@@ -120,7 +120,9 @@
 
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evglock")
-
+#if ACPI_REDUCED_HARDWARE
+#error
+#endif
 #if (!ACPI_REDUCED_HARDWARE) /* Entire module */
 
 /* Local prototypes */

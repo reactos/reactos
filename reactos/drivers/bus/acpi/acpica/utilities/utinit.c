@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __UTINIT_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -186,6 +183,162 @@ AcpiUtFreeGpeLists (
     }
 }
 #endif /* !ACPI_REDUCED_HARDWARE */
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUtInitGlobals
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Initialize ACPICA globals. All globals that require specific
+ *              initialization should be initialized here. This allows for
+ *              a warm restart.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiUtInitGlobals (
+    void)
+{
+    ACPI_STATUS             Status;
+    UINT32                  i;
+
+
+    ACPI_FUNCTION_TRACE (UtInitGlobals);
+
+
+    /* Create all memory caches */
+
+    Status = AcpiUtCreateCaches ();
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Address Range lists */
+
+    for (i = 0; i < ACPI_ADDRESS_RANGE_MAX; i++)
+    {
+        AcpiGbl_AddressRangeList[i] = NULL;
+    }
+
+    /* Mutex locked flags */
+
+    for (i = 0; i < ACPI_NUM_MUTEX; i++)
+    {
+        AcpiGbl_MutexInfo[i].Mutex          = NULL;
+        AcpiGbl_MutexInfo[i].ThreadId       = ACPI_MUTEX_NOT_ACQUIRED;
+        AcpiGbl_MutexInfo[i].UseCount       = 0;
+    }
+
+    for (i = 0; i < ACPI_NUM_OWNERID_MASKS; i++)
+    {
+        AcpiGbl_OwnerIdMask[i]              = 0;
+    }
+
+    /* Last OwnerID is never valid */
+
+    AcpiGbl_OwnerIdMask[ACPI_NUM_OWNERID_MASKS - 1] = 0x80000000;
+
+    /* Event counters */
+
+    AcpiMethodCount                     = 0;
+    AcpiSciCount                        = 0;
+    AcpiGpeCount                        = 0;
+
+    for (i = 0; i < ACPI_NUM_FIXED_EVENTS; i++)
+    {
+        AcpiFixedEventCount[i]              = 0;
+    }
+
+#if (!ACPI_REDUCED_HARDWARE)
+
+    /* GPE/SCI support */
+
+    AcpiGbl_AllGpesInitialized          = FALSE;
+    AcpiGbl_GpeXruptListHead            = NULL;
+    AcpiGbl_GpeFadtBlocks[0]            = NULL;
+    AcpiGbl_GpeFadtBlocks[1]            = NULL;
+    AcpiCurrentGpeCount                 = 0;
+
+    AcpiGbl_GlobalEventHandler          = NULL;
+    AcpiGbl_SciHandlerList              = NULL;
+
+#endif /* !ACPI_REDUCED_HARDWARE */
+
+    /* Global handlers */
+
+    AcpiGbl_GlobalNotify[0].Handler     = NULL;
+    AcpiGbl_GlobalNotify[1].Handler     = NULL;
+    AcpiGbl_ExceptionHandler            = NULL;
+    AcpiGbl_InitHandler                 = NULL;
+    AcpiGbl_TableHandler                = NULL;
+    AcpiGbl_InterfaceHandler            = NULL;
+
+    /* Global Lock support */
+
+    AcpiGbl_GlobalLockSemaphore         = NULL;
+    AcpiGbl_GlobalLockMutex             = NULL;
+    AcpiGbl_GlobalLockAcquired          = FALSE;
+    AcpiGbl_GlobalLockHandle            = 0;
+    AcpiGbl_GlobalLockPresent           = FALSE;
+
+    /* Miscellaneous variables */
+
+    AcpiGbl_DSDT                        = NULL;
+    AcpiGbl_CmSingleStep                = FALSE;
+    AcpiGbl_Shutdown                    = FALSE;
+    AcpiGbl_NsLookupCount               = 0;
+    AcpiGbl_PsFindCount                 = 0;
+    AcpiGbl_AcpiHardwarePresent         = TRUE;
+    AcpiGbl_LastOwnerIdIndex            = 0;
+    AcpiGbl_NextOwnerIdOffset           = 0;
+    AcpiGbl_TraceDbgLevel               = 0;
+    AcpiGbl_TraceDbgLayer               = 0;
+    AcpiGbl_DebuggerConfiguration       = DEBUGGER_THREADING;
+    AcpiGbl_OsiMutex                    = NULL;
+    AcpiGbl_RegMethodsExecuted          = FALSE;
+
+    /* Hardware oriented */
+
+    AcpiGbl_EventsInitialized           = FALSE;
+    AcpiGbl_SystemAwakeAndRunning       = TRUE;
+
+    /* Namespace */
+
+    AcpiGbl_ModuleCodeList              = NULL;
+    AcpiGbl_RootNode                    = NULL;
+    AcpiGbl_RootNodeStruct.Name.Integer = ACPI_ROOT_NAME;
+    AcpiGbl_RootNodeStruct.DescriptorType = ACPI_DESC_TYPE_NAMED;
+    AcpiGbl_RootNodeStruct.Type         = ACPI_TYPE_DEVICE;
+    AcpiGbl_RootNodeStruct.Parent       = NULL;
+    AcpiGbl_RootNodeStruct.Child        = NULL;
+    AcpiGbl_RootNodeStruct.Peer         = NULL;
+    AcpiGbl_RootNodeStruct.Object       = NULL;
+
+
+#ifdef ACPI_DISASSEMBLER
+    AcpiGbl_ExternalList                = NULL;
+    AcpiGbl_NumExternalMethods          = 0;
+    AcpiGbl_ResolvedExternalMethods     = 0;
+#endif
+
+#ifdef ACPI_DEBUG_OUTPUT
+    AcpiGbl_LowestStackPointer          = ACPI_CAST_PTR (ACPI_SIZE, ACPI_SIZE_MAX);
+#endif
+
+#ifdef ACPI_DBG_TRACK_ALLOCATIONS
+    AcpiGbl_DisplayFinalMemStats        = FALSE;
+    AcpiGbl_DisableMemTracking          = FALSE;
+#endif
+
+    ACPI_DEBUGGER_EXEC (AcpiGbl_DbTerminateThreads = FALSE);
+
+    return_ACPI_STATUS (AE_OK);
+}
 
 
 /******************************************************************************

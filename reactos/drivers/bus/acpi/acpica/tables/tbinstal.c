@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __TBINSTAL_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "actables.h"
@@ -282,7 +280,7 @@ AcpiTbInstallFixedTable (
 
     /* Validate and verify a table before installation */
 
-    Status = AcpiTbVerifyTable (&NewTableDesc, Signature);
+    Status = AcpiTbVerifyTempTable (&NewTableDesc, Signature);
     if (ACPI_FAILURE (Status))
     {
         goto ReleaseAndExit;
@@ -362,7 +360,7 @@ AcpiTbInstallStandardTable (
 
     /* Validate and verify a table before installation */
 
-    Status = AcpiTbVerifyTable (&NewTableDesc, NULL);
+    Status = AcpiTbVerifyTempTable (&NewTableDesc, NULL);
     if (ACPI_FAILURE (Status))
     {
         goto ReleaseAndExit;
@@ -527,7 +525,7 @@ FinishOverride:
 
     /* Validate and verify a table before overriding */
 
-    Status = AcpiTbVerifyTable (&NewTableDesc, NULL);
+    Status = AcpiTbVerifyTempTable (&NewTableDesc, NULL);
     if (ACPI_FAILURE (Status))
     {
         return;
@@ -549,7 +547,7 @@ FinishOverride:
      */
     AcpiTbInitTableDescriptor (OldTableDesc, NewTableDesc.Address,
         NewTableDesc.Flags, NewTableDesc.Pointer);
-    AcpiTbValidateTable (OldTableDesc);
+    AcpiTbValidateTempTable (OldTableDesc);
 
     /* Release the temporary table descriptor */
 

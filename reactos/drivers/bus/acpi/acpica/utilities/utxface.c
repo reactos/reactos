@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __UTXFACE_C__
 #define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
@@ -694,7 +692,9 @@ AcpiDecodePldBuffer (
     ACPI_MOVE_32_TO_32 (&Dword, &Buffer[0]);
     PldInfo->Revision =             ACPI_PLD_GET_REVISION (&Dword);
     PldInfo->IgnoreColor =          ACPI_PLD_GET_IGNORE_COLOR (&Dword);
-    PldInfo->Color =                ACPI_PLD_GET_COLOR (&Dword);
+    PldInfo->Red =                  ACPI_PLD_GET_RED (&Dword);
+    PldInfo->Green =                ACPI_PLD_GET_GREEN (&Dword);
+    PldInfo->Blue =                 ACPI_PLD_GET_BLUE (&Dword);
 
     /* Second 32-bit DWord */
 

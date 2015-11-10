@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __UTEXCEP_C__
 #define EXPORT_ACPI_INTERFACES
 
 #define ACPI_DEFINE_EXCEPTION_TABLE

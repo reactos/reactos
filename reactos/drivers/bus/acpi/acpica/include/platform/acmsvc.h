@@ -285,6 +285,10 @@
 /* Debug support. Must be last in this file, do not move. */
 
 #ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC /* Enables specific file/lineno for leaks */
+
+#include <stdlib.h>
+#include <malloc.h>
 #include <crtdbg.h>
 
 /*
@@ -294,9 +298,26 @@
  * This can quickly localize the memory corruption.
  */
 #define ACPI_DEBUG_INITIALIZE() \
-    _CrtSetDbgFlag (_CRTDBG_CHECK_ALWAYS_DF | \
-        _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_CRT_DF | \
-        _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG))
+    _CrtSetDbgFlag (\
+        _CRTDBG_CHECK_ALWAYS_DF | \
+        _CRTDBG_ALLOC_MEM_DF | \
+        _CRTDBG_DELAY_FREE_MEM_DF | \
+        _CRTDBG_LEAK_CHECK_DF | \
+        _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG));
+
+#if 0
+/*
+ * _CrtSetBreakAlloc can be used to set a breakpoint at a particular
+ * memory leak, add to the macro above.
+ */
+Detected memory leaks!
+Dumping objects ->
+..\..\source\os_specific\service_layers\oswinxf.c(701) : {937} normal block at 0x002E9190, 40 bytes long.
+ Data: <                > 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+_CrtSetBreakAlloc (937);
+#endif
+
 #endif
 
 #endif /* __ACMSVC_H__ */

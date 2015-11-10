@@ -354,17 +354,17 @@ AcpiEvCreateGpeInfoBlocks (
     {
         /* Init the RegisterInfo for this GPE register (8 GPEs) */
 
-        ThisRegister->BaseGpeNumber = (UINT8) (GpeBlock->BlockBaseNumber +
-                                             (i * ACPI_GPE_REGISTER_WIDTH));
+        ThisRegister->BaseGpeNumber = (UINT16)
+            (GpeBlock->BlockBaseNumber + (i * ACPI_GPE_REGISTER_WIDTH));
 
         ThisRegister->StatusAddress.Address =
-            GpeBlock->BlockAddress.Address + i;
+            GpeBlock->Address + i;
 
         ThisRegister->EnableAddress.Address =
-            GpeBlock->BlockAddress.Address + i + GpeBlock->RegisterCount;
+            GpeBlock->Address + i + GpeBlock->RegisterCount;
 
-        ThisRegister->StatusAddress.SpaceId   = GpeBlock->BlockAddress.SpaceId;
-        ThisRegister->EnableAddress.SpaceId   = GpeBlock->BlockAddress.SpaceId;
+        ThisRegister->StatusAddress.SpaceId   = GpeBlock->SpaceId;
+        ThisRegister->EnableAddress.SpaceId   = GpeBlock->SpaceId;
         ThisRegister->StatusAddress.BitWidth  = ACPI_GPE_REGISTER_WIDTH;
         ThisRegister->EnableAddress.BitWidth  = ACPI_GPE_REGISTER_WIDTH;
         ThisRegister->StatusAddress.BitOffset = 0;
@@ -437,9 +437,10 @@ ErrorExit:
 ACPI_STATUS
 AcpiEvCreateGpeBlock (
     ACPI_NAMESPACE_NODE     *GpeDevice,
-    ACPI_GENERIC_ADDRESS    *GpeBlockAddress,
+    UINT64                  Address,
+    UINT8                   SpaceId,
     UINT32                  RegisterCount,
-    UINT8                   GpeBlockBaseNumber,
+    UINT16                  GpeBlockBaseNumber,
     UINT32                  InterruptNumber,
     ACPI_GPE_BLOCK_INFO     **ReturnGpeBlock)
 {
@@ -466,14 +467,13 @@ AcpiEvCreateGpeBlock (
 
     /* Initialize the new GPE block */
 
+    GpeBlock->Address = Address;
+    GpeBlock->SpaceId = SpaceId;
     GpeBlock->Node = GpeDevice;
     GpeBlock->GpeCount = (UINT16) (RegisterCount * ACPI_GPE_REGISTER_WIDTH);
     GpeBlock->Initialized = FALSE;
     GpeBlock->RegisterCount = RegisterCount;
     GpeBlock->BlockBaseNumber = GpeBlockBaseNumber;
-
-    ACPI_MEMCPY (&GpeBlock->BlockAddress, GpeBlockAddress,
-        sizeof (ACPI_GENERIC_ADDRESS));
 
     /*
      * Create the RegisterInfo and EventInfo sub-structures
@@ -517,11 +517,11 @@ AcpiEvCreateGpeBlock (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "    Initialized GPE %02X to %02X [%4.4s] %u regs on interrupt 0x%X\n",
+        "    Initialized GPE %02X to %02X [%4.4s] %u regs on interrupt 0x%X%s\n",
         (UINT32) GpeBlock->BlockBaseNumber,
         (UINT32) (GpeBlock->BlockBaseNumber + (GpeBlock->GpeCount - 1)),
-        GpeDevice->Name.Ascii, GpeBlock->RegisterCount,
-        InterruptNumber));
+        GpeDevice->Name.Ascii, GpeBlock->RegisterCount, InterruptNumber,
+        InterruptNumber == AcpiGbl_FADT.SciInterrupt ? " (SCI)" : ""));
 
     /* Update global count of currently available GPEs */
 

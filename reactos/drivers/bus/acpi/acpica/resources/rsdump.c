@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __RSDUMP_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acresrc.h"

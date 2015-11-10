@@ -116,10 +116,19 @@
 #ifndef __ACEFI_H__
 #define __ACEFI_H__
 
+#include <stdarg.h>
+#if defined(_GNU_EFI)
+#include <stdint.h>
+#include <unistd.h>
+#endif
 #include <efi.h>
 #include <efistdarg.h>
 #include <efilib.h>
 
+
+/* AED EFI definitions */
+
+#if defined(_AED_EFI)
 
 /* _int64 works for both IA32 and IA64 */
 
@@ -142,6 +151,58 @@
 /* warn C4142: redefinition of type */
 
 #pragma warning(disable:4142)
+
+#endif
+
+
+/* GNU EFI definitions */
+
+#if defined(_GNU_EFI)
+
+/* Using GCC for GNU EFI */
+
+#include "acgcc.h"
+
+#undef ACPI_USE_SYSTEM_CLIBRARY
+#undef ACPI_USE_STANDARD_HEADERS
+#undef ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_SYSTEM_INTTYPES
+
+#define ACPI_FILE           SIMPLE_TEXT_OUTPUT_INTERFACE *
+#define ACPI_FILE_OUT       ST->ConOut
+#define ACPI_FILE_ERR       ST->ConOut
+
+/*
+ * Math helpers
+ */
+#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
+    do {                                             \
+        UINT64 __n = ((UINT64) n_hi) << 32 | (n_lo); \
+        (q32) = DivU64x32 ((__n), (d32), &(r32));    \
+    } while (0)
+
+#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
+    do {                                \
+        (n_lo) >>= 1;                   \
+        (n_lo) |= (((n_hi) & 1) << 31); \
+        (n_hi) >>= 1;                   \
+    } while (0)
+
+/*
+ * EFI specific prototypes
+ */
+EFI_STATUS
+efi_main (
+    EFI_HANDLE              Image,
+    EFI_SYSTEM_TABLE        *SystemTab);
+
+int
+acpi_main (
+    int                     argc,
+    char                    *argv[]);
+
+
+#endif
 
 
 #endif /* __ACEFI_H__ */

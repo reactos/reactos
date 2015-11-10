@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __UTRESRC_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acresrc.h"
@@ -172,7 +169,9 @@ const char                      *AcpiGbl_IoDecode[] =
 const char                      *AcpiGbl_LlDecode[] =
 {
     "ActiveHigh",
-    "ActiveLow"
+    "ActiveLow",
+    "ActiveBoth",
+    "Reserved"
 };
 
 const char                      *AcpiGbl_MaxDecode[] =
@@ -371,7 +370,7 @@ const char                      *AcpiGbl_BpbDecode[] =
 
 const char                      *AcpiGbl_SbDecode[] =
 {
-    "StopBitsNone",
+    "StopBitsZero",
     "StopBitsOne",
     "StopBitsOnePlusHalf",
     "StopBitsTwo"

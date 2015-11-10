@@ -126,6 +126,8 @@
 #if !defined(_MSC_VER) && defined(__GNUC__)
 #include "acgcc.h"
 #endif
+
+#define ACPI_USE_SYSTEM_INTTYPES
 #endif /* __REACTOS __ */
 /*! [End] no source code translation !*/
 

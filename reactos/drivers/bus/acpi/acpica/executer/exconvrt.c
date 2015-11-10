@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __EXCONVRT_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acinterp.h"

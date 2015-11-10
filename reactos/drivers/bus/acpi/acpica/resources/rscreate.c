@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __RSCREATE_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acresrc.h"
@@ -149,6 +147,10 @@ AcpiBufferToResource (
     void                    *Resource;
     void                    *CurrentResourcePtr;
 
+
+    ACPI_FUNCTION_TRACE (AcpiBufferToResource);
+
+
     /*
      * Note: we allow AE_AML_NO_RESOURCE_END_TAG, since an end tag
      * is not required here.
@@ -164,7 +166,7 @@ AcpiBufferToResource (
     }
     if (ACPI_FAILURE (Status))
     {
-        return (Status);
+        return_ACPI_STATUS (Status);
     }
 
     /* Allocate a buffer for the converted resource */
@@ -173,7 +175,7 @@ AcpiBufferToResource (
     CurrentResourcePtr = Resource;
     if (!Resource)
     {
-        return (AE_NO_MEMORY);
+        return_ACPI_STATUS (AE_NO_MEMORY);
     }
 
     /* Perform the AML-to-Resource conversion */
@@ -193,8 +195,10 @@ AcpiBufferToResource (
         *ResourcePtr = Resource;
     }
 
-    return (Status);
+    return_ACPI_STATUS (Status);
 }
+
+ACPI_EXPORT_SYMBOL (AcpiBufferToResource)
 
 
 /*******************************************************************************

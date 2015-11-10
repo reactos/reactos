@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __UTOBJECT_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -472,7 +470,7 @@ AcpiUtValidInternalObject (
     default:
 
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "%p is not not an ACPI operand obj [%s]\n",
+                "%p is not an ACPI operand obj [%s]\n",
                 Object, AcpiUtGetDescriptorName (Object)));
         break;
     }

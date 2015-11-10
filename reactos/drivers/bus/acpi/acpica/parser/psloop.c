@@ -113,7 +113,6 @@
  *
  *****************************************************************************/
 
-
 /*
  * Parse the AML and build an operation tree as most interpreters, (such as
  * Perl) do. Parsing is done by hand rather than with a YACC generated parser

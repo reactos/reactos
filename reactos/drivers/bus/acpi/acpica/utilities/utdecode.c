@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __UTDECODE_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -161,38 +159,6 @@ const UINT8                     AcpiGbl_NsProperties[ACPI_NUM_NS_TYPES] =
     ACPI_NS_NORMAL,                     /* 29 Data             */
     ACPI_NS_NORMAL                      /* 30 Invalid          */
 };
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiUtHexToAsciiChar
- *
- * PARAMETERS:  Integer             - Contains the hex digit
- *              Position            - bit position of the digit within the
- *                                    integer (multiple of 4)
- *
- * RETURN:      The converted Ascii character
- *
- * DESCRIPTION: Convert a hex digit to an Ascii character
- *
- ******************************************************************************/
-
-/* Hex to ASCII conversion table */
-
-static const char           AcpiGbl_HexToAscii[] =
-{
-    '0','1','2','3','4','5','6','7',
-    '8','9','A','B','C','D','E','F'
-};
-
-char
-AcpiUtHexToAsciiChar (
-    UINT64                  Integer,
-    UINT32                  Position)
-{
-
-    return (AcpiGbl_HexToAscii[(Integer >> Position) & 0xF]);
-}
 
 
 /*******************************************************************************
@@ -613,7 +579,8 @@ static const char           *AcpiGbl_GenericNotify[ACPI_NOTIFY_MAX + 1] =
     /* 09 */ "Device PLD Check",
     /* 0A */ "Reserved",
     /* 0B */ "System Locality Update",
-    /* 0C */ "Shutdown Request"
+    /* 0C */ "Shutdown Request",
+    /* 0D */ "System Resource Affinity Update"
 };
 
 static const char           *AcpiGbl_DeviceNotify[4] =
@@ -647,7 +614,7 @@ AcpiUtGetNotifyName (
     ACPI_OBJECT_TYPE        Type)
 {
 
-    /* 00 - 0C are common to all object types */
+    /* 00 - 0D are common to all object types */
 
     if (NotifyValue <= ACPI_NOTIFY_MAX)
     {

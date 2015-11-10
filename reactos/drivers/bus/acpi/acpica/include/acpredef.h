@@ -178,6 +178,11 @@
  *      count = 0 (optional)
  *      (Used for _DLM)
  *
+ * ACPI_PTYPE2_UUID_PAIR: Each subpackage is preceded by a UUID Buffer. The UUID
+ *      defines the format of the package. Zero-length parent package is
+ *      allowed.
+ *      (Used for _DSD)
+ *
  *****************************************************************************/
 
 enum AcpiReturnPackageTypes
@@ -191,7 +196,8 @@ enum AcpiReturnPackageTypes
     ACPI_PTYPE2_FIXED       = 7,
     ACPI_PTYPE2_MIN         = 8,
     ACPI_PTYPE2_REV_FIXED   = 9,
-    ACPI_PTYPE2_FIX_VAR     = 10
+    ACPI_PTYPE2_FIX_VAR     = 10,
+    ACPI_PTYPE2_UUID_PAIR   = 11
 };
 
 
@@ -438,6 +444,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_CBA",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}}, /* See PCI firmware spec 3.0 */
 
+    {{"_CCA",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}}, /* ACPI 5.1 */
+
     {{"_CDM",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
@@ -505,6 +514,10 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
 
     {{"_DOS",   METHOD_1ARGS (ACPI_TYPE_INTEGER),
                 METHOD_NO_RETURN_VALUE}},
+
+    {{"_DSD",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Pkgs) each: 1 Buf, 1 Pkg */
+                    PACKAGE_INFO (ACPI_PTYPE2_UUID_PAIR, ACPI_RTYPE_BUFFER, 1, ACPI_RTYPE_PACKAGE, 1,0),
 
     {{"_DSM",   METHOD_4ARGS (ACPI_TYPE_BUFFER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_PACKAGE),
                 METHOD_RETURNS (ACPI_RTYPE_ALL)}}, /* Must return a value, but it can be of any type */
@@ -652,6 +665,10 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_LID",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
+    {{"_LPD",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (1 Int(rev), n Pkg (2 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE2_REV_FIXED, ACPI_RTYPE_INTEGER, 2,0,0,0),
+
     {{"_MAT",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
@@ -755,12 +772,6 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_PRL",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Refs) */
                     PACKAGE_INFO (ACPI_PTYPE1_VAR, ACPI_RTYPE_REFERENCE, 0,0,0,0),
-
-    {{"_PRP",   METHOD_0ARGS,
-                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Pkgs) each: 1 Str, 1 Int/Str/Pkg */
-                    PACKAGE_INFO (ACPI_PTYPE2, ACPI_RTYPE_STRING, 1,
-                        ACPI_RTYPE_INTEGER | ACPI_RTYPE_STRING |
-                        ACPI_RTYPE_PACKAGE | ACPI_RTYPE_REFERENCE, 1,0),
 
     {{"_PRS",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},

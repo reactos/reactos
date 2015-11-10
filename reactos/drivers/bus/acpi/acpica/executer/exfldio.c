@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __EXFLDIO_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acinterp.h"

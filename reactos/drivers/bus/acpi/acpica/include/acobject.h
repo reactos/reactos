@@ -410,6 +410,7 @@ typedef struct acpi_object_region_field
     UINT16                          ResourceLength;
     union acpi_operand_object       *RegionObj;         /* Containing OpRegion object */
     UINT8                           *ResourceBuffer;    /* ResourceTemplate for serial regions/fields */
+    UINT16                          PinNumberIndex;     /* Index relative to previous Connection/Template */
 
 } ACPI_OBJECT_REGION_FIELD;
 

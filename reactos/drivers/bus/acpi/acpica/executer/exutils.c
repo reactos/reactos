@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __EXUTILS_C__
-
 /*
  * DEFINE_AML_GLOBALS is tested in amlcode.h
  * to determine whether certain global names should be "defined" or only

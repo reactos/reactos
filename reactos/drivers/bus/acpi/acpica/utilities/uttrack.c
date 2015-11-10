@@ -124,8 +124,6 @@
  * occurs in the body of AcpiUtFree.
  */
 
-#define __UTTRACK_C__
-
 #include "acpi.h"
 #include "accommon.h"
 

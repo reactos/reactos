@@ -124,6 +124,10 @@ AcpiAllocateRootTable (
 /*
  * tbxfroot - Root pointer utilities
  */
+UINT32
+AcpiTbGetRsdpLength (
+    ACPI_TABLE_RSDP         *Rsdp);
+
 ACPI_STATUS
 AcpiTbValidateRsdp (
     ACPI_TABLE_RSDP         *Rsdp);
@@ -157,6 +161,15 @@ AcpiTbAcquireTempTable (
 void
 AcpiTbReleaseTempTable (
     ACPI_TABLE_DESC         *TableDesc);
+
+ACPI_STATUS
+AcpiTbValidateTempTable (
+    ACPI_TABLE_DESC         *TableDesc);
+
+ACPI_STATUS
+AcpiTbVerifyTempTable (
+    ACPI_TABLE_DESC         *TableDesc,
+    char                    *Signature);
 
 BOOLEAN
 AcpiTbIsTableLoaded (
@@ -206,11 +219,6 @@ AcpiTbValidateTable (
 void
 AcpiTbInvalidateTable (
     ACPI_TABLE_DESC         *TableDesc);
-
-ACPI_STATUS
-AcpiTbVerifyTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    char                    *Signature);
 
 void
 AcpiTbOverrideTable (

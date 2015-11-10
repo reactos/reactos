@@ -352,35 +352,115 @@ typedef struct acpi_s3pt_suspend
 
 /*******************************************************************************
  *
- * GTDT - Generic Timer Description Table (ACPI 5.0)
- *        Version 1
+ * GTDT - Generic Timer Description Table (ACPI 5.1)
+ *        Version 2
  *
  ******************************************************************************/
 
 typedef struct acpi_table_gtdt
 {
     ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
-    UINT64                  Address;
-    UINT32                  Flags;
-    UINT32                  SecurePl1Interrupt;
-    UINT32                  SecurePl1Flags;
-    UINT32                  NonSecurePl1Interrupt;
-    UINT32                  NonSecurePl1Flags;
+    UINT64                  CounterBlockAddresss;
+    UINT32                  Reserved;
+    UINT32                  SecureEl1Interrupt;
+    UINT32                  SecureEl1Flags;
+    UINT32                  NonSecureEl1Interrupt;
+    UINT32                  NonSecureEl1Flags;
     UINT32                  VirtualTimerInterrupt;
     UINT32                  VirtualTimerFlags;
-    UINT32                  NonSecurePl2Interrupt;
-    UINT32                  NonSecurePl2Flags;
+    UINT32                  NonSecureEl2Interrupt;
+    UINT32                  NonSecureEl2Flags;
+    UINT64                  CounterReadBlockAddress;
+    UINT32                  PlatformTimerCount;
+    UINT32                  PlatformTimerOffset;
 
 } ACPI_TABLE_GTDT;
 
-/* Values for Flags field above */
+/* Flag Definitions: Timer Block Physical Timers and Virtual timers */
 
-#define ACPI_GTDT_MAPPED_BLOCK_PRESENT      1
+#define ACPI_GTDT_INTERRUPT_MODE        (1)
+#define ACPI_GTDT_INTERRUPT_POLARITY    (1<<1)
+#define ACPI_GTDT_ALWAYS_ON             (1<<2)
 
-/* Values for all "TimerFlags" fields above */
 
-#define ACPI_GTDT_INTERRUPT_MODE            1
-#define ACPI_GTDT_INTERRUPT_POLARITY        2
+/* Common GTDT subtable header */
+
+typedef struct acpi_gtdt_header
+{
+    UINT8                   Type;
+    UINT16                  Length;
+
+} ACPI_GTDT_HEADER;
+
+/* Values for GTDT subtable type above */
+
+enum AcpiGtdtType
+{
+    ACPI_GTDT_TYPE_TIMER_BLOCK      = 0,
+    ACPI_GTDT_TYPE_WATCHDOG         = 1,
+    ACPI_GTDT_TYPE_RESERVED         = 2    /* 2 and greater are reserved */
+};
+
+
+/* GTDT Subtables, correspond to Type in acpi_gtdt_header */
+
+/* 0: Generic Timer Block */
+
+typedef struct acpi_gtdt_timer_block
+{
+    ACPI_GTDT_HEADER        Header;
+    UINT8                   Reserved;
+    UINT64                  BlockAddress;
+    UINT32                  TimerCount;
+    UINT32                  TimerOffset;
+
+} ACPI_GTDT_TIMER_BLOCK;
+
+/* Timer Sub-Structure, one per timer */
+
+typedef struct acpi_gtdt_timer_entry
+{
+    UINT8                   FrameNumber;
+    UINT8                   Reserved[3];
+    UINT64                  BaseAddress;
+    UINT64                  El0BaseAddress;
+    UINT32                  TimerInterrupt;
+    UINT32                  TimerFlags;
+    UINT32                  VirtualTimerInterrupt;
+    UINT32                  VirtualTimerFlags;
+    UINT32                  CommonFlags;
+
+} ACPI_GTDT_TIMER_ENTRY;
+
+/* Flag Definitions: TimerFlags and VirtualTimerFlags above */
+
+#define ACPI_GTDT_GT_IRQ_MODE               (1)
+#define ACPI_GTDT_GT_IRQ_POLARITY           (1<<1)
+
+/* Flag Definitions: CommonFlags above */
+
+#define ACPI_GTDT_GT_IS_SECURE_TIMER        (1)
+#define ACPI_GTDT_GT_ALWAYS_ON              (1<<1)
+
+
+/* 1: SBSA Generic Watchdog Structure */
+
+typedef struct acpi_gtdt_watchdog
+{
+    ACPI_GTDT_HEADER        Header;
+    UINT8                   Reserved;
+    UINT64                  RefreshFrameAddress;
+    UINT64                  ControlFrameAddress;
+    UINT32                  TimerInterrupt;
+    UINT32                  TimerFlags;
+
+} ACPI_GTDT_WATCHDOG;
+
+/* Flag Definitions: TimerFlags above */
+
+#define ACPI_GTDT_WATCHDOG_IRQ_MODE         (1)
+#define ACPI_GTDT_WATCHDOG_IRQ_POLARITY     (1<<1)
+#define ACPI_GTDT_WATCHDOG_SECURE           (1<<2)
 
 
 /*******************************************************************************
@@ -525,7 +605,8 @@ typedef struct acpi_table_pcct
 enum AcpiPcctType
 {
     ACPI_PCCT_TYPE_GENERIC_SUBSPACE     = 0,
-    ACPI_PCCT_TYPE_RESERVED             = 1     /* 1 and greater are reserved */
+    ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE  = 1,
+    ACPI_PCCT_TYPE_RESERVED             = 2     /* 2 and greater are reserved */
 };
 
 /*
@@ -548,6 +629,31 @@ typedef struct acpi_pcct_subspace
     UINT16                  MinTurnaroundTime;
 
 } ACPI_PCCT_SUBSPACE;
+
+
+/* 1: HW-reduced Communications Subspace (ACPI 5.1) */
+
+typedef struct acpi_pcct_hw_reduced
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT32                  DoorbellInterrupt;
+    UINT8                   Flags;
+    UINT8                   Reserved;
+    UINT64                  BaseAddress;
+    UINT64                  Length;
+    ACPI_GENERIC_ADDRESS    DoorbellRegister;
+    UINT64                  PreserveMask;
+    UINT64                  WriteMask;
+    UINT32                  Latency;
+    UINT32                  MaxAccessRate;
+    UINT16                  MinTurnaroundTime;
+
+} ACPI_PCCT_HW_REDUCED;
+
+/* Values for doorbell flags above */
+
+#define ACPI_PCCT_INTERRUPT_POLARITY    (1)
+#define ACPI_PCCT_INTERRUPT_MODE        (1<<1)
 
 
 /*

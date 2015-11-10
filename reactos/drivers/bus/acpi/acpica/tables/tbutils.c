@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __TBUTILS_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "actables.h"
@@ -124,10 +122,6 @@
 
 
 /* Local prototypes */
-
-static ACPI_STATUS
-AcpiTbValidateXsdt (
-    ACPI_PHYSICAL_ADDRESS   Address);
 
 static ACPI_PHYSICAL_ADDRESS
 AcpiTbGetRootTableEntry (
@@ -348,92 +342,6 @@ AcpiTbGetRootTableEntry (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiTbValidateXsdt
- *
- * PARAMETERS:  Address             - Physical address of the XSDT (from RSDP)
- *
- * RETURN:      Status. AE_OK if the table appears to be valid.
- *
- * DESCRIPTION: Validate an XSDT to ensure that it is of minimum size and does
- *              not contain any NULL entries. A problem that is seen in the
- *              field is that the XSDT exists, but is actually useless because
- *              of one or more (or all) NULL entries.
- *
- ******************************************************************************/
-
-static ACPI_STATUS
-AcpiTbValidateXsdt (
-    ACPI_PHYSICAL_ADDRESS   XsdtAddress)
-{
-    ACPI_TABLE_HEADER       *Table;
-    UINT8                   *NextEntry;
-    ACPI_PHYSICAL_ADDRESS   Address;
-    UINT32                  Length;
-    UINT32                  EntryCount;
-    ACPI_STATUS             Status;
-    UINT32                  i;
-
-
-    /* Get the XSDT length */
-
-    Table = AcpiOsMapMemory (XsdtAddress, sizeof (ACPI_TABLE_HEADER));
-    if (!Table)
-    {
-        return (AE_NO_MEMORY);
-    }
-
-    Length = Table->Length;
-    AcpiOsUnmapMemory (Table, sizeof (ACPI_TABLE_HEADER));
-
-    /*
-     * Minimum XSDT length is the size of the standard ACPI header
-     * plus one physical address entry
-     */
-    if (Length < (sizeof (ACPI_TABLE_HEADER) + ACPI_XSDT_ENTRY_SIZE))
-    {
-        return (AE_INVALID_TABLE_LENGTH);
-    }
-
-    /* Map the entire XSDT */
-
-    Table = AcpiOsMapMemory (XsdtAddress, Length);
-    if (!Table)
-    {
-        return (AE_NO_MEMORY);
-    }
-
-    /* Get the number of entries and pointer to first entry */
-
-    Status = AE_OK;
-    NextEntry = ACPI_ADD_PTR (UINT8, Table, sizeof (ACPI_TABLE_HEADER));
-    EntryCount = (UINT32) ((Table->Length - sizeof (ACPI_TABLE_HEADER)) /
-        ACPI_XSDT_ENTRY_SIZE);
-
-    /* Validate each entry (physical address) within the XSDT */
-
-    for (i = 0; i < EntryCount; i++)
-    {
-        Address = AcpiTbGetRootTableEntry (NextEntry, ACPI_XSDT_ENTRY_SIZE);
-        if (!Address)
-        {
-            /* Detected a NULL entry, XSDT is invalid */
-
-            Status = AE_NULL_ENTRY;
-            break;
-        }
-
-        NextEntry += ACPI_XSDT_ENTRY_SIZE;
-    }
-
-    /* Unmap table */
-
-    AcpiOsUnmapMemory (Table, Length);
-    return (Status);
-}
-
-
-/*******************************************************************************
- *
  * FUNCTION:    AcpiTbParseRootTable
  *
  * PARAMETERS:  Rsdp                    - Pointer to the RSDP
@@ -507,25 +415,6 @@ AcpiTbParseRootTable (
      */
     AcpiOsUnmapMemory (Rsdp, sizeof (ACPI_TABLE_RSDP));
 
-    /*
-     * If it is present and used, validate the XSDT for access/size
-     * and ensure that all table entries are at least non-NULL
-     */
-    if (TableEntrySize == ACPI_XSDT_ENTRY_SIZE)
-    {
-        Status = AcpiTbValidateXsdt (Address);
-        if (ACPI_FAILURE (Status))
-        {
-            ACPI_BIOS_WARNING ((AE_INFO, "XSDT is invalid (%s), using RSDT",
-                AcpiFormatException (Status)));
-
-            /* Fall back to the RSDT */
-
-            Address = (ACPI_PHYSICAL_ADDRESS) Rsdp->RsdtPhysicalAddress;
-            TableEntrySize = ACPI_RSDT_ENTRY_SIZE;
-        }
-    }
-
     /* Map the RSDT/XSDT table header to get the full table length */
 
     Table = AcpiOsMapMemory (Address, sizeof (ACPI_TABLE_HEADER));
@@ -584,8 +473,16 @@ AcpiTbParseRootTable (
     {
         /* Get the table physical address (32-bit for RSDT, 64-bit for XSDT) */
 
-        Status = AcpiTbInstallStandardTable (
-            AcpiTbGetRootTableEntry (TableEntry, TableEntrySize),
+        Address = AcpiTbGetRootTableEntry (TableEntry, TableEntrySize);
+
+        /* Skip NULL entries in RSDT/XSDT */
+
+        if (!Address)
+        {
+            goto NextTable;
+        }
+
+        Status = AcpiTbInstallStandardTable (Address,
             ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE, &TableIndex);
 
         if (ACPI_SUCCESS (Status) &&
@@ -595,13 +492,11 @@ AcpiTbParseRootTable (
             AcpiTbParseFadt (TableIndex);
         }
 
+NextTable:
+
         TableEntry += TableEntrySize;
     }
 
-    /*
-     * It is not possible to map more than one entry in some environments,
-     * so unmap the root table here before mapping other tables
-     */
     AcpiOsUnmapMemory (Table, Length);
 
     return_ACPI_STATUS (AE_OK);

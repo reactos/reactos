@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __CMCLIB_C__
-
 #include "acpi.h"
 #include "accommon.h"
 
@@ -380,8 +377,6 @@ AcpiUtStrcmp (
 }
 
 
-#ifdef ACPI_FUTURE_IMPLEMENTATION
-/* Not used at this time */
 /*******************************************************************************
  *
  * FUNCTION:    AcpiUtStrchr (strchr)
@@ -412,7 +407,7 @@ AcpiUtStrchr (
 
     return (NULL);
 }
-#endif
+
 
 /*******************************************************************************
  *

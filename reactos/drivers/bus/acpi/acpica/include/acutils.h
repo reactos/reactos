@@ -168,7 +168,6 @@ extern const char                       *AcpiGbl_PtDecode[];
 #ifdef ACPI_ASL_COMPILER
 
 #include <stdio.h>
-extern FILE                 *AcpiGbl_OutputFile;
 
 #define ACPI_MSG_REDIRECT_BEGIN \
     FILE                    *OutputFile = AcpiGbl_OutputFile; \
@@ -298,6 +297,10 @@ AcpiUtHexToAsciiChar (
     UINT64                  Integer,
     UINT32                  Position);
 
+UINT8
+AcpiUtAsciiCharToHex (
+    int                     HexChar);
+
 BOOLEAN
 AcpiUtValidObjectType (
     ACPI_OBJECT_TYPE        Type);
@@ -323,6 +326,11 @@ AcpiUtSubsystemShutdown (
 ACPI_SIZE
 AcpiUtStrlen (
     const char              *String);
+
+char *
+AcpiUtStrchr (
+    const char              *String,
+    int                     ch);
 
 char *
 AcpiUtStrcpy (
@@ -412,7 +420,7 @@ extern const UINT8 _acpi_ctype[];
 #define ACPI_IS_XDIGIT(c) (_acpi_ctype[(unsigned char)(c)] & (_ACPI_XD))
 #define ACPI_IS_UPPER(c)  (_acpi_ctype[(unsigned char)(c)] & (_ACPI_UP))
 #define ACPI_IS_LOWER(c)  (_acpi_ctype[(unsigned char)(c)] & (_ACPI_LO))
-#define ACPI_IS_PRINT(c)  (_acpi_ctype[(unsigned char)(c)] & (_ACPI_LO | _ACPI_UP | _ACPI_DI | _ACPI_SP | _ACPI_PU))
+#define ACPI_IS_PRINT(c)  (_acpi_ctype[(unsigned char)(c)] & (_ACPI_LO | _ACPI_UP | _ACPI_DI | _ACPI_XS | _ACPI_PU))
 #define ACPI_IS_ALPHA(c)  (_acpi_ctype[(unsigned char)(c)] & (_ACPI_LO | _ACPI_UP))
 
 #endif /* !ACPI_USE_SYSTEM_CLIBRARY */
@@ -554,6 +562,16 @@ AcpiUtDumpBuffer (
     UINT32                  Display,
     UINT32                  Offset);
 
+#ifdef ACPI_APPLICATION
+void
+AcpiUtDumpBufferToFile (
+    ACPI_FILE               File,
+    UINT8                   *Buffer,
+    UINT32                  Count,
+    UINT32                  Display,
+    UINT32                  BaseOffset);
+#endif
+
 void
 AcpiUtReportError (
     char                    *ModuleName,
@@ -620,6 +638,17 @@ AcpiUtExecutePowerMethods (
     const char              **MethodNames,
     UINT8                   MethodCount,
     UINT8                   *OutValues);
+
+
+/*
+ * utfileio - file operations
+ */
+#ifdef ACPI_APPLICATION
+ACPI_STATUS
+AcpiUtReadTableFromFile (
+    char                    *Filename,
+    ACPI_TABLE_HEADER       **Table);
+#endif
 
 
 /*
@@ -1181,5 +1210,58 @@ AcpiAhMatchPredefinedName (
 const AH_DEVICE_ID *
 AcpiAhMatchHardwareId (
     char                    *Hid);
+
+const char *
+AcpiAhMatchUuid (
+    UINT8                   *Data);
+
+/*
+ * utprint - printf/vprintf output functions
+ */
+const char *
+AcpiUtScanNumber (
+    const char              *String,
+    UINT64                  *NumberPtr);
+
+const char *
+AcpiUtPrintNumber (
+    char                    *String,
+    UINT64                  Number);
+
+int
+AcpiUtVsnprintf (
+    char                    *String,
+    ACPI_SIZE               Size,
+    const char              *Format,
+    va_list                 Args);
+
+int
+AcpiUtSnprintf (
+    char                    *String,
+    ACPI_SIZE               Size,
+    const char              *Format,
+    ...);
+
+#ifdef ACPI_APPLICATION
+int
+AcpiUtFileVprintf (
+    ACPI_FILE               File,
+    const char              *Format,
+    va_list                 Args);
+
+int
+AcpiUtFilePrintf (
+    ACPI_FILE               File,
+    const char              *Format,
+    ...);
+#endif
+
+/*
+ * utuuid -- UUID support functions
+ */
+void
+AcpiUtConvertStringToUuid (
+    char                    *InString,
+    UINT8                   *UuidBuffer);
 
 #endif /* _ACUTILS_H */

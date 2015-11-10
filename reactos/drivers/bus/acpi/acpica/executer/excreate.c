@@ -114,8 +114,6 @@
  *
  *****************************************************************************/
 
-#define __EXCREATE_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acinterp.h"

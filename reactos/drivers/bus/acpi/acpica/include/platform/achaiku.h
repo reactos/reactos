@@ -132,7 +132,8 @@ struct mutex;
 
 #define ACPI_USE_NATIVE_DIVIDE
 
-// #define ACPI_THREAD_ID               thread_id
+/* #define ACPI_THREAD_ID               thread_id */
+
 #define ACPI_SEMAPHORE              sem_id
 #define ACPI_SPINLOCK               spinlock *
 #define ACPI_CPU_FLAGS              cpu_status

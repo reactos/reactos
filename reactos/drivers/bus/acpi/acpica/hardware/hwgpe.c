@@ -313,6 +313,14 @@ AcpiHwGetGpeStatus (
         return (AE_BAD_PARAMETER);
     }
 
+    /* GPE currently handled? */
+
+    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) !=
+            ACPI_GPE_DISPATCH_NONE)
+    {
+        LocalEventStatus |= ACPI_EVENT_FLAG_HAS_HANDLER;
+    }
+
     /* Get the info block for the entire GPE register */
 
     GpeRegisterInfo = GpeEventInfo->RegisterInfo;

@@ -113,7 +113,6 @@
  *
  *****************************************************************************/
 
-#define __TBXFLOAD_C__
 #define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"

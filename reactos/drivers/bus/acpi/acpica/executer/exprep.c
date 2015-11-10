@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __EXPREP_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acinterp.h"
@@ -586,6 +584,8 @@ AcpiExPrepFieldValue (
             ObjDesc->Field.ResourceBuffer = Info->ResourceBuffer;
             ObjDesc->Field.ResourceLength = Info->ResourceLength;
         }
+
+        ObjDesc->Field.PinNumberIndex = Info->PinNumberIndex;
 
         /* Allow full data read from EC address space */
 

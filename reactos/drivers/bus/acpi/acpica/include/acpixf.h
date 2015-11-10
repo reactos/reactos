@@ -113,64 +113,258 @@
  *
  *****************************************************************************/
 
-
 #ifndef __ACXFACE_H__
 #define __ACXFACE_H__
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20140325
+#define ACPI_CA_VERSION                 0x20141107
 
 #include "acconfig.h"
 #include "actypes.h"
 #include "actbl.h"
 #include "acbuffer.h"
 
+
+/*****************************************************************************
+ *
+ * Macros used for ACPICA globals and configuration
+ *
+ ****************************************************************************/
+
 /*
- * Globals that are publically available
+ * Ensure that global variables are defined and initialized only once.
+ *
+ * The use of these macros allows for a single list of globals (here)
+ * in order to simplify maintenance of the code.
  */
-extern UINT32               AcpiCurrentGpeCount;
-extern ACPI_TABLE_FADT      AcpiGbl_FADT;
-extern BOOLEAN              AcpiGbl_SystemAwakeAndRunning;
-extern BOOLEAN              AcpiGbl_ReducedHardware;        /* ACPI 5.0 */
-extern UINT8                AcpiGbl_OsiData;
+#ifdef DEFINE_ACPI_GLOBALS
+#define ACPI_GLOBAL(type,name) \
+    extern type name; \
+    type name
 
-/* Runtime configuration of debug print levels */
+#define ACPI_INIT_GLOBAL(type,name,value) \
+    type name=value
 
-extern UINT32               AcpiDbgLevel;
-extern UINT32               AcpiDbgLayer;
+#else
+#ifndef ACPI_GLOBAL
+#define ACPI_GLOBAL(type,name) \
+    extern type name
+#endif
 
-/* ACPICA runtime options */
-
-extern UINT8                AcpiGbl_AutoSerializeMethods;
-extern UINT8                AcpiGbl_CopyDsdtLocally;
-extern UINT8                AcpiGbl_CreateOsiMethod;
-extern UINT8                AcpiGbl_DisableAutoRepair;
-extern UINT8                AcpiGbl_DisableSsdtTableInstall;
-extern UINT8                AcpiGbl_DoNotUseXsdt;
-extern UINT8                AcpiGbl_EnableAmlDebugObject;
-extern UINT8                AcpiGbl_EnableInterpreterSlack;
-extern UINT32               AcpiGbl_TraceFlags;
-extern ACPI_NAME            AcpiGbl_TraceMethodName;
-extern UINT8                AcpiGbl_TruncateIoAddresses;
-extern UINT8                AcpiGbl_Use32BitFadtAddresses;
-extern UINT8                AcpiGbl_UseDefaultRegisterWidths;
-
+#ifndef ACPI_INIT_GLOBAL
+#define ACPI_INIT_GLOBAL(type,name,value) \
+    extern type name
+#endif
+#endif
 
 /*
- * Hardware-reduced prototypes. All interfaces that use these macros will
- * be configured out of the ACPICA build if the ACPI_REDUCED_HARDWARE flag
+ * These macros configure the various ACPICA interfaces. They are
+ * useful for generating stub inline functions for features that are
+ * configured out of the current kernel or ACPICA application.
+ */
+#ifndef ACPI_EXTERNAL_RETURN_STATUS
+#define ACPI_EXTERNAL_RETURN_STATUS(Prototype) \
+    Prototype;
+#endif
+
+#ifndef ACPI_EXTERNAL_RETURN_OK
+#define ACPI_EXTERNAL_RETURN_OK(Prototype) \
+    Prototype;
+#endif
+
+#ifndef ACPI_EXTERNAL_RETURN_VOID
+#define ACPI_EXTERNAL_RETURN_VOID(Prototype) \
+    Prototype;
+#endif
+
+#ifndef ACPI_EXTERNAL_RETURN_UINT32
+#define ACPI_EXTERNAL_RETURN_UINT32(Prototype) \
+    Prototype;
+#endif
+
+#ifndef ACPI_EXTERNAL_RETURN_PTR
+#define ACPI_EXTERNAL_RETURN_PTR(Prototype) \
+    Prototype;
+#endif
+
+
+/*****************************************************************************
+ *
+ * Public globals and runtime configuration options
+ *
+ ****************************************************************************/
+
+/*
+ * Enable "slack mode" of the AML interpreter?  Default is FALSE, and the
+ * interpreter strictly follows the ACPI specification. Setting to TRUE
+ * allows the interpreter to ignore certain errors and/or bad AML constructs.
+ *
+ * Currently, these features are enabled by this flag:
+ *
+ * 1) Allow "implicit return" of last value in a control method
+ * 2) Allow access beyond the end of an operation region
+ * 3) Allow access to uninitialized locals/args (auto-init to integer 0)
+ * 4) Allow ANY object type to be a source operand for the Store() operator
+ * 5) Allow unresolved references (invalid target name) in package objects
+ * 6) Enable warning messages for behavior that is not ACPI spec compliant
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_EnableInterpreterSlack, FALSE);
+
+/*
+ * Automatically serialize all methods that create named objects? Default
+ * is TRUE, meaning that all NonSerialized methods are scanned once at
+ * table load time to determine those that create named objects. Methods
+ * that create named objects are marked Serialized in order to prevent
+ * possible run-time problems if they are entered by more than one thread.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_AutoSerializeMethods, TRUE);
+
+/*
+ * Create the predefined _OSI method in the namespace? Default is TRUE
+ * because ACPICA is fully compatible with other ACPI implementations.
+ * Changing this will revert ACPICA (and machine ASL) to pre-OSI behavior.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_CreateOsiMethod, TRUE);
+
+/*
+ * Optionally use default values for the ACPI register widths. Set this to
+ * TRUE to use the defaults, if an FADT contains incorrect widths/lengths.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_UseDefaultRegisterWidths, TRUE);
+
+/*
+ * Whether or not to verify the table checksum before installation. Set
+ * this to TRUE to verify the table checksum before install it to the table
+ * manager. Note that enabling this option causes errors to happen in some
+ * OSPMs during early initialization stages. Default behavior is to do such
+ * verification.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_VerifyTableChecksum, TRUE);
+
+/*
+ * Optionally enable output from the AML Debug Object.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_EnableAmlDebugObject, FALSE);
+
+/*
+ * Optionally copy the entire DSDT to local memory (instead of simply
+ * mapping it.) There are some BIOSs that corrupt or replace the original
+ * DSDT, creating the need for this option. Default is FALSE, do not copy
+ * the DSDT.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_CopyDsdtLocally, FALSE);
+
+/*
+ * Optionally ignore an XSDT if present and use the RSDT instead.
+ * Although the ACPI specification requires that an XSDT be used instead
+ * of the RSDT, the XSDT has been found to be corrupt or ill-formed on
+ * some machines. Default behavior is to use the XSDT if present.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_DoNotUseXsdt, FALSE);
+
+/*
+ * Optionally use 32-bit FADT addresses if and when there is a conflict
+ * (address mismatch) between the 32-bit and 64-bit versions of the
+ * address. Although ACPICA adheres to the ACPI specification which
+ * requires the use of the corresponding 64-bit address if it is non-zero,
+ * some machines have been found to have a corrupted non-zero 64-bit
+ * address. Default is FALSE, do not favor the 32-bit addresses.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_Use32BitFadtAddresses, FALSE);
+
+/*
+ * Optionally truncate I/O addresses to 16 bits. Provides compatibility
+ * with other ACPI implementations. NOTE: During ACPICA initialization,
+ * this value is set to TRUE if any Windows OSI strings have been
+ * requested by the BIOS.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_TruncateIoAddresses, FALSE);
+
+/*
+ * Disable runtime checking and repair of values returned by control methods.
+ * Use only if the repair is causing a problem on a particular machine.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_DisableAutoRepair, FALSE);
+
+/*
+ * Optionally do not install any SSDTs from the RSDT/XSDT during initialization.
+ * This can be useful for debugging ACPI problems on some machines.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_DisableSsdtTableInstall, FALSE);
+
+/*
+ * We keep track of the latest version of Windows that has been requested by
+ * the BIOS. ACPI 5.0.
+ */
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_OsiData, 0);
+
+/*
+ * ACPI 5.0 introduces the concept of a "reduced hardware platform", meaning
+ * that the ACPI hardware is no longer required. A flag in the FADT indicates
+ * a reduced HW machine, and that flag is duplicated here for convenience.
+ */
+ACPI_INIT_GLOBAL (BOOLEAN,          AcpiGbl_ReducedHardware, FALSE);
+
+/*
+ * This mechanism is used to trace a specified AML method. The method is
+ * traced each time it is executed.
+ */
+ACPI_INIT_GLOBAL (UINT32,           AcpiGbl_TraceFlags, 0);
+ACPI_INIT_GLOBAL (ACPI_NAME,        AcpiGbl_TraceMethodName, 0);
+
+/*
+ * Runtime configuration of debug output control masks. We want the debug
+ * switches statically initialized so they are already set when the debugger
+ * is entered.
+ */
+#ifdef ACPI_DEBUG_OUTPUT
+ACPI_INIT_GLOBAL (UINT32,           AcpiDbgLevel, ACPI_DEBUG_DEFAULT);
+#else
+ACPI_INIT_GLOBAL (UINT32,           AcpiDbgLevel, ACPI_NORMAL_DEFAULT);
+#endif
+ACPI_INIT_GLOBAL (UINT32,           AcpiDbgLayer, ACPI_COMPONENT_DEFAULT);
+
+/*
+ * Other miscellaneous globals
+ */
+ACPI_GLOBAL (ACPI_TABLE_FADT,       AcpiGbl_FADT);
+ACPI_GLOBAL (UINT32,                AcpiCurrentGpeCount);
+ACPI_GLOBAL (BOOLEAN,               AcpiGbl_SystemAwakeAndRunning);
+
+
+/*****************************************************************************
+ *
+ * ACPICA public interface configuration.
+ *
+ * Interfaces that are configured out of the ACPICA build are replaced
+ * by inlined stubs by default.
+ *
+ ****************************************************************************/
+
+/*
+ * Hardware-reduced prototypes (default: Not hardware reduced).
+ *
+ * All ACPICA hardware-related interfaces that use these macros will be
+ * configured out of the ACPICA build if the ACPI_REDUCED_HARDWARE flag
  * is set to TRUE.
+ *
+ * Note: This static build option for reduced hardware is intended to
+ * reduce ACPICA code size if desired or necessary. However, even if this
+ * option is not specified, the runtime behavior of ACPICA is dependent
+ * on the actual FADT reduced hardware flag (HW_REDUCED_ACPI). If set,
+ * the flag will enable similar behavior -- ACPICA will not attempt
+ * to access any ACPI-relate hardware (SCI, GPEs, Fixed Events, etc.)
  */
 #if (!ACPI_REDUCED_HARDWARE)
 #define ACPI_HW_DEPENDENT_RETURN_STATUS(Prototype) \
-    Prototype;
+    ACPI_EXTERNAL_RETURN_STATUS(Prototype)
 
 #define ACPI_HW_DEPENDENT_RETURN_OK(Prototype) \
-    Prototype;
+    ACPI_EXTERNAL_RETURN_OK(Prototype)
 
 #define ACPI_HW_DEPENDENT_RETURN_VOID(Prototype) \
-    Prototype;
+    ACPI_EXTERNAL_RETURN_VOID(Prototype)
 
 #else
 #define ACPI_HW_DEPENDENT_RETURN_STATUS(Prototype) \
@@ -186,29 +380,94 @@ extern UINT8                AcpiGbl_UseDefaultRegisterWidths;
 
 
 /*
+ * Error message prototypes (default: error messages enabled).
+ *
+ * All interfaces related to error and warning messages
+ * will be configured out of the ACPICA build if the
+ * ACPI_NO_ERROR_MESSAGE flag is defined.
+ */
+#ifndef ACPI_NO_ERROR_MESSAGES
+#define ACPI_MSG_DEPENDENT_RETURN_VOID(Prototype) \
+    Prototype;
+
+#else
+#define ACPI_MSG_DEPENDENT_RETURN_VOID(Prototype) \
+    static ACPI_INLINE Prototype {return;}
+
+#endif /* ACPI_NO_ERROR_MESSAGES */
+
+
+/*
+ * Debugging output prototypes (default: no debug output).
+ *
+ * All interfaces related to debug output messages
+ * will be configured out of the ACPICA build unless the
+ * ACPI_DEBUG_OUTPUT flag is defined.
+ */
+#ifdef ACPI_DEBUG_OUTPUT
+#define ACPI_DBG_DEPENDENT_RETURN_VOID(Prototype) \
+    Prototype;
+
+#else
+#define ACPI_DBG_DEPENDENT_RETURN_VOID(Prototype) \
+    static ACPI_INLINE Prototype {return;}
+
+#endif /* ACPI_DEBUG_OUTPUT */
+
+
+/*
+ * Application prototypes
+ *
+ * All interfaces used by application will be configured
+ * out of the ACPICA build unless the ACPI_APPLICATION
+ * flag is defined.
+ */
+#ifdef ACPI_APPLICATION
+#define ACPI_APP_DEPENDENT_RETURN_VOID(Prototype) \
+    Prototype;
+
+#else
+#define ACPI_APP_DEPENDENT_RETURN_VOID(Prototype) \
+    static ACPI_INLINE Prototype {return;}
+
+#endif /* ACPI_APPLICATION */
+
+
+/*****************************************************************************
+ *
+ * ACPICA public interface prototypes
+ *
+ ****************************************************************************/
+
+/*
  * Initialization
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInitializeTables (
     ACPI_TABLE_DESC         *InitialStorage,
     UINT32                  InitialTableCount,
-    BOOLEAN                 AllowResize);
+    BOOLEAN                 AllowResize))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInitializeSubsystem (
-    void);
+    void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiEnableSubsystem (
-    UINT32                  Flags);
+    UINT32                  Flags))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInitializeObjects (
-    UINT32                  Flags);
+    UINT32                  Flags))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiTerminate (
-    void);
+    void))
 
 
 /*
@@ -224,114 +483,136 @@ ACPI_STATUS
 AcpiDisable (
     void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiSubsystemStatus (
-    void);
+    void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetSystemInfo (
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetStatistics (
-    ACPI_STATISTICS         *Stats);
+    ACPI_STATISTICS         *Stats))
 
+ACPI_EXTERNAL_RETURN_PTR (
 const char *
 AcpiFormatException (
-    ACPI_STATUS             Exception);
+    ACPI_STATUS             Exception))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiPurgeCachedObjects (
-    void);
+    void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallInterface (
-    ACPI_STRING             InterfaceName);
+    ACPI_STRING             InterfaceName))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiRemoveInterface (
-    ACPI_STRING             InterfaceName);
+    ACPI_STRING             InterfaceName))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiUpdateInterfaces (
-    UINT8                   Action);
+    UINT8                   Action))
 
+ACPI_EXTERNAL_RETURN_UINT32 (
 UINT32
 AcpiCheckAddressRange (
     ACPI_ADR_SPACE_TYPE     SpaceId,
     ACPI_PHYSICAL_ADDRESS   Address,
     ACPI_SIZE               Length,
-    BOOLEAN                 Warn);
+    BOOLEAN                 Warn))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiDecodePldBuffer (
     UINT8                   *InBuffer,
     ACPI_SIZE               Length,
-    ACPI_PLD_INFO           **ReturnBuffer);
+    ACPI_PLD_INFO           **ReturnBuffer))
 
 
 /*
  * ACPI table load/unload interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallTable (
     ACPI_PHYSICAL_ADDRESS   Address,
-    BOOLEAN                 Physical);
+    BOOLEAN                 Physical))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiLoadTable (
-    ACPI_TABLE_HEADER       *Table);
+    ACPI_TABLE_HEADER       *Table))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiUnloadParentTable (
-    ACPI_HANDLE             Object);
+    ACPI_HANDLE             Object))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiLoadTables (
-    void);
+    void))
 
 
 /*
  * ACPI table manipulation interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiReallocateRootTable (
-    void);
+    void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiFindRootPointer (
-    ACPI_SIZE               *RsdpAddress);
+    ACPI_SIZE               *RsdpAddress))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetTableHeader (
     ACPI_STRING             Signature,
     UINT32                  Instance,
-    ACPI_TABLE_HEADER       *OutTableHeader);
+    ACPI_TABLE_HEADER       *OutTableHeader))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetTable (
     ACPI_STRING             Signature,
     UINT32                  Instance,
-    ACPI_TABLE_HEADER       **OutTable);
+    ACPI_TABLE_HEADER       **OutTable))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetTableByIndex (
     UINT32                  TableIndex,
-    ACPI_TABLE_HEADER       **OutTable);
+    ACPI_TABLE_HEADER       **OutTable))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallTableHandler (
     ACPI_TABLE_HANDLER      Handler,
-    void                    *Context);
+    void                    *Context))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiRemoveTableHandler (
-    ACPI_TABLE_HANDLER      Handler);
+    ACPI_TABLE_HANDLER      Handler))
 
 
 /*
  * Namespace and name interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiWalkNamespace (
     ACPI_OBJECT_TYPE        Type,
@@ -340,104 +621,119 @@ AcpiWalkNamespace (
     ACPI_WALK_CALLBACK      DescendingCallback,
     ACPI_WALK_CALLBACK      AscendingCallback,
     void                    *Context,
-    void                    **ReturnValue);
+    void                    **ReturnValue))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetDevices (
     char                    *HID,
     ACPI_WALK_CALLBACK      UserFunction,
     void                    *Context,
-    void                    **ReturnValue);
+    void                    **ReturnValue))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetName (
     ACPI_HANDLE             Object,
     UINT32                  NameType,
-    ACPI_BUFFER             *RetPathPtr);
+    ACPI_BUFFER             *RetPathPtr))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetHandle (
     ACPI_HANDLE             Parent,
     ACPI_STRING             Pathname,
-    ACPI_HANDLE             *RetHandle);
+    ACPI_HANDLE             *RetHandle))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiAttachData (
     ACPI_HANDLE             Object,
     ACPI_OBJECT_HANDLER     Handler,
-    void                    *Data);
+    void                    *Data))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiDetachData (
     ACPI_HANDLE             Object,
-    ACPI_OBJECT_HANDLER     Handler);
+    ACPI_OBJECT_HANDLER     Handler))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetData (
     ACPI_HANDLE             Object,
     ACPI_OBJECT_HANDLER     Handler,
-    void                    **Data);
+    void                    **Data))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiDebugTrace (
     char                    *Name,
     UINT32                  DebugLevel,
     UINT32                  DebugLayer,
-    UINT32                  Flags);
+    UINT32                  Flags))
 
 
 /*
  * Object manipulation and enumeration
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiEvaluateObject (
     ACPI_HANDLE             Object,
     ACPI_STRING             Pathname,
     ACPI_OBJECT_LIST        *ParameterObjects,
-    ACPI_BUFFER             *ReturnObjectBuffer);
+    ACPI_BUFFER             *ReturnObjectBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiEvaluateObjectTyped (
     ACPI_HANDLE             Object,
     ACPI_STRING             Pathname,
     ACPI_OBJECT_LIST        *ExternalParams,
     ACPI_BUFFER             *ReturnBuffer,
-    ACPI_OBJECT_TYPE        ReturnType);
+    ACPI_OBJECT_TYPE        ReturnType))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetObjectInfo (
     ACPI_HANDLE             Object,
-    ACPI_DEVICE_INFO        **ReturnBuffer);
+    ACPI_DEVICE_INFO        **ReturnBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallMethod (
-    UINT8                   *Buffer);
+    UINT8                   *Buffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetNextObject (
     ACPI_OBJECT_TYPE        Type,
     ACPI_HANDLE             Parent,
     ACPI_HANDLE             Child,
-    ACPI_HANDLE             *OutHandle);
+    ACPI_HANDLE             *OutHandle))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetType (
     ACPI_HANDLE             Object,
-    ACPI_OBJECT_TYPE        *OutType);
+    ACPI_OBJECT_TYPE        *OutType))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetParent (
     ACPI_HANDLE             Object,
-    ACPI_HANDLE             *OutHandle);
+    ACPI_HANDLE             *OutHandle))
 
 
 /*
  * Handler interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallInitializationHandler (
     ACPI_INIT_HANDLER       Handler,
-    UINT32                  Function);
+    UINT32                  Function))
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
@@ -485,40 +781,46 @@ AcpiRemoveGpeHandler (
     UINT32                  GpeNumber,
     ACPI_GPE_HANDLER        Address))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallNotifyHandler (
     ACPI_HANDLE             Device,
     UINT32                  HandlerType,
     ACPI_NOTIFY_HANDLER     Handler,
-    void                    *Context);
+    void                    *Context))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiRemoveNotifyHandler (
     ACPI_HANDLE             Device,
     UINT32                  HandlerType,
-    ACPI_NOTIFY_HANDLER     Handler);
+    ACPI_NOTIFY_HANDLER     Handler))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallAddressSpaceHandler (
     ACPI_HANDLE             Device,
     ACPI_ADR_SPACE_TYPE     SpaceId,
     ACPI_ADR_SPACE_HANDLER  Handler,
     ACPI_ADR_SPACE_SETUP    Setup,
-    void                    *Context);
+    void                    *Context))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiRemoveAddressSpaceHandler (
     ACPI_HANDLE             Device,
     ACPI_ADR_SPACE_TYPE     SpaceId,
-    ACPI_ADR_SPACE_HANDLER  Handler);
+    ACPI_ADR_SPACE_HANDLER  Handler))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallExceptionHandler (
-    ACPI_EXCEPTION_HANDLER  Handler);
+    ACPI_EXCEPTION_HANDLER  Handler))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiInstallInterfaceHandler (
-    ACPI_INTERFACE_HANDLER  Handler);
+    ACPI_INTERFACE_HANDLER  Handler))
 
 
 /*
@@ -539,16 +841,18 @@ AcpiReleaseGlobalLock (
 /*
  * Interfaces to AML mutex objects
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiAcquireMutex (
     ACPI_HANDLE             Handle,
     ACPI_STRING             Pathname,
-    UINT16                  Timeout);
+    UINT16                  Timeout))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiReleaseMutex (
     ACPI_HANDLE             Handle,
-    ACPI_STRING             Pathname);
+    ACPI_STRING             Pathname))
 
 
 /*
@@ -619,6 +923,12 @@ AcpiFinishGpe (
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
+AcpiMarkGpeForWake (
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber))
+
+ACPI_HW_DEPENDENT_RETURN_STATUS (
+ACPI_STATUS
 AcpiSetupGpeForWake (
     ACPI_HANDLE             ParentDevice,
     ACPI_HANDLE             GpeDevice,
@@ -676,79 +986,92 @@ ACPI_STATUS (*ACPI_WALK_RESOURCE_CALLBACK) (
     ACPI_RESOURCE           *Resource,
     void                    *Context);
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetVendorResource (
     ACPI_HANDLE             Device,
     char                    *Name,
     ACPI_VENDOR_UUID        *Uuid,
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetCurrentResources (
     ACPI_HANDLE             Device,
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetPossibleResources (
     ACPI_HANDLE             Device,
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetEventResources (
     ACPI_HANDLE             DeviceHandle,
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiWalkResourceBuffer (
     ACPI_BUFFER                 *Buffer,
     ACPI_WALK_RESOURCE_CALLBACK UserFunction,
-    void                        *Context);
+    void                        *Context))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiWalkResources (
     ACPI_HANDLE                 Device,
     char                        *Name,
     ACPI_WALK_RESOURCE_CALLBACK UserFunction,
-    void                        *Context);
+    void                        *Context))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiSetCurrentResources (
     ACPI_HANDLE             Device,
-    ACPI_BUFFER             *InBuffer);
+    ACPI_BUFFER             *InBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetIrqRoutingTable (
     ACPI_HANDLE             Device,
-    ACPI_BUFFER             *RetBuffer);
+    ACPI_BUFFER             *RetBuffer))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiResourceToAddress64 (
     ACPI_RESOURCE           *Resource,
-    ACPI_RESOURCE_ADDRESS64 *Out);
+    ACPI_RESOURCE_ADDRESS64 *Out))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiBufferToResource (
     UINT8                   *AmlBuffer,
     UINT16                  AmlBufferLength,
-    ACPI_RESOURCE           **ResourcePtr);
+    ACPI_RESOURCE           **ResourcePtr))
 
 
 /*
  * Hardware (ACPI device) interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiReset (
-    void);
+    void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiRead (
     UINT64                  *Value,
-    ACPI_GENERIC_ADDRESS    *Reg);
+    ACPI_GENERIC_ADDRESS    *Reg))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiWrite (
     UINT64                  Value,
-    ACPI_GENERIC_ADDRESS    *Reg);
+    ACPI_GENERIC_ADDRESS    *Reg))
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
@@ -766,32 +1089,37 @@ AcpiWriteBitRegister (
 /*
  * Sleep/Wake interfaces
  */
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiGetSleepTypeData (
     UINT8                   SleepState,
     UINT8                   *Slp_TypA,
-    UINT8                   *Slp_TypB);
+    UINT8                   *Slp_TypB))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiEnterSleepStatePrep (
-    UINT8                   SleepState);
+    UINT8                   SleepState))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiEnterSleepState (
-    UINT8                   SleepState);
+    UINT8                   SleepState))
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
 AcpiEnterSleepStateS4bios (
     void))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiLeaveSleepStatePrep (
-    UINT8                   SleepState);
+    UINT8                   SleepState))
 
+ACPI_EXTERNAL_RETURN_STATUS (
 ACPI_STATUS
 AcpiLeaveSleepState (
-    UINT8                   SleepState);
+    UINT8                   SleepState))
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
@@ -830,14 +1158,16 @@ AcpiGetTimerDuration (
 /*
  * Error/Warning output
  */
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiError (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(4)
 void  ACPI_INTERNAL_VAR_XFACE
 AcpiException (
@@ -845,46 +1175,49 @@ AcpiException (
     UINT32                  LineNumber,
     ACPI_STATUS             Status,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiWarning (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiInfo (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiBiosError (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_MSG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiBiosWarning (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...);
+    ...))
 
 
 /*
  * Debug output
  */
-#ifdef ACPI_DEBUG_OUTPUT
-
+ACPI_DBG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(6)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiDebugPrint (
@@ -894,8 +1227,9 @@ AcpiDebugPrint (
     const char              *ModuleName,
     UINT32                  ComponentId,
     const char              *Format,
-    ...);
+    ...))
 
+ACPI_DBG_DEPENDENT_RETURN_VOID (
 ACPI_PRINTF_LIKE(6)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiDebugPrintRaw (
@@ -905,7 +1239,13 @@ AcpiDebugPrintRaw (
     const char              *ModuleName,
     UINT32                  ComponentId,
     const char              *Format,
-    ...);
-#endif
+    ...))
+
+ACPI_APP_DEPENDENT_RETURN_VOID (
+ACPI_PRINTF_LIKE(1)
+void ACPI_INTERNAL_VAR_XFACE
+AcpiLogError (
+    const char              *Format,
+    ...))
 
 #endif /* __ACXFACE_H__ */

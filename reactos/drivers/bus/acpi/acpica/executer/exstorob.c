@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __EXSTOROB_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acinterp.h"

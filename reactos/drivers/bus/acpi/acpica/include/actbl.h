@@ -368,7 +368,8 @@ typedef struct acpi_table_fadt
     UINT32                  Flags;              /* Miscellaneous flag bits (see below for individual flags) */
     ACPI_GENERIC_ADDRESS    ResetRegister;      /* 64-bit address of the Reset register */
     UINT8                   ResetValue;         /* Value to write to the ResetRegister port to reset the system */
-    UINT8                   Reserved4[3];       /* Reserved, must be zero */
+    UINT16                  ArmBootFlags;       /* ARM-Specific Boot Flags (see below for individual flags) (ACPI 5.1) */
+    UINT8                   MinorRevision;      /* FADT Minor Revision (ACPI 5.1) */
     UINT64                  XFacs;              /* 64-bit physical address of FACS */
     UINT64                  XDsdt;              /* 64-bit physical address of DSDT */
     ACPI_GENERIC_ADDRESS    XPm1aEventBlock;    /* 64-bit Extended Power Mgt 1a Event Reg Blk address */
@@ -385,7 +386,7 @@ typedef struct acpi_table_fadt
 } ACPI_TABLE_FADT;
 
 
-/* Masks for FADT Boot Architecture Flags (BootFlags) [Vx]=Introduced in this FADT revision */
+/* Masks for FADT IA-PC Boot Architecture Flags (boot_flags) [Vx]=Introduced in this FADT revision */
 
 #define ACPI_FADT_LEGACY_DEVICES    (1)         /* 00: [V2] System has LPC or ISA bus devices */
 #define ACPI_FADT_8042              (1<<1)      /* 01: [V3] System has an 8042 controller on port 60/64 */
@@ -393,6 +394,11 @@ typedef struct acpi_table_fadt
 #define ACPI_FADT_NO_MSI            (1<<3)      /* 03: [V4] Message Signaled Interrupts (MSI) must not be enabled */
 #define ACPI_FADT_NO_ASPM           (1<<4)      /* 04: [V4] PCIe ASPM control must not be enabled */
 #define ACPI_FADT_NO_CMOS_RTC       (1<<5)      /* 05: [V5] No CMOS real-time clock present */
+
+/* Masks for FADT ARM Boot Architecture Flags (arm_boot_flags) ACPI 5.1 */
+
+#define ACPI_FADT_PSCI_COMPLIANT    (1)         /* 00: [V5+] PSCI 0.2+ is implemented */
+#define ACPI_FADT_PSCI_USE_HVC      (1<<1)      /* 01: [V5+] HVC must be used instead of SMC as the PSCI conduit */
 
 /* Masks for FADT flags */
 
@@ -507,7 +513,7 @@ typedef struct acpi_table_desc
  *     FADT V5  size: 0x10C
  */
 #define ACPI_FADT_V1_SIZE       (UINT32) (ACPI_FADT_OFFSET (Flags) + 4)
-#define ACPI_FADT_V2_SIZE       (UINT32) (ACPI_FADT_OFFSET (Reserved4[0]) + 3)
+#define ACPI_FADT_V2_SIZE       (UINT32) (ACPI_FADT_OFFSET (MinorRevision) + 1)
 #define ACPI_FADT_V3_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepControl))
 #define ACPI_FADT_V5_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
 

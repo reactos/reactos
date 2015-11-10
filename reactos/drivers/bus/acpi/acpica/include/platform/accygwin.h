@@ -164,11 +164,14 @@
 
 
 /*
- * The vsnprintf function is defined by c99, but cygwin/gcc does not
- * enable this prototype when the -ansi flag is set. Also related to
- * __STRICT_ANSI__. So, we just declare the prototype here.
+ * The vsnprintf/snprintf functions are defined by c99, but cygwin/gcc
+ * does not enable this prototype when the -ansi flag is set. Also related
+ * to __STRICT_ANSI__. So, we just declare the prototype here.
  */
 int
 vsnprintf (char *s, size_t n, const char *format, va_list ap);
+
+int
+snprintf (char *s, size_t n, const char *format, ...);
 
 #endif /* __ACCYGWIN_H__ */

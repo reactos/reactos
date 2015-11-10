@@ -113,17 +113,83 @@
  *
  *****************************************************************************/
 
-
-#define __EXFIELD_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acdispat.h"
 #include "acinterp.h"
+#include "amlcode.h"
 
 
 #define _COMPONENT          ACPI_EXECUTER
         ACPI_MODULE_NAME    ("exfield")
+
+/* Local prototypes */
+
+static UINT32
+AcpiExGetSerialAccessLength (
+    UINT32                  AccessorType,
+    UINT32                  AccessLength);
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiExGetSerialAccessLength
+ *
+ * PARAMETERS:  AccessorType    - The type of the protocol indicated by region
+ *                                field access attributes
+ *              AccessLength    - The access length of the region field
+ *
+ * RETURN:      Decoded access length
+ *
+ * DESCRIPTION: This routine returns the length of the GenericSerialBus
+ *              protocol bytes
+ *
+ ******************************************************************************/
+
+static UINT32
+AcpiExGetSerialAccessLength (
+    UINT32                  AccessorType,
+    UINT32                  AccessLength)
+{
+    UINT32                  Length;
+
+
+    switch (AccessorType)
+    {
+    case AML_FIELD_ATTRIB_QUICK:
+
+        Length = 0;
+        break;
+
+    case AML_FIELD_ATTRIB_SEND_RCV:
+    case AML_FIELD_ATTRIB_BYTE:
+
+        Length = 1;
+        break;
+
+    case AML_FIELD_ATTRIB_WORD:
+    case AML_FIELD_ATTRIB_WORD_CALL:
+
+        Length = 2;
+        break;
+
+    case AML_FIELD_ATTRIB_MULTIBYTE:
+    case AML_FIELD_ATTRIB_RAW_BYTES:
+    case AML_FIELD_ATTRIB_RAW_PROCESS:
+
+        Length = AccessLength;
+        break;
+
+    case AML_FIELD_ATTRIB_BLOCK:
+    case AML_FIELD_ATTRIB_BLOCK_CALL:
+    default:
+
+        Length = ACPI_GSBUS_BUFFER_SIZE - 2;
+        break;
+    }
+
+    return (Length);
+}
 
 
 /*******************************************************************************
@@ -152,6 +218,7 @@ AcpiExReadDataFromField (
     ACPI_SIZE               Length;
     void                    *Buffer;
     UINT32                  Function;
+    UINT16                  AccessorType;
 
 
     ACPI_FUNCTION_TRACE_PTR (ExReadDataFromField, ObjDesc);
@@ -201,8 +268,19 @@ AcpiExReadDataFromField (
         }
         else if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS)
         {
-            Length = ACPI_GSBUS_BUFFER_SIZE;
-            Function = ACPI_READ | (ObjDesc->Field.Attribute << 16);
+            AccessorType = ObjDesc->Field.Attribute;
+            Length = AcpiExGetSerialAccessLength (AccessorType,
+                ObjDesc->Field.AccessLength);
+
+            /*
+             * Add additional 2 bytes for the GenericSerialBus data buffer:
+             *
+             *     Status;      (Byte 0 of the data buffer)
+             *     Length;      (Byte 1 of the data buffer)
+             *     Data[x-1];   (Bytes 2-x of the arbitrary length data buffer)
+             */
+            Length += 2;
+            Function = ACPI_READ | (AccessorType << 16);
         }
         else /* IPMI */
         {
@@ -265,6 +343,39 @@ AcpiExReadDataFromField (
         Buffer = &BufferDesc->Integer.Value;
     }
 
+    if ((ObjDesc->Common.Type == ACPI_TYPE_LOCAL_REGION_FIELD) &&
+        (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO))
+    {
+        /*
+         * For GPIO (GeneralPurposeIo), the Address will be the bit offset
+         * from the previous Connection() operator, making it effectively a
+         * pin number index. The BitLength is the length of the field, which
+         * is thus the number of pins.
+         */
+        ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
+            "GPIO FieldRead [FROM]:  Pin %u Bits %u\n",
+            ObjDesc->Field.PinNumberIndex, ObjDesc->Field.BitLength));
+
+        /* Lock entire transaction if requested */
+
+        AcpiExAcquireGlobalLock (ObjDesc->CommonField.FieldFlags);
+
+        /* Perform the write */
+
+        Status = AcpiExAccessRegion (ObjDesc, 0,
+                    (UINT64 *) Buffer, ACPI_READ);
+        AcpiExReleaseGlobalLock (ObjDesc->CommonField.FieldFlags);
+        if (ACPI_FAILURE (Status))
+        {
+            AcpiUtRemoveReference (BufferDesc);
+        }
+        else
+        {
+            *RetBufferDesc = BufferDesc;
+        }
+        return_ACPI_STATUS (Status);
+    }
+
     ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
         "FieldRead [TO]:   Obj %p, Type %X, Buf %p, ByteLen %X\n",
         ObjDesc, ObjDesc->Common.Type, Buffer, (UINT32) Length));
@@ -323,6 +434,7 @@ AcpiExWriteDataToField (
     void                    *Buffer;
     ACPI_OPERAND_OBJECT     *BufferDesc;
     UINT32                  Function;
+    UINT16                  AccessorType;
 
 
     ACPI_FUNCTION_TRACE_PTR (ExWriteDataToField, ObjDesc);
@@ -382,8 +494,19 @@ AcpiExWriteDataToField (
         }
         else if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS)
         {
-            Length = ACPI_GSBUS_BUFFER_SIZE;
-            Function = ACPI_WRITE | (ObjDesc->Field.Attribute << 16);
+            AccessorType = ObjDesc->Field.Attribute;
+            Length = AcpiExGetSerialAccessLength (AccessorType,
+                ObjDesc->Field.AccessLength);
+
+            /*
+             * Add additional 2 bytes for the GenericSerialBus data buffer:
+             *
+             *     Status;      (Byte 0 of the data buffer)
+             *     Length;      (Byte 1 of the data buffer)
+             *     Data[x-1];   (Bytes 2-x of the arbitrary length data buffer)
+             */
+            Length += 2;
+            Function = ACPI_WRITE | (AccessorType << 16);
         }
         else /* IPMI */
         {
@@ -424,6 +547,41 @@ AcpiExWriteDataToField (
         AcpiExReleaseGlobalLock (ObjDesc->CommonField.FieldFlags);
 
         *ResultDesc = BufferDesc;
+        return_ACPI_STATUS (Status);
+    }
+    else if ((ObjDesc->Common.Type == ACPI_TYPE_LOCAL_REGION_FIELD) &&
+             (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO))
+    {
+        /*
+         * For GPIO (GeneralPurposeIo), we will bypass the entire field
+         * mechanism and handoff the bit address and bit width directly to
+         * the handler. The Address will be the bit offset
+         * from the previous Connection() operator, making it effectively a
+         * pin number index. The BitLength is the length of the field, which
+         * is thus the number of pins.
+         */
+        if (SourceDesc->Common.Type != ACPI_TYPE_INTEGER)
+        {
+            return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
+        }
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
+            "GPIO FieldWrite [FROM]: (%s:%X), Val %.8X  [TO]:  Pin %u Bits %u\n",
+            AcpiUtGetTypeName (SourceDesc->Common.Type),
+            SourceDesc->Common.Type, (UINT32) SourceDesc->Integer.Value,
+            ObjDesc->Field.PinNumberIndex, ObjDesc->Field.BitLength));
+
+        Buffer = &SourceDesc->Integer.Value;
+
+        /* Lock entire transaction if requested */
+
+        AcpiExAcquireGlobalLock (ObjDesc->CommonField.FieldFlags);
+
+        /* Perform the write */
+
+        Status = AcpiExAccessRegion (ObjDesc, 0,
+                    (UINT64 *) Buffer, ACPI_WRITE);
+        AcpiExReleaseGlobalLock (ObjDesc->CommonField.FieldFlags);
         return_ACPI_STATUS (Status);
     }
 

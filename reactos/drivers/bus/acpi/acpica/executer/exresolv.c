@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __EXRESOLV_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "amlcode.h"

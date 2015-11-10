@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __TBDATA_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -424,7 +422,43 @@ AcpiTbInvalidateTable (
 
 /******************************************************************************
  *
- * FUNCTION:    AcpiTbVerifyTable
+ * FUNCTION:    AcpiTbValidateTempTable
+ *
+ * PARAMETERS:  TableDesc           - Table descriptor
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: This function is called to validate the table, the returned
+ *              table descriptor is in "VALIDATED" state.
+ *
+ *****************************************************************************/
+
+ACPI_STATUS
+AcpiTbValidateTempTable (
+    ACPI_TABLE_DESC         *TableDesc)
+{
+
+    if (!TableDesc->Pointer && !AcpiGbl_VerifyTableChecksum)
+    {
+        /*
+         * Only validates the header of the table.
+         * Note that Length contains the size of the mapping after invoking
+         * this work around, this value is required by
+         * AcpiTbReleaseTempTable().
+         * We can do this because in AcpiInitTableDescriptor(), the Length
+         * field of the installed descriptor is filled with the actual
+         * table length obtaining from the table header.
+         */
+        TableDesc->Length = sizeof (ACPI_TABLE_HEADER);
+    }
+
+    return (AcpiTbValidateTable (TableDesc));
+}
+
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiTbVerifyTempTable
  *
  * PARAMETERS:  TableDesc           - Table descriptor
  *              Signature           - Table signature to verify
@@ -437,19 +471,19 @@ AcpiTbInvalidateTable (
  *****************************************************************************/
 
 ACPI_STATUS
-AcpiTbVerifyTable (
+AcpiTbVerifyTempTable (
     ACPI_TABLE_DESC         *TableDesc,
     char                    *Signature)
 {
     ACPI_STATUS             Status = AE_OK;
 
 
-    ACPI_FUNCTION_TRACE (TbVerifyTable);
+    ACPI_FUNCTION_TRACE (TbVerifyTempTable);
 
 
     /* Validate the table */
 
-    Status = AcpiTbValidateTable (TableDesc);
+    Status = AcpiTbValidateTempTable (TableDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (AE_NO_MEMORY);
@@ -469,16 +503,19 @@ AcpiTbVerifyTable (
 
     /* Verify the checksum */
 
-    Status = AcpiTbVerifyChecksum (TableDesc->Pointer, TableDesc->Length);
-    if (ACPI_FAILURE (Status))
+    if (AcpiGbl_VerifyTableChecksum)
     {
-        ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
-            "%4.4s " ACPI_PRINTF_UINT
-            " Attempted table install failed",
-            AcpiUtValidAcpiName (TableDesc->Signature.Ascii) ?
-                TableDesc->Signature.Ascii : "????",
-            ACPI_FORMAT_TO_UINT (TableDesc->Address)));
-        goto InvalidateAndExit;
+        Status = AcpiTbVerifyChecksum (TableDesc->Pointer, TableDesc->Length);
+        if (ACPI_FAILURE (Status))
+        {
+            ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
+                "%4.4s " ACPI_PRINTF_UINT
+                " Attempted table install failed",
+                AcpiUtValidAcpiName (TableDesc->Signature.Ascii) ?
+                    TableDesc->Signature.Ascii : "????",
+                ACPI_FORMAT_TO_UINT (TableDesc->Address)));
+            goto InvalidateAndExit;
+        }
     }
 
     return_ACPI_STATUS (AE_OK);

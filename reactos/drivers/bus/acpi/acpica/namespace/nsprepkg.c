@@ -393,6 +393,46 @@ AcpiNsCheckPackage (
         Status = AcpiNsCheckPackageList (Info, Package, Elements, Count);
         break;
 
+    case ACPI_PTYPE2_UUID_PAIR:
+
+        /* The package must contain pairs of (UUID + type) */
+
+        if (Count & 1)
+        {
+            ExpectedCount = Count + 1;
+            goto PackageTooSmall;
+        }
+
+        while (Count > 0)
+        {
+            Status = AcpiNsCheckObjectType(Info, Elements,
+                        Package->RetInfo.ObjectType1, 0);
+            if (ACPI_FAILURE(Status))
+            {
+                return (Status);
+            }
+
+            /* Validate length of the UUID buffer */
+
+            if ((*Elements)->Buffer.Length != 16)
+            {
+                ACPI_WARN_PREDEFINED ((AE_INFO, Info->FullPathname,
+                    Info->NodeFlags, "Invalid length for UUID Buffer"));
+                return (AE_AML_OPERAND_VALUE);
+            }
+
+            Status = AcpiNsCheckObjectType(Info, Elements + 1,
+                        Package->RetInfo.ObjectType2, 0);
+            if (ACPI_FAILURE(Status))
+            {
+                return (Status);
+            }
+
+            Elements += 2;
+            Count -= 2;
+         }
+         break;
+
     default:
 
         /* Should not get here if predefined info table is correct */

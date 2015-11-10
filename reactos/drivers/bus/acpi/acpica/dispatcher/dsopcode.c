@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __DSOPCODE_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acparser.h"

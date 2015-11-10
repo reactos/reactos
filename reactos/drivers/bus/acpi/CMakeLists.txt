@@ -133,11 +133,13 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utcache.c
     acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
-    acpica/utilities/utdebug.c
+    # acpica/utilities/utdebug.c
     acpica/utilities/utdecode.c
     acpica/utilities/utdelete.c
     acpica/utilities/uterror.c
     acpica/utilities/uteval.c
+    # acpica/utilities/utfileio.c
+    acpica/utilities/uthex.c
     acpica/utilities/utids.c
     acpica/utilities/utinit.c
     acpica/utilities/utlock.c
@@ -148,9 +150,11 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utosi.c
     acpica/utilities/utownerid.c
     acpica/utilities/utpredef.c
+    # acpica/utilities/utprint.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c
+    # acpica/utilities/utuuid.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c
     acpica/utilities/utxferror.c
