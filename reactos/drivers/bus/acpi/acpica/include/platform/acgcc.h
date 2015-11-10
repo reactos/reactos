@@ -147,7 +147,7 @@
 #undef strchr
 #endif
 
-
+#ifdef __REACTOS__
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
 
 #ifdef ACPI_APPLICATION
@@ -207,5 +207,5 @@ do {                                                        \
     n_lo >>= 1;    \
 }
 
-
+#endif /* __REACTOS__ */
 #endif /* __ACGCC_H__ */

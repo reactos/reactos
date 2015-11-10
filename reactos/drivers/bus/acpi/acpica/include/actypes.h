@@ -196,11 +196,13 @@
  *
  ******************************************************************************/
 
-// typedef unsigned char                   BOOLEAN;
-// typedef unsigned char                   UINT8;
-// typedef unsigned short                  UINT16;
-// typedef COMPILER_DEPENDENT_UINT64       UINT64;
-// typedef COMPILER_DEPENDENT_INT64        INT64;
+#ifndef __REACTOS__
+typedef unsigned char                   BOOLEAN;
+typedef unsigned char                   UINT8;
+typedef unsigned short                  UINT16;
+typedef COMPILER_DEPENDENT_UINT64       UINT64;
+typedef COMPILER_DEPENDENT_INT64        INT64;
+#endif /* __REACTOS__ */
 
 /*! [End] no source code translation !*/
 
@@ -225,8 +227,10 @@
 
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
-// typedef unsigned int                    UINT32;
-// typedef int                             INT32;
+#ifndef __REACTOS__
+typedef unsigned int                    UINT32;
+typedef int                             INT32;
+#endif /* __REACTOS__ */
 
 /*! [End] no source code translation !*/
 
@@ -264,8 +268,10 @@ typedef UINT64                          ACPI_PHYSICAL_ADDRESS;
 
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
-// typedef unsigned int                    UINT32;
-// typedef int                             INT32;
+#ifndef __REACTOS__
+typedef unsigned int                    UINT32;
+typedef int                             INT32;
+#endif /* __REACTOS__ */
 
 /*! [End] no source code translation !*/
 

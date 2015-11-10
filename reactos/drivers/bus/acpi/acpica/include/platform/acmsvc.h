@@ -202,6 +202,7 @@
 }
 #endif
 
+#ifdef __REACTOS__
 
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
 
@@ -262,6 +263,7 @@
         __asm mov           Pnd, al                 \
 }
 
+#endif /* __REACTOS__ */
 
 /* warn C4100: unreferenced formal parameter */
 #pragma warning(disable:4100)

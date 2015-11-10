@@ -116,11 +116,13 @@
 #ifndef __ACPI_H__
 #define __ACPI_H__
 
+#ifdef __REACTOS__
 /*
  * Header inclusion HACK (see modifications to actypes.h too).
  */
 #include <ntddk.h>
 #undef ACPI_BIOS_ERROR  // ACPI_BIOS_ERROR is redefined in acoutput.h
+#endif /* __REACTOS__ */
 
 /*
  * Public include files for use by code that will interface to ACPICA.
