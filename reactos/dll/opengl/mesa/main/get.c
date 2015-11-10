@@ -1009,10 +1009,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       COPY_4FV(v->value_float_4, ctx->Fog.Color);
       break;
    case GL_COLOR_CLEAR_VALUE:
-      v->value_float_4[0] = ctx->Color.ClearColor.f[0], 0.0F, 1.0F;
-      v->value_float_4[1] = ctx->Color.ClearColor.f[1], 0.0F, 1.0F;
-      v->value_float_4[2] = ctx->Color.ClearColor.f[2], 0.0F, 1.0F;
-      v->value_float_4[3] = ctx->Color.ClearColor.f[3], 0.0F, 1.0F;
+      v->value_float_4[0] = ctx->Color.ClearColor.f[0];
+      v->value_float_4[1] = ctx->Color.ClearColor.f[1];
+      v->value_float_4[2] = ctx->Color.ClearColor.f[2];
+      v->value_float_4[3] = ctx->Color.ClearColor.f[3];
       break;
    case GL_ALPHA_TEST_REF:
          v->value_float = ctx->Color.AlphaRef;
