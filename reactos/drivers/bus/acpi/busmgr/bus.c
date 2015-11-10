@@ -1274,6 +1274,7 @@ acpi_bus_add (
 			device->pnp.bus_address = info->Address;
 			device->flags.bus_address = 1;
 		}
+		ACPI_FREE(info);
 		break;
 	case ACPI_BUS_TYPE_POWER:
 		hid = ACPI_POWER_HID;
