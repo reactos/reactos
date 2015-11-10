@@ -125,7 +125,6 @@ NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
 VOID
-NTAPI
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,

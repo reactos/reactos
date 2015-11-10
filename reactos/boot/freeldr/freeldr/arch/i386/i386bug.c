@@ -172,7 +172,6 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
 }
 
 VOID
-NTAPI
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,
