@@ -1855,7 +1855,8 @@ HWND WINAPI GetDesktopWindow(void)
 
     SERVER_START_REQ( get_desktop_window )
     {
-        req->force = 0;
+ERR("ARWINSS BIG BUG #2, force should be 0\n");
+        req->force = 1;
         if (!wine_server_call( req ))
         {
             thread_info->top_window = wine_server_ptr_handle( reply->top_window );

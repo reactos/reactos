@@ -783,3 +783,4 @@
 # ROS specific exports
 #
 @ stdcall PrivateCsrssManualGuiCheck(long)
+@ stdcall NtUserCallOneParam(ptr long)

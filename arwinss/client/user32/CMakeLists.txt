@@ -33,6 +33,7 @@ list(APPEND SOURCE
     hook.c
     icontitle.c
     input.c
+    inputros.c
     legacy.c
     listbox.c
     lstr.c

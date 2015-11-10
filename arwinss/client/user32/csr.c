@@ -144,7 +144,7 @@ SetLogonNotifyWindow (HWND Wnd)
     return TRUE;
 #else
     ERR("SetLogonNotifyWindow is not yet implemented in Arwinss\n");
-    return FALSE;
+    return TRUE;
 #endif
 }
 
