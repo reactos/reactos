@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -247,8 +247,8 @@ AcpiExSystemMemorySpaceHandler (
          * one page, which is similar to the original code that used a 4k
          * maximum window.
          */
-        PageBoundaryMapLength =
-            ACPI_ROUND_UP (Address, ACPI_DEFAULT_PAGE_SIZE) - Address;
+        PageBoundaryMapLength = (ACPI_SIZE)
+            (ACPI_ROUND_UP (Address, ACPI_DEFAULT_PAGE_SIZE) - Address);
         if (PageBoundaryMapLength == 0)
         {
             PageBoundaryMapLength = ACPI_DEFAULT_PAGE_SIZE;
@@ -261,13 +261,12 @@ AcpiExSystemMemorySpaceHandler (
 
         /* Create a new mapping starting at the address given */
 
-        MemInfo->MappedLogicalAddress = AcpiOsMapMemory (
-            (ACPI_PHYSICAL_ADDRESS) Address, MapLength);
+        MemInfo->MappedLogicalAddress = AcpiOsMapMemory (Address, MapLength);
         if (!MemInfo->MappedLogicalAddress)
         {
             ACPI_ERROR ((AE_INFO,
                 "Could not map memory at 0x%8.8X%8.8X, size %u",
-                ACPI_FORMAT_NATIVE_UINT (Address), (UINT32) MapLength));
+                ACPI_FORMAT_UINT64 (Address), (UINT32) MapLength));
             MemInfo->MappedLength = 0;
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
@@ -287,7 +286,7 @@ AcpiExSystemMemorySpaceHandler (
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
         "System-Memory (width %u) R/W %u Address=%8.8X%8.8X\n",
-        BitWidth, Function, ACPI_FORMAT_NATIVE_UINT (Address)));
+        BitWidth, Function, ACPI_FORMAT_UINT64 (Address)));
 
     /*
      * Perform the memory read or write
@@ -410,7 +409,7 @@ AcpiExSystemIoSpaceHandler (
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
         "System-IO (width %u) R/W %u Address=%8.8X%8.8X\n",
-        BitWidth, Function, ACPI_FORMAT_NATIVE_UINT (Address)));
+        BitWidth, Function, ACPI_FORMAT_UINT64 (Address)));
 
     /* Decode the function parameter */
 

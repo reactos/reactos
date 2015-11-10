@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -142,8 +142,9 @@ AcpiTbScanMemoryForRsdp (
  * tbdata - table data structure management
  */
 ACPI_STATUS
-AcpiTbGetNextRootIndex (
-    UINT32                  *TableIndex);
+AcpiTbGetNextTableDescriptor (
+    UINT32                  *TableIndex,
+    ACPI_TABLE_DESC         **TableDesc);
 
 void
 AcpiTbInitTableDescriptor (
@@ -243,14 +244,6 @@ AcpiTbInstallStandardTable (
     UINT8                   Flags,
     BOOLEAN                 Reload,
     BOOLEAN                 Override,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS
-AcpiTbStoreTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length,
-    UINT8                   Flags,
     UINT32                  *TableIndex);
 
 void

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -547,28 +547,25 @@ AcpiUtStrstr (
     char                    *String1,
     char                    *String2)
 {
-    char                    *String;
+    UINT32                  Length;
 
 
-    if (AcpiUtStrlen (String2) > AcpiUtStrlen (String1))
+    Length = AcpiUtStrlen (String2);
+    if (!Length)
     {
-        return (NULL);
+        return (String1);
     }
 
-    /* Walk entire string, comparing the letters */
-
-    for (String = String1; *String2; )
+    while (AcpiUtStrlen (String1) >= Length)
     {
-        if (*String2 != *String)
+        if (AcpiUtMemcmp (String1, String2, Length) == 0)
         {
-            return (NULL);
+            return (String1);
         }
-
-        String2++;
-        String++;
+        String1++;
     }
 
-    return (String1);
+    return (NULL);
 }
 
 

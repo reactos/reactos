@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -405,7 +405,11 @@ const ACPI_OPCODE_INFO    AcpiGbl_AmlOpInfo[AML_NUM_OPCODES] =
 /* ACPI 5.0 opcodes */
 
 /* 7F */ ACPI_OP ("-ConnectField-",     ARGP_CONNECTFIELD_OP,      ARGI_CONNECTFIELD_OP,       ACPI_TYPE_ANY,               AML_CLASS_INTERNAL,        AML_TYPE_BOGUS,           AML_HAS_ARGS),
-/* 80 */ ACPI_OP ("-ExtAccessField-",   ARGP_CONNECTFIELD_OP,      ARGI_CONNECTFIELD_OP,       ACPI_TYPE_ANY,               AML_CLASS_INTERNAL,        AML_TYPE_BOGUS,           0)
+/* 80 */ ACPI_OP ("-ExtAccessField-",   ARGP_CONNECTFIELD_OP,      ARGI_CONNECTFIELD_OP,       ACPI_TYPE_ANY,               AML_CLASS_INTERNAL,        AML_TYPE_BOGUS,           0),
+
+/* ACPI 6.0 opcodes */
+
+/* 81 */ ACPI_OP ("External",           ARGP_EXTERNAL_OP,          ARGI_EXTERNAL_OP,           ACPI_TYPE_ANY,               AML_CLASS_EXECUTE,/* ? */  AML_TYPE_EXEC_3A_0T_0R,   AML_FLAGS_EXEC_3A_0T_0R)
 
 /*! [End] no source code translation !*/
 };

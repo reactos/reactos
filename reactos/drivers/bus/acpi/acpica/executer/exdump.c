@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -856,7 +856,7 @@ AcpiExDumpOperand (
         else
         {
             AcpiOsPrintf (" base %8.8X%8.8X Length %X\n",
-                ACPI_FORMAT_NATIVE_UINT (ObjDesc->Region.Address),
+                ACPI_FORMAT_UINT64 (ObjDesc->Region.Address),
                 ObjDesc->Region.Length);
         }
         break;

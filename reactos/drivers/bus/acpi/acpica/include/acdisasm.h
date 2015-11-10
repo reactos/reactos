@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -201,6 +201,7 @@ typedef enum
     /* Types used only for the Data Table Compiler */
 
     ACPI_DMT_BUFFER,
+    ACPI_DMT_RAW_BUFFER,  /* Large, multiple line buffer */
     ACPI_DMT_DEVICE_PATH,
     ACPI_DMT_LABEL,
     ACPI_DMT_PCI_PATH,
@@ -423,9 +424,7 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3ptHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3pt0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3pt1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSbst[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlicHdr[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic0[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic1[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlit[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSpcr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSpmi[];
@@ -493,6 +492,15 @@ AcpiDmLineHeader2 (
 /*
  * dmtbdump
  */
+void
+AcpiDmDumpBuffer (
+    void                    *Table,
+    UINT32                  BufferOffset,
+    UINT32                  Length,
+    UINT32                  AbsoluteOffset,
+    char                    *Header,
+    BOOLEAN                 MultiLine);
+
 void
 AcpiDmDumpAsf (
     ACPI_TABLE_HEADER       *Table);
@@ -1068,6 +1076,10 @@ AcpiDmCloseOperator (
  */
 void
 AdDisassemblerHeader (
-    char                    *Filename);
+    char                    *Filename,
+    UINT8                   TableType);
+
+#define ACPI_IS_AML_TABLE   0
+#define ACPI_IS_DATA_TABLE  1
 
 #endif  /* __ACDISASM_H__ */

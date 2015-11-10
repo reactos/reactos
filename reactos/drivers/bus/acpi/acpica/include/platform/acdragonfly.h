@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Module Name: hwacpi - ACPI Hardware Initialization/Mode Interface
+ * Name: acdragonfly.h - OS specific for DragonFly BSD
  *
  *****************************************************************************/
 
@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2003, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -81,7 +81,7 @@
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
  * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
  * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
  * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
@@ -113,181 +113,90 @@
  *
  *****************************************************************************/
 
-#include "acpi.h"
-#include "accommon.h"
+#ifndef __ACDRAGONFLY_H_
+#define __ACDRAGONFLY_H_
 
+#include <platform/acgcc.h>     /* DragonFly uses GCC */
+#include <sys/types.h>
 
-#define _COMPONENT          ACPI_HARDWARE
-        ACPI_MODULE_NAME    ("hwacpi")
+#ifdef __LP64__
+#define ACPI_MACHINE_WIDTH              64
+#else
+#define ACPI_MACHINE_WIDTH              32
+#define ACPI_USE_NATIVE_DIVIDE
+#endif
 
+#define ACPI_UINTPTR_T                  uintptr_t
+#define COMPILER_DEPENDENT_INT64        int64_t
+#define COMPILER_DEPENDENT_UINT64       uint64_t
 
-#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
-/******************************************************************************
- *
- * FUNCTION:    AcpiHwSetMode
- *
- * PARAMETERS:  Mode            - SYS_MODE_ACPI or SYS_MODE_LEGACY
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Transitions the system into the requested mode.
- *
- ******************************************************************************/
+#define ACPI_USE_DO_WHILE_0
+#define ACPI_USE_SYSTEM_CLIBRARY
 
-ACPI_STATUS
-AcpiHwSetMode (
-    UINT32                  Mode)
-{
+#ifdef _KERNEL
 
-    ACPI_STATUS             Status;
-    UINT32                  Retry;
+#include "opt_acpi.h"
+#include <sys/ctype.h>
+#include <sys/systm.h>
+#include <machine/acpica_machdep.h>
+#include <stdarg.h>
 
+#ifdef ACPI_DEBUG
+#define ACPI_DEBUG_OUTPUT       /* enable debug output */
+#ifdef DEBUGGER_THREADING
+#undef DEBUGGER_THREADING
+#endif /* DEBUGGER_THREADING */
+#define DEBUGGER_THREADING DEBUGGER_SINGLE_THREADED /* integrated with DDB */
+#if 0                           /* XXX */
+#include "opt_ddb.h"
+#ifdef DDB
+#define ACPI_DEBUGGER
+#endif /* DDB */
+#define ACPI_DISASSEMBLER
+#endif
+#endif
 
-    ACPI_FUNCTION_TRACE (HwSetMode);
+#ifdef ACPI_DEBUG_CACHE
+#define ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsReleaseObject
+#define AcpiOsReleaseObject(Cache, Object) \
+        _AcpiOsReleaseObject((Cache), (Object), __func__, __LINE__)
+#endif
 
+#ifdef ACPI_DEBUG_LOCKS
+#define ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsAcquireLock
+#define AcpiOsAcquireLock(Handle) \
+        _AcpiOsAcquireLock((Handle), __func__, __LINE__)
+#endif
 
-    /* If the Hardware Reduced flag is set, machine is always in acpi mode */
+#ifdef ACPI_DEBUG_MEMMAP
+#define ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsMapMemory
+#define AcpiOsMapMemory(Where, Length) \
+        _AcpiOsMapMemory((Where), (Length), __func__, __LINE__)
 
-    if (AcpiGbl_ReducedHardware)
-    {
-        return_ACPI_STATUS (AE_OK);
-    }
+#define ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsUnmapMemory
+#define AcpiOsUnmapMemory(LogicalAddress, Size) \
+        _AcpiOsUnmapMemory((LogicalAddress), (Size), __func__, __LINE__)
+#endif
 
-    /*
-     * ACPI 2.0 clarified that if SMI_CMD in FADT is zero,
-     * system does not support mode transition.
-     */
-    if (!AcpiGbl_FADT.SmiCommand)
-    {
-        ACPI_ERROR ((AE_INFO, "No SMI_CMD in FADT, mode transition failed"));
-        return_ACPI_STATUS (AE_NO_HARDWARE_RESPONSE);
-    }
+/* XXX TBI */
+#define ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsWaitEventsComplete
+#define AcpiOsWaitEventsComplete()
 
-    /*
-     * ACPI 2.0 clarified the meaning of ACPI_ENABLE and ACPI_DISABLE
-     * in FADT: If it is zero, enabling or disabling is not supported.
-     * As old systems may have used zero for mode transition,
-     * we make sure both the numbers are zero to determine these
-     * transitions are not supported.
-     */
-    if (!AcpiGbl_FADT.AcpiEnable && !AcpiGbl_FADT.AcpiDisable)
-    {
-        ACPI_ERROR ((AE_INFO,
-            "No ACPI mode transition supported in this system "
-            "(enable/disable both zero)"));
-        return_ACPI_STATUS (AE_OK);
-    }
+#define USE_NATIVE_ALLOCATE_ZEROED
 
-    switch (Mode)
-    {
-    case ACPI_SYS_MODE_ACPI:
+#define ACPI_SPINLOCK   struct acpi_spinlock *
+struct acpi_spinlock;
 
-        /* BIOS should have disabled ALL fixed and GP events */
+#define ACPI_CACHE_T    struct acpicache
+struct acpicache;
 
-        Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
-                        (UINT32) AcpiGbl_FADT.AcpiEnable, 8);
-        ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "Attempting to enable ACPI mode\n"));
-        break;
+#else /* _KERNEL */
 
-    case ACPI_SYS_MODE_LEGACY:
-        /*
-         * BIOS should clear all fixed status bits and restore fixed event
-         * enable bits to default
-         */
-        Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
-                    (UINT32) AcpiGbl_FADT.AcpiDisable, 8);
-        ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-                    "Attempting to enable Legacy (non-ACPI) mode\n"));
-        break;
+#define ACPI_USE_STANDARD_HEADERS
 
-    default:
+#define ACPI_CAST_PTHREAD_T(pthread)    ((ACPI_THREAD_ID) ACPI_TO_INTEGER (pthread))
+#define ACPI_FLUSH_CPU_CACHE()
 
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
-    }
+#endif /* _KERNEL */
 
-    if (ACPI_FAILURE (Status))
-    {
-        ACPI_EXCEPTION ((AE_INFO, Status,
-            "Could not write ACPI mode change"));
-        return_ACPI_STATUS (Status);
-    }
-
-    /*
-     * Some hardware takes a LONG time to switch modes. Give them 3 sec to
-     * do so, but allow faster systems to proceed more quickly.
-     */
-    Retry = 3000;
-    while (Retry)
-    {
-        if (AcpiHwGetMode () == Mode)
-        {
-            ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "Mode %X successfully enabled\n",
-                Mode));
-            return_ACPI_STATUS (AE_OK);
-        }
-        AcpiOsStall (ACPI_USEC_PER_MSEC);
-        Retry--;
-    }
-
-    ACPI_ERROR ((AE_INFO, "Hardware did not change modes"));
-    return_ACPI_STATUS (AE_NO_HARDWARE_RESPONSE);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiHwGetMode
- *
- * PARAMETERS:  none
- *
- * RETURN:      SYS_MODE_ACPI or SYS_MODE_LEGACY
- *
- * DESCRIPTION: Return current operating state of system. Determined by
- *              querying the SCI_EN bit.
- *
- ******************************************************************************/
-
-UINT32
-AcpiHwGetMode (
-    void)
-{
-    ACPI_STATUS             Status;
-    UINT32                  Value;
-
-
-    ACPI_FUNCTION_TRACE (HwGetMode);
-
-
-    /* If the Hardware Reduced flag is set, machine is always in acpi mode */
-
-    if (AcpiGbl_ReducedHardware)
-    {
-        return_UINT32 (ACPI_SYS_MODE_ACPI);
-    }
-
-    /*
-     * ACPI 2.0 clarified that if SMI_CMD in FADT is zero,
-     * system does not support mode transition.
-     */
-    if (!AcpiGbl_FADT.SmiCommand)
-    {
-        return_UINT32 (ACPI_SYS_MODE_ACPI);
-    }
-
-    Status = AcpiReadBitRegister (ACPI_BITREG_SCI_ENABLE, &Value);
-    if (ACPI_FAILURE (Status))
-    {
-        return_UINT32 (ACPI_SYS_MODE_LEGACY);
-    }
-
-    if (Value)
-    {
-        return_UINT32 (ACPI_SYS_MODE_ACPI);
-    }
-    else
-    {
-        return_UINT32 (ACPI_SYS_MODE_LEGACY);
-    }
-}
-
-#endif /* !ACPI_REDUCED_HARDWARE */
+#endif /* __ACDRAGONFLY_H_ */

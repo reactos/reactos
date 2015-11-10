@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -473,7 +473,8 @@ AcpiGetEventStatus (
 
     if (InByte)
     {
-        LocalEventStatus |= ACPI_EVENT_FLAG_ENABLED;
+        LocalEventStatus |=
+            (ACPI_EVENT_FLAG_ENABLED | ACPI_EVENT_FLAG_ENABLE_SET);
     }
 
     /* Fixed event currently active? */
@@ -487,7 +488,7 @@ AcpiGetEventStatus (
 
     if (InByte)
     {
-        LocalEventStatus |= ACPI_EVENT_FLAG_SET;
+        LocalEventStatus |= ACPI_EVENT_FLAG_STATUS_SET;
     }
 
     (*EventStatus) = LocalEventStatus;

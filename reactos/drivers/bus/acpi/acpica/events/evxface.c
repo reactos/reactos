@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -123,6 +123,21 @@
 
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evxface")
+
+#if (!ACPI_REDUCED_HARDWARE)
+
+/* Local prototypes */
+
+static ACPI_STATUS
+AcpiEvInstallGpeHandler (
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber,
+    UINT32                  Type,
+    BOOLEAN                 IsRawHandler,
+    ACPI_GPE_HANDLER        Address,
+    void                    *Context);
+
+#endif
 
 
 /*******************************************************************************
@@ -894,27 +909,31 @@ ACPI_EXPORT_SYMBOL (AcpiRemoveFixedEventHandler)
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiInstallGpeHandler
+ * FUNCTION:    AcpiEvInstallGpeHandler
  *
  * PARAMETERS:  GpeDevice       - Namespace node for the GPE (NULL for FADT
  *                                defined GPEs)
  *              GpeNumber       - The GPE number within the GPE block
  *              Type            - Whether this GPE should be treated as an
  *                                edge- or level-triggered interrupt.
+ *              IsRawHandler    - Whether this GPE should be handled using
+ *                                the special GPE handler mode.
  *              Address         - Address of the handler
  *              Context         - Value passed to the handler on each GPE
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Install a handler for a General Purpose Event.
+ * DESCRIPTION: Internal function to install a handler for a General Purpose
+ *              Event.
  *
  ******************************************************************************/
 
-ACPI_STATUS
-AcpiInstallGpeHandler (
+static ACPI_STATUS
+AcpiEvInstallGpeHandler (
     ACPI_HANDLE             GpeDevice,
     UINT32                  GpeNumber,
     UINT32                  Type,
+    BOOLEAN                 IsRawHandler,
     ACPI_GPE_HANDLER        Address,
     void                    *Context)
 {
@@ -924,7 +943,7 @@ AcpiInstallGpeHandler (
     ACPI_CPU_FLAGS          Flags;
 
 
-    ACPI_FUNCTION_TRACE (AcpiInstallGpeHandler);
+    ACPI_FUNCTION_TRACE (EvInstallGpeHandler);
 
 
     /* Parameter validation */
@@ -962,8 +981,10 @@ AcpiInstallGpeHandler (
 
     /* Make sure that there isn't a handler there already */
 
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
-            ACPI_GPE_DISPATCH_HANDLER)
+    if ((ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+            ACPI_GPE_DISPATCH_HANDLER) ||
+        (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+            ACPI_GPE_DISPATCH_RAW_HANDLER))
     {
         Status = AE_ALREADY_EXISTS;
         goto FreeAndExit;
@@ -980,8 +1001,10 @@ AcpiInstallGpeHandler (
      * automatically during initialization, in which case it has to be
      * disabled now to avoid spurious execution of the handler.
      */
-    if (((Handler->OriginalFlags & ACPI_GPE_DISPATCH_METHOD) ||
-         (Handler->OriginalFlags & ACPI_GPE_DISPATCH_NOTIFY)) &&
+    if (((ACPI_GPE_DISPATCH_TYPE (Handler->OriginalFlags) ==
+            ACPI_GPE_DISPATCH_METHOD) ||
+         (ACPI_GPE_DISPATCH_TYPE (Handler->OriginalFlags) ==
+            ACPI_GPE_DISPATCH_NOTIFY)) &&
         GpeEventInfo->RuntimeCount)
     {
         Handler->OriginallyEnabled = TRUE;
@@ -1002,7 +1025,8 @@ AcpiInstallGpeHandler (
     /* Setup up dispatch flags to indicate handler (vs. method/notify) */
 
     GpeEventInfo->Flags &= ~(ACPI_GPE_XRUPT_TYPE_MASK | ACPI_GPE_DISPATCH_MASK);
-    GpeEventInfo->Flags |= (UINT8) (Type | ACPI_GPE_DISPATCH_HANDLER);
+    GpeEventInfo->Flags |= (UINT8) (Type | (IsRawHandler ?
+        ACPI_GPE_DISPATCH_RAW_HANDLER : ACPI_GPE_DISPATCH_HANDLER));
 
     AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
 
@@ -1017,7 +1041,87 @@ FreeAndExit:
     goto UnlockAndExit;
 }
 
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiInstallGpeHandler
+ *
+ * PARAMETERS:  GpeDevice       - Namespace node for the GPE (NULL for FADT
+ *                                defined GPEs)
+ *              GpeNumber       - The GPE number within the GPE block
+ *              Type            - Whether this GPE should be treated as an
+ *                                edge- or level-triggered interrupt.
+ *              Address         - Address of the handler
+ *              Context         - Value passed to the handler on each GPE
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Install a handler for a General Purpose Event.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiInstallGpeHandler (
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber,
+    UINT32                  Type,
+    ACPI_GPE_HANDLER        Address,
+    void                    *Context)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiInstallGpeHandler);
+
+
+    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type, FALSE,
+                Address, Context);
+
+    return_ACPI_STATUS (Status);
+}
+
 ACPI_EXPORT_SYMBOL (AcpiInstallGpeHandler)
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiInstallGpeRawHandler
+ *
+ * PARAMETERS:  GpeDevice       - Namespace node for the GPE (NULL for FADT
+ *                                defined GPEs)
+ *              GpeNumber       - The GPE number within the GPE block
+ *              Type            - Whether this GPE should be treated as an
+ *                                edge- or level-triggered interrupt.
+ *              Address         - Address of the handler
+ *              Context         - Value passed to the handler on each GPE
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Install a handler for a General Purpose Event.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiInstallGpeRawHandler (
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber,
+    UINT32                  Type,
+    ACPI_GPE_HANDLER        Address,
+    void                    *Context)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiInstallGpeRawHandler);
+
+
+    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type, TRUE,
+                Address, Context);
+
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiInstallGpeRawHandler)
 
 
 /*******************************************************************************
@@ -1076,8 +1180,10 @@ AcpiRemoveGpeHandler (
 
     /* Make sure that a handler is indeed installed */
 
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) !=
-            ACPI_GPE_DISPATCH_HANDLER)
+    if ((ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) !=
+            ACPI_GPE_DISPATCH_HANDLER) &&
+        (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) !=
+            ACPI_GPE_DISPATCH_RAW_HANDLER))
     {
         Status = AE_NOT_EXIST;
         goto UnlockAndExit;
@@ -1094,6 +1200,7 @@ AcpiRemoveGpeHandler (
     /* Remove the handler */
 
     Handler = GpeEventInfo->Dispatch.Handler;
+    GpeEventInfo->Dispatch.Handler = NULL;
 
     /* Restore Method node (if any), set dispatch flags */
 
@@ -1107,8 +1214,10 @@ AcpiRemoveGpeHandler (
      * enabled, it should be enabled at this point to restore the
      * post-initialization configuration.
      */
-    if (((Handler->OriginalFlags & ACPI_GPE_DISPATCH_METHOD) ||
-         (Handler->OriginalFlags & ACPI_GPE_DISPATCH_NOTIFY)) &&
+    if (((ACPI_GPE_DISPATCH_TYPE (Handler->OriginalFlags) ==
+            ACPI_GPE_DISPATCH_METHOD) ||
+         (ACPI_GPE_DISPATCH_TYPE (Handler->OriginalFlags) ==
+            ACPI_GPE_DISPATCH_NOTIFY)) &&
         Handler->OriginallyEnabled)
     {
         (void) AcpiEvAddGpeReference (GpeEventInfo);

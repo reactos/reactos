@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -118,44 +118,6 @@
 
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utstate")
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiUtCreatePkgStateAndPush
- *
- * PARAMETERS:  Object          - Object to be added to the new state
- *              Action          - Increment/Decrement
- *              StateList       - List the state will be added to
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Create a new state and push it
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiUtCreatePkgStateAndPush (
-    void                    *InternalObject,
-    void                    *ExternalObject,
-    UINT16                  Index,
-    ACPI_GENERIC_STATE      **StateList)
-{
-    ACPI_GENERIC_STATE       *State;
-
-
-    ACPI_FUNCTION_ENTRY ();
-
-
-    State = AcpiUtCreatePkgState (InternalObject, ExternalObject, Index);
-    if (!State)
-    {
-        return (AE_NO_MEMORY);
-    }
-
-    AcpiUtPushGenericState (StateList, State);
-    return (AE_OK);
-}
 
 
 /*******************************************************************************

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -514,11 +514,11 @@ AcpiUtVsnprintf (
     const char              *Format,
     va_list                 Args)
 {
-    UINT8                   Base = 10;
-    UINT8                   Type = 0;
-    INT32                   Width = -1;
-    INT32                   Precision = -1;
-    char                    Qualifier = 0;
+    UINT8                   Base;
+    UINT8                   Type;
+    INT32                   Width;
+    INT32                   Precision;
+    char                    Qualifier;
     UINT64                  Number;
     char                    *Pos;
     char                    *End;
@@ -539,6 +539,9 @@ AcpiUtVsnprintf (
             Pos = AcpiUtBoundStringOutput (Pos, End, *Format);
             continue;
         }
+
+        Type = 0;
+        Base = 10;
 
         /* Process sign */
 

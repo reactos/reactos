@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -182,60 +182,6 @@ AcpiEvWalkGpeList (
 UnlockAndExit:
     AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
     return_ACPI_STATUS (Status);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiEvValidGpeEvent
- *
- * PARAMETERS:  GpeEventInfo                - Info for this GPE
- *
- * RETURN:      TRUE if the GpeEvent is valid
- *
- * DESCRIPTION: Validate a GPE event. DO NOT CALL FROM INTERRUPT LEVEL.
- *              Should be called only when the GPE lists are semaphore locked
- *              and not subject to change.
- *
- ******************************************************************************/
-
-BOOLEAN
-AcpiEvValidGpeEvent (
-    ACPI_GPE_EVENT_INFO     *GpeEventInfo)
-{
-    ACPI_GPE_XRUPT_INFO     *GpeXruptBlock;
-    ACPI_GPE_BLOCK_INFO     *GpeBlock;
-
-
-    ACPI_FUNCTION_ENTRY ();
-
-
-    /* No need for spin lock since we are not changing any list elements */
-
-    /* Walk the GPE interrupt levels */
-
-    GpeXruptBlock = AcpiGbl_GpeXruptListHead;
-    while (GpeXruptBlock)
-    {
-        GpeBlock = GpeXruptBlock->GpeBlockListHead;
-
-        /* Walk the GPE blocks on this interrupt level */
-
-        while (GpeBlock)
-        {
-            if ((&GpeBlock->EventInfo[0] <= GpeEventInfo) &&
-                (&GpeBlock->EventInfo[GpeBlock->GpeCount] > GpeEventInfo))
-            {
-                return (TRUE);
-            }
-
-            GpeBlock = GpeBlock->Next;
-        }
-
-        GpeXruptBlock = GpeXruptBlock->Next;
-    }
-
-    return (FALSE);
 }
 
 
@@ -488,8 +434,10 @@ AcpiEvDeleteGpeHandlers (
             GpeEventInfo = &GpeBlock->EventInfo[((ACPI_SIZE) i *
                 ACPI_GPE_REGISTER_WIDTH) + j];
 
-            if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
-                    ACPI_GPE_DISPATCH_HANDLER)
+            if ((ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+                    ACPI_GPE_DISPATCH_HANDLER) ||
+                (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+                    ACPI_GPE_DISPATCH_RAW_HANDLER))
             {
                 /* Delete an installed handler block */
 
@@ -497,7 +445,7 @@ AcpiEvDeleteGpeHandlers (
                 GpeEventInfo->Dispatch.Handler = NULL;
                 GpeEventInfo->Flags &= ~ACPI_GPE_DISPATCH_MASK;
             }
-            else if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
+            else if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
                     ACPI_GPE_DISPATCH_NOTIFY)
             {
                 /* Delete the implicit notification device list */

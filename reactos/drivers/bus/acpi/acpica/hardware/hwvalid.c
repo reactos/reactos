@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -227,8 +227,8 @@ AcpiHwValidateIoRequest (
     ByteWidth = ACPI_DIV_8 (BitWidth);
     LastAddress = Address + ByteWidth - 1;
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_IO, "Address %p LastAddress %p Length %X",
-        ACPI_CAST_PTR (void, Address), ACPI_CAST_PTR (void, LastAddress),
+    ACPI_DEBUG_PRINT ((ACPI_DB_IO, "Address %8.8X%8.8X LastAddress %8.8X%8.8X Length %X",
+        ACPI_FORMAT_UINT64 (Address), ACPI_FORMAT_UINT64 (LastAddress),
         ByteWidth));
 
     /* Maximum 16-bit address in I/O space */
@@ -236,8 +236,8 @@ AcpiHwValidateIoRequest (
     if (LastAddress > ACPI_UINT16_MAX)
     {
         ACPI_ERROR ((AE_INFO,
-            "Illegal I/O port address/length above 64K: %p/0x%X",
-            ACPI_CAST_PTR (void, Address), ByteWidth));
+            "Illegal I/O port address/length above 64K: %8.8X%8.8X/0x%X",
+            ACPI_FORMAT_UINT64 (Address), ByteWidth));
         return_ACPI_STATUS (AE_LIMIT);
     }
 
@@ -268,8 +268,8 @@ AcpiHwValidateIoRequest (
             if (AcpiGbl_OsiData >= PortInfo->OsiDependency)
             {
                 ACPI_DEBUG_PRINT ((ACPI_DB_IO,
-                    "Denied AML access to port 0x%p/%X (%s 0x%.4X-0x%.4X)",
-                    ACPI_CAST_PTR (void, Address), ByteWidth, PortInfo->Name,
+                    "Denied AML access to port 0x%8.8X%8.8X/%X (%s 0x%.4X-0x%.4X)",
+                    ACPI_FORMAT_UINT64 (Address), ByteWidth, PortInfo->Name,
                     PortInfo->Start, PortInfo->End));
 
                 return_ACPI_STATUS (AE_AML_ILLEGAL_ADDRESS);

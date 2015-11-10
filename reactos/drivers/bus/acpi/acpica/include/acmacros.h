@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -136,22 +136,11 @@
 #define ACPI_SET64(ptr, val)            (*ACPI_CAST64 (ptr) = (UINT64) (val))
 
 /*
- * printf() format helpers. These macros are workarounds for the difficulties
+ * printf() format helper. This macros is a workaround for the difficulties
  * with emitting 64-bit integers and 64-bit pointers with the same code
  * for both 32-bit and 64-bit hosts.
  */
 #define ACPI_FORMAT_UINT64(i)           ACPI_HIDWORD(i), ACPI_LODWORD(i)
-
-#if ACPI_MACHINE_WIDTH == 64
-#define ACPI_FORMAT_NATIVE_UINT(i)      ACPI_FORMAT_UINT64(i)
-#define ACPI_FORMAT_TO_UINT(i)          ACPI_FORMAT_UINT64(i)
-#define ACPI_PRINTF_UINT                 "0x%8.8X%8.8X"
-
-#else
-#define ACPI_FORMAT_NATIVE_UINT(i)      0, (UINT32) (i)
-#define ACPI_FORMAT_TO_UINT(i)          (UINT32) (i)
-#define ACPI_PRINTF_UINT                 "0x%8.8X"
-#endif
 
 
 /*

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -120,6 +120,10 @@
 
 #include "acgcc.h"
 
+#define ACPI_UINTPTR_T          uintptr_t
+#define ACPI_USE_LOCAL_CACHE
+#define ACPI_CAST_PTHREAD_T(x)  ((ACPI_THREAD_ID) ACPI_TO_INTEGER (x))
+
 #ifdef _LP64
 #define ACPI_MACHINE_WIDTH      64
 #else
@@ -129,8 +133,10 @@
 #define COMPILER_DEPENDENT_INT64  int64_t
 #define COMPILER_DEPENDENT_UINT64 uint64_t
 
-#ifdef _KERNEL
+#if defined(_KERNEL) || defined(_STANDALONE)
+#ifdef _KERNEL_OPT
 #include "opt_acpi.h"           /* collect build-time options here */
+#endif /* _KERNEL_OPT */
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -160,26 +166,19 @@
 #endif /* DDB */
 #endif /* ACPI_DEBUG */
 
-static __inline int
-isprint(int ch)
-{
-        return(isspace(ch) || isascii(ch));
-}
-
-#else /* _KERNEL */
+#else /* defined(_KERNEL) || defined(_STANDALONE) */
 
 #include <ctype.h>
+#include <stdint.h>
 
 /* Not building kernel code, so use libc */
 #define ACPI_USE_STANDARD_HEADERS
 
 #define __cli()
 #define __sti()
+#define __cdecl
 
-/* XXX */
-#define __inline inline
-
-#endif /* _KERNEL */
+#endif /* defined(_KERNEL) || defined(_STANDALONE) */
 
 /* Always use NetBSD code over our local versions */
 #define ACPI_USE_SYSTEM_CLIBRARY

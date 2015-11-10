@@ -10,7 +10,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -137,6 +137,7 @@
 #define AML_PACKAGE_OP              (UINT16) 0x12
 #define AML_VAR_PACKAGE_OP          (UINT16) 0x13     /* ACPI 2.0 */
 #define AML_METHOD_OP               (UINT16) 0x14
+#define AML_EXTERNAL_OP             (UINT16) 0x15     /* ACPI 6.0 */
 #define AML_DUAL_NAME_PREFIX        (UINT16) 0x2e
 #define AML_MULTI_NAME_PREFIX_OP    (UINT16) 0x2f
 #define AML_NAME_CHAR_SUBSEQ        (UINT16) 0x30
@@ -281,7 +282,6 @@
 #define AML_INT_RESERVEDFIELD_OP    (UINT16) 0x0031
 #define AML_INT_ACCESSFIELD_OP      (UINT16) 0x0032
 #define AML_INT_BYTELIST_OP         (UINT16) 0x0033
-#define AML_INT_STATICSTRING_OP     (UINT16) 0x0034
 #define AML_INT_METHODCALL_OP       (UINT16) 0x0035
 #define AML_INT_RETURN_VALUE_OP     (UINT16) 0x0036
 #define AML_INT_EVAL_SUBTREE_OP     (UINT16) 0x0037

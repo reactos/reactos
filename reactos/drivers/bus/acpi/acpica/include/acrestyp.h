@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -417,6 +417,36 @@ typedef struct acpi_resource_source
     UINT8                           MaxAddressFixed; \
     ACPI_RESOURCE_ATTRIBUTE         Info;
 
+typedef struct acpi_address16_attribute
+{
+    UINT16                          Granularity;
+    UINT16                          Minimum;
+    UINT16                          Maximum;
+    UINT16                          TranslationOffset;
+    UINT16                          AddressLength;
+
+} ACPI_ADDRESS16_ATTRIBUTE;
+
+typedef struct acpi_address32_attribute
+{
+    UINT32                          Granularity;
+    UINT32                          Minimum;
+    UINT32                          Maximum;
+    UINT32                          TranslationOffset;
+    UINT32                          AddressLength;
+
+} ACPI_ADDRESS32_ATTRIBUTE;
+
+typedef struct acpi_address64_attribute
+{
+    UINT64                          Granularity;
+    UINT64                          Minimum;
+    UINT64                          Maximum;
+    UINT64                          TranslationOffset;
+    UINT64                          AddressLength;
+
+} ACPI_ADDRESS64_ATTRIBUTE;
+
 typedef struct acpi_resource_address
 {
     ACPI_RESOURCE_ADDRESS_COMMON
@@ -426,11 +456,7 @@ typedef struct acpi_resource_address
 typedef struct acpi_resource_address16
 {
     ACPI_RESOURCE_ADDRESS_COMMON
-    UINT16                          Granularity;
-    UINT16                          Minimum;
-    UINT16                          Maximum;
-    UINT16                          TranslationOffset;
-    UINT16                          AddressLength;
+    ACPI_ADDRESS16_ATTRIBUTE        Address;
     ACPI_RESOURCE_SOURCE            ResourceSource;
 
 } ACPI_RESOURCE_ADDRESS16;
@@ -438,11 +464,7 @@ typedef struct acpi_resource_address16
 typedef struct acpi_resource_address32
 {
     ACPI_RESOURCE_ADDRESS_COMMON
-    UINT32                          Granularity;
-    UINT32                          Minimum;
-    UINT32                          Maximum;
-    UINT32                          TranslationOffset;
-    UINT32                          AddressLength;
+    ACPI_ADDRESS32_ATTRIBUTE        Address;
     ACPI_RESOURCE_SOURCE            ResourceSource;
 
 } ACPI_RESOURCE_ADDRESS32;
@@ -450,11 +472,7 @@ typedef struct acpi_resource_address32
 typedef struct acpi_resource_address64
 {
     ACPI_RESOURCE_ADDRESS_COMMON
-    UINT64                          Granularity;
-    UINT64                          Minimum;
-    UINT64                          Maximum;
-    UINT64                          TranslationOffset;
-    UINT64                          AddressLength;
+    ACPI_ADDRESS64_ATTRIBUTE        Address;
     ACPI_RESOURCE_SOURCE            ResourceSource;
 
 } ACPI_RESOURCE_ADDRESS64;
@@ -463,11 +481,7 @@ typedef struct acpi_resource_extended_address64
 {
     ACPI_RESOURCE_ADDRESS_COMMON
     UINT8                           RevisionID;
-    UINT64                          Granularity;
-    UINT64                          Minimum;
-    UINT64                          Maximum;
-    UINT64                          TranslationOffset;
-    UINT64                          AddressLength;
+    ACPI_ADDRESS64_ATTRIBUTE        Address;
     UINT64                          TypeSpecific;
 
 } ACPI_RESOURCE_EXTENDED_ADDRESS64;

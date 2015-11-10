@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -147,6 +147,7 @@
 #define ACPI_SIG_LPIT           "LPIT"      /* Low Power Idle Table */
 #define ACPI_SIG_MCFG           "MCFG"      /* PCI Memory Mapped Configuration table */
 #define ACPI_SIG_MCHI           "MCHI"      /* Management Controller Host Interface table */
+#define ACPI_SIG_MSDM           "MSDM"      /* Microsoft Data Management Table */
 #define ACPI_SIG_MTMR           "MTMR"      /* MID Timer table */
 #define ACPI_SIG_SLIC           "SLIC"      /* Software Licensing Description Table */
 #define ACPI_SIG_SPCR           "SPCR"      /* Serial Port Console Redirection table */
@@ -1051,7 +1052,8 @@ typedef struct acpi_lpit_header
 enum AcpiLpitType
 {
     ACPI_LPIT_TYPE_NATIVE_CSTATE    = 0x00,
-    ACPI_LPIT_TYPE_SIMPLE_IO        = 0x01
+    ACPI_LPIT_TYPE_SIMPLE_IO        = 0x01,
+    ACPI_LPIT_TYPE_RESERVED         = 0x02      /* 2 and above are reserved */
 };
 
 /* Masks for Flags field above  */
@@ -1156,6 +1158,24 @@ typedef struct acpi_table_mchi
 
 /*******************************************************************************
  *
+ * MSDM - Microsoft Data Management table
+ *
+ * Conforms to "Microsoft Software Licensing Tables (SLIC and MSDM)",
+ * November 29, 2011. Copyright 2011 Microsoft
+ *
+ ******************************************************************************/
+
+/* Basic MSDM table is only the common ACPI header */
+
+typedef struct acpi_table_msdm
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_MSDM;
+
+
+/*******************************************************************************
+ *
  * MTMR - MID Timer Table
  *        Version 1
  *
@@ -1185,10 +1205,9 @@ typedef struct acpi_mtmr_entry
 /*******************************************************************************
  *
  * SLIC - Software Licensing Description Table
- *        Version 1
  *
- * Conforms to "OEM Activation 2.0 for Windows Vista Operating Systems",
- * Copyright 2006
+ * Conforms to "Microsoft Software Licensing Tables (SLIC and MSDM)",
+ * November 29, 2011. Copyright 2011 Microsoft
  *
  ******************************************************************************/
 
@@ -1199,62 +1218,6 @@ typedef struct acpi_table_slic
     ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
 
 } ACPI_TABLE_SLIC;
-
-
-/* Common SLIC subtable header */
-
-typedef struct acpi_slic_header
-{
-    UINT32                  Type;
-    UINT32                  Length;
-
-} ACPI_SLIC_HEADER;
-
-/* Values for Type field above */
-
-enum AcpiSlicType
-{
-    ACPI_SLIC_TYPE_PUBLIC_KEY           = 0,
-    ACPI_SLIC_TYPE_WINDOWS_MARKER       = 1,
-    ACPI_SLIC_TYPE_RESERVED             = 2    /* 2 and greater are reserved */
-};
-
-
-/*
- * SLIC Subtables, correspond to Type in ACPI_SLIC_HEADER
- */
-
-/* 0: Public Key Structure */
-
-typedef struct acpi_slic_key
-{
-    ACPI_SLIC_HEADER        Header;
-    UINT8                   KeyType;
-    UINT8                   Version;
-    UINT16                  Reserved;
-    UINT32                  Algorithm;
-    char                    Magic[4];
-    UINT32                  BitLength;
-    UINT32                  Exponent;
-    UINT8                   Modulus[128];
-
-} ACPI_SLIC_KEY;
-
-
-/* 1: Windows Marker Structure */
-
-typedef struct acpi_slic_marker
-{
-    ACPI_SLIC_HEADER        Header;
-    UINT32                  Version;
-    char                    OemId[ACPI_OEM_ID_SIZE];            /* ASCII OEM identification */
-    char                    OemTableId[ACPI_OEM_TABLE_ID_SIZE]; /* ASCII OEM table identification */
-    char                    WindowsFlag[8];
-    UINT32                  SlicVersion;
-    UINT8                   Reserved[16];
-    UINT8                   Signature[128];
-
-} ACPI_SLIC_MARKER;
 
 
 /*******************************************************************************

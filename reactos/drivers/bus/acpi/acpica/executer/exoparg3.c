@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -198,7 +198,18 @@ AcpiExOpcode_3A_0T_0R (
         /* Might return while OS is shutting down, just continue */
 
         ACPI_FREE (Fatal);
-        break;
+        goto Cleanup;
+
+    case AML_EXTERNAL_OP:
+        /*
+         * If the interpreter sees this opcode, just ignore it. The External
+         * op is intended for use by disassemblers in order to properly
+         * disassemble control method invocations. The opcode or group of
+         * opcodes should be surrounded by an "if (0)" clause to ensure that
+         * AML interpreters never see the opcode.
+         */
+        Status = AE_OK;
+        goto Cleanup;
 
     default:
 

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -133,11 +133,11 @@
     ACPI_COPY_FIELD(Out, In, MinAddressFixed);           \
     ACPI_COPY_FIELD(Out, In, MaxAddressFixed);           \
     ACPI_COPY_FIELD(Out, In, Info);                      \
-    ACPI_COPY_FIELD(Out, In, Granularity);               \
-    ACPI_COPY_FIELD(Out, In, Minimum);                   \
-    ACPI_COPY_FIELD(Out, In, Maximum);                   \
-    ACPI_COPY_FIELD(Out, In, TranslationOffset);         \
-    ACPI_COPY_FIELD(Out, In, AddressLength);             \
+    ACPI_COPY_FIELD(Out, In, Address.Granularity);       \
+    ACPI_COPY_FIELD(Out, In, Address.Minimum);           \
+    ACPI_COPY_FIELD(Out, In, Address.Maximum);           \
+    ACPI_COPY_FIELD(Out, In, Address.TranslationOffset); \
+    ACPI_COPY_FIELD(Out, In, Address.AddressLength);     \
     ACPI_COPY_FIELD(Out, In, ResourceSource);
 
 

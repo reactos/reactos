@@ -710,15 +710,15 @@ AcpiOsReadPort (
     switch (Width)
     {
     case 8:
-        *Value = READ_PORT_UCHAR((PUCHAR)Address);
+        *Value = READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)Address);
         break;
 
     case 16:
-        *Value = READ_PORT_USHORT((PUSHORT)Address);
+        *Value = READ_PORT_USHORT((PUSHORT)(ULONG_PTR)Address);
         break;
 
     case 32:
-        *Value = READ_PORT_ULONG((PULONG)Address);
+        *Value = READ_PORT_ULONG((PULONG)(ULONG_PTR)Address);
         break;
 
     default:
@@ -739,15 +739,15 @@ AcpiOsWritePort (
     switch (Width)
     {
     case 8:
-        WRITE_PORT_UCHAR((PUCHAR)Address, Value);
+        WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)Address, Value);
         break;
 
     case 16:
-        WRITE_PORT_USHORT((PUSHORT)Address, Value);
+        WRITE_PORT_USHORT((PUSHORT)(ULONG_PTR)Address, Value);
         break;
 
     case 32:
-        WRITE_PORT_ULONG((PULONG)Address, Value);
+        WRITE_PORT_ULONG((PULONG)(ULONG_PTR)Address, Value);
         break;
 
     default:

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -219,7 +219,7 @@ AcpiEnableGpe (
     GpeEventInfo = AcpiEvGetGpeEventInfo (GpeDevice, GpeNumber);
     if (GpeEventInfo)
     {
-        if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) !=
+        if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) !=
             ACPI_GPE_DISPATCH_NONE)
         {
             Status = AcpiEvAddGpeReference (GpeEventInfo);
@@ -293,12 +293,21 @@ ACPI_EXPORT_SYMBOL (AcpiDisableGpe)
  * RETURN:      Status
  *
  * DESCRIPTION: Enable or disable an individual GPE. This function bypasses
- *              the reference count mechanism used in the AcpiEnableGpe and
- *              AcpiDisableGpe interfaces -- and should be used with care.
+ *              the reference count mechanism used in the AcpiEnableGpe(),
+ *              AcpiDisableGpe() interfaces.
+ *              This API is typically used by the GPE raw handler mode driver
+ *              to switch between the polling mode and the interrupt mode after
+ *              the driver has enabled the GPE.
+ *              The APIs should be invoked in this order:
+ *               AcpiEnableGpe()              <- Ensure the reference count > 0
+ *               AcpiSetGpe(ACPI_GPE_DISABLE) <- Enter polling mode
+ *               AcpiSetGpe(ACPI_GPE_ENABLE)  <- Leave polling mode
+ *               AcpiDisableGpe()             <- Decrease the reference count
  *
- * Note: Typically used to disable a runtime GPE for short period of time,
- * then re-enable it, without disturbing the existing reference counts. This
- * is useful, for example, in the Embedded Controller (EC) driver.
+ * Note: If a GPE is shared by 2 silicon components, then both the drivers
+ *       should support GPE polling mode or disabling the GPE for long period
+ *       for one driver may break the other. So use it with care since all
+ *       firmware _Lxx/_Exx handlers currently rely on the GPE interrupt mode.
  *
  ******************************************************************************/
 
@@ -333,7 +342,7 @@ AcpiSetGpe (
     {
     case ACPI_GPE_ENABLE:
 
-        Status = AcpiEvEnableGpe (GpeEventInfo);
+        Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_ENABLE);
         break;
 
     case ACPI_GPE_DISABLE:
@@ -502,7 +511,7 @@ AcpiSetupGpeForWake (
      * known as an "implicit notify". Note: The GPE is assumed to be
      * level-triggered (for windows compatibility).
      */
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
+    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
             ACPI_GPE_DISPATCH_NONE)
     {
         /*
@@ -517,7 +526,7 @@ AcpiSetupGpeForWake (
      * If we already have an implicit notify on this GPE, add
      * this device to the notify list.
      */
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
+    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
             ACPI_GPE_DISPATCH_NOTIFY)
     {
         /* Ensure that the device is not already in the list */
@@ -872,6 +881,44 @@ AcpiEnableAllRuntimeGpes (
 }
 
 ACPI_EXPORT_SYMBOL (AcpiEnableAllRuntimeGpes)
+
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiEnableAllWakeupGpes
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Enable all "wakeup" GPEs and disable all of the other GPEs, in
+ *              all GPE blocks.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiEnableAllWakeupGpes (
+    void)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiEnableAllWakeupGpes);
+
+
+    Status = AcpiUtAcquireMutex (ACPI_MTX_EVENTS);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiHwEnableAllWakeupGpes ();
+    (void) AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
+
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiEnableAllWakeupGpes)
 
 
 /*******************************************************************************
