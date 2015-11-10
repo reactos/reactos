@@ -1,16 +1,3 @@
-Index: base/system/smss/smsubsys.c
-===================================================================
---- base/system/smss/smsubsys.c	(revision 69795)
-+++ base/system/smss/smsubsys.c	(working copy)
-@@ -10,7 +10,7 @@
- 
- #include "smss.h"
- 
--#define NDEBUG
-+//#define NDEBUG
- #include <debug.h>
- 
- /* GLOBALS ********************************************************************/
 Index: base/system/winlogon/winlogon.c
 ===================================================================
 --- base/system/winlogon/winlogon.c	(revision 69795)
@@ -113,6 +100,15 @@ Index: dll/win32/msgina/gui.c
  
      if(!SetThreadDesktop(hDesk))
      {
+@@ -118,6 +122,8 @@
+ 
+     TRACE("GUIDisplayStatusMessage(%ws)\n", pMessage);
+ 
++	ERR("ARWINSS BIG BUG #1\n");
++return TRUE; // ARWINSS 1st bug
+     if (!pgContext->hStatusWindow)
+     {
+         /*
 Index: include/asm/syscalls.inc
 ===================================================================
 --- include/asm/syscalls.inc	(revision 69795)
@@ -502,12 +498,7 @@ Index: win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
      if (!NT_SUCCESS(Status)) goto Quit;
  
      /* Connect this CSR thread to the USER subsystem */
-@@ -295,13 +300,17 @@
- 
- Quit:
-     DPRINT("CONSRV: Quit the Input Thread 0x%p, Status = 0x%08lx\n", InputThreadId, Status);
--
-+    
+@@ -299,9 +304,13 @@
      /* Remove this console input thread from this desktop */
      // DesktopConsoleThreadInfo.DesktopHandle;
      DesktopConsoleThreadInfo.ThreadId = 0;
@@ -543,30 +534,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
 ===================================================================
 --- win32ss/user/winsrv/usersrv/init.c	(revision 69795)
 +++ win32ss/user/winsrv/usersrv/init.c	(working copy)
-@@ -101,8 +101,22 @@
- NTAPI
- CreateSystemThreads(PVOID pParam)
- {
-+#ifndef _ARWINSS_
-     NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
-     RtlExitUserThread(0);
-+#else
-+    DWORD WaitRes;
-+    HANDLE hDummyEvent;
-+
-+    hDummyEvent = CreateEventW(0, FALSE, FALSE, L"");
-+
-+    while (TRUE)
-+    {
-+        WaitRes = WaitForSingleObject(hDummyEvent, INFINITE);
-+    }
-+    DPRINT1("WaitRes: 0x%x\n", WaitRes);
-+#endif
-+    DPRINT1("This thread should not terminate!\n");
-     return 0;
- }
- 
-@@ -173,6 +187,7 @@
+@@ -173,6 +173,7 @@
          CsrApiPort = CsrQueryApiPort();
  
          /* Inform win32k about the API port */
@@ -574,7 +542,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
          Status = NtUserSetInformationThread(NtCurrentThread(),
                                              UserThreadCsrApiPort,
                                              &CsrApiPort,
-@@ -181,6 +196,9 @@
+@@ -181,6 +182,9 @@
          {
              return Status;
          }
@@ -584,7 +552,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
      }
  
      /* Check connection info validity */
-@@ -199,9 +217,14 @@
+@@ -199,9 +203,14 @@
  
      /* Pass the request to win32k */
      ConnectInfo->dwDispatchCount = 0; // gDispatchTableValues;
@@ -599,7 +567,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
  
      return Status;
  }
-@@ -254,7 +277,11 @@
+@@ -254,7 +263,11 @@
      }
  
      /* Set the process creation notify routine for BASE */
