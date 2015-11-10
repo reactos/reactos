@@ -145,12 +145,13 @@ static ACPI_STATUS
 AcpiPsGetAmlOpcode (
     ACPI_WALK_STATE         *WalkState)
 {
+    UINT32                  AmlOffset;
+
 
     ACPI_FUNCTION_TRACE_PTR (PsGetAmlOpcode, WalkState);
 
 
-    WalkState->AmlOffset = (UINT32) ACPI_PTR_DIFF (WalkState->ParserState.Aml,
-                                WalkState->ParserState.AmlStart);
+    WalkState->Aml = WalkState->ParserState.Aml;
     WalkState->Opcode = AcpiPsPeekOpcode (&(WalkState->ParserState));
 
     /*
@@ -179,10 +180,13 @@ AcpiPsGetAmlOpcode (
 
         if (WalkState->PassNumber == 2)
         {
+            AmlOffset = (UINT32) ACPI_PTR_DIFF (WalkState->Aml,
+                            WalkState->ParserState.AmlStart);
+
             ACPI_ERROR ((AE_INFO,
                 "Unknown opcode 0x%.2X at table offset 0x%.4X, ignoring",
                 WalkState->Opcode,
-                (UINT32) (WalkState->AmlOffset + sizeof (ACPI_TABLE_HEADER))));
+                (UINT32) (AmlOffset + sizeof (ACPI_TABLE_HEADER))));
 
             ACPI_DUMP_BUFFER ((WalkState->ParserState.Aml - 16), 48);
 
@@ -194,13 +198,13 @@ AcpiPsGetAmlOpcode (
             AcpiOsPrintf (
                 "/*\nError: Unknown opcode 0x%.2X at table offset 0x%.4X, context:\n",
                 WalkState->Opcode,
-                (UINT32) (WalkState->AmlOffset + sizeof (ACPI_TABLE_HEADER)));
+                (UINT32) (AmlOffset + sizeof (ACPI_TABLE_HEADER)));
 
             /* Dump the context surrounding the invalid opcode */
 
             AcpiUtDumpBuffer (((UINT8 *) WalkState->ParserState.Aml - 16),
                 48, DB_BYTE_DISPLAY,
-                (WalkState->AmlOffset + sizeof (ACPI_TABLE_HEADER) - 16));
+                (AmlOffset + sizeof (ACPI_TABLE_HEADER) - 16));
             AcpiOsPrintf (" */\n");
 #endif
         }
@@ -385,7 +389,7 @@ AcpiPsCreateOp (
     /* Create Op structure and append to parent's argument list */
 
     WalkState->OpInfo = AcpiPsGetOpcodeInfo (WalkState->Opcode);
-    Op = AcpiPsAllocOp (WalkState->Opcode);
+    Op = AcpiPsAllocOp (WalkState->Opcode, AmlOpStart);
     if (!Op)
     {
         return_ACPI_STATUS (AE_NO_MEMORY);

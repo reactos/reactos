@@ -212,7 +212,7 @@ AcpiHwDerivePciId (
     ACPI_HANDLE             PciRegion)
 {
     ACPI_STATUS             Status;
-    ACPI_PCI_DEVICE         *ListHead = NULL;
+    ACPI_PCI_DEVICE         *ListHead;
 
 
     ACPI_FUNCTION_TRACE (HwDerivePciId);
@@ -270,7 +270,6 @@ AcpiHwBuildPciList (
     ACPI_HANDLE             ParentDevice;
     ACPI_STATUS             Status;
     ACPI_PCI_DEVICE         *ListElement;
-    ACPI_PCI_DEVICE         *ListHead = NULL;
 
 
     /*
@@ -278,6 +277,7 @@ AcpiHwBuildPciList (
      * a list of device nodes. Loop will exit when either the PCI device is
      * found, or the root of the namespace is reached.
      */
+    *ReturnListHead = NULL;
     CurrentDevice = PciRegion;
     while (1)
     {
@@ -294,7 +294,6 @@ AcpiHwBuildPciList (
 
         if (ParentDevice == RootPciDevice)
         {
-            *ReturnListHead = ListHead;
             return (AE_OK);
         }
 
@@ -309,9 +308,9 @@ AcpiHwBuildPciList (
 
         /* Put new element at the head of the list */
 
-        ListElement->Next = ListHead;
+        ListElement->Next = *ReturnListHead;
         ListElement->Device = ParentDevice;
-        ListHead = ListElement;
+        *ReturnListHead = ListElement;
 
         CurrentDevice = ParentDevice;
     }

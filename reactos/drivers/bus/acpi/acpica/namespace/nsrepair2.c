@@ -709,7 +709,7 @@ AcpiNsRepair_HID (
      */
     for (Dest = NewString->String.Pointer; *Source; Dest++, Source++)
     {
-        *Dest = (char) ACPI_TOUPPER (*Source);
+        *Dest = (char) toupper ((int) *Source);
     }
 
     AcpiUtRemoveReference (ReturnObject);

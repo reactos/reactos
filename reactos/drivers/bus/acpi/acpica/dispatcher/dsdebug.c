@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Name: actables.h - ACPI table management
+ * Module Name: dsdebug - Parser/Interpreter interface - debugging
  *
  *****************************************************************************/
 
@@ -113,225 +113,209 @@
  *
  *****************************************************************************/
 
-#ifndef __ACTABLES_H__
-#define __ACTABLES_H__
+#include "acpi.h"
+#include "accommon.h"
+#include "acdispat.h"
+#include "acnamesp.h"
+#include "acdisasm.h"
+#include "acinterp.h"
 
 
-ACPI_STATUS
-AcpiAllocateRootTable (
-    UINT32                  InitialTableCount);
-
-/*
- * tbxfroot - Root pointer utilities
- */
-UINT32
-AcpiTbGetRsdpLength (
-    ACPI_TABLE_RSDP         *Rsdp);
-
-ACPI_STATUS
-AcpiTbValidateRsdp (
-    ACPI_TABLE_RSDP         *Rsdp);
-
-UINT8 *
-AcpiTbScanMemoryForRsdp (
-    UINT8                   *StartAddress,
-    UINT32                  Length);
+#define _COMPONENT          ACPI_DISPATCHER
+        ACPI_MODULE_NAME    ("dsdebug")
 
 
-/*
- * tbdata - table data structure management
- */
-ACPI_STATUS
-AcpiTbGetNextTableDescriptor (
-    UINT32                  *TableIndex,
-    ACPI_TABLE_DESC         **TableDesc);
+#if defined(ACPI_DEBUG_OUTPUT) || defined(ACPI_DEBUGGER)
 
-void
-AcpiTbInitTableDescriptor (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags,
-    ACPI_TABLE_HEADER       *Table);
+/* Local prototypes */
 
-ACPI_STATUS
-AcpiTbAcquireTempTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags);
-
-void
-AcpiTbReleaseTempTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-ACPI_STATUS
-AcpiTbValidateTempTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-ACPI_STATUS
-AcpiTbVerifyTempTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    char                    *Signature);
-
-BOOLEAN
-AcpiTbIsTableLoaded (
-    UINT32                  TableIndex);
-
-void
-AcpiTbSetTableLoadedFlag (
-    UINT32                  TableIndex,
-    BOOLEAN                 IsLoaded);
+static void
+AcpiDsPrintNodePathname (
+    ACPI_NAMESPACE_NODE     *Node,
+    const char              *Message);
 
 
-/*
- * tbfadt - FADT parse/convert/validate
- */
-void
-AcpiTbParseFadt (
-    UINT32                  TableIndex);
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiDsPrintNodePathname
+ *
+ * PARAMETERS:  Node            - Object
+ *              Message         - Prefix message
+ *
+ * DESCRIPTION: Print an object's full namespace pathname
+ *              Manages allocation/freeing of a pathname buffer
+ *
+ ******************************************************************************/
 
-void
-AcpiTbCreateLocalFadt (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length);
-
-
-/*
- * tbfind - find ACPI table
- */
-ACPI_STATUS
-AcpiTbFindTable (
-    char                    *Signature,
-    char                    *OemId,
-    char                    *OemTableId,
-    UINT32                  *TableIndex);
+static void
+AcpiDsPrintNodePathname (
+    ACPI_NAMESPACE_NODE     *Node,
+    const char              *Message)
+{
+    ACPI_BUFFER             Buffer;
+    ACPI_STATUS             Status;
 
 
-/*
- * tbinstal - Table removal and deletion
- */
-ACPI_STATUS
-AcpiTbResizeRootTableList (
-    void);
+    ACPI_FUNCTION_TRACE (DsPrintNodePathname);
 
-ACPI_STATUS
-AcpiTbValidateTable (
-    ACPI_TABLE_DESC         *TableDesc);
+    if (!Node)
+    {
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "[NULL NAME]"));
+        return_VOID;
+    }
+
+    /* Convert handle to full pathname and print it (with supplied message) */
+
+    Buffer.Length = ACPI_ALLOCATE_LOCAL_BUFFER;
+
+    Status = AcpiNsHandleToPathname (Node, &Buffer, TRUE);
+    if (ACPI_SUCCESS (Status))
+    {
+        if (Message)
+        {
+            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "%s ", Message));
+        }
+
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "[%s] (Node %p)",
+            (char *) Buffer.Pointer, Node));
+        ACPI_FREE (Buffer.Pointer);
+    }
+
+    return_VOID;
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiDsDumpMethodStack
+ *
+ * PARAMETERS:  Status          - Method execution status
+ *              WalkState       - Current state of the parse tree walk
+ *              Op              - Executing parse op
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Called when a method has been aborted because of an error.
+ *              Dumps the method execution stack.
+ *
+ ******************************************************************************/
 
 void
-AcpiTbInvalidateTable (
-    ACPI_TABLE_DESC         *TableDesc);
+AcpiDsDumpMethodStack (
+    ACPI_STATUS             Status,
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       *Op)
+{
+    ACPI_PARSE_OBJECT       *Next;
+    ACPI_THREAD_STATE       *Thread;
+    ACPI_WALK_STATE         *NextWalkState;
+    ACPI_NAMESPACE_NODE     *PreviousMethod = NULL;
+    ACPI_OPERAND_OBJECT     *MethodDesc;
+
+
+    ACPI_FUNCTION_TRACE (DsDumpMethodStack);
+
+    /* Ignore control codes, they are not errors */
+
+    if ((Status & AE_CODE_MASK) == AE_CODE_CONTROL)
+    {
+        return_VOID;
+    }
+
+    /* We may be executing a deferred opcode */
+
+    if (WalkState->DeferredNode)
+    {
+        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+            "Executing subtree for Buffer/Package/Region\n"));
+        return_VOID;
+    }
+
+    /*
+     * If there is no Thread, we are not actually executing a method.
+     * This can happen when the iASL compiler calls the interpreter
+     * to perform constant folding.
+     */
+    Thread = WalkState->Thread;
+    if (!Thread)
+    {
+        return_VOID;
+    }
+
+    /* Display exception and method name */
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+        "\n**** Exception %s during execution of method ",
+        AcpiFormatException (Status)));
+    AcpiDsPrintNodePathname (WalkState->MethodNode, NULL);
+
+    /* Display stack of executing methods */
+
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH,
+        "\n\nMethod Execution Stack:\n"));
+    NextWalkState = Thread->WalkStateList;
+
+    /* Walk list of linked walk states */
+
+    while (NextWalkState)
+    {
+        MethodDesc = NextWalkState->MethodDesc;
+        if (MethodDesc)
+        {
+            AcpiExStopTraceMethod (
+                    (ACPI_NAMESPACE_NODE *) MethodDesc->Method.Node,
+                    MethodDesc, WalkState);
+        }
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+            "    Method [%4.4s] executing: ",
+            AcpiUtGetNodeName (NextWalkState->MethodNode)));
+
+        /* First method is the currently executing method */
+
+        if (NextWalkState == WalkState)
+        {
+            if (Op)
+            {
+                /* Display currently executing ASL statement */
+
+                Next = Op->Common.Next;
+                Op->Common.Next = NULL;
+
+#ifdef ACPI_DISASSEMBLER
+                AcpiDmDisassemble (NextWalkState, Op, ACPI_UINT32_MAX);
+#endif
+                Op->Common.Next = Next;
+            }
+        }
+        else
+        {
+            /*
+             * This method has called another method
+             * NOTE: the method call parse subtree is already deleted at this
+             * point, so we cannot disassemble the method invocation.
+             */
+            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "Call to method "));
+            AcpiDsPrintNodePathname (PreviousMethod, NULL);
+        }
+
+        PreviousMethod = NextWalkState->MethodNode;
+        NextWalkState = NextWalkState->Next;
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "\n"));
+    }
+
+    return_VOID;
+}
+
+#else
 
 void
-AcpiTbOverrideTable (
-    ACPI_TABLE_DESC         *OldTableDesc);
+AcpiDsDumpMethodStack (
+    ACPI_STATUS             Status,
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       *Op)
+{
+    return;
+}
 
-ACPI_STATUS
-AcpiTbAcquireTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_TABLE_HEADER       **TablePtr,
-    UINT32                  *TableLength,
-    UINT8                   *TableFlags);
-
-void
-AcpiTbReleaseTable (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  TableLength,
-    UINT8                   TableFlags);
-
-ACPI_STATUS
-AcpiTbInstallStandardTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags,
-    BOOLEAN                 Reload,
-    BOOLEAN                 Override,
-    UINT32                  *TableIndex);
-
-void
-AcpiTbUninstallTable (
-    ACPI_TABLE_DESC        *TableDesc);
-
-void
-AcpiTbTerminate (
-    void);
-
-ACPI_STATUS
-AcpiTbDeleteNamespaceByOwner (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbAllocateOwnerId (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbReleaseOwnerId (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbGetOwnerId (
-    UINT32                  TableIndex,
-    ACPI_OWNER_ID           *OwnerId);
-
-
-/*
- * tbutils - table manager utilities
- */
-ACPI_STATUS
-AcpiTbInitializeFacs (
-    void);
-
-BOOLEAN
-AcpiTbTablesLoaded (
-    void);
-
-void
-AcpiTbPrintTableHeader(
-    ACPI_PHYSICAL_ADDRESS   Address,
-    ACPI_TABLE_HEADER       *Header);
-
-UINT8
-AcpiTbChecksum (
-    UINT8                   *Buffer,
-    UINT32                  Length);
-
-ACPI_STATUS
-AcpiTbVerifyChecksum (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length);
-
-void
-AcpiTbCheckDsdtHeader (
-    void);
-
-ACPI_TABLE_HEADER *
-AcpiTbCopyDsdt (
-    UINT32                  TableIndex);
-
-void
-AcpiTbInstallTableWithOverride (
-    ACPI_TABLE_DESC         *NewTableDesc,
-    BOOLEAN                 Override,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS
-AcpiTbInstallFixedTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    char                    *Signature,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS
-AcpiTbParseRootTable (
-    ACPI_PHYSICAL_ADDRESS   RsdpAddress);
-
-BOOLEAN
-AcpiIsValidSignature (
-    char                    *Signature);
-
-
-/*
- * tbxfload
- */
-ACPI_STATUS
-AcpiTbLoadNamespace (
-    void);
-
-#endif /* __ACTABLES_H__ */
+#endif

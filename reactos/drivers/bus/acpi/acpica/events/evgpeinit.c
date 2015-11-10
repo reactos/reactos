@@ -467,7 +467,7 @@ AcpiEvMatchGpeMethod (
 
     /* 4) The last two characters of the name are the hex GPE Number */
 
-    GpeNumber = ACPI_STRTOUL (&Name[2], NULL, 16);
+    GpeNumber = strtoul (&Name[2], NULL, 16);
     if (GpeNumber == ACPI_UINT32_MAX)
     {
         /* Conversion failed; invalid method, just ignore it */

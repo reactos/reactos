@@ -123,7 +123,6 @@
 /*
  * All functions in this module are used by the AML Debugger only
  */
-#if defined(ACPI_DEBUGGER)
 
 /* Local prototypes */
 
@@ -739,5 +738,3 @@ AcpiRsDumpWordList (
             "Word", i, Data[i]);
     }
 }
-
-#endif

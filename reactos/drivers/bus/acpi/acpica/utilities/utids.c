@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Module Name: utids - support for device IDs - HID, UID, CID
+ * Module Name: utids - support for device IDs - HID, UID, CID, SUB, CLS
  *
  *****************************************************************************/
 
@@ -193,7 +193,7 @@ AcpiUtExecute_HID (
     }
     else
     {
-        ACPI_STRCPY (Hid->String, ObjDesc->String.Pointer);
+        strcpy (Hid->String, ObjDesc->String.Pointer);
     }
 
     Hid->Length = Length;
@@ -266,7 +266,7 @@ AcpiUtExecute_SUB (
 
     /* Simply copy existing string */
 
-    ACPI_STRCPY (Sub->String, ObjDesc->String.Pointer);
+    strcpy (Sub->String, ObjDesc->String.Pointer);
     Sub->Length = Length;
     *ReturnId = Sub;
 
@@ -351,7 +351,7 @@ AcpiUtExecute_UID (
     }
     else
     {
-        ACPI_STRCPY (Uid->String, ObjDesc->String.Pointer);
+        strcpy (Uid->String, ObjDesc->String.Pointer);
     }
 
     Uid->Length = Length;
@@ -498,7 +498,7 @@ AcpiUtExecute_CID (
         {
             /* Copy the String CID from the returned object */
 
-            ACPI_STRCPY (NextIdString, CidObjects[i]->String.Pointer);
+            strcpy (NextIdString, CidObjects[i]->String.Pointer);
             Length = CidObjects[i]->String.Length + 1;
         }
 
@@ -517,6 +517,100 @@ AcpiUtExecute_CID (
 Cleanup:
 
     /* On exit, we must delete the _CID return object */
+
+    AcpiUtRemoveReference (ObjDesc);
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUtExecute_CLS
+ *
+ * PARAMETERS:  DeviceNode          - Node for the device
+ *              ReturnId            - Where the _CLS is returned
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Executes the _CLS control method that returns PCI-defined
+ *              class code of the device. The _CLS value is always a package
+ *              containing PCI class information as a list of integers.
+ *              The returned string has format "BBSSPP", where:
+ *                BB = Base-class code
+ *                SS = Sub-class code
+ *                PP = Programming Interface code
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiUtExecute_CLS (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_PNP_DEVICE_ID      **ReturnId)
+{
+    ACPI_OPERAND_OBJECT     *ObjDesc;
+    ACPI_OPERAND_OBJECT     **ClsObjects;
+    UINT32                  Count;
+    ACPI_PNP_DEVICE_ID      *Cls;
+    UINT32                  Length;
+    ACPI_STATUS             Status;
+    UINT8                   ClassCode[3] = {0, 0, 0};
+
+
+    ACPI_FUNCTION_TRACE (UtExecute_CLS);
+
+
+    Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__CLS,
+                ACPI_BTYPE_PACKAGE, &ObjDesc);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Get the size of the String to be returned, includes null terminator */
+
+    Length = ACPI_PCICLS_STRING_SIZE;
+    ClsObjects = ObjDesc->Package.Elements;
+    Count = ObjDesc->Package.Count;
+
+    if (ObjDesc->Common.Type == ACPI_TYPE_PACKAGE)
+    {
+        if (Count > 0 && ClsObjects[0]->Common.Type == ACPI_TYPE_INTEGER)
+        {
+            ClassCode[0] = (UINT8) ClsObjects[0]->Integer.Value;
+        }
+        if (Count > 1 && ClsObjects[1]->Common.Type == ACPI_TYPE_INTEGER)
+        {
+            ClassCode[1] = (UINT8) ClsObjects[1]->Integer.Value;
+        }
+        if (Count > 2 && ClsObjects[2]->Common.Type == ACPI_TYPE_INTEGER)
+        {
+            ClassCode[2] = (UINT8) ClsObjects[2]->Integer.Value;
+        }
+    }
+
+    /* Allocate a buffer for the CLS */
+
+    Cls = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
+    if (!Cls)
+    {
+        Status = AE_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Area for the string starts after PNP_DEVICE_ID struct */
+
+    Cls->String = ACPI_ADD_PTR (char, Cls, sizeof (ACPI_PNP_DEVICE_ID));
+
+    /* Simply copy existing string */
+
+    AcpiExPciClsToString (Cls->String, ClassCode);
+    Cls->Length = Length;
+    *ReturnId = Cls;
+
+
+Cleanup:
+
+    /* On exit, we must delete the return object */
 
     AcpiUtRemoveReference (ObjDesc);
     return_ACPI_STATUS (Status);

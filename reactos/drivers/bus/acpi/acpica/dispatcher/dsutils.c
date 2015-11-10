@@ -677,7 +677,7 @@ AcpiDsCreateOperand (
 
                     ObjDesc = AcpiUtCreateStringObject ((ACPI_SIZE) NameLength);
 
-                    ACPI_STRNCPY (ObjDesc->String.Pointer, NameString, NameLength);
+                    strncpy (ObjDesc->String.Pointer, NameString, NameLength);
                     Status = AE_OK;
                 }
                 else

@@ -10,6 +10,7 @@ endif()
 list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsargs.c
     acpica/dispatcher/dscontrol.c
+    acpica/dispatcher/dsdebug.c
     acpica/dispatcher/dsfield.c
     acpica/dispatcher/dsinit.c
     acpica/dispatcher/dsmethod.c
@@ -146,6 +147,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utmath.c
     acpica/utilities/utmisc.c
     acpica/utilities/utmutex.c
+    acpica/utilities/utnonansi.c
     acpica/utilities/utobject.c
     acpica/utilities/utosi.c
     acpica/utilities/utownerid.c

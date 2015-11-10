@@ -195,8 +195,18 @@ AcpiException (
 
 
     ACPI_MSG_REDIRECT_BEGIN;
-    AcpiOsPrintf (ACPI_MSG_EXCEPTION "%s, ", AcpiFormatException (Status));
 
+    /* For AE_OK, just print the message */
+
+    if (ACPI_SUCCESS (Status))
+    {
+        AcpiOsPrintf (ACPI_MSG_EXCEPTION);
+
+    }
+    else
+    {
+        AcpiOsPrintf (ACPI_MSG_EXCEPTION "%s, ", AcpiFormatException (Status));
+    }
     va_start (ArgList, Format);
     AcpiOsVprintf (Format, ArgList);
     ACPI_MSG_SUFFIX;

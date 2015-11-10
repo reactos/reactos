@@ -117,6 +117,7 @@
 #include "accommon.h"
 #include "actables.h"
 #include "acapps.h"
+#include "errno.h"
 
 #ifdef ACPI_ASL_COMPILER
 #include "aslcompiler.h"
@@ -300,11 +301,8 @@ AcpiUtReadTable (
                 TableHeader.Length, FileSize);
 
 #ifdef ACPI_ASL_COMPILER
-            Status = FlCheckForAscii (fp, NULL, FALSE);
-            if (ACPI_SUCCESS (Status))
-            {
-                AcpiOsPrintf ("File appears to be ASCII only, must be binary\n");
-            }
+            AcpiOsPrintf ("File is corrupt or is ASCII text -- "
+                "it must be a binary file\n");
 #endif
             return (AE_BAD_HEADER);
         }
@@ -405,6 +403,12 @@ AcpiUtReadTableFromFile (
     if (!File)
     {
         perror ("Could not open input file");
+
+        if (errno == ENOENT)
+        {
+            return (AE_NOT_EXIST);
+        }
+
         return (Status);
     }
 
@@ -416,7 +420,8 @@ AcpiUtReadTableFromFile (
 
     /* Get the entire file */
 
-    fprintf (stderr, "Loading Acpi table from file %10s - Length %.8u (%06X)\n",
+    fprintf (stderr,
+        "Reading ACPI table from file %12s - Length %.8u (0x%06X)\n",
         Filename, FileSize, FileSize);
 
     Status = AcpiUtReadTable (File, Table, &TableLength);

@@ -139,6 +139,7 @@
 #define ACPI_SIG_DSDT           "DSDT"      /* Differentiated System Description Table */
 #define ACPI_SIG_FADT           "FACP"      /* Fixed ACPI Description Table */
 #define ACPI_SIG_FACS           "FACS"      /* Firmware ACPI Control Structure */
+#define ACPI_SIG_OSDT           "OSDT"      /* Override System Description Table */
 #define ACPI_SIG_PSDT           "PSDT"      /* Persistent System Description Table */
 #define ACPI_SIG_RSDP           "RSD PTR "  /* Root System Description Pointer */
 #define ACPI_SIG_RSDT           "RSDT"      /* Root System Description Table */
@@ -382,6 +383,7 @@ typedef struct acpi_table_fadt
     ACPI_GENERIC_ADDRESS    XGpe1Block;         /* 64-bit Extended General Purpose Event 1 Reg Blk address */
     ACPI_GENERIC_ADDRESS    SleepControl;       /* 64-bit Sleep Control register (ACPI 5.0) */
     ACPI_GENERIC_ADDRESS    SleepStatus;        /* 64-bit Sleep Status register (ACPI 5.0) */
+    UINT64                  HypervisorId;       /* Hypervisor Vendor ID (ACPI 6.0) */
 
 } ACPI_TABLE_FADT;
 
@@ -441,7 +443,7 @@ enum AcpiPreferredPmProfiles
     PM_TABLET               = 8
 };
 
-/* Values for SleepStatus and SleepControl registers (V5 FADT) */
+/* Values for SleepStatus and SleepControl registers (V5+ FADT) */
 
 #define ACPI_X_WAKE_STATUS          0x80
 #define ACPI_X_SLEEP_TYPE_MASK      0x1C
@@ -506,15 +508,17 @@ typedef struct acpi_table_desc
  * FADT is the bottom line as to what the version really is.
  *
  * For reference, the values below are as follows:
- *     FADT V1  size: 0x074
- *     FADT V2  size: 0x084
- *     FADT V3  size: 0x0F4
- *     FADT V4  size: 0x0F4
- *     FADT V5  size: 0x10C
+ *     FADT V1 size: 0x074
+ *     FADT V2 size: 0x084
+ *     FADT V3 size: 0x0F4
+ *     FADT V4 size: 0x0F4
+ *     FADT V5 size: 0x10C
+ *     FADT V6 size: 0x114
  */
 #define ACPI_FADT_V1_SIZE       (UINT32) (ACPI_FADT_OFFSET (Flags) + 4)
 #define ACPI_FADT_V2_SIZE       (UINT32) (ACPI_FADT_OFFSET (MinorRevision) + 1)
 #define ACPI_FADT_V3_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepControl))
-#define ACPI_FADT_V5_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
+#define ACPI_FADT_V5_SIZE       (UINT32) (ACPI_FADT_OFFSET (HypervisorId))
+#define ACPI_FADT_V6_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
 
 #endif /* __ACTBL_H__ */

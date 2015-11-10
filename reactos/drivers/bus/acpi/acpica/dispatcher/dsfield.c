@@ -602,7 +602,7 @@ AcpiDsCreateField (
         }
     }
 
-    ACPI_MEMSET (&Info, 0, sizeof (ACPI_CREATE_FIELD_INFO));
+    memset (&Info, 0, sizeof (ACPI_CREATE_FIELD_INFO));
 
     /* Second arg is the field flags */
 

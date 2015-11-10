@@ -149,7 +149,7 @@ AcpiTbInitTableDescriptor (
      * Initialize the table descriptor. Set the pointer to NULL, since the
      * table is not fully mapped at this time.
      */
-    ACPI_MEMSET (TableDesc, 0, sizeof (ACPI_TABLE_DESC));
+    memset (TableDesc, 0, sizeof (ACPI_TABLE_DESC));
     TableDesc->Address = Address;
     TableDesc->Length = Table->Length;
     TableDesc->Flags = Flags;
@@ -583,7 +583,7 @@ AcpiTbResizeRootTableList (
 
     if (AcpiGbl_RootTableList.Tables)
     {
-        ACPI_MEMCPY (Tables, AcpiGbl_RootTableList.Tables,
+        memcpy (Tables, AcpiGbl_RootTableList.Tables,
             (ACPI_SIZE) TableCount * sizeof (ACPI_TABLE_DESC));
 
         if (AcpiGbl_RootTableList.Flags & ACPI_ROOT_ORIGIN_ALLOCATED)

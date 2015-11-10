@@ -323,7 +323,7 @@ AcpiExConvertToBuffer (
         /* Copy the integer to the buffer, LSB first */
 
         NewBuf = ReturnDesc->Buffer.Pointer;
-        ACPI_MEMCPY (NewBuf,
+        memcpy (NewBuf,
                         &ObjDesc->Integer.Value,
                         AcpiGbl_IntegerByteWidth);
         break;
@@ -348,7 +348,7 @@ AcpiExConvertToBuffer (
         /* Copy the string to the buffer */
 
         NewBuf = ReturnDesc->Buffer.Pointer;
-        ACPI_STRNCPY ((char *) NewBuf, (char *) ObjDesc->String.Pointer,
+        strncpy ((char *) NewBuf, (char *) ObjDesc->String.Pointer,
             ObjDesc->String.Length);
         break;
 
@@ -745,6 +745,7 @@ AcpiExConvertToTargetType (
         break;
 
     case ARGI_TARGETREF:
+    case ARGI_STORE_TARGET:
 
         switch (DestinationType)
         {

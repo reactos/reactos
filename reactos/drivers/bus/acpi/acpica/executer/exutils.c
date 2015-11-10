@@ -505,6 +505,43 @@ AcpiExIntegerToString (
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiExPciClsToString
+ *
+ * PARAMETERS:  OutString       - Where to put the converted string (7 bytes)
+ * PARAMETERS:  ClassCode       - PCI class code to be converted (3 bytes)
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Convert 3-bytes PCI class code to string representation.
+ *              Return buffer must be large enough to hold the string. The
+ *              string returned is always exactly of length
+ *              ACPI_PCICLS_STRING_SIZE (includes null terminator).
+ *
+ ******************************************************************************/
+
+void
+AcpiExPciClsToString (
+    char                    *OutString,
+    UINT8                   ClassCode[3])
+{
+
+    ACPI_FUNCTION_ENTRY ();
+
+
+    /* All 3 bytes are hexadecimal */
+
+    OutString[0] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[0], 4);
+    OutString[1] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[0], 0);
+    OutString[2] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[1], 4);
+    OutString[3] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[1], 0);
+    OutString[4] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[2], 4);
+    OutString[5] = AcpiUtHexToAsciiChar ((UINT64) ClassCode[2], 0);
+    OutString[6] = 0;
+}
+
+
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiIsValidSpaceId
  *
  * PARAMETERS:  SpaceId             - ID to be validated

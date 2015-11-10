@@ -830,7 +830,7 @@ AcpiNsGetDeviceCallback (
             return (AE_CTRL_DEPTH);
         }
 
-        NoMatch = ACPI_STRCMP (Hid->String, Info->Hid);
+        NoMatch = strcmp (Hid->String, Info->Hid);
         ACPI_FREE (Hid);
 
         if (NoMatch)
@@ -854,7 +854,7 @@ AcpiNsGetDeviceCallback (
             Found = FALSE;
             for (i = 0; i < Cid->Count; i++)
             {
-                if (ACPI_STRCMP (Cid->Ids[i].String, Info->Hid) == 0)
+                if (strcmp (Cid->Ids[i].String, Info->Hid) == 0)
                 {
                     /* Found a matching CID */
 

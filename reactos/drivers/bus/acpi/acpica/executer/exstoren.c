@@ -201,9 +201,10 @@ AcpiExResolveObject (
             /* Conversion successful but still not a valid type */
 
             ACPI_ERROR ((AE_INFO,
-                "Cannot assign type %s to %s (must be type Int/Str/Buf)",
+                "Cannot assign type [%s] to [%s] (must be type Int/Str/Buf)",
                 AcpiUtGetObjectTypeName (SourceDesc),
                 AcpiUtGetTypeName (TargetType)));
+
             Status = AE_AML_OPERAND_TYPE;
         }
         break;
@@ -356,7 +357,7 @@ AcpiExStoreObjectToObject (
         /*
          * All other types come here.
          */
-        ACPI_WARNING ((AE_INFO, "Store into type %s not implemented",
+        ACPI_WARNING ((AE_INFO, "Store into type [%s] not implemented",
             AcpiUtGetObjectTypeName (DestDesc)));
 
         Status = AE_NOT_IMPLEMENTED;

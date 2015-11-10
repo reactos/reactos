@@ -297,7 +297,6 @@ AcpiExResolveObjectToValue (
                      * (i.e., dereference the package index)
                      * Delete the ref object, increment the returned object
                      */
-                    AcpiUtRemoveReference (StackDesc);
                     AcpiUtAddReference (ObjDesc);
                     *StackPtr = ObjDesc;
                 }
@@ -423,8 +422,8 @@ AcpiExResolveMultiple (
     ACPI_OBJECT_TYPE        *ReturnType,
     ACPI_OPERAND_OBJECT     **ReturnDesc)
 {
-    ACPI_OPERAND_OBJECT     *ObjDesc = (void *) Operand;
-    ACPI_NAMESPACE_NODE     *Node;
+    ACPI_OPERAND_OBJECT     *ObjDesc = ACPI_CAST_PTR (void, Operand);
+    ACPI_NAMESPACE_NODE     *Node = ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, Operand);
     ACPI_OBJECT_TYPE        Type;
     ACPI_STATUS             Status;
 
@@ -444,7 +443,7 @@ AcpiExResolveMultiple (
     case ACPI_DESC_TYPE_NAMED:
 
         Type = ((ACPI_NAMESPACE_NODE *) ObjDesc)->Type;
-        ObjDesc = AcpiNsGetAttachedObject ((ACPI_NAMESPACE_NODE *) ObjDesc);
+        ObjDesc = AcpiNsGetAttachedObject (Node);
 
         /* If we had an Alias node, use the attached object for type info */
 
@@ -452,6 +451,14 @@ AcpiExResolveMultiple (
         {
             Type = ((ACPI_NAMESPACE_NODE *) ObjDesc)->Type;
             ObjDesc = AcpiNsGetAttachedObject ((ACPI_NAMESPACE_NODE *) ObjDesc);
+        }
+
+        if (!ObjDesc)
+        {
+            ACPI_ERROR ((AE_INFO,
+                "[%4.4s] Node is unresolved or uninitialized",
+                AcpiUtGetNodeName (Node)));
+            return_ACPI_STATUS (AE_AML_UNINITIALIZED_NODE);
         }
         break;
 

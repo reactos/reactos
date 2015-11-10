@@ -334,7 +334,7 @@ AcpiExOpcode_3A_1T_1R (
         {
             /* We have a buffer, copy the portion requested */
 
-            ACPI_MEMCPY (Buffer, Operand[0]->String.Pointer + Index,
+            memcpy (Buffer, Operand[0]->String.Pointer + Index,
                          Length);
         }
 

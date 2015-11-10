@@ -1,6 +1,7 @@
 /******************************************************************************
  *
- * Name: actables.h - ACPI table management
+ * Name: acclib.h -- C library support. Prototypes for the (optional) local
+ *                   implementations of required C library functions.
  *
  *****************************************************************************/
 
@@ -113,225 +114,141 @@
  *
  *****************************************************************************/
 
-#ifndef __ACTABLES_H__
-#define __ACTABLES_H__
+#ifndef _ACCLIB_H
+#define _ACCLIB_H
 
-
-ACPI_STATUS
-AcpiAllocateRootTable (
-    UINT32                  InitialTableCount);
 
 /*
- * tbxfroot - Root pointer utilities
+ * Prototypes and macros for local implementations of C library functions
  */
+
+/* is* functions. The AcpiGbl_Ctypes array is defined in utclib.c */
+
+extern const UINT8 AcpiGbl_Ctypes[];
+
+#define _ACPI_XA     0x00    /* extra alphabetic - not supported */
+#define _ACPI_XS     0x40    /* extra space */
+#define _ACPI_BB     0x00    /* BEL, BS, etc. - not supported */
+#define _ACPI_CN     0x20    /* CR, FF, HT, NL, VT */
+#define _ACPI_DI     0x04    /* '0'-'9' */
+#define _ACPI_LO     0x02    /* 'a'-'z' */
+#define _ACPI_PU     0x10    /* punctuation */
+#define _ACPI_SP     0x08    /* space, tab, CR, LF, VT, FF */
+#define _ACPI_UP     0x01    /* 'A'-'Z' */
+#define _ACPI_XD     0x80    /* '0'-'9', 'A'-'F', 'a'-'f' */
+
+#define isdigit(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_DI))
+#define isspace(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_SP))
+#define isxdigit(c) (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_XD))
+#define isupper(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_UP))
+#define islower(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_LO))
+#define isprint(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_LO | _ACPI_UP | _ACPI_DI | _ACPI_XS | _ACPI_PU))
+#define isalpha(c)  (AcpiGbl_Ctypes[(unsigned char)(c)] & (_ACPI_LO | _ACPI_UP))
+
+
+/* Strings */
+
+char *
+strcat (
+    char                    *DstString,
+    const char              *SrcString);
+
+char *
+strchr (
+    const char              *String,
+    int                     ch);
+
+char *
+strcpy (
+    char                    *DstString,
+    const char              *SrcString);
+
+int
+strcmp (
+    const char              *String1,
+    const char              *String2);
+
+ACPI_SIZE
+strlen (
+    const char              *String);
+
+char *
+strncat (
+    char                    *DstString,
+    const char              *SrcString,
+    ACPI_SIZE               Count);
+
+int
+strncmp (
+    const char              *String1,
+    const char              *String2,
+    ACPI_SIZE               Count);
+
+char *
+strncpy (
+    char                    *DstString,
+    const char              *SrcString,
+    ACPI_SIZE               Count);
+
+#ifdef __REACTOS__
+char *
+strstr (
+    const char              *String1,
+    const char              *String2);
+#else /* __REACTOS__ */
+char *
+strstr (
+    char                    *String1,
+    char                    *String2);
+#endif /* __REACTOS__ */
+
+
+/* Conversion */
+
 UINT32
-AcpiTbGetRsdpLength (
-    ACPI_TABLE_RSDP         *Rsdp);
-
-ACPI_STATUS
-AcpiTbValidateRsdp (
-    ACPI_TABLE_RSDP         *Rsdp);
-
-UINT8 *
-AcpiTbScanMemoryForRsdp (
-    UINT8                   *StartAddress,
-    UINT32                  Length);
+strtoul (
+    const char              *String,
+    char                    **Terminator,
+    UINT32                  Base);
 
 
-/*
- * tbdata - table data structure management
- */
-ACPI_STATUS
-AcpiTbGetNextTableDescriptor (
-    UINT32                  *TableIndex,
-    ACPI_TABLE_DESC         **TableDesc);
+/* Memory */
 
-void
-AcpiTbInitTableDescriptor (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags,
-    ACPI_TABLE_HEADER       *Table);
+#ifdef __REACTOS__
+int
+memcmp (
+    const void              *Buffer1,
+    const void              *Buffer2,
+    ACPI_SIZE               Count);
+#else /* __REACTOS__ */
+int
+memcmp (
+    void                    *Buffer1,
+    void                    *Buffer2,
+    ACPI_SIZE               Count);
+#endif /* __REACTOS__ */
 
-ACPI_STATUS
-AcpiTbAcquireTempTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags);
+void *
+memcpy (
+    void                    *Dest,
+    const void              *Src,
+    ACPI_SIZE               Count);
 
-void
-AcpiTbReleaseTempTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-ACPI_STATUS
-AcpiTbValidateTempTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-ACPI_STATUS
-AcpiTbVerifyTempTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    char                    *Signature);
-
-BOOLEAN
-AcpiTbIsTableLoaded (
-    UINT32                  TableIndex);
-
-void
-AcpiTbSetTableLoadedFlag (
-    UINT32                  TableIndex,
-    BOOLEAN                 IsLoaded);
+void *
+memset (
+    void                    *Dest,
+    int                     Value,
+    ACPI_SIZE               Count);
 
 
-/*
- * tbfadt - FADT parse/convert/validate
- */
-void
-AcpiTbParseFadt (
-    UINT32                  TableIndex);
+/* upper/lower case */
 
-void
-AcpiTbCreateLocalFadt (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length);
+int
+tolower (
+    int                     c);
 
+int
+toupper (
+    int                     c);
 
-/*
- * tbfind - find ACPI table
- */
-ACPI_STATUS
-AcpiTbFindTable (
-    char                    *Signature,
-    char                    *OemId,
-    char                    *OemTableId,
-    UINT32                  *TableIndex);
-
-
-/*
- * tbinstal - Table removal and deletion
- */
-ACPI_STATUS
-AcpiTbResizeRootTableList (
-    void);
-
-ACPI_STATUS
-AcpiTbValidateTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-void
-AcpiTbInvalidateTable (
-    ACPI_TABLE_DESC         *TableDesc);
-
-void
-AcpiTbOverrideTable (
-    ACPI_TABLE_DESC         *OldTableDesc);
-
-ACPI_STATUS
-AcpiTbAcquireTable (
-    ACPI_TABLE_DESC         *TableDesc,
-    ACPI_TABLE_HEADER       **TablePtr,
-    UINT32                  *TableLength,
-    UINT8                   *TableFlags);
-
-void
-AcpiTbReleaseTable (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  TableLength,
-    UINT8                   TableFlags);
-
-ACPI_STATUS
-AcpiTbInstallStandardTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    UINT8                   Flags,
-    BOOLEAN                 Reload,
-    BOOLEAN                 Override,
-    UINT32                  *TableIndex);
-
-void
-AcpiTbUninstallTable (
-    ACPI_TABLE_DESC        *TableDesc);
-
-void
-AcpiTbTerminate (
-    void);
-
-ACPI_STATUS
-AcpiTbDeleteNamespaceByOwner (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbAllocateOwnerId (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbReleaseOwnerId (
-    UINT32                  TableIndex);
-
-ACPI_STATUS
-AcpiTbGetOwnerId (
-    UINT32                  TableIndex,
-    ACPI_OWNER_ID           *OwnerId);
-
-
-/*
- * tbutils - table manager utilities
- */
-ACPI_STATUS
-AcpiTbInitializeFacs (
-    void);
-
-BOOLEAN
-AcpiTbTablesLoaded (
-    void);
-
-void
-AcpiTbPrintTableHeader(
-    ACPI_PHYSICAL_ADDRESS   Address,
-    ACPI_TABLE_HEADER       *Header);
-
-UINT8
-AcpiTbChecksum (
-    UINT8                   *Buffer,
-    UINT32                  Length);
-
-ACPI_STATUS
-AcpiTbVerifyChecksum (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length);
-
-void
-AcpiTbCheckDsdtHeader (
-    void);
-
-ACPI_TABLE_HEADER *
-AcpiTbCopyDsdt (
-    UINT32                  TableIndex);
-
-void
-AcpiTbInstallTableWithOverride (
-    ACPI_TABLE_DESC         *NewTableDesc,
-    BOOLEAN                 Override,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS
-AcpiTbInstallFixedTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    char                    *Signature,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS
-AcpiTbParseRootTable (
-    ACPI_PHYSICAL_ADDRESS   RsdpAddress);
-
-BOOLEAN
-AcpiIsValidSignature (
-    char                    *Signature);
-
-
-/*
- * tbxfload
- */
-ACPI_STATUS
-AcpiTbLoadNamespace (
-    void);
-
-#endif /* __ACTABLES_H__ */
+#endif /* _ACCLIB_H */

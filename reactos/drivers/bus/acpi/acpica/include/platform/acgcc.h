@@ -147,6 +147,11 @@
 #undef strchr
 #endif
 
+/* GCC supports __VA_ARGS__ in macros */
+
+#define COMPILER_VA_MACRO               1
+
+
 #ifdef __REACTOS__
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
 

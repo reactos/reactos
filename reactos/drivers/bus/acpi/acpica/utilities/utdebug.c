@@ -117,6 +117,7 @@
 
 #include "acpi.h"
 #include "accommon.h"
+#include "acinterp.h"
 
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utdebug")
@@ -705,6 +706,42 @@ AcpiUtPtrExit (
         AcpiGbl_NestingLevel--;
     }
 }
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTracePoint
+ *
+ * PARAMETERS:  Type                - Trace event type
+ *              Begin               - TRUE if before execution
+ *              Aml                 - Executed AML address
+ *              Pathname            - Object path
+ *              Pointer             - Pointer to the related object
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Interpreter execution trace.
+ *
+ ******************************************************************************/
+
+void
+AcpiTracePoint (
+    ACPI_TRACE_EVENT_TYPE   Type,
+    BOOLEAN                 Begin,
+    UINT8                   *Aml,
+    char                    *Pathname)
+{
+
+    ACPI_FUNCTION_ENTRY ();
+
+    AcpiExTracePoint (Type, Begin, Aml, Pathname);
+
+#ifdef ACPI_USE_SYSTEM_TRACER
+    AcpiOsTracePoint (Type, Begin, Aml, Pathname);
+#endif
+}
+
+ACPI_EXPORT_SYMBOL (AcpiTracePoint)
 
 #endif
 

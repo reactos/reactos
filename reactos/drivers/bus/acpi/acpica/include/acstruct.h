@@ -157,9 +157,10 @@ typedef struct acpi_walk_state
     UINT8                           ReturnUsed;
     UINT8                           ScopeDepth;
     UINT8                           PassNumber;         /* Parse pass during table load */
+    BOOLEAN                         NamespaceOverride;  /* Override existing objects */
     UINT8                           ResultSize;         /* Total elements for the result stack */
     UINT8                           ResultCount;        /* Current number of occupied elements of result stack */
-    UINT32                          AmlOffset;
+    UINT8                           *Aml;
     UINT32                          ArgTypes;
     UINT32                          MethodBreakpoint;   /* For single stepping */
     UINT32                          UserBreakpoint;     /* User AML breakpoint */

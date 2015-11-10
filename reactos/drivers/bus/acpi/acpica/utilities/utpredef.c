@@ -238,7 +238,7 @@ AcpiUtGetExpectedReturnTypes (
 
     if (!ExpectedBtypes)
     {
-        ACPI_STRCPY (Buffer, "NONE");
+        strcpy (Buffer, "NONE");
         return;
     }
 
@@ -252,7 +252,7 @@ AcpiUtGetExpectedReturnTypes (
 
         if (ExpectedBtypes & ThisRtype)
         {
-            ACPI_STRCAT (Buffer, &UtRtypeNames[i][j]);
+            strcat (Buffer, &UtRtypeNames[i][j]);
             j = 0;              /* Use name separator from now on */
         }
 

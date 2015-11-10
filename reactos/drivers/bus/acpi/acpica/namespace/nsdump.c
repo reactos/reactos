@@ -195,7 +195,7 @@ AcpiNsPrintPathname (
     {
         for (i = 0; i < 4; i++)
         {
-            ACPI_IS_PRINT (Pathname[i]) ?
+            isprint ((int) Pathname[i]) ?
                 AcpiOsPrintf ("%c", Pathname[i]) :
                 AcpiOsPrintf ("?");
         }

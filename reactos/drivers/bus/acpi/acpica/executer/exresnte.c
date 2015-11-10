@@ -206,7 +206,7 @@ AcpiExResolveNodeToValue (
     {
         ACPI_ERROR ((AE_INFO, "No object attached to node [%4.4s] %p",
             Node->Name.Ascii, Node));
-        return_ACPI_STATUS (AE_AML_NO_OPERAND);
+        return_ACPI_STATUS (AE_AML_UNINITIALIZED_NODE);
     }
 
     /*

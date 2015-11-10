@@ -293,7 +293,7 @@ AcpiDsExecEndControlOp (
              * loop does not implement a timeout.
              */
             ControlState->Control.LoopCount++;
-            if (ControlState->Control.LoopCount > ACPI_MAX_LOOP_ITERATIONS)
+            if (ControlState->Control.LoopCount > AcpiGbl_MaxLoopIterations)
             {
                 Status = AE_AML_INFINITE_LOOP;
                 break;

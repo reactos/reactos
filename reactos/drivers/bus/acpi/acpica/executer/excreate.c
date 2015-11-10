@@ -599,6 +599,7 @@ AcpiExCreateMethod (
 
     ObjDesc->Method.AmlStart = AmlStart;
     ObjDesc->Method.AmlLength = AmlLength;
+    ObjDesc->Method.Node = Operand[0];
 
     /*
      * Disassemble the method flags. Split off the ArgCount, Serialized

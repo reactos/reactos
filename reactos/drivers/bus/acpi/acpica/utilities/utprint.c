@@ -299,7 +299,7 @@ AcpiUtScanNumber (
     UINT64                  Number = 0;
 
 
-    while (ACPI_IS_DIGIT (*String))
+    while (isdigit ((int) *String))
     {
         Number *= 10;
         Number += *(String++) - '0';
@@ -577,7 +577,7 @@ AcpiUtVsnprintf (
         /* Process width */
 
         Width = -1;
-        if (ACPI_IS_DIGIT (*Format))
+        if (isdigit ((int) *Format))
         {
             Format = AcpiUtScanNumber (Format, &Number);
             Width = (INT32) Number;
@@ -599,7 +599,7 @@ AcpiUtVsnprintf (
         if (*Format == '.')
         {
             ++Format;
-            if (ACPI_IS_DIGIT(*Format))
+            if (isdigit ((int) *Format))
             {
                 Format = AcpiUtScanNumber (Format, &Number);
                 Precision = (INT32) Number;

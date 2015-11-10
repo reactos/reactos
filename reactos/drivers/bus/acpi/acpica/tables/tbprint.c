@@ -156,7 +156,7 @@ AcpiTbFixString (
 
     while (Length && *String)
     {
-        if (!ACPI_IS_PRINT (*String))
+        if (!isprint ((int) *String))
         {
             *String = '?';
         }
@@ -186,7 +186,7 @@ AcpiTbCleanupTableHeader (
     ACPI_TABLE_HEADER       *Header)
 {
 
-    ACPI_MEMCPY (OutHeader, Header, sizeof (ACPI_TABLE_HEADER));
+    memcpy (OutHeader, Header, sizeof (ACPI_TABLE_HEADER));
 
     AcpiTbFixString (OutHeader->Signature, ACPI_NAME_SIZE);
     AcpiTbFixString (OutHeader->OemId, ACPI_OEM_ID_SIZE);
@@ -228,7 +228,7 @@ AcpiTbPrintTableHeader (
     {
         /* RSDP has no common fields */
 
-        ACPI_MEMCPY (LocalHeader.OemId,
+        memcpy (LocalHeader.OemId,
             ACPI_CAST_PTR (ACPI_TABLE_RSDP, Header)->OemId, ACPI_OEM_ID_SIZE);
         AcpiTbFixString (LocalHeader.OemId, ACPI_OEM_ID_SIZE);
 

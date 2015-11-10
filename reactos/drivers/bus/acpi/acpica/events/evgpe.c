@@ -176,6 +176,7 @@ AcpiEvUpdateGpeEnableMask (
     {
         ACPI_SET_BIT (GpeRegisterInfo->EnableForRun, (UINT8) RegisterBit);
     }
+    GpeRegisterInfo->EnableMask = GpeRegisterInfo->EnableForRun;
 
     return_ACPI_STATUS (AE_OK);
 }
@@ -213,7 +214,7 @@ AcpiEvEnableGpe (
 
     /* Enable the requested GPE */
 
-    Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_ENABLE_SAVE);
+    Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_ENABLE);
     return_ACPI_STATUS (Status);
 }
 
@@ -303,7 +304,7 @@ AcpiEvRemoveGpeReference (
         Status = AcpiEvUpdateGpeEnableMask (GpeEventInfo);
         if (ACPI_SUCCESS (Status))
         {
-            Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_DISABLE_SAVE);
+            Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_DISABLE);
         }
 
         if (ACPI_FAILURE (Status))

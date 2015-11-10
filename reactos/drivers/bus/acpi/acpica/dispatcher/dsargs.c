@@ -166,7 +166,7 @@ AcpiDsExecuteArguments (
 
     /* Allocate a new parser op to be the root of the parsed tree */
 
-    Op = AcpiPsAllocOp (AML_INT_EVAL_SUBTREE_OP);
+    Op = AcpiPsAllocOp (AML_INT_EVAL_SUBTREE_OP, AmlStart);
     if (!Op)
     {
         return_ACPI_STATUS (AE_NO_MEMORY);
@@ -213,7 +213,7 @@ AcpiDsExecuteArguments (
 
     /* Evaluate the deferred arguments */
 
-    Op = AcpiPsAllocOp (AML_INT_EVAL_SUBTREE_OP);
+    Op = AcpiPsAllocOp (AML_INT_EVAL_SUBTREE_OP, AmlStart);
     if (!Op)
     {
         return_ACPI_STATUS (AE_NO_MEMORY);

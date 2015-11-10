@@ -671,5 +671,14 @@ AcpiOsSetFileOffset (
     UINT8                   From);
 #endif
 
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTracePoint
+void
+AcpiOsTracePoint (
+    ACPI_TRACE_EVENT_TYPE   Type,
+    BOOLEAN                 Begin,
+    UINT8                   *Aml,
+    char                    *Pathname);
+#endif
+
 
 #endif /* __ACPIOSXF_H__ */

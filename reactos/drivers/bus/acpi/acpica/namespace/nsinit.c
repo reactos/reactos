@@ -177,7 +177,7 @@ AcpiNsInitializeObjects (
 
     /* Set all init info to zero */
 
-    ACPI_MEMSET (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
+    memset (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
 
     /* Walk entire namespace from the supplied root */
 
@@ -686,7 +686,7 @@ AcpiNsInitOneDevice (
     ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (
         ACPI_TYPE_METHOD, DeviceNode, METHOD_NAME__INI));
 
-    ACPI_MEMSET (Info, 0, sizeof (ACPI_EVALUATE_INFO));
+    memset (Info, 0, sizeof (ACPI_EVALUATE_INFO));
     Info->PrefixNode = DeviceNode;
     Info->RelativePathname = METHOD_NAME__INI;
     Info->Parameters = NULL;

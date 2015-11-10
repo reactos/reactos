@@ -147,7 +147,7 @@ ACPI_STATUS
 AcpiTbInitializeFacs (
     void)
 {
-    ACPI_STATUS             Status;
+    ACPI_TABLE_FACS         *Facs;
 
 
     /* If Hardware Reduced flag is set, there is no FACS */
@@ -157,10 +157,23 @@ AcpiTbInitializeFacs (
         AcpiGbl_FACS = NULL;
         return (AE_OK);
     }
+    else if (AcpiGbl_FADT.XFacs &&
+             (!AcpiGbl_FADT.Facs || !AcpiGbl_Use32BitFacsAddresses))
+    {
+        (void) AcpiGetTableByIndex (AcpiGbl_XFacsIndex,
+                    ACPI_CAST_INDIRECT_PTR (ACPI_TABLE_HEADER, &Facs));
+        AcpiGbl_FACS = Facs;
+    }
+    else if (AcpiGbl_FADT.Facs)
+    {
+        (void) AcpiGetTableByIndex (AcpiGbl_FacsIndex,
+                    ACPI_CAST_INDIRECT_PTR (ACPI_TABLE_HEADER, &Facs));
+        AcpiGbl_FACS = Facs;
+    }
 
-    Status = AcpiGetTableByIndex (ACPI_TABLE_INDEX_FACS,
-                ACPI_CAST_INDIRECT_PTR (ACPI_TABLE_HEADER, &AcpiGbl_FACS));
-    return (Status);
+    /* If there is no FACS, just continue. There was already an error msg */
+
+    return (AE_OK);
 }
 #endif /* !ACPI_REDUCED_HARDWARE */
 
@@ -183,7 +196,7 @@ AcpiTbTablesLoaded (
     void)
 {
 
-    if (AcpiGbl_RootTableList.CurrentTableCount >= 3)
+    if (AcpiGbl_RootTableList.CurrentTableCount >= 4)
     {
         return (TRUE);
     }
@@ -262,11 +275,11 @@ AcpiTbCopyDsdt (
         return (NULL);
     }
 
-    ACPI_MEMCPY (NewTable, TableDesc->Pointer, TableDesc->Length);
+    memcpy (NewTable, TableDesc->Pointer, TableDesc->Length);
     AcpiTbUninstallTable (TableDesc);
 
     AcpiTbInitTableDescriptor (
-        &AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT],
+        &AcpiGbl_RootTableList.Tables[AcpiGbl_DsdtIndex],
         ACPI_PTR_TO_PHYSADDR (NewTable), ACPI_TABLE_ORIGIN_INTERNAL_VIRTUAL,
         NewTable);
 
@@ -460,13 +473,6 @@ AcpiTbParseRootTable (
         TableEntrySize);
     TableEntry = ACPI_ADD_PTR (UINT8, Table, sizeof (ACPI_TABLE_HEADER));
 
-    /*
-     * First two entries in the table array are reserved for the DSDT
-     * and FACS, which are not actually present in the RSDT/XSDT - they
-     * come from the FADT
-     */
-    AcpiGbl_RootTableList.CurrentTableCount = 2;
-
     /* Initialize the root table array from the RSDT/XSDT */
 
     for (i = 0; i < TableCount; i++)
@@ -500,4 +506,44 @@ NextTable:
     AcpiOsUnmapMemory (Table, Length);
 
     return_ACPI_STATUS (AE_OK);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiIsValidSignature
+ *
+ * PARAMETERS:  Signature           - Sig string to be validated
+ *
+ * RETURN:      TRUE if signature is correct length and has valid characters
+ *
+ * DESCRIPTION: Validate an ACPI table signature.
+ *
+ ******************************************************************************/
+
+BOOLEAN
+AcpiIsValidSignature (
+    char                    *Signature)
+{
+    UINT32                  i;
+
+
+    /* Validate the signature length */
+
+    if (strlen (Signature) != ACPI_NAME_SIZE)
+    {
+        return (FALSE);
+    }
+
+    /* Validate each character in the signature */
+
+    for (i = 0; i < ACPI_NAME_SIZE; i++)
+    {
+        if (!AcpiUtValidAcpiChar (Signature[i], i))
+        {
+            return (FALSE);
+        }
+    }
+
+    return (TRUE);
 }

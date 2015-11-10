@@ -298,8 +298,8 @@ AcpiExConcatTemplate (
      * EndTag descriptor is copied from Operand1.
      */
     NewBuf = ReturnDesc->Buffer.Pointer;
-    ACPI_MEMCPY (NewBuf, Operand0->Buffer.Pointer, Length0);
-    ACPI_MEMCPY (NewBuf + Length0, Operand1->Buffer.Pointer, Length1);
+    memcpy (NewBuf, Operand0->Buffer.Pointer, Length0);
+    memcpy (NewBuf + Length0, Operand1->Buffer.Pointer, Length1);
 
     /* Insert EndTag and set the checksum to zero, means "ignore checksum" */
 
@@ -413,12 +413,12 @@ AcpiExDoConcatenate (
 
         /* Copy the first integer, LSB first */
 
-        ACPI_MEMCPY (NewBuf, &Operand0->Integer.Value,
+        memcpy (NewBuf, &Operand0->Integer.Value,
                         AcpiGbl_IntegerByteWidth);
 
         /* Copy the second integer (LSB first) after the first */
 
-        ACPI_MEMCPY (NewBuf + AcpiGbl_IntegerByteWidth,
+        memcpy (NewBuf + AcpiGbl_IntegerByteWidth,
                         &LocalOperand1->Integer.Value,
                         AcpiGbl_IntegerByteWidth);
         break;
@@ -440,8 +440,8 @@ AcpiExDoConcatenate (
 
         /* Concatenate the strings */
 
-        ACPI_STRCPY (NewBuf, Operand0->String.Pointer);
-        ACPI_STRCPY (NewBuf + Operand0->String.Length,
+        strcpy (NewBuf, Operand0->String.Pointer);
+        strcpy (NewBuf + Operand0->String.Length,
                         LocalOperand1->String.Pointer);
         break;
 
@@ -462,9 +462,9 @@ AcpiExDoConcatenate (
 
         /* Concatenate the buffers */
 
-        ACPI_MEMCPY (NewBuf, Operand0->Buffer.Pointer,
+        memcpy (NewBuf, Operand0->Buffer.Pointer,
                         Operand0->Buffer.Length);
-        ACPI_MEMCPY (NewBuf + Operand0->Buffer.Length,
+        memcpy (NewBuf + Operand0->Buffer.Length,
                         LocalOperand1->Buffer.Pointer,
                         LocalOperand1->Buffer.Length);
         break;
@@ -785,7 +785,7 @@ AcpiExDoLogicalOp (
 
         /* Lexicographic compare: compare the data bytes */
 
-        Compare = ACPI_MEMCMP (Operand0->Buffer.Pointer,
+        Compare = memcmp (Operand0->Buffer.Pointer,
                     LocalOperand1->Buffer.Pointer,
                     (Length0 > Length1) ? Length1 : Length0);
 

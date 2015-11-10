@@ -240,7 +240,7 @@ AcpiUtDumpBuffer (
             }
 
             BufChar = Buffer[(ACPI_SIZE) i + j];
-            if (ACPI_IS_PRINT (BufChar))
+            if (isprint (BufChar))
             {
                 AcpiOsPrintf ("%c", BufChar);
             }
@@ -413,7 +413,7 @@ AcpiUtDumpBufferToFile (
             }
 
             BufChar = Buffer[(ACPI_SIZE) i + j];
-            if (ACPI_IS_PRINT (BufChar))
+            if (isprint (BufChar))
             {
                 AcpiUtFilePrintf (File, "%c", BufChar);
             }

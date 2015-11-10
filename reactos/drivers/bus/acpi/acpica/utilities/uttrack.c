@@ -185,7 +185,7 @@ AcpiUtCreateList (
         return (AE_NO_MEMORY);
     }
 
-    ACPI_MEMSET (Cache, 0, sizeof (ACPI_MEMORY_LIST));
+    memset (Cache, 0, sizeof (ACPI_MEMORY_LIST));
 
     Cache->ListName   = ListName;
     Cache->ObjectSize = ObjectSize;
@@ -517,7 +517,7 @@ AcpiUtTrackAllocation (
     Allocation->Component = Component;
     Allocation->Line      = Line;
 
-    ACPI_STRNCPY (Allocation->Module, Module, ACPI_MAX_MODULE_NAME);
+    strncpy (Allocation->Module, Module, ACPI_MAX_MODULE_NAME);
     Allocation->Module[ACPI_MAX_MODULE_NAME-1] = 0;
 
     if (!Element)
@@ -628,7 +628,7 @@ AcpiUtRemoveAllocation (
 
     /* Mark the segment as deleted */
 
-    ACPI_MEMSET (&Allocation->UserSpace, 0xEA, Allocation->Size);
+    memset (&Allocation->UserSpace, 0xEA, Allocation->Size);
 
     Status = AcpiUtReleaseMutex (ACPI_MTX_MEMORY);
     return (Status);
@@ -739,7 +739,7 @@ AcpiUtDumpAllocations (
     while (Element)
     {
         if ((Element->Component & Component) &&
-            ((Module == NULL) || (0 == ACPI_STRCMP (Module, Element->Module))))
+            ((Module == NULL) || (0 == strcmp (Module, Element->Module))))
         {
             Descriptor = ACPI_CAST_PTR (ACPI_DESCRIPTOR, &Element->UserSpace);
 

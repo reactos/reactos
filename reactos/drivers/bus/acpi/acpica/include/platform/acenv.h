@@ -143,13 +143,14 @@
 
 #ifdef ACPI_ASL_COMPILER
 #define ACPI_APPLICATION
-#define ACPI_DISASSEMBLER
 #define ACPI_DEBUG_OUTPUT
 #define ACPI_CONSTANT_EVAL_ONLY
 #define ACPI_LARGE_NAMESPACE_NODE
 #define ACPI_DATA_TABLE_DISASSEMBLY
 #define ACPI_SINGLE_THREADED
 #define ACPI_32BIT_PHYSICAL_ADDRESS
+
+#define ACPI_DISASSEMBLER 1
 #endif
 
 /* AcpiExec configuration. Multithreaded with full AML debugger */
@@ -162,8 +163,8 @@
 #endif
 
 /*
- * AcpiBin/AcpiDump/AcpiHelp/AcpiNames/AcpiSrc/AcpiXtract/Example configuration.
- * All single threaded.
+ * AcpiBin/AcpiDump/AcpiHelp/AcpiNames/AcpiSrc/AcpiXtract/Example
+ * configuration. All single threaded.
  */
 #if (defined ACPI_BIN_APP)      || \
     (defined ACPI_DUMP_APP)     || \
@@ -196,7 +197,7 @@
 #define ACPI_USE_NATIVE_RSDP_POINTER
 #endif
 
-/* AcpiDump configuration. Native mapping used if provied by OSPMs */
+/* AcpiDump configuration. Native mapping used if provided by the host */
 
 #ifdef ACPI_DUMP_APP
 #define ACPI_USE_NATIVE_MEMORY_MAPPING
@@ -214,6 +215,7 @@
 
 #ifdef ACPI_LIBRARY
 #define ACPI_USE_LOCAL_CACHE
+#define ACPI_FULL_DEBUG
 #endif
 
 /* Common for all ACPICA applications */
@@ -223,14 +225,13 @@
 #define ACPI_USE_LOCAL_CACHE
 #endif
 
-/* Common debug support */
+/* Common debug/disassembler support */
 
 #ifdef ACPI_FULL_DEBUG
-#define ACPI_DEBUGGER
 #define ACPI_DEBUG_OUTPUT
-#define ACPI_DISASSEMBLER
+#define ACPI_DEBUGGER 1
+#define ACPI_DISASSEMBLER 1
 #endif
-
 
 /*! [Begin] no source code translation */
 
@@ -246,6 +247,9 @@
 
 #elif defined(_APPLE) || defined(__APPLE__)
 #include "acmacosx.h"
+
+#elif defined(__DragonFly__)
+#include "acdragonfly.h"
 
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include "acfreebsd.h"
@@ -369,6 +373,7 @@
 #define ACPI_INTERNAL_VAR_XFACE
 #endif
 
+
 /*
  * Debugger threading model
  * Use single threaded if the entire subsystem is contained in an application
@@ -378,11 +383,11 @@
  * multi-threaded if ACPI_APPLICATION is not set.
  */
 #ifndef DEBUGGER_THREADING
-#ifdef ACPI_APPLICATION
-#define DEBUGGER_THREADING          DEBUGGER_SINGLE_THREADED
+#if !defined (ACPI_APPLICATION) || defined (ACPI_EXEC_APP)
+#define DEBUGGER_THREADING          DEBUGGER_MULTI_THREADED
 
 #else
-#define DEBUGGER_THREADING          DEBUGGER_MULTI_THREADED
+#define DEBUGGER_THREADING          DEBUGGER_SINGLE_THREADED
 #endif
 #endif /* !DEBUGGER_THREADING */
 
@@ -399,8 +404,8 @@
  * ACPI_USE_STANDARD_HEADERS - Define this if linking to a C library and
  *      the standard header files may be used.
  *
- * The ACPICA subsystem only uses low level C library functions that do not call
- * operating system services and may therefore be inlined in the code.
+ * The ACPICA subsystem only uses low level C library functions that do not
+ * call operating system services and may therefore be inlined in the code.
  *
  * It may be necessary to tailor these include files to the target
  * generation environment.
@@ -421,28 +426,6 @@
 #endif /* ACPI_USE_STANDARD_HEADERS */
 
 /* We will be linking to the standard Clib functions */
-
-#define ACPI_STRSTR(s1,s2)      strstr((s1), (s2))
-#define ACPI_STRCHR(s1,c)       strchr((s1), (c))
-#define ACPI_STRLEN(s)          (ACPI_SIZE) strlen((s))
-#define ACPI_STRCPY(d,s)        (void) strcpy((d), (s))
-#define ACPI_STRNCPY(d,s,n)     (void) strncpy((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRNCMP(d,s,n)     strncmp((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRCMP(d,s)        strcmp((d), (s))
-#define ACPI_STRCAT(d,s)        (void) strcat((d), (s))
-#define ACPI_STRNCAT(d,s,n)     strncat((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRTOUL(d,s,n)     strtoul((d), (s), (ACPI_SIZE)(n))
-#define ACPI_MEMCMP(s1,s2,n)    memcmp((const char *)(s1), (const char *)(s2), (ACPI_SIZE)(n))
-#define ACPI_MEMCPY(d,s,n)      (void) memcpy((d), (s), (ACPI_SIZE)(n))
-#define ACPI_MEMSET(d,s,n)      (void) memset((d), (s), (ACPI_SIZE)(n))
-#define ACPI_TOUPPER(i)         toupper((int) (i))
-#define ACPI_TOLOWER(i)         tolower((int) (i))
-#define ACPI_IS_XDIGIT(i)       isxdigit((int) (i))
-#define ACPI_IS_DIGIT(i)        isdigit((int) (i))
-#define ACPI_IS_SPACE(i)        isspace((int) (i))
-#define ACPI_IS_UPPER(i)        isupper((int) (i))
-#define ACPI_IS_PRINT(i)        isprint((int) (i))
-#define ACPI_IS_ALPHA(i)        isalpha((int) (i))
 
 #else
 
@@ -480,22 +463,6 @@ typedef char *va_list;
 #endif /* va_arg */
 
 /* Use the local (ACPICA) definitions of the clib functions */
-
-#define ACPI_STRSTR(s1,s2)      AcpiUtStrstr ((s1), (s2))
-#define ACPI_STRCHR(s1,c)       AcpiUtStrchr ((s1), (c))
-#define ACPI_STRLEN(s)          (ACPI_SIZE) AcpiUtStrlen ((s))
-#define ACPI_STRCPY(d,s)        (void) AcpiUtStrcpy ((d), (s))
-#define ACPI_STRNCPY(d,s,n)     (void) AcpiUtStrncpy ((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRNCMP(d,s,n)     AcpiUtStrncmp ((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRCMP(d,s)        AcpiUtStrcmp ((d), (s))
-#define ACPI_STRCAT(d,s)        (void) AcpiUtStrcat ((d), (s))
-#define ACPI_STRNCAT(d,s,n)     AcpiUtStrncat ((d), (s), (ACPI_SIZE)(n))
-#define ACPI_STRTOUL(d,s,n)     AcpiUtStrtoul ((d), (s), (ACPI_SIZE)(n))
-#define ACPI_MEMCMP(s1,s2,n)    AcpiUtMemcmp((const char *)(s1), (const char *)(s2), (ACPI_SIZE)(n))
-#define ACPI_MEMCPY(d,s,n)      (void) AcpiUtMemcpy ((d), (s), (ACPI_SIZE)(n))
-#define ACPI_MEMSET(d,v,n)      (void) AcpiUtMemset ((d), (v), (ACPI_SIZE)(n))
-#define ACPI_TOUPPER(c)         AcpiUtToUpper ((int) (c))
-#define ACPI_TOLOWER(c)         AcpiUtToLower ((int) (c))
 
 #endif /* ACPI_USE_SYSTEM_CLIBRARY */
 

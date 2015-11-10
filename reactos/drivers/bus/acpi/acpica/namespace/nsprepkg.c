@@ -393,6 +393,13 @@ AcpiNsCheckPackage (
         Status = AcpiNsCheckPackageList (Info, Package, Elements, Count);
         break;
 
+    case ACPI_PTYPE2_VAR_VAR:
+        /*
+         * Returns a variable list of packages, each with a variable list
+         * of objects.
+         */
+        break;
+
     case ACPI_PTYPE2_UUID_PAIR:
 
         /* The package must contain pairs of (UUID + type) */
@@ -560,6 +567,12 @@ AcpiNsCheckPackageList (
             {
                 return (Status);
             }
+            break;
+
+        case ACPI_PTYPE2_VAR_VAR:
+            /*
+             * Each subpackage has a fixed or variable number of elements
+             */
             break;
 
         case ACPI_PTYPE2_FIXED:

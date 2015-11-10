@@ -202,7 +202,7 @@ AcpiRsConvertAmlToResource (
             /*
              * Get the resource type and the initial (minimum) length
              */
-            ACPI_MEMSET (Resource, 0, INIT_RESOURCE_LENGTH (Info));
+            memset (Resource, 0, INIT_RESOURCE_LENGTH (Info));
             Resource->Type = INIT_RESOURCE_TYPE (Info);
             Resource->Length = INIT_RESOURCE_LENGTH (Info);
             break;
@@ -398,13 +398,13 @@ AcpiRsConvertAmlToResource (
 
         case ACPI_RSC_SET8:
 
-            ACPI_MEMSET (Destination, Info->AmlOffset, Info->Value);
+            memset (Destination, Info->AmlOffset, Info->Value);
             break;
 
         case ACPI_RSC_DATA8:
 
             Target = ACPI_ADD_PTR (char, Resource, Info->Value);
-            ACPI_MEMCPY (Destination, Source,  ACPI_GET16 (Target));
+            memcpy (Destination, Source,  ACPI_GET16 (Target));
             break;
 
         case ACPI_RSC_ADDRESS:
@@ -577,7 +577,7 @@ AcpiRsConvertResourceToAml (
         {
         case ACPI_RSC_INITSET:
 
-            ACPI_MEMSET (Aml, 0, INIT_RESOURCE_LENGTH (Info));
+            memset (Aml, 0, INIT_RESOURCE_LENGTH (Info));
             AmlLength = INIT_RESOURCE_LENGTH (Info);
             AcpiRsSetResourceHeader (INIT_RESOURCE_TYPE (Info), AmlLength, Aml);
             break;

@@ -125,82 +125,6 @@
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiNsBuildExternalPath
- *
- * PARAMETERS:  Node            - NS node whose pathname is needed
- *              Size            - Size of the pathname
- *              *NameBuffer     - Where to return the pathname
- *
- * RETURN:      Status
- *              Places the pathname into the NameBuffer, in external format
- *              (name segments separated by path separators)
- *
- * DESCRIPTION: Generate a full pathaname
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiNsBuildExternalPath (
-    ACPI_NAMESPACE_NODE     *Node,
-    ACPI_SIZE               Size,
-    char                    *NameBuffer)
-{
-    ACPI_SIZE               Index;
-    ACPI_NAMESPACE_NODE     *ParentNode;
-
-
-    ACPI_FUNCTION_ENTRY ();
-
-
-    /* Special case for root */
-
-    Index = Size - 1;
-    if (Index < ACPI_NAME_SIZE)
-    {
-        NameBuffer[0] = AML_ROOT_PREFIX;
-        NameBuffer[1] = 0;
-        return (AE_OK);
-    }
-
-    /* Store terminator byte, then build name backwards */
-
-    ParentNode = Node;
-    NameBuffer[Index] = 0;
-
-    while ((Index > ACPI_NAME_SIZE) && (ParentNode != AcpiGbl_RootNode))
-    {
-        Index -= ACPI_NAME_SIZE;
-
-        /* Put the name into the buffer */
-
-        ACPI_MOVE_32_TO_32 ((NameBuffer + Index), &ParentNode->Name);
-        ParentNode = ParentNode->Parent;
-
-        /* Prefix name with the path separator */
-
-        Index--;
-        NameBuffer[Index] = ACPI_PATH_SEPARATOR;
-    }
-
-    /* Overwrite final separator with the root prefix character */
-
-    NameBuffer[Index] = AML_ROOT_PREFIX;
-
-    if (Index != 0)
-    {
-        ACPI_ERROR ((AE_INFO,
-            "Could not construct external pathname; index=%u, size=%u, Path=%s",
-            (UINT32) Index, (UINT32) Size, &NameBuffer[Size]));
-
-        return (AE_BAD_PARAMETER);
-    }
-
-    return (AE_OK);
-}
-
-
-/*******************************************************************************
- *
  * FUNCTION:    AcpiNsGetExternalPathname
  *
  * PARAMETERS:  Node            - Namespace node whose pathname is needed
@@ -218,39 +142,13 @@ char *
 AcpiNsGetExternalPathname (
     ACPI_NAMESPACE_NODE     *Node)
 {
-    ACPI_STATUS             Status;
     char                    *NameBuffer;
-    ACPI_SIZE               Size;
 
 
     ACPI_FUNCTION_TRACE_PTR (NsGetExternalPathname, Node);
 
 
-    /* Calculate required buffer size based on depth below root */
-
-    Size = AcpiNsGetPathnameLength (Node);
-    if (!Size)
-    {
-        return_PTR (NULL);
-    }
-
-    /* Allocate a buffer to be returned to caller */
-
-    NameBuffer = ACPI_ALLOCATE_ZEROED (Size);
-    if (!NameBuffer)
-    {
-        ACPI_ERROR ((AE_INFO, "Could not allocate %u bytes", (UINT32) Size));
-        return_PTR (NULL);
-    }
-
-    /* Build the path in the allocated buffer */
-
-    Status = AcpiNsBuildExternalPath (Node, Size, NameBuffer);
-    if (ACPI_FAILURE (Status))
-    {
-        ACPI_FREE (NameBuffer);
-        return_PTR (NULL);
-    }
+    NameBuffer = AcpiNsGetNormalizedPathname (Node, FALSE);
 
     return_PTR (NameBuffer);
 }
@@ -273,38 +171,14 @@ AcpiNsGetPathnameLength (
     ACPI_NAMESPACE_NODE     *Node)
 {
     ACPI_SIZE               Size;
-    ACPI_NAMESPACE_NODE     *NextNode;
 
 
     ACPI_FUNCTION_ENTRY ();
 
 
-    /*
-     * Compute length of pathname as 5 * number of name segments.
-     * Go back up the parent tree to the root
-     */
-    Size = 0;
-    NextNode = Node;
+    Size = AcpiNsBuildNormalizedPath (Node, NULL, 0, FALSE);
 
-    while (NextNode && (NextNode != AcpiGbl_RootNode))
-    {
-        if (ACPI_GET_DESCRIPTOR_TYPE (NextNode) != ACPI_DESC_TYPE_NAMED)
-        {
-            ACPI_ERROR ((AE_INFO,
-                "Invalid Namespace Node (%p) while traversing namespace",
-                NextNode));
-            return (0);
-        }
-        Size += ACPI_PATH_SEGMENT_LENGTH;
-        NextNode = NextNode->Parent;
-    }
-
-    if (!Size)
-    {
-        Size = 1; /* Root node case */
-    }
-
-    return (Size + 1);  /* +1 for null string terminator */
+    return (Size);
 }
 
 
@@ -315,6 +189,8 @@ AcpiNsGetPathnameLength (
  * PARAMETERS:  TargetHandle            - Handle of named object whose name is
  *                                        to be found
  *              Buffer                  - Where the pathname is returned
+ *              NoTrailing              - Remove trailing '_' for each name
+ *                                        segment
  *
  * RETURN:      Status, Buffer is filled with pathname if status is AE_OK
  *
@@ -325,7 +201,8 @@ AcpiNsGetPathnameLength (
 ACPI_STATUS
 AcpiNsHandleToPathname (
     ACPI_HANDLE             TargetHandle,
-    ACPI_BUFFER             *Buffer)
+    ACPI_BUFFER             *Buffer,
+    BOOLEAN                 NoTrailing)
 {
     ACPI_STATUS             Status;
     ACPI_NAMESPACE_NODE     *Node;
@@ -343,7 +220,7 @@ AcpiNsHandleToPathname (
 
     /* Determine size required for the caller buffer */
 
-    RequiredSize = AcpiNsGetPathnameLength (Node);
+    RequiredSize = AcpiNsBuildNormalizedPath (Node, NULL, 0, NoTrailing);
     if (!RequiredSize)
     {
         return_ACPI_STATUS (AE_BAD_PARAMETER);
@@ -359,7 +236,8 @@ AcpiNsHandleToPathname (
 
     /* Build the path in the caller buffer */
 
-    Status = AcpiNsBuildExternalPath (Node, RequiredSize, Buffer->Pointer);
+    (void) AcpiNsBuildNormalizedPath (Node, Buffer->Pointer,
+            RequiredSize, NoTrailing);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -368,4 +246,170 @@ AcpiNsHandleToPathname (
     ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%s [%X]\n",
         (char *) Buffer->Pointer, (UINT32) RequiredSize));
     return_ACPI_STATUS (AE_OK);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiNsBuildNormalizedPath
+ *
+ * PARAMETERS:  Node        - Namespace node
+ *              FullPath    - Where the path name is returned
+ *              PathSize    - Size of returned path name buffer
+ *              NoTrailing  - Remove trailing '_' from each name segment
+ *
+ * RETURN:      Return 1 if the AML path is empty, otherwise returning (length
+ *              of pathname + 1) which means the 'FullPath' contains a trailing
+ *              null.
+ *
+ * DESCRIPTION: Build and return a full namespace pathname.
+ *              Note that if the size of 'FullPath' isn't large enough to
+ *              contain the namespace node's path name, the actual required
+ *              buffer length is returned, and it should be greater than
+ *              'PathSize'. So callers are able to check the returning value
+ *              to determine the buffer size of 'FullPath'.
+ *
+ ******************************************************************************/
+
+UINT32
+AcpiNsBuildNormalizedPath (
+    ACPI_NAMESPACE_NODE     *Node,
+    char                    *FullPath,
+    UINT32                  PathSize,
+    BOOLEAN                 NoTrailing)
+{
+    UINT32                  Length = 0, i;
+    char                    Name[ACPI_NAME_SIZE];
+    BOOLEAN                 DoNoTrailing;
+    char                    c, *Left, *Right;
+    ACPI_NAMESPACE_NODE     *NextNode;
+
+
+    ACPI_FUNCTION_TRACE_PTR (NsBuildNormalizedPath, Node);
+
+
+#define ACPI_PATH_PUT8(Path, Size, Byte, Length)    \
+    do {                                            \
+        if ((Length) < (Size))                      \
+        {                                           \
+            (Path)[(Length)] = (Byte);              \
+        }                                           \
+        (Length)++;                                 \
+    } while (0)
+
+    /*
+     * Make sure the PathSize is correct, so that we don't need to
+     * validate both FullPath and PathSize.
+     */
+    if (!FullPath)
+    {
+        PathSize = 0;
+    }
+
+    if (!Node)
+    {
+        goto BuildTrailingNull;
+    }
+
+    NextNode = Node;
+    while (NextNode && NextNode != AcpiGbl_RootNode)
+    {
+        if (NextNode != Node)
+        {
+            ACPI_PATH_PUT8(FullPath, PathSize, AML_DUAL_NAME_PREFIX, Length);
+        }
+        ACPI_MOVE_32_TO_32 (Name, &NextNode->Name);
+        DoNoTrailing = NoTrailing;
+        for (i = 0; i < 4; i++)
+        {
+            c = Name[4-i-1];
+            if (DoNoTrailing && c != '_')
+            {
+                DoNoTrailing = FALSE;
+            }
+            if (!DoNoTrailing)
+            {
+                ACPI_PATH_PUT8(FullPath, PathSize, c, Length);
+            }
+        }
+        NextNode = NextNode->Parent;
+    }
+    ACPI_PATH_PUT8(FullPath, PathSize, AML_ROOT_PREFIX, Length);
+
+    /* Reverse the path string */
+
+    if (Length <= PathSize)
+    {
+        Left = FullPath;
+        Right = FullPath+Length-1;
+        while (Left < Right)
+        {
+            c = *Left;
+            *Left++ = *Right;
+            *Right-- = c;
+        }
+    }
+
+    /* Append the trailing null */
+
+BuildTrailingNull:
+    ACPI_PATH_PUT8(FullPath, PathSize, '\0', Length);
+
+#undef ACPI_PATH_PUT8
+
+    return_UINT32 (Length);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiNsGetNormalizedPathname
+ *
+ * PARAMETERS:  Node            - Namespace node whose pathname is needed
+ *              NoTrailing      - Remove trailing '_' from each name segment
+ *
+ * RETURN:      Pointer to storage containing the fully qualified name of
+ *              the node, In external format (name segments separated by path
+ *              separators.)
+ *
+ * DESCRIPTION: Used to obtain the full pathname to a namespace node, usually
+ *              for error and debug statements. All trailing '_' will be
+ *              removed from the full pathname if 'NoTrailing' is specified..
+ *
+ ******************************************************************************/
+
+char *
+AcpiNsGetNormalizedPathname (
+    ACPI_NAMESPACE_NODE     *Node,
+    BOOLEAN                 NoTrailing)
+{
+    char                    *NameBuffer;
+    ACPI_SIZE               Size;
+
+
+    ACPI_FUNCTION_TRACE_PTR (NsGetNormalizedPathname, Node);
+
+
+    /* Calculate required buffer size based on depth below root */
+
+    Size = AcpiNsBuildNormalizedPath (Node, NULL, 0, NoTrailing);
+    if (!Size)
+    {
+        return_PTR (NULL);
+    }
+
+    /* Allocate a buffer to be returned to caller */
+
+    NameBuffer = ACPI_ALLOCATE_ZEROED (Size);
+    if (!NameBuffer)
+    {
+        ACPI_ERROR ((AE_INFO, "Could not allocate %u bytes", (UINT32) Size));
+        return_PTR (NULL);
+    }
+
+    /* Build the path in the allocated buffer */
+
+    (void) AcpiNsBuildNormalizedPath (Node, NameBuffer, Size, NoTrailing);
+
+    return_PTR (NameBuffer);
 }

@@ -178,6 +178,11 @@
  *      count = 0 (optional)
  *      (Used for _DLM)
  *
+ * ACPI_PTYPE2_VAR_VAR: Variable number of subpackages, each of either a
+ *      constant or variable length. The subpackages are preceded by a
+ *      constant number of objects.
+ *      (Used for _LPI, _RDI)
+ *
  * ACPI_PTYPE2_UUID_PAIR: Each subpackage is preceded by a UUID Buffer. The UUID
  *      defines the format of the package. Zero-length parent package is
  *      allowed.
@@ -197,7 +202,8 @@ enum AcpiReturnPackageTypes
     ACPI_PTYPE2_MIN         = 8,
     ACPI_PTYPE2_REV_FIXED   = 9,
     ACPI_PTYPE2_FIX_VAR     = 10,
-    ACPI_PTYPE2_UUID_PAIR   = 11
+    ACPI_PTYPE2_VAR_VAR     = 11,
+    ACPI_PTYPE2_UUID_PAIR   = 12
 };
 
 
@@ -249,7 +255,7 @@ enum AcpiReturnPackageTypes
  * These are the names that can actually be evaluated via AcpiEvaluateObject.
  * Not present in this table are the following:
  *
- *      1) Predefined/Reserved names that are never evaluated via
+ *      1) Predefined/Reserved names that are not usually evaluated via
  *         AcpiEvaluateObject:
  *              _Lxx and _Exx GPE methods
  *              _Qxx EC methods
@@ -435,6 +441,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (4 Int) */
                     PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 4,0,0,0),
 
+    {{"_BTH",   METHOD_1ARGS (ACPI_TYPE_INTEGER),      /* ACPI 6.0 */
+                METHOD_NO_RETURN_VALUE}},
+
     {{"_BTM",   METHOD_1ARGS (ACPI_TYPE_INTEGER),
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
@@ -461,6 +470,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_CPC",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Ints/Bufs) */
                     PACKAGE_INFO (ACPI_PTYPE1_VAR, ACPI_RTYPE_INTEGER | ACPI_RTYPE_BUFFER, 0,0,0,0),
+
+    {{"_CR3",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
     {{"_CRS",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
@@ -515,7 +527,7 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_DOS",   METHOD_1ARGS (ACPI_TYPE_INTEGER),
                 METHOD_NO_RETURN_VALUE}},
 
-    {{"_DSD",   METHOD_0ARGS,
+    {{"_DSD",   METHOD_0ARGS,                          /* ACPI 6.0 */
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Pkgs) each: 1 Buf, 1 Pkg */
                     PACKAGE_INFO (ACPI_PTYPE2_UUID_PAIR, ACPI_RTYPE_BUFFER, 1, ACPI_RTYPE_PACKAGE, 1,0),
 
@@ -669,6 +681,11 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (1 Int(rev), n Pkg (2 Int) */
                     PACKAGE_INFO (ACPI_PTYPE2_REV_FIXED, ACPI_RTYPE_INTEGER, 2,0,0,0),
 
+    {{"_LPI",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (3 Int, n Pkg (10 Int/Buf) */
+                    PACKAGE_INFO (ACPI_PTYPE2_VAR_VAR, ACPI_RTYPE_INTEGER, 3,
+                    ACPI_RTYPE_INTEGER | ACPI_RTYPE_BUFFER | ACPI_RTYPE_STRING, 10,0),
+
     {{"_MAT",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
@@ -684,6 +701,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
                 METHOD_NO_RETURN_VALUE}},
 
     {{"_MSM",   METHOD_4ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
+
+    {{"_MTL",   METHOD_0ARGS,                          /* ACPI 6.0 */
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
     {{"_NTT",   METHOD_0ARGS,
@@ -773,6 +793,10 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Refs) */
                     PACKAGE_INFO (ACPI_PTYPE1_VAR, ACPI_RTYPE_REFERENCE, 0,0,0,0),
 
+    {{"_PRR",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (1 Ref) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_REFERENCE, 1,0,0,0),
+
     {{"_PRS",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
@@ -850,6 +874,11 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_PXM",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
+    {{"_RDI",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (1 Int, n Pkg (m Ref)) */
+                    PACKAGE_INFO (ACPI_PTYPE2_VAR_VAR, ACPI_RTYPE_INTEGER, 1,
+                    ACPI_RTYPE_REFERENCE,0,0),
+
     {{"_REG",   METHOD_2ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
                 METHOD_NO_RETURN_VALUE}},
 
@@ -861,6 +890,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
 
     {{"_ROM",   METHOD_2ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
+
+    {{"_RST",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_NO_RETURN_VALUE}},
 
     {{"_RTV",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
@@ -988,6 +1020,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_TDL",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
+    {{"_TFP",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
+
     {{"_TIP",   METHOD_1ARGS (ACPI_TYPE_INTEGER),
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
@@ -1010,6 +1045,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_TSD",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (Pkgs) each 5 Int with count */
                     PACKAGE_INFO (ACPI_PTYPE2_COUNT,ACPI_RTYPE_INTEGER, 5,0,0,0),
+
+    {{"_TSN",   METHOD_0ARGS,                          /* ACPI 6.0 */
+                METHOD_RETURNS (ACPI_RTYPE_REFERENCE)}},
 
     {{"_TSP",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},

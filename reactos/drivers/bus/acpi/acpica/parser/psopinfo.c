@@ -124,9 +124,6 @@
         ACPI_MODULE_NAME    ("psopinfo")
 
 
-extern const UINT8      AcpiGbl_ShortOpIndex[];
-extern const UINT8      AcpiGbl_LongOpIndex[];
-
 static const UINT8      AcpiGbl_ArgumentCount[] = {0,1,1,1,1,2,2,2,2,3,3,6};
 
 

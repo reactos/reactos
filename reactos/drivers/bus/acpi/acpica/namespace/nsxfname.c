@@ -198,7 +198,7 @@ AcpiGetHandle (
 
         /* Special case for root-only, since we can't search for it */
 
-        if (!ACPI_STRCMP (Pathname, ACPI_NS_ROOT_PATH))
+        if (!strcmp (Pathname, ACPI_NS_ROOT_PATH))
         {
             *RetHandle = ACPI_CAST_PTR (ACPI_HANDLE, AcpiGbl_RootNode);
             return (AE_OK);
@@ -265,11 +265,13 @@ AcpiGetName (
         return (Status);
     }
 
-    if (NameType == ACPI_FULL_PATHNAME)
+    if (NameType == ACPI_FULL_PATHNAME ||
+        NameType == ACPI_FULL_PATHNAME_NO_TRAILING)
     {
         /* Get the full pathname (From the namespace root) */
 
-        Status = AcpiNsHandleToPathname (Handle, Buffer);
+        Status = AcpiNsHandleToPathname (Handle, Buffer,
+                    NameType == ACPI_FULL_PATHNAME ? FALSE : TRUE);
         return (Status);
     }
 
@@ -343,7 +345,7 @@ AcpiNsCopyDeviceId (
 
     /* Copy actual string and return a pointer to the next string area */
 
-    ACPI_MEMCPY (StringArea, Source->String, Source->Length);
+    memcpy (StringArea, Source->String, Source->Length);
     return (StringArea + Source->Length);
 }
 
@@ -362,7 +364,7 @@ AcpiNsCopyDeviceId (
  *              control methods (Such as in the case of a device.)
  *
  * For Device and Processor objects, run the Device _HID, _UID, _CID, _SUB,
- * _STA, _ADR, _SxW, and _SxD methods.
+ * _CLS, _STA, _ADR, _SxW, and _SxD methods.
  *
  * Note: Allocates the return buffer, must be freed by the caller.
  *
@@ -379,11 +381,12 @@ AcpiGetObjectInfo (
     ACPI_PNP_DEVICE_ID      *Hid = NULL;
     ACPI_PNP_DEVICE_ID      *Uid = NULL;
     ACPI_PNP_DEVICE_ID      *Sub = NULL;
+    ACPI_PNP_DEVICE_ID      *Cls = NULL;
     char                    *NextIdString;
     ACPI_OBJECT_TYPE        Type;
     ACPI_NAME               Name;
     UINT8                   ParamCount= 0;
-    UINT8                   Valid = 0;
+    UINT16                  Valid = 0;
     UINT32                  InfoSize;
     UINT32                  i;
     ACPI_STATUS             Status;
@@ -431,7 +434,7 @@ AcpiGetObjectInfo (
     {
         /*
          * Get extra info for ACPI Device/Processor objects only:
-         * Run the Device _HID, _UID, _SUB, and _CID methods.
+         * Run the Device _HID, _UID, _SUB, _CID, and _CLS methods.
          *
          * Note: none of these methods are required, so they may or may
          * not be present for this device. The Info->Valid bitfield is used
@@ -474,6 +477,15 @@ AcpiGetObjectInfo (
 
             InfoSize += (CidList->ListSize - sizeof (ACPI_PNP_DEVICE_ID_LIST));
             Valid |= ACPI_VALID_CID;
+        }
+
+        /* Execute the Device._CLS method */
+
+        Status = AcpiUtExecute_CLS (Node, &Cls);
+        if (ACPI_SUCCESS (Status))
+        {
+            InfoSize += Cls->Length;
+            Valid |= ACPI_VALID_CLS;
         }
     }
 
@@ -606,6 +618,12 @@ AcpiGetObjectInfo (
         }
     }
 
+    if (Cls)
+    {
+        NextIdString = AcpiNsCopyDeviceId (&Info->ClassCode,
+            Cls, NextIdString);
+    }
+
     /* Copy the fixed-length data */
 
     Info->InfoSize = InfoSize;
@@ -634,6 +652,10 @@ Cleanup:
     if (CidList)
     {
         ACPI_FREE (CidList);
+    }
+    if (Cls)
+    {
+        ACPI_FREE (Cls);
     }
     return (Status);
 }
@@ -756,7 +778,7 @@ AcpiInstallMethod (
 
     /* Copy the method AML to the local buffer */
 
-    ACPI_MEMCPY (AmlBuffer, AmlStart, AmlLength);
+    memcpy (AmlBuffer, AmlStart, AmlLength);
 
     /* Initialize the method object with the new method's information */
 

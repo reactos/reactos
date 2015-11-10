@@ -204,7 +204,7 @@ AcpiInitializeTables (
     {
         /* Root Table Array has been statically allocated by the host */
 
-        ACPI_MEMSET (InitialTableArray, 0,
+        memset (InitialTableArray, 0,
             (ACPI_SIZE) InitialTableCount * sizeof (ACPI_TABLE_DESC));
 
         AcpiGbl_RootTableList.Tables = InitialTableArray;
@@ -343,7 +343,7 @@ AcpiGetTableHeader (
                     return (AE_NO_MEMORY);
                 }
 
-                ACPI_MEMCPY (OutTableHeader, Header,
+                memcpy (OutTableHeader, Header,
                     sizeof (ACPI_TABLE_HEADER));
                 AcpiOsUnmapMemory (Header, sizeof (ACPI_TABLE_HEADER));
             }
@@ -354,7 +354,7 @@ AcpiGetTableHeader (
         }
         else
         {
-            ACPI_MEMCPY (OutTableHeader,
+            memcpy (OutTableHeader,
                 AcpiGbl_RootTableList.Tables[i].Pointer,
                 sizeof (ACPI_TABLE_HEADER));
         }

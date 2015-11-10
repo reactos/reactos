@@ -292,6 +292,10 @@ AcpiUtDeleteInternalObj (
             AcpiUtDeleteObjectDesc (Object->Method.Mutex);
             Object->Method.Mutex = NULL;
         }
+        if (Object->Method.Node)
+        {
+            Object->Method.Node = NULL;
+        }
         break;
 
     case ACPI_TYPE_REGION:

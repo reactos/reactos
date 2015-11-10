@@ -123,12 +123,6 @@
 #define _COMPONENT          ACPI_TABLES
         ACPI_MODULE_NAME    ("tbxfload")
 
-/* Local prototypes */
-
-static ACPI_STATUS
-AcpiTbLoadNamespace (
-    void);
-
 
 /*******************************************************************************
  *
@@ -155,6 +149,14 @@ AcpiLoadTables (
     /* Load the namespace from the tables */
 
     Status = AcpiTbLoadNamespace ();
+
+    /* Don't let single failures abort the load */
+
+    if (Status == AE_CTRL_TERMINATE)
+    {
+        Status = AE_OK;
+    }
+
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
@@ -180,13 +182,16 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiLoadTables)
  *
  ******************************************************************************/
 
-static ACPI_STATUS
+ACPI_STATUS
 AcpiTbLoadNamespace (
     void)
 {
     ACPI_STATUS             Status;
     UINT32                  i;
     ACPI_TABLE_HEADER       *NewDsdt;
+    ACPI_TABLE_DESC         *Table;
+    UINT32                  TablesLoaded = 0;
+    UINT32                  TablesFailed = 0;
 
 
     ACPI_FUNCTION_TRACE (TbLoadNamespace);
@@ -198,12 +203,11 @@ AcpiTbLoadNamespace (
      * Load the namespace. The DSDT is required, but any SSDT and
      * PSDT tables are optional. Verify the DSDT.
      */
+    Table = &AcpiGbl_RootTableList.Tables[AcpiGbl_DsdtIndex];
+
     if (!AcpiGbl_RootTableList.CurrentTableCount ||
-        !ACPI_COMPARE_NAME (
-            &(AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT].Signature),
-            ACPI_SIG_DSDT) ||
-         ACPI_FAILURE (AcpiTbValidateTable (
-            &AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT])))
+        !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_DSDT) ||
+         ACPI_FAILURE (AcpiTbValidateTable (Table)))
     {
         Status = AE_NO_ACPI_TABLES;
         goto UnlockAndExit;
@@ -215,7 +219,7 @@ AcpiTbLoadNamespace (
      * array can change dynamically as tables are loaded at run-time. Note:
      * .Pointer field is not validated until after call to AcpiTbValidateTable.
      */
-    AcpiGbl_DSDT = AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT].Pointer;
+    AcpiGbl_DSDT = Table->Pointer;
 
     /*
      * Optionally copy the entire DSDT to local memory (instead of simply
@@ -225,7 +229,7 @@ AcpiTbLoadNamespace (
      */
     if (AcpiGbl_CopyDsdtLocally)
     {
-        NewDsdt = AcpiTbCopyDsdt (ACPI_TABLE_INDEX_DSDT);
+        NewDsdt = AcpiTbCopyDsdt (AcpiGbl_DsdtIndex);
         if (NewDsdt)
         {
             AcpiGbl_DSDT = NewDsdt;
@@ -236,17 +240,22 @@ AcpiTbLoadNamespace (
      * Save the original DSDT header for detection of table corruption
      * and/or replacement of the DSDT from outside the OS.
      */
-    ACPI_MEMCPY (&AcpiGbl_OriginalDsdtHeader, AcpiGbl_DSDT,
+    memcpy (&AcpiGbl_OriginalDsdtHeader, AcpiGbl_DSDT,
         sizeof (ACPI_TABLE_HEADER));
 
     (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
 
     /* Load and parse tables */
 
-    Status = AcpiNsLoadTable (ACPI_TABLE_INDEX_DSDT, AcpiGbl_RootNode);
+    Status = AcpiNsLoadTable (AcpiGbl_DsdtIndex, AcpiGbl_RootNode);
     if (ACPI_FAILURE (Status))
     {
-        return_ACPI_STATUS (Status);
+        ACPI_EXCEPTION ((AE_INFO, Status, "[DSDT] table load failed"));
+        TablesFailed++;
+    }
+    else
+    {
+        TablesLoaded++;
     }
 
     /* Load any SSDT or PSDT tables. Note: Loop leaves tables locked */
@@ -254,12 +263,13 @@ AcpiTbLoadNamespace (
     (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
     for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
     {
-        if ((!ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                    ACPI_SIG_SSDT) &&
-             !ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                    ACPI_SIG_PSDT)) ||
-             ACPI_FAILURE (AcpiTbValidateTable (
-                &AcpiGbl_RootTableList.Tables[i])))
+        Table = &AcpiGbl_RootTableList.Tables[i];
+
+        if (!AcpiGbl_RootTableList.Tables[i].Address ||
+            (!ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_SSDT) &&
+             !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_PSDT) &&
+             !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_OSDT)) ||
+             ACPI_FAILURE (AcpiTbValidateTable (Table)))
         {
             continue;
         }
@@ -267,11 +277,41 @@ AcpiTbLoadNamespace (
         /* Ignore errors while loading tables, get as many as possible */
 
         (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
-        (void) AcpiNsLoadTable (i, AcpiGbl_RootNode);
+        Status =  AcpiNsLoadTable (i, AcpiGbl_RootNode);
+        if (ACPI_FAILURE (Status))
+        {
+            ACPI_EXCEPTION ((AE_INFO, Status, "(%4.4s:%8.8s) while loading table",
+                Table->Signature.Ascii, Table->Pointer->OemTableId));
+            TablesFailed++;
+
+            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
+                "Table [%4.4s:%8.8s] (id FF) - Table namespace load failed\n\n",
+                Table->Signature.Ascii, Table->Pointer->OemTableId));
+        }
+        else
+        {
+            TablesLoaded++;
+        }
+
         (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
     }
 
-    ACPI_INFO ((AE_INFO, "All ACPI Tables successfully acquired"));
+    if (!TablesFailed)
+    {
+        ACPI_INFO ((AE_INFO,
+            "%u ACPI AML tables successfully acquired and loaded",
+            TablesLoaded));
+    }
+    else
+    {
+        ACPI_ERROR ((AE_INFO,
+            "%u table load failures, %u successful",
+            TablesFailed, TablesLoaded));
+
+        /* Indicate at least one failure */
+
+        Status = AE_CTRL_TERMINATE;
+    }
 
 UnlockAndExit:
     (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
@@ -310,11 +350,11 @@ AcpiInstallTable (
 
     if (Physical)
     {
-        Flags = ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL;
+        Flags = ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL;
     }
     else
     {
-        Flags = ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL;
+        Flags = ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL;
     }
 
     Status = AcpiTbInstallStandardTable (Address, Flags,

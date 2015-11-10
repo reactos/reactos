@@ -333,13 +333,29 @@ char *
 AcpiUtGetObjectTypeName (
     ACPI_OPERAND_OBJECT     *ObjDesc)
 {
+    ACPI_FUNCTION_TRACE (UtGetObjectTypeName);
+
 
     if (!ObjDesc)
     {
-        return ("[NULL Object Descriptor]");
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Null Object Descriptor\n"));
+        return_PTR ("[NULL Object Descriptor]");
     }
 
-    return (AcpiUtGetTypeName (ObjDesc->Common.Type));
+    /* These descriptor types share a common area */
+
+    if ((ACPI_GET_DESCRIPTOR_TYPE (ObjDesc) != ACPI_DESC_TYPE_OPERAND) &&
+        (ACPI_GET_DESCRIPTOR_TYPE (ObjDesc) != ACPI_DESC_TYPE_NAMED))
+    {
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+            "Invalid object descriptor type: 0x%2.2X [%s] (%p)\n",
+            ACPI_GET_DESCRIPTOR_TYPE (ObjDesc),
+            AcpiUtGetDescriptorName (ObjDesc), ObjDesc));
+
+        return_PTR ("Invalid object");
+    }
+
+    return_PTR (AcpiUtGetTypeName (ObjDesc->Common.Type));
 }
 
 
@@ -533,8 +549,6 @@ static char                 *AcpiGbl_MutexNames[ACPI_NUM_MUTEX] =
     "ACPI_MTX_Events",
     "ACPI_MTX_Caches",
     "ACPI_MTX_Memory",
-    "ACPI_MTX_CommandComplete",
-    "ACPI_MTX_CommandReady"
 };
 
 char *

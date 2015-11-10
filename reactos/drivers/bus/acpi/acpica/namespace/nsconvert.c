@@ -274,7 +274,7 @@ AcpiNsConvertToString (
          * Copy the raw buffer data with no transform. String is already NULL
          * terminated at Length+1.
          */
-        ACPI_MEMCPY (NewObject->String.Pointer,
+        memcpy (NewObject->String.Pointer,
             OriginalObject->Buffer.Pointer, Length);
         break;
 
@@ -341,7 +341,7 @@ AcpiNsConvertToBuffer (
             return (AE_NO_MEMORY);
         }
 
-        ACPI_MEMCPY (NewObject->Buffer.Pointer,
+        memcpy (NewObject->Buffer.Pointer,
             OriginalObject->String.Pointer, OriginalObject->String.Length);
         break;
 

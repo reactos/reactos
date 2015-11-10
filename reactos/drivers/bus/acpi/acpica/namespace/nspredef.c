@@ -321,7 +321,7 @@ AcpiNsCheckObjectType (
 {
     ACPI_OPERAND_OBJECT         *ReturnObject = *ReturnObjectPtr;
     ACPI_STATUS                 Status = AE_OK;
-    char                        TypeBuffer[48]; /* Room for 5 types */
+    char                        TypeBuffer[96]; /* Room for 10 types */
 
 
     /* A Namespace node should not get here, but make sure */

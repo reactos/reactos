@@ -118,9 +118,9 @@
 #include "acdispat.h"
 #include "acinterp.h"
 #include "acnamesp.h"
-#include "acdisasm.h"
 #include "acparser.h"
 #include "amlcode.h"
+#include "acdebug.h"
 
 
 #define _COMPONENT          ACPI_DISPATCHER
@@ -181,7 +181,7 @@ AcpiDsAutoSerializeMethod (
 
     /* Create/Init a root op for the method parse tree */
 
-    Op = AcpiPsAllocOp (AML_METHOD_OP);
+    Op = AcpiPsAllocOp (AML_METHOD_OP, ObjDesc->Method.AmlStart);
     if (!Op)
     {
         return_ACPI_STATUS (AE_NO_MEMORY);
@@ -195,6 +195,7 @@ AcpiDsAutoSerializeMethod (
     WalkState = AcpiDsCreateWalkState (Node->OwnerId, NULL, NULL, NULL);
     if (!WalkState)
     {
+        AcpiPsFreeOp (Op);
         return_ACPI_STATUS (AE_NO_MEMORY);
     }
 
@@ -203,6 +204,7 @@ AcpiDsAutoSerializeMethod (
     if (ACPI_FAILURE (Status))
     {
         AcpiDsDeleteWalkState (WalkState);
+        AcpiPsFreeOp (Op);
         return_ACPI_STATUS (Status);
     }
 
@@ -211,10 +213,6 @@ AcpiDsAutoSerializeMethod (
     /* Parse the method, scan for creation of named objects */
 
     Status = AcpiPsParseAml (WalkState);
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
 
     AcpiPsDeleteParseTree (Op);
     return_ACPI_STATUS (Status);
@@ -287,7 +285,7 @@ AcpiDsDetectNamedOpcodes (
  * RETURN:      Status
  *
  * DESCRIPTION: Called on method error. Invoke the global exception handler if
- *              present, dump the method data if the disassembler is configured
+ *              present, dump the method data if the debugger is configured
  *
  *              Note: Allows the exception handler to change the status code
  *
@@ -298,6 +296,9 @@ AcpiDsMethodError (
     ACPI_STATUS             Status,
     ACPI_WALK_STATE         *WalkState)
 {
+    UINT32                  AmlOffset;
+
+
     ACPI_FUNCTION_ENTRY ();
 
 
@@ -321,23 +322,28 @@ AcpiDsMethodError (
          * Handler can map the exception code to anything it wants, including
          * AE_OK, in which case the executing method will not be aborted.
          */
+        AmlOffset = (UINT32) ACPI_PTR_DIFF (WalkState->Aml,
+                        WalkState->ParserState.AmlStart);
+
         Status = AcpiGbl_ExceptionHandler (Status,
                     WalkState->MethodNode ?
                         WalkState->MethodNode->Name.Integer : 0,
-                    WalkState->Opcode, WalkState->AmlOffset, NULL);
+                    WalkState->Opcode, AmlOffset, NULL);
         AcpiExEnterInterpreter ();
     }
 
     AcpiDsClearImplicitReturn (WalkState);
 
-#ifdef ACPI_DISASSEMBLER
     if (ACPI_FAILURE (Status))
     {
-        /* Display method locals/args if disassembler is present */
+        AcpiDsDumpMethodStack (Status, WalkState, WalkState->Op);
 
-        AcpiDmDumpMethodInfo (Status, WalkState, WalkState->Op);
-    }
+        /* Display method locals/args if debugger is present */
+
+#ifdef ACPI_DEBUGGER
+        AcpiDbDumpMethodInfo (Status, WalkState);
 #endif
+    }
 
     return (Status);
 }
@@ -422,6 +428,8 @@ AcpiDsBeginMethodExecution (
     {
         return_ACPI_STATUS (AE_NULL_ENTRY);
     }
+
+    AcpiExStartTraceMethod (MethodNode, ObjDesc, WalkState);
 
     /* Prevent wraparound of thread count */
 
@@ -684,10 +692,7 @@ Cleanup:
     /* On error, we must terminate the method properly */
 
     AcpiDsTerminateControlMethod (ObjDesc, NextWalkState);
-    if (NextWalkState)
-    {
-        AcpiDsDeleteWalkState (NextWalkState);
-    }
+    AcpiDsDeleteWalkState (NextWalkState);
 
     return_ACPI_STATUS (Status);
 }
@@ -943,6 +948,9 @@ AcpiDsTerminateControlMethod (
             AcpiUtReleaseOwnerId (&MethodDesc->Method.OwnerId);
         }
     }
+
+    AcpiExStopTraceMethod ((ACPI_NAMESPACE_NODE *) MethodDesc->Method.Node,
+            MethodDesc, WalkState);
 
     return_VOID;
 }

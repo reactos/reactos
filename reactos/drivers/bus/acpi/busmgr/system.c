@@ -394,7 +394,7 @@ acpi_suspend (
 	_enable();
 
 	/* reset firmware waking vector */
-	AcpiSetFirmwareWakingVector((ACPI_PHYSICAL_ADDRESS) 0);
+	AcpiSetFirmwareWakingVector(0, 0);
 
 	return status;
 }

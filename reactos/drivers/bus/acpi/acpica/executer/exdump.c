@@ -310,7 +310,7 @@ static ACPI_EXDUMP_INFO     AcpiExDumpIndexField[5] =
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (IndexField.DataObj),           "Data Object"}
 };
 
-static ACPI_EXDUMP_INFO     AcpiExDumpReference[8] =
+static ACPI_EXDUMP_INFO     AcpiExDumpReference[9] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpReference),       NULL},
     {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Reference.Class),              "Class"},
@@ -319,6 +319,7 @@ static ACPI_EXDUMP_INFO     AcpiExDumpReference[8] =
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Reference.Object),             "Object Desc"},
     {ACPI_EXD_NODE,     ACPI_EXD_OFFSET (Reference.Node),               "Node"},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Reference.Where),              "Where"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Reference.IndexPointer),       "Index Pointer"},
     {ACPI_EXD_REFERENCE,0,                                              NULL}
 };
 
@@ -1110,7 +1111,8 @@ AcpiExDumpReferenceObj (
     {
         AcpiOsPrintf (" %p ", ObjDesc->Reference.Node);
 
-        Status = AcpiNsHandleToPathname (ObjDesc->Reference.Node, &RetBuf);
+        Status = AcpiNsHandleToPathname (ObjDesc->Reference.Node,
+            &RetBuf, TRUE);
         if (ACPI_FAILURE (Status))
         {
             AcpiOsPrintf (" Could not convert name to pathname\n");
@@ -1125,16 +1127,18 @@ AcpiExDumpReferenceObj (
     {
         if (ACPI_GET_DESCRIPTOR_TYPE (ObjDesc) == ACPI_DESC_TYPE_OPERAND)
         {
-            AcpiOsPrintf (" Target: %p", ObjDesc->Reference.Object);
+            AcpiOsPrintf ("%22s %p", "Target :",
+                ObjDesc->Reference.Object);
             if (ObjDesc->Reference.Class == ACPI_REFCLASS_TABLE)
             {
-                AcpiOsPrintf (" Table Index: %X\n", ObjDesc->Reference.Value);
+                AcpiOsPrintf (" Table Index: %X\n",
+                    ObjDesc->Reference.Value);
             }
             else
             {
-                AcpiOsPrintf (" Target: %p [%s]\n", ObjDesc->Reference.Object,
+                AcpiOsPrintf (" [%s]\n",
                     AcpiUtGetTypeName (((ACPI_OPERAND_OBJECT *)
-                        ObjDesc->Reference.Object)->Common.Type));
+                    ObjDesc->Reference.Object)->Common.Type));
             }
         }
         else
