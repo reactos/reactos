@@ -513,11 +513,14 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
     *ppSid = NULL;
     *Allocated = FALSE;
 
+    /* Windows ignores this */
+#if 0
     if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
     {
         /* This is currently not supported */
         return ERROR_INVALID_PARAMETER;
     }
+#endif
 
     switch (Trustee->TrusteeForm)
     {
