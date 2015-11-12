@@ -53,6 +53,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoCreateFile.c
     ntos_io/IoDeviceInterface.c
     ntos_io/IoEvent.c
+    ntos_io/IoFilesystem.c
     ntos_io/IoInterrupt.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
