@@ -440,8 +440,10 @@ CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
         Status = NtClose(CsrThread->ThreadHandle);
 
         if (!NT_SUCCESS(Status))
-            DPRINT1("CSR: NtClose failed, we are going to ASSERT, Status = 0x%08lx; [0x%x, 0x%x] Process: 0x%p; ThreadHandle: 0x%p\n",
-                    Status, CsrThread->ClientId.UniqueProcess, CsrThread->ClientId.UniqueThread, CsrProcess, CsrThread->ThreadHandle);
+            DPRINT1("CSR: NtClose failed, we are going to ASSERT, Status = 0x%08lx; P:[0x%x, 0x%x] T:[0x%x, 0x%x] Process: 0x%p; Thread: 0x%p; ThreadHandle: 0x%p\n",
+                    Status, CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread,
+                    CsrThread->ClientId.UniqueProcess, CsrThread->ClientId.UniqueThread,
+                    CsrProcess, CsrThread, CsrThread->ThreadHandle);
 
         ASSERT(NT_SUCCESS(Status));
     }

@@ -755,8 +755,9 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
                    IN ULONG Flags,
                    IN BOOLEAN FirstPhase)
 {
-    DPRINT1("UserClientShutdown(0x%p, 0x%x, %s)\n",
-            CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase");
+    DPRINT1("UserClientShutdown(0x%p, 0x%x, %s) - [0x%x, 0x%x]\n",
+            CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase",
+            CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
 
     /*
      * Check for process validity

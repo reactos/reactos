@@ -169,17 +169,23 @@ GuiConsoleInputThread(PVOID Param)
     /* Connect this CSR thread to the USER subsystem */
     {
     PCSR_THREAD CurrThread = CsrGetClientThread();
+    PCSR_PROCESS CsrProcess;
 
-    DPRINT1("CsrConnectToUser being called; [0x%x, 0x%x]...\n",
-            CurrThread->ClientId.UniqueProcess, CurrThread->ClientId.UniqueThread);
+    DPRINT1("CsrConnectToUser being called; 0x%p [0x%x, 0x%x]...\n",
+            CurrThread, (CurrThread ? CurrThread->ClientId.UniqueProcess : (ULONG_PTR)-1), (CurrThread ? CurrThread->ClientId.UniqueThread : (ULONG_PTR)-1));
 
     pcsrt = CsrConnectToUser();
     if (pcsrt == NULL) goto Quit;
     hThread = pcsrt->ThreadHandle;
 
-    DPRINT1("CsrConnectToUser was successfully called; [0x%x, 0x%x] -- hThread = 0x%p, pcsrt->Process = 0x%p; pcsrt->ThreadHandle = 0x%p from [0x%x, 0x%x]\n",
+    CurrThread = CsrGetClientThread();
+    CsrProcess = CurrThread->Process;
+
+    DPRINT1("CsrConnectToUser was successfully called; P:[0x%x, 0x%x] T:[0x%x, 0x%x] Process: 0x%p; Thread: 0x%p -- hThread = 0x%p, pcsrt = 0x%p; pcsrt->Process = 0x%p; pcsrt->ThreadHandle = 0x%p from [0x%x, 0x%x]\n",
+            CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread,
             CurrThread->ClientId.UniqueProcess, CurrThread->ClientId.UniqueThread,
-            hThread, pcsrt->Process, pcsrt->ThreadHandle,
+            CsrProcess, CurrThread,
+            hThread, pcsrt, pcsrt->Process, pcsrt->ThreadHandle,
             pcsrt->ClientId.UniqueProcess, pcsrt->ClientId.UniqueThread);
     }
 
