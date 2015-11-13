@@ -172,7 +172,7 @@ GuiConsoleInputThread(PVOID Param)
     PCSR_PROCESS CsrProcess;
 
     DPRINT1("CsrConnectToUser being called; 0x%p [0x%x, 0x%x]...\n",
-            CurrThread, (CurrThread ? CurrThread->ClientId.UniqueProcess : (ULONG_PTR)-1), (CurrThread ? CurrThread->ClientId.UniqueThread : (ULONG_PTR)-1));
+            CurrThread, (CurrThread ? CurrThread->ClientId.UniqueProcess : (HANDLE)-1), (CurrThread ? CurrThread->ClientId.UniqueThread : (HANDLE)-1));
 
     pcsrt = CsrConnectToUser();
     if (pcsrt == NULL) goto Quit;
