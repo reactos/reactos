@@ -411,7 +411,8 @@ VfatOpenFile(
 
     /* Fail, if we try to overwrite a read-only file */
     if ((*Fcb->Attributes & FILE_ATTRIBUTE_READONLY) &&
-        (RequestedDisposition == FILE_OVERWRITE))
+        (RequestedDisposition == FILE_OVERWRITE ||
+         RequestedDisposition == FILE_OVERWRITE_IF))
     {
         vfatReleaseFCB(DeviceExt, Fcb);
         return STATUS_ACCESS_DENIED;
@@ -580,6 +581,8 @@ VfatCreateFile(
     if (!OpenTargetDir)
     {
         Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, &ParentFcb);
+        if (Status == STATUS_ACCESS_DENIED)
+            return Status;
     }
     else
     {
