@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/mntpoint.c
+ * FILE:            dll/win32/kernel32/client/file/mntpoint.c
  * PURPOSE:         File volume mount point functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Erik Bos, Alexandre Julliard :

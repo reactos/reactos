@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/time.c
+ * FILE:            dll/win32/kernel32/client/time.c
  * PURPOSE:         Time conversion functions
  * PROGRAMMER:      Ariadne
  *                  DOSDATE and DOSTIME structures from Onno Hovers

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/nls.c
+ * FILE:            dll/win32/kernel32/winnls/string/nls.c
  * PURPOSE:         National Language Support
  * PROGRAMMER:      Filip Navara
  *                  Hartmut Birr

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
- * FILE:       lib/kernel32/thread/arm/thread.S
+ * FILE:       dll/win32/kernel32/client/arm/thread.S
  * PURPOSE:    Thread and process start thunks
  * PROGRAMMER:
  */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/env.c
+ * FILE:            dll/win32/kernel32/client/environ.c
  * PURPOSE:         Environment functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Emanuele Aliberti

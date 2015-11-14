@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS System Libraries
- * FILE:        lib/kernel32/thread/fiber.c
+ * FILE:        dll/win32/kernel32/client/fiber.c
  * PURPOSE:     Fiber Implementation
  * PROGRAMMERS:
  *              Alex Ionescu (alex@relsoft.net)

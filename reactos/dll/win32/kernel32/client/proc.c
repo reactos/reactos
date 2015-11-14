@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/proc/proc.c
+ * FILE:            dll/win32/kernel32/client/proc.c
  * PURPOSE:         Process functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
