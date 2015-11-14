@@ -340,7 +340,6 @@ VfatSetDispositionInformation(
 
     if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY)
     {
-DPRINT1("\n");
         return STATUS_CANNOT_DELETE;
     }
 
@@ -349,10 +348,7 @@ DPRINT1("\n");
         (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
     {
         /* we cannot delete a '.', '..' or the root directory */
-
-DPRINT1("\n");
-        return STATUS_CANNOT_DELETE;
-//        return STATUS_ACCESS_DENIED;
+        return STATUS_ACCESS_DENIED;
     }
 
     if (!MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
@@ -360,7 +356,6 @@ DPRINT1("\n");
         /* can't delete a file if its mapped into a process */
 
         DPRINT("MmFlushImageSection returned FALSE\n");
-DPRINT1("\n");
         return STATUS_CANNOT_DELETE;
     }
 
@@ -368,7 +363,6 @@ DPRINT1("\n");
     {
         /* can't delete a non-empty directory */
 
-DPRINT1("\n");
         return STATUS_DIRECTORY_NOT_EMPTY;
     }
 
