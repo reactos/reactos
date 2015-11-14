@@ -1930,7 +1930,7 @@ EnableDeviceInstance(LPWSTR pszDeviceInstance)
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    DPRINT("Enable device instance\n");
+    DPRINT("Enable device instance %S\n", pszDeviceInstance);
 
     RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance);
     Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
@@ -3167,7 +3167,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     WCHAR PipeName[74];
     WCHAR UuidString[39];
 
-    DPRINT1("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
+    DPRINT("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
 
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
