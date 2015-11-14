@@ -212,7 +212,7 @@ USHORT
 NTAPI
 KdpPrompt(IN LPSTR PromptString,
           IN USHORT PromptLength,
-          OUT LPSTR ResponseString,
+          OUT PCHAR ResponseString,
           IN USHORT MaximumResponseLength,
           IN KPROCESSOR_MODE PreviousMode,
           IN PKTRAP_FRAME TrapFrame,
@@ -220,7 +220,8 @@ KdpPrompt(IN LPSTR PromptString,
 {
     STRING PromptBuffer, ResponseBuffer;
     BOOLEAN Enable, Resend;
-    PVOID CapturedPrompt, CapturedResponse;
+    PVOID CapturedPrompt;
+    PCHAR SafeResponseString;
 
     /* Normalize the lengths */
     PromptLength = min(PromptLength,
@@ -250,8 +251,7 @@ KdpPrompt(IN LPSTR PromptString,
             ProbeForWrite(ResponseString,
                           MaximumResponseLength,
                           1);
-            CapturedResponse = _alloca(MaximumResponseLength);
-            ResponseString = CapturedResponse;
+            SafeResponseString = _alloca(MaximumResponseLength);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -260,11 +260,15 @@ KdpPrompt(IN LPSTR PromptString,
         }
         _SEH2_END;
     }
+    else
+    {
+        SafeResponseString = ResponseString;
+    }
 
     /* Setup the prompt and response  buffers */
     PromptBuffer.Buffer = PromptString;
     PromptBuffer.Length = PromptLength;
-    ResponseBuffer.Buffer = ResponseString;
+    ResponseBuffer.Buffer = SafeResponseString;
     ResponseBuffer.Length = 0;
     ResponseBuffer.MaximumLength = MaximumResponseLength;
 
