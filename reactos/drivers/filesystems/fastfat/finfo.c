@@ -340,6 +340,7 @@ VfatSetDispositionInformation(
 
     if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY)
     {
+DPRINT1("\n");
         return STATUS_CANNOT_DELETE;
     }
 
@@ -347,16 +348,19 @@ VfatSetDispositionInformation(
         (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
         (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
     {
-        // we cannot delete a '.', '..' or the root directory
-        return STATUS_ACCESS_DENIED;
-    }
+        /* we cannot delete a '.', '..' or the root directory */
 
+DPRINT1("\n");
+        return STATUS_CANNOT_DELETE;
+//        return STATUS_ACCESS_DENIED;
+    }
 
     if (!MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
     {
         /* can't delete a file if its mapped into a process */
 
         DPRINT("MmFlushImageSection returned FALSE\n");
+DPRINT1("\n");
         return STATUS_CANNOT_DELETE;
     }
 
@@ -364,6 +368,7 @@ VfatSetDispositionInformation(
     {
         /* can't delete a non-empty directory */
 
+DPRINT1("\n");
         return STATUS_DIRECTORY_NOT_EMPTY;
     }
 
@@ -1076,8 +1081,8 @@ VfatGetAllInformation(
     ASSERT(Info);
     ASSERT(Fcb);
 
-    if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR))
-        return(STATUS_BUFFER_OVERFLOW);
+    if (*BufferLength < sizeof(FILE_ALL_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
 
     /* Basic Information */
     Status = VfatGetBasicInformation(FileObject, Fcb, DeviceObject, &Info->BasicInformation, BufferLength);
@@ -1098,11 +1103,12 @@ VfatGetAllInformation(
     /* Alignment Information: The IO-Manager adds this information */
     /* Name Information */
     Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
-    if (!NT_SUCCESS(Status)) return Status;
 
-    *BufferLength = InitialBufferLength - (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
+    *BufferLength = InitialBufferLength - sizeof(FILE_ALL_INFORMATION);
+    if (InitialBufferLength > sizeof(FILE_ALL_INFORMATION))
+        *BufferLength -= min(InitialBufferLength - sizeof(FILE_ALL_INFORMATION), Fcb->PathNameU.Length);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static
