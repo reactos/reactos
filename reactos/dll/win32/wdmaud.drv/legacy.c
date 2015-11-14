@@ -13,9 +13,11 @@
  *
  */
 
-#define NDEBUG
 #include "wdmaud.h"
+
+#define NDEBUG
 #include <debug.h>
+#include <mmebuddy_debug.h>
 
 #define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
 

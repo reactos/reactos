@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <mmebuddy_debug.h>
+
 /*
     Open the parameters key of a sound driver.
     NT4 only.
