@@ -163,7 +163,8 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
-        NtClose(NewBuffer->ClientMutex);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -189,7 +190,8 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     {
         DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtClose(NewBuffer->hSection);
-        NtClose(NewBuffer->ClientMutex);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -217,7 +219,8 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
         DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtUnmapViewOfSection(NtCurrentProcess(), NewBuffer->BitMap);
         NtClose(NewBuffer->hSection);
-        NtClose(NewBuffer->ClientMutex);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -260,7 +263,8 @@ GRAPHICS_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     NtUnmapViewOfSection(Buff->ClientProcess, Buff->ClientBitMap);
     NtUnmapViewOfSection(NtCurrentProcess(), Buff->BitMap);
     NtClose(Buff->hSection);
-    NtClose(Buff->ClientMutex);
+    NtDuplicateObject(Buff->ClientProcess, Buff->ClientMutex,
+                      NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
     NtClose(Buff->Mutex);
     ConsoleFreeHeap(Buff->BitMapInfo);
 
