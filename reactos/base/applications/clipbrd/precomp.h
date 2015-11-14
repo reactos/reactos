@@ -9,9 +9,11 @@
 #include <wingdi.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
+#include <commdlg.h>
 
 #include "resources.h"
 #include "cliputils.h"
+#include "fileutils.h"
 #include "winutils.h"
 
 #define MAX_STRING_LEN 255

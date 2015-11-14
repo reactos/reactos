@@ -9,8 +9,8 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "Ö&ffnen...", CMD_OPEN, GRAYED
-        MENUITEM "Speichern &unter...", CMD_SAVE_AS, GRAYED
+        MENUITEM "Ö&ffnen...", CMD_OPEN
+        MENUITEM "Speichern &unter...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Beenden", CMD_EXIT
     END
@@ -35,6 +35,8 @@ BEGIN
     STRING_CLIPBOARD "Zwischenablage"
     STRING_DELETE_MSG "Soll der Inhalt der Zwischenablage gelöscht werden?"
     STRING_DELETE_TITLE "Zwischenablage löschen"
+    STRING_FORMAT_NT "Zwischenablagedateien für ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Zwischenablagedateien (*.clp)"
 END
 
 STRINGTABLE

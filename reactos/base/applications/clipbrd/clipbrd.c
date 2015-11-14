@@ -12,6 +12,103 @@ static const WCHAR szClassName[] = L"ClipBookWClass";
 
 CLIPBOARD_GLOBALS Globals;
 
+static void SaveClipboardToFile(void)
+{
+    OPENFILENAMEW sfn;
+    WCHAR szFileName[MAX_PATH];
+    WCHAR szFilterMask[MAX_STRING_LEN + 10];
+    LPWSTR c;
+
+    ZeroMemory(&szFilterMask, sizeof(szFilterMask));
+    c = szFilterMask + LoadStringW(Globals.hInstance, STRING_FORMAT_NT, szFilterMask, MAX_STRING_LEN) + 1;
+    wcscpy(c, L"*.clp");
+
+    ZeroMemory(&szFileName, sizeof(szFileName));
+    ZeroMemory(&sfn, sizeof(sfn));
+    sfn.lStructSize = sizeof(sfn);
+    sfn.hwndOwner = Globals.hMainWnd;
+    sfn.hInstance = Globals.hInstance;
+    sfn.lpstrFilter = szFilterMask;
+    sfn.lpstrFile = szFileName;
+    sfn.nMaxFile = ARRAYSIZE(szFileName);
+    sfn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    sfn.lpstrDefExt = L"clp";
+
+    if (!GetSaveFileNameW(&sfn))
+        return;
+
+    if (!OpenClipboard(NULL))
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        return;
+    }
+
+    WriteClipboardFile(szFileName);
+
+    CloseClipboard();
+}
+
+static void LoadClipboardFromFile(void)
+{
+    OPENFILENAMEW ofn;
+    WCHAR szFileName[MAX_PATH];
+    WCHAR szFilterMask[MAX_STRING_LEN + 10];
+    LPWSTR c;
+
+    ZeroMemory(&szFilterMask, sizeof(szFilterMask));
+    c = szFilterMask + LoadStringW(Globals.hInstance, STRING_FORMAT_GEN, szFilterMask, MAX_STRING_LEN) + 1;
+    wcscpy(c, L"*.clp");
+
+    ZeroMemory(&szFileName, sizeof(szFileName));
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = Globals.hMainWnd;
+    ofn.hInstance = Globals.hInstance;
+    ofn.lpstrFilter = szFilterMask;
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = ARRAYSIZE(szFileName);
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
+
+    if (!GetOpenFileNameW(&ofn))
+        return;
+
+    if (!OpenClipboard(NULL))
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        return;
+    }
+
+    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance, STRING_DELETE_MSG, STRING_DELETE_TITLE, MB_ICONWARNING | MB_YESNO) == IDYES)
+    {
+        EmptyClipboard();
+        ReadClipboardFile(szFileName);
+    }
+
+    CloseClipboard();
+}
+
+static void LoadClipboardFromDrop(HDROP hDrop)
+{
+    WCHAR szFileName[MAX_PATH];
+
+    DragQueryFileW(hDrop, 0, szFileName, ARRAYSIZE(szFileName));
+    DragFinish(hDrop);
+
+    if (!OpenClipboard(NULL))
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        return;
+    }
+
+    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance, STRING_DELETE_MSG, STRING_DELETE_TITLE, MB_ICONWARNING | MB_YESNO) == IDYES)
+    {
+        EmptyClipboard();
+        ReadClipboardFile(szFileName);
+    }
+
+    CloseClipboard();
+}
+
 static void SetDisplayFormat(UINT uFormat)
 {
     CheckMenuItem(Globals.hMenu, Globals.uCheckedItem, MF_BYCOMMAND | MF_UNCHECKED);
@@ -33,15 +130,17 @@ static void SetDisplayFormat(UINT uFormat)
 
 static void InitMenuPopup(HMENU hMenu, LPARAM index)
 {
-    if (GetMenuItemID(hMenu, 0) == CMD_DELETE)
+    if ((GetMenuItemID(hMenu, 0) == CMD_DELETE) || (GetMenuItemID(hMenu, 1) == CMD_SAVE_AS))
     {
         if (CountClipboardFormats() == 0)
         {
             EnableMenuItem(hMenu, CMD_DELETE, MF_GRAYED);
+            EnableMenuItem(hMenu, CMD_SAVE_AS, MF_GRAYED);
         }
         else
         {
             EnableMenuItem(hMenu, CMD_DELETE, MF_ENABLED);
+            EnableMenuItem(hMenu, CMD_SAVE_AS, MF_ENABLED);
         }
     }
 
@@ -51,7 +150,7 @@ static void InitMenuPopup(HMENU hMenu, LPARAM index)
 void UpdateDisplayMenu(void)
 {
     UINT uFormat;
-    WCHAR szFormatName[MAX_STRING_LEN];
+    WCHAR szFormatName[MAX_FMT_NAME_LEN + 1];
     HMENU hMenu;
 
     hMenu = GetSubMenu(Globals.hMenu, DISPLAY_MENU_POS);
@@ -93,6 +192,18 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
     switch (LOWORD(wParam))
     {
+        case CMD_OPEN:
+        {
+            LoadClipboardFromFile();
+            break;
+        }
+
+        case CMD_SAVE_AS:
+        {
+            SaveClipboardToFile();
+            break;
+        }
+
         case CMD_EXIT:
         {
             PostMessageW(Globals.hMainWnd, WM_CLOSE, 0, 0);
@@ -280,6 +391,12 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_DROPFILES:
+        {
+            LoadClipboardFromDrop((HDROP)wParam);
+            break;
+        }
+
         default:
         {
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -323,7 +440,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     LoadStringW(hInstance, STRING_CLIPBOARD, szBuffer, ARRAYSIZE(szBuffer));
-    Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE,
+    Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_ACCEPTFILES,
                                        szClassName,
                                        szBuffer,
                                        WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,

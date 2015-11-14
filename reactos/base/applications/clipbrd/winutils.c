@@ -118,7 +118,7 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
     if (!OpenClipboard(NULL))
         return;
 
-    hGlobal = GetClipboardData(CF_DIBV5);
+    hGlobal = GetClipboardData(uFormat);
     if (!hGlobal)
         return;
 
