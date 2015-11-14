@@ -28,5 +28,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 add_importlibs(wdmaud.drv user32 winmm advapi32 msvcrt setupapi ksuser kernel32 ntdll)
-add_pch(wdmaud.drv wdmaud.h SOURCE)
+# FIXME: Address mmebuddy.h reliance on NDEBUG
+#add_pch(wdmaud.drv wdmaud.h SOURCE)
 add_cd_file(TARGET wdmaud.drv DESTINATION reactos/system32 FOR all)
