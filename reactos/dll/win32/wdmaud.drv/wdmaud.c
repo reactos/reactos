@@ -12,9 +12,9 @@
  *
  */
 
+#define NDEBUG
 #include "wdmaud.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #ifndef USE_MMIXER_LIB
