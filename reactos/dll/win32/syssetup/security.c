@@ -132,6 +132,81 @@ SetAccountDomain(LPCWSTR DomainName,
 }
 
 
+/* Hack */
+static
+NTSTATUS
+SetPrimaryDomain(LPCWSTR DomainName,
+                 PSID DomainSid)
+{
+    PPOLICY_PRIMARY_DOMAIN_INFO OrigInfo = NULL;
+    POLICY_PRIMARY_DOMAIN_INFO Info;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
+    NTSTATUS Status;
+
+    DPRINT1("SYSSETUP: SetPrimaryDomain()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyPrimaryDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (Status == STATUS_SUCCESS && OrigInfo != NULL)
+    {
+        if (DomainName == NULL)
+        {
+            Info.Name.Buffer = OrigInfo->Name.Buffer;
+            Info.Name.Length = OrigInfo->Name.Length;
+            Info.Name.MaximumLength = OrigInfo->Name.MaximumLength;
+        }
+        else
+        {
+            Info.Name.Buffer = (LPWSTR)DomainName;
+            Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+            Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
+        }
+
+        if (DomainSid == NULL)
+            Info.Sid = OrigInfo->Sid;
+        else
+            Info.Sid = DomainSid;
+    }
+    else
+    {
+        Info.Name.Buffer = (LPWSTR)DomainName;
+        Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+        Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
+        Info.Sid = DomainSid;
+    }
+
+    Status = LsaSetInformationPolicy(PolicyHandle,
+                                     PolicyPrimaryDomainInformation,
+                                     (PVOID)&Info);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT("LsaSetInformationPolicy failed (Status: 0x%08lx)\n", Status);
+    }
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    LsaClose(PolicyHandle);
+
+    return Status;
+}
+
+
 static
 VOID
 InstallBuiltinAccounts(VOID)
@@ -317,11 +392,15 @@ done:
         SetupCloseInfFile(hSecurityInf);
 }
 
+
 VOID
 InstallSecurity(VOID)
 {
     InstallBuiltinAccounts();
     InstallPrivileges();
+
+    /* Hack */
+    SetPrimaryDomain(L"WORKGROUP", NULL);
 }
 
 
