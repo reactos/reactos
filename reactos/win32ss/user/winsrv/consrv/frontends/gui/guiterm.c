@@ -167,27 +167,9 @@ GuiConsoleInputThread(PVOID Param)
     if (!NT_SUCCESS(Status)) goto Quit;
 
     /* Connect this CSR thread to the USER subsystem */
-    {
-    PCSR_THREAD CurrThread = CsrGetClientThread();
-    PCSR_PROCESS CsrProcess;
-
-    DPRINT1("CsrConnectToUser being called; 0x%p [0x%x, 0x%x]...\n",
-            CurrThread, (CurrThread ? CurrThread->ClientId.UniqueProcess : (HANDLE)-1), (CurrThread ? CurrThread->ClientId.UniqueThread : (HANDLE)-1));
-
     pcsrt = CsrConnectToUser();
     if (pcsrt == NULL) goto Quit;
     hThread = pcsrt->ThreadHandle;
-
-    CurrThread = CsrGetClientThread();
-    CsrProcess = CurrThread->Process;
-
-    DPRINT1("CsrConnectToUser was successfully called; P:[0x%x, 0x%x] T:[0x%x, 0x%x] Process: 0x%p; Thread: 0x%p -- hThread = 0x%p, pcsrt = 0x%p; pcsrt->Process = 0x%p; pcsrt->ThreadHandle = 0x%p from [0x%x, 0x%x]\n",
-            CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread,
-            CurrThread->ClientId.UniqueProcess, CurrThread->ClientId.UniqueThread,
-            CsrProcess, CurrThread,
-            hThread, pcsrt, pcsrt->Process, pcsrt->ThreadHandle,
-            pcsrt->ClientId.UniqueProcess, pcsrt->ClientId.UniqueThread);
-    }
 
     /* Assign the desktop to this thread */
     if (!SetThreadDesktop(DesktopConsoleThreadInfo.DesktopHandle)) goto Quit;
@@ -329,15 +311,8 @@ Quit:
     /* Cleanup CSR thread */
     if (pcsrt)
     {
-        PCSR_THREAD CurrThread = CsrGetClientThread();
-
-        DPRINT1("CsrDereferenceThread being called; [0x%x, 0x%x] -- hThread = 0x%p, pcsrt->Process = 0x%p; pcsrt->ThreadHandle = 0x%p from [0x%x, 0x%x]\n",
-                CurrThread->ClientId.UniqueProcess, CurrThread->ClientId.UniqueThread,
-                hThread, pcsrt->Process, pcsrt->ThreadHandle,
-                pcsrt->ClientId.UniqueProcess, pcsrt->ClientId.UniqueThread);
-
         if (hThread != pcsrt->ThreadHandle)
-            DPRINT1("WARNING!! hThread != pcsrt->ThreadHandle, you may expect crashes soon!!\n");
+            DPRINT1("WARNING!! hThread (0x%p) != pcsrt->ThreadHandle (0x%p), you may expect crashes soon!!\n", hThread, pcsrt->ThreadHandle);
 
         CsrDereferenceThread(pcsrt);
     }
