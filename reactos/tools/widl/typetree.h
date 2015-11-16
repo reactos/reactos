@@ -24,6 +24,11 @@
 #ifndef WIDL_TYPE_TREE_H
 #define WIDL_TYPE_TREE_H
 
+enum name_type {
+    NAME_DEFAULT,
+    NAME_C
+};
+
 type_t *type_new_function(var_list_t *args);
 type_t *type_new_pointer(unsigned char pointer_default, type_t *ref, attr_list_t *attrs);
 type_t *type_new_alias(type_t *t, const char *name);
@@ -35,8 +40,8 @@ type_t *type_new_basic(enum type_basic_type basic_type);
 type_t *type_new_int(enum type_basic_type basic_type, int sign);
 type_t *type_new_void(void);
 type_t *type_new_coclass(char *name);
-type_t *type_new_enum(const char *name, int defined, var_list_t *enums);
-type_t *type_new_struct(char *name, int defined, var_list_t *fields);
+type_t *type_new_enum(const char *name, struct namespace *namespace, int defined, var_list_t *enums);
+type_t *type_new_struct(char *name, struct namespace *namespace, int defined, var_list_t *fields);
 type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t *fields);
 type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_t *union_field, var_list_t *cases);
 type_t *type_new_bitfield(type_t *field_type, const expr_t *bits);
@@ -46,6 +51,7 @@ void type_dispinterface_define_from_iface(type_t *dispiface, type_t *iface);
 void type_module_define(type_t *module, statement_list_t *stmts);
 type_t *type_coclass_define(type_t *coclass, ifref_list_t *ifaces);
 int type_is_equal(const type_t *type1, const type_t *type2);
+const char *type_get_name(const type_t *type, enum name_type name_type);
 
 /* FIXME: shouldn't need to export this */
 type_t *duptype(type_t *t, int dupname);

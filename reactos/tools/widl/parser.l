@@ -147,6 +147,22 @@ UUID *parse_uuid(const char *u)
                             input_name = xstrdup(fname);
                         }
 <PP_PRAGMA>midl_echo[^\n]*  yyless(9); yy_pop_state(); return tCPPQUOTE;
+<PP_PRAGMA>winrt[^\n]*  {
+                            if(import_stack_ptr) {
+                                if(!winrt_mode)
+                                    error_loc("winrt IDL file imported in non-winrt mode\n");
+                            }else {
+                                const char *ptr = yytext+5;
+
+                                winrt_mode = TRUE;
+
+                                while(isspace(*ptr))
+                                    ptr++;
+                                if(!strncmp(ptr, "ns_prefix", 9) && (!*(ptr += 9) || isspace(*ptr)))
+                                    use_abi_namespace = TRUE;
+                            }
+                            yy_pop_state();
+                        }
 <PP_PRAGMA>[^\n]*       parser_lval.str = xstrdup(yytext); yy_pop_state(); return aPRAGMA;
 <INITIAL,ATTR>\"	yy_push_state(QUOTE); cbufidx = 0;
 <QUOTE>\"		{
@@ -419,7 +435,7 @@ static int kw_token(const char *kw)
 	struct keyword key, *kwp;
 	key.kw = kw;
 	kwp = bsearch(&key, keywords, NKEYWORDS, sizeof(keywords[0]), kw_cmp_func);
-	if (kwp && (do_rt_extension || kwp->token != tNAMESPACE)) {
+	if (kwp && (winrt_mode || kwp->token != tNAMESPACE)) {
 		parser_lval.str = xstrdup(kwp->kw);
 		return kwp->token;
 	}

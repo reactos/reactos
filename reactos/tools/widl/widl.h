@@ -49,7 +49,8 @@ extern int do_win32;
 extern int do_win64;
 extern int win32_packing;
 extern int win64_packing;
-extern int do_rt_extension;
+extern int winrt_mode;
+extern int use_abi_namespace;
 
 extern char *input_name;
 extern char *input_idl_name;

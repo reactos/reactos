@@ -280,6 +280,8 @@ void output_typelib_regscript( const typelib_t *typelib )
     const expr_t *lcid_expr = get_attrp( typelib->attrs, ATTR_LIBLCID );
     unsigned int version = get_attrv( typelib->attrs, ATTR_VERSION );
     unsigned int flags = 0;
+    char id_part[12] = "";
+    expr_t *expr;
 
     if (is_attr( typelib->attrs, ATTR_RESTRICTED )) flags |= 1; /* LIBFLAG_FRESTRICTED */
     if (is_attr( typelib->attrs, ATTR_CONTROL )) flags |= 2; /* LIBFLAG_FCONTROL */
@@ -295,8 +297,11 @@ void output_typelib_regscript( const typelib_t *typelib )
     put_str( indent, "'%u.%u' = s '%s'\n",
              MAJORVERSION(version), MINORVERSION(version), descr ? descr : typelib->name );
     put_str( indent++, "{\n" );
-    put_str( indent, "'%x' { %s = s '%%MODULE%%' }\n",
-             lcid_expr ? lcid_expr->cval : 0, typelib_kind == SYS_WIN64 ? "win64" : "win32" );
+    expr = get_attrp( typelib->attrs, ATTR_ID );
+    if (expr)
+        sprintf(id_part, "\\%d", expr->cval);
+    put_str( indent, "'%x' { %s = s '%%MODULE%%%s' }\n",
+             lcid_expr ? lcid_expr->cval : 0, typelib_kind == SYS_WIN64 ? "win64" : "win32", id_part );
     put_str( indent, "FLAGS = s '%u'\n", flags );
     put_str( --indent, "}\n" );
     put_str( --indent, "}\n" );

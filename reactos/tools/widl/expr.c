@@ -571,7 +571,7 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
             error_loc_info(&expr_loc->v->loc_info, "address-of operator applied to non-variable type in expression%s%s\n",
                            expr_loc->attr ? " for attribute " : "",
                            expr_loc->attr ? expr_loc->attr : "");
-            result.is_variable = FALSE;
+        result.is_variable = FALSE;
         result.is_temporary = TRUE;
         result.type = type_new_pointer(RPC_FC_UP, result.type, NULL);
         break;

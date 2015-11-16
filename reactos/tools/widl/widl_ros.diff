@@ -1,6 +1,6 @@
-diff -u wine-1.3.4/tools/widl/hash.c tools/widl/hash.c
---- wine-1.3.4/tools/widl/hash.c	2010-09-19 17:48:47.640625000 +0200
-+++ tools/widl/hash.c	2010-09-19 19:17:19.000000000 +0200
+diff -pudN e:\wine-patched\tools\widl/hash.c e:\reactos-sync-clean\tools\widl/hash.c
+--- e:\wine-patched\tools\widl/hash.c	2015-02-22 13:23:48 +0100
++++ e:\reactos-sync-clean\tools\widl/hash.c	2013-10-15 20:06:18 +0100
 @@ -21,9 +21,7 @@
  #include <stdio.h>
  #include <stdarg.h>
@@ -8,82 +8,210 @@ diff -u wine-1.3.4/tools/widl/hash.c tools/widl/hash.c
 -#include "windef.h"
 -#include "winbase.h"
 -#include "winnls.h"
-+#include <host/nls.h>
++#include <nls.h>
  
  #include "widltypes.h"
  #include "hash.h"
-diff -u wine-1.3.4/tools/widl/header.c tools/widl/header.c
---- wine-1.3.4/tools/widl/header.c	2010-09-19 17:48:47.640625000 +0200
-+++ tools/widl/header.c	2010-10-26 18:30:19.000000000 +0200
-@@ -1081,15 +1081,7 @@
- {
-   unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
-   const char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
--  static int allocate_written = 0;
+@@ -539,10 +537,10 @@ unsigned int lhash_val_of_name_sys( sysk
+   case LANG_VIETNAMESE: case LANG_MALTESE:    case LANG_IRISH:
+   case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_TSWANA:
+   case LANG_XHOSA:      case LANG_ZULU:       case LANG_WELSH:
+-  case LANG_BRETON:     case LANG_SCOTTISH_GAELIC: case LANG_NEUTRAL:
++  case LANG_BRETON:     case LANG_NEUTRAL:
+ /* some languages not in all windows versions or ReactOS */
+-#ifdef LANG_MANX_GAELIC
+-  case LANG_MANX_GAELIC:
++#ifdef LANG_GAELIC
++  case LANG_GAELIC:
+ #endif
+ #ifdef LANG_TAJIK
+   case LANG_TAJIK:
+diff -pudN e:\wine-patched\tools\widl/header.c e:\reactos-sync-clean\tools\widl/header.c
+--- e:\wine-patched\tools\widl/header.c	2015-10-30 18:41:54 +0100
++++ e:\reactos-sync-clean\tools\widl/header.c	2015-11-16 20:04:15 +0100
+@@ -1068,7 +1068,7 @@ static void write_inline_wrappers(FILE *
+     if (!is_callas(func->attrs)) {
+       const var_t *arg;
  
--  if (!allocate_written)
--  {
--    allocate_written = 1;
--    fprintf(header, "void * __RPC_USER MIDL_user_allocate(SIZE_T);\n");
--    fprintf(header, "void __RPC_USER MIDL_user_free(void *);\n\n");
--  }
--
-   fprintf(header, "/*****************************************************************************\n");
-   fprintf(header, " * %s interface (v%d.%d)\n", iface->name, MAJORVERSION(ver), MINORVERSION(ver));
-   fprintf(header, " */\n");
-diff -u wine-1.3.4/tools/widl/parser.y tools/widl/parser.y
---- wine-1.3.4/tools/widl/parser.y	2010-09-19 17:49:40.578125000 +0200
-+++ tools/widl/parser.y	2010-10-03 16:44:18.781250000 +0200
-@@ -1816,6 +1816,12 @@
-   else if (is_attr(attrs, ATTR_UUID) && !is_attr(attrs, ATTR_PUBLIC))
-     attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
+-      fprintf(header, "static FORCEINLINE ");
++      fprintf(header, "FORCEINLINE ");
+       write_type_decl_left(header, type_function_get_rettype(func->type));
+       fprintf(header, " %s_%s(", name, get_name(func));
+       write_args(header, type_get_function_args(func->type), name, 1, FALSE);
+@@ -1103,6 +1103,15 @@ static void do_write_c_method_def(FILE *
  
-+  /* Append the SWITCHTYPE attribute to a union if it does not already have one.  */
+   if (type_iface_get_inherit(iface))
+     do_write_c_method_def(header, type_iface_get_inherit(iface), name);
++  else if (type_iface_get_stmts(iface) == NULL)
++  {
++    fprintf(header, "#ifndef __cplusplus\n");
++    indent(header, 0);
++    fprintf(header, "char dummy;\n");
++    fprintf(header, "#endif\n");
++    fprintf(header, "\n");
++    return;
++  }
+ 
+   STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
+   {
+@@ -1640,6 +1649,10 @@ void write_header(const statement_list_t
+   fprintf(header, "#define __REQUIRED_RPCNDR_H_VERSION__ 475\n");
+   fprintf(header, "#endif\n\n");
+ 
++  fprintf(header, "#ifdef __REACTOS__\n");
++  fprintf(header, "#define WIN32_LEAN_AND_MEAN\n");
++  fprintf(header, "#endif\n\n");
++
+   fprintf(header, "#include <rpc.h>\n" );
+   fprintf(header, "#include <rpcndr.h>\n\n" );
+ 
+diff -pudN e:\wine-patched\tools\widl/parser.y e:\reactos-sync-clean\tools\widl/parser.y
+--- e:\wine-patched\tools\widl/parser.y	2015-11-15 19:23:32 +0100
++++ e:\reactos-sync-clean\tools\widl/parser.y	2015-11-16 20:04:15 +0100
+@@ -1899,6 +1899,14 @@ static type_t *reg_typedefs(decl_spec_t 
+         type->attrs = attrs;
+   }
+ 
++#ifdef __REACTOS__
++  /* Append the SWITCHTYPE attribute to a non-encapsulated union if it does not already have it.  */
 +  if (type_get_type_detect_alias(type) == TYPE_UNION &&
 +      is_attr(attrs, ATTR_SWITCHTYPE) &&
 +      !is_attr(type->attrs, ATTR_SWITCHTYPE))
 +    type->attrs = append_attr(type->attrs, make_attrp(ATTR_SWITCHTYPE, get_attrp(attrs, ATTR_SWITCHTYPE)));
++#endif
 +
    LIST_FOR_EACH_ENTRY( decl, decls, const declarator_t, entry )
    {
  
-diff -u wine-1.3.4/tools/widl/typelib.c tools/widl/typelib.c
---- wine-1.3.4/tools/widl/typelib.c	2010-09-19 17:50:24.000000000 +0200
-+++ tools/widl/typelib.c	2010-09-26 20:23:47.000000000 +0200
-@@ -35,8 +35,7 @@
- #define NONAMELESSUNION
- #define NONAMELESSSTRUCT
+diff -pudN e:\wine-patched\tools\widl/proxy.c e:\reactos-sync-clean\tools\widl/proxy.c
+--- e:\wine-patched\tools\widl/proxy.c	2015-02-22 13:23:48 +0100
++++ e:\reactos-sync-clean\tools\widl/proxy.c	2015-11-16 20:04:15 +0100
+@@ -87,7 +87,13 @@ static void init_proxy(const statement_l
+     error("Could not open %s for output\n", proxy_name);
+   print_proxy( "/*** Autogenerated by WIDL %s from %s - Do not edit ***/\n", PACKAGE_VERSION, input_name);
+   print_proxy( "\n");
+-  print_proxy( "#define __midl_proxy\n");
++  print_proxy( "#define __midl_proxy\n\n");
++
++  print_proxy( "#ifdef __REACTOS__\n");
++  print_proxy( "#define WIN32_NO_STATUS\n");
++  print_proxy( "#define WIN32_LEAN_AND_MEAN\n");
++  print_proxy( "#endif\n\n");
++
+   print_proxy( "#include \"objbase.h\"\n");
+   print_proxy( "\n");
+   print_proxy( "#ifndef DECLSPEC_HIDDEN\n");
+@@ -476,14 +482,15 @@ static const statement_t * get_callas_so
+   return NULL;
+ }
+ 
+-static void write_proxy_procformatstring_offsets( const type_t *iface, int skip )
++static int write_proxy_procformatstring_offsets( const type_t *iface, int skip )
+ {
+     const statement_t *stmt;
++    int i = 0;
+ 
+     if (type_iface_get_inherit(iface))
+-        write_proxy_procformatstring_offsets( type_iface_get_inherit(iface), need_delegation(iface));
++        i = write_proxy_procformatstring_offsets( type_iface_get_inherit(iface), need_delegation(iface));
+     else
+-        return;
++        return 0;
+ 
+     STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
+     {
+@@ -503,7 +510,9 @@ static void write_proxy_procformatstring
+             print_proxy( "(unsigned short)-1,  /* %s::%s */\n", iface->name, get_name(func));
+         else
+             print_proxy( "%u,  /* %s::%s */\n", func->procstring_offset, iface->name, get_name(func));
++        i++;
+     }
++    return i;
+ }
+ 
+ static int write_proxy_methods(type_t *iface, int skip)
+@@ -636,7 +645,10 @@ static void write_proxy(type_t *iface, u
+   print_proxy( "static const unsigned short %s_FormatStringOffsetTable[] =\n", iface->name );
+   print_proxy( "{\n" );
+   indent++;
+-  write_proxy_procformatstring_offsets( iface, 0 );
++  if (write_proxy_procformatstring_offsets( iface, 0 ) == 0)
++  {
++      print_proxy( "0\n" );
++  }
+   indent--;
+   print_proxy( "};\n\n" );
+ 
+@@ -710,7 +722,10 @@ static void write_proxy(type_t *iface, u
+       print_proxy( "static const PRPC_STUB_FUNCTION %s_table[] =\n", iface->name);
+       print_proxy( "{\n");
+       indent++;
+-      write_stub_methods(iface, FALSE);
++      if (write_stub_methods(iface, FALSE) == 0)
++      {
++          fprintf(proxy, "0");
++      }
+       fprintf(proxy, "\n");
+       indent--;
+       fprintf(proxy, "};\n\n");
+diff -pudN e:\wine-patched\tools\widl/typegen.c e:\reactos-sync-clean\tools\widl/typegen.c
+--- e:\wine-patched\tools\widl/typegen.c	2015-10-30 18:41:54 +0100
++++ e:\reactos-sync-clean\tools\widl/typegen.c	2015-11-16 20:04:16 +0100
+@@ -4747,7 +4747,7 @@ void write_func_param_struct( FILE *file
+         if (align >= pointer_size)
+             fprintf( file, "%s;\n", arg->name );
+         else
+-            fprintf( file, "%s DECLSPEC_ALIGN(%u);\n", arg->name, pointer_size );
++            fprintf( file, "DECLSPEC_ALIGN(%u) %s;\n", pointer_size, arg->name );
+     }
+     if (add_retval && !is_void( retval->type ))
+     {
+diff -pudN e:\wine-patched\tools\widl/typelib.c e:\reactos-sync-clean\tools\widl/typelib.c
+--- e:\wine-patched\tools\widl/typelib.c	2015-10-30 18:41:54 +0100
++++ e:\reactos-sync-clean\tools\widl/typelib.c	2015-11-16 20:04:16 +0100
+@@ -32,9 +32,7 @@
+ #include <string.h>
+ #include <ctype.h>
  
 -#include "windef.h"
 -#include "winbase.h"
-+#include <host/typedefs.h>
- 
+-
++#include <typedefs.h>
  #include "widl.h"
  #include "utils.h"
-diff -u wine-1.3.4/tools/widl/typelib_struct.h tools/widl/typelib_struct.h
---- wine-1.3.4/tools/widl/typelib_struct.h	2010-09-19 17:50:40.953125000 +0200
-+++ tools/widl/typelib_struct.h	2010-10-10 00:50:32.921875000 +0200
-@@ -302,7 +302,7 @@
-  *
-  */
+ #include "parser.h"
+diff -pudN e:\wine-patched\tools\widl/widl.c e:\reactos-sync-clean\tools\widl/widl.c
+--- e:\wine-patched\tools\widl/widl.c	2015-10-30 18:41:54 +0100
++++ e:\reactos-sync-clean\tools\widl/widl.c	2015-11-16 20:04:16 +0100
+@@ -364,6 +364,12 @@ static void write_dlldata_list(struct li
+   fprintf(dlldata, "- Do not edit ***/\n\n");
+   if (define_proxy_delegation)
+       fprintf(dlldata, "#define PROXY_DELEGATION\n");
++
++  fprintf(dlldata, "#ifdef __REACTOS__\n");
++  fprintf(dlldata, "#define WIN32_NO_STATUS\n");
++  fprintf(dlldata, "#define WIN32_LEAN_AND_MEAN\n");
++  fprintf(dlldata, "#endif\n\n");
++
+   fprintf(dlldata, "#include <objbase.h>\n");
+   fprintf(dlldata, "#include <rpcproxy.h>\n\n");
+   start_cplusplus_guard(dlldata);
+@@ -504,6 +510,12 @@ void write_id_data(const statement_list_
  
--#include "pshpack1.h"
-+#include <host/pshpack1.h>
+   fprintf(idfile, "/*** Autogenerated by WIDL %s ", PACKAGE_VERSION);
+   fprintf(idfile, "from %s - Do not edit ***/\n\n", input_idl_name);
++
++  fprintf(idfile, "#ifdef __REACTOS__\n");
++  fprintf(idfile, "#define WIN32_NO_STATUS\n");
++  fprintf(idfile, "#define WIN32_LEAN_AND_MEAN\n");
++  fprintf(idfile, "#endif\n\n");
++
+   fprintf(idfile, "#include <rpc.h>\n");
+   fprintf(idfile, "#include <rpcndr.h>\n\n");
  
- typedef struct {
- /*00*/	DWORD SLTG_magic;	/* 0x47544c53  == "SLTG" */
-@@ -599,7 +599,7 @@
- WORD typeofarray
- */
- 
--#include "poppack.h"
-+#include <host/poppack.h>
- 
- /*---------------------------END--------------------------------------------*/
- #endif
-diff -u wine-1.3.4/tools/widl/widltypes.h tools/widl/widltypes.h
---- wine-1.3.4/tools/widl/widltypes.h	2010-09-19 17:51:38.890625000 +0200
-+++ tools/widl/widltypes.h	2010-09-19 19:17:19.656250000 +0200
+diff -pudN e:\wine-patched\tools\widl/widltypes.h e:\reactos-sync-clean\tools\widl/widltypes.h
+--- e:\wine-patched\tools\widl/widltypes.h	2015-10-30 18:41:54 +0100
++++ e:\reactos-sync-clean\tools\widl/widltypes.h	2015-11-16 20:04:16 +0100
 @@ -21,6 +21,15 @@
  #ifndef __WIDL_WIDLTYPES_H
  #define __WIDL_WIDLTYPES_H
@@ -100,54 +228,19 @@ diff -u wine-1.3.4/tools/widl/widltypes.h tools/widl/widltypes.h
  #include <stdarg.h>
  #include <assert.h>
  #include "guiddef.h"
-@@ -32,7 +39,9 @@
- typedef GUID UUID;
- #endif
+diff -pudN e:\wine-patched\tools\widl/write_msft.c e:\reactos-sync-clean\tools\widl/write_msft.c
+--- e:\wine-patched\tools\widl/write_msft.c	2015-11-15 19:23:32 +0100
++++ e:\reactos-sync-clean\tools\widl/write_msft.c	2015-11-16 20:04:16 +0100
+@@ -39,10 +39,8 @@
  
-+#ifndef TRUE
- #define TRUE 1
-+#endif
- #define FALSE 0
- 
- typedef struct _loc_info_t loc_info_t;
-diff -u wine-1.3.4/tools/widl/write_msft.c tools/widl/write_msft.c
---- wine-1.3.4/tools/widl/write_msft.c	2010-09-19 17:51:48.531250000 +0200
-+++ tools/widl/write_msft.c	2010-09-26 20:23:47.000000000 +0200
-@@ -40,10 +40,8 @@
  #define NONAMELESSUNION
- #define NONAMELESSSTRUCT
  
 -#include "winerror.h"
 -#include "windef.h"
 -#include "winbase.h"
 -#include "winnls.h"
-+#include <host/typedefs.h>
-+#include <host/nls.h>
++#include <typedefs.h>
++#include <nls.h>
  
  #include "widl.h"
  #include "typelib.h"
-@@ -2023,7 +2023,10 @@
-     }
- 
-     if (is_attr(interface->attrs, ATTR_DISPINTERFACE))
--        return add_dispinterface_typeinfo(typelib, interface);
-+    {
-+        add_dispinterface_typeinfo(typelib, interface);
-+        return;
-+    }
- 
-     /* midl adds the parent interface first, unless the parent itself
-        has no parent (i.e. it stops before IUnknown). */
-diff -u wine-1.3.4/tools/widl/typegen.c tools/widl/typegen.c
---- wine-1.3.4/tools/widl/typegen.c	2010-09-19 17:51:48.531250000 +0200
-+++ tools/widl/typegen.c	2012-08-12 14:19:47.000000000 +0200
-@@ -2345,7 +2345,8 @@
-             return;
-         }
-     }
--    return write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
-+    write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
-+    return;
- }
- 
- static void write_end(FILE *file, unsigned int *tfsoff)

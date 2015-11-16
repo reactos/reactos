@@ -32,9 +32,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include <typedefs.h>
 #include "widl.h"
 #include "utils.h"

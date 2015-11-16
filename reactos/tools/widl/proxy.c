@@ -37,14 +37,6 @@
 #include "typegen.h"
 #include "expr.h"
 
-#define END_OF_LIST(list)       \
-  do {                          \
-    if (list) {                 \
-      while (NEXT_LINK(list))   \
-        list = NEXT_LINK(list); \
-    }                           \
-  } while(0)
-
 static FILE* proxy;
 static int indent = 0;
 

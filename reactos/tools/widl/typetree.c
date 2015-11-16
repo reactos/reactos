@@ -45,8 +45,10 @@ type_t *make_type(enum type_type type)
 {
     type_t *t = alloc_type();
     t->name = NULL;
+    t->namespace = NULL;
     t->type_type = type;
     t->attrs = NULL;
+    t->c_name = NULL;
     t->orig = NULL;
     memset(&t->details, 0, sizeof(t->details));
     t->typestring_offset = 0;
@@ -74,6 +76,56 @@ static const var_t *find_arg(const var_list_t *args, const char *name)
     }
 
     return NULL;
+}
+
+const char *type_get_name(const type_t *type, enum name_type name_type)
+{
+    switch(name_type) {
+    case NAME_DEFAULT:
+        return type->name;
+    case NAME_C:
+        return type->c_name;
+    }
+
+    assert(0);
+    return NULL;
+}
+
+static char *append_namespace(char *ptr, struct namespace *namespace, const char *separator)
+{
+    if(is_global_namespace(namespace)) {
+        if(!use_abi_namespace)
+            return ptr;
+        strcpy(ptr, "ABI");
+        strcat(ptr, separator);
+        return ptr + strlen(ptr);
+    }
+
+    ptr = append_namespace(ptr, namespace->parent, separator);
+    strcpy(ptr, namespace->name);
+    strcat(ptr, separator);
+    return ptr + strlen(ptr);
+}
+
+char *format_namespace(struct namespace *namespace, const char *prefix, const char *separator, const char *suffix)
+{
+    unsigned len = strlen(prefix) + strlen(suffix);
+    unsigned sep_len = strlen(separator);
+    struct namespace *iter;
+    char *ret, *ptr;
+
+    if(use_abi_namespace && !is_global_namespace(namespace))
+        len += 3 /* strlen("ABI") */ + sep_len;
+
+    for(iter = namespace; !is_global_namespace(iter); iter = iter->parent)
+        len += strlen(iter->name) + sep_len;
+
+    ret = xmalloc(len+1);
+    strcpy(ret, prefix);
+    ptr = append_namespace(ret + strlen(ret), namespace, separator);
+    strcpy(ptr, suffix);
+
+    return ret;
 }
 
 type_t *type_new_function(var_list_t *args)
@@ -152,7 +204,7 @@ type_t *type_new_alias(type_t *t, const char *name)
 
 type_t *type_new_module(char *name)
 {
-    type_t *type = get_type(TYPE_MODULE, name, 0);
+    type_t *type = get_type(TYPE_MODULE, name, NULL, 0);
     if (type->type_type != TYPE_MODULE || type->defined)
         error_loc("%s: redefinition error; original definition was at %s:%d\n",
                   type->name, type->loc_info.input_name, type->loc_info.line_number);
@@ -162,7 +214,7 @@ type_t *type_new_module(char *name)
 
 type_t *type_new_coclass(char *name)
 {
-    type_t *type = get_type(TYPE_COCLASS, name, 0);
+    type_t *type = get_type(TYPE_COCLASS, name, NULL, 0);
     if (type->type_type != TYPE_COCLASS || type->defined)
         error_loc("%s: redefinition error; original definition was at %s:%d\n",
                   type->name, type->loc_info.input_name, type->loc_info.line_number);
@@ -219,11 +271,12 @@ type_t *type_new_void(void)
     return void_type;
 }
 
-type_t *type_new_enum(const char *name, int defined, var_list_t *enums)
+type_t *type_new_enum(const char *name, struct namespace *namespace, int defined, var_list_t *enums)
 {
-    type_t *tag_type = name ? find_type(name, tsENUM) : NULL;
+    type_t *tag_type = name ? find_type(name, namespace, tsENUM) : NULL;
     type_t *t = make_type(TYPE_ENUM);
     t->name = name;
+    t->namespace = namespace;
 
     if (tag_type && tag_type->details.enumeration)
         t->details.enumeration = tag_type->details.enumeration;
@@ -237,18 +290,25 @@ type_t *type_new_enum(const char *name, int defined, var_list_t *enums)
     if (name)
     {
         if (defined)
-            reg_type(t, name, tsENUM);
+            reg_type(t, name, namespace, tsENUM);
         else
             add_incomplete(t);
     }
     return t;
 }
 
-type_t *type_new_struct(char *name, int defined, var_list_t *fields)
+type_t *type_new_struct(char *name, struct namespace *namespace, int defined, var_list_t *fields)
 {
-    type_t *tag_type = name ? find_type(name, tsSTRUCT) : NULL;
-    type_t *t = make_type(TYPE_STRUCT);
+    type_t *tag_type = name ? find_type(name, namespace, tsSTRUCT) : NULL;
+    type_t *t;
+
+    /* avoid creating duplicate typelib type entries */
+    if (tag_type && do_typelib) return tag_type;
+
+    t = make_type(TYPE_STRUCT);
     t->name = name;
+    t->namespace = namespace;
+
     if (tag_type && tag_type->details.structure)
         t->details.structure = tag_type->details.structure;
     else if (defined)
@@ -260,7 +320,7 @@ type_t *type_new_struct(char *name, int defined, var_list_t *fields)
     if (name)
     {
         if (defined)
-            reg_type(t, name, tsSTRUCT);
+            reg_type(t, name, namespace, tsSTRUCT);
         else
             add_incomplete(t);
     }
@@ -269,7 +329,7 @@ type_t *type_new_struct(char *name, int defined, var_list_t *fields)
 
 type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t *fields)
 {
-    type_t *tag_type = name ? find_type(name, tsUNION) : NULL;
+    type_t *tag_type = name ? find_type(name, NULL, tsUNION) : NULL;
     type_t *t = make_type(TYPE_UNION);
     t->name = name;
     if (tag_type && tag_type->details.structure)
@@ -283,7 +343,7 @@ type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t
     if (name)
     {
         if (defined)
-            reg_type(t, name, tsUNION);
+            reg_type(t, name, NULL, tsUNION);
         else
             add_incomplete(t);
     }
@@ -292,7 +352,7 @@ type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t
 
 type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_t *union_field, var_list_t *cases)
 {
-    type_t *t = get_type(TYPE_ENCAPSULATED_UNION, name, tsUNION);
+    type_t *t = get_type(TYPE_ENCAPSULATED_UNION, name, NULL, tsUNION);
     if (!union_field) union_field = make_var( xstrdup("tagged_union") );
     union_field->type = type_new_nonencapsulated_union(NULL, TRUE, cases);
     t->details.structure = xmalloc(sizeof(*t->details.structure));
@@ -392,7 +452,7 @@ void type_dispinterface_define(type_t *iface, var_list_t *props, var_list_t *met
     iface->details.iface->disp_props = props;
     iface->details.iface->disp_methods = methods;
     iface->details.iface->stmts = NULL;
-    iface->details.iface->inherit = find_type("IDispatch", 0);
+    iface->details.iface->inherit = find_type("IDispatch", NULL, 0);
     if (!iface->details.iface->inherit) error_loc("IDispatch is undefined\n");
     iface->defined = TRUE;
     compute_method_indexes(iface);

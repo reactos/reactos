@@ -29,7 +29,7 @@ extern int is_attr(const attr_list_t *list, enum attr_type t);
 extern void *get_attrp(const attr_list_t *list, enum attr_type t);
 extern unsigned int get_attrv(const attr_list_t *list, enum attr_type t);
 extern const char* get_name(const var_t *v);
-extern void write_type_left(FILE *h, type_t *t, int declonly);
+extern void write_type_left(FILE *h, type_t *t, enum name_type name_type, int declonly);
 extern void write_type_right(FILE *h, type_t *t, int is_field);
 extern void write_type_decl(FILE *f, type_t *t, const char *name);
 extern void write_type_decl_left(FILE *f, type_t *t);

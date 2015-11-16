@@ -72,7 +72,8 @@ static const char usage[] =
 "   --prefix-client=p  Prefix names of client stubs with 'p'\n"
 "   --prefix-server=p  Prefix names of server functions with 'p'\n"
 "   -r                 Generate registration script\n"
-"   --rt               Enable WinRT's language extensions for IDL\n"
+"   --winrt            Enable Windows Runtime mode\n"
+"   --ns_prefix        Prefix namespaces with ABI namespace\n"
 "   -s                 Generate server stub\n"
 "   -t                 Generate typelib\n"
 "   -u                 Generate interface identifiers file\n"
@@ -114,7 +115,8 @@ int do_win32 = 1;
 int do_win64 = 1;
 int win32_packing = 8;
 int win64_packing = 8;
-int do_rt_extension = 0;
+int winrt_mode = 0;
+int use_abi_namespace = 0;
 static enum stub_mode stub_mode = MODE_Os;
 
 char *input_name;
@@ -155,6 +157,7 @@ enum {
     PREFIX_CLIENT_OPTION,
     PREFIX_SERVER_OPTION,
     PRINT_HELP,
+    RT_NS_PREFIX,
     RT_OPTION,
     WIN32_OPTION,
     WIN64_OPTION,
@@ -170,12 +173,13 @@ static const struct option long_options[] = {
     { "dlldata-only", 0, NULL, DLLDATA_ONLY_OPTION },
     { "help", 0, NULL, PRINT_HELP },
     { "local-stubs", 1, NULL, LOCAL_STUBS_OPTION },
+    { "ns_prefix", 0, NULL, RT_NS_PREFIX },
     { "oldnames", 0, NULL, OLDNAMES_OPTION },
     { "output", 0, NULL, 'o' },
     { "prefix-all", 1, NULL, PREFIX_ALL_OPTION },
     { "prefix-client", 1, NULL, PREFIX_CLIENT_OPTION },
     { "prefix-server", 1, NULL, PREFIX_SERVER_OPTION },
-    { "rt", 0, NULL, RT_OPTION },
+    { "winrt", 0, NULL, RT_OPTION },
     { "win32", 0, NULL, WIN32_OPTION },
     { "win64", 0, NULL, WIN64_OPTION },
     { "win32-align", 1, NULL, WIN32_ALIGN_OPTION },
@@ -590,7 +594,10 @@ int main(int argc,char *argv[])
       fprintf(stderr, "%s", usage);
       return 0;
     case RT_OPTION:
-      do_rt_extension = 1;
+      winrt_mode = 1;
+      break;
+    case RT_NS_PREFIX:
+      use_abi_namespace = 1;
       break;
     case WIN32_OPTION:
       do_win32 = 1;
