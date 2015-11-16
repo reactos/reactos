@@ -161,12 +161,12 @@ NTAPI
 PdoPnp(IN PDEVICE_OBJECT DeviceObject,
        IN PIRP Irp)
 {
+    NTSTATUS Status;
     DPRINT("PdoPnp()\n");
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Status = Irp->IoStatus.Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 

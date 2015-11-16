@@ -371,6 +371,7 @@ FdoQueryBusRelations(
     i = 0;
     ObReferenceObject(DeviceExtension->AttachedRawPdo);
     DeviceRelations->Objects[i] = DeviceExtension->AttachedRawPdo;
+    DeviceRelations->Count = 1;
 
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
