@@ -50,7 +50,8 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
     /* verify related object is a directory and target name
     don't start with \. */
     if ((Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY) == 0 ||
-        RelativeFileName->Buffer[0] == L'\\')
+        (RelativeFileName->Length >= sizeof(WCHAR) &&
+         RelativeFileName->Buffer[0] == L'\\'))
     {
         return STATUS_INVALID_PARAMETER;
     }
