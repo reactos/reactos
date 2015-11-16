@@ -10,6 +10,201 @@
 /* FIXME: Test this stuff on non-FAT volumes */
 
 static
+NTSTATUS
+QueryFileInfo(
+    _In_ HANDLE FileHandle,
+    _Out_ PVOID *Info,
+    _Inout_ PSIZE_T Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    PVOID Buffer;
+
+    *Info = NULL;
+    if (*Length)
+    {
+        Buffer = KmtAllocateGuarded(*Length);
+        if (skip(Buffer != NULL, "Failed to allocate %Iu bytes\n", *Length))
+            return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    else
+    {
+        Buffer = NULL;
+    }
+    RtlFillMemory(Buffer, *Length, 0xDD);
+    RtlFillMemory(&IoStatus, sizeof(IoStatus), 0x55);
+    _SEH2_TRY
+    {
+        Status = ZwQueryInformationFile(FileHandle,
+                                        &IoStatus,
+                                        Buffer,
+                                        *Length,
+                                        FileInformationClass);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        ok(0, "Exception %lx querying class %d with length %Iu\n",
+           Status, FileInformationClass, *Length);
+    }
+    _SEH2_END;
+    if (Status == STATUS_PENDING)
+    {
+        Status = ZwWaitForSingleObject(FileHandle, FALSE, NULL);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = IoStatus.Status;
+    }
+    *Length = IoStatus.Information;
+    *Info = Buffer;
+    return Status;
+}
+
+static
+VOID
+TestAllInformation(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING FileName = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntoskrnl.exe");
+    UNICODE_STRING Ntoskrnl = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK IoStatus;
+    PFILE_ALL_INFORMATION FileAllInfo;
+    SIZE_T Length;
+    ULONG NameLength;
+    PWCHAR Name = NULL;
+    UNICODE_STRING NamePart;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenFile(&FileHandle,
+                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        &ObjectAttributes,
+                        &IoStatus,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_NON_DIRECTORY_FILE);
+    if (Status == STATUS_PENDING)
+    {
+        Status = ZwWaitForSingleObject(FileHandle, FALSE, NULL);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = IoStatus.Status;
+    }
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (skip(NT_SUCCESS(Status), "No file handle, %lx\n", Status))
+        return;
+
+    /* NtQueryInformationFile doesn't do length checks for kernel callers in a free build */
+    if (KmtIsCheckedBuild)
+    {
+    /* Zero length */
+    Length = 0;
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+    ok_eq_size(Length, (ULONG_PTR)0x5555555555555555);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* One less than the minimum */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) - 1;
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+    ok_eq_size(Length, (ULONG_PTR)0x5555555555555555);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+    }
+
+    /* The minimum allowed */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName);
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_BUFFER_OVERFLOW);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName));
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* Plenty of space -- determine NameLength and copy the name */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + MAX_PATH * sizeof(WCHAR);
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status) && FileAllInfo != NULL, "No info\n"))
+    {
+        NameLength = FileAllInfo->NameInformation.FileNameLength;
+        ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
+        Name = ExAllocatePoolWithTag(PagedPool, NameLength + sizeof(UNICODE_NULL), 'sFmK');
+        if (!skip(Name != NULL, "Could not allocate %lu bytes\n", NameLength + (ULONG)sizeof(UNICODE_NULL)))
+        {
+            RtlCopyMemory(Name,
+                          FileAllInfo->NameInformation.FileName,
+                          NameLength);
+            Name[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            ok(Name[0] == L'\\', "Name is %ls, expected first char to be \\\n", Name);
+            ok(NameLength >= Ntoskrnl.Length + sizeof(WCHAR), "NameLength %lu too short\n", NameLength);
+            if (NameLength >= Ntoskrnl.Length)
+            {
+                NamePart.Buffer = Name + (NameLength - Ntoskrnl.Length) / sizeof(WCHAR);
+                NamePart.Length = Ntoskrnl.Length;
+                NamePart.MaximumLength = NamePart.Length;
+                ok(RtlEqualUnicodeString(&NamePart, &Ntoskrnl, TRUE),
+                   "Name ends in '%wZ', expected %wZ\n", &NamePart, &Ntoskrnl);
+            }
+        }
+        ok(FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)] == 0xdddd,
+           "Char past FileName is %x\n",
+           FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)]);
+    }
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* One char less than needed */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength - sizeof(WCHAR);
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_BUFFER_OVERFLOW);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength - sizeof(WCHAR));
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* One byte less than needed */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength - 1;
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_BUFFER_OVERFLOW);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength - 1);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* Exactly the required size */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength;
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* One byte more than needed */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength + 1;
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    /* One char more than needed */
+    Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength + sizeof(WCHAR);
+    Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
+    if (FileAllInfo)
+        KmtFreeGuarded(FileAllInfo);
+
+    ExFreePoolWithTag(Name, 'sFmK');
+
+    Status = ObCloseHandle(FileHandle, KernelMode);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+}
+
+static
 VOID
 Substitute(
     _Out_writes_bytes_(BufferSize) PWCHAR Buffer,
@@ -443,6 +638,7 @@ Cleanup:
 
 START_TEST(IoFilesystem)
 {
+    TestAllInformation();
     TestRelativeNames();
     TestSharedCacheMap();
 }
