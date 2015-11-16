@@ -35,6 +35,7 @@ extern void func_RtlGetFullPathName_Ustr(void);
 extern void func_RtlGetFullPathName_UstrEx(void);
 extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
+extern void func_RtlImageRvaToVa(void);
 extern void func_RtlInitializeBitMap(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlReAllocateHeap(void);
@@ -75,6 +76,7 @@ const struct test winetest_testlist[] =
     { "RtlGetFullPathName_UstrEx",      func_RtlGetFullPathName_UstrEx },
     { "RtlGetLengthWithoutTrailingPathSeperators", func_RtlGetLengthWithoutTrailingPathSeperators },
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
+    { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
