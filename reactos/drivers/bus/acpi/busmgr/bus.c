@@ -1138,7 +1138,7 @@ acpi_bus_add (
 	struct acpi_device	*device = NULL;
 	char			bus_id[5] = {'?',0};
 	ACPI_BUFFER	buffer;
-	ACPI_DEVICE_INFO	*info;
+	ACPI_DEVICE_INFO	*info = NULL;
 	char			*hid = NULL;
 	char			*uid = NULL;
 	ACPI_PNP_DEVICE_ID_LIST *cid_list = NULL;
@@ -1248,6 +1248,7 @@ acpi_bus_add (
 			ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
 				"Error reading device info\n"));
 			result = AE_NOT_FOUND;
+			info = NULL;
 			goto end;
 		}
 		if (info->Valid & ACPI_VALID_HID)
@@ -1266,7 +1267,6 @@ acpi_bus_add (
 			device->pnp.bus_address = info->Address;
 			device->flags.bus_address = 1;
 		}
-		ACPI_FREE(info);
 		break;
 	case ACPI_BUS_TYPE_POWER:
 		hid = ACPI_POWER_HID;
@@ -1427,6 +1427,8 @@ acpi_bus_add (
 		acpi_bus_find_driver(device);
 
 end:
+	if (info != NULL)
+		ACPI_FREE(info);
 	if (result) {
 		if (device->pnp.cid_list) {
 			ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
