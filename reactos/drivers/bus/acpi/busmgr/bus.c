@@ -1258,8 +1258,19 @@ acpi_bus_add (
 		if (info->Valid & ACPI_VALID_CID) {
 			cid_list = &info->CompatibleIdList;
 			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'DpcA');
-			if (device->pnp.cid_list)
-				memcpy(device->pnp.cid_list, cid_list, cid_list->ListSize);
+			if (device->pnp.cid_list) {
+				char *p = (char *)&device->pnp.cid_list->Ids[cid_list->Count];
+				device->pnp.cid_list->Count = cid_list->Count;
+				device->pnp.cid_list->ListSize = cid_list->ListSize;
+				for (i = 0; i < cid_list->Count; i++) {
+					device->pnp.cid_list->Ids[i].Length = cid_list->Ids[i].Length;
+					device->pnp.cid_list->Ids[i].String = p;
+					ASSERT(p + cid_list->Ids[i].Length <= (char *)device->pnp.cid_list + cid_list->ListSize);
+					memcpy(device->pnp.cid_list->Ids[i].String,
+						cid_list->Ids[i].String, cid_list->Ids[i].Length);
+					p += cid_list->Ids[i].Length;
+				}
+			}
 			else
 				DPRINT("Memory allocation error\n");
 		}
