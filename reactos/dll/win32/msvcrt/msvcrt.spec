@@ -618,7 +618,7 @@
 @ cdecl _setsystime(ptr long)
 @ cdecl _sleep(long)
 @ varargs _snprintf(ptr long str)
-# stub _snscanf
+@ varargs _snscanf(str long str)
 @ varargs _snwprintf(ptr long wstr)
 # stub _snwscanf
 @ varargs _sopen(str long long)
