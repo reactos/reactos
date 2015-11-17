@@ -1,4 +1,7 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(
     -D__WINESRC__
     -D_ATL_VER=_ATL_VER_30)
@@ -27,6 +30,6 @@ add_typelib(atl_lib.idl)
 add_dependencies(atl stdole2)
 set_module_type(atl win32dll)
 target_link_libraries(atl uuid wine)
-add_importlibs(atl oleaut32 ole32 user32 gdi32 advapi32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(atl oleaut32 ole32 user32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl precomp.h SOURCE)
 add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)

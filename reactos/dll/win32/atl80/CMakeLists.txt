@@ -1,4 +1,7 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(
     -D__WINESRC__
     -D_ATL_VER=_ATL_VER_80)
@@ -17,6 +20,6 @@ list(APPEND SOURCE
 add_library(atl80 SHARED ${SOURCE})
 set_module_type(atl80 win32dll)
 target_link_libraries(atl80 uuid wine)
-add_importlibs(atl80 oleaut32 user32 ole32 gdi32 advapi32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(atl80 oleaut32 user32 ole32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl80 precomp.h SOURCE)
 add_cd_file(TARGET atl80 DESTINATION reactos/system32 FOR all)

@@ -18,11 +18,6 @@
 
 #include <precomp.h>
 
-#define NO_SHLWAPI_PATH
-#define NO_SHLWAPI_STRFCNS
-#define NO_SHLWAPI_GDI
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
 
 /**************************************************************
  * ATLRegistrar implementation
@@ -232,10 +227,10 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                 strbuf_write(buf->str, &name, -1);
             }else if(key_type == DO_DELETE) {
                 TRACE("Deleting %s\n", debugstr_w(buf->str));
-                SHDeleteKeyW(parent_key, buf->str);
+                RegDeleteTreeW(parent_key, buf->str);
             }else {
                 if(key_type == FORCE_REMOVE)
-                    SHDeleteKeyW(parent_key, buf->str);
+                    RegDeleteTreeW(parent_key, buf->str);
                 lres = RegCreateKeyW(parent_key, buf->str, &hkey);
                 if(lres != ERROR_SUCCESS) {
                     WARN("Could not create(open) key: %08x\n", lres);
