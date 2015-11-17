@@ -661,7 +661,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     }
 
     RpcBindingInqObject(message_state->binding_handle, &ipid);
-    hr = ipid_get_dispatch_params(&ipid, &apt, &message_state->params.stub,
+    hr = ipid_get_dispatch_params(&ipid, &apt, NULL, &message_state->params.stub,
                                   &message_state->params.chan,
                                   &message_state->params.iid,
                                   &message_state->params.iface);
@@ -1420,6 +1420,7 @@ exit:
 static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
 {
     struct dispatch_params *params;
+    struct stub_manager *stub_manager;
     APARTMENT *apt;
     IPID ipid;
     HRESULT hr;
@@ -1435,7 +1436,7 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
         return;
     }
 
-    hr = ipid_get_dispatch_params(&ipid, &apt, &params->stub, &params->chan,
+    hr = ipid_get_dispatch_params(&ipid, &apt, &stub_manager, &params->stub, &params->chan,
                                   &params->iid, &params->iface);
     if (hr != S_OK)
     {
@@ -1493,6 +1494,7 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
         IRpcStubBuffer_Release(params->stub);
     HeapFree(GetProcessHeap(), 0, params);
 
+    stub_manager_int_release(stub_manager);
     apartment_release(apt);
 
     /* if IRpcStubBuffer_Invoke fails, we should raise an exception to tell
@@ -1558,7 +1560,7 @@ HRESULT RPC_RegisterInterface(REFIID riid)
 }
 
 /* stub unregistration */
-void RPC_UnregisterInterface(REFIID riid)
+void RPC_UnregisterInterface(REFIID riid, BOOL wait)
 {
     struct registered_if *rif;
     EnterCriticalSection(&csRegIf);
@@ -1568,7 +1570,7 @@ void RPC_UnregisterInterface(REFIID riid)
         {
             if (!--rif->refs)
             {
-                RpcServerUnregisterIf((RPC_IF_HANDLE)&rif->If, NULL, TRUE);
+                RpcServerUnregisterIf((RPC_IF_HANDLE)&rif->If, NULL, wait);
                 list_remove(&rif->entry);
                 HeapFree(GetProcessHeap(), 0, rif);
             }

@@ -218,8 +218,8 @@
 @ stub OleCreateEx
 @ stdcall OleCreateFromData(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateFromDataEx(ptr ptr long long long ptr ptr ptr ptr ptr ptr ptr)
-@ stdcall OleCreateFromFile(ptr ptr ptr long ptr ptr ptr ptr)
-@ stub OleCreateFromFileEx
+@ stdcall OleCreateFromFile(ptr wstr ptr long ptr ptr ptr ptr)
+@ stdcall OleCreateFromFileEx(ptr wstr ptr long long long ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall OleCreateLink(ptr ptr long ptr ptr ptr ptr)
 @ stub OleCreateLinkEx
 @ stdcall OleCreateLinkFromData(ptr ptr long ptr ptr ptr ptr)

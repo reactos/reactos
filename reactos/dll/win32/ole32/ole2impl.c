@@ -84,7 +84,7 @@ static inline void init_fmtetc(FORMATETC *fmt, CLIPFORMAT cf, TYMED tymed)
  *
  * FIXME: CF_FILENAME.
  */
-static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf)
+static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf, BOOL other_fmts)
 {
     static const UINT fmt_id[] = { CF_METAFILEPICT, CF_BITMAP, CF_DIB };
     UINT i;
@@ -94,16 +94,17 @@ static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf)
     IPersistStorage *persist;
     CLSID clsid;
 
-    *src_cf = 0;
+    if (src_cf) *src_cf = 0;
 
     /* CF_EMBEDEDOBJECT */
     init_fmtetc(&fmt, embedded_object_clipboard_format, TYMED_ISTORAGE);
     med.tymed = TYMED_ISTORAGE;
     med.u.pstg = stg;
+    med.pUnkForRelease = NULL;
     hr = IDataObject_GetDataHere(data, &fmt, &med);
     if(SUCCEEDED(hr))
     {
-        *src_cf = embedded_object_clipboard_format;
+        if (src_cf) *src_cf = embedded_object_clipboard_format;
         return hr;
     }
 
@@ -111,21 +112,25 @@ static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf)
     init_fmtetc(&fmt, embed_source_clipboard_format, TYMED_ISTORAGE);
     med.tymed = TYMED_ISTORAGE;
     med.u.pstg = stg;
+    med.pUnkForRelease = NULL;
     hr = IDataObject_GetDataHere(data, &fmt, &med);
     if(SUCCEEDED(hr))
     {
-        *src_cf = embed_source_clipboard_format;
+        if (src_cf) *src_cf = embed_source_clipboard_format;
         return hr;
     }
 
-    for (i = 0; i < sizeof(fmt_id)/sizeof(fmt_id[0]); i++)
+    if (other_fmts)
     {
-        init_fmtetc(&fmt, fmt_id[i], TYMED_ISTORAGE);
-        hr = IDataObject_QueryGetData(data, &fmt);
-        if(SUCCEEDED(hr))
+        for (i = 0; i < sizeof(fmt_id)/sizeof(fmt_id[0]); i++)
         {
-            *src_cf = fmt_id[i];
-            return hr;
+            init_fmtetc(&fmt, fmt_id[i], TYMED_ISTORAGE);
+            hr = IDataObject_QueryGetData(data, &fmt);
+            if (SUCCEEDED(hr))
+            {
+                if (src_cf) *src_cf = fmt_id[i];
+                return hr;
+            }
         }
     }
 
@@ -168,7 +173,7 @@ HRESULT WINAPI OleCreateFromDataEx(IDataObject *data, REFIID iid, DWORD flags,
           data, debugstr_guid(iid), flags, renderopt, num_cache_fmts, adv_flags, cache_fmts,
           sink, conns, client_site, stg, obj);
 
-    hr = get_storage(data, stg, &src_cf);
+    hr = get_storage(data, stg, &src_cf, TRUE);
     if(FAILED(hr)) return hr;
 
     hr = OleLoad(stg, iid, client_site, obj);
@@ -217,6 +222,84 @@ HRESULT WINAPI OleCreateStaticFromData(IDataObject *data, REFIID iid,
     FIXME("%p,%s,%08x,%p,%p,%p,%p: semi-stub\n",
           data, debugstr_guid(iid), renderopt, fmt, client_site, stg, obj);
     return OleCreateFromData(data, iid, renderopt, fmt, client_site, stg, obj);
+}
+
+/******************************************************************************
+ *              OleCreateFromFileEx        [OLE32.@]
+ */
+HRESULT WINAPI OleCreateFromFileEx(REFCLSID clsid, const OLECHAR *filename, REFIID iid, DWORD flags,
+                                   DWORD renderopt, ULONG num_fmts, DWORD *adv_flags, FORMATETC *fmts, IAdviseSink *sink,
+                                   DWORD *conns, IOleClientSite *client_site, IStorage *stg, void **obj)
+{
+    HRESULT hr;
+    IMoniker *mon;
+    IDataObject *data;
+    IUnknown *unk = NULL;
+    IOleCache *cache = NULL;
+    ULONG i;
+
+    TRACE("cls %s, %s, iid %s, flags %d, render opts %d, num fmts %d, adv flags %p, fmts %p\n", debugstr_guid(clsid),
+          debugstr_w(filename), debugstr_guid(iid), flags, renderopt, num_fmts, adv_flags, fmts);
+    TRACE("sink %p, conns %p, client site %p, storage %p, obj %p\n", sink, conns, client_site, stg, obj);
+    for (i = 0; i < num_fmts; i++)
+        TRACE("\t%d: fmt %s adv flags %d\n", i, debugstr_formatetc(fmts + i), adv_flags[i]);
+
+    hr = CreateFileMoniker( filename, &mon );
+    if (FAILED(hr)) return hr;
+
+    hr = BindMoniker( mon, 0, &IID_IDataObject, (void**)&data );
+    IMoniker_Release( mon );
+    if (FAILED(hr)) return hr;
+
+    hr = get_storage( data, stg, NULL, FALSE );
+    if (FAILED(hr)) goto end;
+
+    hr = OleLoad( stg, &IID_IUnknown, client_site, (void**)&unk );
+    if (FAILED(hr)) goto end;
+
+    if (renderopt == OLERENDER_FORMAT)
+    {
+        hr = IUnknown_QueryInterface( unk, &IID_IOleCache, (void**)&cache );
+        if (FAILED(hr)) goto end;
+
+        for (i = 0; i < num_fmts; i++)
+        {
+            STGMEDIUM med;
+            DWORD dummy_conn;
+
+            memset( &med, 0, sizeof(med) );
+            hr = IDataObject_GetData( data, fmts + i, &med );
+            if (FAILED(hr)) goto end;
+            hr = IOleCache_Cache( cache, fmts + i, adv_flags[i], &dummy_conn );
+            if (SUCCEEDED(hr))
+                hr = IOleCache_SetData( cache, fmts + i, &med, TRUE );
+            if (FAILED(hr))
+            {
+                ReleaseStgMedium( &med );
+                goto end;
+            }
+        }
+    }
+
+    hr = IUnknown_QueryInterface( unk, iid, obj );
+
+end:
+    if (cache) IOleCache_Release( cache );
+    if (unk) IUnknown_Release( unk );
+    IDataObject_Release( data );
+    return hr;
+}
+
+/******************************************************************************
+ *              OleCreateFromFile        [OLE32.@]
+ */
+HRESULT WINAPI OleCreateFromFile(REFCLSID clsid, const OLECHAR *filename, REFIID iid, DWORD renderopt,
+                                 FORMATETC *fmt, IOleClientSite *client_site, IStorage *storage, void **obj)
+{
+    DWORD advf = ADVF_PRIMEFIRST;
+
+    return OleCreateFromFileEx(clsid, filename, iid, 0, renderopt, fmt ? 1 : 0, fmt ? &advf : NULL, fmt,
+                               NULL, NULL, client_site, storage, obj);
 }
 
 /******************************************************************************

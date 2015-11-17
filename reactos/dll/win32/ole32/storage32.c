@@ -858,7 +858,7 @@ static HRESULT removeFromTree(
  * IEnumSTATSTGImpl definitions.
  *
  * Definition of the implementation structure for the IEnumSTATSTGImpl interface.
- * This class allows iterating through the content of a storage and to find
+ * This class allows iterating through the content of a storage and finding
  * specific items inside it.
  */
 struct IEnumSTATSTGImpl
@@ -890,6 +890,8 @@ static HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
 {
   IEnumSTATSTGImpl* const This = impl_from_IEnumSTATSTG(iface);
 
+  TRACE("%p,%s,%p\n", iface, debugstr_guid(riid), ppvObject);
+
   if (ppvObject==0)
     return E_INVALIDARG;
 
@@ -900,9 +902,11 @@ static HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
   {
     *ppvObject = &This->IEnumSTATSTG_iface;
     IEnumSTATSTG_AddRef(&This->IEnumSTATSTG_iface);
+    TRACE("<-- %p\n", *ppvObject);
     return S_OK;
   }
 
+  TRACE("<-- E_NOINTERFACE\n");
   return E_NOINTERFACE;
 }
 
@@ -940,6 +944,8 @@ static HRESULT IEnumSTATSTGImpl_GetNextRef(
   HRESULT hr;
   WCHAR result_name[DIRENTRY_NAME_MAX_LEN];
 
+  TRACE("%p,%p\n", This, ref);
+
   hr = StorageBaseImpl_ReadDirEntry(This->parentStorage,
     This->parentStorage->storageDirEntry, &entry);
   searchNode = entry.dirRootEntry;
@@ -972,6 +978,7 @@ static HRESULT IEnumSTATSTGImpl_GetNextRef(
       memcpy(This->name, result_name, sizeof(result_name));
   }
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -989,11 +996,16 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Next(
   DirRef      currentSearchNode;
   HRESULT     hr=S_OK;
 
+  TRACE("%p,%u,%p,%p\n", iface, celt, rgelt, pceltFetched);
+
   if ( (rgelt==0) || ( (celt!=1) && (pceltFetched==0) ) )
     return E_INVALIDARG;
 
   if (This->parentStorage->reverted)
+  {
+    TRACE("<-- STG_E_REVERTED\n");
     return STG_E_REVERTED;
+  }
 
   /*
    * To avoid the special case, get another pointer to a ULONG value if
@@ -1013,14 +1025,18 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Next(
     hr = IEnumSTATSTGImpl_GetNextRef(This, &currentSearchNode);
 
     if (FAILED(hr) || currentSearchNode == DIRENTRY_NULL)
+    {
+      memset(currentReturnStruct, 0, sizeof(*currentReturnStruct));
       break;
+    }
 
     /*
      * Read the entry from the storage.
      */
-    StorageBaseImpl_ReadDirEntry(This->parentStorage,
+    hr = StorageBaseImpl_ReadDirEntry(This->parentStorage,
       currentSearchNode,
       &currentEntry);
+    if (FAILED(hr)) break;
 
     /*
      * Copy the information to the return buffer.
@@ -1040,6 +1056,7 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Next(
   if (SUCCEEDED(hr) && *pceltFetched != celt)
     hr = S_FALSE;
 
+  TRACE("<-- %08x (asked %u, got %u)\n", hr, celt, *pceltFetched);
   return hr;
 }
 
@@ -1054,8 +1071,13 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Skip(
   DirRef      currentSearchNode;
   HRESULT     hr=S_OK;
 
+  TRACE("%p,%u\n", iface, celt);
+
   if (This->parentStorage->reverted)
+  {
+    TRACE("<-- STG_E_REVERTED\n");
     return STG_E_REVERTED;
+  }
 
   while ( (objectFetched < celt) )
   {
@@ -1070,6 +1092,7 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Skip(
   if (SUCCEEDED(hr) && objectFetched != celt)
     return S_FALSE;
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -1078,8 +1101,13 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Reset(
 {
   IEnumSTATSTGImpl* const This = impl_from_IEnumSTATSTG(iface);
 
+  TRACE("%p\n", iface);
+
   if (This->parentStorage->reverted)
+  {
+    TRACE("<-- STG_E_REVERTED\n");
     return STG_E_REVERTED;
+  }
 
   This->name[0] = 0;
 
@@ -1095,8 +1123,13 @@ static HRESULT WINAPI IEnumSTATSTGImpl_Clone(
   IEnumSTATSTGImpl* const This = impl_from_IEnumSTATSTG(iface);
   IEnumSTATSTGImpl* newClone;
 
+  TRACE("%p,%p\n", iface, ppenum);
+
   if (This->parentStorage->reverted)
+  {
+    TRACE("<-- STG_E_REVERTED\n");
     return STG_E_REVERTED;
+  }
 
   if (ppenum==0)
     return E_INVALIDARG;
@@ -1186,6 +1219,8 @@ static HRESULT WINAPI StorageBaseImpl_QueryInterface(
 {
   StorageBaseImpl *This = impl_from_IStorage(iface);
 
+  TRACE("%p,%s,%p\n", iface, debugstr_guid(riid), ppvObject);
+
   if (!ppvObject)
     return E_INVALIDARG;
 
@@ -1206,10 +1241,13 @@ static HRESULT WINAPI StorageBaseImpl_QueryInterface(
     *ppvObject = &This->IDirectWriterLock_iface;
   }
   else
+  {
+    TRACE("<-- E_NOINTERFACE\n");
     return E_NOINTERFACE;
+  }
 
   IStorage_AddRef(iface);
-
+  TRACE("<-- %p\n", *ppvObject);
   return S_OK;
 }
 
@@ -1392,12 +1430,15 @@ static HRESULT StorageBaseImpl_CopyChildEntryTo(StorageBaseImpl *This,
     hr = StorageBaseImpl_CopyChildEntryTo( This, data.rightChild, skip_storage,
                                            skip_stream, snbExclude, pstgDest );
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
 static BOOL StorageBaseImpl_IsStreamOpen(StorageBaseImpl * stg, DirRef streamEntry)
 {
   StgStreamImpl *strm;
+
+  TRACE("%p,%d\n", stg, streamEntry);
 
   LIST_FOR_EACH_ENTRY(strm, &stg->strmHead, StgStreamImpl, StrmListEntry)
   {
@@ -1413,6 +1454,8 @@ static BOOL StorageBaseImpl_IsStreamOpen(StorageBaseImpl * stg, DirRef streamEnt
 static BOOL StorageBaseImpl_IsStorageOpen(StorageBaseImpl * stg, DirRef storageEntry)
 {
   StorageInternalImpl *childstg;
+
+  TRACE("%p,%d\n", stg, storageEntry);
 
   LIST_FOR_EACH_ENTRY(childstg, &stg->storageHead, StorageInternalImpl, ParentListEntry)
   {
@@ -2218,6 +2261,7 @@ static HRESULT StorageBaseImpl_CopyStorageEntryTo(StorageBaseImpl *This,
     hr = StorageBaseImpl_CopyChildEntryTo( This, data.dirRootEntry, skip_storage,
       skip_stream, snbExclude, pstgDest );
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -2374,6 +2418,8 @@ static HRESULT deleteStorageContents(
   HRESULT      destroyHr = S_OK;
   StorageInternalImpl *stg, *stg2;
 
+  TRACE("%p,%d\n", parentStorage, indexToDelete);
+
   /* Invalidate any open storage objects. */
   LIST_FOR_EACH_ENTRY_SAFE(stg, stg2, &parentStorage->storageHead, StorageInternalImpl, ParentListEntry)
   {
@@ -2397,6 +2443,7 @@ static HRESULT deleteStorageContents(
 
   if (hr != S_OK)
   {
+    TRACE("<-- %08x\n", hr);
     return hr;
   }
 
@@ -2407,6 +2454,7 @@ static HRESULT deleteStorageContents(
   if (FAILED(hr))
   {
     IStorage_Release(childStorage);
+    TRACE("<-- %08x\n", hr);
     return hr;
   }
 
@@ -2434,6 +2482,7 @@ static HRESULT deleteStorageContents(
   IStorage_Release(childStorage);
   IEnumSTATSTG_Release(elements);
 
+  TRACE("%08x\n", hr);
   return destroyHr;
 }
 
@@ -2473,6 +2522,7 @@ static HRESULT deleteStreamContents(
 
   if (hr!=S_OK)
   {
+    TRACE("<-- %08x\n", hr);
     return(hr);
   }
 
@@ -2483,6 +2533,7 @@ static HRESULT deleteStreamContents(
 
   if(hr != S_OK)
   {
+    TRACE("<-- %08x\n", hr);
     return hr;
   }
 
@@ -2490,7 +2541,7 @@ static HRESULT deleteStreamContents(
    * Release the stream object.
    */
   IStream_Release(pis);
-
+  TRACE("<-- %08x\n", hr);
   return S_OK;
 }
 
@@ -2500,7 +2551,7 @@ static HRESULT deleteStreamContents(
  * Strategy: This implementation is built this way for simplicity not for speed.
  *          I always delete the topmost element of the enumeration and adjust
  *          the deleted element pointer all the time.  This takes longer to
- *          do but allow to reinvoke DestroyElement whenever we encounter a
+ *          do but allows reinvoking DestroyElement whenever we encounter a
  *          storage object.  The optimisation resides in the usage of another
  *          enumeration strategy that would give all the leaves of a storage
  *          first. (postfix order)
@@ -2536,6 +2587,7 @@ static HRESULT WINAPI StorageBaseImpl_DestroyElement(
 
   if ( entryToDeleteRef == DIRENTRY_NULL )
   {
+    TRACE("<-- STG_E_FILENOTFOUND\n");
     return STG_E_FILENOTFOUND;
   }
 
@@ -2555,7 +2607,10 @@ static HRESULT WINAPI StorageBaseImpl_DestroyElement(
   }
 
   if (hr!=S_OK)
+  {
+    TRACE("<-- %08x\n", hr);
     return hr;
+  }
 
   /*
    * Remove the entry from its parent storage
@@ -2574,6 +2629,7 @@ static HRESULT WINAPI StorageBaseImpl_DestroyElement(
   if (SUCCEEDED(hr))
     hr = StorageBaseImpl_Flush(This);
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -3428,10 +3484,18 @@ static HRESULT StorageImpl_ReadDirEntry(
       OFFSET_PS_SIZE,
       &buffer->size.u.LowPart);
 
-    StorageUtl_ReadDWord(
-      currentEntry,
-      OFFSET_PS_SIZE_HIGH,
-      &buffer->size.u.HighPart);
+    if (This->bigBlockSize < 4096)
+    {
+      /* Version 3 files may have junk in the high part of size. */
+      buffer->size.u.HighPart = 0;
+    }
+    else
+    {
+      StorageUtl_ReadDWord(
+        currentEntry,
+        OFFSET_PS_SIZE_HIGH,
+        &buffer->size.u.HighPart);
+    }
   }
 
   return readRes;
@@ -6004,6 +6068,7 @@ end:
     StorageBaseImpl_UnlockTransaction(This->transactedParent, TRUE);
   }
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -6110,7 +6175,11 @@ static HRESULT TransactedSnapshotImpl_WriteDirEntry(StorageBaseImpl *base,
   TRACE("%x %s l=%x r=%x d=%x\n", index, debugstr_w(data->name), data->leftChild, data->rightChild, data->dirRootEntry);
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, index);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   memcpy(&This->entries[index].data, data, sizeof(DirEntry));
 
@@ -6132,7 +6201,7 @@ static HRESULT TransactedSnapshotImpl_WriteDirEntry(StorageBaseImpl *base,
       This->entries[index].transactedParentEntry = This->entries[index].newTransactedParentEntry = DIRENTRY_NULL;
     }
   }
-
+  TRACE("<-- S_OK\n");
   return S_OK;
 }
 
@@ -6143,7 +6212,11 @@ static HRESULT TransactedSnapshotImpl_ReadDirEntry(StorageBaseImpl *base,
   HRESULT hr;
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, index);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   memcpy(data, &This->entries[index].data, sizeof(DirEntry));
 
@@ -6205,10 +6278,18 @@ static HRESULT TransactedSnapshotImpl_StreamWriteAt(StorageBaseImpl *base,
   HRESULT hr;
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, index);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   hr = TransactedSnapshotImpl_MakeStreamDirty(This, index);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   hr = StorageBaseImpl_StreamWriteAt(This->scratch,
     This->entries[index].stream_entry, offset, size, buffer, bytesWritten);
@@ -6218,6 +6299,7 @@ static HRESULT TransactedSnapshotImpl_StreamWriteAt(StorageBaseImpl *base,
         This->entries[index].data.size.QuadPart,
         offset.QuadPart + size);
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -6228,7 +6310,11 @@ static HRESULT TransactedSnapshotImpl_StreamSetSize(StorageBaseImpl *base,
   HRESULT hr;
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, index);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   if (This->entries[index].data.size.QuadPart == newsize.QuadPart)
     return S_OK;
@@ -6269,6 +6355,7 @@ static HRESULT TransactedSnapshotImpl_StreamSetSize(StorageBaseImpl *base,
   if (SUCCEEDED(hr))
     This->entries[index].data.size = newsize;
 
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -6280,10 +6367,18 @@ static HRESULT TransactedSnapshotImpl_StreamLink(StorageBaseImpl *base,
   TransactedDirEntry *dst_entry, *src_entry;
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, src);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   hr = TransactedSnapshotImpl_EnsureReadEntry(This, dst);
-  if (FAILED(hr)) return hr;
+  if (FAILED(hr))
+  {
+    TRACE("<-- %08x\n", hr);
+    return hr;
+  }
 
   dst_entry = &This->entries[dst];
   src_entry = &This->entries[src];
@@ -6638,7 +6733,7 @@ static HRESULT WINAPI TransactedSharedImpl_Commit(
       This->lastTransactionSig = transactionSig+1;
     }
   }
-
+  TRACE("<-- %08x\n", hr);
   return hr;
 }
 
@@ -9165,7 +9260,10 @@ static HRESULT STREAM_ReadString( IStream *stm, LPWSTR *string )
     count = 0;
     r = IStream_Read( stm, str, len, &count );
     if( FAILED( r ) )
+    {
+        CoTaskMemFree( str );
         return r;
+    }
     if( count != len )
     {
         CoTaskMemFree( str );

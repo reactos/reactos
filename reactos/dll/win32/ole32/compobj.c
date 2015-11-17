@@ -1003,7 +1003,7 @@ static HRESULT get_local_server_stream(APARTMENT *apt, IStream **ret)
  * SEE ALSO
  *  CoRegisterClassObject
  */
-HRESULT WINAPI CoRevokeClassObject(
+HRESULT WINAPI DECLSPEC_HOTPATCH CoRevokeClassObject(
         DWORD dwRegister)
 {
   HRESULT hr = E_INVALIDARG;
@@ -1851,7 +1851,7 @@ HRESULT WINAPI CoInitialize(LPVOID lpReserved)
  * SEE ALSO
  *   CoUninitialize
  */
-HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
+HRESULT WINAPI DECLSPEC_HOTPATCH CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 {
   struct oletls *info = COM_CurrentInfo();
   HRESULT hr = S_OK;
@@ -1997,6 +1997,7 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
  */
 HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
 {
+    struct stub_manager *manager;
     HRESULT hr;
     IMarshal *marshal;
     APARTMENT *apt;
@@ -2017,7 +2018,13 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
     if (!apt)
         return CO_E_NOTINITIALIZED;
 
-    apartment_disconnectobject(apt, lpUnk);
+    manager = get_stub_manager_from_object(apt, lpUnk, FALSE);
+    if (manager) {
+        stub_manager_disconnect(manager);
+        /* Release stub manager twice, to remove the apartment reference. */
+        stub_manager_int_release(manager);
+        stub_manager_int_release(manager);
+    }
 
     /* Note: native is pretty broken here because it just silently
      * fails, without returning an appropriate error code if the object was
@@ -3158,10 +3165,8 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstance(
     REFIID iid,
     LPVOID *ppv)
 {
+    MULTI_QI multi_qi = { iid };
     HRESULT hres;
-    LPCLASSFACTORY lpclf = 0;
-    APARTMENT *apt;
-    CLSID clsid;
 
     TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08x, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
           pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
@@ -3169,65 +3174,8 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstance(
     if (ppv==0)
         return E_POINTER;
 
-    hres = CoGetTreatAsClass(rclsid, &clsid);
-    if(FAILED(hres))
-        clsid = *rclsid;
-
-    *ppv = 0;
-
-    if (!(apt = COM_CurrentApt()))
-    {
-        if (!(apt = apartment_find_multi_threaded()))
-        {
-            ERR("apartment not initialised\n");
-            return CO_E_NOTINITIALIZED;
-        }
-        apartment_release(apt);
-    }
-
-    /*
-     * The Standard Global Interface Table (GIT) object is a process-wide singleton.
-     */
-    if (IsEqualIID(&clsid, &CLSID_StdGlobalInterfaceTable))
-    {
-        IGlobalInterfaceTable *git = get_std_git();
-        hres = IGlobalInterfaceTable_QueryInterface(git, iid, ppv);
-        if (hres != S_OK) return hres;
-
-        TRACE("Retrieved GIT (%p)\n", *ppv);
-        return S_OK;
-    }
-
-    if (IsEqualCLSID(&clsid, &CLSID_ManualResetEvent))
-        return ManualResetEvent_Construct(pUnkOuter, iid, ppv);
-
-    /*
-     * Get a class factory to construct the object we want.
-     */
-    hres = CoGetClassObject(&clsid,
-                            dwClsContext,
-                            NULL,
-                            &IID_IClassFactory,
-                            (LPVOID)&lpclf);
-
-    if (FAILED(hres))
-        return hres;
-
-    /*
-     * Create the object and don't forget to release the factory
-     */
-    hres = IClassFactory_CreateInstance(lpclf, pUnkOuter, iid, ppv);
-    IClassFactory_Release(lpclf);
-    if (FAILED(hres))
-    {
-        if (hres == CLASS_E_NOAGGREGATION && pUnkOuter)
-            FIXME("Class %s does not support aggregation\n", debugstr_guid(&clsid));
-        else
-            FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n",
-                  debugstr_guid(iid),
-                  debugstr_guid(&clsid),hres);
-    }
-
+    hres = CoCreateInstanceEx(rclsid, pUnkOuter, dwClsContext, NULL, 1, &multi_qi);
+    *ppv = multi_qi.pItf;
     return hres;
 }
 
@@ -3242,18 +3190,26 @@ static void init_multi_qi(DWORD count, MULTI_QI *mqi)
   }
 }
 
-static HRESULT return_multi_qi(IUnknown *unk, DWORD count, MULTI_QI *mqi)
+static HRESULT return_multi_qi(IUnknown *unk, DWORD count, MULTI_QI *mqi, BOOL include_unk)
 {
-  ULONG index, fetched = 0;
+  ULONG index = 0, fetched = 0;
 
-  for (index = 0; index < count; index++)
+  if (include_unk)
+  {
+    mqi[0].hr = S_OK;
+    mqi[0].pItf = unk;
+    index = fetched = 1;
+  }
+
+  for (; index < count; index++)
   {
     mqi[index].hr = IUnknown_QueryInterface(unk, mqi[index].pIID, (void**)&mqi[index].pItf);
     if (mqi[index].hr == S_OK)
       fetched++;
   }
 
-  IUnknown_Release(unk);
+  if (!include_unk)
+      IUnknown_Release(unk);
 
   if (fetched == 0)
     return E_NOINTERFACE;
@@ -3272,39 +3228,83 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
   ULONG         cmq,
   MULTI_QI*     pResults)
 {
-  IUnknown* pUnk = NULL;
-  HRESULT   hr;
+    IUnknown *unk = NULL;
+    IClassFactory *cf;
+    APARTMENT *apt;
+    CLSID clsid;
+    HRESULT hres;
 
-  /*
-   * Sanity check
-   */
-  if ( (cmq==0) || (pResults==NULL))
-    return E_INVALIDARG;
+    TRACE("(%s %p %x %p %u %p)\n", debugstr_guid(rclsid), pUnkOuter, dwClsContext, pServerInfo, cmq, pResults);
 
-  if (pServerInfo!=NULL)
-    FIXME("() non-NULL pServerInfo not supported!\n");
+    if (!cmq || !pResults)
+        return E_INVALIDARG;
 
-  init_multi_qi(cmq, pResults);
+    if (pServerInfo)
+        FIXME("() non-NULL pServerInfo not supported!\n");
 
-  /*
-   * Get the object and get its IUnknown pointer.
-   */
-  hr = CoCreateInstance(rclsid,
-			pUnkOuter,
-			dwClsContext,
-			&IID_IUnknown,
-			(VOID**)&pUnk);
+    init_multi_qi(cmq, pResults);
 
-  if (hr != S_OK)
-    return hr;
+    hres = CoGetTreatAsClass(rclsid, &clsid);
+    if(FAILED(hres))
+        clsid = *rclsid;
 
-  return return_multi_qi(pUnk, cmq, pResults);
+    if (!(apt = COM_CurrentApt()))
+    {
+        if (!(apt = apartment_find_multi_threaded()))
+        {
+            ERR("apartment not initialised\n");
+            return CO_E_NOTINITIALIZED;
+        }
+        apartment_release(apt);
+    }
+
+    /*
+     * The Standard Global Interface Table (GIT) object is a process-wide singleton.
+     */
+    if (IsEqualIID(&clsid, &CLSID_StdGlobalInterfaceTable))
+    {
+        IGlobalInterfaceTable *git = get_std_git();
+        TRACE("Retrieving GIT\n");
+        return return_multi_qi((IUnknown*)git, cmq, pResults, FALSE);
+    }
+
+    if (IsEqualCLSID(&clsid, &CLSID_ManualResetEvent)) {
+        hres = ManualResetEvent_Construct(pUnkOuter, pResults[0].pIID, (void**)&unk);
+        if (FAILED(hres))
+            return hres;
+        return return_multi_qi(unk, cmq, pResults, TRUE);
+    }
+
+    /*
+     * Get a class factory to construct the object we want.
+     */
+    hres = CoGetClassObject(&clsid, dwClsContext, NULL, &IID_IClassFactory, (void**)&cf);
+    if (FAILED(hres))
+        return hres;
+
+    /*
+     * Create the object and don't forget to release the factory
+     */
+    hres = IClassFactory_CreateInstance(cf, pUnkOuter, pResults[0].pIID, (void**)&unk);
+    IClassFactory_Release(cf);
+    if (FAILED(hres))
+    {
+        if (hres == CLASS_E_NOAGGREGATION && pUnkOuter)
+            FIXME("Class %s does not support aggregation\n", debugstr_guid(&clsid));
+        else
+            FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n",
+                  debugstr_guid(pResults[0].pIID),
+                  debugstr_guid(&clsid),hres);
+        return hres;
+    }
+
+    return return_multi_qi(unk, cmq, pResults, TRUE);
 }
 
 /***********************************************************************
  *           CoGetInstanceFromFile [OLE32.@]
  */
-HRESULT WINAPI CoGetInstanceFromFile(
+HRESULT WINAPI DECLSPEC_HOTPATCH CoGetInstanceFromFile(
   COSERVERINFO *server_info,
   CLSID        *rclsid,
   IUnknown     *outer,
@@ -3361,7 +3361,7 @@ HRESULT WINAPI CoGetInstanceFromFile(
       IPersistFile_Release(pf);
   }
 
-  return return_multi_qi(unk, count, results);
+  return return_multi_qi(unk, count, results, FALSE);
 }
 
 /***********************************************************************
@@ -3424,7 +3424,7 @@ HRESULT WINAPI CoGetInstanceFromIStorage(
       IPersistStorage_Release(ps);
   }
 
-  return return_multi_qi(unk, count, results);
+  return return_multi_qi(unk, count, results, FALSE);
 }
 
 /***********************************************************************
@@ -3583,32 +3583,8 @@ HRESULT WINAPI CoLockObjectExternal(
     apt = COM_CurrentApt();
     if (!apt) return CO_E_NOTINITIALIZED;
 
-    stubmgr = get_stub_manager_from_object(apt, pUnk);
-    
-    if (stubmgr)
-    {
-        if (fLock)
-            stub_manager_ext_addref(stubmgr, 1, FALSE);
-        else
-            stub_manager_ext_release(stubmgr, 1, FALSE, fLastUnlockReleases);
-        
-        stub_manager_int_release(stubmgr);
-
-        return S_OK;
-    }
-    else if (fLock)
-    {
-        stubmgr = new_stub_manager(apt, pUnk);
-
-        if (stubmgr)
-        {
-            stub_manager_ext_addref(stubmgr, 1, FALSE);
-            stub_manager_int_release(stubmgr);
-        }
-
-        return S_OK;
-    }
-    else
+    stubmgr = get_stub_manager_from_object(apt, pUnk, fLock);
+    if (!stubmgr)
     {
         WARN("stub object not found %p\n", pUnk);
         /* Note: native is pretty broken here because it just silently
@@ -3616,6 +3592,14 @@ HRESULT WINAPI CoLockObjectExternal(
          * think that the object was disconnected, when it actually wasn't */
         return S_OK;
     }
+
+    if (fLock)
+        stub_manager_ext_addref(stubmgr, 1, FALSE);
+    else
+        stub_manager_ext_release(stubmgr, 1, FALSE, fLastUnlockReleases);
+
+    stub_manager_int_release(stubmgr);
+    return S_OK;
 }
 
 /***********************************************************************
@@ -4366,7 +4350,7 @@ HRESULT WINAPI CoRevertToSelf(void)
 static BOOL COM_PeekMessage(struct apartment *apt, MSG *msg)
 {
     /* first try to retrieve messages for incoming COM calls to the apartment window */
-    return PeekMessageW(msg, apt->win, 0, 0, PM_REMOVE|PM_NOYIELD) ||
+    return (apt->win && PeekMessageW(msg, apt->win, 0, 0, PM_REMOVE|PM_NOYIELD)) ||
            /* next retrieve other messages necessary for the app to remain responsive */
            PeekMessageW(msg, NULL, WM_DDE_FIRST, WM_DDE_LAST, PM_REMOVE|PM_NOYIELD) ||
            PeekMessageW(msg, NULL, 0, 0, PM_QS_PAINT|PM_QS_SENDMESSAGE|PM_REMOVE|PM_NOYIELD);

@@ -484,12 +484,12 @@ FileMonikerImpl_BindToObject(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLeft
             /* if the requested class was loaded before ! we don't need to reload it */
             res = IRunningObjectTable_GetObject(prot,iface,&pObj);
 
-            if (res==S_FALSE){
+            if (res != S_OK){
                 /* first activation of this class */
                 res=GetClassFile(This->filePathName,&clsID);
                 if (SUCCEEDED(res)){
 
-                    res=CoCreateInstance(&clsID,NULL,CLSCTX_ALL,&IID_IPersistFile,(void**)&ppf);
+                    res=CoCreateInstance(&clsID,NULL,CLSCTX_SERVER,&IID_IPersistFile,(void**)&ppf);
                     if (SUCCEEDED(res)){
 
                         res=IPersistFile_Load(ppf,This->filePathName,STGM_READ);
