@@ -1968,13 +1968,17 @@ static HRESULT AVIFILE_ParseIndex(const IAVIFileImpl *This, AVIINDEXENTRY *lp,
     if (nStream > This->fInfo.dwStreams)
       return AVIERR_BADFORMAT;
 
+    /* Video frames can be either indexed in a relative position to the
+     * "movi" chunk or in a absolute position in the file. If the index
+     * is relative the frame offset will always be so small that it will
+     * virtually never reach the "movi" offset so we can detect if the
+     * video is relative very fast.
+     */
     if (*bAbsolute && lp->dwChunkOffset < This->dwMoviChunkPos)
       *bAbsolute = FALSE;
 
-    if (*bAbsolute)
-      lp->dwChunkOffset += sizeof(DWORD);
-    else
-      lp->dwChunkOffset += pos;
+    if (!*bAbsolute)
+      lp->dwChunkOffset += pos; /* make the offset absolute */
 
     if (FAILED(AVIFILE_AddFrame(This->ppStreams[nStream], lp->ckid, lp->dwChunkLength, lp->dwChunkOffset, lp->dwFlags)))
       return AVIERR_MEMORY;

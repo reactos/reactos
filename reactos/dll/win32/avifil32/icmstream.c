@@ -756,11 +756,11 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
   if (This->lKeyFrameEvery != 0) {
     if (This->lCurrent == This->sInfo.dwStart) {
       if (idxFlags & AVIIF_KEYFRAME) {
-	/* for keyframes allow to consume all unused bytes */
+	/* allow keyframes to consume all unused bytes */
 	dwRequest = This->dwBytesPerFrame + This->dwUnusedBytes;
 	This->dwUnusedBytes = 0;
       } else {
-	/* for non-keyframes only allow something of the unused bytes to be consumed */
+	/* for non-keyframes only allow some of the unused bytes to be consumed */
 	DWORD tmp1 = 0;
 	DWORD tmp2;
 
@@ -782,8 +782,8 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
       dwRequest = MAX_FRAMESIZE;
   }
 
-  /* must we check for framesize to gain requested
-   * datarate or could we trust codec? */
+  /* must we check for frame size to gain the requested
+   * data rate or can we trust the codec? */
   doSizeCheck = (dwRequest != 0 && ((This->dwICMFlags & (VIDCF_CRUNCH|VIDCF_QUALITY)) == 0));
 
   dwMaxQual = dwCurQual = This->sInfo.dwQuality;
