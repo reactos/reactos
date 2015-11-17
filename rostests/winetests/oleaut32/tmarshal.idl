@@ -175,10 +175,19 @@ library TestTypelib
         HRESULT prop_req_arg([in] INT req, [in] INT i);
 
         [id(DISPID_TM_RESTRICTED), restricted]
-        HRESULT do_restrict([out, retval] INT *i);
+        HRESULT pos_restrict([out, retval] INT *i);
 
         [id(DISPID_TM_NEG_RESTRICTED), restricted]
         HRESULT neg_restrict([out, retval] INT *i);
+
+        [id(DISPID_TM_VARARG_RUN), vararg]
+        HRESULT VarArg_Run([in] BSTR name, [in] SAFEARRAY(VARIANT) params, [out, retval] VARIANT *result);
+
+        [id(DISPID_TM_VARARG_REF_RUN), vararg]
+        HRESULT VarArg_Ref_Run([in] BSTR name, [in] SAFEARRAY(VARIANT) *params, [out, retval] VARIANT *result);
+
+        [id(DISPID_TM_COCLASS)]
+        HRESULT Coclass([in] ApplicationObject2 *p);
     }
 
     [

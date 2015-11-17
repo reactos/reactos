@@ -234,7 +234,7 @@ static HRESULT WINAPI RecordInfo_GetFieldNames(IRecordInfo *iface, ULONG *pcName
 static BOOL WINAPI RecordInfo_IsMatchingType(IRecordInfo *iface, IRecordInfo *info2)
 {
     ok(0, "unexpected call\n");
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static PVOID WINAPI RecordInfo_RecordCreate(IRecordInfo *iface)
@@ -1622,7 +1622,7 @@ static const char *szFailOk = "Call failed, hres = %08x\n";
 #define EXPECT_UI4(val) EXPECT_OK { EXPECT_TYPE(VT_UI4); \
   ok(V_UI4(&vOut) == val, "Expected ui4 = %d, got %d\n", (ULONG)val, V_UI4(&vOut)); }
 #define EXPECT_I8(high,low) EXPECT_OK { EXPECT_TYPE(VT_I8); \
-  ok(V_I8(&vOut) == ((((LONG64)(high))<<32)|(low)), "Expected i8 = %x%08x, got %x%08x\n", \
+  ok(V_I8(&vOut) == ((((ULONG64)(high))<<32)|(low)), "Expected i8 = %x%08x, got %x%08x\n", \
      (LONG)(high), (LONG)(low), (LONG)(V_I8(&vOut)>>32), (LONG)V_I8(&vOut) ); }
 #define EXPECT_UI8(val) EXPECT_OK { EXPECT_TYPE(VT_UI8); \
   ok(V_UI8(&vOut) == val, "Expected ui8 = 0x%x%08x, got 0x%x%08x\n", \

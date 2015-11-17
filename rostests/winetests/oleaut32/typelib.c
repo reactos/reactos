@@ -2,7 +2,7 @@
  * ITypeLib and ITypeInfo test
  *
  * Copyright 2004 Jacek Caban
- * Copyright 2006 Dmitry Timoshkov
+ * Copyright 2006,2015 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,7 +47,7 @@
 #define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")
 #define expect_hex(expr, value) expect_eq(expr, (int)(value), int, "0x%x")
 #define expect_null(expr) expect_eq(expr, NULL, const void *, "%p")
-#define expect_guid(expected, guid) { ok(IsEqualGUID(expected, guid), "got wrong guid\n"); }
+#define expect_guid(expected, guid) { ok(IsEqualGUID(expected, guid), "got wrong guid %s\n", wine_dbgstr_guid(guid)); }
 
 #define expect_wstr_acpval(expr, value) \
     { \
@@ -69,6 +69,10 @@
 #define ARCH "x86"
 #elif defined __x86_64__
 #define ARCH "amd64"
+#elif defined __arm__
+#define ARCH "arm"
+#elif defined __aarch64__
+#define ARCH "arm64"
 #else
 #define ARCH "none"
 #endif
@@ -3664,11 +3668,9 @@ static void test_CreateTypeLib(SYSKIND sys) {
 
 static char *dump_string(LPWSTR wstr)
 {
-    int size = lstrlenW(wstr)+3;
+    int size = lstrlenW(wstr)+1;
     char *out = CoTaskMemAlloc(size);
-    WideCharToMultiByte(20127, 0, wstr, -1, out+1, size, NULL, NULL);
-    out[0] = '\"';
-    strcat(out, "\"");
+    WideCharToMultiByte(20127, 0, wstr, -1, out, size, NULL, NULL);
     return out;
 }
 
@@ -3709,9 +3711,95 @@ static const struct map_entry invkind_map[] = {
     {0, NULL}
 };
 
+static const struct map_entry callconv_map[] = {
+    MAP_ENTRY(CC_FASTCALL),
+    MAP_ENTRY(CC_CDECL),
+    MAP_ENTRY(CC_PASCAL),
+    MAP_ENTRY(CC_MACPASCAL),
+    MAP_ENTRY(CC_STDCALL),
+    MAP_ENTRY(CC_FPFASTCALL),
+    MAP_ENTRY(CC_SYSCALL),
+    MAP_ENTRY(CC_MPWCDECL),
+    MAP_ENTRY(CC_MPWPASCAL),
+    {0, NULL}
+};
+
+static const struct map_entry vt_map[] = {
+    MAP_ENTRY(VT_EMPTY),
+    MAP_ENTRY(VT_NULL),
+    MAP_ENTRY(VT_I2),
+    MAP_ENTRY(VT_I4),
+    MAP_ENTRY(VT_R4),
+    MAP_ENTRY(VT_R8),
+    MAP_ENTRY(VT_CY),
+    MAP_ENTRY(VT_DATE),
+    MAP_ENTRY(VT_BSTR),
+    MAP_ENTRY(VT_DISPATCH),
+    MAP_ENTRY(VT_ERROR),
+    MAP_ENTRY(VT_BOOL),
+    MAP_ENTRY(VT_VARIANT),
+    MAP_ENTRY(VT_UNKNOWN),
+    MAP_ENTRY(VT_DECIMAL),
+    MAP_ENTRY(15),
+    MAP_ENTRY(VT_I1),
+    MAP_ENTRY(VT_UI1),
+    MAP_ENTRY(VT_UI2),
+    MAP_ENTRY(VT_UI4),
+    MAP_ENTRY(VT_I8),
+    MAP_ENTRY(VT_UI8),
+    MAP_ENTRY(VT_INT),
+    MAP_ENTRY(VT_UINT),
+    MAP_ENTRY(VT_VOID),
+    MAP_ENTRY(VT_HRESULT),
+    MAP_ENTRY(VT_PTR),
+    MAP_ENTRY(VT_SAFEARRAY),
+    MAP_ENTRY(VT_CARRAY),
+    MAP_ENTRY(VT_USERDEFINED),
+    MAP_ENTRY(VT_LPSTR),
+    MAP_ENTRY(VT_LPWSTR),
+    MAP_ENTRY(VT_RECORD),
+    MAP_ENTRY(VT_INT_PTR),
+    MAP_ENTRY(VT_UINT_PTR),
+    MAP_ENTRY(39),
+    MAP_ENTRY(40),
+    MAP_ENTRY(41),
+    MAP_ENTRY(42),
+    MAP_ENTRY(43),
+    MAP_ENTRY(44),
+    MAP_ENTRY(45),
+    MAP_ENTRY(46),
+    MAP_ENTRY(47),
+    MAP_ENTRY(48),
+    MAP_ENTRY(49),
+    MAP_ENTRY(50),
+    MAP_ENTRY(51),
+    MAP_ENTRY(52),
+    MAP_ENTRY(53),
+    MAP_ENTRY(54),
+    MAP_ENTRY(55),
+    MAP_ENTRY(56),
+    MAP_ENTRY(57),
+    MAP_ENTRY(58),
+    MAP_ENTRY(59),
+    MAP_ENTRY(60),
+    MAP_ENTRY(61),
+    MAP_ENTRY(62),
+    MAP_ENTRY(63),
+    MAP_ENTRY(VT_FILETIME),
+    MAP_ENTRY(VT_BLOB),
+    MAP_ENTRY(VT_STREAM),
+    MAP_ENTRY(VT_STORAGE),
+    MAP_ENTRY(VT_STREAMED_OBJECT),
+    MAP_ENTRY(VT_STORED_OBJECT),
+    MAP_ENTRY(VT_BLOB_OBJECT),
+    MAP_ENTRY(VT_CF),
+    MAP_ENTRY(VT_CLSID),
+    {0, NULL}
+};
+
 #undef MAP_ENTRY
 
-static const char *map_value(DWORD val, const struct map_entry *map)
+static const char *map_value(int val, const struct map_entry *map)
 {
     static int map_id;
     static char bufs[16][256];
@@ -3725,8 +3813,150 @@ static const char *map_value(DWORD val, const struct map_entry *map)
     }
 
     buf = bufs[(map_id++)%16];
-    sprintf(buf, "0x%x", val);
+    sprintf(buf, "%d", val);
     return buf;
+}
+
+static const char *dump_type_flags(DWORD flags)
+{
+    static char buf[256];
+
+    if (!flags) return "0";
+
+    buf[0] = 0;
+
+#define ADD_FLAG(x) if (flags & x) { if (buf[0]) strcat(buf, "|"); strcat(buf, #x); flags &= ~x; }
+    ADD_FLAG(TYPEFLAG_FPROXY)
+    ADD_FLAG(TYPEFLAG_FREVERSEBIND)
+    ADD_FLAG(TYPEFLAG_FDISPATCHABLE)
+    ADD_FLAG(TYPEFLAG_FREPLACEABLE)
+    ADD_FLAG(TYPEFLAG_FAGGREGATABLE)
+    ADD_FLAG(TYPEFLAG_FRESTRICTED)
+    ADD_FLAG(TYPEFLAG_FOLEAUTOMATION)
+    ADD_FLAG(TYPEFLAG_FNONEXTENSIBLE)
+    ADD_FLAG(TYPEFLAG_FDUAL)
+    ADD_FLAG(TYPEFLAG_FCONTROL)
+    ADD_FLAG(TYPEFLAG_FHIDDEN)
+    ADD_FLAG(TYPEFLAG_FPREDECLID)
+    ADD_FLAG(TYPEFLAG_FLICENSED)
+    ADD_FLAG(TYPEFLAG_FCANCREATE)
+    ADD_FLAG(TYPEFLAG_FAPPOBJECT)
+#undef ADD_FLAG
+
+    assert(!flags);
+    assert(strlen(buf) < sizeof(buf));
+
+    return buf;
+}
+
+static char *print_size(BSTR name, TYPEATTR *attr)
+{
+    static char buf[256];
+
+    switch (attr->typekind)
+    {
+    case TKIND_DISPATCH:
+    case TKIND_INTERFACE:
+        sprintf(buf, "sizeof(%s*)", dump_string(name));
+        break;
+
+    case TKIND_RECORD:
+        sprintf(buf, "sizeof(struct %s)", dump_string(name));
+        break;
+
+    case TKIND_UNION:
+        sprintf(buf, "sizeof(union %s)", dump_string(name));
+        break;
+
+    case TKIND_ENUM:
+    case TKIND_ALIAS:
+        sprintf(buf, "4");
+        break;
+
+    default:
+        assert(0);
+        return NULL;
+    }
+
+    return buf;
+}
+
+static const char *dump_param_flags(DWORD flags)
+{
+    static char buf[256];
+
+    if (!flags) return "PARAMFLAG_NONE";
+
+    buf[0] = 0;
+
+#define ADD_FLAG(x) if (flags & x) { if (buf[0]) strcat(buf, "|"); strcat(buf, #x); flags &= ~x; }
+    ADD_FLAG(PARAMFLAG_FIN)
+    ADD_FLAG(PARAMFLAG_FOUT)
+    ADD_FLAG(PARAMFLAG_FLCID)
+    ADD_FLAG(PARAMFLAG_FRETVAL)
+    ADD_FLAG(PARAMFLAG_FOPT)
+    ADD_FLAG(PARAMFLAG_FHASDEFAULT)
+    ADD_FLAG(PARAMFLAG_FHASCUSTDATA)
+#undef ADD_FLAG
+
+    assert(!flags);
+    assert(strlen(buf) < sizeof(buf));
+
+    return buf;
+}
+
+static const char *dump_func_flags(DWORD flags)
+{
+    static char buf[256];
+
+    if (!flags) return "0";
+
+    buf[0] = 0;
+
+#define ADD_FLAG(x) if (flags & x) { if (buf[0]) strcat(buf, "|"); strcat(buf, #x); flags &= ~x; }
+    ADD_FLAG(FUNCFLAG_FRESTRICTED)
+    ADD_FLAG(FUNCFLAG_FSOURCE)
+    ADD_FLAG(FUNCFLAG_FBINDABLE)
+    ADD_FLAG(FUNCFLAG_FREQUESTEDIT)
+    ADD_FLAG(FUNCFLAG_FDISPLAYBIND)
+    ADD_FLAG(FUNCFLAG_FDEFAULTBIND)
+    ADD_FLAG(FUNCFLAG_FHIDDEN)
+    ADD_FLAG(FUNCFLAG_FUSESGETLASTERROR)
+    ADD_FLAG(FUNCFLAG_FDEFAULTCOLLELEM)
+    ADD_FLAG(FUNCFLAG_FUIDEFAULT)
+    ADD_FLAG(FUNCFLAG_FNONBROWSABLE)
+    ADD_FLAG(FUNCFLAG_FREPLACEABLE)
+    ADD_FLAG(FUNCFLAG_FIMMEDIATEBIND)
+#undef ADD_FLAG
+
+    assert(!flags);
+    assert(strlen(buf) < sizeof(buf));
+
+    return buf;
+}
+
+static int get_href_type(ITypeInfo *info, TYPEDESC *tdesc)
+{
+    int href_type = -1;
+
+    if (tdesc->vt == VT_USERDEFINED)
+    {
+        HRESULT hr;
+        ITypeInfo *param;
+        TYPEATTR *attr;
+
+        hr = ITypeInfo_GetRefTypeInfo(info, U(*tdesc).hreftype, &param);
+        ok(hr == S_OK, "GetRefTypeInfo error %#x\n", hr);
+        hr = ITypeInfo_GetTypeAttr(param, &attr);
+        ok(hr == S_OK, "GetTypeAttr error %#x\n", hr);
+
+        href_type = attr->typekind;
+
+        ITypeInfo_ReleaseTypeAttr(param, attr);
+        ITypeInfo_Release(param);
+    }
+
+    return href_type;
 }
 
 static void test_dump_typelib(const char *name)
@@ -3739,27 +3969,36 @@ static void test_dump_typelib(const char *name)
 
     MultiByteToWideChar(CP_ACP, 0, name, -1, wszString, 260);
     OLE_CHECK(LoadTypeLib(wszString, &lib));
+
+    printf("/*** Autogenerated data. Do not edit, change the generator above instead. ***/\n");
+
     count = ITypeLib_GetTypeInfoCount(lib);
-    printf("/* interfaces count: %d */\n", count);
     for (i = 0; i < count; i++)
     {
         TYPEATTR *attr;
         BSTR name;
+        DWORD help_ctx;
         int f = 0;
 
-        OLE_CHECK(ITypeLib_GetDocumentation(lib, i, &name, NULL, NULL, NULL));
+        OLE_CHECK(ITypeLib_GetDocumentation(lib, i, &name, NULL, &help_ctx, NULL));
         printf("{\n"
-               "  %s,\n", dump_string(name));
-        SysFreeString(name);
+               "  \"%s\",\n", dump_string(name));
 
         OLE_CHECK(ITypeLib_GetTypeInfo(lib, i, &info));
-        ITypeInfo_GetTypeAttr(info, &attr);
-        printf("  /*kind*/ %s, /*flags*/ 0x%x, /*align*/ %d, /*size*/ %d,\n"
-               "  /*#vtbl*/ %d, /*#func*/ %d,\n"
-               "  {\n",
-            map_value(attr->typekind, tkind_map), attr->wTypeFlags, attr->cbAlignment, attr->cbSizeInstance, attr->cbSizeVft,
-            attr->cFuncs);
-        ITypeInfo_ReleaseTypeAttr(info, attr);
+        OLE_CHECK(ITypeInfo_GetTypeAttr(info, &attr));
+
+        printf("  \"%s\",\n", wine_dbgstr_guid(&attr->guid));
+
+        printf("  /*kind*/ %s, /*flags*/ %s, /*align*/ %d, /*size*/ %s,\n"
+               "  /*helpctx*/ 0x%04x, /*version*/ 0x%08x, /*#vtbl*/ %d, /*#func*/ %d",
+            map_value(attr->typekind, tkind_map), dump_type_flags(attr->wTypeFlags),
+            attr->cbAlignment, print_size(name, attr),
+            help_ctx, MAKELONG(attr->wMinorVerNum, attr->wMajorVerNum),
+            attr->cbSizeVft/sizeof(void*), attr->cFuncs);
+
+        if (attr->cFuncs) printf(",\n  {\n");
+        else printf("\n");
+
         while (1)
         {
             FUNCDESC *desc;
@@ -3770,25 +4009,27 @@ static void test_dump_typelib(const char *name)
             if (FAILED(ITypeInfo_GetFuncDesc(info, f, &desc)))
                 break;
             printf("    {\n"
-                   "      0x%x, /*func*/ %s, /*inv*/ %s, /*call*/ 0x%x,\n",
+                   "      /*id*/ 0x%x, /*func*/ %s, /*inv*/ %s, /*call*/ %s,\n",
                 desc->memid, map_value(desc->funckind, funckind_map), map_value(desc->invkind, invkind_map),
-                desc->callconv);
-            printf("      /*#param*/ %d, /*#opt*/ %d, /*vtbl*/ %d, /*#scodes*/ %d, /*flags*/ 0x%x,\n",
-                desc->cParams, desc->cParamsOpt, desc->oVft, desc->cScodes, desc->wFuncFlags);
-            printf("      {%d, %x}, /* ret */\n", desc->elemdescFunc.tdesc.vt, desc->elemdescFunc.paramdesc.wParamFlags);
+                map_value(desc->callconv, callconv_map));
+            printf("      /*#param*/ %d, /*#opt*/ %d, /*vtbl*/ %d, /*#scodes*/ %d, /*flags*/ %s,\n",
+                desc->cParams, desc->cParamsOpt, desc->oVft/sizeof(void*), desc->cScodes, dump_func_flags(desc->wFuncFlags));
+            printf("      {%s, %s, %s}, /* ret */\n", map_value(desc->elemdescFunc.tdesc.vt, vt_map),
+                map_value(get_href_type(info, &desc->elemdescFunc.tdesc), tkind_map), dump_param_flags(U(desc->elemdescFunc).paramdesc.wParamFlags));
             printf("      { /* params */\n");
             for (p = 0; p < desc->cParams; p++)
             {
                 ELEMDESC e = desc->lprgelemdescParam[p];
-                printf("        {%d, %x},\n", e.tdesc.vt, e.paramdesc.wParamFlags);
+                printf("        {%s, %s, %s},\n", map_value(e.tdesc.vt, vt_map),
+                    map_value(get_href_type(info, &e.tdesc), tkind_map), dump_param_flags(U(e).paramdesc.wParamFlags));
             }
-            printf("        {-1, -1}\n");
+            printf("        {-1, 0, 0}\n");
             printf("      },\n");
             printf("      { /* names */\n");
             OLE_CHECK(ITypeInfo_GetNames(info, desc->memid, tab, 256, &cNames));
             for (p = 0; p < cNames; p++)
             {
-                printf("        %s,\n", dump_string(tab[p]));
+                printf("        \"%s\",\n", dump_string(tab[p]));
                 SysFreeString(tab[p]);
             }
             printf("        NULL,\n");
@@ -3797,9 +4038,11 @@ static void test_dump_typelib(const char *name)
             ITypeInfo_ReleaseFuncDesc(info, desc);
             f++;
         }
-        printf("  }\n");
+        if (attr->cFuncs) printf("  }\n");
         printf("},\n");
+        ITypeInfo_ReleaseTypeAttr(info, attr);
         ITypeInfo_Release(info);
+        SysFreeString(name);
     }
     ITypeLib_Release(lib);
 }
@@ -3809,6 +4052,7 @@ static void test_dump_typelib(const char *name)
 typedef struct _element_info
 {
     VARTYPE vt;
+    TYPEKIND type;
     USHORT wParamFlags;
 } element_info;
 
@@ -3836,26 +4080,135 @@ typedef struct _type_info
     WORD wTypeFlags;
     USHORT cbAlignment;
     USHORT cbSizeInstance;
+    USHORT help_ctx;
+    DWORD version;
     USHORT cbSizeVft;
     USHORT cFuncs;
     function_info funcs[20];
 } type_info;
 
 static const type_info info[] = {
+/*** Autogenerated data. Do not edit, change the generator above instead. ***/
+{
+  "g",
+  "{b14b6bb5-904e-4ff9-b247-bd361f7a0001}",
+  /*kind*/ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct g),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "test_iface",
+  "{b14b6bb5-904e-4ff9-b247-bd361f7a0002}",
+  /*kind*/ TKIND_INTERFACE, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(test_iface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 4, /*#func*/ 1,
+  {
+    {
+      /*id*/ 0x60010000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 3, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "Test",
+        "ptr",
+        NULL,
+      },
+    },
+  }
+},
+{
+  "parent_iface",
+  "{b14b6bb5-904e-4ff9-b247-bd361f7aa001}",
+  /*kind*/ TKIND_INTERFACE, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(parent_iface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 4, /*#func*/ 1,
+  {
+    {
+      /*id*/ 0x60010000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 3, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_PTR, -1, PARAMFLAG_FOUT|PARAMFLAG_FRETVAL},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test1",
+        "iface",
+        NULL,
+      },
+    },
+  }
+},
+{
+  "child_iface",
+  "{b14b6bb5-904e-4ff9-b247-bd361f7aa002}",
+  /*kind*/ TKIND_INTERFACE, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(child_iface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 5, /*#func*/ 1,
+  {
+    {
+      /*id*/ 0x60020000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 4, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test2",
+        NULL,
+      },
+    },
+  }
+},
+{
+  "_n",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753903}",
+  /*kind*/ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct _n),
+  /*helpctx*/ 0x0003, /*version*/ 0x00010002, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "n",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753902}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "nn",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0003, /*version*/ 0x00010002, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_m",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753906}",
+  /*kind*/ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct _m),
+  /*helpctx*/ 0x0003, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "m",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753905}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00010002, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "mm",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0003, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
 {
   "IDualIface",
   "{b14b6bb5-904e-4ff9-b247-bd361f7aaedd}",
-  /*kind*/ TKIND_DISPATCH, /*flags*/ TYPEFLAG_FDISPATCHABLE|TYPEFLAG_FDUAL, /*align*/ 4, /*size*/ sizeof(void*),
-  /*#vtbl*/ 7, /*#func*/ 8,
+  /*kind*/ TKIND_DISPATCH, /*flags*/ TYPEFLAG_FDISPATCHABLE|TYPEFLAG_FDUAL, /*align*/ 4, /*size*/ sizeof(IDualIface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 7, /*#func*/ 8,
   {
     {
-      0x60000000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 2, /*#opt*/ 0, /*vtbl*/ 0, /*#scodes*/ 0, /*flags*/ 0x1,
-      {24, 0}, /* ret */
+      /*id*/ 0x60000000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 2, /*#opt*/ 0, /*vtbl*/ 0, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {26, 1},
-        {26, 2},
-        {-1, -1}
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {-1, 0, 0}
       },
       { /* names */
         "QueryInterface",
@@ -3865,11 +4218,11 @@ static const type_info info[] = {
       },
     },
     {
-      0x60000001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 1, /*#scodes*/ 0, /*flags*/ 0x1,
-      {19, 0}, /* ret */
+      /*id*/ 0x60000001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 1, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_UI4, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {-1, -1}
+        {-1, 0, 0}
       },
       { /* names */
         "AddRef",
@@ -3877,11 +4230,11 @@ static const type_info info[] = {
       },
     },
     {
-      0x60000002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 2, /*#scodes*/ 0, /*flags*/ 0x1,
-      {19, 0}, /* ret */
+      /*id*/ 0x60000002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 2, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_UI4, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {-1, -1}
+        {-1, 0, 0}
       },
       { /* names */
         "Release",
@@ -3889,12 +4242,12 @@ static const type_info info[] = {
       },
     },
     {
-      0x60010000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 3, /*#scodes*/ 0, /*flags*/ 0x1,
-      {24, 0}, /* ret */
+      /*id*/ 0x60010000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 3, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {26, 2},
-        {-1, -1}
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {-1, 0, 0}
       },
       { /* names */
         "GetTypeInfoCount",
@@ -3903,14 +4256,14 @@ static const type_info info[] = {
       },
     },
     {
-      0x60010001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 3, /*#opt*/ 0, /*vtbl*/ 4, /*#scodes*/ 0, /*flags*/ 0x1,
-      {24, 0}, /* ret */
+      /*id*/ 0x60010001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 3, /*#opt*/ 0, /*vtbl*/ 4, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {23, 1},
-        {19, 1},
-        {26, 2},
-        {-1, -1}
+        {VT_UINT, -1, PARAMFLAG_FIN},
+        {VT_UI4, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {-1, 0, 0}
       },
       { /* names */
         "GetTypeInfo",
@@ -3921,16 +4274,16 @@ static const type_info info[] = {
       },
     },
     {
-      0x60010002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 5, /*#opt*/ 0, /*vtbl*/ 5, /*#scodes*/ 0, /*flags*/ 0x1,
-      {24, 0}, /* ret */
+      /*id*/ 0x60010002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 5, /*#opt*/ 0, /*vtbl*/ 5, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {26, 1},
-        {26, 1},
-        {23, 1},
-        {19, 1},
-        {26, 2},
-        {-1, -1}
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {VT_UINT, -1, PARAMFLAG_FIN},
+        {VT_UI4, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {-1, 0, 0}
       },
       { /* names */
         "GetIDsOfNames",
@@ -3943,19 +4296,19 @@ static const type_info info[] = {
       },
     },
     {
-      0x60010003, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 8, /*#opt*/ 0, /*vtbl*/ 6, /*#scodes*/ 0, /*flags*/ 0x1,
-      {24, 0}, /* ret */
+      /*id*/ 0x60010003, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 8, /*#opt*/ 0, /*vtbl*/ 6, /*#scodes*/ 0, /*flags*/ FUNCFLAG_FRESTRICTED,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {3, 1},
-        {26, 1},
-        {19, 1},
-        {18, 1},
-        {26, 1},
-        {26, 2},
-        {26, 2},
-        {26, 2},
-        {-1, -1}
+        {VT_I4, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {VT_UI4, -1, PARAMFLAG_FIN},
+        {VT_UI2, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FIN},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {VT_PTR, -1, PARAMFLAG_FOUT},
+        {-1, 0, 0}
       },
       { /* names */
         "Invoke",
@@ -3971,11 +4324,11 @@ static const type_info info[] = {
       },
     },
     {
-      0x60020000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0x0,
-      {24, 0}, /* ret */
+      /*id*/ 0x60020000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_VOID, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {-1, -1}
+        {-1, 0, 0}
       },
       { /* names */
         "Test",
@@ -3987,15 +4340,15 @@ static const type_info info[] = {
 {
   "ISimpleIface",
   "{ec5dfcd6-eeb0-4cd6-b51e-8030e1dac009}",
-  /*kind*/ TKIND_INTERFACE, /*flags*/ TYPEFLAG_FDISPATCHABLE, /*align*/ 4, /*size*/ sizeof(void*),
-  /*#vtbl*/ 8, /*#func*/ 1,
+  /*kind*/ TKIND_INTERFACE, /*flags*/ TYPEFLAG_FDISPATCHABLE, /*align*/ 4, /*size*/ sizeof(ISimpleIface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 8, /*#func*/ 1,
   {
     {
-      0x60020000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0x0,
-      {25, 0}, /* ret */
+      /*id*/ 0x60020000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
       { /* params */
-        {-1, -1}
+        {-1, 0, 0}
       },
       { /* names */
         "Test",
@@ -4007,12 +4360,214 @@ static const type_info info[] = {
 {
   "test_struct",
   "{4029f190-ca4a-4611-aeb9-673983cb96dd}",
-  /* kind */ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct)
+  /*kind*/ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
 },
 {
   "test_struct2",
   "{4029f190-ca4a-4611-aeb9-673983cb96de}",
-  /* kind */ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct)
+  /*kind*/ TKIND_RECORD, /*flags*/ 0, /*align*/ 4, /*size*/ sizeof(struct test_struct2),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "t_INT",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a75396a}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FRESTRICTED, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "a",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_a",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "aa",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_b",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "bb",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "c",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a75396b}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_c",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "cc",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a75396c}",
+  /*kind*/ TKIND_ENUM, /*flags*/ 0, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "d",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a75396d}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_d",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_ENUM, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "dd",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a75396e}",
+  /*kind*/ TKIND_ENUM, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "e",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753970}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_e",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_RECORD, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ sizeof(struct _e),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "ee",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753971}",
+  /*kind*/ TKIND_RECORD, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ sizeof(struct ee),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "f",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753972}",
+  /*kind*/ TKIND_ALIAS, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ 4,
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "_f",
+  "{00000000-0000-0000-0000-000000000000}",
+  /*kind*/ TKIND_UNION, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ sizeof(union _f),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "ff",
+  "{016fe2ec-b2c8-45f8-b23b-39e53a753973}",
+  /*kind*/ TKIND_UNION, /*flags*/ TYPEFLAG_FRESTRICTED|TYPEFLAG_FHIDDEN, /*align*/ 4, /*size*/ sizeof(union ff),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 0, /*#func*/ 0
+},
+{
+  "ITestIface",
+  "{ec5dfcd6-eeb0-4cd6-b51e-8030e1dac00a}",
+  /*kind*/ TKIND_INTERFACE, /*flags*/ TYPEFLAG_FDISPATCHABLE, /*align*/ 4, /*size*/ sizeof(ITestIface*),
+  /*helpctx*/ 0x0000, /*version*/ 0x00000000, /*#vtbl*/ 13, /*#func*/ 6,
+  {
+    {
+      /*id*/ 0x60020000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ALIAS, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test1",
+        "value",
+        NULL,
+      },
+    },
+    {
+      /*id*/ 0x60020001, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 8, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ENUM, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test2",
+        "value",
+        NULL,
+      },
+    },
+    {
+      /*id*/ 0x60020002, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 9, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ALIAS, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test3",
+        "value",
+        NULL,
+      },
+    },
+    {
+      /*id*/ 0x60020003, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 10, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ALIAS, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test4",
+        "value",
+        NULL,
+      },
+    },
+    {
+      /*id*/ 0x60020004, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 11, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ALIAS, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test5",
+        "value",
+        NULL,
+      },
+    },
+    {
+      /*id*/ 0x60020005, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ CC_STDCALL,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 12, /*#scodes*/ 0, /*flags*/ 0,
+      {VT_HRESULT, -1, PARAMFLAG_NONE}, /* ret */
+      { /* params */
+        {VT_USERDEFINED, TKIND_ALIAS, PARAMFLAG_NONE},
+        {-1, 0, 0}
+      },
+      { /* names */
+        "test6",
+        "value",
+        NULL,
+      },
+    },
+  }
 }
 };
 
@@ -4037,18 +4592,34 @@ static void test_dump_typelib(const char *name)
         ITypeInfo *typeinfo;
         TYPEATTR *typeattr;
         BSTR bstrIfName;
+        DWORD help_ctx;
 
         trace("Interface %s\n", ti->name);
         ole_check(ITypeLib_GetTypeInfo(typelib, iface, &typeinfo));
-        ole_check(ITypeLib_GetDocumentation(typelib, iface, &bstrIfName, NULL, NULL, NULL));
+        ole_check(ITypeLib_GetDocumentation(typelib, iface, &bstrIfName, NULL, &help_ctx, NULL));
         expect_wstr_acpval(bstrIfName, ti->name);
         SysFreeString(bstrIfName);
 
         ole_check(ITypeInfo_GetTypeAttr(typeinfo, &typeattr));
         expect_int(typeattr->typekind, ti->type);
         expect_hex(typeattr->wTypeFlags, ti->wTypeFlags);
+        /* FIXME: remove once widl is fixed */
+        if (typeattr->typekind == TKIND_ALIAS && typeattr->cbAlignment != ti->cbAlignment)
+        {
+todo_wine /* widl generates broken typelib and typeattr just reflects that */
+        ok(typeattr->cbAlignment == ti->cbAlignment || broken(typeattr->cbAlignment == 1),
+           "expected %d, got %d\n", ti->cbAlignment, typeattr->cbAlignment);
+todo_wine /* widl generates broken typelib and typeattr just reflects that */
+        ok(typeattr->cbSizeInstance == ti->cbSizeInstance || broken(typeattr->cbSizeInstance == 0),
+           "expected %d, got %d\n", ti->cbSizeInstance, typeattr->cbSizeInstance);
+        }
+        else
+        {
         expect_int(typeattr->cbAlignment, ti->cbAlignment);
         expect_int(typeattr->cbSizeInstance, ti->cbSizeInstance);
+        }
+        expect_int(help_ctx, ti->help_ctx);
+        expect_int(MAKELONG(typeattr->wMinorVerNum, typeattr->wMajorVerNum), ti->version);
         expect_int(typeattr->cbSizeVft, ti->cbSizeVft * sizeof(void*));
         expect_int(typeattr->cFuncs, ti->cFuncs);
 
@@ -4067,8 +4638,8 @@ static void test_dump_typelib(const char *name)
             /* check that it's possible to search using this uuid */
             typeinfo2 = NULL;
             hr = ITypeLib_GetTypeInfoOfGuid(typelib, &guid, &typeinfo2);
-            ok(hr == S_OK, "got 0x%08x\n", hr);
-            ITypeInfo_Release(typeinfo2);
+            ok(hr == S_OK || (IsEqualGUID(&guid, &IID_NULL) && hr == TYPE_E_ELEMENTNOTFOUND), "got 0x%08x\n", hr);
+            if (hr == S_OK) ITypeInfo_Release(typeinfo2);
         }
 
         for (func = 0; func < typeattr->cFuncs; func++)
@@ -4104,6 +4675,20 @@ static void test_dump_typelib(const char *name)
             for (i = 0 ; i < desc->cParams; i++)
             {
                 check_type(&desc->lprgelemdescParam[i], &fn_info->params[i]);
+
+                if (desc->lprgelemdescParam[i].tdesc.vt == VT_USERDEFINED)
+                {
+                    ITypeInfo *param;
+                    TYPEATTR *var_attr;
+
+                    ole_check(ITypeInfo_GetRefTypeInfo(typeinfo, U(desc->lprgelemdescParam[i].tdesc).hreftype, &param));
+                    ole_check(ITypeInfo_GetTypeAttr(param, &var_attr));
+
+                    ok(var_attr->typekind == fn_info->params[i].type, "expected %#x, got %#x\n", fn_info->params[i].type, var_attr->typekind);
+
+                    ITypeInfo_ReleaseTypeAttr(param, var_attr);
+                    ITypeInfo_Release(param);
+                }
             }
             expect_int(fn_info->params[desc->cParams].vt, (VARTYPE)-1);
 

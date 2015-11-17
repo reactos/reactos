@@ -216,7 +216,7 @@ static HRESULT WINAPI RecordInfo_GetFieldNames(IRecordInfo *iface, ULONG *pcName
 static BOOL WINAPI RecordInfo_IsMatchingType(IRecordInfo *iface, IRecordInfo *info2)
 {
   ok(0, "unexpected call\n");
-  return E_NOTIMPL;
+  return FALSE;
 }
 
 static PVOID WINAPI RecordInfo_RecordCreate(IRecordInfo *iface)
