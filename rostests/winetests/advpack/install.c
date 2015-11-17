@@ -197,6 +197,7 @@ static void test_LaunchINFSection(void)
     HRESULT hr;
     char cmdline[MAX_PATH];
     static char file[] = "test.inf,DefaultInstall,4,0";
+    static char file2[] = "test.inf,,1,0";
 
     /* The 'No UI' flag seems to have no effect whatsoever on Windows.
      * So only do this test in interactive mode.
@@ -225,6 +226,9 @@ static void test_LaunchINFSection(void)
 
     /* try just the INF filename */
     hr = pLaunchINFSection(NULL, NULL, file, 0);
+    ok(hr == 0, "Expected 0, got %d\n", hr);
+
+    hr = pLaunchINFSection(NULL, NULL, file2, 0);
     ok(hr == 0, "Expected 0, got %d\n", hr);
 
     DeleteFileA("test.inf");
