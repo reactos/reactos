@@ -1166,8 +1166,8 @@ static void test_aes(int keylen)
 
     /* Does AES provider support salt? */
     result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
-    ok((!result && GetLastError() == NTE_BAD_KEY) || result /* Win7 */,
-       "expected NTE_BAD_KEY, got %08x\n", GetLastError());
+    todo_wine ok(result || broken(GetLastError() == NTE_BAD_KEY), /* Vista or older */
+       "Expected OK, got last error %d\n", GetLastError());
     if (result)
         ok(!dwLen, "unexpected salt length %d\n", dwLen);
 
@@ -1971,8 +1971,7 @@ static void test_import_private(void)
      * actual buffer.  The private exponent can be omitted, its length is
      * inferred from the passed-in length parameter.
      */
-    dwLen = sizeof(BLOBHEADER) + sizeof(RSAPUBKEY) +
-        rsaPubKey->bitlen / 8 + 5 * rsaPubKey->bitlen / 16;
+    dwLen = sizeof(BLOBHEADER) + sizeof(RSAPUBKEY) + rsaPubKey->bitlen / 2;
     for (; dwLen < sizeof(abPlainPrivateKey); dwLen++)
     {
         result = CryptImportKey(hProv, abPlainPrivateKey, dwLen, 0, 0, &hKeyExchangeKey);
