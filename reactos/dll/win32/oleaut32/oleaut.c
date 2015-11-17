@@ -484,7 +484,7 @@ static const WCHAR	*pdelimiter = &_delimiter[0];
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI RegisterActiveObject(
+HRESULT WINAPI DECLSPEC_HOTPATCH RegisterActiveObject(
 	LPUNKNOWN punk,REFCLSID rcid,DWORD dwFlags,LPDWORD pdwRegister
 ) {
 	WCHAR 			guidbuf[80];
@@ -523,7 +523,7 @@ HRESULT WINAPI RegisterActiveObject(
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
+HRESULT WINAPI DECLSPEC_HOTPATCH RevokeActiveObject(DWORD xregister,LPVOID reserved)
 {
 	LPRUNNINGOBJECTTABLE	runobtable;
 	HRESULT			ret;
@@ -550,7 +550,7 @@ HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
+HRESULT WINAPI DECLSPEC_HOTPATCH GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
 {
 	WCHAR 			guidbuf[80];
 	HRESULT			ret;

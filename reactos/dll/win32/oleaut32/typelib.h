@@ -598,7 +598,7 @@ extern void  heap_free(void *ptr) DECLSPEC_HIDDEN;
 
 HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 
-extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) DECLSPEC_HIDDEN;
+extern DWORD _invoke(FARPROC func, CALLCONV callconv, int nrargs, DWORD_PTR *args) DECLSPEC_HIDDEN;
 
 HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 

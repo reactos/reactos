@@ -333,11 +333,12 @@ static unsigned char *interface_variant_unmarshal(ULONG *pFlags, unsigned char *
   ptr = *(DWORD*)Buffer;
   Buffer += sizeof(DWORD);
 
+  /* Clear any existing interface which WdtpInterfacePointer_UserUnmarshal()
+     would try to release.  This has been done already with a VariantClear(). */
+  *ppunk = NULL;
+
   if(!ptr)
-  {
-      *ppunk = NULL;
       return Buffer;
-  }
 
   return WdtpInterfacePointer_UserUnmarshal(pFlags, Buffer, ppunk, riid);
 }

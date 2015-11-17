@@ -2938,28 +2938,28 @@ HRESULT WINAPI VarR4FromUI4(ULONG ulIn, float *pFltOut)
 HRESULT WINAPI VarR4FromDec(DECIMAL* pDecIn, float *pFltOut)
 {
   BYTE scale = DEC_SCALE(pDecIn);
-  int divisor = 1;
+  double divisor = 1.0;
   double highPart;
 
   if (scale > DEC_MAX_SCALE || DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
   while (scale--)
-    divisor *= 10;
+    divisor *= 10.0;
 
   if (DEC_SIGN(pDecIn))
     divisor = -divisor;
 
   if (DEC_HI32(pDecIn))
   {
-    highPart = (double)DEC_HI32(pDecIn) / (double)divisor;
+    highPart = (double)DEC_HI32(pDecIn) / divisor;
     highPart *= 4294967296.0F;
     highPart *= 4294967296.0F;
   }
   else
     highPart = 0.0;
 
-  *pFltOut = (double)DEC_LO64(pDecIn) / (double)divisor + highPart;
+  *pFltOut = (double)DEC_LO64(pDecIn) / divisor + highPart;
   return S_OK;
 }
 
