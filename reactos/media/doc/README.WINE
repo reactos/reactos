@@ -44,7 +44,7 @@ reactos/dll/directx/wine/wined3d        # Synced to WineStaging-1.7.47
 
 reactos/dll/win32/activeds            # Synced to WineStaging-1.7.47
 reactos/dll/win32/actxprxy            # Synced to WineStaging-1.7.47
-reactos/dll/win32/advpack             # Synced to WineStaging-1.7.47
+reactos/dll/win32/advpack             # Synced to WineStaging-1.7.55
 reactos/dll/win32/atl                 # Synced to WineStaging-1.7.47
 reactos/dll/win32/atl80               # Synced to WineStaging-1.7.47
 reactos/dll/win32/atl100              # Synced to WineStaging-1.7.47

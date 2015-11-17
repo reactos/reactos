@@ -762,7 +762,11 @@ INT WINAPI LaunchINFSectionW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT sho
 
     str_flags = get_parameter(&cmdline_ptr, ',', TRUE);
     if (str_flags)
-        flags = atolW(str_flags);
+    {
+        DWORD inf_flags = atolW(str_flags);
+        if (inf_flags & LIS_QUIET) flags |= RSC_FLAG_QUIET;
+        if (inf_flags & LIS_NOGRPCONV) flags |= RSC_FLAG_NGCONV;
+    }
 
     ZeroMemory(&info, sizeof(ADVInfo));
 
