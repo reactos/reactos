@@ -7,6 +7,7 @@ spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     DllMain.c
+    GetFileInformationByHandleEx.c
     GetTickCount64.c
     InitOnceExecuteOnce.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_vista.def)
