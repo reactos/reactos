@@ -37,7 +37,8 @@ typedef struct _NDR_PROC_HEADER
      * RPC_FC_BIND_PRIMITIVE = 32 - Implicit handle using handle_t created by
      *   calling application
      * RPC_FC_AUTO_HANDLE = 33 - Automatic handle
-     * RPC_FC_CALLBACK_HANDLE = 34 - undocumented
+     * RPC_FC_CALLBACK_HANDLE = 34 - Implicit handle used for a callback: current handle
+     *   from last remote call
      */
     unsigned char handle_type;
 
@@ -235,6 +236,7 @@ enum stubless_phase
     STUBLESS_CALCSIZE,
     STUBLESS_GETBUFFER,
     STUBLESS_MARSHAL,
+    STUBLESS_MUSTFREE,
     STUBLESS_FREE
 };
 

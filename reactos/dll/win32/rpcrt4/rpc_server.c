@@ -740,9 +740,18 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
   return status;
 }
 
-static void RPCRT4_stop_listen(BOOL auto_listen)
+static RPC_STATUS RPCRT4_stop_listen(BOOL auto_listen)
 {
+  RPC_STATUS status = RPC_S_OK;
+
   EnterCriticalSection(&listen_cs);
+
+  if (!std_listen)
+  {
+    status = RPC_S_NOT_LISTENING;
+    goto done;
+  }
+
   if (auto_listen || (--manual_listen_count == 0))
   {
     if (listen_count != 0 && --listen_count == 0) {
@@ -757,12 +766,14 @@ static void RPCRT4_stop_listen(BOOL auto_listen)
       EnterCriticalSection(&listen_cs);
       if (listen_done_event) SetEvent( listen_done_event );
       listen_done_event = 0;
-      LeaveCriticalSection(&listen_cs);
-      return;
+      goto done;
     }
     assert(listen_count >= 0);
   }
+
+done:
   LeaveCriticalSection(&listen_cs);
+  return status;
 }
 
 static BOOL RPCRT4_protseq_is_endpoint_registered(RpcServerProtseq *protseq, const char *endpoint)
@@ -1053,10 +1064,8 @@ void RPCRT4_destroy_all_protseqs(void)
     EnterCriticalSection(&server_cs);
     LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
     {
-#ifndef __REACTOS__
         if (listen_count != 0)
             RPCRT4_sync_with_server_thread(cps);
-#endif
         destroy_serverprotoseq(cps);
     }
     LeaveCriticalSection(&server_cs);
@@ -1540,9 +1549,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
   
-  RPCRT4_stop_listen(FALSE);
-
-  return RPC_S_OK;
+  return RPCRT4_stop_listen(FALSE);
 }
 
 /***********************************************************************
@@ -1647,9 +1654,15 @@ RPC_STATUS WINAPI RpcMgmtIsServerListening(RPC_BINDING_HANDLE Binding)
 
   TRACE("(%p)\n", Binding);
 
-  EnterCriticalSection(&listen_cs);
-  if (manual_listen_count > 0) status = RPC_S_OK;
-  LeaveCriticalSection(&listen_cs);
+  if (Binding) {
+    RpcBinding *rpc_binding = (RpcBinding*)Binding;
+    status = RPCRT4_IsServerListening(rpc_binding->Protseq, rpc_binding->Endpoint);
+  }else {
+    EnterCriticalSection(&listen_cs);
+    if (manual_listen_count > 0) status = RPC_S_OK;
+    LeaveCriticalSection(&listen_cs);
+  }
+
   return status;
 }
 

@@ -29,6 +29,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 #define NDR_TABLE_MASK 127
 
+static inline BOOL is_oicf_stubdesc(const PMIDL_STUB_DESC pStubDesc)
+{
+    return pStubDesc->Version >= 0x20000;
+}
+
 static inline void call_buffer_sizer(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory,
                                      const NDR_PARAM_OIF *param)
 {
@@ -323,7 +328,11 @@ static PFORMAT_STRING client_get_handle(
         *phBinding = *pStubMsg->StubDesc->IMPLICIT_HANDLE_INFO.pPrimitiveHandle;
         break;
     case RPC_FC_CALLBACK_HANDLE: /* implicit callback */
-        FIXME("RPC_FC_CALLBACK_HANDLE\n");
+        TRACE("RPC_FC_CALLBACK_HANDLE\n");
+        /* server calls callback procedures only in response to remote call, and most recent
+           binding handle is used. Calling back to a client can potentially result in another
+           callback with different current handle. */
+        *phBinding = I_RpcGetCurrentCallHandle();
         break;
     case RPC_FC_AUTO_HANDLE: /* implicit auto handle */
         /* strictly speaking, it isn't necessary to set hBinding here
@@ -645,7 +654,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
         if (!pFormat) goto done;
     }
 
-    if (pStubDesc->Version >= 0x20000)  /* -Oicf format */
+    if (is_oicf_stubdesc(pStubDesc))  /* -Oicf format */
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader =
             (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
@@ -706,6 +715,8 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     {
         /* initialize extra correlation package */
         NdrCorrelationInitialize(&stubMsg, NdrCorrCache, sizeof(NdrCorrCache), 0);
+        if (ext_flags.Unused & 0x2) /* has range on conformance */
+            stubMsg.CorrDespIncrement = 12;
     }
 
     /* order of phases:
@@ -1047,10 +1058,10 @@ __ASM_GLOBAL_FUNC( call_server_func,
                    "movq 8(%rsp),%rdx\n\t"
                    "movq 16(%rsp),%r8\n\t"
                    "movq 24(%rsp),%r9\n\t"
-                   "movq %rcx,%xmm0\n\t"
-                   "movq %rdx,%xmm1\n\t"
-                   "movq %r8,%xmm2\n\t"
-                   "movq %r9,%xmm3\n\t"
+                   "movq 0(%rsp),%xmm0\n\t"
+                   "movq 8(%rsp),%xmm1\n\t"
+                   "movq 16(%rsp),%xmm2\n\t"
+                   "movq 24(%rsp),%xmm3\n\t"
                    "callq *%rax\n\t"
                    "leaq -16(%rbp),%rsp\n\t"  /* restore stack */
                    "popq %rdi\n\t"
@@ -1062,13 +1073,40 @@ __ASM_GLOBAL_FUNC( call_server_func,
                    __ASM_CFI(".cfi_adjust_cfa_offset -8\n\t")
                    __ASM_CFI(".cfi_same_value %rbp\n\t")
                    "ret")
-#elif defined(__arm__)
-LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
-{
-    FIXME("Not implemented for ARM\n");
-    assert(FALSE);
-    return 0;
-}
+#elif defined __arm__
+LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char *args, unsigned int stack_size);
+__ASM_GLOBAL_FUNC( call_server_func,
+                   ".arm\n\t"
+                   "push {r4, r5, LR}\n\t"
+                   "mov r4, r0\n\t"
+                   "mov r5, SP\n\t"
+                   "lsr r3, r2, #2\n\t"
+                   "cmp r3, #0\n\t"
+                   "beq 5f\n\t"
+                   "sub SP, SP, r2\n\t"
+                   "tst r3, #1\n\t"
+                   "subeq SP, SP, #4\n\t"
+                   "1:\tsub r2, r2, #4\n\t"
+                   "ldr r0, [r1, r2]\n\t"
+                   "str r0, [SP, r2]\n\t"
+                   "cmp r2, #0\n\t"
+                   "bgt 1b\n\t"
+                   "cmp r3, #1\n\t"
+                   "bgt 2f\n\t"
+                   "pop {r0}\n\t"
+                   "b 5f\n\t"
+                   "2:\tcmp r3, #2\n\t"
+                   "bgt 3f\n\t"
+                   "pop {r0-r1}\n\t"
+                   "b 5f\n\t"
+                   "3:\tcmp r3, #3\n\t"
+                   "bgt 4f\n\t"
+                   "pop {r0-r2}\n\t"
+                   "b 5f\n\t"
+                   "4:\tpop {r0-r3}\n\t"
+                   "5:\tblx r4\n\t"
+                   "mov SP, r5\n\t"
+                   "pop {r4, r5, PC}" )
 #else
 #warning call_server_func not implemented for your architecture
 LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
@@ -1086,19 +1124,6 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
     unsigned int i;
     LONG_PTR *retval_ptr = NULL;
 
-    if (phase == STUBLESS_FREE)
-    {
-        /* Process the params allocated by the application first */
-        for (i = 0; i < number_of_params; i++)
-        {
-            unsigned char *pArg = pStubMsg->StackTop + params[i].stack_offset;
-            if (params[i].attr.MustFree)
-            {
-                call_freer(pStubMsg, pArg, &params[i]);
-            }
-        }
-    }
-
     for (i = 0; i < number_of_params; i++)
     {
         unsigned char *pArg = pStubMsg->StackTop + params[i].stack_offset;
@@ -1115,10 +1140,14 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
             if (params[i].attr.IsOut || params[i].attr.IsReturn)
                 call_marshaller(pStubMsg, pArg, &params[i]);
             break;
-        case STUBLESS_FREE:
+        case STUBLESS_MUSTFREE:
             if (params[i].attr.MustFree)
-                break;
-            else if (params[i].attr.ServerAllocSize)
+            {
+                call_freer(pStubMsg, pArg, &params[i]);
+            }
+            break;
+        case STUBLESS_FREE:
+            if (params[i].attr.ServerAllocSize)
             {
                 HeapFree(GetProcessHeap(), 0, *(void **)pArg);
             }
@@ -1304,7 +1333,7 @@ LONG WINAPI NdrStubCall2(
     if (pThis)
         *(void **)args = ((CStdStubBuffer *)pThis)->pvServerObject;
 
-    if (pStubDesc->Version >= 0x20000)  /* -Oicf format */
+    if (is_oicf_stubdesc(pStubDesc))
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader = (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
 
@@ -1332,8 +1361,9 @@ LONG WINAPI NdrStubCall2(
         if (ext_flags.HasNewCorrDesc)
         {
             /* initialize extra correlation package */
-            FIXME("new correlation description not implemented\n");
-            stubMsg.fHasNewCorrDesc = TRUE;
+            NdrCorrelationInitialize(&stubMsg, NdrCorrCache, sizeof(NdrCorrCache), 0);
+            if (ext_flags.Unused & 0x2) /* has range on conformance */
+                stubMsg.CorrDespIncrement = 12;
         }
     }
     else
@@ -1396,7 +1426,7 @@ LONG WINAPI NdrStubCall2(
 
                 pRpcMsg->BufferLength = stubMsg.BufferLength;
                 /* allocate buffer for [out] and [ret] params */
-                Status = I_RpcGetBuffer(pRpcMsg);
+                Status = I_RpcGetBuffer(pRpcMsg); 
                 if (Status)
                     RpcRaiseException(Status);
                 stubMsg.Buffer = pRpcMsg->Buffer;
@@ -1406,6 +1436,7 @@ LONG WINAPI NdrStubCall2(
         case STUBLESS_INITOUT:
         case STUBLESS_CALCSIZE:
         case STUBLESS_MARSHAL:
+        case STUBLESS_MUSTFREE:
         case STUBLESS_FREE:
             retval_ptr = stub_do_args(&stubMsg, pFormat, phase, number_of_params);
             break;
@@ -1420,7 +1451,7 @@ LONG WINAPI NdrStubCall2(
     if (ext_flags.HasNewCorrDesc)
     {
         /* free extra correlation package */
-        /* NdrCorrelationFree(&stubMsg); */
+        NdrCorrelationFree(&stubMsg);
     }
 
     if (Oif_flags.HasPipes)
@@ -1495,8 +1526,6 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     INTERPRETER_OPT_FLAGS2 ext_flags = { 0 };
     /* header for procedure string */
     const NDR_PROC_HEADER * pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
-    /* -Oif or -Oicf generated format */
-    BOOL bV2Format = FALSE;
     RPC_STATUS status;
 
     TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
@@ -1509,7 +1538,7 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     }
 
     async_call_data = I_RpcAllocate(sizeof(*async_call_data) + sizeof(MIDL_STUB_MESSAGE) + sizeof(RPC_MESSAGE));
-    if (!async_call_data) RpcRaiseException(ERROR_OUTOFMEMORY);
+    if (!async_call_data) RpcRaiseException(RPC_X_NO_MEMORY);
     async_call_data->pProcHeader = pProcHeader;
 
     async_call_data->pStubMsg = pStubMsg = (PMIDL_STUB_MESSAGE)(async_call_data + 1);
@@ -1558,9 +1587,7 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     pFormat = client_get_handle(pStubMsg, pProcHeader, async_call_data->pHandleFormat, &async_call_data->hBinding);
     if (!pFormat) goto done;
 
-    bV2Format = (pStubDesc->Version >= 0x20000);
-
-    if (bV2Format)
+    if (is_oicf_stubdesc(pStubDesc))
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader =
             (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
@@ -1611,6 +1638,8 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     {
         /* initialize extra correlation package */
         NdrCorrelationInitialize(pStubMsg, async_call_data->NdrCorrCache, sizeof(async_call_data->NdrCorrCache), 0);
+        if (ext_flags.Unused & 0x2) /* has range on conformance */
+            pStubMsg->CorrDespIncrement = 12;
     }
 
     /* order of phases:

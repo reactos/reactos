@@ -1,15 +1,57 @@
-diff -prudN .\wine\dlls\rpcrt4/rpc_epmap.c .\reactos\dll\win32\rpcrt4/rpc_epmap.c
---- .\wine\dlls\rpcrt4/rpc_epmap.c	2014-05-09 03:43:55.965035900 +0200
-+++ .\reactos\dll\win32\rpcrt4/rpc_epmap.c	2013-12-27 18:11:56.421567500 +0100
-@@ -92,7 +80,7 @@ static BOOL start_rpcss(void)
-     lstrcatW( cmd, rpcss );
+diff -pudN --strip-trailing-cr e:\wine\dlls\rpcrt4/cproxy.c e:\reactos\dll\win32\rpcrt4/cproxy.c
+--- e:\wine\dlls\rpcrt4/cproxy.c	2015-02-21 17:13:10 +0100
++++ e:\reactos\dll\win32\rpcrt4/cproxy.c	2015-08-27 22:03:34 +0100
+@@ -167,6 +150,30 @@ static inline void init_thunk( struct th
+     thunk->call_stubless = call_stubless_func;
+ }
  
-     Wow64DisableWow64FsRedirection( &redir );
--    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi );
-+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
-     Wow64RevertWow64FsRedirection( redir );
++#elif defined(__arm__)
++
++extern void call_stubless_func(void);
++__ASM_GLOBAL_FUNC(call_stubless_func,
++                  "DCD 0xDEFC\n\t" // _assertfail
++                  "" );
++
++#include "pshpack1.h"
++struct thunk
++{
++    DWORD assertfail;
++};
++#include "poppack.h"
++
++static const struct thunk thunk_template =
++{
++    { 0xDEFC }            /* _assertfail */
++};
++
++static inline void init_thunk( struct thunk *thunk, unsigned int index )
++{
++    *thunk = thunk_template;
++}
++
+ #else  /* __i386__ */
  
-     if (rslt)
+ #warning You must implement stubless proxies for your CPU
+diff -pudN --strip-trailing-cr e:\wine\dlls\rpcrt4/cstub.c e:\reactos\dll\win32\rpcrt4/cstub.c
+--- e:\wine\dlls\rpcrt4/cstub.c	2015-10-30 18:41:53 +0100
++++ e:\reactos\dll\win32\rpcrt4/cstub.c	2015-11-16 22:55:49 +0100
+@@ -174,6 +156,13 @@ typedef struct
+ 
+ static const BYTE opcodes[16] = { 0x48, 0x8b, 0x49, 0x20, 0x48, 0x8b, 0x01,
+                                   0xff, 0xa0, 0, 0, 0, 0, 0x48, 0x8d, 0x36 };
++#elif defined(__arm__)
++typedef struct
++{
++    DWORD offset;
++} vtbl_method_t;
++static const BYTE opcodes[1];
++
+ #else
+ 
+ #warning You must implement delegated proxies/stubs for your CPU
+diff -pudN --strip-trailing-cr e:\wine\dlls\rpcrt4/rpc_epmap.c e:\reactos\dll\win32\rpcrt4/rpc_epmap.c
+--- e:\wine\dlls\rpcrt4/rpc_epmap.c	2015-02-21 17:13:10 +0100
++++ e:\reactos\dll\win32\rpcrt4/rpc_epmap.c	2015-11-16 22:55:50 +0100
 @@ -162,7 +150,7 @@ static RPC_STATUS get_epm_handle_server(
  
  static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
@@ -19,24 +61,18 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_epmap.c .\reactos\dll\win32\rpcrt4/rpc_epmap.
      {
          case EXCEPTION_ACCESS_VIOLATION:
          case EXCEPTION_ILLEGAL_INSTRUCTION:
-diff -prudN .\wine\dlls\rpcrt4/rpc_server.c .\reactos\dll\win32\rpcrt4/rpc_server.c
---- .\wine\dlls\rpcrt4/rpc_server.c	2014-05-09 03:43:55.973036400 +0200
-+++ .\reactos\dll\win32\rpcrt4/rpc_server.c	2013-12-27 18:11:56.780368100 +0100
-@@ -1075,8 +1053,10 @@ void RPCRT4_destroy_all_protseqs(void)
-     EnterCriticalSection(&server_cs);
-     LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
-     {
-+#ifndef __REACTOS__
-         if (listen_count != 0)
-             RPCRT4_sync_with_server_thread(cps);
-+#endif
-         destroy_serverprotoseq(cps);
-     }
-     LeaveCriticalSection(&server_cs);
-diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_transport.c
---- .\wine\dlls\rpcrt4/rpc_transport.c	2014-05-09 03:43:55.977036600 +0200
-+++ .\reactos\dll\win32\rpcrt4/rpc_transport.c	2014-05-09 03:10:59.250551600 +0200
-@@ -113,31 +91,41 @@ typedef struct _RpcConnection_np
+diff -pudN --strip-trailing-cr e:\wine\dlls\rpcrt4/rpc_transport.c e:\reactos\dll\win32\rpcrt4/rpc_transport.c
+--- e:\wine\dlls\rpcrt4/rpc_transport.c	2015-11-01 09:49:28 +0100
++++ e:\reactos\dll\win32\rpcrt4/rpc_transport.c	2015-11-16 22:55:50 +0100
+@@ -102,6 +79,7 @@
+ 
+ #define DEFAULT_NCACN_HTTP_TIMEOUT (60 * 1000)
+ 
++#undef ARRAYSIZE
+ #define ARRAYSIZE(a) (sizeof((a)) / sizeof((a)[0]))
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(rpc);
+@@ -114,31 +92,41 @@ typedef struct _RpcConnection_np
  {
    RpcConnection common;
    HANDLE pipe;
@@ -85,7 +121,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
        case ERROR_NO_DATA_DETECTED:
            /* client has disconnected, retry */
            DisconnectNamedPipe( npc->pipe );
-@@ -150,6 +138,7 @@ static DWORD CALLBACK listen_thread(void
+@@ -151,6 +139,7 @@ static DWORD CALLBACK listen_thread(void
    }
  }
  
@@ -93,7 +129,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
  static RPC_STATUS rpcrt4_conn_listen_pipe(RpcConnection_np *npc)
  {
    if (npc->listening)
-@@ -165,13 +154,14 @@ static RPC_STATUS rpcrt4_conn_listen_pip
+@@ -166,13 +155,14 @@ static RPC_STATUS rpcrt4_conn_listen_pip
    }
    return RPC_S_OK;
  }
@@ -109,7 +145,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
                                 PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
                                 PIPE_UNLIMITED_INSTANCES,
                                 RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
-@@ -183,6 +173,9 @@ static RPC_STATUS rpcrt4_conn_create_pip
+@@ -184,6 +174,9 @@ static RPC_STATUS rpcrt4_conn_create_pip
        return RPC_S_CANT_CREATE_ENDPOINT;
    }
  
@@ -119,7 +155,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    /* Note: we don't call ConnectNamedPipe here because it must be done in the
     * server thread as the thread must be alertable */
    return RPC_S_OK;
-@@ -229,6 +222,9 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
+@@ -230,6 +223,9 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
      if (err == ERROR_PIPE_BUSY) {
        TRACE("connection failed, error=%x\n", err);
        return RPC_S_SERVER_TOO_BUSY;
@@ -129,7 +165,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
      }
      if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
        err = GetLastError();
-@@ -238,9 +234,11 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
+@@ -239,9 +235,11 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
    }
  
    /* success */
@@ -141,11 +177,50 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    npc->pipe = pipe;
  
    return RPC_S_OK;
-@@ -308,18 +306,64 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc
+@@ -262,6 +260,7 @@ static char *ncalrpc_pipe_name(const cha
+ static RPC_STATUS rpcrt4_ncalrpc_open(RpcConnection* Connection)
+ {
+   RpcConnection_np *npc = (RpcConnection_np *) Connection;
++  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
+   RPC_STATUS r;
+   LPSTR pname;
+ 
+@@ -269,7 +268,10 @@ static RPC_STATUS rpcrt4_ncalrpc_open(Rp
+   if (npc->pipe)
+     return RPC_S_OK;
+ 
+-  pname = ncalrpc_pipe_name(Connection->Endpoint);
++  /* protseq=ncalrpc: supposed to use NT LPC ports,
++   * but we'll implement it with named pipes for now */
++  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
++  strcat(strcpy(pname, prefix), Connection->Endpoint);
+   r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
+   I_RpcFree(pname);
+ 
+@@ -278,6 +280,7 @@ static RPC_STATUS rpcrt4_ncalrpc_open(Rp
+ 
+ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq, const char *endpoint)
+ {
++  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
+   RPC_STATUS r;
+   LPSTR pname;
+   RpcConnection *Connection;
+@@ -298,7 +301,10 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc
+   if (r != RPC_S_OK)
+       return r;
+ 
+-  pname = ncalrpc_pipe_name(Connection->Endpoint);
++  /* protseq=ncalrpc: supposed to use NT LPC ports,
++   * but we'll implement it with named pipes for now */
++  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
++  strcat(strcpy(pname, prefix), Connection->Endpoint);
+   r = rpcrt4_conn_create_pipe(Connection, pname);
+   I_RpcFree(pname);
+ 
+@@ -324,15 +330,64 @@ static char *ncacn_pipe_name(const char 
  static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
  {
    RpcConnection_np *npc = (RpcConnection_np *) Connection;
--  static const char prefix[] = "\\\\.";
 +  static const char prefix[] = "\\\\";
 +  static const char local[] = ".";
 +  BOOL bUseLocalName = TRUE;
@@ -160,10 +235,9 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    if (npc->pipe)
      return RPC_S_OK;
  
-   /* protseq=ncacn_np: named pipes */
--  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
--  strcat(strcpy(pname, prefix), Connection->Endpoint);
+-  pname = ncacn_pipe_name(Connection->Endpoint);
 -  r = rpcrt4_conn_open_pipe(Connection, pname, FALSE);
++  /* protseq=ncacn_np: named pipes */
 +  size = strlen(prefix);
 +
 +  if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
@@ -210,7 +284,26 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    I_RpcFree(pname);
  
    return r;
-@@ -368,9 +412,9 @@ static void rpcrt4_conn_np_handoff(RpcCo
+@@ -340,6 +395,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(R
+ 
+ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protseq, const char *endpoint)
+ {
++  static const char prefix[] = "\\\\.";
+   RPC_STATUS r;
+   LPSTR pname;
+   RpcConnection *Connection;
+@@ -360,7 +416,9 @@ static RPC_STATUS rpcrt4_protseq_ncacn_n
+   if (r != RPC_S_OK)
+     return r;
+ 
+-  pname = ncacn_pipe_name(Connection->Endpoint);
++  /* protseq=ncacn_np: named pipes */
++  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
++  strcat(strcpy(pname, prefix), Connection->Endpoint);
+   r = rpcrt4_conn_create_pipe(Connection, pname);
+   I_RpcFree(pname);
+ 
+@@ -378,9 +436,9 @@ static void rpcrt4_conn_np_handoff(RpcCo
     * to the child, then reopen the server binding to continue listening */
  
    new_npc->pipe = old_npc->pipe;
@@ -222,10 +315,41 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    old_npc->listening = FALSE;
  }
  
-@@ -415,11 +459,17 @@ static int rpcrt4_conn_np_read(RpcConnec
+@@ -388,10 +446,12 @@ static RPC_STATUS rpcrt4_ncacn_np_handof
+ {
+   RPC_STATUS status;
+   LPSTR pname;
++  static const char prefix[] = "\\\\.";
+ 
+   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
+ 
+-  pname = ncacn_pipe_name(old_conn->Endpoint);
++  pname = I_RpcAllocate(strlen(prefix) + strlen(old_conn->Endpoint) + 1);
++  strcat(strcpy(pname, prefix), old_conn->Endpoint);
+   status = rpcrt4_conn_create_pipe(old_conn, pname);
+   I_RpcFree(pname);
+ 
+@@ -429,12 +489,14 @@ static RPC_STATUS rpcrt4_ncalrpc_handoff
+ {
+   RPC_STATUS status;
+   LPSTR pname;
++  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
+ 
+   TRACE("%s\n", old_conn->Endpoint);
+ 
+   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
+ 
+-  pname = ncalrpc_pipe_name(old_conn->Endpoint);
++  pname = I_RpcAllocate(strlen(prefix) + strlen(old_conn->Endpoint) + 1);
++  strcat(strcpy(pname, prefix), old_conn->Endpoint);
+   status = rpcrt4_conn_create_pipe(old_conn, pname);
+   I_RpcFree(pname);
+     
+@@ -448,12 +510,17 @@ static int rpcrt4_conn_np_read(RpcConnec
    char *buf = buffer;
    BOOL ret = TRUE;
    unsigned int bytes_left = count;
+-  DWORD err = GetLastError();
 +  OVERLAPPED ovl;
 +
 +  ZeroMemory(&ovl, sizeof(ovl));
@@ -241,15 +365,16 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
      if (!ret && GetLastError() == ERROR_MORE_DATA)
          ret = TRUE;
      if (!ret || !bytes_read)
-@@ -427,6 +472,7 @@ static int rpcrt4_conn_np_read(RpcConnec
+@@ -461,7 +528,7 @@ static int rpcrt4_conn_np_read(RpcConnec
      bytes_left -= bytes_read;
      buf += bytes_read;
    }
+-  if (ret) SetLastError(err);
 +  CloseHandle(ovl.hEvent);
    return ret ? count : -1;
  }
  
-@@ -437,16 +488,23 @@ static int rpcrt4_conn_np_write(RpcConne
+@@ -472,16 +539,23 @@ static int rpcrt4_conn_np_write(RpcConne
    const char *buf = buffer;
    BOOL ret = TRUE;
    unsigned int bytes_left = count;
@@ -274,7 +399,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    return ret ? count : -1;
  }
  
-@@ -458,9 +516,9 @@ static int rpcrt4_conn_np_close(RpcConne
+@@ -493,9 +567,9 @@ static int rpcrt4_conn_np_close(RpcConne
      CloseHandle(npc->pipe);
      npc->pipe = 0;
    }
@@ -287,7 +412,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    }
    return 0;
  }
-@@ -664,7 +722,7 @@ static void *rpcrt4_protseq_np_get_wait_
+@@ -699,7 +773,7 @@ static void *rpcrt4_protseq_np_get_wait_
      conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
      while (conn) {
          rpcrt4_conn_listen_pipe(conn);
@@ -296,7 +421,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
              (*count)++;
          conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
      }
-@@ -685,7 +743,7 @@ static void *rpcrt4_protseq_np_get_wait_
+@@ -720,7 +794,7 @@ static void *rpcrt4_protseq_np_get_wait_
      *count = 1;
      conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
      while (conn) {
@@ -305,7 +430,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
              (*count)++;
          conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
      }
-@@ -732,18 +790,12 @@ static int rpcrt4_protseq_np_wait_for_ne
+@@ -767,18 +841,12 @@ static int rpcrt4_protseq_np_wait_for_ne
          EnterCriticalSection(&protseq->cs);
          conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
          while (conn) {
@@ -326,15 +451,3 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
          else
              ERR("failed to locate connection for handle %p\n", b_handle);
          LeaveCriticalSection(&protseq->cs);
-diff -prudN .\wine\dlls\rpcrt4/rpcrt4.spec .\reactos\dll\win32\rpcrt4/rpcrt4.spec
---- .\wine\dlls\rpcrt4/rpcrt4.spec	2014-05-09 03:43:55.911032800 +0200
-+++ .\reactos\dll\win32\rpcrt4/rpcrt4.spec	2013-12-07 15:35:15.331527800 +0100
-@@ -266,7 +266,7 @@
- @ stdcall NdrRangeUnmarshall(ptr ptr ptr long)
- @ stub NdrRpcSmClientAllocate
- @ stub NdrRpcSmClientFree
--@ stub NdrRpcSmSetClientToOsf
-+@ stdcall NdrRpcSmSetClientToOsf(ptr)
- @ stub NdrRpcSsDefaultAllocate
- @ stub NdrRpcSsDefaultFree
- @ stub NdrRpcSsDisableAllocate

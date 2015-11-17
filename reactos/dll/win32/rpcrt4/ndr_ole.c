@@ -75,14 +75,15 @@ static HRESULT WINAPI RpcStream_QueryInterface(LPSTREAM iface,
                                               REFIID riid,
                                               LPVOID *obj)
 {
-  RpcStreamImpl *This = impl_from_IStream(iface);
   if (IsEqualGUID(&IID_IUnknown, riid) ||
       IsEqualGUID(&IID_ISequentialStream, riid) ||
       IsEqualGUID(&IID_IStream, riid)) {
-    *obj = This;
-    InterlockedIncrement( &This->RefCount );
+    *obj = iface;
+    IStream_AddRef(iface);
     return S_OK;
   }
+
+  *obj = NULL;
   return E_NOINTERFACE;
 }
 
@@ -100,7 +101,6 @@ static ULONG WINAPI RpcStream_Release(LPSTREAM iface)
     TRACE("size=%d\n", *This->size);
     This->pMsg->Buffer = This->data + *This->size;
     HeapFree(GetProcessHeap(),0,This);
-    return 0;
   }
   return ref;
 }
@@ -174,6 +174,58 @@ static HRESULT WINAPI RpcStream_SetSize(LPSTREAM iface,
   return S_OK;
 }
 
+static HRESULT WINAPI RpcStream_CopyTo(IStream *iface, IStream *dest,
+  ULARGE_INTEGER len, ULARGE_INTEGER *read, ULARGE_INTEGER *written)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_Commit(IStream *iface, DWORD flags)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p)->(0x%08x): stub\n", This, flags);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_Revert(IStream *iface)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_LockRegion(IStream *iface,
+  ULARGE_INTEGER offset, ULARGE_INTEGER len, DWORD locktype)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_UnlockRegion(IStream *iface,
+  ULARGE_INTEGER offset, ULARGE_INTEGER len, DWORD locktype)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_Stat(IStream *iface, STATSTG *stat, DWORD flag)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStream_Clone(IStream *iface, IStream **cloned)
+{
+  RpcStreamImpl *This = impl_from_IStream(iface);
+  FIXME("(%p): stub\n", This);
+  return E_NOTIMPL;
+}
+
 static const IStreamVtbl RpcStream_Vtbl =
 {
   RpcStream_QueryInterface,
@@ -183,29 +235,34 @@ static const IStreamVtbl RpcStream_Vtbl =
   RpcStream_Write,
   RpcStream_Seek,
   RpcStream_SetSize,
-  NULL, /* CopyTo */
-  NULL, /* Commit */
-  NULL, /* Revert */
-  NULL, /* LockRegion */
-  NULL, /* UnlockRegion */
-  NULL, /* Stat */
-  NULL  /* Clone */
+  RpcStream_CopyTo,
+  RpcStream_Commit,
+  RpcStream_Revert,
+  RpcStream_LockRegion,
+  RpcStream_UnlockRegion,
+  RpcStream_Stat,
+  RpcStream_Clone
 };
 
-static LPSTREAM RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init)
+static HRESULT RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init, ULONG *size, IStream **stream)
 {
   RpcStreamImpl *This;
-  This = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(RpcStreamImpl));
-  if (!This) return NULL;
+
+  *stream = NULL;
+  This = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcStreamImpl));
+  if (!This) return E_OUTOFMEMORY;
   This->IStream_iface.lpVtbl = &RpcStream_Vtbl;
   This->RefCount = 1;
   This->pMsg = pStubMsg;
   This->size = (LPDWORD)pStubMsg->Buffer;
-  This->data = (unsigned char*)(This->size + 1);
+  This->data = pStubMsg->Buffer + sizeof(DWORD);
   This->pos = 0;
   if (init) *This->size = 0;
   TRACE("init size=%d\n", *This->size);
-  return (LPSTREAM)This;
+
+  if (size) *size = *This->size;
+  *stream = &This->IStream_iface;
+  return S_OK;
 }
 
 static const IID* get_ip_iid(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory, PFORMAT_STRING pFormat)
@@ -240,19 +297,17 @@ unsigned char * WINAPI NdrInterfacePointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   pStubMsg->MaxCount = 0;
   if (!LoadCOM()) return NULL;
   if (pStubMsg->Buffer + sizeof(DWORD) <= (unsigned char *)pStubMsg->RpcMsg->Buffer + pStubMsg->BufferLength) {
-    stream = RpcStream_Create(pStubMsg, TRUE);
-    if (stream) {
+    hr = RpcStream_Create(pStubMsg, TRUE, NULL, &stream);
+    if (hr == S_OK) {
       if (pMemory)
         hr = COM_MarshalInterface(stream, riid, (LPUNKNOWN)pMemory,
                                   pStubMsg->dwDestContext, pStubMsg->pvDestContext,
                                   MSHLFLAGS_NORMAL);
-      else
-        hr = S_OK;
-
       IStream_Release(stream);
-      if (FAILED(hr))
-        RpcRaiseException(hr);
     }
+
+    if (FAILED(hr))
+      RpcRaiseException(hr);
   }
   return NULL;
 }
@@ -272,13 +327,16 @@ unsigned char * WINAPI NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg
   if (!LoadCOM()) return NULL;
   *(LPVOID*)ppMemory = NULL;
   if (pStubMsg->Buffer + sizeof(DWORD) < (unsigned char *)pStubMsg->RpcMsg->Buffer + pStubMsg->BufferLength) {
-    stream = RpcStream_Create(pStubMsg, FALSE);
-    if (!stream) RpcRaiseException(E_OUTOFMEMORY);
-    if (*((RpcStreamImpl *)stream)->size != 0)
-      hr = COM_UnmarshalInterface(stream, &IID_NULL, (LPVOID*)ppMemory);
-    else
-      hr = S_OK;
-    IStream_Release(stream);
+    ULONG size;
+
+    hr = RpcStream_Create(pStubMsg, FALSE, &size, &stream);
+    if (hr == S_OK) {
+      if (size != 0)
+        hr = COM_UnmarshalInterface(stream, &IID_NULL, (LPVOID*)ppMemory);
+
+      IStream_Release(stream);
+    }
+
     if (FAILED(hr))
         RpcRaiseException(hr);
   }

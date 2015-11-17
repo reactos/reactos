@@ -32,7 +32,7 @@
 32 stub I_RpcBindingInqDynamicEndPoint
 33 stub I_RpcBindingInqDynamicEndPointA
 34 stub I_RpcBindingInqDynamicEndPointW
-35 stub I_RpcBindingInqLocalClientPID
+35 stdcall I_RpcBindingInqLocalClientPID(ptr ptr)
 # I_RpcBindingInqMarshalledTargetInfo
 37 stub I_RpcBindingInqSecurityContext
 38 stdcall I_RpcBindingInqTransportType(ptr ptr)
@@ -100,10 +100,10 @@
 100 stub I_RpcTransIoCancelled
 101 stub I_RpcTransServerNewConnection
 102 stub I_RpcTurnOnEEInfoPropagation
-103 stub I_UuidCreate
+103 stdcall I_UuidCreate(ptr)
 104 stub MIDL_wchar_strcpy
 105 stub MIDL_wchar_strlen
-106 stub MesBufferHandleReset
+106 stdcall MesBufferHandleReset(ptr long long ptr long ptr)
 107 stdcall MesDecodeBufferHandleCreate(ptr long ptr)
 108 stdcall MesDecodeIncrementalHandleCreate(ptr ptr ptr)
 109 stdcall MesEncodeDynBufferHandleCreate(ptr ptr ptr)
@@ -465,7 +465,7 @@
 465 stub RpcSsContextLockShared
 466 stdcall RpcSsDestroyClientContext(ptr)
 467 stub RpcSsDisableAllocate
-468 stub RpcSsDontSerializeContext
+468 stdcall RpcSsDontSerializeContext()
 469 stub RpcSsEnableAllocate
 470 stub RpcSsFree
 471 stub RpcSsGetContextBinding

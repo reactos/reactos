@@ -183,7 +183,9 @@ const NDR_MARSHALL NdrMarshaller[NDR_TABLE_SIZE] = {
   NdrUserMarshalMarshall,
   0, 0,
   /* 0xb7 */
-  NdrRangeMarshall
+  NdrRangeMarshall,
+  NdrBaseTypeMarshall,
+  NdrBaseTypeMarshall
 };
 const NDR_UNMARSHALL NdrUnmarshaller[NDR_TABLE_SIZE] = {
   0,
@@ -225,7 +227,9 @@ const NDR_UNMARSHALL NdrUnmarshaller[NDR_TABLE_SIZE] = {
   NdrUserMarshalUnmarshall,
   0, 0,
   /* 0xb7 */
-  NdrRangeUnmarshall
+  NdrRangeUnmarshall,
+  NdrBaseTypeUnmarshall,
+  NdrBaseTypeUnmarshall
 };
 const NDR_BUFFERSIZE NdrBufferSizer[NDR_TABLE_SIZE] = {
   0,
@@ -267,7 +271,9 @@ const NDR_BUFFERSIZE NdrBufferSizer[NDR_TABLE_SIZE] = {
   NdrUserMarshalBufferSize,
   0, 0,
   /* 0xb7 */
-  NdrRangeBufferSize
+  NdrRangeBufferSize,
+  NdrBaseTypeBufferSize,
+  NdrBaseTypeBufferSize
 };
 const NDR_MEMORYSIZE NdrMemorySizer[NDR_TABLE_SIZE] = {
   0,
@@ -309,7 +315,9 @@ const NDR_MEMORYSIZE NdrMemorySizer[NDR_TABLE_SIZE] = {
   NdrUserMarshalMemorySize,
   0, 0,
   /* 0xb7 */
-  NdrRangeMemorySize
+  NdrRangeMemorySize,
+  NdrBaseTypeMemorySize,
+  NdrBaseTypeMemorySize
 };
 const NDR_FREE NdrFreer[NDR_TABLE_SIZE] = {
   0,
@@ -350,7 +358,9 @@ const NDR_FREE NdrFreer[NDR_TABLE_SIZE] = {
   NdrUserMarshalFree,
   0, 0,
   /* 0xb7 */
-  NdrRangeFree
+  NdrRangeFree,
+  NdrBaseTypeFree,
+  NdrBaseTypeFree
 };
 
 typedef struct _NDR_MEMORY_LIST
@@ -377,7 +387,7 @@ typedef struct _NDR_MEMORY_LIST
  *
  * NOTES
  *  The memory block is always 8-byte aligned.
- *  If the function is unable to allocate memory an ERROR_OUTOFMEMORY
+ *  If the function is unable to allocate memory an RPC_X_NO_MEMORY
  *  exception is raised.
  */
 void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, SIZE_T len)
@@ -397,7 +407,7 @@ void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, SIZE_T len)
     }
 
     p = pStubMsg->pfnAllocate(adjusted_len);
-    if (!p) RpcRaiseException(ERROR_OUTOFMEMORY);
+    if (!p) RpcRaiseException(RPC_X_NO_MEMORY);
 
     mem_list = (NDR_MEMORY_LIST *)((char *)p + aligned_len);
     mem_list->magic = MEML_MAGIC;
@@ -422,6 +432,11 @@ static inline BOOL IsConformanceOrVariancePresent(PFORMAT_STRING pFormat)
     return (*(const ULONG *)pFormat != -1);
 }
 
+static inline PFORMAT_STRING SkipConformance(const PMIDL_STUB_MESSAGE pStubMsg, const PFORMAT_STRING pFormat)
+{
+    return pFormat + 4 + pStubMsg->CorrDespIncrement;
+}
+
 static PFORMAT_STRING ReadConformance(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
 {
   align_pointer(&pStubMsg->Buffer, 4);
@@ -430,10 +445,7 @@ static PFORMAT_STRING ReadConformance(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRIN
   pStubMsg->MaxCount = NDR_LOCAL_UINT32_READ(pStubMsg->Buffer);
   pStubMsg->Buffer += 4;
   TRACE("unmarshalled conformance is %ld\n", pStubMsg->MaxCount);
-  if (pStubMsg->fHasNewCorrDesc)
-    return pFormat+6;
-  else
-    return pFormat+4;
+  return SkipConformance(pStubMsg, pFormat);
 }
 
 static inline PFORMAT_STRING ReadVariance(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat, ULONG MaxValue)
@@ -465,10 +477,7 @@ static inline PFORMAT_STRING ReadVariance(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_S
   }
 
 done:
-  if (pStubMsg->fHasNewCorrDesc)
-    return pFormat+6;
-  else
-    return pFormat+4;
+  return SkipConformance(pStubMsg, pFormat);
 }
 
 /* writes the conformance value to the buffer */
@@ -646,20 +655,8 @@ done_conf_grab:
 
 finish_conf:
   TRACE("resulting conformance is %ld\n", *pCount);
-  if (pStubMsg->fHasNewCorrDesc)
-    return pFormat+6;
-  else
-    return pFormat+4;
-}
 
-static inline PFORMAT_STRING SkipConformance(PMIDL_STUB_MESSAGE pStubMsg,
-                                             PFORMAT_STRING pFormat)
-{
-    if (pStubMsg->fHasNewCorrDesc)
-      pFormat += 6;
-    else
-      pFormat += 4;
-    return pFormat;
+  return SkipConformance(pStubMsg, pFormat);
 }
 
 static inline PFORMAT_STRING SkipVariance(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat)
@@ -2767,11 +2764,7 @@ static ULONG EmbeddedComplexSize(MIDL_STUB_MESSAGE *pStubMsg,
   }
   case RPC_FC_NON_ENCAPSULATED_UNION:
     pFormat += 2;
-    if (pStubMsg->fHasNewCorrDesc)
-        pFormat += 6;
-    else
-        pFormat += 4;
-
+    pFormat = SkipConformance(pStubMsg, pFormat);
     pFormat += *(const SHORT*)pFormat;
     return *(const SHORT*)pFormat;
   case RPC_FC_IP:
@@ -4596,7 +4589,7 @@ RPC_STATUS RPC_ENTRY NdrGetUserMarshalInfo(ULONG *flags, ULONG level, NDR_USER_M
 
         if (umcb->pStubMsg->Buffer < buffer_start ||
             umcb->pStubMsg->Buffer > buffer_end)
-            return ERROR_INVALID_USER_BUFFER;
+            return RPC_X_INVALID_BUFFER;
 
         umi->u1.Level1.Buffer = umcb->pStubMsg->Buffer;
         umi->u1.Level1.BufferSize = buffer_end - umcb->pStubMsg->Buffer;
@@ -6168,10 +6161,7 @@ static LONG unmarshall_discriminant(PMIDL_STUB_MESSAGE pStubMsg,
     }
     (*ppFormat)++;
 
-    if (pStubMsg->fHasNewCorrDesc)
-        *ppFormat += 6;
-    else
-        *ppFormat += 4;
+    *ppFormat = SkipConformance(pStubMsg, *ppFormat);
     return discriminant;
 }
 
@@ -7198,7 +7188,11 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
  */
 void WINAPI NdrCorrelationInitialize(PMIDL_STUB_MESSAGE pStubMsg, void *pMemory, ULONG CacheSize, ULONG Flags)
 {
-    FIXME("(%p, %p, %d, 0x%x): stub\n", pStubMsg, pMemory, CacheSize, Flags);
+    FIXME("(%p, %p, %d, 0x%x): semi-stub\n", pStubMsg, pMemory, CacheSize, Flags);
+
+    if (pStubMsg->CorrDespIncrement == 0)
+        pStubMsg->CorrDespIncrement = 2; /* size of the normal (non-range) /robust payload */
+
     pStubMsg->fHasNewCorrDesc = TRUE;
 }
 

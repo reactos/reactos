@@ -41,7 +41,7 @@ typedef struct
 
 static inline cstdstubbuffer_delegating_t *impl_from_delegating( IRpcStubBuffer *iface )
 {
-    return (cstdstubbuffer_delegating_t*)((char *)iface - FIELD_OFFSET(cstdstubbuffer_delegating_t, stub_buffer));
+    return CONTAINING_RECORD(iface, cstdstubbuffer_delegating_t, stub_buffer);
 }
 
 HRESULT CStdStubBuffer_Construct(REFIID riid,

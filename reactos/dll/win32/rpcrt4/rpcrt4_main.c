@@ -431,6 +431,15 @@ RPC_STATUS WINAPI UuidCreateSequential(UUID *Uuid)
     return status;
 }
 
+/*************************************************************************
+ *           I_UuidCreate   [RPCRT4.@]
+ *
+ * See UuidCreateSequential()
+ */
+RPC_STATUS WINAPI I_UuidCreate(UUID *Uuid)
+{
+    return UuidCreateSequential(Uuid);
+}
 
 /*************************************************************************
  *           UuidHash   [RPCRT4.@]
