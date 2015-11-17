@@ -120,10 +120,10 @@ typedef struct _IDocHostContainerVtbl
 {
     ULONG (*addref)(DocHost*);
     ULONG (*release)(DocHost*);
-    void (WINAPI* GetDocObjRect)(DocHost*,RECT*);
-    HRESULT (WINAPI* SetStatusText)(DocHost*,LPCWSTR);
-    void (WINAPI* SetURL)(DocHost*,LPCWSTR);
-    HRESULT (*exec)(DocHost*,const GUID*,DWORD,DWORD,VARIANT*,VARIANT*);
+    void (*get_docobj_rect)(DocHost*,RECT*);
+    HRESULT (*set_status_text)(DocHost*,const WCHAR*);
+    void (*on_command_state_change)(DocHost*,LONG,BOOL);
+    void (*set_url)(DocHost*,const WCHAR*);
 } IDocHostContainerVtbl;
 
 struct DocHost {
@@ -145,6 +145,7 @@ struct DocHost {
     IDispatch *client_disp;
     IDocHostUIHandler *hostui;
     IOleInPlaceFrame *frame;
+    IOleCommandTarget *olecmd;
 
     IUnknown *document;
     IOleDocumentView *view;
@@ -208,6 +209,10 @@ struct WebBrowser {
     IOleContainer *container;
     IOleInPlaceSiteEx *inplace;
 
+    IAdviseSink *sink;
+    DWORD sink_aspects;
+    DWORD sink_flags;
+
     /* window context */
 
     HWND frame_hwnd;
@@ -243,6 +248,7 @@ struct InternetExplorer {
 
     HWND frame_hwnd;
     HWND status_hwnd;
+    HWND toolbar_hwnd;
     HMENU menu;
     BOOL nohome;
 
@@ -290,6 +296,8 @@ void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
 void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
 void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
 void on_commandstate_change(DocHost*,LONG,VARIANT_BOOL) DECLSPEC_HIDDEN;
+void notify_download_state(DocHost*,BOOL) DECLSPEC_HIDDEN;
+void update_navigation_commands(DocHost *dochost) DECLSPEC_HIDDEN;
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
 void push_dochost_task(DocHost*,task_header_t*,task_proc_t,task_destr_t,BOOL) DECLSPEC_HIDDEN;

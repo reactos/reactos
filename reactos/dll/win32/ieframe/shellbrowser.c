@@ -742,6 +742,8 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
 
     TRACE("%p %p %x\n", This, pHTMLWindow2, dwFlags);
 
+    update_navigation_commands(This->doc_host);
+
     if(doc_host->travellog.loading_pos != -1) {
         WARN("histupdate not notified\n");
         doc_host->travellog.position = doc_host->travellog.loading_pos;

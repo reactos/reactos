@@ -73,6 +73,37 @@ void abort_dochost_tasks(DocHost *This, task_proc_t proc)
     }
 }
 
+void on_commandstate_change(DocHost *doc_host, LONG command, VARIANT_BOOL enable)
+{
+    DISPPARAMS dispparams;
+    VARIANTARG params[2];
+
+    TRACE("command=%d enable=%d\n", command, enable);
+
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = params;
+
+    V_VT(params) = VT_BOOL;
+    V_BOOL(params) = enable ? VARIANT_TRUE : VARIANT_FALSE;
+
+    V_VT(params+1) = VT_I4;
+    V_I4(params+1) = command;
+
+    call_sink(doc_host->cps.wbe2, DISPID_COMMANDSTATECHANGE, &dispparams);
+
+    doc_host->container_vtbl->on_command_state_change(doc_host, command, enable);
+}
+
+void update_navigation_commands(DocHost *dochost)
+{
+    unsigned pos = dochost->travellog.loading_pos == -1 ? dochost->travellog.position : dochost->travellog.loading_pos;
+
+    on_commandstate_change(dochost, CSC_NAVIGATEBACK, pos > 0);
+    on_commandstate_change(dochost, CSC_NAVIGATEFORWARD, pos < dochost->travellog.length);
+}
+
 static void notif_complete(DocHost *This, DISPID dispid)
 {
     DISPPARAMS dispparams;
@@ -388,25 +419,32 @@ static void update_travellog(DocHost *This)
 {
     travellog_entry_t *new_entry;
 
+    static const WCHAR about_schemeW[] = {'a','b','o','u','t',':'};
+
+    if(This->url && !strncmpiW(This->url, about_schemeW, sizeof(about_schemeW)/sizeof(*about_schemeW))) {
+        TRACE("Skipping about URL\n");
+        return;
+    }
+
+    if(!This->travellog.log) {
+        This->travellog.log = heap_alloc(4 * sizeof(*This->travellog.log));
+        if(!This->travellog.log)
+            return;
+
+        This->travellog.size = 4;
+    }else if(This->travellog.size < This->travellog.position+1) {
+        travellog_entry_t *new_travellog;
+
+        new_travellog = heap_realloc(This->travellog.log, This->travellog.size*2*sizeof(*This->travellog.log));
+        if(!new_travellog)
+            return;
+
+        This->travellog.log = new_travellog;
+        This->travellog.size *= 2;
+    }
+
     if(This->travellog.loading_pos == -1) {
         /* Clear forward history. */
-        if(!This->travellog.log) {
-            This->travellog.log = heap_alloc(4 * sizeof(*This->travellog.log));
-            if(!This->travellog.log)
-                return;
-
-            This->travellog.size = 4;
-        }else if(This->travellog.size < This->travellog.position+1) {
-            travellog_entry_t *new_travellog;
-
-            new_travellog = heap_realloc(This->travellog.log, This->travellog.size*2*sizeof(*This->travellog.log));
-            if(!new_travellog)
-                return;
-
-            This->travellog.log = new_travellog;
-            This->travellog.size *= 2;
-        }
-
         while(This->travellog.length > This->travellog.position)
             free_travellog_entry(This->travellog.log + --This->travellog.length);
     }
@@ -455,7 +493,7 @@ void create_doc_view_hwnd(DocHost *This)
         doc_view_atom = RegisterClassExW(&wndclass);
     }
 
-    This->container_vtbl->GetDocObjRect(This, &rect);
+    This->container_vtbl->get_docobj_rect(This, &rect);
     This->hwnd = CreateWindowExW(0, wszShell_DocObject_View,
          wszShell_DocObject_View,
          WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP,
@@ -575,6 +613,11 @@ void release_dochost_client(DocHost *This)
         IOleInPlaceFrame_Release(This->frame);
         This->frame = NULL;
     }
+
+    if(This->olecmd) {
+        IOleCommandTarget_Release(This->olecmd);
+        This->olecmd = NULL;
+    }
 }
 
 static inline DocHost *impl_from_IOleCommandTarget(IOleCommandTarget *iface)
@@ -627,8 +670,18 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
     if(!pguidCmdGroup) {
         switch(nCmdID) {
         case OLECMDID_UPDATECOMMANDS:
+            if(!This->olecmd)
+                return E_NOTIMPL;
+            return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         case OLECMDID_SETDOWNLOADSTATE:
-            return This->container_vtbl->exec(This, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            if(This->olecmd)
+                return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+            if(!pvaIn || V_VT(pvaIn) != VT_I4)
+                return E_INVALIDARG;
+
+            notify_download_state(This, V_I4(pvaIn));
+            return S_OK;
         default:
             FIXME("Unimplemented cmdid %d\n", nCmdID);
             return E_NOTIMPL;
@@ -691,6 +744,7 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
         switch(nCmdID) {
         case CMDID_EXPLORER_UPDATEHISTORY:
             update_travellog(This);
+            update_navigation_commands(This);
             return S_OK;
 
         default:
@@ -707,8 +761,11 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
         }
     }
 
-    if(IsEqualGUID(&CGID_DocHostCommandHandler, pguidCmdGroup))
-        return This->container_vtbl->exec(This, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+    if(IsEqualGUID(&CGID_DocHostCommandHandler, pguidCmdGroup)) {
+        if(!This->olecmd)
+            return E_NOTIMPL;
+        return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+    }
 
     FIXME("Unimplemented cmdid %d of group %s\n", nCmdID, debugstr_guid(pguidCmdGroup));
     return E_NOTIMPL;

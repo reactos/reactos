@@ -389,7 +389,7 @@ static void ie_dialog_properties(HWND hwnd)
 }
 #endif
 
-static void add_tb_separator(HWND hwnd)
+static void add_tb_separator(InternetExplorer *ie)
 {
     TBBUTTON btn;
 
@@ -397,10 +397,10 @@ static void add_tb_separator(HWND hwnd)
 
     btn.iBitmap = 3;
     btn.fsStyle = BTNS_SEP;
-    SendMessageW(hwnd, TB_ADDBUTTONSW, 1, (LPARAM)&btn);
+    SendMessageW(ie->toolbar_hwnd, TB_ADDBUTTONSW, 1, (LPARAM)&btn);
 }
 
-static void add_tb_button(HWND hwnd, int bmp, int cmd, int strId)
+static void add_tb_button(InternetExplorer *ie, int bmp, int cmd, int strId)
 {
     TBBUTTON btn;
     WCHAR buf[30];
@@ -414,14 +414,18 @@ static void add_tb_button(HWND hwnd, int bmp, int cmd, int strId)
     btn.dwData = 0;
     btn.iString = (INT_PTR)buf;
 
-    SendMessageW(hwnd, TB_ADDBUTTONSW, 1, (LPARAM)&btn);
+    SendMessageW(ie->toolbar_hwnd, TB_ADDBUTTONSW, 1, (LPARAM)&btn);
 }
 
-static void create_rebar(HWND hwnd)
+static void enable_toolbar_button(InternetExplorer *ie, int command, BOOL enable)
+{
+    SendMessageW(ie->toolbar_hwnd, TB_ENABLEBUTTON, command, enable);
+}
+
+static void create_rebar(InternetExplorer *ie)
 {
     HWND hwndRebar;
     HWND hwndAddress;
-    HWND hwndToolbar;
     REBARINFO rebarinf;
     REBARBANDINFOW bandinf;
     WCHAR addr[40];
@@ -432,7 +436,7 @@ static void create_rebar(HWND hwnd)
 
     hwndRebar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAMEW, NULL,
             WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|RBS_VARHEIGHT|CCS_TOP|CCS_NODIVIDER, 0, 0, 0, 0,
-            hwnd, (HMENU)IDC_BROWSE_REBAR, ieframe_instance, NULL);
+            ie->frame_hwnd, (HMENU)IDC_BROWSE_REBAR, ieframe_instance, NULL);
 
     rebarinf.cbSize = sizeof(rebarinf);
     rebarinf.fMask = 0;
@@ -440,29 +444,29 @@ static void create_rebar(HWND hwnd)
 
     SendMessageW(hwndRebar, RB_SETBARINFO, 0, (LPARAM)&rebarinf);
 
-    hwndToolbar = CreateWindowExW(TBSTYLE_EX_MIXEDBUTTONS, TOOLBARCLASSNAMEW, NULL, TBSTYLE_FLAT | WS_CHILD | WS_VISIBLE | CCS_NORESIZE,
+    ie->toolbar_hwnd = CreateWindowExW(TBSTYLE_EX_MIXEDBUTTONS, TOOLBARCLASSNAMEW, NULL, TBSTYLE_FLAT | WS_CHILD | WS_VISIBLE | CCS_NORESIZE,
             0, 0, 0, 0, hwndRebar, (HMENU)IDC_BROWSE_TOOLBAR, ieframe_instance, NULL);
 
     imagelist = ImageList_LoadImageW(ieframe_instance, MAKEINTRESOURCEW(IDB_IETOOLBAR), 32, 0, CLR_NONE, IMAGE_BITMAP, LR_CREATEDIBSECTION);
 
-    SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)imagelist);
-    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    add_tb_button(hwndToolbar, 0, ID_BROWSE_BACK, IDS_TB_BACK);
-    add_tb_button(hwndToolbar, 1, ID_BROWSE_FORWARD, IDS_TB_FORWARD);
-    add_tb_button(hwndToolbar, 2, ID_BROWSE_STOP, IDS_TB_STOP);
-    add_tb_button(hwndToolbar, 3, ID_BROWSE_REFRESH, IDS_TB_REFRESH);
-    add_tb_button(hwndToolbar, 4, ID_BROWSE_HOME, IDS_TB_HOME);
-    add_tb_separator(hwndToolbar);
-    add_tb_button(hwndToolbar, 5, ID_BROWSE_PRINT, IDS_TB_PRINT);
-    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(55,50));
-    SendMessageW(hwndToolbar, TB_GETMAXSIZE, 0, (LPARAM)&toolbar_size);
+    SendMessageW(ie->toolbar_hwnd, TB_SETIMAGELIST, 0, (LPARAM)imagelist);
+    SendMessageW(ie->toolbar_hwnd, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    add_tb_button(ie, 0, ID_BROWSE_BACK, IDS_TB_BACK);
+    add_tb_button(ie, 1, ID_BROWSE_FORWARD, IDS_TB_FORWARD);
+    add_tb_button(ie, 2, ID_BROWSE_STOP, IDS_TB_STOP);
+    add_tb_button(ie, 3, ID_BROWSE_REFRESH, IDS_TB_REFRESH);
+    add_tb_button(ie, 4, ID_BROWSE_HOME, IDS_TB_HOME);
+    add_tb_separator(ie);
+    add_tb_button(ie, 5, ID_BROWSE_PRINT, IDS_TB_PRINT);
+    SendMessageW(ie->toolbar_hwnd, TB_SETBUTTONSIZE, 0, MAKELPARAM(55,50));
+    SendMessageW(ie->toolbar_hwnd, TB_GETMAXSIZE, 0, (LPARAM)&toolbar_size);
 
     bandinf.cbSize = sizeof(bandinf);
     bandinf.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
     bandinf.fStyle = RBBS_CHILDEDGE;
     bandinf.cxMinChild = toolbar_size.cx;
     bandinf.cyMinChild = toolbar_size.cy+2;
-    bandinf.hwndChild = hwndToolbar;
+    bandinf.hwndChild = ie->toolbar_hwnd;
 
     SendMessageW(hwndRebar, RB_INSERTBANDW, -1, (LPARAM)&bandinf);
 
@@ -484,13 +488,15 @@ static LRESULT iewnd_OnCreate(HWND hwnd, LPCREATESTRUCTW lpcs)
     InternetExplorer* This = (InternetExplorer*)lpcs->lpCreateParams;
     SetWindowLongPtrW(hwnd, 0, (LONG_PTR) lpcs->lpCreateParams);
 
+    This->doc_host.frame_hwnd = This->frame_hwnd = hwnd;
+
     This->menu = create_ie_menu();
 
     This->status_hwnd = CreateStatusWindowW(WS_VISIBLE|WS_CHILD|SBT_NOBORDERS|CCS_NODIVIDER,
                                             NULL, hwnd, IDC_BROWSE_STATUSBAR);
     SendMessageW(This->status_hwnd, SB_SIMPLE, TRUE, 0);
 
-    create_rebar(hwnd);
+    create_rebar(This);
 
     return 0;
 }
@@ -554,9 +560,7 @@ static LRESULT iewnd_OnNotify(InternetExplorer *This, WPARAM wparam, LPARAM lpar
 
 static LRESULT iewnd_OnDestroy(InternetExplorer *This)
 {
-    HWND hwndRebar = GetDlgItem(This->frame_hwnd, IDC_BROWSE_REBAR);
-    HWND hwndToolbar = GetDlgItem(hwndRebar, IDC_BROWSE_TOOLBAR);
-    HIMAGELIST list = (HIMAGELIST)SendMessageW(hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    HIMAGELIST list = (HIMAGELIST)SendMessageW(This->toolbar_hwnd, TB_GETIMAGELIST, 0, 0);
 
     TRACE("%p\n", This);
 
@@ -715,7 +719,7 @@ void unregister_iewindow_class(void)
 
 static void create_frame_hwnd(InternetExplorer *This)
 {
-    This->frame_hwnd = CreateWindowExW(
+    CreateWindowExW(
             WS_EX_WINDOWEDGE,
             szIEWinFrame, wszWineInternetExplorer,
             WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
@@ -723,7 +727,6 @@ static void create_frame_hwnd(InternetExplorer *This)
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
             NULL, NULL /* FIXME */, ieframe_instance, This);
 
-    This->doc_host.frame_hwnd = This->frame_hwnd;
     create_doc_view_hwnd(&This->doc_host);
 }
 
@@ -744,19 +747,33 @@ static ULONG IEDocHost_release(DocHost *iface)
     return IWebBrowser2_Release(&This->IWebBrowser2_iface);
 }
 
-static void WINAPI DocHostContainer_GetDocObjRect(DocHost* This, RECT* rc)
+static void DocHostContainer_get_docobj_rect(DocHost *This, RECT *rc)
 {
     GetClientRect(This->frame_hwnd, rc);
     adjust_ie_docobj_rect(This->frame_hwnd, rc);
 }
 
-static HRESULT WINAPI DocHostContainer_SetStatusText(DocHost *iface, LPCWSTR text)
+static HRESULT DocHostContainer_set_status_text(DocHost *iface, const WCHAR *text)
 {
     InternetExplorer *This = impl_from_DocHost(iface);
     return update_ie_statustext(This, text);
 }
 
-static void WINAPI DocHostContainer_SetURL(DocHost* iface, LPCWSTR url)
+static void DocHostContainer_on_command_state_change(DocHost *iface, LONG command, BOOL enable)
+{
+    InternetExplorer *This = impl_from_DocHost(iface);
+
+    switch(command) {
+    case CSC_NAVIGATEBACK:
+        enable_toolbar_button(This, ID_BROWSE_BACK, enable);
+        break;
+    case CSC_NAVIGATEFORWARD:
+        enable_toolbar_button(This, ID_BROWSE_FORWARD, enable);
+        break;
+    }
+}
+
+static void DocHostContainer_set_url(DocHost* iface, const WCHAR *url)
 {
     InternetExplorer *This = impl_from_DocHost(iface);
 
@@ -764,19 +781,13 @@ static void WINAPI DocHostContainer_SetURL(DocHost* iface, LPCWSTR url)
     SendMessageW(This->frame_hwnd, WM_UPDATEADDRBAR, 0, (LPARAM)url);
 }
 
-static HRESULT DocHostContainer_exec(DocHost* This, const GUID *cmd_group, DWORD cmdid, DWORD execopt, VARIANT *in,
-        VARIANT *out)
-{
-    return E_NOTIMPL;
-}
-
 static const IDocHostContainerVtbl DocHostContainerVtbl = {
     IEDocHost_addref,
     IEDocHost_release,
-    DocHostContainer_GetDocObjRect,
-    DocHostContainer_SetStatusText,
-    DocHostContainer_SetURL,
-    DocHostContainer_exec
+    DocHostContainer_get_docobj_rect,
+    DocHostContainer_set_status_text,
+    DocHostContainer_on_command_state_change,
+    DocHostContainer_set_url
 };
 
 static HRESULT create_ie(InternetExplorer **ret_obj)
