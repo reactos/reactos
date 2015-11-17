@@ -509,11 +509,11 @@ NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                 ret = LsaNtStatusToWinError(NtStatus);
             else
             {
-                PPOLICY_ACCOUNT_DOMAIN_INFO DomainInfo;
+                PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo;
 
                 LsaQueryInformationPolicy(PolicyHandle,
-                 PolicyAccountDomainInformation, (PVOID*)&DomainInfo);
-                domainNameLen = lstrlenW(DomainInfo->DomainName.Buffer) + 1;
+                 PolicyPrimaryDomainInformation, (PVOID*)&DomainInfo);
+                domainNameLen = lstrlenW(DomainInfo->Name.Buffer) + 1;
                 size = sizeof(WKSTA_INFO_102) + computerNameLen * sizeof(WCHAR)
                     + domainNameLen * sizeof(WCHAR) + sizeof(lanroot);
                 ret = NetApiBufferAllocate(size, (LPVOID *)bufptr);
@@ -529,7 +529,7 @@ NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                     memcpy(info->wki102_computername, computerName,
                      computerNameLen * sizeof(WCHAR));
                     info->wki102_langroup = info->wki102_computername + computerNameLen;
-                    memcpy(info->wki102_langroup, DomainInfo->DomainName.Buffer,
+                    memcpy(info->wki102_langroup, DomainInfo->Name.Buffer,
                      domainNameLen * sizeof(WCHAR));
                     info->wki102_lanroot = info->wki102_langroup + domainNameLen;
                     memcpy(info->wki102_lanroot, lanroot, sizeof(lanroot));
