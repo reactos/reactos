@@ -1949,6 +1949,16 @@ BOOL WINAPI GetFileBandwidthReservation(_In_ HANDLE, _Out_ LPDWORD, _Out_ LPDWOR
 #endif
 BOOL WINAPI GetFileInformationByHandle(HANDLE,LPBY_HANDLE_FILE_INFORMATION);
 
+#if (_WIN32_WINNT >= 0x0600)
+BOOL
+WINAPI
+GetFileInformationByHandleEx(
+  _In_ HANDLE hFile,
+  _In_ FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
+  _Out_writes_bytes_(dwBufferSize) LPVOID lpFileInformation,
+  _In_ DWORD dwBufferSize);
+#endif
+
 BOOL
 WINAPI
 GetFileSecurityA(
