@@ -397,6 +397,8 @@ static BOOL check_address(void *actual, void *expected)
 {
     static void *ole32_start = NULL;
     static void *ole32_end = NULL;
+    static void *combase_start = NULL;
+    static void *combase_end = NULL;
 
     if (actual == expected)
         return TRUE;
@@ -412,7 +414,21 @@ static BOOL check_address(void *actual, void *expected)
         ole32_end = (void *)((char *) ole32_start + nt_headers->OptionalHeader.SizeOfImage);
     }
 
-    return ole32_start <= actual && actual < ole32_end;
+    if (ole32_start <= actual && actual < ole32_end)
+        return TRUE;
+
+    /* On Win8, actual can be located inside combase.dll */
+    if (combase_start == NULL || combase_end == NULL)
+    {
+        PIMAGE_NT_HEADERS nt_headers;
+        combase_start = (void *) GetModuleHandleA("combase.dll");
+        if (combase_start == NULL)
+            return FALSE;
+        nt_headers = (PIMAGE_NT_HEADERS)((char *) combase_start + ((PIMAGE_DOS_HEADER) combase_start)->e_lfanew);
+        combase_end = (void *)((char *) combase_start + nt_headers->OptionalHeader.SizeOfImage);
+    }
+
+    return (combase_start <= actual && actual < combase_end);
 }
 
 static const ExtendedProxyFileInfo my_proxy_file_info =

@@ -1531,6 +1531,26 @@ set_auth_info(RPC_BINDING_HANDLE handle)
     ok(status == RPC_S_OK, "RpcBindingSetAuthInfoExA failed %d\n", status);
 }
 
+#define test_is_server_listening(a,b) _test_is_server_listening(__LINE__,a,b)
+static void _test_is_server_listening(unsigned line, RPC_BINDING_HANDLE binding, RPC_STATUS expected_status)
+{
+    RPC_STATUS status;
+    status = RpcMgmtIsServerListening(binding);
+    ok_(__FILE__,line)(status == expected_status, "RpcMgmtIsServerListening returned %u, expected %u\n",
+                       status, expected_status);
+}
+
+#define test_is_server_listening2(a,b,c) _test_is_server_listening2(__LINE__,a,b,c)
+static void _test_is_server_listening2(unsigned line, RPC_BINDING_HANDLE binding, RPC_STATUS expected_status,
+        RPC_STATUS expected_status2)
+{
+    RPC_STATUS status;
+    status = RpcMgmtIsServerListening(binding);
+    ok_(__FILE__,line)(status == expected_status || status == expected_status2,
+                       "RpcMgmtIsServerListening returned %u, expected %u or %u\n",
+                       status, expected_status, expected_status2);
+}
+
 static void
 client(const char *test)
 {
@@ -1552,6 +1572,7 @@ client(const char *test)
 
     run_tests();
     authinfo_test(RPC_PROTSEQ_TCP, 0);
+    test_is_server_listening2(IServer_IfHandle, RPC_S_OK, RPC_S_ACCESS_DENIED);
 
     ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
@@ -1563,6 +1584,7 @@ client(const char *test)
 
     set_auth_info(IServer_IfHandle);
     authinfo_test(RPC_PROTSEQ_TCP, 1);
+    test_is_server_listening(IServer_IfHandle, RPC_S_ACCESS_DENIED);
 
     ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
@@ -1574,6 +1596,7 @@ client(const char *test)
 
     run_tests(); /* can cause RPC_X_BAD_STUB_DATA exception */
     authinfo_test(RPC_PROTSEQ_LRPC, 0);
+    test_is_server_listening(IServer_IfHandle, RPC_S_OK);
 
     ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
@@ -1585,6 +1608,7 @@ client(const char *test)
 
     set_auth_info(IServer_IfHandle);
     authinfo_test(RPC_PROTSEQ_LRPC, 1);
+    test_is_server_listening(IServer_IfHandle, RPC_S_OK);
 
     ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
@@ -1594,9 +1618,12 @@ client(const char *test)
     ok(RPC_S_OK == RpcStringBindingComposeA(NULL, np, address_np, pipe, NULL, &binding), "RpcStringBindingCompose\n");
     ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
+    test_is_server_listening(IServer_IfHandle, RPC_S_OK);
     run_tests();
     authinfo_test(RPC_PROTSEQ_NMP, 0);
+    test_is_server_listening(IServer_IfHandle, RPC_S_OK);
     stop();
+    test_is_server_listening(IServer_IfHandle, RPC_S_NOT_LISTENING);
 
     ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
@@ -1637,8 +1664,10 @@ server(void)
   else
     status = RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL);
   ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %d\n", status);
+  test_is_server_listening(NULL, RPC_S_NOT_LISTENING);
   status = RpcServerListen(1, 20, TRUE);
   ok(status == RPC_S_OK, "RpcServerListen failed with status %d\n", status);
+  test_is_server_listening(NULL, RPC_S_OK);
   stop_event = CreateEventW(NULL, FALSE, FALSE, NULL);
   ok(stop_event != NULL, "CreateEvent failed with error %d\n", GetLastError());
 

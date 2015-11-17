@@ -222,10 +222,8 @@ static void test_rpc_ncacn_ip_tcp(void)
     ok(status == RPC_S_OK, "return wrong\n");
 
     status = RpcMgmtStopServerListening(NULL);
-todo_wine {
     ok(status == RPC_S_NOT_LISTENING,
        "wrong RpcMgmtStopServerListening error (%u)\n", status);
-}
 
     status = RpcMgmtWaitServerListen();
     ok(status == RPC_S_NOT_LISTENING,
@@ -242,9 +240,7 @@ todo_wine {
     ok(status == RPC_S_OK, "RpcServerRegisterIf failed (%u)\n", status);
 
     status = RpcServerListen(1, 20, TRUE);
-todo_wine {
     ok(status == RPC_S_OK, "RpcServerListen failed (%u)\n", status);
-}
 
     status = RpcServerListen(1, 20, TRUE);
 todo_wine {
@@ -663,7 +659,7 @@ static void test_I_RpcExceptionFilter(void)
 
     if (!pI_RpcExceptionFilter)
     {
-        skip("I_RpcExceptionFilter not exported\n");
+        win_skip("I_RpcExceptionFilter not exported\n");
         return;
     }
 
@@ -682,9 +678,9 @@ static void test_I_RpcExceptionFilter(void)
         case STATUS_ACCESS_VIOLATION:
         case STATUS_ILLEGAL_INSTRUCTION:
         case STATUS_PRIVILEGED_INSTRUCTION:
-        case 0xc00000aa /* STATUS_INSTRUCTION_MISALIGNMENT */:
+        case STATUS_INSTRUCTION_MISALIGNMENT:
         case STATUS_STACK_OVERFLOW:
-        case 0xc0000194 /* STATUS_POSSIBLE_DEADLOCK */:
+        case STATUS_POSSIBLE_DEADLOCK:
             ok(retval == EXCEPTION_CONTINUE_SEARCH, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
                exception, EXCEPTION_CONTINUE_SEARCH, retval);
             break;
@@ -789,13 +785,17 @@ static void test_UuidCreateSequential(void)
     UUID guid1;
     BYTE version;
     RPC_STATUS (WINAPI *pUuidCreateSequential)(UUID *) = (void *)GetProcAddress(GetModuleHandleA("rpcrt4.dll"), "UuidCreateSequential");
+    RPC_STATUS (WINAPI *pI_UuidCreate)(UUID *) = (void*)GetProcAddress(GetModuleHandleA("rpcrt4.dll"), "I_UuidCreate");
     RPC_STATUS ret;
 
     if (!pUuidCreateSequential)
     {
-        skip("UuidCreateSequential not exported\n");
+        win_skip("UuidCreateSequential not exported\n");
         return;
     }
+
+    ok(pI_UuidCreate != pUuidCreateSequential, "got %p, %p\n", pI_UuidCreate, pUuidCreateSequential);
+
     ret = pUuidCreateSequential(&guid1);
     ok(!ret || ret == RPC_S_UUID_LOCAL_ONLY,
        "expected RPC_S_OK or RPC_S_UUID_LOCAL_ONLY, got %08x\n", ret);
@@ -829,6 +829,14 @@ static void test_UuidCreateSequential(void)
         ret = pUuidCreateSequential(&guid2);
         ok(!ret || ret == RPC_S_UUID_LOCAL_ONLY,
            "expected RPC_S_OK or RPC_S_UUID_LOCAL_ONLY, got %08x\n", ret);
+        version = (guid2.Data3 & 0xf000) >> 12;
+        ok(version == 1, "unexpected version %d\n", version);
+        ok(!memcmp(guid1.Data4, guid2.Data4, sizeof(guid2.Data4)),
+           "unexpected value in MAC address: %s\n",
+           wine_dbgstr_guid(&guid2));
+
+        /* I_UuidCreate does exactly the same */
+        pI_UuidCreate(&guid2);
         version = (guid2.Data3 & 0xf000) >> 12;
         ok(version == 1, "unexpected version %d\n", version);
         ok(!memcmp(guid1.Data4, guid2.Data4, sizeof(guid2.Data4)),
