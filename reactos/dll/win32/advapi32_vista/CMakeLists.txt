@@ -8,6 +8,7 @@ spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     DllMain.c
     RegDeleteTree.c
+    RegSetKeyValue.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
 
 add_library(advapi32_vista SHARED ${SOURCE})
