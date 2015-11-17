@@ -7262,7 +7262,7 @@ static void test_decodeNameConstraints(DWORD dwEncoding)
 
             if (constraints->cPermittedSubtree !=
              encodedNameConstraints[i].constraints.cPermittedSubtree)
-                fprintf(stderr, "%d: expected %d permitted, got %d\n", i,
+                fprintf(stderr, "%d: expected %u permitted, got %u\n", i,
                  encodedNameConstraints[i].constraints.cPermittedSubtree,
                  constraints->cPermittedSubtree);
             if (constraints->cPermittedSubtree ==
@@ -7276,7 +7276,7 @@ static void test_decodeNameConstraints(DWORD dwEncoding)
             }
             if (constraints->cExcludedSubtree !=
              encodedNameConstraints[i].constraints.cExcludedSubtree)
-                fprintf(stderr, "%d: expected %d excluded, got %d\n", i,
+                fprintf(stderr, "%d: expected %u excluded, got %u\n", i,
                  encodedNameConstraints[i].constraints.cExcludedSubtree,
                  constraints->cExcludedSubtree);
             if (constraints->cExcludedSubtree ==
