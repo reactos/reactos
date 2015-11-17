@@ -85,9 +85,16 @@ LONG TEXT_TabbedTextOut( HDC hdc,
     SIZE extent;
     int i, j;
     int start = x;
+    TEXTMETRICW tm;
 
     if (!lpTabPos)
         cTabStops=0;
+
+#ifdef _WIN32K_
+    GreGetTextMetricsW( hdc, &tm );
+#else
+    GetTextMetricsW( hdc, &tm );
+#endif
 
     if (cTabStops == 1)
     {
@@ -96,13 +103,6 @@ LONG TEXT_TabbedTextOut( HDC hdc,
     }
     else
     {
-#ifdef _WIN32K_
-        TEXTMETRICW tm;
-        GreGetTextMetricsW( hdc, &tm );
-#else
-        TEXTMETRICA tm;
-        GetTextMetricsA( hdc, &tm );
-#endif
         defWidth = 8 * tm.tmAveCharWidth;
     }
 
@@ -178,6 +178,10 @@ LONG TEXT_TabbedTextOut( HDC hdc,
         count -= j;
         lpstr += j;
     }
+
+    if(!extent.cy)
+        extent.cy = tm.tmHeight;
+
     return MAKELONG(x - start, extent.cy);
 }
 
