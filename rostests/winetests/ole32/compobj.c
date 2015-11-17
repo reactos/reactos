@@ -46,6 +46,32 @@
 
 extern const IID GUID_NULL;
 
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    expect_ ## func = TRUE
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+DEFINE_EXPECT(CreateStub);
+
 /* functions that are not present on all versions of Windows */
 static HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
 static HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
@@ -135,6 +161,7 @@ static ULONG WINAPI Test_IClassFactory_Release(LPCLASSFACTORY iface)
     return 1; /* non-heap-based object */
 }
 
+static IID create_instance_iid;
 static HRESULT WINAPI Test_IClassFactory_CreateInstance(
     LPCLASSFACTORY iface,
     IUnknown *pUnkOuter,
@@ -142,6 +169,7 @@ static HRESULT WINAPI Test_IClassFactory_CreateInstance(
     LPVOID *ppvObj)
 {
     *ppvObj = NULL;
+    create_instance_iid = *riid;
     if (pUnkOuter) return CLASS_E_NOAGGREGATION;
     return E_NOINTERFACE;
 }
@@ -772,6 +800,30 @@ static void test_CoGetClassObject(void)
     CoUninitialize();
 }
 
+static void test_CoCreateInstanceEx(void)
+{
+    MULTI_QI qi_res = { &IID_IMoniker };
+    DWORD cookie;
+    HRESULT hr;
+
+    CoInitialize(NULL);
+
+    hr = CoRegisterClassObject(&CLSID_WineOOPTest, (IUnknown *)&Test_ClassFactory,
+                               CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &cookie);
+    ok_ole_success(hr, "CoRegisterClassObject");
+
+    create_instance_iid = IID_NULL;
+    hr = CoCreateInstanceEx(&CLSID_WineOOPTest, NULL, CLSCTX_INPROC_SERVER, NULL, 1, &qi_res);
+    ok(hr == E_NOINTERFACE, "CoCreateInstanceEx failed: %08x\n", hr);
+    ok(IsEqualGUID(&create_instance_iid, qi_res.pIID), "Unexpected CreateInstance iid %s\n",
+       wine_dbgstr_guid(&create_instance_iid));
+
+    hr = CoRevokeClassObject(cookie);
+    ok_ole_success(hr, "CoRevokeClassObject");
+
+    CoUninitialize();
+}
+
 static ATOM register_dummy_class(void)
 {
     WNDCLASSA wc =
@@ -912,6 +964,59 @@ static void test_CoRegisterMessageFilter(void)
     CoUninitialize();
 }
 
+static IUnknown Test_Unknown;
+
+static HRESULT WINAPI EnumOLEVERB_QueryInterface(IEnumOLEVERB *iface, REFIID riid, void **ppv)
+{
+    return IUnknown_QueryInterface(&Test_Unknown, riid, ppv);
+}
+
+static ULONG WINAPI EnumOLEVERB_AddRef(IEnumOLEVERB *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI EnumOLEVERB_Release(IEnumOLEVERB *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Next(IEnumOLEVERB *iface, ULONG celt, OLEVERB *rgelt, ULONG *fetched)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Skip(IEnumOLEVERB *iface, ULONG celt)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Reset(IEnumOLEVERB *iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Clone(IEnumOLEVERB *iface, IEnumOLEVERB **ppenum)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const IEnumOLEVERBVtbl EnumOLEVERBVtbl = {
+    EnumOLEVERB_QueryInterface,
+    EnumOLEVERB_AddRef,
+    EnumOLEVERB_Release,
+    EnumOLEVERB_Next,
+    EnumOLEVERB_Skip,
+    EnumOLEVERB_Reset,
+    EnumOLEVERB_Clone
+};
+
+static IEnumOLEVERB EnumOLEVERB = { &EnumOLEVERBVtbl };
+
 static HRESULT WINAPI Test_IUnknown_QueryInterface(
     IUnknown *iface,
     REFIID riid,
@@ -919,16 +1024,17 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
 {
     if (ppvObj == NULL) return E_POINTER;
 
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IWineTest))
-    {
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IWineTest)) {
         *ppvObj = iface;
-        IUnknown_AddRef(iface);
-        return S_OK;
+    }else if(IsEqualIID(riid, &IID_IEnumOLEVERB)) {
+        *ppvObj = &EnumOLEVERB;
+    }else {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
     }
 
-    *ppvObj = NULL;
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppvObj);
+    return S_OK;
 }
 
 static ULONG WINAPI Test_IUnknown_AddRef(IUnknown *iface)
@@ -949,6 +1055,8 @@ static const IUnknownVtbl TestUnknown_Vtbl =
 };
 
 static IUnknown Test_Unknown = { &TestUnknown_Vtbl };
+
+static IPSFactoryBuffer *ps_factory_buffer;
 
 static HRESULT WINAPI PSFactoryBuffer_QueryInterface(
     IPSFactoryBuffer * This,
@@ -993,7 +1101,13 @@ static HRESULT WINAPI PSFactoryBuffer_CreateStub(
     /* [unique][in] */ IUnknown *pUnkServer,
     /* [out] */ IRpcStubBuffer **ppStub)
 {
-    return E_NOTIMPL;
+    CHECK_EXPECT(CreateStub);
+
+    ok(pUnkServer == (IUnknown*)&Test_Unknown, "unexpected pUnkServer %p\n", pUnkServer);
+    if(!ps_factory_buffer)
+        return E_NOTIMPL;
+
+    return IPSFactoryBuffer_CreateStub(ps_factory_buffer, &IID_IEnumOLEVERB, pUnkServer, ppStub);
 }
 
 static IPSFactoryBufferVtbl PSFactoryBufferVtbl =
@@ -1037,9 +1151,31 @@ static void test_CoRegisterPSClsid(void)
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
     ok_ole_success(hr, "CreateStreamOnHGlobal");
 
+    SET_EXPECT(CreateStub);
     hr = CoMarshalInterface(stream, &IID_IWineTest, &Test_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok(hr == E_NOTIMPL, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+    CHECK_CALLED(CreateStub);
+
+    hr = CoGetPSClsid(&IID_IEnumOLEVERB, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+
+    hr = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void **)&ps_factory_buffer);
+    ok_ole_success(hr, "CoGetClassObject");
+
+    hr = CoRegisterPSClsid(&IID_IEnumOLEVERB, &CLSID_WineTestPSFactoryBuffer);
+    ok_ole_success(hr, "CoRegisterPSClsid");
+
+    SET_EXPECT(CreateStub);
+    hr = CoMarshalInterface(stream, &IID_IEnumOLEVERB, (IUnknown*)&EnumOLEVERB, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok(hr == S_OK, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+    CHECK_CALLED(CreateStub);
+
+    hr = CoMarshalInterface(stream, &IID_IEnumOLEVERB, &Test_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok(hr == S_OK, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+
     IStream_Release(stream);
+    IPSFactoryBuffer_Release(ps_factory_buffer);
+    ps_factory_buffer = NULL;
 
     hr = CoRevokeClassObject(dwRegistrationKey);
     ok_ole_success(hr, "CoRevokeClassObject");
@@ -2135,9 +2271,45 @@ static DWORD CALLBACK post_message_thread(LPVOID arg)
     return 0;
 }
 
+static const char cls_name[] = "cowait_test_class";
+static DWORD CALLBACK test_CoWaitForMultipleHandles_thread(LPVOID arg)
+{
+    HANDLE *handles = arg;
+    BOOL success;
+    DWORD index;
+    HRESULT hr;
+    HWND hWnd;
+    MSG msg;
+
+    hr = pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    ok(hr == S_OK, "CoInitializeEx failed with error 0x%08x\n", hr);
+
+    hWnd = CreateWindowExA(0, cls_name, "Test (thread)", WS_TILEDWINDOW, 0, 0, 640, 480, 0, 0, 0, 0);
+    ok(hWnd != 0, "CreateWindowExA failed %u\n", GetLastError());
+
+    index = 0xdeadbeef;
+    PostMessageA(hWnd, WM_DDE_FIRST, 0, 0);
+    hr = CoWaitForMultipleHandles(0, 50, 2, handles, &index);
+    ok(hr == RPC_S_CALLPENDING, "expected RPC_S_CALLPENDING, got 0x%08x\n", hr);
+    ok(index==0 || index==0xdeadbeef/* Win 8 */, "expected index 0, got %u\n", index);
+    success = PeekMessageA(&msg, hWnd, WM_DDE_FIRST, WM_DDE_FIRST, PM_REMOVE);
+    ok(!success, "CoWaitForMultipleHandles didn't pump any messages\n");
+
+    index = 0xdeadbeef;
+    PostMessageA(hWnd, WM_USER, 0, 0);
+    hr = CoWaitForMultipleHandles(0, 50, 2, handles, &index);
+    ok(hr == RPC_S_CALLPENDING, "expected RPC_S_CALLPENDING, got 0x%08x\n", hr);
+    ok(index==0 || index==0xdeadbeef/* Win 8 */, "expected index 0, got %u\n", index);
+    success = PeekMessageA(&msg, hWnd, WM_USER, WM_USER, PM_REMOVE);
+    ok(success, "CoWaitForMultipleHandles unexpectedly pumped messages\n");
+
+    DestroyWindow(hWnd);
+    CoUninitialize();
+    return 0;
+}
+
 static void test_CoWaitForMultipleHandles(void)
 {
-    static const char cls_name[] = "cowait_test_class";
     HANDLE handles[2], thread;
     DWORD index, tid;
     WNDCLASSEXA wc;
@@ -2440,6 +2612,12 @@ static void test_CoWaitForMultipleHandles(void)
         CloseHandle(thread);
     }
 
+    /* test message pumping when CoWaitForMultipleHandles is called from non main apartment thread */
+    thread = CreateThread(NULL, 0, test_CoWaitForMultipleHandles_thread, handles, 0, &tid);
+    index = WaitForSingleObject(thread, 500);
+    ok(index == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(thread);
+
     CloseHandle(handles[0]);
     CloseHandle(handles[1]);
     DestroyWindow(hWnd);
@@ -2493,6 +2671,7 @@ START_TEST(compobj)
     test_CoCreateInstance();
     test_ole_menu();
     test_CoGetClassObject();
+    test_CoCreateInstanceEx();
     test_CoRegisterMessageFilter();
     test_CoRegisterPSClsid();
     test_CoGetPSClsid();

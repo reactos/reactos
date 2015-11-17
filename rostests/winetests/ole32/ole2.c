@@ -118,6 +118,32 @@ static HRESULT g_QIFailsWith;
 
 static UINT cf_test_1, cf_test_2, cf_test_3;
 
+/****************************************************************************
+ * PresentationDataHeader
+ *
+ * This structure represents the header of the \002OlePresXXX stream in
+ * the OLE object storage.
+ */
+typedef struct PresentationDataHeader
+{
+    /* clipformat:
+     *  - standard clipformat:
+     *  DWORD length = 0xffffffff;
+     *  DWORD cfFormat;
+     *  - or custom clipformat:
+     *  DWORD length;
+     *  CHAR format_name[length]; (null-terminated)
+     */
+    DWORD unknown3; /* 4, possibly TYMED_ISTREAM */
+    DVASPECT dvAspect;
+    DWORD lindex;
+    DWORD tymed;
+    DWORD unknown7; /* 0 */
+    DWORD dwObjectExtentX;
+    DWORD dwObjectExtentY;
+    DWORD dwSize;
+} PresentationDataHeader;
+
 #define CHECK_EXPECTED_METHOD(method_name) \
     do { \
         trace("%s\n", method_name); \
@@ -1045,6 +1071,7 @@ static void test_OleLoad(IStorage *pStorage)
 {
     HRESULT hr;
     IOleObject *pObject;
+    DWORD fmt;
 
     static const struct expected_method methods_oleload[] =
     {
@@ -1101,6 +1128,105 @@ static void test_OleLoad(IStorage *pStorage)
 
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
+    }
+
+    for (fmt = CF_TEXT; fmt < CF_MAX; fmt++)
+    {
+        static const WCHAR olrepres[] = { 2,'O','l','e','P','r','e','s','0','0','0',0 };
+        IStorage *stg;
+        IStream *stream;
+        IUnknown *obj;
+        DWORD data, i, tymed, data_size;
+        PresentationDataHeader header;
+        HDC hdc;
+        HGDIOBJ hobj;
+        RECT rc;
+        char buf[256];
+
+        for (i = 0; i < 7; i++)
+        {
+            hr = StgCreateDocfile(NULL, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE | STGM_DELETEONRELEASE, 0, &stg);
+            ok(hr == S_OK, "StgCreateDocfile error %#x\n", hr);
+
+            hr = IStorage_SetClass(stg, &CLSID_WineTest);
+            ok(hr == S_OK, "SetClass error %#x\n", hr);
+
+            hr = IStorage_CreateStream(stg, olrepres, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE, 0, 0, &stream);
+            ok(hr == S_OK, "CreateStream error %#x\n", hr);
+
+            data = ~0;
+            hr = IStream_Write(stream, &data, sizeof(data), NULL);
+            ok(hr == S_OK, "Write error %#x\n", hr);
+
+            data = fmt;
+            hr = IStream_Write(stream, &data, sizeof(data), NULL);
+            ok(hr == S_OK, "Write error %#x\n", hr);
+
+            switch (fmt)
+            {
+            case CF_BITMAP:
+                /* FIXME: figure out stream format */
+                hobj = CreateBitmap(1, 1, 1, 1, NULL);
+                data_size = GetBitmapBits(hobj, sizeof(buf), buf);
+                DeleteObject(hobj);
+                break;
+
+            case CF_METAFILEPICT:
+            case CF_ENHMETAFILE:
+                hdc = CreateMetaFileA(NULL);
+                hobj = CloseMetaFile(hdc);
+                data_size = GetMetaFileBitsEx(hobj, sizeof(buf), buf);
+                DeleteMetaFile(hobj);
+                break;
+
+            default:
+                data_size = sizeof(buf);
+                memset(buf, 'A', sizeof(buf));
+                break;
+            }
+
+            tymed = 1 << i;
+
+            header.unknown3 = 4;
+            header.dvAspect = DVASPECT_CONTENT;
+            header.lindex = -1;
+            header.tymed = tymed;
+            header.unknown7 = 0;
+            header.dwObjectExtentX = 1;
+            header.dwObjectExtentY = 1;
+            header.dwSize = data_size;
+            hr = IStream_Write(stream, &header, sizeof(header), NULL);
+            ok(hr == S_OK, "Write error %#x\n", hr);
+
+            hr = IStream_Write(stream, buf, data_size, NULL);
+            ok(hr == S_OK, "Write error %#x\n", hr);
+
+            IStream_Release(stream);
+
+            hr = OleLoad(stg, &IID_IUnknown, NULL, (void **)&obj);
+            /* FIXME: figure out stream format */
+            if (fmt == CF_BITMAP && hr != S_OK)
+            {
+                IStorage_Release(stg);
+                continue;
+            }
+            ok(hr == S_OK, "OleLoad error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+
+            hdc = CreateCompatibleDC(0);
+            SetRect(&rc, 0, 0, 100, 100);
+            hr = OleDraw(obj, DVASPECT_CONTENT, hdc, &rc);
+            DeleteDC(hdc);
+            if (fmt == CF_METAFILEPICT)
+                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+            else if (fmt == CF_ENHMETAFILE)
+todo_wine
+                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+            else
+                ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#x, cfFormat = %u, tymed = %u\n", hr, fmt, header.tymed);
+
+            IUnknown_Release(obj);
+            IStorage_Release(stg);
+        }
     }
 }
 
@@ -1936,7 +2062,6 @@ static void test_default_handler(void)
     fmtetc.lindex = -1;
     fmtetc.tymed = TYMED_ENHMF;
     hr = IDataObject_QueryGetData(pDataObject, &fmtetc);
-    todo_wine
     ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
 
     fmtetc.cfFormat = CF_TEXT;
@@ -1945,7 +2070,6 @@ static void test_default_handler(void)
     fmtetc.lindex = -1;
     fmtetc.tymed = TYMED_NULL;
     hr = IDataObject_QueryGetData(pDataObject, &fmtetc);
-    todo_wine
     ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
 
     hr = IOleObject_QueryInterface(pObject, &IID_IRunnableObject, (void **)&pRunnableObject);
@@ -2107,7 +2231,7 @@ static ULONG WINAPI OleRun_Release(IRunnableObject *iface)
 
 static HRESULT WINAPI OleRun_GetRunningClass(IRunnableObject *iface, CLSID *clsid)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return E_NOTIMPL;
 }
 
@@ -2119,20 +2243,20 @@ static HRESULT WINAPI OleRun_Run(IRunnableObject *iface, LPBINDCTX ctx)
 
 static BOOL WINAPI OleRun_IsRunning(IRunnableObject *iface)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return FALSE;
 }
 
 static HRESULT WINAPI OleRun_LockRunning(IRunnableObject *iface, BOOL lock,
     BOOL last_unlock_closes)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI OleRun_SetContainedObject(IRunnableObject *iface, BOOL contained)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return E_NOTIMPL;
 }
 

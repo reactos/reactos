@@ -122,7 +122,7 @@ static BOOL last_release_closes;
 
 static HRESULT WINAPI ExternalConnection_QueryInterface(IExternalConnection *iface, REFIID riid, void **ppv)
 {
-    ok(0, "unxpected call\n");
+    ok(0, "unexpected call\n");
     *ppv = NULL;
     return E_NOINTERFACE;
 }
@@ -202,6 +202,24 @@ static const IUnknownVtbl TestUnknown_Vtbl =
 
 static IUnknown Test_Unknown = { &TestUnknown_Vtbl };
 
+static ULONG WINAPI TestCrash_IUnknown_Release(LPUNKNOWN iface)
+{
+    UnlockModule();
+    if(!cLocks) {
+        trace("crashing...\n");
+        *(int**)0xc = 0;
+    }
+    return 1; /* non-heap-based object */
+}
+
+static const IUnknownVtbl TestCrashUnknown_Vtbl =
+{
+    Test_IUnknown_QueryInterface,
+    Test_IUnknown_AddRef,
+    TestCrash_IUnknown_Release,
+};
+
+static IUnknown TestCrash_Unknown = { &TestCrashUnknown_Vtbl };
 
 static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
@@ -1087,6 +1105,63 @@ static void test_no_couninitialize_client(void)
     ok_last_release_closes(TRUE);
 
     end_host_object(host_tid, host_thread);
+}
+
+static BOOL crash_thread_success;
+
+static DWORD CALLBACK crash_couninitialize_proc(void *p)
+{
+    IStream *stream;
+    HRESULT hr;
+
+    cLocks = 0;
+
+    CoInitialize(NULL);
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+
+    hr = CoMarshalInterface(stream, &IID_IUnknown, &TestCrash_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok_ole_success(hr, CoMarshalInterface);
+
+    IStream_Seek(stream, ullZero, STREAM_SEEK_SET, NULL);
+
+    hr = CoReleaseMarshalData(stream);
+    ok_ole_success(hr, CoReleaseMarshalData);
+
+    ok_no_locks();
+
+    hr = CoMarshalInterface(stream, &IID_IUnknown, &TestCrash_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok_ole_success(hr, CoMarshalInterface);
+
+    ok_more_than_one_lock();
+
+    trace("CoUninitialize >>>\n");
+    CoUninitialize();
+    trace("CoUninitialize <<<\n");
+
+    ok_no_locks();
+
+    IStream_Release(stream);
+    crash_thread_success = TRUE;
+    return 0;
+}
+
+static void test_crash_couninitialize(void)
+{
+    HANDLE thread;
+    DWORD tid;
+
+    if(!GetProcAddress(GetModuleHandleA("kernel32.dll"), "CreateActCtxW")) {
+        win_skip("Skipping crash tests on win2k.\n");
+        return;
+    }
+
+    crash_thread_success = FALSE;
+    thread = CreateThread(NULL, 0, crash_couninitialize_proc, NULL, 0, &tid);
+    ok(!WaitForSingleObject(thread, 10000), "wait timed out\n");
+    CloseHandle(thread);
+    ok(crash_thread_success, "Crash thread failed\n");
 }
 
 /* tests success case of a same-thread table-weak marshal, unmarshal, unmarshal */
@@ -2859,6 +2934,63 @@ static void UnlockModuleOOP(void)
 
 static HWND hwnd_app;
 
+struct local_server
+{
+    IPersist IPersist_iface; /* a nice short interface */
+};
+
+static HRESULT WINAPI local_server_QueryInterface(IPersist *iface, REFIID iid, void **obj)
+{
+    *obj = NULL;
+
+    if (IsEqualGUID(iid, &IID_IUnknown) ||
+        IsEqualGUID(iid, &IID_IPersist))
+        *obj = iface;
+
+    if (*obj)
+    {
+        IPersist_AddRef(iface);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI local_server_AddRef(IPersist *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI local_server_Release(IPersist *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI local_server_GetClassID(IPersist *iface, CLSID *clsid)
+{
+    HRESULT hr;
+
+    *clsid = IID_IUnknown;
+
+    /* Test calling CoDisconnectObject within a COM call */
+    hr = CoDisconnectObject((IUnknown *)iface, 0);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    return S_OK;
+}
+
+static const IPersistVtbl local_server_persist_vtbl =
+{
+    local_server_QueryInterface,
+    local_server_AddRef,
+    local_server_Release,
+    local_server_GetClassID
+};
+
+struct local_server local_server_class =
+{
+    {&local_server_persist_vtbl}
+};
+
 static HRESULT WINAPI TestOOP_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
     REFIID riid,
@@ -2893,12 +3025,12 @@ static HRESULT WINAPI TestOOP_IClassFactory_CreateInstance(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    if (IsEqualIID(riid, &IID_IClassFactory) || IsEqualIID(riid, &IID_IUnknown))
-    {
-        *ppvObj = iface;
-        return S_OK;
-    }
-    return CLASS_E_CLASSNOTAVAILABLE;
+    IPersist *persist = &local_server_class.IPersist_iface;
+    HRESULT hr;
+    IPersist_AddRef( persist );
+    hr = IPersist_QueryInterface( persist, riid, ppvObj );
+    IPersist_Release( persist );
+    return hr;
 }
 
 static HRESULT WINAPI TestOOP_IClassFactory_LockServer(
@@ -2928,24 +3060,25 @@ static void test_register_local_server(void)
     DWORD cookie;
     HRESULT hr;
     HANDLE ready_event;
-    HANDLE quit_event;
     DWORD wait;
+    HANDLE handles[2];
 
     heventShutdown = CreateEventA(NULL, TRUE, FALSE, NULL);
+    ready_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Ready Event");
+    handles[0] = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Quit Event");
+    handles[1] = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Repeat Event");
 
+again:
     hr = CoRegisterClassObject(&CLSID_WineOOPTest, (IUnknown *)&TestOOP_ClassFactory,
                                CLSCTX_LOCAL_SERVER, REGCLS_SINGLEUSE, &cookie);
     ok_ole_success(hr, CoRegisterClassObject);
 
-    ready_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Ready Event");
     SetEvent(ready_event);
-
-    quit_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Quit Event");
 
     do
     {
-        wait = MsgWaitForMultipleObjects(1, &quit_event, FALSE, 30000, QS_ALLINPUT);
-        if (wait == WAIT_OBJECT_0+1)
+        wait = MsgWaitForMultipleObjects(2, handles, FALSE, 30000, QS_ALLINPUT);
+        if (wait == WAIT_OBJECT_0+2)
         {
             MSG msg;
 
@@ -2956,12 +3089,20 @@ static void test_register_local_server(void)
                 DispatchMessageA(&msg);
             }
         }
+        else if (wait == WAIT_OBJECT_0+1)
+        {
+            hr = CoRevokeClassObject(cookie);
+            ok_ole_success(hr, CoRevokeClassObject);
+            goto again;
+        }
     }
-    while (wait == WAIT_OBJECT_0+1);
+    while (wait == WAIT_OBJECT_0+2);
 
     ok( wait == WAIT_OBJECT_0, "quit event wait timed out\n" );
     hr = CoRevokeClassObject(cookie);
     ok_ole_success(hr, CoRevokeClassObject);
+    CloseHandle(handles[0]);
+    CloseHandle(handles[1]);
 }
 
 static HANDLE create_target_process(const char *arg)
@@ -2976,7 +3117,7 @@ static HANDLE create_target_process(const char *arg)
     pi.hThread = NULL;
     pi.hProcess = NULL;
     winetest_get_mainargs( &argv );
-    sprintf(cmdline, "%s %s %s", argv[0], argv[1], arg);
+    sprintf(cmdline, "\"%s\" %s %s", argv[0], argv[1], arg);
     ret = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcess failed with error: %u\n", GetLastError());
     if (pi.hThread) CloseHandle(pi.hThread);
@@ -2989,10 +3130,13 @@ static void test_local_server(void)
     DWORD cookie;
     HRESULT hr;
     IClassFactory * cf;
+    IPersist *persist;
     DWORD ret;
     HANDLE process;
     HANDLE quit_event;
     HANDLE ready_event;
+    HANDLE repeat_event;
+    CLSID clsid;
 
     heventShutdown = CreateEventA(NULL, TRUE, FALSE, NULL);
 
@@ -3059,15 +3203,29 @@ static void test_local_server(void)
 
     ready_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Ready Event");
     ok( !WaitForSingleObject(ready_event, 10000), "wait timed out\n" );
-    CloseHandle(ready_event);
 
-    hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IClassFactory, (void **)&cf);
+    hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IPersist, (void **)&persist);
     ok_ole_success(hr, CoCreateInstance);
 
-    IClassFactory_Release(cf);
+    IPersist_Release(persist);
 
-    hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IClassFactory, (void **)&cf);
+    hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IPersist, (void **)&persist);
     ok(hr == REGDB_E_CLASSNOTREG, "Second CoCreateInstance on REGCLS_SINGLEUSE object should have failed\n");
+
+    /* Re-register the class and try calling CoDisconnectObject from within a call to that object */
+    repeat_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Repeat Event");
+    SetEvent(repeat_event);
+    CloseHandle(repeat_event);
+
+    ok( !WaitForSingleObject(ready_event, 10000), "wait timed out\n" );
+    CloseHandle(ready_event);
+
+    hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IPersist, (void **)&persist);
+    ok_ole_success(hr, CoCreateInstance);
+
+    /* GetClassID will call CoDisconnectObject */
+    IPersist_GetClassID(persist, &clsid);
+    IPersist_Release(persist);
 
     quit_event = CreateEventA(NULL, FALSE, FALSE, "Wine COM Test Quit Event");
     SetEvent(quit_event);
@@ -3556,6 +3714,7 @@ START_TEST(marshal)
 
     test_globalinterfacetable();
     test_manualresetevent();
+    test_crash_couninitialize();
 
     /* must be last test as channel hooks can't be unregistered */
     test_channel_hook();

@@ -140,7 +140,7 @@ static const char* wine_vtypes[VT_CLSID+1] =
 };
 
 
-static void expect(HRESULT hr, VARTYPE vt, BOOL copy)
+static void expect(HRESULT hr, VARTYPE vt, BOOL copy, int line)
 {
     int idx = vt & VT_TYPEMASK;
     BYTE flags;
@@ -168,7 +168,12 @@ static void expect(HRESULT hr, VARTYPE vt, BOOL copy)
     }
 
     if(flags == PROP_INV)
-        ok(hr == copy ? DISP_E_BADVARTYPE : STG_E_INVALIDPARAMETER, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+    {
+        if (copy && (vt & VT_VECTOR))
+            ok(hr == DISP_E_BADVARTYPE || hr == STG_E_INVALIDPARAMETER, "%s (%s): got %08x (line %d)\n", wine_vtypes[idx], modifier, hr, line);
+        else
+            ok(hr == (copy ? DISP_E_BADVARTYPE : STG_E_INVALIDPARAMETER), "%s (%s): got %08x (line %d)\n", wine_vtypes[idx], modifier, hr, line);
+    }
     else if(flags == PROP_V0)
         ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
     else if(flags & PROP_TODO)
@@ -220,7 +225,7 @@ static void test_validtypes(void)
         vt = propvar.vt = i;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
-        expect(hr, vt, TRUE);
+        expect(hr, vt, TRUE, __LINE__);
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
@@ -234,7 +239,7 @@ static void test_validtypes(void)
             ok(!ret || broken(ret) /* win2000 */, "%d: copy should stay unchanged\n", i);
         }
         hr = PropVariantClear(&propvar);
-        expect(hr, vt, FALSE);
+        expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
         ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
            i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
@@ -244,7 +249,7 @@ static void test_validtypes(void)
         vt = propvar.vt = i | VT_ARRAY;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
-        expect(hr, vt, TRUE);
+        expect(hr, vt, TRUE, __LINE__);
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
@@ -257,7 +262,7 @@ static void test_validtypes(void)
             ok(!ret || broken(ret) /* win2000 */, "%d: copy should stay unchanged\n", i);
         }
         hr = PropVariantClear(&propvar);
-        expect(hr, vt, FALSE);
+        expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
         ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
            i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
@@ -268,7 +273,7 @@ static void test_validtypes(void)
         vt = propvar.vt = i | VT_VECTOR;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
-        expect(hr, vt, TRUE);
+        expect(hr, vt, TRUE, __LINE__);
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
@@ -281,7 +286,7 @@ static void test_validtypes(void)
             ok(!ret || broken(ret) /* win2000 */, "%d: copy should stay unchanged\n", i);
         }
         hr = PropVariantClear(&propvar);
-        expect(hr, vt, FALSE);
+        expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
         ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
            i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
@@ -291,7 +296,7 @@ static void test_validtypes(void)
         vt = propvar.vt = i | VT_BYREF;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
-        expect(hr, vt, TRUE);
+        expect(hr, vt, TRUE, __LINE__);
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
@@ -305,7 +310,7 @@ static void test_validtypes(void)
             ok(!ret || broken(ret) /* win2000 */, "%d: copy should stay unchanged\n", i);
         }
         hr = PropVariantClear(&propvar);
-        expect(hr, vt, FALSE);
+        expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
         ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
            i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
