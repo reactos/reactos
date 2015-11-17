@@ -3985,18 +3985,19 @@ static BOOL WINAPI CRYPT_AsnDecodeRsaPrivKey(DWORD dwCertEncodingType,
          &size, NULL, NULL);
         if (ret)
         {
-            halflen = decodedKey->modulus.cbData / 2;
-            if ((decodedKey->modulus.cbData != halflen * 2) ||
-                (decodedKey->prime1.cbData != halflen) ||
-                (decodedKey->prime2.cbData != halflen) ||
-                (decodedKey->exponent1.cbData != halflen) ||
-                (decodedKey->exponent2.cbData != halflen) ||
-                (decodedKey->coefficient.cbData != halflen) ||
-                (decodedKey->privexp.cbData != halflen * 2))
-            {
-                ret = FALSE;
-                SetLastError(CRYPT_E_BAD_ENCODE);
-            }
+            halflen = decodedKey->prime1.cbData;
+            if (halflen < decodedKey->prime2.cbData)
+                halflen = decodedKey->prime2.cbData;
+            if (halflen < decodedKey->exponent1.cbData)
+                halflen = decodedKey->exponent1.cbData;
+            if (halflen < decodedKey->exponent2.cbData)
+                halflen = decodedKey->exponent2.cbData;
+            if (halflen < decodedKey->coefficient.cbData)
+                halflen = decodedKey->coefficient.cbData;
+            if (halflen * 2 < decodedKey->modulus.cbData)
+                halflen = decodedKey->modulus.cbData / 2 + decodedKey->modulus.cbData % 2;
+            if (halflen * 2 < decodedKey->privexp.cbData)
+                halflen = decodedKey->privexp.cbData / 2 + decodedKey->privexp.cbData % 2;
 
             if (ret)
             {
@@ -4031,20 +4032,21 @@ static BOOL WINAPI CRYPT_AsnDecodeRsaPrivKey(DWORD dwCertEncodingType,
                     rsaPubKey->bitlen = halflen * 16;
 
                     vardata = (BYTE*)(rsaPubKey + 1);
+                    memset(vardata, 0, halflen * 9);
                     memcpy(vardata,
-                     decodedKey->modulus.pbData, halflen * 2);
+                     decodedKey->modulus.pbData, decodedKey->modulus.cbData);
                     memcpy(vardata + halflen * 2,
-                     decodedKey->prime1.pbData, halflen);
+                     decodedKey->prime1.pbData, decodedKey->prime1.cbData);
                     memcpy(vardata + halflen * 3,
-                     decodedKey->prime2.pbData, halflen);
+                     decodedKey->prime2.pbData, decodedKey->prime2.cbData);
                     memcpy(vardata + halflen * 4,
-                     decodedKey->exponent1.pbData, halflen);
+                     decodedKey->exponent1.pbData, decodedKey->exponent1.cbData);
                     memcpy(vardata + halflen * 5,
-                     decodedKey->exponent2.pbData, halflen);
+                     decodedKey->exponent2.pbData, decodedKey->exponent2.cbData);
                     memcpy(vardata + halflen * 6,
-                     decodedKey->coefficient.pbData, halflen);
+                     decodedKey->coefficient.pbData, decodedKey->coefficient.cbData);
                     memcpy(vardata + halflen * 7,
-                     decodedKey->privexp.pbData, halflen * 2);
+                     decodedKey->privexp.pbData, decodedKey->privexp.cbData);
                 }
             }
 

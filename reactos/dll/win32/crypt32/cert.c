@@ -685,6 +685,7 @@ static BOOL CertContext_SetProperty(cert_t *cert, DWORD dwPropId,
         case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
         case CERT_ENROLLMENT_PROP_ID:
         case CERT_CROSS_CERT_DIST_POINTS_PROP_ID:
+        case CERT_OCSP_RESPONSE_PROP_ID:
         case CERT_RENEWAL_PROP_ID:
         {
             if (pvData)
