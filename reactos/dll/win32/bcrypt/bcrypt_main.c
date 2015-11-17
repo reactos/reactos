@@ -114,3 +114,11 @@ NTSTATUS WINAPI BCryptGetProperty(BCRYPT_HANDLE obj, LPCWSTR prop, UCHAR *buffer
 
     return STATUS_NOT_IMPLEMENTED;
 }
+
+NTSTATUS WINAPI BCryptCreateHash(BCRYPT_ALG_HANDLE algorithm, BCRYPT_HASH_HANDLE* hash, UCHAR* hashobject,
+				 ULONG hashobjectlen, UCHAR *secret, ULONG secretlen, ULONG flags)
+{
+    FIXME("%p, %p, %p, %u, %p, %u, %08x - stub\n", algorithm, hash, hashobject, hashobjectlen, secret, secretlen, flags);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
