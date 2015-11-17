@@ -275,6 +275,14 @@ static inline int is_valid_dbcs_mapping( const struct dbcs_table *table, int fla
     return 1;
 }
 
+/* compute the default char for the dbcs case */
+static inline WCHAR get_defchar_dbcs( const struct dbcs_table *table, const char *defchar )
+{
+    if (!defchar) return table->info.def_char;
+    if (!defchar[1]) return (unsigned char)defchar[0];
+    return ((unsigned char)defchar[0] << 8) | (unsigned char)defchar[1];
+}
+
 /* query necessary dst length for src string */
 static int get_length_dbcs( const struct dbcs_table *table, int flags,
                             const WCHAR *src, unsigned int srclen,
@@ -282,8 +290,7 @@ static int get_length_dbcs( const struct dbcs_table *table, int flags,
 {
     const unsigned short * const uni2cp_low = table->uni2cp_low;
     const unsigned short * const uni2cp_high = table->uni2cp_high;
-    WCHAR defchar_value = table->info.def_char;
-    WCHAR composed;
+    WCHAR defchar_value, composed;
     int len, tmp;
 
     if (!defchar && !used && !(flags & WC_COMPOSITECHECK))
@@ -295,7 +302,7 @@ static int get_length_dbcs( const struct dbcs_table *table, int flags,
         return len;
     }
 
-    if (defchar) defchar_value = defchar[1] ? ((defchar[0] << 8) | defchar[1]) : defchar[0];
+    defchar_value = get_defchar_dbcs( table, defchar );
     if (!used) used = &tmp;  /* avoid checking on every char */
     *used = 0;
     for (len = 0; srclen; len++, srclen--, src++)
@@ -376,11 +383,10 @@ static int wcstombs_dbcs_slow( const struct dbcs_table *table, int flags,
 {
     const unsigned short * const uni2cp_low = table->uni2cp_low;
     const unsigned short * const uni2cp_high = table->uni2cp_high;
-    WCHAR defchar_value = table->info.def_char;
+    WCHAR defchar_value = get_defchar_dbcs( table, defchar );
     WCHAR composed;
     int len, tmp;
 
-    if (defchar) defchar_value = defchar[1] ? ((defchar[0] << 8) | defchar[1]) : defchar[0];
     if (!used) used = &tmp;  /* avoid checking on every char */
     *used = 0;
 
