@@ -201,7 +201,8 @@ static BOOL GetMenuItemInfo_common ( HMENU hmenu,
             return FALSE;
         }
 	lpmii->fType = pItem->fType & MENUITEMINFO_TYPE_MASK;
-        if( pItem->hbmp) lpmii->fType |= MFT_BITMAP;
+        if (pItem->hbmp && !IS_MAGIC_BITMAP(pItem->hbmp))
+            lpmii->fType |= MFT_BITMAP;
 	lpmii->hbmpItem = pItem->hbmp; /* not on Win9x/ME */
         if( lpmii->fType & MFT_BITMAP)
         {
