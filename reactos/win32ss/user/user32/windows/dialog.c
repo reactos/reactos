@@ -585,16 +585,16 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
 
             /*
              * If the user is pressing Ctrl+C, send a WM_COPY message.
-             * Guido Pola, Bug 5281, Is there another way to check if the Dialog it's a MessageBox?
+             * Guido Pola, CORE-4829, Is there another way to check if the Dialog is a MessageBox?
              */
-            if( msg.message == WM_KEYDOWN &&
+            if (msg.message == WM_KEYDOWN &&
                 pWnd->state & WNDS_MSGBOX && // Yes!
-                GetForegroundWindow() == hwnd )
+                GetForegroundWindow() == hwnd)
             {
-                if( msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0 )
-                    SendMessageW( hwnd, WM_COPY, 0, 0);
+                if (msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0)
+                    SendMessageW(hwnd, WM_COPY, 0, 0);
             }
-            
+
             if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
