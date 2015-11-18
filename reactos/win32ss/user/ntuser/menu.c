@@ -2266,6 +2266,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
         ** the menu owner has finished drawing.
         */
         DRAWITEMSTRUCT dis;
+        COLORREF old_bk, old_text;
 
         dis.CtlType   = ODT_MENU;
         dis.CtlID     = 0;
@@ -2289,7 +2290,11 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 	        dis.hDC, dis.rcItem.left, dis.rcItem.top, dis.rcItem.right,
 	        dis.rcItem.bottom);
         TRACE("Ownerdraw: Width %d Height %d\n", dis.rcItem.right-dis.rcItem.left, dis.rcItem.bottom-dis.rcItem.top);
+        old_bk = GreGetBkColor(hdc);
+        old_text = GreGetTextColor(hdc);
         co_IntSendMessage(UserHMGetHandle(WndOwner), WM_DRAWITEM, 0, (LPARAM) &dis);
+        IntGdiSetBkColor(hdc, old_bk);
+        IntGdiSetTextColor(hdc, old_text);
         /* Draw the popup-menu arrow */
         if (!menuBar && lpitem->spSubMenu)
         {
