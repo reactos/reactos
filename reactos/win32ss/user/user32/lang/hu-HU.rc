@@ -67,6 +67,7 @@ BEGIN
     IDS_IGNORE "&Tovább"
     IDS_YES "&Igen"
     IDS_NO "&Nem"
+    IDS_CLOSE "&Bezár"
     IDS_HELP "Súgó"
     IDS_TRYAGAIN "&Újra"
     IDS_CONTINUE "&Folytat"

@@ -20,7 +20,7 @@ BEGIN
     BEGIN
         MENUITEM "撤销(&U)", EM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "剪切(&t)", WM_CUT
+        MENUITEM "剪切(&T)", WM_CUT
         MENUITEM "复制(&C)", WM_COPY
         MENUITEM "粘贴(&P)", WM_PASTE
         MENUITEM "删除(&D)", WM_CLEAR
@@ -34,8 +34,8 @@ BEGIN
     MENUITEM "还原(&R)", SC_RESTORE
     MENUITEM "移动(&M)", SC_MOVE
     MENUITEM "大小(&S)", SC_SIZE
-    MENUITEM "最小化(&n)", SC_MINIMIZE
-    MENUITEM "最大化(&x)", SC_MAXIMIZE
+    MENUITEM "最小化(&N)", SC_MINIMIZE
+    MENUITEM "最大化(&X)", SC_MAXIMIZE
     MENUITEM SEPARATOR
     MENUITEM "关闭(&C)\tAlt+F4", SC_CLOSE
 END
@@ -45,8 +45,8 @@ BEGIN
     MENUITEM "还原(&R)", SC_RESTORE
     MENUITEM "移动(&M)", SC_MOVE
     MENUITEM "大小(&S)", SC_SIZE
-    MENUITEM "最小化(&n)", SC_MINIMIZE
-    MENUITEM "最大化(&x)", SC_MAXIMIZE
+    MENUITEM "最小化(&N)", SC_MINIMIZE
+    MENUITEM "最大化(&X)", SC_MAXIMIZE
     MENUITEM SEPARATOR
     MENUITEM "关闭(&C)\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "忽略(&I)"
     IDS_YES "是(&Y)"
     IDS_NO "否(&N)"
+    IDS_CLOSE "关闭(&C)"
     IDS_HELP "帮助"
     IDS_TRYAGAIN "重试(&T)"
     IDS_CONTINUE "继续(&C)"

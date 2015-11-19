@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "Пр&опустити"
     IDS_YES "&Так"
     IDS_NO "Н&і"
+    IDS_CLOSE "&Закрити"
     IDS_HELP "Довідка"
     IDS_TRYAGAIN "По&вторити"
     IDS_CONTINUE "&Продовжити"

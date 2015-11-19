@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "Aba&ikan"
     IDS_YES "&Ya"
     IDS_NO "&Tidak"
+    IDS_CLOSE "T&utup"
     IDS_HELP "Bantuan"
     IDS_TRYAGAIN "&Coba Lagi"
     IDS_CONTINUE "&Lanjutkan"

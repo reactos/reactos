@@ -1055,10 +1055,14 @@ LPCWSTR WINAPI MB_GetString(UINT wBtn)
 {
     LPCWSTR btnStr = NULL;
 
-    /* The allowable IDs are between IDOK (0) and IDCONTINUE (11) inclusive */
-    if (wBtn >= IDCONTINUE)
+    /*
+     * The allowable IDs are between "IDOK - 1" (0) and "IDCONTINUE - 1" (10) inclusive.
+     * See psdk/winuser.h and user32/include/resource.h .
+     */
+    if (wBtn > IDCONTINUE - 1)
         return NULL;
 
+    wBtn += 800; // See user32/include/resource.h
     LoadStringW(User32Instance, wBtn, (LPWSTR)&btnStr, 0);
     return btnStr;
 }

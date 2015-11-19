@@ -67,6 +67,7 @@ BEGIN
     IDS_IGNORE "&Ignorovať"
     IDS_YES "Án&o"
     IDS_NO "&Nie"
+    IDS_CLOSE "&Zavrieť"
     IDS_HELP "Pomoc"
     IDS_TRYAGAIN "&Skúsiť znova"
     IDS_CONTINUE "&Pokračovať"

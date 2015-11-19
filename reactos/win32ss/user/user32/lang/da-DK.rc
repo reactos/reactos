@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "&Ignorer"
     IDS_YES "&Ja"
     IDS_NO "&Nej"
+    IDS_CLOSE "&Luk"
     IDS_HELP "Hjælp"
     IDS_TRYAGAIN "&Forsøg Igen"
     IDS_CONTINUE "&Forsæt"

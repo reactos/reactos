@@ -70,7 +70,8 @@ BEGIN
     IDS_IGNORE "Ign&oră"
     IDS_YES "D&a"
     IDS_NO "N&u"
-    IDS_HELP "&Manual…"
+    IDS_CLOSE "Î&nchide"
+    IDS_HELP "Manual"
     IDS_TRYAGAIN "&Reîncearcă"
     IDS_CONTINUE "&Continuă"
 END
