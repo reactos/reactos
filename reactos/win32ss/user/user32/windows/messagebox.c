@@ -1046,11 +1046,21 @@ MessageBeep(UINT uType)
 
 /*
  * @implemented
+ *
+ * See: https://msdn.microsoft.com/en-us/library/windows/desktop/dn910915(v=vs.85).aspx
+ * and: http://undoc.airesoft.co.uk/user32.dll/MB_GetString.php
+ * for more information.
  */
-LPWSTR WINAPI MB_GetString(DWORD string)
+LPCWSTR WINAPI MB_GetString(UINT wBtn)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    LPCWSTR btnStr = NULL;
+
+    /* The allowable IDs are between IDOK (0) and IDCONTINUE (11) inclusive */
+    if (wBtn >= IDCONTINUE)
+        return NULL;
+
+    LoadStringW(User32Instance, wBtn, (LPWSTR)&btnStr, 0);
+    return btnStr;
 }
 
 /* EOF */
