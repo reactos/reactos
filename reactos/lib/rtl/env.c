@@ -524,6 +524,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    {
       PPEB Peb = RtlGetCurrentPeb();
       if (Peb) {
+          RtlAcquirePebLock();
           Environment = Peb->ProcessParameters->Environment;
           SysEnvUsed = TRUE;
       }
@@ -531,12 +532,12 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
+      if (SysEnvUsed)
+         RtlReleasePebLock();
       return(STATUS_VARIABLE_NOT_FOUND);
    }
 
    Value->Length = 0;
-   if (SysEnvUsed)
-      RtlAcquirePebLock();
 
    wcs = Environment;
    DPRINT("Starting search at :%p\n", wcs);
