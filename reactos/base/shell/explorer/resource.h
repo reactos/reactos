@@ -50,41 +50,12 @@
 #define IDB_SYSTRAYPROP_SHOW_CLOCK          182
 #define IDB_SYSTRAYPROP_SHOW_NOCLOCK        183
 
+/*******************************************************************************\
+|*                                Menu Resources                               *|
+\*******************************************************************************/
 
-
-#define IDS_START             101
-#define IDS_PROPERTIES        102
-#define IDS_OPEN_ALL_USERS    103
-#define IDS_EXPLORE_ALL_USERS 104
-#define IDS_STARTUP_ERROR     105
-
-#define IDC_STARTBTN 304
-
-#define IDM_TRAYWND   101
-#define IDM_STARTMENU 102
-
-#define IDA_TASKBAR 251
-
-#define IDMA_START 305
-#define IDMA_CYCLE_FOCUS 41008
-#define IDMA_SEARCH 41093
-#define IDMA_RESTORE_OPEN 416
-#define IDMA_MINIMIZE_ALL 419
-
-#define ID_SHELL_CMD_FIRST              0xF
-#define ID_SHELL_CMD_LAST               0x7FEF
-#define ID_SHELL_CMD_PROPERTIES         (ID_SHELL_CMD_LAST + 1)
-#define ID_SHELL_CMD_OPEN_ALL_USERS     (ID_SHELL_CMD_LAST + 2)
-#define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
-#define ID_LOCKTASKBAR                  (ID_SHELL_CMD_LAST + 4)
-#define ID_SHELL_CMD_OPEN_TASKMGR       (ID_SHELL_CMD_LAST + 5)
-#define ID_SHELL_CMD_UNDO_ACTION        (ID_SHELL_CMD_LAST + 6)
-#define ID_SHELL_CMD_SHOW_DESKTOP       (ID_SHELL_CMD_LAST + 7)
-#define ID_SHELL_CMD_TILE_WND_V         (ID_SHELL_CMD_LAST + 8)
-#define ID_SHELL_CMD_TILE_WND_H         (ID_SHELL_CMD_LAST + 9)
-#define ID_SHELL_CMD_CASCADE_WND        (ID_SHELL_CMD_LAST + 10)
-#define ID_SHELL_CMD_CUST_NOTIF         (ID_SHELL_CMD_LAST + 11)
-#define ID_SHELL_CMD_ADJUST_DAT         (ID_SHELL_CMD_LAST + 12)
+#define IDM_STARTMENU 204
+#define IDM_TRAYWND   205
 
 /* NOTE: The following constants may *NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -108,35 +79,114 @@
 #define IDM_SHUTDOWN                506
 #define IDM_LASTSTARTMENU_SEPARATOR 450
 
-/* Taskbar resources */
-#define IDD_TASKBARPAGE      2000
-#define IDC_TASKBAR_BITMAP   2001
-#define IDD_STARTMENUPAGE    2001
-#define IDD_NOTIFICATIONPAGE 2002
-#define IDD_TOOLBARSPAGE     2003
+/*******************************************************************************\
+|*                               Dialog Resources                              *|
+\*******************************************************************************/
 
-/* Taskbar properties, taskbar */
-#define IDD_TASKBARPROP_TASKBAR       2000
-#define IDC_TASKBARPROP_TASKBARBITMAP 2001
-#define IDC_TASKBARPROP_LOCK          2002
-#define IDC_TASKBARPROP_HIDE          2003
-#define IDC_TASKBARPROP_ONTOP         2004
-#define IDC_TASKBARPROP_GROUP         2005
-#define IDC_TASKBARPROP_SHOWQL        2006
-#define IDD_TASKBARPROP_NOTIFICATION       2200
-#define IDC_TASKBARPROP_NOTIFICATIONBITMAP 2201
-#define IDC_TASKBARPROP_HIDEICONS          2202
-#define IDC_TASKBARPROP_ICONCUST           2203
-#define IDC_TASKBARPROP_CLOCK              2204
-#define IDC_TASKBARPROP_SECONDS            2205
+#define IDD_TASKBARPROP_TASKBAR       6
+#define IDD_NOTIFICATIONS_CUSTOMIZE   7
+#define IDD_CLASSICSTART_CUSTOMIZE    9
+#define IDD_FILENAME_WARNING          20
+#define IDD_TASKBARPROP_STARTMENU     205
+#define IDD_MODERNSTART_ADVANCED      1036
+#define IDD_MODERNSTART_GENERAL       1037
 
-/* Taskbar properties, startmenu*/
-#define IDD_TASKBARPROP_STARTMENU            2100
-#define IDC_TASKBARPROP_STARTMENU            2101
-#define IDC_TASKBARPROP_STARTMENUCUST        2102
-#define IDC_TASKBARPROP_STARTMENUCLASSIC     2103
-#define IDC_TASKBARPROP_STARTMENUCLASSICCUST 2104
-#define IDC_TASKBARPROP_STARTMENU_BITMAP     2107
+/*******************************************************************************\
+|*                               String Resources                              *|
+\*******************************************************************************/
 
-#define IDS_TASKBAR_STARTMENU_PROP_CAPTION 2200
-#define IDS_HELP_COMMAND 732
+#define IDS_STARTUP_ERROR                  105
+#define IDS_START                          595
+#define IDS_OPEN_ALL_USERS                 718
+#define IDS_EXPLORE_ALL_USERS              719
+#define IDS_PROPERTIES                     720
+#define IDS_HELP_COMMAND                   732
+#define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
+
+/*******************************************************************************\
+|*                              Control Resources                              *|
+\*******************************************************************************/
+
+/* Taskbar Page */
+#define IDC_TASKBARPROP_HIDEICONS            1000
+#define IDC_TASKBARPROP_ICONCUST             1007
+#define IDC_TASKBARPROP_ONTOP                1101
+#define IDC_TASKBARPROP_HIDE                 1102
+#define IDC_TASKBARPROP_CLOCK                1103
+#define IDC_TASKBARPROP_GROUP                1104
+#define IDC_TASKBARPROP_LOCK                 1105
+#define IDC_TASKBARPROP_SECONDS              1106
+#define IDC_TASKBARPROP_SHOWQL               1107
+#define IDC_TASKBARPROP_TASKBARBITMAP        1111
+#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+
+/* Startmenu Page */
+#define IDC_TASKBARPROP_STARTMENUCLASSICCUST 1130
+#define IDC_TASKBARPROP_STARTMENUCUST        1131
+#define IDC_TASKBARPROP_STARTMENU            1132
+#define IDC_TASKBARPROP_STARTMENUCLASSIC     1133
+#define IDC_TASKBARPROP_STARTMENU_BITMAP     1134
+#define IDC_STARTBTN                         1140
+
+/* Customize Notifications Dialog */
+#define IDC_TASKBARPROP_NOTIREST             1402
+#define IDC_NOTIFICATION_LIST                1005 
+#define IDC_NOTIFICATION_BEHAVIOUR           1006
+
+/* Customize classic start menu dialog */
+#define IDC_CLASSICSTART_ADD                 1126
+#define IDC_CLASSICSTART_REMOVE              1127
+#define IDC_CLASSICSTART_ADVANCED            1128
+#define IDC_CLASSICSTART_SORT                1124
+#define IDC_CLASSICSTART_CLEAR               1125
+#define IDC_CLASSICSTART_SETTINGS            1135
+
+/* File Name Warning Dialog */
+#define IDC_FILE_RENAME                      1006
+#define IDC_NOTCHECK                         4610
+
+/* Customize modern start menu Advanced Page */
+#define IDC_AUTOOPEN                         1306
+#define IDC_HIGHLIGHT                        4326
+#define IDC_ITEMS                            1123
+#define IDC_RECENTLY                         1308
+#define IDC_CLEAR                            1309
+
+/* Customize modern start menu General Page */
+#define IDC_LARGEICON                       1301
+#define IDC_SMALLICON                       1300
+#define IDC_CHOOSELARGE                     1302
+#define IDC_CHOOSESMALL                     1303
+#define IDC_NUMBEROFPROGRAMS                1304
+#define IDC_NUMBERUPDOWN                    1305
+#define IDC_CLEARLIST                       1310
+#define IDC_SHOWINTERNET                    1320
+#define IDC_INTERNETDEFAULTAPP              1321
+#define IDC_SHOWEMAIL                       1322
+#define IDC_EMAILDEFAULTAPP                 1323
+
+/*******************************************************************************\
+|*                            Accelerator Resources                            *|
+\*******************************************************************************/
+
+#define IDA_TASKBAR 251
+#define IDMA_START 305
+#define IDMA_CYCLE_FOCUS 41008
+#define IDMA_SEARCH 41093
+#define IDMA_RESTORE_OPEN 416
+#define IDMA_MINIMIZE_ALL 419
+
+#define ID_SHELL_CMD_FIRST              0xF
+#define ID_SHELL_CMD_LAST               0x7FEF
+#define ID_SHELL_CMD_PROPERTIES         (ID_SHELL_CMD_LAST + 1)
+#define ID_SHELL_CMD_OPEN_ALL_USERS     (ID_SHELL_CMD_LAST + 2)
+#define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
+#define ID_LOCKTASKBAR                  (ID_SHELL_CMD_LAST + 4)
+#define ID_SHELL_CMD_OPEN_TASKMGR       (ID_SHELL_CMD_LAST + 5)
+#define ID_SHELL_CMD_UNDO_ACTION        (ID_SHELL_CMD_LAST + 6)
+#define ID_SHELL_CMD_SHOW_DESKTOP       (ID_SHELL_CMD_LAST + 7)
+#define ID_SHELL_CMD_TILE_WND_V         (ID_SHELL_CMD_LAST + 8)
+#define ID_SHELL_CMD_TILE_WND_H         (ID_SHELL_CMD_LAST + 9)
+#define ID_SHELL_CMD_CASCADE_WND        (ID_SHELL_CMD_LAST + 10)
+#define ID_SHELL_CMD_CUST_NOTIF         (ID_SHELL_CMD_LAST + 11)
+#define ID_SHELL_CMD_ADJUST_DAT         (ID_SHELL_CMD_LAST + 12)
