@@ -353,6 +353,7 @@ VfatOpenFile(
     PUNICODE_STRING PathNameU,
     PFILE_OBJECT FileObject,
     ULONG RequestedDisposition,
+    ULONG RequestedOptions,
     PVFATFCB *ParentFcb)
 {
     PVFATFCB Fcb;
@@ -401,6 +402,16 @@ VfatOpenFile(
     {
         DPRINT ("Could not make a new FCB, status: %x\n", Status);
         return  Status;
+    }
+
+    /* Fail, if we try to overwrite an existing directory */
+    if ((!(RequestedOptions & FILE_DIRECTORY_FILE) && (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY)) &&
+        (RequestedDisposition == FILE_OVERWRITE ||
+         RequestedDisposition == FILE_OVERWRITE_IF ||
+         RequestedDisposition == FILE_SUPERSEDE))
+    {
+        vfatReleaseFCB(DeviceExt, Fcb);
+        return STATUS_OBJECT_NAME_COLLISION;
     }
 
     if (Fcb->Flags & FCB_DELETE_PENDING)
@@ -580,8 +591,9 @@ VfatCreateFile(
     /* Try opening the file. */
     if (!OpenTargetDir)
     {
-        Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, &ParentFcb);
-        if (Status == STATUS_ACCESS_DENIED)
+        Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, RequestedOptions, &ParentFcb);
+        if (Status == STATUS_ACCESS_DENIED ||
+            Status == STATUS_OBJECT_NAME_COLLISION)
             return Status;
     }
     else
