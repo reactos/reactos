@@ -397,12 +397,7 @@ GetAdaptersAddresses(
                     "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
                     Entry->if_descrlen, &Entry->if_descr[0]);
 
-                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) != ERROR_SUCCESS)
-                {
-                    ERR("Failed opening interface key for interface %*s\n", Entry->if_descrlen, &Entry->if_descr[0]);
-                    Flags |= GAA_FLAG_SKIP_DNS_SERVER;
-                }
-                else
+                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
                 {
                     EnumNameServers(InterfaceKey, NULL, &CurrentAASize, EnumerateServerNameSize);
                     RegCloseKey(InterfaceKey);
@@ -471,7 +466,7 @@ GetAdaptersAddresses(
 
                     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) != ERROR_SUCCESS)
                     {
-                        ERR("Failed opening interface key for interface %*s\n", Entry->if_descrlen, &Entry->if_descr[0]);
+                        TRACE("Failed opening interface key for interface %*s\n", Entry->if_descrlen, &Entry->if_descr[0]);
                     }
                     else
                     {
@@ -567,7 +562,7 @@ GetAdaptersAddresses(
                     }
                 }
 
-                ERR("address is 0x%08x, mask is 0x%08x\n", AddrEntries[j].iae_addr, AddrEntries[j].iae_mask);
+                TRACE("address is 0x%08x, mask is 0x%08x\n", AddrEntries[j].iae_addr, AddrEntries[j].iae_mask);
 
                 //FIXME: For now reactos only supports unicast addresses
                 if (!(Flags & GAA_FLAG_SKIP_UNICAST))
