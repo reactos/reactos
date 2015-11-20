@@ -4882,6 +4882,10 @@ UserMenuItemInfo(
 
    if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
    {
+      /* workaround for Word 95: pretend that SC_TASKLIST item exists. */
+      if ( SetOrGet && Item == SC_TASKLIST && !ByPosition )
+         return TRUE;
+
       EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
       return( FALSE);
    }
