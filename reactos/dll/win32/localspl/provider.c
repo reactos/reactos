@@ -1838,7 +1838,7 @@ static BOOL WINAPI fpDeleteMonitor(LPWSTR pName, LPWSTR pEnvironment, LPWSTR pMo
         return FALSE;
     }
 
-    if(SHDeleteKeyW(hroot, pMonitorName) == ERROR_SUCCESS) {
+    if(RegDeleteTreeW(hroot, pMonitorName) == ERROR_SUCCESS) {
         TRACE("%s deleted\n", debugstr_w(pMonitorName));
         RegCloseKey(hroot);
         return TRUE;
