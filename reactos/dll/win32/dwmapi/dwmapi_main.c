@@ -256,3 +256,12 @@ HRESULT WINAPI DwmDetachMilContent(HWND hwnd)
     FIXME("(%p) stub\n", hwnd);
     return E_NOTIMPL;
 }
+
+/**********************************************************************
+ *           DwmUpdateThumbnailProperties         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmUpdateThumbnailProperties(HTHUMBNAIL thumbnail, const DWM_THUMBNAIL_PROPERTIES *props)
+{
+    FIXME("(%p, %p) stub\n", thumbnail, props);
+    return E_NOTIMPL;
+}

@@ -42,4 +42,4 @@
 @ stub DwmSetPresentParameters
 @ stdcall DwmSetWindowAttribute(long long ptr long)
 @ stdcall DwmUnregisterThumbnail(long)
-@ stub DwmUpdateThumbnailProperties
+@ stdcall DwmUpdateThumbnailProperties(ptr ptr)
