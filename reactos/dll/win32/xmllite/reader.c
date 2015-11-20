@@ -150,6 +150,16 @@ const WCHAR *get_encoding_name(xml_encoding encoding)
     return xml_encoding_map[encoding].name;
 }
 
+xml_encoding get_encoding_from_codepage(UINT codepage)
+{
+    int i;
+    for (i = 0; i < sizeof(xml_encoding_map)/sizeof(xml_encoding_map[0]); i++)
+    {
+        if (xml_encoding_map[i].cp == codepage) return xml_encoding_map[i].enc;
+    }
+    return XmlEncoding_Unknown;
+}
+
 typedef struct
 {
     char *data;
@@ -2835,7 +2845,7 @@ static HRESULT WINAPI xmlreader_GetDepth(IXmlReader* iface, UINT *depth)
 static BOOL WINAPI xmlreader_IsEOF(IXmlReader* iface)
 {
     FIXME("(%p): stub\n", iface);
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static const struct IXmlReaderVtbl xmlreader_vtbl =

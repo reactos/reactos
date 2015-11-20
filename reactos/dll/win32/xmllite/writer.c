@@ -1075,18 +1075,11 @@ HRESULT WINAPI CreateXmlWriter(REFIID riid, void **obj, IMalloc *imalloc)
     return S_OK;
 }
 
-HRESULT WINAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream,
-                                                     IMalloc *imalloc,
-                                                     LPCWSTR encoding,
-                                                     IXmlWriterOutput **output)
+static HRESULT create_writer(IUnknown *stream, IMalloc *imalloc, xml_encoding encoding,
+                             IXmlWriterOutput **output)
 {
-    static const WCHAR utf8W[] = {'U','T','F','-','8',0};
     xmlwriteroutput *writeroutput;
     HRESULT hr;
-
-    TRACE("%p %p %s %p\n", stream, imalloc, debugstr_w(encoding), output);
-
-    if (!stream || !output) return E_INVALIDARG;
 
     *output = NULL;
 
@@ -1100,7 +1093,7 @@ HRESULT WINAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream,
     writeroutput->ref = 1;
     writeroutput->imalloc = imalloc;
     if (imalloc) IMalloc_AddRef(imalloc);
-    writeroutput->encoding = parse_encoding_name(encoding ? encoding : utf8W, -1);
+    writeroutput->encoding = encoding;
     writeroutput->stream = NULL;
     hr = init_output_buffer(writeroutput);
     if (FAILED(hr)) {
@@ -1115,4 +1108,35 @@ HRESULT WINAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream,
     TRACE("returning iface %p\n", *output);
 
     return S_OK;
+}
+
+HRESULT WINAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream,
+                                                     IMalloc *imalloc,
+                                                     LPCWSTR encoding,
+                                                     IXmlWriterOutput **output)
+{
+    static const WCHAR utf8W[] = {'U','T','F','-','8',0};
+    xml_encoding xml_enc;
+
+    TRACE("%p %p %s %p\n", stream, imalloc, debugstr_w(encoding), output);
+
+    if (!stream || !output) return E_INVALIDARG;
+
+    xml_enc = parse_encoding_name(encoding ? encoding : utf8W, -1);
+    return create_writer(stream, imalloc, xml_enc, output);
+}
+
+HRESULT WINAPI CreateXmlWriterOutputWithEncodingCodePage(IUnknown *stream,
+                                                         IMalloc *imalloc,
+                                                         UINT codepage,
+                                                         IXmlWriterOutput **output)
+{
+    xml_encoding xml_enc;
+
+    TRACE("%p %p %u %p\n", stream, imalloc, codepage, output);
+
+    if (!stream || !output) return E_INVALIDARG;
+
+    xml_enc = get_encoding_from_codepage(codepage);
+    return create_writer(stream, imalloc, xml_enc, output);
 }
