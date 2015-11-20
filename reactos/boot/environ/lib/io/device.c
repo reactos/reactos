@@ -1023,7 +1023,7 @@ BlockIoEfiGetDeviceInformation (
                         /* Copy it */
                         RtlCopyMemory(&BlockDevice->Disk.Gpt.Signature,
                                       &Device->Local.HardDisk.Gpt.PartitionSignature,
-                                      sizeof(&BlockDevice->Disk.Gpt.Signature));
+                                      sizeof(BlockDevice->Disk.Gpt.Signature));
                         Found = TRUE;
                     }
                 }
