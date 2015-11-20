@@ -149,13 +149,13 @@ static void test_WNetGetRemoteName(void)
         info_size = sizeof(buffer);
         ret = WNetGetUniversalNameW(driveW, REMOTE_NAME_INFO_LEVEL,
                 buffer, &info_size);
-        todo_wine{
+
         if(drive_type == DRIVE_REMOTE)
-            ok(ret == WN_NO_ERROR, "WNetGetUniversalNameW failed: %08x\n", ret);
+            todo_wine ok(ret == WN_NO_ERROR, "WNetGetUniversalNameW failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_NO_NET_OR_BAD_PATH,
                 "(%s) WNetGetUniversalNameW gave wrong error: %u\n", driveA, ret);
-        }
+
         ok(info_size == sizeof(buffer), "Got wrong size: %u\n", info_size);
     }
 }
@@ -199,10 +199,10 @@ static BOOL CALLBACK enum_password_proc(PASSWORD_CACHE_ENTRY* pce, DWORD param)
     ok(pce->nType == m_type, "nType, got %d, got %d\n", pce->nType, m_type);
 
     buf = (char*)pce->abResource;
-    ok(strncmp(buf, m_resource, pce->cbResource)==0, "enumerated ressource differs, got %.*s, expected %s\n", pce->cbResource, buf, m_resource);
+    ok(strncmp(buf, m_resource, pce->cbResource)==0, "enumerated resource differs, got %.*s, expected %s\n", pce->cbResource, buf, m_resource);
 
     buf += pce->cbResource;
-    ok(strncmp(buf, m_password, pce->cbPassword)==0, "enumerated ressource differs, got %.*s, expected %s\n", pce->cbPassword, buf, m_password);
+    ok(strncmp(buf, m_password, pce->cbPassword)==0, "enumerated resource differs, got %.*s, expected %s\n", pce->cbPassword, buf, m_password);
 
     m_callback_reached = 1;
     return TRUE;
