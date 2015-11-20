@@ -91,6 +91,7 @@ DEFINE_EXPECT(global_propputref_d);
 DEFINE_EXPECT(global_propputref_i);
 DEFINE_EXPECT(global_propdelete_d);
 DEFINE_EXPECT(global_nopropdelete_d);
+DEFINE_EXPECT(global_propdeleteerror_d);
 DEFINE_EXPECT(global_success_d);
 DEFINE_EXPECT(global_success_i);
 DEFINE_EXPECT(global_notexists_d);
@@ -117,6 +118,7 @@ DEFINE_EXPECT(ActiveScriptSite_OnScriptError);
 DEFINE_EXPECT(invoke_func);
 DEFINE_EXPECT(DeleteMemberByDispID);
 DEFINE_EXPECT(DeleteMemberByDispID_false);
+DEFINE_EXPECT(DeleteMemberByDispID_error);
 DEFINE_EXPECT(BindHandler);
 
 #define DISPID_GLOBAL_TESTPROPGET   0x1000
@@ -150,8 +152,9 @@ DEFINE_EXPECT(BindHandler);
 #define DISPID_GLOBAL_GETSCRIPTSTATE 0x101c
 #define DISPID_GLOBAL_BINDEVENTHANDLER 0x101d
 
-#define DISPID_GLOBAL_TESTPROPDELETE    0x2000
-#define DISPID_GLOBAL_TESTNOPROPDELETE  0x2001
+#define DISPID_GLOBAL_TESTPROPDELETE      0x2000
+#define DISPID_GLOBAL_TESTNOPROPDELETE    0x2001
+#define DISPID_GLOBAL_TESTPROPDELETEERROR 0x2002
 
 #define DISPID_TESTOBJ_PROP         0x2000
 #define DISPID_TESTOBJ_ONLYDISPID   0x2001
@@ -714,6 +717,12 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         CHECK_EXPECT(global_nopropdelete_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTNOPROPDELETE;
+        return S_OK;
+    }
+    if(!strcmp_wa(bstrName, "testPropDeleteError")) {
+        CHECK_EXPECT(global_propdeleteerror_d);
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_GLOBAL_TESTPROPDELETEERROR;
         return S_OK;
     }
     if(!strcmp_wa(bstrName, "getVT")) {
@@ -1368,6 +1377,9 @@ static HRESULT WINAPI Global_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
     case DISPID_GLOBAL_TESTNOPROPDELETE:
         CHECK_EXPECT(DeleteMemberByDispID_false);
         return S_FALSE;
+    case DISPID_GLOBAL_TESTPROPDELETEERROR:
+        CHECK_EXPECT(DeleteMemberByDispID_error);
+        return E_FAIL;
     default:
         ok(0, "id = %d\n", id);
     }
@@ -1853,6 +1865,17 @@ static void parse_script_af(DWORD flags, const char *src)
 static void parse_script_a(const char *src)
 {
     parse_script_af(SCRIPTITEM_GLOBALMEMBERS, src);
+}
+
+static void parse_script_ae(const char *src, HRESULT exhres)
+{
+    BSTR tmp;
+    HRESULT hres;
+
+    tmp = a2bstr(src);
+    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, tmp);
+    SysFreeString(tmp);
+    ok(hres == exhres, "parse_script failed: %08x, expected %08x\n", hres, exhres);
 }
 
 static void parse_script_with_error_a(const char *src, SCODE errorcode, ULONG line, LONG pos, LPCSTR source, LPCSTR desc, LPCSTR linetext)
@@ -2454,6 +2477,12 @@ static BOOL run_tests(void)
     parse_script_a("ok((delete testNoPropDelete) === false, 'delete testPropDelete did not return false');");
     CHECK_CALLED(global_nopropdelete_d);
     CHECK_CALLED(DeleteMemberByDispID_false);
+
+    SET_EXPECT(global_propdeleteerror_d);
+    SET_EXPECT(DeleteMemberByDispID_error);
+    parse_script_ae("delete testPropDeleteError;", E_FAIL);
+    CHECK_CALLED(global_propdeleteerror_d);
+    CHECK_CALLED(DeleteMemberByDispID_error);
 
     SET_EXPECT(puredisp_prop_d);
     parse_script_a("ok((delete pureDisp.prop) === false, 'delete pureDisp.prop did not return true');");
