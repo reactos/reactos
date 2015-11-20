@@ -342,6 +342,9 @@ co_CallHook( INT HookId,
        case WH_KEYBOARD:
           break;
     }
+
+    if (!UserObjectInDestroy(UserHMGetHandle(phk))) //// Fix CORE-10549.
+    {
     /* The odds are high for this to be a Global call. */
     Result = co_IntCallHookProc( HookId,
                                  Code,
@@ -352,7 +355,7 @@ co_CallHook( INT HookId,
                                  phk->offPfn,
                                  phk->Ansi,
                                 &phk->ModuleName);
-
+    }
     /* The odds so high, no one is waiting for the results. */
     if (pHP->pHookStructs) ExFreePoolWithTag(pHP->pHookStructs, TAG_HOOK);
     ExFreePoolWithTag(pHP, TAG_HOOK);

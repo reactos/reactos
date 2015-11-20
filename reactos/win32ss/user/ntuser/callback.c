@@ -647,7 +647,13 @@ co_IntCallHookProc(INT HookId,
    Common->offPfn = offPfn;
    Common->Ansi = Ansi;
    RtlZeroMemory(&Common->ModuleName, sizeof(Common->ModuleName));
-   RtlCopyMemory(&Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
+   if (ModuleName->Buffer && ModuleName->Length)
+   {
+      RtlCopyMemory(&Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
+      // If ModuleName->Buffer NULL while in destroy,
+      //    this will make User32:Hook.c complain about not loading the library module.
+      // Fix symptom for CORE-10549.
+   }
    Extra = (PCHAR) Common + sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
 
    switch(HookId)
@@ -738,7 +744,7 @@ co_IntCallHookProc(INT HookId,
 
    if (!NT_SUCCESS(Status))
    {
-      ERR("Failure to make Callback! Status 0x%x",Status);
+      ERR("Failure to make Callback! Status 0x%x\n",Status);
       goto Fault_Exit;
    }
 
