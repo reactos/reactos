@@ -1636,7 +1636,7 @@ static HRESULT interp_delete_ident(exec_ctx_t *ctx)
         hres = disp_delete(exprval.u.idref.disp, exprval.u.idref.id, &ret);
         IDispatch_Release(exprval.u.idref.disp);
         if(FAILED(hres))
-            return ret;
+            return hres;
         break;
     case EXPRVAL_INVALID:
         ret = TRUE;
