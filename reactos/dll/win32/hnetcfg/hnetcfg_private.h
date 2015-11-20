@@ -43,6 +43,7 @@ enum type_id
     INetFwAuthorizedApplications_tid,
     INetFwMgr_tid,
     INetFwOpenPort_tid,
+    INetFwOpenPorts_tid,
     INetFwPolicy_tid,
     INetFwProfile_tid,
     last_tid

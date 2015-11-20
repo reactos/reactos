@@ -72,7 +72,7 @@ reactos/dll/win32/fusion              # Synced to WineStaging-1.7.47
 reactos/dll/win32/gdiplus             # Synced to WineStaging-1.7.47
 reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-1.7.47
 reactos/dll/win32/hlink               # Synced to WineStaging-1.7.47
-reactos/dll/win32/hnetcfg             # Synced to WineStaging-1.7.47
+reactos/dll/win32/hnetcfg             # Synced to WineStaging-1.7.55
 reactos/dll/win32/httpapi             # Synced to WineStaging-1.7.47
 reactos/dll/win32/iccvid              # Synced to WineStaging-1.7.47
 reactos/dll/win32/icmp                # Out of sync
