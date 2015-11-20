@@ -95,8 +95,6 @@ typedef struct _MilMatrix3x2D
     DOUBLE DY;
 } MilMatrix3x2D;
 
-#include <poppack.h>
-
 #define DWM_BB_ENABLE                 0x00000001
 #define DWM_BB_BLURREGION             0x00000002
 #define DWM_BB_TRANSITIONONMAXIMIZED  0x00000004
@@ -109,6 +107,18 @@ typedef struct _DWM_BLURBEHIND
     BOOL fTransitionOnMaximized;
 } DWM_BLURBEHIND, *PDWM_BLURBEHIND;
 
+typedef struct _DWM_THUMBNAIL_PROPERTIES
+{
+    DWORD dwFlags;
+    RECT  rcDestination;
+    RECT  rcSource;
+    BYTE  opacity;
+    BOOL  fVisible;
+    BOOL  fSourceClientAreaOnly;
+} DWM_THUMBNAIL_PROPERTIES, *PDWM_THUMBNAIL_PROPERTIES;
+
+#include <poppack.h>
+
 DWMAPI DwmDefWindowProc(HWND, UINT, WPARAM, LPARAM, LRESULT*);
 DWMAPI DwmEnableBlurBehindWindow(HWND, const DWM_BLURBEHIND *);
 DWMAPI DwmEnableComposition(UINT);
@@ -116,10 +126,12 @@ DWMAPI DwmEnableMMCSS(BOOL);
 DWMAPI DwmExtendFrameIntoClientArea(HWND,const MARGINS*);
 DWMAPI DwmGetColorizationColor(DWORD*,BOOL);
 DWMAPI DwmGetCompositionTimingInfo(HWND,DWM_TIMING_INFO*);
+DWMAPI DwmInvalidateIconicBitmaps(HWND);
 DWMAPI DwmIsCompositionEnabled(BOOL*);
 DWMAPI DwmRegisterThumbnail(HWND, HWND, PHTHUMBNAIL);
 DWMAPI DwmSetWindowAttribute(HWND, DWORD, LPCVOID, DWORD);
 DWMAPI DwmUnregisterThumbnail(HTHUMBNAIL);
+DWMAPI DwmUpdateThumbnailProperties(HTHUMBNAIL, const DWM_THUMBNAIL_PROPERTIES *);
 
 #ifdef __cplusplus
 }
