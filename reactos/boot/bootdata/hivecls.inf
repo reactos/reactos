@@ -225,36 +225,37 @@ HKCR,".c","PerceivedType",0x00000000,"text"
 HKCR,".cpp","PerceivedType",0x00000000,"text"
 HKCR,".h","PerceivedType",0x00000000,"text"
 HKCR,".hpp","PerceivedType",0x00000000,"text"
+HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,".txt\shellnew","",0x00000000,""
 HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
-HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
 HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 
 ; XML Documents
 HKCR,".xml","",0x00000000,"xmlfile"
-HKCR,"xmlfile","",0x00000000,"XML Document"
 HKCR,".xml","Content Type",0x00000000,"text/xml"
+HKCR,"xmlfile","",0x00000000,"XML Document"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
 HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; XSL Stylesheets
 HKCR,".xsl","",0x00000000,"xslfile"
-HKCR,"xslfile","",0x00000000,"XSL Stylesheet"
 HKCR,".xsl","Content Type",0x00000000,"text/xml"
+HKCR,"xslfile","",0x00000000,"XSL Stylesheet"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; MSI files
-HKCR,".msi","",0x00000000,"MSI.Package"
-HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,".msi","",0x00000000,"Msi.Package"
 HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
+HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
 
+; Program Information File for NT VDM
 HKCR,".pif","",0x00000000,"piffile"
 
 ; Registration Entries
@@ -277,7 +278,7 @@ HKCR,"scrfile\shell\install\command","",0x00000000,"rundll32.exe desk.cpl,Instal
 HKCR,"scrfile\shell\open","",0x00000000,"Test"
 HKCR,"scrfile\shell\open\command","",0x00000000,"""%1"" /S"
 
-; shell command files (e.g. "Show Desktop" in quicklaunch bar)
+; Shell command files (e.g. "Show Desktop" in QuickLaunch bar)
 HKCR,".scf","",0x00000000,"SHCmdFile"
 HKCR,"SHCmdFile","",0x00000000,"ReactOS Explorer Command"
 HKCR,"SHCmdFile","NeverShowExt",0x00000000,""
@@ -290,7 +291,7 @@ HKCR,"SHCmdFile\CLSID","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
 HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
 HKCR,"SHCmdFile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
-; System-Files
+; System Files
 HKCR,".sys","",0x00000000,"sysfile"
 HKCR,"sysfile","",0x00000000,"System File"
 HKCR,"sysfile","NoOpen",0x00000000,""
@@ -303,13 +304,13 @@ HKCR,"msstylesfile","",0x00000000,"Visual Style File"
 HKCR,"msstylesfile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
 HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme file:""%1"""
 
-; Theme File
+; Theme Files
 HKCR,".theme","",0x00000000,"themefile"
 HKCR,"themefile","",0x00000000,"Theme File"
 HKCR,"themefile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
 HKCR,"themefile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenTheme /file:""%1"""
 
-; URL shortcuts (e.g. used in favorites folder of IExplorer)
+; URL shortcuts (e.g. used in Favorites folder of IExplorer)
 HKCR,".url","",0x00000000,"InternetShortcut"
 
 ; Wave Sounds
