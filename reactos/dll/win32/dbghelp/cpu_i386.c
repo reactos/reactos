@@ -263,7 +263,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
             }
         }
         else
-            /* FIXME: this will allow to work when we're not attached to a live target,
+            /* FIXME: this will allow it to work when we're not attached to a live target,
              * but the 16 <=> 32 switch facility won't be available.
              */
             curr_switch = 0;

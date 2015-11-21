@@ -128,6 +128,7 @@ struct image_file_map
             {
                 const macho_section*            section;
                 const char*                     mapped;
+                unsigned int                    ignored : 1;
             }*                          sect;
 #endif
         } macho;

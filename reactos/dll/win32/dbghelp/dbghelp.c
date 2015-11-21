@@ -276,7 +276,7 @@ static BOOL check_live_target(struct process* pcs)
  * The initialisation of a dbghelp's context.
  * Note that hProcess doesn't need to be a valid process handle (except
  * when fInvadeProcess is TRUE).
- * Since, we're also allow to load ELF (pure) libraries and Wine ELF libraries 
+ * Since we also allow loading ELF (pure) libraries and Wine ELF libraries
  * containing PE (and NE) module(s), here's how we handle it:
  * - we load every module (ELF, NE, PE) passed in SymLoadModule
  * - in fInvadeProcess (in SymInitialize) is TRUE, we set up what is called ELF

@@ -187,7 +187,7 @@
 @ stdcall SymUnloadModule(long long)
 @ stdcall SymUnloadModule64(long double)
 @ stdcall UnDecorateSymbolName(str str long long)
-@ stdcall UnDecorateSymbolNameW(str str long long)
+@ stdcall UnDecorateSymbolNameW(wstr ptr long long)
 @ stdcall UnmapDebugInformation(ptr)
 @ stdcall WinDbgExtensionDllInit(ptr long long)
 #@ stdcall block
