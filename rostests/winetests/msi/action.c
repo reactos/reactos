@@ -214,7 +214,8 @@ static const char environment_dat[] =
     "Var23\t+-MSITESTVAR19\t1\tOne\n"
     "Var24\t+-MSITESTVAR19\t[~]2\tOne\n"
     "Var25\t+-MSITESTVAR20\t1\tOne\n"
-    "Var26\t+-MSITESTVAR20\t2[~]\tOne\n";
+    "Var26\t+-MSITESTVAR20\t2[~]\tOne\n"
+    "Var27\t+-MSITESTVAR21\t[~];1\tOne\n";
 
 static const char service_install_dat[] =
     "ServiceInstall\tName\tDisplayName\tServiceType\tStartType\tErrorControl\t"
@@ -1201,7 +1202,13 @@ static const char res_environment_dat[] =
     "var2\t=+-MSITESTVAR2\t1\tenvvar\n"
     "var3\t=MSITESTVAR3\t1\tenvvar\n"
     "var4\t=-MSITESTVAR4\t\tenvvar\n"
-    "var5\t=MSITESTVAR5\t\tenvvar\n";
+    "var5\t=MSITESTVAR5\t\tenvvar\n"
+    "Var6\t-MSITESTVAR6\t1;[~]\tenvvar\n"
+    "Var7\t-MSITESTVAR7\t[~];1\tenvvar\n"
+    "Var8\t-MSITESTVAR8\t1;[~]\tenvvar\n"
+    "Var9\t-MSITESTVAR9\t[~];1\tenvvar\n"
+    "Var10\t-MSITESTVAR10\t1\tenvvar\n"
+    "Var11\t-MSITESTVAR11\t2\tenvvar\n";
 
 static const char res_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -5135,6 +5142,7 @@ static void test_envvar(void)
         "1;;2;;", /* MSITESTVAR18 */
         "1",      /* MSITESTVAR19 */
         "1",      /* MSITESTVAR20 */
+        "1",      /* MSITESTVAR21 */
         NULL
     };
     UINT r;
@@ -5160,6 +5168,9 @@ static void test_envvar(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = RegSetValueExA(env, "MSITESTVAR2", 0, REG_SZ, (const BYTE *)"0", 2);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegSetValueExA(env, "MSITESTVAR21", 0, REG_SZ, (const BYTE *)"1", 2);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -5254,6 +5265,7 @@ static void test_envvar(void)
 error:
     RegDeleteValueA(env, "MSITESTVAR1");
     RegDeleteValueA(env, "MSITESTVAR2");
+    RegDeleteValueA(env, "MSITESTVAR21");
     RegCloseKey(env);
 
     delete_test_files();
@@ -5838,10 +5850,14 @@ static void test_publish_components(void)
 {
     static const char keypath[] =
         "Software\\Microsoft\\Installer\\Components\\0CBCFA296AC907244845745CEEB2F8AA";
+    static const char keypath2[] =
+        "Software\\Classes\\Installer\\Components\\0CBCFA296AC907244845745CEEB2F8AA";
 
     UINT r;
     LONG res;
     HKEY key;
+    BYTE *data;
+    DWORD size;
 
     if (is_process_limited())
     {
@@ -5863,11 +5879,49 @@ static void test_publish_components(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
+    size = 0;
+    r = MsiProvideQualifiedComponentA("{92AFCBC0-9CA6-4270-8454-47C5EE2B8FAA}",
+            "english.txt", INSTALLMODE_DEFAULT, NULL, &size);
+    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedCompontent returned %d\n", r);
+
     res = RegOpenKeyA(HKEY_CURRENT_USER, keypath, &key);
     ok(res == ERROR_SUCCESS, "components key not created %d\n", res);
 
-    res = RegQueryValueExA(key, "english.txt", NULL, NULL, NULL, NULL);
+    res = RegQueryValueExA(key, "english.txt", NULL, NULL, NULL, &size);
     ok(res == ERROR_SUCCESS, "value not found %d\n", res);
+
+    data = HeapAlloc(GetProcessHeap(), 0, size);
+    res = RegQueryValueExA(key, "english.txt", NULL, NULL, data, &size);
+    ok(res == ERROR_SUCCESS, "value not found %d\n", res);
+    RegCloseKey(key);
+
+    res = RegDeleteKeyA(HKEY_CURRENT_USER, keypath);
+    ok(res == ERROR_SUCCESS, "RegDeleteKey failed %d\n", res);
+
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath2, 0, NULL, REG_OPTION_NON_VOLATILE,
+            MAXIMUM_ALLOWED | KEY_WOW64_64KEY, NULL, &key, NULL );
+    ok(res == ERROR_SUCCESS, "RegCreateKeyEx failed %d\n", res);
+    res = RegSetValueExA(key, "english.txt", 0, REG_MULTI_SZ, data, size);
+    ok(res == ERROR_SUCCESS, "RegSetValueEx failed %d\n", res);
+    RegCloseKey(key);
+
+    size = 0;
+    r = MsiProvideQualifiedComponentA("{92AFCBC0-9CA6-4270-8454-47C5EE2B8FAA}",
+            "english.txt", INSTALLMODE_DEFAULT, NULL, &size);
+    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedCompontent returned %d\n", r);
+
+    if (pRegDeleteKeyExA)
+        res = pRegDeleteKeyExA(HKEY_LOCAL_MACHINE, keypath2, KEY_WOW64_64KEY, 0);
+    else
+        res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, keypath2);
+    ok(res == ERROR_SUCCESS, "RegDeleteKey failed %d\n", res);
+
+    res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &key);
+    ok(res == ERROR_SUCCESS, "RegCreateKey failed %d\n", res);
+
+    res = RegSetValueExA(key, "english.txt", 0, REG_MULTI_SZ, data, size);
+    ok(res == ERROR_SUCCESS, "RegSetValueEx failed %d\n", res);
+    HeapFree(GetProcessHeap(), 0, data);
     RegCloseKey(key);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
@@ -6188,6 +6242,12 @@ static void test_remove_env_strings(void)
     RegSetValueExA(key, "MSITESTVAR3", 0, REG_SZ, (const BYTE *)"1", 2);
     RegSetValueExA(key, "MSITESTVAR4", 0, REG_SZ, (const BYTE *)"1", 2);
     RegSetValueExA(key, "MSITESTVAR5", 0, REG_SZ, (const BYTE *)"1", 2);
+    RegSetValueExA(key, "MSITESTVAR6", 0, REG_SZ, (const BYTE *)"1;2", 4);
+    RegSetValueExA(key, "MSITESTVAR7", 0, REG_SZ, (const BYTE *)"1;2", 4);
+    RegSetValueExA(key, "MSITESTVAR8", 0, REG_SZ, (const BYTE *)"2;1;0", 6);
+    RegSetValueExA(key, "MSITESTVAR9", 0, REG_SZ, (const BYTE *)"0;1;2", 6);
+    RegSetValueExA(key, "MSITESTVAR10", 0, REG_SZ, (const BYTE *)"1", 2);
+    RegSetValueExA(key, "MSITESTVAR11", 0, REG_SZ, (const BYTE *)"1", 2);
 
     RegCloseKey(key);
 
@@ -6277,6 +6337,57 @@ static void test_remove_env_strings(void)
     ok(!lstrcmpA(buffer, "1"), "expected \"1\", got \"%s\"\n", buffer);
     RegDeleteValueA(key, "MSITESTVAR5");
 
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR6", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(type == REG_SZ, "expected REG_SZ, got %u\n", type);
+    ok(!lstrcmpA(buffer, "2"), "expected \"2\", got \"%s\"\n", buffer);
+    RegDeleteValueA(key, "MSITESTVAR6");
+
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR7", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(type == REG_SZ, "expected REG_SZ, got %u\n", type);
+    ok(!lstrcmpA(buffer, "2"), "expected \"2\", got \"%s\"\n", buffer);
+    RegDeleteValueA(key, "MSITESTVAR7");
+
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR8", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(type == REG_SZ, "expected REG_SZ, got %u\n", type);
+    ok(!lstrcmpA(buffer, "2;0"), "expected \"2;0\", got \"%s\"\n", buffer);
+    RegDeleteValueA(key, "MSITESTVAR8");
+
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR9", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(type == REG_SZ, "expected REG_SZ, got %u\n", type);
+    ok(!lstrcmpA(buffer, "0;2"), "expected \"0;2\", got \"%s\"\n", buffer);
+    RegDeleteValueA(key, "MSITESTVAR9");
+
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR10", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+    type = REG_NONE;
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    res = RegQueryValueExA(key, "MSITESTVAR11", NULL, &type, (LPBYTE)buffer, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(type == REG_SZ, "expected REG_SZ, got %u\n", type);
+    ok(!lstrcmpA(buffer, "1"), "expected \"1\", got \"%s\"\n", buffer);
+    RegDeleteValueA(key, "MSITESTVAR11");
+
     ok(!delete_pf("msitest\\envvar.txt", TRUE), "file not removed\n");
     ok(!delete_pf("msitest", FALSE), "directory not removed\n");
 
@@ -6286,6 +6397,12 @@ error:
     RegDeleteValueA(key, "MSITESTVAR3");
     RegDeleteValueA(key, "MSITESTVAR4");
     RegDeleteValueA(key, "MSITESTVAR5");
+    RegDeleteValueA(key, "MSITESTVAR6");
+    RegDeleteValueA(key, "MSITESTVAR7");
+    RegDeleteValueA(key, "MSITESTVAR8");
+    RegDeleteValueA(key, "MSITESTVAR9");
+    RegDeleteValueA(key, "MSITESTVAR10");
+    RegDeleteValueA(key, "MSITESTVAR11");
     RegCloseKey(key);
 
     DeleteFileA("msitest\\envvar.txt");

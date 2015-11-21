@@ -3414,7 +3414,7 @@ static void test_states(void)
 
     /* reinstall the product */
     r = MsiInstallProductA(msifile3, "REINSTALL=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(r == ERROR_SUCCESS || broken(r == ERROR_INSTALL_FAILURE) /* win2k3 */, "Expected ERROR_SUCCESS, got %d\n", r);
 
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
     ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);

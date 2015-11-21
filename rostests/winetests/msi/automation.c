@@ -1127,6 +1127,25 @@ static HRESULT Installer_UILevelPut(int level)
     return invoke(pInstaller, "UILevel", DISPATCH_PROPERTYPUT, &dispparams, &varresult, VT_EMPTY);
 }
 
+static HRESULT Installer_SummaryInformation(BSTR PackagePath, int UpdateCount, IDispatch **pSumInfo)
+{
+    VARIANT varresult;
+    VARIANTARG vararg[2];
+    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    HRESULT hr;
+
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[1]) = VT_BSTR;
+    V_BSTR(&vararg[1]) = SysAllocString(PackagePath);
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_I4;
+    V_I4(&vararg[0]) = UpdateCount;
+
+    hr = invoke(pInstaller, "SummaryInformation", DISPATCH_PROPERTYGET, &dispparams, &varresult, VT_DISPATCH);
+    *pSumInfo = V_DISPATCH(&varresult);
+    return hr;
+}
+
 static HRESULT Session_Installer(IDispatch *pSession, IDispatch **pInst)
 {
     VARIANT varresult;
@@ -1184,7 +1203,7 @@ static HRESULT Session_LanguageGet(IDispatch *pSession, UINT *pLangId)
     return hr;
 }
 
-static HRESULT Session_ModeGet(IDispatch *pSession, int iFlag, BOOL *pMode)
+static HRESULT Session_ModeGet(IDispatch *pSession, int iFlag, VARIANT_BOOL *mode)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
@@ -1196,12 +1215,12 @@ static HRESULT Session_ModeGet(IDispatch *pSession, int iFlag, BOOL *pMode)
     V_I4(&vararg[0]) = iFlag;
 
     hr = invoke(pSession, "Mode", DISPATCH_PROPERTYGET, &dispparams, &varresult, VT_BOOL);
-    *pMode = V_BOOL(&varresult);
+    *mode = V_BOOL(&varresult);
     VariantClear(&varresult);
     return hr;
 }
 
-static HRESULT Session_ModePut(IDispatch *pSession, int iFlag, BOOL bMode)
+static HRESULT Session_ModePut(IDispatch *pSession, int iFlag, VARIANT_BOOL mode)
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
@@ -1213,7 +1232,7 @@ static HRESULT Session_ModePut(IDispatch *pSession, int iFlag, BOOL bMode)
     V_I4(&vararg[1]) = iFlag;
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_BOOL;
-    V_BOOL(&vararg[0]) = bMode;
+    V_BOOL(&vararg[0]) = mode;
 
     return invoke(pSession, "Mode", DISPATCH_PROPERTYPUT, &dispparams, &varresult, VT_EMPTY);
 }
@@ -1856,7 +1875,7 @@ static void test_Session(IDispatch *pSession)
     WCHAR stringw[MAX_PATH];
     CHAR string[MAX_PATH];
     UINT len;
-    BOOL bool;
+    VARIANT_BOOL bool;
     int myint;
     IDispatch *pDatabase = NULL, *pInst = NULL, *record = NULL;
     ULONG refs_before, refs_after;
@@ -1924,15 +1943,15 @@ static void test_Session(IDispatch *pSession)
     ok(!bool, "Maintenance mode is %d\n", bool);
 
     /* Session::Mode, put */
-    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, TRUE);
+    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, VARIANT_TRUE);
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
     hr = Session_ModeGet(pSession, MSIRUNMODE_REBOOTATEND, &bool);
     ok(hr == S_OK, "Session_ModeGet failed, hresult 0x%08x\n", hr);
     ok(bool, "Reboot at end session mode is %d, expected 1\n", bool);
-    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, FALSE);  /* set it again so we don't reboot */
+    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTATEND, VARIANT_FALSE);  /* set it again so we don't reboot */
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
 
-    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, TRUE);
+    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, VARIANT_TRUE);
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
     ok_exception(hr, szModeFlag);
 
@@ -1940,11 +1959,11 @@ static void test_Session(IDispatch *pSession)
     ok(hr == S_OK, "Session_ModeGet failed, hresult 0x%08x\n", hr);
     ok(bool, "Reboot now mode is %d, expected 1\n", bool);
 
-    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, FALSE);  /* set it again so we don't reboot */
+    hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, VARIANT_FALSE);  /* set it again so we don't reboot */
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
     ok_exception(hr, szModeFlag);
 
-    hr = Session_ModePut(pSession, MSIRUNMODE_MAINTENANCE, TRUE);
+    hr = Session_ModePut(pSession, MSIRUNMODE_MAINTENANCE, VARIANT_TRUE);
     ok(hr == DISP_E_EXCEPTION, "Session_ModePut failed, hresult 0x%08x\n", hr);
     ok_exception(hr, szModeFlag);
 
@@ -2601,7 +2620,7 @@ static void test_Installer(void)
     static const WCHAR szIntegerDataException[] = { 'I','n','t','e','g','e','r','D','a','t','a',',','F','i','e','l','d',0 };
     WCHAR szPath[MAX_PATH];
     HRESULT hr;
-    IDispatch *pSession = NULL, *pDatabase = NULL, *pRecord = NULL, *pStringList = NULL;
+    IDispatch *pSession = NULL, *pDatabase = NULL, *pRecord = NULL, *pStringList = NULL, *pSumInfo = NULL;
     int iValue, iCount;
 
     if (!pInstaller) return;
@@ -2676,6 +2695,18 @@ static void test_Installer(void)
         test_Database(pDatabase, FALSE);
         IDispatch_Release(pDatabase);
     }
+
+    /* Installer::SummaryInformation */
+    hr = Installer_SummaryInformation(szPath, 0, &pSumInfo);
+    ok(hr == S_OK, "Installer_SummaryInformation failed, hresult 0x%08x\n", hr);
+    if (hr == S_OK)
+    {
+        test_SummaryInfo(pSumInfo, summary_info, sizeof(summary_info)/sizeof(msi_summary_info), TRUE);
+        IDispatch_Release(pSumInfo);
+    }
+
+    hr = Installer_SummaryInformation(NULL, 0, &pSumInfo);
+    ok(hr == DISP_E_EXCEPTION, "Installer_SummaryInformation failed, hresult 0x%08x\n", hr);
 
     /* Installer::RegistryValue */
     test_Installer_RegistryValue();

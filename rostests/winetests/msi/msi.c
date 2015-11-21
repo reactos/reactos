@@ -48,6 +48,8 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathA)
     (LPCSTR, LPCSTR, LPSTR, DWORD*);
+static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)
+    (LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
 static INSTALLSTATE (WINAPI *pMsiProvideComponentA)
     (LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
 static INSTALLSTATE (WINAPI *pMsiProvideComponentW)
@@ -90,6 +92,7 @@ static void init_functionpointers(void)
       trace("GetProcAddress(%s) failed\n", #func);
 
     GET_PROC(hmsi, MsiGetComponentPathA)
+    GET_PROC(hmsi, MsiGetComponentPathExA);
     GET_PROC(hmsi, MsiProvideComponentA)
     GET_PROC(hmsi, MsiProvideComponentW)
     GET_PROC(hmsi, MsiGetFileHashA)
@@ -4224,12 +4227,11 @@ static void test_MsiGetFileVersion(void)
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
 
     /* pcchLangBuf not big enough */
-    langsz = 3;
+    langsz = 4;
     lstrcpyA(lang, "lang");
     r = MsiGetFileVersionA(path, NULL, NULL, lang, &langsz);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
-    ok(!strncmp(lang, langcheck, 2),
-       "Expected first character of \"%s\", got \"%s\"\n", langcheck, lang);
+    ok(lstrcmpA(lang, "lang"), "lang not set\n");
     ok(langsz >= langchecksz, "Expected %d >= %d\n", langsz, langchecksz);
 
     /* pcchVersionBuf big enough, pcchLangBuf not big enough */
@@ -4250,7 +4252,7 @@ static void test_MsiGetFileVersion(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
     ok(langsz >= langchecksz && langsz < MAX_PATH, "Expected %d >= %d\n", langsz, langchecksz);
-    ok(lstrcmpA(lang, "lang"), "lang buffer not modified\n");
+    ok(strstr(lang, langcheck) != NULL, "expected %s in %s\n", langcheck, lang);
 
     /* NULL pcchVersionBuf and pcchLangBuf */
     r = MsiGetFileVersionA(path, version, NULL, lang, NULL);
@@ -14432,7 +14434,8 @@ START_TEST(msi)
     test_lastusedsource();
     test_setpropertyfolder();
     test_sourcedir_props();
-    test_concurrentinstall();
+    if (pMsiGetComponentPathExA)
+        test_concurrentinstall();
     test_command_line_parsing();
 
     SetCurrentDirectoryA(prev_path);
