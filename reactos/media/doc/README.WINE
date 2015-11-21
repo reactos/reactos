@@ -186,7 +186,7 @@ reactos/dll/win32/spoolss             # Synced to WineStaging-1.7.47
 reactos/dll/win32/stdole2.tlb         # Synced to WineStaging-1.7.47
 reactos/dll/win32/stdole32.tlb        # Synced to WineStaging-1.7.47
 reactos/dll/win32/sti                 # Synced to WineStaging-1.7.47
-reactos/dll/win32/sxs                 # Synced to WineStaging-1.7.47
+reactos/dll/win32/sxs                 # Synced to WineStaging-1.7.55
 reactos/dll/win32/tapi32              # Synced to WineStaging-1.7.47
 reactos/dll/win32/traffic             # Synced to WineStaging-1.7.47
 reactos/dll/win32/twain_32            # Synced to WineStaging-1.7.37
