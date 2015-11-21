@@ -2871,7 +2871,7 @@ static void init_bind_test(int protocol, DWORD flags, DWORD t)
         url_a = (flags & BINDTEST_INVALID_CN) ? "https://209.46.25.134/favicon.ico" : "https://test.winehq.org/tests/hello.html";
         break;
     case FTP_TEST:
-        url_a = "ftp://ftp.winehq.org/pub/other/winelogo.xcf.tar.bz2";
+        url_a = "ftp://ftp.winehq.org/welcome.msg";
         break;
     default:
         url_a = "winetest:test";

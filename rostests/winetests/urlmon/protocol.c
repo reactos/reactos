@@ -31,7 +31,7 @@
 //#include "winbase.h"
 #include <winnls.h>
 #include <ole2.h>
-//#include "urlmon.h"
+#include <urlmon.h>
 #include <wininet.h>
 
 static HRESULT (WINAPI *pCoInternetGetSession)(DWORD, IInternetSession **, DWORD);
@@ -892,6 +892,9 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
     case BINDSTATUS_RESERVED_7:
         trace("BINDSTATUS_RESERVED_7\n");
         break;
+    case BINDSTATUS_RESERVED_8:
+        trace("BINDSTATUS_RESERVED_8\n");
+        break;
     default:
         ok(0, "Unexpected status %d (%d)\n", ulStatusCode, ulStatusCode-BINDSTATUS_LAST);
     };
@@ -1408,6 +1411,9 @@ static HRESULT WINAPI BindInfo_GetBindString(IInternetBindInfo *iface, ULONG ulS
     }
     case BINDSTRING_ROOTDOC_URL:
         CHECK_EXPECT(GetBindString_ROOTDOC_URL);
+        ok(cEl == 1, "cEl=%d, expected 1\n", cEl);
+        return E_NOTIMPL;
+    case BINDSTRING_ENTERPRISE_ID:
         ok(cEl == 1, "cEl=%d, expected 1\n", cEl);
         return E_NOTIMPL;
     default:
