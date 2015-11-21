@@ -99,7 +99,68 @@ static void test_encode(void)
     ICClose(hic);
 }
 
+static void test_raw_decompress(void)
+{
+    DWORD codecs[] = {FCC('D', 'I', 'B', ' '), FCC('R', 'A', 'W', ' '),
+                      FCC('M', 'R', 'L', 'E'), BI_RGB}, i, hr;
+    BITMAPINFO bi;
+    BITMAPINFOHEADER *bih, biho;
+    HIC hic;
+    ICINFO codec_info;
+    void *bits, *outbits;
+
+    /* Create an uncompressed 200x200 bitmap */
+    bih = &bi.bmiHeader;
+    bih->biSize = sizeof(*bih);
+    bih->biWidth = 200;
+    bih->biHeight = 200;
+    bih->biPlanes = 1;
+    bih->biBitCount = 24;
+    bih->biCompression = BI_RGB;
+    bih->biSizeImage = bih->biWidth * (bih->biBitCount / 8) * bih->biHeight;
+    bih->biXPelsPerMeter = 10000;
+    bih->biYPelsPerMeter = 10000;
+    bih->biClrUsed = 0;
+    bih->biClrImportant = 0;
+    biho = *bih;
+
+    bits = HeapAlloc(GetProcessHeap(), 0, bih->biSizeImage);
+    ok(bits != NULL, "Expected non-NULL value\n");
+    outbits = HeapAlloc(GetProcessHeap(), 0, bih->biSizeImage);
+    ok(outbits != NULL, "Expected non-NULL value\n");
+
+    for (i = 0; i < sizeof(codecs) / sizeof(codecs[0]); i++)
+    {
+        memset(bits, i + 0xAF, bih->biSizeImage);
+
+        /* Check which codec is able to decompress uncompressed data */
+        hic = ICLocate(FCC('V', 'I', 'D', 'C'), codecs[i], bih, NULL, ICMODE_DECOMPRESS);
+        ok(hic != NULL, "Test[%d]: Expected non-NULL return\n", i);
+
+        /* Now wich is this codec? Windows returns MRLE for uncompressed cases */
+        memset(&codec_info, 0, sizeof(codec_info));
+        hr = ICGetInfo(hic, &codec_info, sizeof(codec_info));
+        ok(hr == sizeof(codec_info), "Test[%d]: Incorrect amount of data returned\n", i);
+        ok(codec_info.fccType == FCC('v', 'i', 'd', 'c'),
+           "Test[%d]: Expected a video type, got 0x%x\n", i, codec_info.fccType);
+        ok(codec_info.fccHandler == FCC('M', 'R', 'L', 'E'),
+           "Test[%d]: Expected MRLE, got 0x%x\n", i, codec_info.fccHandler);
+
+        /* Decompress the frame and check if we get the same output */
+        memset(outbits, 0, bih->biSizeImage);
+        hr = ICDecompress(hic, 0, bih, bits, &biho, outbits);
+        ok(hr == ICERR_OK, "Test[%d]: Expected ICERR_OK, got %d\n", i, hr);
+        ok(!memcmp(bits, outbits, bih->biSizeImage), "Test[%d]: Image contents do not match!\n", i);
+
+        hr = ICClose(hic);
+        ok(hr == ICERR_OK, "Test[%d]: Expected ICERR_OK, got %d\n", i, hr);
+    }
+    HeapFree(GetProcessHeap(), 0, bits);
+    HeapFree(GetProcessHeap(), 0, outbits);
+}
+
 START_TEST(msrle)
 {
     test_encode();
+    test_raw_decompress();
 }
