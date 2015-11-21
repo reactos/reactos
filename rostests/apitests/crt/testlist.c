@@ -17,6 +17,9 @@ extern void func_sprintf(void);
 extern void func_strcpy(void);
 extern void func_wcstombs(void);
 
+extern void func_static_construct(void);
+extern void func_static_init(void);
+
 const struct test winetest_testlist[] =
 {
     { "_vsnprintf", func__vsnprintf },
@@ -35,6 +38,9 @@ const struct test winetest_testlist[] =
 #elif defined(TEST_MSVCRT)
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },
+
+    { "static_construct", func_static_construct },
+    { "static_init", func_static_init },
 #elif defined(TEST_NTDLL)
     { "_vscwprintf", func__vscwprintf },
 #elif defined(TEST_CRTDLL)
