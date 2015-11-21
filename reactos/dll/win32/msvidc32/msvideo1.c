@@ -303,16 +303,19 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
     if( (info==NULL) || (info->dwMagic!=CRAM_MAGIC) )
         return ICERR_BADPARAM;
 
-    TRACE("planes = %d\n", in->bmiHeader.biPlanes );
-    TRACE("bpp    = %d\n", in->bmiHeader.biBitCount );
-    TRACE("height = %d\n", in->bmiHeader.biHeight );
-    TRACE("width  = %d\n", in->bmiHeader.biWidth );
-    TRACE("compr  = %x\n", in->bmiHeader.biCompression );
+    TRACE("in->planes  = %d\n", in->bmiHeader.biPlanes );
+    TRACE("in->bpp     = %d\n", in->bmiHeader.biBitCount );
+    TRACE("in->height  = %d\n", in->bmiHeader.biHeight );
+    TRACE("in->width   = %d\n", in->bmiHeader.biWidth );
+    TRACE("in->compr   = 0x%x\n", in->bmiHeader.biCompression );
 
     if( ( in->bmiHeader.biCompression != CRAM_MAGIC ) &&
         ( in->bmiHeader.biCompression != MSVC_MAGIC ) &&
         ( in->bmiHeader.biCompression != WHAM_MAGIC ) )
+    {
+        TRACE("can't do 0x%x compression\n", in->bmiHeader.biCompression);
         return ICERR_BADFORMAT;
+    }
 
     if( ( in->bmiHeader.biBitCount != 16 ) &&
         ( in->bmiHeader.biBitCount != 8 ) )
@@ -324,18 +327,21 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
     /* output must be same dimensions as input */
     if( out )
     {
-        if( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount )
+        TRACE("out->planes = %d\n", out->bmiHeader.biPlanes );
+        TRACE("out->bpp    = %d\n", out->bmiHeader.biBitCount );
+        TRACE("out->height = %d\n", out->bmiHeader.biHeight );
+        TRACE("out->width  = %d\n", out->bmiHeader.biWidth );
+        if(( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount ) ||
+          ( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes ) ||
+          ( in->bmiHeader.biHeight != out->bmiHeader.biHeight ) ||
+          ( in->bmiHeader.biWidth != out->bmiHeader.biWidth ))
+        {
+            TRACE("incompatible output requested\n");
             return ICERR_BADFORMAT;
-        if( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes )
-            return ICERR_BADFORMAT;
-        if( in->bmiHeader.biHeight != out->bmiHeader.biHeight )
-            return ICERR_BADFORMAT;
-        if( in->bmiHeader.biWidth != out->bmiHeader.biWidth )
-            return ICERR_BADFORMAT;
+        }
     }
 
     TRACE("OK!\n");
-
     return ICERR_OK;
 }
 
@@ -556,12 +562,15 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
         break;
 
     case ICM_COMPRESS_QUERY:
-        FIXME("compression not implemented\n");
         r = ICERR_BADFORMAT;
+        /* fall through */
+    case ICM_COMPRESS_GET_FORMAT:
+    case ICM_COMPRESS_END:
+    case ICM_COMPRESS:
+        FIXME("compression not implemented\n");
         break;
 
     case ICM_CONFIGURE:
-        r = ICERR_UNSUPPORTED;
         break;
 
     default:
