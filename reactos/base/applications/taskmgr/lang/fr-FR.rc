@@ -48,17 +48,17 @@ BEGIN
         MENUITEM "&Cascade", ID_WINDOWS_CASCADE
         MENUITEM "Mettre au &premier plan", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "É&teindre"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Mettre en veille",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hiberner",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "É&teindre",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Redémarrer",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Femer la session %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Changer d'utilisateur\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Verrouiller l'ordinateur\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Déconnecter",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Libér&er l'ordinateur de la station",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Aide"
     BEGIN

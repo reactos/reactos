@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Bienvenue", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Cet assistant installe un nouveau pilote pour :", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Cliquer sur Suivant pour continuer.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !", IDC_STATIC, 120, 59, 200, 16
     CONTROL "Installer le pilote automatiquement", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Installer le pilote depuis un endroit spécifié", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "L'installation a échoué", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Le matériel n'a pu etre installé en raison d'une erreur inattendue.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -53,7 +53,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
@@ -61,7 +61,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
@@ -72,7 +72,7 @@ BEGIN
     LTEXT "Installation terminée", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Vous devez redémarrer l'ordinateur avant d'utiliser :", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Cliquer sur Terminer pour fermer l'assistant.", IDC_STATIC, 120, 174, 179, 12
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -83,14 +83,14 @@ BEGIN
     LTEXT "Installation terminée", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "L'assistant a fini d'installer le pilote pour :", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Cliquer sur Terminer pour fermer l'assistant.", IDC_STATIC, 120, 174, 179, 12
-    LTEXT "MATERIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New Hardware Wizard"
-    IDS_UPDATEWIZARDTITLE "Update Driver Wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "Assistant d'installation de matériel"
+    IDS_UPDATEWIZARDTITLE "Assistant de mise à jour des pilotes"
+    IDS_CHSOURCE_TITLE "Options de recherche et d'installation"
+    IDS_SEARCHDRV_TITLE "Recherche..."
+    IDS_INSTALLDRV_TITLE "Installation..."
 END
