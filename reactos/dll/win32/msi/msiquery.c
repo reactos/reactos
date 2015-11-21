@@ -335,7 +335,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
             if ((type & MSI_DATASIZEMASK) == 2)
                 MSI_RecordSetInteger(*rec, i, ival - (1<<15));
             else
-                MSI_RecordSetInteger(*rec, i, ival - (1<<31));
+                MSI_RecordSetInteger(*rec, i, ival - (1u<<31));
         }
     }
 

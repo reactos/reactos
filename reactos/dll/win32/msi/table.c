@@ -792,7 +792,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
         /* add each column to the _Columns table */
         r = TABLE_CreateView( db, szColumns, &tv );
         if( r )
-            return r;
+            goto err;
 
         r = tv->ops->execute( tv, 0 );
         TRACE("tv execute returned %x\n", r);
@@ -2308,8 +2308,7 @@ err:
 }
 
 static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string_table *st,
-                                            IStorage *stg,
-                                            const BYTE *rawdata, UINT bytes_per_strref )
+                                            IStorage *stg, const BYTE *rawdata, UINT bytes_per_strref )
 {
     UINT i, val, ofs = 0;
     USHORT mask;
@@ -2342,12 +2341,14 @@ static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string
 
             r = msi_record_encoded_stream_name( tv, rec, &encname );
             if ( r != ERROR_SUCCESS )
+            {
+                msiobj_release( &rec->hdr );
                 return NULL;
-
-            r = IStorage_OpenStream( stg, encname, NULL,
-                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
+            }
+            r = IStorage_OpenStream( stg, encname, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
             if ( r != ERROR_SUCCESS )
             {
+                msiobj_release( &rec->hdr );
                 msi_free( encname );
                 return NULL;
             }

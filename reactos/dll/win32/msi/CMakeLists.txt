@@ -65,7 +65,7 @@ set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader)
 add_delay_importlibs(msi odbccp32 crypt32 wintrust)
-add_importlibs(msi advapi32 cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi urlmon user32 version wininet mspatcha
+add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi urlmon user32 version wininet mspatcha
     #FIXME : should be in delayed imports
     imagehlp
     msvcrt

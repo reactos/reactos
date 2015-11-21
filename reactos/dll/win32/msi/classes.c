@@ -953,7 +953,7 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
 
         cls->action = INSTALLSTATE_ABSENT;
 
-        res = SHDeleteKeyW( hkey, cls->clsid );
+        res = RegDeleteTreeW( hkey, cls->clsid );
         if (res != ERROR_SUCCESS)
             WARN("Failed to delete class key %d\n", res);
 
@@ -975,7 +975,7 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
             {
                 strcpyW( filetype, szFileType );
                 strcatW( filetype, cls->clsid );
-                res = SHDeleteKeyW( HKEY_CLASSES_ROOT, filetype );
+                res = RegDeleteTreeW( HKEY_CLASSES_ROOT, filetype );
                 msi_free( filetype );
 
                 if (res != ERROR_SUCCESS)
@@ -1148,7 +1148,7 @@ UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
         }
         TRACE("Unregistering progid %s\n", debugstr_w(progid->ProgID));
 
-        res = SHDeleteKeyW( HKEY_CLASSES_ROOT, progid->ProgID );
+        res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid->ProgID );
         if (res != ERROR_SUCCESS)
             TRACE("Failed to delete progid key %d\n", res);
 
@@ -1392,7 +1392,7 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
         {
             extension[0] = '.';
             strcpyW( extension + 1, ext->Extension );
-            res = SHDeleteKeyW( HKEY_CLASSES_ROOT, extension );
+            res = RegDeleteTreeW( HKEY_CLASSES_ROOT, extension );
             msi_free( extension );
             if (res != ERROR_SUCCESS)
                 WARN("Failed to delete extension key %d\n", res);
@@ -1414,7 +1414,7 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
             {
                 strcpyW( progid_shell, progid );
                 strcatW( progid_shell, shellW );
-                res = SHDeleteKeyW( HKEY_CLASSES_ROOT, progid_shell );
+                res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid_shell );
                 msi_free( progid_shell );
                 if (res != ERROR_SUCCESS)
                     WARN("Failed to delete shell key %d\n", res);

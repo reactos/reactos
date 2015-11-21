@@ -4292,6 +4292,17 @@ UINT WINAPI MsiBeginTransactionW( LPCWSTR name, DWORD attrs, MSIHANDLE *id, HAND
 }
 
 /***********************************************************************
+ * MsiJoinTransaction     [MSI.@]
+ */
+UINT WINAPI MsiJoinTransaction( MSIHANDLE handle, DWORD attrs, HANDLE *event )
+{
+    FIXME("%u %08x %p\n", handle, attrs, event);
+
+    *event = (HANDLE)0xdeadbeef;
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
  * MsiEndTransaction     [MSI.@]
  */
 UINT WINAPI MsiEndTransaction( DWORD state )

@@ -1421,7 +1421,7 @@ static HRESULT session_invoke(
                 hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
                 if (FAILED(hr)) return hr;
                 V_VT(pVarResult) = VT_BOOL;
-                V_BOOL(pVarResult) = MsiGetMode(This->msiHandle, V_I4(&varg0));
+                V_BOOL(pVarResult) = MsiGetMode(This->msiHandle, V_I4(&varg0)) ? VARIANT_TRUE : VARIANT_FALSE;
             } else if (wFlags & DISPATCH_PROPERTYPUT) {
                 hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
                 if (FAILED(hr)) return hr;
@@ -1816,12 +1816,36 @@ static HRESULT InstallerImpl_SummaryInformation(WORD wFlags,
                                                 EXCEPINFO* pExcepInfo,
                                                 UINT* puArgErr)
 {
-    if (!(wFlags & DISPATCH_METHOD))
+    UINT ret;
+    HRESULT hr;
+    MSIHANDLE hsuminfo;
+    IDispatch *dispatch;
+    VARIANTARG varg0, varg1;
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
         return DISP_E_MEMBERNOTFOUND;
 
-    FIXME("\n");
+    VariantInit(&varg1);
+    hr = DispGetParam(pDispParams, 1, VT_I4, &varg1, puArgErr);
+    if (FAILED(hr))
+        return hr;
 
-    VariantInit(pVarResult);
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    ret = MsiGetSummaryInformationW(0, V_BSTR(&varg0), V_I4(&varg1), &hsuminfo);
+    VariantClear(&varg0);
+    if (ret != ERROR_SUCCESS)
+        return DISP_E_EXCEPTION;
+
+    hr = create_summaryinfo(hsuminfo, &dispatch);
+    if (FAILED(hr))
+        return hr;
+
+    V_VT(pVarResult) = VT_DISPATCH;
+    V_DISPATCH(pVarResult) = dispatch;
     return S_OK;
 }
 
@@ -2013,7 +2037,7 @@ static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
         /* Return VT_BOOL clarifying whether registry key exists or not. */
         case VT_EMPTY:
             V_VT(pVarResult) = VT_BOOL;
-            V_BOOL(pVarResult) = (ret == ERROR_SUCCESS);
+            V_BOOL(pVarResult) = (ret == ERROR_SUCCESS) ? VARIANT_TRUE : VARIANT_FALSE;
             break;
 
         /* Return the value of specified key if it exists. */

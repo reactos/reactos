@@ -36,6 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
 
+struct row_export_info
+{
+    HANDLE handle;
+    LPCWSTR folder;
+    LPCWSTR table;
+};
+
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
@@ -763,6 +770,8 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     lstrcatW( path, file );
 
     data = msi_read_text_archive( path, &len );
+    if (data == NULL)
+        return ERROR_BAD_PATHNAME;
 
     ptr = data;
     msi_parse_line( &ptr, &columns, &num_columns, &len );
@@ -901,50 +910,131 @@ end:
     return r;
 }
 
-static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
+static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
-    UINT i, count, len, r = ERROR_SUCCESS;
-    const char *sep;
     char *buffer;
+    BOOL bret;
     DWORD sz;
+    UINT r;
 
-    len = 0x100;
-    buffer = msi_alloc( len );
-    if ( !buffer )
+    sz = 0x100;
+    buffer = msi_alloc( sz );
+    if (!buffer)
         return ERROR_OUTOFMEMORY;
 
-    count = MSI_RecordGetFieldCount( row );
-    for ( i=start; i<=count; i++ )
+    r = MSI_RecordGetStringA( row, field, buffer, &sz );
+    if (r == ERROR_MORE_DATA)
     {
-        sz = len;
-        r = MSI_RecordGetStringA( row, i, buffer, &sz );
-        if (r == ERROR_MORE_DATA)
-        {
-            char *p = msi_realloc( buffer, sz + 1 );
-            if (!p)
-                break;
-            len = sz + 1;
-            buffer = p;
-        }
-        sz = len;
-        r = MSI_RecordGetStringA( row, i, buffer, &sz );
-        if (r != ERROR_SUCCESS)
-            break;
+        char *p;
 
-        if (!WriteFile( handle, buffer, sz, &sz, NULL ))
+        sz++; /* leave room for NULL terminator */
+        p = msi_realloc( buffer, sz );
+        if (!p)
         {
-            r = ERROR_FUNCTION_FAILED;
-            break;
+            msi_free( buffer );
+            return ERROR_OUTOFMEMORY;
         }
+        buffer = p;
+
+        r = MSI_RecordGetStringA( row, field, buffer, &sz );
+        if (r != ERROR_SUCCESS)
+        {
+            msi_free( buffer );
+            return r;
+        }
+    }
+    else if (r != ERROR_SUCCESS)
+        return r;
+
+    bret = WriteFile( handle, buffer, sz, &sz, NULL );
+    msi_free( buffer );
+    if (!bret)
+        return ERROR_FUNCTION_FAILED;
+
+    return r;
+}
+
+static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UINT field,
+                               UINT start )
+{
+    static const WCHAR fmt_file[] = { '%','s','/','%','s','/','%','s',0 };
+    static const WCHAR fmt_folder[] = { '%','s','/','%','s',0 };
+    WCHAR stream_name[256], stream_filename[MAX_PATH];
+    DWORD sz, read_size, write_size;
+    char buffer[1024];
+    HANDLE file;
+    UINT r;
+
+    /* get the name of the file */
+    sz = sizeof(stream_name)/sizeof(WCHAR);
+    r = MSI_RecordGetStringW( row, start, stream_name, &sz );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    /* if the destination folder does not exist then create it (folder name = table name) */
+    snprintfW( stream_filename, sizeof(stream_filename), fmt_folder, folder, table );
+    if (GetFileAttributesW( stream_filename ) == INVALID_FILE_ATTRIBUTES)
+    {
+        if (!CreateDirectoryW( stream_filename, NULL ))
+            return ERROR_PATH_NOT_FOUND;
+    }
+
+    /* actually create the file */
+    snprintfW( stream_filename, sizeof(stream_filename), fmt_file, folder, table, stream_name );
+    file = CreateFileW( stream_filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    if (file == INVALID_HANDLE_VALUE)
+        return ERROR_FILE_NOT_FOUND;
+
+    /* copy the stream to the file */
+    read_size = sizeof(buffer);
+    while (read_size == sizeof(buffer))
+    {
+        r = MSI_RecordReadStream( row, field, buffer, &read_size );
+        if (r != ERROR_SUCCESS)
+        {
+            CloseHandle( file );
+            return r;
+        }
+        if (!WriteFile( file, buffer, read_size, &write_size, NULL ) || read_size != write_size)
+        {
+            CloseHandle( file );
+            return ERROR_WRITE_FAULT;
+        }
+    }
+    CloseHandle( file );
+    return r;
+}
+
+static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
+{
+    HANDLE handle = row_export_info->handle;
+    UINT i, count, r = ERROR_SUCCESS;
+    const char *sep;
+    DWORD sz;
+
+    count = MSI_RecordGetFieldCount( row );
+    for (i = start; i <= count; i++)
+    {
+        r = msi_export_field( handle, row, i );
+        if (r == ERROR_INVALID_PARAMETER)
+        {
+            r = msi_export_stream( row_export_info->folder, row_export_info->table, row, i, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+
+            /* exporting a binary stream, repeat the "Name" field */
+            r = msi_export_field( handle, row, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+        }
+        else if (r != ERROR_SUCCESS)
+            return r;
 
         sep = (i < count) ? "\t" : "\r\n";
         if (!WriteFile( handle, sep, strlen(sep), &sz, NULL ))
-        {
-            r = ERROR_FUNCTION_FAILED;
-            break;
-        }
+            return ERROR_FUNCTION_FAILED;
     }
-    msi_free( buffer );
     return r;
 }
 
@@ -968,9 +1058,25 @@ static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_export_summaryinformation( MSIDATABASE *db, HANDLE handle )
+{
+    static const char header[] = "PropertyId\tValue\r\n"
+                                 "i2\tl255\r\n"
+                                 "_SummaryInformation\tPropertyId\r\n";
+    DWORD sz;
+
+    sz = lstrlenA(header);
+    if (!WriteFile(handle, header, sz, &sz, NULL))
+        return ERROR_WRITE_FAULT;
+
+    return msi_export_suminfo( db, handle );
+}
+
 static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
+    static const WCHAR summaryinformation[] = {
+        '_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0 };
     static const WCHAR query[] = {
         's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
     static const WCHAR forcecodepage[] = {
@@ -1009,14 +1115,22 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         goto done;
     }
 
+    if (!strcmpW( table, summaryinformation ))
+    {
+        r = msi_export_summaryinformation( db, handle );
+        goto done;
+    }
+
     r = MSI_OpenQuery( db, &view, query, table );
     if (r == ERROR_SUCCESS)
     {
+        struct row_export_info row_export_info = { handle, folder, table };
+
         /* write out row 1, the column names */
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( handle, rec, 1 );
+            msi_export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1024,7 +1138,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( handle, rec, 1 );
+            msi_export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1033,12 +1147,12 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         if (r == ERROR_SUCCESS)
         {
             MSI_RecordSetStringW( rec, 0, table );
-            msi_export_record( handle, rec, 0 );
+            msi_export_record( &row_export_info, rec, 0 );
             msiobj_release( &rec->hdr );
         }
 
         /* write out row 4 onwards, the data */
-        r = MSI_IterateRecords( view, 0, msi_export_row, handle );
+        r = MSI_IterateRecords( view, 0, msi_export_row, &row_export_info );
         msiobj_release( &view->hdr );
     }
 

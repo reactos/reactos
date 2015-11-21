@@ -115,7 +115,7 @@ reactos/dll/win32/msg711.acm          # Synced to WineStaging-1.7.47
 reactos/dll/win32/msgsm32.acm         # Synced to WineStaging-1.7.47
 reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.37
 reactos/dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.47
-reactos/dll/win32/msi                 # Synced to WineStaging-1.7.47
+reactos/dll/win32/msi                 # Synced to WineStaging-1.7.55
 reactos/dll/win32/msimg32             # Synced to WineStaging-1.7.47
 reactos/dll/win32/msimtf              # Synced to WineStaging-1.7.47
 reactos/dll/win32/msisip              # Synced to WineStaging-1.7.47

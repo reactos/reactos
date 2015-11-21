@@ -968,6 +968,7 @@ extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty ) DECL
 extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
 extern LPWSTR msi_get_suminfo_product( IStorage *stg ) DECLSPEC_HIDDEN;
 extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns ) DECLSPEC_HIDDEN;
+extern UINT msi_export_suminfo( MSIDATABASE *db, HANDLE handle ) DECLSPEC_HIDDEN;
 extern enum platform parse_platform( const WCHAR *str ) DECLSPEC_HIDDEN;
 extern UINT msi_load_suminfo_properties( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 

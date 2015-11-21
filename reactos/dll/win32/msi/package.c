@@ -2100,6 +2100,8 @@ UINT msi_get_property( MSIDATABASE *db, LPCWSTR szName,
     MSIRECORD *row;
     UINT rc = ERROR_FUNCTION_FAILED;
 
+    TRACE("%p %s %p %p\n", db, debugstr_w(szName), szValueBuf, pchValueBuf);
+
     row = msi_get_property_row( db, szName );
 
     if (*pchValueBuf > 0)

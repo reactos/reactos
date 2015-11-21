@@ -280,7 +280,7 @@
 284 stdcall MsiBeginTransactionA(str long ptr ptr)
 285 stdcall MsiBeginTransactionW(wstr long ptr ptr)
 286 stdcall MsiEndTransaction(long)
-287 stub MsiJoinTransaction
+287 stdcall MsiJoinTransaction(long long ptr)
 288 stub MsiSetOfflineContextW
 289 stdcall MsiEnumComponentsExA(str long long ptr ptr ptr ptr)
 290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)

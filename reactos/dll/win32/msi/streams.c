@@ -194,7 +194,28 @@ static UINT STREAMS_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row
 
 static UINT STREAMS_delete_row(struct tagMSIVIEW *view, UINT row)
 {
-    FIXME("(%p %d): stub!\n", view, row);
+    MSIDATABASE *db = ((MSISTREAMSVIEW *)view)->db;
+    UINT i, num_rows = db->num_streams - 1;
+    const WCHAR *name;
+    WCHAR *encname;
+    HRESULT hr;
+
+    TRACE("(%p %d)!\n", view, row);
+
+    name = msi_string_lookup( db->strings, db->streams[row].str_index, NULL );
+    if (!(encname = encode_streamname( FALSE, name ))) return ERROR_OUTOFMEMORY;
+    hr = IStorage_DestroyElement( db->storage, encname );
+    msi_free( encname );
+    if (FAILED( hr ))
+        return ERROR_FUNCTION_FAILED;
+    hr = IStream_Release( db->streams[row].stream );
+    if (FAILED( hr ))
+        return ERROR_FUNCTION_FAILED;
+
+    for (i = row; i < num_rows; i++)
+        db->streams[i] = db->streams[i + 1];
+    db->num_streams = num_rows;
+
     return ERROR_SUCCESS;
 }
 
@@ -293,12 +314,15 @@ static UINT STREAMS_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRE
         r = streams_modify_update(view, rec);
         break;
 
+    case MSIMODIFY_DELETE:
+        r = STREAMS_delete_row(view, row - 1);
+        break;
+
     case MSIMODIFY_VALIDATE_NEW:
     case MSIMODIFY_INSERT_TEMPORARY:
     case MSIMODIFY_REFRESH:
     case MSIMODIFY_REPLACE:
     case MSIMODIFY_MERGE:
-    case MSIMODIFY_DELETE:
     case MSIMODIFY_VALIDATE:
     case MSIMODIFY_VALIDATE_FIELD:
     case MSIMODIFY_VALIDATE_DELETE:
