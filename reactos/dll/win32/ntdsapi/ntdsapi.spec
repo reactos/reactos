@@ -7,7 +7,7 @@
 @ stub DsBindWithSpnA
 @ stub DsBindWithSpnW
 @ stub DsClientMakeSpnForTargetServerA
-@ stub DsClientMakeSpnForTargetServerW
+@ stdcall DsClientMakeSpnForTargetServerW(wstr wstr ptr ptr)
 @ stub DsCrackNamesA
 @ stub DsCrackNamesW
 @ stub DsCrackSpn2A

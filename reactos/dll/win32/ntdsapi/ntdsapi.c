@@ -205,3 +205,29 @@ DWORD WINAPI DsServerRegisterSpnW(DS_SPN_WRITE_OP operation, LPCWSTR ServiceClas
             debugstr_w(ServiceClass), debugstr_w(UserObjectDN));
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+DWORD WINAPI DsClientMakeSpnForTargetServerW(LPCWSTR class, LPCWSTR name, DWORD *buflen, LPWSTR buf)
+{
+    DWORD len;
+    WCHAR *p;
+
+    TRACE("(%s,%s,%p,%p)\n", debugstr_w(class), debugstr_w(name), buflen, buf);
+
+    if (!class || !name || !buflen) return ERROR_INVALID_PARAMETER;
+
+    len = strlenW(class) + 1 + strlenW(name) + 1;
+    if (*buflen < len)
+    {
+        *buflen = len;
+        return ERROR_BUFFER_OVERFLOW;
+    }
+    *buflen = len;
+
+    memcpy(buf, class, strlenW(class) * sizeof(WCHAR));
+    p = buf + strlenW(class);
+    *p++ = '/';
+    memcpy(p, name, strlenW(name) * sizeof(WCHAR));
+    buf[len - 1] = 0;
+
+    return ERROR_SUCCESS;
+}

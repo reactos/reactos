@@ -138,7 +138,7 @@ reactos/dll/win32/msxml6              # Synced to WineStaging-1.7.47
 reactos/dll/win32/nddeapi             # Synced to WineStaging-1.7.47
 reactos/dll/win32/netapi32            # Forked at Wine-1.3.34
 reactos/dll/win32/npptools            # Synced to WineStaging-1.7.47
-reactos/dll/win32/ntdsapi             # Synced to WineStaging-1.7.47
+reactos/dll/win32/ntdsapi             # Synced to WineStaging-1.7.55
 reactos/dll/win32/ntprint             # Synced to WineStaging-1.7.47
 reactos/dll/win32/objsel              # Synced to WineStaging-1.7.47
 reactos/dll/win32/odbc32              # Synced to WineStaging-1.7.37. Depends on port of Linux ODBC.
