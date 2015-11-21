@@ -198,6 +198,17 @@ StartMenuPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             break;
+            
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_TASKBARPROP_STARTMENUCLASSICCUST:
+                    ShowCustomizeClassic(hExplorerInstance, hwndDlg);
+                    break;
+            }
+            break;
+        }
 
         case WM_DESTROY:
             break;

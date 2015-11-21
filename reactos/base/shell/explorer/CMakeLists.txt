@@ -13,6 +13,7 @@ list(APPEND SOURCE
     startctxmnu.cpp
     startmnu.cpp
     startmnusite.cpp
+    startmnucust.cpp
     startup.cpp
     taskband.cpp
     taskswnd.cpp

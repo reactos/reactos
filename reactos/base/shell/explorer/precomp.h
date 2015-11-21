@@ -316,6 +316,12 @@ HRESULT
 CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
+ * startmnucust.cpp
+ */
+VOID 
+ShowCustomizeClassic(HINSTANCE, HWND);
+
+/*
  * trayntfy.c
  */
 
