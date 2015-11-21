@@ -544,6 +544,7 @@ static void testCertTrust(SAFE_PROVIDER_FUNCTIONS *funcs, GUID *actionID)
     CRYPT_PROVIDER_DATA data = { 0 };
     CRYPT_PROVIDER_SGNR sgnr = { sizeof(sgnr), { 0 } };
     HRESULT ret;
+    BOOL b;
 
     if (!CertFreeCertificateChain_p)
     {
@@ -563,8 +564,8 @@ static void testCertTrust(SAFE_PROVIDER_FUNCTIONS *funcs, GUID *actionID)
     ok(data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV] ==
      TRUST_E_NOSIGNATURE, "Expected TRUST_E_NOSIGNATURE, got %08x\n",
      data.padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV]);
-    ret = funcs->pfnAddSgnr2Chain(&data, FALSE, 0, &sgnr);
-    if (ret)
+    b = funcs->pfnAddSgnr2Chain(&data, FALSE, 0, &sgnr);
+    if (b)
     {
         PCCERT_CONTEXT cert;
 
@@ -577,8 +578,8 @@ static void testCertTrust(SAFE_PROVIDER_FUNCTIONS *funcs, GUID *actionID)
         {
             WINTRUST_DATA wintrust_data = { 0 };
 
-            ret = funcs->pfnAddCert2Chain(&data, 0, FALSE, 0, cert);
-            ok(ret == S_FALSE, "Expected S_FALSE, got %08x\n", ret);
+            b = funcs->pfnAddCert2Chain(&data, 0, FALSE, 0, cert);
+            ok(b == TRUE, "Expected TRUE, got %d\n", b);
 
             /* If pWintrustData isn't set, crashes attempting to access
              * pWintrustData->fdwRevocationChecks
