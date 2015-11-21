@@ -391,8 +391,8 @@ static	DWORD	MCIAVI_player(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpP
         {
             while(next_frame_us <= tc && wma->dwCurrVideoFrame < wma->dwToVideoFrame){
                 double dur;
-                ++wma->dwCurrVideoFrame;
                 dur = MCIAVI_PaintFrame(wma, hDC);
+                ++wma->dwCurrVideoFrame;
                 if(!dur)
                     break;
                 next_frame_us += dur;
@@ -400,14 +400,19 @@ static	DWORD	MCIAVI_player(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpP
             }
             ReleaseDC(wma->hWndPaint, hDC);
         }
-        if(wma->dwCurrVideoFrame >= wma->dwToVideoFrame)
-            break;
+        if (wma->dwCurrVideoFrame >= wma->dwToVideoFrame)
+        {
+            if (!(dwFlags & MCI_DGV_PLAY_REPEAT))
+                break;
+            TRACE("repeat media as requested\n");
+            wma->dwCurrVideoFrame = wma->dwCurrAudioBlock = 0;
+        }
 
         if (wma->lpWaveFormat)
             MCIAVI_PlayAudioBlocks(wma, nHdr, waveHdr);
 
         tc = currenttime_us();
-        if(tc < next_frame_us)
+        if (tc < next_frame_us)
             delta = next_frame_us - tc;
         else
             delta = 0;
@@ -530,7 +535,7 @@ static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
     if (dwFlags & MCI_DGV_PLAY_REVERSE) return MCIERR_UNSUPPORTED_FUNCTION;
     if (dwFlags & MCI_TEST)	return 0;
 
-    if (dwFlags & (MCI_DGV_PLAY_REPEAT|MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLSCREEN|MCI_MCIAVI_PLAY_FULLBY2))
+    if (dwFlags & (MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLSCREEN|MCI_MCIAVI_PLAY_FULLBY2))
 	FIXME("Unsupported flag %08x\n", dwFlags);
 
     EnterCriticalSection(&wma->cs);
