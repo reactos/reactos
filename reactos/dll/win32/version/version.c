@@ -1372,7 +1372,7 @@ _fetch_versioninfo(LPSTR fn,VS_FIXEDFILEINFO **vffi) {
     alloclen = 1000;
     buf=HeapAlloc(GetProcessHeap(), 0, alloclen);
     if(buf == NULL) {
-        WARN("Memory exausted while fetching version info!\n");
+        WARN("Memory exhausted while fetching version info!\n");
         return NULL;
     }
     while (1) {
@@ -1386,7 +1386,7 @@ _fetch_versioninfo(LPSTR fn,VS_FIXEDFILEINFO **vffi) {
 	    HeapFree(GetProcessHeap(), 0, buf);
 	    buf = HeapAlloc(GetProcessHeap(), 0, alloclen);
             if(buf == NULL) {
-               WARN("Memory exausted while fetching version info!\n");
+               WARN("Memory exhausted while fetching version info!\n");
                return NULL;
             }
 	} else {
