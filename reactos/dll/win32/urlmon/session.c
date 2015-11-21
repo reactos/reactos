@@ -540,7 +540,7 @@ static void ensure_useragent(void)
          ' ','(','c','o','m','p','a','t','i','b','l','e',';',
          ' ','M','S','I','E',' ','8','.','0',';',
          ' ','W','i','n','d','o','w','s',' ','%','s','%','d','.','%','d',';',
-         ' ','%','s',';',' ','T','r','i','d','e','n','t','/','5','.','0',0};
+         ' ','%','s','T','r','i','d','e','n','t','/','5','.','0',0};
     static const WCHAR post_platform_keyW[] =
         {'S','O','F','T','W','A','R','E',
          '\\','M','i','c','r','o','s','o','f','t',
@@ -550,9 +550,8 @@ static void ensure_useragent(void)
          '\\','5','.','0','\\','U','s','e','r',' ','A','g','e','n','t',
          '\\','P','o','s','t',' ','P','l','a','t','f','o','r','m',0};
     static const WCHAR ntW[] = {'N','T',' ',0};
-    static const WCHAR win32W[] = {'W','i','n','3','2',0};
-    static const WCHAR win64W[] = {'W','i','n','6','4',0};
-    static const WCHAR wow64W[] = {'W','O','W','6','4',0};
+    static const WCHAR win64W[] = {'W','i','n','6','4',';',' ','x','6','4',';',' ',0};
+    static const WCHAR wow64W[] = {'W','O','W','6','4',';',' ',0};
     static const WCHAR emptyW[] = {0};
 
     if(user_agent)
@@ -566,7 +565,7 @@ static void ensure_useragent(void)
     else if(IsWow64Process(GetCurrentProcess(), &is_wow) && is_wow)
         os_type = wow64W;
     else
-        os_type = win32W;
+        os_type = emptyW;
 
     sprintfW(buf, formatW, is_nt, info.dwMajorVersion, info.dwMinorVersion, os_type);
     len = strlenW(buf);
