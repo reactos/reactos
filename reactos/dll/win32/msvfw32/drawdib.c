@@ -303,7 +303,8 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
                         UINT wFlags)
 {
     WINE_HDD *whdd;
-    BOOL ret = TRUE;
+    BOOL ret;
+    int reopen = 0;
 
     TRACE("(%p,%p,%d,%d,%d,%d,%p,%p,%d,%d,%d,%d,0x%08x)\n",
           hdd, hdc, xDst, yDst, dxDst, dyDst, lpbi, lpBits, xSrc, ySrc, dxSrc, dySrc, wFlags);
@@ -325,11 +326,25 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
 #define CHANGED(x) (whdd->x != x)
 
-    if ((!whdd->begun) || 
-        (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc)) || 
-        (!(wFlags & DDF_SAME_DRAW) && (CHANGED(lpbi) || CHANGED(dxSrc) || CHANGED(dySrc) || CHANGED(dxDst) || CHANGED(dyDst)))) 
+    /* Check if anything changed from the parameters passed and our struct.
+     * If anything changed we need to run DrawDibBegin again to ensure we
+     * can support the changes.
+     */
+    if (!whdd->begun)
+        reopen = 1;
+    else if (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc))
+        reopen = 2;
+    else if (!(wFlags & DDF_SAME_DRAW))
     {
-        TRACE("Something changed!\n");
+        if (CHANGED(lpbi) && memcmp(lpbi, whdd->lpbi, sizeof(*lpbi))) reopen = 3;
+        else if (CHANGED(dxSrc)) reopen = 4;
+        else if (CHANGED(dySrc)) reopen = 5;
+        else if (CHANGED(dxDst)) reopen = 6;
+        else if (CHANGED(dyDst)) reopen = 7;
+    }
+    if (reopen)
+    {
+        TRACE("Something changed (reason %d)!\n", reopen);
         ret = DrawDibBegin(hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, 0);
         if (!ret)
             return ret;
@@ -337,7 +352,14 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
 #undef CHANGED
 
-    if ((dxDst == -1) && (dyDst == -1)) 
+    /* If source dimensions are not specified derive them from bitmap header */
+    if (dxSrc == -1 && dySrc == -1)
+    {
+        dxSrc = lpbi->biWidth;
+        dySrc = lpbi->biHeight;
+    }
+    /* If destination dimensions are not specified derive them from source */
+    if (dxDst == -1 && dyDst == -1)
     {
         dxDst = dxSrc;
         dyDst = dySrc;
@@ -371,9 +393,10 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
          SelectPalette(hdc, whdd->hpal, FALSE);
     }
 
-    if (!(StretchBlt(whdd->hdc, xDst, yDst, dxDst, dyDst, whdd->hMemDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY)))
-        ret = FALSE;
-    
+    ret = StretchBlt(whdd->hdc, xDst, yDst, dxDst, dyDst, whdd->hMemDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY);
+    TRACE("Painting %dx%d at %d,%d from %dx%d at %d,%d -> %d\n",
+          dxDst, dyDst, xDst, yDst, dxSrc, dySrc, xSrc, ySrc, ret);
+
     return ret;
 }
 

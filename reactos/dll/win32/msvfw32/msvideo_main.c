@@ -38,11 +38,56 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvideo);
 
+/* This one is a macro in order to work for both ASCII and Unicode */
+#define fourcc_to_string(str, fcc) do { \
+	(str)[0] = LOBYTE(LOWORD(fcc)); \
+	(str)[1] = HIBYTE(LOWORD(fcc)); \
+	(str)[2] = LOBYTE(HIWORD(fcc)); \
+	(str)[3] = HIBYTE(HIWORD(fcc)); \
+	} while(0)
+
 static inline const char *wine_dbgstr_fcc( DWORD fcc )
 {
-    return wine_dbg_sprintf("%c%c%c%c", 
-                            LOBYTE(LOWORD(fcc)), HIBYTE(LOWORD(fcc)),
-                            LOBYTE(HIWORD(fcc)), HIBYTE(HIWORD(fcc)));
+    char fcc_str[5];
+    fourcc_to_string(fcc_str, fcc);
+    fcc_str[4] = '\0';
+    /* Last byte may be ' ' in some cases like "DIB " */
+    if (isalnum(fcc_str[0]) && isalnum(fcc_str[1]) && isalnum(fcc_str[2])
+    && (isalnum(fcc_str[3]) || isspace(fcc_str[3])))
+        return wine_dbg_sprintf("%s", fcc_str);
+    return wine_dbg_sprintf("0x%08x", fcc);
+}
+
+static const char *wine_dbgstr_icerr( int ret )
+{
+    const char *str;
+    if (ret <= ICERR_CUSTOM)
+        return wine_dbg_sprintf("ICERR_CUSTOM (%d)", ret);
+#define XX(x) case (x): str = #x; break
+    switch (ret)
+    {
+        XX(ICERR_OK);
+        XX(ICERR_DONTDRAW);
+        XX(ICERR_NEWPALETTE);
+        XX(ICERR_GOTOKEYFRAME);
+        XX(ICERR_STOPDRAWING);
+        XX(ICERR_UNSUPPORTED);
+        XX(ICERR_BADFORMAT);
+        XX(ICERR_MEMORY);
+        XX(ICERR_INTERNAL);
+        XX(ICERR_BADFLAGS);
+        XX(ICERR_BADPARAM);
+        XX(ICERR_BADSIZE);
+        XX(ICERR_BADHANDLE);
+        XX(ICERR_CANTUPDATE);
+        XX(ICERR_ABORT);
+        XX(ICERR_ERROR);
+        XX(ICERR_BADBITDEPTH);
+        XX(ICERR_BADIMAGESIZE);
+        default: str = wine_dbg_sprintf("UNKNOWN (%d)", ret);
+    }
+#undef XX
+    return str;
 }
 
 static WINE_HIC*        MSVIDEO_FirstHic /* = NULL */;
@@ -58,14 +103,6 @@ struct _reg_driver
 };
 
 static reg_driver* reg_driver_list = NULL;
-
-/* This one is a macro in order to work for both ASCII and Unicode */
-#define fourcc_to_string(str, fcc) do { \
-	(str)[0] = LOBYTE(LOWORD(fcc)); \
-	(str)[1] = HIBYTE(LOWORD(fcc)); \
-	(str)[2] = LOBYTE(HIWORD(fcc)); \
-	(str)[3] = HIBYTE(HIWORD(fcc)); \
-	} while(0)
 
 HMODULE MSVFW32_hModule;
 
@@ -165,7 +202,7 @@ static LRESULT MSVIDEO_SendMessage(WINE_HIC* whic, UINT msg, DWORD_PTR lParam1, 
         ret = SendDriverMessage(whic->hdrv, msg, lParam1, lParam2);
     }
 
-    TRACE("	-> 0x%08lx\n", ret);
+    TRACE("	-> %s\n", wine_dbgstr_icerr(ret));
     return ret;
 }
 
@@ -282,8 +319,8 @@ static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
  */
 BOOL VFWAPI ICInfo( DWORD fccType, DWORD fccHandler, ICINFO *lpicinfo)
 {
-    TRACE("(%s,%s/%08x,%p)\n",
-          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), fccHandler, lpicinfo);
+    TRACE("(%s,%s,%p)\n",
+          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), lpicinfo);
 
     lpicinfo->fccType = fccType;
     lpicinfo->fccHandler = fccHandler;
@@ -391,6 +428,27 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
 
     TRACE("(%s,%s,0x%08x)\n", wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wMode);
 
+    if (!fccHandler) /* No specific handler, return the first valid for wMode */
+    {
+        HIC local;
+        ICINFO info;
+        DWORD loop = 0;
+        info.dwSize = sizeof(info);
+        while(ICInfo(fccType, loop++, &info))
+        {
+            /* Ensure fccHandler is not 0x0 because we will recurse on ICOpen */
+            if(!info.fccHandler)
+                continue;
+            local = ICOpen(fccType, info.fccHandler, wMode);
+            if (local != 0)
+            {
+                TRACE("Returning %s as defult handler for %s\n",
+                      wine_dbgstr_fcc(info.fccHandler), wine_dbgstr_fcc(fccType));
+                return local;
+            }
+        }
+    }
+
     /* Check if there is a registered driver that matches */
     driver = reg_driver_list;
     while(driver)
@@ -403,22 +461,22 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
             driver = driver->next;
 
     if (driver && driver->proc)
-	/* The driver has been registered at runtime with its driverproc */
+        /* The driver has been registered at runtime with its driverproc */
         return ICOpenFunction(fccType, fccHandler, wMode, driver->proc);
   
     /* Well, lParam2 is in fact a LPVIDEO_OPEN_PARMS, but it has the
      * same layout as ICOPEN
      */
-    icopen.dwSize		= sizeof(ICOPEN);
-    icopen.fccType		= fccType;
-    icopen.fccHandler	        = fccHandler;
-    icopen.dwVersion            = 0x00001000; /* FIXME */
-    icopen.dwFlags		= wMode;
-    icopen.dwError              = 0;
-    icopen.pV1Reserved          = NULL;
-    icopen.pV2Reserved          = NULL;
-    icopen.dnDevNode            = 0; /* FIXME */
-	
+    icopen.dwSize      = sizeof(ICOPEN);
+    icopen.fccType     = fccType;
+    icopen.fccHandler  = fccHandler;
+    icopen.dwVersion   = 0x00001000; /* FIXME */
+    icopen.dwFlags     = wMode;
+    icopen.dwError     = 0;
+    icopen.pV1Reserved = NULL;
+    icopen.pV2Reserved = NULL;
+    icopen.dnDevNode   = 0; /* FIXME */
+
     if (!driver) {
         /* normalize to lower case as in 'vidc' */
         ((char*)&fccType)[0] = tolower(((char*)&fccType)[0]);
@@ -427,13 +485,13 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
         ((char*)&fccType)[3] = tolower(((char*)&fccType)[3]);
         icopen.fccType = fccType;
         /* Seek the driver in the registry */
-	fourcc_to_string(codecname, fccType);
+        fourcc_to_string(codecname, fccType);
         codecname[4] = '.';
-	fourcc_to_string(codecname + 5, fccHandler);
+        fourcc_to_string(codecname + 5, fccHandler);
         codecname[9] = '\0';
 
         hdrv = OpenDriver(codecname, drv32W, (LPARAM)&icopen);
-        if (!hdrv) 
+        if (!hdrv)
             return 0;
     } else {
         /* The driver has been registered at runtime with its name */
@@ -472,15 +530,15 @@ HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, DRIVERPRO
     TRACE("(%s,%s,%d,%p)\n",
           wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wMode, lpfnHandler);
 
-    icopen.dwSize		= sizeof(ICOPEN);
-    icopen.fccType		= fccType;
-    icopen.fccHandler	        = fccHandler;
-    icopen.dwVersion            = ICVERSION;
-    icopen.dwFlags		= wMode;
-    icopen.dwError              = 0;
-    icopen.pV1Reserved          = NULL;
-    icopen.pV2Reserved          = NULL;
-    icopen.dnDevNode            = 0; /* FIXME */
+    icopen.dwSize      = sizeof(ICOPEN);
+    icopen.fccType     = fccType;
+    icopen.fccHandler  = fccHandler;
+    icopen.dwVersion   = ICVERSION;
+    icopen.dwFlags     = wMode;
+    icopen.dwError     = 0;
+    icopen.pV1Reserved = NULL;
+    icopen.pV2Reserved = NULL;
+    icopen.dnDevNode   = 0; /* FIXME */
 
     whic = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_HIC));
     if (!whic) return 0;
@@ -556,7 +614,7 @@ LRESULT VFWAPI ICGetInfo(HIC hic, ICINFO *picinfo, DWORD cb)
         lstrcpyW(picinfo->szDriver, ii.szDriver);
     }
 
-    TRACE("	-> 0x%08lx\n", ret);
+    TRACE("	-> %s\n", wine_dbgstr_icerr(ret));
     return ret;
 }
 
@@ -641,8 +699,8 @@ HIC VFWAPI ICLocate(DWORD fccType, DWORD fccHandler, LPBITMAPINFOHEADER lpbiIn,
     if (fccType == streamtypeVIDEO) 
         return ICLocate(ICTYPE_VIDEO, fccHandler, lpbiIn, lpbiOut, wMode);
     
-    WARN("(%s,%s,%p,%p,0x%04x) not found!\n",
-         wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), lpbiIn, lpbiOut, wMode);
+    ERR("Required media codec '%s %s' not found!\n",
+         wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler));
     return 0;
 }
 
@@ -753,7 +811,7 @@ DWORD VFWAPIV  ICDecompress(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiFormat,
 	icd.ckid	= 0;
 	ret = ICSendMessage(hic,ICM_DECOMPRESS,(DWORD_PTR)&icd,sizeof(ICDECOMPRESS));
 
-	TRACE("-> %d\n",ret);
+	TRACE("-> %s\n",wine_dbgstr_icerr(ret));
 
 	return ret;
 }
@@ -1358,7 +1416,7 @@ LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL
         if (pc->lKey && pc->lKeyCount == (pc->lKey - 1))
         /* No key frames if pc->lKey == 0 */
            pc->lKeyCount = 0;
-	icComp->dwFlags = 0;
+        icComp->dwFlags = 0;
     }
 
     icComp->lpInput = lpBits;
@@ -1367,30 +1425,46 @@ LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL
     icComp->lpPrev = pc->lpBitsPrev;
     ret = ICSendMessage(pc->hic, ICM_COMPRESS, (DWORD_PTR)icComp, sizeof(*icComp));
 
-    if (icComp->dwFlags & AVIIF_KEYFRAME)
-    {
-       pc->lKeyCount = 1;
-       *pfKey = TRUE;
-       TRACE("Key frame\n");
-    }
-    else
-       *pfKey = FALSE;
-
-    *plSize = icComp->lpbiOutput->biSizeImage;
-    TRACE(" -- 0x%08x\n", ret);
     if (ret == ICERR_OK)
     {
-       LPVOID oldprev, oldout;
-/* We shift Prev and Out, so we don't have to allocate and release memory */
-       oldprev = pc->lpBitsPrev;
-       oldout = pc->lpBitsOut;
-       pc->lpBitsPrev = oldout;
-       pc->lpBitsOut = oldprev;
+        LPVOID oldprev, oldout;
 
-       TRACE("returning: %p\n", icComp->lpOutput);
-       return icComp->lpOutput;
+        if (icComp->dwFlags & AVIIF_KEYFRAME)
+        {
+            pc->lKeyCount = 1;
+            *pfKey = TRUE;
+            TRACE("Key frame\n");
+        }
+        else
+            *pfKey = FALSE;
+
+        *plSize = icComp->lpbiOutput->biSizeImage;
+
+        /* We shift Prev and Out, so we don't have to allocate and release memory */
+        oldprev = pc->lpBitsPrev;
+        oldout = pc->lpBitsOut;
+        pc->lpBitsPrev = oldout;
+        pc->lpBitsOut = oldprev;
+
+        TRACE("returning: %p, compressed frame size %u\n", icComp->lpOutput, *plSize);
+        return icComp->lpOutput;
     }
     return NULL;
+}
+
+static void clear_compvars(PCOMPVARS pc)
+{
+    HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
+    HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
+    HeapFree(GetProcessHeap(), 0, pc->lpBitsOut);
+    HeapFree(GetProcessHeap(), 0, pc->lpState);
+    pc->lpbiIn = pc->lpBitsPrev = pc->lpBitsOut = pc->lpState = NULL;
+    if (pc->dwFlags & 0x80000000)
+    {
+        HeapFree(GetProcessHeap(), 0, pc->lpbiOut);
+        pc->lpbiOut = NULL;
+        pc->dwFlags &= ~0x80000000;
+    }
 }
 
 /***********************************************************************
@@ -1398,15 +1472,9 @@ LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL
  */
 void VFWAPI ICSeqCompressFrameEnd(PCOMPVARS pc)
 {
-    DWORD ret;
     TRACE("(%p)\n", pc);
-    ret = ICSendMessage(pc->hic, ICM_COMPRESS_END, 0, 0);
-    TRACE(" -- %x\n", ret);
-    HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsOut);
-    HeapFree(GetProcessHeap(), 0, pc->lpState);
-    pc->lpbiIn = pc->lpBitsPrev = pc->lpBitsOut = pc->lpState = NULL;
+    ICSendMessage(pc->hic, ICM_COMPRESS_END, 0, 0);
+    clear_compvars(pc);
 }
 
 /***********************************************************************
@@ -1418,68 +1486,106 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
      * it doesn't appear to be used though
      */
     DWORD ret;
+    ICCOMPRESS* icComp;
     pc->lpbiIn = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFO));
     if (!pc->lpbiIn)
         return FALSE;
 
     *pc->lpbiIn = *lpbiIn;
-    pc->lpBitsPrev = HeapAlloc(GetProcessHeap(), 0, pc->lpbiIn->bmiHeader.biSizeImage);
-    if (!pc->lpBitsPrev)
-    {
-        HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-	return FALSE;
-    }
 
-    pc->lpState = HeapAlloc(GetProcessHeap(), 0, sizeof(ICCOMPRESS));
+    pc->lpState = HeapAlloc(GetProcessHeap(), 0, sizeof(ICCOMPRESS)
+                            + sizeof(*icComp->lpckid) + sizeof(*icComp->lpdwFlags));
     if (!pc->lpState)
-    {
-       HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-       HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-       return FALSE;
-    }
+        goto error;
+
     pc->cbState = sizeof(ICCOMPRESS);
 
-    pc->lpBitsOut = HeapAlloc(GetProcessHeap(), 0, pc->lpbiIn->bmiHeader.biSizeImage);
-    if (!pc->lpBitsOut)
+    if (!pc->lpbiOut)
     {
-       HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-       HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-       HeapFree(GetProcessHeap(), 0, pc->lpState);
-       return FALSE;
+        /* Ask compressor for needed header size */
+        int size = ICSendMessage(pc->hic, ICM_COMPRESS_GET_FORMAT,
+                                 (DWORD_PTR)pc->lpbiIn, 0);
+        if (size <= 0)
+            goto error;
+
+        pc->lpbiOut = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        if (!pc->lpbiOut)
+            goto error;
+        /* Flag to show that we allocated lpbiOut for proper cleanup */
+        pc->dwFlags |= 0x80000000;
+
+        ret = ICSendMessage(pc->hic, ICM_COMPRESS_GET_FORMAT,
+                            (DWORD_PTR)pc->lpbiIn, (DWORD_PTR)pc->lpbiOut);
+        if (ret != ICERR_OK)
+        {
+            ERR("Could not get output format from compressor\n");
+            goto error;
+        }
+        if (!pc->lpbiOut->bmiHeader.biSizeImage)
+        {
+            /* If we can't know the output frame size for sure at least allocate
+             * the same size of the input frame and also at least 8Kb to be sure
+             * that poor compressors will have enough memory to work if the input
+             * frame is too small.
+             */
+            pc->lpbiOut->bmiHeader.biSizeImage = max(8192, pc->lpbiIn->bmiHeader.biSizeImage);
+            ERR("Bad codec! Invalid output frame size, guessing from input\n");
+        }
     }
+
+    TRACE("Input: %ux%u, fcc %s, bpp %u, size %u\n",
+          pc->lpbiIn->bmiHeader.biWidth, pc->lpbiIn->bmiHeader.biHeight,
+          wine_dbgstr_fcc(pc->lpbiIn->bmiHeader.biCompression),
+          pc->lpbiIn->bmiHeader.biBitCount,
+          pc->lpbiIn->bmiHeader.biSizeImage);
+    TRACE("Output: %ux%u, fcc %s, bpp %u, size %u\n",
+          pc->lpbiOut->bmiHeader.biWidth, pc->lpbiOut->bmiHeader.biHeight,
+          wine_dbgstr_fcc(pc->lpbiOut->bmiHeader.biCompression),
+          pc->lpbiOut->bmiHeader.biBitCount,
+          pc->lpbiOut->bmiHeader.biSizeImage);
+
+    /* Buffer for compressed frame data */
+    pc->lpBitsOut = HeapAlloc(GetProcessHeap(), 0, pc->lpbiOut->bmiHeader.biSizeImage);
+    if (!pc->lpBitsOut)
+        goto error;
+
+    /* Buffer for previous compressed frame data */
+    pc->lpBitsPrev = HeapAlloc(GetProcessHeap(), 0, pc->lpbiOut->bmiHeader.biSizeImage);
+    if (!pc->lpBitsPrev)
+        goto error;
+
     TRACE("Compvars:\n"
-          "\tpc:\n"
           "\tsize: %i\n"
-          "\tflags: %i\n"
+          "\tflags: 0x%x\n"
           "\thic: %p\n"
-          "\ttype: %x\n"
-          "\thandler: %x\n"
+          "\ttype: %s\n"
+          "\thandler: %s\n"
           "\tin/out: %p/%p\n"
-          "key/data/quality: %i/%i/%i\n",
-	     pc->cbSize, pc->dwFlags, pc->hic, pc->fccType, pc->fccHandler,
-	     pc->lpbiIn, pc->lpbiOut, pc->lKey, pc->lDataRate, pc->lQ);
+          "\tkey/data/quality: %i/%i/%i\n",
+    pc->cbSize, pc->dwFlags, pc->hic, wine_dbgstr_fcc(pc->fccType),
+    wine_dbgstr_fcc(pc->fccHandler), pc->lpbiIn, pc->lpbiOut, pc->lKey,
+    pc->lDataRate, pc->lQ);
 
     ret = ICSendMessage(pc->hic, ICM_COMPRESS_BEGIN, (DWORD_PTR)pc->lpbiIn, (DWORD_PTR)pc->lpbiOut);
-    TRACE(" -- %x\n", ret);
     if (ret == ICERR_OK)
     {
-       ICCOMPRESS* icComp = pc->lpState;
-       /* Initialise some variables */
-       pc->lFrame = 0; pc->lKeyCount = 0;
+        icComp = pc->lpState;
+        /* Initialise some variables */
+        pc->lFrame = 0; pc->lKeyCount = 0;
 
-       icComp->lpbiOutput = &pc->lpbiOut->bmiHeader;
-       icComp->lpbiInput = &pc->lpbiIn->bmiHeader;
-       icComp->lpckid = NULL;
-       icComp->dwFrameSize = 0;
-       icComp->dwQuality = pc->lQ;
-       icComp->lpbiPrev = &pc->lpbiIn->bmiHeader;
-       return TRUE;
+        icComp->lpbiOutput = &pc->lpbiOut->bmiHeader;
+        icComp->lpbiInput = &pc->lpbiIn->bmiHeader;
+        icComp->lpckid = (DWORD *)(icComp + 1);
+        *icComp->lpckid = 0;
+        icComp->lpdwFlags = (DWORD *)((char *)(icComp + 1) + sizeof(*icComp->lpckid));
+        *icComp->lpdwFlags = 0;
+        icComp->dwFrameSize = 0;
+        icComp->dwQuality = pc->lQ;
+        icComp->lpbiPrev = &pc->lpbiIn->bmiHeader;
+        return TRUE;
     }
-    HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-    HeapFree(GetProcessHeap(), 0, pc->lpState);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsOut);
-    pc->lpBitsPrev = pc->lpbiIn = pc->lpState = pc->lpBitsOut = NULL;
+error:
+    clear_compvars(pc);
     return FALSE;
 }
 
