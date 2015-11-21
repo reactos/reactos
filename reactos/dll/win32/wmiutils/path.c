@@ -1211,7 +1211,7 @@ static BOOL WINAPI path_IsRelative(
     LPWSTR wszNamespace)
 {
     FIXME("%p, %s, %s\n", iface, debugstr_w(wszMachine), debugstr_w(wszNamespace));
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static BOOL WINAPI path_IsRelativeOrChild(
@@ -1221,7 +1221,7 @@ static BOOL WINAPI path_IsRelativeOrChild(
     LONG lFlags)
 {
     FIXME("%p, %s, %s, 0x%x\n", iface, debugstr_w(wszMachine), debugstr_w(wszNamespace), lFlags);
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static BOOL WINAPI path_IsLocal(
@@ -1229,7 +1229,7 @@ static BOOL WINAPI path_IsLocal(
     LPCWSTR wszMachine)
 {
     FIXME("%p, %s\n", iface, debugstr_w(wszMachine));
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static BOOL WINAPI path_IsSameClassName(
@@ -1237,7 +1237,7 @@ static BOOL WINAPI path_IsSameClassName(
     LPCWSTR wszClass)
 {
     FIXME("%p, %s\n", iface, debugstr_w(wszClass));
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static const struct IWbemPathVtbl path_vtbl =
