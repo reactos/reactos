@@ -610,7 +610,7 @@
 610 stdcall GdipFindFirstImageItem(ptr ptr)
 611 stub GdipFindNextImageItem
 612 stdcall GdipGetImageItemData(ptr ptr)
-613 stdcall -stub GdipCreateEffect(ptr ptr)
+613 stdcall GdipCreateEffect(int128 ptr)
 614 stdcall GdipDeleteEffect(ptr)
 615 stub GdipGetEffectParameterSize
 616 stub GdipGetEffectParameters
@@ -620,7 +620,7 @@
 620 stdcall GdipBitmapApplyEffect(ptr ptr ptr long ptr ptr)
 621 stub GdipBitmapGetHistogram
 622 stub GdipBitmapGetHistogramSize
-623 stub GdipBitmapConvertFormat
+623 stdcall GdipBitmapConvertFormat(ptr long long long ptr float)
 624 stdcall GdipImageSetAbort(ptr ptr)
 625 stub GdipGraphicsSetAbort
 626 stub GdipDrawImageFX
