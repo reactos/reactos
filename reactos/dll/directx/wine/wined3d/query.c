@@ -112,7 +112,7 @@ enum wined3d_event_query_result wined3d_event_query_finish(const struct wined3d_
     const struct wined3d_gl_info *gl_info;
     enum wined3d_event_query_result ret;
 
-    TRACE("(%p)\n", query);
+    TRACE("query %p, device %p.\n", query, device);
 
     if (!query->context)
     {
@@ -938,6 +938,14 @@ static HRESULT wined3d_timestamp_disjoint_query_ops_get_data(struct wined3d_quer
         void *data, DWORD size, DWORD flags)
 {
     TRACE("query %p, data %p, size %#x, flags %#x.\n", query, data, size, flags);
+    if (query->type == WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT)
+    {
+        static const struct wined3d_query_data_timestamp_disjoint disjoint_data = {1000 * 1000 * 1000, FALSE};
+
+        if (query->state == QUERY_BUILDING)
+        {
+             TRACE("Query is building, returning S_FALSE.\n");
+             return S_FALSE;
 #else  /* STAGING_CSMT */
         query->state = QUERY_SIGNALLED;
 
@@ -949,7 +957,6 @@ static HRESULT wined3d_timestamp_disjoint_query_ops_get_data(struct wined3d_quer
 {
     TRACE("query %p, data %p, size %#x, flags %#x.\n", query, data, size, flags);
 
-#endif /* STAGING_CSMT */
     if (query->type == WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT)
     {
         static const struct wined3d_query_data_timestamp_disjoint disjoint_data = {1000 * 1000 * 1000, FALSE};
@@ -958,6 +965,7 @@ static HRESULT wined3d_timestamp_disjoint_query_ops_get_data(struct wined3d_quer
         {
             TRACE("Query is building, returning S_FALSE.\n");
             return S_FALSE;
+#endif /* STAGING_CSMT */
         }
 
         fill_query_data(data, size, &disjoint_data, sizeof(disjoint_data));
@@ -1166,7 +1174,7 @@ HRESULT CDECL wined3d_query_create(struct wined3d_device *device,
     struct wined3d_query *object;
     HRESULT hr;
 
-    TRACE("device %p, type %#x, query %p.\n", device, type, query);
+    TRACE("device %p, type %#x, parent %p, query %p.\n", device, type, parent, query);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)

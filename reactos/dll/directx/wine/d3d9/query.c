@@ -29,7 +29,7 @@ static inline struct d3d9_query *impl_from_IDirect3DQuery9(IDirect3DQuery9 *ifac
 
 static HRESULT WINAPI d3d9_query_QueryInterface(IDirect3DQuery9 *iface, REFIID riid, void **out)
 {
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), out);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
     if (IsEqualGUID(riid, &IID_IDirect3DQuery9)
             || IsEqualGUID(riid, &IID_IUnknown))

@@ -252,21 +252,18 @@ static void WINE_GLAPI wine_glFogfv(GLenum pname, const GLfloat *param) {
 }
 
 static void (WINE_GLAPI *old_fogcoord_glVertex4f) (GLfloat x, GLfloat y, GLfloat z, GLfloat w) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glVertex4fv) (const GLfloat *pos) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glVertex3f) (GLfloat x, GLfloat y, GLfloat z) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glVertex3fv) (const GLfloat *pos) = NULL;
 static void (WINE_GLAPI *old_fogcoord_glColor4f) (GLfloat r, GLfloat g, GLfloat b, GLfloat a) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glColor4fv) (const GLfloat *color) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glColor3f) (GLfloat r, GLfloat g, GLfloat b) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glColor3fv) (const GLfloat *color) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glColor4ub) (GLubyte r, GLubyte g, GLubyte b, GLubyte a) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glFogCoordfEXT) (GLfloat f) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glFogCoorddEXT) (GLdouble f) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glFogCoordfvEXT) (const GLfloat *f) = NULL;
-static void (WINE_GLAPI *old_fogcoord_glFogCoorddvEXT) (const GLdouble *f) = NULL;
 
 static void WINE_GLAPI wine_glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
     struct wined3d_context *ctx = context_get_current();
+
+    /* This can be called from draw_test_quad() and at that point there is no
+     * wined3d_context current. */
+    if (!ctx)
+    {
+        old_fogcoord_glVertex4f(x, y, z, w);
+        return;
+    }
     if(ctx->gl_fog_source == GL_FOG_COORDINATE_EXT && ctx->fog_enabled) {
         GLfloat c[4] = {ctx->color[0], ctx->color[1], ctx->color[2], ctx->color[3]};
         GLfloat i;
@@ -297,6 +294,14 @@ static void WINE_GLAPI wine_glVertex3fv(const GLfloat *pos) {
 
 static void WINE_GLAPI wine_glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
     struct wined3d_context *ctx = context_get_current();
+
+    /* This can be called from draw_test_quad() and at that point there is no
+     * wined3d_context current. */
+    if (!ctx)
+    {
+        old_fogcoord_glColor4f(r, g, b, a);
+        return;
+    }
     ctx->color[0] = r;
     ctx->color[1] = g;
     ctx->color[2] = b;
@@ -339,198 +344,117 @@ static void WINE_GLAPI wine_glFogCoorddvEXT(const GLdouble *f) {
 
 /* End GL_EXT_fog_coord emulation */
 
-void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
+void install_gl_compat_wrapper(struct wined3d_gl_info *gl_info, enum wined3d_gl_extension ext)
 {
-    if (!gl_info->supported[ARB_MULTITEXTURE])
+    switch (ext)
     {
-        TRACE("Applying GL_ARB_multitexture emulation hooks\n");
-        gl_info->gl_ops.ext.p_glActiveTexture           = wine_glActiveTexture;
-        gl_info->gl_ops.ext.p_glClientActiveTextureARB  = wine_glClientActiveTextureARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord1fARB      = wine_glMultiTexCoord1fARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord1fvARB     = wine_glMultiTexCoord1fvARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord2fARB      = wine_glMultiTexCoord2fARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord2fvARB     = wine_glMultiTexCoord2fvARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord3fARB      = wine_glMultiTexCoord3fARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord3fvARB     = wine_glMultiTexCoord3fvARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord4fARB      = wine_glMultiTexCoord4fARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord4fvARB     = wine_glMultiTexCoord4fvARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord2svARB     = wine_glMultiTexCoord2svARB;
-        gl_info->gl_ops.ext.p_glMultiTexCoord4svARB     = wine_glMultiTexCoord4svARB;
-        if(old_multitex_glGetIntegerv) {
-            FIXME("GL_ARB_multitexture glGetIntegerv hook already applied\n");
-        } else {
+        case ARB_MULTITEXTURE:
+            if (gl_info->supported[ARB_MULTITEXTURE])
+                return;
+            if (gl_info->gl_ops.ext.p_glActiveTexture == wine_glActiveTexture)
+            {
+                FIXME("ARB_multitexture emulation hooks already applied.\n");
+                return;
+            }
+            TRACE("Applying GL_ARB_multitexture emulation hooks.\n");
+            gl_info->gl_ops.ext.p_glActiveTexture           = wine_glActiveTexture;
+            gl_info->gl_ops.ext.p_glClientActiveTextureARB  = wine_glClientActiveTextureARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord1fARB      = wine_glMultiTexCoord1fARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord1fvARB     = wine_glMultiTexCoord1fvARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord2fARB      = wine_glMultiTexCoord2fARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord2fvARB     = wine_glMultiTexCoord2fvARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord3fARB      = wine_glMultiTexCoord3fARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord3fvARB     = wine_glMultiTexCoord3fvARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord4fARB      = wine_glMultiTexCoord4fARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord4fvARB     = wine_glMultiTexCoord4fvARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord2svARB     = wine_glMultiTexCoord2svARB;
+            gl_info->gl_ops.ext.p_glMultiTexCoord4svARB     = wine_glMultiTexCoord4svARB;
             old_multitex_glGetIntegerv = gl_info->gl_ops.gl.p_glGetIntegerv;
             gl_info->gl_ops.gl.p_glGetIntegerv = wine_glGetIntegerv;
-        }
-        if(old_multitex_glGetFloatv) {
-            FIXME("GL_ARB_multitexture glGetGloatv hook already applied\n");
-        } else {
             old_multitex_glGetFloatv = gl_info->gl_ops.gl.p_glGetFloatv;
             gl_info->gl_ops.gl.p_glGetFloatv = wine_glGetFloatv;
-        }
-        if(old_multitex_glGetDoublev) {
-            FIXME("GL_ARB_multitexture glGetDoublev hook already applied\n");
-        } else {
             old_multitex_glGetDoublev = gl_info->gl_ops.gl.p_glGetDoublev;
             gl_info->gl_ops.gl.p_glGetDoublev = wine_glGetDoublev;
-        }
-        gl_info->supported[ARB_MULTITEXTURE] = TRUE;
-    }
+            gl_info->supported[ARB_MULTITEXTURE] = TRUE;
+            return;
 
-    if (!gl_info->supported[EXT_FOG_COORD])
-    {
-        /* This emulation isn't perfect. There are a number of potential problems, but they should
-         * not matter in practise:
-         *
-         * Fog vs fragment shader: If we are using GL_ARB_fragment_program with the fog option, the
-         * glDisable(GL_FOG) here won't matter. However, if we have GL_ARB_fragment_program, it is pretty
-         * unlikely that we don't have GL_EXT_fog_coord. Besides, we probably have GL_ARB_vertex_program
-         * too, which would allow fog coord emulation in a fixed function vertex pipeline replacement.
-         *
-         * Fog vs texture: We apply the fog in the vertex color. An app could set up texturing settings which
-         * ignore the vertex color, thus effectively disabling our fog. However, in D3D this type of fog is
-         * a per-vertex fog too, so the apps shouldn't do that.
-         *
-         * Fog vs lighting: The app could in theory use D3DFOG_NONE table and D3DFOG_NONE vertex fog with
-         * untransformed vertices. That enables lighting and fog coords at the same time, and the lighting
-         * calculations could affect the already blended in fog color. There's nothing we can do against that,
-         * but most apps using fog color do their own lighting too and often even use RHW vertices. So live
-         * with it.
-         */
-        TRACE("Applying GL_ARB_fog_coord emulation hooks\n");
+        case EXT_FOG_COORD:
+            /* This emulation isn't perfect. There are a number of potential problems, but they should
+             * not matter in practise:
+             *
+             * Fog vs fragment shader: If we are using GL_ARB_fragment_program with the fog option, the
+             * glDisable(GL_FOG) here won't matter. However, if we have GL_ARB_fragment_program, it is pretty
+             * unlikely that we don't have GL_EXT_fog_coord. Besides, we probably have GL_ARB_vertex_program
+             * too, which would allow fog coord emulation in a fixed function vertex pipeline replacement.
+             *
+             * Fog vs texture: We apply the fog in the vertex color. An app could set up texturing settings which
+             * ignore the vertex color, thus effectively disabling our fog. However, in D3D this type of fog is
+             * a per-vertex fog too, so the apps shouldn't do that.
+             *
+             * Fog vs lighting: The app could in theory use D3DFOG_NONE table and D3DFOG_NONE vertex fog with
+             * untransformed vertices. That enables lighting and fog coords at the same time, and the lighting
+             * calculations could affect the already blended in fog color. There's nothing we can do against that,
+             * but most apps using fog color do their own lighting too and often even use RHW vertices. So live
+             * with it.
+             */
+            if (gl_info->supported[EXT_FOG_COORD])
+                return;
+            if (gl_info->gl_ops.gl.p_glFogi == wine_glFogi)
+            {
+                FIXME("EXT_fog_coord emulation hooks already applied.\n");
+                return;
+            }
+            TRACE("Applying GL_ARB_fog_coord emulation hooks\n");
 
-        /* This probably means that the implementation doesn't advertise the extension, but implicitly supports
-         * it via the GL core version, or someone messed around in the extension table in directx.c. Add version-
-         * dependent loading for this extension if we ever hit this situation
-         */
-        if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
-        {
-            FIXME("GL implementation supports GL_ARB_fragment_program but not GL_EXT_fog_coord\n");
-            FIXME("The fog coord emulation will most likely fail\n");
-        }
-        else if (gl_info->supported[ARB_FRAGMENT_SHADER])
-        {
-            FIXME("GL implementation supports GL_ARB_fragment_shader but not GL_EXT_fog_coord\n");
-            FIXME("The fog coord emulation will most likely fail\n");
-        }
+            /* This probably means that the implementation doesn't advertise the extension, but implicitly supports
+             * it via the GL core version, or someone messed around in the extension table in directx.c. Add version-
+             * dependent loading for this extension if we ever hit this situation
+             */
+            if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
+            {
+                FIXME("GL implementation supports GL_ARB_fragment_program but not GL_EXT_fog_coord\n");
+                FIXME("The fog coord emulation will most likely fail\n");
+            }
+            else if (gl_info->supported[ARB_FRAGMENT_SHADER])
+            {
+                FIXME("GL implementation supports GL_ARB_fragment_shader but not GL_EXT_fog_coord\n");
+                FIXME("The fog coord emulation will most likely fail\n");
+            }
 
-        if(old_fogcoord_glFogi) {
-            FIXME("GL_EXT_fogcoord glFogi hook already applied\n");
-        } else {
             old_fogcoord_glFogi = gl_info->gl_ops.gl.p_glFogi;
             gl_info->gl_ops.gl.p_glFogi = wine_glFogi;
-        }
-        if(old_fogcoord_glFogiv) {
-            FIXME("GL_EXT_fogcoord glFogiv hook already applied\n");
-        } else {
             old_fogcoord_glFogiv = gl_info->gl_ops.gl.p_glFogiv;
             gl_info->gl_ops.gl.p_glFogiv = wine_glFogiv;
-        }
-        if(old_fogcoord_glFogf) {
-            FIXME("GL_EXT_fogcoord glFogf hook already applied\n");
-        } else {
             old_fogcoord_glFogf = gl_info->gl_ops.gl.p_glFogf;
             gl_info->gl_ops.gl.p_glFogf = wine_glFogf;
-        }
-        if(old_fogcoord_glFogfv) {
-            FIXME("GL_EXT_fogcoord glFogfv hook already applied\n");
-        } else {
             old_fogcoord_glFogfv = gl_info->gl_ops.gl.p_glFogfv;
             gl_info->gl_ops.gl.p_glFogfv = wine_glFogfv;
-        }
-        if(old_fogcoord_glEnable) {
-            FIXME("GL_EXT_fogcoord glEnable hook already applied\n");
-        } else {
             old_fogcoord_glEnable = glEnableWINE;
             glEnableWINE = wine_glEnable;
-        }
-        if(old_fogcoord_glDisable) {
-            FIXME("GL_EXT_fogcoord glDisable hook already applied\n");
-        } else {
             old_fogcoord_glDisable = glDisableWINE;
             glDisableWINE = wine_glDisable;
-        }
 
-        if(old_fogcoord_glVertex4f) {
-            FIXME("GL_EXT_fogcoord glVertex4f hook already applied\n");
-        } else {
             old_fogcoord_glVertex4f = gl_info->gl_ops.gl.p_glVertex4f;
             gl_info->gl_ops.gl.p_glVertex4f = wine_glVertex4f;
-        }
-        if(old_fogcoord_glVertex4fv) {
-            FIXME("GL_EXT_fogcoord glVertex4fv hook already applied\n");
-        } else {
-            old_fogcoord_glVertex4fv = gl_info->gl_ops.gl.p_glVertex4fv;
             gl_info->gl_ops.gl.p_glVertex4fv = wine_glVertex4fv;
-        }
-        if(old_fogcoord_glVertex3f) {
-            FIXME("GL_EXT_fogcoord glVertex3f hook already applied\n");
-        } else {
-            old_fogcoord_glVertex3f = gl_info->gl_ops.gl.p_glVertex3f;
             gl_info->gl_ops.gl.p_glVertex3f = wine_glVertex3f;
-        }
-        if(old_fogcoord_glVertex3fv) {
-            FIXME("GL_EXT_fogcoord glVertex3fv hook already applied\n");
-        } else {
-            old_fogcoord_glVertex3fv = gl_info->gl_ops.gl.p_glVertex3fv;
             gl_info->gl_ops.gl.p_glVertex3fv = wine_glVertex3fv;
-        }
 
-        if(old_fogcoord_glColor4f) {
-            FIXME("GL_EXT_fogcoord glColor4f hook already applied\n");
-        } else {
             old_fogcoord_glColor4f = gl_info->gl_ops.gl.p_glColor4f;
             gl_info->gl_ops.gl.p_glColor4f = wine_glColor4f;
-        }
-        if(old_fogcoord_glColor4fv) {
-            FIXME("GL_EXT_fogcoord glColor4fv hook already applied\n");
-        } else {
-            old_fogcoord_glColor4fv = gl_info->gl_ops.gl.p_glColor4fv;
             gl_info->gl_ops.gl.p_glColor4fv = wine_glColor4fv;
-        }
-        if(old_fogcoord_glColor3f) {
-            FIXME("GL_EXT_fogcoord glColor3f hook already applied\n");
-        } else {
-            old_fogcoord_glColor3f = gl_info->gl_ops.gl.p_glColor3f;
             gl_info->gl_ops.gl.p_glColor3f = wine_glColor3f;
-        }
-        if(old_fogcoord_glColor3fv) {
-            FIXME("GL_EXT_fogcoord glColor3fv hook already applied\n");
-        } else {
-            old_fogcoord_glColor3fv = gl_info->gl_ops.gl.p_glColor3fv;
             gl_info->gl_ops.gl.p_glColor3fv = wine_glColor3fv;
-        }
-        if(old_fogcoord_glColor4ub) {
-            FIXME("GL_EXT_fogcoord glColor4ub hook already applied\n");
-        } else {
-            old_fogcoord_glColor4ub = gl_info->gl_ops.gl.p_glColor4ub;
             gl_info->gl_ops.gl.p_glColor4ub = wine_glColor4ub;
-        }
 
-        if(old_fogcoord_glFogCoordfEXT) {
-            FIXME("GL_EXT_fogcoord glFogCoordfEXT hook already applied\n");
-        } else {
-            old_fogcoord_glFogCoordfEXT = gl_info->gl_ops.ext.p_glFogCoordfEXT;
             gl_info->gl_ops.ext.p_glFogCoordfEXT = wine_glFogCoordfEXT;
-        }
-        if(old_fogcoord_glFogCoordfvEXT) {
-            FIXME("GL_EXT_fogcoord glFogCoordfvEXT hook already applied\n");
-        } else {
-            old_fogcoord_glFogCoordfvEXT = gl_info->gl_ops.ext.p_glFogCoordfvEXT;
             gl_info->gl_ops.ext.p_glFogCoordfvEXT = wine_glFogCoordfvEXT;
-        }
-        if(old_fogcoord_glFogCoorddEXT) {
-            FIXME("GL_EXT_fogcoord glFogCoorddEXT hook already applied\n");
-        } else {
-            old_fogcoord_glFogCoorddEXT = gl_info->gl_ops.ext.p_glFogCoorddEXT;
             gl_info->gl_ops.ext.p_glFogCoorddEXT = wine_glFogCoorddEXT;
-        }
-        if(old_fogcoord_glFogCoorddvEXT) {
-            FIXME("GL_EXT_fogcoord glFogCoorddvEXT hook already applied\n");
-        } else {
-            old_fogcoord_glFogCoorddvEXT = gl_info->gl_ops.ext.p_glFogCoorddvEXT;
             gl_info->gl_ops.ext.p_glFogCoorddvEXT = wine_glFogCoorddvEXT;
-        }
-        gl_info->supported[EXT_FOG_COORD] = TRUE;
+            gl_info->supported[EXT_FOG_COORD] = TRUE;
+            return;
+
+        default:
+            FIXME("Extension %u emulation not supported.\n", ext);
     }
 }

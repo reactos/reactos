@@ -28,62 +28,62 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 /* DCL usage masks */
 #define WINED3DSP_DCL_USAGE_SHIFT               0
-#define WINED3DSP_DCL_USAGE_MASK                (0xf << WINED3DSP_DCL_USAGE_SHIFT)
+#define WINED3DSP_DCL_USAGE_MASK                (0xfu << WINED3DSP_DCL_USAGE_SHIFT)
 #define WINED3DSP_DCL_USAGEINDEX_SHIFT          16
-#define WINED3DSP_DCL_USAGEINDEX_MASK           (0xf << WINED3DSP_DCL_USAGEINDEX_SHIFT)
+#define WINED3DSP_DCL_USAGEINDEX_MASK           (0xfu << WINED3DSP_DCL_USAGEINDEX_SHIFT)
 
 /* DCL sampler type */
 #define WINED3D_SM1_RESOURCE_TYPE_SHIFT         27
-#define WINED3D_SM1_RESOURCE_TYPE_MASK          (0xf << WINED3D_SM1_RESOURCE_TYPE_SHIFT)
+#define WINED3D_SM1_RESOURCE_TYPE_MASK          (0xfu << WINED3D_SM1_RESOURCE_TYPE_SHIFT)
 
 /* Opcode-related masks */
 #define WINED3DSI_OPCODE_MASK                   0x0000ffff
 
 #define WINED3D_OPCODESPECIFICCONTROL_SHIFT     16
-#define WINED3D_OPCODESPECIFICCONTROL_MASK      (0xff << WINED3D_OPCODESPECIFICCONTROL_SHIFT)
+#define WINED3D_OPCODESPECIFICCONTROL_MASK      (0xffu << WINED3D_OPCODESPECIFICCONTROL_SHIFT)
 
 #define WINED3DSI_INSTLENGTH_SHIFT              24
-#define WINED3DSI_INSTLENGTH_MASK               (0xf << WINED3DSI_INSTLENGTH_SHIFT)
+#define WINED3DSI_INSTLENGTH_MASK               (0xfu << WINED3DSI_INSTLENGTH_SHIFT)
 
-#define WINED3DSI_COISSUE                       (1 << 30)
+#define WINED3DSI_COISSUE                       (0x1u << 30)
 
 #define WINED3DSI_COMMENTSIZE_SHIFT             16
-#define WINED3DSI_COMMENTSIZE_MASK              (0x7fff << WINED3DSI_COMMENTSIZE_SHIFT)
+#define WINED3DSI_COMMENTSIZE_MASK              (0x7fffu << WINED3DSI_COMMENTSIZE_SHIFT)
 
-#define WINED3DSHADER_INSTRUCTION_PREDICATED    (1 << 28)
+#define WINED3DSHADER_INSTRUCTION_PREDICATED    (0x1u << 28)
 
 /* Register number mask */
 #define WINED3DSP_REGNUM_MASK                   0x000007ff
 
 /* Register type masks  */
 #define WINED3DSP_REGTYPE_SHIFT                 28
-#define WINED3DSP_REGTYPE_MASK                  (0x7 << WINED3DSP_REGTYPE_SHIFT)
+#define WINED3DSP_REGTYPE_MASK                  (0x7u << WINED3DSP_REGTYPE_SHIFT)
 #define WINED3DSP_REGTYPE_SHIFT2                8
-#define WINED3DSP_REGTYPE_MASK2                 (0x18 << WINED3DSP_REGTYPE_SHIFT2)
+#define WINED3DSP_REGTYPE_MASK2                 (0x18u << WINED3DSP_REGTYPE_SHIFT2)
 
 /* Relative addressing mask */
 #define WINED3DSHADER_ADDRESSMODE_SHIFT         13
-#define WINED3DSHADER_ADDRESSMODE_MASK          (1 << WINED3DSHADER_ADDRESSMODE_SHIFT)
+#define WINED3DSHADER_ADDRESSMODE_MASK          (0x1u << WINED3DSHADER_ADDRESSMODE_SHIFT)
 
 /* Destination modifier mask */
 #define WINED3DSP_DSTMOD_SHIFT                  20
-#define WINED3DSP_DSTMOD_MASK                   (0xf << WINED3DSP_DSTMOD_SHIFT)
+#define WINED3DSP_DSTMOD_MASK                   (0xfu << WINED3DSP_DSTMOD_SHIFT)
 
 /* Destination shift mask */
 #define WINED3DSP_DSTSHIFT_SHIFT                24
-#define WINED3DSP_DSTSHIFT_MASK                 (0xf << WINED3DSP_DSTSHIFT_SHIFT)
+#define WINED3DSP_DSTSHIFT_MASK                 (0xfu << WINED3DSP_DSTSHIFT_SHIFT)
 
 /* Write mask */
 #define WINED3D_SM1_WRITEMASK_SHIFT             16
-#define WINED3D_SM1_WRITEMASK_MASK              (0xf << WINED3D_SM1_WRITEMASK_SHIFT)
+#define WINED3D_SM1_WRITEMASK_MASK              (0xfu << WINED3D_SM1_WRITEMASK_SHIFT)
 
 /* Swizzle mask */
 #define WINED3DSP_SWIZZLE_SHIFT                 16
-#define WINED3DSP_SWIZZLE_MASK                  (0xff << WINED3DSP_SWIZZLE_SHIFT)
+#define WINED3DSP_SWIZZLE_MASK                  (0xffu << WINED3DSP_SWIZZLE_SHIFT)
 
 /* Source modifier mask */
 #define WINED3DSP_SRCMOD_SHIFT                  24
-#define WINED3DSP_SRCMOD_MASK                   (0xf << WINED3DSP_SRCMOD_SHIFT)
+#define WINED3DSP_SRCMOD_MASK                   (0xfu << WINED3DSP_SRCMOD_SHIFT)
 
 #define WINED3DSP_END                           0x0000ffff
 
@@ -92,8 +92,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 enum WINED3DSHADER_ADDRESSMODE_TYPE
 {
-    WINED3DSHADER_ADDRMODE_ABSOLUTE = 0 << WINED3DSHADER_ADDRESSMODE_SHIFT,
-    WINED3DSHADER_ADDRMODE_RELATIVE = 1 << WINED3DSHADER_ADDRESSMODE_SHIFT,
+    WINED3DSHADER_ADDRMODE_ABSOLUTE = 0u << WINED3DSHADER_ADDRESSMODE_SHIFT,
+    WINED3DSHADER_ADDRMODE_RELATIVE = 1u << WINED3DSHADER_ADDRESSMODE_SHIFT,
 };
 
 enum wined3d_sm1_resource_type
@@ -409,7 +409,7 @@ static int shader_get_param(const struct wined3d_sm1_data *priv, const DWORD *pt
     {
         if (priv->shader_version.major < 2)
         {
-            *addr_token = (1 << 31)
+            *addr_token = (1u << 31)
                     | ((WINED3DSPR_ADDR << WINED3DSP_REGTYPE_SHIFT2) & WINED3DSP_REGTYPE_MASK2)
                     | ((WINED3DSPR_ADDR << WINED3DSP_REGTYPE_SHIFT) & WINED3DSP_REGTYPE_MASK)
                     | (WINED3DSP_NOSWIZZLE << WINED3DSP_SWIZZLE_SHIFT);

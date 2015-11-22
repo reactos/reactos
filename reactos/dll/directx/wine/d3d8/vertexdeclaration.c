@@ -260,7 +260,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     WORD stream = 0;
     int offset = 0;
 
-    TRACE("d3d8_elements %p, wined3d_elements %p\n", d3d8_elements, wined3d_elements);
+    TRACE("d3d8_elements %p, d3d8_elements_size %p, wined3d_elements %p\n", d3d8_elements, d3d8_elements_size, wined3d_elements);
 
     /* 128 should be enough for anyone... */
     *wined3d_elements = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 128 * sizeof(**wined3d_elements));

@@ -298,7 +298,7 @@ static BOOL buffer_check_attribute(struct wined3d_buffer *This, const struct win
     /* Ignore attributes that do not have our vbo. After that check we can be sure that the attribute is
      * there, on nonexistent attribs the vbo is 0.
      */
-    if (!(si->use_map & (1 << attrib_idx))
+    if (!(si->use_map & (1u << attrib_idx))
             || state->streams[attrib->stream_idx].buffer != This)
         return FALSE;
 
@@ -466,9 +466,9 @@ static inline void fixup_d3dcolor(DWORD *dst_color)
      */
 #endif /* STAGING_CSMT */
     *dst_color = 0;
-    *dst_color |= (src_color & 0xff00ff00);         /* Alpha Green */
-    *dst_color |= (src_color & 0x00ff0000) >> 16;   /* Red */
-    *dst_color |= (src_color & 0x000000ff) << 16;   /* Blue */
+    *dst_color |= (src_color & 0xff00ff00u);         /* Alpha Green */
+    *dst_color |= (src_color & 0x00ff0000u) >> 16;   /* Red */
+    *dst_color |= (src_color & 0x000000ffu) << 16;   /* Blue */
 }
 
 static inline void fixup_transformed_pos(float *p)
@@ -1083,7 +1083,7 @@ HRESULT CDECL wined3d_buffer_map(struct wined3d_buffer *buffer, UINT offset, UIN
      *
      * Don't try to solve this by going back to always invalidating changed areas.
      * This won't work if we ever want to support glMapBufferRange mapping with
-     * GL_buffer_storage in the CS.
+     * GL_ARB_buffer_storage in the CS.
      *
      * Also keep in mind that UnLoad can destroy the VBO, so simply creating it
      * on buffer creation won't work either. */
@@ -1222,9 +1222,12 @@ HRESULT CDECL wined3d_buffer_map(struct wined3d_buffer *buffer, UINT offset, UIN
         BOOL swvp = device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING;
         if (flags & WINED3D_MAP_DISCARD && !swvp)
         {
-            buffer->ignore_discard = TRUE;
-            wined3d_resource_allocate_sysmem(&buffer->resource);
-            wined3d_cs_emit_buffer_swap_mem(device->cs, buffer, buffer->resource.map_heap_memory);
+            if (buffer->resource.access_fence)
+            {
+                buffer->ignore_discard = TRUE;
+                wined3d_resource_allocate_sysmem(&buffer->resource);
+                wined3d_cs_emit_buffer_swap_mem(device->cs, buffer, buffer->resource.map_heap_memory);
+            }
         }
         else if(!(flags & (WINED3D_MAP_NOOVERWRITE | WINED3D_MAP_READONLY)) && !buffer->ignore_discard)
         {
@@ -1354,6 +1357,44 @@ static ULONG buffer_resource_decref(struct wined3d_resource *resource)
     return wined3d_buffer_decref(buffer_from_resource(resource));
 }
 
+static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
+{
+    struct wined3d_buffer *buffer = buffer_from_resource(resource);
+    UINT offset, size;
+
+    if (sub_resource_idx)
+    {
+        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+        return E_INVALIDARG;
+    }
+
+    if (box)
+    {
+        offset = box->left;
+        size = box->right - box->left;
+    }
+    else
+    {
+        offset = size = 0;
+    }
+
+    map_desc->row_pitch = map_desc->slice_pitch = buffer->desc.byte_width;
+    return wined3d_buffer_map(buffer, offset, size, (BYTE **)&map_desc->data, flags);
+}
+
+static HRESULT buffer_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
+{
+    if (sub_resource_idx)
+    {
+        WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+        return E_INVALIDARG;
+    }
+
+    wined3d_buffer_unmap(buffer_from_resource(resource));
+    return WINED3D_OK;
+}
+
 #if defined(STAGING_CSMT)
 static void wined3d_buffer_location_invalidated(struct wined3d_resource *resource, DWORD location)
 {
@@ -1367,25 +1408,23 @@ static void wined3d_buffer_load_location(struct wined3d_resource *resource,
     ERR("Not yet implemented.\n");
 }
 
+#endif /* STAGING_CSMT */
 static const struct wined3d_resource_ops buffer_resource_ops =
 {
     buffer_resource_incref,
     buffer_resource_decref,
     buffer_unload,
+    buffer_resource_sub_resource_map,
+    buffer_resource_sub_resource_unmap,
+#if defined(STAGING_CSMT)
     wined3d_buffer_location_invalidated,
     wined3d_buffer_load_location,
-#else  /* STAGING_CSMT */
-static const struct wined3d_resource_ops buffer_resource_ops =
-{
-    buffer_resource_incref,
-    buffer_resource_decref,
-    buffer_unload,
 #endif /* STAGING_CSMT */
 };
 
 static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device *device,
         UINT size, DWORD usage, enum wined3d_format_id format_id, enum wined3d_pool pool, GLenum bind_hint,
-        const char *data, void *parent, const struct wined3d_parent_ops *parent_ops)
+        const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_format *format = wined3d_get_format(gl_info, format_id);
@@ -1396,6 +1435,12 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     {
         WARN("Size 0 requested, returning WINED3DERR_INVALIDCALL\n");
         return WINED3DERR_INVALIDCALL;
+    }
+
+    if (data && !data->data)
+    {
+        WARN("Invalid sub-resource data specified.\n");
+        return E_INVALIDARG;
     }
 
     hr = resource_init(&buffer->resource, device, WINED3D_RTYPE_BUFFER, format,
@@ -1458,24 +1503,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
         buffer->flags |= WINED3D_BUFFER_CREATEBO;
     }
 
-    if (data)
-    {
-        BYTE *ptr;
-
-        hr = wined3d_buffer_map(buffer, 0, size, &ptr, 0);
-        if (FAILED(hr))
-        {
-            ERR("Failed to map buffer, hr %#x\n", hr);
-            buffer_unload(&buffer->resource);
-            resource_cleanup(&buffer->resource);
-            return hr;
-        }
-
-        memcpy(ptr, data, size);
-
-        wined3d_buffer_unmap(buffer);
-    }
-
+#if defined(STAGING_CSMT)
     buffer->maps = HeapAlloc(GetProcessHeap(), 0, sizeof(*buffer->maps));
     if (!buffer->maps)
     {
@@ -1486,21 +1514,55 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     }
     buffer->maps_size = 1;
 
+#endif /* STAGING_CSMT */
+    if (data)
+    {
+        BYTE *ptr;
+
+        hr = wined3d_buffer_map(buffer, 0, size, &ptr, 0);
+        if (FAILED(hr))
+        {
+            ERR("Failed to map buffer, hr %#x\n", hr);
+#if defined(STAGING_CSMT)
+            HeapFree(GetProcessHeap(), 0, buffer->maps);
+#endif /* STAGING_CSMT */
+            buffer_unload(&buffer->resource);
+            resource_cleanup(&buffer->resource);
+            return hr;
+        }
+
+        memcpy(ptr, data->data, size);
+
+        wined3d_buffer_unmap(buffer);
+    }
+
 #if defined(STAGING_CSMT)
     if (wined3d_settings.cs_multithreaded)
         buffer->flags |= WINED3D_BUFFER_DOUBLEBUFFER;
-
+#else  /* STAGING_CSMT */
+    buffer->maps = HeapAlloc(GetProcessHeap(), 0, sizeof(*buffer->maps));
+    if (!buffer->maps)
+    {
+        ERR("Out of memory\n");
+        buffer_unload(&buffer->resource);
+        resource_cleanup(&buffer->resource);
+        return E_OUTOFMEMORY;
+    }
+    buffer->maps_size = 1;
 #endif /* STAGING_CSMT */
+
     return WINED3D_OK;
 }
 
 HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct wined3d_buffer_desc *desc,
-        const void *data, void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_buffer **buffer)
+        const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,
+        struct wined3d_buffer **buffer)
 {
     struct wined3d_buffer *object;
     HRESULT hr;
 
-    TRACE("device %p, desc %p, data %p, parent %p, buffer %p\n", device, desc, data, parent, buffer);
+    TRACE("device %p, desc %p, data %p, parent %p, parent_ops %p, buffer %p\n",
+            device, desc, data, parent, parent_ops, buffer);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)

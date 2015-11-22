@@ -335,6 +335,22 @@ void CDECL wined3d_resource_get_desc(const struct wined3d_resource *resource, st
     desc->size = resource->size;
 }
 
+HRESULT CDECL wined3d_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
+{
+    TRACE("resource %p, sub_resource_idx %u, map_desc %p, box %p, flags %#x.\n",
+            resource, sub_resource_idx, map_desc, box, flags);
+
+    return resource->resource_ops->resource_sub_resource_map(resource, sub_resource_idx, map_desc, box, flags);
+}
+
+HRESULT CDECL wined3d_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
+{
+    TRACE("resource %p, sub_resource_idx %u.\n", resource, sub_resource_idx);
+
+    return resource->resource_ops->resource_sub_resource_unmap(resource, sub_resource_idx);
+}
+
 BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
 {
     void **p;
@@ -462,8 +478,9 @@ void wined3d_resource_update_draw_binding(struct wined3d_resource *resource)
     else
         resource->draw_binding = WINED3D_LOCATION_TEXTURE_RGB;
 }
+#if defined(STAGING_CSMT)
 
-void CDECL wined3d_resource_get_pitch(const struct wined3d_resource *resource, UINT *row_pitch,
+void wined3d_resource_get_pitch(const struct wined3d_resource *resource, UINT *row_pitch,
         UINT *slice_pitch)
 {
     unsigned int alignment;
@@ -493,7 +510,6 @@ void CDECL wined3d_resource_get_pitch(const struct wined3d_resource *resource, U
 
     TRACE("Returning row pitch %u, slice pitch %u.\n", *row_pitch, *slice_pitch);
 }
-#if defined(STAGING_CSMT)
 
 void wined3d_resource_validate_location(struct wined3d_resource *resource, DWORD location)
 {
@@ -876,7 +892,7 @@ HRESULT wined3d_resource_map(struct wined3d_resource *resource,
     struct wined3d_device *device = resource->device;
     BYTE *base_memory;
     const struct wined3d_format *format = resource->format;
-    const unsigned int fmt_flags = resource->format_flags;
+    const unsigned int fmt_flags = resource->format->flags[WINED3D_GL_RES_TYPE_TEX_2D];
 
     TRACE("resource %p, map_desc %p, box %p, flags %#x.\n",
             resource, map_desc, box, flags);

@@ -1249,9 +1249,15 @@ struct d3d9_texture *unsafe_impl_from_IDirect3DBaseTexture9(IDirect3DBaseTexture
 {
     if (!iface)
         return NULL;
-    assert(iface->lpVtbl == (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_2d_vtbl
-            || iface->lpVtbl == (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_cube_vtbl
-            || iface->lpVtbl == (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_3d_vtbl);
+
+    if (iface->lpVtbl != (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_2d_vtbl
+            && iface->lpVtbl != (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_cube_vtbl
+            && iface->lpVtbl != (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_3d_vtbl)
+    {
+        WARN("%p is not a valid IDirect3DBaseTexture9 interface.\n", iface);
+        return NULL;
+    }
+
     return CONTAINING_RECORD(iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
 }
 

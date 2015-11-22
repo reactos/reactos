@@ -99,6 +99,8 @@ enum wined3d_cs_op
     WINED3D_CS_OP_DELETE_GL_CONTEXTS,
     WINED3D_CS_OP_GETDC,
     WINED3D_CS_OP_RELEASEDC,
+    WINED3D_CS_OP_SAMPLER_DESTROY,
+    WINED3D_CS_OP_UPDATE_SUB_RESOURCE,
     WINED3D_CS_OP_STOP,
 };
 
@@ -615,6 +617,21 @@ struct wined3d_cs_releasedc
     struct wined3d_surface *surface;
 };
 
+struct wined3d_cs_sampler_destroy
+{
+    enum wined3d_cs_op opcode;
+    struct wined3d_sampler *sampler;
+};
+
+struct wined3d_cs_update_sub_resource
+{
+    enum wined3d_cs_op opcode;
+    struct wined3d_resource *resource;
+    unsigned int sub_resource_idx, row_pitch, depth_pitch;
+    const struct wined3d_box *box;
+    const void *data;
+};
+
 static void wined3d_cs_mt_submit(struct wined3d_cs *cs, size_t size)
 {
     LONG new_val = (cs->queue.head + size) & (WINED3D_CS_QUEUE_SIZE - 1);
@@ -772,7 +789,7 @@ static UINT wined3d_cs_exec_clear(struct wined3d_cs *cs, const void *data)
 
     if (op->flags & WINED3DCLEAR_TARGET)
     {
-        for (i = 0; i < sizeof(cs->state.fb.render_targets) / sizeof(*cs->state.fb.render_targets); i++)
+        for (i = 0; i < device->adapter->gl_info.limits.buffers; i++)
         {
             if (cs->state.fb.render_targets[i])
                 wined3d_resource_dec_fence(cs->state.fb.render_targets[i]->resource);
@@ -804,7 +821,7 @@ void wined3d_cs_emit_clear(struct wined3d_cs *cs, DWORD rect_count, const RECT *
 
     if (flags & WINED3DCLEAR_TARGET)
     {
-        for (i = 0; i < sizeof(state->fb.render_targets) / sizeof(*state->fb.render_targets); i++)
+        for (i = 0; i < cs->device->adapter->gl_info.limits.buffers; i++)
         {
             if (state->fb.render_targets[i])
                 wined3d_resource_inc_fence(state->fb.render_targets[i]->resource);
@@ -875,7 +892,7 @@ static UINT wined3d_cs_exec_draw(struct wined3d_cs *cs, const void *data)
         if (cs->state.textures[i])
             wined3d_resource_dec_fence(&cs->state.textures[i]->resource);
     }
-    for (i = 0; i < sizeof(cs->state.fb.render_targets) / sizeof(*cs->state.fb.render_targets); i++)
+    for (i = 0; i < gl_info->limits.buffers; i++)
     {
         if (cs->state.fb.render_targets[i] && wined3d_cs_colorwrite_enabled(&cs->state, i))
             wined3d_resource_dec_fence(cs->state.fb.render_targets[i]->resource);
@@ -919,7 +936,7 @@ void wined3d_cs_emit_draw(struct wined3d_cs *cs, UINT start_idx, UINT index_coun
         if (state->textures[i])
             wined3d_resource_inc_fence(&state->textures[i]->resource);
     }
-    for (i = 0; i < sizeof(state->fb.render_targets) / sizeof(*state->fb.render_targets); i++)
+    for (i = 0; i < cs->device->adapter->gl_info.limits.buffers; i++)
     {
         if (state->fb.render_targets[i] && wined3d_cs_colorwrite_enabled(state, i))
             wined3d_resource_inc_fence(state->fb.render_targets[i]->resource);
@@ -1034,7 +1051,7 @@ static UINT wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
             surface_modify_ds_location(prev_surface, WINED3D_LOCATION_DISCARDED, prev->width, prev->height);
             if (prev_surface == cs->onscreen_depth_stencil)
             {
-                wined3d_surface_decref(cs->onscreen_depth_stencil);
+                wined3d_texture_decref(cs->onscreen_depth_stencil->container);
                 cs->onscreen_depth_stencil = NULL;
             }
         }
@@ -1050,7 +1067,8 @@ static UINT wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_STENCILWRITEMASK));
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_DEPTHBIAS));
     }
-    else if (prev && prev->format->depth_size != op->view->format->depth_size)
+    else if (prev && (prev->format_flags & WINED3DFMT_FLAG_FLOAT)
+            != (op->view->format_flags & WINED3DFMT_FLAG_FLOAT))
     {
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_DEPTHBIAS));
     }
@@ -1712,7 +1730,7 @@ static UINT wined3d_cs_exec_set_color_key(struct wined3d_cs *cs, const void *dat
 
     if (op->set)
     {
-        switch (op->flags & ~WINED3D_CKEY_COLORSPACE)
+        switch (op->flags)
         {
             case WINED3D_CKEY_DST_BLT:
                 texture->async.dst_blt_color_key = op->color_key;
@@ -1744,7 +1762,7 @@ static UINT wined3d_cs_exec_set_color_key(struct wined3d_cs *cs, const void *dat
     }
     else
     {
-        switch (op->flags & ~WINED3D_CKEY_COLORSPACE)
+        switch (op->flags)
         {
             case WINED3D_CKEY_DST_BLT:
                 texture->async.color_key_flags &= ~WINED3D_CKEY_DST_BLT;
@@ -1938,12 +1956,6 @@ static UINT wined3d_cs_exec_set_light(struct wined3d_cs *cs, const void *data)
         object->OriginalIndex = light_idx;
     }
 
-    object->OriginalParms = op->light.OriginalParms;
-    memcpy(&object->position, &op->light.position, sizeof(object->position));
-    memcpy(&object->direction, &op->light.direction, sizeof(object->direction));
-    object->exponent = op->light.exponent;
-    object->cutoff = op->light.cutoff;
-
     /* Update the live definitions if the light is currently assigned a glIndex. */
     if (object->glIndex != -1)
     {
@@ -1951,6 +1963,12 @@ static UINT wined3d_cs_exec_set_light(struct wined3d_cs *cs, const void *data)
             device_invalidate_state(cs->device, STATE_LIGHT_TYPE);
         device_invalidate_state(cs->device, STATE_ACTIVELIGHT(object->glIndex));
     }
+
+    object->OriginalParms = op->light.OriginalParms;
+    object->position = op->light.position;
+    object->direction = op->light.direction;
+    object->exponent = op->light.exponent;
+    object->cutoff = op->light.cutoff;
 
     return sizeof(*op);
 }
@@ -2815,6 +2833,106 @@ void wined3d_cs_emit_releasedc(struct wined3d_cs *cs, struct wined3d_surface *su
     cs->ops->finish(cs);
 }
 
+static UINT wined3d_cs_exec_sampler_destroy(struct wined3d_cs *cs, const void *data)
+{
+    const struct wined3d_cs_sampler_destroy *op = data;
+
+    wined3d_sampler_destroy(op->sampler);
+
+    return sizeof(*op);
+}
+
+void wined3d_cs_emit_sampler_destroy(struct wined3d_cs *cs, struct wined3d_sampler *sampler)
+{
+    struct wined3d_cs_sampler_destroy *op;
+
+    op = cs->ops->require_space(cs, sizeof(*op));
+    op->opcode = WINED3D_CS_OP_SAMPLER_DESTROY;
+    op->sampler = sampler;
+
+    cs->ops->submit(cs, sizeof(*op));
+}
+
+static UINT wined3d_cs_exec_update_sub_resource(struct wined3d_cs *cs, const void *data)
+{
+    const struct wined3d_cs_update_sub_resource *op = data;
+
+    struct wined3d_resource *sub_resource;
+    const struct wined3d_gl_info *gl_info;
+    struct wined3d_const_bo_address addr;
+    struct wined3d_context *context;
+    struct wined3d_texture *texture;
+    struct wined3d_surface *surface;
+    POINT dst_point;
+    RECT src_rect;
+
+    texture = wined3d_texture_from_resource(op->resource);
+    sub_resource = wined3d_texture_get_sub_resource(texture, op->sub_resource_idx);
+    surface = surface_from_resource(sub_resource);
+
+    src_rect.left = 0;
+    src_rect.top = 0;
+    if (op->box)
+    {
+        src_rect.right = op->box->right - op->box->left;
+        src_rect.bottom = op->box->bottom - op->box->top;
+        dst_point.x = op->box->left;
+        dst_point.y = op->box->top;
+    }
+    else
+    {
+        src_rect.right = sub_resource->width;
+        src_rect.bottom = sub_resource->height;
+        dst_point.x = 0;
+        dst_point.y = 0;
+    }
+
+    addr.buffer_object = 0;
+    addr.addr = op->data;
+
+    context = context_acquire(cs->device, NULL);
+    gl_info = context->gl_info;
+
+    /* Only load the surface for partial updates. */
+    if (!dst_point.x && !dst_point.y && src_rect.right == sub_resource->width
+            && src_rect.bottom == sub_resource->height)
+        wined3d_texture_prepare_texture(texture, context, FALSE);
+    else
+        wined3d_resource_load_location(&surface->resource, context, WINED3D_LOCATION_TEXTURE_RGB);
+    wined3d_texture_bind_and_dirtify(texture, context, FALSE);
+
+    wined3d_surface_upload_data(surface, gl_info, op->resource->format,
+            &src_rect, op->row_pitch, &dst_point, FALSE, &addr);
+
+    context_release(context);
+
+    wined3d_resource_validate_location(&surface->resource, WINED3D_LOCATION_TEXTURE_RGB);
+    wined3d_resource_invalidate_location(&surface->resource, ~WINED3D_LOCATION_TEXTURE_RGB);
+
+    return sizeof(*op);
+}
+
+void wined3d_cs_emit_update_sub_resource(struct wined3d_cs *cs, struct wined3d_resource *resource,
+        unsigned int sub_resource_idx, const struct wined3d_box *box, const void *data, unsigned int row_pitch,
+        unsigned int depth_pitch)
+{
+    struct wined3d_cs_update_sub_resource *op;
+
+    op = cs->ops->require_space(cs, sizeof(*op));
+    op->opcode = WINED3D_CS_OP_UPDATE_SUB_RESOURCE;
+    op->resource = resource;
+    op->sub_resource_idx = sub_resource_idx;
+    op->box = box;
+    op->data = data;
+    op->row_pitch = row_pitch;
+    op->depth_pitch = depth_pitch;
+
+    cs->ops->submit(cs, sizeof(*op));
+    /* The data pointer may go away, need to wait until the data is read. Copying the data may be faster.
+     * Don't forget to copy box as well in this case. */
+    cs->ops->finish(cs);
+}
+
 static UINT (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void *data) =
 {
     /* WINED3D_CS_OP_NOP                        */ wined3d_cs_exec_nop,
@@ -3000,7 +3118,7 @@ static void wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
             surface_modify_ds_location(prev_surface, WINED3D_LOCATION_DISCARDED, prev->width, prev->height);
             if (prev_surface == device->onscreen_depth_stencil)
             {
-                wined3d_surface_decref(device->onscreen_depth_stencil);
+                wined3d_texture_decref(device->onscreen_depth_stencil->container);
                 device->onscreen_depth_stencil = NULL;
             }
         }
@@ -3016,7 +3134,8 @@ static void wined3d_cs_exec_set_depth_stencil_view(struct wined3d_cs *cs, const 
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_STENCILWRITEMASK));
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_DEPTHBIAS));
     }
-    else if (prev && prev->format->depth_size != op->view->format->depth_size)
+    else if (prev && (prev->format_flags & WINED3DFMT_FLAG_FLOAT)
+            != (op->view->format_flags & WINED3DFMT_FLAG_FLOAT))
     {
         device_invalidate_state(device, STATE_RENDER(WINED3D_RS_DEPTHBIAS));
     }
@@ -3472,7 +3591,7 @@ static void wined3d_cs_exec_set_color_key(struct wined3d_cs *cs, const void *dat
 
     if (op->set)
     {
-        switch (op->flags & ~WINED3D_CKEY_COLORSPACE)
+        switch (op->flags)
         {
             case WINED3D_CKEY_DST_BLT:
                 texture->async.dst_blt_color_key = op->color_key;
@@ -3504,7 +3623,7 @@ static void wined3d_cs_exec_set_color_key(struct wined3d_cs *cs, const void *dat
     }
     else
     {
-        switch (op->flags & ~WINED3D_CKEY_COLORSPACE)
+        switch (op->flags)
         {
             case WINED3D_CKEY_DST_BLT:
                 texture->async.color_key_flags &= ~WINED3D_CKEY_DST_BLT;
@@ -3659,6 +3778,8 @@ static void (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void
     /* WINED3D_CS_OP_DELETE_GL_CONTEXTS         */ wined3d_cs_exec_delete_gl_contexts,
     /* WINED3D_CS_OP_GETDC                      */ wined3d_cs_exec_getdc,
     /* WINED3D_CS_OP_RELEASEDC                  */ wined3d_cs_exec_releasedc,
+    /* WINED3D_CS_OP_SAMPLER_DESTROY            */ wined3d_cs_exec_sampler_destroy,
+    /* WINED3D_CS_OP_UPDATE_SUB_RESOURCE        */ wined3d_cs_exec_update_sub_resource,
 };
 
 static inline void *_wined3d_cs_mt_require_space(struct wined3d_cs *cs, size_t size, BOOL prio)
@@ -3831,10 +3952,10 @@ void wined3d_cs_switch_onscreen_ds(struct wined3d_cs *cs,
         surface_modify_ds_location(cs->onscreen_depth_stencil, WINED3D_LOCATION_TEXTURE_RGB,
                 cs->onscreen_depth_stencil->ds_current_size.cx,
                 cs->onscreen_depth_stencil->ds_current_size.cy);
-        wined3d_surface_decref(cs->onscreen_depth_stencil);
+        wined3d_texture_decref(cs->onscreen_depth_stencil->container);
     }
     cs->onscreen_depth_stencil = depth_stencil;
-    wined3d_surface_incref(cs->onscreen_depth_stencil);
+    wined3d_texture_incref(cs->onscreen_depth_stencil->container);
 }
 
 static inline void poll_queries(struct wined3d_cs *cs)
