@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <winuser.h>
 #include <httprequest.h>
+#include <httprequestid.h>
 
 #include "inet_ntop.c"
 
@@ -206,6 +207,11 @@ static DWORD CALLBACK task_proc( LPVOID param )
         }
         case WAIT_OBJECT_0 + 1:
             TRACE("exiting\n");
+            CloseHandle( request->task_cancel );
+            CloseHandle( request->task_wait );
+            request->task_cs.DebugInfo->Spare[0] = 0;
+            DeleteCriticalSection( &request->task_cs );
+            request->hdr.vtbl->destroy( &request->hdr );
             return 0;
 
         default:
@@ -525,6 +531,7 @@ BOOL WINAPI WinHttpAddRequestHeaders( HINTERNET hrequest, LPCWSTR headers, DWORD
     ret = add_request_headers( request, headers, len, flags );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -655,11 +662,8 @@ static BOOL query_headers( request_t *request, DWORD level, LPCWSTR name, LPVOID
         if (!(p = headers)) return FALSE;
         for (len = 0; *p; p++) if (*p != '\r') len++;
 
-        if (!buffer || (len + 1) * sizeof(WCHAR) > *buflen)
-        {
-            len++;
+        if (!buffer || len * sizeof(WCHAR) > *buflen)
             set_last_error( ERROR_INSUFFICIENT_BUFFER );
-        }
         else
         {
             for (p = headers, q = buffer; *p; p++, q++)
@@ -671,8 +675,8 @@ static BOOL query_headers( request_t *request, DWORD level, LPCWSTR name, LPVOID
                     p++; /* skip '\n' */
                 }
             }
-            *q = 0;
             TRACE("returning data: %s\n", debugstr_wn(buffer, len));
+            if (len) len--;
             ret = TRUE;
         }
         *buflen = len * sizeof(WCHAR);
@@ -832,6 +836,7 @@ BOOL WINAPI WinHttpQueryHeaders( HINTERNET hrequest, DWORD level, LPCWSTR name, 
     ret = query_headers( request, level, name, buffer, buflen, index );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -1036,7 +1041,7 @@ static BOOL open_connection( request_t *request )
                 return FALSE;
             }
         }
-        if (!netconn_secure_connect( &request->netconn, connect->servername ))
+        if (!netconn_secure_connect( &request->netconn, connect->hostname ))
         {
             netconn_close( &request->netconn );
             heap_free( addressW );
@@ -1249,6 +1254,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD heade
         ret = send_request( request, headers, headers_len, optional, optional_len, total_len, context, FALSE );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -1373,6 +1379,7 @@ BOOL WINAPI WinHttpQueryAuthSchemes( HINTERNET hrequest, LPDWORD supported, LPDW
     }
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -1827,6 +1834,7 @@ BOOL WINAPI WinHttpSetCredentials( HINTERNET hrequest, DWORD target, DWORD schem
     ret = set_credentials( request, target, scheme, username, password );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -2072,19 +2080,17 @@ static BOOL read_reply( request_t *request )
     static const WCHAR crlf[] = {'\r','\n',0};
 
     char buffer[MAX_REPLY_LEN];
-    DWORD buflen, len, offset, received_len, crlf_len = 2; /* strlenW(crlf) */
+    DWORD buflen, len, offset, crlf_len = 2; /* strlenW(crlf) */
     char *status_code, *status_text;
     WCHAR *versionW, *status_textW, *raw_headers;
     WCHAR status_codeW[4]; /* sizeof("nnn") */
 
     if (!netconn_connected( &request->netconn )) return FALSE;
 
-    received_len = 0;
     do
     {
         buflen = MAX_REPLY_LEN;
         if (!read_line( request, buffer, &buflen )) return FALSE;
-        received_len += buflen;
 
         /* first line should look like 'HTTP/1.x nnn OK' where nnn is the status code */
         if (!(status_code = strchr( buffer, ' ' ))) return FALSE;
@@ -2137,8 +2143,7 @@ static BOOL read_reply( request_t *request )
 
         buflen = MAX_REPLY_LEN;
         if (!read_line( request, buffer, &buflen )) return TRUE;
-        received_len += buflen;
-        if (!*buffer) break;
+        if (!*buffer) buflen = 1;
 
         while (len - offset < buflen + crlf_len)
         {
@@ -2146,6 +2151,11 @@ static BOOL read_reply( request_t *request )
             len *= 2;
             if (!(tmp = heap_realloc( raw_headers, len * sizeof(WCHAR) ))) return FALSE;
             request->raw_headers = raw_headers = tmp;
+        }
+        if (!*buffer)
+        {
+            memcpy( raw_headers + offset, crlf, sizeof(crlf) );
+            break;
         }
         MultiByteToWideChar( CP_ACP, 0, buffer, buflen, raw_headers + offset, buflen );
 
@@ -2469,6 +2479,7 @@ BOOL WINAPI WinHttpReceiveResponse( HINTERNET hrequest, LPVOID reserved )
         ret = receive_response( request, FALSE );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -2540,6 +2551,7 @@ BOOL WINAPI WinHttpQueryDataAvailable( HINTERNET hrequest, LPDWORD available )
         ret = query_data_available( request, available, FALSE );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -2589,6 +2601,7 @@ BOOL WINAPI WinHttpReadData( HINTERNET hrequest, LPVOID buffer, DWORD to_read, L
         ret = read_data( request, buffer, to_read, read, FALSE );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -2660,6 +2673,7 @@ BOOL WINAPI WinHttpWriteData( HINTERNET hrequest, LPCVOID buffer, DWORD to_write
         ret = write_data( request, buffer, to_write, written, FALSE );
 
     release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -2700,6 +2714,7 @@ struct winhttp_request
     LONG receive_timeout;
     WINHTTP_PROXY_INFO proxy;
     BOOL async;
+    UINT url_codepage;
 };
 
 static inline struct winhttp_request *impl_from_IWinHttpRequest( IWinHttpRequest *iface )
@@ -2922,6 +2937,48 @@ static HRESULT WINAPI winhttp_request_Invoke(
     TRACE("%p, %d, %s, %d, %d, %p, %p, %p, %p\n", request, member, debugstr_guid(riid),
           lcid, flags, params, result, excep_info, arg_err);
 
+    if (!IsEqualIID( riid, &IID_NULL )) return DISP_E_UNKNOWNINTERFACE;
+
+    if (member == DISPID_HTTPREQUEST_OPTION)
+    {
+        VARIANT ret_value, option;
+        UINT err_pos;
+
+        if (!result) result = &ret_value;
+        if (!arg_err) arg_err = &err_pos;
+
+        VariantInit( &option );
+        VariantInit( result );
+
+        if (!flags) return S_OK;
+
+        if (flags == DISPATCH_PROPERTYPUT)
+        {
+            hr = DispGetParam( params, 0, VT_I4, &option, arg_err );
+            if (FAILED(hr)) return hr;
+
+            hr = IWinHttpRequest_put_Option( &request->IWinHttpRequest_iface, V_I4( &option ), params->rgvarg[0] );
+            if (FAILED(hr))
+                WARN("put_Option(%d) failed: %x\n", V_I4( &option ), hr);
+            return hr;
+        }
+        else if (flags & (DISPATCH_PROPERTYGET | DISPATCH_METHOD))
+        {
+            hr = DispGetParam( params, 0, VT_I4, &option, arg_err );
+            if (FAILED(hr)) return hr;
+
+            hr = IWinHttpRequest_get_Option( &request->IWinHttpRequest_iface, V_I4( &option ), result );
+            if (FAILED(hr))
+                WARN("get_Option(%d) failed: %x\n", V_I4( &option ), hr);
+            return hr;
+        }
+
+        FIXME("unsupported flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    /* fallback to standard implementation */
+
     hr = get_typeinfo( IWinHttpRequest_tid, &typeinfo );
     if (SUCCEEDED(hr))
     {
@@ -3048,6 +3105,7 @@ static void initialize_request( struct winhttp_request *request )
     request->connect_timeout = 60000;
     request->send_timeout    = 30000;
     request->receive_timeout = 30000;
+    request->url_codepage = CP_UTF8;
     VariantInit( &request->data );
     request->state = REQUEST_STATE_INITIALIZED;
 }
@@ -3068,6 +3126,7 @@ static void reset_request( struct winhttp_request *request )
     request->bytes_read = 0;
     request->error    = ERROR_SUCCESS;
     request->async    = FALSE;
+    request->url_codepage = CP_UTF8;
     VariantClear( &request->data );
     request->state = REQUEST_STATE_INITIALIZED;
 }
@@ -3973,8 +4032,25 @@ static HRESULT WINAPI winhttp_request_get_Option(
     WinHttpRequestOption option,
     VARIANT *value )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    struct winhttp_request *request = impl_from_IWinHttpRequest( iface );
+    HRESULT hr = S_OK;
+
+    TRACE("%p, %u, %p\n", request, option, value);
+
+    EnterCriticalSection( &request->cs );
+    switch (option)
+    {
+    case WinHttpRequestOption_URLCodePage:
+        V_VT( value ) = VT_I4;
+        V_I4( value ) = request->url_codepage;
+        break;
+    default:
+        FIXME("unimplemented option %u\n", option);
+        hr = E_NOTIMPL;
+        break;
+    }
+    LeaveCriticalSection( &request->cs );
+    return hr;
 }
 
 static HRESULT WINAPI winhttp_request_put_Option(
@@ -3996,6 +4072,28 @@ static HRESULT WINAPI winhttp_request_put_Option(
             request->disable_feature &= ~WINHTTP_DISABLE_REDIRECTS;
         else
             request->disable_feature |= WINHTTP_DISABLE_REDIRECTS;
+        break;
+    }
+    case WinHttpRequestOption_URLCodePage:
+    {
+        static const WCHAR utf8W[] = {'u','t','f','-','8',0};
+        VARIANT cp;
+
+        VariantInit( &cp );
+        hr = VariantChangeType( &cp, &value, 0, VT_UI4 );
+        if (SUCCEEDED( hr ))
+        {
+            request->url_codepage = V_UI4( &cp );
+            TRACE("URL codepage: %u\n", request->url_codepage);
+        }
+        else if (V_VT( &value ) == VT_BSTR && !strcmpiW( V_BSTR( &value ), utf8W ))
+        {
+            TRACE("URL codepage: UTF-8\n");
+            request->url_codepage = CP_UTF8;
+            hr = S_OK;
+        }
+        else
+            FIXME("URL codepage %s is not recognized\n", debugstr_variant( &value ));
         break;
     }
     default:
@@ -4151,6 +4249,7 @@ HRESULT WinHttpRequest_create( void **obj )
     request->state = REQUEST_STATE_UNINITIALIZED;
     request->proxy.lpszProxy = NULL;
     request->proxy.lpszProxyBypass = NULL;
+    request->url_codepage = CP_UTF8;
     InitializeCriticalSection( &request->cs );
     request->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": winhttp_request.cs");
 

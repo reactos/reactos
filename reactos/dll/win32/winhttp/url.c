@@ -291,6 +291,7 @@ exit:
     if (ret) uc->nScheme = scheme;
     heap_free( url_decoded );
     heap_free( url_escaped );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -509,5 +510,6 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
         }
     }
     *url = 0;
+    set_last_error( ERROR_SUCCESS );
     return TRUE;
 }
