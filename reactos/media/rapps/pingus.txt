@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
@@ -16,7 +16,7 @@ SHA1 = 925d9a46eb1e063a3f792b9205cac7a01741632c
 CDPath = none
 
 [Section.0407]
-Description = Freies Lemings-ähnliches Puzzle Spiel.
+Description = Freies Lemmings-ähnliches Puzzle Spiel.
 
 [Section.0a]
 Description = Un juego de puzles parecido a los Lemmings.
