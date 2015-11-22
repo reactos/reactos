@@ -619,7 +619,7 @@ static BOOL WINAPI localui_ConfigurePortUI(PCWSTR pName, HWND hWnd, PCWSTR pPort
  *  Failure: FALSE
  *
  * NOTES
- *  Native localui does not allow to delete a COM / LPT - Port (ERROR_NOT_SUPPORTED)
+ *  Native localui does not allow deleting a COM/LPT port (ERROR_NOT_SUPPORTED)
  *
  */
 static BOOL WINAPI localui_DeletePortUI(PCWSTR pName, HWND hWnd, PCWSTR pPortName)
