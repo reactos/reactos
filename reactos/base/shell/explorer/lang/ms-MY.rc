@@ -94,9 +94,9 @@ BEGIN
     AUTORADIOBUTTON "Menu Mula(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
     LTEXT "Gaya menu ini memberikan anda akses ke folder, programs kegemaran anda, dan cari fail anda.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
     PUSHBUTTON "Suaikan...(&C)", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
-    AUTORADIOBUTTON "Klasik &menu mula", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10, WS_DISABLED
-    LTEXT "Gaya menu ini memberikan anda lihat klasik dan berfungsi", IDC_STATIC, 20, 185, 150, 24, WS_DISABLED
-    PUSHBUTTON "Suaikan...(&C)", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14, WS_DISABLED    
+    AUTORADIOBUTTON "Klasik &menu mula", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "Gaya menu ini memberikan anda lihat klasik dan berfungsi", IDC_STATIC, 20, 185, 150, 24
+    PUSHBUTTON "Suaikan...(&C)", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240

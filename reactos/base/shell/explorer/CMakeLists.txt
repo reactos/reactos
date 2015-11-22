@@ -12,8 +12,8 @@ list(APPEND SOURCE
     shellservice.cpp
     startctxmnu.cpp
     startmnu.cpp
-    startmnusite.cpp
     startmnucust.cpp
+    startmnusite.cpp
     startup.cpp
     taskband.cpp
     taskswnd.cpp
