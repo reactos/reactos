@@ -15,3 +15,4 @@
 @ stub -private DllGetClassObject
 @ stub -private DllRegisterServer
 @ stub -private DllUnregisterServer
+@ stdcall SspiPromptForCredentialsW(wstr ptr long wstr ptr ptr ptr long)
