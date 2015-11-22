@@ -66,8 +66,6 @@
 @ stdcall D3DXCreateFontIndirectA(ptr ptr ptr) d3dx9_36.D3DXCreateFontIndirectA
 @ stdcall D3DXCreateFontIndirectW(ptr ptr ptr) d3dx9_36.D3DXCreateFontIndirectW
 @ stdcall D3DXCreateFontW(ptr long long long long long long long long long wstr ptr) d3dx9_36.D3DXCreateFontW
-@ stdcall D3DXCreateFragmentLinker(ptr long ptr) d3dx9_36.D3DXCreateFragmentLinker
-@ stdcall D3DXCreateFragmentLinkerEx(ptr long long ptr) d3dx9_36.D3DXCreateFragmentLinkerEx
 @ stdcall D3DXCreateKeyframedAnimationSet(ptr long long long long ptr ptr) d3dx9_36.D3DXCreateKeyframedAnimationSet
 @ stdcall D3DXCreateLine(ptr ptr) d3dx9_36.D3DXCreateLine
 @ stdcall D3DXCreateMatrixStack(long ptr) d3dx9_36.D3DXCreateMatrixStack
@@ -293,7 +291,7 @@
 @ stdcall D3DXSimplifyMesh(ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXSimplifyMesh
 @ stdcall D3DXSphereBoundProbe(ptr float ptr ptr) d3dx9_36.D3DXSphereBoundProbe
 @ stdcall D3DXSplitMesh(ptr ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSplitMesh
-@ stdcall D3DXTessellateNPatches(ptr ptr long long ptr ptr) d3dx9_36.D3DXTessellateNPatches
+@ stdcall D3DXTessellateNPatches(ptr ptr float long ptr ptr) d3dx9_36.D3DXTessellateNPatches
 @ stdcall D3DXTessellateRectPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateRectPatch
 @ stdcall D3DXTessellateTriPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateTriPatch
 @ stdcall D3DXTriPatchSize(ptr ptr ptr) d3dx9_36.D3DXTriPatchSize

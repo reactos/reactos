@@ -63,3 +63,21 @@ BOOL WINAPI D3DXCheckVersion(UINT d3dsdkvers, UINT d3dxsdkvers)
     else
         return FALSE;
 }
+
+/***********************************************************************
+ * D3DXDebugMute
+ * Returns always FALSE for us.
+ */
+BOOL WINAPI D3DXDebugMute(BOOL mute)
+{
+    return FALSE;
+}
+
+/***********************************************************************
+ * D3DXGetDriverLevel.
+ * Returns always 900 (DX 9) for us
+ */
+UINT WINAPI D3DXGetDriverLevel(struct IDirect3DDevice9 *device)
+{
+    return 900;
+}

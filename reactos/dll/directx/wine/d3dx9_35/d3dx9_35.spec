@@ -291,7 +291,7 @@
 @ stdcall D3DXSimplifyMesh(ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXSimplifyMesh
 @ stdcall D3DXSphereBoundProbe(ptr float ptr ptr) d3dx9_36.D3DXSphereBoundProbe
 @ stdcall D3DXSplitMesh(ptr ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSplitMesh
-@ stdcall D3DXTessellateNPatches(ptr ptr long long ptr ptr) d3dx9_36.D3DXTessellateNPatches
+@ stdcall D3DXTessellateNPatches(ptr ptr float long ptr ptr) d3dx9_36.D3DXTessellateNPatches
 @ stdcall D3DXTessellateRectPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateRectPatch
 @ stdcall D3DXTessellateTriPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateTriPatch
 @ stdcall D3DXTriPatchSize(ptr ptr ptr) d3dx9_36.D3DXTriPatchSize
