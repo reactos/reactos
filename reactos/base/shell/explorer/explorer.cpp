@@ -45,12 +45,6 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)
     {
-        /* HACK - the global constructors don't run, so I placement new them here */
-        new (&gModule) CExplorerModule;
-        new (&gWinModule) CAtlWinModule;
-        new (&_AtlBaseModule) CAtlBaseModule;
-        new (&_AtlComModule) CAtlComModule;
-
         gModule.Init(ObjectMap, hInstance, NULL);
     }
     else

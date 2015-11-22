@@ -60,12 +60,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 
     if (dwReason == DLL_PROCESS_ATTACH)
     {
-        /* HACK - the global constructors don't run, so I placement new them here */
-        new (&gModule) CBrowseUIModule;
-        new (&gWinModule) CAtlWinModule;
-        new (&_AtlBaseModule) CAtlBaseModule;
-        new (&_AtlComModule) CAtlComModule;
-
         gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls (hInstance);
     }

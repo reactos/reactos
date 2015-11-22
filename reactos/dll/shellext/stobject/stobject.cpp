@@ -34,12 +34,6 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         g_hInstance = hinstDLL;
         DisableThreadLibraryCalls(g_hInstance);
 
-        /* HACK - the global constructors don't run, so I placement new them here */
-        new (&g_Module) CComModule;
-        new (&_AtlWinModule) CAtlWinModule;
-        new (&_AtlBaseModule) CAtlBaseModule;
-        new (&_AtlComModule) CAtlComModule;
-
         g_Module.Init(ObjectMap, g_hInstance, NULL);
     }
     else if (fdwReason == DLL_PROCESS_DETACH)
