@@ -322,7 +322,7 @@ static LONG INTERNET_SaveProxySettings( proxyinfo_t *lpwpi )
     }
     else
     {
-        if ((ret = RegDeleteValueW( key, szProxyServer )))
+        if ((ret = RegDeleteValueW( key, szProxyServer )) && ret != ERROR_FILE_NOT_FOUND)
         {
             RegCloseKey( key );
             return ret;
@@ -1283,9 +1283,8 @@ HINTERNET WINAPI InternetConnectW(HINTERNET hInternet,
     HINTERNET rc = NULL;
     DWORD res = ERROR_SUCCESS;
 
-    TRACE("(%p, %s, %i, %s, %s, %i, %x, %lx)\n", hInternet, debugstr_w(lpszServerName),
-	  nServerPort, debugstr_w(lpszUserName), debugstr_w(lpszPassword),
-	  dwService, dwFlags, dwContext);
+    TRACE("(%p, %s, %u, %s, %p, %u, %x, %lx)\n", hInternet, debugstr_w(lpszServerName),
+          nServerPort, debugstr_w(lpszUserName), lpszPassword, dwService, dwFlags, dwContext);
 
     if (!lpszServerName)
     {
@@ -2382,7 +2381,8 @@ static BOOL get_proxy_autoconfig_url( char *buf, DWORD buflen )
     CFRelease( settings );
     return ret;
 #else
-    FIXME( "no support on this platform\n" );
+    static int once;
+    if (!once++) FIXME( "no support on this platform\n" );
     return FALSE;
 #endif
 }
@@ -2731,6 +2731,15 @@ static DWORD set_global_option(DWORD option, void *buf, DWORD size)
         FIXME("INTERNETOPTION_SETTINGS_CHANGED semi-stub\n");
         collect_connections(COLLECT_CONNECTIONS);
         return ERROR_SUCCESS;
+
+    case INTERNET_OPTION_SUPPRESS_BEHAVIOR:
+        FIXME("INTERNET_OPTION_SUPPRESS_BEHAVIOR stub\n");
+
+        if(size != sizeof(ULONG))
+            return ERROR_INTERNET_BAD_OPTION_LENGTH;
+
+        FIXME("%08x\n", *(ULONG*)buf);
+        return ERROR_SUCCESS;
     }
 
     return ERROR_INTERNET_INVALID_OPTION;
@@ -3002,6 +3011,12 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         ret = (res == ERROR_SUCCESS);
         break;
         }
+    case INTERNET_OPTION_SETTINGS_CHANGED:
+        FIXME("INTERNET_OPTION_SETTINGS_CHANGED; STUB\n");
+        break;
+    case INTERNET_OPTION_REFRESH:
+        FIXME("INTERNET_OPTION_REFRESH; STUB\n");
+        break;
     default:
         FIXME("Option %d STUB\n",dwOption);
         SetLastError(ERROR_INTERNET_INVALID_OPTION);
