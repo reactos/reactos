@@ -598,7 +598,7 @@ static void write_declarations(struct bc_writer *This,
         put_dword(buffer, instr_dcl);
 
         /* Write the usage and index */
-        token = (1 << 31); /* Bit 31 of non-instruction opcodes is 1 */
+        token = (1u << 31); /* Bit 31 of non-instruction opcodes is 1 */
         token |= (decls[i].usage << D3DSP_DCL_USAGE_SHIFT) & D3DSP_DCL_USAGE_MASK;
         token |= (decls[i].usage_idx << D3DSP_DCL_USAGEINDEX_SHIFT) & D3DSP_DCL_USAGEINDEX_MASK;
         put_dword(buffer, token);
@@ -614,7 +614,7 @@ static void write_declarations(struct bc_writer *This,
 static void write_const(struct constant **consts, int num, DWORD opcode, DWORD reg_type, struct bytecode_buffer *buffer, BOOL len) {
     int i;
     DWORD instr_def = opcode;
-    const DWORD reg = (1<<31) | d3dsp_register( reg_type, 0 ) | D3DSP_WRITEMASK_ALL;
+    const DWORD reg = (1u << 31) | d3dsp_register( reg_type, 0 ) | D3DSP_WRITEMASK_ALL;
 
     if(len) {
         if(opcode == D3DSIO_DEFB)
@@ -885,7 +885,7 @@ static DWORD map_vs_output(struct bc_writer *This, DWORD regnum, DWORD mask, DWO
 static void vs_12_dstreg(struct bc_writer *This, const struct shader_reg *reg,
                          struct bytecode_buffer *buffer,
                          DWORD shift, DWORD mod) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD has_wmask;
 
     if(reg->rel_reg) {
@@ -959,7 +959,7 @@ static void vs_12_dstreg(struct bc_writer *This, const struct shader_reg *reg,
 
 static void vs_1_x_srcreg(struct bc_writer *This, const struct shader_reg *reg,
                           struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD has_swizzle;
     DWORD component;
 
@@ -1070,7 +1070,7 @@ static DWORD map_ps_input(struct bc_writer *This,
 
 static void ps_1_0123_srcreg(struct bc_writer *This, const struct shader_reg *reg,
                              struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     if(reg->rel_reg) {
         WARN("Relative addressing not supported in <= ps_3_0\n");
         This->state = E_INVALIDARG;
@@ -1116,7 +1116,7 @@ static void ps_1_0123_srcreg(struct bc_writer *This, const struct shader_reg *re
 static void ps_1_0123_dstreg(struct bc_writer *This, const struct shader_reg *reg,
                              struct bytecode_buffer *buffer,
                              DWORD shift, DWORD mod) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
 
     if(reg->rel_reg) {
         WARN("Relative addressing not supported for destination registers\n");
@@ -1378,7 +1378,7 @@ static const struct bytecode_backend ps_1_0123_backend = {
 
 static void ps_1_4_srcreg(struct bc_writer *This, const struct shader_reg *reg,
                           struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     if(reg->rel_reg) {
         WARN("Relative addressing not supported in <= ps_3_0\n");
         This->state = E_INVALIDARG;
@@ -1417,7 +1417,7 @@ static void ps_1_4_srcreg(struct bc_writer *This, const struct shader_reg *reg,
 static void ps_1_4_dstreg(struct bc_writer *This, const struct shader_reg *reg,
                           struct bytecode_buffer *buffer,
                           DWORD shift, DWORD mod) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
 
     if(reg->rel_reg) {
         WARN("Relative addressing not supported for destination registers\n");
@@ -1564,7 +1564,7 @@ static void vs_2_header(struct bc_writer *This,
 static void vs_2_srcreg(struct bc_writer *This,
                         const struct shader_reg *reg,
                         struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD has_swizzle;
     DWORD component;
     DWORD d3d9reg;
@@ -1799,12 +1799,12 @@ static void write_samplers(const struct bwriter_shader *shader, struct bytecode_
     DWORD i;
     DWORD instr_dcl = D3DSIO_DCL | (2 << D3DSI_INSTLENGTH_SHIFT);
     DWORD token;
-    const DWORD reg = (1<<31) | d3dsp_register( D3DSPR_SAMPLER, 0 ) | D3DSP_WRITEMASK_ALL;
+    const DWORD reg = (1u << 31) | d3dsp_register( D3DSPR_SAMPLER, 0 ) | D3DSP_WRITEMASK_ALL;
 
     for(i = 0; i < shader->num_samplers; i++) {
         /* Write the DCL instruction */
         put_dword(buffer, instr_dcl);
-        token = (1<<31);
+        token = (1u << 31);
         /* Already shifted */
         token |= (d3d9_sampler(shader->samplers[i].type)) & D3DSP_TEXTURETYPE_MASK;
         put_dword(buffer, token);
@@ -1831,7 +1831,7 @@ static void ps_2_header(struct bc_writer *This, const struct bwriter_shader *sha
 static void ps_2_srcreg(struct bc_writer *This,
                         const struct shader_reg *reg,
                         struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD d3d9reg;
     if(reg->rel_reg) {
         WARN("Relative addressing not supported in <= ps_3_0\n");
@@ -1886,7 +1886,7 @@ static void ps_2_0_dstreg(struct bc_writer *This,
                           const struct shader_reg *reg,
                           struct bytecode_buffer *buffer,
                           DWORD shift, DWORD mod) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD d3d9reg;
 
     if(reg->rel_reg) {
@@ -2059,7 +2059,7 @@ static void sm_3_header(struct bc_writer *This, const struct bwriter_shader *sha
 static void sm_3_srcreg(struct bc_writer *This,
                         const struct shader_reg *reg,
                         struct bytecode_buffer *buffer) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD d3d9reg;
 
     d3d9reg = d3d9_register(reg->type);
@@ -2098,7 +2098,7 @@ static void sm_3_dstreg(struct bc_writer *This,
                         const struct shader_reg *reg,
                         struct bytecode_buffer *buffer,
                         DWORD shift, DWORD mod) {
-    DWORD token = (1 << 31); /* Bit 31 of registers is 1 */
+    DWORD token = (1u << 31); /* Bit 31 of registers is 1 */
     DWORD d3d9reg;
 
     if(reg->rel_reg) {
