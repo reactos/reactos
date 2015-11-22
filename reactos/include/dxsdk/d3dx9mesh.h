@@ -836,11 +836,11 @@ HRESULT WINAPI D3DXSimplifyMesh(ID3DXMesh *mesh_in, const DWORD *adjacency,
 HRESULT WINAPI D3DXSplitMesh(ID3DXMesh *mesh_in, const DWORD *adjacency_in, const DWORD max_size,
         const DWORD flags, DWORD *mesh_out_count, ID3DXBuffer **mesh_out, ID3DXBuffer **adjacency_out,
         ID3DXBuffer **face_remap_out, ID3DXBuffer **vertex_remap_out);
-HRESULT WINAPI D3DXTesselateNPatches(ID3DXMesh *mesh_in, const DWORD *adjacency_in, float segment_count,
+HRESULT WINAPI D3DXTessellateNPatches(ID3DXMesh *mesh_in, const DWORD *adjacency_in, float segment_count,
         BOOL quad_interp, ID3DXMesh **mesh_out, ID3DXBuffer **adjacency_out);
-HRESULT WINAPI D3DXTesselateRectPatch(struct IDirect3DVertexBuffer9 *buffer, const float *segment_count,
+HRESULT WINAPI D3DXTessellateRectPatch(struct IDirect3DVertexBuffer9 *buffer, const float *segment_count,
         const D3DVERTEXELEMENT9 *declaration, const D3DRECTPATCH_INFO *patch_info, struct ID3DXMesh *mesh);
-HRESULT WINAPI D3DXTesselateTriPatch(struct IDirect3DVertexBuffer9 *buffer, const float *segment_count,
+HRESULT WINAPI D3DXTessellateTriPatch(struct IDirect3DVertexBuffer9 *buffer, const float *segment_count,
         const D3DVERTEXELEMENT9 *declaration, const D3DTRIPATCH_INFO *patch_info, struct ID3DXMesh *mesh);
 HRESULT WINAPI D3DXTriPatchSize(const FLOAT *segment_count, DWORD *num_triangles,
         DWORD *num_vertices);
