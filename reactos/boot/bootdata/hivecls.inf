@@ -29,7 +29,7 @@ HKCR,".rtf\shellnew","",0x00000000,""
 HKCR,".rtf\shellnew","Data",0x00020000,"{\rtf1}"
 HKCR,"rtffile","",0x00000000,"Rich Text Document"
 HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe,-1404"
-HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-2"
+HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\wordpad.exe,-103"
 HKCR,"rtffile\shell\open","",0x00000000,"Open"
 HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
 
@@ -39,8 +39,8 @@ HKCR,".386","PerceivedType",0x00000000,"system"
 HKCR,".vxd","",0x00000000,"vxdfile"
 HKCR,".vxd","PerceivedType",0x00000000,"system"
 HKCR,"vxdfile","",0x00000000,"Virtual Device Driver"
+HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-219"
 HKCR,"vxdfile","NoOpen",0x00000000,""
-HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-157"
 
 ; Animated Cursors
 HKCR,".ani","",0x00000000,"anifile"
@@ -48,18 +48,18 @@ HKCR,"anifile","",0x00000000,"Animated Cursor"
 HKCR,"anifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\main.cpl,-1039"
 HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 
-; DOS Batch Files
+; ReactOS Batch Files
 HKCR,".bat","",0x00000000,"batfile"
-HKCR,"batfile","",0x00000000,"DOS Batch File"
-HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-158"
+HKCR,"batfile","",0x00000000,"ReactOS Batch File"
+HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
-; ReactOS Cmd Script Files
+; ReactOS Command Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
-HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-159"
+HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -67,43 +67,44 @@ HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
 HKCR,"comfile","",0x00000000,"DOS Application"
-HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-160"
+HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-203"
 HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
 HKCR,"comfile\shell\open\command","",0x00000000,"""%1"" %*"
 
-; Control Panel extensions
+; Control Panel Items
 HKCR,".cpl","",0x00000000,"cplfile"
-HKCR,"cplfile","",0x00000000,%CPLFILE%
-HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-161"
+HKCR,"cplfile","",0x00000000,"Control Panel Item"
+HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-204"
 HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen","",0x00000000,%CPLFILE_OPENWITH%
+;;HKCR,"cplfile\shell\cplopen","MUIVerb",0x00020000,"@%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
 HKCR,"cplfile\shell\runas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLLAsUser %1,%*"
 
 ; Cursors
 HKCR,".cur","",0x00000000,"curfile"
 HKCR,"curfile","",0x00000000,"Cursor"
-HKCR,"curfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-162"
+HKCR,"curfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-205"
 HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
-HKCR,"dllfile","",0x00000000,"Dynamic Link Library"
+HKCR,"dllfile","",0x00000000,"Application Extension"
+HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-206"
 HKCR,"dllfile","NoOpen",0x00000000,""
-HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-163"
 HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; Device Drivers
 HKCR,".drv","",0x00000000,"drvfile"
 HKCR,"drvfile","",0x00000000,"Device Driver"
-HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-164"
+HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-207"
 HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; Applications
 HKCR,".exe","",0x00000000,"exefile"
-HKCR,"exefile","",0x00000000,"ReactOS Application"
-HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-165"
-HKCR,"exefile\Defaulticon","",0x00000000,"%1"
+HKCR,"exefile","",0x00000000,"Application"
+HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-208"
+HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
 HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
@@ -111,32 +112,32 @@ HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
 HKCR,"fonfile","",0x00000000,"Font file"
-HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-166"
+HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-209"
 HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
 HKCR,"fonfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 HKCR,".ttf","",0x00000000,"ttffile"
-HKCR,"ttffile","",0x00000000,"TrueType font file"
-HKCR,"ttffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-167"
+HKCR,"ttffile","",0x00000000,"TrueType Font file"
+HKCR,"ttffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-210"
 HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
 HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 HKCR,".otf","",0x00000000,"otffile"
-HKCR,"otffile","",0x00000000,"OpenType font file"
+HKCR,"otffile","",0x00000000,"OpenType Font file"
+HKCR,"otffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-211"
 HKCR,"otffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
-HKCR,"otffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-167"
 HKCR,"otffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
-HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-212"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
 HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\winhlp32.exe %1"
 
 HKCR,".chm","",0x00000000,"chm.file"
-HKCR,"chm.file","",0x00000000,"Compiled HTML Help File"
-HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"chm.file","",0x00000000,%CHMFILE%
+;;HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\hhctrl.ocx,-452"
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
 HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
 
@@ -147,44 +148,50 @@ HKCR,".htm","PerceivedType",0x00000000,"text"
 HKCR,".html","",0x00000000,"htmlfile"
 HKCR,".html","Content Type",0x00000000,"text/html"
 HKCR,".html","PerceivedType",0x00000000,"text"
-HKCR,"htmlfile","",0x00000000,"HTML File"
+HKCR,"htmlfile","",0x00000000,%HTMLFILE%
+;;HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-912"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
 HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
 HKCR,"icofile","",0x00000000,"Icon"
+HKCR,"icofile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-213"
 HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
+
+; GIF Images
+HKCR,".gif","",0x00000000,"giffile"
+HKCR,"giffile","",0x00000000,"GIF Image"
+HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
+HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
 HKCR,".jpeg","",0x00000000,"jpegfile"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
+HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
+HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
 HKCR,"pngfile","",0x00000000,"PNG Image"
+HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-
-; GIF Images
-HKCR,".gif","",0x00000000,"giffile"
-HKCR,"giffile","",0x00000000,"GIF Image"
-HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
 HKCR,"inifile","",0x00000000,"Configuration Settings"
-HKCR,"inifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-169"
+HKCR,"inifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-214"
 HKCR,"inifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inifile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 HKCR,"inifile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
@@ -192,7 +199,7 @@ HKCR,"inifile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 ; Setup Information Files
 HKCR,".inf","",0x00000000,"inffile"
 HKCR,"inffile","",0x00000000,"Setup Information"
-HKCR,"inffile\FriendlyTypeName","",0x00020000,"%SystemRoot%\system32\setupapi.dll,-2001"
+HKCR,"inffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\setupapi.dll,-2001"
 HKCR,"inffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 HKCR,"inffile\shell\Install","",0x00000000,"Install"
@@ -204,9 +211,9 @@ HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,".lnk\shellnew","",0x00000000,""
 HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere %1"
 HKCR,"lnkfile","",0x00000000,"Shortcut"
-HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-170"
-HKCR,"lnkfile","NeverShowExt",0x00000000,""
+HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-215"
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
+HKCR,"lnkfile","NeverShowExt",0x00000000,""
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\DropHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
@@ -229,6 +236,7 @@ HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,".txt\shellnew","",0x00000000,""
 HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
+HKCR,"txtfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\notepad.exe,-512"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
 HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
@@ -236,20 +244,23 @@ HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 ; XML Documents
 HKCR,".xml","",0x00000000,"xmlfile"
 HKCR,".xml","Content Type",0x00000000,"text/xml"
-HKCR,"xmlfile","",0x00000000,"XML Document"
+HKCR,"xmlfile","",0x00000000,%XMLFILE%
+;;HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
 HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; XSL Stylesheets
 HKCR,".xsl","",0x00000000,"xslfile"
 HKCR,".xsl","Content Type",0x00000000,"text/xml"
-HKCR,"xslfile","",0x00000000,"XSL Stylesheet"
+HKCR,"xslfile","",0x00000000,%XSLFILE%
+;;HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
-HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
+HKCR,"Msi.Package","",0x00000000,%MSIPACK%
+;;HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
@@ -257,11 +268,15 @@ HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\
 
 ; Program Information File for NT VDM
 HKCR,".pif","",0x00000000,"piffile"
+HKCR,"piffile","",0x00000000,"NT VDM Program Information File"
+HKCR,"piffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-216"
+HKCR,"piffile","IsShortcut",0x00000000,"yes"
+HKCR,"piffile","NeverShowExt",0x00000000,""
 
 ; Registration Entries
 HKCR,".reg","",0x00000000,"regfile"
-HKCR,"regfile","",0x00000000,"Registration Entries"
-HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-170"
+HKCR,"regfile","",0x00000000,"Registration File"
+HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\regedit.exe,-31000"
 HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
 HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"regfile\shell\open","",0x00000000,"Merge"
@@ -270,7 +285,8 @@ HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
 ; Screen Savers
 HKCR,".scr","",0x00000000,"scrfile"
 HKCR,"scrfile","",0x00000000,"Screen Saver"
-HKCR,"scrfile\Defaulticon","",0x00000000,"%1"
+HKCR,"scrfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-217"
+HKCR,"scrfile\DefaultIcon","",0x00000000,"%1"
 HKCR,"scrfile\shell\config","",0x00000000,"Configure"
 HKCR,"scrfile\shell\config\command","",0x00000000,"""%1"""
 HKCR,"scrfile\shell\install","",0x00000000,"Install"
@@ -294,19 +310,19 @@ HKCR,"SHCmdFile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-080
 ; System Files
 HKCR,".sys","",0x00000000,"sysfile"
 HKCR,"sysfile","",0x00000000,"System File"
+HKCR,"sysfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-218"
 HKCR,"sysfile","NoOpen",0x00000000,""
-HKCR,"sysfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
 HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; MS Styles (Themes)
 HKCR,".msstyles","",0x00000000,"msstylesfile"
-HKCR,"msstylesfile","",0x00000000,"Visual Style File"
+HKCR,"msstylesfile","",0x00000000,%MSSTYLESFILE%
 HKCR,"msstylesfile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
 HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme file:""%1"""
 
 ; Theme Files
 HKCR,".theme","",0x00000000,"themefile"
-HKCR,"themefile","",0x00000000,"Theme File"
+HKCR,"themefile","",0x00000000,%THEMEFILE%
 HKCR,"themefile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
 HKCR,"themefile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenTheme /file:""%1"""
 
@@ -315,26 +331,26 @@ HKCR,".url","",0x00000000,"InternetShortcut"
 
 ; Wave Sounds
 HKCR,".wav","",0x00000000,"SoundRec"
-HKCR,"SoundRec","",0x00000000,"Wave Sound"
+HKCR,"SoundRec","",0x00000000,%WAVFILE%
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 ; Midi Sounds
 HKCR,".mid","",0x00000000,"MIDFile"
 HKCR,".midi","",0x00000000,"MIDFile"
-HKCR,"MIDFile","",0x00000000,"MIDI Sequence"
+HKCR,"MIDFile","",0x00000000,%MIDFILE%
 HKCR,"MIDFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 ; Audio CD
 HKCR,".cda","",0x00000000,"CDAFile"
-HKCR,"CDAFile","",0x00000000,"CD Audio Track"
+HKCR,"CDAFile","",0x00000000,%CDAFILE%
 HKCR,"CDAFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 ; Avi Files
 HKCR,".avi","",0x00000000,"AVIFile"
-HKCR,"AVIFile","",0x00000000,"Video Clip"
+HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
 HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
@@ -554,42 +570,65 @@ HKCR,"MIME\Database\Rfc1766","0435",0x00000000,"zu;Zulu"
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-CPLFILE="Control Panel Extension"
+;; In shell32.dll
 CPLFILE_OPENWITH="Open with Control Panel"
+
+;; In hhctrl.ocx
+CHMFILE="Compiled HTML Help File"
+;; In ieframe.dll
+HTMLFILE="HTML File"
+;; In msxml3r.dll
+XMLFILE="XML Document"
+XSLFILE="XSL Stylesheet"
+;; In msi.dll
+MSIPACK="ReactOS Installer Package"
+;; In themeui.dll
+MSSTYLESFILE="Visual Style File"
+THEMEFILE="Theme File"
+;; In some multimedia exe/dll
+WAVFILE="Wave Sound"
+MIDFILE="MIDI Sequence"
+CDAFILE="CD Audio Track"
+AVIFILE="Video Clip"
 
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
-CPLFILE="Systemsteuerungselement"
 CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
+
+; LANG_SPANISH SUBLANG_NEUTRAL
+[Strings.000A]
+CPLFILE_OPENWITH="Abrir con el Panel de control"
 
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
-CPLFILE="Extension du Panneau de Contrôle"
 CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
+
+CHMFILE="Fichier d'aide HTML compilé"
+HTMLFILE="Fichier HTML"
+XMLFILE="Document XML"
+XSLFILE="Feuille de style XSL"
+MSIPACK="Package ReactOS Installer"
+MSSTYLESFILE="Fichier de styles visuels"
+THEMEFILE="Fichier de thèmes"
+WAVFILE="Son Wave"
+MIDFILE="Séquence MIDI"
+CDAFILE="Piste de CD Audio"
+AVIFILE="Clip Vidéo"
 
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
-CPLFILE="Aplet Panelu Sterowania"
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
-
-; LANG_SPANISH SUBLANG_NEUTRAL
-[Strings.0a]
-CPLFILE="Extensión del Panel de control"
-CPLFILE_OPENWITH="Abrir con el Panel de control"
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
-CPLFILE="Extensie pentru panou de control"
-CPLFILE_OPENWITH="Deschide în panou de control"
+CPLFILE_OPENWITH="Deschide în Panoul de control"
 
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
-CPLFILE="Элемент панели управления"
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
 
-; Turkish
-[Strings.041f]
-CPLFILE="Denetim Masası Uzantısı"
+; LANG_TURKISH SUBLANG_DEFAULT
+[Strings.041F]
 CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 
 ; EOF

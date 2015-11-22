@@ -181,4 +181,6 @@ O‘zgarishlarni saqlashni istaysizmi?"
     STRING_CR "Macintosh (CR)"
     STRING_LINE_COLUMN "Qator %d, Ustun %d"
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

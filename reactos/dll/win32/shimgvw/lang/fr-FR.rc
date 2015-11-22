@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Visionneuse d'Images et Fax de ReactOS"
     IDS_SETASDESKBG "Définir comme Arrière-plan du Bureau"
-    IDS_PREVIEW "Preview"
+    IDS_PREVIEW "Aperçu"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Image Suivante"
     IDS_TOOLTIP_PREV_PIC "Image Précédente"
@@ -14,4 +14,15 @@ BEGIN
     IDS_TOOLTIP_ROT_COUNCW "Tourner dans le sens opposé des aiguilles d'une montre (Ctrl+L)"
     IDS_TOOLTIP_PRINT "Imprimer (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Enregistrer sous... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    // IDS_EMF_FILE    "Image EMF"
+    IDS_GIF_FILE    "Image GIF"
+    IDS_JPG_FILE    "Image JPEG"
+    IDS_BMP_FILE    "Image Bitmap"
+    IDS_PNG_FILE    "Image PNG"
+    // IDS_TIF_FILE    "Image TIF"
+    // IDS_WMF_FILE    "Image WMF"
 END

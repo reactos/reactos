@@ -598,7 +598,7 @@ BEGIN
     GROUPBOX "Check disk options", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancel", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -775,11 +775,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Choose Icon"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Folder"
-    IDS_VIRTUAL_DRIVER "Virtual Device Driver"
     IDS_BAT_FILE "ReactOS Batch File"
     IDS_CMD_FILE "ReactOS Command Script"
-    IDS_COM_FILE "Dos Application"
+    IDS_COM_FILE "DOS Application"
     IDS_CPL_FILE "Control Panel Item"
     IDS_CUR_FILE "Cursor"
     IDS_DLL_FILE "Application Extension"
@@ -787,10 +787,15 @@ BEGIN
     IDS_EXE_FILE "Application"
     IDS_FON_FILE "Font file"
     IDS_TTF_FILE "TrueType Font file"
+    IDS_OTF_FILE "OpenType Font file"
     IDS_HLP_FILE "Help File"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Configuration Settings"
     IDS_LNK_FILE "Shortcut"
-    IDS_SYS_FILE "System file"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
+    IDS_SYS_FILE "System File"
+    IDS_VXD_FILE "Virtual Device Driver"
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"

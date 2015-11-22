@@ -768,6 +768,7 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             FormatDateTime(buffer, MAX_PATH, &pFileDetails->LastModification);
             break;
         case COLUMN_TYPE:
+            // FIXME: We should in fact use a UNICODE version of _ILGetFileType
             szTypeName[0] = L'\0';
             wcscpy(buffer, PathFindExtensionW(pFileDetails->szName));
             if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer) / sizeof(WCHAR), TRUE) &&

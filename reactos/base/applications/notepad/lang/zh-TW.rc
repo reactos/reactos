@@ -182,4 +182,6 @@ BEGIN
     STRING_LINE_COLUMN "第 %d 行，第 %d 字元"
     STRING_PRINTERROR """%s"" 檔案列印失敗。\n\
 請檢查印表機是否已經開機和正確設定。"
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

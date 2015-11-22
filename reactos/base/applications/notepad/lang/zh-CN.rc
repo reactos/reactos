@@ -181,4 +181,6 @@ BEGIN
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "线 %d, 列 %d"
     STRING_PRINTERROR "不能打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

@@ -64,6 +64,14 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 	  return FALSE;
 	}
 
+#ifdef __REACTOS__
+        if (!RegLoadMUIStringW(hkey, L"FriendlyTypeName", szFileType, len, NULL, 0, NULL))
+        {
+            RegCloseKey(hkey);
+            return TRUE;
+        }
+#endif
+
 	if (RegQueryValueW(hkey, NULL, szFileType, &len))
 	{ 
 	  RegCloseKey(hkey);
@@ -416,9 +424,28 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 {	HKEY	hkey;
 	BOOL ret = FALSE;
 	DWORD buflen = len;
+#ifdef __REACTOS__
+        CHAR szName[100];
+        LPOLESTR pStr;
+#endif
 
 	szDest[0] = 0;
+
+#ifdef __REACTOS__
+        if (StringFromCLSID(riid, &pStr) == S_OK)
+        {
+            DWORD dwLen = buflen * sizeof(CHAR);
+            sprintf(szName, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%S", pStr);
+            if (!RegGetValueA(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szDest, &dwLen))
+            {
+                ret = TRUE;
+            }
+            CoTaskMemFree(pStr);
+        }
+        if (!ret && HCR_RegOpenClassIDKey(riid, &hkey))
+#else
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
+#endif
 	{
           if (!RegLoadMUIStringA(hkey,"LocalizedString",szDest,len,NULL,0,NULL) ||
               !RegQueryValueExA(hkey,"",0,NULL,(LPBYTE)szDest,&len))
@@ -440,6 +467,28 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 	    if(LoadStringA(shell32_hInstance, IDS_MYCOMPUTER, szDest, buflen))
 	      ret = TRUE;
 	  }
+#ifdef __REACTOS__
+          else if (IsEqualIID(riid, &CLSID_MyDocuments))
+          {
+              if(LoadStringA(shell32_hInstance, IDS_PERSONAL, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_RecycleBin))
+          {
+              if(LoadStringA(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_ControlPanel))
+          {
+              if(LoadStringA(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_AdminFolderShortcut))
+          {
+              if(LoadStringA(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
+                  ret = TRUE;
+          }
+#endif
 	}
 
 	TRACE("-- (%s)\n", szDest);

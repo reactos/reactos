@@ -40,12 +40,21 @@
 #define IDS_SETASDESKBG 101
 #define IDS_PREVIEW     550
 
+/* Friendly File Type Names */
+// #define IDS_EMF_FILE    301
+#define IDS_GIF_FILE    302
+#define IDS_JPG_FILE    303
+#define IDS_BMP_FILE    304
+#define IDS_PNG_FILE    305
+// #define IDS_TIF_FILE    306
+// #define IDS_WMF_FILE    307
+
 /* Tooltips strings */
-#define IDS_TOOLTIP_NEXT_PIC   300
-#define IDS_TOOLTIP_PREV_PIC   301
-#define IDS_TOOLTIP_ZOOM_IN    302
-#define IDS_TOOLTIP_ZOOM_OUT   304
-#define IDS_TOOLTIP_ROT_CLOCKW 305
-#define IDS_TOOLTIP_ROT_COUNCW 306
-#define IDS_TOOLTIP_PRINT      307
-#define IDS_TOOLTIP_SAVEAS     308
+#define IDS_TOOLTIP_NEXT_PIC   400
+#define IDS_TOOLTIP_PREV_PIC   401
+#define IDS_TOOLTIP_ZOOM_IN    402
+#define IDS_TOOLTIP_ZOOM_OUT   404
+#define IDS_TOOLTIP_ROT_CLOCKW 405
+#define IDS_TOOLTIP_ROT_COUNCW 406
+#define IDS_TOOLTIP_PRINT      407
+#define IDS_TOOLTIP_SAVEAS     408

@@ -186,4 +186,6 @@ Păstrați modificările aduse?"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linia %d, coloana %d"
     STRING_PRINTERROR "Nu se poate imprima fișierul '%s'.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

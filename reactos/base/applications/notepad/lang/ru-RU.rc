@@ -181,4 +181,6 @@ BEGIN
     STRING_CR "Macintosh (CR)"
     STRING_LINE_COLUMN "Строка %d, столбец %d"
     STRING_PRINTERROR "Невозможно распечатать файл '%s'.\n\nПроверьте, включен ли принтер, и настроен ли он правильно."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

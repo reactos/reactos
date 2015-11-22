@@ -181,4 +181,6 @@ den här åtgärden. \nAvsluta ett eller flera program för att frigöra mer min
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Line %d, column %d"
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

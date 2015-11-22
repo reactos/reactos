@@ -147,7 +147,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "ReactOSは次の方々によって提供されています:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS は次の方々によって提供されています:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -775,11 +775,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "アイコンの選択"
     IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
     IDS_DIRECTORY "フォルダ"
-    IDS_VIRTUAL_DRIVER "仮想 デバイス ドライバ"
     IDS_BAT_FILE "ReactOS バッチ ファイル"
     IDS_CMD_FILE "ReactOS コマンド スクリプト"
-    IDS_COM_FILE "Dos アプリケーション"
+    IDS_COM_FILE "DOS アプリケーション"
     IDS_CPL_FILE "コントロール パネルの項目"
     IDS_CUR_FILE "カーソル"
     IDS_DLL_FILE "アプリケーション 拡張"
@@ -787,10 +787,15 @@ BEGIN
     IDS_EXE_FILE "アプリケーション"
     IDS_FON_FILE "フォント ファイル"
     IDS_TTF_FILE "TrueType フォント ファイル"
+    IDS_OTF_FILE "OpenType フォント ファイル"
     IDS_HLP_FILE "ヘルプ ファイル"
-    IDS_INI_FILE "構成設定"
+    IDS_ICO_FILE "Icon"
+    IDS_INI_FILE "設定ファイル"
     IDS_LNK_FILE "ショートカット"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "システム ファイル"
+    IDS_VXD_FILE "仮想 デバイス ドライバ"
 
     IDS_OPEN_VERB "開く"
     IDS_EXPLORE_VERB "Explore"

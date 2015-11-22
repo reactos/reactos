@@ -183,4 +183,6 @@ tugas ini. \nTutup satu atau lebih aplikasi untuk menambah jumlah \ningatan koso
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Garisan %d, Kolum %d"
     STRING_PRINTERROR "Tidak boleh mencetak fail '%s'.\n\nPastikan pencetak dihidupkan dan dikonfigurasikan dengan betul."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

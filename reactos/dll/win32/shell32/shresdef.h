@@ -141,22 +141,29 @@
 #define IDS_RECYCLEBIN_LOCATION   153
 #define IDS_RECYCLEBIN_DISKSPACE  154
 #define IDS_OPEN_WITH_FILTER      155
-#define IDS_DIRECTORY             156
-#define IDS_VIRTUAL_DRIVER        157
-#define IDS_BAT_FILE              158
-#define IDS_CMD_FILE              159
-#define IDS_COM_FILE              160
-#define IDS_CPL_FILE              161
-#define IDS_CUR_FILE              162
-#define IDS_DLL_FILE              163
-#define IDS_DRV_FILE              164
-#define IDS_EXE_FILE              165
-#define IDS_FON_FILE              166
-#define IDS_TTF_FILE              167
-#define IDS_HLP_FILE              168
-#define IDS_INI_FILE              169
-#define IDS_LNK_FILE              170
-#define IDS_SYS_FILE              171
+
+/* Friendly File Type Names */
+#define IDS_DIRECTORY             200
+#define IDS_BAT_FILE              201
+#define IDS_CMD_FILE              202
+#define IDS_COM_FILE              203
+#define IDS_CPL_FILE              204
+#define IDS_CUR_FILE              205
+#define IDS_DLL_FILE              206
+#define IDS_DRV_FILE              207
+#define IDS_EXE_FILE              208
+#define IDS_FON_FILE              209
+#define IDS_TTF_FILE              210
+#define IDS_OTF_FILE              211
+#define IDS_HLP_FILE              212
+#define IDS_ICO_FILE              213
+#define IDS_INI_FILE              214
+#define IDS_LNK_FILE              215
+#define IDS_PIF_FILE              216
+#define IDS_SCR_FILE              217
+#define IDS_SYS_FILE              218
+#define IDS_VXD_FILE              219
+
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173
 #define IDS_FILE_TYPES            174

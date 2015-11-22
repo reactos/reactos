@@ -61,6 +61,9 @@ IDB_FORMATBAR BITMAP "res/formatbar.bmp"
 /* @makedep: wordpad.ico */
 IDI_WORDPAD ICON "res/wordpad.ico"
 
+/* @makedep: document.ico */
+IDI_RTFDOC ICON "res/document.ico"
+
 /* @makedep: zoom.cur */
 IDC_ZOOM CURSOR "res/zoom.cur"
 
