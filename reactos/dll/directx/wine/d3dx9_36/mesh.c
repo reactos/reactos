@@ -3320,6 +3320,13 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
         goto end;
     }
 
+    if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
+    {
+        hr = create_dummy_skin(&mesh_data->skin_info);
+        if (FAILED(hr))
+            goto end;
+    }
+
     hr = D3D_OK;
 
 end:
@@ -3898,11 +3905,9 @@ HRESULT WINAPI D3DXLoadMeshHierarchyFromXInMemory(const void *memory, DWORD memo
 
     if (!memory || !memory_size || !device || !frame_hierarchy || !alloc_hier)
         return D3DERR_INVALIDCALL;
-    if (load_user_data || anim_controller) {
-        if (load_user_data)
-            FIXME("Loading user data not implemented\n");
-        if (anim_controller)
-            FIXME("Animation controller creation not implemented\n");
+    if (load_user_data)
+    {
+        FIXME("Loading user data not implemented.\n");
         return E_NOTIMPL;
     }
 
@@ -3970,6 +3975,12 @@ HRESULT WINAPI D3DXLoadMeshHierarchyFromXInMemory(const void *memory, DWORD memo
     } else {
         *frame_hierarchy = first_frame;
         hr = D3D_OK;
+    }
+
+    if (anim_controller)
+    {
+        *anim_controller = NULL;
+        FIXME("Animation controller creation not implemented.\n");
     }
 
 cleanup:
@@ -4978,12 +4989,6 @@ HRESULT WINAPI D3DXCreateCylinder(struct IDirect3DDevice9 *device, float radius1
         return D3DERR_INVALIDCALL;
     }
 
-    if (adjacency)
-    {
-        FIXME("Case of adjacency != NULL not implemented.\n");
-        return E_NOTIMPL;
-    }
-
     number_of_vertices = 2 + (slices * (3 + stacks));
     number_of_faces = 2 * slices + stacks * (2 * slices);
 
@@ -5135,6 +5140,23 @@ HRESULT WINAPI D3DXCreateCylinder(struct IDirect3DDevice9 *device, float radius1
     free_sincos_table(&theta);
     cylinder->lpVtbl->UnlockIndexBuffer(cylinder);
     cylinder->lpVtbl->UnlockVertexBuffer(cylinder);
+
+    if (adjacency)
+    {
+        if (FAILED(hr = D3DXCreateBuffer(number_of_faces * sizeof(DWORD) * 3, adjacency)))
+        {
+            cylinder->lpVtbl->Release(cylinder);
+            return hr;
+        }
+
+        if (FAILED(hr = cylinder->lpVtbl->GenerateAdjacency(cylinder, 0.0f, (*adjacency)->lpVtbl->GetBufferPointer(*adjacency))))
+        {
+            (*adjacency)->lpVtbl->Release(*adjacency);
+            cylinder->lpVtbl->Release(cylinder);
+            return hr;
+        }
+    }
+
     *mesh = cylinder;
 
     return D3D_OK;
@@ -5145,7 +5167,7 @@ HRESULT WINAPI D3DXCreateTeapot(struct IDirect3DDevice9 *device,
 {
     FIXME("(%p, %p, %p): stub\n", device, mesh, adjacency);
 
-    return E_NOTIMPL;
+    return D3DXCreateSphere(device, 1.0f, 4, 4, mesh, adjacency);
 }
 
 HRESULT WINAPI D3DXCreateTextA(struct IDirect3DDevice9 *device, HDC hdc, const char *text, float deviation,
@@ -5838,6 +5860,10 @@ static HRESULT triangulate(struct triangulation_array *triangulations)
     int nb_vertices = 0;
     int i;
     struct point2d_index *idx_ptr;
+
+    /* Glyphs without outlines do not generate any vertices. */
+    if (!glyph->outlines.count)
+        return D3D_OK;
 
     for (i = 0; i < glyph->outlines.count; i++)
         nb_vertices += glyph->outlines.items[i].count;
@@ -6989,7 +7015,6 @@ HRESULT WINAPI D3DXWeldVertices(ID3DXMesh *mesh, DWORD flags, const D3DXWELDEPSI
     DWORD *point_reps = NULL;
     struct d3dx9_mesh *This = impl_from_ID3DXMesh(mesh);
     DWORD *vertex_face_map = NULL;
-    ID3DXBuffer *vertex_remap = NULL;
     BYTE *vertices = NULL;
 
     TRACE("mesh %p, flags %#x, epsilons %p, adjacency %p, adjacency_out %p, face_remap_out %p, vertex_remap_out %p.\n",
@@ -7156,7 +7181,6 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, vertex_face_map);
     if (attributes) mesh->lpVtbl->UnlockAttributeBuffer(mesh);
     if (indices) mesh->lpVtbl->UnlockIndexBuffer(mesh);
-    if (vertex_remap) ID3DXBuffer_Release(vertex_remap);
     if (vertices) mesh->lpVtbl->UnlockVertexBuffer(mesh);
 
     return hr;
@@ -7227,36 +7251,281 @@ error:
     return hr;
 }
 
+static D3DXVECTOR3 *vertex_element_vec3(BYTE *vertices, const D3DVERTEXELEMENT9 *declaration,
+        DWORD vertex_stride, DWORD index)
+{
+    return (D3DXVECTOR3 *)(vertices + declaration->Offset + index * vertex_stride);
+}
+
+static D3DXVECTOR3 read_vec3(BYTE *vertices, const D3DVERTEXELEMENT9 *declaration,
+        DWORD vertex_stride, DWORD index)
+{
+    D3DXVECTOR3 vec3 = {0};
+    const D3DXVECTOR3 *src = vertex_element_vec3(vertices, declaration, vertex_stride, index);
+
+    switch (declaration->Type)
+    {
+        case D3DDECLTYPE_FLOAT1:
+            vec3.x = src->x;
+            break;
+        case D3DDECLTYPE_FLOAT2:
+            vec3.x = src->x;
+            vec3.y = src->y;
+            break;
+        case D3DDECLTYPE_FLOAT3:
+        case D3DDECLTYPE_FLOAT4:
+            vec3 = *src;
+            break;
+        default:
+            ERR("Cannot read vec3\n");
+            break;
+    }
+
+    return vec3;
+}
+
 /*************************************************************************
  * D3DXComputeTangentFrameEx    (D3DX9_36.@)
  */
-HRESULT WINAPI D3DXComputeTangentFrameEx(ID3DXMesh *Mesh, DWORD TextureInSemantic, DWORD TextureInIndex,
-               DWORD UPartialOutSemantic, DWORD UPartialOutIndex, DWORD VPartialOutSemantic, DWORD VPartialOutIndex,
-               DWORD NormalOutSemantic, DWORD NormalOutIndex, DWORD options, const DWORD *adjacency,
-               FLOAT PartialEdgeThreshold, FLOAT SingularPointThreshold, FLOAT NormalEdgeThreshold,
-               ID3DXMesh **MeshOut, ID3DXBuffer **VertexMapping)
+HRESULT WINAPI D3DXComputeTangentFrameEx(ID3DXMesh *mesh, DWORD texture_in_semantic, DWORD texture_in_index,
+        DWORD u_partial_out_semantic, DWORD u_partial_out_index, DWORD v_partial_out_semantic,
+        DWORD v_partial_out_index, DWORD normal_out_semantic, DWORD normal_out_index, DWORD options,
+        const DWORD *adjacency, float partial_edge_threshold, float singular_point_threshold,
+        float normal_edge_threshold, ID3DXMesh **mesh_out, ID3DXBuffer **vertex_mapping)
 {
-    FIXME("Mesh %p, TextureInSemantic %u, TextureInIndex %u, UPartialOutSemantic %u, UPartialOutIndex %u, "
-            "VPartialOutSemantic %u, VPartialOutIndex %u, NormalOutSemantic %u, NormalOutIndex %u, "
-            "options %x, adjacency %p, PartialEdgeThreshold %f, SingularPointThreshold %f, NormalEdgeThreshold %f, "
-            "MeshOut %p, VertexMapping %p stub.\n",
-            Mesh, TextureInSemantic, TextureInIndex, UPartialOutSemantic, UPartialOutIndex, VPartialOutSemantic,
-            VPartialOutIndex, NormalOutSemantic, NormalOutIndex, options, adjacency, PartialEdgeThreshold,
-            SingularPointThreshold, NormalEdgeThreshold, MeshOut, VertexMapping);
+    HRESULT hr;
+    void *indices = NULL;
+    BYTE *vertices = NULL;
+    DWORD *point_reps = NULL;
+    size_t normal_size;
+    BOOL indices_are_32bit;
+    DWORD i, j, num_faces, num_vertices, vertex_stride;
+    D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE] = {D3DDECL_END()};
+    D3DVERTEXELEMENT9 *position_declaration = NULL, *normal_declaration = NULL;
+    DWORD weighting_method = options & (D3DXTANGENT_WEIGHT_EQUAL | D3DXTANGENT_WEIGHT_BY_AREA);
 
-    return E_NOTIMPL;
+    TRACE("mesh %p, texture_in_semantic %u, texture_in_index %u, u_partial_out_semantic %u, u_partial_out_index %u, "
+            "v_partial_out_semantic %u, v_partial_out_index %u, normal_out_semantic %u, normal_out_index %u, "
+            "options %#x, adjacency %p, partial_edge_threshold %f, singular_point_threshold %f, "
+            "normal_edge_threshold %f, mesh_out %p, vertex_mapping %p\n",
+            mesh, texture_in_semantic, texture_in_index, u_partial_out_semantic, u_partial_out_index,
+            v_partial_out_semantic, v_partial_out_index, normal_out_semantic, normal_out_index, options, adjacency,
+            partial_edge_threshold, singular_point_threshold, normal_edge_threshold, mesh_out, vertex_mapping);
+
+    if (!mesh)
+    {
+        WARN("mesh is NULL\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (weighting_method == (D3DXTANGENT_WEIGHT_EQUAL | D3DXTANGENT_WEIGHT_BY_AREA))
+    {
+        WARN("D3DXTANGENT_WEIGHT_BY_AREA and D3DXTANGENT_WEIGHT_EQUAL are mutally exclusive\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (u_partial_out_semantic != D3DX_DEFAULT)
+    {
+        FIXME("tangent vectors computation is not supported\n");
+        return E_NOTIMPL;
+    }
+
+    if (v_partial_out_semantic != D3DX_DEFAULT)
+    {
+        FIXME("binormal vectors computation is not supported\n");
+        return E_NOTIMPL;
+    }
+
+    if (options & ~(D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS | D3DXTANGENT_WEIGHT_EQUAL | D3DXTANGENT_WEIGHT_BY_AREA))
+    {
+        FIXME("unsupported options %#x\n", options);
+        return E_NOTIMPL;
+    }
+
+    if (!(options & D3DXTANGENT_CALCULATE_NORMALS))
+    {
+        FIXME("only normals computation is supported\n");
+        return E_NOTIMPL;
+    }
+
+    if (!(options & D3DXTANGENT_GENERATE_IN_PLACE) || mesh_out || vertex_mapping)
+    {
+        FIXME("only D3DXTANGENT_GENERATE_IN_PLACE is supported\n");
+        return E_NOTIMPL;
+    }
+
+    if (FAILED(hr = mesh->lpVtbl->GetDeclaration(mesh, declaration)))
+        return hr;
+
+    for (i = 0; declaration[i].Stream != 0xff; i++)
+    {
+        if (declaration[i].Usage == D3DDECLUSAGE_POSITION && !declaration[i].UsageIndex)
+            position_declaration = &declaration[i];
+        if (declaration[i].Usage == normal_out_semantic && declaration[i].UsageIndex == normal_out_index)
+            normal_declaration = &declaration[i];
+    }
+
+    if (!position_declaration || !normal_declaration)
+        return D3DERR_INVALIDCALL;
+
+    if (normal_declaration->Type == D3DDECLTYPE_FLOAT3)
+    {
+        normal_size = sizeof(D3DXVECTOR3);
+    }
+    else if (normal_declaration->Type == D3DDECLTYPE_FLOAT4)
+    {
+        normal_size = sizeof(D3DXVECTOR4);
+    }
+    else
+    {
+        WARN("unsupported normals type %u\n", normal_declaration->Type);
+        return D3DERR_INVALIDCALL;
+    }
+
+    num_faces = mesh->lpVtbl->GetNumFaces(mesh);
+    num_vertices = mesh->lpVtbl->GetNumVertices(mesh);
+    vertex_stride = mesh->lpVtbl->GetNumBytesPerVertex(mesh);
+    indices_are_32bit = mesh->lpVtbl->GetOptions(mesh) & D3DXMESH_32BIT;
+
+    point_reps = HeapAlloc(GetProcessHeap(), 0, num_vertices * sizeof(*point_reps));
+    if (!point_reps)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (adjacency)
+    {
+        if (FAILED(hr = mesh->lpVtbl->ConvertAdjacencyToPointReps(mesh, adjacency, point_reps)))
+            goto done;
+    }
+    else
+    {
+        for (i = 0; i < num_vertices; i++)
+            point_reps[i] = i;
+    }
+
+    if (FAILED(hr = mesh->lpVtbl->LockIndexBuffer(mesh, 0, &indices)))
+        goto done;
+
+    if (FAILED(hr = mesh->lpVtbl->LockVertexBuffer(mesh, 0, (void **)&vertices)))
+        goto done;
+
+    for (i = 0; i < num_vertices; i++)
+    {
+        static const D3DXVECTOR4 default_vector = {0.0f, 0.0f, 0.0f, 1.0f};
+        void *normal = vertices + normal_declaration->Offset + i * vertex_stride;
+
+        memcpy(normal, &default_vector, normal_size);
+    }
+
+    for (i = 0; i < num_faces; i++)
+    {
+        float denominator, weights[3];
+        D3DXVECTOR3 a, b, cross, face_normal;
+        const DWORD face_indices[3] =
+        {
+            read_ib(indices, indices_are_32bit, 3 * i + 0),
+            read_ib(indices, indices_are_32bit, 3 * i + 1),
+            read_ib(indices, indices_are_32bit, 3 * i + 2)
+        };
+        const D3DXVECTOR3 v0 = read_vec3(vertices, position_declaration, vertex_stride, face_indices[0]);
+        const D3DXVECTOR3 v1 = read_vec3(vertices, position_declaration, vertex_stride, face_indices[1]);
+        const D3DXVECTOR3 v2 = read_vec3(vertices, position_declaration, vertex_stride, face_indices[2]);
+
+        D3DXVec3Cross(&cross, D3DXVec3Subtract(&a, &v0, &v1), D3DXVec3Subtract(&b, &v0, &v2));
+
+        switch (weighting_method)
+        {
+            case D3DXTANGENT_WEIGHT_EQUAL:
+                weights[0] = weights[1] = weights[2] = 1.0f;
+                break;
+            case D3DXTANGENT_WEIGHT_BY_AREA:
+                weights[0] = weights[1] = weights[2] = D3DXVec3Length(&cross);
+                break;
+            default:
+                /* weight by angle */
+                denominator = D3DXVec3Length(&a) * D3DXVec3Length(&b);
+                if (!denominator)
+                    weights[0] = 0.0f;
+                else
+                    weights[0] = acosf(D3DXVec3Dot(&a, &b) / denominator);
+
+                D3DXVec3Subtract(&a, &v1, &v0);
+                D3DXVec3Subtract(&b, &v1, &v2);
+                denominator = D3DXVec3Length(&a) * D3DXVec3Length(&b);
+                if (!denominator)
+                    weights[1] = 0.0f;
+                else
+                    weights[1] = acosf(D3DXVec3Dot(&a, &b) / denominator);
+
+                D3DXVec3Subtract(&a, &v2, &v0);
+                D3DXVec3Subtract(&b, &v2, &v1);
+                denominator = D3DXVec3Length(&a) * D3DXVec3Length(&b);
+                if (!denominator)
+                    weights[2] = 0.0f;
+                else
+                    weights[2] = acosf(D3DXVec3Dot(&a, &b) / denominator);
+
+                break;
+        }
+
+        D3DXVec3Normalize(&face_normal, &cross);
+
+        for (j = 0; j < 3; j++)
+        {
+            D3DXVECTOR3 normal;
+            DWORD rep_index = point_reps[face_indices[j]];
+            D3DXVECTOR3 *rep_normal = vertex_element_vec3(vertices, normal_declaration, vertex_stride, rep_index);
+
+            D3DXVec3Scale(&normal, &face_normal, weights[j]);
+            D3DXVec3Add(rep_normal, rep_normal, &normal);
+        }
+    }
+
+    for (i = 0; i < num_vertices; i++)
+    {
+        DWORD rep_index = point_reps[i];
+        D3DXVECTOR3 *normal = vertex_element_vec3(vertices, normal_declaration, vertex_stride, i);
+        D3DXVECTOR3 *rep_normal = vertex_element_vec3(vertices, normal_declaration, vertex_stride, rep_index);
+
+        if (i == rep_index)
+            D3DXVec3Normalize(rep_normal, rep_normal);
+        else
+            *normal = *rep_normal;
+    }
+
+    hr = D3D_OK;
+
+done:
+    if (vertices)
+        mesh->lpVtbl->UnlockVertexBuffer(mesh);
+
+    if (indices)
+        mesh->lpVtbl->UnlockIndexBuffer(mesh);
+
+    HeapFree(GetProcessHeap(), 0, point_reps);
+
+    return hr;
 }
 
 /*************************************************************************
  * D3DXComputeNormals    (D3DX9_36.@)
  */
-HRESULT WINAPI D3DXComputeNormals(ID3DXBaseMesh *mesh, const DWORD *adjacency)
+HRESULT WINAPI D3DXComputeNormals(struct ID3DXBaseMesh *mesh, const DWORD *adjacency)
 {
-    TRACE("mesh %p, adjacency %p.\n", mesh, adjacency);
+    TRACE("mesh %p, adjacency %p\n", mesh, adjacency);
 
-    return D3DXComputeTangentFrameEx((ID3DXMesh *)mesh, D3DX_DEFAULT, 0, D3DX_DEFAULT, 0, D3DX_DEFAULT, 0,
-                                     D3DDECLUSAGE_NORMAL, 0, D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
-                                     adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
+    if (mesh && (ID3DXMeshVtbl *)mesh->lpVtbl != &D3DXMesh_Vtbl)
+    {
+        ERR("Invalid virtual table\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    return D3DXComputeTangentFrameEx((ID3DXMesh *)mesh, D3DX_DEFAULT, 0,
+            D3DX_DEFAULT, 0, D3DX_DEFAULT, 0, D3DDECLUSAGE_NORMAL, 0,
+            D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
+            adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
 }
 
 /*************************************************************************
@@ -7274,11 +7543,20 @@ HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture
 /*************************************************************************
  * D3DXIntersect    (D3DX9_36.@)
  */
-HRESULT WINAPI D3DXIntersect(ID3DXBaseMesh *Mesh, const D3DXVECTOR3 *RayPos, const D3DXVECTOR3 *RayDir, BOOL *Hit,
-        DWORD *FaceIndex, FLOAT *U, FLOAT *V, FLOAT *Dist, ID3DXBuffer **AllHits, DWORD *CountOfHits)
+HRESULT WINAPI D3DXIntersect(ID3DXBaseMesh *mesh, const D3DXVECTOR3 *ray_pos, const D3DXVECTOR3 *ray_dir,
+        BOOL *hit, DWORD *face_index, float *u, float *v, float *distance, ID3DXBuffer **all_hits, DWORD *count_of_hits)
 {
-    FIXME("Mesh %p, RayPos %p, RayDir %p, Hit %p, FaceIndex %p, U %p, V %p, Dist %p, AllHits %p, CountOfHits %p stub.\n",
-            Mesh, RayPos, RayDir, Hit, FaceIndex, U, V, Dist, AllHits, CountOfHits);
+    FIXME("mesh %p, ray_pos %p, ray_dir %p, hit %p, face_index %p, u %p, v %p, distance %p, all_hits %p, "
+            "count_of_hits %p stub!\n", mesh, ray_pos, ray_dir, hit, face_index, u, v, distance, all_hits, count_of_hits);
+
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI D3DXTessellateNPatches(ID3DXMesh *mesh, const DWORD *adjacency_in, float num_segs,
+        BOOL quadratic_normals, ID3DXMesh **mesh_out, ID3DXBuffer **adjacency_out)
+{
+    FIXME("mesh %p, adjacency_in %p, num_segs %f, quadratic_normals %d, mesh_out %p, adjacency_out %p stub.\n",
+            mesh, adjacency_in, num_segs, quadratic_normals, mesh_out, adjacency_out);
 
     return E_NOTIMPL;
 }

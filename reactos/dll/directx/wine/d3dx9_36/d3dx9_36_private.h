@@ -128,4 +128,6 @@ const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r) DECLSPEC_HIDDEN;
 void set_number(void *outdata, D3DXPARAMETER_TYPE outtype,
         const void *indata, D3DXPARAMETER_TYPE intype) DECLSPEC_HIDDEN;
 
+HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
+
 #endif /* __WINE_D3DX9_36_PRIVATE_H */

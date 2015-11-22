@@ -207,7 +207,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
 
-    if (!string || !count)
+    if (!string || count <= 0)
         return 0;
 
     countW = MultiByteToWideChar(CP_ACP, 0, string, count, NULL, 0);
@@ -232,7 +232,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
 
-    if (!string || !count)
+    if (!string || count <= 0)
         return 0;
 
     /* Strip terminating NULL characters */
