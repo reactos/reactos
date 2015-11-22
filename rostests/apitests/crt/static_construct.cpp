@@ -6,6 +6,7 @@
  */
 
 #include <apitest.h>
+#include <strsafe.h>
 #include "dll_startup.h"
 
 extern "C"
@@ -35,7 +36,9 @@ static struct init_static
     }
 } init_static;
 
-START_TEST(static_construct)
+static
+VOID
+TestInitStatic(VOID)
 {
     ok(static_init_counter_at_startup == 123, "static_init_counter at startup: %d\n", static_init_counter_at_startup);
     ok(static_construct_counter_at_startup == 789, "static_construct_counter at startup: %d\n", static_construct_counter_at_startup);
@@ -46,15 +49,25 @@ START_TEST(static_construct)
     ok(static_construct_counter == 790, "static_construct_counter: %d\n", static_construct_counter);
     ok(init_static.m_counter == 2, "init_static.m_counter: %d\n", init_static.m_counter);
     ok(init_static.m_uninit == 1, "init_static.m_uninit: %d\n", init_static.m_uninit);
+}
 
-    counter_values values;
+static
+VOID
+TestDllStartup(VOID)
+{
 #if defined(TEST_MSVCRT)
-    HMODULE hDll = LoadLibraryW(L"msvcrt_crt_dll_startup.dll");
+    const PCWSTR DllName = L"msvcrt_crt_dll_startup.dll";
 #elif defined(TEST_STATIC_CRT)
-    HMODULE hDll = LoadLibraryW(L"static_crt_dll_startup.dll");
+    const PCWSTR DllName = L"static_crt_dll_startup.dll";
 #else
 #error This test only makes sense for static CRT and msvcrt.dll
 #endif
+    WCHAR DllPath[MAX_PATH];
+    GetModuleFileNameW(NULL, DllPath, _countof(DllPath));
+    wcsrchr(DllPath, L'\\')[1] = UNICODE_NULL;
+    StringCchCatW(DllPath, _countof(DllPath), DllName);
+
+    HMODULE hDll = LoadLibraryW(DllPath);
     if (hDll == NULL)
     {
         skip("Helper dll not found\n");
@@ -67,6 +80,7 @@ START_TEST(static_construct)
         FreeLibrary(hDll);
         return;
     }
+    counter_values values;
     pSetCounterValuesPointer(&values);
     ok(values.m_uninit_at_startup == 0, "m_uninit_at_startup = %d\n", values.m_uninit_at_startup);
     ok(values.m_uninit == 1, "m_uninit = %d\n", values.m_uninit);
@@ -85,4 +99,10 @@ START_TEST(static_construct)
     ok(values.static_construct_counter == 5657, "static_construct_counter = %d\n", values.static_construct_counter);
     ok(values.dtor_counter_at_detach == 7878, "dtor_counter_at_detach = %d\n", values.dtor_counter_at_detach);
     ok(values.dtor_counter == 7879, "dtor_counter = %d\n", values.dtor_counter);
+}
+
+START_TEST(static_construct)
+{
+    TestInitStatic();
+    TestDllStartup();
 }
