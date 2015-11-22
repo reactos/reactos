@@ -104,7 +104,7 @@ reactos/dll/win32/mmdevapi            # Synced to WineStaging-1.7.47
 reactos/dll/win32/mpr                 # Synced to WineStaging-1.7.55
 reactos/dll/win32/mprapi              # Synced to WineStaging-1.7.47
 reactos/dll/win32/msacm32             # Synced to WineStaging-1.7.55
-reactos/dll/win32/msacm32/msacm32.drv # Synced to WineStaging-1.7.47
+reactos/dll/win32/msacm32/msacm32.drv # Synced to WineStaging-1.7.55
 reactos/dll/win32/msadp32.acm         # Synced to WineStaging-1.7.47
 reactos/dll/win32/mscat32             # Synced to WineStaging-1.7.47
 reactos/dll/win32/mscms               # Synced to WineStaging-1.7.47
