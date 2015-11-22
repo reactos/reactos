@@ -2047,7 +2047,6 @@ DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
   return ERROR_NOT_SUPPORTED;
 }
 
-
 /******************************************************************
  *    SendARP (IPHLPAPI.@)
  *
@@ -2062,15 +2061,19 @@ DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr, PULONG PhyAddrLen)
 {
-  FIXME("(DestIP 0x%08x, SrcIP 0x%08x, pMacAddr %p, PhyAddrLen %p): stub\n",
-   DestIP, SrcIP, pMacAddr, PhyAddrLen);
-  return ERROR_NOT_SUPPORTED;
+  IPAddr IPs[2];
+  ULONG Size;
+
+  if (IsBadWritePtr(pMacAddr, sizeof(ULONG)) || IsBadWritePtr(PhyAddrLen, sizeof(ULONG)))
+    return ERROR_INVALID_PARAMETER;
+
+  IPs[0] = DestIP;
+  IPs[1] = SrcIP;
+  Size = sizeof(IPs);
+  return TCPSendIoctl(INVALID_HANDLE_VALUE, IOCTL_QUERY_IP_HW_ADDRESS, IPs, &Size, pMacAddr, PhyAddrLen);
 }
 
 
