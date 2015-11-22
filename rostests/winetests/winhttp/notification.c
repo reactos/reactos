@@ -158,9 +158,9 @@ static void setup_test( struct info *info, enum api function, unsigned int line 
 
 static void test_connection_cache( void )
 {
-    HANDLE ses, con, req;
-    DWORD size, status;
-    BOOL ret;
+    HANDLE ses, con, req, event;
+    DWORD size, status, err;
+    BOOL ret, unload = TRUE;
     struct info info, *context = &info;
 
     info.test  = cache_test;
@@ -170,6 +170,14 @@ static void test_connection_cache( void )
 
     ses = WinHttpOpen( user_agent, 0, NULL, NULL, 0 );
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
+
+    event = CreateEventW( NULL, FALSE, FALSE, NULL );
+    ret = WinHttpSetOption( ses, WINHTTP_OPTION_UNLOAD_NOTIFY_EVENT, &event, sizeof(event) );
+    if (!ret)
+    {
+        win_skip("Unload event not supported\n");
+        unload = FALSE;
+    }
 
     WinHttpSetStatusCallback( ses, check_notification, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0 );
 
@@ -186,7 +194,8 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         goto done;
@@ -214,7 +223,8 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         goto done;
@@ -236,14 +246,32 @@ static void test_connection_cache( void )
     setup_test( &info, winhttp_close_handle, __LINE__ );
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
+
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 0 );
+        ok(status == WAIT_TIMEOUT, "got %08x\n", status);
+    }
+
     WinHttpCloseHandle( ses );
 
     Sleep(2000); /* make sure connection is evicted from cache */
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 0 );
+        ok(status == WAIT_OBJECT_0, "got %08x\n", status);
+    }
 
     info.index = 0;
 
     ses = WinHttpOpen( user_agent, 0, NULL, NULL, 0 );
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
+
+    if (unload)
+    {
+        ret = WinHttpSetOption( ses, WINHTTP_OPTION_UNLOAD_NOTIFY_EVENT, &event, sizeof(event) );
+        ok(ret, "failed to set unload option\n");
+    }
 
     WinHttpSetStatusCallback( ses, check_notification, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0 );
 
@@ -263,7 +291,8 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         goto done;
@@ -291,7 +320,8 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         goto done;
@@ -311,9 +341,23 @@ static void test_connection_cache( void )
 done:
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
+
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 0 );
+        ok(status == WAIT_TIMEOUT, "got %08x\n", status);
+    }
+
     WinHttpCloseHandle( ses );
 
     Sleep(2000); /* make sure connection is evicted from cache */
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 0 );
+        ok(status == WAIT_OBJECT_0, "got %08x\n", status);
+    }
+
+    CloseHandle( event );
 }
 
 static const struct notification redirect_test[] =
@@ -347,7 +391,7 @@ static const struct notification redirect_test[] =
 static void test_redirect( void )
 {
     HANDLE ses, con, req;
-    DWORD size, status;
+    DWORD size, status, err;
     BOOL ret;
     struct info info, *context = &info;
 
@@ -374,7 +418,8 @@ static void test_redirect( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         goto done;
@@ -433,9 +478,9 @@ static const struct notification async_test[] =
 
 static void test_async( void )
 {
-    HANDLE ses, con, req;
-    DWORD size, status;
-    BOOL ret;
+    HANDLE ses, con, req, event;
+    DWORD size, status, err;
+    BOOL ret, unload = TRUE;
     struct info info, *context = &info;
     char buffer[1024];
 
@@ -447,22 +492,44 @@ static void test_async( void )
     ses = WinHttpOpen( user_agent, 0, NULL, NULL, WINHTTP_FLAG_ASYNC );
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
 
-    WinHttpSetStatusCallback( ses, check_notification, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0 );
+    event = CreateEventW( NULL, FALSE, FALSE, NULL );
+    ret = WinHttpSetOption( ses, WINHTTP_OPTION_UNLOAD_NOTIFY_EVENT, &event, sizeof(event) );
+    if (!ret)
+    {
+        win_skip("Unload event not supported\n");
+        unload = FALSE;
+    }
 
+    SetLastError( 0xdeadbeef );
+    WinHttpSetStatusCallback( ses, check_notification, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0 );
+    err = GetLastError();
+    ok(err == ERROR_SUCCESS || broken(err == 0xdeadbeef) /* < win7 */, "got %u\n", err);
+
+    SetLastError( 0xdeadbeef );
     ret = WinHttpSetOption( ses, WINHTTP_OPTION_CONTEXT_VALUE, &context, sizeof(struct info *) );
-    ok(ret, "failed to set context value %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret, "failed to set context value %u\n", err);
+    ok(err == ERROR_SUCCESS || broken(err == 0xdeadbeef) /* < win7 */, "got %u\n", err);
 
     setup_test( &info, winhttp_connect, __LINE__ );
+    SetLastError( 0xdeadbeef );
     con = WinHttpConnect( ses, test_winehq, 0, 0 );
-    ok(con != NULL, "failed to open a connection %u\n", GetLastError());
+    err = GetLastError();
+    ok(con != NULL, "failed to open a connection %u\n", err);
+    ok(err == ERROR_SUCCESS || broken(err == WSAEINVAL) /* < win7 */, "got %u\n", err);
 
     setup_test( &info, winhttp_open_request, __LINE__ );
+    SetLastError( 0xdeadbeef );
     req = WinHttpOpenRequest( con, NULL, NULL, NULL, NULL, NULL, 0 );
-    ok(req != NULL, "failed to open a request %u\n", GetLastError());
+    err = GetLastError();
+    ok(req != NULL, "failed to open a request %u\n", err);
+    ok(err == ERROR_SUCCESS, "got %u\n", err);
 
     setup_test( &info, winhttp_send_request, __LINE__ );
+    SetLastError( 0xdeadbeef );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
-    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    err = GetLastError();
+    if (!ret && (err == ERROR_WINHTTP_CANNOT_CONNECT || err == ERROR_WINHTTP_TIMEOUT))
     {
         skip("connection failed, skipping\n");
         WinHttpCloseHandle( req );
@@ -471,39 +538,65 @@ static void test_async( void )
         CloseHandle( info.wait );
         return;
     }
-    ok(ret, "failed to send request %u\n", GetLastError());
+    ok(ret, "failed to send request %u\n", err);
+    ok(err == ERROR_SUCCESS, "got %u\n", err);
 
     WaitForSingleObject( info.wait, INFINITE );
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
+    SetLastError( 0xdeadbeef );
     ret = WinHttpReceiveResponse( req, NULL );
-    ok(ret, "failed to receive response %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret, "failed to receive response %u\n", err);
+    ok(err == ERROR_SUCCESS, "got %u\n", err);
 
     WaitForSingleObject( info.wait, INFINITE );
 
     size = sizeof(status);
+    SetLastError( 0xdeadbeef );
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
-    ok(ret, "failed unexpectedly %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret, "failed unexpectedly %u\n", err);
     ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(err == ERROR_SUCCESS || broken(err == 0xdeadbeef) /* < win7 */, "got %u\n", err);
 
     setup_test( &info, winhttp_query_data, __LINE__ );
+    SetLastError( 0xdeadbeef );
     ret = WinHttpQueryDataAvailable( req, NULL );
-    ok(ret, "failed to query data available %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret, "failed to query data available %u\n", err);
+    ok(err == ERROR_SUCCESS || err == ERROR_IO_PENDING || broken(err == 0xdeadbeef) /* < win7 */, "got %u\n", err);
 
     WaitForSingleObject( info.wait, INFINITE );
 
     setup_test( &info, winhttp_read_data, __LINE__ );
+    SetLastError( 0xdeadbeef );
     ret = WinHttpReadData( req, buffer, sizeof(buffer), NULL );
-    ok(ret, "failed to query data available %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret, "failed to read data %u\n", err);
+    ok(err == ERROR_SUCCESS, "got %u\n", err);
 
     WaitForSingleObject( info.wait, INFINITE );
 
     setup_test( &info, winhttp_close_handle, __LINE__ );
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
+
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 0 );
+        ok(status == WAIT_TIMEOUT, "got %08x\n", status);
+    }
     WinHttpCloseHandle( ses );
 
     WaitForSingleObject( info.wait, INFINITE );
+
+    if (unload)
+    {
+        status = WaitForSingleObject( event, 2000 );
+        ok(status == WAIT_OBJECT_0, "got %08x\n", status);
+    }
+    CloseHandle( event );
     CloseHandle( info.wait );
 }
 
