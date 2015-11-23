@@ -335,7 +335,8 @@ GetRawInputDeviceList(
 {
     if(pRawInputDeviceList)
         memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    *puiNumDevices = 0;
+    if(puiNumDevices)
+       *puiNumDevices = 0;
 
     UNIMPLEMENTED;
     return 0;
