@@ -1040,10 +1040,13 @@ static ULONG WINAPI GifDecoder_Release(IWICBitmapDecoder *iface)
 
     if (ref == 0)
     {
-        IStream_Release(This->stream);
+        if (This->stream)
+        {
+            IStream_Release(This->stream);
+            DGifCloseFile(This->gif);
+        }
         This->lock.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->lock);
-        DGifCloseFile(This->gif);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -1420,6 +1423,7 @@ HRESULT GifDecoder_CreateInstance(REFIID iid, void** ppv)
 
     This->IWICBitmapDecoder_iface.lpVtbl = &GifDecoder_Vtbl;
     This->IWICMetadataBlockReader_iface.lpVtbl = &GifDecoder_BlockVtbl;
+    This->stream = NULL;
     This->ref = 1;
     This->initialized = FALSE;
     This->gif = NULL;

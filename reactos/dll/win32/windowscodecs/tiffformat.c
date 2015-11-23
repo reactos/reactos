@@ -210,7 +210,7 @@ typedef struct {
     IWICBitmapDecoder IWICBitmapDecoder_iface;
     LONG ref;
     IStream *stream;
-    CRITICAL_SECTION lock; /* Must be held when tiff is used or initiailzed is set */
+    CRITICAL_SECTION lock; /* Must be held when tiff is used or initialized is set */
     TIFF *tiff;
     BOOL initialized;
 } TiffDecoder;

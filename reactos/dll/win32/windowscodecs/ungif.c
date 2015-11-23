@@ -491,7 +491,10 @@ DGifGetLine(GifFileType * GifFile,
              * image until empty block (size 0) detected. We use GetCodeNext. */
             do
                 if (DGifGetCodeNext(GifFile, &Dummy) == GIF_ERROR)
+                {
+                    WARN("GIF is not properly terminated\n");
                     break;
+                }
             while (Dummy != NULL) ;
         }
         return GIF_OK;
@@ -927,9 +930,17 @@ DGifSlurp(GifFileType * GifFile) {
 
               Extensions->Function = Function;
 
-              /* Create an extension block with our data */
-              if (AddExtensionBlock(Extensions, ExtData[0], &ExtData[1]) == GIF_ERROR)
-                  return (GIF_ERROR);
+              if (ExtData)
+              {
+                  /* Create an extension block with our data */
+                  if (AddExtensionBlock(Extensions, ExtData[0], &ExtData[1]) == GIF_ERROR)
+                      return (GIF_ERROR);
+              }
+              else /* Empty extension block */
+              {
+                  if (AddExtensionBlock(Extensions, 0, NULL) == GIF_ERROR)
+                      return (GIF_ERROR);
+              }
 
               while (ExtData != NULL) {
                   int Len;
