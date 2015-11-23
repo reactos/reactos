@@ -1797,6 +1797,8 @@ static RTFKey	rtfKey[] =
 	{ rtfDestination,	rtfNeXTGraphic,		"NeXTGraphic",	0 },
 	{ rtfDestination,	rtfNestTableProps,	"nesttableprops", 0 },
 	{ rtfDestination,	rtfNoNestTables,	"nonesttables",	0 },
+        { rtfDestination,       rtfShpPict,             "shppict",      0 },
+        { rtfDestination,       rtfNonShpPict,          "nonshppict",   0 },
 
 	/*
 	 * Font families

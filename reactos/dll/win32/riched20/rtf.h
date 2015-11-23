@@ -174,7 +174,9 @@
 # define		rtfGenerator		74
 # define		rtfNestTableProps	75
 # define		rtfNoNestTables		76
-# define		rtfMaxDestination	77	/* highest dest + 1 */
+# define                rtfShpPict              77
+# define                rtfNonShpPict           78
+# define                rtfMaxDestination       79      /* highest dest + 1 */
 
 # define	rtfFontFamily	4
 # define		rtfFFNil		0
