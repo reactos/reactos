@@ -154,9 +154,9 @@ static HRESULT WINAPI CategoryMgr_UnregisterCategory ( ITfCategoryMgr *iface,
     sprintfW(fullkey,fmt2,ctg,ctg,buf,buf2);
 
     sprintfW(fullkey,fmt2,ctg,itm,buf2,buf);
-    SHDeleteKeyW(tipkey, fullkey);
+    RegDeleteTreeW(tipkey, fullkey);
     sprintfW(fullkey,fmt2,ctg,itm,buf2,buf);
-    SHDeleteKeyW(tipkey, fullkey);
+    RegDeleteTreeW(tipkey, fullkey);
 
     RegCloseKey(tipkey);
     return S_OK;
