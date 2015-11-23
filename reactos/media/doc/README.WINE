@@ -147,7 +147,7 @@ reactos/dll/win32/ole32               # Synced to WineStaging-1.7.55
 reactos/dll/win32/oleacc              # Synced to WineStaging-1.7.47
 reactos/dll/win32/oleaut32            # Synced to WineStaging-1.7.55
 reactos/dll/win32/olecli32            # Synced to WineStaging-1.7.47
-reactos/dll/win32/oledlg              # Synced to WineStaging-1.7.47
+reactos/dll/win32/oledlg              # Synced to WineStaging-1.7.55
 reactos/dll/win32/olepro32            # Synced to WineStaging-1.7.47
 reactos/dll/win32/olesvr32            # Synced to WineStaging-1.7.47
 reactos/dll/win32/olethk32            # Synced to WineStaging-1.7.47

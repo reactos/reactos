@@ -26,7 +26,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Filen ser ikke ut til å være en gyldig OLE-modul. Kunne ikke registrere OLE-kontroller."
   IDS_NOTOLEMODCAPTION  "Legg til kontroller"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

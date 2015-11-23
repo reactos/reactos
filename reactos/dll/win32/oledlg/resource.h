@@ -43,6 +43,8 @@
 
 /* String ids for verb menu */
 #define IDS_VERBMENU_CONVERT            0x130
+#define IDS_VERBMENU_SINGLEVERB_OBJECT  0x132
+#define IDS_VERBMENU_OBJECT_WITH_NAME   0x134
 #define IDS_VERBMENU_OBJECT             0x135
 
 /* String ids for Paste Special */

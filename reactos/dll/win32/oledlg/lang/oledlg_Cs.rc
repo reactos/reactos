@@ -31,7 +31,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Soubor není platným OLE modulem. Nelze registrovat OLE propojení."
   IDS_NOTOLEMODCAPTION  "Přidat propojení"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

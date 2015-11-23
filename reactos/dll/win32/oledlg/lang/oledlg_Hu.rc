@@ -29,7 +29,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "A fájl úgy tűnik nem egy érvényes OLE modul. Nem tudom regisztrálni az OLE vezérlőt."
   IDS_NOTOLEMODCAPTION  "Vezérlő hozzáadása"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE
