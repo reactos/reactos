@@ -931,6 +931,7 @@ static void test_ScriptShapeOpenType(HDC hdc)
     int nb, outnItems;
     HFONT hfont, hfont_orig;
     int test_valid;
+    shapeTest_glyph glyph_test[4];
 
     static const WCHAR test1[] = {'w', 'i', 'n', 'e',0};
     static const shapeTest_char t1_c[] = {{0,{0,0}},{1,{0,0}},{2,{0,0}},{3,{0,0}}};
@@ -1189,7 +1190,16 @@ static void test_ScriptShapeOpenType(HDC hdc)
     ScriptFreeCache(&sc);
 
     test_shape_ok(hdc, test1, 4, &Control, &State, 0, 4, t1_c, t1_g);
-    test_shape_ok(hdc, test2, 4, &Control, &State, 1, 4, t2_c, t2_g);
+
+    /* newer Tahoma has zerowidth space glyphs for 0x202b and 0x202c */
+    memcpy(glyph_test, t2_g, sizeof(glyph_test));
+    GetGlyphIndicesW(hdc, test2, 4, glyphs, 0);
+    if (glyphs[0] != 0)
+        glyph_test[0].Glyph = 1;
+    if (glyphs[3] != 0)
+        glyph_test[3].Glyph = 1;
+
+    test_shape_ok(hdc, test2, 4, &Control, &State, 1, 4, t2_c, glyph_test);
 
     test_valid = find_font_for_range(hdc, "Microsoft Sans Serif", 11, test_hebrew[0], &hfont, &hfont_orig);
     if (hfont != NULL)
@@ -1334,10 +1344,10 @@ static void test_ScriptShape(HDC hdc)
     static const WCHAR test2[] = {0x202B, 'i', 'n', 0x202C,0};
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
-    WORD glyphs[4], glyphs2[4], logclust[4];
+    WORD glyphs[4], glyphs2[4], logclust[4], glyphs3[4];
     SCRIPT_VISATTR attrs[4];
     SCRIPT_ITEM items[2];
-    int nb;
+    int nb, i, j;
 
     hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
     ok(hr == S_OK, "ScriptItemize should return S_OK not %08x\n", hr);
@@ -1395,13 +1405,17 @@ static void test_ScriptShape(HDC hdc)
     sc = NULL;
 
     memset(glyphs2,-1,sizeof(glyphs2));
+    memset(glyphs3,-1,sizeof(glyphs3));
     memset(logclust,-1,sizeof(logclust));
     memset(attrs,-1,sizeof(attrs));
+
+    GetGlyphIndicesW(hdc, test2, 4, glyphs3, 0);
+
     hr = ScriptShape(hdc, &sc, test2, 4, 4, &items[0].a, glyphs2, logclust, attrs, &nb);
     ok(hr == S_OK, "ScriptShape should return S_OK not %08x\n", hr);
     ok(nb == 4, "Wrong number of items\n");
-    ok(glyphs2[0] == 0 || broken(glyphs2[0] == 0x80), "Incorrect glyph for 0x202B\n");
-    ok(glyphs2[3] == 0 || broken(glyphs2[3] == 0x80), "Incorrect glyph for 0x202C\n");
+    ok(glyphs2[0] == glyphs3[0], "Incorrect glyph for 0x202B\n");
+    ok(glyphs2[3] == glyphs3[3], "Incorrect glyph for 0x202C\n");
     ok(logclust[0] == 0, "clusters out of order\n");
     ok(logclust[1] == 1, "clusters out of order\n");
     ok(logclust[2] == 2, "clusters out of order\n");
@@ -1457,6 +1471,47 @@ static void test_ScriptShape(HDC hdc)
     ok(attrs[3].fZeroWidth == 0, "fZeroWidth incorrect\n");
 
     ScriptFreeCache(&sc);
+
+    /* some control characters are shown as blank */
+    for (i = 0; i < 2; i++)
+    {
+        static const WCHAR space[]  = {' ', 0};
+        static const WCHAR blanks[] = {'\t', '\r', '\n', 0x001C, 0x001D, 0x001E, 0x001F,0};
+        HFONT font, oldfont = NULL;
+        LOGFONTA lf;
+
+        font = GetCurrentObject(hdc, OBJ_FONT);
+        GetObjectA(font, sizeof(lf), &lf);
+        if (i == 1) {
+            lstrcpyA(lf.lfFaceName, "MS Sans Serif");
+            font = CreateFontIndirectA(&lf);
+            oldfont = SelectObject(hdc, font);
+        }
+
+        hr = ScriptItemize(space, 1, 2, NULL, NULL, items, NULL);
+        ok(hr == S_OK, "%s: expected S_OK, got %08x\n", lf.lfFaceName, hr);
+
+        hr = ScriptShape(hdc, &sc, space, 1, 1, &items[0].a, glyphs, logclust, attrs, &nb);
+        ok(hr == S_OK, "%s: expected S_OK, got %08x\n", lf.lfFaceName, hr);
+        ok(nb == 1, "%s: expected 1, got %d\n", lf.lfFaceName, nb);
+
+        for (j = 0; blanks[j]; j++)
+        {
+            hr = ScriptItemize(&blanks[j], 1, 2, NULL, NULL, items, NULL);
+            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, blanks[j], hr);
+
+            hr = ScriptShape(hdc, &sc, &blanks[j], 1, 1, &items[0].a, glyphs2, logclust, attrs, &nb);
+            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, blanks[j], hr);
+            ok(nb == 1, "%s: [%02x] expected 1, got %d\n", lf.lfFaceName, blanks[j], nb);
+
+            ok(glyphs[0] == glyphs2[0] ||
+               broken(glyphs2[0] == blanks[j] && (blanks[j] < 0x10)),
+               "%s: [%02x] expected %04x, got %04x\n", lf.lfFaceName, blanks[j], glyphs[0], glyphs2[0]);
+        }
+        if (oldfont)
+            DeleteObject(SelectObject(hdc, oldfont));
+        ScriptFreeCache(&sc);
+    }
 }
 
 static void test_ScriptPlace(HDC hdc)
@@ -1774,13 +1829,19 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     ScriptFreeCache( &psc);
     ok (!psc, "psc is not null after ScriptFreeCache\n");
 
+    /* ScriptGetCMap returns whatever font defines, no special treatment for control chars */
     cInChars = cChars = 4;
-    hr = ScriptGetCMap(hdc, &psc, TestItem2, cInChars, dwFlags, pwOutGlyphs3);
-    ok (hr == S_FALSE, "ScriptGetCMap should return S_FALSE not (%08x)\n", hr);
-    ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-    ok(pwOutGlyphs3[0] == 0 || broken(pwOutGlyphs3[0] == 0x80), "Glyph 0 should be default glyph\n");
-    ok(pwOutGlyphs3[3] == 0 || broken(pwOutGlyphs3[0] == 0x80), "Glyph 0 should be default glyph\n");
+    GetGlyphIndicesW(hdc, TestItem2, cInChars, pwOutGlyphs2, 0);
 
+    hr = ScriptGetCMap(hdc, &psc, TestItem2, cInChars, dwFlags, pwOutGlyphs3);
+    if (pwOutGlyphs3[0] == 0 || pwOutGlyphs3[3] == 0)
+        ok(hr == S_FALSE, "ScriptGetCMap should return S_FALSE not (%08x)\n", hr);
+    else
+        ok(hr == S_OK, "ScriptGetCMap should return S_OK not (%08x)\n", hr);
+
+    ok(psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+    ok(pwOutGlyphs3[0] == pwOutGlyphs2[0], "expected glyph %d, got %d\n", pwOutGlyphs2[0], pwOutGlyphs3[0]);
+    ok(pwOutGlyphs3[3] == pwOutGlyphs2[3], "expected glyph %d, got %d\n", pwOutGlyphs2[3], pwOutGlyphs3[3]);
 
     cInChars = cChars = 9;
     hr = ScriptGetCMap(hdc, &psc, TestItem3b, cInChars, dwFlags, pwOutGlyphs2);
@@ -1863,7 +1924,7 @@ static void test_ScriptGetFontProperties(HDC hdc)
     /* U+0020: numeric space
        U+200B: zero width space
        U+F71B: unknown, found by black box testing */
-    BOOL is_terminal, is_arial, is_times_new_roman, is_arabic = (system_lang_id == LANG_ARABIC);
+    BOOL is_arial, is_times_new_roman, is_arabic = (system_lang_id == LANG_ARABIC);
 
     /* Some sanity checks for ScriptGetFontProperties */
 
@@ -1935,6 +1996,11 @@ static void test_ScriptGetFontProperties(HDC hdc)
 
     for (i = 0; i < efnd.total; i++)
     {
+        if (strlen((char *)efnd.elf[i].elfFullName) >= LF_FACESIZE)
+        {
+            trace("Font name to long to test: %s\n",(char *)efnd.elf[i].elfFullName);
+            continue;
+        }
         lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
         font = CreateFontIndirectA(&lf);
         oldfont = SelectObject(hdc, font);
@@ -1956,10 +2022,12 @@ static void test_ScriptGetFontProperties(HDC hdc)
         ret = GetTextMetricsA(hdc, &tmA);
         ok(ret != 0, "GetTextMetricsA failed!\n");
 
-        is_terminal = !(lstrcmpA(lf.lfFaceName, "Terminal") && lstrcmpA(lf.lfFaceName, "@Terminal"));
-        ok(sfp.wgBlank == tmA.tmBreakChar || broken(is_terminal) || broken(is_arabic), "bitmap font %s wgBlank %04x tmBreakChar %04x\n", lf.lfFaceName, sfp.wgBlank, tmA.tmBreakChar);
+        ret = pGetGlyphIndicesW(hdc, invalids, 1, gi, GGI_MARK_NONEXISTING_GLYPHS);
+        ok(ret != GDI_ERROR, "GetGlyphIndicesW failed!\n");
 
-        ok(sfp.wgDefault == tmA.tmDefaultChar || broken(is_arabic), "bitmap font %s wgDefault %04x, tmDefaultChar %04x\n", lf.lfFaceName, sfp.wgDefault, tmA.tmDefaultChar);
+        ok(sfp.wgBlank == tmA.tmBreakChar || sfp.wgBlank == gi[0], "bitmap font %s wgBlank %04x tmBreakChar %04x Space %04x\n", lf.lfFaceName, sfp.wgBlank, tmA.tmBreakChar, gi[0]);
+
+        ok(sfp.wgDefault == 0 || sfp.wgDefault == tmA.tmDefaultChar || broken(sfp.wgDefault == (0x100 | tmA.tmDefaultChar)), "bitmap font %s wgDefault %04x, tmDefaultChar %04x\n", lf.lfFaceName, sfp.wgDefault, tmA.tmDefaultChar);
 
         ok(sfp.wgInvalid == sfp.wgBlank || broken(is_arabic), "bitmap font %s wgInvalid %02x wgBlank %02x\n", lf.lfFaceName, sfp.wgInvalid, sfp.wgBlank);
 
@@ -1976,6 +2044,11 @@ static void test_ScriptGetFontProperties(HDC hdc)
 
     for (i = 0; i < efnd.total; i++)
     {
+        if (strlen((char *)efnd.elf[i].elfFullName) >= LF_FACESIZE)
+        {
+            trace("Font name to long to test: %s\n",(char *)efnd.elf[i].elfFullName);
+            continue;
+        }
         lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
         font = CreateFontIndirectA(&lf);
         oldfont = SelectObject(hdc, font);
@@ -2197,15 +2270,17 @@ static void test_ScriptTextOut2(HDC hdc)
         ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
         ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
         ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-        if (hr ==0) {
+        if (hr == S_OK) {
+            BOOL ret;
+
             /* Note hdc is needed as glyph info is not yet in psc                  */
             hr = ScriptPlace(hdc2, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
                              pGoffset, pABC);
             ok (hr == S_OK, "Should return S_OK not (%08x)\n", hr);
 
             /*   key part!!!   cached dc is being deleted  */
-            hr = DeleteDC(hdc2);
-            ok(hr == 1, "DeleteDC should return 1 not %08x\n", hr);
+            ret = DeleteDC(hdc2);
+            ok(ret, "DeleteDC should return 1 not %d\n", ret);
 
             /* At this point the cached hdc (hdc2) has been destroyed,
              * however, we are passing in a *real* hdc (the original hdc).
@@ -2488,6 +2563,12 @@ static void test_ScriptString(HDC hdc)
                               ReqWidth, NULL, NULL, Dx, NULL,
                               &InClass, &ssa);
     ok(hr == E_PENDING, "ScriptStringAnalyse Stub should return E_PENDING not %08x\n", hr);
+
+    /* Test that 0 length string returns E_INVALIDARG  */
+    hr = ScriptStringAnalyse( hdc, teststr, 0, Glyphs, Charset, Flags,
+                              ReqWidth, NULL, NULL, Dx, NULL,
+                              &InClass, &ssa);
+    ok(hr == E_INVALIDARG, "ScriptStringAnalyse should return E_INVALIDARG not %08x\n", hr);
 
     /* test with hdc, this should be a valid test  */
     hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
