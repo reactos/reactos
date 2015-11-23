@@ -18,6 +18,7 @@
 
 #include "wbemprox_private.h"
 
+#include <winuser.h>
 #include <wingdi.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -42,6 +43,8 @@ static const WCHAR class_compsysproductW[] =
     {'W','i','n','3','2','_','C','o','m','p','u','t','e','r','S','y','s','t','e','m','P','r','o','d','u','c','t',0};
 static const WCHAR class_datafileW[] =
     {'C','I','M','_','D','a','t','a','F','i','l','e',0};
+static const WCHAR class_desktopmonitorW[] =
+    {'W','i','n','3','2','_','D','e','s','k','t','o','p','M','o','n','i','t','o','r',0};
 static const WCHAR class_directoryW[] =
     {'W','i','n','3','2','_','D','i','r','e','c','t','o','r','y',0};
 static const WCHAR class_diskdriveW[] =
@@ -249,6 +252,8 @@ static const WCHAR prop_parameterW[] =
     {'P','a','r','a','m','e','t','e','r',0};
 static const WCHAR prop_physicaladapterW[] =
     {'P','h','y','s','i','c','a','l','A','d','a','p','t','e','r',0};
+static const WCHAR prop_pixelsperxlogicalinchW[] =
+    {'P','i','x','e','l','s','P','e','r','X','L','o','g','i','c','a','l','I','n','c','h',0};
 static const WCHAR prop_pnpdeviceidW[] =
     {'P','N','P','D','e','v','i','c','e','I','D',0};
 static const WCHAR prop_pprocessidW[] =
@@ -352,6 +357,7 @@ static const struct column col_bios[] =
     { prop_descriptionW,        CIM_STRING },
     { prop_identificationcodeW, CIM_STRING },
     { prop_manufacturerW,       CIM_STRING },
+    { prop_nameW,               CIM_STRING },
     { prop_releasedateW,        CIM_DATETIME },
     { prop_serialnumberW,       CIM_STRING },
     { prop_smbiosbiosversionW,  CIM_STRING },
@@ -387,6 +393,10 @@ static const struct column col_datafile[] =
 {
     { prop_nameW,    CIM_STRING|COL_FLAG_DYNAMIC|COL_FLAG_KEY },
     { prop_versionW, CIM_STRING|COL_FLAG_DYNAMIC }
+};
+static const struct column col_desktopmonitor[] =
+{
+    { prop_pixelsperxlogicalinchW, CIM_UINT32 }
 };
 static const struct column col_directory[] =
 {
@@ -632,6 +642,8 @@ static const WCHAR bios_descriptionW[] =
     {'D','e','f','a','u','l','t',' ','S','y','s','t','e','m',' ','B','I','O','S',0};
 static const WCHAR bios_manufacturerW[] =
     {'T','h','e',' ','W','i','n','e',' ','P','r','o','j','e','c','t',0};
+static const WCHAR bios_nameW[] =
+    {'W','I','N','E',' ','B','I','O','S',0};
 static const WCHAR bios_releasedateW[] =
     {'2','0','1','2','0','6','0','8','0','0','0','0','0','0','.','0','0','0','0','0','0','+','0','0','0',0};
 static const WCHAR bios_serialnumberW[] =
@@ -735,6 +747,7 @@ struct record_bios
     const WCHAR *description;
     const WCHAR *identificationcode;
     const WCHAR *manufacturer;
+    const WCHAR *name;
     const WCHAR *releasedate;
     const WCHAR *serialnumber;
     const WCHAR *smbiosbiosversion;
@@ -770,6 +783,10 @@ struct record_datafile
 {
     const WCHAR *name;
     const WCHAR *version;
+};
+struct record_desktopmonitor
+{
+    UINT32       pixelsperxlogicalinch;
 };
 struct record_directory
 {
@@ -1010,7 +1027,7 @@ static const struct record_baseboard data_baseboard[] =
 };
 static const struct record_bios data_bios[] =
 {
-    { bios_descriptionW, bios_descriptionW, bios_manufacturerW, bios_releasedateW, bios_serialnumberW,
+    { bios_descriptionW, bios_descriptionW, bios_manufacturerW, bios_nameW, bios_releasedateW, bios_serialnumberW,
       bios_smbiosbiosversionW, bios_versionW }
 };
 static const struct record_computersystemproduct data_compsysproduct[] =
@@ -1634,6 +1651,35 @@ done:
     free_dirstack( dirstack );
     heap_free( glob );
     heap_free( path );
+
+    TRACE("created %u rows\n", row);
+    table->num_rows = row;
+    return status;
+}
+
+static UINT32 get_pixelsperxlogicalinch(void)
+{
+    HDC hdc = GetDC( NULL );
+    UINT32 ret;
+
+    if (!hdc) return 96;
+    ret = GetDeviceCaps( hdc, LOGPIXELSX );
+    ReleaseDC( NULL, hdc );
+    return ret;
+}
+
+static enum fill_status fill_desktopmonitor( struct table *table, const struct expr *cond )
+{
+    struct record_desktopmonitor *rec;
+    enum fill_status status = FILL_STATUS_UNFILTERED;
+    UINT row = 0;
+
+    if (!resize_table( table, 1, sizeof(*rec) )) return FILL_STATUS_FAILED;
+
+    rec = (struct record_desktopmonitor *)table->data;
+    rec->pixelsperxlogicalinch = get_pixelsperxlogicalinch();
+
+    if (match_row( table, row, cond, &status )) row++;
 
     TRACE("created %u rows\n", row);
     table->num_rows = row;
@@ -2845,6 +2891,7 @@ static struct table builtin_classes[] =
     { class_compsysW, SIZEOF(col_compsys), col_compsys, 0, 0, NULL, fill_compsys },
     { class_compsysproductW, SIZEOF(col_compsysproduct), col_compsysproduct, SIZEOF(data_compsysproduct), 0, (BYTE *)data_compsysproduct },
     { class_datafileW, SIZEOF(col_datafile), col_datafile, 0, 0, NULL, fill_datafile },
+    { class_desktopmonitorW, SIZEOF(col_desktopmonitor), col_desktopmonitor, 0, 0, NULL, fill_desktopmonitor },
     { class_directoryW, SIZEOF(col_directory), col_directory, 0, 0, NULL, fill_directory },
     { class_diskdriveW, SIZEOF(col_diskdrive), col_diskdrive, 0, 0, NULL, fill_diskdrive },
     { class_diskpartitionW, SIZEOF(col_diskpartition), col_diskpartition, 0, 0, NULL, fill_diskpartition },

@@ -56,11 +56,11 @@ static HRESULT control_service( const WCHAR *name, DWORD control, VARIANT *retva
         goto done;
     }
     if (!ControlService( service, control, &status )) error = map_error( GetLastError() );
+    CloseServiceHandle( service );
 
 done:
     set_variant( VT_UI4, error, NULL, retval );
-    CloseServiceHandle( service );
-    CloseServiceHandle( manager );
+    if (manager) CloseServiceHandle( manager );
     return S_OK;
 }
 
@@ -170,11 +170,11 @@ static HRESULT start_service( const WCHAR *name, VARIANT *retval )
         goto done;
     }
     if (!StartServiceW( service, 0, NULL )) error = map_error( GetLastError() );
+    CloseServiceHandle( service );
 
 done:
     set_variant( VT_UI4, error, NULL, retval );
-    CloseServiceHandle( service );
-    CloseServiceHandle( manager );
+    if (manager) CloseServiceHandle( manager );
     return S_OK;
 }
 

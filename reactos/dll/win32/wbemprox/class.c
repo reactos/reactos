@@ -101,17 +101,14 @@ static HRESULT WINAPI enum_class_object_Next(
 {
     struct enum_class_object *ec = impl_from_IEnumWbemClassObject( iface );
     struct view *view = ec->query->view;
+    static int once = 0;
     HRESULT hr;
 
     TRACE("%p, %d, %u, %p, %p\n", iface, lTimeout, uCount, apObjects, puReturned);
 
     if (!uCount) return WBEM_S_FALSE;
     if (!apObjects || !puReturned) return WBEM_E_INVALID_PARAMETER;
-    if (lTimeout != WBEM_INFINITE)
-    {
-        static int once;
-        if (!once++) FIXME("timeout not supported\n");
-    }
+    if (lTimeout != WBEM_INFINITE && !once++) FIXME("timeout not supported\n");
 
     *puReturned = 0;
     if (ec->index >= view->count) return WBEM_S_FALSE;
@@ -153,10 +150,11 @@ static HRESULT WINAPI enum_class_object_Skip(
 {
     struct enum_class_object *ec = impl_from_IEnumWbemClassObject( iface );
     struct view *view = ec->query->view;
+    static int once = 0;
 
     TRACE("%p, %d, %u\n", iface, lTimeout, nCount);
 
-    if (lTimeout != WBEM_INFINITE) FIXME("timeout not supported\n");
+    if (lTimeout != WBEM_INFINITE && !once++) FIXME("timeout not supported\n");
 
     if (!view->count) return WBEM_S_FALSE;
 
