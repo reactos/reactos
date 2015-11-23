@@ -1,4 +1,7 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(odbccp32.dll odbccp32.spec ADD_IMPORTLIB)
