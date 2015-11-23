@@ -1,5 +1,5 @@
 /* Unicode Bidirectional Bracket table */
-/* generated from http://www.unicode.org/Public/7.0.0/ucd/BidiBrackets.txt */
+/* generated from http://www.unicode.org/Public/8.0.0/ucd/BidiBrackets.txt */
 /* DO NOT EDIT!! */
 
 const unsigned short bidi_bracket_table[768] =
