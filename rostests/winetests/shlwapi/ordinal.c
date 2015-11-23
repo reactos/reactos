@@ -1639,20 +1639,18 @@ static void test_SHPropertyBag_ReadLONG(void)
 
     out = 0xfeedface;
     rc = pSHPropertyBag_ReadLONG(NULL, szName1, &out);
-    ok(rc == E_INVALIDARG || broken(rc == 0), "incorrect return %x\n",rc);
+    ok(rc == E_INVALIDARG || broken(rc == S_OK), "incorrect return %x\n",rc);
     ok(out == 0xfeedface, "value should not have changed\n");
     rc = pSHPropertyBag_ReadLONG(&pb->IPropertyBag_iface, NULL, &out);
-    ok(rc == E_INVALIDARG || broken(rc == 0) || broken(rc == 1), "incorrect return %x\n",rc);
+    ok(rc == E_INVALIDARG || broken(rc == S_OK) || broken(rc == S_FALSE), "incorrect return %x\n",rc);
     ok(out == 0xfeedface, "value should not have changed\n");
     rc = pSHPropertyBag_ReadLONG(&pb->IPropertyBag_iface, szName1, NULL);
-    ok(rc == E_INVALIDARG || broken(rc == 0) || broken(rc == 1), "incorrect return %x\n",rc);
+    ok(rc == E_INVALIDARG || broken(rc == S_OK) || broken(rc == S_FALSE), "incorrect return %x\n",rc);
     rc = pSHPropertyBag_ReadLONG(&pb->IPropertyBag_iface, szName1, &out);
-    ok(rc == DISP_E_BADVARTYPE || broken(rc == 0) || broken(rc == 1), "incorrect return %x\n",rc);
+    ok(rc == DISP_E_BADVARTYPE || broken(rc == S_OK) || broken(rc == S_FALSE), "incorrect return %x\n",rc);
     ok(out == 0xfeedface  || broken(out == 0xfeedfa00), "value should not have changed %x\n",out);
     IUnknown_Release((IUnknown*)pb);
 }
-
-
 
 static void test_SHSetWindowBits(void)
 {

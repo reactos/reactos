@@ -42,6 +42,8 @@ static DWORD (WINAPI *pSHCopyKeyA)(HKEY,LPCSTR,HKEY,DWORD);
 static DWORD (WINAPI *pSHRegGetPathA)(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
 static LSTATUS (WINAPI *pSHRegGetValueA)(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
 static LSTATUS (WINAPI *pSHRegCreateUSKeyW)(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,DWORD);
+static LSTATUS (WINAPI *pSHRegOpenUSKeyW)(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,BOOL);
+static LSTATUS (WINAPI *pSHRegCloseUSKey)(HUSKEY);
 
 static const char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
 static const char sTestpath2[] = "%FOO%\\subdir1";
@@ -462,6 +464,35 @@ static void test_SHRegCreateUSKeyW(void)
     ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
 }
 
+static void test_SHRegCloseUSKey(void)
+{
+    static const WCHAR localW[] = {'S','o','f','t','w','a','r','e',0};
+    LONG ret;
+    HUSKEY key;
+
+    if (!pSHRegOpenUSKeyW || !pSHRegCloseUSKey)
+    {
+        win_skip("SHRegOpenUSKeyW or SHRegCloseUSKey not available\n");
+        return;
+    }
+
+    ret = pSHRegCloseUSKey(NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+
+    ret = pSHRegOpenUSKeyW(localW, KEY_ALL_ACCESS, NULL, &key, FALSE);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = pSHRegCloseUSKey(key);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    /* Test with limited rights, specially without KEY_SET_VALUE */
+    ret = pSHRegOpenUSKeyW(localW, KEY_QUERY_VALUE, NULL, &key, FALSE);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = pSHRegCloseUSKey(key);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+}
+
 START_TEST(shreg)
 {
     HKEY hkey = create_test_entries();
@@ -480,6 +511,8 @@ START_TEST(shreg)
     pSHRegGetPathA = (void*)GetProcAddress(hshlwapi,"SHRegGetPathA");
     pSHRegGetValueA = (void*)GetProcAddress(hshlwapi,"SHRegGetValueA");
     pSHRegCreateUSKeyW = (void*)GetProcAddress(hshlwapi, "SHRegCreateUSKeyW");
+    pSHRegOpenUSKeyW = (void*)GetProcAddress(hshlwapi, "SHRegOpenUSKeyW");
+    pSHRegCloseUSKey = (void*)GetProcAddress(hshlwapi, "SHRegCloseUSKey");
 
     test_SHGetValue();
     test_SHRegGetValue();
@@ -488,6 +521,7 @@ START_TEST(shreg)
     test_SHCopyKey();
     test_SHDeleteKey();
     test_SHRegCreateUSKeyW();
+    test_SHRegCloseUSKey();
 
     delete_key( hkey, "Software\\Wine", "Test" );
 }
