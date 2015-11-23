@@ -477,7 +477,7 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
             refcount = xmlnode_get_inst_cnt(node_obj);
 
         if (refcount) xmldoc_add_refs(before_node_obj->node->doc, refcount);
-        xmlAddPrevSibling(before_node_obj->node, node_obj->node);
+        node_obj->node = xmlAddPrevSibling(before_node_obj->node, node_obj->node);
         if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->parent;
     }
@@ -489,7 +489,7 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
         if (refcount) xmldoc_add_refs(This->node->doc, refcount);
         /* xmlAddChild doesn't unlink node from previous parent */
         xmlUnlinkNode(node_obj->node);
-        xmlAddChild(This->node, node_obj->node);
+        node_obj->node = xmlAddChild(This->node, node_obj->node);
         if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->iface;
     }
@@ -635,6 +635,8 @@ HRESULT node_has_childnodes(const xmlnode *This, VARIANT_BOOL *ret)
 
 HRESULT node_get_owner_doc(const xmlnode *This, IXMLDOMDocument **doc)
 {
+    if(!doc)
+        return E_INVALIDARG;
     return get_domdoc_from_xmldoc(This->node->doc, (IXMLDOMDocument3**)doc);
 }
 

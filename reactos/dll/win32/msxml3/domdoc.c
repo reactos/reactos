@@ -1945,7 +1945,7 @@ static HRESULT WINAPI domdoc_createNode(
     }
 
     xml_name = xmlchar_from_wchar(name);
-    /* prevent empty href to be allocated */
+    /* prevent empty href from being allocated */
     href = namespaceURI ? xmlchar_from_wchar(namespaceURI) : NULL;
 
     switch(node_type)
@@ -1958,7 +1958,7 @@ static HRESULT WINAPI domdoc_createNode(
 
         xmlnode = xmlNewDocNode(get_doc(This), NULL, local ? local : xml_name, NULL);
 
-        /* allow to create default namespace xmlns= */
+        /* allow creating the default namespace xmlns= */
         if (local || (href && *href))
         {
             xmlNsPtr ns = xmlNewNs(xmlnode, href, prefix);
