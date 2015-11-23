@@ -251,9 +251,17 @@ static	void cvtSSms16K(const ACMDRVSTREAMINSTANCE *adsi,
     {
         const unsigned char*    in_src = src;
 
-        assert(*src <= 6);
+        /* Catch a problem from Tomb Raider III (bug 21000) where it passes
+         * invalid data after a valid sequence of blocks */
+        if (*src > 6 || *(src + 1) > 6)
+        {
+            /* Recalculate the amount of used output buffer. We are not changing
+             * nsrc, let's assume the bad data was parsed */
+            *ndst -= nblock * nsamp_blk * adsi->pwfxDst->nBlockAlign;
+            WARN("Invalid ADPCM data, stopping conversion\n");
+            break;
+        }
         coeffL = MSADPCM_CoeffSet[*src++];
-        assert(*src <= 6);
         coeffR = MSADPCM_CoeffSet[*src++];
 
         ideltaL  = R16(src);    src += 2;
@@ -544,6 +552,8 @@ static	LRESULT	ADPCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
         break;
     case WAVE_FORMAT_ADPCM:
+        if (adfs->cbwfxDst < sizeof(ADPCMWAVEFORMAT) + (7 - 1) * sizeof(ADPCMCOEFSET))
+            return ACMERR_NOTPOSSIBLE;
         init_wfx_adpcm((ADPCMWAVEFORMAT*)adfs->pwfxDst);
         /* check if result is ok */
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
