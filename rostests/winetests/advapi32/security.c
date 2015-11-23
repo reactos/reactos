@@ -132,6 +132,9 @@ static NTSTATUS (WINAPI *pNtSetSecurityObject)(HANDLE,SECURITY_INFORMATION,PSECU
 static NTSTATUS (WINAPI *pNtCreateFile)(PHANDLE,ACCESS_MASK,POBJECT_ATTRIBUTES,PIO_STATUS_BLOCK,PLARGE_INTEGER,ULONG,ULONG,ULONG,ULONG,PVOID,ULONG);
 static BOOL     (WINAPI *pRtlDosPathNameToNtPathName_U)(LPCWSTR,PUNICODE_STRING,PWSTR*,CURDIR*);
 static NTSTATUS (WINAPI *pRtlAnsiStringToUnicodeString)(PUNICODE_STRING,PCANSI_STRING,BOOLEAN);
+static BOOL     (WINAPI *pGetWindowsAccountDomainSid)(PSID,PSID,DWORD*);
+static void     (WINAPI *pRtlInitAnsiString)(PANSI_STRING,PCSZ);
+static NTSTATUS (WINAPI *pRtlFreeUnicodeString)(PUNICODE_STRING);
 
 static HMODULE hmod;
 static int     myARGC;
@@ -162,6 +165,8 @@ static void init(void)
     pNtCreateFile = (void *)GetProcAddress(hntdll, "NtCreateFile");
     pRtlDosPathNameToNtPathName_U = (void *)GetProcAddress(hntdll, "RtlDosPathNameToNtPathName_U");
     pRtlAnsiStringToUnicodeString = (void *)GetProcAddress(hntdll, "RtlAnsiStringToUnicodeString");
+    pRtlInitAnsiString = (void *)GetProcAddress(hntdll, "RtlInitAnsiString");
+    pRtlFreeUnicodeString = (void *)GetProcAddress(hntdll, "RtlFreeUnicodeString");
 
     hmod = GetModuleHandleA("advapi32.dll");
     pAddAccessAllowedAceEx = (void *)GetProcAddress(hmod, "AddAccessAllowedAceEx");
@@ -193,6 +198,7 @@ static void init(void)
     pConvertStringSidToSidA = (void *)GetProcAddress(hmod, "ConvertStringSidToSidA");
     pGetAclInformation = (void *)GetProcAddress(hmod, "GetAclInformation");
     pGetAce = (void *)GetProcAddress(hmod, "GetAce");
+    pGetWindowsAccountDomainSid = (void *)GetProcAddress(hmod, "GetWindowsAccountDomainSid");
 
     myARGC = winetest_get_mainargs( &myARGV );
 }
@@ -1683,7 +1689,7 @@ static void test_sid_str(PSID * sid)
         DWORD acc_size = MAX_PATH;
         DWORD dom_size = MAX_PATH;
         ret = LookupAccountSidA (NULL, sid, account, &acc_size, domain, &dom_size, &use);
-        ok(ret || (!ret && (GetLastError() == ERROR_NONE_MAPPED)),
+        ok(ret || GetLastError() == ERROR_NONE_MAPPED,
            "LookupAccountSid(%s) failed: %d\n", str_sid, GetLastError());
         if (ret)
             trace(" %s %s\\%s %d\n", str_sid, domain, account, use);
@@ -1728,7 +1734,9 @@ static const struct well_known_sid_value
 /* 69 */ {TRUE, "S-1-16-16384"},  {TRUE, "S-1-5-33"},      {TRUE, "S-1-3-4"},
 /* 72 */ {FALSE, "S-1-5-21-12-23-34-45-56-571"},  {FALSE, "S-1-5-21-12-23-34-45-56-572"},
 /* 74 */ {TRUE, "S-1-5-22"}, {FALSE, "S-1-5-21-12-23-34-45-56-521"}, {TRUE, "S-1-5-32-573"},
-/* 77 */ {FALSE, "S-1-5-21-12-23-34-45-56-498"}, {TRUE, "S-1-5-32-574"}, {TRUE, "S-1-16-8448"}
+/* 77 */ {FALSE, "S-1-5-21-12-23-34-45-56-498"}, {TRUE, "S-1-5-32-574"}, {TRUE, "S-1-16-8448"},
+/* 80 */ {FALSE, NULL}, {TRUE, "S-1-2-1"}, {TRUE, "S-1-5-65-1"}, {FALSE, NULL},
+/* 84 */ {TRUE, "S-1-15-2-1"},
 };
 
 static void test_CreateWellKnownSid(void)
@@ -1777,15 +1785,12 @@ static void test_CreateWellKnownSid(void)
         if (value->sid_string == NULL)
             continue;
 
-        if (i > WinAccountRasAndIasServersSid)
+        /* some SIDs aren't implemented by all Windows versions - detect it */
+        cb = sizeof(sid_buffer);
+        if (!pCreateWellKnownSid(i, NULL, sid_buffer, &cb))
         {
-            /* These SIDs aren't implemented by all Windows versions - detect it and break the loop */
-            cb = sizeof(sid_buffer);
-            if (!pCreateWellKnownSid(i, domainsid, sid_buffer, &cb))
-            {
-                skip("Well known SIDs starting from %u are not implemented\n", i);
-                break;
-            }
+            skip("Well known SID %u not implemented\n", i);
+            continue;
         }
 
         cb = sizeof(sid_buffer);
@@ -2247,7 +2252,7 @@ static void test_LookupAccountName(void)
     ok(ret, "Failed to lookup account name\n");
     ok(sid_size == GetLengthSid(psid), "Expected %d, got %d\n", GetLengthSid(psid), sid_size);
     ok(!lstrcmpA(account, user_name), "Expected %s, got %s\n", user_name, account);
-    ok(!lstrcmpA(domain, sid_dom), "Expected %s, got %s\n", sid_dom, domain);
+    ok(!lstrcmpiA(domain, sid_dom), "Expected %s, got %s\n", sid_dom, domain);
     ok(domain_size == domain_save - 1, "Expected %d, got %d\n", domain_save - 1, domain_size);
     ok(strlen(domain) == domain_size, "Expected %d, got %d\n", lstrlenA(domain), domain_size);
     ok(sid_use == SidTypeUser, "Expected SidTypeUser (%d), got %d\n", SidTypeUser, sid_use);
@@ -2265,7 +2270,7 @@ static void test_LookupAccountName(void)
         ok(ret, "Failed to lookup account name\n");
         ok(sid_size != 0, "sid_size was zero\n");
         ok(!lstrcmpA(account, "Everyone"), "Expected Everyone, got %s\n", account);
-        ok(!lstrcmpA(domain, sid_dom), "Expected %s, got %s\n", sid_dom, domain);
+        ok(!lstrcmpiA(domain, sid_dom), "Expected %s, got %s\n", sid_dom, domain);
         ok(domain_size == 0, "Expected 0, got %d\n", domain_size);
         ok(strlen(domain) == domain_size, "Expected %d, got %d\n", lstrlenA(domain), domain_size);
         ok(sid_use == SidTypeWellKnownGroup, "Expected SidTypeWellKnownGroup (%d), got %d\n", SidTypeWellKnownGroup, sid_use);
@@ -2330,9 +2335,8 @@ static void test_LookupAccountName(void)
         get_sid_info(psid, &account, &sid_dom);
         ok(ret, "Failed to lookup account name\n");
         /* Using a fixed string will not work on different locales */
-        ok(!lstrcmpA(account, domain),
-           "Got %s for account and %s for domain, these should be the same\n",
-           account, domain);
+        ok(!lstrcmpiA(account, domain),
+           "Got %s for account and %s for domain, these should be the same\n", account, domain);
         ok(sid_use == SidTypeDomain, "Expected SidTypeDomain (%d), got %d\n", SidTypeDomain, sid_use);
 
         HeapFree(GetProcessHeap(), 0, psid);
@@ -3160,7 +3164,8 @@ static void get_nt_pathW(const char *name, UNICODE_STRING *nameW)
     ANSI_STRING str;
     NTSTATUS status;
     BOOLEAN ret;
-    RtlInitAnsiString(&str, name);
+
+    pRtlInitAnsiString(&str, name);
 
     status = pRtlAnsiStringToUnicodeString(&strW, &str, TRUE);
     ok(!status, "RtlAnsiStringToUnicodeString failed with %08x\n", status);
@@ -3168,7 +3173,7 @@ static void get_nt_pathW(const char *name, UNICODE_STRING *nameW)
     ret = pRtlDosPathNameToNtPathName_U(strW.Buffer, nameW, NULL, NULL);
     ok(ret, "RtlDosPathNameToNtPathName_U failed\n");
 
-    RtlFreeUnicodeString(&strW);
+    pRtlFreeUnicodeString(&strW);
 }
 
 static void test_inherited_dacl(PACL dacl, PSID admin_sid, PSID user_sid, DWORD flags, DWORD mask,
@@ -3402,7 +3407,7 @@ static void test_CreateDirectoryA(void)
     status = pNtCreateFile(&hTemp, GENERIC_WRITE | DELETE, &attr, &io, NULL, 0,
                            FILE_SHARE_READ, FILE_CREATE, FILE_DELETE_ON_CLOSE, NULL, 0);
     ok(!status, "NtCreateFile failed with %08x\n", status);
-    RtlFreeUnicodeString(&tmpfileW);
+    pRtlFreeUnicodeString(&tmpfileW);
 
     error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT,
                                    OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
@@ -3437,7 +3442,7 @@ static void test_CreateDirectoryA(void)
     status = pNtCreateFile(&hTemp, GENERIC_WRITE | DELETE, &attr, &io, NULL, 0,
                            FILE_SHARE_READ, FILE_CREATE, FILE_DELETE_ON_CLOSE, NULL, 0);
     ok(!status, "NtCreateFile failed with %08x\n", status);
-    RtlFreeUnicodeString(&tmpfileW);
+    pRtlFreeUnicodeString(&tmpfileW);
     HeapFree(GetProcessHeap(), 0, pDacl);
 
     error = pGetSecurityInfo(hTemp, SE_FILE_OBJECT,
@@ -3979,7 +3984,8 @@ static void test_GetNamedSecurityInfoA(void)
         ok(bret, "Failed to get Builtin Admins ACE.\n");
         flags = ((ACE_HEADER *)ace)->AceFlags;
         ok(flags == 0x0
-           || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE|INHERITED_ACE)) /* w2k8 */,
+           || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE|INHERITED_ACE)) /* w2k8 */
+           || broken(flags == (OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE)), /* win7 */
            "Builtin Admins ACE has unexpected flags (0x%x != 0x0)\n", flags);
         ok(ace->Mask == KEY_ALL_ACCESS || broken(ace->Mask == GENERIC_ALL) /* w2k8 */,
            "Builtin Admins ACE has unexpected mask (0x%x != 0x%x)\n", ace->Mask, KEY_ALL_ACCESS);
@@ -4492,7 +4498,8 @@ static void test_GetSecurityInfo(void)
         win_skip("Failed to get current user token\n");
         return;
     }
-    GetTokenInformation(token, TokenUser, b, l, &l);
+    bret = GetTokenInformation(token, TokenUser, b, l, &l);
+    ok(bret, "GetTokenInformation(TokenUser) failed with error %d\n", GetLastError());
     CloseHandle( token );
     user_sid = ((TOKEN_USER *)b)->User.Sid;
 
@@ -5767,6 +5774,16 @@ todo_wine
         CloseHandle(dup);
     }
 
+    SetLastError( 0xdeadbeef );
+    ret = DuplicateHandle(GetCurrentProcess(), thread, GetCurrentProcess(), &dup,
+                          THREAD_QUERY_INFORMATION, FALSE, 0);
+    ok(ret, "DuplicateHandle error %d\n", GetLastError());
+    access = get_obj_access(dup);
+    ok(access == (THREAD_QUERY_INFORMATION | THREAD_QUERY_LIMITED_INFORMATION) /* Vista+ */ ||
+       access == THREAD_QUERY_INFORMATION /* before Vista */,
+       "expected THREAD_QUERY_INFORMATION|THREAD_QUERY_LIMITED_INFORMATION, got %#x\n", access);
+    CloseHandle(dup);
+
     TerminateThread(thread, 0);
     CloseHandle(thread);
 }
@@ -5838,6 +5855,16 @@ static void test_process_access(void)
 
         CloseHandle(dup);
     }
+
+    SetLastError( 0xdeadbeef );
+    ret = DuplicateHandle(GetCurrentProcess(), process, GetCurrentProcess(), &dup,
+                          PROCESS_QUERY_INFORMATION, FALSE, 0);
+    ok(ret, "DuplicateHandle error %d\n", GetLastError());
+    access = get_obj_access(dup);
+    ok(access == (PROCESS_QUERY_INFORMATION | PROCESS_QUERY_LIMITED_INFORMATION) /* Vista+ */ ||
+       access == PROCESS_QUERY_INFORMATION /* before Vista */,
+       "expected PROCESS_QUERY_INFORMATION|PROCESS_QUERY_LIMITED_INFORMATION, got %#x\n", access);
+    CloseHandle(dup);
 
     TerminateProcess(process, 0);
     CloseHandle(process);
@@ -6115,6 +6142,184 @@ static void test_AddAce(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %d\n", GetLastError());
 }
 
+static void test_system_security_access(void)
+{
+    static const WCHAR testkeyW[] =
+        {'S','O','F','T','W','A','R','E','\\','W','i','n','e','\\','S','A','C','L','t','e','s','t',0};
+    LONG res;
+    HKEY hkey;
+    PSECURITY_DESCRIPTOR sd;
+    ACL *sacl;
+    DWORD err, len = 128;
+    TOKEN_PRIVILEGES priv, *priv_prev;
+    HANDLE token;
+    LUID luid;
+    BOOL ret;
+
+    if (!OpenProcessToken( GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY, &token )) return;
+    if (!LookupPrivilegeValueA( NULL, SE_SECURITY_NAME, &luid ))
+    {
+        CloseHandle( token );
+        return;
+    }
+
+    /* ACCESS_SYSTEM_SECURITY requires special privilege */
+    res = RegCreateKeyExW( HKEY_LOCAL_MACHINE, testkeyW, 0, NULL, 0, KEY_READ|ACCESS_SYSTEM_SECURITY, NULL, &hkey, NULL );
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "unprivileged user\n" );
+        CloseHandle( token );
+        return;
+    }
+    todo_wine ok( res == ERROR_PRIVILEGE_NOT_HELD, "got %d\n", res );
+
+    priv.PrivilegeCount = 1;
+    priv.Privileges[0].Luid = luid;
+    priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    priv_prev = HeapAlloc( GetProcessHeap(), 0, len );
+    ret = AdjustTokenPrivileges( token, FALSE, &priv, len, priv_prev, &len );
+    ok( ret, "got %u\n", GetLastError());
+
+    res = RegCreateKeyExW( HKEY_LOCAL_MACHINE, testkeyW, 0, NULL, 0, KEY_READ|ACCESS_SYSTEM_SECURITY, NULL, &hkey, NULL );
+    if (res == ERROR_PRIVILEGE_NOT_HELD)
+    {
+        win_skip( "privilege not held\n" );
+        HeapFree( GetProcessHeap(), 0, priv_prev );
+        CloseHandle( token );
+        return;
+    }
+    ok( !res, "got %d\n", res );
+
+    /* restore privileges */
+    ret = AdjustTokenPrivileges( token, FALSE, priv_prev, 0, NULL, NULL );
+    ok( ret, "got %u\n", GetLastError() );
+    HeapFree( GetProcessHeap(), 0, priv_prev );
+
+    /* privilege is checked on access */
+    err = GetSecurityInfo( hkey, SE_REGISTRY_KEY, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, &sacl, &sd );
+    todo_wine ok( err == ERROR_PRIVILEGE_NOT_HELD, "got %u\n", err );
+
+    priv.PrivilegeCount = 1;
+    priv.Privileges[0].Luid = luid;
+    priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    priv_prev = HeapAlloc( GetProcessHeap(), 0, len );
+    ret = AdjustTokenPrivileges( token, FALSE, &priv, len, priv_prev, &len );
+    ok( ret, "got %u\n", GetLastError());
+
+    err = GetSecurityInfo( hkey, SE_REGISTRY_KEY, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, &sacl, &sd );
+    ok( err == ERROR_SUCCESS, "got %u\n", err );
+    RegCloseKey( hkey );
+    LocalFree( sd );
+
+    /* handle created without ACCESS_SYSTEM_SECURITY, privilege held */
+    res = RegCreateKeyExW( HKEY_LOCAL_MACHINE, testkeyW, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    sd = NULL;
+    err = GetSecurityInfo( hkey, SE_REGISTRY_KEY, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, &sacl, &sd );
+    todo_wine ok( err == ERROR_SUCCESS, "got %u\n", err );
+    RegCloseKey( hkey );
+    LocalFree( sd );
+
+    /* restore privileges */
+    ret = AdjustTokenPrivileges( token, FALSE, priv_prev, 0, NULL, NULL );
+    ok( ret, "got %u\n", GetLastError() );
+    HeapFree( GetProcessHeap(), 0, priv_prev );
+
+    /* handle created without ACCESS_SYSTEM_SECURITY, privilege not held */
+    res = RegCreateKeyExW( HKEY_LOCAL_MACHINE, testkeyW, 0, NULL, 0, KEY_READ, NULL, &hkey, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    err = GetSecurityInfo( hkey, SE_REGISTRY_KEY, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, &sacl, &sd );
+    todo_wine ok( err == ERROR_PRIVILEGE_NOT_HELD, "got %u\n", err );
+    RegCloseKey( hkey );
+
+    res = RegDeleteKeyW( HKEY_LOCAL_MACHINE, testkeyW );
+    ok( !res, "got %d\n", res );
+    CloseHandle( token );
+}
+
+static void test_GetWindowsAccountDomainSid(void)
+{
+    char *user, buffer1[SECURITY_MAX_SID_SIZE], buffer2[SECURITY_MAX_SID_SIZE];
+    SID_IDENTIFIER_AUTHORITY domain_ident = { SECURITY_NT_AUTHORITY };
+    PSID domain_sid = (PSID *)&buffer1;
+    PSID domain_sid2 = (PSID *)&buffer2;
+    DWORD sid_size;
+    PSID user_sid;
+    HANDLE token;
+    BOOL bret = TRUE;
+    int i;
+
+    if (!pGetWindowsAccountDomainSid)
+    {
+        win_skip("GetWindowsAccountDomainSid not available\n");
+        return;
+    }
+
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_READ, TRUE, &token))
+    {
+        if (GetLastError() != ERROR_NO_TOKEN) bret = FALSE;
+        else if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &token)) bret = FALSE;
+    }
+    if (!bret)
+    {
+        win_skip("Failed to get current user token\n");
+        return;
+    }
+
+    bret = GetTokenInformation(token, TokenUser, NULL, 0, &sid_size);
+    ok(!bret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "GetTokenInformation(TokenUser) failed with error %d\n", GetLastError());
+    user = HeapAlloc(GetProcessHeap(), 0, sid_size);
+    bret = GetTokenInformation(token, TokenUser, user, sid_size, &sid_size);
+    ok(bret, "GetTokenInformation(TokenUser) failed with error %d\n", GetLastError());
+    CloseHandle(token);
+    user_sid = ((TOKEN_USER *)user)->User.Sid;
+
+    SetLastError(0xdeadbeef);
+    bret = pGetWindowsAccountDomainSid(0, 0, 0);
+    ok(!bret, "GetWindowsAccountDomainSid succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_SID, "expected ERROR_INVALID_SID, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    bret = pGetWindowsAccountDomainSid(user_sid, 0, 0);
+    ok(!bret, "GetWindowsAccountDomainSid succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    sid_size = SECURITY_MAX_SID_SIZE;
+    SetLastError(0xdeadbeef);
+    bret = pGetWindowsAccountDomainSid(user_sid, 0, &sid_size);
+    ok(!bret, "GetWindowsAccountDomainSid succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(sid_size == GetSidLengthRequired(4), "expected size %d, got %d\n", GetSidLengthRequired(4), sid_size);
+
+    SetLastError(0xdeadbeef);
+    bret = pGetWindowsAccountDomainSid(user_sid, domain_sid, 0);
+    ok(!bret, "GetWindowsAccountDomainSid succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    sid_size = 1;
+    SetLastError(0xdeadbeef);
+    bret = pGetWindowsAccountDomainSid(user_sid, domain_sid, &sid_size);
+    ok(!bret, "GetWindowsAccountDomainSid succeeded\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok(sid_size == GetSidLengthRequired(4), "expected size %d, got %d\n", GetSidLengthRequired(4), sid_size);
+
+    sid_size = SECURITY_MAX_SID_SIZE;
+    bret = pGetWindowsAccountDomainSid(user_sid, domain_sid, &sid_size);
+    ok(bret, "GetWindowsAccountDomainSid failed with error %d\n", GetLastError());
+    ok(sid_size == GetSidLengthRequired(4), "expected size %d, got %d\n", GetSidLengthRequired(4), sid_size);
+    InitializeSid(domain_sid2, &domain_ident, 4);
+    for (i = 0; i < 4; i++)
+        *GetSidSubAuthority(domain_sid2, i) = *GetSidSubAuthority(user_sid, i);
+    ok(EqualSid(domain_sid, domain_sid2), "unexpected domain sid\n");
+
+    HeapFree(GetProcessHeap(), 0, user);
+}
+
 START_TEST(security)
 {
     init();
@@ -6146,6 +6351,7 @@ START_TEST(security)
     test_ConvertSecurityDescriptorToString();
     test_PrivateObjectSecurity();
     test_acls();
+    test_GetWindowsAccountDomainSid();
     test_GetSecurityInfo();
     test_GetSidSubAuthority();
     test_CheckTokenMembership();
@@ -6157,4 +6363,5 @@ START_TEST(security)
     test_default_dacl_owner_sid();
     test_AdjustTokenPrivileges();
     test_AddAce();
+    test_system_security_access();
 }

@@ -646,6 +646,32 @@ static void test_enum_value(void)
     ok( !strcmp( value, "Test" ), "value is '%s' instead of Test\n", value );
     ok( !strcmp( data, "foobar" ), "data is '%s' instead of foobar\n", data );
 
+    if (pRegGetValueA) /* avoid a crash on Windows 2000 */
+    {
+        /* no value and no val_count parameter */
+        data_count = 20;
+        type = 1234;
+        strcpy( data, "xxxxxxxxxx" );
+        res = RegEnumValueA( test_key, 0, NULL, NULL, NULL, &type, (BYTE*)data, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+
+        /* no value parameter */
+        val_count = 20;
+        data_count = 20;
+        type = 1234;
+        strcpy( data, "xxxxxxxxxx" );
+        res = RegEnumValueA( test_key, 0, NULL, &val_count, NULL, &type, (BYTE*)data, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+
+        /* no val_count parameter */
+        data_count = 20;
+        type = 1234;
+        strcpy( value, "xxxxxxxxxx" );
+        strcpy( data, "xxxxxxxxxx" );
+        res = RegEnumValueA( test_key, 0, value, NULL, NULL, &type, (BYTE*)data, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+    }
+
     /* Unicode tests */
 
     SetLastError(0xdeadbeef);
@@ -712,6 +738,32 @@ static void test_enum_value(void)
     ok( type == REG_SZ, "type %d is not REG_SZ\n", type );
     ok( !memcmp( valueW, testW, sizeof(testW) ), "value is not 'Test'\n" );
     ok( !memcmp( dataW, foobarW, sizeof(foobarW) ), "data is not 'foobar'\n" );
+
+    if (pRegGetValueA) /* avoid a crash on Windows 2000 */
+    {
+        /* no valueW and no val_count parameter */
+        data_count = 20;
+        type = 1234;
+        memcpy( dataW, xxxW, sizeof(xxxW) );
+        res = RegEnumValueW( test_key, 0, NULL, NULL, NULL, &type, (BYTE*)dataW, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+
+        /* no valueW parameter */
+        val_count = 20;
+        data_count = 20;
+        type = 1234;
+        memcpy( dataW, xxxW, sizeof(xxxW) );
+        res = RegEnumValueW( test_key, 0, NULL, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+
+        /* no val_count parameter */
+        data_count = 20;
+        type = 1234;
+        memcpy( valueW, xxxW, sizeof(xxxW) );
+        memcpy( dataW, xxxW, sizeof(xxxW) );
+        res = RegEnumValueW( test_key, 0, valueW, NULL, NULL, &type, (BYTE*)dataW, &data_count );
+        ok( res == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", res );
+    }
 
 cleanup:
     RegDeleteKeyA(test_key, "");
@@ -1026,7 +1078,6 @@ static void test_reg_open_key(void)
     ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_BADKEY, /* Windows 95 returns BADKEY */
        "expected ERROR_INVALID_HANDLE or ERROR_BADKEY, got %d\n", ret);
     ok(hkResult == hkPreserve, "expected hkResult == hkPreserve\n");
-    RegCloseKey(hkResult);
 
     /* send in NULL hkResult */
     ret = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Test", NULL);
@@ -1051,6 +1102,45 @@ static void test_reg_open_key(void)
        ret == ERROR_BAD_PATHNAME, /* NT */
        "expected ERROR_SUCCESS, ERROR_BAD_PATHNAME or ERROR_FILE_NOT_FOUND, got %d\n", ret);
     RegCloseKey(hkResult);
+
+    /* NULL or empty subkey of special root */
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, NULL, 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+    ok(hkResult == HKEY_CLASSES_ROOT, "expected hkResult == HKEY_CLASSES_ROOT\n");
+
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, "", 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+    ok(hkResult == HKEY_CLASSES_ROOT, "expected hkResult == HKEY_CLASSES_ROOT\n");
+
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, "\\", 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+    ok(hkResult != HKEY_CLASSES_ROOT, "expected hkResult to be a new key\n");
+    ok(!RegCloseKey(hkResult), "got invalid hkey\n");
+
+    /* empty subkey of existing handle */
+    hkResult = hkPreserve;
+    ret = RegOpenKeyExA(hkPreserve, "", 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+    ok(hkResult != hkPreserve, "expected hkResult != hkPreserve\n");
+    ok(!RegCloseKey(hkResult), "got invalid hkey\n");
+
+    /* NULL subkey of existing handle */
+    hkResult = hkPreserve;
+    ret = RegOpenKeyExA(hkPreserve, NULL, 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+    ok(hkResult != hkPreserve, "expected hkResult != hkPreserve\n");
+    ok(!RegCloseKey(hkResult), "got invalid hkey\n");
+
+    /* empty subkey of NULL */
+    hkResult = hkPreserve;
+    ret = RegOpenKeyExA(NULL, "", 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", ret);
+    ok(hkResult == hkPreserve, "expected hkResult == hkPreserve\n");
+
+    RegCloseKey(hkPreserve);
 
     /* WOW64 flags */
     hkResult = NULL;
@@ -1426,39 +1516,6 @@ static void test_reg_delete_key(void)
     RegCloseKey(key);
 }
 
-static void test_reg_save_key(void)
-{
-    DWORD ret;
-
-    ret = RegSaveKeyA(hkey_main, "saved_key", NULL);
-    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
-}
-
-static void test_reg_load_key(void)
-{
-    DWORD ret;
-    HKEY hkHandle;
-
-    ret = RegLoadKeyA(HKEY_LOCAL_MACHINE, "Test", "saved_key");
-    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
-
-    ret = RegOpenKeyA(HKEY_LOCAL_MACHINE, "Test", &hkHandle);
-    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
-
-    RegCloseKey(hkHandle);
-}
-
-static void test_reg_unload_key(void)
-{
-    DWORD ret;
-
-    ret = RegUnLoadKeyA(HKEY_LOCAL_MACHINE, "Test");
-    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
-
-    DeleteFileA("saved_key");
-    DeleteFileA("saved_key.LOG");
-}
-
 static BOOL set_privileges(LPCSTR privilege, BOOL set)
 {
     TOKEN_PRIVILEGES tp;
@@ -1491,6 +1548,66 @@ static BOOL set_privileges(LPCSTR privilege, BOOL set)
 
     CloseHandle(hToken);
     return TRUE;
+}
+
+static void test_reg_save_key(void)
+{
+    DWORD ret;
+
+    if (!set_privileges(SE_BACKUP_NAME, TRUE) ||
+        !set_privileges(SE_RESTORE_NAME, FALSE))
+    {
+        win_skip("Failed to set SE_BACKUP_NAME privileges, skipping tests\n");
+        return;
+    }
+
+    ret = RegSaveKeyA(hkey_main, "saved_key", NULL);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+
+    set_privileges(SE_BACKUP_NAME, FALSE);
+}
+
+static void test_reg_load_key(void)
+{
+    DWORD ret;
+    HKEY hkHandle;
+
+    if (!set_privileges(SE_RESTORE_NAME, TRUE) ||
+        !set_privileges(SE_BACKUP_NAME, FALSE))
+    {
+        win_skip("Failed to set SE_RESTORE_NAME privileges, skipping tests\n");
+        return;
+    }
+
+    ret = RegLoadKeyA(HKEY_LOCAL_MACHINE, "Test", "saved_key");
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+
+    set_privileges(SE_RESTORE_NAME, FALSE);
+
+    ret = RegOpenKeyA(HKEY_LOCAL_MACHINE, "Test", &hkHandle);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+
+    RegCloseKey(hkHandle);
+}
+
+static void test_reg_unload_key(void)
+{
+    DWORD ret;
+
+    if (!set_privileges(SE_RESTORE_NAME, TRUE) ||
+        !set_privileges(SE_BACKUP_NAME, FALSE))
+    {
+        win_skip("Failed to set SE_RESTORE_NAME privileges, skipping tests\n");
+        return;
+    }
+
+    ret = RegUnLoadKeyA(HKEY_LOCAL_MACHINE, "Test");
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", ret);
+
+    set_privileges(SE_RESTORE_NAME, FALSE);
+
+    DeleteFileA("saved_key");
+    DeleteFileA("saved_key.LOG");
 }
 
 /* tests that show that RegConnectRegistry and 
@@ -1716,6 +1833,7 @@ static void test_reg_query_info(void)
     ok(classbufferW[0] == 0x5555, "classbufferW[0] = 0x%x\n", classbufferW[0]);
 
     /* empty key */
+    sdlen = 0;
     ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
     ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
@@ -1725,10 +1843,11 @@ static void test_reg_query_info(void)
     ok(values == 0, "values = %u\n", values);
     ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
     ok(maxvaluelen == 0, "maxvaluelen = %u\n", maxvaluelen);
-    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    todo_wine ok(sdlen != 0, "sdlen = %u\n", sdlen);
     ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
     ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
 
+    sdlen = 0;
     ret = RegQueryInfoKeyW(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
     ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
@@ -1738,7 +1857,7 @@ static void test_reg_query_info(void)
     ok(values == 0, "values = %u\n", values);
     ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
     ok(maxvaluelen == 0, "maxvaluelen = %u\n", maxvaluelen);
-    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    todo_wine ok(sdlen != 0, "sdlen = %u\n", sdlen);
     ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
     ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
 
@@ -1749,8 +1868,9 @@ static void test_reg_query_info(void)
     ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
 
     /* with subkey & default value */
+    sdlen = 0;
     ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
-    todo_wine ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
     ok(subkeys == 1, "subkeys = %u\n", subkeys);
     ok(maxsubkeylen == strlen("subsubkey"), "maxsubkeylen = %u\n", maxsubkeylen);
@@ -1758,10 +1878,11 @@ static void test_reg_query_info(void)
     ok(values == 1, "values = %u\n", values);
     ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
     ok(maxvaluelen == sizeof("data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
-    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    todo_wine ok(sdlen != 0, "sdlen = %u\n", sdlen);
     ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
     ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
 
+    sdlen = 0;
     ret = RegQueryInfoKeyW(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
     ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
@@ -1771,7 +1892,7 @@ static void test_reg_query_info(void)
     ok(values == 1, "values = %u\n", values);
     ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
     ok(maxvaluelen == sizeof("data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
-    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    todo_wine ok(sdlen != 0, "sdlen = %u\n", sdlen);
     ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
     ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
 
@@ -1783,7 +1904,7 @@ static void test_reg_query_info(void)
 
     /* with named value */
     ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
-    todo_wine ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(values == 3, "values = %u\n", values);
     ok(maxvaluenamelen == strlen("value one"), "maxvaluenamelen = %u\n", maxvaluenamelen);
     ok(maxvaluelen == sizeof("second value data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
@@ -1798,7 +1919,7 @@ static void test_reg_query_info(void)
     memset(classbuffer, 0x55, sizeof(classbuffer));
     classlen = 0;
     ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    todo_wine ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class) /* win2k */ ||
        classlen == 0, "classlen = %u\n", classlen);
     memset(expectbuffer, 0x55, sizeof(expectbuffer));
@@ -1807,7 +1928,7 @@ static void test_reg_query_info(void)
     memset(classbufferW, 0x55, sizeof(classbufferW));
     classlen = 0;
     ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    todo_wine ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == strlen(subkey_class) /* win2k */ ||
        classlen == 0, "classlen = %u\n", classlen);
     memset(expectbufferW, 0x55, sizeof(expectbufferW));
@@ -1818,15 +1939,15 @@ static void test_reg_query_info(void)
     classlen = 1;
     ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     ok(ret == ERROR_MORE_DATA, "ret = %d\n", ret);
-    todo_wine ok(classlen == 0, "classlen = %u\n", classlen);
+    ok(classlen == 0, "classlen = %u\n", classlen);
     memset(expectbuffer, 0x55, sizeof(expectbuffer));
     expectbuffer[0] = 0;
-    todo_wine ok(!memcmp(classbuffer, expectbuffer, sizeof(classbuffer)), "classbuffer was modified\n");
+    ok(!memcmp(classbuffer, expectbuffer, sizeof(classbuffer)), "classbuffer was modified\n");
 
     memset(classbufferW, 0x55, sizeof(classbufferW));
     classlen = 1;
     ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    todo_wine ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
+    ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
     ok(classlen == 0 /* win8 */ ||
        classlen == strlen(subkey_class), "classlen = %u\n", classlen);
     memset(expectbufferW, 0x55, sizeof(expectbufferW));
@@ -1837,19 +1958,19 @@ static void test_reg_query_info(void)
     classlen = sizeof(subkey_class) - 1;
     ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     ok(ret == ERROR_MORE_DATA, "ret = %d\n", ret);
-    todo_wine ok(classlen == sizeof(subkey_class) - 2, "classlen = %u\n", classlen);
+    ok(classlen == sizeof(subkey_class) - 2, "classlen = %u\n", classlen);
     memset(expectbuffer, 0x55, sizeof(expectbuffer));
     strcpy(expectbuffer, subkey_class);
     expectbuffer[sizeof(subkey_class) - 2] = 0;
     expectbuffer[sizeof(subkey_class) - 1] = 0x55;
-    todo_wine ok(!memcmp(classbuffer, expectbuffer, sizeof(classbuffer)),
+    ok(!memcmp(classbuffer, expectbuffer, sizeof(classbuffer)),
        "classbuffer = %.*s, expected %s\n",
        (int)sizeof(classbuffer), classbuffer, expectbuffer);
 
     memset(classbufferW, 0x55, sizeof(classbufferW));
     classlen = sizeof(subkey_class) - 1;
     ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    todo_wine ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
+    ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
     ok(classlen == sizeof(subkey_class) - 2 /* win8 */ ||
        classlen == strlen(subkey_class), "classlen = %u\n", classlen);
     memset(expectbufferW, 0x55, sizeof(expectbufferW));
@@ -3185,17 +3306,9 @@ START_TEST(registry)
     test_classesroot_enum();
     test_classesroot_mask();
 
-    /* SaveKey/LoadKey require the SE_BACKUP_NAME privilege to be set */
-    if (set_privileges(SE_BACKUP_NAME, TRUE) &&
-        set_privileges(SE_RESTORE_NAME, TRUE))
-    {
-        test_reg_save_key();
-        test_reg_load_key();
-        test_reg_unload_key();
-
-        set_privileges(SE_BACKUP_NAME, FALSE);
-        set_privileges(SE_RESTORE_NAME, FALSE);
-    }
+    test_reg_save_key();
+    test_reg_load_key();
+    test_reg_unload_key();
 
     test_reg_delete_tree();
     test_rw_order();
