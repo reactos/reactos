@@ -487,7 +487,7 @@ static void test_CreateNamedPipe(int pipemode)
         ok(written == sizeof(obuf2), "write file len 3b\n");
         ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek3\n");
         if (pipemode == PIPE_TYPE_BYTE) {
-            todo_wine ok(readden == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes\n", readden);
+            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes\n", readden);
         }
         else
         {
@@ -515,7 +515,7 @@ static void test_CreateNamedPipe(int pipemode)
         ok(written == sizeof(obuf2), "write file len 4b\n");
         ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek4\n");
         if (pipemode == PIPE_TYPE_BYTE) {
-            todo_wine ok(readden == sizeof(obuf) + sizeof(obuf2), "peek4 got %d bytes\n", readden);
+            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek4 got %d bytes\n", readden);
         }
         else
         {
@@ -1162,6 +1162,8 @@ static void test_CloseNamedPipe(void)
     char ibuf[32];
     DWORD written;
     DWORD readden;
+    DWORD state;
+    BOOL ret;
 
     hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
                            PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -1196,10 +1198,21 @@ static void test_CloseNamedPipe(void)
         ok(readden == sizeof(obuf), "got %d bytes\n", readden);
         /* pipe is empty now */
 
+        ret = GetNamedPipeHandleStateA(hFile, &state, NULL, NULL, NULL, NULL, 0);
+        todo_wine
+        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
+        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
+        todo_wine
+        ok(ret, "SetNamedPipeHandleState failed with %d\n", GetLastError());
+
         SetLastError(0xdeadbeef);
         ok(!ReadFile(hFile, ibuf, 0, &readden, NULL), "ReadFile() succeeded\n");
         ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-        SetLastError(0);
+
+        SetLastError(0xdeadbeef);
+        ok(!WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
+        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
 
         CloseHandle(hFile);
     }
@@ -1230,11 +1243,21 @@ static void test_CloseNamedPipe(void)
         ok(readden == 0, "got %d bytes\n", readden);
         /* pipe is empty now */
 
+        ret = GetNamedPipeHandleStateA(hFile, &state, NULL, NULL, NULL, NULL, 0);
+        todo_wine
+        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
+        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
+        todo_wine
+        ok(ret, "SetNamedPipeHandleState failed with %d\n", GetLastError());
+
         SetLastError(0xdeadbeef);
         ok(!ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        todo_wine
         ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-        SetLastError(0);
+
+        SetLastError(0xdeadbeef);
+        ok(!WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
+        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
 
         CloseHandle(hFile);
     }
@@ -1272,10 +1295,21 @@ static void test_CloseNamedPipe(void)
         ok(readden == sizeof(obuf), "got %d bytes\n", readden);
         /* pipe is empty now */
 
+        ret = GetNamedPipeHandleStateA(hnp, &state, NULL, NULL, NULL, NULL, 0);
+        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
+        SetLastError(0xdeadbeef);
+        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
+        ok(!ret, "SetNamedPipeHandleState unexpectedly succeeded\n");
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError() returned %08x, expected ERROR_INVALID_HANDLE\n", GetLastError());
+
         SetLastError(0xdeadbeef);
         ok(!ReadFile(hnp, ibuf, 0, &readden, NULL), "ReadFile() succeeded\n");
         ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-        SetLastError(0);
+
+        SetLastError(0xdeadbeef);
+        ok(!WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
+        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
 
         CloseHandle(hnp);
     }
@@ -1306,10 +1340,22 @@ static void test_CloseNamedPipe(void)
         ok(readden == 0, "got %d bytes\n", readden);
         /* pipe is empty now */
 
+        ret = GetNamedPipeHandleStateA(hnp, &state, NULL, NULL, NULL, NULL, 0);
+        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
+        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
+        SetLastError(0xdeadbeef);
+        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
+        ok(!ret, "SetNamedPipeHandleState unexpectedly succeeded\n");
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError() returned %08x, expected ERROR_INVALID_HANDLE\n", GetLastError());
+
         SetLastError(0xdeadbeef);
         ok(!ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
         ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-        SetLastError(0);
+
+        SetLastError(0xdeadbeef);
+        ok(!WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
+        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
 
         CloseHandle(hnp);
     }
@@ -2851,20 +2897,17 @@ static void test_readfileex_pending(void)
     ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
 
     /* free up some space in the pipe */
-    ret = ReadFile(client, read_buf, sizeof(read_buf), &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-
-    ok(completion_called == 0, "completion routine called during ReadFile\n");
-
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    if (wait == WAIT_TIMEOUT)
+    for (i=0; i<256; i++)
     {
         ret = ReadFile(client, read_buf, sizeof(read_buf), &num_bytes, NULL);
         ok(ret == TRUE, "ReadFile failed\n");
+
         ok(completion_called == 0, "completion routine called during ReadFile\n");
+
         wait = WaitForSingleObjectEx(event, 0, TRUE);
-        ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
+        ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0 || wait == WAIT_TIMEOUT,
+           "WaitForSingleObject returned %x\n", wait);
+        if (wait != WAIT_TIMEOUT) break;
     }
 
     ok(completion_called == 1, "completion routine not called\n");
@@ -2886,6 +2929,7 @@ static void test_readfileex_pending(void)
     num_bytes = 0xdeadbeef;
     SetLastError(0xdeadbeef);
     ret = ReadFile(server, read_buf, 0, &num_bytes, &overlapped);
+    ok(!ret, "ReadFile should fail\n");
     ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
     ok(num_bytes == 0, "bytes %u\n", num_bytes);
     ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
@@ -2943,7 +2987,6 @@ todo_wine
     ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
     ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
     wait = WaitForSingleObjectEx(event, 0, TRUE);
-    todo_wine
     ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
     ok(completion_called == 0, "completion routine called before writing to file\n");
 
@@ -3221,7 +3264,6 @@ todo_wine
     ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
     ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
     wait = WaitForSingleObjectEx(event, 0, TRUE);
-    todo_wine
     ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
     ok(completion_called == 0, "completion routine called before writing to file\n");
 

@@ -29,6 +29,8 @@ static BOOL (WINAPI *pSystemTimeToTzSpecificLocalTime)(LPTIME_ZONE_INFORMATION, 
 static BOOL (WINAPI *pGetSystemTimes)(LPFILETIME, LPFILETIME, LPFILETIME);
 static int (WINAPI *pGetCalendarInfoA)(LCID,CALID,CALTYPE,LPSTR,int,LPDWORD);
 static int (WINAPI *pGetCalendarInfoW)(LCID,CALID,CALTYPE,LPWSTR,int,LPDWORD);
+static DWORD (WINAPI *pGetDynamicTimeZoneInformation)(DYNAMIC_TIME_ZONE_INFORMATION*);
+static void (WINAPI *pGetSystemTimePreciseAsFileTime)(LPFILETIME);
 
 #define SECSPERMIN         60
 #define SECSPERDAY        86400
@@ -732,8 +734,75 @@ static void test_GetCalendarInfo(void)
     ok( ret2, "GetCalendarInfoW failed err %u\n", GetLastError() );
     ret2 = WideCharToMultiByte( CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL );
     ok( ret == ret2, "got %d, expected %d\n", ret, ret2 );
-
 }
+
+static void test_GetDynamicTimeZoneInformation(void)
+{
+    DYNAMIC_TIME_ZONE_INFORMATION dyninfo;
+    TIME_ZONE_INFORMATION tzinfo;
+    DWORD ret, ret2;
+
+    if (!pGetDynamicTimeZoneInformation)
+    {
+        win_skip("GetDynamicTimeZoneInformation() is not supported.\n");
+        return;
+    }
+
+    ret = pGetDynamicTimeZoneInformation(&dyninfo);
+    ret2 = GetTimeZoneInformation(&tzinfo);
+    ok(ret == ret2, "got %d, %d\n", ret, ret2);
+
+    ok(dyninfo.Bias == tzinfo.Bias, "got %d, %d\n", dyninfo.Bias, tzinfo.Bias);
+    ok(!lstrcmpW(dyninfo.StandardName, tzinfo.StandardName), "got std name %s, %s\n",
+        wine_dbgstr_w(dyninfo.StandardName), wine_dbgstr_w(tzinfo.StandardName));
+    ok(!memcmp(&dyninfo.StandardDate, &tzinfo.StandardDate, sizeof(dyninfo.StandardDate)), "got different StandardDate\n");
+    ok(dyninfo.StandardBias == tzinfo.StandardBias, "got %d, %d\n", dyninfo.StandardBias, tzinfo.StandardBias);
+    ok(!lstrcmpW(dyninfo.DaylightName, tzinfo.DaylightName), "got daylight name %s, %s\n",
+        wine_dbgstr_w(dyninfo.DaylightName), wine_dbgstr_w(tzinfo.DaylightName));
+    ok(!memcmp(&dyninfo.DaylightDate, &tzinfo.DaylightDate, sizeof(dyninfo.DaylightDate)), "got different DaylightDate\n");
+    ok(dyninfo.TimeZoneKeyName[0] != 0, "got empty tz keyname\n");
+    trace("Dyn TimeZoneKeyName %s\n", wine_dbgstr_w(dyninfo.TimeZoneKeyName));
+}
+
+static ULONGLONG get_longlong_time(FILETIME *time)
+{
+    ULARGE_INTEGER uli;
+    uli.u.LowPart = time->dwLowDateTime;
+    uli.u.HighPart = time->dwHighDateTime;
+    return uli.QuadPart;
+}
+
+static void test_GetSystemTimePreciseAsFileTime(void)
+{
+    FILETIME ft;
+    ULONGLONG time1, time2;
+    LONGLONG diff;
+
+    if (!pGetSystemTimePreciseAsFileTime)
+    {
+        win_skip("GetSystemTimePreciseAsFileTime() is not supported.\n");
+        return;
+    }
+
+    GetSystemTimeAsFileTime(&ft);
+    time1 = get_longlong_time(&ft);
+    pGetSystemTimePreciseAsFileTime(&ft);
+    time2 = get_longlong_time(&ft);
+    diff = time2 - time1;
+    if (diff < 0)
+        diff = -diff;
+    ok(diff < 1000000, "Difference between GetSystemTimeAsFileTime and GetSystemTimePreciseAsFileTime more than 100 ms\n");
+
+    pGetSystemTimePreciseAsFileTime(&ft);
+    time1 = get_longlong_time(&ft);
+    do {
+        pGetSystemTimePreciseAsFileTime(&ft);
+        time2 = get_longlong_time(&ft);
+    } while (time2 == time1);
+    diff = time2 - time1;
+    ok(diff < 10000 && diff > 0, "GetSystemTimePreciseAsFileTime incremented by more than 1 ms\n");
+}
+
 static void test_GetSystemTimes(void)
 {
 
@@ -743,7 +812,7 @@ static void test_GetSystemTimes(void)
     SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *sppi;
     SYSTEM_BASIC_INFORMATION sbi;
     ULONG ReturnLength;
-    double total_usertime = 0.0, total_kerneltime = 0.0, total_idletime = 0.0;
+    ULARGE_INTEGER total_usertime, total_kerneltime, total_idletime;
 
     if (!pGetSystemTimes)
     {
@@ -753,6 +822,9 @@ static void test_GetSystemTimes(void)
 
     ok( pGetSystemTimes(NULL, NULL, NULL), "GetSystemTimes failed unexpectedly\n" );
 
+    total_usertime.QuadPart = 0;
+    total_kerneltime.QuadPart = 0;
+    total_idletime.QuadPart = 0;
     memset( &idletime, 0x11, sizeof(idletime) );
     memset( &kerneltime, 0x11, sizeof(kerneltime) );
     memset( &usertime, 0x11, sizeof(usertime) );
@@ -761,18 +833,10 @@ static void test_GetSystemTimes(void)
 
     ul1.LowPart = idletime.dwLowDateTime;
     ul1.HighPart = idletime.dwHighDateTime;
-
-    trace( "IdleTime:   %f seconds\n", (double)ul1.QuadPart/10000000.0 );
-
     ul2.LowPart = kerneltime.dwLowDateTime;
     ul2.HighPart = kerneltime.dwHighDateTime;
-
-    trace( "KernelTime: %f seconds\n", (double)ul2.QuadPart/10000000.0 );
-
     ul3.LowPart = usertime.dwLowDateTime;
     ul3.HighPart = usertime.dwHighDateTime;
-
-    trace( "UserTime:   %f seconds\n", (double)ul3.QuadPart/10000000.0 );
 
     ok( !NtQuerySystemInformation(SystemBasicInformation, &sbi, sizeof(sbi), &ReturnLength),
                                   "NtQuerySystemInformation failed\n" );
@@ -787,22 +851,20 @@ static void test_GetSystemTimes(void)
                       sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * sbi.NumberOfProcessors);
 
     ok( !NtQuerySystemInformation( SystemProcessorPerformanceInformation, sppi,
-                                   sizeof(*sppi), &ReturnLength),
+                                   sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * sbi.NumberOfProcessors,
+                                   &ReturnLength),
                                    "NtQuerySystemInformation failed\n" );
 
     for (i = 0; i < sbi.NumberOfProcessors; i++)
     {
-        total_usertime += (double)(sppi[i].UserTime.QuadPart)/10000000.0;
-        total_kerneltime += (double)(sppi[i].KernelTime.QuadPart)/10000000.0;
-        total_idletime += (double)(sppi[i].IdleTime.QuadPart)/10000000.0;
+        total_usertime.QuadPart += sppi[i].UserTime.QuadPart;
+        total_kerneltime.QuadPart += sppi[i].KernelTime.QuadPart;
+        total_idletime.QuadPart += sppi[i].IdleTime.QuadPart;
     }
 
-    trace( "total_idletime %f total_kerneltime %f total_usertime %f \n", total_idletime,
-          total_kerneltime, total_usertime );
-
-    ok( (total_idletime - (double)ul1.QuadPart/10000000.0) < 1.0, "test idletime failed\n" );
-    ok( (total_kerneltime - (double)ul2.QuadPart/10000000.0) < 1.0, "test kerneltime failed\n" );
-    ok( (total_usertime - (double)ul3.QuadPart/10000000.0) < 1.0, "test usertime failed\n" );
+    ok( total_idletime.QuadPart - ul1.QuadPart < 10000000, "test idletime failed\n" );
+    ok( total_kerneltime.QuadPart - ul2.QuadPart < 10000000, "test kerneltime failed\n" );
+    ok( total_usertime.QuadPart - ul3.QuadPart < 10000000, "test usertime failed\n" );
 
     HeapFree(GetProcessHeap(), 0, sppi);
 }
@@ -815,6 +877,8 @@ START_TEST(time)
     pGetSystemTimes = (void *)GetProcAddress( hKernel, "GetSystemTimes");
     pGetCalendarInfoA = (void *)GetProcAddress(hKernel, "GetCalendarInfoA");
     pGetCalendarInfoW = (void *)GetProcAddress(hKernel, "GetCalendarInfoW");
+    pGetDynamicTimeZoneInformation = (void *)GetProcAddress(hKernel, "GetDynamicTimeZoneInformation");
+    pGetSystemTimePreciseAsFileTime = (void *)GetProcAddress(hKernel, "GetSystemTimePreciseAsFileTime");
 
     test_conversions();
     test_invalid_arg();
@@ -825,4 +889,6 @@ START_TEST(time)
     test_GetSystemTimes();
     test_FileTimeToDosDateTime();
     test_GetCalendarInfo();
+    test_GetDynamicTimeZoneInformation();
+    test_GetSystemTimePreciseAsFileTime();
 }

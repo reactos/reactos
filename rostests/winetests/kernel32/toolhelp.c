@@ -175,8 +175,8 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             num++;
         } while (pThread32Next( hSnapshot, &te ));
     }
-    ok(curr_found == 1, "couldn't find self in thread list\n");
-    ok(sub_found == 2, "couldn't find sub-process thread's in thread list\n");
+    ok(curr_found, "couldn't find self in thread list\n");
+    ok(sub_found >= 2, "couldn't find sub-process threads in thread list\n");
 
     /* check that first really resets enumeration */
     curr_found = 0;
@@ -192,8 +192,8 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             num--;
         } while (pThread32Next( hSnapshot, &te ));
     }
-    ok(curr_found == 1, "couldn't find self in thread list\n");
-    ok(sub_found == 2, "couldn't find sub-process thread's in thread list\n");
+    ok(curr_found, "couldn't find self in thread list\n");
+    ok(sub_found >= 2, "couldn't find sub-process threads in thread list\n");
 
     me.dwSize = sizeof(me);
     ok(!pModule32First( hSnapshot, &me ), "shouldn't return a module\n");

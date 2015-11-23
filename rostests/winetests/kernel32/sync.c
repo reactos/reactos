@@ -56,6 +56,9 @@ static VOID   (WINAPI *pReleaseSRWLockExclusive)(PSRWLOCK);
 static VOID   (WINAPI *pReleaseSRWLockShared)(PSRWLOCK);
 static BOOLEAN (WINAPI *pTryAcquireSRWLockExclusive)(PSRWLOCK);
 static BOOLEAN (WINAPI *pTryAcquireSRWLockShared)(PSRWLOCK);
+
+static NTSTATUS (WINAPI *pNtAllocateVirtualMemory)(HANDLE, PVOID *, ULONG, SIZE_T *, ULONG, ULONG);
+static NTSTATUS (WINAPI *pNtFreeVirtualMemory)(HANDLE, PVOID *, SIZE_T *, ULONG);
 static NTSTATUS (WINAPI *pNtWaitForMultipleObjects)(ULONG,const HANDLE*,BOOLEAN,BOOLEAN,const LARGE_INTEGER*);
 
 static void test_signalandwait(void)
@@ -102,7 +105,7 @@ static void test_signalandwait(void)
     for (i = 0; i < 10000; i++)
     {
         r = pSignalObjectAndWait(event[0], event[0], 0, FALSE);
-        ok( r == WAIT_OBJECT_0, "should succeed\n");
+        ok(r == WAIT_OBJECT_0, "should succeed\n");
     }
 
     /* event[0] is not signalled */
@@ -2308,8 +2311,184 @@ static void test_srwlock_example(void)
     trace("number of total exclusive accesses is %d\n", srwlock_protected_value);
 }
 
+static DWORD WINAPI alertable_wait_thread(void *param)
+{
+    HANDLE *semaphores = param;
+    LARGE_INTEGER timeout;
+    NTSTATUS status;
+    DWORD result;
+
+    ReleaseSemaphore(semaphores[0], 1, NULL);
+    result = WaitForMultipleObjectsEx(1, &semaphores[1], TRUE, 1000, TRUE);
+    ok(result == WAIT_IO_COMPLETION, "expected WAIT_IO_COMPLETION, got %u\n", result);
+    result = WaitForMultipleObjectsEx(1, &semaphores[1], TRUE, 200, TRUE);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+
+    ReleaseSemaphore(semaphores[0], 1, NULL);
+    timeout.QuadPart = -10000000;
+    status = pNtWaitForMultipleObjects(1, &semaphores[1], FALSE, TRUE, &timeout);
+    ok(status == STATUS_USER_APC, "expected STATUS_USER_APC, got %08x\n", status);
+    timeout.QuadPart = -2000000;
+    status = pNtWaitForMultipleObjects(1, &semaphores[1], FALSE, TRUE, &timeout);
+    ok(status == STATUS_WAIT_0, "expected STATUS_WAIT_0, got %08x\n", status);
+
+    ReleaseSemaphore(semaphores[0], 1, NULL);
+    timeout.QuadPart = -10000000;
+    status = pNtWaitForMultipleObjects(1, &semaphores[1], FALSE, TRUE, &timeout);
+    ok(status == STATUS_USER_APC, "expected STATUS_USER_APC, got %08x\n", status);
+    result = WaitForSingleObject(semaphores[0], 0);
+    ok(result == WAIT_TIMEOUT, "expected WAIT_TIMEOUT, got %u\n", result);
+
+    return 0;
+}
+
+static void CALLBACK alertable_wait_apc(ULONG_PTR userdata)
+{
+    HANDLE *semaphores = (void *)userdata;
+    ReleaseSemaphore(semaphores[1], 1, NULL);
+}
+
+static void CALLBACK alertable_wait_apc2(ULONG_PTR userdata)
+{
+    HANDLE *semaphores = (void *)userdata;
+    DWORD result;
+
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+}
+
+static void test_alertable_wait(void)
+{
+    HANDLE thread, semaphores[2];
+    DWORD result;
+
+    semaphores[0] = CreateSemaphoreW(NULL, 0, 2, NULL);
+    ok(semaphores[0] != NULL, "CreateSemaphore failed with %u\n", GetLastError());
+    semaphores[1] = CreateSemaphoreW(NULL, 0, 1, NULL);
+    ok(semaphores[1] != NULL, "CreateSemaphore failed with %u\n", GetLastError());
+    thread = CreateThread(NULL, 0, alertable_wait_thread, semaphores, 0, NULL);
+    ok(thread != NULL, "CreateThread failed with %u\n", GetLastError());
+
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+    Sleep(100); /* ensure the thread is blocking in WaitForMultipleObjectsEx */
+    result = QueueUserAPC(alertable_wait_apc, thread, (ULONG_PTR)semaphores);
+    ok(result != 0, "QueueUserAPC failed with %u\n", GetLastError());
+
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+    Sleep(100); /* ensure the thread is blocking in NtWaitForMultipleObjects */
+    result = QueueUserAPC(alertable_wait_apc, thread, (ULONG_PTR)semaphores);
+    ok(result != 0, "QueueUserAPC failed with %u\n", GetLastError());
+
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+    Sleep(100); /* ensure the thread is blocking in NtWaitForMultipleObjects */
+    result = QueueUserAPC(alertable_wait_apc2, thread, (ULONG_PTR)semaphores);
+    ok(result != 0, "QueueUserAPC failed with %u\n", GetLastError());
+    result = QueueUserAPC(alertable_wait_apc2, thread, (ULONG_PTR)semaphores);
+    ok(result != 0, "QueueUserAPC failed with %u\n", GetLastError());
+    ReleaseSemaphore(semaphores[0], 2, NULL);
+
+    result = WaitForSingleObject(thread, 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+    CloseHandle(thread);
+    CloseHandle(semaphores[0]);
+    CloseHandle(semaphores[1]);
+}
+
+struct apc_deadlock_info
+{
+    PROCESS_INFORMATION *pi;
+    HANDLE event;
+    BOOL running;
+};
+
+static DWORD WINAPI apc_deadlock_thread(void *param)
+{
+    struct apc_deadlock_info *info = param;
+    PROCESS_INFORMATION *pi = info->pi;
+    NTSTATUS status;
+    SIZE_T size;
+    void *base;
+
+    while (info->running)
+    {
+        base = NULL;
+        size = 0x1000;
+        status = pNtAllocateVirtualMemory(pi->hProcess, &base, 0, &size,
+                                          MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
+        ok(base != NULL, "expected base != NULL, got %p\n", base);
+        SetEvent(info->event);
+
+        size = 0;
+        status = pNtFreeVirtualMemory(pi->hProcess, &base, &size, MEM_RELEASE);
+        ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
+        SetEvent(info->event);
+    }
+
+    return 0;
+}
+
+static void test_apc_deadlock(void)
+{
+    struct apc_deadlock_info info;
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si = { sizeof(si) };
+    char cmdline[MAX_PATH];
+    HANDLE event, thread;
+    DWORD result;
+    BOOL success;
+    char **argv;
+    int i;
+
+    winetest_get_mainargs(&argv);
+    sprintf(cmdline, "\"%s\" sync apc_deadlock", argv[0]);
+    success = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ok(success, "CreateProcess failed with %u\n", GetLastError());
+
+    event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok(event != NULL, "CreateEvent failed with %u\n", GetLastError());
+
+    info.pi = &pi;
+    info.event = event;
+    info.running = TRUE;
+
+    thread = CreateThread(NULL, 0, apc_deadlock_thread, &info, 0, NULL);
+    ok(thread != NULL, "CreateThread failed with %u\n", GetLastError());
+    result = WaitForSingleObject(event, 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+
+    for (i = 0; i < 1000; i++)
+    {
+        result = SuspendThread(pi.hThread);
+        ok(result == 0, "expected 0, got %u\n", result);
+
+        WaitForSingleObject(event, 0); /* reset event */
+        result = WaitForSingleObject(event, 1000);
+        ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+
+        result = ResumeThread(pi.hThread);
+        ok(result == 1, "expected 1, got %u\n", result);
+        Sleep(1);
+    }
+
+    info.running = FALSE;
+    result = WaitForSingleObject(thread, 1000);
+    ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
+    CloseHandle(thread);
+    CloseHandle(event);
+
+    TerminateProcess(pi.hProcess, 0);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+}
+
 START_TEST(sync)
 {
+    char **argv;
+    int argc;
     HMODULE hdll = GetModuleHandleA("kernel32.dll");
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
 
@@ -2338,7 +2517,20 @@ START_TEST(sync)
     pReleaseSRWLockShared = (void *)GetProcAddress(hdll, "ReleaseSRWLockShared");
     pTryAcquireSRWLockExclusive = (void *)GetProcAddress(hdll, "TryAcquireSRWLockExclusive");
     pTryAcquireSRWLockShared = (void *)GetProcAddress(hdll, "TryAcquireSRWLockShared");
+    pNtAllocateVirtualMemory = (void *)GetProcAddress(hntdll, "NtAllocateVirtualMemory");
+    pNtFreeVirtualMemory = (void *)GetProcAddress(hntdll, "NtFreeVirtualMemory");
     pNtWaitForMultipleObjects = (void *)GetProcAddress(hntdll, "NtWaitForMultipleObjects");
+
+    argc = winetest_get_mainargs( &argv );
+    if (argc >= 3)
+    {
+        if (!strcmp(argv[2], "apc_deadlock"))
+        {
+            HANDLE handle = GetCurrentThread();
+            for (;;) WaitForMultipleObjectsEx(1, &handle, FALSE, INFINITE, TRUE);
+        }
+        return;
+    }
 
     test_signalandwait();
     test_mutex();
@@ -2355,4 +2547,6 @@ START_TEST(sync)
     test_condvars_consumer_producer();
     test_srwlock_base();
     test_srwlock_example();
+    test_alertable_wait();
+    test_apc_deadlock();
 }

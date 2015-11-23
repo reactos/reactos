@@ -28,12 +28,17 @@
 #include <time.h>
 #include <stdio.h>
 
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winnls.h"
-#include "fileapi.h"
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <wine/test.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winerror.h>
+#include <wine/winternl.h>
+#include <winnls.h>
+#include <fileapi.h>
+
+#undef DeleteFile  /* needed for FILE_DISPOSITION_INFO */
 
 static HANDLE (WINAPI *pFindFirstFileExA)(LPCSTR,FINDEX_INFO_LEVELS,LPVOID,FINDEX_SEARCH_OPS,LPVOID,DWORD);
 static BOOL (WINAPI *pReplaceFileA)(LPCSTR, LPCSTR, LPCSTR, DWORD, LPVOID, LPVOID);
@@ -46,8 +51,13 @@ static HANDLE (WINAPI *pOpenFileById)(HANDLE, LPFILE_ID_DESCRIPTOR, DWORD, DWORD
 static BOOL (WINAPI *pSetFileValidData)(HANDLE, LONGLONG);
 static HRESULT (WINAPI *pCopyFile2)(PCWSTR,PCWSTR,COPYFILE2_EXTENDED_PARAMETERS*);
 static HANDLE (WINAPI *pCreateFile2)(LPCWSTR, DWORD, DWORD, DWORD, CREATEFILE2_EXTENDED_PARAMETERS*);
-static DWORD (WINAPI* pGetFinalPathNameByHandleA)(HANDLE, LPSTR, DWORD, DWORD);
-static DWORD (WINAPI* pGetFinalPathNameByHandleW)(HANDLE, LPWSTR, DWORD, DWORD);
+static DWORD (WINAPI *pGetFinalPathNameByHandleA)(HANDLE, LPSTR, DWORD, DWORD);
+static DWORD (WINAPI *pGetFinalPathNameByHandleW)(HANDLE, LPWSTR, DWORD, DWORD);
+static NTSTATUS (WINAPI *pNtCreateFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK,
+                                        PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
+static BOOL (WINAPI *pRtlDosPathNameToNtPathName_U)(LPCWSTR, PUNICODE_STRING, PWSTR*, CURDIR*);
+static NTSTATUS (WINAPI *pRtlAnsiStringToUnicodeString)(PUNICODE_STRING, PCANSI_STRING, BOOLEAN);
+static BOOL (WINAPI *pSetFileInformationByHandle)(HANDLE, FILE_INFO_BY_HANDLE_CLASS, void*, DWORD);
 
 static const char filename[] = "testfile.xxx";
 static const char sillytext[] =
@@ -72,7 +82,12 @@ struct test_list {
 
 static void InitFunctionPointers(void)
 {
+    HMODULE hntdll = GetModuleHandleA("ntdll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32");
+
+    pNtCreateFile = (void *)GetProcAddress(hntdll, "NtCreateFile");
+    pRtlDosPathNameToNtPathName_U = (void *)GetProcAddress(hntdll, "RtlDosPathNameToNtPathName_U");
+    pRtlAnsiStringToUnicodeString = (void *)GetProcAddress(hntdll, "RtlAnsiStringToUnicodeString");
 
     pFindFirstFileExA=(void*)GetProcAddress(hkernel32, "FindFirstFileExA");
     pReplaceFileA=(void*)GetProcAddress(hkernel32, "ReplaceFileA");
@@ -87,6 +102,7 @@ static void InitFunctionPointers(void)
     pCreateFile2 = (void *) GetProcAddress(hkernel32, "CreateFile2");
     pGetFinalPathNameByHandleA = (void *) GetProcAddress(hkernel32, "GetFinalPathNameByHandleA");
     pGetFinalPathNameByHandleW = (void *) GetProcAddress(hkernel32, "GetFinalPathNameByHandleW");
+    pSetFileInformationByHandle = (void *) GetProcAddress(hkernel32, "SetFileInformationByHandle");
 }
 
 static void test__hread( void )
@@ -243,15 +259,36 @@ static void test__lclose( void )
     ok( ret != 0, "DeleteFile failed (%d)\n", GetLastError(  ) );
 }
 
+/* helper function for test__lcreat */
+static void get_nt_pathW( const char *name, UNICODE_STRING *nameW )
+{
+    UNICODE_STRING strW;
+    ANSI_STRING str;
+    NTSTATUS status;
+    BOOLEAN ret;
+    RtlInitAnsiString( &str, name );
+
+    status = pRtlAnsiStringToUnicodeString( &strW, &str, TRUE );
+    ok( !status, "RtlAnsiStringToUnicodeString failed with %08x\n", status );
+
+    ret = pRtlDosPathNameToNtPathName_U( strW.Buffer, nameW, NULL, NULL );
+    ok( ret, "RtlDosPathNameToNtPathName_U failed\n" );
+
+    RtlFreeUnicodeString( &strW );
+}
 
 static void test__lcreat( void )
 {
+    UNICODE_STRING filenameW;
+    OBJECT_ATTRIBUTES attr;
+    IO_STATUS_BLOCK io;
     HFILE filehandle;
     char buffer[10000];
     WIN32_FIND_DATAA search_results;
     char slashname[] = "testfi/";
     int err;
-    HANDLE find;
+    HANDLE find, file;
+    NTSTATUS status;
     BOOL ret;
 
     filehandle = _lcreat( filename, 0 );
@@ -287,11 +324,63 @@ static void test__lcreat( void )
     ok( INVALID_HANDLE_VALUE != find, "should be able to find file\n" );
     FindClose( find );
 
+    SetLastError( 0xdeadbeef );
     ok( 0 == DeleteFileA( filename ), "shouldn't be able to delete a readonly file\n" );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "expected ERROR_ACCESS_DENIED, got %d\n", GetLastError() );
 
     ok( SetFileAttributesA(filename, FILE_ATTRIBUTE_NORMAL ) != 0, "couldn't change attributes on file\n" );
 
     ok( DeleteFileA( filename ) != 0, "now it should be possible to delete the file!\n" );
+
+    filehandle = _lcreat( filename, 1 ); /* readonly */
+    ok( HFILE_ERROR != filehandle, "couldn't create file \"%s\" (err=%d)\n", filename, GetLastError() );
+    ok( HFILE_ERROR != _hwrite( filehandle, sillytext, strlen(sillytext) ),
+        "_hwrite shouldn't be able to write never the less\n" );
+    ok( HFILE_ERROR != _lclose(filehandle), "_lclose complains\n" );
+
+    find = FindFirstFileA( filename, &search_results );
+    ok( INVALID_HANDLE_VALUE != find, "should be able to find file\n" );
+    FindClose( find );
+
+    get_nt_pathW( filename, &filenameW );
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.ObjectName = &filenameW;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    status = NtCreateFile( &file, GENERIC_READ | GENERIC_WRITE | DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                           FILE_OPEN, FILE_DELETE_ON_CLOSE | FILE_NON_DIRECTORY_FILE, NULL, 0 );
+    ok( status == STATUS_ACCESS_DENIED, "expected STATUS_ACCESS_DENIED, got %08x\n", status );
+    ok( GetFileAttributesA( filename ) != INVALID_FILE_ATTRIBUTES, "file was deleted\n" );
+
+    status = NtCreateFile( &file, DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                           FILE_OPEN, FILE_DELETE_ON_CLOSE | FILE_NON_DIRECTORY_FILE, NULL, 0 );
+    ok( status == STATUS_CANNOT_DELETE, "expected STATUS_CANNOT_DELETE, got %08x\n", status );
+
+    status = NtCreateFile( &file, DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                           FILE_OPEN, FILE_DELETE_ON_CLOSE | FILE_DIRECTORY_FILE, NULL, 0 );
+    ok( status == STATUS_NOT_A_DIRECTORY, "expected STATUS_NOT_A_DIRECTORY, got %08x\n", status );
+
+    status = NtCreateFile( &file, DELETE, &attr, &io, NULL, 0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                           FILE_OPEN_IF, FILE_DELETE_ON_CLOSE | FILE_NON_DIRECTORY_FILE, NULL, 0 );
+    todo_wine
+    ok( status == STATUS_CANNOT_DELETE, "expected STATUS_CANNOT_DELETE, got %08x\n", status );
+    if (!status) CloseHandle( file );
+
+    RtlFreeUnicodeString( &filenameW );
+
+    todo_wine
+    ok( GetFileAttributesA( filename ) != INVALID_FILE_ATTRIBUTES, "file was deleted\n" );
+    todo_wine
+    ok( SetFileAttributesA(filename, FILE_ATTRIBUTE_NORMAL ) != 0, "couldn't change attributes on file\n" );
+    todo_wine
+    ok( DeleteFileA( filename ) != 0, "now it should be possible to delete the file\n" );
 
     filehandle = _lcreat( filename, 2 );
     ok( HFILE_ERROR != filehandle, "couldn't create file \"%s\" (err=%d)\n", filename, GetLastError(  ) );
@@ -1024,6 +1113,57 @@ static void test_CopyFile2(void)
     DeleteFileW(dest);
 }
 
+static DWORD WINAPI copy_progress_cb(LARGE_INTEGER total_size, LARGE_INTEGER total_transferred,
+                                     LARGE_INTEGER stream_size, LARGE_INTEGER stream_transferred,
+                                     DWORD stream, DWORD reason, HANDLE source, HANDLE dest, LPVOID userdata)
+{
+    ok(reason == CALLBACK_STREAM_SWITCH, "expected CALLBACK_STREAM_SWITCH, got %u\n", reason);
+    CloseHandle(userdata);
+    return PROGRESS_CANCEL;
+}
+
+static void test_CopyFileEx(void)
+{
+    char temp_path[MAX_PATH];
+    char source[MAX_PATH], dest[MAX_PATH];
+    static const char prefix[] = "pfx";
+    HANDLE hfile;
+    DWORD ret;
+    BOOL retok;
+
+    ret = GetTempPathA(MAX_PATH, temp_path);
+    ok(ret != 0, "GetTempPathA error %d\n", GetLastError());
+    ok(ret < MAX_PATH, "temp path should fit into MAX_PATH\n");
+
+    ret = GetTempFileNameA(temp_path, prefix, 0, source);
+    ok(ret != 0, "GetTempFileNameA error %d\n", GetLastError());
+
+    ret = GetTempFileNameA(temp_path, prefix, 0, dest);
+    ok(ret != 0, "GetTempFileNameA error %d\n", GetLastError());
+
+    hfile = CreateFileA(dest, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "failed to open destination file, error %d\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    retok = CopyFileExA(source, dest, copy_progress_cb, hfile, NULL, 0);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_REQUEST_ABORTED, "expected ERROR_REQUEST_ABORTED, got %d\n", GetLastError());
+    ok(GetFileAttributesA(dest) != INVALID_FILE_ATTRIBUTES, "file was deleted\n");
+
+    hfile = CreateFileA(dest, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "failed to open destination file, error %d\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    retok = CopyFileExA(source, dest, copy_progress_cb, hfile, NULL, 0);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_REQUEST_ABORTED, "expected ERROR_REQUEST_ABORTED, got %d\n", GetLastError());
+    ok(GetFileAttributesA(dest) == INVALID_FILE_ATTRIBUTES, "file was not deleted\n");
+
+    ret = DeleteFileA(source);
+    ok(ret, "DeleteFileA failed with error %d\n", GetLastError());
+    ret = DeleteFileA(dest);
+    ok(!ret, "DeleteFileA unexpectedly succeeded\n");
+}
+
 /*
  *   Debugging routine to dump a buffer in a hexdump-like fashion.
  */
@@ -1646,14 +1786,12 @@ static void test_DeleteFileA( void )
 
     SetLastError(0xdeadbeef);
     ret = DeleteFileA(temp_file);
-todo_wine
     ok(ret, "DeleteFile error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = CloseHandle(hfile);
     ok(ret, "CloseHandle error %d\n", GetLastError());
     ret = DeleteFileA(temp_file);
-todo_wine
     ok(!ret, "DeleteFile should fail\n");
 
     SetLastError(0xdeadbeef);
@@ -3689,11 +3827,21 @@ else
 static void test_GetFileInformationByHandleEx(void)
 {
     int i;
-    char tempPath[MAX_PATH], tempFileName[MAX_PATH], buffer[1024];
+    char tempPath[MAX_PATH], tempFileName[MAX_PATH], buffer[1024], *strPtr;
     BOOL ret;
-    DWORD ret2;
-    HANDLE directory;
+    DWORD ret2, written;
+    HANDLE directory, file;
     FILE_ID_BOTH_DIR_INFO *bothDirInfo;
+    FILE_BASIC_INFO *basicInfo;
+    FILE_STANDARD_INFO *standardInfo;
+    FILE_NAME_INFO *nameInfo;
+    LARGE_INTEGER prevWrite;
+    FILE_IO_PRIORITY_HINT_INFO priohintinfo;
+    FILE_ALLOCATION_INFO allocinfo;
+    FILE_DISPOSITION_INFO dispinfo;
+    FILE_END_OF_FILE_INFO eofinfo;
+    FILE_RENAME_INFO renameinfo;
+
     struct {
         FILE_INFO_BY_HANDLE_CLASS handleClass;
         void *ptr;
@@ -3756,6 +3904,89 @@ static void test_GetFileInformationByHandleEx(void)
     }
 
     CloseHandle(directory);
+
+    file = CreateFileA(tempFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "GetFileInformationByHandleEx: failed to open the temp file, "
+        "got error %u.\n", GetLastError());
+
+    /* Test FileBasicInfo; make sure the write time changes when a file is updated */
+    memset(buffer, 0xff, sizeof(buffer));
+    ret = pGetFileInformationByHandleEx(file, FileBasicInfo, buffer, sizeof(buffer));
+    ok(ret, "GetFileInformationByHandleEx: failed to get FileBasicInfo, %u\n", GetLastError());
+    basicInfo = (FILE_BASIC_INFO *)buffer;
+    prevWrite = basicInfo->LastWriteTime;
+    CloseHandle(file);
+
+    Sleep(30); /* Make sure a new write time is different from the previous */
+
+    /* Write something to the file, to make sure the write time has changed */
+    file = CreateFileA(tempFileName, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "GetFileInformationByHandleEx: failed to open the temp file, "
+        "got error %u.\n", GetLastError());
+    ret = WriteFile(file, tempFileName, strlen(tempFileName), &written, NULL);
+    ok(ret, "GetFileInformationByHandleEx: Write failed\n");
+    CloseHandle(file);
+
+    file = CreateFileA(tempFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "GetFileInformationByHandleEx: failed to open the temp file, "
+        "got error %u.\n", GetLastError());
+
+    memset(buffer, 0xff, sizeof(buffer));
+    ret = pGetFileInformationByHandleEx(file, FileBasicInfo, buffer, sizeof(buffer));
+    ok(ret, "GetFileInformationByHandleEx: failed to get FileBasicInfo, %u\n", GetLastError());
+    basicInfo = (FILE_BASIC_INFO *)buffer;
+    /* Could also check that the creation time didn't change - on windows
+     * it doesn't, but on wine, it does change even if it shouldn't. */
+    ok(basicInfo->LastWriteTime.QuadPart != prevWrite.QuadPart,
+        "GetFileInformationByHandleEx: last write time didn't change\n");
+
+    /* Test FileStandardInfo, check some basic parameters */
+    memset(buffer, 0xff, sizeof(buffer));
+    ret = pGetFileInformationByHandleEx(file, FileStandardInfo, buffer, sizeof(buffer));
+    ok(ret, "GetFileInformationByHandleEx: failed to get FileStandardInfo, %u\n", GetLastError());
+    standardInfo = (FILE_STANDARD_INFO *)buffer;
+    ok(standardInfo->NumberOfLinks == 1, "GetFileInformationByHandleEx: Unexpcted number of links\n");
+    ok(standardInfo->DeletePending == FALSE, "GetFileInformationByHandleEx: Unexpcted pending delete\n");
+    ok(standardInfo->Directory == FALSE, "GetFileInformationByHandleEx: Incorrect directory flag\n");
+
+    /* Test FileNameInfo */
+    memset(buffer, 0xff, sizeof(buffer));
+    ret = pGetFileInformationByHandleEx(file, FileNameInfo, buffer, sizeof(buffer));
+    ok(ret, "GetFileInformationByHandleEx: failed to get FileNameInfo, %u\n", GetLastError());
+    nameInfo = (FILE_NAME_INFO *)buffer;
+    strPtr = strchr(tempFileName, '\\');
+    ok(strPtr != NULL, "GetFileInformationByHandleEx: Temp filename didn't contain backslash\n");
+    ok(nameInfo->FileNameLength == strlen(strPtr) * 2,
+        "GetFileInformationByHandleEx: Incorrect file name length\n");
+    for (i = 0; i < nameInfo->FileNameLength/2; i++)
+        ok(strPtr[i] == nameInfo->FileName[i], "Incorrect filename char %d: %c vs %c\n",
+            i, strPtr[i], nameInfo->FileName[i]);
+
+    /* invalid classes */
+    SetLastError(0xdeadbeef);
+    ret = pGetFileInformationByHandleEx(file, FileEndOfFileInfo, &eofinfo, sizeof(eofinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetFileInformationByHandleEx(file, FileIoPriorityHintInfo, &priohintinfo, sizeof(priohintinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetFileInformationByHandleEx(file, FileAllocationInfo, &allocinfo, sizeof(allocinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetFileInformationByHandleEx(file, FileDispositionInfo, &dispinfo, sizeof(dispinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetFileInformationByHandleEx(file, FileRenameInfo, &renameinfo, sizeof(renameinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    CloseHandle(file);
     DeleteFileA(tempFileName);
 }
 
@@ -4186,201 +4417,261 @@ todo_wine
     }
 }
 
-
 static void test_GetFinalPathNameByHandleA(void)
 {
     static char prefix[] = "GetFinalPathNameByHandleA";
     static char dos_prefix[] = "\\\\?\\";
     char temp_path[MAX_PATH], test_path[MAX_PATH];
     char long_path[MAX_PATH], result_path[MAX_PATH];
-    char dos_path[sizeof(dos_prefix) + MAX_PATH];
-    HANDLE hFile;
+    char dos_path[MAX_PATH + sizeof(dos_prefix)];
+    HANDLE file;
     DWORD count;
     UINT ret;
 
     if (!pGetFinalPathNameByHandleA)
     {
-        win_skip("GetFinalPathNameByHandleA is missing\n");
+        skip("GetFinalPathNameByHandleA is missing\n");
         return;
     }
 
     /* Test calling with INVALID_HANDLE_VALUE */
     SetLastError(0xdeadbeaf);
     count = pGetFinalPathNameByHandleA(INVALID_HANDLE_VALUE, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == 0, "Expected length 0, got %d\n", count);
-    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %x\n", GetLastError());
+    ok(count == 0, "Expected length 0, got %u\n", count);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %u\n", GetLastError());
 
     count = GetTempPathA(MAX_PATH, temp_path);
-    ok(count, "Failed to get temp path, error %x\n", GetLastError());
-    if (!count) return;
-
+    ok(count, "Failed to get temp path, error %u\n", GetLastError());
     ret = GetTempFileNameA(temp_path, prefix, 0, test_path);
-    ok(ret != 0, "GetTempFileNameA error %x\n", GetLastError());
-    if (!ret) return;
-
+    ok(ret != 0, "GetTempFileNameA error %u\n", GetLastError());
     ret = GetLongPathNameA(test_path, long_path, MAX_PATH);
-    ok(ret != 0, "GetLongPathNameA error %x\n", GetLastError());
-    if (!ret) return;
-
-    hFile = CreateFileA(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                        CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA error %x\n", GetLastError());
-    if (hFile == INVALID_HANDLE_VALUE) return;
-
-    dos_path[0] = 0;
-    strcat(dos_path, dos_prefix);
+    ok(ret != 0, "GetLongPathNameA error %u\n", GetLastError());
+    strcpy(dos_path, dos_prefix);
     strcat(dos_path, long_path);
+
+    file = CreateFileA(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                       CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA error %u\n", GetLastError());
 
     /* Test VOLUME_NAME_DOS with sufficient buffer size */
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleA(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    count = pGetFinalPathNameByHandleA(file, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
     ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
-    if (count && count <= MAX_PATH)
-        ok(lstrcmpiA(dos_path, result_path) == 0, "Expected %s, got %s\n", dos_path, result_path);
+    ok(lstrcmpiA(dos_path, result_path) == 0, "Expected %s, got %s\n", dos_path, result_path);
 
     /* Test VOLUME_NAME_DOS with insufficient buffer size */
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)-2, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    count = pGetFinalPathNameByHandleA(file, result_path, strlen(dos_path)-2, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
     ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
     ok(result_path[0] == 0x11, "Result path was modified\n");
 
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    count = pGetFinalPathNameByHandleA(file, result_path, strlen(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
     ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
     ok(result_path[0] == 0x11, "Result path was modified\n");
 
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    count = pGetFinalPathNameByHandleA(file, result_path, strlen(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
     ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
     ok(result_path[0] == 0x11, "Result path was modified\n");
 
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    count = pGetFinalPathNameByHandleA(file, result_path, strlen(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
     ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
     ok(result_path[0] != 0x11, "Result path was not modified\n");
+    ok(!result_path[strlen(dos_path)], "Expected nullterminated string\n");
     ok(result_path[strlen(dos_path)+1] == 0x11, "Buffer overflow\n");
 
-    CloseHandle(hFile);
+    CloseHandle(file);
 }
 
 static void test_GetFinalPathNameByHandleW(void)
 {
-    static WCHAR prefix[] = {'G','e','t','F','i','n','a','l','P','a','t','h','N','a','m','e','B','y','H','a','n','d','l','e','W','\0'};
+    static WCHAR prefix[] = {'G','e','t','F','i','n','a','l','P','a','t','h',
+                             'N','a','m','e','B','y','H','a','n','d','l','e','W','\0'};
     static WCHAR dos_prefix[] = {'\\','\\','?','\\','\0'};
     WCHAR temp_path[MAX_PATH], test_path[MAX_PATH];
     WCHAR long_path[MAX_PATH], result_path[MAX_PATH];
     WCHAR dos_path[MAX_PATH + sizeof(dos_prefix)];
     WCHAR drive_part[MAX_PATH];
     WCHAR *file_part;
-    WCHAR volume_path[MAX_PATH+50];
-    WCHAR nt_path[2*MAX_PATH];
-    HANDLE hFile;
+    WCHAR volume_path[MAX_PATH + 50];
+    WCHAR nt_path[2 * MAX_PATH];
+    BOOL success;
+    HANDLE file;
     DWORD count;
     UINT ret;
 
     if (!pGetFinalPathNameByHandleW)
     {
-        win_skip("GetFinalPathNameByHandleW is missing\n");
+        skip("GetFinalPathNameByHandleW is missing\n");
         return;
     }
 
     /* Test calling with INVALID_HANDLE_VALUE */
     SetLastError(0xdeadbeaf);
     count = pGetFinalPathNameByHandleW(INVALID_HANDLE_VALUE, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == 0, "Expected length 0, got %d\n", count);
-    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+    ok(count == 0, "Expected length 0, got %u\n", count);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %u\n", GetLastError());
 
     count = GetTempPathW(MAX_PATH, temp_path);
-    ok(count, "Failed to get temp path, error %d\n", GetLastError());
-    if (!count) return;
-
+    ok(count, "Failed to get temp path, error %u\n", GetLastError());
     ret = GetTempFileNameW(temp_path, prefix, 0, test_path);
-    ok(ret != 0, "GetTempFileNameW error %d\n", GetLastError());
-    if (!ret) return;
-
+    ok(ret != 0, "GetTempFileNameW error %u\n", GetLastError());
     ret = GetLongPathNameW(test_path, long_path, MAX_PATH);
-    ok(ret != 0, "GetLongPathNameW error %d\n", GetLastError());
-    if (!ret) return;
-
-    hFile = CreateFileW(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                        CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFileW error %d\n", GetLastError());
-    if (hFile == INVALID_HANDLE_VALUE) return;
-
-    dos_path[0] = 0;
-    lstrcatW(dos_path, dos_prefix);
+    ok(ret != 0, "GetLongPathNameW error %u\n", GetLastError());
+    lstrcpyW(dos_path, dos_prefix);
     lstrcatW(dos_path, long_path);
+
+    file = CreateFileW(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                       CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileW error %u\n", GetLastError());
 
     /* Test VOLUME_NAME_DOS with sufficient buffer size */
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == lstrlenW(dos_path), "Expected length %d, got %d\n", lstrlenW(dos_path), count);
-    if (count && count <= MAX_PATH)
-        ok(lstrcmpiW(dos_path, result_path) == 0, "Expected %s, got %s\n", wine_dbgstr_w(dos_path), wine_dbgstr_w(result_path));
+    count = pGetFinalPathNameByHandleW(file, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path), "Expected length %u, got %u\n", lstrlenW(dos_path), count);
+    ok(lstrcmpiW(dos_path, result_path) == 0, "Expected %s, got %s\n", wine_dbgstr_w(dos_path), wine_dbgstr_w(result_path));
 
     /* Test VOLUME_NAME_DOS with insufficient buffer size */
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == lstrlenW(dos_path) + 1, "Expected length %d, got %d\n", lstrlenW(dos_path) + 1, count);
+    count = pGetFinalPathNameByHandleW(file, result_path, lstrlenW(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path) + 1, "Expected length %u, got %u\n", lstrlenW(dos_path) + 1, count);
     ok(result_path[0] == 0x1111, "Result path was modified\n");
 
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == lstrlenW(dos_path) + 1, "Expected length %d, got %d\n", lstrlenW(dos_path) + 1, count);
+    count = pGetFinalPathNameByHandleW(file, result_path, lstrlenW(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path) + 1, "Expected length %u, got %u\n", lstrlenW(dos_path) + 1, count);
     ok(result_path[0] == 0x1111, "Result path was modified\n");
 
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-    ok(count == lstrlenW(dos_path), "Expected length %d, got %d\n", lstrlenW(dos_path), count);
+    count = pGetFinalPathNameByHandleW(file, result_path, lstrlenW(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path), "Expected length %u, got %u\n", lstrlenW(dos_path), count);
     ok(result_path[0] != 0x1111, "Result path was not modified\n");
+    ok(!result_path[lstrlenW(dos_path)], "Expected nullterminated string\n");
     ok(result_path[lstrlenW(dos_path)+1] == 0x1111, "Buffer overflow\n");
 
-    if (!GetVolumePathNameW(long_path, drive_part, MAX_PATH))
-    {
-        ok(0, "Failed to get drive part, error: %d\n", GetLastError());
-        CloseHandle(hFile);
-        return;
-    }
+    success = GetVolumePathNameW(long_path, drive_part, MAX_PATH);
+    ok(success, "GetVolumePathNameW error %u\n", GetLastError());
+    success = GetVolumeNameForVolumeMountPointW(drive_part, volume_path, sizeof(volume_path) / sizeof(WCHAR));
+    ok(success, "GetVolumeNameForVolumeMountPointW error %u\n", GetLastError());
 
-    if (!GetVolumeNameForVolumeMountPointW(drive_part, volume_path, sizeof(volume_path) / sizeof(WCHAR)))
-        ok(0, "GetVolumeNameForVolumeMountPointW failed, error: %d\n", GetLastError());
-    else
-    {
-        /* Test for VOLUME_NAME_GUID */
-        lstrcatW(volume_path, long_path + lstrlenW(drive_part));
-        memset(result_path, 0x11, sizeof(result_path));
-        count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_GUID);
-        ok(count == lstrlenW(volume_path), "Expected length %d, got %d\n", lstrlenW(volume_path), count);
-        if (count && count <= MAX_PATH)
-            ok(lstrcmpiW(volume_path, result_path) == 0, "Expected %s, got %s\n",
-               wine_dbgstr_w(volume_path), wine_dbgstr_w(result_path));
-    }
+    /* Test for VOLUME_NAME_GUID */
+    lstrcatW(volume_path, long_path + lstrlenW(drive_part));
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(file, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_GUID);
+    ok(count == lstrlenW(volume_path), "Expected length %u, got %u\n", lstrlenW(volume_path), count);
+    ok(lstrcmpiW(volume_path, result_path) == 0, "Expected %s, got %s\n",
+       wine_dbgstr_w(volume_path), wine_dbgstr_w(result_path));
 
     /* Test for VOLUME_NAME_NONE */
     file_part = long_path + lstrlenW(drive_part) - 1;
     memset(result_path, 0x11, sizeof(result_path));
-    count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NONE);
-    ok(count == lstrlenW(file_part), "Expected length %d, got %d\n", lstrlenW(file_part), count);
-    if (count && count <= MAX_PATH)
-        ok(lstrcmpiW(file_part, result_path) == 0, "Expected %s, got %s\n",
-           wine_dbgstr_w(file_part), wine_dbgstr_w(result_path));
+    count = pGetFinalPathNameByHandleW(file, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NONE);
+    ok(count == lstrlenW(file_part), "Expected length %u, got %u\n", lstrlenW(file_part), count);
+    ok(lstrcmpiW(file_part, result_path) == 0, "Expected %s, got %s\n",
+       wine_dbgstr_w(file_part), wine_dbgstr_w(result_path));
 
     drive_part[lstrlenW(drive_part)-1] = 0;
-    if (!QueryDosDeviceW(drive_part, nt_path, sizeof(nt_path) / sizeof(WCHAR)))
-        ok(0, "QueryDosDeviceW failed, error: %d\n", GetLastError());
-    else
+    success = QueryDosDeviceW(drive_part, nt_path, sizeof(nt_path) / sizeof(WCHAR));
+    ok(success, "QueryDosDeviceW error %u\n", GetLastError());
+
+    /* Test for VOLUME_NAME_NT */
+    lstrcatW(nt_path, file_part);
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(file, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NT);
+    ok(count == lstrlenW(nt_path), "Expected length %u, got %u\n", lstrlenW(nt_path), count);
+    ok(lstrcmpiW(nt_path, result_path) == 0, "Expected %s, got %s\n",
+       wine_dbgstr_w(nt_path), wine_dbgstr_w(result_path));
+
+    CloseHandle(file);
+}
+
+static void test_SetFileInformationByHandle(void)
+{
+    FILE_ATTRIBUTE_TAG_INFO fileattrinfo = { 0 };
+    FILE_REMOTE_PROTOCOL_INFO protinfo = { 0 };
+    FILE_STANDARD_INFO stdinfo;
+    FILE_COMPRESSION_INFO compressinfo;
+    FILE_DISPOSITION_INFO dispinfo;
+    char tempFileName[MAX_PATH];
+    char tempPath[MAX_PATH];
+    HANDLE file;
+    BOOL ret;
+
+    if (!pSetFileInformationByHandle)
     {
-        /* Test for VOLUME_NAME_NT */
-        lstrcatW(nt_path, file_part);
-        memset(result_path, 0x11, sizeof(result_path));
-        count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NT);
-        ok(count == lstrlenW(nt_path), "Expected length %d, got %d\n", lstrlenW(nt_path), count);
-        if (count && count <= MAX_PATH)
-            ok(lstrcmpiW(nt_path, result_path) == 0, "Expected %s, got %s\n",
-               wine_dbgstr_w(nt_path), wine_dbgstr_w(result_path));
+        win_skip("SetFileInformationByHandle is not supported\n");
+        return;
     }
 
-    CloseHandle(hFile);
+    ret = GetTempPathA(sizeof(tempPath), tempPath);
+    ok(ret, "GetTempPathA failed, got error %u.\n", GetLastError());
+
+    /* ensure the existence of a file in the temp folder */
+    ret = GetTempFileNameA(tempPath, "abc", 0, tempFileName);
+    ok(ret, "GetTempFileNameA failed, got error %u.\n", GetLastError());
+
+    file = CreateFileA(tempFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "failed to open the temp file, error %u.\n", GetLastError());
+
+    /* invalid classes */
+    SetLastError(0xdeadbeef);
+    ret = pSetFileInformationByHandle(file, FileStandardInfo, &stdinfo, sizeof(stdinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    memset(&compressinfo, 0, sizeof(compressinfo));
+    SetLastError(0xdeadbeef);
+    ret = pSetFileInformationByHandle(file, FileCompressionInfo, &compressinfo, sizeof(compressinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileInformationByHandle(file, FileAttributeTagInfo, &fileattrinfo, sizeof(fileattrinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    memset(&protinfo, 0, sizeof(protinfo));
+    protinfo.StructureVersion = 1;
+    protinfo.StructureSize = sizeof(protinfo);
+    SetLastError(0xdeadbeef);
+    ret = pSetFileInformationByHandle(file, FileRemoteProtocolInfo, &protinfo, sizeof(protinfo));
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+    /* test FileDispositionInfo, additional details already covered by ntdll tests */
+    SetLastError(0xdeadbeef);
+    ret = pSetFileInformationByHandle(file, FileDispositionInfo, &dispinfo, 0);
+todo_wine
+    ok(!ret && GetLastError() == ERROR_BAD_LENGTH, "got %d, error %d\n", ret, GetLastError());
+
+    dispinfo.DeleteFile = TRUE;
+    ret = pSetFileInformationByHandle(file, FileDispositionInfo, &dispinfo, sizeof(dispinfo));
+    ok(ret, "setting FileDispositionInfo failed, error %d\n", GetLastError());
+
+    CloseHandle(file);
+}
+
+static void test_GetFileAttributesExW(void)
+{
+    static const WCHAR path1[] = {'\\','\\','?','\\',0};
+    static const WCHAR path2[] = {'\\','?','?','\\',0};
+    static const WCHAR path3[] = {'\\','D','o','s','D','e','v','i','c','e','s','\\',0};
+    WIN32_FILE_ATTRIBUTE_DATA info;
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    ret = GetFileAttributesExW(path1, GetFileExInfoStandard, &info);
+    ok(!ret, "GetFileAttributesExW succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "Expected error ERROR_INVALID_NAME, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = GetFileAttributesExW(path2, GetFileExInfoStandard, &info);
+    ok(!ret, "GetFileAttributesExW succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "Expected error ERROR_INVALID_NAME, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = GetFileAttributesExW(path3, GetFileExInfoStandard, &info);
+    ok(!ret, "GetFileAttributesExW succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected error ERROR_FILE_NOT_FOUND, got %u\n", GetLastError());
 }
 
 START_TEST(file)
@@ -4399,6 +4690,7 @@ START_TEST(file)
     test_CopyFileA();
     test_CopyFileW();
     test_CopyFile2();
+    test_CopyFileEx();
     test_CreateFile();
     test_CreateFileA();
     test_CreateFileW();
@@ -4437,4 +4729,6 @@ START_TEST(file)
     test_file_access();
     test_GetFinalPathNameByHandleA();
     test_GetFinalPathNameByHandleW();
+    test_SetFileInformationByHandle();
+    test_GetFileAttributesExW();
 }

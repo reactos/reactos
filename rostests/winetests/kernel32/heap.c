@@ -39,6 +39,7 @@
 #define HEAP_VALIDATE_PARAMS  0x40000000
 
 static BOOL (WINAPI *pHeapQueryInformation)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T);
+static BOOL (WINAPI *pGetPhysicallyInstalledSystemMemory)(ULONGLONG *);
 static ULONG (WINAPI *pRtlGetNtGlobalFlags)(void);
 
 struct heap_layout
@@ -1145,6 +1146,38 @@ static void test_child_heap( const char *arg )
     test_heap_checks( expect_heap );
 }
 
+static void test_GetPhysicallyInstalledSystemMemory(void)
+{
+    HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
+    MEMORYSTATUSEX memstatus;
+    ULONGLONG total_memory;
+    BOOL ret;
+
+    pGetPhysicallyInstalledSystemMemory = (void *)GetProcAddress(kernel32, "GetPhysicallyInstalledSystemMemory");
+    if (!pGetPhysicallyInstalledSystemMemory)
+    {
+        win_skip("GetPhysicallyInstalledSystemMemory is not available\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    ret = pGetPhysicallyInstalledSystemMemory(NULL);
+    ok(!ret, "GetPhysicallyInstalledSystemMemory should fail\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    total_memory = 0;
+    ret = pGetPhysicallyInstalledSystemMemory(&total_memory);
+    ok(ret, "GetPhysicallyInstalledSystemMemory unexpectedly failed\n");
+    ok(total_memory != 0, "expected total_memory != 0\n");
+
+    memstatus.dwLength = sizeof(memstatus);
+    ret = GlobalMemoryStatusEx(&memstatus);
+    ok(ret, "GlobalMemoryStatusEx unexpectedly failed\n");
+    ok(total_memory >= memstatus.ullTotalPhys / 1024,
+       "expected total_memory >= memstatus.ullTotalPhys / 1024\n");
+}
+
 START_TEST(heap)
 {
     int argc;
@@ -1172,7 +1205,9 @@ START_TEST(heap)
     test_sized_HeapReAlloc(1, (1 << 20));
     test_sized_HeapReAlloc((1 << 20), (2 << 20));
     test_sized_HeapReAlloc((1 << 20), 1);
+
     test_HeapQueryInformation();
+    test_GetPhysicallyInstalledSystemMemory();
 
     if (pRtlGetNtGlobalFlags)
     {
