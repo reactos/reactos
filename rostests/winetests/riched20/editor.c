@@ -3307,6 +3307,8 @@ static void test_ES_PASSWORD(void)
   DestroyWindow(hwndRichEdit);
 }
 
+LONG streamout_written = 0;
+
 static DWORD CALLBACK test_WM_SETTEXT_esCallback(DWORD_PTR dwCookie,
                                          LPBYTE pbBuff,
                                          LONG cb,
@@ -3318,6 +3320,7 @@ static DWORD CALLBACK test_WM_SETTEXT_esCallback(DWORD_PTR dwCookie,
     memcpy(*str, pbBuff, *pcb);
     *str += *pcb;
   }
+  streamout_written = *pcb;
   return 0;
 }
 
@@ -3442,6 +3445,7 @@ static void test_EM_STREAMOUT(void)
   EDITSTREAM es;
   char buf[1024] = {0};
   char * p;
+  LRESULT result;
 
   const char * TestItem1 = "TestSomeText";
   const char * TestItem2 = "TestSomeText\r";
@@ -3453,24 +3457,28 @@ static void test_EM_STREAMOUT(void)
   es.dwError = 0;
   es.pfnCallback = test_WM_SETTEXT_esCallback;
   memset(buf, 0, sizeof(buf));
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
   r = strlen(buf);
   ok(r == 12, "streamed text length is %d, expecting 12\n", r);
   ok(strcmp(buf, TestItem1) == 0,
         "streamed text different, got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
 
   /* RTF mode writes the final end of para \r if it's part of the selection */
   p = buf;
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF, (LPARAM)&es);
   ok (count_pars(buf) == 1, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   p = buf;
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, 12);
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
   ok (count_pars(buf) == 0, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   p = buf;
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
   ok (count_pars(buf) == 1, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)TestItem2);
   p = buf;
@@ -3478,7 +3486,8 @@ static void test_EM_STREAMOUT(void)
   es.dwError = 0;
   es.pfnCallback = test_WM_SETTEXT_esCallback;
   memset(buf, 0, sizeof(buf));
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   r = strlen(buf);
   /* Here again, \r gets converted to \r\n, like WM_GETTEXT */
   ok(r == 14, "streamed text length is %d, expecting 14\n", r);
@@ -3487,16 +3496,19 @@ static void test_EM_STREAMOUT(void)
 
   /* And again RTF mode writes the final end of para \r if it's part of the selection */
   p = buf;
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF, (LPARAM)&es);
   ok (count_pars(buf) == 2, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   p = buf;
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, 13);
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
   ok (count_pars(buf) == 1, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   p = buf;
   SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_RTF|SFF_SELECTION, (LPARAM)&es);
   ok (count_pars(buf) == 2, "got %s\n", buf);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)TestItem3);
   p = buf;
@@ -3504,7 +3516,8 @@ static void test_EM_STREAMOUT(void)
   es.dwError = 0;
   es.pfnCallback = test_WM_SETTEXT_esCallback;
   memset(buf, 0, sizeof(buf));
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  ok(result == streamout_written, "got %ld expected %d\n", result, streamout_written);
   r = strlen(buf);
   ok(r == 14, "streamed text length is %d, expecting 14\n", r);
   ok(strcmp(buf, TestItem3) == 0,
@@ -3516,11 +3529,12 @@ static void test_EM_STREAMOUT(void)
   es.dwError = 0;
   es.pfnCallback = test_esCallback_written_1;
   memset(buf, 0, sizeof(buf));
-  SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
+  result = SendMessageA(hwndRichEdit, EM_STREAMOUT, SF_TEXT, (LPARAM)&es);
   r = strlen(buf);
   ok(r == 14, "streamed text length is %d, expecting 14\n", r);
   ok(strcmp(buf, TestItem3) == 0,
         "streamed text different, got %s\n", buf);
+  ok(result == 0, "got %ld expected 0\n", result);
 
 
   DestroyWindow(hwndRichEdit);
@@ -7857,6 +7871,170 @@ static void test_EM_SETREADONLY(void)
     DestroyWindow(richedit);
 }
 
+static inline LONG twips2points(LONG value)
+{
+    return value / 20;
+}
+
+#define TEST_EM_SETFONTSIZE(hwnd,size,expected_size,expected_res,expected_undo) \
+    _test_font_size(__LINE__,hwnd,size,expected_size,expected_res,expected_undo)
+static void _test_font_size(unsigned line, HWND hwnd, LONG size, LONG expected_size,
+                            LRESULT expected_res, BOOL expected_undo)
+{
+    CHARFORMAT2A cf;
+    LRESULT res;
+    BOOL isundo;
+
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_SIZE;
+
+    res = SendMessageA(hwnd, EM_SETFONTSIZE, size, 0);
+    SendMessageA(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+    isundo = SendMessageA(hwnd, EM_CANUNDO, 0, 0);
+    ok_(__FILE__,line)(res == expected_res, "EM_SETFONTSIZE unexpected return value: %lx.\n", res);
+    ok_(__FILE__,line)(twips2points(cf.yHeight) == expected_size, "got wrong font size: %d, expected: %d\n",
+                       twips2points(cf.yHeight), expected_size);
+    ok_(__FILE__,line)(isundo == expected_undo, "get wrong undo mark: %d, expected: %d.\n",
+                       isundo, expected_undo);
+}
+
+static void test_EM_SETFONTSIZE(void)
+{
+    HWND richedit = new_richedit(NULL);
+    CHAR text[] = "wine";
+    CHARFORMAT2A tmp_cf;
+    LONG default_size;
+
+    tmp_cf.cbSize = sizeof(tmp_cf);
+    tmp_cf.dwMask = CFM_SIZE;
+    tmp_cf.yHeight = 9 * 20.0;
+    SendMessageA(richedit, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&tmp_cf);
+
+    SendMessageA(richedit, WM_SETTEXT, 0, (LPARAM)text);
+
+    SendMessageA(richedit, EM_SETMODIFY, FALSE, 0);
+    /* without selection */
+    TEST_EM_SETFONTSIZE(richedit, 1, 10, TRUE, FALSE); /* 9 + 1 -> 10 */
+    SendMessageA(richedit, EM_GETCHARFORMAT, SCF_DEFAULT, (LPARAM)&tmp_cf);
+    default_size = twips2points(tmp_cf.yHeight);
+    ok(default_size == 9, "Default font size should not be changed.\n");
+    ok(SendMessageA(richedit, EM_SETMODIFY, 0, 0) == FALSE, "Modify flag should not be changed.\n");
+
+    SendMessageA(richedit, EM_SETSEL, 0, 2);
+
+    TEST_EM_SETFONTSIZE(richedit, 0, 9, TRUE, TRUE); /* 9 + 0 -> 9 */
+
+    SendMessageA(richedit, EM_SETMODIFY, FALSE, 0);
+    TEST_EM_SETFONTSIZE(richedit, 3, 12, TRUE, TRUE); /* 9 + 3 -> 12 */
+    ok(SendMessageA(richedit, EM_SETMODIFY, 0, 0) == FALSE, "Modify flag should not be changed.\n");
+
+    TEST_EM_SETFONTSIZE(richedit, 1, 14, TRUE, TRUE); /* 12 + 1 + 1 -> 14 */
+    TEST_EM_SETFONTSIZE(richedit, -1, 12, TRUE, TRUE); /* 14 - 1 - 1 -> 12 */
+    TEST_EM_SETFONTSIZE(richedit, 4, 16, TRUE, TRUE); /* 12 + 4 -> 16 */
+    TEST_EM_SETFONTSIZE(richedit, 3, 20, TRUE, TRUE); /* 16 + 3 + 1 -> 20 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 20, TRUE, TRUE); /* 20 + 0 -> 20 */
+    TEST_EM_SETFONTSIZE(richedit, 8, 28, TRUE, TRUE); /* 20 + 8 -> 28 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 28, TRUE, TRUE); /* 28 + 0 -> 28 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 36, TRUE, TRUE); /* 28 + 1 -> 36 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 36, TRUE, TRUE); /* 36 + 0 -> 36 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 48, TRUE, TRUE); /* 36 + 1 -> 48 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 48, TRUE, TRUE); /* 48 + 0 -> 48 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 72, TRUE, TRUE); /* 48 + 1 -> 72 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 72, TRUE, TRUE); /* 72 + 0 -> 72 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 80, TRUE, TRUE); /* 72 + 1 -> 80 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 80, TRUE, TRUE); /* 80 + 0 -> 80 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 90, TRUE, TRUE); /* 80 + 1 -> 90 */
+    TEST_EM_SETFONTSIZE(richedit, 0, 90, TRUE, TRUE); /* 90 + 0 -> 90 */
+    TEST_EM_SETFONTSIZE(richedit, 1, 100, TRUE, TRUE); /* 90 + 1 -> 100 */
+    TEST_EM_SETFONTSIZE(richedit, 25, 130, TRUE, TRUE); /* 100 + 25 -> 130 */
+    TEST_EM_SETFONTSIZE(richedit, -1, 120, TRUE, TRUE); /* 130 - 1 -> 120 */
+    TEST_EM_SETFONTSIZE(richedit, -35, 80, TRUE, TRUE); /* 120 - 35 -> 80 */
+    TEST_EM_SETFONTSIZE(richedit, -7, 72, TRUE, TRUE); /* 80 - 7 -> 72 */
+    TEST_EM_SETFONTSIZE(richedit, -42, 28, TRUE, TRUE); /* 72 - 42 -> 28 */
+    TEST_EM_SETFONTSIZE(richedit, -16, 12, TRUE, TRUE); /* 28 - 16 -> 12 */
+    TEST_EM_SETFONTSIZE(richedit, -3, 9, TRUE, TRUE); /* 12 - 3 -> 9 */
+    TEST_EM_SETFONTSIZE(richedit, -8, 1, TRUE, TRUE); /* 9 - 8 -> 1 */
+    TEST_EM_SETFONTSIZE(richedit, -111, 1, TRUE, TRUE); /* 1 - 111 -> 1 */
+    TEST_EM_SETFONTSIZE(richedit, 10086, 1638, TRUE, TRUE); /* 1 + 10086 -> 1638 */
+
+    /* return FALSE when richedit is TM_PLAINTEXT mode */
+    SendMessageA(richedit, WM_SETTEXT, 0, (LPARAM)"");
+    SendMessageA(richedit, EM_SETTEXTMODE, (WPARAM)TM_PLAINTEXT, 0);
+    TEST_EM_SETFONTSIZE(richedit, 0, 9, FALSE, FALSE);
+
+    DestroyWindow(richedit);
+}
+
+static void test_alignment_style(void)
+{
+    HWND richedit = NULL;
+    PARAFORMAT2 pf;
+    DWORD align_style[] = {ES_LEFT, ES_CENTER, ES_RIGHT, ES_RIGHT | ES_CENTER,
+                           ES_LEFT | ES_CENTER, ES_LEFT | ES_RIGHT,
+                           ES_LEFT | ES_RIGHT | ES_CENTER};
+    DWORD align_mask[] = {PFA_LEFT, PFA_CENTER, PFA_RIGHT, PFA_CENTER, PFA_CENTER,
+                          PFA_RIGHT, PFA_CENTER};
+    const char * streamtext =
+        "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang12298{\\fonttbl{\\f0\\fswiss\\fprq2\\fcharset0 System;}}\r\n"
+        "\\viewkind4\\uc1\\pard\\f0\\fs17 TestSomeText\\par\r\n"
+        "}\r\n";
+    EDITSTREAM es;
+    int i;
+
+    for (i = 0; i < sizeof(align_style) / sizeof(align_style[0]); i++)
+    {
+        DWORD dwStyle, new_align;
+
+        richedit = new_windowW(RICHEDIT_CLASS20W, align_style[i], NULL);
+        memset(&pf, 0, sizeof(pf));
+        pf.cbSize = sizeof(PARAFORMAT2);
+        pf.dwMask = -1;
+
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.wAlignment == align_mask[i], "(i = %d) got %d expected %d\n",
+           i, pf.wAlignment, align_mask[i]);
+        dwStyle = GetWindowLongW(richedit, GWL_STYLE);
+        ok((i ? (dwStyle & align_style[i]) : (!(dwStyle & 0x0000000f))) ,
+           "(i = %d) didn't set right align style: 0x%x\n", i, dwStyle);
+
+
+        /* Based on test_reset_default_para_fmt() */
+        new_align = (align_mask[i] == PFA_LEFT) ? PFA_RIGHT : PFA_LEFT;
+        simulate_typing_characters(richedit, "123");
+
+        SendMessageW(richedit, EM_SETSEL, 0, -1);
+        pf.dwMask = PFM_ALIGNMENT;
+        pf.wAlignment = new_align;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.wAlignment == new_align, "got %d expect %d\n", pf.wAlignment, new_align);
+
+        SendMessageW(richedit, EM_SETSEL, 0, -1);
+        SendMessageW(richedit, WM_CUT, 0, 0);
+
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.wAlignment == align_mask[i], "got %d exppect %d\n", pf.wAlignment, align_mask[i]);
+
+        DestroyWindow(richedit);
+    }
+
+    /* test with EM_STREAMIN */
+    richedit = new_windowW(RICHEDIT_CLASS20W, ES_CENTER, NULL);
+    simulate_typing_characters(richedit, "abc");
+    es.dwCookie = (DWORD_PTR)&streamtext;
+    es.dwError = 0;
+    es.pfnCallback = test_EM_STREAMIN_esCallback;
+    SendMessageW(richedit, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+    SendMessageW(richedit, EM_SETSEL, 0, -1);
+    memset(&pf, 0, sizeof(pf));
+    pf.cbSize = sizeof(PARAFORMAT2);
+    pf.dwMask = -1;
+    SendMessageW(richedit, EM_GETPARAFORMAT, SCF_SELECTION, (LPARAM)&pf);
+    ok(pf.wAlignment == ES_CENTER, "got %d expected ES_CENTER\n", pf.wAlignment);
+    DestroyWindow(richedit);
+}
+
 START_TEST( editor )
 {
   BOOL ret;
@@ -7922,6 +8100,8 @@ START_TEST( editor )
   test_WM_CREATE();
   test_reset_default_para_fmt();
   test_EM_SETREADONLY();
+  test_EM_SETFONTSIZE();
+  test_alignment_style();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
