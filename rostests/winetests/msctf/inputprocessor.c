@@ -921,6 +921,7 @@ static void test_EnumInputProcessorInfo(void)
             if(IsEqualGUID(&g,&CLSID_FakeService))
                 found = TRUE;
         }
+        IEnumGUID_Release(ppEnum);
     }
     ok(found,"Did not find registered text service\n");
 }
@@ -943,6 +944,7 @@ static void test_EnumLanguageProfiles(void)
                 ok(IsEqualGUID(&profile.guidProfile,&CLSID_FakeService), "guidProfile Incorrect\n");
             }
         }
+        IEnumTfLanguageProfiles_Release(ppEnum);
     }
     ok(found,"Registered text service not found\n");
 }
@@ -1407,6 +1409,7 @@ static void test_startSession(void)
     ITfContext *cxt,*cxt2,*cxt3,*cxtTest;
     ITextStoreACP *ts;
     TfClientId cid2 = 0;
+    ITfThreadMgrEx *tmex;
 
     hr = ITfThreadMgr_Deactivate(g_tm);
     ok(hr == E_UNEXPECTED,"Deactivate should have failed with E_UNEXPECTED\n");
@@ -1419,10 +1422,21 @@ static void test_startSession(void)
     test_ShouldActivate = FALSE;
     hr = ITfThreadMgr_Activate(g_tm,&cid2);
     ok(SUCCEEDED(hr),"Failed to Activate\n");
-    ok (cid == cid2, "Second activate client ID does not match\n");
+    ok(cid == cid2, "Second activate client ID does not match\n");
+
+    hr = ITfThreadMgr_QueryInterface(g_tm, &IID_ITfThreadMgrEx, (void **)&tmex);
+    ok(SUCCEEDED(hr), "Unable to acquire ITfThreadMgrEx interface\n");
+
+    hr = ITfThreadMgrEx_ActivateEx(tmex, &cid2, 0);
+    ok(SUCCEEDED(hr), "Failed to Activate\n");
+    ok(cid == cid2, "ActivateEx client ID does not match\n");
+
+    ITfThreadMgrEx_Release(tmex);
 
     hr = ITfThreadMgr_Deactivate(g_tm);
-    ok(SUCCEEDED(hr),"Failed to Deactivate\n");
+    ok(SUCCEEDED(hr), "Failed to Deactivate\n");
+    hr = ITfThreadMgr_Deactivate(g_tm);
+    ok(SUCCEEDED(hr), "Failed to Deactivate\n");
 
     test_EnumDocumentMgr(g_tm,NULL,NULL);
 
