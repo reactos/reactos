@@ -86,15 +86,12 @@ static const char gif_frame_sizes[] = {
 
 static IWICImagingFactory *factory;
 
-static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size)
+static IStream *create_stream(const void *image_data, UINT image_size)
 {
     HGLOBAL hmem;
     BYTE *data;
     HRESULT hr;
-    IWICBitmapDecoder *decoder = NULL;
     IStream *stream;
-    GUID format;
-    LONG refcount;
 
     hmem = GlobalAlloc(0, image_size);
     data = GlobalLock(hmem);
@@ -103,6 +100,20 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
 
     hr = CreateStreamOnHGlobal(hmem, TRUE, &stream);
     ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+
+    return stream;
+}
+
+static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size)
+{
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IStream *stream;
+    GUID format;
+    LONG refcount;
+
+    stream = create_stream(image_data, image_size);
+    if (!stream) return NULL;
 
     hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
     ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
@@ -408,6 +419,83 @@ static void test_gif_frame_sizes(void)
     IWICBitmapDecoder_Release(decoder);
 }
 
+static const char gif_with_trailer_1[] = {
+/* LSD */'G','I','F','8','7','a',0x01,0x00,0x01,0x00,0x80,0x00,0x00,
+/* palette */0xff,0xff,0xff,0xff,0xff,0xff,
+/* IMD */0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,
+/* image data */0x02,0x02,0x44,0x01,0x00,0x3b
+};
+static const char gif_with_trailer_2[] = {
+/* LSD */'G','I','F','8','7','a',0x01,0x00,0x01,0x00,0x00,0x00,0x00,
+/* IMD */0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,
+/* image data */0x02,0x02,0x44,0x3b
+};
+static const char gif_without_trailer_1[] = {
+/* LSD */'G','I','F','8','7','a',0x01,0x00,0x01,0x00,0x80,0x00,0x00,
+/* palette */0xff,0xff,0xff,0xff,0xff,0xff,
+/* IMD */0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,
+/* image data */0x02,0x02,0x44,0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef
+};
+
+static const char gif_without_trailer_2[] = {
+/* LSD */'G','I','F','8','7','a',0x01,0x00,0x01,0x00,0x00,0x00,0x00,
+/* IMD */0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,
+/* image data */0x02,0x02,0x44,0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef
+};
+
+static void test_truncated_gif(void)
+{
+    HRESULT hr;
+    IStream *stream;
+    IWICBitmapDecoder *decoder;
+    GUID format;
+
+    stream = create_stream(gif_with_trailer_1, sizeof(gif_with_trailer_1));
+    if (!stream) return;
+
+    hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
+    ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
+    ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
+    IWICBitmapDecoder_Release(decoder);
+    IStream_Release(stream);
+
+    stream = create_stream(gif_with_trailer_2, sizeof(gif_with_trailer_2));
+    if (!stream) return;
+    hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
+    ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
+    ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
+    IWICBitmapDecoder_Release(decoder);
+    IStream_Release(stream);
+
+    stream = create_stream(gif_without_trailer_1, sizeof(gif_without_trailer_1));
+    if (!stream) return;
+    hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
+    ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
+    ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
+    IWICBitmapDecoder_Release(decoder);
+    IStream_Release(stream);
+
+    stream = create_stream(gif_without_trailer_2, sizeof(gif_without_trailer_2));
+    if (!stream) return;
+    hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
+    ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
+    ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
+    IWICBitmapDecoder_Release(decoder);
+    IStream_Release(stream);
+}
+
 START_TEST(gifformat)
 {
     HRESULT hr;
@@ -434,6 +522,7 @@ START_TEST(gifformat)
     test_global_gif_palette_2frames();
     test_local_gif_palette();
     test_gif_frame_sizes();
+    test_truncated_gif();
 
     IWICImagingFactory_Release(factory);
 }

@@ -176,6 +176,7 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
 
     hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
     ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    if (FAILED(hr)) return NULL;
 
     hr = IWICBitmapDecoder_GetContainerFormat(decoder, &guid);
     ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
@@ -196,6 +197,7 @@ static void test_tiff_palette(void)
 
     decoder = create_decoder(&tiff_1bpp_data, sizeof(tiff_1bpp_data));
     ok(decoder != 0, "Failed to load TIFF image data\n");
+    if (!decoder) return;
 
     hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
     ok(hr == S_OK, "GetFrame error %#x\n", hr);
@@ -237,6 +239,7 @@ static void test_QueryCapability(void)
 
     hr = IWICImagingFactory_CreateDecoder(factory, &GUID_ContainerFormatTiff, NULL, &decoder);
     ok(hr == S_OK, "CreateDecoder error %#x\n", hr);
+    if (FAILED(hr)) return;
 
     frame_count = 0xdeadbeef;
     hr = IWICBitmapDecoder_GetFrameCount(decoder, &frame_count);
@@ -328,6 +331,7 @@ static void test_tiff_8bpp_alpha(void)
 
     decoder = create_decoder(&tiff_8bpp_alpha, sizeof(tiff_8bpp_alpha));
     ok(decoder != 0, "Failed to load TIFF image data\n");
+    if (!decoder) return;
 
     hr = IWICBitmapDecoder_GetFrameCount(decoder, &frame_count);
     ok(hr == S_OK, "GetFrameCount error %#x\n", hr);
