@@ -58,6 +58,7 @@ static int (__cdecl *p_memmove_s)(void *, size_t, const void *, size_t);
 static int* (__cdecl *pmemcmp)(void *, const void *, size_t n);
 static int (__cdecl *pstrcpy_s)(char *dst, size_t len, const char *src);
 static int (__cdecl *pstrcat_s)(char *dst, size_t len, const char *src);
+static int (__cdecl *p_mbscat_s)(unsigned char *dst, size_t size, const unsigned char *src);
 static int (__cdecl *p_mbsnbcat_s)(unsigned char *dst, size_t size, const unsigned char *src, size_t count);
 static int (__cdecl *p_mbsnbcpy_s)(unsigned char * dst, size_t size, const unsigned char * src, size_t count);
 static int (__cdecl *p__mbscpy_s)(unsigned char*, size_t, const unsigned char*);
@@ -732,6 +733,86 @@ static void test_strcat_s(void)
     ok(ret == EINVAL, "strcat_s: Writing to a NULL string returned %d, expected EINVAL\n", ret);
 }
 
+static void test__mbscat_s(void)
+{
+    unsigned char dst[8], src[4];
+    int err;
+    int prev_cp = _getmbcp();
+
+    if(!p_mbscat_s)
+    {
+        win_skip("_mbscat_s not found\n");
+        return;
+    }
+
+
+    src[0] = dst[0] = 0;
+    err = p_mbscat_s(NULL, sizeof(dst), src);
+    ok(err == EINVAL, "_mbscat_s returned %d\n", err);
+
+    err = p_mbscat_s(dst, sizeof(dst), NULL);
+    ok(err == EINVAL, "_mbscat_s returned %d\n", err);
+
+    dst[0] = 'a';
+    err = p_mbscat_s(dst, 1, src);
+    ok(err == EINVAL, "_mbscat_s returned %d\n", err);
+
+    memset(dst, 'a', sizeof(dst));
+    dst[6] = 0;
+    src[0] = 'b';
+    src[1] = 0;
+
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == 0, "_mbscat_s returned %d\n", err);
+    ok(!memcmp(dst, "aaaaaab", 8), "dst = %s\n", dst);
+
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == ERANGE, "_mbscat_s returned %d\n", err);
+    ok(!dst[0], "dst[0] = %c\n", dst[0]);
+    ok(dst[1] == 'a', "dst[1] = %c\n", dst[1]);
+
+    _setmbcp(932);
+    /* test invalid str in dst */
+    dst[0] = 0x81;
+    dst[1] = 0x81;
+    dst[2] = 0x52;
+    dst[3] = 0;
+    src[0] = 'a';
+    src[1] = 0;
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == 0, "_mbscat_s returned %d\n", err);
+
+    /* test invalid str in src */
+    dst[0] = 0;
+    src[0] = 0x81;
+    src[1] = 0x81;
+    src[2] = 0x52;
+    src[3] = 0;
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == 0, "_mbscat_s returned %d\n", err);
+
+    /* test dst with leading byte on the end of buffer */
+    dst[0] = 'a';
+    dst[1] = 0x81;
+    dst[2] = 0;
+    src[0] = 'R';
+    src[1] = 0;
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == EILSEQ, "_mbscat_s returned %d\n", err);
+    ok(!memcmp(dst, "aR", 3), "dst = %s\n", dst);
+
+    /* test src with leading byte on the end of buffer */
+    dst[0] = 'a';
+    dst[1] = 0;
+    src[0] = 'b';
+    src[1] = 0x81;
+    src[2] = 0;
+    err = p_mbscat_s(dst, sizeof(dst), src);
+    ok(err == EILSEQ, "_mbscat_s returned %d\n", err);
+    ok(!memcmp(dst, "ab", 3), "dst = %s\n", dst);
+    _setmbcp(prev_cp);
+}
+
 static void test__mbsnbcpy_s(void)
 {
     unsigned char dest[8];
@@ -1027,7 +1108,7 @@ static void test__wcslwr_s(void)
 
     /* Test NULL input string and valid size. */
     errno = EBADF;
-    ret = p_wcslwr_s(NULL, sizeof(buffer)/sizeof(wchar_t));
+    ret = p_wcslwr_s(NULL, sizeof(buffer)/sizeof(buffer[0]));
     ok(ret == EINVAL, "expected EINVAL, got %d\n", ret);
     ok(errno == EINVAL, "expected errno EINVAL, got %d\n", errno);
 
@@ -1403,6 +1484,8 @@ static void test_strtok(void)
 
 static void test_strtol(void)
 {
+    static char neg[] = "-0x";
+
     char* e;
     LONG l;
     ULONG ul;
@@ -1459,6 +1542,12 @@ static void test_strtol(void)
     ul = strtoul("-4294967296", NULL, 0);
     ok(ul == 1, "wrong value %u\n", ul);
     ok(errno == ERANGE, "wrong errno %d\n", errno);
+
+    errno = 0;
+    l = strtol(neg, &e, 0);
+    ok(l == 0, "wrong value %d\n", l);
+    ok(errno == 0, "wrong errno %d\n", errno);
+    ok(e == neg, "e = %p, neg = %p\n", e, neg);
 }
 
 static void test_strnlen(void)
@@ -1639,6 +1728,7 @@ static void test__strtod(void)
     const char double3[] = "INF";
     const char double4[] = ".21e12";
     const char double5[] = "214353e-3";
+    const char double6[] = "NAN";
     const char overflow[] = "1d9999999999999999999";
     const char white_chars[] = "  d10";
 
@@ -1665,6 +1755,10 @@ static void test__strtod(void)
     ok(almost_equal(d, 214.353), "d = %lf\n", d);
     ok(end == double5+9, "incorrect end (%d)\n", (int)(end-double5));
 
+    d = strtod(double6, &end);
+    ok(almost_equal(d, 0), "d = %lf\n", d);
+    ok(end == double6, "incorrect end (%d)\n", (int)(end-double6));
+
     d = strtod("12.1d2", NULL);
     ok(almost_equal(d, 12.1e2), "d = %lf\n", d);
 
@@ -1678,7 +1772,7 @@ static void test__strtod(void)
     {
         errno = EBADF;
         d = strtod(NULL, NULL);
-        ok(almost_equal(d, 0.0), "d =  %lf\n", d);
+        ok(almost_equal(d, 0.0), "d = %lf\n", d);
         ok(errno == EINVAL, "errno = %x\n", errno);
 
         errno = EBADF;
@@ -2514,6 +2608,7 @@ static void test_wctomb(void)
 
 static void test_tolower(void)
 {
+    WCHAR chw, lower;
     char ch, lch;
     int ret, len;
 
@@ -2544,7 +2639,10 @@ static void test_tolower(void)
     ch = 0xF4;
     errno = 0xdeadbeef;
     ret = p_tolower(ch);
-    len = LCMapStringA(0, LCMAP_LOWERCASE, &ch, 1, &lch, 1);
+    if(!MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, &ch, 1, &chw, 1) ||
+            LCMapStringW(CP_ACP, LCMAP_LOWERCASE, &chw, 1, &lower, 1) != 1 ||
+            (len = WideCharToMultiByte(CP_ACP, 0, &lower, 1, &lch, 1, NULL, NULL)) != 1)
+        len = 0;
     if(len)
         ok(ret==(unsigned char)lch || broken(ret==ch)/*WinXP-*/, "ret = %x\n", ret);
     else
@@ -2555,7 +2653,10 @@ static void test_tolower(void)
     ch = 0xD0;
     errno = 0xdeadbeef;
     ret = p_tolower(ch);
-    len = LCMapStringA(0, LCMAP_LOWERCASE, &ch, 1, &lch, 1);
+    if(!MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, &ch, 1, &chw, 1) ||
+            LCMapStringW(CP_ACP, LCMAP_LOWERCASE, &chw, 1, &lower, 1) != 1 ||
+            (len = WideCharToMultiByte(CP_ACP, 0, &lower, 1, &lch, 1, NULL, NULL)) != 1)
+        len = 0;
     if(len)
         ok(ret==(unsigned char)lch || broken(ret==ch)/*WinXP-*/, "ret = %x\n", ret);
     else
@@ -2976,6 +3077,7 @@ START_TEST(string)
     SET(p__mb_cur_max,"__mb_cur_max");
     pstrcpy_s = (void *)GetProcAddress( hMsvcrt,"strcpy_s" );
     pstrcat_s = (void *)GetProcAddress( hMsvcrt,"strcat_s" );
+    p_mbscat_s = (void*)GetProcAddress( hMsvcrt, "_mbscat_s" );
     p_mbsnbcat_s = (void *)GetProcAddress( hMsvcrt,"_mbsnbcat_s" );
     p_mbsnbcpy_s = (void *)GetProcAddress( hMsvcrt,"_mbsnbcpy_s" );
     p__mbscpy_s = (void *)GetProcAddress( hMsvcrt,"_mbscpy_s" );
@@ -3029,6 +3131,7 @@ START_TEST(string)
     test_memcpy_s();
     test_memmove_s();
     test_strcat_s();
+    test__mbscat_s();
     test__mbsnbcpy_s();
     test__mbscpy_s();
     test_mbcjisjms();

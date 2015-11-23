@@ -321,6 +321,11 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"D"),"I64D failed: %s\n",buffer);
     ok( r==1, "return count wrong\n");
 
+    format = "%zx";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer, "zx"), "Problem with \"z\" interpretation\n");
+    ok( r==2, "return count wrong\n");
+
     format = "% d";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer, " 1"),"Problem with sign place-holder: '%s'\n",buffer);
@@ -413,10 +418,20 @@ static void test_sprintf( void )
         ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
         ok( r==16, "return count wrong\n");
 
+        format = "%Np";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==16, "return count wrong\n");
+
         format = "%#-020p";
         r = sprintf(buffer,format,(void *)57);
         ok(!strcmp(buffer,"0X0000000000000039  "),"Pointer formatted incorrectly\n");
         ok( r==20, "return count wrong\n");
+
+        format = "%Ix %d";
+        r = sprintf(buffer,format,(size_t)0x12345678123456,1);
+        ok(!strcmp(buffer,"12345678123456 1"),"buffer = %s\n",buffer);
+        ok( r==16, "return count wrong\n");
     }
     else
     {
@@ -435,10 +450,20 @@ static void test_sprintf( void )
         ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
         ok( r==8, "return count wrong\n");
 
+        format = "%Np";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==8, "return count wrong\n");
+
         format = "%#-012p";
         r = sprintf(buffer,format,(void *)57);
         ok(!strcmp(buffer,"0X00000039  "),"Pointer formatted incorrectly\n");
         ok( r==12, "return count wrong\n");
+
+        format = "%Ix %d";
+        r = sprintf(buffer,format,0x123456,1);
+        ok(!strcmp(buffer,"123456 1"),"buffer = %s\n",buffer);
+        ok( r==8, "return count wrong\n");
     }
 
     format = "%04s";
@@ -670,6 +695,11 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,""), "failed\n");
     ok( r==0, "return count wrong\n");
 
+    format = "%N";
+    r = sprintf(buffer, format,-1);
+    ok(!strcmp(buffer,""), "failed\n");
+    ok( r==0, "return count wrong\n");
+
     format = "%H";
     r = sprintf(buffer, format,-1);
     ok(!strcmp(buffer,"H"), "failed\n");
@@ -787,7 +817,7 @@ static void test_snprintf (void)
             fmt, expect, n);
         ok (!memcmp (fmt, buffer, valid),
             "\"%s\": rendered \"%.*s\"\n", fmt, valid, buffer);
-    };
+    }
 }
 
 static void test_fprintf(void)

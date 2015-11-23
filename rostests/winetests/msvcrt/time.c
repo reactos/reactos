@@ -763,12 +763,12 @@ static void test_asctime(void)
     gmt = 0;
     gmt_tm = p_gmtime(&gmt);
     ret = p_asctime(gmt_tm);
-    ok(!strcmp(ret, "Thu Jan 01 00:00:00 1970\n"), "asctime retunred %s\n", ret);
+    ok(!strcmp(ret, "Thu Jan 01 00:00:00 1970\n"), "asctime returned %s\n", ret);
 
     gmt = 312433121;
     gmt_tm = p_gmtime(&gmt);
     ret = p_asctime(gmt_tm);
-    ok(!strcmp(ret, "Mon Nov 26 02:58:41 1979\n"), "asctime retunred %s\n", ret);
+    ok(!strcmp(ret, "Mon Nov 26 02:58:41 1979\n"), "asctime returned %s\n", ret);
 
     /* Week day is only checked if it's in 0..6 range */
     gmt_tm->tm_wday = 3;
