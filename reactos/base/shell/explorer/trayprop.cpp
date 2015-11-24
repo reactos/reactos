@@ -123,6 +123,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
             else
             {
+                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
                 EnableWindow(hwndSeconds, FALSE);
                 lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
             }
@@ -140,6 +141,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
             else
             {
+                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
                 EnableWindow(hwndSeconds, FALSE);
                 lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
             }
