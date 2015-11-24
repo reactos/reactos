@@ -77,6 +77,7 @@ static struct {
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
+static UINT (WINAPI *pGetRawInputDeviceList) (PRAWINPUTDEVICELIST, PUINT, UINT);
 
 #define MAXKEYEVENTS 12
 #define MAXKEYMESSAGES MAXKEYEVENTS /* assuming a key event generates one
@@ -160,6 +161,7 @@ static void init_function_pointers(void)
 
     GET_PROC(SendInput)
     GET_PROC(GetMouseMovePointsEx)
+    GET_PROC(GetRawInputDeviceList)
 
 #undef GET_PROC
 }
@@ -1486,6 +1488,53 @@ static void test_GetMouseMovePointsEx(void)
 #undef MYERROR
 }
 
+static void test_GetRawInputDeviceList(void)
+{
+    RAWINPUTDEVICELIST devices[32];
+    UINT ret, oret, devcount, odevcount;
+    DWORD err;
+
+    SetLastError(0xdeadbeef);
+    ret = pGetRawInputDeviceList(NULL, NULL, 0);
+    err = GetLastError();
+    ok(ret == -1, "expected -1, got %d\n", ret);
+    ok(err == ERROR_INVALID_PARAMETER, "expected 87, got %d\n", err);
+
+    SetLastError(0xdeadbeef);
+    ret = pGetRawInputDeviceList(NULL, NULL, sizeof(devices[0]));
+    err = GetLastError();
+    ok(ret == -1, "expected -1, got %d\n", ret);
+    ok(err == ERROR_NOACCESS, "expected 998, got %d\n", err);
+
+    devcount = 0;
+    ret = pGetRawInputDeviceList(NULL, &devcount, sizeof(devices[0]));
+    ok(ret == 0, "expected 0, got %d\n", ret);
+    ok(devcount > 0, "expected non-zero\n");
+
+    SetLastError(0xdeadbeef);
+    devcount = 0;
+    ret = pGetRawInputDeviceList(devices, &devcount, sizeof(devices[0]));
+    err = GetLastError();
+    ok(ret == -1, "expected -1, got %d\n", ret);
+    ok(err == ERROR_INSUFFICIENT_BUFFER, "expected 122, got %d\n", err);
+    ok(devcount > 0, "expected non-zero\n");
+
+    /* devcount contains now the correct number of devices */
+    ret = pGetRawInputDeviceList(devices, &devcount, sizeof(devices[0]));
+    ok(ret > 0, "expected non-zero\n");
+
+    /* check if variable changes from larger to smaller value */
+    devcount = odevcount = sizeof(devices) / sizeof(devices[0]);
+    oret = ret = pGetRawInputDeviceList(devices, &odevcount, sizeof(devices[0]));
+    ok(ret > 0, "expected non-zero\n");
+    ok(devcount == odevcount, "expected %d, got %d\n", devcount, odevcount);
+    devcount = odevcount;
+    odevcount = sizeof(devices) / sizeof(devices[0]);
+    ret = pGetRawInputDeviceList(NULL, &odevcount, sizeof(devices[0]));
+    ok(ret == 0, "expected 0, got %d\n", ret);
+    ok(odevcount == oret, "expected %d, got %d\n", oret, odevcount);
+}
+
 static void test_key_map(void)
 {
     HKL kl = GetKeyboardLayout(0);
@@ -1538,6 +1587,56 @@ static void test_key_map(void)
     }
 }
 
+#define shift 1
+#define ctrl  2
+
+static const struct tounicode_tests
+{
+    UINT vk;
+    DWORD modifiers;
+    WCHAR chr; /* if vk is 0, lookup vk using this char */
+    int expect_ret;
+    WCHAR expect_buf[4];
+} utests[] =
+{
+    { 'A', 0, 0, 1, {'a',0}},
+    { 'A', ctrl, 0, 1, {1, 0}},
+    { 'A', shift|ctrl, 0, 1, {1, 0}},
+    { VK_TAB, ctrl, 0, 0, {0}},
+    { VK_TAB, shift|ctrl, 0, 0, {0}},
+    { VK_RETURN, ctrl, 0, 1, {'\n', 0}},
+    { VK_RETURN, shift|ctrl, 0, 0, {0}},
+    { '4', ctrl, 0, 0, {0}},
+    { '4', shift|ctrl, 0, 0, {0}},
+    { 0, ctrl, '!', 0, {0}},
+    { 0, ctrl, '\"', 0, {0}},
+    { 0, ctrl, '#', 0, {0}},
+    { 0, ctrl, '$', 0, {0}},
+    { 0, ctrl, '%', 0, {0}},
+    { 0, ctrl, '\'', 0, {0}},
+    { 0, ctrl, '(', 0, {0}},
+    { 0, ctrl, ')', 0, {0}},
+    { 0, ctrl, '*', 0, {0}},
+    { 0, ctrl, '+', 0, {0}},
+    { 0, ctrl, ',', 0, {0}},
+    { 0, ctrl, '-', 0, {0}},
+    { 0, ctrl, '.', 0, {0}},
+    { 0, ctrl, '/', 0, {0}},
+    { 0, ctrl, ':', 0, {0}},
+    { 0, ctrl, ';', 0, {0}},
+    { 0, ctrl, '<', 0, {0}},
+    { 0, ctrl, '=', 0, {0}},
+    { 0, ctrl, '>', 0, {0}},
+    { 0, ctrl, '?', 0, {0}},
+    { 0, ctrl, '@', 1, {0}},
+    { 0, ctrl, '[', 1, {0x1b}},
+    { 0, ctrl, '\\', 1, {0x1c}},
+    { 0, ctrl, ']', 1, {0x1d}},
+    { 0, ctrl, '^', 1, {0x1e}},
+    { 0, ctrl, '_', 1, {0x1f}},
+    { 0, ctrl, '`', 0, {0}},
+};
+
 static void test_ToUnicode(void)
 {
     WCHAR wStr[4];
@@ -1565,30 +1664,32 @@ static void test_ToUnicode(void)
            "ToUnicode didn't null-terminate the buffer when there was room.\n");
     }
 
-    ret = ToUnicode('A', SC_A, state, wStr, 4, 0);
-    ok(ret == 1, "ToUnicode for character A didn't return 1 (was %i)\n", ret);
-    ok(wStr[0] == 'a', "ToUnicode for character 'A' was %i (expected %i)\n", wStr[0], 'a');
+    for (i = 0; i < sizeof(utests) / sizeof(utests[0]); i++)
+    {
+        UINT vk = utests[i].vk, mod = utests[i].modifiers, scan;
 
-    state[VK_CONTROL] |= HIGHEST_BIT;
-    state[VK_LCONTROL] |= HIGHEST_BIT;
-    ret = ToUnicode(VK_TAB, SC_TAB, state, wStr, 2, 0);
-    ok(ret == 0, "ToUnicode for CTRL + Tab didn't return 0 (was %i)\n", ret);
+        if(!vk)
+        {
+            short vk_ret = VkKeyScanW(utests[i].chr);
+            if (vk_ret == -1) continue;
+            vk = vk_ret & 0xff;
+            if (vk_ret & 0x100) mod |= shift;
+            if (vk_ret & 0x200) mod |= ctrl;
+        }
+        scan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
 
-    ret = ToUnicode(VK_RETURN, SC_RETURN, state, wStr, 2, 0);
-    ok(ret == 1, "ToUnicode for CTRL + Return didn't return 1 (was %i)\n", ret);
-    if(ret == 1)
-        ok(wStr[0]=='\n', "ToUnicode for CTRL + Return was %i (expected 10)\n", wStr[0]);
+        state[VK_SHIFT]   = state[VK_LSHIFT]   = (mod & shift) ? HIGHEST_BIT : 0;
+        state[VK_CONTROL] = state[VK_LCONTROL] = (mod & ctrl) ? HIGHEST_BIT : 0;
 
-    ret = ToUnicode('A', SC_A, state, wStr, 4, 0);
-    ok(ret == 1, "ToUnicode for CTRL + character A didn't return 1 (was %i)\n", ret);
-    ok(wStr[0] == 1, "ToUnicode for CTRL + character 'A' was %i (expected 1)\n", wStr[0]);
+        ret = ToUnicode(vk, scan, state, wStr, 4, 0);
+        ok(ret == utests[i].expect_ret, "%d: got %d expected %d\n", i, ret, utests[i].expect_ret);
+        if (ret)
+            ok(!lstrcmpW(wStr, utests[i].expect_buf), "%d: got %s expected %s\n", i, wine_dbgstr_w(wStr),
+                wine_dbgstr_w(utests[i].expect_buf));
 
-    state[VK_SHIFT] |= HIGHEST_BIT;
-    state[VK_LSHIFT] |= HIGHEST_BIT;
-    ret = ToUnicode(VK_TAB, SC_TAB, state, wStr, 2, 0);
-    ok(ret == 0, "ToUnicode for CTRL + SHIFT + Tab didn't return 0 (was %i)\n", ret);
-    ret = ToUnicode(VK_RETURN, SC_RETURN, state, wStr, 2, 0);
-    todo_wine ok(ret == 0, "ToUnicode for CTRL + SHIFT + Return didn't return 0 (was %i)\n", ret);
+    }
+    state[VK_SHIFT]   = state[VK_LSHIFT]   = 0;
+    state[VK_CONTROL] = state[VK_LCONTROL] = 0;
 
     ret = ToUnicode(VK_TAB, SC_TAB, NULL, wStr, 4, 0);
     ok(ret == 0, "ToUnicode with NULL keystate didn't return 0 (was %i)\n", ret);
@@ -1639,7 +1740,7 @@ static void test_ToAscii(void)
     state[VK_SHIFT] |= HIGHEST_BIT;
     state[VK_LSHIFT] |= HIGHEST_BIT;
     ret = ToAscii(VK_RETURN, SC_RETURN, state, &character, 0);
-    todo_wine ok(ret == 0, "ToAscii for CTRL + Shift + Return key didn't return 0 (was %i)\n", ret);
+    ok(ret == 0, "ToAscii for CTRL + Shift + Return key didn't return 0 (was %i)\n", ret);
 
     ret = ToAscii(VK_RETURN, SC_RETURN, NULL, &character, 0);
     ok(ret == 0, "ToAscii for NULL keystate didn't return 0 (was %i)\n", ret);
@@ -2326,6 +2427,69 @@ static void test_attach_input(void)
     DestroyWindow(Wnd2);
 }
 
+static DWORD WINAPI get_key_state_thread(void *arg)
+{
+    HANDLE *semaphores = arg;
+    DWORD result;
+
+    ReleaseSemaphore(semaphores[0], 1, NULL);
+    result = WaitForSingleObject(semaphores[1], 1000);
+    ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
+
+    result = GetKeyState('X');
+    ok((result & 0x8000) || broken(!(result & 0x8000)), /* > Win 2003 */
+       "expected that highest bit is set, got %x\n", result);
+
+    ReleaseSemaphore(semaphores[0], 1, NULL);
+    result = WaitForSingleObject(semaphores[1], 1000);
+    ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
+
+    result = GetKeyState('X');
+    ok(!(result & 0x8000), "expected that highest bit is unset, got %x\n", result);
+
+    return 0;
+}
+
+static void test_GetKeyState(void)
+{
+    HANDLE semaphores[2];
+    HANDLE thread;
+    DWORD result;
+    HWND hwnd;
+
+    semaphores[0] = CreateSemaphoreA(NULL, 0, 1, NULL);
+    ok(semaphores[0] != NULL, "CreateSemaphoreA failed %u\n", GetLastError());
+    semaphores[1] = CreateSemaphoreA(NULL, 0, 1, NULL);
+    ok(semaphores[1] != NULL, "CreateSemaphoreA failed %u\n", GetLastError());
+
+    hwnd = CreateWindowA("static", "Title", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                         10, 10, 200, 200, NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "CreateWindowA failed %u\n", GetLastError());
+
+    thread = CreateThread(NULL, 0, get_key_state_thread, semaphores, 0, NULL);
+    ok(thread != NULL, "CreateThread failed %u\n", GetLastError());
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
+
+    SetFocus(hwnd);
+    keybd_event('X', 0, 0, 0);
+
+    ReleaseSemaphore(semaphores[1], 1, NULL);
+    result = WaitForSingleObject(semaphores[0], 1000);
+    ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
+
+    keybd_event('X', 0, KEYEVENTF_KEYUP, 0);
+
+    ReleaseSemaphore(semaphores[1], 1, NULL);
+    result = WaitForSingleObject(thread, 1000);
+    ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
+    CloseHandle(thread);
+
+    DestroyWindow(hwnd);
+    CloseHandle(semaphores[0]);
+    CloseHandle(semaphores[1]);
+}
+
 START_TEST(input)
 {
     init_function_pointers();
@@ -2348,9 +2512,15 @@ START_TEST(input)
     test_keyboard_layout_name();
     test_key_names();
     test_attach_input();
+    test_GetKeyState();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();
     else
         win_skip("GetMouseMovePointsEx is not available\n");
+
+    if(pGetRawInputDeviceList)
+        test_GetRawInputDeviceList();
+    else
+        win_skip("GetRawInputDeviceList is not available\n");
 }
