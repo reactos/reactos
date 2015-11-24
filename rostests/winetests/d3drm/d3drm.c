@@ -1947,6 +1947,137 @@ static void test_frame_qi(void)
     IDirect3DRM_Release(d3drm1);
 }
 
+static void test_device_qi(void)
+{
+    static const struct qi_test tests[] =
+    {
+        { &IID_IDirect3DRM3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRM2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRM,                NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMDevice,          &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRMDevice2,         &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRMDevice3,         &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRMWinDevice,       &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRMViewport,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMViewport2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFrame,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFrame2,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFrame3,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMVisual,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMesh,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMeshBuilder,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFace,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFace2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMLight,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMTexture,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMTexture2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMTexture3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMWrap,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMaterial,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMMaterial2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMAnimation,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMAnimation2,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMAnimationSet,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMAnimationSet2,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMObjectArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMDeviceArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMViewportArray,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFrameArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMVisualArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMLightArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMPickedArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMFaceArray,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMAnimationArray,  NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMUserVisual,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMShadow,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMShadow2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMInterpolator,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMProgressiveMesh, NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMPicked2Array,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DRMClippedVisual,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawClipper,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawSurface7,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawSurface4,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawSurface3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawSurface2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDrawSurface,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DDevice7,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DDevice3,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DDevice2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DDevice,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3D7,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3D3,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3D2,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3D,                  NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDraw7,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDraw4,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDraw3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDraw2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirectDraw,                NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IDirect3DLight,             NULL,                    CLASS_E_CLASSNOTAVAILABLE},
+        { &IID_IUnknown,                   &IID_IUnknown,           S_OK,                    },
+    };
+    HRESULT hr;
+    IDirect3DRM *d3drm1;
+    IDirect3DRM2 *d3drm2;
+    IDirect3DRM3 *d3drm3;
+    IDirectDrawClipper *clipper;
+    IDirect3DRMDevice *device1;
+    IDirect3DRMDevice2 *device2;
+    IDirect3DRMDevice3 *device3;
+    IUnknown *unknown;
+    HWND window;
+    GUID driver;
+    RECT rc;
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+    hr = DirectDrawCreateClipper(0, &clipper, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x)\n", hr);
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
+    ok(hr == DD_OK, "Cannot set HWnd to Clipper (hr = %x)\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
+    memcpy(&driver, &IID_IDirect3DRGBDevice, sizeof(GUID));
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, rc.right, rc.bottom, &device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %x)\n", hr);
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice (hr = %x)\n", hr);
+    IDirect3DRMDevice_Release(device1);
+    test_qi("device1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM2 interface (hr = %x).\n", hr);
+    hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, clipper, &driver, rc.right, rc.bottom, &device2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 interface (hr = %x)\n", hr);
+    hr = IDirect3DRMDevice2_QueryInterface(device2, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice2 (hr = %x)\n", hr);
+    IDirect3DRMDevice2_Release(device2);
+    test_qi("device2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, rc.right, rc.bottom, &device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %x)\n", hr);
+    IDirect3DRMDevice3_QueryInterface(device3, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice3 (hr = %x)\n", hr);
+    IDirect3DRMDevice3_Release(device3);
+    test_qi("device3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    IDirectDrawClipper_Release(clipper);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    DestroyWindow(window);
+}
+
 static HRESULT CALLBACK surface_callback(IDirectDrawSurface *surface, DDSURFACEDESC *desc, void *context)
 {
     IDirectDrawSurface **primary = context;
@@ -1961,14 +2092,180 @@ static HRESULT CALLBACK surface_callback(IDirectDrawSurface *surface, DDSURFACED
     return DDENUMRET_OK;
 }
 
-static void test_create_device_from_clipper(void)
+static void test_create_device_from_clipper1(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    IDirect3DRM *d3drm1 = NULL;
+    IDirectDraw *ddraw = NULL;
+    IUnknown *unknown = NULL;
+    IDirect3DRMDevice *device1 = (IDirect3DRMDevice *)0xdeadbeef;
+    IDirect3DDevice *d3ddevice1 = NULL;
+    IDirectDrawClipper *clipper = NULL, *d3drm_clipper = NULL;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
+    IDirectDrawSurface7 *surface7 = NULL;
+    DDSURFACEDESC desc, surface_desc;
+    DWORD expected_flags;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    HRESULT hr;
+    ULONG ref1, ref2, cref1, cref2;
+    RECT rc;
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 500, 400, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+    hr = DirectDrawCreateClipper(0, &clipper, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x).\n", hr);
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
+    ok(hr == DD_OK, "Cannot set HWnd to Clipper (hr = %x).\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    cref1 = get_refcount((IUnknown *)clipper);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, 0, 0, &device1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device1 == NULL, "Expected device returned == NULL, got %p.\n", device1);
+
+    /* If NULL is passed for clipper, CreateDeviceFromClipper returns D3DRMERR_BADVALUE */
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, NULL, &driver, 300, 200, &device1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, 300, 200, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, 300, 200, &device1);
+    ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice interface (hr = %x).\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
+    cref2 = get_refcount((IUnknown *)clipper);
+    ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+
+    /* Fetch immediate mode device in order to access render target */
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3ddevice1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice_QueryInterface(d3ddevice1, &IID_IDirectDrawSurface, (void **)&surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    hr = IDirectDrawSurface_GetClipper(surface, &d3drm_clipper);
+    ok(hr == DDERR_NOCLIPPERATTACHED, "Expected hr == DDERR_NOCLIPPERATTACHED, got %x.\n", hr);
+
+    /* Check if CreateDeviceFromClipper creates a primary surface and attaches the clipper to it */
+    hr = IDirectDrawSurface_QueryInterface(surface, &IID_IDirectDrawSurface7, (void **)&surface7);
+    ok(hr == DD_OK, "Cannot get IDirectDrawSurface7 interface (hr = %x).\n", hr);
+    IDirectDrawSurface7_GetDDInterface(surface7, (void **)&unknown);
+    hr = IUnknown_QueryInterface(unknown, &IID_IDirectDraw, (void **)&ddraw);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+    IUnknown_Release(unknown);
+    hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &d3drm_primary, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(d3drm_primary != NULL, "No primary surface was enumerated.\n");
+    hr = IDirectDrawSurface_GetClipper(d3drm_primary, &d3drm_clipper);
+    ok(hr == DD_OK, "Cannot get attached clipper from primary surface (hr = %x).\n", hr);
+    ok(d3drm_clipper == clipper, "Expected clipper returned == %p, got %p.\n", clipper , d3drm_clipper);
+
+    IDirectDrawClipper_Release(d3drm_clipper);
+    IDirectDrawSurface_Release(d3drm_primary);
+    IDirectDrawSurface7_Release(surface7);
+    IDirectDraw_Release(ddraw);
+
+    /* Check properties of render target and depth surface */
+    surface_desc.dwSize = sizeof(surface_desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &surface_desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+
+    ok((surface_desc.dwWidth == 300) && (surface_desc.dwHeight == 200), "Expected surface dimensions = 300, 200, got %u, %u.\n",
+            surface_desc.dwWidth, surface_desc.dwHeight);
+    ok((surface_desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
+            "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, surface_desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(surface_desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, surface_desc.dwFlags);
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    ok(desc.ddpfPixelFormat.dwRGBBitCount == surface_desc.ddpfPixelFormat.dwRGBBitCount, "Expected %u bpp, got %u bpp.\n",
+            surface_desc.ddpfPixelFormat.dwRGBBitCount, desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == 300) && (desc.dwHeight == 200), "Expected surface dimensions = 300, 200, got %u, %u.\n",
+            desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+    ok(desc.dwZBufferBitDepth == 16, "Expected 16 for Z buffer bit depth, got %u.\n", desc.dwZBufferBitDepth);
+    ok(desc.ddpfPixelFormat.dwStencilBitMask == 0, "Expected 0 stencil bits, got %x.\n", desc.ddpfPixelFormat.dwStencilBitMask);
+
+    /* Release old objects and check refcount of device and clipper */
+    IDirectDrawSurface_Release(ds);
+    ds = NULL;
+    IDirectDrawSurface_Release(surface);
+    surface = NULL;
+    IDirect3DDevice_Release(d3ddevice1);
+    d3ddevice1 = NULL;
+    IDirect3DRMDevice_Release(device1);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref2, "expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
+    cref2 = get_refcount((IUnknown *)clipper);
+    ok(cref1 == cref2, "expected cref1 == cref2, got cref1 = %u, cref2 = %u.\n", cref1, cref2);
+
+    /* Test if render target format follows the screen format */
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    hr = IDirectDraw_SetDisplayMode(ddraw, desc.dwWidth, desc.dwHeight, 16);
+    ok(hr == DD_OK, "Cannot set display mode to 16bpp (hr = %x).\n", hr);
+
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    ok(desc.ddpfPixelFormat.dwRGBBitCount == 16, "Expected 16 bpp, got %u.\n", desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, rc.right, rc.bottom, &device1);
+    ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3ddevice1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice_QueryInterface(d3ddevice1, &IID_IDirectDrawSurface, (void **)&surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    surface_desc.dwSize = sizeof(surface_desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &surface_desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+    todo_wine ok(surface_desc.ddpfPixelFormat.dwRGBBitCount == 16, "Expected 16bpp, got %ubpp.\n",
+            surface_desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirectDraw2_RestoreDisplayMode(ddraw);
+    ok(SUCCEEDED(hr), "RestoreDisplayMode failed, hr %#x.\n", hr);
+
+    if (ds)
+        IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice_Release(d3ddevice1);
+    IDirect3DRMDevice_Release(device1);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDrawClipper_Release(clipper);
+    IDirectDraw_Release(ddraw);
+    DestroyWindow(window);
+}
+
+static void test_create_device_from_clipper2(void)
 {
     DDSCAPS caps = { DDSCAPS_ZBUFFER };
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRM2 *d3drm2 = NULL;
     IDirectDraw *ddraw = NULL;
     IUnknown *unknown = NULL;
-    IDirect3DRMDevice2 *device2 = NULL;
+    IDirect3DRMDevice2 *device2 = (IDirect3DRMDevice2 *)0xdeadbeef;
     IDirect3DDevice2 *d3ddevice2 = NULL;
     IDirectDrawClipper *clipper = NULL, *d3drm_clipper = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
@@ -1998,26 +2295,28 @@ static void test_create_device_from_clipper(void)
     ref2 = get_refcount((IUnknown *)d3drm2);
 
     hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, clipper, &driver, 0, 0, &device2);
-    todo_wine ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device2 == NULL, "Expected device returned == NULL, got %p.\n", device2);
 
     /* If NULL is passed for clipper, CreateDeviceFromClipper returns D3DRMERR_BADVALUE */
-    hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, NULL, &driver, 0, 0, &device2);
-    todo_wine ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, NULL, &driver, 300, 200, &device2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, clipper, &driver, 300, 200, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
 
     hr = IDirect3DRM2_CreateDeviceFromClipper(d3drm2, clipper, &driver, 300, 200, &device2);
     ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice2 interface (hr = %x).\n", hr);
     ref3 = get_refcount((IUnknown *)d3drm1);
-    todo_wine ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
     ref3 = get_refcount((IUnknown *)d3drm2);
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     cref2 = get_refcount((IUnknown *)clipper);
-    todo_wine ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+    ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
 
     /* Fetch immediate mode device in order to access render target */
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
-    todo_wine ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    if (FAILED(hr))
-        goto cleanup;
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &surface);
     ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
@@ -2033,18 +2332,15 @@ static void test_create_device_from_clipper(void)
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
     IUnknown_Release(unknown);
     hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
-        NULL, &d3drm_primary, surface_callback);
+            NULL, &d3drm_primary, surface_callback);
     ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
     ok(d3drm_primary != NULL, "No primary surface was enumerated.\n");
     hr = IDirectDrawSurface_GetClipper(d3drm_primary, &d3drm_clipper);
     ok(hr == DD_OK, "Cannot get attached clipper from primary surface (hr = %x).\n", hr);
-    if (SUCCEEDED(hr))
-    {
-        ok(d3drm_clipper == clipper, "Expected clipper returned == %p, got %p.\n", clipper , d3drm_clipper);
-        IDirectDrawClipper_Release(d3drm_clipper);
-    }
-    if (d3drm_primary)
-        IDirectDrawSurface_Release(d3drm_primary);
+    ok(d3drm_clipper == clipper, "Expected clipper returned == %p, got %p.\n", clipper , d3drm_clipper);
+
+    IDirectDrawClipper_Release(d3drm_clipper);
+    IDirectDrawSurface_Release(d3drm_primary);
     IDirectDrawSurface7_Release(surface7);
     IDirectDraw_Release(ddraw);
 
@@ -2054,7 +2350,7 @@ static void test_create_device_from_clipper(void)
     ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
 
     ok((surface_desc.dwWidth == 300) && (surface_desc.dwHeight == 200), "Expected surface dimensions = 300, 200, got %u, %u.\n",
-        surface_desc.dwWidth, surface_desc.dwHeight);
+            surface_desc.dwWidth, surface_desc.dwHeight);
     ok((surface_desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
             "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, surface_desc.ddsCaps.dwCaps);
     expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
@@ -2096,7 +2392,7 @@ static void test_create_device_from_clipper(void)
     ref3 = get_refcount((IUnknown *)d3drm2);
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     cref2 = get_refcount((IUnknown *)clipper);
-    todo_wine ok(cref1 == cref2, "expected cref1 == cref2, got cref1 = %u, cref2 = %u.\n", cref1, cref2);
+    ok(cref1 == cref2, "expected cref1 == cref2, got cref1 = %u, cref2 = %u.\n", cref1, cref2);
 
     /* Test if render target format follows the screen format */
     hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
@@ -2112,9 +2408,7 @@ static void test_create_device_from_clipper(void)
     ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
-    todo_wine ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    if (FAILED(hr))
-        goto cleanup;
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &surface);
     ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
@@ -2128,34 +2422,365 @@ static void test_create_device_from_clipper(void)
     hr = IDirectDraw2_RestoreDisplayMode(ddraw);
     ok(SUCCEEDED(hr), "RestoreDisplayMode failed, hr %#x.\n", hr);
 
-cleanup:
-    if (ds)
-        IDirectDrawSurface_Release(ds);
-    if (surface)
-        IDirectDrawSurface_Release(surface);
-    if (d3ddevice2)
-        IDirect3DDevice2_Release(d3ddevice2);
-    if (device2)
-        IDirect3DRMDevice2_Release(device2);
-    if (d3drm2)
-        IDirect3DRM2_Release(d3drm2);
-    if (d3drm1)
-        IDirect3DRM_Release(d3drm1);
-    if (clipper)
-        IDirectDrawClipper_Release(clipper);
-    if (ddraw)
-        IDirectDraw_Release(ddraw);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice2_Release(device2);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDrawClipper_Release(clipper);
+    IDirectDraw_Release(ddraw);
     DestroyWindow(window);
 }
 
-static void test_create_device_from_surface(void)
+static void test_create_device_from_clipper3(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRM3 *d3drm3 = NULL;
+    IDirectDraw *ddraw = NULL;
+    IUnknown *unknown = NULL;
+    IDirect3DRMDevice3 *device3 = (IDirect3DRMDevice3 *)0xdeadbeef;
+    IDirect3DDevice2 *d3ddevice2 = NULL;
+    IDirectDrawClipper *clipper = NULL, *d3drm_clipper = NULL;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
+    IDirectDrawSurface7 *surface7 = NULL;
+    DDSURFACEDESC desc, surface_desc;
+    DWORD expected_flags;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    HRESULT hr;
+    ULONG ref1, ref2, ref3, cref1, cref2;
+    RECT rc;
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 500, 400, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+    hr = DirectDrawCreateClipper(0, &clipper, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x).\n", hr);
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
+    ok(hr == DD_OK, "Cannot set HWnd to Clipper (hr = %x).\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    cref1 = get_refcount((IUnknown *)clipper);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm3);
+
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, 0, 0, &device3);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device3 == NULL, "Expected device returned == NULL, got %p.\n", device3);
+
+    /* If NULL is passed for clipper, CreateDeviceFromClipper returns D3DRMERR_BADVALUE */
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, NULL, &driver, 300, 200, &device3);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, 300, 200, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, 300, 200, &device3);
+    ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    cref2 = get_refcount((IUnknown *)clipper);
+    ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+
+    /* Fetch immediate mode device in order to access render target */
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    hr = IDirectDrawSurface_GetClipper(surface, &d3drm_clipper);
+    ok(hr == DDERR_NOCLIPPERATTACHED, "Expected hr == DDERR_NOCLIPPERATTACHED, got %x.\n", hr);
+
+    /* Check if CreateDeviceFromClipper creates a primary surface and attaches the clipper to it */
+    hr = IDirectDrawSurface_QueryInterface(surface, &IID_IDirectDrawSurface7, (void **)&surface7);
+    ok(hr == DD_OK, "Cannot get IDirectDrawSurface7 interface (hr = %x).\n", hr);
+    IDirectDrawSurface7_GetDDInterface(surface7, (void **)&unknown);
+    hr = IUnknown_QueryInterface(unknown, &IID_IDirectDraw, (void **)&ddraw);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+    IUnknown_Release(unknown);
+    hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &d3drm_primary, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(d3drm_primary != NULL, "No primary surface was enumerated.\n");
+    hr = IDirectDrawSurface_GetClipper(d3drm_primary, &d3drm_clipper);
+    ok(hr == DD_OK, "Cannot get attached clipper from primary surface (hr = %x).\n", hr);
+    ok(d3drm_clipper == clipper, "Expected clipper returned == %p, got %p.\n", clipper , d3drm_clipper);
+
+    IDirectDrawClipper_Release(d3drm_clipper);
+    IDirectDrawSurface_Release(d3drm_primary);
+    IDirectDrawSurface7_Release(surface7);
+    IDirectDraw_Release(ddraw);
+
+    /* Check properties of render target and depth surface */
+    surface_desc.dwSize = sizeof(surface_desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &surface_desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+
+    ok((surface_desc.dwWidth == 300) && (surface_desc.dwHeight == 200), "Expected surface dimensions = 300, 200, got %u, %u.\n",
+            surface_desc.dwWidth, surface_desc.dwHeight);
+    ok((surface_desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
+            "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, surface_desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(surface_desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, surface_desc.dwFlags);
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    ok(desc.ddpfPixelFormat.dwRGBBitCount == surface_desc.ddpfPixelFormat.dwRGBBitCount, "Expected %u bpp, got %u bpp.\n",
+            surface_desc.ddpfPixelFormat.dwRGBBitCount, desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == 300) && (desc.dwHeight == 200), "Expected surface dimensions = 300, 200, got %u, %u.\n",
+            desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+    ok(desc.dwZBufferBitDepth == 16, "Expected 16 for Z buffer bit depth, got %u.\n", desc.dwZBufferBitDepth);
+    ok(desc.ddpfPixelFormat.dwStencilBitMask == 0, "Expected 0 stencil bits, got %x.\n", desc.ddpfPixelFormat.dwStencilBitMask);
+
+    /* Release old objects and check refcount of device and clipper */
+    IDirectDrawSurface_Release(ds);
+    ds = NULL;
+    IDirectDrawSurface_Release(surface);
+    surface = NULL;
+    IDirect3DDevice2_Release(d3ddevice2);
+    d3ddevice2 = NULL;
+    IDirect3DRMDevice3_Release(device3);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    cref2 = get_refcount((IUnknown *)clipper);
+    ok(cref1 == cref2, "expected cref1 == cref2, got cref1 = %u, cref2 = %u.\n", cref1, cref2);
+
+    /* Test if render target format follows the screen format */
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    hr = IDirectDraw_SetDisplayMode(ddraw, desc.dwWidth, desc.dwHeight, 16);
+    ok(hr == DD_OK, "Cannot set display mode to 16bpp (hr = %x).\n", hr);
+
+    hr = IDirectDraw_GetDisplayMode(ddraw, &desc);
+    ok(hr == DD_OK, "Cannot get IDirectDraw display mode (hr = %x)\n", hr);
+    ok(desc.ddpfPixelFormat.dwRGBBitCount == 16, "Expected 16 bpp, got %u.\n", desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, rc.right, rc.bottom, &device3);
+    ok(hr == D3DRM_OK, "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    surface_desc.dwSize = sizeof(surface_desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &surface_desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+    todo_wine ok(surface_desc.ddpfPixelFormat.dwRGBBitCount == 16, "Expected 16bpp, got %ubpp.\n",
+            surface_desc.ddpfPixelFormat.dwRGBBitCount);
+
+    hr = IDirectDraw2_RestoreDisplayMode(ddraw);
+    ok(SUCCEEDED(hr), "RestoreDisplayMode failed, hr %#x.\n", hr);
+
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDrawClipper_Release(clipper);
+    IDirectDraw_Release(ddraw);
+    DestroyWindow(window);
+}
+
+static void test_create_device_from_surface1(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    DDSURFACEDESC desc;
+    IDirectDraw *ddraw = NULL;
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRMDevice *device1 = (IDirect3DRMDevice *)0xdeadbeef;
+    IDirect3DDevice *d3ddevice1 = NULL;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
+    DWORD expected_flags;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    ULONG ref1, ref2, surface_ref1, surface_ref2;
+    RECT rc;
+    BOOL use_sysmem_zbuffer = FALSE;
+    HRESULT hr;
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level, hr %#x.\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+
+    /* Create a surface and use it to create the retained mode device. */
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, ddraw, surface, &device1);
+    ok(hr == DDERR_INVALIDCAPS, "Expected hr == DDERR_INVALIDCAPS, got %x.\n", hr);
+    ok(device1 == NULL, "Expected device returned == NULL, got %p.\n", device1);
+    IDirectDrawSurface_Release(surface);
+
+    desc.ddsCaps.dwCaps |= DDSCAPS_3DDEVICE;
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+    surface_ref1 = get_refcount((IUnknown *)surface);
+
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, ddraw, surface, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == DDERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, ddraw, NULL, &device1);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, NULL, surface, &device1);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, ddraw, surface, &device1);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice interface (hr = %x).\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
+    surface_ref2 = get_refcount((IUnknown *)surface);
+    ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
+
+    /* Check if CreateDeviceFromSurface creates a primary surface */
+    hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &d3drm_surface, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(d3drm_surface == NULL, "No primary surface should have enumerated (%p).\n", d3drm_surface);
+
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3ddevice1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice_QueryInterface(d3ddevice1, &IID_IDirectDrawSurface, (void **)&d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check properties of attached depth surface */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    use_sysmem_zbuffer = desc.ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY;
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok(desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(ds);
+    IDirect3DDevice_Release(d3ddevice1);
+    IDirectDrawSurface_Release(d3drm_surface);
+
+    IDirect3DRMDevice_Release(device1);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref2, "expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
+    surface_ref2 = get_refcount((IUnknown *)surface);
+    ok(surface_ref2 == surface_ref1, "Expected surface_ref2 == surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n",
+            surface_ref1, surface_ref2);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_ZBUFFERBITDEPTH | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_ZBUFFER | (use_sysmem_zbuffer ? DDSCAPS_SYSTEMMEMORY : 0);
+    desc.dwZBufferBitDepth = 16;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &ds, NULL);
+    ok(hr == DD_OK, "Cannot create depth surface (hr = %x).\n", hr);
+    hr = IDirectDrawSurface_AddAttachedSurface(surface, ds);
+    ok(SUCCEEDED(hr), "Failed to attach depth buffer, hr %#x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromSurface(d3drm1, &driver, ddraw, surface, &device1);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice2_GetDirect3DDevice(device1, &d3ddevice1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice_QueryInterface(d3ddevice1, &IID_IDirectDrawSurface, (void **)&d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check if depth surface matches the one we created  */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &d3drm_ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(d3drm_surface);
+    IDirectDrawSurface_Release(ds);
+
+    IDirect3DDevice_Release(d3ddevice1);
+    IDirect3DRMDevice_Release(device1);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDraw_Release(ddraw);
+    DestroyWindow(window);
+}
+
+static void test_create_device_from_surface2(void)
 {
     DDSCAPS caps = { DDSCAPS_ZBUFFER };
     DDSURFACEDESC desc;
     IDirectDraw *ddraw = NULL;
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRM2 *d3drm2 = NULL;
-    IDirect3DRMDevice2 *device2 = NULL;
+    IDirect3DRMDevice2 *device2 = (IDirect3DRMDevice2 *)0xdeadbeef;
     IDirect3DDevice2 *d3ddevice2 = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
     DWORD expected_flags;
@@ -2195,33 +2820,39 @@ static void test_create_device_from_surface(void)
     ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
 
     hr = IDirect3DRM2_CreateDeviceFromSurface(d3drm2, &driver, ddraw, surface, &device2);
-    todo_wine ok(hr == DDERR_INVALIDCAPS, "Expected hr == DDERR_INVALIDCAPS, got %x.\n", hr);
+    ok(hr == DDERR_INVALIDCAPS, "Expected hr == DDERR_INVALIDCAPS, got %x.\n", hr);
+    ok(device2 == NULL, "Expected device returned == NULL, got %p.\n", device2);
     IDirectDrawSurface_Release(surface);
 
     desc.ddsCaps.dwCaps |= DDSCAPS_3DDEVICE;
     hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
     ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
     surface_ref1 = get_refcount((IUnknown *)surface);
+
+    hr = IDirect3DRM2_CreateDeviceFromSurface(d3drm2, &driver, ddraw, surface, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == DDERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM2_CreateDeviceFromSurface(d3drm2, &driver, ddraw, NULL, &device2);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+    hr = IDirect3DRM2_CreateDeviceFromSurface(d3drm2, &driver, NULL, surface, &device2);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+
     hr = IDirect3DRM2_CreateDeviceFromSurface(d3drm2, &driver, ddraw, surface, &device2);
     ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice2 interface (hr = %x).\n", hr);
     ref3 = get_refcount((IUnknown *)d3drm1);
-    todo_wine ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
     ref3 = get_refcount((IUnknown *)d3drm2);
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     surface_ref2 = get_refcount((IUnknown *)surface);
-    todo_wine ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n",
-            surface_ref1, surface_ref2);
+    ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
 
     /* Check if CreateDeviceFromSurface creates a primary surface */
     hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
-        NULL, &d3drm_surface, surface_callback);
+            NULL, &d3drm_surface, surface_callback);
     ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
     ok(d3drm_surface == NULL, "No primary surface should have enumerated (%p).\n", d3drm_surface);
 
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
-    todo_wine ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    if (FAILED(hr))
-        goto cleanup;
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
     ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
@@ -2237,7 +2868,7 @@ static void test_create_device_from_surface(void)
     ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
 
     use_sysmem_zbuffer = desc.ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY;
-    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimentions = %u, %u, got %u, %u.\n",
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
             rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
     ok(desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
     expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
@@ -2246,23 +2877,21 @@ static void test_create_device_from_surface(void)
     IDirectDrawSurface_Release(ds);
     IDirect3DDevice2_Release(d3ddevice2);
     IDirectDrawSurface_Release(d3drm_surface);
-    if (device2)
-    {
-        IDirect3DRMDevice2_Release(device2);
-        ref3 = get_refcount((IUnknown *)d3drm1);
-        ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
-        ref3 = get_refcount((IUnknown *)d3drm2);
-        ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
-        surface_ref2 = get_refcount((IUnknown *)surface);
-        ok(surface_ref2 == surface_ref1, "Expected surface_ref2 == surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n",
-                surface_ref1, surface_ref2);
-        hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
-        ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
 
-        /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
-        ref1 = IDirectDrawSurface_Release(ds);
-        ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
-    }
+    IDirect3DRMDevice2_Release(device2);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm2);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    surface_ref2 = get_refcount((IUnknown *)surface);
+    ok(surface_ref2 == surface_ref1, "Expected surface_ref2 == surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n",
+            surface_ref1, surface_ref2);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+
     ref1 = IDirectDrawSurface_Release(surface);
     ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
 
@@ -2292,9 +2921,7 @@ static void test_create_device_from_surface(void)
     ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
-    todo_wine ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    if (FAILED(hr))
-        goto cleanup;
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
 
     hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
     ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
@@ -2309,36 +2936,443 @@ static void test_create_device_from_surface(void)
     IDirectDrawSurface_Release(d3drm_surface);
     IDirectDrawSurface_Release(ds);
 
-cleanup:
-    if (d3ddevice2)
-        IDirect3DDevice2_Release(d3ddevice2);
-    if (device2)
-    {
-        IDirect3DRMDevice2_Release(device2);
-        hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
-        todo_wine ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
-        if (SUCCEEDED(hr))
-        {
-            /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
-            ref1 = IDirectDrawSurface_Release(ds);
-            ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
-        }
-    }
-    if (surface)
-    {
-        ref1 = IDirectDrawSurface_Release(surface);
-        ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
-    }
-    if (d3drm2)
-        IDirect3DRM2_Release(d3drm2);
-    if (d3drm1)
-        IDirect3DRM_Release(d3drm1);
-    if (ddraw)
-        IDirectDraw_Release(ddraw);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice2_Release(device2);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDraw_Release(ddraw);
     DestroyWindow(window);
 }
 
-static IDirect3DDevice2 *create_device(IDirectDraw2 *ddraw, HWND window, IDirectDrawSurface **ds)
+static void test_create_device_from_surface3(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    DDSURFACEDESC desc;
+    IDirectDraw *ddraw = NULL;
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRM3 *d3drm3 = NULL;
+    IDirect3DRMDevice3 *device3 = (IDirect3DRMDevice3 *)0xdeadbeef;
+    IDirect3DDevice2 *d3ddevice2 = NULL;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
+    DWORD expected_flags;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    ULONG ref1, ref2, ref3, surface_ref1, surface_ref2;
+    RECT rc;
+    BOOL use_sysmem_zbuffer = FALSE;
+    HRESULT hr;
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level, hr %#x.\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm3);
+
+    /* Create a surface and use it to create the retained mode device. */
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, 0, &device3);
+    ok(hr == DDERR_INVALIDCAPS, "Expected hr == DDERR_INVALIDCAPS, got %x.\n", hr);
+    ok(device3 == NULL, "Expected device returned == NULL, got %p.\n", device3);
+    IDirectDrawSurface_Release(surface);
+
+    desc.ddsCaps.dwCaps |= DDSCAPS_3DDEVICE;
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+    surface_ref1 = get_refcount((IUnknown *)surface);
+
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, 0, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == DDERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, NULL, 0, &device3);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, NULL, surface, 0, &device3);
+    ok(hr == D3DRMERR_BADDEVICE, "Expected hr == DDERR_BADDEVICE, got %x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, 0, &device3);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    surface_ref2 = get_refcount((IUnknown *)surface);
+    ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
+
+    /* Check if CreateDeviceFromSurface creates a primary surface */
+    hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &d3drm_surface, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(d3drm_surface == NULL, "No primary surface should have enumerated (%p).\n", d3drm_surface);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check properties of attached depth surface */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    use_sysmem_zbuffer = desc.ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY;
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok(desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(ds);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirectDrawSurface_Release(d3drm_surface);
+    IDirect3DRMDevice3_Release(device3);
+
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    surface_ref2 = get_refcount((IUnknown *)surface);
+    ok(surface_ref2 == surface_ref1, "Expected surface_ref2 == surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n",
+            surface_ref1, surface_ref2);
+    /* In version 3, d3drm will destroy all references of the depth surface it created internally. */
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    todo_wine ok(hr == DDERR_NOTFOUND, "Expected hr == DDERR_NOTFOUND, got %x.\n", hr);
+    if (SUCCEEDED(hr))
+        IDirectDrawSurface_Release(ds);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_ZBUFFERBITDEPTH | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_ZBUFFER | (use_sysmem_zbuffer ? DDSCAPS_SYSTEMMEMORY : 0);
+    desc.dwZBufferBitDepth = 16;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &ds, NULL);
+    ok(hr == DD_OK, "Cannot create depth surface (hr = %x).\n", hr);
+    hr = IDirectDrawSurface_AddAttachedSurface(surface, ds);
+    ok(SUCCEEDED(hr), "Failed to attach depth buffer, hr %#x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, D3DRMDEVICE_NOZBUFFER, &device3);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check if depth surface matches the one we created  */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &d3drm_ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(d3drm_surface);
+    IDirectDrawSurface_Release(ds);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /* The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+
+    /* What happens if we pass no flags and still attach our own depth surface? */
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, 0, &device3);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check if depth surface matches the one we created  */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &d3drm_ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(d3drm_surface);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    /*The render target still holds a reference to ds as the depth surface remains attached to it, so refcount will be 1*/
+    ref1 = IDirectDrawSurface_Release(ds);
+    ok(ref1 == 1, "Expected ref1 == 1, got %u.\n", ref1);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    /* What happens if we don't pass D3DRMDEVICE_NOZBUFFER and still not attach our own depth surface? */
+    hr = IDirect3DRM3_CreateDeviceFromSurface(d3drm3, &driver, ddraw, surface, D3DRMDEVICE_NOZBUFFER, &device3);
+    ok(SUCCEEDED(hr), "Cannot create IDirect3DRMDevice3 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3ddevice2, &d3drm_surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+    ok(surface == d3drm_surface, "Expected surface returned == %p, got %p.\n", surface, d3drm_surface);
+
+    /* Check if depth surface matches the one we created  */
+    hr = IDirectDrawSurface_GetAttachedSurface(d3drm_surface, &caps, &d3drm_ds);
+    ok(hr == DDERR_NOTFOUND, "Expected hr == DDERR_NOTFOUND, got %x).\n", hr);
+    IDirectDrawSurface_Release(d3drm_surface);
+
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    ref1 = IDirectDrawSurface_Release(surface);
+    ok(ref1 == 0, "Expected Render target refcount == 0, got %u.\n", ref1);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDraw_Release(ddraw);
+    DestroyWindow(window);
+}
+
+static IDirect3DDevice *create_device1(IDirectDraw *ddraw, HWND window, IDirectDrawSurface **ds)
+{
+    static const DWORD z_depths[] = { 32, 24, 16 };
+    IDirectDrawSurface *surface;
+    IDirect3DDevice *device = NULL;
+    DDSURFACEDESC surface_desc;
+    unsigned int i;
+    HRESULT hr;
+    RECT rc;
+
+    GetClientRect(window, &rc);
+    hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level, hr %#x.\n", hr);
+
+    memset(&surface_desc, 0, sizeof(surface_desc));
+    surface_desc.dwSize = sizeof(surface_desc);
+    surface_desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    surface_desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+    surface_desc.dwWidth = rc.right;
+    surface_desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &surface_desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    /* We used to use EnumDevices() for this, but it seems
+    * D3DDEVICEDESC.dwDeviceZBufferBitDepth only has a very casual
+    * relationship with reality. */
+    for (i = 0; i < sizeof(z_depths) / sizeof(*z_depths); ++i)
+    {
+        memset(&surface_desc, 0, sizeof(surface_desc));
+        surface_desc.dwSize = sizeof(surface_desc);
+        surface_desc.dwFlags = DDSD_CAPS | DDSD_ZBUFFERBITDEPTH | DDSD_WIDTH | DDSD_HEIGHT;
+        surface_desc.ddsCaps.dwCaps = DDSCAPS_ZBUFFER;
+        U2(surface_desc).dwZBufferBitDepth = z_depths[i];
+        surface_desc.dwWidth = rc.right;
+        surface_desc.dwHeight = rc.bottom;
+        if (FAILED(IDirectDraw_CreateSurface(ddraw, &surface_desc, ds, NULL)))
+            continue;
+
+        hr = IDirectDrawSurface_AddAttachedSurface(surface, *ds);
+        ok(SUCCEEDED(hr), "Failed to attach depth buffer, hr %#x.\n", hr);
+        if (FAILED(hr))
+        {
+            IDirectDrawSurface_Release(*ds);
+            continue;
+        }
+
+        if (SUCCEEDED(IDirectDrawSurface_QueryInterface(surface, &IID_IDirect3DHALDevice, (void **)&device)))
+            break;
+
+        IDirectDrawSurface_DeleteAttachedSurface(surface, 0, *ds);
+        IDirectDrawSurface_Release(*ds);
+        *ds = NULL;
+    }
+
+    IDirectDrawSurface_Release(surface);
+    return device;
+}
+
+static void test_create_device_from_d3d1(void)
+{
+    IDirectDraw *ddraw1 = NULL;
+    IDirect3D *d3d1 = NULL;
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRMDevice *device1 = (IDirect3DRMDevice *)0xdeadbeef;
+    IDirect3DRMDevice2 *device2;
+    IDirect3DRMDevice3 *device3;
+    IDirect3DDevice *d3ddevice1 = NULL, *d3drm_d3ddevice1 = NULL;
+    IDirect3DDevice2 *d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
+    DWORD expected_flags;
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    DDSURFACEDESC desc;
+    RECT rc;
+    HWND window;
+    ULONG ref1, ref2, device_ref1, device_ref2;
+    HRESULT hr;
+
+    hr = DirectDrawCreate(NULL, &ddraw1, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D, (void **)&d3d1);
+    ok(hr == DD_OK, "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
+
+    /* Create the immediate mode device */
+    d3ddevice1 = create_device1(ddraw1, window, &ds);
+    if (d3ddevice1 == NULL)
+    {
+        win_skip("Cannot create IM device, skipping tests.\n");
+        IDirect3D_Release(d3d1);
+        IDirectDraw_Release(ddraw1);
+        return;
+    }
+    device_ref1 = get_refcount((IUnknown *)d3ddevice1);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+
+    hr = IDirect3DRM_CreateDeviceFromD3D(d3drm1, NULL, d3ddevice1, &device1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device1 == NULL, "Expected device returned == NULL, got %p.\n", device1);
+    hr = IDirect3DRM_CreateDeviceFromD3D(d3drm1, d3d1, NULL, &device1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM_CreateDeviceFromD3D(d3drm1, d3d1, d3ddevice1, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromD3D(d3drm1, d3d1, d3ddevice1, &device1);
+    ok(hr == DD_OK, "Failed to create IDirect3DRMDevice interface (hr = %x)\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice1);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice2, (void **)&device2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 Interface (hr = %x).\n", hr);
+    hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
+    ok(SUCCEEDED(hr), "Expected hr == DD_OK, got %x).\n", hr);
+    ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
+    IDirect3DRMDevice2_Release(device2);
+
+    d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice2, (void **)&device3);
+    ok(hr == DD_OK, "Cannot get IDirect3DRMDevice2 Interface (hr = %x).\n", hr);
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == DD_OK, "Expected hr == DD_OK, got %x).\n", hr);
+    ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+
+    hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &surface, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
+
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3drm_d3ddevice1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
+    ok(d3ddevice1 == d3drm_d3ddevice1, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice1, d3drm_d3ddevice1);
+
+    /* Check properties of render target and depth surfaces */
+    hr = IDirect3DDevice_QueryInterface(d3drm_d3ddevice1, &IID_IDirectDrawSurface, (void **)&surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
+            "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice_Release(d3drm_d3ddevice1);
+    IDirect3DRMDevice_Release(device1);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref2, "expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice1);
+    ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+
+    IDirect3DRM_Release(d3drm1);
+    IDirect3DDevice_Release(d3ddevice1);
+    IDirect3D_Release(d3d1);
+    IDirectDraw_Release(ddraw1);
+    DestroyWindow(window);
+}
+
+static IDirect3DDevice2 *create_device2(IDirectDraw2 *ddraw, HWND window, IDirectDrawSurface **ds)
 {
     static const DWORD z_depths[] = { 32, 24, 16 };
     IDirectDrawSurface *surface;
@@ -2394,7 +3428,7 @@ static IDirect3DDevice2 *create_device(IDirectDraw2 *ddraw, HWND window, IDirect
             continue;
         }
 
-        if (SUCCEEDED(IDirect3D2_CreateDevice(d3d, &IID_IDirect3DRGBDevice, surface, &device)))
+        if (SUCCEEDED(IDirect3D2_CreateDevice(d3d, &IID_IDirect3DHALDevice, surface, &device)))
             break;
 
         IDirectDrawSurface_DeleteAttachedSurface(surface, 0, *ds);
@@ -2407,14 +3441,14 @@ static IDirect3DDevice2 *create_device(IDirectDraw2 *ddraw, HWND window, IDirect
     return device;
 }
 
-static void test_create_device_from_d3d(void)
+static void test_create_device_from_d3d2(void)
 {
     IDirectDraw *ddraw1 = NULL;
     IDirectDraw2 *ddraw2 = NULL;
     IDirect3D2 *d3d2 = NULL;
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRM2 *d3drm2 = NULL;
-    IDirect3DRMDevice2 *device2 = NULL;
+    IDirect3DRMDevice2 *device2 = (IDirect3DRMDevice2 *)0xdeadbeef;
     IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
     DWORD expected_flags;
@@ -2437,7 +3471,7 @@ static void test_create_device_from_d3d(void)
     ok(hr == DD_OK, "Cannot get IDirectDraw2 interface (hr = %x).\n", hr);
 
     /* Create the immediate mode device */
-    d3ddevice2 = create_device(ddraw2, window, &ds);
+    d3ddevice2 = create_device2(ddraw2, window, &ds);
     if (d3ddevice2 == NULL)
     {
         win_skip("Cannot create IM device, skipping tests.\n");
@@ -2456,24 +3490,30 @@ static void test_create_device_from_d3d(void)
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM2 interface (hr = %x).\n", hr);
     ref2 = get_refcount((IUnknown *)d3drm2);
 
+    hr = IDirect3DRM2_CreateDeviceFromD3D(d3drm2, NULL, d3ddevice2, &device2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device2 == NULL, "Expected device returned == NULL, got %p.\n", device2);
+    hr = IDirect3DRM2_CreateDeviceFromD3D(d3drm2, d3d2, NULL, &device2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM2_CreateDeviceFromD3D(d3drm2, d3d2, d3ddevice2, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
     hr = IDirect3DRM2_CreateDeviceFromD3D(d3drm2, d3d2, d3ddevice2, &device2);
     ok(hr == DD_OK, "Failed to create IDirect3DRMDevice2 interface (hr = %x)\n", hr);
     ref3 = get_refcount((IUnknown *)d3drm1);
-    todo_wine ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
     ref3 = get_refcount((IUnknown *)d3drm2);
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     device_ref2 = get_refcount((IUnknown *)d3ddevice2);
-    todo_wine ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
 
     hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
-        NULL, &surface, surface_callback);
+            NULL, &surface, surface_callback);
     ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
     ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
 
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3drm_d3ddevice2);
-    todo_wine ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    if (FAILED(hr))
-        goto cleanup;
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
     ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
 
     /* Check properties of render target and depth surfaces */
@@ -2485,7 +3525,7 @@ static void test_create_device_from_d3d(void)
     hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
     ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
 
-    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimentions = %u, %u, got %u, %u.\n",
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
             rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
     ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
             "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
@@ -2500,7 +3540,7 @@ static void test_create_device_from_d3d(void)
     hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
     ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
 
-    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimentions = %u, %u, got %u, %u.\n",
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
             rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
     ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
     expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
@@ -2508,13 +3548,8 @@ static void test_create_device_from_d3d(void)
 
     IDirectDrawSurface_Release(d3drm_ds);
     IDirectDrawSurface_Release(ds);
-    ds = NULL;
     IDirectDrawSurface_Release(surface);
     IDirect3DDevice2_Release(d3drm_d3ddevice2);
-cleanup:
-    if (ds)
-        IDirectDrawSurface_Release(ds);
-
     IDirect3DRMDevice2_Release(device2);
     ref3 = get_refcount((IUnknown *)d3drm1);
     ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
@@ -2524,6 +3559,132 @@ cleanup:
     ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
 
     IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    IDirect3DDevice2_Release(d3ddevice2);
+    IDirect3D2_Release(d3d2);
+    IDirectDraw2_Release(ddraw2);
+    IDirectDraw_Release(ddraw1);
+    DestroyWindow(window);
+}
+
+static void test_create_device_from_d3d3(void)
+{
+    IDirectDraw *ddraw1 = NULL;
+    IDirectDraw2 *ddraw2 = NULL;
+    IDirect3D2 *d3d2 = NULL;
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRM3 *d3drm3 = NULL;
+    IDirect3DRMDevice3 *device3 = (IDirect3DRMDevice3 *)0xdeadbeef;
+    IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL;
+    IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
+    DWORD expected_flags;
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    DDSURFACEDESC desc;
+    RECT rc;
+    HWND window;
+    ULONG ref1, ref2, ref3, device_ref1, device_ref2;
+    HRESULT hr;
+
+    hr = DirectDrawCreate(NULL, &ddraw1, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D2, (void **)&d3d2);
+    ok(hr == DD_OK, "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirectDraw2, (void **)&ddraw2);
+    ok(hr == DD_OK, "Cannot get IDirectDraw2 interface (hr = %x).\n", hr);
+
+    /* Create the immediate mode device */
+    d3ddevice2 = create_device2(ddraw2, window, &ds);
+    if (d3ddevice2 == NULL)
+    {
+        win_skip("Cannot create IM device, skipping tests.\n");
+        IDirect3D2_Release(d3d2);
+        IDirectDraw2_Release(ddraw2);
+        IDirectDraw_Release(ddraw1);
+        return;
+    }
+    device_ref1 = get_refcount((IUnknown *)d3ddevice2);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm3);
+
+    hr = IDirect3DRM3_CreateDeviceFromD3D(d3drm3, NULL, d3ddevice2, &device3);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    ok(device3 == NULL, "Expected device returned == NULL, got %p.\n", device3);
+    hr = IDirect3DRM3_CreateDeviceFromD3D(d3drm3, d3d2, NULL, &device3);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+    hr = IDirect3DRM3_CreateDeviceFromD3D(d3drm3, d3d2, d3ddevice2, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %x.\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromD3D(d3drm3, d3d2, d3ddevice2, &device3);
+    ok(hr == DD_OK, "Failed to create IDirect3DRMDevice3 interface (hr = %x)\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+
+    hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &surface, surface_callback);
+    ok(hr == DD_OK, "Failed to enumerate surfaces (hr = %x).\n", hr);
+    ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3drm_d3ddevice2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
+    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
+
+    /* Check properties of render target and depth surfaces */
+    hr = IDirect3DDevice2_GetRenderTarget(d3drm_d3ddevice2, &surface);
+    ok(hr == DD_OK, "Cannot get surface to the render target (hr = %x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
+    ok(hr == DD_OK, "Cannot get surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE),
+            "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(hr == DD_OK, "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(hr == DD_OK, "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %x.\n", DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice2_Release(d3drm_d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+
+    IDirect3DRM3_Release(d3drm3);
     IDirect3DRM_Release(d3drm1);
     IDirect3DDevice2_Release(d3ddevice2);
     IDirect3D2_Release(d3d2);
@@ -2549,7 +3710,14 @@ START_TEST(d3drm)
     test_frame_mesh_materials();
     test_d3drm_qi();
     test_frame_qi();
-    test_create_device_from_clipper();
-    test_create_device_from_surface();
-    test_create_device_from_d3d();
+    test_device_qi();
+    test_create_device_from_clipper1();
+    test_create_device_from_clipper2();
+    test_create_device_from_clipper3();
+    test_create_device_from_surface1();
+    test_create_device_from_surface2();
+    test_create_device_from_surface3();
+    test_create_device_from_d3d1();
+    test_create_device_from_d3d2();
+    test_create_device_from_d3d3();
 }
