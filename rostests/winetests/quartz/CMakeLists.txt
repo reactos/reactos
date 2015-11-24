@@ -8,6 +8,7 @@ list(APPEND SOURCE
     filtermapper.c
     memallocator.c
     misc.c
+    mpegsplit.c
     referenceclock.c
     videorenderer.c
     testlist.c)

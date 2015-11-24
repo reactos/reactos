@@ -509,7 +509,7 @@ static void test_parse_filter_data(void)
     saBound.lLbound = 0;
     saBound.cElements = sizeof(data_block);
     psa = SafeArrayCreate(VT_UI1, 1, &saBound);
-    ok(psa != NULL, "Unable to crate safe array\n");
+    ok(psa != NULL, "Unable to create safe array\n");
     if (!psa) goto out;
     hr = SafeArrayAccessData(psa, (LPVOID *)&pbSAData);
     ok(hr == S_OK, "Unable to access array data\n");
