@@ -465,7 +465,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
         {
             TRACE("removing read-only attribute on %s\n", debugstr_w(path));
             SetFileAttributesW( path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
-            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs2, NULL);
+            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
 
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
