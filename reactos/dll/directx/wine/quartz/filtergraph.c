@@ -589,7 +589,7 @@ static HRESULT CheckCircularConnection(IFilterGraphImpl *This, IPin *out, IPin *
     if (info_out.dir != PINDIR_OUTPUT)
     {
         IBaseFilter_Release(info_out.pFilter);
-        return E_UNEXPECTED;
+        return VFW_E_CANNOT_CONNECT;
     }
 
     hr = IPin_QueryPinInfo(in, &info_in);
@@ -599,7 +599,7 @@ static HRESULT CheckCircularConnection(IFilterGraphImpl *This, IPin *out, IPin *
         goto out;
     if (info_in.dir != PINDIR_INPUT)
     {
-        hr = E_UNEXPECTED;
+        hr = VFW_E_CANNOT_CONNECT;
         goto out;
     }
 
@@ -890,6 +890,9 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
     unsigned int i = 0;
 
     TRACE("(%p/%p)->(%p, %p)\n", This, iface, ppinOut, ppinIn);
+
+    if(!ppinOut || !ppinIn)
+        return E_POINTER;
 
     if (TRACE_ON(quartz))
     {

@@ -133,11 +133,11 @@ HRESULT WINAPI Parser_QueryInterface(IBaseFilter * iface, REFIID riid, LPVOID * 
       || IsEqualIID(riid, &IID_IPersist)
       || IsEqualIID(riid, &IID_IMediaFilter)
       || IsEqualIID(riid, &IID_IBaseFilter) )
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
 
     if (*ppv)
     {
-        IUnknown_AddRef((IUnknown *)(*ppv));
+        IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
 
@@ -507,21 +507,21 @@ static HRESULT WINAPI Parser_Seeking_QueryInterface(IMediaSeeking * iface, REFII
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_QueryInterface((IUnknown *)This, riid, ppv);
+    return IBaseFilter_QueryInterface(&This->filter.IBaseFilter_iface, riid, ppv);
 }
 
 static ULONG WINAPI Parser_Seeking_AddRef(IMediaSeeking * iface)
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_AddRef((IUnknown *)This);
+    return IBaseFilter_AddRef(&This->filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI Parser_Seeking_Release(IMediaSeeking * iface)
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_Release((IUnknown *)This);
+    return IBaseFilter_Release(&This->filter.IBaseFilter_iface);
 }
 
 static const IMediaSeekingVtbl Parser_Seeking_Vtbl =

@@ -240,7 +240,7 @@ static HRESULT unregister_interfaces(struct regsvr_interface const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->iid, buf, 39);
-	res = SHDeleteKeyW(interface_key, buf);
+	res = RegDeleteTreeW(interface_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
     }
 
@@ -346,18 +346,18 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->clsid, buf, 39);
-	res = SHDeleteKeyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
 	if (list->progid) {
-	    res = SHDeleteKeyA(HKEY_CLASSES_ROOT, list->progid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->progid);
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
 
 	if (list->viprogid) {
-	    res = SHDeleteKeyA(HKEY_CLASSES_ROOT, list->viprogid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->viprogid);
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
@@ -500,7 +500,7 @@ static HRESULT unregister_mediatypes_parsing(struct regsvr_mediatype_parsing con
 	if (res != ERROR_SUCCESS) break;
 
 	StringFromGUID2(list->subtype, buf, 39);
-	res = SHDeleteKeyW(majortype_key, buf);
+	res = RegDeleteTreeW(majortype_key, buf);
     	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 
 	/* Removed majortype key if there is no more subtype key */
@@ -535,7 +535,7 @@ static HRESULT unregister_mediatypes_extension(struct regsvr_mediatype_extension
 	res = ERROR_SUCCESS;
     else if (res == ERROR_SUCCESS)
 	for (; res == ERROR_SUCCESS && list->majortype; ++list) {
-	    res = SHDeleteKeyA(extensions_root_key, list->extension);
+	    res = RegDeleteTreeA(extensions_root_key, list->extension);
 	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	}
 
