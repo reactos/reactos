@@ -155,6 +155,14 @@ static HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(IDxDiagContainer *i
   if (NULL == tmp) return E_FAIL;
   lstrcpynW(tmp, pwszContainer, tmp_len);
 
+  /* special handling for an empty string and leaf container */
+  if (!tmp[0] && list_empty(&pContainer->subContainers)) {
+    hr = DXDiag_CreateDXDiagContainer(&IID_IDxDiagContainer, pContainer, This->pProv, (void **)ppInstance);
+    if (SUCCEEDED(hr))
+      TRACE("Succeeded in getting the container instance\n");
+    goto out;
+  }
+
   cur = strchrW(tmp, '.');
   while (NULL != cur) {
     *cur = '\0'; /* cut tmp string to '.' */
@@ -162,7 +170,7 @@ static HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(IDxDiagContainer *i
     TRACE("Trying to get parent container %s\n", debugstr_w(tmp));
     hr = IDxDiagContainerImpl_GetChildContainerInternal(pContainer, tmp, &pContainer);
     if (FAILED(hr))
-      goto on_error;
+      goto out;
     cur++; /* go after '.' (just replaced by \0) */
     tmp = cur;
     cur = strchrW(tmp, '.');
@@ -176,7 +184,7 @@ static HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(IDxDiagContainer *i
         TRACE("Succeeded in getting the container instance\n");
   }
 
-on_error:
+out:
   HeapFree(GetProcessHeap(), 0, orig_tmp);
   return hr;
 }
