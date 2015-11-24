@@ -2526,8 +2526,7 @@ START_TEST(sync)
     {
         if (!strcmp(argv[2], "apc_deadlock"))
         {
-            HANDLE handle = GetCurrentThread();
-            for (;;) WaitForMultipleObjectsEx(1, &handle, FALSE, INFINITE, TRUE);
+            for (;;) SleepEx(INFINITE, TRUE);
         }
         return;
     }
