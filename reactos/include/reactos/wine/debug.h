@@ -252,7 +252,7 @@ static inline const char *wine_dbgstr_vt( VARTYPE vt )
         "|VT_ARRAY",
         "|VT_VECTOR|VT_ARRAY",
         "|VT_BYREF",
-        "|VT_VECTOR|VT_ARRAY",
+        "|VT_VECTOR|VT_BYREF",
         "|VT_ARRAY|VT_BYREF",
         "|VT_VECTOR|VT_ARRAY|VT_BYREF",
         "|VT_RESERVED",
@@ -260,7 +260,7 @@ static inline const char *wine_dbgstr_vt( VARTYPE vt )
         "|VT_ARRAY|VT_RESERVED",
         "|VT_VECTOR|VT_ARRAY|VT_RESERVED",
         "|VT_BYREF|VT_RESERVED",
-        "|VT_VECTOR|VT_ARRAY|VT_RESERVED",
+        "|VT_VECTOR|VT_BYREF|VT_RESERVED",
         "|VT_ARRAY|VT_BYREF|VT_RESERVED",
         "|VT_VECTOR|VT_ARRAY|VT_BYREF|VT_RESERVED",
     };
@@ -285,6 +285,8 @@ static inline const char *wine_dbgstr_variant( const VARIANT *v )
     if (V_VT(v) & VT_BYREF) {
         if (V_VT(v) == (VT_VARIANT|VT_BYREF))
             return wine_dbg_sprintf( "%p {VT_VARIANT|VT_BYREF: %s}", v, wine_dbgstr_variant(V_VARIANTREF(v)) );
+        if (V_VT(v) == (VT_BSTR|VT_BYREF))
+            return wine_dbg_sprintf( "%p {VT_BSTR|VT_BYREF: %s}", v, V_BSTRREF(v) ? wine_dbgstr_w(*V_BSTRREF(v)) : "(none)" );
         return wine_dbg_sprintf( "%p {%s %p}", v, wine_dbgstr_vt(V_VT(v)), V_BYREF(v) );
     }
 
@@ -337,7 +339,7 @@ static inline const char *wine_dbgstr_variant( const VARIANT *v )
     case VT_VOID:
         return wine_dbg_sprintf( "%p {VT_VOID}", v );
     case VT_RECORD:
-        return wine_dbg_sprintf( "%p {VT_RECORD: %p %p}", v, V_UNION(v,brecVal).pvRecord, V_UNION(v,brecVal).pRecInfo );
+        return wine_dbg_sprintf( "%p {VT_RECORD: %p %p}", v, V_RECORD(v), V_RECORDINFO(v) );
     default:
         return wine_dbg_sprintf( "%p {vt %s}", v, wine_dbgstr_vt(V_VT(v)) );
     }
