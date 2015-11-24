@@ -306,9 +306,6 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     ButtonState drawState;
     pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
 
-    if(!paint)
-        return FALSE;
-
     if(IsWindowEnabled(hwnd))
     {
         if(state & BST_PUSHED) drawState = STATE_PRESSED;
@@ -319,7 +316,7 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     else drawState = STATE_DISABLED;
 
     hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-    paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
+    if (paint) paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
     if (!hParamDC) EndPaint(hwnd, &ps);
     return TRUE;
 }
@@ -405,6 +402,14 @@ LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
         InvalidateRect(hwnd, NULL, FALSE);
         break;
     }
+
+    case BM_SETCHECK:
+    case BM_SETSTATE:
+        theme = GetWindowTheme(hwnd);
+        if (theme) {
+            InvalidateRect(hwnd, NULL, FALSE);
+        }
+        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
 
     default:
 	/* Call old proc */

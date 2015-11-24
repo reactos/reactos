@@ -42,6 +42,8 @@
 
 #include "comctl32.h"
 
+#include <wine/exception.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(treeview);
 
 /* internal structures */
@@ -2046,11 +2048,20 @@ TREEVIEW_GetItemT(const TREEVIEW_INFO *infoPtr, LPTVITEMEXW tvItem, BOOL isW)
 
     if (!TREEVIEW_ValidItem(infoPtr, item))
     {
+        BOOL valid_item = FALSE;
         if (!item) return FALSE;
 
-        TRACE("got item from different tree %p, called from %p\n", item->infoPtr, infoPtr);
-        infoPtr = item->infoPtr;
-        if (!TREEVIEW_ValidItem(infoPtr, item)) return FALSE;
+        __TRY
+        {
+            infoPtr = item->infoPtr;
+            TRACE("got item from different tree %p, called from %p\n", item->infoPtr, infoPtr);
+            valid_item = TREEVIEW_ValidItem(infoPtr, item);
+        }
+        __EXCEPT_PAGE_FAULT
+        {
+        }
+        __ENDTRY
+        if (!valid_item) return FALSE;
     }
 
     TREEVIEW_UpdateDispInfo(infoPtr, item, tvItem->mask);

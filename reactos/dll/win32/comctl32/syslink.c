@@ -1377,7 +1377,7 @@ static PDOC_ITEM SYSLINK_LinkAtPt (const SYSLINK_INFO *infoPtr, const POINT *pt,
     for(Current = infoPtr->Items; Current != NULL; Current = Current->Next)
     {
         if((Current->Type == slLink) && SYSLINK_PtInDocItem(Current, *pt) &&
-           (!MustBeEnabled || (MustBeEnabled && (Current->u.Link.state & LIS_ENABLED))))
+           (!MustBeEnabled || (Current->u.Link.state & LIS_ENABLED)))
         {
             if(LinkId != NULL)
             {

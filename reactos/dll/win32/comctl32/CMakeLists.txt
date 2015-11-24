@@ -22,7 +22,6 @@ list(APPEND SOURCE
     flatsb.c
     header.c
     hotkey.c
-    icon.c
     imagelist.c
     ipaddress.c
     listview.c
