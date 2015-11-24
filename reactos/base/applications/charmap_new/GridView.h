@@ -29,8 +29,8 @@ private:
     CCell*** m_Cells; // *m_Cells[][];
     CCell *m_ActiveCell;
 
-    HFONT hFont;
-    INT ScrollPosition;
+    INT m_ScrollPosition;
+    int m_NumRows;
 
     CurrentFont m_CurrentFont;
 
@@ -45,6 +45,8 @@ public:
     bool SetFont(
         _In_ CAtlString& FontName
         );
+
+    HWND GetHwnd() { return m_hwnd; }
 
 private:
     static LRESULT

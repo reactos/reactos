@@ -22,7 +22,8 @@ extern HINSTANCE g_hInstance;
 CGridView::CGridView() :
     m_xNumCells(20),
     m_yNumCells(10),
-    ScrollPosition(0)
+    m_ScrollPosition(0),
+    m_NumRows(0)
 {
     m_szMapWndClass = L"CharGridWClass";
 }
@@ -78,7 +79,7 @@ CGridView::SetFont(
     if (hdc == NULL) return false;
 
     // Setup the logfont structure
-    NewFont.Font.lfHeight = GetDeviceCaps(hdc, LOGPIXELSY) / 5;
+    NewFont.Font.lfHeight = 0; // This is set in WM_SIZE
     NewFont.Font.lfCharSet = DEFAULT_CHARSET;
     StringCchCopyW(NewFont.Font.lfFaceName, LF_FACESIZE, FontName);
 
@@ -127,12 +128,12 @@ CGridView::SetFont(
     NewFont.NumValidGlyphs = j;
 
     // Calculate the number of rows required to hold all glyphs
-    int Rows = NewFont.NumValidGlyphs / m_xNumCells;
+    m_NumRows = NewFont.NumValidGlyphs / m_xNumCells;
     if (NewFont.NumValidGlyphs % m_xNumCells)
-        Rows += 1;
+        m_NumRows += 1;
 
     // Set the scrollbar in relation to the rows
-    SetScrollRange(m_hwnd, SB_VERT, 0, Rows, FALSE);
+    SetScrollRange(m_hwnd, SB_VERT, 0, m_NumRows - m_yNumCells, FALSE);
 
     // We're done, update the current font
     m_CurrentFont = NewFont;
@@ -224,7 +225,7 @@ CGridView::OnSize(
 
     // Get the client area we can draw on. The position we set above includes
     // a scrollbar which we obvioulsy can't draw on. GetClientRect gives us
-    // the size without the scroll, and it more efficient than getting the
+    // the size without the scroll, and it's more efficient than getting the
     // scroll metrics and calculating the size from that
     RECT ClientRect;
     GetClientRect(m_hwnd, &ClientRect);
@@ -234,6 +235,26 @@ CGridView::OnSize(
     // Let all the cells know about their new coords
     UpdateCellCoordinates();
 
+    // We scale the font size up or down depending on the cell size
+    if (m_CurrentFont.hFont)
+    {
+        // Delete the existing font
+        DeleteObject(m_CurrentFont.hFont);
+
+        HDC hdc;
+        hdc = GetDC(m_hwnd);
+        if (hdc)
+        {
+            // Update the font size with respect to the cell size
+            m_CurrentFont.Font.lfHeight = (m_CellSize.cy - 5);
+            m_CurrentFont.hFont = CreateFontIndirectW(&m_CurrentFont.Font);
+            ReleaseDC(m_hwnd, hdc);
+        }
+    }
+
+    // Redraw the whole grid
+    InvalidateRect(m_hwnd, &ClientRect, TRUE);
+
     return 0;
 }
 
@@ -242,42 +263,47 @@ CGridView::OnVScroll(_In_ INT Value,
                      _In_ INT Pos)
 {
     
-    INT PrevScrollPosition = ScrollPosition;
+    INT PrevScrollPosition = m_ScrollPosition;
 
     switch (Value)
     {
     case SB_LINEUP:
-        ScrollPosition -= 1;
+        m_ScrollPosition -= 1;
         break;
 
     case SB_LINEDOWN:
-        ScrollPosition += 1;
+        m_ScrollPosition += 1;
         break;
 
     case SB_PAGEUP:
-        ScrollPosition -= m_yNumCells;
+        m_ScrollPosition -= m_yNumCells;
         break;
 
     case SB_PAGEDOWN:
-        ScrollPosition += m_yNumCells;
+        m_ScrollPosition += m_yNumCells;
         break;
 
     case SB_THUMBTRACK:
-        ScrollPosition = Pos;
+        m_ScrollPosition = Pos;
         break;
 
     default:
         break;
     }
 
+    // Make sure we don't scroll past row 0 or max rows
+    m_ScrollPosition = max(0, m_ScrollPosition);
+    m_ScrollPosition = min(m_ScrollPosition, m_NumRows);
+
+    // Check if there's a difference from the previous position
     INT ScrollDiff;
-    ScrollDiff = PrevScrollPosition - ScrollPosition;
+    ScrollDiff = PrevScrollPosition - m_ScrollPosition;
     if (ScrollDiff)
     {
         // Set the new scrollbar position in the scroll box
         SetScrollPos(m_hwnd,
                      SB_VERT,
-                     ScrollPosition,
+                     m_ScrollPosition,
                      TRUE);
 
         // Check if the scrollbar has moved more than the
@@ -288,7 +314,7 @@ CGridView::OnVScroll(_In_ INT Value,
             GetClientRect(m_hwnd, &rect);
 
             // Scroll the visible cells which remain within the grid
-            // and invalid any new ones which appear from the top / bottom
+            // and invalidate any new ones which appear from the top / bottom
             ScrollWindowEx(m_hwnd,
                            0,
                            ScrollDiff * m_CellSize.cy,
@@ -441,22 +467,23 @@ CGridView::DrawGrid(
 {
     // Calculate which glyph to start at based on scroll position
     int i;
-    i = m_xNumCells * ScrollPosition;
+    i = m_xNumCells * m_ScrollPosition;
 
     // Make sure we have the correct font on the DC
     HFONT hOldFont;
     hOldFont = (HFONT)SelectFont(PaintStruct->hdc,
                                  m_CurrentFont.hFont);
 
-    // Traverse all the cells and tell them to paint themselves
+    // Traverse all the cells
     for (int y = 0; y < m_yNumCells; y++)
     for (int x = 0; x < m_xNumCells; x++)
     {
+        // Update the glyph for this cell
         WCHAR ch = (WCHAR)m_CurrentFont.ValidGlyphs[i];
         m_Cells[y][x]->SetChar(ch);
 
+        // Tell it to paint itself
         m_Cells[y][x]->OnPaint(*PaintStruct);
-
         i++;
     }
 
@@ -487,6 +514,7 @@ CGridView::SetCellFocus(
     {
         // Remove focus from any existing cell
         m_ActiveCell->SetFocus(false);
+        InvalidateRect(m_hwnd, m_ActiveCell->GetCellCoordinates(), TRUE);
     }
 
     // Set the new active cell and give it focus

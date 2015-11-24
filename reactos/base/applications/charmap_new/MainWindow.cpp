@@ -214,7 +214,9 @@ CCharMapWindow::OnCreate(_In_ HWND hDlg)
 }
 
 BOOL
-CCharMapWindow::OnSize(void)
+CCharMapWindow::OnSize(
+    _In_ WPARAM wParam
+    )
 {
     RECT rcClient, rcStatus;
     INT lvHeight, iStatusHeight;
@@ -229,14 +231,11 @@ CCharMapWindow::OnSize(void)
     // Get the full client rect
     GetClientRect(m_hMainWnd, &rcClient);
 
-    // Calculate the remaining height for the treeview
+    // Calculate the remaining height for the gridview
     lvHeight = rcClient.bottom - iStatusHeight;
 
-    // Resize the device view
-    //m_GridView->OnSize(0,
-    //                     iToolHeight,
-    //                     rcClient.right,
-    //                     lvHeight);
+    // Resize the grid view
+    SendMessageW(m_GridView->GetHwnd(), WM_SIZE, wParam, 0);
 
     return TRUE;
 }
@@ -352,7 +351,7 @@ CCharMapWindow::DialogProc(
 
     case WM_SIZE:
     {
-        return This->OnSize();
+        return This->OnSize(wParam);
     }
 
     case WM_NOTIFY:
@@ -526,7 +525,7 @@ CCharMapWindow::ChangeMapFont(
     Length = GetWindowTextLengthW(hCombo);
     if (!Length) return false;
 
-    CAtlStringW FontName;// = L"hahaha";
+    CAtlStringW FontName;
     FontName.Preallocate(Length);
 
     SendMessageW(hCombo,
