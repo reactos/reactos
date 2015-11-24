@@ -78,4 +78,7 @@ private:
 
     bool CreateFontComboBox(
         );
+
+    bool ChangeMapFont(
+        );
 };

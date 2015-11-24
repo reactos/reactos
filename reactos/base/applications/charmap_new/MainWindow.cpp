@@ -199,6 +199,8 @@ CCharMapWindow::OnCreate(_In_ HWND hDlg)
     if (!CreateFontComboBox())
         return FALSE;
 
+    ChangeMapFont();
+
     // Configure Richedit control for sending notification changes.
     DWORD evMask;
     evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
@@ -281,6 +283,13 @@ CCharMapWindow::OnCommand(_In_ WPARAM wParam,
     switch (Msg)
     {
     case IDC_CHECK_ADVANCED:
+        break;
+
+    case IDC_FONTCOMBO:
+        if (HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            ChangeMapFont();
+        }
         break;
 
     default:
@@ -504,4 +513,26 @@ CCharMapWindow::CreateFontComboBox()
                  0);
 
     return (ret == 1);
+}
+
+bool
+CCharMapWindow::ChangeMapFont(
+    )
+{
+    HWND hCombo;
+    hCombo = GetDlgItem(m_hMainWnd, IDC_FONTCOMBO);
+
+    INT Length;
+    Length = GetWindowTextLengthW(hCombo);
+    if (!Length) return false;
+
+    CAtlStringW FontName;// = L"hahaha";
+    FontName.Preallocate(Length);
+
+    SendMessageW(hCombo,
+                 WM_GETTEXT,
+                 FontName.GetAllocLength(),
+                 (LPARAM)FontName.GetBuffer());
+
+    return m_GridView->SetFont(FontName);
 }

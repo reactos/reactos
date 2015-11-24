@@ -21,7 +21,8 @@ extern HINSTANCE g_hInstance;
 
 CGridView::CGridView() :
     m_xNumCells(20),
-    m_yNumCells(10)
+    m_yNumCells(10),
+    ScrollPosition(0)
 {
     m_szMapWndClass = L"CharGridWClass";
 }
@@ -62,7 +63,94 @@ CGridView::Create(
 }
 
 bool
-CGridView::UpdateGridLayout(
+CGridView::SetFont(
+    _In_ CAtlString& FontName
+    )
+{
+
+    // Create a temperary container for the new font
+    CurrentFont NewFont = { 0 };
+    NewFont.FontName = FontName;
+
+    // Get the DC for the full grid window
+    HDC hdc;
+    hdc = GetDC(m_hwnd);
+    if (hdc == NULL) return false;
+
+    // Setup the logfont structure
+    NewFont.Font.lfHeight = GetDeviceCaps(hdc, LOGPIXELSY) / 5;
+    NewFont.Font.lfCharSet = DEFAULT_CHARSET;
+    StringCchCopyW(NewFont.Font.lfFaceName, LF_FACESIZE, FontName);
+
+    // Get a handle to the new font
+    NewFont.hFont = CreateFontIndirectW(&NewFont.Font);
+    if (NewFont.hFont == NULL)
+    {
+        ReleaseDC(m_hwnd, hdc);
+        return false;
+    }
+
+    // Setup an array of all possible non-BMP indices
+    WCHAR ch[MAX_GLYPHS];
+    for (int i = 0; i < MAX_GLYPHS; i++)
+        ch[i] = (WCHAR)i;
+
+    HFONT hOldFont;
+    hOldFont = (HFONT)SelectObject(hdc, NewFont.hFont);
+
+    // Translate all the indices into glyphs
+    WORD out[MAX_GLYPHS];
+    DWORD Status;
+    Status = GetGlyphIndicesW(hdc,
+                              ch,
+                              MAX_GLYPHS,
+                              out,
+                              GGI_MARK_NONEXISTING_GLYPHS);
+    ReleaseDC(m_hwnd, hdc);
+    if (Status == GDI_ERROR)
+    {
+        SelectObject(hdc, hOldFont);
+        return false;
+    }
+
+    // Loop all the glyphs looking for valid ones
+    // and store those in our font data
+    int j = 0;
+    for (int i = 0; i < MAX_GLYPHS; i++)
+    {
+        if (out[i] != 0xffff)
+        {
+            NewFont.ValidGlyphs[j] = ch[i];
+            j++;
+        }
+    }
+    NewFont.NumValidGlyphs = j;
+
+    // Calculate the number of rows required to hold all glyphs
+    int Rows = NewFont.NumValidGlyphs / m_xNumCells;
+    if (NewFont.NumValidGlyphs % m_xNumCells)
+        Rows += 1;
+
+    // Set the scrollbar in relation to the rows
+    SetScrollRange(m_hwnd, SB_VERT, 0, Rows, FALSE);
+
+    // We're done, update the current font
+    m_CurrentFont = NewFont;
+
+    // We changed the font, we'll need to repaint the whole window
+    InvalidateRect(m_hwnd,
+                   NULL,
+                   TRUE);
+
+    return true;
+}
+
+
+
+/* PRIVATE METHODS **********************************************/
+
+bool
+CGridView::UpdateCellCoordinates(
     )
 {
     // Go through all the cells and calculate
@@ -71,10 +159,10 @@ CGridView::UpdateGridLayout(
     for (int x = 0; x < m_xNumCells; x++)
     {
         RECT CellCoordinates;
-        CellCoordinates.left = x * m_CellSize.cx + 1;
-        CellCoordinates.top = y * m_CellSize.cy + 1;
-        CellCoordinates.right = (x + 1) * m_CellSize.cx + 2;
-        CellCoordinates.bottom = (y + 1) * m_CellSize.cy + 2;
+        CellCoordinates.left = x * m_CellSize.cx;
+        CellCoordinates.top = y * m_CellSize.cy;
+        CellCoordinates.right = (x + 1) * m_CellSize.cx + 1;
+        CellCoordinates.bottom = (y + 1) * m_CellSize.cy + 1;
 
         m_Cells[y][x]->SetCellCoordinates(CellCoordinates);
     }
@@ -125,6 +213,7 @@ CGridView::OnSize(
     m_ClientCoordinates.right = ParentRect.right - m_ClientCoordinates.left - 10;
     m_ClientCoordinates.bottom = ParentRect.bottom - m_ClientCoordinates.top - 70;
 
+    // Resize the grid window
     SetWindowPos(m_hwnd,
                  NULL,
                  m_ClientCoordinates.left,
@@ -133,18 +222,90 @@ CGridView::OnSize(
                  m_ClientCoordinates.bottom,
                  SWP_NOZORDER | SWP_SHOWWINDOW);
 
-    // Get the client area we can draw on. The position we set above
-    // includes a scrollbar. GetClientRect gives us the size without
-    // the scroll, and it more efficient than getting the scroll
-    // metrics and calculating the size
+    // Get the client area we can draw on. The position we set above includes
+    // a scrollbar which we obvioulsy can't draw on. GetClientRect gives us
+    // the size without the scroll, and it more efficient than getting the
+    // scroll metrics and calculating the size from that
     RECT ClientRect;
     GetClientRect(m_hwnd, &ClientRect);
     m_CellSize.cx = ClientRect.right / m_xNumCells;
     m_CellSize.cy = ClientRect.bottom / m_yNumCells;
 
-    UpdateGridLayout();
+    // Let all the cells know about their new coords
+    UpdateCellCoordinates();
 
     return 0;
+}
+
+VOID
+CGridView::OnVScroll(_In_ INT Value,
+                     _In_ INT Pos)
+{
+    
+    INT PrevScrollPosition = ScrollPosition;
+
+    switch (Value)
+    {
+    case SB_LINEUP:
+        ScrollPosition -= 1;
+        break;
+
+    case SB_LINEDOWN:
+        ScrollPosition += 1;
+        break;
+
+    case SB_PAGEUP:
+        ScrollPosition -= m_yNumCells;
+        break;
+
+    case SB_PAGEDOWN:
+        ScrollPosition += m_yNumCells;
+        break;
+
+    case SB_THUMBTRACK:
+        ScrollPosition = Pos;
+        break;
+
+    default:
+        break;
+    }
+
+    INT ScrollDiff;
+    ScrollDiff = PrevScrollPosition - ScrollPosition;
+    if (ScrollDiff)
+    {
+        // Set the new scrollbar position in the scroll box
+        SetScrollPos(m_hwnd,
+                     SB_VERT,
+                     ScrollPosition,
+                     TRUE);
+
+        // Check if the scrollbar has moved more than the
+        // number of visible rows (draged or paged)
+        if (abs(ScrollDiff) < m_yNumCells)
+        {
+            RECT rect;
+            GetClientRect(m_hwnd, &rect);
+
+            // Scroll the visible cells which remain within the grid
+            // and invalid any new ones which appear from the top / bottom
+            ScrollWindowEx(m_hwnd,
+                           0,
+                           ScrollDiff * m_CellSize.cy,
+                           &rect,
+                           &rect,
+                           NULL,
+                           NULL,
+                           SW_INVALIDATE);
+        }
+        else
+        {
+            // All the cells need to be redrawn
+            InvalidateRect(m_hwnd,
+                           NULL,
+                           TRUE);
+        }
+    }
 }
 
 LRESULT
@@ -176,8 +337,10 @@ CGridView::OnPaint(
         }
     }
 
+    // Make sure we have a valid DC
     if (bSuccess)
     {
+        // Paint the grid and chars
         DrawGrid(&PaintStruct);
 
         if (LocalHdc)
@@ -237,6 +400,16 @@ CGridView::MapWndProc(
         break;
     }
 
+    case WM_VSCROLL:
+    {
+        INT Value, Pos;
+        Value = LOWORD(wParam);
+        Pos = HIWORD(wParam);
+
+        This->OnVScroll(Value, Pos);
+        break;
+    }
+
     case WM_PAINT:
     {
         This->OnPaint((HDC)wParam);
@@ -266,12 +439,29 @@ CGridView::DrawGrid(
     _In_ LPPAINTSTRUCT PaintStruct
     )
 {
+    // Calculate which glyph to start at based on scroll position
+    int i;
+    i = m_xNumCells * ScrollPosition;
+
+    // Make sure we have the correct font on the DC
+    HFONT hOldFont;
+    hOldFont = (HFONT)SelectFont(PaintStruct->hdc,
+                                 m_CurrentFont.hFont);
+
     // Traverse all the cells and tell them to paint themselves
     for (int y = 0; y < m_yNumCells; y++)
     for (int x = 0; x < m_xNumCells; x++)
     {
+        WCHAR ch = (WCHAR)m_CurrentFont.ValidGlyphs[i];
+        m_Cells[y][x]->SetChar(ch);
+
         m_Cells[y][x]->OnPaint(*PaintStruct);
+
+        i++;
     }
+
+    SelectObject(PaintStruct->hdc, hOldFont);
+
 }
 
 void

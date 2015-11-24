@@ -1,17 +1,16 @@
 #pragma once
 #include "Cell.h"
 
-//typedef struct _CELL
-//{
-//    RECT CellExt;
-//    RECT CellInt;
-//    BOOL bActive;
-//    BOOL bLarge;
-//    WCHAR ch;
-//
-//} CELL, *PCELL;
-
 #define MAX_GLYPHS 0xFFFF
+
+struct CurrentFont
+{
+    CAtlStringW FontName;
+    LOGFONTW Font;
+    HFONT hFont;
+    USHORT ValidGlyphs[MAX_GLYPHS];
+    USHORT NumValidGlyphs;
+};
 
 
 class CGridView
@@ -26,17 +25,14 @@ private:
     int m_yNumCells;
 
     RECT m_ClientCoordinates;
-    //SIZE ClientSize;
     SIZE m_CellSize;
-    CCell*** m_Cells; // m_Cells[][];
+    CCell*** m_Cells; // *m_Cells[][];
     CCell *m_ActiveCell;
 
     HFONT hFont;
-    LOGFONTW CurrentFont;
-    INT iYStart;
+    INT ScrollPosition;
 
-    USHORT ValidGlyphs[MAX_GLYPHS];
-    USHORT NumValidGlyphs;
+    CurrentFont m_CurrentFont;
 
 public:
     CGridView();
@@ -44,6 +40,10 @@ public:
 
     bool Create(
         _In_ HWND hParent
+        );
+
+    bool SetFont(
+        _In_ CAtlString& FontName
         );
 
 private:
@@ -65,11 +65,16 @@ private:
         _In_ INT Height
         );
 
+    VOID OnVScroll(
+        _In_ INT Value,
+        _In_ INT Pos
+        );
+
     LRESULT OnPaint(
         _In_opt_ HDC hdc
         );
 
-    bool UpdateGridLayout(
+    bool UpdateCellCoordinates(
         );
 
     void DrawGrid(
