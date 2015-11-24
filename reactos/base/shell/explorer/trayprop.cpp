@@ -36,6 +36,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
 {
     HWND hwndLock, hwndHide, hwndGroup, hwndShowQL, hwndClock, hwndSeconds, hwndHideInactive;
     HWND hwndTaskbarBitmap, hwndTrayBitmap;
+    HWND hwndAdvancedButton;
     BOOL bLock, bHide, bGroup, bShowQL, bShowClock, bShowSeconds, bHideInactive;
     LPTSTR lpTaskBarImageName = NULL, lpTrayImageName = NULL;
     BOOL bRet = FALSE;
@@ -48,6 +49,8 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
     hwndClock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_CLOCK);
     hwndSeconds = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SECONDS);
     hwndHideInactive = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDEICONS);
+    
+    hwndAdvancedButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_ICONCUST);
 
     if (hwndLock && hwndHide && hwndGroup && hwndShowQL && hwndClock && hwndSeconds && hwndHideInactive)
     {
@@ -109,10 +112,10 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
         
         if (bHideInactive)
         {
-            /* FIXME: when the customize button is disabled, enable it. */
+            EnableWindow(hwndAdvancedButton, TRUE);
             if(bShowClock)
             {
-                /* FIXME: when the seconds checkbox is disabled, enable it. */
+                EnableWindow(hwndSeconds, TRUE);
                 if(bShowSeconds)
                     lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_SECONDS);
                 else
@@ -120,16 +123,16 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
             else
             {
-                /* FIXME: when the seconds checkbox is enabled, disable it it. */
+                EnableWindow(hwndSeconds, FALSE);
                 lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
             }
         }
         else
         {
-            /* FIXME: when the customize button is enabled, disable it. */
+            EnableWindow(hwndAdvancedButton, FALSE);
             if(bShowClock)
             {
-                /* FIXME: when the seconds checkbox is disabled, enable it. */
+                EnableWindow(hwndSeconds, TRUE);
                 if(bShowSeconds)
                     lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_SECONDS);
                 else
@@ -137,7 +140,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
             else
             {
-                /* FIXME: when the seconds checkbox is enabled, disable it it. */
+                EnableWindow(hwndSeconds, FALSE);
                 lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
             }
         }
@@ -184,6 +187,7 @@ OnCreateTaskbarPage(HWND hwnd,
     pPropInfo->hTaskbarWnd = hwnd;
 
     // FIXME: check buttons
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, AdvancedSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
 
     UpdateTaskbarBitmap(pPropInfo);
 }
@@ -241,6 +245,8 @@ TaskbarPageProc(HWND hwndDlg,
                     break;
 
                 case PSN_APPLY:
+                    AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
                     break;
             }
 
