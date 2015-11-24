@@ -1618,13 +1618,8 @@ HRESULT WINAPI IDirectInputDevice2WImpl_Poll(LPDIRECTINPUTDEVICE8W iface)
 
     if (!This->acquired) return DIERR_NOTACQUIRED;
 
-#ifndef __REACTOS__
-    __wine_check_for_events( QS_ALLINPUT );
+    check_dinput_events();
     return DI_OK;
-#else
-    /* Devices do not need to be polled on ReactOS. */
-    return DI_NOEFFECT;
-#endif
 }
 
 HRESULT WINAPI IDirectInputDevice2AImpl_Poll(LPDIRECTINPUTDEVICE8A iface)

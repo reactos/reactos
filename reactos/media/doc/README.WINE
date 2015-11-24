@@ -30,7 +30,7 @@ reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-1.7.55
 reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-1.7.47
 reactos/dll/directx/wine/ddraw          # Synced to WineStaging-1.7.55
 reactos/dll/directx/wine/devenum        # Synced to WineStaging-1.7.55
-reactos/dll/directx/wine/dinput         # Synced to WineStaging-1.7.47
+reactos/dll/directx/wine/dinput         # Synced to WineStaging-1.7.55
 reactos/dll/directx/wine/dinput8        # Synced to WineStaging-1.7.47
 reactos/dll/directx/wine/dmusic         # Synced to WineStaging-1.7.47
 reactos/dll/directx/wine/dplay          # Synced to WineStaging-1.7.47

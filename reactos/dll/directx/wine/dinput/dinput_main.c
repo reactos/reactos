@@ -320,6 +320,39 @@ static DWORD diactionformat_priorityW(LPDIACTIONFORMATW lpdiaf, DWORD genre)
     return priorityFlags;
 }
 
+#if defined __i386__ && defined _MSC_VER
+__declspec(naked) BOOL enum_callback_wrapper(void *callback, const void *instance, void *ref)
+{
+    __asm
+    {
+        push ebp
+        mov ebp, esp
+        push [ebp+16]
+        push [ebp+12]
+        call [ebp+8]
+        leave
+        ret
+    }
+}
+#elif defined __i386__ && defined __GNUC__
+extern BOOL enum_callback_wrapper(void *callback, const void *instance, void *ref);
+__ASM_GLOBAL_FUNC( enum_callback_wrapper,
+    "pushl %ebp\n\t"
+    __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+    __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
+    "movl %esp,%ebp\n\t"
+    __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
+    "pushl 16(%ebp)\n\t"
+    "pushl 12(%ebp)\n\t"
+    "call *8(%ebp)\n\t"
+    "leave\n\t"
+    __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
+    __ASM_CFI(".cfi_same_value %ebp\n\t")
+    "ret" )
+#else
+#define enum_callback_wrapper(callback, instance, ref) (callback)((instance), (ref))
+#endif
+
 /******************************************************************************
  *	IDirectInputA_EnumDevices
  */
@@ -352,7 +385,7 @@ static HRESULT WINAPI IDirectInputAImpl_EnumDevices(
             TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
             r = dinput_devices[i]->enum_deviceA(dwDevType, dwFlags, &devInstance, This->dwVersion, j);
             if (r == S_OK)
-                if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
+                if (enum_callback_wrapper(lpCallback, &devInstance, pvRef) == DIENUM_STOP)
                     return S_OK;
         }
     }
@@ -392,7 +425,7 @@ static HRESULT WINAPI IDirectInputWImpl_EnumDevices(
             TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
             r = dinput_devices[i]->enum_deviceW(dwDevType, dwFlags, &devInstance, This->dwVersion, j);
             if (r == S_OK)
-                if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
+                if (enum_callback_wrapper(lpCallback, &devInstance, pvRef) == DIENUM_STOP)
                     return S_OK;
         }
     }
@@ -1464,7 +1497,7 @@ static DWORD WINAPI hook_thread_proc(void *param)
 
     /* Force creation of the message queue */
     PeekMessageW( &msg, 0, 0, 0, PM_NOREMOVE );
-    SetEvent(*(LPHANDLE)param);
+    SetEvent(param);
 
     while (GetMessageW( &msg, 0, 0, 0 ))
     {
@@ -1532,6 +1565,7 @@ static DWORD WINAPI hook_thread_proc(void *param)
 }
 
 static DWORD hook_thread_id;
+static HANDLE hook_thread_event;
 
 static CRITICAL_SECTION_DEBUG dinput_critsect_debug =
 {
@@ -1550,23 +1584,20 @@ static BOOL check_hook_thread(void)
     TRACE("IDirectInputs left: %d\n", list_count(&direct_input_list));
     if (!list_empty(&direct_input_list) && !hook_thread)
     {
-        HANDLE event;
-
-        event = CreateEventW(NULL, FALSE, FALSE, NULL);
-        hook_thread = CreateThread(NULL, 0, hook_thread_proc, &event, 0, &hook_thread_id);
-        if (event && hook_thread)
-        {
-            HANDLE handles[2];
-            handles[0] = event;
-            handles[1] = hook_thread;
-            WaitForMultipleObjects(2, handles, FALSE, INFINITE);
-        }
+        hook_thread_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+        hook_thread = CreateThread(NULL, 0, hook_thread_proc, hook_thread_event, 0, &hook_thread_id);
         LeaveCriticalSection(&dinput_hook_crit);
-        CloseHandle(event);
     }
     else if (list_empty(&direct_input_list) && hook_thread)
     {
         DWORD tid = hook_thread_id;
+
+        if (hook_thread_event) /* if thread is not started yet */
+        {
+            WaitForSingleObject(hook_thread_event, INFINITE);
+            CloseHandle(hook_thread_event);
+            hook_thread_event = NULL;
+        }
 
         hook_thread_id = 0;
         PostThreadMessageW(tid, WM_USER+0x10, 0, 0);
@@ -1608,9 +1639,32 @@ void check_dinput_hooks(LPDIRECTINPUTDEVICE8W iface)
         callwndproc_hook = NULL;
     }
 
+    if (hook_thread_event) /* if thread is not started yet */
+    {
+        WaitForSingleObject(hook_thread_event, INFINITE);
+        CloseHandle(hook_thread_event);
+        hook_thread_event = NULL;
+    }
+
     PostThreadMessageW( hook_thread_id, WM_USER+0x10, 1, 0 );
 
     LeaveCriticalSection(&dinput_hook_crit);
+}
+
+void check_dinput_events(void)
+{
+    /* Windows does not do that, but our current implementation of winex11
+     * requires periodic event polling to forward events to the wineserver.
+     *
+     * We have to call this function from multiple places, because:
+     * - some games do not explicitly poll for mouse events
+     *   (for example Culpa Innata)
+     * - some games only poll the device, and neither keyboard nor mouse
+     *   (for example Civilization: Call to Power 2)
+     */
+#ifndef __REACTOS__
+    MsgWaitForMultipleObjectsEx(0, NULL, 0, QS_ALLINPUT, 0);
+#endif
 }
 
 BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved)
