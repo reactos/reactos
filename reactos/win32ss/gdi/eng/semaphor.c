@@ -42,7 +42,14 @@ EngAcquireSemaphore(
 {
     // www.osr.com/ddk/graphics/gdifncs_14br.htm
     PTHREADINFO W32Thread;
-    ASSERT(hsem);
+
+    /* On Windows a NULL hsem is ignored */
+    if (hsem == NULL)
+    {
+        DPRINT1("EngAcquireSemaphore called with hsem == NULL!\n");
+        return;
+    }
+
     ExEnterCriticalRegionAndAcquireResourceExclusive((PERESOURCE)hsem);
     W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
     if (W32Thread) W32Thread->dwEngAcquireCount++;
