@@ -346,6 +346,7 @@ static void test_status_control(void)
         r = SendMessageA(hWndStatus, SB_SETTEXTA, 0, (LPARAM)chstr);
         expect(TRUE,r);
         r = SendMessageA(hWndStatus, SB_GETTEXTA, 0, (LPARAM)charArray);
+        ok(r == strlen(charArray), "got %d\n", r);
         /* substitution with single space */
         if (ch > 0x00 && ch < 0x20 && ch != '\t')
             chstr[5] = ' ';

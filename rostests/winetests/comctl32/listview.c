@@ -5345,6 +5345,7 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMCHANGINGW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_ITEMCHANGINGA;
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
                 "header notify, parent", TRUE);
@@ -5353,6 +5354,7 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMCHANGEDW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_ITEMCHANGEDA;
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
                 "header notify, parent", TRUE);
@@ -5363,30 +5365,35 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMCLICKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_click_seq,
                 "header notify, parent", FALSE);
     ok(nmhdr.hdr.code == HDN_ITEMCLICKA, "Expected ANSI notification code\n");
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMDBLCLICKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     ok(nmhdr.hdr.code == HDN_ITEMDBLCLICKW, "Expected Unicode notification code\n");
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_DIVIDERDBLCLICKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_divider_dclick_seq,
                 "header notify, parent", TRUE);
     ok(nmhdr.hdr.code == HDN_DIVIDERDBLCLICKA, "Expected ANSI notification code\n");
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_BEGINTRACKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     ok(nmhdr.hdr.code == HDN_BEGINTRACKW, "Expected Unicode notification code\n");
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ENDTRACKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_ENDTRACKA;
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
                 "header notify, parent", FALSE);
@@ -5394,6 +5401,7 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_TRACKW;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_TRACKA;
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
                 "header notify, parent", FALSE);
@@ -5401,17 +5409,20 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_BEGINDRAG;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 1, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ENDDRAG;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_ENDDRAG;
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
                 "header notify, parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_FILTERCHANGE;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     parent_header_notify_seq[0].id = HDN_FILTERCHANGE;
     parent_header_notify_seq[0].flags |= optional; /* NT4 does not send this message */
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
@@ -5420,21 +5431,25 @@ static void test_header_notification2(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_BEGINFILTEREDIT;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ENDFILTEREDIT;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMSTATEICONCLICK;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     nmhdr.hdr.code = HDN_ITEMKEYDOWN;
     ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok(ret == 0, "got %d\n", ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "header notify, parent", FALSE);
 
@@ -5748,6 +5763,76 @@ static void test_header_proc(void)
     DestroyWindow(hwnd);
 }
 
+static void flush_events(void)
+{
+    MSG msg;
+    int diff = 200;
+    int min_timeout = 100;
+    DWORD time = GetTickCount() + diff;
+
+    while (diff > 0)
+    {
+        if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
+        diff = time - GetTickCount();
+    }
+}
+
+static void test_oneclickactivate(void)
+{
+    TRACKMOUSEEVENT track;
+    char item1[] = "item1";
+    LVITEMA item;
+    HWND hwnd, fg;
+    RECT rect;
+    INT r;
+
+    hwnd = CreateWindowExA(0, "SysListView32", "foo", WS_VISIBLE|WS_CHILD|LVS_LIST,
+            10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
+    ok(hwnd != NULL, "failed to create listview window\n");
+    r = SendMessageA(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_ONECLICKACTIVATE);
+    ok(r == 0, "should return zero\n");
+
+    SetForegroundWindow(hwndparent);
+    flush_events();
+    fg = GetForegroundWindow();
+    if (fg != hwndparent)
+    {
+        skip("Window is not in the foreground. Skipping oneclickactivate tests.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    item.mask = LVIF_TEXT;
+    item.iItem = 0;
+    item.iSubItem = 0;
+    item.iImage = 0;
+    item.pszText = item1;
+    r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM) &item);
+    ok(r == 0, "should not fail\n");
+
+    GetWindowRect(hwnd, &rect);
+    SetCursorPos(rect.left+5, rect.top+5);
+    flush_events();
+    r = SendMessageA(hwnd, WM_MOUSEMOVE, MAKELONG(1, 1), 0);
+    expect(0, r);
+
+    track.cbSize = sizeof(track);
+    track.dwFlags = TME_QUERY;
+    _TrackMouseEvent(&track);
+    ok(track.hwndTrack == hwnd, "hwndTrack != hwnd\n");
+    ok(track.dwFlags == TME_LEAVE, "dwFlags = %x\n", track.dwFlags);
+
+    r = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+    expect(0, r);
+    r = SendMessageA(hwnd, WM_MOUSEHOVER, MAKELONG(1, 1), 0);
+    expect(0, r);
+    r = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+    expect(1, r);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
     HMODULE hComctl32;
@@ -5817,6 +5902,7 @@ START_TEST(listview)
     test_deleteitem();
     test_insertitem();
     test_header_proc();
+    test_oneclickactivate();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {

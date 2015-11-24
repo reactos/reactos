@@ -1536,7 +1536,6 @@ static void test_sizes(void)
     /* Single non-BTNS_AUTOSIZE button with string with TBSTYLE_EX_MIXEDBUTTONS set. */
     rebuild_toolbar(&hToolbar);
     SendMessageA(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
     ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[1]) == 1, "TB_ADDBUTTONSA failed\n");
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
     SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
@@ -1545,7 +1544,6 @@ static void test_sizes(void)
     /* Single non-BTNS_AUTOSIZE, BTNS_SHOWTEXT button with string with TBSTYLE_EX_MIXEDBUTTONS set. */
     rebuild_toolbar(&hToolbar);
     SendMessageA(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-    style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
     ok(SendMessageA(hToolbar, TB_ADDBUTTONSA, 1, (LPARAM)&buttons4[2]) == 1, "TB_ADDBUTTONSA failed\n");
     ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(40, 20)) == 1, "TB_SETBUTTONSIZE failed\n");
     SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );

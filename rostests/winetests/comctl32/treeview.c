@@ -905,6 +905,13 @@ static void test_get_set_item(void)
     expect(TRUE, ret);
     ok(tviRoot.state == TVIS_FOCUSED, "got state 0x%0x\n", tviRoot.state);
 
+    /* invalid item pointer, nt4 crashes here but later versions just return 0 */
+    tviRoot.hItem = (HTREEITEM)0xdeadbeef;
+    tviRoot.mask = TVIF_STATE;
+    tviRoot.state = 0;
+    ret = SendMessageA(hTree2, TVM_GETITEMA, 0, (LPARAM)&tviRoot);
+    expect(FALSE, ret);
+
     DestroyWindow(hTree);
     DestroyWindow(hTree2);
 }
