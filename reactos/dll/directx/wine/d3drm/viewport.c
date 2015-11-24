@@ -298,7 +298,7 @@ static BOOL WINAPI d3drm_viewport1_GetUniformScaling(IDirect3DRMViewport *iface)
 {
     FIXME("iface %p stub!\n", iface);
 
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static LONG WINAPI d3drm_viewport1_GetX(IDirect3DRMViewport *iface)
@@ -663,7 +663,7 @@ static BOOL WINAPI d3drm_viewport2_GetUniformScaling(IDirect3DRMViewport2 *iface
 {
     FIXME("iface %p stub!\n", iface);
 
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static LONG WINAPI d3drm_viewport2_GetX(IDirect3DRMViewport2 *iface)

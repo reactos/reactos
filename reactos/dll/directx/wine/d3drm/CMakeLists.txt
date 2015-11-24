@@ -30,6 +30,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(d3drm mingwex)
 endif()
 
-add_importlibs(d3drm d3dxof msvcrt kernel32 ntdll)
+add_importlibs(d3drm ddraw d3dxof msvcrt kernel32 ntdll)
 add_pch(d3drm d3drm_private.h SOURCE)
 add_cd_file(TARGET d3drm DESTINATION reactos/system32 FOR all)
