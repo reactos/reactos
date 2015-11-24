@@ -5797,7 +5797,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	guid_cache = HeapAlloc(GetProcessHeap(), 0, sizeof(GUID) * dwIndex);
 	if (!guid_cache)
 	{
-	    ERR(": failed to alloc required memory.\n");
+	    ERR(": failed to allocate required memory.\n");
 	    return DPERR_EXCEPTION;
 	}
 	cache_count = dwIndex;
