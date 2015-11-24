@@ -123,6 +123,7 @@ static NTSTATUS (WINAPI * pRtlQueryRegistryValues)(IN ULONG, IN PCWSTR,IN PRTL_Q
 static NTSTATUS (WINAPI * pRtlCheckRegistryKey)(IN ULONG,IN PWSTR);
 static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(IN ACCESS_MASK, PHANDLE);
 static NTSTATUS (WINAPI * pNtOpenKey)(PHANDLE, IN ACCESS_MASK, IN POBJECT_ATTRIBUTES);
+static NTSTATUS (WINAPI * pNtOpenKeyEx)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, ULONG);
 static NTSTATUS (WINAPI * pNtClose)(IN HANDLE);
 static NTSTATUS (WINAPI * pNtFlushKey)(HANDLE);
 static NTSTATUS (WINAPI * pNtDeleteKey)(HANDLE);
@@ -145,6 +146,10 @@ static NTSTATUS (WINAPI * pRtlFreeHeap)(PVOID, ULONG, PVOID);
 static LPVOID   (WINAPI * pRtlAllocateHeap)(PVOID,ULONG,ULONG);
 static NTSTATUS (WINAPI * pRtlZeroMemory)(PVOID, ULONG);
 static NTSTATUS (WINAPI * pRtlpNtQueryValueKey)(HANDLE,ULONG*,PBYTE,DWORD*,void *);
+static NTSTATUS (WINAPI * pNtNotifyChangeKey)(HANDLE,HANDLE,PIO_APC_ROUTINE,PVOID,PIO_STATUS_BLOCK,ULONG,BOOLEAN,PVOID,ULONG,BOOLEAN);
+static NTSTATUS (WINAPI * pNtNotifyChangeMultipleKeys)(HANDLE,ULONG,OBJECT_ATTRIBUTES*,HANDLE,PIO_APC_ROUTINE,
+                                                       void*,IO_STATUS_BLOCK*,ULONG,BOOLEAN,void*,ULONG,BOOLEAN);
+static NTSTATUS (WINAPI * pNtWaitForSingleObject)(HANDLE,BOOLEAN,const LARGE_INTEGER*);
 
 static HMODULE hntdll = 0;
 static int CurrentTest = 0;
@@ -182,6 +187,7 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(NtQueryInformationProcess)
     NTDLL_GET_PROC(NtSetValueKey)
     NTDLL_GET_PROC(NtOpenKey)
+    NTDLL_GET_PROC(NtNotifyChangeKey)
     NTDLL_GET_PROC(RtlFormatCurrentUserKeyPath)
     NTDLL_GET_PROC(RtlCompareUnicodeString)
     NTDLL_GET_PROC(RtlReAllocateHeap)
@@ -192,9 +198,12 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(RtlZeroMemory)
     NTDLL_GET_PROC(RtlpNtQueryValueKey)
     NTDLL_GET_PROC(RtlOpenCurrentUser)
+    NTDLL_GET_PROC(NtWaitForSingleObject)
 
     /* optional functions */
     pNtQueryLicenseValue = (void *)GetProcAddress(hntdll, "NtQueryLicenseValue");
+    pNtOpenKeyEx = (void *)GetProcAddress(hntdll, "NtOpenKeyEx");
+    pNtNotifyChangeMultipleKeys = (void *)GetProcAddress(hntdll, "NtNotifyChangeMultipleKeys");
 
     return TRUE;
 }
@@ -351,6 +360,18 @@ static void test_NtOpenKey(void)
     attr.Length *= 2;
     status = pNtOpenKey(&key, am, &attr);
     ok(status == STATUS_INVALID_PARAMETER, "Expected STATUS_INVALID_PARAMETER, got: 0x%08x\n", status);
+
+    if (!pNtOpenKeyEx)
+    {
+        win_skip("NtOpenKeyEx not available\n");
+        return;
+    }
+
+    InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+    status = pNtOpenKeyEx(&key, KEY_WRITE|KEY_READ, &attr, 0);
+    ok(status == STATUS_SUCCESS, "NtOpenKeyEx Failed: 0x%08x\n", status);
+
+    pNtClose(key);
 }
 
 static void test_NtCreateKey(void)
@@ -509,14 +530,14 @@ static void test_NtQueryValueKey(void)
     OBJECT_ATTRIBUTES attr;
     UNICODE_STRING ValName;
     KEY_VALUE_BASIC_INFORMATION *basic_info;
-    KEY_VALUE_PARTIAL_INFORMATION *partial_info;
+    KEY_VALUE_PARTIAL_INFORMATION *partial_info, pi;
     KEY_VALUE_FULL_INFORMATION *full_info;
     DWORD len, expected;
 
     pRtlCreateUnicodeStringFromAsciiz(&ValName, "deletetest");
 
     InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
-    status = pNtOpenKey(&key, KEY_READ, &attr);
+    status = pNtOpenKey(&key, KEY_READ|KEY_SET_VALUE, &attr);
     ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08x\n", status);
 
     len = FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]);
@@ -611,8 +632,18 @@ static void test_NtQueryValueKey(void)
     ok(len == expected, "NtQueryValueKey wrong len %u\n", len);
 
     HeapFree(GetProcessHeap(), 0, partial_info);
-
     pRtlFreeUnicodeString(&ValName);
+
+    pRtlCreateUnicodeStringFromAsciiz(&ValName, "custtest");
+    status = pNtSetValueKey(key, &ValName, 0, 0xff00ff00, NULL, 0);
+    ok(status == STATUS_SUCCESS, "NtSetValueKey Failed: 0x%08x\n", status);
+
+    status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, &pi, sizeof(pi), &len);
+    ok(status == STATUS_SUCCESS, "NtQueryValueKey should have returned STATUS_BUFFER_TOO_SMALL instead of 0x%08x\n", status);
+    ok(pi.Type == 0xff00ff00, "Type=%x\n", pi.Type);
+    ok(pi.DataLength == 0, "DataLength=%u\n", pi.DataLength);
+    pRtlFreeUnicodeString(&ValName);
+
     pNtClose(key);
 }
 
@@ -1445,12 +1476,14 @@ static void test_long_value_name(void)
 
 static void test_NtQueryKey(void)
 {
-    HANDLE key;
+    HANDLE key, subkey, subkey2;
     NTSTATUS status;
     OBJECT_ATTRIBUTES attr;
     ULONG length, len;
     KEY_NAME_INFORMATION *info = NULL;
+    KEY_CACHED_INFORMATION cached_info;
     UNICODE_STRING str;
+    DWORD dw;
 
     InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
     status = pNtOpenKey(&key, KEY_READ, &attr);
@@ -1485,7 +1518,169 @@ static void test_NtQueryKey(void)
        wine_dbgstr_wn(winetestpath.Buffer, winetestpath.Length/sizeof(WCHAR)));
 
     HeapFree(GetProcessHeap(), 0, info);
+
+    attr.RootDirectory = key;
+    attr.ObjectName = &str;
+    pRtlCreateUnicodeStringFromAsciiz(&str, "test_subkey");
+    status = pNtCreateKey(&subkey, GENERIC_ALL, &attr, 0, 0, 0, 0);
+    ok(status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status);
+
+    status = pNtQueryKey(subkey, KeyCachedInformation, &cached_info, sizeof(cached_info), &len);
+    ok(status == STATUS_SUCCESS, "NtQueryKey Failed: 0x%08x\n", status);
+
+    if (status == STATUS_SUCCESS)
+    {
+        ok(len == sizeof(cached_info), "got unexpected length %d\n", len);
+        ok(cached_info.SubKeys == 0, "cached_info.SubKeys = %u\n", cached_info.SubKeys);
+        ok(cached_info.MaxNameLen == 0, "cached_info.MaxNameLen = %u\n", cached_info.MaxNameLen);
+        ok(cached_info.Values == 0, "cached_info.Values = %u\n", cached_info.Values);
+        ok(cached_info.MaxValueNameLen == 0, "cached_info.MaxValueNameLen = %u\n", cached_info.MaxValueNameLen);
+        ok(cached_info.MaxValueDataLen == 0, "cached_info.MaxValueDataLen = %u\n", cached_info.MaxValueDataLen);
+        ok(cached_info.NameLength == 22, "cached_info.NameLength = %u\n", cached_info.NameLength);
+    }
+
+    attr.RootDirectory = subkey;
+    attr.ObjectName = &str;
+    pRtlCreateUnicodeStringFromAsciiz(&str, "test_subkey2");
+    status = pNtCreateKey(&subkey2, GENERIC_ALL, &attr, 0, 0, 0, 0);
+    ok(status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status);
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, "val");
+    dw = 64;
+    status = pNtSetValueKey( subkey, &str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+
+    if (!winetest_interactive)
+        skip("ROSTESTS-198: Causes an assert in Cm.\n");
+    else
+    {
+        status = pNtQueryKey(subkey, KeyCachedInformation, &cached_info, sizeof(cached_info), &len);
+        ok(status == STATUS_SUCCESS, "NtQueryKey Failed: 0x%08x\n", status);
+
+        if (status == STATUS_SUCCESS)
+        {
+            ok(len == sizeof(cached_info), "got unexpected length %d\n", len);
+            ok(cached_info.SubKeys == 1, "cached_info.SubKeys = %u\n", cached_info.SubKeys);
+            ok(cached_info.MaxNameLen == 24, "cached_info.MaxNameLen = %u\n", cached_info.MaxNameLen);
+            ok(cached_info.Values == 1, "cached_info.Values = %u\n", cached_info.Values);
+            ok(cached_info.MaxValueNameLen == 6, "cached_info.MaxValueNameLen = %u\n", cached_info.MaxValueNameLen);
+            ok(cached_info.MaxValueDataLen == 4, "cached_info.MaxValueDataLen = %u\n", cached_info.MaxValueDataLen);
+            ok(cached_info.NameLength == 22, "cached_info.NameLength = %u\n", cached_info.NameLength);
+        }
+    }
+
+    status = pNtDeleteKey(subkey2);
+    ok(status == STATUS_SUCCESS, "NtDeleteSubkey failed: %x\n", status);
+    status = pNtDeleteKey(subkey);
+    ok(status == STATUS_SUCCESS, "NtDeleteSubkey failed: %x\n", status);
+
+    pNtClose(subkey2);
+    pNtClose(subkey);
     pNtClose(key);
+}
+
+static void test_notify(void)
+{
+    OBJECT_ATTRIBUTES attr;
+    LARGE_INTEGER timeout;
+    IO_STATUS_BLOCK iosb;
+    UNICODE_STRING str;
+    HANDLE key, events[2], subkey;
+    NTSTATUS status;
+
+    InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+    status = pNtOpenKey(&key, KEY_ALL_ACCESS, &attr);
+    ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08x\n", status);
+
+    events[0] = CreateEventW(NULL, FALSE, TRUE, NULL);
+    ok(events[0] != NULL, "CreateEvent failed: %u\n", GetLastError());
+    events[1] = CreateEventW(NULL, FALSE, TRUE, NULL);
+    ok(events[1] != NULL, "CreateEvent failed: %u\n", GetLastError());
+
+    status = pNtNotifyChangeKey(key, events[0], NULL, NULL, &iosb, REG_NOTIFY_CHANGE_NAME, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+    status = pNtNotifyChangeKey(key, events[1], NULL, NULL, &iosb, REG_NOTIFY_CHANGE_NAME, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+
+    timeout.QuadPart = 0;
+    status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+    ok(status == STATUS_TIMEOUT, "NtWaitForSingleObject returned %x\n", status);
+    status = pNtWaitForSingleObject(events[1], FALSE, &timeout);
+    ok(status == STATUS_TIMEOUT, "NtWaitForSingleObject returned %x\n", status);
+
+    attr.RootDirectory = key;
+    attr.ObjectName = &str;
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, "test_subkey");
+    status = pNtCreateKey(&subkey, GENERIC_ALL, &attr, 0, 0, 0, 0);
+    ok(status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status);
+
+    status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+    status = pNtWaitForSingleObject(events[1], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+
+    status = pNtNotifyChangeKey(key, events[0], NULL, NULL, &iosb, 0, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+    status = pNtNotifyChangeKey(key, events[1], NULL, NULL, &iosb, 0, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+
+    status = pNtDeleteKey(subkey);
+    ok(status == STATUS_SUCCESS, "NtDeleteSubkey failed: %x\n", status);
+
+    status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+    status = pNtWaitForSingleObject(events[1], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+
+    pNtClose(subkey);
+
+    status = pNtNotifyChangeKey(key, events[0], NULL, NULL, &iosb, 0, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+    status = pNtNotifyChangeKey(key, events[1], NULL, NULL, &iosb, 0, FALSE, NULL, 0, TRUE);
+    ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+
+    pNtClose(key);
+
+    status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+    status = pNtWaitForSingleObject(events[1], FALSE, &timeout);
+    ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+
+    if (pNtNotifyChangeMultipleKeys)
+    {
+        InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+        status = pNtOpenKey(&key, KEY_ALL_ACCESS, &attr);
+        ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08x\n", status);
+
+        status = pNtNotifyChangeMultipleKeys(key, 0, NULL, events[0], NULL, NULL, &iosb, REG_NOTIFY_CHANGE_NAME, FALSE, NULL, 0, TRUE);
+        ok(status == STATUS_PENDING, "NtNotifyChangeKey returned %x\n", status);
+
+        timeout.QuadPart = 0;
+        status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+        ok(status == STATUS_TIMEOUT, "NtWaitForSingleObject returned %x\n", status);
+
+        attr.RootDirectory = key;
+        attr.ObjectName = &str;
+        pRtlCreateUnicodeStringFromAsciiz(&str, "test_subkey");
+        status = pNtCreateKey(&subkey, GENERIC_ALL, &attr, 0, 0, 0, 0);
+        ok(status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status);
+
+        status = pNtWaitForSingleObject(events[0], FALSE, &timeout);
+        ok(status == STATUS_SUCCESS, "NtWaitForSingleObject returned %x\n", status);
+
+        status = pNtDeleteKey(subkey);
+        ok(status == STATUS_SUCCESS, "NtDeleteSubkey failed: %x\n", status);
+        pNtClose(subkey);
+        pNtClose(key);
+    }
+    else
+    {
+        win_skip("NtNotifyChangeMultipleKeys not available\n");
+    }
+
+    pNtClose(events[0]);
+    pNtClose(events[1]);
 }
 
 START_TEST(reg)
@@ -1512,6 +1707,7 @@ START_TEST(reg)
     test_NtQueryLicenseKey();
     test_NtQueryValueKey();
     test_long_value_name();
+    test_notify();
     test_NtDeleteKey();
     test_symlinks();
     test_redirection();

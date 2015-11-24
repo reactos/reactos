@@ -174,7 +174,7 @@ static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char 
     data_size = mask ? offsetof( FILE_BOTH_DIRECTORY_INFORMATION, FileName[256] ) : sizeof(data);
 
     /* Read the directory and note which files are found */
-    status = pNtOpenFile( &dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, attr, &io, FILE_OPEN,
+    status = pNtOpenFile( &dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, attr, &io, FILE_SHARE_READ,
                          FILE_SYNCHRONOUS_IO_NONALERT|FILE_OPEN_FOR_BACKUP_INTENT|FILE_DIRECTORY_FILE);
     ok (status == STATUS_SUCCESS, "failed to open dir '%s', ret 0x%x, error %d\n", testdirA, status, GetLastError());
     if (status != STATUS_SUCCESS) {
@@ -270,6 +270,101 @@ done:
     pRtlFreeUnicodeString(&ntdirname);
 }
 
+static void set_up_case_test(const char *testdir)
+{
+    BOOL ret;
+    char buf[MAX_PATH];
+    HANDLE h;
+
+    ret = CreateDirectoryA(testdir, NULL);
+    ok(ret, "couldn't create dir '%s', error %d\n", testdir, GetLastError());
+
+    sprintf(buf, "%s\\%s", testdir, "TesT");
+    h = CreateFileA(buf, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                    FILE_ATTRIBUTE_NORMAL, 0);
+    ok(h != INVALID_HANDLE_VALUE, "failed to create temp file '%s'\n", buf);
+    CloseHandle(h);
+}
+
+static void tear_down_case_test(const char *testdir)
+{
+    int ret;
+    char buf[MAX_PATH];
+
+    sprintf(buf, "%s\\%s", testdir, "TesT");
+    ret = DeleteFileA(buf);
+    ok(ret || (GetLastError() == ERROR_PATH_NOT_FOUND),
+       "Failed to rm %s, error %d\n", buf, GetLastError());
+    RemoveDirectoryA(testdir);
+}
+
+static void test_NtQueryDirectoryFile_case(void)
+{
+    static const char testfile[] = "TesT";
+    static const WCHAR testfile_w[] = {'T','e','s','T'};
+    static int testfile_len = sizeof(testfile) - 1;
+    static WCHAR testmask[] = {'t','e','s','t'};
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING ntdirname;
+    char testdir[MAX_PATH];
+    WCHAR testdir_w[MAX_PATH];
+    HANDLE dirh;
+    UNICODE_STRING mask;
+    IO_STATUS_BLOCK io;
+    UINT data_size, data_len;
+    BYTE data[8192];
+    FILE_BOTH_DIRECTORY_INFORMATION *dir_info = (FILE_BOTH_DIRECTORY_INFORMATION *)data;
+    DWORD status;
+    WCHAR *name;
+    ULONG name_len;
+
+    /* Clean up from prior aborted run, if any, then set up test files */
+    ok(GetTempPathA(MAX_PATH, testdir), "couldn't get temp dir\n");
+    strcat(testdir, "case.tmp");
+    tear_down_case_test(testdir);
+    set_up_case_test(testdir);
+
+    pRtlMultiByteToUnicodeN(testdir_w, sizeof(testdir_w), NULL, testdir, strlen(testdir) + 1);
+    if (!pRtlDosPathNameToNtPathName_U(testdir_w, &ntdirname, NULL, NULL))
+    {
+        ok(0, "RtlDosPathNametoNtPathName_U failed\n");
+        goto done;
+    }
+    InitializeObjectAttributes(&attr, &ntdirname, OBJ_CASE_INSENSITIVE, 0, NULL);
+
+    data_size = offsetof(FILE_BOTH_DIRECTORY_INFORMATION, FileName[256]);
+
+    status = pNtOpenFile(&dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, &attr, &io, FILE_SHARE_READ,
+                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_DIRECTORY_FILE);
+    ok (status == STATUS_SUCCESS, "failed to open dir '%s', ret 0x%x, error %d\n", testdir, status, GetLastError());
+    if (status != STATUS_SUCCESS)
+    {
+       skip("can't test if we can't open the directory\n");
+       return;
+    }
+
+    mask.Buffer = testmask;
+    mask.Length = mask.MaximumLength = sizeof(testmask);
+    pNtQueryDirectoryFile(dirh, NULL, NULL, NULL, &io, data, data_size,
+                          FileBothDirectoryInformation, TRUE, &mask, FALSE);
+    ok(U(io).Status == STATUS_SUCCESS, "failed to query directory; status %x\n", U(io).Status);
+    data_len = io.Information;
+    ok(data_len >= sizeof(FILE_BOTH_DIRECTORY_INFORMATION), "not enough data in directory\n");
+
+    name = dir_info->FileName;
+    name_len = dir_info->FileNameLength / sizeof(WCHAR);
+
+    ok(name_len == testfile_len, "unexpected filename length %u\n", name_len);
+    ok(!memcmp(name, testfile_w, testfile_len * sizeof(WCHAR)), "unexpected filename %s\n",
+       wine_dbgstr_wn(name, name_len));
+
+    pNtClose(dirh);
+
+done:
+    tear_down_case_test(testdir);
+    pRtlFreeUnicodeString(&ntdirname);
+}
+
 static void test_redirection(void)
 {
     ULONG old, cur;
@@ -339,5 +434,6 @@ START_TEST(directory)
     pRtlWow64EnableFsRedirectionEx = (void *)GetProcAddress(hntdll,"RtlWow64EnableFsRedirectionEx");
 
     test_NtQueryDirectoryFile();
+    test_NtQueryDirectoryFile_case();
     test_redirection();
 }

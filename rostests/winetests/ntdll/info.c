@@ -477,27 +477,47 @@ static void test_query_handle(void)
     ULONG ReturnLength;
     ULONG SystemInformationLength = sizeof(SYSTEM_HANDLE_INFORMATION);
     SYSTEM_HANDLE_INFORMATION* shi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
+    HANDLE event_handle;
+
+    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok( event_handle != NULL, "CreateEventA failed %u\n", GetLastError() );
 
     /* Request the needed length : a SystemInformationLength greater than one struct sets ReturnLength */
+    ReturnLength = 0xdeadbeef;
     status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
-    todo_wine ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( ReturnLength != 0xdeadbeef, "Expected valid ReturnLength\n" );
 
     SystemInformationLength = ReturnLength;
     shi = HeapReAlloc(GetProcessHeap(), 0, shi , SystemInformationLength);
+
+    ReturnLength = 0xdeadbeef;
     status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
     if (status != STATUS_INFO_LENGTH_MISMATCH) /* vista */
     {
-        ok( status == STATUS_SUCCESS,
-            "Expected STATUS_SUCCESS, got %08x\n", status);
+        ULONG ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handle[shi->Count]);
+        unsigned int i;
+        BOOL found = FALSE;
 
-        /* Check if we have some return values */
-        trace("Number of Handles : %d\n", shi->Count);
-        todo_wine
+        ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+        ok( ReturnLength == ExpectedLength, "Expected length %u, got %u\n", ExpectedLength, ReturnLength );
+        ok( shi->Count > 1, "Expected more than 1 handles, got %u\n", shi->Count );
+        for (i = 0; i < shi->Count; i++)
         {
-            /* our implementation is a stub for now */
-            ok( shi->Count > 1, "Expected more than 1 handles, got (%d)\n", shi->Count);
+            if (shi->Handle[i].OwnerPid == GetCurrentProcessId() &&
+                (HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == event_handle)
+            {
+                found = TRUE;
+                break;
+            }
         }
+        ok( found, "Expected to find event handle in handle list\n" );
     }
+
+    status = pNtQuerySystemInformation(SystemHandleInformation, NULL, SystemInformationLength, &ReturnLength);
+    ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status );
+
+    CloseHandle(event_handle);
     HeapFree( GetProcessHeap(), 0, shi);
 }
 
@@ -1442,6 +1462,8 @@ static void test_mapprotection(void)
     *(unsigned char*)addr = 0xc3;       /* lret ... in both i386 and x86_64 */
 #elif defined(__arm__)
     *(unsigned long*)addr = 0xe12fff1e; /* bx lr */
+#elif defined(__aarch64__)
+    *(unsigned long*)addr = 0xd65f03c0; /* ret */
 #else
     ok(0, "Add a return opcode for your architecture or expect a crash in this test\n");
 #endif
@@ -1695,6 +1717,69 @@ static void test_NtGetCurrentProcessorNumber(void)
     ok(status == STATUS_SUCCESS, "got 0x%x (expected STATUS_SUCCESS)\n", status);
 }
 
+static DWORD WINAPI start_address_thread(void *arg)
+{
+    PRTL_THREAD_START_ROUTINE entry;
+    NTSTATUS status;
+    DWORD ret;
+
+    entry = NULL;
+    ret = 0xdeadbeef;
+    status = pNtQueryInformationThread(GetCurrentThread(), ThreadQuerySetWin32StartAddress,
+                                       &entry, sizeof(entry), &ret);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(ret == sizeof(entry), "NtQueryInformationThread returned %u bytes\n", ret);
+    ok(entry == (void *)start_address_thread, "expected %p, got %p\n", start_address_thread, entry);
+    return 0;
+}
+
+static void test_thread_start_address(void)
+{
+    PRTL_THREAD_START_ROUTINE entry, expected_entry;
+    IMAGE_NT_HEADERS *nt;
+    NTSTATUS status;
+    HANDLE thread;
+    void *module;
+    DWORD ret;
+
+    module = GetModuleHandleA(0);
+    ok(module != NULL, "expected non-NULL address for module\n");
+    nt = RtlImageNtHeader(module);
+    ok(nt != NULL, "expected non-NULL address for NT header\n");
+
+    entry = NULL;
+    ret = 0xdeadbeef;
+    status = pNtQueryInformationThread(GetCurrentThread(), ThreadQuerySetWin32StartAddress,
+                                       &entry, sizeof(entry), &ret);
+    ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(ret == sizeof(entry), "NtQueryInformationThread returned %u bytes\n", ret);
+    expected_entry = (void *)((char *)module + nt->OptionalHeader.AddressOfEntryPoint);
+    ok(entry == expected_entry, "expected %p, got %p\n", expected_entry, entry);
+
+    entry = (void *)0xdeadbeef;
+    status = pNtSetInformationThread(GetCurrentThread(), ThreadQuerySetWin32StartAddress,
+                                     &entry, sizeof(entry));
+    ok(status == STATUS_SUCCESS || status == STATUS_INVALID_PARAMETER, /* >= Vista */
+       "expected STATUS_SUCCESS or STATUS_INVALID_PARAMETER, got %08x\n", status);
+
+    if (status == STATUS_SUCCESS)
+    {
+        entry = NULL;
+        ret = 0xdeadbeef;
+        status = pNtQueryInformationThread(GetCurrentThread(), ThreadQuerySetWin32StartAddress,
+                                           &entry, sizeof(entry), &ret);
+        ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+        ok(ret == sizeof(entry), "NtQueryInformationThread returned %u bytes\n", ret);
+        ok(entry == (void *)0xdeadbeef, "expected 0xdeadbeef, got %p\n", entry);
+    }
+
+    thread = CreateThread(NULL, 0, start_address_thread, NULL, 0, NULL);
+    ok(thread != INVALID_HANDLE_VALUE, "CreateThread failed with %d\n", GetLastError());
+    ret = WaitForSingleObject(thread, 1000);
+    ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", ret);
+    CloseHandle(thread);
+}
+
 START_TEST(info)
 {
     char **argv;
@@ -1820,5 +1905,10 @@ START_TEST(info)
 
     trace("Starting test_affinity()\n");
     test_affinity();
+
+    trace("Starting test_NtGetCurrentProcessorNumber()\n");
     test_NtGetCurrentProcessorNumber();
+
+    trace("Starting test_thread_start_address()\n");
+    test_thread_start_address();
 }
