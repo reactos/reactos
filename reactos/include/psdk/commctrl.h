@@ -1141,6 +1141,8 @@ extern "C" {
 #define TB_GETANCHORHIGHLIGHT (WM_USER+74)
 #define TB_MAPACCELERATORA (WM_USER+78)
 
+#define TB_SETBOUNDINGSIZE (WM_USER+93)
+
   typedef struct {
     int iButton;
     DWORD dwFlags;
