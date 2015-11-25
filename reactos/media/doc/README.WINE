@@ -55,7 +55,7 @@ reactos/dll/win32/cabinet             # Synced to WineStaging-1.7.47
 reactos/dll/win32/clusapi             # Synced to WineStaging-1.7.47
 reactos/dll/win32/comcat              # Synced to WineStaging-1.7.47
 reactos/dll/win32/comctl32            # Synced to WineStaging-1.7.55
-reactos/dll/win32/comdlg32            # Synced to WineStaging-1.7.47
+reactos/dll/win32/comdlg32            # Synced to WineStaging-1.7.55
 reactos/dll/win32/compstui            # Synced to WineStaging-1.7.47
 reactos/dll/win32/credui              # Synced to WineStaging-1.7.55
 reactos/dll/win32/crypt32             # Synced to WineStaging-1.7.55
