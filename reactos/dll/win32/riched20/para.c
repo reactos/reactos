@@ -23,6 +23,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
+static ME_DisplayItem *make_para(ME_TextEditor *editor)
+{
+    ME_DisplayItem *item = ME_MakeDI(diParagraph);
+
+    item->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
+    ME_SetDefaultParaFormat(editor, item->member.para.pFmt);
+    item->member.para.nFlags = MEPF_REWRAP;
+    return item;
+}
+
 void ME_MakeFirstParagraph(ME_TextEditor *editor)
 {
   ME_Context c;
@@ -30,7 +40,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   LOGFONTW lf;
   HFONT hf;
   ME_TextBuffer *text = editor->pBuffer;
-  ME_DisplayItem *para = ME_MakeDI(diParagraph);
+  ME_DisplayItem *para = make_para(editor);
   ME_DisplayItem *run;
   ME_Style *style;
   int eol_len;
@@ -196,7 +206,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
 {
   ME_DisplayItem *next_para = NULL;
   ME_DisplayItem *run_para = NULL;
-  ME_DisplayItem *new_para = ME_MakeDI(diParagraph);
+  ME_DisplayItem *new_para = make_para(editor);
   ME_DisplayItem *end_run;
   int ofs, i;
   ME_DisplayItem *pp;
@@ -619,12 +629,12 @@ void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
   }
 }
 
-void ME_SetDefaultParaFormat(PARAFORMAT2 *pFmt)
+void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 {
     ZeroMemory(pFmt, sizeof(PARAFORMAT2));
     pFmt->cbSize = sizeof(PARAFORMAT2);
     pFmt->dwMask = PFM_ALL2;
-    pFmt->wAlignment = PFA_LEFT;
+    pFmt->wAlignment = editor->alignStyle;
     pFmt->sStyle = -1;
     pFmt->bOutlineLevel = TRUE;
 }

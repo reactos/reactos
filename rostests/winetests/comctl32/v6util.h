@@ -26,6 +26,10 @@
 #define ARCH "x86"
 #elif defined __x86_64__
 #define ARCH "amd64"
+#elif defined __arm__
+#define ARCH "arm"
+#elif defined __aarch64__
+#define ARCH "arm64"
 #else
 #define ARCH "none"
 #endif

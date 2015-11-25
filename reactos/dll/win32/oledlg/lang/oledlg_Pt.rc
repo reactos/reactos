@@ -31,7 +31,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "O arquivo não parece ser um módulo OLE válido. Impossível registrar o controle OLE."
   IDS_NOTOLEMODCAPTION  "Adicionar Controle"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE
@@ -111,7 +113,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "O ficheiro não parece ser um módulo OLE válido. Impossível registrar o controlo OLE."
   IDS_NOTOLEMODCAPTION  "Adicionar Controlo"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

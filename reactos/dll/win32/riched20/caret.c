@@ -446,7 +446,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
       continue;
     }
   }
-  if (delete_all) ME_SetDefaultParaFormat( start_para->member.para.pFmt );
+  if (delete_all) ME_SetDefaultParaFormat( editor, start_para->member.para.pFmt );
   return TRUE;
 }
 

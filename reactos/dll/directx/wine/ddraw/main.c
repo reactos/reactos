@@ -42,7 +42,7 @@ struct callback_info
 };
 
 /* Enumeration callback for converting DirectDrawEnumerateA to DirectDrawEnumerateExA */
-static HRESULT CALLBACK enum_callback(GUID *guid, char *description, char *driver_name,
+static BOOL CALLBACK enum_callback(GUID *guid, char *description, char *driver_name,
                                       void *context, HMONITOR monitor)
 {
     const struct callback_info *info = context;

@@ -92,9 +92,9 @@ BEGIN
     AUTORADIOBUTTON "&Start menu", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
     LTEXT "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
     PUSHBUTTON "&Customize...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
-    AUTORADIOBUTTON "Classic Start &menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10, WS_DISABLED
-    LTEXT "This menu style gives you the classic look and functionality", IDC_STATIC, 20, 185, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Customize...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14, WS_DISABLED    
+    AUTORADIOBUTTON "Classic Start &menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "This menu style gives you the classic look and functionality", IDC_STATIC, 20, 185, 150, 24
+    PUSHBUTTON "&Customize...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240

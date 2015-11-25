@@ -127,15 +127,16 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
        TODO: should it be *exactly* sizeof(dd), as tested here?
      */
     if (rc == MMSYSERR_NOERROR) {
-        struct {
+        static const struct {
             const char *shortname;
-            const WORD mid;
-            const WORD pid;
+            WORD mid;
+            WORD pid;
+            WORD pid_alt;
         } *iter, expected_ids[] = {
             { "Microsoft IMA ADPCM", MM_MICROSOFT, MM_MSFT_ACM_IMAADPCM },
             { "MS-ADPCM", MM_MICROSOFT, MM_MSFT_ACM_MSADPCM },
             { "Microsoft CCITT G.711", MM_MICROSOFT, MM_MSFT_ACM_G711},
-            { "MPEG Layer-3 Codec", MM_FRAUNHOFER_IIS, MM_FHGIIS_MPEGLAYER3_DECODE },
+            { "MPEG Layer-3 Codec", MM_FRAUNHOFER_IIS, MM_FHGIIS_MPEGLAYER3_DECODE, MM_FHGIIS_MPEGLAYER3_PROFESSIONAL },
             { "MS-PCM", MM_MICROSOFT, MM_MSFT_ACM_PCM },
             { 0 }
         };
@@ -144,8 +145,15 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
             "acmDriverDetailsA(): cbStruct = %08x\n", dd.cbStruct);
 
         for (iter = expected_ids; iter->shortname; ++iter) {
-            if (dd.szShortName && !strcmp(iter->shortname, dd.szShortName)) {
-                ok(iter->mid == dd.wMid && iter->pid == dd.wPid,
+            if (!strcmp(iter->shortname, dd.szShortName)) {
+                /* try alternative product id on mismatch */
+                if (iter->pid_alt && iter->pid != dd.wPid)
+                    ok(iter->mid == dd.wMid && iter->pid_alt == dd.wPid,
+                        "Got wrong manufacturer (0x%x vs 0x%x) or product (0x%x vs 0x%x)\n",
+                        dd.wMid, iter->mid,
+                        dd.wPid, iter->pid_alt);
+                else
+                    ok(iter->mid == dd.wMid && iter->pid == dd.wPid,
                         "Got wrong manufacturer (0x%x vs 0x%x) or product (0x%x vs 0x%x)\n",
                         dd.wMid, iter->mid,
                         dd.wPid, iter->pid);
@@ -594,8 +602,115 @@ static void test_prepareheader(void)
     ok(mr == MMSYSERR_NOERROR, "close failed: 0x%x\n", mr);
 }
 
+static void test_acmFormatSuggest(void)
+{
+    WAVEFORMATEX src, dst;
+    DWORD suggest;
+    MMRESULT rc;
+
+    /* Test a valid PCM format */
+    src.wFormatTag = WAVE_FORMAT_PCM;
+    src.nChannels = 1;
+    src.nSamplesPerSec = 8000;
+    src.nAvgBytesPerSec = 16000;
+    src.nBlockAlign = 2;
+    src.wBitsPerSample = 16;
+    src.cbSize = 0;
+    suggest = 0;
+    memset(&dst, 0, sizeof(dst));
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
+todo_wine
+    ok(src.wFormatTag == dst.wFormatTag, "expected %d, got %d\n", src.wFormatTag, dst.wFormatTag);
+    ok(src.nChannels == dst.nChannels, "expected %d, got %d\n", src.nChannels, dst.nChannels);
+    ok(src.nSamplesPerSec == dst.nSamplesPerSec, "expected %d, got %d\n", src.nSamplesPerSec, dst.nSamplesPerSec);
+todo_wine
+    ok(src.nAvgBytesPerSec == dst.nAvgBytesPerSec, "expected %d, got %d\n", src.nAvgBytesPerSec, dst.nAvgBytesPerSec);
+todo_wine
+    ok(src.nBlockAlign == dst.nBlockAlign, "expected %d, got %d\n", src.nBlockAlign, dst.nBlockAlign);
+todo_wine
+    ok(src.wBitsPerSample == dst.wBitsPerSample, "expected %d, got %d\n", src.wBitsPerSample, dst.wBitsPerSample);
+
+    /* All parameters from destination are valid */
+    suggest = ACM_FORMATSUGGESTF_NCHANNELS
+            | ACM_FORMATSUGGESTF_NSAMPLESPERSEC
+            | ACM_FORMATSUGGESTF_WBITSPERSAMPLE
+            | ACM_FORMATSUGGESTF_WFORMATTAG;
+    dst = src;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
+    ok(src.wFormatTag == dst.wFormatTag, "expected %d, got %d\n", src.wFormatTag, dst.wFormatTag);
+    ok(src.nChannels == dst.nChannels, "expected %d, got %d\n", src.nChannels, dst.nChannels);
+    ok(src.nSamplesPerSec == dst.nSamplesPerSec, "expected %d, got %d\n", src.nSamplesPerSec, dst.nSamplesPerSec);
+    ok(src.nAvgBytesPerSec == dst.nAvgBytesPerSec, "expected %d, got %d\n", src.nAvgBytesPerSec, dst.nAvgBytesPerSec);
+    ok(src.nBlockAlign == dst.nBlockAlign, "expected %d, got %d\n", src.nBlockAlign, dst.nBlockAlign);
+    ok(src.wBitsPerSample == dst.wBitsPerSample, "expected %d, got %d\n", src.wBitsPerSample, dst.wBitsPerSample);
+
+    /* Test for WAVE_FORMAT_MSRT24 used in Monster Truck Madness 2 */
+    src.wFormatTag = WAVE_FORMAT_MSRT24;
+    src.nChannels = 1;
+    src.nSamplesPerSec = 8000;
+    src.nAvgBytesPerSec = 16000;
+    src.nBlockAlign = 2;
+    src.wBitsPerSample = 16;
+    src.cbSize = 0;
+    dst = src;
+    suggest = ACM_FORMATSUGGESTF_NCHANNELS
+            | ACM_FORMATSUGGESTF_NSAMPLESPERSEC
+            | ACM_FORMATSUGGESTF_WBITSPERSAMPLE
+            | ACM_FORMATSUGGESTF_WFORMATTAG;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    ok(rc == ACMERR_NOTPOSSIBLE, "failed with error 0x%x\n", rc);
+    memset(&dst, 0, sizeof(dst));
+    suggest = 0;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+
+    /* Invalid struct size */
+    src.wFormatTag = WAVE_FORMAT_PCM;
+    rc = acmFormatSuggest(NULL, &src, &dst, 0, suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) / 2, suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    /* cbSize is the last parameter and not required for PCM */
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - 1, suggest);
+    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize), suggest);
+    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize) - 1, suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    /* cbSize is required for others */
+    src.wFormatTag = WAVE_FORMAT_ADPCM;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize), suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - 1, suggest);
+todo_wine
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+
+    /* Invalid suggest flags */
+    src.wFormatTag = WAVE_FORMAT_PCM;
+    suggest = 0xFFFFFFFF;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_INVALFLAG, "failed with error 0x%x\n", rc);
+
+    /* Invalid source and destination */
+    suggest = 0;
+    rc = acmFormatSuggest(NULL, NULL, &dst, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, &src, NULL, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+    rc = acmFormatSuggest(NULL, NULL, NULL, sizeof(dst), suggest);
+    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+}
+
 START_TEST(msacm)
 {
     driver_tests();
     test_prepareheader();
+    test_acmFormatSuggest();
 }

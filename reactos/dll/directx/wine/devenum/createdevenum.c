@@ -676,15 +676,15 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
      * or switched from pulseaudio to alsa, delete all old devices first
      */
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioRendererCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioInputDeviceCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoInputDeviceCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_MidiRendererCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoCompressorCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
 
     rf2.dwVersion = 2;
     rf2.dwMerit = MERIT_PREFERRED;

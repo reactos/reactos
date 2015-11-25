@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep header
+
 import "unknwn.idl";
 import "objidl.idl";
 import "oaidl.idl";
@@ -254,7 +256,7 @@ typedef struct _XML_NODE_INFO
 ]
 library XMLPSR
 {
-importlib("stdole32.tlb");
+/* importlib("stdole32.tlb"); */
 importlib("stdole2.tlb");
 
 [

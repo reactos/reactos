@@ -23,6 +23,9 @@
 
 #include "quartz_private.h"
 
+#include <strmif.h>
+
+
 #define SEQUENCE_HEADER_CODE     0xB3
 #define PACK_START_CODE          0xBA
 
@@ -38,6 +41,7 @@
 typedef struct MPEGSplitterImpl
 {
     ParserImpl Parser;
+    IAMStreamSelect IAMStreamSelect_iface;
     LONGLONG EndOfFile;
     LONGLONG position;
     DWORD begin_offset;
@@ -47,9 +51,19 @@ typedef struct MPEGSplitterImpl
     BOOL seek;
 } MPEGSplitterImpl;
 
+static inline MPEGSplitterImpl *impl_from_IBaseFilter( IBaseFilter *iface )
+{
+    return CONTAINING_RECORD(iface, MPEGSplitterImpl, Parser.filter.IBaseFilter_iface);
+}
+
 static inline MPEGSplitterImpl *impl_from_IMediaSeeking( IMediaSeeking *iface )
 {
     return CONTAINING_RECORD(iface, MPEGSplitterImpl, Parser.sourceSeeking.IMediaSeeking_iface);
+}
+
+static inline MPEGSplitterImpl *impl_from_IAMStreamSelect( IAMStreamSelect *iface )
+{
+    return CONTAINING_RECORD(iface, MPEGSplitterImpl, IAMStreamSelect_iface);
 }
 
 static int MPEGSplitter_head_check(const BYTE *header)
@@ -97,9 +111,7 @@ static HRESULT parse_header(BYTE *header, LONGLONG *plen, LONGLONG *pduration)
     int bitrate_index, freq_index, lsf = 1, mpeg1, layer, padding, bitrate, length;
     LONGLONG duration;
 
-    if (!(header[0] == 0xff && ((header[1]>>5)&0x7) == 0x7 &&
-          ((header[1]>>1)&0x3) != 0 && ((header[2]>>4)&0xf) != 0xf &&
-          ((header[2]>>2)&0x3) != 0x3))
+    if (MPEGSplitter_head_check(header) != MPEG_AUDIO_HEADER)
     {
         FIXME("Not a valid header: %02x:%02x:%02x:%02x\n", header[0], header[1], header[2], header[3]);
         return E_INVALIDARG;
@@ -189,9 +201,9 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
             if (SUCCEEDED(hr))
             {
                 IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
-                IMediaSample_SetPreroll(sample, 0);
-                IMediaSample_SetDiscontinuity(sample, 0);
-                IMediaSample_SetSyncPoint(sample, 1);
+                IMediaSample_SetPreroll(sample, FALSE);
+                IMediaSample_SetDiscontinuity(sample, FALSE);
+                IMediaSample_SetSyncPoint(sample, TRUE);
                 hr = IAsyncReader_Request(pin->pReader, sample, 0);
                 if (SUCCEEDED(hr))
                 {
@@ -461,7 +473,7 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
     HRESULT hr;
     LONGLONG pos = 0; /* in bytes */
     BYTE header[10];
-    int streamtype = 0;
+    int streamtype;
     LONGLONG total, avail;
     AM_MEDIA_TYPE amt;
     PIN_INFO piOutput;
@@ -499,12 +511,37 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
         hr = IAsyncReader_SyncRead(pPin->pReader, pos, 4, header);
         if (SUCCEEDED(hr))
             pos += 4;
-        TRACE("%x:%x:%x:%x\n", header[0], header[1], header[2], header[3]);
     } while (0);
 
-    while(SUCCEEDED(hr) && !(streamtype=MPEGSplitter_head_check(header)))
+    while(SUCCEEDED(hr))
     {
-        TRACE("%x:%x:%x:%x\n", header[0], header[1], header[2], header[3]);
+        TRACE("Testing header %x:%x:%x:%x\n", header[0], header[1], header[2], header[3]);
+
+        streamtype = MPEGSplitter_head_check(header);
+        if (streamtype == MPEG_AUDIO_HEADER)
+        {
+            LONGLONG length;
+            if (parse_header(header, &length, NULL) == S_OK)
+            {
+                BYTE next_header[4];
+                /* Ensure we have a valid header by seeking for the next frame, some bad
+                 * encoded ID3v2 may have an incorrect length and we end up finding bytes
+                 * like FF FE 00 28 which are nothing more than a Unicode BOM followed by
+                 * ')' character from inside a ID3v2 tag. Unfortunately that sequence
+                 * matches like a valid mpeg audio header.
+                 */
+                hr = IAsyncReader_SyncRead(pPin->pReader, pos + length - 4, 4, next_header);
+                if (FAILED(hr))
+                    break;
+                if (parse_header(next_header, &length, NULL) == S_OK)
+                    break;
+                TRACE("%x:%x:%x:%x is a fake audio header, looking for next...\n",
+                      header[0], header[1], header[2], header[3]);
+            }
+        }
+        else if (streamtype) /* Video or System stream */
+            break;
+
         /* No valid header yet; shift by a byte and check again */
         memmove(header, header+1, 3);
         hr = IAsyncReader_SyncRead(pPin->pReader, pos++, 1, header + 3);
@@ -695,7 +732,7 @@ static HRESULT MPEGSplitter_first_request(LPVOID iface)
         IMediaSample_SetPreroll(sample, FALSE);
         IMediaSample_SetDiscontinuity(sample, TRUE);
         IMediaSample_SetSyncPoint(sample, 1);
-        This->seek = 0;
+        This->seek = FALSE;
 
         hr = IAsyncReader_Request(pin->pReader, sample, 0);
         if (SUCCEEDED(hr))
@@ -712,9 +749,36 @@ static HRESULT MPEGSplitter_first_request(LPVOID iface)
     return hr;
 }
 
+static HRESULT WINAPI MPEGSplitter_QueryInterface(IBaseFilter *iface, REFIID riid, void **ppv)
+{
+    MPEGSplitterImpl *This = impl_from_IBaseFilter(iface);
+    TRACE("(%s, %p)\n", qzdebugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+
+    if ( IsEqualIID(riid, &IID_IUnknown)
+      || IsEqualIID(riid, &IID_IPersist)
+      || IsEqualIID(riid, &IID_IMediaFilter)
+      || IsEqualIID(riid, &IID_IBaseFilter) )
+        *ppv = iface;
+    else if ( IsEqualIID(riid, &IID_IAMStreamSelect) )
+        *ppv = &This->IAMStreamSelect_iface;
+
+    if (*ppv)
+    {
+        IBaseFilter_AddRef(iface);
+        return S_OK;
+    }
+
+    if (!IsEqualIID(riid, &IID_IPin) && !IsEqualIID(riid, &IID_IVideoWindow))
+        FIXME("No interface for %s!\n", qzdebugstr_guid(riid));
+
+    return E_NOINTERFACE;
+}
+
 static const IBaseFilterVtbl MPEGSplitter_Vtbl =
 {
-    Parser_QueryInterface,
+    MPEGSplitter_QueryInterface,
     Parser_AddRef,
     Parser_Release,
     Parser_GetClassID,
@@ -729,6 +793,64 @@ static const IBaseFilterVtbl MPEGSplitter_Vtbl =
     Parser_QueryFilterInfo,
     Parser_JoinFilterGraph,
     Parser_QueryVendorInfo
+};
+
+static HRESULT WINAPI AMStreamSelect_QueryInterface(IAMStreamSelect *iface, REFIID riid, void **ppv)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    return IBaseFilter_QueryInterface(&This->Parser.filter.IBaseFilter_iface, riid, ppv);
+}
+
+static ULONG WINAPI AMStreamSelect_AddRef(IAMStreamSelect *iface)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    return IBaseFilter_AddRef(&This->Parser.filter.IBaseFilter_iface);
+}
+
+static ULONG WINAPI AMStreamSelect_Release(IAMStreamSelect *iface)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    return IBaseFilter_Release(&This->Parser.filter.IBaseFilter_iface);
+}
+
+static HRESULT WINAPI AMStreamSelect_Count(IAMStreamSelect *iface, DWORD *streams)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    FIXME("(%p/%p)->(%p) stub!\n", This, iface, streams);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI AMStreamSelect_Info(IAMStreamSelect *iface, LONG index, AM_MEDIA_TYPE **media_type, DWORD *flags, LCID *lcid, DWORD *group, WCHAR **name, IUnknown **object, IUnknown **unknown)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    FIXME("(%p/%p)->(%d,%p,%p,%p,%p,%p,%p,%p) stub!\n", This, iface, index, media_type, flags, lcid, group, name, object, unknown);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI AMStreamSelect_Enable(IAMStreamSelect *iface, LONG index, DWORD flags)
+{
+    MPEGSplitterImpl *This = impl_from_IAMStreamSelect(iface);
+
+    FIXME("(%p/%p)->(%d,%x) stub!\n", This, iface, index, flags);
+
+    return E_NOTIMPL;
+}
+
+static const IAMStreamSelectVtbl AMStreamSelectVtbl =
+{
+    AMStreamSelect_QueryInterface,
+    AMStreamSelect_AddRef,
+    AMStreamSelect_Release,
+    AMStreamSelect_Count,
+    AMStreamSelect_Info,
+    AMStreamSelect_Enable
 };
 
 HRESULT MPEGSplitter_create(IUnknown * pUnkOuter, LPVOID * ppv)
@@ -754,10 +876,11 @@ HRESULT MPEGSplitter_create(IUnknown * pUnkOuter, LPVOID * ppv)
         CoTaskMemFree(This);
         return hr;
     }
-    This->seek = 1;
+    This->IAMStreamSelect_iface.lpVtbl = &AMStreamSelectVtbl;
+    This->seek = TRUE;
 
     /* Note: This memory is managed by the parser filter once created */
-    *ppv = This;
+    *ppv = &This->Parser.filter.IBaseFilter_iface;
 
     return hr;
 }

@@ -28,7 +28,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Datoteka ni veljaven OLE modul. OLE kontrole ni mogoče registrirati."
   IDS_NOTOLEMODCAPTION  "Dodajanje kontrole"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

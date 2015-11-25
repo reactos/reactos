@@ -24,10 +24,12 @@
 
 #include <winver.h>
 #include <uuids.h>
+#include <mmddk.h>
 #include <d3d9.h>
 #include <fil_data.h>
 #include <psapi.h>
 #include <wbemcli.h>
+#include <dsound.h>
 
 static const WCHAR szEmpty[] = {0};
 
@@ -321,7 +323,7 @@ static inline HRESULT add_bool_property(IDxDiagContainerImpl_Container *node, co
         return E_OUTOFMEMORY;
 
     V_VT(&prop->vProp) = VT_BOOL;
-    V_BOOL(&prop->vProp) = data;
+    V_BOOL(&prop->vProp) = data ? VARIANT_TRUE : VARIANT_FALSE;
 
     list_add_tail(&node->properties, &prop->entry);
     ++node->nProperties;
@@ -1175,11 +1177,85 @@ static HRESULT build_displaydevices_tree(IDxDiagContainerImpl_Container *node)
     return fill_display_information_fallback(node);
 }
 
+struct enum_context
+{
+    IDxDiagContainerImpl_Container *cont;
+    HRESULT hr;
+    int index;
+};
+
+static const WCHAR szGUIDFmt[] =
+{
+    '%','0','8','x','-','%','0','4','x','-','%','0','4','x','-','%','0',
+    '2','x','%','0','2','x','-','%','0','2','x','%','0','2','x','%','0','2',
+    'x','%','0','2','x','%','0','2','x','%','0','2','x',0
+};
+
+static LPWSTR guid_to_string(LPWSTR lpwstr, REFGUID lpcguid)
+{
+    wsprintfW(lpwstr, szGUIDFmt, lpcguid->Data1, lpcguid->Data2,
+        lpcguid->Data3, lpcguid->Data4[0], lpcguid->Data4[1],
+        lpcguid->Data4[2], lpcguid->Data4[3], lpcguid->Data4[4],
+        lpcguid->Data4[5], lpcguid->Data4[6], lpcguid->Data4[7]);
+
+    return lpwstr;
+}
+
+BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID context)
+{
+    static const WCHAR deviceid_fmtW[] = {'%','u',0};
+    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
+    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
+
+    struct enum_context *enum_ctx = context;
+    IDxDiagContainerImpl_Container *device;
+    WCHAR buffer[256];
+    const WCHAR *p, *name;
+
+    /* the default device is enumerated twice, one time without GUID */
+    if (!guid) return TRUE;
+
+    snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), deviceid_fmtW, enum_ctx->index);
+    device = allocate_information_node(buffer);
+    if (!device)
+    {
+        enum_ctx->hr = E_OUTOFMEMORY;
+        return FALSE;
+    }
+
+    add_subcontainer(enum_ctx->cont, device);
+
+    guid_to_string(buffer, guid);
+    enum_ctx->hr = add_bstr_property(device, szGuidDeviceID, buffer);
+    if (FAILED(enum_ctx->hr))
+        return FALSE;
+
+    enum_ctx->hr = add_bstr_property(device, szDescription, desc);
+    if (FAILED(enum_ctx->hr))
+        return FALSE;
+
+    enum_ctx->hr = add_bstr_property(device, szDriverPath, module);
+    if (FAILED(enum_ctx->hr))
+        return FALSE;
+
+    name = module;
+    if ((p = strrchrW(name, '\\'))) name = p + 1;
+    if ((p = strrchrW(name, '/'))) name = p + 1;
+
+    enum_ctx->hr = add_bstr_property(device, szDriverName, name);
+    if (FAILED(enum_ctx->hr))
+        return FALSE;
+
+    enum_ctx->index++;
+    return TRUE;
+}
+
 static HRESULT build_directsound_tree(IDxDiagContainerImpl_Container *node)
 {
     static const WCHAR DxDiag_SoundDevices[] = {'D','x','D','i','a','g','_','S','o','u','n','d','D','e','v','i','c','e','s',0};
     static const WCHAR DxDiag_SoundCaptureDevices[] = {'D','x','D','i','a','g','_','S','o','u','n','d','C','a','p','t','u','r','e','D','e','v','i','c','e','s',0};
 
+    struct enum_context enum_ctx;
     IDxDiagContainerImpl_Container *cont;
 
     cont = allocate_information_node(DxDiag_SoundDevices);
@@ -1188,11 +1264,27 @@ static HRESULT build_directsound_tree(IDxDiagContainerImpl_Container *node)
 
     add_subcontainer(node, cont);
 
+    enum_ctx.cont = cont;
+    enum_ctx.hr = S_OK;
+    enum_ctx.index = 0;
+
+    DirectSoundEnumerateW(dsound_enum, &enum_ctx);
+    if (FAILED(enum_ctx.hr))
+        return enum_ctx.hr;
+
     cont = allocate_information_node(DxDiag_SoundCaptureDevices);
     if (!cont)
         return E_OUTOFMEMORY;
 
     add_subcontainer(node, cont);
+
+    enum_ctx.cont = cont;
+    enum_ctx.hr = S_OK;
+    enum_ctx.index = 0;
+
+    DirectSoundCaptureEnumerateW(dsound_enum, &enum_ctx);
+    if (FAILED(enum_ctx.hr))
+        return enum_ctx.hr;
 
     return S_OK;
 }

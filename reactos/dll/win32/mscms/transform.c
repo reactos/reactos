@@ -38,64 +38,51 @@ WINE_DEFAULT_DEBUG_CHANNEL(mscms);
 
 #ifdef HAVE_LCMS2
 
-static DWORD from_profile( HPROFILE profile )
-{
-    PROFILEHEADER header;
-
-    GetColorProfileHeader( profile, &header );
-    TRACE( "color space: 0x%08x %s\n", header.phDataColorSpace, dbgstr_tag( header.phDataColorSpace ) );
-
-    switch (header.phDataColorSpace)
-    {
-    case 0x434d594b: return TYPE_CMYK_16;  /* 'CMYK' */
-    case 0x47524159: return TYPE_GRAY_16;  /* 'GRAY' */
-    case 0x4c616220: return TYPE_Lab_16;   /* 'Lab ' */
-    case 0x52474220: return TYPE_RGB_16;   /* 'RGB ' */
-    case 0x58595a20: return TYPE_XYZ_16;   /* 'XYZ ' */
-    default:
-        WARN("unhandled format\n");
-        return TYPE_RGB_16;
-    }
-}
-
 static DWORD from_bmformat( BMFORMAT format )
 {
     static BOOL quietfixme = FALSE;
-    TRACE( "bitmap format: 0x%08x\n", format );
+    DWORD ret;
 
     switch (format)
     {
-    case BM_RGBTRIPLETS: return TYPE_RGB_8;
-    case BM_BGRTRIPLETS: return TYPE_BGR_8;
-    case BM_GRAY:        return TYPE_GRAY_8;
-    case BM_xRGBQUADS:   return TYPE_ARGB_8;
-    case BM_xBGRQUADS:   return TYPE_ABGR_8;
+    case BM_RGBTRIPLETS: ret = TYPE_RGB_8; break;
+    case BM_BGRTRIPLETS: ret = TYPE_BGR_8; break;
+    case BM_GRAY:        ret = TYPE_GRAY_8; break;
+    case BM_xRGBQUADS:   ret = TYPE_ARGB_8; break;
+    case BM_xBGRQUADS:   ret = TYPE_ABGR_8; break;
     default:
         if (!quietfixme)
         {
-            FIXME("unhandled bitmap format 0x%x\n", format);
+            FIXME( "unhandled bitmap format %08x\n", format );
             quietfixme = TRUE;
         }
-        return TYPE_RGB_8;
+        ret = TYPE_RGB_8;
+        break;
     }
+    TRACE( "color space: %08x -> %08x\n", format, ret );
+    return ret;
 }
 
 static DWORD from_type( COLORTYPE type )
 {
-    TRACE( "color type: 0x%08x\n", type );
+    DWORD ret;
 
     switch (type)
     {
-    case COLOR_GRAY:    return TYPE_GRAY_16;
-    case COLOR_RGB:     return TYPE_RGB_16;
-    case COLOR_XYZ:     return TYPE_XYZ_16;
-    case COLOR_Yxy:     return TYPE_Yxy_16;
-    case COLOR_Lab:     return TYPE_Lab_16;
-    case COLOR_CMYK:    return TYPE_CMYK_16;
+    case COLOR_GRAY: ret = TYPE_GRAY_16; break;
+    case COLOR_RGB:  ret = TYPE_RGB_16; break;
+    case COLOR_XYZ:  ret = TYPE_XYZ_16; break;
+    case COLOR_Yxy:  ret = TYPE_Yxy_16; break;
+    case COLOR_Lab:  ret = TYPE_Lab_16; break;
+    case COLOR_CMYK: ret = TYPE_CMYK_16; break;
     default:
-        FIXME("unhandled color type\n");
-        return TYPE_RGB_16;
+        FIXME( "unhandled color type %08x\n", type );
+        ret = TYPE_RGB_16;
+        break;
     }
+
+    TRACE( "color type: %08x -> %08x\n", type, ret );
+    return ret;
 }
 
 #endif /* HAVE_LCMS2 */
@@ -147,7 +134,7 @@ HTRANSFORM WINAPI CreateColorTransformW( LPLOGCOLORSPACEW space, HPROFILE dest,
     struct transform transform;
     struct profile *dst, *tgt = NULL;
     cmsHPROFILE cmsinput, cmsoutput, cmstarget = NULL;
-    DWORD in_format, out_format, proofing = 0;
+    DWORD proofing = 0;
     int intent;
 
     TRACE( "( %p, %p, %p, 0x%08x )\n", space, dest, target, flags );
@@ -165,9 +152,6 @@ HTRANSFORM WINAPI CreateColorTransformW( LPLOGCOLORSPACEW space, HPROFILE dest,
     TRACE( "lcsCSType:   %s\n", dbgstr_tag( space->lcsCSType ) );
     TRACE( "lcsFilename: %s\n", debugstr_w( space->lcsFilename ) );
 
-    in_format  = TYPE_RGB_16;
-    out_format = from_profile( dest );
-
     cmsinput = cmsCreate_sRGBProfile(); /* FIXME: create from supplied color space */
     if (target)
     {
@@ -175,8 +159,15 @@ HTRANSFORM WINAPI CreateColorTransformW( LPLOGCOLORSPACEW space, HPROFILE dest,
         cmstarget = tgt->cmsprofile;
     }
     cmsoutput = dst->cmsprofile;
-    transform.cmstransform = cmsCreateProofingTransform(cmsinput, in_format, cmsoutput, out_format, cmstarget,
-                                                        intent, INTENT_ABSOLUTE_COLORIMETRIC, proofing);
+    transform.cmstransform = cmsCreateProofingTransform(cmsinput, 0, cmsoutput, 0, cmstarget,
+                                                        intent, INTENT_ABSOLUTE_COLORIMETRIC,
+                                                        proofing);
+    if (!transform.cmstransform)
+    {
+        if (tgt) release_profile( tgt );
+        release_profile( dst );
+        return FALSE;
+    }
 
     ret = create_transform( &transform );
 
@@ -208,10 +199,9 @@ HTRANSFORM WINAPI CreateMultiProfileTransform( PHPROFILE profiles, DWORD nprofil
 {
     HTRANSFORM ret = NULL;
 #ifdef HAVE_LCMS2
-    cmsHPROFILE *cmsprofiles, cmsconvert = NULL;
+    cmsHPROFILE *cmsprofiles;
     struct transform transform;
     struct profile *profile0, *profile1;
-    DWORD in_format, out_format;
 
     TRACE( "( %p, 0x%08x, %p, 0x%08x, 0x%08x, 0x%08x )\n",
            profiles, nprofiles, intents, nintents, flags, cmm );
@@ -232,33 +222,21 @@ HTRANSFORM WINAPI CreateMultiProfileTransform( PHPROFILE profiles, DWORD nprofil
         release_profile( profile0 );
         return NULL;
     }
-    in_format  = from_profile( profiles[0] );
-    out_format = from_profile( profiles[nprofiles - 1] );
 
-    if (in_format != out_format)
-    {
-        /* insert a conversion profile for pairings that lcms doesn't handle */
-        if (out_format == TYPE_RGB_16) cmsconvert = cmsCreate_sRGBProfile();
-        if (out_format == TYPE_Lab_16) cmsconvert = cmsCreateLab2Profile( NULL );
-    }
-
-    cmsprofiles = HeapAlloc( GetProcessHeap(), 0, (nprofiles + 1) * sizeof(cmsHPROFILE) );
-    if (cmsprofiles)
+    if ((cmsprofiles = HeapAlloc( GetProcessHeap(), 0, (nprofiles + 1) * sizeof(cmsHPROFILE) )))
     {
         cmsprofiles[0] = profile0->cmsprofile;
-        if (cmsconvert)
-        {
-            cmsprofiles[1] = cmsconvert;
-            cmsprofiles[2] = profile1->cmsprofile;
-            nprofiles++;
-        }
-        else
-        {
-            cmsprofiles[1] = profile1->cmsprofile;
-        }
-        transform.cmstransform = cmsCreateMultiprofileTransform( cmsprofiles, nprofiles, in_format, out_format, *intents, 0 );
+        cmsprofiles[1] = profile1->cmsprofile;
 
+        transform.cmstransform = cmsCreateMultiprofileTransform( cmsprofiles, nprofiles, 0,
+                                                                 0, *intents, 0 );
         HeapFree( GetProcessHeap(), 0, cmsprofiles );
+        if (!transform.cmstransform)
+        {
+            release_profile( profile0 );
+            release_profile( profile1 );
+            return FALSE;
+        }
         ret = create_transform( &transform );
     }
 
@@ -329,7 +307,8 @@ BOOL WINAPI TranslateBitmapBits( HTRANSFORM handle, PVOID srcbits, BMFORMAT inpu
            outputstride, callback, data );
 
     if (!transform) return FALSE;
-    cmsChangeBuffersFormat( transform->cmstransform, from_bmformat(input), from_bmformat(output) );
+    if (!cmsChangeBuffersFormat( transform->cmstransform, from_bmformat(input), from_bmformat(output) ))
+        return FALSE;
 
     cmsDoTransform( transform->cmstransform, srcbits, destbits, width * height );
     release_transform( transform );
@@ -370,7 +349,8 @@ BOOL WINAPI TranslateColors( HTRANSFORM handle, PCOLOR in, DWORD count,
     if (!transform) return FALSE;
 
     xfrm = transform->cmstransform;
-    cmsChangeBuffersFormat( xfrm, from_type(input_type), from_type(output_type) );
+    if (!cmsChangeBuffersFormat( xfrm, from_type(input_type), from_type(output_type) ))
+        return FALSE;
 
     switch (input_type)
     {

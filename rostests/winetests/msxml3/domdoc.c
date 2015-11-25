@@ -7505,6 +7505,19 @@ static void test_get_ownerDocument(void)
     IXMLDOMSchemaCollection *cache;
     VARIANT_BOOL b;
     VARIANT var;
+    IXMLDOMElement *element;
+    IXMLDOMNodeList *node_list;
+    IXMLDOMAttribute *attr;
+    LONG i, len;
+    HRESULT hr;
+    const CHAR nodeXML[] =
+    "<root id='0'>"
+    "   <!-- comment node 0 -->"
+    "   text node 0"
+    "   <x attr='val'></x>"
+    "   <?foo value='PI for x'?>"
+    "   <![CDATA[ cdata ]]>"
+    "</root>";
 
     if (!is_clsid_supported(&CLSID_DOMDocument2, &IID_IXMLDOMDocument2)) return;
     if (!is_clsid_supported(&CLSID_XMLSchemaCache, &IID_IXMLDOMSchemaCollection)) return;
@@ -7556,6 +7569,47 @@ static void test_get_ownerDocument(void)
     unset_props(doc_owner);
     check_default_props(doc_owner);
     check_default_props(doc);
+
+    /* NULL check */
+    hr = IXMLDOMDocument_loadXML(doc1, _bstr_(nodeXML), &b);
+    EXPECT_HR(hr, S_OK);
+    ok(b == VARIANT_TRUE, "failed to load XML string\n");
+
+    hr = IXMLDOMDocument_get_documentElement(doc1, &element);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMElement_get_childNodes(element, &node_list);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMNodeList_get_length(node_list, &len);
+    EXPECT_HR(hr, S_OK);
+
+    for(i = 0; i < len; i++) {
+        hr = IXMLDOMNodeList_get_item(node_list, i, &node);
+        EXPECT_HR(hr, S_OK);
+
+        hr = IXMLDOMNode_get_ownerDocument(node, NULL);
+        EXPECT_HR(hr, E_INVALIDARG);
+
+        IXMLDOMNode_Release(node);
+    }
+    IXMLDOMElement_Release(element);
+
+    /* Test Attribute Node */
+    hr = IXMLDOMNodeList_get_item(node_list, 2, &node);
+    EXPECT_HR(hr, S_OK);
+    hr = IXMLDOMNode_QueryInterface(node, &IID_IXMLDOMElement, (void**)&element);
+    EXPECT_HR(hr, S_OK);
+    IXMLDOMNode_Release(node);
+
+    hr = IXMLDOMElement_getAttributeNode(element, _bstr_("attr"), &attr);
+    EXPECT_HR(hr, S_OK);
+    ok(attr != NULL, "attr == NULL\n");
+    IXMLDOMElement_Release(element);
+    hr = IXMLDOMAttribute_get_ownerDocument(attr, NULL);
+    EXPECT_HR(hr, E_INVALIDARG);
+    IXMLDOMAttribute_Release(attr);
+    IXMLDOMNodeList_Release(node_list);
 
     IXMLDOMSchemaCollection_Release(cache);
     IXMLDOMDocument_Release(doc1);
@@ -8961,6 +9015,7 @@ static void test_get_doctype(void)
     ok(doctype == NULL, "got %p\n", doctype);
 
     hr = IXMLDOMDocument_loadXML(doc, _bstr_(szEmailXML), &b);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     doctype = NULL;
@@ -10866,6 +10921,56 @@ static void test_getAttributeNode(void)
     free_bstrs();
 }
 
+static void test_getAttribute(void)
+{
+    IXMLDOMDocument *doc;
+    IXMLDOMElement *elem;
+    VARIANT_BOOL v;
+    VARIANT var;
+    HRESULT hr;
+
+    doc = create_document(&IID_IXMLDOMDocument);
+
+    hr = IXMLDOMDocument_loadXML(doc, _bstr_(szExampleXML), &v);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMDocument_get_documentElement(doc, &elem);
+    EXPECT_HR(hr, S_OK);
+
+    VariantInit(&var);
+    hr = IXMLDOMElement_getAttribute( elem, _bstr_("xmlns:foo"), &var );
+    EXPECT_HR(hr, S_OK);
+    ok( V_VT(&var) == VT_BSTR, "vt = %x\n", V_VT(&var));
+    ok( !lstrcmpW(V_BSTR(&var), _bstr_("urn:uuid:86B2F87F-ACB6-45cd-8B77-9BDB92A01A29")), "wrong attr value: %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    VariantClear(&var);
+
+    hr = IXMLDOMElement_getAttribute( elem, _bstr_("a"), &var );
+    EXPECT_HR(hr, S_OK);
+    ok( V_VT(&var) == VT_BSTR, "vt = %x\n", V_VT(&var));
+    ok( !lstrcmpW(V_BSTR(&var), _bstr_("attr a")), "wrong attr value: %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    VariantClear(&var);
+
+    hr = IXMLDOMElement_getAttribute( elem, _bstr_("foo:b"), &var );
+    EXPECT_HR(hr, S_OK);
+    ok( V_VT(&var) == VT_BSTR, "vt = %x\n", V_VT(&var));
+    ok( !lstrcmpW(V_BSTR(&var), _bstr_("attr b")), "wrong attr value: %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    VariantClear(&var);
+
+    hr = IXMLDOMElement_getAttribute( elem, _bstr_("b"), &var );
+    EXPECT_HR(hr, S_FALSE);
+    ok( V_VT(&var) == VT_NULL, "vt = %x\n", V_VT(&var));
+    VariantClear(&var);
+
+    hr = IXMLDOMElement_getAttribute( elem, _bstr_("non-existent"), &var );
+    EXPECT_HR(hr, S_FALSE);
+    ok( V_VT(&var) == VT_NULL, "vt = %x\n", V_VT(&var));
+    VariantClear(&var);
+
+    IXMLDOMElement_Release(elem);
+    IXMLDOMDocument_Release(doc);
+    free_bstrs();
+}
+
 typedef struct {
     DOMNodeType type;
     const char *name;
@@ -11919,6 +12024,71 @@ static void test_url(void)
     IXMLDOMDocument_Release(doc);
 }
 
+static void test_merging_text(void)
+{
+    IXMLDOMText *nodetext;
+    IXMLDOMText *newtext;
+    IXMLDOMElement *root;
+    IXMLDOMDocument *doc;
+    IXMLDOMNode *first;
+    HRESULT hr;
+    VARIANT v;
+    BSTR str;
+    int i;
+
+    doc = create_document(&IID_IXMLDOMDocument);
+
+    hr = IXMLDOMDocument_createElement(doc, _bstr_("Testing"), &root);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMDocument_appendChild(doc, (IXMLDOMNode*)root, NULL);
+    EXPECT_HR(hr, S_OK);
+
+    /* test xmlAddChild */
+    for (i = 0; i < 10; i++)
+    {
+        str = SysAllocString(szstr1);
+        hr = IXMLDOMDocument_createTextNode(doc, str, &nodetext);
+        SysFreeString(str);
+        EXPECT_HR(hr, S_OK);
+
+        newtext = NULL;
+        hr = IXMLDOMElement_appendChild(root, (IXMLDOMNode*)nodetext, (IXMLDOMNode**)&newtext);
+        EXPECT_HR(hr, S_OK);
+        ok(nodetext == newtext, "expected %p, got %p\n", nodetext, newtext);
+
+        IXMLDOMText_Release(newtext);
+        IXMLDOMText_Release(nodetext);
+    }
+
+    /* test xmlAddPrevSibling */
+    hr = IXMLDOMElement_get_firstChild(root, &first);
+    EXPECT_HR(hr, S_OK);
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = (IUnknown*)first;
+    for (i = 0; i < 10; i++)
+    {
+        str = SysAllocString(szstr2);
+        hr = IXMLDOMDocument_createTextNode(doc, str, &nodetext);
+        SysFreeString(str);
+        EXPECT_HR(hr, S_OK);
+
+        newtext = NULL;
+        hr = IXMLDOMElement_insertBefore(root, (IXMLDOMNode*)nodetext, v, (IXMLDOMNode**)&newtext);
+        EXPECT_HR(hr, S_OK);
+        ok(nodetext == newtext, "expected %p, got %p\n", nodetext, newtext);
+
+        IXMLDOMText_Release(newtext);
+        IXMLDOMText_Release(nodetext);
+    }
+
+    IXMLDOMNode_Release(first);
+    IXMLDOMElement_Release(root);
+    IXMLDOMDocument_Release(doc);
+
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
     HRESULT hr;
@@ -11990,6 +12160,7 @@ START_TEST(domdoc)
     test_dispex();
     test_parseerror();
     test_getAttributeNode();
+    test_getAttribute();
     test_supporterrorinfo();
     test_nodeValue();
     test_get_namespaces();
@@ -11998,6 +12169,7 @@ START_TEST(domdoc)
     test_namedmap_newenum();
     test_xmlns_attribute();
     test_url();
+    test_merging_text();
 
     test_xsltemplate();
     test_xsltext();

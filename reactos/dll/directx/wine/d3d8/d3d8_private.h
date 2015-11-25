@@ -185,6 +185,10 @@ struct d3d8_device
     LONG device_state;
     /* Avoids recursion with nested ReleaseRef to 0 */
     BOOL                    inDestruction;
+
+    /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
+     * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
+    struct d3d8_swapchain   *implicit_swapchain;
 };
 
 HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wined3d *wined3d, UINT adapter,
@@ -213,12 +217,13 @@ struct d3d8_volume
 {
     IDirect3DVolume8 IDirect3DVolume8_iface;
     struct d3d8_resource resource;
-    struct wined3d_volume *wined3d_volume;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
     struct d3d8_texture *texture;
 };
 
-void volume_init(struct d3d8_volume *volume, struct d3d8_texture *texture,
-        struct wined3d_volume *wined3d_volume, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+void volume_init(struct d3d8_volume *volume, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d8_swapchain
 {
@@ -235,7 +240,8 @@ struct d3d8_surface
 {
     IDirect3DSurface8 IDirect3DSurface8_iface;
     struct d3d8_resource resource;
-    struct wined3d_surface *wined3d_surface;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
     struct list rtv_entry;
     struct wined3d_rendertarget_view *wined3d_rtv;
     IDirect3DDevice8 *parent_device;
@@ -244,8 +250,8 @@ struct d3d8_surface
 };
 
 struct wined3d_rendertarget_view *d3d8_surface_get_rendertarget_view(struct d3d8_surface *surface) DECLSPEC_HIDDEN;
-void surface_init(struct d3d8_surface *surface, IUnknown *container_parent,
-        struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+void surface_init(struct d3d8_surface *surface, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
+        const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d8_surface *unsafe_impl_from_IDirect3DSurface8(IDirect3DSurface8 *iface) DECLSPEC_HIDDEN;
 
 struct d3d8_vertexbuffer

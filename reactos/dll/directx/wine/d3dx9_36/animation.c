@@ -24,6 +24,11 @@ struct d3dx9_animation_controller
 {
     ID3DXAnimationController ID3DXAnimationController_iface;
     LONG ref;
+
+    UINT max_outputs;
+    UINT max_sets;
+    UINT max_tracks;
+    UINT max_events;
 };
 
 static inline struct d3dx9_animation_controller *impl_from_ID3DXAnimationController(ID3DXAnimationController *iface)
@@ -50,24 +55,24 @@ static HRESULT WINAPI d3dx9_animation_controller_QueryInterface(ID3DXAnimationCo
 
 static ULONG WINAPI d3dx9_animation_controller_AddRef(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
-    ULONG refcount = InterlockedIncrement(&animation->ref);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    ULONG refcount = InterlockedIncrement(&This->ref);
 
-    TRACE("%p increasing refcount to %u.\n", animation, refcount);
+    TRACE("%p increasing refcount to %u.\n", This, refcount);
 
     return refcount;
 }
 
 static ULONG WINAPI d3dx9_animation_controller_Release(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
-    ULONG refcount = InterlockedDecrement(&animation->ref);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    ULONG refcount = InterlockedDecrement(&This->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", animation, refcount);
+    TRACE("%p decreasing refcount to %u.\n", This, refcount);
 
     if (!refcount)
     {
-        HeapFree(GetProcessHeap(), 0, animation);
+        HeapFree(GetProcessHeap(), 0, This);
     }
 
     return refcount;
@@ -75,30 +80,38 @@ static ULONG WINAPI d3dx9_animation_controller_Release(ID3DXAnimationController 
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumAnimationOutputs(ID3DXAnimationController *iface)
 {
-    FIXME("iface %p stub.\n", iface);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
 
-    return 0;
+    TRACE("iface %p.\n", iface);
+
+    return This->max_outputs;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumAnimationSets(ID3DXAnimationController *iface)
 {
-    FIXME("iface %p stub.\n", iface);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
 
-    return 0;
+    TRACE("iface %p.\n", iface);
+
+    return This->max_sets;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumTracks(ID3DXAnimationController *iface)
 {
-    FIXME("iface %p stub.\n", iface);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
 
-    return 0;
+    FIXME("iface %p.\n", iface);
+
+    return This->max_tracks;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumEvents(ID3DXAnimationController *iface)
 {
-    FIXME("iface %p stub.\n", iface);
+    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
 
-    return 0;
+    FIXME("iface %p.\n", iface);
+
+    return This->max_events;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_RegisterAnimationOutput(ID3DXAnimationController *iface,
@@ -445,6 +458,10 @@ HRESULT WINAPI D3DXCreateAnimationController(UINT MaxNumAnimationOutputs, UINT M
 
     object->ID3DXAnimationController_iface.lpVtbl = &d3dx9_animation_controller_vtbl;
     object->ref = 1;
+    object->max_outputs = MaxNumAnimationOutputs;
+    object->max_sets    = MaxNumAnimationSets;
+    object->max_tracks  = MaxNumTracks;
+    object->max_events  = MaxNumEvents;
 
     *AnimationController = &object->ID3DXAnimationController_iface;
 

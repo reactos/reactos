@@ -1112,30 +1112,44 @@ static void test_InternetSetOption(void)
     SetLastError(0xdeadbeef);
     ulArg = 11;
     ret = InternetSetOptionA(NULL, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
-    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "GetLastError() = %x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ulArg = 11;
     ret = InternetSetOptionA(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, 20);
-    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INTERNET_BAD_OPTION_LENGTH, "GetLastError() = %d\n", GetLastError());
 
     ulArg = 11;
     ret = InternetSetOptionA(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
-    ok(ret == TRUE, "InternetQueryOption should've succeeded\n");
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
 
     SetLastError(0xdeadbeef);
     ulArg = 4;
     ret = InternetSetOptionA(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
-    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ulArg = 16;
     ret = InternetSetOptionA(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
-    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %x\n", GetLastError());
+
+    ret = InternetSetOptionA(req, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
+
+    ret = InternetSetOptionA(ses, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
+
+    ret = InternetSetOptionA(ses, INTERNET_OPTION_REFRESH, NULL, 0);
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
+
+    SetLastError(0xdeadbeef);
+    ret = InternetSetOptionA(req, INTERNET_OPTION_REFRESH, NULL, 0);
+    todo_wine ok(ret == FALSE, "InternetSetOption should've failed\n");
+    todo_wine ok(GetLastError() == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "GetLastError() = %x\n", GetLastError());
 
     ret = InternetCloseHandle(req);
     ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
@@ -1346,6 +1360,35 @@ static void test_Option_PerConnectionOptionA(void)
     ok(list.pOptions[1].Value.dwValue == PROXY_TYPE_PROXY,
             "Retrieved flags should've been PROXY_TYPE_PROXY, was: %d\n",
             list.pOptions[1].Value.dwValue);
+
+    HeapFree(GetProcessHeap(), 0, list.pOptions[0].Value.pszValue);
+    HeapFree(GetProcessHeap(), 0, list.pOptions);
+
+    /* test with NULL as proxy server */
+    list.dwOptionCount = 1;
+    list.pOptions = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNET_PER_CONN_OPTIONA));
+    list.pOptions[0].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+    list.pOptions[0].Value.pszValue = NULL;
+
+    ret = InternetSetOptionA(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list, size);
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
+
+    ret = InternetSetOptionA(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list, size);
+    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
+
+    HeapFree(GetProcessHeap(), 0, list.pOptions);
+
+    /* get & verify the proxy server */
+    list.dwOptionCount = 1;
+    list.dwOptionError = 0;
+    list.pOptions = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNET_PER_CONN_OPTIONA));
+    list.pOptions[0].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+
+    ret = InternetQueryOptionA(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list, &size);
+    ok(ret == TRUE, "InternetQueryOption should've succeeded\n");
+    ok(!list.pOptions[0].Value.pszValue,
+            "Retrieved proxy server should've been NULL, was: \"%s\"\n",
+            list.pOptions[0].Value.pszValue);
 
     HeapFree(GetProcessHeap(), 0, list.pOptions[0].Value.pszValue);
     HeapFree(GetProcessHeap(), 0, list.pOptions);

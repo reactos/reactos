@@ -5094,7 +5094,7 @@ static HRESULT d3dx9_parse_resource(struct d3dx9_base_effect *base, const char *
     HRESULT hr = E_FAIL;
 
     read_dword(ptr, &technique_index);
-    TRACE("techn: %u\n", technique_index);
+    TRACE("technique_index: %u\n", technique_index);
 
     read_dword(ptr, &index);
     TRACE("index: %u\n", index);

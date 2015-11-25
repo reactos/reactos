@@ -256,7 +256,7 @@ typedef struct _XML_NODE_INFO
 ]
 library XMLPSR
 {
-importlib("stdole32.tlb");
+/* importlib("stdole32.tlb"); */
 importlib("stdole2.tlb");
 
 [

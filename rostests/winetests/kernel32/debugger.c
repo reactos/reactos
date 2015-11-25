@@ -158,7 +158,7 @@ typedef struct
 
 static void doCrash(int argc,  char** argv)
 {
-    char* p;
+    volatile char* p;
 
     /* make sure the exception gets to the debugger */
     SetErrorMode( 0 );

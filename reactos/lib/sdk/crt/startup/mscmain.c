@@ -20,31 +20,6 @@
 #error Unsupported platform
 #endif
 
-/*
- * Initializer / constructor handling
- * see http://msdn.microsoft.com/en-us/library/bb918180.aspx
- * Destructors are registered from the initializers using atexit()
- */
-
-extern _PVFV __xi_a[];
-extern _PVFV __xi_z[];
-extern _PVFV __xc_a[];
-extern _PVFV __xc_z[];
-
-static
-void
-__do_xtors(
-    _PVFV *start,
-    _PVFV *end)
-{
-    _PVFV *current;
-    for (current = start; current < end; current++)
-    {
-        if (*current != NULL)
-            (*current)();
-    }
-}
-
 void _pei386_runtime_relocator(void)
 {
 }
@@ -53,13 +28,6 @@ int __mingw_init_ehandler(void)
 {
     /* Nothing to do */
     return 1;
-}
-
-void
-__do_global_ctors(void)
-{
-    __do_xtors(__xi_a, __xi_z);
-    __do_xtors(__xc_a, __xc_z);
 }
 
 BOOL
@@ -114,8 +82,6 @@ __main(void)
         initialized = 1;
 
         _RTC_Initialize();
-
-        __do_global_ctors ();
     }
 }
 

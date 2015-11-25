@@ -377,15 +377,19 @@ WINAPI
 GetDriveTypeW(IN LPCWSTR lpRootPathName)
 {
     FILE_FS_DEVICE_INFORMATION FileFsDevice;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE hFile;
-    NTSTATUS errCode;
+    UNICODE_STRING PathName;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+    PWSTR CurrentDir = NULL;
+    PCWSTR lpRootPath;
 
     if (!lpRootPathName)
     {
         /* If NULL is passed, use current directory path */
         DWORD BufferSize = GetCurrentDirectoryW(0, NULL);
-        LPWSTR CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
+        CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
         if (!CurrentDir)
             return DRIVE_UNKNOWN;
         if (!GetCurrentDirectoryW(BufferSize, CurrentDir))
@@ -393,31 +397,59 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
             HeapFree(GetProcessHeap(), 0, CurrentDir);
             return DRIVE_UNKNOWN;
         }
-        hFile = InternalOpenDirW(CurrentDir, FALSE);
-        HeapFree(GetProcessHeap(), 0, CurrentDir);
+
+        if (wcslen(CurrentDir) > 3)
+            CurrentDir[3] = 0;
+
+        lpRootPath = (PCWSTR)CurrentDir;
     }
     else
     {
-        hFile = InternalOpenDirW(lpRootPathName, FALSE);
+        TRACE("lpRootPathName: %S\n", lpRootPathName);
+        lpRootPath = lpRootPathName;
     }
 
-    if (hFile == INVALID_HANDLE_VALUE)
+    TRACE("lpRootPath: %S\n", lpRootPath);
+
+    if (!RtlDosPathNameToNtPathName_U(lpRootPath, &PathName, NULL, NULL))
     {
-        return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
+        if (CurrentDir != NULL)
+            HeapFree(GetProcessHeap(), 0, CurrentDir);
+
+        return DRIVE_NO_ROOT_DIR;
     }
 
-    errCode = NtQueryVolumeInformationFile (hFile,
-                                            &IoStatusBlock,
-                                            &FileFsDevice,
-                                            sizeof(FILE_FS_DEVICE_INFORMATION),
-                                            FileFsDeviceInformation);
-    if (!NT_SUCCESS(errCode))
+    TRACE("PathName: %S\n", PathName.Buffer);
+
+    if (CurrentDir != NULL)
+        HeapFree(GetProcessHeap(), 0, CurrentDir);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PathName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
+    if (!NT_SUCCESS(Status))
+        return DRIVE_NO_ROOT_DIR; /* According to WINE regression tests */
+
+    Status = NtQueryVolumeInformationFile(FileHandle,
+                                          &IoStatusBlock,
+                                          &FileFsDevice,
+                                          sizeof(FILE_FS_DEVICE_INFORMATION),
+                                          FileFsDeviceInformation);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
     {
-        CloseHandle(hFile);
-        BaseSetLastNTError (errCode);
         return 0;
     }
-    CloseHandle(hFile);
 
     switch (FileFsDevice.DeviceType)
     {

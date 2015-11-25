@@ -535,8 +535,8 @@ enum bwritershader_param_srcmod_type
     BWRITERSPSM_NOT,
 };
 
-#define BWRITER_SM1_VS  0xfffe
-#define BWRITER_SM1_PS  0xffff
+#define BWRITER_SM1_VS  0xfffeu
+#define BWRITER_SM1_PS  0xffffu
 
 #define BWRITERPS_VERSION(major, minor) ((BWRITER_SM1_PS << 16) | ((major) << 8) | (minor))
 #define BWRITERVS_VERSION(major, minor) ((BWRITER_SM1_VS << 16) | ((major) << 8) | (minor))

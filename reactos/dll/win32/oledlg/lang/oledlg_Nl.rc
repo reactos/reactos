@@ -30,7 +30,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Het bestand is geen geldig OLE bestand. De registratie is mislukt."
   IDS_NOTOLEMODCAPTION  "Toevoegen"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

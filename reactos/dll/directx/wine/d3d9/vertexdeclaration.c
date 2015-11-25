@@ -323,7 +323,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elem
     UINT count = 1;
     UINT i;
 
-    TRACE("d3d9_elements %p, wined3d_elements %p\n", d3d9_elements, wined3d_elements);
+    TRACE("d3d9_elements %p, wined3d_elements %p, element_count %p\n", d3d9_elements, wined3d_elements, element_count);
 
     element = d3d9_elements;
     while (element++->Stream != 0xff && count++ < 128);

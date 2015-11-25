@@ -5167,9 +5167,9 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
  *  pValue: address to receive the property value as a 32-bit signed integer
  *
  * RETURNS
- *  0 for Success
+ *  HRESULT codes
  */
-BOOL WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
+HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
 {
     VARIANT var;
     HRESULT hr;

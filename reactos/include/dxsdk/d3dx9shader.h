@@ -305,6 +305,43 @@ DECLARE_INTERFACE(ID3DXInclude)
 
 typedef struct ID3DXInclude *LPD3DXINCLUDE;
 
+typedef struct _D3DXFRAGMENT_DESC
+{
+    const char *Name;
+    DWORD Target;
+
+} D3DXFRAGMENT_DESC, *LPD3DXFRAGMENT_DESC;
+
+
+DEFINE_GUID(IID_ID3DXFragmentLinker, 0x1a2c0cc2, 0xe5b6, 0x4ebc, 0x9e, 0x8d, 0x39, 0xe, 0x5, 0x78, 0x11, 0xb6);
+
+#define INTERFACE ID3DXFragmentLinker
+DECLARE_INTERFACE_(ID3DXFragmentLinker, IUnknown)
+{
+    STDMETHOD(QueryInterface)(THIS_ REFIID iid, void **ppv) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9 **device) PURE;
+    STDMETHOD_(UINT, GetNumberOfFragments)(THIS) PURE;
+
+    STDMETHOD_(D3DXHANDLE, GetFragmentHandleByIndex)(THIS_ UINT index) PURE;
+    STDMETHOD_(D3DXHANDLE, GetFragmentHandleByName)(THIS_ const char *name) PURE;
+    STDMETHOD(GetFragmentDesc)(THIS_ D3DXHANDLE name, D3DXFRAGMENT_DESC *frag_desc) PURE;
+
+    STDMETHOD(AddFragments)(THIS_ const DWORD *fragments) PURE;
+
+    STDMETHOD(GetAllFragments)(THIS_ ID3DXBuffer **buffer) PURE;
+    STDMETHOD(GetFragment)(THIS_ D3DXHANDLE name, ID3DXBuffer **buffer) PURE;
+
+    STDMETHOD(LinkShader)(THIS_ const char *profile, DWORD flags, const D3DXHANDLE *fragmenthandles, UINT fragments, ID3DXBuffer **buffer, ID3DXBuffer **errors) PURE;
+    STDMETHOD(LinkVertexShader)(THIS_ const char *profile, DWORD flags, const D3DXHANDLE *fragment_handles, UINT fragments, IDirect3DVertexShader9 **shader, ID3DXBuffer **errors) PURE;
+    STDMETHOD(LinkPixelShader)(THIS_ const char *profile, DWORD flags, const D3DXHANDLE *fragment_handles, UINT fragments, IDirect3DPixelShader9 **shader, ID3DXBuffer **errors) PURE;
+
+    STDMETHOD(ClearCache)(THIS) PURE;
+};
+#undef INTERFACE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -316,6 +353,7 @@ const char * WINAPI D3DXGetVertexShaderProfile(struct IDirect3DDevice9 *device);
 HRESULT WINAPI D3DXFindShaderComment(const DWORD *byte_code, DWORD fourcc, const void **data, UINT *size);
 HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **samplers, UINT *count);
 HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count);
+HRESULT WINAPI D3DXGetShaderOuputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count);
 
 HRESULT WINAPI D3DXAssembleShaderFromFileA(const char *filename, const D3DXMACRO *defines,
         ID3DXInclude *include, DWORD flags, ID3DXBuffer **shader, ID3DXBuffer **error_messages);
@@ -377,6 +415,9 @@ HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *pFunction, D3DXSEMANTIC 
 HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *pFunction, D3DXSEMANTIC *pSemantics, UINT *pCount);
 
 HRESULT WINAPI D3DXCreateTextureShader(const DWORD *pFunction, ID3DXTextureShader **ppTextureShader);
+
+HRESULT WINAPI D3DXCreateFragmentLinker(IDirect3DDevice9 *device, UINT size, ID3DXFragmentLinker **linker);
+HRESULT WINAPI D3DXCreateFragmentLinkerEx(IDirect3DDevice9 *device, UINT size, DWORD flags, ID3DXFragmentLinker **linker);
 
 #ifdef __cplusplus
 }

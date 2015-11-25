@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *                  2015 Robert Naumann <gonzomdx@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,54 +25,65 @@ typedef struct _PROPSHEET_INFO
 {
     HWND hTaskbarWnd;
     HWND hStartWnd;
-    HWND hNotiWnd;
-    HWND hToolWnd;
 
     HBITMAP hTaskbarBitmap;
+    HBITMAP hTrayBitmap;
 } PROPSHEET_INFO, *PPROPSHEET_INFO;
 
 
 static BOOL
 UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
 {
-    HWND hwndLock, hwndHide, hwndGroup, hwndShowQL;
-    HWND hwndBitmap;
-    BOOL bLock, bHide, bGroup, bShowQL;
-    LPTSTR lpImageName = NULL;
+    HWND hwndLock, hwndHide, hwndGroup, hwndShowQL, hwndClock, hwndSeconds, hwndHideInactive;
+    HWND hwndTaskbarBitmap, hwndTrayBitmap;
+    HWND hwndAdvancedButton;
+    BOOL bLock, bHide, bGroup, bShowQL, bShowClock, bShowSeconds, bHideInactive;
+    LPTSTR lpTaskBarImageName = NULL, lpTrayImageName = NULL;
     BOOL bRet = FALSE;
 
     hwndLock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_LOCK);
     hwndHide = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDE);
     hwndGroup = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_GROUP);
     hwndShowQL = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SHOWQL);
+    
+    hwndClock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_CLOCK);
+    hwndSeconds = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SECONDS);
+    hwndHideInactive = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDEICONS);
+    
+    hwndAdvancedButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_ICONCUST);
 
-    if (hwndLock && hwndHide && hwndGroup && hwndShowQL)
+    if (hwndLock && hwndHide && hwndGroup && hwndShowQL && hwndClock && hwndSeconds && hwndHideInactive)
     {
         bLock = (SendMessage(hwndLock, BM_GETCHECK, 0, 0) == BST_CHECKED);
         bHide = (SendMessage(hwndHide, BM_GETCHECK, 0, 0) == BST_CHECKED);
         bGroup = (SendMessage(hwndGroup, BM_GETCHECK, 0, 0) == BST_CHECKED);
         bShowQL = (SendMessage(hwndShowQL, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        
+        bShowClock = (SendMessage(hwndClock, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        bShowSeconds = (SendMessage(hwndSeconds, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        bHideInactive = (SendMessage(hwndHideInactive, BM_GETCHECK, 0, 0) == BST_CHECKED);
 
         if (bHide)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_AUTOHIDE);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_AUTOHIDE);
         else if (bLock  && bGroup  && bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_QL);
         else if (bLock  && !bGroup && !bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_NOQL);
         else if (bLock  && bGroup  && !bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_NOQL);
         else if (bLock  && !bGroup && bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_QL);
         else if (!bLock && !bGroup && !bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL);
         else if (!bLock && bGroup  && !bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_NOQL);
         else if (!bLock && !bGroup && bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_QL);
         else if (!bLock && bGroup  && bShowQL)
-            lpImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_QL);
 
-        if (lpImageName)
+        
+        if (lpTaskBarImageName)
         {
             if (pPropInfo->hTaskbarBitmap)
             {
@@ -79,21 +91,85 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
 
             pPropInfo->hTaskbarBitmap = (HBITMAP)LoadImage(hExplorerInstance,
-                                                  lpImageName,
+                                                  lpTaskBarImageName,
                                                   IMAGE_BITMAP,
                                                   0,
                                                   0,
                                                   LR_DEFAULTCOLOR);
             if (pPropInfo->hTaskbarBitmap)
             {
-                hwndBitmap = GetDlgItem(pPropInfo->hTaskbarWnd,
+                hwndTaskbarBitmap = GetDlgItem(pPropInfo->hTaskbarWnd,
                                         IDC_TASKBARPROP_TASKBARBITMAP);
-                if (hwndBitmap)
+                if (hwndTaskbarBitmap)
                 {
-                    SendMessage(hwndBitmap,
+                    SendMessage(hwndTaskbarBitmap,
                                 STM_SETIMAGE,
                                 IMAGE_BITMAP,
                                 (LPARAM)pPropInfo->hTaskbarBitmap);
+                }
+            }
+        }
+        
+        if (bHideInactive)
+        {
+            EnableWindow(hwndAdvancedButton, TRUE);
+            if(bShowClock)
+            {
+                EnableWindow(hwndSeconds, TRUE);
+                if(bShowSeconds)
+                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_SECONDS);
+                else
+                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_CLOCK);
+            }
+            else
+            {
+                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
+                EnableWindow(hwndSeconds, FALSE);
+                lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
+            }
+        }
+        else
+        {
+            EnableWindow(hwndAdvancedButton, FALSE);
+            if(bShowClock)
+            {
+                EnableWindow(hwndSeconds, TRUE);
+                if(bShowSeconds)
+                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_SECONDS);
+                else
+                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_CLOCK);
+            }
+            else
+            {
+                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
+                EnableWindow(hwndSeconds, FALSE);
+                lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
+            }
+        }
+        
+        if(lpTrayImageName)
+        {
+            if (pPropInfo->hTrayBitmap)
+            {
+                DeleteObject(pPropInfo->hTrayBitmap);
+            }
+
+            pPropInfo->hTrayBitmap = (HBITMAP)LoadImage(hExplorerInstance,
+                                                  lpTrayImageName,
+                                                  IMAGE_BITMAP,
+                                                  0,
+                                                  0,
+                                                  LR_DEFAULTCOLOR);
+            if (pPropInfo->hTrayBitmap)
+            {
+                hwndTrayBitmap = GetDlgItem(pPropInfo->hTaskbarWnd,
+                                        IDC_TASKBARPROP_NOTIFICATIONBITMAP);
+                if (hwndTrayBitmap)
+                {
+                    SendMessage(hwndTrayBitmap,
+                                STM_SETIMAGE,
+                                IMAGE_BITMAP,
+                                (LPARAM)pPropInfo->hTrayBitmap);
                 }
             }
         }
@@ -113,6 +189,7 @@ OnCreateTaskbarPage(HWND hwnd,
     pPropInfo->hTaskbarWnd = hwnd;
 
     // FIXME: check buttons
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, AdvancedSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
 
     UpdateTaskbarBitmap(pPropInfo);
 }
@@ -136,7 +213,7 @@ TaskbarPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            OnCreateTaskbarPage(hwndDlg, (PPROPSHEET_INFO)lParam);
+            OnCreateTaskbarPage(hwndDlg, (PPROPSHEET_INFO)((LPPROPSHEETPAGE)lParam)->lParam);
             break;
 
         case WM_COMMAND:
@@ -146,6 +223,9 @@ TaskbarPageProc(HWND hwndDlg,
                 case IDC_TASKBARPROP_HIDE:
                 case IDC_TASKBARPROP_GROUP:
                 case IDC_TASKBARPROP_SHOWQL:
+                case IDC_TASKBARPROP_HIDEICONS:
+                case IDC_TASKBARPROP_CLOCK:
+                case IDC_TASKBARPROP_SECONDS:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         UpdateTaskbarBitmap(pPropInfo);
@@ -167,6 +247,8 @@ TaskbarPageProc(HWND hwndDlg,
                     break;
 
                 case PSN_APPLY:
+                    AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
                     break;
             }
 
@@ -177,6 +259,10 @@ TaskbarPageProc(HWND hwndDlg,
             if (pPropInfo->hTaskbarBitmap)
             {
                 DeleteObject(pPropInfo->hTaskbarBitmap);
+            }
+            if (pPropInfo->hTrayBitmap)
+            {
+                DeleteObject(pPropInfo->hTrayBitmap);
             }
             break;
 

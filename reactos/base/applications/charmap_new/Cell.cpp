@@ -29,7 +29,7 @@ CCell::CCell(
     ) :
     m_hParent(hParent),
     m_CellCoordinates(CellCoordinates),
-    ch(L'*'),
+    m_Char(L'*'),
     m_bHasFocus(false),
     m_bIsLarge(false)
 {
@@ -50,21 +50,23 @@ CCell::OnPaint(_In_ PAINTSTRUCT &PaintStruct)
     if (NeedsPaint == FALSE)
         return false;
 
+
+
     // Draw the cell border
     BOOL b = Rectangle(PaintStruct.hdc,
-              m_CellCoordinates.left,
-              m_CellCoordinates.top,
-              m_CellCoordinates.right,
-              m_CellCoordinates.bottom);
+                       m_CellCoordinates.left,
+                       m_CellCoordinates.top,
+                       m_CellCoordinates.right,
+                       m_CellCoordinates.bottom);
+
+    // Calculate an internal drawing canvas for the cell
+    RECT Internal;
+    CopyRect(&Internal, &m_CellCoordinates);
+    InflateRect(&Internal, -1, -1);
 
     // Check if this cell has focus
     if (m_bHasFocus)
     {
-        // Take a copy of the border dims and make it slightly smaller
-        RECT Internal;
-        CopyRect(&Internal, &m_CellCoordinates);
-        InflateRect(&Internal, -1, -1);
-
         // Draw the smaller cell to make it look selected
         Rectangle(PaintStruct.hdc,
                   Internal.left,
@@ -73,7 +75,14 @@ CCell::OnPaint(_In_ PAINTSTRUCT &PaintStruct)
                   Internal.bottom);
     }
 
-    return true;
+    int Success;
+    Success = DrawTextW(PaintStruct.hdc,
+                        &m_Char,
+                        1,
+                        &Internal,
+                        DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    return (Success != 0);
 }
 
 void

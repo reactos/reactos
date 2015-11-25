@@ -660,6 +660,9 @@ MMRESULT WINAPI acmFormatSuggest(HACMDRIVER had, PWAVEFORMATEX pwfxSrc,
     TRACE("(%p, %p, %p, %d, %d)\n",
 	  had, pwfxSrc, pwfxDst, cbwfxDst, fdwSuggest);
 
+    if (!pwfxSrc || !pwfxDst)
+        return MMSYSERR_INVALPARAM;
+
     if (fdwSuggest & ~(ACM_FORMATSUGGESTF_NCHANNELS|ACM_FORMATSUGGESTF_NSAMPLESPERSEC|
 		       ACM_FORMATSUGGESTF_WBITSPERSAMPLE|ACM_FORMATSUGGESTF_WFORMATTAG))
 	return MMSYSERR_INVALFLAG;

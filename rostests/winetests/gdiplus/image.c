@@ -37,6 +37,19 @@
 #include <ole2.h>
 #include <gdiplus.h>
 
+/* FIXME: They belong to gdipluseffects.h */
+DEFINE_GUID(BlurEffectGuid, 0x633c80a4, 0x1843, 0x482b, 0x9e, 0xf2, 0xbe, 0x28, 0x34, 0xc5, 0xfd, 0xd4);
+DEFINE_GUID(SharpenEffectGuid, 0x63cbf3ee, 0xc526, 0x402c, 0x8f, 0x71, 0x62, 0xc5, 0x40, 0xbf, 0x51, 0x42);
+DEFINE_GUID(ColorMatrixEffectGuid, 0x718f2615, 0x7933, 0x40e3, 0xa5, 0x11, 0x5f, 0x68, 0xfe, 0x14, 0xdd, 0x74);
+DEFINE_GUID(ColorLUTEffectGuid, 0xa7ce72a9, 0x0f7f, 0x40d7, 0xb3, 0xcc, 0xd0, 0xc0, 0x2d, 0x5c, 0x32, 0x12);
+DEFINE_GUID(BrightnessContrastEffectGuid, 0xd3a1dbe1, 0x8ec4, 0x4c17, 0x9f, 0x4c, 0xea, 0x97, 0xad, 0x1c, 0x34, 0x3d);
+DEFINE_GUID(HueSaturationLightnessEffectGuid, 0x8b2dd6c3, 0xeb07, 0x4d87, 0xa5, 0xf0, 0x71, 0x08, 0xe2, 0x6a, 0x9c, 0x5f);
+DEFINE_GUID(LevelsEffectGuid, 0x99c354ec, 0x2a31, 0x4f3a, 0x8c, 0x34, 0x17, 0xa8, 0x03, 0xb3, 0x3a, 0x25);
+DEFINE_GUID(TintEffectGuid, 0x1077af00, 0x2848, 0x4441, 0x94, 0x89, 0x44, 0xad, 0x4c, 0x2d, 0x7a, 0x2c);
+DEFINE_GUID(ColorBalanceEffectGuid, 0x537e597d, 0x251e, 0x48da, 0x96, 0x64, 0x29, 0xca, 0x49, 0x6b, 0x70, 0xf8);
+DEFINE_GUID(RedEyeCorrectionEffectGuid, 0x74d29d05, 0x69a4, 0x4266, 0x95, 0x49, 0x3c, 0xc5, 0x28, 0x36, 0xb6, 0x32);
+DEFINE_GUID(ColorCurveEffectGuid, 0xdd6a0022, 0x58e4, 0x4a67, 0x9d, 0x9b, 0xd4, 0x8e, 0xb8, 0x81, 0xa5, 0x3d);
+
 #define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (UINT)(expected), (UINT)(got))
 #define expectf(expected, got) ok(fabs((expected) - (got)) < 0.0001, "Expected %f, got %f\n", (expected), (got))
 
@@ -1551,6 +1564,22 @@ static void test_createfromwmf(void)
     GdipDisposeImage(img);
 }
 
+static void test_createfromwmf_noplaceable(void)
+{
+    HMETAFILE hwmf;
+    GpImage *img;
+    GpStatus stat;
+
+    hwmf = SetMetaFileBitsEx(sizeof(wmfimage)-sizeof(WmfPlaceableFileHeader),
+        wmfimage+sizeof(WmfPlaceableFileHeader));
+    ok(hwmf != 0, "SetMetaFileBitsEx failed\n");
+
+    stat = GdipCreateMetafileFromWmf(hwmf, TRUE, NULL, (GpMetafile**)&img);
+    expect(Ok, stat);
+
+    GdipDisposeImage(img);
+}
+
 static void test_resolution(void)
 {
     GpStatus stat;
@@ -2707,6 +2736,7 @@ static void test_multiframegif(void)
     expect(0, color);
 
     stat = GdipImageSelectActiveFrame((GpImage*)bmp, &dimension, 3);
+    expect(Ok, stat);
     stat = GdipBitmapGetPixel(bmp, 2, 0, &color);
     expect(Ok, stat);
     ok(color==0 || broken(color==0xff0000ff), "color = %x\n", color);
@@ -4005,6 +4035,50 @@ static void test_DrawImage(void)
     expect(Ok, status);
 }
 
+static void test_DrawImage_SourceCopy(void)
+{
+    DWORD dst_pixels[4] = { 0xffffffff, 0xffffffff,
+                            0xffffffff, 0xffffffff };
+    DWORD src_pixels[4] = { 0, 0xffff0000,
+                            0, 0xff00ff };
+
+    GpStatus status;
+    union
+    {
+        GpBitmap *bitmap;
+        GpImage *image;
+    } u1, u2;
+    GpGraphics *graphics;
+
+    status = GdipCreateBitmapFromScan0(2, 2, 8, PixelFormat32bppARGB, (BYTE*)dst_pixels, &u1.bitmap);
+    expect(Ok, status);
+
+    status = GdipCreateBitmapFromScan0(2, 2, 8, PixelFormat32bppARGB, (BYTE*)src_pixels, &u2.bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext(u1.image, &graphics);
+    expect(Ok, status);
+    status = GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
+    expect(Ok, status);
+
+    status = GdipSetCompositingMode(graphics, CompositingModeSourceCopy);
+    expect(Ok, status);
+
+    status = GdipDrawImageI(graphics, u2.image, 0, 0);
+    expect(Ok, status);
+
+    todo_wine expect(0, dst_pixels[0]);
+    expect(0xffff0000, dst_pixels[1]);
+    todo_wine expect(0, dst_pixels[2]);
+    todo_wine expect(0, dst_pixels[3]);
+
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
+    status = GdipDisposeImage(u1.image);
+    expect(Ok, status);
+    status = GdipDisposeImage(u2.image);
+    expect(Ok, status);
+}
+
 static void test_GdipDrawImagePointRect(void)
 {
     BYTE black_1x1[4] = { 0,0,0,0 };
@@ -4583,11 +4657,11 @@ static BOOL get_encoder_clsid(LPCWSTR mime, GUID *format, CLSID *clsid)
 
 static void test_supported_encoders(void)
 {
-    static const WCHAR bmp_mimetype[] = {'i', 'm', 'a','g', 'e', '/', 'b', 'm', 'p', 0};
-    static const WCHAR jpeg_mimetype[] = {'i','m','a','g','e','/','j','p','e','g', 0};
-    static const WCHAR gif_mimetype[] = {'i','m','a','g','e','/','g','i','f', 0};
-    static const WCHAR tiff_mimetype[] = {'i','m','a','g','e','/','t','i','f','f', 0};
-    static const WCHAR png_mimetype[] = {'i','m','a','g','e','/','p','n','g', 0};
+    static const WCHAR bmp_mimetype[] = { 'i', 'm', 'a','g', 'e', '/', 'b', 'm', 'p',0 };
+    static const WCHAR jpeg_mimetype[] = { 'i','m','a','g','e','/','j','p','e','g',0 };
+    static const WCHAR gif_mimetype[] = { 'i','m','a','g','e','/','g','i','f',0 };
+    static const WCHAR tiff_mimetype[] = { 'i','m','a','g','e','/','t','i','f','f',0 };
+    static const WCHAR png_mimetype[] = { 'i','m','a','g','e','/','p','n','g',0 };
     static const struct test_data
     {
         LPCWSTR mime;
@@ -4636,6 +4710,47 @@ static void test_supported_encoders(void)
     GdipDisposeImage((GpImage *)bm);
 }
 
+static void test_createeffect(void)
+{
+    static const GUID noneffect = { 0xcd0c3d4b, 0xe15e, 0x4cf2, { 0x9e, 0xa8, 0x6e, 0x1d, 0x65, 0x48, 0xc5, 0xa5 } };
+    GpStatus (WINAPI *pGdipCreateEffect)( const GUID guid, CGpEffect **effect);
+    GpStatus (WINAPI *pGdipDeleteEffect)( CGpEffect *effect);
+    GpStatus stat;
+    CGpEffect *effect;
+    HMODULE mod = GetModuleHandleA("gdiplus.dll");
+    int i;
+    const GUID effectlist[] =
+               {BlurEffectGuid, SharpenEffectGuid, ColorMatrixEffectGuid, ColorLUTEffectGuid,
+                BrightnessContrastEffectGuid, HueSaturationLightnessEffectGuid, LevelsEffectGuid,
+                TintEffectGuid, ColorBalanceEffectGuid, RedEyeCorrectionEffectGuid, ColorCurveEffectGuid};
+
+    pGdipCreateEffect = (void*)GetProcAddress( mod, "GdipCreateEffect");
+    pGdipDeleteEffect = (void*)GetProcAddress( mod, "GdipDeleteEffect");
+    if(!pGdipCreateEffect || !pGdipDeleteEffect)
+    {
+        /* GdipCreateEffect/GdipDeleteEffect was introduced in Windows Vista. */
+        win_skip("GDIPlus version 1.1 not available\n");
+        return;
+    }
+
+    stat = pGdipCreateEffect(BlurEffectGuid, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = pGdipCreateEffect(noneffect, &effect);
+    todo_wine expect(Win32Error, stat);
+
+    for(i=0; i < sizeof(effectlist) / sizeof(GUID); i++)
+    {
+        stat = pGdipCreateEffect(effectlist[i], &effect);
+        todo_wine expect(Ok, stat);
+        if(stat == Ok)
+        {
+            stat = pGdipDeleteEffect(effect);
+            expect(Ok, stat);
+        }
+    }
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -4654,6 +4769,7 @@ START_TEST(image)
     test_DrawImage_scale();
     test_image_format();
     test_DrawImage();
+    test_DrawImage_SourceCopy();
     test_GdipDrawImagePointRect();
     test_bitmapbits();
     test_tiff_palette();
@@ -4678,6 +4794,7 @@ START_TEST(image)
     test_getrawformat();
     test_loadwmf();
     test_createfromwmf();
+    test_createfromwmf_noplaceable();
     test_resolution();
     test_createhbitmap();
     test_getthumbnail();
@@ -4690,6 +4807,7 @@ START_TEST(image)
     test_remaptable();
     test_colorkey();
     test_dispose();
+    test_createeffect();
 
     GdiplusShutdown(gdiplusToken);
 }

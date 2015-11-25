@@ -169,11 +169,14 @@ static void WinHttpCreateUrl_test( void )
     ok( len == 57, "expected len 57 got %u\n", len );
 
     /* allocated url, NULL scheme */
+    SetLastError( 0xdeadbeef );
     uc.lpszScheme = NULL;
     url[0] = 0;
     len = 256;
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
+    ok( GetLastError() == ERROR_SUCCESS || broken(GetLastError() == 0xdeadbeef) /* < win7 */,
+        "expected ERROR_SUCCESS got %u\n", GetLastError() );
     ok( len == 56, "expected len 56 got %u\n", len );
     ok( !lstrcmpW( url, url1 ), "url doesn't match\n" );
 
@@ -380,9 +383,13 @@ static void WinHttpCrackUrl_test( void )
 
     /* no buffers */
     reset_url_components( &uc );
+    SetLastError( 0xdeadbeef );
     ret = WinHttpCrackUrl( url_k1, 0, 0,&uc);
+    error = GetLastError();
 
-    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", error );
+    ok( error == ERROR_SUCCESS || broken(error == ERROR_INVALID_PARAMETER) /* < win7 */,
+        "got %u, expected ERROR_SUCCESS\n", error );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
     ok( uc.lpszScheme == url_k1,"unexpected scheme\n" );
     ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );

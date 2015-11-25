@@ -125,6 +125,7 @@ typedef struct
     LPWSTR proxy_username;
     LPWSTR proxy_password;
     struct list cookie_cache;
+    HANDLE unload_event;
 } session_t;
 
 typedef struct

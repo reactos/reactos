@@ -1350,6 +1350,55 @@ static void test_file_inherit_child_no(const char* fd_s)
        "Wrong write result in child process on %d (%s)\n", fd, strerror(errno));
 }
 
+static void test_file_refcount_child(void)
+{
+    static const char buffer1[] = "test1";
+    static const char buffer2[] = "test2";
+    static const char buffer3[] = "test3";
+    static const char buffer4[] = "test4";
+    HANDLE f0, f1, f2, h0, h1, h2;
+    DWORD written, flags, ret;
+
+    f0 = (HANDLE)_get_osfhandle(STDIN_FILENO);
+    f1 = (HANDLE)_get_osfhandle(STDOUT_FILENO);
+    f2 = (HANDLE)_get_osfhandle(STDERR_FILENO);
+    ok(f0 == f1, "expected same handles, got %p, %p\n", f0, f1);
+    ok(f1 == f2, "expected same handles, got %p, %p\n", f1, f2);
+
+    h0 = GetStdHandle(STD_INPUT_HANDLE);
+    h1 = GetStdHandle(STD_OUTPUT_HANDLE);
+    h2 = GetStdHandle(STD_ERROR_HANDLE);
+    ok(h0 == h1, "expected same handles, got %p, %p\n", h0, h1);
+    ok(h1 == h2, "expected same handles, got %p, %p\n", h1, h2);
+    ok(f0 == h0, "expected same handles, got %p, %p\n", f0, h0);
+
+    ret = GetHandleInformation(h1, &flags);
+    ok(ret, "GetHandleInformation failed\n");
+    ret = WriteFile(h1, buffer1, strlen(buffer1), &written, 0);
+    ok(ret, "WriteFile failed\n");
+
+    ret = fclose(stdout);
+    ok(ret == 0, "fclose failed\n");
+    ret = GetHandleInformation(h1, &flags);
+    ok(ret, "GetHandleInformation failed\n");
+    ret = WriteFile(h1, buffer2, strlen(buffer2), &written, 0);
+    ok(ret, "WriteFile failed\n");
+
+    ret = fclose(stdout);
+    ok(ret != 0, "fclose should fail\n");
+    ret = GetHandleInformation(h1, &flags);
+    ok(ret, "GetHandleInformation failed\n");
+    ret = WriteFile(h1, buffer3, strlen(buffer3), &written, 0);
+    ok(ret, "WriteFile failed\n");
+
+    ret = fclose(stderr);
+    ok(ret == 0, "fclose failed\n");
+    ret = GetHandleInformation(h1, &flags);
+    ok(!ret, "GetHandleInformation should fail\n");
+    ret = WriteFile(h1, buffer4, strlen(buffer4), &written, 0);
+    ok(!ret, "WriteFile should fail\n");
+}
+
 static void create_io_inherit_block( STARTUPINFOA *startup, unsigned int count, const HANDLE *handles )
 {
     static BYTE block[1024];
@@ -1421,6 +1470,36 @@ static void test_stdout_handle( STARTUPINFOA *startup, char *cmdline, HANDLE hst
 
     CloseHandle( hErrorFile );
     DeleteFileA( "fdopen.err" );
+}
+
+static void test_file_refcount( STARTUPINFOA *startup, char *cmdline, const char *descr )
+{
+    const char *data;
+    HANDLE hMixFile;
+    SECURITY_ATTRIBUTES sa;
+    PROCESS_INFORMATION proc;
+
+    /* make file handle inheritable */
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    hMixFile = CreateFileA( "fdopen.mix", GENERIC_READ|GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, CREATE_ALWAYS, 0, NULL );
+    startup->dwFlags    = STARTF_USESTDHANDLES;
+    startup->hStdInput  = hMixFile;
+    startup->hStdOutput = hMixFile;
+    startup->hStdError  = hMixFile;
+
+    CreateProcessA( NULL, cmdline, NULL, NULL, TRUE,
+                    CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS, NULL, NULL, startup, &proc );
+    winetest_wait_child_process( proc.hProcess );
+
+    data = read_file( hMixFile );
+    ok( !strcmp( data, "test1test2test3" ), "%s: Wrong error data (%s)\n", descr, data );
+
+    CloseHandle( hMixFile );
+    DeleteFileA( "fdopen.mix" );
 }
 
 static void test_file_inherit( const char* selfname )
@@ -1515,6 +1594,12 @@ static void test_file_inherit( const char* selfname )
     startup.cbReserved2 += 7;
     test_stdout_handle( &startup, cmdline, handles[1], TRUE, "large size block" );
     CloseHandle( handles[1] );
+    DeleteFileA("fdopen.tst");
+
+    /* test refcount of handles */
+    create_io_inherit_block( &startup, 0, NULL );
+    sprintf(cmdline, "%s file refcount", selfname);
+    test_file_refcount( &startup, cmdline, "file refcount" );
     DeleteFileA("fdopen.tst");
 }
 
@@ -1789,6 +1874,16 @@ static void test_setmode(void)
         return;
     }
 
+    errno = 0xdeadbeef;
+    ret = _setmode(-2, 0);
+    ok(ret == -1, "_setmode returned %x, expected -1\n", ret);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = _setmode(-2, _O_TEXT);
+    ok(ret == -1, "_setmode returned %x, expected -1\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
     fd = _open(name, _O_CREAT|_O_WRONLY, _S_IWRITE);
     ok(fd != -1, "failed to open file\n");
 
@@ -1850,6 +1945,11 @@ static void test_get_osfhandle(void)
 
     _close(fd);
     _unlink(fname);
+
+    errno = 0xdeadbeef;
+    handle = (HANDLE)_get_osfhandle(fd);
+    ok(handle == INVALID_HANDLE_VALUE, "_get_osfhandle returned %p\n", handle);
+    ok(errno == EBADF, "errno = %d\n", errno);
 }
 
 static void test_setmaxstdio(void)
@@ -2330,6 +2430,8 @@ START_TEST(file)
             test_file_inherit_child_no(arg_v[3]);
         else if (strcmp(arg_v[2], "pipes") == 0)
             test_pipes_child(arg_c, arg_v);
+        else if (strcmp(arg_v[2], "refcount") == 0)
+            test_file_refcount_child();
         else
             ok(0, "invalid argument '%s'\n", arg_v[2]);
         return;

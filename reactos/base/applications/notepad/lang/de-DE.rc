@@ -184,5 +184,5 @@ um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
     STRING_LINE_COLUMN "Zeile %d, Spalte %d"
     STRING_PRINTERROR "Die Datei '%s' kann nicht gedruckt werden.\n\nStellen Sie sicher, dass der Drucker angeschlossen und richtig konfiguriert ist."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Textdokument"
 END

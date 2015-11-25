@@ -38,6 +38,32 @@ BOOL volume_prepare_system_memory(struct wined3d_volume *volume)
     return TRUE;
 }
 
+#if !defined(STAGING_CSMT)
+void wined3d_volume_get_pitch(const struct wined3d_volume *volume, UINT *row_pitch, UINT *slice_pitch)
+{
+    const struct wined3d_format *format = volume->resource.format;
+
+    if (volume->container->resource.format_flags & WINED3DFMT_FLAG_BLOCKS)
+    {
+        /* Since compressed formats are block based, pitch means the amount of
+         * bytes to the next row of block rather than the next row of pixels. */
+        UINT row_block_count = (volume->resource.width + format->block_width - 1) / format->block_width;
+        UINT slice_block_count = (volume->resource.height + format->block_height - 1) / format->block_height;
+        *row_pitch = row_block_count * format->block_byte_count;
+        *slice_pitch = *row_pitch * slice_block_count;
+    }
+    else
+    {
+        unsigned char alignment = volume->resource.device->surface_alignment;
+        *row_pitch = format->byte_count * volume->resource.width;  /* Bytes / row */
+        *row_pitch = (*row_pitch + alignment - 1) & ~(alignment - 1);
+        *slice_pitch = *row_pitch * volume->resource.height;
+    }
+
+    TRACE("Returning row pitch %u, slice pitch %u.\n", *row_pitch, *slice_pitch);
+}
+
+#endif /* STAGING_CSMT */
 /* This call just uploads data, the caller is responsible for binding the
  * correct texture. */
 /* Context activation is done by the caller. */
@@ -69,7 +95,11 @@ void wined3d_volume_upload_data(struct wined3d_volume *volume, const struct wine
         dst_row_pitch = width * format->conv_byte_count;
         dst_slice_pitch = dst_row_pitch * height;
 
+#if defined(STAGING_CSMT)
         wined3d_resource_get_pitch(&volume->resource, &src_row_pitch, &src_slice_pitch);
+#else  /* STAGING_CSMT */
+        wined3d_volume_get_pitch(volume, &src_row_pitch, &src_slice_pitch);
+#endif /* STAGING_CSMT */
 
         converted_mem = HeapAlloc(GetProcessHeap(), 0, dst_slice_pitch * depth);
         format->convert(data->addr, converted_mem, src_row_pitch, src_slice_pitch,
@@ -558,46 +588,6 @@ static void volume_unload(struct wined3d_resource *resource)
     resource_unload(resource);
 }
 
-ULONG CDECL wined3d_volume_incref(struct wined3d_volume *volume)
-{
-    TRACE("Forwarding to container %p.\n", volume->container);
-
-    return wined3d_texture_incref(volume->container);
-}
-
-#if defined(STAGING_CSMT)
-void wined3d_volume_cleanup_cs(struct wined3d_volume *volume)
-{
-    HeapFree(GetProcessHeap(), 0, volume);
-}
-
-#endif /* STAGING_CSMT */
-ULONG CDECL wined3d_volume_decref(struct wined3d_volume *volume)
-{
-    TRACE("Forwarding to container %p.\n", volume->container);
-
-    return wined3d_texture_decref(volume->container);
-}
-
-void * CDECL wined3d_volume_get_parent(const struct wined3d_volume *volume)
-{
-    TRACE("volume %p.\n", volume);
-
-    return volume->resource.parent;
-}
-
-void CDECL wined3d_volume_preload(struct wined3d_volume *volume)
-{
-    FIXME("volume %p stub!\n", volume);
-}
-
-struct wined3d_resource * CDECL wined3d_volume_get_resource(struct wined3d_volume *volume)
-{
-    TRACE("volume %p.\n", volume);
-
-    return &volume->resource;
-}
-
 #if !defined(STAGING_CSMT)
 static BOOL volume_check_block_align(const struct wined3d_volume *volume,
         const struct wined3d_box *box)
@@ -650,7 +640,7 @@ static BOOL wined3d_volume_check_box_dimensions(const struct wined3d_volume *vol
     return TRUE;
 }
 
-HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
+HRESULT wined3d_volume_map(struct wined3d_volume *volume,
         struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
 {
 #if defined(STAGING_CSMT)
@@ -669,8 +659,7 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
         WARN("Map box is invalid.\n");
         return WINED3DERR_INVALIDCALL;
     }
-    if ((fmt_flags & WINED3DFMT_FLAG_BLOCKS) &&
-            !wined3d_resource_check_block_align(&volume->resource, box))
+    if ((fmt_flags & WINED3DFMT_FLAG_BLOCKS) && !wined3d_resource_check_block_align(&volume->resource, box))
     {
         WARN("Map box is misaligned for %ux%u blocks.\n",
                 format->block_width, format->block_height);
@@ -681,6 +670,19 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
     if (FAILED(hr))
         return hr;
 
+    return hr;
+}
+
+HRESULT wined3d_volume_unmap(struct wined3d_volume *volume)
+{
+    HRESULT hr;
+
+    if (volume->resource.unmap_dirtify)
+        wined3d_texture_set_dirty(volume->container);
+
+    hr = wined3d_resource_unmap(&volume->resource);
+    if (hr == WINEDDERR_NOTLOCKED)
+        return WINED3DERR_INVALIDCALL;
     return hr;
 #else  /* STAGING_CSMT */
     struct wined3d_device *device = volume->resource.device;
@@ -780,7 +782,7 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
     }
     else
     {
-        wined3d_resource_get_pitch(&volume->resource, &map_desc->row_pitch, &map_desc->slice_pitch);
+        wined3d_volume_get_pitch(volume, &map_desc->row_pitch, &map_desc->slice_pitch);
     }
 
     if (!box)
@@ -823,27 +825,10 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
             map_desc->data, map_desc->row_pitch, map_desc->slice_pitch);
 
     return WINED3D_OK;
-#endif /* STAGING_CSMT */
 }
 
-struct wined3d_volume * CDECL wined3d_volume_from_resource(struct wined3d_resource *resource)
+HRESULT wined3d_volume_unmap(struct wined3d_volume *volume)
 {
-    return volume_from_resource(resource);
-}
-
-HRESULT CDECL wined3d_volume_unmap(struct wined3d_volume *volume)
-{
-#if defined(STAGING_CSMT)
-    HRESULT hr;
-
-    if (volume->resource.unmap_dirtify)
-        wined3d_texture_set_dirty(volume->container);
-
-    hr = wined3d_resource_unmap(&volume->resource);
-    if (hr == WINEDDERR_NOTLOCKED)
-        return WINED3DERR_INVALIDCALL;
-    return hr;
-#else  /* STAGING_CSMT */
     TRACE("volume %p.\n", volume);
 
     if (!volume->resource.map_count)
@@ -874,12 +859,38 @@ HRESULT CDECL wined3d_volume_unmap(struct wined3d_volume *volume)
 
 static ULONG volume_resource_incref(struct wined3d_resource *resource)
 {
-    return wined3d_volume_incref(volume_from_resource(resource));
+    struct wined3d_volume *volume = volume_from_resource(resource);
+    TRACE("Forwarding to container %p.\n", volume->container);
+
+    return wined3d_texture_incref(volume->container);
 }
 
+#if defined(STAGING_CSMT)
+void wined3d_volume_cleanup_cs(struct wined3d_volume *volume)
+{
+    HeapFree(GetProcessHeap(), 0, volume);
+}
+
+#endif /* STAGING_CSMT */
 static ULONG volume_resource_decref(struct wined3d_resource *resource)
 {
-    return wined3d_volume_decref(volume_from_resource(resource));
+    struct wined3d_volume *volume = volume_from_resource(resource);
+    TRACE("Forwarding to container %p.\n", volume->container);
+
+    return wined3d_texture_decref(volume->container);
+}
+
+static HRESULT volume_resource_sub_resource_map(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
+{
+    ERR("Not supported on sub-resources.\n");
+    return WINED3DERR_INVALIDCALL;
+}
+
+static HRESULT volume_resource_sub_resource_unmap(struct wined3d_resource *resource, unsigned int sub_resource_idx)
+{
+    ERR("Not supported on sub-resources.\n");
+    return WINED3DERR_INVALIDCALL;
 }
 
 #if defined(STAGING_CSMT)
@@ -891,19 +902,17 @@ static void wined3d_volume_location_invalidated(struct wined3d_resource *resourc
         wined3d_texture_set_dirty(volume->container);
 }
 
+#endif /* STAGING_CSMT */
 static const struct wined3d_resource_ops volume_resource_ops =
 {
     volume_resource_incref,
     volume_resource_decref,
     volume_unload,
+    volume_resource_sub_resource_map,
+    volume_resource_sub_resource_unmap,
+#if defined(STAGING_CSMT)
     wined3d_volume_location_invalidated,
     wined3d_volume_load_location,
-#else  /* STAGING_CSMT */
-static const struct wined3d_resource_ops volume_resource_ops =
-{
-    volume_resource_incref,
-    volume_resource_decref,
-    volume_unload,
 #endif /* STAGING_CSMT */
 };
 
@@ -983,7 +992,7 @@ HRESULT wined3d_volume_create(struct wined3d_texture *container, const struct wi
     }
 
     if (FAILED(hr = device_parent->ops->volume_created(device_parent,
-            wined3d_texture_get_parent(container), object, &parent, &parent_ops)))
+            container, level, &parent, &parent_ops)))
     {
         WARN("Failed to create volume parent, hr %#x.\n", hr);
         wined3d_volume_destroy(object);

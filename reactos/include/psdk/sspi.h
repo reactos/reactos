@@ -77,6 +77,15 @@ typedef struct _SECURITY_INTEGER
 } SECURITY_INTEGER, *PSECURITY_INTEGER;
 typedef SECURITY_INTEGER TimeStamp, *PTimeStamp;
 
+#define SSPIPFC_CREDPROV_DO_NOT_SAVE 0x00000001
+#define SSPIPFC_NO_CHECKBOX 0x00000002
+
+typedef void *PSEC_WINNT_AUTH_IDENTITY_OPAQUE;
+
+ULONG SEC_ENTRY SspiPromptForCredentialsW(_In_ PCWSTR, _In_opt_ void *,
+    _In_ ULONG, _In_ PCWSTR, _In_opt_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE,
+    _Outptr_ PSEC_WINNT_AUTH_IDENTITY_OPAQUE *, _Inout_opt_ int *, _In_ ULONG);
+
 typedef struct _SecPkgInfoA
 {
     ULONG  fCapabilities;

@@ -1090,7 +1090,7 @@ static void test_trailing_slash(void)
     ret = CreateUrlCacheEntryA(url_with_slash, 0, "html", filename, 0);
     ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
 
-    create_and_write_file(filenameA, &zero_byte, sizeof(zero_byte));
+    create_and_write_file(filename, &zero_byte, sizeof(zero_byte));
 
     ret = CommitUrlCacheEntryA("Visited: http://testing.cache.com/", NULL, filetime_zero, filetime_zero,
             NORMAL_CACHE_ENTRY, NULL, 0, "html", NULL);

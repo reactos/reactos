@@ -301,6 +301,7 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
 
     hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
     ok(hr == S_OK, "CreateDecoderFromStream error %#x\n", hr);
+    if (FAILED(hr)) return NULL;
 
     hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
     ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
@@ -348,6 +349,7 @@ static void test_color_contexts(void)
 
     decoder = create_decoder(png_no_color_profile, sizeof(png_no_color_profile));
     ok(decoder != 0, "Failed to load PNG image data\n");
+    if (!decoder) return;
 
     /* global color context */
     hr = IWICBitmapDecoder_GetColorContexts(decoder, 0, NULL, NULL);
@@ -375,6 +377,7 @@ static void test_color_contexts(void)
 
     decoder = create_decoder(png_color_profile, sizeof(png_color_profile));
     ok(decoder != 0, "Failed to load PNG image data\n");
+    if (!decoder) return;
 
     /* global color context */
     count = 0xdeadbeef;
@@ -552,6 +555,7 @@ static void test_png_palette(void)
 
     decoder = create_decoder(png_PLTE_tRNS, sizeof(png_PLTE_tRNS));
     ok(decoder != 0, "Failed to load PNG image data\n");
+    if (!decoder) return;
 
     hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
     ok(hr == S_OK, "GetFrame error %#x\n", hr);

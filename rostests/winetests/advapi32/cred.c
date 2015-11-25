@@ -295,7 +295,7 @@ static void test_generic(void)
 
     for (i = 0; i < count; i++)
     {
-        if (!strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
+        if (creds[i]->TargetName && !strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
         {
             ok(creds[i]->Type == CRED_TYPE_GENERIC ||
                creds[i]->Type == CRED_TYPE_DOMAIN_PASSWORD, /* Vista */
@@ -353,7 +353,7 @@ static void test_domain_password(DWORD cred_type)
 
     for (i = 0; i < count; i++)
     {
-        if (!strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
+        if (creds[i]->TargetName && !strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
         {
             ok(creds[i]->Type == cred_type, "expected creds[%d]->Type CRED_TYPE_DOMAIN_PASSWORD but got %d\n", i, creds[i]->Type);
             ok(!creds[i]->Flags, "expected creds[%d]->Flags 0 but got 0x%x\n", i, creds[i]->Flags);

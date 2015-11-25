@@ -1,4 +1,7 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(msctf.dll msctf.spec)
@@ -24,6 +27,6 @@ add_library(msctf SHARED
 
 set_module_type(msctf win32dll)
 target_link_libraries(msctf uuid wine)
-add_importlibs(msctf ole32 oleaut32 user32 advapi32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(msctf ole32 oleaut32 user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_pch(msctf msctf_internal.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)

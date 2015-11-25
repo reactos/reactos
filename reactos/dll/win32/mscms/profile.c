@@ -1154,7 +1154,7 @@ BOOL WINAPI IsColorProfileTagPresent( HPROFILE handle, TAGTYPE type, PBOOL prese
         release_profile( profile );
         return FALSE;
     }
-    *present = cmsIsTag( profile->cmsprofile, type );
+    *present = (cmsIsTag( profile->cmsprofile, type ) != 0);
     release_profile( profile );
     ret = TRUE;
 
@@ -1408,7 +1408,11 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
         if (!(data = HeapAlloc( GetProcessHeap(), 0, profile->cbDataSize ))) return NULL;
         memcpy( data, profile->pProfileData, profile->cbDataSize );
 
-        cmsprofile = cmsOpenProfileFromMem( data, profile->cbDataSize );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, profile->cbDataSize )))
+        {
+            HeapFree( GetProcessHeap(), 0, data );
+            return FALSE;
+        }
         size = profile->cbDataSize;
     }
     else if (profile->dwType == PROFILE_FILENAME)
@@ -1466,7 +1470,12 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
             HeapFree( GetProcessHeap(), 0, data );
             return NULL;
         }
-        cmsprofile = cmsOpenProfileFromMem( data, size );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, size )))
+        {
+            CloseHandle( handle );
+            HeapFree( GetProcessHeap(), 0, data );
+            return NULL;
+        }
     }
     else
     {

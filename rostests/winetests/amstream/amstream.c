@@ -432,9 +432,9 @@ static void test_media_streams(void)
                 ok(!lstrcmpW(info.achName, id), "Pin name is %s instead of %s\n", wine_dbgstr_w(info.achName), wine_dbgstr_w(id));
                 hr = IPin_EnumMediaTypes(pins[i], &enum_media_types);
                 ok(hr == S_OK, "IPin_EnumMediaTypes returned: %x\n", hr);
-                hr = IEnumMediaTypes_Next(enum_media_types, sizeof(media_types) / sizeof(AM_MEDIA_TYPE), media_types, &nb_media_types);
+                hr = IEnumMediaTypes_Next(enum_media_types, sizeof(media_types) / sizeof(media_types[0]), media_types, &nb_media_types);
                 ok(SUCCEEDED(hr), "IEnumMediaTypes_Next returned: %x\n", hr);
-                ok(nb_media_types == 0, "nb_media_types should be 0 instead of %u\n", nb_media_types);
+                ok(nb_media_types > 0, "nb_media_types should be >0\n");
                 IEnumMediaTypes_Release(enum_media_types);
                 IPin_Release(pins[i]);
             }

@@ -32,8 +32,8 @@
 #include <shlwapi.h>
 #include <wininet.h>
 
-static HRESULT (WINAPI *pPathIsValidCharA)(char,DWORD);
-static HRESULT (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
+static BOOL (WINAPI *pPathIsValidCharA)(char,DWORD);
+static BOOL (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
 static LPWSTR  (WINAPI *pPathCombineW)(LPWSTR, LPCWSTR, LPCWSTR);
 static HRESULT (WINAPI *pPathCreateFromUrlA)(LPCSTR, LPSTR, LPDWORD, DWORD);
 static HRESULT (WINAPI *pPathCreateFromUrlW)(LPCWSTR, LPWSTR, LPDWORD, DWORD);
@@ -1644,6 +1644,19 @@ static void test_PathIsRelativeW(void)
     }
 }
 
+static void test_PathStripPathA(void)
+{
+    const char const_path[] = "test";
+    char path[] = "short//path\\file.txt";
+
+    PathStripPathA(path);
+    ok(!strcmp(path, "file.txt"), "path = %s\n", path);
+
+    /* following test should not crash */
+    /* LavView 2013 depends on that behaviour */
+    PathStripPathA((char*)const_path);
+}
+
 START_TEST(path)
 {
     HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
@@ -1689,4 +1702,5 @@ START_TEST(path)
     test_PathUnExpandEnvStrings();
     test_PathIsRelativeA();
     test_PathIsRelativeW();
+    test_PathStripPathA();
 }

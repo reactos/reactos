@@ -96,7 +96,7 @@
   + EM_SETCHARFORMAT (partly done, no ANSI)
   - EM_SETEDITSTYLE
   + EM_SETEVENTMASK (few notifications supported)
-  - EM_SETFONTSIZE
+  + EM_SETFONTSIZE
   - EM_SETIMECOLOR 1.0asian
   - EM_SETIMEOPTIONS 1.0asian
   - EM_SETIMESTATUS
@@ -172,14 +172,14 @@
   
   - ES_AUTOHSCROLL
   - ES_AUTOVSCROLL
-  - ES_CENTER
+  + ES_CENTER
   + ES_DISABLENOSCROLL (scrollbar is always visible)
   - ES_EX_NOCALLOLEINIT
-  - ES_LEFT
+  + ES_LEFT
   - ES_MULTILINE (currently single line controls aren't supported)
   - ES_NOIME
   - ES_READONLY (I'm not sure if beeping is the proper behaviour)
-  - ES_RIGHT
+  + ES_RIGHT
   - ES_SAVESEL
   - ES_SELFIME
   - ES_SUNKEN
@@ -530,7 +530,7 @@ void ME_RTFCharAttrHook(RTF_Info *info)
     ME_Style *style2;
     RTFFlushOutputBuffer(info);
     /* FIXME too slow ? how come ? */
-    style2 = ME_ApplyStyle(info->style, &fmt);
+    style2 = ME_ApplyStyle(info->editor, info->style, &fmt);
     ME_ReleaseStyle(info->style);
     info->style = style2;
     info->styleChanged = TRUE;
@@ -1233,136 +1233,191 @@ static BOOL ME_RTFInsertOleObject(RTF_Info *info, HENHMETAFILE hemf, HBITMAP hbm
   return ret;
 }
 
+static void ME_RTFReadShpPictGroup( RTF_Info *info )
+{
+    int level = 1;
+
+    for (;;)
+    {
+        RTFGetToken (info);
+
+        if (info->rtfClass == rtfEOF) return;
+        if (RTFCheckCM( info, rtfGroup, rtfEndGroup ))
+        {
+            if (--level == 0) break;
+        }
+        else if (RTFCheckCM( info, rtfGroup, rtfBeginGroup ))
+        {
+            level++;
+        }
+        else
+        {
+            RTFRouteToken( info );
+            if (RTFCheckCM( info, rtfGroup, rtfEndGroup ))
+                level--;
+        }
+    }
+
+    RTFRouteToken( info ); /* feed "}" back to router */
+    return;
+}
+
+static DWORD read_hex_data( RTF_Info *info, BYTE **out )
+{
+    DWORD read = 0, size = 1024;
+    BYTE *buf, val;
+    BOOL flip;
+
+    *out = NULL;
+
+    if (info->rtfClass != rtfText)
+    {
+        ERR("Called with incorrect token\n");
+        return 0;
+    }
+
+    buf = HeapAlloc( GetProcessHeap(), 0, size );
+    if (!buf) return 0;
+
+    val = info->rtfMajor;
+    for (flip = TRUE;; flip = !flip)
+    {
+        RTFGetToken( info );
+        if (info->rtfClass == rtfEOF)
+        {
+            HeapFree( GetProcessHeap(), 0, buf );
+            return 0;
+        }
+        if (info->rtfClass != rtfText) break;
+        if (flip)
+        {
+            if (read >= size)
+            {
+                size *= 2;
+                buf = HeapReAlloc( GetProcessHeap(), 0, buf, size );
+                if (!buf) return 0;
+            }
+            buf[read++] = RTFCharToHex(val) * 16 + RTFCharToHex(info->rtfMajor);
+        }
+        else
+            val = info->rtfMajor;
+    }
+    if (flip) FIXME("wrong hex string\n");
+
+    *out = buf;
+    return read;
+}
+
 static void ME_RTFReadPictGroup(RTF_Info *info)
 {
-  SIZEL         sz;
-  BYTE*         buffer = NULL;
-  unsigned      bufsz, bufidx;
-  BOOL          flip;
-  BYTE          val;
-  METAFILEPICT  mfp;
-  HENHMETAFILE  hemf;
-  HBITMAP       hbmp;
-  enum gfxkind {gfx_unknown = 0, gfx_enhmetafile, gfx_metafile, gfx_dib} gfx = gfx_unknown;
+    SIZEL sz;
+    BYTE *buffer = NULL;
+    DWORD size = 0;
+    METAFILEPICT mfp;
+    HENHMETAFILE hemf;
+    HBITMAP hbmp;
+    enum gfxkind {gfx_unknown = 0, gfx_enhmetafile, gfx_metafile, gfx_dib} gfx = gfx_unknown;
+    int level = 1;
 
-  RTFGetToken (info);
-  if (info->rtfClass == rtfEOF)
+    mfp.mm = MM_TEXT;
+    sz.cx = sz.cy = 0;
+
+    for (;;)
+    {
+        RTFGetToken( info );
+
+        if (info->rtfClass == rtfText)
+        {
+            if (level == 1)
+            {
+                if (!buffer)
+                    size = read_hex_data( info, &buffer );
+            }
+            else
+            {
+                RTFSkipGroup( info );
+            }
+        } /* We potentially have a new token so fall through. */
+
+        if (info->rtfClass == rtfEOF) return;
+
+        if (RTFCheckCM( info, rtfGroup, rtfEndGroup ))
+        {
+            if (--level == 0) break;
+            continue;
+        }
+        if (RTFCheckCM( info, rtfGroup, rtfBeginGroup ))
+        {
+            level++;
+            continue;
+        }
+        if (!RTFCheckCM( info, rtfControl, rtfPictAttr ))
+        {
+            RTFRouteToken( info );
+            if (RTFCheckCM( info, rtfGroup, rtfEndGroup ))
+                level--;
+            continue;
+        }
+
+        if (RTFCheckMM( info, rtfPictAttr, rtfWinMetafile ))
+        {
+            mfp.mm = info->rtfParam;
+            gfx = gfx_metafile;
+        }
+        else if (RTFCheckMM( info, rtfPictAttr, rtfDevIndBitmap ))
+        {
+            if (info->rtfParam != 0) FIXME("dibitmap should be 0 (%d)\n", info->rtfParam);
+            gfx = gfx_dib;
+        }
+        else if (RTFCheckMM( info, rtfPictAttr, rtfEmfBlip ))
+            gfx = gfx_enhmetafile;
+        else if (RTFCheckMM( info, rtfPictAttr, rtfPicWid ))
+            mfp.xExt = info->rtfParam;
+        else if (RTFCheckMM( info, rtfPictAttr, rtfPicHt ))
+            mfp.yExt = info->rtfParam;
+        else if (RTFCheckMM( info, rtfPictAttr, rtfPicGoalWid ))
+            sz.cx = info->rtfParam;
+        else if (RTFCheckMM( info, rtfPictAttr, rtfPicGoalHt ))
+            sz.cy = info->rtfParam;
+        else
+            FIXME("Non supported attribute: %d %d %d\n", info->rtfClass, info->rtfMajor, info->rtfMinor);
+    }
+
+    if (buffer)
+    {
+        switch (gfx)
+        {
+        case gfx_enhmetafile:
+            if ((hemf = SetEnhMetaFileBits( size, buffer )))
+                ME_RTFInsertOleObject( info, hemf, NULL, &sz );
+            break;
+        case gfx_metafile:
+            if ((hemf = SetWinMetaFileBits( size, buffer, NULL, &mfp )))
+                ME_RTFInsertOleObject( info, hemf, NULL, &sz );
+            break;
+        case gfx_dib:
+        {
+            BITMAPINFO *bi = (BITMAPINFO*)buffer;
+            HDC hdc = GetDC(0);
+            unsigned nc = bi->bmiHeader.biClrUsed;
+
+            /* not quite right, especially for bitfields type of compression */
+            if (!nc && bi->bmiHeader.biBitCount <= 8)
+                nc = 1 << bi->bmiHeader.biBitCount;
+            if ((hbmp = CreateDIBitmap( hdc, &bi->bmiHeader,
+                                        CBM_INIT, (char*)(bi + 1) + nc * sizeof(RGBQUAD),
+                                        bi, DIB_RGB_COLORS)) )
+                ME_RTFInsertOleObject( info, NULL, hbmp, &sz );
+            ReleaseDC( 0, hdc );
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    HeapFree( GetProcessHeap(), 0, buffer );
+    RTFRouteToken( info ); /* feed "}" back to router */
     return;
-  mfp.mm = MM_TEXT;
-  /* fetch picture type */
-  if (RTFCheckMM (info, rtfPictAttr, rtfWinMetafile))
-  {
-    mfp.mm = info->rtfParam;
-    gfx = gfx_metafile;
-  }
-  else if (RTFCheckMM (info, rtfPictAttr, rtfDevIndBitmap))
-  {
-    if (info->rtfParam != 0) FIXME("dibitmap should be 0 (%d)\n", info->rtfParam);
-    gfx = gfx_dib;
-  }
-  else if (RTFCheckMM (info, rtfPictAttr, rtfEmfBlip))
-  {
-    gfx = gfx_enhmetafile;
-  }
-  else
-  {
-    FIXME("%d %d\n", info->rtfMajor, info->rtfMinor);
-    goto skip_group;
-  }
-  sz.cx = sz.cy = 0;
-  /* fetch picture attributes */
-  for (;;)
-  {
-    RTFGetToken (info);
-    if (info->rtfClass == rtfEOF)
-      return;
-    if (info->rtfClass == rtfText)
-      break;
-    if (!RTFCheckCM (info, rtfControl, rtfPictAttr))
-    {
-      ERR("Expected picture attribute (%d %d)\n",
-        info->rtfClass, info->rtfMajor);
-      goto skip_group;
-    }
-    else if (RTFCheckMM (info, rtfPictAttr, rtfPicWid))
-    {
-      if (gfx == gfx_metafile) mfp.xExt = info->rtfParam;
-    }
-    else if (RTFCheckMM (info, rtfPictAttr, rtfPicHt))
-    {
-      if (gfx == gfx_metafile) mfp.yExt = info->rtfParam;
-    }
-    else if (RTFCheckMM (info, rtfPictAttr, rtfPicGoalWid))
-      sz.cx = info->rtfParam;
-    else if (RTFCheckMM (info, rtfPictAttr, rtfPicGoalHt))
-      sz.cy = info->rtfParam;
-    else
-      FIXME("Non supported attribute: %d %d %d\n", info->rtfClass, info->rtfMajor, info->rtfMinor);
-  }
-  /* fetch picture data */
-  bufsz = 1024;
-  bufidx = 0;
-  buffer = HeapAlloc(GetProcessHeap(), 0, bufsz);
-  val = info->rtfMajor;
-  for (flip = TRUE;; flip = !flip)
-  {
-    RTFGetToken (info);
-    if (info->rtfClass == rtfEOF)
-    {
-      HeapFree(GetProcessHeap(), 0, buffer);
-      return; /* Warn ?? */
-    }
-    if (RTFCheckCM(info, rtfGroup, rtfEndGroup))
-      break;
-    if (info->rtfClass != rtfText) goto skip_group;
-    if (flip)
-    {
-      if (bufidx >= bufsz &&
-          !(buffer = HeapReAlloc(GetProcessHeap(), 0, buffer, bufsz += 1024)))
-        goto skip_group;
-      buffer[bufidx++] = RTFCharToHex(val) * 16 + RTFCharToHex(info->rtfMajor);
-    }
-    else
-      val = info->rtfMajor;
-  }
-  if (flip) FIXME("wrong hex string\n");
-
-  switch (gfx)
-  {
-  case gfx_enhmetafile:
-    if ((hemf = SetEnhMetaFileBits(bufidx, buffer)))
-      ME_RTFInsertOleObject(info, hemf, NULL, &sz);
-    break;
-  case gfx_metafile:
-    if ((hemf = SetWinMetaFileBits(bufidx, buffer, NULL, &mfp)))
-        ME_RTFInsertOleObject(info, hemf, NULL, &sz);
-    break;
-  case gfx_dib:
-    {
-      BITMAPINFO* bi = (BITMAPINFO*)buffer;
-      HDC         hdc = GetDC(0);
-      unsigned    nc = bi->bmiHeader.biClrUsed;
-
-      /* not quite right, especially for bitfields type of compression */
-      if (!nc && bi->bmiHeader.biBitCount <= 8)
-        nc = 1 << bi->bmiHeader.biBitCount;
-      if ((hbmp = CreateDIBitmap(hdc, &bi->bmiHeader,
-                                 CBM_INIT, (char*)(bi + 1) + nc * sizeof(RGBQUAD),
-                                 bi, DIB_RGB_COLORS)))
-          ME_RTFInsertOleObject(info, NULL, hbmp, &sz);
-      ReleaseDC(0, hdc);
-    }
-    break;
-  default:
-    break;
-  }
-  HeapFree(GetProcessHeap(), 0, buffer);
-  RTFRouteToken (info);	/* feed "}" back to router */
-  return;
-skip_group:
-  HeapFree(GetProcessHeap(), 0, buffer);
-  RTFSkipGroup(info);
-  RTFRouteToken(info);	/* feed "}" back to router */
 }
 
 /* for now, lookup the \result part and use it, whatever the object */
@@ -1506,7 +1561,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
                           ME_GetTextLength(editor), FALSE);
     from = to = 0;
     ME_ClearTempStyle(editor);
-    ME_SetDefaultParaFormat(editor->pCursors[0].pPara->member.para.pFmt);
+    ME_SetDefaultParaFormat(editor, editor->pCursors[0].pPara->member.para.pFmt);
   }
 
 
@@ -1551,6 +1606,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
       WriterInit(&parser);
       RTFInit(&parser);
       RTFSetReadHook(&parser, ME_RTFReadHook);
+      RTFSetDestinationCallback(&parser, rtfShpPict, ME_RTFReadShpPictGroup);
       RTFSetDestinationCallback(&parser, rtfPict, ME_RTFReadPictGroup);
       RTFSetDestinationCallback(&parser, rtfObject, ME_RTFReadObjectGroup);
       if (!parser.editor->bEmulateVersion10) /* v4.1 */
@@ -2306,7 +2362,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
               ME_InsertTextFromCursor(editor, 0, &endl, 1,
                                       editor->pCursors[0].pRun->member.run.style);
               para = editor->pBuffer->pFirst->member.para.next_para;
-              ME_SetDefaultParaFormat(para->member.para.pFmt);
+              ME_SetDefaultParaFormat(editor, para->member.para.pFmt);
               para->member.para.nFlags = MEPF_REWRAP;
               editor->pCursors[0].pPara = para;
               editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
@@ -2732,7 +2788,7 @@ static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
   return TRUE;
 }
 
-ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
+ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10, DWORD csStyle)
 {
   ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
   int i;
@@ -2746,6 +2802,11 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
   ed->reOle = NULL;
   ed->bEmulateVersion10 = bEmulateVersion10;
   ed->styleFlags = 0;
+  ed->alignStyle = PFA_LEFT;
+  if (csStyle & ES_RIGHT)
+      ed->alignStyle = PFA_RIGHT;
+  if (csStyle & ES_CENTER)
+      ed->alignStyle = PFA_CENTER;
   ITextHost_TxGetPropertyBits(texthost,
                               (TXTBIT_RICHTEXT|TXTBIT_MULTILINE|
                                TXTBIT_READONLY|TXTBIT_USEPASSWORD|
@@ -2857,6 +2918,7 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
 
   ed->wheel_remain = 0;
 
+  list_init( &ed->style_list );
   OleInitialize(NULL);
 
   return ed;
@@ -2866,6 +2928,7 @@ void ME_DestroyEditor(ME_TextEditor *editor)
 {
   ME_DisplayItem *pFirst = editor->pBuffer->pFirst;
   ME_DisplayItem *p = pFirst, *pNext = NULL;
+  ME_Style *s, *cursor2;
   int i;
 
   ME_ClearTempStyle(editor);
@@ -2875,6 +2938,10 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     ME_DestroyDisplayItem(p);
     p = pNext;
   }
+
+  LIST_FOR_EACH_ENTRY_SAFE( s, cursor2, &editor->style_list, ME_Style, entry )
+      ME_DestroyStyle( s );
+
   ME_ReleaseStyle(editor->pBuffer->pDefaultStyle);
   for (i=0; i<HFONT_CACHE_SIZE; i++)
   {
@@ -3262,7 +3329,6 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   UNSUPPORTED_MSG(EM_SELECTIONTYPE)
   UNSUPPORTED_MSG(EM_SETBIDIOPTIONS)
   UNSUPPORTED_MSG(EM_SETEDITSTYLE)
-  UNSUPPORTED_MSG(EM_SETFONTSIZE)
   UNSUPPORTED_MSG(EM_SETLANGOPTIONS)
   UNSUPPORTED_MSG(EM_SETMARGINS)
   UNSUPPORTED_MSG(EM_SETPALETTE)
@@ -3337,6 +3403,48 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     DWORD settings = editor->styleFlags & mask;
 
     return settings;
+  }
+  case EM_SETFONTSIZE:
+  {
+      CHARFORMAT2W cf;
+      LONG tmp_size, size;
+      BOOL is_increase = ((LONG)wParam > 0);
+
+      if (editor->mode & TM_PLAINTEXT)
+          return FALSE;
+
+      cf.cbSize = sizeof(cf);
+      cf.dwMask = CFM_SIZE;
+      ME_GetSelectionCharFormat(editor, &cf);
+      tmp_size = (cf.yHeight / 20) + wParam;
+
+      if (tmp_size <= 1)
+          size = 1;
+      else if (tmp_size > 12 && tmp_size < 28 && tmp_size % 2)
+          size = tmp_size + (is_increase ? 1 : -1);
+      else if (tmp_size > 28 && tmp_size < 36)
+          size = is_increase ? 36 : 28;
+      else if (tmp_size > 36 && tmp_size < 48)
+          size = is_increase ? 48 : 36;
+      else if (tmp_size > 48 && tmp_size < 72)
+          size = is_increase ? 72 : 48;
+      else if (tmp_size > 72 && tmp_size < 80)
+          size = is_increase ? 80 : 72;
+      else if (tmp_size > 80 && tmp_size < 1638)
+          size = 10 * (is_increase ? (tmp_size / 10 + 1) : (tmp_size / 10));
+      else if (tmp_size >= 1638)
+          size = 1638;
+      else
+          size = tmp_size;
+
+      cf.yHeight = size * 20; /*  convert twips to points */
+      ME_SetSelectionCharFormat(editor, &cf);
+      ME_CommitUndo(editor);
+      ME_WrapMarkedParagraphs(editor);
+      ME_UpdateScrollBar(editor);
+      ME_Repaint(editor);
+
+      return TRUE;
   }
   case EM_SETOPTIONS:
   {
@@ -3723,7 +3831,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
 
     if (!wParam)
       wParam = (WPARAM)GetStockObject(SYSTEM_FONT);
-    GetObjectW((HGDIOBJ)wParam, sizeof(LOGFONTW), &lf);
+
+    if (!GetObjectW((HGDIOBJ)wParam, sizeof(LOGFONTW), &lf))
+      return 0;
+
     hDC = ITextHost_TxGetDC(editor->texthost);
     ME_CharFormatFromLogFont(hDC, &lf, &fmt);
     ITextHost_TxReleaseDC(editor->texthost, hDC);

@@ -676,9 +676,9 @@ static void test__Gettnames(void)
      * Unicode strings are only initialized on Windows 7
      */
     if(sizeof(void*) == 8)
-        ok(size==0x2c0 || broken(size==0x170), "strucure size: %x\n", size);
+        ok(size==0x2c0 || broken(size==0x170), "structure size: %x\n", size);
     else
-        ok(size==0x164 || broken(size==0xb8), "strucure size: %x\n", size);
+        ok(size==0x164 || broken(size==0xb8), "structure size: %x\n", size);
 
     ok(!strcmp(ret->str[0], "Sun"), "ret->str[0] = %s\n", ret->str[0]);
     ok(!strcmp(ret->str[1], "Mon"), "ret->str[1] = %s\n", ret->str[1]);

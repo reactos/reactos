@@ -668,12 +668,13 @@ static void format_error_message_from_id(saxlocator *This, HRESULT hr)
 static void update_position(saxlocator *This, BOOL fix_column)
 {
     const xmlChar *p = This->pParserCtxt->input->cur-1;
+    const xmlChar *baseP = This->pParserCtxt->input->base;
 
     This->line = xmlSAX2GetLineNumber(This->pParserCtxt);
     if(fix_column)
     {
         This->column = 1;
-        for(; *p!='\n' && *p!='\r' && p>=This->pParserCtxt->input->base; p--)
+        for(;p>=baseP && *p!='\n' && *p!='\r'; p--)
             This->column++;
     }
     else

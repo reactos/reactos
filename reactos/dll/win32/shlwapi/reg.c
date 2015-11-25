@@ -182,6 +182,9 @@ LONG WINAPI SHRegCloseUSKey(
     LPSHUSKEY hKey = hUSKey;
     LONG ret = ERROR_SUCCESS;
 
+    if (!hKey)
+        return ERROR_INVALID_PARAMETER;
+
     if (hKey->HKCUkey)
         ret = RegCloseKey(hKey->HKCUkey);
     if (hKey->HKCUstart && hKey->HKCUstart != HKEY_CURRENT_USER)

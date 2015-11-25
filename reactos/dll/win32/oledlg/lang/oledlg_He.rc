@@ -28,7 +28,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "File does not appear to be a valid OLE module. Unable to register OLE control."
   IDS_NOTOLEMODCAPTION  "הוספת בקר"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

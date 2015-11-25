@@ -82,7 +82,7 @@ GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
     if(!pen || !clonepen)
         return InvalidParameter;
 
-    *clonepen = GdipAlloc(sizeof(GpPen));
+    *clonepen = heap_alloc_zero(sizeof(GpPen));
     if(!*clonepen)  return OutOfMemory;
 
     **clonepen = *pen;
@@ -102,7 +102,7 @@ GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
 
     if (stat == Ok && pen->dashes)
     {
-        (*clonepen)->dashes = GdipAlloc(pen->numdashes * sizeof(REAL));
+        (*clonepen)->dashes = heap_alloc_zero(pen->numdashes * sizeof(REAL));
         if ((*clonepen)->dashes)
             memcpy((*clonepen)->dashes, pen->dashes, pen->numdashes * sizeof(REAL));
         else
@@ -146,7 +146,7 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
     if(!pen || !brush)
         return InvalidParameter;
 
-    gp_pen = GdipAlloc(sizeof(GpPen));
+    gp_pen = heap_alloc_zero(sizeof(GpPen));
     if(!gp_pen)    return OutOfMemory;
 
     gp_pen->style = GP_DEFAULT_PENSTYLE;
@@ -162,7 +162,7 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
 
     if(!((gp_pen->unit == UnitWorld) || (gp_pen->unit == UnitPixel))) {
         FIXME("UnitWorld, UnitPixel only supported units\n");
-        GdipFree(gp_pen);
+        heap_free(gp_pen);
         return NotImplemented;
     }
 
@@ -185,8 +185,8 @@ GpStatus WINGDIPAPI GdipDeletePen(GpPen *pen)
     GdipDeleteBrush(pen->brush);
     GdipDeleteCustomLineCap(pen->customstart);
     GdipDeleteCustomLineCap(pen->customend);
-    GdipFree(pen->dashes);
-    GdipFree(pen);
+    heap_free(pen->dashes);
+    heap_free(pen);
 
     return Ok;
 }
@@ -616,11 +616,11 @@ GpStatus WINGDIPAPI GdipSetPenDashArray(GpPen *pen, GDIPCONST REAL *dash,
     if(sum == 0.0 && count)
         return InvalidParameter;
 
-    GdipFree(pen->dashes);
+    heap_free(pen->dashes);
     pen->dashes = NULL;
 
     if(count > 0)
-        pen->dashes = GdipAlloc(count * sizeof(REAL));
+        pen->dashes = heap_alloc_zero(count * sizeof(REAL));
     if(!pen->dashes){
         pen->numdashes = 0;
         return OutOfMemory;
@@ -666,7 +666,7 @@ GpStatus WINGDIPAPI GdipSetPenDashStyle(GpPen *pen, GpDashStyle dash)
         return InvalidParameter;
 
     if(dash != DashStyleCustom){
-        GdipFree(pen->dashes);
+        heap_free(pen->dashes);
         pen->dashes = NULL;
         pen->numdashes = 0;
     }

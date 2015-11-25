@@ -223,7 +223,7 @@ fail:
 
 static inline void stateblock_set_bits(DWORD *map, UINT map_size)
 {
-    DWORD mask = (1 << (map_size & 0x1f)) - 1;
+    DWORD mask = (1u << (map_size & 0x1f)) - 1;
     memset(map, 0xff, (map_size >> 5) * sizeof(*map));
     if (mask) map[map_size >> 5] = mask;
 }
@@ -273,14 +273,14 @@ static void stateblock_savedstates_set_pixel(struct wined3d_saved_states *states
     for (i = 0; i < sizeof(pixel_states_render) / sizeof(*pixel_states_render); ++i)
     {
         DWORD rs = pixel_states_render[i];
-        states->renderState[rs >> 5] |= 1 << (rs & 0x1f);
+        states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
     for (i = 0; i < sizeof(pixel_states_texture) / sizeof(*pixel_states_texture); ++i)
-        texture_mask |= 1 << pixel_states_texture[i];
+        texture_mask |= 1u << pixel_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < sizeof(pixel_states_sampler) / sizeof(*pixel_states_sampler); ++i)
-        sampler_mask |= 1 << pixel_states_sampler[i];
+        sampler_mask |= 1u << pixel_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->pixelShaderConstantsB = 0xffff;
     states->pixelShaderConstantsI = 0xffff;
@@ -300,14 +300,14 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
     for (i = 0; i < sizeof(vertex_states_render) / sizeof(*vertex_states_render); ++i)
     {
         DWORD rs = vertex_states_render[i];
-        states->renderState[rs >> 5] |= 1 << (rs & 0x1f);
+        states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
     for (i = 0; i < sizeof(vertex_states_texture) / sizeof(*vertex_states_texture); ++i)
-        texture_mask |= 1 << vertex_states_texture[i];
+        texture_mask |= 1u << vertex_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < sizeof(vertex_states_sampler) / sizeof(*vertex_states_sampler); ++i)
-        sampler_mask |= 1 << vertex_states_sampler[i];
+        sampler_mask |= 1u << vertex_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->vertexShaderConstantsB = 0xffff;
     states->vertexShaderConstantsI = 0xffff;
@@ -355,7 +355,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_I; ++i)
     {
-        if (stateblock->changed.vertexShaderConstantsI & (1 << i))
+        if (stateblock->changed.vertexShaderConstantsI & (1u << i))
         {
             stateblock->contained_vs_consts_i[stateblock->num_contained_vs_consts_i] = i;
             ++stateblock->num_contained_vs_consts_i;
@@ -364,7 +364,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_B; ++i)
     {
-        if (stateblock->changed.vertexShaderConstantsB & (1 << i))
+        if (stateblock->changed.vertexShaderConstantsB & (1u << i))
         {
             stateblock->contained_vs_consts_b[stateblock->num_contained_vs_consts_b] = i;
             ++stateblock->num_contained_vs_consts_b;
@@ -382,7 +382,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_I; ++i)
     {
-        if (stateblock->changed.pixelShaderConstantsI & (1 << i))
+        if (stateblock->changed.pixelShaderConstantsI & (1u << i))
         {
             stateblock->contained_ps_consts_i[stateblock->num_contained_ps_consts_i] = i;
             ++stateblock->num_contained_ps_consts_i;
@@ -391,7 +391,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_B; ++i)
     {
-        if (stateblock->changed.pixelShaderConstantsB & (1 << i))
+        if (stateblock->changed.pixelShaderConstantsB & (1u << i))
         {
             stateblock->contained_ps_consts_b[stateblock->num_contained_ps_consts_b] = i;
             ++stateblock->num_contained_ps_consts_b;

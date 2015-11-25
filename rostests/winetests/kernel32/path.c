@@ -46,6 +46,10 @@
 #define ARCH "x86"
 #elif defined __x86_64__
 #define ARCH "amd64"
+#elif defined __arm__
+#define ARCH "arm"
+#elif defined __aarch64__
+#define ARCH "arm64"
 #else
 #define ARCH "none"
 #endif
@@ -74,6 +78,9 @@ static HANDLE (WINAPI *pCreateActCtxW)(PCACTCTXW);
 static BOOL   (WINAPI *pDeactivateActCtx)(DWORD,ULONG_PTR);
 static BOOL   (WINAPI *pGetCurrentActCtx)(HANDLE *);
 static void   (WINAPI *pReleaseActCtx)(HANDLE);
+
+static BOOL (WINAPI *pCheckNameLegalDOS8Dot3W)(const WCHAR *, char *, DWORD, BOOL *, BOOL *);
+static BOOL (WINAPI *pCheckNameLegalDOS8Dot3A)(const char *, char *, DWORD, BOOL *, BOOL *);
 
 /* a structure to deal with wine todos somewhat cleanly */
 typedef struct {
@@ -922,7 +929,7 @@ static void test_PathNameA(CHAR *curdir, CHAR curDrive, CHAR otherDrive)
 
 static void test_GetTempPathA(char* tmp_dir)
 {
-    DWORD len, len_with_null;
+    DWORD len, slen, len_with_null;
     char buf[MAX_PATH];
 
     len_with_null = strlen(tmp_dir) + 1;
@@ -953,12 +960,29 @@ static void test_GetTempPathA(char* tmp_dir)
     len = GetTempPathA(len, buf);
     ok(lstrcmpiA(buf, tmp_dir) == 0, "expected [%s], got [%s]\n",tmp_dir,buf);
     ok(len == strlen(buf), "returned length should be equal to the length of string\n");
+
+    memset(buf, 'a', sizeof(buf));
+    len = GetTempPathA(sizeof(buf), buf);
+    ok(lstrcmpiA(buf, tmp_dir) == 0, "expected [%s], got [%s]\n",tmp_dir,buf);
+    ok(len == strlen(buf), "returned length should be equal to the length of string\n");
+    /* The rest of the buffer remains untouched */
+    slen = len + 1;
+    for(len++; len < sizeof(buf); len++)
+        ok(buf[len] == 'a', "expected 'a' at [%d], got 0x%x\n", len, buf[len]);
+
+    /* When the buffer is not long enough it remains untouched */
+    memset(buf, 'a', sizeof(buf));
+    len = GetTempPathA(slen / 2, buf);
+    ok(len == slen || broken(len == slen + 1) /* read the big comment above */ ,
+       "expected %d, got %d\n", slen, len);
+    for(len = 0; len < sizeof(buf) / sizeof(buf[0]); len++)
+        ok(buf[len] == 'a', "expected 'a' at [%d], got 0x%x\n", len, buf[len]);
 }
 
 static void test_GetTempPathW(char* tmp_dir)
 {
-    DWORD len, len_with_null;
-    WCHAR buf[MAX_PATH];
+    DWORD len, slen, len_with_null;
+    WCHAR buf[MAX_PATH], *long_buf;
     WCHAR tmp_dirW[MAX_PATH];
     static const WCHAR fooW[] = {'f','o','o',0};
 
@@ -996,6 +1020,69 @@ static void test_GetTempPathW(char* tmp_dir)
     len = GetTempPathW(len, buf);
     ok(lstrcmpiW(buf, tmp_dirW) == 0, "GetTempPathW returned an incorrect temporary path\n");
     ok(len == lstrlenW(buf), "returned length should be equal to the length of string\n");
+
+    for(len = 0; len < sizeof(buf) / sizeof(buf[0]); len++)
+        buf[len] = 'a';
+    len = GetTempPathW(len, buf);
+    ok(lstrcmpiW(buf, tmp_dirW) == 0, "GetTempPathW returned an incorrect temporary path\n");
+    ok(len == lstrlenW(buf), "returned length should be equal to the length of string\n");
+    /* The rest of the buffer must be zeroed */
+    slen = len + 1;
+    for(len++; len < sizeof(buf) / sizeof(buf[0]); len++)
+        ok(buf[len] == '\0', "expected NULL at [%d], got 0x%x\n", len, buf[len]);
+
+    /* When the buffer is not long enough the length passed is zeroed */
+    for(len = 0; len < sizeof(buf) / sizeof(buf[0]); len++)
+        buf[len] = 'a';
+    len = GetTempPathW(slen / 2, buf);
+    ok(len == slen || broken(len == slen + 1) /* read the big comment above */ ,
+       "expected %d, got %d\n", slen, len);
+
+    {
+        /* In Windows 8 when TMP var points to a drive only (like C:) instead of a
+        * full directory the behavior changes. It will start filling the path but
+        * will later truncate the buffer before returning. So the generic test
+        * below will fail for this Windows 8 corner case.
+        */
+        char tmp_var[64];
+        DWORD version = GetVersion();
+        GetEnvironmentVariableA("TMP", tmp_var, sizeof(tmp_var));
+        if (strlen(tmp_var) == 2 && version >= 0x00060002)
+            return;
+    }
+
+    for(len = 0; len < slen / 2; len++)
+        ok(buf[len] == '\0', "expected NULL at [%d], got 0x%x\n", len, buf[len]);
+    for(; len < sizeof(buf) / sizeof(buf[0]); len++)
+        ok(buf[len] == 'a', "expected 'a' at [%d], got 0x%x\n", len, buf[len]);
+
+    /* bogus application from bug 38220 passes the count value in sizeof(buffer)
+     * instead the correct count of WCHAR, this test catches this case. */
+    slen = 65534;
+    long_buf = HeapAlloc(GetProcessHeap(), 0, slen * sizeof(WCHAR));
+    if (!long_buf)
+    {
+        skip("Could not allocate memory for the test\n");
+        return;
+    }
+    for(len = 0; len < slen; len++)
+        long_buf[len] = 0xCC;
+    len = GetTempPathW(slen, long_buf);
+    ok(lstrcmpiW(long_buf, tmp_dirW) == 0, "GetTempPathW returned an incorrect temporary path\n");
+    ok(len == lstrlenW(long_buf), "returned length should be equal to the length of string\n");
+    /* the remaining buffer must be zeroed up to different values in different OS versions.
+     * <= XP - 32766
+     *  > XP - 32767
+     * to simplify testing we will test only until XP.
+     */
+    for(; len < 32767; len++)
+        ok(long_buf[len] == '\0', "expected NULL at [%d], got 0x%x\n", len, long_buf[len]);
+    /* we will know skip the test that is in the middle of the OS difference by
+     * incrementing len and then resume the test for the untouched part. */
+    for(len++; len < slen; len++)
+        ok(long_buf[len] == 0xcc, "expected 0xcc at [%d], got 0x%x\n", len, long_buf[len]);
+
+    HeapFree(GetProcessHeap(), 0, long_buf);
 }
 
 static void test_GetTempPath(void)
@@ -1266,33 +1353,49 @@ static void test_GetLongPathNameW(void)
 
 static void test_GetShortPathNameW(void)
 {
-    WCHAR test_path[] = { 'L', 'o', 'n', 'g', 'D', 'i', 'r', 'e', 'c', 't', 'o', 'r', 'y', 'N', 'a', 'm', 'e',  0 };
-    WCHAR path[MAX_PATH];
+    static const WCHAR extended_prefix[] = {'\\','\\','?','\\',0};
+    static const WCHAR test_path[] = { 'L', 'o', 'n', 'g', 'D', 'i', 'r', 'e', 'c', 't', 'o', 'r', 'y', 'N', 'a', 'm', 'e',  0 };
+    static const WCHAR name[] = { 't', 'e', 's', 't', 0 };
+    static const WCHAR backSlash[] = { '\\', 0 };
+    static const WCHAR a_bcdeW[] = {'a','.','b','c','d','e',0};
+    WCHAR path[MAX_PATH], tmppath[MAX_PATH], *ptr;
     WCHAR short_path[MAX_PATH];
     DWORD length;
     HANDLE file;
     int ret;
-    WCHAR name[] = { 't', 'e', 's', 't', 0 };
-    WCHAR backSlash[] = { '\\', 0 };
 
     SetLastError(0xdeadbeef);
-    GetTempPathW( MAX_PATH, path );
+    GetTempPathW( MAX_PATH, tmppath );
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("GetTempPathW is not implemented\n");
         return;
     }
 
+    lstrcpyW( path, tmppath );
     lstrcatW( path, test_path );
     lstrcatW( path, backSlash );
     ret = CreateDirectoryW( path, NULL );
     ok( ret, "Directory was not created. LastError = %d\n", GetLastError() );
 
     /* Starting a main part of test */
+
+    /* extended path \\?\C:\path\ */
+    lstrcpyW( path, extended_prefix );
+    lstrcatW( path, tmppath );
+    lstrcatW( path, test_path );
+    lstrcatW( path, backSlash );
+    short_path[0] = 0;
+    length = GetShortPathNameW( path, short_path, sizeof(short_path) / sizeof(*short_path) );
+    ok( length, "GetShortPathNameW returned 0.\n" );
+
+    lstrcpyW( path, tmppath );
+    lstrcatW( path, test_path );
+    lstrcatW( path, backSlash );
     length = GetShortPathNameW( path, short_path, 0 );
     ok( length, "GetShortPathNameW returned 0.\n" );
     ret = GetShortPathNameW( path, short_path, length );
-    ok( ret, "GetShortPathNameW returned 0.\n" );
+    ok( ret && ret == length-1, "GetShortPathNameW returned 0.\n" );
 
     lstrcatW( short_path, name );
 
@@ -1304,11 +1407,24 @@ static void test_GetShortPathNameW(void)
 
     file = CreateFileW( short_path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
     ok( file != INVALID_HANDLE_VALUE, "File was not created.\n" );
-
-    /* End test */
     CloseHandle( file );
     ret = DeleteFileW( short_path );
     ok( ret, "Cannot delete file.\n" );
+
+    ptr = path + lstrlenW(path);
+    lstrcpyW( ptr, a_bcdeW);
+    file = CreateFileW( path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    ok( file != INVALID_HANDLE_VALUE, "File was not created.\n" );
+    CloseHandle( file );
+
+    length = GetShortPathNameW( path, short_path, sizeof(short_path)/sizeof(*short_path) );
+    ok( length, "GetShortPathNameW failed: %u.\n", GetLastError() );
+
+    ret = DeleteFileW( path );
+    ok( ret, "Cannot delete file.\n" );
+    *ptr = 0;
+
+    /* End test */
     ret = RemoveDirectoryW( path );
     ok( ret, "Cannot delete directory.\n" );
 }
@@ -1989,6 +2105,8 @@ static void init_pointers(void)
     MAKEFUNC(DeactivateActCtx);
     MAKEFUNC(GetCurrentActCtx);
     MAKEFUNC(ReleaseActCtx);
+    MAKEFUNC(CheckNameLegalDOS8Dot3W);
+    MAKEFUNC(CheckNameLegalDOS8Dot3A);
 #undef MAKEFUNC
 }
 
@@ -2050,6 +2168,73 @@ static void test_relative_path(void)
     RemoveDirectoryA("bar");
 }
 
+static void test_CheckNameLegalDOS8Dot3(void)
+{
+    static const WCHAR has_driveW[] = {'C',':','\\','a','.','t','x','t',0};
+    static const WCHAR has_pathW[] = {'b','\\','a','.','t','x','t',0};
+    static const WCHAR too_longW[] = {'a','l','o','n','g','f','i','l','e','n','a','m','e','.','t','x','t',0};
+    static const WCHAR twodotsW[] = {'t','e','s','t','.','e','s','t','.','t','x','t',0};
+    static const WCHAR longextW[] = {'t','e','s','t','.','t','x','t','t','x','t',0};
+    static const WCHAR emptyW[] = {0};
+    static const WCHAR funnycharsW[] = {'!','#','$','%','&','\'','(',')','.','-','@','^',0};
+    static const WCHAR length8W[] = {'t','e','s','t','t','e','s','t','.','t','x','t',0};
+    static const WCHAR length1W[] = {'t',0};
+    static const WCHAR withspaceW[] = {'t','e','s','t',' ','e','s','t','.','t','x','t',0};
+
+    static const struct {
+        const WCHAR *name;
+        BOOL should_be_legal, has_space;
+    } cases[] = {
+        {has_driveW, FALSE, FALSE},
+        {has_pathW, FALSE, FALSE},
+        {too_longW, FALSE, FALSE},
+        {twodotsW, FALSE, FALSE},
+        {longextW, FALSE, FALSE},
+        {emptyW, TRUE /* ! */, FALSE},
+        {funnycharsW, TRUE, FALSE},
+        {length8W, TRUE, FALSE},
+        {length1W, TRUE, FALSE},
+        {withspaceW, TRUE, TRUE},
+    };
+
+    BOOL br, is_legal, has_space;
+    char astr[64];
+    DWORD i;
+
+    if(!pCheckNameLegalDOS8Dot3W){
+        win_skip("Missing CheckNameLegalDOS8Dot3, skipping tests\n");
+        return;
+    }
+
+    br = pCheckNameLegalDOS8Dot3W(NULL, NULL, 0, NULL, &is_legal);
+    ok(br == FALSE, "CheckNameLegalDOS8Dot3W should have failed\n");
+
+    br = pCheckNameLegalDOS8Dot3A(NULL, NULL, 0, NULL, &is_legal);
+    ok(br == FALSE, "CheckNameLegalDOS8Dot3A should have failed\n");
+
+    br = pCheckNameLegalDOS8Dot3W(length8W, NULL, 0, NULL, NULL);
+    ok(br == FALSE, "CheckNameLegalDOS8Dot3W should have failed\n");
+
+    br = pCheckNameLegalDOS8Dot3A("testtest.txt", NULL, 0, NULL, NULL);
+    ok(br == FALSE, "CheckNameLegalDOS8Dot3A should have failed\n");
+
+    for(i = 0; i < sizeof(cases)/sizeof(*cases); ++i){
+        br = pCheckNameLegalDOS8Dot3W(cases[i].name, NULL, 0, &has_space, &is_legal);
+        ok(br == TRUE, "CheckNameLegalDOS8Dot3W failed for %s\n", wine_dbgstr_w(cases[i].name));
+        ok(is_legal == cases[i].should_be_legal, "Got wrong legality for %s\n", wine_dbgstr_w(cases[i].name));
+        if(is_legal)
+            ok(has_space == cases[i].has_space, "Got wrong space for %s\n", wine_dbgstr_w(cases[i].name));
+
+        WideCharToMultiByte(CP_ACP, 0, cases[i].name, -1, astr, sizeof(astr), NULL, NULL);
+
+        br = pCheckNameLegalDOS8Dot3A(astr, NULL, 0, &has_space, &is_legal);
+        ok(br == TRUE, "CheckNameLegalDOS8Dot3W failed for %s\n", astr);
+        ok(is_legal == cases[i].should_be_legal, "Got wrong legality for %s\n", astr);
+        if(is_legal)
+            ok(has_space == cases[i].has_space, "Got wrong space for %s\n", wine_dbgstr_w(cases[i].name));
+    }
+}
+
 START_TEST(path)
 {
     CHAR origdir[MAX_PATH],curdir[MAX_PATH], curDrive, otherDrive;
@@ -2082,4 +2267,5 @@ START_TEST(path)
     test_SearchPathW();
     test_GetFullPathNameA();
     test_GetFullPathNameW();
+    test_CheckNameLegalDOS8Dot3();
 }

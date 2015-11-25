@@ -13,9 +13,9 @@ list(APPEND SOURCE
     blob.c
     bytecodewriter.c
     compiler.c
-    d3dcompiler_43_main.c
     hlsl.tab.c
     hlsl.yy.c
+    main.c
     reflection.c
     utils.c
     d3dcompiler_private.h

@@ -123,7 +123,6 @@ typedef struct
     UINT      nTotalCreated;
     UINT      mdiFlags;
     UINT      sbRecalc;   /* SB_xxx flags for scrollbar fixup */
-    DWORD     initialStyle; /* Style when window was created */ // See http://bugs.winehq.org/show_bug.cgi?id=9435
     HBITMAP   hBmpClose; /* ReactOS modification */
 } MDICLIENTINFO;
 
@@ -883,7 +882,7 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
 static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 {
     HMENU menu = GetMenu( frame );
-    HMENU  	hSysPopup = 0;
+    HMENU  	hSysPopup;
     HBITMAP hSysMenuBitmap = 0;
     HICON hIcon;
     INT nItems;
@@ -891,7 +890,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 
     TRACE("frame %p,child %p\n",frame,hChild);
 
-    if( !menu ) return 0;
+    if( !menu ) return FALSE;
 //// ReactOS start
     /* if the system buttons already exist do not add them again */
     nItems = GetMenuItemCount(menu) - 1;
@@ -899,14 +898,14 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     if (iId == SC_RESTORE || iId == SC_CLOSE)
     {
         ERR("system buttons already exist\n");
-	return 0;
+	return FALSE;
     }
 //// End
     /* create a copy of sysmenu popup and insert it into frame menu bar */
     if (!(hSysPopup = GetSystemMenu(hChild, FALSE)))
     {
         TRACE("child %p doesn't have a system menu\n", hChild);
-        return 0;
+        return FALSE;
     }
 
     AppendMenuW(menu, MF_HELP | MF_BITMAP,
@@ -920,9 +919,13 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     /* The system menu is replaced by the child icon */
     hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_SMALL, 0);
     if (!hIcon)
+        hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICONSM);
+    if (!hIcon)
         hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_BIG, 0);
     if (!hIcon)
-        hIcon = LoadImageW(0, MAKEINTRESOURCEW(IDI_WINLOGO), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
+        hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICON);
+    if (!hIcon)
+        hIcon = LoadImageW(0, (LPWSTR)IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     if (hIcon)
     {
       HDC hMemDC;
@@ -954,7 +957,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     {
         TRACE("not inserted\n");
 	DestroyMenu(hSysPopup);
-	return 0;
+	return FALSE;
     }
 
     EnableMenuItem(hSysPopup, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
@@ -965,7 +968,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     /* redraw menu */
     DrawMenuBar(frame);
 
-    return 1;
+    return TRUE;
 }
 
 /**********************************************************************
@@ -980,7 +983,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     TRACE("frame %p,child %p\n",frame, hChild);
 
-    if( !menu ) return 0;
+    if( !menu ) return FALSE;
 
     /* if there is no system buttons then nothing to do */
     nItems = GetMenuItemCount(menu) - 1;
@@ -988,7 +991,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
     if( !(iId == SC_RESTORE || iId == SC_CLOSE) )
     {
         ERR("no system buttons then nothing to do\n");
-	return 0;
+	return FALSE;
     }
 
     /*
@@ -1025,7 +1028,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     DrawMenuBar(frame);
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -1149,7 +1152,6 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 	ci->nTotalCreated	= 0;
 	ci->frameTitle		= NULL;
 	ci->mdiFlags		= 0;
-	ci->initialStyle        = cs->style;
 	ci->hFrameMenu = GetMenu(cs->hwndParent);
 
 	if (!ci->hBmpClose) ci->hBmpClose = CreateMDIMenuBitmap();
@@ -1794,14 +1796,14 @@ BOOL WINAPI TranslateMDISysAccel( HWND hwndClient, LPMSG msg )
                 }
                 /* fall through */
             default:
-                return 0;
+                return FALSE;
             }
             TRACE("wParam = %04lx\n", wParam);
             SendMessageW(ci->hwndActiveChild, WM_SYSCOMMAND, wParam, msg->wParam);
-            return 1;
+            return TRUE;
         }
     }
-    return 0; /* failure */
+    return FALSE; /* failure */
 }
 
 /***********************************************************************
@@ -1812,10 +1814,9 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     SCROLLINFO info;
     RECT childRect, clientRect;
     HWND *list;
-    MDICLIENTINFO *ci;
+    DWORD style;
     WINDOWINFO WindowInfo;
 
-    ci = get_client_info(hwnd);
     GetClientRect( hwnd, &clientRect );
     SetRectEmpty( &childRect );
 
@@ -1839,7 +1840,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         int i;
         for (i = 0; list[i]; i++)
         {
-            DWORD style = GetWindowLongPtrW( list[i], GWL_STYLE );
+            style = GetWindowLongPtrW( list[i], GWL_STYLE );
             if (style & WS_MAXIMIZE)
             {
                 HeapFree( GetProcessHeap(), 0, list );
@@ -1866,44 +1867,40 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
 
-    /* set the specific */
+    /* set the specific values and apply but only if window style allows */
     /* Note how we set nPos to 0 because we scroll the clients instead of
      * the window, and we set nPage to 1 bigger than the clientRect because
      * otherwise the scrollbar never disables. This causes a somewhat ugly
      * effect though while scrolling.
      */
+    style = GetWindowLongW( hwnd, GWL_STYLE );
     switch( scroll )
     {
 	case SB_BOTH:
 	case SB_HORZ:
-			info.nMin = childRect.left;
-			info.nMax = childRect.right;
-			info.nPos = 0;
-			info.nPage = 1 + clientRect.right - clientRect.left;
-			//info.nMax = childRect.right - clientRect.right;
-			//info.nPos = clientRect.left - childRect.left;
-			if (ci->initialStyle & WS_HSCROLL)
-			    SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
-			if (scroll == SB_HORZ)
-			{
-                           TRACE("CalcChildScroll H\n");
-			   break;
-			}
-			else
-			{
-                           TRACE("CalcChildScroll B\n");
+                        if (style & (WS_HSCROLL | WS_VSCROLL))
+                        {
+                            info.nMin = childRect.left;
+                            info.nMax = childRect.right;
+                            info.nPos = 0;
+                            info.nPage = 1 + clientRect.right - clientRect.left;
+                            //info.nMax = childRect.right - clientRect.right;
+                            //info.nPos = clientRect.left - childRect.left;
+                            SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
                         }
+			if (scroll == SB_HORZ) break;
 			/* fall through */
 	case SB_VERT:
-			info.nMin = childRect.top;
-			info.nMax = childRect.bottom;
-			info.nPos = 0;
-			info.nPage = 1 + clientRect.bottom - clientRect.top;
-			//info.nMax = childRect.bottom - clientRect.bottom;
-			//info.nPos = clientRect.top - childRect.top;
-			TRACE("CalcChildScroll V\n");
-			if (ci->initialStyle & WS_VSCROLL)
-			    SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
+                        if (style & (WS_HSCROLL | WS_VSCROLL))
+                        {
+                            info.nMin = childRect.top;
+                            info.nMax = childRect.bottom;
+                            info.nPos = 0;
+                            info.nPage = 1 + clientRect.bottom - clientRect.top;
+                            //info.nMax = childRect.bottom - clientRect.bottom;
+                            //info.nPos = clientRect.top - childRect.top;
+                            SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
+                        }
 			break;
     }
 }

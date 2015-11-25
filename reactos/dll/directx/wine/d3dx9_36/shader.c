@@ -1122,7 +1122,7 @@ static UINT set(struct ID3DXConstantTableImpl *table, IDirect3DDevice9 *device, 
             offset = min(desc->Elements - 1, offset);
             last = offset * desc->Rows * desc->Columns;
 
-            if ((is_pointer || (!is_pointer && inclass == D3DXPC_MATRIX_ROWS)) && desc->RegisterSet != D3DXRS_BOOL)
+            if ((is_pointer || inclass == D3DXPC_MATRIX_ROWS) && desc->RegisterSet != D3DXRS_BOOL)
             {
                 set(table, device, &constant->constants[0], NULL, intype, size, incol, inclass, 0, is_pointer);
             }
@@ -1162,7 +1162,7 @@ static UINT set(struct ID3DXConstantTableImpl *table, IDirect3DDevice9 *device, 
              * E.g.: struct {int i; int n} s;
              *       SetValue(device, "s", [1, 2], 8) => s = {1, 0};
              */
-            else if ((is_pointer || (!is_pointer && inclass == D3DXPC_MATRIX_ROWS)) && desc->RegisterSet != D3DXRS_BOOL)
+            else if ((is_pointer || inclass == D3DXPC_MATRIX_ROWS) && desc->RegisterSet != D3DXRS_BOOL)
             {
                 last = set(table, device, &constant->constants[0], indata, intype, size, incol, inclass,
                         index + last, is_pointer);
@@ -2103,6 +2103,27 @@ HRESULT WINAPI D3DXGetShaderConstantTable(const DWORD *byte_code, ID3DXConstantT
     return D3DXGetShaderConstantTableEx(byte_code, 0, constant_table);
 }
 
+HRESULT WINAPI D3DXCreateFragmentLinker(IDirect3DDevice9 *device, UINT size, ID3DXFragmentLinker **linker)
+{
+    FIXME("device %p, size %u, linker %p: stub.\n", device, size, linker);
+
+    if (linker)
+        *linker = NULL;
+
+
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI D3DXCreateFragmentLinkerEx(IDirect3DDevice9 *device, UINT size, DWORD flags, ID3DXFragmentLinker **linker)
+{
+    FIXME("device %p, size %u, flags %#x, linker %p: stub.\n", device, size, flags, linker);
+
+    if (linker)
+        *linker = NULL;
+
+    return E_NOTIMPL;
+}
+
 HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **samplers, UINT *count)
 {
     UINT i, sampler_count = 0;
@@ -2157,7 +2178,7 @@ HRESULT WINAPI D3DXDisassembleShader(const DWORD *shader, BOOL colorcode, const 
    return E_OUTOFMEMORY;
 }
 
-const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
+static const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
 {
     TRACE("Shader model %u\n", shader_model);
 
@@ -2177,13 +2198,13 @@ const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
     else
     {
         /* Handle remaining safe instructions */
-        while (*++byte_code & (1 << 31));
+        while (*++byte_code & (1u << 31));
     }
 
     return byte_code;
 }
 
-static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, BOOL input)
+static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, DWORD type)
 {
     const DWORD *ptr = byte_code;
     UINT shader_model = (*ptr >> 8) & 0xff;
@@ -2194,7 +2215,7 @@ static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics
 
     while (*ptr != D3DSIO_END)
     {
-        if (*ptr & (1 << 31))
+        if (*ptr & (1u << 31))
         {
             FIXME("Opcode expected but got %#x\n", *ptr);
             return 0;
@@ -2203,14 +2224,15 @@ static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics
         {
             DWORD param1 = *++ptr;
             DWORD param2 = *++ptr;
-            DWORD usage = param1 & 0x1f;
-            DWORD usage_index = (param1 >> 16) & 0xf;
-            DWORD reg_type = (((param2 >> 11) & 0x3) << 3) | ((param2 >> 28) & 0x7);
+            DWORD usage = (param1 & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
+            DWORD usage_index = (param1 & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
+            DWORD reg_type = ((param2 & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2)
+                    | ((param2 & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT);
 
             TRACE("D3DSIO_DCL param1: %#x, param2: %#x, usage: %u, usage_index: %u, reg_type: %u\n",
                    param1, param2, usage, usage_index, reg_type);
 
-            if ((input && (reg_type == D3DSPR_INPUT)) || (!input && (reg_type == D3DSPR_OUTPUT)))
+            if (reg_type == type)
             {
                 if (semantics)
                 {
@@ -2240,7 +2262,7 @@ HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *byte_code, D3DXSEMANTIC 
     if (!byte_code)
         return D3DERR_INVALIDCALL;
 
-    nb_semantics = get_shader_semantics(byte_code, semantics, TRUE);
+    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_INPUT);
 
     if (count)
         *count = nb_semantics;
@@ -2258,7 +2280,7 @@ HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *byte_code, D3DXSEMANTIC
     if (!byte_code)
         return D3DERR_INVALIDCALL;
 
-    nb_semantics = get_shader_semantics(byte_code, semantics, FALSE);
+    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_OUTPUT);
 
     if (count)
         *count = nb_semantics;

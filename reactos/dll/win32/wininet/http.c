@@ -4877,6 +4877,16 @@ static char *build_ascii_request( const WCHAR *str, void *data, DWORD data_len, 
     return ret;
 }
 
+static void set_content_length_header( http_request_t *request, DWORD len, DWORD flags )
+{
+    static const WCHAR fmtW[] =
+        {'C','o','n','t','e','n','t','-','L','e','n','g','t','h',':',' ','%','u','\r','\n',0};
+    WCHAR buf[sizeof(fmtW)/sizeof(fmtW[0]) + 10];
+
+    sprintfW( buf, fmtW, len );
+    HTTP_HttpAddRequestHeadersW( request, buf, ~0u, flags );
+}
+
 /***********************************************************************
  *           HTTP_HttpSendRequestW (internal)
  *
@@ -4891,12 +4901,9 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
 	DWORD dwHeaderLength, LPVOID lpOptional, DWORD dwOptionalLength,
 	DWORD dwContentLength, BOOL bEndRequest)
 {
-    static const WCHAR szContentLength[] =
-        { 'C','o','n','t','e','n','t','-','L','e','n','g','t','h',':',' ','%','l','i','\r','\n',0 };
     BOOL redirected = FALSE, secure_proxy_connect = FALSE, loop_next;
     LPWSTR requestString = NULL;
     INT responseLen, cnt;
-    WCHAR contentLengthStr[sizeof szContentLength/2 /* includes \r\n */ + 20 /* int */ ];
     DWORD res;
 
     TRACE("--> %p\n", request);
@@ -4912,8 +4919,7 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
 
     if (dwContentLength || strcmpW(request->verb, szGET))
     {
-        sprintfW(contentLengthStr, szContentLength, dwContentLength);
-        HTTP_HttpAddRequestHeadersW(request, contentLengthStr, -1L, HTTP_ADDREQ_FLAG_ADD_IF_NEW);
+        set_content_length_header(request, dwContentLength, HTTP_ADDREQ_FLAG_ADD_IF_NEW);
         request->bytesToWrite = dwContentLength;
     }
     if (request->session->appInfo->agent)
@@ -5002,6 +5008,10 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
         {
             static const WCHAR connectW[] = {'C','O','N','N','E','C','T',0};
             const WCHAR *target = request->server->host_port;
+
+            if (HTTP_GetCustomHeaderIndex(request, szContent_Length, 0, TRUE) >= 0)
+                set_content_length_header(request, 0, HTTP_ADDREQ_FLAG_REPLACE);
+
             requestString = build_request_header(request, connectW, target, g_szHttp1_1, TRUE);
         }
         else if (request->proxy && !(request->hdr.dwFlags & INTERNET_FLAG_SECURE))
@@ -5011,7 +5021,12 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
             heap_free(url);
         }
         else
+        {
+            if (request->proxy && HTTP_GetCustomHeaderIndex(request, szContent_Length, 0, TRUE) >= 0)
+                set_content_length_header(request, dwContentLength, HTTP_ADDREQ_FLAG_REPLACE);
+
             requestString = build_request_header(request, request->verb, request->path, request->version, TRUE);
+        }
 
         TRACE("Request header -> %s\n", debugstr_w(requestString) );
 

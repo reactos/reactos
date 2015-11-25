@@ -592,9 +592,6 @@ VfatCreateFile(
     if (!OpenTargetDir)
     {
         Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, RequestedOptions, &ParentFcb);
-        if (Status == STATUS_ACCESS_DENIED ||
-            Status == STATUS_OBJECT_NAME_COLLISION)
-            return Status;
     }
     else
     {
@@ -703,7 +700,9 @@ VfatCreateFile(
      */
     if (Status == STATUS_OBJECT_PATH_NOT_FOUND ||
         Status == STATUS_INVALID_PARAMETER ||
-        Status == STATUS_DELETE_PENDING)
+        Status == STATUS_DELETE_PENDING ||
+        Status == STATUS_ACCESS_DENIED ||
+        Status == STATUS_OBJECT_NAME_COLLISION)
     {
         if (ParentFcb)
         {

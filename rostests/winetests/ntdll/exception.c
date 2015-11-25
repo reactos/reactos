@@ -973,7 +973,7 @@ static void test_debugger(void)
                                           sizeof(stage), &size_read);
             ok(!status,"NtReadVirtualMemory failed with 0x%x\n", status);
 
-            ok(!de.u.DebugString.fUnicode, "unepxected unicode debug string event\n");
+            ok(!de.u.DebugString.fUnicode, "unexpected unicode debug string event\n");
             ok(de.u.DebugString.nDebugStringLength < sizeof(buffer) - 1, "buffer not large enough to hold %d bytes\n",
                de.u.DebugString.nDebugStringLength);
 
@@ -1838,7 +1838,7 @@ static void test_closehandle(DWORD numexc)
     invalid_handle_exceptions = 0;
     res = CloseHandle((HANDLE)0xdeadbeef);
     ok(!res, "CloseHandle(0xdeadbeef) unexpectedly succeeded\n");
-    ok(GetLastError() == ERROR_INVALID_HANDLE, "wrong error code %d instead of %d",
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "wrong error code %d instead of %d\n",
        GetLastError(), ERROR_INVALID_HANDLE);
     ok(invalid_handle_exceptions == numexc, "CloseHandle generated %d exceptions, expected %d\n",
        invalid_handle_exceptions, numexc);

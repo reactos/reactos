@@ -7,7 +7,7 @@ private:
 
     bool m_bHasFocus;
     bool m_bIsLarge;
-    WCHAR ch;
+    WCHAR m_Char;
 
 public:
     CCell(
@@ -23,6 +23,8 @@ public:
 
     LPRECT GetCellCoordinates() { return &m_CellCoordinates; }
     void SetFocus(_In_ bool HasFocus) { m_bHasFocus = HasFocus; }
+    WCHAR GetChar() { return m_Char; }
+    void SetChar(_In_ WCHAR ch) { m_Char = ch; }
 
     bool OnPaint(
         _In_ PAINTSTRUCT &PaintStruct

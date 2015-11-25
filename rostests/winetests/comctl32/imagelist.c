@@ -1258,7 +1258,7 @@ static void test_imagelist_storage(void)
 
 static void test_shell_imagelist(void)
 {
-    BOOL (WINAPI *pSHGetImageList)(INT, REFIID, void**);
+    HRESULT (WINAPI *pSHGetImageList)(INT, REFIID, void**);
     IImageList *iml = NULL;
     HMODULE hShell32;
     HRESULT hr;
@@ -1278,8 +1278,7 @@ static void test_shell_imagelist(void)
     }
 
     /* Get system image list */
-    hr = (pSHGetImageList)(SHIL_SYSSMALL, &IID_IImageList, (void**)&iml);
-
+    hr = pSHGetImageList(SHIL_SYSSMALL, &IID_IImageList, (void**)&iml);
     ok(SUCCEEDED(hr), "SHGetImageList failed, hr=%x\n", hr);
 
     if (hr != S_OK) {

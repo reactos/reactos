@@ -26,7 +26,6 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
 
 #include <windef.h>
 #include <winbase.h>
@@ -40,6 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(odbc);
 
 /* Registry key names */
 static const WCHAR drivers_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','O','D','B','C','I','N','S','T','.','I','N','I','\\','O','D','B','C',' ','D','r','i','v','e','r','s',0};
+static const WCHAR odbcW[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C',0};
 
 /* This config mode is known to be process-wide.
  * MSDN documentation suggests that the value is hidden somewhere in the registry but I haven't found it yet.
@@ -402,28 +402,176 @@ BOOL WINAPI SQLGetInstalledDrivers(LPSTR lpszBuf, WORD cbBufMax,
     return ret;
 }
 
-int WINAPI SQLGetPrivateProfileStringW(LPCWSTR lpszSection, LPCWSTR lpszEntry,
-               LPCWSTR lpszDefault, LPCWSTR RetBuffer, int cbRetBuffer,
-               LPCWSTR lpszFilename)
+static HKEY get_privateprofile_sectionkey(LPCWSTR section, LPCWSTR filename)
 {
-    clear_errors();
-    FIXME("%s %s %s %p %d %s\n", debugstr_w(lpszSection), debugstr_w(lpszEntry),
-               debugstr_w(lpszDefault), RetBuffer, cbRetBuffer,
-               debugstr_w(lpszFilename));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    HKEY hkey, hkeyfilename, hkeysection;
+    LONG ret;
+
+    if (RegOpenKeyW(HKEY_CURRENT_USER, odbcW, &hkey))
+        return NULL;
+
+    ret = RegOpenKeyW(hkey, filename, &hkeyfilename);
+    RegCloseKey(hkey);
+    if (ret)
+        return NULL;
+
+    ret = RegOpenKeyW(hkeyfilename, section, &hkeysection);
+    RegCloseKey(hkeyfilename);
+
+    return ret ? NULL : hkeysection;
 }
 
-int WINAPI SQLGetPrivateProfileString(LPCSTR lpszSection, LPCSTR lpszEntry,
-               LPCSTR lpszDefault, LPCSTR RetBuffer, int cbRetBuffer,
-               LPCSTR lpszFilename)
+int WINAPI SQLGetPrivateProfileStringW(LPCWSTR section, LPCWSTR entry,
+    LPCWSTR defvalue, LPWSTR buff, int buff_len, LPCWSTR filename)
 {
+    BOOL usedefault = TRUE;
+    HKEY sectionkey;
+    LONG ret = 0;
+
+    TRACE("%s %s %s %p %d %s\n", debugstr_w(section), debugstr_w(entry),
+               debugstr_w(defvalue), buff, buff_len, debugstr_w(filename));
+
     clear_errors();
-    FIXME("%s %s %s %p %d %s\n", debugstr_a(lpszSection), debugstr_a(lpszEntry),
-               debugstr_a(lpszDefault), RetBuffer, cbRetBuffer,
-               debugstr_a(lpszFilename));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+
+    if (buff_len <= 0 || !section)
+        return 0;
+
+    if(buff)
+        buff[0] = 0;
+
+    if (!defvalue || !buff)
+        return 0;
+
+    sectionkey = get_privateprofile_sectionkey(section, filename);
+    if (sectionkey)
+    {
+        DWORD type, size;
+
+        if (entry)
+        {
+            size = buff_len * sizeof(*buff);
+            if (RegGetValueW(sectionkey, NULL, entry, RRF_RT_REG_SZ, &type, buff, &size) == ERROR_SUCCESS)
+            {
+                usedefault = FALSE;
+                ret = (size / sizeof(*buff)) - 1;
+            }
+        }
+        else
+        {
+            WCHAR name[MAX_PATH];
+            DWORD index = 0;
+            DWORD namelen;
+
+            usedefault = FALSE;
+
+            memset(buff, 0, buff_len);
+
+            namelen = sizeof(name);
+            while (RegEnumValueW(sectionkey, index, name, &namelen, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            {
+                if ((ret +  namelen+1) > buff_len)
+                    break;
+
+                lstrcpyW(buff+ret, name);
+                ret += namelen+1;
+                namelen = sizeof(name);
+                index++;
+            }
+        }
+
+        RegCloseKey(sectionkey);
+    }
+    else
+        usedefault = entry != NULL;
+
+    if (usedefault)
+    {
+        lstrcpynW(buff, defvalue, buff_len);
+        ret = lstrlenW(buff);
+    }
+
+    return ret;
+}
+
+int WINAPI SQLGetPrivateProfileString(LPCSTR section, LPCSTR entry,
+    LPCSTR defvalue, LPSTR buff, int buff_len, LPCSTR filename)
+{
+    WCHAR *sectionW, *filenameW;
+    BOOL usedefault = TRUE;
+    HKEY sectionkey;
+    LONG ret = 0;
+
+    TRACE("%s %s %s %p %d %s\n", debugstr_a(section), debugstr_a(entry),
+               debugstr_a(defvalue), buff, buff_len, debugstr_a(filename));
+
+    clear_errors();
+
+    if (buff_len <= 0)
+        return 0;
+
+    if (buff)
+        buff[0] = 0;
+
+    if (!section || !defvalue || !buff)
+        return 0;
+
+    sectionW = heap_strdupAtoW(section);
+    filenameW = heap_strdupAtoW(filename);
+
+    sectionkey = get_privateprofile_sectionkey(sectionW, filenameW);
+
+    heap_free(sectionW);
+    heap_free(filenameW);
+
+    if (sectionkey)
+    {
+        DWORD type, size;
+
+        if (entry)
+        {
+            size = buff_len * sizeof(*buff);
+            if (RegGetValueA(sectionkey, NULL, entry, RRF_RT_REG_SZ, &type, buff, &size) == ERROR_SUCCESS)
+            {
+                usedefault = FALSE;
+                ret = (size / sizeof(*buff)) - 1;
+            }
+        }
+        else
+        {
+            char name[MAX_PATH] = {0};
+            DWORD index = 0;
+            DWORD namelen;
+
+            usedefault = FALSE;
+
+            memset(buff, 0, buff_len);
+
+            namelen = sizeof(name);
+            while (RegEnumValueA(sectionkey, index, name, &namelen, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            {
+                if ((ret +  namelen+1) > buff_len)
+                    break;
+
+                lstrcpyA(buff+ret, name);
+
+                ret += namelen+1;
+                namelen = sizeof(name);
+                index++;
+            }
+        }
+
+        RegCloseKey(sectionkey);
+    }
+    else
+        usedefault = entry != NULL;
+
+    if (usedefault)
+    {
+        lstrcpynA(buff, defvalue, buff_len);
+        ret = strlen(buff);
+    }
+
+    return ret;
 }
 
 BOOL WINAPI SQLGetTranslatorW(HWND hwndParent, LPWSTR lpszName, WORD cbNameMax,
@@ -1019,7 +1167,6 @@ BOOL WINAPI SQLWritePrivateProfileStringW(LPCWSTR lpszSection, LPCWSTR lpszEntry
 {
     LONG ret;
     HKEY hkey;
-    WCHAR softwareodbc[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C',0};
 
     clear_errors();
     TRACE("%s %s %s %s\n", debugstr_w(lpszSection), debugstr_w(lpszEntry),
@@ -1031,7 +1178,7 @@ BOOL WINAPI SQLWritePrivateProfileStringW(LPCWSTR lpszSection, LPCWSTR lpszEntry
         return FALSE;
     }
 
-    if ((ret = RegCreateKeyW(HKEY_CURRENT_USER, softwareodbc, &hkey)) == ERROR_SUCCESS)
+    if ((ret = RegCreateKeyW(HKEY_CURRENT_USER, odbcW, &hkey)) == ERROR_SUCCESS)
     {
          HKEY hkeyfilename;
 

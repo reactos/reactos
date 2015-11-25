@@ -151,8 +151,8 @@ HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, DWORD flags,
     struct wined3d_palette *object;
     HRESULT hr;
 
-    TRACE("device %p, flags %#x, entries %p, palette %p.\n",
-            device, flags, entries, palette);
+    TRACE("device %p, flags %#x, entry_count %u, entries %p, palette %p.\n",
+            device, flags, entry_count, entries, palette);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)

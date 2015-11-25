@@ -59,6 +59,8 @@ ME_StreamOutFlush(ME_OutStream *pStream)
       return FALSE;
     /* Don't resend partial chunks if nWritten < pStream->pos */
   }
+  if (nWritten == pStream->pos)
+      pStream->written += nWritten;
   pStream->pos = 0;
   return TRUE;
 }

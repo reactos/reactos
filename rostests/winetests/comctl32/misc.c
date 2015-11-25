@@ -37,9 +37,19 @@ static BOOL (WINAPI * pStr_SetPtrA)(LPSTR, LPCSTR);
 static INT (WINAPI * pStr_GetPtrW)(LPCWSTR, LPWSTR, INT);
 static BOOL (WINAPI * pStr_SetPtrW)(LPWSTR, LPCWSTR);
 
-static HRESULT (WINAPI * LoadIconMetric)(HINSTANCE, PCWSTR, INT, HICON*);
-
 static HMODULE hComctl32 = 0;
+
+static char testicon_data[] =
+{
+    0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x01, 0x00,
+    0x20, 0x00, 0x40, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
+    0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00,
+    0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x12, 0x0b,
+    0x00, 0x00, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xde, 0xde, 0xde, 0xff, 0xde, 0xde, 0xde, 0xff, 0xde, 0xde,
+    0xde, 0xff, 0xde, 0xde, 0xde, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
 
 #define COMCTL32_GET_PROC(ordinal, func) \
     p ## func = (void*)GetProcAddress(hComctl32, (LPSTR)ordinal); \
@@ -215,90 +225,148 @@ static void test_TaskDialogIndirect(void)
     ok(ptr == ptr2, "got wrong pointer for ordinal 345, %p expected %p\n", ptr2, ptr);
 }
 
-static void test_LoadIconMetric(void)
+static void test_LoadIconWithScaleDown(void)
 {
-    static const WCHAR nonExistingFile[] = {'d','o','e','s','n','o','t','e','x','i','s','t','.','i','c','o','\0'};
-    HINSTANCE hinst;
-    void *ptr;
-    HICON icon;
-    HRESULT result;
+    static const WCHAR nonexisting_fileW[] = {'n','o','n','e','x','i','s','t','i','n','g','.','i','c','o',0};
+    static const WCHAR nonexisting_resourceW[] = {'N','o','n','e','x','i','s','t','i','n','g',0};
+    static const WCHAR prefixW[] = {'I','C','O',0};
+    HRESULT (WINAPI *pLoadIconMetric)(HINSTANCE, const WCHAR *, int, HICON *);
+    HRESULT (WINAPI *pLoadIconWithScaleDown)(HINSTANCE, const WCHAR *, int, int, HICON *);
+    WCHAR tmp_path[MAX_PATH], icon_path[MAX_PATH];
     ICONINFO info;
-    BOOL res;
-    INT bytes;
+    HMODULE hinst;
+    HANDLE handle;
+    DWORD written;
+    HRESULT hr;
     BITMAP bmp;
+    HICON icon;
+    void *ptr;
+    int bytes;
+    BOOL res;
 
     hinst = LoadLibraryA("comctl32.dll");
-
-    LoadIconMetric = (void *)GetProcAddress(hinst, "LoadIconMetric");
-    if (!LoadIconMetric)
+    pLoadIconMetric        = (void *)GetProcAddress(hinst, "LoadIconMetric");
+    pLoadIconWithScaleDown = (void *)GetProcAddress(hinst, "LoadIconWithScaleDown");
+    if (!pLoadIconMetric || !pLoadIconWithScaleDown)
     {
 #ifdef __REACTOS__
-        /* Skipped on 2k3 */
-        skip("TaskDialogIndirect not exported by name\n");
+        skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
 #else
-        win_skip("LoadIconMetric not exported by name\n");
+        win_skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
 #endif
+        FreeLibrary(hinst);
         return;
     }
 
-    ptr = GetProcAddress(hinst, (const CHAR*)380);
-    ok(ptr == LoadIconMetric, "got wrong pointer for ordinal 380, %p expected %p\n",
-       ptr, LoadIconMetric);
+    GetTempPathW(MAX_PATH, tmp_path);
+    GetTempFileNameW(tmp_path, prefixW, 0, icon_path);
+    handle = CreateFileW(icon_path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                         FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(handle != INVALID_HANDLE_VALUE, "CreateFileW failed with error %u\n", GetLastError());
+    res = WriteFile(handle, testicon_data, sizeof(testicon_data), &written, NULL);
+    ok(res && written == sizeof(testicon_data), "Failed to write icon file\n");
+    CloseHandle(handle);
 
-    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, LIM_SMALL, &icon);
-    ok(result == S_OK, "Expected S_OK, got %x\n", result);
-    if (result == S_OK)
-    {
-        res = GetIconInfo(icon, &info);
-        ok(res, "Failed to get icon info\n");
-        if (res && info.hbmColor)
-        {
-            bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
-            ok(bytes > 0, "Failed to get bitmap info for icon\n");
-            if (bytes > 0)
-            {
-                ok(bmp.bmWidth  == GetSystemMetrics( SM_CXSMICON ), "Wrong icon width\n");
-                ok(bmp.bmHeight == GetSystemMetrics( SM_CYSMICON ), "Wrong icon height\n");
-            }
-        }
-        DestroyIcon(icon);
-    }
+    /* test ordinals */
+    ptr = GetProcAddress(hinst, (const char *)380);
+    ok(ptr == pLoadIconMetric,
+       "got wrong pointer for ordinal 380, %p expected %p\n", ptr, pLoadIconMetric);
 
-    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, LIM_LARGE, &icon);
-    ok(result == S_OK, "Expected S_OK, got %x\n", result);
-    if (result == S_OK)
-    {
-        res = GetIconInfo(icon, &info);
-        ok(res, "Failed to get icon info\n");
-        if (res && info.hbmColor)
-        {
-            bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
-            ok(bytes > 0, "Failed to get bitmap info for icon\n");
-            if (bytes > 0)
-            {
-                ok(bmp.bmWidth  == GetSystemMetrics( SM_CXICON ), "Wrong icon width\n");
-                ok(bmp.bmHeight == GetSystemMetrics( SM_CYICON ), "Wrong icon height\n");
-            }
-        }
-        DestroyIcon(icon);
-    }
+    ptr = GetProcAddress(hinst, (const char *)381);
+    ok(ptr == pLoadIconWithScaleDown,
+       "got wrong pointer for ordinal 381, %p expected %p\n", ptr, pLoadIconWithScaleDown);
 
-    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, 0x100, &icon);
-    ok(result == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", result);
-    if (result == S_OK) DestroyIcon(icon);
+    /* invalid arguments */
+    icon = (HICON)0x1234;
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, 0x100, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
 
     icon = (HICON)0x1234;
-    result = LoadIconMetric(NULL, NULL, LIM_LARGE, &icon);
-    ok(result == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", result);
-    ok(icon == (HICON)0, "Expected 0x0, got %p\n", icon);
-    if (result == S_OK) DestroyIcon(icon);
+    hr = pLoadIconMetric(NULL, NULL, LIM_LARGE, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
 
-    result = LoadIconMetric(NULL, nonExistingFile, LIM_LARGE, &icon);
-    ok(result == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
-       "Expected 80070715, got %x\n", result);
-    if (result == S_OK) DestroyIcon(icon);
+    icon = (HICON)0x1234;
+    hr = pLoadIconWithScaleDown(NULL, NULL, 32, 32, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
+
+    /* non-existing filename */
+    hr = pLoadIconMetric(NULL, nonexisting_fileW, LIM_LARGE, &icon);
+    todo_wine
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    hr = pLoadIconWithScaleDown(NULL, nonexisting_fileW, 32, 32, &icon);
+    todo_wine
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    /* non-existing resource name */
+    hr = pLoadIconMetric(hinst, nonexisting_resourceW, LIM_LARGE, &icon);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    hr = pLoadIconWithScaleDown(hinst, nonexisting_resourceW, 32, 32, &icon);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    /* load icon using predefined identifier */
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, LIM_SMALL, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXSMICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYSMICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, LIM_LARGE, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconWithScaleDown(NULL, (LPWSTR)IDI_APPLICATION, 42, 42, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == 42, "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == 42, "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    /* load icon from file */
+    hr = pLoadIconMetric(NULL, icon_path, LIM_SMALL, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXSMICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYSMICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconWithScaleDown(NULL, icon_path, 42, 42, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == 42, "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == 42, "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    DeleteFileW(icon_path);
+    FreeLibrary(hinst);
 }
-
 
 START_TEST(misc)
 {
@@ -315,7 +383,7 @@ START_TEST(misc)
         return;
 
     test_TaskDialogIndirect();
-    test_LoadIconMetric();
+    test_LoadIconWithScaleDown();
 
     unload_v6_module(ctx_cookie, hCtx);
 }

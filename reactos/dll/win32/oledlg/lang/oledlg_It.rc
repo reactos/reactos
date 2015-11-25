@@ -30,7 +30,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Il file non sembra essere un modulo OLE valido. Impossibile registrare il controllo OLE."
   IDS_NOTOLEMODCAPTION  "Aggiungi Controllo"
   IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
   IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
 }
 
 STRINGTABLE

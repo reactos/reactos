@@ -20,6 +20,7 @@
 
 #include "precomp.h"
 
+#include <wine/exception.h>
 #include <wine/winternl.h>
 
 static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
@@ -151,26 +152,25 @@ BOOL WINAPI BindImageEx(
 /***********************************************************************
  *		CheckSum (internal)
  */
-static WORD CalcCheckSum(
-  DWORD StartValue, LPVOID BaseAddress, DWORD WordCount)
+static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD ByteCount)
 {
-   LPWORD Ptr;
-   DWORD Sum;
-   DWORD i;
+    LPWORD Ptr;
+    DWORD Sum, i;
 
-   Sum = StartValue;
-   Ptr = (LPWORD)BaseAddress;
-   for (i = 0; i < WordCount; i++)
-     {
-	Sum += *Ptr;
-	if (HIWORD(Sum) != 0)
-	  {
-	     Sum = LOWORD(Sum) + HIWORD(Sum);
-	  }
-	Ptr++;
-     }
+    Sum = StartValue;
+    Ptr = (LPWORD)BaseAddress;
+    for (i = ByteCount; i > 1; i -= 2)
+    {
+        Sum += *Ptr;
+        if (HIWORD(Sum) != 0)
+            Sum = LOWORD(Sum) + HIWORD(Sum);
+        Ptr++;
+    }
 
-   return (WORD)(LOWORD(Sum) + HIWORD(Sum));
+    if (i == 1)
+        Sum += *(BYTE *)Ptr;
+
+    return (WORD)(LOWORD(Sum) + HIWORD(Sum));
 }
 
 
@@ -184,37 +184,57 @@ PIMAGE_NT_HEADERS WINAPI CheckSumMappedFile(
   IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *) BaseAddress;
   PIMAGE_NT_HEADERS32 Header32;
   PIMAGE_NT_HEADERS64 Header64;
+  PIMAGE_NT_HEADERS ret = NULL;
   DWORD *ChecksumFile;
   DWORD CalcSum;
-  DWORD HdrSum;
+  DWORD HdrSum = 0;
 
   TRACE("(%p, %d, %p, %p)\n",
     BaseAddress, FileLength, HeaderSum, CheckSum
   );
 
-  CalcSum = (DWORD)CalcCheckSum(0,
-				BaseAddress,
-				(FileLength + 1) / sizeof(WORD));
+  CalcSum = (DWORD)CalcCheckSum(0, BaseAddress, FileLength);
 
-  if (dos->e_magic != IMAGE_DOS_SIGNATURE)
-    return NULL;
-
-  Header32 = (IMAGE_NT_HEADERS32 *)((char *)dos + dos->e_lfanew);
-
-  if (Header32->Signature != IMAGE_NT_SIGNATURE)
-    return NULL;
-
-  if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
-    ChecksumFile = &Header32->OptionalHeader.CheckSum;
-  else if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+  __TRY
   {
-    Header64 = (IMAGE_NT_HEADERS64 *)Header32;
-    ChecksumFile = &Header64->OptionalHeader.CheckSum;
-  }
-  else
-    return NULL;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE)
+#ifdef __REACTOS__
+      _SEH2_LEAVE;
+#else
+      break;
+#endif
 
-  HdrSum = *ChecksumFile;
+    Header32 = (IMAGE_NT_HEADERS32 *)((char *)dos + dos->e_lfanew);
+    if (Header32->Signature != IMAGE_NT_SIGNATURE)
+#ifdef __REACTOS__
+      _SEH2_LEAVE;
+#else
+      break;
+#endif
+
+    ret = (PIMAGE_NT_HEADERS)Header32;
+
+    if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+      ChecksumFile = &Header32->OptionalHeader.CheckSum;
+    else if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+    {
+      Header64 = (IMAGE_NT_HEADERS64 *)Header32;
+      ChecksumFile = &Header64->OptionalHeader.CheckSum;
+    }
+    else
+#ifdef __REACTOS__
+      _SEH2_LEAVE;
+#else
+      break;
+#endif
+
+    HdrSum = *ChecksumFile;
+  }
+  __EXCEPT_PAGE_FAULT
+  {
+    /* nothing */
+  }
+  __ENDTRY
 
   /* Subtract image checksum from calculated checksum. */
   /* fix low word of checksum */
@@ -241,9 +261,9 @@ PIMAGE_NT_HEADERS WINAPI CheckSumMappedFile(
   CalcSum += FileLength;
 
   *CheckSum = CalcSum;
-  *HeaderSum = *ChecksumFile;
+  *HeaderSum = HdrSum;
 
-  return (PIMAGE_NT_HEADERS) Header32;
+  return ret;
 }
 
 /***********************************************************************

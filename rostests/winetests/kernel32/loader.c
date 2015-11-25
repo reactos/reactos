@@ -68,6 +68,7 @@ static void (WINAPI *pRtlReleasePebLock)(void);
 static PVOID    (WINAPI *pResolveDelayLoadedAPI)(PVOID, PCIMAGE_DELAYLOAD_DESCRIPTOR,
                                                  PDELAYLOAD_FAILURE_DLL_CALLBACK, PVOID,
                                                  PIMAGE_THUNK_DATA ThunkAddress,ULONG);
+static PVOID (WINAPI *pRtlImageDirectoryEntryToData)(HMODULE,BOOL,WORD,ULONG *);
 
 static PVOID RVAToAddr(DWORD_PTR rva, HMODULE module)
 {
@@ -374,6 +375,16 @@ static void test_Loader(void)
           1,
           0,
           { ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT } /* vista is more strict */
+        },
+        /* Minimal PE image that Windows7 is able to load: 268 bytes */
+        { 0x04,
+          0, 0xf0, /* optional header size just forces 0xf0 bytes to be written,
+                      0 or another number don't change the behaviour, what really
+                      matters is file size regardless of values in the headers */
+          0x04 /* also serves as e_lfanew in the truncated MZ header */, 0x04,
+          0x40, /* minimal image size that Windows7 accepts */
+          0,
+          { ERROR_SUCCESS }
         }
     };
     int i;
@@ -788,15 +799,6 @@ static void test_image_mapping(const char *dll_name, DWORD scn_page_access, BOOL
     size = 0;
     status = pNtMapViewOfSection(hmap, GetCurrentProcess(), &addr2, 0, 0, &offset,
                                  &size, 1 /* ViewShare */, 0, PAGE_READONLY);
-    /* FIXME: remove once Wine is fixed */
-    if (status != STATUS_IMAGE_NOT_AT_BASE)
-    {
-        todo_wine {
-        ok(status == STATUS_IMAGE_NOT_AT_BASE, "expected STATUS_IMAGE_NOT_AT_BASE, got %x\n", status);
-        ok(addr2 != 0, "mapped address should be valid\n");
-        }
-        goto wine_is_broken;
-    }
     ok(status == STATUS_IMAGE_NOT_AT_BASE, "expected STATUS_IMAGE_NOT_AT_BASE, got %x\n", status);
     ok(addr2 != 0, "mapped address should be valid\n");
     ok(addr2 != addr1, "mapped addresses should be different\n");
@@ -850,7 +852,6 @@ static void test_image_mapping(const char *dll_name, DWORD scn_page_access, BOOL
         ok(ret, "FreeLibrary error %d\n", GetLastError());
     }
 
-wine_is_broken:
     status = pNtUnmapViewOfSection(GetCurrentProcess(), addr1);
     ok(status == STATUS_SUCCESS, "NtUnmapViewOfSection error %x\n", status);
 
@@ -1411,7 +1412,8 @@ static DWORD WINAPI semaphore_thread_proc(void *param)
 
     while (1)
     {
-        trace("%04u: semaphore_thread_proc: still alive\n", GetCurrentThreadId());
+        if (winetest_debug > 1)
+            trace("%04u: semaphore_thread_proc: still alive\n", GetCurrentThreadId());
         if (WaitForSingleObject(stop_event, 50) != WAIT_TIMEOUT) break;
     }
 
@@ -1549,7 +1551,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %#x\n", ret);
         }
 
-        /* win7 doesn't allow to create a thread during process shutdown,
+        /* win7 doesn't allow creating a thread during process shutdown but
          * earlier Windows versions allow it.
          */
         noop_thread_started = 0;
@@ -1678,8 +1680,8 @@ todo_wine
         trace("dll: %p, DLL_THREAD_DETACH, %p\n", hinst, param);
 
         ret = pRtlDllShutdownInProgress();
-        /* win7 doesn't allow to create a thread during process shutdown,
-         * earlier Windows versions allow it, and DLL_THREAD_DETACH is
+        /* win7 doesn't allow creating a thread during process shutdown but
+         * earlier Windows versions allow it. In that case DLL_THREAD_DETACH is
          * sent on thread exit, but DLL_THREAD_ATTACH is never received.
          */
         if (noop_thread_started)
@@ -2702,7 +2704,7 @@ static void test_ResolveDelayLoadedAPI(void)
         return;
     }
 
-    delaydir = RtlImageDirectoryEntryToData(hlib, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &file_size);
+    delaydir = pRtlImageDirectoryEntryToData(hlib, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &file_size);
     if (!delaydir)
     {
         skip("haven't found section for delay import directory.\n");
@@ -2782,6 +2784,7 @@ START_TEST(loader)
     pLdrUnlockLoaderLock = (void *)GetProcAddress(ntdll, "LdrUnlockLoaderLock");
     pRtlAcquirePebLock = (void *)GetProcAddress(ntdll, "RtlAcquirePebLock");
     pRtlReleasePebLock = (void *)GetProcAddress(ntdll, "RtlReleasePebLock");
+    pRtlImageDirectoryEntryToData = (void *)GetProcAddress(ntdll, "RtlImageDirectoryEntryToData");
     pResolveDelayLoadedAPI = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "ResolveDelayLoadedAPI");
 
     GetSystemInfo( &si );

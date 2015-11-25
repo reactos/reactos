@@ -111,7 +111,7 @@ static void testQuery(void)
             pRtlMultiByteToUnicodeN( bn, sizeof(bn), NULL, test->val, strlen(test->val)+1 );
             ok( value.Length == strlen(test->val) * sizeof(WCHAR), "Wrong length %d for %s\n",
                 value.Length, test->var );
-            ok((value.Length == strlen(test->val) * sizeof(WCHAR) && memcmp(bv, bn, test->len*sizeof(WCHAR)) == 0) ||
+            ok((value.Length == strlen(test->val) * sizeof(WCHAR) && memcmp(bv, bn, value.Length) == 0) ||
 	       lstrcmpW(bv, bn) == 0, 
 	       "Wrong result for %s/%d\n", test->var, test->len);
             ok(bv[test->len] == '@', "Writing too far away in the buffer for %s/%d\n", test->var, test->len);

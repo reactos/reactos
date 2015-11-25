@@ -111,7 +111,7 @@ static void test_initvar( HMODULE hmsvcrt )
             "Wrong value for _osver %04x expected %04x\n",
             osver, osvi.dwBuildNumber);
     ok(osplatform == osvi.dwPlatformId,
-            "Wrong value for _osplatform %x exprected %x\n",
+            "Wrong value for _osplatform %x expected %x\n",
             osplatform, osvi.dwPlatformId);
 }
 
@@ -152,7 +152,7 @@ static void test___getmainargs(void)
         new_argc = *p___p___argc();
         new_argv = *p___p___argv();
         ok(new_argc == 4, "*__p___argc() = %d\n", new_argc);
-        ok(new_argv == argv, "*__p___argv() = %p, epxected %p\n", new_argv, argv);
+        ok(new_argv == argv, "*__p___argv() = %p, expected %p\n", new_argv, argv);
     }else {
         win_skip("__p___argc or __p___argv is not available\n");
     }
@@ -179,7 +179,7 @@ static void test___getmainargs(void)
         new_argc = *p___p___argc();
         new_argv = *p___p___argv();
         ok(new_argc == argc, "*__p___argc() = %d, expected %d\n", new_argc, argc);
-        ok(new_argv == argv, "*__p___argv() = %p, epxected %p\n", new_argv, argv);
+        ok(new_argv == argv, "*__p___argv() = %p, expected %p\n", new_argv, argv);
     }
 
     sprintf(filepath, "%swine_test/b", tmppath);

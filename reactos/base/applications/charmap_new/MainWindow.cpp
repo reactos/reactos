@@ -199,6 +199,8 @@ CCharMapWindow::OnCreate(_In_ HWND hDlg)
     if (!CreateFontComboBox())
         return FALSE;
 
+    ChangeMapFont();
+
     // Configure Richedit control for sending notification changes.
     DWORD evMask;
     evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
@@ -212,7 +214,9 @@ CCharMapWindow::OnCreate(_In_ HWND hDlg)
 }
 
 BOOL
-CCharMapWindow::OnSize(void)
+CCharMapWindow::OnSize(
+    _In_ WPARAM wParam
+    )
 {
     RECT rcClient, rcStatus;
     INT lvHeight, iStatusHeight;
@@ -227,14 +231,11 @@ CCharMapWindow::OnSize(void)
     // Get the full client rect
     GetClientRect(m_hMainWnd, &rcClient);
 
-    // Calculate the remaining height for the treeview
+    // Calculate the remaining height for the gridview
     lvHeight = rcClient.bottom - iStatusHeight;
 
-    // Resize the device view
-    //m_GridView->OnSize(0,
-    //                     iToolHeight,
-    //                     rcClient.right,
-    //                     lvHeight);
+    // Resize the grid view
+    SendMessageW(m_GridView->GetHwnd(), WM_SIZE, wParam, 0);
 
     return TRUE;
 }
@@ -281,6 +282,13 @@ CCharMapWindow::OnCommand(_In_ WPARAM wParam,
     switch (Msg)
     {
     case IDC_CHECK_ADVANCED:
+        break;
+
+    case IDC_FONTCOMBO:
+        if (HIWORD(wParam) == CBN_SELCHANGE)
+        {
+            ChangeMapFont();
+        }
         break;
 
     default:
@@ -343,7 +351,7 @@ CCharMapWindow::DialogProc(
 
     case WM_SIZE:
     {
-        return This->OnSize();
+        return This->OnSize(wParam);
     }
 
     case WM_NOTIFY:
@@ -504,4 +512,26 @@ CCharMapWindow::CreateFontComboBox()
                  0);
 
     return (ret == 1);
+}
+
+bool
+CCharMapWindow::ChangeMapFont(
+    )
+{
+    HWND hCombo;
+    hCombo = GetDlgItem(m_hMainWnd, IDC_FONTCOMBO);
+
+    INT Length;
+    Length = GetWindowTextLengthW(hCombo);
+    if (!Length) return false;
+
+    CAtlStringW FontName;
+    FontName.Preallocate(Length);
+
+    SendMessageW(hCombo,
+                 WM_GETTEXT,
+                 FontName.GetAllocLength(),
+                 (LPARAM)FontName.GetBuffer());
+
+    return m_GridView->SetFont(FontName);
 }

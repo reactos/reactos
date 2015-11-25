@@ -51,10 +51,10 @@ static BOOL eval_like( const WCHAR *lstr, const WCHAR *rstr )
         {
             while (*q == '%') q++;
             if (!*q) return TRUE;
-            while (*p && toupperW( p[1] ) != toupperW( q[1] )) p++;
-            if (!*p) return TRUE;
+            while (*p && *q && toupperW( *p ) == toupperW( *q )) { p++; q++; };
+            if (!*p && !*q) return TRUE;
         }
-        if (toupperW( *p++ ) != toupperW( *q++ )) return FALSE;
+        if (*q != '%' && toupperW( *p++ ) != toupperW( *q++ )) return FALSE;
     }
     return TRUE;
 }

@@ -1466,7 +1466,8 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
         }
     }
 
-    while ((!levels || (levels && levels[cnt+1] == levels[0])) && (pwcInChars[cnt] == Numeric_space) && cnt < cInChars)
+    while ((!levels || (levels && cnt+1 < cInChars && levels[cnt+1] == levels[0]))
+            && (cnt < cInChars && pwcInChars[cnt] == Numeric_space))
         cnt++;
 
     if (cnt == cInChars) /* All Spaces */
@@ -2956,6 +2957,15 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
             /* No mirroring done here */
             if (rtl) idx = cChars - 1 - i;
             pwOutGlyphs[i] = pwcChars[idx];
+
+            /* overwrite some basic control glyphs to blank */
+            if (psa && psa->eScript == Script_Control &&
+                pwcChars[idx] < ((ScriptCache *)*psc)->tm.tmFirstChar)
+            {
+                if (pwcChars[idx] == 0x0009 || pwcChars[idx] == 0x000A ||
+                    pwcChars[idx] == 0x000D || pwcChars[idx] >= 0x001C)
+                    pwOutGlyphs[i] = ((ScriptCache *)*psc)->sfp.wgBlank;
+            }
         }
     }
 

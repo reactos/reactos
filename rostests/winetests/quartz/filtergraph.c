@@ -180,6 +180,9 @@ static void test_graph_builder(void)
     ok(hr == S_OK, "CoCreateInstance failed with %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
 
+    hr = IGraphBuilder_AddFilter(pgraph, NULL, testFilterW);
+    ok(hr == E_POINTER, "IGraphBuilder_AddFilter returned %x\n", hr);
+
     /* add the two filters to the graph */
     hr = IGraphBuilder_AddFilter(pgraph, pF, testFilterW);
     ok(hr == S_OK, "failed to add pF to the graph: %x\n", hr);
@@ -203,6 +206,15 @@ static void test_graph_builder(void)
     ok(pF2 != NULL, "IGraphBuilder_FindFilterByName returned NULL\n");
     hr = IGraphBuilder_FindFilterByName(pgraph, testFilterW, NULL);
     ok(hr == E_POINTER, "IGraphBuilder_FindFilterByName returned %x\n", hr);
+
+    hr = IGraphBuilder_Connect(pgraph, NULL, pIn);
+    ok(hr == E_POINTER, "IGraphBuilder_Connect returned %x\n", hr);
+
+    hr = IGraphBuilder_Connect(pgraph, pIn, NULL);
+    ok(hr == E_POINTER, "IGraphBuilder_Connect returned %x\n", hr);
+
+    hr = IGraphBuilder_Connect(pgraph, pIn, pIn);
+    ok(hr == VFW_E_CANNOT_CONNECT, "IGraphBuilder_Connect returned %x\n", hr);
 
     if (pIn) IPin_Release(pIn);
     if (pEnum) IEnumPins_Release(pEnum);

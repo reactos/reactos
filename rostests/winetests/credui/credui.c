@@ -23,8 +23,16 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wincred.h"
+#include "sspi.h"
 
 #include "wine/test.h"
+
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeAuthIdentityAsStrings)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE,PCWSTR*,PCWSTR*,PCWSTR*);
+static void (SEC_ENTRY *pSspiFreeAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+static ULONG (SEC_ENTRY *pSspiPromptForCredentialsW)
+    (PCWSTR,void*,ULONG,PCWSTR,PSEC_WINNT_AUTH_IDENTITY_OPAQUE,PSEC_WINNT_AUTH_IDENTITY_OPAQUE*,int*,ULONG);
 
 static void test_CredUIPromptForCredentials(void)
 {
@@ -140,7 +148,71 @@ static void test_CredUIPromptForCredentials(void)
     }
 }
 
+static void test_SspiPromptForCredentials(void)
+{
+    static const WCHAR targetW[] = {'S','s','p','i','T','e','s','t',0};
+    static const WCHAR basicW[] = {'b','a','s','i','c',0};
+    ULONG ret;
+    SECURITY_STATUS status;
+    CREDUI_INFOW info;
+    PSEC_WINNT_AUTH_IDENTITY_OPAQUE id;
+    const WCHAR *username, *domain, *creds;
+    int save;
+
+    if (!pSspiPromptForCredentialsW || !pSspiFreeAuthIdentity)
+    {
+        win_skip( "SspiPromptForCredentialsW is missing\n" );
+        return;
+    }
+
+    info.cbSize         = sizeof(info);
+    info.hwndParent     = NULL;
+    info.pszMessageText = targetW;
+    info.pszCaptionText = basicW;
+    info.hbmBanner      = NULL;
+    ret = pSspiPromptForCredentialsW( NULL, &info, 0, basicW, NULL, &id, &save, 0 );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+
+    ret = pSspiPromptForCredentialsW( targetW, &info, 0, NULL, NULL, &id, &save, 0 );
+    ok( ret == ERROR_NO_SUCH_PACKAGE, "got %u\n", ret );
+
+    if (winetest_interactive)
+    {
+        id = NULL;
+        save = -1;
+        ret = pSspiPromptForCredentialsW( targetW, &info, 0, basicW, NULL, &id, &save, 0 );
+        ok( ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "got %u\n", ret );
+        if (ret == ERROR_SUCCESS)
+        {
+            ok( id != NULL, "id not set\n" );
+            ok( save == TRUE || save == FALSE, "got %d\n", save );
+
+            username = creds = NULL;
+            domain = (const WCHAR *)0xdeadbeef;
+            status = pSspiEncodeAuthIdentityAsStrings( id, &username, &domain, &creds );
+            ok( status == SEC_E_OK, "got %u\n", status );
+            ok( username != NULL, "username not set\n" );
+            ok( domain == NULL, "domain not set\n" );
+            ok( creds != NULL, "creds not set\n" );
+            pSspiFreeAuthIdentity( id );
+        }
+    }
+}
+
 START_TEST(credui)
 {
+    HMODULE hcredui = GetModuleHandleA( "credui.dll" ), hsecur32 = LoadLibraryA( "secur32.dll" );
+
+    if (hcredui)
+        pSspiPromptForCredentialsW = (void *)GetProcAddress( hcredui, "SspiPromptForCredentialsW" );
+    if (hsecur32)
+    {
+        pSspiEncodeAuthIdentityAsStrings = (void *)GetProcAddress( hsecur32, "SspiEncodeAuthIdentityAsStrings" );
+        pSspiFreeAuthIdentity = (void *)GetProcAddress( hsecur32, "SspiFreeAuthIdentity" );
+    }
+
     test_CredUIPromptForCredentials();
+    test_SspiPromptForCredentials();
+
+    FreeLibrary( hsecur32 );
 }

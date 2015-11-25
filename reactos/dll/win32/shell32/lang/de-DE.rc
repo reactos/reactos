@@ -793,8 +793,8 @@ BEGIN
     IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Konfigurationseinstellungen"
     IDS_LNK_FILE "Verknüpfung"
-    IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
+    IDS_PIF_FILE "NTVDM Programminformationsdatei"
+    IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
     IDS_VXD_FILE "Virtueller Gerätetreiber"
 

@@ -119,12 +119,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     {
         g_hRShell = hInstance;
 
-        /* HACK - the global constructors don't run, so I placement new them here */
-        new (&gModule) CRShellModule;
-        new (&gWinModule) CAtlWinModule;
-        new (&_AtlBaseModule) CAtlBaseModule;
-        new (&_AtlComModule) CAtlComModule;
-
         gModule.Init(NULL, hInstance, NULL);
         DisableThreadLibraryCalls(hInstance);
     }

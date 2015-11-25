@@ -61,7 +61,7 @@ CSR_API(BaseSrvGetTempFile)
 
     DPRINT("Returning: %u\n", GetTempFile->UniqueID);
 
-    return STATUS_SUCCESS;
+    return GetTempFile->UniqueID;
 }
 
 CSR_API(BaseSrvCreateProcess)
