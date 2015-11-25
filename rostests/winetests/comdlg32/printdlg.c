@@ -379,14 +379,16 @@ static void test_PrintDlgExW(void)
         return;
     }
 
-    /* Set CommDlgExtendedError != 0 */
-    PrintDlgA(NULL);
-    SetLastError(0xdeadbeef);
-    res = pPrintDlgExW(NULL);
-    ok( (res == E_INVALIDARG),
-        "got 0x%x with %u and %u (expected 'E_INVALIDARG')\n",
-        res, GetLastError(), CommDlgExtendedError());
-
+    if (0) /* Crashes on Win10 */
+    {
+        /* Set CommDlgExtendedError != 0 */
+        PrintDlgA(NULL);
+        SetLastError(0xdeadbeef);
+        res = pPrintDlgExW(NULL);
+        ok( (res == E_INVALIDARG),
+            "got 0x%x with %u and %u (expected 'E_INVALIDARG')\n",
+            res, GetLastError(), CommDlgExtendedError() );
+    }
 
     pDlg = HeapAlloc(GetProcessHeap(), 0, (sizeof(PRINTDLGEXW)) + 8);
     if (!pDlg) return;
