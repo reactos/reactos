@@ -328,6 +328,7 @@ CheckNameLegalDOS8Dot3W(
 {
     UNICODE_STRING Name;
     ANSI_STRING AnsiName;
+    BOOLEAN NameContainsSpaces;
 
     if(lpName == NULL ||
        (lpOemName == NULL && OemNameSize != 0) ||
@@ -348,7 +349,9 @@ CheckNameLegalDOS8Dot3W(
 
     *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
                                           (lpOemName ? &AnsiName : NULL),
-                                          (BOOLEAN*)pbNameContainsSpaces);
+                                          &NameContainsSpaces);
+    if (*pbNameLegal && pbNameContainsSpaces)
+        *pbNameContainsSpaces = NameContainsSpaces;
 
     return TRUE;
 }
@@ -370,6 +373,7 @@ CheckNameLegalDOS8Dot3A(
     UNICODE_STRING Name;
     ANSI_STRING AnsiName, AnsiInputName;
     NTSTATUS Status;
+    BOOLEAN NameContainsSpaces;
 
     if(lpName == NULL ||
        (lpOemName == NULL && OemNameSize != 0) ||
@@ -400,7 +404,9 @@ CheckNameLegalDOS8Dot3A(
 
     *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
                                           (lpOemName ? &AnsiName : NULL),
-                                          (BOOLEAN*)pbNameContainsSpaces);
+                                          &NameContainsSpaces);
+    if (*pbNameLegal && pbNameContainsSpaces)
+        *pbNameContainsSpaces = NameContainsSpaces;
 
     RtlFreeUnicodeString(&Name);
 
