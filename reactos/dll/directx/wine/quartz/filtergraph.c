@@ -155,7 +155,6 @@ typedef struct _IFilterGraphImpl {
     IUnknown *outer_unk;
     LONG ref;
     IUnknown *punkFilterMapper2;
-    IFilterMapper2 * pFilterMapper2;
     IBaseFilter ** ppFiltersInGraph;
     LPWSTR * pFilterNames;
     ULONG nFilters;
@@ -243,11 +242,11 @@ static HRESULT WINAPI FilterGraphInner_QueryInterface(IUnknown *iface, REFIID ri
         TRACE("   requesting IFilterMapper interface from aggregated filtermapper (%p)\n", *ppvObj);
         return IUnknown_QueryInterface(This->punkFilterMapper2, riid, ppvObj);
     } else if (IsEqualGUID(&IID_IFilterMapper2, riid)) {
-        *ppvObj = This->pFilterMapper2;
         TRACE("   returning IFilterMapper2 interface from aggregated filtermapper (%p)\n", *ppvObj);
+        return IUnknown_QueryInterface(This->punkFilterMapper2, riid, ppvObj);
     } else if (IsEqualGUID(&IID_IFilterMapper3, riid)) {
-        *ppvObj = This->pFilterMapper2;
         TRACE("   returning IFilterMapper3 interface from aggregated filtermapper (%p)\n", *ppvObj);
+        return IUnknown_QueryInterface(This->punkFilterMapper2, riid, ppvObj);
     } else if (IsEqualGUID(&IID_IGraphVersion, riid)) {
         *ppvObj = &This->IGraphConfig_iface;
         TRACE("   returning IGraphConfig interface (%p)\n", *ppvObj);
@@ -297,9 +296,6 @@ static ULONG WINAPI FilterGraphInner_Release(IUnknown *iface)
                 IUnknown_Release(This->ItfCacheEntries[i].iface);
         }
 
-        /* AddRef on controlling IUnknown, to compensate for Release of cached IFilterMapper2 */
-        IUnknown_AddRef(This->outer_unk);
-        IFilterMapper2_Release(This->pFilterMapper2);
         IUnknown_Release(This->punkFilterMapper2);
 
         if (This->pSite) IUnknown_Release(This->pSite);
@@ -888,6 +884,7 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
     CLSID FilterCLSID;
     PIN_DIRECTION dir;
     unsigned int i = 0;
+    IFilterMapper2 *pFilterMapper2 = NULL;
 
     TRACE("(%p/%p)->(%p, %p)\n", This, iface, ppinOut, ppinIn);
 
@@ -977,10 +974,16 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
     TRACE("MajorType %s\n", debugstr_guid(&mt->majortype));
     TRACE("SubType %s\n", debugstr_guid(&mt->subtype));
 
+    hr = IUnknown_QueryInterface(This->punkFilterMapper2, &IID_IFilterMapper2, (void**)&pFilterMapper2);
+    if (FAILED(hr)) {
+        WARN("Unable to get IFilterMapper2 (%x)\n", hr);
+        goto out;
+    }
+
     /* Try to find a suitable filter that can connect to the pin to render */
     tab[0] = mt->majortype;
     tab[1] = mt->subtype;
-    hr = IFilterMapper2_EnumMatchingFilters(This->pFilterMapper2, &pEnumMoniker, 0, FALSE, MERIT_UNLIKELY, TRUE, 1, tab, NULL, NULL, FALSE, FALSE, 0, NULL, NULL, NULL);
+    hr = IFilterMapper2_EnumMatchingFilters(pFilterMapper2, &pEnumMoniker, 0, FALSE, MERIT_UNLIKELY, TRUE, 1, tab, NULL, NULL, FALSE, FALSE, 0, NULL, NULL, NULL);
     if (FAILED(hr)) {
         WARN("Unable to enum filters (%x)\n", hr);
         goto out;
@@ -1147,7 +1150,11 @@ error:
         CoTaskMemFree(ppins);
     }
 
+    IEnumMoniker_Release(pEnumMoniker);
+
 out:
+    if (pFilterMapper2)
+        IFilterMapper2_Release(pFilterMapper2);
     if (penummt)
         IEnumMediaTypes_Release(penummt);
     if (mt)
@@ -1243,6 +1250,7 @@ static HRESULT WINAPI FilterGraph2_Render(IFilterGraph2 *iface, IPin *ppinOut)
     ULONG nb;
     IMoniker* pMoniker;
     INT x;
+    IFilterMapper2 *pFilterMapper2 = NULL;
 
     TRACE("(%p/%p)->(%p)\n", This, iface, ppinOut);
 
@@ -1352,10 +1360,20 @@ static HRESULT WINAPI FilterGraph2_Render(IFilterGraph2 *iface, IPin *ppinOut)
                 continue;
             }
 
+            if (pFilterMapper2 == NULL)
+            {
+                hr = IUnknown_QueryInterface(This->punkFilterMapper2, &IID_IFilterMapper2, (void**)&pFilterMapper2);
+                if (FAILED(hr))
+                {
+                    WARN("Unable to query IFilterMapper2 (%x)\n", hr);
+                    break;
+                }
+            }
+
             /* Try to find a suitable renderer with the same media type */
             tab[0] = mt->majortype;
             tab[1] = mt->subtype;
-            hr = IFilterMapper2_EnumMatchingFilters(This->pFilterMapper2, &pEnumMoniker, 0, FALSE, MERIT_UNLIKELY, TRUE, 1, tab, NULL, NULL, FALSE, FALSE, 0, NULL, NULL, NULL);
+            hr = IFilterMapper2_EnumMatchingFilters(pFilterMapper2, &pEnumMoniker, 0, FALSE, MERIT_UNLIKELY, TRUE, 1, tab, NULL, NULL, FALSE, FALSE, 0, NULL, NULL, NULL);
             if (FAILED(hr))
             {
                 WARN("Unable to enum filters (%x)\n", hr);
@@ -1468,6 +1486,9 @@ error:
             break;
         hr = S_OK;
     }
+
+    if (pFilterMapper2)
+        IFilterMapper2_Release(pFilterMapper2);
 
     IEnumMediaTypes_Release(penummt);
     return hr;
@@ -5683,14 +5704,6 @@ HRESULT FilterGraph_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     /* create Filtermapper aggregated. */
     hr = CoCreateInstance(&CLSID_FilterMapper2, fimpl->outer_unk, CLSCTX_INPROC_SERVER,
             &IID_IUnknown, (void**)&fimpl->punkFilterMapper2);
-
-    if (SUCCEEDED(hr))
-        hr = IUnknown_QueryInterface(fimpl->punkFilterMapper2, &IID_IFilterMapper2,
-                (void**)&fimpl->pFilterMapper2);
-
-    if (SUCCEEDED(hr))
-        /* Release controlling IUnknown - compensate refcount increase from caching IFilterMapper2 interface. */
-        IUnknown_Release(fimpl->outer_unk);
 
     if (FAILED(hr)) {
         ERR("Unable to create filter mapper (%x)\n", hr);

@@ -1886,6 +1886,98 @@ static void test_render_filter_priority(void)
     ok(hr == S_OK, "CoRevokeClassObject failed with %08x\n", hr);
 }
 
+typedef struct IUnknownImpl
+{
+    IUnknown IUnknown_iface;
+    int AddRef_called;
+    int Release_called;
+} IUnknownImpl;
+
+static IUnknownImpl *IUnknownImpl_from_iface(IUnknown * iface)
+{
+    return CONTAINING_RECORD(iface, IUnknownImpl, IUnknown_iface);
+}
+
+static HRESULT WINAPI IUnknownImpl_QueryInterface(IUnknown * iface, REFIID riid, LPVOID * ppv)
+{
+    ok(0, "QueryInterface should not be called for %s\n", wine_dbgstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI IUnknownImpl_AddRef(IUnknown * iface)
+{
+    IUnknownImpl *This = IUnknownImpl_from_iface(iface);
+    This->AddRef_called++;
+    return 2;
+}
+
+static ULONG WINAPI IUnknownImpl_Release(IUnknown * iface)
+{
+    IUnknownImpl *This = IUnknownImpl_from_iface(iface);
+    This->Release_called++;
+    return 1;
+}
+
+static CONST_VTBL IUnknownVtbl IUnknownImpl_Vtbl =
+{
+    IUnknownImpl_QueryInterface,
+    IUnknownImpl_AddRef,
+    IUnknownImpl_Release
+};
+
+static void test_aggregate_filter_graph(void)
+{
+    HRESULT hr;
+    IUnknown *pgraph;
+    IUnknown *punk;
+    IUnknownImpl unk_outer = { { &IUnknownImpl_Vtbl }, 0, 0 };
+
+    hr = CoCreateInstance(&CLSID_FilterGraph, &unk_outer.IUnknown_iface, CLSCTX_INPROC_SERVER,
+                          &IID_IUnknown, (void **)&pgraph);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(pgraph != &unk_outer.IUnknown_iface, "pgraph = %p, expected not %p\n", pgraph, &unk_outer.IUnknown_iface);
+
+    hr = IUnknown_QueryInterface(pgraph, &IID_IUnknown, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 0, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 0, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pgraph, &IID_IFilterMapper, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pgraph, &IID_IFilterMapper2, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pgraph, &IID_IFilterMapper3, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+
+    IUnknown_Release(pgraph);
+}
+
 START_TEST(filtergraph)
 {
     HRESULT hr;
@@ -1904,5 +1996,6 @@ START_TEST(filtergraph)
     test_mediacontrol();
     test_filter_graph2();
     test_render_filter_priority();
+    test_aggregate_filter_graph();
     CoUninitialize();
 }
