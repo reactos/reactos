@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Napaka: Napačen parameter v ukazni vrstici\n"
     STRING_NO_REMOTE, "Napaka: Na morem dodati ključa na oddaljen računalnik\n"
     STRING_CANNOT_FIND, "Napaka: Sistem ni našel zahtevanega ključa ali vrednosti\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

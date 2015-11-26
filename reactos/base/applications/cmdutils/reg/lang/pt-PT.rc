@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Erro: Parâmetros da linha de comandos inválidos\n"
     STRING_NO_REMOTE, "Erro: Incapaz de adicionar chaves à máquina remota\n"
     STRING_CANNOT_FIND, "Erro: O sistema foi incapaz de encontrar a chave de registo ou valor especificado\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

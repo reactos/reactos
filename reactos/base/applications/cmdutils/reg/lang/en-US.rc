@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Error: Invalid command line parameters\n"
     STRING_NO_REMOTE, "Error: Unable to access remote machine\n"
     STRING_CANNOT_FIND, "Error: The system was unable to find the specified registry key or value\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

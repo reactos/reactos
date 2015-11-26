@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Error: parámetros en línea de comandos no válidos\n"
     STRING_NO_REMOTE, "Error: No se pueden agregar las claves al equipo remoto\n"
     STRING_CANNOT_FIND, "Error: El sistema no pudo encontrar la clave o el valor del Registro especificado\n"
-    STRING_ERROR, "Error inesperado: "
     STRING_UNSUPPORTED_TYPE, "Error: Tipo no soportado\n"
-    STRING_INVALID_DWORD, "Error: /d debe de ser un número positivo\n"
 }

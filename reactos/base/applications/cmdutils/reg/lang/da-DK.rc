@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Fejl: Ugyldige kommando linje parametre\n"
     STRING_NO_REMOTE, "Fejl: Kunne ikke tilføje nøgler til fjern maskinen\n"
     STRING_CANNOT_FIND, "Fejl: Systemet kunne ikke finde, den angivet registrerings nøgle eller værdi\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }
