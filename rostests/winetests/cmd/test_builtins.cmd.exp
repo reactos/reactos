@@ -42,6 +42,18 @@ word
 @pwd@>echo :word@space@
 :word
 
+@pwd@>echo/
+
+
+@pwd@>echo /@space@
+/
+
+@pwd@>echo/word
+word
+
+@pwd@>echo /word@space@
+/word
+
 @pwd@>echo off now@space@
 off now
 
@@ -93,6 +105,10 @@ word
 :
 word
 :word
+
+/
+word
+/word
 on again
 word@space@
 word@space@@space@
@@ -438,6 +454,9 @@ Passed: file size check on subdir\a.a [8]@or_broken@Skipping file size check on 
 if seems to work
 else seems to work
 if seems not to detect /c as parameter
+else if seems to work
+else if seems to work
+else if seems to work
 --- case sensitivity with and without /i option
 if seems to default to case sensitivity
 if /i seems to work
