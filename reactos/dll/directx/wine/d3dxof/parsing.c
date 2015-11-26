@@ -1337,7 +1337,8 @@ _exit:
             return FALSE;
         }
 
-        buf->pxo = buf->pxo->children[buf->pxo->nb_children] = &buf->pxo_tab[buf->pxo->root->nb_subobjects++];
+        buf->pxo = buf->pxo->children[buf->pxo->nb_children] = &buf->pxo_tab[buf->pxo->root->nb_subobjects];
+        pxo->root->nb_subobjects++;
 
         TRACE("Enter optional %s\n", (char*)buf->value);
         buf->level++;
