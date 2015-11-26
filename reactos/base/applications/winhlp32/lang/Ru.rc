@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
  }
  POPUP "&Настройки" {
+  MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
   MENUITEM "История",		MNID_OPTS_HISTORY
   POPUP    "Шрифт"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "&Справка" {
    MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
-   MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
    MENUITEM "&Информация...", MNID_HELP_ABOUT
  }
 }

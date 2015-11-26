@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Aanmaken...", MNID_BKMK_DEFINE
  }
  POPUP "&Opties" {
+  MENUITEM "Altijd &zichtbaar", MNID_HELP_HELPTOP
   MENUITEM "Geschiedenis",		MNID_OPTS_HISTORY
   POPUP    "Lettertype"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "&Help" {
    MENUITEM "Hulp &bij help", MNID_HELP_HELPON
-   MENUITEM "Altijd &zichtbaar", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }

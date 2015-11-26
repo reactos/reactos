@@ -239,7 +239,7 @@ reactos/base/applications/extrac32          # Synced to WineStaging-1.7.47
 reactos/base/applications/iexplore          # Synced to WineStaging-1.7.47
 reactos/base/applications/notepad           # Forked at Wine-20041201
 reactos/base/applications/regedit           # Out of sync
-reactos/base/applications/winhlp32          # Synced to WineStaging-1.7.37
+reactos/base/applications/winhlp32          # Synced to WineStaging-1.7.55
 reactos/base/applications/wordpad           # Synced to WineStaging-1.7.37
 reactos/base/services/rpcss                 # Synced to WineStaging-1.7.37
 reactos/base/system/expand                  # Synced to WineStaging-1.7.47

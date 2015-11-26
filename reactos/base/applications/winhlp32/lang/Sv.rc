@@ -43,6 +43,7 @@ MAIN_MENU MENU
    MENUITEM "&Definiera...", MNID_BKMK_DEFINE
  }
  POPUP "A&lternativ" {
+  MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
   MENUITEM "Historik",		MNID_OPTS_HISTORY
   POPUP    "Typsnitt"
   BEGIN
@@ -53,7 +54,6 @@ MAIN_MENU MENU
  }
  POPUP "&Hjälp" {
    MENUITEM "Hjälp &för hjälp", MNID_HELP_HELPON
-   MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }

@@ -39,6 +39,7 @@ MAIN_MENU MENU
    MENUITEM "&Задай...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -49,7 +50,6 @@ MAIN_MENU MENU
  }
  POPUP "&Помощ" {
    MENUITEM "Помощ &за помощта", MNID_HELP_HELPON
-   MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
    MENUITEM "&Информация...", MNID_HELP_ABOUT
  }
 }

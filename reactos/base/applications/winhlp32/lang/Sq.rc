@@ -41,6 +41,7 @@ MAIN_MENU MENU
    MENUITEM "Percakto...", MNID_BKMK_DEFINE
  }
  POPUP "&Opsione" {
+  MENUITEM "Perhere lart", MNID_HELP_HELPTOP
   MENUITEM "Histori",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -51,7 +52,6 @@ MAIN_MENU MENU
  }
  POPUP "Ndihmë" {
    MENUITEM "Ndihmë &per ndihmen", MNID_HELP_HELPON
-   MENUITEM "Perhere lart", MNID_HELP_HELPTOP
    MENUITEM "Rreth ndihmes Wine", MNID_HELP_ABOUT
  }
 }

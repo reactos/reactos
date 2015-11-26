@@ -39,6 +39,7 @@ MAIN_MENU MENU
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Innstillinger" {
+  MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
   MENUITEM "Historikk",		MNID_OPTS_HISTORY
   POPUP    "Skriftstørrelse"
   BEGIN
@@ -49,7 +50,6 @@ MAIN_MENU MENU
  }
  POPUP "&Hjelp" {
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
-   MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
    MENUITEM "&Informasjon...", MNID_HELP_ABOUT
  }
 }

@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Definir...",  MNID_BKMK_DEFINE
  }
  POPUP "&Opciones" {
+  MENUITEM "&Siempre visible",               MNID_HELP_HELPTOP
   MENUITEM "Historial",     MNID_OPTS_HISTORY
   POPUP    "Tamaño de letra"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "A&yuda" {
    MENUITEM "&Ayuda sobre la ayuda",          MNID_HELP_HELPON
-   MENUITEM "&Siempre visible",               MNID_HELP_HELPTOP
    MENUITEM "&Acerca de la Ayuda de Wine...", MNID_HELP_ABOUT
  }
 }
