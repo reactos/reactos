@@ -107,6 +107,7 @@ DEFINE_EXPECT(Next);
 DEFINE_EXPECT(GetWindow);
 DEFINE_EXPECT(GetUIBehavior);
 DEFINE_EXPECT(EnableModeless);
+DEFINE_EXPECT(OnScriptError);
 
 #define DISPID_GLOBAL_REPORTSUCCESS 1000
 #define DISPID_GLOBAL_TRACE         1001
@@ -145,6 +146,7 @@ static const char *test_name = "(null)";
 static int test_counter;
 static SCRIPTUICHANDLING uic_handling = SCRIPTUICHANDLING_NOUIERROR;
 static IDispatchEx testObj;
+static HRESULT onerror_hres = E_NOTIMPL;
 
 static BSTR a2bstr(const char *str)
 {
@@ -1630,7 +1632,12 @@ static HRESULT WINAPI ActiveScriptSite_OnStateChange(IActiveScriptSite *iface, S
 
 static HRESULT WINAPI ActiveScriptSite_OnScriptError(IActiveScriptSite *iface, IActiveScriptError *pscripterror)
 {
-    return E_NOTIMPL;
+    HRESULT hr = onerror_hres;
+    CHECK_EXPECT(OnScriptError);
+
+    onerror_hres = E_NOTIMPL;
+
+    return hr;
 }
 
 static HRESULT WINAPI ActiveScriptSite_OnEnterScript(IActiveScriptSite *iface)
@@ -1934,18 +1941,22 @@ static void test_msgbox(void)
     SET_EXPECT(GetUIBehavior);
     SET_EXPECT(GetWindow);
     SET_EXPECT(EnableModeless);
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("MsgBox \"testing...\"");
     ok(FAILED(hres), "script not failed\n");
     CHECK_CALLED(GetUIBehavior);
     CHECK_CALLED(GetWindow);
     CHECK_CALLED(EnableModeless);
+    todo_wine CHECK_CALLED(OnScriptError);
 
     uic_handling = SCRIPTUICHANDLING_NOUIERROR;
 
     SET_EXPECT(GetUIBehavior);
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("MsgBox \"testing...\"");
     ok(FAILED(hres), "script not failed\n");
     CHECK_CALLED(GetUIBehavior);
+    todo_wine CHECK_CALLED(OnScriptError);
 }
 
 static HRESULT test_global_vars_ref(BOOL use_close)
@@ -2191,8 +2202,10 @@ static void run_tests(void)
     parse_htmlscript_a("<!--\ndim x\nx=1\n-->\n");
     parse_htmlscript_a("<!--\ndim x\n-->\n<!--\nx=1\n-->\n");
 
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("<!--");
     ok(FAILED(hres), "script didn't fail\n");
+    todo_wine CHECK_CALLED(OnScriptError);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
@@ -2215,19 +2228,39 @@ static void run_tests(void)
     test_global_vars_ref(TRUE);
     test_global_vars_ref(FALSE);
 
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("throwInt(&h80080008&)");
     ok(hres == 0x80080008, "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
 
     /* DISP_E_BADINDEX */
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("throwInt(&h8002000b&)");
     ok(hres == MAKE_VBSERROR(9), "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
 
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("throwInt(&h800a0009&)");
     ok(hres == MAKE_VBSERROR(9), "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
+
+    onerror_hres = S_OK;
+    SET_EXPECT(OnScriptError);
+    hres = parse_script_ar("throwInt(&h800a0009&)");
+    todo_wine ok(hres == SCRIPT_E_REPORTED, "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
 
     /* E_NOTIMPL */
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("throwInt(&h80004001&)");
     ok(hres == MAKE_VBSERROR(445), "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
+
+    onerror_hres = S_OK;
+    SET_EXPECT(OnScriptError);
+    hres = parse_script_ar("throwInt(&h80004001&)");
+    todo_wine ok(hres == SCRIPT_E_REPORTED, "hres = %08x\n", hres);
+    todo_wine CHECK_CALLED(OnScriptError);
 
     SET_EXPECT(global_testoptionalarg_i);
     parse_script_a("call testOptionalArg(1,,2)");
@@ -2262,8 +2295,10 @@ static void run_tests(void)
     parse_script_a("x = y\n"
                    "Call ok(getVT(x) = \"VT_EMPTY*\", \"getVT(x) = \" & getVT(x))\n"
                    "Call ok(getVT(y) = \"VT_EMPTY*\", \"getVT(y) = \" & getVT(y))");
+    SET_EXPECT(OnScriptError);
     hres = parse_script_ar("x = y(\"a\")");
     ok(FAILED(hres), "script didn't fail\n");
+    todo_wine CHECK_CALLED(OnScriptError);
 
     run_from_res("lang.vbs");
     run_from_res("api.vbs");
