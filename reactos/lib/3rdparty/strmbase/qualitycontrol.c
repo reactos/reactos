@@ -38,9 +38,9 @@ HRESULT QualityControlImpl_Create(IPin *input, IBaseFilter *self, QualityControl
     return S_OK;
 }
 
-HRESULT QualityControlImpl_Destroy(QualityControlImpl *This)
+void QualityControlImpl_Destroy(QualityControlImpl *This)
 {
-    return HeapFree(GetProcessHeap(),0,This);
+    HeapFree(GetProcessHeap(),0,This);
 }
 
 HRESULT WINAPI QualityControlImpl_QueryInterface(IQualityControl *iface, REFIID riid, void **ppv) {

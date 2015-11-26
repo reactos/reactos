@@ -36,7 +36,6 @@ static LONG server_locks = 0;
 /*
  * defines and constants
  */
-#define MAX_KEY_LEN  260
 
 static const WCHAR clsid_keyname[] = {'C','L','S','I','D',0 };
 static const WCHAR ips32_keyname[] = {'I','n','P','r','o','c','S','e','r','v','e','r','3','2',0};
@@ -110,7 +109,7 @@ static HRESULT SetupRegisterAllClasses(const FactoryTemplate * pList, int num,
                                         pList->m_Name, szFileName,
                                         ips32_keyname, tmodel_both);
             else
-                hr = SHDeleteKeyW(hkey, szCLSID);
+                hr = RegDeleteTreeW(hkey, szCLSID);
         }
     }
     RegCloseKey(hkey);

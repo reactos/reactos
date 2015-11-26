@@ -63,7 +63,7 @@ typedef struct QualityControlImpl {
 } QualityControlImpl;
 
 HRESULT QualityControlImpl_Create(IPin *input, IBaseFilter *self, QualityControlImpl **ppv);
-HRESULT QualityControlImpl_Destroy(QualityControlImpl *This);
+void QualityControlImpl_Destroy(QualityControlImpl *This);
 HRESULT WINAPI QualityControlImpl_QueryInterface(IQualityControl *iface, REFIID riid, void **ppv);
 ULONG WINAPI QualityControlImpl_AddRef(IQualityControl *iface);
 ULONG WINAPI QualityControlImpl_Release(IQualityControl *iface);

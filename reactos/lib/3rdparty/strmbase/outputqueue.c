@@ -59,7 +59,6 @@ HRESULT WINAPI OutputQueue_Construct(
     OutputQueue **ppOutputQueue )
 
 {
-    HRESULT hr = S_OK;
     BOOL threaded = FALSE;
     DWORD tid;
 
@@ -92,7 +91,7 @@ HRESULT WINAPI OutputQueue_Construct(
 
     EnterCriticalSection(&This->csQueue);
     if (bAuto && pInputPin->pMemInputPin)
-        threaded = IMemInputPin_ReceiveCanBlock(pInputPin->pMemInputPin);
+        threaded = IMemInputPin_ReceiveCanBlock(pInputPin->pMemInputPin) == S_OK;
     else
         threaded = bQueue;
 
@@ -107,7 +106,7 @@ HRESULT WINAPI OutputQueue_Construct(
     }
     LeaveCriticalSection(&This->csQueue);
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT WINAPI OutputQueue_Destroy(OutputQueue *pOutputQueue)
