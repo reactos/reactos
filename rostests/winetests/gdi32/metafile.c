@@ -3361,6 +3361,39 @@ static void test_emf_polybezier(void)
     DeleteEnhMetaFile(hemf);
 }
 
+static void test_emf_GetPath(void)
+{
+    HDC hdcMetafile;
+    HENHMETAFILE hemf;
+    BOOL ret;
+    int size;
+
+    SetLastError(0xdeadbeef);
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    BeginPath(hdcMetafile);
+    ret = MoveToEx(hdcMetafile, 50, 50, NULL);
+    ok( ret, "MoveToEx error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 50, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 150, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 150, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 50, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    EndPath(hdcMetafile);
+
+    size = GetPath(hdcMetafile, NULL, NULL, 0);
+    todo_wine ok( size == 5, "GetPath returned %d.\n", size);
+
+    hemf = CloseEnhMetaFile(hdcMetafile);
+    ok(hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    DeleteEnhMetaFile(hemf);
+}
+
 START_TEST(metafile)
 {
     init_function_pointers();
@@ -3374,6 +3407,7 @@ START_TEST(metafile)
     test_emf_ExtTextOut_on_path();
     test_emf_clipping();
     test_emf_polybezier();
+    test_emf_GetPath();
 
     /* For win-format metafiles (mfdrv) */
     test_mf_SaveDC();
