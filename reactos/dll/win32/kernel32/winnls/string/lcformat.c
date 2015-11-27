@@ -3,7 +3,7 @@
  *
  * Copyright 1995 Martin von Loewis
  * Copyright 1998 David Lee Lambert
- * Copyright 2000 Julio C√©sar G√°zquez
+ * Copyright 2000 Julio César Gázquez
  * Copyright 2003 Jon Griffiths
  * Copyright 2005 Dmitry Timoshkov
  *
@@ -713,7 +713,7 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
   }
   cchWritten++; /* Include terminating NUL */
 
-  TRACE("returning length=%d, ouput=%s\n", cchWritten, debugstr_w(lpStr));
+  TRACE("returning length=%d, output=%s\n", cchWritten, debugstr_w(lpStr));
   return cchWritten;
 
 overrun:
@@ -1663,6 +1663,98 @@ error:
  *        alternate calendars is determined.
  */
 
+enum enum_callback_type {
+    CALLBACK_ENUMPROC,
+    CALLBACK_ENUMPROCEX,
+    CALLBACK_ENUMPROCEXEX
+};
+
+struct enumdateformats_context {
+    enum enum_callback_type type;  /* callback kind */
+    union {
+        DATEFMT_ENUMPROCW    callback;     /* user callback pointer */
+        DATEFMT_ENUMPROCEXW  callbackex;
+        DATEFMT_ENUMPROCEXEX callbackexex;
+    } u;
+    LCID   lcid;    /* locale of interest */
+    DWORD  flags;
+    LPARAM lParam;
+    BOOL   unicode; /* A vs W callback type, only for regular and Ex callbacks */
+};
+
+/******************************************************************************
+ * NLS_EnumDateFormats <internal>
+ * Enumerates date formats for a specified locale.
+ *
+ * PARAMS
+ *    ctxt [I] enumeration context, see 'struct enumdateformats_context'
+ *
+ * RETURNS
+ *    Success: TRUE.
+ *    Failure: FALSE. Use GetLastError() to determine the cause.
+ */
+static BOOL NLS_EnumDateFormats(const struct enumdateformats_context *ctxt)
+{
+    WCHAR bufW[256];
+    char bufA[256];
+    LCTYPE lctype;
+    CALID cal_id;
+    INT ret;
+
+    if (!ctxt->u.callback)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!GetLocaleInfoW(ctxt->lcid, LOCALE_ICALENDARTYPE|LOCALE_RETURN_NUMBER, (LPWSTR)&cal_id, sizeof(cal_id)/sizeof(WCHAR)))
+        return FALSE;
+
+    switch (ctxt->flags & ~LOCALE_USE_CP_ACP)
+    {
+    case 0:
+    case DATE_SHORTDATE:
+        lctype = LOCALE_SSHORTDATE;
+        break;
+    case DATE_LONGDATE:
+        lctype = LOCALE_SLONGDATE;
+        break;
+    case DATE_YEARMONTH:
+        lctype = LOCALE_SYEARMONTH;
+        break;
+    default:
+        FIXME("Unknown date format (0x%08x)\n", ctxt->flags);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    lctype |= ctxt->flags & LOCALE_USE_CP_ACP;
+    if (ctxt->unicode)
+        ret = GetLocaleInfoW(ctxt->lcid, lctype, bufW, sizeof(bufW)/sizeof(bufW[0]));
+    else
+        ret = GetLocaleInfoA(ctxt->lcid, lctype, bufA, sizeof(bufA)/sizeof(bufA[0]));
+
+    if (ret)
+    {
+        switch (ctxt->type)
+        {
+        case CALLBACK_ENUMPROC:
+            ctxt->u.callback(ctxt->unicode ? bufW : (WCHAR*)bufA);
+            break;
+        case CALLBACK_ENUMPROCEX:
+            ctxt->u.callbackex(ctxt->unicode ? bufW : (WCHAR*)bufA, cal_id);
+            break;
+        case CALLBACK_ENUMPROCEXEX:
+            ctxt->u.callbackexex(bufW, cal_id, ctxt->lParam);
+            break;
+        default:
+            ;
+        }
+    }
+
+    return TRUE;
+}
+
 /**************************************************************************
  *              EnumDateFormatsExA    (KERNEL32.@)
  *
@@ -1671,42 +1763,15 @@ error:
  */
 BOOL WINAPI EnumDateFormatsExA(DATEFMT_ENUMPROCEXA proc, LCID lcid, DWORD flags)
 {
-    CALID cal_id;
-    char buf[256];
+    struct enumdateformats_context ctxt;
 
-    if (!proc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    ctxt.type = CALLBACK_ENUMPROCEX;
+    ctxt.u.callbackex = (DATEFMT_ENUMPROCEXW)proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = FALSE;
 
-    if (!GetLocaleInfoW(lcid, LOCALE_ICALENDARTYPE|LOCALE_RETURN_NUMBER, (LPWSTR)&cal_id, sizeof(cal_id)/sizeof(WCHAR)))
-        return FALSE;
-
-    switch (flags & ~LOCALE_USE_CP_ACP)
-    {
-    case 0:
-    case DATE_SHORTDATE:
-        if (GetLocaleInfoA(lcid, LOCALE_SSHORTDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    case DATE_LONGDATE:
-        if (GetLocaleInfoA(lcid, LOCALE_SLONGDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    case DATE_YEARMONTH:
-        if (GetLocaleInfoA(lcid, LOCALE_SYEARMONTH | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    default:
-        FIXME("Unknown date format (%d)\n", flags);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
+    return NLS_EnumDateFormats(&ctxt);
 }
 
 /**************************************************************************
@@ -1714,42 +1779,15 @@ BOOL WINAPI EnumDateFormatsExA(DATEFMT_ENUMPROCEXA proc, LCID lcid, DWORD flags)
  */
 BOOL WINAPI EnumDateFormatsExW(DATEFMT_ENUMPROCEXW proc, LCID lcid, DWORD flags)
 {
-    CALID cal_id;
-    WCHAR buf[256];
+    struct enumdateformats_context ctxt;
 
-    if (!proc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    ctxt.type = CALLBACK_ENUMPROCEX;
+    ctxt.u.callbackex = proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = TRUE;
 
-    if (!GetLocaleInfoW(lcid, LOCALE_ICALENDARTYPE|LOCALE_RETURN_NUMBER, (LPWSTR)&cal_id, sizeof(cal_id)/sizeof(WCHAR)))
-        return FALSE;
-
-    switch (flags & ~LOCALE_USE_CP_ACP)
-    {
-    case 0:
-    case DATE_SHORTDATE:
-        if (GetLocaleInfoW(lcid, LOCALE_SSHORTDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    case DATE_LONGDATE:
-        if (GetLocaleInfoW(lcid, LOCALE_SLONGDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    case DATE_YEARMONTH:
-        if (GetLocaleInfoW(lcid, LOCALE_SYEARMONTH | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf, cal_id);
-        break;
-
-    default:
-        FIXME("Unknown date format (%d)\n", flags);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
+    return NLS_EnumDateFormats(&ctxt);
 }
 
 /**************************************************************************
@@ -1760,38 +1798,15 @@ BOOL WINAPI EnumDateFormatsExW(DATEFMT_ENUMPROCEXW proc, LCID lcid, DWORD flags)
  */
 BOOL WINAPI EnumDateFormatsA(DATEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
 {
-    char buf[256];
+    struct enumdateformats_context ctxt;
 
-    if (!proc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    ctxt.type = CALLBACK_ENUMPROC;
+    ctxt.u.callback = (DATEFMT_ENUMPROCW)proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = FALSE;
 
-    switch (flags & ~LOCALE_USE_CP_ACP)
-    {
-    case 0:
-    case DATE_SHORTDATE:
-        if (GetLocaleInfoA(lcid, LOCALE_SSHORTDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
-
-    case DATE_LONGDATE:
-        if (GetLocaleInfoA(lcid, LOCALE_SLONGDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
-
-    case DATE_YEARMONTH:
-        if (GetLocaleInfoA(lcid, LOCALE_SYEARMONTH | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
-
-    default:
-        FIXME("Unknown date format (%d)\n", flags);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
+    return NLS_EnumDateFormats(&ctxt);
 }
 
 /**************************************************************************
@@ -1799,37 +1814,77 @@ BOOL WINAPI EnumDateFormatsA(DATEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
  */
 BOOL WINAPI EnumDateFormatsW(DATEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
 {
-    WCHAR buf[256];
+    struct enumdateformats_context ctxt;
 
-    if (!proc)
+    ctxt.type = CALLBACK_ENUMPROC;
+    ctxt.u.callback = proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = TRUE;
+
+    return NLS_EnumDateFormats(&ctxt);
+}
+
+struct enumtimeformats_context {
+    enum enum_callback_type type;  /* callback kind */
+    union {
+        TIMEFMT_ENUMPROCW  callback;     /* user callback pointer */
+        TIMEFMT_ENUMPROCEX callbackex;
+    } u;
+    LCID   lcid;    /* locale of interest */
+    DWORD  flags;
+    LPARAM lParam;
+    BOOL   unicode; /* A vs W callback type, only for regular and Ex callbacks */
+};
+
+static BOOL NLS_EnumTimeFormats(struct enumtimeformats_context *ctxt)
+{
+    WCHAR bufW[256];
+    char bufA[256];
+    LCTYPE lctype;
+    INT ret;
+
+    if (!ctxt->u.callback)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    switch (flags & ~LOCALE_USE_CP_ACP)
+    switch (ctxt->flags & ~LOCALE_USE_CP_ACP)
     {
     case 0:
-    case DATE_SHORTDATE:
-        if (GetLocaleInfoW(lcid, LOCALE_SSHORTDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
+        lctype = LOCALE_STIMEFORMAT;
         break;
-
-    case DATE_LONGDATE:
-        if (GetLocaleInfoW(lcid, LOCALE_SLONGDATE | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
+    case TIME_NOSECONDS:
+        lctype = LOCALE_SSHORTTIME;
         break;
-
-    case DATE_YEARMONTH:
-        if (GetLocaleInfoW(lcid, LOCALE_SYEARMONTH | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
-
     default:
-        FIXME("Unknown date format (%d)\n", flags);
+        FIXME("Unknown time format (%d)\n", ctxt->flags);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    lctype |= ctxt->flags & LOCALE_USE_CP_ACP;
+    if (ctxt->unicode)
+        ret = GetLocaleInfoW(ctxt->lcid, lctype, bufW, sizeof(bufW)/sizeof(bufW[0]));
+    else
+        ret = GetLocaleInfoA(ctxt->lcid, lctype, bufA, sizeof(bufA)/sizeof(bufA[0]));
+
+    if (ret)
+    {
+        switch (ctxt->type)
+        {
+        case CALLBACK_ENUMPROC:
+            ctxt->u.callback(ctxt->unicode ? bufW : (WCHAR*)bufA);
+            break;
+        case CALLBACK_ENUMPROCEX:
+            ctxt->u.callbackex(bufW, ctxt->lParam);
+            break;
+        default:
+            ;
+        }
+    }
+
     return TRUE;
 }
 
@@ -1841,27 +1896,22 @@ BOOL WINAPI EnumDateFormatsW(DATEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
  */
 BOOL WINAPI EnumTimeFormatsA(TIMEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
 {
-    char buf[256];
+    struct enumtimeformats_context ctxt;
 
-    if (!proc)
+    /* EnumTimeFormatsA doesn't support flags, EnumTimeFormatsW does. */
+    if (flags & ~LOCALE_USE_CP_ACP)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_FLAGS);
         return FALSE;
     }
 
-    switch (flags & ~LOCALE_USE_CP_ACP)
-    {
-    case 0:
-        if (GetLocaleInfoA(lcid, LOCALE_STIMEFORMAT | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
+    ctxt.type = CALLBACK_ENUMPROC;
+    ctxt.u.callback = (TIMEFMT_ENUMPROCW)proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = FALSE;
 
-    default:
-        FIXME("Unknown time format (%d)\n", flags);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
+    return NLS_EnumTimeFormats(&ctxt);
 }
 
 /**************************************************************************
@@ -1869,49 +1919,37 @@ BOOL WINAPI EnumTimeFormatsA(TIMEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
  */
 BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
 {
-    WCHAR buf[256];
+    struct enumtimeformats_context ctxt;
 
-    if (!proc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    ctxt.type = CALLBACK_ENUMPROC;
+    ctxt.u.callback = proc;
+    ctxt.lcid = lcid;
+    ctxt.flags = flags;
+    ctxt.unicode = TRUE;
 
-    switch (flags & ~LOCALE_USE_CP_ACP)
-    {
-    case 0:
-        if (GetLocaleInfoW(lcid, LOCALE_STIMEFORMAT | (flags & LOCALE_USE_CP_ACP), buf, 256))
-            proc(buf);
-        break;
-
-    default:
-        FIXME("Unknown time format (%d)\n", flags);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
+    return NLS_EnumTimeFormats(&ctxt);
 }
 
+struct enumcalendar_context {
+    enum enum_callback_type type;  /* callback kind */
+    union {
+        CALINFO_ENUMPROCW    callback;     /* user callback pointer */
+        CALINFO_ENUMPROCEXW  callbackex;
+        CALINFO_ENUMPROCEXEX callbackexex;
+    } u;
+    LCID    lcid;     /* locale of interest */
+    CALID   calendar; /* specific calendar or ENUM_ALL_CALENDARS */
+    CALTYPE caltype;  /* calendar information type */
+    LPARAM  lParam;   /* user input parameter passed to callback, for ExEx case only */
+    BOOL    unicode;  /* A vs W callback type, only for regular and Ex callbacks */
+};
+
 /******************************************************************************
- * NLS_EnumCalendarInfoAW <internal>
+ * NLS_EnumCalendarInfo <internal>
  * Enumerates calendar information for a specified locale.
  *
  * PARAMS
- *    calinfoproc [I] Pointer to the callback
- *    locale      [I] The locale for which to retrieve calendar information.
- *                    This parameter can be a locale identifier created by the
- *                    MAKELCID macro, or one of the following values:
- *                        LOCALE_SYSTEM_DEFAULT
- *                            Use the default system locale.
- *                        LOCALE_USER_DEFAULT
- *                            Use the default user locale.
- *    calendar    [I] The calendar for which information is requested, or
- *                    ENUM_ALL_CALENDARS.
- *    caltype     [I] The type of calendar information to be returned. Note
- *                    that only one CALTYPE value can be specified per call
- *                    of this function, except where noted.
- *    unicode     [I] Specifies if the callback expects a unicode string.
- *    ex          [I] Specifies if the callback needs the calendar identifier.
+ *    ctxt [I] enumeration context, see 'struct enumcalendar_context'
  *
  * RETURNS
  *    Success: TRUE.
@@ -1926,14 +1964,14 @@ BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
  * TODO
  *    The above note should be respected by GetCalendarInfoA.
  */
-static BOOL NLS_EnumCalendarInfoAW(void *calinfoproc, LCID locale,
-                  CALID calendar, CALTYPE caltype, BOOL unicode, BOOL ex )
+static BOOL NLS_EnumCalendarInfo(const struct enumcalendar_context *ctxt)
 {
   WCHAR *buf, *opt = NULL, *iter = NULL;
+  CALID calendar = ctxt->calendar;
   BOOL ret = FALSE;
   int bufSz = 200;		/* the size of the buffer */
 
-  if (calinfoproc == NULL)
+  if (ctxt->u.callback == NULL)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
@@ -1948,7 +1986,7 @@ static BOOL NLS_EnumCalendarInfoAW(void *calinfoproc, LCID locale,
 
   if (calendar == ENUM_ALL_CALENDARS)
   {
-    int optSz = GetLocaleInfoW(locale, LOCALE_IOPTIONALCALENDAR, NULL, 0);
+    int optSz = GetLocaleInfoW(ctxt->lcid, LOCALE_IOPTIONALCALENDAR, NULL, 0);
     if (optSz > 1)
     {
       opt = HeapAlloc(GetProcessHeap(), 0, optSz * sizeof(WCHAR));
@@ -1957,28 +1995,30 @@ static BOOL NLS_EnumCalendarInfoAW(void *calinfoproc, LCID locale,
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
       }
-      if (GetLocaleInfoW(locale, LOCALE_IOPTIONALCALENDAR, opt, optSz))
+      if (GetLocaleInfoW(ctxt->lcid, LOCALE_IOPTIONALCALENDAR, opt, optSz))
         iter = opt;
     }
-    calendar = NLS_GetLocaleNumber(locale, LOCALE_ICALENDARTYPE);
+    calendar = NLS_GetLocaleNumber(ctxt->lcid, LOCALE_ICALENDARTYPE);
   }
 
   while (TRUE)			/* loop through calendars */
   {
     do				/* loop until there's no error */
     {
-      if (unicode)
-        ret = GetCalendarInfoW(locale, calendar, caltype, buf, bufSz / sizeof(WCHAR), NULL);
-      else ret = GetCalendarInfoA(locale, calendar, caltype, (CHAR*)buf, bufSz / sizeof(CHAR), NULL);
+      if (ctxt->caltype & CAL_RETURN_NUMBER)
+        ret = GetCalendarInfoW(ctxt->lcid, calendar, ctxt->caltype, NULL, bufSz / sizeof(WCHAR), (LPDWORD)buf);
+      else if (ctxt->unicode)
+        ret = GetCalendarInfoW(ctxt->lcid, calendar, ctxt->caltype, buf, bufSz / sizeof(WCHAR), NULL);
+      else ret = GetCalendarInfoA(ctxt->lcid, calendar, ctxt->caltype, (CHAR*)buf, bufSz / sizeof(CHAR), NULL);
 
       if (!ret)
       {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {				/* so resize it */
           int newSz;
-          if (unicode)
-            newSz = GetCalendarInfoW(locale, calendar, caltype, NULL, 0, NULL) * sizeof(WCHAR);
-          else newSz = GetCalendarInfoA(locale, calendar, caltype, NULL, 0, NULL) * sizeof(CHAR);
+          if (ctxt->unicode)
+            newSz = GetCalendarInfoW(ctxt->lcid, calendar, ctxt->caltype, NULL, 0, NULL) * sizeof(WCHAR);
+          else newSz = GetCalendarInfoA(ctxt->lcid, calendar, ctxt->caltype, NULL, 0, NULL) * sizeof(CHAR);
           if (bufSz >= newSz)
           {
             ERR("Buffer resizing disorder: was %d, requested %d.\n", bufSz, newSz);
@@ -1998,10 +2038,20 @@ static BOOL NLS_EnumCalendarInfoAW(void *calinfoproc, LCID locale,
      * we must check for Ex, but we don't care about Unicode
      * because the buffer is already in the correct format.
      */
-    if (ex) {
-      ret = ((CALINFO_ENUMPROCEXW)calinfoproc)(buf, calendar);
-    } else
-      ret = ((CALINFO_ENUMPROCW)calinfoproc)(buf);
+    switch (ctxt->type)
+    {
+    case CALLBACK_ENUMPROC:
+      ret = ctxt->u.callback(buf);
+      break;
+    case CALLBACK_ENUMPROCEX:
+      ret = ctxt->u.callbackex(buf, calendar);
+      break;
+    case CALLBACK_ENUMPROCEXEX:
+      ret = ctxt->u.callbackexex(buf, calendar, NULL, ctxt->lParam);
+      break;
+    default:
+      ;
+    }
 
     if (!ret) {			/* the callback told to stop */
       ret = TRUE;
@@ -2031,50 +2081,82 @@ cleanup:
 
 /******************************************************************************
  *		EnumCalendarInfoA	[KERNEL32.@]
- *
- * See EnumCalendarInfoAW.
  */
 BOOL WINAPI EnumCalendarInfoA( CALINFO_ENUMPROCA calinfoproc,LCID locale,
                                CALID calendar,CALTYPE caltype )
 {
+  struct enumcalendar_context ctxt;
+
   TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, FALSE, FALSE);
+
+  ctxt.type = CALLBACK_ENUMPROC;
+  ctxt.u.callback = (CALINFO_ENUMPROCW)calinfoproc;
+  ctxt.lcid = locale;
+  ctxt.calendar = calendar;
+  ctxt.caltype = caltype;
+  ctxt.lParam = 0;
+  ctxt.unicode = FALSE;
+  return NLS_EnumCalendarInfo(&ctxt);
 }
 
 /******************************************************************************
  *		EnumCalendarInfoW	[KERNEL32.@]
- *
- * See EnumCalendarInfoAW.
  */
 BOOL WINAPI EnumCalendarInfoW( CALINFO_ENUMPROCW calinfoproc,LCID locale,
                                CALID calendar,CALTYPE caltype )
 {
+  struct enumcalendar_context ctxt;
+
   TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, TRUE, FALSE);
+
+  ctxt.type = CALLBACK_ENUMPROC;
+  ctxt.u.callback = calinfoproc;
+  ctxt.lcid = locale;
+  ctxt.calendar = calendar;
+  ctxt.caltype = caltype;
+  ctxt.lParam = 0;
+  ctxt.unicode = TRUE;
+  return NLS_EnumCalendarInfo(&ctxt);
 }
 
 /******************************************************************************
  *		EnumCalendarInfoExA	[KERNEL32.@]
- *
- * See EnumCalendarInfoAW.
  */
 BOOL WINAPI EnumCalendarInfoExA( CALINFO_ENUMPROCEXA calinfoproc,LCID locale,
                                  CALID calendar,CALTYPE caltype )
 {
+  struct enumcalendar_context ctxt;
+
   TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, FALSE, TRUE);
+
+  ctxt.type = CALLBACK_ENUMPROCEX;
+  ctxt.u.callbackex = (CALINFO_ENUMPROCEXW)calinfoproc;
+  ctxt.lcid = locale;
+  ctxt.calendar = calendar;
+  ctxt.caltype = caltype;
+  ctxt.lParam = 0;
+  ctxt.unicode = FALSE;
+  return NLS_EnumCalendarInfo(&ctxt);
 }
 
 /******************************************************************************
  *		EnumCalendarInfoExW	[KERNEL32.@]
- *
- * See EnumCalendarInfoAW.
  */
 BOOL WINAPI EnumCalendarInfoExW( CALINFO_ENUMPROCEXW calinfoproc,LCID locale,
                                  CALID calendar,CALTYPE caltype )
 {
+  struct enumcalendar_context ctxt;
+
   TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-  return NLS_EnumCalendarInfoAW(calinfoproc, locale, calendar, caltype, TRUE, TRUE);
+
+  ctxt.type = CALLBACK_ENUMPROCEX;
+  ctxt.u.callbackex = calinfoproc;
+  ctxt.lcid = locale;
+  ctxt.calendar = calendar;
+  ctxt.caltype = caltype;
+  ctxt.lParam = 0;
+  ctxt.unicode = TRUE;
+  return NLS_EnumCalendarInfo(&ctxt);
 }
 
 /*********************************************************************
