@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -174,7 +174,7 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
-
+	
     }
     return hOldBitmap;
 }
@@ -299,7 +299,24 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
 
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
+#ifdef __REACTOS__
     return GetControlBrush( hwnd, hdc, WM_CTLCOLORSTATIC);
+#else
+    HBRUSH hBrush;
+    HWND parent = GetParent(hwnd);
+
+    if (!parent) parent = hwnd;
+    hBrush = (HBRUSH) SendMessageW( parent,
+                    WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
+    if (!hBrush) /* did the app forget to call DefWindowProc ? */
+    {
+        /* FIXME: DefWindowProc should return different colors if a
+                  manifest is present */
+        hBrush = (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC,
+                                        (WPARAM)hdc, (LPARAM)hwnd);
+    }
+    return hBrush;
+#endif
 }
 
 static VOID STATIC_InitColours(void)
@@ -326,7 +343,7 @@ static BOOL hasTextStyle( DWORD style )
         case SS_OWNERDRAW:
             return TRUE;
     }
-
+    
     return FALSE;
 }
 
@@ -472,15 +489,12 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_SETTEXT:
         if (hasTextStyle( full_style ))
         {
-	    if (HIWORD(lParam))
-	    {
-	        if(unicode)
-                    lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
-                else
-                    lResult = DefWindowProcA( hwnd, uMsg, wParam, lParam );
-                STATIC_TryPaintFcn( hwnd, full_style );
-	    }
-	}
+            if (unicode)
+                lResult = DefWindowProcW( hwnd, uMsg, wParam, lParam );
+            else
+                lResult = DefWindowProcA( hwnd, uMsg, wParam, lParam );
+            STATIC_TryPaintFcn( hwnd, full_style );
+        }
         break;
 
     case WM_SETFONT:
@@ -823,6 +837,7 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
         GetClientRect(hwnd, &rcClient);
         if (style & SS_CENTERIMAGE)
         {
+            FillRect( hdc, &rcClient, hbrush );
             rcClient.left = (rcClient.right - rcClient.left)/2 - bm.bmWidth/2;
             rcClient.top = (rcClient.bottom - rcClient.top)/2 - bm.bmHeight/2;
             rcClient.right = rcClient.left + bm.bmWidth;
