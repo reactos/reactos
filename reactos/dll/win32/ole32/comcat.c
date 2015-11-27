@@ -229,7 +229,7 @@ static HRESULT COMCAT_IsClassOfCategories(
 	if (res != ERROR_SUCCESS) return S_FALSE;
 	for (string = impl_strings; *string; string += CHARS_IN_GUID) {
 	    HKEY catkey;
-	    res = open_classes_key(subkey, string, 0, &catkey);
+	    res = open_classes_key(subkey, string, READ_CONTROL, &catkey);
 	    if (res != ERROR_SUCCESS) {
 		RegCloseKey(subkey);
 		return S_FALSE;
