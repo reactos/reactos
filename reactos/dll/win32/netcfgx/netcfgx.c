@@ -287,14 +287,14 @@ InstallNetDevice(
     wcscat(ExportName, UuidString);
 
     /* Write Tcpip parameters in new service Key */
-    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, NULL, REG_OPTION_NON_VOLATILE, 0, NULL, &hKey, NULL);
+    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
         DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
-    rc = RegCreateKeyExW(hKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, 0, NULL, &hNetworkKey, NULL);
+    rc = RegCreateKeyExW(hKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
         DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
@@ -414,7 +414,7 @@ InstallNetDevice(
     hKey = NULL;
 
     /* Write connection information in network subkey */
-    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, NULL, REG_OPTION_NON_VOLATILE, 0, NULL, &hNetworkKey, NULL);
+    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
         DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
