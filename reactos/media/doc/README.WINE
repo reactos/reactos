@@ -278,7 +278,7 @@ kernel32 -
   reactos/dll/win32/kernel32/winnls/string/lang.c        # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/lcformat.c    # Synced to WineStaging-1.7.55
   reactos/dll/win32/kernel32/winnls/string/nls.c         # Synced in r52754
-  reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-1.7.37
+  reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-1.7.55
 
 msvcrt -
   reactos/lib/sdk/crt/except/cpp.c              # Synced at 20080528
