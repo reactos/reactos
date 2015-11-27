@@ -263,7 +263,7 @@ CreateHKCRKey(
     }
 
     /* See if the subkey already exists in HKCU. */
-    ErrorCode = RegOpenKeyExW(QueriedKey, lpSubKey, 0, 0, &TestKey);
+    ErrorCode = RegOpenKeyExW(QueriedKey, lpSubKey, 0, READ_CONTROL, &TestKey);
     if (ErrorCode != ERROR_FILE_NOT_FOUND)
     {
         if (ErrorCode == ERROR_SUCCESS)
@@ -757,7 +757,7 @@ EnumHKCRKey(
             PreferredKey,
             FallbackSubKeyName,
             0,
-            0,
+            READ_CONTROL,
             &PreferredSubKey);
 
         if (ErrorCode == ERROR_SUCCESS)
