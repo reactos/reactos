@@ -3287,19 +3287,22 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
     DPRINT("index: %d\n", index);
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    dll = get_dllredirect_data(actctx, index);
+    if (data)
+    {
+        dll = get_dllredirect_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = dll;
-    data->ulLength = dll->size;
-    data->lpSectionGlobalData = NULL;
-    data->ulSectionGlobalDataLength = 0;
-    data->lpSectionBase = actctx->dllredirect_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = dll;
+        data->ulLength = dll->size;
+        data->lpSectionGlobalData = NULL;
+        data->ulSectionGlobalDataLength = 0;
+        data->lpSectionBase = actctx->dllredirect_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -3496,20 +3499,23 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
 
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    class = get_wndclass_data(actctx, index);
+    if (data)
+    {
+        class = get_wndclass_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = class;
-    /* full length includes string length with nulls */
-    data->ulLength = class->size + class->name_len + class->module_len + 2*sizeof(WCHAR);
-    data->lpSectionGlobalData = NULL;
-    data->ulSectionGlobalDataLength = 0;
-    data->lpSectionBase = actctx->wndclass_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = class;
+        /* full length includes string length with nulls */
+        data->ulLength = class->size + class->name_len + class->module_len + 2*sizeof(WCHAR);
+        data->lpSectionGlobalData = NULL;
+        data->ulSectionGlobalDataLength = 0;
+        data->lpSectionBase = actctx->wndclass_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -4551,19 +4557,22 @@ static NTSTATUS find_progid_redirection(ACTIVATION_CONTEXT* actctx, const UNICOD
     index = find_string_index(actctx->progid_section, name);
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    progid = get_progid_data(actctx, index);
+    if (data)
+    {
+        progid = get_progid_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = progid;
-    data->ulLength = progid->size;
-    data->lpSectionGlobalData = (BYTE*)actctx->progid_section + actctx->progid_section->global_offset;
-    data->ulSectionGlobalDataLength = actctx->progid_section->global_len;
-    data->lpSectionBase = actctx->progid_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = progid;
+        data->ulLength = progid->size;
+        data->lpSectionGlobalData = (BYTE*)actctx->progid_section + actctx->progid_section->global_offset;
+        data->ulSectionGlobalDataLength = actctx->progid_section->global_len;
+        data->lpSectionBase = actctx->progid_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -4595,7 +4604,7 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
 
     if (status != STATUS_SUCCESS) return status;
 
-    if (flags & FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    if (data && (flags & FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX))
     {
         actctx_addref(actctx);
         data->hActCtx = actctx;

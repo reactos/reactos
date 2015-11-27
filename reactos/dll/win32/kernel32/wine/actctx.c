@@ -132,7 +132,7 @@ BOOL WINAPI FindActCtxSectionStringA(DWORD dwFlags, const GUID* lpExtGuid,
     TRACE("%08x %s %u %s %p\n", dwFlags, debugstr_guid(lpExtGuid),
           ulId, debugstr_a(lpSearchStr), pInfo);
 
-    if (!lpSearchStr)
+    if (!lpSearchStr || !pInfo)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -159,6 +159,12 @@ BOOL WINAPI FindActCtxSectionStringW(DWORD dwFlags, const GUID* lpExtGuid,
 {
     UNICODE_STRING us;
     NTSTATUS status;
+
+    if (!pInfo)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     RtlInitUnicodeString(&us, lpSearchStr);
     if ((status = RtlFindActivationContextSectionString(dwFlags, lpExtGuid, ulId, &us, pInfo)))
