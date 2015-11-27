@@ -56,8 +56,6 @@ struct format_args
  * Yes, ANSI strings in win32 resources. Go figure.
  */
 
-static const WCHAR FMTWSTR[] = { '%','s',0 };
-
 /**********************************************************************
  *	load_message    (internal)
  */
@@ -90,6 +88,24 @@ static LPWSTR load_message( HMODULE module, UINT id, WORD lang )
     }
     TRACE("returning %s\n", wine_dbgstr_w(buffer));
     return buffer;
+}
+
+static LPWSTR search_message( DWORD flags, HMODULE module, UINT id, WORD lang )
+{
+    LPWSTR from = NULL;
+    if (flags & FORMAT_MESSAGE_FROM_HMODULE)
+        from = load_message( module, id, lang );
+    if (!from && (flags & FORMAT_MESSAGE_FROM_SYSTEM))
+    {
+        /* Fold win32 hresult to its embedded error code. */
+        if (HRESULT_SEVERITY(id) == SEVERITY_ERROR &&
+            HRESULT_FACILITY(id) == FACILITY_WIN32)
+        {
+            id = HRESULT_CODE(id);
+        }
+        from = load_message( kernel32_handle, id, lang );
+    }
+    return from;
 }
 
 /**********************************************************************
@@ -480,10 +496,7 @@ DWORD WINAPI FormatMessageA(
     }
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
-        if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
-        if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
+        from = search_message( dwFlags, (HMODULE)lpSource, dwMessageId, dwLanguageId );
         if (!from) return 0;
     }
     else
@@ -580,10 +593,7 @@ DWORD WINAPI FormatMessageW(
     }
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
-        if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
-        if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
+        from = search_message( dwFlags, (HMODULE)lpSource, dwMessageId, dwLanguageId );
         if (!from) return 0;
     }
     else
