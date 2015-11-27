@@ -841,12 +841,14 @@ static void zero_notify(void)
 }
 
 #define test_notify(enchange, enmaxtext, enupdate) \
+do { \
     ok(notifications.en_change == enchange, "expected %d EN_CHANGE notifications, " \
     "got %d\n", enchange, notifications.en_change); \
     ok(notifications.en_maxtext == enmaxtext, "expected %d EN_MAXTEXT notifications, " \
     "got %d\n", enmaxtext, notifications.en_maxtext); \
     ok(notifications.en_update == enupdate, "expected %d EN_UPDATE notifications, " \
-    "got %d\n", enupdate, notifications.en_update)
+    "got %d\n", enupdate, notifications.en_update); \
+} while(0)
 
 
 static LRESULT CALLBACK edit3_wnd_procA(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -907,8 +909,10 @@ static void test_edit_control_3(void)
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
-    ok(lstrlenA(str) > len, "text should have been truncated\n");
-    test_notify(1, 1, 1);
+    if (len == lstrlenA(str)) /* Win 8 */
+        test_notify(1, 0, 1);
+    else
+        test_notify(1, 1, 1);
 
     SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)"");
     zero_notify();
@@ -998,8 +1002,13 @@ static void test_edit_control_3(void)
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str);
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
-    ok(0 == len, "text should have been truncated, expected 0, got %d\n", len);
-    test_notify(1, 1, 1);
+    if (len == lstrlenA(str)) /* Win 8 */
+        test_notify(1, 0, 1);
+    else
+    {
+        ok(0 == len, "text should have been truncated, expected 0, got %d\n", len);
+        test_notify(1, 1, 1);
+    }
 
     SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)"");
     zero_notify();
@@ -1467,10 +1476,23 @@ static void test_margins(void)
     SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&old_rect);
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(10, 10));
     SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
-    ok(new_rect.left == old_rect.left, "The left border of the rectangle has changed\n");
-    ok(new_rect.right == old_rect.right, "The right border of the rectangle has changed\n");
-    ok(new_rect.top == old_rect.top, "The top border of the rectangle has changed\n");
-    ok(new_rect.bottom == old_rect.bottom, "The bottom border of the rectangle has changed\n");
+    ok(EqualRect(&old_rect, &new_rect), "The border of the rectangle has changed\n");
+
+    /* The lParam argument of the WM_SIZE message should be ignored. */
+
+    SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&old_rect);
+    SendMessageA(hwEdit, WM_SIZE, SIZE_RESTORED, 0);
+    SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
+    ok(EqualRect(&old_rect, &new_rect), "The border of the rectangle has changed\n");
+    SendMessageA(hwEdit, WM_SIZE, SIZE_MINIMIZED, 0);
+    SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
+    ok(EqualRect(&old_rect, &new_rect), "The border of the rectangle has changed\n");
+    SendMessageA(hwEdit, WM_SIZE, SIZE_MAXIMIZED, 0);
+    SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
+    ok(EqualRect(&old_rect, &new_rect), "The border of the rectangle has changed\n");
+    SendMessageA(hwEdit, WM_SIZE, SIZE_RESTORED, MAKELONG(10, 10));
+    SendMessageA(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
+    ok(EqualRect(&old_rect, &new_rect), "The border of the rectangle has changed\n");
 
     DestroyWindow (hwEdit);
 
