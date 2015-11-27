@@ -511,7 +511,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 	LINEDEF *current_line;
 	LINEDEF *previous_line;
 	LINEDEF *start_line;
-	INT line_index = 0, nstart_line = 0, nstart_index = 0;
+	INT line_index = 0, nstart_line, nstart_index;
 	INT line_count = es->line_count;
 	INT orig_net_length;
 	RECT rc;
@@ -1097,7 +1097,7 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 	INT x = 0;
 	INT y = 0;
 	INT w;
-	INT lw = 0;
+	INT lw;
 	LINEDEF *line_def;
 
 	index = min(index, len);
@@ -2235,12 +2235,9 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 		ret = (INT)LOWORD(TabbedTextOutW(dc, x, y, es->text + li + col, count,
 					es->tabs_count, es->tabs, es->format_rect.left - es->x_offset));
 	} else {
-		LPWSTR text = es->text;
-		TextOutW(dc, x, y, text + li + col, count);
-		GetTextExtentPoint32W(dc, text + li + col, count, &size);
+		TextOutW(dc, x, y, es->text + li + col, count);
+		GetTextExtentPoint32W(dc, es->text + li + col, count, &size);
 		ret = size.cx;
-		if (es->style & ES_PASSWORD)
-			HeapFree(GetProcessHeap(), 0, text);
 	}
 	if (rev) {
 		if (es->composition_len == 0)
@@ -2621,7 +2618,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 	LPWSTR p;
 	HRGN hrgn = 0;
 	LPWSTR buf = NULL;
-	UINT bufl = 0;
+	UINT bufl;
 
 	TRACE("%s, can_undo %d, send_update %d\n",
 	    debugstr_w(lpsz_replace), can_undo, send_update);
@@ -2770,8 +2767,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 			EDIT_EM_EmptyUndoBuffer(es);
 	}
 
-	if (bufl)
-		HeapFree(GetProcessHeap(), 0, buf);
+	HeapFree(GetProcessHeap(), 0, buf);
  
 	s += strl;
 
@@ -2927,7 +2923,7 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
  */
 static int calc_min_set_margin_size(HDC dc, INT left, INT right)
 {
-    WCHAR magic_string[] = {'\'','*','*','\'', 0};
+    static const WCHAR magic_string[] = {'\'','*','*','\'', 0};
     SIZE sz;
 
     GetTextExtentPointW(dc, magic_string, sizeof(magic_string)/sizeof(WCHAR) - 1, &sz);
@@ -3995,12 +3991,11 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
  *	WM_SIZE
  *
  */
-static void EDIT_WM_Size(EDITSTATE *es, UINT action, INT width, INT height)
+static void EDIT_WM_Size(EDITSTATE *es, UINT action)
 {
 	if ((action == SIZE_MAXIMIZED) || (action == SIZE_RESTORED)) {
 		RECT rc;
-		TRACE("width = %d, height = %d\n", width, height);
-		SetRect(&rc, 0, 0, width, height);
+		GetClientRect(es->hwndSelf, &rc);
 		EDIT_SetRectNP(es, &rc);
 		EDIT_UpdateText(es, NULL, TRUE);
 	}
@@ -4373,7 +4368,7 @@ static LRESULT EDIT_EM_GetThumb(EDITSTATE *es)
 static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
 {
     LONG buflen;
-    LPWSTR lpCompStr = NULL;
+    LPWSTR lpCompStr;
     LPSTR lpCompStrAttr = NULL;
     DWORD dwBufLenAttr;
 
@@ -4416,8 +4411,6 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
                     dwBufLenAttr);
             lpCompStrAttr[dwBufLenAttr] = 0;
         }
-        else
-            lpCompStrAttr = NULL;
     }
 
     /* check for change in composition start */
@@ -5193,7 +5186,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 
 	case WM_SIZE:
-		EDIT_WM_Size(es, (UINT)wParam, LOWORD(lParam), HIWORD(lParam));
+		EDIT_WM_Size(es, (UINT)wParam);
 		break;
 
         case WM_STYLECHANGED:
