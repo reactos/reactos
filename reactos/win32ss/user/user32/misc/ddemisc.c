@@ -39,14 +39,14 @@ static LONG		WDML_MaxInstanceID = 0;  /* OK for present, have to worry about wra
 const WCHAR		WDML_szEventClass[] = L"DDEMLEvent";
 
 /* protection for instance list */
-CRITICAL_SECTION WDML_CritSect;
+static CRITICAL_SECTION WDML_CritSect;
 static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &WDML_CritSect,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
       0, 0, { (DWORD_PTR)(__FILE__ ": WDML_CritSect") }
 };
-CRITICAL_SECTION WDML_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
+static CRITICAL_SECTION WDML_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 /* ================================================================
  *
@@ -417,7 +417,7 @@ BOOL WDML_DecHSZ(WDML_INSTANCE* pInstance, HSZ hsz)
  * Frees up all the strings still allocated in the list and
  * remove all the nodes from the list of HSZ nodes.
  */
-void WDML_FreeAllHSZ(WDML_INSTANCE* pInstance)
+static void WDML_FreeAllHSZ(WDML_INSTANCE* pInstance)
 {
     /* Free any strings created in this instance.
      */
@@ -825,7 +825,7 @@ static LRESULT CALLBACK WDML_EventProc(HWND hwndEvent, UINT uMsg, WPARAM wParam,
  *
  *
  */
-UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
+static UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
                             DWORD afCmd, DWORD ulRes, BOOL bUnicode)
 {
     WDML_INSTANCE*		pInstance;
@@ -1820,7 +1820,7 @@ void WDML_RemoveLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
  *
  *
  */
-void WDML_RemoveAllLinks(WDML_INSTANCE* pInstance, WDML_CONV* pConv, WDML_SIDE side)
+static void WDML_RemoveAllLinks(WDML_INSTANCE* pInstance, WDML_CONV* pConv, WDML_SIDE side)
 {
     WDML_LINK* pPrev = NULL;
     WDML_LINK* pCurrent = NULL;
@@ -1869,7 +1869,7 @@ void WDML_RemoveAllLinks(WDML_INSTANCE* pInstance, WDML_CONV* pConv, WDML_SIDE s
 WDML_LINK* 	WDML_FindLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
 			      HSZ hszItem, BOOL use_fmt, UINT uFmt)
 {
-    WDML_LINK*	pCurrent = NULL;
+    WDML_LINK*	pCurrent;
 
     for (pCurrent = pInstance->links[side]; pCurrent != NULL; pCurrent = pCurrent->next)
     {
@@ -1982,7 +1982,7 @@ void	WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFre
  *
  *
  */
-WDML_XACT* WDML_FindTransaction(WDML_CONV* pConv, DWORD tid)
+static WDML_XACT* WDML_FindTransaction(WDML_CONV* pConv, DWORD tid)
 {
     WDML_XACT* pXAct;
 
@@ -2049,7 +2049,7 @@ WDML_CONV*	WDML_AddConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
 WDML_CONV*	WDML_FindConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
 			      HSZ hszService, HSZ hszTopic)
 {
-    WDML_CONV*	pCurrent = NULL;
+    WDML_CONV*	pCurrent;
 
     for (pCurrent = pInstance->convs[side]; pCurrent != NULL; pCurrent = pCurrent->next)
     {
