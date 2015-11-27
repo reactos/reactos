@@ -155,7 +155,7 @@ SETUP_CreateInterfaceList(
             list->HKLM,
             REGSTR_PATH_SYSTEMENUM,
             0, /* Options */
-            0,
+            READ_CONTROL,
             &hEnumKey);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
