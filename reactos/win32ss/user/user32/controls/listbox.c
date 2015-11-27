@@ -259,7 +259,7 @@ static void LISTBOX_UpdateScroll( LB_DESCR *descr )
         if (descr->style & WS_VSCROLL)
             SetScrollInfo( descr->self, SB_VERT, &info, TRUE );
 
-        if (descr->style & WS_HSCROLL && descr->horz_extent)
+        if ((descr->style & WS_HSCROLL) && descr->horz_extent)
         {
             info.nPos  = descr->horz_pos;
             info.nPage = descr->width;
@@ -364,8 +364,11 @@ static void LISTBOX_UpdatePage( LB_DESCR *descr )
 static void LISTBOX_UpdateSize( LB_DESCR *descr )
 {
     RECT rect;
+    LONG style = GetWindowLongPtrW( descr->self, GWL_STYLE );
 
     GetClientRect( descr->self, &rect );
+    if (style & WS_HSCROLL)
+        rect.bottom += GetSystemMetrics(SM_CYHSCROLL);
     descr->width  = rect.right - rect.left;
     descr->height = rect.bottom - rect.top;
     if (!(descr->style & LBS_NOINTEGRALHEIGHT) && !(descr->style & LBS_OWNERDRAWVARIABLE))
@@ -557,7 +560,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         dis.itemData     = item->data;
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%s\n",
-              descr->self, index, item ? debugstr_w(item->str) : "", action,
+              descr->self, index, debugstr_w(item->str), action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         SelectClipRgn( hdc, hrgn );
@@ -660,7 +663,12 @@ static void LISTBOX_RepaintItem( LB_DESCR *descr, INT index, UINT action )
     if (LISTBOX_GetItemRect( descr, index, &rect ) != 1) return;
     if (!(hdc = GetDCEx( descr->self, 0, DCX_CACHE ))) return;
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
+#ifdef __REACTOS__
     hbrush = GetControlColor( descr->owner, descr->self, hdc, WM_CTLCOLORLISTBOX);
+#else
+    hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
+				   (WPARAM)hdc, (LPARAM)descr->self );
+#endif
     if (hbrush) oldBrush = SelectObject( hdc, hbrush );
     if (!IsWindowEnabled(descr->self))
         SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
@@ -693,7 +701,7 @@ static void LISTBOX_DrawFocusRect( LB_DESCR *descr, BOOL on )
     if (!IsWindowEnabled(descr->self))
         SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
     SetWindowOrgEx( hdc, descr->horz_pos, 0, NULL );
-    LISTBOX_PaintItem( descr, hdc, &rect, descr->focus_item, ODA_FOCUS, on ? FALSE : TRUE );
+    LISTBOX_PaintItem( descr, hdc, &rect, descr->focus_item, ODA_FOCUS, !on );
     if (oldFont) SelectObject( hdc, oldFont );
     ReleaseDC( descr->self, hdc );
 }
@@ -750,7 +758,7 @@ static BOOL LISTBOX_SetTabStops( LB_DESCR *descr, INT count, LPINT tabs )
     if (!(descr->tabs = HeapAlloc( GetProcessHeap(), 0,
                                             descr->nb_tabs * sizeof(INT) )))
         return FALSE;
-    memcpy( descr->tabs, tabs, descr->nb_tabs * sizeof(INT) ); 
+    memcpy( descr->tabs, tabs, descr->nb_tabs * sizeof(INT) );
 
     /* convert into "dialog units"*/
     for (i = 0; i < descr->nb_tabs; i++)
@@ -833,7 +841,7 @@ static inline INT LISTBOX_lstrcmpiW( LCID lcid, LPCWSTR str1, LPCWSTR str2 )
  */
 static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
 {
-    INT index, min, max, res = -1;
+    INT index, min, max, res;
 
     if (!(descr->style & LBS_SORT)) return -1;  /* Add it at the end */
     min = 0;
@@ -876,7 +884,7 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
  */
 static INT LISTBOX_FindFileStrPos( LB_DESCR *descr, LPCWSTR str )
 {
-    INT min, max, res = -1;
+    INT min, max, res;
 
     if (!HAS_STRINGS(descr))
         return LISTBOX_FindStringPos( descr, str, FALSE );
@@ -1031,7 +1039,12 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
     }
 
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
+#ifdef __REACTOS__
     hbrush = GetControlColor( descr->owner, descr->self, hdc, WM_CTLCOLORLISTBOX);
+#else
+    hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
+			   	   (WPARAM)hdc, (LPARAM)descr->self );
+#endif
     if (hbrush) oldBrush = SelectObject( hdc, hbrush );
     if (!IsWindowEnabled(descr->self)) SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
 
@@ -2516,7 +2529,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->nb_tabs       = 0;
     descr->tabs          = NULL;
     descr->wheel_remain  = 0;
-    descr->caret_on      = lphc ? FALSE : TRUE;
+    descr->caret_on      = !lphc;
     if (descr->style & LBS_NOSEL) descr->caret_on = FALSE;
     descr->in_focus 	 = FALSE;
     descr->captured      = FALSE;
@@ -2647,8 +2660,10 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
 
     case LB_ADDSTRING:
+#ifdef __REACTOS__
     case LB_ADDSTRING_LOWER:
     case LB_ADDSTRING_UPPER:
+#endif
     {
         INT ret;
         LPWSTR textW;
@@ -2663,12 +2678,14 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             else
                 return LB_ERRSPACE;
         }
+#ifdef __REACTOS__
         /* in the unicode the version, the string is really overwritten
            during the converting case */
         if (msg == LB_ADDSTRING_LOWER)
             strlwrW(textW);
         else if (msg == LB_ADDSTRING_UPPER)
             struprW(textW);
+#endif
         wParam = LISTBOX_FindStringPos( descr, textW, FALSE );
         ret = LISTBOX_InsertString( descr, wParam, textW );
         if (!unicode && HAS_STRINGS(descr))
@@ -2677,8 +2694,10 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     }
 
     case LB_INSERTSTRING:
+#ifdef __REACTOS__
     case LB_INSERTSTRING_UPPER:
     case LB_INSERTSTRING_LOWER:
+#endif
     {
         INT ret;
         LPWSTR textW;
@@ -2693,12 +2712,14 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             else
                 return LB_ERRSPACE;
         }
+#ifdef __REACTOS__
         /* in the unicode the version, the string is really overwritten
            during the converting case */
         if (msg == LB_INSERTSTRING_LOWER)
             strlwrW(textW);
         else if (msg == LB_INSERTSTRING_UPPER)
             struprW(textW);
+#endif
         ret = LISTBOX_InsertString( descr, wParam, textW );
         if(!unicode && HAS_STRINGS(descr))
             HeapFree(GetProcessHeap(), 0, textW);
@@ -3188,7 +3209,12 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         if ((IS_OWNERDRAW(descr)) && !(descr->style & LBS_DISPLAYCHANGED))
         {
             RECT rect;
+#ifdef __REACTOS__
             HBRUSH hbrush = GetControlColor( descr->owner, descr->self, (HDC)wParam, WM_CTLCOLORLISTBOX);
+#else
+            HBRUSH hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
+                                              wParam, (LPARAM)descr->self );
+#endif
 	    TRACE("hbrush = %p\n", hbrush);
 	    if(!hbrush)
 		hbrush = GetSysColorBrush(COLOR_WINDOW);
