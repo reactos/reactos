@@ -50,12 +50,12 @@ static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
  */
 BOOL WINAPI DdePostAdvise(DWORD idInst, HSZ hszTopic, HSZ hszItem)
 {
-    WDML_INSTANCE*	pInstance = NULL;
-    WDML_LINK*		pLink = NULL;
-    HDDEDATA		hDdeData = 0;
-    HGLOBAL             hItemData = 0;
-    WDML_CONV*		pConv = NULL;
-    ATOM		atom = 0;
+    WDML_INSTANCE*	pInstance;
+    WDML_LINK*		pLink;
+    HDDEDATA		hDdeData;
+    HGLOBAL		hItemData;
+    WDML_CONV*		pConv;
+    ATOM		atom;
     UINT		count;
 
     TRACE("(%d,%p,%p)\n", idInst, hszTopic, hszItem);
@@ -368,7 +368,7 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 {
     HWND		hwndClient;
     HSZ			hszApp, hszTop;
-    HDDEDATA		hDdeData = 0;
+    HDDEDATA		hDdeData;
     WDML_INSTANCE*	pInstance;
     UINT_PTR		uiLo, uiHi;
 
