@@ -289,7 +289,7 @@ msvcrt -
   reactos/lib/sdk/crt/string/strtoul.c          # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
-  reactos/lib/sdk/crt/wine/undname.c            # Synced at 20081130
+  reactos/lib/sdk/crt/wine/undname.c            # Synced to WineStaging-1.7.55
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -
