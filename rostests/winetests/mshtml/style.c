@@ -2435,6 +2435,17 @@ static void test_body_style(IHTMLStyle *style)
     ok(!strcmp_wa(str, "nowrap"), "whiteSpace = %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
+    str = a2bstr("normal");
+    hres = IHTMLStyle_put_whiteSpace(style, str);
+    SysFreeString(str);
+    ok(hres == S_OK, "put_whiteSpace failed: %08x\n", hres);
+
+    str = NULL;
+    hres = IHTMLStyle_get_whiteSpace(style, &str);
+    ok(hres == S_OK, "get_whiteSpace failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "normal"), "whiteSpace = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
     /* listStyleType */
     hres = IHTMLStyle_get_listStyleType(style, &str);
     ok(hres == S_OK, "get_listStyleType failed: %08x\n", hres);
@@ -2622,6 +2633,7 @@ static void test_style_filters(IHTMLElement *elem)
 static void test_current_style(IHTMLCurrentStyle *current_style)
 {
     IHTMLCurrentStyle2 *current_style2;
+    IHTMLCurrentStyle3 *current_style3;
     VARIANT_BOOL b;
     BSTR str;
     HRESULT hres;
@@ -2895,6 +2907,16 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     ok(b == VARIANT_TRUE, "hasLayout = %x\n", b);
 
     IHTMLCurrentStyle2_Release(current_style2);
+
+    hres = IHTMLCurrentStyle_QueryInterface(current_style, &IID_IHTMLCurrentStyle3, (void**)&current_style3);
+    ok(hres == S_OK, "Could not get IHTMLCurrentStyle3 iface: %08x\n", hres);
+
+    hres = IHTMLCurrentStyle3_get_whiteSpace(current_style3, &str);
+    ok(hres == S_OK, "get_whiteSpace failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "normal"), "whiteSpace = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    IHTMLCurrentStyle3_Release(current_style3);
 }
 
 static const char basic_test_str[] = "<html><body><div id=\"divid\"></div/</body></html>";

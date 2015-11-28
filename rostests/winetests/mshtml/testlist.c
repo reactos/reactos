@@ -12,6 +12,7 @@ extern void func_misc(void);
 extern void func_protocol(void);
 extern void func_script(void);
 extern void func_style(void);
+extern void func_xmlhttprequest(void);
 
 const struct test winetest_testlist[] =
 {
@@ -24,5 +25,6 @@ const struct test winetest_testlist[] =
     { "protocol", func_protocol },
     { "script", func_script },
     { "style", func_style },
+    { "xmlhttprequest", func_xmlhttprequest },
     { 0, 0 }
 };

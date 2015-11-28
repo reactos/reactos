@@ -1057,6 +1057,7 @@ static HRESULT WINAPI submit_onclick_setret(IDispatchEx *iface, DISPID id, LCID 
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     IHTMLEventObj *event;
+    VARIANT v;
     HRESULT hres;
 
     CHECK_EXPECT(submit_onclick_setret);
@@ -1068,10 +1069,20 @@ static HRESULT WINAPI submit_onclick_setret(IDispatchEx *iface, DISPID id, LCID 
     ok(hres == S_OK, "get_event failed: %08x\n", hres);
     ok(event != NULL, "event == NULL\n");
 
+    V_VT(&v) = VT_ERROR;
+    hres = IHTMLEventObj_get_returnValue(event, &v);
+    ok(hres == S_OK, "get_returnValue failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_EMPTY, "V_VT(returnValue) = %d\n", V_VT(&v));
+
     hres = IHTMLEventObj_put_returnValue(event, onclick_event_retval);
     ok(hres == S_OK, "put_returnValue failed: %08x\n", hres);
-    IHTMLEventObj_Release(event);
 
+    V_VT(&v) = VT_ERROR;
+    hres = IHTMLEventObj_get_returnValue(event, &v);
+    ok(hres == S_OK, "get_returnValue failed: %08x\n", hres);
+    ok(VarCmp(&v, &onclick_event_retval, 0, 0) == VARCMP_EQ, "unexpected returnValue\n");
+
+    IHTMLEventObj_Release(event);
     *pvarRes = onclick_retval;
     return S_OK;
 }
@@ -1097,9 +1108,9 @@ static HRESULT WINAPI submit_onclick_cancel(IDispatchEx *iface, DISPID id, LCID 
 
     hres = IHTMLEventObj_put_cancelBubble(event, VARIANT_TRUE);
     ok(hres == S_OK, "put_returnValue failed: %08x\n", hres);
-    IHTMLEventObj_Release(event);
 
     test_event_cancelbubble(event, VARIANT_TRUE);
+    IHTMLEventObj_Release(event);
     return S_OK;
 }
 
@@ -1412,7 +1423,7 @@ static void pump_msgs(BOOL *b)
             DispatchMessageW(&msg);
         }
     }else {
-        while(!b && PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+        while(PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
@@ -1571,7 +1582,7 @@ static void test_onclick(IHTMLDocument2 *doc)
     V_VT(&v) = VT_BSTR;
     V_BSTR(&v) = a2bstr("function();");
     hres = IHTMLElement_put_onclick(div, v);
-    todo_wine ok(hres == S_OK, "put_onclick failed: %08x\n", hres);
+    ok(hres == S_OK, "put_onclick failed: %08x\n", hres);
 
     if(hres == S_OK) {
         V_VT(&v) = VT_EMPTY;
@@ -1843,7 +1854,7 @@ static void test_imgload(IHTMLDocument2 *doc)
     ok(V_DISPATCH(&v) == (IDispatch*)&img_onerror_obj, "V_DISPATCH(onerror) != onerrorFunc\n");
     VariantClear(&v);
 
-    str = a2bstr("https://www.winehq.org/images/winehq_logo_text.png");
+    str = a2bstr("http://test.winehq.org/tests/winehq_snapshot/index_files/winehq_logo_text.png");
     hres = IHTMLImgElement_put_src(img, str);
     ok(hres == S_OK, "put_src failed: %08x\n", hres);
     SysFreeString(str);

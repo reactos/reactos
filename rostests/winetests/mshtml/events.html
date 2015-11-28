@@ -139,6 +139,24 @@ function test_insert_script() {
     readystatechange_log = "append";
 }
 
+var string_handler_called = false;
+
+function test_string_event_handler() {
+    var e = document.createElement("div");
+    var event_str = "string_handler_called = true;";
+
+    document.body.appendChild(e);
+    e.onclick = event_str;
+    ok(e.onclick === event_str, "e.onclick = " + e.onclick);
+    e.click();
+    ok(string_handler_called === false, "string handler called");
+
+    e.setAttribute("onclick", event_str);
+    ok(e.onclick === event_str, "e.onclick = " + e.onclick);
+    e.click();
+    ok(string_handler_called === false, "string handler called");
+}
+
 window.onload = function() {
     try {
         ok(inlscr_complete_called, "onreadystatechange not fired");
@@ -159,6 +177,7 @@ window.onload = function() {
         ondataavailable_test();
         test_handler_this();
         test_insert_script();
+        test_string_event_handler();
     }catch(e) {
         ok(false, "Got an exception: " + e.message);
     }
