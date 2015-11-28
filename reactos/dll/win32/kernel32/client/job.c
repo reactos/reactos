@@ -39,7 +39,7 @@ CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
                  IN LPCWSTR lpName)
 {
     /* Create the NT object */
-    CreateNtObjectFromWin32Api(JobObject, JobObject, JOB, lpJobAttributes, lpName);
+    CreateNtObjectFromWin32Api(JobObject, JobObject, JOB_OBJECT, lpJobAttributes, lpName);
 }
 
 /*
