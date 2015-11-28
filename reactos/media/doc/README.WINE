@@ -306,7 +306,7 @@ User32 -
   reactos/win32ss/user/user32/misc/dde.c           # Synced to WineStaging-1.7.55 (dde_misc.c)
   reactos/win32ss/user/user32/misc/ddeclient.c     # Synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/misc/ddeserver.c     # Synced to WineStaging-1.7.55
-  reactos/win32ss/user/user32/misc/exticon.c       # Synced to Wine-1_1_22
+  reactos/win32ss/user/user32/misc/exticon.c       # Synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/misc/resources.c     # Partially synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/misc/winhelp.c       # Last sync date unknown
   reactos/win32ss/user/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
