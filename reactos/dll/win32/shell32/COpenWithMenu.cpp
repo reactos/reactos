@@ -995,7 +995,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
             tvins.item.mask = TVIF_TEXT|TVIF_STATE|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
             tvins.item.pszText = (LPWSTR)wszBuf;
             tvins.item.state = tvins.item.stateMask = TVIS_EXPANDED;
-            hFolderIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 0, 0, 0);
+            hFolderIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_PROGRAMS_FOLDER), IMAGE_ICON, 0, 0, 0);
             tvins.item.iImage = tvins.item.iSelectedImage = ImageList_AddIcon(m_hImgList, hFolderIcon);
 
             LoadStringW(shell32_hInstance, IDS_OPEN_WITH_RECOMMENDED, wszBuf, _countof(wszBuf));
