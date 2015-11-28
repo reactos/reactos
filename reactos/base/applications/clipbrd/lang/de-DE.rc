@@ -60,4 +60,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "Die Daten in der Zwischenablage liegen in einem Format vor, welches nicht angezeigt werden kann."
+    ERROR_INVALID_FILE_FORMAT "Die ausgewählte Datei ist keine gültige Zwischenablagedatei."
 END

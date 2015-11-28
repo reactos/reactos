@@ -60,4 +60,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "The Clipboard contains data in a format, that cannot be displayed."
+    ERROR_INVALID_FILE_FORMAT "The selected file is not a valid clipboard file."
 END

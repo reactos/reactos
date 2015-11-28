@@ -97,7 +97,7 @@ void RetrieveClipboardFormatName(HINSTANCE hInstance, UINT uFormat, LPWSTR lpszF
 
 void DeleteClipboardContent(void)
 {
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
         return;
