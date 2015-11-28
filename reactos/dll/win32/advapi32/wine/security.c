@@ -3645,17 +3645,50 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
     return r;
 }
 
-/*
- * @unimplemented
+/******************************************************************************
+ * GetWindowsAccountDomainSid         [ADVAPI32.@]
  */
-BOOL
-WINAPI
-GetWindowsAccountDomainSid(IN PSID pSid,
-                           OUT PSID ppDomainSid,
-                           IN OUT DWORD* cbSid)
+BOOL WINAPI GetWindowsAccountDomainSid( PSID sid, PSID domain_sid, DWORD *size )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    SID_IDENTIFIER_AUTHORITY domain_ident = { SECURITY_NT_AUTHORITY };
+    DWORD required_size;
+    int i;
+
+    FIXME( "(%p %p %p): semi-stub\n", sid, domain_sid, size );
+
+    if (!sid || !IsValidSid( sid ))
+    {
+        SetLastError( ERROR_INVALID_SID );
+        return FALSE;
+    }
+
+    if (!size)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    if (*GetSidSubAuthorityCount( sid ) < 4)
+    {
+        SetLastError( ERROR_INVALID_SID );
+        return FALSE;
+    }
+
+    required_size = GetSidLengthRequired( 4 );
+    if (*size < required_size || !domain_sid)
+    {
+        *size = required_size;
+        SetLastError( domain_sid ? ERROR_INSUFFICIENT_BUFFER :
+                                   ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    InitializeSid( domain_sid, &domain_ident, 4 );
+    for (i = 0; i < 4; i++)
+        *GetSidSubAuthority( domain_sid, i ) = *GetSidSubAuthority( sid, i );
+
+    *size = required_size;
+    return TRUE;
 }
 
 /*
