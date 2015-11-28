@@ -210,7 +210,10 @@ EmptyWindowProc(
     {
         case WM_INITDIALOG:
         {
+            pgContext = (PGINA_CONTEXT)lParam;
             pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (LONG_PTR)pgContext);
+            return TRUE;
         }
         case WM_PAINT:
         {
@@ -245,7 +248,7 @@ GUIDisplaySASNotice(
                                             MAKEINTRESOURCEW(IDD_NOTICE_DLG),
                                             GetDesktopWindow(),
                                             EmptyWindowProc,
-                                            (LPARAM)NULL);
+                                            (LPARAM)pgContext);
 }
 
 /* Get the text contained in a textbox. Allocates memory in pText
