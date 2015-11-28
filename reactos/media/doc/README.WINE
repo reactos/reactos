@@ -314,7 +314,7 @@ User32 -
   reactos/win32ss/user/user32/windows/cursoricon   # Forked from Wine-1.2-rc7
   reactos/win32ss/user/user32/windows/defwnd.c     # Forked
   reactos/win32ss/user/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
-  reactos/win32ss/user/user32/windows/mdi.c        # Synced to Wine-1_1_40
+  reactos/win32ss/user/user32/windows/mdi.c        # Synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/windows/menu.c       # Forked
   reactos/win32ss/user/user32/windows/messagebox.c # Forked
   reactos/win32ss/user/user32/windows/rect.c       # Forked (uitools.c)
@@ -328,7 +328,7 @@ schannel.c
   reactos/dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
 
 secur32 -
-  reactos/dll/win32/secur32/sspi.c              # Partially synced to wine-1.7.55 (secur32.c)
+  reactos/dll/win32/secur32/sspi.c              # Partially synced to WineStaging-1.7.55 (secur32.c)
   reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.37
   reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.37
 

@@ -28,7 +28,7 @@
  *
  *      When we have more than 9 opened windows, a "More Windows..."
  *      option appears in the "Windows" menu. Each child window has
- *      a WND* associated with it, accesible via the children list of
+ *      a WND* associated with it, accessible via the children list of
  *      the parent window. This WND* has a wIDmenu member, which reflects
  *      the position of the child in the window list. For example, with
  *      9 child windows, we could have the following pattern:
@@ -263,7 +263,7 @@ static BOOL is_close_enabled(HWND hwnd, HMENU hSysMenu)
 /**********************************************************************
  * 			MDI_GetWindow
  *
- * returns "activateable" child different from the current or zero
+ * returns "activatable" child different from the current or zero
  */
 static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
                             DWORD dwStyleMask )
@@ -339,7 +339,7 @@ static LRESULT MDISetMenu( HWND hwnd, HMENU hmenuFrame,
     MDICLIENTINFO *ci;
     HWND hwndFrame = GetParent(hwnd);
 
-    TRACE("%p %p %p\n", hwnd, hmenuFrame, hmenuWindow);
+    TRACE("%p, frame menu %p, window menu %p\n", hwnd, hmenuFrame, hmenuWindow);
 
     if (hmenuFrame && !IsMenu(hmenuFrame))
     {
@@ -684,7 +684,7 @@ static LONG MDI_ChildActivate( HWND client, HWND child )
          * SetFocus won't work. It appears that Windows sends WM_SETFOCUS
          * manually in this case.
          */
-        if (SetFocus( client ) == client)
+        if (SetFocus(client) == client)
             SendMessageW( client, WM_SETFOCUS, (WPARAM)client, 0 );
     }
 
@@ -925,7 +925,8 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     if (!hIcon)
         hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICON);
     if (!hIcon)
-        hIcon = LoadImageW(0, (LPWSTR)IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
+        hIcon = LoadImageW(0, (LPWSTR)IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                           GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     if (hIcon)
     {
       HDC hMemDC;
@@ -957,7 +958,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     {
         TRACE("not inserted\n");
 	DestroyMenu(hSysPopup);
-	return FALSE;
+        return FALSE;
     }
 
     EnableMenuItem(hSysPopup, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
@@ -983,15 +984,15 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     TRACE("frame %p,child %p\n",frame, hChild);
 
-    if( !menu ) return FALSE;
+    if (!menu) return FALSE;
 
     /* if there is no system buttons then nothing to do */
     nItems = GetMenuItemCount(menu) - 1;
-    iId = GetMenuItemID(menu,nItems) ;
-    if( !(iId == SC_RESTORE || iId == SC_CLOSE) )
+    iId = GetMenuItemID(menu, nItems);
+    if ( !(iId == SC_RESTORE || iId == SC_CLOSE) )
     {
         ERR("no system buttons then nothing to do\n");
-	return FALSE;
+        return FALSE;
     }
 
     /*
@@ -1115,7 +1116,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
 
-    if (!(ci = get_client_info(hwnd)))
+    if (!(ci = get_client_info( hwnd )))
     {
         if (message == WM_NCCREATE)
         {
@@ -1126,9 +1127,9 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
            ci->hBmpClose = 0;
            NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
 #else
-           WND *wndPtr = WIN_GetPtr( hwnd );
-           wndPtr->flags |= WIN_ISMDICLIENT;
-           WIN_ReleasePtr( wndPtr );
+            WND *wndPtr = WIN_GetPtr( hwnd );
+            wndPtr->flags |= WIN_ISMDICLIENT;
+            WIN_ReleasePtr( wndPtr );
 #endif
         }
         return unicode ? DefWindowProcW( hwnd, message, wParam, lParam ) :
@@ -1145,14 +1146,14 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
         LPCLIENTCREATESTRUCT ccs = (LPCLIENTCREATESTRUCT)cs->lpCreateParams;
 
         ci->hWindowMenu		= ccs->hWindowMenu;
-	ci->idFirstChild	= ccs->idFirstChild;
-	ci->hwndChildMaximized  = 0;
+        ci->idFirstChild	= ccs->idFirstChild;
+        ci->hwndChildMaximized  = 0;
         ci->child = NULL;
 	ci->nActiveChildren	= 0;
 	ci->nTotalCreated	= 0;
 	ci->frameTitle		= NULL;
 	ci->mdiFlags		= 0;
-	ci->hFrameMenu = GetMenu(cs->hwndParent);
+        ci->hFrameMenu = GetMenu(cs->hwndParent);
 
 	if (!ci->hBmpClose) ci->hBmpClose = CreateMDIMenuBitmap();
 
@@ -1189,7 +1190,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
       case WM_MDIACTIVATE:
       {
         if( ci->hwndActiveChild != (HWND)wParam )
-            SetWindowPos((HWND)wParam, 0,0,0,0,0, SWP_NOSIZE | SWP_NOMOVE);
+	    SetWindowPos((HWND)wParam, 0,0,0,0,0, SWP_NOSIZE | SWP_NOMOVE);
         return 0;
       }
 
@@ -1520,6 +1521,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     MDICLIENTINFO *ci = get_client_info( client );
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
+
     hwnd = WIN_GetFullHandle( hwnd );
     if (!ci) return DefWindowProcA( hwnd, message, wParam, lParam );
 
@@ -1529,6 +1531,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
 	DefWindowProcA(hwnd, message, wParam, lParam);
 	if( ci->hwndChildMaximized == hwnd )
 	    MDI_UpdateFrameText( GetParent(client), client, TRUE, NULL );
+        MDI_RefreshMenu( ci );
         return 1; /* success. FIXME: check text length */
 
     case WM_GETMINMAXINFO:
@@ -1569,6 +1572,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         DefWindowProcW(hwnd, message, wParam, lParam);
         if( ci->hwndChildMaximized == hwnd )
             MDI_UpdateFrameText( GetParent(client), client, TRUE, NULL );
+        MDI_RefreshMenu( ci );
         return 1; /* success. FIXME: check text length */
 
     case WM_GETMINMAXINFO:
@@ -1592,7 +1596,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         return 0;
 
     case WM_SYSCOMMAND:
-        switch( wParam & 0xfff0)
+        switch (wParam & 0xfff0)
         {
         case SC_MOVE:
             if( ci->hwndChildMaximized == hwnd )
@@ -1602,7 +1606,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         case SC_MINIMIZE:
             break;
         case SC_MAXIMIZE:
-            if (ci->hwndChildMaximized == hwnd )
+            if (ci->hwndChildMaximized == hwnd)
                 return SendMessageW( GetParent(client), message, wParam, lParam);
             break;
         case SC_NEXTWINDOW:
@@ -1626,7 +1630,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         /* do not change */
         TRACE("current active %p, maximized %p\n", ci->hwndActiveChild, ci->hwndChildMaximized);
 
-        if( ci->hwndChildMaximized == hwnd && wParam != SIZE_MAXIMIZED)
+        if( ci->hwndChildMaximized == hwnd && wParam != SIZE_MAXIMIZED )
         {
             HWND frame;
 
@@ -2001,8 +2005,9 @@ CascadeWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     return 0;
 }
 
+
 /***********************************************************************
- *              CascadeChildWindows (USER32.@)
+ *		CascadeChildWindows (USER32.@)
  */
 WORD WINAPI CascadeChildWindows( HWND parent, UINT flags )
 {
@@ -2025,8 +2030,9 @@ TileWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     return 0;
 }
 
+
 /***********************************************************************
- *              TileChildWindows (USER32.@)
+ *		TileChildWindows (USER32.@)
  */
 WORD WINAPI TileChildWindows( HWND parent, UINT flags )
 {
