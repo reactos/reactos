@@ -166,8 +166,7 @@ NtAssignProcessToJobObject (
                 /* lock the process so we can safely assign the process. Note that in the
                 meanwhile another thread could have assigned this process to a job! */
 
-                ExAcquireRundownProtection(&Process->RundownProtect);
-                if(NT_SUCCESS(Status))
+                if(ExAcquireRundownProtection(&Process->RundownProtect))
                 {
                     if(Process->Job == NULL && PsGetProcessSessionId(Process) == Job->SessionId)
                     {
@@ -176,6 +175,7 @@ NtAssignProcessToJobObject (
                         the job object might require it to wait, which is a bad thing
                         while holding the process lock! */
                         Process->Job = Job;
+                        ObReferenceObject(Job);
                     }
                     else
                     {

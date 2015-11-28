@@ -714,7 +714,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* FIXME: We need to insert this process */
         DPRINT1("Jobs not yet supported\n");
-        ASSERT(FALSE);
     }
 
     /* Create PEB only for User-Mode Processes */
