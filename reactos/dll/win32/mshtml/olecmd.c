@@ -19,6 +19,7 @@
 #include "mshtml_private.h"
 
 #define NSCMD_COPY "cmd_copy"
+#define NSCMD_SELECTALL           "cmd_selectAll"
 
 void do_ns_command(HTMLDocument *This, const char *cmd, nsICommandParams *nsparam)
 {
@@ -336,8 +337,10 @@ static HRESULT exec_cut(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn, V
 
 static HRESULT exec_copy(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    FIXME("(%p)->(%d %p %p)\n", This, nCmdexecopt, pvaIn, pvaOut);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%d %s %p)\n", This, nCmdexecopt, debugstr_variant(pvaIn), pvaOut);
+
+    do_ns_command(This, NSCMD_COPY, NULL);
+    return S_OK;
 }
 
 static HRESULT exec_paste(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
@@ -364,10 +367,18 @@ static HRESULT exec_rendo(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn,
     return E_NOTIMPL;
 }
 
-static HRESULT exec_select_all(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+static HRESULT exec_select_all(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *in, VARIANT *out)
 {
-    FIXME("(%p)->(%d %p %p)\n", This, nCmdexecopt, pvaIn, pvaOut);
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+
+    if(in || out)
+        FIXME("unsupported args\n");
+
+    if(This->doc_obj->nscontainer)
+        do_ns_command(This, NSCMD_SELECTALL, NULL);
+
+    update_doc(This, UPDATE_UI);
+    return S_OK;
 }
 
 static HRESULT exec_clear_selection(HTMLDocument *This, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
@@ -620,6 +631,14 @@ static HRESULT exec_mshtml_paste(HTMLDocument *This, DWORD cmdexecopt, VARIANT *
     return S_OK;
 }
 
+static HRESULT query_selall_status(HTMLDocument *This, OLECMD *cmd)
+{
+    TRACE("(%p)->(%p)\n", This, cmd);
+
+    cmd->cmdf = OLECMDF_SUPPORTED|OLECMDF_ENABLED;
+    return S_OK;
+}
+
 static HRESULT exec_browsemode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)
 {
     WARN("(%p)->(%08x %p %p)\n", This, cmdexecopt, in, out);
@@ -738,6 +757,7 @@ static const cmdtable_t base_cmds[] = {
     {IDM_COPY,             query_mshtml_copy,     exec_mshtml_copy},
     {IDM_PASTE,            query_mshtml_paste,    exec_mshtml_paste},
     {IDM_CUT,              query_mshtml_cut,      exec_mshtml_cut},
+    {IDM_SELECTALL,        query_selall_status,   exec_select_all},
     {IDM_BROWSEMODE,       NULL,                  exec_browsemode},
     {IDM_EDITMODE,         NULL,                  exec_editmode},
     {IDM_PRINT,            query_enabled_stub,    exec_print},

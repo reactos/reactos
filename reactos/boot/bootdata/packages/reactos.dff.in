@@ -104,6 +104,6 @@ Signature = "$ReactOS$"
 "modules/optional/vmx_mode.dll"                       1  optional
 "modules/optional/vmx_svga.inf"                       6  optional
 "modules/optional/vmx_svga.sys"                       2  optional
-"modules/optional/wine_gecko-2.34-x86.msi"            4  optional
+"modules/optional/wine_gecko-2.40-x86.msi"            4  optional
 "boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
 ; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !

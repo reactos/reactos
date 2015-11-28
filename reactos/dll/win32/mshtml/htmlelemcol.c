@@ -405,11 +405,13 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
 
     switch(V_VT(&name)) {
     case VT_I4:
+    case VT_INT:
         if(V_I4(&name) < 0)
             return E_INVALIDARG;
         hres = get_item_idx(This, V_I4(&name), pdisp);
         break;
 
+    case VT_UI4:
     case VT_UINT:
         hres = get_item_idx(This, V_UINT(&name), pdisp);
         break;
@@ -807,6 +809,9 @@ HRESULT get_elem_source_index(HTMLElement *elem, LONG *ret)
 static IHTMLElementCollection *HTMLElementCollection_Create(HTMLElement **elems, DWORD len)
 {
     HTMLElementCollection *ret = heap_alloc_zero(sizeof(HTMLElementCollection));
+
+    if (!ret)
+        return NULL;
 
     ret->IHTMLElementCollection_iface.lpVtbl = &HTMLElementCollectionVtbl;
     ret->ref = 1;

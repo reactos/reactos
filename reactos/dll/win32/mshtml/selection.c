@@ -21,6 +21,7 @@
 typedef struct {
     DispatchEx dispex;
     IHTMLSelectionObject IHTMLSelectionObject_iface;
+    IHTMLSelectionObject2 IHTMLSelectionObject2_iface;
 
     LONG ref;
 
@@ -48,6 +49,8 @@ static HRESULT WINAPI HTMLSelectionObject_QueryInterface(IHTMLSelectionObject *i
         *ppv = &This->IHTMLSelectionObject_iface;
     }else if(IsEqualGUID(&IID_IHTMLSelectionObject, riid)) {
         *ppv = &This->IHTMLSelectionObject_iface;
+    }else if(IsEqualGUID(&IID_IHTMLSelectionObject2, riid)) {
+        *ppv = &This->IHTMLSelectionObject2_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }else {
@@ -221,13 +224,100 @@ static const IHTMLSelectionObjectVtbl HTMLSelectionObjectVtbl = {
     HTMLSelectionObject_get_type
 };
 
+static inline HTMLSelectionObject *impl_from_IHTMLSelectionObject2(IHTMLSelectionObject2 *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLSelectionObject, IHTMLSelectionObject2_iface);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_QueryInterface(IHTMLSelectionObject2 *iface, REFIID riid, void **ppv)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IHTMLSelectionObject_QueryInterface(&This->IHTMLSelectionObject_iface, riid, ppv);
+}
+
+static ULONG WINAPI HTMLSelectionObject2_AddRef(IHTMLSelectionObject2 *iface)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IHTMLSelectionObject_AddRef(&This->IHTMLSelectionObject_iface);
+}
+
+static ULONG WINAPI HTMLSelectionObject2_Release(IHTMLSelectionObject2 *iface)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IHTMLSelectionObject_Release(&This->IHTMLSelectionObject_iface);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_GetTypeInfoCount(IHTMLSelectionObject2 *iface, UINT *pctinfo)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_GetTypeInfo(IHTMLSelectionObject2 *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_GetIDsOfNames(IHTMLSelectionObject2 *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_Invoke(IHTMLSelectionObject2 *iface, DISPID dispIdMember,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult,
+        EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_createRangeCollection(IHTMLSelectionObject2 *iface, IDispatch **rangeCollection)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+    FIXME("(%p)->(%p)\n", This, rangeCollection);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLSelectionObject2_get_typeDetail(IHTMLSelectionObject2 *iface, BSTR *p)
+{
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject2(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static const IHTMLSelectionObject2Vtbl HTMLSelectionObject2Vtbl = {
+    HTMLSelectionObject2_QueryInterface,
+    HTMLSelectionObject2_AddRef,
+    HTMLSelectionObject2_Release,
+    HTMLSelectionObject2_GetTypeInfoCount,
+    HTMLSelectionObject2_GetTypeInfo,
+    HTMLSelectionObject2_GetIDsOfNames,
+    HTMLSelectionObject2_Invoke,
+    HTMLSelectionObject2_createRangeCollection,
+    HTMLSelectionObject2_get_typeDetail
+};
+
 static const tid_t HTMLSelectionObject_iface_tids[] = {
     IHTMLSelectionObject_tid,
+    IHTMLSelectionObject2_tid,
     0
 };
 static dispex_static_data_t HTMLSelectionObject_dispex = {
     NULL,
-    IHTMLSelectionObject_tid,
+    IHTMLSelectionObject_tid, /* FIXME: We have a test for that, but it doesn't expose IHTMLSelectionObject2 iface. */
     NULL,
     HTMLSelectionObject_iface_tids
 };
@@ -243,6 +333,7 @@ HRESULT HTMLSelectionObject_Create(HTMLDocumentNode *doc, nsISelection *nsselect
     init_dispex(&selection->dispex, (IUnknown*)&selection->IHTMLSelectionObject_iface, &HTMLSelectionObject_dispex);
 
     selection->IHTMLSelectionObject_iface.lpVtbl = &HTMLSelectionObjectVtbl;
+    selection->IHTMLSelectionObject2_iface.lpVtbl = &HTMLSelectionObject2Vtbl;
     selection->ref = 1;
     selection->nsselection = nsselection; /* We shouldn't call AddRef here */
 

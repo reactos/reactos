@@ -103,8 +103,12 @@ void set_current_mon(HTMLOuterWindow *This, IMoniker *mon, DWORD flags)
     HRESULT hres;
 
     if(This->mon) {
-        if(This->doc_obj && !(flags & (BINDING_REPLACE|BINDING_REFRESH)))
-            notify_travellog_update(This->doc_obj);
+        if(This->doc_obj && !(flags & (BINDING_REPLACE|BINDING_REFRESH))) {
+            if(This == This->doc_obj->basedoc.window)
+                notify_travellog_update(This->doc_obj);
+            else
+                TRACE("Skipping travellog update for frame navigation.\n");
+        }
         IMoniker_Release(This->mon);
         This->mon = NULL;
     }

@@ -916,6 +916,8 @@ static HRESULT on_start_nsrequest(nsChannelBSC *This)
     }
 
     if(This->is_doc_channel) {
+        if(!This->bsc.window)
+            return E_ABORT; /* Binding aborted in OnStartRequest call. */
         update_window_doc(This->bsc.window);
         if(This->bsc.window->base.outer_window->readystate != READYSTATE_LOADING)
             set_ready_state(This->bsc.window->base.outer_window, READYSTATE_LOADING);
@@ -1030,7 +1032,9 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
                     return E_OUTOFMEMORY;
             }
 
-            on_start_nsrequest(This);
+            hres = on_start_nsrequest(This);
+            if(FAILED(hres))
+                return hres;
         }
 
         nsres = nsIStreamListener_OnDataAvailable(This->nslistener,
@@ -1110,7 +1114,7 @@ static nsrefcnt NSAPI nsAsyncVerifyRedirectCallback_Release(nsIAsyncVerifyRedire
     return ref;
 }
 
-static nsresult NSAPI nsAsyncVerifyRedirectCallback_AsyncOnChannelRedirect(nsIAsyncVerifyRedirectCallback *iface, nsresult result)
+static nsresult NSAPI nsAsyncVerifyRedirectCallback_OnRedirectVerifyCallback(nsIAsyncVerifyRedirectCallback *iface, nsresult result)
 {
     nsRedirectCallback *This = impl_from_nsIAsyncVerifyRedirectCallback(iface);
     nsChannel *old_nschannel;
@@ -1157,7 +1161,7 @@ static const nsIAsyncVerifyRedirectCallbackVtbl nsAsyncVerifyRedirectCallbackVtb
     nsAsyncVerifyRedirectCallback_QueryInterface,
     nsAsyncVerifyRedirectCallback_AddRef,
     nsAsyncVerifyRedirectCallback_Release,
-    nsAsyncVerifyRedirectCallback_AsyncOnChannelRedirect
+    nsAsyncVerifyRedirectCallback_OnRedirectVerifyCallback
 };
 
 static HRESULT create_redirect_callback(nsChannel *nschannel, nsChannelBSC *bsc, nsRedirectCallback **ret)
@@ -1572,10 +1576,29 @@ static HRESULT nsChannelBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCW
     return S_OK;
 }
 
+static HRESULT process_response_status_text(const WCHAR *header, const WCHAR *header_end, char **status_text)
+{
+    header = strchrW(header + 1, ' ');
+    if(!header || header >= header_end)
+        return E_FAIL;
+    header = strchrW(header + 1, ' ');
+    if(!header || header >= header_end)
+        return E_FAIL;
+    ++header;
+
+    *status_text = heap_strndupWtoU(header, header_end - header);
+
+    if(!*status_text)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
 static HRESULT nsChannelBSC_on_response(BSCallback *bsc, DWORD response_code,
         LPCWSTR response_headers)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
+    char *str;
     HRESULT hres;
 
     This->response_processed = TRUE;
@@ -1585,6 +1608,15 @@ static HRESULT nsChannelBSC_on_response(BSCallback *bsc, DWORD response_code,
         const WCHAR *headers;
 
         headers = strchrW(response_headers, '\r');
+        hres = process_response_status_text(response_headers, headers, &str);
+        if(FAILED(hres)) {
+            WARN("parsing headers failed: %08x\n", hres);
+            return hres;
+        }
+
+        heap_free(This->nschannel->response_status_text);
+        This->nschannel->response_status_text = str;
+
         if(headers && headers[1] == '\n') {
             headers += 2;
             hres = process_response_headers(This, headers);
@@ -2300,7 +2332,7 @@ static HRESULT translate_uri(HTMLOuterWindow *window, IUri *orig_uri, BSTR *ret_
 
         hres = IDocHostUIHandler_TranslateUrl(window->doc_obj->hostui, 0, display_uri,
                 &translated_url);
-        if(hres == S_OK) {
+        if(hres == S_OK && translated_url) {
             TRACE("%08x %s -> %s\n", hres, debugstr_w(display_uri), debugstr_w(translated_url));
             SysFreeString(display_uri);
             hres = create_uri(translated_url, 0, &uri);

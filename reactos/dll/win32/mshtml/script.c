@@ -1293,10 +1293,9 @@ IDispatch *get_script_disp(ScriptHost *script_host)
     return disp;
 }
 
-static event_target_t **find_event_target(HTMLDocumentNode *doc, HTMLScriptElement *script_elem, HTMLDOMNode **ret_target_node)
+static EventTarget *find_event_target(HTMLDocumentNode *doc, HTMLScriptElement *script_elem)
 {
-    HTMLDOMNode *target_node = NULL;
-    event_target_t **target = NULL;
+    EventTarget *event_target = NULL;
     const PRUnichar *target_id;
     nsAString target_id_str;
     nsresult nsres;
@@ -1314,24 +1313,24 @@ static event_target_t **find_event_target(HTMLDocumentNode *doc, HTMLScriptEleme
     if(!*target_id) {
         FIXME("Empty for attribute\n");
     }else if(!strcmpW(target_id, documentW)) {
-        target = &doc->node.event_target;
-        target_node = &doc->node;
-        IHTMLDOMNode_AddRef(&target_node->IHTMLDOMNode_iface);
+        event_target = &doc->node.event_target;
+        htmldoc_addref(&doc->basedoc);
     }else if(!strcmpW(target_id, windowW)) {
-        target = &doc->body_event_target;
+        if(doc->window) {
+            event_target = &doc->window->event_target;
+            IDispatchEx_AddRef(&event_target->dispex.IDispatchEx_iface);
+        }
     }else {
         HTMLElement *target_elem;
 
         hres = get_doc_elem_by_id(doc, target_id, &target_elem);
         if(SUCCEEDED(hres) && target_elem) {
-            target_node = &target_elem->node;
-            target = &target_elem->node.event_target;
+            event_target = &target_elem->node.event_target;
         }
     }
-    nsAString_Finish(&target_id_str);
 
-    *ret_target_node = target_node;
-    return target;
+    nsAString_Finish(&target_id_str);
+    return event_target;
 }
 
 static BOOL parse_event_str(WCHAR *event, const WCHAR **args)
@@ -1426,9 +1425,8 @@ void bind_event_scripts(HTMLDocumentNode *doc)
     HTMLPluginContainer *plugin_container;
     nsIDOMHTMLScriptElement *nsscript;
     HTMLScriptElement *script_elem;
-    event_target_t **event_target;
+    EventTarget *event_target;
     nsIDOMNodeList *node_list;
-    HTMLDOMNode *target_node;
     nsIDOMNode *script_node;
     nsAString selector_str;
     IDispatch *event_disp;
@@ -1475,21 +1473,18 @@ void bind_event_scripts(HTMLDocumentNode *doc)
 
         event_disp = parse_event_elem(doc, script_elem, &event);
         if(event_disp) {
-            event_target = find_event_target(doc, script_elem, &target_node);
+            event_target = find_event_target(doc, script_elem);
             if(event_target) {
-                if(target_node)
-                    hres = IHTMLDOMNode_QueryInterface(&target_node->IHTMLDOMNode_iface, &IID_HTMLPluginContainer,
-                            (void**)&plugin_container);
-                else
-                    hres = E_NOINTERFACE;
-
+                hres = IDispatchEx_QueryInterface(&event_target->dispex.IDispatchEx_iface, &IID_HTMLPluginContainer,
+                        (void**)&plugin_container);
                 if(SUCCEEDED(hres))
                     bind_activex_event(doc, plugin_container, event, event_disp);
                 else
-                    bind_node_event(doc, event_target, target_node, event, event_disp);
+                    bind_target_event(doc, event_target, event, event_disp);
 
-                if(target_node)
-                    IHTMLDOMNode_Release(&target_node->IHTMLDOMNode_iface);
+                IDispatchEx_Release(&event_target->dispex.IDispatchEx_iface);
+                if(plugin_container)
+                    node_release(&plugin_container->element.node);
             }
 
             heap_free(event);

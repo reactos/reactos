@@ -1192,7 +1192,7 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
 
     if(!Count) {
         *ActualCount = 0;
-        return IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
+        return IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, VARIANT_TRUE);
     }
 
     switch(unit) {
@@ -1204,7 +1204,7 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
         *ActualCount = move_by_chars(&start, Count);
 
         set_start_point(This, &start);
-        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
+        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, VARIANT_TRUE);
         free_rangepoint(&start);
         break;
     }
@@ -1217,7 +1217,7 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
         *ActualCount = move_by_words(&start, Count);
 
         set_start_point(This, &start);
-        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
+        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, VARIANT_TRUE);
         free_rangepoint(&start);
         break;
     }

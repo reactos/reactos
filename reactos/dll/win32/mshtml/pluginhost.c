@@ -18,9 +18,6 @@
 
 #include "mshtml_private.h"
 
-const IID IID_HTMLPluginContainer =
-    {0xbd7a6050,0xb373,0x4f6f,{0xa4,0x93,0xdd,0x40,0xc5,0x23,0xa8,0x6a}};
-
 static BOOL check_load_safety(PluginHost *host)
 {
     DWORD policy_size, policy;

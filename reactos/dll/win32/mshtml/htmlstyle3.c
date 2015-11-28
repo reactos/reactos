@@ -546,7 +546,7 @@ static HRESULT WINAPI HTMLStyle5_get_maxHeight(IHTMLStyle5 *iface, VARIANT *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle5(iface);
 
-    TRACE("(%p)->(%p)\n", This, debugstr_variant(p));
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(p));
 
     return get_nsstyle_attr_var(This->nsstyle, STYLEID_MAX_HEIGHT, p, 0);
 }

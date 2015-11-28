@@ -627,7 +627,7 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         *url_file++ = 0;
     }else {
         url_file = res_type;
-        res_type = MAKEINTRESOURCEW(RT_HTML);
+        res_type = (LPWSTR)RT_HTML;
     }
 
     /* Ignore query and hash parts. */

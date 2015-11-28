@@ -56,14 +56,14 @@ static ULONG WINAPI HTMLTextAreaElement_Release(IHTMLTextAreaElement *iface)
 static HRESULT WINAPI HTMLTextAreaElement_GetTypeInfoCount(IHTMLTextAreaElement *iface, UINT *pctinfo)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLTextAreaElement_GetTypeInfo(IHTMLTextAreaElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
             ppTInfo);
 }
 
@@ -72,7 +72,7 @@ static HRESULT WINAPI HTMLTextAreaElement_GetIDsOfNames(IHTMLTextAreaElement *if
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
             cNames, lcid, rgDispId);
 }
 
@@ -81,7 +81,7 @@ static HRESULT WINAPI HTMLTextAreaElement_Invoke(IHTMLTextAreaElement *iface, DI
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
             lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -215,15 +215,28 @@ static HRESULT WINAPI HTMLTextAreaElement_get_form(IHTMLTextAreaElement *iface, 
 static HRESULT WINAPI HTMLTextAreaElement_put_defaultValue(IHTMLTextAreaElement *iface, BSTR v)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMHTMLTextAreaElement_SetDefaultValue(This->nstextarea, &nsstr);
+    nsAString_Finish(&nsstr);
+    return NS_SUCCEEDED(nsres) ? S_OK : E_FAIL;
 }
 
 static HRESULT WINAPI HTMLTextAreaElement_get_defaultValue(IHTMLTextAreaElement *iface, BSTR *p)
 {
     HTMLTextAreaElement *This = impl_from_IHTMLTextAreaElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLTextAreaElement_GetDefaultValue(This->nstextarea, &nsstr);
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLTextAreaElement_select(IHTMLTextAreaElement *iface)

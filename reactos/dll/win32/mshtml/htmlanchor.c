@@ -26,29 +26,18 @@ typedef struct {
     nsIDOMHTMLAnchorElement *nsanchor;
 } HTMLAnchorElement;
 
-static HRESULT navigate_anchor_window(HTMLAnchorElement *This, const WCHAR *target)
+static HRESULT navigate_href_new_window(HTMLElement *element, nsAString *href_str, const WCHAR *target)
 {
-    nsAString href_str;
+    const PRUnichar *href;
     IUri *uri;
-    nsresult nsres;
     HRESULT hres;
 
-    nsAString_Init(&href_str, NULL);
-    nsres = nsIDOMHTMLAnchorElement_GetHref(This->nsanchor, &href_str);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *href;
-
-        nsAString_GetData(&href_str, &href);
-        hres = create_relative_uri(This->element.node.doc->basedoc.window, href, &uri);
-    }else {
-        ERR("Could not get anchor href: %08x\n", nsres);
-        hres = E_FAIL;
-    }
-    nsAString_Finish(&href_str);
+    nsAString_GetData(href_str, &href);
+    hres = create_relative_uri(element->node.doc->basedoc.window, href, &uri);
     if(FAILED(hres))
         return hres;
 
-    hres = navigate_new_window(This->element.node.doc->basedoc.window, uri, target, NULL, NULL);
+    hres = navigate_new_window(element->node.doc->basedoc.window, uri, target, NULL, NULL);
     IUri_Release(uri);
     return hres;
 }
@@ -102,49 +91,69 @@ HTMLOuterWindow *get_target_window(HTMLOuterWindow *window, nsAString *target_st
     return ret_window;
 }
 
-static HRESULT navigate_anchor(HTMLAnchorElement *This)
+static HRESULT navigate_href(HTMLElement *element, nsAString *href_str, nsAString *target_str)
 {
-    nsAString href_str, target_str;
     HTMLOuterWindow *window;
     BOOL use_new_window;
-    nsresult nsres;
-    HRESULT hres = E_FAIL;
+    const PRUnichar *href;
+    HRESULT hres;
 
-
-    nsAString_Init(&target_str, NULL);
-    nsres = nsIDOMHTMLAnchorElement_GetTarget(This->nsanchor, &target_str);
-    if(NS_FAILED(nsres))
-        return E_FAIL;
-
-    window = get_target_window(This->element.node.doc->basedoc.window, &target_str, &use_new_window);
-    if(!window && use_new_window) {
-        const PRUnichar *target;
-
-        nsAString_GetData(&target_str, &target);
-        hres = navigate_anchor_window(This, target);
-        nsAString_Finish(&target_str);
-        return hres;
-    }
-
-    nsAString_Finish(&target_str);
-    if(!window)
-        return S_OK;
-
-    nsAString_Init(&href_str, NULL);
-    nsres = nsIDOMHTMLAnchorElement_GetHref(This->nsanchor, &href_str);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *href;
-
-        nsAString_GetData(&href_str, &href);
-        if(*href) {
-            hres = navigate_url(window, href, window->uri_nofrag, BINDING_NAVIGATED);
+    window = get_target_window(element->node.doc->basedoc.window, target_str, &use_new_window);
+    if(!window) {
+        if(use_new_window) {
+            const PRUnichar *target;
+            nsAString_GetData(target_str, &target);
+            return navigate_href_new_window(element, href_str, target);
         }else {
-            TRACE("empty href\n");
-            hres = S_OK;
+            return S_OK;
         }
     }
-    nsAString_Finish(&href_str);
+
+    nsAString_GetData(href_str, &href);
+    if(*href) {
+        hres = navigate_url(window, href, window->uri_nofrag, BINDING_NAVIGATED);
+    }else {
+        TRACE("empty href\n");
+        hres = S_OK;
+    }
     IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
+    return hres;
+}
+
+HRESULT handle_link_click_event(HTMLElement *element, nsAString *href_str, nsAString *target_str,
+                                nsIDOMEvent *event, BOOL *prevent_default)
+{
+    nsIDOMMouseEvent *mouse_event;
+    INT16 button;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("CLICK\n");
+
+    nsres = nsIDOMEvent_QueryInterface(event, &IID_nsIDOMMouseEvent, (void**)&mouse_event);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDOMMouseEvent_GetButton(mouse_event, &button);
+    assert(nsres == NS_OK);
+
+    nsIDOMMouseEvent_Release(mouse_event);
+
+    switch(button) {
+    case 0:
+        *prevent_default = TRUE;
+        hres = navigate_href(element, href_str, target_str);
+        break;
+    case 1:
+        *prevent_default = TRUE;
+        hres = navigate_href_new_window(element, href_str, NULL);
+        break;
+    default:
+        *prevent_default = FALSE;
+        hres = S_OK;
+    }
+
+    nsAString_Finish(href_str);
+    nsAString_Finish(target_str);
     return hres;
 }
 
@@ -178,14 +187,14 @@ static ULONG WINAPI HTMLAnchorElement_Release(IHTMLAnchorElement *iface)
 static HRESULT WINAPI HTMLAnchorElement_GetTypeInfoCount(IHTMLAnchorElement *iface, UINT *pctinfo)
 {
     HTMLAnchorElement *This = impl_from_IHTMLAnchorElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLAnchorElement_GetTypeInfo(IHTMLAnchorElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLAnchorElement *This = impl_from_IHTMLAnchorElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
             ppTInfo);
 }
 
@@ -194,7 +203,7 @@ static HRESULT WINAPI HTMLAnchorElement_GetIDsOfNames(IHTMLAnchorElement *iface,
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLAnchorElement *This = impl_from_IHTMLAnchorElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
             cNames, lcid, rgDispId);
 }
 
@@ -203,7 +212,7 @@ static HRESULT WINAPI HTMLAnchorElement_Invoke(IHTMLAnchorElement *iface, DISPID
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLAnchorElement *This = impl_from_IHTMLAnchorElement(iface);
-    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
             lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -704,33 +713,29 @@ static HRESULT HTMLAnchorElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 static HRESULT HTMLAnchorElement_handle_event(HTMLDOMNode *iface, eventid_t eid, nsIDOMEvent *event, BOOL *prevent_default)
 {
     HTMLAnchorElement *This = impl_from_HTMLDOMNode(iface);
+    nsAString href_str, target_str;
+    nsresult nsres;
 
     if(eid == EVENTID_CLICK) {
-        nsIDOMMouseEvent *mouse_event;
-        INT16 button;
-        nsresult nsres;
-
-        TRACE("CLICK\n");
-
-        nsres = nsIDOMEvent_QueryInterface(event, &IID_nsIDOMMouseEvent, (void**)&mouse_event);
-        assert(nsres == NS_OK);
-
-        nsres = nsIDOMMouseEvent_GetButton(mouse_event, &button);
-        assert(nsres == NS_OK);
-
-        nsIDOMMouseEvent_Release(mouse_event);
-
-        switch(button) {
-        case 0:
-            *prevent_default = TRUE;
-            return navigate_anchor(This);
-        case 1:
-            *prevent_default = TRUE;
-            return navigate_anchor_window(This, NULL);
-        default:
-            *prevent_default = FALSE;
-            return S_OK;
+        nsAString_Init(&href_str, NULL);
+        nsres = nsIDOMHTMLAnchorElement_GetHref(This->nsanchor, &href_str);
+        if (NS_FAILED(nsres)) {
+            ERR("Could not get anchor href: %08x\n", nsres);
+            goto fallback;
         }
+
+        nsAString_Init(&target_str, NULL);
+        nsres = nsIDOMHTMLAnchorElement_GetTarget(This->nsanchor, &target_str);
+        if (NS_FAILED(nsres)) {
+            ERR("Could not get anchor target: %08x\n", nsres);
+            goto fallback;
+        }
+
+        return handle_link_click_event(&This->element, &href_str, &target_str, event, prevent_default);
+
+fallback:
+        nsAString_Finish(&href_str);
+        nsAString_Finish(&target_str);
     }
 
     return HTMLElement_handle_event(&This->element.node, eid, event, prevent_default);

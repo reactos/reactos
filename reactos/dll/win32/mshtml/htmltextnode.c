@@ -56,14 +56,14 @@ static ULONG WINAPI HTMLDOMTextNode_Release(IHTMLDOMTextNode *iface)
 static HRESULT WINAPI HTMLDOMTextNode_GetTypeInfoCount(IHTMLDOMTextNode *iface, UINT *pctinfo)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_GetTypeInfo(IHTMLDOMTextNode *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    return IDispatchEx_GetTypeInfo(&This->node.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+    return IDispatchEx_GetTypeInfo(&This->node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_GetIDsOfNames(IHTMLDOMTextNode *iface, REFIID riid,
@@ -71,7 +71,7 @@ static HRESULT WINAPI HTMLDOMTextNode_GetIDsOfNames(IHTMLDOMTextNode *iface, REF
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    return IDispatchEx_GetIDsOfNames(&This->node.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+    return IDispatchEx_GetIDsOfNames(&This->node.event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
             lcid, rgDispId);
 }
 
@@ -80,7 +80,7 @@ static HRESULT WINAPI HTMLDOMTextNode_Invoke(IHTMLDOMTextNode *iface, DISPID dis
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    return IDispatchEx_Invoke(&This->node.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
+    return IDispatchEx_Invoke(&This->node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -208,21 +208,21 @@ static ULONG WINAPI HTMLDOMTextNode2_Release(IHTMLDOMTextNode2 *iface)
 static HRESULT WINAPI HTMLDOMTextNode2_GetTypeInfoCount(IHTMLDOMTextNode2 *iface, UINT *pctinfo)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode2(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode2_GetTypeInfo(IHTMLDOMTextNode2 *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode2(iface);
-    return IDispatchEx_GetTypeInfo(&This->node.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+    return IDispatchEx_GetTypeInfo(&This->node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode2_GetIDsOfNames(IHTMLDOMTextNode2 *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode2(iface);
-    return IDispatchEx_GetIDsOfNames(&This->node.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+    return IDispatchEx_GetIDsOfNames(&This->node.event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
             lcid, rgDispId);
 }
 
@@ -231,7 +231,7 @@ static HRESULT WINAPI HTMLDOMTextNode2_Invoke(IHTMLDOMTextNode2 *iface, DISPID d
         EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode2(iface);
-    return IDispatchEx_Invoke(&This->node.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
+    return IDispatchEx_Invoke(&This->node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -362,7 +362,7 @@ HRESULT HTMLDOMTextNode_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode, HTMLDO
     ret->IHTMLDOMTextNode_iface.lpVtbl = &HTMLDOMTextNodeVtbl;
     ret->IHTMLDOMTextNode2_iface.lpVtbl = &HTMLDOMTextNode2Vtbl;
 
-    init_dispex(&ret->node.dispex, (IUnknown*)&ret->IHTMLDOMTextNode_iface,
+    init_dispex(&ret->node.event_target.dispex, (IUnknown*)&ret->IHTMLDOMTextNode_iface,
             &HTMLDOMTextNode_dispex);
 
     HTMLDOMNode_Init(doc, &ret->node, nsnode);

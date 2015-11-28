@@ -388,7 +388,7 @@ HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, cons
     if(value) {
         if(flags & ATTR_FIX_PX)
             val = fix_px_value(value);
-        if(flags & ATTR_FIX_URL)
+        else if(flags & ATTR_FIX_URL)
             val = fix_url_value(value);
     }
 
