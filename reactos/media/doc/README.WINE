@@ -328,7 +328,7 @@ schannel.c
   reactos/dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
 
 secur32 -
-  reactos/dll/win32/secur32/sspi.c              # partial sync to wine-1.7.17 (secur32.c)
+  reactos/dll/win32/secur32/sspi.c              # Partially synced to wine-1.7.55 (secur32.c)
   reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.37
   reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.37
 
