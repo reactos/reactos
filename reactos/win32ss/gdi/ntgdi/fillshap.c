@@ -165,13 +165,20 @@ IntGdiPolyPolygon(DC      *dc,
 BOOL FASTCALL
 IntPolygon(HDC hdc, POINT *Point, int Count)
 {
-   PDC dc;
-   if (!(dc = DC_LockDc(hdc)))
-   {
-      EngSetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   return IntGdiPolygon(dc, Point, Count);
+    BOOL bResult;
+    PDC pdc;
+
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    bResult = IntGdiPolygon(pdc, Point, Count);
+
+    DC_UnlockDc(pdc);
+    return bResult;
 }
 
 
