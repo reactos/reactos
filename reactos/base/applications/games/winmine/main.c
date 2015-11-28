@@ -994,7 +994,7 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             LoadStringW( board.hInst, IDS_APPNAME, appname, sizeof(appname)/sizeof(WCHAR) );
             LoadStringW( board.hInst, IDS_ABOUT, other, sizeof(other)/sizeof(WCHAR) );
             ShellAboutW( hWnd, appname, other,
-                         LoadImageA( board.hInst, "WINEMINE", IMAGE_ICON, 48, 48, LR_SHARED ));
+                         LoadImageW(board.hInst, MAKEINTRESOURCEW(IDI_WINEMINE), IMAGE_ICON, 48, 48, LR_SHARED));
             return 0;
         }
         default:
