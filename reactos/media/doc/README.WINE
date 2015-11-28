@@ -114,7 +114,7 @@ reactos/dll/win32/msftedit            # Synced to WineStaging-1.7.55
 reactos/dll/win32/msg711.acm          # Synced to WineStaging-1.7.55
 reactos/dll/win32/msgsm32.acm         # Synced to WineStaging-1.7.55
 reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.55
-reactos/dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.47
+reactos/dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.55
 reactos/dll/win32/msi                 # Synced to WineStaging-1.7.55
 reactos/dll/win32/msimg32             # Synced to WineStaging-1.7.55
 reactos/dll/win32/msimtf              # Synced to WineStaging-1.7.55
@@ -290,7 +290,7 @@ msvcrt -
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
   reactos/lib/sdk/crt/wine/undname.c            # Synced to WineStaging-1.7.55
-  reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
+  reactos/lib/sdk/crt/process/thread.c          # Synced to WineStaging-1.7.55
 
 User32 -
   reactos/win32ss/user/user32/controls/button.c    # Synced to WineStaging-1.7.37
@@ -309,7 +309,6 @@ User32 -
   reactos/win32ss/user/user32/misc/exticon.c       # Synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/misc/resources.c     # Partially synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/misc/winhelp.c       # Last sync date unknown
-  reactos/win32ss/user/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
 
   reactos/win32ss/user/user32/windows/cursoricon   # Forked from Wine-1.2-rc7
   reactos/win32ss/user/user32/windows/defwnd.c     # Forked
@@ -324,20 +323,19 @@ User32 -
 
 schannel.c
   reactos/dll/win32/schannel/schannel_wine.c    # synced to wine-1.7.17 (secur32/schannel.c)
-  reactos/dll/win32/schannel/schannel_gnutls.c  # Synced to WineStaging-1.7.37 (secur32/schannel_gnutls.c)
   reactos/dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
 
 secur32 -
   reactos/dll/win32/secur32/sspi.c              # Partially synced to WineStaging-1.7.55 (secur32.c)
-  reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.37
-  reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.37
+  reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.55
+  reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.55
 
 setupapi -
-  reactos/dll/win32/setupapi/query.c            # Partial sync to WineStaging-1.7.47
-  reactos/dll/win32/setupapi/setupcab.c         # Synced to WineStaging-1.7.47
+  reactos/dll/win32/setupapi/query.c            # Partially synced to WineStaging-1.7.55
+  reactos/dll/win32/setupapi/setupcab.c         # Synced to WineStaging-1.7.55
 
 win32k -
-  win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.7.37
+  win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.7.55 (gdi32/painting.c)
 
 ws2_32 -
-  reactos/dll/win32/ws2_32/misc/async.c         # Synced to Wine-1.5.4
+  reactos/dll/win32/ws2_32/misc/async.c         # Synced to WineStaging-1.7.55
