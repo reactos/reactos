@@ -81,8 +81,11 @@ IntGdiPolygon(PDC    dc,
         pbrFill = dc->dclevel.pbrFill;
         pbrLine = dc->dclevel.pbrLine;
         psurf = dc->dclevel.pSurface;
-        /* FIXME: psurf can be NULL!!!! don't assert but handle this case gracefully! */
-        ASSERT(psurf);
+        if (psurf == NULL)
+        {
+            /* Memory DC without a bitmap selected, nothing to do. */
+            return TRUE;
+        }
 
         /* Now fill the polygon with the current fill brush. */
         if (!(pbrFill->flAttrs & BR_IS_NULL))
