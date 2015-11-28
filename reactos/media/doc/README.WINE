@@ -318,7 +318,7 @@ User32 -
   reactos/win32ss/user/user32/windows/menu.c       # Forked
   reactos/win32ss/user/user32/windows/messagebox.c # Forked
   reactos/win32ss/user/user32/windows/rect.c       # Forked (uitools.c)
-  reactos/win32ss/user/user32/windows/spy.c        # Synced to WineStaging-1.7.37
+  reactos/win32ss/user/user32/windows/spy.c        # Synced to WineStaging-1.7.55
   reactos/win32ss/user/user32/windows/text.c       # Forked (lstr.c)
   reactos/win32ss/user/user32/windows/winpos.c     # Forked
 
