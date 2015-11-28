@@ -3526,7 +3526,7 @@ GreExtTextOutW(
         goto fail;
     }
 
-    if (dc->dcattr.iGraphicsMode == GM_ADVANCED)
+    if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
