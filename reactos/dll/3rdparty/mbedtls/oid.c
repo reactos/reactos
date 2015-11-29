@@ -267,7 +267,7 @@ static const oid_x509_ext_t oid_x509_ext[] =
         MBEDTLS_X509_EXT_KEY_USAGE,
     },
     {
-        { ADD_LEN( MBEDTLS_OID_EXTENDED_KEY_USAGE ),   "id-ce-keyUsage",           "Extended Key Usage" },
+        { ADD_LEN( MBEDTLS_OID_EXTENDED_KEY_USAGE ),   "id-ce-extKeyUsage",        "Extended Key Usage" },
         MBEDTLS_X509_EXT_EXTENDED_KEY_USAGE,
     },
     {

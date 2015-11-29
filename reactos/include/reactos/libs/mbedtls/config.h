@@ -697,6 +697,25 @@
 #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 
 /**
+ * \def MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+ *
+ * Enable the ECJPAKE based ciphersuite modes in SSL / TLS.
+ *
+ * \warning This is currently experimental. EC J-PAKE support is based on the
+ * Thread v1.0.0 specification; incompatible changes to the specification
+ * might still happen. For this reason, this is disabled by default.
+ *
+ * Requires: MBEDTLS_ECJPAKE_C
+ *           MBEDTLS_SHA256_C
+ *           MBEDTLS_ECP_DP_SECP256R1_ENABLED
+ *
+ * This enables the following ciphersuites (if other requisites are
+ * enabled as well):
+ *      MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8
+ */
+//#define MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+
+/**
  * \def MBEDTLS_PK_PARSE_EC_EXTENDED
  *
  * Enhance support for reading EC keys using variants of SEC1 not allowed by
@@ -1176,6 +1195,16 @@
  * Comment this macro to disable support for SSL session tickets
  */
 #define MBEDTLS_SSL_SESSION_TICKETS
+
+/**
+ * \def MBEDTLS_SSL_EXPORT_KEYS
+ *
+ * Enable support for exporting key block and master secret.
+ * This is required for certain users of TLS, e.g. EAP-TLS.
+ *
+ * Comment this macro to disable support for key export
+ */
+//#define MBEDTLS_SSL_EXPORT_KEYS
 
 /**
  * \def MBEDTLS_SSL_SERVER_NAME_INDICATION
@@ -1693,6 +1722,25 @@
 #define MBEDTLS_ECDSA_C
 
 /**
+ * \def MBEDTLS_ECJPAKE_C
+ *
+ * Enable the elliptic curve J-PAKE library.
+ *
+ * \warning This is currently experimental. EC J-PAKE support is based on the
+ * Thread v1.0.0 specification; incompatible changes to the specification
+ * might still happen. For this reason, this is disabled by default.
+ *
+ * Module:  library/ecjpake.c
+ * Caller:
+ *
+ * This module is used by the following key exchanges:
+ *      ECJPAKE
+ *
+ * Requires: MBEDTLS_ECP_C, MBEDTLS_MD_C
+ */
+//#define MBEDTLS_ECJPAKE_C
+
+/**
  * \def MBEDTLS_ECP_C
  *
  * Enable the elliptic curve over GF(p) library.
@@ -1700,6 +1748,7 @@
  * Module:  library/ecp.c
  * Caller:  library/ecdh.c
  *          library/ecdsa.c
+ *          library/ecjpake.c
  *
  * Requires: MBEDTLS_BIGNUM_C and at least one MBEDTLS_ECP_DP_XXX_ENABLED
  */

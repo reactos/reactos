@@ -40,7 +40,7 @@
  *
  * Current rule (except rc4, weak and null which come last):
  * 1. By key exchange:
- *    Forward-secure non-PSK > forward-secure PSK > other non-PSK > other PSK
+ *    Forward-secure non-PSK > forward-secure PSK > ECJPAKE > other non-PSK > other PSK
  * 2. By key length and cipher:
  *    AES-256 > Camellia-256 > AES-128 > Camellia-128 > 3DES
  * 3. By cipher mode when relevant GCM > CCM > CBC > CCM_8
@@ -130,6 +130,9 @@ static const int ciphersuite_preference[] =
 
     MBEDTLS_TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA,
     MBEDTLS_TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA,
+
+    /* The ECJPAKE suite */
+    MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8,
 
     /* All AES-256 suites */
     MBEDTLS_TLS_RSA_WITH_AES_256_GCM_SHA384,
@@ -1509,6 +1512,18 @@ static const mbedtls_ssl_ciphersuite_t ciphersuite_definitions[] =
 #endif /* MBEDTLS_SHA1_C */
 #endif /* MBEDTLS_ARC4_C */
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+#if defined(MBEDTLS_AES_C)
+#if defined(MBEDTLS_CCM_C)
+    { MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8, "TLS-ECJPAKE-WITH-AES-128-CCM-8",
+      MBEDTLS_CIPHER_AES_128_CCM, MBEDTLS_MD_SHA256, MBEDTLS_KEY_EXCHANGE_ECJPAKE,
+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
+      MBEDTLS_CIPHERSUITE_SHORT_TAG },
+#endif /* MBEDTLS_CCM_C */
+#endif /* MBEDTLS_AES_C */
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_ENABLE_WEAK_CIPHERSUITES)
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)

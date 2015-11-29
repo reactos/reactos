@@ -359,6 +359,10 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     size_t olen;
     mbedtls_mpi T, T1, T2;
 
+    /* Make sure we have private key info, prevent possible misuse */
+    if( ctx->P.p == NULL || ctx->Q.p == NULL || ctx->D.p == NULL )
+        return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
+
     mbedtls_mpi_init( &T ); mbedtls_mpi_init( &T1 ); mbedtls_mpi_init( &T2 );
 
 #if defined(MBEDTLS_THREADING_C)

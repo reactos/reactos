@@ -79,7 +79,7 @@ Used Version: 9a
 Website: http://www.ijg.org/
 
 Title: mbed TLS
-Used Version: 2.1.2
+Used Version: 2.2.0
 Website: https://tls.mbed.org/
 
 Title: libpng

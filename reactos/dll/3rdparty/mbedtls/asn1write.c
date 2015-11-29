@@ -87,7 +87,7 @@ int mbedtls_asn1_write_raw_buffer( unsigned char **p, unsigned char *start,
 {
     size_t len = 0;
 
-    if( *p - start < (int) size )
+    if( *p < start || (size_t)( *p - start ) < size )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len = size;
@@ -107,7 +107,7 @@ int mbedtls_asn1_write_mpi( unsigned char **p, unsigned char *start, const mbedt
     //
     len = mbedtls_mpi_size( X );
 
-    if( *p - start < (int) len )
+    if( *p < start || (size_t)( *p - start ) < len )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     (*p) -= len;
@@ -191,7 +191,7 @@ int mbedtls_asn1_write_bool( unsigned char **p, unsigned char *start, int boolea
     if( *p - start < 1 )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-    *--(*p) = (boolean) ? 1 : 0;
+    *--(*p) = (boolean) ? 255 : 0;
     len++;
 
     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( p, start, len ) );
@@ -270,7 +270,7 @@ int mbedtls_asn1_write_bitstring( unsigned char **p, unsigned char *start,
 
     // Calculate byte length
     //
-    if( *p - start < (int) size + 1 )
+    if( *p < start || (size_t)( *p - start ) < size + 1 )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len = size + 1;

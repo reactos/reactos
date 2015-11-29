@@ -241,7 +241,8 @@ static void ssl_write_signature_algorithms_ext( mbedtls_ssl_context *ssl,
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
 static void ssl_write_supported_elliptic_curves_ext( mbedtls_ssl_context *ssl,
                                                      unsigned char *buf,
                                                      size_t *olen )
@@ -336,7 +337,86 @@ static void ssl_write_supported_point_formats_ext( mbedtls_ssl_context *ssl,
 
     *olen = 6;
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static void ssl_write_ecjpake_kkpp_ext( mbedtls_ssl_context *ssl,
+                                        unsigned char *buf,
+                                        size_t *olen )
+{
+    int ret;
+    unsigned char *p = buf;
+    const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
+    size_t kkpp_len;
+
+    *olen = 0;
+
+    /* Skip costly extension if we can't use EC J-PAKE anyway */
+    if( mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
+        return;
+
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding ecjpake_kkpp extension" ) );
+
+    if( end - p < 4 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
+        return;
+    }
+
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP      ) & 0xFF );
+
+    /*
+     * We may need to send ClientHello multiple times for Hello verification.
+     * We don't want to compute fresh values every time (both for performance
+     * and consistency reasons), so cache the extension content.
+     */
+    if( ssl->handshake->ecjpake_cache == NULL ||
+        ssl->handshake->ecjpake_cache_len == 0 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "generating new ecjpake parameters" ) );
+
+        ret = mbedtls_ecjpake_write_round_one( &ssl->handshake->ecjpake_ctx,
+                                        p + 2, end - p - 2, &kkpp_len,
+                                        ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1 , "mbedtls_ecjpake_write_round_one", ret );
+            return;
+        }
+
+        ssl->handshake->ecjpake_cache = mbedtls_calloc( 1, kkpp_len );
+        if( ssl->handshake->ecjpake_cache == NULL )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "allocation failed" ) );
+            return;
+        }
+
+        memcpy( ssl->handshake->ecjpake_cache, p + 2, kkpp_len );
+        ssl->handshake->ecjpake_cache_len = kkpp_len;
+    }
+    else
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "re-using cached ecjpake parameters" ) );
+
+        kkpp_len = ssl->handshake->ecjpake_cache_len;
+
+        if( (size_t)( end - p - 2 ) < kkpp_len )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
+            return;
+        }
+
+        memcpy( p + 2, ssl->handshake->ecjpake_cache, kkpp_len );
+    }
+
+    *p++ = (unsigned char)( ( kkpp_len >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( kkpp_len      ) & 0xFF );
+
+    *olen = kkpp_len + 4;
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
 static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -790,8 +870,14 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
             continue;
 #endif
 
-        MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, add ciphersuite: %2d",
-                       ciphersuites[i] ) );
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+        if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE &&
+            mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
+            continue;
+#endif
+
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, add ciphersuite: %04x",
+                                    ciphersuites[i] ) );
 
         n++;
         *p++ = (unsigned char)( ciphersuites[i] >> 8 );
@@ -881,11 +967,17 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
     ext_len += olen;
 #endif
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     ssl_write_supported_elliptic_curves_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 
     ssl_write_supported_point_formats_ext( ssl, p + 2 + ext_len, &olen );
+    ext_len += olen;
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    ssl_write_ecjpake_kkpp_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
 
@@ -1096,7 +1188,8 @@ static int ssl_parse_session_ticket_ext( mbedtls_ssl_context *ssl,
 }
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
 static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
                                                   const unsigned char *buf,
                                                   size_t len )
@@ -1117,7 +1210,12 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
         if( p[0] == MBEDTLS_ECP_PF_UNCOMPRESSED ||
             p[0] == MBEDTLS_ECP_PF_COMPRESSED )
         {
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
             ssl->handshake->ecdh_ctx.point_format = p[0];
+#endif            
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+            ssl->handshake->ecjpake_ctx.point_format = p[0];
+#endif
             MBEDTLS_SSL_DEBUG_MSG( 4, ( "point format selected: %d", p[0] ) );
             return( 0 );
         }
@@ -1129,7 +1227,38 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
     MBEDTLS_SSL_DEBUG_MSG( 1, ( "no point format in common" ) );
     return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
+                                   const unsigned char *buf,
+                                   size_t len )
+{
+    int ret;
+
+    if( ssl->transform_negotiate->ciphersuite_info->key_exchange !=
+        MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "skip ecjpake kkpp extension" ) );
+        return( 0 );
+    }
+
+    /* If we got here, we no longer need our cached extension */
+    mbedtls_free( ssl->handshake->ecjpake_cache );
+    ssl->handshake->ecjpake_cache = NULL;
+    ssl->handshake->ecjpake_cache_len = 0;
+
+    if( ( ret = mbedtls_ecjpake_read_round_one( &ssl->handshake->ecjpake_ctx,
+                                                buf, len ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_one", ret );
+        return( ret );
+    }
+
+    return( 0 );
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN)
 static int ssl_parse_alpn_ext( mbedtls_ssl_context *ssl,
@@ -1479,7 +1608,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "%s session has been resumed",
                    ssl->handshake->resume ? "a" : "no" ) );
 
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %d", i ) );
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %04x", i ) );
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, compress alg.: %d", buf[37 + n] ) );
 
     suite_info = mbedtls_ssl_ciphersuite_from_id( ssl->session_negotiate->ciphersuite );
@@ -1493,6 +1622,8 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server hello message" ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
     }
+
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %s", suite_info->name ) );
 
     i = 0;
     while( 1 )
@@ -1617,7 +1748,8 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
             break;
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
         case MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS:
             MBEDTLS_SSL_DEBUG_MSG( 3, ( "found supported_point_formats extension" ) );
 
@@ -1628,7 +1760,21 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
             }
 
             break;
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C ||
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+        case MBEDTLS_TLS_EXT_ECJPAKE_KKPP:
+            MBEDTLS_SSL_DEBUG_MSG( 3, ( "found ecjpake_kkpp extension" ) );
+
+            if( ( ret = ssl_parse_ecjpake_kkpp( ssl,
+                            ext + 4, ext_size ) ) != 0 )
+            {
+                return( ret );
+            }
+
+            break;
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN)
         case MBEDTLS_TLS_EXT_ALPN:
@@ -1923,7 +2069,9 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
           MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) ||                       \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
                                           unsigned char **p,
                                           unsigned char *end,
@@ -1979,7 +2127,9 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
 
     return( 0 );
 }
-#endif /* MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED ||
+          MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
+          MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
@@ -2147,6 +2297,19 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
 #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
           MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        ret = mbedtls_ecjpake_read_round_two( &ssl->handshake->ecjpake_ctx,
+                                              p, end - p );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_two", ret );
+            return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
+        }
+    }
+    else
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
@@ -2351,7 +2514,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
         ssl->state++;
@@ -2375,7 +2539,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
         ssl->state++;
@@ -2756,6 +2921,31 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
     }
     else
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        i = 4;
+
+        ret = mbedtls_ecjpake_write_round_two( &ssl->handshake->ecjpake_ctx,
+                ssl->out_msg + i, MBEDTLS_SSL_MAX_CONTENT_LEN - i, &n,
+                ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_write_round_two", ret );
+            return( ret );
+        }
+
+        ret = mbedtls_ecjpake_derive_secret( &ssl->handshake->ecjpake_ctx,
+                ssl->handshake->premaster, 32, &ssl->handshake->pmslen,
+                ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_derive_secret", ret );
+            return( ret );
+        }
+    }
+    else
+#endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
     {
         ((void) ciphersuite_info);
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
@@ -2799,7 +2989,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
         ssl->state++;
@@ -2831,7 +3022,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
         ssl->state++;

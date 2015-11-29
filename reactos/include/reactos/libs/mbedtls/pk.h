@@ -321,7 +321,7 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
 /**
  * \brief           Make signature, including padding if relevant.
  *
- * \param ctx       PK context to use
+ * \param ctx       PK context to use - must hold a private key
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length or 0 (see notes)
@@ -350,7 +350,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /**
  * \brief           Decrypt message (including padding if relevant).
  *
- * \param ctx       PK context to use
+ * \param ctx       PK context to use - must hold a private key
  * \param input     Input to decrypt
  * \param ilen      Input size
  * \param output    Decrypted output

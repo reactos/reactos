@@ -347,6 +347,21 @@ int mbedtls_ecp_set_zero( mbedtls_ecp_point *pt );
 int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt );
 
 /**
+ * \brief           Compare two points
+ *
+ * \note            This assumes the points are normalized. Otherwise,
+ *                  they may compare as "not equal" even if they are.
+ *
+ * \param P         First point to compare
+ * \param Q         Second point to compare
+ *
+ * \return          0 if the points are equal,
+ *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA otherwise
+ */
+int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
+                           const mbedtls_ecp_point *Q );
+
+/**
  * \brief           Import a non-zero point from two ASCII strings
  *
  * \param P         Destination point
@@ -568,6 +583,29 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
  *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
  */
 int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *d );
+
+/**
+ * \brief           Generate a keypair with configurable base point
+ *
+ * \param grp       ECP group
+ * \param G         Chosen base point
+ * \param d         Destination MPI (secret part)
+ * \param Q         Destination point (public part)
+ * \param f_rng     RNG function
+ * \param p_rng     RNG parameter
+ *
+ * \return          0 if successful,
+ *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
+ *
+ * \note            Uses bare components rather than an mbedtls_ecp_keypair structure
+ *                  in order to ease use with other structures such as
+ *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
+ */
+int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
+                     const mbedtls_ecp_point *G,
+                     mbedtls_mpi *d, mbedtls_ecp_point *Q,
+                     int (*f_rng)(void *, unsigned char *, size_t),
+                     void *p_rng );
 
 /**
  * \brief           Generate a keypair

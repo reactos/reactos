@@ -301,8 +301,8 @@ int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
  *                 security profile.
  *
  * \note           The restrictions on keys (RSA minimum size, allowed curves
- *                 for ECDSA) only applys to (intermediate) CAs, not to the
- *                 end-entity certificate.
+ *                 for ECDSA) apply to all certificates: trusted root,
+ *                 intermediate CAs if any, and end entity certificate.
  *
  * \param crt      a certificate to be verified
  * \param trust_ca the trusted CA chain
