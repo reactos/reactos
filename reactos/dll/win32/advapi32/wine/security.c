@@ -122,6 +122,10 @@ static const WELLKNOWNRID WellKnownRids[] = {
 
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
 
+static const WCHAR SDDL_NO_READ_UP[]       = {'N','R',0};
+static const WCHAR SDDL_NO_WRITE_UP[]      = {'N','W',0};
+static const WCHAR SDDL_NO_EXECUTE_UP[]    = {'N','X',0};
+
 /*
  * ACE types
  */
@@ -131,6 +135,7 @@ static const WCHAR SDDL_OBJECT_ACCESS_ALLOWED[] = {'O','A',0};
 static const WCHAR SDDL_OBJECT_ACCESS_DENIED[]  = {'O','D',0};
 static const WCHAR SDDL_AUDIT[]                 = {'A','U',0};
 static const WCHAR SDDL_ALARM[]                 = {'A','L',0};
+static const WCHAR SDDL_MANDATORY_LABEL[]       = {'M','L',0};
 static const WCHAR SDDL_OBJECT_AUDIT[]          = {'O','U',0};
 static const WCHAR SDDL_OBJECT_ALARM[]          = {'O','L',0};
 
@@ -2246,6 +2251,7 @@ static const ACEFLAG AceType[] =
     { SDDL_AUDIT,          SYSTEM_AUDIT_ACE_TYPE },
     { SDDL_ACCESS_ALLOWED, ACCESS_ALLOWED_ACE_TYPE },
     { SDDL_ACCESS_DENIED,  ACCESS_DENIED_ACE_TYPE },
+    { SDDL_MANDATORY_LABEL,SYSTEM_MANDATORY_LABEL_ACE_TYPE },
     /*
     { SDDL_OBJECT_ACCESS_ALLOWED, ACCESS_ALLOWED_OBJECT_ACE_TYPE },
     { SDDL_OBJECT_ACCESS_DENIED,  ACCESS_DENIED_OBJECT_ACE_TYPE },
@@ -2356,6 +2362,10 @@ static const ACEFLAG AceRights[] =
     { SDDL_KEY_READ,        KEY_READ },
     { SDDL_KEY_WRITE,       KEY_WRITE },
     { SDDL_KEY_EXECUTE,     KEY_EXECUTE },
+
+    { SDDL_NO_READ_UP,      SYSTEM_MANDATORY_LABEL_NO_READ_UP },
+    { SDDL_NO_WRITE_UP,     SYSTEM_MANDATORY_LABEL_NO_WRITE_UP },
+    { SDDL_NO_EXECUTE_UP,   SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP },
     { NULL, 0 },
 };
 
