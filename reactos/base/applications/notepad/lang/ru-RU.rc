@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Содержание", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе", CMD_ABOUT
+        MENUITEM "&О программе...", CMD_ABOUT
         MENUITEM "&Сведения...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
@@ -113,7 +113,7 @@ BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Кодировка:", 0x155, 5, 2, 41, 12
     COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Конец строки:", 0x156, 5, 20, 50, 12
+    LTEXT "Формат конца строки:", 0x156, 5, 20, 50, 12
 END
 
 /* Dialog 'Go To' */
@@ -182,5 +182,5 @@ BEGIN
     STRING_LINE_COLUMN "Строка %d, столбец %d"
     STRING_PRINTERROR "Невозможно распечатать файл '%s'.\n\nПроверьте, включен ли принтер, и настроен ли он правильно."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Текстовый документ"
 END

@@ -76,10 +76,10 @@ BEGIN
     AUTOCHECKBOX "&Поверх других окон", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Группировать схожие кнопки", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    GROUPBOX "Notification area", IDC_STATIC, 6, 114, 240, 98
+    GROUPBOX "Панель уведомлений", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,13, 126, 223, 28
     AUTOCHECKBOX "&Часы", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Show seconds", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "Отображать секунды", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Можно избежать загромождения области уведомлений, скрывая значки, которые давно не использовались.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "&Скрывать неиспользуемые значки", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "&Настроить...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14

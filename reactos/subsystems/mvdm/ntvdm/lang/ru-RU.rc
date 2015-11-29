@@ -2,8 +2,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
-    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_CAPTURE_MOUSE, "&Захватить указатель мыши"
+    IDS_RELEASE_MOUSE, "&Отпустить указатель мыши"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
@@ -11,12 +11,12 @@ STRINGTABLE
 BEGIN
     IDS_VDM_DUMPMEM_TXT ,   "Дамп памяти (&Текстовый)"
     IDS_VDM_DUMPMEM_BIN ,   "Дамп памяти (&Бинарный)"
-    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
-    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_MOUNT_FLOPPY,   "Вставить дискету в привод %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Извлечь дискету из привода %d"
     IDS_VDM_QUIT        ,   "&Выйти из ReactOS VDM"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Нет медиа"
 END

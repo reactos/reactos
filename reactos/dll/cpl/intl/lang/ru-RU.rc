@@ -32,7 +32,7 @@ CAPTION "Языки"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Языки и службы текстового ввода", -1, 5, 5, 234, 52
-    LTEXT "Чтобы просмотреть или изменить язык или метод ввода текста, нажмите кнопку ""Подробнее""", -1, 12, 15, 220, 18
+    LTEXT "Чтобы просмотреть или изменить язык или метод ввода текста, нажмите кнопку ""Подробнее"".", -1, 12, 15, 220, 18
     PUSHBUTTON "&Подробнее...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Дополнительная языковая поддержка", -1, 5, 61, 234, 90
     LTEXT "Поддержка большинства языков устанавливается по умолчанию. Чтобы установить дополнительную поддержку языков с особыми способами письма, установите соответствующие флажки.", -1, 12, 72, 220, 32
@@ -61,9 +61,9 @@ CAPTION "Числа"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Образцы", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Полож.:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSPOSSAMPLE, 44, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Отриц.:", -1, 123, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "&Раздел. целой и дробной части:", -1, 8, 67, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -91,11 +91,11 @@ CAPTION "Денежная единица"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Полож.:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYPOSSAMPLE, 44, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Отриц.:", -1, 123, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "О&бозначение денежной еденицы:", -1, 8, 51, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "О&бозначение денежной единицы:", -1, 8, 51, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Формат &полож. денежных сумм:", -1, 8, 68, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -130,10 +130,9 @@ BEGIN
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Обозначение формата времени\n\n\
 h = час    m = минута    s = секунда    t = AM или PM\n\n\
-h = 12-часовой формат суток\n\
-H = 24-часовой формат суток\n\
+h/H = 12/24-часовой формат суток\n\
 hh, mm, ss = с выводом нулей в начале\n\
-h, m, s = без вывода нулей", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+h, m, s = без вывода нулей", -1, 13, 150, 214, 60, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
@@ -184,8 +183,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Настройка региональных параметров"
     IDS_SPAIN "Испанский (Испания)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "Метрическая"
+    IDS_IMPERIAL "Американская"
 END
 
 STRINGTABLE
@@ -196,10 +195,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Change default settings"
-    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
-These changes apply to the logon screen and new user accounts.\n\
-The computer must be rebooted, in order to apply the changes to some system services."
+    IDS_APPLY_DEFAULT_TITLE "Изменить стандартные параметры"
+    IDS_APPLY_DEFAULT_TEXT "Параметры будут применены к стандартной учетной записи.\n\n\
+Эти изменения будут применены к экрану приветствия и к новым учетным записям.\n\
+Компьютер должен быть перезагружен, для применения изменений к некоторым службам ОС."
 END
 
 STRINGTABLE
@@ -216,4 +215,3 @@ BEGIN
     IDS_ERROR_NLS_CODE_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Не удается запустить input.dll"
 END
-

@@ -267,8 +267,8 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_BACK "Back to %s"
-  IDS_FORWARD "Forward to %s"
+  IDS_BACK "Назад на ""%s"""
+  IDS_FORWARD "Вперед на ""%s"""
 END
 
 STRINGTABLE
