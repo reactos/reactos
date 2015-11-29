@@ -1,0 +1,25 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nUsage: arping [-t] [-n count] -s source-ip destination-host\n\n\
+Options:\n\
+    -t             Ping the specified host until stopped.\n\
+                   To stop - type Control-C.\n\
+    -n count       Number of probes to send.\n\
+    -s             Use this source IP.\n\n\0"
+    IDS_BAD_OPTION_FORMAT "Bad option format %1.\n\0"
+    IDS_BAD_OPTION "Bad option %1.\n\0"
+    IDS_BAD_PARAMETER "Bad parameter %1.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Name or IP address of destination host must be specified.\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Could not initialize winsock dll.\n\0"
+    IDS_UNKNOWN_HOST "Unknown host %1.\n\0"
+    IDS_SRC_MUST_BE_SPECIFIED "IP address of source host must be specified.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Bad value for option -n, valid range is from 1 to %1!u!.\n\0"
+    IDS_ARPING_TO_FROM "ARPING %1 from %2\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+    IDS_REPLY_FROM "Unicast reply from %1 [%2]  %3%4\n\0"
+    IDS_ARPING_STATISTICS "Sent %1!u! probes\n\
+Received %2!u! response(s)\n\0"
+END
