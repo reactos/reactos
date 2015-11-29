@@ -1609,4 +1609,18 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     return Status;
 }
 
+NTSTATUS DispTdiQueryIpHwAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status;
+
+    Status = STATUS_NOT_IMPLEMENTED;
+    if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < 2 * sizeof(ULONG)) {
+        Status = STATUS_INVALID_BUFFER_SIZE;
+        goto Exit;
+    }
+
+Exit:
+    Irp->IoStatus.Status = Status;
+    return Status;
+}
+
 /* EOF */

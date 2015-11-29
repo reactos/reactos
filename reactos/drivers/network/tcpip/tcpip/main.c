@@ -525,6 +525,11 @@ TiDispatch(
       Status = DispTdiDeleteIPAddress(Irp, IrpSp);
       break;
 
+    case IOCTL_QUERY_IP_HW_ADDRESS:
+      TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
+      Status = DispTdiQueryIpHwAddress(Irp, IrpSp);
+      break;
+
     default:
       TI_DbgPrint(MIN_TRACE, ("Unknown IOCTL 0x%X\n",
           IrpSp->Parameters.DeviceIoControl.IoControlCode));
