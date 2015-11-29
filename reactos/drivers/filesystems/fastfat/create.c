@@ -492,7 +492,9 @@ VfatCreateFile(
 
     /* This a open operation for the volume itself */
     if (FileObject->FileName.Length == 0 &&
-        (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
+        (FileObject->RelatedFileObject == NULL ||
+         FileObject->RelatedFileObject->FsContext2 != NULL ||
+         FileObject->RelatedFileObject->FsContext == DeviceExt->VolumeFcb))
     {
         DPRINT("Volume opening\n");
 
@@ -542,6 +544,13 @@ VfatCreateFile(
 
         Irp->IoStatus.Information = FILE_OPENED;
         return STATUS_SUCCESS;
+    }
+
+    if (FileObject->RelatedFileObject != NULL &&
+        FileObject->RelatedFileObject->FsContext == DeviceExt->VolumeFcb)
+    {
+        ASSERT(FileObject->FileName.Length != 0);
+        return STATUS_OBJECT_PATH_NOT_FOUND;
     }
 
     /* Check for illegal characters and illegale dot sequences in the file name */
