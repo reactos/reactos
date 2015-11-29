@@ -324,6 +324,11 @@ LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_RIGHT:
                     DIALOG_StatusBarUpdateCaretPos();
                     break;
+                default:
+                {
+                    UpdateWindowCaption(FALSE);
+                    break;
+                }
             }
         }
         case WM_LBUTTONUP:
