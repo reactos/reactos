@@ -597,6 +597,11 @@ VfatCreateFile(
         PathNameU.Length -= sizeof(WCHAR);
     }
 
+    if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
+    {
+        return STATUS_OBJECT_NAME_INVALID;
+    }
+
     /* Try opening the file. */
     if (!OpenTargetDir)
     {
