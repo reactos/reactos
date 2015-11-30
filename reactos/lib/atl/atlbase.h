@@ -232,6 +232,80 @@ public:
     }
 };
 
+
+class CHandle
+{
+public:
+    HANDLE m_handle;
+
+public:
+    CHandle() :
+        m_handle(NULL)
+    {
+    }
+
+    CHandle(_Inout_ CHandle& handle) :
+        m_handle(NULL)
+    {
+        Attach(handle.Detach());
+    }
+
+    explicit CHandle(_In_ HANDLE handle) :
+        m_handle(handle)
+    {
+    }
+
+    ~CHandle()
+    {
+        if (m_handle)
+        {
+            Close();
+        }
+    }
+
+    CHandle& operator=(_Inout_ CHandle& handle)
+    {
+        if (this != &handle)
+        {
+            if (m_handle)
+            {
+                Close();
+            }
+            Attach(handle.Detach());
+        }
+
+        return *this;
+    }
+
+    operator HANDLE() const
+    {
+        return m_handle;
+    }
+
+    void Attach(_In_ HANDLE handle)
+    {
+        ATLASSERT(m_handle == NULL);
+        m_handle = handle;
+    }
+
+    HANDLE Detach()
+    {
+        HANDLE handle = m_handle;
+        m_handle = NULL;
+        return handle;
+    }
+
+    void Close()
+    {
+        if (m_handle)
+        {
+            ::CloseHandle(m_handle);
+            m_handle = NULL;
+        }
+    }
+};
+
+
 inline BOOL WINAPI InlineIsEqualUnknown(REFGUID rguid1)
 {
    return (
