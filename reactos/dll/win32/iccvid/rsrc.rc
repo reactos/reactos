@@ -89,3 +89,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/iccvid_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/iccvid_Zh.rc"
+#endif

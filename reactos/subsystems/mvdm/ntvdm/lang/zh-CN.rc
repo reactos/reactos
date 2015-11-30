@@ -4,8 +4,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
-    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_CAPTURE_MOUSE, "捕获鼠标指针(&C)"
+    IDS_RELEASE_MOUSE, "释放鼠标指针(&R)"
     IDS_VDM_MENU     , "ReactOS DOS 虚拟机 (&V)"
 END
 

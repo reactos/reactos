@@ -1,0 +1,17 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    STRING_USAGE, "此命令的语法是:\n\nREG [ ADD | DELETE | QUERY ]\nREG 命令 /?\n"
+    STRING_ADD_USAGE, "REG ADD 密钥名称 [/v 值名称 | /ve] [/t 类型] [/s 分隔符] [/d 数据] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE 密钥名称 [/v 值名称 | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY 密钥名称 [/v 值名称 | /ve] [/s]\n"
+    STRING_SUCCESS, "操作已成功完成\n"
+    STRING_INVALID_KEY, "错误: 无效的密钥名称\n"
+    STRING_INVALID_CMDLINE, "错误: 无效的命令行参数\n"
+    STRING_NO_REMOTE, "错误: 无法访问远程计算机\n"
+    STRING_CANNOT_FIND, "错误: 系统是无法找到指定的注册表项或值\n"
+    STRING_UNSUPPORTED_TYPE, "错误: 不支持的类型\n"
+}

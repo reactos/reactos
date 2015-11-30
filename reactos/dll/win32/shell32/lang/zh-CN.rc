@@ -138,9 +138,9 @@ BEGIN
     LTEXT " (", IDC_STATIC, 90, 65, 5, 10
     LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
     LTEXT ")", IDC_STATIC, 153, 65, 5, 10
-    LTEXT "版权 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "版权所有 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " ReactOS 团队\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
     LTEXT "此 ReactOS 版本注册到:", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -254,7 +254,7 @@ BEGIN
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "文件类型：", 14004, 8, 35, 50, 10
-    CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
+    CONTROL "文件", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "打开方式:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "更换...(&C)", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -677,8 +677,8 @@ BEGIN
     IDS_VIEW_SMALL "小图标(&M)"
     IDS_VIEW_LIST "列表(&L)"
     IDS_VIEW_DETAILS "详细信息(&D)"
-    IDS_SELECT "Select"
-    IDS_OPEN "Open"
+    IDS_SELECT "选择"
+    IDS_OPEN "打开"
     IDS_CREATELINK "创建快捷方式(&L)"
     IDS_COPY "复制(&C)"
     IDS_DELETE "删除(&D)"
@@ -708,7 +708,7 @@ BEGIN
     IDS_FILEOOP_MOVING "正在移动..."
     IDS_FILEOOP_DELETING "正在删除..."
     IDS_FILEOOP_FROM_TO "从 %1 到 %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_FROM "从 %1"
     IDS_FILEOOP_PREFLIGHT "印前检查"
 
     /* message box strings */
@@ -726,10 +726,10 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "可执行文件 (*.exe)\0*.exe\0所有文件 (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PROGRAMS "开始菜单\\程序"
     IDS_PERSONAL "我的文档"
     IDS_FAVORITES "收藏夹"
-    IDS_STARTUP "Start Menu\\Programs\\StartUp"
+    IDS_STARTUP "开始菜单\\程序\\启动"
     IDS_RECENT "最近"
     IDS_SENDTO "为必填项"
     IDS_STARTMENU "开始菜单"
@@ -738,21 +738,21 @@ BEGIN
     IDS_DESKTOPDIRECTORY "桌面"
     IDS_NETHOOD "NetHood"
     IDS_TEMPLATES "模板"
-    IDS_APPDATA "Application Data"
+    IDS_APPDATA "应用程序数据"
     IDS_PRINTHOOD "PrintHood"
-    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES "Cookies"
-    IDS_HISTORY "Local Settings\\History"
-    IDS_PROGRAM_FILES "Program Files"
+    IDS_LOCAL_APPDATA "本地设置\\应用程序数据"
+    IDS_INTERNET_CACHE "本地设置\\互联网临时文件"
+    IDS_COOKIES "小型文字檔案"
+    IDS_HISTORY "本地设置\\历史记录"
+    IDS_PROGRAM_FILES "程序文件"
     IDS_MYPICTURES "我的图片"
-    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS "Documents"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
-    IDS_COMMON_MUSIC "Documents\\My Music"
-    IDS_COMMON_PICTURES "Documents\\My Pictures"
-    IDS_COMMON_VIDEO "Documents\\My Videos"
-    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_PROGRAM_FILES_COMMON "程序文件\\共同文件"
+    IDS_COMMON_DOCUMENTS "文件"
+    IDS_ADMINTOOLS "开始菜单\\程序\\管理工具"
+    IDS_COMMON_MUSIC "我的文件\\我的音乐"
+    IDS_COMMON_PICTURES "我的文件\\我的图片"
+    IDS_COMMON_VIDEO "我的文件\\我的视频"
+    IDS_CDBURN_AREA "本地设置\\应用程序数据\\微软\\光盘刻录"
     IDS_NETWORKPLACE "网上邻居"
 
     IDS_NEWFOLDER "新的文件夹"
@@ -796,11 +796,11 @@ BEGIN
     IDS_TTF_FILE "TrueType 字体文件"
     IDS_OTF_FILE "OpenType 字体文件"
     IDS_HLP_FILE "帮助文件"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
-    IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
+    IDS_PIF_FILE "NT VDM 程序信息文件"
+    IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
 
@@ -825,11 +825,11 @@ BEGIN
     IDS_FILE_DETAILSADV "文件扩展名为 '%s' 的类型 '%s'。若要更改会影响所有的 '%s' 文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
     IDS_COLUMN_EXTENSION "扩展"
-    IDS_BYTES_FORMAT "bytes"
+    IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
     IDS_EXE_DESCRIPTION "描述："
 
     IDS_MENU_EMPTY "(空)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d 个对象"
+    IDS_OBJECTS_SELECTED "%d 个选定的对象"
 END

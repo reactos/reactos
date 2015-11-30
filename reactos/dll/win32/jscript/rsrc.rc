@@ -103,3 +103,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/jscript_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/jscript_Zh.rc"
+#endif

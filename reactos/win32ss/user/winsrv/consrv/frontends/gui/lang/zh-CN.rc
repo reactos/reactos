@@ -20,11 +20,11 @@ BEGIN
     IDS_SCROLLUP "向上滚动"
     IDS_SCROLLDOWN "向下滚动"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "ReactOS 控制台"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "标记"
+    IDS_SELECT_TITLE "选择"
 END

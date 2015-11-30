@@ -106,3 +106,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/msrle_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/msrle_Zh.rc"
+#endif

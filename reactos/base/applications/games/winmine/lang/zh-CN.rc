@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPNAME "Wine地雷"
     IDS_NOBODY "无人"
-    IDS_ABOUT "Copyright 2000 Joshua Thielen"
+    IDS_ABOUT "版权所有 2000 Joshua Thielen"
 END
 
 IDM_WINEMINE MENU
