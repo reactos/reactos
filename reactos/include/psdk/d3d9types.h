@@ -21,6 +21,10 @@
 #ifndef __WINE_D3D9TYPES_H
 #define __WINE_D3D9TYPES_H
 
+#ifdef __i386__
+#include <pshpack4.h>
+#endif
+
 /*****************************************************************************
  * Direct 3D v9 #defines
  */
@@ -56,10 +60,10 @@
 #define D3DCS_PLANE5                 0x800L
 #define D3DCS_ALL                    0xFFFL
 
-#define D3DFVF_TEXTUREFORMAT1 3
-#define D3DFVF_TEXTUREFORMAT2 0
-#define D3DFVF_TEXTUREFORMAT3 1
-#define D3DFVF_TEXTUREFORMAT4 2
+#define D3DFVF_TEXTUREFORMAT1 3u
+#define D3DFVF_TEXTUREFORMAT2 0u
+#define D3DFVF_TEXTUREFORMAT3 1u
+#define D3DFVF_TEXTUREFORMAT4 2u
 #define D3DFVF_TEXCOORDSIZE1(CoordIndex) (D3DFVF_TEXTUREFORMAT1 << (CoordIndex*2 + 16))
 #define D3DFVF_TEXCOORDSIZE2(CoordIndex) (D3DFVF_TEXTUREFORMAT2)
 #define D3DFVF_TEXCOORDSIZE3(CoordIndex) (D3DFVF_TEXTUREFORMAT3 << (CoordIndex*2 + 16))
@@ -174,8 +178,8 @@
 
 #define D3DPV_DONOTCOPYDATA         (1 << 0)
 
-#define D3DSTREAMSOURCE_INDEXEDDATA  (1 << 30)
-#define D3DSTREAMSOURCE_INSTANCEDATA (2 << 30)
+#define D3DSTREAMSOURCE_INDEXEDDATA  (1u << 30)
+#define D3DSTREAMSOURCE_INSTANCEDATA (2u << 30)
 
 #define D3D_MAX_SIMULTANEOUS_RENDERTARGETS 4
 
@@ -206,7 +210,6 @@
 #define D3DPRESENTFLAG_NOAUTOROTATE         0x00000020 /* d3d9ex, ignore display rotation */
 #define D3DPRESENTFLAG_UNPRUNEDMODE         0x00000040 /* d3d9ex, specify invalid display modes */
 
-#define D3DPRESENT_BACK_BUFFERS_MAX         3L
 #define D3DPRESENT_RATE_DEFAULT             0x00000000
 
 /**************************** 
@@ -642,8 +645,6 @@ typedef enum _D3DBACKBUFFER_TYPE {
 
     D3DBACKBUFFER_TYPE_FORCE_DWORD  = 0x7fffffff
 } D3DBACKBUFFER_TYPE;
-
-#define D3DPRESENT_BACK_BUFFER_MAX 3L
 
 typedef enum _D3DBASISTYPE {
    D3DBASIS_BEZIER        = 0,
@@ -1582,5 +1583,9 @@ typedef enum _D3DSHADER_COMPARISON
     D3DSPC_LE,
     D3DSPC_RESERVED1,
 } D3DSHADER_COMPARISON;
+
+#ifdef __i386__
+#include <poppack.h>
+#endif
 
 #endif /* __WINE_D3D9TYPES_H */
