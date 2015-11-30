@@ -759,6 +759,18 @@ vfatDirFindFile(
 
         if (!ENTRY_VOLUME(pDeviceExt, &DirContext.DirEntry))
         {
+            if (DirContext.LongNameU.Length == 0 ||
+                DirContext.ShortNameU.Length == 0)
+            {
+                DPRINT1("WARNING: File system corruption detected. You may need to run a disk repair utility.\n");
+                if (VfatGlobalData->Flags & VFAT_BREAK_ON_CORRUPTION)
+                {
+                    ASSERT(DirContext.LongNameU.Length != 0 &&
+                           DirContext.ShortNameU.Length != 0);
+                }
+                DirContext.DirIndex++;
+                continue;
+            }
             FoundLong = RtlEqualUnicodeString(FileToFindU, &DirContext.LongNameU, TRUE);
             if (FoundLong == FALSE)
             {
