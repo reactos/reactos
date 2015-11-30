@@ -1,4 +1,5 @@
-/* Spanish translation by ??? and Swyter */
+/* Spanish translation by ??? and Ismael Ferreras Morezuelas (Swyter) */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 MENU_001 MENU
@@ -282,9 +283,9 @@ BEGIN
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Descripción: ", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Autoría: ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Información adicional sobre la versión: ", 14006, 6, 70, 222, 115
+    GROUPBOX "Información adicional de versión: ", 14006, 6, 70, 222, 115
     LTEXT "Nombre del elemento:", 14007, 13, 82, 65, 10
     LTEXT "Valor: ", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
@@ -321,7 +322,7 @@ BEGIN
     PUSHBUTTON "&Liberar espacio en disco", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Comprimir contenido para ahorrar espacio en disco", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Permitir a Index Server indizar el disco para acelerar la búsqueda", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "Permitir al servidor de indexación indizar el disco para acelerar la búsqueda", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -393,7 +394,7 @@ BEGIN
     LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
     LTEXT "Archivo:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programas ", -1, 7, 42, 269, 187
-    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programas", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 15, 193, 250, 10
     PUSHBUTTON "&Examinar...", 14004, 218, 207, 50, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 170, 236, 50, 14
@@ -412,8 +413,8 @@ BEGIN
     GROUPBOX "Examinar carpetas ", -1, 7, 60, 279, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 75, 160, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 87, 140, 10, WS_TABSTOP | WS_GROUP
-    GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 279, 60
+    AUTORADIOBUTTON "Abrir cada carpeta en ventanas di&ferentes", 14005, 40, 87, 140, 10, WS_TABSTOP | WS_GROUP
+    GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
@@ -755,7 +756,7 @@ BEGIN
     IDS_DRIVE_CDROM "Unidad de CD"
     IDS_DRIVE_NETWORK "Unidad de red"
     IDS_DRIVE_FLOPPY "Disquete"
-    IDS_DRIVE_REMOVABLE "Disco extraible"
+    IDS_DRIVE_REMOVABLE "Disco extraíble"
     IDS_FS_UNKNOWN "Desconocido"
 
     /* Open With */

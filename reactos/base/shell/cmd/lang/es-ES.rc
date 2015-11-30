@@ -1,4 +1,4 @@
-/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual */
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -320,9 +320,9 @@ PAUSE [mensaje]"
     STRING_PROMPT_HELP3 "\nEscribe PROMPT sin parámetros para resetear el símbolo de \n\
 comandos a su configuración por defecto."
     STRING_REM_HELP "Comienza una liena de comentarios en un archivo por lotes\n\nREM [Comentario]"
-    STRING_RMDIR_HELP "Remueve un directorio.\n\n\
+    STRING_RMDIR_HELP "Elimina un directorio.\n\n\
 RMDIR [unidad:]ruta\nRD [unidad:]ruta"
-    STRING_RMDIR_HELP2 "Directory is not empty!\n"
+    STRING_RMDIR_HELP2 "La carpeta no está vacía.\n"
     STRING_REN_HELP1 "Renombra un archivo/directorio o varios archivos/directorios.\n\n\
 RENAME [/E /N /P /Q /S /T] nombre_antiguo ... nuevo_nombre\n\
 REN [/E /N /P /Q /S /T] nombre_antiguo ... nuevo_nombre\n\n\
@@ -337,12 +337,12 @@ Note que no puede especificar una nueva unidad en el destino o ruta. Usa\n\
 el comando MOVE para este propósito.\n"
     STRING_REN_HELP2 "    %lu archivos renombrados.\n"
     STRING_REN_HELP3 "    %lu archivos renombrados.\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
+    STRING_REPLACE_HELP1 "Reemplaza archivos.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
+  [drive1:][path1]filename Especifica el archivo o archivos de origen.\n\
+  [drive2:][path2]         Especifica el nombre de la carpeta donde\n\
+                           se reemplacen los archivos.\n\
   /A                       Adds new files to destination directory. Cannot\n\
                            use with /S or /U switches.\n\
   /P                       Prompts for confirmation before replacing a file or\n\
@@ -358,17 +358,17 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP2 "Source path required\n"
     STRING_REPLACE_HELP3 "No files replaced\n"
     STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
+    STRING_REPLACE_HELP5 "Reemplazando %s\n"
+    STRING_REPLACE_HELP6 "Reemplazar %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N) "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N) "
-    STRING_REPLACE_HELP11 "Adding %s\n"
+    STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
+    STRING_REPLACE_HELP9 "Añadir %s (S/N) "
+    STRING_REPLACE_HELP10 "Reemplazar %s (S/N) "
+    STRING_REPLACE_HELP11 "Añadiendo %s\n"
     STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un \n\
 archivo por lotes.\n\n\
 SHIFT [ABAJO]"
-    STRING_SCREEN_HELP "Mueve el cursor y opcionalmente escribe un texto.\n\n\
+    STRING_SCREEN_HELP "Mueve el cursor y escribe un texto de forma opcional.\n\n\
 SCREEN fila columna [texto]\n\n\
   fila         Fila a la que mover el cursor.\n\
   columna      columna a la que mover el cursor."
@@ -409,7 +409,7 @@ Si ni ON, OFF o /S se especifican, el comando\n\
 cambiara el estado de parada del reloj\n\n"
     STRING_TYPE_HELP1 "Muestra los contenidos de un archivo de texto.\n\nTYPE [unidad:][ruta]archivo \n\
   /P        Muestra sólo una pantalla de salida cada vez.\n"
-    STRING_VERIFY_HELP1 "¡¡Este comando es solo de relleno!!\n\
+    STRING_VERIFY_HELP1 "¡Este comando es solo de relleno!\n\
 Configura si hay que verificar que los archivos se and escrito correctamente\n\
 en un disco.\n\n\
 VERIFY [ON | OFF]\n\n\
@@ -435,14 +435,14 @@ lista de los créditos."
  (según tu elección) cualquier otra posterior.\n"
     STRING_VERSION_HELP5 "\nManda los informes de bugs a <ros-dev@reactos.org>.\n\
 Actualizaciones disponibles en: http://www.reactos.org"
-    STRING_VERSION_HELP6 "\nFreeDOS version escrita por:\n"
-    STRING_VERSION_HELP7 "\nReactOS version escrita por:\n"
+    STRING_VERSION_HELP6 "\nVersión de FreeDOS escrita por:\n"
+    STRING_VERSION_HELP7 "\nVersión de ReactOS escrita por:\n"
     STRING_VOL_HELP1 " El volumen en la unidad %c es %s\n"
     STRING_VOL_HELP2 " El volumen en la unidad %c no tiene etiqueta.\n"
     STRING_VOL_HELP3 " El número de serie del volumen es %04X-%04X\n"
     STRING_VOL_HELP4 "Muestra la etiqueta del volumen del disco y el número de serie si existen.\n\nVOL [unidad:]"
     STRING_WINDOW_HELP1 "Cambia el aspecto de la ventana de la consola.\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
+WINDOW [/POS[=]izq,arriba,anchura,altura]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          Especifica la posición y dimensión de la ventana\n\
 MIN           minimiza la ventana\n\
@@ -459,10 +459,10 @@ RESTORE       restaura la ventana\n\
 title         Nuevo título\n"
     STRING_CHOICE_OPTION "SN"
     STRING_COPY_OPTION "SNT"
-    STRING_ALIAS_ERROR "¡Linea de comandos demasiado larga tras la expansión del alias!\n"
-    STRING_ASSOC_ERROR "File association not found for extension %s\n"
+    STRING_ALIAS_ERROR "¡Línea de comandos demasiado larga tras la expansión del alias!\n"
+    STRING_ASSOC_ERROR "No se ha encontrado ninguna asociación de archivos para la extensión %s\n"
     STRING_BATCH_ERROR "Error abriendo el archivo por lotes\n"
-    STRING_CHCP_ERROR1 "Página de códigos activa: %u\n"
+    STRING_CHCP_ERROR1 "Página codificación activa: %u\n"
     STRING_CHCP_ERROR4 "Código de página inválido\n"
     STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options"
     STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn"
@@ -496,7 +496,7 @@ title         Nuevo título\n"
     STRING_GOTO_ERROR2 "La etiqueta '%s' no se encuentra\n"
     STRING_MD_ERROR "A subdirectory or file already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
-    STRING_MOVE_ERROR1 "[OK]\n"
+    STRING_MOVE_ERROR1 "[Correcto]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
     STRING_REN_ERROR1 "MoveFile() falló. Error: %lu\n"
     STRING_TIME_ERROR1 "Hora incorrecta."
@@ -513,32 +513,32 @@ title         Nuevo título\n"
     STRING_ERROR_BADCOMMAND "Comando o nombre de archivo erróneo - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Error fuera de memoria.\n"
     STRING_ERROR_CANNOTPIPE "¡Error!  ¡No se puede apilar!  ¡No se puede abrir el archivo temporal!\n"
-    STRING_ERROR_D_PAUSEMSG "Pulsa una tecla para continuar . . ."
+    STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ..."
     STRING_ERROR_DRIVER_NOT_READY "La unidad no está lista"
     STRING_PATH_ERROR "CMD: No está en el entorno '%s'\n"
-    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
-    STRING_REPLACE_ERROR2 "Path not found - %s\n"
-    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
-    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
-    STRING_REPLACE_ERROR5 "Access denied - %s\n"
-    STRING_REPLACE_ERROR6 "No files found - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_REPLACE_ERROR1 "Argumento no válido - %s\n"
+    STRING_REPLACE_ERROR2 "Ruta no encontrada - %s\n"
+    STRING_REPLACE_ERROR3 "La sintaxis del nombre de archivo, carpeta o volúmen es incorrecta.\n"
+    STRING_REPLACE_ERROR4 "Combinación de parámetros incorrecta\n"
+    STRING_REPLACE_ERROR5 "Acceso denegado - %s\n"
+    STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
+    STRING_REPLACE_ERROR7 "Error extendido 32\n"
+    STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
+    STRING_REACTOS_VERSION "Sistema operativo ReactOS [Versión %s-%s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
-    STRING_VERSION_RUNNING_ON "Corriendo en: "
-    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
-    STRING_COPY_FILE "        %d archivo(s) copado(s)\n"
-    STRING_DELETE_WIPE "Limpiado"
-    STRING_FOR_ERROR "Especición de variable errónea."
-    STRING_SCREEN_COL "Valor inválido de columna"
-    STRING_SCREEN_ROW "Valor inválido de fila"
+    STRING_VERSION_RUNNING_ON "Funcionando en: "
+    STRING_VERSION_RUNVER "%s [Versión %d.%d.%d] %s"
+    STRING_COPY_FILE "        %d archivo(s) copiado(s)\n"
+    STRING_DELETE_WIPE "Borrado"
+    STRING_FOR_ERROR "Se ha especificado una variable errónea."
+    STRING_SCREEN_COL "Valor de columna no válido"
+    STRING_SCREEN_ROW "Valor de fila no válido"
     STRING_TIMER_TIME "El temporizador %d es %s: "
-    STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
-    STRING_MORE "More? "
-    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Si/No/Todos) "
+    STRING_MKLINK_CREATED_SYMBOLIC "Enlace simbólico creado para %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "Enlace duro creado para %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Unión de directorios creada para %s <<===>> %s\n"
+    STRING_MORE "¿Más? "
+    STRING_CANCEL_BATCH_FILE "\r\nSe a presionado Ctrl-Pausa. Cancelar el archivo de comandos? (Sí/No/Todos) "
     STRING_INVALID_OPERAND "Operador erróneo.\n"
     STRING_EXPECTED_CLOSE_PAREN "Se esperaba ')'.\n"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "Se esperaba un número o nombre de variable.\n"

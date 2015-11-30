@@ -1,0 +1,66 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Abrir...", CMD_OPEN
+        MENUITEM "Guardar &como...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "S&alir", CMD_EXIT
+    END
+    POPUP "&Edición"
+    BEGIN
+        MENUITEM "&Borrar\tDel", CMD_DELETE
+    END
+    POPUP "&Visualización"
+    BEGIN
+        MENUITEM "&Automática", CMD_AUTOMATIC
+    END
+    POPUP "A&yuda"
+    BEGIN
+        MENUITEM "&Temas de ayuda", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Acerca de", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Portapapeles"
+    STRING_DELETE_MSG "¿Borrar contenidos del Portapapeles?"
+    STRING_DELETE_TITLE "Vaciar Portapapeles"
+    STRING_FORMAT_NT "Archivos de Portapapeles de ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Archivos de Portapapeles (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Formato desconocido"
+    STRING_CF_TEXT "Texto"
+    STRING_CF_BITMAP "Mapa de bits"
+    STRING_CF_OEMTEXT "Texto OEM"
+    STRING_CF_UNICODETEXT "Texto Unicode"
+    STRING_CF_DIB "Mapa de bits DIB"
+    STRING_CF_LOCALE "Dato de idiomas"
+    STRING_CF_ENHMETAFILE "Metarchivo mejorado"
+    STRING_CF_METAFILEPICT "Metarchivo"
+    STRING_CF_PALETTE "Paleta de color"
+    STRING_CF_DIBV5 "Mapa de bits DIB (versión 5)"
+    STRING_CF_SYLK "Formato de enlace simbólico"
+    STRING_CF_DIF "Formato de intercambio de datos"
+    STRING_CF_HDROP "Datos de arrastrar y soltar"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "El Portapapeles contiene datos en un formato que no es posible mostrar."
+    ERROR_INVALID_FILE_FORMAT "El archivo seleccionado no es un archivo del Portapapeles válido."
+END
