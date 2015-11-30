@@ -33,7 +33,7 @@
 @ stdcall GetBestRoute( long long long )
 @ stub GetBestRouteFromStack
 @ stdcall GetExtendedTcpTable( ptr ptr long long long long )
-@ stub GetExtendedUdpTable
+@ stdcall -stub GetExtendedUdpTable( ptr ptr long long long long )
 @ stdcall GetFriendlyIfIndex( long )
 @ stdcall GetIcmpStatistics( ptr )
 @ stdcall GetIcmpStatisticsEx(ptr long)
