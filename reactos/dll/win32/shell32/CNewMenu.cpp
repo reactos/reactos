@@ -337,6 +337,7 @@ HRESULT CNewMenu::SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT
     return hr;
 }
 
+// Code is duplicated in CDefaultContextMenu
 HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
