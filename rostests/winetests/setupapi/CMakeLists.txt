@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     devinst.c
+    dialog.c
     diskspace.c
     install.c
     misc.c
