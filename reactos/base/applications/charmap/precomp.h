@@ -1,7 +1,12 @@
 #ifndef __CHARMAP_PRECOMP_H
 #define __CHARMAP_PRECOMP_H
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+
 
 #include "resource.h"
 
