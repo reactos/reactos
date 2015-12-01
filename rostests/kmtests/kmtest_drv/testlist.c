@@ -20,7 +20,9 @@ KMT_TESTFUNC Test_ExResource;
 KMT_TESTFUNC Test_ExSequencedList;
 KMT_TESTFUNC Test_ExSingleList;
 KMT_TESTFUNC Test_ExTimer;
+KMT_TESTFUNC Test_FsRtlDissect;
 KMT_TESTFUNC Test_FsRtlExpression;
+KMT_TESTFUNC Test_FsRtlLegal;
 KMT_TESTFUNC Test_FsRtlMcb;
 KMT_TESTFUNC Test_FsRtlTunnel;
 KMT_TESTFUNC Test_IoCreateFile;
@@ -85,7 +87,9 @@ const KMT_TEST TestList[] =
     { "ExSingleList",                       Test_ExSingleList },
     { "-ExTimer",                           Test_ExTimer },
     { "Example",                            Test_Example },
+    { "FsRtlDissect",                       Test_FsRtlDissect },
     { "FsRtlExpression",                    Test_FsRtlExpression },
+    { "FsRtlLegal",                         Test_FsRtlLegal },
     { "FsRtlMcb",                           Test_FsRtlMcb },
     { "FsRtlTunnel",                        Test_FsRtlTunnel },
     { "IoCreateFile",                       Test_IoCreateFile },
