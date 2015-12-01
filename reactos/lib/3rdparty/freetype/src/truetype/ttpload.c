@@ -124,8 +124,9 @@
         TT_Table  entry = face->dir_tables;
         TT_Table  limit = entry + face->num_tables;
 
-        FT_Long   pos  = (FT_Long)FT_STREAM_POS();
-        FT_Long   dist = 0x7FFFFFFFL;
+        FT_Long  pos   = (FT_Long)FT_STREAM_POS();
+        FT_Long  dist  = 0x7FFFFFFFL;
+        FT_Bool  found = 0;
 
 
         /* compute the distance to next table in font file */
@@ -135,10 +136,13 @@
 
 
           if ( diff > 0 && diff < dist )
-            dist = diff;
+          {
+            dist  = diff;
+            found = 1;
+          }
         }
 
-        if ( entry == limit )
+        if ( !found )
         {
           /* `loca' is the last table */
           dist = (FT_Long)stream->size - pos;
@@ -222,7 +226,8 @@
     if ( pos1 > face->glyf_len )
     {
       FT_TRACE1(( "tt_face_get_location:"
-                  " too large offset=0x%08lx found for gid=0x%04lx,"
+                  " too large offset=0x%08lx found for gid=0x%04lx,\n"
+                  "                     "
                   " exceeding the end of glyf table (0x%08lx)\n",
                   pos1, gindex, face->glyf_len ));
       *asize = 0;
@@ -232,7 +237,8 @@
     if ( pos2 > face->glyf_len )
     {
       FT_TRACE1(( "tt_face_get_location:"
-                  " too large offset=0x%08lx found for gid=0x%04lx,"
+                  " too large offset=0x%08lx found for gid=0x%04lx,\n"
+                  "                     "
                   " truncate at the end of glyf table (0x%08lx)\n",
                   pos2, gindex + 1, face->glyf_len ));
       pos2 = face->glyf_len;

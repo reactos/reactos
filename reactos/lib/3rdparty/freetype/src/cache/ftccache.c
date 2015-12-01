@@ -576,7 +576,7 @@
       FTC_Node*  pnode  = bucket;
 
 
-      for ( ;; )
+      for (;;)
       {
         FTC_Node  node = *pnode;
         FT_Bool   list_changed = FALSE;

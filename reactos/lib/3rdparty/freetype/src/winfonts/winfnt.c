@@ -1121,7 +1121,7 @@
 
   static const FT_Service_WinFntRec  winfnt_service_rec =
   {
-    winfnt_get_header
+    winfnt_get_header       /* get_header */
   };
 
  /*
@@ -1161,32 +1161,32 @@
       0x10000L,
       0x20000L,
 
-      0,
+      0,    /* module-specific interface */
 
-      0,                  /* FT_Module_Constructor */
-      0,                  /* FT_Module_Destructor  */
-      winfnt_get_service
+      0,                        /* FT_Module_Constructor  module_init   */
+      0,                        /* FT_Module_Destructor   module_done   */
+      winfnt_get_service        /* FT_Module_Requester    get_interface */
     },
 
     sizeof ( FNT_FaceRec ),
     sizeof ( FT_SizeRec ),
     sizeof ( FT_GlyphSlotRec ),
 
-    FNT_Face_Init,
-    FNT_Face_Done,
-    0,                    /* FT_Size_InitFunc */
-    0,                    /* FT_Size_DoneFunc */
-    0,                    /* FT_Slot_InitFunc */
-    0,                    /* FT_Slot_DoneFunc */
+    FNT_Face_Init,              /* FT_Face_InitFunc  init_face */
+    FNT_Face_Done,              /* FT_Face_DoneFunc  done_face */
+    0,                          /* FT_Size_InitFunc  init_size */
+    0,                          /* FT_Size_DoneFunc  done_size */
+    0,                          /* FT_Slot_InitFunc  init_slot */
+    0,                          /* FT_Slot_DoneFunc  done_slot */
 
-    FNT_Load_Glyph,
+    FNT_Load_Glyph,             /* FT_Slot_LoadFunc  load_glyph */
 
-    0,                    /* FT_Face_GetKerningFunc  */
-    0,                    /* FT_Face_AttachFunc      */
-    0,                    /* FT_Face_GetAdvancesFunc */
+    0,                          /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    0,                          /* FT_Face_GetAdvancesFunc  get_advances */
 
-    FNT_Size_Request,
-    FNT_Size_Select
+    FNT_Size_Request,           /* FT_Size_RequestFunc  request_size */
+    FNT_Size_Select             /* FT_Size_SelectFunc   select_size  */
   };
 
 

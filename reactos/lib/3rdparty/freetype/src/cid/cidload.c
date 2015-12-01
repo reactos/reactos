@@ -215,6 +215,7 @@
   {
     CID_FaceInfo  cid    = &face->cid;
     FT_Memory     memory = face->root.memory;
+    FT_Stream     stream = parser->stream;
     FT_Error      error  = FT_Err_Ok;
     FT_Long       num_dicts;
 
@@ -225,6 +226,31 @@
       FT_ERROR(( "parse_fd_array: invalid number of dictionaries\n" ));
       error = FT_THROW( Invalid_File_Format );
       goto Exit;
+    }
+
+    /*
+     * A single entry in the FDArray must (at least) contain the following
+     * structure elements.
+     *
+     *   %ADOBeginFontDict              18
+     *   X dict begin                   13
+     *     /FontMatrix [X X X X]        22
+     *     /Private X dict begin        22
+     *     end                           4
+     *   end                             4
+     *   %ADOEndFontDict                16
+     *
+     * This needs 18+13+22+22+4+4+16=99 bytes or more.  Normally, you also
+     * need a `dup X' at the very beginning and a `put' at the end, so a
+     * rough guess using 100 bytes as the minimum is justified.
+     */
+    if ( (FT_ULong)num_dicts > stream->size / 100 )
+    {
+      FT_TRACE0(( "parse_fd_array: adjusting FDArray size"
+                  " (from %d to %d)\n",
+                  num_dicts,
+                  stream->size / 100 ));
+      num_dicts = (FT_Long)( stream->size / 100 );
     }
 
     if ( !cid->font_dicts )
@@ -395,7 +421,14 @@
 
         cur = parser->root.cursor;
       }
+
+      if ( !face->cid.num_dicts )
+      {
+        FT_ERROR(( "cid_parse_dict: No font dictionary found\n" ));
+        return FT_THROW( Invalid_File_Format );
+      }
     }
+
     return parser->root.error;
   }
 
@@ -427,13 +460,6 @@
       FT_ULong      data_len;
       FT_Byte*      p;
 
-
-      /* Check for possible overflow. */
-      if ( num_subrs == FT_UINT_MAX )
-      {
-        error = FT_THROW( Syntax_Error );
-        goto Fail;
-      }
 
       /* reallocate offsets array if needed */
       if ( num_subrs + 1 > max_offsets )
@@ -467,14 +493,25 @@
       /* offsets must be ordered */
       for ( count = 1; count <= num_subrs; count++ )
         if ( offsets[count - 1] > offsets[count] )
+        {
+          FT_ERROR(( "cid_read_subrs: offsets are not ordered\n" ));
+          error = FT_THROW( Invalid_File_Format );
           goto Fail;
+        }
+
+      if ( offsets[num_subrs] > stream->size - cid->data_offset )
+      {
+        FT_ERROR(( "cid_read_subrs: too large `subrs' offsets\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
 
       /* now, compute the size of subrs charstrings, */
       /* allocate, and read them                     */
       data_len = offsets[num_subrs] - offsets[0];
 
       if ( FT_NEW_ARRAY( subr->code, num_subrs + 1 ) ||
-               FT_ALLOC( subr->code[0], data_len )   )
+           FT_ALLOC( subr->code[0], data_len )       )
         goto Fail;
 
       if ( FT_STREAM_SEEK( cid->data_offset + offsets[0] ) ||
@@ -654,6 +691,12 @@
     CID_Parser*  parser;
     FT_Memory    memory = face->root.memory;
     FT_Error     error;
+    FT_Int       n;
+
+    CID_FaceInfo  cid = &face->cid;
+
+    FT_ULong  binary_length;
+    FT_ULong  entry_len;
 
 
     cid_init_loader( &loader, face );
@@ -678,6 +721,17 @@
 
     if ( parser->binary_length )
     {
+      if ( parser->binary_length >
+             face->root.stream->size - parser->data_offset )
+      {
+        FT_TRACE0(( "cid_face_open: adjusting length of binary data\n"
+                    "               (from %d to %d bytes)\n",
+                    parser->binary_length,
+                    face->root.stream->size - parser->data_offset ));
+        parser->binary_length = face->root.stream->size -
+                                parser->data_offset;
+      }
+
       /* we must convert the data section from hexadecimal to binary */
       if ( FT_ALLOC( face->binary_data, parser->binary_length )         ||
            cid_hex_to_binary( face->binary_data, parser->binary_length,
@@ -686,14 +740,95 @@
 
       FT_Stream_OpenMemory( face->cid_stream,
                             face->binary_data, parser->binary_length );
-      face->cid.data_offset = 0;
+      cid->data_offset = 0;
     }
     else
     {
-      *face->cid_stream     = *face->root.stream;
-      face->cid.data_offset = loader.parser.data_offset;
+      *face->cid_stream = *face->root.stream;
+      cid->data_offset  = loader.parser.data_offset;
     }
 
+    /* sanity tests */
+
+    if ( cid->fd_bytes < 0 || cid->gd_bytes < 1 )
+    {
+      FT_ERROR(( "cid_parse_dict:"
+                 " Invalid `FDBytes' or `GDBytes' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    /* allow at most 32bit offsets */
+    if ( cid->fd_bytes > 4 || cid->gd_bytes > 4 )
+    {
+      FT_ERROR(( "cid_parse_dict:"
+                 " Values of `FDBytes' or `GDBytes' larger than 4\n"
+                 "               "
+                 " are not supported\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    binary_length = face->cid_stream->size - cid->data_offset;
+    entry_len     = (FT_ULong)( cid->fd_bytes + cid->gd_bytes );
+
+    for ( n = 0; n < cid->num_dicts; n++ )
+    {
+      CID_FaceDict  dict = cid->font_dicts + n;
+
+
+      if ( dict->sd_bytes < 0 )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SDBytes' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      if ( dict->sd_bytes > 4 )
+      {
+        FT_ERROR(( "cid_parse_dict:"
+                   " Values of `SDBytes' larger than 4"
+                   " are not supported\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      if ( dict->subrmap_offset > binary_length )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SubrMapOffset' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      /* `num_subrs' is scanned as a signed integer */
+      if ( (FT_Int)dict->num_subrs < 0                                     ||
+           ( dict->sd_bytes                                              &&
+             dict->num_subrs > ( binary_length - dict->subrmap_offset ) /
+                                 (FT_UInt)dict->sd_bytes                 ) )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SubrCount' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+    }
+
+    if ( cid->cidmap_offset > binary_length )
+    {
+      FT_ERROR(( "cid_parse_dict: Invalid `CIDMapOffset' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    if ( entry_len                                            &&
+         cid->cid_count >
+           ( binary_length - cid->cidmap_offset ) / entry_len )
+    {
+      FT_ERROR(( "cid_parse_dict: Invalid `CIDCount' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    /* we can now safely proceed */
     error = cid_read_subrs( face );
 
   Exit:

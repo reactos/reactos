@@ -74,6 +74,8 @@ FT_BEGIN_HEADER
   {
     AF_WidthRec  ref;
     AF_WidthRec  shoot;
+    FT_Pos       ascender;
+    FT_Pos       descender;
     FT_UInt      flags;
 
   } AF_LatinBlueRec, *AF_LatinBlue;

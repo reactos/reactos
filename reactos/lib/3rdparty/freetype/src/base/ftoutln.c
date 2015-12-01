@@ -942,6 +942,9 @@
       l_in = 0;
       last = outline->contours[c];
 
+      /* pacify compiler */
+      in.x = in.y = anchor.x = anchor.y = 0;
+
       /* Counter j cycles though the points; counter i advances only  */
       /* when points are moved; anchor k marks the first moved point. */
       for ( i = last, j = first, k = -1;
@@ -1074,13 +1077,16 @@
       FT_Int  last = outline->contours[c];
 
 
-      v_prev = points[last];
+      v_prev.x = points[last].x >> xshift;
+      v_prev.y = points[last].y >> yshift;
 
       for ( n = first; n <= last; n++ )
       {
-        v_cur = points[n];
-        area += ( ( v_cur.y - v_prev.y ) >> yshift ) *
-                ( ( v_cur.x + v_prev.x ) >> xshift );
+        v_cur.x = points[n].x >> xshift;
+        v_cur.y = points[n].y >> yshift;
+
+        area += ( v_cur.y - v_prev.y ) * ( v_cur.x + v_prev.x );
+
         v_prev = v_cur;
       }
 

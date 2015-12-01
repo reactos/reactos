@@ -693,6 +693,22 @@
   }
 
 
+  /* Extract standard_width from writing system/script specific */
+  /* metrics class.                                             */
+
+  FT_LOCAL_DEF( void )
+  af_latin2_get_standard_widths( AF_LatinMetrics  metrics,
+                                 FT_Pos*          stdHW,
+                                 FT_Pos*          stdVW )
+  {
+    if ( stdHW )
+      *stdHW = metrics->axis[AF_DIMENSION_VERT].standard_width;
+
+    if ( stdVW )
+      *stdVW = metrics->axis[AF_DIMENSION_HORZ].standard_width;
+  }
+
+
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
@@ -2392,6 +2408,7 @@
     (AF_WritingSystem_InitMetricsFunc) af_latin2_metrics_init,
     (AF_WritingSystem_ScaleMetricsFunc)af_latin2_metrics_scale,
     (AF_WritingSystem_DoneMetricsFunc) NULL,
+    (AF_WritingSystem_GetStdWidthsFunc)af_latin2_get_standard_widths,
 
     (AF_WritingSystem_InitHintsFunc)   af_latin2_hints_init,
     (AF_WritingSystem_ApplyHintsFunc)  af_latin2_hints_apply

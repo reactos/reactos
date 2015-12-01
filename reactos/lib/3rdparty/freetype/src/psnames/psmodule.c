@@ -525,31 +525,31 @@
 
   FT_DEFINE_SERVICE_PSCMAPSREC(
     pscmaps_interface,
-    (PS_Unicode_ValueFunc)     ps_unicode_value,
-    (PS_Unicodes_InitFunc)     ps_unicodes_init,
-    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,
-    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,
+    (PS_Unicode_ValueFunc)     ps_unicode_value,        /* unicode_value         */
+    (PS_Unicodes_InitFunc)     ps_unicodes_init,        /* unicodes_init         */
+    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,  /* unicodes_char_index   */
+    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,   /* unicodes_char_next    */
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
 
-    t1_standard_encoding,
-    t1_expert_encoding )
+    t1_standard_encoding,                               /* adobe_std_encoding    */
+    t1_expert_encoding )                                /* adobe_expert_encoding */
 
 #else
 
   FT_DEFINE_SERVICE_PSCMAPSREC(
     pscmaps_interface,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    NULL,                                               /* unicode_value         */
+    NULL,                                               /* unicodes_init         */
+    NULL,                                               /* unicodes_char_index   */
+    NULL,                                               /* unicodes_char_next    */
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
 
-    t1_standard_encoding,
-    t1_expert_encoding )
+    t1_standard_encoding,                               /* adobe_std_encoding    */
+    t1_expert_encoding )                                /* adobe_expert_encoding */
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 

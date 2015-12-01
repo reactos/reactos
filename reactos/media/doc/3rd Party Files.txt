@@ -23,7 +23,7 @@ Used Version: 1.1
 Website: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: FreeType
-Used Version: 2.6.1
+Used Version: 2.6.2
 Website: http://www.freetype.org
 
 Title: Mesa3D

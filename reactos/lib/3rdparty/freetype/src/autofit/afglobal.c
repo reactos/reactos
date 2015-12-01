@@ -350,11 +350,17 @@
                      (FT_ULong)face->num_glyphs * sizeof ( FT_UShort ) ) )
       goto Exit;
 
-    globals->face         = face;
-    globals->glyph_count  = face->num_glyphs;
+    globals->face                      = face;
+    globals->glyph_count               = face->num_glyphs;
     /* right after the globals structure come the glyph styles */
-    globals->glyph_styles = (FT_UShort*)( globals + 1 );
-    globals->module       = module;
+    globals->glyph_styles              = (FT_UShort*)( globals + 1 );
+    globals->module                    = module;
+    globals->stem_darkening_for_ppem   = 0;
+    globals->darken_x                  = 0;
+    globals->darken_y                  = 0;
+    globals->standard_vertical_width   = 0;
+    globals->standard_horizontal_width = 0;
+    globals->scale_down_factor         = 0;
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
     globals->hb_font = hb_ft_font_create( face, NULL );
@@ -406,9 +412,16 @@
       globals->hb_font = NULL;
 #endif
 
-      globals->glyph_count  = 0;
-      globals->glyph_styles = NULL;  /* no need to free this one! */
-      globals->face         = NULL;
+      globals->glyph_count               = 0;
+      globals->stem_darkening_for_ppem   = 0;
+      globals->darken_x                  = 0;
+      globals->darken_y                  = 0;
+      globals->standard_vertical_width   = 0;
+      globals->standard_horizontal_width = 0;
+      globals->scale_down_factor         = 0;
+      /* no need to free this one! */
+      globals->glyph_styles              = NULL;
+      globals->face                      = NULL;
 
       FT_FREE( globals );
     }

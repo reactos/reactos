@@ -111,12 +111,14 @@ FT_BEGIN_HEADER
 #define FT_MODULE_HINTER              4  /* this module is a glyph hinter */
 #define FT_MODULE_STYLER              8  /* this module is a styler       */
 
-#define FT_MODULE_DRIVER_SCALABLE     0x100   /* the driver supports      */
+#define FT_MODULE_DRIVER_SCALABLE      0x100  /* the driver supports      */
                                               /* scalable fonts           */
-#define FT_MODULE_DRIVER_NO_OUTLINES  0x200   /* the driver does not      */
+#define FT_MODULE_DRIVER_NO_OUTLINES   0x200  /* the driver does not      */
                                               /* support vector outlines  */
-#define FT_MODULE_DRIVER_HAS_HINTER   0x400   /* the driver provides its  */
+#define FT_MODULE_DRIVER_HAS_HINTER    0x400  /* the driver provides its  */
                                               /* own hinter               */
+#define FT_MODULE_DRIVER_HINTS_LIGHTLY 0x800  /* the driver's hinter      */
+                                              /* produces LIGHT hints     */
 
 
   /* deprecated values */
@@ -125,9 +127,10 @@ FT_BEGIN_HEADER
 #define ft_module_hinter              FT_MODULE_HINTER
 #define ft_module_styler              FT_MODULE_STYLER
 
-#define ft_module_driver_scalable     FT_MODULE_DRIVER_SCALABLE
-#define ft_module_driver_no_outlines  FT_MODULE_DRIVER_NO_OUTLINES
-#define ft_module_driver_has_hinter   FT_MODULE_DRIVER_HAS_HINTER
+#define ft_module_driver_scalable       FT_MODULE_DRIVER_SCALABLE
+#define ft_module_driver_no_outlines    FT_MODULE_DRIVER_NO_OUTLINES
+#define ft_module_driver_has_hinter     FT_MODULE_DRIVER_HAS_HINTER
+#define ft_module_driver_hints_lightly  FT_MODULE_DRIVER_HINTS_LIGHTLY
 
 
   typedef FT_Pointer  FT_Module_Interface;

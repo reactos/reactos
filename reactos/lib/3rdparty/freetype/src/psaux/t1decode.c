@@ -512,7 +512,7 @@
         break;
 
       case 12:
-        if ( ip > limit )
+        if ( ip >= limit )
         {
           FT_ERROR(( "t1_decoder_parse_charstrings:"
                      " invalid escape (12+EOF)\n" ));
@@ -669,7 +669,7 @@
         if ( large_int )
           FT_TRACE4(( " %ld", value ));
         else
-          FT_TRACE4(( " %ld", Fix2Int( value ) ));
+          FT_TRACE4(( " %ld", value / 65536 ));
 #endif
 
         *top++       = value;

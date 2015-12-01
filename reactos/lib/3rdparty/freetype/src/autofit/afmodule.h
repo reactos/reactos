@@ -41,6 +41,8 @@ FT_BEGIN_HEADER
 #ifdef AF_CONFIG_OPTION_USE_WARPER
     FT_Bool       warping;
 #endif
+    FT_Bool       no_stem_darkening;
+    FT_Int        darken_params[8];
 
   } AF_ModuleRec, *AF_Module;
 

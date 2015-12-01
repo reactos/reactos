@@ -55,7 +55,18 @@
 #pragma warning( disable : 4244 )
 #endif /* _MSC_VER */
 
-  /* it's easiest to include `md5.c' directly */
+  /* It's easiest to include `md5.c' directly.  However, since OpenSSL */
+  /* also provides the same functions, there might be conflicts if     */
+  /* both FreeType and OpenSSL are built as static libraries.  For     */
+  /* this reason, we put the MD5 stuff into the `FT_' namespace.       */
+#define MD5_u32plus  FT_MD5_u32plus
+#define MD5_CTX      FT_MD5_CTX
+#define MD5_Init     FT_MD5_Init
+#define MD5_Update   FT_MD5_Update
+#define MD5_Final    FT_MD5_Final
+
+#undef  HAVE_OPENSSL
+
 #include "md5.c"
 
 #if defined( _MSC_VER )
@@ -675,7 +686,8 @@
         /* check the size of the `fpgm' and `prep' tables, too --    */
         /* the assumption is that there don't exist real TTFs where  */
         /* both `fpgm' and `prep' tables are missing                 */
-        if ( mode == FT_RENDER_MODE_LIGHT                       ||
+        if ( ( mode == FT_RENDER_MODE_LIGHT                   &&
+               !FT_DRIVER_HINTS_LIGHTLY( driver ) )             ||
              face->internal->ignore_unpatented_hinter           ||
              ( FT_IS_SFNT( face )                             &&
                ttface->num_locations                          &&
@@ -4156,39 +4168,50 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_bitmap
 
-    /* we convert to a single bitmap format for computing the checksum */
-    if ( !error )
+    /*
+     * Computing the MD5 checksum is expensive, unnecessarily distorting a
+     * possible profiling of FreeType if compiled with tracing support.  For
+     * this reason, we execute the following code only if explicitly
+     * requested.
+     */
+
+    /* we use FT_TRACE3 in this block */
+    if ( ft_trace_levels[trace_bitmap] >= 3 )
     {
-      FT_Bitmap  bitmap;
-      FT_Error   err;
-
-
-      FT_Bitmap_Init( &bitmap );
-
-      /* this also converts the bitmap flow to `down' (i.e., pitch > 0) */
-      err = FT_Bitmap_Convert( library, &slot->bitmap, &bitmap, 1 );
-      if ( !err )
+      /* we convert to a single bitmap format for computing the checksum */
+      if ( !error )
       {
-        MD5_CTX        ctx;
-        unsigned char  md5[16];
-        int            i;
-        unsigned int   rows  = bitmap.rows;
-        unsigned int   pitch = (unsigned int)bitmap.pitch;
+        FT_Bitmap  bitmap;
+        FT_Error   err;
 
 
-        MD5_Init( &ctx );
-        MD5_Update( &ctx, bitmap.buffer, rows * pitch );
-        MD5_Final( md5, &ctx );
+        FT_Bitmap_Init( &bitmap );
 
-        FT_TRACE3(( "MD5 checksum for %dx%d bitmap:\n"
-                    "  ",
-                    rows, pitch ));
-        for ( i = 0; i < 16; i++ )
-          FT_TRACE3(( "%02X", md5[i] ));
-        FT_TRACE3(( "\n" ));
+        /* this also converts the bitmap flow to `down' (i.e., pitch > 0) */
+        err = FT_Bitmap_Convert( library, &slot->bitmap, &bitmap, 1 );
+        if ( !err )
+        {
+          MD5_CTX        ctx;
+          unsigned char  md5[16];
+          int            i;
+          unsigned int   rows  = bitmap.rows;
+          unsigned int   pitch = (unsigned int)bitmap.pitch;
+
+
+          MD5_Init( &ctx );
+          MD5_Update( &ctx, bitmap.buffer, rows * pitch );
+          MD5_Final( md5, &ctx );
+
+          FT_TRACE3(( "MD5 checksum for %dx%d bitmap:\n"
+                      "  ",
+                      rows, pitch ));
+          for ( i = 0; i < 16; i++ )
+            FT_TRACE3(( "%02X", md5[i] ));
+          FT_TRACE3(( "\n" ));
+        }
+
+        FT_Bitmap_Done( library, &bitmap );
       }
-
-      FT_Bitmap_Done( library, &bitmap );
     }
 
 #undef  FT_COMPONENT

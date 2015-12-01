@@ -774,7 +774,7 @@
     if ( charcode < cmap->cur_start )
       charcode = cmap->cur_start;
 
-    for ( ;; )
+    for (;;)
     {
       FT_Byte*  values = cmap->cur_values;
       FT_UInt   end    = cmap->cur_end;
@@ -1891,7 +1891,10 @@
         /* if `gindex' is invalid, the remaining values */
         /* in this group are invalid, too               */
         if ( gindex >= (FT_UInt)face->num_glyphs )
+        {
+          gindex = 0;
           continue;
+        }
 
         result = char_code;
         break;
@@ -2277,7 +2280,10 @@
         /* if `gindex' is invalid, the remaining values */
         /* in this group are invalid, too               */
         if ( gindex >= (FT_UInt)face->num_glyphs )
+        {
+          gindex = 0;
           continue;
+        }
 
         cmap->cur_charcode = char_code;
         cmap->cur_gindex   = gindex;
@@ -2962,11 +2968,16 @@
         /* through the normal Unicode cmap, no GIDs, just check order) */
         if ( defOff != 0 )
         {
-          FT_Byte*  defp      = table + defOff;
-          FT_ULong  numRanges = TT_NEXT_ULONG( defp );
+          FT_Byte*  defp     = table + defOff;
+          FT_ULong  numRanges;
           FT_ULong  i;
-          FT_ULong  lastBase  = 0;
+          FT_ULong  lastBase = 0;
 
+
+          if ( defp + 4 > valid->limit )
+            FT_INVALID_TOO_SHORT;
+
+          numRanges = TT_NEXT_ULONG( defp );
 
           /* defp + numRanges * 4 > valid->limit ? */
           if ( numRanges > (FT_ULong)( valid->limit - defp ) / 4 )
@@ -2991,13 +3002,18 @@
         /* and the non-default table (these glyphs are specified here) */
         if ( nondefOff != 0 )
         {
-          FT_Byte*  ndp         = table + nondefOff;
-          FT_ULong  numMappings = TT_NEXT_ULONG( ndp );
-          FT_ULong  i, lastUni  = 0;
+          FT_Byte*  ndp        = table + nondefOff;
+          FT_ULong  numMappings;
+          FT_ULong  i, lastUni = 0;
 
 
-          /* numMappings * 4 > (FT_ULong)( valid->limit - ndp ) ? */
-          if ( numMappings > ( (FT_ULong)( valid->limit - ndp ) ) / 4 )
+          if ( ndp + 4 > valid->limit )
+            FT_INVALID_TOO_SHORT;
+
+          numMappings = TT_NEXT_ULONG( ndp );
+
+          /* numMappings * 5 > (FT_ULong)( valid->limit - ndp ) ? */
+          if ( numMappings > ( (FT_ULong)( valid->limit - ndp ) ) / 5 )
             FT_INVALID_TOO_SHORT;
 
           for ( i = 0; i < numMappings; ++i )
@@ -3442,7 +3458,7 @@
       ni   = 1;
       i    = 0;
 
-      for ( ;; )
+      for (;;)
       {
         if ( nuni > duni + dcnt )
         {

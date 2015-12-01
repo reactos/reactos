@@ -462,7 +462,7 @@
               (FT_UInt32)( 5 * _ft_debug_lineno );
     pnode = &table->sources[hash % FT_MEM_SOURCE_BUCKETS];
 
-    for ( ;; )
+    for (;;)
     {
       node = *pnode;
       if ( node == NULL )

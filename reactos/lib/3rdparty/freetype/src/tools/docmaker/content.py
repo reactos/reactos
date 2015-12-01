@@ -46,9 +46,26 @@ re_code_end   = re.compile( r"(\s*)}\s*$" )
 
 
 #
-# A regular expression to isolate identifiers from other text.
+# A regular expression to isolate identifiers from other text.  Two syntax
+# forms are supported:
 #
-re_identifier = re.compile( r'((?:\w|-)*)' )
+#   <name>
+#   <name>[<id>]
+#
+# where both `<name>' and `<id>' consist of alphanumeric characters, `_',
+# and `-'.  Use `<id>' if there are multiple, valid `<name>' entries; in the
+# index, `<id>' will be appended in parentheses.
+#
+# For example,
+#
+#   stem_darkening[autofit]
+#
+# becomes `stem_darkening (autofit)' in the index.
+#
+re_identifier = re.compile( r"""
+                              ((?:\w|-)+
+                               (?:\[(?:\w|-)+\])?)
+                            """, re.VERBOSE )
 
 
 #

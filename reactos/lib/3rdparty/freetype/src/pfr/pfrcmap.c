@@ -130,7 +130,7 @@
         }
 
         if ( gchar->char_code < char_code )
-          min = mid+1;
+          min = mid + 1;
         else
           max = mid;
       }

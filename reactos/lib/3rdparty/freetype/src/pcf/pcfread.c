@@ -102,10 +102,21 @@ THE SOFTWARE.
          FT_STREAM_READ_FIELDS( pcf_toc_header, toc ) )
       return FT_THROW( Cannot_Open_Resource );
 
-    if ( toc->version != PCF_FILE_VERSION                 ||
-         toc->count   >  FT_ARRAY_MAX( face->toc.tables ) ||
-         toc->count   == 0                                )
+    if ( toc->version != PCF_FILE_VERSION ||
+         toc->count   == 0                )
       return FT_THROW( Invalid_File_Format );
+
+    if ( stream->size < 16 )
+      return FT_THROW( Invalid_File_Format );
+
+    /* we need 16 bytes per TOC entry */
+    if ( toc->count > stream->size >> 4 )
+    {
+      FT_TRACE0(( "pcf_read_TOC: adjusting number of tables"
+                  " (from %d to %d)\n",
+                  toc->count, stream->size >> 4 ));
+      toc->count = stream->size >> 4;
+    }
 
     if ( FT_NEW_ARRAY( face->toc.tables, toc->count ) )
       return FT_THROW( Out_Of_Memory );
@@ -1173,8 +1184,10 @@ THE SOFTWARE.
 
   FT_LOCAL_DEF( FT_Error )
   pcf_load_font( FT_Stream  stream,
-                 PCF_Face   face )
+                 PCF_Face   face,
+                 FT_Long    face_index )
   {
+    FT_Face    root   = FT_FACE( face );
     FT_Error   error;
     FT_Memory  memory = FT_FACE( face )->memory;
     FT_Bool    hasBDFAccelerators;
@@ -1183,6 +1196,13 @@ THE SOFTWARE.
     error = pcf_read_TOC( stream, face );
     if ( error )
       goto Exit;
+
+    root->num_faces  = 1;
+    root->face_index = 0;
+
+    /* If we are performing a simple font format check, exit immediately. */
+    if ( face_index < 0 )
+      return FT_Err_Ok;
 
     error = pcf_get_properties( stream, face );
     if ( error )
@@ -1226,12 +1246,8 @@ THE SOFTWARE.
 
     /* now construct the face object */
     {
-      FT_Face       root = FT_FACE( face );
       PCF_Property  prop;
 
-
-      root->num_faces  = 1;
-      root->face_index = 0;
 
       root->face_flags |= FT_FACE_FLAG_FIXED_SIZES |
                           FT_FACE_FLAG_HORIZONTAL  |

@@ -439,6 +439,59 @@ FT_BEGIN_HEADER
    */
 
 
+  /**************************************************************************
+   *
+   * @property:
+   *   no-stem-darkening[autofit]
+   *
+   * @description:
+   *   *Experimental* *only,* *requires* *linear* *alpha* *blending* *and*
+   *   *gamma* *correction*
+   *
+   *   Stem darkening emboldens glyphs at smaller sizes to make them more
+   *   readable on common low-DPI screens when using linear alpha blending
+   *   and gamma correction, see @FT_Render_Glyph.  When not using linear
+   *   alpha blending and gamma correction, glyphs will appear heavy and
+   *   fuzzy!
+   *
+   *   Gamma correction essentially lightens fonts since shades of grey are
+   *   shifted to higher pixel values (=~higher brightness) to match the
+   *   original intention to the reality of our screens.  The side-effect is
+   *   that glyphs `thin out'.  Mac OS~X and Adobe's proprietary font
+   *   rendering library implement a counter-measure: stem darkening at
+   *   smaller sizes where shades of gray dominate.  By emboldening a glyph
+   *   slightly in relation to its pixel size, individual pixels get higher
+   *   coverage of filled-in outlines and are therefore `blacker'.  This
+   *   counteracts the `thinning out' of glyphs, making text remain readable
+   *   at smaller sizes.  All glyphs that pass through the auto-hinter will
+   *   be emboldened unless this property is set to TRUE.
+   *
+   *   See the description of the CFF driver for algorithmic details.  Total
+   *   consistency with the CFF driver is currently not achieved because the
+   *   emboldening method differs and glyphs must be scaled down on the
+   *   Y-axis to keep outline points inside their precomputed blue zones.
+   *   The smaller the size (especially 9ppem and down), the higher the loss
+   *   of emboldening versus the CFF driver.
+   *
+   */
+
+
+  /**************************************************************************
+   *
+   * @property:
+   *   darkening-parameters[autofit]
+   *
+   * @description:
+   *   *Experimental* *only*
+   *
+   *   See the description of the CFF driver for details.  This
+   *   implementation appropriates the
+   *   CFF_CONFIG_OPTION_DARKENING_PARAMETER_* #defines for consistency.
+   *   Note the differences described in @no-stem-darkening[autofit].
+   *
+   */
+
+
   /* */
 
 

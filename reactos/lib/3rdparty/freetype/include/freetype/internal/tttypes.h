@@ -1515,6 +1515,9 @@ FT_BEGIN_HEADER
     FT_Byte*         cursor;
     FT_Byte*         limit;
 
+    /* since version 2.6.2 */
+    FT_ListRec       composites;
+
   } TT_LoaderRec;
 
 
