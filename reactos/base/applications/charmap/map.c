@@ -16,14 +16,6 @@ static const WCHAR szLrgCellWndClass[] = L"LrgCellWnd";
 
 #define MAX_ROWS (0xFFFF / XCELLS) + 1 - YCELLS
 
-static
-VOID
-TagFontToCell(PCELL pCell,
-              WCHAR ch)
-{
-    pCell->ch = ch;
-}
-
 
 static
 VOID
@@ -107,33 +99,47 @@ FillGrid(PMAP infoPtr,
     INT x, y;
     RECT rc;
     PCELL Cell;
+    INT i, added;
 
     hOldFont = SelectObject(ps->hdc,
                             infoPtr->hFont);
 
-    for (y = 0; y < YCELLS; y++)
-    for (x = 0; x < XCELLS; x++)
+    i = XCELLS * infoPtr->iYStart;
+
+    added = 0;
+    x = y = 0;
+    while ((y <= YCELLS) && (x <= XCELLS))
     {
+        ch = (WCHAR)infoPtr->ValidGlyphs[i];
+
         Cell = &infoPtr->Cells[y][x];
 
-        if (!IntersectRect(&rc,
-                           &ps->rcPaint,
-                           &Cell->CellExt))
+        if (IntersectRect(&rc,
+                            &ps->rcPaint,
+                            &Cell->CellExt))
         {
-            continue;
+            Cell->ch = ch;
+
+            DrawTextW(ps->hdc,
+                        &ch,
+                        1,
+                        &Cell->CellInt,
+                        DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            added++;
         }
 
-        ch = (WCHAR)((XCELLS * (y + infoPtr->iYStart)) + x);
+        i++;
+        ch = (WCHAR)i;
 
-        TagFontToCell(Cell, ch);
-
-        DrawTextW(ps->hdc,
-                  &ch,
-                  1,
-                  &Cell->CellInt,
-                  DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        // move to the next cell
+        x++;
+        if (x > XCELLS - 1)
+        {
+            x = 0;
+            y++;
+        }
     }
-
     SelectObject(ps->hdc,
                  hOldFont);
 }
@@ -213,6 +219,9 @@ SetFont(PMAP infoPtr,
         LPWSTR lpFontName)
 {
     HDC hdc;
+    WCHAR ch[MAX_GLYPHS];
+    WORD out[MAX_GLYPHS];
+    DWORD i, j, Rows;
 
     /* Destroy Zoom window, since it was created with older font */
     DestroyWindow(infoPtr->hLrgWnd);
@@ -225,9 +234,7 @@ SetFont(PMAP infoPtr,
                sizeof(LOGFONTW));
 
     hdc = GetDC(infoPtr->hMapWnd);
-    infoPtr->CurrentFont.lfHeight = GetDeviceCaps(hdc,
-                                                  LOGPIXELSY) / 5;
-    ReleaseDC(infoPtr->hMapWnd, hdc);
+    infoPtr->CurrentFont.lfHeight = GetDeviceCaps(hdc, LOGPIXELSY) / 5;
 
     infoPtr->CurrentFont.lfCharSet =  DEFAULT_CHARSET;
     wcsncpy(infoPtr->CurrentFont.lfFaceName,
@@ -246,6 +253,39 @@ SetFont(PMAP infoPtr,
     {
         CreateLargeCell(infoPtr);
     }
+
+    // Get all the valid glyphs in this font
+
+    SelectObject(hdc, infoPtr->hFont);
+
+    for (i = 0; i < MAX_GLYPHS; i++)
+        ch[i] = (WCHAR)i;
+
+    if (GetGlyphIndicesW(hdc,
+                         ch,
+                         MAX_GLYPHS,
+                         out,
+                         GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
+    {
+        j = 0;
+        for (i = 0; i < MAX_GLYPHS; i++)
+        {
+            if (out[i] != 0xffff)
+            {
+                infoPtr->ValidGlyphs[j] = ch[i];
+                j++;
+            }
+        }
+        infoPtr->NumValidGlyphs = j;
+    }
+
+    ReleaseDC(infoPtr->hMapWnd, hdc);
+
+    Rows = infoPtr->NumValidGlyphs / XCELLS;
+    if (infoPtr->NumValidGlyphs % XCELLS)
+        Rows += 1;
+
+    SetScrollRange(infoPtr->hMapWnd, SB_VERT, 0, Rows - YCELLS, FALSE);
 }
 
 
@@ -379,8 +419,7 @@ OnCreate(PMAP infoPtr,
 
             SetGrid(infoPtr);
 
-            SetScrollRange(hwnd, SB_VERT, 0, MAX_ROWS, FALSE);
-            SetScrollPos(hwnd, SB_VERT, 0, TRUE);
+            SetScrollPos(infoPtr->hParent, SB_VERT, 0, TRUE);
 
             Ret = TRUE;
         }
@@ -424,8 +463,7 @@ OnVScroll(PMAP infoPtr,
             break;
        }
 
-    infoPtr->iYStart = max(0,
-                         min(infoPtr->iYStart, MAX_ROWS));
+    infoPtr->iYStart = max(0, min(infoPtr->iYStart, MAX_ROWS));
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)

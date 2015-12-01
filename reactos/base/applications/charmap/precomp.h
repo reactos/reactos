@@ -1,15 +1,13 @@
 #ifndef __CHARMAP_PRECOMP_H
 #define __CHARMAP_PRECOMP_H
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <wingdi.h>
+#include <windows.h>
 
 #include "resource.h"
 
 #define SIZEOF(_v)  (sizeof(_v) / sizeof(*_v))
+
+#define MAX_GLYPHS  65536
 
 #define XCELLS 20
 #define YCELLS 10
@@ -44,6 +42,10 @@ typedef struct _MAP
     HFONT hFont;
     LOGFONTW CurrentFont;
     INT iYStart;
+
+    USHORT ValidGlyphs[MAX_GLYPHS];
+    USHORT NumValidGlyphs;
+
 } MAP, *PMAP;
 
 typedef struct {
