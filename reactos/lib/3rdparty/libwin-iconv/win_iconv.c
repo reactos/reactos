@@ -129,7 +129,7 @@ static int seterror(int err);
 #if defined(USE_LIBICONV_DLL)
 static int libiconv_iconv_open(rec_iconv_t *cd, const char *tocode, const char *fromcode);
 static PVOID MyImageDirectoryEntryToData(LPVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size);
-static HMODULE find_imported_module_by_funcname(HMODULE hModule, const char *funcname);
+static FARPROC find_imported_function(HMODULE hModule, const char *funcname);
 
 static HMODULE hwiniconv;
 #endif
@@ -1093,7 +1093,7 @@ mbtowc_flags(int codepage)
 /*
  * Check if codepage is one those for which the lpUsedDefaultChar
  * parameter to WideCharToMultiByte() must be NULL.  The docs in
- * Platform SDK for for Windows Server 2003 R2 claims that this is the
+ * Platform SDK for Windows Server 2003 R2 claims that this is the
  * list below, while the MSDN docs for MSVS2008 claim that it is only
  * for 65000 (UTF-7) and 65001 (UTF-8). This time the earlier Platform
  * SDK seems to be correct, at least for XP.
@@ -1147,7 +1147,6 @@ static int
 libiconv_iconv_open(rec_iconv_t *cd, const char *tocode, const char *fromcode)
 {
     HMODULE hlibiconv = NULL;
-    HMODULE hmsvcrt = NULL;
     char *dllname;
     const char *p;
     const char *e;
@@ -1189,10 +1188,6 @@ libiconv_iconv_open(rec_iconv_t *cd, const char *tocode, const char *fromcode)
     if (hlibiconv == NULL)
         goto failed;
 
-    hmsvcrt = find_imported_module_by_funcname(hlibiconv, "_errno");
-    if (hmsvcrt == NULL)
-        goto failed;
-
     _iconv_open = (f_iconv_open)GetProcAddressA(hlibiconv, "libiconv_open");
     if (_iconv_open == NULL)
         _iconv_open = (f_iconv_open)GetProcAddressA(hlibiconv, "iconv_open");
@@ -1202,7 +1197,7 @@ libiconv_iconv_open(rec_iconv_t *cd, const char *tocode, const char *fromcode)
     cd->iconv = (f_iconv)GetProcAddressA(hlibiconv, "libiconv");
     if (cd->iconv == NULL)
         cd->iconv = (f_iconv)GetProcAddressA(hlibiconv, "iconv");
-    cd->_errno = (f_errno)GetProcAddressA(hmsvcrt, "_errno");
+    cd->_errno = (f_errno)find_imported_function(hlibiconv, "_errno");
     if (_iconv_open == NULL || cd->iconv_close == NULL
             || cd->iconv == NULL || cd->_errno == NULL)
         goto failed;
@@ -1217,7 +1212,6 @@ libiconv_iconv_open(rec_iconv_t *cd, const char *tocode, const char *fromcode)
 failed:
     if (hlibiconv != NULL)
         FreeLibrary(hlibiconv);
-    /* do not free hmsvcrt which is obtained by GetModuleHandle() */
     return FALSE;
 }
 
@@ -1247,12 +1241,13 @@ MyImageDirectoryEntryToData(LPVOID Base, BOOLEAN MappedAsImage, USHORT Directory
     return (PVOID)((LPBYTE)Base + p->VirtualAddress);
 }
 
-static HMODULE
-find_imported_module_by_funcname(HMODULE hModule, const char *funcname)
+static FARPROC
+find_imported_function(HMODULE hModule, const char *funcname)
 {
     DWORD_PTR Base;
     ULONG Size;
     PIMAGE_IMPORT_DESCRIPTOR Imp;
+    PIMAGE_THUNK_DATA Address;      /* Import Address Table */
     PIMAGE_THUNK_DATA Name;         /* Import Name Table */
     PIMAGE_IMPORT_BY_NAME ImpName;
 
@@ -1266,15 +1261,16 @@ find_imported_module_by_funcname(HMODULE hModule, const char *funcname)
         return NULL;
     for ( ; Imp->OriginalFirstThunk != 0; ++Imp)
     {
+        Address = (PIMAGE_THUNK_DATA)(Base + Imp->FirstThunk);
         Name = (PIMAGE_THUNK_DATA)(Base + Imp->OriginalFirstThunk);
-        for ( ; Name->u1.Ordinal != 0; ++Name)
+        for ( ; Name->u1.Ordinal != 0; ++Name, ++Address)
         {
             if (!IMAGE_SNAP_BY_ORDINAL(Name->u1.Ordinal))
             {
                 ImpName = (PIMAGE_IMPORT_BY_NAME)
                     (Base + (DWORD_PTR)Name->u1.AddressOfData);
                 if (strcmp((char *)ImpName->Name, funcname) == 0)
-                    return GetModuleHandleA((char *)(Base + Imp->Name));
+                    return (FARPROC)Address->u1.Function;
             }
         }
     }

@@ -13,8 +13,8 @@ ENVIRONMENT VARIABLE:
         (only available when USE_LIBICONV_DLL is defined at compile time)
 
 Win32 API does not support strict encoding conversion for some codepage.
-And MLang function drop or replace invalid bytes and does not return
-useful error status as iconv.  This implementation cannot be used for
+And MLang function drops or replaces invalid bytes and does not return
+useful error status as iconv does.  This implementation cannot be used for
 encoding validation purpose.
 
 Yukihiro Nakadaira <yukihiro.nakadaira@gmail.com>
