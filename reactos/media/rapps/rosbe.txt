@@ -25,7 +25,7 @@ Description = Te permite compilar el código de ReactOS. Para más información 
 
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS. Pour plus d'instructions, reportez-vous au wiki ReactOS.
-Size = 28,3 Mo
+Size = 32,2 Mo
 
 [Section.0410]
 Description = Permette di compilare i sorgenti di ReactOS. Per maggiori informazioni consultare il Wiki di ReactOS.
