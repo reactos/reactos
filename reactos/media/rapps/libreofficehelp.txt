@@ -1,25 +1,25 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = LibreOffice Help Pack
-Version = 4.4.5
+Version = 4.4.6
 License = GPLv3
 Description = Offline help content of LibreOffice.
 Size = 5.12 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86_helppack_en-US.msi
-SHA1 = 3543c7e9e0db3c3dd8bcf64c24139fdb6610e8d0
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.6/win/x86/LibreOffice_4.4.6_Win_x86_helppack_en-US.msi
+SHA1 = d03077049dd6e1d31a383fc1d1875f3f0a636225
 CDPath = none
 
 [Section.0407]
 Name = LibreOffice Help Pack
 Description = Offline Hilfe für LibreOffice.
-Size = 7.10 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86_helppack_de.msi
-SHA1 = d6ec18c31a359e8abd2811e9eb16e9be0b18797b
+Size = 7.07 MB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.6/win/x86/LibreOffice_4.4.6_Win_x86_helppack_de.msi
+SHA1 = fc74e0c9cfbe66b389b48cc50fc89088b3daa8ea
 
 [Section.0418]
 Description = Conținut de asistență și ajutor (în limba engleză) pentru LibreOffice.
@@ -28,21 +28,21 @@ Size = 5,12 Mo
 [Section.0a]
 Name = LibreOffice — Paquete de ayuda
 Description = Páginas de ayuda para LibreOffice.
-Size = 7.00 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86_helppack_es.msi
-SHA1 = 64f96e8ddcb0126eb19db6c9dc24d6a51c509b3a
+Size = 6.99 MB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.6/win/x86/LibreOffice_4.4.6_Win_x86_helppack_es.msi
+SHA1 = e0b9248f97c075c9eb4037fdf19aefcbbdf35ed3
 
 [Section.041f]
 Name = LibreOffice Yardım Paketi
 License = GPL sürüm 3
 Description = LibreOffice'in çevrim dışı yardım içeriği.
 Size = 6,85 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86_helppack_tr.msi
-SHA1 = 4de936b3ceb6f90850494fe16a942affbb1cc114
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.6/win/x86/LibreOffice_4.4.6_Win_x86_helppack_tr.msi
+SHA1 = 953c07b494478a4ff71912fd2cb23fe8d429df28
 
 [Section.0804]
 Name = LibreOffice 帮助包
 Description = LibreOffice 的脱机帮助内容。
-Size = 9.50 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.5/win/x86/LibreOffice_4.4.5_Win_x86_helppack_zh-CN.msi
-SHA1 = 8ff9fd6be59d0a8be133406c3666ed1d747d16f6
+Size = 9.48 MB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.6/win/x86/LibreOffice_4.4.6_Win_x86_helppack_zh-CN.msi
+SHA1 = f61699eb57fd2cb7b20a7805a1afc7e9e6f88f8c
