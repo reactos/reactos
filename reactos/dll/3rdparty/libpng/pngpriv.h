@@ -577,10 +577,6 @@
 #define PNG_STRUCT_PNG   0x0001
 #define PNG_STRUCT_INFO  0x0002
 
-/* Scaling factor for filter heuristic weighting calculations */
-#define PNG_WEIGHT_FACTOR (1<<(PNG_WEIGHT_SHIFT))
-#define PNG_COST_FACTOR (1<<(PNG_COST_SHIFT))
-
 /* Flags for the png_ptr->flags rather than declaring a byte for each one */
 #define PNG_FLAG_ZLIB_CUSTOM_STRATEGY     0x0001
 #define PNG_FLAG_ZSTREAM_INITIALIZED      0x0002 /* Added to libpng-1.6.0 */
@@ -671,7 +667,7 @@
 /* The fixed point conversion performs range checking and evaluates
  * its argument multiple times, so must be used with care.  The
  * range checking uses the PNG specification values for a signed
- * 32 bit fixed point value except that the values are deliberately
+ * 32-bit fixed point value except that the values are deliberately
  * rounded-to-zero to an integral value - 21474 (21474.83 is roughly
  * (2^31-1) * 100000). 's' is a string that describes the value being
  * converted.
@@ -818,7 +814,7 @@
     */
 #endif
 
-/* This is used for 16 bit gamma tables -- only the top level pointers are
+/* This is used for 16-bit gamma tables -- only the top level pointers are
  * const; this could be changed:
  */
 typedef const png_uint_16p * png_const_uint_16pp;

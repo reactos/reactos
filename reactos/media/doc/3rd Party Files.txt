@@ -83,5 +83,5 @@ Used Version: 2.2.0
 Website: https://tls.mbed.org/
 
 Title: libpng
-Used Version: 1.6.18
+Used Version: 1.6.19
 Website: http://libpng.sourceforge.net/

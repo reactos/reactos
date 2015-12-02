@@ -26,7 +26,7 @@
  * reads from a file pointer.  Note that this routine sometimes gets called
  * with very small lengths, so you should implement some kind of simple
  * buffering if you are using unbuffered reads.  This should never be asked
- * to read more than 64K on a 16 bit machine.
+ * to read more than 64K on a 16-bit machine.
  */
 void /* PRIVATE */
 png_read_data(png_structrp png_ptr, png_bytep data, png_size_t length)

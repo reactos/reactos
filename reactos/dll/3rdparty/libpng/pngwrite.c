@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.6.18 [July 23, 2015]
+ * Last changed in libpng 1.6.19 [November 12, 2015]
  * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -206,7 +206,7 @@ png_write_info(png_structrp png_ptr, png_const_inforp info_ptr)
       png_write_PLTE(png_ptr, info_ptr->palette,
           (png_uint_32)info_ptr->num_palette);
 
-   else if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) !=0)
+   else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
       png_error(png_ptr, "Valid palette required for paletted images");
 
 #ifdef PNG_WRITE_tRNS_SUPPORTED
@@ -1422,7 +1422,7 @@ png_write_png(png_structrp png_ptr, png_inforp info_ptr,
       png_app_error(png_ptr, "PNG_TRANSFORM_SWAP_ENDIAN not supported");
 #endif
 
-   /* Swap bits of 1, 2, 4 bit packed pixel formats */
+   /* Swap bits of 1-bit, 2-bit, 4-bit packed pixel formats */
    if ((transforms & PNG_TRANSFORM_PACKSWAP) != 0)
 #ifdef PNG_WRITE_PACKSWAP_SUPPORTED
       png_set_packswap(png_ptr);
@@ -1998,7 +1998,7 @@ png_image_write_main(png_voidp argument)
    /* Now set up the data transformations (*after* the header is written),
     * remove the handled transformations from the 'format' flags for checking.
     *
-    * First check for a little endian system if writing 16 bit files.
+    * First check for a little endian system if writing 16-bit files.
     */
    if (write_16bit != 0)
    {

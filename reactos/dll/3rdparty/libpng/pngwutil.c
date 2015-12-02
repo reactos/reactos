@@ -1,7 +1,7 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.18 [July 23, 2015]
+ * Last changed in libpng 1.6.19 [November 12, 2015]
  * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -179,7 +179,7 @@ png_write_complete_chunk(png_structrp png_ptr, png_uint_32 chunk_name,
    if (png_ptr == NULL)
       return;
 
-   /* On 64 bit architectures 'length' may not fit in a png_uint_32. */
+   /* On 64-bit architectures 'length' may not fit in a png_uint_32. */
    if (length > PNG_UINT_31_MAX)
       png_error(png_ptr, "length exceeds PNG maximum");
 
@@ -922,17 +922,20 @@ void /* PRIVATE */
 png_write_PLTE(png_structrp png_ptr, png_const_colorp palette,
     png_uint_32 num_pal)
 {
-   png_uint_32 i;
+   png_uint_32 max_palette_length, i;
    png_const_colorp pal_ptr;
    png_byte buf[3];
 
    png_debug(1, "in png_write_PLTE");
 
+   max_palette_length = (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE) ?
+      (1 << png_ptr->bit_depth) : PNG_MAX_PALETTE_LENGTH;
+
    if ((
 #ifdef PNG_MNG_FEATURES_SUPPORTED
        (png_ptr->mng_features_permitted & PNG_FLAG_MNG_EMPTY_PLTE) == 0 &&
 #endif
-       num_pal == 0) || num_pal > 256)
+       num_pal == 0) || num_pal > max_palette_length)
    {
       if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
       {
@@ -1444,7 +1447,7 @@ png_write_tRNS(png_structrp png_ptr, png_const_bytep trans_alpha,
 
    else if (color_type == PNG_COLOR_TYPE_GRAY)
    {
-      /* One 16 bit value */
+      /* One 16-bit value */
       if (tran->gray >= (1 << png_ptr->bit_depth))
       {
          png_app_warning(png_ptr,
@@ -1459,7 +1462,7 @@ png_write_tRNS(png_structrp png_ptr, png_const_bytep trans_alpha,
 
    else if (color_type == PNG_COLOR_TYPE_RGB)
    {
-      /* Three 16 bit values */
+      /* Three 16-bit values */
       png_save_uint_16(buf, tran->red);
       png_save_uint_16(buf + 2, tran->green);
       png_save_uint_16(buf + 4, tran->blue);
@@ -2651,7 +2654,6 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
 
       if (sum < mins)
       {
-         mins = sum;
          best_row = png_ptr->try_row;
          if (png_ptr->tst_row != NULL)
          {

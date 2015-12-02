@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.18 - July 23, 2015
+ libpng version 1.6.19 - November 12, 2015
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2015 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.18 - July 23, 2015
+ libpng versions 0.97, January 1998, through 1.6.19 - November 12, 2015
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2015 Glenn Randers-Pehrson
 
@@ -70,15 +70,16 @@ a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2004 (E)) at
 The W3C and ISO documents have identical technical content.
 
 The PNG-1.2 specification is available at
-<http://www.libpng.org/pub/png/documents/>.  It is technically equivalent
+<http://png-mng.sourceforge.net/pub/png/spec/1.2/>.
+It is technically equivalent
 to the PNG specification (second edition) but has some additional material.
 
-The PNG-1.0 specification is available
-as RFC 2083 <http://www.libpng.org/pub/png/documents/> and as a
-W3C Recommendation <http://www.w3.org/TR/REC.png.html>.
+The PNG-1.0 specification is available as RFC 2083 
+<http://png-mng.sourceforge.net/pub/png/spec/1.0/> and as a
+W3C Recommendation <http://www.w3.org/TR/REC-png-961001>.
 
 Some additional chunks are described in the special-purpose public chunks
-documents at <http://www.libpng.org/pub/png/documents/>.
+documents at <http://www.libpng.org/pub/png/spec/register/>
 
 Other information
 about PNG, and the latest version of libpng, can be found at the PNG home
@@ -100,7 +101,7 @@ majority of the needs of its users.
 
 Libpng uses zlib for its compression and decompression of PNG files.
 Further information about zlib, and the latest version of zlib, can
-be found at the zlib home page, <http://www.info-zip.org/pub/infozip/zlib/>.
+be found at the zlib home page, <http://zlib.net/>.
 The zlib compression utility is a general purpose utility that is
 useful for more than PNG files, and can be used without libpng.
 See the documentation delivered with zlib for more details.
@@ -649,6 +650,7 @@ User limits
 
 The PNG specification allows the width and height of an image to be as
 large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
+For safety, libpng imposes a default limit of 1 million rows and columns.
 Larger images will be rejected immediately with a png_error() call. If
 you wish to change these limits, you can use
 
@@ -669,8 +671,11 @@ If you need to retrieve the limits that are being applied, use
    height_max = png_get_user_height_max(png_ptr);
 
 The PNG specification sets no limit on the number of ancillary chunks
-allowed in a PNG datastream.  You can impose a limit on the total number
-of sPLT, tEXt, iTXt, zTXt, and unknown chunks that will be stored, with
+allowed in a PNG datastream.  By default, libpng imposes a limit of
+a total of 1000 sPLT, tEXt, iTXt, zTXt, and unknown chunks to be stored.
+If you have set up both info_ptr and end_info_ptr, the limit applies
+separately to each.  You can change the limit on the total number of such
+chunks that will be stored, with
 
    png_set_chunk_cache_max(png_ptr, user_chunk_cache_max);
 
@@ -678,8 +683,9 @@ where 0x7fffffffL means unlimited.  You can retrieve this limit with
 
    chunk_cache_max = png_get_chunk_cache_max(png_ptr);
 
-You can also set a limit on the amount of memory that a compressed chunk
-other than IDAT can occupy, with
+Libpng imposes a limit of 8 Megabytes (8,000,000 bytes) on the amount of
+memory that a compressed chunk other than IDAT can occupy, when decompressed.
+You can change this limit with
 
    png_set_chunk_malloc_max(png_ptr, user_chunk_malloc_max);
 
@@ -1679,15 +1685,16 @@ described below.
 Data will be decoded into the supplied row buffers packed into bytes
 unless the library has been told to transform it into another format.
 For example, 4 bit/pixel paletted or grayscale data will be returned
-2 pixels/byte with the leftmost pixel in the high-order bits of the
-byte, unless png_set_packing() is called.  8-bit RGB data will be stored
+2 pixels/byte with the leftmost pixel in the high-order bits of the byte,
+unless png_set_packing() is called.  8-bit RGB data will be stored
 in RGB RGB RGB format unless png_set_filler() or png_set_add_alpha()
 is called to insert filler bytes, either before or after each RGB triplet.
+
 16-bit RGB data will be returned RRGGBB RRGGBB, with the most significant
 byte of the color value first, unless png_set_scale_16() is called to
 transform it to regular RGB RGB triplets, or png_set_filler() or
-png_set_add alpha() is called to insert filler bytes, either before or
-after each RRGGBB triplet.  Similarly, 8-bit or 16-bit grayscale data can
+png_set_add alpha() is called to insert two filler bytes, either before
+or after each RRGGBB triplet.  Similarly, 8-bit or 16-bit grayscale data can
 be modified with png_set_filler(), png_set_add_alpha(), png_set_strip_16(),
 or png_set_scale_16().
 
@@ -1844,12 +1851,13 @@ into 4 or 8 bytes for windowing systems that need them in this format:
     if (color_type == PNG_COLOR_TYPE_RGB)
        png_set_filler(png_ptr, filler, PNG_FILLER_BEFORE);
 
-where "filler" is the 8 or 16-bit number to fill with, and the location is
-either PNG_FILLER_BEFORE or PNG_FILLER_AFTER, depending upon whether
-you want the filler before the RGB or after.  This transformation
-does not affect images that already have full alpha channels.  To add an
-opaque alpha channel, use filler=0xff or 0xffff and PNG_FILLER_AFTER which
-will generate RGBA pixels.
+where "filler" is the 8-bit or 16-bit number to fill with, and the location
+is either PNG_FILLER_BEFORE or PNG_FILLER_AFTER, depending upon whether
+you want the filler before the RGB or after. When filling an 8-bit pixel,
+the least significant 8 bits of the number are used, if a 16-bit number is
+supplied.  This transformation does not affect images that already have full
+alpha channels.  To add an opaque alpha channel, use filler=0xffff and
+PNG_FILLER_AFTER which will generate RGBA pixels.
 
 Note that png_set_filler() does not change the color type.  If you want
 to do that, you can add a true alpha channel with
@@ -1859,7 +1867,7 @@ to do that, you can add a true alpha channel with
        png_set_add_alpha(png_ptr, filler, PNG_FILLER_AFTER);
 
 where "filler" contains the alpha value to assign to each pixel.
-This function was added in libpng-1.2.7.
+The png_set_add_alpha() function was added in libpng-1.2.7.
 
 If you are reading an image with an alpha channel, and you need the
 data as ARGB instead of the normal PNG format RGBA:
@@ -1917,9 +1925,9 @@ data for sBIT, regardless of the error_action setting.
 The default values come from the PNG file cHRM chunk if present; otherwise, the
 defaults correspond to the ITU-R recommendation 709, and also the sRGB color
 space, as recommended in the Charles Poynton's Colour FAQ,
-<http://www.poynton.com/>, in section 9:
+Copyright (c) 2006-11-28 Charles Poynton, in section 9:
 
-   <http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html#RTFToC9>
+<http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html#RTFToC9>
 
     Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
 
@@ -3716,21 +3724,26 @@ as a wide variety of APIs to manipulate ancilliary information.
 
 To read a PNG file using the simplified API:
 
-  1) Declare a 'png_image' structure (see below) on the
-     stack and memset() it to all zero.
+  1) Declare a 'png_image' structure (see below) on the stack, set the
+     version field to PNG_IMAGE_VERSION and the 'opaque' pointer to NULL
+     (this is REQUIRED, your program may crash if you don't do it.)
 
   2) Call the appropriate png_image_begin_read... function.
 
-  3) Set the png_image 'format' member to the required
-     format and allocate a buffer for the image.
+  3) Set the png_image 'format' member to the required sample format.
 
-  4) Call png_image_finish_read to read the image into
-     your buffer.
+  4) Allocate a buffer for the image and, if required, the color-map.
+
+  5) Call png_image_finish_read to read the image and, if required, the
+     color-map into your buffers.
 
 There are no restrictions on the format of the PNG input itself; all valid
 color types, bit depths, and interlace methods are acceptable, and the
 input image is transformed as necessary to the requested in-memory format
-during the png_image_finish_read() step.
+during the png_image_finish_read() step.  The only caveat is that if you
+request a color-mapped image from a PNG that is full-color or makes
+complex use of an alpha channel the transformation is extremely lossy and the
+result may look terrible.
 
 To write a PNG file using the simplified API:
 
@@ -3739,34 +3752,35 @@ To write a PNG file using the simplified API:
 
   2) Initialize the members of the structure that describe the
      image, setting the 'format' member to the format of the
-     image in memory.
+     image samples.
 
   3) Call the appropriate png_image_write... function with a
-     pointer to the image to write the PNG data.
+     pointer to the image and, if necessary, the color-map to write
+     the PNG data.
 
 png_image is a structure that describes the in-memory format of an image
-when it is being read or define the in-memory format of an image that you
+when it is being read or defines the in-memory format of an image that you
 need to write.  The "png_image" structure contains the following members:
 
+   png_controlp opaque  Initialize to NULL, free with png_image_free
    png_uint_32  version Set to PNG_IMAGE_VERSION
    png_uint_32  width   Image width in pixels (columns)
    png_uint_32  height  Image height in pixels (rows)
    png_uint_32  format  Image format as defined below
    png_uint_32  flags   A bit mask containing informational flags
-   png_controlp opaque  Initialize to NULL, free with png_image_free
    png_uint_32  colormap_entries; Number of entries in the color-map
    png_uint_32  warning_or_error;
    char         message[64];
 
-In the event of an error or warning the following field warning_or_error
+In the event of an error or warning the "warning_or_error"
 field will be set to a non-zero value and the 'message' field will contain
 a '\0' terminated string with the libpng error or warning message.  If both
 warnings and an error were encountered, only the error is recorded.  If there
 are multiple warnings, only the first one is recorded.
 
-The upper 30 bits of this value are reserved; the low two bits contain
-a two bit code such that a value more than 1 indicates a failure in the API
-just called:
+The upper 30 bits of the "warning_or_error" value are reserved; the low two
+bits contain a two bit code such that a value more than 1 indicates a failure
+in the API just called:
 
    0 - no warning or error
    1 - warning
@@ -3798,64 +3812,72 @@ channels are linear.  Color channels use the RGB encoding (RGB end-points) of
 the sRGB specification.  This encoding is identified by the
 PNG_FORMAT_FLAG_LINEAR flag below.
 
+When the simplified API needs to convert between sRGB and linear colorspaces,
+the actual sRGB transfer curve defined in the sRGB specification (see the
+article at http://en.wikipedia.org/wiki/SRGB) is used, not the gamma=1/2.2
+approximation used elsewhere in libpng.
+
 When an alpha channel is present it is expected to denote pixel coverage
 of the color or luminance channels and is returned as an associated alpha
 channel: the color/gray channels are scaled (pre-multiplied) by the alpha
 value.
 
-When a color-mapped image is used as a result of calling
-png_image_read_colormap or png_image_write_colormap the channels are encoded
-in the color-map and the descriptions above apply to the color-map entries.
-The image data is encoded as small integers, value 0..255, that index the
-entries in the color-map.  One integer (one byte) is stored for each pixel.
+The samples are either contained directly in the image data, between 1 and 8
+bytes per pixel according to the encoding, or are held in a color-map indexed
+by bytes in the image data.  In the case of a color-map the color-map entries
+are individual samples, encoded as above, and the image data has one byte per
+pixel to select the relevant sample from the color-map.
 
 PNG_FORMAT_*
 
 The #defines to be used in png_image::format.  Each #define identifies a
 particular layout of channel data and, if present, alpha values.  There are
-separate defines for each of the two channel encodings.
+separate defines for each of the two component encodings.
 
-A format is built up using single bit flag values.  Not all combinations are
-valid: use the bit flag values below for testing a format returned by the
-read APIs, but set formats from the derived values.
+A format is built up using single bit flag values.  All combinations are
+valid.  Formats can be built up from the flag values or you can use one of
+the predefined values below.  When testing formats always use the FORMAT_FLAG
+macros to test for individual features - future versions of the library may
+add new flags.
 
 When reading or writing color-mapped images the format should be set to the
 format of the entries in the color-map then png_image_{read,write}_colormap
 called to read or write the color-map and set the format correctly for the
 image data.  Do not set the PNG_FORMAT_FLAG_COLORMAP bit directly!
 
-NOTE: libpng can be built with particular features disabled, if you see
+NOTE: libpng can be built with particular features disabled. If you see
 compiler errors because the definition of one of the following flags has been
 compiled out it is because libpng does not have the required support.  It is
 possible, however, for the libpng configuration to enable the format on just
-read or just write; in that case you may see an error at run time.  You can
-guard against this by checking for the definition of:
+read or just write; in that case you may see an error at run time.
+You can guard against this by checking for the definition of the
+appropriate "_SUPPORTED" macro, one of:
 
    PNG_SIMPLIFIED_{READ,WRITE}_{BGR,AFIRST}_SUPPORTED
 
-   PNG_FORMAT_FLAG_ALPHA    0x01 format with an alpha channel
-   PNG_FORMAT_FLAG_COLOR    0x02 color format: otherwise grayscale
-   PNG_FORMAT_FLAG_LINEAR   0x04 png_uint_16 channels else png_byte
-   PNG_FORMAT_FLAG_COLORMAP 0x08 libpng use only
-   PNG_FORMAT_FLAG_BGR      0x10 BGR colors, else order is RGB
-   PNG_FORMAT_FLAG_AFIRST   0x20 alpha channel comes first
+   PNG_FORMAT_FLAG_ALPHA    format with an alpha channel
+   PNG_FORMAT_FLAG_COLOR    color format: otherwise grayscale
+   PNG_FORMAT_FLAG_LINEAR   2-byte channels else 1-byte
+   PNG_FORMAT_FLAG_COLORMAP image data is color-mapped
+   PNG_FORMAT_FLAG_BGR      BGR colors, else order is RGB
+   PNG_FORMAT_FLAG_AFIRST   alpha channel comes first
 
 Supported formats are as follows.  Future versions of libpng may support more
 formats; for compatibility with older versions simply check if the format
 macro is defined using #ifdef.  These defines describe the in-memory layout
 of the components of the pixels of the image.
 
-First the single byte formats:
+First the single byte (sRGB) formats:
 
-   PNG_FORMAT_GRAY 0
-   PNG_FORMAT_GA   PNG_FORMAT_FLAG_ALPHA
-   PNG_FORMAT_AG   (PNG_FORMAT_GA|PNG_FORMAT_FLAG_AFIRST)
-   PNG_FORMAT_RGB  PNG_FORMAT_FLAG_COLOR
-   PNG_FORMAT_BGR  (PNG_FORMAT_FLAG_COLOR|PNG_FORMAT_FLAG_BGR)
-   PNG_FORMAT_RGBA (PNG_FORMAT_RGB|PNG_FORMAT_FLAG_ALPHA)
-   PNG_FORMAT_ARGB (PNG_FORMAT_RGBA|PNG_FORMAT_FLAG_AFIRST)
-   PNG_FORMAT_BGRA (PNG_FORMAT_BGR|PNG_FORMAT_FLAG_ALPHA)
-   PNG_FORMAT_ABGR (PNG_FORMAT_BGRA|PNG_FORMAT_FLAG_AFIRST)
+   PNG_FORMAT_GRAY
+   PNG_FORMAT_GA
+   PNG_FORMAT_AG
+   PNG_FORMAT_RGB
+   PNG_FORMAT_BGR
+   PNG_FORMAT_RGBA
+   PNG_FORMAT_ARGB
+   PNG_FORMAT_BGRA
+   PNG_FORMAT_ABGR
 
 Then the linear 2-byte formats.  When naming these "Y" is used to
 indicate a luminance (gray) channel.  The component order within the pixel
@@ -3864,22 +3886,22 @@ components in the linear format.  The components are 16-bit integers in
 the native byte order for your platform, and there is no provision for
 swapping the bytes to a different endian condition.
 
-   PNG_FORMAT_LINEAR_Y PNG_FORMAT_FLAG_LINEAR
+   PNG_FORMAT_LINEAR_Y
    PNG_FORMAT_LINEAR_Y_ALPHA
-      (PNG_FORMAT_FLAG_LINEAR|PNG_FORMAT_FLAG_ALPHA)
    PNG_FORMAT_LINEAR_RGB
-      (PNG_FORMAT_FLAG_LINEAR|PNG_FORMAT_FLAG_COLOR)
    PNG_FORMAT_LINEAR_RGB_ALPHA
-      (PNG_FORMAT_FLAG_LINEAR|PNG_FORMAT_FLAG_COLOR|
-      PNG_FORMAT_FLAG_ALPHA)
 
-Color-mapped formats are obtained by calling png_image_{read,write}_colormap,
-as appropriate after setting png_image::format to the format of the color-map
-to be read or written.  Applications may check the value of
-PNG_FORMAT_FLAG_COLORMAP to see if they have called the colormap API.  The
-format of the color-map may be extracted using the following macro.
+With color-mapped formats the image data is one byte for each pixel. The byte
+is an index into the color-map which is formatted as above.  To obtain a
+color-mapped format it is sufficient just to add the PNG_FOMAT_FLAG_COLORMAP
+to one of the above definitions, or you can use one of the definitions below.
 
-   PNG_FORMAT_OF_COLORMAP(fmt) ((fmt) & ~PNG_FORMAT_FLAG_COLORMAP)
+   PNG_FORMAT_RGB_COLORMAP
+   PNG_FORMAT_BGR_COLORMAP
+   PNG_FORMAT_RGBA_COLORMAP
+   PNG_FORMAT_ARGB_COLORMAP
+   PNG_FORMAT_BGRA_COLORMAP
+   PNG_FORMAT_ABGR_COLORMAP
 
 PNG_IMAGE macros
 
@@ -3887,9 +3909,9 @@ These are convenience macros to derive information from a png_image
 structure.  The PNG_IMAGE_SAMPLE_ macros return values appropriate to the
 actual image sample values - either the entries in the color-map or the
 pixels in the image.  The PNG_IMAGE_PIXEL_ macros return corresponding values
-for the pixels and will always return 1 after a call to
-png_image_{read,write}_colormap.  The remaining macros return information
-about the rows in the image and the complete image.
+for the pixels and will always return 1 for color-mapped formats.  The
+remaining macros return information about the rows in the image and the
+complete image.
 
 NOTE: All the macros that take a png_image::format parameter are compile time
 constants if the format parameter is, itself, a constant.  Therefore these
@@ -3897,45 +3919,38 @@ macros can be used in array declarations and case labels where required.
 Similarly the macros are also pre-processor constants (sizeof is not used) so
 they can be used in #if tests.
 
-First the information about the samples.
-
   PNG_IMAGE_SAMPLE_CHANNELS(fmt)
     Returns the total number of channels in a given format: 1..4
 
   PNG_IMAGE_SAMPLE_COMPONENT_SIZE(fmt)
     Returns the size in bytes of a single component of a pixel or color-map
-    entry (as appropriate) in the image.
+    entry (as appropriate) in the image: 1 or 2.
 
   PNG_IMAGE_SAMPLE_SIZE(fmt)
     This is the size of the sample data for one sample.  If the image is
     color-mapped it is the size of one color-map entry (and image pixels are
     one byte in size), otherwise it is the size of one image pixel.
 
+  PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(fmt)
+    The maximum size of the color-map required by the format expressed in a
+    count of components.  This can be used to compile-time allocate a
+    color-map:
+
+    png_uint_16 colormap[PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(linear_fmt)];
+
+    png_byte colormap[PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(sRGB_fmt)];
+
+    Alternatively use the PNG_IMAGE_COLORMAP_SIZE macro below to use the
+    information from one of the png_image_begin_read_ APIs and dynamically
+    allocate the required memory.
+
   PNG_IMAGE_COLORMAP_SIZE(fmt)
    The size of the color-map required by the format; this is the size of the
-   color-map buffer passed to the png_image_{read,write}_colormap APIs, it is
+   color-map buffer passed to the png_image_{read,write}_colormap APIs. It is
    a fixed number determined by the format so can easily be allocated on the
    stack if necessary.
 
-#define PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(fmt)\
-   (PNG_IMAGE_SAMPLE_CHANNELS(fmt) * 256)
-   /* The maximum size of the color-map required by the format expressed in a
-    * count of components.  This can be used to compile-time allocate a
-    * color-map:
-    *
-    * png_uint_16 colormap[PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(linear_fmt)];
-    *
-    * png_byte colormap[PNG_IMAGE_MAXIMUM_COLORMAP_COMPONENTS(sRGB_fmt)];
-    *
-    * Alternatively, use the PNG_IMAGE_COLORMAP_SIZE macro below to use the
-    * information from one of the png_image_begin_read_ APIs and dynamically
-    * allocate the required memory.
-    */
-
-
 Corresponding information about the pixels
-
-  PNG_IMAGE_PIXEL_(test,fmt)
 
   PNG_IMAGE_PIXEL_CHANNELS(fmt)
    The number of separate channels (components) in a pixel; 1 for a
@@ -3962,19 +3977,54 @@ Information about the whole row, or whole image
    to start the next row on a 4-byte boundary.
 
   PNG_IMAGE_BUFFER_SIZE(image, row_stride)
-    Returns the size, in bytes, of an image buffer given a png_image and a row
-    stride - the number of components to leave space for in each row.  This
-    macro takes care of multiplying row_stride by PNG_IMAGE_PIXEL_COMONENT_SIZE
-    when the image has 2-byte components.
+   Return the size, in bytes, of an image buffer given a png_image and a row
+   stride - the number of components to leave space for in each row.
+
+  PNG_IMAGE_SIZE(image)
+   Return the size, in bytes, of the image in memory given just a png_image;
+   the row stride is the minimum stride required for the image.
+
+  PNG_IMAGE_COLORMAP_SIZE(image)
+   Return the size, in bytes, of the color-map of this image.  If the image
+   format is not a color-map format this will return a size sufficient for
+   256 entries in the given format; check PNG_FORMAT_FLAG_COLORMAP if
+   you don't want to allocate a color-map in this case.
+
+PNG_IMAGE_FLAG_*
+
+Flags containing additional information about the image are held in
+the 'flags' field of png_image.
 
   PNG_IMAGE_FLAG_COLORSPACE_NOT_sRGB == 0x01
     This indicates the the RGB values of the in-memory bitmap do not
     correspond to the red, green and blue end-points defined by sRGB.
 
-  PNG_IMAGE_FLAG_COLORMAP == 0x02
-    The PNG is color-mapped.  If this flag is set png_image_read_colormap
-    can be used without further loss of image information.  If it is not set
-    png_image_read_colormap will cause significant loss if the image has any
+  PNG_IMAGE_FLAG_FAST == 0x02
+   On write emphasise speed over compression; the resultant PNG file will be
+   larger but will be produced significantly faster, particular for large
+   images.  Do not use this option for images which will be distributed, only
+   used it when producing intermediate files that will be read back in
+   repeatedly.  For a typical 24-bit image the option will double the read
+   speed at the cost of increasing the image size by 25%, however for many
+   more compressible images the PNG file can be 10 times larger with only a
+   slight speed gain.
+
+  PNG_IMAGE_FLAG_16BIT_sRGB == 0x04
+    On read if the image is a 16-bit per component image and there is no gAMA
+    or sRGB chunk assume that the components are sRGB encoded.  Notice that
+    images output by the simplified API always have gamma information; setting
+    this flag only affects the interpretation of 16-bit images from an
+    external source.  It is recommended that the application expose this flag
+    to the user; the user can normally easily recognize the difference between
+    linear and sRGB encoding.  This flag has no effect on write - the data
+    passed to the write APIs must have the correct encoding (as defined
+    above.)
+
+    If the flag is not set (the default) input 16-bit per component data is
+    assumed to be linear.
+
+    NOTE: the flag can only be set after the png_image_begin_read_ call,
+    because that call initializes the 'flags' field.
 
 READ APIs
 
@@ -4856,7 +4906,7 @@ limits are now
    png_user_chunk_malloc_max 0 (unlimited) 8,000,000
 
 The png_set_option() function (and the "options" member of the png struct) was
-added to libpng-1.5.15.
+added to libpng-1.5.15, with option PNG_ARM_NEON.
 
 The library now supports a complete fixed point implementation and can
 thus be used on systems that have no floating point support or very
@@ -4998,9 +5048,9 @@ The signatures of many exported functions were changed, such that
    png_infop became png_inforp or png_const_inforp
 where "rp" indicates a "restricted pointer".
 
-The support for FAR/far types has been eliminated and the definition of
-png_alloc_size_t is now controlled by a flag so that 'small size_t' systems
-can select it if necessary.
+Dropped support for 16-bit platforms. The support for FAR/far types has
+been eliminated and the definition of png_alloc_size_t is now controlled
+by a flag so that 'small size_t' systems can select it if necessary.
 
 Error detection in some chunks has improved; in particular the iCCP chunk
 reader now does pretty complete validation of the basic format.  Some bad
@@ -5091,6 +5141,11 @@ library builders to control compilation for an installed system (a release build
 It can be set for testing debug or beta builds to ensure that they will compile
 when the build type is switched to RC or STABLE. In essence this overrides the
 PNG_LIBPNG_BUILD_BASE_TYPE definition which is not directly user controllable.
+
+Starting with libpng-1.6.19, attempting to set an over-length PLTE chunk
+is an error. Previously this requirement of the PNG specification was not
+enforced, and the palette was always limited to 256 entries. An over-length
+PLTE chunk found in an input PNG is silently truncated.
 
 XIII.  Detecting libpng
 
@@ -5245,10 +5300,12 @@ We prefer #ifdef and #ifndef to #if defined() and #if !defined()
 when there is only one macro being tested.  We always use parentheses
 with "defined".
 
-We prefer to express integers that are used as bit masks in hex format,
-with an even number of lower-case hex digits (e.g., 0x00, 0xff, 0x0100).
+We express integer constants that are used as bit masks in hex format,
+with an even number of lower-case hex digits, and to make them unsigned
+(e.g., 0x00U, 0xffU, 0x0100U) and long if they are greater than 0x7fff
+(e.g., 0xffffUL).
 
-We prefer to use underscores in variable names rather than camelCase, except
+We prefer to use underscores rather than camelCase in names, except
 for a few type names that we inherit from zlib.h.
 
 We prefer "if (something != 0)" and "if (something == 0)"
@@ -5262,13 +5319,11 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-July 23, 2015
-
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.18 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.19 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.6.18 [July 23, 2015]
+ * Last changed in libpng 1.6.19 [November 12, 2015]
  * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_18 Your_png_h_is_not_version_1_6_18;
+typedef png_libpng_version_1_6_19 Your_png_h_is_not_version_1_6_19;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -26,15 +26,20 @@ typedef png_libpng_version_1_6_18 Your_png_h_is_not_version_1_6_18;
 void PNGAPI
 png_set_sig_bytes(png_structrp png_ptr, int num_bytes)
 {
+   unsigned int nb = (unsigned int)num_bytes;
+
    png_debug(1, "in png_set_sig_bytes");
 
    if (png_ptr == NULL)
       return;
 
-   if (num_bytes > 8)
+   if (num_bytes < 0)
+      nb = 0;
+
+   if (nb > 8)
       png_error(png_ptr, "Too many bytes for PNG signature");
 
-   png_ptr->sig_bytes = (png_byte)((num_bytes < 0 ? 0 : num_bytes) & 0xff);
+   png_ptr->sig_bytes = (png_byte)nb;
 }
 
 /* Checks whether the supplied bytes match the PNG signature.  We allow
@@ -413,6 +418,8 @@ png_info_init_3,(png_infopp ptr_ptr, png_size_t png_info_struct_size),
       free(info_ptr);
       info_ptr = png_voidcast(png_inforp, png_malloc_base(NULL,
          (sizeof *info_ptr)));
+      if (info_ptr == NULL)
+         return;
       *ptr_ptr = info_ptr;
    }
 
@@ -664,19 +671,20 @@ png_init_io(png_structrp png_ptr, png_FILE_p fp)
 #  endif
 
 #  ifdef PNG_SAVE_INT_32_SUPPORTED
-/* The png_save_int_32 function assumes integers are stored in two's
- * complement format.  If this isn't the case, then this routine needs to
- * be modified to write data in two's complement format.  Note that,
- * the following works correctly even if png_int_32 has more than 32 bits
- * (compare the more complex code required on read for sign extension.)
+/* PNG signed integers are saved in 32-bit 2's complement format.  ANSI C-90
+ * defines a cast of a signed integer to an unsigned integer either to preserve
+ * the value, if it is positive, or to calculate:
+ *
+ *     (UNSIGNED_MAX+1) + integer
+ *
+ * Where UNSIGNED_MAX is the appropriate maximum unsigned value, so when the
+ * negative integral value is added the result will be an unsigned value
+ * correspnding to the 2's complement representation.
  */
 void PNGAPI
 png_save_int_32(png_bytep buf, png_int_32 i)
 {
-   buf[0] = (png_byte)((i >> 24) & 0xff);
-   buf[1] = (png_byte)((i >> 16) & 0xff);
-   buf[2] = (png_byte)((i >> 8) & 0xff);
-   buf[3] = (png_byte)(i & 0xff);
+   png_save_uint_32(buf, i);
 }
 #  endif
 
@@ -722,6 +730,7 @@ png_convert_to_rfc1123_buffer(char out[29], png_const_timep ptime)
       APPEND(':');
       APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->second);
       APPEND_STRING(" +0000"); /* This reliably terminates the buffer */
+      PNG_UNUSED (pos)
 
 #     undef APPEND
 #     undef APPEND_NUMBER
@@ -766,13 +775,13 @@ png_get_copyright(png_const_structrp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.18 - July 23, 2015" PNG_STRING_NEWLINE \
+      "libpng version 1.6.19 - November 12, 2015" PNG_STRING_NEWLINE \
       "Copyright (c) 1998-2015 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
       "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
       PNG_STRING_NEWLINE;
 #  else
-   return "libpng version 1.6.18 - July 23, 2015\
+   return "libpng version 1.6.19 - November 12, 2015\
       Copyright (c) 1998-2015 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
@@ -1703,7 +1712,6 @@ png_colorspace_set_chromaticities(png_const_structrp png_ptr,
           */
          colorspace->flags |= PNG_COLORSPACE_INVALID;
          png_error(png_ptr, "internal error checking chromaticities");
-         break;
    }
 
    return 0; /* failed */
@@ -1731,7 +1739,6 @@ png_colorspace_set_endpoints(png_const_structrp png_ptr,
       default:
          colorspace->flags |= PNG_COLORSPACE_INVALID;
          png_error(png_ptr, "internal error checking chromaticities");
-         break;
    }
 
    return 0; /* failed */
@@ -2057,8 +2064,8 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
    temp = png_get_uint_32(profile+12); /* profile/device class */
    switch (temp)
    {
-      case 0x73636E72: /* 'scnr' */
-      case 0x6D6E7472: /* 'mntr' */
+      case 0x73636e72: /* 'scnr' */
+      case 0x6d6e7472: /* 'mntr' */
       case 0x70727472: /* 'prtr' */
       case 0x73706163: /* 'spac' */
          /* All supported */
@@ -2069,7 +2076,7 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
          return png_icc_profile_error(png_ptr, colorspace, name, temp,
             "invalid embedded Abstract ICC profile");
 
-      case 0x6C696E6B: /* 'link' */
+      case 0x6c696e6b: /* 'link' */
          /* DeviceLink profiles cannot be interpreted in a non-device specific
           * fashion, if an app uses the AToB0Tag in the profile the results are
           * undefined unless the result is sent to the intended device,
@@ -2079,7 +2086,7 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
          return png_icc_profile_error(png_ptr, colorspace, name, temp,
             "unexpected DeviceLink ICC profile class");
 
-      case 0x6E6D636C: /* 'nmcl' */
+      case 0x6e6d636c: /* 'nmcl' */
          /* A NamedColor profile is also device specific, however it doesn't
           * contain an AToB0 tag that is open to misinterpretation.  Almost
           * certainly it will fail the tests below.
@@ -2105,8 +2112,8 @@ png_icc_check_header(png_const_structrp png_ptr, png_colorspacerp colorspace,
    temp = png_get_uint_32(profile+20);
    switch (temp)
    {
-      case 0x58595A20: /* 'XYZ ' */
-      case 0x4C616220: /* 'Lab ' */
+      case 0x58595a20: /* 'XYZ ' */
+      case 0x4c616220: /* 'Lab ' */
          break;
 
       default:
@@ -2276,7 +2283,7 @@ png_compare_ICC_profile_with_sRGB(png_const_structrp png_ptr,
          }
 
          /* Length *and* intent must match */
-         if (length == png_sRGB_checks[i].length &&
+         if (length == (png_uint_32) png_sRGB_checks[i].length &&
             intent == (png_uint_32) png_sRGB_checks[i].intent)
          {
             /* Now calculate the adler32 if not done already. */
@@ -3144,7 +3151,7 @@ png_ascii_from_fixed(png_const_structrp png_ptr, png_charp ascii,
 
       /* Avoid overflow here on the minimum integer. */
       if (fp < 0)
-         *ascii++ = 45, --size, num = -fp;
+         *ascii++ = 45, num = -fp;
       else
          num = fp;
 
@@ -3675,7 +3682,7 @@ png_exp(png_fixed_point x)
    if (x > 0 && x <= 0xfffff) /* Else overflow or zero (underflow) */
    {
       /* Obtain a 4-bit approximation */
-      png_uint_32 e = png_32bit_exp[(x >> 12) & 0xf];
+      png_uint_32 e = png_32bit_exp[(x >> 12) & 0x0f];
 
       /* Incorporate the low 12 bits - these decrease the returned value by
        * multiplying by a number less than 1 if the bit is set.  The multiplier
