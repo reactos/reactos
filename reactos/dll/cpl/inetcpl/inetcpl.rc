@@ -93,6 +93,9 @@
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
 
 #define WINE_FILENAME_STR "inetcpl.cpl"
 #define WINE_FILEDESCRIPTION_STR "Internet Control Panel"

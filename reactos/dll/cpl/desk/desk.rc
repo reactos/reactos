@@ -95,3 +95,6 @@ IDB_SPECTRUM_16 BITMAP "resources/spectrum_16.bmp"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

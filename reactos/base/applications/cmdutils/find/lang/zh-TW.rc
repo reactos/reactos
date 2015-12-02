@@ -1,0 +1,15 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FIND: 輸出某檔中包含指定字串的所有行。\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""字串"" [ 文件... ]\n\
+    /C  計算包含該字串的行數\n\
+    /I  忽略大小寫\n\
+    /N  從 1 開始為顯示的行編號\n\
+    /V  輸出不包含該指定字串的行"
+    IDS_NO_SUCH_FILE "FIND: %s: 沒有這個檔\n"
+    IDS_CANNOT_OPEN "FIND: %s: 無法打開檔\n"
+END

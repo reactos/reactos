@@ -1,0 +1,8 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    STRING_USERINIT_FAIL "Userinit 無法啟動外殼！\n"
+END
