@@ -20,6 +20,10 @@
     #include "lang/en-US.rc"
 #endif
 
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
