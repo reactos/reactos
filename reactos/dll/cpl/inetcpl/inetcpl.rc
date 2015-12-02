@@ -25,7 +25,7 @@
 
 #include "resource.h"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
  /* UTF-8 */
  #pragma code_page(65001)

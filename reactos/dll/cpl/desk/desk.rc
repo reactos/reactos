@@ -21,7 +21,7 @@ IDB_SPECTRUM_4 BITMAP "resources/spectrum_4.bmp"
 IDB_SPECTRUM_8 BITMAP "resources/spectrum_8.bmp"
 IDB_SPECTRUM_16 BITMAP "resources/spectrum_16.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

@@ -29,7 +29,7 @@ IDI_REPEAT_RATE ICON "resources/repeat_rate.ico"
 IDI_REPEAT_DELAY ICON "resources/repeat_delay.ico"
 IDI_LOOK_KEY ICON "resources/look_key.ico"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

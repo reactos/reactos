@@ -18,7 +18,7 @@ IDI_DC ICON "resources/dc.ico"
 IDI_SCREEN ICON "resources/screen.ico"
 IDI_HIBERNATE ICON "resources/hibernate.ico"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

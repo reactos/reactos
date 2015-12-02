@@ -60,7 +60,7 @@ IDI_STOP_ICON ICON "resources/stop.ico"
 /* Bitmaps */
 IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

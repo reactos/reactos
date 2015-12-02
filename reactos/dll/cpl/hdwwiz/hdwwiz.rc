@@ -20,7 +20,7 @@ IDI_SEARCHICON ICON "resources/search.ico"
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER BITMAP "resources/header.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

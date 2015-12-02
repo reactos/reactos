@@ -20,7 +20,7 @@
 
 IDC_CPLICON ICON "res/terminal.ico"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

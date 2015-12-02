@@ -22,7 +22,7 @@ IDI_APPINETICO ICON "resources/1505.ico"
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_SHORTCUT BITMAP "resources/shortcut.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
