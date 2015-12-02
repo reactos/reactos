@@ -46,6 +46,10 @@ Title: LibXML
 Used Version: 2.9.3
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
 
+Title: Libxslt
+Used Version: 1.1.28
+Website: http://xmlsoft.org
+
 Title: ZLib
 Used Version: 1.2.8
 Website: http://www.zlib.net
