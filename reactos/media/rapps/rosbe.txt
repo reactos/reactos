@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = ReactOS Build Environment
-Version = 2.1.1
+Version = 2.1.3
 License = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
-Size = 28.3 MB
+Size = 32.2 MB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
-URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.1.exe
-SHA1 = 3daec4a5df5adf5679eaba25c39b4779afea3b4f
+URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.3.exe
+SHA1 = 73cdd8b49af919064abced95872423e4be2afe6f
 CDPath = none
 
 [Section.0405]
@@ -38,12 +38,12 @@ Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej infor
 
 [Section.0418]
 Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consultați wiki ReactOS.
-Size = 28,3 Mo
+Size = 32,2 Mo
 
 [Section.041f]
 Name = ReactOS Yapma Ortamı
 Description = ReactOS Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
-Size = 28,3 MB
+Size = 32,2 MB
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
