@@ -2948,8 +2948,9 @@ htmlParseScript(htmlParserCtxtPtr ctxt) {
 
 
 /**
- * htmlParseCharData:
+ * htmlParseCharDataInternal:
  * @ctxt:  an HTML parser context
+ * @readahead: optional read ahead character in ascii range
  *
  * parse a CharData section.
  * if we are within a CDATA section ']]>' marks an end of section.
@@ -2958,11 +2959,14 @@ htmlParseScript(htmlParserCtxtPtr ctxt) {
  */
 
 static void
-htmlParseCharData(htmlParserCtxtPtr ctxt) {
-    xmlChar buf[HTML_PARSER_BIG_BUFFER_SIZE + 5];
+htmlParseCharDataInternal(htmlParserCtxtPtr ctxt, int readahead) {
+    xmlChar buf[HTML_PARSER_BIG_BUFFER_SIZE + 6];
     int nbchar = 0;
     int cur, l;
     int chunk = 0;
+
+    if (readahead)
+        buf[nbchar++] = readahead;
 
     SHRINK;
     cur = CUR_CHAR(l);
@@ -3040,6 +3044,21 @@ htmlParseCharData(htmlParserCtxtPtr ctxt) {
 	if (cur == 0)
 	    ctxt->instate = XML_PARSER_EOF;
     }
+}
+
+/**
+ * htmlParseCharData:
+ * @ctxt:  an HTML parser context
+ *
+ * parse a CharData section.
+ * if we are within a CDATA section ']]>' marks an end of section.
+ *
+ * [14] CharData ::= [^<&]* - ([^<&]* ']]>' [^<&]*)
+ */
+
+static void
+htmlParseCharData(htmlParserCtxtPtr ctxt) {
+    htmlParseCharDataInternal(ctxt, 0);
 }
 
 /**
@@ -3245,12 +3264,17 @@ htmlParseComment(htmlParserCtxtPtr ctxt) {
 	ctxt->instate = state;
 	return;
     }
+    len = 0;
+    buf[len] = 0;
     q = CUR_CHAR(ql);
+    if (!IS_CHAR(q))
+        goto unfinished;
     NEXTL(ql);
     r = CUR_CHAR(rl);
+    if (!IS_CHAR(r))
+        goto unfinished;
     NEXTL(rl);
     cur = CUR_CHAR(l);
-    len = 0;
     while (IS_CHAR(cur) &&
            ((cur != '>') ||
 	    (r != '-') || (q != '-'))) {
@@ -3281,18 +3305,20 @@ htmlParseComment(htmlParserCtxtPtr ctxt) {
 	}
     }
     buf[len] = 0;
-    if (!IS_CHAR(cur)) {
-	htmlParseErr(ctxt, XML_ERR_COMMENT_NOT_FINISHED,
-	             "Comment not terminated \n<!--%.50s\n", buf, NULL);
-	xmlFree(buf);
-    } else {
+    if (IS_CHAR(cur)) {
         NEXT;
 	if ((ctxt->sax != NULL) && (ctxt->sax->comment != NULL) &&
 	    (!ctxt->disableSAX))
 	    ctxt->sax->comment(ctxt->userData, buf);
 	xmlFree(buf);
+	ctxt->instate = state;
+	return;
     }
-    ctxt->instate = state;
+
+unfinished:
+    htmlParseErr(ctxt, XML_ERR_COMMENT_NOT_FINISHED,
+		 "Comment not terminated \n<!--%.50s\n", buf, NULL);
+    xmlFree(buf);
 }
 
 /**
@@ -3690,6 +3716,14 @@ htmlParseStartTag(htmlParserCtxtPtr ctxt) {
 	htmlParseErr(ctxt, XML_ERR_NAME_REQUIRED,
 	             "htmlParseStartTag: invalid element name\n",
 		     NULL, NULL);
+	/* if recover preserve text on classic misconstructs */
+	if ((ctxt->recovery) && ((IS_BLANK_CH(CUR)) || (CUR == '<') ||
+	    (CUR == '=') || (CUR == '>') || (((CUR >= '0') && (CUR <= '9'))))) {
+	    htmlParseCharDataInternal(ctxt, '<');
+	    return(-1);
+	}
+
+
 	/* Dump the bogus tag like browsers do */
 	while ((IS_CHAR_CH(CUR)) && (CUR != '>') &&
                (ctxt->instate != XML_PARSER_EOF))
@@ -5701,17 +5735,17 @@ htmlParseTryOrFinish(htmlParserCtxtPtr ctxt, int terminate) {
 				if (ctxt->keepBlanks) {
 				    if (ctxt->sax->characters != NULL)
 					ctxt->sax->characters(
-						ctxt->userData, &cur, 1);
+						ctxt->userData, &in->cur[0], 1);
 				} else {
 				    if (ctxt->sax->ignorableWhitespace != NULL)
 					ctxt->sax->ignorableWhitespace(
-						ctxt->userData, &cur, 1);
+						ctxt->userData, &in->cur[0], 1);
 				}
 			    } else {
 				htmlCheckParagraph(ctxt);
 				if (ctxt->sax->characters != NULL)
 				    ctxt->sax->characters(
-					    ctxt->userData, &cur, 1);
+					    ctxt->userData, &in->cur[0], 1);
 			    }
 			}
 			ctxt->token = 0;

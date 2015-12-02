@@ -76,7 +76,8 @@ typedef enum {
     XML_BUFFER_ALLOC_EXACT,	/* grow only to the minimal size */
     XML_BUFFER_ALLOC_IMMUTABLE, /* immutable buffer */
     XML_BUFFER_ALLOC_IO,	/* special allocation scheme used for I/O */
-    XML_BUFFER_ALLOC_HYBRID	/* exact up to a threshold, and doubleit thereafter */
+    XML_BUFFER_ALLOC_HYBRID,	/* exact up to a threshold, and doubleit thereafter */
+    XML_BUFFER_ALLOC_BOUNDED	/* limit the upper size of the buffer */
 } xmlBufferAllocationScheme;
 
 /**

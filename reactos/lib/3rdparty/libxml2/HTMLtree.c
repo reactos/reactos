@@ -668,7 +668,8 @@ htmlDtdDumpOutput(xmlOutputBufferPtr buf, xmlDocPtr doc,
 	    xmlOutputBufferWriteString(buf, " ");
 	    xmlBufWriteQuotedString(buf->buffer, cur->SystemID);
 	}
-    }  else if (cur->SystemID != NULL) {
+    } else if (cur->SystemID != NULL &&
+	       xmlStrcmp(cur->SystemID, BAD_CAST "about:legacy-compat")) {
 	xmlOutputBufferWriteString(buf, " SYSTEM ");
 	xmlBufWriteQuotedString(buf->buffer, cur->SystemID);
     }

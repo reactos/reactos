@@ -937,6 +937,7 @@ xmlSwitchEncoding(xmlParserCtxtPtr ctxt, xmlCharEncoding enc)
 {
     xmlCharEncodingHandlerPtr handler;
     int len = -1;
+    int ret;
 
     if (ctxt == NULL) return(-1);
     switch (enc) {
@@ -1097,7 +1098,15 @@ xmlSwitchEncoding(xmlParserCtxtPtr ctxt, xmlCharEncoding enc)
     if (handler == NULL)
 	return(-1);
     ctxt->charset = XML_CHAR_ENCODING_UTF8;
-    return(xmlSwitchToEncodingInt(ctxt, handler, len));
+    ret = xmlSwitchToEncodingInt(ctxt, handler, len);
+    if ((ret < 0) || (ctxt->errNo == XML_I18N_CONV_FAILED)) {
+        /*
+	 * on encoding conversion errors, stop the parser
+	 */
+        xmlStopParser(ctxt);
+	ctxt->errNo = XML_I18N_CONV_FAILED;
+    }
+    return(ret);
 }
 
 /**
@@ -1450,6 +1459,8 @@ xmlNewEntityInputStream(xmlParserCtxtPtr ctxt, xmlEntityPtr entity) {
     if (entity->URI != NULL)
 	input->filename = (char *) xmlStrdup((xmlChar *) entity->URI);
     input->base = entity->content;
+    if (entity->length == 0)
+        entity->length = xmlStrlen(entity->content);
     input->cur = entity->content;
     input->length = entity->length;
     input->end = &entity->content[input->length];

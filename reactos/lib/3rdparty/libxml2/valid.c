@@ -2634,8 +2634,10 @@ xmlAddID(xmlValidCtxtPtr ctxt, xmlDocPtr doc, const xmlChar *value,
 	/*
 	 * The id is already defined in this DTD.
 	 */
-	xmlErrValidNode(ctxt, attr->parent, XML_DTD_ID_REDEFINED,
-			"ID %s already defined\n", value, NULL, NULL);
+	if (ctxt != NULL) {
+	    xmlErrValidNode(ctxt, attr->parent, XML_DTD_ID_REDEFINED,
+			    "ID %s already defined\n", value, NULL, NULL);
+	}
 #endif /* LIBXML_VALID_ENABLED */
 	xmlFreeID(ret);
 	return(NULL);
