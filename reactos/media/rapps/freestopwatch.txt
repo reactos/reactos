@@ -1,0 +1,16 @@
+; UTF-8
+
+[Section]
+Name = Free Stopwatch
+Version = 3.0.2
+License = Freeware
+Description = A flexible digital stopwatch software.
+Size = 1.0 MB
+Category = 12
+URLSite = http://free-stopwatch.com/
+URLDownload = http://free-stopwatch.com/FreeStopwatchSetup.exe
+SHA1 = 53fd023d73686fdfb6072d4901329c2056b33f3c
+CDPath = none
+
+[Section.0407]
+Description = Eine flexible digitale Stoppuhr-Software.
