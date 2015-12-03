@@ -11,5 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Błąd: Niewłaściwe parametry wiersza poleceń\n"
     STRING_NO_REMOTE, "Błąd: Nie można dodać kluczy do zdalnej maszyny\n"
     STRING_CANNOT_FIND, "Błąd: System nie mógł znaleźć podanej wartości lub klucza rejestru\n"
-    STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
+    STRING_UNSUPPORTED_TYPE, "Błąd: Nieobsługiwany typ\n"
 }
