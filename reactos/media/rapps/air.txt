@@ -1,0 +1,16 @@
+; UTF-8
+
+[Section]
+Name = Adobe AIR
+Version = 19.0
+License = Adobe Software Licensing Agreement
+Description = The Adobe AIR runtime enables developers to package the same code into native applications and games.
+Size = 17.3 MB
+Category = 14
+URLSite = https://get.adobe.com/air/
+URLDownload = http://airdownload.adobe.com/air/win/download/19.0/AdobeAIRInstaller.exe
+SHA1 = ed0e55d3913f9eeae09c367fa5b796b6025945a4
+CDPath = none
+
+[Section.0407]
+Description = Mithilfe der Adobe AIR-Laufzeit können Entwickler den gleichen Code in native Anwendungen und Spiele einbinden.
