@@ -1,0 +1,16 @@
+; UTF-8
+
+[Section]
+Name = Everything Search Engine
+Version = 1.3.4.686
+License = Freeware
+Description = Locate files and folders by name instantly.
+Size = 907 kB
+Category = 12
+URLSite = http://www.voidtools.com/
+URLDownload = http://www.voidtools.com/Everything-1.3.4.686.x86.Multilingual-Setup.exe
+SHA1 = 43ce04b65db11a897ce4419ea665214d395fae5e
+CDPath = none
+
+[Section.0407]
+Description = Finde schnell Dateien und Ordner durch den Namen. 
