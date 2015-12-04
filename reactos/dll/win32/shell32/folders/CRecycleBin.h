@@ -44,6 +44,7 @@ class CRecycleBin :
         void SF_RegisterClipFmt();
         BOOL fAcceptFmt;       /* flag for pending Drop */
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        BOOL RecycleBinIsEmpty();
 
     public:
         CRecycleBin();
