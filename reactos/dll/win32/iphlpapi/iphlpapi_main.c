@@ -35,13 +35,17 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+  WSADATA wsaData;
+
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
       interfaceMapInit();
+      WSAStartup(MAKEWORD(2, 2), &wsaData);
       break;
 
     case DLL_PROCESS_DETACH:
+      WSACleanup();
       interfaceMapFree();
       break;
   }

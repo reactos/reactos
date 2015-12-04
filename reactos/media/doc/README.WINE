@@ -74,7 +74,6 @@ reactos/dll/win32/hlink               # Synced to WineStaging-1.7.55
 reactos/dll/win32/hnetcfg             # Synced to WineStaging-1.7.55
 reactos/dll/win32/httpapi             # Synced to WineStaging-1.7.55
 reactos/dll/win32/iccvid              # Synced to WineStaging-1.7.55
-reactos/dll/win32/icmp                # Out of sync
 reactos/dll/win32/ieframe             # Synced to WineStaging-1.7.55
 reactos/dll/win32/imaadp32.acm        # Synced to WineStaging-1.7.55
 reactos/dll/win32/imagehlp            # Synced to WineStaging-1.7.55
@@ -266,6 +265,9 @@ advapi32 -
 
 gdi32 -
   reactos/dll/win32/gdi32/objects/linedda.c     # Synced at 20090410
+
+iphlpapi -
+  reactos/dll/win32/iphlpapi/icmp.c # Out of Sync
 
 kernel32 -
   reactos/dll/win32/kernel32/wine/actctx.c               # Partly synced with Wine 1.7.55

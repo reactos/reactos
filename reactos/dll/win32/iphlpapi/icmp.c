@@ -147,22 +147,6 @@ static int in_cksum(u_short *addr, int len)
  * Exported Routines.
  */
 
-BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-  WSADATA wsaData;
-
-  switch (fdwReason) {
-    case DLL_PROCESS_ATTACH:
-      WSAStartup(MAKEWORD(2, 2), &wsaData);
-      break;
-
-    case DLL_PROCESS_DETACH:
-      WSACleanup();
-      break;
-  }
-  return TRUE;
-}
-
 /***********************************************************************
  *		IcmpCreateFile (ICMP.@)
  */
