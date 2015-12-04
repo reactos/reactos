@@ -1,5 +1,5 @@
 /*
- * Unit test suite for Icmp.dll functions
+ * Unit test suite for Icmp functions
  *
  * Copyright 2006 Steven Edwards
  *
@@ -17,17 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/*
- * TODO:
- * It seems under Windows XP, 2003 and Vista these functions are not implemented
- * in iphlpapi. Move the implementation and tests there.
- */
 
-#include <windows.h>
-#include "wine/test.h"
-
-HANDLE WINAPI IcmpCreateFile(void);
-BOOL WINAPI IcmpCloseHandle(HANDLE handle);
+#include <apitest.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
 
 HANDLE handle;
 
