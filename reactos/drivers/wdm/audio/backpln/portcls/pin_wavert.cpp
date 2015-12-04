@@ -638,7 +638,7 @@ CPortPinWaveRT::Init(
     }
 
     m_CommonBuffer = MmGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
-    if (!NT_SUCCESS(Status))
+    if (!m_CommonBuffer)
     {
         DPRINT("Failed to get system address %x\n", Status);
         IoFreeMdl(m_Mdl);
