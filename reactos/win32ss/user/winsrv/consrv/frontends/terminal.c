@@ -314,14 +314,13 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
 
     PLIST_ENTRY CurrentEntry;
     ConsoleInput *Input;
-    ULONG i;
+    ULONG i = 0;
 
     /* Validity checks */
     // ASSERT(Console == InputBuffer->Header.Console);
     ASSERT((Buffer != NULL) || (Buffer == NULL && NumCharsToRead == 0));
 
     /* We haven't read anything (yet) */
-    i = ReadControl->nInitialChars;
 
     if (InputBuffer->Mode & ENABLE_LINE_INPUT)
     {
@@ -329,8 +328,9 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
 
         if (Console->LineBuffer == NULL)
         {
-            /* Starting a new line */
+            /* Start a new line */
             Console->LineMaxSize = max(256, NumCharsToRead);
+            ASSERT(ReadControl->nInitialChars <= Console->LineMaxSize);
 
             Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
@@ -341,8 +341,9 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
 
             /*
-             * Pre-filling the buffer is only allowed in the Unicode API,
-             * so we don't need to worry about ANSI <-> Unicode conversion.
+             * Pre-fill the buffer with the nInitialChars from the user buffer.
+             * Since pre-filling is only allowed in Unicode, we don't need to
+             * worry about ANSI <-> Unicode conversion.
              */
             memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
             if (Console->LineSize == Console->LineMaxSize)
@@ -377,6 +378,11 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         /* Check if we have a complete line to read from */
         if (Console->LineComplete)
         {
+            // NOTE: I want to check whether we always set LinePos to zero
+            // when LineComplete is set to TRUE.
+            // Basically, we are going to use LinePos as 'i'.
+            ASSERT(Console->LinePos == 0);
+
             while (i < NumCharsToRead && Console->LinePos != Console->LineSize)
             {
                 WCHAR Char = Console->LineBuffer[Console->LinePos++];
