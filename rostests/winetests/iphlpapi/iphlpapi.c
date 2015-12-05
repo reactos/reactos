@@ -48,16 +48,6 @@
 
 #define ICMP_MINLEN 8 /* copied from dlls/iphlpapi/ip_icmp.h file */
 
-#undef htonl
-#undef htons
-#undef ntohl
-#undef ntohs
-
-#define htonl(l) ((u_long)(l))
-#define htons(s) ((u_short)(s))
-#define ntohl(l) ((u_long)(l))
-#define ntohs(s) ((u_short)(s))
-
 static HMODULE hLibrary = NULL;
 
 static DWORD (WINAPI *pGetNumberOfInterfaces)(PDWORD);
