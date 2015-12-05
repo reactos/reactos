@@ -28,9 +28,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi saklanamıyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
   IDS_VERBMENU_OBJECT   "&Nesne"
-  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Nesne"
   IDS_VERBMENU_CONVERT  "&Dönüştür..."
-  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Nesne"
 }
 
 STRINGTABLE

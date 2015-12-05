@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "FreeLoader Ayıklayıcı"
+    IDS_APP_TITLE "FreeLoader Yanlışlık Ayıklayıcı"
     IDS_HELLO "Merhaba Dünyâ!"
     IDC_FDEBUG "FDEBUG"
 END

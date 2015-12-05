@@ -1,0 +1,66 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Aç...", CMD_OPEN
+        MENUITEM "A&yrı Sakla...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış", CMD_EXIT
+    END
+    POPUP "&Düzen"
+    BEGIN
+        MENUITEM "&Sil\tDel", CMD_DELETE
+    END
+    POPUP "&Görüntü"
+    BEGIN
+        MENUITEM "&Kendiliğinden", CMD_AUTOMATIC
+    END
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&Yardım Konuları", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Üzerine", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Pano"
+    STRING_DELETE_MSG "Pano içeriğini sil?"
+    STRING_DELETE_TITLE "Pano Sil"
+    STRING_FORMAT_NT "ReactOS İçin Pano Kütükleri (*.clp)"
+    STRING_FORMAT_GEN "Pano Kütükleri (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Bilinmeyen Biçim"
+    STRING_CF_TEXT "Metin"
+    STRING_CF_BITMAP "Bit Eşlem"
+    STRING_CF_OEMTEXT "OEM Metin"
+    STRING_CF_UNICODETEXT "Evrenlik Kodlu Metin"
+    STRING_CF_DIB "DIB Bit Eşlem"
+    STRING_CF_LOCALE "Yerli Veri"
+    STRING_CF_ENHMETAFILE "Geliştirilmiş Metafile"
+    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_PALETTE "Renklik"
+    STRING_CF_DIBV5 "DIB Bit Eşlem (Sürüm 5)"
+    STRING_CF_SYLK "Simgelik Bağlantı Biçimi"
+    STRING_CF_DIF "Veri Değiş Tokuş Biçimi"
+    STRING_CF_HDROP "Bırakma Verisi"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Pano görüntülenemeyen bir biçimdeki veri içeriyor."
+    ERROR_INVALID_FILE_FORMAT "Seçili kütük geçerli bir pano kütüğü değil."
+END

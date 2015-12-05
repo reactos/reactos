@@ -4,8 +4,8 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
-    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_CAPTURE_MOUSE, "&Fâre İmlecini Yakala"
+    IDS_RELEASE_MOUSE, "Fâ&re İmlecini Bırak"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
