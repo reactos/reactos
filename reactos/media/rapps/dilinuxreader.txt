@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = DiskInternals Linux Reader
@@ -14,3 +15,9 @@ CDPath = none
 
 [Section.0407]
 Description = Eine einfache Möglichkeit zwischen Windows/ReactOS und Ext2/Ext3/Ext4, HFS und ReiserFS-Dateisystemen zu überbrücken.
+
+[Section.041f]
+Name = DiskInternals Linux Okuyucu
+License = Ücretsiz
+Description = Windows ya da ReactOS ile Ext2, Ext3, Ext4, HFS ve ReiserFS kütük dizgeleri arasında köprü kurmak için kolay bir yol.
+Size = 19,9 MB

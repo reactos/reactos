@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Everything Search Engine
@@ -14,3 +15,9 @@ CDPath = none
 
 [Section.0407]
 Description = Finde schnell Dateien und Ordner durch den Namen. 
+
+[Section.041f]
+Name = Tüm Şeyler Arama Motoru
+License = Ücretsiz
+Description = Kütükleri ve dizinleri ada göre gecikmeden bulunuz.
+Size = 907 KB
