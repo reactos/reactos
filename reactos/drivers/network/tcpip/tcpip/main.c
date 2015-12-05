@@ -527,7 +527,7 @@ TiDispatch(
 
     case IOCTL_QUERY_IP_HW_ADDRESS:
       TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
-      Status = DispTdiQueryIpHwAddress(Irp, IrpSp);
+      Status = DispTdiQueryIpHwAddress(DeviceObject, Irp, IrpSp);
       break;
 
     default:

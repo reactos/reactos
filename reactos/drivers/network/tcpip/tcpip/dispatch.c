@@ -14,19 +14,25 @@
 #include <datagram.h>
 #include <pseh/pseh2.h>
 
+typedef struct _QUERY_HW_WORK_ITEM {
+    PIO_WORKITEM WorkItem;
+    PIRP Irp;
+    PIO_STACK_LOCATION IrpSp;
+    PIP_INTERFACE Interface;
+    LARGE_INTEGER StartTime;
+    ULONG RemoteIP;
+} QUERY_HW_WORK_ITEM, *PQUERY_HW_WORK_ITEM;
+
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
 
-    Irp->IoStatus.Status = Status;
-
-    if( Status == STATUS_PENDING )
-	IoMarkIrpPending( Irp );
-    else {
+    if (Status != STATUS_PENDING) {
+        Irp->IoStatus.Status = Status;
         IoAcquireCancelSpinLock(&OldIrql);
-	(void)IoSetCancelRoutine( Irp, NULL );
+        (void)IoSetCancelRoutine( Irp, NULL );
         IoReleaseCancelSpinLock(OldIrql);
 
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+        IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
 
     return Status;
@@ -1609,17 +1615,148 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     return Status;
 }
 
-NTSTATUS DispTdiQueryIpHwAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    NTSTATUS Status;
+VOID NTAPI
+WaitForHwAddress ( PDEVICE_OBJECT DeviceObject, PVOID Context) {
+    PQUERY_HW_WORK_ITEM WorkItem = (PQUERY_HW_WORK_ITEM)Context;
+    LARGE_INTEGER Now;
+    LARGE_INTEGER Wait;
+    IP_ADDRESS Remote;
+    PIRP Irp;
+    PNEIGHBOR_CACHE_ENTRY NCE = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    Status = STATUS_NOT_IMPLEMENTED;
+    IoFreeWorkItem(WorkItem->WorkItem);
+    Irp = WorkItem->Irp;
+    AddrInitIPv4(&Remote, WorkItem->RemoteIP);
+    KeQuerySystemTime(&Now);
+    while (Now.QuadPart - WorkItem->StartTime.QuadPart < 10000 * 1000 && !Irp->Cancel) {
+        NCE = NBLocateNeighbor(&Remote, WorkItem->Interface);
+        if (NCE && !(NCE->State & NUD_INCOMPLETE)) {
+            break;
+        }
+
+        NCE = NULL;
+        Wait.QuadPart = -10000;
+        KeDelayExecutionThread(KernelMode, FALSE, &Wait);
+        KeQuerySystemTime(&Now);
+    }
+
+    if (NCE) {
+        PVOID OutputBuffer;
+
+        if (NCE->LinkAddressLength > WorkItem->IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
+            Status = STATUS_INVALID_BUFFER_SIZE;
+        } else {
+            OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
+            RtlCopyMemory(OutputBuffer, NCE->LinkAddress, NCE->LinkAddressLength);
+            Irp->IoStatus.Information = NCE->LinkAddressLength;
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    ExFreePoolWithTag(WorkItem, QUERY_CONTEXT_TAG);
+    if (Irp->Flags & IRP_SYNCHRONOUS_API) {
+        Irp->IoStatus.Status = Status;
+    } else {
+        IRPFinish(Irp, Status);
+    }
+}
+
+NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status;
+    PULONG IPs;
+    IP_ADDRESS Remote, Local;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    PIP_INTERFACE Interface;
+    PQUERY_HW_WORK_ITEM WorkItem;
+
+    Irp->IoStatus.Information = 0;
+
     if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < 2 * sizeof(ULONG)) {
         Status = STATUS_INVALID_BUFFER_SIZE;
         goto Exit;
     }
 
+    IPs = (PULONG)Irp->AssociatedIrp.SystemBuffer;
+    AddrInitIPv4(&Remote, IPs[0]);
+    AddrInitIPv4(&Local, IPs[1]);
+
+    if (AddrIsUnspecified(&Local)) {
+        NCE = RouteGetRouteToDestination(&Remote);
+        if (NCE == NULL) {
+            Status = STATUS_NETWORK_UNREACHABLE;
+            goto Exit;
+        }
+
+        Interface = NCE->Interface;
+    }
+    else {
+        Interface = FindOnLinkInterface(&Local);
+        if (Interface == NULL) {
+            Status = STATUS_NETWORK_UNREACHABLE;
+            goto Exit;
+        }
+    }
+
+    WorkItem = ExAllocatePoolWithTag(PagedPool, sizeof(QUERY_HW_WORK_ITEM), QUERY_CONTEXT_TAG);
+    if (WorkItem == NULL) {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Exit;
+    }
+
+    WorkItem->WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (WorkItem->WorkItem == NULL) {
+        ExFreePoolWithTag(WorkItem, QUERY_CONTEXT_TAG);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Exit;
+    }
+
+    WorkItem->Irp = Irp;
+    WorkItem->IrpSp = IrpSp;
+    WorkItem->Interface = Interface;
+    WorkItem->RemoteIP = IPs[0];
+    KeQuerySystemTime(&WorkItem->StartTime);
+
+    NCE = NBLocateNeighbor(&Remote, Interface);
+    if (NCE != NULL) {
+        if (NCE->LinkAddressLength > IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
+            IoFreeWorkItem(WorkItem->WorkItem);
+            ExFreePoolWithTag(WorkItem, QUERY_CONTEXT_TAG);
+            Status = STATUS_INVALID_BUFFER_SIZE;
+            goto Exit;
+        }
+
+        if (!(NCE->State & NUD_INCOMPLETE)) {
+            PVOID LinkAddress = ExAllocatePoolWithTag(PagedPool, NCE->LinkAddressLength, QUERY_CONTEXT_TAG);
+            if (LinkAddress == NULL) {
+                IoFreeWorkItem(WorkItem->WorkItem);
+                ExFreePoolWithTag(WorkItem, QUERY_CONTEXT_TAG);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Exit;
+            }
+            memset(LinkAddress, 0xff, NCE->LinkAddressLength);
+            NBUpdateNeighbor(NCE, LinkAddress, NUD_INCOMPLETE);
+            ExFreePoolWithTag(LinkAddress, QUERY_CONTEXT_TAG);
+        }
+    }
+
+    if (!ARPTransmit(&Remote, NULL, Interface)) {
+        IoFreeWorkItem(WorkItem->WorkItem);
+        ExFreePoolWithTag(WorkItem, QUERY_CONTEXT_TAG);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    if (Irp->Flags & IRP_SYNCHRONOUS_API) {
+        WaitForHwAddress(DeviceObject, WorkItem);
+        Status = Irp->IoStatus.Status;
+    } else {
+        IoMarkIrpPending(Irp);
+        IoQueueWorkItem(WorkItem->WorkItem, WaitForHwAddress, DelayedWorkQueue, WorkItem);
+        Status = STATUS_PENDING;
+    }
+
 Exit:
-    Irp->IoStatus.Status = Status;
     return Status;
 }
 

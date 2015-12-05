@@ -70,6 +70,7 @@ NTSTATUS DispTdiDeleteIPAddress(
     PIO_STACK_LOCATION IrpSp);
 
 NTSTATUS DispTdiQueryIpHwAddress(
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
