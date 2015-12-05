@@ -1681,6 +1681,27 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
     AddrInitIPv4(&Remote, IPs[0]);
     AddrInitIPv4(&Local, IPs[1]);
 
+    if (AddrIsUnspecified(&Remote)) {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    Interface = AddrLocateInterface(&Remote);
+    if (Interface) {
+        PVOID OutputBuffer;
+
+        if (Interface->AddressLength > IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
+            Status = STATUS_INVALID_BUFFER_SIZE;
+            goto Exit;
+        }
+
+        OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
+        RtlCopyMemory(OutputBuffer, Interface->Address, Interface->AddressLength);
+        Irp->IoStatus.Information = Interface->AddressLength;
+        Status = STATUS_SUCCESS;
+        goto Exit;
+    }
+
     if (AddrIsUnspecified(&Local)) {
         NCE = RouteGetRouteToDestination(&Remote);
         if (NCE == NULL) {
@@ -1691,7 +1712,7 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
         Interface = NCE->Interface;
     }
     else {
-        Interface = FindOnLinkInterface(&Local);
+        Interface = AddrLocateInterface(&Local);
         if (Interface == NULL) {
             Status = STATUS_NETWORK_UNREACHABLE;
             goto Exit;
