@@ -267,7 +267,7 @@ gdi32 -
   reactos/dll/win32/gdi32/objects/linedda.c     # Synced at 20090410
 
 iphlpapi -
-  reactos/dll/win32/iphlpapi/icmp.c # Out of Sync
+  reactos/dll/win32/iphlpapi/icmp.c # Partially synced to WineStaging-1.7.55
 
 kernel32 -
   reactos/dll/win32/kernel32/wine/actctx.c               # Partly synced with Wine 1.7.55
