@@ -581,67 +581,67 @@ SetNewLocale(
     GetLocaleInfo(lcid,
                   LOCALE_SDECIMAL | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumDecimalSep,
-                  MAX_NUMDECIMALSEP * sizeof(WCHAR));
+                  MAX_NUMDECIMALSEP);
 
     GetLocaleInfo(lcid,
                   LOCALE_STHOUSAND | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumThousandSep,
-                  MAX_NUMTHOUSANDSEP * sizeof(WCHAR));
+                  MAX_NUMTHOUSANDSEP);
 
     GetLocaleInfo(lcid,
                   LOCALE_SNEGATIVESIGN | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumNegativeSign,
-                  MAX_NUMNEGATIVESIGN * sizeof(WCHAR));
+                  MAX_NUMNEGATIVESIGN);
 
     GetLocaleInfo(lcid,
                   LOCALE_SPOSITIVESIGN | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumPositiveSign,
-                  MAX_NUMPOSITIVESIGN * sizeof(WCHAR));
+                  MAX_NUMPOSITIVESIGN);
 
     GetLocaleInfo(lcid,
                   LOCALE_SLIST | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumListSep,
-                  MAX_NUMLISTSEP * sizeof(WCHAR));
+                  MAX_NUMLISTSEP);
 
     GetLocaleInfo(lcid,
                   LOCALE_SNATIVEDIGITS | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szNumNativeDigits,
-                  MAX_NUMNATIVEDIGITS * sizeof(WCHAR));
+                  MAX_NUMNATIVEDIGITS);
 
     GetLocaleInfo(lcid,
                   LOCALE_INEGNUMBER | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumNegFormat = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_IDIGITS | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumDigits = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_ILZERO | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumLeadingZero = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_IMEASURE | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumMeasure = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_IDIGITSUBSTITUTION | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumShape = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_SGROUPING | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nNumGrouping = 0;
     if (szBuffer[0] == L'3')
     {
@@ -656,22 +656,22 @@ SetNewLocale(
     GetLocaleInfo(lcid,
                   LOCALE_SCURRENCY | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szCurrSymbol,
-                  MAX_CURRSYMBOL * sizeof(WCHAR));
+                  MAX_CURRSYMBOL);
 
     GetLocaleInfo(lcid,
                   LOCALE_SMONDECIMALSEP | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szCurrDecimalSep,
-                  MAX_CURRDECIMALSEP * sizeof(WCHAR));
+                  MAX_CURRDECIMALSEP);
 
     GetLocaleInfo(lcid,
                   LOCALE_SMONTHOUSANDSEP | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szCurrThousandSep,
-                  MAX_CURRTHOUSANDSEP * sizeof(WCHAR));
+                  MAX_CURRTHOUSANDSEP);
 
     GetLocaleInfo(lcid,
                   LOCALE_SMONGROUPING | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nCurrGrouping = 0;
     if (szBuffer[0] == L'3')
     {
@@ -685,115 +685,115 @@ SetNewLocale(
     GetLocaleInfo(lcid,
                   LOCALE_ICURRENCY | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nCurrPosFormat = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_INEGCURR | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nCurrNegFormat = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_ICURRDIGITS | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nCurrDigits = _wtoi(szBuffer);
 
     /* Time */
     GetLocaleInfo(lcid,
                   LOCALE_STIMEFORMAT | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szTimeFormat,
-                  MAX_TIMEFORMAT * sizeof(WCHAR));
+                  MAX_TIMEFORMAT);
 
     GetLocaleInfo(lcid,
                   LOCALE_STIME | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szTimeSep,
-                  MAX_TIMESEPARATOR * sizeof(WCHAR));
+                  MAX_TIMESEPARATOR);
 
     GetLocaleInfo(lcid,
                   LOCALE_S1159 | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szTimeAM,
-                  MAX_TIMEAMSYMBOL * sizeof(WCHAR));
+                  MAX_TIMEAMSYMBOL);
 
     GetLocaleInfo(lcid,
                   LOCALE_S2359 | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szTimePM,
-                  MAX_TIMEPMSYMBOL * sizeof(WCHAR));
+                  MAX_TIMEPMSYMBOL);
 
     GetLocaleInfo(lcid,
                   LOCALE_ITIME | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nTime = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_ITIMEMARKPOSN | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nTimePrefix = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_ITLZERO | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nTimeLeadingZero = _wtoi(szBuffer);
 
     /* Date */
     GetLocaleInfo(lcid,
                   LOCALE_SLONGDATE | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szLongDateFormat,
-                  MAX_LONGDATEFORMAT * sizeof(WCHAR));
+                  MAX_LONGDATEFORMAT);
 
     GetLocaleInfo(lcid,
                   LOCALE_SSHORTDATE | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szShortDateFormat,
-                  MAX_SHORTDATEFORMAT * sizeof(WCHAR));
+                  MAX_SHORTDATEFORMAT);
 
     GetLocaleInfo(lcid,
                   LOCALE_SDATE | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szDateSep,
-                  MAX_DATESEPARATOR * sizeof(WCHAR));
+                  MAX_DATESEPARATOR);
 
     GetLocaleInfo(lcid,
                   LOCALE_IFIRSTDAYOFWEEK | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nFirstDayOfWeek = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_IFIRSTWEEKOFYEAR | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nFirstWeekOfYear = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_IDATE | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nDate = _wtoi(szBuffer);
 
     GetLocaleInfo(lcid,
                   LOCALE_ICALENDARTYPE | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nCalendarType = _wtoi(szBuffer);
 
     /* Misc */
     GetLocaleInfo(lcid,
                   LOCALE_SCOUNTRY | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szMiscCountry,
-                  MAX_MISCCOUNTRY * sizeof(WCHAR));
+                  MAX_MISCCOUNTRY);
 
     GetLocaleInfo(lcid,
                   LOCALE_SLANGUAGE | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szMiscLanguage,
-                  MAX_MISCLANGUAGE * sizeof(WCHAR));
+                  MAX_MISCLANGUAGE);
 
     GetLocaleInfo(lcid,
                   LOCALE_ICOUNTRY | LOCALE_NOUSEROVERRIDE,
                   szBuffer,
-                  16 * sizeof(WCHAR));
+                  sizeof(szBuffer) / sizeof(WCHAR));
     pGlobalData->nMiscCountry = _wtoi(szBuffer);
 }
 
