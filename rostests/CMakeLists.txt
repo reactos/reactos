@@ -1,6 +1,10 @@
 
 start_module_group(rostests)
 
+if(MSVC_IDE)
+    add_definitions(-DWINETEST_MSVC_IDE_FORMATTING)
+endif()
+
 add_subdirectory(apitests)
 #add_subdirectory(dibtests)
 add_subdirectory(drivers)
