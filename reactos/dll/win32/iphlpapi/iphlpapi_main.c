@@ -2527,6 +2527,13 @@ DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **pp
 DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
     FIXME(":stub\n");
+
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
     return 0L;
 }
 
