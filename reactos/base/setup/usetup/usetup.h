@@ -39,6 +39,8 @@
 #include <winuser.h>
 #include <wincon.h>
 
+#include <strsafe.h>
+
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>

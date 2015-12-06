@@ -612,6 +612,14 @@ UpdateKBLayout(VOID)
 }
 
 
+/*
+ * Displays the LanguagePage.
+ *
+ * Next pages: IntroPage, QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
@@ -737,6 +745,22 @@ LanguagePage(PINPUT_RECORD Ir)
 
 /*
  * Start page
+ *
+ * Next pages:
+ *  LanguagePage (at once, default)
+ *  InstallIntroPage (at once, if unattended)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Init Sdi
+ *  Init SourcePath
+ *  Init SourceRootPath
+ *  Init SourceRootDir
+ *  Init SetupInf
+ *  Init RequiredPartitionDiskSpace
+ *  Init IsUnattendedSetup
+ *  If unattended, init *List and sets the Codepage
+ *
  * RETURNS
  *   Number of the next page.
  */
@@ -911,9 +935,16 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 
 /*
- * First setup page
+ * Displays the IntroPage.
+ *
+ * Next pages:
+ *  InstallIntroPage (default)
+ *  RepairIntroPage
+ *  LicensePage
+ *  QuitPage
+ *
  * RETURNS
- *   Next page number.
+ *   Number of the next page.
  */
 static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
@@ -951,9 +982,13 @@ IntroPage(PINPUT_RECORD Ir)
 
 
 /*
- * License Page
+ * Displays the License page.
+ *
+ * Next page:
+ *  IntroPage (default)
+ *
  * RETURNS
- *   Back to main setup page.
+ *   Number of the next page.
  */
 static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
@@ -974,6 +1009,18 @@ LicensePage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the RepairIntroPage.
+ *
+ * Next pages:
+ *  RebootPage (default)
+ *  InstallIntroPage
+ *  RecoveryPage
+ *  IntroPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
 {
@@ -1006,7 +1053,18 @@ RepairIntroPage(PINPUT_RECORD Ir)
     return REPAIR_INTRO_PAGE;
 }
 
-
+/*
+ * Displays the InstallIntroPage.
+ *
+ * Next pages:
+ *  DeviceSettingsPage  (At once if repair or update is selected)
+ *  SelectPartitionPage (At once if unattended setup)
+ *  DeviceSettingsPage  (default)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
@@ -1083,6 +1141,27 @@ ScsiControllerPage(PINPUT_RECORD Ir)
 #endif
 
 
+/*
+ * Displays the DeviceSettingsPage.
+ *
+ * Next pages:
+ *  SelectPartitionPage (At once if repair or update is selected)
+ *  ComputerSettingsPage
+ *  DisplaySettingsPage
+ *  KeyboardSettingsPage
+ *  LayoutsettingsPage
+ *  SelectPartitionPage
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Init ComputerList
+ *  Init DisplayList
+ *  Init KeyboardList
+ *  Init LayoutList
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
@@ -1208,6 +1287,80 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Handles generic selection lists.
+ *
+ * PARAMS
+ * GenericList: The list to handle.
+ * nextPage: The page it needs to jump to after this page.
+ * Ir: The PINPUT_RECORD
+ */
+static PAGE_NUMBER
+HandleGenericList(PGENERIC_LIST GenericList,
+                  PAGE_NUMBER nextPage,
+                  PINPUT_RECORD Ir)
+{
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
+        {
+            ScrollDownGenericList(GenericList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
+        {
+            ScrollUpGenericList(GenericList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
+        {
+            ScrollPageDownGenericList(GenericList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
+        {
+            ScrollPageUpGenericList(GenericList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+               (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+                return QUIT_PAGE;
+
+            continue;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
+        {
+            RestoreGenericListState(GenericList);
+            return nextPage;
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+        {
+            return nextPage;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        {
+            /* a-z */
+            GenericListKeyPress(GenericList, Ir->Event.KeyEvent.uChar.AsciiChar);
+        }
+    }
+}
+
+
+/*
+ * Displays the ComputerSettingsPage.
+ *
+ * Next pages:
+ *  DeviceSettingsPage
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
@@ -1221,44 +1374,20 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(ComputerList);
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            ScrollDownGenericList(ComputerList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            ScrollUpGenericList(ComputerList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir) == TRUE)
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
-        {
-            RestoreGenericListState(ComputerList);
-            return DEVICE_SETTINGS_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return DEVICE_SETTINGS_PAGE;
-        }
-    }
-
-    return COMPUTER_SETTINGS_PAGE;
+    return HandleGenericList(ComputerList, DEVICE_SETTINGS_PAGE, Ir);
 }
-
-
+ 
+ 
+/*
+ * Displays the DisplaySettingsPage.
+ *
+ * Next pages:
+ *  DeviceSettingsPage
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
@@ -1272,46 +1401,20 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(DisplayList);
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            ScrollDownGenericList(DisplayList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            ScrollUpGenericList(DisplayList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir) == TRUE)
-            {
-                return QUIT_PAGE;
-            }
-
-            break;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
-        {
-            RestoreGenericListState(DisplayList);
-            return DEVICE_SETTINGS_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return DEVICE_SETTINGS_PAGE;
-        }
-    }
-
-    return DISPLAY_SETTINGS_PAGE;
+    return HandleGenericList(DisplayList, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
+/*
+ * Displays the KeyboardSettingsPage.
+ *
+ * Next pages:
+ *  DeviceSettingsPage
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
@@ -1325,44 +1428,20 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(KeyboardList);
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            ScrollDownGenericList(KeyboardList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            ScrollUpGenericList(KeyboardList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir) == TRUE)
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
-        {
-            RestoreGenericListState(KeyboardList);
-            return DEVICE_SETTINGS_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return DEVICE_SETTINGS_PAGE;
-        }
-    }
-
-    return KEYBOARD_SETTINGS_PAGE;
+    return HandleGenericList(KeyboardList, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
+/*
+ * Displays the LayoutSettingsPage.
+ *
+ * Next pages:
+ *  DeviceSettingsPage
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 LayoutSettingsPage(PINPUT_RECORD Ir)
 {
@@ -1376,56 +1455,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(LayoutList);
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            ScrollDownGenericList(LayoutList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            ScrollUpGenericList(LayoutList);
-        }
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
-        {
-            ScrollPageDownGenericList(LayoutList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
-        {
-            ScrollPageUpGenericList(LayoutList);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir) == TRUE)
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
-        {
-            RestoreGenericListState(LayoutList);
-            return DEVICE_SETTINGS_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return DEVICE_SETTINGS_PAGE;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
-        {
-            /* a-z */
-            GenericListKeyPress(LayoutList , Ir->Event.KeyEvent.uChar.AsciiChar);
-        }
-    }
-
-    return LAYOUT_SETTINGS_PAGE;
+    return HandleGenericList(LayoutList, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
@@ -1450,6 +1480,26 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
 }
 
 
+/*
+ * Displays the SelectPartitionPage.
+ *
+ * Next pages:
+ *  SelectFileSystemPage (At once if unattended)
+ *  SelectFileSystemPage (Default if free space is selected)
+ *  CreatePrimaryPartitionPage
+ *  CreateExtendedPartitionPage
+ *  CreateLogicalPartitionPage
+ *  ConfirmDeleteSystemPartitionPage (if the selected partition is the system partition, aka with the boot flag set)
+ *  DeletePartitionPage
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Init DestinationDriveLetter (only if unattended or not free space is selected)
+ *  Set InstallShortcut (only if not unattended + free space is selected)
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
@@ -1801,6 +1851,17 @@ ShowPartitionSizeInputBox(SHORT Left,
 }
 
 
+/*
+ * Displays the CreatePrimaryPartitionPage.
+ *
+ * Next pages:
+ *  SelectPartitionPage
+ *  SelectFileSystemPage (default)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 {
@@ -1948,6 +2009,16 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the CreateExtendedPartitionPage.
+ *
+ * Next pages:
+ *  SelectPartitionPage (default)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 {
@@ -2094,6 +2165,16 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the CreateLogicalPartitionPage.
+ *
+ * Next pages:
+ *  SelectFileSystemPage (default)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 {
@@ -2241,6 +2322,16 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the ConfirmDeleteSystemPartitionPage.
+ *
+ * Next pages:
+ *  DeletePartitionPage (default)
+ *  SelectPartitionPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
 {
@@ -2274,6 +2365,16 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the DeletePartitionPage.
+ *
+ * Next pages:
+ *  SelectPartitionPage (default)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 DeletePartitionPage(PINPUT_RECORD Ir)
 {
@@ -2282,7 +2383,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR Unit;
-    PCHAR PartType;
+    CHAR PartType[32];
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2297,39 +2398,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
-    /* Determine partition type */
-    PartType = NULL;
-    if (PartEntry->New == TRUE)
-    {
-        PartType = MUIGetString(STRING_UNFORMATTED);
-    }
-    else if (PartEntry->IsPartitioned == TRUE)
-    {
-        if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-            (PartEntry->PartitionType == PARTITION_FAT_16) ||
-            (PartEntry->PartitionType == PARTITION_HUGE) ||
-            (PartEntry->PartitionType == PARTITION_XINT13))
-        {
-            PartType = "FAT";
-        }
-        else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
-                 (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-        {
-            PartType = "FAT32";
-        }
-        else if (PartEntry->PartitionType == PARTITION_EXT2)
-        {
-            PartType = "EXT2";
-        }
-        else if (PartEntry->PartitionType == PARTITION_IFS)
-        {
-            PartType = "NTFS"; /* FIXME: Not quite correct! */
-        }
-        else if (IsContainerPartition(PartEntry->PartitionType))
-        {
-            PartType = MUIGetString(STRING_EXTENDED_PARTITION);
-        }
-    }
+    GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
+                                        PartType,
+                                        30);
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
@@ -2443,6 +2514,24 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the SelectFileSystemPage.
+ *
+ * Next pages:
+ *  CheckFileSystemPage (At once if RepairUpdate is selected)
+ *  CheckFileSystemPage (At once if Unattended and not UnattendFormatPartition)
+ *  FormatPartitionPage (At once if Unattended and UnattendFormatPartition)
+ *  SelectPartitionPage (If the user aborts)
+ *  FormatPartitionPage (Default)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Sets PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType (via UpdatePartitionType)
+ *  Calls CheckActiveBootPartition()
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
@@ -2452,7 +2541,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     ULONGLONG PartSize;
     PCHAR DiskUnit;
     PCHAR PartUnit;
-    PCHAR PartType;
+    CHAR PartTypeString[32];
 
     DPRINT("SelectFileSystemPage()\n");
 
@@ -2576,34 +2665,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* adjust partition type */
-    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-        (PartEntry->PartitionType == PARTITION_FAT_16) ||
-        (PartEntry->PartitionType == PARTITION_HUGE) ||
-        (PartEntry->PartitionType == PARTITION_XINT13))
-    {
-        PartType = "FAT";
-    }
-    else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
-             (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-    {
-        PartType = "FAT32";
-    }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
-    {
-        PartType = "EXT2";
-    }
-    else if (PartEntry->PartitionType == PARTITION_IFS)
-    {
-        PartType = "NTFS"; /* FIXME: Not quite correct! */
-    }
-    else if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED)
-    {
-        PartType = MUIGetString(STRING_FORMATUNUSED);
-    }
-    else
-    {
-        PartType = MUIGetString(STRING_FORMATUNKNOWN);
-    }
+    GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
+                                        PartTypeString,
+                                        30);
 
     if (PartEntry->AutoCreate == TRUE)
     {
@@ -2657,7 +2721,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
 
-        if (PartType == NULL)
+        if (PartTypeString == NULL)
         {
             CONSOLE_PrintTextXY(8, 10,
                                 MUIGetString(STRING_HDDINFOUNK4),
@@ -2673,7 +2737,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                                 "%c%c  %s    %I64u %s",
                                 (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                                 (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                PartType,
+                                PartTypeString,
                                 PartSize,
                                 PartUnit);
         }
@@ -2769,6 +2833,21 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the FormatPartitionPage.
+ *
+ * Next pages:
+ *  InstallDirectoryPage (At once if IsUnattendedSetup or InstallShortcut)
+ *  SelectPartitionPage  (At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Sets PartitionList->CurrentPartition->FormatState
+ *  Sets DestinationRootPath
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
@@ -2961,6 +3040,19 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the CheckFileSystemPage.
+ *
+ * Next pages:
+ *  InstallDirectoryPage (At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Inits or reloads FileSystemList
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static ULONG
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
@@ -2968,7 +3060,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
-    LPWSTR FileSystemName = NULL;
+    WCHAR PartTypeString[32];
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     NTSTATUS Status;
@@ -3001,29 +3093,13 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     CurrentFileSystem = PartEntry->FileSystem;
     if (CurrentFileSystem == NULL || CurrentFileSystem->FileSystemName == NULL)
     {
-        if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-            (PartEntry->PartitionType == PARTITION_FAT_16) ||
-            (PartEntry->PartitionType == PARTITION_HUGE) ||
-            (PartEntry->PartitionType == PARTITION_XINT13) ||
-            (PartEntry->PartitionType == PARTITION_FAT32) ||
-            (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-        {
-            FileSystemName = L"FAT";
-        }
-        else if (PartEntry->PartitionType == PARTITION_EXT2)
-        {
-            FileSystemName = L"EXT2";
-        }
-        else if (PartEntry->PartitionType == PARTITION_IFS)
-        {
-            FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
-        }
+        GetPartTypeStringFromPartitionTypeW(PartEntry->PartitionType, PartTypeString, 30);
 
-        DPRINT("FileSystemName: %S\n", FileSystemName);
+        DPRINT("PartTypeString: %S\n", PartTypeString);
 
-        if (FileSystemName != NULL)
+        if (PartTypeString != NULL)
             CurrentFileSystem = GetFileSystemByName(FileSystemList,
-                                                    FileSystemName);
+                                                    PartTypeString);
     }
 
     /* HACK: Do not try to check a partition with an unknown filesytem */
@@ -3087,6 +3163,20 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the InstallDirectoryPage1.
+ *
+ * Next pages:
+ *  PrepareCopyPage (At once)
+ *
+ * SIDEEFFECTS
+ *  Inits DestinationRootPath
+ *  Inits DestinationPath
+ *  Inits DestinationArcPath
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 InstallDirectoryPage1(PWCHAR InstallDir,
                       PDISKENTRY DiskEntry,
@@ -3135,6 +3225,16 @@ InstallDirectoryPage1(PWCHAR InstallDir,
 }
 
 
+/*
+ * Displays the InstallDirectoryPage.
+ *
+ * Next pages:
+ *  PrepareCopyPage (As the direct result of InstallDirectoryPage1)
+ *  QuitPage
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
@@ -3574,6 +3674,20 @@ PrepareCopyPageInfFile(HINF InfFile,
 }
 
 
+/*
+ * Displays the PrepareCopyPage.
+ *
+ * Next pages:
+ *  FileCopyPage(At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ * Inits SetupFileQueue
+ * Calls PrepareCopyPageInfFile
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
@@ -3739,6 +3853,19 @@ FileCopyCallback(PVOID Context,
 }
 
 
+/*
+ * Displays the FileCopyPage.
+ *
+ * Next pages:
+ *  RegistryPage(At once)
+ *
+ * SIDEEFFECTS
+ *  Calls SetupCommitFileQueueW
+ *  Calls SetupCloseFileQueue
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static
 PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
@@ -3816,6 +3943,24 @@ FileCopyPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the RegistryPage.
+ *
+ * Next pages:
+ *  SuccessPage (if RepairUpdate)
+ *  BootLoaderPage (default)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Calls SetInstallPathValue
+ *  Calls NtInitializeRegistry
+ *  Calls ImportRegistryFile
+ *  Calls SetDefaultPagefile
+ *  Calls SetMountedDeviceValues
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
@@ -3961,6 +4106,27 @@ RegistryPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the BootLoaderPage.
+ *
+ * Next pages:
+ *  SuccessPage (if RepairUpdate)
+ *  BootLoaderHarddiskMbrPage
+ *  BootLoaderHarddiskVbrPage
+ *  BootLoaderFloppyPage
+ *  SuccessPage
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Calls SetInstallPathValue
+ *  Calls NtInitializeRegistry
+ *  Calls ImportRegistryFile
+ *  Calls SetDefaultPagefile
+ *  Calls SetMountedDeviceValues
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
@@ -4115,6 +4281,19 @@ BootLoaderPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the BootLoaderFloppyPage.
+ *
+ * Next pages:
+ *  SuccessPage (At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Calls InstallFatBootcodeToFloppy()
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 BootLoaderFloppyPage(PINPUT_RECORD Ir)
 {
@@ -4159,6 +4338,19 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the BootLoaderHarddiskVbrPage.
+ *
+ * Next pages:
+ *  SuccessPage (At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Calls InstallVBRToPartition()
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
@@ -4181,6 +4373,20 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the BootLoaderHarddiskMbrPage.
+ *
+ * Next pages:
+ *  SuccessPage (At once)
+ *  QuitPage
+ *
+ * SIDEEFFECTS
+ *  Calls InstallVBRToPartition()
+ *  CallsInstallMbrBootCodeToDisk()
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 {
@@ -4227,6 +4433,18 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the QuitPage.
+ *
+ * Next pages:
+ *  FlushPage (At once)
+ *
+ * SIDEEFFECTS
+ *  Destroy the Lists
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 QuitPage(PINPUT_RECORD Ir)
 {
@@ -4294,6 +4512,18 @@ QuitPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the SuccessPage.
+ *
+ * Next pages:
+ *  FlushPage (At once)
+ *
+ * SIDEEFFECTS
+ *  Destroy the Lists
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 SuccessPage(PINPUT_RECORD Ir)
 {
@@ -4316,6 +4546,15 @@ SuccessPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Displays the FlushPage.
+ *
+ * Next pages:
+ *  RebootPage (At once)
+ *
+ * RETURNS
+ *   Number of the next page.
+ */
 static PAGE_NUMBER
 FlushPage(PINPUT_RECORD Ir)
 {
@@ -4327,6 +4566,10 @@ FlushPage(PINPUT_RECORD Ir)
 DWORD WINAPI
 PnpEventThread(IN LPVOID lpParameter);
 
+
+/*
+ * The start routine and page management
+ */
 VOID
 RunUSetup(VOID)
 {
