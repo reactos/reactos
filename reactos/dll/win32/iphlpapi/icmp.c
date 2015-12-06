@@ -32,46 +32,7 @@
  * - Using the winsock functions has not been tested.
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#ifdef HAVE_NETDB_H
-# include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_SYSTM_H
-# include <netinet/in_systm.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
-
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
-#include <stdarg.h>
-//#include <string.h>
-//#include <errno.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <ipexport.h>
-//#include <ws2tcpip.h>
-//#include "icmpapi.h"
-#include <wine/debug.h>
+#include "iphlpapi_private.h"
 
 /* Set up endianness macros for the ip and ip_icmp BSD headers */
 #ifndef BIG_ENDIAN
