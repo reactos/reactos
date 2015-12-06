@@ -180,6 +180,40 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     return TDI_SUCCESS;
 }
 
+TDI_STATUS
+InfoTdiQueryGetATInfo(
+    TDIEntityID ID,
+    PIP_INTERFACE Interface,
+    PNDIS_BUFFER Buffer,
+    PUINT BufferSize)
+{
+    ULONG ATInfo[2];
+    TDI_STATUS Status;
+
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    if (!Interface)
+        return TDI_INVALID_PARAMETER;
+
+    if (*BufferSize < 2 * sizeof(ULONG))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    // Fixme: I have no idea what the first field should contain...
+    ATInfo[0] = 0;
+    ATInfo[1] = Interface->Index;
+
+    Status = InfoCopyOut((PCHAR)ATInfo,
+                         sizeof(ATInfo),
+                         Buffer,
+                         BufferSize );
+
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+
+    *BufferSize = 8;
+    return Status;
+}
+
+
 TDI_STATUS InfoTdiQueryInformationEx(
   PTDI_REQUEST Request,
   TDIObjectID *ID,
@@ -246,21 +280,32 @@ TDI_STATUS InfoTdiQueryInformationEx(
                      return TDI_INVALID_PARAMETER;
 
                  if (ID->toi_entity.tei_entity == IF_ENTITY)
+                 {
                      if ((EntityListContext = GetContext(ID->toi_entity)))
                          return InfoTdiQueryGetInterfaceMIB(ID->toi_entity, EntityListContext, Buffer, BufferSize);
                      else
                          return TDI_INVALID_PARAMETER;
+                 }
                  else if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
                           ID->toi_entity.tei_entity == CO_NL_ENTITY)
+                 {
                      if ((EntityListContext = GetContext(ID->toi_entity)))
                          return InfoTdiQueryGetIPSnmpInfo(ID->toi_entity, EntityListContext, Buffer, BufferSize);
                      else
                          return TDI_INVALID_PARAMETER;
+                 }
+                 else if (ID->toi_entity.tei_entity == AT_ENTITY)
+                 {
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetATInfo(ID->toi_entity, EntityListContext, Buffer, BufferSize);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 }
                  else
                      return TDI_INVALID_PARAMETER;
 
               case IP_MIB_ADDRTABLE_ENTRY_ID:
-                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY && 
+                 if (ID->toi_entity.tei_entity != CL_NL_ENTITY &&
                      ID->toi_entity.tei_entity != CO_NL_ENTITY)
                      return TDI_INVALID_PARAMETER;
 

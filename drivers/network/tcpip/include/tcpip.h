@@ -170,6 +170,6 @@ extern ULONG EntityCount;
 extern ULONG EntityMax;
 
 extern NTSTATUS TiGetProtocolNumber( PUNICODE_STRING FileName,
-				     PULONG Protocol );
+				     PUSHORT Protocol );
 
 /* EOF */

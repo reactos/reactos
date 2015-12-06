@@ -3,9 +3,9 @@
 
 static void RunTest() {
     UNICODE_STRING Str;
-    int Proto;
+    USHORT Proto;
     RtlInitUnicodeString( &Str, L"1" );
-    TiGetProtocolNumber( &Str, (PULONG)&Proto );
+    TiGetProtocolNumber( &Str, &Proto );
     _AssertEqualValue(1, Proto);
 }
 

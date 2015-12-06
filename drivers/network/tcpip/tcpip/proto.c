@@ -2,7 +2,7 @@
 
 NTSTATUS TiGetProtocolNumber(
   PUNICODE_STRING FileName,
-  PULONG Protocol)
+  PUSHORT Protocol)
 /*
  * FUNCTION: Returns the protocol number from a file name
  * ARGUMENTS:
@@ -33,7 +33,7 @@ NTSTATUS TiGetProtocolNumber(
   if (!NT_SUCCESS(Status) || ((Value > 255)))
     return STATUS_UNSUCCESSFUL;
 
-  *Protocol = Value;
+  *Protocol = (USHORT)Value;
 
   return STATUS_SUCCESS;
 }

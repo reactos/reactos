@@ -117,7 +117,7 @@ NTSTATUS TiCreateFileObject(
     TDI_REQUEST Request;
     PVOID ClientContext;
     NTSTATUS Status;
-    ULONG Protocol;
+    USHORT Protocol;
     BOOLEAN Shared;
 
     TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
