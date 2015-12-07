@@ -102,6 +102,7 @@
 #define IDS_TIMEOUT                3307
 #define IDS_REASON_UNKNOWN         3308
 #define IDS_ADMINISTRATOR_NAME     3309
+#define IDS_MACHINE_OWNER_NAME     3310
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451

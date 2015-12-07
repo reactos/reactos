@@ -5,6 +5,7 @@
  * PURPOSE:         GUI controls
  * PROGRAMMERS:     Eric Kohl
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
+ *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -454,11 +455,20 @@ OwnerPageDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            /* set a localized ('Owner') placeholder string as default */
+            if (LoadStringW(hDllInstance, IDS_MACHINE_OWNER_NAME, OwnerName, _countof(OwnerName)))
+            {
+                SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, WM_SETTEXT, 0, (LPARAM)OwnerName);
+            }
+
             SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
             SendDlgItemMessage(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
 
             /* Set focus to owner name */
             SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
+
+            /* Select the default text to quickly overwrite it by typing */
+            SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, EM_SETSEL, 0, -1);
         }
         break;
 
