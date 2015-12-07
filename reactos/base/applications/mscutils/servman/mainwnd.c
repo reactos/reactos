@@ -558,8 +558,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_VIEW_LARGE:
-            SetListViewStyle(Info->hListView,
-                             LVS_ICON);
+            SetListViewStyle(Info->hListView, LVS_ICON);
+            ListView_Arrange(Info->hListView, LVA_DEFAULT);
+
             CheckMenuRadioItem(GetMenu(Info->hMainWnd),
                                ID_VIEW_LARGE,
                                ID_VIEW_DETAILS,
@@ -568,8 +569,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_VIEW_SMALL:
-            SetListViewStyle(Info->hListView,
-                             LVS_SMALLICON);
+            SetListViewStyle(Info->hListView, LVS_SMALLICON);
+            ListView_Arrange(Info->hListView, LVA_DEFAULT);
+
             CheckMenuRadioItem(GetMenu(Info->hMainWnd),
                                ID_VIEW_LARGE,
                                ID_VIEW_DETAILS,
