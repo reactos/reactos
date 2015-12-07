@@ -1690,6 +1690,11 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
     if (Interface) {
         PVOID OutputBuffer;
 
+        if (!AddrIsUnspecified(&Local) && IPs[0] != IPs[1]) {
+            Status = STATUS_UNSUCCESSFUL;
+            goto Exit;
+        }
+
         if (Interface->AddressLength > IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
             Status = STATUS_INVALID_BUFFER_SIZE;
             goto Exit;
