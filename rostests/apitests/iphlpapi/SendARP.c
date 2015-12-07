@@ -83,6 +83,8 @@ static VOID TestUM(IPAddr * Source)
         SockAddr = (PSOCKADDR_IN)Current->FirstUnicastAddress->Address.lpSockaddr;
         IpAddr = SockAddr->sin_addr.S_un.S_addr;
 
+        trace("IP address found: %lu.%lu.%lu.%lu\n", IpAddr & 0xFF, (IpAddr >> 8) & 0xFF, (IpAddr >> 16) & 0xFF, (IpAddr >> 24) & 0xFF);
+
         Size = 4;
         Err = SendARP(IpAddr, 0, Hw, &Size);
         ok(Err == ERROR_NO_SYSTEM_RESOURCES, "Expected error: ERROR_NO_SYSTEM_RESOURCES. Got: %lx\n", Err);
