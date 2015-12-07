@@ -202,9 +202,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Specificați proprietăți avansate pentru această scurtătură.", -1, 5, 30, 210, 10
-    CHECKBOX "Execută sub o identitate explicită", 14000, 25, 50, 150, 10
+    CHECKBOX "Execută sub o i&dentitate explicită", 14000, 25, 50, 150, 10
     LTEXT "Această opțiune vă permite execuția scurtăturii sub autoritatea unui alt utilizator sau continuarea folosirii scurtăturii în mod securizat, protejând astfel calculatorul de activități neautorizate.", -1, 50, 60, 175, 40
-    CHECKBOX "Execută în spațiu de memorie separat", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Execută în sp&ațiu de memorie separat", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "Con&firmă", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "A&nulează", 2, 120, 124, 50, 15, WS_VISIBLE
 END

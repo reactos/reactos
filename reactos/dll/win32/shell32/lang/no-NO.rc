@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Velg avansert egenskaper som du vil for denne snarveien.", -1, 5, 30, 210, 10
     CHECKBOX "Kjør som administrator", 14000, 25, 50, 150, 10
     LTEXT "Med dette valget kan du kjøre denne snarveien med som en administrator, mens du beskytter din datamaskin og data fra uautorisert program aktivitet.", -1, 50, 60, 175, 40
-    CHECKBOX "Kjør i seperat minneplass", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Kjør i seperat minneplass", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 END

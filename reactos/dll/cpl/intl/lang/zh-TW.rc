@@ -53,7 +53,7 @@ BEGIN
     LTEXT "選擇一種語言，使之與您想使用的非 Unicode 程式的語言版本相匹配(&S):", -1, 14, 55, 223, 18
     GROUPBOX "內碼表轉換表(&C)", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "默認使用者帳戶設定", -1, 5, 193, 234, 30
+    GROUPBOX "默認使用者帳戶設定", -1, 5, 193, 234, 32
     CHECKBOX "將所有設定應用於當前使用者帳戶和默認使用者配置檔案(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 

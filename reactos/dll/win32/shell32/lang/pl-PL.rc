@@ -206,7 +206,7 @@ BEGIN
     LTEXT "Wybierz właściwości zaawansowane dla tego skrótu.", -1, 5, 30, 210, 10
     CHECKBOX "Uruchom z innym Użytkownikiem", 14000, 25, 50, 150, 10
     LTEXT "Ta opcja pozwoli ci na uruchomienie skrótu jako inny użytkownik, do ochrony twoich danych przed niepowołanym dostępem.", -1, 50, 60, 175, 40
-    CHECKBOX "Uruchom w osobnym przedziale pamięci", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Uruchom w osobnym przedziale pamięci", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Przerwij", 2, 120, 124, 50, 15, WS_VISIBLE
 END

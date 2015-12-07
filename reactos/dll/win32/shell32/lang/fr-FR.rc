@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Choisissez la propriété étendue que vous voulez pour ce raccourci.", -1, 5, 30, 210, 10
     CHECKBOX "Exécuter avec des droits différents", 14000, 25, 50, 150, 10
     LTEXT "Cette option peut vous permettre d'utiliser ce raccourci en tant qu'autre utilisateur ou de continuer vous-même en protégeant votre ordinateur et vos données des activés de programme non autorisées.", -1, 50, 60, 175, 40
-    CHECKBOX "Lancer dans un espace mémoire séparé", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Lancer dans un espace mémoire séparé", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Annuler", 2, 120, 124, 50, 15, WS_VISIBLE
 END

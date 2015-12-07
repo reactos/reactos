@@ -208,7 +208,7 @@ BEGIN
     LTEXT "Zvolte rozšířené vlastnosti, které požadujtete pro tohoto zástupce.", -1, 5, 30, 210, 10
     CHECKBOX "Spustit s jinými pověřeními", 14000, 25, 50, 150, 10
     LTEXT "Tato možnost umožní spustit tohoto zástupce jako jiný uživatel nebo při spuštění se současným uživatelem chránit počítač před nepovolenou aktivitou programu.", -1, 50, 60, 175, 40
-    CHECKBOX "Spustit v odděleném paměťovém prostoru", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Spustit v odděleném paměťovém prostoru", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Storno", 2, 120, 124, 50, 15, WS_VISIBLE
 END

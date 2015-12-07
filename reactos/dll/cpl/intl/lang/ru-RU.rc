@@ -51,8 +51,8 @@ BEGIN
     LTEXT "Выберите язык, соответствующий языку используемых программ, которые не поддерживают Юникод:", -1, 14, 55, 223, 18
     GROUPBOX "Кодовые страницы таблиц преобразования", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 30
-    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 32
+    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

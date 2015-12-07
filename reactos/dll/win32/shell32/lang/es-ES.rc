@@ -204,7 +204,7 @@ BEGIN
     LTEXT "Elija las propiedades avanzadas que desee para este acceso directo.", -1, 5, 25, 210, 14
     CHECKBOX "Ejecutar con credenciales diferentes", 14000, 25, 50, 150, 10
     LTEXT "Esta opción puede permitirle ejecutar este acceso directo como otro usuario, o continuar como usted mismo mientras protege su equipo y datos de una actividad de programa no autorizada.", -1, 50, 60, 175, 40
-    CHECKBOX "Ejecutar en otro espacio de memoria", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Ejecutar en otro espacio de memoria", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "Aceptar", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Cancelar", 2, 120, 124, 50, 15, WS_VISIBLE
 END

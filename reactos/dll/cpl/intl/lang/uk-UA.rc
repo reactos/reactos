@@ -59,8 +59,8 @@ BEGIN
     LTEXT "Виберіть мову, яка відповідає мовній версії бажаних програм без підтримки Юнікоду.", -1, 14, 55, 223, 18
     GROUPBOX "Таблиці перетворення кодових сторінок", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Параметри стандартного облікового запису", -1, 5, 193, 234, 30
-    CHECKBOX "Застосувати всі параметри до поточного облікового запису та до стандартного профілю користувача", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Параметри стандартного облікового запису", -1, 5, 193, 234, 32
+    CHECKBOX "Застосувати всі параметри до поточного облікового запису та до стандартного профілю користувача", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
