@@ -80,6 +80,7 @@ static VOID TestUM(IPAddr * Source)
         if (!Current->FirstUnicastAddress)
             continue;
 
+        ok(Current->FirstUnicastAddress->Address.iSockaddrLength == sizeof(SOCKADDR_IN), "Unexpected length: %u\n", Current->FirstUnicastAddress->Address.iSockaddrLength);
         SockAddr = (PSOCKADDR_IN)Current->FirstUnicastAddress->Address.lpSockaddr;
         IpAddr = SockAddr->sin_addr.S_un.S_addr;
 
