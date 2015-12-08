@@ -2651,6 +2651,23 @@ static int gsm_error_ctr;
     ok( !( exp1 != act && exp2 != act && exp3 != act),"GetSystemMetrics(%s): expected %d or %d or %d actual %d\n", #i, exp1, exp2, exp3, act);\
 }
 
+static INT CALLBACK enum_all_fonts_proc(const LOGFONTA *elf, const TEXTMETRICA *ntm, DWORD type, LPARAM lparam)
+{
+    return lstrcmpiA(elf->lfFaceName, (const char *)lparam);
+}
+
+static BOOL is_font_enumerated(const char *name)
+{
+    HDC hdc = CreateCompatibleDC(0);
+    BOOL ret = FALSE;
+
+    if (!EnumFontFamiliesA(hdc, NULL, enum_all_fonts_proc, (LPARAM)name))
+        ret = TRUE;
+
+    DeleteDC(hdc);
+    return ret;
+}
+
 static void test_GetSystemMetrics( void)
 {
     TEXTMETRICA tmMenuFont;
@@ -2692,6 +2709,13 @@ static void test_GetSystemMetrics( void)
         win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
         return;
     }
+
+    ok(is_font_enumerated(ncm.lfCaptionFont.lfFaceName), "font %s should be enumerated\n", ncm.lfCaptionFont.lfFaceName);
+    ok(is_font_enumerated(ncm.lfSmCaptionFont.lfFaceName), "font %s should be enumerated\n", ncm.lfSmCaptionFont.lfFaceName);
+    ok(is_font_enumerated(ncm.lfMenuFont.lfFaceName), "font %s should be enumerated\n", ncm.lfMenuFont.lfFaceName);
+    ok(is_font_enumerated(ncm.lfStatusFont.lfFaceName), "font %s should be enumerated\n", ncm.lfStatusFont.lfFaceName);
+    ok(is_font_enumerated(ncm.lfMessageFont.lfFaceName), "font %s should be enumerated\n", ncm.lfMessageFont.lfFaceName);
+
     /* CaptionWidth from the registry may have different value of iCaptionWidth
      * from the non client metrics (observed on WinXP) */
     CaptionWidthfromreg = metricfromreg(

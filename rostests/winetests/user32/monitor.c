@@ -34,6 +34,7 @@ static BOOL (WINAPI *pGetMonitorInfoW)(HMONITOR,LPMONITORINFO);
 static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
 static HMONITOR (WINAPI *pMonitorFromRect)(LPCRECT,DWORD);
 static HMONITOR (WINAPI *pMonitorFromWindow)(HWND,DWORD);
+static LONG (WINAPI *pGetDisplayConfigBufferSizes)(UINT32,UINT32*,UINT32*);
 
 static void init_function_pointers(void)
 {
@@ -48,6 +49,7 @@ static void init_function_pointers(void)
     GET_PROC(ChangeDisplaySettingsExW)
     GET_PROC(EnumDisplayDevicesA)
     GET_PROC(EnumDisplayMonitors)
+    GET_PROC(GetDisplayConfigBufferSizes)
     GET_PROC(GetMonitorInfoA)
     GET_PROC(GetMonitorInfoW)
     GET_PROC(MonitorFromPoint)
@@ -543,6 +545,58 @@ static void test_work_area(void)
     DestroyWindow(hwnd);
 }
 
+static void test_display_config(void)
+{
+    UINT32 paths, modes;
+    LONG ret;
+
+    if (!pGetDisplayConfigBufferSizes)
+    {
+        win_skip("GetDisplayConfigBufferSizes is not supported\n");
+        return;
+    }
+
+    ret = pGetDisplayConfigBufferSizes(QDC_ALL_PATHS, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+
+    paths = 100;
+    ret = pGetDisplayConfigBufferSizes(QDC_ALL_PATHS, &paths, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+    ok(paths == 100, "got %u\n", paths);
+
+    modes = 100;
+    ret = pGetDisplayConfigBufferSizes(QDC_ALL_PATHS, NULL, &modes);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+    ok(modes == 100, "got %u\n", modes);
+
+    paths = modes = 0;
+    ret = pGetDisplayConfigBufferSizes(QDC_ALL_PATHS, &paths, &modes);
+    if (!ret)
+        ok(paths > 0 && modes > 0, "got %u, %u\n", paths, modes);
+    else
+        ok(ret == ERROR_NOT_SUPPORTED, "got %d\n", ret);
+
+    /* Invalid flags, non-zero invalid flags validation is version (or driver?) dependent,
+       it's unreliable to use in tests. */
+    ret = pGetDisplayConfigBufferSizes(0, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+
+    paths = 100;
+    ret = pGetDisplayConfigBufferSizes(0, &paths, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+    ok(paths == 100, "got %u\n", paths);
+
+    modes = 100;
+    ret = pGetDisplayConfigBufferSizes(0, NULL, &modes);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+    ok(modes == 100, "got %u\n", modes);
+
+    paths = modes = 100;
+    ret = pGetDisplayConfigBufferSizes(0, &paths, &modes);
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_NOT_SUPPORTED, "got %d\n", ret);
+    ok(modes == 0 && paths == 0, "got %u, %u\n", modes, paths);
+}
+
 START_TEST(monitor)
 {
     init_function_pointers();
@@ -550,4 +604,5 @@ START_TEST(monitor)
     test_ChangeDisplaySettingsEx();
     test_monitors();
     test_work_area();
+    test_display_config();
 }

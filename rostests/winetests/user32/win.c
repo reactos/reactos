@@ -57,6 +57,7 @@ static int  (WINAPI *pGetWindowRgnBox)(HWND,LPRECT);
 static BOOL (WINAPI *pGetGUIThreadInfo)(DWORD, GUITHREADINFO*);
 static BOOL (WINAPI *pGetProcessDefaultLayout)( DWORD *layout );
 static BOOL (WINAPI *pSetProcessDefaultLayout)( DWORD layout );
+static BOOL (WINAPI *pFlashWindow)( HWND hwnd, BOOL bInvert );
 static BOOL (WINAPI *pFlashWindowEx)( PFLASHWINFO pfwi );
 static DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
 static DWORD (WINAPI *pGetLayout)(HDC hdc);
@@ -68,6 +69,7 @@ static DWORD num_settext_msgs;
 static HWND hwndMessage;
 static HWND hwndMain, hwndMain2;
 static HHOOK hhook;
+static BOOL app_activated, app_deactivated;
 
 static const char* szAWRClass = "Winsize";
 static HMENU hmenu;
@@ -717,6 +719,13 @@ static void test_enum_thread_windows(void)
     CloseHandle( handle );
 }
 
+static struct wm_gettext_override_data
+{
+    BOOL   enabled; /* when 1 bypasses default procedure */
+    char  *buff;    /* expected text buffer pointer */
+    WCHAR *buffW;   /* same, for W test */
+} g_wm_gettext_override;
+
 static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -798,9 +807,39 @@ static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
             break;
         case WM_GETTEXT:
             num_gettext_msgs++;
+            if (g_wm_gettext_override.enabled)
+            {
+                char *text = (char*)lparam;
+                ok(g_wm_gettext_override.buff == text, "expected buffer %p, got %p\n", g_wm_gettext_override.buff, text);
+                ok(*text == 0, "expected empty string buffer %x\n", *text);
+                return 0;
+            }
             break;
         case WM_SETTEXT:
             num_settext_msgs++;
+            break;
+        case WM_ACTIVATEAPP:
+            if (wparam) app_activated = TRUE;
+            else app_deactivated = TRUE;
+            break;
+    }
+
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
+}
+
+static LRESULT WINAPI main_window_procW(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+        case WM_GETTEXT:
+            num_gettext_msgs++;
+            if (g_wm_gettext_override.enabled)
+            {
+                WCHAR *text = (WCHAR*)lparam;
+                ok(g_wm_gettext_override.buffW == text, "expected buffer %p, got %p\n", g_wm_gettext_override.buffW, text);
+                ok(*text == 0, "expected empty string buffer %x\n", *text);
+                return 0;
+            }
             break;
     }
 
@@ -832,8 +871,11 @@ static LRESULT WINAPI tool_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
     return DefWindowProcA(hwnd, msg, wparam, lparam);
 }
 
+static const WCHAR mainclassW[] = {'M','a','i','n','W','i','n','d','o','w','C','l','a','s','s','W',0};
+
 static BOOL RegisterWindowClasses(void)
 {
+    WNDCLASSW clsW;
     WNDCLASSA cls;
 
     cls.style = CS_DBLCLKS;
@@ -848,6 +890,19 @@ static BOOL RegisterWindowClasses(void)
     cls.lpszClassName = "MainWindowClass";
 
     if(!RegisterClassA(&cls)) return FALSE;
+
+    clsW.style = CS_DBLCLKS;
+    clsW.lpfnWndProc = main_window_procW;
+    clsW.cbClsExtra = 0;
+    clsW.cbWndExtra = 0;
+    clsW.hInstance = GetModuleHandleA(0);
+    clsW.hIcon = 0;
+    clsW.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
+    clsW.hbrBackground = GetStockObject(WHITE_BRUSH);
+    clsW.lpszMenuName = NULL;
+    clsW.lpszClassName = mainclassW;
+
+    if(!RegisterClassW(&clsW)) return FALSE;
 
     cls.style = 0;
     cls.lpfnWndProc = tool_window_procA;
@@ -1240,7 +1295,7 @@ static char mdi_lParam_test_message[] = "just a test string";
 static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
 {
     MDICREATESTRUCTA mdi_cs;
-    HWND mdi_child;
+    HWND mdi_child, hwnd, exp_hwnd;
     INT_PTR id;
     static const WCHAR classW[] = {'M','D','I','_','c','h','i','l','d','_','C','l','a','s','s','_','1',0};
     static const WCHAR titleW[] = {'M','D','I',' ','c','h','i','l','d',0};
@@ -1259,6 +1314,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+    ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1267,6 +1325,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1281,6 +1342,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
         ok(mdi_child != 0, "MDI child creation failed\n");
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+        ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1303,6 +1367,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     {
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+        exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+        ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1316,6 +1383,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+    ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1328,6 +1398,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1346,6 +1419,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
         ok(mdi_child != 0, "MDI child creation failed\n");
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+        ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1369,6 +1445,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     {
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+        exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+        ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1382,6 +1461,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+    ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1394,6 +1476,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == first_id, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
     ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
 
@@ -1412,6 +1497,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
         ok(mdi_child != 0, "MDI child creation failed\n");
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+todo_wine
+        ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1435,6 +1523,9 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     {
         id = GetWindowLongPtrA(mdi_child, GWLP_ID);
         ok(id == first_id, "wrong child id %ld\n", id);
+        hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+        exp_hwnd = (GetWindowLongW(mdi_child, GWL_STYLE) & WS_VISIBLE) ? mdi_child : 0;
+        ok(hwnd == exp_hwnd, "WM_MDIGETACTIVE should return %p, got %p\n", exp_hwnd, hwnd);
         SendMessageA(mdi_client, WM_MDIDESTROY, (WPARAM)mdi_child, 0);
         ok(!IsWindow(mdi_child), "WM_MDIDESTROY failed\n");
     }
@@ -1460,6 +1551,8 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == 0, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     DestroyWindow(mdi_child);
 
     mdi_child = CreateWindowExA(0, "MDI_child_Class_2", "MDI child",
@@ -1471,6 +1564,8 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == 0, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     DestroyWindow(mdi_child);
 
     /* maximized child */
@@ -1483,6 +1578,8 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == 0, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     DestroyWindow(mdi_child);
 
     trace("Creating maximized child with a caption\n");
@@ -1495,6 +1592,8 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == 0, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     DestroyWindow(mdi_child);
 
     trace("Creating maximized child with a caption and a thick frame\n");
@@ -1507,6 +1606,8 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     ok(mdi_child != 0, "MDI child creation failed\n");
     id = GetWindowLongPtrA(mdi_child, GWLP_ID);
     ok(id == 0, "wrong child id %ld\n", id);
+    hwnd = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    ok(!hwnd, "WM_MDIGETACTIVE should return 0, got %p\n", hwnd);
     DestroyWindow(mdi_child);
 }
 
@@ -1819,51 +1920,7 @@ static LRESULT WINAPI mdi_main_wnd_procA(HWND hwnd, UINT msg, WPARAM wparam, LPA
     switch (msg)
     {
         case WM_CREATE:
-        {
-            CLIENTCREATESTRUCT client_cs;
-            RECT rc;
-
-            GetClientRect(hwnd, &rc);
-
-            client_cs.hWindowMenu = 0;
-            client_cs.idFirstChild = 1;
-
-            /* MDIClient without MDIS_ALLCHILDSTYLES */
-            mdi_client = CreateWindowExA(0, "mdiclient",
-                                         NULL,
-                                         WS_CHILD /*| WS_VISIBLE*/,
-                                          /* tests depend on a not zero MDIClient size */
-                                         0, 0, rc.right, rc.bottom,
-                                         hwnd, 0, GetModuleHandleA(NULL),
-                                         &client_cs);
-            assert(mdi_client);
-            test_MDI_create(hwnd, mdi_client, client_cs.idFirstChild);
-            DestroyWindow(mdi_client);
-
-            /* MDIClient with MDIS_ALLCHILDSTYLES */
-            mdi_client = CreateWindowExA(0, "mdiclient",
-                                         NULL,
-                                         WS_CHILD | MDIS_ALLCHILDSTYLES /*| WS_VISIBLE*/,
-                                          /* tests depend on a not zero MDIClient size */
-                                         0, 0, rc.right, rc.bottom,
-                                         hwnd, 0, GetModuleHandleA(NULL),
-                                         &client_cs);
-            assert(mdi_client);
-            test_MDI_create(hwnd, mdi_client, client_cs.idFirstChild);
-            DestroyWindow(mdi_client);
-
-            /* Test child window stack management */
-            mdi_client = CreateWindowExA(0, "mdiclient",
-                                         NULL,
-                                         WS_CHILD,
-                                         0, 0, rc.right, rc.bottom,
-                                         hwnd, 0, GetModuleHandleA(NULL),
-                                         &client_cs);
-            assert(mdi_client);
-            test_MDI_child_stack(mdi_client);
-            DestroyWindow(mdi_client);
-            break;
-        }
+            return 1;
 
         case WM_WINDOWPOSCHANGED:
         {
@@ -1943,7 +2000,9 @@ static BOOL mdi_RegisterWindowClasses(void)
 
 static void test_mdi(void)
 {
-    HWND mdi_hwndMain;
+    HWND mdi_hwndMain, mdi_client;
+    CLIENTCREATESTRUCT client_cs;
+    RECT rc;
     /*MSG msg;*/
 
     if (!mdi_RegisterWindowClasses()) assert(0);
@@ -1955,6 +2014,46 @@ static void test_mdi(void)
                                    GetDesktopWindow(), 0,
                                    GetModuleHandleA(NULL), NULL);
     assert(mdi_hwndMain);
+
+    GetClientRect(mdi_hwndMain, &rc);
+
+    client_cs.hWindowMenu = 0;
+    client_cs.idFirstChild = 1;
+
+    /* MDIClient without MDIS_ALLCHILDSTYLES */
+    mdi_client = CreateWindowExA(0, "mdiclient",
+                                 NULL,
+                                 WS_CHILD /*| WS_VISIBLE*/,
+                                  /* tests depend on a not zero MDIClient size */
+                                 0, 0, rc.right, rc.bottom,
+                                 mdi_hwndMain, 0, GetModuleHandleA(NULL),
+                                 &client_cs);
+    assert(mdi_client);
+    test_MDI_create(mdi_hwndMain, mdi_client, client_cs.idFirstChild);
+    DestroyWindow(mdi_client);
+
+    /* MDIClient with MDIS_ALLCHILDSTYLES */
+    mdi_client = CreateWindowExA(0, "mdiclient",
+                                 NULL,
+                                 WS_CHILD | MDIS_ALLCHILDSTYLES /*| WS_VISIBLE*/,
+                                  /* tests depend on a not zero MDIClient size */
+                                 0, 0, rc.right, rc.bottom,
+                                 mdi_hwndMain, 0, GetModuleHandleA(NULL),
+                                 &client_cs);
+    assert(mdi_client);
+    test_MDI_create(mdi_hwndMain, mdi_client, client_cs.idFirstChild);
+    DestroyWindow(mdi_client);
+
+    /* Test child window stack management */
+    mdi_client = CreateWindowExA(0, "mdiclient",
+                                 NULL,
+                                 WS_CHILD,
+                                 0, 0, rc.right, rc.bottom,
+                                 mdi_hwndMain, 0, GetModuleHandleA(NULL),
+                                 &client_cs);
+    assert(mdi_client);
+    test_MDI_child_stack(mdi_client);
+    DestroyWindow(mdi_client);
 /*
     while(GetMessage(&msg, 0, 0, 0))
     {
@@ -5726,11 +5825,12 @@ static DWORD CALLBACK settext_msg_thread( LPVOID arg )
 static void test_gettext(void)
 {
     DWORD tid, num_msgs;
+    WCHAR bufW[32];
     HANDLE thread;
     BOOL success;
     char buf[32];
     INT buf_len;
-    HWND hwnd;
+    HWND hwnd, hwnd2;
     LRESULT r;
     MSG msg;
 
@@ -5744,6 +5844,68 @@ static void test_gettext(void)
     ok( buf_len != 0, "expected a nonempty window text\n" );
     ok( !strcmp(buf, "caption"), "got wrong window text '%s'\n", buf );
     ok( num_gettext_msgs == 1, "got %u WM_GETTEXT messages\n", num_gettext_msgs );
+
+    /* other process window */
+    strcpy( buf, "a" );
+    buf_len = GetWindowTextA( GetDesktopWindow(), buf, sizeof(buf) );
+    ok( buf_len == 0, "expected a nonempty window text\n" );
+    ok( *buf == 0, "got wrong window text '%s'\n", buf );
+
+    strcpy( buf, "blah" );
+    buf_len = GetWindowTextA( GetDesktopWindow(), buf, 0 );
+    ok( buf_len == 0, "expected a nonempty window text\n" );
+    ok( !strcmp(buf, "blah"), "got wrong window text '%s'\n", buf );
+
+    bufW[0] = 0xcc;
+    buf_len = GetWindowTextW( GetDesktopWindow(), bufW, 0 );
+    ok( buf_len == 0, "expected a nonempty window text\n" );
+    ok( bufW[0] == 0xcc, "got %x\n", bufW[0] );
+
+    g_wm_gettext_override.enabled = TRUE;
+
+    num_gettext_msgs = 0;
+    memset( buf, 0xcc, sizeof(buf) );
+    g_wm_gettext_override.buff = buf;
+    buf_len = GetWindowTextA( hwnd, buf, sizeof(buf) );
+    ok( buf_len == 0, "got %d\n", buf_len );
+    ok( *buf == 0, "got %x\n", *buf );
+    ok( num_gettext_msgs == 1, "got %u WM_GETTEXT messages\n", num_gettext_msgs );
+
+    num_gettext_msgs = 0;
+    strcpy( buf, "blah" );
+    g_wm_gettext_override.buff = buf;
+    buf_len = GetWindowTextA( hwnd, buf, 0 );
+    ok( buf_len == 0, "got %d\n", buf_len );
+    ok( !strcmp(buf, "blah"), "got %s\n", buf );
+    ok( num_gettext_msgs == 0, "got %u WM_GETTEXT messages\n", num_gettext_msgs );
+
+    g_wm_gettext_override.enabled = FALSE;
+
+    /* same for W window */
+    hwnd2 = CreateWindowExW( 0, mainclassW, NULL, WS_POPUP, 0, 0, 0, 0, 0, 0, 0, NULL );
+    ok( hwnd2 != 0, "CreateWindowExA error %d\n", GetLastError() );
+
+    g_wm_gettext_override.enabled = TRUE;
+
+    num_gettext_msgs = 0;
+    memset( bufW, 0xcc, sizeof(bufW) );
+    g_wm_gettext_override.buffW = bufW;
+    buf_len = GetWindowTextW( hwnd2, bufW, sizeof(bufW)/sizeof(WCHAR) );
+    ok( buf_len == 0, "got %d\n", buf_len );
+    ok( *bufW == 0, "got %x\n", *bufW );
+    ok( num_gettext_msgs == 1, "got %u WM_GETTEXT messages\n", num_gettext_msgs );
+
+    num_gettext_msgs = 0;
+    memset( bufW, 0xcc, sizeof(bufW) );
+    g_wm_gettext_override.buffW = bufW;
+    buf_len = GetWindowTextW( hwnd2, bufW, 0 );
+    ok( buf_len == 0, "got %d\n", buf_len );
+    ok( *bufW == 0xcccc, "got %x\n", *bufW );
+    ok( num_gettext_msgs == 0, "got %u WM_GETTEXT messages\n", num_gettext_msgs );
+
+    g_wm_gettext_override.enabled = FALSE;
+
+    DestroyWindow( hwnd2 );
 
     /* test WM_GETTEXT */
     num_gettext_msgs = 0;
@@ -6324,10 +6486,12 @@ static void test_layered_window(void)
         ret = pUpdateLayeredWindowIndirect( hwnd, &info );
         ok( ret, "UpdateLayeredWindowIndirect should succeed on layered window\n" );
         sz.cx--;
+        SetLastError(0);
         ret = pUpdateLayeredWindowIndirect( hwnd, &info );
         ok( !ret, "UpdateLayeredWindowIndirect should fail\n" );
-        ok( GetLastError() == ERROR_INCORRECT_SIZE || broken(GetLastError() == ERROR_MR_MID_NOT_FOUND),
-            "wrong error %u\n", GetLastError() );
+        /* particular error code differs from version to version, could be ERROR_INCORRECT_SIZE,
+           ERROR_MR_MID_NOT_FOUND or ERROR_GEN_FAILURE (Win8/Win10) */
+        ok( GetLastError() != 0, "wrong error %u\n", GetLastError() );
         info.dwFlags  = ULW_OPAQUE;
         ret = pUpdateLayeredWindowIndirect( hwnd, &info );
         ok( ret, "UpdateLayeredWindowIndirect should succeed on layered window\n" );
@@ -6954,6 +7118,33 @@ static void test_rtl_layout(void)
     DestroyWindow( parent );
 }
 
+static void test_FlashWindow(void)
+{
+    HWND hwnd;
+    BOOL ret;
+    if (!pFlashWindow)
+    {
+        win_skip( "FlashWindow not supported\n" );
+        return;
+    }
+
+    hwnd = CreateWindowExA( 0, "MainWindowClass", "FlashWindow", WS_POPUP,
+                            0, 0, 0, 0, 0, 0, 0, NULL );
+    ok( hwnd != 0, "CreateWindowExA error %d\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pFlashWindow( NULL, TRUE );
+    ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+        "FlashWindow returned with %d\n", GetLastError() );
+
+    DestroyWindow( hwnd );
+
+    SetLastError( 0xdeadbeef );
+    ret = pFlashWindow( hwnd, TRUE );
+    ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER,
+        "FlashWindow returned with %d\n", GetLastError() );
+}
+
 static void test_FlashWindowEx(void)
 {
     HWND hwnd;
@@ -6977,13 +7168,13 @@ static void test_FlashWindowEx(void)
     finfo.hwnd = NULL;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-                 "FlashWindowEx returned with %d\n", GetLastError());
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
+       "FlashWindowEx returned with %d\n", GetLastError());
 
     finfo.hwnd = hwnd;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(NULL);
-    todo_wine ok(!ret && GetLastError() == ERROR_NOACCESS,
+    ok(!ret && GetLastError() == ERROR_NOACCESS,
        "FlashWindowEx returned with %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -6993,13 +7184,13 @@ static void test_FlashWindowEx(void)
     finfo.cbSize = sizeof(FLASHWINFO) - 1;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret && GetLastError()==ERROR_INVALID_PARAMETER,
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
        "FlashWindowEx succeeded\n");
 
     finfo.cbSize = sizeof(FLASHWINFO) + 1;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret && GetLastError()==ERROR_INVALID_PARAMETER,
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
        "FlashWindowEx succeeded\n");
     finfo.cbSize = sizeof(FLASHWINFO);
 
@@ -7007,7 +7198,7 @@ static void test_FlashWindowEx(void)
 
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
        "FlashWindowEx returned with %d\n", GetLastError());
 
     ok(finfo.cbSize == sizeof(FLASHWINFO), "FlashWindowEx modified cdSize to %x\n", finfo.cbSize);
@@ -7023,7 +7214,7 @@ static void test_FlashWindowEx(void)
 
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(NULL);
-    todo_wine ok(!ret && GetLastError() == ERROR_NOACCESS,
+    ok(!ret && GetLastError() == ERROR_NOACCESS,
        "FlashWindowEx returned with %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -7038,7 +7229,6 @@ static void test_FlashWindowEx(void)
     finfo.dwFlags = FLASHW_STOP;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-todo_wine
     ok(prev != ret, "previous window state should be different\n");
 
     DestroyWindow( hwnd );
@@ -8044,6 +8234,224 @@ static void test_GetMessagePos(void)
     DestroyWindow(button);
 }
 
+#define SET_FOREGROUND_STEAL_1          0x01
+#define SET_FOREGROUND_SET_1            0x02
+#define SET_FOREGROUND_STEAL_2          0x04
+#define SET_FOREGROUND_SET_2            0x08
+#define SET_FOREGROUND_INJECT           0x10
+
+struct set_foreground_thread_params
+{
+    UINT msg_quit, msg_command;
+    HWND window1, window2, thread_window;
+    HANDLE command_executed;
+};
+
+static DWORD WINAPI set_foreground_thread(void *params)
+{
+    struct set_foreground_thread_params *p = params;
+    MSG msg;
+
+    p->thread_window = CreateWindowExA(0, "static", "thread window", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            0, 0, 10, 10, 0, 0, 0, NULL);
+    SetEvent(p->command_executed);
+
+    while(GetMessageA(&msg, 0, 0, 0))
+    {
+        if (msg.message == p->msg_quit)
+            break;
+
+        if (msg.message == p->msg_command)
+        {
+            if (msg.wParam & SET_FOREGROUND_STEAL_1)
+            {
+                SetForegroundWindow(p->thread_window);
+                check_wnd_state(p->thread_window, p->thread_window, p->thread_window, 0);
+            }
+            if (msg.wParam & SET_FOREGROUND_INJECT)
+            {
+                SendNotifyMessageA(p->window1, WM_ACTIVATEAPP, 0, 0);
+            }
+            if (msg.wParam & SET_FOREGROUND_SET_1)
+            {
+                SetForegroundWindow(p->window1);
+                check_wnd_state(0, p->window1, 0, 0);
+            }
+            if (msg.wParam & SET_FOREGROUND_STEAL_2)
+            {
+                SetForegroundWindow(p->thread_window);
+                check_wnd_state(p->thread_window, p->thread_window, p->thread_window, 0);
+            }
+            if (msg.wParam & SET_FOREGROUND_SET_2)
+            {
+                SetForegroundWindow(p->window2);
+                check_wnd_state(0, p->window2, 0, 0);
+            }
+
+            SetEvent(p->command_executed);
+            continue;
+        }
+
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    DestroyWindow(p->thread_window);
+    return 0;
+}
+
+static void test_activateapp(HWND window1)
+{
+    HWND window2, test_window;
+    HANDLE thread;
+    struct set_foreground_thread_params thread_params;
+    DWORD tid;
+    MSG msg;
+
+    window2 = CreateWindowExA(0, "static", "window 2", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            300, 0, 10, 10, 0, 0, 0, NULL);
+    thread_params.msg_quit = WM_USER;
+    thread_params.msg_command = WM_USER + 1;
+    thread_params.window1 = window1;
+    thread_params.window2 = window2;
+    thread_params.command_executed = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    thread = CreateThread(NULL, 0, set_foreground_thread, &thread_params, 0, &tid);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+
+    SetForegroundWindow(window1);
+    check_wnd_state(window1, window1, window1, 0);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+
+    /* Steal foreground: WM_ACTIVATEAPP(0) is delivered. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_STEAL_1, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    test_window = GetForegroundWindow();
+    ok(test_window == thread_params.thread_window, "Expected foreground window %p, got %p\n",
+            thread_params.thread_window, test_window);
+    /* Active and Focus window are sometimes 0 on KDE. Ignore them.
+     * check_wnd_state(window1, thread_params.thread_window, window1, 0); */
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    check_wnd_state(0, thread_params.thread_window, 0, 0);
+    test_window = GetForegroundWindow();
+    ok(test_window == thread_params.thread_window, "Expected foreground window %p, got %p\n",
+            thread_params.thread_window, test_window);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    /* This message is reliable on Windows and inside a virtual desktop.
+     * It is unreliable on KDE (50/50) and never arrives on FVWM.
+     * ok(app_deactivated, "Expected WM_ACTIVATEAPP(0), did not receive it.\n"); */
+
+    /* Set foreground: WM_ACTIVATEAPP (1) is delivered. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_SET_1, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    check_wnd_state(0, 0, 0, 0);
+    test_window = GetForegroundWindow();
+    ok(!test_window, "Expected foreground window 0, got %p\n", test_window);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(!= 0), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    check_wnd_state(window1, window1, window1, 0);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    ok(app_activated, "Expected WM_ACTIVATEAPP(1), did not receive it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+
+    /* Steal foreground then set it back: No messages are delivered. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_STEAL_1 | SET_FOREGROUND_SET_1, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+
+    /* This is not implemented with a plain WM_ACTIVATEAPP filter. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_STEAL_1
+            | SET_FOREGROUND_INJECT | SET_FOREGROUND_SET_1, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(app_deactivated, "Expected WM_ACTIVATEAPP(0), did not receive it.\n");
+
+    SetForegroundWindow(thread_params.thread_window);
+
+    /* Set foreground then remove: Both messages are delivered. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_SET_1 | SET_FOREGROUND_STEAL_2, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    test_window = GetForegroundWindow();
+    ok(test_window == thread_params.thread_window, "Expected foreground window %p, got %p\n",
+            thread_params.thread_window, test_window);
+    check_wnd_state(0, thread_params.thread_window, 0, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    test_window = GetForegroundWindow();
+    ok(test_window == thread_params.thread_window, "Expected foreground window %p, got %p\n",
+            thread_params.thread_window, test_window);
+    /* Active and focus are window1 on wine because the internal WM_WINE_SETACTIVEWINDOW(0)
+     * message is never generated. GetCapture() returns 0 though, so we'd get a test success
+     * in todo_wine in the line below.
+     * todo_wine check_wnd_state(0, thread_params.thread_window, 0, 0); */
+    ok(app_activated, "Expected WM_ACTIVATEAPP(1), did not receive it.\n");
+    todo_wine ok(app_deactivated, "Expected WM_ACTIVATEAPP(0), did not receive it.\n");
+
+    SetForegroundWindow(window1);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+
+    /* Switch to a different window from the same thread? No messages. */
+    app_activated = app_deactivated = FALSE;
+    PostThreadMessageA(tid, thread_params.msg_command, SET_FOREGROUND_STEAL_1 | SET_FOREGROUND_SET_2, 0);
+    WaitForSingleObject(thread_params.command_executed, INFINITE);
+    test_window = GetForegroundWindow();
+    ok(test_window == window1, "Expected foreground window %p, got %p\n",
+            window1, test_window);
+    check_wnd_state(window1, window1, window1, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    test_window = GetForegroundWindow();
+    ok(test_window == window2, "Expected foreground window %p, got %p\n",
+            window2, test_window);
+    check_wnd_state(window2, window2, window2, 0);
+    ok(!app_activated, "Received WM_ACTIVATEAPP(1), did not expect it.\n");
+    ok(!app_deactivated, "Received WM_ACTIVATEAPP(0), did not expect it.\n");
+
+    PostThreadMessageA(tid, thread_params.msg_quit, 0, 0);
+    WaitForSingleObject(thread, INFINITE);
+
+    CloseHandle(thread_params.command_executed);
+    DestroyWindow(window2);
+}
+
 START_TEST(win)
 {
     char **argv;
@@ -8063,6 +8471,7 @@ START_TEST(win)
     pGetGUIThreadInfo = (void *)GetProcAddress( user32, "GetGUIThreadInfo" );
     pGetProcessDefaultLayout = (void *)GetProcAddress( user32, "GetProcessDefaultLayout" );
     pSetProcessDefaultLayout = (void *)GetProcAddress( user32, "SetProcessDefaultLayout" );
+    pFlashWindow = (void *)GetProcAddress( user32, "FlashWindow" );
     pFlashWindowEx = (void *)GetProcAddress( user32, "FlashWindowEx" );
     pGetLayout = (void *)GetProcAddress( gdi32, "GetLayout" );
     pSetLayout = (void *)GetProcAddress( gdi32, "SetLayout" );
@@ -8126,6 +8535,7 @@ START_TEST(win)
     test_capture_3(hwndMain, hwndMain2);
     test_capture_4();
     test_rtl_layout();
+    test_FlashWindow();
     test_FlashWindowEx();
 
     test_CreateWindow();
@@ -8176,6 +8586,11 @@ START_TEST(win)
     test_window_without_child_style();
     test_smresult();
     test_GetMessagePos();
+
+    if (!winetest_interactive)
+        skip("ROSTESTS-208: Skipping test_activateapp(hwndMain).\n");
+    else
+        test_activateapp(hwndMain);
 
     /* add the tests above this line */
     if (hhook) UnhookWindowsHookEx(hhook);
