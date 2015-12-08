@@ -368,9 +368,37 @@ static void test_ACLMulti(void)
     CoTaskMemFree(acl2);
 }
 
+static void test_ACListISF(void)
+{
+    IEnumString *enumstring;
+    IACList *list, *list2;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_ACListISF, NULL, CLSCTX_INPROC, &IID_IACList, (void**)&list);
+    ok(hr == S_OK, "failed to create ACListISF instance, 0x%08x\n", hr);
+
+    hr = IACList_QueryInterface(list, &IID_IEnumString, (void**)&enumstring);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IEnumString_QueryInterface(enumstring, &IID_IACList, (void**)&list2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(list == list2, "got %p, %p\n", list, list2);
+    IACList_Release(list2);
+
+    IEnumString_Release(enumstring);
+    IACList_Release(list);
+}
+
 START_TEST(autocomplete)
 {
     CoInitialize(NULL);
+
     test_ACLMulti();
+
+    if (!winetest_interactive)
+        skip("ROSTESTS-210: Skipping test_ACListISF().\n");
+    else
+        test_ACListISF();
+
     CoUninitialize();
 }
