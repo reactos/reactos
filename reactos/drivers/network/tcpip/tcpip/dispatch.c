@@ -1672,7 +1672,8 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
 
     Irp->IoStatus.Information = 0;
 
-    if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < 2 * sizeof(ULONG)) {
+    if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < 2 * sizeof(ULONG) ||
+        IrpSp->Parameters.DeviceIoControl.OutputBufferLength == 0) {
         Status = STATUS_INVALID_BUFFER_SIZE;
         goto Exit;
     }
