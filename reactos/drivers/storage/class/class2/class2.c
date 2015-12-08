@@ -347,6 +347,7 @@ ScsiClassPlugPlay(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PCLASS_DEVICE_INFO DeviceInfo = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     if (IrpSp->MinorFunction == IRP_MN_START_DEVICE)
