@@ -338,7 +338,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 VOID
 DisplayTrayProperties(IN HWND hwndOwner)
 {
-    PROPSHEET_INFO propInfo;
+    PROPSHEET_INFO propInfo = {0};
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[2];
     WCHAR szCaption[256];
