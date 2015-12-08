@@ -54,9 +54,13 @@ static const unsigned int win_formats[][4] = {
 
 #define NULL_PTR_ERR MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, RPC_X_NULL_REF_POINTER)
 
+/* undocumented error code */
+#define D3D11_ERROR_4E MAKE_HRESULT(SEVERITY_ERROR, FACILITY_DIRECT3D11, 0x4e)
+
 static IMMDeviceEnumerator *mme = NULL;
 static IMMDevice *dev = NULL;
 static HRESULT hexcl = S_OK; /* or AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED */
+static BOOL win10 = FALSE;
 
 static const LARGE_INTEGER ullZero;
 
@@ -281,7 +285,8 @@ static void test_audioclient(void)
         fmtex->dwChannelMask = 0xffff;
 
         hr = IAudioClient_Initialize(ac, AUDCLNT_SHAREMODE_SHARED, 0, 5000000, 0, pwfx, NULL);
-        ok(hr == S_OK, "Initialize(dwChannelMask = 0xffff) returns %08x\n", hr);
+        ok(hr == S_OK ||
+                hr == AUDCLNT_E_UNSUPPORTED_FORMAT /* win10 */, "Initialize(dwChannelMask = 0xffff) returns %08x\n", hr);
 
         IAudioClient_Release(ac);
 
@@ -330,9 +335,13 @@ static void test_audioclient(void)
     ok(hr == S_OK, "Valid GetStreamLatency call returns %08x\n", hr);
     trace("Returned latency: %u.%04u ms\n",
           (UINT)(t2/10000), (UINT)(t2 % 10000));
-    ok(t2 >= t1 || broken(t2 >= t1/2 && pwfx->nSamplesPerSec > 48000),
-       "Latency < default period, delta %ldus\n", (long)((t2-t1)/10));
+    ok(t2 >= t1 || broken(t2 >= t1/2 && pwfx->nSamplesPerSec > 48000) ||
+            broken(t2 == 0) /* (!) win10 */,
+       "Latency < default period, delta %dus (%x%08x vs %x%08x)\n",
+       (LONG)((t2-t1)/10), (DWORD)(t2 >> 32), (DWORD)t2, (DWORD)(t1 >> 32), (DWORD)t1);
     /* Native appears to add the engine period to the HW latency in shared mode */
+    if(t2 == 0)
+        win10 = TRUE;
 
     hr = IAudioClient_Initialize(ac, AUDCLNT_SHAREMODE_SHARED, 0, 5000000, 0, pwfx, NULL);
     ok(hr == AUDCLNT_E_ALREADY_INITIALIZED, "Calling Initialize twice returns %08x\n", hr);
@@ -465,169 +474,6 @@ static void test_formats(AUDCLNT_SHAREMODE mode)
         CoTaskMemFree(pwfx);
         IAudioClient_Release(ac);
     }
-}
-
-static void test_formats2(void)
-{
-    IAudioClient *ac;
-    HRESULT hr;
-    WAVEFORMATEX *pwfx, *pwfx2;
-    WAVEFORMATEXTENSIBLE *pwfe, wfe, *pwfe2;
-
-    hr = IMMDevice_Activate(dev, &IID_IAudioClient, CLSCTX_INPROC_SERVER,
-                            NULL, (void**)&ac);
-
-    ok(hr == S_OK, "Activation failed with %08x\n", hr);
-    if (hr != S_OK)
-        return;
-
-    hr = IAudioClient_GetMixFormat(ac, &pwfx);
-    ok(hr == S_OK, "GetMixFormat failed: %08x\n", hr);
-    if (hr != S_OK)
-        return;
-
-    ok(pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE, "Invalid wFormatTag\n");
-    if (pwfx->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
-        CoTaskMemFree(pwfx);
-        return;
-    }
-
-    pwfe = (WAVEFORMATEXTENSIBLE*)pwfx;
-    ok(pwfe->Samples.wValidBitsPerSample, "wValidBitsPerSample should be non-zero\n");
-
-    if (pwfx->nChannels > 2) {
-        trace("Limiting channels to 2\n");
-        pwfx->nChannels = 2;
-        pwfx->nBlockAlign = pwfx->wBitsPerSample / 8 * pwfx->nChannels;
-        pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
-        pwfe->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-    }
-
-    wfe = *pwfe;
-    pwfx->nAvgBytesPerSec = pwfx->nBlockAlign = 0;
-
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with nAvgBytesPerSec=0 and nBlockAlign=0 returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok((hr == E_INVALIDARG || hr == AUDCLNT_E_UNSUPPORTED_FORMAT) && !pwfx2,
-       "Shared IsFormatSupported with nAvgBytesPerSec=0 and nBlockAlign=0 returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    pwfx->wFormatTag = WAVE_FORMAT_PCM;
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok((hr == S_OK || hr == AUDCLNT_E_UNSUPPORTED_FORMAT) && !pwfx2,
-       "Shared IsFormatSupported with nAvgBytesPerSec=0 and nBlockAlign=0 returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    *pwfe = wfe;
-    pwfe->dwChannelMask = 0;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with dwChannelMask=0 returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == S_OK,
-       "Shared IsFormatSupported with dwChannelMask=0 returned %08x\n", hr);
-    CoTaskMemFree(pwfx2);
-
-
-    pwfe->dwChannelMask = 0x3ffff;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with dwChannelMask=0x3ffff returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == S_OK && !pwfx2,
-       "Shared IsFormatSupported with dwChannelMask=0x3ffff returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-
-    pwfe->dwChannelMask = 0x40000000;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with dwChannelMask=0x40000000 returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == S_OK && !pwfx2,
-       "Shared IsFormatSupported with dwChannelMask=0x40000000 returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    pwfe->dwChannelMask = SPEAKER_ALL | SPEAKER_RESERVED;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with dwChannelMask=SPEAKER_ALL | SPEAKER_RESERVED returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == S_OK && !pwfx2,
-       "Shared IsFormatSupported with dwChannelMask=SPEAKER_ALL | SPEAKER_RESERVED returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    *pwfe = wfe;
-    pwfe->Samples.wValidBitsPerSample = 0;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_EXCLUSIVE, pwfx, NULL);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT || hr == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED,
-       "Exclusive IsFormatSupported with wValidBitsPerSample=0 returned %08x\n", hr);
-
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok((hr == S_FALSE || hr == AUDCLNT_E_UNSUPPORTED_FORMAT) && pwfx2,
-       "Shared IsFormatSupported with wValidBitsPerSample=0 returned %08x %p\n", hr, pwfx2);
-    if (pwfx2) {
-        pwfe2 = (WAVEFORMATEXTENSIBLE*)pwfx2;
-        ok(pwfe2->Samples.wValidBitsPerSample == pwfx->wBitsPerSample,
-           "Shared IsFormatSupported had wValidBitsPerSample set to %u, not %u\n",
-           pwfe2->Samples.wValidBitsPerSample, pwfx->wBitsPerSample);
-        CoTaskMemFree(pwfx2);
-    }
-
-    pwfx2 = NULL;
-    pwfe->Samples.wValidBitsPerSample = pwfx->wBitsPerSample + 1;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok((hr == E_INVALIDARG || hr == AUDCLNT_E_UNSUPPORTED_FORMAT) && !pwfx2,
-       "Shared IsFormatSupported with wValidBitsPerSample += 1 returned %08x %p\n", hr, pwfx2);
-
-    *pwfe = wfe;
-    memset(&pwfe->SubFormat, 0xff, 16);
-    pwfx2 = NULL;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == AUDCLNT_E_UNSUPPORTED_FORMAT && !pwfx2,
-       "Shared IsFormatSupported with SubFormat=-1 returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    *pwfe = wfe;
-    pwfx2 = NULL;
-    pwfe->Samples.wValidBitsPerSample = pwfx->wBitsPerSample = 256;
-    pwfx->nBlockAlign = pwfx->wBitsPerSample / 8 * pwfx->nChannels;
-    pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok((hr == E_INVALIDARG || hr == AUDCLNT_E_UNSUPPORTED_FORMAT) && !pwfx2,
-       "Shared IsFormatSupported with wBitsPerSample=256 returned %08x %p\n", hr, pwfx2);
-    CoTaskMemFree(pwfx2);
-
-    *pwfe = wfe;
-    pwfx2 = NULL;
-    pwfe->Samples.wValidBitsPerSample = pwfx->wBitsPerSample - 1;
-    hr = IAudioClient_IsFormatSupported(ac, AUDCLNT_SHAREMODE_SHARED, pwfx, &pwfx2);
-    ok(hr == S_FALSE && pwfx2,
-       "Shared IsFormatSupported with wValidBitsPerSample-=1 returned %08x %p\n", hr, pwfx2);
-    if (pwfx2) {
-        pwfe2 = (WAVEFORMATEXTENSIBLE*)pwfx2;
-        ok(pwfe2->Samples.wValidBitsPerSample == pwfx->wBitsPerSample,
-           "Shared IsFormatSupported had wValidBitsPerSample set to %u, not %u\n",
-           pwfe2->Samples.wValidBitsPerSample, pwfx->wBitsPerSample);
-        CoTaskMemFree(pwfx2);
-    }
-
-    CoTaskMemFree(pwfx);
-    IAudioClient_Release(ac);
 }
 
 static void test_references(void)
@@ -790,13 +636,15 @@ static void test_event(void)
     ok(event != NULL, "CreateEvent failed\n");
 
     hr = IAudioClient_Start(ac);
-    ok(hr == AUDCLNT_E_EVENTHANDLE_NOT_SET, "Start failed: %08x\n", hr);
+    ok(hr == AUDCLNT_E_EVENTHANDLE_NOT_SET ||
+            hr == D3D11_ERROR_4E /* win10 */, "Start failed: %08x\n", hr);
 
     hr = IAudioClient_SetEventHandle(ac, event);
     ok(hr == S_OK, "SetEventHandle failed: %08x\n", hr);
 
     hr = IAudioClient_SetEventHandle(ac, event);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_INVALID_NAME), "SetEventHandle returns %08x\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_INVALID_NAME) ||
+            hr == E_UNEXPECTED /* win10 */, "SetEventHandle returns %08x\n", hr);
 
     r = WaitForSingleObject(event, 40);
     ok(r == WAIT_TIMEOUT, "Wait(event) before Start gave %x\n", r);
@@ -896,10 +744,13 @@ static void test_padding(void)
     hr = IAudioRenderClient_GetBuffer(arc, psize, &buf);
     ok(hr == S_OK, "GetBuffer failed: %08x\n", hr);
     ok(buf != NULL, "NULL buffer returned\n");
-    for(i = 0; i < psize * pwfx->nBlockAlign; ++i){
-        if(buf[i] != silence){
-            ok(0, "buffer has data in it already\n");
-            break;
+    if(!win10){
+        /* win10 appears not to clear the buffer */
+        for(i = 0; i < psize * pwfx->nBlockAlign; ++i){
+            if(buf[i] != silence){
+                ok(0, "buffer has data in it already, i: %u, valu: %f\n", i, *((float*)buf));
+                break;
+            }
         }
     }
 
@@ -1073,7 +924,8 @@ static void test_clock(int share)
     hr = IAudioClient_GetStreamLatency(ac, &t2);
     ok(hr == S_OK, "GetStreamLatency failed: %08x\n", hr);
     trace("Latency: %u.%04u ms\n", (UINT)(t2/10000), (UINT)(t2 % 10000));
-    ok(t2 >= period || broken(t2 >= period/2 && share && pwfx->nSamplesPerSec > 48000),
+    ok(t2 >= period || broken(t2 >= period/2 && share && pwfx->nSamplesPerSec > 48000) ||
+            broken(t2 == 0) /* win10 */,
        "Latency < default period, delta %ldus\n", (long)((t2-period)/10));
 
     /** GetBufferSize
@@ -2135,7 +1987,6 @@ static void test_session_creation(void)
         vol = 0.5f;
         hr = ISimpleAudioVolume_GetMasterVolume(cap_sav, &vol);
         ok(hr == S_OK, "GetMasterVolume failed: %08x\n", hr);
-        ok(vol == 1.f, "Got wrong volume: %f\n", vol);
 
         ISimpleAudioVolume_Release(cap_sav);
         IAudioSessionManager_Release(cap_sesm);
@@ -2164,7 +2015,6 @@ static void test_session_creation(void)
             vol = 0.5f;
             hr = ISimpleAudioVolume_GetMasterVolume(cap_sav, &vol);
             ok(hr == S_OK, "GetMasterVolume failed: %08x\n", hr);
-            ok(vol == 1.f, "Got wrong volume: %f\n", vol);
 
             ISimpleAudioVolume_Release(cap_sav);
         }
@@ -2418,7 +2268,6 @@ START_TEST(render)
     test_audioclient();
     test_formats(AUDCLNT_SHAREMODE_EXCLUSIVE);
     test_formats(AUDCLNT_SHAREMODE_SHARED);
-    test_formats2();
     test_references();
     test_marshal();
     trace("Output to a MS-DOS console is particularly slow and disturbs timing.\n");
