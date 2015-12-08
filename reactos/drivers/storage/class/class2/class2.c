@@ -4826,7 +4826,7 @@ Return Value:
 
     if (Release) {
 
-        ObDereferenceObject(PortDeviceObject);
+        //ObDereferenceObject(PortDeviceObject);
         return STATUS_SUCCESS;
     }
 
@@ -4850,6 +4850,7 @@ Return Value:
 
         return status;
     }
+    ObDereferenceObject(srb.DataBuffer);
 
     //
     // Return the new port device object pointer.
