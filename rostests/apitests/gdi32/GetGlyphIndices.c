@@ -8,7 +8,7 @@
 #include <apitest.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <Strsafe.h>
+#include <strsafe.h>
 
 
 #define ok_lasterrornotchanged() \
