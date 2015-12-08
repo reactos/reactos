@@ -354,14 +354,14 @@ ScsiClassPlugPlay(
     {
         ASSERT(DeviceInfo->Signature == '2slc');
         IoSkipCurrentIrpStackLocation(Irp);
-        return STATUS_SUCCESS;
+        return IoCallDriver(DeviceInfo->LowerDevice, Irp);
     }
     else if (IrpSp->MinorFunction == IRP_MN_REMOVE_DEVICE)
     {
-        PCLASS_DEVICE_INFO DeviceInfo = DeviceObject->DeviceExtension;
-
         ASSERT(DeviceInfo->Signature == '2slc');
         ScsiClassRemoveDriveLetter(DeviceInfo);
+
+        IoForwardIrpSynchronously(DeviceInfo->LowerDevice, Irp);
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -372,6 +372,12 @@ ScsiClassPlugPlay(
     }
     else
     {
+        if (DeviceInfo->Signature == '2slc')
+        {
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceInfo->LowerDevice, Irp);
+        }
+
         Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_SUPPORTED;
