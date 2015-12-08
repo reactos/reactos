@@ -993,7 +993,6 @@ static void test_SHGetStockIconInfo(void)
 {
     BYTE buffer[sizeof(SHSTOCKICONINFO) + 16];
     SHSTOCKICONINFO *sii = (SHSTOCKICONINFO *) buffer;
-    BOOL atleast_win7;
     HRESULT hr;
     INT i;
 
@@ -1007,11 +1006,11 @@ static void test_SHGetStockIconInfo(void)
     /* negative values are handled */
     memset(buffer, '#', sizeof(buffer));
     sii->cbSize = sizeof(SHSTOCKICONINFO);
-    hr = pSHGetStockIconInfo(-1, SHGSI_ICONLOCATION, sii);
+    hr = pSHGetStockIconInfo(SIID_INVALID, SHGSI_ICONLOCATION, sii);
     ok(hr == E_INVALIDARG, "-1: got 0x%x (expected E_INVALIDARG)\n", hr);
 
     /* max. id for vista is 140 (no definition exists for this value) */
-    for (i = 0; i <= 140; i++)
+    for (i = SIID_DOCNOASSOC; i <= SIID_CLUSTEREDDRIVE; i++)
     {
         memset(buffer, '#', sizeof(buffer));
         sii->cbSize = sizeof(SHSTOCKICONINFO);
@@ -1026,38 +1025,17 @@ static void test_SHGetStockIconInfo(void)
                   sii->iIcon, wine_dbgstr_w(sii->szPath));
     }
 
-    /* there are more icons since win7 */
-    memset(buffer, '#', sizeof(buffer));
-    sii->cbSize = sizeof(SHSTOCKICONINFO);
-    hr = pSHGetStockIconInfo(i, SHGSI_ICONLOCATION, sii);
-    atleast_win7 = (!hr);
-
-    for (; i < (SIID_MAX_ICONS + 25) ; i++)
+    /* test invalid icons indices that are invalid for all platforms */
+    for (i = SIID_MAX_ICONS; i < (SIID_MAX_ICONS + 25) ; i++)
     {
         memset(buffer, '#', sizeof(buffer));
         sii->cbSize = sizeof(SHSTOCKICONINFO);
         hr = pSHGetStockIconInfo(i, SHGSI_ICONLOCATION, sii);
-
-        if (atleast_win7 && (i == (SIID_MAX_ICONS - 1)) && broken(hr == E_INVALIDARG))
-        {
-            /* Off by one windows bug: there are SIID_MAX_ICONS icons from 0
-             * up to SIID_MAX_ICONS-1 on Windows 8, but the last one is missing
-             * on Windows 7.
-             */
-            trace("%3d: got E_INVALIDARG (windows bug: off by one)\n", i);
-        }
-        else if (atleast_win7 && (i < (SIID_MAX_ICONS)))
-        {
-            ok(hr == S_OK,
-                "%3d: got 0x%x, iSysImageIndex: 0x%x, iIcon: 0x%x (expected S_OK)\n",
-                i, hr, sii->iSysImageIndex, sii->iIcon);
-
-            if ((hr == S_OK) && (winetest_debug > 1))
-                trace("%3d: got iSysImageIndex %3d, iIcon %3d and %s\n", i, sii->iSysImageIndex,
-                      sii->iIcon, wine_dbgstr_w(sii->szPath));
-        }
-        else
-            ok(hr == E_INVALIDARG, "%3d: got 0x%x (expected E_INVALIDARG)\n", i, hr);
+        ok(hr == E_INVALIDARG, "%3d: got 0x%x (expected E_INVALIDARG)\n", i, hr);
+    todo_wine {
+        ok(sii->iSysImageIndex == -1, "%d: got iSysImageIndex %d\n", i, sii->iSysImageIndex);
+        ok(sii->iIcon == -1, "%d: got iIcon %d\n", i, sii->iIcon);
+    }
     }
 
     /* test more returned SHSTOCKICONINFO elements without extra flags */

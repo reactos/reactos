@@ -759,8 +759,10 @@ static void test_initialization(void)
 {
     IExplorerBrowser *peb;
     IShellBrowser *psb;
+    HWND eb_hwnd;
     HRESULT hr;
     ULONG lres;
+    LONG style;
     RECT rc;
 
     ebrowser_instantiate(&peb);
@@ -807,10 +809,9 @@ static void test_initialization(void)
     ok(hr == S_OK, "Got 0x%08x\n", hr);
     if(SUCCEEDED(hr))
     {
-        HWND eb_hwnd;
         RECT eb_rc;
         char buf[1024];
-        LONG style, expected_style;
+        LONG expected_style;
         static const RECT exp_rc = {0, 0, 48, 58};
 
         hr = IShellBrowser_GetWindow(psb, &eb_hwnd);
@@ -856,6 +857,29 @@ static void test_initialization(void)
         ok(lres == 0, "Got refcount %d\n", lres);
     }
 
+    /* check window style with EBO_NOBORDER */
+    ebrowser_instantiate(&peb);
+    hr = IExplorerBrowser_SetOptions(peb, EBO_NOBORDER);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    rc.left = 50; rc.top = 20; rc.right = 100; rc.bottom = 80;
+
+    hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
+    ok(hr == S_OK, "got (0x%08x)\n", hr);
+
+    hr = IExplorerBrowser_QueryInterface(peb, &IID_IShellBrowser, (void**)&psb);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+
+    hr = IShellBrowser_GetWindow(psb, &eb_hwnd);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+
+    style = GetWindowLongPtrW(eb_hwnd, GWL_STYLE);
+    ok(!(style & WS_BORDER) || broken(style & WS_BORDER) /* before win8 */, "got style 0x%08x\n", style);
+
+    IShellBrowser_Release(psb);
+    IExplorerBrowser_Destroy(peb);
+    IExplorerBrowser_Release(peb);
+
+    /* empty rectangle */
     ebrowser_instantiate(&peb);
     rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
@@ -1469,7 +1493,7 @@ static void test_navigation(void)
         test_browse_pidl_sb(peb2, &ebev, pidl_relative, SBSP_RELATIVE, S_OK, 1, 1, 0, 1);
 
         ILFree(pidl_relative);
-        /* IShellFolder_Release(psf); */
+        IShellFolder_Release(psf);
         IFolderView_Release(pfv);
     }
 

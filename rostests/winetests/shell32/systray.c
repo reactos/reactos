@@ -44,6 +44,7 @@ static void test_cbsize(void)
         nidW.hIcon = LoadIconA(NULL, (LPSTR)IDI_APPLICATION);
         nidW.uCallbackMessage = WM_USER+17;
         ret = pShell_NotifyIconW(NIM_ADD, &nidW);
+        ok(ret, "NIM_ADD failed!\n");
         /* using an invalid cbSize does work */
         nidW.cbSize = 3;
         nidW.hWnd = hMainWnd;

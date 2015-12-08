@@ -32,7 +32,7 @@
 #include "wine/test.h"
 
 static HMODULE hShell32;
-static HRESULT (WINAPI *pStrRetToStrNAW)(LPVOID,DWORD,LPSTRRET,const ITEMIDLIST *);
+static BOOL (WINAPI *pStrRetToStrNAW)(LPVOID,DWORD,LPSTRRET,const ITEMIDLIST *);
 
 static WCHAR *CoDupStrW(const char* src)
 {

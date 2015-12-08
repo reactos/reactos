@@ -127,6 +127,8 @@ static INT_PTR shell_execute(LPCSTR verb, LPCSTR file, LPCSTR parameters, LPCSTR
         if (wait_rc == WAIT_TIMEOUT)
         {
             HWND wnd = FindWindowA("#32770", "Windows");
+            if (!wnd)
+                wnd = FindWindowA("Shell_Flyout", "");
             if (wnd != NULL)
             {
                 SendMessageA(wnd, WM_CLOSE, 0, 0);
@@ -857,7 +859,6 @@ static const char* testfiles[]=
     "%s\\masked",
     "%s\\test file.sde",
     "%s\\test file.exe",
-    "%s\\test file two.exe",
     "%s\\test2.exe",
     "%s\\simple.shlexec",
     "%s\\drawback_file.noassoc",
@@ -901,9 +902,11 @@ static filename_tests_t filename_tests[]=
     {"QuotedUpperL", "%s\\test file.shlexec",   0x0, 33},
 
     /* Test file masked due to space */
-    {NULL,           "%s\\masked file.shlexec",   0x1, 33},
+    {NULL,           "%s\\masked file.shlexec",   0x0, 33},
     /* Test if quoting prevents the masking */
     {NULL,           "%s\\masked file.shlexec",   0x40, 33},
+    /* Test with incorrect quote */
+    {NULL,           "\"%s\\masked file.shlexec",   0x0, SE_ERR_FNF},
 
     {NULL, NULL, 0}
 };
@@ -1220,7 +1223,7 @@ static void test_commandline2argv(void)
 
     *strW = 0;
     args = CommandLineToArgvW(strW, &numargs);
-    ok(numargs == 1, "expected 1 args, got %d\n", numargs);
+    ok(numargs == 1 || broken(numargs > 1), "expected 1 args, got %d\n", numargs);
     ok(!args || (!args[numargs] || broken(args[numargs] != NULL) /* before Vista */),
        "expected NULL-terminated list of commandline arguments\n");
     if (numargs == 1)
@@ -1541,18 +1544,10 @@ static void test_filename(void)
         }
         if (rc > 32)
             rc=33;
-        if ((test->todo & 0x1)==0)
-        {
-            ok(rc==test->rc ||
-               broken(quotedfile && rc == SE_ERR_FNF), /* NT4 */
-               "%s failed: rc=%ld err=%u\n", shell_call,
-               rc, GetLastError());
-        }
-        else
-        {
-            ok(rc==test->rc, "%s failed: rc=%ld err=%u\n", shell_call,
-               rc, GetLastError());
-        }
+        ok(rc==test->rc ||
+           broken(quotedfile && rc == SE_ERR_FNF), /* NT4 */
+           "%s failed: rc=%ld err=%u\n", shell_call,
+           rc, GetLastError());
         if (rc == 33)
         {
             const char* verb;
@@ -2095,7 +2090,6 @@ static void test_exes(void)
 {
     char filename[MAX_PATH];
     char params[1024];
-    DWORD retval;
     INT_PTR rc;
 
     sprintf(params, "shlexec \"%s\" Exec", child_file);
@@ -2123,31 +2117,14 @@ static void test_exes(void)
         win_skip("Skipping shellexecute of file with unassociated extension\n");
     }
 
-    /* the directory with the test programs contain "test file.exe"
-     * and "test file two.exe". Check we do not start the first
-     * when we specify to start the second (see bug 19666)
-     */
-    sprintf(filename, "%s\\test file.exe", tmpdir);
-    retval = CopyFileA(argv0, filename, FALSE);
-    ok(retval, "CopyFile(\"%s\",\"%s\",FALSE) failed\n", argv0, filename);
-    sprintf(filename, "%s\\test file two.exe", tmpdir);
-    retval = CopyFileA(argv0, filename, FALSE);
-    ok(retval, "CopyFile(\"%s\",\"%s\",FALSE) failed\n", argv0, filename);
-    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS, NULL, filename, params, NULL, NULL);
-    ok(rc > 32, "%s returned %lu\n", shell_call, rc);
-    okChildInt("argcA", 4);
-    okChildString("argvA0", filename);
-    okChildString("argvA3", "Exec");
+    /* test combining executable and parameters */
+    sprintf(filename, "%s shlexec \"%s\" Exec", argv0, child_file);
+    rc = shell_execute(NULL, filename, NULL, NULL);
+    ok(rc == SE_ERR_FNF, "%s returned %lu\n", shell_call, rc);
 
-    /* check quoted filename */
-    sprintf(filename, "\"%s\\test file two.exe\"", tmpdir);
-    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS, NULL, filename, params, NULL, NULL);
-    ok(rc > 32, "%s returned %lu\n", shell_call, rc);
-    okChildInt("argcA", 4);
-    /* strip the quotes for the compare */
-    sprintf(filename, "%s\\test file two.exe", tmpdir);
-    okChildString("argvA0", filename);
-    okChildString("argvA3", "Exec");
+    sprintf(filename, "\"%s\" shlexec \"%s\" Exec", argv0, child_file);
+    rc = shell_execute(NULL, filename, NULL, NULL);
+    ok(rc == SE_ERR_FNF, "%s returned %lu\n", shell_call, rc);
 }
 
 typedef struct
@@ -2551,7 +2528,12 @@ static void init_test(void)
            "unable to find argv0!\n");
     }
 
-    GetTempPathA(sizeof(filename), filename);
+    /* Older versions (win 2k) fail tests if there is a space in
+       the path. */
+    if (dllver.dwMajorVersion <= 5)
+        strcpy(filename, "c:\\");
+    else
+        GetTempPathA(sizeof(filename), filename);
     GetTempFileNameA(filename, "wt", 0, tmpdir);
     GetLongPathNameA(tmpdir, tmpdir, sizeof(tmpdir));
     DeleteFileA( tmpdir );

@@ -75,6 +75,7 @@ static UINT (WINAPI *pGetSystemWow64DirectoryW)(LPWSTR, UINT);
 static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFIID,void**);
 static HRESULT (WINAPI *pSHCreateShellFolderView)(const SFV_CREATE *pcsfv, IShellView **ppsv);
 static HRESULT (WINAPI *pSHCreateShellFolderViewEx)(LPCSFV psvcbi, IShellView **ppv);
+static HRESULT (WINAPI *pSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
 
 static WCHAR *make_wstr(const char *str)
 {
@@ -140,6 +141,7 @@ static void init_function_pointers(void)
     MAKEFUNC_ORD(ILFindLastID, 16);
     MAKEFUNC_ORD(ILIsEqual, 21);
     MAKEFUNC_ORD(ILCombine, 25);
+    MAKEFUNC_ORD(SHILCreateFromPath, 28);
     MAKEFUNC_ORD(ILFree, 155);
     MAKEFUNC_ORD(SHSimpleIDListFromPathAW, 162);
 #undef MAKEFUNC_ORD
@@ -4235,12 +4237,34 @@ static void test_ShellItemArrayGetAttributes(void)
     Cleanup();
 }
 
+static WCHAR *get_empty_cddrive(void)
+{
+    static WCHAR cdrom_drive[] = {'A',':','\\',0};
+    DWORD drives = GetLogicalDrives();
+
+    cdrom_drive[0] = 'A';
+    while (drives)
+    {
+        if ((drives & 1) &&
+            GetDriveTypeW(cdrom_drive) == DRIVE_CDROM &&
+            GetFileAttributesW(cdrom_drive) == INVALID_FILE_ATTRIBUTES)
+        {
+            return cdrom_drive;
+        }
+
+        drives = drives >> 1;
+        cdrom_drive[0]++;
+    }
+    return NULL;
+}
+
 static void test_SHParseDisplayName(void)
 {
     LPITEMIDLIST pidl1, pidl2;
     IShellFolder *desktop;
     WCHAR dirW[MAX_PATH];
     WCHAR nameW[10];
+    WCHAR *cdrom;
     HRESULT hr;
     BOOL ret, is_wow64;
 
@@ -4312,6 +4336,16 @@ if (0)
     }
 
     IShellFolder_Release(desktop);
+
+    cdrom = get_empty_cddrive();
+    if (!cdrom)
+        skip("No empty cdrom drive found, skipping test\n");
+    else
+    {
+        hr = pSHParseDisplayName(cdrom, NULL, &pidl1, 0, NULL);
+        ok(hr == S_OK, "failed %08x\n", hr);
+        if (SUCCEEDED(hr)) pILFree(pidl1);
+    }
 }
 
 static void test_desktop_IPersist(void)
@@ -4974,9 +5008,9 @@ static void test_SHChangeNotify(BOOL test_new_delivery)
 
     entries[0].pidl = NULL;
     if(has_unicode)
-        hr = SHILCreateFromPath(root_dirW, (LPITEMIDLIST*)&entries[0].pidl, 0);
+        hr = pSHILCreateFromPath(root_dirW, (LPITEMIDLIST*)&entries[0].pidl, 0);
     else
-        hr = SHILCreateFromPath((LPCVOID)root_dirA, (LPITEMIDLIST*)&entries[0].pidl, 0);
+        hr = pSHILCreateFromPath((LPCVOID)root_dirA, (LPITEMIDLIST*)&entries[0].pidl, 0);
     ok(hr == S_OK, "SHILCreateFromPath failed: 0x%08x\n", hr);
     entries[0].fRecursive = TRUE;
 
