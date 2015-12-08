@@ -437,6 +437,7 @@ vfatGrabFCBFromTable(
 
     DPRINT("'%wZ'\n", PathNameU);
 
+    ASSERT(PathNameU->Length >= sizeof(WCHAR) && PathNameU->Buffer[0] == L'\\');
     Hash = vfatNameHash(0, PathNameU);
 
     entry = pVCB->FcbHashTable[Hash % pVCB->HashTableSize];
@@ -812,14 +813,15 @@ vfatGetFCBForFile(
     DPRINT("vfatGetFCBForFile (%p,%p,%p,%wZ)\n",
            pVCB, pParentFCB, pFCB, pFileNameU);
 
-    FileNameU.Buffer = NameBuffer;
-    FileNameU.MaximumLength = sizeof(NameBuffer);
-    RtlCopyUnicodeString(&FileNameU, pFileNameU);
+    RtlInitEmptyUnicodeString(&FileNameU, NameBuffer, sizeof(NameBuffer));
 
     parentFCB = *pParentFCB;
 
     if (parentFCB == NULL)
     {
+        /* Passed-in name is the full name */
+        RtlCopyUnicodeString(&FileNameU, pFileNameU);
+
         //  Trivial case, open of the root directory on volume
         if (RtlEqualUnicodeString(&FileNameU, &RootNameU, FALSE))
         {
@@ -888,9 +890,20 @@ vfatGetFCBForFile(
     }
     else
     {
+        /* Make absolute path */
+        RtlCopyUnicodeString(&FileNameU, &parentFCB->PathNameU);
+        curr = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
+        if (*curr != L'\\')
+        {
+            RtlAppendUnicodeToString(&FileNameU, L"\\");
+            curr++;
+        }
+        ASSERT(*curr == L'\\');
+        RtlAppendUnicodeStringToString(&FileNameU, pFileNameU);
+
         FCB = parentFCB;
         parentFCB = NULL;
-        prev = curr = FileNameU.Buffer - 1;
+        prev = curr;
         last = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
     }
 
