@@ -137,6 +137,7 @@ DriverEntry(
 /* The following hack to assign drive letters with a non-PnP storage stack */
 
 typedef struct _CLASS_DEVICE_INFO {
+  ULONG Signature;
   ULONG DeviceType;
   ULONG Partitions;
   ULONG DeviceNumber;
@@ -350,6 +351,7 @@ ScsiClassPlugPlay(
 
     if (IrpSp->MinorFunction == IRP_MN_START_DEVICE)
     {
+        ASSERT(DeviceInfo->Signature == '2slc');
         IoSkipCurrentIrpStackLocation(Irp);
         return STATUS_SUCCESS;
     }
@@ -357,6 +359,7 @@ ScsiClassPlugPlay(
     {
         PCLASS_DEVICE_INFO DeviceInfo = DeviceObject->DeviceExtension;
 
+        ASSERT(DeviceInfo->Signature == '2slc');
         ScsiClassRemoveDriveLetter(DeviceInfo);
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -403,6 +406,7 @@ ScsiClassAddDevice(
 
         DeviceInfo = DeviceObject->DeviceExtension;
         RtlZeroMemory(DeviceInfo, sizeof(CLASS_DEVICE_INFO));
+        DeviceInfo->Signature = '2slc';
 
         /* Attach it to the PDO */
         DeviceInfo->LowerDevice = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
@@ -624,6 +628,8 @@ Return Value:
 {
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Invoke the device-specific routine, if one exists. Otherwise complete
     // with SUCCESS
@@ -677,6 +683,8 @@ Return Value:
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     ULONG               maximumTransferLength = deviceExtension->PortCapabilities->MaximumTransferLength;
     NTSTATUS            status;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     if (DeviceObject->Flags & DO_VERIFY_VOLUME &&
         !(currentIrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME)) {
@@ -1041,6 +1049,8 @@ Return Value:
     SCSI_REQUEST_BLOCK  srb;
     NTSTATUS            status;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Allocate read capacity buffer from nonpaged pool.
     //
@@ -1264,6 +1274,8 @@ Return Value:
     PSCSI_REQUEST_BLOCK srb;
     KIRQL currentIrql;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Allocate context from nonpaged pool.
     //
@@ -1408,6 +1420,8 @@ Return Value:
     PSCSI_REQUEST_BLOCK srb;
     PCOMPLETION_CONTEXT context;
     PCDB cdb;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Allocate Srb from nonpaged pool.
@@ -1633,6 +1647,8 @@ Return Value:
     DebugPrint((2, "ScsiClassSplitRequest: Requires %d IRPs\n", irpCount));
     DebugPrint((2, "ScsiClassSplitRequest: Original IRP %lx\n", Irp));
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // If all partial transfers complete successfully then the status and
     // bytes transferred are already set up. Failing a partial-transfer IRP
@@ -1817,6 +1833,8 @@ Return Value:
     NTSTATUS status;
     BOOLEAN retry;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Check SRB status for success of completing request.
     //
@@ -1968,6 +1986,8 @@ Return Value:
     LONG                irpCount;
     NTSTATUS            status;
     BOOLEAN             retry;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Check SRB status for success of completing request.
@@ -2189,6 +2209,8 @@ Return Value:
     LARGE_INTEGER dummy;
 
     PAGED_CODE();
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     dummy.QuadPart = 0;
 
@@ -2481,6 +2503,7 @@ Return Value:
     ULONG             i;
 #endif
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Check that request sense buffer is valid.
@@ -3161,6 +3184,8 @@ Return Value:
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     ULONG transferByteCount;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Determine the transfer count of the request.  If this is a read or a
     // write then the transfer count is in the Irp stack.  Otherwise assume
@@ -3291,6 +3316,8 @@ Return Value:
     PCDB                cdb;
     ULONG               logicalBlockAddress;
     USHORT              transferBlocks;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Calculate relative sector address.
@@ -3511,6 +3538,8 @@ Return Value:
     ULONG retries = 1;
     NTSTATUS status;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     RtlZeroMemory(&srb, sizeof(SCSI_REQUEST_BLOCK));
 
     //
@@ -3687,6 +3716,8 @@ Return Value:
 
     PAGED_CODE();
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Write length to SRB.
     //
@@ -3860,6 +3891,7 @@ Return Value:
 
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Call the class specific driver DeviceControl routine.
@@ -3908,6 +3940,8 @@ Return Value:
     PCDB cdb;
     NTSTATUS status;
     ULONG modifiedIoControlCode;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     if (irpStack->Parameters.DeviceIoControl.IoControlCode ==
         IOCTL_STORAGE_RESET_DEVICE) {
@@ -4456,6 +4490,8 @@ Return Value:
 {
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     if (deviceExtension->ClassShutdownFlush) {
 
         //
@@ -4608,6 +4644,8 @@ Return Value:
     } else {
 
         PDEVICE_EXTENSION deviceExtension = deviceObject->DeviceExtension;
+
+        ASSERT(*(PULONG)deviceExtension != '2slc');
 
         //
         // Fill in entry points
@@ -4853,6 +4891,8 @@ Return Value:
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
     PSCSI_REQUEST_BLOCK srb;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Get a pointer to the SRB.
@@ -5107,6 +5147,9 @@ Return Value:
     PDEVICE_EXTENSION physicalExtension =
                         deviceExtension->PhysicalDevice->DeviceExtension;
     PIRP originalIrp;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+    ASSERT(*(PULONG)physicalExtension != '2slc');
 
     originalIrp = irpStack->Parameters.Others.Argument1;
 
