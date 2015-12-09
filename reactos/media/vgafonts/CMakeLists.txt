@@ -9,7 +9,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/862-8x8.bin
     ${CMAKE_CURRENT_SOURCE_DIR}/865-8x8.bin
     ${CMAKE_CURRENT_SOURCE_DIR}/866-8x8.bin
-    ${CMAKE_CURRENT_SOURCE_DIR}/932-8x8.bin)
+    ${CMAKE_CURRENT_SOURCE_DIR}/932-8x8.bin
+    ${CMAKE_CURRENT_SOURCE_DIR}/28606-8x8.bin)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab
                    COMMAND native-cabman -M raw -S ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab ${SOURCE}
