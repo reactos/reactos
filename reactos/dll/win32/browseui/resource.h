@@ -85,6 +85,7 @@
 #define IDR_EXPLORERBAND         139
 #define IDR_PROGRESSDIALOG       140
 #define IDR_AUTOCOMPLETE         141
+#define IDR_ACLISTISF            142
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302

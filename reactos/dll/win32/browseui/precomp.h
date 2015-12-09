@@ -33,6 +33,7 @@
 
 #include "resource.h"
 
+#include "aclistisf.h"
 #include "aclmulti.h"
 #include "addressband.h"
 #include "addresseditbox.h"

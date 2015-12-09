@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    aclistisf.cpp
     aclmulti.cpp
     addressband.cpp
     addresseditbox.cpp

@@ -394,11 +394,7 @@ START_TEST(autocomplete)
     CoInitialize(NULL);
 
     test_ACLMulti();
-
-    if (!winetest_interactive)
-        skip("ROSTESTS-210: Skipping test_ACListISF().\n");
-    else
-        test_ACListISF();
+    test_ACListISF();
 
     CoUninitialize();
 }
