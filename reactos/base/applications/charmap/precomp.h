@@ -47,6 +47,7 @@ typedef struct _MAP
     HFONT hFont;
     LOGFONTW CurrentFont;
     INT iYStart;
+    INT NumRows;
 
     USHORT ValidGlyphs[MAX_GLYPHS];
     USHORT NumValidGlyphs;

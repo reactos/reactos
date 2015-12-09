@@ -221,7 +221,7 @@ SetFont(PMAP infoPtr,
     HDC hdc;
     WCHAR ch[MAX_GLYPHS];
     WORD out[MAX_GLYPHS];
-    DWORD i, j, Rows;
+    DWORD i, j;
 
     /* Destroy Zoom window, since it was created with older font */
     DestroyWindow(infoPtr->hLrgWnd);
@@ -247,12 +247,7 @@ SetFont(PMAP infoPtr,
                    NULL,
                    TRUE);
 
-    /* Test if zoom window must be reopened */
-    if (infoPtr->pActiveCell != NULL &&
-        infoPtr->pActiveCell->bLarge)
-    {
-        CreateLargeCell(infoPtr);
-    }
+    infoPtr->pActiveCell = &infoPtr->Cells[0][0];
 
     // Get all the valid glyphs in this font
 
@@ -281,11 +276,14 @@ SetFont(PMAP infoPtr,
 
     ReleaseDC(infoPtr->hMapWnd, hdc);
 
-    Rows = infoPtr->NumValidGlyphs / XCELLS;
+    infoPtr->NumRows = infoPtr->NumValidGlyphs / XCELLS;
     if (infoPtr->NumValidGlyphs % XCELLS)
-        Rows += 1;
+        infoPtr->NumRows += 1;
+    infoPtr->NumRows = (infoPtr->NumRows > YCELLS) ? infoPtr->NumRows - YCELLS : 0;
 
-    SetScrollRange(infoPtr->hMapWnd, SB_VERT, 0, Rows - YCELLS, FALSE);
+    SetScrollRange(infoPtr->hMapWnd, SB_VERT, 0, infoPtr->NumRows, FALSE);
+    SetScrollPos(infoPtr->hMapWnd, SB_VERT, 0, TRUE);
+    infoPtr->iYStart = 0;
 }
 
 
@@ -463,7 +461,8 @@ OnVScroll(PMAP infoPtr,
             break;
        }
 
-    infoPtr->iYStart = max(0, min(infoPtr->iYStart, MAX_ROWS));
+    infoPtr->iYStart = max(0, infoPtr->iYStart);
+    infoPtr->iYStart = min(infoPtr->iYStart, infoPtr->NumRows);
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
