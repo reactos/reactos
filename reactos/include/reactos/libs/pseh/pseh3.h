@@ -339,7 +339,7 @@ _Pragma("GCC diagnostic pop") \
 #define _SEH3_TRY \
     _SEH3$_PreventInlining(); \
     /* Enter the outer scope */ \
-    do { \
+    if (1) { \
         /* Declare local labels */ \
         __label__ _SEH3$_l_BeforeTry; \
         __label__ _SEH3$_l_DoTry; \
@@ -374,12 +374,11 @@ _Pragma("GCC diagnostic pop") \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
 \
     _SEH3$_l_DoTry: \
-        do
+        if (1)
 
 
 #define _SEH3_EXCEPT(...) \
-        /* End the try block */ \
-        while (0); \
+    /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         goto _SEH3$_l_EndTry; \
 \
@@ -422,12 +421,11 @@ _Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
         { \
             /* Prevent this block from being optimized away */ \
             asm volatile ("#\n"); \
-            do
+            if (1)
 
 
 #define _SEH3_FINALLY \
-        /* End the try block */ \
-        while (0); \
+    /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         /* Set ExceptionPointers to 0, this is used by _abnormal_termination() */ \
          _SEH3$_TrylevelFrame.ExceptionPointers = 0; \
@@ -463,7 +461,6 @@ _Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 
 
 #define _SEH3_END \
-            while (0); \
         }; \
         goto _SEH3$_l_EndTry; \
 \
@@ -480,7 +477,7 @@ _Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 _Pragma("GCC diagnostic pop") \
 \
     /* Close the outer scope */ \
-    } while (0);
+    }
 
 #define _SEH3_LEAVE goto _SEH3$_l_AfterTry
 
