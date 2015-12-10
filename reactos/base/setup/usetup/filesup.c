@@ -48,8 +48,9 @@ SetupCreateSingleDirectory(
     HANDLE DirectoryHandle;
     NTSTATUS Status;
 
-    RtlCreateUnicodeString(&PathName,
-                           DirectoryName);
+    if(!RtlCreateUnicodeString(&PathName, DirectoryName))
+        return STATUS_NO_MEMORY;
+
     if (PathName.Length > sizeof(WCHAR) &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
