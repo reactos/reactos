@@ -620,15 +620,6 @@ MmFindGap(
     BOOLEAN TopDown
 );
 
-VOID
-NTAPI
-MiRosCheckMemoryAreas(
-   PMMSUPPORT AddressSpace);
-
-VOID
-NTAPI
-MiCheckAllProcessMemoryAreas(VOID);
-
 /* npool.c *******************************************************************/
 
 CODE_SEG("INIT")
@@ -684,12 +675,6 @@ MmBuildMdlFromPages(
 );
 
 /* mminit.c ******************************************************************/
-
-VOID
-NTAPI
-MmInit1(
-    VOID
-);
 
 CODE_SEG("INIT")
 BOOLEAN
@@ -795,18 +780,6 @@ NTAPI
 MmSetMemoryPriorityProcess(
     IN PEPROCESS Process,
     IN UCHAR MemoryPriority
-);
-
-/* i386/pfault.c *************************************************************/
-
-NTSTATUS
-NTAPI
-MmPageFault(
-    ULONG Cs,
-    PULONG Eip,
-    PULONG Eax,
-    ULONG Cr2,
-    ULONG ErrorCode
 );
 
 /* special.c *****************************************************************/
