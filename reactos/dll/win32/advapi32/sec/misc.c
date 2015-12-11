@@ -1396,8 +1396,8 @@ CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDe
                                                    HANDLE Token,
                                                    PGENERIC_MAPPING GenericMapping)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    return FALSE;
+    FIXME("%s() semi-stub\n", __FUNCTION__);
+    return CreatePrivateObjectSecurity(ParentDescriptor, CreatorDescriptor, NewDescriptor, IsContainerObject, Token, GenericMapping);
 }
 
 

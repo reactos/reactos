@@ -30,10 +30,10 @@ STRINGTABLE
 {
 5000, "磊灿"
 5001, "视觉样式"
-5002, "ReactOS Foundation"
+5002, "ReactOS 基础"
 5003, "Pisarz, 基于 Luna Inspirat"
 5004, "根据 GNU/GPL 2.0, 2011 释放"
 5005, "http://www.reactos.org"
-5006, "1.0"
+5006, "版本1.0"
 5007, "ReactOS 的视觉样式"
 }

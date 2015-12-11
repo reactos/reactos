@@ -1448,6 +1448,66 @@ PrintEmptyLine(
 }
 
 
+VOID
+GetPartTypeStringFromPartitionTypeW(
+    UCHAR partitionType,
+    PWCHAR strPartType,
+    DWORD cchPartType)
+{
+    CHAR partTypeString[32];
+
+    GetPartTypeStringFromPartitionTypeA(partitionType,
+                                        partTypeString,
+                                        30);
+
+    mbstowcs(strPartType,
+             partTypeString,
+             (30 < cchPartType) ? 30 : cchPartType);
+}
+
+
+VOID
+GetPartTypeStringFromPartitionTypeA(
+    UCHAR partitionType,
+    PCHAR strPartType,
+    DWORD cchPartType)
+{
+    /* Determine partition type */
+    if ((partitionType == PARTITION_FAT_12) ||
+        (partitionType == PARTITION_FAT_16) ||
+        (partitionType == PARTITION_HUGE) ||
+        (partitionType == PARTITION_XINT13))
+    {
+        StringCchCopy(strPartType, cchPartType, "FAT");
+    }
+    else if ((partitionType == PARTITION_FAT32) ||
+             (partitionType == PARTITION_FAT32_XINT13))
+    {
+        StringCchCopy(strPartType, cchPartType, "FAT32");
+    }
+    else if (partitionType == PARTITION_EXT2)
+    {
+        StringCchCopy(strPartType, cchPartType, "EXT2");
+    }
+    else if (partitionType == PARTITION_IFS)
+    {
+        StringCchCopy(strPartType, cchPartType, "NTFS"); /* FIXME: Not quite correct! */
+    }
+    else if (IsContainerPartition(partitionType))
+    {
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_EXTENDED_PARTITION));
+    }
+    else if (partitionType == PARTITION_ENTRY_UNUSED)
+    {
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNUSED));
+    }
+    else
+    {
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNKNOWN));
+    }
+}
+
+
 static
 VOID
 PrintPartitionData(
@@ -1463,7 +1523,9 @@ PrintPartitionData(
     LARGE_INTEGER PartSize;
     PCHAR Unit;
     UCHAR Attribute;
+    CHAR PartTypeString[32];
     PCHAR PartType;
+    PartType = PartTypeString;
 
     Width = List->Right - List->Left - 1;
     Height = List->Bottom - List->Top - 2;
@@ -1503,38 +1565,17 @@ PrintPartitionData(
     else
     {
         /* Determine partition type */
-        PartType = NULL;
+        PartTypeString[0] = '\0';
         if (PartEntry->New == TRUE)
         {
             PartType = MUIGetString(STRING_UNFORMATTED);
         }
         else if (PartEntry->IsPartitioned == TRUE)
         {
-            if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-                (PartEntry->PartitionType == PARTITION_FAT_16) ||
-                (PartEntry->PartitionType == PARTITION_HUGE) ||
-                (PartEntry->PartitionType == PARTITION_XINT13))
-            {
-                PartType = "FAT";
-            }
-            else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
-                     (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-            {
-                PartType = "FAT32";
-            }
-            else if (PartEntry->PartitionType == PARTITION_EXT2)
-            {
-                PartType = "EXT2";
-            }
-            else if (PartEntry->PartitionType == PARTITION_IFS)
-            {
-                PartType = "NTFS"; /* FIXME: Not quite correct! */
-            }
-            else if ((PartEntry->PartitionType == PARTITION_EXTENDED) ||
-                     (PartEntry->PartitionType == PARTITION_XINT13_EXTENDED))
-            {
-                PartType = MUIGetString(STRING_EXTENDED_PARTITION);
-            }
+           GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
+                                               PartTypeString,
+                                               30);
+           PartType = PartTypeString;
         }
 
         PartSize.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
@@ -1557,7 +1598,7 @@ PrintPartitionData(
             Unit = MUIGetString(STRING_KB);
         }
 
-        if (PartType == NULL)
+        if (strcmp(PartType, MUIGetString(STRING_FORMATUNKNOWN)) == 0)
         {
             sprintf(LineBuffer,
                     MUIGetString(STRING_HDDINFOUNK5),

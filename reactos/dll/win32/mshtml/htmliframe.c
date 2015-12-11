@@ -55,7 +55,7 @@ static ULONG WINAPI HTMLIFrameElement_Release(IHTMLIFrameElement *iface)
 static HRESULT WINAPI HTMLIFrameElement_GetTypeInfoCount(IHTMLIFrameElement *iface, UINT *pctinfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.dispex.IDispatchEx_iface,
+    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface,
             pctinfo);
 }
 
@@ -63,7 +63,7 @@ static HRESULT WINAPI HTMLIFrameElement_GetTypeInfo(IHTMLIFrameElement *iface, U
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.dispex.IDispatchEx_iface, iTInfo,
+    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
             lcid, ppTInfo);
 }
 
@@ -71,7 +71,7 @@ static HRESULT WINAPI HTMLIFrameElement_GetIDsOfNames(IHTMLIFrameElement *iface,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.dispex.IDispatchEx_iface, riid,
+    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, riid,
             rgszNames, cNames, lcid, rgDispId);
 }
 
@@ -80,7 +80,7 @@ static HRESULT WINAPI HTMLIFrameElement_Invoke(IHTMLIFrameElement *iface, DISPID
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement(iface);
-    return IDispatchEx_Invoke(&This->framebase.element.node.dispex.IDispatchEx_iface, dispIdMember,
+    return IDispatchEx_Invoke(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
             riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -172,7 +172,7 @@ static ULONG WINAPI HTMLIFrameElement2_Release(IHTMLIFrameElement2 *iface)
 static HRESULT WINAPI HTMLIFrameElement2_GetTypeInfoCount(IHTMLIFrameElement2 *iface, UINT *pctinfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement2(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.dispex.IDispatchEx_iface,
+    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface,
             pctinfo);
 }
 
@@ -180,7 +180,7 @@ static HRESULT WINAPI HTMLIFrameElement2_GetTypeInfo(IHTMLIFrameElement2 *iface,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement2(iface);
-    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.dispex.IDispatchEx_iface, iTInfo,
+    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
             lcid, ppTInfo);
 }
 
@@ -188,7 +188,7 @@ static HRESULT WINAPI HTMLIFrameElement2_GetIDsOfNames(IHTMLIFrameElement2 *ifac
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement2(iface);
-    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.dispex.IDispatchEx_iface, riid,
+    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, riid,
             rgszNames, cNames, lcid, rgDispId);
 }
 
@@ -197,7 +197,7 @@ static HRESULT WINAPI HTMLIFrameElement2_Invoke(IHTMLIFrameElement2 *iface, DISP
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement2(iface);
-    return IDispatchEx_Invoke(&This->framebase.element.node.dispex.IDispatchEx_iface, dispIdMember,
+    return IDispatchEx_Invoke(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
             riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -323,7 +323,7 @@ static ULONG WINAPI HTMLIFrameElement3_Release(IHTMLIFrameElement3 *iface)
 static HRESULT WINAPI HTMLIFrameElement3_GetTypeInfoCount(IHTMLIFrameElement3 *iface, UINT *pctinfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement3(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.dispex.IDispatchEx_iface,
+    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface,
             pctinfo);
 }
 
@@ -331,7 +331,7 @@ static HRESULT WINAPI HTMLIFrameElement3_GetTypeInfo(IHTMLIFrameElement3 *iface,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement3(iface);
-    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.dispex.IDispatchEx_iface, iTInfo,
+    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
             lcid, ppTInfo);
 }
 
@@ -339,7 +339,7 @@ static HRESULT WINAPI HTMLIFrameElement3_GetIDsOfNames(IHTMLIFrameElement3 *ifac
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement3(iface);
-    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.dispex.IDispatchEx_iface, riid,
+    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, riid,
             rgszNames, cNames, lcid, rgDispId);
 }
 
@@ -348,7 +348,7 @@ static HRESULT WINAPI HTMLIFrameElement3_Invoke(IHTMLIFrameElement3 *iface, DISP
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLIFrame *This = impl_from_IHTMLIFrameElement3(iface);
-    return IDispatchEx_Invoke(&This->framebase.element.node.dispex.IDispatchEx_iface, dispIdMember,
+    return IDispatchEx_Invoke(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
             riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 

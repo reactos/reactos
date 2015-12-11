@@ -227,6 +227,8 @@
 #define MIB_IF_TYPE_LOOPBACK            24
 #define MIB_IF_TYPE_SLIP                28
 
+typedef ULONG IFTYPE;
+
 #define MIB_IF_ADMIN_STATUS_UP          1
 #define MIB_IF_ADMIN_STATUS_DOWN        2
 #define MIB_IF_ADMIN_STATUS_TESTING     3

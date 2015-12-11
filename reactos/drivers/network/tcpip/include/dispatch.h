@@ -69,6 +69,11 @@ NTSTATUS DispTdiDeleteIPAddress(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
+NTSTATUS DispTdiQueryIpHwAddress(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
 VOID DispDoDisconnect(
     PVOID Data);
 

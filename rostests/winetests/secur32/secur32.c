@@ -30,6 +30,17 @@
 
 static HMODULE secdll;
 
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeAuthIdentityAsStrings)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE, PCWSTR *, PCWSTR *, PCWSTR *);
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeStringsAsAuthIdentity)
+    (PCWSTR, PCWSTR, PCWSTR, PSEC_WINNT_AUTH_IDENTITY_OPAQUE *);
+static void (SEC_ENTRY *pSspiFreeAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+static void (SEC_ENTRY *pSspiLocalFree)
+    (void *);
+static void (SEC_ENTRY *pSspiZeroAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+
 static BOOLEAN (WINAPI * pGetComputerObjectNameA)(EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG lpnSize);
 static BOOLEAN (WINAPI * pGetComputerObjectNameW)(EXTENDED_NAME_FORMAT NameFormat, LPWSTR lpNameBuffer, PULONG lpnSize);
 static BOOLEAN (WINAPI * pGetUserNameExA)(EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG lpnSize);
@@ -220,6 +231,90 @@ static void test_InitSecurityInterface(void)
     ok(sftW->Reserved4 == sftW->DecryptMessage, "Reserved4 should be equal to DecryptMessage in the security function table\n");
 }
 
+static void test_SspiEncodeStringsAsAuthIdentity(void)
+{
+    static const WCHAR username[] = {'u','s','e','r','n','a','m','e',0};
+    static const WCHAR domainname[] = {'d','o','m','a','i','n','n','a','m','e',0};
+    static const WCHAR password[] = {'p','a','s','s','w','o','r','d',0};
+    const WCHAR *username_ptr, *domainname_ptr, *password_ptr;
+    PSEC_WINNT_AUTH_IDENTITY_OPAQUE id;
+    SECURITY_STATUS status;
+
+    if (!pSspiEncodeStringsAsAuthIdentity)
+    {
+        win_skip( "SspiEncodeAuthIdentityAsStrings not exported by secur32.dll\n" );
+        return;
+    }
+
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, NULL, NULL );
+    ok( status == SEC_E_INVALID_TOKEN, "got %08x\n", status );
+
+    id = (PSEC_WINNT_AUTH_IDENTITY_OPAQUE)0xdeadbeef;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, NULL, &id );
+    ok( status == SEC_E_INVALID_TOKEN, "got %08x\n", status );
+    ok( id == (PSEC_WINNT_AUTH_IDENTITY_OPAQUE)0xdeadbeef, "id set\n" );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, domainname, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, NULL, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, domainname, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+
+    username_ptr = domainname_ptr = password_ptr = NULL;
+    status = pSspiEncodeAuthIdentityAsStrings( id, &username_ptr, &domainname_ptr, &password_ptr );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( !lstrcmpW( username, username_ptr ), "wrong username\n" );
+    ok( !lstrcmpW( domainname, domainname_ptr ), "wrong domainname\n" );
+    ok( !lstrcmpW( password, password_ptr ), "wrong password\n" );
+
+    pSspiZeroAuthIdentity( id );
+
+    pSspiLocalFree( (void *)username_ptr );
+    pSspiLocalFree( (void *)domainname_ptr );
+    pSspiLocalFree( (void *)password_ptr );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+
+    username_ptr = password_ptr = NULL;
+    domainname_ptr = (const WCHAR *)0xdeadbeef;
+    status = pSspiEncodeAuthIdentityAsStrings( id, &username_ptr, &domainname_ptr, &password_ptr );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( !lstrcmpW( username, username_ptr ), "wrong username\n" );
+    ok( domainname_ptr == NULL, "domainname_ptr not cleared\n" );
+    ok( !lstrcmpW( password, password_ptr ), "wrong password\n" );
+
+    pSspiLocalFree( (void *)username_ptr );
+    pSspiLocalFree( (void *)password_ptr );
+    pSspiFreeAuthIdentity( id );
+}
+
 START_TEST(secur32)
 {
     secdll = LoadLibraryA("secur32.dll");
@@ -229,6 +324,11 @@ START_TEST(secur32)
 
     if (secdll)
     {
+        pSspiEncodeAuthIdentityAsStrings = (void *)GetProcAddress(secdll, "SspiEncodeAuthIdentityAsStrings");
+        pSspiEncodeStringsAsAuthIdentity = (void *)GetProcAddress(secdll, "SspiEncodeStringsAsAuthIdentity");
+        pSspiFreeAuthIdentity = (void *)GetProcAddress(secdll, "SspiFreeAuthIdentity");
+        pSspiLocalFree = (void *)GetProcAddress(secdll, "SspiLocalFree");
+        pSspiZeroAuthIdentity = (void *)GetProcAddress(secdll, "SspiZeroAuthIdentity");
         pGetComputerObjectNameA = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameA");
         pGetComputerObjectNameW = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameW");
         pGetUserNameExA = (PVOID)GetProcAddress(secdll, "GetUserNameExA");
@@ -257,6 +357,7 @@ START_TEST(secur32)
             win_skip("GetUserNameExW not exported by secur32.dll\n");
 
         test_InitSecurityInterface();
+        test_SspiEncodeStringsAsAuthIdentity();
 
         FreeLibrary(secdll);
     }

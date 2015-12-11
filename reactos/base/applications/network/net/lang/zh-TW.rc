@@ -1,0 +1,125 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_ACCOUNTS_SYNTAX "使用方法:\nNET ACCOUNTS [/FORCELOGOFF:{分鐘|NO}] [/MINPWLEN:長度]\n\
+             [/MAXPWAGE:{天|UNLIMITED}] [/MINPWAGE:天]\n\
+             [/UNIQUEPW:計數] [/DOMAIN]\n"
+    IDS_ACCOUNTS_HELP "ACCOUNTS\n..."
+    IDS_COMPUTER_SYNTAX "使用方法:\nNET COMPUTER ..."
+    IDS_COMPUTER_HELP "COMPUTER\n..."
+    IDS_CONFIG_SYNTAX "使用方法:\nNET CONFIG ..."
+    IDS_CONFIG_HELP "CONFIG\n..."
+    IDS_CONTINUE_SYNTAX "使用方法:\nNET CONTINUE <服務名稱>"
+    IDS_CONTINUE_HELP "CONTINUE\n..."
+    IDS_FILE_SYNTAX "使用方法:\nNET FILE ..."
+    IDS_FILE_HELP "FILE\n..."
+    IDS_GROUP_SYNTAX "使用方法:\nNET GROUP ..."
+    IDS_GROUP_HELP "GROUP\n..."
+    IDS_HELPMSG_SYNTAX "使用方法:\nNET HELPMSG <錯誤程式碼>"
+    IDS_HELPMSG_HELP "HELPMSG\n..."
+    IDS_LOCALGROUP_SYNTAX "使用方法:\nNET LOCALGROUP [組名 [/COMMENT:""文字""]] [/DOMAIN]\n\
+               組名 {/ADD [/COMMENT:""文字""] | /DELETE} [/DOMAIN]\n\
+               組名稱 [...] {/ADD | /DELETE} [/DOMAIN]"
+    IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
+    IDS_NAME_SYNTAX "使用方法:\nNET NAME ..."
+    IDS_NAME_HELP "NAME\n..."
+    IDS_PRINT_SYNTAX  "使用方法:\nNET PRINT ..."
+    IDS_PRINT_HELP "PRINT\n..."
+    IDS_PAUSE_SYNTAX "使用方法:\nNET PAUSE <服務名稱>"
+    IDS_PAUSE_HELP "PAUSE\n..."
+    IDS_SEND_SYNTAX "使用方法:\nNET SEND ..."
+    IDS_SEND_HELP "SEND\n..."
+    IDS_SESSION_SYNTAX "使用方法:\nNET SESSION ..."
+    IDS_SESSION_HELP "SESSION\n..."
+    IDS_SHARE_SYNTAX "使用方法:\nNET SHARE ..."
+    IDS_SHARE_HELP "SHARE\n..."
+    IDS_START_SYNTAX "使用方法:\nNET START <服務名稱>"
+    IDS_START_HELP "START\n..."
+    IDS_STATISTICS_SYNTAX "使用方法:\nNET STATISTICS ..."
+    IDS_STATISTICS_HELP "STATISTICS\n..."
+    IDS_STOP_SYNTAX "使用方法:\nNET STOP <服務名稱>"
+    IDS_STOP_HELP "STOP\n..."
+    IDS_TIME_SYNTAX "使用方法:\nNET TIME ..."
+    IDS_TIME_HELP "TIME\n..."
+    IDS_USE_SYNTAX "使用方法:\nNET USE ..."
+    IDS_USE_HELP "USE\n..."
+    IDS_USER_SYNTAX "使用方法:\nNET USER [使用者名 [密碼 | *] [選項]] [/DOMAIN]\n\
+         使用者名 {密碼 | *} /ADD [選項] [/DOMAIN]\n\
+         使用者名 [/DELETE] [/DOMAIN]"
+    IDS_USER_HELP "USER\n..."
+    IDS_VIEW_SYNTAX "使用方法:\nNET VIEW ..."
+    IDS_VIEW_HELP "VIEW\n..."
+    IDS_HELP_SYNTAX "使用方法:\nNET HELP <命令>\n   - 或 -\nNET <命令> /HELP\n\n\
+   以下命令是可用的:\n\n\
+   NET ACCOUNTS             NET HELP                 NET SHARE\n\
+   NET COMPUTER             NET HELPMSG              NET START\n\
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
+   NET CONFIG SERVER        NET NAME                 NET STOP\n\
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
+   NET CONTINUE             NET PRINT                NET USE\n\
+   NET FILE                 NET SEND                 NET USER\n\
+   NET GROUP                NET SESSION              NET VIEW\n\n\
+   ..."
+    IDS_NET_SYNTAX "使用方法:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
+      SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+
+    IDS_ACCOUNTS_FORCE_LOGOFF "強制登出後"
+    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu 秒"
+    IDS_ACCOUNTS_MIN_PW_AGE "密碼最短使用期限 (以天)"
+    IDS_ACCOUNTS_MAX_PW_AGE "密碼最長使用期限 (以天)"
+    IDS_ACCOUNTS_MIN_PW_LENGTH "最小密碼長度"
+    IDS_ACCOUNTS_PW_HIST_LENGTH "密碼歷史記錄長度"
+    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "鎖定閾值"
+    IDS_ACCOUNTS_LOCKOUT_DURATION "鎖定時間 (以分鐘為單位)"
+    IDS_ACCOUNTS_LOCKOUT_WINDOW "鎖定觀察視窗 (以分鐘為單位)"
+    IDS_ACCOUNTS_COMPUTER_ROLE "計算機角色"
+    IDS_ACCOUNTS_PRIMARY_SERVER "主伺服器"
+    IDS_ACCOUNTS_BACKUP_SERVER "備份伺服器"
+    IDS_ACCOUNTS_STANDALONE_SERVER "獨立伺服器"
+    IDS_ACCOUNTS_WORKSTATION "工作站"
+
+    IDS_LOCALGROUP_ALIASES "別名 \\\\%s"
+    IDS_LOCALGROUP_ALIAS_NAME "別名名稱"
+    IDS_LOCALGROUP_COMMENT "評論"
+    IDS_LOCALGROUP_MEMBERS "成員"
+
+    IDS_USER_ACCOUNTS "使用者帳戶 \\\\%s"
+    IDS_USER_NAME "使用者名稱"
+    IDS_USER_FULL_NAME "全名"
+    IDS_USER_COMMENT "評論"
+    IDS_USER_USER_COMMENT "使用者註釋"
+    IDS_USER_COUNTRY_CODE "國家/地區程式碼"
+    IDS_USER_ACCOUNT_ACTIVE "帳戶活動"
+    IDS_USER_ACCOUNT_EXPIRES "帳戶過期"
+    IDS_USER_PW_LAST_SET "上次設定的密碼"
+    IDS_USER_PW_EXPIRES "密碼過期"
+    IDS_USER_PW_CHANGEABLE "密碼多變"
+    IDS_USER_PW_REQUIRED "需要密碼"
+    IDS_USER_CHANGE_PW "使用者可以更改密碼"
+    IDS_USER_WORKSTATIONS "允許的工作站"
+    IDS_USER_LOGON_SCRIPT "登入指令碼"
+    IDS_USER_PROFILE "使用者配置檔案"
+    IDS_USER_HOME_DIR "主目錄"
+    IDS_USER_LAST_LOGON "最後一次登入"
+    IDS_USER_LOGON_HOURS "幾個小時允許的登入"
+    IDS_USER_LOCAL_GROUPS "本地組成員身份"
+    IDS_USER_GLOBAL_GROUPS "全局組成員身份"
+
+    IDS_USER_ENTER_PASSWORD1 "為使用者輸入新的密碼: "
+    IDS_USER_ENTER_PASSWORD2 "再次輸入密碼: "
+    IDS_USER_NO_PASSWORD_MATCH "密碼不匹配!"
+
+    IDS_GENERIC_YES "是"
+    IDS_GENERIC_NO "否"
+    IDS_GENERIC_NEVER "永不"
+    IDS_GENERIC_NONE "無"
+    IDS_GENERIC_ALL "所有"
+    IDS_GENERIC_LOCKED "鎖定"
+
+    IDS_ERROR_OPTION_NOT_SUPPORTED "尚不支援 %s 選項。\n"
+    IDS_ERROR_INVALID_OPTION_VALUE "您輸入了無效的值為 %s 選項。\n"
+END

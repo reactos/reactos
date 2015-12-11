@@ -41,6 +41,7 @@ MAIN_MENU MENU
    MENUITEM "&Aseta...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "&Aina päällimmäisenä", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -51,7 +52,6 @@ MAIN_MENU MENU
  }
  POPUP "&Ohje" {
    MENUITEM "&Ohjeen käyttö", MNID_HELP_HELPON
-   MENUITEM "&Aina päällimmäisenä", MNID_HELP_HELPTOP
    MENUITEM "T&ietoja...", MNID_HELP_ABOUT
  }
 }

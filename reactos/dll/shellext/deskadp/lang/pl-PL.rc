@@ -44,7 +44,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODEFMT "%d by %d, %s, %s"
+    IDS_MODEFMT "%d przez %d, %s, %s"
     IDS_DEFREFRESHRATE "Odświeżanie domyślne"
     IDES_REFRESHRATEFMT "%d Herców"
     IDS_4BPP "16 kolorów"

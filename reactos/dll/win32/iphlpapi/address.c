@@ -588,9 +588,10 @@ GetAdaptersAddresses(
                         /* Set the address */
                         //FIXME: ipv4 only (again...)
                         UnicastAddress->Address.lpSockaddr = (LPSOCKADDR)(UnicastAddress + 1);
-                        UnicastAddress->Address.iSockaddrLength = sizeof(AddrEntries[j].iae_addr);
+                        UnicastAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
                         UnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
-                        memcpy(UnicastAddress->Address.lpSockaddr->sa_data, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
+                        ((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_port = 0;
+                        memcpy(&((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_addr, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
 
                         CurrentAA->FirstUnicastAddress = UnicastAddress;
                         Ptr += Size;

@@ -1,3 +1,5 @@
+/* Translated by ??? and Ismael Ferreras Morezuelas (Swyter) */
+
 #pragma once
 
 MUI_LAYOUTS esESLayouts[] =
@@ -294,13 +296,13 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         24,
-        "Este es software libre; vea el c¢digo para las condiciones de copia.",
+        "Este es un software libre; vea el c¢digo para las condiciones de copia.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "No existe garant¡a; ni siquiera para MERCANTIBILIDAD",
+        "No existe garant¡a; ni siquiera de MERCANTIBILIDAD",
         TEXT_STYLE_NORMAL
     },
     {
@@ -837,85 +839,85 @@ static MUI_ENTRY esESConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "Ha solicitado borrar la partici¢n del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "Las particiones del sistema contienen programas de diagn¢stico y configuraci¢n",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "de dispositivos, para arrancar un sistema operativo (como ReactOS) u otros",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "programas fundamentales proporcionados por el fabricante de hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Borre particiones del sistema £nicamente cuando est‚ seguro de que no",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "haya programas de ese tipo en la partici¢n, o cuando est‚ seguro de borrarlos.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "Cuando se elimina una partici¢n puede perder la posibilidad de arrancar el",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "equipo desde ese disco duro hasta que termine de instalar ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Presione INTRO para borrar la partici¢n del sistema, se",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   volver  a pedir confirmaci¢n m s tarde.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Presione ESC para volver a la p gina anterior. Si lo hace ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   la partici¢n no se borrar .",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "INTRO=Continuar  ESC=Cancelar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1364,7 +1366,7 @@ MUI_ERROR esESErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Completado correctamente\n"
     },
     {
         //ERROR_NOT_INSTALLED
@@ -1572,14 +1574,14 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Nombre de carpeta no v lido.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Presione una tecla para continuar."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "La partici¢n selecionada no es lo suficientemente grande como para.\n"
+        "instalar ReactOS. Se necesita una partici¢n de al menos %lu MB.\n"
         "\n"
         "  * Presione una tecla para continuar.",
         NULL
@@ -1599,10 +1601,10 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "El instalador es incapaz de formatear la partici¢n:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "INTRO = reiniciar equipo"
     },
     {
         NULL,
@@ -1743,9 +1745,9 @@ MUI_STRING esESStrings[] =
     {STRING_NONFORMATTEDPART,
     "Ha elegido instalar ReactOS en una nueva partici¢n o en una partici¢n sin formato."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "La partici¢n del sistema todav¡a no ha sido formateada."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "La partici¢n nueva todav¡a no ha sido formateada."},
     {STRING_INSTALLONPART,
     "El instalador est  instalando ReactOS en la partici¢n"},
     {STRING_CHECKINGPART,
@@ -1819,7 +1821,7 @@ MUI_STRING esESStrings[] =
     {STRING_UNPSPACE,
     "    %sEspacio sin particionar%s            %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "MB (m x. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
     "Partici¢n extendida"},
     {STRING_UNFORMATTED,

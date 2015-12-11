@@ -563,7 +563,7 @@ png_push_read_IDAT(png_structrp png_ptr)
        * are of different types and we don't know which variable has the fewest
        * bits.  Carefully select the smaller and cast it to the type of the
        * larger - this cannot overflow.  Do not cast in the following test - it
-       * will break on either 16 or 64 bit platforms.
+       * will break on either 16-bit or 64-bit platforms.
        */
       if (idat_size < save_size)
          save_size = (png_size_t)idat_size;

@@ -80,7 +80,7 @@ IsAcpiComputer(VOID)
    }
 
    pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
-   if (!pDeviceInformation)
+   if (!pValueInformation)
    {
       DPRINT("RtlAllocateHeap() failed\n");
       Status = STATUS_NO_MEMORY;

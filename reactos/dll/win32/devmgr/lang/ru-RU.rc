@@ -25,7 +25,7 @@ BEGIN
     IDS_UPDATEDRV "О&бновить драйвер..."
     IDS_REBOOT "Пер&езагрузить компьютер..."
     IDS_NOTAVAILABLE "Недоступно"
-    IDS_NOTDIGITALLYSIGNED "Нет цифровой подписи"
+    IDS_NOTDIGITALLYSIGNED "Цифровая подпись отсутствует"
     IDS_NODRIVERS "Файлы драйверов для этого устройства не установлены или не были загружены."
     IDS_RESOURCE_COLUMN "Тип ресурса"
     IDS_SETTING_COLUMN "Настройки"
@@ -253,12 +253,12 @@ BEGIN
   MENUITEM "Action",                        IDC_ACTIONMENU
   POPUP "View"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "&Устройства по типу",             IDC_DEVBYTYPE
+    MENUITEM "Устройства по под&ключению",       IDC_DEVBYCONN
+    MENUITEM "&Ресурсы по типу",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурсы по подк&лючению",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Показать &скрытые устройства",         IDC_SHOWHIDDEN
   END
   POPUP "Help"
   BEGIN
@@ -269,50 +269,50 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Диспетчер устройств ReactOS"
+  IDS_CONFIRM_DISABLE       "Отключение устройства означает, что оно перестанет работать. Отключить устройство?"
+  IDS_CONFIRM_UNINSTALL     "Предупреждение: Сейчас устройство будет удалено из системы.\r\nВы хотите продолжить?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "&Обновить драйвер..."
+  IDS_MENU_ENABLE           "&Включить"
+  IDS_MENU_DISABLE          "&Отключить"
+  IDS_MENU_UNINSTALL        "&Удалить"
+  IDS_MENU_SCAN             "О&бновить конфигурацию оборудования"
+  IDS_MENU_ADD              "&Добавить устройство"
+  IDS_MENU_PROPERTIES       "&Свойства"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Свойства"
+  IDS_TOOLTIP_SCAN          "Обновить конфигурацию оборудования"
+  IDS_TOOLTIP_ENABLE        "Включить"
+  IDS_TOOLTIP_DISABLE       "Отключить"
+  IDS_TOOLTIP_UPDATE        "Обновить драйвер"
+  IDS_TOOLTIP_UNINSTALL     "Удалить"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Открытие страницы свойств для выделенного объекта."
+  IDS_HINT_SCAN         " Проверка на наличие изменений или новых устройств Plug and Play."
+  IDS_HINT_ENABLE       " Включение выбранного устройства."
+  IDS_HINT_DISABLE      " Отключение выбранного устройства."
+  IDS_HINT_UPDATE       " Запуск мастера обновления драйверов для выделенного устройства."
+  IDS_HINT_UNINSTALL    " Удаление драйвера для выбранного устройства."
+  IDS_HINT_ADD          " Добавить старое (не Plug-and-Play) устройство на этот компьютер." 
+  IDS_HINT_ABOUT        " О программе Диспетчер устройств ReactOS."
+  IDS_HINT_EXIT         " Выход из программы."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Показывает устройства, отсортированные по типу оборудования."
+  IDS_HINT_DEV_BY_CONN  " Показывает устройства, отсортированные по подключению."
+  IDS_HINT_RES_BY_TYPE  " Показывает ресурсы, отсортированные по типу."
+  IDS_HINT_RES_BY_CONN  " Показывает ресурсы, отсортированные по подключению."
+  IDS_HINT_SHOW_HIDDEN  " Показывает удаленные из системы и устаревшие устройства."
 
   IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
   IDS_HINT_SYS_MOVE     " Moves this window."

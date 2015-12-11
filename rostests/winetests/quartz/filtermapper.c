@@ -541,6 +541,98 @@ out:
         IFilterMapper2_Release(pMapper);
 }
 
+typedef struct IUnknownImpl
+{
+    IUnknown IUnknown_iface;
+    int AddRef_called;
+    int Release_called;
+} IUnknownImpl;
+
+static IUnknownImpl *IUnknownImpl_from_iface(IUnknown * iface)
+{
+    return CONTAINING_RECORD(iface, IUnknownImpl, IUnknown_iface);
+}
+
+static HRESULT WINAPI IUnknownImpl_QueryInterface(IUnknown * iface, REFIID riid, LPVOID * ppv)
+{
+    ok(0, "QueryInterface should not be called for %s\n", wine_dbgstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI IUnknownImpl_AddRef(IUnknown * iface)
+{
+    IUnknownImpl *This = IUnknownImpl_from_iface(iface);
+    This->AddRef_called++;
+    return 2;
+}
+
+static ULONG WINAPI IUnknownImpl_Release(IUnknown * iface)
+{
+    IUnknownImpl *This = IUnknownImpl_from_iface(iface);
+    This->Release_called++;
+    return 1;
+}
+
+static CONST_VTBL IUnknownVtbl IUnknownImpl_Vtbl =
+{
+    IUnknownImpl_QueryInterface,
+    IUnknownImpl_AddRef,
+    IUnknownImpl_Release
+};
+
+static void test_aggregate_filter_mapper(void)
+{
+    HRESULT hr;
+    IUnknown *pmapper;
+    IUnknown *punk;
+    IUnknownImpl unk_outer = { { &IUnknownImpl_Vtbl }, 0, 0 };
+
+    hr = CoCreateInstance(&CLSID_FilterMapper2, &unk_outer.IUnknown_iface, CLSCTX_INPROC_SERVER,
+                          &IID_IUnknown, (void **)&pmapper);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(pmapper != &unk_outer.IUnknown_iface, "pmapper = %p, expected not %p\n", pmapper, &unk_outer.IUnknown_iface);
+
+    hr = IUnknown_QueryInterface(pmapper, &IID_IUnknown, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 0, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 0, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper2, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+    unk_outer.AddRef_called = 0;
+    unk_outer.Release_called = 0;
+
+    hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper3, (void **)&punk);
+    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
+    IUnknown_Release(punk);
+
+    ok(unk_outer.AddRef_called == 1, "IUnknownImpl_AddRef called %d times\n", unk_outer.AddRef_called);
+    ok(unk_outer.Release_called == 1, "IUnknownImpl_Release called %d times\n", unk_outer.Release_called);
+
+    IUnknown_Release(pmapper);
+}
+
 START_TEST(filtermapper)
 {
     CoInitialize(NULL);
@@ -550,6 +642,7 @@ START_TEST(filtermapper)
     test_ifiltermapper_from_filtergraph();
     test_register_filter_with_null_clsMinorType();
     test_parse_filter_data();
+    test_aggregate_filter_mapper();
 
     CoUninitialize();
 }

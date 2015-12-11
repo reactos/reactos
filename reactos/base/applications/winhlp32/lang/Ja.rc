@@ -43,6 +43,7 @@ MAIN_MENU MENU
    MENUITEM "定義(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "オプション(&O)" {
+  MENUITEM "常に手前に表示(&T)", MNID_HELP_HELPTOP
   MENUITEM "履歴",		MNID_OPTS_HISTORY
   POPUP    "フォント"
   BEGIN
@@ -53,7 +54,6 @@ MAIN_MENU MENU
  }
  POPUP "ヘルプ(&H)" {
    MENUITEM "ヘルプについてのヘルプ(&O)", MNID_HELP_HELPON
-   MENUITEM "常に手前に表示(&T)", MNID_HELP_HELPTOP
    MENUITEM "情報(&I)...", MNID_HELP_ABOUT
  }
 }

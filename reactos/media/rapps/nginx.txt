@@ -22,5 +22,9 @@ License = FreeBSD
 Description = Server HTTP, cu funcționalități de mandatar-invers (reverse proxy) și mandatar poștal, creat de Igor Sysoev.
 Size = 1,22 Mo
 
+[Section.041f]
+Description = Igor Sysoev eliyle yazılmış, bir posta vekil sunucusu denli iyi bir HTTP ve tersine vekil sunucusu.
+Size = 1,22 MB
+
 [Section.0804]
 Description = HTTP 和反向代理服务器，以及一个邮件代理服务器，由 Igor Sysoev 写。

@@ -4,14 +4,14 @@
 
 [Section]
 Name = CCleaner
-Version = 5.08
+Version = 5.12
 License = Freeware
 Description = A decent tool for cleaning temporary files and general computer maintenance.
-Size = 6.25 MB
+Size = 6.5 MB
 Category = 12
 URLSite = http://www.piriform.com/ccleaner
-URLDownload = http://download.piriform.com/ccsetup508.exe
-SHA1 = aa7affcbdaf13c3872f32eaccf3befb92fd0fa80
+URLDownload = http://download.piriform.com/ccsetup512.exe
+SHA1 = 5b189555c663407c8da7930ef070ce16c9b20ce1
 CDPath = none
 
 [Section.0407]
@@ -24,12 +24,12 @@ Description = Una herramienta de limpieza y mantenimiento con la que borrar arch
 [Section.041f]
 License = Ücretsiz
 Description = PC'nizi temizleme için çok iyi araç.
-Size = 6,25 MB
+Size = 6,5 MB
 
 [Section.0418]
 License = Gratuită
 Description = Utilitar pentru mentenanța ordinii în configurația sistemului.
-Size = 6,25 Mo
+Size = 6,5 Mo
 
 [Section.0804]
 Description = 非常好的工具，清理您的电脑。

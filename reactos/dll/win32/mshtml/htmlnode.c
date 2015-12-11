@@ -486,14 +486,14 @@ static ULONG WINAPI HTMLDOMNode_Release(IHTMLDOMNode *iface)
 static HRESULT WINAPI HTMLDOMNode_GetTypeInfoCount(IHTMLDOMNode *iface, UINT *pctinfo)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode_GetTypeInfo(IHTMLDOMNode *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+    return IDispatchEx_GetTypeInfo(&This->event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode_GetIDsOfNames(IHTMLDOMNode *iface, REFIID riid,
@@ -501,7 +501,7 @@ static HRESULT WINAPI HTMLDOMNode_GetIDsOfNames(IHTMLDOMNode *iface, REFIID riid
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+    return IDispatchEx_GetIDsOfNames(&This->event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
             lcid, rgDispId);
 }
 
@@ -510,7 +510,7 @@ static HRESULT WINAPI HTMLDOMNode_Invoke(IHTMLDOMNode *iface, DISPID dispIdMembe
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
+    return IDispatchEx_Invoke(&This->event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -1084,14 +1084,14 @@ static ULONG WINAPI HTMLDOMNode2_Release(IHTMLDOMNode2 *iface)
 static HRESULT WINAPI HTMLDOMNode2_GetTypeInfoCount(IHTMLDOMNode2 *iface, UINT *pctinfo)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode2(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_GetTypeInfo(IHTMLDOMNode2 *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode2(iface);
-    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+    return IDispatchEx_GetTypeInfo(&This->event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLDOMNode2_GetIDsOfNames(IHTMLDOMNode2 *iface, REFIID riid,
@@ -1099,7 +1099,7 @@ static HRESULT WINAPI HTMLDOMNode2_GetIDsOfNames(IHTMLDOMNode2 *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode2(iface);
-    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+    return IDispatchEx_GetIDsOfNames(&This->event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
             lcid, rgDispId);
 }
 
@@ -1108,7 +1108,7 @@ static HRESULT WINAPI HTMLDOMNode2_Invoke(IHTMLDOMNode2 *iface, DISPID dispIdMem
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode2(iface);
-    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
+    return IDispatchEx_Invoke(&This->event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -1147,8 +1147,6 @@ HRESULT HTMLDOMNode_QI(HTMLDOMNode *This, REFIID riid, void **ppv)
         *ppv = &This->IHTMLDOMNode_iface;
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         *ppv = &This->IHTMLDOMNode_iface;
-    }else if(IsEqualGUID(&IID_IDispatchEx, riid) && This->dispex.data) {
-        *ppv = &This->dispex.IDispatchEx_iface;
     }else if(IsEqualGUID(&IID_IHTMLDOMNode, riid)) {
         *ppv = &This->IHTMLDOMNode_iface;
     }else if(IsEqualGUID(&IID_IHTMLDOMNode2, riid)) {
@@ -1159,7 +1157,7 @@ HRESULT HTMLDOMNode_QI(HTMLDOMNode *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_nsCycleCollectionISupports, riid)) {
         *ppv = &This->IHTMLDOMNode_iface;
         return NS_OK;
-    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+    }else if(dispex_query_interface(&This->event_target.dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }else {
         *ppv = NULL;
@@ -1177,8 +1175,8 @@ void HTMLDOMNode_destructor(HTMLDOMNode *This)
         nsIDOMNode_Release(This->nsnode);
     if(This->doc && &This->doc->node != This)
         htmldoc_release(&This->doc->basedoc);
-    if(This->event_target)
-        release_event_target(This->event_target);
+    if(This->event_target.ptr)
+        release_event_target(This->event_target.ptr);
 }
 
 static HRESULT HTMLDOMNode_clone(HTMLDOMNode *This, nsIDOMNode *nsnode, HTMLDOMNode **ret)
@@ -1278,7 +1276,7 @@ static nsresult NSAPI HTMLDOMNode_traverse(void *ccp, void *p, nsCycleCollection
         note_cc_edge((nsISupports*)This->nsnode, "This->nsnode", cb);
     if(This->doc && &This->doc->node != This)
         note_cc_edge((nsISupports*)&This->doc->node.IHTMLDOMNode_iface, "This->doc", cb);
-    dispex_traverse(&This->dispex, cb);
+    dispex_traverse(&This->event_target.dispex, cb);
 
     if(This->vtbl->traverse)
         This->vtbl->traverse(This, cb);
@@ -1295,7 +1293,7 @@ static nsresult NSAPI HTMLDOMNode_unlink(void *p)
     if(This->vtbl->unlink)
         This->vtbl->unlink(This);
 
-    dispex_unlink(&This->dispex);
+    dispex_unlink(&This->event_target.dispex);
 
     if(This->nsnode) {
         nsIDOMNode *nsnode = This->nsnode;
@@ -1323,7 +1321,7 @@ static void NSAPI HTMLDOMNode_delete_cycle_collectable(void *p)
     if(This->vtbl->unlink)
         This->vtbl->unlink(This);
     This->vtbl->destructor(This);
-    release_dispex(&This->dispex);
+    release_dispex(&This->event_target.dispex);
     heap_free(This);
 }
 

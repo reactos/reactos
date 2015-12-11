@@ -1078,7 +1078,15 @@
     }
 
     /* Fine, now run the font program! */
+
+    /* In case of an error while executing `fpgm', we intentionally don't */
+    /* clean up immediately – bugs in the `fpgm' are so fundamental that  */
+    /* all following hinting calls should fail.  Additionally, `fpgm' is  */
+    /* to be executed just once; calling it again is completely useless   */
+    /* and might even lead to extremely slow behaviour if it is malformed */
+    /* (containing an infinite loop, for example).                        */
     error = tt_size_run_fpgm( size, pedantic );
+    return error;
 
   Exit:
     if ( error )

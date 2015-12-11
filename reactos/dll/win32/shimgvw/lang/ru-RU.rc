@@ -18,11 +18,11 @@ END
 
 STRINGTABLE
 BEGIN
-    // IDS_EMF_FILE    "EMF Image"
-    IDS_GIF_FILE    "GIF Image"
-    IDS_JPG_FILE    "JPEG Image"
-    IDS_BMP_FILE    "Bitmap Image"
-    IDS_PNG_FILE    "PNG Image"
-    // IDS_TIF_FILE    "TIF Image"
-    // IDS_WMF_FILE    "WMF Image"
+    // IDS_EMF_FILE    "EMF изображение"
+    IDS_GIF_FILE    "GIF изображение"
+    IDS_JPG_FILE    "JPEG изображение"
+    IDS_BMP_FILE    "Bitmap изображение"
+    IDS_PNG_FILE    "PNG изображение"
+    // IDS_TIF_FILE    "TIF изображение"
+    // IDS_WMF_FILE    "WMF изображение"
 END

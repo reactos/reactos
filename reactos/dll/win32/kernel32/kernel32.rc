@@ -44,3 +44,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "winnls/lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "winnls/lang/zh-CN.rc"
+#endif

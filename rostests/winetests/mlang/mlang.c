@@ -2092,7 +2092,7 @@ static HRESULT WINAPI stream_Clone(IStream *iface, IStream **stream)
     return E_NOTIMPL;
 }
 
-static IStreamVtbl stream_vtbl =
+static /* const */ IStreamVtbl stream_vtbl =
 {
     stream_QueryInterface,
     stream_AddRef,

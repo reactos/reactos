@@ -39,6 +39,7 @@ MAIN_MENU MENU
    MENUITEM "&Definovať...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "Vždy na &vrchu", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -49,7 +50,6 @@ MAIN_MENU MENU
  }
  POPUP "&Pomoc" {
    MENUITEM "Pomoc &na pomoci", MNID_HELP_HELPON
-   MENUITEM "Vždy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }

@@ -18,6 +18,13 @@
  *
  */
 
+#if 0
+#pragma makedep install
+#pragma makedep typelib
+#endif
+
+#include <olectl.h>
+
 [
   uuid(00020430-0000-0000-C000-000000000046),
   version(2.0),
@@ -61,7 +68,7 @@ library stdole
         void *pfnDeferredFillIn;
         SCODE scode;
     } EXCEPINFO;
-#ifndef __midl
+
     [
         odl,
         uuid(00000000-0000-0000-C000-000000000046),
@@ -139,7 +146,7 @@ library stdole
         HRESULT Clone(
                       [out] IEnumVARIANT **ppenum);
     }
-#endif /* !__midl */
+
     typedef [uuid(66504301-BE0F-101A-8BBB-00AA00300CAB), public]
         unsigned long OLE_COLOR;
 
@@ -270,14 +277,14 @@ library stdole
     ]
     dispinterface Font {
     properties:
-        [id(0x0)] BSTR Name;
-        [id(0x2)] CURRENCY Size;
-        [id(0x3)] VARIANT_BOOL Bold;
-        [id(0x4)] VARIANT_BOOL Italic;
-        [id(0x5)] VARIANT_BOOL Underline;
-        [id(0x6)] VARIANT_BOOL Strikethrough;
-        [id(0x7)] short Weight;
-        [id(0x8)] short Charset;
+        [id(DISPID_FONT_NAME)] BSTR Name;
+        [id(DISPID_FONT_SIZE)] CURRENCY Size;
+        [id(DISPID_FONT_BOLD)] VARIANT_BOOL Bold;
+        [id(DISPID_FONT_ITALIC)] VARIANT_BOOL Italic;
+        [id(DISPID_FONT_UNDER)] VARIANT_BOOL Underline;
+        [id(DISPID_FONT_STRIKE)] VARIANT_BOOL Strikethrough;
+        [id(DISPID_FONT_WEIGHT)] short Weight;
+        [id(DISPID_FONT_CHARSET)] short Charset;
     methods:
     }
 
@@ -349,13 +356,14 @@ library stdole
     ]
     dispinterface Picture {
     properties:
-        [id(0x0), readonly] OLE_HANDLE Handle;
-        [id(0x2)] OLE_HANDLE hPal;
-        [id(0x3), readonly] short Type; 
-        [id(0x4), readonly] OLE_XSIZE_HIMETRIC Width;
-        [id(0x5), readonly] OLE_YSIZE_HIMETRIC Height;
+        [id(DISPID_PICT_HANDLE), readonly] OLE_HANDLE Handle;
+        [id(DISPID_PICT_HPAL)] OLE_HANDLE hPal;
+        [id(DISPID_PICT_TYPE), readonly] short Type;
+        [id(DISPID_PICT_WIDTH), readonly] OLE_XSIZE_HIMETRIC Width;
+        [id(DISPID_PICT_HEIGHT), readonly] OLE_YSIZE_HIMETRIC Height;
     methods:
-        [id(0x6)] void Render(int hdc,
+        [id(DISPID_PICT_RENDER)]
+                  void Render(int hdc,
                               long x,
                               long y,
                               long cx,
@@ -400,9 +408,9 @@ library stdole
          helpcontext(0x2775)
         ]
         HRESULT LoadPicture([in, optional] VARIANT filename,
-                            [in, optional, defaultvalue(0)] int widthDesired,
-                            [in, optional, defaultvalue(0)] int heightDesired,
-                            [in, optional, defaultvalue(Default)] enum LoadPictureConstants flags,
+                            [in, defaultvalue(0)] int widthDesired,
+                            [in, defaultvalue(0)] int heightDesired,
+                            [in, defaultvalue(Default)] enum LoadPictureConstants flags,
                             [out, retval] IPictureDisp **retval);
         [
          entry("OleSavePictureFile"),
@@ -422,7 +430,7 @@ library stdole
     dispinterface FontEvents {
     properties:
     methods:
-        [id(0x9)] void FontChanged([in] BSTR PropertyName);
+        [id(DISPID_FONT_CHANGED)] void FontChanged([in] BSTR PropertyName);
     };
 
     typedef [public] FontEvents IFontEventsDisp;

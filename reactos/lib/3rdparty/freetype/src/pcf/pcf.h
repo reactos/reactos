@@ -226,8 +226,9 @@ FT_BEGIN_HEADER
 #define GLYPHPADOPTIONS  4 /* I'm not sure about this */
 
   FT_LOCAL( FT_Error )
-  pcf_load_font( FT_Stream,
-                 PCF_Face );
+  pcf_load_font( FT_Stream  stream,
+                 PCF_Face   face,
+                 FT_Long    face_index );
 
 FT_END_HEADER
 

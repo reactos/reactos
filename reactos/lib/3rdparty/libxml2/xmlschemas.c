@@ -24186,6 +24186,7 @@ xmlSchemaValidateFacets(xmlSchemaAbstractCtxtPtr actxt,
 	else
 	    goto pattern_and_enum;
     }
+
     /*
     * Whitespace handling is only of importance for string-based
     * types.
@@ -24196,14 +24197,13 @@ xmlSchemaValidateFacets(xmlSchemaAbstractCtxtPtr actxt,
 	ws = xmlSchemaGetWhiteSpaceFacetValue(type);
     } else
 	ws = XML_SCHEMA_WHITESPACE_COLLAPSE;
+
     /*
     * If the value was not computed (for string or
     * anySimpleType based types), then use the provided
     * type.
     */
-    if (val == NULL)
-	valType = valType;
-    else
+    if (val != NULL)
 	valType = xmlSchemaGetValType(val);
 
     ret = 0;
@@ -25546,7 +25546,7 @@ xmlSchemaVAttributesComplex(xmlSchemaValidCtxtPtr vctxt)
 		    if (xmlNewProp(defAttrOwnerElem,
 			iattr->localName, value) == NULL) {
 			VERROR_INT("xmlSchemaVAttributesComplex",
-			    "callling xmlNewProp()");
+			    "calling xmlNewProp()");
 			if (normValue != NULL)
 			    xmlFree(normValue);
 			goto internal_error;

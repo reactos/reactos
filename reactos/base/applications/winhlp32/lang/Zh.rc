@@ -45,6 +45,7 @@ MAIN_MENU MENU
    MENUITEM "定义(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "选项(&O)" {
+  MENUITEM "总是在最前面(&T)", MNID_HELP_HELPTOP
   MENUITEM "历史",		MNID_OPTS_HISTORY
   POPUP    "字体"
   BEGIN
@@ -55,7 +56,6 @@ MAIN_MENU MENU
  }
  POPUP "帮助(&H)" {
    MENUITEM "如何使用帮助(&O)", MNID_HELP_HELPON
-   MENUITEM "总是在最前面(&T)", MNID_HELP_HELPTOP
    MENUITEM "关于 Wine 帮助(&I)...", MNID_HELP_ABOUT
  }
 }
@@ -131,6 +131,7 @@ MAIN_MENU MENU
    MENUITEM "定義(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "選項(&O)" {
+  MENUITEM "總是在最上面(&T)", MNID_HELP_HELPTOP
   MENUITEM "歷史",		MNID_OPTS_HISTORY
   POPUP    "字型"
   BEGIN
@@ -141,7 +142,6 @@ MAIN_MENU MENU
  }
  POPUP "幫助(&H)" {
    MENUITEM "如何使用幫助(&O)", MNID_HELP_HELPON
-   MENUITEM "總是在最上面(&T)", MNID_HELP_HELPTOP
    MENUITEM "資訊(&I)...", MNID_HELP_ABOUT
  }
 }

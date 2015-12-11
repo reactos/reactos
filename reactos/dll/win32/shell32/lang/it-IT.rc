@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Scegliere le impostazioni avanzate per questo collegamento.", -1, 5, 30, 210, 10
     CHECKBOX "Eseguire con credenziali diverse", 14000, 25, 50, 150, 10
     LTEXT "Questa opzione permette l'esecuzione del collegamento come se si fosse un altro utente o di proteggere il computer e i dati da attività non autorizzate del programma.", -1, 50, 60, 175, 40
-    CHECKBOX "Eseguire in uno spazio di memoria separato", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Eseguire in uno spazio di memoria separato", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Annulla", 2, 120, 124, 50, 15, WS_VISIBLE
 END

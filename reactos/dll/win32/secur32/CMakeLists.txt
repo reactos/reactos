@@ -6,7 +6,6 @@ spec2def(secur32.dll secur32.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     dllmain.c
     lsalpc.c
-    secext.c
     sspi.c
     stubs.c
     thunks.c

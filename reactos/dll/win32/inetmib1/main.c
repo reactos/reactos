@@ -674,7 +674,7 @@ static void mib2IpStatsInit(void)
 }
 
 static struct structToAsnValue mib2IpMap[] = {
-    { FIELD_OFFSET(MIB_IPSTATS, dwForwarding), copyInt }, /* 1 */
+    { FIELD_OFFSET(MIB_IPSTATS, u.dwForwarding), copyInt }, /* 1 */
     { FIELD_OFFSET(MIB_IPSTATS, dwDefaultTTL), copyInt }, /* 2 */
     { FIELD_OFFSET(MIB_IPSTATS, dwInReceives), copyInt }, /* 3 */
     { FIELD_OFFSET(MIB_IPSTATS, dwInHdrErrors), copyInt }, /* 4 */
@@ -831,8 +831,8 @@ static struct structToAsnValue mib2IpRouteMap[] = {
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardMetric3), copyInt },
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardMetric4), copyInt },
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardNextHop), copyIpAddr },
-    { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardType), copyInt },
-    { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardProto), copyInt },
+    { FIELD_OFFSET(MIB_IPFORWARDROW, u1.dwForwardType), copyInt },
+    { FIELD_OFFSET(MIB_IPFORWARDROW, u2.dwForwardProto), copyInt },
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardAge), copyInt },
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardMask), copyIpAddr },
     { FIELD_OFFSET(MIB_IPFORWARDROW, dwForwardMetric5), copyInt },
@@ -929,7 +929,7 @@ static struct structToAsnValue mib2IpNetMap[] = {
     { FIELD_OFFSET(MIB_IPNETROW, dwIndex), copyInt },
     { FIELD_OFFSET(MIB_IPNETROW, dwPhysAddrLen), copyIpNetPhysAddr },
     { FIELD_OFFSET(MIB_IPNETROW, dwAddr), copyIpAddr },
-    { FIELD_OFFSET(MIB_IPNETROW, dwType), copyInt },
+    { FIELD_OFFSET(MIB_IPNETROW, u.dwType), copyInt },
 };
 
 static void mib2IpNetInit(void)
@@ -1084,7 +1084,7 @@ static void mib2TcpInit(void)
 }
 
 static struct structToAsnValue mib2TcpMap[] = {
-    { FIELD_OFFSET(MIB_TCPSTATS, dwRtoAlgorithm), copyInt },
+    { FIELD_OFFSET(MIB_TCPSTATS, u.dwRtoAlgorithm), copyInt },
     { FIELD_OFFSET(MIB_TCPSTATS, dwRtoMin), copyInt },
     { FIELD_OFFSET(MIB_TCPSTATS, dwRtoMax), copyInt },
     { FIELD_OFFSET(MIB_TCPSTATS, dwMaxConn), copyInt },

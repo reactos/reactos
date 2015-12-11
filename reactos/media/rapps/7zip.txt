@@ -4,14 +4,14 @@
 
 [Section]
 Name = 7-Zip
-Version = 15.05b
+Version = 15.12
 License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
-Size = 1.14 MB
+Size = 1.20 MB
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://www.7-zip.org/a/7z1505.exe
-SHA1 = ece8bbd4c8903095d44e99196219c953a1d47bfd
+URLDownload = http://www.7-zip.org/a/7z1512.msi
+SHA1 = 43a87ae650b3e0651d55da055c82d58336e6c257
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos c
 
 [Section.040c]
 Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et d'autres archives.
-Size = 1,14 Mo
+Size = 1,20 Mo
 
 [Section.0410]
 Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
@@ -35,14 +35,14 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 
 [Section.0418]
 Description = Utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
-Size = 1,14 Mo
+Size = 1,20 Mo
 
 [Section.0419]
 Description = Утилита для создания и открытия 7zip, zip, tar, rar и других архивных файлов.
 
 [Section.041f]
 Description = 7zip, zip, tar, rar ve başka birçok belgelik biçimi destekli bir kütük belgelikleme aracı.
-Size = 1,14 MB
+Size = 1,20 MB
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.

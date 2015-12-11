@@ -1603,10 +1603,100 @@ static void test_fragmentsize(void)
     CloseHandle(hevent);
 }
 
+static void create_wav_file(char *temp_file)
+{
+    WAVEFORMATEX format;
+    HMMIO h;
+    MMCKINFO riff_chunk, chunk;
+    MMRESULT rc;
+    LONG written;
+    DWORD length;
+    char *buffer;
+
+    format.wFormatTag=WAVE_FORMAT_PCM;
+    format.cbSize = 0;
+    format.nChannels=1;
+    format.wBitsPerSample=8;
+    format.nSamplesPerSec=8000;
+    format.nBlockAlign=format.nChannels*format.wBitsPerSample/8;
+    format.nAvgBytesPerSec=format.nSamplesPerSec*format.nBlockAlign;
+
+    h = mmioOpenA(temp_file, NULL, MMIO_ALLOCBUF | MMIO_WRITE | MMIO_CREATE);
+    ok(h != NULL, "Can't open temp_file\n");
+
+    riff_chunk.fccType = mmioFOURCC('W','A','V','E');
+    riff_chunk.cksize = 0;
+    rc = mmioCreateChunk(h, &riff_chunk, MMIO_CREATERIFF);
+    ok(rc == MMSYSERR_NOERROR, "mmioCreateChunk failed, got %u\n", rc);
+
+    chunk.ckid = mmioFOURCC('f','m','t',' ');
+    chunk.cksize = 0;
+    rc = mmioCreateChunk(h, &chunk, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioCreateChunk failed, got %u\n", rc);
+    written = mmioWrite(h, (char*)&format, sizeof(format));
+    ok(written == sizeof(format), "mmioWrite failed, got %d\n", written);
+    rc = mmioAscend(h, &chunk, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioAscend failed, got %d\n", rc);
+
+    chunk.ckid = mmioFOURCC('d','a','t','a');
+    rc = mmioCreateChunk(h, &chunk, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioCreateChunk failed, got %u\n", rc);
+    buffer = wave_generate_silence(&format, .1, &length);
+    written = mmioWrite(h, buffer, length);
+    ok(written == length, "mmioWrite failed, got %d\n", written);
+    rc = mmioAscend(h, &chunk, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioAscend failed, got %d\n", rc);
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    rc = mmioAscend(h, &riff_chunk, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioAscend failed, got %d\n", rc);
+
+    rc = mmioClose(h, 0);
+    ok(rc == MMSYSERR_NOERROR, "mmioClose failed, got %u\n", rc);
+}
+
+static void test_PlaySound(void)
+{
+    BOOL br;
+    char test_file[MAX_PATH], temp[MAX_PATH], *exts;
+
+    if(waveOutGetNumDevs() == 0) {
+        skip("No output devices available\n");
+        return;
+    }
+
+    GetTempPathA(sizeof(test_file), test_file);
+    strcat(test_file, "mysound.wav");
+    create_wav_file(test_file);
+
+    br = PlaySoundA(test_file, NULL, SND_FILENAME | SND_NODEFAULT);
+    ok(br, "PlaySound failed, got %d\n", br);
+
+    /* SND_ALIAS fallbacks to SND_FILENAME */
+    br = PlaySoundA(test_file, NULL, SND_ALIAS | SND_NODEFAULT);
+    ok(br, "PlaySound failed, got %d\n", br);
+
+    strcpy(temp, test_file);
+    exts = strrchr(temp, '.');
+
+    /* no extensions */
+    *exts = '\0';
+    br = PlaySoundA(temp, NULL, SND_FILENAME | SND_NODEFAULT);
+    ok(br, "PlaySound failed, got %d\n", br);
+
+    /* ends with a dot */
+    strcpy(exts, ".");
+    br = PlaySoundA(temp, NULL, SND_FILENAME | SND_NODEFAULT);
+    ok(!br || broken(br), "PlaySound succeeded, got %d\n", br);
+
+    DeleteFileA(test_file);
+}
+
 START_TEST(wave)
 {
     test_multiple_waveopens();
     wave_out_tests();
     test_sndPlaySound();
     test_fragmentsize();
+    test_PlaySound();
 }

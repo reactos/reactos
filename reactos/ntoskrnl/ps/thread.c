@@ -1081,7 +1081,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     Status = SeCreateAccessState(&AccessState,
                                  &AuxData,
                                  DesiredAccess,
-                                 &PsProcessType->TypeInfo.GenericMapping);
+                                 &PsThreadType->TypeInfo.GenericMapping);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if this is a debugger */

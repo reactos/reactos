@@ -45,15 +45,6 @@
 #define FT_COMPONENT  trace_ttinterp
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* In order to detect infinite loops in the code, we set up a counter    */
-  /* within the run loop.  A single stroke of interpretation is now        */
-  /* limited to a maximum number of opcodes defined below.                 */
-  /*                                                                       */
-#define MAX_RUNNABLE_OPCODES  1000000L
-
-
 #define SUBPIXEL_HINTING                                                     \
           ( ((TT_Driver)FT_FACE_DRIVER( exc->face ))->interpreter_version == \
             TT_INTERPRETER_VERSION_38 )
@@ -7565,7 +7556,7 @@
                               ? 2
                               : 12 - ( *opcode_name[exc->opcode] - '0' ),
                               "#" ));
-        for ( n = 0; n < cnt; n++ )
+        for ( n = 1; n <= cnt; n++ )
           FT_TRACE7(( " %d", exc->stack[exc->top - n] ));
         FT_TRACE6(( "\n" ));
       }
@@ -8230,7 +8221,7 @@
 
       /* increment instruction counter and check if we didn't */
       /* run this program for too long (e.g. infinite loops). */
-      if ( ++ins_counter > MAX_RUNNABLE_OPCODES )
+      if ( ++ins_counter > TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES )
         return FT_THROW( Execution_Too_Long );
 
     LSuiteLabel_:

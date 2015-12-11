@@ -41,6 +41,7 @@ MAIN_MENU MENU
    MENUITEM "&Definiálás...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "Mindig &legfelül", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -51,7 +52,6 @@ MAIN_MENU MENU
  }
  POPUP "&Súgó" {
    MENUITEM "&Használat", MNID_HELP_HELPON
-   MENUITEM "Mindig &legfelül", MNID_HELP_HELPTOP
    MENUITEM "&Információ...", MNID_HELP_ABOUT
  }
 }

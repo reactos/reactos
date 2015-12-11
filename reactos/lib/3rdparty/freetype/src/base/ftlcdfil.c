@@ -305,12 +305,10 @@
   FT_Library_SetLcdFilter( FT_Library    library,
                            FT_LcdFilter  filter )
   {
+    static const FT_Byte  default_filter[5] =
+                            { 0x08, 0x4d, 0x56, 0x4d, 0x08 };
     static const FT_Byte  light_filter[5] =
                             { 0x00, 0x55, 0x56, 0x55, 0x00 };
-    /* the values here sum up to a value larger than 256, */
-    /* providing a cheap gamma correction                 */
-    static const FT_Byte  default_filter[5] =
-                            { 0x10, 0x40, 0x70, 0x40, 0x10 };
 
 
     if ( !library )
@@ -354,6 +352,7 @@
 #ifdef USE_LEGACY
 
     case FT_LCD_FILTER_LEGACY:
+    case FT_LCD_FILTER_LEGACY1:
       library->lcd_filter_func = _ft_lcd_filter_legacy;
       library->lcd_extra       = 0;
       break;

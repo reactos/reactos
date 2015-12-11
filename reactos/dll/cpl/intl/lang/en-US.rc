@@ -51,8 +51,8 @@ BEGIN
     LTEXT "Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
     GROUPBOX "Code page conversion tables", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Default user account settings", -1, 5, 193, 234, 30
-    AUTOCHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Default user account settings", -1, 5, 193, 234, 32
+    AUTOCHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

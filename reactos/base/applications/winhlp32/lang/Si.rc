@@ -41,6 +41,7 @@ MAIN_MENU MENU
    MENUITEM "Do&loči ...", MNID_BKMK_DEFINE
  }
  POPUP "&Možnosti" {
+   MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
    MENUITEM "Zgodovina",		MNID_OPTS_HISTORY
    POPUP    "Pisava"
   BEGIN
@@ -51,7 +52,6 @@ MAIN_MENU MENU
  }
   POPUP "&Pomoč" {
    MENUITEM "&O pomoči", MNID_HELP_HELPON
-   MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
    MENUITEM "&Informacije ...", MNID_HELP_ABOUT
  }
 }

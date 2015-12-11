@@ -1,4 +1,5 @@
-/* Spanish translation by ??? and Swyter */
+/* Spanish translation by ??? and Ismael Ferreras Morezuelas (Swyter) */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* Menus */
@@ -221,7 +222,7 @@ BEGIN
     9554 "Muestra la barra de favoritos."
     9555 "Muestra la barra de historial."
     9557 "Muestra la barra de carpetas."
-    9559 "Muestra la barra de media."
+    9559 "Muestra la barra de medios."
 END
 
 STRINGTABLE
@@ -267,7 +268,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BACK "Volver a %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_FORWARD "Ir a %s"
 END
 
 STRINGTABLE

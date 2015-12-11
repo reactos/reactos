@@ -2987,7 +2987,7 @@ static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
         {
             *p = 0;
             if (!p[1]) continue; /* trailing backslash */
-            hkey = open_key( comp, root, subkey, FALSE, access );
+            hkey = open_key( comp, root, subkey, FALSE, access | READ_CONTROL );
             if (!hkey) break;
             res = RegDeleteKeyExW( hkey, p + 1, access, 0 );
             RegCloseKey( hkey );

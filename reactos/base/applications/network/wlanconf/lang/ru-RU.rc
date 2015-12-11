@@ -1,16 +1,16 @@
 /* Russian translation by Kudratov Olimjon, 2014.09.25 */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nНастройте WLAN адаптер.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
-\t-c SSID\t\tПодключается к указанному SSID,\n\
+\t-c SSID\t\tПодключение к указанному SSID.\n\
 \t-w WEP\t\tЗадает WEP ключ для использования.\n\
-\t-a\t\tУказывает целевую сеть is ad-hoc\n\
-\t-d\t\tОтключается от текущей точки доступа.\n\
-\t-s\t\tСканирует и отображает список точек доступа\n\
-\t\t\tв области.\n\n\
+\t-a\t\tУказание целевой сети как ad-hoc\n\
+\t-d\t\tОтключение от текущей точки доступа.\n\
+\t-s\t\tОтображение списка точек доступа.\n\n\
 При отсутствии параметров отображает информацию о текущем WLAN соединении\n"
     IDS_NO_NETWORK "Не найдено сетей в области\n"
     IDS_NO_WLAN_ADAPTER "Не найден WLAN адаптер в системе\n"
@@ -18,7 +18,7 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
     IDS_WLAN_DISCONNECT "\nWLAN отключен\n"
     IDS_MSG_WEP_ENABLED "WEP включен: %s\n"
     IDS_MSG_NETWORK_MODE "Режим сети: %s\n"
-    IDS_MSG_CURRENT_WIRELESS "\nТекущая информация конфигурации беспроводной сети:\n\n"
+    IDS_MSG_CURRENT_WIRELESS "\nИнформация о текущей конфигурации беспроводной сети:\n\n"
     IDS_MSG_ENCRYPTED "Зашифровано: %s\n"
     IDS_MSG_NETWORK_TYPE "Тип сети: %s\n"
     IDS_MSG_RSSI "RSSI: %i dBm\n"

@@ -50,14 +50,16 @@ static DWORD (WINAPI *pGetModuleFileNameExW)(HANDLE, HMODULE, LPWSTR, DWORD);
 static BOOL  (WINAPI *pGetModuleInformation)(HANDLE, HMODULE, LPMODULEINFO, DWORD);
 static DWORD (WINAPI *pGetMappedFileNameA)(HANDLE, LPVOID, LPSTR, DWORD);
 static DWORD (WINAPI *pGetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
+static BOOL  (WINAPI *pGetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
 static DWORD (WINAPI *pGetProcessImageFileNameA)(HANDLE, LPSTR, DWORD);
 static DWORD (WINAPI *pGetProcessImageFileNameW)(HANDLE, LPWSTR, DWORD);
 static BOOL  (WINAPI *pGetProcessMemoryInfo)(HANDLE, PPROCESS_MEMORY_COUNTERS, DWORD);
 static BOOL  (WINAPI *pGetWsChanges)(HANDLE, PPSAPI_WS_WATCH_INFORMATION, DWORD);
 static BOOL  (WINAPI *pInitializeProcessForWsWatch)(HANDLE);
 static BOOL  (WINAPI *pQueryWorkingSet)(HANDLE, PVOID, DWORD);
+static NTSTATUS (WINAPI *pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 static NTSTATUS (WINAPI *pNtQueryVirtualMemory)(HANDLE, LPCVOID, ULONG, PVOID, SIZE_T, SIZE_T *);
-      
+
 static BOOL InitFunctionPtrs(HMODULE hpsapi)
 {
     PSAPI_GET_PROC(EmptyWorkingSet);
@@ -74,10 +76,13 @@ static BOOL InitFunctionPtrs(HMODULE hpsapi)
     PSAPI_GET_PROC(InitializeProcessForWsWatch);
     PSAPI_GET_PROC(QueryWorkingSet);
     /* GetProcessImageFileName is not exported on NT4 */
+    pGetPerformanceInfo =
+      (void *)GetProcAddress(hpsapi, "GetPerformanceInfo");
     pGetProcessImageFileNameA =
       (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameA");
     pGetProcessImageFileNameW =
       (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameW");
+    pNtQuerySystemInformation = (void *)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQuerySystemInformation");
     pNtQueryVirtualMemory = (void *)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryVirtualMemory");
     return TRUE;
 }
@@ -128,29 +133,17 @@ static void test_EnumProcessModules(void)
     ok(ret == 1, "failed with %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
+    ret = pEnumProcessModules(hpQV, NULL, sizeof(HMODULE), &cbNeeded);
+    ok(!ret, "succeeded\n");
+    ok(GetLastError() == ERROR_NOACCESS, "expected error=ERROR_NOACCESS but got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
     ret = pEnumProcessModules(hpQV, &hMod, sizeof(HMODULE), &cbNeeded);
     if(ret != 1)
         return;
     ok(hMod == GetModuleHandleA(NULL),
        "hMod=%p GetModuleHandleA(NULL)=%p\n", hMod, GetModuleHandleA(NULL));
     ok(cbNeeded % sizeof(hMod) == 0, "not a multiple of sizeof(HMODULE) cbNeeded=%d\n", cbNeeded);
-    /* Windows sometimes has a bunch of extra dlls, presumably brought in by
-     * aclayers.dll.
-     */
-    if (cbNeeded < 4 * sizeof(HMODULE) || cbNeeded > 30 * sizeof(HMODULE))
-    {
-        HMODULE hmods[100];
-        int i;
-        ok(0, "cbNeeded=%d\n", cbNeeded);
-
-        pEnumProcessModules(hpQV, hmods, sizeof(hmods), &cbNeeded);
-        for (i = 0 ; i < cbNeeded/sizeof(*hmods); i++)
-        {
-            char path[1024];
-            GetModuleFileNameA(hmods[i], path, sizeof(path));
-            trace("i=%d hmod=%p path=[%s]\n", i, hmods[i], path);
-        }
-    }
 }
 
 static void test_GetModuleInformation(void)
@@ -180,6 +173,120 @@ static void test_GetModuleInformation(void)
     ok(ret == 1, "failed with %d\n", GetLastError());
     ok(info.lpBaseOfDll == hMod, "lpBaseOfDll=%p hMod=%p\n", info.lpBaseOfDll, hMod);
 }
+
+static BOOL check_with_margin(SIZE_T perf, SIZE_T sysperf, int margin)
+{
+    return (perf >= max(sysperf, margin) - margin && perf <= sysperf + margin);
+}
+
+static void test_GetPerformanceInfo(void)
+{
+    PERFORMANCE_INFORMATION info;
+    NTSTATUS status;
+    DWORD size;
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    ret = pGetPerformanceInfo(&info, sizeof(info)-1);
+    ok(!ret, "GetPerformanceInfo unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BAD_LENGTH, "expected error=ERROR_BAD_LENGTH but got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetPerformanceInfo(&info, sizeof(info));
+    ok(ret, "GetPerformanceInfo failed with %d\n", GetLastError());
+    ok(info.cb == sizeof(PERFORMANCE_INFORMATION), "got %d\n", info.cb);
+
+    if (!pNtQuerySystemInformation)
+        win_skip("NtQuerySystemInformation not found, skipping tests\n");
+    else
+    {
+        char performance_buffer[sizeof(SYSTEM_PERFORMANCE_INFORMATION) + 16]; /* larger on w2k8/win7 */
+        SYSTEM_PERFORMANCE_INFORMATION *sys_performance_info = (SYSTEM_PERFORMANCE_INFORMATION *)performance_buffer;
+        SYSTEM_PROCESS_INFORMATION *sys_process_info = NULL, *spi;
+        SYSTEM_BASIC_INFORMATION sys_basic_info;
+        DWORD process_count, handle_count, thread_count;
+
+        /* compare with values from SYSTEM_PERFORMANCE_INFORMATION */
+        size = 0;
+        status = pNtQuerySystemInformation(SystemPerformanceInformation, sys_performance_info, sizeof(performance_buffer), &size);
+        ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+        ok(size >= sizeof(SYSTEM_PERFORMANCE_INFORMATION), "incorrect length %d\n", size);
+
+
+        ok(check_with_margin(info.CommitTotal,          sys_performance_info->TotalCommittedPages,  288),
+           "expected approximately %ld but got %d\n", info.CommitTotal, sys_performance_info->TotalCommittedPages);
+
+        ok(check_with_margin(info.CommitLimit,          sys_performance_info->TotalCommitLimit,     32),
+           "expected approximately %ld but got %d\n", info.CommitLimit, sys_performance_info->TotalCommitLimit);
+
+        ok(check_with_margin(info.CommitPeak,           sys_performance_info->PeakCommitment,       32),
+           "expected approximately %ld but got %d\n", info.CommitPeak, sys_performance_info->PeakCommitment);
+
+        ok(check_with_margin(info.PhysicalAvailable,    sys_performance_info->AvailablePages,       128),
+           "expected approximately %ld but got %d\n", info.PhysicalAvailable, sys_performance_info->AvailablePages);
+
+        /* TODO: info.SystemCache not checked yet - to which field(s) does this value correspond to? */
+
+        ok(check_with_margin(info.KernelTotal, sys_performance_info->PagedPoolUsage + sys_performance_info->NonPagedPoolUsage, 64),
+           "expected approximately %ld but got %d\n", info.KernelTotal,
+           sys_performance_info->PagedPoolUsage + sys_performance_info->NonPagedPoolUsage);
+
+        ok(check_with_margin(info.KernelPaged,          sys_performance_info->PagedPoolUsage,       64),
+           "expected approximately %ld but got %d\n", info.KernelPaged, sys_performance_info->PagedPoolUsage);
+
+        ok(check_with_margin(info.KernelNonpaged,       sys_performance_info->NonPagedPoolUsage,    8),
+           "expected approximately %ld but got %d\n", info.KernelNonpaged, sys_performance_info->NonPagedPoolUsage);
+
+        /* compare with values from SYSTEM_BASIC_INFORMATION */
+        size = 0;
+        status = pNtQuerySystemInformation(SystemBasicInformation, &sys_basic_info, sizeof(sys_basic_info), &size);
+        ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+        ok(size >= sizeof(SYSTEM_BASIC_INFORMATION), "incorrect length %d\n", size);
+
+        ok(info.PhysicalTotal == sys_basic_info.MmNumberOfPhysicalPages,
+           "expected info.PhysicalTotal=%u but got %u\n",
+           sys_basic_info.MmNumberOfPhysicalPages, (ULONG)info.PhysicalTotal);
+
+        ok(info.PageSize == sys_basic_info.PageSize,
+           "expected info.PageSize=%u but got %u\n",
+           sys_basic_info.PageSize, (ULONG)info.PageSize);
+
+        /* compare with values from SYSTEM_PROCESS_INFORMATION */
+        size = 0;
+        status = pNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &size);
+        ok(status == STATUS_INFO_LENGTH_MISMATCH, "expected STATUS_LENGTH_MISMATCH, got %08x\n", status);
+        ok(size > 0, "incorrect length %d\n", size);
+        while (status == STATUS_INFO_LENGTH_MISMATCH)
+        {
+            sys_process_info = HeapAlloc(GetProcessHeap(), 0, size);
+            ok(sys_process_info != NULL, "failed to allocate memory\n");
+            status = pNtQuerySystemInformation(SystemProcessInformation, sys_process_info, size, &size);
+            if (status == STATUS_SUCCESS) break;
+            HeapFree(GetProcessHeap(), 0, sys_process_info);
+        }
+        ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
+
+        process_count = handle_count = thread_count = 0;
+        for (spi = sys_process_info;; spi = (SYSTEM_PROCESS_INFORMATION *)(((char *)spi) + spi->NextEntryOffset))
+        {
+            process_count++;
+            handle_count += spi->HandleCount;
+            thread_count += spi->dwThreadCount;
+            if (spi->NextEntryOffset == 0) break;
+        }
+        HeapFree(GetProcessHeap(), 0, sys_process_info);
+
+        ok(check_with_margin(info.HandleCount,  handle_count,  24),
+           "expected approximately %d but got %d\n", info.HandleCount, handle_count);
+
+        ok(check_with_margin(info.ProcessCount, process_count, 4),
+           "expected approximately %d but got %d\n", info.ProcessCount, process_count);
+
+        ok(check_with_margin(info.ThreadCount,  thread_count,  4),
+           "expected approximately %d but got %d\n", info.ThreadCount, thread_count);
+    }
+}
+
 
 static void test_GetProcessMemoryInfo(void)
 {
@@ -514,30 +621,36 @@ static void test_GetModuleFileNameEx(void)
     SetLastError(0xdeadbeef);
     memset( szModExPath, 0xcc, sizeof(szModExPath) );
     ret = pGetModuleFileNameExA(hpQV, NULL, szModExPath, 4 );
-    ok( ret == 4, "wrong length %u\n", ret );
+    ok( ret == 4 || ret == strlen(szModExPath), "wrong length %u\n", ret );
     ok( broken(szModExPath[3]) /*w2kpro*/ || strlen(szModExPath) == 3,
         "szModExPath=\"%s\" ret=%d\n", szModExPath, ret );
     ok(GetLastError() == 0xdeadbeef, "got error %d\n", GetLastError());
 
-    SetLastError(0xdeadbeef);
-    ret = pGetModuleFileNameExA(hpQV, NULL, szModExPath, 0 );
-    ok( ret == 0, "wrong length %u\n", ret );
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got error %d\n", GetLastError());
+    if (0) /* crashes on Windows 10 */
+    {
+        SetLastError(0xdeadbeef);
+        ret = pGetModuleFileNameExA(hpQV, NULL, szModExPath, 0 );
+        ok( ret == 0, "wrong length %u\n", ret );
+        ok(GetLastError() == ERROR_INVALID_PARAMETER, "got error %d\n", GetLastError());
+    }
 
     SetLastError(0xdeadbeef);
     memset( buffer, 0xcc, sizeof(buffer) );
     ret = pGetModuleFileNameExW(hpQV, NULL, buffer, 4 );
-    ok( ret == 4, "wrong length %u\n", ret );
+    ok( ret == 4 || ret == lstrlenW(buffer), "wrong length %u\n", ret );
     ok( broken(buffer[3]) /*w2kpro*/ || lstrlenW(buffer) == 3,
         "buffer=%s ret=%d\n", wine_dbgstr_w(buffer), ret );
     ok(GetLastError() == 0xdeadbeef, "got error %d\n", GetLastError());
 
-    SetLastError(0xdeadbeef);
-    buffer[0] = 0xcc;
-    ret = pGetModuleFileNameExW(hpQV, NULL, buffer, 0 );
-    ok( ret == 0, "wrong length %u\n", ret );
-    ok(GetLastError() == 0xdeadbeef, "got error %d\n", GetLastError());
-    ok( buffer[0] == 0xcc, "buffer modified %s\n", wine_dbgstr_w(buffer) );
+    if (0) /* crashes on Windows 10 */
+    {
+        SetLastError(0xdeadbeef);
+        buffer[0] = 0xcc;
+        ret = pGetModuleFileNameExW(hpQV, NULL, buffer, 0 );
+        ok( ret == 0, "wrong length %u\n", ret );
+        ok(GetLastError() == 0xdeadbeef, "got error %d\n", GetLastError());
+        ok( buffer[0] == 0xcc, "buffer modified %s\n", wine_dbgstr_w(buffer) );
+    }
 }
 
 static void test_GetModuleBaseName(void)
@@ -674,6 +787,7 @@ START_TEST(psapi_main)
 	    test_EnumProcesses();
 	    test_EnumProcessModules();
 	    test_GetModuleInformation();
+            test_GetPerformanceInfo();
 	    test_GetProcessMemoryInfo();
             test_GetMappedFileName();
             test_GetProcessImageFileName();

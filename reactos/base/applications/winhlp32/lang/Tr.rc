@@ -39,6 +39,7 @@ MAIN_MENU MENU
    MENUITEM "&Belirle...", MNID_BKMK_DEFINE
  }
  POPUP "&Seçenekler" {
+  MENUITEM "&Sürekli Üstte", MNID_HELP_HELPTOP
   MENUITEM "&Geçmiş",		MNID_OPTS_HISTORY
   POPUP    "&Yazı Tipi"
   BEGIN
@@ -49,7 +50,6 @@ MAIN_MENU MENU
  }
  POPUP "&Yardım" {
    MENUITEM "&Yardım İçin Yardım", MNID_HELP_HELPON
-   MENUITEM "&Sürekli Üstte", MNID_HELP_HELPTOP
    MENUITEM "&ReactOS Yardım Üzerine...", MNID_HELP_ABOUT
  }
 }

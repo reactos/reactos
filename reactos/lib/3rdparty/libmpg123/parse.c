@@ -694,7 +694,7 @@ read_frame_bad:
  * <0: error codes, possibly from feeder buffer (NEED_MORE)
  *  PARSE_BAD: cannot get the framesize for some reason and shall silentry try the next possible header (if this is no free format stream after all...)
  */
-static int guess_freeformat_framesize(mpg123_handle *fr)
+static int guess_freeformat_framesize(mpg123_handle *fr, unsigned long oldhead)
 {
 	long i;
 	int ret;
@@ -714,7 +714,7 @@ static int guess_freeformat_framesize(mpg123_handle *fr)
 		if((ret=fr->rd->head_shift(fr,&head))<=0) return ret;
 
 		/* No head_check needed, the mask contains all relevant bits. */
-		if((head & HDR_SAMEMASK) == (fr->oldhead & HDR_SAMEMASK))
+		if((head & HDR_SAMEMASK) == (oldhead & HDR_SAMEMASK))
 		{
 			fr->rd->back_bytes(fr,i+1);
 			fr->framesize = i-3;
@@ -791,7 +791,7 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 				if(VERBOSE3) error("You fooled me too often. Refusing to guess free format frame size _again_.");
 				return PARSE_BAD;
 			}
-			ret = guess_freeformat_framesize(fr);
+			ret = guess_freeformat_framesize(fr, newhead);
 			if(ret == PARSE_GOOD)
 			{
 				fr->freeformat_framesize = fr->framesize - fr->padding;

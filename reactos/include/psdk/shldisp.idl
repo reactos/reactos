@@ -495,6 +495,53 @@ interface IShellDispatch2 : IShellDispatch
 }
 
 [
+    uuid(177160ca-bb5a-411c-841d-bd38facdeaa0),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellDispatch3 : IShellDispatch2
+{
+    HRESULT AddToRecent([in] VARIANT file, [in, optional] BSTR category);
+}
+
+[
+    uuid(efd84b2d-4bcf-4298-be25-eb542a59fbda),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellDispatch4 : IShellDispatch3
+{
+    HRESULT WindowsSecurity();
+    HRESULT ToggleDesktop();
+    HRESULT ExplorerPolicy([in] BSTR policy, [out, retval] VARIANT *value);
+    HRESULT GetSetting([in] long setting, [out,retval] VARIANT_BOOL *result);
+}
+
+[
+    uuid(866738b9-6cf2-4de8-8767-f794ebe74f4e),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellDispatch5 : IShellDispatch4
+{
+    HRESULT WindowSwitcher();
+}
+
+[
+    uuid(286e6f1b-7113-4355-9562-96b7e9d64c54),
+    oleautomation,
+    hidden,
+    dual,
+]
+interface IShellDispatch6 : IShellDispatch5
+{
+    HRESULT SearchCommand(void);
+}
+
+[
     uuid(13709620-c279-11ce-a49e-444553540000)
 ]
 coclass Shell
@@ -555,6 +602,120 @@ enum ShellSpecialFolderConstants {
     ssfSYSTEMx86        = 0x29,
     ssfPROGRAMFILESx86  = 0x30
 } ShellSpecialFolderConstants;
+
+/*****************************************************************************
+ * IShellFolderViewDual interface
+ */
+typedef
+[
+    uuid(742a99a0-c77e-11d0-a32c-00a0c91eedba)
+]
+enum ShellFolderViewOptions
+{
+    SFVVO_SHOWALLOBJECTS       = 0x00000001,
+    SFVVO_SHOWEXTENSIONS       = 0x00000002,
+    SFVVO_SHOWCOMPCOLOR        = 0x00000008,
+    SFVVO_SHOWSYSFILES         = 0x00000020,
+    SFVVO_WIN95CLASSIC         = 0x00000040,
+    SFVVO_DOUBLECLICKINWEBVIEW = 0x00000080,
+    SFVVO_DESKTOPHTML          = 0x00000200
+} ShellFolderViewOptions;
+
+[
+    uuid(e7a1af80-4d96-11cf-960c-0080c7f4ee85),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellFolderViewDual : IDispatch
+{
+    [propget]
+    HRESULT Application([out, retval] IDispatch **app);
+
+    [propget]
+    HRESULT Parent([out, retval] IDispatch **parent);
+
+    [propget]
+    HRESULT Folder([out, retval] Folder **folder);
+
+    HRESULT SelectedItems([out, retval] FolderItems **items);
+
+    [propget]
+    HRESULT FocusedItem([out, retval] FolderItem **item);
+
+    HRESULT SelectItem([in] VARIANT *item, [in] int flags);
+
+    HRESULT PopupItemMenu([in] FolderItem *item,
+                          [in, optional] VARIANT vx,
+                          [in, optional] VARIANT vy,
+                          [out, retval] BSTR *command);
+    [propget]
+    HRESULT Script([out, retval] IDispatch **script);
+
+    [propget]
+    HRESULT ViewOptions([out, retval] long *options);
+}
+
+[
+    uuid(31c147b6-0ade-4a3c-b514-ddf932ef6d17),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellFolderViewDual2 : IShellFolderViewDual
+{
+    [propget]
+    HRESULT CurrentViewMode([out, retval] UINT *mode);
+
+    [propput]
+    HRESULT CurrentViewMode([in] UINT mode);
+
+    HRESULT SelectItemRelative([in] int relative);
+}
+
+[
+    uuid(29ec8e6c-46d3-411f-baaa-611a6c9cac66),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellFolderViewDual3 : IShellFolderViewDual2
+{
+    [propget]
+    HRESULT GroupBy([out, retval] BSTR *groupby);
+
+    [propput]
+    HRESULT GroupBy([in] BSTR groupby);
+
+    [propget]
+    HRESULT FolderFlags([out, retval] DWORD *flags);
+
+    [propput]
+    HRESULT FolderFlags([in] DWORD flags);
+
+    [propget]
+    HRESULT SortColumns([out, retval] BSTR *sortcolumns);
+
+    [propput]
+    HRESULT SortColumns([in] BSTR sortcolumns);
+
+    [propput]
+    HRESULT IconSize([in] int icon_size);
+
+    [propget]
+    HRESULT IconSize([out, retval] int *icon_size);
+
+    HRESULT FilterView([in, unique] BSTR filter_text);
+}
+
+[
+    uuid(62112aa1-ebe4-11cf-a5fb-0020afe7292d)
+]
+coclass ShellFolderView
+{
+    [default] interface IShellFolderViewDual3;
+    [default, source] dispinterface DShellFolderViewEvents;
+}
 
 } /* library Shell32 */
 

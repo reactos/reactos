@@ -1719,6 +1719,9 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_AES_192                15
 #define ALG_SID_AES_256                16
 #define ALG_SID_AES                    17
+/* Fortezza */
+#define ALG_SID_SKIPJACK               10
+#define ALG_SID_TEK                    11
 /* Diffie-Hellman SIDs */
 #define ALG_SID_DH_SANDF                1
 #define ALG_SID_DH_EPHEM                2
@@ -1756,6 +1759,8 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_SCHANNEL_ENC_KEY        7
 #define ALG_SID_EXAMPLE                80
 
+#define ALG_SID_ECMQV                   1
+
 /* Algorithm Definitions */
 #define CALG_MD2                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD2)
 #define CALG_MD4                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD4)
@@ -1775,6 +1780,9 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_NO_SIGN              (ALG_CLASS_SIGNATURE    | ALG_TYPE_ANY           | ALG_SID_ANY)
 #define CALG_DH_SF                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_SANDF)
 #define CALG_DH_EPHEM             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_EPHEM)
+#define CALG_AGREEDKEY_ANY        (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_AGREED_KEY_ANY)
+#define CALG_KEA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_KEA)
+#define CALG_HUGHES_MD5           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_MD5)
 #define CALG_RSA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_RSA           | ALG_SID_RSA_ANY)
 #define CALG_ECDH                 (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_ECDH)
 #define CALG_ECDH_EPHEM           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH_EPHEM      | ALG_SID_ECDH_EPHEM) /* FIXME: find the original TYPE and SID names */
@@ -1783,6 +1791,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_RC2                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_RC2)
 #define CALG_3DES                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES)
 #define CALG_3DES_112             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES_112)
+#define CALG_DESX                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DESX)
 #define CALG_AES_128              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_128)
 #define CALG_AES_192              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_192)
 #define CALG_AES_256              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_256)
@@ -1790,6 +1799,9 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_RC4                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC4)
 #define CALG_SEAL                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_SEAL)
 #define CALG_RC5                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC5)
+#define CALG_SKIPJACK             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_SKIPJACK)
+#define CALG_TEK                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_TEK)
+#define CALG_CYLINK_MEK           (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_CYLINK_MEK)
 #define CALG_SSL3_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL3_MASTER)
 #define CALG_SCHANNEL_MASTER_HASH (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MASTER_HASH)
 #define CALG_SCHANNEL_MAC_KEY     (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MAC_KEY)

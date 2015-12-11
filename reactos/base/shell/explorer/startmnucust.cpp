@@ -18,14 +18,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
 #include "precomp.h"
 
 VOID OnAddStartmenuItems(HWND hDlg)
 {
     WCHAR szPath[MAX_PATH];
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath))) 
+    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
     {
         WCHAR szCommand[MAX_PATH] = L"appwiz.cpl,NewLinkHere ";
         if(SUCCEEDED(StringCchCatW(szCommand, MAX_PATH, szPath)))
@@ -37,7 +37,7 @@ VOID OnAdvancedStartMenuItems()
 {
     WCHAR szPath[MAX_PATH];
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath))) 
+    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
     {
         ShellExecuteW(NULL, L"explore", szPath, NULL, NULL, SW_SHOWNORMAL);
     }
@@ -49,7 +49,7 @@ VOID OnClearRecentItems()
    WIN32_FIND_DATA info;
    HANDLE hPath;
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath))) 
+    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
     {
         StringCchPrintf(szFile,MAX_PATH, L"%s\\*.*", szPath);
         hPath = FindFirstFileW(szFile, &info);
@@ -57,14 +57,14 @@ VOID OnClearRecentItems()
         {
             StringCchPrintf(szFile,MAX_PATH, L"%s\\%s", szPath, info.cFileName);
             DeleteFileW(szFile);
- 
-        }while(FindNextFileW(hPath, &info)); 
+
+        }while(FindNextFileW(hPath, &info));
         FindClose(hPath);
         /* FIXME: Disable the button*/
-    } 
+    }
 }
 
-BOOL CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     switch(Message)
     {
@@ -96,8 +96,8 @@ BOOL CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
     }
     return TRUE;
 }
- 
+
 VOID ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)
- {
+{
      DialogBox(hInst, MAKEINTRESOURCE(IDD_CLASSICSTART_CUSTOMIZE), hExplorer, CustomizeClassicProc);
- }
+}

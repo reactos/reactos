@@ -177,6 +177,46 @@
       return error;
     }
 #endif /* AF_CONFIG_OPTION_USE_WARPER */
+    else if ( !ft_strcmp( property_name, "darkening-parameters" ) )
+    {
+      FT_Int*  darken_params = (FT_Int*)value;
+
+      FT_Int  x1 = darken_params[0];
+      FT_Int  y1 = darken_params[1];
+      FT_Int  x2 = darken_params[2];
+      FT_Int  y2 = darken_params[3];
+      FT_Int  x3 = darken_params[4];
+      FT_Int  y3 = darken_params[5];
+      FT_Int  x4 = darken_params[6];
+      FT_Int  y4 = darken_params[7];
+
+
+      if ( x1 < 0   || x2 < 0   || x3 < 0   || x4 < 0   ||
+           y1 < 0   || y2 < 0   || y3 < 0   || y4 < 0   ||
+           x1 > x2  || x2 > x3  || x3 > x4              ||
+           y1 > 500 || y2 > 500 || y3 > 500 || y4 > 500 )
+        return FT_THROW( Invalid_Argument );
+
+      module->darken_params[0] = x1;
+      module->darken_params[1] = y1;
+      module->darken_params[2] = x2;
+      module->darken_params[3] = y2;
+      module->darken_params[4] = x3;
+      module->darken_params[5] = y3;
+      module->darken_params[6] = x4;
+      module->darken_params[7] = y4;
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "no-stem-darkening" ) )
+    {
+      FT_Bool*  no_stem_darkening = (FT_Bool*)value;
+
+
+      module->no_stem_darkening = *no_stem_darkening;
+
+      return error;
+    }
 
     FT_TRACE0(( "af_property_set: missing property `%s'\n",
                 property_name ));
@@ -253,6 +293,33 @@
       return error;
     }
 #endif /* AF_CONFIG_OPTION_USE_WARPER */
+    else if ( !ft_strcmp( property_name, "darkening-parameters" ) )
+    {
+      FT_Int*  darken_params = module->darken_params;
+      FT_Int*  val           = (FT_Int*)value;
+
+
+      val[0] = darken_params[0];
+      val[1] = darken_params[1];
+      val[2] = darken_params[2];
+      val[3] = darken_params[3];
+      val[4] = darken_params[4];
+      val[5] = darken_params[5];
+      val[6] = darken_params[6];
+      val[7] = darken_params[7];
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "no-stem-darkening" ) )
+    {
+      FT_Bool   no_stem_darkening = module->no_stem_darkening;
+      FT_Bool*  val               = (FT_Bool*)value;
+
+
+      *val = no_stem_darkening;
+
+      return error;
+    }
 
     FT_TRACE0(( "af_property_get: missing property `%s'\n",
                 property_name ));
@@ -262,8 +329,8 @@
 
   FT_DEFINE_SERVICE_PROPERTIESREC(
     af_service_properties,
-    (FT_Properties_SetFunc)af_property_set,
-    (FT_Properties_GetFunc)af_property_get )
+    (FT_Properties_SetFunc)af_property_set,        /* set_property */
+    (FT_Properties_GetFunc)af_property_get )       /* get_property */
 
 
   FT_DEFINE_SERVICEDESCREC1(
@@ -299,11 +366,21 @@
     AF_Module  module = (AF_Module)ft_module;
 
 
-    module->fallback_style = AF_STYLE_FALLBACK;
-    module->default_script = AF_SCRIPT_DEFAULT;
+    module->fallback_style    = AF_STYLE_FALLBACK;
+    module->default_script    = AF_SCRIPT_DEFAULT;
 #ifdef AF_CONFIG_OPTION_USE_WARPER
-    module->warping        = 0;
+    module->warping           = 0;
 #endif
+    module->no_stem_darkening = TRUE;
+
+    module->darken_params[0]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1;
+    module->darken_params[1]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1;
+    module->darken_params[2]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2;
+    module->darken_params[3]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2;
+    module->darken_params[4]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3;
+    module->darken_params[5]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3;
+    module->darken_params[6]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4;
+    module->darken_params[7]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4;
 
     return FT_Err_Ok;
   }

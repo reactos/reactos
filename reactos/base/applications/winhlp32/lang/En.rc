@@ -40,6 +40,7 @@ MAIN_MENU MENU
    MENUITEM "&Define...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "Always on &top", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -50,7 +51,6 @@ MAIN_MENU MENU
  }
  POPUP "&Help" {
    MENUITEM "&Help on help\tF1", MNID_HELP_HELPON
-   MENUITEM "Always on &top", MNID_HELP_HELPTOP
    MENUITEM "&About Wine Help", MNID_HELP_ABOUT
  }
 }

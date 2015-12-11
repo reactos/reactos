@@ -425,8 +425,17 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (DesiredAccess == 0)
     {
         *GrantedAccess = PreviouslyGrantedAccess;
-        *AccessStatus = STATUS_SUCCESS;
-        ret = TRUE;
+        if (PreviouslyGrantedAccess == 0)
+        {
+            DPRINT1("Request for zero access to an object. Denying.\n");
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            ret = FALSE;
+        }
+        else
+        {
+            *AccessStatus = STATUS_SUCCESS;
+            ret = TRUE;
+        }
     }
     else
     {

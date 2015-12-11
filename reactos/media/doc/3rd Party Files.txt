@@ -23,7 +23,7 @@ Used Version: 1.1
 Website: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: FreeType
-Used Version: 2.6.1
+Used Version: 2.6.2
 Website: http://www.freetype.org
 
 Title: Mesa3D
@@ -43,8 +43,12 @@ Used Version: 1.0.6
 Website: http://www.bzip.org
 
 Title: LibXML
-Used Version: 2.9.2
+Used Version: 2.9.3
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
+
+Title: Libxslt
+Used Version: 1.1.28
+Website: http://xmlsoft.org
 
 Title: ZLib
 Used Version: 1.2.8
@@ -63,7 +67,7 @@ Used Version: 0.1.8
 Website: http://www.mega-nerd.com/SRC/download.html
 
 Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.22.1
+Used Version: 1.22.4
 Website: http://www.mpg123.de/
 
 Title:  STLport
@@ -71,17 +75,17 @@ Used Version: 5.2.1
 Website: http://stlport.sourceforge.net/
 
 Title: win-iconv
-Used Version: r44
-Website: https://code.google.com/p/win-iconv/
+Used Version: git commit 8765259
+Website: https://github.com/win-iconv/win-iconv
 
 Title: libjpeg
 Used Version: 9a
 Website: http://www.ijg.org/
 
 Title: mbed TLS
-Used Version: 2.1.2
+Used Version: 2.2.0
 Website: https://tls.mbed.org/
 
 Title: libpng
-Used Version: 1.6.18
+Used Version: 1.6.19
 Website: http://libpng.sourceforge.net/

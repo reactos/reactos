@@ -239,8 +239,16 @@
     AFM_ParserRec  parser;
     AFM_FontInfo   fi      = NULL;
     FT_Error       error   = FT_ERR( Unknown_File_Format );
-    T1_Font        t1_font = &( (T1_Face)t1_face )->type1;
+    T1_Face        face    = (T1_Face)t1_face;
+    T1_Font        t1_font = &face->type1;
 
+
+    if ( face->afm_data )
+    {
+      FT_TRACE1(( "T1_Read_Metrics:"
+                  " Freeing previously attached metrics data.\n" ));
+      T1_Done_Metrics( memory, (AFM_FontInfo)face->afm_data );
+    }
 
     if ( FT_NEW( fi )                   ||
          FT_FRAME_ENTER( stream->size ) )
@@ -250,7 +258,7 @@
     fi->Ascender  = t1_font->font_bbox.yMax;
     fi->Descender = t1_font->font_bbox.yMin;
 
-    psaux = (PSAux_Service)( (T1_Face)t1_face )->psaux;
+    psaux = (PSAux_Service)face->psaux;
     if ( psaux->afm_parser_funcs )
     {
       error = psaux->afm_parser_funcs->init( &parser,
@@ -298,7 +306,7 @@
       if ( fi->NumKernPair )
       {
         t1_face->face_flags |= FT_FACE_FLAG_KERNING;
-        ( (T1_Face)t1_face )->afm_data = fi;
+        face->afm_data       = fi;
         fi = NULL;
       }
     }

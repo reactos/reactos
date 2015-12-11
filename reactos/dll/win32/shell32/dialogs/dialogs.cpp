@@ -346,6 +346,27 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
     }
 }
 
+static void EnableOkButtonFromEditContents(HWND hwnd)
+{
+    BOOL Enable = FALSE;
+    INT Length, n;
+    HWND Edit = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
+    Length = GetWindowTextLengthA(Edit);
+    if (Length > 0)
+    {
+        PWCHAR psz = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, (Length + 1) * sizeof(WCHAR));
+        if (psz)
+        {
+            GetWindowTextW(Edit, psz, Length + 1);
+            for (n = 0; n < Length && !Enable; ++n)
+                Enable = psz[n] != ' ';
+            HeapFree(GetProcessHeap(), 0, psz);
+        }
+        else
+            Enable = TRUE;
+    }
+    EnableWindow(GetDlgItem(hwnd, IDOK), Enable);
+}
 
 /* Dialog procedure for RunFileDlg */
 static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -379,6 +400,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
 
             FillList (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            EnableOkButtonFromEditContents(hwnd);
             SetFocus (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH));
             return TRUE;
 
@@ -472,11 +494,20 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                         SetFocus (GetDlgItem (hwnd, IDOK));
                         SetWindowTextW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName);
                         SendMessageW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                        EnableOkButtonFromEditContents(hwnd);
                         SetFocus (GetDlgItem (hwnd, IDOK));
                     }
 
                     FreeLibrary (hComdlg);
 
+                    return TRUE;
+                }
+                case IDC_RUNDLG_EDITPATH:
+                {
+                    if (HIWORD(wParam) == CBN_EDITCHANGE)
+                    {
+                        EnableOkButtonFromEditContents(hwnd);
+                    }
                     return TRUE;
                 }
             }

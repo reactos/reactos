@@ -63,24 +63,35 @@ VOID ShowLastError(VOID)
  *    (untitled) - Notepad      if no file is open
  *    [filename] - Notepad      if a file is given
  */
-static void UpdateWindowCaption(void)
+void UpdateWindowCaption(BOOL clearModifyAlert)
 {
     TCHAR szCaption[MAX_STRING_LEN];
     TCHAR szNotepad[MAX_STRING_LEN];
+    TCHAR szFilename[MAX_STRING_LEN];
 
+    /* Load the name of the application */
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
 
+    /* Determine if the file has been saved or if this is a new file */
     if (Globals.szFileTitle[0] != 0)
-    {
-        StringCchCopy(szCaption, ARRAY_SIZE(szCaption), Globals.szFileTitle);
-    }
+        StringCchCopy(szFilename, ARRAY_SIZE(szFilename), Globals.szFileTitle);
+    else
+        LoadString(Globals.hInstance, STRING_UNTITLED, szFilename, ARRAY_SIZE(szFilename));
+
+    /* When a file is being opened or created, there is no need to have the edited flag shown
+       when the new or opened file has not been edited yet */
+    if (clearModifyAlert)
+        StringCbPrintf(szCaption, ARRAY_SIZE(szCaption), _T("%s - %s"), szFilename, szNotepad);
     else
     {
-        LoadString(Globals.hInstance, STRING_UNTITLED, szCaption, ARRAY_SIZE(szCaption));
+        BOOL isModified = (SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0) ? TRUE : FALSE);
+
+        /* Update the caption based upon if the user has modified the contents of the file or not */
+        StringCbPrintf(szCaption, ARRAY_SIZE(szCaption), _T("%s%s - %s"),
+            (isModified ? _T("*") : _T("")), szFilename, szNotepad);
     }
 
-    StringCchCat(szCaption, ARRAY_SIZE(szCaption), _T(" - "));
-    StringCchCat(szCaption, ARRAY_SIZE(szCaption), szNotepad);
+    /* Update the window caption */
     SetWindowText(Globals.hMainWnd, szCaption);
 }
 
@@ -326,7 +337,7 @@ BOOL DoCloseFile(VOID)
     }
 
     SetFileName(empty_str);
-    UpdateWindowCaption();
+    UpdateWindowCaption(TRUE);
 
     return TRUE;
 }
@@ -375,7 +386,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     }
 
     SetFileName(szFileName);
-    UpdateWindowCaption();
+    UpdateWindowCaption(TRUE);
     NOTEPAD_EnableSearchMenu();
 done:
     if (hFile != INVALID_HANDLE_VALUE)
@@ -522,7 +533,7 @@ BOOL DIALOG_FileSaveAs(VOID)
         SetFileName(szPath);
         if (DoSaveFile())
         {
-            UpdateWindowCaption();
+            UpdateWindowCaption(TRUE);
             return TRUE;
         }
         else

@@ -1,7 +1,7 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Last changed in libpng 1.6.18 [July 23, 2015]
+ * Last changed in libpng 1.6.19 [November 12, 2015]
  * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -976,7 +976,6 @@ png_set_rgb_to_gray_fixed(png_structrp png_ptr, int error_action,
 
       default:
          png_error(png_ptr, "invalid error action to rgb_to_gray");
-         break;
    }
 
    if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
@@ -1997,7 +1996,7 @@ png_read_transform_info(png_structrp png_ptr, png_inforp info_ptr)
 #     endif
 
 #  else
-      /* No 16 bit support: force chopping 16-bit input down to 8, in this case
+      /* No 16-bit support: force chopping 16-bit input down to 8, in this case
        * the app program can chose if both APIs are available by setting the
        * correct scaling to use.
        */
@@ -2098,10 +2097,10 @@ png_read_transform_info(png_structrp png_ptr, png_inforp info_ptr)
 defined(PNG_READ_USER_TRANSFORM_SUPPORTED)
    if ((png_ptr->transformations & PNG_USER_TRANSFORM) != 0)
    {
-      if (info_ptr->bit_depth < png_ptr->user_transform_depth)
+      if (png_ptr->user_transform_depth != 0)
          info_ptr->bit_depth = png_ptr->user_transform_depth;
 
-      if (info_ptr->channels < png_ptr->user_transform_channels)
+      if (png_ptr->user_transform_channels != 0)
          info_ptr->channels = png_ptr->user_transform_channels;
    }
 #endif
@@ -2382,8 +2381,8 @@ png_do_scale_16_to_8(png_row_infop row_info, png_bytep row)
 
       while (sp < ep)
       {
-         /* The input is an array of 16 bit components, these must be scaled to
-          * 8 bits each.  For a 16 bit value V the required value (from the PNG
+         /* The input is an array of 16-bit components, these must be scaled to
+          * 8 bits each.  For a 16-bit value V the required value (from the PNG
           * specification) is:
           *
           *    (V * 255) / 65535
@@ -2404,7 +2403,7 @@ png_do_scale_16_to_8(png_row_infop row_info, png_bytep row)
           *
           * The approximate differs from the exact answer only when (vlo-vhi) is
           * 128; it then gives a correction of +1 when the exact correction is
-          * 0.  This gives 128 errors.  The exact answer (correct for all 16 bit
+          * 0.  This gives 128 errors.  The exact answer (correct for all 16-bit
           * input values) is:
           *
           *    error = (vlo-vhi+128)*65535 >> 24;
@@ -3148,9 +3147,9 @@ png_do_rgb_to_gray(png_structrp png_ptr, png_row_infop row_info, png_bytep row)
                if (red != green || red != blue)
                   rgb_error |= 1;
 
-               /* From 1.5.5 in the 16 bit case do the accurate conversion even
+               /* From 1.5.5 in the 16-bit case do the accurate conversion even
                 * in the 'fast' case - this is because this is where the code
-                * ends up when handling linear 16 bit data.
+                * ends up when handling linear 16-bit data.
                 */
                gray16  = (png_uint_16)((rc*red + gc*green + bc*blue + 16384) >>
                   15);
@@ -3315,7 +3314,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         if ((png_uint_16)((*sp >> shift) & 0x0f)
                             == png_ptr->trans_color.gray)
                         {
-                           unsigned int tmp = *sp & (0xf0f >> (4 - shift));
+                           unsigned int tmp = *sp & (0x0f0f >> (4 - shift));
                            tmp |= png_ptr->background.gray << shift;
                            *sp = (png_byte)(tmp & 0xff);
                         }
@@ -3325,7 +3324,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                            unsigned int p = (*sp >> shift) & 0x0f;
                            unsigned int g = (gamma_table[p | (p << 4)] >> 4) &
                               0x0f;
-                           unsigned int tmp = *sp & (0xf0f >> (4 - shift));
+                           unsigned int tmp = *sp & (0x0f0f >> (4 - shift));
                            tmp |= g << shift;
                            *sp = (png_byte)(tmp & 0xff);
                         }
@@ -3351,7 +3350,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         if ((png_uint_16)((*sp >> shift) & 0x0f)
                             == png_ptr->trans_color.gray)
                         {
-                           unsigned int tmp = *sp & (0xf0f >> (4 - shift));
+                           unsigned int tmp = *sp & (0x0f0f >> (4 - shift));
                            tmp |= png_ptr->background.gray << shift;
                            *sp = (png_byte)(tmp & 0xff);
                         }

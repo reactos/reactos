@@ -2821,9 +2821,6 @@ FT_BEGIN_HEADER
    *   have specified (e.g., the TrueType bytecode interpreter).  You can set
    *   @FT_LOAD_FORCE_AUTOHINT to ensure that the auto-hinter is used.
    *
-   *   Also note that @FT_LOAD_TARGET_LIGHT is an exception, in that it
-   *   always implies @FT_LOAD_FORCE_AUTOHINT.
-   *
    * @values:
    *   FT_LOAD_TARGET_NORMAL ::
    *     This corresponds to the default hinting algorithm, optimized for
@@ -2831,11 +2828,14 @@ FT_BEGIN_HEADER
    *     @FT_LOAD_TARGET_MONO instead.
    *
    *   FT_LOAD_TARGET_LIGHT ::
-   *     A lighter hinting algorithm for non-monochrome modes.  Many
-   *     generated glyphs are more fuzzy but better resemble its original
-   *     shape.  A bit like rendering on Mac OS~X.
-   *
-   *     As a special exception, this target implies @FT_LOAD_FORCE_AUTOHINT.
+   *     A lighter hinting algorithm for gray-level modes.  Many generated
+   *     glyphs are fuzzier but better resemble their original shape.  This
+   *     is achieved by snapping glyphs to the pixel grid only vertically
+   *     (Y-axis), as is done by Microsoft's ClearType and Adobe's
+   *     proprietary font renderer.  This preserves inter-glyph spacing in
+   *     horizontal text.  The snapping is done either by the native font
+   *     driver if the driver itself and the font support it or by the
+   *     auto-hinter.
    *
    *   FT_LOAD_TARGET_MONO ::
    *     Strong hinting algorithm that should only be used for monochrome
@@ -2942,7 +2942,10 @@ FT_BEGIN_HEADER
   /*    field in the @FT_GlyphSlotRec structure gives the format of the    */
   /*    returned bitmap.                                                   */
   /*                                                                       */
-  /*    All modes except @FT_RENDER_MODE_MONO use 256 levels of opacity.   */
+  /*    All modes except @FT_RENDER_MODE_MONO use 256 levels of opacity,   */
+  /*    indicating pixel coverage.  Use linear alpha blending and gamma    */
+  /*    correction to correctly render non-monochrome glyph bitmaps onto a */
+  /*    surface; see @FT_Render_Glyph.                                     */
   /*                                                                       */
   /* <Values>                                                              */
   /*    FT_RENDER_MODE_NORMAL ::                                           */
@@ -3011,6 +3014,83 @@ FT_BEGIN_HEADER
   /*    Convert a given glyph image to a bitmap.  It does so by inspecting */
   /*    the glyph image format, finding the relevant renderer, and         */
   /*    invoking it.                                                       */
+  /*                                                                       */
+  /*    When FreeType outputs a bitmap of a glyph, it really outputs an    */
+  /*    alpha coverage map.  If a pixel is completely covered by a         */
+  /*    filled-in outline, the bitmap contains 0xFF at that pixel, meaning */
+  /*    that 0xFF/0xFF fraction of that pixel is covered, meaning the      */
+  /*    pixel is 100% black (or 0% bright).  If a pixel is only 50%        */
+  /*    covered (value 0x80), the pixel is made 50% black (50% bright or a */
+  /*    middle shade of grey).  0% covered means 0% black (100% bright or  */
+  /*    white).                                                            */
+  /*                                                                       */
+  /*    On high-DPI screens like on smartphones and tablets, the pixels    */
+  /*    are so small that their chance of being completely covered and     */
+  /*    therefore completely black are fairly good.  On the low-DPI        */
+  /*    screens, however, the situation is different.  The pixels are too  */
+  /*    large for most of the details of a glyph and shades of gray are    */
+  /*    the norm rather than the exception.                                */
+  /*                                                                       */
+  /*    This is relevant because all our screens have a second problem:    */
+  /*    they are not linear.  1~+~1 is not~2.  Twice the value does not    */
+  /*    result in twice the brightness.  When a pixel is only 50% covered, */
+  /*    the coverage map says 50% black, and this translates to a pixel    */
+  /*    value of 128 when you use 8~bits per channel (0-255).  However,    */
+  /*    this does not translate to 50% brightness for that pixel on our    */
+  /*    sRGB and gamma~2.2 screens.  Due to their non-linearity, they      */
+  /*    dwell longer in the darks and only a pixel value of about 186      */
+  /*    results in 50% brightness – 128 ends up too dark on both bright    */
+  /*    and dark backgrounds.  The net result is that dark text looks      */
+  /*    burnt-out, pixely and blotchy on bright background, bright text    */
+  /*    too frail on dark backgrounds, and colored text on colored         */
+  /*    background (for example, red on green) seems to have dark halos or */
+  /*    `dirt' around it.  The situation is especially ugly for diagonal   */
+  /*    stems like in `w' glyph shapes where the quality of FreeType's     */
+  /*    anti-aliasing depends on the correct display of grays.  On         */
+  /*    high-DPI screens where smaller, fully black pixels reign supreme,  */
+  /*    this doesn't matter, but on our low-DPI screens with all the gray  */
+  /*    shades, it does.  0% and 100% brightness are the same things in    */
+  /*    linear and non-linear space, just all the shades in-between        */
+  /*    aren't.                                                            */
+  /*                                                                       */
+  /*    The blending function for placing text over a background is        */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      dst = alpha * src + (1 - alpha) * dst    ,                       */
+  /*    }                                                                  */
+  /*                                                                       */
+  /*    which is known as the OVER operator.                               */
+  /*                                                                       */
+  /*    To correctly composite an antialiased pixel of a glyph onto a      */
+  /*    surface,                                                           */
+  /*                                                                       */
+  /*    1. take the foreground and background colors (e.g., in sRGB space) */
+  /*       and apply gamma to get them in a linear space,                  */
+  /*                                                                       */
+  /*    2. use OVER to blend the two linear colors using the glyph pixel   */
+  /*       as the alpha value (remember, the glyph bitmap is an alpha      */
+  /*       coverage bitmap), and                                           */
+  /*                                                                       */
+  /*    3. apply inverse gamma to the blended pixel and write it back to   */
+  /*       the image.                                                      */
+  /*                                                                       */
+  /*    Internal testing at Adobe found that a target inverse gamma of~1.8 */
+  /*    for step~3 gives good results across a wide range of displays with */
+  /*    an sRGB gamma curve or a similar one.                              */
+  /*                                                                       */
+  /*    This process can cost performance.  There is an approximation that */
+  /*    does not need to know about the background color; see              */
+  /*    https://bel.fi/alankila/lcd/ and                                   */
+  /*    https://bel.fi/alankila/lcd/alpcor.html for details.               */
+  /*                                                                       */
+  /*    *ATTENTION*: Linear blending is even more important when dealing   */
+  /*    with subpixel-rendered glyphs to prevent color-fringing!  A        */
+  /*    subpixel-rendered glyph must first be filtered with a filter that  */
+  /*    gives equal weight to the three color primaries and does not       */
+  /*    exceed a sum of 0x100, see section @lcd_filtering.  Then the       */
+  /*    only difference to gray linear blending is that subpixel-rendered  */
+  /*    linear blending is done 3~times per pixel: red foreground subpixel */
+  /*    to red background subpixel and so on for green and blue.           */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    slot        :: A handle to the glyph slot containing the image to  */
@@ -4093,7 +4173,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  6
-#define FREETYPE_PATCH  1
+#define FREETYPE_PATCH  2
 
 
   /*************************************************************************/

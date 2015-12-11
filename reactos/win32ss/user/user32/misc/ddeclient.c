@@ -88,7 +88,7 @@ HCONV WINAPI DdeConnect(DWORD idInst, HSZ hszService, HSZ hszTopic,
 {
     HWND		hwndClient;
     WDML_INSTANCE*	pInstance;
-    WDML_CONV*		pConv = NULL;
+    WDML_CONV*		pConv;
     ATOM		aSrv = 0, aTpc = 0;
 
     TRACE("(0x%x,%p,%p,%p)\n", idInst, hszService, hszTopic, pCC);
@@ -1126,7 +1126,7 @@ HDDEDATA WINAPI DdeClientTransaction(LPBYTE pData, DWORD cbData, HCONV hConv, HS
 {
     WDML_CONV*		pConv;
     WDML_XACT*		pXAct;
-    HDDEDATA		hDdeData = 0;
+    HDDEDATA		hDdeData;
 
     TRACE("(%p,%d,%p,%p,%x,%x,%d,%p)\n",
 	  pData, cbData, hConv, hszItem, wFmt, wType, dwTimeout, pdwResult);
@@ -1364,7 +1364,7 @@ static LRESULT CALLBACK WDML_ClientProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPA
  */
 BOOL WINAPI DdeDisconnect(HCONV hConv)
 {
-    WDML_CONV*	pConv = NULL;
+    WDML_CONV*	pConv;
     WDML_XACT*	pXAct;
     BOOL	ret = FALSE;
 

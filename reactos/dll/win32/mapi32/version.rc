@@ -94,3 +94,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/Zh.rc"
+#endif

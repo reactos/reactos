@@ -271,7 +271,7 @@ void read_png(char *file_name)  /* We need to open the file */
 {
    png_structp png_ptr;
    png_infop info_ptr;
-   unsigned int sig_read = 0;
+   int sig_read = 0;
    png_uint_32 width, height;
    int bit_depth, color_type, interlace_type;
    FILE *fp;
@@ -280,7 +280,7 @@ void read_png(char *file_name)  /* We need to open the file */
       return (ERROR);
 
 #else no_open_file /* prototype 2 */
-void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
+void read_png(FILE *fp, int sig_read)  /* File is already open */
 {
    png_structp png_ptr;
    png_infop info_ptr;
@@ -370,7 +370,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
     * are mutually exclusive.
     */
 
-   /* Tell libpng to strip 16 bit/color files down to 8 bits/color.
+   /* Tell libpng to strip 16 bits/color files down to 8 bits/color.
     * Use accurate scaling if it's available, otherwise just chop off the
     * low byte.
     */
@@ -466,7 +466,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    }
 
 #ifdef PNG_READ_QUANTIZE_SUPPORTED
-   /* Quantize RGB files down to 8 bit palette or reduce palettes
+   /* Quantize RGB files down to 8-bit palette or reduce palettes
     * to the number of colors available on your screen.
     */
    if ((color_type & PNG_COLOR_MASK_COLOR) != 0)
@@ -518,11 +518,11 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    /* Swap the RGBA or GA data to ARGB or AG (or BGRA to ABGR) */
    png_set_swap_alpha(png_ptr);
 
-   /* Swap bytes of 16 bit files to least significant byte first */
+   /* Swap bytes of 16-bit files to least significant byte first */
    png_set_swap(png_ptr);
 
    /* Add filler (or alpha) byte (before/after each RGB triplet) */
-   png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
+   png_set_filler(png_ptr, 0xffff, PNG_FILLER_AFTER);
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
    /* Turn on interlace handling.  REQUIRED if you are not using
@@ -966,7 +966,7 @@ void write_png(char *file_name /* , ... other image information ... */)
    /* Swap bytes of 16-bit files to most significant byte first */
    png_set_swap(png_ptr);
 
-   /* Swap bits of 1, 2, 4 bit packed pixel formats */
+   /* Swap bits of 1-bit, 2-bit, 4-bit packed pixel formats */
    png_set_packswap(png_ptr);
 
    /* Turn on interlace handling if you are not using png_write_image() */

@@ -77,7 +77,7 @@ BEGIN
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    GROUPBOX "纸张", grp2, 8, 6, 224, 56, BS_GROUPBOX
     LTEXT "大小:(&S)", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "任务栏:(&T)", stc3, 16, 42, 36, 8
@@ -142,7 +142,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "此程序是免费软件;你可以将它重新分发和/或修改在 GNU 通用公共许可的条款下，作为出版由自由软件基金会;两个版本 2 的许可协议，或 (在您的选择) 任何更新的版本。\r\n\r\n此程序被分布在希望它有用，但没有任何担保。没有甚至对适销性或特定用途的默示保证。  请参阅 GNU 通用公共许可证有关更多详细信息。\r\n\r\n您应该已经收到一份 GNU 通用公共许可证以及这一计划; 如果没有，写信给自由软件基金会, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
@@ -182,5 +182,5 @@ BEGIN
     STRING_LINE_COLUMN "线 %d, 列 %d"
     STRING_PRINTERROR "不能打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "文本文档"
 END

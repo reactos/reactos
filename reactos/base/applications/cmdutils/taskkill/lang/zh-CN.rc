@@ -1,0 +1,21 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    STRING_USAGE, "用法: taskkill [/?] [/f] [/im 进程名称 | /pid 进程 ID]\n"
+    STRING_INVALID_OPTION, "错误: 未知或无效的命令行选项指定。\n"
+    STRING_INVALID_PARAM, "错误: 无效的命令行参数指定。\n"
+    STRING_MISSING_OPTION, "错误: 选项 /im 或 /pid 之一必须指定。\n"
+    STRING_MISSING_PARAM, "错误: %1 选项需要命令行参数。\n"
+    STRING_MUTUAL_EXCLUSIVE, "错误: 选项 /im 和 /pid 是互斥的。\n"
+    STRING_CLOSE_PID_SEARCH, "关闭消息发送到顶级窗口过程的 PID %1!u!。\n"
+    STRING_CLOSE_PROC_SRCH, "关闭消息发送到顶级窗口的过程 ""%1"" 与 PID %2!u!.\n"
+    STRING_TERM_PID_SEARCH, "过程与 PID %1!u! 被强行终止。\n"
+    STRING_TERM_PROC_SEARCH, " ""%1"" 过程与 PID %2!u! 被强行终止。\n"
+    STRING_SEARCH_FAILED, "错误: 找不到进程 ""%1""。\n"
+    STRING_ENUM_FAILED, "错误: 无法枚举进程列表。\n"
+    STRING_TERMINATE_FAILED, "错误: 无法终止进程 ""%1""。\n"
+    STRING_SELF_TERMINATION, "错误: 不允许自我终止的进程。\n"
+}

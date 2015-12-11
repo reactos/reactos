@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "エラー: コマンド ライン引数が無効です\n"
     STRING_NO_REMOTE, "エラー: リモート マシンにキーを追加できませんでした\n"
     STRING_CANNOT_FIND, "エラー: システムは指定されたキーまたは値を見つけられませんでした\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

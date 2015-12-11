@@ -293,4 +293,16 @@ GetNextUncheckedPartition(
     OUT PDISKENTRY *pDiskEntry,
     OUT PPARTENTRY *pPartEntry);
 
+VOID
+GetPartTypeStringFromPartitionTypeA(
+    UCHAR partitionType,
+    PSTR strPartType,
+    DWORD cchPartType);
+
+VOID
+GetPartTypeStringFromPartitionTypeW(
+    UCHAR partitionType,
+    PWSTR strPartType,
+    DWORD cchPartType);
+
 /* EOF */

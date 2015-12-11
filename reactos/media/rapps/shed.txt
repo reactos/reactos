@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
@@ -20,6 +21,11 @@ Description = Ein Single-Player-Kartenspiel für Windows. Es basiert auf dem bel
 License = Gratuită
 Description = Un joc de cărți pentru Windows. Este bazat pe popularul joc de cărți studențesc „Shit-head”.
 Size = 65,79 ko
+
+[Section.041f]
+License = Ücretsiz
+Description = Windows için bir tekli oyunculu kart oyunu. "Shit-head" tutulan öğrenci kart oyunu tabanlıdır.
+Size = 65,79 KB
 
 [Section.0804]
 Description = 单人卡游戏窗口。它基于"屎头"受欢迎的学生纸牌游戏。

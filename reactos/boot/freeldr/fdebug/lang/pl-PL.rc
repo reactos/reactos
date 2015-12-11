@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "fdebug"
+    IDS_APP_TITLE "FreeLoader Debugger"
     IDS_HELLO "Hello World!"
     IDC_FDEBUG "FDEBUG"
 END

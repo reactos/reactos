@@ -29,6 +29,7 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
 OBJECT_ENTRY(CLSID_AutoComplete, CAutoComplete)
 OBJECT_ENTRY(CLSID_ACLMulti, CACLMulti)
+OBJECT_ENTRY(CLSID_ACListISF, CACListISF)
 OBJECT_ENTRY(CLSID_SH_AddressBand, CAddressBand)
 OBJECT_ENTRY(CLSID_AddressEditBox, CAddressEditBox)
 OBJECT_ENTRY(CLSID_BandProxy, CBandProxy)

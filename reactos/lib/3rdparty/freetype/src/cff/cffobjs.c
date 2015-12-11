@@ -1052,7 +1052,7 @@
     driver->hinting_engine = FT_CFF_HINTING_ADOBE;
 #endif
 
-    driver->no_stem_darkening = FALSE;
+    driver->no_stem_darkening = TRUE;
 
     driver->darken_params[0] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1;
     driver->darken_params[1] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1;

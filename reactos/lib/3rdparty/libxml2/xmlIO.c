@@ -1335,7 +1335,7 @@ xmlGzfileClose (void * context) {
 }
 #endif /* HAVE_ZLIB_H */
 
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
 /************************************************************************
  *									*
  *		I/O for compressed file accesses			*
@@ -1452,7 +1452,7 @@ xmlXzfileClose (void * context) {
     if (ret < 0) xmlIOErr(0, "xzclose()");
     return(ret);
 }
-#endif /* HAVE_LZMA_H */
+#endif /* LIBXML_LZMA_ENABLED */
 
 #ifdef LIBXML_HTTP_ENABLED
 /************************************************************************
@@ -2329,10 +2329,10 @@ xmlRegisterDefaultInputCallbacks(void) {
     xmlRegisterInputCallbacks(xmlGzfileMatch, xmlGzfileOpen,
 	                      xmlGzfileRead, xmlGzfileClose);
 #endif /* HAVE_ZLIB_H */
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
     xmlRegisterInputCallbacks(xmlXzfileMatch, xmlXzfileOpen,
 	                      xmlXzfileRead, xmlXzfileClose);
-#endif /* HAVE_ZLIB_H */
+#endif /* LIBXML_LZMA_ENABLED */
 
 #ifdef LIBXML_HTTP_ENABLED
     xmlRegisterInputCallbacks(xmlIOHTTPMatch, xmlIOHTTPOpen,
@@ -2684,7 +2684,7 @@ __xmlParserInputBufferCreateFilename(const char *URI, xmlCharEncoding enc) {
 #endif
 	}
 #endif
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
 	if ((xmlInputCallbackTable[i].opencallback == xmlXzfileOpen) &&
 		(strcmp(URI, "-") != 0)) {
             ret->compressed = __libxml2_xzcompressed(context);
@@ -3351,7 +3351,7 @@ xmlParserInputBufferGrow(xmlParserInputBufferPtr in, int len) {
      * try to establish compressed status of input if not done already
      */
     if (in->compressed == -1) {
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
 	if (in->readcallback == xmlXzfileRead)
             in->compressed = __libxml2_xzcompressed(in->context);
 #endif

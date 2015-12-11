@@ -2008,7 +2008,7 @@ static HRESULT WINAPI HTMLDocument3_attachEvent(IHTMLDocument3 *iface, BSTR even
 
     TRACE("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
 
-    return attach_event(&This->doc_node->node.event_target, This, event, pDisp, pfResult);
+    return attach_event(&This->doc_node->node.event_target, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLDocument3_detachEvent(IHTMLDocument3 *iface, BSTR event,
@@ -2018,7 +2018,7 @@ static HRESULT WINAPI HTMLDocument3_detachEvent(IHTMLDocument3 *iface, BSTR even
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(event), pDisp);
 
-    return detach_event(This->doc_node->node.event_target, This, event, pDisp);
+    return detach_event(&This->doc_node->node.event_target, event, pDisp);
 }
 
 static HRESULT WINAPI HTMLDocument3_put_onrowsdelete(IHTMLDocument3 *iface, VARIANT v)
@@ -2858,7 +2858,7 @@ static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *
 {
     HTMLDocument *This = impl_from_IHTMLDocument5(iface);
     nsAString mode_str;
-    const PRUnichar *mode;
+    nsresult nsres;
 
     TRACE("(%p)->(%p)\n", This, p);
 
@@ -2868,13 +2868,8 @@ static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *
     }
 
     nsAString_Init(&mode_str, NULL);
-    nsIDOMHTMLDocument_GetCompatMode(This->doc_node->nsdoc, &mode_str);
-
-    nsAString_GetData(&mode_str, &mode);
-    *p = SysAllocString(mode);
-    nsAString_Finish(&mode_str);
-
-    return S_OK;
+    nsres = nsIDOMHTMLDocument_GetCompatMode(This->doc_node->nsdoc, &mode_str);
+    return return_nsstr(nsres, &mode_str, p);
 }
 
 static const IHTMLDocument5Vtbl HTMLDocument5Vtbl = {
@@ -3943,7 +3938,7 @@ static void HTMLDocument_on_advise(IUnknown *iface, cp_static_data_t *cp)
     HTMLDocument *This = impl_from_IHTMLDocument2((IHTMLDocument2*)iface);
 
     if(This->window)
-        update_cp_events(This->window->base.inner_window, &This->doc_node->node.event_target, cp);
+        update_doc_cp_events(This->doc_node, cp);
 }
 
 static inline HTMLDocument *impl_from_ISupportErrorInfo(ISupportErrorInfo *iface)
@@ -4507,7 +4502,7 @@ static HRESULT HTMLDocumentFragment_clone(HTMLDOMNode *iface, nsIDOMNode *nsnode
 
 static inline HTMLDocumentNode *impl_from_DispatchEx(DispatchEx *iface)
 {
-    return CONTAINING_RECORD(iface, HTMLDocumentNode, node.dispex);
+    return CONTAINING_RECORD(iface, HTMLDocumentNode, node.event_target.dispex);
 }
 
 static HRESULT HTMLDocumentNode_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
@@ -4552,12 +4547,19 @@ static HRESULT HTMLDocumentNode_invoke(DispatchEx *dispex, DISPID id, LCID lcid,
     return S_OK;
 }
 
+static void HTMLDocumentNode_bind_event(DispatchEx *dispex, int eid)
+{
+    HTMLDocumentNode *This = impl_from_DispatchEx(dispex);
+    ensure_doc_nsevent_handler(This, eid);
+}
 
 static const dispex_static_data_vtbl_t HTMLDocumentNode_dispex_vtbl = {
     NULL,
     NULL,
     HTMLDocumentNode_invoke,
-    NULL
+    NULL,
+    NULL,
+    HTMLDocumentNode_bind_event
 };
 
 static const NodeImplVtbl HTMLDocumentFragmentImplVtbl = {
@@ -4598,10 +4600,10 @@ static HTMLDocumentNode *alloc_doc_node(HTMLDocumentObj *doc_obj, HTMLInnerWindo
     doc->basedoc.window = window->base.outer_window;
     doc->window = window;
 
-    init_dispex(&doc->node.dispex, (IUnknown*)&doc->node.IHTMLDOMNode_iface,
+    init_dispex(&doc->node.event_target.dispex, (IUnknown*)&doc->node.IHTMLDOMNode_iface,
             &HTMLDocumentNode_dispex);
     init_doc(&doc->basedoc, (IUnknown*)&doc->node.IHTMLDOMNode_iface,
-            &doc->node.dispex.IDispatchEx_iface);
+            &doc->node.event_target.dispex.IDispatchEx_iface);
     HTMLDocumentNode_SecMgr_Init(doc);
 
     list_init(&doc->selection_list);
@@ -4735,6 +4737,8 @@ static ULONG WINAPI CustomDoc_Release(ICustomDoc *iface)
             IOleDocumentView_SetInPlaceSite(&This->basedoc.IOleDocumentView_iface, NULL);
         if(This->undomgr)
             IOleUndoManager_Release(This->undomgr);
+        if(This->editsvcs)
+            IHTMLEditServices_Release(This->editsvcs);
         if(This->tooltips_hwnd)
             DestroyWindow(This->tooltips_hwnd);
 

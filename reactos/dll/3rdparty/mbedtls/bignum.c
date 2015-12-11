@@ -22,7 +22,7 @@
  *  This MPI implementation is based on:
  *
  *  http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf
- *  http://www.stillhq.com/extracted/gnupg-api/mbedtls_mpi/
+ *  http://www.stillhq.com/extracted/gnupg-api/mpi/
  *  http://math.libtomcrypt.com/files/tommath.pdf
  */
 

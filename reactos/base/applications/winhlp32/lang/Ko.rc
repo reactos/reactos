@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "정의(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "옵션(&O)" {
+  MENUITEM "항상 위(&T)", MNID_HELP_HELPTOP
   MENUITEM "기록",		MNID_OPTS_HISTORY
   POPUP    "글꼴"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "도움말(&H)" {
    MENUITEM "도움말 사용법(&O)", MNID_HELP_HELPON
-   MENUITEM "항상 위(&T)", MNID_HELP_HELPTOP
    MENUITEM "Wine 도움말 정보(&I)...", MNID_HELP_ABOUT
  }
 }

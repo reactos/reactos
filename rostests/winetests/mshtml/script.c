@@ -333,20 +333,20 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
 {
     if(IsEqualGUID(guidService, &SID_VariantConversion)) {
         CHECK_EXPECT(QS_VariantConversion);
-        ok(IsEqualGUID(riid, &IID_IVariantChangeType), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
+        ok(IsEqualGUID(riid, &IID_IVariantChangeType), "unexpected riid %s\n", wine_dbgstr_guid(riid));
         *ppv = &VChangeType;
         return S_OK;
     }
 
     if(IsEqualGUID(guidService, &IID_IActiveScriptSite)) {
         CHECK_EXPECT(QS_IActiveScriptSite);
-        ok(IsEqualGUID(riid, &IID_IOleCommandTarget), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
+        ok(IsEqualGUID(riid, &IID_IOleCommandTarget), "unexpected riid %s\n", wine_dbgstr_guid(riid));
         return IActiveScriptSite_QueryInterface(site, riid, ppv);
     }
 
     if(IsEqualGUID(guidService, &SID_GetCaller)) {
         CHECK_EXPECT(QS_GetCaller);
-        ok(IsEqualGUID(riid, &IID_IServiceProvider), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
+        ok(IsEqualGUID(riid, &IID_IServiceProvider), "unexpected riid %s\n", wine_dbgstr_guid(riid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }

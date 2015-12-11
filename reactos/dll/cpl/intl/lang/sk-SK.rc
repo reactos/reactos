@@ -56,8 +56,8 @@ BEGIN
     LTEXT "Vyberte jazyk zodpovedajúci jazykovej verzii príslušných programov bez podpory kódovania &Unicode:", -1, 14, 55, 223, 18
     GROUPBOX "&Tabuľky na konverziu kódových stránok", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Predvolené nastavenie používateľského konta", -1, 5, 193, 234, 30
-    CHECKBOX "&Všetky nastavenia použiť na aktuálne používateľské konto a na predvolený profil používateľa", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 203, 220, 19, BS_MULTILINE
+    GROUPBOX "Predvolené nastavenie používateľského konta", -1, 5, 193, 234, 32
+    CHECKBOX "&Všetky nastavenia použiť na aktuálne používateľské konto a na predvolený profil používateľa", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

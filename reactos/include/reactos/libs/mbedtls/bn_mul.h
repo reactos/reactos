@@ -412,10 +412,11 @@
 #endif /* PPC32 */
 
 /*
- * The Sparc64 assembly is reported to be broken.
+ * The Sparc(64) assembly is reported to be broken.
  * Disable it for now, until we're able to fix it.
  */
-#if 0 && defined(__sparc__) && defined(__sparc64__)
+#if 0 && defined(__sparc__)
+#if defined(__sparc64__)
 
 #define MULADDC_INIT                                    \
     asm(                                                \
@@ -446,9 +447,8 @@
         : "g1", "o0", "o1", "o2", "o3", "o4",   \
           "o5"                                  \
         );
-#endif /* SPARCv9 */
 
-#if defined(__sparc__) && !defined(__sparc64__)
+#else /* __sparc64__ */
 
 #define MULADDC_INIT                                    \
     asm(                                                \
@@ -480,7 +480,8 @@
           "o5"                                  \
         );
 
-#endif /* SPARCv8 */
+#endif /* __sparc64__ */
+#endif /* __sparc__ */
 
 #if defined(__microblaze__) || defined(microblaze)
 

@@ -37,7 +37,7 @@ static void SaveClipboardToFile(void)
     if (!GetSaveFileNameW(&sfn))
         return;
 
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
         return;
@@ -72,7 +72,7 @@ static void LoadClipboardFromFile(void)
     if (!GetOpenFileNameW(&ofn))
         return;
 
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
         return;
@@ -94,7 +94,7 @@ static void LoadClipboardFromDrop(HDROP hDrop)
     DragQueryFileW(hDrop, 0, szFileName, ARRAYSIZE(szFileName));
     DragFinish(hDrop);
 
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
         return;
@@ -163,7 +163,7 @@ void UpdateDisplayMenu(void)
     if (CountClipboardFormats() == 0)
         return;
 
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
         return;
 
     AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);

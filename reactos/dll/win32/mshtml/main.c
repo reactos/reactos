@@ -539,6 +539,7 @@ const char *debugstr_mshtml_guid(const GUID *iid)
     X(DIID_HTMLDocumentEvents2);
     X(DIID_HTMLTableEvents);
     X(DIID_HTMLTextContainerEvents);
+    X(IID_HTMLPluginContainer);
     X(IID_IConnectionPoint);
     X(IID_IConnectionPointContainer);
     X(IID_ICustomDoc);
@@ -551,6 +552,7 @@ const char *debugstr_mshtml_guid(const GUID *iid)
     X(IID_IHlinkTarget);
     X(IID_IHTMLDocument6);
     X(IID_IHTMLDocument7);
+    X(IID_IHTMLEditServices);
     X(IID_IHTMLFramesCollection2);
     X(IID_IHTMLPrivateWindow);
     X(IID_IHtmlLoadOptions);

@@ -192,7 +192,7 @@ static void test_IApplicationAssociationRegistration_QueryCurrentDefault(IApplic
     ok(hr == E_INVALIDARG, "got 0x%x\n", hr);
 
     hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, spacetxtW, AT_FILEEXTENSION, AL_EFFECTIVE, &assocprog);
-    ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /* Win8 */, "got 0x%x\n", hr);
+    ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /*Win8*/, "got 0x%x\n", hr);
 
     hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, httpW, AT_URLPROTOCOL, AL_EFFECTIVE, NULL);
     ok(hr == E_INVALIDARG, "got 0x%x\n", hr);
@@ -212,13 +212,14 @@ static void test_IApplicationAssociationRegistration_QueryCurrentDefault(IApplic
     hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, httpW, AT_URLPROTOCOL, AL_EFFECTIVE, &assocprog);
     todo_wine ok(hr == S_OK, "got 0x%x\n", hr);
     trace("%s\n", wine_dbgstr_w(assocprog));
+
     CoTaskMemFree(assocprog);
 }
 
 START_TEST(assoc)
 {
     IQueryAssociations *qa;
-    IApplicationAssociationRegistration *appreg;
+    IApplicationAssociationRegistration *appreg = NULL;
     HRESULT hr;
 
     CoInitialize(NULL);
@@ -238,7 +239,7 @@ START_TEST(assoc)
 
     /* this works since Vista */
     hr = CoCreateInstance(&CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IApplicationAssociationRegistration, (LPVOID *)&appreg);
+                          &IID_IApplicationAssociationRegistration, (LPVOID*)&appreg);
     if (hr == S_OK)
     {
         test_IApplicationAssociationRegistration_QueryInterface(appreg);

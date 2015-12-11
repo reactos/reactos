@@ -243,7 +243,7 @@
   FT_ERRORDEF_( No_Unicode_Glyph_Name,                       0xA3,
                 "no Unicode glyph name found" )
   FT_ERRORDEF_( Glyph_Too_Big,                               0xA4,
-                "glyph to big for hinting" )
+                "glyph too big for hinting" )
 
   /* BDF errors */
 

@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d by %d, %s, %s"
     IDS_DEFREFRESHRATE "默认刷新"
-    IDES_REFRESHRATEFMT "%d Hertz"
+    IDES_REFRESHRATEFMT "%d 赫兹"
     IDS_4BPP "16 色"
     IDS_8BPP "256 色"
     IDS_15BPP "增强色 (15 位)"

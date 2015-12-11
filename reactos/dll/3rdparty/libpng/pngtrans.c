@@ -30,7 +30,7 @@ png_set_bgr(png_structrp png_ptr)
 #endif
 
 #if defined(PNG_READ_SWAP_SUPPORTED) || defined(PNG_WRITE_SWAP_SUPPORTED)
-/* Turn on 16 bit byte swapping */
+/* Turn on 16-bit byte swapping */
 void PNGAPI
 png_set_swap(png_structrp png_ptr)
 {
@@ -313,7 +313,7 @@ png_do_invert(png_row_infop row_info, png_bytep row)
 
 #ifdef PNG_16BIT_SUPPORTED
 #if defined(PNG_READ_SWAP_SUPPORTED) || defined(PNG_WRITE_SWAP_SUPPORTED)
-/* Swaps byte order on 16 bit depth images */
+/* Swaps byte order on 16-bit depth images */
 void /* PRIVATE */
 png_do_swap(png_row_infop row_info, png_bytep row)
 {

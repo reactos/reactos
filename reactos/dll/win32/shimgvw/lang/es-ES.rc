@@ -1,3 +1,5 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -6,7 +8,7 @@ BEGIN
     IDS_SETASDESKBG "Establecer como fondo de escritorio"
     IDS_PREVIEW "Vista previa"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC "Imagen siguiente"
+    IDS_TOOLTIP_NEXT_PIC "Siguiente imagen"
     IDS_TOOLTIP_PREV_PIC "Imagen anterior"
     IDS_TOOLTIP_ZOOM_IN "Acercar (+)"
     IDS_TOOLTIP_ZOOM_OUT "Alejar (-)"
@@ -18,11 +20,11 @@ END
 
 STRINGTABLE
 BEGIN
-    // IDS_EMF_FILE    "EMF Image"
-    IDS_GIF_FILE    "GIF Image"
-    IDS_JPG_FILE    "JPEG Image"
-    IDS_BMP_FILE    "Bitmap Image"
-    IDS_PNG_FILE    "PNG Image"
-    // IDS_TIF_FILE    "TIF Image"
-    // IDS_WMF_FILE    "WMF Image"
+    // IDS_EMF_FILE    "Imagen EMF"
+    IDS_GIF_FILE    "Imagen GIF"
+    IDS_JPG_FILE    "Imagen JPEG"
+    IDS_BMP_FILE    "Imagen de mapa de bits"
+    IDS_PNG_FILE    "Imagen PNG"
+    // IDS_TIF_FILE    "Imagen TIF"
+    // IDS_WMF_FILE    "Imagen WMF"
 END

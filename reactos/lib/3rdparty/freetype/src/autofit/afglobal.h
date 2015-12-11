@@ -117,6 +117,22 @@ FT_BEGIN_HEADER
 
     AF_StyleMetrics  metrics[AF_STYLE_MAX];
 
+    /* Compute darkening amount once per size.  Use this to check whether */
+    /* darken_{x,y} needs to be recomputed.                               */
+    FT_UShort        stem_darkening_for_ppem;
+    /* Copy from e.g. AF_LatinMetrics.axis[AF_DIMENSION_HORZ] */
+    /* to compute the darkening amount.                       */
+    FT_Pos           standard_vertical_width;
+    /* Copy from e.g. AF_LatinMetrics.axis[AF_DIMENSION_VERT] */
+    /* to compute the darkening amount.                       */
+    FT_Pos           standard_horizontal_width;
+    /* The actual amount to darken a glyph along the X axis. */
+    FT_Pos           darken_x;
+    /* The actual amount to darken a glyph along the Y axis. */
+    FT_Pos           darken_y;
+    /* Amount to scale down by to keep emboldened points */
+    /* on the Y-axis in pre-computed blue zones.         */
+    FT_Fixed         scale_down_factor;
     AF_Module        module;         /* to access global properties */
 
   } AF_FaceGlobalsRec;

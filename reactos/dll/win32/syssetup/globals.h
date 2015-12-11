@@ -56,6 +56,8 @@ typedef struct _SETUPDATA
     DWORD TimeZoneIndex;
     DWORD DisableAutoDaylightTimeSet;
     LCID LocaleID;
+
+    HINF hUnattendedInf;
 } SETUPDATA, *PSETUPDATA;
 
 typedef struct _ADMIN_INFO
@@ -67,7 +69,6 @@ typedef struct _ADMIN_INFO
 
 extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
-extern SETUPDATA SetupData;
 extern ADMIN_INFO AdminInfo;
 
 BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);

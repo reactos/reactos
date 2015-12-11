@@ -587,8 +587,9 @@
     }
 
     /* paired edges must be in proper order */
-    FT_ASSERT( !isPair                                         ||
-               topHintEdge->csCoord >= bottomHintEdge->csCoord );
+    if ( isPair                                         &&
+         topHintEdge->csCoord < bottomHintEdge->csCoord )
+      return;
 
     /* linear search to find index value of insertion point */
     indexInsert = 0;

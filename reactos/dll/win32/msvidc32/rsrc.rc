@@ -86,3 +86,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/msvidc32_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/msvidc32_Zh.rc"
+#endif

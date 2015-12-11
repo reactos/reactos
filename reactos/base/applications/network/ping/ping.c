@@ -352,6 +352,14 @@ static WORD Checksum(PUSHORT data, UINT size)
     return (USHORT)(~sum);
 }
 
+static BOOL WINAPI StopLoop(DWORD dwCtrlType)
+{
+    NeverStop = FALSE;
+    PingCount = 0;
+
+    return TRUE;
+}
+
 /* Prepare to ping target */
 static BOOL Setup(VOID)
 {
@@ -439,6 +447,9 @@ static BOOL Setup(VOID)
     MaxRTT.QuadPart = 0;
     SumRTT.QuadPart = 0;
     MinRTTSet       = FALSE;
+
+    SetConsoleCtrlHandler(StopLoop, TRUE);
+
     return TRUE;
 }
 

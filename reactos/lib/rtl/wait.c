@@ -44,7 +44,7 @@ Wait_thread_proc(LPVOID Arg)
 {
     PRTLP_WAIT Wait = (PRTLP_WAIT) Arg;
     NTSTATUS Status;
-    BOOLEAN alertable = (Wait->Flags & WT_EXECUTEINIOTHREAD) ? TRUE : FALSE;
+    BOOLEAN alertable = (Wait->Flags & WT_EXECUTEINIOTHREAD) != 0;
     HANDLE handles[2] = { Wait->Object, Wait->CancelEvent };
     LARGE_INTEGER timeout;
     HANDLE completion_event;
@@ -84,7 +84,7 @@ Wait_thread_proc(LPVOID Arg)
             if (Wait->Flags & WT_EXECUTEONLYONCE)
                 break;
         }
-        else
+        else if (Status != STATUS_USER_APC)
             break;
     }
 
@@ -157,7 +157,7 @@ RtlRegisterWait(PHANDLE NewWaitObject,
     Status = NtCreateEvent( &Wait->CancelEvent, 
                              EVENT_ALL_ACCESS, 
                              NULL,
-                             TRUE,
+                             NotificationEvent,
                              FALSE );
 
     if (Status != STATUS_SUCCESS)
@@ -166,9 +166,12 @@ RtlRegisterWait(PHANDLE NewWaitObject,
         return Status;
     }
 
+    Flags = Flags & (WT_EXECUTEINIOTHREAD | WT_EXECUTEINPERSISTENTTHREAD |
+                     WT_EXECUTELONGFUNCTION | WT_TRANSFER_IMPERSONATION);
+
     Status = RtlQueueWorkItem( Wait_thread_proc,
                                Wait,
-                               Flags & ~WT_EXECUTEONLYONCE );
+                               Flags );
 
     if (Status != STATUS_SUCCESS)
     {
@@ -214,7 +217,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
                 Status = NtCreateEvent( &CompletionEvent,
                                          EVENT_ALL_ACCESS,
                                          NULL,
-                                         TRUE,
+                                         NotificationEvent,
                                          FALSE );
 
                 if (Status != STATUS_SUCCESS)

@@ -83,3 +83,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/wldap32_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/wldap32_Zh.rc"
+#endif

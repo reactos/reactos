@@ -115,6 +115,8 @@ static const BYTE selfSignedCert[] = {
  0x0a, 0x8c, 0xb4, 0x5c, 0x34, 0x78, 0xe0, 0x3c, 0x9c, 0xe9, 0xf3, 0x30, 0x9f,
  0xa8, 0x76, 0x57, 0x92, 0x36 };
 
+static CHAR unisp_name_a[] = UNISP_NAME_A;
+
 static void InitFunctionPtrs(void)
 {
     HMODULE advapi32dll;
@@ -154,6 +156,81 @@ static void InitFunctionPtrs(void)
 #undef GET_PROC
 }
 
+static const char *algid_to_str(ALG_ID alg)
+{
+    static char buf[12];
+    switch(alg) {
+#define X(x) case x: return #x
+        X(CALG_MD2);
+        X(CALG_MD4);
+        X(CALG_MD5);
+        X(CALG_SHA1); /* same as CALG_SHA */
+        X(CALG_MAC);
+        X(CALG_RSA_SIGN);
+        X(CALG_DSS_SIGN);
+        X(CALG_NO_SIGN);
+        X(CALG_RSA_KEYX);
+        X(CALG_DES);
+        X(CALG_3DES_112);
+        X(CALG_3DES);
+        X(CALG_DESX);
+        X(CALG_RC2);
+        X(CALG_RC4);
+        X(CALG_SEAL);
+        X(CALG_DH_SF);
+        X(CALG_DH_EPHEM);
+        X(CALG_AGREEDKEY_ANY);
+        X(CALG_KEA_KEYX);
+        X(CALG_HUGHES_MD5);
+        X(CALG_SKIPJACK);
+        X(CALG_TEK);
+        X(CALG_CYLINK_MEK);
+        X(CALG_SSL3_SHAMD5);
+        X(CALG_SSL3_MASTER);
+        X(CALG_SCHANNEL_MASTER_HASH);
+        X(CALG_SCHANNEL_MAC_KEY);
+        X(CALG_SCHANNEL_ENC_KEY);
+        X(CALG_PCT1_MASTER);
+        X(CALG_SSL2_MASTER);
+        X(CALG_TLS1_MASTER);
+        X(CALG_RC5);
+        X(CALG_HMAC);
+        X(CALG_TLS1PRF);
+        X(CALG_HASH_REPLACE_OWF);
+        X(CALG_AES_128);
+        X(CALG_AES_192);
+        X(CALG_AES_256);
+        X(CALG_AES);
+        X(CALG_SHA_256);
+        X(CALG_SHA_384);
+        X(CALG_SHA_512);
+        X(CALG_ECDH);
+        X(CALG_ECMQV);
+        X(CALG_ECDSA);
+#undef X
+    }
+
+    sprintf(buf, "%x", alg);
+    return buf;
+}
+
+static void init_cred(SCHANNEL_CRED *cred)
+{
+    cred->dwVersion = SCHANNEL_CRED_VERSION;
+    cred->cCreds = 0;
+    cred->paCred = 0;
+    cred->hRootStore = NULL;
+    cred->cMappers = 0;
+    cred->aphMappers = NULL;
+    cred->cSupportedAlgs = 0;
+    cred->palgSupportedAlgs = NULL;
+    cred->grbitEnabledProtocols = 0;
+    cred->dwMinimumCipherStrength = 0;
+    cred->dwMaximumCipherStrength = 0;
+    cred->dwSessionLifespan = 0;
+    cred->dwFlags = 0;
+}
+
 static void test_strength(PCredHandle handle)
 {
     SecPkgCred_CipherStrengths strength = {-1,-1};
@@ -191,6 +268,57 @@ static void test_supported_protocols(CredHandle *handle, unsigned exprots)
         trace("Unknown flags: %x\n", protocols.grbitProtocol);
 }
 
+static void test_supported_algs(CredHandle *handle)
+{
+    SecPkgCred_SupportedAlgs algs;
+    SECURITY_STATUS status;
+    unsigned i;
+
+    status = pQueryCredentialsAttributesA(handle, SECPKG_ATTR_SUPPORTED_ALGS, &algs);
+    todo_wine ok(status == SEC_E_OK, "QueryCredentialsAttributes failed: %08x\n", status);
+    if(status != SEC_E_OK)
+        return;
+
+    trace("Supported algorithms (%d):\n", algs.cSupportedAlgs);
+    for(i=0; i < algs.cSupportedAlgs; i++)
+        trace("    %s\n", algid_to_str(algs.palgSupportedAlgs[i]));
+
+    pFreeContextBuffer(algs.palgSupportedAlgs);
+}
+
+static void test_cread_attrs(void)
+{
+    SCHANNEL_CRED schannel_cred;
+    SECURITY_STATUS status;
+    CredHandle cred;
+
+    status = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+            NULL, NULL, NULL, NULL, &cred, NULL);
+    ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %x\n", status);
+
+    test_supported_protocols(&cred, 0);
+    test_supported_algs(&cred);
+
+    status = pQueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_PROTOCOLS, NULL);
+    ok(status == SEC_E_INTERNAL_ERROR, "QueryCredentialsAttributes failed: %08x, expected SEC_E_INTERNAL_ERROR\n", status);
+
+    status = pQueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_ALGS, NULL);
+    ok(status == SEC_E_INTERNAL_ERROR, "QueryCredentialsAttributes failed: %08x, expected SEC_E_INTERNAL_ERROR\n", status);
+
+    pFreeCredentialsHandle(&cred);
+
+    init_cred(&schannel_cred);
+    schannel_cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
+    status = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+            NULL, &schannel_cred, NULL, NULL, &cred, NULL);
+    ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %x\n", status);
+
+    test_supported_protocols(&cred, SP_PROT_TLS1_CLIENT);
+    test_supported_algs(&cred);
+
+    pFreeCredentialsHandle(&cred);
+}
+
 static void testAcquireSecurityContext(void)
 {
     BOOL has_schannel = FALSE;
@@ -203,7 +331,6 @@ static void testAcquireSecurityContext(void)
     SCHANNEL_CRED schanCred;
     PCCERT_CONTEXT certs[2];
     HCRYPTPROV csp;
-    static CHAR unisp_name_a[] = UNISP_NAME_A;
     WCHAR ms_def_prov_w[MAX_PATH];
     BOOL ret;
     HCRYPTKEY key;
@@ -287,13 +414,8 @@ static void testAcquireSecurityContext(void)
     st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, NULL, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
-    if(st == SEC_E_OK) {
-        st = pQueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_PROTOCOLS, NULL);
-        ok(st == SEC_E_INTERNAL_ERROR, "QueryCredentialsAttributes failed: %08x, expected SEC_E_INTERNAL_ERROR\n", st);
-
-        test_supported_protocols(&cred, 0);
+    if(st == SEC_E_OK)
         pFreeCredentialsHandle(&cred);
-    }
     memset(&cred, 0, sizeof(cred));
     st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, NULL, NULL, NULL, &cred, &exp);
@@ -524,23 +646,6 @@ static void test_remote_cert(PCCERT_CONTEXT remote_cert)
 
 static const char http_request[] = "HEAD /test.html HTTP/1.1\r\nHost: www.winehq.org\r\nConnection: close\r\n\r\n";
 
-static void init_cred(SCHANNEL_CRED *cred)
-{
-    cred->dwVersion = SCHANNEL_CRED_VERSION;
-    cred->cCreds = 0;
-    cred->paCred = 0;
-    cred->hRootStore = NULL;
-    cred->cMappers = 0;
-    cred->aphMappers = NULL;
-    cred->cSupportedAlgs = 0;
-    cred->palgSupportedAlgs = NULL;
-    cred->grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
-    cred->dwMinimumCipherStrength = 0;
-    cred->dwMaximumCipherStrength = 0;
-    cred->dwSessionLifespan = 0;
-    cred->dwFlags = 0;
-}
-
 static void init_buffers(SecBufferDesc *desc, unsigned count, unsigned size)
 {
     desc->ulVersion = SECBUFFER_VERSION;
@@ -679,14 +784,13 @@ static void test_communication(void)
 
     /* Create client credentials */
     init_cred(&cred);
+    cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
     cred.dwFlags = SCH_CRED_NO_DEFAULT_CREDS|SCH_CRED_MANUAL_CRED_VALIDATION;
 
     status = pAcquireCredentialsHandleA(NULL, (SEC_CHAR *)UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
         &cred, NULL, NULL, &cred_handle, NULL);
     ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", status);
     if (status != SEC_E_OK) return;
-
-    test_supported_protocols(&cred_handle, SP_PROT_TLS1_CLIENT);
 
     /* Initialize the connection */
     init_buffers(&buffers[0], 4, buf_size);
@@ -917,6 +1021,7 @@ START_TEST(schannel)
 {
     InitFunctionPtrs();
 
+    test_cread_attrs();
     testAcquireSecurityContext();
     test_communication();
 

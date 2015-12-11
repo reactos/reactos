@@ -231,7 +231,7 @@ static UINT ICO_ExtractIconExW(
 	LPBYTE		pData;
 	DWORD		sig;
 	HANDLE		hFile;
-	UINT16		iconDirCount = 0, iconCount = 0;
+	UINT16		iconDirCount = 0,iconCount = 0;
 	LPBYTE		peimage;
 	HANDLE		fmapping;
 	DWORD		fsizeh,fsizel;
@@ -256,13 +256,13 @@ static UINT ICO_ExtractIconExW(
 	CloseHandle(hFile);
 	if (!fmapping)
 	{
-	  WARN("CreateFileMapping error %ld\n", GetLastError() );
+          WARN("CreateFileMapping error %ld\n", GetLastError() );
 	  return 0xFFFFFFFF;
 	}
 
 	if (!(peimage = MapViewOfFile(fmapping, FILE_MAP_READ, 0, 0, 0)))
 	{
-	  WARN("MapViewOfFile error %ld\n", GetLastError() );
+          WARN("MapViewOfFile error %ld\n", GetLastError() );
 	  CloseHandle(fmapping);
 	  return 0xFFFFFFFF;
 	}
@@ -617,8 +617,10 @@ UINT WINAPI PrivateExtractIconsA (
     UINT ret;
     INT len = MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, NULL, 0);
     LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+#ifdef __REACTOS__
     if (lpwstrFile == NULL)
         return 0;
+#endif
 
     MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, lpwstrFile, len);
     ret = PrivateExtractIconsW(lpwstrFile, nIndex, sizeX, sizeY, phicon, piconid, nIcons, flags);
@@ -696,8 +698,10 @@ UINT WINAPI PrivateExtractIconExA (
 	UINT ret;
 	INT len = MultiByteToWideChar(CP_ACP, 0, lpstrFile, -1, NULL, 0);
 	LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+#ifdef __REACTOS__
     if (lpwstrFile == NULL)
         return 0;
+#endif
 
 	TRACE("%s %d %p %p %d\n", lpstrFile, nIndex, phIconLarge, phIconSmall, nIcons);
 

@@ -288,6 +288,18 @@ FindFile(
             DirContext->DirIndex++;
             continue;
         }
+        if (DirContext->LongNameU.Length == 0 ||
+            DirContext->ShortNameU.Length == 0)
+        {
+            DPRINT1("WARNING: File system corruption detected. You may need to run a disk repair utility.\n");
+            if (VfatGlobalData->Flags & VFAT_BREAK_ON_CORRUPTION)
+            {
+                ASSERT(DirContext->LongNameU.Length != 0 &&
+                       DirContext->ShortNameU.Length != 0);
+            }
+            DirContext->DirIndex++;
+            continue;
+        }
         if (WildCard)
         {
             Found = FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->LongNameU, TRUE, NULL) ||
@@ -492,7 +504,9 @@ VfatCreateFile(
 
     /* This a open operation for the volume itself */
     if (FileObject->FileName.Length == 0 &&
-        (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
+        (FileObject->RelatedFileObject == NULL ||
+         FileObject->RelatedFileObject->FsContext2 != NULL ||
+         FileObject->RelatedFileObject->FsContext == DeviceExt->VolumeFcb))
     {
         DPRINT("Volume opening\n");
 
@@ -544,6 +558,13 @@ VfatCreateFile(
         return STATUS_SUCCESS;
     }
 
+    if (FileObject->RelatedFileObject != NULL &&
+        FileObject->RelatedFileObject->FsContext == DeviceExt->VolumeFcb)
+    {
+        ASSERT(FileObject->FileName.Length != 0);
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
     /* Check for illegal characters and illegale dot sequences in the file name */
     PathNameU = FileObject->FileName;
     c = PathNameU.Buffer + PathNameU.Length / sizeof(WCHAR);
@@ -586,6 +607,11 @@ VfatCreateFile(
     if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
     {
         PathNameU.Length -= sizeof(WCHAR);
+    }
+
+    if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
+    {
+        return STATUS_OBJECT_NAME_INVALID;
     }
 
     /* Try opening the file. */

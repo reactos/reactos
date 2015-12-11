@@ -445,7 +445,7 @@ static void test_GetStateText(void)
         ret = GetStateTextW(1<<i, buf, 1024);
         ok(ret, "%d) GetStateText failed\n", i);
     }
-    ret = GetStateTextW(1<<31, buf, 1024);
+    ret = GetStateTextW(1u<<31, buf, 1024);
     ok(!ret, "31) GetStateText succeeded: %d\n", ret);
 
     ret = GetStateTextW(2, buf, 1024);
@@ -478,7 +478,7 @@ static void test_GetStateText(void)
         ret = GetStateTextA(1<<i, bufa, 1024);
         ok(ret, "%d) GetStateText failed\n", i);
     }
-    ret = GetStateTextA(1<<31, bufa, 1024);
+    ret = GetStateTextA(1u<<31, bufa, 1024);
     ok(!ret, "31) GetStateText succeeded: %d\n", ret);
 }
 

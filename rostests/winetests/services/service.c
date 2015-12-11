@@ -328,6 +328,7 @@ static void test_service(void)
     ok(res, "StartService failed: %u\n", GetLastError());
     if(!res) {
         DeleteService(service_handle);
+        CloseServiceHandle(service_handle);
         return;
     }
     expect_event("RUNNING");
@@ -368,6 +369,7 @@ static inline void test_no_stop(void)
     ok(res, "StartService failed: %u\n", GetLastError());
     if(!res) {
         DeleteService(service_handle);
+        CloseServiceHandle(service_handle);
         return;
     }
     expect_event("RUNNING");
@@ -468,10 +470,14 @@ START_TEST(service)
         return;
     }
 
-    argc = winetest_get_mainargs(&argv);
-
     scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
-    ok(scm_handle != NULL, "OpenSCManager failed: %u\n", GetLastError());
+    ok(scm_handle != NULL || GetLastError() == ERROR_ACCESS_DENIED, "OpenSCManager failed: %u\n", GetLastError());
+    if(!scm_handle) {
+        skip("OpenSCManager failed, skipping tests\n");
+        return;
+    }
+
+    argc = winetest_get_mainargs(&argv);
 
     if(argc < 3) {
         test_runner(test_service);

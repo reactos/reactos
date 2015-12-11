@@ -44,6 +44,7 @@ MAIN_MENU MENU
    MENUITEM "&Definire…", MNID_BKMK_DEFINE
  }
  POPUP "&Opțiuni" {
+  MENUITEM "Î&ntotdeauna deasupra", MNID_HELP_HELPTOP
   MENUITEM "Ist&oric",		MNID_OPTS_HISTORY
   POPUP    "&Font"
   BEGIN
@@ -54,7 +55,6 @@ MAIN_MENU MENU
  }
  POPUP "Aj&utor" {
    MENUITEM "&Despre…", MNID_HELP_HELPON
-   MENUITEM "Î&ntotdeauna deasupra", MNID_HELP_HELPTOP
    MENUITEM "In&formații…", MNID_HELP_ABOUT
  }
 }

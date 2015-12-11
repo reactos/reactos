@@ -93,6 +93,9 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/winmm_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/winmm_Zh.rc"
+#endif
 
 /* do not add NLS specific stuff below that line */
 

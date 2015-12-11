@@ -742,10 +742,126 @@ static void test_SHCreateQueryCancelAutoPlayMoniker(void)
     IMoniker_Release(mon);
 }
 
+#define DROPTEST_FILENAME "c:\\wintest.bin"
+struct DragParam {
+    HWND hwnd;
+    HANDLE ready;
+};
+
+static LRESULT WINAPI drop_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg) {
+    case WM_DROPFILES:
+    {
+        HDROP hDrop = (HDROP)wparam;
+        char filename[MAX_PATH] = "dummy";
+        UINT num;
+        num = DragQueryFileA(hDrop, 0xffffffff, NULL, 0);
+        ok(num == 1, "expected 1, got %u\n", num);
+        num = DragQueryFileA(hDrop, 0xffffffff, (char*)0xdeadbeef, 0xffffffff);
+        ok(num == 1, "expected 1, got %u\n", num);
+        num = DragQueryFileA(hDrop, 0, filename, sizeof(filename));
+        ok(num == strlen(DROPTEST_FILENAME), "got %u\n", num);
+        ok(!strcmp(filename, DROPTEST_FILENAME), "got %s\n", filename);
+        DragFinish(hDrop);
+        return 0;
+    }
+    }
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
+}
+
+static DWORD WINAPI drop_window_therad(void *arg)
+{
+    struct DragParam *param = arg;
+    WNDCLASSA cls;
+    WINDOWINFO info;
+    BOOL r;
+    MSG msg;
+
+    memset(&cls, 0, sizeof(cls));
+    cls.lpfnWndProc = drop_window_proc;
+    cls.hInstance = GetModuleHandleA(NULL);
+    cls.lpszClassName = "drop test";
+    RegisterClassA(&cls);
+
+    param->hwnd = CreateWindowA("drop test", NULL, 0, 0, 0, 0, 0,
+                                NULL, 0, NULL, 0);
+    ok(param->hwnd != NULL, "CreateWindow failed: %d\n", GetLastError());
+
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    r = GetWindowInfo(param->hwnd, &info);
+    ok(r, "got %d\n", r);
+    ok(!(info.dwExStyle & WS_EX_ACCEPTFILES), "got %08x\n", info.dwExStyle);
+
+    DragAcceptFiles(param->hwnd, TRUE);
+
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    r = GetWindowInfo(param->hwnd, &info);
+    ok(r, "got %d\n", r);
+    ok((info.dwExStyle & WS_EX_ACCEPTFILES), "got %08x\n", info.dwExStyle);
+
+    SetEvent(param->ready);
+
+    while ((r = GetMessageA(&msg, NULL, 0, 0)) != 0) {
+        if (r == (BOOL)-1) {
+            ok(0, "unexpected return value, got %d\n", r);
+            break;
+        }
+        DispatchMessageA(&msg);
+    }
+
+    DestroyWindow(param->hwnd);
+    UnregisterClassA("drop test", GetModuleHandleA(NULL));
+    return 0;
+}
+
+static void test_DragQueryFile(void)
+{
+    struct DragParam param;
+    HANDLE hThread;
+    DWORD rc;
+    HGLOBAL hDrop;
+    DROPFILES *pDrop;
+    int ret;
+    BOOL r;
+
+    param.ready = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok(param.ready != NULL, "can't create event\n");
+    hThread = CreateThread(NULL, 0, drop_window_therad, &param, 0, NULL);
+
+    rc = WaitForSingleObject(param.ready, 5000);
+    ok(rc == WAIT_OBJECT_0, "got %u\n", rc);
+
+    hDrop = GlobalAlloc(GHND, sizeof(DROPFILES) + (strlen(DROPTEST_FILENAME) + 2) * sizeof(WCHAR));
+    pDrop = GlobalLock(hDrop);
+    pDrop->pFiles = sizeof(DROPFILES);
+    ret = MultiByteToWideChar(CP_ACP, 0, DROPTEST_FILENAME, -1,
+                              (LPWSTR)(pDrop + 1), strlen(DROPTEST_FILENAME) + 1);
+    ok(ret > 0, "got %d\n", ret);
+    pDrop->fWide = TRUE;
+    GlobalUnlock(hDrop);
+
+    r = PostMessageA(param.hwnd, WM_DROPFILES, (WPARAM)hDrop, 0);
+    ok(r, "got %d\n", r);
+
+    r = PostMessageA(param.hwnd, WM_QUIT, 0, 0);
+    ok(r, "got %d\n", r);
+
+    rc = WaitForSingleObject(hThread, 5000);
+    ok(rc == WAIT_OBJECT_0, "got %d\n", rc);
+
+    CloseHandle(param.ready);
+    CloseHandle(hThread);
+}
+#undef DROPTEST_FILENAME
+
 START_TEST(shellole)
 {
     init();
 
     test_SHPropStg_functions();
     test_SHCreateQueryCancelAutoPlayMoniker();
+    test_DragQueryFile();
 }

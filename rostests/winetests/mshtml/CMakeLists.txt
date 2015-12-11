@@ -13,7 +13,8 @@ list(APPEND SOURCE
     protocol.c
     script.c
     style.c
-    testlist.c)
+    testlist.c
+    xmlhttprequest.c)
 
 add_executable(mshtml_winetest ${SOURCE} rsrc.rc)
 

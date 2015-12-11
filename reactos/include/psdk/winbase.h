@@ -2998,6 +2998,15 @@ SetFirmwareEnvironmentVariableW(
 
 UINT WINAPI SetHandleCount(UINT);
 BOOL WINAPI SetHandleInformation(HANDLE,DWORD,DWORD);
+
+BOOL
+WINAPI
+SetInformationJobObject(
+  _In_ HANDLE hJob,
+  _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+  _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
+  _In_ DWORD cbJobObjectInformationLength);
+
 BOOL WINAPI SetKernelObjectSecurity(HANDLE,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
 void WINAPI SetLastError(DWORD);
 void WINAPI SetLastErrorEx(DWORD,DWORD);

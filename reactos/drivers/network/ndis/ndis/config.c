@@ -761,6 +761,7 @@ NdisReadNetworkAddress(
     NDIS_STRING Keyword;
     UINT *IntArray = 0;
     UINT i,j = 0;
+    WCHAR Buff[11];
     NDIS_STRING str;
 
     NdisInitUnicodeString(&Keyword, L"NetworkAddress");
@@ -774,8 +775,6 @@ NdisReadNetworkAddress(
 
     if (ParameterValue->ParameterType == NdisParameterInteger)
     {
-        WCHAR Buff[11];
-
         NDIS_DbgPrint(MAX_TRACE, ("Read integer data %lx\n",
                                   ParameterValue->ParameterData.IntegerData));
 

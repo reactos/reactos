@@ -75,7 +75,7 @@ static HRESULT WINAPI TransformFilter_Input_CheckMediaType(BasePin *iface, const
 
 static HRESULT WINAPI TransformFilter_Input_Receive(BaseInputPin *This, IMediaSample *pInSample)
 {
-    HRESULT hr = S_FALSE;
+    HRESULT hr;
     TransformFilter * pTransform;
     TRACE("%p\n", This);
     pTransform = impl_from_IBaseFilter(This->pin.pinInfo.pFilter);

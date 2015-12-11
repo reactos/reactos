@@ -774,11 +774,11 @@ static void test_intconversions(void)
     PropVariantClear(&propvar);
 
     propvar.vt = VT_I8;
-    propvar.u.hVal.QuadPart = (LONGLONG)1 << 63;
+    propvar.u.hVal.QuadPart = (ULONGLONG)1 << 63;
 
     hr = PropVariantToInt64(&propvar, &llval);
     ok(hr == S_OK, "hr=%x\n", hr);
-    ok(llval == (LONGLONG)1 << 63, "got wrong value %s\n", debugstr_longlong(llval));
+    ok(llval == (ULONGLONG)1 << 63, "got wrong value %s\n", debugstr_longlong(llval));
 
     hr = PropVariantToUInt64(&propvar, &ullval);
     ok(hr == HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW), "hr=%x\n", hr);

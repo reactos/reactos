@@ -715,6 +715,9 @@ static DWORD WINAPI wgl_thread(void *param)
     struct wgl_thread_param *p = param;
     HDC hdc = GetDC( p->hwnd );
 
+    ok(!glGetString(GL_RENDERER) && !glGetString(GL_VERSION) && !glGetString(GL_VENDOR),
+       "Expected NULL string when no active context is set\n");
+
     SetLastError(0xdeadbeef);
     p->make_current = wglMakeCurrent(hdc, p->hglrc);
     p->make_current_error = GetLastError();
@@ -1668,6 +1671,8 @@ START_TEST(opengl)
         test_message_window();
         test_dc(hwnd, hdc);
 
+        ok(!glGetString(GL_RENDERER) && !glGetString(GL_VERSION) && !glGetString(GL_VENDOR),
+           "Expected NULL string when no active context is set\n");
         hglrc = wglCreateContext(hdc);
         res = wglMakeCurrent(hdc, hglrc);
         ok(res, "wglMakeCurrent failed!\n");

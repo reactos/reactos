@@ -59,8 +59,8 @@ BEGIN
     LTEXT "Wybierz taki język, który ma być używany przez programy bez Unicode:", -1, 14, 55, 223, 18
     GROUPBOX "Tabele konwersji stron kodowych", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Domyślne ustawienia konta użytkownika", -1, 5, 193, 234, 30
-    CHECKBOX "Zastosuj wszystkie ustawienia do bieżącego konta użytkownika i do domyślnego profilu użytkownika.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Domyślne ustawienia konta użytkownika", -1, 5, 193, 234, 32
+    CHECKBOX "Zastosuj wszystkie ustawienia do bieżącego konta użytkownika i do domyślnego profilu użytkownika.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

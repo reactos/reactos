@@ -125,10 +125,10 @@
     FT_BitmapGlyph  glyph = (FT_BitmapGlyph)bitmap_glyph;
 
 
-    cbox->xMin = glyph->left << 6;
-    cbox->xMax = cbox->xMin + (FT_Pos)( glyph->bitmap.width << 6 );
-    cbox->yMax = glyph->top << 6;
-    cbox->yMin = cbox->yMax - (FT_Pos)( glyph->bitmap.rows << 6 );
+    cbox->xMin = glyph->left * 64;
+    cbox->xMax = cbox->xMin + (FT_Pos)( glyph->bitmap.width * 64 );
+    cbox->yMax = glyph->top * 64;
+    cbox->yMin = cbox->yMax - (FT_Pos)( glyph->bitmap.rows * 64 );
   }
 
 
@@ -403,9 +403,9 @@
     if ( error )
       goto Exit;
 
-    /* copy advance while converting it to 16.16 format */
-    glyph->advance.x = slot->advance.x << 10;
-    glyph->advance.y = slot->advance.y << 10;
+    /* copy advance while converting 26.6 to 16.16 format */
+    glyph->advance.x = slot->advance.x * 1024;
+    glyph->advance.y = slot->advance.y * 1024;
 
     /* now import the image from the glyph slot */
     error = clazz->glyph_init( glyph, slot );

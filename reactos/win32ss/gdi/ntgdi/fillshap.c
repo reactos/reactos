@@ -81,8 +81,11 @@ IntGdiPolygon(PDC    dc,
         pbrFill = dc->dclevel.pbrFill;
         pbrLine = dc->dclevel.pbrLine;
         psurf = dc->dclevel.pSurface;
-        /* FIXME: psurf can be NULL!!!! don't assert but handle this case gracefully! */
-        ASSERT(psurf);
+        if (psurf == NULL)
+        {
+            /* Memory DC without a bitmap selected, nothing to do. */
+            return TRUE;
+        }
 
         /* Now fill the polygon with the current fill brush. */
         if (!(pbrFill->flAttrs & BR_IS_NULL))
@@ -162,13 +165,20 @@ IntGdiPolyPolygon(DC      *dc,
 BOOL FASTCALL
 IntPolygon(HDC hdc, POINT *Point, int Count)
 {
-   PDC dc;
-   if (!(dc = DC_LockDc(hdc)))
-   {
-      EngSetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   return IntGdiPolygon(dc, Point, Count);
+    BOOL bResult;
+    PDC pdc;
+
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    bResult = IntGdiPolygon(pdc, Point, Count);
+
+    DC_UnlockDc(pdc);
+    return bResult;
 }
 
 

@@ -117,8 +117,8 @@
 
   FT_DEFINE_SERVICE_PROPERTIESREC(
     tt_service_properties,
-    (FT_Properties_SetFunc)tt_property_set,
-    (FT_Properties_GetFunc)tt_property_get )
+    (FT_Properties_SetFunc)tt_property_set,     /* set_property */
+    (FT_Properties_GetFunc)tt_property_get )    /* get_property */
 
 
   /*************************************************************************/
@@ -417,12 +417,13 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
   FT_DEFINE_SERVICE_MULTIMASTERSREC(
     tt_service_gx_multi_masters,
-    (FT_Get_MM_Func)        NULL,
-    (FT_Set_MM_Design_Func) NULL,
-    (FT_Set_MM_Blend_Func)  TT_Set_MM_Blend,
-    (FT_Get_MM_Var_Func)    TT_Get_MM_Var,
-    (FT_Set_Var_Design_Func)TT_Set_Var_Design )
+    (FT_Get_MM_Func)        NULL,                   /* get_mm         */
+    (FT_Set_MM_Design_Func) NULL,                   /* set_mm_design  */
+    (FT_Set_MM_Blend_Func)  TT_Set_MM_Blend,        /* set_mm_blend   */
+    (FT_Get_MM_Var_Func)    TT_Get_MM_Var,          /* get_mm_var     */
+    (FT_Set_Var_Design_Func)TT_Set_Var_Design )     /* set_var_design */
 #endif
+
 
   static const FT_Service_TrueTypeEngineRec  tt_service_truetype_engine =
   {
@@ -441,9 +442,11 @@
 #endif /* TT_USE_BYTECODE_INTERPRETER */
   };
 
+
   FT_DEFINE_SERVICE_TTGLYFREC(
     tt_service_truetype_glyf,
-    (TT_Glyf_GetLocationFunc)tt_face_get_location )
+    (TT_Glyf_GetLocationFunc)tt_face_get_location )    /* get_location */
+
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
   FT_DEFINE_SERVICEDESCREC5(
@@ -534,31 +537,31 @@
       0x10000L,        /* driver version == 1.0                 */
       0x20000L,        /* driver requires FreeType 2.0 or above */
 
-      (void*)0,        /* driver specific interface */
+      0,    /* module-specific interface */
 
-      tt_driver_init,
-      tt_driver_done,
-      tt_get_interface,
+      tt_driver_init,           /* FT_Module_Constructor  module_init   */
+      tt_driver_done,           /* FT_Module_Destructor   module_done   */
+      tt_get_interface,         /* FT_Module_Requester    get_interface */
 
     sizeof ( TT_FaceRec ),
     sizeof ( TT_SizeRec ),
     sizeof ( FT_GlyphSlotRec ),
 
-    tt_face_init,
-    tt_face_done,
-    tt_size_init,
-    tt_size_done,
-    tt_slot_init,
-    0,                       /* FT_Slot_DoneFunc */
+    tt_face_init,               /* FT_Face_InitFunc  init_face */
+    tt_face_done,               /* FT_Face_DoneFunc  done_face */
+    tt_size_init,               /* FT_Size_InitFunc  init_size */
+    tt_size_done,               /* FT_Size_DoneFunc  done_size */
+    tt_slot_init,               /* FT_Slot_InitFunc  init_slot */
+    0,                          /* FT_Slot_DoneFunc  done_slot */
 
-    tt_glyph_load,
+    tt_glyph_load,              /* FT_Slot_LoadFunc  load_glyph */
 
-    tt_get_kerning,
-    0,                       /* FT_Face_AttachFunc */
-    tt_get_advances,
+    tt_get_kerning,             /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    tt_get_advances,            /* FT_Face_GetAdvancesFunc  get_advances */
 
-    tt_size_request,
-    TT_SIZE_SELECT
+    tt_size_request,            /* FT_Size_RequestFunc  request_size */
+    TT_SIZE_SELECT              /* FT_Size_SelectFunc   select_size  */
   )
 
 

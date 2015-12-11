@@ -48,6 +48,7 @@ MAIN_MENU MENU
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
  POPUP "&Opções" {
+  MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
   MENUITEM "Histórico",		MNID_OPTS_HISTORY
   POPUP    "Fontes"
   BEGIN
@@ -58,7 +59,6 @@ MAIN_MENU MENU
  }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
-   MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
    MENUITEM "&Informações...", MNID_HELP_ABOUT
  }
 }
@@ -134,6 +134,7 @@ MAIN_MENU MENU
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
  POPUP "&Opções" {
+  MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
   MENUITEM "Histórico",		MNID_OPTS_HISTORY
   POPUP    "Tipos de Letra"
   BEGIN
@@ -144,7 +145,6 @@ MAIN_MENU MENU
  }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
-   MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
    MENUITEM "&Informações...", MNID_HELP_ABOUT
  }
 }

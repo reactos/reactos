@@ -155,6 +155,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Yönetici"
+    IDS_MACHINE_OWNER_NAME "Sahip"
 END
 
 STRINGTABLE

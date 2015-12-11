@@ -1997,7 +1997,7 @@ static BOOL InstallOneService(
         list ? list->HKLM : HKEY_LOCAL_MACHINE,
         REGSTR_PATH_SERVICES,
         0,
-        0,
+        READ_CONTROL,
         &hServicesKey);
     if (rc != ERROR_SUCCESS)
     {

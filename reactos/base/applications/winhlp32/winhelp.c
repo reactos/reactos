@@ -1500,11 +1500,11 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
     case WM_INITMENUPOPUP:
         win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_SMALL,
-                      MF_BYCOMMAND | (win->font_scale == 0) ? MF_CHECKED : 0);
+                      (win->font_scale == 0) ? MF_CHECKED : MF_UNCHECKED);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_NORMAL,
-                      MF_BYCOMMAND | (win->font_scale == 1) ? MF_CHECKED : 0);
+                      (win->font_scale == 1) ? MF_CHECKED : MF_UNCHECKED);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_LARGE,
-                      MF_BYCOMMAND | (win->font_scale == 2) ? MF_CHECKED : 0);
+                      (win->font_scale == 2) ? MF_CHECKED : MF_UNCHECKED);
         break;
     case WM_DESTROY:
         win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);

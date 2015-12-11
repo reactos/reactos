@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Definieren...", MNID_BKMK_DEFINE
  }
  POPUP "&Optionen" {
+  MENUITEM "Immer im &Vordergrund", MNID_HELP_HELPTOP
   MENUITEM "Verlauf",		MNID_OPTS_HISTORY
   POPUP    "Textgröße"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "&Hilfe" {
    MENUITEM "&Hilfe benutzen", MNID_HELP_HELPON
-   MENUITEM "Immer im &Vordergrund", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }

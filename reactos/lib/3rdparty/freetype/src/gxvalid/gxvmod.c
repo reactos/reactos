@@ -235,14 +235,14 @@
   static
   const FT_Service_GXvalidateRec  gxvalid_interface =
   {
-    gxv_validate
+    gxv_validate              /* validate */
   };
 
 
   static
   const FT_Service_CKERNvalidateRec  ckernvalid_interface =
   {
-    classic_kern_validate
+    classic_kern_validate     /* validate */
   };
 
 

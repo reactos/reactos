@@ -1,5 +1,6 @@
 ; UTF-8
 ; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Kindle For PC
@@ -49,7 +50,7 @@ Description = Свободное применение которое позво�
 Description = Bezplatná aplikácia, ktorá umožňuje čítanie Kindle kníh.
 
 [Section.041f]
-Description = Ücretsiz bir uygulama sağlayan Kindle kitapları okuyun.
+Description = Kindle kitaplarını okumanızı sağlayan ücretsiz bir uygulama.
 Size = 39,0 MB
 
 [Section.0422]

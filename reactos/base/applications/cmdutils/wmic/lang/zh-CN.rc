@@ -1,0 +1,10 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "错误: 不支持的命令行\n"
+    STRING_ALIAS_NOT_FOUND, "错误: 别名未找到\n"
+    STRING_INVALID_QUERY, "错误: 无效的查询\n"
+}

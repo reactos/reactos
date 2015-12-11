@@ -286,6 +286,7 @@ static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
             }
             InternetCloseHandle(hRequest);
         }
+        InternetCloseHandle(hConnect);
     }
     return Ret;
 }

@@ -71,7 +71,7 @@ static inline HRESULT set_window_event(HTMLWindow *window, eventid_t eid, VARIAN
         return E_FAIL;
     }
 
-    return set_event_handler(&window->inner_window->doc->body_event_target, window->inner_window->doc, eid, var);
+    return set_event_handler(&window->inner_window->event_target, eid, var);
 }
 
 static inline HRESULT get_window_event(HTMLWindow *window, eventid_t eid, VARIANT *var)
@@ -81,7 +81,7 @@ static inline HRESULT get_window_event(HTMLWindow *window, eventid_t eid, VARIAN
         return E_FAIL;
     }
 
-    return get_event_handler(&window->inner_window->doc->body_event_target, eid, var);
+    return get_event_handler(&window->inner_window->event_target, eid, var);
 }
 
 static void detach_inner_window(HTMLInnerWindow *window)
@@ -145,7 +145,7 @@ static HRESULT WINAPI HTMLWindow2_QueryInterface(IHTMLWindow2 *iface, REFIID rii
         *ppv = &This->ITravelLogClient_iface;
     }else if(IsEqualGUID(&IID_IObjectIdentity, riid)) {
         *ppv = &This->IObjectIdentity_iface;
-    }else if(dispex_query_interface(&This->inner_window->dispex, riid, ppv)) {
+    }else if(dispex_query_interface(&This->inner_window->event_target.dispex, riid, ppv)) {
         assert(!*ppv);
         return E_NOINTERFACE;
     }else {
@@ -211,7 +211,7 @@ static void release_inner_window(HTMLInnerWindow *This)
         htmldoc_release(&This->doc->basedoc);
     }
 
-    release_dispex(&This->dispex);
+    release_dispex(&This->event_target.dispex);
 
     for(i=0; i < This->global_prop_cnt; i++)
         heap_free(This->global_props[i].name);
@@ -230,6 +230,11 @@ static void release_inner_window(HTMLInnerWindow *This)
     if(This->option_factory) {
         This->option_factory->window = NULL;
         IHTMLOptionElementFactory_Release(&This->option_factory->IHTMLOptionElementFactory_iface);
+    }
+
+    if(This->xhr_factory) {
+        This->xhr_factory->window = NULL;
+        IHTMLXMLHttpRequestFactory_Release(&This->xhr_factory->IHTMLXMLHttpRequestFactory_iface);
     }
 
     if(This->screen)
@@ -351,6 +356,11 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
         return E_FAIL;
     }
 
+    if(!nsframes) {
+        WARN("nsIDOMWindow_GetFrames returned NULL nsframes: %p\n", This->nswindow);
+        return DISP_E_MEMBERNOTFOUND;
+    }
+
     nsAString_InitDepend(&name_str, name);
     nsres = nsIDOMWindowCollection_NamedItem(nsframes, &name_str, &nswindow);
     nsAString_Finish(&name_str);
@@ -381,6 +391,11 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
         window_iter = nswindow_to_window(nswindow);
 
         nsIDOMWindow_Release(nswindow);
+
+        if(!window_iter) {
+            WARN("nsIDOMWindow without HTMLOuterWindow: %p\n", nswindow);
+            continue;
+        }
 
         hres = IHTMLElement_get_id(&window_iter->frame_element->element.IHTMLElement_iface, &id);
         if(FAILED(hres)) {
@@ -1630,7 +1645,7 @@ static HRESULT WINAPI HTMLWindow3_attachEvent(IHTMLWindow3 *iface, BSTR event, I
         return E_FAIL;
     }
 
-    return attach_event(&window->doc->body_event_target, &window->doc->basedoc, event, pDisp, pfResult);
+    return attach_event(&window->event_target, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLWindow3_detachEvent(IHTMLWindow3 *iface, BSTR event, IDispatch *pDisp)
@@ -1645,7 +1660,7 @@ static HRESULT WINAPI HTMLWindow3_detachEvent(IHTMLWindow3 *iface, BSTR event, I
         return E_FAIL;
     }
 
-    return detach_event(window->doc->body_event_target, &window->doc->basedoc, event, pDisp);
+    return detach_event(&window->event_target, event, pDisp);
 }
 
 static HRESULT window_set_timer(HTMLInnerWindow *This, VARIANT *expr, LONG msec, VARIANT *language,
@@ -1936,8 +1951,24 @@ static HRESULT WINAPI HTMLWindow5_put_XMLHttpRequest(IHTMLWindow5 *iface, VARIAN
 static HRESULT WINAPI HTMLWindow5_get_XMLHttpRequest(IHTMLWindow5 *iface, VARIANT *p)
 {
     HTMLWindow *This = impl_from_IHTMLWindow5(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    HTMLInnerWindow *window = This->inner_window;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!window->xhr_factory) {
+        HRESULT hres;
+
+        hres = HTMLXMLHttpRequestFactory_Create(window, &window->xhr_factory);
+        if(FAILED(hres)) {
+            return hres;
+        }
+    }
+
+    V_VT(p) = VT_DISPATCH;
+    V_DISPATCH(p) = (IDispatch*)&window->xhr_factory->IHTMLXMLHttpRequestFactory_iface;
+    IDispatch_AddRef(V_DISPATCH(p));
+
+    return S_OK;
 }
 
 static const IHTMLWindow5Vtbl HTMLWindow5Vtbl = {
@@ -2399,7 +2430,7 @@ static HRESULT WINAPI WindowDispEx_GetTypeInfoCount(IDispatchEx *iface, UINT *pc
 
     TRACE("(%p)->(%p)\n", This, pctinfo);
 
-    return IDispatchEx_GetTypeInfoCount(&This->inner_window->dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->inner_window->event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI WindowDispEx_GetTypeInfo(IDispatchEx *iface, UINT iTInfo,
@@ -2409,7 +2440,7 @@ static HRESULT WINAPI WindowDispEx_GetTypeInfo(IDispatchEx *iface, UINT iTInfo,
 
     TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
 
-    return IDispatchEx_GetTypeInfo(&This->inner_window->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+    return IDispatchEx_GetTypeInfo(&This->inner_window->event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI WindowDispEx_GetIDsOfNames(IDispatchEx *iface, REFIID riid,
@@ -2443,7 +2474,7 @@ static HRESULT WINAPI WindowDispEx_Invoke(IDispatchEx *iface, DISPID dispIdMembe
 
     /* FIXME: Use script dispatch */
 
-    return IDispatchEx_Invoke(&This->inner_window->dispex.IDispatchEx_iface, dispIdMember, riid, lcid, wFlags,
+    return IDispatchEx_Invoke(&This->inner_window->event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid, wFlags,
             pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -2522,7 +2553,7 @@ static HRESULT WINAPI WindowDispEx_GetDispID(IDispatchEx *iface, BSTR bstrName, 
     if(hres != DISP_E_UNKNOWNNAME)
         return hres;
 
-    hres = IDispatchEx_GetDispID(&window->base.inner_window->dispex.IDispatchEx_iface, bstrName, grfdex, pid);
+    hres = IDispatchEx_GetDispID(&window->base.inner_window->event_target.dispex.IDispatchEx_iface, bstrName, grfdex, pid);
     if(hres != DISP_E_UNKNOWNNAME)
         return hres;
 
@@ -2589,7 +2620,7 @@ static HRESULT WINAPI WindowDispEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         return hres;
     }
 
-    return IDispatchEx_InvokeEx(&window->dispex.IDispatchEx_iface, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+    return IDispatchEx_InvokeEx(&window->event_target.dispex.IDispatchEx_iface, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 }
 
 static HRESULT WINAPI WindowDispEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
@@ -2598,7 +2629,7 @@ static HRESULT WINAPI WindowDispEx_DeleteMemberByName(IDispatchEx *iface, BSTR b
 
     TRACE("(%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
 
-    return IDispatchEx_DeleteMemberByName(&This->inner_window->dispex.IDispatchEx_iface, bstrName, grfdex);
+    return IDispatchEx_DeleteMemberByName(&This->inner_window->event_target.dispex.IDispatchEx_iface, bstrName, grfdex);
 }
 
 static HRESULT WINAPI WindowDispEx_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
@@ -2607,7 +2638,7 @@ static HRESULT WINAPI WindowDispEx_DeleteMemberByDispID(IDispatchEx *iface, DISP
 
     TRACE("(%p)->(%x)\n", This, id);
 
-    return IDispatchEx_DeleteMemberByDispID(&This->inner_window->dispex.IDispatchEx_iface, id);
+    return IDispatchEx_DeleteMemberByDispID(&This->inner_window->event_target.dispex.IDispatchEx_iface, id);
 }
 
 static HRESULT WINAPI WindowDispEx_GetMemberProperties(IDispatchEx *iface, DISPID id, DWORD grfdexFetch, DWORD *pgrfdex)
@@ -2616,7 +2647,7 @@ static HRESULT WINAPI WindowDispEx_GetMemberProperties(IDispatchEx *iface, DISPI
 
     TRACE("(%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
 
-    return IDispatchEx_GetMemberProperties(&This->inner_window->dispex.IDispatchEx_iface, id, grfdexFetch,
+    return IDispatchEx_GetMemberProperties(&This->inner_window->event_target.dispex.IDispatchEx_iface, id, grfdexFetch,
             pgrfdex);
 }
 
@@ -2626,7 +2657,7 @@ static HRESULT WINAPI WindowDispEx_GetMemberName(IDispatchEx *iface, DISPID id, 
 
     TRACE("(%p)->(%x %p)\n", This, id, pbstrName);
 
-    return IDispatchEx_GetMemberName(&This->inner_window->dispex.IDispatchEx_iface, id, pbstrName);
+    return IDispatchEx_GetMemberName(&This->inner_window->event_target.dispex.IDispatchEx_iface, id, pbstrName);
 }
 
 static HRESULT WINAPI WindowDispEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
@@ -2635,7 +2666,7 @@ static HRESULT WINAPI WindowDispEx_GetNextDispID(IDispatchEx *iface, DWORD grfde
 
     TRACE("(%p)->(%x %x %p)\n", This, grfdex, id, pid);
 
-    return IDispatchEx_GetNextDispID(&This->inner_window->dispex.IDispatchEx_iface, grfdex, id, pid);
+    return IDispatchEx_GetNextDispID(&This->inner_window->event_target.dispex.IDispatchEx_iface, grfdex, id, pid);
 }
 
 static HRESULT WINAPI WindowDispEx_GetNameSpaceParent(IDispatchEx *iface, IUnknown **ppunk)
@@ -2716,7 +2747,7 @@ static const IServiceProviderVtbl ServiceProviderVtbl = {
 
 static inline HTMLInnerWindow *impl_from_DispatchEx(DispatchEx *iface)
 {
-    return CONTAINING_RECORD(iface, HTMLInnerWindow, dispex);
+    return CONTAINING_RECORD(iface, HTMLInnerWindow, event_target.dispex);
 }
 
 static HRESULT HTMLWindow_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
@@ -2778,13 +2809,13 @@ static HRESULT HTMLWindow_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD 
         case DISPATCH_PROPERTYPUT: {
             DISPID dispex_id;
 
-            hres = dispex_get_dynid(&This->dispex, prop->name, &dispex_id);
+            hres = dispex_get_dynid(&This->event_target.dispex, prop->name, &dispex_id);
             if(FAILED(hres))
                 return hres;
 
             prop->type = GLOBAL_DISPEXVAR;
             prop->id = dispex_id;
-            return IDispatchEx_InvokeEx(&This->dispex.IDispatchEx_iface, dispex_id, 0, flags, params, res, ei, caller);
+            return IDispatchEx_InvokeEx(&This->event_target.dispex.IDispatchEx_iface, dispex_id, 0, flags, params, res, ei, caller);
         }
         default:
             FIXME("Not supported flags: %x\n", flags);
@@ -2815,7 +2846,7 @@ static HRESULT HTMLWindow_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD 
             return E_NOTIMPL;
         }
     case GLOBAL_DISPEXVAR:
-        return IDispatchEx_InvokeEx(&This->dispex.IDispatchEx_iface, prop->id, 0, flags, params, res, ei, caller);
+        return IDispatchEx_InvokeEx(&This->event_target.dispex.IDispatchEx_iface, prop->id, 0, flags, params, res, ei, caller);
     default:
         ERR("invalid type %d\n", prop->type);
         hres = DISP_E_MEMBERNOTFOUND;
@@ -2824,12 +2855,25 @@ static HRESULT HTMLWindow_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD 
     return hres;
 }
 
+static event_target_t **HTMLWindow_get_event_target_ptr(DispatchEx *dispex)
+{
+    HTMLInnerWindow *This = impl_from_DispatchEx(dispex);
+    return &This->doc->body_event_target;
+}
+
+static void HTMLWindow_bind_event(DispatchEx *dispex, int eid)
+{
+    HTMLInnerWindow *This = impl_from_DispatchEx(dispex);
+    This->doc->node.event_target.dispex.data->vtbl->bind_event(&This->doc->node.event_target.dispex, eid);
+}
 
 static const dispex_static_data_vtbl_t HTMLWindow_dispex_vtbl = {
     NULL,
     NULL,
     HTMLWindow_invoke,
-    NULL
+    NULL,
+    HTMLWindow_get_event_target_ptr,
+    HTMLWindow_bind_event
 };
 
 static const tid_t HTMLWindow_iface_tids[] = {
@@ -2885,7 +2929,7 @@ static HRESULT create_inner_window(HTMLOuterWindow *outer_window, IMoniker *mon,
     window->base.outer_window = outer_window;
     window->base.inner_window = window;
 
-    init_dispex(&window->dispex, (IUnknown*)&window->base.IHTMLWindow2_iface, &HTMLWindow_dispex);
+    init_dispex(&window->event_target.dispex, (IUnknown*)&window->base.IHTMLWindow2_iface, &HTMLWindow_dispex);
 
     window->task_magic = get_task_target_magic();
 

@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
     CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-    CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Run in seperate memory space", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Cancel", 2, 120, 124, 50, 15, WS_VISIBLE
 END

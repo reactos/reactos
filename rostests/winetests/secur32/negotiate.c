@@ -262,6 +262,9 @@ static void test_authentication(void)
     SecPkgInfoA *pi;
     BOOL first = TRUE;
 
+    memset(&client, 0, sizeof(client));
+    memset(&server, 0, sizeof(server));
+
     id.User = (unsigned char *)"user";
     id.UserLength = strlen( "user" );
     id.Domain = (unsigned char *)"domain";
@@ -342,17 +345,29 @@ done:
     cleanup_buffers( &client );
     cleanup_buffers( &server );
 
-    status_c = pDeleteSecurityContext( &client.ctxt );
-    ok( status_c == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_c );
+    if (client.ctxt.dwLower || client.ctxt.dwUpper)
+    {
+        status_c = pDeleteSecurityContext( &client.ctxt );
+        ok( status_c == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_c );
+    }
 
-    status_s = pDeleteSecurityContext( &server.ctxt );
-    ok( status_s == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_s );
+    if (server.ctxt.dwLower || server.ctxt.dwUpper)
+    {
+        status_s = pDeleteSecurityContext( &server.ctxt );
+        ok( status_s == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_s );
+    }
 
-    status_c = pFreeCredentialsHandle( &client.cred );
-    ok( status_c == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_c );
+    if (client.cred.dwLower || client.cred.dwUpper)
+    {
+        status_c = pFreeCredentialsHandle( &client.cred );
+        ok( status_c == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_c );
+    }
 
-    status_s = pFreeCredentialsHandle(&server.cred);
-    ok( status_s == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_s );
+    if (server.cred.dwLower || server.cred.dwUpper)
+    {
+        status_s = pFreeCredentialsHandle(&server.cred);
+        ok( status_s == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_s );
+    }
 }
 
 START_TEST(negotiate)

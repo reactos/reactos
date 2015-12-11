@@ -5,7 +5,7 @@
 
 [Section]
 Name = Resource Hacker
-Version = 4.2.4
+Version = 4.2.5
 License = Freeware
 Description = A freeware utility to view, modify, rename, add, delete and extract resources in 32bit & 64bit Windows executables and resource files (*.res).
 Size = 2.7 MB

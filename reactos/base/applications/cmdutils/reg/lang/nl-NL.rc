@@ -11,7 +11,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Fout: Foutieve commandoregel-parameters\n"
     STRING_NO_REMOTE, "Fout: Sleutels konden niet toegevoegd worden aan de remote machine\n"
     STRING_CANNOT_FIND, "Fout: Het systeem kon de gespecificeerde registersleutel of waarde niet vinden\n"
-    STRING_ERROR, "Unexpected error: "
     STRING_UNSUPPORTED_TYPE, "Error: Unsupported type\n"
-    STRING_INVALID_DWORD, "Error: /d must be positive number\n"
 }

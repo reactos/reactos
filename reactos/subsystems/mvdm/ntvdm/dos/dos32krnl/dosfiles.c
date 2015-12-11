@@ -844,6 +844,8 @@ WORD DosReadFile(WORD FileHandle,
             PCHAR Pointer = FAR_POINTER(Buffer);
             CHAR Character;
 
+            *BytesRead = 0;
+
             while (*BytesRead < Count)
             {
                 USHORT Amount = 1;

@@ -184,7 +184,7 @@
       return;
 
     FT_ASSERT( hintmask->byteCount > 0 );
-    FT_ASSERT( hintmask->byteCount <
+    FT_ASSERT( hintmask->byteCount <=
                  sizeof ( hintmask->mask ) / sizeof ( hintmask->mask[0] ) );
 
     /* set mask to all ones */
@@ -752,7 +752,7 @@
       case cf2_cmdCALLGSUBR:
       case cf2_cmdCALLSUBR:
         {
-          CF2_UInt  subrIndex;
+          CF2_Int  subrNum;
 
 
           FT_TRACE4(( op1 == cf2_cmdCALLGSUBR ? " callgsubr"
@@ -772,17 +772,17 @@
                            (size_t)charstringIndex + 1 );
 
           /* set up the new CFF region and pointer */
-          subrIndex = (CF2_UInt)cf2_stack_popInt( opStack );
+          subrNum = cf2_stack_popInt( opStack );
 
           switch ( op1 )
           {
           case cf2_cmdCALLGSUBR:
             FT_TRACE4(( " (idx %d, entering level %d)\n",
-                        subrIndex + (CF2_UInt)decoder->globals_bias,
+                        subrNum + decoder->globals_bias,
                         charstringIndex + 1 ));
 
             if ( cf2_initGlobalRegionBuffer( decoder,
-                                             subrIndex,
+                                             subrNum,
                                              charstring ) )
             {
               lastError = FT_THROW( Invalid_Glyph_Format );
@@ -793,11 +793,11 @@
           default:
             /* cf2_cmdCALLSUBR */
             FT_TRACE4(( " (idx %d, entering level %d)\n",
-                        subrIndex + (CF2_UInt)decoder->locals_bias,
+                        subrNum + decoder->locals_bias,
                         charstringIndex + 1 ));
 
             if ( cf2_initLocalRegionBuffer( decoder,
-                                            subrIndex,
+                                            subrNum,
                                             charstring ) )
             {
               lastError = FT_THROW( Invalid_Glyph_Format );

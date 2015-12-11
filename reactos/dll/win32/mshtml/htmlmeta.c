@@ -53,14 +53,14 @@ static ULONG WINAPI HTMLMetaElement_Release(IHTMLMetaElement *iface)
 static HRESULT WINAPI HTMLMetaElement_GetTypeInfoCount(IHTMLMetaElement *iface, UINT *pctinfo)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLMetaElement_GetTypeInfo(IHTMLMetaElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
             ppTInfo);
 }
 
@@ -68,7 +68,7 @@ static HRESULT WINAPI HTMLMetaElement_GetIDsOfNames(IHTMLMetaElement *iface, REF
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
             cNames, lcid, rgDispId);
 }
 
@@ -77,7 +77,7 @@ static HRESULT WINAPI HTMLMetaElement_Invoke(IHTMLMetaElement *iface, DISPID dis
         UINT *puArgErr)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
             lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 

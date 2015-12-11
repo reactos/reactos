@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Apibrėžti...", MNID_BKMK_DEFINE
  }
  POPUP "&Parinktys" {
+  MENUITEM "&Visada viršuje", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
    POPUP    "Šriftas"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "&Žinynas" {
    MENUITEM "Pa&galba apie žinyną", MNID_HELP_HELPON
-   MENUITEM "&Visada viršuje", MNID_HELP_HELPTOP
    MENUITEM "&Informacija...", MNID_HELP_ABOUT
  }
 }

@@ -1181,6 +1181,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
         return( ret );
 #endif /* MBEDTLS_PKCS12_C || MBEDTLS_PKCS5_C */
 #else
+    ((void) ret);
     ((void) pwd);
     ((void) pwdlen);
 #endif /* MBEDTLS_PEM_PARSE_C */

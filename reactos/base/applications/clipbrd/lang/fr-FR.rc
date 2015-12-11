@@ -60,4 +60,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "Le Presse-papiers contient des données dans un format qui ne peut être affiché."
+    ERROR_INVALID_FILE_FORMAT "Le fichier sélectionné n'est pas un fichier valide du presse-papiers."
 END

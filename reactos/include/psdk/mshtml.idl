@@ -9158,6 +9158,233 @@ methods:
 }
 
 /*****************************************************************************
+ *    IHTMLAreaElement interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f265-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLAreaElement : IDispatch
+{
+    [propput, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
+    HRESULT shape([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
+    HRESULT shape([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_COORDS)]
+    HRESULT coords([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_COORDS)]
+    HRESULT coords([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HREF)]
+    HRESULT href([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HREF)]
+    HRESULT href([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_TARGET)]
+    HRESULT target([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_TARGET)]
+    HRESULT target([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_ALT)]
+    HRESULT alt([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_ALT)]
+    HRESULT alt([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_NOHREF)]
+    HRESULT noHref([in] VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_NOHREF)]
+    HRESULT noHref([retval, out] VARIANT_BOOL *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HOST)]
+    HRESULT host([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HOST)]
+    HRESULT host([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HOSTNAME)]
+    HRESULT hostname([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HOSTNAME)]
+    HRESULT hostname([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PATHNAME)]
+    HRESULT pathname([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PATHNAME)]
+    HRESULT pathname([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PORT)]
+    HRESULT port([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PORT)]
+    HRESULT port([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PROTOCOL)]
+    HRESULT protocol([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PROTOCOL)]
+    HRESULT protocol([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_SEARCH)]
+    HRESULT search([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_SEARCH)]
+    HRESULT search([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HASH)]
+    HRESULT hash([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HASH)]
+    HRESULT hash([retval, out] BSTR *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_ONBLUR), displaybind, bindable]
+    HRESULT onblur([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_ONBLUR), displaybind, bindable]
+    HRESULT onblur([retval, out] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_ONFOCUS), displaybind, bindable]
+    HRESULT onfocus([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_ONFOCUS), displaybind, bindable]
+    HRESULT onfocus([retval, out] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_TABINDEX), displaybind, bindable]
+    HRESULT tabIndex([in] short v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_TABINDEX), displaybind, bindable]
+    HRESULT tabIndex([retval, out] short *p);
+
+    [id(DISPID_IHTMLAREAELEMENT_FOCUS)]
+    HRESULT focus();
+
+    [id(DISPID_IHTMLAREAELEMENT_BLUR)]
+    HRESULT blur();
+}
+
+/*****************************************************************************
+ *    DispHTMLAreaElement dispinterface
+ */
+[
+    hidden,
+    uuid(3050f503-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLAreaElement
+{
+properties:
+methods:
+    WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch* constructor();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
+    void shape(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
+    BSTR shape();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_COORDS)]
+    void coords(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_COORDS)]
+    BSTR coords();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HREF)]
+    void href(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HREF)]
+    BSTR href();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_TARGET)]
+    void target(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_TARGET)]
+    BSTR target();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_ALT)]
+    void alt(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_ALT)]
+    BSTR alt();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_NOHREF)]
+    void noHref(VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_NOHREF)]
+    VARIANT_BOOL noHref();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HOST)]
+    void host(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HOST)]
+    BSTR host();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HOSTNAME)]
+    void hostname(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HOSTNAME)]
+    BSTR hostname();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PATHNAME)]
+    void pathname(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PATHNAME)]
+    BSTR pathname();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PORT)]
+    void port(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PORT)]
+    BSTR port();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_PROTOCOL)]
+    void protocol(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_PROTOCOL)]
+    BSTR protocol();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_SEARCH)]
+    void search(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_SEARCH)]
+    BSTR search();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT_HASH)]
+    void hash(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT_HASH)]
+    BSTR hash();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT2_IE8_SHAPE)]
+    void ie8_shape(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT2_IE8_SHAPE)]
+    BSTR ie8_shape();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT2_IE8_COORDS)]
+    void ie8_coords(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT2_IE8_COORDS)]
+    BSTR ie8_coords();
+
+    [propput, id(DISPID_IHTMLAREAELEMENT2_IE8_HREF)]
+    void ie8_href(BSTR v);
+
+    [propget, id(DISPID_IHTMLAREAELEMENT2_IE8_HREF)]
+    BSTR ie8_href();
+};
+
+/*****************************************************************************
  *    IHTMLLabelElement interface
  */
 [
@@ -9496,6 +9723,24 @@ interface IHTMLSelectionObject : IDispatch
 
     [propget, id(DISPID_IHTMLSELECTIONOBJECT_TYPE)]
     HRESULT type([retval, out] BSTR *p);
+}
+
+/*****************************************************************************
+ *    IHTMLSelectionObject2 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f7ec-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLSelectionObject2 : IDispatch
+{
+    [id(DISPID_IHTMLSELECTIONOBJECT2_CREATERANGECOLLECTION)]
+    HRESULT createRangeCollection([out, retval] IDispatch **rangeCollection);
+
+    [propget, id(DISPID_IHTMLSELECTIONOBJECT2_TYPEDETAIL)]
+    HRESULT typeDetail([out, retval] BSTR *p);
 }
 
 /*****************************************************************************

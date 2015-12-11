@@ -599,12 +599,15 @@ static void test_mmioSetBuffer(char *fname)
 static LRESULT CALLBACK mmio_test_IOProc(LPSTR lpMMIOInfo, UINT uMessage, LPARAM lParam1, LPARAM lParam2)
 {
     LPMMIOINFO lpInfo = (LPMMIOINFO) lpMMIOInfo;
+    int i;
 
     switch (uMessage)
     {
     case MMIOM_OPEN:
         if (lpInfo->fccIOProc == FOURCC_DOS)
             lpInfo->fccIOProc = mmioFOURCC('F', 'A', 'I', 'L');
+        for (i = 0; i < sizeof(lpInfo->adwInfo) / sizeof(*lpInfo->adwInfo); i++)
+            ok(lpInfo->adwInfo[i] == 0, "[%d] Expected 0, got %u\n", i, lpInfo->adwInfo[i]);
         return MMSYSERR_NOERROR;
     case MMIOM_CLOSE:
         return MMSYSERR_NOERROR;
@@ -633,6 +636,18 @@ static void test_mmioOpen_fourcc(void)
 
     memset(&mmio, 0, sizeof(mmio));
     hmmio = mmioOpenA(fname, &mmio, MMIO_READ);
+    mmioGetInfo(hmmio, &mmio, 0);
+    ok(hmmio && mmio.fccIOProc == FOURCC_XYZ, "mmioOpenA error %u, got %4.4s\n",
+            mmio.wErrorRet, (LPCSTR)&mmio.fccIOProc);
+    ok(mmio.adwInfo[1] == 0, "mmioOpenA sent MMIOM_SEEK, got %d\n",
+       mmio.adwInfo[1]);
+    ok(mmio.lDiskOffset == 0, "mmioOpenA updated lDiskOffset, got %d\n",
+       mmio.lDiskOffset);
+    mmioClose(hmmio, 0);
+
+    /* Same test with NULL info */
+    memset(&mmio, 0, sizeof(mmio));
+    hmmio = mmioOpenA(fname, NULL, MMIO_READ);
     mmioGetInfo(hmmio, &mmio, 0);
     ok(hmmio && mmio.fccIOProc == FOURCC_XYZ, "mmioOpenA error %u, got %4.4s\n",
             mmio.wErrorRet, (LPCSTR)&mmio.fccIOProc);
@@ -870,7 +885,8 @@ static void test_mmio_buffer_pointer(void)
     ok(mmio.pchEndRead == mmio.pchBuffer, "expected %p, got %p\n", mmio.pchBuffer, mmio.pchEndRead);
 
     /* fill the buffer */
-    size = mmioAdvance(hmmio, &mmio, MMIO_READ);
+    res = mmioAdvance(hmmio, &mmio, MMIO_READ);
+    ok(res == MMSYSERR_NOERROR, "mmioAdvance failed %x\n", res);
     ok(mmio.pchEndRead-mmio.pchBuffer == sizeof(buffer), "got %d\n", (int)(mmio.pchEndRead-mmio.pchBuffer));
 
     /* seeking to the same buffer chunk, the buffer is kept */
@@ -906,6 +922,88 @@ static void test_mmio_buffer_pointer(void)
     DeleteFileA(test_file);
 }
 
+static void test_riff_write(void)
+{
+    static const DWORD test_write_data[] =
+    {
+        FOURCC_RIFF, 0x28, mmioFOURCC('W','A','V','E'),  mmioFOURCC('d','a','t','a'),
+        0x1b, 0xdededede, 0xdededede, 0xefefefef,
+        0xefefefef, 0xbabababa, 0xbabababa, 0xefefef
+    };
+
+    char name[] = "test_write.wav";
+    char buf[256];
+    MMCKINFO chunk_info[2];
+    MMIOINFO info;
+    HMMIO mmio;
+    MMRESULT ret;
+    LONG written;
+    DWORD read;
+    HANDLE h;
+
+    memset(chunk_info, 0, sizeof(chunk_info));
+
+    mmio = mmioOpenA(name, NULL, MMIO_ALLOCBUF|MMIO_CREATE|MMIO_READWRITE);
+    ok(mmio != NULL, "mmioOpen failed\n");
+
+    chunk_info[0].fccType = mmioFOURCC('W','A','V','E');
+    ret = mmioCreateChunk(mmio, chunk_info, MMIO_CREATERIFF);
+    ok(ret == MMSYSERR_NOERROR, "mmioCreateChunk failed %x\n", ret);
+    ok(chunk_info[0].ckid == FOURCC_RIFF, "chunk_info[0].ckid = %x\n", chunk_info[0].ckid);
+    ok(chunk_info[0].cksize == 0, "chunk_info[0].cksize = %d\n", chunk_info[0].cksize);
+    ok(chunk_info[0].dwDataOffset == 8, "chunk_info[0].dwDataOffset = %d\n", chunk_info[0].dwDataOffset);
+    ok(chunk_info[0].dwFlags == MMIO_DIRTY, "chunk_info[0].dwFlags = %x\n", chunk_info[0].dwFlags);
+
+    chunk_info[1].ckid = mmioFOURCC('d','a','t','a');
+    ret = mmioCreateChunk(mmio, chunk_info+1, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioCreateChunk failed %x\n", ret);
+    ok(chunk_info[1].ckid == mmioFOURCC('d','a','t','a'), "chunk_info[1].ckid = %x\n", chunk_info[1].ckid);
+    ok(chunk_info[1].cksize == 0, "chunk_info[1].cksize = %d\n", chunk_info[1].cksize);
+    ok(chunk_info[1].dwDataOffset == 20, "chunk_info[1].dwDataOffset = %d\n", chunk_info[1].dwDataOffset);
+    ok(chunk_info[1].dwFlags == MMIO_DIRTY, "chunk_info[1].dwFlags = %x\n", chunk_info[1].dwFlags);
+
+    memset(buf, 0xde, sizeof(buf));
+    written = mmioWrite(mmio, buf, 8);
+    ok(written == 8, "mmioWrite failed %x\n", ret);
+
+    ret = mmioGetInfo(mmio, &info, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioGetInfo failed %x\n", ret);
+
+    memset(info.pchNext, 0xef, 8);
+    info.pchNext += 8;
+    ret = mmioAdvance(mmio, &info, 1);
+    ok(ret == MMSYSERR_NOERROR, "mmioAdvance failed %x\n", ret);
+    ok(info.lBufOffset == 36, "info.lBufOffset = %d\n", info.lBufOffset);
+
+    info.dwFlags |= MMIO_DIRTY;
+    memset(info.pchNext, 0xba, 8);
+    info.pchNext += 8;
+    ret = mmioAdvance(mmio, &info, 1);
+    ok(ret == MMSYSERR_NOERROR, "mmioAdvance failed %x\n", ret);
+    ok(info.lBufOffset == 44, "info.lBufOffset = %d\n", info.lBufOffset);
+
+    info.dwFlags |= MMIO_DIRTY;
+    memset(info.pchNext, 0xef, 3);
+    info.pchNext += 3;
+    ret = mmioSetInfo(mmio, &info, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioSetInfo failed %x\n", ret);
+
+    ret = mmioAscend(mmio, chunk_info+1, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioAscend failed %x\n", ret);
+    ret = mmioAscend(mmio, chunk_info, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioAscend failed %x\n", ret);
+    ret = mmioClose(mmio, 0);
+    ok(ret == MMSYSERR_NOERROR, "mmioClose failed %x\n", ret);
+
+    h = CreateFileA("test_write.wav", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(h != INVALID_HANDLE_VALUE, "CreateFile failed\n");
+    ok(ReadFile(h, buf, sizeof(buf), &read, NULL), "ReadFile failed\n");
+    CloseHandle(h);
+    ok(!memcmp(buf, test_write_data, sizeof(test_write_data)), "created file is incorrect\n");
+
+    DeleteFileA("test_write.wav");
+}
+
 START_TEST(mmio)
 {
     /* Make it possible to run the tests against a specific AVI file in
@@ -924,4 +1022,5 @@ START_TEST(mmio)
     test_mmioSeek();
     test_mmio_end_of_file();
     test_mmio_buffer_pointer();
+    test_riff_write();
 }

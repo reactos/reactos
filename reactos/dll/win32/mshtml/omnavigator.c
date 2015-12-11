@@ -456,8 +456,11 @@ static HRESULT WINAPI HTMLPluginsCollection_get_length(IHTMLPluginsCollection *i
 static HRESULT WINAPI HTMLPluginsCollection_refresh(IHTMLPluginsCollection *iface, VARIANT_BOOL reload)
 {
     HTMLPluginsCollection *This = impl_from_IHTMLPluginsCollection(iface);
-    FIXME("(%p)->(%x)\n", This, reload);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%x)\n", This, reload);
+
+    /* Nothing to do here. */
+    return S_OK;
 }
 
 static const IHTMLPluginsCollectionVtbl HTMLPluginsCollectionVtbl = {

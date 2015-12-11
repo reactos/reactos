@@ -240,7 +240,7 @@
   static
   const FT_Service_OTvalidateRec  otvalid_interface =
   {
-    otv_validate
+    otv_validate        /* validate */
   };
 
 

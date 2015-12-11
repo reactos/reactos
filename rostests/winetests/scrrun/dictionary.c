@@ -209,7 +209,7 @@ static HRESULT WINAPI test_unk_no_QI(IUnknown *iface, REFIID riid, void **obj)
 
 static ULONG WINAPI test_unk_AddRef(IUnknown *iface)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return 2;
 }
 
@@ -218,13 +218,13 @@ static ULONG WINAPI test_unk_Release(IUnknown *iface)
     return 1;
 }
 
-static IUnknownVtbl test_unk_vtbl = {
+static /* const */ IUnknownVtbl test_unk_vtbl = {
     test_unk_QI,
     test_unk_AddRef,
     test_unk_Release
 };
 
-static IUnknownVtbl test_unk_no_vtbl = {
+static /* const */ IUnknownVtbl test_unk_no_vtbl = {
     test_unk_no_QI,
     test_unk_AddRef,
     test_unk_Release
@@ -244,7 +244,7 @@ static HRESULT WINAPI test_disp_QI(IDispatch *iface, REFIID riid, void **obj)
 
 static ULONG WINAPI test_disp_AddRef(IDispatch *iface)
 {
-    ok(0, "unxpected\n");
+    ok(0, "unexpected\n");
     return 2;
 }
 
@@ -279,7 +279,7 @@ static HRESULT WINAPI test_disp_Invoke(IDispatch *iface, DISPID dispid, REFIID r
     return E_NOTIMPL;
 }
 
-static IDispatchVtbl test_disp_vtbl = {
+static /* const */ IDispatchVtbl test_disp_vtbl = {
     test_disp_QI,
     test_disp_AddRef,
     test_disp_Release,

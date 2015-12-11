@@ -43,6 +43,7 @@ MAIN_MENU MENU
    MENUITEM "&Definisci...", MNID_BKMK_DEFINE
  }
  POPUP "&Opzioni" {
+  MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
   MENUITEM "Cronologia",		MNID_OPTS_HISTORY
   POPUP    "Caratteri"
   BEGIN
@@ -53,7 +54,6 @@ MAIN_MENU MENU
  }
  POPUP "&Aiuto" {
    MENUITEM "&Aiuto sulla guida", MNID_HELP_HELPON
-   MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
    MENUITEM "&Informazioni su...", MNID_HELP_ABOUT
  }
 }

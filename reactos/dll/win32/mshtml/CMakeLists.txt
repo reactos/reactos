@@ -16,6 +16,7 @@ list(APPEND SOURCE
     editor.c
     hlink.c
     htmlanchor.c
+    htmlarea.c
     htmlattr.c
     htmlbody.c
     htmlcomment.c
@@ -81,6 +82,7 @@ list(APPEND SOURCE
     task.c
     txtrange.c
     view.c
+    xmlhttprequest.c
     mshtml_private.h)
 
 if(MSVC)

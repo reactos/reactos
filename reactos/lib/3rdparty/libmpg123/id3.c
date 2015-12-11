@@ -1051,10 +1051,10 @@ static void convert_utf16bom(mpg123_string *sb, const unsigned char* s, size_t l
 	for(i=0; i < n; i+=2)
 	{
 		unsigned long point = ((unsigned long) s[i+high]<<8) + s[i+low];
-		if((point & 0xd800) == 0xd800) /* lead surrogate */
+		if((point & 0xfc00) == 0xd800) /* lead surrogate */
 		{
 			unsigned short second = (i+3 < l) ? (s[i+2+high]<<8) + s[i+2+low] : 0;
-			if((second & 0xdc00) == 0xdc00) /* good... */
+			if((second & 0xfc00) == 0xdc00) /* good... */
 			{
 				point = FULLPOINT(point,second);
 				length += UTF8LEN(point); /* possibly 4 bytes */
@@ -1077,7 +1077,7 @@ static void convert_utf16bom(mpg123_string *sb, const unsigned char* s, size_t l
 	for(i=0; i < n; i+=2)
 	{
 		unsigned long codepoint = ((unsigned long) s[i+high]<<8) + s[i+low];
-		if((codepoint & 0xd800) == 0xd800) /* lead surrogate */
+		if((codepoint & 0xfc00) == 0xd800) /* lead surrogate */
 		{
 			unsigned short second = (s[i+2+high]<<8) + s[i+2+low];
 			codepoint = FULLPOINT(codepoint,second);

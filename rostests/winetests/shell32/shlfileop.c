@@ -164,6 +164,9 @@ static void clean_after_shfo_tests(void)
     DeleteFileA("test4.txt\\test1.txt");
     DeleteFileA("test4.txt\\test2.txt");
     DeleteFileA("test4.txt\\test3.txt");
+    DeleteFileA("test4.txt\\one.txt");
+    DeleteFileA("test4.txt\\nested\\two.txt");
+    RemoveDirectoryA("test4.txt\\nested");
     RemoveDirectoryA("test4.txt");
     DeleteFileA("testdir2\\one.txt");
     DeleteFileA("testdir2\\test1.txt");
@@ -1826,6 +1829,48 @@ static void test_move(void)
     CHAR to[5*MAX_PATH];
     DWORD retval;
 
+    clean_after_shfo_tests();
+    init_shfo_tests();
+
+    shfo.hwnd = NULL;
+    shfo.wFunc = FO_MOVE;
+    shfo.pFrom = from;
+    shfo.pTo = to;
+    shfo.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+    shfo.hNameMappings = NULL;
+    shfo.lpszProgressTitle = NULL;
+    shfo.fAnyOperationsAborted = FALSE;
+
+    set_curr_dir_path(from, "testdir2\\*.*\0");
+    set_curr_dir_path(to, "test4.txt\\*.*\0");
+    retval = SHFileOperationA(&shfo);
+    ok(retval != 0, "SHFileOperation should fail\n");
+    ok(!shfo.fAnyOperationsAborted, "fAnyOperationsAborted %d\n", shfo.fAnyOperationsAborted);
+
+    ok(file_exists("testdir2"), "dir should not be moved\n");
+    ok(file_exists("testdir2\\one.txt"), "file should not be moved\n");
+    ok(file_exists("testdir2\\nested"), "dir should not be moved\n");
+    ok(file_exists("testdir2\\nested\\two.txt"), "file should not be moved\n");
+
+    set_curr_dir_path(from, "testdir2\\*.*\0");
+    set_curr_dir_path(to, "test4.txt\0");
+    retval = SHFileOperationA(&shfo);
+    ok(!retval, "SHFileOperation error %#x\n", retval);
+    ok(!shfo.fAnyOperationsAborted, "fAnyOperationsAborted %d\n", shfo.fAnyOperationsAborted);
+
+    ok(file_exists("testdir2"), "dir should not be moved\n");
+    ok(!file_exists("testdir2\\one.txt"), "file should be moved\n");
+    ok(!file_exists("testdir2\\nested"), "dir should be moved\n");
+    ok(!file_exists("testdir2\\nested\\two.txt"), "file should be moved\n");
+
+    ok(file_exists("test4.txt"), "dir should exist\n");
+    ok(file_exists("test4.txt\\one.txt"), "file should exist\n");
+    ok(file_exists("test4.txt\\nested"), "dir should exist\n");
+    ok(file_exists("test4.txt\\nested\\two.txt"), "file should exist\n");
+
+    clean_after_shfo_tests();
+    init_shfo_tests();
+
     shfo.hwnd = NULL;
     shfo.wFunc = FO_MOVE;
     shfo.pFrom = from;
@@ -2160,13 +2205,13 @@ static void test_move(void)
         ok(!DeleteFileA("d.txt"), "Expected d.txt to not exist\n");
     }
 
-    /* FO_MOVE does not create dest directories */
+    /* FO_MOVE should create dest directories */
     shfo.pFrom = "test2.txt\0";
     shfo.pTo = "dir1\\dir2\\test2.txt\0";
     retval = SHFileOperationA(&shfo);
     if (dir_exists("dir1"))
     {
-        /* Vista and W2K8 (broken or new behavior ?) */
+        /* New behavior on Vista or later */
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
         ok(DeleteFileA("dir1\\dir2\\test2.txt"), "Expected dir1\\dir2\\test2.txt to exist\n");
         RemoveDirectoryA("dir1\\dir2");
@@ -2429,7 +2474,7 @@ static void test_unicode(void)
     shfoW.hwnd = NULL;
     shfoW.wFunc = FO_DELETE;
     shfoW.pFrom = UNICODE_PATH;
-    shfoW.pTo = '\0';
+    shfoW.pTo = NULL;
     shfoW.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
     shfoW.hNameMappings = NULL;
     shfoW.lpszProgressTitle = NULL;

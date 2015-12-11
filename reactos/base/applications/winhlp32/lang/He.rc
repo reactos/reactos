@@ -43,6 +43,7 @@ MAIN_MENU MENU
    MENUITEM "ה&גדרה...", MNID_BKMK_DEFINE
  }
  POPUP "&אפשרויות" {
+  MENUITEM "תמיד &עליון", MNID_HELP_HELPTOP
   MENUITEM "היסטוריה",		MNID_OPTS_HISTORY
   POPUP    "גופנים"
   BEGIN
@@ -53,7 +54,6 @@ MAIN_MENU MENU
  }
  POPUP "ע&זרה" {
    MENUITEM "עזרה ע&ל העזרה", MNID_HELP_HELPON
-   MENUITEM "תמיד &עליון", MNID_HELP_HELPTOP
    MENUITEM "&מידע...", MNID_HELP_ABOUT
  }
 }

@@ -400,6 +400,46 @@ typedef struct _CONSOLE_GETSETHWSTATE
 } CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
 
 
+typedef struct _CONSOLE_GETNUMFONTS
+{
+    HANDLE ConsoleHandle;
+    DWORD  NumFonts;
+} CONSOLE_GETNUMFONTS, *PCONSOLE_GETNUMFONTS;
+
+typedef struct _CONSOLE_GETFONTINFO
+{
+    HANDLE  ConsoleHandle;
+    HANDLE  OutputHandle;
+    BOOLEAN MaximumWindow;
+    PCONSOLE_FONT_INFO FontInfo;
+    DWORD   NumFonts;
+} CONSOLE_GETFONTINFO, *PCONSOLE_GETFONTINFO;
+
+typedef struct _CONSOLE_GETFONTSIZE
+{
+    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+    DWORD  FontIndex;
+    COORD  FontSize;
+} CONSOLE_GETFONTSIZE, *PCONSOLE_GETFONTSIZE;
+
+typedef struct _CONSOLE_GETCURRENTFONT
+{
+    HANDLE  ConsoleHandle;
+    HANDLE  OutputHandle;
+    BOOLEAN MaximumWindow;
+    DWORD   FontIndex;
+    COORD   FontSize;
+} CONSOLE_GETCURRENTFONT, *PCONSOLE_GETCURRENTFONT;
+
+typedef struct _CONSOLE_SETFONT
+{
+    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+    DWORD  FontIndex;
+} CONSOLE_SETFONT, *PCONSOLE_SETFONT;
+
+
 
 typedef struct _CONSOLE_CREATESCREENBUFFER
 {
@@ -898,6 +938,13 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETDISPLAYMODE GetDisplayModeRequest;
         CONSOLE_SETDISPLAYMODE SetDisplayModeRequest;
         CONSOLE_GETSETHWSTATE HardwareStateRequest;
+
+        /* Console fonts */
+        CONSOLE_GETNUMFONTS GetNumFontsRequest;
+        CONSOLE_GETFONTINFO GetFontInfoRequest;
+        CONSOLE_GETFONTSIZE GetFontSizeRequest;
+        CONSOLE_GETCURRENTFONT GetCurrentFontRequest;
+        CONSOLE_SETFONT SetFontRequest;
 
         /* Console window */
         CONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest;

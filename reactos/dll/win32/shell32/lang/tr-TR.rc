@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Bu kısayolda istediğiniz gelişmiş özellikleri seçin.", -1, 5, 30, 210, 10
     CHECKBOX "&Farklı kimlik bilgisiyle çalıştır", 14000, 25, 50, 150, 10
     LTEXT "Bu seçenek bu kısayolu başka bir kullanıcı olarak çalıştırmanızı ya da bilgisayar ve verilerinizi yetkisiz program işlemlerinden korumak için kendiniz olarak devam etmenizi sağlar.", -1, 50, 60, 175, 40
-    CHECKBOX "Ayrı &bir bellek alanında çalıştır", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Ayrı &bir bellek alanında çalıştır", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "Tamam", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "İptal", 2, 120, 124, 50, 15, WS_VISIBLE
 END

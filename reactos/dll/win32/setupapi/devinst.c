@@ -4719,7 +4719,7 @@ OpenHardwareProfileKey(
     rc = RegOpenKeyExW(HKLM,
                        REGSTR_PATH_HWPROFILES,
                        0,
-                       0,
+                       READ_CONTROL,
                        &hHWProfilesKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -4909,7 +4909,7 @@ SetupDiOpenDeviceInfoW(
                 list->HKLM,
                 REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
-                0,
+                READ_CONTROL,
                 &hEnumKey);
             if (rc != ERROR_SUCCESS)
             {
@@ -5697,7 +5697,7 @@ static HKEY SETUPDI_OpenDevKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
     HKEY enumKey, key = INVALID_HANDLE_VALUE;
     LONG l;
 
-    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, 0, &enumKey);
+    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, READ_CONTROL, &enumKey);
     if (!l)
     {
         l = RegOpenKeyExW(enumKey, devInfo->instanceId, 0, samDesired, &key);
@@ -5752,7 +5752,7 @@ static HKEY SETUPDI_OpenDrvKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
         RootKey,
         REGSTR_PATH_CLASS_NT,
         0, /* Options */
-        0,
+        READ_CONTROL,
         &hEnumKey);
     if (rc != ERROR_SUCCESS)
     {

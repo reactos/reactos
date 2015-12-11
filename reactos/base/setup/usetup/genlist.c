@@ -341,6 +341,51 @@ DrawScrollBarGenericList(
 }
 
 
+static
+VOID
+CenterCurrentListItem(
+    PGENERIC_LIST List)
+{
+    PLIST_ENTRY Entry;
+    ULONG MaxVisibleItems, ItemCount, i;
+
+    if ((List->Top == 0 && List->Bottom == 0) ||
+        IsListEmpty(&List->ListHead) ||
+        List->CurrentEntry == NULL)
+        return;
+
+    MaxVisibleItems = (ULONG)(List->Bottom - List->Top - 1);
+
+    ItemCount = 0;
+    Entry = List->ListHead.Flink;
+    while (Entry != &List->ListHead)
+    {
+        ItemCount++;
+        Entry = Entry->Flink;
+    }
+
+    if (ItemCount > MaxVisibleItems)
+    {
+        Entry = &List->CurrentEntry->Entry;
+        for (i = 0; i < MaxVisibleItems / 2; i++)
+        {
+            if (Entry->Blink != &List->ListHead)
+                Entry = Entry->Blink;
+        }
+
+        List->FirstShown = Entry;
+
+        for (i = 0; i < MaxVisibleItems; i++)
+        {
+            if (Entry->Flink != &List->ListHead)
+                Entry = Entry->Flink;
+        }
+
+        List->LastShown = Entry;
+    }
+}
+
+
 VOID
 DrawGenericList(
     PGENERIC_LIST List,
@@ -359,6 +404,8 @@ DrawGenericList(
 
     if (IsListEmpty(&List->ListHead))
         return;
+
+    CenterCurrentListItem(List);
 
     DrawListEntries(List);
     DrawScrollBarGenericList(List);

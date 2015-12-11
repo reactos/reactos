@@ -47,6 +47,7 @@ MAIN_MENU MENU
    MENUITEM "&Задати...", MNID_BKMK_DEFINE
  }
  POPUP "&Налаштування" {
+  MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
   MENUITEM "Історія",		MNID_OPTS_HISTORY
   POPUP    "Шрифти"
   BEGIN
@@ -57,7 +58,6 @@ MAIN_MENU MENU
  }
  POPUP "&Довідка" {
    MENUITEM "Довідка &про Довідку", MNID_HELP_HELPON
-   MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
    MENUITEM "&Інформація...", MNID_HELP_ABOUT
  }
 }

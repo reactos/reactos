@@ -15,7 +15,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDC_CPLICON ICON "resources/applet.ico"
 IDC_WORLD BITMAP "resources/world.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -97,4 +97,7 @@ IDC_WORLD BITMAP "resources/world.bmp"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

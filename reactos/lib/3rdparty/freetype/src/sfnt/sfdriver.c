@@ -139,9 +139,9 @@
 
   FT_DEFINE_SERVICE_SFNT_TABLEREC(
     sfnt_service_sfnt_table,
-    (FT_SFNT_TableLoadFunc)tt_face_load_any,
-    (FT_SFNT_TableGetFunc) get_sfnt_table,
-    (FT_SFNT_TableInfoFunc)sfnt_table_info )
+    (FT_SFNT_TableLoadFunc)tt_face_load_any,     /* load_table */
+    (FT_SFNT_TableGetFunc) get_sfnt_table,       /* get_table  */
+    (FT_SFNT_TableInfoFunc)sfnt_table_info )     /* table_info */
 
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
@@ -205,8 +205,8 @@
 
   FT_DEFINE_SERVICE_GLYPHDICTREC(
     sfnt_service_glyph_dict,
-    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)sfnt_get_name_index )
+    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,    /* get_name   */
+    (FT_GlyphDict_NameIndexFunc)sfnt_get_name_index )   /* name_index */
 
 
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
@@ -330,7 +330,7 @@
 
   FT_DEFINE_SERVICE_PSFONTNAMEREC(
     sfnt_service_ps_name,
-    (FT_PsName_GetFunc)sfnt_get_ps_name )
+    (FT_PsName_GetFunc)sfnt_get_ps_name )     /* get_ps_font_name */
 
 
   /*
@@ -338,7 +338,7 @@
    */
   FT_DEFINE_SERVICE_TTCMAPSREC(
     tt_service_get_cmap_info,
-    (TT_CMap_Info_GetFunc)tt_get_cmap_info )
+    (TT_CMap_Info_GetFunc)tt_get_cmap_info )  /* get_cmap_info */
 
 
 #ifdef TT_CONFIG_OPTION_BDF
@@ -381,8 +381,8 @@
 
   FT_DEFINE_SERVICE_BDFRec(
     sfnt_service_bdf,
-    (FT_BDF_GetCharsetIdFunc)sfnt_get_charset_id,
-    (FT_BDF_GetPropertyFunc) tt_face_find_bdf_prop )
+    (FT_BDF_GetCharsetIdFunc)sfnt_get_charset_id,     /* get_charset_id */
+    (FT_BDF_GetPropertyFunc) tt_face_find_bdf_prop )  /* get_property   */
 
 
 #endif /* TT_CONFIG_OPTION_BDF */

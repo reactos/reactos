@@ -801,6 +801,17 @@ HRESULT WINAPI CRecycleBin::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
     return S_OK;
 }
 
+BOOL CRecycleBin::RecycleBinIsEmpty()
+{
+    CComPtr<IEnumIDList> spEnumFiles;
+    HRESULT hr = EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &spEnumFiles);
+    if (FAILED(hr))
+        return TRUE;
+    CComHeapPtr<ITEMIDLIST> spPidl;
+    ULONG itemcount;
+    return spEnumFiles->Next(1, &spPidl, &itemcount) != S_OK;
+    }
+
 /*************************************************************************
  * RecycleBin IContextMenu interface
  */
@@ -819,7 +830,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     memset(&mii, 0, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-    mii.fState = MFS_ENABLED;
+    mii.fState = RecycleBinIsEmpty() ? MFS_DISABLED : MFS_ENABLED;
     szBuffer[0] = L'\0';
     LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
     mii.dwTypeData = szBuffer;

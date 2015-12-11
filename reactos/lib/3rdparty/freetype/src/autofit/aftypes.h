@@ -211,6 +211,11 @@ extern void*  _af_debug_hints;
   typedef void
   (*AF_WritingSystem_DoneMetricsFunc)( AF_StyleMetrics  metrics );
 
+  typedef void
+  (*AF_WritingSystem_GetStdWidthsFunc)( AF_StyleMetrics  metrics,
+                                        FT_Pos*          stdHW,
+                                        FT_Pos*          stdVW );
+
 
   typedef FT_Error
   (*AF_WritingSystem_InitHintsFunc)( AF_GlyphHints    hints,
@@ -276,6 +281,7 @@ extern void*  _af_debug_hints;
     AF_WritingSystem_InitMetricsFunc   style_metrics_init;
     AF_WritingSystem_ScaleMetricsFunc  style_metrics_scale;
     AF_WritingSystem_DoneMetricsFunc   style_metrics_done;
+    AF_WritingSystem_GetStdWidthsFunc  style_metrics_getstdw;
 
     AF_WritingSystem_InitHintsFunc     style_hints_init;
     AF_WritingSystem_ApplyHintsFunc    style_hints_apply;
@@ -489,6 +495,7 @@ extern void*  _af_debug_hints;
           m_init,                                        \
           m_scale,                                       \
           m_done,                                        \
+          m_stdw,                                        \
           h_init,                                        \
           h_apply )                                      \
   FT_CALLBACK_TABLE_DEF                                  \
@@ -501,6 +508,7 @@ extern void*  _af_debug_hints;
     m_init,                                              \
     m_scale,                                             \
     m_done,                                              \
+    m_stdw,                                              \
                                                          \
     h_init,                                              \
     h_apply                                              \
@@ -570,16 +578,17 @@ extern void*  _af_debug_hints;
   FT_LOCAL_DEF( void )                                                    \
   FT_Init_Class_ ## writing_system_class( AF_WritingSystemClassRec*  ac ) \
   {                                                                       \
-    ac->writing_system      = system;                                     \
+    ac->writing_system        = system;                                   \
                                                                           \
-    ac->style_metrics_size  = m_size;                                     \
+    ac->style_metrics_size    = m_size;                                   \
                                                                           \
-    ac->style_metrics_init  = m_init;                                     \
-    ac->style_metrics_scale = m_scale;                                    \
-    ac->style_metrics_done  = m_done;                                     \
+    ac->style_metrics_init    = m_init;                                   \
+    ac->style_metrics_scale   = m_scale;                                  \
+    ac->style_metrics_done    = m_done;                                   \
+    ac->style_metrics_getstdw = m_stdw;                                   \
                                                                           \
-    ac->style_hints_init    = h_init;                                     \
-    ac->style_hints_apply   = h_apply;                                    \
+    ac->style_hints_init      = h_init;                                   \
+    ac->style_hints_apply     = h_apply;                                  \
   }
 
 

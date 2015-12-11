@@ -96,3 +96,6 @@ IDB_CERT_HEADER BITMAP "res/certheader.bmp"
 #ifdef LANGUAGE_UK_UA
     #include "lang/cryptui_Uk.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/cryptui_Zh.rc"
+#endif

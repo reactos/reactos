@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
  POPUP "&Opcje" {
+  MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
   MENUITEM "Historia",		MNID_OPTS_HISTORY
   POPUP    "Czcionki"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
-   MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
    MENUITEM "&O programie...", MNID_HELP_ABOUT
  }
 }

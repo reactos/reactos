@@ -42,6 +42,7 @@ MAIN_MENU MENU
    MENUITEM "&Odredi...", MNID_BKMK_DEFINE
  }
   POPUP "&Opcije" {
+  MENUITEM "Uvek na &vrhu", MNID_HELP_HELPTOP
   MENUITEM "Istorija",		MNID_OPTS_HISTORY
   POPUP "Fontovi"
   BEGIN
@@ -52,7 +53,6 @@ MAIN_MENU MENU
  }
  POPUP "&Pomoć" {
    MENUITEM "Pomoć &na pomoći", MNID_HELP_HELPON
-   MENUITEM "Uvek na &vrhu", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }

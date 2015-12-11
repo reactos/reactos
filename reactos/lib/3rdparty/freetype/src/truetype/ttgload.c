@@ -24,6 +24,7 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_OUTLINE_H
 #include FT_TRUETYPE_DRIVER_H
+#include FT_LIST_H
 
 #include "ttgload.h"
 #include "ttpload.h"
@@ -659,6 +660,7 @@
     } while ( subglyph->flags & MORE_COMPONENTS );
 
     gloader->current.num_subglyphs = num_subglyphs;
+    FT_TRACE5(( "  %d components\n", num_subglyphs ));
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
@@ -1395,6 +1397,11 @@
 #endif
 
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+    if ( recurse_count )
+      FT_TRACE5(( "  nesting level: %d\n", recurse_count ));
+#endif
+
     /* some fonts have an incorrect value of `maxComponentDepth', */
     /* thus we allow depth 1 to catch the majority of them        */
     if ( recurse_count > 1                                   &&
@@ -1627,10 +1634,39 @@
     /* otherwise, load a composite! */
     else if ( loader->n_contours == -1 )
     {
+      FT_Memory  memory = face->root.memory;
+
       FT_UInt   start_point;
       FT_UInt   start_contour;
       FT_ULong  ins_pos;  /* position of composite instructions, if any */
 
+
+      /*
+       * We store the glyph index directly in the `node->data' pointer,
+       * following the glib solution (cf. macro `GUINT_TO_POINTER') with a
+       * double cast to make this portable.  Note, however, that this needs
+       * pointers with a width of at least 32 bits.
+       */
+
+      /* check whether we already have a composite glyph with this index */
+      if ( FT_List_Find( &loader->composites,
+                         (void*)(unsigned long)glyph_index ) )
+      {
+        FT_TRACE1(( "TT_Load_Composite_Glyph:"
+                    " infinite recursion detected\n" ));
+        error = FT_THROW( Invalid_Composite );
+        goto Exit;
+      }
+      else
+      {
+        FT_ListNode  node = NULL;
+
+
+        if ( FT_NEW( node ) )
+          goto Exit;
+        node->data = (void*)(unsigned long)glyph_index;
+        FT_List_Add( &loader->composites, node );
+      }
 
       start_point   = (FT_UInt)gloader->base.outline.n_points;
       start_contour = (FT_UInt)gloader->base.outline.n_contours;
@@ -1658,8 +1694,6 @@
         FT_Vector*  points   = NULL;
         char*       tags     = NULL;
         short*      contours = NULL;
-
-        FT_Memory  memory = face->root.memory;
 
 
         limit = (short)gloader->current.num_subglyphs;
@@ -2393,7 +2427,20 @@
     loader->glyph  = (FT_GlyphSlot)glyph;
     loader->stream = stream;
 
+    loader->composites.head = NULL;
+    loader->composites.tail = NULL;
+
     return FT_Err_Ok;
+  }
+
+
+  static void
+  tt_loader_done( TT_Loader  loader )
+  {
+    FT_List_Finalize( &loader->composites,
+                      NULL,
+                      loader->face->root.memory,
+                      NULL );
   }
 
 
@@ -2453,6 +2500,7 @@
           /* for the bbox we need the header only */
           (void)tt_loader_init( &loader, size, glyph, load_flags, TRUE );
           (void)load_truetype_glyph( &loader, glyph_index, 0, TRUE );
+          tt_loader_done( &loader );
           glyph->linearHoriAdvance = loader.linear;
           glyph->linearVertAdvance = loader.vadvance;
 
@@ -2547,6 +2595,8 @@
 
       error = compute_glyph_metrics( &loader, glyph_index );
     }
+
+    tt_loader_done( &loader );
 
     /* Set the `high precision' bit flag.                           */
     /* This is _critical_ to get correct output for monochrome      */

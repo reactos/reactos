@@ -222,7 +222,7 @@ static ULONG WINAPI HTMLBodyElement_Release(IHTMLBodyElement *iface)
 static HRESULT WINAPI HTMLBodyElement_GetTypeInfoCount(IHTMLBodyElement *iface, UINT *pctinfo)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->textcont.element.node.dispex.IDispatchEx_iface,
+    return IDispatchEx_GetTypeInfoCount(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface,
             pctinfo);
 }
 
@@ -230,7 +230,7 @@ static HRESULT WINAPI HTMLBodyElement_GetTypeInfo(IHTMLBodyElement *iface, UINT 
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->textcont.element.node.dispex.IDispatchEx_iface, iTInfo,
+    return IDispatchEx_GetTypeInfo(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
             lcid, ppTInfo);
 }
 
@@ -239,7 +239,7 @@ static HRESULT WINAPI HTMLBodyElement_GetIDsOfNames(IHTMLBodyElement *iface, REF
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->textcont.element.node.dispex.IDispatchEx_iface, riid,
+    return IDispatchEx_GetIDsOfNames(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, riid,
             rgszNames, cNames, lcid, rgDispId);
 }
 
@@ -248,7 +248,7 @@ static HRESULT WINAPI HTMLBodyElement_Invoke(IHTMLBodyElement *iface, DISPID dis
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_Invoke(&This->textcont.element.node.dispex.IDispatchEx_iface, dispIdMember,
+    return IDispatchEx_Invoke(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
             riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -808,13 +808,13 @@ static void HTMLBodyElement_unlink(HTMLDOMNode *iface)
     }
 }
 
-static event_target_t **HTMLBodyElement_get_event_target(HTMLDOMNode *iface)
+static event_target_t **HTMLBodyElement_get_event_target_ptr(HTMLDOMNode *iface)
 {
     HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
 
     return This->textcont.element.node.doc
         ? &This->textcont.element.node.doc->body_event_target
-        : &This->textcont.element.node.event_target;
+        : &This->textcont.element.node.event_target.ptr;
 }
 
 static BOOL HTMLBodyElement_is_text_edit(HTMLDOMNode *iface)
@@ -836,7 +836,7 @@ static const NodeImplVtbl HTMLBodyElementImplVtbl = {
     HTMLElement_clone,
     HTMLElement_handle_event,
     HTMLElement_get_attr_col,
-    HTMLBodyElement_get_event_target,
+    HTMLBodyElement_get_event_target_ptr,
     NULL,
     NULL,
     NULL,

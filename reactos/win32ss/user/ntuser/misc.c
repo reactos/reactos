@@ -228,7 +228,7 @@ NtUserGetThreadState(
          {
            PUSER_SENT_MESSAGE Message =
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
-           ERR("THREADSTATE_INSENDMESSAGE\n");
+           TRACE("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
            if (Message)

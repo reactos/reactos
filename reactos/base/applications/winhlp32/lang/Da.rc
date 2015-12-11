@@ -44,6 +44,7 @@ MAIN_MENU MENU
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
+  MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -54,7 +55,6 @@ MAIN_MENU MENU
  }
  POPUP "&Hjælp" {
    MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
-   MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
    MENUITEM "&Information...", MNID_HELP_ABOUT
  }
 }

@@ -872,7 +872,13 @@ static IHlinkFrame HlinkFrame = { &HlinkFrameVtbl };
 
 static HRESULT WINAPI NewWindowManager_QueryInterface(INewWindowManager *iface, REFIID riid, void **ppv)
 {
-    ok(0, "unexpected call\n");
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(riid, &IID_INewWindowManager)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    trace("NewWindowManager_QueryInterface %s\n", wine_dbgstr_guid(riid));
+    *ppv = NULL;
     return E_NOINTERFACE;
 }
 
@@ -2614,6 +2620,12 @@ static HRESULT WINAPI DocHostUIHandler_TranslateUrl(IDocHostUIHandler2 *iface, D
     ok(ppchURLOut != NULL, "ppchURLOut == NULL\n");
     ok(!*ppchURLOut, "*ppchURLOut = %p\n", *ppchURLOut);
 
+    /* Not related to hash navigation, just return NULL and S_OK in some cases. */
+    if(loading_hash) {
+        *ppchURLOut = NULL;
+        return S_OK;
+    }
+
     return S_FALSE;
 }
 
@@ -2633,7 +2645,7 @@ static HRESULT WINAPI DocHostUIHandler_GetOverrideKeyPath(IDocHostUIHandler2 *if
     ok(pchKey != NULL, "pchKey = NULL\n");
     if(pchKey)
         ok(!*pchKey, "*pchKey=%p, expected NULL\n", *pchKey);
-    ok(!dw, "dw=%d, xepected 0\n", dw);
+    ok(!dw, "dw=%d, expected 0\n", dw);
     return S_OK;
 }
 
@@ -2866,8 +2878,6 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
     }
 
     if(IsEqualGUID(&CGID_ShellDocView, pguidCmdGroup)) {
-        if(nCmdID != 63 && nCmdID != 178 && (!is_refresh || nCmdID != 37))
-            test_readyState(NULL);
         ok(nCmdexecopt == 0, "nCmdexecopts=%08x\n", nCmdexecopt);
 
         switch(nCmdID) {
@@ -2881,6 +2891,8 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
                 test_readyState(NULL);
                 load_state = LD_LOADING;
             }else {
+                if(!is_refresh)
+                    test_readyState(NULL);
                 if(nav_url)
                     test_GetCurMoniker(doc_unk, NULL, nav_serv_url, FALSE);
                 else if(load_from_stream)
@@ -2944,6 +2956,7 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
             if(pvaIn)
                 ok(V_VT(pvaOut) == VT_EMPTY, "V_VT(pvaOut)=%d\n", V_VT(pvaOut));
 
+            test_readyState(NULL);
             return E_NOTIMPL;
 
         case 103:
@@ -2952,6 +2965,7 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
             ok(pvaIn == NULL, "pvaIn != NULL\n");
             ok(pvaOut == NULL, "pvaOut != NULL\n");
 
+            test_readyState(NULL);
             return E_NOTIMPL;
 
         case 105:
@@ -2960,12 +2974,14 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
             ok(pvaIn != NULL, "pvaIn == NULL\n");
             ok(pvaOut == NULL, "pvaOut != NULL\n");
 
+            test_readyState(NULL);
             return E_NOTIMPL;
 
         case 138:
             CHECK_EXPECT2(Exec_ShellDocView_138);
             ok(!pvaIn, "pvaIn != NULL\n");
             ok(!pvaOut, "pvaOut != NULL\n");
+            test_readyState(NULL);
             return S_OK;
 
         case 140:
@@ -2974,10 +2990,13 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
             ok(pvaIn == NULL, "pvaIn != NULL\n");
             ok(pvaOut == NULL, "pvaOut != NULL\n");
 
+            test_readyState(NULL);
             return E_NOTIMPL;
 
         case 83:
+        case 101:
         case 102:
+        case 132:
         case 133:
         case 134: /* TODO */
         case 135:
@@ -2991,6 +3010,7 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
         case 180:
         case 181:
         case 182:
+        case 183:
             return E_NOTIMPL;
 
         default:
@@ -3447,7 +3467,8 @@ static HRESULT  WINAPI DocObjectService_FireBeforeNavigate2(IDocObjectService *i
     if(!testing_submit) {
         ok(!pPostData, "pPostData = %p\n", pPostData);
         ok(!cbPostData, "cbPostData = %d\n", cbPostData);
-        ok(!lpszHeaders, "lpszHeaders = %s\n", wine_dbgstr_w(lpszHeaders));
+        ok(!lpszHeaders || !strcmp_wa(lpszHeaders, "Referer: http://test.winehq.org/tests/winehq_snapshot/\r\n"),
+           "lpszHeaders = %s\n", wine_dbgstr_w(lpszHeaders));
     }else {
         ok(cbPostData == 9, "cbPostData = %d\n", cbPostData);
         ok(!memcmp(pPostData, "cmd=TEST", cbPostData), "pPostData = %p\n", pPostData);
@@ -5731,7 +5752,6 @@ static void test_download(DWORD flags)
             SET_EXPECT(CountEntries);
         SET_EXPECT(Exec_HTTPEQUIV_DONE);
     }
-    SET_EXPECT(SetStatusText);
     if(nav_url || support_wbapp) {
         SET_EXPECT(UpdateUI);
         SET_EXPECT(Exec_UPDATECOMMANDS);
@@ -5927,6 +5947,56 @@ static void test_Persist(IHTMLDocument2 *doc, IMoniker *mon)
     }
 }
 
+static void test_put_hash(IHTMLDocument2 *doc, const char *new_hash)
+{
+    static char nav_url_buff[256];
+    IHTMLLocation *location;
+    BSTR str;
+    char *psharp;
+    HRESULT hres;
+
+    trace("put_hash, url = %s, new hash = %s\n", nav_url, new_hash);
+
+    location = NULL;
+    hres = IHTMLDocument2_get_location(doc, &location);
+    ok(hres == S_OK, "get_location failed: %08x\n", hres);
+    ok(location != NULL, "location == NULL\n");
+
+    SET_EXPECT(TranslateUrl);
+    SET_EXPECT(Exec_ShellDocView_67);
+    SET_EXPECT(FireBeforeNavigate2);
+    SET_EXPECT(FireDocumentComplete);
+    SET_EXPECT(FireNavigateComplete2);
+
+    /* Edit nav_url */
+    strcpy(nav_url_buff, nav_url);
+    psharp = strchr(nav_url_buff, '#');
+    if (psharp)
+        *psharp = '\0';
+    strcat(nav_url_buff, new_hash);
+    nav_url = nav_url_buff;
+
+    str = a2bstr(new_hash);
+    hres = IHTMLLocation_put_hash(location, str);
+    ok (hres == S_OK, "put_hash failed: %08x\n", hres);
+    SysFreeString(str);
+
+    CHECK_CALLED(TranslateUrl);
+    CHECK_CALLED_BROKEN(Exec_ShellDocView_67); /* Broken on Win7 and 8 */
+    CHECK_CALLED(FireBeforeNavigate2);
+    CHECK_CALLED(FireDocumentComplete);
+    CHECK_CALLED(FireNavigateComplete2);
+
+
+    /* Check the result */
+    hres = IHTMLLocation_get_hash(location, &str);
+    ok(hres == S_OK, "get_hash failed: %08x\n", hres);
+    ok(!strcmp_wa(str, new_hash), "expected %s, got %s\n", new_hash, wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    IHTMLLocation_Release(location);
+}
+
 static void test_put_href(IHTMLDocument2 *doc, BOOL use_replace, const char *href, const char *new_nav_url, BOOL is_js,
         BOOL is_hash, DWORD dwl_flags)
 {
@@ -6111,7 +6181,7 @@ static void test_load_history(IHTMLDocument2 *doc)
     ok(hres == S_OK, "Could not get IPersistHistory iface: %08x\n", hres);
 
     prev_url = nav_url;
-    nav_url = "http://test.winehq.org/tests/winehq_snapshot/#test";
+    nav_url = "http://test.winehq.org/tests/winehq_snapshot/#hash_test";
     nav_serv_url = "http://test.winehq.org/tests/winehq_snapshot/";
 
     SET_EXPECT(Exec_ShellDocView_138);
@@ -6504,11 +6574,10 @@ static void test_exec_editmode(IUnknown *unk, BOOL loaded)
 
     editmode = TRUE;
 
-    if(loaded)
+    if(loaded) {
         load_state = LD_DOLOAD;
-
-    if(loaded)
         SET_EXPECT(GetClassID);
+    }
     SET_EXPECT(SetStatusText);
     SET_EXPECT(Exec_ShellDocView_37);
     SET_EXPECT(GetHostInfo);
@@ -7717,6 +7786,7 @@ static void test_HTMLDocument_http(BOOL with_wbapp)
     nav_url = nav_serv_url = "http://test.winehq.org/tests/winehq_snapshot/"; /* for valid prev nav_url */
     if(support_wbapp) {
         test_put_href(doc, FALSE, "#test", "http://test.winehq.org/tests/winehq_snapshot/#test", FALSE, TRUE, 0);
+        test_put_hash(doc, "#hash_test");
         test_travellog(doc);
         test_refresh(doc);
     }
@@ -8493,8 +8563,12 @@ static void test_ServiceProvider(void)
     hres = IServiceProvider_QueryService(provider, &SID_SContainerDispatch, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "got 0x%08x\n", hres);
     ok(iface_cmp((IUnknown*)doc, unk), "got wrong pointer\n");
-
     IUnknown_Release(unk);
+
+    hres = IServiceProvider_QueryService(provider, &SID_SHTMLEditServices, &IID_IHTMLEditServices, (void**)&unk);
+    ok(hres == S_OK, "QueryService(HTMLEditServices) failed: %08x\n", hres);
+    IUnknown_Release(unk);
+
     IServiceProvider_Release(provider);
     release_document(doc);
 }

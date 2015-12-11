@@ -553,34 +553,85 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 DWORD
 WINAPI
-GetConsoleFontInfo(HANDLE hConsoleOutput,
-                   BOOL bMaximumWindow,
-                   DWORD nFontCount,
-                   PCONSOLE_FONT_INFO lpConsoleFontInfo)
+GetConsoleFontInfo(IN HANDLE hConsoleOutput,
+                   IN BOOL bMaximumWindow,
+                   IN DWORD nFontCount,
+                   OUT PCONSOLE_FONT_INFO lpConsoleFontInfo)
 {
-    DPRINT1("GetConsoleFontInfo(0x%p, %d, %lu, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, nFontCount, lpConsoleFontInfo);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETFONTINFO GetFontInfoRequest = &ApiMessage.Data.GetFontInfoRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    GetFontInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetFontInfoRequest->OutputHandle  = hConsoleOutput;
+    GetFontInfoRequest->MaximumWindow = bMaximumWindow;
+    GetFontInfoRequest->NumFonts      = nFontCount;
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, nFontCount * sizeof(CONSOLE_FONT_INFO));
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              nFontCount * sizeof(CONSOLE_FONT_INFO),
+                              (PVOID*)&GetFontInfoRequest->FontInfo);
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetFontInfo),
+                        sizeof(*GetFontInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+    }
+    else
+    {
+        RtlCopyMemory(lpConsoleFontInfo,
+                      GetFontInfoRequest->FontInfo,
+                      GetFontInfoRequest->NumFonts * sizeof(CONSOLE_FONT_INFO));
+    }
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    return GetFontInfoRequest->NumFonts;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 COORD
 WINAPI
 DECLSPEC_HOTPATCH
-GetConsoleFontSize(HANDLE hConsoleOutput,
-                   DWORD nFont)
+GetConsoleFontSize(IN HANDLE hConsoleOutput,
+                   IN DWORD nFont)
 {
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETFONTSIZE GetFontSizeRequest = &ApiMessage.Data.GetFontSizeRequest;
     COORD Empty = {0, 0};
-    DPRINT1("GetConsoleFontSize(0x%p, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, nFont);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return Empty;
+
+    GetFontSizeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetFontSizeRequest->OutputHandle  = hConsoleOutput;
+    GetFontSizeRequest->FontIndex     = nFont;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetFontSize),
+                        sizeof(*GetFontSizeRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return Empty;
+    }
+
+    return GetFontSizeRequest->FontSize;
 }
 
 
@@ -636,31 +687,63 @@ GetConsoleInputWaitHandle(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-GetCurrentConsoleFont(HANDLE hConsoleOutput,
-                      BOOL bMaximumWindow,
-                      PCONSOLE_FONT_INFO lpConsoleCurrentFont)
+GetCurrentConsoleFont(IN HANDLE hConsoleOutput,
+                      IN BOOL bMaximumWindow,
+                      OUT PCONSOLE_FONT_INFO lpConsoleCurrentFont)
 {
-    DPRINT1("GetCurrentConsoleFont(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, lpConsoleCurrentFont);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETCURRENTFONT GetCurrentFontRequest = &ApiMessage.Data.GetCurrentFontRequest;
+
+    GetCurrentFontRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetCurrentFontRequest->OutputHandle  = hConsoleOutput;
+    GetCurrentFontRequest->MaximumWindow = bMaximumWindow;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCurrentFont),
+                        sizeof(*GetCurrentFontRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    lpConsoleCurrentFont->dwFontSize = GetCurrentFontRequest->FontSize;
+    lpConsoleCurrentFont->nFont      = GetCurrentFontRequest->FontIndex;
+
+    return TRUE;
 }
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
-ULONG
+DWORD
 WINAPI
 DECLSPEC_HOTPATCH
 GetNumberOfConsoleFonts(VOID)
 {
-    DPRINT1("GetNumberOfConsoleFonts() UNIMPLEMENTED!\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 1;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETNUMFONTS GetNumFontsRequest = &ApiMessage.Data.GetNumFontsRequest;
+
+    GetNumFontsRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetNumberOfFonts),
+                        sizeof(*GetNumFontsRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return 0;
+    }
+
+    return GetNumFontsRequest->NumFonts;
 }
 
 
@@ -823,17 +906,33 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleFont(HANDLE hConsoleOutput,
-               DWORD nFont)
+SetConsoleFont(IN HANDLE hConsoleOutput,
+               IN DWORD nFont)
 {
-    DPRINT1("SetConsoleFont(0x%p, %lu) UNIMPLEMENTED!\n", hConsoleOutput, nFont);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETFONT SetFontRequest = &ApiMessage.Data.SetFontRequest;
+
+    SetFontRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetFontRequest->OutputHandle  = hConsoleOutput;
+    SetFontRequest->FontIndex     = nFont;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetFont),
+                        sizeof(*SetFontRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -2102,7 +2201,7 @@ IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD dwNumChars, BOOLEAN bUnicode)
 
     if (dwNumChars > 0)
     {
-        memcpy(lpConsoleTitle, TitleRequest->Title, TitleRequest->Length);
+        RtlCopyMemory(lpConsoleTitle, TitleRequest->Title, TitleRequest->Length);
 
         if (bUnicode)
             ((LPWSTR)lpConsoleTitle)[dwNumChars] = UNICODE_NULL;
@@ -2452,7 +2551,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
         nProcesses = GetProcessListRequest->ProcessCount;
         if (dwProcessCount >= nProcesses)
         {
-            memcpy(lpdwProcessList, GetProcessListRequest->ProcessIdsList, nProcesses * sizeof(DWORD));
+            RtlCopyMemory(lpdwProcessList, GetProcessListRequest->ProcessIdsList, nProcesses * sizeof(DWORD));
         }
     }
 

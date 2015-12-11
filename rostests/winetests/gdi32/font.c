@@ -55,6 +55,9 @@ static HANDLE (WINAPI *pAddFontMemResourceEx)(PVOID, DWORD, PVOID, DWORD *);
 static BOOL  (WINAPI *pRemoveFontMemResourceEx)(HANDLE);
 static INT   (WINAPI *pAddFontResourceExA)(LPCSTR, DWORD, PVOID);
 static BOOL  (WINAPI *pRemoveFontResourceExA)(LPCSTR, DWORD, PVOID);
+static BOOL  (WINAPI *pGetFontRealizationInfo)(HDC hdc, DWORD *);
+static BOOL  (WINAPI *pGetFontFileInfo)(DWORD, DWORD, void *, DWORD, DWORD *);
+static BOOL  (WINAPI *pGetFontFileData)(DWORD, DWORD, ULONGLONG, void *, DWORD);
 
 static HMODULE hgdi32 = 0;
 static const MAT2 mat = { {0,1}, {0,0}, {0,0}, {0,1} };
@@ -97,6 +100,9 @@ static void init(void)
     pRemoveFontMemResourceEx = (void *)GetProcAddress(hgdi32, "RemoveFontMemResourceEx");
     pAddFontResourceExA = (void *)GetProcAddress(hgdi32, "AddFontResourceExA");
     pRemoveFontResourceExA = (void *)GetProcAddress(hgdi32, "RemoveFontResourceExA");
+    pGetFontRealizationInfo = (void *)GetProcAddress(hgdi32, "GetFontRealizationInfo");
+    pGetFontFileInfo = (void *)GetProcAddress(hgdi32, "GetFontFileInfo");
+    pGetFontFileData = (void *)GetProcAddress(hgdi32, "GetFontFileData");
 
     system_lang_id = PRIMARYLANGID(GetSystemDefaultLangID());
 }
@@ -747,6 +753,7 @@ static BOOL is_CJK(void)
 #define FH_SCALE 0x80000000
 static void test_bitmap_font_metrics(void)
 {
+    static const WORD skip_rtl[] = {LANG_ARABIC, LANG_HEBREW, 0};
     static const struct font_data
     {
         const char face_name[LF_FACESIZE];
@@ -754,19 +761,19 @@ static void test_bitmap_font_metrics(void)
         int ave_char_width, max_char_width, dpi;
         BYTE first_char, last_char, def_char, break_char;
         DWORD ansi_bitfield;
-        WORD skip_lang_id;
+        const WORD *skip_lang_id;
         int scaled_height;
     } fd[] =
     {
-        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl, 13 },
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
-        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl, 13 },
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
-        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl, 13 },
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
-        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl, 13 },
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
-        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl, 16 },
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
 
         { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
@@ -858,22 +865,22 @@ static void test_bitmap_font_metrics(void)
         { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 2, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
         { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
         { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 2, 4, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 3, 4, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 3, 4, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, skip_rtl},
         { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 2, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
         { "Small Fonts", FW_NORMAL, 5, 4, 1, 0, 0, 3, 6, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 13, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 13, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, skip_rtl},
         { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
         { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, 0x00, 0xff, 0x60, 0x00, FS_ARABIC },
         { "Small Fonts", FW_NORMAL, 6, 5, 1, 0, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, skip_rtl},
         { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
         { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, 0x00, 0xff, 0x60, 0x00, FS_ARABIC },
         { "Small Fonts", FW_NORMAL, 8, 7, 1, 0, 0, 5, 10, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2, skip_rtl},
         { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
         { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 9, 96, 0x00, 0xff, 0x60, 0x00, FS_ARABIC },
         { "Small Fonts", FW_NORMAL, 10, 8, 2, 0, 0, 6, 12, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC, skip_rtl},
         { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 4, 10, 96, 0x00, 0xff, 0x60, 0x00, FS_ARABIC },
         { "Small Fonts", FW_NORMAL, 11, 9, 2, 0, 0, 7, 14, 96, 0x20, 0xff, 0x80, 0x20, FS_JISJAPAN },
 
@@ -1015,8 +1022,17 @@ static void test_bitmap_font_metrics(void)
 
             if(fd[i].dpi == tm.tmDigitizedAspectX)
             {
+                int skipme = 0;
                 trace("matched %s, height %d charset %x dpi %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
-                if (fd[i].skip_lang_id == 0 || system_lang_id != fd[i].skip_lang_id)
+                if (fd[i].skip_lang_id)
+                {
+                    int si = 0;
+                    skipme = 0;
+                    while(!skipme && fd[i].skip_lang_id[si])
+                        if (fd[i].skip_lang_id[si++] == system_lang_id)
+                            skipme = 1;
+                }
+                if (!skipme)
                 {
                     ok(tm.tmWeight == fd[i].weight, "%s(%d): tm.tmWeight %d != %d\n", fd[i].face_name, height, tm.tmWeight, fd[i].weight);
                     if (fd[i].height & FH_SCALE)
@@ -1850,6 +1866,8 @@ static void test_height( HDC hdc, const struct font_data *fd )
         }
 
         SelectObject(hdc, old_hfont);
+        /* force GDI to use new font, otherwise Windows leaks the font reference */
+        GetTextMetricsA(hdc, &tm);
         DeleteObject(hfont);
     }
 }
@@ -2002,6 +2020,7 @@ static void test_height_selection_vdmx( HDC hdc )
     BYTE *ratio_rec;
     char ttf_name[MAX_PATH];
     void *res, *copy;
+    BOOL ret;
 
     if (!pAddFontResourceExA)
     {
@@ -2034,7 +2053,9 @@ static void test_height_selection_vdmx( HDC hdc )
             test_height( hdc, data[i].fd );
             pRemoveFontResourceExA( ttf_name, FR_PRIVATE, 0 );
         }
-        DeleteFileA( ttf_name );
+        ret = DeleteFileA( ttf_name );
+        ok(ret || broken(!ret && GetLastError() == ERROR_ACCESS_DENIED),
+           "DeleteFile error %d\n", GetLastError());
     }
 }
 
@@ -2141,6 +2162,11 @@ static void test_GetOutlineTextMetrics(void)
         ok(otm->otmpStyleName == NULL, "expected NULL got %p\n", otm->otmpStyleName);
     }
     ok(otm->otmpFullName == unset_ptr, "expected %p got %p\n", unset_ptr, otm->otmpFullName);
+
+    /* check handling of NULL pointer */
+    SetLastError(0xdeadbeef);
+    ret = GetOutlineTextMetricsA(hdc, otm_size, NULL);
+    ok(ret == otm_size, "expected %u, got %u, error %d\n", otm_size, ret, GetLastError());
 
     HeapFree(GetProcessHeap(), 0, otm);
 
@@ -2375,12 +2401,12 @@ static BOOL get_glyph_indices(INT charset, UINT code_page, WORD *idx, UINT count
     if (charset == SYMBOL_CHARSET)
     {
         ok(strcmp("Arial", name), "face name should NOT be Arial\n");
-        ok(fs.fsCsb[0] & (1 << 31), "symbol encoding should be available\n");
+        ok(fs.fsCsb[0] & (1u << 31), "symbol encoding should be available\n");
     }
     else
     {
         ok(!strcmp("Arial", name), "face name should be Arial, not %s\n", name);
-        ok(!(fs.fsCsb[0] & (1 << 31)), "symbol encoding should NOT be available\n");
+        ok(!(fs.fsCsb[0] & (1u << 31)), "symbol encoding should NOT be available\n");
     }
 
     if (!TranslateCharsetInfo((DWORD *)(INT_PTR)cs, &csi, TCI_SRCCHARSET))
@@ -3172,8 +3198,13 @@ typedef struct
     USHORT usDefaultChar;
     USHORT usBreakChar;
     USHORT usMaxContext;
-} TT_OS2_V2;
+    /* version 4 (OpenType 1.6) */
+    USHORT usLowerOpticalPointSize;
+    USHORT usUpperOpticalPointSize;
+} TT_OS2_V4;
 #include "poppack.h"
+
+#define TT_OS2_V0_SIZE (FIELD_OFFSET(TT_OS2_V4, ulCodePageRange1))
 
 typedef struct
 {
@@ -3226,7 +3257,7 @@ typedef struct
     USHORT id_range_offset;
 } cmap_format_4_seg;
 
-static void expect_ff(const TEXTMETRICA *tmA, const TT_OS2_V2 *os2, WORD family, const char *name)
+static void expect_ff(const TEXTMETRICA *tmA, const TT_OS2_V4 *os2, WORD family, const char *name)
 {
     ok((tmA->tmPitchAndFamily & 0xf0) == family ||
        broken(PRIMARYLANGID(GetSystemDefaultLangID()) != LANG_ENGLISH),
@@ -3646,7 +3677,7 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
     HDC hdc;
     HFONT hfont, hfont_old;
     TEXTMETRICA tmA;
-    TT_OS2_V2 tt_os2;
+    TT_OS2_V4 tt_os2;
     LONG size, ret;
     const char *font_name = lf->lfFaceName;
     DWORD cmap_first = 0, cmap_last = 0;
@@ -3677,7 +3708,8 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
 
     memset(&tt_os2, 0, sizeof(tt_os2));
     ret = GetFontData(hdc, MS_OS2_TAG, 0, &tt_os2, size);
-    ok(ret == size, "GetFontData should return %u not %u\n", size, ret);
+    ok(ret >= TT_OS2_V0_SIZE && ret <= size, "GetFontData should return size from [%u,%u] not %u\n", TT_OS2_V0_SIZE,
+        size, ret);
 
     SetLastError(0xdeadbeef);
     ret = GetTextMetricsA(hdc, &tmA);
@@ -3696,7 +3728,7 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
         TEXTMETRICW tmW;
 
         ascent = GET_BE_WORD(tt_os2.usWinAscent);
-        descent = GET_BE_WORD(tt_os2.usWinDescent);
+        descent = abs((SHORT)GET_BE_WORD(tt_os2.usWinDescent));
         cell_height = ascent + descent;
         ok(ntm->ntmCellHeight == cell_height, "%s: ntmCellHeight %u != %u, os2.usWinAscent/os2.usWinDescent %u/%u\n",
            font_name, ntm->ntmCellHeight, cell_height, ascent, descent);
@@ -3917,19 +3949,24 @@ static void test_nonexistent_font(void)
         { "Times New Roman Greek", 161 },
         { "Times New Roman TUR", 162 }
     };
+    static const struct
+    {
+        const char *name;
+        int charset;
+    } shell_subst[] =
+    {
+        { "MS Shell Dlg", 186 },
+        { "MS Shell Dlg", 238 },
+        { "MS Shell Dlg", 204 },
+        { "MS Shell Dlg", 161 },
+        { "MS Shell Dlg", 162 }
+    };
     LOGFONTA lf;
     HDC hdc;
     HFONT hfont;
     CHARSETINFO csi;
-    INT cs, expected_cs, i;
+    INT cs, expected_cs, i, ret;
     char buf[LF_FACESIZE];
-
-    if (!is_truetype_font_installed("Arial") ||
-        !is_truetype_font_installed("Times New Roman"))
-    {
-        skip("Arial or Times New Roman not installed\n");
-        return;
-    }
 
     expected_cs = GetACP();
     if (!TranslateCharsetInfo(ULongToPtr(expected_cs), &csi, TCI_SRCCODEPAGE))
@@ -3940,7 +3977,48 @@ static void test_nonexistent_font(void)
     expected_cs = csi.ciCharset;
     trace("ACP %d -> charset %d\n", GetACP(), expected_cs);
 
-    hdc = GetDC(0);
+    hdc = CreateCompatibleDC(0);
+
+    for (i = 0; i < sizeof(shell_subst)/sizeof(shell_subst[0]); i++)
+    {
+        ret = is_font_installed(shell_subst[i].name);
+        ok(ret || broken(!ret) /* win2000 */, "%s should be enumerated\n", shell_subst[i].name);
+        ret = is_truetype_font_installed(shell_subst[i].name);
+        ok(ret || broken(!ret) /* win2000 */, "%s should be enumerated\n", shell_subst[i].name);
+
+        memset(&lf, 0, sizeof(lf));
+        lf.lfHeight = -13;
+        lf.lfWeight = FW_REGULAR;
+        strcpy(lf.lfFaceName, shell_subst[i].name);
+        hfont = CreateFontIndirectA(&lf);
+        hfont = SelectObject(hdc, hfont);
+        GetTextFaceA(hdc, sizeof(buf), buf);
+        ok(!lstrcmpiA(buf, shell_subst[i].name), "expected %s, got %s\n", shell_subst[i].name, buf);
+        cs = GetTextCharset(hdc);
+        ok(cs == ANSI_CHARSET, "expected ANSI_CHARSET, got %d for font %s\n", cs, shell_subst[i].name);
+
+        DeleteObject(SelectObject(hdc, hfont));
+
+        memset(&lf, 0, sizeof(lf));
+        lf.lfHeight = -13;
+        lf.lfWeight = FW_DONTCARE;
+        strcpy(lf.lfFaceName, shell_subst[i].name);
+        hfont = CreateFontIndirectA(&lf);
+        hfont = SelectObject(hdc, hfont);
+        GetTextFaceA(hdc, sizeof(buf), buf);
+        ok(!lstrcmpiA(buf, shell_subst[i].name), "expected %s, got %s\n", shell_subst[i].name, buf);
+        cs = GetTextCharset(hdc);
+        ok(cs == expected_cs || cs == ANSI_CHARSET, "expected %d, got %d for font %s\n", expected_cs, cs, shell_subst[i].name);
+        DeleteObject(SelectObject(hdc, hfont));
+    }
+
+    if (!is_truetype_font_installed("Arial") ||
+        !is_truetype_font_installed("Times New Roman"))
+    {
+        DeleteDC(hdc);
+        skip("Arial or Times New Roman not installed\n");
+        return;
+    }
 
     memset(&lf, 0, sizeof(lf));
     lf.lfHeight = 100;
@@ -3999,6 +4077,15 @@ todo_wine /* Wine uses Arial for all substitutions */
 
     for (i = 0; i < sizeof(font_subst)/sizeof(font_subst[0]); i++)
     {
+        ret = is_font_installed(font_subst[i].name);
+todo_wine
+        ok(ret || broken(!ret && !i) /* win2000 doesn't have Times New Roman Baltic substitution */,
+           "%s should be enumerated\n", font_subst[i].name);
+        ret = is_truetype_font_installed(font_subst[i].name);
+todo_wine
+        ok(ret || broken(!ret && !i) /* win2000 doesn't have Times New Roman Baltic substitution */,
+           "%s should be enumerated\n", font_subst[i].name);
+
         memset(&lf, 0, sizeof(lf));
         lf.lfHeight = -13;
         lf.lfWeight = FW_REGULAR;
@@ -4038,16 +4125,44 @@ todo_wine /* Wine uses Arial for all substitutions */
         DeleteObject(SelectObject(hdc, hfont));
     }
 
-    ReleaseDC(0, hdc);
+    DeleteDC(hdc);
 }
 
-static void test_GdiRealizationInfo(void)
+static void test_RealizationInfo(void)
 {
+    struct font_realization_info {
+        DWORD size;
+        DWORD flags;
+        DWORD cache_num;
+        DWORD instance_id;
+        DWORD unk;
+        WORD  face_index;
+        WORD  simulations;
+    };
+
+    struct realization_info_t
+    {
+        DWORD flags;
+        DWORD cache_num;
+        DWORD instance_id;
+    };
+
     HDC hdc;
-    DWORD info[4];
-    BOOL r;
+    DWORD info[4], info2[10];
+    BOOL r, have_file = FALSE;
     HFONT hfont, hfont_old;
     LOGFONTA lf;
+    DWORD needed, read;
+    HANDLE h;
+    BYTE file[16], data[14];
+    struct file_info
+    {
+        FILETIME time;
+        LARGE_INTEGER size;
+        WCHAR path[MAX_PATH];
+    } file_info;
+    FILETIME time;
+    LARGE_INTEGER size;
 
     if(!pGdiRealizationInfo)
     {
@@ -4063,16 +4178,17 @@ static void test_GdiRealizationInfo(void)
     ok((info[0] & 0xf) == 1, "info[0] = %x for the system font\n", info[0]);
     ok(info[3] == 0xcccccccc, "structure longer than 3 dwords\n");
 
-    if (!is_truetype_font_installed("Arial"))
+    if (!is_truetype_font_installed("Tahoma"))
     {
         skip("skipping GdiRealizationInfo with truetype font\n");
         goto end;
     }
 
     memset(&lf, 0, sizeof(lf));
-    strcpy(lf.lfFaceName, "Arial");
+    strcpy(lf.lfFaceName, "Tahoma");
     lf.lfHeight = 20;
-    lf.lfWeight = FW_NORMAL;
+    lf.lfWeight = FW_BOLD;
+    lf.lfItalic = 1;
     hfont = CreateFontIndirectA(&lf);
     hfont_old = SelectObject(hdc, hfont);
 
@@ -4081,6 +4197,93 @@ static void test_GdiRealizationInfo(void)
     ok(r != 0, "ret 0\n");
     ok((info[0] & 0xf) == 3, "info[0] = %x for arial\n", info[0]);
     ok(info[3] == 0xcccccccc, "structure longer than 3 dwords\n");
+
+    if (pGetFontRealizationInfo)
+    {
+        struct font_realization_info *fri = (struct font_realization_info*)info2;
+        struct realization_info_t *ri = (struct realization_info_t*)info;
+
+        /* The first DWORD represents a struct size. On a
+           newly rebooted system setting this to < 16 results
+           in GetFontRealizationInfo failing.  However there
+           appears to be some caching going on which results
+           in calls after a successful call also succeeding even
+           if the size < 16.  This means we can't reliably test
+           this behaviour. */
+
+        memset(info2, 0xcc, sizeof(info2));
+        info2[0] = 16;
+        r = pGetFontRealizationInfo(hdc, info2);
+        ok(r != 0, "ret 0\n");
+        /* We may get the '24' version here if that has been previously
+           requested. */
+        ok(fri->size == 16 || fri->size == 24, "got %d\n", info2[0]);
+        ok(fri->flags == ri->flags, "flags mismatch\n");
+        ok(fri->cache_num == ri->cache_num, "cache_num mismatch\n");
+        ok(fri->instance_id == ri->instance_id, "instance id mismatch\n");
+        ok(info2[6] == 0xcccccccc, "got wrong dword 6, 0x%08x\n", info2[6]);
+
+        memset(info2, 0xcc, sizeof(info2));
+        info2[0] = 28;
+        r = pGetFontRealizationInfo(hdc, info2);
+        ok(r == FALSE, "got %d\n", r);
+
+        memset(info2, 0xcc, sizeof(info2));
+        info2[0] = 24;
+        r = pGetFontRealizationInfo(hdc, info2);
+        ok(r != 0, "ret 0\n");
+        ok(fri->size == 24, "got %d\n", fri->size);
+        ok(fri->flags == ri->flags, "flags mismatch\n");
+        ok(fri->cache_num == ri->cache_num, "cache_num mismatch\n");
+        ok(fri->instance_id == ri->instance_id, "instance id mismatch\n");
+        ok(fri->simulations == 0x2, "got simulations flags 0x%04x\n", fri->simulations);
+        ok(fri->face_index == 0, "got wrong face index %u\n", fri->face_index);
+        ok(info2[6] == 0xcccccccc, "structure longer than 6 dwords\n");
+
+        /* Test GetFontFileInfo() */
+        /* invalid font id */
+        SetLastError(0xdeadbeef);
+        r = pGetFontFileInfo(0xabababab, 0, &file_info, sizeof(file_info), &needed);
+        ok(r == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "ret %d gle %d\n", r, GetLastError());
+
+        needed = 0;
+        r = pGetFontFileInfo(fri->instance_id, 0, &file_info, sizeof(file_info), &needed);
+        ok(r != 0 || GetLastError() == ERROR_NOACCESS, "ret %d gle %d\n", r, GetLastError());
+
+        if (r)
+        {
+            ok(needed > 0 && needed < sizeof(file_info), "got needed size %u\n", needed);
+
+            h = CreateFileW(file_info.path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+            ok(h != INVALID_HANDLE_VALUE, "Unable to open file %d\n", GetLastError());
+
+            GetFileTime(h, NULL, NULL, &time);
+            ok(!CompareFileTime(&file_info.time, &time), "time mismatch\n");
+            GetFileSizeEx(h, &size);
+            ok(file_info.size.QuadPart == size.QuadPart, "size mismatch\n");
+
+            /* Read first 16 bytes from the file */
+            ReadFile(h, file, sizeof(file), &read, NULL);
+            CloseHandle(h);
+            have_file = TRUE;
+
+            /* shorter buffer */
+            SetLastError(0xdeadbeef);
+            r = pGetFontFileInfo(fri->instance_id, 0, &file_info, needed - 1, &needed);
+            ok(r == 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "ret %d gle %d\n", r, GetLastError());
+        }
+
+    if (pGetFontFileData) {
+        /* Get bytes 2 - 16 using GetFontFileData */
+        r = pGetFontFileData(fri->instance_id, 0, 2, data, sizeof(data));
+        ok(r != 0, "ret 0 gle %d\n", GetLastError());
+
+        if (have_file)
+            ok(!memcmp(data, file + 2, sizeof(data)), "mismatch\n");
+        else
+            win_skip("GetFontFileInfo() failed, skipping\n");
+    }
+    }
 
     DeleteObject(SelectObject(hdc, hfont_old));
 
@@ -4868,7 +5071,6 @@ static void test_EnumFonts(void)
     int ret;
     LOGFONTA lf;
     HDC hdc;
-    struct enum_fullname_data efnd;
 
     if (!is_truetype_font_installed("Arial"))
     {
@@ -4929,26 +5131,89 @@ static void test_EnumFonts(void)
     ret = EnumFontFamiliesA(hdc, NULL, enum_all_fonts_proc, (LPARAM)&lf);
     ok(ret, "font Arial Italic Bold should not be enumerated\n");
 
-    /* MS Shell Dlg and MS Shell Dlg 2 must exist */
+    DeleteDC(hdc);
+}
+
+static INT CALLBACK enum_ms_shell_dlg_proc(const LOGFONTA *lf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
+{
+    struct enum_fullname_data *efnd = (struct enum_fullname_data *)lParam;
+
+if (0) /* Disabled to limit console spam */
+    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
+          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
+
+    if (type != TRUETYPE_FONTTYPE) return 1;
+    if (strcmp(lf->lfFaceName, "MS Shell Dlg") != 0) return 1;
+
+    efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
+    return 0;
+}
+
+static INT CALLBACK enum_ms_shell_dlg2_proc(const LOGFONTA *lf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
+{
+    struct enum_fullname_data *efnd = (struct enum_fullname_data *)lParam;
+
+if (0) /* Disabled to limit console spam */
+    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
+          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
+
+    if (type != TRUETYPE_FONTTYPE) return 1;
+    if (strcmp(lf->lfFaceName, "MS Shell Dlg 2") != 0) return 1;
+
+    efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
+    return 0;
+}
+
+static void test_EnumFonts_subst(void)
+{
+    int ret;
+    LOGFONTA lf;
+    HDC hdc;
+    struct enum_fullname_data efnd;
+
+    ret = is_font_installed("MS Shell Dlg");
+    ok(ret, "MS Shell Dlg should be enumerated\n");
+    ret = is_truetype_font_installed("MS Shell Dlg");
+    ok(ret, "MS Shell Dlg should be enumerated as a TrueType font\n");
+
+    ret = is_font_installed("MS Shell Dlg 2");
+    ok(ret, "MS Shell Dlg 2 should be enumerated\n");
+    ret = is_truetype_font_installed("MS Shell Dlg 2");
+    ok(ret, "MS Shell Dlg 2 should be enumerated as a TrueType font\n");
+
+    hdc = CreateCompatibleDC(0);
+
+    memset(&efnd, 0, sizeof(efnd));
+    ret = EnumFontFamiliesExA(hdc, NULL, enum_ms_shell_dlg_proc, (LPARAM)&efnd, 0);
+    ok(ret, "MS Shell Dlg should not be enumerated\n");
+    ok(!efnd.total, "MS Shell Dlg should not be enumerated\n");
+
     memset(&lf, 0, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET;
 
     memset(&efnd, 0, sizeof(efnd));
     strcpy(lf.lfFaceName, "MS Shell Dlg");
-    ret = EnumFontFamiliesExA(hdc, &lf, enum_fullname_data_proc, (LPARAM)&efnd, 0);
-    ok(ret, "font MS Shell Dlg is not enumerated\n");
-    ret = strcmp((char*)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg");
-    todo_wine ok(!ret, "expected MS Shell Dlg got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
-    ret = strcmp((char*)efnd.elf[0].elfFullName, "MS Shell Dlg");
+    ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg_proc, (LPARAM)&efnd, 0);
+    ok(!ret, "MS Shell Dlg should be enumerated\n");
+    ok(efnd.total > 0, "MS Shell Dlg should be enumerated\n");
+    ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg");
+    ok(!ret, "expected MS Shell Dlg, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+    ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg");
     ok(ret, "did not expect MS Shell Dlg\n");
 
     memset(&efnd, 0, sizeof(efnd));
+    ret = EnumFontFamiliesExA(hdc, NULL, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
+    ok(ret, "MS Shell Dlg 2 should not be enumerated\n");
+    ok(!efnd.total, "MS Shell Dlg 2 should not be enumerated\n");
+
+    memset(&efnd, 0, sizeof(efnd));
     strcpy(lf.lfFaceName, "MS Shell Dlg 2");
-    ret = EnumFontFamiliesExA(hdc, &lf, enum_fullname_data_proc, (LPARAM)&efnd, 0);
-    ok(ret, "font MS Shell Dlg 2 is not enumerated\n");
-    ret = strcmp((char*)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg 2");
-    todo_wine ok(!ret, "expected MS Shell Dlg 2 got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
-    ret = strcmp((char*)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
+    ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
+    ok(!ret, "MS Shell Dlg 2 should be enumerated\n");
+    ok(efnd.total > 0, "MS Shell Dlg 2 should be enumerated\n");
+    ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg 2");
+    ok(!ret, "expected MS Shell Dlg 2, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+    ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
     ok(ret, "did not expect MS Shell Dlg 2\n");
 
     DeleteDC(hdc);
@@ -5704,9 +5969,12 @@ static void test_stock_fonts(void)
     {
         int charset, weight, height, height_pixels, dpi;
         const char face_name[LF_FACESIZE];
-    } td[][11] =
+        WORD lang_id;
+    } td[][12] =
     {
         { /* ANSI_FIXED_FONT */
+            { ANSI_CHARSET, FW_NORMAL, 12, 12, 96, "Courier", LANG_ARABIC },
+            { ANSI_CHARSET, FW_NORMAL, 12, 12, 96, "Courier", LANG_HEBREW},
             { DEFAULT_CHARSET, FW_NORMAL, 12, 13, 96, "Courier" },
             { DEFAULT_CHARSET, FW_NORMAL, 12, 13, 120, "Courier" },
             { 0 }
@@ -5735,6 +6003,7 @@ static void test_stock_fonts(void)
             { 0 }
         },
         { /* DEFAULT_GUI_FONT */
+            { SHIFTJIS_CHARSET, FW_NORMAL, -11, 13, 96, "MS Shell Dlg" },
             { SHIFTJIS_CHARSET, FW_NORMAL, -12, 15, 96, "?MS UI Gothic" },
             { SHIFTJIS_CHARSET, FW_NORMAL, -15, 18, 120, "?MS UI Gothic" },
             { HANGEUL_CHARSET, FW_NORMAL, -12, 15, 96, "?Gulim" },
@@ -5769,7 +6038,9 @@ static void test_stock_fonts(void)
 
         for (j = 0; td[i][j].face_name[0] != 0; j++)
         {
-            if (lf.lfCharSet != td[i][j].charset && td[i][j].charset != DEFAULT_CHARSET)
+            if ((lf.lfCharSet != td[i][j].charset && td[i][j].charset != DEFAULT_CHARSET) ||
+                (system_lang_id != td[i][j].lang_id && td[i][j].lang_id != LANG_NEUTRAL) ||
+                (td[i][j].face_name[0] != '?' && strcmp(lf.lfFaceName, td[i][j].face_name)))
             {
                 continue;
             }
@@ -6224,6 +6495,7 @@ START_TEST(font)
     test_height_selection();
     test_AddFontMemResource();
     test_EnumFonts();
+    test_EnumFonts_subst();
 
     /* On Windows Arial has a lot of default charset aliases such as Arial Cyr,
      * I'd like to avoid them in this test.
@@ -6241,7 +6513,7 @@ START_TEST(font)
         skip("Arial Black or Symbol/Wingdings is not installed\n");
     test_EnumFontFamiliesEx_default_charset();
     test_GetTextMetrics();
-    test_GdiRealizationInfo();
+    test_RealizationInfo();
     test_GetTextFace();
     test_GetGlyphOutline();
     test_GetTextMetrics2("Tahoma", -11);

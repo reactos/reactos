@@ -139,9 +139,9 @@
   static
   const FT_Service_PfrMetricsRec  pfr_metrics_service_rec =
   {
-    pfr_get_metrics,
-    pfr_face_get_kerning,
-    pfr_get_advance
+    pfr_get_metrics,          /* get_metrics */
+    pfr_face_get_kerning,     /* get_kerning */
+    pfr_get_advance           /* get_advance */
   };
 
 
@@ -181,31 +181,32 @@
       0x10000L,
       0x20000L,
 
-      NULL,
+      0,    /* module-specific interface */
 
-      0,                /* FT_Module_Constructor */
-      0,                /* FT_Module_Destructor  */
-      pfr_get_service
+      0,                        /* FT_Module_Constructor  module_init   */
+      0,                        /* FT_Module_Destructor   module_done   */
+      pfr_get_service           /* FT_Module_Requester    get_interface */
     },
 
     sizeof ( PFR_FaceRec ),
     sizeof ( PFR_SizeRec ),
     sizeof ( PFR_SlotRec ),
 
-    pfr_face_init,
-    pfr_face_done,
-    0,                  /* FT_Size_InitFunc */
-    0,                  /* FT_Size_DoneFunc */
-    pfr_slot_init,
-    pfr_slot_done,
+    pfr_face_init,              /* FT_Face_InitFunc  init_face */
+    pfr_face_done,              /* FT_Face_DoneFunc  done_face */
+    0,                          /* FT_Size_InitFunc  init_size */
+    0,                          /* FT_Size_DoneFunc  done_size */
+    pfr_slot_init,              /* FT_Slot_InitFunc  init_slot */
+    pfr_slot_done,              /* FT_Slot_DoneFunc  done_slot */
 
-    pfr_slot_load,
+    pfr_slot_load,              /* FT_Slot_LoadFunc  load_glyph */
 
-    pfr_get_kerning,
-    0,                  /* FT_Face_AttachFunc      */
-    0,                  /* FT_Face_GetAdvancesFunc */
-    0,                  /* FT_Size_RequestFunc     */
-    0,                  /* FT_Size_SelectFunc      */
+    pfr_get_kerning,            /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    0,                          /* FT_Face_GetAdvancesFunc  get_advances */
+
+    0,                          /* FT_Size_RequestFunc  request_size */
+    0,                          /* FT_Size_SelectFunc   select_size  */
   };
 
 

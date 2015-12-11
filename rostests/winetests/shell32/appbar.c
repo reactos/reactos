@@ -29,6 +29,7 @@
 static const CHAR testwindow_class[] = "testwindow";
 
 static HMONITOR (WINAPI *pMonitorFromWindow)(HWND, DWORD);
+static HRESULT (WINAPI *pGetCurrentProcessExplicitAppUserModelID)(PWSTR*);
 
 typedef BOOL (*boolean_function)(void);
 
@@ -430,15 +431,39 @@ static void test_appbarget(void)
     return;
 }
 
+static void test_GetCurrentProcessExplicitAppUserModelID(void)
+{
+    WCHAR *appid;
+    HRESULT hr;
+
+    if (!pGetCurrentProcessExplicitAppUserModelID)
+    {
+        win_skip("GetCurrentProcessExplicitAppUserModelID() is not supported.\n");
+        return;
+    }
+
+if (0) /* crashes on native */
+    hr = pGetCurrentProcessExplicitAppUserModelID(NULL);
+
+    appid = (void*)0xdeadbeef;
+    hr = pGetCurrentProcessExplicitAppUserModelID(&appid);
+todo_wine
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(appid == NULL, "got %p\n", appid);
+}
+
 START_TEST(appbar)
 {
-    HMODULE huser32;
+    HMODULE huser32, hshell32;
 
     huser32 = GetModuleHandleA("user32.dll");
+    hshell32 = GetModuleHandleA("shell32.dll");
     pMonitorFromWindow = (void*)GetProcAddress(huser32, "MonitorFromWindow");
+    pGetCurrentProcessExplicitAppUserModelID = (void*)GetProcAddress(hshell32, "GetCurrentProcessExplicitAppUserModelID");
 
     register_testwindow_class();
 
     test_setpos();
     test_appbarget();
+    test_GetCurrentProcessExplicitAppUserModelID();
 }

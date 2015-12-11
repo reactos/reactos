@@ -118,9 +118,11 @@
 
     /* load the face */
     error = pfr_log_font_load(
-               &face->log_font, stream, (FT_UInt)( face_index & 0xFFFF ),
-               face->header.log_dir_offset,
-               FT_BOOL( face->header.phy_font_max_size_high != 0 ) );
+              &face->log_font,
+              stream,
+              (FT_UInt)( face_index & 0xFFFF ),
+              face->header.log_dir_offset,
+              FT_BOOL( face->header.phy_font_max_size_high != 0 ) );
     if ( error )
       goto Exit;
 
@@ -141,8 +143,8 @@
 
       pfrface->face_flags |= FT_FACE_FLAG_SCALABLE;
 
-      /* if all characters point to the same gps_offset 0, we */
-      /* assume that the font only contains bitmaps           */
+      /* if gps_offset == 0 for all characters, we  */
+      /* assume that the font only contains bitmaps */
       {
         FT_UInt  nn;
 
@@ -164,7 +166,7 @@
         }
       }
 
-      if ( (phy_font->flags & PFR_PHY_PROPORTIONAL) == 0 )
+      if ( ( phy_font->flags & PFR_PHY_PROPORTIONAL ) == 0 )
         pfrface->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
       if ( phy_font->flags & PFR_PHY_VERTICAL )
@@ -178,7 +180,7 @@
       if ( phy_font->num_kern_pairs > 0 )
         pfrface->face_flags |= FT_FACE_FLAG_KERNING;
 
-      /* If no family name was found in the "undocumented" auxiliary
+      /* If no family name was found in the `undocumented' auxiliary
        * data, use the font ID instead.  This sucks but is better than
        * nothing.
        */
@@ -187,7 +189,7 @@
         pfrface->family_name = phy_font->font_id;
 
       /* note that the style name can be NULL in certain PFR fonts,
-       * probably meaning "Regular"
+       * probably meaning `Regular'
        */
       pfrface->style_name = phy_font->style_name;
 
@@ -264,13 +266,13 @@
         error = FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
 
 #if 0
-        /* Select default charmap */
+        /* select default charmap */
         if ( pfrface->num_charmaps )
           pfrface->charmap = pfrface->charmaps[0];
 #endif
       }
 
-      /* check whether we've loaded any kerning pairs */
+      /* check whether we have loaded any kerning pairs */
       if ( phy_font->num_kern_pairs )
         pfrface->face_flags |= FT_FACE_FLAG_KERNING;
     }
@@ -402,7 +404,7 @@
       pfrslot->linearHoriAdvance = metrics->horiAdvance;
       pfrslot->linearVertAdvance = metrics->vertAdvance;
 
-      /* make-up vertical metrics(?) */
+      /* make up vertical metrics(?) */
       metrics->vertBearingX = 0;
       metrics->vertBearingY = 0;
 
@@ -595,5 +597,6 @@
   Exit:
     return error;
   }
+
 
 /* END */

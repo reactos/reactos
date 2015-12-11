@@ -1075,12 +1075,14 @@ InstallReactOS(HINSTANCE hInstance)
     /* ROS HACK, as long as NtUnloadKey is not implemented */
     {
         NTSTATUS Status = NtUnloadKey(NULL);
-        if (Status == STATUS_NOT_IMPLEMENTED)
+        if (!NT_SUCCESS(Status))
         {
             /* Create the Administrator profile */
             PROFILEINFOW ProfileInfo;
             HANDLE hToken;
             BOOL ret;
+
+            DPRINT1("NtUnloadKey failed with 0x%lx\n", Status);
 
             ret = LogonUserW(AdminInfo.Name,
                              AdminInfo.Domain,

@@ -149,7 +149,6 @@ HRESULT WINAPI BaseFilterImpl_QueryFilterInfo(IBaseFilter * iface, FILTER_INFO *
 
 HRESULT WINAPI BaseFilterImpl_JoinFilterGraph(IBaseFilter * iface, IFilterGraph *pGraph, LPCWSTR pName )
 {
-    HRESULT hr = S_OK;
     BaseFilter *This = impl_from_IBaseFilter(iface);
 
     TRACE("(%p)->(%p, %s)\n", This, pGraph, debugstr_w(pName));
@@ -164,7 +163,7 @@ HRESULT WINAPI BaseFilterImpl_JoinFilterGraph(IBaseFilter * iface, IFilterGraph 
     }
     LeaveCriticalSection(&This->csFilter);
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT WINAPI BaseFilterImpl_QueryVendorInfo(IBaseFilter * iface, LPWSTR *pVendorInfo)

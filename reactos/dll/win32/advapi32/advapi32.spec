@@ -59,7 +59,7 @@
 59 stdcall ClearEventLogA(long str)
 60 stdcall ClearEventLogW(long wstr)
 61 stub CloseCodeAuthzLevel
-62 stub CloseEncryptedFileRaw
+62 stdcall CloseEncryptedFileRaw(ptr)
 63 stdcall CloseEventLog(long)
 64 stdcall CloseServiceHandle(long)
 65 stub CloseTrace

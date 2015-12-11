@@ -90,8 +90,8 @@
 
   static const FT_Service_GlyphDictRec  t42_service_glyph_dict =
   {
-    (FT_GlyphDict_GetNameFunc)  t42_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)t42_get_name_index
+    (FT_GlyphDict_GetNameFunc)  t42_get_glyph_name,    /* get_name   */
+    (FT_GlyphDict_NameIndexFunc)t42_get_name_index     /* name_index */
   };
 
 
@@ -110,7 +110,7 @@
 
   static const FT_Service_PsFontNameRec  t42_service_ps_font_name =
   {
-    (FT_PsName_GetFunc)t42_get_ps_font_name
+    (FT_PsName_GetFunc)t42_get_ps_font_name   /* get_ps_font_name */
   };
 
 
@@ -161,11 +161,12 @@
 
   static const FT_Service_PsInfoRec  t42_service_ps_info =
   {
-    (PS_GetFontInfoFunc)   t42_ps_get_font_info,
-    (PS_GetFontExtraFunc)  t42_ps_get_font_extra,
-    (PS_HasGlyphNamesFunc) t42_ps_has_glyph_names,
-    (PS_GetFontPrivateFunc)t42_ps_get_font_private,
-    (PS_GetFontValueFunc)  NULL             /* not implemented */
+    (PS_GetFontInfoFunc)   t42_ps_get_font_info,    /* ps_get_font_info    */
+    (PS_GetFontExtraFunc)  t42_ps_get_font_extra,   /* ps_get_font_extra   */
+    (PS_HasGlyphNamesFunc) t42_ps_has_glyph_names,  /* ps_has_glyph_names  */
+    (PS_GetFontPrivateFunc)t42_ps_get_font_private, /* ps_get_font_private */
+    /* not implemented */
+    (PS_GetFontValueFunc)  NULL                     /* ps_get_font_value   */
   };
 
 
@@ -212,32 +213,32 @@
       0x10000L,
       0x20000L,
 
-      0,    /* format interface */
+      0,    /* module-specific interface */
 
-      T42_Driver_Init,
-      T42_Driver_Done,
-      T42_Get_Interface,
+      T42_Driver_Init,          /* FT_Module_Constructor  module_init   */
+      T42_Driver_Done,          /* FT_Module_Destructor   module_done   */
+      T42_Get_Interface,        /* FT_Module_Requester    get_interface */
     },
 
     sizeof ( T42_FaceRec ),
     sizeof ( T42_SizeRec ),
     sizeof ( T42_GlyphSlotRec ),
 
-    T42_Face_Init,
-    T42_Face_Done,
-    T42_Size_Init,
-    T42_Size_Done,
-    T42_GlyphSlot_Init,
-    T42_GlyphSlot_Done,
+    T42_Face_Init,              /* FT_Face_InitFunc  init_face */
+    T42_Face_Done,              /* FT_Face_DoneFunc  done_face */
+    T42_Size_Init,              /* FT_Size_InitFunc  init_size */
+    T42_Size_Done,              /* FT_Size_DoneFunc  done_size */
+    T42_GlyphSlot_Init,         /* FT_Slot_InitFunc  init_slot */
+    T42_GlyphSlot_Done,         /* FT_Slot_DoneFunc  done_slot */
 
-    T42_GlyphSlot_Load,
+    T42_GlyphSlot_Load,         /* FT_Slot_LoadFunc  load_glyph */
 
-    0,                 /* FT_Face_GetKerningFunc  */
-    0,                 /* FT_Face_AttachFunc      */
+    0,                          /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    0,                          /* FT_Face_GetAdvancesFunc  get_advances */
 
-    0,                 /* FT_Face_GetAdvancesFunc */
-    T42_Size_Request,
-    T42_Size_Select
+    T42_Size_Request,           /* FT_Size_RequestFunc  request_size */
+    T42_Size_Select             /* FT_Size_SelectFunc   select_size  */
   };
 
 

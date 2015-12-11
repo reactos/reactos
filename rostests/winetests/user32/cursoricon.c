@@ -308,21 +308,33 @@ static const BOOL is_win64 = (sizeof(void *) > sizeof(int));
 
 static LRESULT CALLBACK callback_child(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    BOOL ret;
-    DWORD error;
-
     switch (msg)
     {
         /* Destroy the cursor. */
         case WM_USER+1:
+        {
+            HCURSOR cursor = (HCURSOR)lParam;
+            ICONINFO info;
+            BOOL ret;
+            DWORD error;
+
+            memset(&info, 0, sizeof(info));
+            ret = GetIconInfo(cursor, &info);
+            todo_wine ok(ret, "GetIconInfoEx failed with error %u\n", GetLastError());
+            todo_wine ok(info.hbmColor != NULL, "info.hmbColor was not set\n");
+            todo_wine ok(info.hbmMask != NULL, "info.hmbColor was not set\n");
+            DeleteObject(info.hbmColor);
+            DeleteObject(info.hbmMask);
+
             SetLastError(0xdeadbeef);
-            ret = DestroyCursor((HCURSOR) lParam);
+            ret = DestroyCursor(cursor);
             error = GetLastError();
             ok(!ret || broken(ret) /* win9x */, "DestroyCursor on the active cursor succeeded.\n");
             ok(error == ERROR_DESTROY_OBJECT_OF_OTHER_THREAD ||
                error == 0xdeadbeef,  /* vista */
                 "Last error: %u\n", error);
             return TRUE;
+        }
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;

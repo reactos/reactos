@@ -43,6 +43,10 @@ list(APPEND FONT_FILES
     LiberationSans-BoldItalic.ttf
     LiberationSans-Italic.ttf
     LiberationSans-Regular.ttf
+    LiberationSansNarrow-Bold.ttf
+    LiberationSansNarrow-BoldItalic.ttf
+    LiberationSansNarrow-Italic.ttf
+    LiberationSansNarrow-Regular.ttf
     LiberationSerif-Bold.ttf
     LiberationSerif-BoldItalic.ttf
     LiberationSerif-Italic.ttf

@@ -32,7 +32,7 @@ Description = Joc de tip arcadă de vânătoare în spațiul cosmic.
 Size = 2,3 Mo
 
 [Section.041f]
-Description = Atari salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
+Description = Oyun konsolu salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
 Size = 2,3 MB
 
 [Section.0804]

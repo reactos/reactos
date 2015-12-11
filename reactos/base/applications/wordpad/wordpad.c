@@ -2479,55 +2479,50 @@ static LRESULT OnInitPopupMenu( HWND hWnd, WPARAM wParam )
     MENUITEMINFOW mi;
 
     SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&selFrom, (LPARAM)&selTo);
-    EnableMenuItem(hMenu, ID_EDIT_COPY, MF_BYCOMMAND|(selFrom == selTo) ? MF_GRAYED : MF_ENABLED);
-    EnableMenuItem(hMenu, ID_EDIT_CUT, MF_BYCOMMAND|(selFrom == selTo) ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(hMenu, ID_EDIT_COPY, (selFrom == selTo) ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(hMenu, ID_EDIT_CUT, (selFrom == selTo) ? MF_GRAYED : MF_ENABLED);
 
     pf.cbSize = sizeof(PARAFORMAT);
     SendMessageW(hwndEditor, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
     CheckMenuItem(hMenu, ID_EDIT_READONLY,
-      MF_BYCOMMAND|(GetWindowLongW(hwndEditor, GWL_STYLE)&ES_READONLY ? MF_CHECKED : MF_UNCHECKED));
+      (GetWindowLongW(hwndEditor, GWL_STYLE) & ES_READONLY) ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(hMenu, ID_EDIT_MODIFIED,
-      MF_BYCOMMAND|(SendMessageW(hwndEditor, EM_GETMODIFY, 0, 0) ? MF_CHECKED : MF_UNCHECKED));
+      SendMessageW(hwndEditor, EM_GETMODIFY, 0, 0) ? MF_CHECKED : MF_UNCHECKED);
     if (pf.dwMask & PFM_ALIGNMENT)
         nAlignment = pf.wAlignment;
-    CheckMenuItem(hMenu, ID_ALIGN_LEFT, MF_BYCOMMAND|(nAlignment == PFA_LEFT) ?
-            MF_CHECKED : MF_UNCHECKED);
-    CheckMenuItem(hMenu, ID_ALIGN_CENTER, MF_BYCOMMAND|(nAlignment == PFA_CENTER) ?
-            MF_CHECKED : MF_UNCHECKED);
-    CheckMenuItem(hMenu, ID_ALIGN_RIGHT, MF_BYCOMMAND|(nAlignment == PFA_RIGHT) ?
-            MF_CHECKED : MF_UNCHECKED);
-    CheckMenuItem(hMenu, ID_BULLET, MF_BYCOMMAND | ((pf.wNumbering == PFN_BULLET) ?
-            MF_CHECKED : MF_UNCHECKED));
-    EnableMenuItem(hMenu, ID_EDIT_UNDO, MF_BYCOMMAND|(SendMessageW(hwndEditor, EM_CANUNDO, 0, 0)) ?
+    CheckMenuItem(hMenu, ID_ALIGN_LEFT, (nAlignment == PFA_LEFT) ?  MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(hMenu, ID_ALIGN_CENTER, (nAlignment == PFA_CENTER) ?  MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(hMenu, ID_ALIGN_RIGHT, (nAlignment == PFA_RIGHT) ?  MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(hMenu, ID_BULLET, ((pf.wNumbering == PFN_BULLET) ?  MF_CHECKED : MF_UNCHECKED));
+    EnableMenuItem(hMenu, ID_EDIT_UNDO, SendMessageW(hwndEditor, EM_CANUNDO, 0, 0) ?
             MF_ENABLED : MF_GRAYED);
-    EnableMenuItem(hMenu, ID_EDIT_REDO, MF_BYCOMMAND|(SendMessageW(hwndEditor, EM_CANREDO, 0, 0)) ?
+    EnableMenuItem(hMenu, ID_EDIT_REDO, SendMessageW(hwndEditor, EM_CANREDO, 0, 0) ?
             MF_ENABLED : MF_GRAYED);
 
-    CheckMenuItem(hMenu, ID_TOGGLE_TOOLBAR, MF_BYCOMMAND|(is_bar_visible(BANDID_TOOLBAR)) ?
+    CheckMenuItem(hMenu, ID_TOGGLE_TOOLBAR, is_bar_visible(BANDID_TOOLBAR) ?
             MF_CHECKED : MF_UNCHECKED);
 
-    CheckMenuItem(hMenu, ID_TOGGLE_FORMATBAR, MF_BYCOMMAND|(is_bar_visible(BANDID_FORMATBAR)) ?
+    CheckMenuItem(hMenu, ID_TOGGLE_FORMATBAR, is_bar_visible(BANDID_FORMATBAR) ?
             MF_CHECKED : MF_UNCHECKED);
 
-    CheckMenuItem(hMenu, ID_TOGGLE_STATUSBAR, MF_BYCOMMAND|IsWindowVisible(hwndStatus) ?
+    CheckMenuItem(hMenu, ID_TOGGLE_STATUSBAR, IsWindowVisible(hwndStatus) ?
             MF_CHECKED : MF_UNCHECKED);
 
-    CheckMenuItem(hMenu, ID_TOGGLE_RULER, MF_BYCOMMAND|(is_bar_visible(BANDID_RULER)) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(hMenu, ID_TOGGLE_RULER, is_bar_visible(BANDID_RULER) ? MF_CHECKED : MF_UNCHECKED);
 
     gt.flags = GTL_NUMCHARS;
     gt.codepage = 1200;
     textLength = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
-    EnableMenuItem(hMenu, ID_FIND, MF_BYCOMMAND|(textLength ? MF_ENABLED : MF_GRAYED));
+    EnableMenuItem(hMenu, ID_FIND, textLength ? MF_ENABLED : MF_GRAYED);
 
     mi.cbSize = sizeof(mi);
     mi.fMask = MIIM_DATA;
 
     GetMenuItemInfoW(hMenu, ID_FIND_NEXT, FALSE, &mi);
 
-    EnableMenuItem(hMenu, ID_FIND_NEXT, MF_BYCOMMAND|((textLength && mi.dwItemData) ?
-                   MF_ENABLED : MF_GRAYED));
+    EnableMenuItem(hMenu, ID_FIND_NEXT, (textLength && mi.dwItemData) ?  MF_ENABLED : MF_GRAYED);
 
-    EnableMenuItem(hMenu, ID_REPLACE, MF_BYCOMMAND|(textLength ? MF_ENABLED : MF_GRAYED));
+    EnableMenuItem(hMenu, ID_REPLACE, textLength ? MF_ENABLED : MF_GRAYED);
 
     return 0;
 }

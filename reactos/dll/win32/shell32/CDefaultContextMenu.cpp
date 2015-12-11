@@ -14,6 +14,13 @@ TODO:
 
 #include "precomp.h"
 
+extern "C"
+{
+    //fixme: this isn't in wine's shlwapi header, and the definition doesnt match the
+    // windows headers. When wine's header and lib are fixed this can be removed.
+    DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen);
+};
+
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
 typedef struct _DynamicShellEntry_
@@ -31,6 +38,26 @@ typedef struct _StaticShellEntry_
     LPWSTR szClass;
     struct _StaticShellEntry_ *pNext;
 } StaticShellEntry, *PStaticShellEntry;
+
+
+//
+// verbs for InvokeCommandInfo
+//
+struct _StaticInvokeCommandMap_
+{
+    LPCSTR szStringVerb;
+    UINT IntVerb;
+} g_StaticInvokeCmdMap[] = 
+{
+    { "RunAs", 0 },  // Unimplemented
+    { "Print", 0 },  // Unimplemented
+    { "Preview", 0 }, // Unimplemented
+    { "Open", FCIDM_SHVIEW_OPEN },
+    { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER },
+    { CMDSTR_VIEWLISTA, FCIDM_SHVIEW_LISTVIEW },
+    { CMDSTR_VIEWDETAILSA, FCIDM_SHVIEW_REPORTVIEW }
+};
+
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -69,12 +96,14 @@ class CDefaultContextMenu :
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoFormat(LPCMINVOKECOMMANDINFO lpcmi);
+        HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
         HRESULT DoDynamicShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoStaticShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
         HRESULT TryToBrowse(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags);
         HRESULT InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
         PDynamicShellEntry GetDynamicEntry(UINT idCmd);
+        BOOL MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode);
 
     public:
         CDefaultContextMenu();
@@ -1367,6 +1396,67 @@ CDefaultContextMenu::DoFormat(
     return S_OK;
 }
 
+// This code is taken from CNewMenu and should be shared between the 2 classes
+HRESULT
+CDefaultContextMenu::DoCreateNewFolder(
+    LPCMINVOKECOMMANDINFO lpici)
+{
+    WCHAR wszPath[MAX_PATH];
+    WCHAR wszName[MAX_PATH];
+    WCHAR wszNewFolder[25];
+    HRESULT hr;
+
+    /* Get folder path */
+    hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (!LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder, _countof(wszNewFolder)))
+        return E_FAIL;
+
+    /* Create the name of the new directory */
+    if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFolder))
+        return E_FAIL;
+
+    /* Create the new directory and show the appropriate dialog in case of error */
+    if (SHCreateDirectory(lpici->hwnd, wszName) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    /* Show and select the new item in the def view */
+    CComPtr<IShellBrowser> lpSB;
+    CComPtr<IShellView> lpSV;
+    LPITEMIDLIST pidl;
+    PITEMID_CHILD pidlNewItem;
+
+    /* Notify the view object about the new item */
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW, (LPCVOID)wszName, NULL);
+
+    /* FIXME: I think that this can be implemented using callbacks to the shell folder */
+
+    /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */
+    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+    if (!lpSB)
+        return E_FAIL;
+
+    hr = lpSB->QueryActiveShellView(&lpSV);
+    if (FAILED(hr))
+        return hr;
+
+    /* Attempt to get the pidl of the new item */
+    hr = SHILCreateFromPathW(wszName, &pidl, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    pidlNewItem = ILFindLastID(pidl);
+
+    hr = lpSV->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
+                          SVSI_FOCUSED | SVSI_SELECT);
+
+    SHFree(pidl);
+
+    return hr;
+}
+
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
 {
     PDynamicShellEntry pEntry = m_pDynamicEntries;
@@ -1381,6 +1471,42 @@ PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
         return NULL;
 
     return pEntry;
+}
+
+//FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
+#define MAX_VERB 260
+
+BOOL
+CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
+{
+    WCHAR UnicodeStr[MAX_VERB];
+
+    /* Loop through all the static verbs looking for a match */
+    for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); i++)
+    {
+        /* We can match both ANSI and unicode strings */
+        if (IsUnicode)
+        {
+            /* The static verbs are ANSI, get a unicode version before doing the compare */
+            SHAnsiToUnicode(g_StaticInvokeCmdMap[i].szStringVerb, UnicodeStr, MAX_VERB);
+            if (!wcscmp(UnicodeStr, (LPWSTR)Verb))
+            {
+                /* Return the Corresponding Id */
+                *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (!strcmp(g_StaticInvokeCmdMap[i].szStringVerb, (LPSTR)Verb))
+            {
+                *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
 }
 
 HRESULT
@@ -1549,57 +1675,97 @@ WINAPI
 CDefaultContextMenu::InvokeCommand(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    switch(LOWORD(lpcmi->lpVerb))
+    CMINVOKECOMMANDINFO LocalInvokeInfo;
+    HRESULT Result;
+    UINT CmdId;
+
+    /* Take a local copy of the fixed members of the
+       struct as we might need to modify the verb */
+    LocalInvokeInfo = *lpcmi;
+
+    /* Check if this is a string verb */
+    if (HIWORD(LocalInvokeInfo.lpVerb))
     {
-        case FCIDM_SHVIEW_BIGICON:
-        case FCIDM_SHVIEW_SMALLICON:
-        case FCIDM_SHVIEW_LISTVIEW:
-        case FCIDM_SHVIEW_REPORTVIEW:
-        case 0x30: /* FIX IDS in resource files */
-        case 0x31:
-        case 0x32:
-        case 0x33:
-        case FCIDM_SHVIEW_AUTOARRANGE:
-        case FCIDM_SHVIEW_SNAPTOGRID:
-            return NotifyShellViewWindow(lpcmi, FALSE);
-        case FCIDM_SHVIEW_REFRESH:
-            return DoRefresh(lpcmi);
-        case FCIDM_SHVIEW_INSERT:
-            return DoPaste(lpcmi, FALSE);
-        case FCIDM_SHVIEW_INSERTLINK:
-            return DoPaste(lpcmi, TRUE);
-        case FCIDM_SHVIEW_OPEN:
-        case FCIDM_SHVIEW_EXPLORE:
-            return DoOpenOrExplore(lpcmi);
-        case FCIDM_SHVIEW_COPY:
-        case FCIDM_SHVIEW_CUT:
-            return DoCopyOrCut(lpcmi, LOWORD(lpcmi->lpVerb) == FCIDM_SHVIEW_COPY);
-        case FCIDM_SHVIEW_CREATELINK:
-            return DoCreateLink(lpcmi);
-        case FCIDM_SHVIEW_DELETE:
-            return DoDelete(lpcmi);
-        case FCIDM_SHVIEW_RENAME:
-            return DoRename(lpcmi);
-        case FCIDM_SHVIEW_PROPERTIES:
-            return DoProperties(lpcmi);
-        case 0x7ABC:
-            return DoFormat(lpcmi);
+        /* Get the ID which corresponds to this verb, and update our local copy */
+        if (MapVerbToCmdId((LPVOID)LocalInvokeInfo.lpVerb, &CmdId, FALSE))
+            LocalInvokeInfo.lpVerb = MAKEINTRESOURCEA(CmdId);
     }
 
-    if (m_iIdSHEFirst && m_iIdSHELast)
+    /* Check if this is a Id */
+    switch (LOWORD(LocalInvokeInfo.lpVerb))
     {
-        if (LOWORD(lpcmi->lpVerb) >= m_iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= m_iIdSHELast)
-            return DoDynamicShellExtensions(lpcmi);
+    case FCIDM_SHVIEW_BIGICON:
+    case FCIDM_SHVIEW_SMALLICON:
+    case FCIDM_SHVIEW_LISTVIEW:
+    case FCIDM_SHVIEW_REPORTVIEW:
+    case 0x30: /* FIX IDS in resource files */
+    case 0x31:
+    case 0x32:
+    case 0x33:
+    case FCIDM_SHVIEW_AUTOARRANGE:
+    case FCIDM_SHVIEW_SNAPTOGRID:
+        Result = NotifyShellViewWindow(&LocalInvokeInfo, FALSE);
+        break;
+    case FCIDM_SHVIEW_REFRESH:
+        Result = DoRefresh(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_INSERT:
+        Result = DoPaste(&LocalInvokeInfo, FALSE);
+        break;
+    case FCIDM_SHVIEW_INSERTLINK:
+        Result = DoPaste(&LocalInvokeInfo, TRUE);
+        break;
+    case FCIDM_SHVIEW_OPEN:
+    case FCIDM_SHVIEW_EXPLORE:
+        Result = DoOpenOrExplore(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_COPY:
+    case FCIDM_SHVIEW_CUT:
+        Result = DoCopyOrCut(&LocalInvokeInfo, LOWORD(LocalInvokeInfo.lpVerb) == FCIDM_SHVIEW_COPY);
+        break;
+    case FCIDM_SHVIEW_CREATELINK:
+        Result = DoCreateLink(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_DELETE:
+        Result = DoDelete(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_RENAME:
+        Result = DoRename(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_PROPERTIES:
+        Result = DoProperties(&LocalInvokeInfo);
+        break;
+    case 0x7ABC:
+        Result = DoFormat(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_NEWFOLDER:
+        Result = DoCreateNewFolder(&LocalInvokeInfo);
+        break;
+    default:
+        Result = E_UNEXPECTED;
+        break;
     }
 
-    if (m_iIdSCMFirst && m_iIdSCMLast)
+    /* Check for ID's we didn't find a handler for */
+    if (Result == E_UNEXPECTED)
     {
-        if (LOWORD(lpcmi->lpVerb) >= m_iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= m_iIdSCMLast)
-            return DoStaticShellExtensions(lpcmi);
+        if (m_iIdSHEFirst && m_iIdSHELast)
+        {
+            if (LOWORD(LocalInvokeInfo.lpVerb) >= m_iIdSHEFirst && LOWORD(LocalInvokeInfo.lpVerb) <= m_iIdSHELast)
+                Result = DoDynamicShellExtensions(&LocalInvokeInfo);
+        }
+
+        if (m_iIdSCMFirst && m_iIdSCMLast)
+        {
+            if (LOWORD(LocalInvokeInfo.lpVerb) >= m_iIdSCMFirst && LOWORD(LocalInvokeInfo.lpVerb) <= m_iIdSCMLast)
+                Result = DoStaticShellExtensions(&LocalInvokeInfo);
+        }
     }
 
-    FIXME("Unhandled Verb %xl\n", LOWORD(lpcmi->lpVerb));
-    return E_UNEXPECTED;
+    if (Result == E_UNEXPECTED)
+        FIXME("Unhandled Verb %xl\n", LOWORD(LocalInvokeInfo.lpVerb));
+
+    return Result;
 }
 
 HRESULT
@@ -1611,7 +1777,36 @@ CDefaultContextMenu::GetCommandString(
     LPSTR lpszName,
     UINT uMaxNameLen)
 {
-    return S_OK;
+    /* We don't handle the help text yet */
+    if (uFlags == GCS_HELPTEXTA ||
+        uFlags == GCS_HELPTEXTW)
+    {
+        return E_NOTIMPL;
+    }
+
+    /* Loop looking for a matching Id */
+    for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); i++)
+    {
+        if (g_StaticInvokeCmdMap[i].IntVerb == idCommand)
+        {
+            /* Validation just returns S_OK on a match */
+            if (uFlags == GCS_VALIDATEA || uFlags == GCS_VALIDATEA)
+                return S_OK;
+
+            /* Return a copy of the ANSI verb */
+            if (uFlags == GCS_VERBA)
+                return StringCchCopyA(lpszName, uMaxNameLen, g_StaticInvokeCmdMap[i].szStringVerb);
+
+            /* Convert the ANSI verb to unicode and return that */
+            if (uFlags == GCS_VERBW)
+            {
+                if (SHAnsiToUnicode(g_StaticInvokeCmdMap[i].szStringVerb, (LPWSTR)lpszName, uMaxNameLen))
+                    return S_OK;
+            }
+        }
+    }
+
+    return E_INVALIDARG;
 }
 
 HRESULT

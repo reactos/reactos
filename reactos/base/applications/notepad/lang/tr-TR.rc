@@ -179,5 +179,5 @@ BEGIN
     STRING_LINE_COLUMN "%d. Yataç, %d. Dikeç"
     STRING_PRINTERROR """%s"" kütüğü yazdırılamıyor.\n\nYazıcının açık olduğundan ve doğru yapılandırıldığından emin olunuz."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Metin Belgesi"
 END

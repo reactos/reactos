@@ -1,0 +1,57 @@
+/*
+ * cryptdlg dll resources
+ *
+ * Copyright 2008 Juan Lang
+ * Copyright 2016 Henry Tang Ih
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    IDS_CERT_POLICY "证书策略"
+    IDS_POLICY_ID "策略标识符: "
+    IDS_POLICY_QUALIFIER_INFO "政策限定符信息"
+    IDS_POLICY_QUALIFIER_ID "政策限定符 ID="
+    IDS_CPS "CPS"/*认证做法说明 */
+    IDS_USER_NOTICE "用户通知"
+    IDS_QUALIFIER "限定符"
+    IDS_NOTICE_REF "请注意参考"
+    IDS_ORGANIZATION "组织="
+    IDS_NOTICE_NUM "注意到人数="
+    IDS_NOTICE_TEXT "请注意文本="
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    IDS_CERT_POLICY "憑證原則"
+    IDS_POLICY_ID "策略識別碼: "
+    IDS_POLICY_QUALIFIER_INFO "政策限定詞資訊"
+    IDS_POLICY_QUALIFIER_ID "政策限定詞 ID="
+    IDS_CPS "CPS"/*認證做法說明 */
+    IDS_USER_NOTICE "使用者通知"
+    IDS_QUALIFIER "限定詞"
+    IDS_NOTICE_REF "請注意參考"
+    IDS_ORGANIZATION "組織="
+    IDS_NOTICE_NUM "注意到人數="
+    IDS_NOTICE_TEXT "請注意文本="
+}

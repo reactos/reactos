@@ -202,7 +202,7 @@ BEGIN
     LTEXT "Escolha as propriedades avançadas para este atalho.", -1, 5, 30, 210, 10
     CHECKBOX "Executar com credenciais diferentes", 14000, 25, 50, 150, 10
     LTEXT "Esta opção permite você executar este atalho como outro usuário, ou continuar como si próprio enquanto protege seu computador e dados de atividades de programas não autorizados.", -1, 50, 60, 175, 40
-    CHECKBOX "Executar em espaço de memória separado", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Executar em espaço de memória separado", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abortar", 2, 120, 124, 50, 15, WS_VISIBLE
 END

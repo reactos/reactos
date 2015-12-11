@@ -121,7 +121,7 @@ void mbedtls_ssl_cache_set_timeout( mbedtls_ssl_cache_context *cache, int timeou
 #endif /* MBEDTLS_HAVE_TIME */
 
 /**
- * \brief          Set the cache timeout
+ * \brief          Set the maximum number of cache entries
  *                 (Default: MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES (50))
  *
  * \param cache    SSL cache context

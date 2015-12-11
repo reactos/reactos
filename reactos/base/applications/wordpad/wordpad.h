@@ -184,9 +184,17 @@
 #define IDB_FORMATBAR 101
 
 #define IDI_WORDPAD 102
-#define IDI_RTFDOC  103
 
+#ifdef __REACTOS__
+
+#define IDI_RTFDOC  103
 #define IDC_ZOOM 104
+
+#else
+
+#define IDC_ZOOM 103
+
+#endif
 
 #define STRING_ALL_FILES 1400
 #define STRING_TEXT_FILES_TXT 1401

@@ -19,6 +19,7 @@
 #include <ddeml.h>
 #include <shlwapi.h>
 #include <shlobj.h>
+#include <shobjidl.h>
 #include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>

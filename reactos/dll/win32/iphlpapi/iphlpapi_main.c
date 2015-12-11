@@ -35,13 +35,17 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+  WSADATA wsaData;
+
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
       interfaceMapInit();
+      WSAStartup(MAKEWORD(2, 2), &wsaData);
       break;
 
     case DLL_PROCESS_DETACH:
+      WSACleanup();
       interfaceMapFree();
       break;
   }
@@ -2523,6 +2527,13 @@ DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **pp
 DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
     FIXME(":stub\n");
+
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
     return 0L;
 }
 

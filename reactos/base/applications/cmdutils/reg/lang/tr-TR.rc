@@ -13,7 +13,5 @@ STRINGTABLE
     STRING_INVALID_CMDLINE, "Yanlışlık: Geçersiz komut yatacı değişkenleri\n"
     STRING_NO_REMOTE, "Yanlışlık: Uzak makineye erişilemez\n"
     STRING_CANNOT_FIND, "Yanlışlık: Dizge belirtilen değer defteri dizinini ya da değerini bulamadı\n"
-    STRING_ERROR, "Beklenmeyen yanlışlık: "
     STRING_UNSUPPORTED_TYPE, "Yanlışlık: Desteklenmeyen tür\n"
-    STRING_INVALID_DWORD, "Yanlışlık: /d artı sayı olmalı\n"
 }

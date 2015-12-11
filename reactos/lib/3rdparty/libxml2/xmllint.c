@@ -3046,7 +3046,7 @@ static void usage(const char *name) {
     printf("\t--noblanks : drop (ignorable?) blanks spaces\n");
     printf("\t--nocdata : replace cdata section with text nodes\n");
 #ifdef LIBXML_OUTPUT_ENABLED
-    printf("\t--format : reformat/reindent the input\n");
+    printf("\t--format : reformat/reindent the output\n");
     printf("\t--encode encoding : output in the given encoding\n");
     printf("\t--dropdtd : remove the DOCTYPE of the input docs\n");
     printf("\t--pretty STYLE : pretty-print in a particular style\n");
