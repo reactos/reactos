@@ -11,6 +11,7 @@
 static const WCHAR szClassName[] = L"ClipBookWClass";
 
 CLIPBOARD_GLOBALS Globals;
+SCROLLSTATE Scrollstate;
 
 static void SaveClipboardToFile(void)
 {
@@ -124,8 +125,15 @@ static void SetDisplayFormat(UINT uFormat)
         Globals.uDisplayFormat =  uFormat;
     }
 
+    if (Globals.hDspBmp)
+    {
+        DeleteObject(Globals.hDspBmp);
+    }
+
+    ZeroMemory(&Scrollstate, sizeof(Scrollstate));
+    UpdateWindowScrollState(Globals.hMainWnd, Globals.hDspBmp, &Scrollstate);
+
     InvalidateRect(Globals.hMainWnd, NULL, TRUE);
-    UpdateWindow(Globals.hMainWnd);
 }
 
 static void InitMenuPopup(HMENU hMenu, LPARAM index)
@@ -330,10 +338,40 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_KEYDOWN:
+        {
+            HandleKeyboardScrollEvents(hWnd, uMsg, wParam, lParam);
+            break;
+        }
+
+        case WM_HSCROLL:
+        {
+            HandleHorizontalScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            break;
+        }
+
+        case WM_VSCROLL:
+        {
+            HandleVerticalScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            break;
+        }
+
         case WM_SIZE:
         {
-            InvalidateRect(hWnd, NULL, TRUE);
-            UpdateWindow(hWnd);
+            UpdateWindowScrollState(hWnd, Globals.hDspBmp, &Scrollstate);
+
+            if ((Globals.uDisplayFormat == CF_METAFILEPICT) ||
+                (Globals.uDisplayFormat == CF_ENHMETAFILE) ||
+                (Globals.uDisplayFormat == CF_DSPENHMETAFILE) ||
+                (Globals.uDisplayFormat == CF_DSPMETAFILEPICT))
+            {
+                InvalidateRect(Globals.hMainWnd, NULL, FALSE);
+            }
+            else if (!IsClipboardFormatSupported(Globals.uDisplayFormat))
+            {
+                InvalidateRect(Globals.hMainWnd, NULL, TRUE);
+            }
+
             break;
         }
 
@@ -431,6 +469,12 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_SYSCOLORCHANGE:
+        {
+            SetDisplayFormat(Globals.uDisplayFormat);
+            break;
+        }
+
         default:
         {
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -508,6 +552,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
+    }
+
+    if (Globals.hDspBmp)
+    {
+        DeleteObject(Globals.hDspBmp);
     }
 
     return (int)msg.wParam;

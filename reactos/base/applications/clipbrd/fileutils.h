@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/fileutils.c
+ * FILE:            base/applications/clipbrd/fileutils.h
  * PURPOSE:         Clipboard file format helper functions.
  * PROGRAMMERS:     Ricardo Hanke
  */
