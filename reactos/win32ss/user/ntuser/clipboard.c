@@ -40,7 +40,7 @@ IntGetWinStaForCbAccess(VOID)
 static PCLIP FASTCALL
 IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 {
-    unsigned i = 0;
+    DWORD i;
 
     for (i = 0; i < pWinStaObj->cNumClipFormats; ++i)
     {
@@ -335,7 +335,7 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
 VOID NTAPI
 UserEmptyClipboardData(PWINSTATION_OBJECT pWinSta)
 {
-    unsigned i;
+    DWORD i;
     PCLIP pElement;
 
     for (i = 0; i < pWinSta->cNumClipFormats; ++i)
@@ -630,6 +630,7 @@ UserEmptyClipboard(VOID)
         pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
 
         pWinStaObj->iClipSequenceNumber++;
+        pWinStaObj->fClipboardChanged = TRUE;
 
         bRet = TRUE;
     }
