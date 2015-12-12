@@ -234,8 +234,12 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
         case CMD_ABOUT:
         {
             WCHAR szTitle[MAX_STRING_LEN];
+            HICON hIcon;
+
+            hIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCE(CLIP_ICON));
             LoadStringW(Globals.hInstance, STRING_CLIPBOARD, szTitle, ARRAYSIZE(szTitle));
-            ShellAboutW(Globals.hMainWnd, szTitle, 0, NULL);
+            ShellAboutW(Globals.hMainWnd, szTitle, 0, hIcon);
+            DeleteObject(hIcon);
             break;
         }
 
@@ -253,6 +257,11 @@ static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     PAINTSTRUCT ps;
     RECT rc;
 
+    if (!OpenClipboard(NULL))
+    {
+        return;
+    }
+
     hdc = BeginPaint(hWnd, &ps);
     GetClientRect(hWnd, &rc);
 
@@ -265,7 +274,7 @@ static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case CF_UNICODETEXT:
         {
-            DrawTextFromClipboard(hdc, &rc, DT_LEFT);
+            DrawTextFromClipboard(hdc, &rc, DT_LEFT | DT_NOPREFIX);
             break;
         }
 
@@ -301,13 +310,14 @@ static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         default:
         {
-
-            DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, hdc, &rc, DT_CENTER | DT_WORDBREAK);
+            DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
             break;
         }
     }
 
     EndPaint(hWnd, &ps);
+
+    CloseClipboard();
 }
 
 static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

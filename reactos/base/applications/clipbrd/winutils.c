@@ -14,8 +14,6 @@ void ShowLastWin32Error(HWND hwndParent)
     LPWSTR lpMsgBuf = NULL;
 
     dwError = GetLastError();
-    if (dwError == NO_ERROR)
-        return;
 
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                    NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0,  NULL);
@@ -73,9 +71,6 @@ void DrawTextFromClipboard(HDC hDC, LPRECT lpRect, UINT uFormat)
     HGLOBAL hGlobal;
     LPWSTR lpchText;
 
-    if (!OpenClipboard(NULL))
-        return;
-
     hGlobal = GetClipboardData(CF_UNICODETEXT);
     if (!hGlobal)
         return;
@@ -86,16 +81,12 @@ void DrawTextFromClipboard(HDC hDC, LPRECT lpRect, UINT uFormat)
 
     DrawTextW(hDC, lpchText, -1, lpRect, uFormat);
     GlobalUnlock(hGlobal);
-    CloseClipboard();
 }
 
 void BitBltFromClipboard(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, int nXSrc, int nYSrc, DWORD dwRop)
 {
     HDC hdcMem;
     HBITMAP hbm;
-
-    if (!OpenClipboard(NULL))
-        return;
 
     hdcMem = CreateCompatibleDC(hdcDest);
     if (hdcMem)
@@ -105,7 +96,6 @@ void BitBltFromClipboard(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nH
         BitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcMem, nXSrc, nYSrc, dwRop);
         DeleteDC(hdcMem);
     }
-    CloseClipboard();
 }
 
 void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest, int XSrc, int YSrc, UINT uStartScan, UINT fuColorUse)
@@ -114,9 +104,6 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
     LPBYTE lpBits;
     HGLOBAL hGlobal;
     INT iPalSize;
-
-    if (!OpenClipboard(NULL))
-        return;
 
     hGlobal = GetClipboardData(uFormat);
     if (!hGlobal)
@@ -140,16 +127,12 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
     SetDIBitsToDevice(hdc, XDest, YDest, lpInfoHeader->biWidth, lpInfoHeader->biHeight, XSrc, YSrc, uStartScan, lpInfoHeader->biHeight, lpBits, (LPBITMAPINFO)lpInfoHeader, fuColorUse);
 
     GlobalUnlock(hGlobal);
-    CloseClipboard();
 }
 
 void PlayMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
 {
     LPMETAFILEPICT mp;
     HGLOBAL hGlobal;
-
-    if (!OpenClipboard(NULL))
-        return;
 
     hGlobal = GetClipboardData(CF_METAFILEPICT);
     if (!hGlobal)
@@ -164,17 +147,12 @@ void PlayMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     SetViewportOrgEx(hdc, lpRect->left, lpRect->top, NULL);
     PlayMetaFile(hdc, mp->hMF);
     GlobalUnlock(hGlobal);
-    CloseClipboard();
 }
 
 void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
 {
     HENHMETAFILE hEmf;
 
-    if (!OpenClipboard(NULL))
-        return;
-
     hEmf = GetClipboardData(CF_ENHMETAFILE);
     PlayEnhMetaFile(hdc, hEmf, lpRect);
-    CloseClipboard();
 }
