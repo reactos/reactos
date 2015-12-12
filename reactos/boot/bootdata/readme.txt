@@ -1,6 +1,6 @@
 ========================
-ReactOS™ Version 0.3.x
-Updated March 3, 2013
+ReactOS™ Version 0.4.x
+Updated December 12, 2015
 ========================
 
 1. What is ReactOS?
