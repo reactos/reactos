@@ -14,13 +14,14 @@
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-static VOID TestUM(IPAddr * Source)
+static VOID TestUM(IPAddr * Source, IPAddr * Gateway)
 {
     DWORD Err;
     ULONG Hw[2];
     DWORD Size;
     BOOL Tested = FALSE;
     PIP_ADAPTER_ADDRESSES Addresses, Current;
+    PIP_ADAPTER_INFO Adapters, CurrentA;
 
     Err = SendARP(0, 0, NULL, NULL);
     ok(Err == ERROR_INVALID_PARAMETER, "Expected error: ERROR_INVALID_PARAMETER. Got: %lx\n", Err);
@@ -117,15 +118,126 @@ static VOID TestUM(IPAddr * Source)
         break;
     }
 
+    free(Addresses);
+
     if (!Tested)
     {
         skip("No suitable interface found\n");
+        return;
     }
 
-    free(Addresses);
+    Size = sizeof(IP_ADAPTER_INFO);
+    Adapters = (PIP_ADAPTER_INFO)malloc(Size);
+    if (!Adapters)
+    {
+        skip("Memory failure\n");
+        return;
+    }
+
+    Err = GetAdaptersInfo(Adapters, &Size);
+    if (Err == ERROR_BUFFER_OVERFLOW)
+    {
+        free(Adapters);
+        Adapters = (PIP_ADAPTER_INFO)malloc(Size);
+        if (!Adapters)
+        {
+            skip("Memory failure\n");
+            return;
+        }
+
+        Err = GetAdaptersInfo(Adapters, &Size);
+    }
+
+    if (Err != ERROR_SUCCESS)
+    {
+        skip("GetAdaptersInfo() failure\n");
+        free(Adapters);
+        return;
+    }
+
+    Tested = FALSE;
+    for (CurrentA = Adapters; CurrentA; CurrentA = CurrentA->Next)
+    {
+        IPAddr IpAddr;
+        NTSTATUS Status;
+        const CHAR * Terminator;
+
+        Status = RtlIpv4StringToAddressA(CurrentA->IpAddressList.IpAddress.String, TRUE, &Terminator, (struct in_addr *)&IpAddr);
+        if (!NT_SUCCESS(Status))
+            continue;
+
+        if (IpAddr != *Source)
+            continue;
+
+        Status = RtlIpv4StringToAddressA(CurrentA->GatewayList.IpAddress.String, TRUE, &Terminator, (struct in_addr *)&IpAddr);
+        if (NT_SUCCESS(Status))
+        {
+            trace("Gateway found: %lu.%lu.%lu.%lu\n", IpAddr & 0xFF, (IpAddr >> 8) & 0xFF, (IpAddr >> 16) & 0xFF, (IpAddr >> 24) & 0xFF);
+            Tested = TRUE;
+            *Gateway = IpAddr;
+        }
+
+        break;
+    }
+
+    free(Adapters);
+
+    if (!Tested)
+    {
+        skip("No suitable gateway found\n");
+        return;
+    }
+
+    Size = 4;
+    Err = SendARP(*Gateway, *Source, Hw, &Size);
+    ok(Err == ERROR_GEN_FAILURE, "Expected error: ERROR_GEN_FAILURE. Got: %lx\n", Err);
+
+    Size = 6;
+    Err = SendARP(*Gateway, *Source, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 8;
+    Err = SendARP(*Gateway, *Source, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 4;
+    Err = SendARP(*Source, *Gateway, Hw, &Size);
+    ok(Err == ERROR_NO_SYSTEM_RESOURCES, "Expected error: ERROR_NO_SYSTEM_RESOURCES. Got: %lx\n", Err);
+
+    Size = 6;
+    Err = SendARP(*Source, *Gateway, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 8;
+    Err = SendARP(*Source, *Gateway, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 4;
+    Err = SendARP(*Gateway, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_GEN_FAILURE, "Expected error: ERROR_GEN_FAILURE. Got: %lx\n", Err);
+
+    Size = 6;
+    Err = SendARP(*Gateway, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 8;
+    Err = SendARP(*Gateway, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 4;
+    Err = SendARP(*Source, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_NO_SYSTEM_RESOURCES, "Expected error: ERROR_NO_SYSTEM_RESOURCES. Got: %lx\n", Err);
+
+    Size = 6;
+    Err = SendARP(*Source, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
+
+    Size = 8;
+    Err = SendARP(*Source, 0x08080808, Hw, &Size);
+    ok(Err == ERROR_SUCCESS, "Expected error: ERROR_SUCCESS. Got: %lx\n", Err);
 }
 
-static VOID TestKM(IPAddr Source)
+static VOID TestKM(IPAddr Source, IPAddr Gateway)
 {
     HANDLE hDevice;
     NTSTATUS Status;
@@ -378,6 +490,213 @@ static VOID TestKM(IPAddr Source)
     ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
     ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
 
+    if (!Gateway)
+    {
+        skip("No suitable gateway found\n");
+        CloseHandle(hEvent);
+        CloseHandle(hDevice);
+        return;
+    }
+
+    Ip[0] = Gateway;
+    Ip[1] = Source;
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), NULL, 0);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INVALID_BUFFER_SIZE, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 4);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_UNSUCCESSFUL, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 6);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 8);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    Ip[0] = Source;
+    Ip[1] = Gateway;
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), NULL, 0);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INVALID_BUFFER_SIZE, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 4);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INSUFFICIENT_RESOURCES, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 6);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 8);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    Ip[0] = Gateway;
+    Ip[1] = 0x08080808;
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), NULL, 0);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INVALID_BUFFER_SIZE, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 4);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_UNSUCCESSFUL, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 6);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 8);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    Ip[0] = Source;
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), NULL, 0);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INVALID_BUFFER_SIZE, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 4);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_INSUFFICIENT_RESOURCES, "NtDeviceIoControlFile() failed with unexpected status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 0, "Excepted 0, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 6);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
+    ResetEvent(hEvent);
+    IoStatusBlock.Status = STATUS_SUCCESS;
+    IoStatusBlock.Information = 0;
+    Status = NtDeviceIoControlFile(hDevice, hEvent, NULL, NULL, &IoStatusBlock, IOCTL_QUERY_IP_HW_ADDRESS, Ip, sizeof(Ip), Hw, 8);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(hEvent, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    ok(Status == STATUS_SUCCESS, "NtDeviceIoControlFile() failed with status: %lx\n", Status);
+    ok(IoStatusBlock.Information == 6, "Excepted 6, got: %lu\n", IoStatusBlock.Information);
+
     CloseHandle(hEvent);
     CloseHandle(hDevice);
 }
@@ -385,13 +704,14 @@ static VOID TestKM(IPAddr Source)
 START_TEST(SendARP)
 {
     IPAddr Source = 0;
+    IPAddr Gateway = 0;
 
-    TestUM(&Source);
+    TestUM(&Source, &Gateway);
     if (!Source)
     {
         skip("No suitable interface found\n");
         return;
     }
 
-    TestKM(Source);
+    TestKM(Source, Gateway);
 }
