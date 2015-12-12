@@ -204,5 +204,5 @@ UINT RealizeClipboardPalette(HWND hWnd)
 
     CloseClipboard();
 
-    PlayEnhMetaFile(hdc, hEmf, lpRect);
+    return uResult;
 }
