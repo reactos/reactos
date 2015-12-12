@@ -44,7 +44,7 @@ IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 
     for (i = 0; i < pWinStaObj->cNumClipFormats; ++i)
     {
-	    if (pWinStaObj->pClipBase[i].fmt == fmt)
+        if (pWinStaObj->pClipBase[i].fmt == fmt)
             return &pWinStaObj->pClipBase[i];
     }
 
@@ -232,14 +232,14 @@ IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
 
     pDibEl = IntIsFormatAvailable(pWinStaObj, CF_DIB);
     ASSERT(pDibEl && !IS_DATA_SYNTHESIZED(pDibEl));
-    if(!pDibEl->fGlobalHandle)
+    if (!pDibEl->fGlobalHandle)
         return;
 
     pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, pDibEl->hData, TYPE_CLIPDATA);
     if (!pMemObj)
         return;
 
-	pBmi = (BITMAPINFO*)pMemObj->Data;
+    pBmi = (BITMAPINFO*)pMemObj->Data;
 
     if (pMemObj->cbData < sizeof(DWORD) && pMemObj->cbData < pBmi->bmiHeader.biSize)
         goto cleanup;
@@ -341,11 +341,12 @@ UserEmptyClipboardData(PWINSTATION_OBJECT pWinSta)
     for (i = 0; i < pWinSta->cNumClipFormats; ++i)
     {
         pElement = &pWinSta->pClipBase[i];
-		IntFreeElementData(pElement);
+        IntFreeElementData(pElement);
     }
 
-    if(pWinSta->pClipBase)
+    if (pWinSta->pClipBase)
         ExFreePoolWithTag(pWinSta->pClipBase, USERTAG_CLIPBOARD);
+
     pWinSta->pClipBase = NULL;
     pWinSta->cNumClipFormats = 0;
 }
@@ -413,7 +414,7 @@ UserEnumClipboardFormats(UINT fmt)
     }
 
 cleanup:
-    if(pWinStaObj)
+    if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
     return Ret;
@@ -569,10 +570,10 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 
     if (pWindowRemove && pWinStaObj->spwndClipViewer)
     {
-        if(pWindowRemove == pWinStaObj->spwndClipViewer)
+        if (pWindowRemove == pWinStaObj->spwndClipViewer)
             pWinStaObj->spwndClipViewer = UserGetWindowObject(hWndNewNext);
 
-        if(pWinStaObj->spwndClipViewer)
+        if (pWinStaObj->spwndClipViewer)
             bRet = (BOOL)co_IntSendMessage(pWinStaObj->spwndClipViewer->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, (LPARAM)hWndNewNext);
     }
 
@@ -730,7 +731,7 @@ NtUserGetClipboardViewer(VOID)
     UserEnterShared();
 
     pWinStaObj = IntGetWinStaForCbAccess();
-    if(!pWinStaObj)
+    if (!pWinStaObj)
         goto cleanup;
 
     if (pWinStaObj->spwndClipViewer)
@@ -911,7 +912,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     _SEH2_END;
 
 cleanup:
-    if(pWinStaObj)
+    if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
     UserLeave();
@@ -976,7 +977,7 @@ UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
 cleanup:
     TRACE("NtUserSetClipboardData returns: %p\n", hRet);
 
-    if(pWinStaObj)
+    if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
     return hRet;
@@ -1041,7 +1042,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
     pWinStaObj->spwndClipViewer = pWindow;
 
 cleanup:
-    if(pWinStaObj)
+    if (pWinStaObj)
         ObDereferenceObject(pWinStaObj);
 
     UserLeave();
