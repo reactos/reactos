@@ -407,6 +407,30 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_QUERYNEWPALETTE:
+        {
+            if (RealizeClipboardPalette(hWnd) != GDI_ERROR)
+            {
+                InvalidateRect(hWnd, NULL, TRUE);
+                UpdateWindow(hWnd);
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        case WM_PALETTECHANGED:
+        {
+            if ((HWND)wParam != hWnd)
+            {
+                if (RealizeClipboardPalette(hWnd) != GDI_ERROR)
+                {
+                    InvalidateRect(hWnd, NULL, TRUE);
+                    UpdateWindow(hWnd);
+                }
+            }
+            break;
+        }
+
         default:
         {
             return DefWindowProc(hWnd, uMsg, wParam, lParam);

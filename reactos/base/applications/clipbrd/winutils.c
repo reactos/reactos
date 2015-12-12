@@ -156,3 +156,53 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     hEmf = GetClipboardData(CF_ENHMETAFILE);
     PlayEnhMetaFile(hdc, hEmf, lpRect);
 }
+
+UINT RealizeClipboardPalette(HWND hWnd)
+{
+    HPALETTE hPalette;
+    HPALETTE hOldPalette;
+    UINT uResult;
+    HDC hDevContext;
+
+    if (!OpenClipboard(NULL))
+    {
+        return GDI_ERROR;
+    }
+
+    if (!IsClipboardFormatAvailable(CF_PALETTE))
+    {
+        CloseClipboard();
+        return GDI_ERROR;
+    }
+
+    hPalette = GetClipboardData(CF_PALETTE);
+    if (!hPalette)
+    {
+        CloseClipboard();
+        return GDI_ERROR;
+    }
+
+    hDevContext = GetDC(hWnd);
+    if (!hDevContext)
+    {
+        CloseClipboard();
+        return GDI_ERROR;
+    }
+
+    hOldPalette = SelectPalette(hDevContext, hPalette, FALSE);
+    if (!hOldPalette)
+    {
+        ReleaseDC(hWnd, hDevContext);
+        CloseClipboard();
+        return GDI_ERROR;
+    }
+
+    uResult = RealizePalette(hDevContext);
+
+    SelectPalette(hDevContext, hOldPalette, FALSE);
+    ReleaseDC(hWnd, hDevContext);
+
+    CloseClipboard();
+
+    PlayEnhMetaFile(hdc, hEmf, lpRect);
+}
