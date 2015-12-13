@@ -87,6 +87,7 @@ list(APPEND SOURCE
     main/monitor.c
     main/kbdlayout.c
     main/keyboard.c
+    main/misc.c
     swm/winman.c
     wine/atom.c
     wine/class.c
