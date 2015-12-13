@@ -27,7 +27,10 @@ HWND hMainWnd;
 
 TCHAR szTitle[MAX_LOADSTRING];
 
+#define TIMER_SPEED   1
 #define REPAINT_SPEED   100
+
+DWORD lastTicks = 0;
 
 HWND hDesktopWindow = NULL;
 
@@ -148,26 +151,62 @@ void Refresh()
     }
 }
 
+void GetBestOverlapWithMonitors(LPRECT rect)
+{
+    int rcLeft, rcTop;
+    int rcWidth, rcHeight;
+    RECT rcMon;
+    HMONITOR hMon = MonitorFromRect(rect, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+
+    GetMonitorInfo(hMon, &info);
+
+    rcMon = info.rcMonitor;
+
+    rcLeft = rect->left;
+    rcTop = rect->top;
+    rcWidth  = (rect->right - rect->left);
+    rcHeight = (rect->bottom - rect->top);
+
+    if (rcLeft < rcMon.left)
+       rcLeft = rcMon.left;
+
+    if (rcTop < rcMon.top)
+       rcTop = rcMon.top;
+
+    if (rcLeft > (rcMon.right - rcWidth))
+        rcLeft = (rcMon.right - rcWidth);
+
+    if (rcTop > (rcMon.bottom - rcHeight))
+        rcTop = (rcMon.bottom - rcHeight);
+
+    OffsetRect(rect, (rcLeft-rect->left), (rcTop-rect->top));
+}
+
 void Draw(HDC aDc)
 {
     HDC desktopHdc = NULL;
-    HDC HdcStrech;
+    HDC HdcStretch;
     HANDLE hOld;
     HBITMAP HbmpStrech;
-    
-    RECT R;
-    RECT appRect;
+
+    RECT sourceRect, intersectedRect;
+    RECT targetRect, appRect;
     DWORD rop = SRCCOPY;
     CURSORINFO cinfo;
     ICONINFO iinfo;
 
-    int Width, Height, AppWidth, AppHeight;
-    LONG blitAreaWidth, blitAreaHeight, blitAreaX, blitAreaY;
+    int AppWidth, AppHeight;
+    LONG blitAreaWidth, blitAreaHeight;
 
-    desktopHdc = GetWindowDC(hDesktopWindow);
+    if (bInvertColors)
+        rop = NOTSRCCOPY;
+
+    desktopHdc = GetDC(0);
 
     GetClientRect(hMainWnd, &appRect);
-    GetWindowRect(hDesktopWindow, &R);
+    GetWindowRect(hDesktopWindow, &sourceRect);
 
     ZeroMemory(&cinfo, sizeof(cinfo));
     ZeroMemory(&iinfo, sizeof(iinfo));
@@ -175,39 +214,9 @@ void Draw(HDC aDc)
     GetCursorInfo(&cinfo);
     GetIconInfo(cinfo.hCursor, &iinfo);
 
-     /* Create a memory DC compatible with client area DC */
-    HdcStrech = CreateCompatibleDC(desktopHdc);
-
-    /* Create a bitmap compatible with the client area DC */
-    HbmpStrech = CreateCompatibleBitmap(
-        desktopHdc,
-        R.right,
-        R.bottom);
-
-    /* Select our bitmap in memory DC and save the old one */
-    hOld = SelectObject(HdcStrech , HbmpStrech);
-    
-    /* Paint the screen bitmap to our in memory DC */
-    BitBlt(
-        HdcStrech,
-        0,
-        0,
-        R.right,
-        R.bottom,
-        desktopHdc,
-        0,
-        0,
-        SRCCOPY);
-        
-    /* Draw the mouse pointer in the right position */
-    DrawIcon(
-        HdcStrech ,
-        pMouse.x - iinfo.xHotspot, // - 10,
-        pMouse.y - iinfo.yHotspot, // - 10,
-        cinfo.hCursor);
-
-    Width  = (R.right - R.left);
-    Height = (R.bottom - R.top);
+    targetRect = appRect;
+    ClientToScreen(hMainWnd, (POINT*)&targetRect.left);
+    ClientToScreen(hMainWnd, (POINT*)&targetRect.right);
 
     AppWidth  = (appRect.right - appRect.left);
     AppHeight = (appRect.bottom - appRect.top);
@@ -215,23 +224,49 @@ void Draw(HDC aDc)
     blitAreaWidth  = AppWidth / iZoom;
     blitAreaHeight = AppHeight / iZoom;
 
-    blitAreaX = (cp.x) - (blitAreaWidth /2);
-    blitAreaY = (cp.y) - (blitAreaHeight /2);
+    sourceRect.left = (cp.x) - (blitAreaWidth /2);
+    sourceRect.top = (cp.y) - (blitAreaHeight /2);
+    sourceRect.right = sourceRect.left + blitAreaWidth;
+    sourceRect.bottom = sourceRect.top + blitAreaHeight;
 
-    if (blitAreaX < 0)
-       blitAreaX = 0;
+    GetBestOverlapWithMonitors(&sourceRect);
 
-    if (blitAreaY < 0)
-       blitAreaY = 0;
+     /* Create a memory DC compatible with client area DC */
+    HdcStretch = CreateCompatibleDC(desktopHdc);
 
-    if (blitAreaX > (Width - blitAreaWidth))
-        blitAreaX = (Width - blitAreaWidth);
+    /* Create a bitmap compatible with the client area DC */
+    HbmpStrech = CreateCompatibleBitmap(
+        desktopHdc,
+        blitAreaWidth,
+        blitAreaHeight);
 
-    if (blitAreaY > (Height - blitAreaHeight))
-        blitAreaY = (Height - blitAreaHeight);
+    /* Select our bitmap in memory DC and save the old one */
+    hOld = SelectObject(HdcStretch , HbmpStrech);
 
-    if (bInvertColors)
-        rop = NOTSRCCOPY;
+    /* Paint the screen bitmap to our in memory DC */
+    BitBlt(
+        HdcStretch,
+        0,
+        0,
+        blitAreaWidth,
+        blitAreaHeight,
+        desktopHdc,
+        sourceRect.left,
+        sourceRect.top,
+        rop);
+
+    if (IntersectRect(&intersectedRect, &sourceRect, &targetRect))
+    {
+        OffsetRect(&intersectedRect, -sourceRect.left, -sourceRect.top);
+        FillRect(HdcStretch, &intersectedRect, GetStockObject(DC_BRUSH));
+    }
+
+    /* Draw the mouse pointer in the right position */
+    DrawIcon(
+        HdcStretch ,
+        pMouse.x - iinfo.xHotspot - sourceRect.left, // - 10,
+        pMouse.y - iinfo.yHotspot - sourceRect.top, // - 10,
+        cinfo.hCursor);
 
     /* Blast the stretched image from memory DC to window DC */
     StretchBlt(
@@ -240,22 +275,21 @@ void Draw(HDC aDc)
         0,
         AppWidth,
         AppHeight,
-        HdcStrech,
-        blitAreaX,
-        blitAreaY,
+        HdcStretch,
+        0,
+        0,
         blitAreaWidth,
         blitAreaHeight,
-        rop | NOMIRRORBITMAP);
-        
-        
+        SRCCOPY | NOMIRRORBITMAP);
+
     /* Cleanup */
     if (iinfo.hbmMask)
         DeleteObject(iinfo.hbmMask);
     if (iinfo.hbmColor)
         DeleteObject(iinfo.hbmColor);
-    SelectObject(HdcStrech, hOld);
+    SelectObject(HdcStretch, hOld);
     DeleteObject (HbmpStrech);
-    DeleteDC(HdcStrech);
+    DeleteDC(HdcStretch);
     ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
@@ -267,53 +301,85 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         case WM_TIMER:
         {
-            POINT pNewMouse;
-            POINT pNewCaret;
-            POINT pNewFocus;
-            HWND hwnd1, hwnd2, hwnd3;
-            DWORD a, b;
-            RECT controlRect;
+            BOOL hasMoved = FALSE;
 
-            //Get current mouse position
-            GetCursorPos (&pNewMouse);
-
-            //Get caret position
-            hwnd1 = GetForegroundWindow ();
-            a = GetWindowThreadProcessId(hwnd1, NULL);
-            b = GetCurrentThreadId();
-            AttachThreadInput (a, b, TRUE);
-            hwnd2 = GetFocus();
-
-            GetCaretPos( &pNewCaret);
-            ClientToScreen (hwnd2, (LPPOINT) &pNewCaret);
-            AttachThreadInput (a, b, FALSE);
-
-            //Get current control focus
-            hwnd3 = GetFocus ();
-            GetWindowRect (hwnd3 , &controlRect);
-            pNewFocus.x = controlRect.left;
-            pNewFocus.y = controlRect.top;
-
-            //If mouse has moved ....
-            if (((pMouse.x != pNewMouse.x) || (pMouse.y != pNewMouse.y)) && bFollowMouse)
+            if (bFollowMouse)
             {
-                //Update to new position
-                pMouse = pNewMouse;
-                cp = pNewMouse;
+                POINT pNewMouse;
+
+                //Get current mouse position
+                GetCursorPos (&pNewMouse);
+
+                //If mouse has moved ...
+                if (((pMouse.x != pNewMouse.x) || (pMouse.y != pNewMouse.y)))
+                {
+                    //Update to new position
+                    pMouse = pNewMouse;
+                    cp = pNewMouse;
+                    hasMoved = TRUE;
+                }
             }
-            else if (((pCaret.x != pNewCaret.x) || (pCaret.y != pNewCaret.y)) && bFollowCaret)
+            
+            if (bFollowCaret && !hasMoved)
             {
-                //Update to new position
-                pCaret = pNewCaret;
-                cp = pNewCaret;
+                POINT pNewCaret;
+                HWND hwnd2;
+
+                //Get caret position
+                HWND hwnd1 = GetForegroundWindow ();
+                DWORD a = GetWindowThreadProcessId(hwnd1, NULL);
+                DWORD b = GetCurrentThreadId();
+                AttachThreadInput (a, b, TRUE);
+                hwnd2 = GetFocus();
+
+                GetCaretPos( &pNewCaret);
+                ClientToScreen (hwnd2, (LPPOINT) &pNewCaret);
+                AttachThreadInput (a, b, FALSE);
+
+                if (((pCaret.x != pNewCaret.x) || (pCaret.y != pNewCaret.y)))
+                {
+                    //Update to new position
+                    pCaret = pNewCaret;
+                    cp = pNewCaret;
+                    hasMoved = TRUE;
+                }
             }
-            else if (((pFocus.x != pNewFocus.x) || (pFocus.y != pNewFocus.y)) && bFollowFocus)
+
+            if (bFollowFocus && !hasMoved)
             {
-                //Update to new position
-                pFocus = pNewFocus;
-                cp = pNewFocus;
+                POINT pNewFocus;
+                RECT controlRect;
+
+                //Get current control focus
+                HWND hwnd3 = GetFocus ();
+                GetWindowRect (hwnd3 , &controlRect);
+                pNewFocus.x = controlRect.left;
+                pNewFocus.y = controlRect.top;
+
+                if(((pFocus.x != pNewFocus.x) || (pFocus.y != pNewFocus.y)))
+                {
+                    //Update to new position
+                    pFocus = pNewFocus;
+                    cp = pNewFocus;
+                    hasMoved = TRUE;
+                }
             }
-            Refresh();
+
+            if(!hasMoved)
+            {
+                DWORD newTicks = GetTickCount();
+                DWORD elapsed = (newTicks - lastTicks);
+                if(elapsed > REPAINT_SPEED)
+                {
+                    hasMoved = TRUE;
+                }
+            }
+
+            if(hasMoved)
+            {
+                lastTicks = GetTickCount();
+                Refresh();
+            }
         }
         break;
 
@@ -367,7 +433,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hDesktopWindow = GetDesktopWindow();
 
             /* Set the timer */
-            SetTimer (hWnd , 1, REPAINT_SPEED , NULL);
+            SetTimer (hWnd , 1, TIMER_SPEED , NULL);
             break;
 
         default:
