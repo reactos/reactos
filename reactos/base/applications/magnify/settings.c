@@ -18,7 +18,7 @@ BOOL bShowWarning = TRUE;
 
 BOOL bFollowMouse = TRUE;
 BOOL bFollowFocus = TRUE;
-BOOL bFollowCaret = TRUE;
+BOOL bFollowCaret = FALSE; // FIXME: Default to false because AttachThreadInput seems to break.
 
 BOOL bInvertColors = FALSE;
 BOOL bStartMinimized = FALSE;

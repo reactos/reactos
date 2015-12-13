@@ -3,8 +3,9 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/magnify/magnifier.c
  * PURPOSE:     Magnification of parts of the screen.
- * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
- *
+ * AUTHORS:
+ *     Marc Piulachs <marc.piulachs@codexchange.net>
+ *     David Quintana <gigaherz@gmail.com>
  */
 
 /* TODO: AppBar */
@@ -14,6 +15,8 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <shellapi.h>
+#include <windowsx.h>
 
 #include "resource.h"
 
@@ -28,11 +31,18 @@ HWND hMainWnd;
 TCHAR szTitle[MAX_LOADSTRING];
 
 #define TIMER_SPEED   1
-#define REPAINT_SPEED   100
+#define REPAINT_SPEED 100
 
 DWORD lastTicks = 0;
 
 HWND hDesktopWindow = NULL;
+
+#define APPMSG_NOTIFYICON (WM_APP+1)
+HICON notifyIcon;
+NOTIFYICONDATA nid;
+HMENU notifyMenu;
+HWND hOptionsDialog;
+BOOL bOptionsDialog = FALSE;
 
 /* Current magnified area */
 POINT cp;
@@ -102,7 +112,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wc.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
     wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszMenuName     = MAKEINTRESOURCE(IDC_MAGNIFIER);
+    wc.lpszMenuName     = NULL; //MAKEINTRESOURCE(IDC_MAGNIFIER);
     wc.lpszClassName    = szWindowClass;
 
     return RegisterClass(&wc);
@@ -135,6 +145,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(hMainWnd, bStartMinimized ? SW_MINIMIZE : nCmdShow);
     UpdateWindow(hMainWnd);
+
+    // Windows 2003's Magnifier always shows this dialog, and exits when the dialog isclosed.
+    // Should we add a custom means to prevent opening it?
+    hOptionsDialog = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hMainWnd, OptionsProc);
 
     if (bShowWarning)
         DialogBox(hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
@@ -293,6 +307,22 @@ void Draw(HDC aDc)
     ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
+void HandleNotifyIconMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    POINT pt;
+
+    switch(lParam)
+    {
+        case WM_LBUTTONUP:
+            PostMessage(hMainWnd, WM_COMMAND, IDM_OPTIONS, 0);
+            break;
+        case WM_RBUTTONUP:
+            GetCursorPos (&pt);
+            TrackPopupMenu(notifyMenu, 0, pt.x, pt.y, 0, hWnd, NULL);
+            break;
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId;
@@ -390,7 +420,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
                 case IDM_OPTIONS:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, OptionsProc);
+                    if(bOptionsDialog)
+                    {
+                        ShowWindow(hOptionsDialog, SW_HIDE);
+                    }
+                    else
+                    {
+                        ShowWindow(hOptionsDialog, SW_SHOW);
+                    }
                     break;
                 case IDM_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
@@ -423,9 +460,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SaveSettings();
             KillTimer(hWnd , 1);
             PostQuitMessage(0);
+
+            /* Cleanup notification icon */
+            ZeroMemory(&nid, sizeof(nid));
+            nid.cbSize = sizeof(nid);
+            nid.uFlags = NIF_MESSAGE;
+            nid.hWnd = hWnd;
+            nid.uCallbackMessage = APPMSG_NOTIFYICON;
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+
+            DestroyIcon(notifyIcon);
+
+            DestroyWindow(hOptionsDialog);
             break;
 
         case WM_CREATE:
+        {
+            HMENU tempMenu;
+
             /* Load settings from registry */
             LoadSettings();
 
@@ -434,7 +486,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             /* Set the timer */
             SetTimer (hWnd , 1, TIMER_SPEED , NULL);
+
+            /* Notification icon */
+            notifyIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 16, 16, 0);
+
+            ZeroMemory(&nid, sizeof(nid));
+            nid.cbSize = sizeof(nid);
+            nid.uFlags = NIF_ICON | NIF_MESSAGE;
+            nid.hWnd = hWnd;
+            nid.uCallbackMessage = APPMSG_NOTIFYICON;
+            nid.hIcon = notifyIcon;
+            Shell_NotifyIcon(NIM_ADD, &nid);
+            
+            tempMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_MAGNIFIER));
+            notifyMenu = GetSubMenu(tempMenu, 0);
+            RemoveMenu(tempMenu, 0, MF_BYPOSITION);
+            DestroyMenu(tempMenu);
+
             break;
+        }
+
+        case APPMSG_NOTIFYICON:
+            HandleNotifyIconMessage(hWnd, wParam, lParam);
+
+            break;
+
+        case WM_CONTEXTMENU:
+        {
+            TrackPopupMenu(notifyMenu, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hWnd, NULL);
+            break;
+        }
 
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -468,6 +549,9 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
+        case WM_SHOWWINDOW:
+            bOptionsDialog = wParam;
+            break;
         case WM_INITDIALOG:
         {
             // Add the zoom items...
@@ -508,7 +592,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
         {
             case IDOK:
             case IDCANCEL:
-                EndDialog(hDlg, LOWORD(wParam));
+                ShowWindow(hDlg, SW_HIDE);
                 return (INT_PTR)TRUE;
 
             case IDC_BUTTON_HELP:
