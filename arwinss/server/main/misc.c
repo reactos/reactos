@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #include <ntstatus.h>
-//#include <shutdown.h>
+#include <shutdown.h>
 #include <csr.h>
 
 extern PEPROCESS CsrProcess;
@@ -72,8 +72,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_END;
 
-            Status = STATUS_NOT_IMPLEMENTED; //UserInitiateShutdown(Thread, &CapturedFlags);
-            UNIMPLEMENTED;
+            Status = UserInitiateShutdown(Thread, &CapturedFlags);
 
             /* Return the modified value to the caller */
             _SEH2_TRY
@@ -115,8 +114,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_END;
 
-            Status = STATUS_NOT_IMPLEMENTED; //UserEndShutdown(Thread, ShutdownStatus);
-            UNIMPLEMENTED;
+            Status = UserEndShutdown(Thread, ShutdownStatus);
             break;
         }
 

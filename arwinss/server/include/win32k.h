@@ -52,6 +52,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ntgdihdl.h>
 #include <ntgdi.h>
 
+/* Undocumented user definitions */
+#include <undocuser.h>
+
 /* Internal  Win32K Header */
 #include <win32kp.h>
 
