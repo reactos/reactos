@@ -4,14 +4,13 @@
 
 [Section]
 Name = µTorrent
-Version = 3.4.3
+Version = 3.4.5
 License = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
-Size = 1.66 MB
+Size = 1.93 MB
 Category = 5
 URLSite = http://www.utorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/utorrent/os/windows/track/stable/utorrent.exe
-SHA1 = 8fffab0df9bf581c209337fc07ea93d2ba22cc8c
 CDPath = none
 
 [Section.0407]
