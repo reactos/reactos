@@ -1,6 +1,6 @@
 Index: base/system/winlogon/winlogon.c
 ===================================================================
---- base/system/winlogon/winlogon.c	(revision 69795)
+--- base/system/winlogon/winlogon.c	(revision 70340)
 +++ base/system/winlogon/winlogon.c	(working copy)
 @@ -397,7 +397,7 @@
          HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
@@ -13,22 +13,24 @@ Index: base/system/winlogon/winlogon.c
  #if 0
 Index: cmake/baseaddress.cmake
 ===================================================================
---- cmake/baseaddress.cmake	(revision 69795)
+--- cmake/baseaddress.cmake	(revision 70340)
 +++ cmake/baseaddress.cmake	(working copy)
-@@ -2,8 +2,8 @@
+@@ -2,9 +2,9 @@
  set(baseaddress_kernel32             0x7c750000)
  set(baseaddress_msvcrt               0x7c6b0000)
  set(baseaddress_advapi32             0x7c610000)
 -set(baseaddress_gdi32                0x7c570000)
 -set(baseaddress_user32               0x7c3d0000)
+-set(baseaddress_dhcpcsvc             0x7c380000)
 +set(baseaddress_gdi32                0x7c530000)
 +set(baseaddress_user32               0x7c380000)
- set(baseaddress_dhcpcsvc             0x7c380000)
++set(baseaddress_dhcpcsvc             0x7cb80000)
  set(baseaddress_dnsapi               0x7c330000)
  set(baseaddress_icmp                 0x7c300000)
+ set(baseaddress_iphlpapi             0x7c2b0000)
 Index: cmake/config.cmake
 ===================================================================
---- cmake/config.cmake	(revision 69795)
+--- cmake/config.cmake	(revision 70340)
 +++ cmake/config.cmake	(working copy)
 @@ -58,6 +58,9 @@
  "Whether to compile support for ELF files.
@@ -42,7 +44,7 @@ Index: cmake/config.cmake
  If you live in a country where software patents are valid/apply, don't
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 69795)
+--- CMakeLists.txt	(revision 70340)
 +++ CMakeLists.txt	(working copy)
 @@ -165,6 +165,10 @@
          add_definitions(-D_WINKD_=1)
@@ -67,7 +69,7 @@ Index: CMakeLists.txt
      create_registry_hives()
 Index: dll/win32/kernel32/client/dllmain.c
 ===================================================================
---- dll/win32/kernel32/client/dllmain.c	(revision 69795)
+--- dll/win32/kernel32/client/dllmain.c	(revision 70340)
 +++ dll/win32/kernel32/client/dllmain.c	(working copy)
 @@ -131,7 +131,7 @@
                           SessionId,
@@ -80,7 +82,7 @@ Index: dll/win32/kernel32/client/dllmain.c
                                                BASESRV_SERVERDLL_INDEX,
 Index: dll/win32/msgina/gui.c
 ===================================================================
---- dll/win32/msgina/gui.c	(revision 69795)
+--- dll/win32/msgina/gui.c	(revision 70340)
 +++ dll/win32/msgina/gui.c	(working copy)
 @@ -73,6 +73,7 @@
  
@@ -111,7 +113,7 @@ Index: dll/win32/msgina/gui.c
          /*
 Index: include/asm/syscalls.inc
 ===================================================================
---- include/asm/syscalls.inc	(revision 69795)
+--- include/asm/syscalls.inc	(revision 70340)
 +++ include/asm/syscalls.inc	(working copy)
 @@ -1,4 +1,4 @@
 -
@@ -323,7 +325,7 @@ Index: include/asm/syscalls.inc
 -#endif
 Index: include/psdk/winddi.h
 ===================================================================
---- include/psdk/winddi.h	(revision 69795)
+--- include/psdk/winddi.h	(revision 70340)
 +++ include/psdk/winddi.h	(working copy)
 @@ -2911,7 +2911,7 @@
      _In_ ULONG cjSize,
@@ -336,7 +338,7 @@ Index: include/psdk/winddi.h
  APIENTRY
 Index: include/reactos/wine/config.h
 ===================================================================
---- include/reactos/wine/config.h	(revision 69795)
+--- include/reactos/wine/config.h	(revision 70340)
 +++ include/reactos/wine/config.h	(working copy)
 @@ -1,3 +1,5 @@
 +#include "reactos/buildno.h"
@@ -346,7 +348,7 @@ Index: include/reactos/wine/config.h
  /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
 Index: lib/3rdparty/CMakeLists.txt
 ===================================================================
---- lib/3rdparty/CMakeLists.txt	(revision 69795)
+--- lib/3rdparty/CMakeLists.txt	(revision 70340)
 +++ lib/3rdparty/CMakeLists.txt	(working copy)
 @@ -2,7 +2,9 @@
  add_subdirectory(adns)
@@ -360,7 +362,7 @@ Index: lib/3rdparty/CMakeLists.txt
  add_subdirectory(libsamplerate)
 Index: subsystems/win32/csrsrv/init.c
 ===================================================================
---- subsystems/win32/csrsrv/init.c	(revision 69795)
+--- subsystems/win32/csrsrv/init.c	(revision 70340)
 +++ subsystems/win32/csrsrv/init.c	(working copy)
 @@ -20,7 +20,7 @@
  /* DATA ***********************************************************************/
@@ -373,7 +375,7 @@ Index: subsystems/win32/csrsrv/init.c
  HANDLE CsrObjectDirectory = NULL;
 Index: win32ss/CMakeLists.txt
 ===================================================================
---- win32ss/CMakeLists.txt	(revision 69795)
+--- win32ss/CMakeLists.txt	(revision 70340)
 +++ win32ss/CMakeLists.txt	(working copy)
 @@ -10,7 +10,10 @@
  PROJECT(WIN32SS)
@@ -402,7 +404,7 @@ Index: win32ss/CMakeLists.txt
 \ No newline at end of file
 Index: win32ss/drivers/CMakeLists.txt
 ===================================================================
---- win32ss/drivers/CMakeLists.txt	(revision 69795)
+--- win32ss/drivers/CMakeLists.txt	(revision 70340)
 +++ win32ss/drivers/CMakeLists.txt	(working copy)
 @@ -1,6 +1,8 @@
  
@@ -415,7 +417,7 @@ Index: win32ss/drivers/CMakeLists.txt
  add_subdirectory(watchdog)
 Index: win32ss/include/ntgdihdl.h
 ===================================================================
---- win32ss/include/ntgdihdl.h	(revision 69795)
+--- win32ss/include/ntgdihdl.h	(revision 70340)
 +++ win32ss/include/ntgdihdl.h	(working copy)
 @@ -260,6 +260,7 @@
      DWORD           dwCFCount;
@@ -447,7 +449,7 @@ Index: win32ss/include/ntgdihdl.h
      FLONG    AttrFlags;
 Index: win32ss/user/winsrv/consrv/conoutput.c
 ===================================================================
---- win32ss/user/winsrv/consrv/conoutput.c	(revision 69795)
+--- win32ss/user/winsrv/consrv/conoutput.c	(revision 70340)
 +++ win32ss/user/winsrv/consrv/conoutput.c	(working copy)
 @@ -99,9 +99,13 @@
       * Indeed, the palette handle comes from a console app
@@ -465,7 +467,7 @@ Index: win32ss/user/winsrv/consrv/conoutput.c
                                       Buffer,
 Index: win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
 ===================================================================
---- win32ss/user/winsrv/consrv/frontends/gui/conwnd.c	(revision 69795)
+--- win32ss/user/winsrv/consrv/frontends/gui/conwnd.c	(revision 70340)
 +++ win32ss/user/winsrv/consrv/frontends/gui/conwnd.c	(working copy)
 @@ -159,7 +159,11 @@
      }
@@ -481,9 +483,9 @@ Index: win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
      return (WndClassAtom != 0);
 Index: win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
 ===================================================================
---- win32ss/user/winsrv/consrv/frontends/gui/guiterm.c	(revision 69795)
+--- win32ss/user/winsrv/consrv/frontends/gui/guiterm.c	(revision 70340)
 +++ win32ss/user/winsrv/consrv/frontends/gui/guiterm.c	(working copy)
-@@ -160,9 +160,14 @@
+@@ -161,9 +161,14 @@
      /* Assign this console input thread to this desktop */
      DesktopConsoleThreadInfo.DesktopHandle = GuiInitInfo->Desktop; // Duplicated desktop handle
      DesktopConsoleThreadInfo.ThreadId = InputThreadId;
@@ -498,7 +500,7 @@ Index: win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
      if (!NT_SUCCESS(Status)) goto Quit;
  
      /* Connect this CSR thread to the USER subsystem */
-@@ -299,9 +304,13 @@
+@@ -301,9 +306,13 @@
      /* Remove this console input thread from this desktop */
      // DesktopConsoleThreadInfo.DesktopHandle;
      DesktopConsoleThreadInfo.ThreadId = 0;
@@ -512,7 +514,7 @@ Index: win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
  
      /* Close the duplicated desktop handle */
      CloseDesktop(DesktopConsoleThreadInfo.DesktopHandle); // NtUserCloseDesktop
-@@ -358,11 +367,16 @@
+@@ -366,11 +375,16 @@
      {
          RtlInitUnicodeString(&DesktopPath, L"Default");
      }
@@ -532,27 +534,9 @@ Index: win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
  
 Index: win32ss/user/winsrv/usersrv/init.c
 ===================================================================
---- win32ss/user/winsrv/usersrv/init.c	(revision 69795)
+--- win32ss/user/winsrv/usersrv/init.c	(revision 70340)
 +++ win32ss/user/winsrv/usersrv/init.c	(working copy)
-@@ -173,6 +173,7 @@
-         CsrApiPort = CsrQueryApiPort();
- 
-         /* Inform win32k about the API port */
-+#ifndef _ARWINSS_
-         Status = NtUserSetInformationThread(NtCurrentThread(),
-                                             UserThreadCsrApiPort,
-                                             &CsrApiPort,
-@@ -181,6 +182,9 @@
-         {
-             return Status;
-         }
-+#else
-+        UNIMPLEMENTED
-+#endif
-     }
- 
-     /* Check connection info validity */
-@@ -199,9 +203,14 @@
+@@ -199,9 +199,14 @@
  
      /* Pass the request to win32k */
      ConnectInfo->dwDispatchCount = 0; // gDispatchTableValues;
@@ -567,7 +551,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
  
      return Status;
  }
-@@ -254,7 +263,11 @@
+@@ -254,7 +259,11 @@
      }
  
      /* Set the process creation notify routine for BASE */
@@ -581,7 +565,7 @@ Index: win32ss/user/winsrv/usersrv/init.c
      Status = NtUserInitialize(USER_VERSION,
 Index: win32ss/user/winsrv/usersrv/shutdown.c
 ===================================================================
---- win32ss/user/winsrv/usersrv/shutdown.c	(revision 69795)
+--- win32ss/user/winsrv/usersrv/shutdown.c	(revision 70340)
 +++ win32ss/user/winsrv/usersrv/shutdown.c	(working copy)
 @@ -381,7 +381,12 @@
  static BOOLEAN
@@ -595,33 +579,4 @@ Index: win32ss/user/winsrv/usersrv/shutdown.c
 +#endif
  }
  
- 
-@@ -678,9 +683,14 @@
-     while (TRUE)
-     {
-         /* Notify Win32k and potentially Winlogon of the shutdown */
-+#ifndef _ARWINSS_
-         Status = NtUserSetInformationThread(CsrThread->ThreadHandle,
-                                             UserThreadInitiateShutdown,
-                                             &Flags, sizeof(Flags));
-+#else
-+        Status = STATUS_SUCCESS;
-+        UNIMPLEMENTED
-+#endif
-         DPRINT1("Win32k says: %lx\n", Status);
-         switch (Status)
-         {
-@@ -736,9 +746,13 @@
-     // FIXME: If Status == STATUS_CANCELLED, call RecordShutdownReason
- 
-     /* Tell Win32k and potentially Winlogon that we're done */
-+#ifndef _ARWINSS_
-     NtUserSetInformationThread(CsrThread->ThreadHandle,
-                                UserThreadEndShutdown,
-                                &Status, sizeof(Status));
-+#else
-+    UNIMPLEMENTED
-+#endif
- 
-     DPRINT1("SrvExitWindowsEx returned 0x%08x\n", Status);
  
