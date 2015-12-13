@@ -350,12 +350,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_TIMER:
         {
             BOOL hasMoved = FALSE;
-            HWND hwndForeground = GetForegroundWindow ();
-            DWORD threadId = GetWindowThreadProcessId(hwndForeground, NULL);
+
             GUITHREADINFO guiInfo;
             guiInfo.cbSize = sizeof(guiInfo);
 
-            GetGUIThreadInfo(threadId, &guiInfo);
+            GetGUIThreadInfo(0, &guiInfo);
 
             if (bFollowMouse)
             {
@@ -374,7 +373,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
             
-            if (bFollowCaret && hwndForeground && guiInfo.hwndCaret)
+            if (bFollowCaret && guiInfo.hwndCaret)
             {
                 POINT ptCaret;
                 ptCaret.x = (guiInfo.rcCaret.left + guiInfo.rcCaret.right) / 2;
@@ -394,7 +393,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
 
-            if (bFollowFocus && hwndForeground && guiInfo.hwndFocus)
+            if (bFollowFocus && guiInfo.hwndFocus)
             {
                 POINT ptFocus;
                 RECT activeRect;

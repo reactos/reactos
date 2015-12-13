@@ -371,27 +371,31 @@ NtUserGetGUIThreadInfo(
       }
       W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
       Desktop = W32Thread->rpdesk;
+
+      if (!Thread || !Desktop )
+      {
+        if(Thread)
+           ObDereferenceObject(Thread);
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        RETURN( FALSE);
+      }
+      
+      if ( W32Thread->MessageQueue )
+        MsgQueue = W32Thread->MessageQueue;
+      else
+      {
+        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+      }
    }
    else
    {  /* Get the foreground thread */
-      Thread = PsGetCurrentThread();
-      W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
-      Desktop = W32Thread->rpdesk;
-   }
-
-   if (!Thread || !Desktop )
-   {
-      if(idThread && Thread)
-         ObDereferenceObject(Thread);
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN( FALSE);
-   }
-
-   if ( W32Thread->MessageQueue )
-      MsgQueue = W32Thread->MessageQueue;
-   else
-   {
-      if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+      /* FIXME: Handle NULL queue properly? */
+      MsgQueue = IntGetFocusMessageQueue();
+      if(!MsgQueue)
+      {
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        RETURN( FALSE);
+      }
    }
 
    CaretInfo = &MsgQueue->CaretInfo;
