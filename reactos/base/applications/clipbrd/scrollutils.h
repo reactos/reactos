@@ -15,6 +15,7 @@ typedef struct _SCROLLSTATE
 } SCROLLSTATE, *LPSCROLLSTATE;
 
 void HandleKeyboardScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void HandleMouseScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state);
 void HandleHorizontalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state);
 void HandleVerticalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state);
 void UpdateWindowScrollState(HWND hWnd, HBITMAP hBmp, LPSCROLLSTATE lpState);

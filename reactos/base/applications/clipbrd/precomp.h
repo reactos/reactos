@@ -3,6 +3,8 @@
 
 // #pragma once
 
+#include <limits.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -29,6 +31,7 @@ typedef struct _CLIPBOARD_GLOBALS
     HMENU hMenu;
     UINT uDisplayFormat;
     UINT uCheckedItem;
+    UINT uLinesToScroll;
     HBITMAP hDspBmp;
 } CLIPBOARD_GLOBALS;
 

@@ -13,6 +13,20 @@ static const WCHAR szClassName[] = L"ClipBookWClass";
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
 
+static void UpdateLinesToScroll(void)
+{
+    UINT uLinesToScroll;
+
+    if (!SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &uLinesToScroll, 0))
+    {
+        Globals.uLinesToScroll = 3;
+    }
+    else
+    {
+        Globals.uLinesToScroll = uLinesToScroll;
+    }
+}
+
 static void SaveClipboardToFile(void)
 {
     OPENFILENAMEW sfn;
@@ -122,7 +136,7 @@ static void SetDisplayFormat(UINT uFormat)
     }
     else
     {
-        Globals.uDisplayFormat =  uFormat;
+        Globals.uDisplayFormat = uFormat;
     }
 
     if (Globals.hDspBmp)
@@ -344,6 +358,12 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_MOUSEWHEEL:
+        {
+            HandleMouseScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            break;
+        }
+
         case WM_HSCROLL:
         {
             HandleHorizontalScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
@@ -475,6 +495,15 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_SETTINGCHANGE:
+        {
+            if (wParam == SPI_SETWHEELSCROLLLINES)
+            {
+                UpdateLinesToScroll();
+            }
+            break;
+        }
+
         default:
         {
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -544,6 +573,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     {
         ShowLastWin32Error(Globals.hMainWnd);
     }
+
+    UpdateLinesToScroll();
 
     while (GetMessageW(&msg, 0, 0, 0))
     {

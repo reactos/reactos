@@ -108,17 +108,21 @@ void DeleteClipboardContent(void)
         ShowLastWin32Error(Globals.hMainWnd);
     }
 
-    if (!CloseClipboard())
-    {
-        ShowLastWin32Error(Globals.hMainWnd);
-    }
+    CloseClipboard();
 }
 
 UINT GetAutomaticClipboardFormat(void)
 {
-    UINT uFormatList[] = {CF_UNICODETEXT, CF_ENHMETAFILE, CF_METAFILEPICT, CF_DIBV5, CF_DIB, CF_BITMAP};
+    static UINT uFormatList[] = {
+        CF_UNICODETEXT,
+        CF_ENHMETAFILE,
+        CF_METAFILEPICT,
+        CF_DIBV5,
+        CF_DIB,
+        CF_BITMAP
+    };
 
-    return GetPriorityClipboardFormat(uFormatList, 6);
+    return GetPriorityClipboardFormat(uFormatList, ARRAYSIZE(uFormatList));
 }
 
 BOOL IsClipboardFormatSupported(UINT uFormat)
