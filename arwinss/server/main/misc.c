@@ -10,7 +10,7 @@
 
 #include <win32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include <ntstatus.h>
@@ -18,6 +18,25 @@
 #include <csr.h>
 
 extern PEPROCESS CsrProcess;
+extern HWND hwndSAS;
+
+/* Registered logon process ID */
+HANDLE gpidLogon = 0;
+
+BOOL
+APIENTRY
+NtUserSetLogonNotifyWindow(HWND hWnd)
+{
+    if (gpidLogon != PsGetCurrentProcessId())
+        return FALSE;
+
+    DPRINT("Logon hwnd %x\n", hWnd);
+
+    hwndSAS = hWnd;
+
+    return TRUE;
+}
+
 
 NTSTATUS
 APIENTRY
@@ -162,4 +181,65 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 Quit:
     UserLeave();
     return Status;
+}
+
+BOOL
+UserRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
+{
+    NTSTATUS Status;
+    PEPROCESS Process;
+
+    Status = PsLookupProcessByProcessId(ProcessId, &Process);
+    if (!NT_SUCCESS(Status))
+    {
+        EngSetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    ProcessId = Process->UniqueProcessId;
+    ObDereferenceObject(Process);
+
+    if (Register)
+    {
+        /* Register the logon process */
+        if (gpidLogon != 0) return FALSE;
+        gpidLogon = ProcessId;
+    }
+    else
+    {
+        /* Deregister the logon process */
+        if (gpidLogon != ProcessId) return FALSE;
+        gpidLogon = 0;
+    }
+
+    return TRUE;
+}
+
+DWORD_PTR
+APIENTRY
+NtUserCallTwoParam(
+    DWORD_PTR Param1,
+    DWORD_PTR Param2,
+    DWORD Routine)
+{
+    DWORD_PTR ReturnValue;
+
+    DPRINT("Enter NtUserCallTwoParam\n");
+    UserEnterExclusive();
+
+    switch(Routine)
+    {
+        case TWOPARAM_ROUTINE_REGISTERLOGONPROCESS:
+            ReturnValue = (DWORD_PTR)UserRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
+            break;
+
+        default:
+            DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
+                Routine, Param1, Param2);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    DPRINT("Leave NtUserCallTwoParam, ret=%p\n", ReturnValue);
+    UserLeave();
+    return ReturnValue;
 }

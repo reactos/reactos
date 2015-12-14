@@ -236,9 +236,9 @@ static struct thread_input *create_thread_input( PTHREADINFO thread )
 
         if (!(input->desktop = get_thread_desktop( thread, 0 /* FIXME: access rights */ )))
         {
-            DPRINT1("error getting thread desktop\n");
-            release_object( input );
-            return NULL;
+            DPRINT1("error getting thread desktop, SHOULD FAIL! BIG BUG\n");
+            //release_object( input );
+            //return NULL;
         }
     }
     return input;

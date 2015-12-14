@@ -92,5 +92,7 @@ SwmSetForeground                   1
 SwmPosChanged                      5
 SwmGetWindowFromPoint              2
 SwmShowWindow                      3
+NtUserCallTwoParam                 3
 NtUserInitialize                   3
 NtUserSetInformationThread         4
+NtUserSetLogonNotifyWindow         1

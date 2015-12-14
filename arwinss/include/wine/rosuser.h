@@ -11,6 +11,14 @@
 #ifndef __WIN32K_ROSUSER_H
 #define __WIN32K_ROSUSER_H
 
+#if defined(__GNUC__)
+#define EXTINLINE extern inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define EXTINLINE extern __forceinline
+#else
+#error
+#endif
+
 /* DEFINES *******************************************************************/
 
 #define SWM_ROOT_WINDOW_ID 1
@@ -180,6 +188,12 @@ RosUserDeRegisterShellHookWindow(HWND hWnd);
 
 BOOL NTAPI
 RosUserBuildShellHookHwndList(HWND *list, UINT *cbSize);
+
+DWORD_PTR NTAPI
+NtUserCallTwoParam(DWORD_PTR Param1, DWORD_PTR Param2, DWORD Routine);
+
+BOOL NTAPI
+NtUserSetLogonNotifyWindow(HWND hWnd);
 
 SWM_WINDOW_ID NTAPI
 SwmNewWindow(SWM_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style);

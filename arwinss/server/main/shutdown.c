@@ -9,16 +9,54 @@
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-
-//#define NDEBUG
-#include <debug.h>
-
 #include <ntstatus.h>
+
+#include "object.h"
+#include "request.h"
+#include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* Our local copy of shutdown flags */
 static ULONG gdwShutdownFlags = 0;
 
+/* Registered logon window */
 HWND hwndSAS = NULL;
+
+extern HANDLE gpidLogon;
+
+VOID
+UserPostMessage(HWND hWnd,
+                UINT Msg,
+                WPARAM wParam,
+                LPARAM lParam)
+{
+    PTHREADINFO thread;
+    struct send_message_request req;
+    struct send_message_reply reply;
+
+    // Get that window's thread
+    thread = get_window_thread((user_handle_t)hWnd);
+    if (!thread) return;
+
+    req.id      = (ULONG)thread->peThread->Cid.UniqueThread;
+    req.type    = MSG_NOTIFY; // Or MSG_OTHER_PROCESS ?
+    req.flags   = 0;
+    req.win     = (user_handle_t)hWnd;
+    req.msg     = Msg;
+    req.wparam  = wParam;
+    req.lparam  = lParam;
+    req.timeout = TIMEOUT_INFINITE;
+
+    // No strings attached
+    req.__header.request_size = 0;
+
+    // Zero reply's memory area
+    memset( &reply, 0, sizeof(reply) );
+
+    req_send_message(&req, &reply);
+}
 
 NTSTATUS
 GetProcessLuid(IN PETHREAD Thread OPTIONAL,
@@ -89,8 +127,7 @@ NotifyLogon(IN HWND hWndSta,
     if (hwndSAS)
     {
         DPRINT("\tSending %s, Param 0x%x message to Winlogon\n", Notif == LN_LOGOFF ? "LN_LOGOFF" : "LN_LOGOFF_CANCELED", Param);
-        //UserPostMessage(hwndSAS, WM_LOGONNOTIFY, Notif, (LPARAM)Param);
-        UNIMPLEMENTED;
+        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, Notif, (LPARAM)Param);
         return TRUE;
     }
     else
@@ -110,12 +147,6 @@ UserInitiateShutdown(IN PETHREAD Thread,
     ULONG Flags = *pFlags;
     LUID CallerLuid;
     LUID SystemLuid = SYSTEM_LUID;
-    /*static PRIVILEGE_SET ShutdownPrivilege =
-    {
-        1, PRIVILEGE_SET_ALL_NECESSARY,
-        { {{SE_SHUTDOWN_PRIVILEGE, 0}, 0} }
-    };*/
-
     PPROCESSINFO ppi;
 
     DPRINT("UserInitiateShutdown\n");
@@ -145,8 +176,7 @@ UserInitiateShutdown(IN PETHREAD Thread,
     if (ppi == NULL)
         return STATUS_INVALID_HANDLE;
 
-#if 0
-    /* If the caller is not Winlogon, do some security checks */
+    /* If the caller is not Winlogon, do some security checks and notify it to perform the real shutdown */
     if (PsGetThreadProcessId(Thread) != gpidLogon)
     {
         /*
@@ -157,47 +187,16 @@ UserInitiateShutdown(IN PETHREAD Thread,
 
         *pFlags = Flags;
 
-        /* Check whether the current process is attached to a window station */
-        if (ppi->prpwinsta == NULL)
-            return STATUS_INVALID_HANDLE;
-
-        /* Check whether the window station of the current process can send exit requests */
-        if (!RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_EXITWINDOWS))
-            return STATUS_ACCESS_DENIED;
-
-        /*
-         * NOTE: USERSRV automatically adds the shutdown flag when we poweroff or reboot.
-         *
-         * If the caller wants to shutdown / reboot / power-off...
-         */
-        if (Flags & EWX_SHUTDOWN)
-        {
-            /* ... check whether it has shutdown privilege */
-            if (!HasPrivilege(&ShutdownPrivilege))
-                return STATUS_PRIVILEGE_NOT_HELD;
-        }
-        else
-        {
-            /*
-             * ... but if it just wants to log-off, in case its
-             * window station is a non-IO one, fail the call.
-             */
-            if (ppi->prpwinsta->Flags & WSS_NOIO)
-                return STATUS_INVALID_DEVICE_REQUEST;
-        }
-    }
-
-    /* If the caller is not Winlogon, possibly notify it to perform the real shutdown */
-    if (PsGetThreadProcessId(Thread) != gpidLogon)
-    {
         // FIXME: HACK!! Do more checks!!
-        ERR("UserInitiateShutdown -- Notify Winlogon for shutdown\n");
+
+        /* NOTE: USERSRV automatically adds the shutdown flag when we poweroff or reboot. */
+        DPRINT("UserInitiateShutdown -- Notify Winlogon for shutdown\n");
         NotifyLogon(hwndSAS, &CallerLuid, Flags, STATUS_SUCCESS);
         return STATUS_PENDING;
     }
 
     // If we reach this point, that means it's Winlogon that triggered the shutdown.
-    ERR("UserInitiateShutdown -- Winlogon is doing a shutdown\n");
+    DPRINT("UserInitiateShutdown -- Winlogon is doing a shutdown\n");
 
     /*
      * Update and save the shutdown flags globally for renotifying
@@ -208,9 +207,7 @@ UserInitiateShutdown(IN PETHREAD Thread,
 
     /* Save the shutdown flags now */
     gdwShutdownFlags = Flags;
-#else
-    UNIMPLEMENTED;
-#endif
+
     return STATUS_SUCCESS;
 }
 
@@ -252,11 +249,7 @@ UserEndShutdown(IN PETHREAD Thread,
 
     DPRINT("UserEndShutdown -- Notify Winlogon for end of shutdown\n");
 
-#if 0
     NotifyLogon(hwndSAS, &CallerLuid, Flags, ShutdownStatus);
-#else
-    UNIMPLEMENTED
-#endif
 
     /* Always return success */
     return STATUS_SUCCESS;
