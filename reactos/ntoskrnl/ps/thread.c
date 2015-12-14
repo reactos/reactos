@@ -654,10 +654,10 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     CidEntry = ExMapHandleToPointer(PspCidTable, ThreadId);
     if (CidEntry)
     {
-        /* Get the Process */
+        /* Get the Thread */
         FoundThread = CidEntry->Object;
 
-        /* Make sure it's really a process */
+        /* Make sure it's really a thread */
         if (FoundThread->Tcb.Header.Type == ThreadObject)
         {
             /* Safe Reference and return it */
