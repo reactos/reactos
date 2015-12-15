@@ -16,7 +16,7 @@ void ShowLastWin32Error(HWND hwndParent)
     dwError = GetLastError();
 
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                   NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0,  NULL);
+                   NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0, NULL);
     MessageBoxW(hwndParent, lpMsgBuf, NULL, MB_OK | MB_ICONERROR);
     LocalFree(lpMsgBuf);
 }
@@ -102,8 +102,9 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
 {
     LPBITMAPINFOHEADER lpInfoHeader;
     LPBYTE lpBits;
+    LONG bmWidth, bmHeight;
+    DWORD dwPalSize = 0;
     HGLOBAL hGlobal;
-    INT iPalSize;
 
     hGlobal = GetClipboardData(uFormat);
     if (!hGlobal)
@@ -113,18 +114,96 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
     if (!lpInfoHeader)
         return;
 
-    if (lpInfoHeader->biBitCount < 16)
+    if (lpInfoHeader->biSize == sizeof(BITMAPCOREHEADER))
     {
-        iPalSize = (1 << lpInfoHeader->biBitCount) * 4;
+        LPBITMAPCOREHEADER lpCoreHeader = (LPBITMAPCOREHEADER)lpInfoHeader;
+
+        dwPalSize = 0;
+
+        if (lpCoreHeader->bcBitCount <= 8)
+        {
+            dwPalSize = (1 << lpCoreHeader->bcBitCount);
+
+            if (fuColorUse == DIB_RGB_COLORS)
+                dwPalSize *= sizeof(RGBTRIPLE);
+            else
+                dwPalSize *= sizeof(WORD);
+        }
+
+        bmWidth  = lpCoreHeader->bcWidth;
+        bmHeight = lpCoreHeader->bcHeight;
+    }
+    else if ((lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) ||
+             (lpInfoHeader->biSize == sizeof(BITMAPV4HEADER))   ||
+             (lpInfoHeader->biSize == sizeof(BITMAPV5HEADER)))
+    {
+        dwPalSize = lpInfoHeader->biClrUsed;
+
+        if ((dwPalSize == 0) && (lpInfoHeader->biBitCount <= 8))
+            dwPalSize = (1 << lpInfoHeader->biBitCount);
+
+        if (fuColorUse == DIB_RGB_COLORS)
+            dwPalSize *= sizeof(RGBQUAD);
+        else
+            dwPalSize *= sizeof(WORD);
+
+        if (/*(lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) &&*/
+            (lpInfoHeader->biCompression == BI_BITFIELDS))
+        {
+            dwPalSize += 3 * sizeof(DWORD);
+        }
+
+        /*
+         * This is a (disabled) hack for Windows, when uFormat == CF_DIB
+         * it needs yet another extra 3 DWORDs, in addition to the
+         * ones already taken into account in via the compression.
+         * This problem doesn't happen when uFormat == CF_DIBV5
+         * (in that case, when compression is taken into account,
+         * everything is nice).
+         *
+         * NOTE 1: This fix is only for us, because when one pastes DIBs
+         * directly in apps, the bitmap offset problem is still present.
+         *
+         * NOTE 2: The problem can be seen with Windows' clipbrd.exe if
+         * one copies a CF_DIB image in the clipboard. By default Windows'
+         * clipbrd.exe works with CF_DIBV5 and CF_BITMAP, so the problem
+         * is unseen, and the clipboard doesn't have to convert to CF_DIB.
+         *
+         * FIXME: investigate!!
+         * ANSWER: this is a Windows bug; part of the answer is there:
+         * http://go4answers.webhost4life.com/Help/bug-clipboard-format-conversions-28724.aspx
+         * May be related:
+         * http://blog.talosintel.com/2015/10/dangerous-clipboard.html
+         */
+#if 0
+        if ((lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) &&
+            (lpInfoHeader->biCompression == BI_BITFIELDS))
+        {
+            dwPalSize += 3 * sizeof(DWORD);
+        }
+#endif
+
+        bmWidth  = lpInfoHeader->biWidth;
+        bmHeight = lpInfoHeader->biHeight;
     }
     else
     {
-        iPalSize = 0;
+        /* Invalid format */
+        GlobalUnlock(hGlobal);
+        return;
     }
 
-    lpBits = (LPBYTE)lpInfoHeader + lpInfoHeader->biSize + iPalSize;
+    lpBits = (LPBYTE)lpInfoHeader + lpInfoHeader->biSize + dwPalSize;
 
-    SetDIBitsToDevice(hdc, XDest, YDest, lpInfoHeader->biWidth, lpInfoHeader->biHeight, XSrc, YSrc, uStartScan, lpInfoHeader->biHeight, lpBits, (LPBITMAPINFO)lpInfoHeader, fuColorUse);
+    SetDIBitsToDevice(hdc,
+                      XDest, YDest,
+                      bmWidth, bmHeight,
+                      XSrc, YSrc,
+                      uStartScan,
+                      bmHeight,
+                      lpBits,
+                      (LPBITMAPINFO)lpInfoHeader,
+                      fuColorUse);
 
     GlobalUnlock(hGlobal);
 }
