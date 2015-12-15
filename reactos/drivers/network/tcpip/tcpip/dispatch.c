@@ -1645,7 +1645,7 @@ WaitForHwAddress ( PDEVICE_OBJECT DeviceObject, PVOID Context) {
         PVOID OutputBuffer;
 
         if (NCE->LinkAddressLength > WorkItem->IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
-            Status = STATUS_INVALID_BUFFER_SIZE;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
         } else {
             OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
             RtlCopyMemory(OutputBuffer, NCE->LinkAddress, NCE->LinkAddressLength);
@@ -1691,13 +1691,8 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
     if (Interface) {
         PVOID OutputBuffer;
 
-        if (!AddrIsUnspecified(&Local) && IPs[0] != IPs[1]) {
-            Status = STATUS_UNSUCCESSFUL;
-            goto Exit;
-        }
-
         if (Interface->AddressLength > IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
-            Status = STATUS_INVALID_BUFFER_SIZE;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;
         }
 
@@ -1720,8 +1715,11 @@ NTSTATUS DispTdiQueryIpHwAddress( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STA
     else {
         Interface = AddrLocateInterface(&Local);
         if (Interface == NULL) {
-            Status = STATUS_NETWORK_UNREACHABLE;
-            goto Exit;
+            Interface = GetDefaultInterface();
+            if (Interface == NULL) {
+                Status = STATUS_NETWORK_UNREACHABLE;
+                goto Exit;
+            }
         }
     }
 
