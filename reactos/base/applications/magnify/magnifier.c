@@ -3,8 +3,9 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/magnify/magnifier.c
  * PURPOSE:     Magnification of parts of the screen.
- * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
- *
+ * AUTHORS:
+ *     Marc Piulachs <marc.piulachs@codexchange.net>
+ *     David Quintana <gigaherz@gmail.com>
  */
 
 /* TODO: AppBar */
@@ -14,6 +15,8 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <shellapi.h>
+#include <windowsx.h>
 
 #include "resource.h"
 
@@ -27,9 +30,26 @@ HWND hMainWnd;
 
 TCHAR szTitle[MAX_LOADSTRING];
 
-#define REPAINT_SPEED   100
+#define TIMER_SPEED   1
+#define REPAINT_SPEED 100
+
+DWORD lastTicks = 0;
 
 HWND hDesktopWindow = NULL;
+
+#define APPMSG_NOTIFYICON (WM_APP+1)
+HICON notifyIcon;
+NOTIFYICONDATA nid;
+HMENU notifyMenu;
+HWND hOptionsDialog;
+BOOL bOptionsDialog = FALSE;
+
+BOOL bRecreateOffscreenDC = TRUE;
+LONG sourceWidth = 0;
+LONG sourceHeight = 0;
+HDC hdcOffscreen = NULL;
+HANDLE hbmpOld;
+HBITMAP hbmpOffscreen = NULL;
 
 /* Current magnified area */
 POINT cp;
@@ -38,6 +58,8 @@ POINT cp;
 POINT pMouse;
 POINT pCaret;
 POINT pFocus;
+HWND pCaretWnd;
+HWND pFocusWnd;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -84,6 +106,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         }
     }
 
+
+    SelectObject(hdcOffscreen, hbmpOld);
+    DeleteObject (hbmpOffscreen);
+    DeleteDC(hdcOffscreen);
+
     return (int) msg.wParam;
 }
 
@@ -99,7 +126,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wc.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
     wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszMenuName     = MAKEINTRESOURCE(IDC_MAGNIFIER);
+    wc.lpszMenuName     = NULL; //MAKEINTRESOURCE(IDC_MAGNIFIER);
     wc.lpszClassName    = szWindowClass;
 
     return RegisterClass(&wc);
@@ -133,6 +160,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ShowWindow(hMainWnd, bStartMinimized ? SW_MINIMIZE : nCmdShow);
     UpdateWindow(hMainWnd);
 
+    // Windows 2003's Magnifier always shows this dialog, and exits when the dialog isclosed.
+    // Should we add a custom means to prevent opening it?
+    hOptionsDialog = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hMainWnd, OptionsProc);
+
     if (bShowWarning)
         DialogBox(hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
 
@@ -148,26 +179,59 @@ void Refresh()
     }
 }
 
+void GetBestOverlapWithMonitors(LPRECT rect)
+{
+    int rcLeft, rcTop;
+    int rcWidth, rcHeight;
+    RECT rcMon;
+    HMONITOR hMon = MonitorFromRect(rect, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+
+    GetMonitorInfo(hMon, &info);
+
+    rcMon = info.rcMonitor;
+
+    rcLeft = rect->left;
+    rcTop = rect->top;
+    rcWidth  = (rect->right - rect->left);
+    rcHeight = (rect->bottom - rect->top);
+
+    if (rcLeft < rcMon.left)
+       rcLeft = rcMon.left;
+
+    if (rcTop < rcMon.top)
+       rcTop = rcMon.top;
+
+    if (rcLeft > (rcMon.right - rcWidth))
+        rcLeft = (rcMon.right - rcWidth);
+
+    if (rcTop > (rcMon.bottom - rcHeight))
+        rcTop = (rcMon.bottom - rcHeight);
+
+    OffsetRect(rect, (rcLeft-rect->left), (rcTop-rect->top));
+}
+
 void Draw(HDC aDc)
 {
     HDC desktopHdc = NULL;
-    HDC HdcStrech;
-    HANDLE hOld;
-    HBITMAP HbmpStrech;
-    
-    RECT R;
-    RECT appRect;
+
+    RECT sourceRect, intersectedRect;
+    RECT targetRect, appRect;
     DWORD rop = SRCCOPY;
     CURSORINFO cinfo;
     ICONINFO iinfo;
 
-    int Width, Height, AppWidth, AppHeight;
-    LONG blitAreaWidth, blitAreaHeight, blitAreaX, blitAreaY;
+    int AppWidth, AppHeight;
 
-    desktopHdc = GetWindowDC(hDesktopWindow);
+    if (bInvertColors)
+        rop = NOTSRCCOPY;
+
+    desktopHdc = GetDC(0);
 
     GetClientRect(hMainWnd, &appRect);
-    GetWindowRect(hDesktopWindow, &R);
+    AppWidth  = (appRect.right - appRect.left);
+    AppHeight = (appRect.bottom - appRect.top);
 
     ZeroMemory(&cinfo, sizeof(cinfo));
     ZeroMemory(&iinfo, sizeof(iinfo));
@@ -175,63 +239,69 @@ void Draw(HDC aDc)
     GetCursorInfo(&cinfo);
     GetIconInfo(cinfo.hCursor, &iinfo);
 
-     /* Create a memory DC compatible with client area DC */
-    HdcStrech = CreateCompatibleDC(desktopHdc);
+    targetRect = appRect;
+    ClientToScreen(hMainWnd, (POINT*)&targetRect.left);
+    ClientToScreen(hMainWnd, (POINT*)&targetRect.right);
 
-    /* Create a bitmap compatible with the client area DC */
-    HbmpStrech = CreateCompatibleBitmap(
-        desktopHdc,
-        R.right,
-        R.bottom);
+    if (bRecreateOffscreenDC || !hdcOffscreen)
+    {
+        bRecreateOffscreenDC = FALSE;
 
-    /* Select our bitmap in memory DC and save the old one */
-    hOld = SelectObject(HdcStrech , HbmpStrech);
-    
+        if(hdcOffscreen)
+        {
+            SelectObject(hdcOffscreen, hbmpOld);
+            DeleteObject (hbmpOffscreen);
+            DeleteDC(hdcOffscreen);
+        }
+
+        sourceWidth  = AppWidth / iZoom;
+        sourceHeight = AppHeight / iZoom;
+
+         /* Create a memory DC compatible with client area DC */
+        hdcOffscreen = CreateCompatibleDC(desktopHdc);
+
+        /* Create a bitmap compatible with the client area DC */
+        hbmpOffscreen = CreateCompatibleBitmap(
+            desktopHdc,
+            sourceWidth,
+            sourceHeight);
+
+        /* Select our bitmap in memory DC and save the old one */
+        hbmpOld = SelectObject(hdcOffscreen , hbmpOffscreen);
+    }
+
+    GetWindowRect(hDesktopWindow, &sourceRect);
+    sourceRect.left = (cp.x) - (sourceWidth /2);
+    sourceRect.top = (cp.y) - (sourceHeight /2);
+    sourceRect.right = sourceRect.left + sourceWidth;
+    sourceRect.bottom = sourceRect.top + sourceHeight;
+
+    GetBestOverlapWithMonitors(&sourceRect);
+
     /* Paint the screen bitmap to our in memory DC */
     BitBlt(
-        HdcStrech,
+        hdcOffscreen,
         0,
         0,
-        R.right,
-        R.bottom,
+        sourceWidth,
+        sourceHeight,
         desktopHdc,
-        0,
-        0,
-        SRCCOPY);
-        
+        sourceRect.left,
+        sourceRect.top,
+        rop);
+
+    if (IntersectRect(&intersectedRect, &sourceRect, &targetRect))
+    {
+        OffsetRect(&intersectedRect, -sourceRect.left, -sourceRect.top);
+        FillRect(hdcOffscreen, &intersectedRect, GetStockObject(DC_BRUSH));
+    }
+
     /* Draw the mouse pointer in the right position */
     DrawIcon(
-        HdcStrech ,
-        pMouse.x - iinfo.xHotspot, // - 10,
-        pMouse.y - iinfo.yHotspot, // - 10,
+        hdcOffscreen ,
+        pMouse.x - iinfo.xHotspot - sourceRect.left, // - 10,
+        pMouse.y - iinfo.yHotspot - sourceRect.top, // - 10,
         cinfo.hCursor);
-
-    Width  = (R.right - R.left);
-    Height = (R.bottom - R.top);
-
-    AppWidth  = (appRect.right - appRect.left);
-    AppHeight = (appRect.bottom - appRect.top);
-
-    blitAreaWidth  = AppWidth / iZoom;
-    blitAreaHeight = AppHeight / iZoom;
-
-    blitAreaX = (cp.x) - (blitAreaWidth /2);
-    blitAreaY = (cp.y) - (blitAreaHeight /2);
-
-    if (blitAreaX < 0)
-       blitAreaX = 0;
-
-    if (blitAreaY < 0)
-       blitAreaY = 0;
-
-    if (blitAreaX > (Width - blitAreaWidth))
-        blitAreaX = (Width - blitAreaWidth);
-
-    if (blitAreaY > (Height - blitAreaHeight))
-        blitAreaY = (Height - blitAreaHeight);
-
-    if (bInvertColors)
-        rop = NOTSRCCOPY;
 
     /* Blast the stretched image from memory DC to window DC */
     StretchBlt(
@@ -240,23 +310,35 @@ void Draw(HDC aDc)
         0,
         AppWidth,
         AppHeight,
-        HdcStrech,
-        blitAreaX,
-        blitAreaY,
-        blitAreaWidth,
-        blitAreaHeight,
-        rop | NOMIRRORBITMAP);
-        
-        
+        hdcOffscreen,
+        0,
+        0,
+        sourceWidth,
+        sourceHeight,
+        SRCCOPY | NOMIRRORBITMAP);
+
     /* Cleanup */
     if (iinfo.hbmMask)
         DeleteObject(iinfo.hbmMask);
     if (iinfo.hbmColor)
         DeleteObject(iinfo.hbmColor);
-    SelectObject(HdcStrech, hOld);
-    DeleteObject (HbmpStrech);
-    DeleteDC(HdcStrech);
     ReleaseDC(hDesktopWindow, desktopHdc);
+}
+
+void HandleNotifyIconMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    POINT pt;
+
+    switch(lParam)
+    {
+        case WM_LBUTTONUP:
+            PostMessage(hMainWnd, WM_COMMAND, IDM_OPTIONS, 0);
+            break;
+        case WM_RBUTTONUP:
+            GetCursorPos (&pt);
+            TrackPopupMenu(notifyMenu, 0, pt.x, pt.y, 0, hWnd, NULL);
+            break;
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -267,53 +349,87 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         case WM_TIMER:
         {
-            POINT pNewMouse;
-            POINT pNewCaret;
-            POINT pNewFocus;
-            HWND hwnd1, hwnd2, hwnd3;
-            DWORD a, b;
-            RECT controlRect;
+            BOOL hasMoved = FALSE;
+            HWND hwndForeground = GetForegroundWindow ();
+            DWORD threadId = GetWindowThreadProcessId(hwndForeground, NULL);
+            GUITHREADINFO guiInfo;
+            guiInfo.cbSize = sizeof(guiInfo);
 
-            //Get current mouse position
-            GetCursorPos (&pNewMouse);
+            GetGUIThreadInfo(threadId, &guiInfo);
 
-            //Get caret position
-            hwnd1 = GetForegroundWindow ();
-            a = GetWindowThreadProcessId(hwnd1, NULL);
-            b = GetCurrentThreadId();
-            AttachThreadInput (a, b, TRUE);
-            hwnd2 = GetFocus();
-
-            GetCaretPos( &pNewCaret);
-            ClientToScreen (hwnd2, (LPPOINT) &pNewCaret);
-            AttachThreadInput (a, b, FALSE);
-
-            //Get current control focus
-            hwnd3 = GetFocus ();
-            GetWindowRect (hwnd3 , &controlRect);
-            pNewFocus.x = controlRect.left;
-            pNewFocus.y = controlRect.top;
-
-            //If mouse has moved ....
-            if (((pMouse.x != pNewMouse.x) || (pMouse.y != pNewMouse.y)) && bFollowMouse)
+            if (bFollowMouse)
             {
-                //Update to new position
-                pMouse = pNewMouse;
-                cp = pNewMouse;
+                POINT pNewMouse;
+
+                //Get current mouse position
+                GetCursorPos (&pNewMouse);
+
+                //If mouse has moved ...
+                if (((pMouse.x != pNewMouse.x) || (pMouse.y != pNewMouse.y)))
+                {
+                    //Update to new position
+                    pMouse = pNewMouse;
+                    cp = pNewMouse;
+                    hasMoved = TRUE;
+                }
             }
-            else if (((pCaret.x != pNewCaret.x) || (pCaret.y != pNewCaret.y)) && bFollowCaret)
+            
+            if (bFollowCaret && hwndForeground && guiInfo.hwndCaret)
             {
-                //Update to new position
-                pCaret = pNewCaret;
-                cp = pNewCaret;
+                POINT ptCaret;
+                ptCaret.x = (guiInfo.rcCaret.left + guiInfo.rcCaret.right) / 2;
+                ptCaret.y = (guiInfo.rcCaret.top + guiInfo.rcCaret.bottom) / 2;
+
+                if (guiInfo.hwndCaret && ((pCaretWnd != guiInfo.hwndCaret) || (pCaret.x != ptCaret.x) || (pCaret.y != ptCaret.y)))
+                {
+                    //Update to new position
+                    pCaret = ptCaret;
+                    pCaretWnd = guiInfo.hwndCaret;
+                    if(!hasMoved)
+                    {
+                        ClientToScreen (guiInfo.hwndCaret, (LPPOINT) &ptCaret);
+                        cp = ptCaret;
+                    }
+                    hasMoved = TRUE;
+                }
             }
-            else if (((pFocus.x != pNewFocus.x) || (pFocus.y != pNewFocus.y)) && bFollowFocus)
+
+            if (bFollowFocus && hwndForeground && guiInfo.hwndFocus)
             {
-                //Update to new position
-                pFocus = pNewFocus;
-                cp = pNewFocus;
+                POINT ptFocus;
+                RECT activeRect;
+
+                //Get current control focus
+                GetWindowRect (guiInfo.hwndFocus, &activeRect);
+                ptFocus.x = (activeRect.left + activeRect.right) / 2;
+                ptFocus.y = (activeRect.top + activeRect.bottom) / 2;
+
+                if(guiInfo.hwndFocus && ((guiInfo.hwndFocus != pFocusWnd) || (pFocus.x != ptFocus.x) || (pFocus.y != ptFocus.y)))
+                {
+                    //Update to new position
+                    pFocus = ptFocus;
+                    pFocusWnd = guiInfo.hwndFocus;
+                    if(!hasMoved)
+                        cp = ptFocus;
+                    hasMoved = TRUE;
+                }
             }
-            Refresh();
+
+            if(!hasMoved)
+            {
+                DWORD newTicks = GetTickCount();
+                DWORD elapsed = (newTicks - lastTicks);
+                if(elapsed > REPAINT_SPEED)
+                {
+                    hasMoved = TRUE;
+                }
+            }
+
+            if(hasMoved)
+            {
+                lastTicks = GetTickCount();
+                Refresh();
+            }
         }
         break;
 
@@ -324,7 +440,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
                 case IDM_OPTIONS:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, OptionsProc);
+                    if(bOptionsDialog)
+                    {
+                        ShowWindow(hOptionsDialog, SW_HIDE);
+                    }
+                    else
+                    {
+                        ShowWindow(hOptionsDialog, SW_SHOW);
+                    }
                     break;
                 case IDM_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
@@ -348,6 +471,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        case WM_CONTEXTMENU:
+            TrackPopupMenu(notifyMenu, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hWnd, NULL);
+            break;
+
+        case WM_SIZE:
+        case WM_DISPLAYCHANGE:
+            bRecreateOffscreenDC = TRUE;
+            Refresh();
+            return DefWindowProc(hWnd, message, wParam, lParam);
+
         case WM_ERASEBKGND:
             // handle WM_ERASEBKGND by simply returning non-zero because we did all the drawing in WM_PAINT.
             break;
@@ -357,9 +490,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SaveSettings();
             KillTimer(hWnd , 1);
             PostQuitMessage(0);
+
+            /* Cleanup notification icon */
+            ZeroMemory(&nid, sizeof(nid));
+            nid.cbSize = sizeof(nid);
+            nid.uFlags = NIF_MESSAGE;
+            nid.hWnd = hWnd;
+            nid.uCallbackMessage = APPMSG_NOTIFYICON;
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+
+            DestroyIcon(notifyIcon);
+
+            DestroyWindow(hOptionsDialog);
             break;
 
         case WM_CREATE:
+        {
+            HMENU tempMenu;
+
             /* Load settings from registry */
             LoadSettings();
 
@@ -367,7 +515,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hDesktopWindow = GetDesktopWindow();
 
             /* Set the timer */
-            SetTimer (hWnd , 1, REPAINT_SPEED , NULL);
+            SetTimer (hWnd , 1, TIMER_SPEED , NULL);
+
+            /* Notification icon */
+            notifyIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 16, 16, 0);
+
+            ZeroMemory(&nid, sizeof(nid));
+            nid.cbSize = sizeof(nid);
+            nid.uFlags = NIF_ICON | NIF_MESSAGE;
+            nid.hWnd = hWnd;
+            nid.uCallbackMessage = APPMSG_NOTIFYICON;
+            nid.hIcon = notifyIcon;
+            Shell_NotifyIcon(NIM_ADD, &nid);
+            
+            tempMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_MAGNIFIER));
+            notifyMenu = GetSubMenu(tempMenu, 0);
+            RemoveMenu(tempMenu, 0, MF_BYPOSITION);
+            DestroyMenu(tempMenu);
+
+            break;
+        }
+
+        case APPMSG_NOTIFYICON:
+            HandleNotifyIconMessage(hWnd, wParam, lParam);
+
             break;
 
         default:
@@ -402,6 +573,9 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
+        case WM_SHOWWINDOW:
+            bOptionsDialog = wParam;
+            break;
         case WM_INITDIALOG:
         {
             // Add the zoom items...
@@ -442,7 +616,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
         {
             case IDOK:
             case IDCANCEL:
-                EndDialog(hDlg, LOWORD(wParam));
+                ShowWindow(hDlg, SW_HIDE);
                 return (INT_PTR)TRUE;
 
             case IDC_BUTTON_HELP:
