@@ -10,6 +10,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(UserDisplay);
+
 PPDEVOBJ gppdevPrimary = NULL;
 
 static PPDEVOBJ gppdevList = NULL;
@@ -247,8 +249,109 @@ PDEVOBJ_pSurface(
     /* Increment reference count */
     GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
-    DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
+    TRACE("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
+}
+
+VOID
+NTAPI
+PDEVOBJ_vRefreshModeList(
+    PPDEVOBJ ppdev)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    PDEVMODEENTRY pTmpDevModeList, pOldDevModeList;
+    PDEVMODEINFO pdminfo;
+    PDEVMODEW pdm, pdmEnd;
+    UINT cModes = 0;
+    UINT j = 0;
+
+    /* Lock the PDEV */
+    EngAcquireSemaphore(ppdev->hsemDevLock);
+
+    pGraphicsDevice = ppdev->pGraphicsDevice;
+
+    TRACE("Enter PDEVOBJ_vRefreshModeList('%ws'/'%ws')\n",
+           pGraphicsDevice->szNtDeviceName,
+           pGraphicsDevice->szWinDeviceName);
+
+    pdminfo = LDEVOBJ_pdmiGetModes(ppdev->pldev, pGraphicsDevice->DeviceObject);
+
+    if (!pdminfo || pdminfo->cbdevmode == 0)
+    {
+        ERR("Could not get an updated mode list for '%ls'\n", pGraphicsDevice->szWinDeviceName);
+    }
+    else
+    {
+        TRACE("Bingo! We've just got some (%lu) new modes for '%ls'.\n", pdminfo->cbdevmode/sizeof(DEVMODEW), pGraphicsDevice->szWinDeviceName);
+
+        /* Loop all DEVMODEs */
+        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+        for (pdm = pdminfo->adevmode;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
+             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            TRACE("mode %lu -- %lux%lux%lu (%lu hz)\n", cModes, pdminfo->adevmode[cModes].dmPelsWidth,
+                                                                pdminfo->adevmode[cModes].dmPelsHeight,
+                                                                pdminfo->adevmode[cModes].dmBitsPerPel,
+                                                                pdminfo->adevmode[cModes].dmDisplayFrequency);
+
+            /* Some drivers like the VBox driver don't fill the dmDeviceName
+               with the name of the display driver. So fix that here. */
+            wcsncpy(pdminfo->adevmode[cModes].dmDeviceName, pGraphicsDevice->pDiplayDrivers, CCHDEVICENAME);
+            pdminfo->adevmode[cModes].dmDeviceName[CCHDEVICENAME - 1] = 0;
+
+            /* Count this DEVMODE */
+            cModes++;
+        }
+
+        if (cModes == 0)
+        {
+            ERR("No valid devmodes returned by the driver on mode list refresh!\n");
+            ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
+            return;
+        }
+
+        /* Allocate an index buffer early on, even before trying to change the graphics device struct */
+        pTmpDevModeList = ExAllocatePoolWithTag(PagedPool,
+                                                cModes * sizeof(DEVMODEENTRY),
+                                                GDITAG_GDEVICE);
+
+        if (!pTmpDevModeList)
+        {
+            ERR("Bummer! Not enough memory to alloc a new DevModeList\n");
+            return;
+        }
+
+        /* Save a reference to the old thing */
+        pOldDevModeList = pGraphicsDevice->pDevModeList;
+
+        /* Attach the new mode info and company to the device,
+           the GraphicsDevice could potentially use additional synchonisation mechanisms */
+        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
+        pGraphicsDevice->pdevmodeInfo = pdminfo;
+
+        pGraphicsDevice->cDevModes = cModes;
+        pGraphicsDevice->pDevModeList = pTmpDevModeList;
+
+        /* Don't leak the previous DevModeList, please! */
+        ExFreePoolWithTag(pOldDevModeList, GDITAG_GDEVICE);
+
+        /* Loop through the DEVMODEs */
+        for (pdm = pdminfo->adevmode;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
+             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            /* Initialize the entry */
+            pGraphicsDevice->pDevModeList[j].dwFlags = 0;
+            pGraphicsDevice->pDevModeList[j].pdm = &pdminfo->adevmode[j];
+
+            j++;
+        }
+
+    }
+
+    /* Unlock PDEV */
+    EngReleaseSemaphore(ppdev->hsemDevLock);
 }
 
 PDEVMODEW
@@ -264,13 +367,32 @@ PDEVOBJ_pdmMatchDevMode(
 
     pGraphicsDevice = ppdev->pGraphicsDevice;
 
+    TRACE("looking for mode -- %lux%lux%lu (%lu hz) (%ls)\n", pdm->dmPelsWidth,
+                                                               pdm->dmPelsHeight,
+                                                               pdm->dmBitsPerPel,
+                                                               pdm->dmDisplayFrequency,
+                                                               pdm->dmDeviceName);
+
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
+    {
+        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
+
+        TRACE("mode %lu -- %lux%lux%lu (%lu hz) (%ls)\n", i, pdmCurrent->dmPelsWidth,
+                                                              pdmCurrent->dmPelsHeight,
+                                                              pdmCurrent->dmBitsPerPel,
+                                                              pdmCurrent->dmDisplayFrequency,
+                                                              pdmCurrent->dmDeviceName);
+    }
+
+    TRACE("---\n");
+
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
     {
         pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
 
         /* Compare asked DEVMODE fields
          * Only compare those that are valid in both DEVMODE structs */
-        dwFields = pdmCurrent->dmFields & pdm->dmFields ;
+        dwFields = pdmCurrent->dmFields & pdm->dmFields;
 
         /* For now, we only need those */
         if ((dwFields & DM_BITSPERPEL) &&
@@ -281,6 +403,12 @@ PDEVOBJ_pdmMatchDevMode(
             (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight)) continue;
         if ((dwFields & DM_DISPLAYFREQUENCY) &&
             (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency)) continue;
+
+        TRACE("chosen mode %lu -- %lux%lux%lu (%lu hz) (%ls)\n", i, pdmCurrent->dmPelsWidth,
+                                                                     pdmCurrent->dmPelsHeight,
+                                                                     pdmCurrent->dmBitsPerPel,
+                                                                     pdmCurrent->dmDisplayFrequency,
+                                                                     pdmCurrent->dmDeviceName);
 
         /* Match! Return the DEVMODE */
         return pdmCurrent;
@@ -352,8 +480,8 @@ EngpCreatePDEV(
         ppdev->pfnMovePointer = EngMovePointer;
 
     ppdev->pGraphicsDevice = pGraphicsDevice;
-    // Should we change the ative mode of pGraphicsDevice ?
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
+    // Should we change the active mode of pGraphicsDevice ?
+    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
 
     /* FIXME! */
     ppdev->flFlags = PDEV_DISPLAY;

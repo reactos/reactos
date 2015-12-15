@@ -462,22 +462,34 @@ UserEnumDisplaySettings(
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
+    PPDEVOBJ ppdev;
 
     TRACE("Enter UserEnumDisplaySettings('%wZ', %lu)\n",
           pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+    ppdev = EngpGetPDEV(pustrDevice);
 
-    if (!pGraphicsDevice)
+    if (!pGraphicsDevice || !ppdev)
     {
         /* No device found */
         ERR("No device found!\n");
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* let's politely ask the driver for an updated mode list,
+       just in case there's something new in there (vbox) */
+
+    PDEVOBJ_vRefreshModeList(ppdev);
+    PDEVOBJ_vRelease(ppdev);
+
+    /* FIXME: maybe only refresh when iModeNum is bigger than cDevModes? */
     if (iModeNum >= pGraphicsDevice->cDevModes)
+    {
+        ERR("STATUS_NO_MORE_ENTRIES!\n");
         return STATUS_NO_MORE_ENTRIES;
+    }
 
     iFoundMode = 0;
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
