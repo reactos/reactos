@@ -763,6 +763,14 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
      * Check for process validity
      */
 
+    /* Do not kill system processes when a user is logging off */
+    if ((Flags & EWX_SHUTDOWN) == EWX_LOGOFF &&
+        (CsrProcess->ShutdownFlags & (SHUTDOWN_OTHERCONTEXT | SHUTDOWN_SYSTEMCONTEXT)))
+    {
+        DPRINT1("Do not kill a system process in a logoff request!\n");
+        return CsrShutdownNonCsrProcess;
+    }
+
     /* Do not kill Winlogon or CSRSS */
     if (CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ||
         CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
