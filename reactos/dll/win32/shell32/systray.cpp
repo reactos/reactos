@@ -63,6 +63,7 @@ static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, DWORD n
  */
 BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 {
+    NOTIFYICONDATAW nidW;
     DWORD cbSize;
 
     /* Validate the cbSize as Windows XP does */
@@ -77,7 +78,37 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
     else
         cbSize = pnid->cbSize;
 
-    return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, cbSize, FALSE);
+    ZeroMemory(&nidW, sizeof(nidW));
+    nidW.cbSize = sizeof(nidW);
+    nidW.hWnd   = pnid->hWnd;
+    nidW.uID    = pnid->uID;
+    nidW.uFlags = pnid->uFlags;
+    nidW.uCallbackMessage = pnid->uCallbackMessage;
+    nidW.hIcon  = pnid->hIcon;
+
+    /* szTip */
+    if (pnid->uFlags & NIF_TIP)
+        MultiByteToWideChar(CP_ACP, 0, pnid->szTip, -1, nidW.szTip, _countof(nidW.szTip));
+
+    if (cbSize >= NOTIFYICONDATAA_V2_SIZE)
+    {
+        nidW.dwState      = pnid->dwState;
+        nidW.dwStateMask  = pnid->dwStateMask;
+
+        /* szInfo, szInfoTitle */
+        if (pnid->uFlags & NIF_INFO)
+        {
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,  nidW.szInfo, _countof(nidW.szTip));
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1, nidW.szInfoTitle, _countof(nidW.szTip));
+        }
+
+        nidW.uTimeout = pnid->uTimeout;
+        nidW.dwInfoFlags = pnid->dwInfoFlags;
+    }
+
+    if (cbSize >= sizeof(NOTIFYICONDATAA))
+        nidW.hBalloonIcon = pnid->hBalloonIcon;
+    return Shell_NotifyIconW(dwMessage, &nidW);
 }
 
 /*************************************************************************
