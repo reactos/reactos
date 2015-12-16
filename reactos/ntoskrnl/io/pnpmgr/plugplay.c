@@ -247,7 +247,10 @@ IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceLis
     {
         /* Get the device object */
         DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-        ExFreePool(DeviceInstance.Buffer);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
     }
 
     Status = IoGetDeviceInterfaces(&FilterGuid, DeviceObject, StackList.Flags, &SymbolicLinkList);
@@ -317,14 +320,20 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(DeviceInstance.Buffer);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
     {
         return STATUS_NO_SUCH_DEVICE;
@@ -394,7 +403,10 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -406,13 +418,19 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
                               TRUE))
     {
         DeviceNode = IopRootDeviceNode;
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
     }
     else
     {
         /* Get the device object */
         DeviceObject = IopGetDeviceObjectFromDeviceInstance(&TargetDeviceInstance);
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
@@ -566,14 +584,20 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(DeviceInstance.Buffer);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
     {
         return STATUS_NO_SUCH_DEVICE;
@@ -647,7 +671,10 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
     {
         return STATUS_NO_SUCH_DEVICE;
@@ -689,7 +716,10 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
     {
         return STATUS_NO_SUCH_DEVICE;
