@@ -17,6 +17,8 @@
 #include "asmxtras.inc"
 #include <isvbop.inc>
 
+// #define NDEBUG
+
 /* DEFINES ********************************************************************/
 
 #define MAX_PATH            260
@@ -124,11 +126,15 @@ ResidentMain:
     jz Run
     cmp word ptr OldParentPsp, SYSTEM_PSP   // Check whether our parent is SYSTEM
     je Run
+
+#ifndef NDEBUG
 /********************************/
     mov dx, offset Msg1
     mov ah, HEX(09)
     int HEX(21)
 /********************************/
+#endif
+
     BOP BOP_CMD, HEX(0A)        // Start 32-bit COMSPEC
     jnc Quit
 
@@ -143,11 +149,14 @@ Run:
     mov word ptr FIELD(NextCmd, AppNameOff), offset PgmName
 
     /* Wait for the next command */
+#ifndef NDEBUG
 /********************************/
     mov dx, offset Msg2
     mov ah, HEX(09)
     int HEX(21)
 /********************************/
+#endif
+
     // FIXME: Initialize memory with structure for holding CmdLine etc...
 //  mov ds, seg NextCmd
     mov dx, offset NextCmd
@@ -190,6 +199,8 @@ Run:
 
 Quit:
     mov bl, al // Save AL in BL
+
+#ifndef NDEBUG
 /********************************/
     cmp al, HEX(0A)
     jne XXXX
@@ -198,11 +209,15 @@ Quit:
     int HEX(21)
 XXXX:
 /********************************/
+#endif
+
+#ifndef NDEBUG
     /* Say bye-bye */
 //  mov ds, seg QuitMsg
     mov dx, offset QuitMsg
     mov ah, HEX(09)
     int HEX(21)
+#endif
 
     /* Restore our old parent PSP */
     mov ax, word ptr OldParentPsp
@@ -220,6 +235,7 @@ Exit:
 
 /* DATA *******************************/
 
+#ifndef NDEBUG
 QuitMsg:
     .ascii "Bye bye!", CR, LF, "$"
 
@@ -228,6 +244,7 @@ Msg1: .ascii "Starting COMSPEC...", CR, LF, "$"
 Msg2: .ascii "Waiting for new command...", CR, LF, "$"
 Msg3: .ascii "Bad environment!", CR, LF, "$"
 /********************************/
+#endif
 
 OldParentPsp:   .word 0
 CurrentPsp:     .word 0
@@ -257,9 +274,12 @@ BaseStack:
 
 /* DATA *******************************/
 
+#ifndef NDEBUG
 WelcomeMsg:
     .ascii "ReactOS DOS32 Command", CR, LF, \
            "Copyright (C) ReactOS Team 2015" , CR, LF, "$"
+#endif
+
 VerErrMsg:
     .ascii "Incorrect DOS version", CR, LF, "$"
 
@@ -320,11 +340,13 @@ Continue:
     mov ax, word ptr CurrentPsp
     mov PSP_VAR(ParentPsp), ax
 
+#ifndef NDEBUG
     /* Say hello */
 //  mov ds, seg WelcomeMsg
     mov dx, offset WelcomeMsg
     mov ah, HEX(09)
     int HEX(21)
+#endif
 
     /* Jump to resident code */
     jmp ResidentMain
