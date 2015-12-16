@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/winutils.c
+ * FILE:            base/applications/clipbrd/winutils.h
  * PURPOSE:         Miscellaneous helper functions.
  * PROGRAMMERS:     Ricardo Hanke
  */
@@ -15,3 +15,4 @@ void BitBltFromClipboard(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nH
 void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest, int XSrc, int YSrc, UINT uStartScan, UINT fuColorUse);
 void PlayMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
 void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
+UINT RealizeClipboardPalette(HWND hWnd);

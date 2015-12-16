@@ -3,6 +3,8 @@
 
 // #pragma once
 
+#include <limits.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -15,6 +17,7 @@
 #include "cliputils.h"
 #include "fileutils.h"
 #include "winutils.h"
+#include "scrollutils.h"
 
 #define MAX_STRING_LEN 255
 #define DISPLAY_MENU_POS 2
@@ -28,6 +31,8 @@ typedef struct _CLIPBOARD_GLOBALS
     HMENU hMenu;
     UINT uDisplayFormat;
     UINT uCheckedItem;
+    UINT uLinesToScroll;
+    HBITMAP hDspBmp;
 } CLIPBOARD_GLOBALS;
 
 extern CLIPBOARD_GLOBALS Globals;
