@@ -16,6 +16,11 @@ CDPath = none
 [Section.0407]
 Description = Eine flexible digitale Stoppuhr-Software.
 
+[Section.0418]
+License = Gratuită
+Description = Aplicație flexibilă de cronometru digital.
+Size = 1,0 Mo
+
 [Section.041f]
 Name = Ücretsiz Süreölçer
 License = Ücretsiz

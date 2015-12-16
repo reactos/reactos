@@ -3,6 +3,6 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NTOBJFLD_NAME "Spațiu de nume Obiect NT"
+    IDS_NTOBJFLD_NAME "Spațiul de nume Obiect NT"
     IDS_REGISTRY_NAME "Registrul de sistem"
 END

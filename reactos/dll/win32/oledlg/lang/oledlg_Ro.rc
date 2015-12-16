@@ -31,9 +31,9 @@ STRINGTABLE
   IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Nu se poate înregistra controlul OLE."
   IDS_NOTOLEMODCAPTION  "Adaugă un control"
   IDS_VERBMENU_OBJECT   "&Obiect"
-  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "&Obiect %1"
   IDS_VERBMENU_CONVERT  "&Convertire…"
-  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+  IDS_VERBMENU_SINGLEVERB_OBJECT "&Obiect %1 %2"
 }
 
 STRINGTABLE

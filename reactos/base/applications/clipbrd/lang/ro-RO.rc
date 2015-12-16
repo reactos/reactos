@@ -1,0 +1,65 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "&Deschidere…", CMD_OPEN
+        MENUITEM "Păst&rare ca…", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire", CMD_EXIT
+    END
+    POPUP "&Editare"
+    BEGIN
+        MENUITEM "Șt&erge\tDel", CMD_DELETE
+    END
+    POPUP "&Afișare"
+    BEGIN
+        MENUITEM "&Automată", CMD_AUTOMATIC
+    END
+    POPUP "Aj&utor"
+    BEGIN
+        MENUITEM "&Manual…", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Despre…", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Clipboard"
+    STRING_DELETE_MSG "Elimină conținutul din Clipboard?"
+    STRING_DELETE_TITLE "Curăță Clipboard"
+    STRING_FORMAT_NT "Fișiere clipboard pentru ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Fișiere clipboard (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Format nespecificat"
+    STRING_CF_TEXT "Text"
+    STRING_CF_BITMAP "Bitmap"
+    STRING_CF_OEMTEXT "Text OEM"
+    STRING_CF_UNICODETEXT "Text unicode"
+    STRING_CF_DIB "Bitmap DIB"
+    STRING_CF_LOCALE "Date locale"
+    STRING_CF_ENHMETAFILE "Metafișier îmbunătățit"
+    STRING_CF_METAFILEPICT "Metafișier"
+    STRING_CF_PALETTE "Paletă de culori"
+    STRING_CF_DIBV5 "Bitmap DIB (versiune 5)"
+    STRING_CF_SYLK "Format de legătură simbolică"
+    STRING_CF_DIF "Format de transfer al datelor"
+    STRING_CF_HDROP "Abandon date"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "În clipboard sunt date într-un format care nu poate fi afișat."
+    ERROR_INVALID_FILE_FORMAT "The selected file is not a valid clipboard file."
+END

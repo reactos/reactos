@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "FreeLoader Debugger"
+    IDS_APP_TITLE "Program de depanare FreeLoader"
     IDS_HELLO "Salut, lume!"
     IDC_FDEBUG "FDEBUG"
 END

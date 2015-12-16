@@ -56,7 +56,7 @@ BEGIN
     END
     POPUP "F&ormatare"
     BEGIN
-        MENUITEM "Mod te&xt încadrat", CMD_WRAP
+        MENUITEM "În&cadrează liniile lungi", CMD_WRAP
         MENUITEM "&Font…", CMD_FONT
     END
     POPUP "&Afișare"
@@ -187,5 +187,5 @@ Păstrați modificările aduse?"
     STRING_LINE_COLUMN "Linia %d, coloana %d"
     STRING_PRINTERROR "Nu se poate imprima fișierul '%s'.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Document text"
 END

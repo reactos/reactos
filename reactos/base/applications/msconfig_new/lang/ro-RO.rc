@@ -143,20 +143,20 @@ END
 
 IDD_FIND_DIALOG DIALOGEX 30, 73, 236, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Find what:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "&Găsește:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
-    CONTROL         "Match &whole word only", IDC_CBX_FIND_WHOLE_WORD_ONLY,
+    CONTROL         "&Doar pentru întreg cuvântul", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
-    CONTROL         "Match &case", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
-    GROUPBOX        "Direction", IDC_STATIC, 107, 26, 68, 28
-    CONTROL         "&Up", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
-    CONTROL         "&Down", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
-    DEFPUSHBUTTON   "Find &Next", IDOK, 182, 5, 50, 14, WS_GROUP
-    PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "&Search from the beginning (Direction: Down) or end (Direction: Up)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "Distinge &MAJ/min", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
+    GROUPBOX        "Direcție", IDC_STATIC, 107, 26, 68, 28
+    CONTROL         "S&us", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
+    CONTROL         "J&os", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
+    DEFPUSHBUTTON   "Găsește &următorul", IDOK, 182, 5, 50, 14, WS_GROUP
+    PUSHBUTTON      "A&nulează", IDCANCEL, 182, 23, 50, 14, WS_GROUP
+    CONTROL         "&Caută de la început (Direcție: Sus) sau sfârșit (Direcție: Jos)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
