@@ -1,21 +1,8 @@
 /*
- * Unit test suite for Icmp functions
- *
- * Copyright 2006 Steven Edwards
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:         ReactOS API Tests
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
+ * PURPOSE:         Tests for ICMP functions
+ * PROGRAMMERS:     Tim Crawford
  */
 
 #include <apitest.h>
@@ -23,23 +10,81 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 
-HANDLE handle;
-
-static void test_IcmpCreateFile(void)
+static
+void
+test_IcmpCreateFile(void)
 {
-    handle=IcmpCreateFile();
-    ok(handle!=INVALID_HANDLE_VALUE,"Failed to create icmp file handle\n");
+    HANDLE hIcmp;
+
+    SetLastError(0xDEADBEEF);
+    hIcmp = IcmpCreateFile();
+    ok(hIcmp != INVALID_HANDLE_VALUE, "IcmpCreateFile failed unexpectedly: %lu\n", GetLastError());
+
+    if (hIcmp != INVALID_HANDLE_VALUE)
+        IcmpCloseHandle(hIcmp);
 }
 
-static void test_IcmpCloseHandle(void)
+static
+void
+test_Icmp6CreateFile(void)
 {
-    BOOL result;
-    result=IcmpCloseHandle(handle);
-    ok(result!=FALSE,"Failed to close icmp file handle\n");
+    HANDLE hIcmp;
+
+    SetLastError(0xDEADBEEF);
+    hIcmp = Icmp6CreateFile();
+
+    if (GetLastError() == ERROR_FILE_NOT_FOUND)
+    {
+        /* On Windows Server 2003, the IPv6 protocol must be installed. */
+        skip("IPv6 is not available.\n");
+        return;
+    }
+
+    ok(hIcmp != INVALID_HANDLE_VALUE, "Icmp6CreateFile failed unexpectedly: %lu\n", GetLastError());
+
+    if (hIcmp != INVALID_HANDLE_VALUE)
+        IcmpCloseHandle(hIcmp);
+}
+
+static
+void
+test_IcmpCloseHandle(void)
+{
+    HANDLE hIcmp;
+    BOOL bRet;
+
+    SetLastError(0xDEADBEEF);
+    hIcmp = IcmpCreateFile();
+    if (hIcmp != INVALID_HANDLE_VALUE)
+    {
+        bRet = IcmpCloseHandle(hIcmp);
+        ok(bRet, "IcmpCloseHandle failed unexpectedly: %lu\n", GetLastError());
+    }
+
+    SetLastError(0xDEADBEEF);
+    hIcmp = Icmp6CreateFile();
+    if (hIcmp != INVALID_HANDLE_VALUE)
+    {
+        bRet = IcmpCloseHandle(hIcmp);
+        ok(bRet, "IcmpCloseHandle failed unexpectedly: %lu\n", GetLastError());
+    }
+
+    hIcmp = INVALID_HANDLE_VALUE;
+    SetLastError(0xDEADBEEF);
+    bRet = IcmpCloseHandle(hIcmp);
+    ok(!bRet, "IcmpCloseHandle succeeded unexpectedly\n");
+    ok_err(ERROR_INVALID_HANDLE);
+
+    hIcmp = NULL;
+    SetLastError(0xDEADBEEF);
+    bRet = IcmpCloseHandle(hIcmp);
+    ok(!bRet, "IcmpCloseHandle succeeded unexpectedly\n");
+    ok_err(ERROR_INVALID_HANDLE);
 }
 
 START_TEST(icmp)
 {
     test_IcmpCreateFile();
+    test_Icmp6CreateFile();
     test_IcmpCloseHandle();
 }
