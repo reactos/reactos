@@ -268,10 +268,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_BACK "Înapoi la %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_FORWARD "Înainte la %s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Dosare|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de dosar||"
 END

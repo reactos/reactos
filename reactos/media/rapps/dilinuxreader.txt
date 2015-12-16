@@ -16,6 +16,11 @@ CDPath = none
 [Section.0407]
 Description = Eine einfache Möglichkeit zwischen Windows/ReactOS und Ext2/Ext3/Ext4, HFS und ReiserFS-Dateisystemen zu überbrücken.
 
+[Section.0418]
+License = Gratuită
+Description = Un mod facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.
+Size = 19,9 Mo
+
 [Section.041f]
 Name = DiskInternals Linux Okuyucu
 License = Ücretsiz

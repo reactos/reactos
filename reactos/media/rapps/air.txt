@@ -16,6 +16,11 @@ CDPath = none
 [Section.0407]
 Description = Mithilfe der Adobe AIR-Laufzeit können Entwickler den gleichen Code in native Anwendungen und Spiele einbinden.
 
+[Section.0418]
+License = Acord de licențiere Adobe Software
+Description = Adobe AIR oferă programatorilor posibilitatea de a încorpora în același pachet aplicații native și jocuri.
+Size = 17,3 Mo
+
 [Section.041f]
 License = Adobe Yazılım Ruhsatlama Anlaşması
 Description = Adobe AIR yürütücüsü geliştiricilere aynı kodu özgün uygulamalara ve oyunlara paketlemeye olanak sağlar.

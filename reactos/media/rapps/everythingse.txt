@@ -16,6 +16,11 @@ CDPath = none
 [Section.0407]
 Description = Finde schnell Dateien und Ordner durch den Namen. 
 
+[Section.0418]
+License = Gratuită
+Description = Localizează automat după nume fișiere și dosare.
+Size = 907 ko
+
 [Section.041f]
 Name = Tüm Şeyler Arama Motoru
 License = Ücretsiz

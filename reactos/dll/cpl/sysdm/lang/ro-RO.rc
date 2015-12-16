@@ -119,7 +119,7 @@ BEGIN
     LTEXT "Număr serial:", IDC_STATIC, 10, 55, 52, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "Acesta este un calculator porta&bil", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "Acesta este un calculator porta&bil", IDC_HWPPROP_PORTABLE, 17, 68, 120, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Sta&rea de andocare este nespecificată", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Calculatorul &este andocat", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "Calculatorul n&u este andocat", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10

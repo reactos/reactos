@@ -27,6 +27,9 @@ CLIP_ICON ICON "res/clipbrd.ico"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
