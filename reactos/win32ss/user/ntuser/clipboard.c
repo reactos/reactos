@@ -628,10 +628,12 @@ UserEmptyClipboard(VOID)
         co_IntSendMessageNoWait(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
-        pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
+    pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
 
-        pWinStaObj->iClipSequenceNumber++;
-        pWinStaObj->fClipboardChanged = TRUE;
+    pWinStaObj->iClipSerialNumber++;
+    pWinStaObj->iClipSequenceNumber++;
+    pWinStaObj->fClipboardChanged = TRUE;
+    pWinStaObj->fInDelayedRendering = FALSE;
 
     bRet = TRUE;
 
@@ -930,10 +932,15 @@ UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
     if (!pWinStaObj)
         goto cleanup;
 
-    /* If it's delayed rendering we don't have to open clipboard */
-    if ((pWinStaObj->fInDelayedRendering &&
-        pWinStaObj->spwndClipOwner->head.pti != PsGetCurrentThreadWin32Thread()) ||
-        !IntIsClipboardOpenByMe(pWinStaObj))
+    /*
+     * Check if the clipboard is correctly opened:
+     * - in case of normal rendering, we must have opened the clipboard;
+     * - in case of delayed rendering, the clipboard must be already opened
+     *   by another application, but we need to be the clipboard owner.
+     */
+    if ((!pWinStaObj->fInDelayedRendering && !IntIsClipboardOpenByMe(pWinStaObj)) ||
+        (pWinStaObj->fInDelayedRendering && !(pWinStaObj->ptiClipLock &&
+         pWinStaObj->spwndClipOwner->head.pti == PsGetCurrentThreadWin32Thread())))
     {
         ERR("Access denied!\n");
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
@@ -957,7 +964,10 @@ UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
         IntAddFormatedData(pWinStaObj, fmt, hData, scd->fGlobalHandle, FALSE);
         TRACE("hData stored\n");
 
-        pWinStaObj->iClipSequenceNumber++;
+        /* If the serial number was increased, increase also the sequence number */
+        if (scd->fIncSerialNumber)
+            pWinStaObj->iClipSequenceNumber++;
+
         pWinStaObj->fClipboardChanged = TRUE;
 
         /* Note: Synthesized formats are added in NtUserCloseClipboard */
