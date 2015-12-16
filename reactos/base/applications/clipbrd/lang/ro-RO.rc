@@ -61,5 +61,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "În clipboard sunt date într-un format care nu poate fi afișat."
-    ERROR_INVALID_FILE_FORMAT "The selected file is not a valid clipboard file."
+    ERROR_INVALID_FILE_FORMAT "Fișierul selectat nu e un fișier clipboard valid."
 END
