@@ -68,6 +68,9 @@ IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif

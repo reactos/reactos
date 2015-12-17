@@ -282,7 +282,7 @@ BEGIN
     IDS_VARIABLE "Variable"
     IDS_VALUE "Value"
     IDS_NO_DUMP "(None)"
-    IDS_MINI_DUMP "Minidump(64KB)"
+    IDS_MINI_DUMP "Minidump (64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Complete dump"
     IDS_USERPROFILE_NAME "Name"

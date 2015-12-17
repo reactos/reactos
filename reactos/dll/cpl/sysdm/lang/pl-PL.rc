@@ -291,7 +291,7 @@ BEGIN
     IDS_VARIABLE "Zmienna"
     IDS_VALUE "Wartość"
     IDS_NO_DUMP "(Brak)"
-    IDS_MINI_DUMP "Minimalny zrzut pamięci(64KB)"
+    IDS_MINI_DUMP "Minimalny zrzut pamięci (64KB)"
     IDS_KERNEL_DUMP "Zrzut pamięci kernela"
     IDS_FULL_DUMP "Zrzut całej pamięci"
     IDS_USERPROFILE_NAME "Nazwa"
@@ -304,7 +304,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Wprowadź wielkość dla maksymalnego rozmiaru pliku stronicowania."
     IDS_WARNINITIALRANGE "Początkowy rozmiar pliku stronicowania nie może być mniejszy niż 16MB i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
     IDS_WARNMAXIMUMRANGE "Maksymalny rozmiar pliku stronicowania nie może być mniejszy niż jego rozmiar początkowy i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
-    IDS_PAGEFILE_NONE "brak"
+    IDS_PAGEFILE_NONE "Brak"
     IDS_PAGEFILE_SYSTEM "Kontrolowany przez system"
     IDS_INFOREBOOT "Musisz ponownie uruchomić komputer, aby zastosować zmiany."
     IDS_DEVS "\nEkipa ReactOS\n\nKoordynator Projektu\n\nAleksey Bragin\n\nEkipa Programistów\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nInżynierowie Wydań\n\nColin Finck\nZ98\n\nEkipa WWW\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nEkipa PR\n\nMindflyer\nWierd_W\n\nPodziękowania dla\n\nwszystkich współpracowników\nEkipy Wine\n\n"//FIXME

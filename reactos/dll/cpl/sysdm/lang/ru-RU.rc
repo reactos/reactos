@@ -281,7 +281,7 @@ BEGIN
     IDS_PETABYTE "Пб ОЗУ"
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
-    IDS_NO_DUMP "(нет)"
+    IDS_NO_DUMP "(Нет)"
     IDS_MINI_DUMP "Малый дамп (64Кб)"
     IDS_KERNEL_DUMP "Дамп ядра"
     IDS_FULL_DUMP "Полный дамп"
