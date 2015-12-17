@@ -177,6 +177,8 @@ HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\syst
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
+HKCR,".bmp\shellnew","",0x00000000,""
+HKCR,".bmp\shellnew","NullFile",0x00020000,""
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
