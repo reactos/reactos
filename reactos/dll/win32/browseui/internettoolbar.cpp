@@ -1562,6 +1562,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
     VARIANT                                 parmIn;
     OLECMD                                  commandInfo;
     HRESULT                                 hResult;
+    wchar_t                                 templateString[200];
 
     notifyInfo = (NMTOOLBARW *)pNMHDR;
     if (notifyInfo->hdr.hwndFrom != fToolbarWindow)
@@ -1584,10 +1585,15 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
                 travelLog->CountEntries(browserService) > 1)
             {
-                AppendMenu(newMenu, MF_SEPARATOR, -1, L"");
-                AppendMenu(newMenu, MF_STRING /* | MF_OWNERDRAW */, IDM_EXPLORERBAR_HISTORY, L"&History\tCtrl+H");
+                AppendMenuW(newMenu, MF_SEPARATOR, -1, L"");
+
+                if (LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                                IDS_HISTORYTEXT, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+                    StringCbCopyW(templateString, sizeof(templateString), L"&History\tCtrl+H");
+
+                AppendMenuW(newMenu, MF_STRING /* | MF_OWNERDRAW */, IDM_EXPLORERBAR_HISTORY, templateString);
             }
-            params.cbSize = sizeof (params);
+            params.cbSize = sizeof(params);
             params.rcExclude = bounds;
             selectedItem = TrackPopupMenuEx(newMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
                                     bounds.left, bounds.bottom, m_hWnd, &params);
@@ -1611,10 +1617,15 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
                 travelLog->CountEntries(browserService) > 1)
             {
-                AppendMenu(newMenu, MF_SEPARATOR, -1, L"");
-                AppendMenu(newMenu, MF_STRING /* | MF_OWNERDRAW */, IDM_EXPLORERBAR_HISTORY, L"&History\tCtrl+H");
+                AppendMenuW(newMenu, MF_SEPARATOR, -1, L"");
+
+                if (LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                                IDS_HISTORYTEXT, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+                    StringCbCopyW(templateString, sizeof(templateString), L"&History\tCtrl+H");
+
+                AppendMenuW(newMenu, MF_STRING /* | MF_OWNERDRAW */, IDM_EXPLORERBAR_HISTORY, templateString);
             }
-            params.cbSize = sizeof (params);
+            params.cbSize = sizeof(params);
             params.rcExclude = bounds;
             selectedItem = TrackPopupMenuEx(newMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
                                     bounds.left, bounds.bottom, m_hWnd, &params);
@@ -1769,8 +1780,8 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
     CComPtr<ITravelLog>                     travelLog;
     TOOLTIPTEXTW                            *pTTTW;
     UINT                                    nID;
-    wchar_t                                 tempString[300];
     HRESULT                                 hResult;
+    wchar_t                                 tempString[300];
 
     pTTTW = reinterpret_cast<TOOLTIPTEXTW *>(pNMHDR);
     if ((pTTTW->uFlags & TTF_IDISHWND) != 0)
@@ -1796,7 +1807,7 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
         }
         else
             tempString[0] = 0;
-        wcsncpy (pTTTW->szText, tempString, sizeof (pTTTW->szText) / sizeof (wchar_t));
+        wcsncpy (pTTTW->szText, tempString, sizeof(pTTTW->szText) / sizeof(wchar_t));
         ::SetWindowPos(pNMHDR->hwndFrom, HWND_TOP, 0, 0, 0, 0,
             SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
         return 0;
