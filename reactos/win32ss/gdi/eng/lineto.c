@@ -28,6 +28,63 @@ TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
     }
 }
 
+LONG
+HandleStyles(
+    BRUSHOBJ *pbo,
+    POINTL* Translate,
+    LONG x,
+    LONG y,
+    LONG deltax,
+    LONG deltay,
+    LONG dx,
+    LONG dy,
+    PULONG piStyle)
+{
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    PULONG pulStyles = pebo->pbrush->pStyle;
+    ULONG iStyle, cStyles = pebo->pbrush->dwStyleCount;
+    LONG diStyle, offStyle, lStyleMax;
+
+    if (cStyles > 0)
+    {
+        if (deltax > deltay)
+        {
+            offStyle = (x - Translate->x) % pebo->pbrush->ulStyleSize;
+            diStyle = dx;
+            lStyleMax = x;
+        }
+        else
+        {
+            offStyle = (y - Translate->y) % pebo->pbrush->ulStyleSize;
+            diStyle = dy;
+            lStyleMax = y;
+        }
+
+        /* Now loop until we have found the style index */
+        for (iStyle = 0; offStyle >= pulStyles[iStyle]; iStyle++)
+        {
+            offStyle -= pulStyles[iStyle];
+        }
+
+        if (diStyle > 0)
+        {
+            lStyleMax += pulStyles[iStyle] - offStyle;
+        }
+        else
+        {
+            lStyleMax -= offStyle + 1;
+        }
+    }
+    else
+    {
+        iStyle = 0;
+        lStyleMax = MAX_COORD;
+    }
+
+    *piStyle = iStyle;
+    return lStyleMax;
+}
+
 /*
  * Draw a line from top-left to bottom-right
  */
@@ -43,6 +100,12 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     RECT_ENUM RectEnum;
     ULONG Pixel = pbo->iSolidColor;
     LONG delta;
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    PULONG pulStyles = pebo->pbrush->pStyle;
+    ULONG iStyle, cStyles = pebo->pbrush->dwStyleCount;
+    LONG lStyleMax;
+
+    lStyleMax = HandleStyles(pbo, Translate, x, y, deltax, deltay, 1, 1, &iStyle);
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
     EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -72,7 +135,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
         }
         if (ClipRect < RectEnum.arcl + RectEnum.c) /* If there's no current clip rect we're done */
         {
-            if (ClipRect->left <= x && ClipRect->top <= y)
+            if ((ClipRect->left <= x && ClipRect->top <= y) && ((iStyle & 1) == 0))
             {
                 DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_PutPixel(
                     OutputObj, x, y, Pixel);
@@ -80,6 +143,11 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y++;
+                if (y == lStyleMax)
+                {
+                    iStyle = (iStyle + 1) % cStyles;
+                    lStyleMax = y + pulStyles[iStyle];
+                }
                 error = error + deltax;
                 if (deltay <= error)
                 {
@@ -90,6 +158,11 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x++;
+                if (x == lStyleMax)
+                {
+                    iStyle = (iStyle + 1) % cStyles;
+                    lStyleMax = x + pulStyles[iStyle];
+                }
                 error = error + deltay;
                 if (deltax <= error)
                 {
@@ -114,6 +187,12 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     RECT_ENUM RectEnum;
     ULONG Pixel = pbo->iSolidColor;
     LONG delta;
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    PULONG pulStyles = pebo->pbrush->pStyle;
+    ULONG iStyle, cStyles = pebo->pbrush->dwStyleCount;
+    LONG lStyleMax;
+
+    lStyleMax = HandleStyles(pbo, Translate, x, y, deltax, deltay, 1, -1, &iStyle);
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTUP, 0);
     EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -142,7 +221,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
         }
         if (ClipRect < RectEnum.arcl + RectEnum.c)
         {
-            if (ClipRect->left <= x && y < ClipRect->bottom)
+            if ((ClipRect->left <= x && y < ClipRect->bottom) && ((iStyle & 1) == 0))
             {
                 DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_PutPixel(
                     OutputObj, x, y, Pixel);
@@ -150,6 +229,11 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y--;
+                if (y == lStyleMax)
+                {
+                    iStyle = (iStyle - 1) % cStyles;
+                    lStyleMax = y - pulStyles[iStyle];
+                }
                 error = error + deltax;
                 if (deltay <= error)
                 {
@@ -160,6 +244,11 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x++;
+                if (x == lStyleMax)
+                {
+                    iStyle = (iStyle + 1) % cStyles;
+                    lStyleMax = x + pulStyles[iStyle];
+                }
                 error = error + deltay;
                 if (deltax <= error)
                 {
@@ -184,6 +273,12 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     RECT_ENUM RectEnum;
     ULONG Pixel = pbo->iSolidColor;
     LONG delta;
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    PULONG pulStyles = pebo->pbrush->pStyle;
+    ULONG iStyle, cStyles = pebo->pbrush->dwStyleCount;
+    LONG lStyleMax;
+
+    lStyleMax = HandleStyles(pbo, Translate, x, y, deltax, deltay, -1, 1, &iStyle);
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTDOWN, 0);
     EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -212,7 +307,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
         }
         if (ClipRect < RectEnum.arcl + RectEnum.c)
         {
-            if (x < ClipRect->right && ClipRect->top <= y)
+            if ((x < ClipRect->right && ClipRect->top <= y) && ((iStyle & 1) == 0))
             {
                 DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_PutPixel(
                     OutputObj, x, y, Pixel);
@@ -220,6 +315,11 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y++;
+                if (y == lStyleMax)
+                {
+                    iStyle = (iStyle + 1) % cStyles;
+                    lStyleMax = y + pulStyles[iStyle];
+                }
                 error = error + deltax;
                 if (deltay <= error)
                 {
@@ -230,6 +330,11 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x--;
+                if (x == lStyleMax)
+                {
+                    iStyle = (iStyle - 1) % cStyles;
+                    lStyleMax = x - pulStyles[iStyle];
+                }
                 error = error + deltay;
                 if (deltax <= error)
                 {
@@ -254,6 +359,12 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     RECT_ENUM RectEnum;
     ULONG Pixel = pbo->iSolidColor;
     LONG delta;
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    PULONG pulStyles = pebo->pbrush->pStyle;
+    ULONG iStyle, cStyles = pebo->pbrush->dwStyleCount;
+    LONG lStyleMax;
+
+    lStyleMax = HandleStyles(pbo, Translate, x, y, deltax, deltay, -1, -1, &iStyle);
 
     CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_LEFTUP, 0);
     EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -282,7 +393,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
         }
         if (ClipRect < RectEnum.arcl + RectEnum.c)
         {
-            if (x < ClipRect->right && y < ClipRect->bottom)
+            if ((x < ClipRect->right && y < ClipRect->bottom) && ((iStyle & 1) == 0))
             {
                 DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_PutPixel(
                     OutputObj, x, y, Pixel);
@@ -290,6 +401,11 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             if (deltax < deltay)
             {
                 y--;
+                if (y == lStyleMax)
+                {
+                    iStyle = (iStyle - 1) % cStyles;
+                    lStyleMax = y - pulStyles[iStyle];
+                }
                 error = error + deltax;
                 if (deltay <= error)
                 {
@@ -300,6 +416,11 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
             else
             {
                 x--;
+                if (x == lStyleMax)
+                {
+                    iStyle = (iStyle - 1) % cStyles;
+                    lStyleMax = x - pulStyles[iStyle];
+                }
                 error = error + deltay;
                 if (deltax <= error)
                 {
@@ -337,6 +458,8 @@ EngLineTo(
     RECT_ENUM RectEnum;
     BOOL EnumMore;
     CLIPOBJ *pcoPriv = NULL;
+    PEBRUSHOBJ pebo = (PEBRUSHOBJ)pbo;
+    ULONG cStyles = pebo->pbrush->dwStyleCount;
 
     if (x1 < x2)
     {
@@ -413,7 +536,7 @@ EngLineTo(
         vy = y1;
     }
 
-    if (y1 == y2)
+    if ((y1 == y2) && (cStyles == 0))
     {
         CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
         do
@@ -437,7 +560,7 @@ EngLineTo(
         }
         while (EnumMore);
     }
-    else if (x1 == x2)
+    else if ((x1 == x2) && (cStyles == 0))
     {
         CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
         do

@@ -43,7 +43,8 @@ typedef struct _BRUSHBODY
     INT iBrushStyle;        // 0x070
     //PREGION prgn;           // 0x074
     //DWORD unk078;         // 0x078
-    DWORD unk07c;           // 0x07c
+    //DWORD unk07c;           // 0x07c
+    ULONG ulStyleSize;
     LIST_ENTRY ListHead;    // 0x080
 } BRUSHBODY;
 

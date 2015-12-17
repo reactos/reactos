@@ -86,11 +86,12 @@ IntGdiExtCreatePen(
 {
     HPEN hPen;
     PBRUSH pbrushPen;
-    static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55, 0};
-    static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0, 0};
-    static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38, 0};
-    static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0, 0};
-    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38, 0};
+    static ULONG aulStyleAlternate[] = { 1, 1 };
+    static ULONG aulStyleDash[] = { 6, 2 };
+    static ULONG aulStyleDot[] = { 1, 1 };
+    static ULONG aulStyleDashDot[] = { 3, 2, 1, 2 };
+    static ULONG aulStyleDashDotDot[] = { 3, 1, 1, 1, 1, 1 };
+    ULONG i;
 
     dwWidth = abs(dwWidth);
 
@@ -128,7 +129,8 @@ IntGdiExtCreatePen(
     // FIXME: Copy the bitmap first ?
     pbrushPen->hbmClient = (HANDLE)ulClientHatch;
     pbrushPen->dwStyleCount = dwStyleCount;
-    pbrushPen->pStyle = pStyle;
+    pbrushPen->pStyle = NULL;
+    pbrushPen->ulStyleSize = 0;
 
     pbrushPen->flAttrs = bOldStylePen ? BR_IS_OLDSTYLEPEN : BR_IS_PEN;
 
@@ -150,28 +152,33 @@ IntGdiExtCreatePen(
         break;
 
     case PS_ALTERNATE:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->pStyle = aulStyleAlternate;
+        pbrushPen->dwStyleCount = _countof(aulStyleAlternate);
         break;
 
     case PS_DOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->pStyle = aulStyleDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDot);
         break;
 
     case PS_DASH:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->pStyle = aulStyleDash;
+        pbrushPen->dwStyleCount = _countof(aulStyleDash);
         break;
 
     case PS_DASHDOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->pStyle = aulStyleDashDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDashDot);
         break;
 
     case PS_DASHDOTDOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->pStyle = aulStyleDashDotDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDashDotDot);
         break;
 
     case PS_INSIDEFRAME:
@@ -203,12 +210,22 @@ IntGdiExtCreatePen(
             }
         }
         /* FIXME: What style here? */
-        pbrushPen->flAttrs |= 0;
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->dwStyleCount = dwStyleCount;
+        pbrushPen->pStyle = pStyle;
         break;
 
     default:
         DPRINT1("IntGdiExtCreatePen unknown penstyle %x\n", dwPenStyle);
         goto ExitCleanup;
+    }
+
+    if (pbrushPen->pStyle != NULL)
+    {
+        for (i = 0; i < pbrushPen->dwStyleCount; i++)
+        {
+            pbrushPen->ulStyleSize += pbrushPen->pStyle[i];
+        }
     }
 
     PEN_UnlockPen(pbrushPen);
