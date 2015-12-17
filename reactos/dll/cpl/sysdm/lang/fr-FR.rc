@@ -53,7 +53,7 @@ BEGIN
     LTEXT "Réglages liés à votre compte utilsateur.", IDC_STATIC, 16, 88, 210, 20
     PUSHBUTTON "Réglages", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Démarrage et Récupération", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Les option Démarrage et Récupération indiquent à l'ordinateur comment démarrer et quoi faire si une erreur empêche l'ordinateur de s'arrêter.", IDC_STATIC, 16, 144, 210, 30
+    LTEXT "Les options Démarrage et Récupération indiquent à l'ordinateur comment démarrer et quoi faire si une erreur empêche l'ordinateur de s'arrêter.", IDC_STATIC, 16, 144, 210, 30
     PUSHBUTTON "Réglages", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 88, 192, 80, 15
