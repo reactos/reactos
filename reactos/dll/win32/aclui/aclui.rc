@@ -86,3 +86,6 @@ IDB_USRGRPIMAGES BITMAP "res/usrgrp.bmp"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

@@ -1,0 +1,85 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+/* Menu */
+IDC_FDEBUG MENU
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "連線(&C)", IDM_FILE_CONNECT
+        MENUITEM "斷開連線(&D)", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "清除顯示(&C)", IDM_FILE_CLEARDISPLAY
+        MENUITEM SEPARATOR
+        MENUITEM "開始捕獲(&S)", IDM_FILE_STARTCAPTURE
+        MENUITEM "停止捕獲(&T)", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "本地回顯(&L)", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "關閉(&X)", IDM_EXIT
+    END
+    POPUP "幫助(&H)"
+    BEGIN
+        MENUITEM "關於 ...(&A)", IDM_ABOUT
+    END
+END
+
+/* Accelerators */
+IDC_FDEBUG ACCELERATORS
+BEGIN
+    63, IDM_ABOUT, ASCII, ALT // "?"
+    47, IDM_ABOUT, ASCII, ALT // "/"
+END
+
+/* Dialogs */
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "關於 FreeLoader 偵錯程式"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "FreeLoader 偵錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "確定", IDOK, 183, 189, 44, 14, WS_GROUP
+    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
+    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "連線選項"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "輸入的 COM 埠 (例如 COM1):", IDC_STATIC, 7, 7, 108, 8
+    EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
+    LTEXT "輸入波特率 (例如 115200):", IDC_STATIC, 7, 38, 114, 8
+    EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "確定", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 100, 79, 50, 14
+END
+
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "捕獲檔案"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "捕獲檔案的名稱:", IDC_STATIC, 7, 17, 62, 8
+    EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "瀏覽器(&B)", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "確定", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 194, 74, 50, 14
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "fdebug"
+    IDS_HELLO "世界您好！"
+    IDC_FDEBUG "FDEBUG"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE "此程式是免費軟體; 你可以將它重新分發和/或修改根據 GNU 通用公共許可的條款，如由自由軟體基金會出版; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END

@@ -58,3 +58,7 @@ IDR_REGISTRYFOLDER REGISTRY "resources/rgs/regfolder.rgs"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

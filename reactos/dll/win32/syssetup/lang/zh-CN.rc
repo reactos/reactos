@@ -124,7 +124,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "致谢"
-    IDS_ACKSUBTITLE "ReactOS 的肩上站在和许可证信息"
+    IDS_ACKSUBTITLE "ReactOS 所依赖的开源项目及其许可证信息"
     IDS_OWNERTITLE "自定义软件"
     IDS_OWNERSUBTITLE "安装程序将使用您提供的个人信息，自定义您的 ReactOS 软件。"
     IDS_COMPUTERTITLE "计算机名和系统管理员密码"
