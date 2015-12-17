@@ -30,6 +30,7 @@
 
 #include <tchar.h>
 #include <wincon.h>
+#include <winnls.h>
 #include <winsvc.h>
 #include <userenv.h>
 #include <shlobj.h>
@@ -974,7 +975,117 @@ HotkeyThread(LPVOID Parameter)
     return 0;
 }
 
-DWORD WINAPI
+
+static
+VOID
+InitializeDefaultUserLocale(VOID)
+{
+    WCHAR szBuffer[80];
+    PWSTR ptr;
+    HKEY hLocaleKey;
+    DWORD ret;
+    DWORD dwSize;
+    LCID lcid;
+    INT i;
+
+    struct {LCTYPE LCType; PWSTR pValue;} LocaleData[] = {
+        /* Number */
+        {LOCALE_SDECIMAL, L"sDecimal"},
+        {LOCALE_STHOUSAND, L"sThousand"},
+        {LOCALE_SNEGATIVESIGN, L"sNegativeSign"},
+        {LOCALE_SPOSITIVESIGN, L"sPositiveSign"},
+        {LOCALE_SGROUPING, L"sGrouping"},
+        {LOCALE_SLIST, L"sList"},
+        {LOCALE_SNATIVEDIGITS, L"sNativeDigits"},
+        {LOCALE_INEGNUMBER, L"iNegNumber"},
+        {LOCALE_IDIGITS, L"iDigits"},
+        {LOCALE_ILZERO, L"iLZero"},
+        {LOCALE_IMEASURE, L"iMeasure"},
+        {LOCALE_IDIGITSUBSTITUTION, L"NumShape"},
+
+        /* Currency */
+        {LOCALE_SCURRENCY, L"sCurrency"},
+        {LOCALE_SMONDECIMALSEP, L"sMonDecimalSep"},
+        {LOCALE_SMONTHOUSANDSEP, L"sMonThousandSep"},
+        {LOCALE_SMONGROUPING, L"sMonGrouping"},
+        {LOCALE_ICURRENCY, L"iCurrency"},
+        {LOCALE_INEGCURR, L"iNegCurr"},
+        {LOCALE_ICURRDIGITS, L"iCurrDigits"},
+
+        /* Time */
+        {LOCALE_STIMEFORMAT, L"sTimeFormat"},
+        {LOCALE_STIME, L"sTime"},
+        {LOCALE_S1159, L"s1159"},
+        {LOCALE_S2359, L"s2359"},
+        {LOCALE_ITIME, L"iTime"},
+        {LOCALE_ITIMEMARKPOSN, L"iTimePrefix"},
+        {LOCALE_ITLZERO, L"iTLZero"},
+
+        /* Date */
+        {LOCALE_SLONGDATE, L"sLongDate"},
+        {LOCALE_SSHORTDATE, L"sShortDate"},
+        {LOCALE_SDATE, L"sDate"},
+        {LOCALE_IFIRSTDAYOFWEEK, L"iFirstDayOfWeek"},
+        {LOCALE_IFIRSTWEEKOFYEAR, L"iFirstWeekOfYear"},
+        {LOCALE_IDATE, L"iDate"},
+        {LOCALE_ICALENDARTYPE, L"iCalendarType"},
+
+        /* Misc */
+        {LOCALE_SCOUNTRY, L"sCountry"},
+        {LOCALE_SLANGUAGE, L"sLanguage"},
+        {LOCALE_ICOUNTRY, L"iCountry"},
+        {0, NULL}};
+
+    ret = RegOpenKeyExW(HKEY_USERS,
+                        L".DEFAULT\\Control Panel\\International",
+                        0,
+                        KEY_READ | KEY_WRITE,
+                        &hLocaleKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    dwSize = 9 * sizeof(WCHAR);
+    ret = RegQueryValueExW(hLocaleKey,
+                           L"Locale",
+                           NULL,
+                           NULL,
+                           (PBYTE)szBuffer,
+                           &dwSize);
+    if (ret != ERROR_SUCCESS)
+        goto done;
+
+    lcid = (LCID)wcstoul(szBuffer, &ptr, 16);
+    if (lcid == 0)
+        goto done;
+
+    i = 0;
+    while (LocaleData[i].pValue != NULL)
+    {
+        if (GetLocaleInfo(lcid,
+                          LocaleData[i].LCType | LOCALE_NOUSEROVERRIDE,
+                          szBuffer,
+                          sizeof(szBuffer) / sizeof(WCHAR)))
+        {
+            RegSetValueExW(hLocaleKey,
+                           LocaleData[i].pValue,
+                           0,
+                           REG_SZ,
+                           (PBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+        }
+
+        i++;
+    }
+
+done:
+    RegCloseKey(hLocaleKey);
+}
+
+
+DWORD
+WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
     TCHAR szBuffer[MAX_PATH];
@@ -996,6 +1107,8 @@ InstallReactOS(HINSTANCE hInstance)
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
+
+    InitializeDefaultUserLocale();
 
     if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
     {
