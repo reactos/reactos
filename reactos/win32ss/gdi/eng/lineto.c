@@ -49,13 +49,13 @@ HandleStyles(
     {
         if (deltax > deltay)
         {
-            offStyle = (x - Translate->x) % pebo->pbrush->ulStyleSize;
+            offStyle = (- Translate->x) % pebo->pbrush->ulStyleSize;
             diStyle = dx;
             lStyleMax = x;
         }
         else
         {
-            offStyle = (y - Translate->y) % pebo->pbrush->ulStyleSize;
+            offStyle = (- Translate->y) % pebo->pbrush->ulStyleSize;
             diStyle = dy;
             lStyleMax = y;
         }

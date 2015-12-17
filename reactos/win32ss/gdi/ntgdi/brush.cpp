@@ -45,6 +45,11 @@ BRUSH::BRUSH(
     this->ulSurfTime = 0;
     this->pvRBrush = NULL;
     this->hdev = NULL;
+
+    /* FIXME: should be done only in PEN constructor,
+       but our destructor needs it! */
+    this->dwStyleCount = 0;
+    this->pStyle = NULL;
 }
 
 BRUSH::~BRUSH(
@@ -62,6 +67,12 @@ BRUSH::~BRUSH(
     {
         GreSetBitmapOwner(this->hbmPattern, BASEOBJECT::OWNER::POWNED);
         GreDeleteObject(this->hbmPattern);
+    }
+
+    /* Delete styles */
+    if ((this->pStyle != NULL) && !(this->flAttrs & BR_IS_DEFAULTSTYLE))
+    {
+        ExFreePoolWithTag(this->pStyle, GDITAG_PENSTYLE);
     }
 }
 
