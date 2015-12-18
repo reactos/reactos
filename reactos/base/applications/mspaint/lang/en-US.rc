@@ -21,9 +21,9 @@ BEGIN
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Set as wallpaper (tiled)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Set as wallpaper (centered)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Set as wallpaper (stretched)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Set as wallpaper (Tiled)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Set as wallpaper (Centered)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Set as wallpaper (Stretched)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "&Quit\tAlt+F4", IDM_FILEEXIT
     END
