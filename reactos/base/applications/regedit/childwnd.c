@@ -348,6 +348,12 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
             }
         }
     }
+    else
+    {
+        (void)ListView_DeleteAllItems(g_pChildWnd->hListWnd);
+        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
+        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
+    }
 }
 
 /*******************************************************************************
