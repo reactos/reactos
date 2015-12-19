@@ -98,8 +98,8 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         /* szInfo, szInfoTitle */
         if (pnid->uFlags & NIF_INFO)
         {
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,  nidW.szInfo, _countof(nidW.szTip));
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1, nidW.szInfoTitle, _countof(nidW.szTip));
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,  nidW.szInfo, _countof(nidW.szInfo));
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1, nidW.szInfoTitle, _countof(nidW.szInfoTitle));
         }
 
         nidW.uTimeout = pnid->uTimeout;
