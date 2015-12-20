@@ -32,6 +32,8 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 #error Unknown architecture
 #endif
 
+#define MAX_COM_PORTS   (sizeof(BaseArray) / sizeof(BaseArray[0]) - 1)
+
 /* GLOBALS ********************************************************************/
 
 CPPORT KdComPort;
@@ -40,6 +42,42 @@ ULONG  KdComPortIrq = 0; // Not used at the moment.
 CPPORT KdDebugComPort;
 #endif
 
+/* DEBUGGING ******************************************************************/
+
+#ifdef KDDEBUG
+ULONG KdpDbgPrint(const char *Format, ...)
+{
+    va_list ap;
+    int Length;
+    char* ptr;
+    CHAR Buffer[512];
+
+    va_start(ap, Format);
+    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+    va_end(ap);
+
+    /* Check if we went past the buffer */
+    if (Length == -1)
+    {
+        /* Terminate it if we went over-board */
+        Buffer[sizeof(Buffer) - 1] = '\n';
+
+        /* Put maximum */
+        Length = sizeof(Buffer);
+    }
+
+    ptr = Buffer;
+    while (Length--)
+    {
+        if (*ptr == '\n')
+            CpPutByte(&KdDebugComPort, '\r');
+
+        CpPutByte(&KdDebugComPort, *ptr++);
+    }
+
+    return 0;
+}
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -190,8 +228,27 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
     }
 
 #ifdef KDDEBUG
-    /* Use DEBUGPORT=COM1 if you want to debug KDGDB, as we use COM2 for debugging it */
-    CpInitialize(&KdDebugComPort, UlongToPtr(BaseArray[2]), DEFAULT_BAUD_RATE);
+    /*
+     * Try to find a free COM port and use it as the KD debugging port.
+     * NOTE: Inspired by reactos/boot/freeldr/freeldr/comm/rs232.c, Rs232PortInitialize(...)
+     */
+    {
+    /*
+     * Start enumerating COM ports from the last one to the first one,
+     * and break when we find a valid port.
+     * If we reach the first element of the list, the invalid COM port,
+     * then it means that no valid port was found.
+     */
+    ULONG ComPort;
+    for (ComPort = MAX_COM_PORTS; ComPort > 0; ComPort--)
+    {
+        /* Check if the port exist; skip the KD port */
+        if ((ComPort != ComPortNumber) && CpDoesPortExist(UlongToPtr(BaseArray[ComPort])))
+            break;
+    }
+    if (ComPort != 0)
+        CpInitialize(&KdDebugComPort, UlongToPtr(BaseArray[ComPort]), DEFAULT_BAUD_RATE);
+    }
 #endif
 
     /* Initialize the port */
@@ -272,35 +329,5 @@ KdpPollBreakIn(VOID)
     }
     return KdPacketTimedOut;
 }
-
-#ifdef KDDEBUG
-ULONG KdpDbgPrint(const char* Format, ...)
-{
-    va_list ap;
-    static CHAR Buffer[512];
-    char* ptr;
-    int Length;
-
-    va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-    va_end(ap);
-
-    /* Check if we went past the buffer */
-    if (Length == -1)
-    {
-        /* Terminate it if we went over-board */
-        Buffer[sizeof(Buffer) - 1] = '\n';
-
-        /* Put maximum */
-        Length = sizeof(Buffer);
-    }
-
-    ptr = Buffer;
-    while (Length--)
-        CpPutByte(&KdDebugComPort, *ptr++);
-
-    return 0;
-}
-#endif
 
 /* EOF */

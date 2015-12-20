@@ -8,12 +8,8 @@
 
 #include "kddll.h"
 
-#define NDEBUG
-#include <debug.h>
-
 /* GLOBALS ********************************************************************/
 
-PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 ULONG RemotePacketId = INITIAL_PACKET_ID;
 
