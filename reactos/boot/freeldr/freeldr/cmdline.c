@@ -14,24 +14,60 @@
 
 typedef struct tagCMDLINEINFO
 {
-    const char *DefaultOperatingSystem;
+    PCCH DebugString;
+    PCCH DefaultOperatingSystem;
     LONG TimeOut;
 } CMDLINEINFO, *PCMDLINEINFO;
 
+CCHAR DebugString[256];
 CCHAR DefaultOs[256];
 CMDLINEINFO CmdLineInfo;
 
 /* FUNCTIONS ******************************************************************/
 
 VOID
-CmdLineParse(IN PCHAR CmdLine)
+CmdLineParse(IN PCCH CmdLine)
 {
     PCHAR End, Setting;
     ULONG_PTR Length, Offset = 0;
 
     /* Set defaults */
+    CmdLineInfo.DebugString = NULL;
     CmdLineInfo.DefaultOperatingSystem = NULL;
     CmdLineInfo.TimeOut = -1;
+
+    /*
+     * Get debug string, in the following format:
+     * "debug=option1=XXX;option2=YYY;..."
+     * and translate it into the format:
+     * "OPTION1=XXX OPTION2=YYY ..."
+     */
+    Setting = strstr(CmdLine, "debug=");
+    if (Setting)
+    {
+        /* Check if there are more command-line parameters following */
+        Setting += sizeof("debug=") + sizeof(ANSI_NULL);
+        End = strstr(Setting, " ");
+        if (End)
+            Length = End - Setting;
+        else
+            Length = sizeof(DebugString);
+
+        /* Copy the debug string and upcase it */
+        strncpy(DebugString, Setting, Length);
+        DebugString[Length - 1] = ANSI_NULL;
+        _strupr(DebugString);
+
+        /* Replace all separators ';' by spaces */
+        Setting = DebugString;
+        while (*Setting)
+        {
+            if (*Setting == ';') *Setting = ' ';
+            Setting++;
+        }
+
+        CmdLineInfo.DebugString = DebugString;
+    }
 
     /* Get timeout */
     Setting = strstr(CmdLine, "timeout=");
@@ -43,7 +79,7 @@ CmdLineParse(IN PCHAR CmdLine)
     Setting = strstr(CmdLine, "defaultos=");
     if (Setting)
     {
-        /* Check if there's more command-line parameters following */
+        /* Check if there are more command-line parameters following */
         Setting += sizeof("defaultos=") + sizeof(ANSI_NULL);
         End = strstr(Setting, " ");
         if (End)
@@ -53,6 +89,7 @@ CmdLineParse(IN PCHAR CmdLine)
 
         /* Copy the default OS */
         strncpy(DefaultOs, Setting, Length);
+        DefaultOs[Length - 1] = ANSI_NULL;
         CmdLineInfo.DefaultOperatingSystem = DefaultOs;
     }
 
@@ -82,6 +119,12 @@ CmdLineParse(IN PCHAR CmdLine)
 
     /* Fix it up */
     gRamDiskBase = (PVOID)((ULONG_PTR)gRamDiskBase + Offset);
+}
+
+PCCH
+CmdLineGetDebugString(VOID)
+{
+    return CmdLineInfo.DebugString;
 }
 
 PCCH

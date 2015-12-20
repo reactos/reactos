@@ -119,7 +119,7 @@
 #include <arch/mips/arcbios.h>
 #endif
 
-VOID __cdecl BootMain(LPSTR CmdLine);
+VOID __cdecl BootMain(IN PCCH CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
 VOID RunLoader(VOID);
 VOID FrLdrCheckCpuCompatiblity(VOID);

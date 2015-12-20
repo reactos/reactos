@@ -18,7 +18,6 @@
  */
 
 #include <freeldr.h>
-
 #include <debug.h>
 
 #if DBG && !defined(_M_ARM)
@@ -33,36 +32,31 @@
 
 #define DBG_DEFAULT_LEVELS (ERR_LEVEL|FIXME_LEVEL)
 
+static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
+
 #define SCREEN  1
 #define RS232   2
 #define BOCHS   4
 
-#define COM1    1
-#define COM2    2
-#define COM3    3
-#define COM4    4
-
-#define BOCHS_OUTPUT_PORT    0xe9
-
-static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
+#define BOCHS_OUTPUT_PORT   0xE9
 
 ULONG DebugPort = RS232;
-// ULONG DebugPort = SCREEN;
-// ULONG DebugPort = BOCHS;
-// ULONG DebugPort = SCREEN|BOCHS;
-#ifdef _WINKD_
-/* COM1 is the WinDbg port */
-ULONG ComPort = COM2;
-#else
-ULONG ComPort = COM1;
-#endif
-// ULONG BaudRate = 19200;
+
+/* Serial debug connection */
+ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
 ULONG BaudRate = 115200;
+ULONG PortIrq  = 0; // Not used at the moment.
 
 BOOLEAN DebugStartOfLine = TRUE;
 
-VOID DebugInit(VOID)
+VOID DebugInit(BOOLEAN MainInit)
 {
+    PCHAR CommandLine, PortString, BaudString, IrqString;
+    ULONG Value;
+    CHAR  DebugString[256];
+
+    /* Always reset the debugging channels */
+
 #if defined (DEBUG_ALL)
     memset(DbgChannels, MAX_LEVEL, DBG_CHANNELS_COUNT);
 #elif defined (DEBUG_WARN)
@@ -83,9 +77,121 @@ VOID DebugInit(VOID)
     DbgChannels[DPRINT_WINDOWS] = MAX_LEVEL;
 #endif
 
+    /* Check for pre- or main initialization phase */
+    if (!MainInit)
+    {
+        /* Pre-initialization phase: use the FreeLdr command-line debugging string */
+        CommandLine = (PCHAR)CmdLineGetDebugString();
+
+        /* If no command-line is provided, initialize the debug port with default settings */
+        if (CommandLine == NULL)
+            goto Done;
+
+        strcpy(DebugString, CommandLine);
+    }
+    else
+    {
+        /* Main initialization phase: use the FreeLdr INI debugging string */
+
+        ULONG_PTR SectionId;
+
+        if (!IniOpenSection("FreeLoader", &SectionId))
+            return;
+
+        if (!IniReadSettingByName(SectionId, "Debug", DebugString, sizeof(DebugString)))
+            return;
+    }
+
+    /* Get the Command Line */
+    CommandLine = DebugString;
+
+    /* Upcase it */
+    _strupr(CommandLine);
+
+    /* Get the port and baud rate */
+    PortString = strstr(CommandLine, "DEBUGPORT");
+    BaudString = strstr(CommandLine, "BAUDRATE");
+    IrqString  = strstr(CommandLine, "IRQ");
+
+    /*
+     * Check if we got /DEBUGPORT parameters.
+     * NOTE: Inspired by reactos/ntoskrnl/kd/kdinit.c, KdInitSystem(...)
+     */
+    while (PortString)
+    {
+        /* Move past the actual string, to reach the port*/
+        PortString += strlen("DEBUGPORT");
+
+        /* Now get past any spaces and skip the equal sign */
+        while (*PortString == ' ') PortString++;
+        PortString++;
+
+        /* Check for possible ports and set the port to use */
+        if (strncmp(PortString, "SCREEN", 6) == 0)
+        {
+            PortString += 6;
+            DebugPort |= SCREEN;
+        }
+        else if (strncmp(PortString, "BOCHS", 5) == 0)
+        {
+            PortString += 5;
+            DebugPort |= BOCHS;
+        }
+        else if (strncmp(PortString, "COM", 3) == 0)
+        {
+            PortString += 3;
+            DebugPort |= RS232;
+
+            /* Set the port to use */
+            Value = atol(PortString);
+            if (Value) ComPort = Value;
+        }
+
+        PortString = strstr(PortString, "DEBUGPORT");
+   }
+
+    /* Check if we got a baud rate */
+    if (BaudString)
+    {
+        /* Move past the actual string, to reach the rate */
+        BaudString += strlen("BAUDRATE");
+
+        /* Now get past any spaces */
+        while (*BaudString == ' ') BaudString++;
+
+        /* And make sure we have a rate */
+        if (*BaudString)
+        {
+            /* Read and set it */
+            Value = atol(BaudString + 1);
+            if (Value) BaudRate = Value;
+        }
+    }
+
+    /* Check Serial Port Settings [IRQ] */
+    if (IrqString)
+    {
+        /* Move past the actual string, to reach the rate */
+        IrqString += strlen("IRQ");
+
+        /* Now get past any spaces */
+        while (*IrqString == ' ') IrqString++;
+
+        /* And make sure we have an IRQ */
+        if (*IrqString)
+        {
+            /* Read and set it */
+            Value = atol(IrqString + 1);
+            if (Value) PortIrq = Value;
+        }
+    }
+
+Done:
+    /* Try to initialize the port; if it fails, remove the corresponding flag */
     if (DebugPort & RS232)
     {
-        Rs232PortInitialize(ComPort, BaudRate);
+        if (!Rs232PortInitialize(ComPort, BaudRate))
+            DebugPort &= ~RS232;
     }
 }
 
@@ -114,9 +220,9 @@ VOID DebugPrintChar(UCHAR Character)
 ULONG
 DbgPrint(const char *Format, ...)
 {
-    int i;
-    int Length;
     va_list ap;
+    int Length;
+    char* ptr;
     CHAR Buffer[512];
 
     va_start(ap, Format);
@@ -133,10 +239,9 @@ DbgPrint(const char *Format, ...)
         Length = sizeof(Buffer);
     }
 
-    for (i = 0; i < Length; i++)
-    {
-        DebugPrintChar(Buffer[i]);
-    }
+    ptr = Buffer;
+    while (Length--)
+        DebugPrintChar(*ptr++);
 
     return 0;
 }
@@ -149,7 +254,7 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     char *ptr = Buffer;
 
     /* Mask out unwanted debug messages */
-    if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS ))
+    if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS))
     {
         return;
     }
@@ -191,9 +296,8 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
 VOID
 DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 {
-    PUCHAR    BufPtr = (PUCHAR)Buffer;
-    ULONG        Idx;
-    ULONG        Idx2;
+    PUCHAR BufPtr = (PUCHAR)Buffer;
+    ULONG  Idx, Idx2;
 
     /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & TRACE_LEVEL))
@@ -202,7 +306,7 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
     DebugStartOfLine = FALSE; // We don't want line headers
     DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
 
-    for (Idx=0; Idx<Length; )
+    for (Idx = 0; Idx < Length; )
     {
         DebugStartOfLine = FALSE; // We don't want line headers
 
@@ -215,7 +319,7 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
         else
             DbgPrint("%x:\t", Idx);
 
-        for (Idx2=0; Idx2<16; Idx2++,Idx++)
+        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
         {
             if (BufPtr[Idx] < 0x10)
             {
@@ -236,7 +340,7 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
         Idx -= 16;
         DbgPrint(" ");
 
-        for (Idx2=0; Idx2<16; Idx2++,Idx++)
+        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
         {
             if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
             {
@@ -257,10 +361,10 @@ DbgAddDebugChannel(CHAR* channel, CHAR* level, CHAR op)
 {
     int iLevel, iChannel;
 
-    if (channel == NULL || *channel == L'\0' || strlen(channel) == 0 )
+    if (channel == NULL || *channel == '\0' || strlen(channel) == 0)
         return FALSE;
 
-    if (level == NULL || *level == L'\0' || strlen(level) == 0 )
+    if (level == NULL || *level == '\0' || strlen(level) == 0)
         iLevel = MAX_LEVEL;
     else if (strcmp(level, "err") == 0)
         iLevel = ERR_LEVEL;
@@ -290,9 +394,9 @@ DbgAddDebugChannel(CHAR* channel, CHAR* level, CHAR op)
     {
         int i;
 
-        for(i= 0 ; i < DBG_CHANNELS_COUNT; i++)
+        for (i = 0; i < DBG_CHANNELS_COUNT; i++)
         {
-            if(op==L'+')
+            if (op == '+')
                 DbgChannels[i] |= iLevel;
             else
                 DbgChannels[i] &= ~iLevel;
@@ -302,7 +406,7 @@ DbgAddDebugChannel(CHAR* channel, CHAR* level, CHAR op)
     }
     else return FALSE;
 
-    if (op == L'+')
+    if (op == '+')
         DbgChannels[iChannel] |= iLevel;
     else
         DbgChannels[iChannel] &= ~iLevel;
