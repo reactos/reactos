@@ -539,8 +539,8 @@ GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
             return FALSE;
         }
 
-        wcscpy(lpProfileDir, szProfilePath);
-    }
+            wcscpy(lpProfileDir, szProfilePath);
+        }
 
     *lpcchSize = dwLength;
 
@@ -667,8 +667,8 @@ GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
             return FALSE;
         }
 
-        wcscpy(lpProfileDir, szProfilePath);
-    }
+            wcscpy(lpProfileDir, szProfilePath);
+        }
 
     *lpcchSize = dwLength;
 
@@ -1308,6 +1308,25 @@ UnloadUserProfile(HANDLE hToken,
         RtlFreeUnicodeString(&SidString);
         return FALSE;
     }
+
+    /* HACK */
+    {
+        HKEY hUserKey;
+
+        Error = RegOpenKeyExW(HKEY_USERS,
+                              SidString.Buffer,
+                              0,
+                              KEY_WRITE,
+                              &hUserKey);
+        if (Error == ERROR_SUCCESS)
+        {
+            RegDeleteKeyW(hUserKey,
+                          L"Volatile Environment");
+
+            RegCloseKey(hUserKey);
+        }
+    }
+    /* End of HACK */
 
     /* Unload the hive */
     Error = RegUnLoadKeyW(HKEY_USERS,
