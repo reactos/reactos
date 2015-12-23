@@ -38,6 +38,7 @@ static PKDB_BREAKPOINT KdbSwBreakPoints[KDB_MAXIMUM_SW_BREAKPOINT_COUNT]; /* Ena
 static PKDB_BREAKPOINT KdbHwBreakPoints[KDB_MAXIMUM_HW_BREAKPOINT_COUNT]; /* Enabled hardware breakpoints, orderless */
 static PKDB_BREAKPOINT KdbBreakPointToReenable = NULL; /* Set to a breakpoint struct when single stepping after
                                                           a software breakpoint was hit, to reenable it */
+static BOOLEAN KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep;
 LONG KdbLastBreakPointNr = -1;  /* Index of the breakpoint which cause KDB to be entered */
 ULONG KdbNumSingleSteps = 0; /* How many single steps to do */
 BOOLEAN KdbSingleStepOver = FALSE; /* Whether to step over calls/reps. */
@@ -1407,6 +1408,15 @@ KdbEnterDebuggerException(
                 KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
                 KeBugCheck(0); // FIXME: Proper bugcode!
             }
+
+            /* Also since we are past the int3 now, decrement EIP in the
+               TrapFrame. This is only needed because KDBG insists on working
+               with the TrapFrame instead of with the Context, as it is supposed
+               to do. The context has already EIP point to the int3, since
+               KiDispatchException accounts for that. Whatever we do here with
+               the TrapFrame does not matter anyway, since KiDispatchException
+               will overwrite it with the values from the Context! */
+            TrapFrame->Eip--;
         }
 
         if ((BreakPoint->Type == KdbBreakPointHardware) &&
@@ -1427,8 +1437,6 @@ KdbEnterDebuggerException(
 
             /* Delete the temporary breakpoint which was used to step over or into the instruction. */
             KdbpDeleteBreakPoint(-1, BreakPoint);
-
-            TrapFrame->Eip--;
 
             if (--KdbNumSingleSteps > 0)
             {
@@ -1520,8 +1528,14 @@ KdbEnterDebuggerException(
             if (KdbNumSingleSteps == 0)
                 Context->EFlags &= ~EFLAGS_TF;
 
-            goto continue_execution; /* return */
+            if (!KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep)
+            {
+                goto continue_execution; /* return */
+            }
         }
+
+        /* Quoth the raven, 'Nevermore!' */
+        KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep = FALSE;
 
         /* Check if we expect a single step */
         if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
@@ -1645,6 +1659,9 @@ KdbEnterDebuggerException(
     /* Check if we should single step */
     if (KdbNumSingleSteps > 0)
     {
+        /* Variable explains itself! */
+        KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep = TRUE;
+
         if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
             (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
         {
