@@ -248,6 +248,7 @@ IntSetDIBits(
     UINT  StartScan,
     UINT  ScanLines,
     CONST VOID  *Bits,
+    ULONG cjMaxBits,
     CONST BITMAPINFO  *bmi,
     UINT  ColorUse)
 {
@@ -260,6 +261,11 @@ IntSetDIBits(
     PPALETTE    ppalDIB = 0;
 
     if (!bmi) return 0;
+
+    if (bmi->bmiHeader.biSizeImage > cjMaxBits)
+    {
+        return 0;
+    }
 
     SourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
                                      ScanLines,
@@ -1316,6 +1322,7 @@ IntCreateDIBitmap(
     ULONG compression,
     DWORD init,
     LPBYTE bits,
+    ULONG cjMaxBits,
     PBITMAPINFO data,
     DWORD coloruse)
 {
@@ -1390,7 +1397,7 @@ IntCreateDIBitmap(
 
     if ((NULL != handle) && (CBM_INIT & init))
     {
-        IntSetDIBits(Dc, handle, 0, height, bits, data, coloruse);
+        IntSetDIBits(Dc, handle, 0, height, bits, cjMaxBits, data, coloruse);
     }
 
     return handle;
@@ -1529,7 +1536,7 @@ GreCreateDIBitmapInternal(
         planes = 0;
         compression = 0;
     }
-    Bmp = IntCreateDIBitmap(Dc, cx, cy, planes, bpp, compression, fInit, pjInit, pbmi, iUsage);
+    Bmp = IntCreateDIBitmap(Dc, cx, cy, planes, bpp, compression, fInit, pjInit, cjMaxBits, pbmi, iUsage);
     DC_UnlockDc(Dc);
 
     if(!hDc)
