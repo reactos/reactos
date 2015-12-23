@@ -6939,17 +6939,11 @@ typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
 #define IO_STOP_ON_SYMLINK                  0x0008
 #define IO_MM_PAGING_FILE                   0x0010
 
-//typedef VOID
-//( *PDRIVER_FS_NOTIFICATION) (
-//  _In_ PDEVICE_OBJECT DeviceObject,
-//  _In_ BOOLEAN FsActive);
-
-typedef
-VOID
-DRIVER_FS_NOTIFICATION(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ BOOLEAN FsActive
-);
+_Function_class_(DRIVER_FS_NOTIFICATION)
+typedef VOID
+(NTAPI DRIVER_FS_NOTIFICATION)(
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN FsActive);
 typedef DRIVER_FS_NOTIFICATION *PDRIVER_FS_NOTIFICATION;
 
 typedef enum _FS_FILTER_SECTION_SYNC_TYPE {

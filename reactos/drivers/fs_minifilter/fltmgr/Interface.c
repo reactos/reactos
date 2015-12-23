@@ -66,6 +66,7 @@ FltpDetachFromFileSystemDevice(
 
 DRIVER_FS_NOTIFICATION FltpFsNotification;
 VOID
+NTAPI
 FltpFsNotification(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ BOOLEAN FsActive
@@ -586,6 +587,7 @@ FltpDetachFromFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject)
 
 DRIVER_FS_NOTIFICATION FltpFsNotification;
 VOID
+NTAPI
 FltpFsNotification(_In_ PDEVICE_OBJECT DeviceObject,
                    _In_ BOOLEAN FsActive)
 {
