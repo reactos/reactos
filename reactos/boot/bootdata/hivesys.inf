@@ -1943,6 +1943,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CheckingBitmap",0x00
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","Ext3ForceWriting",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","AutoMount",0x00010001,0x00000001
 
+; Filesystem Filter Manager driver
+HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ImagePath",0x00020000,"system32\drivers\rosfltmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Type",0x00010001,0x00000002
+
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
 HKLM,"SYSTEM\Select","Default",0x00010001,0x00000001
