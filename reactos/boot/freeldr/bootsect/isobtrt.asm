@@ -14,7 +14,7 @@
 ;  the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
 ;  USA; either version 2 of the License, or (at your option) any later
 ;  version; incorporated herein by reference.
-; 
+;
 ; ****************************************************************************
 ;
 ; THIS FILE IS A MODIFIED VERSION OF ISOLINUX.ASM

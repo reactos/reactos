@@ -133,8 +133,8 @@ CalcDriveSize:
         xor cx,cx
         mov al,[BYTE bp+NumberOfFats]           ; Number of fats
         mul WORD [BYTE bp+SectorsPerFat]        ; Times sectors per fat
-        add ax,WORD [BYTE bp+HiddenSectors] 
-        adc dx,WORD [BYTE bp+HiddenSectors+2]   ; Add the number of hidden sectors 
+        add ax,WORD [BYTE bp+HiddenSectors]
+        adc dx,WORD [BYTE bp+HiddenSectors+2]   ; Add the number of hidden sectors
         add ax,WORD [BYTE bp+ReservedSectors]   ; Add the number of reserved sectors
         adc dx,cx                               ; Add carry bit
         mov WORD [BYTE bp-DataAreaStartLow],ax  ; Save the starting sector of the root directory
@@ -225,7 +225,7 @@ ErrBoot:
 Reboot:
         ; mov  si,msgAnyKey       ; Press any key message
         ; call PutChars           ; Display it
-        xor ax,ax       
+        xor ax,ax
         int 16h                 ; Wait for a keypress
         int 19h                 ; Reboot
 
@@ -270,7 +270,7 @@ ReadCluster:
 ; DX:AX has logical sector number to read
 ; CX has number of sectors to read
 ReadSectors:
-        
+
         ; We can't just check if the start sector is
         ; in the BIOS CHS range. We have to check if
         ; the start sector + length is in that range.
@@ -314,8 +314,8 @@ ReadSectorsLBALoop:
 ;       jz   PrintDiskError                     ; Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
 
 
-                                                ; Good, we're here so the computer supports LBA disk access
-                                                ; So finish the extended read
+        ; Good, we're here so the computer supports LBA disk access
+        ; So finish the extended read
         mov  dl,[BYTE bp+BootDrive]             ; Drive number
         mov  ah,42h                             ; Int 13h, AH = 42h - Extended Read
         int  13h                                ; Call BIOS
@@ -333,10 +333,10 @@ ReadSectorsLBALoop:
         add  bx,byte 20h                        ; Increment read buffer for next sector
         mov  es,bx
         pop  bx
-                                                
+
         loop ReadSectorsLBALoop                 ; Read next sector
 
-        ret   
+        ret
 
 
 ; Reads logical sectors into [ES:BX]
@@ -351,7 +351,7 @@ ReadSectorsCHSLoop:
         xchg ax,dx
         xor  dx,dx
         div  WORD [BYTE bp+SectorsPerTrack]
-        xchg ax,cx                    
+        xchg ax,cx
         div  WORD [BYTE bp+SectorsPerTrack]    ; Divide logical by SectorsPerTrack
         inc  dx                        ; Sectors numbering starts at 1 not 0
         xchg cx,dx
@@ -385,7 +385,7 @@ NoCarryCHS:
                                         ; Increment read buffer for next sector
         loop ReadSectorsCHSLoop         ; Read next sector
 
-        ret   
+        ret
 
 
 msgDiskError db 'Disk error',0dh,0ah,0

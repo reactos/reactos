@@ -112,7 +112,7 @@ FSInfoSector:
 BackupBootSector:
     .word    6
 Reserved1:
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    .space 12, 0
 #endif // FAT32
 
 BootDrive:

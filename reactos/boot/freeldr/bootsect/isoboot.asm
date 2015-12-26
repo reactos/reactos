@@ -14,7 +14,7 @@
 ;  the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
 ;  USA; either version 2 of the License, or (at your option) any later
 ;  version; incorporated herein by reference.
-; 
+;
 ; ****************************************************************************
 ;
 ; THIS FILE IS A MODIFIED VERSION OF ISOLINUX.ASM
@@ -158,7 +158,7 @@ relocate:
 	mov	byte [TimeoutCount], 5
 .next_second:
 	mov	eax, [BIOS_timer]		; load current tick counter
-	add	eax, 19				; 
+	add	eax, 19				;
 
 .poll_again:
 	call	pollchar_and_empty

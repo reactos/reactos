@@ -62,9 +62,9 @@ FSInfoSector:
 BackupBootSector:
     .word    6
 Reserved1:
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-
+    .space 12, 0
 // End FAT32 Inserted Info
+
 BootDrive:
     .byte 0
 Reserved:
@@ -355,8 +355,8 @@ ContinueSearch:
     jmp  PrintFileNotFound
 
 FindFile:
-    mov  ax, es              // We didn't find it in the previous dir entry
-    add  ax, 2               // So lets move to the next one
+    mov  ax, es             // We didn't find it in the previous dir entry
+    add  ax, 2              // So lets move to the next one
     mov  es, ax             // And search again
     xor  di, di
     mov  si, offset filename

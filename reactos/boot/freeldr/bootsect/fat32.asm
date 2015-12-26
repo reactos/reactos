@@ -108,7 +108,7 @@ LoadExtraBootCode:
         ; First we have to load our extra boot code at
         ; sector 14 into memory at [0000:7e00h]
         mov  eax,0eh
-        add  eax,DWORD [BYTE bp+HiddenSectors]  ; Add the number of hidden sectors 
+        add  eax,DWORD [BYTE bp+HiddenSectors]  ; Add the number of hidden sectors
         mov  cx,1
         xor  bx,bx
         mov  es,bx                              ; Read sector to [0000:7e00h]
@@ -122,6 +122,7 @@ LoadExtraBootCode:
 ; EAX has logical sector number to read
 ; CX has number of sectors to read
 ReadSectors:
+        push es
         cmp  eax,DWORD [BiosCHSDriveSize]       ; Check if they are reading a sector outside CHS range
         jae  ReadSectorsLBA                     ; Yes - go to the LBA routine
                                                 ; If at all possible we want to use LBA routines because
@@ -181,6 +182,7 @@ ReadSectorsSetupDiskAddressPacket:
         sub  cx,[LBASectorsRead]
         jnz  ReadSectorsLBA                     ; Read next sector
 
+        pop es
         ret
 
 LBASectorsRead:
@@ -227,7 +229,7 @@ ReadSectorsCHSLoop:
 
         loop  ReadSectorsCHSLoop                    ; Read next sector
 
-        ret   
+        ret
 
 
 
@@ -249,7 +251,7 @@ PrintFileSystemError:
 Reboot:
         mov  si,msgAnyKey               ; Press any key message
         call PutChars                   ; Display it
-        xor ax,ax       
+        xor ax,ax
         int 16h                         ; Wait for a keypress
         int 19h                         ; Reboot
 
@@ -279,7 +281,7 @@ BootPartition:
 
 BootSignature:
         dw 0aa55h       ; BootSector signature
-        
+
 
 ; End of bootsector
 ;
@@ -326,7 +328,7 @@ FindFile:
         add  ax,2               ; So lets move to the next one
         mov  es,ax              ; And search again
         xor  di,di
-        mov  si,filename        
+        mov  si,filename
         mov  cx,11
         rep  cmpsb              ; Compare filenames
         jz   FoundFile          ; If same we found it
@@ -340,7 +342,6 @@ FindFile:
         jmp  StartSearch
 
 FoundFile:
-
                                         ; Display "Loading FreeLoader..." message
         mov  si,msgLoading              ; Loading message
         call PutChars                   ; Display it
@@ -437,21 +438,21 @@ GetActiveFatOffset:
 
 LoadFatSector:
         push  ecx
+
+        mov   bx, 9000h                         ; We will load it to [9000:0000h]
+        mov   es, bx
+
         ; EAX holds logical FAT sector number
         ; Check if we have already loaded it
         cmp  eax,DWORD [FatSectorInCache]
         je   LoadFatSectorAlreadyLoaded
 
         mov  DWORD [FatSectorInCache],eax
-        mov  bx,9000h
-        mov  es,bx
-        xor  bx,bx                              ; We will load it to [9000:0000h]
+        xor  bx,bx
         mov  cx,1
         call ReadSectors
 
 LoadFatSectorAlreadyLoaded:
-        mov  bx,9000h
-        mov  es,bx
         pop  ecx
         mov  eax,DWORD [es:ecx]                 ; Get FAT entry
         and  eax,0fffffffh                      ; Mask off reserved bits
