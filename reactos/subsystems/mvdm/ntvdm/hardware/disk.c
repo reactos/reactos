@@ -342,7 +342,7 @@ SeekDisk(IN PDISK_IMAGE DiskImage,
 
     /* Set position */
     // Compute the offset
-    FilePointer = ((Cylinder * DiskImage->DiskInfo.Heads + Head)
+    FilePointer = (DWORD)((DWORD)((DWORD)Cylinder * DiskImage->DiskInfo.Heads + Head)
                     * DiskImage->DiskInfo.Sectors + (Sector - 1))
                     * DiskImage->DiskInfo.SectorSize;
     FilePointer = SetFilePointer(DiskImage->hDisk, FilePointer, NULL, FILE_BEGIN);
@@ -373,7 +373,7 @@ ReadDisk(IN PDISK_IMAGE DiskImage,
     if (Result != 0x00)
         return Result;
 
-    BytesToRead = NumSectors * DiskImage->DiskInfo.SectorSize;
+    BytesToRead = (DWORD)NumSectors * DiskImage->DiskInfo.SectorSize;
 
     // FIXME: Consider just looping around filling each time the buffer...
 
@@ -434,7 +434,7 @@ WriteDisk(IN PDISK_IMAGE DiskImage,
     if (Result != 0x00)
         return Result;
 
-    BytesToWrite = NumSectors * DiskImage->DiskInfo.SectorSize;
+    BytesToWrite = (DWORD)NumSectors * DiskImage->DiskInfo.SectorSize;
 
     // FIXME: Consider just looping around filling each time the buffer...
 
