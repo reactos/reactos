@@ -466,7 +466,7 @@ list(APPEND SOURCE_CRTDLL
 #    strcspn.c
 #    strerror.c
 #    strftime.c
-#    strlen.c
+    strlen.c
 #    strncat.c
 #    strncmp.c
 #    strncpy.c

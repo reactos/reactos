@@ -88,7 +88,7 @@ list(APPEND SOURCE_NTDLL
 #    strcmp.c
     strcpy.c
 #    strcspn.c
-#    strlen.c
+    strlen.c
 #    strncat.c
 #    strncmp.c
 #    strncpy.c

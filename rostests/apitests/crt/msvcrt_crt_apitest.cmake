@@ -1173,7 +1173,7 @@ list(APPEND SOURCE_MSVCRT
 #    strerror.c
 #    strerror_s.c
 #    strftime.c
-#    strlen.c
+    strlen.c
 #    strncat.c
 #    strncat_s
 #    strncmp.c

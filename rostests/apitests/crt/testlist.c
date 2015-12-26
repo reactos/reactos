@@ -15,6 +15,7 @@ extern void func__vsnwprintf(void);
 extern void func_mbstowcs(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
+extern void func_strlen(void);
 extern void func_wcstombs(void);
 
 extern void func_static_construct(void);
@@ -27,6 +28,7 @@ const struct test winetest_testlist[] =
     { "mbstowcs", func_mbstowcs },
     { "sprintf", func_sprintf },
     { "strcpy", func_strcpy },
+    { "strlen", func_strlen },
     { "wcstombs", func_wcstombs },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...
