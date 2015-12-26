@@ -361,14 +361,14 @@ CheckEndCluster:
         jmp  PrintFileSystemError       ; If so exit with error
 
 InitializeLoadSegment:
-        mov  bx,800h
+        mov  bx,0F80h   ; FREELDR_BASE / 16
         mov  es,bx
 
 LoadFile:
         cmp  eax,0ffffff8h      ; Check to see if this is the last cluster in the chain
         jae  LoadFileDone       ; If so continue, if not then read the next one
         push eax
-        xor  bx,bx              ; Load ROSLDR starting at 0000:8000h
+        xor  bx,bx              ; Load ROSLDR starting at 0000:F800h
         push es
         call ReadCluster
         pop  es
@@ -391,11 +391,11 @@ LoadFileDone:
         mov  dl,[BYTE bp+BootDrive]     ; Load boot drive into DL
         mov  dh,[BootPartition]         ; Load boot partition into DH
 
-        push 0                      ; push segment (0x0000)
-        mov eax, [0x8000 + 0xA8]    ; load the RVA of the EntryPoint into eax
-        add eax, 0x8000             ; RVA -> VA
-        push ax                     ; push offset
-        retf                        ; Transfer control to FreeLoader
+        ; Transfer execution to the bootloader
+        ;ljmp16 0, FREELDR_BASE
+        db 0EAh
+        dw 0F800h
+        dw 0
 
 ; Returns the FAT entry for a given cluster number
 ; On entry EAX has cluster number

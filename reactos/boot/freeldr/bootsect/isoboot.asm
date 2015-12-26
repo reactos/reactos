@@ -360,7 +360,10 @@ get_fs_structures:
 	call	crlf
 %endif
 
-	mov	bx, 0x8000			; bx = load address
+; use high segment, as some bios can fail, when offset is too big
+    mov bx, 0x0F80          ; FREELDR_BASE / 16 ; es = load segment
+    mov es, bx
+    xor ebx, ebx            ; bx = load offset
 	mov	si, di				; restore file pointer
 	mov	cx, 0xFFFF			; load the whole file
 	call	getfssec			; get the whole file
@@ -373,13 +376,12 @@ get_fs_structures:
 
 	mov	dl, [DriveNo]			; dl = boot drive
 	mov dh, 0					; dh = boot partition
-	push 0						; push segment (0x0000)
-	mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
-	add eax, 0x8000				; RVA -> VA
-	push ax						; push offset
-	retf						; Transfer control to ROSLDR
 
-
+    ; Transfer execution to the bootloader
+    ;ljmp16 0, FREELDR_BASE
+    db 0xEA
+    dw 0xF800
+    dw 0
 
 ;
 ; searchdir:
@@ -944,7 +946,7 @@ findfail_msg:	db 'Failed to find file!', 0
 startldr_msg:	db 'Starting SETUPLDR.SYS', 0
 %endif
 
-nosecsize_msg:	db 'No sector size, assume 0800', CR, LF, 0
+; nosecsize_msg:	db 'No sector size, assume 0800', CR, LF, 0
 spec_err_msg:	db 'Load spec failed, trying wing ...', CR, LF, 0
 maybe_msg:	db 'Found smth at drive = ', 0
 alright_msg:	db 'might be ok, continuing...', CR, LF, 0

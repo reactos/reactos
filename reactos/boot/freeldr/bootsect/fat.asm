@@ -29,7 +29,7 @@
 ; of the PutChars function in the boot sector.
 ;
 ; When it locates freeldr.sys on the disk it will
-; load the first sector of the file to 0000:8000
+; load the first sector of the file to 0000:F800
 ; With the help of this sector we should be able
 ; to load the entire file off the disk, no matter
 ; how fragmented it is.
@@ -187,12 +187,12 @@ SearchRootDirSector:
 FoundFreeLoader:
         ; We found freeldr.sys on the disk
         ; so we need to load the first 512
-        ; bytes of it to 0000:8000
+        ; bytes of it to 0000:F800
         ; ES:DI has dir entry (ES:DI == 07E0:XXXX)
         mov  ax,WORD [es:di+1ah]                ; Get start cluster
         push ax                                 ; Save start cluster
-        push WORD 800h                          ; Put 800h on the stack and load it
-        pop  es                                 ; Into ES so that we load the cluster at 0000:8000
+        push WORD 0F80h ; FREELDR_BASE / 16     ; Put load segment on the stack and load it
+        pop  es                                 ; Into ES so that we load the cluster at 0000:F800
         call ReadCluster                        ; Read the cluster
         pop  ax                                 ; Restore start cluster of FreeLoader
 
@@ -204,16 +204,14 @@ FoundFreeLoader:
 
         ; Now AX has start cluster of FreeLoader and we
         ; have loaded the helper code in the first 512 bytes
-        ; of FreeLoader to 0000:8000. Now transfer control
+        ; of FreeLoader to 0000:F800. Now transfer control
         ; to the helper code. Skip the first three bytes
         ; because they contain a jump instruction to skip
         ; over the helper code in the FreeLoader image.
-        ;jmp  0000:9003h
-        push 0                      ; push segment (0x0000)
-        mov bx, [0x8000 + 0xA8]     ; load the RVA of the EntryPoint into eax
-        add bx, 0x8003              ; RVA -> VA and skip 3 bytes (jump to fathelper code)
-        push bx                     ; push offset
-        retf                        ; Transfer control to FreeLoader
+        ;ljmp16 0, FREELDR_BASE + 3
+        db 0EAh
+        dw 0F803h
+        dw 0
 
 
 
@@ -225,8 +223,8 @@ ErrBoot:
         call PutChars           ; Display it
 
 Reboot:
-        mov  si,msgAnyKey       ; Press any key message
-        call PutChars           ; Display it
+        ; mov  si,msgAnyKey       ; Press any key message
+        ; call PutChars           ; Display it
         xor ax,ax       
         int 16h                 ; Wait for a keypress
         int 19h                 ; Reboot

@@ -29,7 +29,7 @@
 // of the PutChars function in the boot sector.
 //
 // When it locates freeldr.sys on the disk it will
-// load the first sector of the file to 0000:8000
+// load the first sector of the file to 0000:F800
 // With the help of this sector we should be able
 // to load the entire file off the disk, no matter
 // how fragmented it is.

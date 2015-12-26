@@ -400,7 +400,7 @@ LoadFile:
     cmp  eax, HEX(0ffffff8)     // Check to see if this is the last cluster in the chain
     jae  LoadFileDone           // If so continue, if not then read the next one
     push eax
-    xor  bx, bx                 // Load ROSLDR starting at 0000:8000h
+    xor  bx, bx                 // Load ROSLDR starting at 0000:F800h
     push es
     call ReadCluster
     pop  es
