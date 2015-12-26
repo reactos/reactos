@@ -1234,8 +1234,31 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
  "System Bus Extender", \
  "SCSI Miniport", \
+ "Port", \
  "Primary Disk", \
  "SCSI Class", \
+ "SCSI CDROM Class", \
+ "FSFilter Infrastructure", \
+ "FSFilter System", \
+ "FSFilter Bottom", \
+ "FSFilter Copy Protection", \
+ "FSFilter Security Enhancer", \
+ "FSFilter Open File", \
+ "FSFilter Physical Quota Management", \
+ "FSFilter Encryption", \
+ "FSFilter Compression", \
+ "FSFilter HSM", \
+ "FSFilter Cluster File System", \
+ "FSFilter System Recovery", \
+ "FSFilter Quota Management", \
+ "FSFilter Content Screener", \
+ "FSFilter Continuous Backup", \
+ "FSFilter Replication", \
+ "FSFilter Anti-Virus", \
+ "FSFilter Undelete", \
+ "FSFilter Activity Monitor", \
+ "FSFilter Top", \
+ "Filter", \
  "Boot File System", \
  "Base", \
  "Pointer Port", \
@@ -1247,16 +1270,29 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Video", \
  "Video Save", \
  "File System", \
- "Event log", \
+ "Event Log", \
+ "Streams Drivers", \
+ "NDIS Wrapper", \
  "COM Infrastructure", \
- "NDIS", \
- "PNP_TDI", \
- "TDI", \
+ "UIGroup", \
+ "LocalValidation", \
  "PlugPlay", \
+ "PNP_TDI", \
+ "NDIS", \
+ "TDI", \
+ "NetBIOSGroup", \
+ "ShellSvcGroup", \
  "SchedulerGroup", \
  "SpoolerGroup", \
- "UIGroup", \
- "Extended Base"
+ "AudioGroup", \
+ "SmartCardGroup", \
+ "NetworkProvider" \
+ "RemoteValidation", \
+ "NetDDEGroup", \
+ "Parallel arbitrator", \
+ "Extended Base" \
+ "PCI Configuration", \
+ "MS Transactions
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
@@ -1409,7 +1445,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","DisplayName",0x00000000,"Event Logger"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"Logs events or messages sent by the operating system in a database accessible via the event log viewer"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event log"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event Log"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Start",0x00010001,0x00000002
