@@ -7,23 +7,34 @@ PUBLIC _tcslen
 
 FUNC _tcslen
     FPO 0, 1, 1, 1, 0, FRAME_FPO
-    push edi
-    mov edi, [esp + 8]
-    xor eax, eax
-    test edi, edi
-    jz _tcslen_end
 
+    /* Save edi and eflags (according to the x86 ABI, we don't need to do that
+       but since the native function doesn't change the direction flag, we don't
+       either */
+    push edi
+    pushfd
+
+    /* Load the string pointer into edi */
+    mov edi, [esp + 12]
+
+    /* Set eax to 0, since we want to compare with 0 */
+    xor eax, eax
+
+    /* Set ecx to -1 (i.e. 0xFFFFFFFF) */
     mov ecx, -1
+
+    /* Clear direction flag */
     cld
 
+    /* Now compare the characters until a 0 is found */
     repne _tscas
 
+    /* Calculate the count (eax = -ecx - 1) */
     not ecx
-    dec ecx
+    lea eax, [ecx-1]
 
-    mov eax, ecx
-
-_tcslen_end:
+    /* Restore eflags/edi and return the result */
+    popfd
     pop edi
     ret
 ENDFUNC
