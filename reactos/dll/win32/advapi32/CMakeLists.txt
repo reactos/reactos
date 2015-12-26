@@ -14,7 +14,8 @@ include_directories(
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/eventlogrpc.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/winreg.idl)
 
 list(APPEND SOURCE
     misc/dllmain.c
@@ -37,6 +38,7 @@ list(APPEND SOURCE
     service/rpc.c
     service/scm.c
     service/sctrl.c
+    service/winreg.c
     token/token.c
     wine/cred.c
     wine/crypt.c
@@ -52,7 +54,8 @@ add_library(advapi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def
     ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
-    ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winreg_c.c)
 
 set_module_type(advapi32 win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})
