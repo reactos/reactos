@@ -64,7 +64,8 @@ PutCharsOffset        = BootSectorStackTop + 20 /* word */
  ******************************************************************************/
 /* We have 3 bytes at the entry point to jump over the data area */
 start:
-    jmp short main
+    jmp short main // FIXME: When compiling FAT32, assembler will complain
+                   // that the label is too far... Need investigation!
     nop
 
 /* Here starts the BIOS Parameter Block (BPB) data.
@@ -233,8 +234,8 @@ main:
     add eax, dword ptr BP_REL(HiddenSectors)
 
     /* Load sector count into ecx */
-#if FAT32
-    mov ecx, BP_REL(SectorsPerFatBig)
+#ifdef FAT32
+    mov ecx, dword ptr BP_REL(SectorsPerFatBig)
 #else
     movzx ecx, word ptr BP_REL(SectorsPerFat)
 #endif
@@ -350,7 +351,7 @@ main:
     dec dx
     jnz .CheckDirEntry
 
-#if FAT32
+#ifdef FAT32
     /* Check to see if this was the last cluster in the chain */
     cmp eax, HEX(0ffffff8)
     jnb BootFailure
@@ -367,7 +368,7 @@ main:
 .FoundFreeLoader:
 
     /* Load the cluster number of freeldr into eax */
-#if FAT32
+#ifdef FAT32
 #error unsupported
 #else
     movzx eax, word ptr es:[bx + HEX(1A)]
@@ -384,9 +385,9 @@ main:
     call ReadCluster
 
     /* Check if this is the last cluster in the chain */
-#if FAT32
+#if defined(FAT32)
     cmp eax, HEX(0ffffff8)
-#elif FAT12
+#elif defined(FAT12)
     cmp ax, HEX(0ff8)
 #else
     cmp ax, HEX(0fff8)
@@ -453,9 +454,9 @@ ReadCluster:
     /* Save ES */
     push es
 
-#if FAT32
-#error FAT23 not implemented
-#elif FAT12
+#if defined(FAT32)
+#error FAT32 not implemented
+#elif defined(FAT12)
 #error FAT12 not implemented
 #else
     /* DX:AX = AX * 2 (since FAT16 entries are 2 bytes) */
