@@ -177,7 +177,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         CheckDr(1, Prcb->ProcessorState.SpecialRegisters.KernelDr1);
         CheckDr(2, Prcb->ProcessorState.SpecialRegisters.KernelDr2);
         CheckDr(3, Prcb->ProcessorState.SpecialRegisters.KernelDr3);
-        CheckDr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7);
+        // CheckDr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7); // Disabled, see CORE-10165 for more details.
     }
 #endif
 
