@@ -34,6 +34,7 @@ list(APPEND CRT_SOURCE
     float/nafter.c
     float/scalb.c
     locale/locale.c
+    math/abs.c
     math/acos.c
     math/adjust.c
     math/asin.c
@@ -51,6 +52,7 @@ list(APPEND CRT_SOURCE
     math/j0_y0.c
     math/j1_y1.c
     math/jn_yn.c
+    math/labs.c
     math/ldiv.c
     math/logf.c
     math/modf.c

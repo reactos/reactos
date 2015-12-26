@@ -125,4 +125,18 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     return TRUE;
 }
 
+/* FIXME: This hack is required to prevent the VC linker from linking these
+   exports to the functions from libntdll. See CORE-10753 */
+#ifdef _MSC_VER
+#ifdef _M_IX86
+#pragma comment(linker, "/include:__vsnprintf")
+#pragma comment(linker, "/include:_bsearch")
+#pragma comment(linker, "/include:_strcspn")
+#else
+#pragma comment(linker, "/include:_vsnprintf")
+#pragma comment(linker, "/include:bsearch")
+#pragma comment(linker, "/include:strcspn")
+#endif // _M_IX86
+#endif // _MSC_VER
+
 /* EOF */
