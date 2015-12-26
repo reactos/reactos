@@ -150,7 +150,7 @@ static NTSTATUS
 CmiAddKeyToHashTable(
     IN PCMHIVE RegistryHive,
     IN OUT PCM_KEY_FAST_INDEX HashCell,
-   IN HCELL_INDEX HashCellIndex,
+    IN HCELL_INDEX HashCellIndex,
     IN PCM_KEY_NODE NewKeyCell,
     IN HCELL_INDEX NKBOffset)
 {
@@ -181,7 +181,7 @@ CmiAddKeyToHashTable(
 
     HashCell->List[i].Cell = NKBOffset;
     HashCell->List[i].HashKey = HashKey;
-   HashCell->Count++;
+    HashCell->Count++;
     HvMarkCellDirty(&RegistryHive->Hive, HashCellIndex, FALSE);
     return STATUS_SUCCESS;
 }
