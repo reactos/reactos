@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Bootsector
- * FILE:            boot/freeldr/bootsect/fatx.S
- * PURPOSE:         Combined FAT16 and FAT32 boot sector
+ * FILE:            boot/freeldr/bootsect/faty.S
+ * PURPOSE:         Combined FAT12, FAT16 and FAT32 boot sector
  * PROGRAMMERS:     Brian Palmer
  *                  Timo Kreuzer
  */
