@@ -1088,6 +1088,10 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
 {
     ULONG ActualDevices = 1;
     PDEVICE_OBJECT CurrentDevice = DriverObject->DeviceObject;
+    KIRQL OldIrql;
+
+    /* Raise to dispatch level */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     /* Find out how many devices we'll enumerate */
     while ((CurrentDevice = CurrentDevice->NextDevice)) ActualDevices++;
@@ -1099,13 +1103,14 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
     *ActualNumberDeviceObjects = ActualDevices;
 
     /* Check if we can support so many */
-    if ((ActualDevices * 4) > DeviceObjectListSize)
+    if ((ActualDevices * sizeof(PDEVICE_OBJECT)) > DeviceObjectListSize)
     {
         /* Fail because the buffer was too small */
+        KeLowerIrql(OldIrql);
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    /* Check if the caller only wanted the size */
+    /* Check if the caller wanted the device list */
     if (DeviceObjectList)
     {
         /* Loop through all the devices */
@@ -1123,6 +1128,9 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
             DeviceObjectList++;
         }
     }
+
+    /* Return back to previous IRQL */
+    KeLowerIrql(OldIrql);
 
     /* Return the status */
     return STATUS_SUCCESS;
