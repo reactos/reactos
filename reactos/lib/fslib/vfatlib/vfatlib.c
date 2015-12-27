@@ -351,6 +351,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     BOOLEAN salvage_files;
     ULONG free_clusters;
     DOS_FS fs;
+    int ret;
 
     /* Store callback pointer */
     ChkdskCallback = Callback;
@@ -372,7 +373,11 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
-        return fs_close(FALSE);
+        // NOTE: Returning the value of fs_close looks suspicious.
+        // return fs_close(FALSE);
+        ret = fs_close(FALSE);
+        DPRINT1("No need to check FS; fs_close returning %d\n", ret);
+        return STATUS_SUCCESS;
     }
 
     read_boot(&fs);
@@ -404,6 +409,8 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     if (fs_changed())
     {
+        DPRINT1("fs_changed is TRUE!\n");
+
         if (FixErrors)
         {
             if (FsCheckFlags & FSCHECK_INTERACTIVE)
@@ -430,7 +437,11 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     /* Close the volume */
-    return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    // NOTE: Returning the value of fs_close looks suspicious.
+    // return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    res = fs_close(FixErrors);
+    DPRINT1("fs_close returning %d\n", ret);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
