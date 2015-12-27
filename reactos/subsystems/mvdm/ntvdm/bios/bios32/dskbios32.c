@@ -608,8 +608,8 @@ VOID WINAPI BiosDiskService(LPWORD Stack)
                 setAH(0x03);
 
                 /* Number of 512-byte sectors in CX:DX */
-                NumSectors = DiskImage->DiskInfo.Cylinders * DiskImage->DiskInfo.Heads
-                                                           * DiskImage->DiskInfo.Sectors;
+                NumSectors = (ULONG)((ULONG)DiskImage->DiskInfo.Cylinders * DiskImage->DiskInfo.Heads)
+                                                                          * DiskImage->DiskInfo.Sectors;
                 setCX(HIWORD(NumSectors));
                 setDX(LOWORD(NumSectors));
             }
