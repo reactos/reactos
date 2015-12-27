@@ -16,7 +16,7 @@ Signature = "$ReactOS$"
 
 [DiskSpaceRequirements]
 ; Required free system partition disk space in MB
-FreeSysPartDiskSpace=550
+FreeSysPartDiskSpace=450
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
