@@ -473,6 +473,7 @@ static MUI_ENTRY heILRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY heILComputerPageEntries[] =
 {
     {
@@ -1433,7 +1434,7 @@ MUI_ERROR heILErrorEntries[] =
           "\n"
           "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+          "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1745,7 +1746,7 @@ MUI_STRING heILStrings[] =
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
-    "F3= ˆŒ „š—„  ENTER = „™Š"},
+    "F3 = ˆŒ „š—„  ENTER = „™Š"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = „”’Œ ‡ƒ™ €š „‡™"},
     {STRING_TXTSETUPFAILED,

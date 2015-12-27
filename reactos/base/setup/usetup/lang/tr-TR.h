@@ -361,7 +361,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         25,
         16,
-		"Bu aygçt ayarlarçnç doßrula.",
+        "Bu aygçt ayarlarçnç doßrula.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -376,7 +376,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
         "basarak deßiütirebilirsiniz. Sonra baüka ayarlar seámek iáin Giriü",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         21,
         "dÅßmesine basçnçz.",
@@ -920,7 +920,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
         "BîlÅm Biáimlendirme",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         10,
         "Kur, üimdi bîlÅmÅ biáimlendirecek. SÅrdÅrmek iáin Giriü'e basçnçz.",
@@ -1000,7 +1000,7 @@ static MUI_ENTRY trTRFileCopyEntries[] =
         "ReactOS Kur, ReactOS kurulum dizininize kÅtÅkleri áoßaltçrken",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
-	{
+    {
         0,
         13,
         " lÅtfen bekleyiniz.",
@@ -1408,7 +1408,7 @@ MUI_ERROR trTRErrorEntries[] =
     {
         //ERROR_WARN_PARTITION,
         "Kur, dÅzgÅn yînetilemeyen bir uyumsuz bîlÅm tablosu iáeren en az\n"
-		"bir sÉbit disk buldu!\n"
+        "bir sÉbit disk buldu!\n"
         "\n"         
         "BîlÅmleri oluüturmak veyÉ silmek bîlÅm tablosunu yok edebilir.\n"
         "\n"

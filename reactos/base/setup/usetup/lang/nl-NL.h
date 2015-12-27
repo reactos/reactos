@@ -500,6 +500,7 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY nlNLComputerPageEntries[] =
 {
     {
@@ -1641,7 +1642,6 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     }
 };
-
 
 MUI_PAGE nlNLPages[] =
 {

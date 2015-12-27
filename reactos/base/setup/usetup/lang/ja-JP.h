@@ -473,6 +473,7 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY jaJPComputerPageEntries[] =
 {
     {
@@ -831,7 +832,7 @@ static MUI_ENTRY jaJPConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " ¾¯Ä±¯Ìß ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1434,7 +1435,7 @@ MUI_ERROR jaJPErrorEntries[] =
           "\n"
           "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼ ½ÙÆÊ F3 ·°¦ µ¼Ã ¸ÀÞ»²¡\n"
           "  \x07  ¿Þ¯º³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
-          "F3= Á­³¼  ENTER = ¿Þ¯º³"
+          "F3 = Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1747,7 +1748,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_CHECKINGPART,
     "¾¯Ä±¯ÌßÊ ¾ÝÀ¸ »ÚÀ Êß°Ã¨¼®Ý¦ ¹Ý» ¼Ã²Ï½¡"},
     {STRING_QUITCONTINUE,
-    "F3= Á­³¼  ENTER = ¿Þ¯º³"},
+    "F3 = Á­³¼  ENTER = ¿Þ¯º³"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"},
     {STRING_TXTSETUPFAILED,

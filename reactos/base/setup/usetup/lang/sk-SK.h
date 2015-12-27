@@ -480,6 +480,7 @@ static MUI_ENTRY skSKRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY skSKComputerPageEntries[] =
 {
     {
@@ -838,7 +839,7 @@ static MUI_ENTRY skSKConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " InÁtal†tor systÇmu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1614,7 +1615,6 @@ MUI_ERROR skSKErrorEntries[] =
     }
 };
 
-
 MUI_PAGE skSKPages[] =
 {
     {
@@ -1758,7 +1758,7 @@ MUI_STRING skSKStrings[] =
     {STRING_CHECKINGPART,
     "InÁtal†tor teraz skontroluje vybran£ oblasú."},
     {STRING_QUITCONTINUE,
-    "F3= Skonüiú  ENTER = Pokraüovaú"},
+    "F3 = Skonüiú  ENTER = Pokraüovaú"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ReÁtart poü°taüa"},
     {STRING_TXTSETUPFAILED,

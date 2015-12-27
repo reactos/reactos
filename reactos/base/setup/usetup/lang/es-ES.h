@@ -481,6 +481,7 @@ static MUI_ENTRY esESRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY esESComputerPageEntries[] =
 {
     {
@@ -1442,7 +1443,7 @@ MUI_ERROR esESErrorEntries[] =
         "\n"
         "  \x07  Presione F3 para salir del instalador.\n"
         "  \x07  Presione INTRO para continuar.",
-        "F3= Salir  INTRO = Continuar"
+        "F3 = Salir  INTRO = Continuar"
     },
     {
         //ERROR_NEW_PARTITION,

@@ -483,6 +483,7 @@ static MUI_ENTRY plPLRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY plPLComputerPageEntries[] =
 {
     {
@@ -840,7 +841,7 @@ static MUI_ENTRY plPLConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1377,7 +1378,7 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "  \x07  Naci˜nij ENTER, aby kontynuowa† instalacj©.\n"
         "  \x07  Naci˜nij F3, aby wyj˜† z instalatora.",
-        "F3= Wyj˜cie  ENTER = Kontynuacja"
+        "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NO_HDD
@@ -1443,7 +1444,7 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "  \x07  Naci˜nij F3, aby wyj˜† z instalatora.\n"
         "  \x07  Naci˜nij ENTER, aby kontynuowa†.",
-        "F3= Wyj˜cie  ENTER = Kontynuacja"
+        "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1754,7 +1755,7 @@ MUI_STRING plPLStrings[] =
     {STRING_CHECKINGPART,
     "Instalator sprawdza wybran¥ partycj©."},
     {STRING_QUITCONTINUE,
-    "F3= Wyj˜cie  ENTER = Kontynuacja"},
+    "F3 = Wyj˜cie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restart komputera"},
     {STRING_TXTSETUPFAILED,

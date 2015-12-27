@@ -479,6 +479,7 @@ static MUI_ENTRY svSERepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY svSEComputerPageEntries[] =
 {
     {
@@ -1374,7 +1375,7 @@ MUI_ERROR svSEErrorEntries[] =
         "\n"
         "  \x07  Tryck ENTER f”r att forts„tta Setup.\n"
         "  \x07  Tryck F3 f”r att avsluta Setup.",
-        "F3= Avsluta  ENTER = Forts„tta"
+        "F3 = Avsluta  ENTER = Forts„tta"
     },
     {
         //ERROR_NO_HDD
@@ -1440,7 +1441,7 @@ MUI_ERROR svSEErrorEntries[] =
         "\n"
         "  \x07  Tryck F3 f”r att avsluta Setup."
         "  \x07  Tryck ENTER f”r att forts„tta.",
-        "F3= Avsluta  ENTER = Forts„tt"
+        "F3 = Avsluta  ENTER = Forts„tt"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1753,7 +1754,7 @@ MUI_STRING svSEStrings[] =
     {STRING_CHECKINGPART,
     "Setup unders”ker nu den valda partitionen."},
     {STRING_QUITCONTINUE,
-    "F3= Avsluta  ENTER = Forts„tt"},
+    "F3 = Avsluta  ENTER = Forts„tt"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Starta om datorn"},
     {STRING_TXTSETUPFAILED,

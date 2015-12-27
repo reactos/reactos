@@ -528,6 +528,7 @@ static MUI_ENTRY roRORepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY roROComputerPageEntries[] =
 {
     {
@@ -885,7 +886,7 @@ static MUI_ENTRY roROConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalare ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1418,7 +1419,7 @@ MUI_ERROR roROErrorEntries[] =
         //ERROR_NOT_INSTALLED
         "ReactOS nu a fost instalat complet în calculatorul\n"
         "dumneavoastrã. Dacã abandonaþi instalarea ReactOS\n"
-		"acum, va fi nevoie sã o reluaþi din nou altã datã.\n"
+        "acum, va fi nevoie sã o reluaþi din nou altã datã.\n"
         "\n"
         "  \x07  Apãsaþi ENTER pentru a continua instalarea.\n"
         "  \x07  Apãsaþi F3 pentru a abandona instalarea.",
@@ -1452,37 +1453,37 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_DRIVE_INFORMATION
         "Nu se pot obþine informaþii despre dispozitiv(ele)\n"
-		"din calculator.\n",
+        "din calculator.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_WRITE_BOOT,
         "Nu s-a reuºit instalarea codului FAT de iniþializare\n"
-		"pe partiþia de sistem.",
+        "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_COMPUTER,
         "A eºuat încãrcarea listei cu arhitecturi de\n"
-		"calcul disponibile.",
+        "calcul disponibile.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_DISPLAY,
         "A eºuat încãrcarea listei cu parametri de\n"
-		"afiºare pentru ecran.",
+        "afiºare pentru ecran.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_KEYBOARD,
         "A eºuat încãrcarea listei cu tipuri\n"
-		"disponibile de tastaturã.",
+        "disponibile de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
         "A eºuat încãrcarea listei de configuraþii\n"
-		"ale tastaturii.",
+        "ale tastaturii.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1491,11 +1492,11 @@ MUI_ERROR roROErrorEntries[] =
         "nerecunoscutã, ce nu pot fi gestionatã corespunzãtor!\n"
         "\n"
         "Crearea sau ºtergerea de partiþii poate astfel cauza\n"
-		"distrugerea tabelei de partiþii."
+        "distrugerea tabelei de partiþii."
         "\n"
         "  \x07  Apãsaþi F3 pentru a abandona instalarea.\n"
         "  \x07  Apãsaþi ENTER pentru a continua.",
-        "F3= Ieºire  ENTER = Continuare"
+        "F3 = Ieºire  ENTER = Continuare"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1516,7 +1517,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_INSTALL_BOOTCODE,
         "Nu s-a reuºit instalarea codului FAT de iniþializare\n"
-		"pe partiþia de sistem.",
+        "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1532,18 +1533,18 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Nu s-a reuºit actualizarea registrului cu\n"
-		"parametrii grafici ai ecranului!",
+        "parametrii grafici ai ecranului!",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_IMPORT_HIVE,
-		"Nu s-a reuºit importarea registrului.",
+        "Nu s-a reuºit importarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_FIND_REGISTRY
         "Fiºierele cu datele registrului\n"
-		"nu au putut fi localizate.",
+        "nu au putut fi localizate.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1559,7 +1560,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_INVALID_CABINET_INF,
         "Fiºierul cabinet nu conþine nici un fiºier\n"
-		"valid de tip inf.",
+        "valid de tip inf.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1570,13 +1571,13 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_CABINET_SCRIPT,
         "Fiºierul cabinet nu conþine nici un script\n"
-		"de instalare.",
+        "de instalare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_COPY_QUEUE,
         "Nu se poate deschide lista de fiºiere\n"
-		"pentru copiere.",
+        "pentru copiere.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1587,7 +1588,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_TXTSETUP_SECTION,
         "Nu se poate gãsi secþiunea de directoare\n"
-		"în fiºierul TXTSETUP.SIF.",
+        "în fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1814,7 +1815,7 @@ MUI_STRING roROStrings[] =
     {STRING_CHECKINGPART,
     "Programul de instalare verificã acum partiþia aleasã."},
     {STRING_QUITCONTINUE,
-    "F3= Ieºire  ENTER = Continuare"},
+    "F3 = Ieºire  ENTER = Continuare"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Repornire calculator"},
     {STRING_TXTSETUPFAILED,

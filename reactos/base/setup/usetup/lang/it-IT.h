@@ -479,6 +479,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY itITComputerPageEntries[] =
 {
     {
@@ -835,9 +836,9 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
 static MUI_ENTRY itITConfirmDeletePartitionEntries[] =
 {
     {
-        4,
+        4, 
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1308,7 +1309,7 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
     {
         11,
         19,
-		"ATTENZIONE: Tutti i dati di questa partizione saranno persi!!",
+        "ATTENZIONE: Tutti i dati di questa partizione saranno persi!!",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1374,7 +1375,7 @@ MUI_ERROR itITErrorEntries[] =
         "\n"
         "  \x07  Premere INVIO per continuare il setup.\n"
         "  \x07  Premere F3 per uscire.",
-        "F3= Uscire INVIO = Continuare"
+        "F3 = Uscire INVIO = Continuare"
     },
     {
         //ERROR_NO_HDD
@@ -1440,7 +1441,7 @@ MUI_ERROR itITErrorEntries[] =
         "\n"
         "  \x07  Premere F3 per uscire dal Setup.\n"
         "  \x07  Premere INVIO per continuare.",
-        "F3= Uscire  INVIO = Continuare"
+        "F3 = Uscire  INVIO = Continuare"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1610,7 +1611,6 @@ MUI_ERROR itITErrorEntries[] =
     }
 };
 
-
 MUI_PAGE itITPages[] =
 {
     {
@@ -1754,7 +1754,7 @@ MUI_STRING itITStrings[] =
     {STRING_CHECKINGPART,
     "Setup sta controllando la partizione selezionata."},
     {STRING_QUITCONTINUE,
-    "F3= Esci  INVIO = Continua"},
+    "F3 = Esci  INVIO = Continua"},
     {STRING_REBOOTCOMPUTER,
     "INVIO = Riavvia il computer"},
     {STRING_TXTSETUPFAILED,

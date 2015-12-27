@@ -69,7 +69,7 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         6,
         11,
-		"Selles paigaldamise osas kopeeritakse ReactOSi failid arvutisse ja",
+        "Selles paigaldamise osas kopeeritakse ReactOSi failid arvutisse ja",
         TEXT_STYLE_NORMAL
     },
     {
@@ -472,6 +472,7 @@ static MUI_ENTRY etEERepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY etEEComputerPageEntries[] =
 {
     {
@@ -730,7 +731,7 @@ static MUI_ENTRY etEEBootPageEntries[] =
     {
         6,
         13,
-		"Sisesta vormindatud flopiketas draivi A:",
+        "Sisesta vormindatud flopiketas draivi A:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -830,7 +831,7 @@ static MUI_ENTRY etEEConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -970,7 +971,7 @@ static MUI_ENTRY etEEInstallDirectoryEntries[] =
     {
         6,
         9,
-		"Vali kaust, kuhu ReactOS paigaldada:",
+        "Vali kaust, kuhu ReactOS paigaldada:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1433,7 +1434,7 @@ MUI_ERROR etEEErrorEntries[] =
           "\n"
           "  \x07  Vajuta F3, et v„ljuda paigaldusest..\n"
           "  \x07  Vajuta ENTER, et j„tkata.",
-          "F3= V„lju  ENTER = J„tka"
+          "F3 = V„lju  ENTER = J„tka"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1517,7 +1518,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         //ERROR_TXTSETUP_SECTION,
-		"TXTSETUP.SIF failist ei leitud 'Directories' sektsiooni.",
+        "TXTSETUP.SIF failist ei leitud 'Directories' sektsiooni.",
         "ENTER = Taask„ivita arvuti"
     },
     {
@@ -1599,7 +1600,6 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     }
 };
-
 
 MUI_PAGE etEEPages[] =
 {
@@ -1744,7 +1744,7 @@ MUI_STRING etEEStrings[] =
     {STRING_CHECKINGPART,
     "Valitud partitsiooni kontrollitakse."},
     {STRING_QUITCONTINUE,
-    "F3= V„lju  ENTER = J„tka"},
+    "F3 = V„lju  ENTER = J„tka"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Taask„ivita arvuti"},
     {STRING_TXTSETUPFAILED,

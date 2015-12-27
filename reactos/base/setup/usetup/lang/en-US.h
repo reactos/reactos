@@ -1433,7 +1433,7 @@ MUI_ERROR enUSErrorEntries[] =
         "\n"
         "  \x07  Press F3 to quit Setup.\n"
         "  \x07  Press ENTER to continue.",
-        "F3= Quit  ENTER = Continue"
+        "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1744,7 +1744,7 @@ MUI_STRING enUSStrings[] =
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
     {STRING_TXTSETUPFAILED,
