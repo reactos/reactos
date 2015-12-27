@@ -29,9 +29,11 @@ FUNC _tcslen
     /* Now compare the characters until a 0 is found */
     repne _tscas
 
-    /* Calculate the count (eax = -ecx - 1) */
+    /* Calculate the count. For n characters, we do (n + 1) comparisons. Initial
+       value of ecx was -1, so end value of ecx is (-1 - (n + 1)) = -(n + 2).
+       => n = -ecx - 2 = ~ecx - 1 */
     not ecx
-    lea eax, [ecx-1]
+    lea eax, [ecx - 1]
 
     /* Restore eflags/edi and return the result */
     popfd
