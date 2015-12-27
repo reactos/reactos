@@ -35,12 +35,13 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the new bootsector */
-    memset(NewBootSector, 0, BootSector->BytesPerSector);
+    RtlZeroMemory(NewBootSector, BootSector->BytesPerSector);
 
     /* Copy FAT32 BPB to new bootsector */
     memcpy(&NewBootSector->OEMName[0],
            &BootSector->OEMName[0],
-           FIELD_OFFSET(FAT32_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT32_BOOT_SECTOR, OEMName)); /* FAT32 BPB length (up to (not including) Res2) */
+           FIELD_OFFSET(FAT32_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT32_BOOT_SECTOR, OEMName));
+           /* FAT32 BPB length (up to (not including) Res2) */
 
     /* Write the boot sector signature */
     NewBootSector->Signature1 = 0xAA550000;
@@ -59,8 +60,7 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, 1);
@@ -81,16 +81,15 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
-            return Status;
+            goto done;
         }
 
         UpdateProgress(Context, 1);
     }
 
-    /* Free the new boot sector */
+done:
+    /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
-
     return Status;
 }
 
@@ -113,13 +112,13 @@ Fat32WriteFsInfo(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the new sector */
-    memset(FsInfo, 0, BootSector->BytesPerSector);
+    RtlZeroMemory(FsInfo, BootSector->BytesPerSector);
 
-    FsInfo->LeadSig = 0x41615252;
-    FsInfo->StrucSig = 0x61417272;
+    FsInfo->LeadSig   = FSINFO_SECTOR_BEGIN_SIGNATURE;
+    FsInfo->StrucSig  = FSINFO_SIGNATURE;
     FsInfo->FreeCount = 0xffffffff;
-    FsInfo->NextFree = 0xffffffff;
-    FsInfo->TrailSig = 0xaa550000;
+    FsInfo->NextFree  = 0xffffffff;
+    FsInfo->TrailSig  = FSINFO_SECTOR_END_SIGNATURE;
 
     /* Write sector */
     FileOffset.QuadPart = BootSector->FSInfoSector * BootSector->BytesPerSector;
@@ -135,15 +134,14 @@ Fat32WriteFsInfo(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, FsInfo);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, 1);
 
-    /* Free the new sector buffer */
+done:
+    /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, FsInfo);
-
     return Status;
 }
 
@@ -169,7 +167,7 @@ Fat32WriteFAT(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the buffer */
-    memset(Buffer, 0, 64 * 1024);
+    RtlZeroMemory(Buffer, 64 * 1024);
 
     /* FAT cluster 0 */
     Buffer[0] = 0xf8; /* Media type */
@@ -203,14 +201,13 @@ Fat32WriteFAT(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, 1);
 
     /* Zero the begin of the buffer */
-    memset(Buffer, 0, 12);
+    RtlZeroMemory(Buffer, 12);
 
     /* Zero the rest of the FAT */
     Sectors = 64 * 1024 / BootSector->BytesPerSector;
@@ -236,16 +233,15 @@ Fat32WriteFAT(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-            return Status;
+            goto done;
         }
 
         UpdateProgress(Context, Sectors);
     }
 
+done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 
@@ -270,7 +266,7 @@ Fat32WriteRootDirectory(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the buffer */
-    memset(Buffer, 0, BootSector->SectorsPerCluster * BootSector->BytesPerSector);
+    RtlZeroMemory(Buffer, BootSector->SectorsPerCluster * BootSector->BytesPerSector);
 
     DPRINT("BootSector->ReservedSectors = %lu\n", BootSector->ReservedSectors);
     DPRINT("BootSector->FATSectors32 = %lu\n", BootSector->FATSectors32);
@@ -301,15 +297,14 @@ Fat32WriteRootDirectory(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, (ULONG)BootSector->SectorsPerCluster);
 
+done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 
@@ -390,7 +385,6 @@ Fat32WipeSectors(
 done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 
@@ -435,7 +429,7 @@ Fat32Format(IN HANDLE FileHandle,
         }
     }
 
-    memset(&BootSector, 0, sizeof(FAT32_BOOT_SECTOR));
+    RtlZeroMemory(&BootSector, sizeof(FAT32_BOOT_SECTOR));
     memcpy(&BootSector.OEMName[0], "MSWIN4.1", 8);
     BootSector.BytesPerSector = DiskGeometry->BytesPerSector;
     BootSector.SectorsPerCluster = ClusterSize / BootSector.BytesPerSector;
@@ -466,7 +460,7 @@ Fat32Format(IN HANDLE FileHandle,
     else
     {
         RtlUnicodeStringToOemString(&VolumeLabel, Label, TRUE);
-        memset(&BootSector.VolumeLabel[0], ' ', 11);
+        RtlFillMemory(&BootSector.VolumeLabel[0], 11, ' ');
         memcpy(&BootSector.VolumeLabel[0], VolumeLabel.Buffer,
                VolumeLabel.Length < 11 ? VolumeLabel.Length : 11);
         RtlFreeOemString(&VolumeLabel);
