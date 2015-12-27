@@ -265,7 +265,6 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         DPRINT1("Failed to umount volume (Status: 0x%x)\n", LockStatus);
     }
 
-
     LockStatus = NtFsControlFile(FileHandle,
                                  NULL,
                                  NULL,
@@ -303,7 +302,6 @@ UpdateProgress(PFORMAT_CONTEXT Context,
 
     Context->CurrentSectorCount += (ULONGLONG)Increment;
 
-
     NewPercent = (Context->CurrentSectorCount * 100ULL) / Context->TotalSectorCount;
 
     if (NewPercent > Context->Percent)
@@ -332,6 +330,8 @@ VfatPrint(PCHAR Format, ...)
     TextOut.Lines = 1;
     TextOut.Output = TextBuf;
 
+    DPRINT1("VfatPrint -- %s", TextBuf);
+
     /* Do the callback */
     if (ChkdskCallback)
         ChkdskCallback(OUTPUT, 0, &TextOut);
@@ -351,7 +351,6 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     BOOLEAN salvage_files;
     ULONG free_clusters;
     DOS_FS fs;
-    int ret;
 
     /* Store callback pointer */
     ChkdskCallback = Callback;
@@ -373,11 +372,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
-        // NOTE: Returning the value of fs_close looks suspicious.
-        // return fs_close(FALSE);
-        ret = fs_close(FALSE);
-        DPRINT1("No need to check FS; fs_close returning %d\n", (unsigned int)ret);
-        return STATUS_SUCCESS;
+        return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
     }
 
     read_boot(&fs);
@@ -425,7 +420,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
-        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters );
+        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters);
 
     if (FixErrors)
     {
@@ -437,11 +432,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     /* Close the volume */
-    // NOTE: Returning the value of fs_close looks suspicious.
-    // return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-    ret = fs_close(FixErrors);
-    DPRINT1("fs_close returning %d\n", (unsigned int)ret);
-    return STATUS_SUCCESS;
+    return (fs_close(FixErrors) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
 }
 
 /* EOF */
