@@ -404,8 +404,6 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     if (fs_changed())
     {
-        DPRINT1("fs_changed is TRUE!\n");
-
         if (FixErrors)
         {
             if (FsCheckFlags & FSCHECK_INTERACTIVE)
