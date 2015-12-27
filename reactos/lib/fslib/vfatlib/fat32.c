@@ -103,6 +103,7 @@ Fat32WriteFsInfo(IN HANDLE FileHandle,
     NTSTATUS Status;
     PFAT32_FSINFO FsInfo;
     LARGE_INTEGER FileOffset;
+    ULONGLONG FirstDataSector;
 
     /* Allocate buffer for new sector */
     FsInfo = (PFAT32_FSINFO)RtlAllocateHeap(RtlGetProcessHeap(),
@@ -111,16 +112,19 @@ Fat32WriteFsInfo(IN HANDLE FileHandle,
     if (FsInfo == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Zero the new sector */
+    /* Zero the first FsInfo sector */
     RtlZeroMemory(FsInfo, BootSector->BytesPerSector);
+
+    FirstDataSector = BootSector->ReservedSectors +
+        (BootSector->FATCount * BootSector->FATSectors32) + 0 /* RootDirSectors */;
 
     FsInfo->LeadSig   = FSINFO_SECTOR_BEGIN_SIGNATURE;
     FsInfo->StrucSig  = FSINFO_SIGNATURE;
-    FsInfo->FreeCount = 0xffffffff;
+    FsInfo->FreeCount = (BootSector->SectorsHuge - FirstDataSector) / BootSector->SectorsPerCluster - 1;
     FsInfo->NextFree  = 0xffffffff;
     FsInfo->TrailSig  = FSINFO_SECTOR_END_SIGNATURE;
 
-    /* Write sector */
+    /* Write the first FsInfo sector */
     FileOffset.QuadPart = BootSector->FSInfoSector * BootSector->BytesPerSector;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -138,6 +142,76 @@ Fat32WriteFsInfo(IN HANDLE FileHandle,
     }
 
     UpdateProgress(Context, 1);
+
+    /* Write backup of the first FsInfo sector */
+    if (BootSector->BootBackup != 0x0000)
+    {
+        /* Reset the free cluster count for the backup */
+        FsInfo->FreeCount = 0xffffffff;
+
+        FileOffset.QuadPart = (ULONGLONG)(((ULONG)BootSector->BootBackup + (ULONG)BootSector->FSInfoSector) * BootSector->BytesPerSector);
+        Status = NtWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             FsInfo,
+                             BootSector->BytesPerSector,
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+            goto done;
+        }
+
+        UpdateProgress(Context, 1);
+    }
+
+    /* Zero the second FsInfo sector */
+    RtlZeroMemory(FsInfo, BootSector->BytesPerSector);
+    FsInfo->TrailSig = FSINFO_SECTOR_END_SIGNATURE;
+
+    /* Write the second FsInfo sector */
+    FileOffset.QuadPart = (BootSector->FSInfoSector + 1) * BootSector->BytesPerSector;
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         FsInfo,
+                         BootSector->BytesPerSector,
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+        goto done;
+    }
+
+    UpdateProgress(Context, 1);
+
+    /* Write backup of the second FsInfo sector */
+    if (BootSector->BootBackup != 0x0000)
+    {
+        FileOffset.QuadPart = (ULONGLONG)(((ULONG)BootSector->BootBackup + (ULONG)BootSector->FSInfoSector + 1) * BootSector->BytesPerSector);
+        Status = NtWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             FsInfo,
+                             BootSector->BytesPerSector,
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+            goto done;
+        }
+
+        UpdateProgress(Context, 1);
+    }
 
 done:
     /* Free the buffer */
