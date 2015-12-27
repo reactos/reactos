@@ -129,7 +129,6 @@ Fat1216WipeSectors(
 done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 

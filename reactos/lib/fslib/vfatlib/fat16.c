@@ -35,12 +35,13 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the new bootsector */
-    memset(NewBootSector, 0, BootSector->BytesPerSector);
+    RtlZeroMemory(NewBootSector, BootSector->BytesPerSector);
 
     /* Copy FAT16 BPB to new bootsector */
     memcpy(&NewBootSector->OEMName[0],
            &BootSector->OEMName[0],
-           FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, OEMName)); /* FAT16 BPB length (up to (not including) Res2) */
+           FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, OEMName));
+           /* FAT16 BPB length (up to (not including) Res2) */
 
     /* Write the boot sector signature */
     NewBootSector->Signature1 = 0xAA550000;
@@ -59,15 +60,14 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, 1);
 
-    /* Free the new boot sector */
+done:
+    /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
-
     return Status;
 }
 
@@ -93,7 +93,7 @@ Fat16WriteFAT(IN HANDLE FileHandle,
       return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the buffer */
-    memset(Buffer, 0, 32 * 1024);
+    RtlZeroMemory(Buffer, 32 * 1024);
 
     /* FAT cluster 0 */
     Buffer[0] = 0xf8; /* Media type */
@@ -117,14 +117,13 @@ Fat16WriteFAT(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        return Status;
+        goto done;
     }
 
     UpdateProgress(Context, 1);
 
     /* Zero the begin of the buffer */
-    memset(Buffer, 0, 4);
+    RtlZeroMemory(Buffer, 4);
 
     /* Zero the rest of the FAT */
     Sectors = 32 * 1024 / BootSector->BytesPerSector;
@@ -150,16 +149,15 @@ Fat16WriteFAT(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-            return Status;
+            goto done;
         }
 
         UpdateProgress(Context, Sectors);
     }
 
+done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 
@@ -199,7 +197,7 @@ Fat16WriteRootDirectory(IN HANDLE FileHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the buffer */
-    memset(Buffer, 0, 32 * 1024);
+    RtlZeroMemory(Buffer, 32 * 1024);
 
     Sectors = 32 * 1024 / BootSector->BytesPerSector;
     for (i = 0; i < RootDirSectors; i += Sectors)
@@ -224,16 +222,15 @@ Fat16WriteRootDirectory(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-            return Status;
+            goto done;
         }
 
         UpdateProgress(Context, Sectors);
     }
 
+done:
     /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
     return Status;
 }
 
@@ -284,7 +281,7 @@ Fat16Format(IN HANDLE FileHandle,
     SectorCount = PartitionInfo->PartitionLength.QuadPart >>
         GetShiftCount(DiskGeometry->BytesPerSector); /* Use shifting to avoid 64-bit division */
 
-    memset(&BootSector, 0, sizeof(FAT16_BOOT_SECTOR));
+    RtlZeroMemory(&BootSector, sizeof(FAT16_BOOT_SECTOR));
     memcpy(&BootSector.OEMName[0], "MSWIN4.1", 8);
     BootSector.BytesPerSector = DiskGeometry->BytesPerSector;
     BootSector.SectorsPerCluster = ClusterSize / BootSector.BytesPerSector;
@@ -308,7 +305,7 @@ Fat16Format(IN HANDLE FileHandle,
     else
     {
         RtlUnicodeStringToOemString(&VolumeLabel, Label, TRUE);
-        memset(&BootSector.VolumeLabel[0], ' ', 11);
+        RtlFillMemory(&BootSector.VolumeLabel[0], 11, ' ');
         memcpy(&BootSector.VolumeLabel[0], VolumeLabel.Buffer,
                VolumeLabel.Length < 11 ? VolumeLabel.Length : 11);
         RtlFreeOemString(&VolumeLabel);
