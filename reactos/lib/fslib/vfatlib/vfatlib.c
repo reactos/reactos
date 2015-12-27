@@ -376,7 +376,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
         // NOTE: Returning the value of fs_close looks suspicious.
         // return fs_close(FALSE);
         ret = fs_close(FALSE);
-        DPRINT1("No need to check FS; fs_close returning %d\n", ret);
+        DPRINT1("No need to check FS; fs_close returning %d\n", (unsigned int)ret);
         return STATUS_SUCCESS;
     }
 
@@ -439,8 +439,8 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     /* Close the volume */
     // NOTE: Returning the value of fs_close looks suspicious.
     // return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-    res = fs_close(FixErrors);
-    DPRINT1("fs_close returning %d\n", ret);
+    ret = fs_close(FixErrors);
+    DPRINT1("fs_close returning %d\n", (unsigned int)ret);
     return STATUS_SUCCESS;
 }
 
