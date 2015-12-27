@@ -57,7 +57,6 @@ typedef struct _FAT16_BOOT_SECTOR
     unsigned long  Signature1;                  // 508
 } FAT16_BOOT_SECTOR, *PFAT16_BOOT_SECTOR;
 
-
 typedef struct _FAT32_BOOT_SECTOR
 {
     unsigned char  magic0;                      // 0
@@ -113,6 +112,8 @@ typedef struct _FORMAT_CONTEXT
     BOOLEAN Success;
     ULONG Percent;
 } FORMAT_CONTEXT, *PFORMAT_CONTEXT;
+
+#include "common.h"
 
 
 NTSTATUS

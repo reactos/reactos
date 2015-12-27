@@ -7,6 +7,7 @@ list(APPEND SOURCE
     check/file.c
     check/io.c
     check/lfn.c
+    common.c
     fat12.c
     fat16.c
     fat32.c

@@ -4,13 +4,17 @@
  * FILE:        lib\fslib\vfatlib\vfatlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISIONS:
- *   CSH 05/04-2003 Created
  */
+
+/* INCLUDES *******************************************************************/
+
 #include "vfatlib.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* GLOBALS & FUNCTIONS ********************************************************/
 
 PFMIFSCALLBACK ChkdskCallback = NULL;
 PVOID FsCheckMemQueue;
@@ -282,7 +286,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     if (Callback != NULL)
     {
         Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
-        Callback (DONE, 0, (PVOID)&Context.Success);
+        Callback(DONE, 0, (PVOID)&Context.Success);
     }
 
     DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
@@ -307,7 +311,7 @@ UpdateProgress(PFORMAT_CONTEXT Context,
         Context->Percent = NewPercent;
         if (Context->Callback != NULL)
         {
-            Context->Callback (PROGRESS, 0, &Context->Percent);
+            Context->Callback(PROGRESS, 0, &Context->Percent);
         }
     }
 }

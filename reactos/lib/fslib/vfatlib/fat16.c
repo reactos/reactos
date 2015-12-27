@@ -5,49 +5,17 @@
  * PURPOSE:     Fat16 support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Eric Kohl
- * REVISIONS:
- *   EK 05/04-2003 Created
  */
+
+/* INCLUDES *******************************************************************/
+
 #include "vfatlib.h"
 
 #define NDEBUG
 #include <debug.h>
 
-static ULONG
-GetShiftCount(IN ULONG Value)
-{
-    ULONG i = 1;
 
-    while (Value > 0)
-    {
-        i++;
-        Value /= 2;
-    }
-
-    return i - 2;
-}
-
-
-static ULONG
-CalcVolumeSerialNumber(VOID)
-{
-    LARGE_INTEGER SystemTime;
-    TIME_FIELDS TimeFields;
-    ULONG Serial;
-    PUCHAR Buffer;
-
-    NtQuerySystemTime (&SystemTime);
-    RtlTimeToTimeFields (&SystemTime, &TimeFields);
-
-    Buffer = (PUCHAR)&Serial;
-    Buffer[0] = (UCHAR)(TimeFields.Year & 0xFF) + (UCHAR)(TimeFields.Hour & 0xFF);
-    Buffer[1] = (UCHAR)(TimeFields.Year >> 8) + (UCHAR)(TimeFields.Minute & 0xFF);
-    Buffer[2] = (UCHAR)(TimeFields.Month & 0xFF) + (UCHAR)(TimeFields.Second & 0xFF);
-    Buffer[3] = (UCHAR)(TimeFields.Day & 0xFF) + (UCHAR)(TimeFields.Milliseconds & 0xFF);
-
-    return Serial;
-}
-
+/* FUNCTIONS ******************************************************************/
 
 static NTSTATUS
 Fat16WriteBootSector(IN HANDLE FileHandle,
@@ -330,7 +298,7 @@ Fat16Format(IN HANDLE FileHandle,
     BootSector.Heads = DiskGeometry->TracksPerCylinder;
     BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
     BootSector.SectorsHuge = (SectorCount >= 0x10000) ? (unsigned long)SectorCount : 0;
-    BootSector.Drive = DiskGeometry->MediaType == FixedMedia ? 0x80 : 0x00;
+    BootSector.Drive = (DiskGeometry->MediaType == FixedMedia) ? 0x80 : 0x00;
     BootSector.ExtBootSignature = 0x29;
     BootSector.VolumeID = CalcVolumeSerialNumber();
     if ((Label == NULL) || (Label->Buffer == NULL))
@@ -364,6 +332,20 @@ Fat16Format(IN HANDLE FileHandle,
     /* Init context data */
     Context->TotalSectorCount =
         1 + (BootSector.FATSectors * 2) + RootDirSectors;
+
+    if (!QuickFormat)
+    {
+        Context->TotalSectorCount += SectorCount;
+
+        Status = Fat1216WipeSectors(FileHandle,
+                                    &BootSector,
+                                    Context);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Fat16WipeSectors() failed with status 0x%.08x\n", Status);
+            return Status;
+        }
+    }
 
     Status = Fat16WriteBootSector(FileHandle,
                                   &BootSector,
@@ -402,11 +384,6 @@ Fat16Format(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Fat16WriteRootDirectory() failed with status 0x%.08x\n", Status);
-    }
-
-    if (!QuickFormat)
-    {
-        /* FIXME: Fill remaining sectors */
     }
 
     return Status;
