@@ -485,6 +485,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY frFRComputerPageEntries[] =
 {
     {
@@ -842,7 +843,7 @@ static MUI_ENTRY frFRConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1379,7 +1380,7 @@ MUI_ERROR frFRErrorEntries[] =
         "\n"
         "  \x07  Appuyer sur ENTRêE pour continuer Setup.\n"
         "  \x07  Appuyer sur F3 pour quitter Setup.",
-        "F3= Quitter  ENTRêE = Continuer"
+        "F3 = Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NO_HDD
@@ -1445,7 +1446,7 @@ MUI_ERROR frFRErrorEntries[] =
         "\n"
         "  \x07  Appuyer sur F3 pour quitter Setup.\n"
         "  \x07  Appuyer sur ENTRêE pour continuer Setup.",
-        "F3= Quitter  ENTRêE = Continuer"
+        "F3 = Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1615,7 +1616,6 @@ MUI_ERROR frFRErrorEntries[] =
     }
 };
 
-
 MUI_PAGE frFRPages[] =
 {
     {
@@ -1757,7 +1757,7 @@ MUI_STRING frFRStrings[] =
     {STRING_CHECKINGPART,
     "Setup vÇrifie la partition sÇlectionnÇe."},
     {STRING_QUITCONTINUE,
-    "F3= Quitter  ENTRêE = Continuer"},
+    "F3 = Quitter  ENTRêE = Continuer"},
     {STRING_REBOOTCOMPUTER,
     "ENTRêE = RedÇmarrer l'ordinateur"},
     {STRING_TXTSETUPFAILED,

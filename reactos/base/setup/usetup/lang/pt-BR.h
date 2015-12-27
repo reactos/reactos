@@ -473,6 +473,7 @@ static MUI_ENTRY ptBRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ptBRComputerPageEntries[] =
 {
     {
@@ -849,7 +850,7 @@ static MUI_ENTRY ptBRConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instala‡Æo do ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {

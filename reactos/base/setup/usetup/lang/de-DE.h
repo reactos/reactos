@@ -479,6 +479,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY deDEComputerPageEntries[] =
 {
     {
@@ -1605,7 +1606,6 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     }
 };
-
 
 MUI_PAGE deDEPages[] =
 {

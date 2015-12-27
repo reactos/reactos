@@ -476,6 +476,7 @@ static MUI_ENTRY sqALRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY sqALComputerPageEntries[] =
 {
     {
@@ -834,7 +835,7 @@ static MUI_ENTRY sqALConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1437,7 +1438,7 @@ MUI_ERROR sqALErrorEntries[] =
           "\n"
           "  \x07  Kliko F3 p‰r daljen nga instalimi.\n"
           "  \x07  Kliko ENTER p‰r t‰ vazhduar.",
-          "F3= Dil  ENTER = Vazhdo"
+          "F3 = Dil  ENTER = Vazhdo"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1750,7 +1751,7 @@ MUI_STRING sqALStrings[] =
     {STRING_CHECKINGPART,
     "Instalimi tani ‰sht‰ duke kontrolluar particionin e p‰rzgjedhur."},
     {STRING_QUITCONTINUE,
-    "F3= Dil  ENTER = Vazhdo"},
+    "F3 = Dil  ENTER = Vazhdo"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Ristarto kompjuterin"},
     {STRING_TXTSETUPFAILED,

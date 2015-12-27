@@ -480,6 +480,7 @@ static MUI_ENTRY csCZRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY csCZComputerPageEntries[] =
 {
     {
@@ -837,7 +838,7 @@ static MUI_ENTRY csCZConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1440,7 +1441,7 @@ MUI_ERROR csCZErrorEntries[] =
           "\n"
           "  \x07  Stisknut°m F3 ukonü°te instalaci.\n"
           "  \x07  Stisknut°m ENTER budete pokraüovat v instalaci.",
-          "F3= Ukonüit  ENTER = Pokraüovat"
+          "F3 = Ukonüit  ENTER = Pokraüovat"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1610,7 +1611,6 @@ MUI_ERROR csCZErrorEntries[] =
     }
 };
 
-
 MUI_PAGE csCZPages[] =
 {
     {
@@ -1752,7 +1752,7 @@ MUI_STRING csCZStrings[] =
     {STRING_CHECKINGPART,
     "Instalace nyn° kontroluje zvolenÏ odd°l."},
     {STRING_QUITCONTINUE,
-    "F3= Ukonüit  ENTER = Pokraüovat"},
+    "F3 = Ukonüit  ENTER = Pokraüovat"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restartovat poü°taü"},
     {STRING_TXTSETUPFAILED,

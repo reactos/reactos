@@ -482,6 +482,7 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ltLTComputerPageEntries[] =
 {
     {
@@ -839,7 +840,7 @@ static MUI_ENTRY ltLTConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1442,7 +1443,7 @@ MUI_ERROR ltLTErrorEntries[] =
           "\n"
           "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+          "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1612,7 +1613,6 @@ MUI_ERROR ltLTErrorEntries[] =
     }
 };
 
-
 MUI_PAGE ltLTPages[] =
 {
     {
@@ -1754,7 +1754,7 @@ MUI_STRING ltLTStrings[] =
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
     {STRING_TXTSETUPFAILED,

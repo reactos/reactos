@@ -472,6 +472,7 @@ static MUI_ENTRY bnBDRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY bnBDComputerPageEntries[] =
 {
     {
@@ -1432,7 +1433,7 @@ MUI_ERROR bnBDErrorEntries[] =
           "\n"
           "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+          "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1743,7 +1744,7 @@ MUI_STRING bnBDStrings[] =
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
     {STRING_TXTSETUPFAILED,

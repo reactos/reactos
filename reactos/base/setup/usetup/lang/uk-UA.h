@@ -478,6 +478,7 @@ static MUI_ENTRY ukUARepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ukUAComputerPageEntries[] =
 {
     {
@@ -836,7 +837,7 @@ static MUI_ENTRY ukUAConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1440,7 +1441,7 @@ MUI_ERROR ukUAErrorEntries[] =
           "\n"
           "  \x07  Натиснiть F3 для виходу з встановлювача.\n"
           "  \x07  Натиснiть ENTER щоб продовжити.",
-          "F3= Вийти  ENTER = Продовжити"
+          "F3 = Вийти  ENTER = Продовжити"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1753,7 +1754,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_CHECKINGPART,
     "Встановлювач перевiряє вибраний роздiл."},
     {STRING_QUITCONTINUE,
-    "F3= Вийти  ENTER = Продовжити"},
+    "F3 = Вийти  ENTER = Продовжити"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезавантажити комп'ютер"},
     {STRING_TXTSETUPFAILED,

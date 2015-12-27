@@ -481,6 +481,7 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY bgBGComputerPageEntries[] =
 {
     {
@@ -839,7 +840,7 @@ static MUI_ENTRY bgBGConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1615,7 +1616,6 @@ MUI_ERROR bgBGErrorEntries[] =
     }
 };
 
-
 MUI_PAGE bgBGPages[] =
 {
     {
@@ -1759,7 +1759,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_CHECKINGPART,
     "Тече проверка на избрания дял."},
     {STRING_QUITCONTINUE,
-    "F3= Изход  ENTER = Продължаване"},
+    "F3 = Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Презапускане на компютъра"},
     {STRING_TXTSETUPFAILED,

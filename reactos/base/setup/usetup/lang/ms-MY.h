@@ -472,6 +472,7 @@ static MUI_ENTRY msMYRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY msMYComputerPageEntries[] =
 {
     {
@@ -1332,7 +1333,7 @@ MUI_ERROR msMYErrorEntries[] =
           "\n"
           "  \x07  Tekan F3 untuk keluar persediaan.\n"
           "  \x07  Tekan ENTER untuk teruskan.",
-          "F3= Keluar  ENTER = Teruskan"
+          "F3 = Keluar  ENTER = Teruskan"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1632,7 +1633,7 @@ MUI_STRING msMYStrings[] =
     {STRING_CHECKINGPART,
     "Persediaan kini sedang menyemak sekatan yang dipilih."},
     {STRING_QUITCONTINUE,
-    "F3= Keluar  ENTER = Teruskan"},
+    "F3 = Keluar  ENTER = Teruskan"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Memulakan semuala komputer"},
     {STRING_TXTSETUPFAILED,

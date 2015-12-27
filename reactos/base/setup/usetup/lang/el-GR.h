@@ -473,6 +473,7 @@ static MUI_ENTRY elGRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY elGRComputerPageEntries[] =
 {
     {
@@ -842,7 +843,7 @@ static MUI_ENTRY elGRConfirmDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ДЪбШлсйлШйЮ лжм ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1391,7 +1392,7 @@ MUI_ERROR elGRErrorEntries[] =
         "\n"
         "  \x07  ПШлуйлЬ ENTER ЪаШ Шд ймдЬохйЬлЬ лЮд ДЪбШлсйлШйЮ.\n"
         "  \x07  ПШлуйлЬ F3 ЪаШ дШ ШзжориуйЬлЬ Шзц лЮд ДЪбШлсйлШйЮ.",
-        "F3= АзжощиЮйЮ  ENTER = СмдтоЬаШ"
+        "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"
     },
     {
         //ERROR_NO_HDD
@@ -1457,7 +1458,7 @@ MUI_ERROR elGRErrorEntries[] =
           "\n"
           "  \x07  ПШлуйлЬ F3 ЪаШ дШ ШзжориуйЬлЬ Шзц лЮд ДЪбШлсйлШйЮ.\n"
           "  \x07  ПШлуйлЬ ENTER ЪаШ дШ ймдЬохйЬлЬ.",
-          "F3= АзжощиЮйЮ  ENTER = СмдтоЬаШ"
+          "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1619,7 +1620,6 @@ MUI_ERROR elGRErrorEntries[] =
     }
 };
 
-
 MUI_PAGE elGRPages[] =
 {
     {
@@ -1763,7 +1763,7 @@ MUI_STRING elGRStrings[] =
     {STRING_CHECKINGPART,
     "Ж ЬЪбШлсйлШйЮ ЬвтЪоЬа лщиШ лж ЬзавЬЪгтдж partition."},
     {STRING_QUITCONTINUE,
-    "F3= АзжощиЮйЮ  ENTER = СмдтоЬаШ"},
+    "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"},
     {STRING_TXTSETUPFAILED,

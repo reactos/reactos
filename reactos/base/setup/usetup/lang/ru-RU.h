@@ -473,6 +473,7 @@ static MUI_ENTRY ruRURepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ruRUComputerPageEntries[] =
 {
     {
@@ -1602,7 +1603,6 @@ MUI_ERROR ruRUErrorEntries[] =
         NULL
     }
 };
-
 
 MUI_PAGE ruRUPages[] =
 {
