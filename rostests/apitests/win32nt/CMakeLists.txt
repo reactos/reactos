@@ -1,6 +1,6 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/win32ss/include ../gditools)
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/include ${REACTOS_SOURCE_DIR}/win32ss/include/psdk ../gditools)
 
 list(APPEND SOURCE
     ntdd/NtGdiDdCreateDirectDrawObject.c
