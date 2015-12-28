@@ -388,7 +388,7 @@ SVC_(UserGetAsyncKeyState, 1)
 SVC_(UserGetAtomName, 2)
 SVC_(UserGetCaretBlinkTime, 0)
 SVC_(UserGetCaretPos, 1)
-SVC_(UserGetClassInfoEx, 5)
+SVC_(UserGetClassInfo, 5) // called UserGetClassInfoEx on 2k3, but identical to XP
 SVC_(UserGetClassName, 3)
 SVC_(UserGetClipboardData, 2)
 SVC_(UserGetClipboardFormatName, 3)
