@@ -1,6 +1,6 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/win32ss/include ${REACTOS_SOURCE_DIR}/win32ss/include/psdk ../gditools)
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/include ../gditools)
 
 list(APPEND SOURCE
     ntdd/NtGdiDdCreateDirectDrawObject.c
@@ -76,4 +76,5 @@ add_importlibs(win32knt_apitest
     kernel32
     ntdll)
 
+add_dependencies(win32knt_apitest xdk)
 add_cd_file(TARGET win32knt_apitest DESTINATION reactos/bin FOR all)
