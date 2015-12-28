@@ -264,9 +264,8 @@ list(APPEND SOURCE_CRTDLL
 #    _setmode.c
 #    _setsystime.c
 #    _sleep.c
-#    _snprintf.c
-#    _snwprintf.c
-#    _sopen.c
+    _snprintf.c
+    _snwprintf.c#    _sopen.c
 #    _spawnl.c
 #    _spawnle.c
 #    _spawnlp.c
@@ -477,7 +476,7 @@ list(APPEND SOURCE_CRTDLL
 #    strtod.c
 #    strtok.c
 #    strtol.c
-#    strtoul.c
+    strtoul.c
 #    strxfrm.c
 #    swprintf.c
 #    swscanf.c
@@ -518,7 +517,7 @@ list(APPEND SOURCE_CRTDLL
 #    wcstok.c
 #    wcstol.c
     wcstombs.c
-#    wcstoul.c
+    wcstoul.c
 #    wcsxfrm.c
 #    wctomb.c
 #    wprintf.c

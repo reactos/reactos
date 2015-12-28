@@ -679,7 +679,7 @@ list(APPEND SOURCE_MSVCRT
 #    _setmode.c
 #    _setsystime.c
 #    _sleep.c
-#    _snprintf.c
+    _snprintf.c
 #    _snprintf_c
 #    _snprintf_c_l
 #    _snprintf_l
@@ -689,7 +689,7 @@ list(APPEND SOURCE_MSVCRT
 #    _snscanf_l
 #    _snscanf_s
 #    _snscanf_s_l
-#    _snwprintf.c
+    _snwprintf.c
 #    _snwprintf_l
 #    _snwprintf_s
 #    _snwprintf_s_l
@@ -1188,7 +1188,7 @@ list(APPEND SOURCE_MSVCRT
 #    strtok.c
 #    strtok_s.c
 #    strtol.c
-#    strtoul.c
+    strtoul.c
 #    strxfrm.c
 #    swprintf.c
 #    swprintf_s.c
@@ -1252,7 +1252,7 @@ list(APPEND SOURCE_MSVCRT
 #    wcstol.c
     wcstombs.c
 #    wcstombs_s.c Not exported in 2k3 Sp1
-#    wcstoul.c
+    wcstoul.c
 #    wcsxfrm.c
 #    wctob
 #    wctomb.c

@@ -10,13 +10,21 @@ extern void func__vscwprintf(void);
 #if defined(TEST_NTDLL)
 extern void func__vscwprintf(void);
 #endif
+extern void func_fputc(void);
+extern void func_fputwc(void);
+extern void func__snprintf(void);
+extern void func__snwprintf(void);
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
 extern void func_mbstowcs(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
 extern void func_strlen(void);
+extern void func_strnlen(void);
+extern void func_strtoul(void);
+extern void func_wcsnlen(void);
 extern void func_wcstombs(void);
+extern void func_wcstoul(void);
 
 extern void func_static_construct(void);
 extern void func_static_init(void);
@@ -26,9 +34,13 @@ const struct test winetest_testlist[] =
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },
     { "mbstowcs", func_mbstowcs },
+    { "_snprintf", func__snprintf },
+    { "_snwprintf", func__snwprintf },
     { "sprintf", func_sprintf },
     { "strcpy", func_strcpy },
     { "strlen", func_strlen },
+    { "strtoul", func_strtoul },
+    { "wcstoul", func_wcstoul },
     { "wcstombs", func_wcstombs },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...

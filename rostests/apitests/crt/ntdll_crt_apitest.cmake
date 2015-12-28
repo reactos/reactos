@@ -19,8 +19,8 @@ list(APPEND SOURCE_NTDLL
 #    _ltow.c
 #    _memccpy.c
 #    _memicmp.c
-#    _snprintf.c
-#    _snwprintf.c
+    _snprintf.c
+    _snwprintf.c
 #    _splitpath.c
     # _strcmpi == _stricmp
 #    _stricmp.c
@@ -97,7 +97,7 @@ list(APPEND SOURCE_NTDLL
 #    strspn.c
 #    strstr.c
 #    strtol.c
-#    strtoul.c
+    strtoul.c
 #    swprintf.c
 #    tan.c
 #    tolower.c
@@ -121,7 +121,7 @@ list(APPEND SOURCE_NTDLL
 #    wcstok.c
 #    wcstol.c
     wcstombs.c
-#    wcstoul.c
+    wcstoul.c
 )
 
 if(ARCH STREQUAL "i386")
