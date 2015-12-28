@@ -14,7 +14,9 @@
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-#ifdef __GNUC__
+#ifdef _MSC_VER
+#pragma warning(disable:4778) // unterminated format string '%'
+#else
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-zero-length"
 #pragma GCC diagnostic ignored "-Wnonnull"
@@ -177,7 +179,7 @@ START_TEST(sprintf)
     Length = sprintf(Buffer, "%.4s", "hello");
     ok_str(Buffer, "hell");
     ok_int(Length, 4);
-    
+
     StartSeh()
         Length = sprintf(Buffer, "%.*s", -1, "hello");
 #ifdef TEST_USER32

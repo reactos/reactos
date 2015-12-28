@@ -52,11 +52,14 @@ Test_strlen(PFN_STRLEN pstrlen)
     ok((eflags & EFLAGS_DF) != 0, "Direction flag in ELFAGS was changed.");
 
     /* Only test this for the exported versions, intrinsics might do it
-       differently. It's up to us to not do fishy stuff! */
+       differently. It's up to us to not do fishy stuff! Also crtdll does
+       not do it like this. */
+#ifndef TEST_CRTDLL
     if (pstrlen == strlen)
     {
         ok(len == 8, "Should not have gone backwards (got len %i)", (int)len);
     }
+#endif // TEST_CRTDLL
 #endif
 }
 
