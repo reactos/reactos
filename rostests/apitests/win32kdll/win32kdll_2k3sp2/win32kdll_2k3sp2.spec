@@ -390,7 +390,8 @@
 @ stdcall NtUserGetAtomName(long ptr)
 @ stdcall NtUserGetCaretBlinkTime()
 @ stdcall NtUserGetCaretPos(ptr)
-@ stdcall NtUserGetClassInfo(ptr ptr ptr ptr long) # called NtUserGetClassInfoEx on 2k3,but identical to XP
+@ stdcall NtUserGetClassInfo(ptr ptr ptr ptr long) NtUserGetClassInfoEx # called NtUserGetClassInfoEx on 2k3, but identical to XP's NtUserGetClassInfo
+@ stdcall NtUserGetClassInfoEx(ptr ptr ptr ptr long)
 @ stdcall NtUserGetClassName(ptr long ptr)
 @ stdcall NtUserGetClipboardData(long ptr)
 @ stdcall NtUserGetClipboardFormatName(long wstr ptr)
