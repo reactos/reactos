@@ -259,11 +259,37 @@ IntSetDIBits(
     POINTL		ptSrc;
     EXLATEOBJ	exlo;
     PPALETTE    ppalDIB = 0;
+    ULONG cjSizeImage;
 
     if (!bmi) return 0;
 
-    if (bmi->bmiHeader.biSizeImage > cjMaxBits)
+    /* Check if the header provided an image size */
+    if (bmi->bmiHeader.biSizeImage != 0)
     {
+        /* Use the given size */
+        cjSizeImage = bmi->bmiHeader.biSizeImage;
+    }
+    /* Otherwise check for uncompressed formats */
+    else if ((bmi->bmiHeader.biCompression == BI_RGB) ||
+             (bmi->bmiHeader.biCompression == BI_BITFIELDS))
+    {
+        /* Calculate the image size */
+        cjSizeImage = DIB_GetDIBImageBytes(bmi->bmiHeader.biWidth,
+                                           ScanLines,
+                                           bmi->bmiHeader.biBitCount);
+    }
+    else
+    {
+        /* Compressed format without a size. This is invalid. */
+        DPRINT1("Compressed format without a size!");
+        return 0;
+    }
+
+    /* Check if the size that we have is ok */
+    if (cjSizeImage > cjMaxBits)
+    {
+        DPRINT1("Size too large! cjSizeImage = %lu, cjMaxBits = %lu\n",
+                cjSizeImage, cjMaxBits);
         return 0;
     }
 
@@ -273,7 +299,7 @@ IntSetDIBits(
                                      BitmapFormat(bmi->bmiHeader.biBitCount,
                                                   bmi->bmiHeader.biCompression),
                                      bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
-                                     bmi->bmiHeader.biSizeImage,
+                                     cjSizeImage,
                                      (PVOID)Bits,
                                      0);
     if (!SourceBitmap)
@@ -314,6 +340,8 @@ IntSetDIBits(
     rcDst.right = psurfDst->SurfObj.sizlBitmap.cx;
     ptSrc.x = 0;
     ptSrc.y = 0;
+
+    NT_ASSERT(psurfSrc->SurfObj.cjBits <= cjMaxBits);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -1366,7 +1394,11 @@ IntCreateDIBitmap(
             /* Undocumented flag which creates a DDB of the format specified by the bitmap info. */
             handle = IntCreateCompatibleBitmap(Dc, width, height, planes, bpp);
             if (!handle)
+            {
+                DPRINT1("IntCreateCompatibleBitmap() failed!\n");
                 return NULL;
+            }
+
             /* The palette must also match the given data */
             Surface = SURFACE_ShareLockSurface(handle);
             ASSERT(Surface);
@@ -1430,6 +1462,7 @@ NtGdiCreateDIBitmapInternal(
         safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
         if(!safeBits)
         {
+            DPRINT1("Failed to allocate %lu bytes\n", cjMaxBits);
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
@@ -1452,6 +1485,7 @@ NtGdiCreateDIBitmapInternal(
 
     if(!NT_SUCCESS(Status))
     {
+        DPRINT1("Got an exception! pjInit = %p\n", pjInit);
         SetLastNtError(Status);
         goto cleanup;
     }
@@ -1498,6 +1532,7 @@ GreCreateDIBitmapInternal(
         hdcDest = NtGdiCreateCompatibleDC(0);
         if(!hdcDest)
         {
+            DPRINT1("NtGdiCreateCompatibleDC failed\n");
             return NULL;
         }
     }
@@ -1509,6 +1544,7 @@ GreCreateDIBitmapInternal(
     Dc = DC_LockDc(hdcDest);
     if (!Dc)
     {
+        DPRINT1("Failed to lock hdcDest %p\n", hdcDest);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
