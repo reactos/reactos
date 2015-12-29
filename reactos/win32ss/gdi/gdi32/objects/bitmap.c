@@ -408,23 +408,30 @@ CreateDIBitmap(
 //  PDC_ATTR pDc_Attr;
     UINT InfoSize = 0;
     UINT cjBmpScanSize = 0;
-    HBITMAP hBmp;
+    HBITMAP hBmp = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
+    PBITMAPINFO pbmiConverted;
+    UINT cjInfoSize;
+
+    /* Convert the BITMAPINFO if it is a COREINFO */
+    pbmiConverted = ConvertBitmapInfo(Data, ColorUse, &cjInfoSize, FALSE);
 
     /* Check for CBM_CREATDIB */
     if (Init & CBM_CREATDIB)
     {
         /* CBM_CREATDIB needs Data. */
-        if (!Data)
+        if (pbmiConverted == NULL)
         {
-            return 0;
+            DPRINT1("CBM_CREATDIB needs a BITMAINFO!\n");
+            goto Exit;
         }
 
         /* It only works with PAL or RGB */
         if (ColorUse > DIB_PAL_COLORS)
         {
+            DPRINT1("Invalid ColorUse: %lu\n", ColorUse);
             GdiSetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
+            goto Exit;
         }
 
         /* Use the header from the data */
@@ -434,38 +441,48 @@ CreateDIBitmap(
     /* Header is required */
     if (!Header)
     {
+        DPRINT1("Header is NULL\n");
         GdiSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        goto Exit;
     }
 
     /* Get the bitmap format and dimensions */
     if (DIB_GetBitmapInfo(Header, &width, &height, &planes, &bpp, &compr, &dibsize) == -1)
     {
+        DPRINT1("DIB_GetBitmapInfo failed!\n");
         GdiSetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
+        goto Exit;
     }
 
     /* Check if the Compr is incompatible */
     if ((compr == BI_JPEG) || (compr == BI_PNG) || (compr == BI_BITFIELDS))
-        return 0;
+    {
+        DPRINT1("invalid compr: %lu!\n", compr);
+        goto Exit;
+    }
 
     /* Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid. */
     if (ColorUse > DIB_PAL_COLORS + 1)
     {
+        DPRINT1("invalid compr: %lu!\n", compr);
         GdiSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        goto Exit;
     }
 
     /* If some Bits are given, only DIB_PAL_COLORS and DIB_RGB_COLORS are valid */
     if (Bits && (ColorUse > DIB_PAL_COLORS))
     {
+        DPRINT1("Invalid ColorUse: %lu\n", ColorUse);
         GdiSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        goto Exit;
     }
 
     /* Negative width is not allowed */
     if (width < 0)
-        return 0;
+    {
+        DPRINT1("Negative width: %li\n", width);
+        goto Exit;
+    }
 
     /* Top-down DIBs have a negative height. */
     height = abs(height);
@@ -473,13 +490,13 @@ CreateDIBitmap(
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
 
-    if (Data)
+    if (pbmiConverted)
     {
         _SEH2_TRY
         {
-            cjBmpScanSize = GdiGetBitmapBitsSize((BITMAPINFO *) Data);
-            CalculateColorTableSize(&Data->bmiHeader, &ColorUse, &InfoSize);
-            InfoSize += Data->bmiHeader.biSize;
+            cjBmpScanSize = GdiGetBitmapBitsSize(pbmiConverted);
+            CalculateColorTableSize(&pbmiConverted->bmiHeader, &ColorUse, &InfoSize);
+            InfoSize += pbmiConverted->bmiHeader.biSize;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -490,8 +507,9 @@ CreateDIBitmap(
 
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Got an exception!\n");
         GdiSetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
+        goto Exit;
     }
 
     DPRINT("pBMI %p, Size bpp %u, dibsize %d, Conv %u, BSS %u\n", Data, bpp, dibsize, InfoSize,
@@ -501,9 +519,18 @@ CreateDIBitmap(
         hBmp = GetStockObject(DEFAULT_BITMAP);
     else
     {
-        hBmp = NtGdiCreateDIBitmapInternal(hDC, width, height, Init, (LPBYTE) Bits,
-            (LPBITMAPINFO) Data, ColorUse, InfoSize, cjBmpScanSize, 0, 0);
+        hBmp = NtGdiCreateDIBitmapInternal(hDC, width, height, Init, (LPBYTE)Bits,
+            (LPBITMAPINFO)pbmiConverted, ColorUse, InfoSize, cjBmpScanSize, 0, 0);
     }
+
+Exit:
+
+    /* Cleanup converted BITMAPINFO */
+    if ((pbmiConverted != NULL) && (pbmiConverted != Data))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pbmiConverted);
+    }
+
     return hBmp;
 }
 
