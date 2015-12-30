@@ -93,8 +93,7 @@ CreateCommonFreeLoaderSections(
     PINICACHESECTION IniSection;
 
     /* Create "FREELOADER" section */
-    IniSection = IniCacheAppendSection(IniCache,
-                                       L"FREELOADER");
+    IniSection = IniCacheAppendSection(IniCache, L"FREELOADER");
 
 #if DBG
     if (IsUnattendedSetup)
@@ -288,123 +287,6 @@ CreateCommonFreeLoaderSections(
                       L"Seconds until highlighted choice will be started automatically:   ");
 }
 
-
-NTSTATUS
-CreateFreeLoaderIniForDos(
-    PWCHAR IniPath,
-    PWCHAR ArcPath)
-{
-    PINICACHE IniCache;
-    PINICACHESECTION IniSection;
-
-    IniCache = IniCacheCreate();
-
-    CreateCommonFreeLoaderSections(IniCache);
-
-    /* Create "Operating Systems" section */
-    IniSection = IniCacheAppendSection(IniCache, L"Operating Systems");
-
-    /* REACTOS=ReactOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"ReactOS",
-                      L"\"ReactOS\"");
-
-    /* ReactOS_Debug="ReactOS (Debug)" */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"ReactOS_Debug",
-                      L"\"ReactOS (Debug)\"");
-
-    /* DOS=Dos/Windows */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"DOS",
-                      L"\"DOS/Windows\"");
-
-    /* Create "ReactOS" section */
-    IniSection = IniCacheAppendSection(IniCache, L"ReactOS");
-
-    /* BootType=ReactOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      L"ReactOS");
-
-    /* SystemPath=<ArcPath> */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SystemPath",
-                      ArcPath);
-
-    /* Create "ReactOS_Debug" section */
-    IniSection = IniCacheAppendSection(IniCache, L"ReactOS_Debug");
-
-    /* BootType=ReactOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      L"ReactOS");
-
-    /* SystemPath=<ArcPath> */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SystemPath",
-                      ArcPath);
-
-    /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"Options",
-                      L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
-
-    /* Create "DOS" section */
-    IniSection = IniCacheAppendSection(IniCache,
-                                       L"DOS");
-
-    /* BootType=BootSector */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      L"BootSector");
-
-    /* BootDrive=hd0 */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootDrive",
-                      L"hd0");
-
-    /* BootPartition=1 */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootPartition",
-                      L"1");
-
-    /* BootSector=BOOTSECT.DOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootSectorFile",
-                      L"BOOTSECT.DOS");
-
-    IniCacheSave(IniCache, IniPath);
-    IniCacheDestroy(IniCache);
-
-    return STATUS_SUCCESS;
-}
-
-
 NTSTATUS
 CreateFreeLoaderEntry(
     PINICACHE IniCache,
@@ -451,17 +333,13 @@ CreateFreeLoaderEntry(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-CreateFreeLoaderIniForReactOS(
-    PWCHAR IniPath,
+static
+VOID
+CreateFreeLoaderReactOSEntries(
+    PINICACHE IniCache,
     PWCHAR ArcPath)
 {
-    PINICACHE IniCache;
     PINICACHESECTION IniSection;
-
-    IniCache = IniCacheCreate();
-
-    CreateCommonFreeLoaderSections(IniCache);
 
     /* Create "Operating Systems" section */
     IniSection = IniCacheAppendSection(IniCache, L"Operating Systems");
@@ -517,8 +395,90 @@ CreateFreeLoaderIniForReactOS(
                           L"Windows2003", ArcPath,
                           L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200");
 #endif
+}
 
-    /* Save the ini file */
+NTSTATUS
+CreateFreeLoaderIniForReactOS(
+    PWCHAR IniPath,
+    PWCHAR ArcPath)
+{
+    PINICACHE IniCache;
+
+    /* Initialize the INI file */
+    IniCache = IniCacheCreate();
+
+    /* Create the common FreeLdr sections */
+    CreateCommonFreeLoaderSections(IniCache);
+
+    /* Add the ReactOS entries */
+    CreateFreeLoaderReactOSEntries(IniCache, ArcPath);
+
+    /* Save the INI file */
+    IniCacheSave(IniCache, IniPath);
+    IniCacheDestroy(IniCache);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CreateFreeLoaderIniForDos(
+    PWCHAR IniPath,
+    PWCHAR ArcPath)
+{
+    PINICACHE IniCache;
+    PINICACHESECTION IniSection;
+
+    /* Initialize the INI file */
+    IniCache = IniCacheCreate();
+
+    /* Create the common FreeLdr sections */
+    CreateCommonFreeLoaderSections(IniCache);
+
+    /* Add the ReactOS entries */
+    CreateFreeLoaderReactOSEntries(IniCache, ArcPath);
+
+    /* Get "Operating Systems" section */
+    IniSection = IniCacheGetSection(IniCache, L"Operating Systems");
+
+    /* DOS=DOS/Windows */
+    IniCacheInsertKey(IniSection,
+                      NULL,
+                      INSERT_LAST,
+                      L"DOS",
+                      L"\"DOS/Windows\"");
+
+    /* Create the "DOS" section */
+    IniSection = IniCacheAppendSection(IniCache, L"DOS");
+
+    /* BootType=BootSector */
+    IniCacheInsertKey(IniSection,
+                      NULL,
+                      INSERT_LAST,
+                      L"BootType",
+                      L"BootSector");
+
+    /* BootDrive=hd0 */
+    IniCacheInsertKey(IniSection,
+                      NULL,
+                      INSERT_LAST,
+                      L"BootDrive",
+                      L"hd0");
+
+    /* BootPartition=1 */
+    IniCacheInsertKey(IniSection,
+                      NULL,
+                      INSERT_LAST,
+                      L"BootPartition",
+                      L"1");
+
+    /* BootSector=BOOTSECT.DOS */
+    IniCacheInsertKey(IniSection,
+                      NULL,
+                      INSERT_LAST,
+                      L"BootSectorFile",
+                      L"BOOTSECT.DOS");
+
+    /* Save the INI file */
     IniCacheSave(IniCache, IniPath);
     IniCacheDestroy(IniCache);
 
@@ -531,7 +491,6 @@ UpdateFreeLoaderIni(
     PWCHAR IniPath,
     PWCHAR ArcPath)
 {
-    UNICODE_STRING Name;
     PINICACHE IniCache;
     PINICACHESECTION IniSection;
     PINICACHESECTION OsIniSection;
@@ -543,9 +502,7 @@ UpdateFreeLoaderIni(
     ULONG i,j;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name, IniPath);
-
-    Status = IniCacheLoad(&IniCache, &Name, FALSE);
+    Status = IniCacheLoad(&IniCache, IniPath, FALSE);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -1944,16 +1901,13 @@ UpdateBootIni(
     PWSTR EntryName,
     PWSTR EntryValue)
 {
-    UNICODE_STRING Name;
     PINICACHE Cache = NULL;
     PINICACHESECTION Section = NULL;
     NTSTATUS Status;
     ULONG FileAttribute;
     PWCHAR OldValue = NULL;
 
-    RtlInitUnicodeString(&Name, BootIniPath);
-
-    Status = IniCacheLoad(&Cache, &Name, FALSE);
+    Status = IniCacheLoad(&Cache, BootIniPath, FALSE);
     if (!NT_SUCCESS(Status))
     {
         return Status;
