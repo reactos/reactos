@@ -539,18 +539,19 @@ UpdateFreeLoaderIni(
             wcscpy(SectionName2, KeyData);
         }
 
+        /* Search for an existing ReactOS entry */
         OsIniSection = IniCacheGetSection(IniCache, SectionName2);
         if (OsIniSection != NULL)
         {
             BOOLEAN UseExistingEntry = TRUE;
 
-            /* Check BootType */
+            /* Check for boot type "Windows2003" */
             Status = IniCacheGetKey(OsIniSection, L"BootType", &KeyData);
             if (NT_SUCCESS(Status))
             {
                 if ((KeyData == NULL) ||
-                        ( (_wcsicmp(KeyData, L"ReactOS") != 0) &&
-                          (_wcsicmp(KeyData, L"\"ReactOS\"") != 0) ))
+                    ( (_wcsicmp(KeyData, L"Windows2003") != 0) &&
+                      (_wcsicmp(KeyData, L"\"Windows2003\"") != 0) ))
                 {
                     /* This is not a ReactOS entry */
                     UseExistingEntry = FALSE;
@@ -563,17 +564,17 @@ UpdateFreeLoaderIni(
 
             if (UseExistingEntry)
             {
-                /* BootType is ReactOS. Now check SystemPath */
+                /* BootType is Windows2003. Now check SystemPath. */
                 Status = IniCacheGetKey(OsIniSection, L"SystemPath", &KeyData);
                 if (NT_SUCCESS(Status))
                 {
-                    swprintf(SystemPath, L"\"%S\"", ArcPath);
+                    swprintf(SystemPath, L"\"%s\"", ArcPath);
                     if ((KeyData == NULL) ||
-                            ((_wcsicmp(KeyData, ArcPath) != 0) &&
-                             (_wcsicmp(KeyData, SystemPath) != 0) ))
+                        ( (_wcsicmp(KeyData, ArcPath) != 0) &&
+                          (_wcsicmp(KeyData, SystemPath) != 0) ))
                     {
-                        /* This entry is a ReactOS entry, but the SystemRoot does not
-                           match the one we are looking for */
+                        /* This entry is a ReactOS entry, but the SystemRoot
+                           does not match the one we are looking for. */
                         UseExistingEntry = FALSE;
                     }
                 }
@@ -595,29 +596,11 @@ UpdateFreeLoaderIni(
         i++;
     }
 
-    /* <SectionName>=<OsName> */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      SectionName,
-                      OsName);
-
-    /* Create <SectionName> section */
-    IniSection = IniCacheAppendSection(IniCache, SectionName);
-
-    /* BootType=ReactOS */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      L"ReactOS");
-
-    /* SystemPath=<ArcPath> */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SystemPath",
-                      ArcPath);
+    /* Create a new "ReactOS" entry */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+                          SectionName, OsName,
+                          L"Windows2003", ArcPath,
+                          L"");
 
     IniCacheSave(IniCache, IniPath);
     IniCacheDestroy(IniCache);
@@ -2032,7 +2015,7 @@ InstallFatBootcodeToPartition(
 
             /* Install new bootcode */
             if (PartitionType == PARTITION_FAT32 ||
-                    PartitionType == PARTITION_FAT32_XINT13)
+                PartitionType == PARTITION_FAT32_XINT13)
             {
                 /* Install FAT32 bootcode */
                 wcscpy(SrcPath, SourceRootPath->Buffer);
@@ -2151,7 +2134,7 @@ InstallFatBootcodeToPartition(
 
             /* Install new bootsector */
             if (PartitionType == PARTITION_FAT32 ||
-                    PartitionType == PARTITION_FAT32_XINT13)
+                PartitionType == PARTITION_FAT32_XINT13)
             {
                 wcscpy(SrcPath, SourceRootPath->Buffer);
                 wcscat(SrcPath, L"\\loader\\fat32.bin");
