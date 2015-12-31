@@ -243,6 +243,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
                 NULL,                     // use window class menu
                 hInst,                    // program instance handle
                 NULL);                    // creation parameters
+    if (hwnd == NULL)
+        return 1;
 
     hwndMain = hwnd;
 
