@@ -50,7 +50,7 @@ pSetupDebugPrint(
 #define TOWL1(p) TOWL2(p)
 #define TOWL2(p) L##p
 
-#if (defined(_MSC_VER)
+#if defined(_MSC_VER)
 #define LogItem(lpTag, lpMessageText, ...) \
     pSetupDebugPrint(__WFILE__, __LINE__, lpTag, lpMessageText, __VA_ARGS__)
 #else
