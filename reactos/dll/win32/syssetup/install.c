@@ -64,7 +64,7 @@ FatalError(char *pszFmt,...)
     vsprintf(szBuffer, pszFmt, ap);
     va_end(ap);
 
-    LogItem(SYSSETUP_SEVERITY_FATAL_ERROR, L"Failed");
+    LogItem(NULL, L"Failed");
 
     strcat(szBuffer, "\nRebooting now!");
     MessageBoxA(NULL,
@@ -1097,7 +1097,7 @@ InstallReactOS(HINSTANCE hInstance)
     BOOL ret;
 
     InitializeSetupActionLog(FALSE);
-    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
+    LogItem(NULL, L"Installing ReactOS");
 
     if (!InitializeProfiles())
     {
@@ -1194,7 +1194,7 @@ InstallReactOS(HINSTANCE hInstance)
         CloseHandle(hHotkeyThread);
     }
 
-    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
+    LogItem(NULL, L"Installing ReactOS done");
     TerminateSetupActionLog();
 
     if (AdminInfo.Name != NULL)

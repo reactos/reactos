@@ -266,6 +266,7 @@ WelcomeDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
+                    LogItem(L"BEGIN", L"WelcomePage");
                     /* Enable the Next button */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
@@ -273,6 +274,10 @@ WelcomeDlgProc(HWND hwndDlg,
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_ACKPAGE);
                         return TRUE;
                     }
+                    break;
+
+                case PSN_WIZNEXT:
+                    LogItem(L"END", L"WelcomePage");
                     break;
 
                 case PSN_WIZBACK:
@@ -2302,7 +2307,7 @@ GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax)
     if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
     {
         /* buffer too small or failure */
-        LogItem(SYSSETUP_SEVERITY_INFORMATION, L"GetLogicalDriveStringsW failed");
+        LogItem(NULL, L"GetLogicalDriveStringsW failed");
         return FALSE;
     }
 
@@ -2312,7 +2317,7 @@ GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax)
         {
             WCHAR wszBuf[MAX_PATH];
             wsprintf(wszBuf, L"%sreactos\\system32\\ntoskrnl.exe", pwszDrive);
-            LogItem(SYSSETUP_SEVERITY_INFORMATION, wszBuf);
+            LogItem(NULL, wszBuf);
             if (GetFileAttributesW(wszBuf) != INVALID_FILE_ATTRIBUTES)
             {
                 /* the file exists, so this is the right drive */
@@ -2372,12 +2377,15 @@ InstallWizard(VOID)
     MSG msg;
     PSETUPDATA pSetupData = NULL;
 
+    LogItem(L"BEGIN_SECTION", L"InstallWizard");
+
     /* Allocate setup data */
     pSetupData = HeapAlloc(GetProcessHeap(),
                            HEAP_ZERO_MEMORY,
                            sizeof(SETUPDATA));
     if (pSetupData == NULL)
     {
+        LogItem(NULL, L"SetupData allocation failed!");
         MessageBoxW(NULL,
                     L"Setup failed to allocate global data!",
                     L"ReactOS Setup",
@@ -2487,6 +2495,8 @@ InstallWizard(VOID)
 
     DeleteObject(pSetupData->hTitleFont);
     HeapFree(GetProcessHeap(), 0, pSetupData);
+
+    LogItem(L"END_SECTION", L"InstallWizard");
 }
 
 /* EOF */

@@ -31,26 +31,27 @@ InstallReactOS (HINSTANCE hInstance);
 
 /* Log File APIs */
 
-#define SYSSETUP_SEVERITY_INFORMATION   0
-#define SYSSETUP_SEVERITY_WARNING       1
-#define SYSSETUP_SEVERITY_ERROR         2
-#define SYSSETUP_SEVERITY_FATAL_ERROR   3
-
-
 BOOL WINAPI
 InitializeSetupActionLog(IN BOOL bDeleteOldLogFile);
 
 VOID WINAPI
 TerminateSetupActionLog(VOID);
 
-BOOL WINAPI
-SYSSETUP_LogItem(IN const LPSTR lpFileName,
-                 IN DWORD dwLineNumber,
-                 IN DWORD dwSeverity,
-                 IN LPWSTR lpMessageText);
+VOID
+CDECL
+pSetupDebugPrint(
+    IN PCWSTR pszFileName,
+    IN INT nLineNumber,
+    IN PCWSTR pszTag,
+    IN PCWSTR pszMessage,
+    ...);
 
-#define LogItem(dwSeverity, lpMessageText) \
-    SYSSETUP_LogItem(__FILE__, __LINE__, dwSeverity, lpMessageText)
+#define __WFILE__ TOWL1(__FILE__)
+#define TOWL1(p) TOWL2(p)
+#define TOWL2(p) L##p
+
+#define LogItem(lpTag, lpMessageText...) \
+    pSetupDebugPrint(__WFILE__, __LINE__, lpTag, lpMessageText)
 
 #endif /* __SYSSETUP_H_INCLUDED__ */
 
