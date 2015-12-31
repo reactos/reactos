@@ -12,6 +12,7 @@ extern TCHAR MsgDeal[128];
 CardStack activepile;
 int LastId;
 bool fGameStarted = false;
+bool bAutoroute = false;
 
 void NewGame(void)
 {
@@ -233,7 +234,7 @@ bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
     SetPlayTimer();
 
     //only drop 1 card at a time
-    if(dragcards.NumCards() != 1)
+    if (!bAutoroute && dragcards.NumCards() != 1)
     {
         TRACE("EXIT SuitStackDropProc()\n");
         return false;
@@ -415,7 +416,9 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
         //stackobj.MoveCards(pDest, 1, true);
         //use the SimulateDrag funcion, because we get the
         //AddProc callbacks called for us on the destination stacks...
+        bAutoroute = true;
         stackobj.SimulateDrag(pDest, 1, true);
+        bAutoroute = false;
     }
     TRACE("EXIT RowStackDblClickProc()\n");
 }
