@@ -193,7 +193,7 @@ AcpiRsConvertAmlToResource (
          * Source is the external AML byte stream buffer,
          * destination is the internal resource descriptor
          */
-        Source      = ACPI_ADD_PTR (void, Aml, Info->AmlOffset);
+        Source = ACPI_ADD_PTR (void, Aml, Info->AmlOffset);
         Destination = ACPI_ADD_PTR (void, Resource, Info->ResourceOffset);
 
         switch (Info->Opcode)
@@ -272,8 +272,7 @@ AcpiRsConvertAmlToResource (
             ItemCount = ACPI_GET8 (Source);
             ACPI_SET8 (Destination, ItemCount);
 
-            Resource->Length = Resource->Length +
-                (Info->Value * ItemCount);
+            Resource->Length = Resource->Length + (Info->Value * ItemCount);
             break;
 
         case ACPI_RSC_COUNT_GPIO_RES:
@@ -345,7 +344,7 @@ AcpiRsConvertAmlToResource (
             /* Generate and set the PIN data pointer */
 
             Target = (char *) ACPI_ADD_PTR (void, Resource,
-                  (Resource->Length - ItemCount * 2));
+                (Resource->Length - ItemCount * 2));
             *(UINT16 **) Destination = ACPI_CAST_PTR (UINT16, Target);
 
             /* Copy the PIN data */
@@ -359,7 +358,7 @@ AcpiRsConvertAmlToResource (
             /* Generate and set the ResourceSource string pointer */
 
             Target = (char *) ACPI_ADD_PTR (void, Resource,
-                  (Resource->Length - ItemCount));
+                (Resource->Length - ItemCount));
             *(UINT8 **) Destination = ACPI_CAST_PTR (UINT8, Target);
 
             /* Copy the ResourceSource string */
@@ -373,7 +372,7 @@ AcpiRsConvertAmlToResource (
             /* Generate and set the Vendor Data pointer */
 
             Target = (char *) ACPI_ADD_PTR (void, Resource,
-                  (Resource->Length - ItemCount));
+                (Resource->Length - ItemCount));
             *(UINT8 **) Destination = ACPI_CAST_PTR (UINT8, Target);
 
             /* Copy the Vendor Data */
@@ -387,12 +386,13 @@ AcpiRsConvertAmlToResource (
             /* Generate and set the ResourceSource string pointer */
 
             Target = (char *) ACPI_ADD_PTR (void, Resource,
-                  (Resource->Length - ItemCount));
+                (Resource->Length - ItemCount));
             *(UINT8 **) Destination = ACPI_CAST_PTR (UINT8, Target);
 
             /* Copy the ResourceSource string */
 
-            Source = ACPI_ADD_PTR (void, Aml, (ACPI_GET16 (Source) + Info->Value));
+            Source = ACPI_ADD_PTR (
+                void, Aml, (ACPI_GET16 (Source) + Info->Value));
             AcpiRsMoveData (Target, Source, ItemCount, Info->Opcode);
             break;
 
@@ -514,7 +514,8 @@ Exit:
     {
         /* Round the resource struct length up to the next boundary (32 or 64) */
 
-        Resource->Length = (UINT32) ACPI_ROUND_UP_TO_NATIVE_WORD (Resource->Length);
+        Resource->Length = (UINT32)
+            ACPI_ROUND_UP_TO_NATIVE_WORD (Resource->Length);
     }
     return_ACPI_STATUS (AE_OK);
 }
@@ -570,7 +571,7 @@ AcpiRsConvertResourceToAml (
          * Source is the internal resource descriptor,
          * destination is the external AML byte stream buffer
          */
-        Source      = ACPI_ADD_PTR (void, Resource, Info->ResourceOffset);
+        Source = ACPI_ADD_PTR (void, Resource, Info->ResourceOffset);
         Destination = ACPI_ADD_PTR (void, Aml, Info->AmlOffset);
 
         switch (Info->Opcode)
@@ -579,7 +580,8 @@ AcpiRsConvertResourceToAml (
 
             memset (Aml, 0, INIT_RESOURCE_LENGTH (Info));
             AmlLength = INIT_RESOURCE_LENGTH (Info);
-            AcpiRsSetResourceHeader (INIT_RESOURCE_TYPE (Info), AmlLength, Aml);
+            AcpiRsSetResourceHeader (
+                INIT_RESOURCE_TYPE (Info), AmlLength, Aml);
             break;
 
         case ACPI_RSC_INITGET:
@@ -621,7 +623,8 @@ AcpiRsConvertResourceToAml (
             ItemCount = ACPI_GET8 (Source);
             ACPI_SET8 (Destination, ItemCount);
 
-            AmlLength = (UINT16) (AmlLength + (Info->Value * (ItemCount - 1)));
+            AmlLength = (UINT16)
+                (AmlLength + (Info->Value * (ItemCount - 1)));
             break;
 
         case ACPI_RSC_COUNT16:
@@ -647,7 +650,8 @@ AcpiRsConvertResourceToAml (
             ItemCount = ACPI_GET16 (Source);
             ACPI_SET16 (Destination, ItemCount);
 
-            AmlLength = (UINT16) (AmlLength + (Info->Value * ItemCount));
+            AmlLength = (UINT16) (
+                AmlLength + (Info->Value * ItemCount));
             AcpiRsSetResourceLength (AmlLength, Aml);
             break;
 
@@ -708,7 +712,7 @@ AcpiRsConvertResourceToAml (
         case ACPI_RSC_MOVE_GPIO_PIN:
 
             Destination = (char *) ACPI_ADD_PTR (void, Aml,
-                  ACPI_GET16 (Destination));
+                ACPI_GET16 (Destination));
             Source = * (UINT16 **) Source;
             AcpiRsMoveData (Destination, Source, ItemCount, Info->Opcode);
             break;
@@ -718,7 +722,7 @@ AcpiRsConvertResourceToAml (
             /* Used for both ResourceSource string and VendorData */
 
             Destination = (char *) ACPI_ADD_PTR (void, Aml,
-                  ACPI_GET16 (Destination));
+                ACPI_GET16 (Destination));
             Source = * (UINT8 **) Source;
             AcpiRsMoveData (Destination, Source, ItemCount, Info->Opcode);
             break;
@@ -726,7 +730,7 @@ AcpiRsConvertResourceToAml (
         case ACPI_RSC_MOVE_SERIAL_VEN:
 
             Destination = (char *) ACPI_ADD_PTR (void, Aml,
-                  (AmlLength - ItemCount));
+                (AmlLength - ItemCount));
             Source = * (UINT8 **) Source;
             AcpiRsMoveData (Destination, Source, ItemCount, Info->Opcode);
             break;
@@ -734,7 +738,7 @@ AcpiRsConvertResourceToAml (
         case ACPI_RSC_MOVE_SERIAL_RES:
 
             Destination = (char *) ACPI_ADD_PTR (void, Aml,
-                  (AmlLength - ItemCount));
+                (AmlLength - ItemCount));
             Source = * (UINT8 **) Source;
             AcpiRsMoveData (Destination, Source, ItemCount, Info->Opcode);
             break;
@@ -751,7 +755,7 @@ AcpiRsConvertResourceToAml (
              * Optional ResourceSource (Index and String)
              */
             AmlLength = AcpiRsSetResourceSource (
-                            Aml, (ACPI_RS_LENGTH) AmlLength, Source);
+                Aml, (ACPI_RS_LENGTH) AmlLength, Source);
             AcpiRsSetResourceLength (AmlLength, Aml);
             break;
 
@@ -777,8 +781,8 @@ AcpiRsConvertResourceToAml (
             /*
              * 16-bit encoded bitmask (IRQ macro)
              */
-            Temp16 = AcpiRsEncodeBitmask (Source,
-                        *ACPI_ADD_PTR (UINT8, Resource, Info->Value));
+            Temp16 = AcpiRsEncodeBitmask (
+                Source, *ACPI_ADD_PTR (UINT8, Resource, Info->Value));
             ACPI_MOVE_16_TO_16 (Destination, &Temp16);
             break;
 
@@ -801,7 +805,7 @@ AcpiRsConvertResourceToAml (
             case ACPI_RSC_COMPARE_VALUE:
 
                 if (*ACPI_ADD_PTR (UINT8, Resource,
-                        COMPARE_TARGET (Info)) != COMPARE_VALUE (Info))
+                    COMPARE_TARGET (Info)) != COMPARE_VALUE (Info))
                 {
                     goto Exit;
                 }
@@ -819,7 +823,7 @@ AcpiRsConvertResourceToAml (
              * Control - Exit conversion if equal
              */
             if (*ACPI_ADD_PTR (UINT8, Resource,
-                    COMPARE_TARGET (Info)) == COMPARE_VALUE (Info))
+                COMPARE_TARGET (Info)) == COMPARE_VALUE (Info))
             {
                 goto Exit;
             }
@@ -843,7 +847,8 @@ Exit:
 #if 0
 /* Previous resource validations */
 
-    if (Aml->ExtAddress64.RevisionID != AML_RESOURCE_EXTENDED_ADDRESS_REVISION)
+    if (Aml->ExtAddress64.RevisionID !=
+        AML_RESOURCE_EXTENDED_ADDRESS_REVISION)
     {
         return_ACPI_STATUS (AE_SUPPORT);
     }

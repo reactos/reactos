@@ -126,7 +126,7 @@
 /* Local macros for 16,32-bit to 64-bit conversion */
 
 #define ACPI_COPY_FIELD(Out, In, Field)  ((Out)->Field = (In)->Field)
-#define ACPI_COPY_ADDRESS(Out, In)                      \
+#define ACPI_COPY_ADDRESS(Out, In)                       \
     ACPI_COPY_FIELD(Out, In, ResourceType);              \
     ACPI_COPY_FIELD(Out, In, ProducerConsumer);          \
     ACPI_COPY_FIELD(Out, In, Decode);                    \
@@ -505,13 +505,15 @@ AcpiResourceToAddress64 (
     {
     case ACPI_RESOURCE_TYPE_ADDRESS16:
 
-        Address16 = ACPI_CAST_PTR (ACPI_RESOURCE_ADDRESS16, &Resource->Data);
+        Address16 = ACPI_CAST_PTR (
+            ACPI_RESOURCE_ADDRESS16, &Resource->Data);
         ACPI_COPY_ADDRESS (Out, Address16);
         break;
 
     case ACPI_RESOURCE_TYPE_ADDRESS32:
 
-        Address32 = ACPI_CAST_PTR (ACPI_RESOURCE_ADDRESS32, &Resource->Data);
+        Address32 = ACPI_CAST_PTR (
+            ACPI_RESOURCE_ADDRESS32, &Resource->Data);
         ACPI_COPY_ADDRESS (Out, Address32);
         break;
 
@@ -576,8 +578,8 @@ AcpiGetVendorResource (
 
     /* Walk the _CRS or _PRS resource list for this device */
 
-    Status = AcpiWalkResources (DeviceHandle, Name, AcpiRsMatchVendorResource,
-                &Info);
+    Status = AcpiWalkResources (
+        DeviceHandle, Name, AcpiRsMatchVendorResource, &Info);
     if (ACPI_FAILURE (Status))
     {
         return (Status);
@@ -696,7 +698,8 @@ AcpiWalkResourceBuffer (
     /* Buffer contains the resource list and length */
 
     Resource = ACPI_CAST_PTR (ACPI_RESOURCE, Buffer->Pointer);
-    ResourceEnd = ACPI_ADD_PTR (ACPI_RESOURCE, Buffer->Pointer, Buffer->Length);
+    ResourceEnd = ACPI_ADD_PTR (
+        ACPI_RESOURCE, Buffer->Pointer, Buffer->Length);
 
     /* Walk the resource list until the EndTag is found (or buffer end) */
 

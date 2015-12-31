@@ -371,8 +371,8 @@ AcpiDsResultStackPop (
 
     if (WalkState->Results == NULL)
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Result stack underflow - State=%p\n",
-            WalkState));
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+            "Result stack underflow - State=%p\n", WalkState));
         return (AE_AML_NO_OPERAND);
     }
 
@@ -779,7 +779,8 @@ AcpiDsInitAmlWalk (
 
         /* Push start scope on scope stack and make it current  */
 
-        Status = AcpiDsScopeStackPush (MethodNode, ACPI_TYPE_METHOD, WalkState);
+        Status = AcpiDsScopeStackPush (
+            MethodNode, ACPI_TYPE_METHOD, WalkState);
         if (ACPI_FAILURE (Status))
         {
             return_ACPI_STATUS (Status);
@@ -822,7 +823,7 @@ AcpiDsInitAmlWalk (
             /* Push start scope on scope stack and make it current  */
 
             Status = AcpiDsScopeStackPush (ParserState->StartNode,
-                            ParserState->StartNode->Type, WalkState);
+                ParserState->StartNode->Type, WalkState);
             if (ACPI_FAILURE (Status))
             {
                 return_ACPI_STATUS (Status);

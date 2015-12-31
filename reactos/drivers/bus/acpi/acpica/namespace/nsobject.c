@@ -217,7 +217,7 @@ AcpiNsAttachObject (
          * Value passed is a name handle and that name has a
          * non-null value. Use that name's value and type.
          */
-        ObjDesc    = ((ACPI_NAMESPACE_NODE *) Object)->Object;
+        ObjDesc = ((ACPI_NAMESPACE_NODE *) Object)->Object;
         ObjectType = ((ACPI_NAMESPACE_NODE *) Object)->Type;
     }
 
@@ -267,8 +267,8 @@ AcpiNsAttachObject (
         LastObjDesc->Common.NextObject = Node->Object;
     }
 
-    Node->Type     = (UINT8) ObjectType;
-    Node->Object   = ObjDesc;
+    Node->Type = (UINT8) ObjectType;
+    Node->Object = ObjDesc;
 
     return_ACPI_STATUS (AE_OK);
 }

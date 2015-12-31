@@ -525,7 +525,8 @@ AcpiExDumpObject (
 
         case ACPI_EXD_BUFFER:
 
-            ACPI_DUMP_BUFFER (ObjDesc->Buffer.Pointer, ObjDesc->Buffer.Length);
+            ACPI_DUMP_BUFFER (
+                ObjDesc->Buffer.Pointer, ObjDesc->Buffer.Length);
             break;
 
         case ACPI_EXD_PACKAGE:
@@ -544,7 +545,8 @@ AcpiExDumpObject (
         case ACPI_EXD_REFERENCE:
 
             ReferenceName = AcpiUtGetReferenceName (ObjDesc);
-            AcpiExOutString ("Class Name", ACPI_CAST_PTR (char, ReferenceName));
+            AcpiExOutString (
+                "Class Name", ACPI_CAST_PTR (char, ReferenceName));
             AcpiExDumpReferenceObj (ObjDesc);
             break;
 
@@ -573,7 +575,8 @@ AcpiExDumpObject (
 
                     if ((Next == Start) || (Next == Data))
                     {
-                        AcpiOsPrintf ("\n**** Error: Object list appears to be circular linked");
+                        AcpiOsPrintf (
+                            "\n**** Error: Object list appears to be circular linked");
                         break;
                     }
                 }
@@ -591,7 +594,8 @@ AcpiExDumpObject (
             if (Next)
             {
                 AcpiOsPrintf ("(%s %2.2X)",
-                    AcpiUtGetObjectTypeName (Next), Next->Common.Type);
+                    AcpiUtGetObjectTypeName (Next),
+                    Next->AddressSpace.SpaceId);
 
                 while (Next->AddressSpace.Next)
                 {
@@ -603,11 +607,13 @@ AcpiExDumpObject (
 
                     Next = Next->AddressSpace.Next;
                     AcpiOsPrintf ("->%p(%s %2.2X)", Next,
-                        AcpiUtGetObjectTypeName (Next), Next->Common.Type);
+                        AcpiUtGetObjectTypeName (Next),
+                        Next->AddressSpace.SpaceId);
 
                     if ((Next == Start) || (Next == Data))
                     {
-                        AcpiOsPrintf ("\n**** Error: Handler list appears to be circular linked");
+                        AcpiOsPrintf (
+                            "\n**** Error: Handler list appears to be circular linked");
                         break;
                     }
                 }
@@ -641,7 +647,8 @@ AcpiExDumpObject (
 
                     if ((Next == Start) || (Next == Data))
                     {
-                        AcpiOsPrintf ("\n**** Error: Region list appears to be circular linked");
+                        AcpiOsPrintf (
+                            "\n**** Error: Region list appears to be circular linked");
                         break;
                     }
                 }
@@ -749,7 +756,8 @@ AcpiExDumpOperand (
     {
     case ACPI_TYPE_LOCAL_REFERENCE:
 
-        AcpiOsPrintf ("Reference: [%s] ", AcpiUtGetReferenceName (ObjDesc));
+        AcpiOsPrintf ("Reference: [%s] ",
+            AcpiUtGetReferenceName (ObjDesc));
 
         switch (ObjDesc->Reference.Class)
         {
@@ -777,7 +785,8 @@ AcpiExDumpOperand (
 
         case ACPI_REFCLASS_NAME:
 
-            AcpiOsPrintf ("- [%4.4s]\n", ObjDesc->Reference.Node->Name.Ascii);
+            AcpiOsPrintf ("- [%4.4s]\n",
+                ObjDesc->Reference.Node->Name.Ascii);
             break;
 
         case ACPI_REFCLASS_ARG:
@@ -808,8 +817,8 @@ AcpiExDumpOperand (
                 Length = 128;
             }
 
-            AcpiOsPrintf ("Buffer Contents: (displaying length 0x%.2X)\n",
-                Length);
+            AcpiOsPrintf (
+                "Buffer Contents: (displaying length 0x%.2X)\n", Length);
             ACPI_DUMP_BUFFER (ObjDesc->Buffer.Pointer, Length);
         }
         break;
@@ -835,7 +844,8 @@ AcpiExDumpOperand (
         {
             for (Index = 0; Index < ObjDesc->Package.Count; Index++)
             {
-                AcpiExDumpOperand (ObjDesc->Package.Elements[Index], Depth+1);
+                AcpiExDumpOperand (
+                    ObjDesc->Package.Elements[Index], Depth + 1);
             }
         }
         break;
@@ -888,7 +898,7 @@ AcpiExDumpOperand (
             ObjDesc->Field.BaseByteOffset,
             ObjDesc->Field.StartFieldBitOffset);
 
-        AcpiExDumpOperand (ObjDesc->Field.RegionObj, Depth+1);
+        AcpiExDumpOperand (ObjDesc->Field.RegionObj, Depth + 1);
         break;
 
     case ACPI_TYPE_LOCAL_INDEX_FIELD:
@@ -908,13 +918,13 @@ AcpiExDumpOperand (
             ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "*NULL*\n"));
         }
         else if ((ObjDesc->BufferField.BufferObj)->Common.Type !=
-                    ACPI_TYPE_BUFFER)
+            ACPI_TYPE_BUFFER)
         {
             AcpiOsPrintf ("*not a Buffer*\n");
         }
         else
         {
-            AcpiExDumpOperand (ObjDesc->BufferField.BufferObj, Depth+1);
+            AcpiExDumpOperand (ObjDesc->BufferField.BufferObj, Depth + 1);
         }
         break;
 
@@ -1214,7 +1224,8 @@ AcpiExDumpPackageObj (
         AcpiOsPrintf ("[Buffer] Length %.2X = ", ObjDesc->Buffer.Length);
         if (ObjDesc->Buffer.Length)
         {
-            AcpiUtDebugDumpBuffer (ACPI_CAST_PTR (UINT8, ObjDesc->Buffer.Pointer),
+            AcpiUtDebugDumpBuffer (
+                ACPI_CAST_PTR (UINT8, ObjDesc->Buffer.Pointer),
                 ObjDesc->Buffer.Length, DB_DWORD_DISPLAY, _COMPONENT);
         }
         else
@@ -1230,7 +1241,8 @@ AcpiExDumpPackageObj (
 
         for (i = 0; i < ObjDesc->Package.Count; i++)
         {
-            AcpiExDumpPackageObj (ObjDesc->Package.Elements[i], Level+1, i);
+            AcpiExDumpPackageObj (
+                ObjDesc->Package.Elements[i], Level + 1, i);
         }
         break;
 
@@ -1328,7 +1340,8 @@ DumpObject:
         ObjDesc = ObjDesc->Common.NextObject;
         if (ObjDesc->Common.Type > ACPI_TYPE_LOCAL_MAX)
         {
-            AcpiOsPrintf ("Secondary object is not a known object type: %2.2X\n",
+            AcpiOsPrintf (
+                "Secondary object is not a known object type: %2.2X\n",
                 ObjDesc->Common.Type);
 
             return_VOID;

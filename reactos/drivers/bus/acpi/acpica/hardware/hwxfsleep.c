@@ -244,7 +244,7 @@ AcpiSetFirmwareWakingVector (
     if (AcpiGbl_FACS)
     {
         (void) AcpiHwSetFirmwareWakingVector (AcpiGbl_FACS,
-                    PhysicalAddress, PhysicalAddress64);
+            PhysicalAddress, PhysicalAddress64);
     }
 
     return_ACPI_STATUS (AE_OK);
@@ -311,7 +311,7 @@ AcpiEnterSleepStateS4bios (
     ACPI_FLUSH_CPU_CACHE ();
 
     Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
-                (UINT32) AcpiGbl_FADT.S4BiosRequest, 8);
+        (UINT32) AcpiGbl_FADT.S4BiosRequest, 8);
 
     do {
         AcpiOsStall (ACPI_USEC_PER_MSEC);
@@ -320,6 +320,7 @@ AcpiEnterSleepStateS4bios (
         {
             return_ACPI_STATUS (Status);
         }
+
     } while (!InValue);
 
     return_ACPI_STATUS (AE_OK);
@@ -415,7 +416,7 @@ AcpiEnterSleepStatePrep (
 
 
     Status = AcpiGetSleepTypeData (SleepState,
-                    &AcpiGbl_SleepTypeA, &AcpiGbl_SleepTypeB);
+        &AcpiGbl_SleepTypeA, &AcpiGbl_SleepTypeB);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);

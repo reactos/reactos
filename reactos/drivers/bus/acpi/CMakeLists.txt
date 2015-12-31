@@ -61,6 +61,7 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exstoren.c
     acpica/executer/exstorob.c
     acpica/executer/exsystem.c
+    acpica/executer/extrace.c
     acpica/executer/exutils.c
     acpica/hardware/hwacpi.c
     acpica/hardware/hwesleep.c

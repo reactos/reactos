@@ -150,6 +150,7 @@
 /* Object is not a package element */
 
 #define ACPI_NOT_PACKAGE_ELEMENT    ACPI_UINT32_MAX
+#define ACPI_ALL_PACKAGE_ELEMENTS   (ACPI_UINT32_MAX-1)
 
 /* Always emit warning message, not dependent on node flags */
 
@@ -296,11 +297,19 @@ AcpiNsConvertToBuffer (
 
 ACPI_STATUS
 AcpiNsConvertToUnicode (
+    ACPI_NAMESPACE_NODE     *Scope,
     ACPI_OPERAND_OBJECT     *OriginalObject,
     ACPI_OPERAND_OBJECT     **ReturnObject);
 
 ACPI_STATUS
 AcpiNsConvertToResource (
+    ACPI_NAMESPACE_NODE     *Scope,
+    ACPI_OPERAND_OBJECT     *OriginalObject,
+    ACPI_OPERAND_OBJECT     **ReturnObject);
+
+ACPI_STATUS
+AcpiNsConvertToReference (
+    ACPI_NAMESPACE_NODE     *Scope,
     ACPI_OPERAND_OBJECT     *OriginalObject,
     ACPI_OPERAND_OBJECT     **ReturnObject);
 

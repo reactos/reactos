@@ -1119,7 +1119,7 @@ AcpiDmCloseOperator (
 
 
 /*
- * acdisasm
+ * dmtables
  */
 void
 AdDisassemblerHeader (
@@ -1128,5 +1128,36 @@ AdDisassemblerHeader (
 
 #define ACPI_IS_AML_TABLE   0
 #define ACPI_IS_DATA_TABLE  1
+
+
+/*
+ * adisasm
+ */
+ACPI_STATUS
+AdAmlDisassemble (
+    BOOLEAN                 OutToFile,
+    char                    *Filename,
+    char                    *Prefix,
+    char                    **OutFilename);
+
+ACPI_STATUS
+AdGetLocalTables (
+    void);
+
+ACPI_STATUS
+AdParseTable (
+    ACPI_TABLE_HEADER       *Table,
+    ACPI_OWNER_ID           *OwnerId,
+    BOOLEAN                 LoadTable,
+    BOOLEAN                 External);
+
+ACPI_STATUS
+AdDisplayTables (
+    char                    *Filename,
+    ACPI_TABLE_HEADER       *Table);
+
+ACPI_STATUS
+AdDisplayStatistics (
+    void);
 
 #endif  /* __ACDISASM_H__ */

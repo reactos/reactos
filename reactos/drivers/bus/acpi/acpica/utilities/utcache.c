@@ -165,9 +165,9 @@ AcpiOsCreateCache (
     /* Populate the cache object and return it */
 
     memset (Cache, 0, sizeof (ACPI_MEMORY_LIST));
-    Cache->ListName   = CacheName;
+    Cache->ListName = CacheName;
     Cache->ObjectSize = ObjectSize;
-    Cache->MaxDepth   = MaxDepth;
+    Cache->MaxDepth = MaxDepth;
 
     *ReturnCache = Cache;
     return (AE_OK);

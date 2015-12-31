@@ -512,7 +512,7 @@ AcpiSetupGpeForWake (
      * level-triggered (for windows compatibility).
      */
     if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
-            ACPI_GPE_DISPATCH_NONE)
+        ACPI_GPE_DISPATCH_NONE)
     {
         /*
          * This is the first device for implicit notify on this GPE.
@@ -527,7 +527,7 @@ AcpiSetupGpeForWake (
      * this device to the notify list.
      */
     if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
-            ACPI_GPE_DISPATCH_NOTIFY)
+        ACPI_GPE_DISPATCH_NOTIFY)
     {
         /* Ensure that the device is not already in the list */
 
@@ -992,8 +992,8 @@ AcpiInstallGpeBlock (
      * is always zero
      */
     Status = AcpiEvCreateGpeBlock (Node, GpeBlockAddress->Address,
-                GpeBlockAddress->SpaceId, RegisterCount,
-                0, InterruptNumber, &GpeBlock);
+        GpeBlockAddress->SpaceId, RegisterCount,
+        0, InterruptNumber, &GpeBlock);
     if (ACPI_FAILURE (Status))
     {
         goto UnlockAndExit;

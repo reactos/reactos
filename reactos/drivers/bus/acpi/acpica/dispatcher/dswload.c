@@ -260,7 +260,8 @@ AcpiDsLoad1BeginOp (
     ObjectType = WalkState->OpInfo->ObjectType;
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "State=%p Op=%p [%s]\n", WalkState, Op, AcpiUtGetTypeName (ObjectType)));
+        "State=%p Op=%p [%s]\n", WalkState, Op,
+        AcpiUtGetTypeName (ObjectType)));
 
     switch (WalkState->Opcode)
     {
@@ -271,7 +272,7 @@ AcpiDsLoad1BeginOp (
          * Allow search-to-root for single namesegs.
          */
         Status = AcpiNsLookup (WalkState->ScopeInfo, Path, ObjectType,
-                        ACPI_IMODE_EXECUTE, ACPI_NS_SEARCH_PARENT, WalkState, &(Node));
+            ACPI_IMODE_EXECUTE, ACPI_NS_SEARCH_PARENT, WalkState, &(Node));
 #ifdef ACPI_ASL_COMPILER
         if (Status == AE_NOT_FOUND)
         {
@@ -282,8 +283,8 @@ AcpiDsLoad1BeginOp (
              */
             AcpiDmAddOpToExternalList (Op, Path, ACPI_TYPE_DEVICE, 0, 0);
             Status = AcpiNsLookup (WalkState->ScopeInfo, Path, ObjectType,
-                       ACPI_IMODE_LOAD_PASS1, ACPI_NS_SEARCH_PARENT,
-                       WalkState, &Node);
+               ACPI_IMODE_LOAD_PASS1, ACPI_NS_SEARCH_PARENT,
+               WalkState, &Node);
         }
 #endif
         if (ACPI_FAILURE (Status))
@@ -401,20 +402,20 @@ AcpiDsLoad1BeginOp (
             {
                 Flags |= ACPI_NS_OVERRIDE_IF_FOUND;
                 ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH, "[%s] Override allowed\n",
-                        AcpiUtGetTypeName (ObjectType)));
+                    AcpiUtGetTypeName (ObjectType)));
             }
             else
             {
                 Flags |= ACPI_NS_ERROR_IF_FOUND;
                 ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH, "[%s] Cannot already exist\n",
-                        AcpiUtGetTypeName (ObjectType)));
+                    AcpiUtGetTypeName (ObjectType)));
             }
         }
         else
         {
             ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
                 "[%s] Both Find or Create allowed\n",
-                    AcpiUtGetTypeName (ObjectType)));
+                AcpiUtGetTypeName (ObjectType)));
         }
 
         /*
@@ -424,7 +425,7 @@ AcpiDsLoad1BeginOp (
          * parse tree later.
          */
         Status = AcpiNsLookup (WalkState->ScopeInfo, Path, ObjectType,
-                        ACPI_IMODE_LOAD_PASS1, Flags, WalkState, &Node);
+            ACPI_IMODE_LOAD_PASS1, Flags, WalkState, &Node);
         if (ACPI_FAILURE (Status))
         {
             if (Status == AE_ALREADY_EXISTS)
@@ -444,7 +445,8 @@ AcpiDsLoad1BeginOp (
 
                     if (AcpiNsOpensScope (ObjectType))
                     {
-                        Status = AcpiDsScopeStackPush (Node, ObjectType, WalkState);
+                        Status = AcpiDsScopeStackPush (
+                            Node, ObjectType, WalkState);
                         if (ACPI_FAILURE (Status))
                         {
                             return_ACPI_STATUS (Status);
@@ -566,8 +568,9 @@ AcpiDsLoad1EndOp (
         if (Op->Common.AmlOpcode == AML_REGION_OP)
         {
             Status = AcpiExCreateRegion (Op->Named.Data, Op->Named.Length,
-                        (ACPI_ADR_SPACE_TYPE) ((Op->Common.Value.Arg)->Common.Value.Integer),
-                        WalkState);
+                (ACPI_ADR_SPACE_TYPE)
+                    ((Op->Common.Value.Arg)->Common.Value.Integer),
+                WalkState);
             if (ACPI_FAILURE (Status))
             {
                 return_ACPI_STATUS (Status);
@@ -576,7 +579,7 @@ AcpiDsLoad1EndOp (
         else if (Op->Common.AmlOpcode == AML_DATA_REGION_OP)
         {
             Status = AcpiExCreateRegion (Op->Named.Data, Op->Named.Length,
-                        ACPI_ADR_SPACE_DATA_TABLE, WalkState);
+                ACPI_ADR_SPACE_DATA_TABLE, WalkState);
             if (ACPI_FAILURE (Status))
             {
                 return_ACPI_STATUS (Status);
@@ -628,11 +631,12 @@ AcpiDsLoad1EndOp (
                 WalkState->Operands[0] = ACPI_CAST_PTR (void, Op->Named.Node);
                 WalkState->NumOperands = 1;
 
-                Status = AcpiDsCreateOperands (WalkState, Op->Common.Value.Arg);
+                Status = AcpiDsCreateOperands (
+                    WalkState, Op->Common.Value.Arg);
                 if (ACPI_SUCCESS (Status))
                 {
                     Status = AcpiExCreateMethod (Op->Named.Data,
-                                        Op->Named.Length, WalkState);
+                        Op->Named.Length, WalkState);
                 }
 
                 WalkState->Operands[0] = NULL;

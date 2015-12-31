@@ -134,6 +134,7 @@ ACPI_GLOBAL (ACPI_TABLE_HEADER,         AcpiGbl_OriginalDsdtHeader);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_DsdtIndex, ACPI_INVALID_TABLE_INDEX);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_FacsIndex, ACPI_INVALID_TABLE_INDEX);
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_XFacsIndex, ACPI_INVALID_TABLE_INDEX);
+ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_FadtIndex, ACPI_INVALID_TABLE_INDEX);
 
 #if (!ACPI_REDUCED_HARDWARE)
 ACPI_GLOBAL (ACPI_TABLE_FACS *,         AcpiGbl_FACS);
@@ -156,6 +157,8 @@ ACPI_GLOBAL (ACPI_GENERIC_ADDRESS,      AcpiGbl_XPm1bEnable);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerBitWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerByteWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerNybbleWidth);
+
+ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_GroupModuleLevelCode, FALSE);
 
 
 /*****************************************************************************
@@ -219,6 +222,7 @@ ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_OperandCache);
 
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_StartupFlags, 0);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_Shutdown, TRUE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_EarlyInitialization, TRUE);
 
 /* Global handlers */
 
@@ -238,7 +242,7 @@ ACPI_GLOBAL (UINT8,                     AcpiGbl_NextOwnerIdOffset);
 
 /* Initialization sequencing */
 
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_RegMethodsExecuted);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_RegMethodsEnabled, FALSE);
 
 /* Misc */
 
@@ -400,9 +404,9 @@ ACPI_GLOBAL (ACPI_EXTERNAL_FILE *,      AcpiGbl_ExternalFileList);
 
 #ifdef ACPI_DEBUGGER
 
-ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DbTerminateThreads, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_AbortMethod, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_MethodExecuting, FALSE);
+ACPI_INIT_GLOBAL (ACPI_THREAD_ID,       AcpiGbl_DbThreadId, ACPI_INVALID_THREAD_ID);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoIniMethods);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoRegionSupport);
@@ -412,6 +416,8 @@ ACPI_GLOBAL (char *,                    AcpiGbl_DbFilename);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_DbDebugLevel);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_DbConsoleDebugLevel);
 ACPI_GLOBAL (ACPI_NAMESPACE_NODE *,     AcpiGbl_DbScopeNode);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbTerminateLoop);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbThreadsTerminated);
 
 ACPI_GLOBAL (char *,                    AcpiGbl_DbArgs[ACPI_DEBUGGER_MAX_ARGS]);
 ACPI_GLOBAL (ACPI_OBJECT_TYPE,          AcpiGbl_DbArgTypes[ACPI_DEBUGGER_MAX_ARGS]);

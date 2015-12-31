@@ -189,8 +189,8 @@ AcpiNsRootInitialize (
         }
 
         Status = AcpiNsLookup (NULL, InitVal->Name, InitVal->Type,
-                        ACPI_IMODE_LOAD_PASS2, ACPI_NS_NO_UPSEARCH,
-                        NULL, &NewNode);
+            ACPI_IMODE_LOAD_PASS2, ACPI_NS_NO_UPSEARCH,
+            NULL, &NewNode);
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
@@ -291,7 +291,7 @@ AcpiNsRootInitialize (
                     /* Create additional counting semaphore for global lock */
 
                     Status = AcpiOsCreateSemaphore (
-                                1, 0, &AcpiGbl_GlobalLockSemaphore);
+                        1, 0, &AcpiGbl_GlobalLockSemaphore);
                     if (ACPI_FAILURE (Status))
                     {
                         AcpiUtRemoveReference (ObjDesc);
@@ -312,7 +312,7 @@ AcpiNsRootInitialize (
             /* Store pointer to value descriptor in the Node */
 
             Status = AcpiNsAttachObject (NewNode, ObjDesc,
-                        ObjDesc->Common.Type);
+                ObjDesc->Common.Type);
 
             /* Remove local reference to the object */
 
@@ -329,7 +329,7 @@ UnlockAndExit:
     if (ACPI_SUCCESS (Status))
     {
         Status = AcpiNsGetNode (NULL, "\\_GPE", ACPI_NS_NO_UPSEARCH,
-                    &AcpiGbl_FadtGpeDevice);
+            &AcpiGbl_FadtGpeDevice);
     }
 
     return_ACPI_STATUS (Status);
@@ -661,7 +661,7 @@ AcpiNsLookup (
         /* Try to find the single (4 character) ACPI name */
 
         Status = AcpiNsSearchAndEnter (SimpleName, WalkState, CurrentNode,
-                    InterpreterMode, ThisSearchType, LocalFlags, &ThisNode);
+            InterpreterMode, ThisSearchType, LocalFlags, &ThisNode);
         if (ACPI_FAILURE (Status))
         {
             if (Status == AE_NOT_FOUND)

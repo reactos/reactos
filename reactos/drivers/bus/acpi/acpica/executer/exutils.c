@@ -259,8 +259,8 @@ AcpiExTruncateFor32bitTable (
         (ObjDesc->Integer.Value > (UINT64) ACPI_UINT32_MAX))
     {
         /*
-         * We are executing in a 32-bit ACPI table.
-         * Truncate the value to 32 bits by zeroing out the upper 32-bit field
+         * We are executing in a 32-bit ACPI table. Truncate
+         * the value to 32 bits by zeroing out the upper 32-bit field
          */
         ObjDesc->Integer.Value &= (UINT64) ACPI_UINT32_MAX;
         return (TRUE);
@@ -304,7 +304,7 @@ AcpiExAcquireGlobalLock (
     /* Attempt to get the global lock, wait forever */
 
     Status = AcpiExAcquireMutexObject (ACPI_WAIT_FOREVER,
-                AcpiGbl_GlobalLockMutex, AcpiOsGetThreadId ());
+        AcpiGbl_GlobalLockMutex, AcpiOsGetThreadId ());
 
     if (ACPI_FAILURE (Status))
     {
@@ -441,7 +441,8 @@ AcpiExEisaIdToString (
     if (CompressedId > ACPI_UINT32_MAX)
     {
         ACPI_WARNING ((AE_INFO,
-            "Expected EISAID is larger than 32 bits: 0x%8.8X%8.8X, truncating",
+            "Expected EISAID is larger than 32 bits: "
+            "0x%8.8X%8.8X, truncating",
             ACPI_FORMAT_UINT64 (CompressedId)));
     }
 
@@ -567,6 +568,5 @@ AcpiIsValidSpaceId (
 
     return (TRUE);
 }
-
 
 #endif

@@ -398,7 +398,7 @@ AcpiTbSelectAddress (
  *
  * FUNCTION:    AcpiTbParseFadt
  *
- * PARAMETERS:  TableIndex          - Index for the FADT
+ * PARAMETERS:  None
  *
  * RETURN:      None
  *
@@ -409,7 +409,7 @@ AcpiTbSelectAddress (
 
 void
 AcpiTbParseFadt (
-    UINT32                  TableIndex)
+    void)
 {
     UINT32                  Length;
     ACPI_TABLE_HEADER       *Table;
@@ -422,10 +422,10 @@ AcpiTbParseFadt (
      * Get a local copy of the FADT and convert it to a common format
      * Map entire FADT, assumed to be smaller than one page.
      */
-    Length = AcpiGbl_RootTableList.Tables[TableIndex].Length;
+    Length = AcpiGbl_RootTableList.Tables[AcpiGbl_FadtIndex].Length;
 
     Table = AcpiOsMapMemory (
-                AcpiGbl_RootTableList.Tables[TableIndex].Address, Length);
+        AcpiGbl_RootTableList.Tables[AcpiGbl_FadtIndex].Address, Length);
     if (!Table)
     {
         return;

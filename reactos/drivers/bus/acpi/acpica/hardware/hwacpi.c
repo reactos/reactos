@@ -185,7 +185,7 @@ AcpiHwSetMode (
         /* BIOS should have disabled ALL fixed and GP events */
 
         Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
-                        (UINT32) AcpiGbl_FADT.AcpiEnable, 8);
+            (UINT32) AcpiGbl_FADT.AcpiEnable, 8);
         ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "Attempting to enable ACPI mode\n"));
         break;
 
@@ -195,9 +195,9 @@ AcpiHwSetMode (
          * enable bits to default
          */
         Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
-                    (UINT32) AcpiGbl_FADT.AcpiDisable, 8);
+            (UINT32) AcpiGbl_FADT.AcpiDisable, 8);
         ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-                    "Attempting to enable Legacy (non-ACPI) mode\n"));
+            "Attempting to enable Legacy (non-ACPI) mode\n"));
         break;
 
     default:
@@ -221,8 +221,8 @@ AcpiHwSetMode (
     {
         if (AcpiHwGetMode () == Mode)
         {
-            ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "Mode %X successfully enabled\n",
-                Mode));
+            ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
+                "Mode %X successfully enabled\n", Mode));
             return_ACPI_STATUS (AE_OK);
         }
         AcpiOsStall (ACPI_USEC_PER_MSEC);

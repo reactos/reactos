@@ -191,7 +191,7 @@ const char        *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS] =
 };
 
 
-char *
+const char *
 AcpiUtGetRegionName (
     UINT8                   SpaceId)
 {
@@ -213,7 +213,7 @@ AcpiUtGetRegionName (
         return ("InvalidSpaceId");
     }
 
-    return (ACPI_CAST_PTR (char, AcpiGbl_RegionTypes[SpaceId]));
+    return (AcpiGbl_RegionTypes[SpaceId]);
 }
 
 
@@ -241,7 +241,7 @@ static const char        *AcpiGbl_EventTypes[ACPI_NUM_FIXED_EVENTS] =
 };
 
 
-char *
+const char *
 AcpiUtGetEventName (
     UINT32                  EventId)
 {
@@ -251,7 +251,7 @@ AcpiUtGetEventName (
         return ("InvalidEventID");
     }
 
-    return (ACPI_CAST_PTR (char, AcpiGbl_EventTypes[EventId]));
+    return (AcpiGbl_EventTypes[EventId]);
 }
 
 
@@ -273,7 +273,8 @@ AcpiUtGetEventName (
  *
  * The type ACPI_TYPE_ANY (Untyped) is used as a "don't care" when searching;
  * when stored in a table it really means that we have thus far seen no
- * evidence to indicate what type is actually going to be stored for this entry.
+ * evidence to indicate what type is actually going to be stored for this
+ & entry.
  */
 static const char           AcpiGbl_BadType[] = "UNDEFINED";
 
@@ -315,21 +316,21 @@ static const char           *AcpiGbl_NsTypeNames[] =
 };
 
 
-char *
+const char *
 AcpiUtGetTypeName (
     ACPI_OBJECT_TYPE        Type)
 {
 
     if (Type > ACPI_TYPE_INVALID)
     {
-        return (ACPI_CAST_PTR (char, AcpiGbl_BadType));
+        return (AcpiGbl_BadType);
     }
 
-    return (ACPI_CAST_PTR (char, AcpiGbl_NsTypeNames[Type]));
+    return (AcpiGbl_NsTypeNames[Type]);
 }
 
 
-char *
+const char *
 AcpiUtGetObjectTypeName (
     ACPI_OPERAND_OBJECT     *ObjDesc)
 {
@@ -371,7 +372,7 @@ AcpiUtGetObjectTypeName (
  *
  ******************************************************************************/
 
-char *
+const char *
 AcpiUtGetNodeName (
     void                    *Object)
 {
@@ -447,7 +448,7 @@ static const char           *AcpiGbl_DescTypeNames[] =
 };
 
 
-char *
+const char *
 AcpiUtGetDescriptorName (
     void                    *Object)
 {
@@ -462,9 +463,7 @@ AcpiUtGetDescriptorName (
         return ("Not a Descriptor");
     }
 
-    return (ACPI_CAST_PTR (char,
-        AcpiGbl_DescTypeNames[ACPI_GET_DESCRIPTOR_TYPE (Object)]));
-
+    return (AcpiGbl_DescTypeNames[ACPI_GET_DESCRIPTOR_TYPE (Object)]);
 }
 
 
@@ -541,7 +540,7 @@ AcpiUtGetReferenceName (
 
 /* Names for internal mutex objects, used for debug output */
 
-static char                 *AcpiGbl_MutexNames[ACPI_NUM_MUTEX] =
+static const char           *AcpiGbl_MutexNames[ACPI_NUM_MUTEX] =
 {
     "ACPI_MTX_Interpreter",
     "ACPI_MTX_Namespace",
@@ -551,7 +550,7 @@ static char                 *AcpiGbl_MutexNames[ACPI_NUM_MUTEX] =
     "ACPI_MTX_Memory",
 };
 
-char *
+const char *
 AcpiUtGetMutexName (
     UINT32                  MutexId)
 {

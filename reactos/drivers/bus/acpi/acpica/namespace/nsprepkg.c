@@ -243,8 +243,8 @@ AcpiNsCheckPackage (
         /* Validate all elements of the returned package */
 
         Status = AcpiNsCheckPackageElements (Info, Elements,
-                    Package->RetInfo.ObjectType1, Package->RetInfo.Count1,
-                    Package->RetInfo.ObjectType2, Package->RetInfo.Count2, 0);
+            Package->RetInfo.ObjectType1, Package->RetInfo.Count1,
+            Package->RetInfo.ObjectType2, Package->RetInfo.Count2, 0);
         break;
 
     case ACPI_PTYPE1_VAR:
@@ -255,7 +255,7 @@ AcpiNsCheckPackage (
         for (i = 0; i < Count; i++)
         {
             Status = AcpiNsCheckObjectType (Info, Elements,
-                        Package->RetInfo.ObjectType1, i);
+                Package->RetInfo.ObjectType1, i);
             if (ACPI_FAILURE (Status))
             {
                 return (Status);
@@ -287,7 +287,7 @@ AcpiNsCheckPackage (
                 /* These are the required package elements (0, 1, or 2) */
 
                 Status = AcpiNsCheckObjectType (Info, Elements,
-                            Package->RetInfo3.ObjectType[i], i);
+                    Package->RetInfo3.ObjectType[i], i);
                 if (ACPI_FAILURE (Status))
                 {
                     return (Status);
@@ -298,7 +298,7 @@ AcpiNsCheckPackage (
                 /* These are the optional package elements */
 
                 Status = AcpiNsCheckObjectType (Info, Elements,
-                            Package->RetInfo3.TailObjectType, i);
+                    Package->RetInfo3.TailObjectType, i);
                 if (ACPI_FAILURE (Status))
                 {
                     return (Status);
@@ -312,8 +312,8 @@ AcpiNsCheckPackage (
 
         /* First element is the (Integer) revision */
 
-        Status = AcpiNsCheckObjectType (Info, Elements,
-                    ACPI_RTYPE_INTEGER, 0);
+        Status = AcpiNsCheckObjectType (
+            Info, Elements, ACPI_RTYPE_INTEGER, 0);
         if (ACPI_FAILURE (Status))
         {
             return (Status);
@@ -331,8 +331,8 @@ AcpiNsCheckPackage (
 
         /* First element is the (Integer) count of subpackages to follow */
 
-        Status = AcpiNsCheckObjectType (Info, Elements,
-                    ACPI_RTYPE_INTEGER, 0);
+        Status = AcpiNsCheckObjectType (
+            Info, Elements, ACPI_RTYPE_INTEGER, 0);
         if (ACPI_FAILURE (Status))
         {
             return (Status);
@@ -375,7 +375,8 @@ AcpiNsCheckPackage (
         {
             /* Create the new outer package and populate it */
 
-            Status = AcpiNsWrapWithPackage (Info, ReturnObject, ReturnObjectPtr);
+            Status = AcpiNsWrapWithPackage (
+                Info, ReturnObject, ReturnObjectPtr);
             if (ACPI_FAILURE (Status))
             {
                 return (Status);

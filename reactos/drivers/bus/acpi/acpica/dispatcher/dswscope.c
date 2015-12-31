@@ -154,6 +154,7 @@ AcpiDsScopeStackClear (
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
             "Popped object type (%s)\n",
             AcpiUtGetTypeName (ScopeInfo->Common.Value)));
+
         AcpiUtDeleteGenericState (ScopeInfo);
     }
 }

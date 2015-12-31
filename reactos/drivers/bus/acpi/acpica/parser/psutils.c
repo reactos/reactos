@@ -177,8 +177,8 @@ AcpiPsInitOp (
     Op->Common.AmlOpcode = Opcode;
 
     ACPI_DISASM_ONLY_MEMBERS (strncpy (Op->Common.AmlOpName,
-            (AcpiPsGetOpcodeInfo (Opcode))->Name,
-                sizeof (Op->Common.AmlOpName)));
+        (AcpiPsGetOpcodeInfo (Opcode))->Name,
+        sizeof (Op->Common.AmlOpName)));
 }
 
 
@@ -277,7 +277,8 @@ AcpiPsFreeOp (
 
     if (Op->Common.AmlOpcode == AML_INT_RETURN_VALUE_OP)
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "Free retval op: %p\n", Op));
+        ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,
+            "Free retval op: %p\n", Op));
     }
 
     if (Op->Common.Flags & ACPI_PARSEOP_GENERIC)

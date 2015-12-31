@@ -208,6 +208,15 @@ AcpiOsGetThreadId (
         Lock ? AE_OK : AE_NO_MEMORY; \
     })
 
+static inline BOOLEAN
+AcpiOsReadable (
+    void                    *Pointer,
+    ACPI_SIZE               Length)
+{
+    return TRUE;
+}
+
+
 /*
  * OSL interfaces added by Linux
  */

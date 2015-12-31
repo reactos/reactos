@@ -205,8 +205,10 @@ AcpiException (
     }
     else
     {
-        AcpiOsPrintf (ACPI_MSG_EXCEPTION "%s, ", AcpiFormatException (Status));
+        AcpiOsPrintf (ACPI_MSG_EXCEPTION "%s, ",
+            AcpiFormatException (Status));
     }
+
     va_start (ArgList, Format);
     AcpiOsVprintf (Format, ArgList);
     ACPI_MSG_SUFFIX;

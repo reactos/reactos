@@ -257,20 +257,23 @@ AcpiRsMoveData (
         case ACPI_RSC_MOVE16:
         case ACPI_RSC_MOVE_GPIO_PIN:
 
-            ACPI_MOVE_16_TO_16 (&ACPI_CAST_PTR (UINT16, Destination)[i],
-                                &ACPI_CAST_PTR (UINT16, Source)[i]);
+            ACPI_MOVE_16_TO_16 (
+                &ACPI_CAST_PTR (UINT16, Destination)[i],
+                &ACPI_CAST_PTR (UINT16, Source)[i]);
             break;
 
         case ACPI_RSC_MOVE32:
 
-            ACPI_MOVE_32_TO_32 (&ACPI_CAST_PTR (UINT32, Destination)[i],
-                                &ACPI_CAST_PTR (UINT32, Source)[i]);
+            ACPI_MOVE_32_TO_32 (
+                &ACPI_CAST_PTR (UINT32, Destination)[i],
+                &ACPI_CAST_PTR (UINT32, Source)[i]);
             break;
 
         case ACPI_RSC_MOVE64:
 
-            ACPI_MOVE_64_TO_64 (&ACPI_CAST_PTR (UINT64, Destination)[i],
-                                &ACPI_CAST_PTR (UINT64, Source)[i]);
+            ACPI_MOVE_64_TO_64 (
+                &ACPI_CAST_PTR (UINT64, Destination)[i],
+                &ACPI_CAST_PTR (UINT64, Source)[i]);
             break;
 
         default:
@@ -320,18 +323,18 @@ AcpiRsSetResourceLength (
     {
         /* Large descriptor -- bytes 1-2 contain the 16-bit length */
 
-        ACPI_MOVE_16_TO_16 (&Aml->LargeHeader.ResourceLength, &ResourceLength);
+        ACPI_MOVE_16_TO_16 (
+            &Aml->LargeHeader.ResourceLength, &ResourceLength);
     }
     else
     {
-        /* Small descriptor -- bits 2:0 of byte 0 contain the length */
-
+        /*
+         * Small descriptor -- bits 2:0 of byte 0 contain the length
+         * Clear any existing length, preserving descriptor type bits
+         */
         Aml->SmallHeader.DescriptorType = (UINT8)
-
-            /* Clear any existing length, preserving descriptor type bits */
-
-            ((Aml->SmallHeader.DescriptorType & ~ACPI_RESOURCE_NAME_SMALL_LENGTH_MASK)
-
+            ((Aml->SmallHeader.DescriptorType &
+                ~ACPI_RESOURCE_NAME_SMALL_LENGTH_MASK)
             | ResourceLength);
     }
 }
@@ -450,8 +453,8 @@ AcpiRsGetResourceSource (
     AmlResourceSource = ACPI_ADD_PTR (UINT8, Aml, MinimumLength);
 
     /*
-     * ResourceSource is present if the length of the descriptor is longer than
-     * the minimum length.
+     * ResourceSource is present if the length of the descriptor is longer
+     * than the minimum length.
      *
      * Note: Some resource descriptors will have an additional null, so
      * we add 1 to the minimum length.
@@ -469,8 +472,8 @@ AcpiRsGetResourceSource (
              * String destination pointer is not specified; Set the String
              * pointer to the end of the current ResourceSource structure.
              */
-            ResourceSource->StringPtr = ACPI_ADD_PTR (char, ResourceSource,
-                sizeof (ACPI_RESOURCE_SOURCE));
+            ResourceSource->StringPtr = ACPI_ADD_PTR (
+                char, ResourceSource, sizeof (ACPI_RESOURCE_SOURCE));
         }
 
         /*
@@ -482,13 +485,15 @@ AcpiRsGetResourceSource (
          */
         TotalLength = (UINT32) strlen (
             ACPI_CAST_PTR (char, &AmlResourceSource[1])) + 1;
+
         TotalLength = (UINT32) ACPI_ROUND_UP_TO_NATIVE_WORD (TotalLength);
 
         memset (ResourceSource->StringPtr, 0, TotalLength);
 
         /* Copy the ResourceSource string to the destination */
 
-        ResourceSource->StringLength = AcpiRsStrcpy (ResourceSource->StringPtr,
+        ResourceSource->StringLength = AcpiRsStrcpy (
+            ResourceSource->StringPtr,
             ACPI_CAST_PTR (char, &AmlResourceSource[1]));
 
         return ((ACPI_RS_LENGTH) TotalLength);
@@ -556,7 +561,8 @@ AcpiRsSetResourceSource (
          * Add the length of the string (+ 1 for null terminator) to the
          * final descriptor length
          */
-        DescriptorLength += ((ACPI_RSDESC_SIZE) ResourceSource->StringLength + 1);
+        DescriptorLength += ((ACPI_RSDESC_SIZE)
+            ResourceSource->StringLength + 1);
     }
 
     /* Return the new total length of the AML descriptor */
@@ -599,8 +605,8 @@ AcpiRsGetPrtMethodData (
 
     /* Execute the method, no parameters */
 
-    Status = AcpiUtEvaluateObject (Node, METHOD_NAME__PRT,
-                ACPI_BTYPE_PACKAGE, &ObjDesc);
+    Status = AcpiUtEvaluateObject (
+        Node, METHOD_NAME__PRT, ACPI_BTYPE_PACKAGE, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -653,8 +659,8 @@ AcpiRsGetCrsMethodData (
 
     /* Execute the method, no parameters */
 
-    Status = AcpiUtEvaluateObject (Node, METHOD_NAME__CRS,
-                ACPI_BTYPE_BUFFER, &ObjDesc);
+    Status = AcpiUtEvaluateObject (
+        Node, METHOD_NAME__CRS, ACPI_BTYPE_BUFFER, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -708,8 +714,8 @@ AcpiRsGetPrsMethodData (
 
     /* Execute the method, no parameters */
 
-    Status = AcpiUtEvaluateObject (Node, METHOD_NAME__PRS,
-                ACPI_BTYPE_BUFFER, &ObjDesc);
+    Status = AcpiUtEvaluateObject (
+        Node, METHOD_NAME__PRS, ACPI_BTYPE_BUFFER, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -763,8 +769,8 @@ AcpiRsGetAeiMethodData (
 
     /* Execute the method, no parameters */
 
-    Status = AcpiUtEvaluateObject (Node, METHOD_NAME__AEI,
-                ACPI_BTYPE_BUFFER, &ObjDesc);
+    Status = AcpiUtEvaluateObject (
+        Node, METHOD_NAME__AEI, ACPI_BTYPE_BUFFER, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -820,7 +826,8 @@ AcpiRsGetMethodData (
 
     /* Execute the method, no parameters */
 
-    Status = AcpiUtEvaluateObject (ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, Handle),
+    Status = AcpiUtEvaluateObject (
+        ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, Handle),
         Path, ACPI_BTYPE_BUFFER, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {

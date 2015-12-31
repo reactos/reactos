@@ -158,7 +158,6 @@ AcpiExSystemWaitSemaphore (
         /* We must wait, so unlock the interpreter */
 
         AcpiExExitInterpreter ();
-
         Status = AcpiOsWaitSemaphore (Semaphore, 1, Timeout);
 
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
@@ -211,7 +210,6 @@ AcpiExSystemWaitMutex (
         /* We must wait, so unlock the interpreter */
 
         AcpiExExitInterpreter ();
-
         Status = AcpiOsAcquireMutex (Mutex, Timeout);
 
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
@@ -262,8 +260,8 @@ AcpiExSystemDoStall (
          * (ACPI specifies 100 usec as max, but this gives some slack in
          * order to support existing BIOSs)
          */
-        ACPI_ERROR ((AE_INFO, "Time parameter is too large (%u)",
-            HowLong));
+        ACPI_ERROR ((AE_INFO,
+            "Time parameter is too large (%u)", HowLong));
         Status = AE_AML_OPERAND_VALUE;
     }
     else
@@ -378,7 +376,7 @@ AcpiExSystemWaitEvent (
     if (ObjDesc)
     {
         Status = AcpiExSystemWaitSemaphore (ObjDesc->Event.OsSemaphore,
-                    (UINT16) TimeDesc->Integer.Value);
+            (UINT16) TimeDesc->Integer.Value);
     }
 
     return_ACPI_STATUS (Status);

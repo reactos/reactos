@@ -205,8 +205,8 @@ AcpiExDoMatch (
          * True if equal: (P[i] == M)
          * Change to:     (M == P[i])
          */
-        Status = AcpiExDoLogicalOp (AML_LEQUAL_OP, MatchObj, PackageObj,
-                    &LogicalResult);
+        Status = AcpiExDoLogicalOp (
+            AML_LEQUAL_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -218,8 +218,8 @@ AcpiExDoMatch (
          * True if less than or equal: (P[i] <= M) (P[i] NotGreater than M)
          * Change to:                  (M >= P[i]) (M NotLess than P[i])
          */
-        Status = AcpiExDoLogicalOp (AML_LLESS_OP, MatchObj, PackageObj,
-                    &LogicalResult);
+        Status = AcpiExDoLogicalOp (
+            AML_LLESS_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -232,8 +232,8 @@ AcpiExDoMatch (
          * True if less than: (P[i] < M)
          * Change to:         (M > P[i])
          */
-        Status = AcpiExDoLogicalOp (AML_LGREATER_OP, MatchObj, PackageObj,
-                    &LogicalResult);
+        Status = AcpiExDoLogicalOp (
+            AML_LGREATER_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -245,8 +245,8 @@ AcpiExDoMatch (
          * True if greater than or equal: (P[i] >= M) (P[i] NotLess than M)
          * Change to:                     (M <= P[i]) (M NotGreater than P[i])
          */
-        Status = AcpiExDoLogicalOp (AML_LGREATER_OP, MatchObj, PackageObj,
-                    &LogicalResult);
+        Status = AcpiExDoLogicalOp (
+            AML_LGREATER_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -259,8 +259,8 @@ AcpiExDoMatch (
          * True if greater than: (P[i] > M)
          * Change to:            (M < P[i])
          */
-        Status = AcpiExDoLogicalOp (AML_LLESS_OP, MatchObj, PackageObj,
-                    &LogicalResult);
+        Status = AcpiExDoLogicalOp (
+            AML_LLESS_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -376,13 +376,13 @@ AcpiExOpcode_6A_0T_1R (
              * non-match.
              */
             if (!AcpiExDoMatch ((UINT32) Operand[1]->Integer.Value,
-                                ThisElement, Operand[2]))
+                    ThisElement, Operand[2]))
             {
                 continue;
             }
 
             if (!AcpiExDoMatch ((UINT32) Operand[3]->Integer.Value,
-                                ThisElement, Operand[4]))
+                    ThisElement, Operand[4]))
             {
                 continue;
             }
@@ -403,6 +403,7 @@ AcpiExOpcode_6A_0T_1R (
 
         ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
+
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;
     }

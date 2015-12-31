@@ -220,7 +220,7 @@ AcpiExCreateAlias (
          * target node or the alias Node
          */
         Status = AcpiNsAttachObject (AliasNode,
-                    AcpiNsGetAttachedObject (TargetNode), TargetNode->Type);
+            AcpiNsGetAttachedObject (TargetNode), TargetNode->Type);
         break;
     }
 
@@ -265,7 +265,7 @@ AcpiExCreateEvent (
      * that the event is created in an unsignalled state
      */
     Status = AcpiOsCreateSemaphore (ACPI_NO_UNIT_LIMIT, 0,
-                &ObjDesc->Event.OsSemaphore);
+        &ObjDesc->Event.OsSemaphore);
     if (ACPI_FAILURE (Status))
     {
         goto Cleanup;
@@ -273,8 +273,9 @@ AcpiExCreateEvent (
 
     /* Attach object to the Node */
 
-    Status = AcpiNsAttachObject ((ACPI_NAMESPACE_NODE *) WalkState->Operands[0],
-                ObjDesc, ACPI_TYPE_EVENT);
+    Status = AcpiNsAttachObject (
+        (ACPI_NAMESPACE_NODE *) WalkState->Operands[0],
+        ObjDesc, ACPI_TYPE_EVENT);
 
 Cleanup:
     /*
@@ -333,7 +334,8 @@ AcpiExCreateMutex (
     ObjDesc->Mutex.SyncLevel = (UINT8) WalkState->Operands[1]->Integer.Value;
     ObjDesc->Mutex.Node = (ACPI_NAMESPACE_NODE *) WalkState->Operands[0];
 
-    Status = AcpiNsAttachObject (ObjDesc->Mutex.Node, ObjDesc, ACPI_TYPE_MUTEX);
+    Status = AcpiNsAttachObject (
+        ObjDesc->Mutex.Node, ObjDesc, ACPI_TYPE_MUTEX);
 
 
 Cleanup:
@@ -401,7 +403,8 @@ AcpiExCreateRegion (
          * a table load for this exception. Instead, if the region is
          * actually used at runtime, abort the executing method.
          */
-        ACPI_ERROR ((AE_INFO, "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
+        ACPI_ERROR ((AE_INFO,
+            "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "Region Type - %s (0x%X)\n",
@@ -420,9 +423,10 @@ AcpiExCreateRegion (
      * Remember location in AML stream of address & length
      * operands since they need to be evaluated at run time.
      */
-    RegionObj2 = ObjDesc->Common.NextObject;
+    RegionObj2 = AcpiNsGetSecondaryObject (ObjDesc);
     RegionObj2->Extra.AmlStart = AmlStart;
     RegionObj2->Extra.AmlLength = AmlLength;
+    RegionObj2->Extra.Method_REG = NULL;
     if (WalkState->ScopeInfo)
     {
         RegionObj2->Extra.ScopeNode = WalkState->ScopeInfo->Scope.Node;
@@ -438,6 +442,10 @@ AcpiExCreateRegion (
     ObjDesc->Region.Address = 0;
     ObjDesc->Region.Length = 0;
     ObjDesc->Region.Node = Node;
+    ObjDesc->Region.Handler = NULL;
+    ObjDesc->Common.Flags &=
+        ~(AOPOBJ_SETUP_COMPLETE | AOPOBJ_REG_CONNECTED |
+          AOPOBJ_OBJECT_INITIALIZED);
 
     /* Install the new region object in the parent Node */
 
@@ -496,7 +504,7 @@ AcpiExCreateProcessor (
     /* Install the processor object in the parent Node */
 
     Status = AcpiNsAttachObject ((ACPI_NAMESPACE_NODE *) Operand[0],
-                    ObjDesc, ACPI_TYPE_PROCESSOR);
+        ObjDesc, ACPI_TYPE_PROCESSOR);
 
     /* Remove local reference to the object */
 
@@ -547,7 +555,7 @@ AcpiExCreatePowerResource (
     /* Install the  power resource object in the parent Node */
 
     Status = AcpiNsAttachObject ((ACPI_NAMESPACE_NODE *) Operand[0],
-                    ObjDesc, ACPI_TYPE_POWER);
+        ObjDesc, ACPI_TYPE_POWER);
 
     /* Remove local reference to the object */
 
@@ -606,7 +614,8 @@ AcpiExCreateMethod (
      * flag, and SyncLevel for efficiency.
      */
     MethodFlags = (UINT8) Operand[1]->Integer.Value;
-    ObjDesc->Method.ParamCount = (UINT8) (MethodFlags & AML_METHOD_ARG_COUNT);
+    ObjDesc->Method.ParamCount = (UINT8)
+        (MethodFlags & AML_METHOD_ARG_COUNT);
 
     /*
      * Get the SyncLevel. If method is serialized, a mutex will be
@@ -627,7 +636,7 @@ AcpiExCreateMethod (
     /* Attach the new object to the method Node */
 
     Status = AcpiNsAttachObject ((ACPI_NAMESPACE_NODE *) Operand[0],
-                    ObjDesc, ACPI_TYPE_METHOD);
+        ObjDesc, ACPI_TYPE_METHOD);
 
     /* Remove local reference to the object */
 

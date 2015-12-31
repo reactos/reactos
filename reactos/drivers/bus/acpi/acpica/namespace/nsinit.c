@@ -182,8 +182,8 @@ AcpiNsInitializeObjects (
     /* Walk entire namespace from the supplied root */
 
     Status = AcpiWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
-                &Info, NULL);
+        ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
+        &Info, NULL);
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status, "During WalkNamespace"));
@@ -245,7 +245,7 @@ AcpiNsInitializeDevices (
     /* Tree analysis: find all subtrees that contain _INI methods */
 
     Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, FALSE, AcpiNsFindIniMethods, NULL, &Info, NULL);
+        ACPI_UINT32_MAX, FALSE, AcpiNsFindIniMethods, NULL, &Info, NULL);
     if (ACPI_FAILURE (Status))
     {
         goto ErrorExit;
@@ -279,7 +279,7 @@ AcpiNsInitializeDevices (
     /* Walk namespace to execute all _INIs on present devices */
 
     Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, FALSE, AcpiNsInitOneDevice, NULL, &Info, NULL);
+        ACPI_UINT32_MAX, FALSE, AcpiNsInitOneDevice, NULL, &Info, NULL);
 
     /*
      * Any _OSI requests should be completed by now. If the BIOS has
@@ -703,7 +703,7 @@ AcpiNsInitOneDevice (
     {
         /* Ignore error and move on to next device */
 
-        char *ScopeName = AcpiNsGetExternalPathname (Info->Node);
+        char *ScopeName = AcpiNsGetNormalizedPathname (DeviceNode, TRUE);
 
         ACPI_EXCEPTION ((AE_INFO, Status, "during %s._INI execution",
             ScopeName));

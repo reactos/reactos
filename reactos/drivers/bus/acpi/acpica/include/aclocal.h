@@ -190,6 +190,14 @@ typedef struct acpi_rw_lock
 
 #define ACPI_MUTEX_NOT_ACQUIRED         (ACPI_THREAD_ID) -1
 
+/* This Thread ID means an invalid thread ID */
+
+#ifdef ACPI_OS_INVALID_THREAD_ID
+#define ACPI_INVALID_THREAD_ID          ACPI_OS_INVALID_THREAD_ID
+#else
+#define ACPI_INVALID_THREAD_ID          ((ACPI_THREAD_ID) 0xFFFFFFFF)
+#endif
+
 /* Table for the global mutexes */
 
 typedef struct acpi_mutex_info
@@ -306,6 +314,16 @@ typedef struct acpi_table_list
 #define ACPI_ROOT_ORIGIN_UNKNOWN        (0)     /* ~ORIGIN_ALLOCATED */
 #define ACPI_ROOT_ORIGIN_ALLOCATED      (1)
 #define ACPI_ROOT_ALLOW_RESIZE          (2)
+
+
+/* List to manage incoming ACPI tables */
+
+typedef struct acpi_new_table_desc
+{
+    ACPI_TABLE_HEADER               *Table;
+    struct acpi_new_table_desc      *Next;
+
+} ACPI_NEW_TABLE_DESC;
 
 
 /* Predefined table indexes */
@@ -507,6 +525,7 @@ typedef union acpi_predefined_info
 /* Return object auto-repair info */
 
 typedef ACPI_STATUS (*ACPI_OBJECT_CONVERTER) (
+    struct acpi_namespace_node  *Scope,
     union acpi_operand_object   *OriginalObject,
     union acpi_operand_object   **ConvertedObject);
 
@@ -542,6 +561,7 @@ typedef struct acpi_simple_repair_info
 typedef struct acpi_reg_walk_info
 {
     ACPI_ADR_SPACE_TYPE     SpaceId;
+    UINT32                  Function;
     UINT32                  RegRunCount;
 
 } ACPI_REG_WALK_INFO;
@@ -1094,6 +1114,7 @@ typedef struct acpi_parse_state
 #define ACPI_PARSEOP_CLOSING_PAREN      0x10
 #define ACPI_PARSEOP_COMPOUND           0x20
 #define ACPI_PARSEOP_ASSIGNMENT         0x40
+#define ACPI_PARSEOP_ELSEIF             0x80
 
 
 /*****************************************************************************

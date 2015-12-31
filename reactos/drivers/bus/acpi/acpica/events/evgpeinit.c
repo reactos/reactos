@@ -210,10 +210,10 @@ AcpiEvGpeInitialize (
         /* Install GPE Block 0 */
 
         Status = AcpiEvCreateGpeBlock (AcpiGbl_FadtGpeDevice,
-                    AcpiGbl_FADT.XGpe0Block.Address,
-                    AcpiGbl_FADT.XGpe0Block.SpaceId,
-                    RegisterCount0, 0,
-                    AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[0]);
+            AcpiGbl_FADT.XGpe0Block.Address,
+            AcpiGbl_FADT.XGpe0Block.SpaceId,
+            RegisterCount0, 0,
+            AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[0]);
 
         if (ACPI_FAILURE (Status))
         {
@@ -250,11 +250,11 @@ AcpiEvGpeInitialize (
             /* Install GPE Block 1 */
 
             Status = AcpiEvCreateGpeBlock (AcpiGbl_FadtGpeDevice,
-                        AcpiGbl_FADT.XGpe1Block.Address,
-                        AcpiGbl_FADT.XGpe1Block.SpaceId,
-                        RegisterCount1,
-                        AcpiGbl_FADT.Gpe1Base,
-                        AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[1]);
+                AcpiGbl_FADT.XGpe1Block.Address,
+                AcpiGbl_FADT.XGpe1Block.SpaceId,
+                RegisterCount1,
+                AcpiGbl_FADT.Gpe1Base,
+                AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[1]);
 
             if (ACPI_FAILURE (Status))
             {
@@ -267,7 +267,7 @@ AcpiEvGpeInitialize (
              * space. However, GPE0 always starts at GPE number zero.
              */
             GpeNumberMax = AcpiGbl_FADT.Gpe1Base +
-                            ((RegisterCount1 * ACPI_GPE_REGISTER_WIDTH) - 1);
+                ((RegisterCount1 * ACPI_GPE_REGISTER_WIDTH) - 1);
         }
     }
 
@@ -347,9 +347,9 @@ AcpiEvUpdateGpes (
             WalkInfo.GpeDevice = GpeBlock->Node;
 
             Status = AcpiNsWalkNamespace (ACPI_TYPE_METHOD,
-                        WalkInfo.GpeDevice, ACPI_UINT32_MAX,
-                        ACPI_NS_WALK_NO_UNLOCK, AcpiEvMatchGpeMethod,
-                        NULL, &WalkInfo, NULL);
+                WalkInfo.GpeDevice, ACPI_UINT32_MAX,
+                ACPI_NS_WALK_NO_UNLOCK, AcpiEvMatchGpeMethod,
+                NULL, &WalkInfo, NULL);
             if (ACPI_FAILURE (Status))
             {
                 ACPI_EXCEPTION ((AE_INFO, Status,
@@ -502,7 +502,7 @@ AcpiEvMatchGpeMethod (
     }
 
     if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
-            ACPI_GPE_DISPATCH_METHOD)
+        ACPI_GPE_DISPATCH_METHOD)
     {
         /*
          * If there is already a method, ignore this method. But check

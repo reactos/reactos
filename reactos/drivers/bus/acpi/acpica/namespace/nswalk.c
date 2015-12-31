@@ -290,10 +290,10 @@ AcpiNsWalkNamespace (
 
     /* Null child means "get first node" */
 
-    ParentNode  = StartNode;
-    ChildNode   = AcpiNsGetNextNode (ParentNode, NULL);
-    ChildType   = ACPI_TYPE_ANY;
-    Level       = 1;
+    ParentNode = StartNode;
+    ChildNode = AcpiNsGetNextNode (ParentNode, NULL);
+    ChildType = ACPI_TYPE_ANY;
+    Level = 1;
 
     /*
      * Traverse the tree of nodes until we bubble back up to where we
@@ -351,7 +351,7 @@ AcpiNsWalkNamespace (
                 if (DescendingCallback)
                 {
                     Status = DescendingCallback (ChildNode, Level,
-                                Context, ReturnValue);
+                        Context, ReturnValue);
                 }
             }
             else
@@ -359,7 +359,7 @@ AcpiNsWalkNamespace (
                 if (AscendingCallback)
                 {
                     Status = AscendingCallback (ChildNode, Level,
-                                Context, ReturnValue);
+                        Context, ReturnValue);
                 }
             }
 

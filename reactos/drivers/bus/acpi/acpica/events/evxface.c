@@ -1074,8 +1074,8 @@ AcpiInstallGpeHandler (
     ACPI_FUNCTION_TRACE (AcpiInstallGpeHandler);
 
 
-    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type, FALSE,
-                Address, Context);
+    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type,
+        FALSE, Address, Context);
 
     return_ACPI_STATUS (Status);
 }
@@ -1115,8 +1115,8 @@ AcpiInstallGpeRawHandler (
     ACPI_FUNCTION_TRACE (AcpiInstallGpeRawHandler);
 
 
-    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type, TRUE,
-                Address, Context);
+    Status = AcpiEvInstallGpeHandler (GpeDevice, GpeNumber, Type,
+        TRUE, Address, Context);
 
     return_ACPI_STATUS (Status);
 }
@@ -1282,7 +1282,7 @@ AcpiAcquireGlobalLock (
     AcpiExEnterInterpreter ();
 
     Status = AcpiExAcquireMutexObject (Timeout,
-                AcpiGbl_GlobalLockMutex, AcpiOsGetThreadId ());
+        AcpiGbl_GlobalLockMutex, AcpiOsGetThreadId ());
 
     if (ACPI_SUCCESS (Status))
     {

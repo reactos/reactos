@@ -116,6 +116,7 @@
 #ifndef _ACAPPS
 #define _ACAPPS
 
+#include <stdio.h>
 
 #ifdef _MSC_VER                 /* disable some level-4 warnings */
 #pragma warning(disable:4100)   /* warning C4100: unreferenced formal parameter */
@@ -162,11 +163,49 @@
     AcpiOsPrintf (Description);
 
 #define ACPI_OPTION(Name, Description) \
-    AcpiOsPrintf ("  %-18s%s\n", Name, Description);
+    AcpiOsPrintf ("  %-20s%s\n", Name, Description);
 
+
+/* Check for unexpected exceptions */
+
+#define ACPI_CHECK_STATUS(Name, Status, Expected) \
+    if (Status != Expected) \
+    { \
+        AcpiOsPrintf ("Unexpected %s from %s (%s-%d)\n", \
+            AcpiFormatException (Status), #Name, _AcpiModuleName, __LINE__); \
+    }
+
+/* Check for unexpected non-AE_OK errors */
+
+
+#define ACPI_CHECK_OK(Name, Status)   ACPI_CHECK_STATUS (Name, Status, AE_OK);
 
 #define FILE_SUFFIX_DISASSEMBLY     "dsl"
 #define FILE_SUFFIX_BINARY_TABLE    ".dat" /* Needs the dot */
+
+
+/* acfileio */
+
+ACPI_STATUS
+AcGetAllTablesFromFile (
+    char                    *Filename,
+    UINT8                   GetOnlyAmlTables,
+    ACPI_NEW_TABLE_DESC     **ReturnListHead);
+
+BOOLEAN
+AcIsFileBinary (
+    FILE                    *File);
+
+ACPI_STATUS
+AcValidateTableHeader (
+    FILE                    *File,
+    long                    TableOffset);
+
+
+/* Values for GetOnlyAmlTables */
+
+#define ACPI_GET_ONLY_AML_TABLES    TRUE
+#define ACPI_GET_ALL_TABLES         FALSE
 
 
 /*
@@ -195,51 +234,6 @@ extern char                 *AcpiGbl_Optarg;
 UINT32
 CmGetFileSize (
     ACPI_FILE               File);
-
-
-#ifndef ACPI_DUMP_APP
-/*
- * adisasm
- */
-ACPI_STATUS
-AdAmlDisassemble (
-    BOOLEAN                 OutToFile,
-    char                    *Filename,
-    char                    *Prefix,
-    char                    **OutFilename);
-
-void
-AdPrintStatistics (
-    void);
-
-ACPI_STATUS
-AdFindDsdt(
-    UINT8                   **DsdtPtr,
-    UINT32                  *DsdtLength);
-
-void
-AdDumpTables (
-    void);
-
-ACPI_STATUS
-AdGetLocalTables (
-    void);
-
-ACPI_STATUS
-AdParseTable (
-    ACPI_TABLE_HEADER       *Table,
-    ACPI_OWNER_ID           *OwnerId,
-    BOOLEAN                 LoadTable,
-    BOOLEAN                 External);
-
-ACPI_STATUS
-AdDisplayTables (
-    char                    *Filename,
-    ACPI_TABLE_HEADER       *Table);
-
-ACPI_STATUS
-AdDisplayStatistics (
-    void);
 
 
 /*
@@ -300,6 +294,5 @@ AdWriteTable (
     UINT32                  Length,
     char                    *TableName,
     char                    *OemTableId);
-#endif
 
 #endif /* _ACAPPS */

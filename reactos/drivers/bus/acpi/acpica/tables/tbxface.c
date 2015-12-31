@@ -318,8 +318,8 @@ AcpiGetTableHeader (
 
     for (i = 0, j = 0; i < AcpiGbl_RootTableList.CurrentTableCount; i++)
     {
-        if (!ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                    Signature))
+        if (!ACPI_COMPARE_NAME (
+                &(AcpiGbl_RootTableList.Tables[i].Signature), Signature))
         {
             continue;
         }
@@ -336,15 +336,14 @@ AcpiGetTableHeader (
                 ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL)
             {
                 Header = AcpiOsMapMemory (
-                            AcpiGbl_RootTableList.Tables[i].Address,
-                            sizeof (ACPI_TABLE_HEADER));
+                    AcpiGbl_RootTableList.Tables[i].Address,
+                    sizeof (ACPI_TABLE_HEADER));
                 if (!Header)
                 {
                     return (AE_NO_MEMORY);
                 }
 
-                memcpy (OutTableHeader, Header,
-                    sizeof (ACPI_TABLE_HEADER));
+                memcpy (OutTableHeader, Header, sizeof (ACPI_TABLE_HEADER));
                 AcpiOsUnmapMemory (Header, sizeof (ACPI_TABLE_HEADER));
             }
             else
@@ -405,8 +404,8 @@ AcpiGetTable (
 
     for (i = 0, j = 0; i < AcpiGbl_RootTableList.CurrentTableCount; i++)
     {
-        if (!ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                Signature))
+        if (!ACPI_COMPARE_NAME (
+                &(AcpiGbl_RootTableList.Tables[i].Signature), Signature))
         {
             continue;
         }
@@ -477,7 +476,8 @@ AcpiGetTableByIndex (
     {
         /* Table is not mapped, map it */
 
-        Status = AcpiTbValidateTable (&AcpiGbl_RootTableList.Tables[TableIndex]);
+        Status = AcpiTbValidateTable (
+            &AcpiGbl_RootTableList.Tables[TableIndex]);
         if (ACPI_FAILURE (Status))
         {
             (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);

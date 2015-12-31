@@ -163,11 +163,17 @@ typedef struct acpi_db_execute_walk
 /*
  * dbxface - external debugger interfaces
  */
+ACPI_DBR_DEPENDENT_RETURN_OK (
 ACPI_STATUS
 AcpiDbSingleStep (
     ACPI_WALK_STATE         *WalkState,
     ACPI_PARSE_OBJECT       *Op,
-    UINT32                  OpType);
+    UINT32                  OpType))
+
+ACPI_DBR_DEPENDENT_RETURN_VOID (
+void
+AcpiDbSignalBreakPoint (
+    ACPI_WALK_STATE         *WalkState))
 
 
 /*
@@ -362,10 +368,11 @@ AcpiDbDecodeAndDisplayObject (
     char                    *Target,
     char                    *OutputType);
 
+ACPI_DBR_DEPENDENT_RETURN_VOID (
 void
 AcpiDbDisplayResultObject (
     ACPI_OPERAND_OBJECT     *ObjDesc,
-    ACPI_WALK_STATE         *WalkState);
+    ACPI_WALK_STATE         *WalkState))
 
 ACPI_STATUS
 AcpiDbDisplayAllMethods (
@@ -391,10 +398,11 @@ void
 AcpiDbDisplayObjectType (
     char                    *ObjectArg);
 
+ACPI_DBR_DEPENDENT_RETURN_VOID (
 void
 AcpiDbDisplayArgumentObject (
     ACPI_OPERAND_OBJECT     *ObjDesc,
-    ACPI_WALK_STATE         *WalkState);
+    ACPI_WALK_STATE         *WalkState))
 
 
 /*
@@ -446,10 +454,8 @@ AcpiDbLoadAcpiTable (
     char                    *Filename);
 
 ACPI_STATUS
-AcpiDbGetTableFromFile (
-    char                    *Filename,
-    ACPI_TABLE_HEADER       **Table,
-    BOOLEAN                 MustBeAmlTable);
+AcpiDbLoadTables (
+    ACPI_NEW_TABLE_DESC     *ListHead);
 
 
 /*

@@ -326,8 +326,10 @@ AcpiUtMatchResourceName (
     const ACPI_PREDEFINED_INFO  *ThisName;
 
 
-    /* Quick check for a predefined name, first character must be underscore */
-
+    /*
+     * Quick check for a predefined name, first character must
+     * be underscore
+     */
     if (Name[0] != '_')
     {
         return (NULL);

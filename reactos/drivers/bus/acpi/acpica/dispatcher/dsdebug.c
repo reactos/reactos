@@ -247,6 +247,7 @@ AcpiDsDumpMethodStack (
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "\n**** Exception %s during execution of method ",
         AcpiFormatException (Status)));
+
     AcpiDsPrintNodePathname (WalkState->MethodNode, NULL);
 
     /* Display stack of executing methods */
@@ -263,8 +264,8 @@ AcpiDsDumpMethodStack (
         if (MethodDesc)
         {
             AcpiExStopTraceMethod (
-                    (ACPI_NAMESPACE_NODE *) MethodDesc->Method.Node,
-                    MethodDesc, WalkState);
+                (ACPI_NAMESPACE_NODE *) MethodDesc->Method.Node,
+                MethodDesc, WalkState);
         }
 
         ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
@@ -292,8 +293,8 @@ AcpiDsDumpMethodStack (
         {
             /*
              * This method has called another method
-             * NOTE: the method call parse subtree is already deleted at this
-             * point, so we cannot disassemble the method invocation.
+             * NOTE: the method call parse subtree is already deleted at
+             * this point, so we cannot disassemble the method invocation.
              */
             ACPI_DEBUG_PRINT_RAW ((ACPI_DB_DISPATCH, "Call to method "));
             AcpiDsPrintNodePathname (PreviousMethod, NULL);

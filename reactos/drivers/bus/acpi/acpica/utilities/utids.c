@@ -155,7 +155,7 @@ AcpiUtExecute_HID (
 
 
     Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__HID,
-                ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING, &ObjDesc);
+        ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -174,7 +174,8 @@ AcpiUtExecute_HID (
 
     /* Allocate a buffer for the HID */
 
-    Hid = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
+    Hid = ACPI_ALLOCATE_ZEROED (
+        sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
     if (!Hid)
     {
         Status = AE_NO_MEMORY;
@@ -198,77 +199,6 @@ AcpiUtExecute_HID (
 
     Hid->Length = Length;
     *ReturnId = Hid;
-
-
-Cleanup:
-
-    /* On exit, we must delete the return object */
-
-    AcpiUtRemoveReference (ObjDesc);
-    return_ACPI_STATUS (Status);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiUtExecute_SUB
- *
- * PARAMETERS:  DeviceNode          - Node for the device
- *              ReturnId            - Where the _SUB is returned
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Executes the _SUB control method that returns the subsystem
- *              ID of the device. The _SUB value is always a string containing
- *              either a valid PNP or ACPI ID.
- *
- *              NOTE: Internal function, no parameter validation
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiUtExecute_SUB (
-    ACPI_NAMESPACE_NODE     *DeviceNode,
-    ACPI_PNP_DEVICE_ID      **ReturnId)
-{
-    ACPI_OPERAND_OBJECT     *ObjDesc;
-    ACPI_PNP_DEVICE_ID      *Sub;
-    UINT32                  Length;
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_TRACE (UtExecute_SUB);
-
-
-    Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__SUB,
-                ACPI_BTYPE_STRING, &ObjDesc);
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
-
-    /* Get the size of the String to be returned, includes null terminator */
-
-    Length = ObjDesc->String.Length + 1;
-
-    /* Allocate a buffer for the SUB */
-
-    Sub = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
-    if (!Sub)
-    {
-        Status = AE_NO_MEMORY;
-        goto Cleanup;
-    }
-
-    /* Area for the string starts after PNP_DEVICE_ID struct */
-
-    Sub->String = ACPI_ADD_PTR (char, Sub, sizeof (ACPI_PNP_DEVICE_ID));
-
-    /* Simply copy existing string */
-
-    strcpy (Sub->String, ObjDesc->String.Pointer);
-    Sub->Length = Length;
-    *ReturnId = Sub;
 
 
 Cleanup:
@@ -313,7 +243,7 @@ AcpiUtExecute_UID (
 
 
     Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__UID,
-                ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING, &ObjDesc);
+        ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -332,7 +262,8 @@ AcpiUtExecute_UID (
 
     /* Allocate a buffer for the UID */
 
-    Uid = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
+    Uid = ACPI_ALLOCATE_ZEROED (
+        sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
     if (!Uid)
     {
         Status = AE_NO_MEMORY;
@@ -413,8 +344,8 @@ AcpiUtExecute_CID (
     /* Evaluate the _CID method for this device */
 
     Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__CID,
-                ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING | ACPI_BTYPE_PACKAGE,
-                &ObjDesc);
+        ACPI_BTYPE_INTEGER | ACPI_BTYPE_STRING | ACPI_BTYPE_PACKAGE,
+        &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -491,7 +422,8 @@ AcpiUtExecute_CID (
         {
             /* Convert the Integer (EISAID) CID to a string */
 
-            AcpiExEisaIdToString (NextIdString, CidObjects[i]->Integer.Value);
+            AcpiExEisaIdToString (
+                NextIdString, CidObjects[i]->Integer.Value);
             Length = ACPI_EISAID_STRING_SIZE;
         }
         else /* ACPI_TYPE_STRING */
@@ -560,7 +492,7 @@ AcpiUtExecute_CLS (
 
 
     Status = AcpiUtEvaluateObject (DeviceNode, METHOD_NAME__CLS,
-                ACPI_BTYPE_PACKAGE, &ObjDesc);
+        ACPI_BTYPE_PACKAGE, &ObjDesc);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -590,7 +522,8 @@ AcpiUtExecute_CLS (
 
     /* Allocate a buffer for the CLS */
 
-    Cls = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
+    Cls = ACPI_ALLOCATE_ZEROED (
+        sizeof (ACPI_PNP_DEVICE_ID) + (ACPI_SIZE) Length);
     if (!Cls)
     {
         Status = AE_NO_MEMORY;

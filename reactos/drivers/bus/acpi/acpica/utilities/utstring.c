@@ -219,6 +219,7 @@ AcpiUtPrintString (
             break;
         }
     }
+
     AcpiOsPrintf ("\"");
 
     if (i == MaxLength && String[i])
@@ -341,6 +342,15 @@ AcpiUtRepairName (
 
     ACPI_FUNCTION_NAME (UtRepairName);
 
+
+    /*
+     * Special case for the root node. This can happen if we get an
+     * error during the execution of module-level code.
+     */
+    if (ACPI_COMPARE_NAME (Name, "\\___"))
+    {
+        return;
+    }
 
     ACPI_MOVE_NAME (&OriginalName, Name);
 

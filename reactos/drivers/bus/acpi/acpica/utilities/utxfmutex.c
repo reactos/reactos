@@ -170,8 +170,8 @@ AcpiUtGetMutexObject (
     MutexNode = Handle;
     if (Pathname != NULL)
     {
-        Status = AcpiGetHandle (Handle, Pathname,
-            ACPI_CAST_PTR (ACPI_HANDLE, &MutexNode));
+        Status = AcpiGetHandle (
+            Handle, Pathname, ACPI_CAST_PTR (ACPI_HANDLE, &MutexNode));
         if (ACPI_FAILURE (Status))
         {
             return (Status);
