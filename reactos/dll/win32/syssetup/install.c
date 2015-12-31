@@ -1185,43 +1185,6 @@ InstallReactOS(HINSTANCE hInstance)
 
     SetupCloseInfFile(hShortcutsInf);
 
-    /* ROS HACK, as long as NtUnloadKey is not implemented */
-    {
-        NTSTATUS Status = NtUnloadKey(NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Create the Administrator profile */
-            PROFILEINFOW ProfileInfo;
-            HANDLE hToken;
-            BOOL ret;
-
-            DPRINT1("NtUnloadKey failed with 0x%lx\n", Status);
-
-            ret = LogonUserW(AdminInfo.Name,
-                             AdminInfo.Domain,
-                             AdminInfo.Password,
-                             LOGON32_LOGON_INTERACTIVE,
-                             LOGON32_PROVIDER_DEFAULT,
-                             &hToken);
-            if (!ret)
-            {
-                FatalError("LogonUserW() failed!");
-                return 0;
-            }
-            ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-            ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-            ProfileInfo.lpUserName = L"Administrator";
-            ProfileInfo.dwFlags = PI_NOUI;
-            LoadUserProfileW(hToken, &ProfileInfo);
-            CloseHandle(hToken);
-        }
-        else
-        {
-            DPRINT1("ROS HACK not needed anymore. Please remove it\n");
-        }
-    }
-    /* END OF ROS HACK */
-
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 
