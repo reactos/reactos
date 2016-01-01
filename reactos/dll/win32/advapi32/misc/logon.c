@@ -125,20 +125,23 @@ CreateProcessAsUserA(HANDLE hToken,
         return FALSE;
     }
 
-    AccessToken.Token = hToken;
-    AccessToken.Thread = NULL;
-
-    /* Set the new process token */
-    Status = NtSetInformationProcess(lpProcessInformation->hProcess,
-                                     ProcessAccessToken,
-                                     (PVOID)&AccessToken,
-                                     sizeof(AccessToken));
-    if (!NT_SUCCESS (Status))
+    if (hToken != NULL)
     {
-        ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
-        TerminateProcess(lpProcessInformation->hProcess, Status);
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
+        AccessToken.Token = hToken;
+        AccessToken.Thread = NULL;
+
+        /* Set the new process token */
+        Status = NtSetInformationProcess(lpProcessInformation->hProcess,
+                                         ProcessAccessToken,
+                                         (PVOID)&AccessToken,
+                                         sizeof(AccessToken));
+        if (!NT_SUCCESS (Status))
+        {
+            ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+            TerminateProcess(lpProcessInformation->hProcess, Status);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
 
     /* Resume the main thread */
@@ -190,20 +193,23 @@ CreateProcessAsUserW(HANDLE hToken,
         return FALSE;
     }
 
-    AccessToken.Token = hToken;
-    AccessToken.Thread = NULL;
-
-    /* Set the new process token */
-    Status = NtSetInformationProcess(lpProcessInformation->hProcess,
-                                     ProcessAccessToken,
-                                     (PVOID)&AccessToken,
-                                     sizeof(AccessToken));
-    if (!NT_SUCCESS (Status))
+    if (hToken != NULL)
     {
-        ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
-        TerminateProcess(lpProcessInformation->hProcess, Status);
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
+        AccessToken.Token = hToken;
+        AccessToken.Thread = NULL;
+
+        /* Set the new process token */
+        Status = NtSetInformationProcess(lpProcessInformation->hProcess,
+                                         ProcessAccessToken,
+                                         (PVOID)&AccessToken,
+                                         sizeof(AccessToken));
+        if (!NT_SUCCESS (Status))
+        {
+            ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+            TerminateProcess(lpProcessInformation->hProcess, Status);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
 
     /* Resume the main thread */
