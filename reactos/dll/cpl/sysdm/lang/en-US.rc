@@ -48,16 +48,16 @@ BEGIN
     LTEXT "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Performance", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 228, 17
-    PUSHBUTTON "Settings", IDC_PERFOR, 194, 48, 50, 15
+    PUSHBUTTON "&Settings", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "User Profiles", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Desktop settings related to your logon", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON "Settings", IDC_USERPROFILE, 194, 103, 50, 15
+    PUSHBUTTON "S&ettings", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Startup and Recovery", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON "Se&ttings", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "S&ystem Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Enviro&nment Variables", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "E&rror Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
@@ -66,7 +66,7 @@ CAPTION "System Settings"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    CONTROL "&Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -154,9 +154,9 @@ BEGIN
     LTEXT "Profiles stored on this computer:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Change Type", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
-    PUSHBUTTON "Delete", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
-    PUSHBUTTON "Copy To", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+    PUSHBUTTON "&Change Type", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
+    PUSHBUTTON "&Delete", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
+    PUSHBUTTON "Copy &To", IDC_USERPROFILE_COPY, 200, 156, 50, 13
     CONTROL "To create new user accounts, open <A>User Accounts</A> in Control Panel.",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
     DEFPUSHBUTTON "OK", IDOK, 134, 200, 54, 13

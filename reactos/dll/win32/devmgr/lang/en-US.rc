@@ -247,19 +247,19 @@ BEGIN
   BEGIN
     MENUITEM "E&xit",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "&Action",                        IDC_ACTIONMENU
+  POPUP "&View"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "D&evices by type",             IDC_DEVBYTYPE
+    MENUITEM "De&vices by connection",       IDC_DEVBYCONN
+    MENUITEM "Resources by t&ype",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resources by co&nnection",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Sho&w hidden devices",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "&Help"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "&About",                       IDC_ABOUT
   END
 END
 

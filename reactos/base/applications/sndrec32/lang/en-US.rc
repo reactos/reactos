@@ -19,16 +19,16 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "File"
+    POPUP "&File"
     BEGIN
-        MENUITEM "New", ID_FILE_NEW
-        MENUITEM "Open...", ID_FILE_OPEN
-        MENUITEM "Save", ID_FILE_SAVE, GRAYED
-        MENUITEM "Save As...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "&New", ID_FILE_NEW
+        MENUITEM "&Open...", ID_FILE_OPEN
+        MENUITEM "&Save", ID_FILE_SAVE, GRAYED
+        MENUITEM "Save &As...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Restore...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Properties", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Exit", ID_FILE_EXIT
+        MENUITEM "E&xit", ID_FILE_EXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -49,15 +49,15 @@ BEGIN
         MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
         MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "I&ncrease Speed (by 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "D&ecrease Speed", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
         MENUITEM "&Add Echo", ID_EFFECTS_ECHO
         MENUITEM "&Reverse", ID_EFFECTS_REVERSE
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "About...", ID_ABOUT
+        MENUITEM "&About...", ID_ABOUT
     END
 END
 
