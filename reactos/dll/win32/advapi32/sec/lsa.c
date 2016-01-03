@@ -1400,7 +1400,7 @@ LsaQueryInformationPolicy(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1683,7 +1683,7 @@ LsaRemovePrivilegesFromAccount(IN LSA_HANDLE AccountHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1691,9 +1691,64 @@ LsaRetrievePrivateData(IN LSA_HANDLE PolicyHandle,
                        IN PLSA_UNICODE_STRING KeyName,
                        OUT PLSA_UNICODE_STRING *PrivateData)
 {
-    FIXME("LsaRetrievePrivateData(%p %p %p) stub\n",
+    PLSAPR_CR_CIPHER_VALUE EncryptedData = NULL;
+    PLSA_UNICODE_STRING DecryptedData = NULL;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+
+    TRACE("LsaRetrievePrivateData(%p %p %p)\n",
           PolicyHandle, KeyName, PrivateData);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+
+    RpcTryExcept
+    {
+        Status = LsarRetrievePrivateData((LSAPR_HANDLE)PolicyHandle,
+                                         (PRPC_UNICODE_STRING)KeyName,
+                                         &EncryptedData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+
+    if (EncryptedData == NULL)
+    {
+        *PrivateData = NULL;
+    }
+    else
+    {
+        BufferSize = sizeof(LSA_UNICODE_STRING) + EncryptedData->MaximumLength;
+        DecryptedData = midl_user_allocate(BufferSize);
+        if (DecryptedData == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        DecryptedData->Length = (USHORT)EncryptedData->Length;
+        DecryptedData->MaximumLength = (USHORT)EncryptedData->MaximumLength;
+        DecryptedData->Buffer = (PWSTR)(DecryptedData + 1);
+        RtlCopyMemory(DecryptedData->Buffer,
+                      EncryptedData->Buffer,
+                      EncryptedData->Length);
+
+        *PrivateData = DecryptedData;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (DecryptedData != NULL)
+            midl_user_free(DecryptedData);
+
+        *PrivateData = NULL;
+    }
+
+    if (EncryptedData != NULL)
+        midl_user_free(EncryptedData);
+
+    return Status;
 }
 
 
@@ -2024,7 +2079,7 @@ LsaSetTrustedDomainInformation(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -2032,9 +2087,49 @@ LsaStorePrivateData(IN LSA_HANDLE PolicyHandle,
                     IN PLSA_UNICODE_STRING KeyName,
                     IN PLSA_UNICODE_STRING PrivateData OPTIONAL)
 {
-    FIXME("LsaStorePrivateData(%p %p %p) stub\n",
+    PLSAPR_CR_CIPHER_VALUE EncryptedData = NULL;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+
+    TRACE("LsaStorePrivateData(%p %p %p)\n",
           PolicyHandle, KeyName, PrivateData);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+
+    if (PrivateData != NULL)
+    {
+        BufferSize = sizeof(LSAPR_CR_CIPHER_VALUE) + PrivateData->MaximumLength;
+        EncryptedData = midl_user_allocate(BufferSize);
+        if (EncryptedData == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        EncryptedData->Length = PrivateData->Length;
+        EncryptedData->MaximumLength = PrivateData->MaximumLength;
+        EncryptedData->Buffer = (BYTE *)(EncryptedData + 1);
+        if (EncryptedData->Buffer != NULL)
+            RtlCopyMemory(EncryptedData->Buffer,
+                          PrivateData->Buffer,
+                          PrivateData->Length);
+    }
+
+    RpcTryExcept
+    {
+        Status = LsarStorePrivateData((LSAPR_HANDLE)PolicyHandle,
+                                      (PRPC_UNICODE_STRING)KeyName,
+                                      EncryptedData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+done:
+    if (EncryptedData != NULL)
+        midl_user_free(EncryptedData);
+
+    return Status;
 }
 
 /* EOF */

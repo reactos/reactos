@@ -2386,8 +2386,151 @@ NTSTATUS WINAPI LsarStorePrivateData(
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE EncryptedData)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    PLSA_DB_OBJECT SecretsObject = NULL;
+    PLSA_DB_OBJECT SecretObject = NULL;
+    LARGE_INTEGER Time;
+    PBYTE Value = NULL;
+    ULONG ValueLength = 0;
+    NTSTATUS Status;
+
+    TRACE("LsarStorePrivateData(%p %p %p)\n",
+          PolicyHandle, KeyName, EncryptedData);
+
+    /* Validate the SecretHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_SECRET,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the 'Secrets' object */
+    Status = LsapOpenDbObject(PolicyObject,
+                              NULL,
+                              L"Secrets",
+                              LsaDbIgnoreObject,
+                              0,
+                              PolicyObject->Trusted,
+                              &SecretsObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (EncryptedData == NULL)
+    {
+        /* Open the Secret object */
+        Status = LsapOpenDbObject(SecretsObject,
+                                  NULL,
+                                  KeyName->Buffer,
+                                  LsaDbSecretObject,
+                                  0,
+                                  PolicyObject->Trusted,
+                                  &SecretObject);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Delete the secret */
+        Status = LsapDeleteDbObject(SecretObject);
+        if (NT_SUCCESS(Status))
+            SecretObject = NULL;
+    }
+    else
+    {
+        /* Create the Secret object */
+        Status = LsapCreateDbObject(SecretsObject,
+                                    NULL,
+                                    KeyName->Buffer,
+                                    LsaDbSecretObject,
+                                    0,
+                                    PolicyObject->Trusted,
+                                    &SecretObject);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapCreateDbObject failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* FIXME: Decrypt data */
+        Value = EncryptedData->Buffer;
+        ValueLength = EncryptedData->MaximumLength;
+
+        /* Get the current time */
+        Status = NtQuerySystemTime(&Time);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Set the current value */
+        Status = LsapSetObjectAttribute(SecretObject,
+                                        L"CurrentValue",
+                                        Value,
+                                        ValueLength);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Set the current time */
+        Status = LsapSetObjectAttribute(SecretObject,
+                                        L"CurrentTime",
+                                        &Time,
+                                        sizeof(LARGE_INTEGER));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Get the current time */
+        Status = NtQuerySystemTime(&Time);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Set the old value */
+        Status = LsapSetObjectAttribute(SecretObject,
+                                        L"OldValue",
+                                        NULL,
+                                        0);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Set the old time */
+        Status = LsapSetObjectAttribute(SecretObject,
+                                        L"OldTime",
+                                        &Time,
+                                        sizeof(LARGE_INTEGER));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        }
+    }
+
+done:
+    if (SecretObject != NULL)
+        LsapCloseDbObject(SecretObject);
+
+    if (SecretsObject != NULL)
+        LsapCloseDbObject(SecretsObject);
+
+    return Status;
 }
 
 
@@ -2397,8 +2540,97 @@ NTSTATUS WINAPI LsarRetrievePrivateData(
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE *EncryptedData)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    PLSA_DB_OBJECT SecretObject = NULL;
+    PLSAPR_CR_CIPHER_VALUE EncCurrentValue = NULL;
+    ULONG CurrentValueLength = 0;
+    PBYTE CurrentValue = NULL;
+    NTSTATUS Status;
+
+    /* Validate the SecretHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_SECRET,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the secret object */
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Secrets",
+                              KeyName->Buffer,
+                              LsaDbSecretObject,
+                              0,
+                              PolicyObject->Trusted,
+                              &SecretObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get the size of the current value */
+    Status = LsapGetObjectAttribute(SecretObject,
+                                    L"CurrentValue",
+                                    NULL,
+                                    &CurrentValueLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Allocate a buffer for the current value */
+    CurrentValue = midl_user_allocate(CurrentValueLength);
+    if (CurrentValue == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Get the current value */
+    Status = LsapGetObjectAttribute(SecretObject,
+                                    L"CurrentValue",
+                                    CurrentValue,
+                                    &CurrentValueLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Allocate a buffer for the encrypted current value */
+    EncCurrentValue = midl_user_allocate(sizeof(LSAPR_CR_CIPHER_VALUE) + CurrentValueLength);
+    if (EncCurrentValue == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* FIXME: Encrypt the current value */
+    EncCurrentValue->Length = (USHORT)(CurrentValueLength - sizeof(WCHAR));
+    EncCurrentValue->MaximumLength = (USHORT)CurrentValueLength;
+    EncCurrentValue->Buffer = (PBYTE)(EncCurrentValue + 1);
+    RtlCopyMemory(EncCurrentValue->Buffer,
+                  CurrentValue,
+                  CurrentValueLength);
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        if (EncryptedData != NULL)
+            *EncryptedData = EncCurrentValue;
+    }
+    else
+    {
+        if (EncryptedData != NULL)
+            *EncryptedData = NULL;
+
+        if (EncCurrentValue != NULL)
+            midl_user_free(EncCurrentValue);
+
+        if (SecretObject != NULL)
+            LsapCloseDbObject(SecretObject);
+    }
+
+    return Status;
 }
 
 
