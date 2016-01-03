@@ -801,7 +801,7 @@
 796 stdcall RtlPrefixString(ptr ptr long)
 797 stdcall RtlPrefixUnicodeString(ptr ptr long)
 798 stdcall RtlProtectHeap(ptr long)
-799 stdcall RtlPushFrame(ptr)r
+799 stdcall RtlPushFrame(ptr)
 800 stdcall RtlQueryAtomInAtomTable(ptr long ptr ptr ptr ptr)
 801 stdcall RtlQueryDepthSList(ptr)
 802 stdcall RtlQueryEnvironmentVariable_U(ptr ptr ptr)
