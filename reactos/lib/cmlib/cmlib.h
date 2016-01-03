@@ -455,6 +455,32 @@ CmpFindSubKeyByName(
     IN PCUNICODE_STRING SearchName
     );
 
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByNumber(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Node,
+    IN ULONG Number
+    );
+
+PCELL_DATA
+NTAPI
+CmpValueToData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    OUT PULONG Length
+    );
+
+BOOLEAN
+NTAPI
+CmpFindNameInList(
+    IN PHHIVE Hive,
+    IN PCHILD_LIST ChildList,
+    IN PUNICODE_STRING Name,
+    IN PULONG ChildIndex,
+    IN PHCELL_INDEX CellIndex
+    );
+
 /* To be implemented by the user of this library */
 PVOID
 NTAPI

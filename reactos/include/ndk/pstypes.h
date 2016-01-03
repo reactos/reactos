@@ -183,6 +183,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define TLS_MINIMUM_AVAILABLE                   64
 
 //
+// TEB Active Frame Flags
+//
+#define TEB_ACTIVE_FRAME_CONTEXT_FLAG_EXTENDED 	0x1
+
+//
 // Job Access Types
 //
 #define JOB_OBJECT_ASSIGN_PROCESS               0x1
@@ -684,13 +689,29 @@ typedef struct _TEB_ACTIVE_FRAME_CONTEXT
     ULONG Flags;
     LPSTR FrameName;
 } TEB_ACTIVE_FRAME_CONTEXT, *PTEB_ACTIVE_FRAME_CONTEXT;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT *PCTEB_ACTIVE_FRAME_CONTEXT;
+
+typedef struct _TEB_ACTIVE_FRAME_CONTEXT_EX
+{
+    TEB_ACTIVE_FRAME_CONTEXT BasicContext;
+    PCSTR SourceLocation;
+} TEB_ACTIVE_FRAME_CONTEXT_EX, *PTEB_ACTIVE_FRAME_CONTEXT_EX;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT_EX *PCTEB_ACTIVE_FRAME_CONTEXT_EX;
 
 typedef struct _TEB_ACTIVE_FRAME
 {
     ULONG Flags;
     struct _TEB_ACTIVE_FRAME *Previous;
-    PTEB_ACTIVE_FRAME_CONTEXT Context;
+    PCTEB_ACTIVE_FRAME_CONTEXT Context;
 } TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
+typedef const struct _TEB_ACTIVE_FRAME *PCTEB_ACTIVE_FRAME;
+
+typedef struct _TEB_ACTIVE_FRAME_EX
+{
+    TEB_ACTIVE_FRAME BasicFrame;
+    PVOID ExtensionIdentifier;
+} TEB_ACTIVE_FRAME_EX, *PTEB_ACTIVE_FRAME_EX;
+typedef const struct _TEB_ACTIVE_FRAME_EX *PCTEB_ACTIVE_FRAME_EX;
 
 typedef struct _CLIENT_ID32
 {

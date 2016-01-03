@@ -3007,6 +3007,30 @@ RtlGetCompressionWorkSpaceSize(
 );
 
 //
+// Frame Functions
+//
+NTSYSAPI
+VOID
+NTAPI
+RtlPopFrame(
+    _In_ PTEB_ACTIVE_FRAME Frame
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlPushFrame(
+    _In_ PTEB_ACTIVE_FRAME Frame
+);
+
+NTSYSAPI
+PTEB_ACTIVE_FRAME
+NTAPI
+RtlGetFrame(
+    VOID
+);
+
+//
 // Debug Info Functions
 //
 NTSYSAPI
