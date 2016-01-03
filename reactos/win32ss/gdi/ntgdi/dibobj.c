@@ -260,23 +260,26 @@ IntSetDIBits(
     EXLATEOBJ	exlo;
     PPALETTE    ppalDIB = 0;
     ULONG cjSizeImage;
+    BOOL bCompressed;
 
-    if (!bmi) return 0;
+    if (!bmi || !Bits) return 0;
 
-    /* Check if the header provided an image size */
-    if (bmi->bmiHeader.biSizeImage != 0)
-    {
-        /* Use the given size */
-        cjSizeImage = bmi->bmiHeader.biSizeImage;
-    }
-    /* Otherwise check for uncompressed formats */
-    else if ((bmi->bmiHeader.biCompression == BI_RGB) ||
+    /* Check for uncompressed formats */
+    if ((bmi->bmiHeader.biCompression == BI_RGB) ||
              (bmi->bmiHeader.biCompression == BI_BITFIELDS))
     {
         /* Calculate the image size */
         cjSizeImage = DIB_GetDIBImageBytes(bmi->bmiHeader.biWidth,
                                            ScanLines,
                                            bmi->bmiHeader.biBitCount);
+        bCompressed = FALSE;
+    }
+    /* Check if the header provided an image size */
+    else if (bmi->bmiHeader.biSizeImage != 0)
+    {
+        /* Use the given size */
+        cjSizeImage = bmi->bmiHeader.biSizeImage;
+        bCompressed = TRUE;
     }
     else
     {
@@ -293,6 +296,8 @@ IntSetDIBits(
         return 0;
     }
 
+    /* We cannot use the provided buffer for uncompressed bits, since they
+       might not be aligned correctly! */
     SourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
                                      ScanLines,
                                      0,
@@ -300,7 +305,7 @@ IntSetDIBits(
                                                   bmi->bmiHeader.biCompression),
                                      bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
                                      cjSizeImage,
-                                     (PVOID)Bits,
+                                     bCompressed ? (PVOID)Bits : NULL,
                                      0);
     if (!SourceBitmap)
     {
@@ -316,6 +321,17 @@ IntSetDIBits(
     {
         DPRINT1("Error: Could not lock surfaces\n");
         goto cleanup;
+    }
+
+    /* Check for uncompressed bits */
+    if (!bCompressed)
+    {
+        /* Copy the bitmap bits */
+        if (!UnsafeSetBitmapBits(psurfSrc, cjMaxBits, Bits))
+        {
+            DPRINT1("Error: Could not set bitmap bits\n");
+            goto cleanup;
+        }
     }
 
     /* Create a palette for the DIB */
@@ -340,8 +356,6 @@ IntSetDIBits(
     rcDst.right = psurfDst->SurfObj.sizlBitmap.cx;
     ptSrc.x = 0;
     ptSrc.y = 0;
-
-    NT_ASSERT(psurfSrc->SurfObj.cjBits <= cjMaxBits);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -1455,6 +1469,11 @@ NtGdiCreateDIBitmapInternal(
     NTSTATUS Status = STATUS_SUCCESS;
     PBYTE safeBits = NULL;
     HBITMAP hbmResult = NULL;
+
+    if (pjInit == NULL)
+    {
+        fInit &= ~CBM_INIT;
+    }
 
     if(pjInit && (fInit & CBM_INIT))
     {

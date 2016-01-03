@@ -43,3 +43,10 @@ GreCreateDIBitmapInternal(
     IN FLONG fl,
     IN UINT cjMaxBits,
     IN HANDLE hcmXform);
+
+BOOL
+NTAPI
+UnsafeSetBitmapBits(
+    _Inout_ PSURFACE psurf,
+    _In_ ULONG cjBits,
+    _In_ const VOID *pvBits);
