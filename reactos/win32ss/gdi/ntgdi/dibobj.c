@@ -341,8 +341,6 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    NT_ASSERT(psurfSrc->SurfObj.cjBits <= cjMaxBits);
-
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
                             NULL,
