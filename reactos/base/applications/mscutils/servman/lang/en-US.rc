@@ -4,41 +4,41 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Export...", ID_EXPORT
+        MENUITEM "&Export...", ID_EXPORT
         MENUITEM SEPARATOR
         MENUITEM "E&xit", ID_EXIT
     END
-    POPUP "Action"
+    POPUP "&Action"
     BEGIN
-        MENUITEM "Connect to...", ID_CONNECT, GRAYED
+        MENUITEM "&Connect to...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Start", ID_START, GRAYED
-        MENUITEM "Stop", ID_STOP, GRAYED
-        MENUITEM "Pause", ID_PAUSE, GRAYED
-        MENUITEM "Resume", ID_RESUME, GRAYED
-        MENUITEM "Restart", ID_RESTART, GRAYED
+        MENUITEM "&Start", ID_START, GRAYED
+        MENUITEM "St&op", ID_STOP, GRAYED
+        MENUITEM "&Pause", ID_PAUSE, GRAYED
+        MENUITEM "Resu&me", ID_RESUME, GRAYED
+        MENUITEM "Rest&art", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Refresh", ID_REFRESH
+        MENUITEM "Re&fresh", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Edit...", ID_EDIT, GRAYED
-        MENUITEM "Create...", ID_CREATE, GRAYED
-        MENUITEM "Delete...", ID_DELETE, GRAYED
+        MENUITEM "&Edit...", ID_EDIT, GRAYED
+        MENUITEM "Crea&te...", ID_CREATE, GRAYED
+        MENUITEM "&Delete...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Properties...", ID_PROP, GRAYED
+        MENUITEM "P&roperties...", ID_PROP, GRAYED
     END
-    POPUP "View"
+    POPUP "&View"
     BEGIN
-        MENUITEM "Large Icons", ID_VIEW_LARGE
-        MENUITEM "Small Icons", ID_VIEW_SMALL
-        MENUITEM "List", ID_VIEW_LIST
-        MENUITEM "Details", ID_VIEW_DETAILS
+        MENUITEM "Lar&ge Icons", ID_VIEW_LARGE
+        MENUITEM "S&mall Icons", ID_VIEW_SMALL
+        MENUITEM "&List", ID_VIEW_LIST
+        MENUITEM "&Details", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "Customize...", ID_VIEW_CUST, GRAYED
+        MENUITEM "C&ustomize...", ID_VIEW_CUST, GRAYED
     END
-    POPUP "Help"
+    POPUP "&Help"
     BEGIN
-        MENUITEM "Help", ID_HELP
-        MENUITEM "About", ID_ABOUT
+        MENUITEM "&Help", ID_HELP
+        MENUITEM "&About", ID_ABOUT
     END
 END
 
@@ -46,18 +46,18 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "Start", ID_START, GRAYED
-        MENUITEM "Stop", ID_STOP, GRAYED
-        MENUITEM "Pause", ID_PAUSE, GRAYED
-        MENUITEM "Resume", ID_RESUME, GRAYED
-        MENUITEM "Restart", ID_RESTART, GRAYED
+        MENUITEM "&Start", ID_START, GRAYED
+        MENUITEM "St&op", ID_STOP, GRAYED
+        MENUITEM "&Pause", ID_PAUSE, GRAYED
+        MENUITEM "Resu&me", ID_RESUME, GRAYED
+        MENUITEM "Rest&art", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Refresh", ID_REFRESH
+        MENUITEM "Re&fresh", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Edit...", ID_EDIT, GRAYED
-        MENUITEM "Delete...", ID_DELETE, GRAYED
+        MENUITEM "&Edit...", ID_EDIT, GRAYED
+        MENUITEM "Dele&te...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Properties...", ID_PROP, GRAYED
+        MENUITEM "P&roperties...", ID_PROP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Help...", ID_HELP
     END
@@ -69,7 +69,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "Service Manager v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
+    PUSHBUTTON "&Close", IDOK, 75, 162, 44, 15
     ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -133,8 +133,8 @@ BEGIN
     LTEXT "Description :", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
     PUSHBUTTON "Cancel", IDCANCEL, 176, 192, 46, 13
-    LTEXT "Additional options (click help for details)", IDC_STATIC, 10, 151, 134, 9
-    PUSHBUTTON "Help", ID_CREATE_HELP, 10, 192, 44, 13
+    LTEXT "Additional Options (Click Help for details)", IDC_STATIC, 10, 151, 134, 9
+    PUSHBUTTON "&Help", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148

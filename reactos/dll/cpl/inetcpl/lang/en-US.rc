@@ -65,18 +65,18 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Delete browsing history"
 BEGIN
 
-    AUTOCHECKBOX   "Temporary internet files\nCached copies of web pages, images and certificates.",
+    AUTOCHECKBOX   "&Temporary internet files\nCached copies of web pages, images and certificates.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Cookies\nFiles saved on your computer by websites, which store things like user preferences and login information.",
+    AUTOCHECKBOX   "&Cookies\nFiles saved on your computer by websites, which store things like user preferences and login information.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "History\nList of websites you have accessed.",
+    AUTOCHECKBOX   "&History\nList of websites you have accessed.",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Form data\nUsernames and other information you have entered into forms.",
+    AUTOCHECKBOX   "&Form data\nUsernames and other information you have entered into forms.",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Passwords\nSaved passwords you have entered into forms.",
+    AUTOCHECKBOX   "&Passwords\nSaved passwords you have entered into forms.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Cancel", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Delete", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Delete", IDOK, 120, 230, 60, 15, WS_GROUP
 
 END
 
@@ -109,7 +109,7 @@ BEGIN
     ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
     LTEXT       "Certificates are used for your personal identification and to identify certificate authorities and publishers.",
                 IDC_STATIC, 40, 14, 252, 18
-    PUSHBUTTON  "Certificates...", IDC_CERT, 146, 34, 80, 14
-    PUSHBUTTON	"Publishers...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+    PUSHBUTTON  "&Certificates...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"Pu&blishers...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
