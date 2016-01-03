@@ -786,9 +786,6 @@ IntAnimatePalette(HPALETTE hPal,
     {
         PPALETTE palPtr;
         UINT pal_entries;
-        HDC hDC;
-        PDC dc;
-        PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
         palPtr = PALETTE_ShareLockPalette(hPal);
@@ -816,6 +813,16 @@ IntAnimatePalette(HPALETTE hPal,
 
         PALETTE_ShareUnlockPalette(palPtr);
 
+#if 0
+/* FIXME: This is completely broken! We cannot call UserGetDesktopWindow
+   without first acquiring the USER lock. But the whole process here is
+   screwed anyway. Instead of messing with the desktop DC, we need to
+   check, whether the palette is associated with a PDEV and whether that
+   PDEV supports palette operations. Then we need to call pfnDrvSetPalette.
+   But since IntGdiRealizePalette() is not even implemented for direct DCs,
+   we can as well just do nothing, that will at least not ASSERT!
+   I leave the whole thing here, to scare people away, who want to "fix" it. */
+
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
         hDC =  UserGetWindowDC(Wnd);
@@ -831,6 +838,7 @@ IntAnimatePalette(HPALETTE hPal,
                 DC_UnlockDc(dc);
         }
         UserReleaseDC(Wnd,hDC, FALSE);
+#endif // 0
     }
     return ret;
 }
