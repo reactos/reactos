@@ -39,6 +39,12 @@ FltpAttachDeviceObject(
 );
 
 static
+VOID
+FltpCleanupDeviceObject(
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+static
 BOOLEAN
 FltpIsAttachedToDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
@@ -94,8 +100,6 @@ typedef struct _FLTMGR_DEVICE_EXTENSION
     /* The file system we're attached to */
     PDEVICE_OBJECT AttachedToDeviceObject;
 
-    //  Pointer to the real (disk) device object that is associated with
-    //  the file system device object we are attached to
     /* The storage stack(disk) accociated with the file system device object we're attached to */
     PDEVICE_OBJECT StorageStackDeviceObject;
 
@@ -106,7 +110,13 @@ typedef struct _FLTMGR_DEVICE_EXTENSION
 
 } FLTMGR_DEVICE_EXTENSION, *PFLTMGR_DEVICE_EXTENSION;
 
+typedef struct _DETATCH_DEVICE_WORK_ITEM
+{
+    WORK_QUEUE_ITEM WorkItem;
+    PDEVICE_OBJECT SourceDevice;
+    PDEVICE_OBJECT TargetDevice;
 
+} DETATCH_DEVICE_WORK_ITEM, *PDETATCH_DEVICE_WORK_ITEM;
 
 
 /* DISPATCH ROUTINES **********************************************/
@@ -139,10 +149,15 @@ NTAPI
 FltpDispatch(_In_ PDEVICE_OBJECT DeviceObject,
              _Inout_ PIRP Irp)
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
-    return STATUS_SUCCESS;
+    FLT_ASSERT(DeviceExtension &&
+               DeviceExtension->AttachedToDeviceObject);
+
+    /* Just pass the IRP down the stack */
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->AttachedToDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -150,10 +165,15 @@ NTAPI
 FltpCreate(_In_ PDEVICE_OBJECT DeviceObject,
            _Inout_ PIRP Irp)
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
-    return STATUS_SUCCESS;
+    FLT_ASSERT(DeviceExtension &&
+               DeviceExtension->AttachedToDeviceObject);
+
+    /* Just pass the IRP down the stack */
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->AttachedToDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -161,16 +181,1025 @@ NTAPI
 FltpFsControl(_In_ PDEVICE_OBJECT DeviceObject,
               _Inout_ PIRP Irp)
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
-    return STATUS_SUCCESS;
+    FLT_ASSERT(DeviceExtension &&
+               DeviceExtension->AttachedToDeviceObject);
+    /* Just pass the IRP down the stack */
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->AttachedToDeviceObject, Irp);
+}
+
+
+
+/* FASTIO ROUTINES ************************************************/
+
+BOOLEAN
+FltpFastIoCheckIfPossible(_In_ PFILE_OBJECT FileObject,
+                          _In_ PLARGE_INTEGER FileOffset,
+                          _In_ ULONG Length,
+                          _In_ BOOLEAN Wait,
+                          _In_ ULONG LockKey,
+                          _In_ BOOLEAN CheckForReadOperation,
+                          _Out_ PIO_STATUS_BLOCK IoStatus,
+                          _In_ PDEVICE_OBJECT DeviceObject)
+
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoCheckIfPossible)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoCheckIfPossible(FileObject,
+                                                     FileOffset,
+                                                     Length,
+                                                     Wait,
+                                                     LockKey,
+                                                     CheckForReadOperation,
+                                                     IoStatus,
+                                                     AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoRead(_In_ PFILE_OBJECT FileObject,
+               _In_ PLARGE_INTEGER FileOffset,
+               _In_ ULONG Length,
+               _In_ BOOLEAN Wait,
+               _In_ ULONG LockKey,
+               _Out_ PVOID Buffer,
+               _Out_ PIO_STATUS_BLOCK IoStatus,
+               _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoRead)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoRead(FileObject,
+                                          FileOffset,
+                                          Length,
+                                          Wait,
+                                          LockKey,
+                                          Buffer,
+                                          IoStatus,
+                                          AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoWrite(_In_ PFILE_OBJECT FileObject,
+                _In_ PLARGE_INTEGER FileOffset,
+                 _In_ ULONG Length,
+                 _In_ BOOLEAN Wait,
+                 _In_ ULONG LockKey,
+                 _In_ PVOID Buffer,
+                 _Out_ PIO_STATUS_BLOCK IoStatus,
+                 _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoWrite)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoWrite(FileObject,
+                                           FileOffset,
+                                           Length,
+                                           Wait,
+                                           LockKey,
+                                           Buffer,
+                                           IoStatus,
+                                           AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoQueryBasicInfo(_In_ PFILE_OBJECT FileObject,
+                         _In_ BOOLEAN Wait,
+                         _Out_ PFILE_BASIC_INFORMATION Buffer,
+                         _Out_ PIO_STATUS_BLOCK IoStatus,
+                         _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoQueryBasicInfo)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoQueryBasicInfo(FileObject,
+                                                    Wait,
+                                                    Buffer,
+                                                    IoStatus,
+                                                    AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoQueryStandardInfo(_In_ PFILE_OBJECT FileObject,
+                            _In_ BOOLEAN Wait,
+                            _Out_ PFILE_STANDARD_INFORMATION Buffer,
+                            _Out_ PIO_STATUS_BLOCK IoStatus,
+                            _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoQueryStandardInfo)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoQueryStandardInfo(FileObject,
+                                                       Wait,
+                                                       Buffer,
+                                                       IoStatus,
+                                                       AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoLock(_In_ PFILE_OBJECT FileObject,
+               _In_ PLARGE_INTEGER FileOffset,
+               _In_ PLARGE_INTEGER Length,
+               _In_ PEPROCESS ProcessId,
+               _In_ ULONG Key,
+               _In_ BOOLEAN FailImmediately,
+               _In_ BOOLEAN ExclusiveLock,
+               _Out_ PIO_STATUS_BLOCK IoStatus,
+               _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoLock)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoLock(FileObject,
+                                          FileOffset,
+                                          Length,
+                                          ProcessId,
+                                          Key,
+                                          FailImmediately,
+                                          ExclusiveLock,
+                                          IoStatus,
+                                          AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoUnlockSingle(_In_ PFILE_OBJECT FileObject,
+                       _In_ PLARGE_INTEGER FileOffset,
+                       _In_ PLARGE_INTEGER Length,
+                       _In_ PEPROCESS ProcessId,
+                       _In_ ULONG Key,
+                       _Out_ PIO_STATUS_BLOCK IoStatus,
+                       _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoUnlockSingle)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoUnlockSingle(FileObject,
+                                                  FileOffset,
+                                                  Length,
+                                                  ProcessId,
+                                                  Key,
+                                                  IoStatus,
+                                                  AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoUnlockAll(_In_ PFILE_OBJECT FileObject,
+                    _In_ PEPROCESS ProcessId,
+                    _Out_ PIO_STATUS_BLOCK IoStatus,
+                    _In_ PDEVICE_OBJECT DeviceObject)
+
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoUnlockAll)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoUnlockAll(FileObject,
+                                               ProcessId,
+                                               IoStatus,
+                                               AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoUnlockAllByKey(_In_ PFILE_OBJECT FileObject,
+                         _In_ PVOID ProcessId,
+                         _In_ ULONG Key,
+                         _Out_ PIO_STATUS_BLOCK IoStatus,
+                         _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoUnlockAllByKey)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoUnlockAllByKey(FileObject,
+                                                    ProcessId,
+                                                    Key,
+                                                    IoStatus,
+                                                    AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoDeviceControl(_In_ PFILE_OBJECT FileObject,
+                        _In_ BOOLEAN Wait,
+                        _In_opt_ PVOID InputBuffer,
+                        _In_ ULONG InputBufferLength,
+                        _Out_opt_ PVOID OutputBuffer,
+                        _In_ ULONG OutputBufferLength,
+                        _In_ ULONG IoControlCode,
+                        _Out_ PIO_STATUS_BLOCK IoStatus,
+                        _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the request, send it down the slow path */
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoDeviceControl)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoDeviceControl(FileObject,
+                                                   Wait,
+                                                   InputBuffer,
+                                                   InputBufferLength,
+                                                   OutputBuffer,
+                                                   OutputBufferLength,
+                                                   IoControlCode,
+                                                   IoStatus,
+                                                   AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+VOID
+NTAPI
+FltpFastIoDetatchDeviceWorker(_In_ PVOID Parameter)
+{
+    PDETATCH_DEVICE_WORK_ITEM DetatchDeviceWorkItem = Parameter;
+
+    /* Run any cleanup routines */
+    FltpCleanupDeviceObject(DetatchDeviceWorkItem->SourceDevice);
+
+    /* Detatch from the target device */
+    IoDetachDevice(DetatchDeviceWorkItem->TargetDevice);
+
+    /* Delete the source */
+    IoDeleteDevice(DetatchDeviceWorkItem->SourceDevice);
+
+    /* Free the pool we allocated in FltpFastIoDetachDevice */
+    ExFreePoolWithTag(DetatchDeviceWorkItem, 0x1234);
+}
+
+VOID
+FltpFastIoDetachDevice(_In_ PDEVICE_OBJECT SourceDevice,
+                     _In_ PDEVICE_OBJECT TargetDevice)
+{
+    PDETATCH_DEVICE_WORK_ITEM DetatchDeviceWorkItem;
+
+    PAGED_CODE();
+
+    /*
+     * Detatching and deleting devices is a lot of work and takes too long
+     * to be a worthwhile FastIo candidate, so we defer this call to speed
+     * it up. There's no return value so we're okay to do this.
+     */
+
+    /* Allocate the work item and it's corresponding data */
+    DetatchDeviceWorkItem = ExAllocatePoolWithTag(NonPagedPool,
+                                                  sizeof(DETATCH_DEVICE_WORK_ITEM),
+                                                  0x1234);
+    if (DetatchDeviceWorkItem)
+    {
+        /* Initialize the work item */
+        ExInitializeWorkItem(&DetatchDeviceWorkItem->WorkItem,
+                             FltpFastIoDetatchDeviceWorker,
+                             DetatchDeviceWorkItem);
+
+        /* Queue the work item and return the call */
+        ExQueueWorkItem(&DetatchDeviceWorkItem->WorkItem,
+                        DelayedWorkQueue);
+    }
+    else
+    {
+        /* We failed to defer, just cleanup here */
+        FltpCleanupDeviceObject(SourceDevice);
+        IoDetachDevice(TargetDevice);
+        IoDeleteDevice(SourceDevice);
+    }
+
+}
+
+BOOLEAN
+FltpFastIoQueryNetworkOpenInfo(_In_ PFILE_OBJECT FileObject,
+                               _In_ BOOLEAN Wait,
+                               _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+                               _Out_ PIO_STATUS_BLOCK IoStatus,
+                               _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoQueryNetworkOpenInfo)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoQueryNetworkOpenInfo(FileObject,
+                                                          Wait,
+                                                          Buffer,
+                                                          IoStatus,
+                                                          AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoMdlRead(_In_ PFILE_OBJECT FileObject,
+                  _In_ PLARGE_INTEGER FileOffset,
+                  _In_ ULONG Length,
+                  _In_ ULONG LockKey,
+                  _Out_ PMDL *MdlChain,
+                  _Out_ PIO_STATUS_BLOCK IoStatus,
+                  _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->MdlRead)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->MdlRead(FileObject,
+                                       FileOffset,
+                                       Length,
+                                       LockKey,
+                                       MdlChain,
+                                       IoStatus,
+                                       AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoMdlReadComplete(_In_ PFILE_OBJECT FileObject,
+                          _In_ PMDL MdlChain,
+                          _In_ PDEVICE_OBJECT DeviceObject)
+
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the request, send it down the slow path */
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->MdlReadComplete)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->MdlReadComplete(FileObject,
+                                               MdlChain,
+                                               AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoPrepareMdlWrite(_In_ PFILE_OBJECT FileObject,
+                          _In_ PLARGE_INTEGER FileOffset,
+                          _In_ ULONG Length,
+                          _In_ ULONG LockKey,
+                          _Out_ PMDL *MdlChain,
+                          _Out_ PIO_STATUS_BLOCK IoStatus,
+                          _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the call */
+        IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoStatus->Information = 0;
+        return TRUE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->PrepareMdlWrite)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->PrepareMdlWrite(FileObject,
+                                               FileOffset,
+                                               Length,
+                                               LockKey,
+                                               MdlChain,
+                                               IoStatus,
+                                               AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoMdlWriteComplete(_In_ PFILE_OBJECT FileObject,
+                           _In_ PLARGE_INTEGER FileOffset,
+                           _In_ PMDL MdlChain,
+                           _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the request, send it down the slow path */
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->MdlWriteComplete)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->MdlWriteComplete(FileObject,
+                                               FileOffset,
+                                               MdlChain,
+                                               AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoReadCompressed(_In_ PFILE_OBJECT FileObject,
+                         _In_ PLARGE_INTEGER FileOffset,
+                         _In_ ULONG Length,
+                         _In_ ULONG LockKey,
+                         _Out_ PVOID Buffer,
+                         _Out_ PMDL *MdlChain,
+                         _Out_ PIO_STATUS_BLOCK IoStatus,
+                         _Out_ PCOMPRESSED_DATA_INFO CompressedDataInfo,
+                         _In_ ULONG CompressedDataInfoLength,
+                         _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the request, send it down the slow path */
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoReadCompressed)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoReadCompressed(FileObject,
+                                                    FileOffset,
+                                                    Length,
+                                                    LockKey,
+                                                    Buffer,
+                                                    MdlChain,
+                                                    IoStatus,
+                                                    CompressedDataInfo,
+                                                    CompressedDataInfoLength,
+                                                    AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoWriteCompressed(_In_ PFILE_OBJECT FileObject,
+                          _In_ PLARGE_INTEGER FileOffset,
+                          _In_ ULONG Length,
+                          _In_ ULONG LockKey,
+                          _In_ PVOID Buffer,
+                          _Out_ PMDL *MdlChain,
+                          _Out_ PIO_STATUS_BLOCK IoStatus,
+                          _In_ PCOMPRESSED_DATA_INFO CompressedDataInfo,
+                          _In_ ULONG CompressedDataInfoLength,
+                          _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        /* Fail the request, send it down the slow path */
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoWriteCompressed)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->FastIoWriteCompressed(FileObject,
+                                                     FileOffset,
+                                                     Length,
+                                                     LockKey,
+                                                     Buffer,
+                                                     MdlChain,
+                                                     IoStatus,
+                                                     CompressedDataInfo,
+                                                     CompressedDataInfoLength,
+                                                     AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoMdlReadCompleteCompressed(_In_ PFILE_OBJECT FileObject,
+                                    _In_ PMDL MdlChain,
+                                    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->MdlReadCompleteCompressed)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->MdlReadCompleteCompressed(FileObject,
+                                                         MdlChain,
+                                                         AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoMdlWriteCompleteCompressed(_In_ PFILE_OBJECT FileObject,
+                                     _In_ PLARGE_INTEGER FileOffset,
+                                     _In_ PMDL MdlChain,
+                                     _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->MdlWriteCompleteCompressed)
+    {
+        /* Forward the call onto the device we attached to */
+        return FastIoDispatch->MdlWriteCompleteCompressed(FileObject,
+                                                          FileOffset,
+                                                          MdlChain,
+                                                          AttachedDeviceObject);
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+FltpFastIoQueryOpen(_Inout_ PIRP Irp,
+                    _Out_ PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
+                    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    BOOLEAN Success;
+
+    PAGED_CODE();
+
+    /* If it doesn't have a device extension, then it's not our device object */
+    if (DeviceObject->DeviceExtension == NULL)
+    {
+        return FALSE;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FLT_ASSERT(DeviceExtension->AttachedToDeviceObject);
+
+    /* Get the device that we attached to */
+    AttachedDeviceObject = DeviceExtension->AttachedToDeviceObject;
+    FastIoDispatch = AttachedDeviceObject->DriverObject->FastIoDispatch;
+
+    /* Make sure our FastIo table is valid */
+    if (FastIoDispatch && FastIoDispatch->FastIoQueryOpen)
+    {
+        PIO_STACK_LOCATION StackPtr = IoGetCurrentIrpStackLocation(Irp);
+
+        /* Update the stack to contain the correct device for the next filter */
+        StackPtr->DeviceObject = AttachedDeviceObject;
+
+        /* Now forward the call */
+        Success = FastIoDispatch->FastIoQueryOpen(Irp,
+                                                  NetworkInformation,
+                                                  AttachedDeviceObject);
+
+        /* Restore the DeviceObject as we found it */
+        StackPtr->DeviceObject = DeviceObject;
+        return Success;
+    }
+
+    /* We failed to handle the request, send it down the slow path */
+    FLT_ASSERT(FALSE);
+    return FALSE;
 }
 
 
 
 /* FUNCTIONS **********************************************/
 
+static
 VOID
 FltpCleanupDeviceObject(_In_ PDEVICE_OBJECT DeviceObject)
 {
@@ -555,7 +1584,8 @@ FltpDetachFromFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject)
     AttachedDevice = IoGetAttachedDeviceReference(DeviceObject);
 
     /* Loop through all attached devices until we reach the bottom (file system driver) */
-    while (AttachedDevice->DriverObject != DriverData.DriverObject)
+    while (AttachedDevice == NULL ||
+           AttachedDevice->DriverObject != DriverData.DriverObject)
     {
         /* Get the attached device */
         LowestDevice = IoGetLowerDeviceObject(AttachedDevice);
@@ -682,7 +1712,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
 
     /* Register for notifications when a new file system is loaded. This also enumerates any existing file systems */
     Status = IoRegisterFsRegistrationChange(DriverObject, FltpFsNotification);
-    FLT_ASSERT(Status != STATUS_DEVICE_ALREADY_ATTACHED); // Windows checks for this, but I'm not sure how that can happen??
+    FLT_ASSERT(Status != STATUS_DEVICE_ALREADY_ATTACHED); // Windows checks for this, I'm not sure how it can happen. Needs investigation??
     if (!NT_SUCCESS(Status))  goto Cleanup;
 
     /* IoRegisterFsRegistrationChange isn't notified about the raw  file systems, so we attach to them manually */
@@ -762,29 +1792,30 @@ SetupDispatchAndCallbacksTables(_In_ PDRIVER_OBJECT DriverObject)
     /* Fill out the FastIo table  */
     RtlZeroMemory(FastIoDispatch, sizeof(FAST_IO_DISPATCH));
     FastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
-    FastIoDispatch->FastIoCheckIfPossible = (PFAST_IO_CHECK_IF_POSSIBLE)NULL;
-    FastIoDispatch->FastIoRead = (PFAST_IO_READ)NULL;
-    FastIoDispatch->FastIoWrite = (PFAST_IO_WRITE)NULL;
-    FastIoDispatch->FastIoQueryBasicInfo = (PFAST_IO_QUERY_BASIC_INFO)NULL;
-    FastIoDispatch->FastIoQueryStandardInfo = (PFAST_IO_QUERY_STANDARD_INFO)NULL;
-    FastIoDispatch->FastIoLock = (PFAST_IO_LOCK)NULL;
-    FastIoDispatch->FastIoUnlockSingle = (PFAST_IO_UNLOCK_SINGLE)NULL;
-    FastIoDispatch->FastIoUnlockAll = (PFAST_IO_UNLOCK_ALL)NULL;
-    FastIoDispatch->FastIoUnlockAllByKey = (PFAST_IO_UNLOCK_ALL_BY_KEY)NULL;
-    FastIoDispatch->FastIoDeviceControl = (PFAST_IO_DEVICE_CONTROL)NULL;
-    FastIoDispatch->FastIoDetachDevice = (PFAST_IO_DETACH_DEVICE)NULL;
-    FastIoDispatch->FastIoQueryNetworkOpenInfo = (PFAST_IO_QUERY_NETWORK_OPEN_INFO)NULL;
-    FastIoDispatch->MdlRead = (PFAST_IO_MDL_READ)NULL;
-    FastIoDispatch->MdlReadComplete = (PFAST_IO_MDL_READ_COMPLETE)NULL;
-    FastIoDispatch->PrepareMdlWrite = (PFAST_IO_PREPARE_MDL_WRITE)NULL;
-    FastIoDispatch->MdlWriteComplete = (PFAST_IO_MDL_WRITE_COMPLETE)NULL;
-    FastIoDispatch->FastIoReadCompressed = (PFAST_IO_READ_COMPRESSED)NULL;
-    FastIoDispatch->FastIoWriteCompressed = (PFAST_IO_WRITE_COMPRESSED)NULL;
-    FastIoDispatch->MdlReadCompleteCompressed = (PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)NULL;
-    FastIoDispatch->MdlWriteCompleteCompressed = (PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)NULL;
-    FastIoDispatch->FastIoQueryOpen = (PFAST_IO_QUERY_OPEN)NULL;
+    FastIoDispatch->FastIoCheckIfPossible = (PFAST_IO_CHECK_IF_POSSIBLE)FltpFastIoCheckIfPossible;
+    FastIoDispatch->FastIoRead = (PFAST_IO_READ)FltpFastIoRead;
+    FastIoDispatch->FastIoWrite = (PFAST_IO_WRITE)FltpFastIoWrite;
+    FastIoDispatch->FastIoQueryBasicInfo = (PFAST_IO_QUERY_BASIC_INFO)FltpFastIoQueryBasicInfo;
+    FastIoDispatch->FastIoQueryStandardInfo = (PFAST_IO_QUERY_STANDARD_INFO)FltpFastIoQueryStandardInfo;
+    FastIoDispatch->FastIoLock = (PFAST_IO_LOCK)FltpFastIoLock;
+    FastIoDispatch->FastIoUnlockSingle = (PFAST_IO_UNLOCK_SINGLE)FltpFastIoUnlockSingle;
+    FastIoDispatch->FastIoUnlockAll = (PFAST_IO_UNLOCK_ALL)FltpFastIoUnlockAll;
+    FastIoDispatch->FastIoUnlockAllByKey = (PFAST_IO_UNLOCK_ALL_BY_KEY)FltpFastIoUnlockAllByKey;
+    FastIoDispatch->FastIoDeviceControl = (PFAST_IO_DEVICE_CONTROL)FltpFastIoDeviceControl;
+    FastIoDispatch->FastIoDetachDevice = (PFAST_IO_DETACH_DEVICE)FltpFastIoDetachDevice;
+    FastIoDispatch->FastIoQueryNetworkOpenInfo = (PFAST_IO_QUERY_NETWORK_OPEN_INFO)FltpFastIoQueryNetworkOpenInfo;
+    FastIoDispatch->MdlRead = (PFAST_IO_MDL_READ)FltpFastIoMdlRead;
+    FastIoDispatch->MdlReadComplete = (PFAST_IO_MDL_READ_COMPLETE)FltpFastIoMdlReadComplete;
+    FastIoDispatch->PrepareMdlWrite = (PFAST_IO_PREPARE_MDL_WRITE)FltpFastIoPrepareMdlWrite;
+    FastIoDispatch->MdlWriteComplete = (PFAST_IO_MDL_WRITE_COMPLETE)FltpFastIoMdlWriteComplete;
+    FastIoDispatch->FastIoReadCompressed = (PFAST_IO_READ_COMPRESSED)FltpFastIoReadCompressed;
+    FastIoDispatch->FastIoWriteCompressed = (PFAST_IO_WRITE_COMPRESSED)FltpFastIoWriteCompressed;
+    FastIoDispatch->MdlReadCompleteCompressed = (PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)FltpFastIoMdlReadCompleteCompressed;
+    FastIoDispatch->MdlWriteCompleteCompressed = (PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)FltpFastIoMdlWriteCompleteCompressed;
+    FastIoDispatch->FastIoQueryOpen = (PFAST_IO_QUERY_OPEN)FltpFastIoQueryOpen;
 
-    /* Store the FastIo table address for easy reference */
+    /* Store the FastIo table for internal and our access */
+    DriverObject->FastIoDispatch = FastIoDispatch;
     DriverData.FastIoDispatch = FastIoDispatch;
 
     /* Initialize the callback table */
