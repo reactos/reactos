@@ -101,6 +101,7 @@
     #define CMLTRACE(x, ...)
     #undef PAGED_CODE
     #define PAGED_CODE()
+    #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
 #else
     //
     // Debug/Tracing support
@@ -118,6 +119,7 @@
 
     #include <ntdef.h>
     #include <ntddk.h>
+    #include <bugcodes.h>
     #undef PAGED_CODE
     #define PAGED_CODE()
 
@@ -160,7 +162,6 @@
 #include <wchar.h>
 #include "hivedata.h"
 #include "cmdata.h"
-#include "bugcodes.h"
 
 #if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H)
 
