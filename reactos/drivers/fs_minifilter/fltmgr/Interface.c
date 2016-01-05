@@ -78,6 +78,260 @@ FltpFsNotification(
     _In_ BOOLEAN FsActive
 );
 
+NTSTATUS
+NTAPI
+FltpDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FltpCreate(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FltpFsControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoCheckIfPossible(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ BOOLEAN CheckForReadOperation,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+
+BOOLEAN
+NTAPI
+FltpFastIoRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoQueryBasicInfo(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_BASIC_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoQueryStandardInfo(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_STANDARD_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoLock(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PLARGE_INTEGER Length,
+    _In_ PEPROCESS ProcessId,
+    _In_ ULONG Key,
+    _In_ BOOLEAN FailImmediately,
+    _In_ BOOLEAN ExclusiveLock,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoUnlockSingle(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PLARGE_INTEGER Length,
+    _In_ PEPROCESS ProcessId,
+    _In_ ULONG Key,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoUnlockAll(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PEPROCESS ProcessId,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoUnlockAllByKey(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PVOID ProcessId,
+    _In_ ULONG Key,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoDeviceControl(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _In_opt_ PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_opt_ PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_ ULONG IoControlCode,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+VOID
+NTAPI
+FltpFastIoDetachDevice(
+    _In_ PDEVICE_OBJECT SourceDevice,
+    _In_ PDEVICE_OBJECT TargetDevice
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoQueryNetworkOpenInfo(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoMdlRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ ULONG LockKey,
+    _Out_ PMDL *MdlChain,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoMdlReadComplete(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PMDL MdlChain,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoPrepareMdlWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ ULONG LockKey,
+    _Out_ PMDL *MdlChain,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoMdlWriteComplete(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PMDL MdlChain,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoReadCompressed(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PMDL *MdlChain,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _Out_ PCOMPRESSED_DATA_INFO CompressedDataInfo,
+    _In_ ULONG CompressedDataInfoLength,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoWriteCompressed(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PMDL *MdlChain,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PCOMPRESSED_DATA_INFO CompressedDataInfo,
+    _In_ ULONG CompressedDataInfoLength,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoMdlReadCompleteCompressed(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PMDL MdlChain,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoMdlWriteCompleteCompressed(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PMDL MdlChain,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+NTAPI
+FltpFastIoQueryOpen(
+    _Inout_ PIRP Irp,
+    _Out_ PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
+    _In_ PDEVICE_OBJECT DeviceObject
+);
+
+
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DriverEntry)
@@ -88,7 +342,29 @@ FltpFsNotification(
 #pragma alloc_text(PAGE, FltpAttachToFileSystemDevice)
 #pragma alloc_text(PAGE, FltpDetachFromFileSystemDevice)
 #pragma alloc_text(PAGE, FltpFsNotification)
-//#pragma alloc_text(PAGE, )
+#pragma alloc_text(PAGE, FltpDispatch)
+#pragma alloc_text(PAGE, FltpCreate)
+#pragma alloc_text(PAGE, FltpFsControl)
+#pragma alloc_text(PAGE, FltpFastIoRead)
+#pragma alloc_text(PAGE, FltpFastIoWrite)
+#pragma alloc_text(PAGE, FltpFastIoQueryBasicInfo)
+#pragma alloc_text(PAGE, FltpFastIoQueryStandardInfo)
+#pragma alloc_text(PAGE, FltpFastIoLock)
+#pragma alloc_text(PAGE, FltpFastIoUnlockSingle)
+#pragma alloc_text(PAGE, FltpFastIoUnlockAll)
+#pragma alloc_text(PAGE, FltpFastIoUnlockAllByKey)
+#pragma alloc_text(PAGE, FltpFastIoDeviceControl)
+#pragma alloc_text(PAGE, FltpFastIoDetachDevice)
+#pragma alloc_text(PAGE, FltpFastIoQueryNetworkOpenInfo)
+#pragma alloc_text(PAGE, FltpFastIoMdlRead)
+#pragma alloc_text(PAGE, FltpFastIoMdlReadComplete)
+#pragma alloc_text(PAGE, FltpFastIoPrepareMdlWrite)
+#pragma alloc_text(PAGE, FltpFastIoMdlWriteComplete)
+#pragma alloc_text(PAGE, FltpFastIoReadCompressed)
+#pragma alloc_text(PAGE, FltpFastIoWriteCompressed)
+#pragma alloc_text(PAGE, FltpFastIoMdlReadCompleteCompressed)
+#pragma alloc_text(PAGE, FltpFastIoMdlWriteCompleteCompressed)
+#pragma alloc_text(PAGE, FltpFastIoQueryOpen)
 #endif
 
 #define MAX_DEVNAME_LENGTH  64
@@ -150,6 +426,9 @@ FltpDispatch(_In_ PDEVICE_OBJECT DeviceObject,
              _Inout_ PIRP Irp)
 {
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+
+    PAGED_CODE();
+
     DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
     FLT_ASSERT(DeviceExtension &&
@@ -166,6 +445,9 @@ FltpCreate(_In_ PDEVICE_OBJECT DeviceObject,
            _Inout_ PIRP Irp)
 {
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+
+    PAGED_CODE();
+
     DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
     FLT_ASSERT(DeviceExtension &&
@@ -182,6 +464,9 @@ FltpFsControl(_In_ PDEVICE_OBJECT DeviceObject,
               _Inout_ PIRP Irp)
 {
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+
+    PAGED_CODE();
+
     DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
     FLT_ASSERT(DeviceExtension &&
@@ -196,6 +481,7 @@ FltpFsControl(_In_ PDEVICE_OBJECT DeviceObject,
 /* FASTIO ROUTINES ************************************************/
 
 BOOLEAN
+NTAPI
 FltpFastIoCheckIfPossible(_In_ PFILE_OBJECT FileObject,
                           _In_ PLARGE_INTEGER FileOffset,
                           _In_ ULONG Length,
@@ -248,6 +534,7 @@ FltpFastIoCheckIfPossible(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoRead(_In_ PFILE_OBJECT FileObject,
                _In_ PLARGE_INTEGER FileOffset,
                _In_ ULONG Length,
@@ -299,6 +586,7 @@ FltpFastIoRead(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoWrite(_In_ PFILE_OBJECT FileObject,
                 _In_ PLARGE_INTEGER FileOffset,
                  _In_ ULONG Length,
@@ -350,6 +638,7 @@ FltpFastIoWrite(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoQueryBasicInfo(_In_ PFILE_OBJECT FileObject,
                          _In_ BOOLEAN Wait,
                          _Out_ PFILE_BASIC_INFORMATION Buffer,
@@ -395,6 +684,7 @@ FltpFastIoQueryBasicInfo(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoQueryStandardInfo(_In_ PFILE_OBJECT FileObject,
                             _In_ BOOLEAN Wait,
                             _Out_ PFILE_STANDARD_INFORMATION Buffer,
@@ -440,6 +730,7 @@ FltpFastIoQueryStandardInfo(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoLock(_In_ PFILE_OBJECT FileObject,
                _In_ PLARGE_INTEGER FileOffset,
                _In_ PLARGE_INTEGER Length,
@@ -493,6 +784,7 @@ FltpFastIoLock(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoUnlockSingle(_In_ PFILE_OBJECT FileObject,
                        _In_ PLARGE_INTEGER FileOffset,
                        _In_ PLARGE_INTEGER Length,
@@ -542,6 +834,7 @@ FltpFastIoUnlockSingle(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoUnlockAll(_In_ PFILE_OBJECT FileObject,
                     _In_ PEPROCESS ProcessId,
                     _Out_ PIO_STATUS_BLOCK IoStatus,
@@ -586,6 +879,7 @@ FltpFastIoUnlockAll(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoUnlockAllByKey(_In_ PFILE_OBJECT FileObject,
                          _In_ PVOID ProcessId,
                          _In_ ULONG Key,
@@ -631,6 +925,7 @@ FltpFastIoUnlockAllByKey(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoDeviceControl(_In_ PFILE_OBJECT FileObject,
                         _In_ BOOLEAN Wait,
                         _In_opt_ PVOID InputBuffer,
@@ -701,6 +996,7 @@ FltpFastIoDetatchDeviceWorker(_In_ PVOID Parameter)
 }
 
 VOID
+NTAPI
 FltpFastIoDetachDevice(_In_ PDEVICE_OBJECT SourceDevice,
                      _In_ PDEVICE_OBJECT TargetDevice)
 {
@@ -740,6 +1036,7 @@ FltpFastIoDetachDevice(_In_ PDEVICE_OBJECT SourceDevice,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoQueryNetworkOpenInfo(_In_ PFILE_OBJECT FileObject,
                                _In_ BOOLEAN Wait,
                                _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
@@ -785,6 +1082,7 @@ FltpFastIoQueryNetworkOpenInfo(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoMdlRead(_In_ PFILE_OBJECT FileObject,
                   _In_ PLARGE_INTEGER FileOffset,
                   _In_ ULONG Length,
@@ -834,6 +1132,7 @@ FltpFastIoMdlRead(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoMdlReadComplete(_In_ PFILE_OBJECT FileObject,
                           _In_ PMDL MdlChain,
                           _In_ PDEVICE_OBJECT DeviceObject)
@@ -874,6 +1173,7 @@ FltpFastIoMdlReadComplete(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoPrepareMdlWrite(_In_ PFILE_OBJECT FileObject,
                           _In_ PLARGE_INTEGER FileOffset,
                           _In_ ULONG Length,
@@ -923,6 +1223,7 @@ FltpFastIoPrepareMdlWrite(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoMdlWriteComplete(_In_ PFILE_OBJECT FileObject,
                            _In_ PLARGE_INTEGER FileOffset,
                            _In_ PMDL MdlChain,
@@ -964,6 +1265,7 @@ FltpFastIoMdlWriteComplete(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoReadCompressed(_In_ PFILE_OBJECT FileObject,
                          _In_ PLARGE_INTEGER FileOffset,
                          _In_ ULONG Length,
@@ -1017,6 +1319,7 @@ FltpFastIoReadCompressed(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoWriteCompressed(_In_ PFILE_OBJECT FileObject,
                           _In_ PLARGE_INTEGER FileOffset,
                           _In_ ULONG Length,
@@ -1070,6 +1373,7 @@ FltpFastIoWriteCompressed(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoMdlReadCompleteCompressed(_In_ PFILE_OBJECT FileObject,
                                     _In_ PMDL MdlChain,
                                     _In_ PDEVICE_OBJECT DeviceObject)
@@ -1108,6 +1412,7 @@ FltpFastIoMdlReadCompleteCompressed(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoMdlWriteCompleteCompressed(_In_ PFILE_OBJECT FileObject,
                                      _In_ PLARGE_INTEGER FileOffset,
                                      _In_ PMDL MdlChain,
@@ -1148,6 +1453,7 @@ FltpFastIoMdlWriteCompleteCompressed(_In_ PFILE_OBJECT FileObject,
 }
 
 BOOLEAN
+NTAPI
 FltpFastIoQueryOpen(_Inout_ PIRP Irp,
                     _Out_ PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
                     _In_ PDEVICE_OBJECT DeviceObject)
@@ -1792,27 +2098,27 @@ SetupDispatchAndCallbacksTables(_In_ PDRIVER_OBJECT DriverObject)
     /* Fill out the FastIo table  */
     RtlZeroMemory(FastIoDispatch, sizeof(FAST_IO_DISPATCH));
     FastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
-    FastIoDispatch->FastIoCheckIfPossible = (PFAST_IO_CHECK_IF_POSSIBLE)FltpFastIoCheckIfPossible;
-    FastIoDispatch->FastIoRead = (PFAST_IO_READ)FltpFastIoRead;
-    FastIoDispatch->FastIoWrite = (PFAST_IO_WRITE)FltpFastIoWrite;
-    FastIoDispatch->FastIoQueryBasicInfo = (PFAST_IO_QUERY_BASIC_INFO)FltpFastIoQueryBasicInfo;
-    FastIoDispatch->FastIoQueryStandardInfo = (PFAST_IO_QUERY_STANDARD_INFO)FltpFastIoQueryStandardInfo;
-    FastIoDispatch->FastIoLock = (PFAST_IO_LOCK)FltpFastIoLock;
-    FastIoDispatch->FastIoUnlockSingle = (PFAST_IO_UNLOCK_SINGLE)FltpFastIoUnlockSingle;
-    FastIoDispatch->FastIoUnlockAll = (PFAST_IO_UNLOCK_ALL)FltpFastIoUnlockAll;
-    FastIoDispatch->FastIoUnlockAllByKey = (PFAST_IO_UNLOCK_ALL_BY_KEY)FltpFastIoUnlockAllByKey;
-    FastIoDispatch->FastIoDeviceControl = (PFAST_IO_DEVICE_CONTROL)FltpFastIoDeviceControl;
-    FastIoDispatch->FastIoDetachDevice = (PFAST_IO_DETACH_DEVICE)FltpFastIoDetachDevice;
-    FastIoDispatch->FastIoQueryNetworkOpenInfo = (PFAST_IO_QUERY_NETWORK_OPEN_INFO)FltpFastIoQueryNetworkOpenInfo;
-    FastIoDispatch->MdlRead = (PFAST_IO_MDL_READ)FltpFastIoMdlRead;
-    FastIoDispatch->MdlReadComplete = (PFAST_IO_MDL_READ_COMPLETE)FltpFastIoMdlReadComplete;
-    FastIoDispatch->PrepareMdlWrite = (PFAST_IO_PREPARE_MDL_WRITE)FltpFastIoPrepareMdlWrite;
-    FastIoDispatch->MdlWriteComplete = (PFAST_IO_MDL_WRITE_COMPLETE)FltpFastIoMdlWriteComplete;
-    FastIoDispatch->FastIoReadCompressed = (PFAST_IO_READ_COMPRESSED)FltpFastIoReadCompressed;
-    FastIoDispatch->FastIoWriteCompressed = (PFAST_IO_WRITE_COMPRESSED)FltpFastIoWriteCompressed;
-    FastIoDispatch->MdlReadCompleteCompressed = (PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)FltpFastIoMdlReadCompleteCompressed;
-    FastIoDispatch->MdlWriteCompleteCompressed = (PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)FltpFastIoMdlWriteCompleteCompressed;
-    FastIoDispatch->FastIoQueryOpen = (PFAST_IO_QUERY_OPEN)FltpFastIoQueryOpen;
+    FastIoDispatch->FastIoCheckIfPossible = FltpFastIoCheckIfPossible;
+    FastIoDispatch->FastIoRead = FltpFastIoRead;
+    FastIoDispatch->FastIoWrite = FltpFastIoWrite;
+    FastIoDispatch->FastIoQueryBasicInfo = FltpFastIoQueryBasicInfo;
+    FastIoDispatch->FastIoQueryStandardInfo = FltpFastIoQueryStandardInfo;
+    FastIoDispatch->FastIoLock = FltpFastIoLock;
+    FastIoDispatch->FastIoUnlockSingle = FltpFastIoUnlockSingle;
+    FastIoDispatch->FastIoUnlockAll = FltpFastIoUnlockAll;
+    FastIoDispatch->FastIoUnlockAllByKey = FltpFastIoUnlockAllByKey;
+    FastIoDispatch->FastIoDeviceControl = FltpFastIoDeviceControl;
+    FastIoDispatch->FastIoDetachDevice = FltpFastIoDetachDevice;
+    FastIoDispatch->FastIoQueryNetworkOpenInfo = FltpFastIoQueryNetworkOpenInfo;
+    FastIoDispatch->MdlRead = FltpFastIoMdlRead;
+    FastIoDispatch->MdlReadComplete = FltpFastIoMdlReadComplete;
+    FastIoDispatch->PrepareMdlWrite = FltpFastIoPrepareMdlWrite;
+    FastIoDispatch->MdlWriteComplete = FltpFastIoMdlWriteComplete;
+    FastIoDispatch->FastIoReadCompressed = FltpFastIoReadCompressed;
+    FastIoDispatch->FastIoWriteCompressed = FltpFastIoWriteCompressed;
+    FastIoDispatch->MdlReadCompleteCompressed = FltpFastIoMdlReadCompleteCompressed;
+    FastIoDispatch->MdlWriteCompleteCompressed = FltpFastIoMdlWriteCompleteCompressed;
+    FastIoDispatch->FastIoQueryOpen = FltpFastIoQueryOpen;
 
     /* Store the FastIo table for internal and our access */
     DriverObject->FastIoDispatch = FastIoDispatch;
