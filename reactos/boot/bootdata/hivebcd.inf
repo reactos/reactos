@@ -6,6 +6,11 @@ Signature = "$ReactOS$"
 BCD,"BCD00000000\Description\Control","System",0x00010003,1
 BCD,"BCD00000000\Description\Control","TreatAtSystem",0x00010003,1
 BCD,"BCD00000000\Description\Control","KeyName",2,"BCD00000000"
-BCD,"BCD00000000\Objects",,0x00000012
+
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Description","Type",0x00010003,0x10100002
+
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\12000002","Element",2,"\EFI\BOOT\BOOTIA32.EFI"
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\12000004","Element",2,"ReactOS Boot Manager"
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\12000005","Element",2,"en-US"
 
 ; EOF

@@ -30,7 +30,8 @@ RtlpAllocateMemory (
     _In_ ULONG Tag
     )
 {
-    return NULL;
+    UNREFERENCED_PARAMETER(Tag);
+    return BlMmAllocateHeap(Bytes);
 }
 
 VOID
@@ -40,7 +41,8 @@ RtlpFreeMemory (
     _In_ ULONG Tag
     )
 {
-    return;
+    UNREFERENCED_PARAMETER(Tag);
+    BlMmFreeHeap(Mem);
 }
 
 NTSTATUS
@@ -64,7 +66,11 @@ RtlAssert (
     IN PCHAR Message OPTIONAL
     )
 {
-
+    EfiPrintf(L"*** ASSERTION %s FAILED AT %d in %s (%s) ***\r \n",
+              FailedAssertion,
+              LineNumber,
+              FileName,
+              Message);
 }
 
 ULONG
@@ -73,6 +79,7 @@ DbgPrint (
     ...
     )
 {
+    EfiPrintf(L"%s\r\n", Format);
     return 0;
 }
 
