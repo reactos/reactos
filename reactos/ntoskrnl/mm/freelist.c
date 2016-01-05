@@ -48,7 +48,7 @@ MiInitializeUserPfnBitmap(VOID)
     /* Allocate enough buffer for the PFN bitmap and align it on 32-bits */
     Bitmap = ExAllocatePoolWithTag(NonPagedPool,
                                    (((MmHighestPhysicalPage + 1) + 31) / 32) * 4,
-                                   '  mM');
+                                   TAG_MM);
     ASSERT(Bitmap);
 
     /* Initialize it and clear all the bits to begin with */

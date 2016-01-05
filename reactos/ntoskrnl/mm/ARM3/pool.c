@@ -1353,7 +1353,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track allocations */
     PagedPoolInfo->PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
                                                                   BitmapSize,
-                                                                  '  mM');
+                                                                  TAG_MM);
     ASSERT(PagedPoolInfo->PagedPoolAllocationMap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->PagedPoolAllocationMap,
                         (PULONG)(PagedPoolInfo->PagedPoolAllocationMap + 1),
@@ -1366,7 +1366,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track free space */
     PagedPoolInfo->EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
                                                                 BitmapSize,
-                                                                '  mM');
+                                                                TAG_MM);
     ASSERT(PagedPoolInfo->EndOfPagedPoolBitmap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->EndOfPagedPoolBitmap,
                         (PULONG)(PagedPoolInfo->EndOfPagedPoolBitmap + 1),

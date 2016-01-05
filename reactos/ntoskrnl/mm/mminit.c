@@ -305,7 +305,7 @@ MmInitSystem(IN ULONG Phase,
     //
     MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
                           sizeof(MMPTE),
-                          '  mM');
+                          TAG_MM);
     if (!MmSharedUserDataPte) return FALSE;
 
     //
