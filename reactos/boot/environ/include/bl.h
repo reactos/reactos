@@ -22,6 +22,9 @@
 /* NDK Headers */
 #include <ntndk.h>
 
+/* NT SafeInt Header */
+#include <ntintsafe.h>
+
 /* UEFI Headers */
 #include <Uefi.h>
 #include <DevicePath.h>
@@ -52,7 +55,9 @@
 #define BL_FIRMWARE_DESCRIPTOR_VERSION                  2
 
 #define BL_APPLICATION_ENTRY_FLAG_NO_GUID               0x01
+#define BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL       0x02
 #define BL_APPLICATION_ENTRY_REBOOT_ON_ERROR            0x20
+#define BL_APPLICATION_ENTRY_BCD_OPTIONS_EXTERNAL       0x80
 
 #define BL_CONTEXT_PAGING_ON                            1
 #define BL_CONTEXT_INTERRUPTS_ON                        2
@@ -716,9 +721,9 @@ typedef struct _BL_LOCAL_DEVICE
 
 typedef struct _BL_DEVICE_DESCRIPTOR
 {
-    ULONG Size;
-    ULONG Flags;
     DEVICE_TYPE DeviceType;
+    ULONG Flags;
+    ULONG Size;
     ULONG Unknown;
     union
     {
@@ -1424,7 +1429,18 @@ BlHtCreate (
     _Out_ PULONG Id
     );
 
-/* BCD ROUTINES **************************************************************/
+/* BCD OPTION ROUTINES *******************************************************/
+
+PBL_BCD_OPTION
+MiscGetBootOption (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type
+    );
+
+ULONG
+BlGetBootOptionListSize (
+    _In_ PBL_BCD_OPTION BcdOption
+    );
 
 ULONG
 BlGetBootOptionSize (
@@ -1453,11 +1469,82 @@ BlGetBootOptionBoolean (
     );
 
 NTSTATUS
+BlpGetBootOptionIntegerList (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PULONGLONG* Value,
+    _Out_ PULONGLONG Count,
+    _In_ BOOLEAN NoCopy
+    );
+
+NTSTATUS
 BlGetBootOptionDevice (
     _In_ PBL_BCD_OPTION List,
     _In_ ULONG Type,
     _Out_ PBL_DEVICE_DESCRIPTOR* Value,
     _In_opt_ PBL_BCD_OPTION* ExtraOptions
+    );
+
+NTSTATUS
+BlGetBootOptionGuidList (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PGUID *Value,
+    _In_ PULONG Count
+    );
+
+NTSTATUS
+BlCopyBootOptions (
+    _In_ PBL_BCD_OPTION OptionList,
+    _Out_ PBL_BCD_OPTION *CopiedOptions
+    );
+
+NTSTATUS
+BlAppendBootOptions (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ PBL_BCD_OPTION Options
+    );
+
+/* BOOT REGISTRY ROUTINES ****************************************************/
+
+VOID
+BiCloseKey (
+    _In_ HANDLE KeyHandle
+    );
+
+NTSTATUS
+BiOpenKey(
+    _In_ HANDLE ParentHandle,
+    _In_ PWCHAR KeyName,
+    _Out_ PHANDLE Handle
+    );
+
+NTSTATUS
+BiLoadHive (
+    _In_ PBL_FILE_PATH_DESCRIPTOR FilePath,
+    _Out_ PHANDLE HiveHandle
+    );
+
+NTSTATUS
+BiGetRegistryValue (
+    _In_ HANDLE KeyHandle,
+    _In_ PWCHAR ValueName,
+    _In_ PWCHAR KeyName,
+    _In_ ULONG Type,
+    _Out_ PVOID* Buffer,
+    _Out_ PULONG ValueLength
+    );
+
+NTSTATUS
+BiEnumerateSubKeys (
+    _In_ HANDLE KeyHandle,
+    _Out_ PWCHAR** SubKeyList,
+    _Out_ PULONG SubKeyCount
+    );
+
+VOID
+BiDereferenceHive (
+    _In_ HANDLE KeyHandle
     );
 
 /* CONTEXT ROUTINES **********************************************************/
@@ -1559,6 +1646,16 @@ NTSTATUS
 MmFwGetMemoryMap (
     _Out_ PBL_MEMORY_DESCRIPTOR_LIST MemoryMap,
     _In_ ULONG Flags
+    );
+
+NTSTATUS
+BlpMmInitializeConstraints (
+    VOID
+    );
+
+NTSTATUS
+BlMmRemoveBadMemory (
+    VOID
     );
 
 /* VIRTUAL MEMORY ROUTINES ***************************************************/

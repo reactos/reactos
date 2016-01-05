@@ -31,7 +31,196 @@ BOOLEAN BmBootIniUsed;
 WCHAR BmpFileNameBuffer[128];
 PWCHAR ParentFileName = L"";
 
+BOOLEAN BmDisplayStateCached;
+
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+BmGetOptionList (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID ObjectId,
+    _In_ PBL_BCD_OPTION *OptionList
+    )
+{
+    NTSTATUS Status;
+    HANDLE ObjectHandle;
+    ULONG ElementSize, ElementCount, i, OptionsSize;
+    BcdElementType Type;
+    PBCD_ELEMENT_HEADER Header;
+    PBCD_ELEMENT BcdElements;
+    PBL_BCD_OPTION Options, Option, PreviousOption, DeviceOptions;
+    PBCD_DEVICE_OPTION DeviceOption;
+    GUID DeviceId;
+    PVOID DeviceData;
+
+    /* Open the BCD object requested */
+    ObjectHandle = NULL;
+    BcdElements = NULL;
+    Status = BcdOpenObject(BcdHandle, ObjectId, &ObjectHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Do the initial enumeration to get the size needed */
+    ElementSize = 0;
+    Status = BcdEnumerateAndUnpackElements(BcdHandle,
+                                           ObjectHandle,
+                                           NULL,
+                                           &ElementSize,
+                                           &ElementCount);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        /* If we got success, that doesn't make any sense */
+        if (NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+
+        /* Bail out */
+        goto Quickie;
+    }
+
+    /* Allocate a large-enough buffer */
+    BcdElements = BlMmAllocateHeap(ElementSize);
+    if (!BcdElements)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Now do the real enumeration to fill out the elements buffer */
+    Status = BcdEnumerateAndUnpackElements(BcdHandle,
+                                           ObjectHandle,
+                                           BcdElements,
+                                           &ElementSize,
+                                           &ElementCount);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Go through each BCD option to add the sizes up */
+    OptionsSize = 0;
+    for (i = 0; i < ElementCount; i++)
+    {
+        OptionsSize += BcdElements[i].Header->Size + sizeof(BL_BCD_OPTION);
+    }
+
+    /* Allocate the required BCD option list */
+    Options = BlMmAllocateHeap(OptionsSize);
+    if (!Options)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Zero it out */
+    RtlZeroMemory(Options, OptionsSize);
+
+    /* Start going through each option */
+    PreviousOption = NULL;
+    Option = Options;
+    EfiPrintf(L"BCD Options found: %d\r\n", ElementCount);
+    for (i = 0; i < ElementCount; i++)
+    {
+        /* Read the header and type */
+        Header = BcdElements[i].Header;
+        Type.PackedValue = Header->Type;
+
+        /* Check if this option isn't already present */
+        if (!MiscGetBootOption(Options, Type.PackedValue))
+        {
+            /* It's a new option. Did we have an existing one? */
+            if (PreviousOption)
+            {
+                /* Link it to this new one */
+                PreviousOption->NextEntryOffset = (ULONG_PTR)Option -
+                                                  (ULONG_PTR)Options;
+            }
+
+            /* Capture the type, size, data, and offset */
+            Option->Type = Type.PackedValue;
+            Option->DataSize = Header->Size;
+            RtlCopyMemory(Option + 1, BcdElements[i].Body, Header->Size);
+            Option->DataOffset = sizeof(BL_BCD_OPTION);
+
+            /* Check if this was a device */
+            if (Type.Format == BCD_TYPE_DEVICE)
+            {
+                /* Grab its GUID */
+                DeviceOption = (PBCD_DEVICE_OPTION)(Option + 1);
+                DeviceId = DeviceOption->AssociatedEntry;
+
+                /* Look up the options for that GUID */
+                Status = BmGetOptionList(BcdHandle, &DeviceId, &DeviceOptions);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Device data is after the device option */
+                    DeviceData = (PVOID)((ULONG_PTR)DeviceOption + Header->Size);
+
+                    /* Copy it */
+                    RtlCopyMemory(DeviceData,
+                                  DeviceOptions,
+                                  BlGetBootOptionListSize(DeviceOptions));
+
+                    /* Don't need this anymore */
+                    BlMmFreeHeap(DeviceOptions);
+
+                    /* Write the offset of the device options */
+                    Option->ListOffset = (ULONG_PTR)DeviceData -
+                                         (ULONG_PTR)Option;
+                }
+            }
+
+            /* Save the previous option and go to the next one */
+            PreviousOption = Option;
+            Option = (PBL_BCD_OPTION)((ULONG_PTR)Option +
+                                      BlGetBootOptionSize(Option));
+        }
+    }
+
+    /* Return the pointer back, we've made it! */
+    *OptionList = Options;
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* Did we allocate a local buffer? Free it if so */
+    if (BcdElements)
+    {
+        BlMmFreeHeap(BcdElements);
+    }
+
+    /* Was the key open? Close it if so */
+    if (ObjectHandle)
+    {
+        BiCloseKey(ObjectHandle);
+    }
+
+    /* Return the option list parsing status */
+    return Status;
+}
+
+NTSTATUS
+BmpUpdateApplicationOptions (
+    _In_ HANDLE BcdHandle
+    )
+{
+    NTSTATUS Status;
+    PBL_BCD_OPTION Options;
+
+    /* Get the boot option list */
+    Status = BmGetOptionList(BcdHandle, &BmApplicationIdentifier, &Options);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Append the options, free the local buffer, and return success */
+    BlAppendBootOptions(&BlpApplicationEntry, Options);
+    BlMmFreeHeap(Options);
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 BmpFwGetApplicationDirectoryPath (
@@ -65,39 +254,14 @@ BmpFwGetApplicationDirectoryPath (
         }
 
         /* Check if we have space for one more character */
-        AppPathLength = i + 1;
-        if (AppPathLength < i)
-        {
-            /* Nope, we'll overflow */
-            AppPathLength = -1;
-            Status = STATUS_INTEGER_OVERFLOW;
-        }
-        else
-        {
-            /* Go ahead */
-            Status = STATUS_SUCCESS;
-        }
-
-        /* No overflow? */
+        Status = RtlULongAdd(i, 1, &AppPathLength);
         if (NT_SUCCESS(Status))
         {
             /* Check if it's safe to multiply by two */
-            if ((AppPathLength * sizeof(WCHAR)) > 0xFFFFFFFF)
-            {
-                /* Nope */
-                AppPathLength = -1;
-                Status = STATUS_INTEGER_OVERFLOW;
-            }
-            else
-            {
-                /* We're good, do the multiplication */
-                Status = STATUS_SUCCESS;
-                AppPathLength *= sizeof(WCHAR);
-            }
-
-            /* Allocate a copy for the string */
+            Status = RtlULongMult(AppPathLength, sizeof(WCHAR), &AppPathLength);
             if (NT_SUCCESS(Status))
             {
+                /* Allocate a copy for the string */
                 PathCopy = BlMmAllocateHeap(AppPathLength);
                 if (PathCopy)
                 {
@@ -382,6 +546,38 @@ BmFatalErrorEx (
             ErrorResourceId = 9002;
             break;
 
+        case BL_FATAL_ERROR_BCD_PARSE:
+
+            /* File name isin parameter 1 */
+            FileName = (PWCHAR)Parameter1;
+
+            /* The NTSTATUS code is in parameter 2*/
+            ErrorStatus = (NTSTATUS)Parameter2;
+
+            /* Build the error string */
+            swprintf(FormatString,
+                     L"\nThe boot configuration file %s is invalid (%08x).\n",
+                     FileName,
+                     ErrorStatus);
+
+            /* Select the resource ID message */
+            ErrorResourceId = 9015;
+            break;
+
+        case BL_FATAL_ERROR_GENERIC:
+
+            /* The NTSTATUS code is in parameter 1*/
+            ErrorStatus = (NTSTATUS)Parameter1;
+
+            /* Build the error string */
+            swprintf(FormatString,
+                     L"\nThe boot manager experienced an error (%08x).\n",
+                     ErrorStatus);
+
+            /* Select the resource ID message */
+            ErrorResourceId = 9005;
+            break;
+
         default:
 
             /* The rest is not yet handled */
@@ -427,25 +623,11 @@ BmpFwGetFullPath (
     )
 {
     NTSTATUS Status;
-    ULONG BootDirLength, BootDirLengthWithNul;
-    ULONG PathLength, FullPathLength;
+    ULONG BootDirLength, PathLength;
 
     /* Compute the length of the directory, and add a NUL */
     BootDirLength = wcslen(BootDirectory);
-    BootDirLengthWithNul = BootDirLength + 1;
-    if (BootDirLengthWithNul < BootDirLength)
-    {
-        /* This would overflow */
-        BootDirLengthWithNul = -1;
-        Status = STATUS_INTEGER_OVERFLOW;
-    }
-    else
-    {
-        /* We have space */
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Fail on overflow */
+    Status = RtlULongAdd(BootDirLength, 1, &BootDirLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -453,33 +635,26 @@ BmpFwGetFullPath (
 
     /* Add the length of the file, make sure it fits */
     PathLength = wcslen(FileName);
-    FullPathLength = PathLength + BootDirLength;
-    if (FullPathLength < PathLength)
+    Status = RtlULongAdd(PathLength, BootDirLength, &PathLength);
+    if (!NT_SUCCESS(Status))
     {
-        /* Nope */
-        FullPathLength = -1;
-        Status = STATUS_INTEGER_OVERFLOW;
-    }
-    else
-    {
-        /* All good */
-        Status = STATUS_SUCCESS;
+        goto Quickie;
     }
 
-    /* Fail on overflow */
+    /* Convert to bytes */
+    Status = RtlULongLongToULong(PathLength * sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Allocate the full path */
-    FullPathLength = FullPathLength * sizeof(WCHAR);
-    *FullPath = BlMmAllocateHeap(FullPathLength);
+    *FullPath = BlMmAllocateHeap(PathLength);
     if (*FullPath)
     {
         /* Copy the directory followed by the file name */
-        wcsncpy(*FullPath, BootDirectory, FullPathLength / sizeof(WCHAR));
-        wcsncat(*FullPath, FileName, FullPathLength / sizeof(WCHAR));
+        wcsncpy(*FullPath, BootDirectory, PathLength / sizeof(WCHAR));
+        wcsncat(*FullPath, FileName, PathLength / sizeof(WCHAR));
     }
     else
     {
@@ -492,6 +667,22 @@ Quickie:
     return Status;
 }
 
+VOID
+BmCloseDataStore (
+    _In_ HANDLE Handle
+    )
+{
+    /* Check if boot.ini data needs to be freed */
+    if (BmBootIniUsed)
+    {
+        EfiPrintf(L"Not handled\r\n");
+    }
+
+    /* Dereference the hive and close the key */
+    BiDereferenceHive(Handle);
+    BiCloseKey(Handle);
+}
+
 NTSTATUS
 BmOpenDataStore (
     _Out_ PHANDLE Handle
@@ -501,7 +692,7 @@ BmOpenDataStore (
     PBL_DEVICE_DESCRIPTOR BcdDevice;
     PWCHAR BcdPath, FullPath, PathBuffer;
     BOOLEAN HavePath;
-    ULONG PathLength, PathLengthWithNul, FullSize;
+    ULONG PathLength, FullSize;
     PVOID FinalBuffer;
     UNICODE_STRING BcdString;
 
@@ -544,7 +735,7 @@ BmOpenDataStore (
     if (NT_SUCCESS(Status))
     {
         /* We don't handle custom BCDs yet */
-        EfiPrintf(L"Not handled\n");
+        EfiPrintf(L"Not handled: %s\r\n", BcdPath);
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -579,35 +770,22 @@ BmOpenDataStore (
     }
 
     /* Add a NUL to the path, make sure it'll fit */
-    Status = STATUS_SUCCESS;
     PathLength = wcslen(PathBuffer);
-    PathLengthWithNul = PathLength + 1;
-    if (PathLengthWithNul < PathLength)
+    Status = RtlULongAdd(PathLength, 1, &PathLength);
+    if (!NT_SUCCESS(Status))
     {
-        PathLengthWithNul = -1;
-        Status = STATUS_INTEGER_OVERFLOW;
+        goto Quickie;
     }
 
-    /* Bail out if it doesn't fit */
+    /* Convert to bytes */
+    Status = RtlULongLongToULong(PathLength * sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Now add the size of the path to the device path, check if it fits */
-    PathLengthWithNul = PathLengthWithNul * sizeof(WCHAR);
-    FullSize = PathLengthWithNul + BcdDevice->Size;
-    if (FullSize < BcdDevice->Size)
-    {
-        FullSize = -1;
-        Status = STATUS_INTEGER_OVERFLOW;
-    }
-    else
-    {
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Bail out if it doesn't fit */
+    Status = RtlULongAdd(PathLength, BcdDevice->Size, &FullSize);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -625,7 +803,7 @@ BmOpenDataStore (
     RtlCopyMemory(FinalBuffer, BcdDevice, BcdDevice->Size);
     RtlCopyMemory((PVOID)((ULONG_PTR)FinalBuffer + BcdDevice->Size),
                   PathBuffer,
-                  PathLengthWithNul);
+                  PathLength);
 
     /* Now tell the BCD engine to open the store */
     BcdString.Length = FullSize;
@@ -648,7 +826,11 @@ Quickie:
     if (!NT_SUCCESS(Status))
     {
         /* Raise a fatal error */
-        BmFatalErrorEx(1, (ULONG_PTR)PathBuffer, Status, 0, 0);
+        BmFatalErrorEx(BL_FATAL_ERROR_BCD_READ,
+                       (ULONG_PTR)PathBuffer,
+                       Status,
+                       0,
+                       0);
     }
 
     /* Did we get an allocated path? */
@@ -680,12 +862,13 @@ BmMain (
     _In_ PBOOT_APPLICATION_PARAMETER_BLOCK BootParameters
     )
 {
-    NTSTATUS Status;
+    NTSTATUS Status, LibraryStatus;
     BL_LIBRARY_PARAMETERS LibraryParameters;
     PBL_RETURN_ARGUMENTS ReturnArguments;
     BOOLEAN RebootOnError;
     PGUID AppIdentifier;
     HANDLE BcdHandle;
+    PBL_BCD_OPTION EarlyOptions;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -734,11 +917,72 @@ BmMain (
 
     /* Load and initialize the boot configuration database (BCD) */
     Status = BmOpenDataStore(&BcdHandle);
-    EfiPrintf(L"BCD Open: %lx\r\n", Status);
+    if (NT_SUCCESS(Status))
+    {
+        /* Copy the boot options */
+        Status = BlCopyBootOptions(BlpApplicationEntry.BcdData, &EarlyOptions);
+        if (NT_SUCCESS(Status))
+        {
+            /* Update them */
+            Status = BmpUpdateApplicationOptions(BcdHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Log a fatal error */
+                BmFatalErrorEx(BL_FATAL_ERROR_BCD_PARSE,
+                               (ULONG_PTR)L"\\BCD",
+                               Status,
+                               0,
+                               0);
+            }
+        }
+    }
+
+#ifdef _SECURE_BOOT
+    /* Initialize the secure boot machine policy */
+    Status = BmSecureBootInitializeMachinePolicy();
+    if (!NT_SUCCESS(Status))
+    {
+        BmFatalErrorEx(BL_FATAL_ERROR_SECURE_BOOT, Status, 0, 0, 0);
+    }
+#endif
+
+    /* Copy the library parameters and add the re-initialization flag */
+    RtlCopyMemory(&LibraryParameters,
+                  &BlpLibraryParameters, 
+                  sizeof(LibraryParameters));
+    LibraryParameters.LibraryFlags |= (BL_LIBRARY_FLAG_REINITIALIZE_ALL |
+                                       BL_LIBRARY_FLAG_REINITIALIZE);
+
+    /* Now that we've parsed the BCD, re-initialize the library */
+    LibraryStatus = BlInitializeLibrary(BootParameters, &LibraryParameters);
+    if (!NT_SUCCESS(LibraryStatus) && (NT_SUCCESS(Status)))
+    {
+        Status = LibraryStatus;
+    }
 
     /* do more stuff!! */
-    EfiPrintf(L"We are A-OK!\r\n");
+    EfiPrintf(L"We are A-OKer!\r\n");
     EfiStall(10000000);
+
+//Failure:
+    /* Check if we got here due to an internal error */
+    if (BmpInternalBootError)
+    {
+        /* If XML is available, display the error */
+#if 0
+        if (XmlLoaded)
+        {
+            BmDisplayDumpError(0, 0);
+            BmErrorPurge();
+        }
+#endif
+
+        /* Don't do a fatal error -- return back to firmware */
+        goto Quickie;
+    }
+
+    /* Log a general fatal error once we're here */
+    BmFatalErrorEx(BL_FATAL_ERROR_GENERIC, Status, 0, 0, 0);
 
 Quickie:
     /* Check if we should reboot */

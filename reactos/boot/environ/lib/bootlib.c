@@ -86,11 +86,15 @@ InitializeLibrary (
     BlpApplicationParameters = BootAppParameters;
     BlpLibraryParameters = *LibraryParameters;
 
-    /* Save the application entry flags */
-    if (AppEntry->Flags & 2)
+    /* Check if the caller sent us their internal BCD options */
+    if (AppEntry->Flags & BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL)
     {
-        AppEntry->Flags = (AppEntry->Flags & ~0x2) | 0x80;
+        /* These are external to us now, as far as we are concerned */
+        AppEntry->Flags &= ~BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL;
+        AppEntry->Flags |= BL_APPLICATION_ENTRY_BCD_OPTIONS_EXTERNAL;
     }
+
+    /* Save the application entry flags */
     BlpApplicationEntry.Flags = AppEntry->Flags;
 
     /* Copy the GUID and point to the options */
@@ -363,15 +367,24 @@ BlInitializeLibrary(
         BlpLibraryParameters = *LibraryParameters;
         if (LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)
         {
-#if 0
-            /* Initialize all the core modules again */
+#ifdef BL_TPM_SUPPORT
+            /* Reinitialize the TPM security enclave as BCD hash changed */
             BlpSiInitialize(1);
+#endif
+#ifdef BL_KD_SUPPORT
+            /* Reinitialize the boot debugger as BCD debug options changed */
             BlBdInitialize();
+#endif
+
+            /* Reparse the bad page list now that the BCD has been reloaded */
             BlMmRemoveBadMemory();
+
+            /* Reparse the low/high physical address limits as well */
             BlpMmInitializeConstraints();
 
             /* Redraw the graphics console as needed */
             BlpDisplayInitialize(LibraryParameters->LibraryFlags);
+#if 0
             BlpResourceInitialize();
 #endif
         }

@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "bl.h"
-
+#include "bcd.h"
 
 typedef struct _BL_PA_REQUEST
 {
@@ -50,7 +50,30 @@ BlpMmInitializeConstraints (
     VOID
     )
 {
-    /* FIXME: Read BCD option 'avoidlowmemory' and 'truncatememory' */
+    NTSTATUS Status;
+    ULONGLONG LowestAddressValid, HighestAddressValid;
+
+    /* Check for LOWMEM */
+    Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                    BcdLibraryInteger_AvoidLowPhysicalMemory,
+                                    &LowestAddressValid);
+    if (NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"/LOWMEM not supported\r\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Check for MAXMEM */
+    Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                    BcdLibraryInteger_TruncatePhysicalMemory,
+                                    &HighestAddressValid);
+    if (NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"/MAXMEM not supported\r\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Return back to the caller */
     return STATUS_SUCCESS;
 }
 

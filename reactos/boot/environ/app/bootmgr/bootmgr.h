@@ -49,7 +49,9 @@ typedef struct _BL_PACKED_BOOT_ERROR
     ULONG Size;
 } BL_PACKED_BOOT_ERROR, *PBL_PACKED_BOOT_ERROR;
 
-#define BL_FATAL_ERROR_BCD_READ 0x01
+#define BL_FATAL_ERROR_BCD_READ     0x01
+#define BL_FATAL_ERROR_GENERIC      0x04
+#define BL_FATAL_ERROR_BCD_PARSE    0x07
 
 /* FUNCTIONS *****************************************************************/
 

@@ -43,7 +43,7 @@ DsppGraphicsDisabledByBcd (
     VOID
     )
 {
-    //EarlyPrint(L"Disabling graphics\r\n");
+    EfiPrintf(L"Disabling graphics\r\n");
     return FALSE;
 }
 
@@ -53,10 +53,10 @@ DsppInitialize (
     )
 {
     BL_LIBRARY_PARAMETERS LibraryParameters = BlpLibraryParameters;
-    BOOLEAN NoGraphics;// , HighestMode;
+    BOOLEAN NoGraphics, HighestMode;
     NTSTATUS Status;
     PBL_DISPLAY_MODE DisplayMode;
-    //ULONG GraphicsResolution;
+    ULONGLONG GraphicsResolution;
     PBL_GRAPHICS_CONSOLE GraphicsConsole;
     PBL_TEXT_CONSOLE TextConsole, RemoteConsole;
 
@@ -100,14 +100,9 @@ DsppInitialize (
         DisplayMode = &ConsoleGraphicalResolutionList[0];
 
         /* Check what resolution to use*/
-#if 0
         Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
                                         BcdLibraryInteger_GraphicsResolution,
                                         &GraphicsResolution);
-#else
-        //GraphicsResolution = 0;
-        Status = STATUS_NOT_FOUND;
-#endif
         if (NT_SUCCESS(Status))
         {
             ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG;
@@ -116,14 +111,9 @@ DsppInitialize (
         }
 
         /* Check if the highest mode should be forced */
-#if 0
         Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
                                         BcdLibraryBoolean_GraphicsForceHighestMode,
                                         &HighestMode);
-#else
-        //HighestMode = 0;
-        Status = STATUS_NOT_FOUND;
-#endif
         if (NT_SUCCESS(Status))
         {
             ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG;
@@ -233,6 +223,7 @@ BlpDisplayInitialize (
     {
         /* This is a reset */
         Status = STATUS_NOT_IMPLEMENTED;
+        EfiPrintf(L"Display reset not yet implemented\r\n");
 #if 0
         Status = DsppReinitialize(Flags);
         if (NT_SUCCESS(Status))

@@ -11,6 +11,21 @@
 
 /* ENUMERATIONS **************************************************************/
 
+/* See https://msdn.microsoft.com/en-us/library/windows/desktop/aa964229(v=vs.85).aspx */
+
+#define BCD_CLASS_LIBRARY       0x01
+#define BCD_CLASS_APPLICATION   0x02
+#define BCD_CLASS_DEVICE        0x03
+#define BCD_CLASS_OEM           0x05
+
+#define BCD_TYPE_DEVICE         0x01
+#define BCD_TYPE_STRING         0x02
+#define BCD_TYPE_OBJECT         0x03
+#define BCD_TYPE_OBJECT_LIST    0x04
+#define BCD_TYPE_INTEGER        0x05
+#define BCD_TYPE_BOOLEAN        0x06
+#define BCD_TYPE_INTEGER_LIST   0x07
+
 typedef enum BcdLibraryElementTypes
 {
     BcdLibraryDevice_ApplicationDevice = 0x11000001,
@@ -155,8 +170,42 @@ typedef enum BcdBootMgrElementTypes
     BcdBootMgrBoolean_PersistBootSequence = 0x26000031
 } BcdBootMgrElementTypes;
 
-
 /* DATA STRUCTURES ***********************************************************/
+
+typedef struct
+{
+    union
+    {
+        ULONG  PackedValue;
+        struct
+        {
+            ULONG SubType : 24;
+            ULONG Format : 4;
+            ULONG Class : 4;
+        };
+    };
+} BcdElementType;
+
+typedef struct _BCD_ELEMENT_HEADER
+{
+    ULONG Version;
+    ULONG Type;
+    ULONG Size;
+} BCD_ELEMENT_HEADER, *PBCD_ELEMENT_HEADER;
+
+typedef struct _BCD_PACKED_ELEMENT
+{
+    struct _BCD_PACKED_ELEMENT* NextEntry;
+    BcdElementType RootType;
+    BCD_ELEMENT_HEADER;
+    UCHAR Data[ANYSIZE_ARRAY];
+} BCD_PACKED_ELEMENT, *PBCD_PACKED_ELEMENT;
+
+typedef struct _BCD_ELEMENT
+{
+    PBCD_ELEMENT_HEADER Header;
+    PUCHAR Body;
+} BCD_ELEMENT, *PBCD_ELEMENT;
 
 typedef struct _BCD_DEVICE_OPTION
 {
@@ -170,6 +219,37 @@ NTSTATUS
 BcdOpenStoreFromFile (
     _In_ PUNICODE_STRING FileName,
     _In_ PHANDLE StoreHandle
+    );
+
+#define BCD_ENUMERATE_FLAG_DEEP         0x04
+#define BCD_ENUMERATE_FLAG_DEVICES      0x08
+#define BCD_ENUMERATE_FLAG_IN_ORDER     0x10
+
+NTSTATUS
+BiEnumerateElements (
+    _In_ HANDLE BcdHandle,
+    _In_ HANDLE ObjectHandle,
+    _In_ ULONG RootElementType,
+    _In_ ULONG Flags,
+    _Out_opt_ PBCD_PACKED_ELEMENT Elements,
+    _Inout_ PULONG ElementSize,
+    _Out_ PULONG ElementCountNe
+    );
+
+NTSTATUS
+BcdOpenObject (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID ObjectId,
+    _Out_ PHANDLE ObjectHandle
+    );
+
+NTSTATUS
+BcdEnumerateAndUnpackElements (
+    _In_ HANDLE BcdHandle,
+    _In_ HANDLE ObjectHandle,
+    _Out_opt_ PBCD_ELEMENT Elements,
+    _Inout_ PULONG ElementSize,
+    _Out_ PULONG ElementCount
     );
 
 #endif

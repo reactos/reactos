@@ -12,6 +12,8 @@ list(APPEND BOOTLIB_SOURCE
      lib/bootlib.c
      lib/misc/debug.c
      lib/misc/bcd.c
+     lib/misc/bcdopt.c
+     lib/misc/bootreg.c
      lib/misc/util.c
      lib/misc/image.c
      lib/firmware/efi/firmware.c
