@@ -342,7 +342,6 @@ FltpFastIoQueryOpen(
 #pragma alloc_text(PAGE, FltpAttachToFileSystemDevice)
 #pragma alloc_text(PAGE, FltpDetachFromFileSystemDevice)
 #pragma alloc_text(PAGE, FltpFsNotification)
-#pragma alloc_text(PAGE, FltpDispatch)
 #pragma alloc_text(PAGE, FltpCreate)
 #pragma alloc_text(PAGE, FltpFsControl)
 #pragma alloc_text(PAGE, FltpFastIoRead)
@@ -426,8 +425,6 @@ FltpDispatch(_In_ PDEVICE_OBJECT DeviceObject,
              _Inout_ PIRP Irp)
 {
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
-
-    PAGED_CODE();
 
     DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
@@ -1807,7 +1804,7 @@ FltpAttachToFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject,
     Status = FltpGetObjectName(DeviceObject->DriverObject, &FileSystemDeviceName);
     if (!NT_SUCCESS(Status)) return Status;
 
-    DPRINT("Found device %wZ, checking if we need to attach...", &FileSystemDeviceName);
+    DPRINT("Found device %wZ, checking if we need to attach...\n", &FileSystemDeviceName);
 
     /* Build up the name of the file system recognizer device */
     RtlInitUnicodeString(&FsRecDeviceName, L"\\FileSystem\\Fs_Rec");
@@ -1828,7 +1825,7 @@ FltpAttachToFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject,
                             &NewDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a DO for attatching to a FS : 0x%X", Status);
+        DPRINT1("Failed to create a DO for attatching to a FS : 0x%X\n", Status);
         return Status;
     }
 
@@ -1841,11 +1838,11 @@ FltpAttachToFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject,
                                     &DeviceExtension->AttachedToDeviceObject);
     if (NT_SUCCESS(Status))
     {
-        DPRINT("Attached to %wZ", &FileSystemDeviceName);
+        DPRINT("Attached to %wZ\n", &FileSystemDeviceName);
     }
     else
     {
-        DPRINT1("Failed to attach to the driver stack : 0x%X", Status);
+        DPRINT1("Failed to attach to the driver stack : 0x%X\n", Status);
         goto Cleanup;
     }
 
@@ -1862,7 +1859,7 @@ FltpAttachToFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject,
     Status = FltpEnumerateFileSystemVolumes(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to enumerate file system volumes for this file system : 0x%X", Status);
+        DPRINT1("Failed to enumerate file system volumes for this file system : 0x%X\n", Status);
         IoDetachDevice(DeviceExtension->AttachedToDeviceObject);
     }
 
@@ -1880,28 +1877,32 @@ static
 LONG_PTR
 FltpDetachFromFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject)
 {
-    PDEVICE_OBJECT AttachedDevice, LowestDevice;
+    PDEVICE_OBJECT AttachedDevice, NextDevice;
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
     LONG_PTR Count;
 
     PAGED_CODE();
+    __debugbreak();
 
-    /* Get the attached device and increment the ref count on it */
+    /* Get the top device in the chain and increment the ref count on it */
     AttachedDevice = IoGetAttachedDeviceReference(DeviceObject);
 
-    /* Loop through all attached devices until we reach the bottom (file system driver) */
-    while (AttachedDevice == NULL ||
-           AttachedDevice->DriverObject != DriverData.DriverObject)
+    /* Loop all attached devices looking for our file system driver */
+    while (AttachedDevice->DriverObject != DriverData.DriverObject)
     {
-        /* Get the attached device */
-        LowestDevice = IoGetLowerDeviceObject(AttachedDevice);
+        FLT_ASSERT(AttachedDevice != NULL);
 
-        /* Remove the reference we added. If it's zero then we're already clean */
+        /* Get the next lower device object. This adds a ref on NextDevice */
+        NextDevice = IoGetLowerDeviceObject(AttachedDevice);
+
+        /* Remove the reference we added */
         Count = ObfDereferenceObject(AttachedDevice);
-        if (Count == 0) return Count;
+
+        /* Bail if this is the last one */
+        if (NextDevice == NULL) return Count;
 
         /* Try the next one */
-        AttachedDevice = LowestDevice;
+        AttachedDevice = NextDevice;
     }
 
 
@@ -1929,7 +1930,7 @@ FltpFsNotification(_In_ PDEVICE_OBJECT DeviceObject,
 {
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
-    __debugbreak();
+
     PAGED_CODE();
 
     /* Set an empty string */
@@ -1939,7 +1940,7 @@ FltpFsNotification(_In_ PDEVICE_OBJECT DeviceObject,
     Status = FltpGetBaseDeviceObjectName(DeviceObject, &DeviceName);
     if (NT_SUCCESS(Status))
     {
-        /* Check if it's attaching or detaching*/
+        /* Check if it's attaching or detaching */
         if (FsActive)
         {
             /* Run the attach routine */
@@ -1970,7 +1971,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     UNICODE_STRING SymLink;
 
     NTSTATUS Status;
-    __debugbreak();
+
     RtlZeroMemory(&DriverData, sizeof(DRIVER_DATA));
     DriverData.DriverObject = DriverObject;
 
@@ -1996,7 +1997,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
                             &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("fltmgr IoCreateDevice failed.  Status = %X", Status);
+        DPRINT1("fltmgr IoCreateDevice failed.  Status = %X\n", Status);
         goto Cleanup;
     }
 
