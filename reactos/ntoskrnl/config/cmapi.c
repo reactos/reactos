@@ -2345,46 +2345,6 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
     return SubKeys;
 }
 
-HCELL_INDEX
-NTAPI
-CmpCopyCell(IN PHHIVE SourceHive,
-            IN HCELL_INDEX SourceCell,
-            IN PHHIVE DestinationHive,
-            IN HSTORAGE_TYPE StorageType)
-{
-    PCELL_DATA SourceData;
-    PCELL_DATA DestinationData = NULL;
-    HCELL_INDEX DestinationCell = HCELL_NIL;
-    LONG DataSize;
-    PAGED_CODE();
-
-    /* Get the data and the size of the source cell */
-    SourceData = HvGetCell(SourceHive, SourceCell);
-    DataSize = HvGetCellSize(SourceHive, SourceData);
-
-    /* Allocate a new cell in the destination hive */
-    DestinationCell = HvAllocateCell(DestinationHive,
-                                     DataSize,
-                                     StorageType,
-                                     HCELL_NIL);
-    if (DestinationCell == HCELL_NIL) goto Cleanup;
-
-    /* Get the data of the destination cell */
-    DestinationData = HvGetCell(DestinationHive, DestinationCell);
-
-    /* Copy the data from the source cell to the destination cell */
-    RtlMoveMemory(DestinationData, SourceData, DataSize);
-
-Cleanup:
-
-    /* Release the cells */
-    if (SourceData) HvReleaseCell(SourceHive, SourceCell);
-    if (DestinationData) HvReleaseCell(DestinationHive, DestinationCell);
-
-    /* Return the destination cell index */
-    return DestinationCell;
-}
-
 static
 NTSTATUS
 NTAPI

@@ -9,6 +9,7 @@ list(APPEND SOURCE
     cmindex.c
     cmname.c
     cmtools.c
+    cmvalue.c
     hivebin.c
     hivecell.c
     hiveinit.c

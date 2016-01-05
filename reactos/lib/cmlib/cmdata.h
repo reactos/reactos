@@ -48,6 +48,13 @@
 //
 #define VALUE_COMP_NAME                                 0x0001
 
+//
+// CM_KEY_VALUE Types
+//
+#define CM_KEY_VALUE_SMALL                              0x4
+#define CM_KEY_VALUE_BIG                                0x3FD8
+#define CM_KEY_VALUE_SPECIAL_SIZE                       0x80000000
+
 #include <pshpack1.h>
 
 //

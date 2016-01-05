@@ -75,3 +75,15 @@ DbgPrint (
 {
     return 0;
 }
+
+VOID
+NTAPI
+KeBugCheckEx(
+    _In_ ULONG BugCheckCode,
+    _In_ ULONG_PTR BugCheckParameter1,
+    _In_ ULONG_PTR BugCheckParameter2,
+    _In_ ULONG_PTR BugCheckParameter3,
+    _In_ ULONG_PTR BugCheckParameter4)
+{
+    __assume(0);
+}

@@ -160,6 +160,7 @@
 #include <wchar.h>
 #include "hivedata.h"
 #include "cmdata.h"
+#include "bugcodes.h"
 
 #if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H)
 
@@ -252,6 +253,56 @@ typedef struct _HV_TRACK_CELL_REF
 } HV_TRACK_CELL_REF, *PHV_TRACK_CELL_REF;
 
 extern ULONG CmlibTraceLevel;
+
+//
+// Hack since bigkeys are not yet supported
+//
+#define ASSERT_VALUE_BIG(h, s)                          \
+    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+
+//
+// Returns whether or not this is a small valued key
+//
+static inline
+BOOLEAN
+CmpIsKeyValueSmall(OUT PULONG RealLength,
+                   IN ULONG Length)
+{
+    /* Check if the length has the special size value */
+    if (Length >= CM_KEY_VALUE_SPECIAL_SIZE)
+    {
+        /* It does, so this is a small key: return the real length */
+        *RealLength = Length - CM_KEY_VALUE_SPECIAL_SIZE;
+        return TRUE;
+    }
+
+    /* This is not a small key, return the length we read */
+    *RealLength = Length;
+    return FALSE;
+}
+
+//
+// Returns whether or not this is a big valued key
+//
+static inline
+BOOLEAN
+CmpIsKeyValueBig(IN PHHIVE Hive,
+                 IN ULONG Length)
+{
+    /* Check if the hive is XP Beta 1 or newer */
+    if (Hive->Version >= HSYS_WHISTLER_BETA1)
+    {
+        /* Check if the key length is valid for a big value key */
+        if ((Length < CM_KEY_VALUE_SPECIAL_SIZE) && (Length > CM_KEY_VALUE_BIG))
+        {
+            /* Yes, this value is big */
+            return TRUE;
+        }
+    }
+
+    /* Not a big value key */
+    return FALSE;
+}
 
 /*
  * Public Hive functions.

@@ -68,7 +68,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmsecach.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmsysini.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmvalche.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmvalue.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmwraprs.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/ntapi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/dbgk/dbgkobj.c

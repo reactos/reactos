@@ -1,16 +1,16 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmvalue.c
- * PURPOSE:         Configuration Manager - Cell Values
+ * FILE:            lib/cmlib/cmvalue.c
+ * PURPOSE:         Configuration Manager Library - Cell Values
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
-#include "ntoskrnl.h"
+#include "cmlib.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -360,6 +360,46 @@ CmpRemoveValueFromList(IN PHHIVE Hive,
     /* Update the child list with the new count */
     ChildList->Count = Count;
     return STATUS_SUCCESS;
+}
+
+HCELL_INDEX
+NTAPI
+CmpCopyCell(IN PHHIVE SourceHive,
+            IN HCELL_INDEX SourceCell,
+            IN PHHIVE DestinationHive,
+            IN HSTORAGE_TYPE StorageType)
+{
+    PCELL_DATA SourceData;
+    PCELL_DATA DestinationData = NULL;
+    HCELL_INDEX DestinationCell = HCELL_NIL;
+    LONG DataSize;
+    PAGED_CODE();
+
+    /* Get the data and the size of the source cell */
+    SourceData = HvGetCell(SourceHive, SourceCell);
+    DataSize = HvGetCellSize(SourceHive, SourceData);
+
+    /* Allocate a new cell in the destination hive */
+    DestinationCell = HvAllocateCell(DestinationHive,
+                                     DataSize,
+                                     StorageType,
+                                     HCELL_NIL);
+    if (DestinationCell == HCELL_NIL) goto Cleanup;
+
+    /* Get the data of the destination cell */
+    DestinationData = HvGetCell(DestinationHive, DestinationCell);
+
+    /* Copy the data from the source cell to the destination cell */
+    RtlMoveMemory(DestinationData, SourceData, DataSize);
+
+Cleanup:
+
+    /* Release the cells */
+    if (SourceData) HvReleaseCell(SourceHive, SourceCell);
+    if (DestinationData) HvReleaseCell(DestinationHive, DestinationCell);
+
+    /* Return the destination cell index */
+    return DestinationCell;
 }
 
 NTSTATUS
