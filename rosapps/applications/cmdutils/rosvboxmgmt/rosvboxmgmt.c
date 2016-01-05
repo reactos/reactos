@@ -13,6 +13,8 @@
 /* DON'T CHANGE ORDER!!!! */
 PCWSTR devices[3] = { L"\\\\.\\VBoxMiniRdrDN", L"\\??\\VBoxMiniRdrDN", L"\\Device\\VBoxMiniRdr" };
 
+#define MAX_LEN 255
+
 /* Taken from VBox header */
 #define _MRX_MAX_DRIVE_LETTERS 26
 #define IOCTL_MRX_VBOX_BASE FILE_DEVICE_NETWORK_FILE_SYSTEM
@@ -21,6 +23,7 @@ PCWSTR devices[3] = { L"\\\\.\\VBoxMiniRdrDN", L"\\??\\VBoxMiniRdrDN", L"\\Devic
 #define IOCTL_MRX_VBOX_ADDCONN       _MRX_VBOX_CONTROL_CODE(100, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_GETLIST       _MRX_VBOX_CONTROL_CODE(103, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_GETGLOBALLIST _MRX_VBOX_CONTROL_CODE(104, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_MRX_VBOX_GETGLOBALCONN _MRX_VBOX_CONTROL_CODE(105, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_START         _MRX_VBOX_CONTROL_CODE(106, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 BOOL performDevIoCtl(DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize)
@@ -120,6 +123,21 @@ int getList(void)
     return 0;
 }
 
+PWSTR getGlobalConn(CHAR id)
+{
+    BOOL ret;
+    static WCHAR name[MAX_LEN];
+
+    ret = performDevIoCtl(IOCTL_MRX_VBOX_GETGLOBALCONN, &id, sizeof(id), name, sizeof(name));
+    if (ret == FALSE)
+    {
+        return NULL;
+    }
+
+    name[MAX_LEN - 1] = 0;
+    return name;
+}
+
 int getGlobalList(void)
 {
     short i;
@@ -135,10 +153,22 @@ int getGlobalList(void)
         return 1;
     }
 
-    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; i += 2)
+    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; ++i)
     {
-        wprintf(L"%c: %s\t%c: %s\n", 'A' + i, (outputBuffer[i] & 0x80 ? L"Active" : L"Inactive"),
-                'A' + (i + 1), (outputBuffer[i + 1] & 0x80 ? L"Active" : L"Inactive"));
+        CHAR id = outputBuffer[i];
+        BOOL active = ((id & 0x80) == 0x80);
+        PWSTR name = NULL;
+
+        if (active)
+        {
+            name = getGlobalConn(id);
+        }
+        if (name == NULL)
+        {
+            name = L"None";
+        }
+
+        wprintf(L"%c: %s (%s)%c", 'A' + i, (active ? L"Active" : L"Inactive"), name, (i & 1 ? '\n' : '\t'));
     }
 
     return 0;
