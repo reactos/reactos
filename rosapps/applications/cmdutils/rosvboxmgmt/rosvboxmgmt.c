@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
+#include <shlobj.h>
+#include <shobjidl.h>
+#include <shlwapi.h>
 
 /* DON'T CHANGE ORDER!!!! */
 PCWSTR devices[3] = { L"\\\\.\\VBoxMiniRdrDN", L"\\??\\VBoxMiniRdrDN", L"\\Device\\VBoxMiniRdr" };
@@ -123,7 +126,7 @@ int getList(void)
     return 0;
 }
 
-PWSTR getGlobalConn(CHAR id)
+PCWSTR getGlobalConn(CHAR id)
 {
     BOOL ret;
     static WCHAR name[MAX_LEN];
@@ -157,7 +160,7 @@ int getGlobalList(void)
     {
         CHAR id = outputBuffer[i];
         BOOL active = ((id & 0x80) == 0x80);
-        PWSTR name = NULL;
+        PCWSTR name = NULL;
 
         if (active)
         {
@@ -174,6 +177,90 @@ int getGlobalList(void)
     return 0;
 }
 
+BOOL CreateUNCShortcut(PCWSTR share)
+{
+    HRESULT res;
+    IShellLink *link;
+    IPersistFile *persist;
+    WCHAR path[MAX_PATH];
+    WCHAR linkPath[MAX_PATH];
+
+    res = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&link);
+    if (FAILED(res))
+    {
+        return FALSE;
+    }
+
+    res = link->lpVtbl->QueryInterface(link, &IID_IPersistFile, (void **)&persist);
+    if (FAILED(res))
+    {
+        link->lpVtbl->Release(link);
+        return FALSE;
+    }
+
+    wcscpy(path, L"\\\\vboxsvr\\");
+    wcscat(path, share);
+    link->lpVtbl->SetPath(link, path);
+
+    res = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, path);
+    if (FAILED(res))
+    {
+        persist->lpVtbl->Release(persist);
+        link->lpVtbl->Release(link);
+        return FALSE;
+    }
+
+    wsprintf(linkPath, L"%s\\Browse %s (VBox).lnk", path, share);
+    res = persist->lpVtbl->Save(persist, linkPath, TRUE);
+
+    persist->lpVtbl->Release(persist);
+    link->lpVtbl->Release(link);
+
+    return SUCCEEDED(res);
+}
+
+int autoStart(void)
+{
+    short i;
+    BOOL ret;
+    DWORD outputBufferSize;
+    char outputBuffer[_MRX_MAX_DRIVE_LETTERS];
+
+    if (startVBoxSrv() != 0)
+    {
+        return 1;
+    }
+
+    outputBufferSize = sizeof(outputBuffer);
+    memset(outputBuffer, 0, outputBufferSize);
+    ret = performDevIoCtl(IOCTL_MRX_VBOX_GETGLOBALLIST, NULL, 0, &outputBuffer, outputBufferSize);
+    if (ret == FALSE)
+    {
+        return 1;
+    }
+
+    CoInitialize(NULL);
+    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; ++i)
+    {
+        CHAR id = outputBuffer[i];
+        BOOL active = ((id & 0x80) == 0x80);
+        PCWSTR name = NULL;
+
+        if (active)
+        {
+            name = getGlobalConn(id);
+        }
+        if (name == NULL)
+        {
+            continue;
+        }
+
+        CreateUNCShortcut(name);
+    }
+
+    return 0;
+}
+
 void printUsage(void)
 {
     wprintf(L"ReactOS VBox Shared Folders Management\n");
@@ -181,6 +268,7 @@ void printUsage(void)
     wprintf(L"\taddconn <letter> <share name>: add a connection\n");
     wprintf(L"\tgetlist: list connections\n");
     wprintf(L"\tgetgloballist: list available shares\n");
+    wprintf(L"\tauto: automagically configure the VBox Shared folders and creates desktop folders\n");
 }
 
 int wmain(int argc, wchar_t *argv[])
@@ -216,6 +304,10 @@ int wmain(int argc, wchar_t *argv[])
     else if (_wcsicmp(cmd, L"getgloballist") == 0)
     {
         return getGlobalList();
+    }
+    else if (_wcsicmp(cmd, L"auto") == 0)
+    {
+        return autoStart();
     }
     else
     {
