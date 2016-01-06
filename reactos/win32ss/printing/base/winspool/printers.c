@@ -379,24 +379,23 @@ BOOL WINAPI
 OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefault)
 {
     BOOL bReturnValue = FALSE;
+    DWORD cch;
     PWSTR pwszPrinterName = NULL;
-    PWSTR pwszDatatype = NULL;
     PRINTER_DEFAULTSW wDefault = { 0 };
-    size_t StringLength;
 
     if (pPrinterName)
     {
         // Convert pPrinterName to a Unicode string pwszPrinterName
-        StringLength = strlen(pPrinterName) + 1;
+        cch = strlen(pPrinterName);
 
-        pwszPrinterName = HeapAlloc(hProcessHeap, 0, StringLength * sizeof(WCHAR));
+        pwszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszPrinterName)
         {
             ERR("HeapAlloc failed for pwszPrinterName with last error %lu!\n", GetLastError());
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pPrinterName, -1, pwszPrinterName, StringLength);
+        MultiByteToWideChar(CP_ACP, 0, pPrinterName, -1, pwszPrinterName, cch + 1);
     }
 
     if (pDefault)
@@ -405,18 +404,17 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
 
         if (pDefault->pDatatype)
         {
-            // Convert pDefault->pDatatype to a Unicode string pwszDatatype that later becomes wDefault.pDatatype
-            StringLength = strlen(pDefault->pDatatype) + 1;
+            // Convert pDefault->pDatatype to a Unicode string wDefault.pDatatype
+            cch = strlen(pDefault->pDatatype);
 
-            pwszDatatype = HeapAlloc(hProcessHeap, 0, StringLength * sizeof(WCHAR));
-            if (!pwszDatatype)
+            wDefault.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+            if (!wDefault.pDatatype)
             {
-                ERR("HeapAlloc failed for pwszDatatype with last error %lu!\n", GetLastError());
+                ERR("HeapAlloc failed for wDefault.pDatatype with last error %lu!\n", GetLastError());
                 goto Cleanup;
             }
 
-            MultiByteToWideChar(CP_ACP, 0, pDefault->pDatatype, -1, pwszDatatype, StringLength);
-            wDefault.pDatatype = pwszDatatype;
+            MultiByteToWideChar(CP_ACP, 0, pDefault->pDatatype, -1, wDefault.pDatatype, cch + 1);
         }
 
         if (pDefault->pDevMode)
@@ -426,14 +424,14 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
     bReturnValue = OpenPrinterW(pwszPrinterName, phPrinter, &wDefault);
 
 Cleanup:
+    if (wDefault.pDatatype)
+        HeapFree(hProcessHeap, 0, wDefault.pDatatype);
+
     if (wDefault.pDevMode)
         HeapFree(hProcessHeap, 0, wDefault.pDevMode);
 
     if (pwszPrinterName)
         HeapFree(hProcessHeap, 0, pwszPrinterName);
-
-    if (pwszDatatype)
-        HeapFree(hProcessHeap, 0, pwszDatatype);
 
     return bReturnValue;
 }
@@ -537,11 +535,97 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
 }
 
 DWORD WINAPI
+StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
+{
+    DOC_INFO_1W wDocInfo1 = { 0 };
+    DWORD cch;
+    DWORD dwErrorCode;
+    DWORD dwReturnValue = 0;
+    PDOC_INFO_1A pDocInfo1 = (PDOC_INFO_1A)pDocInfo;
+
+    // Only check the minimum required for accessing pDocInfo.
+    // Additional sanity checks are done in StartDocPrinterW.
+    if (!pDocInfo1)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    if (Level != 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    if (pDocInfo1->pDatatype)
+    {
+        // Convert pDocInfo1->pDatatype to a Unicode string wDocInfo1.pDatatype
+        cch = strlen(pDocInfo1->pDatatype);
+
+        wDocInfo1.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!wDocInfo1.pDatatype)
+        {
+            ERR("HeapAlloc failed for wDocInfo1.pDatatype with last error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDatatype, -1, wDocInfo1.pDatatype, cch + 1);
+    }
+
+    if (pDocInfo1->pDocName)
+    {
+        // Convert pDocInfo1->pDocName to a Unicode string wDocInfo1.pDocName
+        cch = strlen(pDocInfo1->pDocName);
+
+        wDocInfo1.pDocName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!wDocInfo1.pDocName)
+        {
+            ERR("HeapAlloc failed for wDocInfo1.pDocName with last error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDocName, -1, wDocInfo1.pDocName, cch + 1);
+    }
+
+    if (pDocInfo1->pOutputFile)
+    {
+        // Convert pDocInfo1->pOutputFile to a Unicode string wDocInfo1.pOutputFile
+        cch = strlen(pDocInfo1->pOutputFile);
+
+        wDocInfo1.pOutputFile = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!wDocInfo1.pOutputFile)
+        {
+            ERR("HeapAlloc failed for wDocInfo1.pOutputFile with last error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pOutputFile, -1, wDocInfo1.pOutputFile, cch + 1);
+    }
+
+    dwReturnValue = StartDocPrinterW(hPrinter, Level, (PBYTE)&wDocInfo1);
+    dwErrorCode = GetLastError();
+
+Cleanup:
+    if (wDocInfo1.pDatatype)
+        HeapFree(hProcessHeap, 0, wDocInfo1.pDatatype);
+
+    if (wDocInfo1.pDocName)
+        HeapFree(hProcessHeap, 0, wDocInfo1.pDocName);
+
+    if (wDocInfo1.pOutputFile)
+        HeapFree(hProcessHeap, 0, wDocInfo1.pOutputFile);
+
+    SetLastError(dwErrorCode);
+    return dwReturnValue;
+}
+
+DWORD WINAPI
 StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
 {
     DWORD cbAddJobInfo1;
     DWORD cbNeeded;
     DWORD dwErrorCode;
+    DWORD dwReturnValue = 0;
     PADDJOB_INFO_1W pAddJobInfo1 = NULL;
     PDOC_INFO_1W pDocInfo1 = (PDOC_INFO_1W)pDocInfo;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
@@ -611,14 +695,17 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
     }
 
     if (dwErrorCode == ERROR_SUCCESS)
+    {
         pHandle->bStartedDoc = TRUE;
+        dwReturnValue = pHandle->dwJobID;
+    }
 
 Cleanup:
     if (pAddJobInfo1)
         HeapFree(hProcessHeap, 0, pAddJobInfo1);
 
     SetLastError(dwErrorCode);
-    return pHandle->dwJobID;
+    return dwReturnValue;
 }
 
 BOOL WINAPI
