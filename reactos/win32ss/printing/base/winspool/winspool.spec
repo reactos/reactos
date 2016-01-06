@@ -192,7 +192,7 @@
 291 stub SpoolerPrinterEvent
 292 stub StartDocDlgA
 293 stub StartDocDlgW
-294 stub StartDocPrinterA
+294 stdcall StartDocPrinterA(long long ptr)
 295 stdcall StartDocPrinterW(long long ptr)
 296 stdcall StartPagePrinter(long)
 297 stub WaitForPrinterChange
