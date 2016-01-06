@@ -2,6 +2,7 @@
 # The library
 add_definitions(-DSKIPLIST_LEVELS=16)
 add_library(skiplist16 skiplist.c)
+add_dependencies(skiplist16 psdk)
 
 # The Test program
 add_executable(skiplist_test skiplist_test.c)
