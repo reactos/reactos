@@ -1,0 +1,4 @@
+
+add_executable(bootvid_font_generator bootvid_font_generator.c)
+set_module_type(bootvid_font_generator win32cui)
+add_importlibs(bootvid_font_generator user32 gdi32 msvcrt kernel32)
