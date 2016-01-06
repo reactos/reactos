@@ -1,10 +1,10 @@
-/*b
+/*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/include/bl.h
  * PURPOSE:         Main Boot Library Header
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ */
 
 #ifndef _BL_H
 #define _BL_H
@@ -24,6 +24,9 @@
 
 /* NT SafeInt Header */
 #include <ntintsafe.h>
+
+/* PE Headers */
+#include <ntimage.h>
 
 /* UEFI Headers */
 #include <Uefi.h>
@@ -241,6 +244,7 @@ typedef enum _BL_MEMORY_TYPE
     //
     // Application Memory
     //
+    BlApplicationReserved = 0xE0000001,
     BlApplicationData = 0xE0000004,
 
     //
@@ -285,7 +289,8 @@ typedef enum _BL_MEMORY_ATTR
     //
     BlMemoryNonFixed =          0x00020000,
     BlMemoryFixed =             0x00040000,
-    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed,
+    BlMemoryReserved =          0x00080000,
+    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryReserved,
     BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
 
     //
@@ -1029,6 +1034,14 @@ typedef struct _BL_IMG_FILE
     PWCHAR FileName;
 } BL_IMG_FILE, *PBL_IMG_FILE;
 
+typedef struct _BL_DEFERRED_FONT_FILE
+{
+    LIST_ENTRY ListEntry;
+    ULONG Flags;
+    PBL_DEVICE_DESCRIPTOR Device;
+    PWCHAR FontPath;
+} BL_DEFERRED_FONT_FILE, *PBL_DEFERRED_FONT_FILE;;
+
 /* INLINE ROUTINES ***********************************************************/
 
 FORCEINLINE
@@ -1275,6 +1288,31 @@ BlpTimeCalibratePerformanceCounter (
     VOID
     );
 
+/* RESOURCE LOCALE INTERNATIONALIZATION ROUTINES *****************************/
+
+NTSTATUS
+BlpDisplayRegisterLocale (
+    _In_ PWCHAR Locale
+    );
+
+/* FONT ROUTINES *************************************************************/
+
+VOID
+BfiFreeDeferredFontFile (
+    _In_ PBL_DEFERRED_FONT_FILE DeferredFontFile
+    );
+
+NTSTATUS
+BfLoadFontFile (
+    _In_ PBL_DEVICE_DESCRIPTOR Device,
+    _In_ PWCHAR FontPath
+    );
+
+NTSTATUS
+BfLoadDeferredFontFiles (
+    VOID
+    );
+
 /* FILESYSTEM ROUTINES *******************************************************/
 
 NTSTATUS
@@ -1364,9 +1402,25 @@ BlGetApplicationIdentifier (
     VOID
     );
 
+NTSTATUS
+BlGetApplicationBaseAndSize (
+    _Out_ PVOID* ImageBase,
+    _Out_ PULONG ImageSize
+    );
+
 PWCHAR
 BlResourceFindMessage (
     _In_ ULONG MsgId
+    );
+
+PWCHAR
+BlResourceFindHtml (
+    VOID
+    );
+
+NTSTATUS
+BlpResourceInitialize (
+    VOID
     );
 
 /* TABLE ROUTINES ************************************************************/
@@ -1627,6 +1681,18 @@ BlMmAllocatePhysicalPages(
     );
 
 NTSTATUS
+MmPapAllocatePhysicalPagesInRange (
+    _Inout_ PPHYSICAL_ADDRESS BaseAddress,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _In_ ULONGLONG Pages,
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
+    _In_opt_ PBL_ADDRESS_RANGE Range,
+    _In_ ULONG RangeType
+    );
+
+NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
     );
@@ -1701,6 +1767,17 @@ BlDisplayGetTextCellResolution (
     _Out_ PULONG TextHeight
     );
 
+NTSTATUS
+BlDisplaySetScreenResolution (
+    VOID
+    );
+
+NTSTATUS
+BlDisplayGetScreenResolution (
+    _Out_ PULONG HRes,
+    _Out_ PULONG Vres
+    );
+
 /* I/O ROUTINES **************************************************************/
 
 NTSTATUS
@@ -1755,6 +1832,12 @@ BlImgLoadImageWithProgress2 (
     _In_ BOOLEAN ShowProgress,
     _Out_opt_ PUCHAR* HashBuffer,
     _Out_opt_ PULONG HashSize
+    );
+
+PIMAGE_SECTION_HEADER
+BlImgFindSection (
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize
     );
 
 /* FILE I/O ROUTINES *********************************************************/
@@ -1947,4 +2030,5 @@ extern BL_DISPLAY_MODE ConsoleTextResolutionList[];
 extern ULONG ConsoleGraphicalResolutionListSize;
 extern PVOID DspRemoteInputConsole;
 extern WCHAR BlScratchBuffer[8192];
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedAllocated;
 #endif

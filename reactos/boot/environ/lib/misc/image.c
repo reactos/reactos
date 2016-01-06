@@ -551,3 +551,43 @@ Quickie:
     return Status;
 }
 
+PIMAGE_SECTION_HEADER 
+BlImgFindSection (
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize
+    )
+{
+    PIMAGE_SECTION_HEADER FoundSection;
+    ULONG i;
+    PIMAGE_SECTION_HEADER SectionHeader;
+    PIMAGE_NT_HEADERS NtHeader;
+    NTSTATUS Status;
+
+    /* Assume failure */
+    FoundSection = NULL;
+
+    /* Make sure the image is valid */
+    Status = RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeader);
+    if (NT_SUCCESS(Status))
+    {
+        /* Get the first section and loop through them all */
+        SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
+        for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+        {
+            /* Check if this is the resource section */
+            if (!_stricmp((PCCH)SectionHeader->Name, ".rsrc"))
+            {
+                /* Yep, we're done */
+                FoundSection = SectionHeader;
+                break;
+            }
+
+            /* Nope, keep going */
+            SectionHeader++;
+        }
+    }
+
+    /* Return the matching section */
+    return FoundSection;
+}
+

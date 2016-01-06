@@ -48,6 +48,203 @@ DsppGraphicsDisabledByBcd (
 }
 
 NTSTATUS
+DsppLoadFontFile (
+    _In_ PWCHAR FontFileName
+    )
+{
+    PBL_DEVICE_DESCRIPTOR FontDevice;
+    NTSTATUS Status;
+    ULONG NameLength, DirectoryLength, TotalLength;
+    PWCHAR FontPath, FontDirectory;
+    BL_LIBRARY_PARAMETERS LibraryParameters;
+    BOOLEAN CustomDirectory, CustomDevice;
+
+    /* Initialize locals */
+    CustomDirectory = TRUE;
+    CustomDevice = TRUE;
+    FontDevice = NULL;
+    FontPath = NULL;
+    FontDirectory = NULL;
+
+    /* Check if a custom font path should be used */
+    Status = BlGetBootOptionString(BlpApplicationEntry.BcdData,
+                                   BcdLibraryString_FontPath,
+                                   &FontDirectory);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Nope, use the one configured by the library */
+        CustomDirectory = FALSE;
+        RtlCopyMemory(&LibraryParameters,
+                      &BlpLibraryParameters,
+                      sizeof(LibraryParameters)),
+        FontDirectory = LibraryParameters.FontBaseDirectory;
+    }
+
+    /* Do we still not have a font directory? */
+    if (!FontDirectory)
+    {
+        /* Use the boot device and boot directory */
+        FontDevice = BlpBootDevice;
+        FontDirectory = L"\\EFI\\Microsoft\\Boot\\Fonts";
+        CustomDevice = FALSE;
+    }
+    else
+    {
+        /* Otherwise, if we have a font directory, what device is the app on? */
+        Status = BlGetBootOptionDevice(BlpApplicationEntry.BcdData,
+                                       BcdLibraryDevice_ApplicationDevice,
+                                       &FontDevice,
+                                       NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* If we don't know the device, we can't open the path */
+            goto Quickie;
+        }
+    }
+
+    /* Figure out the length of the file name, and of the directory */
+    NameLength = wcslen(FontFileName);
+    DirectoryLength = wcslen(FontDirectory);
+
+    /* Safely add them up*/
+    Status = RtlULongAdd(NameLength, DirectoryLength, &TotalLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Convert to bytes */
+    Status = RtlULongLongToULong(TotalLength * sizeof(WCHAR), &TotalLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Add a terminating NUL */
+    Status = RtlULongAdd(TotalLength, sizeof(UNICODE_NULL), &TotalLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Allocate the final buffer for it */
+    FontPath = BlMmAllocateHeap(TotalLength);
+    if (!FontPath)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Concatenate the directory with the file name */
+    wcscpy(FontPath, FontDirectory);
+    wcscat(FontPath, FontFileName);
+
+    /* Try to load this font */
+    Status = BfLoadFontFile(FontDevice, FontPath);
+
+Quickie:
+    /* Check if we had a custom font device allocated and free it */
+    if ((CustomDevice) && (FontDevice))
+    {
+        BlMmFreeHeap(FontDevice);
+    }
+
+    /* Check if we had a custom font directory allocated and free it */
+    if ((FontDirectory) && (CustomDirectory))
+    {
+        BlMmFreeHeap(FontDirectory);
+    }
+
+    /* Check if we had allocated a font path and free it */
+    if (FontPath)
+    {
+        BlMmFreeHeap(FontPath);
+    }
+
+    /* Return back */
+    return Status;
+}
+
+NTSTATUS
+BlpDisplayRegisterLocale (
+    _In_ PWCHAR Locale
+    )
+{
+    BOOLEAN StandardLocale;
+    NTSTATUS Status;
+    PWCHAR FontFileName;
+    PBL_DEFERRED_FONT_FILE DeferredFont;
+    PLIST_ENTRY NextEntry;
+    WCHAR Prefix[3];
+
+    /* Assume custom locale */
+    StandardLocale = FALSE;
+
+    /* Bail out if the locale string seems invalid */
+    if (wcslen(Locale) < 2)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check the prefix first, then traditional vs. simplified */
+    Prefix[0] = Locale[0];
+    Prefix[1] = Locale[1];
+    Prefix[2] = UNICODE_NULL;
+    if (!_wcsicmp(Prefix, L"ja"))
+    {
+        FontFileName = L"\\jpn_boot.ttf";
+    }
+    else if (!_wcsicmp(Prefix, L"ko"))
+    {
+        FontFileName = L"\\kor_boot.ttf";
+    }
+    else if (!(_wcsicmp(Locale, L"zh-CN")) ||
+             !(_wcsicmp(Locale, L"zh-CHS")) ||
+             !(_wcsicmp(Locale, L"zh-Hans")))
+    {
+        FontFileName = L"\\chs_boot.ttf";
+    }
+    else if (!(_wcsicmp(Locale, L"zh-TW")) &&
+             !(_wcsicmp(Locale, L"zh-CHT")) &&
+             !(_wcsicmp(Locale, L"zh-HK")) &&
+             !(_wcsicmp(Locale, L"zh-Hant")))
+    {
+        FontFileName = L"\\cht_boot.ttf";
+    }
+    else
+    {
+        StandardLocale = TRUE;
+        FontFileName = L"\\wgl4_boot.ttf";
+    }
+
+    /* Parse all the currently deferred fonts*/
+    NextEntry = BfiDeferredListHead.Flink;
+    while (NextEntry != &BfiDeferredListHead)
+    {
+        /* Grab the font */
+        DeferredFont = CONTAINING_RECORD(NextEntry, BL_DEFERRED_FONT_FILE, ListEntry);
+
+        /* Move to the next entry, and remove this one */
+        NextEntry = NextEntry->Flink;
+        RemoveEntryList(&DeferredFont->ListEntry);
+
+        /* Free the deferred font, we'll be loading a new one */
+        BfiFreeDeferredFontFile(DeferredFont);
+    }
+
+    /* Load the primary font */
+    Status = DsppLoadFontFile(FontFileName);
+    if (NT_SUCCESS(Status) && !(StandardLocale))
+    {
+        /* Also load the standard US one if we loaded a different one */
+        Status = DsppLoadFontFile(L"\\wgl4_boot.ttf");
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
+NTSTATUS
 DsppInitialize (
     _In_ ULONG Flags
     )
@@ -276,4 +473,94 @@ BlDisplayGetTextCellResolution (
         *TextWidth = 8;
         *TextHeight = 8;
     }
+}
+
+NTSTATUS
+BlDisplaySetScreenResolution (
+    VOID
+    )
+{
+    PBL_GRAPHICS_CONSOLE Console;
+    NTSTATUS Status;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Do we have a graphics console? */
+    Console = DspGraphicalConsole;
+    if (Console)
+    {
+#if 0
+        /* Is it active? If not, activate it */
+        if (((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->IsActive())
+        {
+            return ((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->Activate(Console, FALSE);
+        }
+#else
+        /* Not yet supported */
+        EfiPrintf(L"Graphics not yet supported\r\n");
+        //Status = STATUS_NOT_IMPLEMENTED;
+#endif
+    }
+
+    /* Do we have a text console? */
+    if (!DspTextConsole)
+    {
+        /* Then fail, as no display appears active */
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Return back to the caller */
+    return Status;
+}
+
+NTSTATUS
+BlDisplayGetScreenResolution (
+    _Out_ PULONG HRes,
+    _Out_ PULONG Vres
+    )
+{
+    NTSTATUS Status;
+//    PULONG Resolution;
+
+    /* Assume failure if no consoles are active */
+    Status = STATUS_UNSUCCESSFUL;
+
+    /* Do we have a text console? */
+    if (DspTextConsole)
+    {
+        /* Do we have an active graphics console? */
+        if ((DspGraphicalConsole)
+#if 0
+            && (((PBL_GRAPHICS_CONSOLE_VTABLE)DspGraphicalConsole->TextConsole.Callbacks)->IsActive())
+#endif
+            )
+        {
+#if 0
+            /* Get the resolution */
+            Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)DspGraphicalConsole->TextConsole.Callbacks)->GetResolution(DspGraphicalConsole, &Resolution);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return it back to the caller */
+                *HRes = Resolution[0];
+                *Vres = Resolution[1];
+            }
+#else
+            /* Not yet supported */
+            EfiPrintf(L"Graphics not yet supported\r\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+
+        }
+        else
+        {
+#endif
+            /* Return defaults */
+            *HRes = 640;
+            *Vres = 200;
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    /* Return if we got a valid resolution back */
+    return Status;
 }

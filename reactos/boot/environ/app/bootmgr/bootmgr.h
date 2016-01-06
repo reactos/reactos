@@ -29,6 +29,9 @@
 /* BCD Headers */
 #include <bcd.h>
 
+/* Message Header */
+#include <bootmsg.h>
+
 /* STRUCTURES ****************************************************************/
 
 typedef struct _BL_BOOT_ERROR

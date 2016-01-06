@@ -16,6 +16,9 @@ list(APPEND BOOTLIB_SOURCE
      lib/misc/bootreg.c
      lib/misc/util.c
      lib/misc/image.c
+     lib/misc/resource.c
+     lib/misc/font.c
+     lib/firmware/fwutil.c
      lib/firmware/efi/firmware.c
      lib/mm/mm.c
      lib/mm/pagealloc.c
@@ -65,7 +68,7 @@ endif()
 add_asm_files(bootlib_asm ${BOOTLIB_ASM_SOURCE})
 add_library(bootlib ${BOOTLIB_SOURCE} ${bootlib_asm})
 add_pch(bootlib app/bootmgr/bootmgr.h BOOTLIB_SOURCE)
-add_dependencies(bootlib bugcodes xdk)
+add_dependencies(bootlib bugcodes bootmsg xdk)
 
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
@@ -73,7 +76,7 @@ list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/rtlcompat.c
      )
 
-add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE})
+add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE} app/bootmgr/bootmgr.rc)
 set_target_properties(bootmgfw PROPERTIES SUFFIX ".efi")
 
 if(MSVC)

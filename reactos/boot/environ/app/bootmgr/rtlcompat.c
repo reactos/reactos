@@ -23,6 +23,8 @@ CHECK_PAGED_CODE_RTL (
 }
 #endif
 
+PVOID MmHighestUserAddress = (PVOID)0xFFFFFFFF;
+
 PVOID
 NTAPI
 RtlpAllocateMemory (

@@ -290,18 +290,17 @@ InitializeLibrary (
     BlpSiInitialize(1);
 #endif
 
-#if 0
     /* Setup the text, UI and font resources */
     Status = BlpResourceInitialize();
     if (!NT_SUCCESS(Status))
     {
         /* Tear down everything if this failed */
-        if (!(LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_TEXT_MODE))
+        if (!(LibraryParameters->LibraryFlags & BL_LIBRARY_FLAG_NO_DISPLAY))
         {
 //            BlpDisplayDestroy();
         }
-        //BlpBdDestroy();
 #ifdef BL_KD_SUPPORT
+        BlpBdDestroy();
         PltDestroyPciConfiguration();
 #endif
 #ifdef BL_NET_SUPPORT
@@ -317,7 +316,6 @@ InitializeLibrary (
         //BlpMmDestroy(1);
         return Status;
     }
-#endif
 
 #if BL_BITLOCKER_SUPPORT
     /* Setup the boot cryptography library */
@@ -384,9 +382,9 @@ BlInitializeLibrary(
 
             /* Redraw the graphics console as needed */
             BlpDisplayInitialize(LibraryParameters->LibraryFlags);
-#if 0
+
+            /* Reinitialize resources (language may have changed) */
             BlpResourceInitialize();
-#endif
         }
 
         /* Nothing to do, we're done */
@@ -419,4 +417,22 @@ BlGetApplicationIdentifier (
     /* Return the GUID, if one was present */
     return (BlpApplicationEntry.Flags & BL_APPLICATION_ENTRY_FLAG_NO_GUID) ?
             NULL : &BlpApplicationEntry.Guid;
+}
+
+NTSTATUS
+BlGetApplicationBaseAndSize (
+    _Out_ PVOID* ImageBase, 
+    _Out_ PULONG ImageSize
+    )
+{
+    /* Fail if output parameters are missing */
+    if (!ImageBase || !ImageSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return the requested data */
+    *ImageBase = (PVOID)(ULONG_PTR)BlpApplicationParameters->ImageBase;
+    *ImageSize = BlpApplicationParameters->ImageSize;
+    return STATUS_SUCCESS;
 }

@@ -63,6 +63,7 @@ typedef enum BcdLibraryElementTypes
     BcdLibraryBoolean_DisplayOptionsEdit = 0x16000041,
     BcdLibraryDevice_BsdLogDevice = 0x11000043,
     BcdLibraryString_BsdLogPath = 0x12000044,
+    BcdLibraryBoolean_PreserveBsdLog = 0x16000045, /* Undocumented */
     BcdLibraryBoolean_GraphicsModeDisabled = 0x16000046,
     BcdLibraryInteger_ConfigAccessPolicy = 0x15000047,
     BcdLibraryBoolean_DisableIntegrityChecks = 0x16000048,

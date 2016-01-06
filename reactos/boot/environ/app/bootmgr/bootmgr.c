@@ -844,6 +844,191 @@ Quickie:
     return Status;
 }
 
+typedef struct _BL_BSD_LOG_OBJECT
+{
+    ULONG DeviceId;
+    ULONG FileId;
+    ULONG Unknown;
+    ULONG Size;
+    ULONG Flags;
+} BL_BSD_LOG_OBJECT, *PBL_BSD_LOG_OBJECT;
+
+BL_BSD_LOG_OBJECT BsdpLogObject;
+BOOLEAN BsdpLogObjectInitialized;
+
+VOID
+BlBsdInitializeLog (
+    _In_ PBL_DEVICE_DESCRIPTOR LogDevice,
+    _In_ PWCHAR LogPath,
+    _In_ ULONG Flags
+    )
+{
+    NTSTATUS Status;
+
+    /* Don't initialize twice */
+    if (BsdpLogObjectInitialized)
+    {
+        return;
+    }
+
+    /* Set invalid IDs for now */
+    BsdpLogObject.DeviceId = -1;
+    BsdpLogObject.FileId = -1;
+
+    /* Open the BSD device */
+    Status = BlpDeviceOpen(LogDevice,
+                           BL_DEVICE_READ_ACCESS | BL_DEVICE_WRITE_ACCESS,
+                           0,
+                           &BsdpLogObject.DeviceId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Welp that didn't work */
+        goto FailurePath;
+    }
+
+    /* Now open the BSD itself */
+    Status = BlFileOpen(BsdpLogObject.DeviceId,
+                        LogPath,
+                        BL_FILE_READ_ACCESS | BL_FILE_WRITE_ACCESS,
+                        &BsdpLogObject.FileId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* D'oh */
+        goto FailurePath;
+    }
+
+    /* The BSD is open. Start doing stuff to it */
+    EfiPrintf(L"Unimplemented BSD path\r\n");
+    Status =  STATUS_NOT_IMPLEMENTED;
+
+FailurePath:
+    /* Close the BSD if we had it open */
+    if (BsdpLogObject.FileId != -1)
+    {
+        BlFileClose(BsdpLogObject.FileId);
+    }
+
+    /* Close the device if we had it open */
+    if (BsdpLogObject.DeviceId != -1)
+    {
+        BlDeviceClose(BsdpLogObject.DeviceId);
+    }
+
+    /* Set BSD object to its uninitialized state */
+    BsdpLogObjectInitialized = FALSE;
+    BsdpLogObject.FileId = 0;
+    BsdpLogObject.DeviceId = 0;
+    BsdpLogObject.Flags = 0;
+    BsdpLogObject.Unknown = 0;
+    BsdpLogObject.Size = 0;
+}
+
+VOID
+BmpInitializeBootStatusDataLog (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    PBL_DEVICE_DESCRIPTOR BsdDevice;
+    PWCHAR BsdPath;
+    ULONG Flags;
+    BOOLEAN PreserveBsd;
+
+    /* Initialize locals */
+    BsdPath = NULL;
+    BsdDevice = NULL;
+    Flags = 0;
+
+    /* Check if the BSD is stored in a custom device */
+    Status = BlGetBootOptionDevice(BlpApplicationEntry.BcdData,
+                                   BcdLibraryDevice_BsdLogDevice,
+                                   &BsdDevice,
+                                   NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Nope, use the boot device */
+        BsdDevice = BlpBootDevice;
+    }
+
+    /* Check if the path is custom as well */
+    Status = BlGetBootOptionString(BlpApplicationEntry.BcdData,
+                                   BcdLibraryString_BsdLogPath,
+                                   &BsdPath);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Nope, use our default path */
+        Status = BmpFwGetFullPath(L"\\bootstat.dat", &BsdPath);
+        if (!NT_SUCCESS(Status))
+        {
+            BsdPath = NULL;
+        }
+
+        /* Set preserve flag */
+        Flags = 1;
+    }
+    else
+    {
+        /* Set preserve flag */
+        Flags = 1;
+    }
+
+    /* Finally, check if the BSD should be preserved */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdLibraryBoolean_PreserveBsdLog,
+                                    &PreserveBsd);
+    if (!(NT_SUCCESS(Status)) || !(PreserveBsd))
+    {
+        /* We failed to read, or we were asked not to preserve it */
+        Flags = 0;
+    }
+
+    /* Initialize the log */
+    BlBsdInitializeLog(BsdDevice, BsdPath, Flags);
+
+    /* Free the BSD device descriptor if we had one */
+    if (BsdDevice)
+    {
+        BlMmFreeHeap(BsdDevice);
+    }
+
+    /* Free the BSD path if we had one */
+    if ((Flags) && (BsdPath))
+    {
+        BlMmFreeHeap(BsdPath);
+    }
+}
+
+VOID
+BmFwMemoryInitialize (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    BL_ADDRESS_RANGE AddressRange;
+
+    /* Select the range below 1MB */
+    AddressRange.Maximum = 0xFFFFF;
+    AddressRange.Minimum = 0;
+
+    /* Allocate one reserved page with the "reserved" attribute */
+    Status = MmPapAllocatePhysicalPagesInRange(&PhysicalAddress,
+                                               BlApplicationReserved,
+                                               1,
+                                               BlMemoryReserved,
+                                               0,
+                                               &MmMdlUnmappedAllocated,
+                                               &AddressRange,
+                                               BL_MM_REQUEST_DEFAULT_TYPE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Print a message on error, but keep going */
+        BlStatusPrint(L"BmFwMemoryInitialize: Failed to allocate a page below 1MB. Status: 0x%08x\r\n",
+                      Status);
+    }
+}
+
+
 /*++
  * @name BmMain
  *
@@ -869,6 +1054,7 @@ BmMain (
     PGUID AppIdentifier;
     HANDLE BcdHandle;
     PBL_BCD_OPTION EarlyOptions;
+    PWCHAR Stylesheet;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -960,8 +1146,25 @@ BmMain (
         Status = LibraryStatus;
     }
 
+    /* Initialize firmware-specific memory regions */
+    //BmFwMemoryInitialize();
+
+    /* Initialize the boot status data log (BSD) */
+    BmpInitializeBootStatusDataLog();
+
+    /* Find our XSL stylesheet */
+    Stylesheet = BlResourceFindHtml();
+    if (!Stylesheet)
+    {
+        /* Awe, no XML. This is actually fatal lol. Can't boot without XML. */
+        Status = STATUS_NOT_FOUND;
+        EfiPrintf(L"BlResourceFindMessage failed 0x%x\r\n", STATUS_NOT_FOUND);
+        goto Quickie;
+    }
+
     /* do more stuff!! */
-    EfiPrintf(L"We are A-OKer!\r\n");
+    EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
+    EfiPrintf(Stylesheet);
     EfiStall(10000000);
 
 //Failure:
