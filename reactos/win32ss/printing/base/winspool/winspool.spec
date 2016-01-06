@@ -157,8 +157,8 @@
 256 stdcall GetPrinterDriverW(long wstr long ptr long ptr)
 257 stdcall GetPrinterW(long long ptr long ptr)
 258 stub GetSpoolFileHandle
-259 stub IsValidDevmodeA
-260 stub IsValidDevmodeW
+259 stdcall IsValidDevmodeA(ptr long)
+260 stdcall IsValidDevmodeW(ptr long)
 261 stdcall OpenPrinterA(str ptr ptr)
 262 stdcall OpenPrinterW(wstr ptr ptr)
 263 stub PlayGdiScriptOnPrinterIC

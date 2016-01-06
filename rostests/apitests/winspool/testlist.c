@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Print Spooler DLL API Tests
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Test list
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
  */
 
 #define __ROS_LONG64__
@@ -14,6 +14,8 @@ extern void func_ClosePrinter(void);
 extern void func_EnumPrinters(void);
 extern void func_EnumPrintProcessorDatatypes(void);
 extern void func_GetPrintProcessorDirectory(void);
+extern void func_IsValidDevmodeA(void);
+extern void func_IsValidDevmodeW(void);
 extern void func_OpenPrinter(void);
 extern void func_StartDocPrinter(void);
 
@@ -23,6 +25,8 @@ const struct test winetest_testlist[] =
     { "EnumPrinters", func_EnumPrinters },
     { "EnumPrintProcessorDatatypes", func_EnumPrintProcessorDatatypes },
     { "GetPrintProcessorDirectory", func_GetPrintProcessorDirectory },
+    { "IsValidDevmodeA", func_IsValidDevmodeA },
+    { "IsValidDevmodeW", func_IsValidDevmodeW },
     { "OpenPrinter", func_OpenPrinter },
     { "StartDocPrinter", func_StartDocPrinter },
 
