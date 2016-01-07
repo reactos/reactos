@@ -565,7 +565,6 @@ EtfsOpen (
                                         FALSE);
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"no dirent found: %lx\r\n", Status);
         return Status;
     }
 
@@ -761,7 +760,6 @@ EtfspCheckEtfs (
     /* Return back to the caller */
     *VolumeDescriptor = IsoVd;
     *VolumeIsIso = IsIso;
-    EfiPrintf(L"Recognized!!!\r\n");
     return STATUS_SUCCESS;
 }
 

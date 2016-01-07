@@ -603,28 +603,32 @@ BlDeviceSetInformation (
 {
     PBL_DEVICE_ENTRY DeviceEntry;
 
-    if (!(DeviceInformation))
+    /* This parameter is not optional */
+    if (!DeviceInformation)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Make sure the device ID is valid */
     if (DmTableEntries <= DeviceId)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the device entry */
     DeviceEntry = DmDeviceTable[DeviceId];
     if (!DeviceEntry)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (!(DeviceEntry->Flags & 1))
+    /* Make sure the device is open */
+    if (!(DeviceEntry->Flags & BL_DEVICE_ENTRY_OPENED))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    DeviceInformation->DeviceType = DeviceEntry->DeviceDescriptor->DeviceType;
+    /* Set the device information */
     return DeviceEntry->Callbacks.SetInformation(DeviceEntry, DeviceInformation);
 }
 
@@ -636,27 +640,32 @@ BlDeviceGetInformation (
 {
     PBL_DEVICE_ENTRY DeviceEntry;
 
-    if (!(DeviceInformation))
+    /* This parameter is not optional */
+    if (!DeviceInformation)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Make sure the device ID is valid */
     if (DmTableEntries <= DeviceId)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the device entry */
     DeviceEntry = DmDeviceTable[DeviceId];
     if (!DeviceEntry)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (!(DeviceEntry->Flags & 1))
+    /* Make sure the device is open */
+    if (!(DeviceEntry->Flags & BL_DEVICE_ENTRY_OPENED))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Return the device information */
     DeviceInformation->DeviceType = DeviceEntry->DeviceDescriptor->DeviceType;
     return DeviceEntry->Callbacks.GetInformation(DeviceEntry, DeviceInformation);
 }
@@ -666,40 +675,51 @@ BlDeviceRead (
     _In_ ULONG DeviceId,
     _In_ PVOID Buffer,
     _In_ ULONG Size,
-    _Out_ PULONG BytesRead
+    _Out_opt_ PULONG BytesRead
     )
 {
     PBL_DEVICE_ENTRY DeviceEntry;
     NTSTATUS Status;
     ULONG BytesTransferred;
 
+    /* Make sure we have a buffer, and the device ID is valid */
     if (!(Buffer) || (DmTableEntries <= DeviceId))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the device entry for it */
     DeviceEntry = DmDeviceTable[DeviceId];
     if (!DeviceEntry)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (!(DeviceEntry->Flags & 1) || !(DeviceEntry->Flags & 2))
+    /* Make sure this is a device opened for read access */
+    if (!(DeviceEntry->Flags & BL_DEVICE_ENTRY_OPENED) ||
+        !(DeviceEntry->Flags & BL_DEVICE_ENTRY_READ_ACCESS))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = DeviceEntry->Callbacks.Read(DeviceEntry, Buffer, Size, &BytesTransferred);
+    /* Issue the read */
+    Status = DeviceEntry->Callbacks.Read(DeviceEntry,
+                                         Buffer,
+                                         Size,
+                                         &BytesTransferred);
     if (!DeviceEntry->Unknown)
     {
+        /* Update performance counters */
         DmDeviceIoInformation.ReadCount += BytesTransferred;
     }
 
+    /* Return back how many bytes were read, if caller wants to know */
     if (BytesRead)
     {
         *BytesRead = BytesTransferred;
     }
 
+    /* Return read result */
     return Status;
 }
 
@@ -744,7 +764,7 @@ BlpDeviceCompare (
     /* Assume failure */
     DeviceMatch = FALSE;
 
-    /* Check if the two devices exist and are identical in typ */
+    /* Check if the two devices exist and are identical in type */
     if ((Device1) && (Device2) && (Device1->DeviceType == Device2->DeviceType))
     {
         /* Take the bigger of the two sizes */
@@ -753,8 +773,8 @@ BlpDeviceCompare (
         {
             /* Compare the two devices up to their size */
             if (RtlEqualMemory(&Device1->Local,
-                &Device2->Local,
-                DeviceSize - FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local)))
+                               &Device2->Local,
+                               DeviceSize - FIELD_OFFSET(BL_DEVICE_DESCRIPTOR, Local)))
             {
                 /* They match! */
                 DeviceMatch = TRUE;
@@ -1173,7 +1193,7 @@ BlockIoEfiCreateDeviceEntry (
         Status = BlockIoEfiGetDeviceInformation(IoDeviceEntry);
         if (NT_SUCCESS(Status))
         {
-            /* We have a fully constructed device, reuturn it */
+            /* We have a fully constructed device, return it */
             *DeviceEntry = IoDeviceEntry;
             return STATUS_SUCCESS;
         }
@@ -1287,7 +1307,6 @@ BlockIoFirmwareOpen (
 
         /* Does this device match what we're looking for? */
         DeviceMatch = BlpDeviceCompare(DeviceEntry->DeviceDescriptor, Device);
-        EfiPrintf(L"Device match: %d\r\n", DeviceMatch);
         if (DeviceMatch)
         {
             /* Yep, return the data back */
@@ -1477,8 +1496,8 @@ DeviceTableCompare (
     )
 {
     BOOLEAN Found;
-    PBL_DEVICE_DESCRIPTOR Device = (PBL_DEVICE_DESCRIPTOR)Entry;
-    PBL_DEVICE_ENTRY DeviceEntry = (PBL_DEVICE_ENTRY)Argument1;
+    PBL_DEVICE_DESCRIPTOR Device = (PBL_DEVICE_DESCRIPTOR)Argument1;
+    PBL_DEVICE_ENTRY DeviceEntry = (PBL_DEVICE_ENTRY)Entry;
     ULONG Flags = *(PULONG)Argument2;
     ULONG Unknown = *(PULONG)Argument3;
 
@@ -1492,8 +1511,8 @@ DeviceTableCompare (
         if (DeviceEntry->Unknown == Unknown)
         {
             /* Compare flags */
-            if ((!(Flags & 1) || (DeviceEntry->Flags & 2)) &&
-                (!(Flags & 2) || (DeviceEntry->Flags & 4)))
+            if ((!(Flags & BL_DEVICE_READ_ACCESS) || (DeviceEntry->Flags & BL_DEVICE_ENTRY_READ_ACCESS)) &&
+                (!(Flags & BL_DEVICE_WRITE_ACCESS) || (DeviceEntry->Flags & BL_DEVICE_ENTRY_WRITE_ACCESS)))
             {
                 /* And more flags */
                 if (((Flags & 8) || !(DeviceEntry->Flags & 8)) &&
@@ -1540,7 +1559,7 @@ DeviceTablePurge (
     NTSTATUS Status;
 
     /* Check if the device is opened */
-    if (DeviceEntry->Flags & 1)
+    if (DeviceEntry->Flags & BL_DEVICE_ENTRY_OPENED)
     {
         /* It is, so can't purge it */
         Status = STATUS_UNSUCCESSFUL;
@@ -1700,7 +1719,6 @@ BlockIopInitialize (
     return Status;
 }
 
-
 BOOLEAN
 BlockIoDeviceTableCompare (
     _In_ PVOID Entry,
@@ -1736,7 +1754,6 @@ BlockIoOpen (
         if (!NT_SUCCESS(Status))
         {
             /* Failed to initialize block I/O */
-            EfiPrintf(L"Block I/O Init failed\r\n");
             return Status;
         }
     }
@@ -1769,7 +1786,7 @@ BlockIoOpen (
     if (FoundDeviceEntry)
     {
         /* We already found a device, so copy its device data and callbacks */
-        EfiPrintf(L"Device entry found: %p\r\n", FoundDeviceEntry);
+        //EfiPrintf(L"Block I/O Device entry found: %p\r\n", FoundDeviceEntry);
         RtlCopyMemory(BlockDevice, FoundDeviceEntry->DeviceSpecificData, sizeof(*BlockDevice));
         RtlCopyMemory(&DeviceEntry->Callbacks,
                       &FoundDeviceEntry->Callbacks,
@@ -1873,7 +1890,7 @@ BlDeviceClose (
     }
 
     /* Make sure the device is active */
-    if (!(DeviceEntry->Flags & 1))
+    if (!(DeviceEntry->Flags & BL_DEVICE_ENTRY_OPENED))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1883,7 +1900,7 @@ BlDeviceClose (
     if (!DeviceEntry->ReferenceCount)
     {
         /* Mark the device as inactive */
-        DeviceEntry->Flags = ~1;
+        DeviceEntry->Flags = ~BL_DEVICE_ENTRY_OPENED;
     }
 
     /* We're good */
@@ -1964,10 +1981,9 @@ BlpDeviceOpen (
     if (DeviceEntry)
     {
         /* Return it, taking a reference on it */
-        EfiPrintf(L"Device found: %p\r\n", DeviceEntry);
         *DeviceId = DeviceEntry->DeviceId;
         ++DeviceEntry->ReferenceCount;
-        DeviceEntry->Flags |= 1;
+        DeviceEntry->Flags |= BL_DEVICE_ENTRY_OPENED;
         return STATUS_SUCCESS;
     }
 

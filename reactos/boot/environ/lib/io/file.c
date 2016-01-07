@@ -323,7 +323,6 @@ FileIoOpen (
                                                 &Unknown);
     if (FileEntry)
     {
-        EfiPrintf(L"Entry exists: %p\n", FileEntry);
         goto FileOpened;
     }
 
@@ -525,7 +524,7 @@ BlFileOpen (
     if (NT_SUCCESS(Status))
     {
         /* Return the file ID back to the caller */
-        EfiPrintf(L"File opened: %lx\r\n", FileEntry->FileId);
+        EfiPrintf(L"File %s opened: %lx\r\n", FileName, FileEntry->FileId);
         *FileId = FileEntry->FileId;
     }
 

@@ -315,7 +315,10 @@ BmFwInitializeBootDirectoryPath (
     DeviceHandle = -1;
 
     /* Try to open the boot device */
-    Status = BlpDeviceOpen(BlpBootDevice, 1u, 0, &DeviceHandle);
+    Status = BlpDeviceOpen(BlpBootDevice,
+                           BL_DEVICE_READ_ACCESS,
+                           0, 
+                           &DeviceHandle);
     if (!NT_SUCCESS(Status))
     {
         EfiPrintf(L"Device open failed: %lx\r\n", Status);
@@ -327,7 +330,6 @@ BmFwInitializeBootDirectoryPath (
     BcdDirectory = BcdPath.Buffer;
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"path failed: %lx\n", Status);
         goto Quickie;
     }
 
@@ -351,8 +353,10 @@ BmFwInitializeBootDirectoryPath (
     wcsncat(FinalPath, L"\\BCD", FinalSize / sizeof(WCHAR));
 
     /* Try to open the file */
-    EfiPrintf(L"Opening: %s\r\n", FinalPath);
-    Status = BlFileOpen(DeviceHandle, FinalPath, 1, &FileHandle);
+    Status = BlFileOpen(DeviceHandle,
+                        FinalPath,
+                        BL_FILE_READ_ACCESS,
+                        &FileHandle);
     if (!NT_SUCCESS(Status))
     {
         BootDirectory = BcdDirectory;
