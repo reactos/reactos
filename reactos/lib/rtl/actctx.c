@@ -2615,6 +2615,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
 
     //DPRINT( "looking for res %s in module %p %s\n", resname,
     //                hModule, filename );
+    DPRINT("get_manifest_in_module %p\n", hModule);
 
 #if 0
     if (TRACE_ON(actctx))
@@ -3139,7 +3140,7 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             total_len += sizeof(*data);
             total_len += aligned_string_len((strlenW(dll->name)+1)*sizeof(WCHAR));
 
-            DPRINT("assembly %d, dll %d: dll name %S\n", i, j, dll->name);
+            DPRINT("assembly %d (%p), dll %d: dll name %S\n", i, assembly, j, dll->name);
         }
 
         dll_count += assembly->num_dlls;
@@ -4922,6 +4923,10 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
     frame->ActivationContext = handle;
     frame->Flags = 0;
 
+    DPRINT("ActiveSP %p: ACTIVATE (ActiveFrame %p -> NewFrame %p, Context %p)\n",
+        tebAddress->ActivationContextStackPointer, tebAddress->ActivationContextStackPointer->ActiveFrame,
+        frame, handle);
+
     tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
 
@@ -4957,6 +4962,11 @@ NTSTATUS NTAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 
     if (frame != top && !(flags & RTL_DEACTIVATE_ACTIVATION_CONTEXT_FLAG_FORCE_EARLY_DEACTIVATION))
         RtlRaiseStatus( STATUS_SXS_EARLY_DEACTIVATION );
+
+    DPRINT("ActiveSP %p: DEACTIVATE (ActiveFrame %p -> PreviousFrame %p)\n",
+        NtCurrentTeb()->ActivationContextStackPointer,
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame,
+        frame->Previous);
 
     /* pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
@@ -5422,7 +5432,7 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
     /* Get the current active frame */
     ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    DPRINT("ActiveSP %p, ActiveFrame %p, &Frame->Frame %p, Context %p\n",
+    DPRINT("ActiveSP %p: ACTIVATE (ActiveFrame %p -> NewFrame %p, Context %p)\n",
         NtCurrentTeb()->ActivationContextStackPointer, ActiveFrame,
         &Frame->Frame, Context);
 
@@ -5533,7 +5543,8 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
         DPRINT1("Deactivating wrong active frame: %p != %p\n", ActiveFrame, NewFrame);
     }
 
-    DPRINT("Deactivated actctx %p, active frame %p, new active frame %p\n", NtCurrentTeb()->ActivationContextStackPointer, NewFrame, NewFrame->Previous);
+    DPRINT("ActiveSP %p: DEACTIVATE (ActiveFrame %p -> PreviousFrame %p)\n",
+        NtCurrentTeb()->ActivationContextStackPointer, NewFrame, NewFrame->Previous);
 
     /* Pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NewFrame->Previous;

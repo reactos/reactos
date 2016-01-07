@@ -21,29 +21,7 @@ BOOLEAN g_ShimsEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
-/* NOTE: Remove those two once our actctx support becomes better */
-NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module )
-{
-    NTSTATUS status;
-    LDR_RESOURCE_INFO info;
-    IMAGE_RESOURCE_DATA_ENTRY *entry;
-
-    info.Type = (ULONG)RT_MANIFEST;
-    info.Name = (ULONG)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-    info.Language = 0;
-    if (!(status = LdrFindResource_U( module->DllBase, &info, 3, &entry )))
-    {
-        ACTCTXW ctx;
-        ctx.cbSize   = sizeof(ctx);
-        ctx.lpSource = NULL;
-        ctx.dwFlags  = ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_HMODULE_VALID;
-        ctx.hModule  = module->DllBase;
-        ctx.lpResourceName = (LPCWSTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-        status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &module->EntryPointActivationContext);
-    }
-    return status;
-}
-
+/* NOTE: Remove thise one once our actctx support becomes better */
 NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
 {
     static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\'};

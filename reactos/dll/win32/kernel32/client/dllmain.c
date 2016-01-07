@@ -110,6 +110,9 @@ DllMain(HANDLE hDll,
             /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
             RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 
+            /* Register the manifest prober routine */
+            LdrSetDllManifestProber(BasepProbeForDllManifest);
+
             /* Don't bother us for each thread */
             LdrDisableThreadCalloutsForDll((PVOID)hDll);
 

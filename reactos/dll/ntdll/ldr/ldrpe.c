@@ -686,7 +686,7 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
 {
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
     PPEB Peb = NtCurrentPeb();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS, Status2;
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry = NULL;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     ULONG BoundSize, IatSize;
@@ -700,7 +700,24 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Check if we have a manifest prober routine */
     if (LdrpManifestProberRoutine)
     {
-        DPRINT1("We don't support manifests yet, much less prober routines\n");
+        /* Probe the DLL for its manifest. Some details are omitted */
+        Status2 = LdrpManifestProberRoutine(LdrEntry->DllBase, LdrEntry->FullDllName.Buffer, &LdrEntry->EntryPointActivationContext);
+
+        if (!NT_SUCCESS(Status2) &&
+            Status2 != STATUS_NO_SUCH_FILE &&
+            Status2 != STATUS_RESOURCE_DATA_NOT_FOUND &&
+            Status2 != STATUS_RESOURCE_TYPE_NOT_FOUND &&
+            Status2 != STATUS_RESOURCE_NAME_NOT_FOUND &&
+            Status2 != STATUS_RESOURCE_LANG_NOT_FOUND)
+        {
+            /* Some serious issue */
+            Status = Status2;
+            DbgPrintEx(DPFLTR_SXS_ID,
+                DPFLTR_WARNING_LEVEL,
+                "LDR: LdrpWalkImportDescriptor() failed to probe %wZ for its "
+                "manifest, ntstatus = 0x%08lx\n",
+                &LdrEntry->FullDllName, Status);
+        }
     }
 
     /* Check if we failed above */
