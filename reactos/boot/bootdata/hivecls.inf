@@ -155,12 +155,25 @@ HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Expl
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
+HKCR,".ico","Content Type",0x00000000,"image/x-icon"
+HKCR,".ico","PerceivedType",0x00000000,"image"
 HKCR,"icofile","",0x00000000,"Icon"
 HKCR,"icofile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-213"
 HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
+HKCR,"icofile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; EMF Images
+HKCR,".emf","",0x00000000,"emffile"
+HKCR,".emf","PerceivedType",0x00000000,"image"
+HKCR,"emffile","",0x00000000,"EMF Image"
+HKCR,"emffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-301"
+HKCR,"emffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
+HKCR,"emffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; GIF Images
 HKCR,".gif","",0x00000000,"giffile"
+HKCR,".gif","Content Type",0x00000000,"image/gif"
+HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
@@ -168,7 +181,11 @@ HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explo
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
+HKCR,".jpg","Content Type",0x00000000,"image/jpeg"
+HKCR,".jpg","PerceivedType",0x00000000,"image"
 HKCR,".jpeg","",0x00000000,"jpegfile"
+HKCR,".jpeg","Content Type",0x00000000,"image/jpeg"
+HKCR,".jpeg","PerceivedType",0x00000000,"image"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
 HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
@@ -176,19 +193,43 @@ HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\syst
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
-HKCR,"bmpfile","",0x00000000,"Bitmap Image"
+HKCR,".bmp","Content Type",0x00000000,"image/bmp"
+HKCR,".bmp","PerceivedType",0x00000000,"image"
 HKCR,".bmp\shellnew","",0x00000000,""
 HKCR,".bmp\shellnew","NullFile",0x00020000,""
+HKCR,"bmpfile","",0x00000000,"Bitmap Image"
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
+HKCR,".png","Content Type",0x00000000,"image/png"
+HKCR,".png","PerceivedType",0x00000000,"image"
 HKCR,"pngfile","",0x00000000,"PNG Image"
 HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; TIF Images
+HKCR,".tif","",0x00000000,"TIFImage.Document"
+HKCR,".tif","Content Type",0x00000000,"image/tiff"
+HKCR,".tif","PerceivedType",0x00000000,"image"
+HKCR,".tiff","",0x00000000,"TIFImage.Document"
+HKCR,".tiff","Content Type",0x00000000,"image/tiff"
+HKCR,".tiff","PerceivedType",0x00000000,"image"
+HKCR,"TIFImage.Document","",0x00000000,"TIF Image"
+HKCR,"TIFImage.Document","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-306"
+HKCR,"TIFImage.Document\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
+HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+
+; WMF Images
+HKCR,".wmf","",0x00000000,"wmffile"
+HKCR,".wmf","PerceivedType",0x00000000,"image"
+HKCR,"wmffile","",0x00000000,"WMF Image"
+HKCR,"wmffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-307"
+HKCR,"wmffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
+HKCR,"wmffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"

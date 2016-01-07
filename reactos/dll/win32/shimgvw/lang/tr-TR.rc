@@ -20,11 +20,11 @@ END
 
 STRINGTABLE
 BEGIN
-    // IDS_EMF_FILE    "EMF Resmi"
+    IDS_EMF_FILE    "EMF Resmi"
     IDS_GIF_FILE    "GIF Resmi"
     IDS_JPG_FILE    "JPEG Resmi"
-    IDS_BMP_FILE    "Bit Eşlem Resmi"
+    IDS_BMP_FILE    "Bitmap Resmi"
     IDS_PNG_FILE    "PNG Resmi"
-    // IDS_TIF_FILE    "TIF Resmi"
-    // IDS_WMF_FILE    "WMF Resmi"
+    IDS_TIF_FILE    "TIF Resmi"
+    IDS_WMF_FILE    "WMF Resmi"
 END
