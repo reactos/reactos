@@ -742,9 +742,9 @@ MmMdFindSatisfyingRegion (
     }
 
     /* Bail out if the allocation flags don't match */
-    if (((Flags ^ Descriptor->Flags) & 0x190000))
+    if (((Flags ^ Descriptor->Flags) & (BlMemoryRuntime | BlMemoryReserved | BlMemoryUnknown)))
     {
-        EfiPrintf(L"Incorrect memory allocation flags\r\n");
+        //EfiPrintf(L"Incorrect memory allocation flags\r\n");
         return FALSE;
     }
 

@@ -301,7 +301,7 @@ BlockIopOperation (
     }
 
     Alignment = BlockDevice->Alignment;
-    if (!Alignment || !((Alignment - 1) & (ULONG_PTR)Buffer))
+    if (!(Alignment) || !((Alignment - 1) & (ULONG_PTR)Buffer))
     {
         Status = BlockIopFirmwareOperation(DeviceEntry,
                                            Buffer,
@@ -317,7 +317,6 @@ BlockIopOperation (
         return STATUS_SUCCESS;
     }
 
-    EfiPrintf(L"Firmware alignment fixup required\r\n");
     Status = BlockIopAllocateAlignedBuffer(&BlockIopAlignedBuffer,
                                            &BlockIopAlignedBufferSize,
                                            BufferSize,
@@ -820,11 +819,6 @@ BlockIoEfiGetBlockIoInformation (
 
     /* Get information on the block media */
     Media = BlockDevice->Protocol->Media;
-
-    EfiPrintf(L"Block I/O Info for Device 0x%p, 0x%lX\r\n", BlockDevice, BlockDevice->Handle);
-    EfiPrintf(L"Removable: %d Present: %d Last Block: %I64d BlockSize: %d IoAlign: %d MediaId: %d ReadOnly: %d\r\n",
-              Media->RemovableMedia, Media->MediaPresent, Media->LastBlock, Media->BlockSize, Media->IoAlign,
-              Media->MediaId, Media->ReadOnly);
 
     /* Set the appropriate device flags */
     BlockDevice->DeviceFlags = 0;

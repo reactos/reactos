@@ -551,8 +551,6 @@ EtfsOpen (
     PRAW_DIR_REC DirEntry;
     BOOLEAN IsDirectory;
 
-    EfiPrintf(L"Attempting to open file %s in directory %s\r\n", FileName, Directory->FilePath);
-
     EtfsFile = Directory->FsSpecificData;
     DeviceId = EtfsFile->DeviceId;
     EtfsDevice = EtfsDeviceTable[DeviceId];

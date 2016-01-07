@@ -1269,7 +1269,8 @@ MmFwGetMemoryMap (
                 if (Descriptor->Type == BlConventionalMemory)
                 {
                     /* Set the reserved flag on the descriptor */
-                    Descriptor->Flags |= BlReservedMemory;
+                    EfiPrintf(L"Adding magic flag\r\n");
+                    Descriptor->Flags |= BlMemoryReserved;
                 }
 
                 /* Add this descriptor into the list */
@@ -1313,7 +1314,8 @@ MmFwGetMemoryMap (
         if ((Descriptor->Type == BlConventionalMemory) && (EndPage <= 0x100))
         {
             /* Set the reserved flag on the descriptor */
-            Descriptor->Flags |= BlReservedMemory;
+            EfiPrintf(L"Adding magic flag\r\n");
+            Descriptor->Flags |= BlMemoryReserved;
         }
 
         /* Add the descriptor to the list, requesting coalescing as asked */

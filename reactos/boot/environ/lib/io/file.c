@@ -426,8 +426,6 @@ FileIoOpen (
     Status = STATUS_SUCCESS;
     FileEntry->FileId = FileId;
 
-    EfiPrintf(L"File %s opened with ID: %lx\r\n", FileEntry->FilePath, FileId);
-
 FileOpened:
     /* Add a reference to the file entry, and see if this is the first one */
     if (++FileEntry->ReferenceCount == 1)
@@ -524,7 +522,6 @@ BlFileOpen (
     if (NT_SUCCESS(Status))
     {
         /* Return the file ID back to the caller */
-        EfiPrintf(L"File %s opened: %lx\r\n", FileName, FileEntry->FileId);
         *FileId = FileEntry->FileId;
     }
 

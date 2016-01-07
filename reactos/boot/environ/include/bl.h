@@ -287,10 +287,11 @@ typedef enum _BL_MEMORY_ATTR
     //
     // Memory Allocation Attributes
     //
+    BlMemoryUnknown =           0x00010000,
     BlMemoryNonFixed =          0x00020000,
     BlMemoryFixed =             0x00040000,
     BlMemoryReserved =          0x00080000,
-    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryReserved,
+    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryReserved | BlMemoryUnknown,
     BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
 
     //

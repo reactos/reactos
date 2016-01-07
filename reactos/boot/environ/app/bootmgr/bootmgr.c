@@ -1151,7 +1151,7 @@ BmMain (
     }
 
     /* Initialize firmware-specific memory regions */
-    //BmFwMemoryInitialize();
+    BmFwMemoryInitialize();
 
     /* Initialize the boot status data log (BSD) */
     BmpInitializeBootStatusDataLog();
@@ -1168,7 +1168,7 @@ BmMain (
 
     /* do more stuff!! */
     EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
-    EfiPrintf(Stylesheet);
+    //EfiPrintf(Stylesheet);
     EfiStall(10000000);
 
 //Failure:
