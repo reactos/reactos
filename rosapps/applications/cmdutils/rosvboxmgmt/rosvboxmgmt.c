@@ -177,7 +177,7 @@ int getGlobalList(void)
     return 0;
 }
 
-BOOL CreateUNCShortcut(PCWSTR share)
+BOOL createUNCShortcut(PCWSTR share)
 {
     HRESULT res;
     IShellLink *link;
@@ -219,12 +219,68 @@ BOOL CreateUNCShortcut(PCWSTR share)
     return SUCCEEDED(res);
 }
 
-int autoStart(void)
+BOOL assignDriveLetter(PCWSTR share)
+{
+    DWORD driveMap;
+    char drive;
+    wchar_t cmdLine[MAX_PATH];
+    STARTUPINFOW startupInfo;
+    PROCESS_INFORMATION processInformation;
+    BOOL ok = FALSE;
+
+    driveMap = GetLogicalDrives();
+
+    for (drive = _MRX_MAX_DRIVE_LETTERS - 1; drive >= 0; ++drive)
+    {
+        if (!(driveMap & (1 << drive)))
+        {
+            break;
+        }
+    }
+
+    if (drive < 0)
+    {
+        wprintf(L"Failed finding an appropriate drive for shared folder\n");
+        return 1;
+    }
+
+    drive += 'A';
+
+    wsprintf(cmdLine, L"hackssign_client.exe assign %c %s", drive, share);
+    RtlZeroMemory(&startupInfo, sizeof(startupInfo));
+    startupInfo.cb = sizeof(STARTUPINFOW);
+
+    if (!CreateProcessW(NULL,
+                        (PVOID)cmdLine,
+                        NULL,
+                        NULL,
+                        FALSE,
+                        0,
+                        NULL,
+                        NULL,
+                        &startupInfo,
+                        &processInformation))
+    {
+        wprintf(L"Failed starting hackssign_client.exe\n");
+        return 1;
+    }
+
+    ok = (WaitForSingleObject(processInformation.hProcess, -1) == WAIT_OBJECT_0);
+    CloseHandle(processInformation.hProcess);
+    CloseHandle(processInformation.hThread);
+
+    wprintf(L"%c assigned to %s\n", drive, share);
+
+    return ok;
+}
+
+int autoStart(BOOL assign)
 {
     short i;
     BOOL ret;
     DWORD outputBufferSize;
     char outputBuffer[_MRX_MAX_DRIVE_LETTERS];
+    OFSTRUCT ofs;
 
     if (startVBoxSrv() != 0)
     {
@@ -239,7 +295,20 @@ int autoStart(void)
         return 1;
     }
 
-    CoInitialize(NULL);
+    if (assign)
+    {
+        if (OpenFile("hackssign_client.exe", &ofs, OF_EXIST) != 1)
+        {
+            wprintf(L"hackssign_client.exe not found, falling back to links\n");
+            assign = FALSE;
+        }
+    }
+
+    if (!assign)
+    {
+        CoInitialize(NULL);
+    }
+
     for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; ++i)
     {
         CHAR id = outputBuffer[i];
@@ -255,7 +324,14 @@ int autoStart(void)
             continue;
         }
 
-        CreateUNCShortcut(name);
+        if (!assign)
+        {
+            createUNCShortcut(name);
+        }
+        else
+        {
+            assignDriveLetter(name);
+        }
     }
 
     return 0;
@@ -268,7 +344,8 @@ void printUsage(void)
     wprintf(L"\taddconn <letter> <share name>: add a connection\n");
     wprintf(L"\tgetlist: list connections\n");
     wprintf(L"\tgetgloballist: list available shares\n");
-    wprintf(L"\tauto: automagically configure the VBox Shared folders and creates desktop folders\n");
+    wprintf(L"\tautolink: automagically configure the VBox Shared folders and creates desktop folders\n");
+    wprintf(L"\tautoassign: automagically configure the VBox Shared folders and assigns drive letters\n");
 }
 
 int wmain(int argc, wchar_t *argv[])
@@ -305,9 +382,13 @@ int wmain(int argc, wchar_t *argv[])
     {
         return getGlobalList();
     }
-    else if (_wcsicmp(cmd, L"auto") == 0)
+    else if (_wcsicmp(cmd, L"autolink") == 0)
     {
-        return autoStart();
+        return autoStart(FALSE);
+    }
+    else if (_wcsicmp(cmd, L"autoassign") == 0)
+    {
+        return autoStart(TRUE);
     }
     else
     {
