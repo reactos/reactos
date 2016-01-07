@@ -1,28 +1,41 @@
 1. Build environment
+--------------------
 
-To build the system you need either mingw32 installed on Windows or a mingw32
-cross compiler running on unix. You may obtain MinGW binaries that build
-ReactOS from http://www.reactos.org/. 
+To build the system it is strongly advised to use the ReactOS Build Environment
+(RosBE). Up-to-date versions for Windows and for Unix/GNU-Linux are available
+from our download page at: http://www.reactos.org/wiki/Build_Environment/
+
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
+with separate installations of CMake and the Ninja build utility.
 
 
 2. Building ReactOS
+-------------------
+
+A throughout guide for how to build ReactOS can be found at:
+  http://www.reactos.org/wiki/Building_ReactOS
+
+In the following we only make a quick overview.
+
 
 2.1 Building the binaries
 
-To build ReactOS run 'make' (without the quotes) if you are building on Linux
-or 'mingw32-make' if you are building on Windows (or ReactOS) from the top
-directory. If you are using RosBE, follow on-screen instructions.
+To build ReactOS run 'ninja' (without the quotes), or alternatively run
+'make' if you are using the Make utility, from the top directory.
+NOTE: In the other examples listed in the following, similar modification
+holds if you are using the Make utility instead of Ninja.
+If you are using RosBE, follow on-screen instructions.
 
 
 2.2 Building a bootable CD image
 
-To build a bootable CD image run 'make bootcd' (without the quotes) if you are
-building on Linux or 'mingw32-make bootcd' if you are building on Windows (or
-ReactOS) from the top directory. This will create a CD image with a filename,
-ReactOS.iso, in the top directory.
+To build a bootable CD image run 'ninja bootcd' (without the quotes) from the
+top directory. This will create a CD image with a filename, ReactOS.iso, in
+the top directory.
 
 
 3. Installation
+---------------
 
 ReactOS can only be installed on a machine that has a FAT16 or FAT32 partition
 as the active (bootable) partition. The partition on which ReactOS is to be
@@ -41,13 +54,13 @@ build a bootable CD as described above. Burn the CD image, boot from it, and
 follow the instructions to install ReactOS.
 
 If you have an existing ReactOS installation you want to upgrade, then to
-install ReactOS after building it, type 'make install' or
-'mingw32-make install'. This will create the directory 'reactos' in the top
-directory. Copy the contents of this directory over the existing installation.
+install ReactOS after building it, type 'ninja install'. This will create
+the directory 'reactos' in the top directory. Copy the contents of this
+directory over the existing installation.
 
 If you don't want to copy the files manually every time you run a
-'make install' or 'mingw32-make install', then you can specify the directory
-where the files are to be copied to during installation.
+'ninja install', then you can specify the directory where the files are
+to be copied to during installation.
 
 Set the ROS_INSTALL environment variable. If you are on Windows this could be
 done by:
@@ -58,8 +71,7 @@ If you are on Linux this could be done by:
 
   export ROS_INSTALL=/mnt/windows/reactos
 
-Now run 'make install' or 'mingw32-make install' to install the files to the
-new location.
+Now run 'ninja install' to install the files to the new location.
 
 
 3.2 Installation from bootable CD distribution
@@ -68,12 +80,13 @@ To install ReactOS from the bootable CD distribution, extract the archive
 contents. Then burn the CD image, boot from it, and follow instructions.
 
 
-5. Help
+4. Help
+-------
 
 If you run into problems or have suggestions for making ReactOS better, please
 visit the address below. Mailing lists are available for a variety of topics, 
 bugs should be submitted to JIRA and general chat takes place in the forums, 
-or #reactos on freenode
+or #reactos on freenode.
 
 http://www.reactos.org/
 
