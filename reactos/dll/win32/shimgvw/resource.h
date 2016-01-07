@@ -41,13 +41,13 @@
 #define IDS_PREVIEW     550
 
 /* Friendly File Type Names */
-// #define IDS_EMF_FILE    301
+#define IDS_EMF_FILE    301
 #define IDS_GIF_FILE    302
 #define IDS_JPG_FILE    303
 #define IDS_BMP_FILE    304
 #define IDS_PNG_FILE    305
-// #define IDS_TIF_FILE    306
-// #define IDS_WMF_FILE    307
+#define IDS_TIF_FILE    306
+#define IDS_WMF_FILE    307
 
 /* Tooltips strings */
 #define IDS_TOOLTIP_NEXT_PIC   400
