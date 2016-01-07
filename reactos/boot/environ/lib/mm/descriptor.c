@@ -149,7 +149,7 @@ MmMdpSwitchToDynamicDescriptors (
     _In_ ULONG Count
     )
 {
-    EfiPrintf(L"NOT SUPPORTED!!!\r\n");
+    EfiPrintf(L"dynamic switch NOT SUPPORTED!!!\r\n");
     while (1);
 }
 

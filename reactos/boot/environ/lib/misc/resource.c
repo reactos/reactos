@@ -68,6 +68,7 @@ ResSelectLocale (
         if (!NT_SUCCESS(Status))
         {
             /* Fallback to text mode (yes, this is the API...) */
+            EfiPrintf(L"Locale failed, falling back to text mode\r\n");
             return BlDisplaySetScreenResolution();
         }
     }
@@ -383,6 +384,7 @@ BlResourceFindMessage (
                 if (!NT_SUCCESS(Status))
                 {
                     /* Still didn't work -- fallback to text mode */
+                    EfiPrintf(L"Font loading failed, falling back to text mode\r\n");
                     Status = BlDisplaySetScreenResolution();
                     if (!NT_SUCCESS(Status))
                     {

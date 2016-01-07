@@ -489,3 +489,66 @@ ConsoleFirmwareTextOpen (
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+ConsoleInputBaseEraseBuffer (
+    _In_ PBL_INPUT_CONSOLE Console,
+    _In_opt_ PULONG FillValue
+    )
+{
+    ULONG ValueToFill;
+    PULONG i;
+
+    /* Check if we should fill with a particular value */
+    if (FillValue)
+    {
+        /* Use it */
+        ValueToFill = *FillValue;
+    }
+    else
+    {
+        /* Otherwise, use default */
+        ValueToFill = 0x10020;
+    }
+
+    /* Set the input buffer to its last location */
+    Console->DataStart = Console->DataEnd;
+
+    /* Fill the buffer with the value */
+    for (i = Console->Buffer; i < Console->EndBuffer; i++)
+    {
+        *i = ValueToFill;
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+ConsoleInputLocalEraseBuffer (
+    _In_ PBL_INPUT_CONSOLE Console,
+    _In_opt_ PULONG FillValue
+    )
+{
+    NTSTATUS Status, EfiStatus;
+
+    /* Erase the software buffer */
+    Status = ConsoleInputBaseEraseBuffer(Console, FillValue);
+
+    /* Reset the hardware console */
+    EfiStatus = EfiConInEx ? EfiConInExReset() : EfiConInReset();
+    if (!NT_SUCCESS(EfiStatus))
+    {
+        /* Normalize the failure code */
+        EfiStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Check if software reset worked */
+    if (NT_SUCCESS(Status))
+    {
+        /* Then return the firmware code */
+        Status = EfiStatus;
+    }
+
+    /* All done */
+    return Status;
+}

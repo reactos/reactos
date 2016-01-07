@@ -26,12 +26,12 @@ BL_TEXT_CONSOLE_VTABLE ConsoleTextLocalVtbl =
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
+VOID
 ConsoleTextLocalDestruct (
     _In_ struct _BL_TEXT_CONSOLE* Console
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+
 }
 
 NTSTATUS
@@ -39,6 +39,7 @@ ConsoleTextLocalReinitialize (
     _In_ struct _BL_TEXT_CONSOLE* Console
     )
 {
+    EfiPrintf(L"Not active yet!\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -181,4 +182,89 @@ ConsolepFindResolution (
 
     /* No matches were found */
     return FALSE;
+}
+
+BL_INPUT_CONSOLE_VTABLE ConsoleInputLocalVtbl = 
+{
+    (PCONSOLE_DESTRUCT)ConsoleInputLocalDestruct,
+    (PCONSOLE_REINITIALIZE)ConsoleInputBaseReinitialize,
+};
+
+VOID
+ConsoleInputLocalDestruct (
+    _In_ PBL_INPUT_CONSOLE Console
+    )
+{
+    /* Erase the current input buffer, and tear down the console */
+    ConsoleInputLocalEraseBuffer(Console, NULL);
+    BlMmFreeHeap(Console->Buffer);
+}
+
+NTSTATUS
+ConsoleInputBaseConstruct (
+    _In_ PBL_INPUT_CONSOLE Console
+    )
+{
+    PULONG Buffer;
+
+    /* Allocate a new 512 byte buffer */
+    Buffer = BlMmAllocateHeap(512);
+    Console->Buffer = Buffer;
+    if (!Buffer)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set the current buffer pointers to it */
+    Console->DataStart = Buffer;
+    Console->DataEnd = Buffer;
+
+    /* Set the end 128 data entries into the buffer */
+    Console->EndBuffer = Buffer + 128;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+ConsoleInputBaseReinitialize (
+    _In_ PBL_INPUT_CONSOLE Console
+    )
+{
+    PULONG Buffer;
+
+    /* Reset all the buffer pointers to the current buffer */
+    Buffer = Console->Buffer;
+    Console->DataStart = Buffer;
+    Console->DataEnd = Buffer;
+    Console->EndBuffer = Buffer + 128;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+ConsoleCreateLocalInputConsole (
+    VOID
+    )
+{
+    PBL_INPUT_CONSOLE InputConsole;
+    NTSTATUS Status;
+
+    /* Allocate the input console */
+    InputConsole = BlMmAllocateHeap(sizeof(*InputConsole));
+    if (!InputConsole)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Construct it */
+    Status = ConsoleInputBaseConstruct(InputConsole);
+    if (!NT_SUCCESS(Status));
+    {
+        /* Tear down on failure */
+        BlMmFreeHeap(InputConsole);
+        return Status;
+    }
+
+    /* Set the callback table, and set us as the local input console */
+    InputConsole->Callbacks = &ConsoleInputLocalVtbl;
+    DspLocalInputConsole = InputConsole;
+    return STATUS_SUCCESS;
 }

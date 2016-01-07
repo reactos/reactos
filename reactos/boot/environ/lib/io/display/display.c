@@ -35,6 +35,7 @@ BL_DISPLAY_MODE ConsoleTextResolutionList[1] =
 PVOID DspRemoteInputConsole;
 PVOID DspTextConsole;
 PVOID DspGraphicalConsole;
+PVOID DspLocalInputConsole;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -43,8 +44,14 @@ DsppGraphicsDisabledByBcd (
     VOID
     )
 {
-    EfiPrintf(L"Disabling graphics\r\n");
-    return FALSE;
+    BOOLEAN Disabled;
+    NTSTATUS Status;
+
+    /* Get the boot option, and if present, return the result */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdLibraryBoolean_GraphicsModeDisabled,
+                                    &Disabled);
+    return (NT_SUCCESS(Status) && (Disabled));
 }
 
 NTSTATUS
@@ -409,6 +416,167 @@ DsppInitialize (
 }
 
 NTSTATUS
+DsppReinitialize (
+    _In_ ULONG Flags
+    )
+{
+    PBL_TEXT_CONSOLE TextConsole;
+    PBL_GRAPHICS_CONSOLE GraphicsConsole;
+    NTSTATUS Status;
+    ULONGLONG GraphicsResolution;
+    BOOLEAN HighestMode;
+    BL_DISPLAY_MODE CurrentResolution;
+
+    /* Do we have local input yet? */
+    if (!DspLocalInputConsole)
+    {
+        /* Create it now */
+        ConsoleCreateLocalInputConsole();
+    }
+
+    /* If a graphics console is present without a remote console... */
+    TextConsole = NULL;
+    if (!(DspRemoteInputConsole) && (DspGraphicalConsole))
+    {
+        /* Try to create a remote console */
+        ConsoleCreateRemoteConsole(&TextConsole);
+    }
+
+    /* All good for now */
+    Status = STATUS_SUCCESS;
+
+    /* Now check if we were able to create the remote console */
+    if (TextConsole)
+    {
+        EfiPrintf(L"EMS not supported\r\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Set a local for the right cast */
+    GraphicsConsole = DspGraphicalConsole;
+
+    /* Nothing to do without a graphics console being reinitialized */
+    if (!(Flags & BL_LIBRARY_FLAG_REINITIALIZE_ALL) ||
+        !(GraphicsConsole) ||
+        !(((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->IsEnabled(GraphicsConsole)))
+    {
+        EfiPrintf(L"Nothing to do for re-init\r\n");
+        return Status;
+    }
+
+    /* Check if graphics are disabled in the BCD */
+    if (DsppGraphicsDisabledByBcd())
+    {
+        /* Turn off the graphics console, switching back to text mode */
+        Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->Enable(GraphicsConsole, FALSE);
+    }
+
+    /* Check if a custom graphics resolution is set */
+    if (MiscGetBootOption(BlpApplicationEntry.BcdData,
+                          BcdLibraryInteger_GraphicsResolution))
+    {
+        /* Check what it's set to */
+        Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                        BcdLibraryInteger_GraphicsResolution,
+                                        &GraphicsResolution);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+        
+        /* Now check our current graphical resolution */
+        Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->GetGraphicalResolution(GraphicsConsole,
+                                                                                                               &CurrentResolution);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Remember that we're forcing a video mode */
+        ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_VIDEO_MODE_FLAG;
+
+        /* Check which resolution to set */
+        if (!GraphicsResolution)
+        {
+            /* 1024x768 */
+            EfiPrintf(L"Display selection not yet handled\r\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        else if (GraphicsResolution == 1)
+        {
+            /* 800x600 */
+            EfiPrintf(L"Display selection not yet handled\r\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        else if (GraphicsResolution == 2)
+        {
+            /* 1024x600 */
+            EfiPrintf(L"Display selection not yet handled\r\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
+    }
+
+    /* Check if the force highest mode setting is present */
+    if (MiscGetBootOption(BlpApplicationEntry.BcdData,
+                          BcdLibraryBoolean_GraphicsForceHighestMode))
+    {
+        /* Check what it's set to */
+        Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                        BcdLibraryBoolean_GraphicsForceHighestMode,
+                                        &HighestMode);
+        if ((NT_SUCCESS(Status)) && (HighestMode))
+        {
+            /* Remember that high rest mode is being forced */
+            ConsoleGraphicalResolutionListFlags |= BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG;
+
+            /* Turn it on */
+            //((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->SetGraphicalResolution(GraphicsConsole, 0, 0);
+
+            /* All done now */
+            ConsoleGraphicalResolutionListFlags |= ~BL_DISPLAY_GRAPHICS_FORCED_HIGH_RES_MODE_FLAG;
+            EfiPrintf(L"High res mode not yet handled\r\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
+    }
+
+    /* Return back to the caller */
+    return Status;
+}
+
+NTSTATUS
+BlpDisplayReinitialize (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    PBL_TEXT_CONSOLE TextConsole;
+    PBL_INPUT_CONSOLE InputConsole;
+
+    /* Do we have a local console? */
+    InputConsole = DspLocalInputConsole;
+    if (InputConsole)
+    {
+        /* Reinitialize it */
+        Status = InputConsole->Callbacks->Reinitialize((PBL_TEXT_CONSOLE)InputConsole);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Do we have a text console? */
+    TextConsole = DspTextConsole;
+    if (TextConsole)
+    {
+        /* Reinitialize it */
+        Status = TextConsole->Callbacks->Reinitialize(TextConsole);
+    }
+
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
 BlpDisplayInitialize (
     _In_ ULONG Flags
     )
@@ -419,15 +587,12 @@ BlpDisplayInitialize (
     if (Flags & BL_LIBRARY_FLAG_REINITIALIZE)
     {
         /* This is a reset */
-        Status = STATUS_NOT_IMPLEMENTED;
-        EfiPrintf(L"Display reset not yet implemented\r\n");
-#if 0
         Status = DsppReinitialize(Flags);
         if (NT_SUCCESS(Status))
         {
+            /* Re-initialize the class as well */
             Status = BlpDisplayReinitialize();
         }
-#endif
     }
     else
     {
@@ -446,6 +611,7 @@ BlDisplayGetTextCellResolution (
     )
 {
     NTSTATUS Status;
+    PBL_GRAPHICS_CONSOLE GraphicsConsole;
 
     /* If the caller doesn't want anything, bail out */
     if (!(TextWidth) || !(TextHeight))
@@ -458,11 +624,17 @@ BlDisplayGetTextCellResolution (
     if (DspTextConsole)
     {
         /* Do we have a graphics console? */
-        if (DspGraphicalConsole)
+        GraphicsConsole = DspGraphicalConsole;
+        if (GraphicsConsole)
         {
-            /* Yep -- query it */
-            EfiPrintf(L"Not supported\r\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Is it currently active? */
+            if (((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->IsEnabled(GraphicsConsole))
+            {
+                /* Yep -- query it */
+                EfiPrintf(L"GFX active, not supported query\r\n");
+                Status = STATUS_NOT_IMPLEMENTED;
+                //Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->GetTextCellResolution(GraphicsConsole);
+            }
         }
     }
 
@@ -490,20 +662,15 @@ BlDisplaySetScreenResolution (
     Console = DspGraphicalConsole;
     if (Console)
     {
-#if 0
-        /* Is it active? If not, activate it */
-        if (((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->IsActive())
+        /* Is it currently active? */
+        if (((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->IsEnabled(Console))
         {
-            return ((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->Activate(Console, FALSE);
+            /* If so, disable it */
+            return ((PBL_GRAPHICS_CONSOLE_VTABLE)Console->TextConsole.Callbacks)->Enable(Console, FALSE);
         }
-#else
-        /* Not yet supported */
-        EfiPrintf(L"Graphics not yet supported\r\n");
-        //Status = STATUS_NOT_IMPLEMENTED;
-#endif
     }
 
-    /* Do we have a text console? */
+    /* We should've now fallen back to text mode */
     if (!DspTextConsole)
     {
         /* Then fail, as no display appears active */
@@ -517,11 +684,12 @@ BlDisplaySetScreenResolution (
 NTSTATUS
 BlDisplayGetScreenResolution (
     _Out_ PULONG HRes,
-    _Out_ PULONG Vres
+    _Out_ PULONG VRes
     )
 {
     NTSTATUS Status;
-//    PULONG Resolution;
+    BL_DISPLAY_MODE Resolution;
+    PBL_GRAPHICS_CONSOLE GraphicsConsole;
 
     /* Assume failure if no consoles are active */
     Status = STATUS_UNSUCCESSFUL;
@@ -530,33 +698,24 @@ BlDisplayGetScreenResolution (
     if (DspTextConsole)
     {
         /* Do we have an active graphics console? */
-        if ((DspGraphicalConsole)
-#if 0
-            && (((PBL_GRAPHICS_CONSOLE_VTABLE)DspGraphicalConsole->TextConsole.Callbacks)->IsActive())
-#endif
-            )
+        GraphicsConsole = DspGraphicalConsole;
+        if ((GraphicsConsole) &&
+            (((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->IsEnabled(GraphicsConsole)))
         {
-#if 0
             /* Get the resolution */
-            Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)DspGraphicalConsole->TextConsole.Callbacks)->GetResolution(DspGraphicalConsole, &Resolution);
+            Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->GetGraphicalResolution(GraphicsConsole, &Resolution);
             if (NT_SUCCESS(Status))
             {
                 /* Return it back to the caller */
-                *HRes = Resolution[0];
-                *Vres = Resolution[1];
+                *HRes = Resolution.HRes;
+                *VRes = Resolution.VRes;
             }
-#else
-            /* Not yet supported */
-            EfiPrintf(L"Graphics not yet supported\r\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-
         }
         else
         {
-#endif
             /* Return defaults */
             *HRes = 640;
-            *Vres = 200;
+            *VRes = 200;
             Status = STATUS_SUCCESS;
         }
     }

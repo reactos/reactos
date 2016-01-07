@@ -394,8 +394,12 @@ NTSTATUS
 
 struct _BL_TEXT_CONSOLE;
 struct _BL_DISPLAY_STATE;
+struct _BL_DISPLAY_MODE;
+struct _BL_INPUT_CONSOLE;
+struct _BL_REMOTE_CONSOLE;
+struct _BL_GRAPHICS_CONSOLE;
 typedef
-NTSTATUS
+VOID
 (*PCONSOLE_DESTRUCT) (
     _In_ struct _BL_TEXT_CONSOLE* Console
     );
@@ -442,6 +446,33 @@ NTSTATUS
     _In_ struct _BL_TEXT_CONSOLE* Console,
     _In_ ULONG Attribute
     );
+
+typedef
+BOOLEAN
+(*PCONSOLE_IS_ENABLED) (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console
+    );
+
+typedef
+NTSTATUS
+(*PCONSOLE_GET_GRAPHICAL_RESOLUTION) (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _Out_ struct _BL_DISPLAY_MODE* DisplayMode
+    );
+
+typedef
+NTSTATUS
+(*PCONSOLE_SET_GRAPHICAL_RESOLUTION) (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _In_ struct _BL_DISPLAY_MODE DisplayMode
+    );
+
+typedef
+NTSTATUS
+(*PCONSOLE_ENABLE) (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _In_ BOOLEAN Enable
+);
 
 typedef
 NTSTATUS
@@ -875,6 +906,12 @@ typedef struct _BL_TEXT_CONSOLE_VTABLE
 typedef struct _BL_GRAPHICS_CONSOLE_VTABLE
 {
     BL_TEXT_CONSOLE_VTABLE Text;
+    PCONSOLE_IS_ENABLED IsEnabled;
+    PCONSOLE_ENABLE Enable;
+    PVOID GetConsoleResolution;
+    PCONSOLE_GET_GRAPHICAL_RESOLUTION GetGraphicalResolution;
+    PCONSOLE_GET_GRAPHICAL_RESOLUTION GetOriginalResolution;
+    PCONSOLE_SET_GRAPHICAL_RESOLUTION SetOriginalResolution;
     /// more for graphics ///
 } BL_GRAPHICS_CONSOLE_VTABLE, *PBL_GRAPHICS_CONSOLE_VTABLE;
 
@@ -888,6 +925,25 @@ typedef struct _BL_TEXT_CONSOLE
     ULONG Mode;
     EFI_SIMPLE_TEXT_OUTPUT_MODE OldMode;
 } BL_TEXT_CONSOLE, *PBL_TEXT_CONSOLE;
+
+typedef struct _BL_INPUT_CONSOLE_VTABLE
+{
+    PCONSOLE_DESTRUCT Destruct;
+    PCONSOLE_REINITIALIZE Reinitialize;
+    //PCONSOLE_IS_KEY_PENDING IsKeyPending;
+    //PCONSOLE_READ_INPUT ReadInput;
+    //PCONSOLE_ERASE_BUFFER EraseBuffer;
+    //PCONSOLE_FILL_BUFFER FillBuffer;
+} BL_INPUT_CONSOLE_VTABLE, *PBL_INPUT_CONSOLE_VTABLE;
+
+typedef struct _BL_INPUT_CONSOLE
+{
+    PBL_INPUT_CONSOLE_VTABLE Callbacks;
+    PULONG Buffer;
+    PULONG DataStart;
+    PULONG DataEnd;
+    PULONG EndBuffer;
+} BL_INPUT_CONSOLE, *PBL_INPUT_CONSOLE;
 
 typedef enum _BL_GRAPHICS_CONSOLE_TYPE
 {
@@ -1183,6 +1239,16 @@ EfiAllocatePages (
 NTSTATUS
 EfiStall (
     _In_ ULONG StallTime
+    );
+
+NTSTATUS
+EfiConInExReset (
+    VOID
+    );
+
+NTSTATUS
+EfiConInReset (
+    VOID
     );
 
 NTSTATUS
@@ -1871,9 +1937,59 @@ BlFileOpen (
     _Out_ PULONG FileId
     );
 
-/* TEXT CONSOLE ROUTINES *****************************************************/
+/* INPUT CONSOLE ROUTINES ****************************************************/
+
+VOID
+ConsoleInputLocalDestruct (
+    _In_ struct _BL_INPUT_CONSOLE* Console
+    );
 
 NTSTATUS
+ConsoleInputBaseReinitialize (
+    _In_ struct _BL_INPUT_CONSOLE* Console
+    );
+
+NTSTATUS
+ConsoleCreateLocalInputCnsole (
+    VOID
+    );
+
+/* TEXT CONSOLE ROUTINES *****************************************************/
+
+VOID
+ConsoleGraphicalDestruct (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console
+    );
+
+NTSTATUS
+ConsoleGraphicalReinitialize (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console
+    );
+
+BOOLEAN
+ConsoleGraphicalIsEnabled (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console
+    );
+
+NTSTATUS
+ConsoleGraphicalGetGraphicalResolution (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _In_ PBL_DISPLAY_MODE DisplayMode
+    );
+
+NTSTATUS
+ConsoleGraphicalGetOriginalResolution (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _In_ PBL_DISPLAY_MODE DisplayMode
+    );
+
+NTSTATUS
+ConsoleGraphicalEnable (
+    _In_ struct _BL_GRAPHICS_CONSOLE* Console,
+    _In_ BOOLEAN Enable
+    );
+
+VOID
 ConsoleTextLocalDestruct (
     _In_ struct _BL_TEXT_CONSOLE* Console
     );
@@ -1973,6 +2089,11 @@ ConsoleFirmwareGraphicalClose (
     _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
     );
 
+VOID
+ConsoleFirmwareGraphicalDisable (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    );
+
 NTSTATUS
 ConsoleFirmwareGraphicalEnable (
     _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
@@ -2010,6 +2131,17 @@ ConsoleEfiUgaSetResolution  (
     _In_ ULONG DisplayModeCount
     );
 
+NTSTATUS
+ConsoleCreateLocalInputConsole (
+    VOID
+    );
+
+NTSTATUS
+ConsoleInputLocalEraseBuffer (
+    _In_ PBL_INPUT_CONSOLE Console,
+    _In_opt_ PULONG ValueToFill
+    );
+
 extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
@@ -2017,7 +2149,8 @@ extern BL_TRANSLATION_TYPE  MmTranslationType;
 extern PBL_ARCH_CONTEXT CurrentExecutionContext;
 extern PBL_DEVICE_DESCRIPTOR BlpBootDevice;
 extern BL_LOADED_APPLICATION_ENTRY BlpApplicationEntry;
-extern SIMPLE_TEXT_OUTPUT_INTERFACE *EfiConOut;
+extern EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *EfiConOut;
+extern EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *EfiConInEx;
 extern EFI_GUID EfiGraphicsOutputProtocol;
 extern EFI_GUID EfiUgaDrawProtocol;
 extern EFI_GUID EfiLoadedImageProtocol;
@@ -2029,6 +2162,7 @@ extern BL_DISPLAY_MODE ConsoleGraphicalResolutionList[];
 extern BL_DISPLAY_MODE ConsoleTextResolutionList[];
 extern ULONG ConsoleGraphicalResolutionListSize;
 extern PVOID DspRemoteInputConsole;
+extern PVOID DspLocalInputConsole;
 extern WCHAR BlScratchBuffer[8192];
 extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedAllocated;
 #endif

@@ -259,6 +259,64 @@ EfiCloseProtocol (
 }
 
 NTSTATUS
+EfiConInReset (
+    VOID
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = EfiConIn->Reset(EfiConIn, FALSE);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiConInExReset (
+    VOID
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = EfiConInEx->Reset(EfiConInEx, FALSE);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
 EfiConInExSetState (
     _In_ EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *ConInEx,
     _In_ EFI_KEY_TOGGLE_STATE* KeyToggleState

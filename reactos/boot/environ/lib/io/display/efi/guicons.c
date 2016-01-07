@@ -111,3 +111,20 @@ ConsoleFirmwareGraphicalEnable (
     return Status;
 }
 
+VOID
+ConsoleFirmwareGraphicalDisable (
+    _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    )
+{
+    /* Is this a GOP console? */
+    if (GraphicsConsole->Type == BlGopConsole)
+    {
+        /* Did we map a framebuffer? */
+        if (GraphicsConsole->FrameBuffer)
+        {
+            /* Unmap it */
+            BlMmUnmapVirtualAddressEx(GraphicsConsole->FrameBuffer,
+                                      GraphicsConsole->FrameBufferSize);
+        }
+    }
+}

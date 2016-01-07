@@ -22,7 +22,7 @@ BfiLoadFontFile (
     _In_ PWCHAR FontPath
     )
 {
-    EfiPrintf(L"rotfl font loading\r\n");
+    EfiPrintf(L"Cannot load fond %s, no font loader exists\r\n", FontPath);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -55,7 +55,6 @@ BfLoadFontFile (
 {
     PBL_DEFERRED_FONT_FILE DeferredFont;
     ULONG FontPathSize;
-    EfiPrintf(L"Adding deferred font: %s\r\n", FontPath);
 
     /* Allocate the deferred font structure */
     DeferredFont = (PBL_DEFERRED_FONT_FILE)BlMmAllocateHeap(sizeof(*DeferredFont));
@@ -120,7 +119,6 @@ BfLoadDeferredFontFiles (
         RemoveEntryList(&DeferredFont->ListEntry);
 
         /* Load the font */
-        EfiPrintf(L"Found deferred font: %s\r\n", DeferredFont->FontPath);
         LoadStatus = BfiLoadFontFile(DeferredFont->Device,
                                      DeferredFont->FontPath);
         if (!NT_SUCCESS(LoadStatus))
