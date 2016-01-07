@@ -622,10 +622,10 @@ PoUnregisterSystemState(IN PVOID StateHandle)
  */
 NTSTATUS
 NTAPI
-NtInitiatePowerAction (IN POWER_ACTION SystemAction,
-                       IN SYSTEM_POWER_STATE MinSystemState,
-                       IN ULONG Flags,
-                       IN BOOLEAN Asynchronous)
+NtInitiatePowerAction(IN POWER_ACTION SystemAction,
+                      IN SYSTEM_POWER_STATE MinSystemState,
+                      IN ULONG Flags,
+                      IN BOOLEAN Asynchronous)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
