@@ -608,7 +608,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureAllowProtectedRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"AllowProtectedRenames",
         NULL,
         REG_DWORD,
@@ -648,7 +648,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureFileRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"PendingFileRenameOperations",
         &SmpFileRenameList,
         REG_NONE,
@@ -658,7 +658,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureFileRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"PendingFileRenameOperations2",
         &SmpFileRenameList,
         REG_NONE,
@@ -1989,6 +1989,10 @@ SmpProcessFileRenames(VOID)
     Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &OldState);
     if (NT_SUCCESS(Status)) HavePrivilege = TRUE;
 
+    // FIXME: Handle SFC-protected file renames!
+    if (SmpAllowProtectedRenames)
+        DPRINT1("SMSS: FIXME: Handle SFC-protected file renames!\n");
+
     /* Process pending files to rename */
     Head = &SmpFileRenameList;
     while (!IsListEmpty(Head))
@@ -2073,10 +2077,10 @@ SmpProcessFileRenames(VOID)
                                           InformationClass);
 
             /* Check if we seem to have failed because the file was readonly */
-            if ((!NT_SUCCESS(Status) &&
+            if (!NT_SUCCESS(Status) &&
                 (InformationClass == FileRenameInformation) &&
                 (Status == STATUS_OBJECT_NAME_COLLISION) &&
-                (Buffer->ReplaceIfExists)))
+                Buffer->ReplaceIfExists)
             {
                 /* Open the file for write attribute access this time... */
                 DPRINT1("\nSMSS: '%wZ' => '%wZ' failed - Status == %x, Possible readonly target\n",
