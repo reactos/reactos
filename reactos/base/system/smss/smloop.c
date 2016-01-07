@@ -380,7 +380,7 @@ SmpApiLoop(IN PVOID Parameter)
             case LPC_CONNECTION_REQUEST:
                 /* Create the right structures for it */
                 SmpHandleConnectionRequest(SmApiPort, (PSB_API_MSG)&RequestMsg);
-                ReplyMsg =  NULL;
+                ReplyMsg = NULL;
                 break;
 
             /* A closed connection */

@@ -38,7 +38,7 @@ PISECURITY_DESCRIPTOR SmpPrimarySecurityDescriptor, SmpLiberalSecurityDescriptor
 PISECURITY_DESCRIPTOR SmpKnownDllsSecurityDescriptor, SmpApiPortSecurityDescriptor;
 
 ULONG SmpAllowProtectedRenames, SmpProtectionMode = 1;
-BOOLEAN MiniNTBoot;
+BOOLEAN MiniNTBoot = FALSE;
 
 #define SMSS_CHECKPOINT(x, y)           \
 {                                       \
@@ -325,7 +325,7 @@ SmpConfigureObjectDirectories(IN PWSTR ValueName,
         }
 
         /* Move to the next requested object */
-        while (*SourceString++);
+        SourceString += wcslen(SourceString) + 1;
     }
 
     /* All done */
@@ -403,7 +403,7 @@ SmpConfigureExcludeKnownDlls(IN PWSTR ValueName,
             if (!(NT_SUCCESS(Status)) || (ValueType == REG_SZ)) return Status;
 
             /* Otherwise, move to the next DLL name */
-            while (*DllName++);
+            DllName += wcslen(DllName) + 1;
         }
     }
 
@@ -585,7 +585,7 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
             }
 
             /* Move to the next name */
-            while (*SubsystemName++);
+            SubsystemName += wcslen(SubsystemName) + 1;
         }
     }
 
@@ -1495,9 +1495,13 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     NextEntry = SmpKnownDllsList.Flink;
     while (NextEntry != &SmpKnownDllsList)
     {
-        /* Get the entry and skip it if it's in the exluded list */
+        /* Get the entry and move on */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        NextEntry = NextEntry->Flink;
+
         DPRINT("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
+
+        /* Skip the entry if it's in the exluded list */
         if ((SmpFindRegistryValue(&SmpExcludeKnownDllsList,
                                   RegEntry->Name.Buffer)) ||
             (SmpFindRegistryValue(&SmpExcludeKnownDllsList,
@@ -1512,14 +1516,15 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
                                    OBJ_CASE_INSENSITIVE,
                                    DirFileHandle,
                                    NULL);
-        Status = NtOpenFile(&FileHandle,
-                            SYNCHRONIZE | FILE_EXECUTE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_SHARE_READ | FILE_SHARE_DELETE,
-                            FILE_NON_DIRECTORY_FILE |
-                            FILE_SYNCHRONOUS_IO_NONALERT);
-        if (!NT_SUCCESS(Status)) break;
+        Status1 = NtOpenFile(&FileHandle,
+                             SYNCHRONIZE | FILE_EXECUTE,
+                             &ObjectAttributes,
+                             &IoStatusBlock,
+                             FILE_SHARE_READ | FILE_SHARE_DELETE,
+                             FILE_NON_DIRECTORY_FILE |
+                             FILE_SYNCHRONOUS_IO_NONALERT);
+        /* If we failed, skip it */
+        if (!NT_SUCCESS(Status1)) continue;
 
         /* Checksum it */
         Status = LdrVerifyImageMatchesChecksum((HANDLE)((ULONG_PTR)FileHandle | 1),
@@ -1536,8 +1541,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
         }
-        else
-        if (!(ImageCharacteristics & IMAGE_FILE_DLL))
+        else if (!(ImageCharacteristics & IMAGE_FILE_DLL))
         {
             /* An invalid known DLL entry will also kill SMSS */
             RtlInitUnicodeString(&ErrorResponse,
@@ -1589,9 +1593,6 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
         /* Close the file since we can move on to the next one */
         Status1 = NtClose(FileHandle);
         ASSERT(NT_SUCCESS(Status1));
-
-        /* Go to the next entry */
-        NextEntry = NextEntry->Flink;
     }
 
 Quickie:
@@ -1652,7 +1653,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     UNICODE_STRING ValueName, DestinationString;
     HANDLE KeyHandle, KeyHandle2;
     ULONG ResultLength;
-    PWCHAR ArchName;
+    PWCHAR ValueData;
     WCHAR ValueBuffer[512], ValueBuffer2[512];
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo2 = (PVOID)ValueBuffer2;
@@ -1700,13 +1701,14 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* First let's write the OS variable */
     RtlInitUnicodeString(&ValueName, L"OS");
-    DPRINT("Setting %wZ to %S\n", &ValueName, L"Windows_NT");
+    ValueData = L"Windows_NT";
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueData);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           L"Windows_NT",
-                           wcslen(L"Windows_NT") * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           ValueData,
+                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1721,30 +1723,30 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     {
         /* Pick the correct string that matches the architecture */
         case PROCESSOR_ARCHITECTURE_INTEL:
-            ArchName = L"x86";
+            ValueData = L"x86";
             break;
 
         case PROCESSOR_ARCHITECTURE_AMD64:
-            ArchName = L"AMD64";
+            ValueData = L"AMD64";
             break;
 
         case PROCESSOR_ARCHITECTURE_IA64:
-            ArchName = L"IA64";
+            ValueData = L"IA64";
             break;
 
         default:
-            ArchName = L"Unknown";
+            ValueData = L"Unknown";
             break;
     }
 
     /* Set it */
-    DPRINT("Setting %wZ to %S\n", &ValueName, ArchName);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueData);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           ArchName,
-                           wcslen(ArchName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           ValueData,
+                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1762,7 +1764,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1830,7 +1832,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            PartialInfo->Data,
-                           wcslen((PWCHAR)PartialInfo->Data) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen((PWCHAR)PartialInfo->Data) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1872,7 +1874,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1890,7 +1892,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1944,7 +1946,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                                    0,
                                    REG_SZ,
                                    ValueBuffer,
-                                   wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                                   (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -2335,25 +2337,29 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
         return Status;
     }
 
-    /* Loop every page file */
-    Head = &SmpPagingFileList;
-    while (!IsListEmpty(Head))
+    /* Create the needed page files */
+    if (!MiniNTBoot)
     {
-        /* Remove each one from the list */
-        NextEntry = RemoveHeadList(Head);
+        /* Loop every page file */
+        Head = &SmpPagingFileList;
+        while (!IsListEmpty(Head))
+        {
+            /* Remove each one from the list */
+            NextEntry = RemoveHeadList(Head);
 
-        /* Create the descriptor for it */
-        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        SmpCreatePagingFileDescriptor(&RegEntry->Name);
+            /* Create the descriptor for it */
+            RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+            SmpCreatePagingFileDescriptor(&RegEntry->Name);
 
-        /* And free it */
-        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
-        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+            /* And free it */
+            if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+            if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+        }
+
+        /* Now create all the paging files for the descriptors that we have */
+        SmpCreatePagingFiles();
     }
-
-    /* Now create all the paging files for the descriptors that we have */
-    SmpCreatePagingFiles();
 
     /* Tell Cm it's now safe to fully enable write access to the registry */
     NtInitializeRegistry(CM_BOOT_FLAG_SMSS);
