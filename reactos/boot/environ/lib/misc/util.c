@@ -12,8 +12,8 @@
 
 /* DATA VARIABLES ************************************************************/
 
-PVOID UtlRsdt;
-PVOID UtlXsdt;
+PRSDT UtlRsdt;
+PXSDT UtlXsdt;
 
 PVOID UtlMcContext;
 PVOID UtlMcDisplayMessageRoutine;
@@ -29,6 +29,152 @@ BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+BlUtlGetAcpiTable (
+    _Out_ PVOID* TableAddress,
+    _In_ ULONG Signature
+    )
+{
+    ULONG i, TableCount, HeaderLength;
+    NTSTATUS Status;
+    PRSDT Rsdt;
+    PXSDT Xsdt;
+    PHYSICAL_ADDRESS PhysicalAddress; 
+    PDESCRIPTION_HEADER Header;
+
+    Header = 0;
+
+    /* Make sure there's an output parameter */
+    if (!TableAddress)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the currently known RSDT and XSDT */
+    Rsdt = (PRSDT)UtlRsdt;
+    Xsdt = (PXSDT)UtlXsdt;
+
+    /* Is there an RSDT? */
+    if (!Rsdt)
+    {
+        /* No -- is there an XSDT? */
+        if (!Xsdt)
+        {
+            /* No. Look up the RSDT */
+            Status = EfipGetRsdt(&PhysicalAddress);
+            if (!NT_SUCCESS(Status))
+            {
+                EfiPrintf(L"no rsdp found\r\n");
+                return Status;
+            }
+
+            /* Map the header */
+            Status = BlMmMapPhysicalAddressEx((PVOID)&Header,
+                                              0,
+                                              sizeof(*Header),
+                                              PhysicalAddress);
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
+
+            /* Unmap the header */
+            BlMmUnmapVirtualAddressEx(Header, sizeof(*Header));
+
+            /* Map the whole table */
+            Status = BlMmMapPhysicalAddressEx((PVOID)&Header,
+                                              0,
+                                              Header->Length,
+                                              PhysicalAddress);
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
+
+            /* Check if its an XSDT or an RSDT */
+            if (Header->Signature == XSDT_SIGNATURE)
+            {
+                /* It's an XSDT */
+                Xsdt = (PXSDT)Header;
+                UtlXsdt = Xsdt;
+            }
+            else
+            {
+                /* It's an RSDT */
+                Rsdt = (PRSDT)Header;
+                UtlRsdt = Rsdt;
+            }
+        }
+    }
+
+    /* OK, so do we have an XSDT after all? */
+    if (Xsdt)
+    {
+        /* Yes... how big is it? */
+        HeaderLength = Xsdt->Header.Length;
+        if (HeaderLength >= sizeof(*Header))
+        {
+            HeaderLength = sizeof(*Header);
+        }
+
+        /* Based on that, how many tables are there? */
+        TableCount = (Xsdt->Header.Length - HeaderLength) / sizeof(PHYSICAL_ADDRESS);
+    }
+    else
+    {
+        /* Nope, we have an RSDT. How big is it? */
+        HeaderLength = Rsdt->Header.Length;
+        if (HeaderLength >= sizeof(*Header))
+        {
+            HeaderLength = sizeof(*Header);
+        }
+
+        /* Based on that, how many tables are there? */
+        TableCount = (Rsdt->Header.Length - HeaderLength) / sizeof(ULONG);
+    }
+
+    /* Loop through the ACPI tables */
+    for (i = 0; i < TableCount; i++)
+    {
+        /* For an XSDT, read the 64-bit address directly */
+        if (Xsdt)
+        {
+            PhysicalAddress = Xsdt->Tables[i];
+        }
+        else
+        {
+            /* For RSDT, cast it */
+            PhysicalAddress.QuadPart = Rsdt->Tables[i];
+        }
+
+        /* Map the header */
+        Status = BlMmMapPhysicalAddressEx((PVOID)&Header,
+                                          0,
+                                          sizeof(*Header),
+                                          PhysicalAddress);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Is it the right one? */
+        if (Header->Signature == Signature)
+        {
+            /* Unmap the header */
+            BlMmUnmapVirtualAddressEx(Header, sizeof(*Header));
+
+            /* Map the whole table */
+            return BlMmMapPhysicalAddressEx(TableAddress,
+                                            0,
+                                            Header->Length,
+                                            PhysicalAddress);
+        }
+    }
+
+    /* Requested table does not exist */
+    return STATUS_NOT_FOUND;
+}
 
 VOID
 BlUtlUpdateProgress (

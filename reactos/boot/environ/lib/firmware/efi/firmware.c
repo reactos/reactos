@@ -23,6 +23,7 @@ EFI_RUNTIME_SERVICES *EfiRT;
 EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *EfiConOut;
 EFI_SIMPLE_TEXT_INPUT_PROTOCOL *EfiConIn;
 EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *EfiConInEx;
+PHYSICAL_ADDRESS EfiRsdt;
 
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 EFI_GUID EfiUgaDrawProtocol = EFI_UGA_DRAW_PROTOCOL_GUID;
@@ -30,6 +31,8 @@ EFI_GUID EfiLoadedImageProtocol = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 EFI_GUID EfiDevicePathProtocol = EFI_DEVICE_PATH_PROTOCOL_GUID;
 EFI_GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
 EFI_GUID EfiBlockIoProtocol = EFI_BLOCK_IO_PROTOCOL_GUID;
+EFI_GUID EfiRootAcpiTableGuid = EFI_ACPI_20_TABLE_GUID;
+EFI_GUID EfiRootAcpiTable10Guid = EFI_ACPI_TABLE_GUID;
 
 WCHAR BlScratchBuffer[8192];
 
@@ -624,6 +627,37 @@ EfiConOutEnableCursor (
     return EfiGetNtStatusCode(EfiStatus);
 }
 
+NTSTATUS
+EfiConOutOutputString (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ PWCHAR String
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = TextInterface->OutputString(TextInterface, String);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+
 VOID
 EfiConOutReadCurrentMode (
     _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
@@ -879,6 +913,129 @@ EfiAllocatePages (
 
     /* Convert the error to an NTSTATUS */
     return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfipGetSystemTable (
+    _In_ EFI_GUID *TableGuid,
+    _Out_ PPHYSICAL_ADDRESS TableAddress
+    )
+{
+    ULONG i;
+    NTSTATUS Status;
+
+    /* Assume failure */
+    Status = STATUS_NOT_FOUND;
+
+    /* Loop through the configuration tables */
+    for (i = 0; i < EfiST->NumberOfTableEntries; i++)
+    {
+        /* Check if this one matches the one we want */
+        if (RtlEqualMemory(&EfiST->ConfigurationTable[i].VendorGuid,
+                           TableGuid,
+                           sizeof(*TableGuid)))
+        {
+            /* Return its address */
+            TableAddress->QuadPart = (ULONG_PTR)EfiST->ConfigurationTable[i].VendorTable;
+            Status = STATUS_SUCCESS;
+            break;
+        }
+    }
+
+    /* Return the search result */
+    return Status;
+}
+
+NTSTATUS
+EfipGetRsdt (
+    _Out_ PPHYSICAL_ADDRESS FoundRsdt
+    )
+{
+    NTSTATUS Status;
+    ULONG Length;
+    PHYSICAL_ADDRESS RsdpAddress, Rsdt;
+    PRSDP Rsdp;
+
+    /* Assume failure */
+    Length = 0;
+    Rsdp = NULL;
+
+    /* Check if we already know it */
+    if (EfiRsdt.QuadPart)
+    {
+        /* Return it */
+        *FoundRsdt = EfiRsdt;
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, look for the ACPI 2.0 RSDP (XSDT really) */
+    Status = EfipGetSystemTable(&EfiRootAcpiTableGuid, &RsdpAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Didn't fint it, look for the ACPI 1.0 RSDP (RSDT really) */
+        Status = EfipGetSystemTable(&EfiRootAcpiTable10Guid, &RsdpAddress);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Map it */
+    Length = sizeof(*Rsdp);
+    Status = BlMmMapPhysicalAddressEx((PVOID*)&Rsdp,
+                                      0,
+                                      Length,
+                                      RsdpAddress);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check the revision (anything >= 2.0 is XSDT) */
+        if (Rsdp->Revision)
+        {
+            /* Check if the table is bigger than just its header */
+            if (Rsdp->Length > Length)
+            {
+                /* Capture the real length */
+                Length = Rsdp->Length;
+
+                /* Unmap our header mapping */
+                BlMmUnmapVirtualAddressEx(Rsdp, sizeof(*Rsdp));
+
+                /* And map the whole thing now */
+                Status = BlMmMapPhysicalAddressEx((PVOID*)&Rsdp,
+                                                  0,
+                                                  Length,
+                                                  RsdpAddress);
+                if (!NT_SUCCESS(Status))
+                {
+                    return Status;
+                }
+            }
+
+            /* Read the XSDT address from the table*/
+            Rsdt = Rsdp->XsdtAddress;
+        }
+        else
+        {
+            /* ACPI 1.0 so just read the RSDT */
+            Rsdt.QuadPart = Rsdp->RsdtAddress;
+        }
+
+        /* Save it for later */
+        EfiRsdt = Rsdt;
+
+        /* And return it back */
+        *FoundRsdt = Rsdt;
+    }
+
+    /* Check if we had mapped the RSDP */
+    if (Rsdp)
+    {
+        /* Unmap it */
+        BlMmUnmapVirtualAddressEx(Rsdp, Length);
+    }
+
+    /* Return search result back to caller */
+    return Status;
 }
 
 BL_MEMORY_ATTR

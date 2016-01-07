@@ -28,6 +28,9 @@
 /* PE Headers */
 #include <ntimage.h>
 
+/* ACPI Headers */
+#include <drivers/acpi/acpi.h>
+
 /* UEFI Headers */
 #include <Uefi.h>
 #include <DevicePath.h>
@@ -35,6 +38,7 @@
 #include <GraphicsOutput.h>
 #include <UgaDraw.h>
 #include <BlockIo.h>
+#include <Acpi.h>
 
 /* Registry Headers */
 #define __FREELDR_H
@@ -445,7 +449,7 @@ typedef
 NTSTATUS
 (*PCONSOLE_CLEAR_TEXT) (
     _In_ struct _BL_TEXT_CONSOLE* Console,
-    _In_ ULONG Attribute
+    _In_ BOOLEAN LineOnly
     );
 
 typedef
@@ -1097,7 +1101,45 @@ typedef struct _BL_DEFERRED_FONT_FILE
     ULONG Flags;
     PBL_DEVICE_DESCRIPTOR Device;
     PWCHAR FontPath;
-} BL_DEFERRED_FONT_FILE, *PBL_DEFERRED_FONT_FILE;;
+} BL_DEFERRED_FONT_FILE, *PBL_DEFERRED_FONT_FILE;
+
+#pragma pack(push)
+#pragma pack(1)
+typedef struct _BMP_HEADER
+{
+    USHORT Signature;
+    ULONG Size;
+    USHORT Reserved[2];
+    ULONG Offset;
+} BMP_HEADER, *PBMP_HEADER;
+
+typedef struct _DIB_HEADER
+{
+    ULONG Size;
+    ULONG Width;
+    ULONG Height;
+    USHORT Planes;
+    USHORT BitCount;
+    ULONG Compression;
+    ULONG SizeImage;
+    ULONG XPelsPerMeter;
+    ULONG YPelsPerMEter;
+    ULONG ClrUsed;
+    ULONG ClrImportant;
+} DIB_HEADER, *PDIB_HEADER;
+
+typedef struct _BITMAP
+{
+    BMP_HEADER BmpHeader;
+    DIB_HEADER DibHeader;
+} BITMAP, *PBITMAP;
+#pragma pack(pop)
+
+typedef struct _COORD
+{
+    ULONG X;
+    ULONG Y;
+} COORD, *PCOORD;
 
 /* INLINE ROUTINES ***********************************************************/
 
@@ -1253,6 +1295,12 @@ EfiConInReset (
     );
 
 NTSTATUS
+EfiConOutOutputString (
+    _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
+    _In_ PWCHAR String
+    );
+
+NTSTATUS
 EfiConOutQueryMode (
     _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
     _In_ ULONG Mode,
@@ -1348,6 +1396,11 @@ EfiIsDevicePathParent (
     _In_ EFI_DEVICE_PATH *DevicePath2
     );
 
+NTSTATUS
+EfipGetRsdt (
+    _Out_ PPHYSICAL_ADDRESS FoundRsdt
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -1378,6 +1431,16 @@ BfLoadFontFile (
 NTSTATUS
 BfLoadDeferredFontFiles (
     VOID
+    );
+
+NTSTATUS
+BfClearScreen  (
+    _In_ PBL_GRAPHICS_CONSOLE Console
+    );
+
+NTSTATUS
+BfClearToEndOfLine (
+    _In_ PBL_GRAPHICS_CONSOLE Console
     );
 
 /* FILESYSTEM ROUTINES *******************************************************/
@@ -1442,6 +1505,12 @@ VOID
 BlUtlUpdateProgress (
     _In_ ULONG Percentage,
     _Out_opt_ PBOOLEAN Completed
+    );
+
+NTSTATUS
+BlUtlGetAcpiTable (
+    _Out_ PVOID* TableAddress,
+    _In_ ULONG Signature
     );
 
 EFI_STATUS
@@ -1845,6 +1914,32 @@ BlDisplayGetScreenResolution (
     _Out_ PULONG Vres
     );
 
+VOID
+BlDisplayInvalidateOemBitmap (
+    VOID
+    );
+
+PBITMAP
+BlDisplayGetOemBitmap (
+    _Out_ PCOORD Offset, 
+    _Out_opt_ PULONG Flags
+    );
+
+BOOLEAN
+BlDisplayValidOemBitmap (
+    VOID
+    );
+
+NTSTATUS
+BlDisplayClearScreen (
+    VOID
+    );
+
+NTSTATUS
+BlDisplaySetCursorType (
+    _In_ ULONG Type
+    );
+
 /* I/O ROUTINES **************************************************************/
 
 NTSTATUS
@@ -1963,8 +2058,27 @@ ConsoleGraphicalDestruct (
     );
 
 NTSTATUS
+ConsoleGraphicalClearText (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ BOOLEAN LineOnly
+    );
+
+NTSTATUS
+ConsoleGraphicalClearPixels  (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Color
+    );
+
+NTSTATUS
 ConsoleGraphicalReinitialize (
     _In_ struct _BL_GRAPHICS_CONSOLE* Console
+    );
+
+NTSTATUS
+ConsoleGraphicalSetTextState (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Mask,
+    _In_ PBL_DISPLAY_STATE TextState
     );
 
 BOOLEAN
@@ -2029,7 +2143,7 @@ ConsoleTextLocalSetTextResolution (
 NTSTATUS
 ConsoleTextLocalClearText (
     _In_ struct _BL_TEXT_CONSOLE* Console,
-    _In_ ULONG Attribute
+    _In_ BOOLEAN LineOnly
     );
 
 NTSTATUS
@@ -2050,6 +2164,12 @@ ConsolepFindResolution (
     _In_ PBL_DISPLAY_MODE Mode,
     _In_ PBL_DISPLAY_MODE List,
     _In_ ULONG MaxIndex
+    );
+
+NTSTATUS
+ConsoleFirmwareTextClear (
+    _In_ PBL_TEXT_CONSOLE Console,
+    _In_ BOOLEAN LineOnly
     );
 
 VOID
@@ -2093,6 +2213,12 @@ ConsoleFirmwareGraphicalClose (
 VOID
 ConsoleFirmwareGraphicalDisable (
     _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
+    );
+
+NTSTATUS
+ConsoleFirmwareGraphicalClear (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Color
     );
 
 NTSTATUS
@@ -2143,6 +2269,22 @@ ConsoleInputLocalEraseBuffer (
     _In_opt_ PULONG ValueToFill
     );
 
+VOID
+ConsolepClearBuffer (
+    _In_ PUCHAR FrameBuffer,
+    _In_ ULONG Width,
+    _In_ PUCHAR FillColor,
+    _In_ ULONG Height,
+    _In_ ULONG ScanlineWidth,
+    _In_ ULONG PixelDepth
+    );
+    
+NTSTATUS
+ConsolepConvertColorToPixel (
+    _In_ BL_COLOR Color,
+    _Out_ PUCHAR Pixel
+    );
+
 extern ULONG MmDescriptorCallTreeCount;
 extern ULONG BlpApplicationFlags;
 extern BL_LIBRARY_PARAMETERS BlpLibraryParameters;
@@ -2158,6 +2300,8 @@ extern EFI_GUID EfiLoadedImageProtocol;
 extern EFI_GUID EfiDevicePathProtocol;
 extern EFI_GUID EfiBlockIoProtocol;
 extern EFI_GUID EfiSimpleTextInputExProtocol;
+extern EFI_GUID EfiRootAcpiTableGuid;
+extern EFI_GUID EfiRootAcpiTable10Guid;
 extern ULONG ConsoleGraphicalResolutionListFlags;
 extern BL_DISPLAY_MODE ConsoleGraphicalResolutionList[];
 extern BL_DISPLAY_MODE ConsoleTextResolutionList[];

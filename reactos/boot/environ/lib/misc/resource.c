@@ -55,7 +55,7 @@ ResSelectLocale (
     }
 
     /* Check if that failed, or if we're using fallback */
-    if (!NT_SUCCESS(Status) || !(Primary))
+    if (!(Primary) || !(NT_SUCCESS(Status)))
     {
         /* Set the fallback pointers */
         ResRootDirectory = ResRootDirectoryFallback;
@@ -68,7 +68,6 @@ ResSelectLocale (
         if (!NT_SUCCESS(Status))
         {
             /* Fallback to text mode (yes, this is the API...) */
-            EfiPrintf(L"Locale failed, falling back to text mode\r\n");
             return BlDisplaySetScreenResolution();
         }
     }

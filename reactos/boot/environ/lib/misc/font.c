@@ -134,3 +134,63 @@ BfLoadDeferredFontFiles (
     /* Return load status */
     return Status;
 }
+
+NTSTATUS
+BfiFlipCursorCharacter (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ BOOLEAN Visible
+    )
+{
+    /* not implemented */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BfClearToEndOfLine (
+    _In_ PBL_GRAPHICS_CONSOLE Console
+    )
+{
+    /* not implemented */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BfClearScreen  (
+    _In_ PBL_GRAPHICS_CONSOLE Console
+    )
+{
+    NTSTATUS Status;
+
+    /* Reset the cursor position */
+    Console->TextConsole.State.XPos = 0;
+    Console->TextConsole.State.YPos = 0;
+
+    /* Fill the screen with the background color */
+    Status = ConsoleGraphicalClearPixels(Console,
+                                         Console->TextConsole.State.BgColor);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Check if the cursor should be visible */
+    if (Console->TextConsole.State.CursorVisible)
+    {
+        /* Load any fonts at this time */
+        if (!IsListEmpty(&BfiDeferredListHead))
+        {
+            BfLoadDeferredFontFiles();
+        }
+
+        /* Switch the cursor to visible */
+        Status = BfiFlipCursorCharacter(Console, TRUE);
+    }
+    else
+    {
+        /* Nothing left to do */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return cursor flip result, if any */
+    return Status;
+}

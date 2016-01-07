@@ -87,6 +87,44 @@ ConsoleEfiGraphicalOpenProtocol (
 }
 
 NTSTATUS
+ConsoleFirmwareGraphicalClear (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Color
+    )
+{
+    NTSTATUS Status;
+    UCHAR Pixel[4] = { 0 };
+
+    /* Convert the standard color to a firmware pixel color */
+    Status = ConsolepConvertColorToPixel(Color, Pixel);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Check if this is GOP or UGA */
+    if (Console->Type == BlUgaConsole)
+    {
+        EfiPrintf(L"Uga not supported\r\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* For GOP, just fill the screen */
+        ConsolepClearBuffer(Console->FrameBuffer,
+                            Console->DisplayMode.HRes,
+                            Pixel,
+                            Console->DisplayMode.VRes,
+                            Console->PixelsPerScanLine,
+                            Console->PixelDepth);
+        Status = STATUS_SUCCESS;
+    }
+
+    /* All clear */
+    return Status;
+}
+
+NTSTATUS
 ConsoleFirmwareGraphicalEnable (
     _In_ PBL_GRAPHICS_CONSOLE GraphicsConsole
     )

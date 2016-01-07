@@ -723,3 +723,273 @@ BlDisplayGetScreenResolution (
     /* Return if we got a valid resolution back */
     return Status;
 }
+
+VOID
+BlDisplayInvalidateOemBitmap (
+    VOID
+    )
+{
+    PBGRT_TABLE BgrtTable;
+    NTSTATUS Status;
+
+    /* Search for the BGRT */
+    Status = BlUtlGetAcpiTable((PVOID*)&BgrtTable, BGRT_SIGNATURE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Mark the bitmap as invalid */
+        BgrtTable->Status &= BGRT_STATUS_IMAGE_VALID;
+
+        /* Unmap the table */
+        BlMmUnmapVirtualAddressEx(BgrtTable, BgrtTable->Header.Length);
+    }
+}
+
+PBITMAP
+BlDisplayGetOemBitmap (
+    _In_opt_ PCOORD Offsets,
+    _Out_opt_ PULONG Flags
+    )
+{
+    NTSTATUS Status;
+    ULONG Size;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PBGRT_TABLE BgrtTable;
+    PBITMAP Bitmap;
+    PBMP_HEADER Header;
+
+    Bitmap = NULL;
+    BgrtTable = NULL;
+
+    /* Search for the BGRT */
+    Status = BlUtlGetAcpiTable((PVOID*)&BgrtTable, BGRT_SIGNATURE);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"no BGRT found\r\n");
+        goto Quickie;
+    }
+
+    /* Make sure this is really a BGRT */
+    if (BgrtTable->Header.Signature != BGRT_SIGNATURE)
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Make sure the BGRT table length is valid */
+    if (BgrtTable->Header.Length != sizeof(*BgrtTable))
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Make sure its a bitmap */
+    if (BgrtTable->ImageType != BgrtImageTypeBitmap)
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Make sure it's somewhere in RAM */
+    if (!BgrtTable->LogoAddress)
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Map the bitmap header only for now */
+    PhysicalAddress.QuadPart = BgrtTable->LogoAddress;
+    Status = BlMmMapPhysicalAddressEx((PVOID*)&Header,
+                                      0,
+                                      sizeof(BMP_HEADER),
+                                      PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Capture the real size of the header */
+    Size = Header->Size;
+
+    /* Unmap the bitmap header */
+    BlMmUnmapVirtualAddressEx(BgrtTable, sizeof(BMP_HEADER));
+
+    /* If the real size is smaller than at least a V3 bitmap, bail out */
+    if (Size < sizeof(BITMAP))
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Map the real size of the header */
+    Status = BlMmMapPhysicalAddressEx((PVOID*)&Bitmap,
+                                      0,
+                                      Size,
+                                      PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Make sure this is a non-compressed 24-bit or 32-bit V3 bitmap */
+    if ((Bitmap->BmpHeader.Signature != 'MB') ||
+        (Bitmap->DibHeader.Compression) ||
+        ((Bitmap->DibHeader.BitCount != 24) &&
+         (Bitmap->DibHeader.BitCount != 32)) ||
+        (Bitmap->DibHeader.Size != sizeof(BITMAP)))
+    {
+        Status = STATUS_ACPI_INVALID_TABLE;
+        goto Quickie;
+    }
+
+    /* Check if caller wants the offsets back */
+    if (Offsets)
+    {
+        /* Give them away */
+        Offsets->X = BgrtTable->OffsetX;
+        Offsets->Y = BgrtTable->OffsetY;
+    }
+
+    /* Check if the caller wants flags */
+    if (Flags)
+    {
+        /* Return if the image is valid */
+        *Flags = BgrtTable->Status & BGRT_STATUS_IMAGE_VALID;
+    }
+
+Quickie:
+    /* Check if we had mapped the BGRT */
+    if (BgrtTable)
+    {
+        /* Unmap it */
+        BlMmUnmapVirtualAddressEx(BgrtTable, BgrtTable->Header.Length);
+    }
+
+    /* Check if this is the failure path */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Did we have the OEM bitmap mapped? */
+        if (Bitmap)
+        {
+            /* Unmap it */
+            BlMmUnmapVirtualAddressEx(Bitmap, Bitmap->BmpHeader.Size);
+        }
+
+        /* No bitmap to return */
+        Bitmap = NULL;
+    }
+
+    /* Return the bitmap back, if any */
+    return Bitmap;
+}
+
+BOOLEAN
+BlDisplayValidOemBitmap (
+    VOID
+    )
+{
+    PBITMAP Bitmap;
+    ULONG HRes, VRes, Height, Width, Flags;
+    COORD Offsets;
+    BOOLEAN Result;
+    NTSTATUS Status;
+
+    /* First check if mobile graphics are enabled */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdLibraryBoolean_MobileGraphics,
+                                    &Result);
+    if ((NT_SUCCESS(Status)) && (Result))
+    {
+        /* Yes, so use the firmware image */
+        return TRUE;
+    }
+
+    /* Nope, so we'll check the ACPI OEM bitmap */
+    Result = FALSE;
+    Bitmap = BlDisplayGetOemBitmap(&Offsets, &Flags);
+
+    /* Is there one? */
+    if (Bitmap)
+    {
+        /* Is it valid? */
+        if (Flags & BGRT_STATUS_IMAGE_VALID)
+        {
+            /* Get the current screen resolution */
+            Status = BlDisplayGetScreenResolution(&HRes, &VRes);
+            if (NT_SUCCESS(Status))
+            {
+                /* Is there a valid width? */
+                Width = Bitmap->DibHeader.Width;
+                if (Width)
+                {
+                    /* Is there a valid height? */
+                    Height = Bitmap->DibHeader.Height;
+                    if (Height)
+                    {
+                        /* Will if fit on this screen? */
+                        if (((Width + Offsets.X) <= HRes) &&
+                            ((Height + Offsets.Y) <= VRes))
+                        {
+                            /* Then it's all good! */
+                            Result = TRUE;
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Unmap the bitmap for now, it will be drawn later */
+        BlMmUnmapVirtualAddressEx(Bitmap, Bitmap->BmpHeader.Size);
+    }
+
+    /* Return that a valid OEM bitmap exists */
+    return Result;
+}
+
+NTSTATUS
+BlDisplayClearScreen (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    PBL_TEXT_CONSOLE TextConsole;
+
+    /* Nothing to do if there's no text console */
+    Status = STATUS_SUCCESS;
+    TextConsole = DspTextConsole;
+    if (TextConsole)
+    {
+        /* Otherwise, clear the whole screen */
+        Status = TextConsole->Callbacks->ClearText(TextConsole, FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Invalidate the OEM bitmap at this point */
+            BlDisplayInvalidateOemBitmap();
+        }
+    }
+
+    /* All done */
+    return Status;
+};
+
+NTSTATUS
+BlDisplaySetCursorType (
+    _In_ ULONG Type
+    )
+{
+    NTSTATUS Status;
+    PBL_TEXT_CONSOLE TextConsole;
+    BL_DISPLAY_STATE State;
+
+    /* Nothing to do if there's no text console */
+    Status = STATUS_SUCCESS;
+    TextConsole = DspTextConsole;
+    if (TextConsole)
+    {
+        /* Write visibility state and call the function to change it */
+        State.CursorVisible = Type;
+        Status = TextConsole->Callbacks->SetTextState(TextConsole, 8, &State);
+    }
+
+    /* All done */
+    return Status;
+}

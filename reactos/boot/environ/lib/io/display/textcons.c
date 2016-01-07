@@ -55,11 +55,11 @@ ConsoleTextBaseGetTextState (
 NTSTATUS
 ConsoleTextLocalSetTextState (
     _In_ struct _BL_TEXT_CONSOLE* Console,
-    _In_ ULONG Flags,
+    _In_ ULONG Mask,
     _In_ PBL_DISPLAY_STATE TextState
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    return ConsoleFirmwareTextSetState(Console, Mask, TextState);
 }
 
 NTSTATUS
@@ -84,10 +84,10 @@ ConsoleTextLocalSetTextResolution (
 NTSTATUS
 ConsoleTextLocalClearText (
     _In_ struct _BL_TEXT_CONSOLE* Console,
-    _In_ ULONG Attribute
+    _In_ BOOLEAN LineOnly
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    return ConsoleFirmwareTextClear(Console, LineOnly);
 }
 
 NTSTATUS

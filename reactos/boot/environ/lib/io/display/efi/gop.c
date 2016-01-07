@@ -120,7 +120,7 @@ ConsoleEfiGopEnable (
         }
 
         /* Reset the OEM bitmap and get the new more information */
-//        BlDisplayInvalidateOemBitmap();
+        BlDisplayInvalidateOemBitmap();
         EfiGopGetCurrentMode(Protocol, &Dummy, &ModeInformation);
     }
 
@@ -166,7 +166,7 @@ ConsoleEfiGopEnable (
     {
         /* We failed seomewhere, reset the mode and the OEM bitmap back */
         EfiGopSetMode(Protocol, CurrentMode);
-        //BlDisplayInvalidateOemBitmap();
+        BlDisplayInvalidateOemBitmap();
     }
 
     /* Return back to caller */
@@ -186,7 +186,7 @@ ConsoleEfiGopClose (
     {
         /* Restore the old mode and reset the OEM bitmap in ACPI */
         EfiGopSetMode(GraphicsConsole->Protocol, OldMode);
-        //BlDisplayInvalidateOemBitmap();
+        BlDisplayInvalidateOemBitmap();
     }
 
     /* Close the GOP protocol */

@@ -552,3 +552,74 @@ ConsoleInputLocalEraseBuffer (
     /* All done */
     return Status;
 }
+
+NTSTATUS
+ConsoleFirmwareTextClear ( 
+    _In_ PBL_TEXT_CONSOLE Console, 
+    _In_ BOOLEAN LineOnly
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+    NTSTATUS Status;
+    ULONG i, Column, Row, TextWidth, TextHeight;
+
+    /* Get the text resolution */
+    BlDisplayGetTextCellResolution(&TextWidth, &TextHeight);
+
+    /* Are we just clearing a line? */
+    if (LineOnly)
+    {
+        /* Get the current column and row */
+        Column = Console->State.XPos / TextWidth;
+        Row = Console->State.YPos / TextHeight;
+        
+        /* Loop over every remaining character */
+        for (i = 0; i < Console->DisplayMode.HRes - Column - 1; i++)
+        {
+            /* Write a space on top of it */
+            Status = EfiConOutOutputString(Console->Protocol, L" ");
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+        }
+
+        /* And reset the cursor back at the initial position */
+        Status = EfiConOutSetCursorPosition(Console->Protocol,
+                                            Column,
+                                            Row);
+    }
+    else
+    {
+        /* Are we in protected mode? */
+        OldMode = CurrentExecutionContext->Mode;
+        if (OldMode != BlRealMode)
+        {
+            /* FIXME: Not yet implemented */
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        /* Clear the scren */
+        EfiStatus = Console->Protocol->ClearScreen(Console->Protocol);
+
+        /* Switch back to protected mode if we came from there */
+        if (OldMode != BlRealMode)
+        {
+            BlpArchSwitchContext(OldMode);
+        }
+
+        /* Conver to NT status -- did that work? */
+        Status = EfiGetNtStatusCode(EfiStatus);
+        if (NT_SUCCESS(Status))
+        {
+            /* Reset current positions */
+            Console->State.XPos = 0;
+            Console->State.YPos = 0;
+        }
+    }
+
+    /* All done */
+    return Status;
+}
+

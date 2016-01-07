@@ -16,7 +16,12 @@ BL_GRAPHICS_CONSOLE_VTABLE ConsoleGraphicalVtbl =
 {
     {
         (PCONSOLE_DESTRUCT)ConsoleGraphicalDestruct,
-        (PCONSOLE_REINITIALIZE)ConsoleGraphicalReinitialize
+        (PCONSOLE_REINITIALIZE)ConsoleGraphicalReinitialize,
+        ConsoleTextBaseGetTextState,
+        (PCONSOLE_SET_TEXT_STATE)ConsoleGraphicalSetTextState,
+        NULL, // GetTextResolution
+        NULL, // SetTextResolution
+        (PCONSOLE_CLEAR_TEXT)ConsoleGraphicalClearText
     },
     ConsoleGraphicalIsEnabled,
     ConsoleGraphicalEnable,
@@ -27,6 +32,27 @@ BL_GRAPHICS_CONSOLE_VTABLE ConsoleGraphicalVtbl =
 };
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+ConsoleGraphicalSetTextState (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Mask,
+    _In_ PBL_DISPLAY_STATE TextState
+    )
+{
+    /* Is the text console active? */
+    if (Console->TextConsole.Active)
+    {
+        /* Let it handle that */
+        return ConsoleFirmwareTextSetState(&Console->TextConsole,
+                                           Mask,
+                                           TextState);
+    }
+
+    /* Not yet */
+    EfiPrintf(L"FFX set not implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS
 ConsoleGraphicalConstruct (
@@ -77,6 +103,219 @@ ConsoleGraphicalConstruct (
     GraphicsConsole->FgColor = GraphicsConsole->TextConsole.State.FgColor;
     GraphicsConsole->BgColor = GraphicsConsole->TextConsole.State.BgColor;
     return STATUS_SUCCESS;
+}
+
+VOID
+ConsolepClearBuffer (
+    _In_ PUCHAR FrameBuffer,
+    _In_ ULONG Width,
+    _In_ PUCHAR FillColor,
+    _In_ ULONG Height,
+    _In_ ULONG ScanlineWidth,
+    _In_ ULONG PixelDepth
+    )
+{
+    PUCHAR Scanline, Current, FrameBufferEnd, LineEnd;
+    ULONG LineBytes, WidthBytes, BytesPerPixel;
+
+    /* Get the BPP */
+    BytesPerPixel = PixelDepth / 8;
+
+    /* Using that, calculate the size of a scan line */
+    LineBytes = ScanlineWidth * BytesPerPixel;
+
+    /* And the size of line we'll have to clear */
+    WidthBytes = Width * BytesPerPixel;
+
+    /* Allocat a scanline */
+    Scanline = BlMmAllocateHeap(WidthBytes);
+    if (Scanline)
+    {
+        /* For each remaining pixel on the scanline */
+        Current = Scanline;
+        while (Width--)
+        {
+            /* Copy in the fill color */
+            RtlCopyMemory(Current, FillColor, BytesPerPixel);
+            Current += BytesPerPixel;
+        }
+
+        /* For each scanline in the frame buffer */
+        while (Height--)
+        {
+            /* Copy our constructed scanline */
+            RtlCopyMemory(FrameBuffer, Scanline, WidthBytes);
+            FrameBuffer += LineBytes;
+        }
+    }
+    else
+    {
+        FrameBufferEnd = FrameBuffer + Height * LineBytes;
+        ScanlineWidth = BytesPerPixel * (ScanlineWidth - Width);
+        while (FrameBuffer != FrameBufferEnd)
+        {
+            if (FrameBuffer != (FrameBuffer + WidthBytes))
+            {
+                LineEnd = FrameBuffer + WidthBytes;
+                do
+                {
+                    RtlCopyMemory(FrameBuffer, FillColor, BytesPerPixel);
+                    FrameBuffer += BytesPerPixel;
+                }
+                while (FrameBuffer != LineEnd);
+            }
+
+            FrameBuffer += ScanlineWidth;
+        }
+    }
+}
+
+NTSTATUS
+ConsolepConvertColorToPixel (
+    _In_ BL_COLOR Color,
+    _Out_ PUCHAR Pixel
+    )
+{
+    NTSTATUS Status;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Convert the color to a pixel value */
+    switch (Color)
+    {
+    case Black:
+        Pixel[1] = 0;
+        Pixel[2] = 0;
+        Pixel[0] = 0;
+        break;
+    case Blue:
+        Pixel[1] = 0;
+        Pixel[2] = 0;
+        Pixel[0] = 0x7F;
+        break;
+    case Green:
+        Pixel[1] = 0x7F;
+        Pixel[2] = 0;
+        Pixel[0] = 0;
+        break;
+    case Cyan:
+        Pixel[1] = 0x7F;
+        Pixel[2] = 0;
+        Pixel[0] = 0x7F;
+        break;
+    case Red:
+        Pixel[1] = 0;
+        Pixel[2] = 0x7F;
+        Pixel[0] = 0x7F;
+        break;
+    case Magenta:
+        Pixel[1] = 0;
+        Pixel[2] = 0x7F;
+        Pixel[0] = 0x7F;
+        break;
+    case Brown:
+        Pixel[1] = 0x3F;
+        Pixel[2] = 0x7F;
+        Pixel[0] = 0;
+        break;
+    case LtGray:
+        Pixel[1] = 0xBFu;
+        Pixel[2] = 0xBFu;
+        *Pixel = 0xBFu;
+        break;
+    case Gray:
+        Pixel[1] = 0x7F;
+        Pixel[2] = 0x7F;
+        Pixel[0] = 0x7F;
+        break;
+    case LtBlue:
+        Pixel[1] = 0;
+        Pixel[2] = 0;
+        Pixel[0] = 0xFF;
+        break;
+    case LtGreen:
+        Pixel[1] = 0xFF;
+        Pixel[2] = 0;
+        Pixel[0] = 0;
+        break;
+    case LtCyan:
+        Pixel[1] = 0xFF;
+        Pixel[2] = 0;
+        Pixel[0] = 0xFF;
+        break;
+    case LtRed:
+        Pixel[1] = 0;
+        Pixel[2] = 0xFF;
+        Pixel[0] = 0;
+        break;
+    case LtMagenta:
+        Pixel[1] = 0;
+        Pixel[2] = 0xFF;
+        Pixel[0] = 0xFF;
+        break;
+    case Yellow:
+        Pixel[1] = 0xFF;
+        Pixel[2] = 0xFF;
+        Pixel[0] = 0;
+        break;
+    case White:
+        Pixel[1] = 0xFF;
+        Pixel[2] = 0xFF;
+        Pixel[0] = 0xFF;
+        break;
+    default:
+        Status = STATUS_INVALID_PARAMETER;
+        break;
+    }
+    return Status;
+}
+
+NTSTATUS
+ConsoleGraphicalClearPixels  (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ ULONG Color
+    )
+{
+    NTSTATUS Status;
+
+    /* Check if the text console is active */
+    if (Console->TextConsole.Active)
+    {
+        /* We shouldn't be here */
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Clear it in graphics mode */
+        Status = ConsoleFirmwareGraphicalClear(Console, Color);
+    }
+
+    /* All good */
+    return Status;
+}
+
+NTSTATUS
+ConsoleGraphicalClearText (
+    _In_ PBL_GRAPHICS_CONSOLE Console,
+    _In_ BOOLEAN LineOnly
+    )
+{
+    /* Is the text console active? */
+    if (Console->TextConsole.Active)
+    {
+        /* Let firmware clear do it */
+        return ConsoleFirmwareTextClear(&Console->TextConsole, LineOnly);
+    }
+
+    /* Are we clearing a line only? */
+    if (LineOnly)
+    {
+        return BfClearToEndOfLine(Console);
+    }
+
+    /* Nope -- the whole screen */
+    return BfClearScreen(Console);
 }
 
 BOOLEAN

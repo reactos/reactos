@@ -79,7 +79,8 @@ typedef enum BcdLibraryElementTypes
     BcdLibraryBoolean_BootUxDisable = 0x1600006C,
     BcdLibraryBoolean_BootShutdownDisabled = 0x16000074,
     BcdLibraryIntegerList_AllowedInMemorySettings = 0x17000077,
-    BcdLibraryBoolean_ForceFipsCrypto = 0x16000079
+    BcdLibraryBoolean_ForceFipsCrypto = 0x16000079,
+    BcdLibraryBoolean_MobileGraphics = 0x1600007A /* Undocumented */
 } BcdLibraryElementTypes;
 
 typedef enum BcdOSLoaderElementTypes

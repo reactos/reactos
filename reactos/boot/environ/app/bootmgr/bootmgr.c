@@ -1032,6 +1032,66 @@ BmFwMemoryInitialize (
     }
 }
 
+NTSTATUS
+BmpBgDisplayClearScreen (
+    _In_ ULONG Color
+    )
+{
+    /* Not yet supported */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlXmiInitialize (
+    _In_ PWCHAR Stylesheet
+    )
+{
+    /* Reset the cursor type */
+    BlDisplaySetCursorType(0);
+
+    /* Nope, not doing any XML stuff */
+    return STATUS_SUCCESS;
+}
+
+VOID
+BlImgQueryCodeIntegrityBootOptions (
+    _In_ PBL_LOADED_APPLICATION_ENTRY ApplicationEntry,
+    _Out_ PBOOLEAN IntegrityChecksDisabled, 
+    _Out_ PBOOLEAN TestSigningEnabled
+    )
+{
+    
+    NTSTATUS Status;
+    BOOLEAN Value;
+
+    /* Check if /DISABLEINTEGRITYCHECKS is on */
+    Status = BlGetBootOptionBoolean(ApplicationEntry->BcdData,
+                                    BcdLibraryBoolean_DisableIntegrityChecks,
+                                    &Value);
+    *IntegrityChecksDisabled = NT_SUCCESS(Status) && (Value);
+
+    /* Check if /TESTSIGNING is on */
+    Status = BlGetBootOptionBoolean(ApplicationEntry->BcdData,
+                                    BcdLibraryBoolean_AllowPrereleaseSignatures,
+                                    &Value);
+    *TestSigningEnabled = NT_SUCCESS(Status) && (Value);
+}
+
+NTSTATUS
+BmFwVerifySelfIntegrity (
+    VOID
+    )
+{
+    EfiPrintf(L"Device Type %d Local Type %d\r\n", BlpBootDevice->DeviceType, BlpBootDevice->Local.Type);
+    if ((BlpBootDevice->DeviceType == LocalDevice) &&
+        (BlpBootDevice->Local.Type == CdRomDevice) &&
+        (BlpApplicationFlags & BL_APPLICATION_ENTRY_FLAG_NO_GUID))
+    {
+        return STATUS_SUCCESS;
+    }
+
+    return 0xC0000428;
+}
 
 /*++
  * @name BmMain
@@ -1059,6 +1119,7 @@ BmMain (
     HANDLE BcdHandle;
     PBL_BCD_OPTION EarlyOptions;
     PWCHAR Stylesheet;
+    BOOLEAN XmlLoaded, DisableIntegrity, TestSigning;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -1166,23 +1227,66 @@ BmMain (
         goto Quickie;
     }
 
+    /* Initialize the XML Engine (as a side-effect, resets cursor) */
+    Status = BlXmiInitialize(Stylesheet);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"\r\nBlXmiInitialize failed 0x%x\r\n", Status);
+        goto Failure;
+    }
+    XmlLoaded = TRUE;
+
+    /* Check if there's an active bitmap visible */
+    if (!BlDisplayValidOemBitmap())
+    {
+        /* Nope, make the screen black using BGFX */
+        if (!NT_SUCCESS(BmpBgDisplayClearScreen(0xFF000000)))
+        {
+            /* BGFX isn't active, use standard display */
+            BlDisplayClearScreen();
+        }
+    }
+
+#ifdef _BIT_LOCKER_
+    /* Bitlocker will take over screen UI if enabled */
+    FveDisplayScreen = BmFveDisplayScreen;
+#endif
+
+    /* Check if any bypass options are enabled */
+    BlImgQueryCodeIntegrityBootOptions(&BlpApplicationEntry,
+                                        &DisableIntegrity,
+                                        &TestSigning);
+    if (!DisableIntegrity)
+    {
+        /* Integrity checks are enabled, so validate our signature */
+        Status = BmFwVerifySelfIntegrity();
+        if (!NT_SUCCESS(Status))
+        {
+            /* Signature invalid, fail boot */
+           // goto Failure;
+        }
+    }
+
+//        BlXmiWrite(L"<bootmgr/>");
+
+    //BlSecureBootCheckForFactoryReset();
+
+
     /* do more stuff!! */
     EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
-    //EfiPrintf(Stylesheet);
+    EfiPrintf(Stylesheet);
     EfiStall(10000000);
 
-//Failure:
+Failure:
     /* Check if we got here due to an internal error */
     if (BmpInternalBootError)
     {
         /* If XML is available, display the error */
-#if 0
         if (XmlLoaded)
         {
-            BmDisplayDumpError(0, 0);
-            BmErrorPurge();
+            //BmDisplayDumpError(0, 0);
+            //BmErrorPurge();
         }
-#endif
 
         /* Don't do a fatal error -- return back to firmware */
         goto Quickie;
