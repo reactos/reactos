@@ -9,9 +9,14 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
+#include <shlobj.h>
+#include <shobjidl.h>
+#include <shlwapi.h>
 
 /* DON'T CHANGE ORDER!!!! */
 PCWSTR devices[3] = { L"\\\\.\\VBoxMiniRdrDN", L"\\??\\VBoxMiniRdrDN", L"\\Device\\VBoxMiniRdr" };
+
+#define MAX_LEN 255
 
 /* Taken from VBox header */
 #define _MRX_MAX_DRIVE_LETTERS 26
@@ -21,6 +26,7 @@ PCWSTR devices[3] = { L"\\\\.\\VBoxMiniRdrDN", L"\\??\\VBoxMiniRdrDN", L"\\Devic
 #define IOCTL_MRX_VBOX_ADDCONN       _MRX_VBOX_CONTROL_CODE(100, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_GETLIST       _MRX_VBOX_CONTROL_CODE(103, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_GETGLOBALLIST _MRX_VBOX_CONTROL_CODE(104, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_MRX_VBOX_GETGLOBALCONN _MRX_VBOX_CONTROL_CODE(105, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MRX_VBOX_START         _MRX_VBOX_CONTROL_CODE(106, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 BOOL performDevIoCtl(DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize)
@@ -120,6 +126,21 @@ int getList(void)
     return 0;
 }
 
+PCWSTR getGlobalConn(CHAR id)
+{
+    BOOL ret;
+    static WCHAR name[MAX_LEN];
+
+    ret = performDevIoCtl(IOCTL_MRX_VBOX_GETGLOBALCONN, &id, sizeof(id), name, sizeof(name));
+    if (ret == FALSE)
+    {
+        return NULL;
+    }
+
+    name[MAX_LEN - 1] = 0;
+    return name;
+}
+
 int getGlobalList(void)
 {
     short i;
@@ -135,10 +156,106 @@ int getGlobalList(void)
         return 1;
     }
 
-    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; i += 2)
+    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; ++i)
     {
-        wprintf(L"%c: %s\t%c: %s\n", 'A' + i, (outputBuffer[i] & 0x80 ? L"Active" : L"Inactive"),
-                'A' + (i + 1), (outputBuffer[i + 1] & 0x80 ? L"Active" : L"Inactive"));
+        CHAR id = outputBuffer[i];
+        BOOL active = ((id & 0x80) == 0x80);
+        PCWSTR name = NULL;
+
+        if (active)
+        {
+            name = getGlobalConn(id);
+        }
+        if (name == NULL)
+        {
+            name = L"None";
+        }
+
+        wprintf(L"%c: %s (%s)%c", 'A' + i, (active ? L"Active" : L"Inactive"), name, (i & 1 ? '\n' : '\t'));
+    }
+
+    return 0;
+}
+
+BOOL CreateUNCShortcut(PCWSTR share)
+{
+    HRESULT res;
+    IShellLink *link;
+    IPersistFile *persist;
+    WCHAR path[MAX_PATH];
+    WCHAR linkPath[MAX_PATH];
+
+    res = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&link);
+    if (FAILED(res))
+    {
+        return FALSE;
+    }
+
+    res = link->lpVtbl->QueryInterface(link, &IID_IPersistFile, (void **)&persist);
+    if (FAILED(res))
+    {
+        link->lpVtbl->Release(link);
+        return FALSE;
+    }
+
+    wcscpy(path, L"\\\\vboxsvr\\");
+    wcscat(path, share);
+    link->lpVtbl->SetPath(link, path);
+
+    res = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, path);
+    if (FAILED(res))
+    {
+        persist->lpVtbl->Release(persist);
+        link->lpVtbl->Release(link);
+        return FALSE;
+    }
+
+    wsprintf(linkPath, L"%s\\Browse %s (VBox).lnk", path, share);
+    res = persist->lpVtbl->Save(persist, linkPath, TRUE);
+
+    persist->lpVtbl->Release(persist);
+    link->lpVtbl->Release(link);
+
+    return SUCCEEDED(res);
+}
+
+int autoStart(void)
+{
+    short i;
+    BOOL ret;
+    DWORD outputBufferSize;
+    char outputBuffer[_MRX_MAX_DRIVE_LETTERS];
+
+    if (startVBoxSrv() != 0)
+    {
+        return 1;
+    }
+
+    outputBufferSize = sizeof(outputBuffer);
+    memset(outputBuffer, 0, outputBufferSize);
+    ret = performDevIoCtl(IOCTL_MRX_VBOX_GETGLOBALLIST, NULL, 0, &outputBuffer, outputBufferSize);
+    if (ret == FALSE)
+    {
+        return 1;
+    }
+
+    CoInitialize(NULL);
+    for (i = 0; i < _MRX_MAX_DRIVE_LETTERS; ++i)
+    {
+        CHAR id = outputBuffer[i];
+        BOOL active = ((id & 0x80) == 0x80);
+        PCWSTR name = NULL;
+
+        if (active)
+        {
+            name = getGlobalConn(id);
+        }
+        if (name == NULL)
+        {
+            continue;
+        }
+
+        CreateUNCShortcut(name);
     }
 
     return 0;
@@ -151,6 +268,7 @@ void printUsage(void)
     wprintf(L"\taddconn <letter> <share name>: add a connection\n");
     wprintf(L"\tgetlist: list connections\n");
     wprintf(L"\tgetgloballist: list available shares\n");
+    wprintf(L"\tauto: automagically configure the VBox Shared folders and creates desktop folders\n");
 }
 
 int wmain(int argc, wchar_t *argv[])
@@ -186,6 +304,10 @@ int wmain(int argc, wchar_t *argv[])
     else if (_wcsicmp(cmd, L"getgloballist") == 0)
     {
         return getGlobalList();
+    }
+    else if (_wcsicmp(cmd, L"auto") == 0)
+    {
+        return autoStart();
     }
     else
     {
