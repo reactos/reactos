@@ -950,7 +950,7 @@ CUSBRequest::BuildControlTransferQueueHead(
         if (!NT_SUCCESS(Status))
         {
             // failed to create descriptor chain
-            DPRINT1("[EHCI] Failed to create status descriptor\n");
+            DPRINT1("[EHCI] Failed to create descriptor chain\n");
 
             // release status transfer descriptor
             m_DmaManager->Release(StatusDescriptor, sizeof(QUEUE_TRANSFER_DESCRIPTOR));
