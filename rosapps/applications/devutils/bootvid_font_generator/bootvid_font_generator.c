@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS BootVid Font Generator Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
- * PURPOSE:     Generates the FontData array for the bootdata.c file of bootvid.sys
+ * PURPOSE:     Generates the FontData array for the bootdata.c file of bootvid.dll
  * COPYRIGHT:   Copyright 2016 Colin Finck <colin@reactos.org>
  */
 
@@ -139,8 +139,8 @@ static void DumpFont(LPSTR FontName, INT FontSize, INT XOffset, INT YOffset)
 
     iHeight = -MulDiv(FontSize, GetDeviceCaps(hDC, LOGPIXELSY), 72);
     hFont = CreateFontA(iHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                        ANSI_CHARSET, 0, 0, NONANTIALIASED_QUALITY,
-                        FIXED_PITCH, FontName);
+                        ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                        NONANTIALIASED_QUALITY, FIXED_PITCH, FontName);
     if (!hFont)
     {
         fprintf(stderr, "CreateFont failed with error %lu!\n", GetLastError());
