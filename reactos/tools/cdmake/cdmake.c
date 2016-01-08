@@ -2249,7 +2249,7 @@ int main(int argc, char **argv)
         FILE *f = fopen(source+1, "r");
         if (!f)
         {
-            error_exit("Cannot open cd description %s\n", source+1);
+            error_exit("Cannot open CD-ROM file description %s\n", source+1);
         }
         while (fgets(lineread, sizeof(lineread), f))
         {
