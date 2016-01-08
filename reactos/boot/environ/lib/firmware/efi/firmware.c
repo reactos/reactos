@@ -33,8 +33,13 @@ EFI_GUID EfiSimpleTextInputExProtocol = EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID;
 EFI_GUID EfiBlockIoProtocol = EFI_BLOCK_IO_PROTOCOL_GUID;
 EFI_GUID EfiRootAcpiTableGuid = EFI_ACPI_20_TABLE_GUID;
 EFI_GUID EfiRootAcpiTable10Guid = EFI_ACPI_TABLE_GUID;
+EFI_GUID EfiGlobalVariable = EFI_GLOBAL_VARIABLE;
+EFI_GUID BlpEfiSecureBootPrivateNamespace = { 0x77FA9ABD , 0x0359, 0x4D32, { 0xBD, 0x60, 0x28, 0xF4, 0xE7, 0x8F, 0x78, 0x4B } };
 
 WCHAR BlScratchBuffer[8192];
+
+BOOLEAN BlpFirmwareChecked;
+BOOLEAN BlpFirmwareEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -265,6 +270,159 @@ EfiCloseProtocol (
     }
 
     /* All done */
+    return Status;
+}
+
+NTSTATUS
+EfiGetVariable (
+    _In_ PWCHAR VariableName,
+    _In_ EFI_GUID* VendorGuid,
+    _Out_opt_ PULONG Attributes,
+    _Inout_ PULONG DataSize,
+    _Out_ PVOID Data
+    )
+{
+    EFI_STATUS EfiStatus;
+    NTSTATUS Status;
+    BL_ARCH_MODE OldMode;
+    ULONG LocalAttributes;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Call the runtime API */
+    EfiStatus = EfiRT->GetVariable(VariableName,
+                                   VendorGuid,
+                                   (UINT32*)&LocalAttributes,
+                                   (UINTN*)DataSize,
+                                   Data);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Return attributes back to the caller if asked to */
+    if (Attributes)
+    {
+        *Attributes = LocalAttributes;
+    }
+
+    /* Convert the errot to an NTSTATUS and return it */
+    Status = EfiGetNtStatusCode(EfiStatus);
+    return Status;
+}
+
+NTSTATUS
+BlpSecureBootEFIIsEnabled (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    BOOLEAN SetupMode, SecureBoot;
+    ULONG DataSize;
+
+    /* Assume setup mode enabled, and no secure boot */
+    SecureBoot = FALSE;
+    SetupMode = TRUE;
+
+    /* Get the SetupMode variable */
+    DataSize = sizeof(SetupMode);
+    Status = EfiGetVariable(L"SetupMode",
+                            &EfiGlobalVariable,
+                            NULL,
+                            &DataSize,
+                            &SetupMode);
+    if (NT_SUCCESS(Status))
+    {
+        /* If it worked, get the SecureBoot variable */
+        DataSize = sizeof(SecureBoot);
+        Status = EfiGetVariable(L"SecureBoot",
+                                &EfiGlobalVariable,
+                                NULL,
+                                &DataSize,
+                                &SecureBoot);
+        if (NT_SUCCESS(Status))
+        {
+            /* In setup mode or without secureboot turned on, return failure */
+            if ((SecureBoot != TRUE) || (SetupMode))
+            {
+                Status = STATUS_INVALID_SIGNATURE;
+            }
+
+            // BlpSbdiStateFlags |= 8u;
+        }
+    }
+
+    /* Return secureboot status */
+    return Status;
+}
+
+NTSTATUS
+BlSecureBootIsEnabled (
+    _Out_ PBOOLEAN SecureBootEnabled
+    )
+{
+    NTSTATUS Status;
+
+    /* Have we checked before ? */
+    if (!BlpFirmwareChecked)
+    {
+        /* First time checking */
+        Status = BlpSecureBootEFIIsEnabled();
+        if NT_SUCCESS(Status)
+        {
+            /* Yep, it's on */
+            BlpFirmwareEnabled = TRUE;
+        }
+
+        /* Don't check again */
+        BlpFirmwareChecked = TRUE;
+    }
+
+    /* Return the firmware result */
+    *SecureBootEnabled = BlpFirmwareEnabled;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+BlSecureBootCheckForFactoryReset (
+    VOID
+    )
+{
+    BOOLEAN SecureBootEnabled;
+    NTSTATUS Status;
+    ULONG DataSize;
+
+    /* Initialize locals */
+    DataSize = 0;
+    SecureBootEnabled = FALSE;
+
+    /* Check if secureboot is enabled */
+    Status = BlSecureBootIsEnabled(&SecureBootEnabled);
+    if (!(NT_SUCCESS(Status)) || !(SecureBootEnabled))
+    {
+        /* It's not. Check if there's a revocation list */
+        Status = EfiGetVariable(L"RevocationList",
+                                &BlpEfiSecureBootPrivateNamespace,
+                                NULL,
+                                &DataSize,
+                                NULL);
+        if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_TOO_SMALL))
+        {
+            /* We don't support this yet */
+            EfiPrintf(L"Not yet supported\r\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
+    }
+
+    /* Return back to the caller */
     return Status;
 }
 

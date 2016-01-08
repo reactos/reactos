@@ -1042,6 +1042,16 @@ BmpBgDisplayClearScreen (
 }
 
 NTSTATUS
+BlXmiWrite (
+    _In_ PWCHAR XmlTag
+    )
+{
+    /* Sigh */
+    EfiPrintf(L"XML: %s\r\n", XmlTag);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 BlXmiInitialize (
     _In_ PWCHAR Stylesheet
     )
@@ -1082,15 +1092,75 @@ BmFwVerifySelfIntegrity (
     VOID
     )
 {
-    EfiPrintf(L"Device Type %d Local Type %d\r\n", BlpBootDevice->DeviceType, BlpBootDevice->Local.Type);
+    /* Check if we're booted by UEFI off the DVD directlry */
     if ((BlpBootDevice->DeviceType == LocalDevice) &&
         (BlpBootDevice->Local.Type == CdRomDevice) &&
         (BlpApplicationFlags & BL_APPLICATION_FLAG_CONVERTED_FROM_EFI))
     {
+        /* Windows actually bypasses integrity checks in this case. Works for us */
         return STATUS_SUCCESS;
     }
 
+    /* Our binaries aren't signed, so always return failure */
     return 0xC0000428;
+}
+
+NTSTATUS
+BmFwRegisterRevocationList (
+    VOID
+    )
+{
+    NTSTATUS Status;
+    BOOLEAN SecureBootEnabled;
+
+    /* Is SecureBoot enabled? */
+    Status = BlSecureBootIsEnabled(&SecureBootEnabled);
+    if ((NT_SUCCESS(Status)) && (SecureBootEnabled))
+    {
+        EfiPrintf(L"SB not implemented revok\r\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* Nothing to do without SecureBoot */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return revocation result back to caller */
+    return Status;
+}
+
+NTSTATUS
+BmResumeFromHibernate (
+    _Out_ PHANDLE BcdResumeHandle
+    )
+{
+    NTSTATUS Status;
+    BOOLEAN AttemptResume;
+
+    /* Should we attempt to resume from hibernation? */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdBootMgrBoolean_AttemptResume,
+                                    &AttemptResume);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Nope. Is automatic restart on crash enabled? */
+        AttemptResume = FALSE;
+        Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                        BcdOSLoaderBoolean_DisableCrashAutoReboot,
+                                        &AttemptResume);
+        AttemptResume = (NT_SUCCESS(Status) && (AttemptResume));
+    }
+
+    /* Don't do anything if there's no need to resume anything */
+    if (!AttemptResume)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Not yet implemented */
+    EfiPrintf(L"Resume not supported\r\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*++
@@ -1116,7 +1186,7 @@ BmMain (
     PBL_RETURN_ARGUMENTS ReturnArguments;
     BOOLEAN RebootOnError;
     PGUID AppIdentifier;
-    HANDLE BcdHandle;
+    HANDLE BcdHandle, ResumeBcdHandle;
     PBL_BCD_OPTION EarlyOptions;
     PWCHAR Stylesheet;
     BOOLEAN XmlLoaded, DisableIntegrity, TestSigning;
@@ -1267,14 +1337,36 @@ BmMain (
         }
     }
 
-//        BlXmiWrite(L"<bootmgr/>");
+    /* Write out the first XML tag */
+    BlXmiWrite(L"<bootmgr/>");
 
-    //BlSecureBootCheckForFactoryReset();
+    /* Check for factory resset */
+    BlSecureBootCheckForFactoryReset();
+
+    /* Load the revocation list */
+    Status = BmFwRegisterRevocationList();
+    if (!NT_SUCCESS(Status))
+    {
+        goto Failure;
+    }
+
+    /* Register our custom progress routine */
+    BlUtlRegisterProgressRoutine();
+
+    /* Display state is not currently cached */
+    BmDisplayStateCached = FALSE;
+
+    /* Check if w need to resume from hibernate */
+    Status = BmResumeFromHibernate(&ResumeBcdHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Failure;
+    }
 
 
     /* do more stuff!! */
-    EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
-    EfiPrintf(Stylesheet);
+    //EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
+    //EfiPrintf(Stylesheet);
     EfiStall(10000000);
 
 Failure:

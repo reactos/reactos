@@ -39,6 +39,7 @@
 #include <UgaDraw.h>
 #include <BlockIo.h>
 #include <Acpi.h>
+#include <GlobalVariable.h>
 
 /* Registry Headers */
 #define __FREELDR_H
@@ -1528,6 +1529,11 @@ BlUtlInitialize (
     VOID
     );
 
+NTSTATUS
+BlUtlRegisterProgressRoutine (
+    VOID
+    );
+
 VOID
 BlFwReboot (
     VOID
@@ -1535,6 +1541,21 @@ BlFwReboot (
 
 PGUID
 BlGetApplicationIdentifier (
+    VOID
+    );
+
+NTSTATUS
+BlpSecureBootEFIIsEnabled (
+    VOID
+    );
+
+NTSTATUS
+BlSecureBootIsEnabled (
+    _Out_ PBOOLEAN SecureBootEnabled
+    );
+
+NTSTATUS
+BlSecureBootCheckForFactoryReset (
     VOID
     );
 
@@ -2302,6 +2323,7 @@ extern EFI_GUID EfiBlockIoProtocol;
 extern EFI_GUID EfiSimpleTextInputExProtocol;
 extern EFI_GUID EfiRootAcpiTableGuid;
 extern EFI_GUID EfiRootAcpiTable10Guid;
+extern EFI_GUID EfiGlobalVariable;
 extern ULONG ConsoleGraphicalResolutionListFlags;
 extern BL_DISPLAY_MODE ConsoleGraphicalResolutionList[];
 extern BL_DISPLAY_MODE ConsoleTextResolutionList[];

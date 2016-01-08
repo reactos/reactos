@@ -28,6 +28,8 @@ ULONG UtlNextUpdatePercentage;
 BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
+
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -176,6 +178,7 @@ BlUtlGetAcpiTable (
     return STATUS_NOT_FOUND;
 }
 
+
 VOID
 BlUtlUpdateProgress (
     _In_ ULONG Percentage,
@@ -213,6 +216,58 @@ BlUtlInitialize (
     UtlProgressNeedsInfoUpdate = 0;
     UtlProgressInfo = 0;
 
+    return STATUS_SUCCESS;
+}
+
+VOID
+BmUpdateProgressInfo (
+    _In_ PVOID Uknown,
+    _In_ PWCHAR ProgressInfo
+    )
+{
+    EfiPrintf(L"Progress Info: %s\r\n", ProgressInfo);
+}
+
+VOID
+BmUpdateProgress (
+    _In_ PVOID Unknown,
+    _In_ ULONG Percent,
+    _Out_ PBOOLEAN Completed
+    )
+{
+    EfiPrintf(L"Progress: %d\r\n", Percent);
+    if (Completed)
+    {
+        *Completed = TRUE;
+    }
+}
+
+NTSTATUS
+BlUtlRegisterProgressRoutine (
+    VOID
+    )
+{
+    /* One shouldn't already exist */
+    if (UtlProgressRoutine)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Set the routine, and no context */
+    UtlProgressRoutine = BmUpdateProgress;
+    UtlProgressContext = NULL;
+
+    /* Progress increases by one */
+    UtlProgressGranularity = 1;
+
+    /* Set progress to zero for now */
+    UtlCurrentPercentComplete = 0;
+    UtlNextUpdatePercentage = 0;
+
+    /* Set the info routine if there is one */
+    UtlProgressInfoRoutine = BmUpdateProgressInfo;
+
+    /* All good */
     return STATUS_SUCCESS;
 }
 
