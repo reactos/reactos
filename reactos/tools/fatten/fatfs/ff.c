@@ -4056,8 +4056,8 @@ FRESULT f_forward (
 /*-----------------------------------------------------------------------*/
 /* Create file system on the logical drive                               */
 /*-----------------------------------------------------------------------*/
-#define N_ROOTDIR12	224		/* Number of root directory entries for FAT12/16 */
-#define N_ROOTDIR16	512		/* Number of root directory entries for FAT12/16 */
+#define N_ROOTDIR12	224		/* Number of root directory entries for FAT12 */
+#define N_ROOTDIR16	512		/* Number of root directory entries for FAT16 */
 #define N_FATS		2		/* Number of FATs (1 or 2) */
 
 
@@ -4141,10 +4141,10 @@ FRESULT f_mkfs (
 		n_fat = (fmt == FS_FAT12) ? (n_clst * 3 + 1) / 2 + 3 : (n_clst * 2) + 4;
 		n_fat = (n_fat + SS(fs) - 1) / SS(fs);
 		n_rsv = 1;
-        if(fmt == FS_FAT12)
-		    n_dir = (DWORD)N_ROOTDIR12 * SZ_DIRE / SS(fs);
-        else
-            n_dir = (DWORD)N_ROOTDIR16 * SZ_DIRE / SS(fs);
+		if (fmt == FS_FAT12)
+			n_dir = (DWORD)N_ROOTDIR12 * SZ_DIRE / SS(fs);
+		else
+			n_dir = (DWORD)N_ROOTDIR16 * SZ_DIRE / SS(fs);
 	}
 	b_fat = b_vol + n_rsv;				/* FAT area start sector */
 	b_dir = b_fat + n_fat * N_FATS;		/* Directory area start sector */
@@ -4226,20 +4226,11 @@ FRESULT f_mkfs (
 		ST_DWORD(tbl + BPB_TotSec32, n_vol);
 	}
 	tbl[BPB_Media] = md;					/* Media descriptor */
-    ST_DWORD(tbl + BPB_HiddSec, b_vol);		/* Hidden sectors */
+	ST_DWORD(tbl + BPB_HiddSec, b_vol);		/* Hidden sectors */
 	n = GET_FATTIME();						/* Use current time as VSN */
-    if (fmt == FS_FAT12) {
-        /* Assume floppy characteristics */
-        ST_WORD(tbl + BPB_SecPerTrk, 0x12);	/* Number of sectors per track */
-        ST_WORD(tbl + BPB_NumHeads, 0x02);	/* Number of heads */
-        ST_DWORD(tbl + BS_VolID, n);		/* VSN */
-        ST_WORD(tbl + BPB_FATSz16, n_fat);	/* Number of sectors per FAT */
-        tbl[BS_DrvNum] = 0x00;				/* Drive number */
-        tbl[BS_BootSig] = 0x29;				/* Extended boot signature */
-        mem_cpy(tbl + BS_VolLab, "NO NAME    " "FAT12   ", 19);	/* Volume label, FAT signature */
-    } else if (fmt == FS_FAT32) {
-        ST_WORD(tbl + BPB_SecPerTrk, 63);	/* Number of sectors per track */
-        ST_WORD(tbl + BPB_NumHeads, 255);	/* Number of heads */
+	if (fmt == FS_FAT32) {
+		ST_WORD(tbl + BPB_SecPerTrk, 63);	/* Number of sectors per track */
+		ST_WORD(tbl + BPB_NumHeads, 255);	/* Number of heads */
 		ST_DWORD(tbl + BS_VolID32, n);		/* VSN */
 		ST_DWORD(tbl + BPB_FATSz32, n_fat);	/* Number of sectors per FAT */
 		ST_DWORD(tbl + BPB_RootClus, 2);	/* Root directory start cluster (2) */
@@ -4248,15 +4239,24 @@ FRESULT f_mkfs (
 		tbl[BS_DrvNum32] = 0x80;			/* Drive number */
 		tbl[BS_BootSig32] = 0x29;			/* Extended boot signature */
 		mem_cpy(tbl + BS_VolLab32, "NO NAME    " "FAT32   ", 19);	/* Volume label, FAT signature */
-	} else {
-        ST_WORD(tbl + BPB_SecPerTrk, 63);	/* Number of sectors per track */
-        ST_WORD(tbl + BPB_NumHeads, 255);	/* Number of heads */
-        ST_DWORD(tbl + BS_VolID, n);		/* VSN */
-        ST_WORD(tbl + BPB_FATSz16, n_fat);	/* Number of sectors per FAT */
-        tbl[BS_DrvNum] = 0x80;				/* Drive number */
-        tbl[BS_BootSig] = 0x29;				/* Extended boot signature */
-        mem_cpy(tbl + BS_VolLab, "NO NAME    " "FAT     ", 19);	/* Volume label, FAT signature */
-    }
+	} else if (fmt == FS_FAT16) {
+		ST_WORD(tbl + BPB_SecPerTrk, 63);	/* Number of sectors per track */
+		ST_WORD(tbl + BPB_NumHeads, 255);	/* Number of heads */
+		ST_DWORD(tbl + BS_VolID, n);		/* VSN */
+		ST_WORD(tbl + BPB_FATSz16, n_fat);	/* Number of sectors per FAT */
+		tbl[BS_DrvNum] = 0x80;				/* Drive number */
+		tbl[BS_BootSig] = 0x29;				/* Extended boot signature */
+		mem_cpy(tbl + BS_VolLab, "NO NAME    " "FAT16   ", 19);	/* Volume label, FAT signature */
+	} else /* if (fmt == FS_FAT12) */ {
+		/* Assume floppy characteristics */
+		ST_WORD(tbl + BPB_SecPerTrk, 0x12);	/* Number of sectors per track */
+		ST_WORD(tbl + BPB_NumHeads, 0x02);	/* Number of heads */
+		ST_DWORD(tbl + BS_VolID, n);		/* VSN */
+		ST_WORD(tbl + BPB_FATSz16, n_fat);	/* Number of sectors per FAT */
+		tbl[BS_DrvNum] = 0x00;				/* Drive number */
+		tbl[BS_BootSig] = 0x29;				/* Extended boot signature */
+		mem_cpy(tbl + BS_VolLab, "NO NAME    " "FAT12   ", 19);	/* Volume label, FAT signature */
+	}
 	ST_WORD(tbl + BS_55AA, 0xAA55);			/* Signature (Offset is fixed here regardless of sector size) */
 	if (disk_write(pdrv, tbl, b_vol, 1) != RES_OK)	/* Write it to the VBR sector */
 		return FR_DISK_ERR;
