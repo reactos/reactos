@@ -1085,7 +1085,7 @@ BmFwVerifySelfIntegrity (
     EfiPrintf(L"Device Type %d Local Type %d\r\n", BlpBootDevice->DeviceType, BlpBootDevice->Local.Type);
     if ((BlpBootDevice->DeviceType == LocalDevice) &&
         (BlpBootDevice->Local.Type == CdRomDevice) &&
-        (BlpApplicationFlags & BL_APPLICATION_ENTRY_FLAG_NO_GUID))
+        (BlpApplicationFlags & BL_APPLICATION_FLAG_CONVERTED_FROM_EFI))
     {
         return STATUS_SUCCESS;
     }

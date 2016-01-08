@@ -920,7 +920,8 @@ BlockIoEfiGetChildHandle (
             /* Yup, return back to caller */
             ChildProtocolInterface->Handle = Handle;
             ChildProtocolInterface->Interface = DevicePath;
-            break;
+            Status = STATUS_SUCCESS;
+            goto Quickie;
         }
 
         /* Close the device path */
@@ -930,6 +931,7 @@ BlockIoEfiGetChildHandle (
     /* If we got here, nothing was found */
     Status = STATUS_NO_SUCH_DEVICE;
 
+Quickie:
     /* Free the handle array buffer */
     BlMmFreeHeap(DeviceHandles);
     return Status;
@@ -981,6 +983,7 @@ BlockIoEfiGetDeviceInformation (
     /* Iteratate twice -- once for the top level, once for the bottom */
     for (i = 0, Found = FALSE; Found == FALSE && Protocol[i].Handle; i++)
     {
+        /* Check what kind of leaf node device this is */
         LeafNode = EfiGetLeafNode(Protocol[i].Interface);
         EfiPrintf(L"Pass %d, Leaf node: %p Type: %d\r\n", i, LeafNode, LeafNode->Type);
         if (LeafNode->Type == ACPI_DEVICE_PATH)

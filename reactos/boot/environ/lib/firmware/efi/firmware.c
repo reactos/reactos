@@ -44,14 +44,21 @@ EfiIsDevicePathParent (
     _In_ EFI_DEVICE_PATH *DevicePath2
     )
 {
+    EFI_DEVICE_PATH* CurrentPath1;
+    EFI_DEVICE_PATH* CurrentPath2;
     USHORT Length1, Length2;
 
+    /* Start with the current nodes */
+    CurrentPath1 = DevicePath1;
+    CurrentPath2 = DevicePath2;
+
     /* Loop each element of the device path */
-    while (!IsDevicePathEndType(DevicePath1) && !IsDevicePathEndType(DevicePath2))
+    while (!(IsDevicePathEndType(CurrentPath1)) &&
+           !(IsDevicePathEndType(CurrentPath2)))
     {
         /* Check if the element has a different length */
-        Length1 = DevicePathNodeLength(DevicePath1);
-        Length2 = DevicePathNodeLength(DevicePath2);
+        Length1 = DevicePathNodeLength(CurrentPath1);
+        Length2 = DevicePathNodeLength(CurrentPath2);
         if (Length1 != Length2)
         {
             /* Then they're not related */
@@ -59,25 +66,25 @@ EfiIsDevicePathParent (
         }
 
         /* Check if the rest of the element data matches */
-        if (RtlCompareMemory(DevicePath1, DevicePath2, Length1) != Length1)
+        if (RtlCompareMemory(CurrentPath1, CurrentPath2, Length1) != Length1)
         {
             /* Nope, not related */
             return NULL;
         }
 
         /* Move to the next element */
-        DevicePath1 = NextDevicePathNode(DevicePath1);
-        DevicePath2 = NextDevicePathNode(DevicePath2);
+        CurrentPath1 = NextDevicePathNode(CurrentPath1);
+        CurrentPath2 = NextDevicePathNode(CurrentPath2);
     }
 
     /* If the last element in path 1 is empty, then path 2 is the child (deeper) */
-    if (!IsDevicePathEndType(DevicePath1))
+    if (!IsDevicePathEndType(CurrentPath1))
     {
         return DevicePath2;
     }
 
     /* If the last element in path 2 is empty, then path 1 is the child (deeper) */
-    if (!IsDevicePathEndType(DevicePath2))
+    if (!IsDevicePathEndType(CurrentPath2))
     {
         return DevicePath1;
     }
