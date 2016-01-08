@@ -5,6 +5,7 @@
  * PURPOSE:         CD-ROM Premastering Utility - Directory names hashing
  * PROGRAMMERS:     Art Yerkes
  */
+
 #ifndef _DIRHASH_H_
 #define _DIRHASH_H_
 
@@ -37,9 +38,13 @@ struct target_dir_hash
 };
 
 void normalize_dirname(char *filename);
-void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target);
+
 struct target_dir_entry *
 dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char *targetnorm);
+
+struct target_file *
+dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target);
+
 void dir_hash_destroy(struct target_dir_hash *dh);
 
 #endif // _DIRHASH_H_

@@ -12,7 +12,9 @@
 #include "config.h"
 #include "dirhash.h"
 
+#ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
 /* This is the famous DJB hash */
 static unsigned int
@@ -148,7 +150,11 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
     free(parentcase);
 
     /* See the remark above */
-    if (!*case_name) return parent_de;
+    if (!*case_name)
+    {
+        free(case_name);
+        return parent_de;
+    }
 
     /* Now create the directory */
     de = calloc(1, sizeof(*de));
@@ -168,7 +174,8 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
     return de;
 }
 
-void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target)
+struct target_file *
+dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target)
 {
     struct target_file *tf;
     struct target_dir_entry *de;
@@ -176,8 +183,14 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     char *targetfile = NULL;
     char *targetnorm;
 
-    /* Create first the directory */
+    /* First create the directory; check whether the file name is valid and bail out if not */
     split_path(target, &targetdir, &targetfile);
+    if (!*targetfile)
+    {
+        free(targetdir);
+        free(targetfile);
+        return NULL;
+    }
     targetnorm = strdup(targetdir);
     normalize_dirname(targetnorm);
     de = dir_hash_create_dir(dh, targetdir, targetnorm);
@@ -190,6 +203,8 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     de->head = tf;
     tf->source_name = strdup(source);
     tf->target_name = targetfile;
+
+    return tf;
 }
 
 static void
