@@ -68,7 +68,7 @@ RtlAssert (
     IN PCHAR Message OPTIONAL
     )
 {
-    EfiPrintf(L"*** ASSERTION %s FAILED AT %d in %s (%s) ***\r \n",
+    EfiPrintf(L"*** ASSERTION %s FAILED AT %d in %s (%s) ***\r\n",
               FailedAssertion,
               LineNumber,
               FileName,

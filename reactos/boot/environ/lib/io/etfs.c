@@ -509,7 +509,7 @@ EtfsSetInformation (
     if (FileInfo->Offset >= EtfsFile->Size)
     {
         /* Don't allow EOF */
-        EfiPrintf(L"Offset too large: %lx vs %lx \r\n", FileInfo->Offset, EtfsFile->Size);
+        EfiPrintf(L"Offset too large: %lx vs %lx\r\n", FileInfo->Offset, EtfsFile->Size);
         return STATUS_INVALID_PARAMETER;
     }
 

@@ -820,7 +820,7 @@ BlFileReadAtOffsetEx (
     if (!NT_SUCCESS(Status))
     {
         /* Bail out if the read is invalid */
-        EfiPrintf(L"File info check failure: %lx\n", Status);
+        EfiPrintf(L"File info check failure: %lx\r\n", Status);
         return Status;
     }
 

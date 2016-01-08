@@ -949,7 +949,7 @@ EfiGopSetMode (
     if ((ModeChanged) && (NT_SUCCESS(Status)))
     {
         /* FIXME @TODO: Should be BlStatusPrint */
-        EfiPrintf(L"Console video mode  set to 0x%x\r\r\n", Mode);
+        EfiPrintf(L"Console video mode set to 0x%x\r\n", Mode);
     }
 
     /* Convert the error to an NTSTATUS */
@@ -1485,7 +1485,7 @@ MmFwGetMemoryMap (
 
     /* Loop the EFI memory map */
 #if 0
-    EfiPrintf(L"UEFI MEMORY MAP\n\r\n");
+    EfiPrintf(L"UEFI MEMORY MAP\r\n\r\n");
     EfiPrintf(L"TYPE        START              END                   ATTRIBUTES\r\n");
     EfiPrintf(L"===============================================================\r\n");
 #endif

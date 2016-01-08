@@ -22,7 +22,7 @@ BfiLoadFontFile (
     _In_ PWCHAR FontPath
     )
 {
-    EfiPrintf(L"Cannot load fond %s, no font loader exists\r\n", FontPath);
+    EfiPrintf(L"Cannot load font %s, no font loader exists\r\n", FontPath);
     return STATUS_NOT_IMPLEMENTED;
 }
 

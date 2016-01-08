@@ -96,7 +96,7 @@ BcInitialize (
     }
 
 Quickie:
-    EfiPrintf(L"Failure path not yet implemented\n");
+    EfiPrintf(L"Failure path not yet implemented\r\n");
 #if 0
     if (BcpHashTableId != -1)
     {

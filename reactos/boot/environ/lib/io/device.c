@@ -421,7 +421,7 @@ BlockIopReadPhysicalDevice (
     Status = BlockIopOperation(DeviceEntry, ReadBuffer, Offset, 0);
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"Block I/O failed:%lx\r\n", Status);
+        EfiPrintf(L"Block I/O failed: %lx\r\n", Status);
         return Status;
     }
 
@@ -1275,7 +1275,7 @@ BlockIoFirmwareOpen (
         Status = BlockIoEfiCreateDeviceEntry(&DeviceEntry, DeviceHandles[i]);
         if (!NT_SUCCESS(Status))
         {
-            EfiPrintf(L"EFI create failed: %lx\n", Status);
+            EfiPrintf(L"EFI create failed: %lx\r\n", Status);
             continue;
         }
 

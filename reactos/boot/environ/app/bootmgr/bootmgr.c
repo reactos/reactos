@@ -585,7 +585,7 @@ BmFatalErrorEx (
         default:
 
             /* The rest is not yet handled */
-            EfiPrintf(L"Unexpected fatal error: %lx\n", ErrorCode);
+            EfiPrintf(L"Unexpected fatal error: %lx\r\n", ErrorCode);
             while (1);
             break;
     }
@@ -748,7 +748,7 @@ BmOpenDataStore (
     if (BcdDevice->DeviceType == UdpDevice)
     {
         /* Nope. Nope. Nope */
-        EfiPrintf(L"Not handled\n");
+        EfiPrintf(L"Not handled\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -1195,7 +1195,7 @@ BmMain (
     //PBL_LOADED_APPLICATION_ENTRY* BootEntries;
     //PBL_LOADED_APPLICATION_ENTRY BootEntry;
 
-    EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
+    EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\r\n");
 
     /* Reading the BCD can change this later on */
     RebootOnError = FALSE;
@@ -1360,7 +1360,7 @@ BmMain (
     /* Display state is not currently cached */
     BmDisplayStateCached = FALSE;
 
-    /* Check if w need to resume from hibernate */
+    /* Check if we need to resume from hibernate */
     Status = BmResumeFromHibernate(&ResumeBcdHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -1465,7 +1465,7 @@ Quickie:
         ReturnArguments->Version = BL_RETURN_ARGUMENTS_VERSION;
         ReturnArguments->Status = Status;
 
-        /* Tear down the boot library*/
+        /* Tear down the boot library */
         BlDestroyLibrary();
     }
 
