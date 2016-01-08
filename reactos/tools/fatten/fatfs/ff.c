@@ -4162,9 +4162,9 @@ FRESULT f_mkfs (
 	if (fmt == FS_FAT32) {		/* FAT32: Move FAT offset */
 		n_rsv += n;
 		b_fat += n;
-	} else {					/* FAT12/16: Expand FAT size */
+	} else if (fmt == FS_FAT16) {	/* FAT16: Expand FAT size */
 		n_fat += n;
-	}
+	} // else /* if (fmt == FS_FAT12) */ {}	/* FAT12: Do nothing */
 
 	/* Determine number of clusters and final check of validity of the FAT sub-type */
 	n_clst = (n_vol - n_rsv - n_fat * N_FATS - n_dir) / au;
