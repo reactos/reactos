@@ -3626,6 +3626,7 @@ FRESULT f_mkdir (
 				mem_set(dir + DIR_Name, ' ', 11);	/* Create "." entry */
 				dir[DIR_Name] = '.';
 				dir[DIR_Attr] = AM_DIR;
+				ST_DWORD(dir + DIR_CrtTime, tm);
 				ST_DWORD(dir + DIR_WrtTime, tm);
 				st_clust(dir, dcl);
 				mem_cpy(dir + SZ_DIRE, dir, SZ_DIRE); 	/* Create ".." entry */
@@ -3647,7 +3648,8 @@ FRESULT f_mkdir (
 			} else {
 				dir = dj.dir;
 				dir[DIR_Attr] = AM_DIR;				/* Attribute */
-				ST_DWORD(dir + DIR_WrtTime, tm);	/* Created time */
+				ST_DWORD(dir + DIR_CrtTime, tm);	/* Created time */
+				ST_DWORD(dir + DIR_WrtTime, tm);	/* Modified time */
 				st_clust(dir, dcl);					/* Table start cluster */
 				dj.fs->wflag = 1;
 				res = sync_fs(dj.fs);
@@ -3959,6 +3961,7 @@ FRESULT f_setlabel (
 			if (vn[0]) {
 				mem_cpy(dj.dir, vn, 11);	/* Change the volume label name */
 				tm = GET_FATTIME();
+				ST_DWORD(dj.dir + DIR_CrtTime, tm);
 				ST_DWORD(dj.dir + DIR_WrtTime, tm);
 			} else {
 				dj.dir[0] = DDEM;			/* Remove the volume label */
@@ -3975,6 +3978,7 @@ FRESULT f_setlabel (
 						mem_cpy(dj.dir, vn, 11);
 						dj.dir[DIR_Attr] = AM_VOL;
 						tm = GET_FATTIME();
+						ST_DWORD(dj.dir + DIR_CrtTime, tm);
 						ST_DWORD(dj.dir + DIR_WrtTime, tm);
 						dj.fs->wflag = 1;
 						res = sync_fs(dj.fs);
