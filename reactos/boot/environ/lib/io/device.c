@@ -1276,7 +1276,7 @@ BlockIoFirmwareOpen (
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"EFI create failed: %lx\n", Status);
-            break;
+            continue;
         }
 
         /* Add the device entry to the device table */

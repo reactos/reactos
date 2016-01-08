@@ -319,7 +319,7 @@ EfiInitpGetDeviceNode (
 
     /* Loop each device path, until we get to the end or to a file path device node */
     for ((NextPath = NextDevicePathNode(DevicePath));
-         !(IsDevicePathEndType(NextPath)) && ((NextPath->Type != MEDIA_DEVICE_PATH) &&
+         !(IsDevicePathEndType(NextPath)) && ((NextPath->Type != MEDIA_DEVICE_PATH) ||
                                               (NextPath->SubType != MEDIA_FILEPATH_DP));
          (NextPath = NextDevicePathNode(NextPath)))
     {

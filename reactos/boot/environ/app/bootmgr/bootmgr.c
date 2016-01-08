@@ -1263,7 +1263,7 @@ BmMain (
         if (!NT_SUCCESS(Status))
         {
             /* Signature invalid, fail boot */
-           // goto Failure;
+            goto Failure;
         }
     }
 
