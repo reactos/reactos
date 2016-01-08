@@ -1184,12 +1184,16 @@ BmMain (
     NTSTATUS Status, LibraryStatus;
     BL_LIBRARY_PARAMETERS LibraryParameters;
     PBL_RETURN_ARGUMENTS ReturnArguments;
-    BOOLEAN RebootOnError;
     PGUID AppIdentifier;
     HANDLE BcdHandle, ResumeBcdHandle;
     PBL_BCD_OPTION EarlyOptions;
     PWCHAR Stylesheet;
-    BOOLEAN XmlLoaded, DisableIntegrity, TestSigning;
+    BOOLEAN XmlLoaded, DisableIntegrity, TestSigning, PersistBootSequence;
+    BOOLEAN RebootOnError, CustomActions, ContinueLoop;
+    ULONG SequenceId, SequenceCount;
+    PGUID BootSequences;
+    //PBL_LOADED_APPLICATION_ENTRY* BootEntries;
+    //PBL_LOADED_APPLICATION_ENTRY BootEntry;
 
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\n");
 
@@ -1324,8 +1328,8 @@ BmMain (
 
     /* Check if any bypass options are enabled */
     BlImgQueryCodeIntegrityBootOptions(&BlpApplicationEntry,
-                                        &DisableIntegrity,
-                                        &TestSigning);
+                                       &DisableIntegrity,
+                                       &TestSigning);
     if (!DisableIntegrity)
     {
         /* Integrity checks are enabled, so validate our signature */
@@ -1363,11 +1367,69 @@ BmMain (
         goto Failure;
     }
 
+#ifdef BL_NET_SUPPORT
+    /* Register multicast printing routine */
+    BlUtlRegisterMulticastRoutine();
+#endif
 
-    /* do more stuff!! */
-    //EfiPrintf(BlResourceFindMessage(BM_MSG_TEST));
-    //EfiPrintf(Stylesheet);
-    EfiStall(10000000);
+    /* Check if restart on failure is enabled */
+    BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                           BcdLibraryBoolean_RestartOnFailure,
+                           &RebootOnError);
+
+    /* Check if the boot sequence is persisted */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdBootMgrBoolean_PersistBootSequence,
+                                    &PersistBootSequence);
+    if (!NT_SUCCESS(Status))
+    {
+        /* It usually is */
+        PersistBootSequence = TRUE;
+    }
+
+    /* Check if there's custom actions to take */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdBootMgrBoolean_ProcessCustomActionsFirst,
+                                    &CustomActions);
+    if ((NT_SUCCESS(Status)) && (CustomActions))
+    {
+        /* We don't suppport this yet */
+        EfiPrintf(L"Not implemented\r\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto Failure;
+    }
+
+    /* At last, enter the boot selection stage */
+    SequenceId = 0;
+    do
+    {
+        ContinueLoop = FALSE;
+
+        /* Get the list of boot sequences */
+        SequenceCount = 0;
+        Status = BlGetBootOptionGuidList(BlpApplicationEntry.BcdData,
+                                         BcdBootMgrObjectList_BootSequence,
+                                         &BootSequences,
+                                         &SequenceCount);
+        EfiPrintf(L"Count: %d\r\n", SequenceCount);
+        EfiStall(1000000);
+        if (!NT_SUCCESS(Status))
+        {
+            //goto GetEntry;
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            continue;
+        }
+
+        if (RebootOnError)
+        {
+            break;
+        }
+
+        SequenceId++;
+    } while (ContinueLoop);
 
 Failure:
     /* Check if we got here due to an internal error */
