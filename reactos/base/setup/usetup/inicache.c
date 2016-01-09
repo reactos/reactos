@@ -142,16 +142,13 @@ IniCacheAddKey(
     }
 
     Key = (PINICACHEKEY)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHEKEY));
     if (Key == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Key,
-                  sizeof(INICACHEKEY));
 
     Key->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                         0,
@@ -222,15 +219,13 @@ IniCacheAddSection(
     }
 
     Section = (PINICACHESECTION)RtlAllocateHeap(ProcessHeap,
-                                                0,
+                                                HEAP_ZERO_MEMORY,
                                                 sizeof(INICACHESECTION));
     if (Section == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Section, sizeof(INICACHESECTION));
 
     /* Allocate and initialize section name */
     Section->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
@@ -579,16 +574,13 @@ IniCacheLoad(
 
     /* Allocate inicache header */
     *Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHE));
     if (*Cache == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    /* Initialize inicache header */
-    RtlZeroMemory(*Cache, sizeof(INICACHE));
 
     /* Parse ini file */
     Section = NULL;
@@ -842,15 +834,13 @@ IniCacheInsertKey(
 
     /* Allocate key buffer */
     Key = (PINICACHEKEY)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHEKEY));
     if (Key == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-   RtlZeroMemory(Key, sizeof(INICACHEKEY));
 
     /* Allocate name buffer */
     Key->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
@@ -930,16 +920,13 @@ IniCacheCreate(VOID)
 
     /* Allocate inicache header */
     Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                       0,
+                                       HEAP_ZERO_MEMORY,
                                        sizeof(INICACHE));
     if (Cache == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    /* Initialize inicache header */
-    RtlZeroMemory(Cache, sizeof(INICACHE));
 
     return Cache;
 }
@@ -992,15 +979,13 @@ IniCacheSave(
 
     /* Allocate file buffer */
     Buffer = (CHAR*)RtlAllocateHeap(ProcessHeap,
-                                    0,
+                                    HEAP_ZERO_MEMORY,
                                     BufferSize);
     if (Buffer == NULL)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    RtlZeroMemory(Buffer, BufferSize);
 
     /* Fill file buffer */
     Ptr = Buffer;
@@ -1093,15 +1078,13 @@ IniCacheAppendSection(
     }
 
     Section = (PINICACHESECTION)RtlAllocateHeap(ProcessHeap,
-                                                0,
+                                                HEAP_ZERO_MEMORY,
                                                 sizeof(INICACHESECTION));
     if (Section == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Section, sizeof(INICACHESECTION));
 
     /* Allocate and initialize section name */
     Section->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
