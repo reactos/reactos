@@ -193,7 +193,7 @@ HvpInitializeMemoryHive(
     * we go.
     */
 
-   Hive->Storage[Stable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE);
+   Hive->Storage[Stable].Length = (ULONG)(ChunkSize / HBLOCK_SIZE);
    Hive->Storage[Stable].BlockList =
       Hive->Allocate(Hive->Storage[Stable].Length *
                      sizeof(HMAP_ENTRY), FALSE, TAG_CM);
@@ -206,9 +206,9 @@ HvpInitializeMemoryHive(
 
    for (BlockIndex = 0; BlockIndex < Hive->Storage[Stable].Length; )
    {
-      Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HV_BLOCK_SIZE);
+      Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HBLOCK_SIZE);
       if (Bin->Signature != HV_BIN_SIGNATURE ||
-          (Bin->Size % HV_BLOCK_SIZE) != 0)
+          (Bin->Size % HBLOCK_SIZE) != 0)
       {
          DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",
                  (unsigned long)BlockIndex, (unsigned)Bin->Signature, (unsigned)Bin->Size);
@@ -230,17 +230,17 @@ HvpInitializeMemoryHive(
 
       RtlCopyMemory(NewBin, Bin, Bin->Size);
 
-      if (Bin->Size > HV_BLOCK_SIZE)
+      if (Bin->Size > HBLOCK_SIZE)
       {
-         for (i = 1; i < Bin->Size / HV_BLOCK_SIZE; i++)
+         for (i = 1; i < Bin->Size / HBLOCK_SIZE; i++)
          {
             Hive->Storage[Stable].BlockList[BlockIndex + i].BinAddress = (ULONG_PTR)NewBin;
             Hive->Storage[Stable].BlockList[BlockIndex + i].BlockAddress =
-               ((ULONG_PTR)NewBin + (i * HV_BLOCK_SIZE));
+               ((ULONG_PTR)NewBin + (i * HBLOCK_SIZE));
          }
       }
 
-      BlockIndex += Bin->Size / HV_BLOCK_SIZE;
+      BlockIndex += Bin->Size / HBLOCK_SIZE;
    }
 
    if (HvpCreateHiveFreeCellList(Hive))
@@ -313,7 +313,7 @@ HvpGetHiveHeader(IN PHHIVE Hive,
     ULONG Alignment;
     ULONG Result;
     ULONG Offset = 0;
-    ASSERT(sizeof(HBASE_BLOCK) >= (HV_BLOCK_SIZE * Hive->Cluster));
+    ASSERT(sizeof(HBASE_BLOCK) >= (HBLOCK_SIZE * Hive->Cluster));
 
     /* Assume failure and allocate the buffer */
     *HiveBaseBlock = 0;
@@ -321,7 +321,7 @@ HvpGetHiveHeader(IN PHHIVE Hive,
     if (!BaseBlock) return NoMemory;
 
     /* Check for, and enforce, alignment */
-    Alignment = Hive->Cluster * HV_BLOCK_SIZE -1;
+    Alignment = Hive->Cluster * HBLOCK_SIZE -1;
     if ((ULONG_PTR)BaseBlock & Alignment)
     {
         /* Free the old header */
@@ -338,7 +338,7 @@ HvpGetHiveHeader(IN PHHIVE Hive,
                             HFILE_TYPE_PRIMARY,
                             &Offset,
                             BaseBlock,
-                            Hive->Cluster * HV_BLOCK_SIZE);
+                            Hive->Cluster * HBLOCK_SIZE);
 
     /* Couldn't read: assume it's not a hive */
     if (!Result) return NotHive;

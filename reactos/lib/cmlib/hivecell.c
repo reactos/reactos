@@ -37,7 +37,7 @@ HvpGetCellHeader(
    else
    {
       ASSERT((CellIndex & HCELL_TYPE_MASK) == Stable);
-      return (PVOID)((ULONG_PTR)RegistryHive->BaseBlock + HV_BLOCK_SIZE +
+      return (PVOID)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
                      CellIndex);
    }
 }
@@ -117,7 +117,7 @@ HvMarkCellDirty(
       return TRUE;
 
    CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
-   CellLastBlock = ((CellIndex + HV_BLOCK_SIZE - 1) & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
+   CellLastBlock = ((CellIndex + HBLOCK_SIZE - 1) & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
 
    RtlSetBits(&RegistryHive->DirtyVector,
               CellBlock, CellLastBlock - CellBlock);
@@ -139,7 +139,7 @@ HvIsCellDirty(IN PHHIVE Hive,
       return TRUE;
 
    /* Check if the dirty bit is set */
-   if (RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE))
+   if (RtlCheckBit(&Hive->DirtyVector, Cell / HBLOCK_SIZE))
        IsDirty = TRUE;
 
    /* Return result as boolean*/
@@ -322,7 +322,7 @@ HvpCreateHiveFreeCellList(
          }
       }
 
-      BlockIndex += Bin->Size / HV_BLOCK_SIZE;
+      BlockIndex += Bin->Size / HBLOCK_SIZE;
       BlockOffset += Bin->Size;
    }
 

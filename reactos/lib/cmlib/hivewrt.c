@@ -32,7 +32,7 @@ HvpWriteLog(
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
    ASSERT(RegistryHive->BaseBlock->Length ==
-          RegistryHive->Storage[Stable].Length * HV_BLOCK_SIZE);
+          RegistryHive->Storage[Stable].Length * HBLOCK_SIZE);
 
    DPRINT("HvpWriteLog called\n");
 
@@ -44,7 +44,7 @@ HvpWriteLog(
 
    BitmapSize = RegistryHive->DirtyVector.SizeOfBitMap;
    BufferSize = HV_LOG_HEADER_SIZE + sizeof(ULONG) + BitmapSize;
-   BufferSize = ROUND_UP(BufferSize, HV_BLOCK_SIZE);
+   BufferSize = ROUND_UP(BufferSize, HBLOCK_SIZE);
 
    DPRINT("Bitmap size %u  buffer size: %u\n", BitmapSize, BufferSize);
 
@@ -95,14 +95,14 @@ HvpWriteLog(
       /* Write hive block */
       Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_LOG,
                                         &FileOffset, BlockPtr,
-                                        HV_BLOCK_SIZE);
+                                        HBLOCK_SIZE);
       if (!Success)
       {
          return FALSE;
       }
 
       BlockIndex++;
-      FileOffset += HV_BLOCK_SIZE;
+      FileOffset += HBLOCK_SIZE;
     }
 
    Success = RegistryHive->FileSetSize(RegistryHive, HFILE_TYPE_LOG, FileOffset, FileOffset);
@@ -157,7 +157,7 @@ HvpWriteHive(
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
    ASSERT(RegistryHive->BaseBlock->Length ==
-          RegistryHive->Storage[Stable].Length * HV_BLOCK_SIZE);
+          RegistryHive->Storage[Stable].Length * HBLOCK_SIZE);
 
    DPRINT("HvpWriteHive called\n");
 
@@ -197,12 +197,12 @@ HvpWriteHive(
       }
 
       BlockPtr = (PVOID)RegistryHive->Storage[Stable].BlockList[BlockIndex].BlockAddress;
-      FileOffset = (BlockIndex + 1) * HV_BLOCK_SIZE;
+      FileOffset = (BlockIndex + 1) * HBLOCK_SIZE;
 
       /* Write hive block */
       Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
                                         &FileOffset, BlockPtr,
-                                        HV_BLOCK_SIZE);
+                                        HBLOCK_SIZE);
       if (!Success)
       {
          return FALSE;

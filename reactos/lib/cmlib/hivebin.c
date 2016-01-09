@@ -23,8 +23,8 @@ HvpAddBin(
    ULONG OldBlockListSize;
    PHCELL Block;
 
-   BinSize = ROUND_UP(Size + sizeof(HBIN), HV_BLOCK_SIZE);
-   BlockCount = (ULONG)(BinSize / HV_BLOCK_SIZE);
+   BinSize = ROUND_UP(Size + sizeof(HBIN), HBLOCK_SIZE);
+   BlockCount = (ULONG)(BinSize / HBLOCK_SIZE);
 
    Bin = RegistryHive->Allocate(BinSize, TRUE, TAG_CM);
    if (Bin == NULL)
@@ -33,7 +33,7 @@ HvpAddBin(
 
    Bin->Signature = HV_BIN_SIGNATURE;
    Bin->FileOffset = RegistryHive->Storage[Storage].Length *
-                    HV_BLOCK_SIZE;
+                    HBLOCK_SIZE;
    Bin->Size = (ULONG)BinSize;
 
    /* Allocate new block list */
@@ -61,7 +61,7 @@ HvpAddBin(
    for (i = 0; i < BlockCount; i++)
    {
       RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].BlockAddress =
-         ((ULONG_PTR)Bin + (i * HV_BLOCK_SIZE));
+         ((ULONG_PTR)Bin + (i * HBLOCK_SIZE));
       RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].BinAddress = (ULONG_PTR)Bin;
    }
 
@@ -96,7 +96,7 @@ HvpAddBin(
 
       /* Mark new bin dirty. */
       RtlSetBits(&RegistryHive->DirtyVector,
-                 Bin->FileOffset / HV_BLOCK_SIZE,
+                 Bin->FileOffset / HBLOCK_SIZE,
                  BlockCount);
 
       /* Update size in the base block */
