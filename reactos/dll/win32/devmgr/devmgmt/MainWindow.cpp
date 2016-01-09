@@ -667,6 +667,12 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
     return RetCode;
 }
 
+void
+CDeviceManager::OnActivate(void)
+{
+    m_DeviceView->SetFocus();
+}
+
 LRESULT
 CDeviceManager::OnDestroy(void)
 {
@@ -822,7 +828,11 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
             DestroyWindow(hwnd);
             break;
         }
-        
+
+        case WM_ACTIVATE:
+            if (LOWORD(hwnd))
+                This->OnActivate();
+            break;
 
         case WM_DESTROY:
         {
