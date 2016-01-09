@@ -22,13 +22,10 @@ HvpGetCellHeader(
     ASSERT(CellIndex != HCELL_NIL);
     if (!RegistryHive->Flat)
     {
-        ULONG CellType;
-        ULONG CellBlock;
-        ULONG CellOffset;
+        ULONG CellType   = HvGetCellType(CellIndex);
+        ULONG CellBlock  = HvGetCellBlock(CellIndex);
+        ULONG CellOffset = (CellIndex & HCELL_OFFSET_MASK) >> HCELL_OFFSET_SHIFT;
 
-        CellType = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
-        CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
-        CellOffset = (CellIndex & HCELL_OFFSET_MASK) >> HCELL_OFFSET_SHIFT;
         ASSERT(CellBlock < RegistryHive->Storage[CellType].Length);
         Block = (PVOID)RegistryHive->Storage[CellType].BlockList[CellBlock].BlockAddress;
         ASSERT(Block != NULL);
@@ -113,11 +110,11 @@ HvMarkCellDirty(
     CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, HoldingLock %u\n",
              __FUNCTION__, RegistryHive, CellIndex, HoldingLock);
 
-    if ((CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT != Stable)
+    if (HvGetCellType(CellIndex) != Stable)
         return TRUE;
 
-    CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
-    CellLastBlock = ((CellIndex + HBLOCK_SIZE - 1) & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
+    CellBlock     = HvGetCellBlock(CellIndex);
+    CellLastBlock = HvGetCellBlock(CellIndex + HBLOCK_SIZE - 1);
 
     RtlSetBits(&RegistryHive->DirtyVector,
                CellBlock, CellLastBlock - CellBlock);
@@ -187,7 +184,7 @@ HvpAddFree(
     ASSERT(RegistryHive != NULL);
     ASSERT(FreeBlock != NULL);
 
-    Storage = (FreeIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
+    Storage = HvGetCellType(FreeIndex);
     Index = HvpComputeFreeListIndex((ULONG)FreeBlock->Size);
 
     FreeBlockData = (PHCELL_INDEX)(FreeBlock + 1);
@@ -212,7 +209,7 @@ HvpRemoveFree(
 
     ASSERT(RegistryHive->ReadOnly == FALSE);
 
-    Storage = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
+    Storage = HvGetCellType(CellIndex);
     Index = HvpComputeFreeListIndex((ULONG)CellBlock->Size);
 
     pFreeCellOffset = &RegistryHive->Storage[Storage].FreeDisplay[Index];
@@ -410,7 +407,7 @@ HvReallocateCell(
     CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, Size %x\n",
              __FUNCTION__, RegistryHive, CellIndex, Size);
 
-    Storage = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
+    Storage = HvGetCellType(CellIndex);
 
     OldCell = HvGetCell(RegistryHive, CellIndex);
     OldCellSize = HvGetCellSize(RegistryHive, OldCell);
@@ -462,8 +459,8 @@ HvFreeCell(
 
     Free->Size = -Free->Size;
 
-    CellType = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
-    CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
+    CellType = HvGetCellType(CellIndex);
+    CellBlock = HvGetCellBlock(CellIndex);
 
     /* FIXME: Merge free blocks */
     Bin = (PHBIN)RegistryHive->Storage[CellType].BlockList[CellBlock].BinAddress;
