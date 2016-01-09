@@ -436,3 +436,18 @@ BlGetApplicationBaseAndSize (
     *ImageSize = BlpApplicationParameters->ImageSize;
     return STATUS_SUCCESS;
 }
+
+VOID
+BlDestroyBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry
+    )
+{
+    /* Check if we had allocated BCD options */
+    if (AppEntry->Flags & BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL)
+    {
+        BlMmFreeHeap(AppEntry->BcdData);
+    }
+
+    /* Free the entry itself */
+    BlMmFreeHeap(AppEntry);
+}

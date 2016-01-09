@@ -645,3 +645,75 @@ BlAppendBootOptions (
     return Status;
 }
 
+VOID
+BlRemoveBootOption (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type
+    )
+{
+    PBL_BCD_OPTION Option;
+
+    /* Keep going until the option is gone */
+    while (1)
+    {
+        /* Get the BCD option */
+        Option = MiscGetBootOption(List, Type);
+        if (!Option)
+        {
+            break;
+        }
+
+        /* Pretend it's empty */
+        Option->Empty = TRUE;
+    }
+}
+
+NTSTATUS
+BlReplaceBootOptions (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ PBL_BCD_OPTION NewOptions
+    )
+{
+    NTSTATUS Status;
+    ULONG Size;
+
+    /* Make sure there's something to replace with */
+    if (!NewOptions)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if we already had allocated internal options */
+    if (AppEntry->Flags & BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL)
+    {
+        /* Free them */
+        BlMmFreeHeap(AppEntry->BcdData);
+    }
+
+    /* Reset option flags */
+    AppEntry->Flags &= ~(BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL |
+                         BL_APPLICATION_ENTRY_BCD_OPTIONS_EXTERNAL);
+
+    /* Reset the options and set success for now */
+    Status = STATUS_SUCCESS;
+    AppEntry->BcdData = NULL;
+
+    /* Get the size of the new list of options */
+    Size = BlGetBootOptionListSize(NewOptions);
+
+    /* Allocate a copy of the new list */
+    NewOptions = BlMmAllocateHeap(Size);
+    if (!NewOptions)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Copy it in */
+    RtlCopyMemory(NewOptions, NewOptions, Size);
+
+    /* Set it as the new set of options and return */
+    AppEntry->Flags |= BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL;
+    AppEntry->BcdData = NewOptions;
+    return Status;
+}
+

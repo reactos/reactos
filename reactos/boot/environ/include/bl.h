@@ -1514,16 +1514,6 @@ BlUtlGetAcpiTable (
     _In_ ULONG Signature
     );
 
-EFI_STATUS
-EfiGetEfiStatusCode(
-    _In_ NTSTATUS Status
-    );
-
-NTSTATUS
-EfiGetNtStatusCode (
-    _In_ EFI_STATUS EfiStatus
-    );
-
 NTSTATUS
 BlUtlInitialize (
     VOID
@@ -1532,6 +1522,29 @@ BlUtlInitialize (
 NTSTATUS
 BlUtlRegisterProgressRoutine (
     VOID
+    );
+
+NTSTATUS
+BlGetApplicationBaseAndSize (
+    _Out_ PVOID* ImageBase,
+    _Out_ PULONG ImageSize
+    );
+
+VOID
+BlDestroyBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry
+    );
+
+/* FIRMWARE UTILITY ROUTINES *************************************************/
+
+EFI_STATUS
+EfiGetEfiStatusCode(
+    _In_ NTSTATUS Status
+    );
+
+NTSTATUS
+EfiGetNtStatusCode (
+    _In_ EFI_STATUS EfiStatus
     );
 
 VOID
@@ -1559,11 +1572,7 @@ BlSecureBootCheckForFactoryReset (
     VOID
     );
 
-NTSTATUS
-BlGetApplicationBaseAndSize (
-    _Out_ PVOID* ImageBase,
-    _Out_ PULONG ImageSize
-    );
+/* RESOURCE ROUTINES *********************************************************/
 
 PWCHAR
 BlResourceFindMessage (
@@ -1714,6 +1723,18 @@ NTSTATUS
 BlAppendBootOptions (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
     _In_ PBL_BCD_OPTION Options
+    );
+
+VOID
+BlRemoveBootOption (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type
+    );
+
+NTSTATUS
+BlReplaceBootOptions (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ PBL_BCD_OPTION NewOptions
     );
 
 /* BOOT REGISTRY ROUTINES ****************************************************/

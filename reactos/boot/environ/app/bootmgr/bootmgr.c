@@ -1163,6 +1163,66 @@ BmResumeFromHibernate (
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+BmpProcessBadMemory (
+    VOID
+    )
+{
+    EfiPrintf(L"Bad page list persistence \r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BmPurgeOption (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID ObjectId,
+    _In_ ULONG Type
+    )
+{
+    EfiPrintf(L"Key BCD delete not yet implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BmGetBootSequence (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID SequenceList,
+    _In_ ULONG SequenceListCount,
+    _In_ ULONG Flags,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY** BootSequence,
+    _Out_ PULONG SequenceCount
+    )
+{
+    EfiPrintf(L"Fixed sequences not yet supported\r\n");
+    *SequenceCount = 0;
+    *BootSequence = NULL;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BmpGetSelectedBootEntry (
+    _In_ HANDLE BcdHandle,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY *SelectedBootEntry,
+    _Out_ PULONG EntryIndex,
+    _Out_ PBOOLEAN ExitBootManager
+    )
+{
+    EfiPrintf(L"Boot selection not yet implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BmpLaunchBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PULONG EntryIndex,
+    _In_ ULONG Unknown,
+    _In_ BOOLEAN LaunchWinRe
+    )
+{
+    EfiPrintf(L"Boot launch not yet implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*++
  * @name BmMain
  *
@@ -1189,12 +1249,18 @@ BmMain (
     PBL_BCD_OPTION EarlyOptions;
     PWCHAR Stylesheet;
     BOOLEAN XmlLoaded, DisableIntegrity, TestSigning, PersistBootSequence;
-    BOOLEAN RebootOnError, CustomActions, ContinueLoop;
-    ULONG SequenceId, SequenceCount;
-    PGUID BootSequences;
-    //PBL_LOADED_APPLICATION_ENTRY* BootEntries;
-    //PBL_LOADED_APPLICATION_ENTRY BootEntry;
-
+    BOOLEAN RebootOnError, CustomActions;
+    ULONG SequenceId;
+    PBL_LOADED_APPLICATION_ENTRY BootEntry;
+    PGUID SequenceList;
+    ULONG SequenceListCount;
+    PBL_LOADED_APPLICATION_ENTRY* BootSequence;
+    ULONG BootIndex;
+    BOOLEAN ExitBootManager;
+    BOOLEAN BootFailed;
+    BOOLEAN BootOk;
+    ULONG SequenceCount;
+    BOOLEAN GetEntry;
     EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\r\n");
 
     /* Reading the BCD can change this later on */
@@ -1401,49 +1467,190 @@ BmMain (
 
     /* At last, enter the boot selection stage */
     SequenceId = 0;
-    do
+    GetEntry = FALSE;
+    BootFailed = FALSE;
+    SequenceList = NULL;
+    BootSequence = NULL;
+    SequenceCount = 0;
+    while (1)
     {
-        ContinueLoop = FALSE;
+        /* We don't have a boot entry nor a sequence ID */
+        BootEntry = NULL;
+        BootOk = FALSE;
 
-        /* Get the list of boot sequences */
-        SequenceCount = 0;
-        Status = BlGetBootOptionGuidList(BlpApplicationEntry.BcdData,
-                                         BcdBootMgrObjectList_BootSequence,
-                                         &BootSequences,
-                                         &SequenceCount);
-        EfiPrintf(L"Count: %d\r\n", SequenceCount);
-        EfiStall(1000000);
-        if (!NT_SUCCESS(Status))
+        /* Do we have a hardcoded boot sequence set? */
+        if (!(BootSequence) && !(GetEntry))
         {
-            //goto GetEntry;
+            /* Not yet, read the BCD to see if one is there */
+            Status = BlGetBootOptionGuidList(BlpApplicationEntry.BcdData,
+                                             BcdBootMgrObjectList_BootSequence,
+                                             &SequenceList,
+                                             &SequenceListCount);
+            if (NT_SUCCESS(Status))
+            {
+                /* A GUID list for the boot sequence is set. Extract it */
+                Status = BmGetBootSequence(BcdHandle,
+                                           SequenceList,
+                                           SequenceListCount,
+                                           0x20000000,
+                                           &BootSequence,
+                                           &SequenceCount);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Don't get stuck in a loop repeating this sequence */
+                    BlRemoveBootOption(BlpApplicationEntry.BcdData,
+                                       BcdBootMgrObjectList_BootSequence);
+
+                    /* But do check if we should persist it */
+                    if (PersistBootSequence)
+                    {
+                        /* Yes -- so go select an entry now */
+                        GetEntry = TRUE;
+                    }
+                    else
+                    {
+                        /* We shouldn't, so wipe it from the BCD too */
+                        Status = BmPurgeOption(BcdHandle,
+                                               &BmApplicationIdentifier,
+                                               BcdBootMgrObjectList_BootSequence);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            /* Well that failed */
+                            goto LoopQuickie;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                /* No boot entry sequence for us */
+                BootSequence = NULL;
+            }
         }
 
+        /* Do we have a sequence active, and are we still processing it? */
+        if ((BootSequence) && ((GetEntry) || (SequenceId < SequenceCount)))
+        {
+            /* Extract the next entry in the sequence */
+            BootEntry = BootSequence[SequenceId];
+            BootSequence[SequenceId] = NULL;
+
+            /* Move to the next entry for next time */
+            SequenceId++;
+
+            /* Unless there won't be a a next time? */
+            if (SequenceId == SequenceCount)
+            {
+                /* Clean up, it's the last entry */
+                BlMmFreeHeap(BootSequence);
+                BootSequence = NULL;
+            }
+        }
+        else
+        {
+            /* Get the selected boot entry from the user */
+            ExitBootManager = FALSE;
+            Status = BmpGetSelectedBootEntry(BcdHandle,
+                                             &BootEntry,
+                                             &BootIndex,
+                                             &ExitBootManager);
+            if (!(NT_SUCCESS(Status)) || (ExitBootManager))
+            {
+                /* Selection failed, or user wants to exit */
+                goto LoopQuickie;
+            }
+        }
+
+        /* Did we have a BCD open? */
+        if (BcdHandle)
+        {
+            /* Close it, we'll be opening a new one */
+            BmCloseDataStore(BcdHandle);
+            BcdHandle = NULL;
+        }
+
+        /* Launch the selected entry */
+        Status = BmpLaunchBootEntry(BootEntry, &BootIndex, 0, TRUE);
         if (NT_SUCCESS(Status))
         {
-            continue;
+            /* Boot worked, uncache display and process the bad memory list */
+            BmDisplayStateCached = FALSE;
+            BmpProcessBadMemory();
+        }
+        else
+        {
+            /* Boot failed -- was it user driven? */
+            if (Status != STATUS_CANCELLED)
+            {
+                /* Nope, remember that booting failed */
+                BootFailed = TRUE;
+                goto LoopQuickie;
+            }
+
+            /* Yes -- the display is still valid */
+            BmDisplayStateCached = TRUE;
         }
 
-        if (RebootOnError)
+        /* Reopen the BCD */
+        Status = BmOpenDataStore(&BcdHandle);
+        if (!NT_SUCCESS(Status))
         {
             break;
         }
 
-        SequenceId++;
-    } while (ContinueLoop);
+        /* Put the BCD options back into our entry */
+        BlReplaceBootOptions(&BlpApplicationEntry, EarlyOptions);
 
-Failure:
-    /* Check if we got here due to an internal error */
-    if (BmpInternalBootError)
-    {
-        /* If XML is available, display the error */
-        if (XmlLoaded)
+        /* Update our options one more time */
+        Status = BmpUpdateApplicationOptions(BcdHandle);
+        if (NT_SUCCESS(Status))
         {
-            //BmDisplayDumpError(0, 0);
-            //BmErrorPurge();
+            /* Boot was 100% OK */
+            BootOk = TRUE;
         }
 
-        /* Don't do a fatal error -- return back to firmware */
-        goto Quickie;
+LoopQuickie:
+        /* Did we have a boot entry? */
+        if (BootEntry)
+        {
+            /* We can destroy it now */
+            BlDestroyBootEntry(BootEntry);
+        }
+
+        /* Is this the success path? */
+        if (NT_SUCCESS(Status))
+        {
+            /* Did we actually boot something? */
+            if (!BootOk)
+            {
+                /* Bope, fail out */
+                break;
+            }
+        }
+
+        /* This is the failure path... should we reboot? */
+        if (RebootOnError)
+        {
+            break;
+        }
+    };
+
+Failure:
+    if (!BootFailed)
+    {
+        /* Check if we got here due to an internal error */
+        if (BmpInternalBootError)
+        {
+            /* If XML is available, display the error */
+            if (XmlLoaded)
+            {
+                //BmDisplayDumpError(0, 0);
+                //BmErrorPurge();
+            }
+
+            /* Don't do a fatal error -- return back to firmware */
+            goto Quickie;
+        }
     }
 
     /* Log a general fatal error once we're here */
