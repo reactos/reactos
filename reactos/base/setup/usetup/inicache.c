@@ -537,7 +537,7 @@ IniCacheLoad(
 
     DPRINT("File size: %lu\n", FileLength);
 
-    /* Allocate file buffer */
+    /* Allocate file buffer with NULL-terminator */
     FileBuffer = (CHAR*)RtlAllocateHeap(ProcessHeap,
                                         0,
                                         FileLength + 1);
@@ -560,7 +560,7 @@ IniCacheLoad(
                         &FileOffset,
                         NULL);
 
-    /* Append string terminator */
+    /* Append NULL-terminator */
     FileBuffer[FileLength] = 0;
 
     NtClose(FileHandle);
@@ -971,16 +971,15 @@ IniCacheSave(
 
         Section = Section->Next;
         if (Section != NULL)
-            BufferSize += 2; /* extra "\r\n" at end of each section */
+            BufferSize += 2; /* Extra "\r\n" at end of each section */
     }
-    BufferSize++; /* Null-terminator */
 
     DPRINT("BufferSize: %lu\n", BufferSize);
 
-    /* Allocate file buffer */
+    /* Allocate file buffer with NULL-terminator */
     Buffer = (CHAR*)RtlAllocateHeap(ProcessHeap,
                                     HEAP_ZERO_MEMORY,
-                                    BufferSize);
+                                    BufferSize + 1);
     if (Buffer == NULL)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
