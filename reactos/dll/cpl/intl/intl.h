@@ -116,6 +116,8 @@ typedef struct _GLOBALDATA
     GEOID geoid;
     BOOL fGeoIdChanged;
 
+    /* Misc */
+    BOOL bIsUserAdmin;
 } GLOBALDATA, *PGLOBALDATA;
 
 typedef struct

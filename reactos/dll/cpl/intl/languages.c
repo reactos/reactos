@@ -10,10 +10,21 @@ LanguagesPageProc(HWND hwndDlg,
                   LPARAM lParam)
 {
     SHELLEXECUTEINFOW shInputDll;
+    PGLOBALDATA pGlobalData;
+
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            if (!pGlobalData->bIsUserAdmin)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_RTOL_LANG), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_INST_FILES_FOR_ASIAN), FALSE);
+            }
             break;
 
         case WM_COMMAND:

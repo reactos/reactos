@@ -168,6 +168,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         return FALSE;
 
     pGlobalData->SystemLCID = GetSystemDefaultLCID();
+    pGlobalData->bIsUserAdmin = IsUserAdmin();
 
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -178,13 +179,20 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
     psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nPages = 0; //sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
     InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc, (LPARAM)pGlobalData);
+    psh.nPages++;
     InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc, (LPARAM)pGlobalData);
-    InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc, (LPARAM)pGlobalData);
+    psh.nPages++;
+
+    if (pGlobalData->bIsUserAdmin)
+    {
+        InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc, (LPARAM)pGlobalData);
+        psh.nPages++;
+    }
 
     ret = (LONG)(PropertySheet(&psh) != -1);
 
