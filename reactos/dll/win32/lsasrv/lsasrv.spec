@@ -1,10 +1,39 @@
+ @ stub DsRolerDcAsDc
+ @ stub DsRolerDcAsReplica
+ @ stub DsRolerDemoteDc
+ @ stub DsRolerGetDcOperationProgress
+ @ stub DsRolerGetDcOperationResults
+ @ stub LsaIAddNameToLogonSession
+ @ stub LsaIAllocateHeap
+ @ stub LsaIAllocateHeapZero
+ @ stub LsaIAuditAccountLogon
+ @ stub LsaIAuditAccountLogonEx
+ @ stub LsaIAuditKdcEvent
+ @ stub LsaIAuditKerberosLogon
+ @ stub LsaIAuditLogonUsingExplicitCreds
  @ stub LsaIAuditNotifyPackageLoad
+ @ stub LsaIAuditPasswordAccessEvent
  @ stub LsaIAuditSamEvent
+ @ stub LsaICallPackage
+ @ stub LsaICallPackageEx
+ @ stub LsaICallPackagePassthrough
+ @ stub LsaICancelNotification
+ @ stub LsaIChangeSecretCipherKey
+ @ stub LsaICryptProtectData
+ @ stub LsaICryptUnprotectData
+ @ stub LsaIDsNotifiedObjectChange
  @ stub LsaIEnumerateSecrets
+ @ stub LsaIEventNotify
+ @ stub LsaIFilterSids
+ @ stub LsaIForestTrustFindMatch
+ @ stub LsaIFreeForestTrustInfo
+ @ stub LsaIFreeHeap
+ @ stub LsaIFreeReturnBuffer
  @ stub LsaIFree_LSAI_PRIVATE_DATA #DATA
  @ stub LsaIFree_LSAI_SECRET_ENUM_BUFFER
  @ stub LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER
  @ stub LsaIFree_LSAPR_CR_CIPHER_VALUE
+ @ stub LsaIFree_LSAPR_POLICY_DOMIN_INFORMATION
  @ stdcall LsaIFree_LSAPR_POLICY_INFORMATION(long ptr)
  @ stub LsaIFree_LSAPR_PRIVILEGE_ENUM_BUFFER
  @ stdcall LsaIFree_LSAPR_PRIVILEGE_SET(ptr)
@@ -14,20 +43,62 @@
  @ stub LsaIFree_LSAPR_TRANSLATED_SIDS
  @ stub LsaIFree_LSAPR_TRUSTED_DOMAIN_INFO
  @ stub LsaIFree_LSAPR_TRUSTED_ENUM_BUFFER
+ @ stub LsaIFree_LSAPR_TRUSTED_ENUM_BUFFER_EX
  @ stub LsaIFree_LSAPR_TRUST_INFORMATION
  @ stub LsaIFree_LSAPR_UNICODE_STRING
+ @ stub LsaIFree_LSAPR_UNICODE_STRING_BUFFER
+ @ stub LsaIFree_LSAP_SITENAME_INFO
+ @ stub LsaIFree_LSAP_SITE_INFO
+ @ stub LsaIFree_LSAP_SUBNET_INFO
+ @ stub LsaIFree_LSAP_UPN_SUFFIXES
+ @ stub LsaIFree_LSA_FOREST_TRUST_COLLISION_INFORMATION
+ @ stub LsaIFree_LSA_FOREST_TRUST_INFORMATION
+ @ stub LsaIGetBootOption
+ @ stub LsaIGetCallInfo
+ @ stub LsaIGetForestTrustInformation
+ @ stub LsaIGetLogonGuid
+ @ stub LsaIGetNbAndDnsDomainNames
  @ stub LsaIGetPrivateData
  @ stub LsaIGetSerialNumberPolicy
  @ stub LsaIGetSerialNumberPolicy2
+ @ stub LsaIGetSiteName
  @ stub LsaIHealthCheck
+ @ stub LsaIImpersonateClient
  @ stub LsaIInitializeWellKnownSids
+ @ stub LsaIIsClassIdLsaClass
+ @ stub LsaIIsDsPaused
+ @ stub LsaIKerberosRegisterTrustNotification
+ @ stub LsaILookupWellKnownName
+ @ stub LsaINotifyChangeNotification
+ @ stub LsaINotifyNetlogonParametersChangeW
+ @ stub LsaINotifyPasswordChanged
  @ stdcall LsaIOpenPolicyTrusted(ptr)
+ @ stub LsaIQueryForestTrustInfo
  @ stub LsaIQueryInformationPolicyTrusted
+ @ stub LsaIQuerySiteInfo
+ @ stub LsaIQuerySubnetInfo
+ @ stub LsaIQueryUpnSuffixes
+ @ stub LsaIRegisterNotification
+ @ stub LsaIRegisterPolicyChangeNotificationCallback
+ @ stub LsaISafeMode
+ @ stub LsaISamIndicatedDsStarted
+ @ stub LsaISetBootOption
+ @ stub LsaISetClientDnsHostName
+ @ stub LsaISetLogonGuidInLogonSession
  @ stub LsaISetPrivateData
  @ stub LsaISetSerialNumberPolicy
  @ stub LsaISetTimesSecret
  @ stub LsaISetupWasRun
+ @ stub LsaITestCall
+ @ stub LsaIUnregisterAllPolicyChangeNotificationCallback
+ @ stub LsaIUnregisterPolicyChangeNotificationCallback
+ @ stub LsaIUpdateForestTrustInformation
+ @ stub LsaIWriteAuditEvent
  @ stub LsapAuOpenSam
+ @ stub LsapCheckBootMode
+ @ stub LsapDsDebugInitialize
+ @ stub LsapDsInitializeDsStateInfo
+ @ stub LsapDsInitializePromoteInterface
  @ stdcall LsapInitLsa()
  @ stdcall LsarAddPrivilegesToAccount(ptr ptr)
  @ stdcall LsarClose(ptr)
