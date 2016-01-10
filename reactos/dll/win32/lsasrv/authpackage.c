@@ -32,7 +32,9 @@ typedef PVOID PLSA_CLIENT_REQUEST;
 
 typedef NTSTATUS (NTAPI *PLSA_CREATE_LOGON_SESSION)(PLUID);
 typedef NTSTATUS (NTAPI *PLSA_DELETE_LOGON_SESSION)(PLUID);
-
+typedef NTSTATUS (NTAPI *PLSA_ADD_CREDENTIAL)(PLUID, ULONG, PLSA_STRING, PLSA_STRING);
+typedef NTSTATUS (NTAPI *PLSA_GET_CREDENTIALS)(PLUID, ULONG, PULONG, BOOLEAN, PLSA_STRING, PULONG, PLSA_STRING);
+typedef NTSTATUS (NTAPI *PLSA_DELETE_CREDENTIAL)(PLUID, ULONG, PLSA_STRING);
 typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
 typedef VOID (NTAPI *PLSA_FREE_LSA_HEAP)(PVOID);
 typedef NTSTATUS (NTAPI *PLSA_ALLOCATE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG, PVOID*);
@@ -46,9 +48,9 @@ typedef struct LSA_DISPATCH_TABLE
 {
     PLSA_CREATE_LOGON_SESSION CreateLogonSession;
     PLSA_DELETE_LOGON_SESSION DeleteLogonSession;
-    PVOID /*PLSA_ADD_CREDENTIAL */ AddCredential;
-    PVOID /*PLSA_GET_CREDENTIALS */ GetCredentials;
-    PVOID /*PLSA_DELETE_CREDENTIAL */ DeleteCredential;
+    PLSA_ADD_CREDENTIAL AddCredential;
+    PLSA_GET_CREDENTIALS GetCredentials;
+    PLSA_DELETE_CREDENTIAL DeleteCredential;
     PLSA_ALLOCATE_LSA_HEAP AllocateLsaHeap;
     PLSA_FREE_LSA_HEAP FreeLsaHeap;
     PLSA_ALLOCATE_CLIENT_BUFFER AllocateClientBuffer;
@@ -481,9 +483,9 @@ LsapInitAuthPackages(VOID)
     /* Initialize the dispatch table */
     DispatchTable.CreateLogonSession = &LsapCreateLogonSession;
     DispatchTable.DeleteLogonSession = &LsapDeleteLogonSession;
-    DispatchTable.AddCredential = NULL;
-    DispatchTable.GetCredentials = NULL;
-    DispatchTable.DeleteCredential = NULL;
+    DispatchTable.AddCredential = &LsapAddCredential;
+    DispatchTable.GetCredentials = &LsapGetCredentials;
+    DispatchTable.DeleteCredential = &LsapDeleteCredential;
     DispatchTable.AllocateLsaHeap = &LsapAllocateHeap;
     DispatchTable.FreeLsaHeap = &LsapFreeHeap;
     DispatchTable.AllocateClientBuffer = &LsapAllocateClientBuffer;
@@ -1602,7 +1604,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         goto done;
     }
 
-    TokenHandle = NULL;
+//    TokenHandle = NULL;
 
     Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
     if (!NT_SUCCESS(Status))
@@ -1612,11 +1614,11 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     }
 
 done:
-    if (!NT_SUCCESS(Status))
-    {
+//    if (!NT_SUCCESS(Status))
+//    {
         if (TokenHandle != NULL)
             NtClose(TokenHandle);
-    }
+//    }
 
     /* Free the local groups */
     if (LocalGroups != NULL)

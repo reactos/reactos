@@ -177,6 +177,47 @@ LsapDeleteLogonSession(IN PLUID LogonId)
 
 
 NTSTATUS
+NTAPI
+LsapAddCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue,
+    _In_ PLSA_STRING Credential)
+{
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+LsapGetCredentials(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _Inout_ PULONG QueryContext,
+    _In_ BOOLEAN RetrieveAllCredentials,
+    _Inout_ PLSA_STRING PrimaryKeyValue,
+    _Out_ PULONG PrimaryKeyLength,
+    _Out_ PLSA_STRING Credentials)
+{
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+LsapDeleteCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue)
+{
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -290,9 +331,10 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session == NULL)
         return STATUS_NO_SUCH_LOGON_SESSION;
 
-    Length = sizeof(SECURITY_LOGON_SESSION_DATA);
+    /* Calculate the required buffer size */
+    Length = sizeof(SECURITY_LOGON_SESSION_DATA) +
+             Session->UserName.MaximumLength;
 /*
-             Session->UserName.MaximumLength +
              Session->LogonDomain.MaximumLength +
              Session->AuthenticationPackage.MaximumLength +
              Session->LogonServer.MaximumLength +
@@ -305,6 +347,7 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
 
     TRACE("Length: %lu\n", Length);
 
+    /* Allocate the buffer */
     LocalSessionData = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        Length);
@@ -318,6 +361,19 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
 
     RtlCopyLuid(&LocalSessionData->LogonId,
                 &RequestMsg->GetLogonSessionData.Request.LogonId);
+
+    LocalSessionData->UserName.Length = Session->UserName.Length;
+    LocalSessionData->UserName.MaximumLength = Session->UserName.MaximumLength;
+    LocalSessionData->UserName.Buffer = Ptr;
+
+//    RtlCopyMemory(Ptr)
+
+
+    LocalSessionData->LogonType = Session->LogonType;
+    LocalSessionData->Session = 0;
+
+
+
 
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,

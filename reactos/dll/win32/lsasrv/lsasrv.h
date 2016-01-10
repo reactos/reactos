@@ -415,6 +415,32 @@ NTAPI
 LsapDeleteLogonSession(IN PLUID LogonId);
 
 NTSTATUS
+NTAPI
+LsapAddCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue,
+    _In_ PLSA_STRING Credential);
+
+NTSTATUS
+NTAPI
+LsapGetCredentials(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _Inout_ PULONG QueryContext,
+    _In_ BOOLEAN RetrieveAllCredentials,
+    _Inout_ PLSA_STRING PrimaryKeyValue,
+    _Out_ PULONG PrimaryKeyLength,
+    _Out_ PLSA_STRING Credentials);
+
+NTSTATUS
+NTAPI
+LsapDeleteCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue);
+
+NTSTATUS
 LsapSetLogonSessionData(IN PLUID LogonId);
 
 NTSTATUS
