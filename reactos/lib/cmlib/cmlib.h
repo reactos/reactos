@@ -310,19 +310,19 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
  */
 NTSTATUS CMAPI
 HvInitialize(
-   PHHIVE RegistryHive,
-   ULONG Operation,
-   ULONG HiveType,
-   ULONG HiveFlags,
-   PVOID HiveData OPTIONAL,
-   PALLOCATE_ROUTINE Allocate,
-   PFREE_ROUTINE Free,
-   PFILE_SET_SIZE_ROUTINE FileSetSize,
-   PFILE_WRITE_ROUTINE FileWrite,
-   PFILE_READ_ROUTINE FileRead,
-   PFILE_FLUSH_ROUTINE FileFlush,
-   ULONG Cluster OPTIONAL,
-   PCUNICODE_STRING FileName OPTIONAL);
+    PHHIVE RegistryHive,
+    ULONG OperationType,
+    ULONG HiveFlags,
+    ULONG FileType,
+    PVOID HiveData OPTIONAL,
+    PALLOCATE_ROUTINE Allocate,
+    PFREE_ROUTINE Free,
+    PFILE_SET_SIZE_ROUTINE FileSetSize,
+    PFILE_WRITE_ROUTINE FileWrite,
+    PFILE_READ_ROUTINE FileRead,
+    PFILE_FLUSH_ROUTINE FileFlush,
+    ULONG Cluster OPTIONAL,
+    PCUNICODE_STRING FileName OPTIONAL);
 
 VOID CMAPI
 HvFree(

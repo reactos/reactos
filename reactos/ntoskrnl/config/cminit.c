@@ -16,7 +16,7 @@
 
 NTSTATUS
 NTAPI
-CmpInitializeHive(OUT PCMHIVE *RegistryHive,
+CmpInitializeHive(OUT PCMHIVE *CmHive,
                   IN ULONG OperationType,
                   IN ULONG HiveFlags,
                   IN ULONG FileType,
@@ -35,7 +35,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     ULONG Cluster;
 
     /* Assume failure */
-    *RegistryHive = NULL;
+    *CmHive = NULL;
 
     /*
      * The following are invalid:
@@ -187,8 +187,8 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Initialize it */
     Status = HvInitialize(&Hive->Hive,
                           OperationType,
-                          FileType,
                           HiveFlags,
+                          FileType,
                           HiveData,
                           CmpAllocate,
                           CmpFree,
@@ -237,7 +237,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     ExReleasePushLock(&CmpHiveListHeadLock);
 
     /* Return the hive and success */
-    *RegistryHive = (PCMHIVE)Hive;
+    *CmHive = Hive;
     return STATUS_SUCCESS;
 }
 

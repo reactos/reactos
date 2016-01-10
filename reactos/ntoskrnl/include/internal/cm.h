@@ -792,8 +792,8 @@ NTSTATUS
 NTAPI
 CmpInitializeHive(
     OUT PCMHIVE *CmHive,
-    IN ULONG Operation,
-    IN ULONG Flags,
+    IN ULONG OperationType,
+    IN ULONG HiveFlags,
     IN ULONG FileType,
     IN PVOID HiveData OPTIONAL,
     IN HANDLE Primary,

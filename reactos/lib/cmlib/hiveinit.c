@@ -420,7 +420,7 @@ HvLoadHive(IN PHHIVE Hive,
  *
  * @param RegistryHive
  *        Output variable to store pointer to the hive descriptor.
- * @param Operation
+ * @param OperationType
  *        - HV_OPERATION_CREATE_HIVE
  *          Create a new hive for read/write access.
  *        - HV_OPERATION_MEMORY
@@ -447,9 +447,9 @@ HvLoadHive(IN PHHIVE Hive,
 NTSTATUS CMAPI
 HvInitialize(
     PHHIVE RegistryHive,
-    ULONG Operation,
-    ULONG HiveType,
+    ULONG OperationType,
     ULONG HiveFlags,
+    ULONG FileType,
     PVOID HiveData OPTIONAL,
     PALLOCATE_ROUTINE Allocate,
     PFREE_ROUTINE Free,
@@ -463,7 +463,7 @@ HvInitialize(
     NTSTATUS Status;
     PHHIVE Hive = RegistryHive;
 
-    UNREFERENCED_PARAMETER(HiveType);
+    UNREFERENCED_PARAMETER(FileType);
 
     /*
      * Create a new hive structure that will hold all the maintenance data.
@@ -482,7 +482,7 @@ HvInitialize(
     Hive->Version = HSYS_MINOR;
     Hive->HiveFlags = HiveFlags &~ HIVE_NOLAZYFLUSH;
 
-    switch (Operation)
+    switch (OperationType)
     {
         case HINIT_CREATE:
             Status = HvpCreateHive(Hive, FileName);
@@ -520,7 +520,7 @@ HvInitialize(
 
     if (!NT_SUCCESS(Status)) return Status;
 
-    if (Operation != HINIT_CREATE) CmPrepareHive(Hive);
+    if (OperationType != HINIT_CREATE) CmPrepareHive(Hive);
 
     return Status;
 }
