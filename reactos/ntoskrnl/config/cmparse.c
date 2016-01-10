@@ -225,7 +225,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Get the storage type */
     StorageType = Stable;
-    if (Flags & REG_OPTION_VOLATILE) StorageType = Volatile;
+    if (ParseContext->CreateOptions & REG_OPTION_VOLATILE) StorageType = Volatile;
 
     /* Allocate the child */
     *KeyCell = HvAllocateCell(Hive,
@@ -311,7 +311,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Fill out the key node */
     KeyNode->Signature = CM_KEY_NODE_SIGNATURE;
-    KeyNode->Flags = Flags &~ REG_OPTION_CREATE_LINK;
+    KeyNode->Flags = Flags;
     KeQuerySystemTime(&SystemTime);
     KeyNode->LastWriteTime = SystemTime;
     KeyNode->Spare = 0;
@@ -474,7 +474,7 @@ CmpDoCreate(IN PHHIVE Hive,
                               AccessMode,
                               ParseContext,
                               ParentKcb,
-                              ParseContext->CreateOptions, // WRONG!
+                              0,
                               &KeyCell,
                               Object);
     if (NT_SUCCESS(Status))

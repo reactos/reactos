@@ -350,7 +350,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     }
 
     /* Initialize the hive */
-    Status = CmpInitializeHive((PCMHIVE*)&NewHive,
+    Status = CmpInitializeHive(&NewHive,
                                Operation,
                                HiveFlags,
                                FileType,
@@ -904,7 +904,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (HiveBase)
     {
         /* Import it */
-        Status = CmpInitializeHive((PCMHIVE*)&SystemHive,
+        Status = CmpInitializeHive(&SystemHive,
                                    HINIT_MEMORY,
                                    HIVE_NOLAZYFLUSH,
                                    HFILE_TYPE_LOG,
@@ -975,7 +975,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
-                                 (PCMHIVE)SystemHive,
+                                 SystemHive,
                                  Allocate,
                                  SecurityDescriptor);
 
@@ -984,7 +984,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Add the hive to the hive list */
-    CmpMachineHiveList[3].CmHive = (PCMHIVE)SystemHive;
+    CmpMachineHiveList[3].CmHive = SystemHive;
 
     /* Success! */
     return TRUE;
@@ -1711,7 +1711,7 @@ CmInitSystem1(VOID)
     }
 
     /* Create the hardware hive */
-    Status = CmpInitializeHive((PCMHIVE*)&HardwareHive,
+    Status = CmpInitializeHive(&HardwareHive,
                                HINIT_CREATE,
                                HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
@@ -1728,13 +1728,13 @@ CmInitSystem1(VOID)
     }
 
     /* Add the hive to the hive list */
-    CmpMachineHiveList[0].CmHive = (PCMHIVE)HardwareHive;
+    CmpMachineHiveList[0].CmHive = HardwareHive;
 
     /* Attach it to the machine key */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
-                                 (PCMHIVE)HardwareHive,
+                                 HardwareHive,
                                  TRUE,
                                  SecurityDescriptor);
     if (!NT_SUCCESS(Status))
