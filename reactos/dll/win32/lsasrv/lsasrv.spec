@@ -51,7 +51,7 @@
  @ stdcall LsarLookupSids2(ptr ptr ptr ptr long long long long)
  @ stdcall LsarOpenAccount(ptr ptr long ptr)
  @ stdcall LsarOpenPolicy(ptr ptr long ptr)
- @ stdcall LsarOpenPolicySce(ptr)
+ @ stdcall LsarOpenPolicySce(ptr ptr long ptr)
  @ stdcall LsarOpenSecret(ptr ptr long ptr)
  @ stdcall LsarOpenTrustedDomain(ptr ptr long ptr)
  @ stdcall LsarOpenTrustedDomainByName(ptr ptr long ptr)

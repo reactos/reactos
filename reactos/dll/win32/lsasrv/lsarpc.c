@@ -3153,7 +3153,10 @@ NTSTATUS WINAPI LsarLookupNames4(
 
 /* Function 78 */
 NTSTATUS WINAPI LsarOpenPolicySce(
-    handle_t hBinding)
+    LPWSTR SystemName,
+    PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
+    ACCESS_MASK DesiredAccess,
+    LSAPR_HANDLE *PolicyHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

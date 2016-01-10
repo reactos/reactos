@@ -1164,7 +1164,7 @@ LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1173,10 +1173,34 @@ LsaOpenPolicySce(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
                  IN ACCESS_MASK DesiredAccess,
                  OUT PLSA_HANDLE PolicyHandle)
 {
-    FIXME("LsaOpenPolicySce(%s %p 0x%08lx %p)\n",
+    NTSTATUS Status;
+
+    TRACE("LsaOpenPolicySce(%s %p 0x%08lx %p)\n",
           SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
-    return STATUS_NOT_IMPLEMENTED;
+
+    /* FIXME: RPC should take care of this */
+    if (!LsapIsLocalComputer(SystemName))
+        return RPC_NT_SERVER_UNAVAILABLE;
+
+    RpcTryExcept
+    {
+        *PolicyHandle = NULL;
+
+        Status = LsarOpenPolicySce(SystemName ? SystemName->Buffer : NULL,
+                                   (PLSAPR_OBJECT_ATTRIBUTES)ObjectAttributes,
+                                   DesiredAccess,
+                                   PolicyHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    TRACE("LsaOpenPolicySce() done (Status: 0x%08lx)\n", Status);
+
+    return Status;
 }
 
 
