@@ -113,10 +113,8 @@ typedef struct _HBASE_BLOCK
     /* Hive identifier "regf" (0x66676572) */
     ULONG Signature;
 
-    /* Update counter */
+    /* Update counters */
     ULONG Sequence1;
-
-    /* Update counter */
     ULONG Sequence2;
 
     /* When this hive file was last modified */
@@ -139,7 +137,7 @@ typedef struct _HBASE_BLOCK
        If the hive is volatile, this is the actual pointer to the CM_KEY_NODE */
     HCELL_INDEX RootCell;
 
-    /* Size of each hive block ? */
+    /* Size in bytes of the full hive, minus the header */
     ULONG Length;
 
     /* (1?) */

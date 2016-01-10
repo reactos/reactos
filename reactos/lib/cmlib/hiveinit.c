@@ -353,14 +353,14 @@ HvpGetHiveHeader(IN PHHIVE Hive,
 }
 
 NTSTATUS CMAPI
-HvLoadHive(IN PHHIVE Hive,
-           IN ULONG FileSize)
+HvLoadHive(IN PHHIVE Hive)
 {
     PHBASE_BLOCK BaseBlock = NULL;
     ULONG Result;
     LARGE_INTEGER TimeStamp;
     ULONG Offset = 0;
     PVOID HiveData;
+    ULONG FileSize;
 
     /* Get the hive header */
     Result = HvpGetHiveHeader(Hive, &BaseBlock, &TimeStamp);
@@ -394,6 +394,7 @@ HvLoadHive(IN PHHIVE Hive,
     Hive->Version = Hive->BaseBlock->Minor;
 
     /* Allocate a buffer large enough to hold the hive */
+    FileSize = HBLOCK_SIZE + BaseBlock->Length;
     HiveData = Hive->Allocate(FileSize, TRUE, TAG_CM);
     if (!HiveData) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -405,7 +406,7 @@ HvLoadHive(IN PHHIVE Hive,
                             FileSize);
     if (!Result) return STATUS_NOT_REGISTRY_FILE;
 
-
+    // This is a HACK!
     /* Free our base block... it's usless in this implementation */
     Hive->Free(BaseBlock, 0);
 
@@ -480,7 +481,7 @@ HvInitialize(
     Hive->StorageTypeCount = HTYPE_COUNT;
     Hive->Cluster = 1;
     Hive->Version = HSYS_MINOR;
-    Hive->HiveFlags = HiveFlags &~ HIVE_NOLAZYFLUSH;
+    Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
     switch (OperationType)
     {
@@ -498,8 +499,7 @@ HvInitialize(
 
         case HINIT_FILE:
         {
-            /* HACK of doom: Cluster is actually the file size. */
-            Status = HvLoadHive(Hive, Cluster);
+            Status = HvLoadHive(Hive);
             if ((Status != STATUS_SUCCESS) &&
                 (Status != STATUS_REGISTRY_RECOVERED))
             {

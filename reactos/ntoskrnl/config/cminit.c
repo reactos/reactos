@@ -28,7 +28,6 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
                   IN ULONG CheckFlags)
 {
     PCMHIVE Hive;
-    FILE_STANDARD_INFORMATION FileInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_FS_SIZE_INFORMATION FileSizeInformation;
     NTSTATUS Status;
@@ -168,21 +167,6 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     /* Setup flags */
     Hive->Flags = 0;
     Hive->FlushCount = 0;
-
-    /* Set flags */
-    Hive->Flags = HiveFlags;
-
-    /* Check if this is a primary */
-    if (Primary)
-    {
-        /* Check how large the file is */
-        ZwQueryInformationFile(Primary,
-                               &IoStatusBlock,
-                               &FileInformation,
-                               sizeof(FileInformation),
-                               FileStandardInformation);
-        Cluster = FileInformation.EndOfFile.LowPart;
-    }
 
     /* Initialize it */
     Status = HvInitialize(&Hive->Hive,
