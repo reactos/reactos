@@ -715,7 +715,6 @@ CmpDoOpen(IN PHHIVE Hive,
     return Status;
 }
 
-/* Remove calls to CmCreateRootNode once this is used! */
 NTSTATUS
 NTAPI
 CmpCreateLinkNode(IN PHHIVE Hive,

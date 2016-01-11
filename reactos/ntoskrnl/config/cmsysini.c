@@ -371,9 +371,6 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     /* Success, return hive */
     *Hive = NewHive;
 
-    /* HACK: ROS: Init root key cell and prepare the hive */
-    if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
-
     /* Duplicate the hive name */
     NewHive->FileFullPath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                          HiveName->Length,
