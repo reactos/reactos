@@ -297,6 +297,14 @@ int autoStart(BOOL assign)
 
     if (assign)
     {
+        wchar_t path[MAX_PATH];
+        if (GetModuleFileName(NULL, path, ARRAYSIZE(path)) != 0)
+        {
+            *(wcsrchr(path, '\\')) = 0;
+            wprintf(L"Switching to %s\n", path);
+            SetCurrentDirectory(path);
+        }
+
         if (OpenFile("hackssign_client.exe", &ofs, OF_EXIST) != 1)
         {
             wprintf(L"hackssign_client.exe not found, falling back to links\n");
