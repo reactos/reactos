@@ -326,9 +326,11 @@ Fat12Format(IN HANDLE FileHandle,
     {
         Context->TotalSectorCount += SectorCount;
 
-        Status = Fat1216WipeSectors(FileHandle,
-                                    &BootSector,
-                                    Context);
+        Status = FatWipeSectors(FileHandle,
+                                SectorCount,
+                                (ULONG)BootSector.SectorsPerCluster,
+                                (ULONG)BootSector.BytesPerSector,
+                                Context);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("Fat12WipeSectors() failed with status 0x%.08x\n", Status);

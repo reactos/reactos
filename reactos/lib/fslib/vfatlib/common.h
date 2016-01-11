@@ -14,9 +14,11 @@ ULONG GetShiftCount(IN ULONG Value);
 ULONG CalcVolumeSerialNumber(VOID);
 
 NTSTATUS
-Fat1216WipeSectors(
+FatWipeSectors(
     IN HANDLE FileHandle,
-    IN PFAT16_BOOT_SECTOR BootSector,
+    IN ULONG TotalSectors,
+    IN ULONG SectorsPerCluster,
+    IN ULONG BytesPerSector,
     IN OUT PFORMAT_CONTEXT Context);
 
 #endif /* _VFATCOMMON_H_ */
