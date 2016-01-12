@@ -18,7 +18,14 @@
     #include <stdio.h>
     #include <string.h>
 
-    #define NTDDI_VERSION   0x05020400 // NTDDI_WS03SP4 // This is the NT kernel version
+    // NTDDI_xxx versions we allude to in the library (see psdk/sdkddkver.h)
+    #define NTDDI_WS03SP4                       0x05020400
+    #define NTDDI_WIN6                          0x06000000
+    #define NTDDI_LONGHORN                      NTDDI_WIN6
+    #define NTDDI_VISTA                         NTDDI_WIN6
+    #define NTDDI_WIN7                          0x06010000
+
+    #define NTDDI_VERSION   NTDDI_WS03SP4 // This is the ReactOS NT kernel version
 
     /* C_ASSERT Definition */
     #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
