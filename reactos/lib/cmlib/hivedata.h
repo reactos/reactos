@@ -137,7 +137,7 @@ typedef struct _HBASE_BLOCK
        If the hive is volatile, this is the actual pointer to the CM_KEY_NODE */
     HCELL_INDEX RootCell;
 
-    /* Size in bytes of the full hive, minus the header */
+    /* Size in bytes of the full hive, minus the header, multiple of the block size (4KB) */
     ULONG Length;
 
     /* (1?) */
@@ -157,6 +157,8 @@ typedef struct _HBASE_BLOCK
     ULONG BootRecover;
 } HBASE_BLOCK, *PHBASE_BLOCK;
 
+C_ASSERT(sizeof(HBASE_BLOCK) == HBLOCK_SIZE);
+
 typedef struct _HBIN
 {
     /* Bin identifier "hbin" (0x6E696268) */
@@ -165,7 +167,7 @@ typedef struct _HBIN
     /* Block offset of this bin */
     HCELL_INDEX FileOffset;
 
-    /* Size in bytes, multiple of the block size (4KB) */
+    /* Size in bytes of this bin, multiple of the block size (4KB) */
     ULONG Size;
 
     ULONG Reserved1[2];
@@ -282,10 +284,13 @@ typedef struct _HHIVE
     PRELEASE_CELL_ROUTINE ReleaseCellRoutine;
     PALLOCATE_ROUTINE Allocate;
     PFREE_ROUTINE Free;
-    PFILE_READ_ROUTINE FileRead;
-    PFILE_WRITE_ROUTINE FileWrite;
     PFILE_SET_SIZE_ROUTINE FileSetSize;
+    PFILE_WRITE_ROUTINE FileWrite;
+    PFILE_READ_ROUTINE FileRead;
     PFILE_FLUSH_ROUTINE FileFlush;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    PVOID HiveLoadFailure; // PHIVE_LOAD_FAILURE
+#endif
     PHBASE_BLOCK BaseBlock;
     RTL_BITMAP DirtyVector;
     ULONG DirtyCount;
@@ -294,14 +299,23 @@ typedef struct _HHIVE
     ULONG Cluster;
     BOOLEAN Flat;
     BOOLEAN ReadOnly;
+#if (NTDDI_VERSION < NTDDI_VISTA) // NTDDI_LONGHORN
     BOOLEAN Log;
+#endif
     BOOLEAN DirtyFlag;
+#if (NTDDI_VERSION >= NTDDI_VISTA) // NTDDI_LONGHORN
     ULONG HvBinHeadersUse;
     ULONG HvFreeCellsUse;
-    ULONG HvUsedcellsUse;
+    ULONG HvUsedCellsUse;
     ULONG CmUsedCellsUse;
+#endif
     ULONG HiveFlags;
+#if (NTDDI_VERSION < NTDDI_VISTA) // NTDDI_LONGHORN
     ULONG LogSize;
+#else
+    ULONG CurrentLog;
+    ULONG LogSize[2];
+#endif
     ULONG RefreshCount;
     ULONG StorageTypeCount;
     ULONG Version;

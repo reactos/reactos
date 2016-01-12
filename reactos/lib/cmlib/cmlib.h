@@ -18,6 +18,9 @@
     #include <stdio.h>
     #include <string.h>
 
+    /* C_ASSERT Definition */
+    #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
+
     #ifdef _WIN32
     #define strncasecmp _strnicmp
     #define strcasecmp _stricmp
@@ -98,6 +101,19 @@
     #define PWORK_QUEUE_ITEM PVOID
     #define EX_PUSH_LOCK PULONG_PTR
 
+    typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+
+    typedef struct _SECURITY_DESCRIPTOR_RELATIVE
+    {
+        UCHAR Revision;
+        UCHAR Sbz1;
+        SECURITY_DESCRIPTOR_CONTROL Control;
+        ULONG Owner;
+        ULONG Group;
+        ULONG Sacl;
+        ULONG Dacl;
+    } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
     #define CMLTRACE(x, ...)
     #undef PAGED_CODE
     #define PAGED_CODE()
@@ -118,7 +134,7 @@
     #endif
 
     #include <ntdef.h>
-    #include <ntddk.h>
+    #include <ntifs.h>
     #include <bugcodes.h>
     #undef PAGED_CODE
     #define PAGED_CODE()
@@ -482,30 +498,21 @@ CmCopyKeyValueName(
     _Out_ PWCHAR ValueNameBuffer,
     _Inout_ ULONG BufferLength);
 
+
+
 /* NT-style Public Cm functions */
 
-LONG
-NTAPI
-CmpCompareCompressedName(
-    IN PCUNICODE_STRING SearchName,
-    IN PWCHAR CompressedName,
-    IN ULONG NameLength
-    );
 
-USHORT
-NTAPI
-CmpCompressedNameSize(
-    IN PWCHAR Name,
-    IN ULONG Length
-    );
-
+//
+// Cell Index Routines
+//
 HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Parent,
     IN PCUNICODE_STRING SearchName
-    );
+);
 
 HCELL_INDEX
 NTAPI
@@ -513,15 +520,82 @@ CmpFindSubKeyByNumber(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Node,
     IN ULONG Number
-    );
+);
 
-PCELL_DATA
+ULONG
 NTAPI
-CmpValueToData(
+CmpComputeHashKey(
+    IN ULONG Hash,
+    IN PCUNICODE_STRING Name,
+    IN BOOLEAN AllowSeparators
+);
+
+BOOLEAN
+NTAPI
+CmpAddSubKey(
     IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value,
-    OUT PULONG Length
-    );
+    IN HCELL_INDEX Parent,
+    IN HCELL_INDEX Child
+);
+
+BOOLEAN
+NTAPI
+CmpRemoveSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ParentKey,
+    IN HCELL_INDEX TargetKey
+);
+
+BOOLEAN
+NTAPI
+CmpMarkIndexDirty(
+    IN PHHIVE Hive,
+    HCELL_INDEX ParentKey,
+    HCELL_INDEX TargetKey
+);
+
+
+//
+// Name Functions
+//
+LONG
+NTAPI
+CmpCompareCompressedName(
+    IN PCUNICODE_STRING SearchName,
+    IN PWCHAR CompressedName,
+    IN ULONG NameLength
+);
+
+USHORT
+NTAPI
+CmpNameSize(
+    IN PHHIVE Hive,
+    IN PUNICODE_STRING Name
+);
+
+USHORT
+NTAPI
+CmpCompressedNameSize(
+    IN PWCHAR Name,
+    IN ULONG Length
+);
+
+USHORT
+NTAPI
+CmpCopyName(
+    IN PHHIVE Hive,
+    IN PWCHAR Destination,
+    IN PUNICODE_STRING Source
+);
+
+VOID
+NTAPI
+CmpCopyCompressedName(
+    IN PWCHAR Destination,
+    IN ULONG DestinationLength,
+    IN PWCHAR Source,
+    IN ULONG SourceLength
+);
 
 BOOLEAN
 NTAPI
@@ -531,7 +605,102 @@ CmpFindNameInList(
     IN PUNICODE_STRING Name,
     IN PULONG ChildIndex,
     IN PHCELL_INDEX CellIndex
-    );
+);
+
+
+//
+// Cell Value Routines
+//
+HCELL_INDEX
+NTAPI
+CmpFindValueByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE KeyNode,
+    IN PUNICODE_STRING Name
+);
+
+PCELL_DATA
+NTAPI
+CmpValueToData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    OUT PULONG Length
+);
+
+NTSTATUS
+NTAPI
+CmpSetValueDataNew(
+    IN PHHIVE Hive,
+    IN PVOID Data,
+    IN ULONG DataSize,
+    IN ULONG StorageType,
+    IN HCELL_INDEX ValueCell,
+    OUT PHCELL_INDEX DataCell
+);
+
+NTSTATUS
+NTAPI
+CmpAddValueToList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ValueCell,
+    IN ULONG Index,
+    IN ULONG Type,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValue(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
+);
+
+BOOLEAN
+NTAPI
+CmpMarkValueDataDirty(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValueData(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX DataCell,
+    IN ULONG DataLength
+);
+
+NTSTATUS
+NTAPI
+CmpRemoveValueFromList(
+    IN PHHIVE Hive,
+    IN ULONG Index,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpGetValueData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    IN PULONG Length,
+    OUT PVOID *Buffer,
+    OUT PBOOLEAN BufferAllocated,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+NTSTATUS
+NTAPI
+CmpCopyKeyValueList(
+    IN PHHIVE SourceHive,
+    IN PCHILD_LIST SrcValueList,
+    IN PHHIVE DestinationHive,
+    IN OUT PCHILD_LIST DestValueList,
+    IN HSTORAGE_TYPE StorageType
+);
+
+
+/******************************************************************************/
 
 /* To be implemented by the user of this library */
 PVOID
@@ -547,15 +716,6 @@ NTAPI
 CmpFree(
     IN PVOID Ptr,
     IN ULONG Quota
-    );
-
-VOID
-NTAPI
-CmpCopyCompressedName(
-    IN PWCHAR Destination,
-    IN ULONG DestinationLength,
-    IN PWCHAR Source,
-    IN ULONG SourceLength
     );
 
 #endif /* _CMLIB_H_ */

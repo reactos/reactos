@@ -18,16 +18,18 @@
 // Key Types
 //
 #define CM_KEY_INDEX_ROOT               0x6972  // "ri"
-#define CM_KEY_INDEX_LEAF               0x696c  // "li"
-#define CM_KEY_FAST_LEAF                0x666c  // "lf"
-#define CM_KEY_HASH_LEAF                0x686c  // "lh"
+#define CM_KEY_INDEX_LEAF               0x696C  // "li"
+#define CM_KEY_FAST_LEAF                0x666C  // "lf"
+#define CM_KEY_HASH_LEAF                0x686C  // "lh"
 
 //
 // Key Signatures
 //
 #define CM_KEY_NODE_SIGNATURE           0x6B6E  // "nk"
 #define CM_LINK_NODE_SIGNATURE          0x6B6C  // "lk"
+#define CM_KEY_SECURITY_SIGNATURE       0x6B73  // "sk"
 #define CM_KEY_VALUE_SIGNATURE          0x6B76  // "vk"
+#define CM_BIG_DATA_SIGNATURE           0x6264  // "db"
 
 //
 // CM_KEY_NODE Flags
@@ -140,7 +142,7 @@ typedef struct _CM_KEY_VALUE
     HCELL_INDEX Data;
     ULONG Type;
     USHORT Flags;
-    USHORT Unused1;
+    USHORT Spare;
     WCHAR Name[ANYSIZE_ARRAY];
 } CM_KEY_VALUE, *PCM_KEY_VALUE;
 
@@ -155,9 +157,18 @@ typedef struct _CM_KEY_SECURITY
     HCELL_INDEX Blink;
     ULONG ReferenceCount;
     ULONG DescriptorLength;
-    //SECURITY_DESCRIPTOR_RELATIVE Descriptor;
-    UCHAR Data[ANYSIZE_ARRAY];
+    SECURITY_DESCRIPTOR_RELATIVE Descriptor;
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
+
+//
+// Big Value Key
+//
+typedef struct _CM_BIG_DATA
+{
+    USHORT Signature;
+    USHORT Count;
+    HCELL_INDEX List;
+} CM_BIG_DATA, *PCM_BIG_DATA;
 
 #include <poppack.h>
 
@@ -205,6 +216,7 @@ typedef struct _CELL_DATA
         CM_KEY_VALUE KeyValue;
         CM_KEY_SECURITY KeySecurity;
         CM_KEY_INDEX KeyIndex;
+        CM_BIG_DATA ValueData;
         HCELL_INDEX KeyList[ANYSIZE_ARRAY];
         WCHAR KeyString[ANYSIZE_ARRAY];
     } u;
