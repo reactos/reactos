@@ -18,6 +18,8 @@
     #include <stdio.h>
     #include <string.h>
 
+    #define NTDDI_VERSION   0x05020400 // NTDDI_WS03SP4 // This is the NT kernel version
+
     /* C_ASSERT Definition */
     #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
@@ -100,6 +102,9 @@
     #define PKEVENT PVOID
     #define PWORK_QUEUE_ITEM PVOID
     #define EX_PUSH_LOCK PULONG_PTR
+
+    // Definitions copied from <ntifs.h>
+    // We only want to include host headers, so we define them manually
 
     typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
