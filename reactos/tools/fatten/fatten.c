@@ -45,7 +45,7 @@ DWORD get_fattime(void)
             timeinfo->tm_min,
             timeinfo->tm_hour,
             timeinfo->tm_mday,
-            timeinfo->tm_mon,
+            timeinfo->tm_mon  +  1,
             timeinfo->tm_year - 80,
         }
     };
@@ -208,13 +208,15 @@ int main(int oargc, char* oargv[])
             // Arg 2: custom header label (optional)
             if (nargs > 1)
             {
-                char label[11];
+#define FAT_VOL_LABEL_LEN   11
+                char vol_label[2 + FAT_VOL_LABEL_LEN + 1]; // Null-terminated buffer
+                char* label = vol_label + 2; // The first two characters are reserved for the drive number "0:"
                 char ch;
 
                 int i, invalid = 0;
                 int len = strlen(argv[1]);
 
-                if (len <= sizeof(label))
+                if (len <= FAT_VOL_LABEL_LEN)
                 {
                     // Verify each character (should be printable ASCII)
                     // and copy it in uppercase.
@@ -233,7 +235,7 @@ int main(int oargc, char* oargv[])
                     if (!invalid)
                     {
                         // Pad the label with spaces
-                        while (len < sizeof(label))
+                        while (len < FAT_VOL_LABEL_LEN)
                         {
                             label[len++] = ' ';
                         }
@@ -260,11 +262,11 @@ int main(int oargc, char* oargv[])
 
                 if (g_Filesystem.fs_type == FS_FAT32)
                 {
-                    memcpy(buff + 71, label, sizeof(label));
+                    memcpy(buff + 71, label, FAT_VOL_LABEL_LEN);
                 }
                 else
                 {
-                    memcpy(buff + 43, label, sizeof(label));
+                    memcpy(buff + 43, label, FAT_VOL_LABEL_LEN);
                 }
 
                 if (disk_write(0, buff, 0, 1))
@@ -273,6 +275,11 @@ int main(int oargc, char* oargv[])
                     ret = 1;
                     goto exit;
                 }
+
+                // Set also the directory volume label
+                memcpy(vol_label, "0:", 2);
+                vol_label[2 + FAT_VOL_LABEL_LEN] = '\0';
+                f_setlabel(vol_label);
             }
         }
         else if (strcmp(parg, "boot") == 0)
