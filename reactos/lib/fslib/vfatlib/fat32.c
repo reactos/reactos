@@ -484,7 +484,7 @@ Fat32Format(IN HANDLE FileHandle,
                                 Context);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("Fat32WipeSectors() failed with status 0x%.08x\n", Status);
+            DPRINT("FatWipeSectors() failed with status 0x%.08x\n", Status);
             return Status;
         }
     }

@@ -50,7 +50,7 @@ CalcVolumeSerialNumber(VOID)
     return Serial;
 }
 
-/***** Wipe function for FAT12, FAT16 and FAT32 formats, adapted from FAT32 code *****/
+/***** Wipe function for FAT12, FAT16 and FAT32 formats *****/
 NTSTATUS
 FatWipeSectors(
     IN HANDLE FileHandle,
