@@ -142,7 +142,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c m
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","InstallRoot.NET",0x00000000,"cmd /c reg add HKLM\SOFTWARE\Microsoft\.NETFramework /v InstallRoot /t REG_SZ /d %SystemRoot%\Microsoft.NET\Framework\"
 
 ; HACK - Start rosvboxmgmt - ROSAPPS-303
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","Handle VBox SF",0x00000000,"%windir%\bin\rosvboxmgmt auto"
+;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","Handle VBox SF",0x00000000,"%windir%\bin\rosvboxmgmt autolink"
+;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","Handle VBox SF",0x00000000,"%windir%\bin\rosvboxmgmt autoassign"
 
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
