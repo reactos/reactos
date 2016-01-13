@@ -14,10 +14,9 @@
  *
  * Internal function to verify that a hive header has valid format.
  */
-
 BOOLEAN CMAPI
 HvpVerifyHiveHeader(
-    PHBASE_BLOCK BaseBlock)
+    IN PHBASE_BLOCK BaseBlock)
 {
     if (BaseBlock->Signature != HV_SIGNATURE ||
         BaseBlock->Major != HSYS_MAJOR ||
@@ -28,10 +27,10 @@ HvpVerifyHiveHeader(
         BaseBlock->Sequence1 != BaseBlock->Sequence2 ||
         HvpHiveHeaderChecksum(BaseBlock) != BaseBlock->CheckSum)
     {
-        DPRINT1("Verify Hive Header failed: \n");
+        DPRINT1("Verify Hive Header failed:\n");
         DPRINT1("    Signature: 0x%x, expected 0x%x; Major: 0x%x, expected 0x%x\n",
                 BaseBlock->Signature, HV_SIGNATURE, BaseBlock->Major, HSYS_MAJOR);
-        DPRINT1("    Minor: 0x%x is not >= 0x%x; Type: 0x%x, expected 0x%x\n",
+        DPRINT1("    Minor: 0x%x expected to be >= 0x%x; Type: 0x%x, expected 0x%x\n",
                 BaseBlock->Minor, HSYS_MINOR, BaseBlock->Type, HFILE_TYPE_PRIMARY);
         DPRINT1("    Format: 0x%x, expected 0x%x; Cluster: 0x%x, expected 1\n",
                 BaseBlock->Format, HBASE_FORMAT_MEMORY, BaseBlock->Cluster);
@@ -48,10 +47,8 @@ HvpVerifyHiveHeader(
 /**
  * @name HvpFreeHiveBins
  *
- * Internal function to free all bin storage associated with hive
- * descriptor.
+ * Internal function to free all bin storage associated with a hive descriptor.
  */
-
 VOID CMAPI
 HvpFreeHiveBins(
     PHHIVE Hive)
@@ -82,27 +79,98 @@ HvpFreeHiveBins(
 }
 
 /**
+ * @name HvpAllocBaseBlockAligned
+ *
+ * Internal helper function to allocate cluster-aligned hive base blocks.
+ */
+static __inline PHBASE_BLOCK
+HvpAllocBaseBlockAligned(
+    IN PHHIVE Hive,
+    IN BOOLEAN Paged,
+    IN ULONG Tag)
+{
+    PHBASE_BLOCK BaseBlock;
+    ULONG Alignment;
+
+    ASSERT(sizeof(HBASE_BLOCK) >= (HSECTOR_SIZE * Hive->Cluster));
+
+    /* Allocate the buffer */
+    BaseBlock = Hive->Allocate(Hive->BaseBlockAlloc, Paged, Tag);
+    if (!BaseBlock) return NULL;
+
+    /* Check for, and enforce, alignment */
+    Alignment = Hive->Cluster * HSECTOR_SIZE -1;
+    if ((ULONG_PTR)BaseBlock & Alignment)
+    {
+        /* Free the old header and reallocate a new one, always paged */
+        Hive->Free(BaseBlock, Hive->BaseBlockAlloc);
+        BaseBlock = Hive->Allocate(PAGE_SIZE, TRUE, Tag);
+        if (!BaseBlock) return NULL;
+
+        Hive->BaseBlockAlloc = PAGE_SIZE;
+    }
+
+    return BaseBlock;
+}
+
+/**
+ * @name HvpInitFileName
+ *
+ * Internal function to initialize the UNICODE NULL-terminated hive file name
+ * member of a hive header by copying the last 31 characters of the file name.
+ * Mainly used for debugging purposes.
+ */
+static VOID
+HvpInitFileName(
+    IN OUT PHBASE_BLOCK BaseBlock,
+    IN PCUNICODE_STRING FileName OPTIONAL)
+{
+    ULONG_PTR Offset;
+    SIZE_T    Length;
+
+    /* Always NULL-initialize */
+    RtlZeroMemory(BaseBlock->FileName, (HIVE_FILENAME_MAXLEN + 1) * sizeof(WCHAR));
+
+    /* Copy the 31 last characters of the hive file name if any */
+    if (!FileName) return;
+
+    if (FileName->Length / sizeof(WCHAR) <= HIVE_FILENAME_MAXLEN)
+    {
+        Offset = 0;
+        Length = FileName->Length;
+    }
+    else
+    {
+        Offset = FileName->Length / sizeof(WCHAR) - HIVE_FILENAME_MAXLEN;
+        Length = HIVE_FILENAME_MAXLEN * sizeof(WCHAR);
+    }
+
+    RtlCopyMemory(BaseBlock->FileName, FileName->Buffer + Offset, Length);
+}
+
+/**
  * @name HvpCreateHive
  *
- * Internal helper function to initialize hive descriptor structure for
- * newly created hive.
+ * Internal helper function to initialize a hive descriptor structure
+ * for a newly created hive in memory.
  *
  * @see HvInitialize
  */
-
 NTSTATUS CMAPI
 HvpCreateHive(
-    PHHIVE RegistryHive,
-    PCUNICODE_STRING FileName OPTIONAL)
+    IN OUT PHHIVE RegistryHive,
+    IN PCUNICODE_STRING FileName OPTIONAL)
 {
     PHBASE_BLOCK BaseBlock;
     ULONG Index;
 
-    BaseBlock = RegistryHive->Allocate(sizeof(HBASE_BLOCK), FALSE, TAG_CM);
+    /* Allocate the base block */
+    BaseBlock = HvpAllocBaseBlockAligned(RegistryHive, FALSE, TAG_CM);
     if (BaseBlock == NULL)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(BaseBlock, sizeof(HBASE_BLOCK));
+    /* Clear it */
+    RtlZeroMemory(BaseBlock, RegistryHive->BaseBlockAlloc);
 
     BaseBlock->Signature = HV_SIGNATURE;
     BaseBlock->Major = HSYS_MAJOR;
@@ -114,36 +182,28 @@ HvpCreateHive(
     BaseBlock->Length = 0;
     BaseBlock->Sequence1 = 1;
     BaseBlock->Sequence2 = 1;
+    BaseBlock->TimeStamp.QuadPart = 0ULL;
 
-    /* Copy the 31 last characters of the hive file name if any */
-    if (FileName)
-    {
-        if (FileName->Length / sizeof(WCHAR) <= HIVE_FILENAME_MAXLEN)
-        {
-            RtlCopyMemory(BaseBlock->FileName,
-                          FileName->Buffer,
-                          FileName->Length);
-        }
-        else
-        {
-            RtlCopyMemory(BaseBlock->FileName,
-                          FileName->Buffer +
-                          FileName->Length / sizeof(WCHAR) - HIVE_FILENAME_MAXLEN,
-                          HIVE_FILENAME_MAXLEN * sizeof(WCHAR));
-        }
+    /*
+     * No need to compute the checksum since
+     * the hive resides only in memory so far.
+     */
+    BaseBlock->CheckSum = 0;
 
-        /* NULL-terminate */
-        BaseBlock->FileName[HIVE_FILENAME_MAXLEN] = L'\0';
-    }
+    /* Set default boot type */
+    BaseBlock->BootType = 0;
 
-    BaseBlock->CheckSum = HvpHiveHeaderChecksum(BaseBlock);
-
+    /* Setup hive data */
     RegistryHive->BaseBlock = BaseBlock;
+    RegistryHive->Version = BaseBlock->Minor; // == HSYS_MINOR
+
     for (Index = 0; Index < 24; Index++)
     {
         RegistryHive->Storage[Stable].FreeDisplay[Index] = HCELL_NIL;
         RegistryHive->Storage[Volatile].FreeDisplay[Index] = HCELL_NIL;
     }
+
+    HvpInitFileName(BaseBlock, FileName);
 
     return STATUS_SUCCESS;
 }
@@ -152,16 +212,16 @@ HvpCreateHive(
  * @name HvpInitializeMemoryHive
  *
  * Internal helper function to initialize hive descriptor structure for
- * a hive stored in memory. The data of the hive are copied and it is
- * prepared for read/write access.
+ * an existing hive stored in memory. The data of the hive is copied
+ * and it is prepared for read/write access.
  *
  * @see HvInitialize
  */
-
 NTSTATUS CMAPI
 HvpInitializeMemoryHive(
     PHHIVE Hive,
-    PVOID ChunkBase)
+    PHBASE_BLOCK ChunkBase,
+    IN PCUNICODE_STRING FileName OPTIONAL)
 {
     SIZE_T BlockIndex;
     PHBIN Bin, NewBin;
@@ -170,23 +230,26 @@ HvpInitializeMemoryHive(
     PULONG BitmapBuffer;
     SIZE_T ChunkSize;
 
-    ChunkSize = ((PHBASE_BLOCK)ChunkBase)->Length;
+    ChunkSize = ChunkBase->Length;
     DPRINT("ChunkSize: %lx\n", ChunkSize);
 
     if (ChunkSize < sizeof(HBASE_BLOCK) ||
-        !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
+        !HvpVerifyHiveHeader(ChunkBase))
     {
         DPRINT1("Registry is corrupt: ChunkSize %lu < sizeof(HBASE_BLOCK) %lu, "
-                "or HvpVerifyHiveHeader() failed\n", ChunkSize, (SIZE_T)sizeof(HBASE_BLOCK));
+                "or HvpVerifyHiveHeader() failed\n", ChunkSize, sizeof(HBASE_BLOCK));
         return STATUS_REGISTRY_CORRUPT;
     }
 
-    Hive->BaseBlock = Hive->Allocate(sizeof(HBASE_BLOCK), FALSE, TAG_CM);
+    /* Allocate the base block */
+    Hive->BaseBlock = HvpAllocBaseBlockAligned(Hive, FALSE, TAG_CM);
     if (Hive->BaseBlock == NULL)
-    {
         return STATUS_NO_MEMORY;
-    }
+
     RtlCopyMemory(Hive->BaseBlock, ChunkBase, sizeof(HBASE_BLOCK));
+
+    /* Setup hive data */
+    Hive->Version = ChunkBase->Minor;
 
     /*
      * Build a block list from the in-memory chunk and copy the data as
@@ -200,7 +263,7 @@ HvpInitializeMemoryHive(
     if (Hive->Storage[Stable].BlockList == NULL)
     {
         DPRINT1("Allocating block list failed\n");
-        Hive->Free(Hive->BaseBlock, 0);
+        Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
         return STATUS_NO_MEMORY;
     }
 
@@ -212,16 +275,16 @@ HvpInitializeMemoryHive(
         {
             DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",
                     (unsigned long)BlockIndex, (unsigned)Bin->Signature, (unsigned)Bin->Size);
-            Hive->Free(Hive->BaseBlock, 0);
             Hive->Free(Hive->Storage[Stable].BlockList, 0);
+            Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
             return STATUS_REGISTRY_CORRUPT;
         }
 
         NewBin = Hive->Allocate(Bin->Size, TRUE, TAG_CM);
         if (NewBin == NULL)
         {
-            Hive->Free(Hive->BaseBlock, 0);
             Hive->Free(Hive->Storage[Stable].BlockList, 0);
+            Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
             return STATUS_NO_MEMORY;
         }
 
@@ -246,7 +309,7 @@ HvpInitializeMemoryHive(
     if (HvpCreateHiveFreeCellList(Hive))
     {
         HvpFreeHiveBins(Hive);
-        Hive->Free(Hive->BaseBlock, 0);
+        Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
         return STATUS_NO_MEMORY;
     }
 
@@ -256,18 +319,20 @@ HvpInitializeMemoryHive(
     if (BitmapBuffer == NULL)
     {
         HvpFreeHiveBins(Hive);
-        Hive->Free(Hive->BaseBlock, 0);
+        Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
         return STATUS_NO_MEMORY;
     }
 
     RtlInitializeBitMap(&Hive->DirtyVector, BitmapBuffer, BitmapSize * 8);
     RtlClearAllBits(&Hive->DirtyVector);
 
+    HvpInitFileName(Hive->BaseBlock, FileName);
+
     return STATUS_SUCCESS;
 }
 
 /**
- * @name HvpInitializeMemoryInplaceHive
+ * @name HvpInitializeFlatHive
  *
  * Internal helper function to initialize hive descriptor structure for
  * a hive stored in memory. The in-memory data of the hive are directly
@@ -275,20 +340,22 @@ HvpInitializeMemoryHive(
  *
  * @see HvInitialize
  */
-
 NTSTATUS CMAPI
-HvpInitializeMemoryInplaceHive(
+HvpInitializeFlatHive(
     PHHIVE Hive,
-    PVOID ChunkBase)
+    PHBASE_BLOCK ChunkBase)
 {
-    if (!HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
-    {
+    if (!HvpVerifyHiveHeader(ChunkBase))
         return STATUS_REGISTRY_CORRUPT;
-    }
 
-    Hive->BaseBlock = (PHBASE_BLOCK)ChunkBase;
-    Hive->ReadOnly = TRUE;
+    /* Setup hive data */
+    Hive->BaseBlock = ChunkBase;
+    Hive->Version = ChunkBase->Minor;
     Hive->Flat = TRUE;
+    Hive->ReadOnly = TRUE;
+
+    /* Set default boot type */
+    ChunkBase->BootType = 0;
 
     return STATUS_SUCCESS;
 }
@@ -310,25 +377,15 @@ HvpGetHiveHeader(IN PHHIVE Hive,
                  IN PLARGE_INTEGER TimeStamp)
 {
     PHBASE_BLOCK BaseBlock;
-    ULONG Alignment;
     ULONG Result;
     ULONG Offset = 0;
-    ASSERT(sizeof(HBASE_BLOCK) >= (HBLOCK_SIZE * Hive->Cluster));
 
-    /* Assume failure and allocate the buffer */
-    *HiveBaseBlock = 0;
-    BaseBlock = Hive->Allocate(sizeof(HBASE_BLOCK), TRUE, TAG_CM);
+    ASSERT(sizeof(HBASE_BLOCK) >= (HSECTOR_SIZE * Hive->Cluster));
+
+    /* Assume failure and allocate the base block */
+    *HiveBaseBlock = NULL;
+    BaseBlock = HvpAllocBaseBlockAligned(Hive, TRUE, TAG_CM);
     if (!BaseBlock) return NoMemory;
-
-    /* Check for, and enforce, alignment */
-    Alignment = Hive->Cluster * HBLOCK_SIZE -1;
-    if ((ULONG_PTR)BaseBlock & Alignment)
-    {
-        /* Free the old header */
-        Hive->Free(BaseBlock, 0);
-        BaseBlock = Hive->Allocate(PAGE_SIZE, TRUE, TAG_CM);
-        if (!BaseBlock) return NoMemory;
-    }
 
     /* Clear it */
     RtlZeroMemory(BaseBlock, sizeof(HBASE_BLOCK));
@@ -338,7 +395,7 @@ HvpGetHiveHeader(IN PHHIVE Hive,
                             HFILE_TYPE_PRIMARY,
                             &Offset,
                             BaseBlock,
-                            Hive->Cluster * HBLOCK_SIZE);
+                            Hive->Cluster * HSECTOR_SIZE);
 
     /* Couldn't read: assume it's not a hive */
     if (!Result) return NotHive;
@@ -353,8 +410,10 @@ HvpGetHiveHeader(IN PHHIVE Hive,
 }
 
 NTSTATUS CMAPI
-HvLoadHive(IN PHHIVE Hive)
+HvLoadHive(IN PHHIVE Hive,
+           IN PCUNICODE_STRING FileName OPTIONAL)
 {
+    NTSTATUS Status;
     PHBASE_BLOCK BaseBlock = NULL;
     ULONG Result;
     LARGE_INTEGER TimeStamp;
@@ -391,12 +450,16 @@ HvLoadHive(IN PHHIVE Hive)
 
     /* Setup hive data */
     Hive->BaseBlock = BaseBlock;
-    Hive->Version = Hive->BaseBlock->Minor;
+    Hive->Version = BaseBlock->Minor;
 
     /* Allocate a buffer large enough to hold the hive */
-    FileSize = HBLOCK_SIZE + BaseBlock->Length;
+    FileSize = HBLOCK_SIZE + BaseBlock->Length; // == sizeof(HBASE_BLOCK) + BaseBlock->Length;
     HiveData = Hive->Allocate(FileSize, TRUE, TAG_CM);
-    if (!HiveData) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!HiveData)
+    {
+        Hive->Free(BaseBlock, Hive->BaseBlockAlloc);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Now read the whole hive */
     Result = Hive->FileRead(Hive,
@@ -404,14 +467,23 @@ HvLoadHive(IN PHHIVE Hive)
                             &Offset,
                             HiveData,
                             FileSize);
-    if (!Result) return STATUS_NOT_REGISTRY_FILE;
+    if (!Result)
+    {
+        Hive->Free(HiveData, FileSize);
+        Hive->Free(BaseBlock, Hive->BaseBlockAlloc);
+        return STATUS_NOT_REGISTRY_FILE;
+    }
 
     // This is a HACK!
     /* Free our base block... it's usless in this implementation */
-    Hive->Free(BaseBlock, 0);
+    Hive->Free(BaseBlock, Hive->BaseBlockAlloc);
 
     /* Initialize the hive directly from memory */
-    return HvpInitializeMemoryHive(Hive, HiveData);
+    Status = HvpInitializeMemoryHive(Hive, HiveData, FileName);
+    if (!NT_SUCCESS(Status))
+        Hive->Free(HiveData, FileSize);
+
+    return Status;
 }
 
 /**
@@ -444,7 +516,6 @@ HvLoadHive(IN PHHIVE Hive)
  *
  * @see HvFree
  */
-
 NTSTATUS CMAPI
 HvInitialize(
     PHHIVE RegistryHive,
@@ -464,8 +535,6 @@ HvInitialize(
     NTSTATUS Status;
     PHHIVE Hive = RegistryHive;
 
-    UNREFERENCED_PARAMETER(FileType);
-
     /*
      * Create a new hive structure that will hold all the maintenance data.
      */
@@ -474,13 +543,18 @@ HvInitialize(
 
     Hive->Allocate = Allocate;
     Hive->Free = Free;
-    Hive->FileRead = FileRead;
-    Hive->FileWrite = FileWrite;
     Hive->FileSetSize = FileSetSize;
+    Hive->FileWrite = FileWrite;
+    Hive->FileRead = FileRead;
     Hive->FileFlush = FileFlush;
+
+    Hive->RefreshCount = 0;
     Hive->StorageTypeCount = HTYPE_COUNT;
-    Hive->Cluster = 1;
+    Hive->Cluster = Cluster;
+    Hive->BaseBlockAlloc = sizeof(HBASE_BLOCK); // == HBLOCK_SIZE
+
     Hive->Version = HSYS_MINOR;
+    Hive->Log = (FileType == HFILE_TYPE_LOG);
     Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
     switch (OperationType)
@@ -490,16 +564,16 @@ HvInitialize(
             break;
 
         case HINIT_MEMORY:
-            Status = HvpInitializeMemoryHive(Hive, HiveData);
+            Status = HvpInitializeMemoryHive(Hive, HiveData, FileName);
             break;
 
         case HINIT_FLAT:
-            Status = HvpInitializeMemoryInplaceHive(Hive, HiveData);
+            Status = HvpInitializeFlatHive(Hive, HiveData);
             break;
 
         case HINIT_FILE:
         {
-            Status = HvLoadHive(Hive);
+            Status = HvLoadHive(Hive, FileName);
             if ((Status != STATUS_SUCCESS) &&
                 (Status != STATUS_REGISTRY_RECOVERED))
             {
@@ -512,6 +586,12 @@ HvInitialize(
             break;
         }
 
+        case HINIT_MEMORY_INPLACE:
+            // Status = HvpInitializeMemoryInplaceHive(Hive, HiveData);
+            // break;
+
+        case HINIT_MAPFILE:
+
         default:
         /* FIXME: A better return status value is needed */
         Status = STATUS_NOT_IMPLEMENTED;
@@ -520,6 +600,9 @@ HvInitialize(
 
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* HACK: ROS: Init root key cell and prepare the hive */
+    // r31253
+    // if (OperationType == HINIT_CREATE) CmCreateRootNode(Hive, L"");
     if (OperationType != HINIT_CREATE) CmPrepareHive(Hive);
 
     return Status;
@@ -531,7 +614,6 @@ HvInitialize(
  * Free all stroage and handles associated with hive descriptor.
  * But do not free the hive descriptor itself.
  */
-
 VOID CMAPI
 HvFree(
     PHHIVE RegistryHive)
@@ -549,7 +631,7 @@ HvFree(
         /* Free the BaseBlock */
         if (RegistryHive->BaseBlock)
         {
-            RegistryHive->Free(RegistryHive->BaseBlock, 0);
+            RegistryHive->Free(RegistryHive->BaseBlock, RegistryHive->BaseBlockAlloc);
             RegistryHive->BaseBlock = NULL;
         }
     }
