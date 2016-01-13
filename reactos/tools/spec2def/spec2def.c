@@ -688,12 +688,12 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         fprintf(fileDest, " NONAME");
     }
 
+    /* Either PRIVATE or DATA */
     if (pexp->uFlags & FL_PRIVATE)
     {
         fprintf(fileDest, " PRIVATE");
     }
-
-    if (pexp->nCallingConvention == CC_EXTERN)
+    else if (pexp->nCallingConvention == CC_EXTERN)
     {
         fprintf(fileDest, " DATA");
     }
