@@ -42,9 +42,7 @@ IniCacheFreeKey(
     PINICACHEKEY Next;
 
     if (Key == NULL)
-    {
         return NULL;
-    }
 
     Next = Key->Next;
     if (Key->Name != NULL)
@@ -73,9 +71,7 @@ IniCacheFreeSection(
     PINICACHESECTION Next;
 
     if (Section == NULL)
-    {
         return NULL;
-    }
 
     Next = Section->Next;
     while (Section->FirstKey != NULL)
@@ -146,16 +142,13 @@ IniCacheAddKey(
     }
 
     Key = (PINICACHEKEY)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHEKEY));
     if (Key == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Key,
-                  sizeof(INICACHEKEY));
 
     Key->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                         0,
@@ -209,42 +202,6 @@ IniCacheAddKey(
 }
 
 
-#if 0
-static
-PINICACHESECTION
-IniCacheFindSection(
-    PINICACHE Cache,
-    PWCHAR Name,
-    ULONG NameLength)
-{
-    PINICACHESECTION Section = NULL;
-
-    if (Cache == NULL || Name == NULL || NameLength == 0)
-    {
-        return NULL;
-    }
-
-    Section = Cache->FirstSection;
-
-    /* iterate through list of sections */
-    while (Section != NULL)
-    {
-        if (NameLength == wcslen(Section->Name))
-        {
-            /* are the contents the same too? */
-            if (_wcsnicmp(Section->Name, Name, NameLength) == 0)
-                break;
-        }
-
-        /* get the next section*/
-        Section = Section->Next;
-    }
-
-    return Section;
-}
-#endif
-
-
 static
 PINICACHESECTION
 IniCacheAddSection(
@@ -262,15 +219,13 @@ IniCacheAddSection(
     }
 
     Section = (PINICACHESECTION)RtlAllocateHeap(ProcessHeap,
-                                                0,
+                                                HEAP_ZERO_MEMORY,
                                                 sizeof(INICACHESECTION));
     if (Section == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Section, sizeof(INICACHESECTION));
 
     /* Allocate and initialize section name */
     Section->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
@@ -351,7 +306,7 @@ IniCacheGetSectionName(
     *NamePtr = NULL;
     *NameSize = 0;
 
-    /* skip whitespace */
+    /* Skip whitespace */
     while (*Ptr != 0 && isspace(*Ptr))
     {
         Ptr++;
@@ -401,7 +356,7 @@ IniCacheGetKeyName(
         *NameSize = 0;
         Size = 0;
 
-        /* skip whitespace and empty lines */
+        /* Skip whitespace and empty lines */
         while (isspace(*Ptr) || *Ptr == '\n' || *Ptr == '\r')
         {
             Ptr++;
@@ -579,7 +534,7 @@ IniCacheLoad(
 
     DPRINT("File size: %lu\n", FileLength);
 
-    /* Allocate file buffer */
+    /* Allocate file buffer with NULL-terminator */
     FileBuffer = (CHAR*)RtlAllocateHeap(ProcessHeap,
                                         0,
                                         FileLength + 1);
@@ -602,7 +557,7 @@ IniCacheLoad(
                         &FileOffset,
                         NULL);
 
-    /* Append string terminator */
+    /* Append NULL-terminator */
     FileBuffer[FileLength] = 0;
 
     NtClose(FileHandle);
@@ -616,16 +571,13 @@ IniCacheLoad(
 
     /* Allocate inicache header */
     *Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHE));
     if (*Cache == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    /* Initialize inicache header */
-    RtlZeroMemory(*Cache, sizeof(INICACHE));
 
     /* Parse ini file */
     Section = NULL;
@@ -700,9 +652,7 @@ IniCacheDestroy(
     PINICACHE Cache)
 {
     if (Cache == NULL)
-    {
         return;
-    }
 
     while (Cache->FirstSection != NULL)
     {
@@ -881,15 +831,13 @@ IniCacheInsertKey(
 
     /* Allocate key buffer */
     Key = (PINICACHEKEY)RtlAllocateHeap(ProcessHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(INICACHEKEY));
     if (Key == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-   RtlZeroMemory(Key, sizeof(INICACHEKEY));
 
     /* Allocate name buffer */
     Key->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
@@ -969,16 +917,13 @@ IniCacheCreate(VOID)
 
     /* Allocate inicache header */
     Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                       0,
+                                       HEAP_ZERO_MEMORY,
                                        sizeof(INICACHE));
     if (Cache == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    /* Initialize inicache header */
-    RtlZeroMemory(Cache, sizeof(INICACHE));
 
     return Cache;
 }
@@ -1023,23 +968,20 @@ IniCacheSave(
 
         Section = Section->Next;
         if (Section != NULL)
-            BufferSize += 2; /* extra "\r\n" at end of each section */
+            BufferSize += 2; /* Extra "\r\n" at end of each section */
     }
-    BufferSize++; /* Null-terminator */
 
     DPRINT("BufferSize: %lu\n", BufferSize);
 
-    /* Allocate file buffer */
+    /* Allocate file buffer with NULL-terminator */
     Buffer = (CHAR*)RtlAllocateHeap(ProcessHeap,
-                                    0,
-                                    BufferSize);
+                                    HEAP_ZERO_MEMORY,
+                                    BufferSize + 1);
     if (Buffer == NULL)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    RtlZeroMemory(Buffer, BufferSize);
 
     /* Fill file buffer */
     Ptr = Buffer;
@@ -1133,15 +1075,13 @@ IniCacheAppendSection(
     }
 
     Section = (PINICACHESECTION)RtlAllocateHeap(ProcessHeap,
-                                                0,
+                                                HEAP_ZERO_MEMORY,
                                                 sizeof(INICACHESECTION));
     if (Section == NULL)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
-    RtlZeroMemory(Section, sizeof(INICACHESECTION));
 
     /* Allocate and initialize section name */
     Section->Name = (WCHAR*)RtlAllocateHeap(ProcessHeap,
