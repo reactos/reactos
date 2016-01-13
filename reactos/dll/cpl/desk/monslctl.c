@@ -39,6 +39,7 @@ typedef struct _MONITORSELWND
     PMONSL_MON Monitors;
     RECT rcExtent;
     RECT rcMonitors;
+    RECT rcOldMonitors;
     POINT ScrollPos;
     SIZE Margin;
     SIZE SelectionFrame;
@@ -261,6 +262,14 @@ MonSelRepaint(IN PMONITORSELWND infoPtr)
     InvalidateRect(infoPtr->hSelf,
                    &rc,
                    TRUE);
+
+    if (!EqualRect(&infoPtr->rcMonitors, &infoPtr->rcOldMonitors) &&
+        infoPtr->rcOldMonitors.right != infoPtr->rcOldMonitors.left)
+    {
+        MonSelRectToScreen(infoPtr, &infoPtr->rcOldMonitors, &rc);
+        InvalidateRect(infoPtr->hSelf, &rc, TRUE);
+        infoPtr->rcOldMonitors = infoPtr->rcMonitors;
+    }
 }
 
 static VOID
@@ -355,6 +364,7 @@ MonSelUpdateMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
         ScaleRectSizeFit(&rcExtSurface,
                          &rcExtDisplay);
 
+        infoPtr->rcOldMonitors = infoPtr->rcMonitors;
         infoPtr->rcMonitors = rcExtDisplay;
 
         /* Now that we know in which area all monitors are located,
