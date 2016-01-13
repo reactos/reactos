@@ -4,13 +4,17 @@
  * FILE:        lib\fslib\vfatlib\vfatlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISIONS:
- *   CSH 05/04-2003 Created
  */
+
+/* INCLUDES *******************************************************************/
+
 #include "vfatlib.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* GLOBALS & FUNCTIONS ********************************************************/
 
 PFMIFSCALLBACK ChkdskCallback = NULL;
 PVOID FsCheckMemQueue;
@@ -261,7 +265,6 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         DPRINT1("Failed to umount volume (Status: 0x%x)\n", LockStatus);
     }
 
-
     LockStatus = NtFsControlFile(FileHandle,
                                  NULL,
                                  NULL,
@@ -282,7 +285,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     if (Callback != NULL)
     {
         Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
-        Callback (DONE, 0, (PVOID)&Context.Success);
+        Callback(DONE, 0, (PVOID)&Context.Success);
     }
 
     DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
@@ -299,7 +302,6 @@ UpdateProgress(PFORMAT_CONTEXT Context,
 
     Context->CurrentSectorCount += (ULONGLONG)Increment;
 
-
     NewPercent = (Context->CurrentSectorCount * 100ULL) / Context->TotalSectorCount;
 
     if (NewPercent > Context->Percent)
@@ -307,7 +309,7 @@ UpdateProgress(PFORMAT_CONTEXT Context,
         Context->Percent = NewPercent;
         if (Context->Callback != NULL)
         {
-            Context->Callback (PROGRESS, 0, &Context->Percent);
+            Context->Callback(PROGRESS, 0, &Context->Percent);
         }
     }
 }
@@ -327,6 +329,8 @@ VfatPrint(PCHAR Format, ...)
     /* Prepare parameters */
     TextOut.Lines = 1;
     TextOut.Output = TextBuf;
+
+    DPRINT1("VfatPrint -- %s", TextBuf);
 
     /* Do the callback */
     if (ChkdskCallback)
@@ -368,7 +372,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
-        return fs_close(FALSE);
+        return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
     }
 
     read_boot(&fs);
@@ -414,7 +418,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
-        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters );
+        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters);
 
     if (FixErrors)
     {
@@ -426,7 +430,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     /* Close the volume */
-    return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return (fs_close(FixErrors) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
 }
 
 /* EOF */
