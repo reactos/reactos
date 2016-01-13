@@ -619,7 +619,7 @@ This function checks to see if there's a cdname conflict.
 
 #if defined(_WIN32) && !defined(strcasecmp)
 #define strcasecmp stricmp
-#endif//_WIN32
+#endif // _WIN32
 
 static BOOL cdname_exists(PDIR_RECORD d)
 {
@@ -696,7 +696,7 @@ static void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, B
     filename_counter = 1;
     while (cdname_exists(d))
     {
-        // the file name must be least 8 char long
+        // the file name must be at least 8 chars long
         if (strlen(d->name_on_cd)<8)
             error_exit("'%s' is a duplicate file name, aborting...", filename);
 
@@ -704,7 +704,9 @@ static void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, B
             error_exit("'%s' is a duplicate file name, aborting...", filename);
 
         // max 255 times for equal short filename
-        if (filename_counter>255) error_exit("'%s' is a duplicate file name, aborting...", filename);
+        if (filename_counter>255)
+            error_exit("'%s' is a duplicate file name, aborting...", filename);
+
         d->name_on_cd[8] = '~';
         memset(&d->name_on_cd[9],0,5);
         sprintf(&d->name_on_cd[9],"%d",filename_counter);
@@ -729,7 +731,7 @@ specified ffblk. It links it into the beginning of the directory list
 for the specified parent and returns a pointer to the new record.
 -----------------------------------------------------------------------------*/
 
-#if _WIN32
+#ifdef _WIN32
 
 /* Win32 version */
 PDIR_RECORD
@@ -1167,7 +1169,7 @@ new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
     return new_d;
 }
 
-#if _WIN32
+#ifdef _WIN32
 static BOOL
 get_cd_file_time(HANDLE handle, PDATE_AND_TIME cd_time_info)
 {
@@ -1195,7 +1197,7 @@ static void
 scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
 {
     PDIR_RECORD new_d;
-#if _WIN32
+#ifdef _WIN32
     HANDLE open_file;
     LARGE_INTEGER file_size;
 #else
@@ -1210,7 +1212,7 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
     {
         if (strcmp(file->target_name, DIRECTORY_TIMESTAMP) == 0)
         {
-#if _WIN32
+#ifdef _WIN32
             if ((open_file = CreateFileA(file->source_name,
                                          GENERIC_READ,
                                          FILE_SHARE_READ,
@@ -1246,7 +1248,7 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
             }
             new_d = new_empty_dirrecord(d, FALSE);
             parse_filename_into_dirrecord(file->target_name, new_d, FALSE);
-#if _WIN32
+#ifdef _WIN32
             if ((open_file = CreateFileA(file->source_name,
                                          GENERIC_READ,
                                          FILE_SHARE_READ,
@@ -1271,7 +1273,7 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
 #else
             if (stat(file->source_name, &stbuf) == -1)
             {
-                error_exit("Cannot find '%s' (target %s)\n",
+                error_exit("Cannot find '%s' (target '%s')\n",
                            file->source_name,
                            file->target_name);
             }
@@ -2241,13 +2243,13 @@ int main(int argc, char **argv)
     }
     else
     {
-        char *trimmedline, *targetname, *srcname, *eq, *normdir;
+        char *trimmedline, *targetname, *normdir, *srcname, *eq;
         char lineread[1024];
 
         FILE *f = fopen(source+1, "r");
         if (!f)
         {
-            error_exit("Cannot open cd description %s\n", source+1);
+            error_exit("Cannot open CD-ROM file description %s\n", source+1);
         }
         while (fgets(lineread, sizeof(lineread), f))
         {
@@ -2268,17 +2270,17 @@ int main(int argc, char **argv)
                 targetname = strtok(lineread, "=");
                 srcname = strtok(NULL, "");
 
-#if _WIN32
+#ifdef _WIN32
                 if (_access(srcname, R_OK) == 0)
-                    dir_hash_add_file(&specified_files, srcname, targetname);
-                else
-                    error_exit("Cannot access file '%s' (target %s)\n", srcname, targetname);
 #else
                 if (access(srcname, R_OK) == 0)
-                    dir_hash_add_file(&specified_files, srcname, targetname);
-                else
-                    error_exit("Cannot access file '%s' (target %s)\n", srcname, targetname);
 #endif
+                {
+                    if (!dir_hash_add_file(&specified_files, srcname, targetname))
+                        error_exit("Target '%s' (file '%s') is invalid\n", targetname, srcname);
+                }
+                else
+                    error_exit("Cannot access file '%s' (target '%s')\n", srcname, targetname);
             }
         }
         fclose(f);
