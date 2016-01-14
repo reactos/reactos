@@ -27,7 +27,7 @@ DBG_DEFAULT_CHANNEL(REGISTRY);
 
 static PCMHIVE CmHive;
 static PCM_KEY_NODE RootKeyNode;
-static FRLDRHKEY CurrentControlSetKey;
+static HKEY CurrentControlSetKey;
 
 BOOLEAN
 RegImportBinaryHive(
@@ -77,8 +77,8 @@ RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood)
 {
     WCHAR ControlSetKeyName[80];
-    FRLDRHKEY SelectKey;
-    FRLDRHKEY SystemKey;
+    HKEY SelectKey;
+    HKEY SystemKey;
     ULONG CurrentSet = 0;
     ULONG DefaultSet = 0;
     ULONG LastKnownGoodSet = 0;
@@ -261,11 +261,11 @@ RegpFindSubkeyInIndex(
 
 LONG
 RegEnumKey(
-    _In_ FRLDRHKEY Key,
+    _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR Name,
     _Inout_ ULONG* NameSize,
-    _Out_opt_ FRLDRHKEY *SubKey)
+    _Out_opt_ PHKEY SubKey)
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode, SubKeyNode;
@@ -307,7 +307,7 @@ RegEnumKey(
 
     if (SubKey != NULL)
     {
-        *SubKey = (FRLDRHKEY)SubKeyNode;
+        *SubKey = (HKEY)SubKeyNode;
     }
 
     TRACE("RegEnumKey done -> %u, '%.*s'\n", *NameSize, *NameSize, Name);
@@ -316,9 +316,9 @@ RegEnumKey(
 
 LONG
 RegOpenKey(
-    _In_ FRLDRHKEY ParentKey,
+    _In_ HKEY ParentKey,
     _In_z_ PCWSTR KeyName,
-    _Out_ PFRLDRHKEY Key)
+    _Out_ PHKEY Key)
 {
     UNICODE_STRING RemainingPath, SubKeyName;
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
@@ -420,7 +420,7 @@ RegOpenKey(
     }
 
     TRACE("RegOpenKey done\n");
-    *Key = (FRLDRHKEY)KeyNode;
+    *Key = (HKEY)KeyNode;
     return ERROR_SUCCESS;
 }
 
@@ -445,14 +445,14 @@ RepGetValueData(
     if (DataSize != NULL)
     {
         /* Get the data length */
-        DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
+        DataLength = ValueCell->DataLength & ~CM_KEY_VALUE_SPECIAL_SIZE;
 
         /* Does the caller want the data? */
         if ((Data != NULL) && (*DataSize != 0))
         {
             /* Check where the data is stored */
             if ((DataLength <= sizeof(HCELL_INDEX)) &&
-                 (ValueCell->DataLength & REG_DATA_IN_OFFSET))
+                (ValueCell->DataLength & CM_KEY_VALUE_SPECIAL_SIZE))
             {
                 /* The data member contains the data */
                 RtlCopyMemory(Data,
@@ -477,7 +477,7 @@ RepGetValueData(
 
 LONG
 RegQueryValue(
-    _In_ FRLDRHKEY Key,
+    _In_ HKEY Key,
     _In_z_ PCWSTR ValueName,
     _Out_opt_ ULONG* Type,
     _Out_opt_ PUCHAR Data,
@@ -532,7 +532,7 @@ RegQueryValue(
 
 LONG
 RegEnumValue(
-    _In_ FRLDRHKEY Key,
+    _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR ValueName,
     _Inout_ ULONG* NameSize,

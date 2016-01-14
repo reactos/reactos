@@ -196,7 +196,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
                   LPSTR LangName)
 {
     LONG rc = ERROR_SUCCESS;
-    FRLDRHKEY hKey;
+    HKEY hKey;
     WCHAR szIdBuffer[80];
     WCHAR NameBuffer[80];
     ULONG BufferSize;
@@ -446,7 +446,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                    IN LPCSTR DirectoryPath)
 {
     LONG rc = 0;
-    FRLDRHKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
+    HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
     LPWSTR GroupNameBuffer;
     WCHAR ServiceName[256];
     ULONG OrderList[128];

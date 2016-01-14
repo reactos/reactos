@@ -21,43 +21,7 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
-#define TAG_REG_NAME 'NgeR'
-#define TAG_REG_KEY 'KgeR'
-#define TAG_REG_KEY_DATA 'DgeR'
-#define TAG_REG_VALUE 'VgeR'
-
-typedef struct _REG_KEY
-{
-    LIST_ENTRY KeyList;
-    LIST_ENTRY SubKeyList;
-    LIST_ENTRY ValueList;
-
-    ULONG SubKeyCount;
-    ULONG ValueCount;
-
-    ULONG NameSize;
-    PWCHAR Name;
-
-    /* Default data */
-    ULONG DataType;
-    ULONG DataSize;
-    PCHAR Data;
-} KEY, *FRLDRHKEY, **PFRLDRHKEY;
-
-
-typedef struct _REG_VALUE
-{
-    LIST_ENTRY ValueList;
-
-    /* Value name */
-    ULONG NameSize;
-    PWCHAR Name;
-
-    /* Value data */
-    ULONG DataType;
-    ULONG DataSize;
-    PCHAR Data;
-} VALUE, *PVALUE;
+typedef HANDLE HKEY, *PHKEY;
 
 VOID
 RegInitializeRegistry(VOID);
@@ -67,37 +31,33 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood);
 
 LONG
 RegEnumKey(
-    _In_ FRLDRHKEY Key,
+    _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR Name,
     _Inout_ ULONG* NameSize,
-    _Out_opt_ FRLDRHKEY *SubKey);
+    _Out_opt_ PHKEY SubKey);
 
 LONG
-RegOpenKey(FRLDRHKEY ParentKey,
+RegOpenKey(HKEY ParentKey,
            PCWSTR KeyName,
-           PFRLDRHKEY Key);
+           PHKEY Key);
 
 LONG
-RegSetValue(FRLDRHKEY Key,
+RegSetValue(HKEY Key,
         PCWSTR ValueName,
         ULONG Type,
         PCSTR Data,
         ULONG DataSize);
 
 LONG
-RegQueryValue(FRLDRHKEY Key,
+RegQueryValue(HKEY Key,
           PCWSTR ValueName,
           ULONG* Type,
           PUCHAR Data,
           ULONG* DataSize);
 
 LONG
-RegDeleteValue(FRLDRHKEY Key,
-           PCWSTR ValueName);
-
-LONG
-RegEnumValue(FRLDRHKEY Key,
+RegEnumValue(HKEY Key,
          ULONG Index,
          PWCHAR ValueName,
          ULONG* NameSize,
@@ -105,22 +65,9 @@ RegEnumValue(FRLDRHKEY Key,
          PUCHAR Data,
          ULONG* DataSize);
 
-ULONG
-RegGetSubKeyCount (FRLDRHKEY Key);
-
-ULONG
-RegGetValueCount (FRLDRHKEY Key);
-
-
 BOOLEAN
-RegImportBinaryHive (PCHAR ChunkBase,
+RegImportBinaryHive(PCHAR ChunkBase,
              ULONG ChunkSize);
-
-BOOLEAN
-RegExportBinaryHive (PCWSTR KeyName,
-             PCHAR ChunkBase,
-             ULONG* ChunkSize);
-
 
 #endif /* __REGISTRY_H */
 
