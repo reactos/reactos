@@ -11,19 +11,22 @@
 
 ULONG CmlibTraceLevel = 0;
 
+// FIXME: This function must be replaced by CmpCreateRootNode from ntoskrnl/config/cmsysini.c
+// (and CmpCreateRootNode be moved there).
 BOOLEAN CMAPI
 CmCreateRootNode(
     PHHIVE Hive,
     PCWSTR Name)
 {
+    UNICODE_STRING KeyName;
     PCM_KEY_NODE KeyCell;
     HCELL_INDEX RootCellIndex;
-    ULONG NameSize;
 
-    /* Allocate the cell */
-    NameSize = (ULONG)strlenW(Name) * sizeof(WCHAR);
+    /* Initialize the node name and allocate it */
+    RtlInitUnicodeString(&KeyName, Name);
     RootCellIndex = HvAllocateCell(Hive,
-                                   FIELD_OFFSET(CM_KEY_NODE, Name) + NameSize,
+                                   FIELD_OFFSET(CM_KEY_NODE, Name) +
+                                   CmpNameSize(Hive, &KeyName),
                                    Stable,
                                    HCELL_NIL);
     if (RootCellIndex == HCELL_NIL) return FALSE;
@@ -37,9 +40,10 @@ CmCreateRootNode(
     if (!KeyCell) return FALSE;
 
     /* Setup the cell */
-    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
+    KeyCell->Signature = CM_KEY_NODE_SIGNATURE;
     KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
-    KeyCell->LastWriteTime.QuadPart = 0;
+    // KeQuerySystemTime(&KeyCell->LastWriteTime);
+    KeyCell->LastWriteTime.QuadPart = 0ULL;
     KeyCell->Parent = HCELL_NIL;
     KeyCell->SubKeyCounts[Stable] = 0;
     KeyCell->SubKeyCounts[Volatile] = 0;
@@ -54,10 +58,8 @@ CmCreateRootNode(
     KeyCell->MaxClassLen = 0;
     KeyCell->MaxValueNameLen = 0;
     KeyCell->MaxValueDataLen = 0;
-
-    /* Write the name */
-    KeyCell->NameLength = (USHORT)NameSize;
-    RtlCopyMemory(KeyCell->Name, Name, NameSize);
+    KeyCell->NameLength = CmpCopyName(Hive, KeyCell->Name, &KeyName);
+    if (KeyCell->NameLength < KeyName.Length) KeyCell->Flags |= KEY_COMP_NAME;
 
     /* Return success */
     HvReleaseCell(Hive, RootCellIndex);

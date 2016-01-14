@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D_NTOSKRNL_
     -D_NTSYSTEM_
     -DNASSERT)
 

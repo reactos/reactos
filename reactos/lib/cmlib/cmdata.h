@@ -7,13 +7,6 @@
 
 #pragma once
 
-#define  REG_INIT_BLOCK_LIST_SIZE       32
-#define  REG_INIT_HASH_TABLE_SIZE       3
-#define  REG_EXTEND_HASH_TABLE_SIZE     4
-#define  REG_VALUE_LIST_CELL_MULTIPLE   4
-#define  REG_DATA_SIZE_MASK             0x7FFFFFFF
-#define  REG_DATA_IN_OFFSET             0x80000000
-
 //
 // Key Types
 //
