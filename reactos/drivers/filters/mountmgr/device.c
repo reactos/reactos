@@ -2788,6 +2788,9 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             Status = MountMgrSetAutoMount(DeviceExtension, Irp);
             break;
 
+        case IOCTL_MOUNTMGR_DEFINE_UNIX_DRIVE:
+        case IOCTL_MOUNTMGR_QUERY_UNIX_DRIVE:
+            DPRINT1("Winism! Rewrite the caller!\n");
         default:
             Status = STATUS_INVALID_DEVICE_REQUEST;
     }
