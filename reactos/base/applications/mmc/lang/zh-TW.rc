@@ -13,6 +13,7 @@ BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -27,6 +28,9 @@ BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Save", IDM_FILE_SAVE
+        MENUITEM "Save as...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END

@@ -12,6 +12,7 @@ BEGIN
     POPUP "Pl&ik"
     BEGIN
         MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
@@ -26,6 +27,9 @@ BEGIN
     POPUP "Pl&ik"
     BEGIN
         MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Save", IDM_FILE_SAVE
+        MENUITEM "Save as...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END

@@ -7,6 +7,7 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
@@ -21,6 +22,9 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Save", IDM_FILE_SAVE
+        MENUITEM "Save as...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
