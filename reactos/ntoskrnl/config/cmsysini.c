@@ -1030,7 +1030,6 @@ CmpCreateRootNode(IN PHHIVE Hive,
 {
     UNICODE_STRING KeyName;
     PCM_KEY_NODE KeyCell;
-    LARGE_INTEGER SystemTime;
     PAGED_CODE();
 
     /* Initialize the node name and allocate it */
@@ -1048,10 +1047,9 @@ CmpCreateRootNode(IN PHHIVE Hive,
     if (!KeyCell) return FALSE;
 
     /* Setup the cell */
-    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
+    KeyCell->Signature = CM_KEY_NODE_SIGNATURE;
     KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
-    KeQuerySystemTime(&SystemTime);
-    KeyCell->LastWriteTime = SystemTime;
+    KeQuerySystemTime(&KeyCell->LastWriteTime);
     KeyCell->Parent = HCELL_NIL;
     KeyCell->SubKeyCounts[Stable] = 0;
     KeyCell->SubKeyCounts[Volatile] = 0;
@@ -1068,14 +1066,11 @@ CmpCreateRootNode(IN PHHIVE Hive,
     KeyCell->MaxValueDataLen = 0;
 
     /* Copy the name (this will also set the length) */
-    KeyCell->NameLength = CmpCopyName(Hive, (PWCHAR)KeyCell->Name, &KeyName);
+    KeyCell->NameLength = CmpCopyName(Hive, KeyCell->Name, &KeyName);
 
-    /* Check if the name was compressed */
+    /* Check if the name was compressed and set the flag if so */
     if (KeyCell->NameLength < KeyName.Length)
-    {
-        /* Set the flag */
         KeyCell->Flags |= KEY_COMP_NAME;
-    }
 
     /* Return success */
     HvReleaseCell(Hive, *Index);

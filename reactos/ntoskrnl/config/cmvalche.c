@@ -249,14 +249,14 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
             }
 
             /* Get the key value for this index */
-            SearchResult =  CmpGetValueKeyFromCache(Kcb,
-                                                    CellData,
-                                                    i,
-                                                    CachedValue,
-                                                    Value,
-                                                    IndexIsCached,
-                                                    ValueIsCached,
-                                                    CellToRelease);
+            SearchResult = CmpGetValueKeyFromCache(Kcb,
+                                                   CellData,
+                                                   i,
+                                                   CachedValue,
+                                                   Value,
+                                                   IndexIsCached,
+                                                   ValueIsCached,
+                                                   CellToRelease);
             if (SearchResult != SearchSuccess)
             {
                 /* We either failed or need the exclusive lock */
@@ -266,7 +266,7 @@ CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
             }
 
             /* Check if the both the index and the value are cached */
-            if ((IndexIsCached) && (*ValueIsCached))
+            if (IndexIsCached && *ValueIsCached)
             {
                 /* We don't expect this yet */
                 ASSERT_VALUE_CACHE();

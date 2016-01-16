@@ -118,10 +118,10 @@ HvpWriteLog(
         DPRINT("FileFlush failed\n");
     }
 
-    /* Update second update counter and CheckSum. */
+    /* Update second update counter and CheckSum */
     RegistryHive->BaseBlock->Sequence2++;
     RegistryHive->BaseBlock->CheckSum =
-    HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
+        HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
     /* Write hive header again with updated sequence counter. */
     FileOffset = 0;
@@ -170,7 +170,7 @@ HvpWriteHive(
     RegistryHive->BaseBlock->Type = HFILE_TYPE_PRIMARY;
     RegistryHive->BaseBlock->Sequence1++;
     RegistryHive->BaseBlock->CheckSum =
-    HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
+        HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
     /* Write hive block */
     FileOffset = 0;

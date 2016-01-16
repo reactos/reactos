@@ -10,7 +10,7 @@
 
 #include "cmlib.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -110,8 +110,8 @@ CmpCompareCompressedName(IN PCUNICODE_STRING SearchName,
                          IN PWCHAR CompressedName,
                          IN ULONG NameLength)
 {
-    WCHAR *p;
-    UCHAR *pp;
+    WCHAR* p;
+    UCHAR* pp;
     WCHAR chr1, chr2;
     USHORT SearchLength;
     LONG Result;
@@ -120,7 +120,7 @@ CmpCompareCompressedName(IN PCUNICODE_STRING SearchName,
     p = SearchName->Buffer;
     pp = (PUCHAR)CompressedName;
     SearchLength = (SearchName->Length / sizeof(WCHAR));
-    while ((SearchLength) && (NameLength))
+    while (SearchLength > 0 && NameLength > 0)
     {
         /* Get the characters */
         chr1 = *p++;
@@ -149,8 +149,8 @@ NTAPI
 CmpFindNameInList(IN PHHIVE Hive,
                   IN PCHILD_LIST ChildList,
                   IN PUNICODE_STRING Name,
-                  IN PULONG ChildIndex,
-                  IN PHCELL_INDEX CellIndex)
+                  OUT PULONG ChildIndex,
+                  OUT PHCELL_INDEX CellIndex)
 {
     PCELL_DATA CellData;
     HCELL_INDEX CellToRelease = HCELL_NIL;
@@ -199,14 +199,14 @@ CmpFindNameInList(IN PHHIVE Hive,
             /* Check if it's a compressed value name */
             if (KeyValue->Flags & VALUE_COMP_NAME)
             {
-                /* Use the compressed name check */
+                /* Compare compressed names */
                 Result = CmpCompareCompressedName(Name,
                                                   KeyValue->Name,
                                                   KeyValue->NameLength);
             }
             else
             {
-                /* Setup the Unicode string */
+                /* Compare the Unicode name directly */
                 SearchName.Length = KeyValue->NameLength;
                 SearchName.MaximumLength = SearchName.Length;
                 SearchName.Buffer = KeyValue->Name;
@@ -216,7 +216,7 @@ CmpFindNameInList(IN PHHIVE Hive,
             /* Check if we found it */
             if (!Result)
             {
-                /* We did...return info to caller */
+                /* We did... return info to caller */
                 if (ChildIndex) *ChildIndex = i;
                 *CellIndex = CellData->u.KeyList[i];
 
@@ -235,7 +235,7 @@ CmpFindNameInList(IN PHHIVE Hive,
         goto Return;
     }
 
-    /* Nothing found...check if the caller wanted more info */
+    /* Nothing found... check if the caller wanted more info */
     ASSERT(ChildList->Count == 0);
     if (ChildIndex) *ChildIndex = 0;
     *CellIndex = HCELL_NIL;

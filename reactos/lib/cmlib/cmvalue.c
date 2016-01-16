@@ -109,7 +109,7 @@ CmpFindValueByName(IN PHHIVE Hive,
                            NULL,
                            &CellIndex))
     {
-        /* Santy check */
+        /* Sanity check */
         ASSERT(CellIndex == HCELL_NIL);
     }
 
@@ -117,11 +117,14 @@ CmpFindValueByName(IN PHHIVE Hive,
     return CellIndex;
 }
 
+/*
+ * NOTE: This function should support big values, contrary to CmpValueToData.
+ */
 BOOLEAN
 NTAPI
 CmpGetValueData(IN PHHIVE Hive,
                 IN PCM_KEY_VALUE Value,
-                IN PULONG Length,
+                OUT PULONG Length,
                 OUT PVOID *Buffer,
                 OUT PBOOLEAN BufferAllocated,
                 OUT PHCELL_INDEX CellToRelease)
@@ -144,7 +147,7 @@ CmpGetValueData(IN PHHIVE Hive,
         return TRUE;
     }
 
-    /* Unsupported */
+    /* Unsupported at the moment */
     ASSERT_VALUE_BIG(Hive, *Length);
 
     /* Get the data from the cell */
@@ -156,6 +159,9 @@ CmpGetValueData(IN PHHIVE Hive,
     return TRUE;
 }
 
+/*
+ * NOTE: This function doesn't support big values, contrary to CmpGetValueData.
+ */
 PCELL_DATA
 NTAPI
 CmpValueToData(IN PHHIVE Hive,
@@ -409,7 +415,6 @@ CmpCopyKeyValueList(IN PHHIVE SourceHive,
                     IN PHHIVE DestinationHive,
                     IN OUT PCHILD_LIST DestValueList,
                     IN HSTORAGE_TYPE StorageType)
-
 {
     NTSTATUS Status = STATUS_SUCCESS;
     HCELL_INDEX CellIndex = HCELL_NIL;
