@@ -119,11 +119,11 @@ AppendMultiSzValue (
     IN HKEY KeyHandle,
     IN PWCHAR ValueName,
     IN PWCHAR Strings,
-    IN SIZE_T StringSize)
+    IN ULONG StringSize)
 {
-    SIZE_T Size;
+    ULONG Size;
     ULONG Type;
-    size_t Total;
+    ULONG Total;
     PWCHAR Buffer;
     PWCHAR p;
     size_t len;
@@ -182,7 +182,7 @@ AppendMultiSzValue (
             0,
             REG_MULTI_SZ,
             (PUCHAR)Buffer,
-            (ULONG)Total * sizeof(WCHAR));
+            Total * sizeof(WCHAR));
     }
 
 done:
@@ -289,7 +289,7 @@ do_reg_operation(
                 if (Str == NULL)
                     return FALSE;
 
-                InfHostGetMultiSzField (Context, 5, Str, (ULONG)Size, NULL);
+                InfHostGetMultiSzField (Context, 5, Str, Size, NULL);
             }
 
             if (Flags & FLG_ADDREG_APPEND)
@@ -319,7 +319,7 @@ do_reg_operation(
                 if (Str == NULL)
                     return FALSE;
 
-                InfHostGetStringField (Context, 5, Str, (ULONG)Size, NULL);
+                InfHostGetStringField (Context, 5, Str, Size, NULL);
             }
         }
 
@@ -349,7 +349,7 @@ do_reg_operation(
                     0,
                     Type,
                     (PVOID)Str,
-                    (ULONG)Size * sizeof(WCHAR));
+                    Size * sizeof(WCHAR));
             }
             else
             {
@@ -359,7 +359,7 @@ do_reg_operation(
                     0,
                     Type,
                     (PVOID)&EmptyStr,
-                    (ULONG)sizeof(WCHAR));
+                    sizeof(WCHAR));
             }
         }
         free (Str);
@@ -387,7 +387,7 @@ do_reg_operation(
             0,
             Type,
             (PVOID)Data,
-            (ULONG)Size);
+            Size);
 
         free (Data);
     }

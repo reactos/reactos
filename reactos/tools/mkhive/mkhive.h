@@ -57,15 +57,6 @@ typedef DWORD REGSAM;
 typedef LPVOID LPSECURITY_ATTRIBUTES;
 typedef HANDLE HKEY, *PHKEY;
 
-NTSTATUS NTAPI
-RtlAnsiStringToUnicodeString(
-    IN OUT PUNICODE_STRING UniDest,
-    IN PANSI_STRING AnsiSource,
-    IN BOOLEAN AllocateDestinationString);
-VOID NTAPI
-RtlInitAnsiString(
-    IN OUT PANSI_STRING DestinationString,
-    IN PCSTR SourceString);
 VOID NTAPI
 RtlInitUnicodeString(
     IN OUT PUNICODE_STRING DestinationString,
@@ -79,9 +70,9 @@ RegQueryValueExW(
     IN HKEY hKey,
     IN LPCWSTR lpValueName,
     IN PULONG lpReserved,
-    OUT PULONG lpType,
-    OUT PUCHAR lpData,
-    OUT PSIZE_T lpcbData);
+    OUT PULONG lpType OPTIONAL,
+    OUT PUCHAR lpData OPTIONAL,
+    IN OUT PULONG lpcbData OPTIONAL);
 
 LONG WINAPI
 RegSetValueExW(
@@ -90,7 +81,7 @@ RegSetValueExW(
     IN ULONG Reserved,
     IN ULONG dwType,
     IN const UCHAR* lpData,
-    IN USHORT cbData);
+    IN ULONG cbData);
 
 LONG WINAPI
 RegDeleteKeyW(

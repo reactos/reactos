@@ -518,7 +518,7 @@ RegSetValueExW(
     IN ULONG Reserved,
     IN ULONG dwType,
     IN const UCHAR* lpData,
-    IN USHORT cbData)
+    IN ULONG cbData)
 {
     PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
     PHHIVE Hive;
@@ -528,7 +528,7 @@ RegSetValueExW(
     UNICODE_STRING ValueNameString;
 
     PVOID DataCell;
-    LONG DataCellSize;
+    ULONG DataCellSize;
     NTSTATUS Status;
 
     if (dwType == REG_LINK)
@@ -597,7 +597,7 @@ RegSetValueExW(
         if (!DataCell)
             return ERROR_UNSUCCESSFUL;
 
-        DataCellSize = -HvGetCellSize(Hive, DataCell);
+        DataCellSize = (ULONG)(-HvGetCellSize(Hive, DataCell));
     }
     else
     {
@@ -613,12 +613,12 @@ RegSetValueExW(
             HvFreeCell(Hive, ValueCell->Data);
 
         RtlCopyMemory(&ValueCell->Data, lpData, cbData);
-        ValueCell->DataLength = (ULONG)(cbData | CM_KEY_VALUE_SPECIAL_SIZE);
+        ValueCell->DataLength = (cbData | CM_KEY_VALUE_SPECIAL_SIZE);
         ValueCell->Type = dwType;
     }
     else
     {
-        if (cbData > (SIZE_T)DataCellSize)
+        if (cbData > DataCellSize)
         {
             /* New data size is larger than the current, destroy current
              * data block and allocate a new one. */
@@ -642,7 +642,7 @@ RegSetValueExW(
 
         /* Copy new contents to cell */
         RtlCopyMemory(DataCell, lpData, cbData);
-        ValueCell->DataLength = (ULONG)(cbData & ~CM_KEY_VALUE_SPECIAL_SIZE);
+        ValueCell->DataLength = (cbData & ~CM_KEY_VALUE_SPECIAL_SIZE);
         ValueCell->Type = dwType;
         HvMarkCellDirty(Hive, ValueCell->Data, FALSE);
     }
@@ -712,7 +712,7 @@ RegQueryValueExW(
     IN PULONG lpReserved,
     OUT PULONG lpType OPTIONAL,
     OUT PUCHAR lpData OPTIONAL,
-    IN OUT PSIZE_T lpcbData OPTIONAL)
+    IN OUT PULONG lpcbData OPTIONAL)
 {
     PMEMKEY ParentKey = HKEY_TO_MEMKEY(hKey);
     PHHIVE Hive = &ParentKey->RegistryHive->Hive;
