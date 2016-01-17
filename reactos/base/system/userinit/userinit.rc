@@ -1,4 +1,5 @@
 #include <windef.h>
+#include <winuser.h>
 
 #include "resource.h"
 
@@ -6,6 +7,10 @@
 #define REACTOS_STR_INTERNAL_NAME     "userinit"
 #define REACTOS_STR_ORIGINAL_FILENAME "userinit.dll"
 #include <reactos/version.rc>
+
+/* Bitmaps */
+IDB_ROSLOGO BITMAP "res/rosbitmap.bmp"
+
 
 /* UTF-8 */
 #pragma code_page(65001)
