@@ -58,7 +58,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmhvlist.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cminit.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmkcbncb.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmkeydel.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmlazy.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmmapvw.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmnotify.c

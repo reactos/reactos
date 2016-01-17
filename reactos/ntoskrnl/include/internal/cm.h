@@ -1059,14 +1059,6 @@ DelistKeyBodyFromKCB(
     IN BOOLEAN LockHeld
 );
 
-NTSTATUS
-NTAPI
-CmpFreeKeyByCell(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell,
-    IN BOOLEAN Unlink
-);
-
 VOID
 NTAPI
 CmpAcquireTwoKcbLocksExclusiveByKey(

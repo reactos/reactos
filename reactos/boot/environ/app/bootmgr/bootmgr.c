@@ -550,6 +550,23 @@ BmFatalErrorEx (
             ErrorResourceId = 9002;
             break;
 
+        case BL_FATAL_ERROR_BCD_ENTRIES:
+
+            /* File name is in parameter 1 */
+            FileName = (PWCHAR)Parameter1;
+
+            /* The NTSTATUS code is in parameter 2*/
+            ErrorStatus = (NTSTATUS)Parameter2;
+
+            /* Build the error string */
+            swprintf(FormatString,
+                     L"\nNo valid entries found in the boot configuration data file %s\n",
+                     FileName);
+
+            /* Select the resource ID message */
+            ErrorResourceId = 9007;
+            break;
+
         case BL_FATAL_ERROR_BCD_PARSE:
 
             /* File name isin parameter 1 */
@@ -1168,7 +1185,22 @@ BmpProcessBadMemory (
     VOID
     )
 {
-    EfiPrintf(L"Bad page list persistence \r\n");
+    BL_PD_DATA_BLOB BadMemoryData;
+    NTSTATUS Status;
+
+    /* Try to get the memory data from the memtest application */
+    BadMemoryData.BlobSize = 0;
+    BadMemoryData.Data = NULL;
+    BadMemoryData.DataSize = 0;
+    Status = BlPdQueryData(&BadMemoryGuid, NULL, &BadMemoryData);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        /* No results, or some other error */
+        return Status;
+    }
+
+    /* Not yet implemented */
+    EfiPrintf(L"Bad page list persistence not implemented\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1179,7 +1211,37 @@ BmPurgeOption (
     _In_ ULONG Type
     )
 {
-    EfiPrintf(L"Key BCD delete not yet implemented\r\n");
+    HANDLE ObjectHandle;
+    NTSTATUS Status;
+
+    /* Open the object */
+    Status = BcdOpenObject(BcdHandle, ObjectId, &ObjectHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* Delete the element */
+        BcdDeleteElement(ObjectHandle, Type);
+
+        /* Close the object and set success */
+        BiCloseKey(ObjectHandle);
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Return the result */
+    return Status;
+}
+
+NTSTATUS
+BmpPopulateBootEntryList (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID SequenceList,
+    _In_ ULONG Flags,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY* BootSequence,
+    _Out_ PULONG SequenceCount
+    )
+{
+    EfiPrintf(L"Fixed sequences not yet supported\r\n");
+    *SequenceCount = 0;
+    *BootSequence = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1193,9 +1255,50 @@ BmGetBootSequence (
     _Out_ PULONG SequenceCount
     )
 {
-    EfiPrintf(L"Fixed sequences not yet supported\r\n");
+    PBL_LOADED_APPLICATION_ENTRY* Sequence;
+    ULONG Count;
+    NTSTATUS Status;
+
+    /* Allocate the sequence list */
+    Sequence = BlMmAllocateHeap(SequenceListCount * sizeof(*Sequence));
+    if (!Sequence)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Populate the sequence list */
+    Status = BmpPopulateBootEntryList(BcdHandle,
+                                      SequenceList,
+                                      Flags,
+                                      Sequence,
+                                      &Count);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Free the list on failure */
+        BlMmFreeHeap(Sequence);
+    }
+    else
+    {
+        /* Otherwise, set success and return the list and count */
+        Status = STATUS_SUCCESS;
+        *BootSequence = Sequence;
+        *SequenceCount = Count;
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+BmEnumerateBootEntries (
+    _In_ HANDLE BcdHandle,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY **Sequence,
+    _Out_ PULONG SequenceCount
+    )
+{
+    EfiPrintf(L"Boot enumeration not yet implemented\r\n");
+    *Sequence = NULL;
     *SequenceCount = 0;
-    *BootSequence = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1207,8 +1310,69 @@ BmpGetSelectedBootEntry (
     _Out_ PBOOLEAN ExitBootManager
     )
 {
+    NTSTATUS Status;
+    PBL_LOADED_APPLICATION_ENTRY* Sequence;
+    PBL_LOADED_APPLICATION_ENTRY Entry, SelectedEntry;
+    ULONG Count, BootIndex;
+
+    /* Initialize locals */
+    BootIndex = 0;
+    Count = 0;
+    Sequence = NULL;
+    SelectedEntry = NULL;
+
+    /* Enumerate all the boot entries */
+    Status = BmEnumerateBootEntries(BcdHandle, &Sequence, &Count);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out if we failed */
+        goto Quickie;
+    }
+
+    /* Check if there are no entries */
+    if (!Count)
+    {
+        /* This is fatal -- kill the system */
+        Status = STATUS_FILE_INVALID;
+        BmFatalErrorEx(BL_FATAL_ERROR_BCD_ENTRIES, (ULONG_PTR)L"\\BCD", Status, 0, 0);
+        goto Quickie;
+    }
+
     EfiPrintf(L"Boot selection not yet implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    *SelectedBootEntry = NULL;
+
+Quickie:
+    /* We are done -- did we have a sequence? */
+    if (Sequence)
+    {
+        /* Do we have any boot entries we parsed? */
+        while (BootIndex < Count)
+        {
+            /* Get the current boot entry */
+            Entry = Sequence[BootIndex];
+
+            /* Did we fail, or is is not the selected one? */
+            if ((Entry) && ((Entry != SelectedEntry) || !(NT_SUCCESS(Status))))
+            {
+                /* Destroy it, as it won't be needed */
+                BlDestroyBootEntry(Entry);
+            }
+            else if (Entry == SelectedEntry)
+            {
+                /* It's the selected one, return its index */
+                *EntryIndex = BootIndex;
+            }
+
+            /* Move to the next entry */
+            BootIndex++;
+        }
+
+        /* Free the sequence of entries */
+        BlMmFreeHeap(Sequence);
+    }
+
+    /* Return the selection result */
+    return Status;
 }
 
 NTSTATUS

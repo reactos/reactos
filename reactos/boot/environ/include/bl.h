@@ -47,6 +47,8 @@
 
 /* DEFINES *******************************************************************/
 
+DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0xA0, 0x84, 0x94, 0xA3);
+
 #define BL_APPLICATION_FLAG_CONVERTED_FROM_EFI          0x01
 
 #define BL_APP_ENTRY_SIGNATURE                          "BTAPENT"
@@ -1142,6 +1144,13 @@ typedef struct _COORD
     ULONG Y;
 } COORD, *PCOORD;
 
+typedef struct _BL_PD_DATA_BLOB
+{
+    PVOID Data;
+    ULONG DataSize;
+    ULONG BlobSize;
+} BL_PD_DATA_BLOB, *PBL_PD_DATA_BLOB;
+
 /* INLINE ROUTINES ***********************************************************/
 
 FORCEINLINE
@@ -1535,6 +1544,13 @@ BlDestroyBootEntry (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry
     );
 
+NTSTATUS
+BlPdQueryData (
+    _In_ const GUID* DataGuid,
+    _In_ PVOID Unknown,
+    _Inout_ PBL_PD_DATA_BLOB DataBlob
+    );
+
 /* FIRMWARE UTILITY ROUTINES *************************************************/
 
 EFI_STATUS
@@ -1772,6 +1788,11 @@ BiEnumerateSubKeys (
     _In_ HANDLE KeyHandle,
     _Out_ PWCHAR** SubKeyList,
     _Out_ PULONG SubKeyCount
+    );
+
+NTSTATUS
+BiDeleteKey (
+    _In_ HANDLE KeyHandle
     );
 
 VOID

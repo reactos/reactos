@@ -1,14 +1,14 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmkeydel.c
- * PURPOSE:         Configuration Manager - Key Body Deletion
+ * FILE:            lib/cmlib/cmkeydel.c
+ * PURPOSE:         Configuration Manager Library - Key Body Deletion
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
-#include "ntoskrnl.h"
+#include "cmlib.h"
 #define NDEBUG
 #include "debug.h"
 
@@ -213,6 +213,9 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
         /* Free the value list */
         HvFreeCell(Hive, CellData->u.KeyNode.ValueList.List);
     }
+
+    /* FIXME: This leaks the security desriptor! */
+    DPRINT1("Potentially leaking key security descriptor. Please call CmpFreeSecurityDescriptor");
 
     /* Free the key body itself, and then return our status */
     if (!CmpFreeKeyBody(Hive, Cell)) return STATUS_INSUFFICIENT_RESOURCES;

@@ -887,3 +887,66 @@ Quickie:
     return Status;
 }
 
+NTSTATUS
+BiDeleteKey (
+    _In_ HANDLE KeyHandle
+    )
+{
+    NTSTATUS Status;
+    PBI_KEY_OBJECT KeyObject;
+    PHHIVE Hive;
+    ULONG SubKeyCount, i;
+    PWCHAR* SubKeyList;
+    HANDLE SubKeyHandle;
+
+    /* Get the key object and hive */
+    KeyObject = (PBI_KEY_OBJECT)KeyHandle;
+    Hive = &KeyObject->KeyHive->Hive.Hive;
+
+    /* Make sure the hive is writeable */
+    if (!(KeyObject->KeyHive->Flags & BI_HIVE_WRITEABLE))
+    {
+        return STATUS_MEDIA_WRITE_PROTECTED;
+    }
+
+    /* Enumerate all of the subkeys */
+    Status = BiEnumerateSubKeys(KeyHandle, &SubKeyList, &SubKeyCount);
+    if ((NT_SUCCESS(Status)) && (SubKeyCount > 0))
+    {
+        /* Loop through each one */
+        for (i = 0; i < SubKeyCount; i++)
+        {
+            /* Open a handle to it */
+            Status = BiOpenKey(KeyHandle, SubKeyList[i], &SubKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                /* Recursively call us to delete it */
+                Status = BiDeleteKey(SubKeyHandle);
+                if (Status != STATUS_SUCCESS)
+                {
+                    /* Close the key on failure */
+                    BiCloseKey(SubKeyHandle);
+                }
+            }
+        }
+    }
+
+    /* Check if we had a list of subkeys */
+    if (SubKeyList)
+    {
+        /* Free it */
+        BlMmFreeHeap(SubKeyList);
+    }
+
+    /* Delete this key cell */
+    Status = CmpFreeKeyByCell(Hive, KeyObject->KeyCell, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Mark the hive as requiring a flush */
+        KeyObject->KeyHive->Flags |= BI_FLUSH_HIVE;
+        BiCloseKey(KeyHandle);
+    }
+
+    /* All done */
+    return Status;
+}

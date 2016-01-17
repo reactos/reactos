@@ -671,6 +671,13 @@ CmpCopyKeyValueList(
     IN HSTORAGE_TYPE StorageType
 );
 
+NTSTATUS
+NTAPI
+CmpFreeKeyByCell(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN BOOLEAN Unlink    
+);
 
 /******************************************************************************/
 

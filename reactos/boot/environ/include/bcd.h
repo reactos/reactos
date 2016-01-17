@@ -246,6 +246,12 @@ BcdOpenObject (
     );
 
 NTSTATUS
+BcdDeleteElement (
+    _In_ HANDLE ObjectHandle,
+    _In_ ULONG Type
+    );
+
+NTSTATUS
 BcdEnumerateAndUnpackElements (
     _In_ HANDLE BcdHandle,
     _In_ HANDLE ObjectHandle,

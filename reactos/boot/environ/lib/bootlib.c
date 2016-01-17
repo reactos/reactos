@@ -20,7 +20,7 @@ BL_LOADED_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
 
 ULONG PdPersistAllocations;
-LIST_ENTRY BlBadpListHead;
+LIST_ENTRY BlpPdListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -283,7 +283,7 @@ InitializeLibrary (
 
     /* Initialize the boot application persistent data */
     PdPersistAllocations = 0;
-    InitializeListHead(&BlBadpListHead);
+    InitializeListHead(&BlpPdListHead);
 
 #ifdef BL_TPM_SUPPORT
     /* Now setup the security subsystem in phase 1 */
@@ -450,4 +450,30 @@ BlDestroyBootEntry (
 
     /* Free the entry itself */
     BlMmFreeHeap(AppEntry);
+}
+
+NTSTATUS
+BlPdQueryData (
+    _In_ const GUID* DataGuid,
+    _In_ PVOID Unknown,
+    _Inout_ PBL_PD_DATA_BLOB DataBlob
+    )
+{
+    /* Check for invalid or missing parameters */
+    if (!(DataBlob) ||
+        !(DataGuid) ||
+        ((DataBlob->BlobSize) && !(DataBlob->Data)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if there's no persistent data blobs */
+    if (IsListEmpty(&BlpPdListHead))
+    {
+        return STATUS_NOT_FOUND;
+    }
+
+    /* Not yet handled, TODO */
+    EfiPrintf(L"Boot persistent data not yet implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
