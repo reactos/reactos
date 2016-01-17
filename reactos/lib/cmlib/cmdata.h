@@ -27,16 +27,16 @@
 //
 // CM_KEY_NODE Flags
 //
-#define KEY_IS_VOLATILE                 0x01
-#define KEY_HIVE_EXIT                   0x02
-#define KEY_HIVE_ENTRY                  0x04
-#define KEY_NO_DELETE                   0x08
-#define KEY_SYM_LINK                    0x10
-#define KEY_COMP_NAME                   0x20
-#define KEY_PREFEF_HANDLE               0x40
-#define KEY_VIRT_MIRRORED               0x80
-#define KEY_VIRT_TARGET                 0x100
-#define KEY_VIRTUAL_STORE               0x200
+#define KEY_IS_VOLATILE                 0x0001
+#define KEY_HIVE_EXIT                   0x0002
+#define KEY_HIVE_ENTRY                  0x0004
+#define KEY_NO_DELETE                   0x0008
+#define KEY_SYM_LINK                    0x0010
+#define KEY_COMP_NAME                   0x0020
+#define KEY_PREFEF_HANDLE               0x0040
+#define KEY_VIRT_MIRRORED               0x0080
+#define KEY_VIRT_TARGET                 0x0100
+#define KEY_VIRTUAL_STORE               0x0200
 
 //
 // CM_KEY_VALUE Flags
@@ -67,7 +67,7 @@ typedef struct _CM_VIEW_OF_FILE
 } CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
 
 //
-// Children of Key Notes
+// Children of Key Nodes
 //
 typedef struct _CHILD_LIST
 {
@@ -115,14 +115,6 @@ typedef struct _CM_KEY_NODE
     USHORT ClassLength;
     WCHAR Name[ANYSIZE_ARRAY];
 } CM_KEY_NODE, *PCM_KEY_NODE;
-
-//
-// Value List
-//
-typedef struct _VALUE_LIST_CELL
-{
-    HCELL_INDEX ValueOffset[ANYSIZE_ARRAY];
-} VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
 //
 // Value Key

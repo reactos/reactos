@@ -33,7 +33,7 @@
     #ifdef _WIN32
     #define strncasecmp _strnicmp
     #define strcasecmp _stricmp
-    #endif//_WIN32
+    #endif // _WIN32
 
     #if (!defined(_MSC_VER) || (_MSC_VER < 1500))
     #define _In_
@@ -68,6 +68,7 @@
     #define USHORT_MAX                       USHRT_MAX
 
     #define OBJ_NAME_PATH_SEPARATOR          ((WCHAR)L'\\')
+    #define UNICODE_NULL                     ((WCHAR)0)
 
     VOID NTAPI
     KeQuerySystemTime(
@@ -161,7 +162,7 @@
 //
 // These define the Debug Masks Supported
 //
-#define CMLIB_HCELL_DEBUG                                 0x01
+#define CMLIB_HCELL_DEBUG       0x01
 
 #ifndef ROUND_UP
 #define ROUND_UP(a,b)        ((((a)+(b)-1)/(b))*(b))
@@ -191,12 +192,17 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H)
+#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H) // || defined(_BLDR_)
 
-#define PCM_KEY_SECURITY_CACHE_ENTRY PVOID
-#define PCM_KEY_CONTROL_BLOCK PVOID
-#define CMP_SECURITY_HASH_LISTS                         64
-#define PCM_CELL_REMAP_BLOCK PVOID
+#define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
+#define PCM_KEY_CONTROL_BLOCK           PVOID
+#define PCM_CELL_REMAP_BLOCK            PVOID
+
+// See also ntoskrnl/include/internal/cm.h
+#define CMP_SECURITY_HASH_LISTS         64
+
+// #endif // Commented out until one finds a way to properly include
+          // this header in freeldr and in ntoskrnl.
 
 //
 // Use Count Log and Entry
@@ -263,7 +269,7 @@ typedef struct _CMHIVE
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
 
-#endif
+#endif // See comment above
 
 typedef struct _HV_HIVE_CELL_PAIR
 {
@@ -466,54 +472,8 @@ VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive);
 
-BOOLEAN
-NTAPI
-CmCompareHash(
-    IN PCUNICODE_STRING KeyName,
-    IN PCHAR HashString,
-    IN BOOLEAN CaseInsensitive);
-
-BOOLEAN
-NTAPI
-CmComparePackedNames(
-    IN PCUNICODE_STRING Name,
-    IN PVOID NameBuffer,
-    IN USHORT NameBufferSize,
-    IN BOOLEAN NamePacked,
-    IN BOOLEAN CaseInsensitive);
-
-BOOLEAN
-NTAPI
-CmCompareKeyName(
-    IN PCM_KEY_NODE KeyCell,
-    IN PCUNICODE_STRING KeyName,
-    IN BOOLEAN CaseInsensitive);
-
-BOOLEAN
-NTAPI
-CmCompareKeyValueName(
-    IN PCM_KEY_VALUE ValueCell,
-    IN PCUNICODE_STRING KeyName,
-    IN BOOLEAN CaseInsensitive);
-
-ULONG
-NTAPI
-CmCopyKeyName(
-    _In_ PCM_KEY_NODE KeyNode,
-    _Out_ PWCHAR KeyNameBuffer,
-    _Inout_ ULONG BufferLength);
-
-ULONG
-NTAPI
-CmCopyKeyValueName(
-    _In_ PCM_KEY_VALUE ValueCell,
-    _Out_ PWCHAR ValueNameBuffer,
-    _Inout_ ULONG BufferLength);
-
-
 
 /* NT-style Public Cm functions */
-
 
 //
 // Cell Index Routines
@@ -615,8 +575,8 @@ CmpFindNameInList(
     IN PHHIVE Hive,
     IN PCHILD_LIST ChildList,
     IN PUNICODE_STRING Name,
-    IN PULONG ChildIndex,
-    IN PHCELL_INDEX CellIndex
+    OUT PULONG ChildIndex,
+    OUT PHCELL_INDEX CellIndex
 );
 
 
@@ -695,7 +655,7 @@ NTAPI
 CmpGetValueData(
     IN PHHIVE Hive,
     IN PCM_KEY_VALUE Value,
-    IN PULONG Length,
+    OUT PULONG Length,
     OUT PVOID *Buffer,
     OUT PBOOLEAN BufferAllocated,
     OUT PHCELL_INDEX CellToRelease

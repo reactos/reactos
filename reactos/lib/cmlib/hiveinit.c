@@ -57,7 +57,7 @@ HvpFreeHiveBins(
     PHBIN Bin;
     ULONG Storage;
 
-    for (Storage = Stable; Storage < HTYPE_COUNT; Storage++)
+    for (Storage = 0; Storage < Hive->StorageTypeCount; Storage++)
     {
         Bin = NULL;
         for (i = 0; i < Hive->Storage[Storage].Length; i++)
@@ -353,6 +353,8 @@ HvpInitializeFlatHive(
     Hive->Version = ChunkBase->Minor;
     Hive->Flat = TRUE;
     Hive->ReadOnly = TRUE;
+
+    Hive->StorageTypeCount = 1;
 
     /* Set default boot type */
     ChunkBase->BootType = 0;

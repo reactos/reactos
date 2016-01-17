@@ -37,7 +37,11 @@ CmCreateRootNode(
 
     /* Get the key cell */
     KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, RootCellIndex);
-    if (!KeyCell) return FALSE;
+    if (!KeyCell)
+    {
+        HvFreeCell(Hive, RootCellIndex);
+        return FALSE;
+    }
 
     /* Setup the cell */
     KeyCell->Signature = CM_KEY_NODE_SIGNATURE;
