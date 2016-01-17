@@ -680,7 +680,11 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     TRACE_(FLOPPY, "InitController called with Controller 0x%p\n", ControllerInfo);
 
     /* Get controller in a known state */
-    HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0);
+    if(HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0) != STATUS_SUCCESS)
+    {
+        WARN_(FLOPPY, "InitController: unable to configure controller\n");
+        return STATUS_IO_DEVICE_ERROR;
+    }
 
     /* Get the controller version */
     ControllerVersion = HwGetVersion(ControllerInfo);
