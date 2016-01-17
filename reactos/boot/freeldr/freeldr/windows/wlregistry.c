@@ -133,11 +133,8 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (!Success)
         return FALSE;
 
-    // Initialize in-memory registry
-    RegInitializeRegistry();
-
     // Import what was loaded
-    Success = RegImportBinaryHive((PCHAR)VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
+    Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
     if (!Success)
     {
         UiMessageBox("Importing binary hive failed!");

@@ -23,9 +23,6 @@
 
 typedef HANDLE HKEY, *PHKEY;
 
-VOID
-RegInitializeRegistry(VOID);
-
 LONG
 RegInitCurrentControlSet(BOOLEAN LastKnownGood);
 
@@ -41,13 +38,6 @@ LONG
 RegOpenKey(HKEY ParentKey,
            PCWSTR KeyName,
            PHKEY Key);
-
-LONG
-RegSetValue(HKEY Key,
-        PCWSTR ValueName,
-        ULONG Type,
-        PCSTR Data,
-        ULONG DataSize);
 
 LONG
 RegQueryValue(HKEY Key,
@@ -66,7 +56,7 @@ RegEnumValue(HKEY Key,
          ULONG* DataSize);
 
 BOOLEAN
-RegImportBinaryHive(PCHAR ChunkBase,
+RegImportBinaryHive(PVOID ChunkBase,
              ULONG ChunkSize);
 
 #endif /* __REGISTRY_H */

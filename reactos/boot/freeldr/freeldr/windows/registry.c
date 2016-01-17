@@ -29,23 +29,46 @@ static PCMHIVE CmHive;
 static PCM_KEY_NODE RootKeyNode;
 static HKEY CurrentControlSetKey;
 
+PVOID
+NTAPI
+CmpAllocate(
+    IN SIZE_T Size,
+    IN BOOLEAN Paged,
+    IN ULONG Tag)
+{
+    UNREFERENCED_PARAMETER(Paged);
+    UNREFERENCED_PARAMETER(Tag);
+
+    return FrLdrTempAlloc(Size, Tag);
+}
+
+VOID
+NTAPI
+CmpFree(
+    IN PVOID Ptr,
+    IN ULONG Quota)
+{
+    UNREFERENCED_PARAMETER(Quota);
+    FrLdrTempFree(Ptr, 0);
+}
+
 BOOLEAN
 RegImportBinaryHive(
-    _In_ PCHAR ChunkBase,
+    _In_ PVOID ChunkBase,
     _In_ ULONG ChunkSize)
 {
     NTSTATUS Status;
     TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
 
     /* Allocate and initialize the hive */
-    CmHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+    CmHive = CmpAllocate(sizeof(CMHIVE), FALSE, 'eviH');
     Status = HvInitialize(&CmHive->Hive,
-                          HINIT_FLAT,
+                          HINIT_FLAT, // HINIT_MEMORY_INPLACE
                           0,
                           0,
                           ChunkBase,
-                          NULL,
-                          NULL,
+                          CmpAllocate,
+                          CmpFree,
                           NULL,
                           NULL,
                           NULL,
@@ -54,22 +77,16 @@ RegImportBinaryHive(
                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        FrLdrTempFree(CmHive, 'eviH');
-        ERR("Invalid hive Signature!\n");
+        CmpFree(CmHive, 0);
+        ERR("Corrupted hive %p!\n", ChunkBase);
         return FALSE;
     }
 
     /* Save the root key node */
-    RootKeyNode = HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
+    RootKeyNode = (PCM_KEY_NODE)HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
 
     TRACE("RegImportBinaryHive done\n");
     return TRUE;
-}
-
-VOID
-RegInitializeRegistry(VOID)
-{
-    /* Nothing to do */
 }
 
 LONG
@@ -203,62 +220,6 @@ GetNextPathElement(
     return TRUE;
 }
 
-static
-PCM_KEY_NODE
-RegpFindSubkeyInIndex(
-    _In_ PHHIVE Hive,
-    _In_ PCM_KEY_INDEX IndexCell,
-    _In_ PUNICODE_STRING SubKeyName)
-{
-    PCM_KEY_NODE SubKeyNode;
-    ULONG i;
-    TRACE("RegpFindSubkeyInIndex('%wZ')\n", SubKeyName);
-
-    /* Check the cell type */
-    if ((IndexCell->Signature == CM_KEY_INDEX_ROOT) ||
-        (IndexCell->Signature == CM_KEY_INDEX_LEAF))
-    {
-        ASSERT(FALSE);
-
-        /* Enumerate subindex cells */
-        for (i = 0; i < IndexCell->Count; i++)
-        {
-            /* Get the subindex cell and call the function recursively */
-            PCM_KEY_INDEX SubIndexCell = HvGetCell(Hive, IndexCell->List[i]);
-
-            SubKeyNode = RegpFindSubkeyInIndex(Hive, SubIndexCell, SubKeyName);
-            if (SubKeyNode != NULL)
-            {
-                return SubKeyNode;
-            }
-        }
-    }
-    else if ((IndexCell->Signature == CM_KEY_FAST_LEAF) ||
-             (IndexCell->Signature == CM_KEY_HASH_LEAF))
-    {
-        /* Directly enumerate subkey nodes */
-        PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
-        for (i = 0; i < HashCell->Count; i++)
-        {
-            SubKeyNode = HvGetCell(Hive, HashCell->List[i].Cell);
-            ASSERT(SubKeyNode->Signature == CM_KEY_NODE_SIGNATURE);
-
-            TRACE(" RegpFindSubkeyInIndex: checking '%.*s'\n",
-                  SubKeyNode->NameLength, SubKeyNode->Name);
-            if (CmCompareKeyName(SubKeyNode, SubKeyName, TRUE))
-            {
-                return SubKeyNode;
-            }
-        }
-    }
-    else
-    {
-        ASSERT(FALSE);
-    }
-
-    return NULL;
-}
-
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -269,8 +230,9 @@ RegEnumKey(
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode, SubKeyNode;
-    PCM_KEY_INDEX IndexCell;
-    PCM_KEY_FAST_INDEX HashCell;
+    HCELL_INDEX CellIndex;
+    USHORT NameLength;
+
     TRACE("RegEnumKey(%p, %lu, %p, %p->%u)\n",
           Key, Index, Name, NameSize, NameSize ? *NameSize : 0);
 
@@ -278,40 +240,52 @@ RegEnumKey(
     KeyNode = (PCM_KEY_NODE)Key;
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-    /* Check if the index is valid */
-    if ((KeyNode->SubKeyCounts[Stable] == 0) ||
-        (Index >= KeyNode->SubKeyCounts[Stable]))
+    CellIndex = CmpFindSubKeyByNumber(Hive, KeyNode, Index);
+    if (CellIndex == HCELL_NIL)
     {
-        TRACE("RegEnumKey index out of bounds\n");
+        TRACE("RegEnumKey index out of bounds (%d) in key (%.*s)\n",
+              Index, KeyNode->NameLength, KeyNode->Name);
         return ERROR_NO_MORE_ITEMS;
     }
 
-    /* Get the index cell */
-    IndexCell = HvGetCell(Hive, KeyNode->SubKeyLists[Stable]);
-    TRACE("IndexCell: %x, SubKeyCounts: %x\n", IndexCell, KeyNode->SubKeyCounts[Stable]);
+    /* Get the value cell */
+    SubKeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
+    ASSERT(SubKeyNode != NULL);
+    ASSERT(SubKeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-    /* Check the cell type */
-    if ((IndexCell->Signature == CM_KEY_FAST_LEAF) ||
-        (IndexCell->Signature == CM_KEY_HASH_LEAF))
+    if (SubKeyNode->Flags & KEY_COMP_NAME)
     {
-        /* Get the value cell */
-        HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
-        SubKeyNode = HvGetCell(Hive, HashCell->List[Index].Cell);
+        NameLength = CmpCompressedNameSize(SubKeyNode->Name, SubKeyNode->NameLength);
+
+        /* Compressed name */
+        CmpCopyCompressedName(Name,
+                              *NameSize,
+                              SubKeyNode->Name,
+                              SubKeyNode->NameLength);
     }
     else
     {
-        ASSERT(FALSE);
+        NameLength = SubKeyNode->NameLength;
+
+        /* Normal name */
+        RtlCopyMemory(Name, SubKeyNode->Name,
+                      min(*NameSize, SubKeyNode->NameLength));
     }
 
-    *NameSize = CmCopyKeyName(SubKeyNode, Name, *NameSize);
+    if (*NameSize >= NameLength + sizeof(WCHAR))
+    {
+        Name[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    *NameSize = NameLength + sizeof(WCHAR);
+
+    /**/HvReleaseCell(Hive, CellIndex);/**/
 
     if (SubKey != NULL)
-    {
         *SubKey = (HKEY)SubKeyNode;
-    }
 
-    TRACE("RegEnumKey done -> %u, '%.*s'\n", *NameSize, *NameSize, Name);
-    return STATUS_SUCCESS;
+    TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
+    return ERROR_SUCCESS;
 }
 
 LONG
@@ -324,7 +298,7 @@ RegOpenKey(
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
-    PCM_KEY_INDEX IndexCell;
+    HCELL_INDEX CellIndex;
     TRACE("RegOpenKey(%p, '%S', %p)\n", ParentKey, KeyName, Key);
 
     /* Initialize the remaining path name */
@@ -400,27 +374,22 @@ RegOpenKey(
     {
         TRACE("RegOpenKey: next element '%wZ'\n", &SubKeyName);
 
-        /* Check if there is any subkey */
-        if (KeyNode->SubKeyCounts[Stable] == 0)
-        {
-            return ERROR_PATH_NOT_FOUND;
-        }
-
-        /* Get the top level index cell */
-        IndexCell = HvGetCell(Hive, KeyNode->SubKeyLists[Stable]);
-
         /* Get the next sub key */
-        KeyNode = RegpFindSubkeyInIndex(Hive, IndexCell, &SubKeyName);
-        if (KeyNode == NULL)
+        CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        if (CellIndex == HCELL_NIL)
         {
-
-            ERR("Did not find sub key '%wZ' (full %S)\n", &RemainingPath, KeyName);
+            ERR("Did not find sub key '%wZ' (full %S)\n", &SubKeyName, KeyName);
             return ERROR_PATH_NOT_FOUND;
         }
+
+        /* Get the found key */
+        KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
+        ASSERT(KeyNode);
     }
 
-    TRACE("RegOpenKey done\n");
     *Key = (HKEY)KeyNode;
+
+    TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
 }
 
@@ -434,40 +403,27 @@ RepGetValueData(
     _Inout_opt_ ULONG* DataSize)
 {
     ULONG DataLength;
+    PVOID DataCell;
 
     /* Does the caller want the type? */
     if (Type != NULL)
-    {
         *Type = ValueCell->Type;
-    }
 
     /* Does the caller provide DataSize? */
     if (DataSize != NULL)
     {
-        /* Get the data length */
-        DataLength = ValueCell->DataLength & ~CM_KEY_VALUE_SPECIAL_SIZE;
+        // NOTE: CmpValueToData doesn't support big data (the function will
+        // bugcheck if so), FreeLdr is not supposed to read such data.
+        // If big data is needed, use instead CmpGetValueData.
+        // CmpGetValueData(Hive, ValueCell, DataSize, &DataCell, ...);
+        DataCell = CmpValueToData(Hive, ValueCell, &DataLength);
 
         /* Does the caller want the data? */
         if ((Data != NULL) && (*DataSize != 0))
         {
-            /* Check where the data is stored */
-            if ((DataLength <= sizeof(HCELL_INDEX)) &&
-                (ValueCell->DataLength & CM_KEY_VALUE_SPECIAL_SIZE))
-            {
-                /* The data member contains the data */
-                RtlCopyMemory(Data,
-                              &ValueCell->Data,
-                              min(*DataSize, DataLength));
-            }
-            else
-            {
-                /* The data member contains the data cell index */
-                PVOID DataCell = HvGetCell(Hive, ValueCell->Data);
-                RtlCopyMemory(Data,
-                              DataCell,
-                              min(*DataSize, ValueCell->DataLength));
-            }
-
+            RtlCopyMemory(Data,
+                          DataCell,
+                          min(*DataSize, DataLength));
         }
 
         /* Return the actual data length */
@@ -486,9 +442,9 @@ RegQueryValue(
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
     PCM_KEY_VALUE ValueCell;
-    PVALUE_LIST_CELL ValueListCell;
+    HCELL_INDEX CellIndex;
     UNICODE_STRING ValueNameString;
-    ULONG i;
+
     TRACE("RegQueryValue(%p, '%S', %p, %p, %p)\n",
           Key, ValueName, Type, Data, DataSize);
 
@@ -496,54 +452,50 @@ RegQueryValue(
     KeyNode = (PCM_KEY_NODE)Key;
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-    /* Check if there are any values */
-    if (KeyNode->ValueList.Count == 0)
-    {
-        TRACE("RegQueryValue no values in key (%.*s)\n",
-              KeyNode->NameLength, KeyNode->Name);
-        return ERROR_INVALID_PARAMETER;
-    }
-
     /* Initialize value name string */
     RtlInitUnicodeString(&ValueNameString, ValueName);
-
-    ValueListCell = (PVALUE_LIST_CELL)HvGetCell(Hive, KeyNode->ValueList.List);
-    TRACE("ValueListCell: %x\n", ValueListCell);
-
-    /* Loop all values */
-    for (i = 0; i < KeyNode->ValueList.Count; i++)
+    CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
+    if (CellIndex == HCELL_NIL)
     {
-        /* Get the subkey node and check the name */
-        ValueCell = HvGetCell(Hive, ValueListCell->ValueOffset[i]);
-
-        /* Compare the value name */
-        TRACE("checking %.*s\n", ValueCell->NameLength, ValueCell->Name);
-        if (CmCompareKeyValueName(ValueCell, &ValueNameString, TRUE))
-        {
-            RepGetValueData(Hive, ValueCell, Type, Data, DataSize);
-            TRACE("RegQueryValue success\n");
-            return STATUS_SUCCESS;
-        }
+        TRACE("RegQueryValue value not found in key (%.*s)\n",
+              KeyNode->NameLength, KeyNode->Name);
+        return ERROR_FILE_NOT_FOUND;
     }
 
-    TRACE("RegQueryValue value not found\n");
-    return ERROR_INVALID_PARAMETER;
+    /* Get the value cell */
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
+    ASSERT(ValueCell != NULL);
+
+    RepGetValueData(Hive, ValueCell, Type, Data, DataSize);
+
+    HvReleaseCell(Hive, CellIndex);
+
+    TRACE("RegQueryValue success\n");
+    return ERROR_SUCCESS;
 }
 
+/*
+ * NOTE: This function is currently unused in FreeLdr; however it is kept here
+ * as an implementation reference of RegEnumValue using CMLIB that may be used
+ * elsewhere in ReactOS.
+ */
+#if 0
 LONG
 RegEnumValue(
     _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR ValueName,
     _Inout_ ULONG* NameSize,
-    _Out_ ULONG* Type,
-    _Out_ PUCHAR Data,
-    _Inout_ ULONG* DataSize)
+    _Out_opt_ ULONG* Type,
+    _Out_opt_ PUCHAR Data,
+    _Inout_opt_ ULONG* DataSize)
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
+    PCELL_DATA ValueListCell;
     PCM_KEY_VALUE ValueCell;
-    PVALUE_LIST_CELL ValueListCell;
+    USHORT NameLength;
+
     TRACE("RegEnumValue(%p, %lu, %S, %p, %p, %p, %p (%lu))\n",
           Key, Index, ValueName, NameSize, Type, Data, DataSize, *DataSize);
 
@@ -553,40 +505,55 @@ RegEnumValue(
 
     /* Check if the index is valid */
     if ((KeyNode->ValueList.Count == 0) ||
+        (KeyNode->ValueList.List == HCELL_NIL) ||
         (Index >= KeyNode->ValueList.Count))
     {
         ERR("RegEnumValue: index invalid\n");
         return ERROR_NO_MORE_ITEMS;
     }
 
-    ValueListCell = (PVALUE_LIST_CELL)HvGetCell(Hive, KeyNode->ValueList.List);
-    TRACE("ValueListCell: %x\n", ValueListCell);
+    ValueListCell = (PCELL_DATA)HvGetCell(Hive, KeyNode->ValueList.List);
+    ASSERT(ValueListCell != NULL);
 
     /* Get the value cell */
-    ValueCell = HvGetCell(Hive, ValueListCell->ValueOffset[Index]);
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, ValueListCell->KeyList[Index]);
     ASSERT(ValueCell != NULL);
+    ASSERT(ValueCell->Signature == CM_KEY_VALUE_SIGNATURE);
 
-    if (NameSize != NULL)
+    if (ValueCell->Flags & VALUE_COMP_NAME)
     {
-        *NameSize = CmCopyKeyValueName(ValueCell, ValueName, *NameSize);
+        NameLength = CmpCompressedNameSize(ValueCell->Name, ValueCell->NameLength);
+
+        /* Compressed name */
+        CmpCopyCompressedName(ValueName,
+                              *NameSize,
+                              ValueCell->Name,
+                              ValueCell->NameLength);
     }
+    else
+    {
+        NameLength = ValueCell->NameLength;
+
+        /* Normal name */
+        RtlCopyMemory(ValueName, ValueCell->Name,
+                      min(*NameSize, ValueCell->NameLength));
+    }
+
+    if (*NameSize >= NameLength + sizeof(WCHAR))
+    {
+        ValueName[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    *NameSize = NameLength + sizeof(WCHAR);
 
     RepGetValueData(Hive, ValueCell, Type, Data, DataSize);
 
-    if (DataSize != NULL)
-    {
-        if ((Data != NULL) && (*DataSize != 0))
-        {
-            RtlCopyMemory(Data,
-                          &ValueCell->Data,
-                          min(*DataSize, ValueCell->DataLength));
-        }
+    HvReleaseCell(Hive, ValueListCell->KeyList[Index]);
+    HvReleaseCell(Hive, KeyNode->ValueList.List);
 
-        *DataSize = ValueCell->DataLength;
-    }
-
-    TRACE("RegEnumValue done\n");
-    return STATUS_SUCCESS;
+    TRACE("RegEnumValue done -> %u, '%.*S'\n", *NameSize, *NameSize, ValueName);
+    return ERROR_SUCCESS;
 }
+#endif
 
 /* EOF */
