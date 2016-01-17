@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
  * PURPOSE:         Hive maker
@@ -33,7 +34,7 @@
 #ifdef _MSC_VER
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
-#endif//_MSC_VER
+#endif // _MSC_VER
 
 #ifndef _WIN32
 #ifndef PATH_MAX

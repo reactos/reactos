@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/cmi.c
  * PURPOSE:         Registry file manipulation routines
@@ -33,7 +34,7 @@ CmpAllocate(
     IN BOOLEAN Paged,
     IN ULONG Tag)
 {
-    return (PVOID) malloc((size_t)Size);
+    return (PVOID)malloc((size_t)Size);
 }
 
 VOID
@@ -69,9 +70,10 @@ CmpFileWrite(
 {
     PCMHIVE CmHive = (PCMHIVE)RegistryHive;
     FILE *File = CmHive->FileHandles[HFILE_TYPE_PRIMARY];
-    if (0 != fseek (File, *FileOffset, SEEK_SET))
+    if (fseek(File, *FileOffset, SEEK_SET) != 0)
         return FALSE;
-    return BufferLength == fwrite (Buffer, 1, BufferLength, File);
+
+    return (fwrite(Buffer, 1, BufferLength, File) == BufferLength);
 }
 
 static BOOLEAN
@@ -96,25 +98,24 @@ CmpFileFlush(
 {
     PCMHIVE CmHive = (PCMHIVE)RegistryHive;
     FILE *File = CmHive->FileHandles[HFILE_TYPE_PRIMARY];
-    return 0 == fflush (File);
+    return (fflush(File) == 0);
 }
 
 NTSTATUS
-CmiInitializeTempHive(
-    IN OUT PCMHIVE Hive)
+CmiInitializeHive(
+    IN OUT PCMHIVE Hive,
+    IN PCWSTR Name)
 {
     NTSTATUS Status;
 
-    RtlZeroMemory (
-        Hive,
-        sizeof(CMHIVE));
+    RtlZeroMemory(Hive, sizeof(*Hive));
 
     DPRINT("Hive 0x%p\n", Hive);
 
     Status = HvInitialize(&Hive->Hive,
                           HINIT_CREATE,
-                          0,
-                          0,
+                          HIVE_NOLAZYFLUSH,
+                          HFILE_TYPE_PRIMARY,
                           0,
                           CmpAllocate,
                           CmpFree,
@@ -129,94 +130,59 @@ CmiInitializeTempHive(
         return Status;
     }
 
-    if (!CmCreateRootNode (&Hive->Hive, L""))
+    // HACK: See the HACK from r31253
+    if (!CmCreateRootNode(&Hive->Hive, Name))
     {
-        HvFree (&Hive->Hive);
+        HvFree(&Hive->Hive);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    Hive->Flags = HIVE_NO_FILE;
 
     /* Add the new hive to the hive list */
     InsertTailList(&CmiHiveListHead,
                    &Hive->HiveList);
 
-    VERIFY_REGISTRY_HIVE (Hive);
-
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-CmiAddKeyToHashTable(
-    IN PCMHIVE RegistryHive,
-    IN OUT PCM_KEY_FAST_INDEX HashCell,
-    IN HCELL_INDEX HashCellIndex,
-    IN PCM_KEY_NODE NewKeyCell,
-    IN HCELL_INDEX NKBOffset)
+NTSTATUS
+CmiCreateSecurityKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN PUCHAR Descriptor,
+    IN ULONG DescriptorLength)
 {
-    ULONG i;
-    ULONG HashKey = 0;
+    HCELL_INDEX SecurityCell;
+    PCM_KEY_NODE Node;
+    PCM_KEY_SECURITY Security;
 
-    if (NewKeyCell->Flags & KEY_COMP_NAME)
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    SecurityCell = HvAllocateCell(Hive,
+                                  FIELD_OFFSET(CM_KEY_SECURITY, Descriptor) +
+                                  DescriptorLength,
+                                  Stable,
+                                  HCELL_NIL);
+    if (SecurityCell == HCELL_NIL)
     {
-        RtlCopyMemory(
-            &HashKey,
-            NewKeyCell->Name,
-            min(NewKeyCell->NameLength, sizeof(ULONG)));
+        HvReleaseCell(Hive, Cell);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    for (i = 0; i < HashCell->Count; i++)
-    {
-        if (HashCell->List[i].HashKey > HashKey)
-            break;
-    }
+    Node->Security = SecurityCell;
+    Security = (PCM_KEY_SECURITY)HvGetCell(Hive, SecurityCell);
+    Security->Signature = CM_KEY_SECURITY_SIGNATURE;
+    Security->ReferenceCount = 1;
+    Security->DescriptorLength = DescriptorLength;
 
-    if (i < HashCell->Count)
-    {
-        RtlMoveMemory(HashCell->List + i + 1,
-                      HashCell->List + i,
-                      (HashCell->Count - i) *
-                      sizeof(HashCell->List[0]));
-    }
+    RtlMoveMemory(&Security->Descriptor,
+                  Descriptor,
+                  DescriptorLength);
 
-    HashCell->List[i].Cell = NKBOffset;
-    HashCell->List[i].HashKey = HashKey;
-    HashCell->Count++;
-    HvMarkCellDirty(&RegistryHive->Hive, HashCellIndex, FALSE);
+    Security->Flink = Security->Blink = SecurityCell;
+
+    HvReleaseCell(Hive, SecurityCell);
+    HvReleaseCell(Hive, Cell);
+
     return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-CmiAllocateHashTableCell (
-    IN PCMHIVE RegistryHive,
-    OUT PCM_KEY_FAST_INDEX *HashBlock,
-    OUT HCELL_INDEX *HBOffset,
-    IN USHORT SubKeyCount,
-    IN HSTORAGE_TYPE Storage)
-{
-    PCM_KEY_FAST_INDEX NewHashBlock;
-    ULONG NewHashSize;
-    NTSTATUS Status;
-
-    Status = STATUS_SUCCESS;
-    *HashBlock = NULL;
-    NewHashSize = FIELD_OFFSET(CM_KEY_FAST_INDEX, List) +
-        (SubKeyCount * sizeof(CM_INDEX));
-    *HBOffset = HvAllocateCell(&RegistryHive->Hive, NewHashSize, Storage, HCELL_NIL);
-
-    if (*HBOffset == HCELL_NIL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-    else
-    {
-        NewHashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (&RegistryHive->Hive, *HBOffset);
-        NewHashBlock->Signature = CM_KEY_FAST_LEAF;
-        NewHashBlock->Count = 0;
-        *HashBlock = NewHashBlock;
-    }
-
-    return Status;
 }
 
 static NTSTATUS
@@ -224,105 +190,98 @@ CmiCreateSubKey(
     IN PCMHIVE RegistryHive,
     IN HCELL_INDEX ParentKeyCellOffset,
     IN PCUNICODE_STRING SubKeyName,
-    IN ULONG CreateOptions,
+    IN BOOLEAN VolatileKey,
     OUT HCELL_INDEX* pNKBOffset)
 {
     HCELL_INDEX NKBOffset;
     PCM_KEY_NODE NewKeyCell;
-    ULONG NewBlockSize;
-    NTSTATUS Status;
-    USHORT NameLength;
-    PWSTR NamePtr;
-    BOOLEAN Packable;
+    UNICODE_STRING KeyName;
     HSTORAGE_TYPE Storage;
-    ULONG i;
 
-    /* Skip leading backslash */
-    if (SubKeyName->Buffer[0] == L'\\')
+    /* Skip leading path separator if present */
+    if (SubKeyName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
     {
-        NamePtr = &SubKeyName->Buffer[1];
-        NameLength = SubKeyName->Length - sizeof(WCHAR);
+        KeyName.Buffer = &SubKeyName->Buffer[1];
+        KeyName.Length = KeyName.MaximumLength = SubKeyName->Length - sizeof(WCHAR);
     }
     else
     {
-        NamePtr = SubKeyName->Buffer;
-        NameLength = SubKeyName->Length;
+        KeyName = *SubKeyName;
     }
 
-    /* Check whether key name can be packed */
-    Packable = TRUE;
-    for (i = 0; i < NameLength / sizeof(WCHAR); i++)
-    {
-        if (NamePtr[i] & 0xFF00)
-        {
-            Packable = FALSE;
-            break;
-        }
-    }
+    Storage = (VolatileKey ? Volatile : Stable);
 
-    /* Adjust name size */
-    if (Packable)
-    {
-        NameLength = NameLength / sizeof(WCHAR);
-    }
-
-    Status = STATUS_SUCCESS;
-
-    Storage = (CreateOptions & REG_OPTION_VOLATILE) ? Volatile : Stable;
-    NewBlockSize = FIELD_OFFSET(CM_KEY_NODE, Name) + NameLength;
-    NKBOffset = HvAllocateCell(&RegistryHive->Hive, NewBlockSize, Storage, HCELL_NIL);
+    NKBOffset = HvAllocateCell(&RegistryHive->Hive,
+                               FIELD_OFFSET(CM_KEY_NODE, Name) +
+                               CmpNameSize(&RegistryHive->Hive, &KeyName),
+                               Storage,
+                               HCELL_NIL);
     if (NKBOffset == HCELL_NIL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, NKBOffset);
+    if (NewKeyCell == NULL)
+    {
+        HvFreeCell(&RegistryHive->Hive, NKBOffset);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewKeyCell->Signature = CM_KEY_NODE_SIGNATURE;
+    NewKeyCell->Flags = (VolatileKey ? KEY_IS_VOLATILE : 0);
+    KeQuerySystemTime(&NewKeyCell->LastWriteTime);
+    NewKeyCell->Parent = ParentKeyCellOffset;
+    NewKeyCell->SubKeyCounts[Stable] = 0;
+    NewKeyCell->SubKeyCounts[Volatile] = 0;
+    NewKeyCell->SubKeyLists[Stable] = HCELL_NIL;
+    NewKeyCell->SubKeyLists[Volatile] = HCELL_NIL;
+    NewKeyCell->ValueList.Count = 0;
+    NewKeyCell->ValueList.List = HCELL_NIL;
+    NewKeyCell->Security = HCELL_NIL;
+    NewKeyCell->Class = HCELL_NIL;
+    NewKeyCell->ClassLength = 0;
+    NewKeyCell->MaxNameLen = 0;
+    NewKeyCell->MaxClassLen = 0;
+    NewKeyCell->MaxValueNameLen = 0;
+    NewKeyCell->MaxValueDataLen = 0;
+    NewKeyCell->NameLength = CmpCopyName(&RegistryHive->Hive, NewKeyCell->Name, &KeyName);
+    if (NewKeyCell->NameLength < KeyName.Length) NewKeyCell->Flags |= KEY_COMP_NAME;
+
+    /* Inherit the security from the parent */
+    if (ParentKeyCellOffset == HCELL_NIL)
+    {
+        // We are in fact creating a root key.
+        // This is not handled there, but when we
+        // call CmCreateRootNode instead.
+        ASSERT(FALSE);
     }
     else
     {
-        NewKeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, NKBOffset);
-        NewKeyCell->Signature = CM_KEY_NODE_SIGNATURE;
-        if (CreateOptions & REG_OPTION_VOLATILE)
-        {
-            NewKeyCell->Flags = KEY_IS_VOLATILE;
-        }
-        else
-        {
-            NewKeyCell->Flags = 0;
-        }
-        KeQuerySystemTime(&NewKeyCell->LastWriteTime);
-        NewKeyCell->Parent = ParentKeyCellOffset;
-        NewKeyCell->SubKeyCounts[Stable] = 0;
-        NewKeyCell->SubKeyCounts[Volatile] = 0;
-        NewKeyCell->SubKeyLists[Stable] = HCELL_NIL;
-        NewKeyCell->SubKeyLists[Volatile] = HCELL_NIL;
-        NewKeyCell->ValueList.Count = 0;
-        NewKeyCell->ValueList.List = HCELL_NIL;
-        NewKeyCell->Security = HCELL_NIL;
-        NewKeyCell->Class = HCELL_NIL;
+        /* Get the parent node */
+        PCM_KEY_NODE ParentKeyCell;
+        ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
 
-        /* Pack the key name */
-        NewKeyCell->NameLength = NameLength;
-        if (Packable)
+        if (ParentKeyCell)
         {
-            NewKeyCell->Flags |= KEY_COMP_NAME;
-            for (i = 0; i < NameLength; i++)
+            /* Inherit the security block of the parent */
+            NewKeyCell->Security = ParentKeyCell->Security;
+            if (NewKeyCell->Security != HCELL_NIL)
             {
-                ((PCHAR)NewKeyCell->Name)[i] = (CHAR)(NamePtr[i] & 0x00FF);
+                PCM_KEY_SECURITY Security;
+                Security = (PCM_KEY_SECURITY)HvGetCell(&RegistryHive->Hive, NewKeyCell->Security);
+                ++Security->ReferenceCount;
+                HvReleaseCell(&RegistryHive->Hive, NewKeyCell->Security);
             }
-        }
-        else
-        {
-            RtlCopyMemory(NewKeyCell->Name,
-                          NamePtr,
-                          NameLength);
-        }
 
-        VERIFY_KEY_CELL(NewKeyCell);
+            HvReleaseCell(&RegistryHive->Hive, ParentKeyCellOffset);
+        }
     }
 
-    if (NT_SUCCESS(Status))
-    {
-        *pNKBOffset = NKBOffset;
-    }
-    return Status;
+    HvReleaseCell(&RegistryHive->Hive, NKBOffset);
+
+    *pNKBOffset = NKBOffset;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -330,345 +289,160 @@ CmiAddSubKey(
     IN PCMHIVE RegistryHive,
     IN HCELL_INDEX ParentKeyCellOffset,
     IN PCUNICODE_STRING SubKeyName,
-    IN ULONG CreateOptions,
-    OUT PCM_KEY_NODE *pSubKeyCell,
+    IN BOOLEAN VolatileKey,
     OUT HCELL_INDEX *pBlockOffset)
 {
     PCM_KEY_NODE ParentKeyCell;
     HCELL_INDEX NKBOffset;
     NTSTATUS Status;
 
-    ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
-    if (!ParentKeyCell)
-        return STATUS_UNSUCCESSFUL;
-    VERIFY_KEY_CELL(ParentKeyCell);
-
     /* Create the new key */
-    Status = CmiCreateSubKey(RegistryHive, ParentKeyCellOffset, SubKeyName, CreateOptions, &NKBOffset);
+    Status = CmiCreateSubKey(RegistryHive, ParentKeyCellOffset, SubKeyName, VolatileKey, &NKBOffset);
     if (!NT_SUCCESS(Status))
-    {
         return Status;
-    }
+
+    /* Mark the parent cell as dirty */
+    HvMarkCellDirty(&RegistryHive->Hive, ParentKeyCellOffset, FALSE);
 
     if (!CmpAddSubKey(&RegistryHive->Hive, ParentKeyCellOffset, NKBOffset))
     {
         /* FIXME: delete newly created cell */
+        // CmpFreeKeyByCell(&RegistryHive->Hive, NewCell /*NKBOffset*/, FALSE);
+        ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* Get the parent node */
+    ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
+    if (!ParentKeyCell)
+    {
+        /* FIXME: delete newly created cell */
+        return STATUS_UNSUCCESSFUL;
+    }
+    VERIFY_KEY_CELL(ParentKeyCell);
+
+    /* Update the timestamp */
     KeQuerySystemTime(&ParentKeyCell->LastWriteTime);
-    HvMarkCellDirty(&RegistryHive->Hive, ParentKeyCellOffset, FALSE);
+
+    /* Check if we need to update name maximum, update it if so */
+    if (ParentKeyCell->MaxNameLen < SubKeyName->Length)
+        ParentKeyCell->MaxNameLen = SubKeyName->Length;
+
+    /* Release the cell */
+    HvReleaseCell(&RegistryHive->Hive, ParentKeyCellOffset);
 
     *pBlockOffset = NKBOffset;
     return STATUS_SUCCESS;
 }
 
-#if 0 // Those two functions seem to be unused, but keep them just in case we may need to use them in the future...
-static BOOLEAN
-CmiCompareHash(
-    IN PCUNICODE_STRING KeyName,
-    IN PCHAR HashString)
-{
-    CHAR Buffer[4];
-
-    Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
-    Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
-    Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
-    Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
-
-    return (strncmp(Buffer, HashString, 4) == 0);
-}
-
-static BOOLEAN
-CmiCompareHashI(
-    IN PCUNICODE_STRING KeyName,
-    IN PCHAR HashString)
-{
-    CHAR Buffer[4];
-
-    Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
-    Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
-    Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
-    Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
-
-    return (strncasecmp(Buffer, HashString, 4) == 0);
-}
-#endif
-
-NTSTATUS
-CmiScanForSubKey(
-    IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX ParentKeyCellOffset,
-    IN PCUNICODE_STRING SubKeyName,
-    IN ULONG Attributes,
-    OUT PCM_KEY_NODE *pSubKeyCell,
-    OUT HCELL_INDEX *pBlockOffset)
-{
-    PCM_KEY_NODE KeyCell;
-    PCM_KEY_FAST_INDEX HashBlock;
-    PCM_KEY_NODE CurSubKeyCell;
-    BOOLEAN CaseInsensitive;
-    ULONG Storage;
-    ULONG i;
-
-    KeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
-    if (!KeyCell)
-        return STATUS_UNSUCCESSFUL;
-    VERIFY_KEY_CELL(KeyCell);
-
-    ASSERT(RegistryHive);
-
-    *pSubKeyCell = NULL;
-    CaseInsensitive = (Attributes & OBJ_CASE_INSENSITIVE) != 0;
-
-    for (Storage = Stable; Storage < HTYPE_COUNT; Storage++)
-    {
-        if (KeyCell->SubKeyLists[Storage] == HCELL_NIL)
-        {
-            /* The key does not have any subkeys */
-            continue;
-        }
-
-        /* Get hash table */
-        HashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (&RegistryHive->Hive, KeyCell->SubKeyLists[Storage]);
-        if (!HashBlock || HashBlock->Signature != CM_KEY_FAST_LEAF)
-            return STATUS_UNSUCCESSFUL;
-
-        for (i = 0; i < KeyCell->SubKeyCounts[Storage]; i++)
-        {
-            if ((HashBlock->List[i].HashKey == 0) ||
-                (CmCompareHash(SubKeyName, (PCHAR)&HashBlock->List[i].HashKey, CaseInsensitive)))
-            {
-                CurSubKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive,
-                                                        HashBlock->List[i].Cell);
-
-                if (CmCompareKeyName(CurSubKeyCell, SubKeyName, CaseInsensitive))
-                {
-                    *pSubKeyCell = CurSubKeyCell;
-                    *pBlockOffset = HashBlock->List[i].Cell;
-                    return STATUS_SUCCESS;
-                }
-            }
-        }
-    }
-
-    return STATUS_OBJECT_NAME_NOT_FOUND;
-}
-
-static USHORT
-CmiGetPackedNameLength(
-    IN PCUNICODE_STRING Name,
-    OUT PBOOLEAN pPackable)
-{
-    USHORT i;
-
-    *pPackable = TRUE;
-
-    for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
-    {
-        if (Name->Buffer[i] & 0xFF00)
-        {
-            *pPackable = FALSE;
-            return Name->Length;
-        }
-    }
-
-    return (Name->Length / sizeof(WCHAR));
-}
-
-static NTSTATUS
-CmiAllocateValueCell(
-    IN PCMHIVE RegistryHive,
-    OUT PCM_KEY_VALUE *ValueCell,
-    OUT HCELL_INDEX *VBOffset,
-    IN PCUNICODE_STRING ValueName,
-    IN HSTORAGE_TYPE Storage)
-{
-    PCM_KEY_VALUE NewValueCell;
-    BOOLEAN Packable;
-    USHORT NameLength, i;
-    NTSTATUS Status;
-
-    Status = STATUS_SUCCESS;
-
-    NameLength = CmiGetPackedNameLength(ValueName, &Packable);
-
-    DPRINT("ValueName->Length %u  NameLength %u\n", ValueName->Length, NameLength);
-
-    *VBOffset = HvAllocateCell(&RegistryHive->Hive, sizeof(CM_KEY_VALUE) + NameLength, Storage, HCELL_NIL);
-    if (*VBOffset == HCELL_NIL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-    else
-    {
-        NewValueCell = (PCM_KEY_VALUE)HvGetCell (&RegistryHive->Hive, *VBOffset);
-        NewValueCell->Signature = CM_KEY_VALUE_SIGNATURE;
-        NewValueCell->NameLength = (USHORT)NameLength;
-        if (Packable)
-        {
-            /* Pack the value name */
-            for (i = 0; i < NameLength; i++)
-            {
-                ((PCHAR)NewValueCell->Name)[i] = (CHAR)ValueName->Buffer[i];
-            }
-            NewValueCell->Flags |= VALUE_COMP_NAME;
-        }
-        else
-        {
-            /* Copy the value name */
-            RtlCopyMemory(NewValueCell->Name,
-                          ValueName->Buffer,
-                          NameLength);
-            NewValueCell->Flags = 0;
-        }
-        NewValueCell->Type = 0;
-        NewValueCell->DataLength = 0;
-        NewValueCell->Data = HCELL_NIL;
-        *ValueCell = NewValueCell;
-    }
-
-    return Status;
-}
-
 NTSTATUS
 CmiAddValueKey(
     IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX KeyCellOffset,
+    IN PCM_KEY_NODE Parent,
     IN PCUNICODE_STRING ValueName,
     OUT PCM_KEY_VALUE *pValueCell,
     OUT HCELL_INDEX *pValueCellOffset)
 {
-    PVALUE_LIST_CELL ValueListCell;
-    PCM_KEY_NODE KeyCell;
+    PCELL_DATA ValueListCell;
     PCM_KEY_VALUE NewValueCell;
     HCELL_INDEX ValueListCellOffset;
     HCELL_INDEX NewValueCellOffset;
     ULONG CellSize;
     HSTORAGE_TYPE Storage;
-    NTSTATUS Status;
 
-    KeyCell = HvGetCell(&RegistryHive->Hive, KeyCellOffset);
-    if (!KeyCell)
-        return STATUS_UNSUCCESSFUL;
+#ifndef FIELD_SIZE
+#define FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#endif
 
-    Storage = (KeyCell->Flags & KEY_IS_VOLATILE) ? Volatile : Stable;
-    if (KeyCell->ValueList.List == HCELL_NIL)
+    Storage = (Parent->Flags & KEY_IS_VOLATILE) ? Volatile : Stable;
+    if (Parent->ValueList.List == HCELL_NIL)
     {
         /* Allocate some room for the value list */
-        CellSize = sizeof(VALUE_LIST_CELL) + (3 * sizeof(HCELL_INDEX));
+        CellSize = FIELD_SIZE(CELL_DATA, u.KeyList) + (3 * sizeof(HCELL_INDEX));
         ValueListCellOffset = HvAllocateCell(&RegistryHive->Hive, CellSize, Storage, HCELL_NIL);
         if (ValueListCellOffset == HCELL_NIL)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        ValueListCell = (PVALUE_LIST_CELL)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
+        ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
         if (!ValueListCell)
+        {
+            HvFreeCell(&RegistryHive->Hive, ValueListCellOffset);
             return STATUS_UNSUCCESSFUL;
+        }
 
-        KeyCell->ValueList.List = ValueListCellOffset;
-        HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset, FALSE);
+        Parent->ValueList.List = ValueListCellOffset;
     }
     else
     {
-        ValueListCell = (PVALUE_LIST_CELL)HvGetCell(&RegistryHive->Hive, KeyCell->ValueList.List);
+        ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, Parent->ValueList.List);
         if (!ValueListCell)
             return STATUS_UNSUCCESSFUL;
 
         CellSize = ABS_VALUE(HvGetCellSize(&RegistryHive->Hive, ValueListCell));
 
-        if (KeyCell->ValueList.Count >= CellSize / sizeof(HCELL_INDEX))
+        if (Parent->ValueList.Count >= CellSize / sizeof(HCELL_INDEX))
         {
             CellSize *= 2;
-            ValueListCellOffset = HvReallocateCell(&RegistryHive->Hive, KeyCell->ValueList.List, CellSize);
+            ValueListCellOffset = HvReallocateCell(&RegistryHive->Hive, Parent->ValueList.List, CellSize);
             if (ValueListCellOffset == HCELL_NIL)
                 return STATUS_INSUFFICIENT_RESOURCES;
 
-            ValueListCell = (PVALUE_LIST_CELL)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
+            ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
             if (!ValueListCell)
                 return STATUS_UNSUCCESSFUL;
 
-            KeyCell->ValueList.List = ValueListCellOffset;
-            HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset, FALSE);
+            Parent->ValueList.List = ValueListCellOffset;
         }
     }
 
-    Status = CmiAllocateValueCell(RegistryHive,
-                                  &NewValueCell,
-                                  &NewValueCellOffset,
-                                  ValueName,
-                                  Storage);
-    if (!NT_SUCCESS(Status))
-        return Status;
 
-    ValueListCell->ValueOffset[KeyCell->ValueList.Count] = NewValueCellOffset;
-    KeyCell->ValueList.Count++;
-    if (NewValueCell->Flags & VALUE_COMP_NAME)
+    NewValueCellOffset = HvAllocateCell(&RegistryHive->Hive,
+                               FIELD_OFFSET(CM_KEY_VALUE, Name) +
+                               CmpNameSize(&RegistryHive->Hive, (PUNICODE_STRING)ValueName),
+                               Storage,
+                               HCELL_NIL);
+    if (NewValueCellOffset == HCELL_NIL)
     {
-        if (NewValueCell->NameLength*sizeof(WCHAR) > KeyCell->MaxValueNameLen)
-            KeyCell->MaxValueNameLen = NewValueCell->NameLength*sizeof(WCHAR);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewValueCell = (PCM_KEY_VALUE)HvGetCell(&RegistryHive->Hive, NewValueCellOffset);
+    if (NewValueCell == NULL)
+    {
+        HvFreeCell(&RegistryHive->Hive, NewValueCellOffset);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewValueCell->Signature = CM_KEY_VALUE_SIGNATURE;
+    NewValueCell->NameLength = CmpCopyName(&RegistryHive->Hive,
+                                           NewValueCell->Name,
+                                           (PUNICODE_STRING)ValueName);
+
+    /* Check for compressed name */
+    if (NewValueCell->NameLength < ValueName->Length)
+    {
+        /* This is a compressed name */
+        NewValueCell->Flags = VALUE_COMP_NAME;
     }
     else
     {
-        if (NewValueCell->NameLength > KeyCell->MaxValueNameLen)
-            KeyCell->MaxValueNameLen = NewValueCell->NameLength;
+        /* No flags to set */
+        NewValueCell->Flags = 0;
     }
 
-    HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset, FALSE);
-    HvMarkCellDirty(&RegistryHive->Hive, KeyCell->ValueList.List, FALSE);
+    NewValueCell->Type = 0;
+    NewValueCell->DataLength = 0;
+    NewValueCell->Data = HCELL_NIL;
+
+
+    ValueListCell->u.KeyList[Parent->ValueList.Count] = NewValueCellOffset;
+    Parent->ValueList.Count++;
+
+    HvMarkCellDirty(&RegistryHive->Hive, Parent->ValueList.List, FALSE);
     HvMarkCellDirty(&RegistryHive->Hive, NewValueCellOffset, FALSE);
 
     *pValueCell = NewValueCell;
     *pValueCellOffset = NewValueCellOffset;
 
     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CmiScanForValueKey(
-    IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX KeyCellOffset,
-    IN PCUNICODE_STRING ValueName,
-    OUT PCM_KEY_VALUE *pValueCell,
-    OUT HCELL_INDEX *pValueCellOffset)
-{
-    PCM_KEY_NODE KeyCell;
-    PVALUE_LIST_CELL ValueListCell;
-    PCM_KEY_VALUE CurValueCell;
-    ULONG i;
-
-    KeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, KeyCellOffset);
-    if (!KeyCell)
-        return STATUS_UNSUCCESSFUL;
-
-    *pValueCell = NULL;
-    *pValueCellOffset = HCELL_NIL;
-
-    /* The key does not have any values */
-    if (KeyCell->ValueList.List == HCELL_NIL)
-    {
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    ValueListCell = (PVALUE_LIST_CELL)HvGetCell(&RegistryHive->Hive, KeyCell->ValueList.List);
-
-    VERIFY_VALUE_LIST_CELL(ValueListCell);
-
-    for (i = 0; i < KeyCell->ValueList.Count; i++)
-    {
-        CurValueCell = (PCM_KEY_VALUE)HvGetCell(&RegistryHive->Hive,
-                                                ValueListCell->ValueOffset[i]);
-
-        if (CmComparePackedNames(ValueName,
-                                 (PUCHAR)CurValueCell->Name,
-                                 CurValueCell->NameLength,
-                                 (CurValueCell->Flags & VALUE_COMP_NAME) ? TRUE : FALSE,
-                                 TRUE))
-        {
-            *pValueCell = CurValueCell;
-            *pValueCellOffset = ValueListCell->ValueOffset[i];
-            return STATUS_SUCCESS;
-        }
-    }
-
-    return STATUS_OBJECT_NAME_NOT_FOUND;
 }

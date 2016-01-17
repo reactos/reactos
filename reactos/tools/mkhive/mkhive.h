@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
@@ -54,6 +55,7 @@ unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
 
 typedef DWORD REGSAM;
 typedef LPVOID LPSECURITY_ATTRIBUTES;
+typedef HANDLE HKEY, *PHKEY;
 
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
@@ -122,8 +124,6 @@ RegOpenKeyW(
 
 #define OBJ_NAME_PATH_SEPARATOR           ((WCHAR)L'\\')
 
-#define HIVE_NO_FILE 2
-#define VERIFY_REGISTRY_HIVE(hive)
 extern LIST_ENTRY CmiHiveListHead;
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 #define PAGED_CODE()

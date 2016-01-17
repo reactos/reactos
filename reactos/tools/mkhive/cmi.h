@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/cmi.h
  * PURPOSE:         Registry file manipulation routines
@@ -24,42 +25,31 @@
  */
 
 #define VERIFY_KEY_CELL(key)
-#define VERIFY_VALUE_LIST_CELL(cell)
 
 NTSTATUS
-CmiInitializeTempHive(
-    IN OUT PCMHIVE Hive);
+CmiInitializeHive(
+    IN OUT PCMHIVE Hive,
+    IN PCWSTR Name);
+
+NTSTATUS
+CmiCreateSecurityKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN PUCHAR Descriptor,
+    IN ULONG DescriptorLength);
 
 NTSTATUS
 CmiAddSubKey(
     IN PCMHIVE RegistryHive,
     IN HCELL_INDEX ParentKeyCellOffset,
     IN PCUNICODE_STRING SubKeyName,
-    IN ULONG CreateOptions,
-    OUT PCM_KEY_NODE *pSubKeyCell,
-    OUT HCELL_INDEX *pBlockOffset);
-
-NTSTATUS
-CmiScanForSubKey(
-    IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX ParentKeyCellOffset,
-    IN PCUNICODE_STRING SubKeyName,
-    IN ULONG Attributes,
-    OUT PCM_KEY_NODE *pSubKeyCell,
+    IN BOOLEAN VolatileKey,
     OUT HCELL_INDEX *pBlockOffset);
 
 NTSTATUS
 CmiAddValueKey(
     IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX KeyCellOffset,
-    IN PCUNICODE_STRING ValueName,
-    OUT PCM_KEY_VALUE *pValueCell,
-    OUT HCELL_INDEX *pValueCellOffset);
-
-NTSTATUS
-CmiScanForValueKey(
-    IN PCMHIVE RegistryHive,
-    IN HCELL_INDEX KeyCellOffset,
+    IN PCM_KEY_NODE Parent,
     IN PCUNICODE_STRING ValueName,
     OUT PCM_KEY_VALUE *pValueCell,
     OUT HCELL_INDEX *pValueCellOffset);

@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/rtl.c
  * PURPOSE:         Runtime Library
@@ -215,6 +216,23 @@ RtlAssert(PVOID FailedAssertion,
    }
 
    //DbgBreakPoint();
+}
+
+// DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheckEx(
+    IN ULONG  BugCheckCode,
+    IN ULONG_PTR BugCheckParameter1,
+    IN ULONG_PTR BugCheckParameter2,
+    IN ULONG_PTR BugCheckParameter3,
+    IN ULONG_PTR BugCheckParameter4)
+{
+    char Buffer[70];
+    printf("*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
+           BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+           BugCheckParameter3, BugCheckParameter4);
+    ASSERT(FALSE);
 }
 
 unsigned char BitScanForward(ULONG * Index, unsigned long Mask)
