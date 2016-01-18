@@ -24,7 +24,7 @@ BiNotifyEnumerationError (
     UNREFERENCED_PARAMETER(ObjectHandle);
     UNREFERENCED_PARAMETER(ElementName);
     UNREFERENCED_PARAMETER(Status);
-    EfiPrintf(L"Error in BiNotify\r\n");
+    EfiPrintf(L"Error in BiNotify: %lx for element %s\r\n", Status, ElementName);
 }
 
 ULONG
@@ -818,7 +818,7 @@ BiEnumerateElements (
     ULONG i;
     PVOID ElementData, SubObjectList, RegistryElementData;
     BcdElementType ElementType;
-    PBCD_PACKED_ELEMENT PreviousElement;
+    PBCD_PACKED_ELEMENT PreviousElement, ElementsStart;
     ULONG SubElementCount, SubKeyCount, SubObjectCount, ElementDataLength;
     PWCHAR ElementName;
     PWCHAR* SubKeys;
@@ -839,6 +839,7 @@ BiEnumerateElements (
     ElementDataLength = 0;
     SubObjectCount = 0;
     RemainingLength = 0;
+    ElementsStart = Elements;
 
     /* Open the root object key's elements */
     Status = BiOpenKey(ObjectHandle, L"Elements", &ElementsHandle);
@@ -862,6 +863,8 @@ BiEnumerateElements (
         Status = BiOpenKey(ElementsHandle, ElementName, &ElementHandle);
         if (!NT_SUCCESS(Status))
         {
+            EfiPrintf(L"ELEMENT ERROR: %lx\r\n", Status);
+            EfiStall(100000);
             break;
         }
 
@@ -869,7 +872,7 @@ BiEnumerateElements (
         ElementType.PackedValue = wcstoul(SubKeys[i], NULL, 16);
         if (!(ElementType.PackedValue) || (ElementType.PackedValue == -1))
         {
-            EfiPrintf(L"Value invald\r\n");
+            EfiPrintf(L"Value invalid\r\n");
             BiCloseKey(ElementHandle);
             ElementHandle = 0;
             continue;
@@ -885,6 +888,7 @@ BiEnumerateElements (
                                     &RegistryElementDataLength);
         if (!NT_SUCCESS(Status))
         {
+            EfiPrintf(L"Element invalid\r\n");
             break;
         }
 
@@ -945,7 +949,7 @@ BiEnumerateElements (
         if (RemainingLength >= TotalLength)
         {
             /* Set the next pointer */
-            Elements->NextEntry = (PBCD_PACKED_ELEMENT)((ULONG_PTR)Elements + TotalLength);
+            Elements->NextEntry = (PBCD_PACKED_ELEMENT)((ULONG_PTR)ElementsStart + TotalLength);
 
             /* Fill this one out */
             Elements->RootType.PackedValue = RootElementType;
@@ -1005,7 +1009,7 @@ BiEnumerateElements (
                         /* Link the subelements into the chain */
                         PreviousElement = Elements;
                         PreviousElement->NextEntry =
-                            (PBCD_PACKED_ELEMENT)((ULONG_PTR)Elements +
+                            (PBCD_PACKED_ELEMENT)((ULONG_PTR)ElementsStart +
                                                   TotalLength);
                         Elements = PreviousElement->NextEntry;
                     }
