@@ -26,6 +26,25 @@
 #define BCD_TYPE_BOOLEAN        0x06
 #define BCD_TYPE_INTEGER_LIST   0x07
 
+#define BCD_IMAGE_TYPE_FIRMWARE     0x01
+#define BCD_IMAGE_TYPE_BOOT_APP     0x02
+#define BCD_IMAGE_TYPE_NTLDR        0x03
+#define BCD_IMAGE_TYPE_REAL_MODE    0x04
+
+#define BCD_APPLICATION_TYPE_FWBOOTMGR  0x01
+#define BCD_APPLICATION_TYPE_BOOTMGR    0x02
+#define BCD_APPLICATION_TYPE_OSLOADER   0x03
+#define BCD_APPLICATION_TYPE_RESUME     0x04
+#define BCD_APPLICATION_TYPE_MEMDIAG    0x05
+#define BCD_APPLICATION_TYPE_NTLDR      0x06
+#define BCD_APPLICATION_TYPE_SETUPLDR   0x07
+#define BCD_APPLICATION_TYPE_BOOTSECTOR 0x08
+#define BCD_APPLICATION_TYPE_STARTUPCOM 0x09
+
+#define BCD_OBJECT_TYPE_APPLICATION     0x01
+#define BCD_OBJECT_TYPE_INHEREIT        0x02
+#define BCD_OBJECT_TYPE_DEVICE          0x03
+
 typedef enum BcdLibraryElementTypes
 {
     BcdLibraryDevice_ApplicationDevice = 0x11000001,
@@ -172,13 +191,20 @@ typedef enum BcdBootMgrElementTypes
     BcdBootMgrBoolean_PersistBootSequence = 0x26000031
 } BcdBootMgrElementTypes;
 
+/* Undocumented */
+typedef enum BcdStartupElementTypes
+{
+    BcdStartupBoolean_PxeSoftReboot = 0x26000001,
+    BcdStartupString_PxeApplicationName = 0x22000002,
+} BcdStartupElementTypes;
+
 /* DATA STRUCTURES ***********************************************************/
 
 typedef struct
 {
     union
     {
-        ULONG  PackedValue;
+        ULONG PackedValue;
         struct
         {
             ULONG SubType : 24;
@@ -187,6 +213,36 @@ typedef struct
         };
     };
 } BcdElementType;
+
+typedef struct
+{
+    union
+    {
+        ULONG PackedValue;
+        union
+        {
+            struct
+            {
+                ULONG ApplicationCode : 20;
+                ULONG ImageCode : 4;
+                ULONG Reserved : 4;
+                ULONG ObjectCode : 4;
+            } Application;
+            struct
+            {
+                ULONG Value : 20;
+                ULONG ClassCode : 4;
+                ULONG Reserved : 4;
+                ULONG ObjectCode : 4;
+            } Inherit;
+            struct
+            {
+                ULONG Reserved:28;
+                ULONG ObjectCode : 4;
+            } Device;
+        };
+    };
+} BcdObjectType;
 
 typedef struct _BCD_ELEMENT_HEADER
 {
@@ -214,6 +270,12 @@ typedef struct _BCD_DEVICE_OPTION
     GUID AssociatedEntry;
     BL_DEVICE_DESCRIPTOR DeviceDescriptor;
 } BCD_DEVICE_OPTION, *PBCD_DEVICE_OPTION;
+
+typedef struct _BCD_OBJECT_DESCRIPTION
+{
+    ULONG Valid;
+    ULONG Type;
+} BCD_OBJECT_DESCRIPTION, *PBCD_OBJECT_DESCRIPTION;;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -258,6 +320,12 @@ BcdEnumerateAndUnpackElements (
     _Out_opt_ PBCD_ELEMENT Elements,
     _Inout_ PULONG ElementSize,
     _Out_ PULONG ElementCount
+    );
+
+NTSTATUS
+BiGetObjectDescription (
+    _In_ HANDLE ObjectHandle,
+    _Out_ PBCD_OBJECT_DESCRIPTION Description
     );
 
 #endif

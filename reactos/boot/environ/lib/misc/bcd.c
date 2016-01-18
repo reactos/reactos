@@ -881,7 +881,6 @@ BiEnumerateElements (
         /* Read the appropriate registry value type for this element */
         Status = BiGetRegistryValue(ElementHandle,
                                     L"Element",
-                                    NULL,
                                     BiConvertElementFormatToValueType(
                                     ElementType.Format),
                                     &RegistryElementData,
@@ -1173,6 +1172,69 @@ BiAddStoreFromFile (
     }
 
     /* Return the status */
+    return Status;
+}
+
+NTSTATUS
+BiGetObjectDescription (
+    _In_ HANDLE ObjectHandle,
+    _Out_ PBCD_OBJECT_DESCRIPTION Description
+    )
+{
+    NTSTATUS Status;
+    HANDLE DescriptionHandle;
+    PULONG Data;
+    ULONG Length;
+
+    /* Initialize locals */
+    Data = NULL;
+    DescriptionHandle = NULL;
+
+    /* Open the description key */
+    Status = BiOpenKey(ObjectHandle, L"Description", &DescriptionHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* It exists */
+        Description->Valid = TRUE;
+
+        /* Read the type */
+        Length = 0;
+        Status = BiGetRegistryValue(DescriptionHandle,
+                                    L"Type", 
+                                    REG_DWORD,
+                                    (PVOID*)&Data,
+                                    &Length);
+        if (NT_SUCCESS(Status))
+        {
+            /* Make sure it's the length we expected it to be */
+            if (Length == sizeof(Data))
+            {
+                /* Return the type that is stored there */
+                Description->Type = *Data;
+            }
+            else
+            {
+                /* Invalid type value */
+                Status = STATUS_OBJECT_TYPE_MISMATCH;
+            }
+        }
+    }
+
+    /* Did we have a handle open? */
+    if (DescriptionHandle)
+    {
+        /* Close it */
+        BiCloseKey(DescriptionHandle);
+    }
+
+    /* Did we have data allocated? */
+    if (Data)
+    {
+        /* Free it */
+        BlMmFreeHeap(Data);
+    }
+
+    /* Return back to caller */
     return Status;
 }
 

@@ -622,6 +622,53 @@ BlCopyBootOptions (
 }
 
 NTSTATUS
+BlAppendBootOptionString (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ PWCHAR OptionString
+    )
+{
+    NTSTATUS Status;
+    ULONG StringSize;
+    PBL_BCD_OPTION Option;
+
+    /* Get the length in bytes */
+    Status = RtlULongLongToULong(wcslen(OptionString) * sizeof(WCHAR),
+                                 &StringSize);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Add a NULL-terminator */
+    Status = RtlULongAdd(StringSize, sizeof(UNICODE_NULL), &StringSize);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Allocate space for the entry */
+    Option = BlMmAllocateHeap(sizeof(*Option) + StringSize);
+    if (!Option)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize it and copy the string value */
+    RtlZeroMemory(Option, sizeof(*Option) + StringSize);
+    Option->DataSize = StringSize;
+    Option->Type = BcdLibraryString_ApplicationPath;
+    Option->DataOffset = sizeof(*Option);
+    wcsncpy((PWCHAR)Option + 1, OptionString, StringSize / sizeof(WCHAR));
+
+    /* Append it */
+    Status = BlAppendBootOptions(AppEntry, Option);
+
+    /* We're all done, free our initial option */
+    BlMmFreeHeap(Option);
+    return Status;
+}
+
+NTSTATUS
 BlAppendBootOptions (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
     _In_ PBL_BCD_OPTION Options

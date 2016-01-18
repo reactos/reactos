@@ -22,7 +22,7 @@ BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\2500000
 ; ReactOS Boot Loader
 ;
 BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Description","Type",0x00010001,0x10200003                                       ; identifier={winload}
-BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\11000011","Element",0x1,\                                              ; device=boot
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\11000001","Element",0x1,\                                              ; device=boot
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
     05,00,00,00,\
     00,00,00,00,\
@@ -45,7 +45,7 @@ BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\260000b
 ; ReactOS Memory Tester
 ;
 BCD,"BCD00000000\Objects\{b2721d73-1db4-4c62-bf78-c548a880142d}\Description","Type",0x00010001,0x10200005                                       ; identifier={memdiag}
-BCD,"BCD00000000\Objects\{b2721d73-1db4-4c62-bf78-c548a880142d}\Elements\11000011","Element",0x1,\                                              ; device=boot
+BCD,"BCD00000000\Objects\{b2721d73-1db4-4c62-bf78-c548a880142d}\Elements\11000001","Element",0x1,\                                              ; device=boot
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
     05,00,00,00,\
     00,00,00,00,\

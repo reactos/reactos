@@ -66,8 +66,17 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 
 #define BL_APPLICATION_ENTRY_FLAG_NO_GUID               0x01
 #define BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL       0x02
+#define BL_APPLICATION_ENTRY_WINLOAD                    0x04
+#define BL_APPLICATION_ENTRY_STARTUP                    0x08
 #define BL_APPLICATION_ENTRY_REBOOT_ON_ERROR            0x20
+#define BL_APPLICATION_ENTRY_NTLDR                      0x40
 #define BL_APPLICATION_ENTRY_BCD_OPTIONS_EXTERNAL       0x80
+#define BL_APPLICATION_ENTRY_WINRESUME                  0x100
+#define BL_APPLICATION_ENTRY_SETUPLDR                   0x200
+#define BL_APPLICATION_ENTRY_BOOTSECTOR                 0x400
+#define BL_APPLICATION_ENTRY_BOOTMGR                    0x1000
+#define BL_APPLICATION_ENTRY_DISPLAY_ORDER              0x800000
+#define BL_APPLICATION_ENTRY_FIXED_SEQUENCE             0x20000000
 
 #define BL_CONTEXT_PAGING_ON                            1
 #define BL_CONTEXT_INTERRUPTS_ON                        2
@@ -1743,6 +1752,12 @@ BlCopyBootOptions (
     );
 
 NTSTATUS
+BlAppendBootOptionString (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ PWCHAR OptionString
+    );
+
+NTSTATUS
 BlAppendBootOptions (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
     _In_ PBL_BCD_OPTION Options
@@ -1784,7 +1799,6 @@ NTSTATUS
 BiGetRegistryValue (
     _In_ HANDLE KeyHandle,
     _In_ PWCHAR ValueName,
-    _In_ PWCHAR KeyName,
     _In_ ULONG Type,
     _Out_ PVOID* Buffer,
     _Out_ PULONG ValueLength

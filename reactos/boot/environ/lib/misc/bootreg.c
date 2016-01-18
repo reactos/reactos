@@ -655,7 +655,6 @@ NTSTATUS
 BiGetRegistryValue (
     _In_ HANDLE KeyHandle,
     _In_ PWCHAR ValueName,
-    _In_ PWCHAR KeyName,
     _In_ ULONG Type,
     _Out_ PVOID* Buffer,
     _Out_ PULONG ValueLength

@@ -121,7 +121,6 @@ BmGetOptionList (
     /* Start going through each option */
     PreviousOption = NULL;
     Option = Options;
-    EfiPrintf(L"BCD Options found: %d\r\n", ElementCount);
     for (i = 0; i < ElementCount; i++)
     {
         /* Read the header and type */
@@ -1231,6 +1230,40 @@ BmPurgeOption (
 }
 
 NTSTATUS
+BmGetEntryDescription (
+    _In_ HANDLE BcdHandle,
+    _In_ PGUID ObjectId,
+    _Out_ PBCD_OBJECT_DESCRIPTION Description
+    )
+{
+    NTSTATUS Status;
+    HANDLE ObjectHandle;
+
+    /* Open the BCD object */
+    Status = BcdOpenObject(BcdHandle, ObjectId, &ObjectHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* Make sure the caller passed this argument in */
+        if (!Description)
+        {
+            /* Fail otherwise */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /* Query the description from the BCD interface */
+            Status = BiGetObjectDescription(ObjectHandle, Description);
+        }
+
+        /* Close the object key */
+        BiCloseKey(ObjectHandle);
+    }
+
+    /* Return the result back */
+    return Status;
+}
+
+NTSTATUS
 BmpPopulateBootEntryList (
     _In_ HANDLE BcdHandle,
     _In_ PGUID SequenceList,
@@ -1239,10 +1272,211 @@ BmpPopulateBootEntryList (
     _Out_ PULONG SequenceCount
     )
 {
-    EfiPrintf(L"Boot population not yet supported\r\n");
-    *SequenceCount = 0;
-    *BootSequence = NULL;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG BootIndex, i, OptionSize;
+    PBL_LOADED_APPLICATION_ENTRY BootEntry;
+    PBL_BCD_OPTION Options;
+    BCD_OBJECT_DESCRIPTION Description;
+    BcdObjectType ObjectType;
+    BOOLEAN HavePath, IsWinPe, SoftReboot;
+    PWCHAR LoaderPath;
+
+    /* Initialize locals */
+    Options = NULL;
+    BootIndex = 0;
+    Status = STATUS_NOT_FOUND;
+
+    /* Loop through every element in the sequence */
+    for (i = 0; i < *SequenceCount; i++)
+    {
+        /* Assume failure */
+        BootEntry = NULL;
+
+        /* Get the options for the sequence element */
+        Status = BmGetOptionList(BcdHandle, SequenceList, &Options);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"option list failed: %lx\r\n", Status);
+            goto LoopQuickie;
+        }
+
+        /* Make sure there's at least a path and description */
+        if (!(MiscGetBootOption(Options, BcdLibraryDevice_ApplicationDevice)) ||
+            !(MiscGetBootOption(Options, BcdLibraryString_Description)))
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            EfiPrintf(L"missing list failed: %lx\r\n", Status);
+            goto LoopQuickie;
+        }
+
+        /* Get the size of the BCD options and allocate a large enough entry */
+        OptionSize = BlGetBootOptionListSize(Options);
+        BootEntry = BlMmAllocateHeap(sizeof(*BootEntry) + OptionSize);
+        if (!BootEntry)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quickie;
+        }
+
+        /* Save it as part of the sequence */
+        BootSequence[BootIndex] = BootEntry;
+
+        /* Initialize it, and copy the BCD data */
+        RtlZeroMemory(BootEntry, sizeof(*BootEntry));
+        BootEntry->Guid = *SequenceList;
+        BootEntry->BcdData = (PBL_BCD_OPTION)(BootEntry + 1);
+        BootEntry->Flags = Flags;
+        RtlCopyMemory(BootEntry->BcdData, Options, OptionSize);
+
+        /* Get the object descriptor to find out what kind of entry it is */
+        Status = BmGetEntryDescription(BcdHandle,
+                                       &BootEntry->Guid,
+                                       &Description);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"missing desc failed: %lx\r\n", Status);
+            goto LoopQuickie;
+        }
+
+        /* Check if a path was given or not */
+        HavePath = MiscGetBootOption(Options, BcdLibraryString_ApplicationPath) ?
+                   TRUE : FALSE;
+
+        /* Now select based on what type of object this is -- must be an app */
+        ObjectType.PackedValue = Description.Type;
+        if (ObjectType.Application.ObjectCode == BCD_OBJECT_TYPE_APPLICATION)
+        {
+            /* Then select based on what kind of app it is */
+            switch (ObjectType.Application.ApplicationCode)
+            {
+                /* Another boot manager */
+                case BCD_APPLICATION_TYPE_BOOTMGR:
+                    BootEntry->Flags |= BCD_APPLICATION_TYPE_BOOTMGR;
+                    break;
+
+                /* An OS loader */
+                case BCD_APPLICATION_TYPE_OSLOADER:
+                    BootEntry->Flags |= BL_APPLICATION_ENTRY_WINLOAD;
+
+                    /* Do we have a path for it? */
+                    if (!HavePath)
+                    {
+                        /* We'll try to make one up. Is this WinPE? */
+                        IsWinPe = FALSE;
+                        Status = BlGetBootOptionBoolean(Options,
+                                                        BcdOSLoaderBoolean_WinPEMode,
+                                                        &IsWinPe);
+                        if (!(NT_SUCCESS(Status)) && (Status != STATUS_NOT_FOUND))
+                        {
+                            goto Quickie;
+                        }
+
+                        /* Use the appropriate path for WinPE or local install */
+                        LoaderPath = IsWinPe ?
+                                     L"\\Windows\\System32\\boot\\winload.efi" :
+                                     L"\\Windows\\System32\\winload.efi";
+
+                        /* Add the path to the boot entry */
+                        Status = BlAppendBootOptionString(BootEntry, LoaderPath);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            goto Quickie;
+                        }
+
+                        /* We have a path now */
+                        HavePath = TRUE;
+                    }
+                    break;
+
+                /* A hibernate-resume application */
+                case BCD_APPLICATION_TYPE_RESUME:
+                    BootEntry->Flags |= BL_APPLICATION_ENTRY_WINRESUME;
+                    break;
+
+                /* An older OS NTLDR */
+                case BCD_APPLICATION_TYPE_NTLDR:
+                    BootEntry->Flags |= BL_APPLICATION_ENTRY_NTLDR;
+                    break;
+
+                /* An older OS SETUPLDR */
+                case BCD_APPLICATION_TYPE_SETUPLDR:
+                    BootEntry->Flags |= BL_APPLICATION_ENTRY_SETUPLDR;
+                    break;
+
+                /* A 3rd party/Win9x boot sector */
+                case BCD_APPLICATION_TYPE_BOOTSECTOR:
+                    BootEntry->Flags |= BL_APPLICATION_ENTRY_BOOTSECTOR;
+                    break;
+
+                /* Something else entirely */
+                default:
+                    break;
+            }
+        }
+
+        /* We better have a path by now */
+        if (!HavePath)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            goto LoopQuickie;
+        }
+
+        /* Check if this is a real mode startup.com */
+        if ((ObjectType.Application.ObjectCode == BCD_OBJECT_TYPE_APPLICATION) &&
+            (ObjectType.Application.ImageCode = BCD_IMAGE_TYPE_REAL_MODE) &&
+            (ObjectType.Application.ApplicationCode == BCD_APPLICATION_TYPE_STARTUPCOM))
+        {
+            /* Check if PXE soft reboot will occur */
+            Status = BlGetBootOptionBoolean(Options,
+                                            BcdStartupBoolean_PxeSoftReboot,
+                                            &SoftReboot);
+            if ((NT_SUCCESS(Status)) && (SoftReboot))
+            {
+                /* Then it's a valid startup.com entry */
+                BootEntry->Flags |= BL_APPLICATION_ENTRY_STARTUP;
+            }
+        }
+
+LoopQuickie:
+        /* All done with this entry -- did we have BCD options? */
+        if (Options)
+        {
+            /* Free them, they're part of the entry now */
+            BlMmFreeHeap(Options);
+            Options = NULL;
+        }
+
+        /* Did we fail anywhere? */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Yep -- did we fail with an active boot entry? */
+            if (BootEntry)
+            {
+                /* Destroy it */
+                BlDestroyBootEntry(BootEntry);
+                BootSequence[BootIndex] = NULL;
+            }
+        }
+        else
+        {
+            /* It worked, so populate the next index now */
+            BootIndex++;
+        }
+
+        /* And move to the next GUID in the sequence list */
+        SequenceList++;
+    }
+
+Quickie:
+    /* All done now -- did we have any BCD options? */
+    if (Options)
+    {
+        /* Free them */
+        BlMmFreeHeap(Options);
+    }
+
+    /* Return the status */
+    return Status;
 }
 
 NTSTATUS
@@ -1363,7 +1597,7 @@ BmEnumerateBootEntries (
         /* Populate the list of bootable entries */
         Status = BmpPopulateBootEntryList(BcdHandle,
                                           DisplayOrder,
-                                          0x800000,
+                                          BL_APPLICATION_ENTRY_DISPLAY_ORDER,
                                           Sequence,
                                           &BcdCount);
         if (!NT_SUCCESS(Status))
@@ -1454,7 +1688,8 @@ BmpGetSelectedBootEntry (
         goto Quickie;
     }
 
-    EfiPrintf(L"Boot selection not yet implemented\r\n");
+    EfiPrintf(L"Boot selection not yet implemented. %d entries found\r\n", Count);
+    EfiStall(10000000);
     *SelectedBootEntry = NULL;
 
 Quickie:
@@ -1772,7 +2007,7 @@ BmMain (
                 Status = BmGetBootSequence(BcdHandle,
                                            SequenceList,
                                            SequenceListCount,
-                                           0x20000000,
+                                           BL_APPLICATION_ENTRY_FIXED_SEQUENCE,
                                            &BootSequence,
                                            &SequenceCount);
                 if (NT_SUCCESS(Status))
