@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -55,8 +55,8 @@ BEGIN
         MENUITEM "&Kapat",                     ID_SHUTDOWN_POWEROFF
         MENUITEM "&Yeniden Başlat",            ID_SHUTDOWN_REBOOT
         MENUITEM """%s"" &Oturumunu Kapat",    ID_SHUTDOWN_LOGOFF
-        MENUITEM "Ku&llanıcı Değiştir\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Bilgisayarı Kilitle\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "Ku&llanıcı Değiştir\tROS+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Bilgisayarı Kilitle\tROS+L", ID_SHUTDOWN_LOCKCOMPUTER
         MENUITEM "Ba&ğlantıyı Kes",            ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "B&ilgisayarı Çıkar",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END

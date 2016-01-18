@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "A&ğdaki Değer Defteri'ne Bağlan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "Ağ&daki Değer Defteri'ne Bağlantıyı Kes...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zdır...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "Ya&zdır...\tDenetim+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
@@ -60,13 +60,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&İzinler...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
+        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Bul...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "S&onrakini Bul\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "&Bul...\tDenetim+F", ID_EDIT_FIND
+        MENUITEM "S&onrakini Bul\tİ3", ID_EDIT_FINDNEXT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Böl", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tF5", ID_VIEW_REFRESH
+        MENUITEM "&Yenile\tİ5", ID_VIEW_REFRESH
     END
     POPUP "Y&er İmleri"
     BEGIN
@@ -83,7 +83,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
+        MENUITEM "&Yardım Konuları\tİ1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Değer Defteri Düzenleyicisi Üzerine...", ID_HELP_ABOUT
     END
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM "&İkili Veriyi Değiştir...", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
+        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
     END
     POPUP ""

@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2006 Fatih Aşıcı, 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2006 Fatih Aşıcı, 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -13,7 +13,7 @@ IDM_WINEMINE MENU
 BEGIN
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Yeni Oyun\tF2", IDM_NEW
+        MENUITEM "&Yeni Oyun\tİ2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Soru İmiyle İmleme", IDM_MARKQ
         MENUITEM SEPARATOR
@@ -22,7 +22,7 @@ BEGIN
         MENUITEM "&Usta", IDM_EXPERT
         MENUITEM "&Husûsî...", IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+X", IDM_EXIT
+        MENUITEM "&Çıkış\tSeçenek+X", IDM_EXIT
     END
     POPUP "&Yardım"
     BEGIN

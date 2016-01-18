@@ -3,7 +3,7 @@
  * LICENSE:    Freeware, permission to use under Public Domain
  * FILE:       base/applications/games/solitaire/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for ReactOS Solitaire
- * TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -69,7 +69,7 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Oyun"
     BEGIN
-        MENUITEM "&Dağıt\tF2", IDM_GAME_NEW
+        MENUITEM "&Dağıt\tİ2", IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "D&esteler...", IDM_GAME_DECK
         MENUITEM "&Seçenekler...", IDM_GAME_OPTIONS
@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&İçindekiler\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&İçindekiler\tİ1", IDM_HELP_CONTENTS
         MENUITEM "&Üzerine...", IDM_HELP_ABOUT
     END
 END
