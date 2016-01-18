@@ -1722,6 +1722,13 @@ BlGetBootOptionDevice (
     );
 
 NTSTATUS
+BlGetBootOptionGuid (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PGUID Value
+    );
+
+NTSTATUS
 BlGetBootOptionGuidList (
     _In_ PBL_BCD_OPTION List,
     _In_ ULONG Type,

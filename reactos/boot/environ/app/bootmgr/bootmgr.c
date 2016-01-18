@@ -696,7 +696,7 @@ BmCloseDataStore (
     /* Check if boot.ini data needs to be freed */
     if (BmBootIniUsed)
     {
-        EfiPrintf(L"Not handled\r\n");
+        EfiPrintf(L"Boot.ini not handled\r\n");
     }
 
     /* Dereference the hive and close the key */
@@ -756,7 +756,7 @@ BmOpenDataStore (
     if (NT_SUCCESS(Status))
     {
         /* We don't handle custom BCDs yet */
-        EfiPrintf(L"Not handled: %s\r\n", BcdPath);
+        EfiPrintf(L"Custom BCD Not handled: %s\r\n", BcdPath);
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -765,7 +765,7 @@ BmOpenDataStore (
     if (BcdDevice->DeviceType == UdpDevice)
     {
         /* Nope. Nope. Nope */
-        EfiPrintf(L"Not handled\r\n");
+        EfiPrintf(L"UDP device Not handled\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -920,7 +920,7 @@ BlBsdInitializeLog (
 
     /* The BSD is open. Start doing stuff to it */
     EfiPrintf(L"Unimplemented BSD path\r\n");
-    Status =  STATUS_NOT_IMPLEMENTED;
+    Status = STATUS_NOT_IMPLEMENTED;
 
 FailurePath:
     /* Close the BSD if we had it open */
@@ -1239,7 +1239,7 @@ BmpPopulateBootEntryList (
     _Out_ PULONG SequenceCount
     )
 {
-    EfiPrintf(L"Fixed sequences not yet supported\r\n");
+    EfiPrintf(L"Boot population not yet supported\r\n");
     *SequenceCount = 0;
     *BootSequence = NULL;
     return STATUS_NOT_IMPLEMENTED;
@@ -1292,14 +1292,130 @@ BmGetBootSequence (
 NTSTATUS
 BmEnumerateBootEntries (
     _In_ HANDLE BcdHandle,
-    _Out_ PBL_LOADED_APPLICATION_ENTRY **Sequence,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY **BootSequence,
     _Out_ PULONG SequenceCount
     )
 {
-    EfiPrintf(L"Boot enumeration not yet implemented\r\n");
-    *Sequence = NULL;
-    *SequenceCount = 0;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG BootIndex, BootIniCount, BootEntryCount, BcdCount;
+    PBL_LOADED_APPLICATION_ENTRY* Sequence;
+    PGUID DisplayOrder;
+    GUID DefaultObject;
+    BOOLEAN UseDisplayList;
+
+    /* Initialize locals */
+    BootIndex = 0;
+
+    /* First try to get the display list, if any */
+    UseDisplayList = TRUE;
+    Status = BlGetBootOptionGuidList(BlpApplicationEntry.BcdData,
+                                     BcdBootMgrObjectList_DisplayOrder,
+                                     &DisplayOrder,
+                                     &BcdCount);
+    if (!NT_SUCCESS(Status))
+    {
+        /* No list, get the default entry instead */
+        Status = BlGetBootOptionGuid(BlpApplicationEntry.BcdData,
+                                     BcdBootMgrObject_DefaultObject,
+                                     &DefaultObject);
+        if (NT_SUCCESS(Status))
+        {
+            /* Set the array to just our entry */
+            UseDisplayList = FALSE;
+            BcdCount = 1;
+            DisplayOrder = &DefaultObject;
+        }
+        else
+        {
+            /* No default list either, return success but no entries */
+            *BootSequence = NULL;
+            *SequenceCount = 0;
+            Status = STATUS_SUCCESS;
+            DisplayOrder = NULL;
+            goto Quickie;
+        }
+    }
+
+    /* Check if boot.ini was used */
+    BootIniCount = 0;
+    if (BmBootIniUsed)
+    {
+        /* Get the entries from it */
+        EfiPrintf(L"Boot.ini not supported\r\n");
+        BootIniCount = 0;//BmBootIniGetEntryCount();
+    }
+
+    /* Allocate an array large enough for the combined boot entries */
+    BootEntryCount = BootIniCount + BcdCount;
+    Sequence = BlMmAllocateHeap(BootEntryCount * sizeof(*Sequence));
+    if (!Sequence)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Zero it out */
+    RtlZeroMemory(Sequence, BootEntryCount * sizeof(*Sequence));
+
+    /* Check if we had BCD entries */
+    if (BcdCount)
+    {
+        /* Populate the list of bootable entries */
+        Status = BmpPopulateBootEntryList(BcdHandle,
+                                          DisplayOrder,
+                                          0x800000,
+                                          Sequence,
+                                          &BcdCount);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Bail out */
+            goto Quickie;
+        }
+    }
+
+    /* Check if we had boot.ini entries */
+    if (BootIniCount)
+    {
+        /* TODO */
+        EfiPrintf(L"Boot.ini not supported\r\n");
+    }
+
+    /* Return success and the sequence + count populated */
+    Status = STATUS_SUCCESS;
+    *BootSequence = Sequence;
+    *SequenceCount = BootIniCount + BcdCount;
+
+Quickie:
+    /* Check if we had allocated a GUID list */
+    if ((UseDisplayList) && (DisplayOrder))
+    {
+        /* Free it */
+        BlMmFreeHeap(DisplayOrder);
+    }
+
+    /* Check if this is the failure path */
+    if (!(NT_SUCCESS(Status)) && (Sequence))
+    {
+        /* Loop the remaining boot entries */
+        while (BootIndex < BootEntryCount)
+        {
+            /* Check if it had been allocated */
+            if (Sequence[BootIndex])
+            {
+                /* Free it */
+                BlMmFreeHeap(Sequence[BootIndex]);
+            }
+
+            /* Next*/
+            BootIndex++;
+        }
+
+        /* Free the whole sequence now */
+        BlMmFreeHeap(Sequence);
+    }
+
+    /* All done, return the result */
+    return Status;
 }
 
 NTSTATUS

@@ -225,6 +225,44 @@ BlGetBootOptionString (
 }
 
 NTSTATUS
+BlGetBootOptionGuid (
+    _In_ PBL_BCD_OPTION List,
+    _In_ ULONG Type,
+    _Out_ PGUID Value
+    )
+{
+    NTSTATUS Status;
+    PBL_BCD_OPTION Option;
+    PGUID Guid;
+    BcdElementType ElementType;
+
+    /* Make sure this is a BCD_TYPE_OBJECT */
+    ElementType.PackedValue = Type;
+    if (ElementType.Format != BCD_TYPE_OBJECT)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Return the data */
+    Option = MiscGetBootOption(List, Type);
+    if (!Option)
+    {
+        /* Set failure if no data exists */
+        Status = STATUS_NOT_FOUND;
+    }
+    else
+    {
+        /* Copy the GUID */
+        Guid = (PGUID)((ULONG_PTR)Option + Option->DataOffset);
+        RtlCopyMemory(Value, Guid, Option->DataSize);
+        Status = STATUS_SUCCESS;
+    }
+
+    /* All good */
+    return Status;
+}
+
+NTSTATUS
 BlGetBootOptionGuidList (
     _In_ PBL_BCD_OPTION List,
     _In_ ULONG Type,
@@ -610,7 +648,9 @@ BlAppendBootOptions (
 
     /* Copy the old options, and the ones to be added */
     RtlCopyMemory(NewOptions, CurrentOptions, CurrentSize);
-    RtlCopyMemory(&NewOptions[OptionsSize], Options, OptionsSize);
+    RtlCopyMemory((PVOID)((ULONG_PTR)NewOptions + CurrentSize),
+                  Options,
+                  OptionsSize);
 
     /* We made it! */
     Status = STATUS_SUCCESS;
@@ -626,7 +666,7 @@ BlAppendBootOptions (
     /* Every other option now has to have its offset adjusted */
     do
     {
-        NextOption->NextEntryOffset += OptionsSize;
+        NextOption->NextEntryOffset += CurrentSize;
         NextOption = (PBL_BCD_OPTION)((ULONG_PTR)NewOptions + NextOption->NextEntryOffset);
     } while (NextOption->NextEntryOffset);
 
