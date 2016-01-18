@@ -191,6 +191,15 @@ typedef enum BcdBootMgrElementTypes
     BcdBootMgrBoolean_PersistBootSequence = 0x26000031
 } BcdBootMgrElementTypes;
 
+typedef enum _BcdResumeElementTypes {
+    Reserved1 = 0x21000001,
+    Reserved2 = 0x22000002,
+    BcdResumeBoolean_UseCustomSettings = 0x26000003,
+    BcdResumeDevice_AssociatedOsDevice = 0x21000005,
+    BcdResumeBoolean_DebugOptionEnabled = 0x26000006,
+    BcdResumeInteger_BootMenuPolicy = 0x25000008
+} BcdResumeElementTypes;
+
 /* Undocumented */
 typedef enum BcdStartupElementTypes
 {

@@ -32,6 +32,10 @@ WCHAR BmpFileNameBuffer[128];
 PWCHAR ParentFileName = L"";
 
 BOOLEAN BmDisplayStateCached;
+PBL_LOADED_APPLICATION_ENTRY* BmpFailedBootEntries;
+PBL_LOADED_APPLICATION_ENTRY BmpSelectedBootEntry;
+BOOLEAN BmBootEntryOverridePresent;
+BOOLEAN BmpDisplayBootMenu;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1652,10 +1656,186 @@ Quickie:
     return Status;
 }
 
+VOID
+BmpGetDefaultBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY* Sequence,
+    _In_ ULONG Count,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY* DefaultEntry,
+    _Out_ PULONG DefaultIndex
+    )
+{
+    GUID DefaultObject;
+    NTSTATUS Status;
+    ULONG BootIndex;
+
+    /* Assume no default */
+    *DefaultEntry = *Sequence;
+    *DefaultIndex = 0;
+
+    /* Nothing to do if there's just one entry */
+    if (Count == 1)
+    {
+        return;
+    }
+
+    /* Get the default object, bail out if there isn't one */
+    Status = BlGetBootOptionGuid(BlpApplicationEntry.BcdData,
+                                 BcdBootMgrObject_DefaultObject,
+                                 &DefaultObject);
+    if (!(NT_SUCCESS(Status)) || !(Count))
+    {
+        return;
+    }
+
+    /* Scan the boot sequence */
+    for (BootIndex = 0; BootIndex < Count; BootIndex++)
+    {
+        /* Find one that matches the default */
+        if (RtlEqualMemory(&Sequence[BootIndex]->Guid,
+                           &DefaultObject,
+                           sizeof(GUID)))
+        {
+            /* Return it */
+            *DefaultEntry = Sequence[BootIndex];
+            *DefaultIndex = BootIndex;
+            return;
+        }
+    }
+}
+
+BL_MENU_POLICY
+BmGetBootMenuPolicy (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry
+    )
+{
+    NTSTATUS Status;
+    BOOLEAN EmsEnabled;
+    ULONGLONG BootMenuPolicy;
+    ULONG OptionId;
+
+    /* Check if EMS is enabled */
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdOSLoaderBoolean_EmsEnabled,
+                                    &EmsEnabled);
+    if ((NT_SUCCESS(Status)) && (EmsEnabled))
+    {
+        /* No boot menu */
+        return MenuPolicyLegacy;
+    }
+
+    /* Check what entry we are looking at */
+    if (!BootEntry)
+    {
+        /* No entry, pick the selected one */
+        BootEntry = BmpSelectedBootEntry;
+    }
+
+    /* Do we still not have an entry? */
+    if (!BootEntry)
+    {
+        /* Show the menu */
+        return MenuPolicyStandard;
+    }
+
+    /* Check if this is an OS loader */
+    BootMenuPolicy = 0;
+    if (BootEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
+    {
+        /* Use the correct option ID */
+        OptionId = BcdOSLoaderInteger_BootMenuPolicy;
+    }
+    else
+    {
+        /* Check if this is an OS resumer */
+        if (!(BootEntry->Flags & BL_APPLICATION_ENTRY_WINRESUME))
+        {
+            /* Nope, so no reason for a menu */
+            return MenuPolicyLegacy;
+        }
+
+        /* Use the correct opetion ID */
+        OptionId = BcdResumeInteger_BootMenuPolicy;
+    }
+
+    /* Check the option ID for the boot menu policy */
+    Status = BlGetBootOptionInteger(BootEntry->BcdData,
+                                    OptionId,
+                                    &BootMenuPolicy);
+    if (NT_SUCCESS(Status))
+    {
+        /* We have one, return it */
+        return BootMenuPolicy;
+    }
+
+    /* No policy, so assume no menu */
+    return MenuPolicyLegacy;
+}
+
+VOID
+BmDisplayGetBootMenuStatus (
+    _Out_ PL_MENU_STATUS MenuStatus
+    )
+{
+    /* For now, don't support key input at all */
+    MenuStatus->AsULong = 0;
+    MenuStatus->OemKey = UNICODE_NULL;
+    MenuStatus->BootIndex = -1;
+}
+
+NTSTATUS
+BmProcessCustomAction (
+    _In_ HANDLE BcdHandle,
+    _In_ PWCHAR ActionKey
+    )
+{
+    EfiPrintf(L"Custom actions not yet handled\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+BmpProcessBootEntry (
+    _In_ HANDLE BcdHandle,
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PBOOLEAN ExitBootManager
+    )
+{
+    BL_MENU_STATUS MenuStatus;
+
+    /* Don't exit */
+    *ExitBootManager = FALSE;
+
+    /* If the legacy menu must be shown, or if we have a boot entry */
+    if ((BmGetBootMenuPolicy(BootEntry) != MenuPolicyStandard) || (BootEntry))
+    {
+        /* Check if any key has been presseed */
+        BmDisplayGetBootMenuStatus(&MenuStatus);
+        if (MenuStatus.AnyKey)
+        {
+            /* Was the exit key pressed? */
+            if (MenuStatus.Exit)
+            {
+                /* Don't display a menu, and exit */
+                *ExitBootManager = TRUE;
+                BmpDisplayBootMenu = FALSE;
+            }
+            else if (MenuStatus.OemKey)
+            {
+                /* Process the OEM key action */
+                BmProcessCustomAction(BcdHandle, &MenuStatus.KeyValue);
+            }
+            else
+            {
+                /* Process other keys */
+                EfiPrintf(L"TODO\r\n");
+            }
+        }
+    }
+}
+
 NTSTATUS
 BmpGetSelectedBootEntry (
     _In_ HANDLE BcdHandle,
-    _Out_ PBL_LOADED_APPLICATION_ENTRY *SelectedBootEntry,
+    _Out_ PBL_LOADED_APPLICATION_ENTRY* SelectedBootEntry,
     _Out_ PULONG EntryIndex,
     _Out_ PBOOLEAN ExitBootManager
     )
@@ -1663,7 +1843,9 @@ BmpGetSelectedBootEntry (
     NTSTATUS Status;
     PBL_LOADED_APPLICATION_ENTRY* Sequence;
     PBL_LOADED_APPLICATION_ENTRY Entry, SelectedEntry;
-    ULONG Count, BootIndex;
+    ULONG Count, BootIndex, SelectedIndex;
+  //  BOOLEAN FoundFailedEntry;
+    ULONGLONG Timeout;
 
     /* Initialize locals */
     BootIndex = 0;
@@ -1688,7 +1870,128 @@ BmpGetSelectedBootEntry (
         goto Quickie;
     }
 
-    EfiPrintf(L"Boot selection not yet implemented. %d entries found\r\n", Count);
+    /* Check if we don't yet have an array of failed boot entries */
+    if (!BmpFailedBootEntries)
+    {
+        /* Allocate it */
+        BmpFailedBootEntries = BlMmAllocateHeap(Count);
+        if (BmpFailedBootEntries)
+        {
+            /* Zero it out */
+            RtlZeroMemory(BmpFailedBootEntries, Count);
+        }
+    }
+
+    /* Check if we have a hardcoded boot override */
+    if (BmBootEntryOverridePresent)
+    {
+        EfiPrintf(L"Hard-coded boot override mode not supported\r\n");
+    }
+
+    /* Log the OS count */
+    //BlLogEtwWrite(BOOT_BOOTMGR_MULTI_OS_COUNT);
+
+    /* Check if the display is already active and cached */
+    if (!BmDisplayStateCached)
+    {
+        /* Check if we should display a boot menu */
+        Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                        BcdBootMgrBoolean_DisplayBootMenu,
+                                        &BmpDisplayBootMenu);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Assume not */
+            BmpDisplayBootMenu = FALSE;
+        }
+    }
+
+    /* Check if there's only one entry to boot anyway */
+    if (Count == 1)
+    {
+        /* Read it */
+        SelectedEntry = *Sequence;
+
+        /* Process it */
+        BmpProcessBootEntry(BcdHandle, SelectedEntry, ExitBootManager);
+
+        /* Check if we're not displaying a boot menu */
+        if (!BmpDisplayBootMenu)
+        {
+            /* Now we are */
+            BmpDisplayBootMenu = TRUE;
+
+            /* Return the entry and its index back */
+            *EntryIndex = 0;
+            *SelectedBootEntry = SelectedEntry;
+            Status = STATUS_SUCCESS;
+            goto Quickie;
+        }
+    }
+    else
+    {
+        /* Get the default boot entry */
+        BmpGetDefaultBootEntry(Sequence, Count, &SelectedEntry, &SelectedIndex);
+
+        /* Check if we have a failed boot entry array allocated */
+        //FoundFailedEntry = FALSE;
+        if (BmpFailedBootEntries)
+        {
+            /* Check if the default entry failed to boot */
+            if (BmpFailedBootEntries[SelectedIndex])
+            {
+                /* Loop through the current boot sequence */
+                for (SelectedIndex = 0; SelectedIndex < Count; SelectedIndex++)
+                {
+                    /* Check if there's no sequence for this index, or it failed */
+                    while (!(Sequence[SelectedIndex]) ||
+                            (BmpFailedBootEntries[SelectedIndex]))
+                    {
+                        /* Remember that this is a failed entry */
+                        SelectedEntry = Sequence[SelectedIndex];
+                        //FoundFailedEntry = TRUE;
+                        BmpDisplayBootMenu = FALSE;
+                    }
+                }
+            }
+        }
+
+        /* Check if the entry is an OS loader */
+        if (SelectedEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
+        {
+            // todo
+            EfiPrintf(L"todo path\r\n");
+        }
+
+        /* Check if there's no timeout */
+        Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                        BcdBootMgrInteger_Timeout,
+                                        &Timeout);
+        if ((NT_SUCCESS(Status) && !(Timeout)))
+        {
+            /* There isn't, so just process the default entry right away */
+            BmpProcessBootEntry(BcdHandle, SelectedEntry, ExitBootManager);
+
+            /* Check if we're not displaying a boot menu */
+            if (!BmpDisplayBootMenu)
+            {
+                /* Now we are */
+                BmpDisplayBootMenu = TRUE;
+
+                /* Return the entry and its index back */
+                *EntryIndex = 0;
+                *SelectedBootEntry = SelectedEntry;
+                Status = STATUS_SUCCESS;
+                goto Quickie;
+            }
+
+            /* Remove the timeout for this boot instance */
+            BlRemoveBootOption(BlpApplicationEntry.BcdData,
+                               BcdBootMgrInteger_Timeout);
+        }
+    }
+
+    /* Here is where we display the menu and list of tools */
+    EfiPrintf(L"Tool selection not yet implemented\r\n");
     EfiStall(10000000);
     *SelectedBootEntry = NULL;
 
@@ -1735,6 +2038,7 @@ BmpLaunchBootEntry (
     )
 {
     EfiPrintf(L"Boot launch not yet implemented\r\n");
+    EfiStall(1000000000);
     return STATUS_NOT_IMPLEMENTED;
 }
 

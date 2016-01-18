@@ -162,6 +162,12 @@ typedef enum _BL_COLOR
     White
 } BL_COLOR, *PBL_COLOR;
 
+typedef enum _BL_MENU_POLICY
+{
+    MenuPolicyLegacy = 0,
+    MenuPolicyStandard = 1
+} BL_MENU_POLICY;
+
 typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
 {
     BlMdPhysical,
@@ -728,6 +734,25 @@ typedef struct _BL_LOADED_APPLICATION_ENTRY
     GUID Guid;
     PBL_BCD_OPTION BcdData;
 } BL_LOADED_APPLICATION_ENTRY, *PBL_LOADED_APPLICATION_ENTRY;
+
+typedef struct _BL_MENU_STATUS
+{
+    union
+    {
+        struct
+        {
+            ULONG AnyKey : 1;
+            ULONG AdvancedOptions : 1;
+            ULONG BootOptions : 1;
+            ULONG OemKey : 1;
+            ULONG Exit : 1;
+            ULONG Reserved : 27;
+        };
+        ULONG AsULong;
+    };
+    ULONG BootIndex;
+    WCHAR KeyValue;
+} BL_MENU_STATUS, *PL_MENU_STATUS;
 
 typedef struct _BL_HARDDISK_DEVICE
 {
