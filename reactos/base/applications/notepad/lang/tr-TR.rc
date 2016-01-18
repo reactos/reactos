@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -24,32 +24,32 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N", CMD_NEW
-        MENUITEM "&Aç...\tCtrl+O", CMD_OPEN
-        MENUITEM "&Sakla\tCtrl+S", CMD_SAVE
+        MENUITEM "&Yeni\tDenetim+N", CMD_NEW
+        MENUITEM "&Aç...\tDenetim+O", CMD_OPEN
+        MENUITEM "&Sakla\tDenetim+S", CMD_SAVE
         MENUITEM "Ay&rı Sakla...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Say&fa Ayarla...", CMD_PAGE_SETUP
-        MENUITEM "Ya&zdır...\tCtrl+P", CMD_PRINT
+        MENUITEM "Ya&zdır...\tDenetim+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", CMD_EXIT
     END
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Geri Al\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Geri Al\tDenetim+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Kes\tCtrl+X", CMD_CUT
-        MENUITEM "&Çoğalt\tCtrl+C", CMD_COPY
-        MENUITEM "&Yapıştır\tCtrl+V", CMD_PASTE
-        MENUITEM "&Sil\tDel", CMD_DELETE
+        MENUITEM "&Kes\tDenetim+X", CMD_CUT
+        MENUITEM "&Çoğalt\tDenetim+C", CMD_COPY
+        MENUITEM "&Yapıştır\tDenetim+V", CMD_PASTE
+        MENUITEM "&Sil\tSil", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Bul...\tCtrl+F", CMD_SEARCH
-        MENUITEM "S&onrakini Bul\tF3", CMD_SEARCH_NEXT
-        MENUITEM "&Değiştir...\tCtrl+H", CMD_REPLACE
-        MENUITEM "G&it...\tCtrl+G", CMD_GOTO
+        MENUITEM "&Bul...\tDenetim+F", CMD_SEARCH
+        MENUITEM "S&onrakini Bul\tİ3", CMD_SEARCH_NEXT
+        MENUITEM "&Değiştir...\tDenetim+H", CMD_REPLACE
+        MENUITEM "G&it...\tDenetim+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "&Tümünü Seç\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "&Şimdiki Zamânı Koy\tF5", CMD_TIME_DATE
+        MENUITEM "&Tümünü Seç\tDenetim+A", CMD_SELECT_ALL
+        MENUITEM "&Şimdiki Zamânı Koy\tİ5", CMD_TIME_DATE
     END
     POPUP "&Biçim"
     BEGIN

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,10 +6,10 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
     END
     POPUP "&Yardım"
     BEGIN
@@ -21,12 +21,12 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM "&Sakla", IDM_FILE_SAVE
+        MENUITEM "Ay&rı Sakla...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
     END
     POPUP "&Pencereler"
     BEGIN

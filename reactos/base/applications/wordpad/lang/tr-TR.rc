@@ -1,7 +1,7 @@
 /*
  * Turkish Resources for ReactOS Wordpad
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,12 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni...\tCtrl+N",      ID_FILE_NEW
-        MENUITEM "&Aç...\tCtrl+O",        ID_FILE_OPEN
-        MENUITEM "&Sakla\tCtrl+S",        ID_FILE_SAVE
+        MENUITEM "&Yeni...\tDenetim+N",   ID_FILE_NEW
+        MENUITEM "&Aç...\tDenetim+O",     ID_FILE_OPEN
+        MENUITEM "&Sakla\tDenetim+S",     ID_FILE_SAVE
         MENUITEM "Ay&rı Sakla...",        ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zdır...\tCtrl+P",    ID_PRINT
+        MENUITEM "Ya&zdır...\tDenetim+P", ID_PRINT
         MENUITEM "Yaz&dırma Ön İzlemesi...", ID_PREVIEW
         MENUITEM "Say&fa Ayarla...",      ID_PRINTSETUP
         MENUITEM SEPARATOR
@@ -37,18 +37,18 @@ BEGIN
     END
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Geri Al\tCtrl+Z",            ID_EDIT_UNDO
-        MENUITEM "&Yinele\tCtrl+Y",             ID_EDIT_REDO
+        MENUITEM "&Geri Al\tDenetim+Z",         ID_EDIT_UNDO
+        MENUITEM "&Yinele\tDenetim+Y",          ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "&Kes\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Çoğalt\tCtrl+C",             ID_EDIT_COPY
-        MENUITEM "Y&apıştır\tCtrl+V",           ID_EDIT_PASTE
-        MENUITEM "&Sil\tDel",                   ID_EDIT_CLEAR
-        MENUITEM "&Tümünü Seç\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM "&Kes\tDenetim+X",             ID_EDIT_CUT
+        MENUITEM "&Çoğalt\tDenetim+C",          ID_EDIT_COPY
+        MENUITEM "Y&apıştır\tDenetim+V",        ID_EDIT_PASTE
+        MENUITEM "&Sil\tSil",                   ID_EDIT_CLEAR
+        MENUITEM "&Tümünü Seç\tDenetim+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Bul...\tCtrl+F",             ID_FIND
-        MENUITEM "S&onrakini Bul\tF3",          ID_FIND_NEXT
-        MENUITEM "&Değiştir...\tCtrl+H",        ID_REPLACE
+        MENUITEM "&Bul...\tDenetim+F",          ID_FIND
+        MENUITEM "S&onrakini Bul\tİ3",          ID_FIND_NEXT
+        MENUITEM "&Değiştir...\tDenetim+H",     ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Ya&lnızca Okunur",            ID_EDIT_READONLY
         MENUITEM "D&eğiştirilmiş",              ID_EDIT_MODIFIED
@@ -83,13 +83,13 @@ BEGIN
         MENUITEM "&Sekme Durakları...",          ID_TABSTOPS
         POPUP "&Arka Plan"
         BEGIN
-            MENUITEM "&Dizge Rengi\tCtrl+1",    ID_BACK_1
-            MENUITEM "&Sarımtırak\tCtrl+2",            ID_BACK_2
+            MENUITEM "&Dizge Rengi\tDenetim+1",  ID_BACK_1
+            MENUITEM "&Sarımtırak\tDenetim+2",   ID_BACK_2
         END
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&ReactOS Wordpad Üzerine...",              ID_ABOUT
+        MENUITEM "&ReactOS Wordpad Üzerine...",  ID_ABOUT
     END
 END
 
