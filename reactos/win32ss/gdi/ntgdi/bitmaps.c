@@ -42,15 +42,15 @@ GreSetBitmapOwner(
     return GreSetObjectOwner(hbmp, ulOwner);
 }
 
-static
-int
+BOOL
 NTAPI
 UnsafeSetBitmapBits(
-    PSURFACE psurf,
-    IN ULONG cjBits,
-    IN PVOID pvBits)
+    _Inout_ PSURFACE psurf,
+    _In_ ULONG cjBits,
+    _In_ const VOID *pvBits)
 {
-    PUCHAR pjDst, pjSrc;
+    PUCHAR pjDst;
+    const UCHAR *pjSrc;
     LONG lDeltaDst, lDeltaSrc;
     ULONG nWidth, nHeight, cBitsPixel;
     NT_ASSERT(psurf->flags & API_BITMAP);
@@ -69,7 +69,7 @@ UnsafeSetBitmapBits(
 
     /* Make sure the buffer is large enough*/
     if (cjBits < (lDeltaSrc * nHeight))
-        return 0;
+        return FALSE;
 
     while (nHeight--)
     {
@@ -79,7 +79,7 @@ UnsafeSetBitmapBits(
         pjDst += lDeltaDst;
     }
 
-    return 1;
+    return TRUE;
 }
 
 HBITMAP
