@@ -371,7 +371,7 @@ BlockIopReadPhysicalDevice (
     )
 {
     PBL_BLOCK_DEVICE BlockDevice;
-    PVOID ReadBuffer; // edi@1
+    PVOID ReadBuffer;
     ULONGLONG OffsetEnd, AlignedOffsetEnd, Offset;
     NTSTATUS Status;
 
@@ -532,24 +532,32 @@ BlockIoRead (
     PBL_BLOCK_DEVICE BlockDevice;
     NTSTATUS Status;
 
+    /* Get the device-specific data, which is our block device descriptor */
     BlockDevice = DeviceEntry->DeviceSpecificData;
 
+    /* Make sure that the buffer and size is valid */
     Status = BlockIopBlockInformationCheck(BlockDevice, &Size, BytesRead, &Size);
     if (NT_SUCCESS(Status))
     {
-        if (BlockDevice->DeviceFlags & 4)
+        /* Check if this is a virtual device or a physical device */
+        if (BlockDevice->DeviceFlags & BL_BLOCK_DEVICE_VIRTUAL_FLAG)
         {
+            /* Do a virtual read or write */
             Status = BlockIopReadWriteVirtualDevice(DeviceEntry, Buffer, Size, 0, BytesRead);
         }
         else
         {
+            /* Do a physical read or write */
             Status = BlockIopReadPhysicalDevice(DeviceEntry, Buffer, Size, BytesRead);
         }
     }
     else if (BytesRead)
     {
+        /* We failed, if the caller wanted bytes read, return 0 */
         *BytesRead = 0;
     }
+
+    /* Return back to the caller */
     return Status;
 }
 
@@ -564,16 +572,25 @@ BlockIoSetInformation (
 
     BlockDevice = DeviceEntry->DeviceSpecificData;
 
-    Offset = DeviceInformation->BlockDeviceInfo.Block * BlockDevice->BlockSize + DeviceInformation->BlockDeviceInfo.Offset;
+    /* Take the current block number and block-offset and conver to full offset */
+    Offset = DeviceInformation->BlockDeviceInfo.Block * BlockDevice->BlockSize +
+             DeviceInformation->BlockDeviceInfo.Offset;
+
+    /* Make sure that the full offset is still within the bounds of the device */
     if (Offset > ((BlockDevice->LastBlock + 1) * BlockDevice->BlockSize - 1))
     {
-        EfiPrintf(L"Invalid offset\r\n");
+        EfiPrintf(L"Offset out of bounds\r\n");
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Convery the full raw offset into a block number and block-offset */
     BlockDevice->Block = Offset / BlockDevice->BlockSize;
     BlockDevice->Offset = Offset % BlockDevice->BlockSize;
+
+    /* Return the unknown */
     BlockDevice->Unknown = DeviceInformation->BlockDeviceInfo.Unknown;
+
+    /* All done */
     return STATUS_SUCCESS;
 }
 
@@ -583,13 +600,12 @@ BlockIoGetInformation (
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     )
 {
-    PBL_BLOCK_DEVICE BlockDevice;
-
-    BlockDevice = DeviceEntry->DeviceSpecificData;
-
+    /* Copy the device speciifc data into the block device information */
     RtlCopyMemory(&DeviceInformation->BlockDeviceInfo,
-                  BlockDevice,
-                  sizeof(DeviceInformation->BlockDeviceInfo));
+                   DeviceEntry->DeviceSpecificData,
+                   sizeof(DeviceInformation->BlockDeviceInfo));
+
+    /* Hardcode the device type */
     DeviceInformation->DeviceType = DiskDevice;
     return STATUS_SUCCESS;
 }
@@ -732,22 +748,28 @@ BlDeviceReadAtOffset (
     )
 {
     NTSTATUS Status;
-    BL_DEVICE_INFORMATION DeviceInformation;
+    BL_DEVICE_INFORMATION DeviceInfo;
 
-    Status = BlDeviceGetInformation(DeviceId, &DeviceInformation);
+    /* Get the current block and offset  */
+    Status = BlDeviceGetInformation(DeviceId, &DeviceInfo);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    DeviceInformation.BlockDeviceInfo.Block = Offset / DeviceInformation.BlockDeviceInfo.BlockSize;
-    DeviceInformation.BlockDeviceInfo.Offset = Offset % DeviceInformation.BlockDeviceInfo.BlockSize;
-    Status = BlDeviceSetInformation(DeviceId, &DeviceInformation);
+    /* Get the block and block-offset based on the new raw offset */
+    DeviceInfo.BlockDeviceInfo.Block = Offset / DeviceInfo.BlockDeviceInfo.BlockSize;
+    DeviceInfo.BlockDeviceInfo.Offset = Offset % DeviceInfo.BlockDeviceInfo.BlockSize;
+
+    /* Update the block and offset */
+    Status = BlDeviceSetInformation(DeviceId, &DeviceInfo);
     if (NT_SUCCESS(Status))
     {
+        /* Now issue a read, with this block and offset configured */
         Status = BlDeviceRead(DeviceId, Buffer, Size, BytesRead);
     }
 
+    /* All good, return the caller */
     return Status;
 }
 
@@ -828,7 +850,7 @@ BlockIoEfiGetBlockIoInformation (
     }
     if (Media->MediaPresent)
     {
-        BlockDevice->DeviceFlags |= 2;
+        BlockDevice->DeviceFlags |= BL_BLOCK_DEVICE_PRESENT_FLAG;
     }
 
     /* No clue */
@@ -1208,6 +1230,158 @@ BlockIoEfiCreateDeviceEntry (
     /* Free the device entry itself and return the failure code */
     BlMmFreeHeap(IoDeviceEntry);
     EfiPrintf(L"Failed: %lx\r\n", Status);
+    return Status;
+}
+
+NTSTATUS
+BlockIoEfiCompareDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR Device,
+    _In_ EFI_HANDLE Handle
+    )
+{
+    PBL_LOCAL_DEVICE LocalDeviceInfo, EfiLocalDeviceInfo;
+    PBL_DEVICE_ENTRY DeviceEntry;
+    PBL_DEVICE_DESCRIPTOR EfiDevice;
+    NTSTATUS Status;
+
+    DeviceEntry = NULL;
+
+    /* Check if no device was given */
+    if (!Device)
+    {
+        /* Fail the comparison */
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* Check if this is a local disk device */
+    if (Device->DeviceType != DiskDevice)
+    {
+        /* Nope -- is it a partition device? */
+        if ((Device->DeviceType != LegacyPartitionDevice) &&
+            (Device->DeviceType != PartitionDevice))
+        {
+            /* Nope, so we can't compare */
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+
+        /* If so, return the device information for the parent disk */
+        LocalDeviceInfo = &Device->Partition.Disk;
+    }
+    else
+    {
+        /* Just return the disk information itself */
+        LocalDeviceInfo = &Device->Local;
+    }
+
+    /* Create an EFI device entry for the EFI device handle */
+    Status = BlockIoEfiCreateDeviceEntry(&DeviceEntry, Handle);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Read the descriptor and assume failure for now */
+    EfiDevice = DeviceEntry->DeviceDescriptor;
+    Status = STATUS_UNSUCCESSFUL;
+
+    /* Check if the EFI device is a disk */
+    if (EfiDevice->DeviceType != DiskDevice)
+    {
+        /* Nope, is it a partition? */
+        if ((EfiDevice->DeviceType != LegacyPartitionDevice) &&
+            (EfiDevice->DeviceType != PartitionDevice))
+        {
+            /* Neither, invalid handle so bail out */
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quickie;
+        }
+
+        /* Yes, so get the information of the parent disk */
+        EfiLocalDeviceInfo = &EfiDevice->Partition.Disk;
+    }
+    else
+    {
+        /* It's a disk, so get the disk information itself */
+        EfiLocalDeviceInfo = &EfiDevice->Local;
+    }
+
+    /* Are the two devices the same type? */
+    if (EfiLocalDeviceInfo->Type != LocalDeviceInfo->Type)
+    {
+        /* Nope, that was easy */
+        goto Quickie;
+    }
+
+    /* Yes, what kind of device is the EFI side? */
+    switch (EfiLocalDeviceInfo->Type)
+    {
+        case LocalDevice:
+
+            /* Local hard drive, compare the signature */
+            if (RtlCompareMemory(&EfiLocalDeviceInfo->HardDisk,
+                                 &LocalDeviceInfo->HardDisk,
+                                 sizeof(LocalDeviceInfo->HardDisk)) ==
+                sizeof(LocalDeviceInfo->HardDisk))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        case FloppyDevice:
+        case CdRomDevice:
+
+            /* Removable floppy or CD, compare the disk number */
+            if (RtlCompareMemory(&EfiLocalDeviceInfo->FloppyDisk,
+                                 &LocalDeviceInfo->FloppyDisk,
+                                 sizeof(LocalDeviceInfo->FloppyDisk)) ==
+                sizeof(LocalDeviceInfo->FloppyDisk))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        case RamDiskDevice:
+
+            /* RAM disk, compare the size and base information */
+            if (RtlCompareMemory(&EfiLocalDeviceInfo->RamDisk,
+                                 &LocalDeviceInfo->RamDisk,
+                                 sizeof(LocalDeviceInfo->RamDisk)) ==
+                sizeof(LocalDeviceInfo->RamDisk))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        case FileDevice:
+
+            /* File, compare the file identifier */
+            if (RtlCompareMemory(&EfiLocalDeviceInfo->File,
+                                 &LocalDeviceInfo->File,
+                                 sizeof(LocalDeviceInfo->File)) ==
+                sizeof(LocalDeviceInfo->File))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
+        /* Something else we don't support */
+        default:
+            break;
+    }
+
+Quickie:
+    /* All done, did we have an EFI device entry? */
+    if (DeviceEntry)
+    {
+        /* Free it, since we only needed it locally for comparison */
+        BlMmFreeHeap(DeviceEntry->DeviceDescriptor);
+        BlockIopFreeAllocations(DeviceEntry->DeviceSpecificData);
+        BlMmFreeHeap(DeviceEntry);
+    }
+
+    /* Return back to the caller */
     return Status;
 }
 

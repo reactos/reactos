@@ -77,6 +77,7 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_APPLICATION_ENTRY_BOOTMGR                    0x1000
 #define BL_APPLICATION_ENTRY_DISPLAY_ORDER              0x800000
 #define BL_APPLICATION_ENTRY_FIXED_SEQUENCE             0x20000000
+#define BL_APPLICATION_ENTRY_RECOVERY                   0x40000000
 
 #define BL_CONTEXT_PAGING_ON                            1
 #define BL_CONTEXT_INTERRUPTS_ON                        2
@@ -110,6 +111,8 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_FS_REGISTER_AT_HEAD_FLAG                     1
 
 #define BL_BLOCK_DEVICE_REMOVABLE_FLAG                  0x01
+#define BL_BLOCK_DEVICE_PRESENT_FLAG                    0x02
+#define BL_BLOCK_DEVICE_VIRTUAL_FLAG                    0x04
 
 #define BL_MEMORY_CLASS_SHIFT                           28
 
@@ -685,7 +688,9 @@ typedef struct _BL_RETURN_ARGUMENTS
 {
     ULONG Version;
     NTSTATUS Status;
-    ULONG ReturnArgumentData[5];
+    ULONG Flags;
+    ULONGLONG DataSize;
+    ULONGLONG DataPage;
 } BL_RETURN_ARGUMENTS, *PBL_RETURN_ARGUMENTS;
 
 typedef struct _BL_MEMORY_DESCRIPTOR
@@ -794,8 +799,10 @@ typedef struct _BL_LOCAL_DEVICE
             LARGE_INTEGER ImageSize;
             ULONG ImageOffset;
         } RamDisk;
+
+        ULONG File; // unknown for now
     };
-} BL_LOCAL_DEVICE;
+} BL_LOCAL_DEVICE, *PBL_LOCAL_DEVICE;
 
 typedef struct _BL_DEVICE_DESCRIPTOR
 {
@@ -1317,6 +1324,11 @@ EfiPrintf (
     );
 
 NTSTATUS
+BlFwEnumerateDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR Device
+    );
+
+NTSTATUS
 EfiAllocatePages (
     _In_ ULONG Type,
     _In_ ULONG Pages,
@@ -1777,6 +1789,19 @@ BlCopyBootOptions (
     );
 
 NTSTATUS
+BlAppendBootOptionBoolean (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId
+    );
+
+NTSTATUS
+BlAppendBootOptionInteger (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId,
+    _In_ ULONGLONG Value
+    );
+
+NTSTATUS
 BlAppendBootOptionString (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
     _In_ PWCHAR OptionString
@@ -2140,6 +2165,14 @@ BlFileOpen (
     _In_ PWCHAR FileName,
     _In_ ULONG Flags,
     _Out_ PULONG FileId
+    );
+
+/* BLOCK I/O ROUTINES *******************************************************/
+
+NTSTATUS
+BlockIoEfiCompareDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR Device,
+    _In_ EFI_HANDLE Handle
     );
 
 /* INPUT CONSOLE ROUTINES ****************************************************/

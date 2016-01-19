@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Manager
- * FILE:            boot/environ/app/bootmgr/bootmgr.c
+ * FILE:            boot/environ/app/bootmgr/bootmgr.cla
  * PURPOSE:         Boot Manager Entrypoint
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -2033,13 +2033,562 @@ NTSTATUS
 BmpLaunchBootEntry (
     _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
     _Out_ PULONG EntryIndex,
-    _In_ ULONG Unknown,
+    _In_ ULONG LaunchCode,
+    _In_ BOOLEAN LaunchWinRe
+    );
+
+NTSTATUS 
+BmLaunchRecoverySequence (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _In_ ULONG LaunchCode
+    )
+{
+    NTSTATUS Status;
+    PBL_LOADED_APPLICATION_ENTRY RecoveryEntry;
+    HANDLE BcdHandle;
+    PGUID RecoverySequence;
+    ULONG Count, i, RecoveryIndex, SequenceCount;
+    PBL_LOADED_APPLICATION_ENTRY* Sequence;
+
+    RecoveryIndex = 0;
+    Sequence = NULL;
+    RecoverySequence = NULL;
+    Count = 0;
+    BcdHandle = NULL;
+
+    Status = BmOpenDataStore(&BcdHandle);
+    if (NT_SUCCESS(Status))
+    {
+        Status = BlGetBootOptionGuidList(BootEntry->BcdData,
+                                         BcdLibraryObjectList_RecoverySequence,
+                                         &RecoverySequence,
+                                         &SequenceCount);
+        if (NT_SUCCESS(Status))
+        {
+            Status = BmGetBootSequence(BcdHandle,
+                                       RecoverySequence,
+                                       SequenceCount,
+                                       BL_APPLICATION_ENTRY_RECOVERY,
+                                       &Sequence,
+                                       &Count);
+            if (NT_SUCCESS(Status))
+            {
+                if (BcdHandle)
+                {
+                    BmCloseDataStore(BcdHandle);
+                }
+
+                for (i = 0; i < Count; ++i)
+                {
+                    if (LaunchCode == 2 || LaunchCode == 5)
+                    {
+                        BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
+                        BlAppendBootOptionInteger(Sequence[i],
+                                                  BcdLibraryInteger_DisplayMessageOverride,
+                                                  4);
+                    }
+                    else if (LaunchCode == 3)
+                    {
+                        BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
+                        BlAppendBootOptionInteger(Sequence[i],
+                                                  BcdLibraryInteger_DisplayMessageOverride,
+                                                  10);
+                    }
+
+                    Status = BmpLaunchBootEntry(Sequence[i], NULL, LaunchCode, FALSE);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (Sequence)
+            {
+                for (RecoveryIndex = 0; RecoveryIndex < Count; RecoveryIndex++)
+                {
+                    RecoveryEntry = Sequence[RecoveryIndex];
+                    if (RecoveryEntry)
+                    {
+                        BlDestroyBootEntry(RecoveryEntry);
+                    }
+                }
+                BlMmFreeHeap(Sequence);
+            }
+        }
+
+        if (RecoverySequence)
+        {
+            BlMmFreeHeap(RecoverySequence);
+        }
+    }
+
+    return Status;
+}
+
+ULONG
+BmDisplayDumpError (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _In_ ULONG LaunchCode
+    )
+{
+    ULONG BootError;
+    NTSTATUS Status;
+    BOOLEAN Restart, NoError;
+
+    BootError = 1;
+
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdLibraryBoolean_RestartOnFailure,
+                                    &Restart);
+    if ((NT_SUCCESS(Status)) && (Restart))
+    {
+        return BootError;
+    }
+
+    Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                                    BcdBootMgrBoolean_NoErrorDisplay,
+                                    &NoError);
+    if ((NT_SUCCESS(Status)) && (NoError))
+    {
+        return BootError;
+    }
+
+    if (BmpInternalBootError)
+    {
+        return (ULONG)BmpInternalBootError; // ???
+    }
+
+    EfiPrintf(L"Error menu not yet implemented\r\n");
+    return BootError;
+}
+
+NTSTATUS
+BmpCreateDevices (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry
+    )
+{
+    ULONG NextOffset, DataOffset, ListOffset;
+    PBL_BCD_OPTION Option, ListOption;
+    BcdElementType ElementType;
+    PBCD_DEVICE_OPTION BcdDevice;
+
+    NextOffset = 0;
+    do
+    {
+        Option = (PBL_BCD_OPTION)((ULONG_PTR)BootEntry->BcdData + NextOffset);
+        NextOffset = Option->NextEntryOffset;
+
+        if (Option->Empty)
+        {
+            continue;
+        }
+
+        ElementType.PackedValue = Option->Type;
+        if (ElementType.Format != BCD_TYPE_DEVICE)
+        {
+            continue;
+        }
+
+        DataOffset = Option->DataOffset;
+
+        BcdDevice = (PBCD_DEVICE_OPTION)((ULONG_PTR)BootEntry->BcdData + DataOffset);
+        if (!(BcdDevice->DeviceDescriptor.Flags & 1))
+        {
+            continue;
+        }
+
+        ListOption = NULL;
+        ListOffset = Option->ListOffset;
+        if (Option->ListOffset)
+        {
+            ListOption = (PBL_BCD_OPTION)((ULONG_PTR)BootEntry->BcdData + ListOffset);
+        }
+
+        EfiPrintf(L"Unspecified devices not yet supported: %p\r\n", ListOption);
+        return STATUS_NOT_SUPPORTED;
+    } while (NextOffset != 0);
+
+    return STATUS_SUCCESS;
+}
+
+/* MOVE TO IMAGe.C */
+NTSTATUS
+BlImgLoadBootApplication (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PHANDLE AppHandle
+    )
+{
+    EfiPrintf(L"Loading application %p\r\n", BootEntry);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlImgStartBootApplication (
+    _In_ HANDLE AppHandle,
+    _Inout_ PBL_RETURN_ARGUMENTS ReturnArguments
+    )
+{
+    EfiPrintf(L"Starting application %p\r\n", AppHandle);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BlImgUnloadBootApplication (
+    _In_ HANDLE AppHandle
+    )
+{
+    EfiPrintf(L"Unloading application %p\r\n", AppHandle);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BmpTransferExecution (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PULONG LaunchCode,
+    _Out_ PBOOLEAN Recover
+    )
+{
+    PWCHAR AppPath;
+    NTSTATUS Status;
+    PBL_DEVICE_DESCRIPTOR AppDevice;
+    BL_RETURN_ARGUMENTS ReturnArgs;
+    BOOLEAN AdvancedOptions;
+    HANDLE AppHandle;
+
+    Status = BlGetBootOptionString(BootEntry->BcdData,
+                                   BcdLibraryString_ApplicationPath,
+                                   &AppPath);
+    if (!NT_SUCCESS(Status))
+    {
+        AppPath = NULL;
+    }
+
+    if (BootEntry->Flags & BL_APPLICATION_ENTRY_STARTUP)
+    {
+#if BL_NET_SUPPORT
+        Status = BlNetSoftReboot(BootEntry);
+#else
+        EfiPrintf(L"Net boot not supported\r\n");
+        Status = STATUS_NOT_SUPPORTED;
+#endif
+        goto Quickie;
+    }
+
+    do
+    {
+        Status = BlImgLoadBootApplication(BootEntry, &AppHandle);
+        if (Status == STATUS_NOT_FOUND)
+        {
+            Status = BlGetBootOptionDevice(BootEntry->BcdData,
+                                           BcdLibraryDevice_ApplicationDevice,
+                                           &AppDevice,
+                                           NULL);
+            if (NT_SUCCESS(Status))
+            {
+                Status = BlFwEnumerateDevice(AppDevice);
+            }
+
+            if (!NT_SUCCESS(Status))
+            {
+                BmFatalErrorEx(2, (ULONG_PTR)AppPath, Status, 0, 0);
+                goto Quickie;
+            }
+
+            Status = BlImgLoadBootApplication(BootEntry, &AppHandle);
+        }
+
+        if (Status == STATUS_CANCELLED)
+        {
+            if ((BmGetBootMenuPolicy(BootEntry) != MenuPolicyStandard) ||
+                !(MiscGetBootOption(BootEntry->BcdData,
+                                    BcdLibraryObjectList_RecoverySequence)))
+            {
+                goto Quickie;
+            }
+
+            *LaunchCode = 4;
+            *Recover = TRUE;
+            goto Quickie;
+        }
+
+        if (Status == 0xC0210000)
+        {
+            *LaunchCode = 4;
+            *Recover = TRUE;
+            goto Quickie;
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            BmFatalErrorEx(2, (ULONG_PTR)AppPath, Status, 0, 0);
+            goto Quickie;
+        }
+
+        RtlZeroMemory(&ReturnArgs, sizeof(ReturnArgs));
+        //BmpLogApplicationLaunchEvent(&BootEntry->Guid, AppPath);
+
+        Status = BlImgStartBootApplication(AppHandle, &ReturnArgs);
+
+#if BL_BITLOCKER_SUPPORT
+        BlFveSecureBootCheckpointAppReturn(BootEntry, &ReturnArgs);
+#endif
+
+        //BlBsdLogEntry(1, 0x12, &BootEntry->Guid, 0x14);
+
+        BlImgUnloadBootApplication(AppHandle);
+
+    } while (Status != 0xC0000453);
+
+    *Recover = TRUE;
+    if (ReturnArgs.Flags & 1)
+    {
+        Status = BlGetBootOptionBoolean(BootEntry->BcdData,
+                                        BcdLibraryBoolean_DisplayAdvancedOptions,
+                                        &AdvancedOptions);
+        if ((NT_SUCCESS(Status)) && (AdvancedOptions))
+        {
+            *LaunchCode = 2;
+        }
+        else
+        {
+            *LaunchCode = 1;
+        }
+    }
+    else if (ReturnArgs.Flags & 4)
+    {
+        *LaunchCode = 1;
+    }
+    else if (ReturnArgs.Flags & 8)
+    {
+        *LaunchCode = 5;
+    }
+    else if (ReturnArgs.Flags & 0x10)
+    {
+        *LaunchCode = 6;
+    }
+    else if (ReturnArgs.Flags & 0x20)
+    {
+        *LaunchCode = 7;
+    }
+    else if (ReturnArgs.Flags & 0x40)
+    {
+        *Recover = FALSE;
+        BmFatalErrorEx(11, Status, 0, 0, 0);
+    }
+
+Quickie:
+    if (AppPath)
+    {
+        BlMmFreeHeap(AppPath);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+BmpLaunchBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PULONG EntryIndex,
+    _In_ ULONG LaunchCode,
     _In_ BOOLEAN LaunchWinRe
     )
 {
-    EfiPrintf(L"Boot launch not yet implemented\r\n");
-    EfiStall(1000000000);
-    return STATUS_NOT_IMPLEMENTED;
+    HANDLE BcdHandle;
+    NTSTATUS Status;
+    GUID ObjectId;
+    BOOLEAN DoRecovery, AutoRecovery, DoRestart, RestartOnFailure;
+    ULONG ErrorCode;
+    BOOLEAN AdvancedOneTime, EditOneTime, Recover;
+
+    if (BootEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
+    {
+        if (MiscGetBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime))
+        {
+            BcdHandle = NULL;
+            Status = BmOpenDataStore(BcdHandle);
+            if (NT_SUCCESS(Status))
+            {
+                ObjectId = BootEntry->Guid;
+                BmPurgeOption(BcdHandle, &ObjectId, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+                BmCloseDataStore(BcdHandle);
+            }
+        }
+        if (MiscGetBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime))
+        {
+            BcdHandle = NULL;
+            Status = BmOpenDataStore(BcdHandle);
+            if (NT_SUCCESS(Status))
+            {
+                ObjectId = BootEntry->Guid;
+                BmPurgeOption(BcdHandle, &ObjectId, BcdOSLoaderBoolean_OptionsEditOneTime);
+                BmCloseDataStore(BcdHandle);
+            }
+        }
+    }
+
+TryAgain:
+    DoRecovery = FALSE;
+    Recover = FALSE;
+    BmpSelectedBootEntry = BootEntry;
+
+    Status = BmpCreateDevices(BootEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        if (!LaunchWinRe)
+        {
+            return Status;
+        }
+
+        LaunchCode = 2;
+        goto Quickie;
+    }
+
+    if (BootEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
+    {
+        Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime, &AdvancedOneTime);
+        if (NT_SUCCESS(Status))
+        {
+            if (AdvancedOneTime)
+            {
+                BlAppendBootOptionBoolean(BootEntry, BcdLibraryBoolean_DisplayAdvancedOptions);
+            }
+            else
+            {
+                BlRemoveBootOption(BootEntry->BcdData, BcdLibraryBoolean_DisplayAdvancedOptions);
+            }
+
+            BlRemoveBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+        }
+
+        Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime, &EditOneTime);
+        if (NT_SUCCESS(Status))
+        {
+            if (AdvancedOneTime)
+            {
+                BlAppendBootOptionBoolean(BootEntry, BcdLibraryBoolean_DisplayOptionsEdit);
+            }
+            else
+            {
+                BlRemoveBootOption(BootEntry->BcdData, BcdLibraryBoolean_DisplayOptionsEdit);
+            }
+
+            BlRemoveBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime);
+        }
+    }
+
+    Status = BmpTransferExecution(BootEntry, &LaunchCode, &Recover);
+    if (!LaunchWinRe)
+    {
+        return Status;
+    }
+
+    DoRecovery = Recover;
+
+    if (((NT_SUCCESS(Status)) || (Status == STATUS_CANCELLED)) && !(Recover))
+    {
+        return Status;
+    }
+
+    if (!Recover)
+    {
+        LaunchCode = 2;
+        goto Quickie;
+    }
+
+Quickie:
+    if (MiscGetBootOption(BootEntry->BcdData, BcdLibraryObjectList_RecoverySequence))
+    {
+        if ((LaunchCode == 3) || (LaunchCode == 5) || (LaunchCode == 6))
+        {
+            Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdLibraryBoolean_AutoRecoveryEnabled, &AutoRecovery);
+            if (NT_SUCCESS(Status))
+            {
+                DoRecovery = AutoRecovery;
+            }
+        }
+    }
+    else
+    {
+        DoRecovery = FALSE;
+    }
+
+    RestartOnFailure = FALSE;
+    BlGetBootOptionBoolean(BlpApplicationEntry.BcdData, BcdLibraryBoolean_RestartOnFailure, &RestartOnFailure);
+    DoRestart = RestartOnFailure ? FALSE : DoRecovery;
+    while (1)
+    {
+        if (DoRestart)
+        {
+            if (AutoRecovery)
+            {
+                //BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, TRUE);
+            }
+
+            Status = BmLaunchRecoverySequence(BootEntry, LaunchCode);
+
+            if (AutoRecovery)
+            {
+                //BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, FALSE);
+                AutoRecovery = FALSE;
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                return STATUS_SUCCESS;
+            }
+
+            BlRemoveBootOption(BootEntry->BcdData, BcdLibraryObjectList_RecoverySequence);
+        }
+
+        if (!BmpInternalBootError)
+        {
+            BmFatalErrorEx(4, Status, 0, 0, 0);
+        }
+
+        ErrorCode = BmDisplayDumpError(BootEntry, LaunchCode);
+        BmErrorPurge();
+
+        switch (ErrorCode)
+        {
+            case 6:
+                goto TryAgain;
+            case 5:
+                break;
+            case 4:
+                return STATUS_CANCELLED;
+            case 3:
+                Status = BmOpenDataStore(BcdHandle);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = BmProcessCustomAction(BcdHandle, NULL);
+                }
+                if (BcdHandle)
+                {
+                    BmCloseDataStore(BcdHandle);
+                }
+                return Status;
+            case 7:
+                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+                goto TryAgain;
+            case 8:
+                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_OptionsEditOneTime);
+                goto TryAgain;
+            case 2:
+                DoRestart = TRUE;
+                LaunchCode = 1;
+                goto TryAgain;
+            default:
+                return STATUS_CANCELLED;
+        }
+    }
+
+
+
+    return STATUS_SUCCESS;
 }
 
 /*++

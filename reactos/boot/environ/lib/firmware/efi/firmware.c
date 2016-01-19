@@ -1050,6 +1050,42 @@ EfiResetSystem (
 }
 
 NTSTATUS
+EfiConnectController (
+    _In_ EFI_HANDLE ControllerHandle
+    )
+{
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+
+    /* Is this EFI 1.02? */
+    if (EfiST->Hdr.Revision == EFI_1_02_SYSTEM_TABLE_REVISION)
+    {
+        /* This function didn't exist back then */
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* FIXME: Not yet implemented */
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Make the EFI call */
+    EfiStatus = EfiBS->ConnectController(ControllerHandle, NULL, NULL, TRUE);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert the error to an NTSTATUS */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
 EfiAllocatePages (
     _In_ ULONG Type,
     _In_ ULONG Pages,
@@ -1748,6 +1784,91 @@ BlpFwInitialize (
     return Status;
 }
 
+NTSTATUS
+BlFwEnumerateDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR Device
+    )
+{
+    NTSTATUS Status;
+    ULONG PathProtocols, BlockProtocols;
+    EFI_HANDLE* PathArray;
+    EFI_HANDLE* BlockArray;
+
+    /* Initialize locals */
+    BlockArray = NULL;
+    PathArray = NULL;
+    PathProtocols = 0;
+    BlockProtocols = 0;
+
+    /* Enumeration only makes sense on disks or partitions */
+    if ((Device->DeviceType != DiskDevice) &&
+        (Device->DeviceType != LegacyPartitionDevice) &&
+        (Device->DeviceType != PartitionDevice))
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    /* Enumerate the list of device paths */
+    Status = EfiLocateHandleBuffer(ByProtocol,
+                                   &EfiDevicePathProtocol,
+                                   &PathProtocols,
+                                   &PathArray);
+    if (NT_SUCCESS(Status))
+    {
+        /* Loop through each one */
+        Status = STATUS_NOT_FOUND;
+        while (PathProtocols)
+        {
+            /* Attempt to connect the driver for this device epath */
+            Status = EfiConnectController(PathArray[--PathProtocols]);
+            if (NT_SUCCESS(Status))
+            {
+                /* Now enumerate any block I/O devices the driver added */
+                Status = EfiLocateHandleBuffer(ByProtocol,
+                                               &EfiBlockIoProtocol,
+                                               &BlockProtocols,
+                                               &BlockArray);
+                if (!NT_SUCCESS(Status))
+                {
+                    break;
+                }
+
+                /* Loop through each one */
+                while (BlockProtocols)
+                {
+                    /* Check if one of the new devices is the one we want */
+                    Status = BlockIoEfiCompareDevice(Device,
+                                                     BlockArray[--BlockProtocols]);
+                    if (NT_SUCCESS(Status))
+                    {
+                        /* Yep, all done */
+                        goto Quickie;
+                    }
+                }
+
+                /* Move on to the next device path */
+                BlMmFreeHeap(BlockArray);
+                BlockArray = NULL;
+            }
+        }
+    }
+
+Quickie:
+    /* We're done -- free the array of device path protocols, if any */
+    if (PathArray)
+    {
+        BlMmFreeHeap(PathArray);
+    }
+
+    /* We're done -- free the array of block I/O protocols, if any */
+    if (BlockArray)
+    {
+        BlMmFreeHeap(BlockArray);
+    }
+
+    /* Return if we found the device or not */
+    return Status;
+}
 
 /*++
  * @name EfiGetEfiStatusCode

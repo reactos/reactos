@@ -622,6 +622,69 @@ BlCopyBootOptions (
 }
 
 NTSTATUS
+BlAppendBootOptionBoolean (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId
+    )
+{
+    NTSTATUS Status;
+    PBL_BCD_OPTION Option;
+
+    /* Allocate space for the entry -- remember BOOLEANs are USHORTs in BCD */
+    Option = BlMmAllocateHeap(sizeof(*Option) + sizeof(USHORT));
+    if (!Option)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize it and set the boolean to TRUE */
+    RtlZeroMemory(Option, sizeof(*Option) + sizeof(USHORT));
+    Option->DataSize = sizeof(USHORT);
+    Option->Type = OptionId;
+    Option->DataOffset = sizeof(*Option);
+    *(PBOOLEAN)(Option + 1) = TRUE;
+
+    /* Append it */
+    Status = BlAppendBootOptions(AppEntry, Option);
+
+    /* We're all done, free our initial option */
+    BlMmFreeHeap(Option);
+    return Status;
+}
+
+NTSTATUS
+BlAppendBootOptionInteger (
+    _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId,
+    _In_ ULONGLONG Value
+    )
+{
+    NTSTATUS Status;
+    PBL_BCD_OPTION Option;
+
+    /* Allocate space for the entry */
+    Option = BlMmAllocateHeap(sizeof(*Option) + sizeof(Value));
+    if (!Option)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize it and set the integer to the given value */
+    RtlZeroMemory(Option, sizeof(*Option) + sizeof(Value));
+    Option->DataSize = sizeof(Value);
+    Option->Type = OptionId;
+    Option->DataOffset = sizeof(*Option);
+    *(PULONGLONG)(Option + 1) = Value;
+
+    /* Append it */
+    Status = BlAppendBootOptions(AppEntry, Option);
+
+    /* We're all done, free our initial option */
+    BlMmFreeHeap(Option);
+    return Status;
+}
+
+NTSTATUS
 BlAppendBootOptionString (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
     _In_ PWCHAR OptionString

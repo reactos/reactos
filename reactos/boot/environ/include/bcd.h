@@ -92,6 +92,8 @@ typedef enum BcdLibraryElementTypes
     BcdLibraryInteger_FveBandId = 0x1500004C,
     BcdLibraryBoolean_ConsoleExtendedInput = 0x16000050,
     BcdLibraryInteger_GraphicsResolution = 0x15000052,
+    BcdLibraryInteger_DisplayMessage = 0x15000065, /* Undocumented */
+    BcdLibraryInteger_DisplayMessageOverride = 0x15000066, /* Undocumented */
     BcdLibraryBoolean_RestartOnFailure = 0x16000053,
     BcdLibraryBoolean_GraphicsForceHighestMode = 0x16000054,
     BcdLibraryBoolean_IsolatedExecutionContext = 0x16000060,
@@ -151,6 +153,7 @@ typedef enum BcdOSLoaderElementTypes
     BcdOSLoaderInteger_DriverLoadFailurePolicy = 0x250000c1,
     BcdOSLoaderInteger_BootMenuPolicy = 0x250000C2,
     BcdOSLoaderBoolean_AdvancedOptionsOneTime = 0x260000C3,
+    BcdOSLoaderBoolean_OptionsEditOneTime = 0x260000C4, /* Undocumented */
     BcdOSLoaderInteger_BootStatusPolicy = 0x250000E0,
     BcdOSLoaderBoolean_DisableElamDrivers = 0x260000E1,
     BcdOSLoaderInteger_HypervisorLaunchType = 0x250000F0,
