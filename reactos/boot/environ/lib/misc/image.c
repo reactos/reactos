@@ -652,6 +652,21 @@ BlImgUnLoadImage (
 }
 
 NTSTATUS
+ImgpLoadPEImage (
+    _In_ PBL_IMG_FILE ImageFile,
+    _In_ BL_MEMORY_TYPE MemoryType,
+    _Out_ PVOID* ImageBase,
+    _Out_ PULONG ImageSize,
+    _Out_ PVOID Hash,
+    _In_ ULONG Flags
+    )
+{
+    /* Micro-PE loader (no imports/exports/etc) */
+    EfiPrintf(L"PE not implemented\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 BlImgLoadPEImageEx (
     _In_ ULONG DeviceId,
     _In_ BL_MEMORY_TYPE MemoryType,
@@ -662,8 +677,46 @@ BlImgLoadPEImageEx (
     _In_ ULONG Flags
     )
 {
-    EfiPrintf(L"PE not implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    BL_IMG_FILE ImageFile;
+    NTSTATUS Status;
+
+    /* Initialize the image file structure */
+    ImageFile.Flags = 0;
+    ImageFile.FileName = NULL;
+
+    /* Check if the required parameter are missing */
+    if (!(ImageBase) || !(Path))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* If we are loading a pre-allocated image, make sure we have it */
+    if ((Flags & 4) && (!(*ImageBase) || !(ImageSize)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Load the file from disk */
+    Status = ImgpOpenFile(DeviceId, Path, 0, &ImageFile);
+    if (NT_SUCCESS(Status))
+    {
+        /* If that worked, do the PE parsing */
+        Status = ImgpLoadPEImage(&ImageFile,
+                                 MemoryType,
+                                 ImageBase,
+                                 ImageSize,
+                                 Hash,
+                                 Flags);
+    }
+    else
+    {
+        /* For temporary debugging */
+        EfiPrintf(L"Couldn't open file: %lx\r\n", Status);
+    }
+
+    /* Close the image file and return back to caller */
+    ImgpCloseFile(&ImageFile);
+    return Status;
 }
 
 NTSTATUS
@@ -675,22 +728,18 @@ BlImgLoadBootApplication (
     NTSTATUS Status;
     PULONGLONG AllowedList;
     ULONGLONG AllowedCount;
-    ULONG i;
+    ULONG i, DeviceId, ImageSize, Flags, ListSize;
     LARGE_INTEGER Frequency;
-    PVOID UnlockCode;
+    PVOID UnlockCode, ImageBase;
     PBL_DEVICE_DESCRIPTOR Device, BitLockerDevice;
-    ULONG DeviceId;
     PWCHAR Path;
     PBL_APPLICATION_ENTRY AppEntry;
     PBL_IMG_FILE ImageFile;
-    PVOID ImageBase;
-    ULONG ImageSize;
     BOOLEAN DisableIntegrity, TestSigning;
     UCHAR Hash[64];
-    ULONG Flags;
-    ULONG ListSize;
     PBL_IMAGE_APPLICATION_ENTRY ImageAppEntry;
 
+    /* Initialize all locals */
     BitLockerDevice = NULL;
     UnlockCode = NULL;
     ImageFile = NULL;
@@ -703,6 +752,7 @@ BlImgLoadBootApplication (
 
     EfiPrintf(L"Loading application %p\r\n", BootEntry);
 
+    /* Check for "allowed in-memory settings" */
     Status = BlpGetBootOptionIntegerList(BootEntry->BcdData,
                                          BcdLibraryIntegerList_AllowedInMemorySettings,
                                          &AllowedList,
@@ -710,10 +760,13 @@ BlImgLoadBootApplication (
                                          TRUE);
     if (Status == STATUS_SUCCESS)
     {
+        /* Loop through the list of allowed setting */
         for (i = 0; i < AllowedCount; i++)
         {
+            /* Find the super undocumented one */
             if (AllowedList[i] == BcdLibraryInteger_UndocumentedMagic)
             {
+                /* If it's present, append the current perf frequence to it */
                 BlTimeQueryPerformanceCounter(&Frequency);
                 BlAppendBootOptionInteger(BootEntry,
                                           BcdLibraryInteger_UndocumentedMagic,
@@ -723,34 +776,49 @@ BlImgLoadBootApplication (
     }
 
 #if BL_BITLOCKER_SUPPORT
+    /* Do bitlocker stuff */
     Status = BlFveSecureBootUnlockBootDevice(BootEntry, &BitLockerDevice, &UnlockCode);
-#else
-    Status = STATUS_SUCCESS;
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
 #endif
+
+    /* Get the device on which this application is on*/
+    Status = BlGetBootOptionDevice(BootEntry->BcdData,
+                                   BcdLibraryDevice_ApplicationDevice,
+                                   &Device,
+                                   NULL);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
-    Status = BlGetBootOptionDevice(BootEntry->BcdData, BcdLibraryDevice_ApplicationDevice, &Device, NULL);
+    /* Get the path of the application */
+    Status = BlGetBootOptionString(BootEntry->BcdData,
+                                   BcdLibraryString_ApplicationPath,
+                                   &Path);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
-    Status = BlGetBootOptionString(BootEntry->BcdData, BcdLibraryString_ApplicationPath, &Path);
+    /* Open the device */
+    EfiPrintf(L"Opening device for path: %s\r\n", Path);
+    Status = BlpDeviceOpen(Device,
+                           BL_DEVICE_READ_ACCESS,
+                           0,
+                           &DeviceId);
+    EfiPrintf(L"Device ID: %lx %lx\r\n", Status, DeviceId);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
-    Status = BlpDeviceOpen(Device, BL_DEVICE_READ_ACCESS, 0, &DeviceId);
-    if (!NT_SUCCESS(Status))
-    {
-        goto Quickie;
-    }
-
-    BlImgQueryCodeIntegrityBootOptions(BootEntry, &DisableIntegrity, &TestSigning);
+    /* Check for integrity BCD options */
+    BlImgQueryCodeIntegrityBootOptions(BootEntry,
+                                       &DisableIntegrity,
+                                       &TestSigning);
 
 #if BL_TPM_SUPPORT
     RtlZeroMemory(&Context, sizeof(Context);
@@ -758,27 +826,39 @@ BlImgLoadBootApplication (
     BlEnNotifyEvent(0x10000003, &Context);
 #endif
 
+    /* Enable signing and hashing checks if integrity is enabled */
     Flags = 0;
     if (!DisableIntegrity)
     {
         Flags = 0x8070;
     }
 
-    Status = BlImgLoadPEImageEx(DeviceId, BlLoaderMemory, Path, &ImageBase, &ImageSize, Hash, Flags);
+    /* Now call the PE loader to load the image */
+    Status = BlImgLoadPEImageEx(DeviceId,
+                                BlLoaderMemory,
+                                Path,
+                                &ImageBase,
+                                &ImageSize,
+                                Hash,
+                                Flags);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
 #if BL_KD_SUPPORT
+    /* Check if we should notify the debugger of load */
     if (BdDebugTransitions)
     {
+        /* Initialize it */
         BdForceDebug = 1;
         Status = BlBdInitialize();
         if (NT_SUCCESS(Status))
         {
+            /* Check if it's enabled */
             if (BlBdDebuggerEnabled())
             {
+                /* Send it an image load notification */
                 BdDebuggerNotPresent = FALSE;
                 RtlInitUnicodeString(&PathString, Path);
                 BlBdLoadImageSymbols(&PathString, ImageBase);
@@ -788,27 +868,27 @@ BlImgLoadBootApplication (
 #endif
 
 #if BL_BITLOCKER_SUPPORT
+    /* Do bitlocker stuff */
     Status = BlSecureBootCheckPolicyOnFveDevice(BitLockerDevice);
-#else
-    Status = STATUS_SUCCESS;
-#endif
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
+#endif
 
 #if BL_BITLOCKER_SUPPORT
+    /* Do bitlocker stuff */
     Status = BlFveSecureBootCheckpointBootApp(BootEntry, BitLockerDevice, Hash, UnlockCode);
-#else
-Status = STATUS_SUCCESS;
-#endif
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
+#endif
 
+    /* Get the BCD option size */
     ListSize = BlGetBootOptionListSize(BootEntry->BcdData);
 
+    /* Allocate an entry with all the BCD options */
     AppEntry = BlMmAllocateHeap(ListSize + sizeof(*AppEntry));
     if (!AppEntry)
     {
@@ -816,21 +896,34 @@ Status = STATUS_SUCCESS;
         goto Quickie;
     }
 
+    /* Zero it out */
     RtlZeroMemory(AppEntry, sizeof(AppEntry));
 
+    /* Initialize it */
     strcpy(AppEntry->Signature, "BTAPENT");
     AppEntry->Guid = BootEntry->Guid;
     AppEntry->Flags = BootEntry->Flags;
+
+    /* Copy the BCD options */
     RtlCopyMemory(&AppEntry->BcdData, BootEntry->BcdData, ListSize);
 
-
+    /* Allocate the image entry */
     ImageAppEntry = BlMmAllocateHeap(sizeof(*ImageAppEntry));
+    if (!ImageAppEntry)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Initialize it */
     ImageAppEntry->ImageBase = ImageBase;
     ImageAppEntry->ImageSize = ImageSize;
     ImageAppEntry->AppEntry = AppEntry;
 
+    /* Check if this is the first entry */
     if (!IapTableEntries)
     {
+        /* Allocate two entries */
         IapAllocatedTableEntries = 0;
         IapTableEntries = 2;
         IapImageTable = BlMmAllocateHeap(IapTableEntries * sizeof(PVOID));
@@ -840,9 +933,11 @@ Status = STATUS_SUCCESS;
             goto Quickie;
         }
 
+        /* Zero out the entries for now */
         RtlZeroMemory(IapImageTable, sizeof(IapTableEntries * sizeof(PVOID)));
     }
 
+    /* Set this entry into the table */
     Status = BlTblSetEntry(&IapImageTable,
                            &IapTableEntries,
                            ImageAppEntry,
@@ -850,60 +945,75 @@ Status = STATUS_SUCCESS;
                            TblDoNotPurgeEntry);
 
 Quickie:
+    /* Is the device open? Close it if so */
     if (DeviceId != 1)
     {
         BlDeviceClose(DeviceId);
     }
 
+    /* Is there an allocated device? Free it */
     if (Device)
     {
         BlMmFreeHeap(Device);
     }
 
+    /* Is there an allocated path? Free it */
     if (Path)
     {
         BlMmFreeHeap(Path);
     }
 
+    /* Is there a bitlocker device? Free it */
     if (BitLockerDevice)
     {
         BlMmFreeHeap(BitLockerDevice);
     }
 
+    /* Is there a bitlocker unlock code? Free it */
     if (UnlockCode)
     {
         BlMmFreeHeap(UnlockCode);
     }
 
+    /* Did we succeed in creating an entry? */
     if (NT_SUCCESS(Status))
     {
+        /* Remember there's one more in the table */
         IapAllocatedTableEntries++;
+
+        /* Return success */
+        return Status;
     }
-    else
+
+    /* Did we load an image after all? */
+    if (ImageBase)
     {
-        if (ImageBase)
-        {
-            BlImgUnLoadImage(ImageBase, ImageSize, 0);
-        }
-
-        if (AppEntry)
-        {
-            BlMmFreeHeap(AppEntry);
-        }
-
-        if (ImageFile)
-        {
-            BlMmFreeHeap(ImageFile);
-        }
-
-        if (!(IapAllocatedTableEntries) && (IapImageTable))
-        {
-            BlMmFreeHeap(IapImageTable);
-            IapTableEntries = 0;
-            IapImageTable = NULL;
-        }
+        /* Unload it */
+        BlImgUnLoadImage(ImageBase, ImageSize, 0);
     }
 
+    /* Did we allocate an app entry? Free it */
+    if (AppEntry)
+    {
+        BlMmFreeHeap(AppEntry);
+    }
+
+    /* Do we have an image file entry?  Free it */
+    if (ImageFile)
+    {
+        BlMmFreeHeap(ImageFile);
+    }
+
+    /* Do we no longer have a single entry in the table? */
+    if (!(IapAllocatedTableEntries) && (IapImageTable))
+    {
+        /* Free and destroy the table */
+        BlMmFreeHeap(IapImageTable);
+        IapTableEntries = 0;
+        IapImageTable = NULL;
+    }
+
+    /* Return the failure code */
     return Status;
 }
 
@@ -912,11 +1022,14 @@ BlpPdParseReturnArguments (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
+    /* Check if any custom data was returned */
     if (ReturnArguments->DataPage == 0)
     {
+        /* Nope, nothing to do */
         return STATUS_SUCCESS;
     }
 
+    /* Yes, we have to parse it */
     EfiPrintf(L"Return arguments not supported\r\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -929,6 +1042,7 @@ ImgArchEfiStartBootApplication (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
+    /* Not yet implemented. This is the last step! */
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -944,67 +1058,81 @@ BlImgStartBootApplication (
     PLIST_ENTRY NextEntry, ListHead;
     NTSTATUS Status;
 
+    /* Check if we don't have an argument structure */
     if (!ReturnArguments)
     {
-        LocalReturnArgs.Version = 1;
+        /* Initialize a local copy and use it instead */
+        LocalReturnArgs.Version = BL_RETURN_ARGUMENTS_VERSION;
         LocalReturnArgs.Status = STATUS_SUCCESS;
         LocalReturnArgs.Flags = 0;
         LocalReturnArgs.DataPage = 0;
         LocalReturnArgs.DataSize = 0;
-
         ReturnArguments = &LocalReturnArgs;
     }
 
-
+    /* Make sure the handle index is valid */
     if (IapTableEntries <= AppHandle)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the entry for this handle, making sure it exists */
     ImageAppEntry = IapImageTable[AppHandle];
     if (!ImageAppEntry)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Loop the registered file systems */
     ListHead = &RegisteredFileSystems;
     NextEntry = RegisteredFileSystems.Flink;
     while (NextEntry != ListHead)
     {
-        FileSystem = CONTAINING_RECORD(NextEntry, BL_FILE_SYSTEM_ENTRY, ListEntry);
+        /* Get the filesystem entry */
+        FileSystem = CONTAINING_RECORD(NextEntry,
+                                       BL_FILE_SYSTEM_ENTRY,
+                                       ListEntry);
 
+        /* See if it has a purge callback */
         if (FileSystem->PurgeCallback)
         {
+            /* Call it */
             FileSystem->PurgeCallback();
         }
 
+        /* Move to the next entry */
         NextEntry = NextEntry->Flink;
     }
 
-    /* TODO */
+    /* TODO  -- flush the block I/O cache too */
     //BlockIoPurgeCache();
 
+    /* Call into EFI land to start the boot application */
     Status = ImgArchEfiStartBootApplication(ImageAppEntry->AppEntry,
                                             ImageAppEntry->ImageBase,
                                             ImageAppEntry->ImageSize,
                                             ReturnArguments);
 
+    /* Parse any arguments we got on the way back */
     BlpPdParseReturnArguments(ReturnArguments);
 
 #if BL_BITLOCKER_SUPPORT
+    /* Bitlocker stuff */
     FvebpCheckAllPartitions(TRUE);
 #endif
 
 #if BL_TPM_SUPPORT
+    /* Notify a TPM/SI event */
     BlEnNotifyEvent(0x10000005, NULL);
 #endif
 
-    /* TODO */
-    //BlpDisplayReinitialize();
+    /* Reset the display */
+    BlpDisplayReinitialize();
 
-    /* TODO */
+    /* TODO -- reset ETW */
     //BlpLogInitialize();
 
+    /* All done */
     return Status;
 }
 
@@ -1013,43 +1141,53 @@ BlImgUnloadBootApplication (
     _In_ ULONG AppHandle
     )
 {
-    PBL_IMAGE_APPLICATION_ENTRY ImageAppEntry; // esi@2
+    PBL_IMAGE_APPLICATION_ENTRY ImageAppEntry;
     NTSTATUS Status;
 
+    /* Make sure the handle index is valid */
     if (IapTableEntries <= AppHandle)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Get the entry for this handle, making sure it exists */
     ImageAppEntry = IapImageTable[AppHandle];
     if (!ImageAppEntry)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Unload the image */
     Status = BlImgUnLoadImage(ImageAppEntry->ImageBase,
                               ImageAppEntry->ImageSize,
                               0);
     if (NT_SUCCESS(Status))
     {
+        /* Normalize the success code */
         Status = STATUS_SUCCESS;
     }
     else
     {
+        /* Normalize the failure code */
         Status = STATUS_MEMORY_NOT_ALLOCATED;
     }
 
+    /* Free the entry and the image entry as well */
     BlMmFreeHeap(ImageAppEntry->AppEntry);
     BlMmFreeHeap(ImageAppEntry);
 
+    /* Clear the handle */
     IapImageTable[AppHandle] = NULL;
 
+    /* Free one entry */
     if (!(--IapAllocatedTableEntries))
     {
+        /* There are no more, so get rid of the table itself */
         BlMmFreeHeap(IapImageTable);
         IapImageTable = NULL;
         IapTableEntries = 0;
     }
 
+    /* All good */
     return Status;
 }

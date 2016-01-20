@@ -1326,6 +1326,11 @@ BlpDisplayInitialize (
     _In_ ULONG Flags
     );
 
+NTSTATUS
+BlpDisplayReinitialize (
+    VOID
+    );
+
 VOID
 BlDestroyLibrary (
     VOID
