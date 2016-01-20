@@ -2862,7 +2862,7 @@ BmMain (
         goto Failure;
     }
     XmlLoaded = TRUE;
-
+    EfiStall(100000000);
     /* Check if there's an active bitmap visible */
     if (!BlDisplayValidOemBitmap())
     {
@@ -2951,6 +2951,8 @@ BmMain (
         Status = STATUS_NOT_IMPLEMENTED;
         goto Failure;
     }
+
+    //BlResourceFindMessage(BM_MSG_TEST);
 
     /* At last, enter the boot selection stage */
     SequenceId = 0;
