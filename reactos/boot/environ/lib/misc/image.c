@@ -922,6 +922,17 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
+ImgArchEfiStartBootApplication (
+    _In_ PBL_APPLICATION_ENTRY AppEntry,
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize,
+    _In_ PBL_RETURN_ARGUMENTS ReturnArguments
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 BlImgStartBootApplication (
     _In_ ULONG AppHandle,
     _Inout_opt_ PBL_RETURN_ARGUMENTS ReturnArguments
