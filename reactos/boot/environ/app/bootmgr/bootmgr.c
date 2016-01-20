@@ -2005,14 +2005,6 @@ Quickie:
     return Status;
 }
 
-NTSTATUS
-BmpLaunchBootEntry (
-    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
-    _Out_ PULONG EntryIndex,
-    _In_ ULONG LaunchCode,
-    _In_ BOOLEAN LaunchWinRe
-    );
-
 NTSTATUS 
 BmLaunchRecoverySequence (
     _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
@@ -2026,79 +2018,106 @@ BmLaunchRecoverySequence (
     ULONG Count, i, RecoveryIndex, SequenceCount;
     PBL_LOADED_APPLICATION_ENTRY* Sequence;
 
+    /* Initialize locals */
     RecoveryIndex = 0;
     Sequence = NULL;
     RecoverySequence = NULL;
     Count = 0;
     BcdHandle = NULL;
 
+    /* Open the BCD*/
     Status = BmOpenDataStore(&BcdHandle);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        Status = BlGetBootOptionGuidList(BootEntry->BcdData,
-                                         BcdLibraryObjectList_RecoverySequence,
-                                         &RecoverySequence,
-                                         &SequenceCount);
-        if (NT_SUCCESS(Status))
+        goto Quickie;
+    }
+
+    /* Get the recovery sequence list */
+    Status = BlGetBootOptionGuidList(BootEntry->BcdData,
+                                     BcdLibraryObjectList_RecoverySequence,
+                                     &RecoverySequence,
+                                     &SequenceCount);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Get the sequence of boot entries out of it */
+    Status = BmGetBootSequence(BcdHandle,
+                               RecoverySequence,
+                               SequenceCount,
+                               BL_APPLICATION_ENTRY_RECOVERY,
+                               &Sequence,
+                               &Count);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Was the BCD open? */
+    if (BcdHandle)
+    {
+        /* Close it */
+        BmCloseDataStore(BcdHandle);
+    }
+
+    /* Now go over every entry in the sequence */
+    for (i = 0; i < Count; ++i)
+    {
+        /* Check the code for this recovery launch */
+        if (LaunchCode == 2 || LaunchCode == 5)
         {
-            Status = BmGetBootSequence(BcdHandle,
-                                       RecoverySequence,
-                                       SequenceCount,
-                                       BL_APPLICATION_ENTRY_RECOVERY,
-                                       &Sequence,
-                                       &Count);
-            if (NT_SUCCESS(Status))
-            {
-                if (BcdHandle)
-                {
-                    BmCloseDataStore(BcdHandle);
-                }
-
-                for (i = 0; i < Count; ++i)
-                {
-                    if (LaunchCode == 2 || LaunchCode == 5)
-                    {
-                        BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
-                        BlAppendBootOptionInteger(Sequence[i],
-                                                  BcdLibraryInteger_DisplayMessageOverride,
-                                                  4);
-                    }
-                    else if (LaunchCode == 3)
-                    {
-                        BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
-                        BlAppendBootOptionInteger(Sequence[i],
-                                                  BcdLibraryInteger_DisplayMessageOverride,
-                                                  10);
-                    }
-
-                    Status = BmpLaunchBootEntry(Sequence[i], NULL, LaunchCode, FALSE);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (Sequence)
-            {
-                for (RecoveryIndex = 0; RecoveryIndex < Count; RecoveryIndex++)
-                {
-                    RecoveryEntry = Sequence[RecoveryIndex];
-                    if (RecoveryEntry)
-                    {
-                        BlDestroyBootEntry(RecoveryEntry);
-                    }
-                }
-                BlMmFreeHeap(Sequence);
-            }
+            /* Remove the override if there is one, and set it to 4 */
+            BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
+            BlAppendBootOptionInteger(Sequence[i],
+                                      BcdLibraryInteger_DisplayMessageOverride,
+                                      4);
+        }
+        else if (LaunchCode == 3)
+        {
+            /* Remove the override if there is one, and set it to 10 */
+            BlRemoveBootOption(Sequence[i]->BcdData, BcdLibraryInteger_DisplayMessageOverride);
+            BlAppendBootOptionInteger(Sequence[i],
+                                        BcdLibraryInteger_DisplayMessageOverride,
+                                        10);
         }
 
-        if (RecoverySequence)
+        /* Launch the boot entry for this part of the recovery sequence */
+        Status = BmpLaunchBootEntry(Sequence[i], NULL, LaunchCode, FALSE);
+        if (!NT_SUCCESS(Status))
         {
-            BlMmFreeHeap(RecoverySequence);
+            break;
         }
     }
 
+Quickie:
+    /* Did we have a sequence of entries? */
+    if (Sequence)
+    {   
+        /* Loop through each one */
+        for (RecoveryIndex = 0; RecoveryIndex < Count; RecoveryIndex++)
+        {
+            /* Does this index have an allocated boot entry? */
+            RecoveryEntry = Sequence[RecoveryIndex];
+            if (RecoveryEntry)
+            {
+                /* Destroy it */
+                BlDestroyBootEntry(RecoveryEntry);
+            }
+        }
+
+        /* Free the sequence itself */
+        BlMmFreeHeap(Sequence);
+    }
+
+    /* Was there a sequence list? */
+    if (RecoverySequence)
+    {
+        /* Free it */
+        BlMmFreeHeap(RecoverySequence);
+    }
+  
+    /* Return back to caller */
     return Status;
 }
 
@@ -2112,8 +2131,10 @@ BmDisplayDumpError (
     NTSTATUS Status;
     BOOLEAN Restart, NoError;
 
-    BootError = 1;
+    /* Assume we'll just reboot */
+    BootError = Reboot;
 
+    /* Should we reboot? */
     Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
                                     BcdLibraryBoolean_RestartOnFailure,
                                     &Restart);
@@ -2122,6 +2143,7 @@ BmDisplayDumpError (
         return BootError;
     }
 
+    /* Should we not show errors, and thus, reboot? */
     Status = BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
                                     BcdBootMgrBoolean_NoErrorDisplay,
                                     &NoError);
@@ -2130,11 +2152,14 @@ BmDisplayDumpError (
         return BootError;
     }
 
+    /* Is there an internal boot error? */
     if (BmpInternalBootError)
     {
+        /* Return it -- but it's a pointer? */
         return (ULONG)BmpInternalBootError; // ???
     }
 
+    /* Otherwise, show the menu to see what to do */
     EfiPrintf(L"Error menu not yet implemented\r\n");
     return BootError;
 }
@@ -2149,31 +2174,40 @@ BmpCreateDevices (
     BcdElementType ElementType;
     PBCD_DEVICE_OPTION BcdDevice;
 
+    /* Starting at offset 0, loop every BCD option */
     NextOffset = 0;
     do
     {
+        /* Get the current option, and its offset */
         Option = (PBL_BCD_OPTION)((ULONG_PTR)BootEntry->BcdData + NextOffset);
         NextOffset = Option->NextEntryOffset;
 
+        /* If it's empty, ignore it */
         if (Option->Empty)
         {
             continue;
         }
 
+        /* If it's not a device option, ignore it */
         ElementType.PackedValue = Option->Type;
         if (ElementType.Format != BCD_TYPE_DEVICE)
         {
             continue;
         }
 
+        /* Get the data offset */
         DataOffset = Option->DataOffset;
 
+        /* Extract the device out of it */
         BcdDevice = (PBCD_DEVICE_OPTION)((ULONG_PTR)BootEntry->BcdData + DataOffset);
+
+        /* If the device is already fully specified, no need to build it */
         if (!(BcdDevice->DeviceDescriptor.Flags & 1))
         {
             continue;
         }
 
+        /* Otherwise, check if there's any list options as well */
         ListOption = NULL;
         ListOffset = Option->ListOffset;
         if (Option->ListOffset)
@@ -2181,13 +2215,14 @@ BmpCreateDevices (
             ListOption = (PBL_BCD_OPTION)((ULONG_PTR)BootEntry->BcdData + ListOffset);
         }
 
+        /* And now call BlCreateDevice to build the full device descriptor */
         EfiPrintf(L"Unspecified devices not yet supported: %p\r\n", ListOption);
         return STATUS_NOT_SUPPORTED;
     } while (NextOffset != 0);
 
+    /* Devices created successfully */
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 BmpTransferExecution (
@@ -2203,133 +2238,185 @@ BmpTransferExecution (
     BOOLEAN AdvancedOptions;
     ULONG AppHandle;
 
+    /* Get the application path */
     Status = BlGetBootOptionString(BootEntry->BcdData,
                                    BcdLibraryString_ApplicationPath,
                                    &AppPath);
     if (!NT_SUCCESS(Status))
     {
+        /* If we couldn't find one, set this to NULL */
         AppPath = NULL;
     }
 
+    /* Check if this is a PXE startup.com */
     if (BootEntry->Flags & BL_APPLICATION_ENTRY_STARTUP)
     {
 #if BL_NET_SUPPORT
+        /* Do soft reboot to launch it */
         Status = BlNetSoftReboot(BootEntry);
 #else
         EfiPrintf(L"Net boot not supported\r\n");
         Status = STATUS_NOT_SUPPORTED;
 #endif
+        /* Nothing else for us to do */
         goto Quickie;
     }
 
+    /* Loop as long as boot was not cancelled */
     do
     {
+        /* Load the boot application */
         Status = BlImgLoadBootApplication(BootEntry, &AppHandle);
+
+        /* Did we not find it? */
         if (Status == STATUS_NOT_FOUND)
         {
+            /* Get the device for the boot application */
             Status = BlGetBootOptionDevice(BootEntry->BcdData,
                                            BcdLibraryDevice_ApplicationDevice,
                                            &AppDevice,
                                            NULL);
             if (NT_SUCCESS(Status))
             {
+                /* Force re-enumeration */
                 Status = BlFwEnumerateDevice(AppDevice);
             }
 
+            /* Did re-enumeration work? */
             if (!NT_SUCCESS(Status))
             {
-                BmFatalErrorEx(2, (ULONG_PTR)AppPath, Status, 0, 0);
+                /* Nope, raise a fatal error */
+                BmFatalErrorEx(BL_FATAL_ERROR_APP_LOAD,
+                               (ULONG_PTR)AppPath,
+                               Status,
+                               0,
+                               0);
                 goto Quickie;
             }
 
+            /* Yes, try booting it again */
             Status = BlImgLoadBootApplication(BootEntry, &AppHandle);
         }
 
+        /* Was boot cancelled?*/
         if (Status == STATUS_CANCELLED)
         {
+            /* Should we display the menu, or is there no launch sequence? */
             if ((BmGetBootMenuPolicy(BootEntry) != MenuPolicyStandard) ||
                 !(MiscGetBootOption(BootEntry->BcdData,
                                     BcdLibraryObjectList_RecoverySequence)))
             {
+                /* Bail out, the menu will take care of it */
                 goto Quickie;
             }
 
+            /* No menu and there's a sequence, launch it */
             *LaunchCode = 4;
             *Recover = TRUE;
             goto Quickie;
         }
 
+        /* STATUS_FVE_LOCKED_VOLUME -- bitlocker volume is locked */
         if (Status == 0xC0210000)
         {
+            /* Launch recovery mode */
             *LaunchCode = 4;
             *Recover = TRUE;
             goto Quickie;
         }
 
+        /* Was there some other error launching the boot application? */
         if (!NT_SUCCESS(Status))
         {
-            BmFatalErrorEx(2, (ULONG_PTR)AppPath, Status, 0, 0);
+            /* Raise a fatal error */
+            BmFatalErrorEx(BL_FATAL_ERROR_APP_LOAD,
+                           (ULONG_PTR)AppPath,
+                           Status,
+                           0,
+                           0);
             goto Quickie;
         }
 
+        /* Zero out the return arguments */
         RtlZeroMemory(&ReturnArgs, sizeof(ReturnArgs));
+
+        /* Log to ETW this launch */
         //BmpLogApplicationLaunchEvent(&BootEntry->Guid, AppPath);
 
+        /* Launch the boot application*/
         Status = BlImgStartBootApplication(AppHandle, &ReturnArgs);
 
 #if BL_BITLOCKER_SUPPORT
+        /* Bitlocker stuff */
         BlFveSecureBootCheckpointAppReturn(BootEntry, &ReturnArgs);
 #endif
 
+        /* Log in the boot status log the launch */
         //BlBsdLogEntry(1, 0x12, &BootEntry->Guid, 0x14);
 
+        /* Unloac the boot application if we've returned */
         BlImgUnloadBootApplication(AppHandle);
 
+        /* Keep going unless STATUS_RESTART_BOOT_APPLICATION */
     } while (Status != 0xC0000453);
 
+    /* We've come back. Assume we need to launch the recovery sequence */
     *Recover = TRUE;
+
+    /* Why did we get back? */
     if (ReturnArgs.Flags & 1)
     {
+        /* Flag 1 -- should we display advanced options? */
         Status = BlGetBootOptionBoolean(BootEntry->BcdData,
                                         BcdLibraryBoolean_DisplayAdvancedOptions,
                                         &AdvancedOptions);
         if ((NT_SUCCESS(Status)) && (AdvancedOptions))
         {
+            /* Yes, so return with code 2 */
             *LaunchCode = 2;
         }
         else
         {
+            /* No, return with code 1 */
             *LaunchCode = 1;
         }
     }
     else if (ReturnArgs.Flags & 4)
     {
+        /* Flag 4 -- unkown */
         *LaunchCode = 1;
     }
     else if (ReturnArgs.Flags & 8)
     {
+        /* Flag 5 -- unkown */
         *LaunchCode = 5;
     }
     else if (ReturnArgs.Flags & 0x10)
     {
+        /* Flag 6 -- unkown */
         *LaunchCode = 6;
     }
     else if (ReturnArgs.Flags & 0x20)
     {
+        /* Flag 7 -- unkown */
         *LaunchCode = 7;
     }
-    else if (ReturnArgs.Flags & 0x40)
+    else if (ReturnArgs.Flags & BL_RETURN_ARGUMENTS_NO_PAE_FLAG)
     {
+        /* PAE is not supported -- refuse to boot */
         *Recover = FALSE;
-        BmFatalErrorEx(11, Status, 0, 0, 0);
+        BmFatalErrorEx(BL_FATAL_ERROR_NO_PAE, Status, 0, 0, 0);
     }
 
 Quickie:
+    /* All done, did we have an application path? */
     if (AppPath)
     {
+        /* Free it */
         BlMmFreeHeap(AppPath);
     }
 
+    /* Back to the caller now */
     return Status;
 }
 
@@ -2344,194 +2431,282 @@ BmpLaunchBootEntry (
     HANDLE BcdHandle;
     NTSTATUS Status;
     GUID ObjectId;
-    BOOLEAN DoRecovery, AutoRecovery, DoRestart, RestartOnFailure;
+    BOOLEAN DoRecovery, AutoRecovery, DoSequence, RestartOnFailure;
     ULONG ErrorCode;
-    BOOLEAN AdvancedOneTime, EditOneTime, Recover;
+    BOOLEAN AdvancedOneTime, EditOneTime;
 
+    /* Check if this is the OS loader */
     if (BootEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
     {
-        if (MiscGetBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime))
+        /* Check if one-time advanced options should be shown */
+        if (MiscGetBootOption(BootEntry->BcdData,
+                              BcdOSLoaderBoolean_AdvancedOptionsOneTime))
         {
+            /* Open the BCD */
             BcdHandle = NULL;
             Status = BmOpenDataStore(BcdHandle);
             if (NT_SUCCESS(Status))
             {
+                /* Delete the option from the BCD, so it doesn't happen again */
                 ObjectId = BootEntry->Guid;
-                BmPurgeOption(BcdHandle, &ObjectId, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+                BmPurgeOption(BcdHandle,
+                              &ObjectId,
+                              BcdOSLoaderBoolean_AdvancedOptionsOneTime);
                 BmCloseDataStore(BcdHandle);
             }
         }
-        if (MiscGetBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime))
+
+        /* Check if one-time options editor should be shown */
+        if (MiscGetBootOption(BootEntry->BcdData,
+                              BcdOSLoaderBoolean_OptionsEditOneTime))
         {
+            /* Open the BCD */
             BcdHandle = NULL;
             Status = BmOpenDataStore(BcdHandle);
             if (NT_SUCCESS(Status))
             {
+                /* Delete the option from the BCD, so it doesn't happen again */
                 ObjectId = BootEntry->Guid;
-                BmPurgeOption(BcdHandle, &ObjectId, BcdOSLoaderBoolean_OptionsEditOneTime);
+                BmPurgeOption(BcdHandle,
+                              &ObjectId,
+                              BcdOSLoaderBoolean_OptionsEditOneTime);
                 BmCloseDataStore(BcdHandle);
             }
         }
     }
 
 TryAgain:
+    /* Disable recovery mode */
     DoRecovery = FALSE;
-    Recover = FALSE;
+
+    /* Store globally which entry we are trying to boot */
     BmpSelectedBootEntry = BootEntry;
 
+    /* Create any devices that aren't yet fully defined for this boot entry */
     Status = BmpCreateDevices(BootEntry);
     if (!NT_SUCCESS(Status))
     {
+        /* That failed -- can we launch the recovery environment? */
         if (!LaunchWinRe)
         {
             return Status;
         }
 
+        /* Yes, so return with the WinRe launch code */
         LaunchCode = 2;
         goto Quickie;
     }
 
+    /* Is this an OS loader/ */
     if (BootEntry->Flags & BL_APPLICATION_ENTRY_WINLOAD)
     {
-        Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime, &AdvancedOneTime);
+        /* Is the one-time advanced options menu option present? */
+        Status = BlGetBootOptionBoolean(BootEntry->BcdData,
+                                        BcdOSLoaderBoolean_AdvancedOptionsOneTime,
+                                        &AdvancedOneTime);
         if (NT_SUCCESS(Status))
         {
+            /* Is it turned on? */
             if (AdvancedOneTime)
             {
-                BlAppendBootOptionBoolean(BootEntry, BcdLibraryBoolean_DisplayAdvancedOptions);
+                /* Set the option this once */
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdLibraryBoolean_DisplayAdvancedOptions);
             }
             else
             {
-                BlRemoveBootOption(BootEntry->BcdData, BcdLibraryBoolean_DisplayAdvancedOptions);
+                /* It's not, so disable the option if active */
+                BlRemoveBootOption(BootEntry->BcdData,
+                                   BcdLibraryBoolean_DisplayAdvancedOptions);
             }
 
-            BlRemoveBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+            /* Remove the one-time option. We've already purged it earlier */
+            BlRemoveBootOption(BootEntry->BcdData,
+                               BcdOSLoaderBoolean_AdvancedOptionsOneTime);
         }
 
-        Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime, &EditOneTime);
+        /* Is the one-time options editor menu option present? */
+        Status = BlGetBootOptionBoolean(BootEntry->BcdData,
+                                        BcdOSLoaderBoolean_OptionsEditOneTime,
+                                        &EditOneTime);
         if (NT_SUCCESS(Status))
         {
-            if (AdvancedOneTime)
+            /* Is it turned on? */
+            if (EditOneTime)
             {
-                BlAppendBootOptionBoolean(BootEntry, BcdLibraryBoolean_DisplayOptionsEdit);
+                /* Set the option this once */
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdLibraryBoolean_DisplayOptionsEdit);
             }
             else
             {
-                BlRemoveBootOption(BootEntry->BcdData, BcdLibraryBoolean_DisplayOptionsEdit);
+                /* It's not, so disable the option if active */
+                BlRemoveBootOption(BootEntry->BcdData,
+                                   BcdLibraryBoolean_DisplayOptionsEdit);
             }
 
-            BlRemoveBootOption(BootEntry->BcdData, BcdOSLoaderBoolean_OptionsEditOneTime);
+            /* Remove the one-time option. We've already purged it earlier */
+            BlRemoveBootOption(BootEntry->BcdData,
+                               BcdOSLoaderBoolean_OptionsEditOneTime);
         }
     }
 
-    Status = BmpTransferExecution(BootEntry, &LaunchCode, &Recover);
+    /* BCD handling done, transfer execution to this entry */
+    Status = BmpTransferExecution(BootEntry, &LaunchCode, &DoRecovery);
     if (!LaunchWinRe)
     {
         return Status;
     }
 
-    DoRecovery = Recover;
-
-    if (((NT_SUCCESS(Status)) || (Status == STATUS_CANCELLED)) && !(Recover))
+    /* Check if boot was successfull, or  cancelled and we're not doing WinRE */
+    if (((NT_SUCCESS(Status)) || (Status == STATUS_CANCELLED)) && !(DoRecovery))
     {
         return Status;
     }
 
-    if (!Recover)
+    /* Boot failed -- are we doing recovery? */
+    if (!DoRecovery)
     {
+        /* Nope, bail out */
         LaunchCode = 2;
         goto Quickie;
     }
 
 Quickie:
+    /* Get the recovery sequence */
     if (MiscGetBootOption(BootEntry->BcdData, BcdLibraryObjectList_RecoverySequence))
     {
+        /* Check if the launch depends on auto-recovery being enabled or not */
         if ((LaunchCode == 3) || (LaunchCode == 5) || (LaunchCode == 6))
         {
-            Status = BlGetBootOptionBoolean(BootEntry->BcdData, BcdLibraryBoolean_AutoRecoveryEnabled, &AutoRecovery);
+            Status = BlGetBootOptionBoolean(BootEntry->BcdData,
+                                            BcdLibraryBoolean_AutoRecoveryEnabled,
+                                            &AutoRecovery);
             if (NT_SUCCESS(Status))
             {
+                /* Override the setting */
                 DoRecovery = AutoRecovery;
             }
         }
     }
     else
     {
+        /* There's no recovery setting */
         DoRecovery = FALSE;
     }
 
+    /* Check if we should restart on failure */
     RestartOnFailure = FALSE;
-    BlGetBootOptionBoolean(BlpApplicationEntry.BcdData, BcdLibraryBoolean_RestartOnFailure, &RestartOnFailure);
-    DoRestart = RestartOnFailure ? FALSE : DoRecovery;
+    BlGetBootOptionBoolean(BlpApplicationEntry.BcdData,
+                           BcdLibraryBoolean_RestartOnFailure,
+                           &RestartOnFailure);
+
+    /* Do the sequence if recovery is on, unless we should restart instead */
+    DoSequence = RestartOnFailure ? FALSE : DoRecovery;
     while (1)
     {
-        if (DoRestart)
+        /* Are we doing the recovery sequence? */
+        if (DoSequence)
         {
+            /* Because of automatic recovery? */
             if (AutoRecovery)
             {
-                //BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, TRUE);
+#if BL_BITLOCKER_SUPPORT
+                /* Do bitlocker stuff */
+                BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, TRUE);
+#endif
             }
 
+            /* Launch the recovery sequence*/
             Status = BmLaunchRecoverySequence(BootEntry, LaunchCode);
 
+            /* Was it launched automatically? */
             if (AutoRecovery)
             {
-                //BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, FALSE);
+#if BL_BITLOCKER_SUPPORT
+                /* Do bitlocker stuff */
+                BlFveRegisterBootEntryForTrustedWimBoot(BootEntry, FALSE);
+#endif
+
+                /* No need to do this again */
                 AutoRecovery = FALSE;
             }
 
+            /* Did the recovery sequence work? */
             if (NT_SUCCESS(Status))
             {
+                /* All good */
                 return STATUS_SUCCESS;
             }
 
+            /* Remove the sequence, don't do it again */
             BlRemoveBootOption(BootEntry->BcdData, BcdLibraryObjectList_RecoverySequence);
         }
 
+        /* Recovery sequence also failed, show fatal error */
         if (!BmpInternalBootError)
         {
-            BmFatalErrorEx(4, Status, 0, 0, 0);
+            BmFatalErrorEx(BL_FATAL_ERROR_GENERIC, Status, 0, 0, 0);
         }
 
+        /* Display the error menu */
         ErrorCode = BmDisplayDumpError(BootEntry, LaunchCode);
         BmErrorPurge();
 
+        /* See what the user wants to do */
         switch (ErrorCode)
         {
-            case 6:
+            case TryAgain:
+                /* Try again */
                 goto TryAgain;
-            case 5:
+
+            case NextOs:
+                /* Boot the next entry*/
                 break;
-            case 4:
+
+            case OsSelection:
+                /* Cancel the boot*/
                 return STATUS_CANCELLED;
-            case 3:
+
+            case RecoverOem:
+                /* Custom OEM recovery -- open the BCD */
                 Status = BmOpenDataStore(BcdHandle);
                 if (NT_SUCCESS(Status))
                 {
+                    /* See what the custom sequence is */
                     Status = BmProcessCustomAction(BcdHandle, NULL);
                 }
+
+                /* All done, close the BCD */
                 if (BcdHandle)
                 {
                     BmCloseDataStore(BcdHandle);
                 }
                 return Status;
-            case 7:
+
+            case AdvancedOptions:
+                /* Show the advanced options next iteration */
                 BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
                 goto TryAgain;
-            case 8:
+
+            case BootOptions:
+                /* Show the options editor next iteration */
                 BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_OptionsEditOneTime);
                 goto TryAgain;
-            case 2:
-                DoRestart = TRUE;
+
+            case Recover:
+                /* Try the recovery sequence next time*/
+                DoSequence = TRUE;
                 LaunchCode = 1;
                 goto TryAgain;
+
             default:
+                /* Something unknown */
                 return STATUS_CANCELLED;
         }
     }
 
-
-
+    /* We are booting the next OS, so return success as to not kill the boot */
     return STATUS_SUCCESS;
 }
 

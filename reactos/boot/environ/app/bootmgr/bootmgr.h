@@ -53,15 +53,25 @@ typedef struct _BL_PACKED_BOOT_ERROR
 } BL_PACKED_BOOT_ERROR, *PBL_PACKED_BOOT_ERROR;
 
 #define BL_FATAL_ERROR_BCD_READ     0x01
+#define BL_FATAL_ERROR_APP_LOAD     0x02
 #define BL_FATAL_ERROR_BCD_ENTRIES  0x03
 #define BL_FATAL_ERROR_GENERIC      0x04
 #define BL_FATAL_ERROR_BCD_PARSE    0x07
+#define BL_FATAL_ERROR_NO_PAE       0x0B
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 BmMain (
     _In_ PBOOT_APPLICATION_PARAMETER_BLOCK BootParameters
+    );
+
+NTSTATUS
+BmpLaunchBootEntry (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PULONG EntryIndex,
+    _In_ ULONG LaunchCode,
+    _In_ BOOLEAN LaunchWinRe
     );
 
 #endif

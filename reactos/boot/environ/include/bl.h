@@ -64,6 +64,8 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_RETURN_ARGUMENTS_VERSION                     1
 #define BL_FIRMWARE_DESCRIPTOR_VERSION                  2
 
+#define BL_RETURN_ARGUMENTS_NO_PAE_FLAG                 0x40
+
 #define BL_APPLICATION_ENTRY_FLAG_NO_GUID               0x01
 #define BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL       0x02
 #define BL_APPLICATION_ENTRY_WINLOAD                    0x04
@@ -758,6 +760,18 @@ typedef struct _BL_MENU_STATUS
     ULONG BootIndex;
     WCHAR KeyValue;
 } BL_MENU_STATUS, *PL_MENU_STATUS;
+
+typedef enum _BL_BOOT_ERROR_STATUS
+{
+    Reboot = 1,
+    Recover = 2,
+    RecoverOem = 3,
+    OsSelection = 4,
+    NextOs = 5,
+    TryAgain = 6,
+    AdvancedOptions = 7,
+    BootOptions = 8
+} BL_BOOT_ERROR_STATUS;
 
 typedef struct _BL_HARDDISK_DEVICE
 {
