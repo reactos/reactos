@@ -123,7 +123,7 @@ set_image_base(rosload 0x10000)
 if(MSVC)
     set_subsystem(rosload BOOT_APPLICATION)
 else()
-    set_subsystem(rosload 14)
+    set_subsystem(rosload 16)
 endif()
 
 set_entrypoint(rosload OslMain@4)
