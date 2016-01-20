@@ -148,6 +148,13 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_LOAD_IMG_COMPUTE_SIGNATURE                   0x10
 #define BL_LOAD_IMG_COMPUTE_HASH                        0x40000
 
+#define BL_LOAD_PE_IMG_VIRTUAL_BUFFER                   BL_LOAD_IMG_VIRTUAL_BUFFER
+#define BL_LOAD_PE_IMG_CHECK_MACHINE                    0x02
+#define BL_LOAD_PE_IMG_EXISTING_BUFFER                  BL_LOAD_IMG_EXISTING_BUFFER 
+#define BL_LOAD_PE_IMG_COMPUTE_HASH                     0x10
+#define BL_LOAD_PE_IMG_CHECK_SUBSYSTEM                  0x80
+#define BL_LOAD_PE_IMG_CHECK_FORCED_INTEGRITY           0x200
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _BL_COLOR

@@ -655,15 +655,240 @@ NTSTATUS
 ImgpLoadPEImage (
     _In_ PBL_IMG_FILE ImageFile,
     _In_ BL_MEMORY_TYPE MemoryType,
-    _Out_ PVOID* ImageBase,
+    _Inout_ PVOID* ImageBase,
     _Out_ PULONG ImageSize,
-    _Out_ PVOID Hash,
+    _Inout_opt_ PVOID Hash,
     _In_ ULONG Flags
     )
 {
-    /* Micro-PE loader (no imports/exports/etc) */
-    EfiPrintf(L"PE not implemented\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG FileSize, HeaderSize;
+    PVOID ImageBuffer;
+    BL_IMG_FILE LocalFileBuffer;
+    PBL_IMG_FILE LocalFile;
+    PVOID VirtualAddress;
+    ULONGLONG VirtualSize;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PIMAGE_NT_HEADERS NtHeaders;
+
+    /* Initialize locals */
+    LocalFile = NULL;
+    ImageBuffer = NULL;
+    FileSize = 0;
+
+    /* Get the size of the image */
+    Status = ImgpGetFileSize(ImageFile, &FileSize);
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_FILE_INVALID;
+    }
+
+    /* Allocate a flat buffer for it */
+    Status = BlImgAllocateImageBuffer(&ImageBuffer, BlLoaderData, FileSize, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Read the whole file flat for now */
+    Status = ImgpReadAtFileOffset(ImageFile, FileSize, 0, ImageBuffer, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Build a local file handle */
+    LocalFile = &LocalFileBuffer;
+    LocalFileBuffer.FileName = ImageFile->FileName;
+    LocalFileBuffer.Flags = BL_IMG_MEMORY_FILE | BL_IMG_VALID_FILE;
+    LocalFileBuffer.BaseAddress = ImageBuffer;
+    LocalFileBuffer.FileSize = FileSize;
+
+    /* Get the NT headers of the file */
+    Status = RtlImageNtHeaderEx(0, ImageBuffer, FileSize, &NtHeaders);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Check if we should validate the machine type */
+    if (Flags & BL_LOAD_PE_IMG_CHECK_MACHINE)
+    {
+        /* Is it different than our current machine type? */
+#if _M_AMD64
+        if (NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64)
+#else
+        if (NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
+#endif
+        {
+            /* Is it x86 (implying we are x64) ? */
+            if (NtHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
+            {
+                /* Return special error code */
+                Status = STATUS_INVALID_IMAGE_WIN_32;
+            }
+            else if (NtHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
+            {
+                /* Otherwise, it's x64 but we are x86 */
+                Status = STATUS_INVALID_IMAGE_WIN_64;
+            }
+            else
+            {
+                /* Or it's ARM or something... */
+                Status = STATUS_INVALID_IMAGE_FORMAT;
+            }
+
+            /* Return with the distinguished error code */
+            goto Quickie;
+        }
+    }
+
+    /* Check if we should validate the subsystem */
+    if (Flags & BL_LOAD_PE_IMG_CHECK_SUBSYSTEM)
+    {
+        /* It must be a Windows boot Application */
+        if (NtHeaders->OptionalHeader.Subsystem !=
+            IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION)
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+    }
+
+    /* Check if we should validate the /INTEGRITYCHECK flag */
+    if (Flags & BL_LOAD_PE_IMG_CHECK_FORCED_INTEGRITY)
+    {
+        /* Check if it's there */
+        if (!(NtHeaders->OptionalHeader.DllCharacteristics &
+              IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY))
+        {
+            /* Nope, fail otherwise */
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+    }
+
+    /* Check if we should compute the image hash */
+    if ((Flags & BL_LOAD_PE_IMG_COMPUTE_HASH) || (Hash))
+    {
+        EfiPrintf(L"No hash support\r\n");
+    }
+
+    /* Read the current base address, if any */
+    VirtualAddress = *ImageBase;
+
+    /* Get the virtual size of the image */
+    VirtualSize = NtHeaders->OptionalHeader.SizeOfImage;
+
+    /* Safely align the virtual size to a page */
+    Status = RtlULongLongAdd(VirtualSize,
+                             PAGE_SIZE - 1,
+                             &VirtualSize);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+    VirtualSize = ALIGN_DOWN_BY(VirtualSize, PAGE_SIZE);
+
+    /* Make sure the image isn't larger than 4GB */
+    if (VirtualSize > ULONG_MAX)
+    {
+        Status = STATUS_INVALID_IMAGE_FORMAT;
+        goto Quickie;
+    }
+
+    /* Check if we have a buffer already */
+    if (Flags & BL_LOAD_IMG_EXISTING_BUFFER)
+    {
+        /* Check if it's too small */
+        if (*ImageSize < VirtualSize)
+        {
+            /* Fail, letting the caller know how big to make it */
+            *ImageSize = VirtualSize;
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+    else
+    {
+        /* Allocate the buffer with the flags and type the caller wants */
+        Status = BlImgAllocateImageBuffer(&VirtualAddress,
+                                          MemoryType,
+                                          VirtualSize,
+                                          Flags);
+    }
+
+    /* Bail out if allocation failed, or existing buffer is too small */
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Read the size of the headers */
+    HeaderSize = NtHeaders->OptionalHeader.SizeOfHeaders;
+    if (VirtualSize < HeaderSize)
+    {
+        /* Bail out if they're bigger than the image! */
+        Status = STATUS_INVALID_IMAGE_FORMAT;
+        goto Quickie;
+    }
+
+    /* Now read the header into the buffer */
+    Status = ImgpReadAtFileOffset(LocalFile, HeaderSize, 0, VirtualAddress, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Get the NT headers of the file */
+    Status = RtlImageNtHeaderEx(0, VirtualAddress, HeaderSize, &NtHeaders);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    EfiPrintf(L"MORE PE TODO: %lx\r\n", NtHeaders->OptionalHeader.AddressOfEntryPoint);
+    EfiStall(100000000);
+
+Quickie:
+    /* Check if we had an image buffer allocated */
+    if ((ImageBuffer) && (FileSize))
+    {
+        /* Free it */
+        BlImgUnallocateImageBuffer(ImageBuffer, FileSize, 0);
+    }
+
+    /* Check if we had a local file handle */
+    if (LocalFile)
+    {
+        /* Close it */
+        ImgpCloseFile(LocalFile);
+    }
+
+    /* Check if this is the failure path */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Check if we had started mapping in the image already */
+        if ((VirtualAddress) && !(Flags & BL_LOAD_PE_IMG_EXISTING_BUFFER))
+        {
+            /* Into a virtual buffer? */
+            if (Flags & BL_LOAD_PE_IMG_VIRTUAL_BUFFER)
+            {
+                /* Unmap and free it */
+                BlMmUnmapVirtualAddressEx(VirtualAddress, VirtualSize);
+                PhysicalAddress.QuadPart = (ULONG_PTR)VirtualAddress;
+                BlMmFreePhysicalPages(PhysicalAddress);
+            }
+            else
+            {
+                /* Into a physical buffer -- free it */
+                EfiPrintf(L"Leaking physical pages\r\n");
+               // MmPapFreePages(VirtualAddress, TRUE);
+            }
+        }
+    }
+
+    /* Return back to caller */
+    return Status;
 }
 
 NTSTATUS
@@ -691,7 +916,7 @@ BlImgLoadPEImageEx (
     }
 
     /* If we are loading a pre-allocated image, make sure we have it */
-    if ((Flags & 4) && (!(*ImageBase) || !(ImageSize)))
+    if ((Flags & BL_LOAD_IMG_EXISTING_BUFFER) && (!(*ImageBase) || !(ImageSize)))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -707,11 +932,6 @@ BlImgLoadPEImageEx (
                                  ImageSize,
                                  Hash,
                                  Flags);
-    }
-    else
-    {
-        /* For temporary debugging */
-        EfiPrintf(L"Couldn't open file: %lx\r\n", Status);
     }
 
     /* Close the image file and return back to caller */
@@ -749,8 +969,6 @@ BlImgLoadBootApplication (
     Path = NULL;
     ImageSize = 0;
     ImageBase = NULL;
-
-    EfiPrintf(L"Loading application %p\r\n", BootEntry);
 
     /* Check for "allowed in-memory settings" */
     Status = BlpGetBootOptionIntegerList(BootEntry->BcdData,
@@ -804,12 +1022,10 @@ BlImgLoadBootApplication (
     }
 
     /* Open the device */
-    EfiPrintf(L"Opening device for path: %s\r\n", Path);
     Status = BlpDeviceOpen(Device,
                            BL_DEVICE_READ_ACCESS,
                            0,
                            &DeviceId);
-    EfiPrintf(L"Device ID: %lx %lx\r\n", Status, DeviceId);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
