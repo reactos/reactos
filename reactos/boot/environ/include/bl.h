@@ -134,6 +134,9 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_FILE_ENTRY_READ_ACCESS                       0x02
 #define BL_FILE_ENTRY_WRITE_ACCESS                      0x04
 #define BL_FILE_ENTRY_UNKNOWN_ACCESS                    0x10
+#define BL_FILE_ENTRY_DIRECTORY                         0x10000
+
+#define BL_ETFS_FILE_ENTRY_DIRECTORY                    0x01
 
 #define BL_IMG_VALID_FILE                               0x01
 #define BL_IMG_MEMORY_FILE                              0x02

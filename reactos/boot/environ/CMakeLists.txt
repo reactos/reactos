@@ -18,6 +18,7 @@ list(APPEND BOOTLIB_SOURCE
      lib/misc/image.c
      lib/misc/resource.c
      lib/misc/font.c
+     lib/misc/rtlcompat.c
      lib/firmware/fwutil.c
      lib/firmware/efi/firmware.c
      lib/mm/mm.c
@@ -73,7 +74,6 @@ add_dependencies(bootlib bugcodes bootmsg xdk)
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c
      app/bootmgr/bootmgr.c
-     app/bootmgr/rtlcompat.c
      )
 
 add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE} app/bootmgr/bootmgr.rc)
@@ -105,3 +105,37 @@ endif()
 
 add_dependencies(bootmgfw asm bugcodes)
 
+list(APPEND ROSLOAD_BASE_SOURCE
+     app/rosload/rosload.c
+     )
+
+add_executable(rosload ${ROSLOAD_BASE_SOURCE})
+set_target_properties(rosload PROPERTIES SUFFIX ".efi")
+
+if(MSVC)
+    add_target_link_flags(rosload "/ignore:4078 /ignore:4254 /DRIVER /FIXED")
+else()
+    add_target_link_flags(rosload "-Wl,--strip-all,--exclude-all-symbols")
+endif()
+
+set_image_base(rosload 0x10000)
+
+if(MSVC)
+    set_subsystem(rosload BOOT_APPLICATION)
+else()
+    set_subsystem(rosload 14)
+endif()
+
+set_entrypoint(rosload OslMain@4)
+
+target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
+
+if(STACK_PROTECTOR)
+    target_link_libraries(rosload gcc_ssp)
+elseif(RUNTIME_CHECKS)
+    target_link_libraries(rosload runtmchk)
+endif()
+
+add_dependencies(rosload asm bugcodes)
+
+add_cd_file(TARGET rosload DESTINATION reactos/system32/boot NO_CAB FOR all)

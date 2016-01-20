@@ -18,6 +18,7 @@ PWCHAR BlpApplicationBaseDirectory;
 PBOOT_APPLICATION_PARAMETER_BLOCK BlpApplicationParameters;
 BL_LOADED_APPLICATION_ENTRY BlpApplicationEntry;
 BOOLEAN BlpLibraryParametersInitialized;
+ULONG BlpApplicationFlags;
 
 ULONG PdPersistAllocations;
 LIST_ENTRY BlpPdListHead;

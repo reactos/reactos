@@ -22,8 +22,6 @@ typedef struct _BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH
 
 /* DATA VARIABLES ************************************************************/
 
-ULONG BlpApplicationFlags;
-
 BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH EfiInitScratch;
 
 /* FUNCTIONS *****************************************************************/

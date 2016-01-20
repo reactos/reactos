@@ -2862,7 +2862,7 @@ BmMain (
         goto Failure;
     }
     XmlLoaded = TRUE;
-    EfiStall(100000000);
+
     /* Check if there's an active bitmap visible */
     if (!BlDisplayValidOemBitmap())
     {
