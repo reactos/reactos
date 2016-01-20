@@ -1823,6 +1823,8 @@ MUI_STRING itITStrings[] =
     "    %sSpazio non partizionato%s             %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Partizione estesa"},
     {STRING_UNFORMATTED,
     "Nuova (Non formattata)"},
     {STRING_FORMATUNUSED,
