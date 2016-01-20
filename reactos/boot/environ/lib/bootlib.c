@@ -49,9 +49,11 @@ InitializeLibrary (
     PBL_MEMORY_DATA MemoryData;
     PBL_APPLICATION_ENTRY AppEntry;
     PBL_FIRMWARE_DESCRIPTOR FirmwareDescriptor;
-    ULONG_PTR ParamPointer = (ULONG_PTR)BootAppParameters;
+    LARGE_INTEGER BootFrequency;
+    ULONG_PTR ParamPointer;
 
     /* Validate correct Boot Application data */
+    ParamPointer = (ULONG_PTR)BootAppParameters;
     if (!(BootAppParameters) ||
         (BootAppParameters->Signature[0] != BOOT_APPLICATION_SIGNATURE_1) ||
         (BootAppParameters->Signature[1] != BOOT_APPLICATION_SIGNATURE_2) ||
@@ -131,18 +133,16 @@ InitializeLibrary (
         return Status;
     }
 
-#if 0
     /* Modern systems have an undocumented BCD system for the boot frequency */
     Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
                                     0x15000075,
-                                    &BootFrequency);
-    if (NT_SUCCESS(Status) && (BootFrequency))
+                                    (PULONGLONG)&BootFrequency.QuadPart);
+    if (NT_SUCCESS(Status) && (BootFrequency.QuadPart))
     {
         /* Use it if present */
-        BlpTimePerformanceFrequency = BootFrequency;
+        BlpTimePerformanceFrequency = BootFrequency.QuadPart;
     }
     else
-#endif
     {
         /* Use the TSC for calibration */
         Status = BlpTimeCalibratePerformanceCounter();

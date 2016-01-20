@@ -1139,6 +1139,13 @@ typedef struct _BL_IMG_FILE
     PWCHAR FileName;
 } BL_IMG_FILE, *PBL_IMG_FILE;
 
+typedef struct _BL_IMAGE_APPLICATION_ENTRY
+{
+    PBL_APPLICATION_ENTRY AppEntry;
+    PVOID ImageBase;
+    ULONG ImageSize;
+} BL_IMAGE_APPLICATION_ENTRY, *PBL_IMAGE_APPLICATION_ENTRY;
+
 typedef struct _BL_DEFERRED_FONT_FILE
 {
     LIST_ENTRY ListEntry;
@@ -1462,6 +1469,11 @@ EfipGetRsdt (
 NTSTATUS
 BlpTimeCalibratePerformanceCounter (
     VOID
+    );
+
+ULONGLONG
+BlTimeQueryPerformanceCounter (
+    _Out_opt_ PLARGE_INTEGER Frequency
     );
 
 /* RESOURCE LOCALE INTERNATIONALIZATION ROUTINES *****************************/
@@ -2136,6 +2148,30 @@ BlImgFindSection (
     _In_ ULONG ImageSize
     );
 
+NTSTATUS
+BlImgLoadBootApplication (
+    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
+    _Out_ PULONG AppHandle
+    );
+
+NTSTATUS
+BlImgStartBootApplication (
+    _In_ ULONG AppHandle,
+    _Inout_ PBL_RETURN_ARGUMENTS ReturnArguments
+    );
+
+NTSTATUS
+BlImgUnloadBootApplication (
+    _In_ ULONG AppHandle
+    );
+
+VOID
+BlImgQueryCodeIntegrityBootOptions (
+    _In_ PBL_LOADED_APPLICATION_ENTRY ApplicationEntry,
+    _Out_ PBOOLEAN IntegrityChecksDisabled,
+    _Out_ PBOOLEAN TestSigning
+    );
+
 /* FILE I/O ROUTINES *********************************************************/
 
 NTSTATUS
@@ -2453,4 +2489,7 @@ extern PVOID DspRemoteInputConsole;
 extern PVOID DspLocalInputConsole;
 extern WCHAR BlScratchBuffer[8192];
 extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedAllocated;
+extern ULONGLONG BlpTimePerformanceFrequency;
+extern LIST_ENTRY RegisteredFileSystems;
+
 #endif

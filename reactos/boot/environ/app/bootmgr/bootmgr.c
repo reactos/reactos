@@ -1083,30 +1083,6 @@ BlXmiInitialize (
     return STATUS_SUCCESS;
 }
 
-VOID
-BlImgQueryCodeIntegrityBootOptions (
-    _In_ PBL_LOADED_APPLICATION_ENTRY ApplicationEntry,
-    _Out_ PBOOLEAN IntegrityChecksDisabled, 
-    _Out_ PBOOLEAN TestSigningEnabled
-    )
-{
-    
-    NTSTATUS Status;
-    BOOLEAN Value;
-
-    /* Check if /DISABLEINTEGRITYCHECKS is on */
-    Status = BlGetBootOptionBoolean(ApplicationEntry->BcdData,
-                                    BcdLibraryBoolean_DisableIntegrityChecks,
-                                    &Value);
-    *IntegrityChecksDisabled = NT_SUCCESS(Status) && (Value);
-
-    /* Check if /TESTSIGNING is on */
-    Status = BlGetBootOptionBoolean(ApplicationEntry->BcdData,
-                                    BcdLibraryBoolean_AllowPrereleaseSignatures,
-                                    &Value);
-    *TestSigningEnabled = NT_SUCCESS(Status) && (Value);
-}
-
 NTSTATUS
 BmFwVerifySelfIntegrity (
     VOID
@@ -2212,38 +2188,6 @@ BmpCreateDevices (
     return STATUS_SUCCESS;
 }
 
-/* MOVE TO IMAGe.C */
-NTSTATUS
-BlImgLoadBootApplication (
-    _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
-    _Out_ PHANDLE AppHandle
-    )
-{
-    EfiPrintf(L"Loading application %p\r\n", BootEntry);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-BlImgStartBootApplication (
-    _In_ HANDLE AppHandle,
-    _Inout_ PBL_RETURN_ARGUMENTS ReturnArguments
-    )
-{
-    EfiPrintf(L"Starting application %p\r\n", AppHandle);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-BlImgUnloadBootApplication (
-    _In_ HANDLE AppHandle
-    )
-{
-    EfiPrintf(L"Unloading application %p\r\n", AppHandle);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
 
 NTSTATUS
 BmpTransferExecution (
@@ -2257,7 +2201,7 @@ BmpTransferExecution (
     PBL_DEVICE_DESCRIPTOR AppDevice;
     BL_RETURN_ARGUMENTS ReturnArgs;
     BOOLEAN AdvancedOptions;
-    HANDLE AppHandle;
+    ULONG AppHandle;
 
     Status = BlGetBootOptionString(BootEntry->BcdData,
                                    BcdLibraryString_ApplicationPath,

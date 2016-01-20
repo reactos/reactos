@@ -87,3 +87,19 @@ BlpTimeCalibratePerformanceCounter (
     /* On other systems, compute it */
     return BlpTimeMeasureTscFrequency();
 }
+
+ULONGLONG
+BlTimeQueryPerformanceCounter (
+    _Out_opt_ PLARGE_INTEGER Frequency
+    )
+{
+    /* Check if caller wants frequency */
+    if (Frequency)
+    {
+        /* Return it */
+        Frequency->QuadPart = BlpTimePerformanceFrequency;
+    }
+
+    /* Return the TSC value */
+    return __rdtsc();
+};

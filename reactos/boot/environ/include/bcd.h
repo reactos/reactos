@@ -94,6 +94,7 @@ typedef enum BcdLibraryElementTypes
     BcdLibraryInteger_GraphicsResolution = 0x15000052,
     BcdLibraryInteger_DisplayMessage = 0x15000065, /* Undocumented */
     BcdLibraryInteger_DisplayMessageOverride = 0x15000066, /* Undocumented */
+    BcdLibraryInteger_UndocumentedMagic = 0x15000075, /* Undocumented magic */
     BcdLibraryBoolean_RestartOnFailure = 0x16000053,
     BcdLibraryBoolean_GraphicsForceHighestMode = 0x16000054,
     BcdLibraryBoolean_IsolatedExecutionContext = 0x16000060,
