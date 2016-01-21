@@ -651,54 +651,6 @@ BlImgUnLoadImage (
     return BlImgUnallocateImageBuffer(ImageBase, ImageSize, ImageFlags);
 }
 
-unsigned int  BlUtlCheckSum(unsigned int PartialSum, PUCHAR Source, unsigned int Length, unsigned int Flags)
-{
-    unsigned int Type; // eax@1
-    int Type1; // eax@1
-    unsigned int AlignedLength; // ebx@3
-    unsigned int i; // ebx@21 MAPDST
-
-    Type = Flags & 3;
-    Type1 = Type - 1;
-    if (Type1)
-    {
-        if (Type1 == 1)
-        {
-            PartialSum = (unsigned __int16)PartialSum;
-            AlignedLength = Length & ~1;
-            if (Length & ~1)
-            {
-                i = 0;
-                do
-                {
-                    PartialSum += *(unsigned __int16 *)&Source[i];
-                    if (Flags & 0x10000)
-                        PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
-                    i += 2;
-                } while (i < AlignedLength);
-            }
-
-            if (Length != AlignedLength)
-            {
-                PartialSum += (unsigned __int8)Source[AlignedLength];
-                if (Flags & 0x10000)
-                    PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
-            }
-            if (Flags & 0x40000)
-                return ~PartialSum;
-            PartialSum = (unsigned __int16)PartialSum;
-        }
-    }
-    else
-    {
-        EfiPrintf(L"checksum type not supported\r\n");
-    }
-
-    if (Flags & 0x40000)
-        return ~PartialSum;
-    return PartialSum;
-}
-
 NTSTATUS
 ImgpLoadPEImage (
     _In_ PBL_IMG_FILE ImageFile,
@@ -921,7 +873,11 @@ ImgpLoadPEImage (
     NtHeaders->OptionalHeader.CheckSum = 0;
 
     /* Calculate the checksum of the header, and restore the original one */
-    PartialSum = BlUtlCheckSum(0, VirtualAddress, HeaderSize, 0x10002);
+    PartialSum = BlUtlCheckSum(0,
+                               VirtualAddress,
+                               HeaderSize,
+                               BL_UTL_CHECKSUM_COMPLEMENT |
+                               BL_UTL_CHECKSUM_USHORT_BUFFER);
     NtHeaders->OptionalHeader.CheckSum = CheckSum;
 
     /* Record our current position (right after the headers) */
@@ -1037,7 +993,8 @@ ImgpLoadPEImage (
                 PartialSum = BlUtlCheckSum(PartialSum,
                                            (PUCHAR)SectionStart,
                                            AlignSize,
-                                           0x10002);
+                                           BL_UTL_CHECKSUM_COMPLEMENT |
+                                           BL_UTL_CHECKSUM_USHORT_BUFFER);
             }
         }
 
@@ -1114,7 +1071,8 @@ ImgpLoadPEImage (
             PartialSum = BlUtlCheckSum(PartialSum,
                                        LocalBuffer,
                                        BytesRead,
-                                       0x10002);
+                                       BL_UTL_CHECKSUM_COMPLEMENT |
+                                       BL_UTL_CHECKSUM_USHORT_BUFFER);
         }
 
         /* Finally, calculate the final checksum and compare it */

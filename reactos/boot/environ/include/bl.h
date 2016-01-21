@@ -155,6 +155,12 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_LOAD_PE_IMG_CHECK_SUBSYSTEM                  0x80
 #define BL_LOAD_PE_IMG_CHECK_FORCED_INTEGRITY           0x200
 
+#define BL_UTL_CHECKSUM_COMPLEMENT                      0x10000
+#define BL_UTL_CHECKSUM_ROTATE                          0x20000
+#define BL_UTL_CHECKSUM_NEGATE                          0x40000
+#define BL_UTL_CHECKSUM_UCHAR_BUFFER                    0x01
+#define BL_UTL_CHECKSUM_USHORT_BUFFER                   0x02
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _BL_COLOR
@@ -1618,6 +1624,14 @@ BlUtlInitialize (
 NTSTATUS
 BlUtlRegisterProgressRoutine (
     VOID
+    );
+
+ULONG
+BlUtlCheckSum (
+    _In_ ULONG PartialSum,
+    _In_ PUCHAR Buffer,
+    _In_ ULONG Length,
+    _In_ ULONG Flags
     );
 
 NTSTATUS

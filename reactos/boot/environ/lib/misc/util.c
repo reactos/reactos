@@ -720,3 +720,61 @@ Quickie:
     return Status;
 }
 
+ULONG
+BlUtlCheckSum (
+    _In_ ULONG PartialSum,
+    _In_ PUCHAR Buffer,
+    _In_ ULONG Length,
+    _In_ ULONG Flags
+    )
+{
+    ULONG i;
+
+    if (Flags & BL_UTL_CHECKSUM_UCHAR_BUFFER)
+    {
+        EfiPrintf(L"Not supported\r\n");
+        return 0;
+    }
+    else if (Flags & BL_UTL_CHECKSUM_USHORT_BUFFER)
+    {
+        PartialSum = (unsigned __int16)PartialSum;
+        Length &= ~1;
+
+        for (i = 0; i < Length; i += 2)
+        {
+            PartialSum += *(unsigned __int16 *)&Buffer[i];
+            if (Flags & BL_UTL_CHECKSUM_COMPLEMENT)
+            {
+                PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
+            }
+        }
+
+        if (Length != Length)
+        {
+            PartialSum += (unsigned __int8)Buffer[Length];
+            if (Flags & BL_UTL_CHECKSUM_COMPLEMENT)
+            {
+                PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
+            }
+        }
+
+        if (Flags & BL_UTL_CHECKSUM_NEGATE)
+        {
+            return ~PartialSum;
+        }
+
+        PartialSum = (unsigned __int16)PartialSum;
+    }
+    else
+    {
+        /* Invalid mode */
+        return 0;
+    }
+
+    if (Flags & BL_UTL_CHECKSUM_NEGATE)
+    {
+        return ~PartialSum;
+    }
+
+    return PartialSum;
+}
