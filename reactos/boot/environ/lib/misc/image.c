@@ -656,33 +656,27 @@ ImgpLoadPEImage (
     _In_ PBL_IMG_FILE ImageFile,
     _In_ BL_MEMORY_TYPE MemoryType,
     _Inout_ PVOID* ImageBase,
-    _Out_ PULONG ImageSize,
+    _Out_opt_ PULONG ImageSize,
     _Inout_opt_ PVOID Hash,
     _In_ ULONG Flags
     )
 {
     NTSTATUS Status;
     ULONG FileSize, HeaderSize;
-    PVOID ImageBuffer;
     BL_IMG_FILE LocalFileBuffer;
     PBL_IMG_FILE LocalFile;
-    PVOID VirtualAddress;
+    PVOID VirtualAddress, PreferredBase, ImageBuffer, CertBuffer, HashBuffer;
     ULONGLONG VirtualSize;
+    PIMAGE_DATA_DIRECTORY CertDirectory;
     PHYSICAL_ADDRESS PhysicalAddress;
     PIMAGE_NT_HEADERS NtHeaders;
-    USHORT SectionCount;
-    USHORT CheckSum, PartialSum;
+    USHORT SectionCount, CheckSum, PartialSum, FinalSum;
     PIMAGE_SECTION_HEADER Section;
-    ULONG_PTR EndOfHeaders, SectionStart;
-    ULONG i;
-    BOOLEAN First;
-    ULONG_PTR Slack, SectionEnd;
-    ULONG SectionSize, RawSize;
-    ULONG BytesRead, RemainingLength;
+    ULONG_PTR EndOfHeaders, SectionStart, Slack, SectionEnd;
+    ULONG i, SectionSize, RawSize, BytesRead, RemainingLength, Offset, AlignSize;
+    BOOLEAN First, ImageHashValid;
     UCHAR LocalBuffer[1024];
-    USHORT FinalSum;
-    ULONG Offset;
-    ULONG AlignSize;
+    UCHAR TrustedBootInformation[52];
 
     /* Initialize locals */
     LocalFile = NULL;
@@ -690,8 +684,13 @@ ImgpLoadPEImage (
     FileSize = 0;
     First = FALSE;
     VirtualAddress = NULL;
+    CertBuffer = NULL;
+    CertDirectory = NULL;
+    HashBuffer = NULL;
     Offset = 0;
     VirtualSize = 0;
+    ImageHashValid = FALSE;
+    RtlZeroMemory(&TrustedBootInformation, sizeof(TrustedBootInformation));
 
     /* Get the size of the image */
     Status = ImgpGetFileSize(ImageFile, &FileSize);
@@ -1084,18 +1083,98 @@ ImgpLoadPEImage (
         }
 
         /* If the checksum doesn't match, and caller is enforcing, bail out */
-        EfiPrintf(L"Final checksum: %lx. Original: %lx\r\n", FinalSum, CheckSum);
-        if ((FinalSum != CheckSum) && !(Flags & 0x10000))
+        if ((FinalSum != CheckSum) &&
+            !(Flags & BL_LOAD_PE_IMG_IGNORE_CHECKSUM_MISMATCH))
         {
             Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
             goto Quickie;
         }
     }
 
+    /* Check if the .rsrc section should be checked with the filename */
+    if (Flags & BL_LOAD_PE_IMG_VALIDATE_ORIGINAL_FILENAME)
+    {
+        EfiPrintf(L"Not yet supported\r\n");
+        Status = 0xC0430007; // STATUS_SECUREBOOT_FILE_REPLACED
+        goto Quickie;
+    }
+
+    /* Check if we should relocate */
+    if (!(Flags & BL_LOAD_PE_IMG_SKIP_RELOCATIONS))
+    {
+        /* Check if we loaded at a different address */
+        PreferredBase = (PVOID)NtHeaders->OptionalHeader.ImageBase;
+        if (VirtualAddress != PreferredBase)
+        {
+            /* Yep -- do relocations */
+            Status = LdrRelocateImage(VirtualAddress,
+                                      "Boot Environment Library",
+                                      STATUS_SUCCESS,
+                                      STATUS_UNSUCCESSFUL,
+                                      STATUS_INVALID_IMAGE_FORMAT);
+            if (!NT_SUCCESS(Status))
+            {
+                /* That's bad */
+                goto Quickie;
+            }
+        }
+    }
+
+#if BL_TPM_SUPPORT
+    /* Check if the image hash  was valid */
+    if (!ImageHashValid)
+    {
+        /* Send a TPM/SI notification without a context */
+        BlEnNotifyEvent(0x10000002, NULL);
+    }
+
+    /* Now send a TPM/SI notification with the hash of the loaded image */
+    BlMmTranslateVirtualAddress(VirtualAddress, &Context.ImageBase);
+    Context.HashAlgorithm = HashAlgorithm;
+    Context.HashSize = HashSize;
+    Context.FileName = ImageFile->FileName;
+    Context.ImageSize = VirtualSize;
+    Context.HashValid = ImageHashValid;
+    Context.Hash = Hash;
+    BlEnNotifyEvent(0x10000002, &Context);
+#endif
+
+    /* Return the loaded address to the caller */
+    *ImageBase = VirtualAddress;
+
+    /* If the caller wanted the image size, return it too */
+    if (ImageSize)
+    {
+        *ImageSize = VirtualSize;
+    }
+
     EfiPrintf(L"MORE PE TODO: %lx\r\n", NtHeaders->OptionalHeader.AddressOfEntryPoint);
     EfiStall(100000000);
 
 Quickie:
+    /* Check if we computed the image hash OK */
+    if (ImageHashValid)
+    {
+        /* Then free the information that ImgpValidateImageHash set up */
+        EfiPrintf(L"leadking trusted boot\r\n");
+        //ImgpDestroyTrustedBootInformation(&TrustedBootInformation);
+    }
+
+    /* Check if we had a hash buffer */
+    if (HashBuffer)
+    {
+        /* Free it */
+        EfiPrintf(L"Leadking hash: %p\r\n", HashBuffer);
+        //MmPapFreePages(HashBuffer, TRUE);
+    }
+
+    /* Check if we have a certificate diretory */
+    if ((CertBuffer) && (CertDirectory))
+    {
+        /* Free it */
+        BlImgUnallocateImageBuffer(CertBuffer, CertDirectory->Size, 0);
+    }
+
     /* Check if we had an image buffer allocated */
     if ((ImageBuffer) && (FileSize))
     {
@@ -1505,6 +1584,8 @@ ImgArchEfiStartBootApplication (
     )
 {
     /* Not yet implemented. This is the last step! */
+    EfiPrintf(L"EFI APPLICATION START!!!\r\n");
+    EfiStall(100000000);
     return STATUS_NOT_IMPLEMENTED;
 }
 

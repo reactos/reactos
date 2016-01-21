@@ -346,24 +346,24 @@ RtlImageRvaToVa(
 {
     PIMAGE_SECTION_HEADER Section = NULL;
 
+if (SectionHeader)
+Section = *SectionHeader;
+
+if ((Section == NULL) ||
+    (Rva < SWAPD(Section->VirtualAddress)) ||
+    (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData)))
+{
+    Section = RtlImageRvaToSection(NtHeader, BaseAddress, Rva);
+    if (Section == NULL)
+        return NULL;
+
     if (SectionHeader)
-        Section = *SectionHeader;
+        *SectionHeader = Section;
+}
 
-    if ((Section == NULL) ||
-        (Rva < SWAPD(Section->VirtualAddress)) ||
-        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData)))
-    {
-        Section = RtlImageRvaToSection(NtHeader, BaseAddress, Rva);
-        if (Section == NULL)
-            return NULL;
-
-        if (SectionHeader)
-            *SectionHeader = Section;
-    }
-
-    return (PVOID)((ULONG_PTR)BaseAddress + Rva +
-                   (ULONG_PTR)SWAPD(Section->PointerToRawData) -
-                   (ULONG_PTR)SWAPD(Section->VirtualAddress));
+return (PVOID)((ULONG_PTR)BaseAddress + Rva +
+    (ULONG_PTR)SWAPD(Section->PointerToRawData) -
+    (ULONG_PTR)SWAPD(Section->VirtualAddress));
 }
 
 PIMAGE_BASE_RELOCATION
@@ -426,7 +426,7 @@ LdrProcessRelocationBlockLongLong(
         default:
             DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
             DPRINT1("Address %p, Current %u, Count %u, *TypeOffset %x\n",
-                    (PVOID)Address, i, Count, SWAPW(*TypeOffset));
+                (PVOID)Address, i, Count, SWAPW(*TypeOffset));
             return (PIMAGE_BASE_RELOCATION)NULL;
         }
 
@@ -434,6 +434,18 @@ LdrProcessRelocationBlockLongLong(
     }
 
     return (PIMAGE_BASE_RELOCATION)TypeOffset;
+}
+
+ULONG
+NTAPI
+LdrRelocateImage(
+    IN PVOID BaseAddress,
+    IN PCCH  LoaderName,
+    IN ULONG Success,
+    IN ULONG Conflict,
+    IN ULONG Invalid)
+{
+    return LdrRelocateImageWithBias(BaseAddress, 0, LoaderName, Success, Conflict, Invalid);
 }
 
 ULONG
