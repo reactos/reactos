@@ -651,6 +651,54 @@ BlImgUnLoadImage (
     return BlImgUnallocateImageBuffer(ImageBase, ImageSize, ImageFlags);
 }
 
+unsigned int  BlUtlCheckSum(unsigned int PartialSum, PUCHAR Source, unsigned int Length, unsigned int Flags)
+{
+    unsigned int Type; // eax@1
+    int Type1; // eax@1
+    unsigned int AlignedLength; // ebx@3
+    unsigned int i; // ebx@21 MAPDST
+
+    Type = Flags & 3;
+    Type1 = Type - 1;
+    if (Type1)
+    {
+        if (Type1 == 1)
+        {
+            PartialSum = (unsigned __int16)PartialSum;
+            AlignedLength = Length & ~1;
+            if (Length & ~1)
+            {
+                i = 0;
+                do
+                {
+                    PartialSum += *(unsigned __int16 *)&Source[i];
+                    if (Flags & 0x10000)
+                        PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
+                    i += 2;
+                } while (i < AlignedLength);
+            }
+
+            if (Length != AlignedLength)
+            {
+                PartialSum += (unsigned __int8)Source[AlignedLength];
+                if (Flags & 0x10000)
+                    PartialSum = (unsigned __int16)((PartialSum >> 16) + PartialSum);
+            }
+            if (Flags & 0x40000)
+                return ~PartialSum;
+            PartialSum = (unsigned __int16)PartialSum;
+        }
+    }
+    else
+    {
+        EfiPrintf(L"checksum type not supported\r\n");
+    }
+
+    if (Flags & 0x40000)
+        return ~PartialSum;
+    return PartialSum;
+}
+
 NTSTATUS
 ImgpLoadPEImage (
     _In_ PBL_IMG_FILE ImageFile,
@@ -670,11 +718,28 @@ ImgpLoadPEImage (
     ULONGLONG VirtualSize;
     PHYSICAL_ADDRESS PhysicalAddress;
     PIMAGE_NT_HEADERS NtHeaders;
+    USHORT SectionCount;
+    USHORT CheckSum, PartialSum;
+    PIMAGE_SECTION_HEADER Section;
+    ULONG_PTR EndOfHeaders, SectionStart;
+    ULONG i;
+    BOOLEAN First;
+    ULONG_PTR Slack, SectionEnd;
+    ULONG SectionSize, RawSize;
+    ULONG BytesRead, RemainingLength;
+    UCHAR LocalBuffer[1024];
+    USHORT FinalSum;
+    ULONG Offset;
+    ULONG AlignSize;
 
     /* Initialize locals */
     LocalFile = NULL;
     ImageBuffer = NULL;
     FileSize = 0;
+    First = FALSE;
+    VirtualAddress = NULL;
+    Offset = 0;
+    VirtualSize = 0;
 
     /* Get the size of the image */
     Status = ImgpGetFileSize(ImageFile, &FileSize);
@@ -844,6 +909,229 @@ ImgpLoadPEImage (
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
+    }
+
+    First = FALSE;
+
+    /* Record how many sections we have */
+    SectionCount = NtHeaders->FileHeader.NumberOfSections;
+
+    /* Capture the current checksum and reset it */
+    CheckSum = NtHeaders->OptionalHeader.CheckSum;
+    NtHeaders->OptionalHeader.CheckSum = 0;
+
+    /* Calculate the checksum of the header, and restore the original one */
+    PartialSum = BlUtlCheckSum(0, VirtualAddress, HeaderSize, 0x10002);
+    NtHeaders->OptionalHeader.CheckSum = CheckSum;
+
+    /* Record our current position (right after the headers) */
+    EndOfHeaders = (ULONG_PTR)VirtualAddress + HeaderSize;
+
+    /* Get the first section and iterate through each one */
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
+    for (i = 0; i < SectionCount; i++)
+    {
+        /* Compute where this section starts */
+        SectionStart = (ULONG_PTR)VirtualAddress + Section->VirtualAddress;
+
+        /* Make sure that the section fits within the image */
+        if ((VirtualSize < Section->VirtualAddress) ||
+            ((PVOID)SectionStart < VirtualAddress))
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+
+        /* Check if there's slack space between header end and the section */
+        if (!(First) && (EndOfHeaders < SectionStart))
+        {
+            /* Zero it out */
+            Slack = SectionStart - EndOfHeaders;
+            RtlZeroMemory((PVOID)EndOfHeaders, Slack);
+        }
+
+        /* Get the section virtual size and the raw size */
+        SectionSize = Section->Misc.VirtualSize;
+        RawSize = Section->SizeOfRawData;
+
+        /* Safely align the raw size by 2 */
+        Status = RtlULongAdd(RawSize, 1, &AlignSize);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Quickie;
+        }
+        AlignSize = ALIGN_DOWN_BY(AlignSize, 2);
+
+        /* IF we don't have a virtual size, use the raw size */
+        if (!SectionSize)
+        {
+            SectionSize = RawSize;
+        }
+
+        /* If we don't have raw data, ignore the raw size */
+        if (!Section->PointerToRawData)
+        {
+            RawSize = 0;
+        }
+        else if (SectionSize < RawSize)
+        {
+            /* And if the virtual size is smaller, use it as the final size */
+            RawSize = SectionSize;
+        }
+
+        /* Make sure that the section doesn't overflow in memory */
+        Status = RtlULongAdd(Section->VirtualAddress,
+                             SectionSize,
+                             &SectionEnd);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+
+        /* Make sure that it fits within the image */
+        if (VirtualSize < SectionEnd)
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+
+        /* Make sure it doesn't overflow on disk */
+        Status = RtlULongAdd(Section->VirtualAddress,
+                             AlignSize,
+                             &SectionEnd);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+
+        /* Make sure that it fits within the disk image as well */
+        if (VirtualSize < SectionEnd)
+        {
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+            goto Quickie;
+        }
+
+        /* So does this section have a valid size after all? */
+        if (RawSize)
+        {
+            /* Are we in the first iteration? */
+            if (!First)
+            {
+                /* Yes, read the section data */
+                Status = ImgpReadAtFileOffset(LocalFile,
+                                              AlignSize,
+                                              Section->PointerToRawData,
+                                              (PVOID)SectionStart,
+                                              NULL);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Quickie;
+                }
+
+                /* Update our current offset */
+                Offset = AlignSize + Section->PointerToRawData;
+
+                /* Update the checksum to include this section */
+                PartialSum = BlUtlCheckSum(PartialSum,
+                                           (PUCHAR)SectionStart,
+                                           AlignSize,
+                                           0x10002);
+            }
+        }
+
+        /* Are we in the first iteration? */
+        if (!First)
+        {
+            /* Is there space at the end of the section? */
+            if (RawSize < SectionSize)
+            {
+                /* Zero out the slack space that's there */
+                Slack = SectionSize - RawSize;
+                RtlZeroMemory((PVOID)(SectionStart + RawSize), Slack);
+            }
+
+            /* Update our tail offset */
+            EndOfHeaders = SectionStart + SectionSize;
+        }
+
+        /* Move to the next section */
+        Section++;
+    }
+
+    /* Are we in the first iteration? */
+    if (!First)
+    {
+        /* Go to the end of the file */
+        SectionStart = (ULONG_PTR)VirtualAddress + VirtualSize;
+
+        /* Is there still some slack space left? */
+        if (EndOfHeaders < SectionStart)
+        {
+            /* Zero it out */
+            Slack = SectionStart - EndOfHeaders;
+            RtlZeroMemory((PVOID)EndOfHeaders, Slack);
+        }
+    }
+
+    /* Did the first iteration complete OK? */
+    if ((NT_SUCCESS(Status)) && !(First))
+    {
+        /* Check how many non-image bytes are left in the file */
+        RemainingLength = FileSize - Offset;
+        while (RemainingLength)
+        {
+            /* See if the read will fit into our local buffer */
+            if (RemainingLength >= sizeof(LocalBuffer))
+            {
+                /* Nope, cap it */
+                BytesRead = sizeof(LocalBuffer);
+            }
+            else
+            {
+                /* Yes, but there's less to read */
+                BytesRead = RemainingLength;
+            }
+
+            /* Read 1024 bytes into the local buffer */
+            Status = ImgpReadAtFileOffset(LocalFile,
+                                          BytesRead,
+                                          Offset,
+                                          LocalBuffer,
+                                          &BytesRead);
+            if (!(NT_SUCCESS(Status)) || !(BytesRead))
+            {
+                Status = STATUS_FILE_INVALID;
+                goto Quickie;
+            }
+
+            /* Advance the offset and reduce the length */
+            RemainingLength -= BytesRead;
+            Offset += BytesRead;
+
+            /* Compute the checksum of this leftover space */
+            PartialSum = BlUtlCheckSum(PartialSum,
+                                       LocalBuffer,
+                                       BytesRead,
+                                       0x10002);
+        }
+
+        /* Finally, calculate the final checksum and compare it */
+        FinalSum = FileSize + PartialSum;
+        if ((FinalSum != CheckSum) && (PartialSum == 0xFFFF))
+        {
+            /* It hit overflow, so set it to the file size */
+            FinalSum = FileSize;
+        }
+
+        /* If the checksum doesn't match, and caller is enforcing, bail out */
+        EfiPrintf(L"Final checksum: %lx. Original: %lx\r\n", FinalSum, CheckSum);
+        if ((FinalSum != CheckSum) && !(Flags & 0x10000))
+        {
+            Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+            goto Quickie;
+        }
     }
 
     EfiPrintf(L"MORE PE TODO: %lx\r\n", NtHeaders->OptionalHeader.AddressOfEntryPoint);
