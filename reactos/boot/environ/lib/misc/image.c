@@ -677,8 +677,10 @@ ImgpLoadPEImage (
     BOOLEAN First, ImageHashValid;
     UCHAR LocalBuffer[1024];
     UCHAR TrustedBootInformation[52];
+    ULONG WorkaroundForBinutils;
 
     /* Initialize locals */
+    WorkaroundForBinutils = 0;
     LocalFile = NULL;
     ImageBuffer = NULL;
     FileSize = 0;
@@ -881,6 +883,7 @@ ImgpLoadPEImage (
 
     /* Record our current position (right after the headers) */
     EndOfHeaders = (ULONG_PTR)VirtualAddress + HeaderSize;
+    EfiPrintf(L"here\r\n");
 
     /* Get the first section and iterate through each one */
     Section = IMAGE_FIRST_SECTION(NtHeaders);
@@ -893,6 +896,7 @@ ImgpLoadPEImage (
         if ((VirtualSize < Section->VirtualAddress) ||
             ((PVOID)SectionStart < VirtualAddress))
         {
+            EfiPrintf(L"fail 1\r\n");
             Status = STATUS_INVALID_IMAGE_FORMAT;
             goto Quickie;
         }
@@ -940,6 +944,7 @@ ImgpLoadPEImage (
                              &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
+            EfiPrintf(L"fail 21\r\n");
             Status = STATUS_INVALID_IMAGE_FORMAT;
             goto Quickie;
         }
@@ -957,6 +962,7 @@ ImgpLoadPEImage (
                              &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
+            EfiPrintf(L"fail 31\r\n");
             Status = STATUS_INVALID_IMAGE_FORMAT;
             goto Quickie;
         }
@@ -974,6 +980,20 @@ ImgpLoadPEImage (
             /* Are we in the first iteration? */
             if (!First)
             {
+                /* FUCK YOU BINUTILS */
+                if ((*(PULONG)&Section->Name == 'ler.') && (RawSize < AlignSize))
+                {
+                    /* Piece of shit won't build relocations when you tell it to,
+                     * either by using --emit-relocs or --dynamicbase. People online
+                     * have found out that by using -pie-executable you can get this
+                     * to happen, but then it turns out that the .reloc section is
+                     * incorrectly sized, and results in a corrupt PE. However, they
+                     * still compute the checksum using the correct value. What idiots.
+                     */
+                    WorkaroundForBinutils = AlignSize - RawSize;
+                    AlignSize -= WorkaroundForBinutils;
+                }
+
                 /* Yes, read the section data */
                 Status = ImgpReadAtFileOffset(LocalFile,
                                               AlignSize,
@@ -994,6 +1014,7 @@ ImgpLoadPEImage (
                                            AlignSize,
                                            BL_UTL_CHECKSUM_COMPLEMENT |
                                            BL_UTL_CHECKSUM_USHORT_BUFFER);
+                AlignSize += WorkaroundForBinutils;
             }
         }
 
@@ -1075,7 +1096,7 @@ ImgpLoadPEImage (
         }
 
         /* Finally, calculate the final checksum and compare it */
-        FinalSum = FileSize + PartialSum;
+        FinalSum = FileSize + PartialSum + WorkaroundForBinutils;
         if ((FinalSum != CheckSum) && (PartialSum == 0xFFFF))
         {
             /* It hit overflow, so set it to the file size */
@@ -1147,9 +1168,6 @@ ImgpLoadPEImage (
     {
         *ImageSize = VirtualSize;
     }
-
-    EfiPrintf(L"MORE PE TODO: %lx\r\n", NtHeaders->OptionalHeader.AddressOfEntryPoint);
-    EfiStall(100000000);
 
 Quickie:
     /* Check if we computed the image hash OK */

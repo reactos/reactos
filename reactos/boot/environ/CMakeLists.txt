@@ -113,9 +113,9 @@ add_executable(rosload ${ROSLOAD_BASE_SOURCE})
 set_target_properties(rosload PROPERTIES SUFFIX ".efi")
 
 if(MSVC)
-    add_target_link_flags(rosload "/ignore:4078 /ignore:4254 /DRIVER /FIXED")
+    add_target_link_flags(rosload "/ignore:4078 /ignore:4254 /DRIVER")
 else()
-    add_target_link_flags(rosload "-Wl,--strip-all,--exclude-all-symbols")
+    add_target_link_flags(rosload "-Wl,--strip-all,--exclude-all-symbols,--dynamicbase,--pic-executable")
 endif()
 
 set_image_base(rosload 0x10000)
