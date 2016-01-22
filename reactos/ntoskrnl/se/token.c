@@ -1792,7 +1792,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 NTSTATUS NTAPI
 NtSetInformationToken(IN HANDLE TokenHandle,
                       IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-                      OUT PVOID TokenInformation,
+                      IN PVOID TokenInformation,
                       IN ULONG TokenInformationLength)
 {
     PTOKEN Token;
