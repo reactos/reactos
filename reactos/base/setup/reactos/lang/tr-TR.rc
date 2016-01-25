@@ -21,7 +21,7 @@ BEGIN
     LTEXT "Install a new copy of ReactOS. This option does not keep your files, settions and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 18, 269, 25
     AUTORADIOBUTTON "Kurulu ReactOS'u Onarma ya da Yükseltme", IDC_UPDATE, 7, 50, 277, 10
     LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settions and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 61, 269, 30
-    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 297, 10
+    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -29,14 +29,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Aygıt Ayarları", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Bilgisayar:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
     LTEXT "Görüntü:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
     LTEXT "Düğme Takımı:", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
-    LTEXT "Kurulum aygıtını kurmak için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
+    LTEXT "Kurulum aygıtını kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
@@ -44,12 +43,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS Kurulumu İçin Bölümlendirme", IDC_STATIC, "Button", BS_GROUPBOX, 10, 1, 298, 176
-    LISTBOX IDC_PARTITION, 20, 12, 278, 142, LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 20, 155, 50, 15
-    PUSHBUTTON "&Sil", IDC_PARTDELETE, 76, 155, 50, 15
-    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 162, 155, 50, 15, WS_DISABLED
-    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 218, 155, 80, 15
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 15
     LTEXT "Kurulum özetini gözden geçirmek için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
 END
 

@@ -126,24 +126,10 @@ DriveDlgProc(
     {
         case WM_INITDIALOG:
         {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
 #if 1
             h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT);
             if (h != INVALID_HANDLE_VALUE)

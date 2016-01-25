@@ -97,38 +97,20 @@ StartDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
-            hwndControl = GetParent(hwndDlg);
-
             /* Center the wizard window */
-            CenterWindow (hwndControl);
+            CenterWindow(GetParent(hwndDlg));
 
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Hide and disable the 'Cancel' button at the moment,
-             * we use this button to cancel the setup process
-             * like F3 in usetup
-             */
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow (hwndControl, SW_HIDE);
-            EnableWindow (hwndControl, FALSE);
-            
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
                                IDC_STARTTITLE,
                                WM_SETFONT,
                                (WPARAM)pSetupData->hTitleFont,
                                (LPARAM)TRUE);
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -168,25 +150,17 @@ TypeDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-
+            /* Check the 'install' radio button */
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
 
+            /* Disable the 'update' radio button and text */
             EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), FALSE);
             EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATETEXT), FALSE);
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -196,7 +170,7 @@ TypeDlgProc(HWND hwndDlg,
             {
                 case PSN_SETACTIVE:
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
-                break;
+                    break;
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
@@ -244,25 +218,9 @@ DeviceDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
 
@@ -290,8 +248,7 @@ DeviceDlgProc(HWND hwndDlg,
                 SendMessage(hList,CB_SETITEMDATA,tindex,i);
             }
             SendMessage(hList,CB_SETCURSEL,0,0); // set first as default
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -376,27 +333,10 @@ SummaryDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -443,27 +383,10 @@ ProcessDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -504,21 +427,17 @@ RestartDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow(hwndControl, SW_HIDE);
-            EnableWindow(hwndControl, FALSE);
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
@@ -526,8 +445,7 @@ RestartDlgProc(HWND hwndDlg,
                                  WM_SETFONT,
                                  (WPARAM)hTitleFont,
                                  (LPARAM)TRUE);*/
-        }
-        break;
+            break;
 
         case WM_TIMER:
         {
@@ -558,13 +476,11 @@ RestartDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE: // Only "Finish" for closing the App
-                {
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 300));
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                     SetTimer(hwndDlg, 1, 50, NULL);
-                }
-                break;
+                    break;
 
                 default:
                     break;
@@ -753,12 +669,12 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
                 while (SetupFindNextLine(context, context) && Count < TotalCount);
             }
         }
-	else return 0;
+        else return 0;
     }
     return TotalCount;
 }
 
-BOOL isUnattendSetup()
+BOOL isUnattendSetup(VOID)
 {
     WCHAR szPath[MAX_PATH];
     WCHAR *ch;
@@ -796,6 +712,51 @@ BOOL isUnattendSetup()
 
     return result;
 }
+
+#if 0
+static
+VOID
+EnableShutdownPrivilege(VOID)
+{
+    HANDLE hToken = NULL;
+    TOKEN_PRIVILEGES Privileges;
+
+    /* Get shutdown privilege */
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+//        FatalError("OpenProcessToken() failed!");
+        return;
+    }
+
+    if (!LookupPrivilegeValue(NULL,
+                              SE_SHUTDOWN_NAME,
+                              &Privileges.Privileges[0].Luid))
+    {
+//        FatalError("LookupPrivilegeValue() failed!");
+       goto done;
+    }
+
+    Privileges.PrivilegeCount = 1;
+    Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (AdjustTokenPrivileges(hToken,
+                              FALSE,
+                              &Privileges,
+                              0,
+                              (PTOKEN_PRIVILEGES)NULL,
+                              NULL) == 0)
+    {
+//        FatalError("AdjustTokenPrivileges() failed!");
+       goto done;
+    }
+
+done:
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    return;
+}
+#endif
 
 int WINAPI
 _tWinMain(HINSTANCE hInst,
@@ -922,6 +883,11 @@ _tWinMain(HINSTANCE hInst,
 
     if (pSetupData != NULL)
         HeapFree(GetProcessHeap(), 0, pSetupData);
+
+#if 0
+    EnableShutdownPrivilege();
+    ExitWindowsEx(EWX_REBOOT, 0);
+#endif
 
     return 0;
 }
