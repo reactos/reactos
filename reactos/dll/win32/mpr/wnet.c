@@ -123,11 +123,17 @@ static void _tryLoadProvider(PCWSTR provider)
         DWORD type, size = sizeof(providerPath);
 
         if (RegQueryValueExW(hKey, szProviderPath, NULL, &type,
-         (LPBYTE)providerPath, &size) == ERROR_SUCCESS && type == REG_SZ)
+         (LPBYTE)providerPath, &size) == ERROR_SUCCESS && (type == REG_SZ || type == REG_EXPAND_SZ))
         {
             static const WCHAR szProviderName[] = { 'N','a','m','e',0 };
             PWSTR name = NULL;
-           
+
+            if (type == REG_EXPAND_SZ)
+            {
+                WCHAR path[MAX_PATH];
+                if (ExpandEnvironmentStringsW(providerPath, path, MAX_PATH)) lstrcpyW( providerPath, path );
+            }
+
             size = 0;
             RegQueryValueExW(hKey, szProviderName, NULL, NULL, NULL, &size);
             if (size)
