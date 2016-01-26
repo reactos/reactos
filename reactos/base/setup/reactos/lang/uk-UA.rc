@@ -24,9 +24,9 @@ CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Встановлення ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settions and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 18, 269, 25
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Відновити або змінити встановлений раніше ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settions and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 61, 269, 30
+    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Для встановлення пристроїв натисніть Далі.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -65,7 +65,7 @@ BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 131, 22, 9, 13
     CONTROL "Створити та відформатувати розділ", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 156, 57
     LTEXT "Розмір:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 79, 23, 53, 13, WS_VISIBLE | WS_TABSTOP
+    EDITTEXT IDC_PARTSIZE, 79, 22, 53, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "Гб", IDC_UNIT, 144, 24, 14, 9
     LTEXT "Файлова система:", IDC_STATIC, 13, 46, 65, 9
     CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 79, 42, 79, 50

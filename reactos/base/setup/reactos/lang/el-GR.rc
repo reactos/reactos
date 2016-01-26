@@ -16,9 +16,9 @@ CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Install ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settions and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 18, 269, 25
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Update or repair an installed ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settions and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 61, 269, 30
+    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Πατήστε Επόμενο για να ρυθμίσετε τις συσκευές.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -57,10 +57,10 @@ BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
     CONTROL "Create and format partition", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
     LTEXT "Μέγεθος:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 52, 23, 53, 13, WS_VISIBLE | WS_TABSTOP
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Τύπος συστήματος:", IDC_STATIC, 13, 46, 35, 9
-    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 52, 42, 79, 50
+    LTEXT "Τύπος συστήματος:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
     PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Άκυρο", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
