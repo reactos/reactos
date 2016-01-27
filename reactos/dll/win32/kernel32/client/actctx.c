@@ -157,7 +157,7 @@ BasepProbeForDllManifest(IN PVOID DllHandle,
     Info.Type = (ULONG)RT_MANIFEST;
     Info.Name = (ULONG)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
     Info.Language = 0;
-    if (!(Status = LdrFindResource_U(DllHandle, &Info, 2, &Entry)))
+    if (!(Status = LdrFindResource_U(DllHandle, &Info, 3, &Entry)))
     {
         /* Create the activation context */
         Context.cbSize = sizeof(Context);

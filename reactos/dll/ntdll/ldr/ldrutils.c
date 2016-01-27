@@ -2061,6 +2061,8 @@ lookinhash:
     }
 
     /* FIXME: Warning, activation context missing */
+    DPRINT("Warning, activation context missing\n");
+
     /* NOTE: From here on down, everything looks good */
 
     /* Loop the module list */
