@@ -871,7 +871,7 @@ MiDeleteFromWorkingSetList(
     if (Wsle == NULL)
     {
         /* Most likely because we don't expand the thing */
-        DPRINT1("Address %p not found in Vm %p.\n", Address, Vm);
+        // DPRINT1("Address %p not found in Vm %p.\n", Address, Vm);
         return;
     }
 
@@ -908,7 +908,7 @@ MiInsertInWorkingSetList(
 
         if (Vm->VmWorkingSetList->FirstFree == Vm->VmWorkingSetList->LastEntry)
         {
-            DPRINT1("FIXME: Could not add address %p to Vm %p because it is FULL!\n", Address, Vm);
+            // DPRINT1("FIXME: Could not add address %p to Vm %p because it is FULL!\n", Address, Vm);
             return;
         }
 
