@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welkom bij de Reactos installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Deze wizard zal Reactos op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om Reactos correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Welkom bij de ReactOS installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Deze wizard zal ReactOS op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om ReactOS correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klik op Volgende om voort te gaan met de installatie.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -116,7 +116,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Please wait..."
-FONT 8, "MS Shell Dlg 2", 400, 0, 1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
@@ -155,6 +155,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Eigenaar"
 END
 
 STRINGTABLE

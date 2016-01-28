@@ -71,7 +71,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
 
     INPUT_RECORD er;
 
-    if (NULL == Console)
+    if (Console == NULL)
     {
         DPRINT1("No Active Console!\n");
         return;
@@ -169,7 +169,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
             }
         }
 
-        ConioDrawConsole((PCONSOLE)Console);
+        ConioDrawConsole(Console);
         return;
     }
 

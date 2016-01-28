@@ -379,8 +379,9 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
+        /* No need to notify for a PnP device or if we didn't find the device */
         if (NextEntry == &(DeviceExtension->DeviceListHead) ||
-            !DeviceInformation->Volume)
+            !DeviceInformation->ManuallyRegistered)
         {
             return;
         }

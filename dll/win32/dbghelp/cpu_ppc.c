@@ -48,7 +48,7 @@ static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
     return FALSE;
 }
 
-static unsigned ppc_map_dwarf_register(unsigned regno)
+static unsigned ppc_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     FIXME("not done\n");
     return 0;

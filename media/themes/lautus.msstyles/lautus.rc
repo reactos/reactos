@@ -1,7 +1,12 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Lautus Theme\0"
+#define REACTOS_STR_INTERNAL_NAME	"Lautus\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"lautus.msstyles\0"
+#include <reactos/version.rc>
+
 #include <windows.h>
 
-#pragma code_page(65001)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 1 COLORNAMES					{L"Normal Color\0\0"}
 COMBO COMBODATA					{0x0003,0x0003, 0x0000, 0x0003, 0x0006, 0x0001,0x0004,0x0007,0x0002,0x0005,0x08,}
@@ -10,9 +15,9 @@ COMBO COMBODATA					{0x0003,0x0003, 0x0000, 0x0003, 0x0006, 0x0001,0x0004,0x0007
 1 SIZENAMES						{L"Normal Size\0Large Fonts\0Extra Large Fonts\0\0"}
 1 MINDEPTH						{0x000F,0x000F,0x000F,0x000F,0x000F,0x000F,0x000F,0x000F,0x000F,0x0000,}
 
-EXTRALARGENORMAL_INI TEXTFILE	"textfiles/ExtraLargeNormal.INI"
-LARGEFONTSNORMAL_INI TEXTFILE	"textfiles/LargeFontsNormal.INI"
-NORMALNORMAL_INI TEXTFILE		"textfiles/NormalNormal.INI"
+EXTRALARGENORMAL_INI TEXTFILE	"textfiles/ExtraLargeNormal_utf16.INI"
+LARGEFONTSNORMAL_INI TEXTFILE	"textfiles/LargeFontsNormal_utf16.INI"
+NORMALNORMAL_INI TEXTFILE		"textfiles/NormalNormal_utf16.INI"
 THEMES_INI TEXTFILE				{L"\r\n"}
 
 NORMAL_BALLOONCLOSE_BMP BITMAP "bitmaps/NORMAL_BALLOONCLOSE.bmp"
@@ -176,44 +181,29 @@ NORMAL_IE_PERSONALBARMENU_BMP BITMAP "bitmaps/dummy.bmp"
 NORMAL_NORMALGROUPCOLLAPSE_BMP BITMAP "bitmaps/dummy.bmp"
 NORMAL_NORMALGROUPEXPAND_BMP BITMAP "bitmaps/dummy.bmp"
 
-STRINGTABLE
-{
-1000, 	"Ater"
-}
+#pragma code_page(65001)
 
-STRINGTABLE
-{
-2000, 	"Lautus Ater"
-}
-
-STRINGTABLE
-{
-3000, 	"Normal"
-3001, 	"Large Fonts"
-3002, 	"Extra Large Fonts"
-}
-
-STRINGTABLE
-{
-4000, 	"Normal"
-4001, 	"Large Fonts"
-4002, 	"Extra Large Fonts"
-}
-
-STRINGTABLE
-{
-5000, 	"Lautus"
-5001, 	"Visual Style"
-5002, 	"ReactOS Foundation"
-5003, 	"Pisarz, based on Luna Inspirat"
-5004, 	"Released under GNU/GPL 2.0, 2011"
-5005, 	"http://www.reactos.org"
-5006, 	"1.0"
-5007, 	"Visual Style for ReactOS"
-}
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"Lautus Theme\0"
-#define REACTOS_STR_INTERNAL_NAME	"Lautus\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"lautus.msstyles\0"
-#include <reactos/version.rc>
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

@@ -4,7 +4,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

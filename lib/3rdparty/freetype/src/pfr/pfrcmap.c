@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR cmap handling (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2007, 2009, 2013 by                                    */
+/*  Copyright 2002-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,10 +25,13 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  pfr_cmap_init( PFR_CMap  cmap )
+  pfr_cmap_init( PFR_CMap    cmap,
+                 FT_Pointer  pointer )
   {
     FT_Error  error = FT_Err_Ok;
     PFR_Face  face  = (PFR_Face)FT_CMAP_FACE( cmap );
+
+    FT_UNUSED( pointer );
 
 
     cmap->num_chars = face->phy_font.num_chars;
@@ -127,7 +130,7 @@
         }
 
         if ( gchar->char_code < char_code )
-          min = mid+1;
+          min = mid + 1;
         else
           max = mid;
       }

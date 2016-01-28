@@ -226,13 +226,13 @@ VOID
 UiDrawProgressBar(IN ULONG Left,
                   IN ULONG Top,
                   IN ULONG Right,
-                  IN ULONG Bottom, 
+                  IN ULONG Bottom,
                   IN ULONG Position,
                   IN ULONG Range,
                   IN PCHAR ProgressText)
 {
     ULONG i, ProgressBarWidth;
-    
+
     /* Calculate the width of the bar proper */
     ProgressBarWidth = (Right - Left) - 3;
 

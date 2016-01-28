@@ -4,7 +4,7 @@
  * Copyright 2005 James Hawkins
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
- *                Fulea Ștefan
+ *                Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,10 +27,13 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Cuprins"
-    IDS_INDEX        "&Index"
+    IDS_CONTENTS     "C&uprins"
+    IDS_INDEX        "In&dex"
     IDS_SEARCH       "&Caută"
     IDS_FAVORITES    "F&avorite"
+
+    IDS_HIDETABS     "Ascunde ta&buri"
+    IDS_SHOWTABS     "Afișează ta&buri"
 END
 
 STRINGTABLE
@@ -45,18 +48,45 @@ BEGIN
     IDTB_PRINT       "Imprimă"
     IDTB_OPTIONS     "Opțiuni"
     IDTB_FORWARD     "Înainte"
-    IDTB_NOTES       "Note"
-    IDTB_BROWSE_FWD  "Caută înainte"
-    IDTB_BROWSE_BACK "Caută înapoi"
-    IDTB_CONTENTS    "Cuprins"
-    IDTB_INDEX       "Index"
-    IDTB_SEARCH      "Caută"
-    IDTB_HISTORY     "Istoric"
-    IDTB_FAVORITES   "Favorite"
-    IDTB_JUMP1       "Salt1"
-    IDTB_JUMP2       "Salt2"
-    IDTB_CUSTOMIZE   "Personalizare"
-    IDTB_ZOOM        "Scară"
-    IDTB_TOC_NEXT    "Capitol următor"
-    IDTB_TOC_PREV    "Capitol precedent"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "Sinc&ronizează", IDTB_SYNC
+        MENUITEM "Înap&oi", IDTB_BACK
+        MENUITEM "În&ainte", IDTB_FORWARD
+        MENUITEM "A&casă", IDTB_HOME
+        MENUITEM "Opr&ește", IDTB_STOP
+        MENUITEM "Împrospătea&ză", IDTB_REFRESH
+        MENUITEM "I&mprimare…", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "Înap&oi", IDTB_BACK
+        MENUITEM "În&ainte", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "S&electează tot", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Afișează s&ursa paginii", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "I&mprimare…", IDTB_PRINT
+        MENUITEM "Împrospătea&ză", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Proprietăți", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "&Decupează", MIID_CUT
+        MENUITEM "&Copiază", MIID_COPY
+        MENUITEM "&Lipește", MIID_PASTE
+        MENUITEM "S&electează tot", MIID_SELECTALL
+        MENUITEM "I&mprimă", IDTB_PRINT
+    }
+}

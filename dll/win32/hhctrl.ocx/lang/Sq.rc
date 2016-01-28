@@ -30,6 +30,9 @@ BEGIN
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "Kerko"
     IDS_FAVORITES    "Favor&ite"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
@@ -44,28 +47,45 @@ BEGIN
     IDTB_PRINT       "Printo"
     IDTB_OPTIONS     "opsione"
     IDTB_FORWARD     "Perpara"
-    IDTB_NOTES       "IDTB_SHENIME"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_MBRAPA"
-    IDTB_CONTENTS    "IDTB_PERMBAJTJE"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_KERKO"
-    IDTB_HISTORY     "IDTB_HISTORI"
-    IDTB_FAVORITES   "IDTB_FAVORITE"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Modifiko"
-    IDTB_ZOOM        "Zoom"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
 
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
 
-STRINGTABLE
-BEGIN
-    IDS_CONTENTS     "Përmbajtja"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "Kerko"
-    IDS_FAVORITES    "Favour&ite"
-END
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

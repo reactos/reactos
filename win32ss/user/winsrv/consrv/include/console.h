@@ -15,10 +15,10 @@ NTSTATUS NTAPI
 ConDrvInitConsole(OUT PCONSOLE* NewConsole,
                   IN PCONSOLE_INFO ConsoleInfo);
 NTSTATUS NTAPI
-ConDrvRegisterTerminal(IN PCONSOLE Console,
-                       IN PTERMINAL Terminal);
+ConDrvAttachTerminal(IN PCONSOLE Console,
+                     IN PTERMINAL Terminal);
 NTSTATUS NTAPI
-ConDrvDeregisterTerminal(IN PCONSOLE Console);
+ConDrvDetachTerminal(IN PCONSOLE Console);
 VOID NTAPI
 ConDrvDeleteConsole(IN PCONSOLE Console);
 

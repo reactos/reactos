@@ -21,99 +21,70 @@
 
 #include "resource.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#include <reactos/manifest_dll.rc>
 
-IDR_BROWSE_MAIN_MENU MENU
-{
-    POPUP "&File"
-    {
-        POPUP "&New"
-        {
-            MENUITEM "&Window",                 ID_BROWSE_NEW_WINDOW
-        }
-        MENUITEM "&Open...",                    ID_BROWSE_OPEN
-        MENUITEM "&Save",                       ID_BROWSE_SAVE
-        MENUITEM "Save &as...",                 ID_BROWSE_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "Print &format...",            ID_BROWSE_PRINT_FORMAT
-        MENUITEM "Pr&int...",                   ID_BROWSE_PRINT
-        MENUITEM "Print previe&w",              ID_BROWSE_PRINT_PREVIEW
-        MENUITEM SEPARATOR
-        MENUITEM "&Properties",                 ID_BROWSE_PROPERTIES
-        MENUITEM "&Close",                      ID_BROWSE_QUIT
-    }
-    POPUP "&View"
-    {
-        POPUP "&Toolbars"
-        {
-            MENUITEM "&Standard bar",           ID_BROWSE_BAR_STD
-            MENUITEM "&Address bar",            ID_BROWSE_BAR_ADDR
-        }
-    }
-    POPUP "&Favorites"
-    {
-        MENUITEM "&Add to Favorites...",        ID_BROWSE_ADDFAV
-        MENUITEM SEPARATOR
-    }
-    POPUP "&Help"
-    {
-        MENUITEM "&About Internet Explorer", ID_BROWSE_ABOUT
-    }
-}
+/* UTF-8 */
+#pragma code_page(65001)
 
-STRINGTABLE
-{
-    IDS_TB_BACK             "Back"
-    IDS_TB_FORWARD          "Forward"
-    IDS_TB_STOP             "Stop"
-    IDS_TB_REFRESH          "Refresh"
-    IDS_TB_HOME             "Home"
-    IDS_TB_PRINT            "Print..."
-}
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
 
-STRINGTABLE
-{
-    IDS_ADDRESS             "Address"
-}
-
-STRINGTABLE
-{
-    IDS_FINDINGRESOURCE     "Searching for %s"
-    IDS_BEGINDOWNLOADDATA   "Start downloading %s"
-    IDS_ENDDOWNLOADDATA     "Downloading %s"
-    IDS_SENDINGREQUEST      "Asking for %s"
-}
-
-
-IDD_BROWSE_OPEN DIALOG 10, 10, 200, 70
-STYLE DS_MODALFRAME | WS_CAPTION
-CAPTION "Open URL"
-FONT 8, "MS Shell Dlg"
-{
-    LTEXT "Specify the URL you wish to open in Internet Explorer",-1, 35,5,160,25
-    LTEXT "Open:", -1, 5, 32, 30, 15
-    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
-    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 145, 50, 50, 14
-}
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILEDESCRIPTION_STR "Internet Browser"
 #define WINE_FILENAME_STR "ieframe.dll"
-#define WINE_FILEVERSION 8,00,7601,17601
-#define WINE_FILEVERSION_STR "8.00.7601.17601"
-#define WINE_PRODUCTVERSION 8,00,7601,17601
-#define WINE_PRODUCTVERSION_STR "8.00.7601.17601"
+#define WINE_FILEVERSION 8,0,6001,18702
+#define WINE_FILEVERSION_STR "8.0.6001.18702"
+#define WINE_PRODUCTVERSION 8,0,6001,18702
+#define WINE_PRODUCTVERSION_STR "8.0.6001.18702"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
 #include <wine/wine_common_ver.rc>
 
 /* @makedep: ietoolbar.bmp */
-IDB_IETOOLBAR BITMAP ietoolbar.bmp
+IDB_IETOOLBAR BITMAP "resources/ietoolbar.bmp"
+
+#ifdef __REACTOS__
+IDC_PAGEICO ICON "resources/pages.ico"
+#endif
 
 /* @makedep: ieframe.rgs */
-1 WINE_REGISTRY ieframe.rgs
+1 WINE_REGISTRY "ieframe.rgs"
 
 2 WINE_REGISTRY "ieframe_v1.rgs"
 3 WINE_REGISTRY "ieframe_v1.tlb.rgs"

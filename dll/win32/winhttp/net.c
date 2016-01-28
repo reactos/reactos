@@ -126,6 +126,28 @@ static inline int unix_ioctl(int filedes, long request, void *arg)
 #define ioctlsocket unix_ioctl
 #endif
 
+static int sock_send(int fd, const void *msg, size_t len, int flags)
+{
+    int ret;
+    do
+    {
+        ret = send(fd, msg, len, flags);
+    }
+    while(ret == -1 && errno == EINTR);
+    return ret;
+}
+
+static int sock_recv(int fd, void *msg, size_t len, int flags)
+{
+    int ret;
+    do
+    {
+        ret = recv(fd, msg, len, flags);
+    }
+    while(ret == -1 && errno == EINTR);
+    return ret;
+}
+
 static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, WCHAR *server, DWORD security_flags )
 {
     HCERTSTORE store = cert->hCertStore;
@@ -331,7 +353,8 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
         res = sock_get_error( errno );
         if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
         {
-            // ReactOS: use select instead of poll
+#ifdef __REACTOS__
+            /* ReactOS: use select instead of poll */
             fd_set outfd;
             struct timeval tv;
 
@@ -342,6 +365,13 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
             tv.tv_usec = timeout * 1000;
 
             if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
+#else
+            struct pollfd pfd;
+
+            pfd.fd = conn->socket;
+            pfd.events = POLLOUT;
+            if (poll( &pfd, 1, timeout ) > 0)
+#endif
                 ret = TRUE;
             else
                 res = sock_get_error( errno );
@@ -396,7 +426,7 @@ BOOL netconn_secure_connect( netconn_t *conn, WCHAR *hostname )
 
             TRACE("sending %u bytes\n", out_buf.cbBuffer);
 
-            size = send(conn->socket, out_buf.pvBuffer, out_buf.cbBuffer, 0);
+            size = sock_send(conn->socket, out_buf.pvBuffer, out_buf.cbBuffer, 0);
             if(size != out_buf.cbBuffer) {
                 ERR("send failed\n");
                 res = ERROR_WINHTTP_SECURE_CHANNEL_ERROR;
@@ -435,7 +465,7 @@ BOOL netconn_secure_connect( netconn_t *conn, WCHAR *hostname )
             read_buf_size += 1024;
         }
 
-        size = recv(conn->socket, (char *)(read_buf+in_bufs[0].cbBuffer), read_buf_size-in_bufs[0].cbBuffer, 0);
+        size = sock_recv(conn->socket, read_buf+in_bufs[0].cbBuffer, read_buf_size-in_bufs[0].cbBuffer, 0);
         if(size < 1) {
             WARN("recv error\n");
             status = ERROR_WINHTTP_SECURE_CHANNEL_ERROR;
@@ -481,6 +511,7 @@ BOOL netconn_secure_connect( netconn_t *conn, WCHAR *hostname )
         }
     }
 
+    heap_free(read_buf);
 
     if(status != SEC_E_OK || res != ERROR_SUCCESS) {
         WARN("Failed to initialize security context failed: %08x\n", status);
@@ -516,7 +547,7 @@ static BOOL send_ssl_chunk(netconn_t *conn, const void *msg, size_t size)
         return FALSE;
     }
 
-    if(send(conn->socket, conn->ssl_buf, bufs[0].cbBuffer+bufs[1].cbBuffer+bufs[2].cbBuffer, 0) < 1) {
+    if(sock_send(conn->socket, conn->ssl_buf, bufs[0].cbBuffer+bufs[1].cbBuffer+bufs[2].cbBuffer, 0) < 1) {
         WARN("send failed\n");
         return FALSE;
     }
@@ -546,7 +577,7 @@ BOOL netconn_send( netconn_t *conn, const void *msg, size_t len, int *sent )
 
         return TRUE;
     }
-    if ((*sent = send( conn->socket, msg, len, 0 )) == -1)
+    if ((*sent = sock_send( conn->socket, msg, len, 0 )) == -1)
     {
         set_last_error( sock_get_error( errno ) );
         return FALSE;
@@ -572,7 +603,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, SIZE_T *
         heap_free(conn->extra_buf);
         conn->extra_buf = NULL;
     }else {
-        buf_len = recv(conn->socket, conn->ssl_buf+conn->extra_len, ssl_buf_size-conn->extra_len, 0);
+        buf_len = sock_recv(conn->socket, conn->ssl_buf+conn->extra_len, ssl_buf_size-conn->extra_len, 0);
         if(buf_len < 0) {
             WARN("recv failed\n");
             return FALSE;
@@ -604,7 +635,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, SIZE_T *
         case SEC_E_INCOMPLETE_MESSAGE:
             assert(buf_len < ssl_buf_size);
 
-            size = recv(conn->socket, conn->ssl_buf+buf_len, ssl_buf_size-buf_len, 0);
+            size = sock_recv(conn->socket, conn->ssl_buf+buf_len, ssl_buf_size-buf_len, 0);
             if(size < 1)
                 return FALSE;
 
@@ -697,7 +728,7 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
         *recvd = size;
         return TRUE;
     }
-    if ((*recvd = recv( conn->socket, buf, len, flags )) == -1)
+    if ((*recvd = sock_recv( conn->socket, buf, len, flags )) == -1)
     {
         set_last_error( sock_get_error( errno ) );
         return FALSE;
@@ -710,16 +741,8 @@ ULONG netconn_query_data_available( netconn_t *conn )
     if(!netconn_connected(conn))
         return 0;
 
-    if(conn->secure) {
+    if(conn->secure)
         return conn->peek_len;
-    }else {
-#ifdef FIONREAD
-        ULONG unread;
-
-        if(!ioctlsocket(conn->socket, FIONREAD, &unread))
-            return unread;
-#endif
-    }
 
     return 0;
 }

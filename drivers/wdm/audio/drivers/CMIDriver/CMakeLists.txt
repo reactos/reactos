@@ -21,20 +21,18 @@ add_library(cmipci SHARED
     cmipci.rc)
 
 target_link_libraries(cmipci stdunk libcntpr uuid)
-
 set_module_type(cmipci wdmdriver UNICODE)
-
 add_importlibs(cmipci portcls hal ntoskrnl)
 
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(portcls "-Wno-write-strings -Wno-switch")
-    #allow_warnings(portcls)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch -Wno-error")
+    #add_target_compile_flags(cmipci "-Wno-write-strings -Wno-switch")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch")
 endif()
 
 add_pch(cmipci precomp.h SOURCE)
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
+
 if(ARCH STREQUAL "i386")
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x32.inf" DESTINATION reactos/inf FOR all)
 else()

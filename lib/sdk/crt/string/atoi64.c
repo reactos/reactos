@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/string/atoi64.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -14,6 +14,7 @@
  * @implemented
  */
 __int64
+CDECL
 _atoi64(const char *nptr)
 {
   char *s = (char *)nptr;

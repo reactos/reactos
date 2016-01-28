@@ -62,7 +62,7 @@ static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPCWSTR name, IStorage *stg)
     if (!storage)
         return NULL;
 
-    storage->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
+    storage->str_index = msi_add_string(sv->db->strings, name, -1, StringNonPersistent);
     storage->storage = stg;
 
     if (storage->storage)

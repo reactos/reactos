@@ -1,8 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/wine)
-
 add_executable(netsh netsh.c)
 target_link_libraries(netsh wine)
 set_module_type(netsh win32cui UNICODE)

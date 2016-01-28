@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/daytime.c
+ * FILE:        base/services/tcpsvcs/daytime.c
  * PURPOSE:     Sends the current date and time to the client
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *

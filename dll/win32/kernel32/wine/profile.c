@@ -256,8 +256,8 @@ static void PROFILE_Free( PROFILESECTION *section )
     }
 }
 
-/* returns 1 if a character white space else 0 */
-static inline int PROFILE_isspaceW(WCHAR c)
+/* returns TRUE if a whitespace character, else FALSE */
+static inline BOOL PROFILE_isspaceW(WCHAR c)
 {
 	/* ^Z (DOS EOF) is a space too  (found on CD-ROMs) */
 	return isspaceW(c) || c == 0x1a;
@@ -489,7 +489,7 @@ static BOOL PROFILE_DeleteSection( PROFILESECTION **section, LPCWSTR name )
 {
     while (*section)
     {
-        if ((*section)->name[0] && !strcmpiW( (*section)->name, name ))
+        if (!strcmpiW( (*section)->name, name ))
         {
             PROFILESECTION *to_del = *section;
             *section = to_del->next;
@@ -513,7 +513,7 @@ static BOOL PROFILE_DeleteKey( PROFILESECTION **section,
 {
     while (*section)
     {
-        if ((*section)->name[0] && !strcmpiW( (*section)->name, section_name ))
+        if (!strcmpiW( (*section)->name, section_name ))
         {
             PROFILEKEY **key = &(*section)->key;
             while (*key)
@@ -545,7 +545,7 @@ static void PROFILE_DeleteAllKeys( LPCWSTR section_name)
     PROFILESECTION **section= &CurProfile->section;
     while (*section)
     {
-        if ((*section)->name[0] && !strcmpiW( (*section)->name, section_name ))
+        if (!strcmpiW( (*section)->name, section_name ))
         {
             PROFILEKEY **key = &(*section)->key;
             while (*key)
@@ -571,31 +571,28 @@ static PROFILEKEY *PROFILE_Find( PROFILESECTION **section, LPCWSTR section_name,
                                  LPCWSTR key_name, BOOL create, BOOL create_always )
 {
     LPCWSTR p;
-    int seclen, keylen;
+    int seclen = 0, keylen = 0;
 
     while (PROFILE_isspaceW(*section_name)) section_name++;
     if (*section_name)
+    {
         p = section_name + strlenW(section_name) - 1;
-    else
-        p = section_name;
-
-    while ((p > section_name) && PROFILE_isspaceW(*p)) p--;
-    seclen = p - section_name + 1;
+        while ((p > section_name) && PROFILE_isspaceW(*p)) p--;
+        seclen = p - section_name + 1;
+    }
 
     while (PROFILE_isspaceW(*key_name)) key_name++;
     if (*key_name)
+    {
         p = key_name + strlenW(key_name) - 1;
-    else
-        p = key_name;
-
-    while ((p > key_name) && PROFILE_isspaceW(*p)) p--;
-    keylen = p - key_name + 1;
+        while ((p > key_name) && PROFILE_isspaceW(*p)) p--;
+        keylen = p - key_name + 1;
+    }
 
     while (*section)
     {
-        if ( ((*section)->name[0])
-             && (!(strncmpiW( (*section)->name, section_name, seclen )))
-             && (((*section)->name)[seclen] == '\0') )
+        if (!strncmpiW((*section)->name, section_name, seclen) &&
+            ((*section)->name)[seclen] == '\0')
         {
             PROFILEKEY **key = &(*section)->key;
 
@@ -862,7 +859,7 @@ static INT PROFILE_GetSection( PROFILESECTION *section, LPCWSTR section_name,
 
     while (section)
     {
-        if (section->name[0] && !strcmpiW( section->name, section_name ))
+        if (!strcmpiW( section->name, section_name ))
         {
             UINT oldlen = len;
             for (key = section->key; key; key = key->next)
@@ -977,11 +974,6 @@ static INT PROFILE_GetString( LPCWSTR section, LPCWSTR key_name,
     if (!def_val) def_val = empty_strW;
     if (key_name)
     {
-	if (!key_name[0])
-        {
-            PROFILE_CopyEntry(buffer, def_val, len, TRUE);
-            return strlenW(buffer);
-        }
         key = PROFILE_Find( &CurProfile->section, section, key_name, FALSE, FALSE);
         PROFILE_CopyEntry( buffer, (key && key->value) ? key->value : def_val,
                            len, TRUE );
@@ -991,7 +983,7 @@ static INT PROFILE_GetString( LPCWSTR section, LPCWSTR key_name,
         return strlenW( buffer );
     }
     /* no "else" here ! */
-    if (section && section[0])
+    if (section)
     {
         INT ret = PROFILE_GetSection(CurProfile->section, section, buffer, len, FALSE);
         if (!buffer[0]) /* no luck -> def_val */
@@ -1102,11 +1094,11 @@ DWORD WINAPI GetPrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
 
         if (p >= def_val)
         {
-            int len = (int)(p - def_val) + 1;
+            int vlen = (int)(p - def_val) + 1;
 
-            defval_tmp = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-            memcpy(defval_tmp, def_val, len * sizeof(WCHAR));
-            defval_tmp[len] = '\0';
+            defval_tmp = HeapAlloc(GetProcessHeap(), 0, (vlen + 1) * sizeof(WCHAR));
+            memcpy(defval_tmp, def_val, vlen * sizeof(WCHAR));
+            defval_tmp[vlen] = '\0';
             def_val = defval_tmp;
         }
     }
@@ -1391,8 +1383,8 @@ BOOL WINAPI WritePrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
 /***********************************************************************
  *           WritePrivateProfileStringA   (KERNEL32.@)
  */
-BOOL WINAPI WritePrivateProfileStringA( LPCSTR section, LPCSTR entry,
-					LPCSTR string, LPCSTR filename )
+BOOL WINAPI DECLSPEC_HOTPATCH WritePrivateProfileStringA( LPCSTR section, LPCSTR entry,
+                                                          LPCSTR string, LPCSTR filename )
 {
     UNICODE_STRING sectionW, entryW, stringW, filenameW;
     BOOL ret;

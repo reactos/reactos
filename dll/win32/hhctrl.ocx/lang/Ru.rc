@@ -30,6 +30,9 @@ BEGIN
     IDS_INDEX        "&Оглавление"
     IDS_SEARCH       "&Поиск"
     IDS_FAVORITES    "&Избранное"
+
+    IDS_HIDETABS     "&Скрыть вкладки"
+    IDS_SHOWTABS     "&Показать вкладки"
 END
 
 STRINGTABLE
@@ -44,18 +47,45 @@ BEGIN
     IDTB_PRINT       "Печать"
     IDTB_OPTIONS     "Настройки"
     IDTB_FORWARD     "Вперёд"
-    IDTB_NOTES       "Записки"
-    IDTB_BROWSE_FWD  "Просмотр вперёд"
-    IDTB_BROWSE_BACK "Просмотр назад"
-    IDTB_CONTENTS    "Содержание"
-    IDTB_INDEX       "Оглавление"
-    IDTB_SEARCH      "Поиск"
-    IDTB_HISTORY     "История"
-    IDTB_FAVORITES   "Избранное"
-    IDTB_JUMP1       "Переход 1"
-    IDTB_JUMP2       "Переход 2"
-    IDTB_CUSTOMIZE   "Персонализировать"
-    IDTB_ZOOM        "Масштаб"
-    IDTB_TOC_NEXT    "Следующая глава"
-    IDTB_TOC_PREV    "Предыдущая глава"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "С&инхронизировать", IDTB_SYNC
+        MENUITEM "&Назад", IDTB_BACK
+        MENUITEM "&Вперед", IDTB_FORWARD
+        MENUITEM "&Домой", IDTB_HOME
+        MENUITEM "&Остановить", IDTB_STOP
+        MENUITEM "О&бновить", IDTB_REFRESH
+        MENUITEM "&Печать...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

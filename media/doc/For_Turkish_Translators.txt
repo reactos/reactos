@@ -1,5 +1,0 @@
-The ReactOS is translating to pure Turkish with new terminology. For new terminology, see: http://eersoy93.blogspot.com.tr/p/sozluk.html
-
-For more information of translating to Turkish, see this forum topic: http://www.reactos.org/forum/viewtopic.php?f=45&t=13528
-
-Erdem ERSOY (eersoy93) (erdemersoy@live.com)

@@ -101,10 +101,11 @@ static const struct IClassFactoryVtbl hnetcfg_cf_vtbl =
 
 static hnetcfg_cf fw_manager_cf = { { &hnetcfg_cf_vtbl }, NetFwMgr_create };
 static hnetcfg_cf fw_app_cf = { { &hnetcfg_cf_vtbl }, NetFwAuthorizedApplication_create };
+static hnetcfg_cf fw_openport_cf = { { &hnetcfg_cf_vtbl }, NetFwOpenPort_create };
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
-    TRACE("(0x%p, %d, %p)\n",hInstDLL,fdwReason,lpvReserved);
+    TRACE("(0x%p, %d, %p)\n", hInstDLL, fdwReason, reserved);
 
     switch(fdwReason) {
         case DLL_WINE_PREATTACH:
@@ -112,6 +113,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             instance = hInstDLL;
             DisableThreadLibraryCalls(hInstDLL);
+            break;
+        case DLL_PROCESS_DETACH:
+            if (reserved) break;
+            release_typelib();
             break;
     }
     return TRUE;
@@ -130,6 +135,10 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
     else if (IsEqualGUID( rclsid, &CLSID_NetFwAuthorizedApplication ))
     {
        cf = &fw_app_cf.IClassFactory_iface;
+    }
+    else if (IsEqualGUID( rclsid, &CLSID_NetFwOpenPort ))
+    {
+       cf = &fw_openport_cf.IClassFactory_iface;
     }
 
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;

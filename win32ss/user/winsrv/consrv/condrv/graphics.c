@@ -33,7 +33,7 @@ static CONSOLE_SCREEN_BUFFER_VTBL GraphicsVtbl =
 
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN OUT PCONSOLE Console,
+                                 IN PCONSOLE Console,
                                  IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size);
 VOID
@@ -42,7 +42,8 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
 NTSTATUS
 GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                           IN OUT PCONSOLE Console,
+                           IN PCONSOLE Console,
+                           IN HANDLE ProcessHandle,
                            IN PGRAPHICS_BUFFER_INFO GraphicsInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -50,7 +51,6 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     LARGE_INTEGER SectionSize;
     ULONG ViewSize = 0;
-    HANDLE ProcessHandle;
 
     if (Buffer == NULL || Console == NULL || GraphicsInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -69,7 +69,6 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
      * correctly the allocated resources when the client releases the
      * screen buffer.
      */
-    ProcessHandle = CsrGetClientThread()->Process->ProcessHandle;
     NewBuffer->ClientProcess = ProcessHandle;
 
     /* Get infos from the graphics buffer information structure */
@@ -163,8 +162,9 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to create a shared section ; Status = %lu\n", Status);
-        NtClose(NewBuffer->ClientMutex);
+        DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -188,9 +188,10 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtClose(NewBuffer->hSection);
-        NtClose(NewBuffer->ClientMutex);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -215,10 +216,11 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtUnmapViewOfSection(NtCurrentProcess(), NewBuffer->BitMap);
         NtClose(NewBuffer->hSection);
-        NtClose(NewBuffer->ClientMutex);
+        NtDuplicateObject(ProcessHandle, NewBuffer->ClientMutex,
+                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
         CONSOLE_SCREEN_BUFFER_Destroy((PCONSOLE_SCREEN_BUFFER)NewBuffer);
@@ -261,7 +263,8 @@ GRAPHICS_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     NtUnmapViewOfSection(Buff->ClientProcess, Buff->ClientBitMap);
     NtUnmapViewOfSection(NtCurrentProcess(), Buff->BitMap);
     NtClose(Buff->hSection);
-    NtClose(Buff->ClientMutex);
+    NtDuplicateObject(Buff->ClientProcess, Buff->ClientMutex,
+                      NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
     NtClose(Buff->Mutex);
     ConsoleFreeHeap(Buff->BitMapInfo);
 

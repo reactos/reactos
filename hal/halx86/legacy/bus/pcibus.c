@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/bus/pcibus.c
+ * FILE:            hal/halx86/legacy/bus/pcibus.c
  * PURPOSE:         PCI Bus Support (Configuration Space, Resource Allocation)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -11,6 +11,14 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitializePciStubs)
+#pragma alloc_text(INIT, HalpQueryPciRegistryInfo)
+#pragma alloc_text(INIT, HalpRegisterPciDebuggingDeviceInfo)
+#pragma alloc_text(INIT, HalpReleasePciDeviceForDebugging)
+#pragma alloc_text(INIT, HalpSetupPciDeviceForDebugging)
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -600,9 +608,9 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
     return STATUS_SUCCESS;
 }
 
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
                                IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
@@ -610,18 +618,18 @@ HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
     DPRINT1("Unimplemented!\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpRegisterPciDebuggingDeviceInfo(VOID)
 {
     BOOLEAN Found = FALSE;
@@ -854,9 +862,9 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
     return Length;
 }
 
+INIT_SECTION
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
-INIT_FUNCTION
 HalpQueryPciRegistryInfo(VOID)
 {
 #ifndef _MINIHAL_
@@ -1087,9 +1095,9 @@ HalpQueryPciRegistryInfo(VOID)
 #endif
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializePciStubs(VOID)
 {
     PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo;

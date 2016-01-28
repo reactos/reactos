@@ -21,7 +21,7 @@
 #ifndef __WINE_SHLWAPI_H
 #define __WINE_SHLWAPI_H
 
-/* FIXME: #include <specstrings.h> */
+#include <specstrings.h>
 #include <objbase.h>
 #include <shtypes.h>
 
@@ -1861,6 +1861,40 @@ SHCreateStreamOnFileEx(
 HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #endif /* NO_SHLWAPI_STREAM */
+
+#ifndef NO_SHLWAPI_SHARED
+
+// These functions are only included in this file starting with the Windows 7 platform SDK
+
+HANDLE
+WINAPI
+SHAllocShared(
+    _In_opt_  const void *pvData,
+    _In_      DWORD dwSize,
+    _In_      DWORD dwDestinationProcessId
+    );
+
+PVOID
+WINAPI
+SHLockShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+BOOL
+WINAPI
+SHUnlockShared(
+    _In_  void *pvData
+    );
+
+BOOL
+WINAPI
+SHFreeShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+#endif /* NO_SHLWAPI_SHARED */
 
 /* SHAutoComplete flags */
 #define SHACF_DEFAULT               0x00000000

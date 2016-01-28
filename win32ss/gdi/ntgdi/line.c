@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32k Subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32k/objects/line.c
+ * FILE:            win32ss/gdi/ntgdi/line.c
  * PURPOSE:         Line functions
  * PROGRAMMERS:     ...
  */
@@ -60,13 +60,16 @@ GreMoveTo( HDC hdc,
            INT y,
            LPPOINT pptOut)
 {
+   BOOL Ret;
    PDC dc;
    if (!(dc = DC_LockDc(hdc)))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   return IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+   Ret = IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+   DC_UnlockDc(dc);
+   return Ret;
 }
 
 // Should use Fx in pt
@@ -100,6 +103,7 @@ IntGdiLineTo(DC  *dc,
     RECTL     Bounds;
     POINT     Points[2];
     PDC_ATTR pdcattr = dc->pdcattr;
+    ASSERT_DC_PREPARED(dc);
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -248,8 +252,7 @@ IntGdiPolyline(DC      *dc,
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
+    if (!dc->dclevel.pSurface)
     {
         return FALSE;
     }
@@ -258,12 +261,7 @@ IntGdiPolyline(DC      *dc,
         return PATH_Polyline(dc, pt, Count);
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
-
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
-
-    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(dc);
+    psurf = dc->dclevel.pSurface;
 
     /* Get BRUSHOBJ from current pen. */
     pbrLine = dc->dclevel.pbrLine;
@@ -411,9 +409,6 @@ NtGdiLineTo(HDC  hDC,
     rcLockRect.bottom += dc->ptlDCOrig.y;
 
     DC_vPrepareDCsForBlit(dc, &rcLockRect, NULL, NULL);
-
-    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(dc);
 
     Ret = IntGdiLineTo(dc, XEnd, YEnd);
 

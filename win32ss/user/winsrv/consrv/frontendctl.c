@@ -210,9 +210,9 @@ CSR_API(SrvSetConsoleCursor)
     PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    // FIXME: Tests show that this function is used only for graphics screen buffers
-    // and otherwise it returns FALSE + sets last error to invalid handle.
-    // NOTE: I find that behaviour is ridiculous but ok, let's accept that at the moment...
+    // NOTE: Tests show that this function is used only for graphics screen buffers
+    // and otherwise it returns FALSE and sets last error to ERROR_INVALID_HANDLE.
+    // I find that behaviour is ridiculous but ok, let's accept it at the moment...
     Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      SetCursorRequest->OutputHandle,
                                      &Buff,
@@ -325,32 +325,115 @@ CSR_API(SrvGetConsoleSelectionInfo)
 
 CSR_API(SrvGetConsoleNumberOfFonts)
 {
+    NTSTATUS Status;
+    PCONSOLE_GETNUMFONTS GetNumFontsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumFontsRequest;
+    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME!
+    // TermGetNumberOfFonts(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    GetNumFontsRequest->NumFonts = 0;
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleFontInfo)
 {
+    NTSTATUS Status;
+    PCONSOLE_GETFONTINFO GetFontInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontInfoRequest;
+    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     GetFontInfoRequest->OutputHandle,
+                                     &Buff,
+                                     GENERIC_READ,
+                                     TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME!
+    // Console = Buff->Header.Console;
+    // TermGetFontInfo(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    GetFontInfoRequest->NumFonts = 0;
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleFontSize)
 {
+    NTSTATUS Status;
+    PCONSOLE_GETFONTSIZE GetFontSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontSizeRequest;
+    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     GetFontSizeRequest->OutputHandle,
+                                     &Buff,
+                                     GENERIC_READ,
+                                     TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME!
+    // Console = Buff->Header.Console;
+    // TermGetFontSize(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleCurrentFont)
 {
+    NTSTATUS Status;
+    PCONSOLE_GETCURRENTFONT GetCurrentFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCurrentFontRequest;
+    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     GetCurrentFontRequest->OutputHandle,
+                                     &Buff,
+                                     GENERIC_READ,
+                                     TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME!
+    // Console = Buff->Header.Console;
+    // TermGetCurrentFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    GetCurrentFontRequest->FontIndex = 0;
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvSetConsoleFont)
 {
+    NTSTATUS Status;
+    PCONSOLE_SETFONT SetFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetFontRequest;
+    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     SetFontRequest->OutputHandle,
+                                     &Buff,
+                                     GENERIC_WRITE,
+                                     TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME!
+    // Console = Buff->Header.Console;
+    // TermSetFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

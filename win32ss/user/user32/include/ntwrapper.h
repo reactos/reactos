@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(__GNUC__)
-#define EXTINLINE extern inline __attribute__((always_inline)) 
+#define EXTINLINE extern inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
 #define EXTINLINE extern __forceinline
 #else
@@ -10,11 +10,13 @@
 
 BOOL FASTCALL TestState(PWND, UINT);
 
+#if 0
 EXTINLINE BOOL WINAPI
 GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
     return NtUserGetScrollBarInfo(hWnd, idObject, psbi);
 }
+#endif
 
 EXTINLINE BOOL WINAPI
 ShowScrollBar(HWND hWnd, INT wBar, BOOL bShow)
@@ -55,7 +57,7 @@ SwitchDesktop(HDESK hDesktop)
 EXTINLINE BOOL WINAPI
 SetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
 {
-	return NtUserSetShellWindowEx(hwndShell, hwndShellListView);
+    return NtUserSetShellWindowEx(hwndShell, hwndShellListView);
 }
 
 EXTINLINE DWORD WINAPI
@@ -127,7 +129,7 @@ GetProcessWindowStation(VOID)
 EXTINLINE BOOL WINAPI
 SetProcessWindowStation(HWINSTA hWinSta)
 {
-  return NtUserSetProcessWindowStation(hWinSta);
+    return NtUserSetProcessWindowStation(hWinSta);
 }
 
 EXTINLINE BOOL WINAPI
@@ -142,7 +144,7 @@ UnlockWindowStation(HWINSTA hWinSta)
     return NtUserUnlockWindowStation(hWinSta);
 }
 
-EXTINLINE int WINAPI 
+EXTINLINE int WINAPI
 CopyAcceleratorTableW(HACCEL hAccelSrc, LPACCEL lpAccelDst, int cAccelEntries)
 {
     return NtUserCopyAcceleratorTable(hAccelSrc, lpAccelDst, cAccelEntries);
@@ -317,7 +319,7 @@ GetDoubleClickTime(VOID)
 EXTINLINE BOOL WINAPI
 GetKeyboardState(PBYTE lpKeyState)
 {
-    return NtUserGetKeyboardState((LPBYTE) lpKeyState);
+    return NtUserGetKeyboardState((LPBYTE)lpKeyState);
 }
 
 EXTINLINE BOOL WINAPI
@@ -503,7 +505,7 @@ SetMenuContextHelpId(HMENU hmenu, DWORD dwContextHelpId)
 EXTINLINE HWND WINAPI
 SetCapture(HWND hWnd)
 {
-    return(NtUserSetCapture(hWnd));
+    return NtUserSetCapture(hWnd);
 }
 
 EXTINLINE BOOL WINAPI
@@ -512,19 +514,19 @@ InvalidateRect(HWND hWnd, CONST RECT* lpRect, BOOL bErase)
     return NtUserInvalidateRect(hWnd, lpRect, bErase);
 }
 
-EXTINLINE BOOL WINAPI ValidateRect( HWND hWnd, CONST RECT *lpRect)
+EXTINLINE BOOL WINAPI ValidateRect(HWND hWnd, CONST RECT *lpRect)
 {
-   return NtUserValidateRect(hWnd, lpRect);
+    return NtUserValidateRect(hWnd, lpRect);
 }
 
-EXTINLINE BOOL WINAPI ShowCaret( HWND hWnd )
+EXTINLINE BOOL WINAPI ShowCaret(HWND hWnd)
 {
-   return NtUserShowCaret(hWnd);
+    return NtUserShowCaret(hWnd);
 }
 
-EXTINLINE BOOL WINAPI HideCaret( HWND hWnd )
+EXTINLINE BOOL WINAPI HideCaret(HWND hWnd)
 {
-   return NtUserHideCaret(hWnd);
+    return NtUserHideCaret(hWnd);
 }
 
 
@@ -541,37 +543,37 @@ EXTINLINE BOOL NtUserxDestroyCaret(VOID)
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
 }
 
-EXTINLINE VOID NtUserxMsqClearWakeMask()
+EXTINLINE VOID NtUserxMsqClearWakeMask(VOID)
 {
     NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK);
 }
 
-EXTINLINE HMENU NtUserxCreateMenu()
+EXTINLINE HMENU NtUserxCreateMenu(VOID)
 {
     return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
 }
 
-EXTINLINE HMENU NtUserxCreatePopupMenu()
+EXTINLINE HMENU NtUserxCreatePopupMenu(VOID)
 {
     return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
 }
 
 EXTINLINE DWORD NtUserxGetMessagePos(VOID)
 {
-  return (DWORD)NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
+    return (DWORD)NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
 }
 
 EXTINLINE BOOL NtUserxReleaseCapture(VOID)
 {
-  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
 }
 
-EXTINLINE BOOL NtUserxInitMessagePump()
+EXTINLINE BOOL NtUserxInitMessagePump(VOID)
 {
-    return NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP);
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP);
 }
 
-EXTINLINE BOOL NtUserxUnInitMessagePump()
+EXTINLINE BOOL NtUserxUnInitMessagePump(VOID)
 {
     return NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP);
 }
@@ -613,7 +615,7 @@ EXTINLINE UINT NtUserxEnumClipboardFormats(UINT format)
 
 EXTINLINE HICON NtUserxCreateEmptyCurObject(DWORD_PTR Param)
 {
-	return (HICON)NtUserCallOneParam(Param, ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+    return (HICON)NtUserCallOneParam(Param, ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
 }
 
 EXTINLINE BOOL NtUserxMessageBeep(UINT uType)
@@ -623,27 +625,27 @@ EXTINLINE BOOL NtUserxMessageBeep(UINT uType)
 
 EXTINLINE HKL NtUserxGetKeyboardLayout(DWORD idThread)
 {
-  return (HKL)NtUserCallOneParam((DWORD_PTR) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
+    return (HKL)NtUserCallOneParam((DWORD_PTR)idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
 }
 
 EXTINLINE INT NtUserxGetKeyboardType(INT nTypeFlag)
 {
-    return (INT)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
+    return (INT)NtUserCallOneParam((DWORD_PTR)nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
 EXTINLINE INT NtUserxReleaseDC(HDC hDC)
 {
-    return (INT)NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_RELEASEDC);
+    return (INT)NtUserCallOneParam((DWORD_PTR)hDC, ONEPARAM_ROUTINE_RELEASEDC);
 }
 
-EXTINLINE UINT NtUserxRealizePalette ( HDC hDC )
+EXTINLINE UINT NtUserxRealizePalette(HDC hDC)
 {
-    return (UINT)NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+    return (UINT)NtUserCallOneParam((DWORD_PTR)hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
 }
 
-EXTINLINE VOID NtUserxCreateSystemThreads(DWORD param)
+EXTINLINE VOID NtUserxCreateSystemThreads(BOOL bRemoteProcess)
 {
-    NtUserCallOneParam(param, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserCallOneParam(bRemoteProcess, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
 }
 
 EXTINLINE HDWP NtUserxBeginDeferWindowPos(INT nNumWindows)
@@ -653,7 +655,7 @@ EXTINLINE HDWP NtUserxBeginDeferWindowPos(INT nNumWindows)
 
 EXTINLINE BOOL NtUserxReplyMessage(LRESULT lResult)
 {
-  return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
+    return NtUserCallOneParam(lResult, ONEPARAM_ROUTINE_REPLYMESSAGE);
 }
 
 EXTINLINE VOID NtUserxPostQuitMessage(int nExitCode)
@@ -663,7 +665,7 @@ EXTINLINE VOID NtUserxPostQuitMessage(int nExitCode)
 
 EXTINLINE DWORD NtUserxGetQueueStatus(UINT flags)
 {
-   return (DWORD)NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
+    return (DWORD)NtUserCallOneParam(flags, ONEPARAM_ROUTINE_GETQUEUESTATUS);
 }
 
 EXTINLINE BOOL NtUserxValidateRgn(HWND hWnd, HRGN hRgn)
@@ -678,7 +680,7 @@ EXTINLINE BOOL NtUserxSetCursorPos(INT x, INT y)
 
 EXTINLINE BOOL NtUserxEnableWindow(HWND hWnd, BOOL bEnable)
 {
-  return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bEnable, TWOPARAM_ROUTINE_ENABLEWINDOW);
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bEnable, TWOPARAM_ROUTINE_ENABLEWINDOW);
 }
 
 EXTINLINE BOOL NtUserxUpdateUiState(HWND hWnd, DWORD Param)
@@ -691,16 +693,16 @@ EXTINLINE BOOL NtUserxShowOwnedPopups(HWND hWnd, BOOL fShow)
     return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
 }
 
-EXTINLINE BOOL NtUserxUnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
+EXTINLINE BOOL NtUserxUnhookWindowsHook(int nCode, HOOKPROC pfnFilterProc)
 {
-  return (BOOL)NtUserCallTwoParam(nCode, (DWORD_PTR)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
+    return (BOOL)NtUserCallTwoParam(nCode, (DWORD_PTR)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
 }
 
 EXTINLINE BOOL NtUserxSetWindowContextHelpId(HWND hWnd, DWORD_PTR dwContextHelpId)
 {
     return (BOOL)NtUserCallHwndParam(hWnd, dwContextHelpId, HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID);
 }
-  
+
 EXTINLINE BOOL NtUserxKillSystemTimer(HWND hWnd, UINT_PTR IDEvent)
 {
     return (BOOL)NtUserCallHwndParam(hWnd, IDEvent, HWNDPARAM_ROUTINE_KILLSYSTEMTIMER);
@@ -708,7 +710,7 @@ EXTINLINE BOOL NtUserxKillSystemTimer(HWND hWnd, UINT_PTR IDEvent)
 
 EXTINLINE VOID NtUserxSetDialogPointer(HWND hWnd, PVOID dlgInfo)
 {
-    NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+    NtUserCallHwndParam(hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER);
 }
 
 EXTINLINE VOID NtUserxNotifyWinEvent(HWND hWnd, PVOID ne)
@@ -723,29 +725,29 @@ EXTINLINE DWORD NtUserxGetWindowContextHelpId(HWND hwnd)
 
 EXTINLINE BOOL NtUserxDeregisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
+    return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
 }
 
 EXTINLINE BOOL NtUserxRegisterShellHookWindow(HWND hWnd)
 {
-  return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
+    return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
 }
 
 EXTINLINE BOOL NtUserxSetMessageBox(HWND hWnd)
 {
-  return NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
+    return NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
 }
 
 EXTINLINE VOID NtUserxClearWindowState(PWND pWnd, UINT Flag)
 {
-  if (!TestState(pWnd, Flag)) return; 
-  NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_CLEARWINDOWSTATE);
+    if (!TestState(pWnd, Flag)) return;
+    NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_CLEARWINDOWSTATE);
 }
 
 EXTINLINE VOID NtUserxSetWindowState(PWND pWnd, UINT Flag)
 {
-  if (TestState(pWnd, Flag)) return;
-  NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_SETWINDOWSTATE);
+    if (TestState(pWnd, Flag)) return;
+    NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_SETWINDOWSTATE);
 }
 
 EXTINLINE HWND NtUserxSetTaskmanWindow(HWND hWnd)
@@ -760,7 +762,7 @@ EXTINLINE HWND NtUserxSetProgmanWindow(HWND hWnd)
 
 EXTINLINE UINT NtUserxArrangeIconicWindows(HWND hWnd)
 {
-    return (UINT)NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
+    return (UINT)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
 }
 
 EXTINLINE BOOL NtUserxUpdateWindow(HWND hWnd)
@@ -784,16 +786,11 @@ EXTINLINE BOOL NtUserxSetForegroundWindow(HWND hWnd)
 }
 
 
-/* Reactos specific definitions */
+/* ReactOS-specific definitions */
 
 EXTINLINE LPARAM NtUserxGetMessageExtraInfo(VOID)
 {
-  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
-}
-
-EXTINLINE BOOL NtUserxSwitchCaretShowing(THRDCARETINFO* CaretInfo)
-{
-    return (BOOL)NtUserCallOneParam((DWORD_PTR)CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING);
+    return (LPARAM)NtUserGetThreadState(THREADSTATE_GETMESSAGEEXTRAINFO);
 }
 
 EXTINLINE VOID NtUserxEnableProcessWindowGhosting(BOOL bEnable)

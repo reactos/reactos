@@ -54,6 +54,7 @@ const PresetColumnEntry ColumnPresets[COLUMN_NMAX] = {
     DECLARE_COLUMN_PRESET(IOREADBYTES,       70, FALSE)
     DECLARE_COLUMN_PRESET(IOWRITEBYTES,      70, FALSE)
     DECLARE_COLUMN_PRESET(IOOTHERBYTES,      70, FALSE)
+    DECLARE_COLUMN_PRESET(COMMANDLINE,      450, FALSE)
 };
 
 static int          InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
@@ -204,10 +205,13 @@ void UpdateColumnDataHints(void)
     HDITEM        hditem;
     WCHAR         text[260];
     ULONG         Index;
+    ULONG         uItems;
     WCHAR         szTemp[256];
-    unsigned int  i;
+    UINT          i;
 
-    for (Index=0; Index<(ULONG)SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); Index++)
+    uItems = min(SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0), COLUMN_NMAX);
+
+    for (Index=0; Index<uItems; Index++)
     {
         memset(&hditem, 0, sizeof(HDITEM));
 

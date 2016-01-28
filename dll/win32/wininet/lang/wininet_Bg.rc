@@ -18,22 +18,63 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-IDD_PROXYDLG DIALOG 36, 24, 250, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Въведете мрежова парола"
+STRINGTABLE
+{
+  IDS_LANCONNECTION "LAN Connection"
+  IDS_CERT_CA_INVALID   "The certificate is issued by an unknown or untrusted publisher."
+  IDS_CERT_DATE_INVALID "The date on the certificate is invalid."
+  IDS_CERT_CN_INVALID   "The name on the certificate does not match the site."
+  IDS_CERT_ERRORS       "There is at least one unspecified security problem with this certificate."
+}
+
+IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Р’СЉРІРµРґРµС‚Рµ РјСЂРµР¶РѕРІР° РїР°СЂРѕР»Р°"
 FONT 8, "MS Shell Dlg"
-{       
- LTEXT "Въведете вашето потребителско име и парола:", -1, 40, 6, 150, 15
- LTEXT "Прокси", -1, 40, 26, 50, 10
- LTEXT "Област", -1, 40, 46, 50, 10
- LTEXT "Потребител", -1, 40, 66, 50, 10
- LTEXT "Парола", -1, 40, 86, 50, 10
- LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
- LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
- EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Запомни паролата (небезопасно)", IDC_SAVEPASSWORD,
-           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Отмени", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+{
+ LTEXT "Р’СЉРІРµРґРµС‚Рµ РІР°С€РµС‚Рѕ РїРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РёРјРµ Рё РїР°СЂРѕР»Р°:", -1, 6, 6, 210, 15
+ LTEXT "РџСЂРѕРєСЃРё", -1, 6, 26, 50, 18
+ LTEXT "РћР±Р»Р°СЃС‚", -1, 6, 46, 50, 18
+ LTEXT "РџРѕС‚СЂРµР±РёС‚РµР»", -1, 6, 66, 50, 18
+ LTEXT "РџР°СЂРѕР»Р°", -1, 6, 86, 50, 18
+ LTEXT "", IDC_PROXY, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Р—Р°РїРѕРјРЅРё РїР°СЂРѕР»Р°С‚Р° (РЅРµР±РµР·РѕРїР°СЃРЅРѕ)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "РћС‚РјРµРЅРё", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Authentication Required"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Please enter your username and password:", -1, 6, 6, 210, 15
+ LTEXT "Server", -1, 6, 26, 50, 18
+ LTEXT "Realm", -1, 6, 46, 50, 18
+ LTEXT "User", -1, 6, 66, 50, 18
+ LTEXT "Password", -1, 6, 86, 50, 18
+ LTEXT "", IDC_SERVER, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Save this password (insecure)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Cancel", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Warning"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "There is a problem with the certificate for this site.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Do you want to continue anyway?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Yes", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "No", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

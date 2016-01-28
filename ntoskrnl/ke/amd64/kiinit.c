@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/kiinit.c
+ * FILE:            ntoskrnl/ke/amd64/kiinit.c
  * PURPOSE:         Kernel Initialization for x86 CPUs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -15,9 +15,11 @@
 
 #define REQUIRED_FEATURE_BITS (KF_RDTSC|KF_CR4|KF_CMPXCHG8B|KF_XMMI|KF_XMMI64| \
                                KF_LARGE_PAGE|KF_FAST_SYSCALL|KF_GLOBAL_PAGE| \
-                               KF_CMOV|KF_PAT|KF_MMX|KF_FXSR|KF_NX_BIT)
+                               KF_CMOV|KF_PAT|KF_MMX|KF_FXSR|KF_NX_BIT|KF_MTRR)
 
 /* GLOBALS *******************************************************************/
+
+extern BOOLEAN RtlpUse16ByteSLists;
 
 /* Function pointer for early debug prints */
 ULONG (*FrLdrDbgPrint)(const char *Format, ...);
@@ -82,6 +84,8 @@ KiInitMachineDependent(VOID)
 //            KeBugCheckEx(NO_PAGES_AVAILABLE, 2, PAGE_SIZE * 2, 0, 0);
 //        }
 
+    /* Initialize 8/16 bit SList support */
+    RtlpUse16ByteSLists = (KeFeatureBits & KF_CMPXCHG16B) ? TRUE: FALSE;
 }
 
 VOID
@@ -279,19 +283,29 @@ KiInitializeKernelMachineDependent(
     KeI386CpuStep = Prcb->CpuStep;
     KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64;
     KeProcessorLevel = (USHORT)Prcb->CpuType;
-    if (Prcb->CpuID) KeProcessorRevision = Prcb->CpuStep;
+    if (Prcb->CpuID)
+        KeProcessorRevision = Prcb->CpuStep;
 
     /* Set basic CPU Features that user mode can read */
+    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = TRUE; // ???
+    SharedUserData->ProcessorFeatures[PF_NX_ENABLED] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_FASTFAIL_AVAILABLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_XSAVE_ENABLED] = TRUE;
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
         (Prcb->FeatureBits & KF_MMX) ? TRUE: FALSE;
-    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] = TRUE;
     SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
         ((Prcb->FeatureBits & KF_FXSR) && (Prcb->FeatureBits & KF_XMMI)) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
         ((Prcb->FeatureBits & KF_FXSR) && (Prcb->FeatureBits & KF_XMMI64)) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
         (Prcb->FeatureBits & KF_3DNOW) ? TRUE: FALSE;
-    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] = TRUE;
+    SharedUserData->ProcessorFeatures[PF_SSE3_INSTRUCTIONS_AVAILABLE] =
+        (Prcb->FeatureBits & KF_SSE3) ? TRUE: FALSE;
+    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE128] =
+        (Prcb->FeatureBits & KF_CMPXCHG16B) ? TRUE: FALSE;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -322,7 +336,6 @@ KiInitializeKernelMachineDependent(
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
         Prcb->FeatureBits |= KF_NX_DISABLED;
     }
-
 }
 
 static LDR_DATA_TABLE_ENTRY LdrCoreEntries[3];
@@ -372,7 +385,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeLoaderBlock = LoaderBlock;
 
     /* Get the current CPU number */
-    Cpu = (CCHAR)KeNumberProcessors++; // FIXME
+    Cpu = KeNumberProcessors++; // FIXME
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)

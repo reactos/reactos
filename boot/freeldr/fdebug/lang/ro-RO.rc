@@ -1,4 +1,4 @@
-/* Romanian translation by Fulea Ștefan */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -15,11 +15,11 @@ BEGIN
         MENUITEM "&Pornește captură", IDM_FILE_STARTCAPTURE
         MENUITEM "&Oprește captură", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ecou &local", IDM_FILE_LOCALECHO
+        MENUITEM "Ecou loc&al", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", IDM_ABOUT
     END
@@ -66,7 +66,7 @@ BEGIN
     LTEXT "Numele fișierului:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Caută", IDC_BROWSE, 194, 26, 50, 14
-    DEFPUSHBUTTON "Con&firmă", 139, 74, 50, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 139, 74, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 194, 74, 50, 14
 END
 
@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "fdebug"
+    IDS_APP_TITLE "Program de depanare FreeLoader"
     IDS_HELLO "Salut, lume!"
     IDC_FDEBUG "FDEBUG"
 END

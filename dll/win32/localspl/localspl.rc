@@ -33,40 +33,23 @@
 
 #include <wine/wine_common_ver.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/spl_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/spl_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/spl_En.rc"
 #endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/spl_Fr.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/spl_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/spl_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/spl_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/spl_Pl.rc"
-#endif
-#ifdef LANGUAGE_PT_PT
-    #include "lang/spl_Pt.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/spl_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/spl_De.rc"
-#endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/spl_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/spl_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/spl_He.rc"
@@ -80,8 +63,23 @@
 #ifdef LANGUAGE_JA_JP
     #include "lang/spl_Ja.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/spl_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/spl_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/spl_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/spl_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/spl_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/spl_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/spl_Ro.rc"
@@ -94,6 +92,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/spl_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/spl_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/spl_Tr.rc"

@@ -449,9 +449,9 @@
       fseek( new, getRandom( 0, item->len - 1 ), SEEK_SET );
 
       if ( item->isbinary )
-        putc( getRandom( 0, 0xff ), new );
+        putc( getRandom( 0, 0xFF ), new );
       else if ( item->isascii )
-        putc( getRandom( 0x20, 0x7e ), new );
+        putc( getRandom( 0x20, 0x7E ), new );
       else
       {
         int  hex = getRandom( 0, 15 );

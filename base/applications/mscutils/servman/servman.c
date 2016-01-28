@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/servman.c
+ * FILE:        base/applications/mscutils/servman/servman.c
  * PURPOSE:     Program HQ
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -13,29 +13,30 @@
 
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
+HWND g_hProgDlg;
 
 int WINAPI
-_tWinMain(HINSTANCE hThisInstance,
+wWinMain(HINSTANCE hThisInstance,
           HINSTANCE hPrevInstance,
-          LPTSTR lpCmdLine,
+          LPWSTR lpCmdLine,
           int nCmdShow)
 {
-    LPTSTR lpAppName;
+    LPWSTR lpAppName;
     HWND hMainWnd;
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX icex;
     
     switch (GetUserDefaultUILanguage())
-  {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
-    default:
-      break;
-  }
-    
+        default:
+            break;
+    }
+
     hInstance = hThisInstance;
     ProcessHeap = GetProcessHeap();
 
@@ -57,13 +58,14 @@ _tWinMain(HINSTANCE hThisInstance,
         if (hMainWnd != NULL)
         {
             /* pump the message queue */
-            while( GetMessage( &Msg, NULL, 0, 0 ) )
+            while (GetMessageW( &Msg, NULL, 0, 0 ) )
             {
                 //if ( !hProgDlg || !IsWindow(hProgDlg) || !IsDialogMessage(hProgDlg, &Msg) )
-                //{
+                //if (!IsDialogMessage(g_hProgDlg, &Msg))
+                {
                     TranslateMessage(&Msg);
-                    DispatchMessage(&Msg);
-                //}
+                    DispatchMessageW(&Msg);
+                }
             }
 
             Ret = 0;

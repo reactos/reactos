@@ -34,15 +34,15 @@ static VOID
 DoOpenFile(PINFO pInfo)
 {
     OPENFILENAMEW ofn;
-    WCHAR szFileName[MAX_PATH] = L"";
-    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+    WCHAR szFileName[MAX_PATH] = L"Default.rdp";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*.RDP)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
-    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrDefExt   = L"RDP";
     ofn.lpstrFilter   = szFilter;
     ofn.lpstrFile     = szFileName;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
@@ -60,15 +60,15 @@ static VOID
 DoSaveAs(PINFO pInfo)
 {
     OPENFILENAMEW ofn;
-    WCHAR szFileName[MAX_PATH] = L"";
-    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+    WCHAR szFileName[MAX_PATH] = L"Default.rdp";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*.RDP)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
-    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrDefExt   = L"RDP";
     ofn.lpstrFilter   = szFilter;
     ofn.lpstrFile     = szFileName;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
@@ -669,7 +669,7 @@ FillResolutionsAndColors(PINFO pInfo)
     PSETTINGS_ENTRY Current;
     DWORD index, i, num;
     DWORD MaxBpp = 0;
-    UINT types[4];
+    UINT types[5];
 
     pInfo->CurrentDisplayDevice = pInfo->DisplayDeviceList; /* Update global variable */
 
@@ -686,10 +686,11 @@ FillResolutionsAndColors(PINFO pInfo)
     }
     switch (MaxBpp)
     {
-        case 32:
-        case 24: num = 4; break;
-        case 16: num = 3; break;
-        case 8:  num = 1; break;
+        case 32: num = 4; break;
+        case 24: num = 3; break;
+        case 16: num = 2; break;
+        case 15: num = 1; break;
+        case 8:  num = 0; break;
         default: num = 0; break;
     }
 
@@ -697,6 +698,7 @@ FillResolutionsAndColors(PINFO pInfo)
     types[1] = IDS_HIGHCOLOR15;
     types[2] = IDS_HIGHCOLOR16;
     types[3] = IDS_HIGHCOLOR24;
+    types[4] = IDS_HIGHCOLOR32;
 
     /* Fill color depths combo box */
     SendDlgItemMessageW(pInfo->hDisplayPage,

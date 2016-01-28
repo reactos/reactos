@@ -1,10 +1,11 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/finfo.c
+ * FILE:             drivers/filesystems/fastfat/finfo.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Herve Poussineau (reactos@poussine.freesurf.fr)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  *
  */
 
@@ -14,6 +15,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#define NASSERTS_RENAME
 
 /* GLOBALS ******************************************************************/
 
@@ -68,7 +71,6 @@ const char* FileInformationClassNames[] =
 /*
  * FUNCTION: Retrieve the standard file information
  */
-static
 NTSTATUS
 VfatGetStandardInformation(
     PVFATFCB FCB,
@@ -233,7 +235,6 @@ VfatSetBasicInformation(
     return STATUS_SUCCESS;
 }
 
-static
 NTSTATUS
 VfatGetBasicInformation(
     PFILE_OBJECT FileObject,
@@ -346,10 +347,9 @@ VfatSetDispositionInformation(
         (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
         (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
     {
-        // we cannot delete a '.', '..' or the root directory
+        /* we cannot delete a '.', '..' or the root directory */
         return STATUS_ACCESS_DENIED;
     }
-
 
     if (!MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
     {
@@ -371,6 +371,518 @@ VfatSetDispositionInformation(
     FileObject->DeletePending = TRUE;
 
     return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+vfatPrepareTargetForRename(
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN PVFATFCB * ParentFCB,
+    IN PUNICODE_STRING NewName,
+    IN BOOLEAN ReplaceIfExists,
+    IN PUNICODE_STRING ParentName,
+    OUT PBOOLEAN Deleted)
+{
+    NTSTATUS Status;
+    PVFATFCB TargetFcb;
+
+    DPRINT("vfatPrepareTargetForRename(%p, %p, %wZ, %d, %wZ, %p)\n", DeviceExt, ParentFCB, NewName, ReplaceIfExists, ParentName);
+
+    *Deleted = FALSE;
+    /* Try to open target */
+    Status = vfatGetFCBForFile(DeviceExt, ParentFCB, &TargetFcb, NewName);
+    /* If it exists */
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("Target file %wZ exists. FCB Flags %08x\n", NewName, TargetFcb->Flags);
+        /* Check whether we are allowed to replace */
+        if (ReplaceIfExists)
+        {
+            /* If that's a directory or a read-only file, we're not allowed */
+            if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY))
+            {
+                DPRINT("And this is a readonly file!\n");
+                vfatReleaseFCB(DeviceExt, *ParentFCB);
+                *ParentFCB = NULL;
+                vfatReleaseFCB(DeviceExt, TargetFcb);
+                return STATUS_OBJECT_NAME_COLLISION;
+            }
+
+
+            /* If we still have a file object, close it. */
+            if (TargetFcb->FileObject)
+            {
+                if (!MmFlushImageSection(TargetFcb->FileObject->SectionObjectPointer, MmFlushForDelete))
+                {
+                    DPRINT("MmFlushImageSection failed.\n");
+                    vfatReleaseFCB(DeviceExt, *ParentFCB);
+                    *ParentFCB = NULL;
+                    vfatReleaseFCB(DeviceExt, TargetFcb);
+                    return STATUS_ACCESS_DENIED;
+                }
+
+                TargetFcb->FileObject->DeletePending = TRUE;
+                VfatCloseFile(DeviceExt, TargetFcb->FileObject);
+            }
+
+            /* If we are here, ensure the file isn't open by anyone! */
+            if (TargetFcb->OpenHandleCount != 0)
+            {
+                DPRINT("There are still open handles for this file.\n");
+                vfatReleaseFCB(DeviceExt, *ParentFCB);
+                *ParentFCB = NULL;
+                vfatReleaseFCB(DeviceExt, TargetFcb);
+                return STATUS_ACCESS_DENIED;
+            }
+
+            /* Effectively delete old file to allow renaming */
+            DPRINT("Effectively deleting the file.\n");
+            VfatDelEntry(DeviceExt, TargetFcb, NULL);
+            vfatReleaseFCB(DeviceExt, TargetFcb);
+            *Deleted = TRUE;
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            vfatReleaseFCB(DeviceExt, *ParentFCB);
+            *ParentFCB = NULL;
+            vfatReleaseFCB(DeviceExt, TargetFcb);
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+    }
+    else if (*ParentFCB != NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Failure */
+    return Status;
+}
+
+/*
+ * FUNCTION: Set the file name information
+ */
+static
+NTSTATUS
+VfatSetRenameInformation(
+    PFILE_OBJECT FileObject,
+    PVFATFCB FCB,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_RENAME_INFORMATION RenameInfo,
+    PFILE_OBJECT TargetFileObject)
+{
+#ifdef NASSERTS_RENAME
+#pragma push_macro("ASSERT")
+#undef ASSERT
+#define ASSERT(x) ((VOID) 0)
+#endif
+    NTSTATUS Status;
+    UNICODE_STRING NewName;
+    UNICODE_STRING SourcePath;
+    UNICODE_STRING SourceFile;
+    UNICODE_STRING NewPath;
+    UNICODE_STRING NewFile;
+    PFILE_OBJECT RootFileObject;
+    PVFATFCB RootFCB;
+    UNICODE_STRING RenameInfoString;
+    PVFATFCB ParentFCB;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE TargetHandle;
+    BOOLEAN DeletedTarget;
+    ULONG OldReferences, NewReferences;
+    PVFATFCB OldParent;
+
+    DPRINT("VfatSetRenameInfo(%p, %p, %p, %p, %p)\n", FileObject, FCB, DeviceExt, RenameInfo, TargetFileObject);
+
+    /* Disallow renaming root */
+    if (vfatFCBIsRoot(FCB))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    OldReferences = FCB->parentFcb->RefCount;
+#ifdef NASSERTS_RENAME
+    UNREFERENCED_PARAMETER(OldReferences);
+#endif
+
+    /* If we are performing relative opening for rename, get FO for getting FCB and path name */
+    if (RenameInfo->RootDirectory != NULL)
+    {
+        /* We cannot tolerate relative opening with a full path */
+        if (RenameInfo->FileName[0] == L'\\')
+        {
+            return STATUS_OBJECT_NAME_INVALID;
+        }
+
+        Status = ObReferenceObjectByHandle(RenameInfo->RootDirectory,
+                                           FILE_READ_DATA,
+                                           *IoFileObjectType,
+                                           ExGetPreviousMode(),
+                                           (PVOID *)&RootFileObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        RootFCB = RootFileObject->FsContext;
+    }
+
+    RtlInitEmptyUnicodeString(&NewName, NULL, 0);
+    ParentFCB = NULL;
+
+    if (TargetFileObject == NULL)
+    {
+        /* If we don't have target file object, construct paths thanks to relative FCB, if any, and with
+         * information supplied by the user
+         */
+
+        /* First, setup a string we'll work on */
+        RenameInfoString.Length = RenameInfo->FileNameLength;
+        RenameInfoString.MaximumLength = RenameInfo->FileNameLength;
+        RenameInfoString.Buffer = RenameInfo->FileName;
+
+        /* Check whether we have FQN */
+        if (RenameInfoString.Length > 6 * sizeof(WCHAR))
+        {
+            if (RenameInfoString.Buffer[0] == L'\\' && RenameInfoString.Buffer[1] == L'?' &&
+                RenameInfoString.Buffer[2] == L'?' && RenameInfoString.Buffer[3] == L'\\' &&
+                RenameInfoString.Buffer[5] == L':' && (RenameInfoString.Buffer[4] >= L'A' &&
+                RenameInfoString.Buffer[4] <= L'Z'))
+            {
+                /* If so, open its target directory */
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &RenameInfoString,
+                                           OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                           NULL, NULL);
+
+                Status = IoCreateFile(&TargetHandle,
+                                      FILE_WRITE_DATA | SYNCHRONIZE,
+                                      &ObjectAttributes,
+                                      &IoStatusBlock,
+                                      NULL, 0,
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                      FILE_OPEN,
+                                      FILE_OPEN_FOR_BACKUP_INTENT,
+                                      NULL, 0,
+                                      CreateFileTypeNone,
+                                      NULL,
+                                      IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Cleanup;
+                }
+
+                /* Get its FO to get the FCB */
+                Status = ObReferenceObjectByHandle(TargetHandle,
+                                                   FILE_WRITE_DATA,
+                                                   *IoFileObjectType,
+                                                   KernelMode,
+                                                   (PVOID *)&TargetFileObject,
+                                                   NULL);
+                if (!NT_SUCCESS(Status))
+                {
+                    ZwClose(TargetHandle);
+                    goto Cleanup;
+                }
+
+                /* Are we working on the same volume? */
+                if (IoGetRelatedDeviceObject(TargetFileObject) != IoGetRelatedDeviceObject(FileObject))
+                {
+                    ObDereferenceObject(TargetFileObject);
+                    ZwClose(TargetHandle);
+                    TargetFileObject = NULL;
+                    Status = STATUS_NOT_SAME_DEVICE;
+                    goto Cleanup;
+                }
+            }
+        }
+
+        NewName.Length = 0;
+        NewName.MaximumLength = RenameInfo->FileNameLength;
+        if (RenameInfo->RootDirectory != NULL)
+        {
+            NewName.MaximumLength += sizeof(WCHAR) + RootFCB->PathNameU.Length;
+        }
+        else if (RenameInfo->FileName[0] != L'\\')
+        {
+            /* We don't have full path, and we don't have root directory:
+             * => we move inside the same directory
+             */
+            NewName.MaximumLength += sizeof(WCHAR) + FCB->DirNameU.Length;
+        }
+        else if (TargetFileObject != NULL)
+        {
+            /* We had a FQN:
+             * => we need to use its correct path
+             */
+            NewName.MaximumLength += sizeof(WCHAR) + ((PVFATFCB)TargetFileObject->FsContext)->PathNameU.Length;
+        }
+
+        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_VFAT);
+        if (NewName.Buffer == NULL)
+        {
+            if (TargetFileObject != NULL)
+            {
+                ObDereferenceObject(TargetFileObject);
+                ZwClose(TargetHandle);
+                TargetFileObject = NULL;
+            }
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+
+        if (RenameInfo->RootDirectory != NULL)
+        {
+            /* Here, copy first absolute and then append relative */ 
+            RtlCopyUnicodeString(&NewName, &RootFCB->PathNameU);
+            NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
+            NewName.Length += sizeof(WCHAR);
+            RtlAppendUnicodeStringToString(&NewName, &RenameInfoString);
+        }
+        else if (RenameInfo->FileName[0] != L'\\')
+        {
+            /* Here, copy first work directory and then append filename */
+            RtlCopyUnicodeString(&NewName, &FCB->DirNameU);
+            NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
+            NewName.Length += sizeof(WCHAR);
+            RtlAppendUnicodeStringToString(&NewName, &RenameInfoString);
+        }
+        else if (TargetFileObject != NULL)
+        {
+            /* Here, copy first path name and then append filename */
+            RtlCopyUnicodeString(&NewName, &((PVFATFCB)TargetFileObject->FsContext)->PathNameU);
+            NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
+            NewName.Length += sizeof(WCHAR);
+            RtlAppendUnicodeStringToString(&NewName, &RenameInfoString);
+        }
+        else
+        {
+            /* Here we should have full path, so simply copy it */
+            RtlCopyUnicodeString(&NewName, &RenameInfoString);
+        }
+
+        /* Do we have to cleanup some stuff? */
+        if (TargetFileObject != NULL)
+        {
+            ObDereferenceObject(TargetFileObject);
+            ZwClose(TargetHandle);
+            TargetFileObject = NULL;
+        }
+    }
+    else
+    {
+        /* At that point, we shouldn't care about whether we are relative opening
+         * Target FO FCB should already have full path
+         */
+
+        /* Before constructing string, just make a sanity check (just to be sure!) */
+        if (IoGetRelatedDeviceObject(TargetFileObject) != IoGetRelatedDeviceObject(FileObject))
+        {
+            Status = STATUS_NOT_SAME_DEVICE;
+            goto Cleanup;
+        }
+
+        NewName.Length = 0;
+        NewName.MaximumLength = TargetFileObject->FileName.Length + ((PVFATFCB)TargetFileObject->FsContext)->PathNameU.Length + sizeof(WCHAR);
+        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_VFAT);
+        if (NewName.Buffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+
+        RtlCopyUnicodeString(&NewName, &((PVFATFCB)TargetFileObject->FsContext)->PathNameU);
+        NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
+        NewName.Length += sizeof(WCHAR);
+        RtlAppendUnicodeStringToString(&NewName, &TargetFileObject->FileName);
+    }
+
+    /* Explode our paths to get path & filename */
+    vfatSplitPathName(&FCB->PathNameU, &SourcePath, &SourceFile);
+    DPRINT("Old dir: %wZ, Old file: %wZ\n", &SourcePath, &SourceFile);
+    vfatSplitPathName(&NewName, &NewPath, &NewFile);
+    DPRINT("New dir: %wZ, New file: %wZ\n", &NewPath, &NewFile);
+
+    /* Are we working in place? */
+    if (FsRtlAreNamesEqual(&SourcePath, &NewPath, TRUE, NULL))
+    {
+        if (FsRtlAreNamesEqual(&SourceFile, &NewFile, FALSE, NULL))
+        {
+            Status = STATUS_SUCCESS;
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
+            goto Cleanup;
+        }
+
+        if (FsRtlAreNamesEqual(&SourceFile, &NewFile, TRUE, NULL))
+        {
+            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                        &(DeviceExt->NotifyList),
+                                        (PSTRING)&FCB->PathNameU,
+                                        FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                        NULL,
+                                        NULL,
+                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                        FILE_ACTION_RENAMED_OLD_NAME,
+                                        NULL);
+            Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
+                                            (PSTRING)&FCB->PathNameU,
+                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                            NULL,
+                                            NULL,
+                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                            FILE_ACTION_RENAMED_NEW_NAME,
+                                            NULL);
+            }
+        }
+        else
+        {
+            /* Try to find target */
+            ParentFCB = FCB->parentFcb;
+            vfatGrabFCB(DeviceExt, ParentFCB);
+            Status = vfatPrepareTargetForRename(DeviceExt,
+                                                &ParentFCB,
+                                                &NewFile,
+                                                RenameInfo->ReplaceIfExists,
+                                                &NewPath,
+                                                &DeletedTarget);
+            if (!NT_SUCCESS(Status))
+            {
+                ASSERT(OldReferences == FCB->parentFcb->RefCount - 1);
+                ASSERT(OldReferences == ParentFCB->RefCount - 1);
+                goto Cleanup;
+            }
+
+            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                        &(DeviceExt->NotifyList),
+                                        (PSTRING)&FCB->PathNameU,
+                                        FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                        NULL,
+                                        NULL,
+                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                        (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME),
+                                        NULL);
+            Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, FALSE);
+            if (NT_SUCCESS(Status))
+            {
+                if (DeletedTarget)
+                {
+                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                                &(DeviceExt->NotifyList),
+                                                (PSTRING)&FCB->PathNameU,
+                                                FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                                NULL,
+                                                NULL,
+                                                FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
+                                                | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
+                                                FILE_ACTION_MODIFIED,
+                                                NULL);
+                }
+                else
+                {
+                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                                &(DeviceExt->NotifyList),
+                                                (PSTRING)&FCB->PathNameU,
+                                                FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                                NULL,
+                                                NULL,
+                                                ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                                FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                                FILE_ACTION_RENAMED_NEW_NAME,
+                                                NULL);
+                }
+            }
+        }
+
+        ASSERT(OldReferences == FCB->parentFcb->RefCount - 1); // extra grab
+        ASSERT(OldReferences == ParentFCB->RefCount - 1); // extra grab
+    }
+    else
+    {
+
+        /* Try to find target */
+        ParentFCB = NULL;
+        OldParent = FCB->parentFcb;
+#ifdef NASSERTS_RENAME
+        UNREFERENCED_PARAMETER(OldParent);
+#endif
+        Status = vfatPrepareTargetForRename(DeviceExt,
+                                            &ParentFCB,
+                                            &NewName,
+                                            RenameInfo->ReplaceIfExists,
+                                            &NewPath,
+                                            &DeletedTarget);
+        if (!NT_SUCCESS(Status))
+        {
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
+            goto Cleanup;
+        }
+
+        NewReferences = ParentFCB->RefCount;
+#ifdef NASSERTS_RENAME
+        UNREFERENCED_PARAMETER(NewReferences);
+#endif
+
+        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                    &(DeviceExt->NotifyList),
+                                    (PSTRING)&FCB->PathNameU,
+                                    FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                    NULL,
+                                    NULL,
+                                    ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                    FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                    FILE_ACTION_REMOVED,
+                                    NULL);
+        Status = VfatMoveEntry(DeviceExt, FCB, &NewFile, ParentFCB);
+        if (NT_SUCCESS(Status))
+        {
+            if (DeletedTarget)
+            {
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
+                                            (PSTRING)&FCB->PathNameU,
+                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                            NULL,
+                                            NULL,
+                                            FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
+                                            | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
+                                            FILE_ACTION_MODIFIED,
+                                            NULL);
+            }
+            else
+            {
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
+                                            (PSTRING)&FCB->PathNameU,
+                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                            NULL,
+                                            NULL,
+                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                            FILE_ACTION_ADDED,
+                                            NULL);
+            }
+        }
+    }
+
+    ASSERT(OldReferences == OldParent->RefCount + 1); // removed file
+    ASSERT(NewReferences == ParentFCB->RefCount - 1); // new file
+Cleanup:
+    if (ParentFCB != NULL) vfatReleaseFCB(DeviceExt, ParentFCB);
+    if (NewName.Buffer != NULL) ExFreePoolWithTag(NewName.Buffer, TAG_VFAT);
+    if (RenameInfo->RootDirectory != NULL) ObDereferenceObject(RootFileObject);
+
+    return Status;
+#ifdef NASSERTS_RENAME
+#pragma pop_macro("ASSERT")
+#endif
 }
 
 /*
@@ -558,13 +1070,12 @@ VfatGetAllInformation(
     PULONG BufferLength)
 {
     NTSTATUS Status;
-    ULONG InitialBufferLength = *BufferLength;
 
     ASSERT(Info);
     ASSERT(Fcb);
 
-    if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR))
-        return(STATUS_BUFFER_OVERFLOW);
+    if (*BufferLength < FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName))
+        return STATUS_BUFFER_OVERFLOW;
 
     /* Basic Information */
     Status = VfatGetBasicInformation(FileObject, Fcb, DeviceObject, &Info->BasicInformation, BufferLength);
@@ -576,20 +1087,21 @@ VfatGetAllInformation(
     Status = VfatGetInternalInformation(Fcb, &Info->InternalInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* EA Information */
-    Info->EaInformation.EaSize = 0;
+    Status = VfatGetEaInformation(FileObject, Fcb, DeviceObject, &Info->EaInformation, BufferLength);
+    if (!NT_SUCCESS(Status)) return Status;
     /* Access Information: The IO-Manager adds this information */
+    *BufferLength -= sizeof(FILE_ACCESS_INFORMATION);
     /* Position Information */
     Status = VfatGetPositionInformation(FileObject, Fcb, DeviceObject, &Info->PositionInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Mode Information: The IO-Manager adds this information */
+    *BufferLength -= sizeof(FILE_MODE_INFORMATION);
     /* Alignment Information: The IO-Manager adds this information */
+    *BufferLength -= sizeof(FILE_ALIGNMENT_INFORMATION);
     /* Name Information */
     Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
-    if (!NT_SUCCESS(Status)) return Status;
 
-    *BufferLength = InitialBufferLength - (sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR));
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static
@@ -865,9 +1377,9 @@ VfatQueryInformation(
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource,
-                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                         BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
-            return VfatQueueRequest(IrpContext);
+            return VfatMarkIrpContextForQueue(IrpContext);
         }
     }
 
@@ -945,14 +1457,11 @@ VfatQueryInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    IrpContext->Irp->IoStatus.Status = Status;
     if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
         IrpContext->Irp->IoStatus.Information =
             IrpContext->Stack->Parameters.QueryFile.Length - BufferLength;
     else
         IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return Status;
 }
@@ -996,21 +1505,32 @@ VfatSetInformation(
                                   (PLARGE_INTEGER)SystemBuffer))
         {
             DPRINT("Couldn't set file size!\n");
-            IrpContext->Irp->IoStatus.Status = STATUS_USER_MAPPED_FILE;
             IrpContext->Irp->IoStatus.Information = 0;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
             return STATUS_USER_MAPPED_FILE;
         }
         DPRINT("Can set file size\n");
     }
 
+    if (FileInformationClass == FileRenameInformation)
+    {
+        if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+        {
+            return VfatMarkIrpContextForQueue(IrpContext);
+        }
+    }
+
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
-                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
-            return VfatQueueRequest(IrpContext);
+            if (FileInformationClass == FileRenameInformation)
+            {
+                ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
+            }
+
+            return VfatMarkIrpContextForQueue(IrpContext);
         }
     }
 
@@ -1044,7 +1564,11 @@ VfatSetInformation(
             break;
 
         case FileRenameInformation:
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = VfatSetRenameInformation(IrpContext->FileObject,
+                                              FCB,
+                                              IrpContext->DeviceExt,
+                                              SystemBuffer,
+                                              IrpContext->Stack->Parameters.SetFile.FileObject);
             break;
 
         default:
@@ -1056,11 +1580,12 @@ VfatSetInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    IrpContext->Irp->IoStatus.Status = Status;
-    IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
+    if (FileInformationClass == FileRenameInformation)
+    {
+        ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
+    }
 
+    IrpContext->Irp->IoStatus.Information = 0;
     return Status;
 }
 

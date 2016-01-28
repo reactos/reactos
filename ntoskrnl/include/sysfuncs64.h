@@ -573,7 +573,7 @@ SVC_(SetSystemCodeIntegrityRoots, 0) // FIXME
 #endif
 SVC_(SetSystemEnvironmentValue, 2)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-SVC_(SetSystemEnvironmentValueEx, 2)
+SVC_(SetSystemEnvironmentValueEx, 5)
 #endif
 SVC_(SetSystemInformation, 3)
 SVC_(SetSystemPowerState, 3)

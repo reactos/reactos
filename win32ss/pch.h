@@ -19,6 +19,7 @@
 #include <ntifs.h>
 #include <ntddmou.h>
 #include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/mmfuncs.h>
@@ -26,6 +27,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
+#include <ntintsafe.h>
 #include <ntddkbd.h>
 
 /* Win32 headers */
@@ -33,6 +35,7 @@
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
+#define STARTF_USESHOWWINDOW 1
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
@@ -40,6 +43,10 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <intrin.h>
+
+// Needed because windef.h messes up CDECL for whatever
+#undef CDECL
+#define CDECL __cdecl
 
 /* Avoid type casting, by defining RECT to RECTL */
 #define RECT RECTL
@@ -59,18 +66,26 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <prntfont.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
+#include <imm.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Public Win32K headers */
-#include <include/callback.h>
+#include <include/ntgdityp.h>
+#include <ntgdi.h>
+#include <include/ntgdihdl.h>
+#include <include/ntgdibad.h>
+
+#ifndef __cplusplus
 #include <include/ntusrtyp.h>
 #include <include/ntuser.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdibad.h>
-#include <include/ntgdihdl.h>
-#include <ntgdi.h>
+#include <include/callback.h>
+#endif // __cplusplus
 
 /* Undocumented user definitions */
 #include <undocuser.h>
@@ -79,7 +94,14 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#define InterlockedIncrementUL(Value) InterlockedIncrement((PLONG)Value)
+#define InterlockedDecrementUL(Value) InterlockedDecrement((PLONG)Value)
+
 /* Internal Win32K header */
 #include "win32kp.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __W32K_H */

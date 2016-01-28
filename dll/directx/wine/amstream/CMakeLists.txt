@@ -21,6 +21,6 @@ add_library(amstream SHARED
 
 set_module_type(amstream win32dll)
 target_link_libraries(amstream strmbase strmiids uuid wine)
-add_importlibs(amstream ole32 msvcrt kernel32 ntdll)
+add_importlibs(amstream ole32 ddraw msvcrt kernel32 ntdll)
 add_pch(amstream amstream_private.h SOURCE)
 add_cd_file(TARGET amstream DESTINATION reactos/system32 FOR all)

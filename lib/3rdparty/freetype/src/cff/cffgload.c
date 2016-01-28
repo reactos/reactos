@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -273,8 +273,8 @@
       builder->current = &loader->current.outline;
       FT_GlyphLoader_Rewind( loader );
 
-      builder->hints_globals = 0;
-      builder->hints_funcs   = 0;
+      builder->hints_globals = NULL;
+      builder->hints_funcs   = NULL;
 
       if ( hinting && size )
       {
@@ -646,7 +646,7 @@
     for ( n = 0; n < cff->num_glyphs; n++ )
     {
       if ( cff->charset.sids[n] == glyph_sid )
-        return n;
+        return (FT_Int)n;
     }
 
     return -1;
@@ -672,7 +672,7 @@
 
 
       *pointer = (FT_Byte*)data.pointer;
-      *length = data.length;
+      *length  = (FT_ULong)data.length;
 
       return error;
     }
@@ -703,11 +703,11 @@
     /* callback function.                                     */
     if ( face->root.internal->incremental_interface )
     {
-      FT_Data data;
+      FT_Data  data;
 
 
       data.pointer = *pointer;
-      data.length  = length;
+      data.length  = (FT_Int)length;
 
       face->root.internal->incremental_interface->funcs->free_glyph_data(
         face->root.internal->incremental_interface->object, &data );
@@ -819,7 +819,7 @@
     FT_GlyphLoader_Prepare( builder->loader );
 
     /* First load `bchar' in builder */
-    error = cff_get_glyph_data( face, bchar_index,
+    error = cff_get_glyph_data( face, (FT_UInt)bchar_index,
                                 &charstring, &charstring_len );
     if ( !error )
     {
@@ -849,7 +849,7 @@
     builder->pos_y = ady;
 
     /* Now load `achar' on top of the base outline. */
-    error = cff_get_glyph_data( face, achar_index,
+    error = cff_get_glyph_data( face, (FT_UInt)achar_index,
                                 &charstring, &charstring_len );
     if ( !error )
     {
@@ -922,10 +922,10 @@
     decoder->read_width = 1;
 
     /* compute random seed from stack address of parameter */
-    seed = (FT_Fixed)( ( (FT_PtrDist)(char*)&seed              ^
-                         (FT_PtrDist)(char*)&decoder           ^
-                         (FT_PtrDist)(char*)&charstring_base ) &
-                         FT_ULONG_MAX ) ;
+    seed = (FT_Fixed)( ( (FT_Offset)(char*)&seed            ^
+                         (FT_Offset)(char*)&decoder         ^
+                         (FT_Offset)(char*)&charstring_base ) &
+                         FT_ULONG_MAX                         );
     seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFFL;
     if ( seed == 0 )
       seed = 0x7384;
@@ -1373,12 +1373,12 @@
           {
             if ( op == cff_op_hintmask )
               hinter->hintmask( hinter->hints,
-                                builder->current->n_points,
-                                decoder->num_hints,
+                                (FT_UInt)builder->current->n_points,
+                                (FT_UInt)decoder->num_hints,
                                 ip );
             else
               hinter->counter( hinter->hints,
-                               decoder->num_hints,
+                               (FT_UInt)decoder->num_hints,
                                ip );
           }
 
@@ -1989,23 +1989,22 @@
           }
           else
           {
-            if ( !error )
-              error = FT_Err_Ok;
-
             cff_builder_close_contour( builder );
 
             /* close hints recording session */
             if ( hinter )
             {
               if ( hinter->close( hinter->hints,
-                                  builder->current->n_points ) )
+                                  (FT_UInt)builder->current->n_points ) )
                 goto Syntax_Error;
 
               /* apply hints to the loaded glyph outline now */
-              hinter->apply( hinter->hints,
-                             builder->current,
-                             (PSH_Globals)builder->hints_globals,
-                             decoder->hint_mode );
+              error = hinter->apply( hinter->hints,
+                                     builder->current,
+                                     (PSH_Globals)builder->hints_globals,
+                                     decoder->hint_mode );
+              if ( error )
+                goto Fail;
             }
 
             /* add current outline to the glyph slot */
@@ -2390,7 +2389,9 @@
                                       decoder->locals_bias );
 
 
-            FT_TRACE4(( " callsubr(%d)\n", idx ));
+            FT_TRACE4(( " callsubr (idx %d, entering level %d)\n",
+                        idx,
+                        zone - decoder->zones + 1 ));
 
             if ( idx >= decoder->num_locals )
             {
@@ -2432,7 +2433,9 @@
                                       decoder->globals_bias );
 
 
-            FT_TRACE4(( " callgsubr(%d)\n", idx ));
+            FT_TRACE4(( " callgsubr (idx %d, entering level %d)\n",
+                        idx,
+                        zone - decoder->zones + 1 ));
 
             if ( idx >= decoder->num_globals )
             {
@@ -2469,7 +2472,8 @@
           break;
 
         case cff_op_return:
-          FT_TRACE4(( " return\n" ));
+          FT_TRACE4(( " return (leaving level %d)\n",
+                      decoder->zone - decoder->zones ));
 
           if ( decoder->zone <= decoder->zones )
           {
@@ -2670,7 +2674,7 @@
         error = sfnt->load_sbit_image( face,
                                        size->strike_index,
                                        glyph_index,
-                                       (FT_Int)load_flags,
+                                       (FT_UInt)load_flags,
                                        stream,
                                        &glyph->root.bitmap,
                                        &metrics );
@@ -2711,23 +2715,23 @@
 
           /* compute linear advance widths */
 
-          ( (SFNT_Service)face->sfnt )->get_metrics( face, 0,
-                                                     glyph_index,
-                                                     &dummy,
-                                                     &advance );
+          (void)( (SFNT_Service)face->sfnt )->get_metrics( face, 0,
+                                                           glyph_index,
+                                                           &dummy,
+                                                           &advance );
           glyph->root.linearHoriAdvance = advance;
 
           has_vertical_info = FT_BOOL(
                                 face->vertical_info                   &&
                                 face->vertical.number_Of_VMetrics > 0 );
 
-          /* get the vertical metrics from the vtmx table if we have one */
+          /* get the vertical metrics from the vmtx table if we have one */
           if ( has_vertical_info )
           {
-            ( (SFNT_Service)face->sfnt )->get_metrics( face, 1,
-                                                       glyph_index,
-                                                       &dummy,
-                                                       &advance );
+            (void)( (SFNT_Service)face->sfnt )->get_metrics( face, 1,
+                                                             glyph_index,
+                                                             &dummy,
+                                                             &advance );
             glyph->root.linearVertAdvance = advance;
           }
           else
@@ -2758,16 +2762,16 @@
     /* this scaling is only relevant if the PS hinter isn't active */
     if ( cff->num_subfonts )
     {
-      FT_ULong  top_upm, sub_upm;
-      FT_Byte   fd_index = cff_fd_select_get( &cff->fd_select,
-                                              glyph_index );
+      FT_Long  top_upm, sub_upm;
+      FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select,
+                                             glyph_index );
 
 
       if ( fd_index >= cff->num_subfonts )
         fd_index = (FT_Byte)( cff->num_subfonts - 1 );
 
-      top_upm = cff->top_font.font_dict.units_per_em;
-      sub_upm = cff->subfonts[fd_index]->font_dict.units_per_em;
+      top_upm = (FT_Long)cff->top_font.font_dict.units_per_em;
+      sub_upm = (FT_Long)cff->subfonts[fd_index]->font_dict.units_per_em;
 
 
       font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
@@ -2868,7 +2872,7 @@
       /* fonts.                                                       */
       if ( face->root.internal->incremental_interface )
       {
-        glyph->root.control_data = 0;
+        glyph->root.control_data = NULL;
         glyph->root.control_len = 0;
       }
       else
@@ -2885,7 +2889,7 @@
         {
           glyph->root.control_data = csindex->bytes +
                                      csindex->offsets[glyph_index] - 1;
-          glyph->root.control_len  = charstring_len;
+          glyph->root.control_len  = (FT_Long)charstring_len;
         }
       }
 
@@ -2945,19 +2949,36 @@
       {
         FT_BBox            cbox;
         FT_Glyph_Metrics*  metrics = &glyph->root.metrics;
-        FT_Vector          advance;
         FT_Bool            has_vertical_info;
 
 
-        /* copy the _unscaled_ advance width */
-        metrics->horiAdvance                    = decoder.glyph_width;
-        glyph->root.linearHoriAdvance           = decoder.glyph_width;
+        if ( face->horizontal.number_Of_HMetrics )
+        {
+          FT_Short   horiBearingX = 0;
+          FT_UShort  horiAdvance  = 0;
+
+
+          ( (SFNT_Service)face->sfnt )->get_metrics( face, 0,
+                                                     glyph_index,
+                                                     &horiBearingX,
+                                                     &horiAdvance );
+          metrics->horiAdvance          = horiAdvance;
+          metrics->horiBearingX         = horiBearingX;
+          glyph->root.linearHoriAdvance = horiAdvance;
+        }
+        else
+        {
+          /* copy the _unscaled_ advance width */
+          metrics->horiAdvance          = decoder.glyph_width;
+          glyph->root.linearHoriAdvance = decoder.glyph_width;
+        }
+
         glyph->root.internal->glyph_transformed = 0;
 
         has_vertical_info = FT_BOOL( face->vertical_info                   &&
                                      face->vertical.number_Of_VMetrics > 0 );
 
-        /* get the vertical metrics from the vtmx table if we have one */
+        /* get the vertical metrics from the vmtx table if we have one */
         if ( has_vertical_info )
         {
           FT_Short   vertBearingY = 0;
@@ -2992,26 +3013,27 @@
 
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
-        if ( !( font_matrix.xx == 0x10000L &&
-                font_matrix.yy == 0x10000L &&
-                font_matrix.xy == 0        &&
-                font_matrix.yx == 0        ) )
+        /* apply the font matrix, if any */
+        if ( font_matrix.xx != 0x10000L || font_matrix.yy != 0x10000L ||
+             font_matrix.xy != 0        || font_matrix.yx != 0        )
+        {
           FT_Outline_Transform( &glyph->root.outline, &font_matrix );
 
-        if ( !( font_offset.x == 0 &&
-                font_offset.y == 0 ) )
+          metrics->horiAdvance = FT_MulFix( metrics->horiAdvance,
+                                            font_matrix.xx );
+          metrics->vertAdvance = FT_MulFix( metrics->vertAdvance,
+                                            font_matrix.yy );
+        }
+
+        if ( font_offset.x || font_offset.y )
+        {
           FT_Outline_Translate( &glyph->root.outline,
-                                font_offset.x, font_offset.y );
+                                font_offset.x,
+                                font_offset.y );
 
-        advance.x = metrics->horiAdvance;
-        advance.y = 0;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->horiAdvance = advance.x + font_offset.x;
-
-        advance.x = 0;
-        advance.y = metrics->vertAdvance;
-        FT_Vector_Transform( &advance, &font_matrix );
-        metrics->vertAdvance = advance.y + font_offset.y;
+          metrics->horiAdvance += font_offset.x;
+          metrics->vertAdvance += font_offset.y;
+        }
 
         if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 || force_scaling )
         {

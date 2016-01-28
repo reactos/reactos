@@ -158,42 +158,12 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         13,
-        "- Nur primÑre Festplattenpartitionen kînnen verwaltet werden.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Eine primÑre Partition kann nicht gelîscht werden,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  solange erweiterte Partitionen auf der Festplatte existieren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Die jeweils erste erweiterte Partition kann nicht gelîscht werden,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  solange weitere erweiterte Partitionen auf der Festplatte existieren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Es werden nur FAT-Dateisysteme unterstÅtzt.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Die DateisystemÅberprÅfung ist noch nicht implementiert.",
         TEXT_STYLE_NORMAL
     },
@@ -509,6 +479,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY deDEComputerPageEntries[] =
 {
     {
@@ -826,6 +797,12 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  L erstellt eine logische Partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  D lîscht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL
     },
@@ -833,6 +810,100 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
         0,
         0,
         "Bitte warten...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1491,15 +1562,22 @@ MUI_ERROR deDEErrorEntries[] =
         "eingetragen werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
-        {
+    {
         //ERROR_UPDATE_GEOID,
         "Der geografische Standort konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Es ist nicht genÅgend Speicherplatz auf der\n"
-        "gewÑhlten Partition vorhanden.\n"
+        //ERROR_DIRECTORY_NAME,
+        "UnzulÑssiger Verzeichnisname.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Die gewÑhlten Partition ist nicht gro· genug, um ReactOS zu installieren.\n"
+        "Die Installationspartition muss mindestens %lu MB gro· sein.\n"
+        "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
     },
@@ -1517,24 +1595,17 @@ MUI_ERROR deDEErrorEntries[] =
         "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Sie kînnen hinter einer erweiterten Partition keine weitere Partition anlegen.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Eine erweiterte Partition muss immer die letzte Partition in \n"
-        "einer Partitionstabelle sein.\n"
-        "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE deDEPages[] =
 {
@@ -1577,6 +1648,10 @@ MUI_PAGE deDEPages[] =
     {
         SELECT_PARTITION_PAGE,
         deDESelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        deDEConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1664,6 +1739,10 @@ MUI_STRING deDEStrings[] =
     "Diese Partition wird als nÑchstes formatiert."},
     {STRING_NONFORMATTEDPART,
     "Sie wollen ReactOS auf einer neuen/unformatierten Partition installieren."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "Die Systempartition ist noch nicht formartiert."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "Die neue Partition ist noch nicht formatiert."},
     {STRING_INSTALLONPART,
     "ReactOS wird auf dieser Partition installiert."},
     {STRING_CHECKINGPART,
@@ -1727,7 +1806,7 @@ MUI_STRING deDEStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTyp %-3u%s                       %6lu %s"},
+    "%c%c %c %sTyp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %S"},
     {STRING_HDDINFOUNK6,

@@ -252,7 +252,7 @@ AccpGetTrusteeObjects(IN PTRUSTEE_W Trustee,
                 *pObjectTypeGuid = pOas->ObjectTypeGuid;
 
             if (pInheritedObjectTypeGuid != NULL && pOas->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT)
-                *pObjectTypeGuid = pOas->InheritedObjectTypeGuid;
+                *pInheritedObjectTypeGuid = pOas->InheritedObjectTypeGuid;
 
             Ret = pOas->ObjectsPresent;
             break;
@@ -513,11 +513,14 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
     *ppSid = NULL;
     *Allocated = FALSE;
 
+    /* Windows ignores this */
+#if 0
     if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
     {
         /* This is currently not supported */
         return ERROR_INVALID_PARAMETER;
     }
+#endif
 
     switch (Trustee->TrusteeForm)
     {
@@ -705,7 +708,7 @@ AccRewriteGetHandleRights(HANDLE handle,
 
         if (SecurityInfo & GROUP_SECURITY_INFORMATION && ppsidGroup != NULL)
         {
-            *ppsidOwner = NULL;
+            *ppsidGroup = NULL;
             if (!GetSecurityDescriptorGroup(pSD,
                                             ppsidGroup,
                                             &Defaulted))
@@ -1068,7 +1071,9 @@ ParseRegErr:
                                              (DWORD)DesiredAccess);
             if (*Handle2 == NULL)
             {
-                goto FailOpenService;
+                Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                goto Cleanup;
             }
 
             DesiredAccess &= ~SC_MANAGER_CONNECT;
@@ -1077,13 +1082,11 @@ ParseRegErr:
                                           (DWORD)DesiredAccess);
             if (*Handle == NULL)
             {
-                if (*Handle2 != NULL)
-                {
-                    CloseServiceHandle((SC_HANDLE)(*Handle2));
-                }
-
-FailOpenService:
                 Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                ASSERT(*Handle2 != NULL);
+                CloseServiceHandle((SC_HANDLE)(*Handle2));
+
                 goto Cleanup;
             }
             break;

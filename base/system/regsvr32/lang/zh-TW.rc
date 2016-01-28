@@ -1,0 +1,21 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_UsageMessage "%s\n\n用法：regsvr32 [/u] [/s] [/c] [/n] [/i[:命令列]] DLL名稱\n\
+/u -	登出服務\n\
+/s -	安靜模式；不顯示訊息框\n\
+/c -	控制檯輸出\n\
+/i -	呼叫 DllInstall 並傳遞給它一個可選的 [命令列]；當使用 /u 時呼叫 DLL 解除安裝\n\
+/n -	不要呼叫 DllRegisterServer；這個選項必須和 /i 一起使用"
+    IDS_NoDllSpecified "沒有 DLL 名稱被指定。"
+    IDS_InvalidFlag "未知標誌：%s"
+    IDS_SwitchN_NoI "未知標誌：/n 必須和 /i 一起使用"
+    IDS_DllNotLoaded "LoadLibrary('%s') 失敗。\nGetLastError 返回 0x%08x。"
+    IDS_MissingEntry "%s 已被載入，但是 %s 的入口點未被發現。\n\n\
+%s 可能未被匯出，或者內存中的是 %s 的一個損壞的版本。請考慮使用 PView 來檢測並移除它。"
+    IDS_FailureMessage "%s 在 %s 中失敗。\n返回值：0x%08x"
+    IDS_SuccessMessage "%s 在 %s 中成功。"
+END

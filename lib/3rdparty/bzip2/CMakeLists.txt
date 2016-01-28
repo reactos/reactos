@@ -1,6 +1,5 @@
 
 add_definitions(-DBZ_NO_STDIO -DBZ_DECOMPRESS_ONLY)
-
 spec2def(unbzip2.sys unbzip2.spec)
 
 list(APPEND SOURCE

@@ -159,7 +159,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Numri hyrës për &thirrje lokale:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues numrit për të bërë thirrje lokale. Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur. Për të bërë thirrje lokale pa përdorur kartën tuaj të quajtur, lëre këtë seksion bosh.", 2000, 7, 40, 238, 24
+    LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues numrit për të bërë thirrje lokale. Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 238, 24
     LTEXT "Hapat thirrës për kartën telefonuese:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14

@@ -101,6 +101,9 @@ CcSetAdditionalCacheAttributes (
 	IN	BOOLEAN		DisableWriteBehind
 	)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p DisableReadAhead=%d DisableWriteBehind=%d\n",
+        FileObject, DisableReadAhead, DisableWriteBehind);
+
 	UNIMPLEMENTED;
 }
 
@@ -114,6 +117,9 @@ CcSetBcbOwnerPointer (
 	IN	PVOID	Owner
 	)
 {
+    CCTRACE(CC_API_DEBUG, "Bcb=%p Owner=%p\n",
+        Bcb, Owner);
+
 	UNIMPLEMENTED;
 }
 
@@ -127,6 +133,9 @@ CcSetDirtyPageThreshold (
 	IN	ULONG		DirtyPageThreshold
 	)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p DirtyPageThreshold=%lu\n",
+        FileObject, DirtyPageThreshold);
+
 	UNIMPLEMENTED;
 }
 
@@ -140,5 +149,8 @@ CcSetReadAheadGranularity (
 	IN	ULONG		Granularity
 	)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p Granularity=%lu\n",
+        FileObject, Granularity);
+
 	UNIMPLEMENTED;
 }

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          User handle manager
- * FILE:             subsystems/win32/win32k/ntuser/object.c
+ * FILE:             win32ss/user/ntuser/object.c
  * PROGRAMER:        Copyright (C) 2001 Alexandre Julliard
  */
 
@@ -13,6 +13,7 @@ DBG_DEFAULT_CHANNEL(UserObj);
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
 /* Forward declarations */
+_Success_(return!=NULL)
 static PVOID AllocThreadObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -53,6 +54,7 @@ static void FreeThreadObject(
     IntDereferenceThreadInfo(pti);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocDeskThreadObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -97,6 +99,7 @@ static void FreeDeskThreadObject(
     IntDereferenceThreadInfo(pti);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocDeskProcObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -141,6 +144,7 @@ static void FreeDeskProcObject(
     DesktopHeapFree(pDesk, Object);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocProcMarkObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -168,7 +172,7 @@ static PVOID AllocProcMarkObject(
     return ObjHead;
 }
 
-static void FreeProcMarkObject(
+void FreeProcMarkObject(
     _In_ PVOID Object)
 {
     PPROCESSINFO ppi = ((PPROCMARKHEAD)Object)->ppi;
@@ -179,6 +183,7 @@ static void FreeProcMarkObject(
     IntDereferenceProcessInfo(ppi);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocSysObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -218,7 +223,7 @@ static const struct
     { NULL,                     NULL,                       NULL },                 /* TYPE_FREE */
     { AllocDeskThreadObject,    co_UserDestroyWindow,       FreeDeskThreadObject }, /* TYPE_WINDOW */
     { AllocDeskProcObject,      UserDestroyMenuObject,      FreeDeskProcObject },   /* TYPE_MENU */
-    { AllocProcMarkObject,      /*UserCursorCleanup*/NULL,  FreeProcMarkObject },   /* TYPE_CURSOR */
+    { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeCurIconObject },    /* TYPE_CURSOR */
     { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
     { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */
     { AllocSysObject,           /*UserClipDataCleanup*/NULL,FreeSysObject },        /* TYPE_CLIPDATA */
@@ -241,7 +246,7 @@ static const struct
 
 #if DBG
 
-void DbgUserDumpHandleTable()
+void DbgUserDumpHandleTable(VOID)
 {
     int HandleCounts[TYPE_CTYPES];
     PPROCESSINFO ppiList;
@@ -582,9 +587,10 @@ BOOL
 FASTCALL
 UserDereferenceObject(PVOID Object)
 {
-    PHEAD ObjHead = (PHEAD)Object;
+    PHEAD ObjHead = Object;
 
     ASSERT(ObjHead->cLockObj >= 1);
+    ASSERT(ObjHead->cLockObj < 0x10000);
 
     if (--ObjHead->cLockObj == 0)
     {
@@ -659,6 +665,7 @@ UserDeleteObject(HANDLE h, HANDLE_TYPE type )
    if (!body) return FALSE;
 
    ASSERT( ((PHEAD)body)->cLockObj >= 1);
+   ASSERT( ((PHEAD)body)->cLockObj < 0x10000);
 
    return UserFreeHandle(gHandleTable, h);
 }
@@ -667,9 +674,10 @@ VOID
 FASTCALL
 UserReferenceObject(PVOID obj)
 {
-   ASSERT(((PHEAD)obj)->cLockObj >= 0);
+   PHEAD ObjHead = obj;
+   ASSERT(ObjHead->cLockObj < 0x10000);
 
-   ((PHEAD)obj)->cLockObj++;
+   ObjHead->cLockObj++;
 }
 
 PVOID
@@ -684,40 +692,6 @@ UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type)
        UserReferenceObject(object);
     }
     return object;
-}
-
-VOID
-FASTCALL
-UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
-{
-    PUSER_HANDLE_ENTRY entry = handle_to_entry(gHandleTable, ((PHEAD)obj)->h );
-    PPROCESSINFO ppi, oldppi;
-
-    /* This must be called with a valid object */
-    ASSERT(entry);
-
-    /* For now, only supported for CursorIcon object */
-    switch(type)
-    {
-        case TYPE_CURSOR:
-            ppi = (PPROCESSINFO)owner;
-            entry->pi = ppi;
-            oldppi = ((PPROCMARKHEAD)obj)->ppi;
-            ((PPROCMARKHEAD)obj)->ppi = ppi;
-            break;
-        default:
-            ASSERT(FALSE);
-            return;
-    }
-
-    oldppi->UserHandleCount--;
-    IntDereferenceProcessInfo(oldppi);
-    ppi->UserHandleCount++;
-    IntReferenceProcessInfo(ppi);
-#if DBG
-    oldppi->DbgHandleCount[type]--;
-    ppi->DbgHandleCount[type]++;
-#endif
 }
 
 BOOLEAN
@@ -739,17 +713,6 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
         if (Entry->flags & HANDLEENTRY_INDESTROY)
             continue;
 
-        /* Spcial case for cursors until cursoricon_new is there */
-        if (Entry->type == TYPE_CURSOR)
-        {
-            UserReferenceObject(Entry->ptr);
-            if (!IntDestroyCurIconObject(Entry->ptr, Owner))
-            {
-                Ret = FALSE;
-            }
-            continue;
-        }
-
         /* Call destructor */
         if (!ObjectCallbacks[Entry->type].ObjectDestroy(Entry->ptr))
         {
@@ -761,9 +724,8 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 
     return Ret;
 }
-      
+
 /*
- * NtUserValidateHandleSecure W2k3 has one argument.
  *
  * Status
  *    @implemented
@@ -772,8 +734,7 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 BOOL
 APIENTRY
 NtUserValidateHandleSecure(
-   HANDLE handle,
-   BOOL Restricted)
+   HANDLE handle)
 {
    UINT uType;
    PPROCESSINFO ppi;

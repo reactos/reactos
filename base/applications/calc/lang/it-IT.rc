@@ -330,8 +330,8 @@ BEGIN
     END
     POPUP "Visualizza"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversione", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
@@ -362,8 +362,8 @@ BEGIN
     END
     POPUP "Visualizza"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversione", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
@@ -395,8 +395,8 @@ BEGIN
     END
     POPUP "Visualizza"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifica", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversione", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Raggruppamento cifre", IDM_VIEW_GROUP, CHECKED

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/symlink.c
+ * FILE:            ntoskrnl/io/iomgr/symlink.c
  * PURPOSE:         I/O Wrappers for Symbolic Links
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
@@ -31,7 +31,7 @@ IoCreateSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     /* Initialize the object attributes and create the link */
     InitializeObjectAttributes(&ObjectAttributes,
                                SymbolicLinkName,
-                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               OBJ_KERNEL_HANDLE | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
                                NULL,
                                SePublicDefaultSd);
     Status = ZwCreateSymbolicLinkObject(&Handle,
@@ -73,7 +73,7 @@ IoCreateUnprotectedSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     /* Initialize the object attributes and create the link */
     InitializeObjectAttributes(&ObjectAttributes,
                                SymbolicLinkName,
-                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               OBJ_KERNEL_HANDLE | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
                                NULL,
                                &SecurityDescriptor);
     Status = ZwCreateSymbolicLinkObject(&Handle,
@@ -101,7 +101,7 @@ IoDeleteSymbolicLink(IN PUNICODE_STRING SymbolicLinkName)
     /* Initialize the object attributes and open the link */
     InitializeObjectAttributes(&ObjectAttributes,
                                SymbolicLinkName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
     Status = ZwOpenSymbolicLinkObject(&Handle, DELETE, &ObjectAttributes);

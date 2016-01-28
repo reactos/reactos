@@ -2,18 +2,16 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          NtUserCallXxx call stubs
- * FILE:             subsystem/win32/win32k/ntuser/simplecall.c
+ * FILE:             win32ss/user/ntuser/simplecall.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 
 #include <win32k.h>
 
-#include <winlogon.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-/* registered Logon process */
-PPROCESSINFO LogonProcess = NULL;
+/* Registered logon process ID */
+HANDLE gpidLogon = 0;
 
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
@@ -21,38 +19,33 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
    NTSTATUS Status;
    PEPROCESS Process;
 
-   Status = PsLookupProcessByProcessId(ProcessId,
-                                       &Process);
+   Status = PsLookupProcessByProcessId(ProcessId, &Process);
    if (!NT_SUCCESS(Status))
    {
       EngSetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
    }
 
+   ProcessId = Process->UniqueProcessId;
+
+   ObDereferenceObject(Process);
+
    if (Register)
    {
       /* Register the logon process */
-      if (LogonProcess != NULL)
-      {
-         ObDereferenceObject(Process);
+      if (gpidLogon != 0)
          return FALSE;
-      }
 
-      LogonProcess = (PPROCESSINFO)Process->Win32Process;
+      gpidLogon = ProcessId;
    }
    else
    {
       /* Deregister the logon process */
-      if (LogonProcess != (PPROCESSINFO)Process->Win32Process)
-      {
-         ObDereferenceObject(Process);
+      if (gpidLogon != ProcessId)
          return FALSE;
-      }
 
-      LogonProcess = NULL;
+      gpidLogon = 0;
    }
-
-   ObDereferenceObject(Process);
 
    return TRUE;
 }
@@ -92,10 +85,6 @@ NtUserCallNoParam(DWORD Routine)
          Result = (DWORD_PTR)IntUninitMessagePumpHook();
          break;
 
-      case NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO:
-         Result = (DWORD_PTR)MsqGetMessageExtraInfo();
-         break;
-
       case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
          RETURN( (DWORD_PTR)IntMsqClearWakeMask());
 
@@ -120,7 +109,7 @@ NtUserCallNoParam(DWORD Routine)
          RETURN(0);
       }
 
-      /* this is a Reactos only case and is needed for gui-on-demand */
+      /* this is a ReactOS only case and is needed for gui-on-demand */
       case NOPARAM_ROUTINE_ISCONSOLEMODE:
           RETURN( ScreenDeviceContext == NULL );
 
@@ -178,8 +167,8 @@ NtUserCallOneParam(
              if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
-                                               NULL, 
-                                               NULL, 
+                                               NULL,
+                                               NULL,
                                               (PHANDLE)&hDwp,
                                                TYPE_SETWINDOWPOS,
                                                sizeof(SMWP));
@@ -228,9 +217,6 @@ NtUserCallOneParam(
             gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
             RETURN(Result);
          }
-
-      case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-         RETURN( (DWORD_PTR)IntSwitchCaretShowing((PVOID)Param));
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
@@ -297,10 +283,6 @@ NtUserCallOneParam(
          /* FIXME: Should use UserEnterShared */
          RETURN(UserEnumClipboardFormats(Param));
 
-      case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
-          IntUserManualGuiCheck(Param);
-          RETURN(TRUE);
-
       case ONEPARAM_ROUTINE_GETCURSORPOS:
       {
           BOOL Ret = TRUE;
@@ -359,8 +341,8 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
       case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          /* TODO: Implement sound sentry */
           RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
-		  /* TODO: Implement sound sentry */
       case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
           RETURN(CreateSystemThreads(Param));
       case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:
@@ -398,6 +380,13 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
+      case TWOPARAM_ROUTINE_REDRAWTITLE:
+         {
+           DWORD_PTR Ret;
+           Window = UserGetWindowObject((HWND)Param1);
+           Ret = (DWORD_PTR)UserPaintCaption(Window, (INT)Param2);
+           RETURN(Ret);
+         }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;
@@ -451,7 +440,6 @@ NtUserCallTwoParam(
          STUB
          RETURN( 0);
 
-
       case TWOPARAM_ROUTINE_SETCARETPOS:
          RETURN( (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2));
 
@@ -463,13 +451,6 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
-      case TWOPARAM_ROUTINE_EXITREACTOS:
-          if(hwndSAS == NULL)
-          {
-              ASSERT(hwndSAS);
-              RETURN(STATUS_NOT_FOUND);
-          }
-         RETURN( co_IntSendMessage (hwndSAS, PM_WINLOGON_EXITWINDOWS, (WPARAM) Param1, (LPARAM)Param2));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
@@ -570,7 +551,8 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
-         Ret = co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
+         co_IntUpdateWindows(Window, RDW_ALLCHILDREN, FALSE);
+         Ret = TRUE;
          break;
    }
 
@@ -618,23 +600,20 @@ NtUserCallHwnd(
       case HWND_ROUTINE_GETWNDCONTEXTHLPID:
       {
          PWND Window;
-         PPROPERTY HelpId;
-         USER_REFERENCE_ENTRY Ref;
+         DWORD HelpId;
 
-         UserEnterExclusive();
+         UserEnterShared();
 
          if (!(Window = UserGetWindowObject(hWnd)))
          {
             UserLeave();
             return 0;
          }
-         UserRefObjectCo(Window, &Ref);
 
-         HelpId = IntGetProp(Window, gpsi->atomContextHelpIdProp);
+         HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE);
 
-         UserDerefObjectCo(Window);
          UserLeave();
-         return (DWORD)HelpId->Data;
+         return HelpId;
       }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))
@@ -687,9 +666,9 @@ NtUserCallHwndParam(
          }
 
          if ( Param )
-            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param);
+            UserSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param, TRUE);
          else
-            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
+            UserRemoveProp(Window, gpsi->atomContextHelpIdProp, TRUE);
 
          UserLeave();
          return TRUE;
@@ -794,11 +773,11 @@ NtUserCallHwndParamLock(
    {
       case TWOPARAM_ROUTINE_VALIDATERGN:
       {
-          PREGION Rgn = RGNOBJAPI_Lock((HRGN)Param, NULL);
+          PREGION Rgn = REGION_LockRgn((HRGN)Param);
           if (Rgn)
           {
               Ret = (DWORD)co_UserRedrawWindow( Window, NULL, Rgn, RDW_VALIDATE);
-              RGNOBJAPI_Unlock(Rgn);
+              REGION_UnlockRgn(Rgn);
           }
           break;
       }

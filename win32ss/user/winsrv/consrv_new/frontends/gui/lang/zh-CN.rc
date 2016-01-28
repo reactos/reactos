@@ -20,5 +20,5 @@ BEGIN
     IDS_SCROLLUP "向上滚动"
     IDS_SCROLLDOWN "向下滚动"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "ReactOS 控制台"
 END

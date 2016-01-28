@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            frontends/gui/conwnd.h
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.h
  * PURPOSE:         GUI Console Window Class
  * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald
@@ -40,6 +40,13 @@ typedef struct _GUI_CONSOLE_DATA
     HANDLE hGuiInitEvent;
     HANDLE hGuiTermEvent;
 
+    // HANDLE InputThreadHandle;
+    ULONG_PTR InputThreadId;
+    HWINSTA WinSta;
+    HDESK   Desktop;
+
+    BOOLEAN IsWindowVisible;
+
     POINT OldCursor;
 
     LONG_PTR WndStyle;
@@ -58,7 +65,9 @@ typedef struct _GUI_CONSOLE_DATA
 /*** The following may be put per-screen-buffer !! ***/
     HCURSOR hCursor;            /* Handle to the mouse cursor */
     INT  MouseCursorRefCount;   /* The reference counter associated with the mouse cursor. >= 0 and the cursor is shown; < 0 and the cursor is hidden. */
-    BOOL IgnoreNextMouseSignal; /* Used in cases where we don't want to treat a mouse signal */
+    BOOL IgnoreNextMouseSignal; /* Used when we need to not process a mouse signal */
+
+    BOOL HackCORE8394IgnoreNextMove; /* HACK FOR CORE-8394. See conwnd.c!OnMouse for more details. */
 
     BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled (default), FALSE otherwise */
     UINT CmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */

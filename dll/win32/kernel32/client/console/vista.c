@@ -23,9 +23,9 @@
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
 
@@ -35,13 +35,13 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
         return FALSE;
     }
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHistory),
-                                 sizeof(CONSOLE_GETSETHISTORYINFO));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHistory),
+                        sizeof(*HistoryInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -58,9 +58,9 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
 
@@ -74,13 +74,13 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
     HistoryInfoRequest->NumberOfHistoryBuffers = lpConsoleHistoryInfo->NumberOfHistoryBuffers;
     HistoryInfoRequest->dwFlags                = lpConsoleHistoryInfo->dwFlags;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHistory),
-                                 sizeof(CONSOLE_GETSETHISTORYINFO));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHistory),
+                        sizeof(*HistoryInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -93,6 +93,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
                          IN DWORD nSize)
 {
@@ -107,6 +108,7 @@ GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
                          IN DWORD nSize)
 {
@@ -121,6 +123,7 @@ GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
                              OUT PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
 {
@@ -135,6 +138,7 @@ GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
                              IN PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
 {
@@ -149,6 +153,7 @@ SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
                         IN BOOL bMaximumWindow,
                         OUT PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx)

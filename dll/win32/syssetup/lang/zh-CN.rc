@@ -116,7 +116,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "请等待..."
-FONT 9, "MS Shell Dlg 2", 400, 0, 1
+FONT 9, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
@@ -124,7 +124,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "致谢"
-    IDS_ACKSUBTITLE "The shoulders ReactOS stands on and license information"
+    IDS_ACKSUBTITLE "ReactOS 所依赖的开源项目及其许可证信息"
     IDS_OWNERTITLE "自定义软件"
     IDS_OWNERSUBTITLE "安装程序将使用您提供的个人信息，自定义您的 ReactOS 软件。"
     IDS_COMPUTERTITLE "计算机名和系统管理员密码"
@@ -140,13 +140,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS 安装程序"
-    IDS_UNKNOWN_ERROR "Unknown error"
+    IDS_UNKNOWN_ERROR "未知的错误"
     IDS_REGISTERING_COMPONENTS "请稍候，安装程序正在安装组件。"
     IDS_LOADLIBRARY_FAILED "LoadLibrary 失败: "
     IDS_GETPROCADDR_FAILED "GetProcAddr 失败: "
     IDS_REGSVR_FAILED "DllRegisterServer 失败: "
     IDS_DLLINSTALL_FAILED "DllInstall 失败: "
-    IDS_TIMEOUT "Timeout during registration"
+    IDS_TIMEOUT "在注册期间超时"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION: 
@@ -155,6 +155,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "所有者"
 END
 
 STRINGTABLE

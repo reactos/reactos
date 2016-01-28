@@ -166,7 +166,7 @@ CUSBHardwareDevice::Initialize(
     NTSTATUS Status;
     ULONG BytesRead;
 
-    DPRINT1("CUSBHardwareDevice::Initialize\n");
+    DPRINT("CUSBHardwareDevice::Initialize\n");
 
     //
     // Create DMAMemoryManager for use with QueueHeads and Transfer Descriptors.
@@ -252,7 +252,7 @@ CUSBHardwareDevice::PnpStart(
     DEVICE_DESCRIPTION DeviceDescription;
     NTSTATUS Status;
 
-    DPRINT1("CUSBHardwareDevice::PnpStart\n");
+    DPRINT("CUSBHardwareDevice::PnpStart\n");
     for(Index = 0; Index < TranslatedResources->List[0].PartialResourceList.Count; Index++)
     {
         //
@@ -296,7 +296,7 @@ CUSBHardwareDevice::PnpStart(
                 // Store Resource base
                 //
                 m_Base = (PULONG)ResourceDescriptor->u.Port.Start.LowPart; //FIXME
-                DPRINT1("UHCI Base %p Length %x\n", m_Base, ResourceDescriptor->u.Port.Length);
+                DPRINT("UHCI Base %p Length %x\n", m_Base, ResourceDescriptor->u.Port.Length);
                 break;
             }
         }
@@ -380,7 +380,7 @@ CUSBHardwareDevice::PnpStart(
     //
     // Start the controller
     //
-    DPRINT1("Starting Controller\n");
+    DPRINT("Starting Controller\n");
     Status = StartController();
 
 
@@ -469,7 +469,7 @@ CUSBHardwareDevice::StartController(void)
     //
     // debug info
     //
-    DPRINT1("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
+    DPRINT("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
 
     //
     // Set the run bit in the command register
@@ -487,7 +487,7 @@ CUSBHardwareDevice::StartController(void)
         // get controller status
         //
         Status = ReadRegister16(UHCI_USBSTS);
-        DPRINT1("[USBUHCI] Status %x\n", Status);
+        DPRINT("[USBUHCI] Status %x\n", Status);
 
         if (!(Status & UHCI_USBSTS_HCHALT))
         {
@@ -498,7 +498,7 @@ CUSBHardwareDevice::StartController(void)
         }
     }
 
-    DPRINT1("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
+    DPRINT("[USBUHCI] USBCMD: %x USBSTS %x\n", ReadRegister16(UHCI_USBCMD), ReadRegister16(UHCI_USBSTS));
 
 
     if ((Status & UHCI_USBSTS_HCHALT))
@@ -529,13 +529,13 @@ CUSBHardwareDevice::StartController(void)
         WriteRegister16(UHCI_PORTSC1 + Index * 2, Status & ~(UHCI_PORTSC_STATCHA | UHCI_PORTSC_SUSPEND));
     }
 
-    DPRINT1("[USBUHCI] Controller Started\n");
-    DPRINT1("[USBUHCI] Controller Status %x\n", ReadRegister16(UHCI_USBSTS));
-    DPRINT1("[USBUHCI] Controller Cmd Status %x\n", ReadRegister16(UHCI_USBCMD));
-    DPRINT1("[USBUHCI] Controller Interrupt Status %x\n", ReadRegister16(UHCI_USBINTR));
-    DPRINT1("[USBUHCI] Controller Frame %x\n", ReadRegister16(UHCI_FRNUM));
-    DPRINT1("[USBUHCI] Controller Port Status 0 %x\n", ReadRegister16(UHCI_PORTSC1));
-    DPRINT1("[USBUHCI] Controller Port Status 1 %x\n", ReadRegister16(UHCI_PORTSC1 + 2));
+    DPRINT("[USBUHCI] Controller Started\n");
+    DPRINT("[USBUHCI] Controller Status %x\n", ReadRegister16(UHCI_USBSTS));
+    DPRINT("[USBUHCI] Controller Cmd Status %x\n", ReadRegister16(UHCI_USBCMD));
+    DPRINT("[USBUHCI] Controller Interrupt Status %x\n", ReadRegister16(UHCI_USBINTR));
+    DPRINT("[USBUHCI] Controller Frame %x\n", ReadRegister16(UHCI_FRNUM));
+    DPRINT("[USBUHCI] Controller Port Status 0 %x\n", ReadRegister16(UHCI_PORTSC1));
+    DPRINT("[USBUHCI] Controller Port Status 1 %x\n", ReadRegister16(UHCI_PORTSC1 + 2));
 
 
     // queue timer
@@ -570,7 +570,7 @@ CUSBHardwareDevice::GlobalReset()
     // delay is 10 ms
     //
     Timeout.QuadPart = 10;
-    DPRINT1("Waiting %lu milliseconds for global reset\n", Timeout.LowPart);
+    DPRINT("Waiting %lu milliseconds for global reset\n", Timeout.LowPart);
 
     //
     // convert to 100 ns units (absolute)
@@ -604,7 +604,7 @@ CUSBHardwareDevice::InitializeController()
     USHORT Value;
     PHYSICAL_ADDRESS Address;
 
-    DPRINT1("[USBUHCI] InitializeController\n");
+    DPRINT("[USBUHCI] InitializeController\n");
 
     //
     // now disable all interrupts
@@ -632,15 +632,15 @@ CUSBHardwareDevice::InitializeController()
     //
     Value = 0;
     BusInterface.GetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, PCI_LEGSUP, sizeof(USHORT));
-    DPRINT1("[USBUHCI] LEGSUP %x\n", Value);
+    DPRINT("[USBUHCI] LEGSUP %x\n", Value);
 
     Value = PCI_LEGSUP_USBPIRQDEN;
     BusInterface.SetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, PCI_LEGSUP, sizeof(USHORT));
 
-    DPRINT1("[USBUHCI] Acquired ownership\n");
+    DPRINT("[USBUHCI] Acquired ownership\n");
     Value = 0;
     BusInterface.GetBusData(BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, 0x60, sizeof(UCHAR));
-    DPRINT1("[USBUHCI] SBRN %x\n", Value);
+    DPRINT("[USBUHCI] SBRN %x\n", Value);
 
     //
     // perform global reset
@@ -724,7 +724,7 @@ CUSBHardwareDevice::InitializeController()
         }
     }
 
-            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
+            DPRINT("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 0,
                 m_QueueHead[0], 
                 m_QueueHead[0]->LinkPhysical,
@@ -732,7 +732,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[0]->PhysicalAddress, 
                 m_QueueHead[0]->Request, 
                 m_QueueHead[0]->NextElementDescriptor);
-            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
+            DPRINT("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 1,
                 m_QueueHead[1], 
                 m_QueueHead[1]->LinkPhysical,
@@ -741,7 +741,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[1]->Request, 
                 m_QueueHead[1]->NextElementDescriptor);
 
-            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
+            DPRINT("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 2,
                 m_QueueHead[2], 
                 m_QueueHead[2]->LinkPhysical,
@@ -749,7 +749,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[2]->PhysicalAddress, 
                 m_QueueHead[2]->Request, 
                 m_QueueHead[2]->NextElementDescriptor);
-            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
+            DPRINT("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 3,
                 m_QueueHead[3], 
                 m_QueueHead[3]->LinkPhysical,
@@ -757,7 +757,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[3]->PhysicalAddress, 
                 m_QueueHead[3]->Request, 
                 m_QueueHead[3]->NextElementDescriptor);
-            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
+            DPRINT("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 4,
                 m_QueueHead[4], 
                 m_QueueHead[4]->LinkPhysical,
@@ -831,7 +831,7 @@ CUSBHardwareDevice::InitializeController()
     //
     WriteRegister16(UHCI_USBINTR, UHCI_USBINTR_CRC | UHCI_USBINTR_IOC| UHCI_USBINTR_SHORT);
 
-    DPRINT1("[USBUHCI] Controller initialized\n");
+    DPRINT("[USBUHCI] Controller initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -857,7 +857,7 @@ CUSBHardwareDevice::ResetController(void)
     // wait for the controller to stop
     while((ReadRegister16(UHCI_USBSTS) & UHCI_USBSTS_HCHALT) == 0)
     {
-        DPRINT1("[UHCI] Waiting for the controller to halt\n");
+        DPRINT("[UHCI] Waiting for the controller to halt\n");
         KeStallExecutionProcessor(10);
     }
 
@@ -902,7 +902,7 @@ CUSBHardwareDevice::ResetPort(
     ULONG Index;
     LARGE_INTEGER Timeout;
 
-    DPRINT1("[UHCI] ResetPort Id %lu\n", PortIndex);
+    DPRINT("[UHCI] ResetPort Id %lu\n", PortIndex);
 
     //
     // sanity check
@@ -935,7 +935,7 @@ CUSBHardwareDevice::ResetPort(
     // delay is 20 ms for port reset
     //
     Timeout.QuadPart = 20;
-    DPRINT1("Waiting %lu milliseconds for port reset\n", Timeout.LowPart);
+    DPRINT("Waiting %lu milliseconds for port reset\n", Timeout.LowPart);
 
     //
     // convert to 100 ns units (absolute)
@@ -1012,7 +1012,7 @@ CUSBHardwareDevice::ResetPort(
     }
 
     m_PortResetChange |= (1 << PortIndex);
-    DPRINT1("[USBUhci] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
+    DPRINT("[USBUHCI] Port Index %x Status after reset %x\n", PortIndex, ReadRegister16(Port));
 
     //
     // is there a callback
@@ -1158,7 +1158,7 @@ CUSBHardwareDevice::SetPortFeature(
 {
     ULONG PortRegister;
 
-    DPRINT1("[UHCI] SetPortFeature PortId %x Feature %x\n", PortId, Feature);
+    DPRINT("[UHCI] SetPortFeature PortId %x Feature %x\n", PortId, Feature);
 
     //
     // sanity check
@@ -1268,7 +1268,7 @@ InterruptServiceRoutine(
         // error interrupt
         //
         Acknowledge |= UHCI_USBSTS_ERRINT;
-        DPRINT1("[UHCI] Error interrupt\n");
+        DPRINT("[UHCI] Error interrupt\n");
     }
 
     if (Status & UHCI_USBSTS_RESDET) 
@@ -1276,7 +1276,7 @@ InterruptServiceRoutine(
         //
         // resume detected
         //
-        DPRINT1("[UHCI] Resume detected\n");
+        DPRINT("[UHCI] Resume detected\n");
         Acknowledge |= UHCI_USBSTS_RESDET;
     }
 
@@ -1285,7 +1285,7 @@ InterruptServiceRoutine(
         //
         // host system error
         //
-        DPRINT1("[UHCI] Host System Error\n");
+        DPRINT("[UHCI] Host System Error\n");
         Acknowledge |= UHCI_USBSTS_HOSTERR;
     }
 
@@ -1294,7 +1294,7 @@ InterruptServiceRoutine(
         //
         // processing error
         //
-        DPRINT1("[UHCI] Process Error\n");
+        DPRINT("[UHCI] Process Error\n");
         Acknowledge |= UHCI_USBSTS_HCPRERR;
     }
 
@@ -1303,7 +1303,7 @@ InterruptServiceRoutine(
         //
         // controller halted
         //
-        DPRINT1("[UHCI] Host controller halted\n");
+        DPRINT("[UHCI] Host controller halted\n");
 
         //
         // disable interrupts
@@ -1346,7 +1346,7 @@ CUSBHardwareDevice::WriteRegister8(
 
 VOID
 CUSBHardwareDevice::WriteRegister16(
-    ULONG Register, 
+    ULONG Register,
     USHORT Value)
 {
     WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + Register), Value);

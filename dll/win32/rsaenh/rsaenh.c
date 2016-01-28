@@ -252,7 +252,7 @@ static const PROV_ENUMALGS_EX aProvEnumAlgsEx[5][RSAENH_MAX_ENUMALGS+1] =
   {CALG_AES_256,  256,256,  256,0,                    8,"AES-256", 39,"Advanced Encryption Standard (AES-256)"},
   {CALG_SHA,      160,160,  160,CRYPT_FLAG_SIGNING,   6,"SHA-1",   30,"Secure Hash Algorithm (SHA-1)"},
   {CALG_SHA_256,  256,256,  256,CRYPT_FLAG_SIGNING,   6,"SHA-256", 30,"Secure Hash Algorithm (SHA-256)"},
-  {CALG_SHA_384,  384,384,  384,CRYPT_FLAG_SIGNING,   6,"SHA-384", 30,"Secure Hash Algorithm (SHA-284)"},
+  {CALG_SHA_384,  384,384,  384,CRYPT_FLAG_SIGNING,   6,"SHA-384", 30,"Secure Hash Algorithm (SHA-384)"},
   {CALG_SHA_512,  512,512,  512,CRYPT_FLAG_SIGNING,   6,"SHA-512", 30,"Secure Hash Algorithm (SHA-512)"},
   {CALG_MD2,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD2",     23,"Message Digest 2 (MD2)"},
   {CALG_MD4,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD4",     23,"Message Digest 4 (MD4)"},
@@ -416,6 +416,19 @@ static inline BOOL copy_param(BYTE *pbBuffer, DWORD *pdwBufferSize, const BYTE *
     return TRUE;
 }
 
+static inline KEYCONTAINER* get_key_container(HCRYPTPROV hProv)
+{
+    KEYCONTAINER *pKeyContainer;
+
+    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
+        (OBJECTHDR**)&pKeyContainer))
+    {
+        SetLastError(NTE_BAD_UID);
+        return NULL;
+    }
+    return pKeyContainer;
+}
+
 /******************************************************************************
  * get_algid_info [Internal]
  *
@@ -433,10 +446,7 @@ static inline const PROV_ENUMALGS_EX* get_algid_info(HCRYPTPROV hProv, ALG_ID al
     const PROV_ENUMALGS_EX *iterator;
     KEYCONTAINER *pKeyContainer;
 
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER, (OBJECTHDR**)&pKeyContainer)) {
-        SetLastError(NTE_BAD_UID);
-        return NULL;
-    }
+    if (!(pKeyContainer = get_key_container(hProv))) return NULL;
 
     for (iterator = aProvEnumAlgsEx[pKeyContainer->dwPersonality]; iterator->aiAlgid; iterator++) {
         if (iterator->aiAlgid == algid) return iterator;
@@ -784,7 +794,7 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
 {
     HCRYPTKEY hCryptKey;
     CRYPTKEY *pCryptKey;
-    DWORD dwKeyLen = HIWORD(dwFlags);
+    DWORD dwKeyLen = HIWORD(dwFlags), bKeyLen = dwKeyLen;
     const PROV_ENUMALGS_EX *peaAlgidInfo;
 
     *ppCryptKey = NULL;
@@ -843,6 +853,14 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
              */
             break;
 
+        case CALG_AES:
+            if (!bKeyLen)
+            {
+                TRACE("missing key len for CALG_AES\n");
+                SetLastError(NTE_BAD_ALGID);
+                return (HCRYPTKEY)INVALID_HANDLE_VALUE;
+            }
+            /* fall through */
         default:
             if (dwKeyLen % 8 || 
                 dwKeyLen > peaAlgidInfo->dwMaxLen || 
@@ -859,6 +877,7 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
                            destroy_key, (OBJECTHDR**)&pCryptKey);
     if (hCryptKey != (HCRYPTKEY)INVALID_HANDLE_VALUE)
     {
+        KEYCONTAINER *pKeyContainer = get_key_container(hProv);
         pCryptKey->aiAlgid = aiAlgid;
         pCryptKey->hProv = hProv;
         pCryptKey->dwModeBits = 0;
@@ -868,7 +887,16 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
             pCryptKey->dwPermissions |= CRYPT_EXPORT;
         pCryptKey->dwKeyLen = dwKeyLen >> 3;
         pCryptKey->dwEffectiveKeyLen = 0;
-        if ((dwFlags & CRYPT_CREATE_SALT) || (dwKeyLen == 40 && !(dwFlags & CRYPT_NO_SALT))) 
+
+        /*
+         * For compatibility reasons a 40 bit key on the Enhanced
+         * provider will not have salt
+         */
+        if (pKeyContainer->dwPersonality == RSAENH_PERSONALITY_ENHANCED
+            && (aiAlgid == CALG_RC2 || aiAlgid == CALG_RC4)
+            && (dwFlags & CRYPT_CREATE_SALT) && dwKeyLen == 40)
+            pCryptKey->dwSaltLen = 0;
+        else if ((dwFlags & CRYPT_CREATE_SALT) || (dwKeyLen == 40 && !(dwFlags & CRYPT_NO_SALT)))
             pCryptKey->dwSaltLen = 16 /*FIXME*/ - pCryptKey->dwKeyLen;
         else
             pCryptKey->dwSaltLen = 0;
@@ -904,7 +932,7 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
             case CALG_AES_192:
             case CALG_AES_256:
                 pCryptKey->dwBlockLen = 16;
-                pCryptKey->dwMode = CRYPT_MODE_ECB;
+                pCryptKey->dwMode = CRYPT_MODE_CBC;
                 break;
 
             case CALG_RSA_KEYX:
@@ -1282,7 +1310,8 @@ static HCRYPTPROV new_key_container(PCCH pszContainerName, DWORD dwFlags, const 
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_ENHANCED;
             } else if (!strcmp(pVTable->pszProvName, MS_DEF_RSA_SCHANNEL_PROV_A)) { 
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_SCHANNEL;
-            } else if (!strcmp(pVTable->pszProvName, MS_ENH_RSA_AES_PROV_A)) {
+            } else if (!strcmp(pVTable->pszProvName, MS_ENH_RSA_AES_PROV_A) ||
+                       !strcmp(pVTable->pszProvName, MS_ENH_RSA_AES_PROV_XP_A)) {
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_AES;
             } else {
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_STRONG;
@@ -1458,10 +1487,10 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
                               0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
                               0x05, 0x00, 0x04, 0x20 } },
         { CALG_SHA_384, 19, { 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
-                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02,
                               0x05, 0x00, 0x04, 0x30 } },
-        { CALG_SHA_384, 19, { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
-                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+        { CALG_SHA_512, 19, { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03,
                               0x05, 0x00, 0x04, 0x40 } },
         { CALG_SSL3_SHAMD5, 0, { 0 } },
         { 0,        0,  { 0 } }
@@ -2693,8 +2722,7 @@ static void release_and_install_key(HCRYPTPROV hProv, HCRYPTKEY src,
     {
         KEYCONTAINER *pKeyContainer;
 
-        if (lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                          (OBJECTHDR**)&pKeyContainer))
+        if ((pKeyContainer = get_key_container(hProv)))
         {
             store_key_container_keys(pKeyContainer);
             store_key_container_permissions(pKeyContainer);
@@ -2740,12 +2768,8 @@ static BOOL import_private_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDat
         SetLastError(NTE_BAD_FLAGS);
         return FALSE;
     }
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer))
-    {
-        SetLastError(NTE_BAD_UID);
+    if (!(pKeyContainer = get_key_container(hProv)))
         return FALSE;
-    }
 
     if ((dwDataLen < sizeof(BLOBHEADER) + sizeof(RSAPUBKEY)))
     {
@@ -2838,12 +2862,8 @@ static BOOL import_public_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwData
         SetLastError(NTE_BAD_FLAGS);
         return FALSE;
     }
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer))
-    {
-        SetLastError(NTE_BAD_UID);
+    if (!(pKeyContainer = get_key_container(hProv)))
         return FALSE;
-    }
 
     if ((dwDataLen < sizeof(BLOBHEADER) + sizeof(RSAPUBKEY)) ||
         (pRSAPubKey->magic != RSAENH_MAGIC_RSA1) ||
@@ -3061,12 +3081,8 @@ static BOOL import_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDataLen, HC
     KEYCONTAINER *pKeyContainer;
     const BLOBHEADER *pBlobHeader = (const BLOBHEADER*)pbData;
 
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer)) 
-    {
-        SetLastError(NTE_BAD_UID);
+    if (!(pKeyContainer = get_key_container(hProv)))
         return FALSE;
-    }
 
     if (dwDataLen < sizeof(BLOBHEADER) || 
         pBlobHeader->bVersion != CUR_BLOB_VERSION ||
@@ -3163,11 +3179,9 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
 
     TRACE("(hProv=%08lx, aiAlgid=%d, dwFlags=%08x, phKey=%p)\n", hProv, Algid, dwFlags, phKey);
 
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer)) 
+    if (!(pKeyContainer = get_key_container(hProv)))
     {
         /* MSDN: hProv not containing valid context handle */
-        SetLastError(NTE_BAD_UID);
         return FALSE;
     }
     
@@ -3452,6 +3466,8 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
             switch (pCryptKey->aiAlgid) {
                 case CALG_RC2:
                 case CALG_RC4:
+                {
+                    KEYCONTAINER *pKeyContainer = get_key_container(pCryptKey->hProv);
                     if (!pbData)
                     {
                         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3464,11 +3480,13 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
                            pbData, 11);
                     pCryptKey->dwSaltLen = 11;
                     setup_key(pCryptKey);
-                    /* Strange but true: salt length reset to 0 after setting
-                     * it via KP_SALT.
-                     */
-                    pCryptKey->dwSaltLen = 0;
+                    /* After setting the salt value if the provider is not base or
+                     * strong the salt length will be reset. */
+                    if (pKeyContainer->dwPersonality != RSAENH_PERSONALITY_BASE &&
+                        pKeyContainer->dwPersonality != RSAENH_PERSONALITY_STRONG)
+                        pCryptKey->dwSaltLen = 0;
                     break;
+                }
                 default:
                     SetLastError(NTE_BAD_KEY);
                     return FALSE;
@@ -3495,22 +3513,40 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
         case KP_EFFECTIVE_KEYLEN:
             switch (pCryptKey->aiAlgid) {
                 case CALG_RC2:
+                {
+                    DWORD keylen, deflen;
+                    BOOL ret = TRUE;
+                    KEYCONTAINER *pKeyContainer = get_key_container(pCryptKey->hProv);
+
                     if (!pbData)
                     {
                         SetLastError(ERROR_INVALID_PARAMETER);
                         return FALSE;
                     }
-                    else if (!*(DWORD *)pbData || *(DWORD *)pbData > 1024)
+                    keylen = *(DWORD *)pbData;
+                    if (!keylen || keylen > 1024)
                     {
                         SetLastError(NTE_BAD_DATA);
                         return FALSE;
                     }
-                    else
+
+                    /*
+                     * The Base provider will force the key length to default
+                     * and set an error state if a key length different from
+                     * the default is tried.
+                     */
+                    deflen = aProvEnumAlgsEx[pKeyContainer->dwPersonality]->dwDefaultLen;
+                    if (pKeyContainer->dwPersonality == RSAENH_PERSONALITY_BASE
+                        && keylen != deflen)
                     {
-                        pCryptKey->dwEffectiveKeyLen = *(DWORD *)pbData;
-                        setup_key(pCryptKey);
+                        keylen = deflen;
+                        SetLastError(NTE_BAD_DATA);
+                        ret = FALSE;
                     }
-                    break;
+                    pCryptKey->dwEffectiveKeyLen = keylen;
+                    setup_key(pCryptKey);
+                    return ret;
+                }
                 default:
                     SetLastError(NTE_BAD_TYPE);
                     return FALSE;
@@ -3717,11 +3753,9 @@ BOOL WINAPI RSAENH_CPGetProvParam(HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
         return FALSE;
     }
     
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer)) 
+    if (!(pKeyContainer = get_key_container(hProv)))
     {
         /* MSDN: hProv not containing valid context handle */
-        SetLastError(NTE_BAD_UID);
         return FALSE;
     }
 
@@ -3930,6 +3964,8 @@ BOOL WINAPI RSAENH_CPDeriveKey(HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBaseD
     switch (GET_ALG_CLASS(Algid))
     {
         case ALG_CLASS_DATA_ENCRYPT:
+        {
+            int need_padding, copy_len;
             *phKey = new_key(hProv, Algid, dwFlags, &pCryptKey);
             if (*phKey == (HCRYPTKEY)INVALID_HANDLE_VALUE) return FALSE;
 
@@ -3940,8 +3976,28 @@ BOOL WINAPI RSAENH_CPDeriveKey(HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBaseD
              */
             dwLen = RSAENH_MAX_HASH_SIZE;
             RSAENH_CPGetHashParam(pCryptHash->hProv, hBaseData, HP_HASHVAL, abHashValue, &dwLen, 0);
-    
-            if (dwLen < pCryptKey->dwKeyLen) {
+
+            /*
+             * The usage of padding seems to vary from algorithm to algorithm.
+             * For now the only different case found was for AES with 128 bit key.
+             */
+            switch(Algid)
+            {
+                case CALG_AES_128:
+                    /* To reduce the chance of regressions we will only deviate
+                     * from the old behavior for the tested hash lengths */
+                    if (dwLen == 16 || dwLen == 20)
+                    {
+                        need_padding = 1;
+                        break;
+                    }
+                default:
+                    need_padding = dwLen < pCryptKey->dwKeyLen;
+            }
+
+            copy_len = pCryptKey->dwKeyLen;
+            if (need_padding)
+            {
                 BYTE pad1[RSAENH_HMAC_DEF_PAD_LEN], pad2[RSAENH_HMAC_DEF_PAD_LEN];
                 BYTE old_hashval[RSAENH_MAX_HASH_SIZE];
                 DWORD i;
@@ -3966,11 +4022,20 @@ BOOL WINAPI RSAENH_CPDeriveKey(HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBaseD
 
                 memcpy(pCryptHash->abHashValue, old_hashval, RSAENH_MAX_HASH_SIZE);
             }
+            /*
+             * Padding was not required, we have more hash than needed.
+             * Do we need to use the remaining hash as salt?
+             */
+            else if((dwFlags & CRYPT_CREATE_SALT) &&
+                    (Algid == CALG_RC2 || Algid == CALG_RC4))
+            {
+                copy_len += pCryptKey->dwSaltLen;
+            }
     
             memcpy(pCryptKey->abKeyValue, abHashValue, 
-                   RSAENH_MIN(pCryptKey->dwKeyLen, sizeof(pCryptKey->abKeyValue)));
+                   RSAENH_MIN(copy_len, sizeof(pCryptKey->abKeyValue)));
             break;
-
+        }
         case ALG_CLASS_MSG_ENCRYPT:
             if (!lookup_handle(&handle_table, pCryptHash->hKey, RSAENH_MAGIC_KEY,
                                (OBJECTHDR**)&pMasterKey)) 
@@ -4056,11 +4121,9 @@ BOOL WINAPI RSAENH_CPGetUserKey(HCRYPTPROV hProv, DWORD dwKeySpec, HCRYPTKEY *ph
 
     TRACE("(hProv=%08lx, dwKeySpec=%08x, phUserKey=%p)\n", hProv, dwKeySpec, phUserKey);
     
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER,
-                       (OBJECTHDR**)&pKeyContainer)) 
+    if (!(pKeyContainer = get_key_container(hProv)))
     {
         /* MSDN: hProv not containing valid context handle */
-        SetLastError(NTE_BAD_UID);
         return FALSE;
     }
 
@@ -4348,11 +4411,8 @@ BOOL WINAPI RSAENH_CPSetProvParam(HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
 
     TRACE("(hProv=%08lx, dwParam=%08x, pbData=%p, dwFlags=%08x)\n", hProv, dwParam, pbData, dwFlags);
 
-    if (!lookup_handle(&handle_table, hProv, RSAENH_MAGIC_CONTAINER, (OBJECTHDR **)&pKeyContainer))
-    {
-        SetLastError(NTE_BAD_UID);
+    if (!(pKeyContainer = get_key_container(hProv)))
         return FALSE;
-    }
 
     switch (dwParam)
     {

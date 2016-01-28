@@ -13,16 +13,15 @@
 
 /* INCLUDES ******************************************************************/
 
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-#define UNICODE
-#define _UNICODE
-
 #include <stdio.h>
+
+#define WIN32_NO_STATUS
 
 /* PSDK/NDK Headers */
 #include <windef.h>
 #include <winbase.h>
+
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
 /* FMIFS Public Header */

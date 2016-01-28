@@ -37,9 +37,6 @@ typedef struct {
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static const WCHAR toUTCStringW[] = {'t','o','U','T','C','S','t','r','i','n','g',0};
 static const WCHAR toGMTStringW[] = {'t','o','G','M','T','S','t','r','i','n','g',0};
@@ -86,9 +83,14 @@ static const WCHAR setYearW[] = {'s','e','t','Y','e','a','r',0};
 static const WCHAR UTCW[] = {'U','T','C',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
 
+static inline DateInstance *date_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, DateInstance, dispex);
+}
+
 static inline DateInstance *date_this(vdisp_t *jsthis)
 {
-    return is_vclass(jsthis, JSCLASS_DATE) ? (DateInstance*)jsthis->u.jsdisp : NULL;
+    return is_vclass(jsthis, JSCLASS_DATE) ? date_from_jsdisp(jsthis->u.jsdisp) : NULL;
 }
 
 /*ECMA-262 3rd Edition    15.9.1.2 */
@@ -1909,20 +1911,11 @@ static HRESULT Date_setYear(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     return S_OK;
 }
 
-static HRESULT Date_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Date_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return dateobj_to_string(date_from_jsdisp(jsthis), r);
 }
 
 static const builtin_prop_t Date_props[] = {
@@ -1974,7 +1967,7 @@ static const builtin_prop_t Date_props[] = {
 
 static const builtin_info_t Date_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     sizeof(Date_props)/sizeof(*Date_props),
     Date_props,
     NULL,
@@ -1983,7 +1976,7 @@ static const builtin_info_t Date_info = {
 
 static const builtin_info_t DateInst_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     0, NULL,
     NULL,
     NULL
@@ -2128,7 +2121,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 }
             }
             else if(parse[i]=='-' || parse[i]=='/') {
-                /* Short date */
+                /* Short or long date */
                 if(set_day || set_month || set_year) break;
                 set_day = TRUE;
                 set_month = TRUE;
@@ -2148,6 +2141,13 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 if(parse[i]<'0' || parse[i]>'9') break;
                 year = atoiW(&parse[i]);
                 while(parse[i]>='0' && parse[i]<='9') i++;
+
+                if(tmp >= 70){
+                        /* long date */
+                        month = day - 1;
+                        day = year;
+                        year = tmp;
+		}
             }
             else if(tmp<0) break;
             else if(tmp<70) {
@@ -2498,7 +2498,7 @@ static const builtin_prop_t DateConstr_props[] = {
 
 static const builtin_info_t DateConstr_info = {
     JSCLASS_FUNCTION,
-    {NULL, Function_value, 0},
+    DEFAULT_FUNCTION_VALUE,
     sizeof(DateConstr_props)/sizeof(*DateConstr_props),
     DateConstr_props,
     NULL,

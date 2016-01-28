@@ -1,7 +1,7 @@
 /*
  * PROJECT:         VGA Miniport Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/drivers/video/miniport/vga/vbe.h
+ * FILE:            win32ss/drivers/miniport/vga_new/vbe.h
  * PURPOSE:         VESA VBE Registers and Structures
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

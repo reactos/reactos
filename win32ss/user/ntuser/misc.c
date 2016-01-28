@@ -58,7 +58,7 @@ UserGetLanguageID(VOID)
   HANDLE KeyHandle;
   OBJECT_ATTRIBUTES ObAttr;
 //  http://support.microsoft.com/kb/324097
-  ULONG Ret = 0x409; // English
+  ULONG Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
   PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
   ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
   UNICODE_STRING Language;
@@ -67,10 +67,10 @@ UserGetLanguageID(VOID)
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
 
   InitializeObjectAttributes( &ObAttr,
-                            &Language,
-                 OBJ_CASE_INSENSITIVE,
-                                 NULL,
-                                 NULL);
+                              &Language,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                              NULL,
+                              NULL);
 
   if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
   {
@@ -87,7 +87,10 @@ UserGetLanguageID(VOID)
                                              &Size)) )
       {
         RtlInitUnicodeString(&Language, (PWSTR)pKeyInfo->Data);
-        RtlUnicodeStringToInteger(&Language, 16, &Ret);
+        if (!NT_SUCCESS(RtlUnicodeStringToInteger(&Language, 16, &Ret)))
+        {
+            Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
+        }
       }
       ExFreePoolWithTag(pKeyInfo, TAG_STRING);
     }
@@ -225,7 +228,7 @@ NtUserGetThreadState(
          {
            PUSER_SENT_MESSAGE Message =
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
-           ERR("THREADSTATE_INSENDMESSAGE\n");
+           TRACE("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
            if (Message)
@@ -271,6 +274,9 @@ NtUserGetThreadState(
          ret = (DWORD_PTR) (GetW32ThreadInfo()->MessageQueue->CursorObject ?
                             UserHMGetHandle(GetW32ThreadInfo()->MessageQueue->CursorObject) : 0);
          break;
+      case THREADSTATE_GETMESSAGEEXTRAINFO:
+         ret = (DWORD_PTR)MsqGetMessageExtraInfo();
+        break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
@@ -365,32 +371,58 @@ NtUserGetGUIThreadInfo(
       }
       W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
       Desktop = W32Thread->rpdesk;
+
+      if (!Thread || !Desktop )
+      {
+        if(Thread)
+           ObDereferenceObject(Thread);
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        RETURN( FALSE);
+      }
+      
+      if ( W32Thread->MessageQueue )
+        MsgQueue = W32Thread->MessageQueue;
+      else
+      {
+        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+      }
    }
    else
    {  /* Get the foreground thread */
-      Thread = PsGetCurrentThread();
-      W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
-      Desktop = W32Thread->rpdesk;
+      /* FIXME: Handle NULL queue properly? */
+      MsgQueue = IntGetFocusMessageQueue();
+      if(!MsgQueue)
+      {
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        RETURN( FALSE);
+      }
    }
 
-   if (!Thread || !Desktop )
-   {
-      if(idThread && Thread)
-         ObDereferenceObject(Thread);
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN( FALSE);
-   }
-
-   if ( W32Thread->MessageQueue )
-      MsgQueue = W32Thread->MessageQueue;
-   else
-   {
-      if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
-   }
-
-   CaretInfo = MsgQueue->CaretInfo;
+   CaretInfo = &MsgQueue->CaretInfo;
 
    SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
+/*
+   if (W32Thread->pMenuState->pGlobalPopupMenu)
+   {
+       SafeGui.flags |= GUI_INMENUMODE;
+
+       if (W32Thread->pMenuState->pGlobalPopupMenu->spwndNotify)
+          SafeGui.hwndMenuOwner = UserHMGetHandle(W32Thread->pMenuState->pGlobalPopupMenu->spwndNotify);
+
+       if (W32Thread->pMenuState->pGlobalPopupMenu->fHasMenuBar)
+       {
+          if (W32Thread->pMenuState->pGlobalPopupMenu->fIsSysMenu)
+          {
+             SafeGui.flags |= GUI_SYSTEMMENUMODE;
+          }
+       }
+       else
+       {
+          SafeGui.flags |= GUI_POPUPMENUMODE;
+       }
+   }
+ */
+   SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
 
    if (MsgQueue->MenuOwner)
       SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
@@ -403,7 +435,6 @@ NtUserGetGUIThreadInfo(
    SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
    SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
    SafeGui.hwndCapture = MsgQueue->spwndCapture ? UserHMGetHandle(MsgQueue->spwndCapture) : 0;
-   SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;
    SafeGui.hwndCaret = CaretInfo->hWnd;
 
@@ -694,7 +725,7 @@ UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 {
     /* Make sure that the first syscall is NtUserInitialize */
     /* too bad this fails */
-    //ASSERT(gbInitialized);
+    // ASSERT(gpepCSRSS);
 
     UserDbgAssertThreadInfo(TRUE);
 

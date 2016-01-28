@@ -17,8 +17,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 #include <debug.h>
+
+/* GLOBALS ********************************************************************/
 
 PCSTR OptionsMenuList[] =
 {
@@ -61,9 +65,7 @@ PCSTR FrldrDbgMsg = "Enable FreeLdr debug channels\n"
                     "  +peloader\n"
                     "NOTE: all letters must be lowercase, no spaces allowed.";
 
-//
-// The boot options are mutually exclusive.
-//
+/* The boot options are mutually exclusive */
 enum BootOption
 {
     NO_OPTION = 0,
@@ -83,6 +85,8 @@ static BOOLEAN BootLogging = FALSE;
 static BOOLEAN VgaMode = FALSE;
 static BOOLEAN DebuggingMode = FALSE;
 
+/* FUNCTIONS ******************************************************************/
+
 VOID DoOptionsMenu(VOID)
 {
     ULONG SelectedMenuItem;
@@ -97,11 +101,11 @@ VOID DoOptionsMenu(VOID)
                        TRUE,
                        NULL))
     {
-        // The user pressed ESC
+        /* The user pressed ESC */
         return;
     }
 
-    // Clear the backdrop
+    /* Clear the backdrop */
     UiDrawBackdrop();
 
     switch (SelectedMenuItem)
@@ -242,15 +246,15 @@ VOID AppendBootTimeOptions(PCHAR BootOptions)
     switch (BootOptionChoice)
     {
         case SAFE_MODE:
-            strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); //FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); // FIXME: NOGUIBOOT should also be specified
             break;
 
         case SAFE_MODE_WITH_NETWORKING:
-            strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); //FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); // FIXME: NOGUIBOOT should also be specified
             break;
 
         case SAFE_MODE_WITH_COMMAND_PROMPT:
-            strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); //FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); // FIXME: NOGUIBOOT should also be specified
             break;
 
         case LAST_KNOWN_GOOD_CONFIGURATION:

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Visibility computations
- * FILE:             subsys/win32k/ntuser/vis.c
+ * FILE:             win32ss/user/ntuser/vis.c
  * PROGRAMMER:       Ge van Geldorp (ge@gse.nl)
  */
 
@@ -78,13 +78,13 @@ VIS_ComputeVisibleRegion(
                /* Combine it with the window region if available */
                if (CurrentSibling->hrgnClip && !(CurrentSibling->style & WS_MINIMIZE))
                {
-                  PREGION SiblingClipRgn = RGNOBJAPI_Lock(CurrentSibling->hrgnClip, NULL);
+                  PREGION SiblingClipRgn = REGION_LockRgn(CurrentSibling->hrgnClip);
                   if (SiblingClipRgn)
                   {
-                      IntGdiOffsetRgn(ClipRgn, -CurrentSibling->rcWindow.left, -CurrentSibling->rcWindow.top);
+                      REGION_bOffsetRgn(ClipRgn, -CurrentSibling->rcWindow.left, -CurrentSibling->rcWindow.top);
                       IntGdiCombineRgn(ClipRgn, ClipRgn, SiblingClipRgn, RGN_AND);
-                      IntGdiOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
-                      RGNOBJAPI_Unlock(SiblingClipRgn);
+                      REGION_bOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
+                      REGION_UnlockRgn(SiblingClipRgn);
                   }
                }
                IntGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
@@ -110,13 +110,13 @@ VIS_ComputeVisibleRegion(
             /* Combine it with the window region if available */
             if (CurrentWindow->hrgnClip && !(CurrentWindow->style & WS_MINIMIZE))
             {
-               PREGION CurrentRgnClip = RGNOBJAPI_Lock(CurrentWindow->hrgnClip, NULL);
+               PREGION CurrentRgnClip = REGION_LockRgn(CurrentWindow->hrgnClip);
                if (CurrentRgnClip)
                {
-                   IntGdiOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
+                   REGION_bOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
                    IntGdiCombineRgn(ClipRgn, ClipRgn, CurrentRgnClip, RGN_AND);
-                   IntGdiOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
-                   RGNOBJAPI_Unlock(CurrentRgnClip);
+                   REGION_bOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
+                   REGION_UnlockRgn(CurrentRgnClip);
                }
             }
             IntGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
@@ -128,13 +128,13 @@ VIS_ComputeVisibleRegion(
 
    if (Wnd->hrgnClip && !(Wnd->style & WS_MINIMIZE))
    {
-      PREGION WndRgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
+      PREGION WndRgnClip = REGION_LockRgn(Wnd->hrgnClip);
       if (WndRgnClip)
       {
-          IntGdiOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
+          REGION_bOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
           IntGdiCombineRgn(VisRgn, VisRgn, WndRgnClip, RGN_AND);
-          IntGdiOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
-          RGNOBJAPI_Unlock(WndRgnClip);
+          REGION_bOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
+          REGION_UnlockRgn(WndRgnClip);
       }
    }
 
@@ -160,9 +160,9 @@ co_VIS_WindowLayoutChanged(
            return;
 
        IntGdiCombineRgn(TempRgn, NewlyExposed, NULL, RGN_COPY);
-       IntGdiOffsetRgn(TempRgn,
-                       Wnd->rcWindow.left - Parent->rcClient.left,
-                       Wnd->rcWindow.top - Parent->rcClient.top);
+       REGION_bOffsetRgn(TempRgn,
+                         Wnd->rcWindow.left - Parent->rcClient.left,
+                         Wnd->rcWindow.top - Parent->rcClient.top);
 
        UserRefObjectCo(Parent, &Ref);
        co_UserRedrawWindow(Parent, NULL, TempRgn,

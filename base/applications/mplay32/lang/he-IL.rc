@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "&Device"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Properties", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Volume Control", IDM_VOLUMECTL
@@ -43,7 +44,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "כל הקבצים הנתמכים (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
+    IDS_ALL_TYPES_FILTER "כל הקבצים הנתמכים"
     IDS_TOOLTIP_PLAY "נגן"
     IDS_TOOLTIP_STOP "עצור"
     IDS_TOOLTIP_EJECT "הוצא"
@@ -51,8 +60,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "חפש אחורנית"
     IDS_TOOLTIP_SEEKFORW "חפש קדימה"
     IDS_TOOLTIP_FORWARD "דלג קדימה"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "נגן המולטימדיה של ReactOS"
     IDS_PLAY "נגן"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

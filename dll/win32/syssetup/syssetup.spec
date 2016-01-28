@@ -12,12 +12,12 @@
 @ stub CreateLocalAdminAccount
 @ stub CreateLocalAdminAccountEx
 @ stub CreateLocalUserAccount
-@ stub CriticalDeviceCoInstaller
+@ stdcall CriticalDeviceCoInstaller(long ptr ptr ptr)
 @ stub DevInstallW
 @ stdcall DeviceBayClassInstaller(long ptr ptr)
 @ stub DiskPropPageProvider
 @ stub DoInstallComponentInfs
-@ stub EisaUpHalCoInstaller
+@ stdcall EisaUpHalCoInstaller(long ptr ptr ptr)
 @ stub EisaUpHalPropPageProvider
 @ stub GenerateName
 @ stdcall HdcClassInstaller(long ptr ptr)
@@ -72,9 +72,9 @@
 @ stub SetupSetRegisteredOsComponentsOrder
 @ stub SetupSetSetupInfo
 @ stub SetupShellSettings
-@ stub SetupStartService
+@ stdcall SetupStartService(wstr long)
 @ stub SetupUnregisterOsComponent
-@ stub StorageCoInstaller
+@ stdcall StorageCoInstaller(long ptr ptr ptr)
 @ stub SystemUpdateUserProfileDirectory
 @ stdcall TapeClassInstaller(long ptr ptr)
 @ stub TapePropPageProvider
@@ -82,5 +82,6 @@
 @ stub UpdatePnpDeviceDrivers
 @ stub UpgradePrinters
 @ stub ViewSetupActionLog
-@ stub pSetupDebugPrint
+@ stdcall VolumeClassInstaller(long ptr ptr)
+@ varargs pSetupDebugPrint(wstr long wstr wstr)
 @ stub pSetuplogSfcError

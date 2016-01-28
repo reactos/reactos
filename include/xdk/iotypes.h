@@ -2577,9 +2577,10 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
 } IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
 typedef VOID
-(NTAPI *PIO_CSQ_INSERT_IRP)(
+(NTAPI IO_CSQ_INSERT_IRP)(
   _In_ struct _IO_CSQ *Csq,
   _In_ PIRP Irp);
+typedef IO_CSQ_INSERT_IRP *PIO_CSQ_INSERT_IRP;
 
 typedef NTSTATUS
 (NTAPI IO_CSQ_INSERT_IRP_EX)(
@@ -2589,30 +2590,35 @@ typedef NTSTATUS
 typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
 
 typedef VOID
-(NTAPI *PIO_CSQ_REMOVE_IRP)(
+(NTAPI IO_CSQ_REMOVE_IRP)(
   _In_ struct _IO_CSQ *Csq,
   _In_ PIRP Irp);
+typedef IO_CSQ_REMOVE_IRP *PIO_CSQ_REMOVE_IRP;
 
 typedef PIRP
-(NTAPI *PIO_CSQ_PEEK_NEXT_IRP)(
+(NTAPI IO_CSQ_PEEK_NEXT_IRP)(
   _In_ struct _IO_CSQ *Csq,
   _In_ PIRP Irp,
   _In_ PVOID PeekContext);
+typedef IO_CSQ_PEEK_NEXT_IRP *PIO_CSQ_PEEK_NEXT_IRP;
 
 typedef VOID
-(NTAPI *PIO_CSQ_ACQUIRE_LOCK)(
+(NTAPI IO_CSQ_ACQUIRE_LOCK)(
   _In_ struct _IO_CSQ *Csq,
   _Out_ PKIRQL Irql);
+typedef IO_CSQ_ACQUIRE_LOCK *PIO_CSQ_ACQUIRE_LOCK;
 
 typedef VOID
-(NTAPI *PIO_CSQ_RELEASE_LOCK)(
+(NTAPI IO_CSQ_RELEASE_LOCK)(
   _In_ struct _IO_CSQ *Csq,
   _In_ KIRQL Irql);
+typedef IO_CSQ_RELEASE_LOCK *PIO_CSQ_RELEASE_LOCK;
 
 typedef VOID
-(NTAPI *PIO_CSQ_COMPLETE_CANCELED_IRP)(
+(NTAPI IO_CSQ_COMPLETE_CANCELED_IRP)(
   _In_ struct _IO_CSQ *Csq,
   _In_ PIRP Irp);
+typedef IO_CSQ_COMPLETE_CANCELED_IRP *PIO_CSQ_COMPLETE_CANCELED_IRP;
 
 typedef struct _IO_CSQ {
   ULONG Type;
@@ -6933,10 +6939,12 @@ typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
 #define IO_STOP_ON_SYMLINK                  0x0008
 #define IO_MM_PAGING_FILE                   0x0010
 
+_Function_class_(DRIVER_FS_NOTIFICATION)
 typedef VOID
-(NTAPI *PDRIVER_FS_NOTIFICATION) (
+(NTAPI DRIVER_FS_NOTIFICATION)(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ BOOLEAN FsActive);
+typedef DRIVER_FS_NOTIFICATION *PDRIVER_FS_NOTIFICATION;
 
 typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
   SyncTypeOther = 0,
@@ -7016,26 +7024,6 @@ typedef struct _FS_FILTER_CALLBACKS {
   PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
   PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
 } FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlRegisterFileSystemFilterCallbacks(
-  _In_ struct _DRIVER_OBJECT *FilterDriverObject,
-  _In_ PFS_FILTER_CALLBACKS Callbacks);
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNotifyStreamFileObject(
-  _In_ struct _FILE_OBJECT * StreamFileObject,
-  _In_opt_ struct _DEVICE_OBJECT *DeviceObjectHint,
-  _In_ FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
-  _In_ BOOLEAN SafeToRecurse);
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 extern NTKERNELAPI KSPIN_LOCK    IoStatisticsLock;
 extern NTKERNELAPI ULONG         IoReadOperationCount;

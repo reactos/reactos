@@ -20,4 +20,6 @@
 #include "main.h"
 #include "dialog.h"
 
+void UpdateWindowCaption(BOOL clearModifyAlert);
+
 #endif /* _NOTEPAD_H */

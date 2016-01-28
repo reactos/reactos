@@ -66,7 +66,6 @@ static HRESULT SendFurther( IPin *from, SendPinFunc fnMiddle, LPVOID arg, SendPi
     hr = IPin_QueryInternalConnections( from, NULL, &amount );
     if (hr != E_NOTIMPL && amount)
         FIXME("Use QueryInternalConnections!\n");
-     hr = S_OK;
 
     pin_info.pFilter = NULL;
     hr = IPin_QueryPinInfo( from, &pin_info );
@@ -204,7 +203,7 @@ static HRESULT PullPin_Init(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinI
     pPinImpl->dRate = 1.0;
     pPinImpl->state = Req_Die;
     pPinImpl->fnCustomRequest = pCustomRequest;
-    pPinImpl->stop_playback = 1;
+    pPinImpl->stop_playback = TRUE;
 
     InitializeCriticalSection(&pPinImpl->thread_lock);
     pPinImpl->thread_lock.DebugInfo->Spare[0] = (DWORD_PTR)( __FILE__ ": PullPin.thread_lock");
@@ -260,7 +259,7 @@ HRESULT WINAPI PullPin_ReceiveConnection(IPin * iface, IPin * pReceivePin, const
         props.cbAlign = 1;
         props.cbPrefix = 0;
 
-        if (SUCCEEDED(hr) && (This->fnQueryAccept(This->pUserData, pmt) != S_OK))
+        if (This->fnQueryAccept(This->pUserData, pmt) != S_OK)
             hr = VFW_E_TYPE_NOT_ACCEPTED; /* FIXME: shouldn't we just map common errors onto 
                                            * VFW_E_TYPE_NOT_ACCEPTED and pass the value on otherwise? */
 
@@ -407,6 +406,7 @@ static void PullPin_Flush(PullPin *This)
         {
             DWORD_PTR dwUser;
 
+            pSample = NULL;
             IAsyncReader_WaitForNext(This->pReader, 0, &pSample, &dwUser);
 
             if (!pSample)
@@ -629,7 +629,7 @@ HRESULT PullPin_StartProcessing(PullPin * This)
         /* Wake up! */
         assert(WaitForSingleObject(This->thread_sleepy, 0) == WAIT_TIMEOUT);
         This->state = Req_Run;
-        This->stop_playback = 0;
+        This->stop_playback = FALSE;
         ResetEvent(This->hEventStateChanged);
         SetEvent(This->thread_sleepy);
     }
@@ -655,7 +655,7 @@ HRESULT PullPin_PauseProcessing(PullPin * This)
         assert(WaitForSingleObject(This->thread_sleepy, 0) == WAIT_TIMEOUT);
 
         This->state = Req_Pause;
-        This->stop_playback = 1;
+        This->stop_playback = TRUE;
         ResetEvent(This->hEventStateChanged);
         SetEvent(This->thread_sleepy);
 
@@ -691,7 +691,7 @@ static HRESULT PullPin_StopProcessing(PullPin * This)
 
     assert(This->state == Req_Pause || This->state == Req_Sleepy);
 
-    This->stop_playback = 1;
+    This->stop_playback = TRUE;
     This->state = Req_Die;
     assert(WaitForSingleObject(This->thread_sleepy, 0) == WAIT_TIMEOUT);
     ResetEvent(This->hEventStateChanged);

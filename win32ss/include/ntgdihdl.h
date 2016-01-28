@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
- * FILE:            include/win32k/ntgdihal.h
+ * FILE:            win32ss/include/ntgdihdl.h
  * PURPOSE:         Win32 Shared GDI Handle/Object Types
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -15,18 +15,15 @@
 
 /* DEFINES *******************************************************************/
 
-/* Base address where the handle table is mapped to */
-#define GDI_HANDLE_TABLE_BASE_ADDRESS (0x400000)
-
 /* GDI handle table can hold 0x10000 handles */
 #define GDI_HANDLE_COUNT 0x10000
-#define GDI_GLOBAL_PROCESS (0x0)
 #define GDI_CFONT_MAX 16
 
 /* Handle Masks and shifts */
 #define GDI_HANDLE_INDEX_MASK (GDI_HANDLE_COUNT - 1)
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_BASETYPE_MASK 0x001f0000
+#define GDI_HANDLE_EXTYPE_MASK 0x00600000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
 #define GDI_HANDLE_REUSE_MASK 0xff000000
 #define GDI_HANDLE_UPPER_MASK (GDI_HANDLE_TYPE_MASK|GDI_HANDLE_STOCK_MASK|GDI_HANDLE_REUSE_MASK)
@@ -34,11 +31,7 @@
 #define GDI_HANDLE_BASETYPE_SHIFT 16
 
 #define GDI_ENTRY_STOCK_MASK 0x00000080
-#define GDI_ENTRY_REUSE_MASK 0x0000ff00
-#define GDI_ENTRY_REUSE_INC 0x00000100
 #define GDI_ENTRY_BASETYPE_MASK 0x001f0000
-#define GDI_ENTRY_FLAGS_MASK 0xff000000
-#define GDI_ENTRY_REUSECNT_SHIFT 8
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
@@ -114,9 +107,6 @@
 
 #define GDI_HANDLE_GET_REUSECNT(h)     \
     (((ULONG_PTR)(h)) >> GDI_HANDLE_REUSECNT_SHIFT)
-
-#define GDI_ENTRY_GET_REUSECNT(e)     \
-    ((((ULONG_PTR)(e)) & GDI_ENTRY_REUSE_MASK) >> GDI_ENTRY_REUSECNT_SHIFT)
 
 #define GDI_OBJECT_GET_TYPE_INDEX(t) \
     ((t & GDI_HANDLE_BASETYPE_MASK) >> GDI_HANDLE_BASETYPE_SHIFT)
@@ -273,7 +263,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE /* Must match win32k/include/gdiobj.h *
 typedef struct _RGN_ATTR
 {
     ULONG AttrFlags;
-    ULONG Flags;     /* Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION */
+    ULONG iComplexity;     /* Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION */
     RECTL Rect;
 } RGN_ATTR,*PRGN_ATTR;
 

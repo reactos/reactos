@@ -1,8 +1,8 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_CMDLINE_NOT_SUPPORTED "Error: Command line not supported\n"
-    STRING_ALIAS_NOT_FOUND "Error: Alias not found\n"
-    STRING_INVALID_QUERY "Error: Invalid query\n"
-END
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Error: Command line not supported\n"
+    STRING_ALIAS_NOT_FOUND, "Error: Alias not found\n"
+    STRING_INVALID_QUERY, "Error: Invalid query\n"
+}

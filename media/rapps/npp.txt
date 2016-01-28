@@ -1,0 +1,58 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = Notepad++
+Version = 6.8.7
+License = GPL
+Description = A full featured, free text editor with many plug-ins.
+Size = 3.9 MB
+Category = 6
+URLSite = http://notepad-plus-plus.org/
+URLDownload = https://notepad-plus-plus.org/repository/6.x/6.8.7/npp.6.8.7.Installer.exe
+SHA1 = 9ffb9a58a2a2480bc3b6db5cb85db9a1f7513e54
+CDPath = none
+
+[Section.0407]
+Description = Voll funktionsfähiger, kostenloser Texteditor mit vielen Plugins.
+
+[Section.0a]
+Description = Un editor de texto completo, libre y con gran cantidad de extensiones.
+
+[Section.040c]
+Description = Un éditeur de texte.
+Size = 3,9 Mo
+URLSite = http://notepad-plus-plus.org/fr/
+
+[Section.0410]
+Description = Un editor di testo.
+
+[Section.0413]
+Description = Een teksteditor.
+
+[Section.0415]
+Description = Edytor tekstu.
+
+[Section.0418]
+Description = Editor complet și gratuit de text, cu multe extensii.
+Size = 3,9 Mo
+
+[Section.0419]
+Description = Текстовый редактор.
+
+[Section.041b]
+Description = Textový editor.
+
+[Section.041f]
+Description = Birçok eklentilerle, tüm husûsiyetli ücretsiz bir metin düzenleyicisi.
+Size = 3,9 MB
+
+[Section.0422]
+Description = Текстовый редактор.
+
+[Section.0804]
+Description = 一种全功能，带有很多插件的免费文本编辑器。
+
+[Section.0813]
+Description = Een teksteditor.

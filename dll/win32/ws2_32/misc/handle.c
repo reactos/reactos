@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/handle.c
+ * FILE:        dll/win32/ws2_32/misc/handle.c
  * PURPOSE:     Provider handle management
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -251,10 +251,11 @@ CloseProviderHandle(HANDLE Handle)
 
     Provider = DeleteProviderHandle(ProviderHandleTable,
                                     Handle);
-    if (!Provider)
-        return FALSE;
 
     LeaveCriticalSection(&ProviderHandleTableLock);
+
+    if (!Provider)
+        return FALSE;
 
     DereferenceProviderByPointer(Provider);
 

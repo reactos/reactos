@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/hal.h
+ * FILE:            ntoskrnl/include/internal/hal.h
  * PURPOSE:         Internal header for the I/O HAL Functions (Fstub)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)

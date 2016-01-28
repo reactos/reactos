@@ -123,3 +123,15 @@ void WINAPI SCardReleaseStartedEvent(void)
 {
     FIXME("stub\n");
 }
+
+LONG WINAPI SCardListReadersA(SCARDCONTEXT context, LPCSTR groups, LPSTR readers, LPDWORD buflen)
+{
+    FIXME("(%lx, %s, %p, %p) stub\n", context, debugstr_a(groups), readers, buflen);
+    return SCARD_F_INTERNAL_ERROR;
+}
+
+LONG WINAPI SCardListReadersW(SCARDCONTEXT context, LPCWSTR groups, LPWSTR readers, LPDWORD buflen)
+{
+    FIXME("(%lx, %s, %p, %p) stub\n", context, debugstr_w(groups), readers, buflen);
+    return SCARD_F_INTERNAL_ERROR;
+}

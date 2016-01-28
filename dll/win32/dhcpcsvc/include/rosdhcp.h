@@ -81,6 +81,9 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 #define random rand
 #define srandom srand
 
+int  init_client(void);
+void stop_client(void);
+
 void AdapterInit(VOID);
 HANDLE StartAdapterDiscovery(VOID);
 void AdapterStop(VOID);

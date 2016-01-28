@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/partlist.h
+ * FILE:            base/setup/usetup/partlist.h
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -37,6 +37,18 @@ typedef enum _FORMATSTATE
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
 
+typedef enum _FORMATMACHINESTATE
+{
+    Start,
+    FormatSystemPartition,
+    FormatInstallPartition,
+    FormatOtherPartition,
+    FormatDone,
+    CheckSystemPartition,
+    CheckInstallPartition,
+    CheckOtherPartition,
+    CheckDone
+} FORMATMACHINESTATE, *PFORMATMACHINESTATE;
 
 typedef struct _PARTENTRY
 {
@@ -70,6 +82,10 @@ typedef struct _PARTENTRY
 
     FORMATSTATE FormatState;
 
+    /* Partition must be checked */
+    BOOLEAN NeedsCheck;
+
+    struct _FILE_SYSTEM_ITEM *FileSystem;
 } PARTENTRY, *PPARTENTRY;
 
 
@@ -96,6 +112,7 @@ typedef struct _DISKENTRY
 
     ULARGE_INTEGER SectorCount;
     ULONG SectorAlignment;
+    ULONG CylinderAlignment;
 
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
@@ -141,8 +158,12 @@ typedef struct _PARTLIST
     PDISKENTRY CurrentDisk;
     PPARTENTRY CurrentPartition;
 
-    PDISKENTRY ActiveBootDisk;
-    PPARTENTRY ActiveBootPartition;
+    PDISKENTRY BootDisk;
+    PPARTENTRY BootPartition;
+
+    PDISKENTRY TempDisk;
+    PPARTENTRY TempPartition;
+    FORMATMACHINESTATE FormatState;
 
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
@@ -222,18 +243,19 @@ ScrollUpPartitionList(
 VOID
 CreatePrimaryPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize,
+    ULONGLONG SectorCount,
     BOOLEAN AutoCreate);
 
 VOID
 CreateExtendedPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize);
+    ULONGLONG SectorCount);
 
 VOID
 CreateLogicalPartition(
     PPARTLIST List,
-    ULONGLONG PartitionSize);
+    ULONGLONG SectorCount,
+    BOOLEAN AutoCreate);
 
 VOID
 DeleteCurrentPartition(
@@ -241,10 +263,6 @@ DeleteCurrentPartition(
 
 VOID
 CheckActiveBootPartition(
-    PPARTLIST List);
-
-BOOLEAN
-CheckForLinuxFdiskPartitions(
     PPARTLIST List);
 
 BOOLEAN
@@ -262,5 +280,29 @@ ExtendedPartitionCreationChecks(
 ULONG
 LogicalPartitionCreationChecks(
     IN PPARTLIST List);
+
+BOOL
+GetNextUnformattedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry);
+
+BOOL
+GetNextUncheckedPartition(
+    IN PPARTLIST List,
+    OUT PDISKENTRY *pDiskEntry,
+    OUT PPARTENTRY *pPartEntry);
+
+VOID
+GetPartTypeStringFromPartitionTypeA(
+    UCHAR partitionType,
+    PSTR strPartType,
+    DWORD cchPartType);
+
+VOID
+GetPartTypeStringFromPartitionTypeW(
+    UCHAR partitionType,
+    PWSTR strPartType,
+    DWORD cchPartType);
 
 /* EOF */

@@ -46,6 +46,8 @@ IDB_CERT_WATERMARK BITMAP "res/certwatermark.bmp"
 /* @makedep: certheader.bmp */
 IDB_CERT_HEADER BITMAP "res/certheader.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -93,4 +95,7 @@ IDB_CERT_HEADER BITMAP "res/certheader.bmp"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/cryptui_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/cryptui_Zh.rc"
 #endif

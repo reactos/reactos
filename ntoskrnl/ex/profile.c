@@ -42,7 +42,7 @@ ExpDeleteProfile(PVOID ObjectBody)
     ULONG State;
 
     /* Typecast the Object */
-    Profile = (PEPROFILE)ObjectBody;
+    Profile = ObjectBody;
 
     /* Check if there if the Profile was started */
     if (Profile->LockedBufferAddress)
@@ -55,6 +55,7 @@ ExpDeleteProfile(PVOID ObjectBody)
         MmUnmapLockedPages(Profile->LockedBufferAddress, Profile->Mdl);
         MmUnlockPages(Profile->Mdl);
         IoFreeMdl(Profile->Mdl);
+        ExFreePoolWithTag(Profile->ProfileObject, TAG_PROFILE);
     }
 
     /* Check if a Process is associated and reference it */
@@ -94,7 +95,7 @@ NTAPI
 NtCreateProfile(OUT PHANDLE ProfileHandle,
                 IN HANDLE Process OPTIONAL,
                 IN PVOID RangeBase,
-                IN ULONG RangeSize,
+                IN SIZE_T RangeSize,
                 IN ULONG BucketSize,
                 IN PVOID Buffer,
                 IN ULONG BufferSize,
@@ -247,7 +248,6 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                              0,
                              NULL,
                              &hProfile);
-    ObDereferenceObject(Profile);
 
     /* Check for Success */
     if (!NT_SUCCESS(Status))
@@ -361,7 +361,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
 
     /* Allocate a Kernel Profile Object. */
     ProfileObject = ExAllocatePoolWithTag(NonPagedPool,
-                                          sizeof(EPROFILE),
+                                          sizeof(*ProfileObject),
                                           TAG_PROFILE);
     if (!ProfileObject)
     {
@@ -396,7 +396,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
     /* Initialize the Kernel Profile Object */
     Profile->ProfileObject = ProfileObject;
     KeInitializeProfile(ProfileObject,
-                        (PKPROCESS)Profile->Process,
+                        &Profile->Process->Pcb,
                         Profile->RangeBase,
                         Profile->RangeSize,
                         Profile->BucketSize,
@@ -453,6 +453,7 @@ NtStopProfile(IN HANDLE ProfileHandle)
     /* Unlock the Buffer */
     MmUnmapLockedPages(Profile->LockedBufferAddress, Profile->Mdl);
     MmUnlockPages(Profile->Mdl);
+    IoFreeMdl(Profile->Mdl);
     ExFreePoolWithTag(Profile->ProfileObject, TAG_PROFILE);
 
     /* Clear the Locked Buffer pointer, meaning the Object is Stopped */

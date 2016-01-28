@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CRT
- * FILE:            lib/crt/misc/i386/seh.S
+ * FILE:            lib/sdk/crt/except/i386/seh.s
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

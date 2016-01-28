@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/include/conio.h
+ * FILE:            win32ss/user/winsrv/consrv/include/conio.h
  * PURPOSE:         Public Console I/O Interface
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
@@ -108,8 +108,6 @@ struct _CONSOLE_SCREEN_BUFFER
 //  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
 //  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
-
-    // PVOID Data;                         /* Private data for the frontend to use */
 };
 
 
@@ -200,7 +198,27 @@ typedef struct _CONSOLE_INPUT_BUFFER
 
 
 typedef struct _TERMINAL TERMINAL, *PTERMINAL;
-/* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
+
+/*
+ * Structure used to hold console information
+ */
+typedef struct _CONSOLE_INFO
+{
+    ULONG   InputBufferSize;
+    COORD   ScreenBufferSize;
+    COORD   ConsoleSize;    /* The size of the console */
+
+    ULONG   CursorSize;
+    BOOLEAN CursorBlinkOn;
+    BOOLEAN ForceCursorOff;
+
+    USHORT  ScreenAttrib; // CHAR_INFO ScreenFillAttrib
+    USHORT  PopupAttrib;
+
+    ULONG   CodePage;
+
+} CONSOLE_INFO, *PCONSOLE_INFO;
+
 typedef struct _TERMINAL_VTBL
 {
     /*
@@ -217,13 +235,13 @@ typedef struct _TERMINAL_VTBL
     /* Interface used only for text-mode screen buffers */
 
     NTSTATUS (NTAPI *ReadStream)(IN OUT PTERMINAL This,
-                                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
-                                IN BOOLEAN Unicode,
-                                /**PWCHAR Buffer,**/
-                                OUT PVOID Buffer,
-                                IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
-                                IN ULONG NumCharsToRead,
-                                OUT PULONG NumCharsRead OPTIONAL);
+                                 IN BOOLEAN Unicode,
+                                 /**PWCHAR Buffer,**/
+                                 OUT PVOID Buffer,
+                                 IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                                 IN PVOID Parameter OPTIONAL,
+                                 IN ULONG NumCharsToRead,
+                                 OUT PULONG NumCharsRead OPTIONAL);
     NTSTATUS (NTAPI *WriteStream)(IN OUT PTERMINAL This,
                                   PTEXTMODE_SCREEN_BUFFER Buff,
                                   PWCHAR Buffer,
@@ -259,7 +277,7 @@ typedef struct _TERMINAL_VTBL
     INT   (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
                                    BOOL Show);
 
-#if 0 // Possible future front-end interface
+#if 0 // Possible future terminal interface
     BOOL (NTAPI *GetTerminalProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info,
@@ -274,8 +292,8 @@ typedef struct _TERMINAL_VTBL
 struct _TERMINAL
 {
     PTERMINAL_VTBL Vtbl;        /* Virtual table */
-    struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
-    PVOID Data;                 /* Private data  */
+    struct _CONSOLE* Console;   /* Console to which the terminal is attached to */
+    PVOID Context;              /* Private context */
 };
 
 /*
@@ -307,11 +325,11 @@ typedef struct _CONSOLE
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
 
-    CONSOLE_STATE State;                    /* State of the console */
-    TERMINAL TermIFace;                     /* Frontend-specific interface */
-
     ULONG ConsoleID;                        /* The ID of the console */
     LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
+
+    CONSOLE_STATE State;                    /* State of the console */
+    TERMINAL TermIFace;                     /* Terminal-specific interface */
 
     HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
 
@@ -347,7 +365,6 @@ ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);

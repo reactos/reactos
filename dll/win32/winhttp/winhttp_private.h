@@ -125,6 +125,7 @@ typedef struct
     LPWSTR proxy_username;
     LPWSTR proxy_password;
     struct list cookie_cache;
+    HANDLE unload_event;
 } session_t;
 
 typedef struct
@@ -163,6 +164,14 @@ typedef struct
     BOOL is_request; /* part of request headers? */
 } header_t;
 
+enum auth_target
+{
+    TARGET_INVALID = -1,
+    TARGET_SERVER,
+    TARGET_PROXY,
+    TARGET_MAX
+};
+
 enum auth_scheme
 {
     SCHEME_INVALID = -1,
@@ -170,7 +179,8 @@ enum auth_scheme
     SCHEME_NTLM,
     SCHEME_PASSPORT,
     SCHEME_DIGEST,
-    SCHEME_NEGOTIATE
+    SCHEME_NEGOTIATE,
+    SCHEME_MAX
 };
 
 struct authinfo
@@ -209,19 +219,30 @@ typedef struct
     BOOL  read_chunked_size; /* chunk size remaining */
     DWORD read_pos;       /* current read position in read_buf */
     DWORD read_size;      /* valid data size in read_buf */
-    char  read_buf[4096]; /* buffer for already read but not returned data */
+    char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
     WCHAR **accept_types;
     DWORD num_accept_types;
     struct authinfo *authinfo;
     struct authinfo *proxy_authinfo;
+    HANDLE task_wait;
+    HANDLE task_cancel;
+    HANDLE task_thread;
+    struct list task_queue;
+    CRITICAL_SECTION task_cs;
+    struct
+    {
+        WCHAR *username;
+        WCHAR *password;
+    } creds[TARGET_MAX][SCHEME_MAX];
 } request_t;
 
 typedef struct _task_header_t task_header_t;
 
 struct _task_header_t
 {
+    struct list entry;
     request_t *request;
     void (*proc)( task_header_t * );
 };
@@ -298,37 +319,7 @@ BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HID
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
-
-static inline const char *debugstr_variant( const VARIANT *v )
-{
-    if (!v) return "(null)";
-    switch (V_VT(v))
-    {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf( "{VT_I4: %d}", V_I4(v) );
-    case VT_R8:
-        return wine_dbg_sprintf( "{VT_R8: %lf}", V_R8(v) );
-    case VT_BSTR:
-        return wine_dbg_sprintf( "{VT_BSTR: %s}", debugstr_w(V_BSTR(v)) );
-    case VT_DISPATCH:
-        return wine_dbg_sprintf( "{VT_DISPATCH: %p}", V_DISPATCH(v) );
-    case VT_BOOL:
-        return wine_dbg_sprintf( "{VT_BOOL: %x}", V_BOOL(v) );
-    case VT_UNKNOWN:
-        return wine_dbg_sprintf( "{VT_UNKNOWN: %p}", V_UNKNOWN(v) );
-    case VT_UINT:
-        return wine_dbg_sprintf( "{VT_UINT: %u}", V_UINT(v) );
-    case VT_BSTR|VT_BYREF:
-        return wine_dbg_sprintf( "{VT_BSTR|VT_BYREF: ptr %p, data %s}",
-            V_BSTRREF(v), V_BSTRREF(v) ? debugstr_w( *V_BSTRREF(v) ) : NULL );
-    default:
-        return wine_dbg_sprintf( "{vt %d}", V_VT(v) );
-    }
-}
+void release_typelib( void ) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc( SIZE_T size )
 {

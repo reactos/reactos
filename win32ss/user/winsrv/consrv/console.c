@@ -12,8 +12,6 @@
 
 #include "consrv.h"
 
-#include <ndk/psfuncs.h>
-
 /* This is for COM usage */
 #define COBJMACROS
 #include <shlobj.h>
@@ -61,7 +59,7 @@ InsertConsole(OUT PHANDLE Handle,
 
     /* All went right, so add the console to the list */
     ConSrvLockConsoleListExclusive();
-    DPRINT1("Insert in the list\n");
+    DPRINT("Insert in the list\n");
 
     if (ConsoleList)
     {
@@ -73,7 +71,7 @@ InsertConsole(OUT PHANDLE Handle,
 
     if (i >= ConsoleListSize)
     {
-        DPRINT1("Creation of a new handles table\n");
+        DPRINT("Creation of a new handles table\n");
         /* Allocate a new handles table */
         Block = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
                                  (ConsoleListSize +
@@ -283,8 +281,6 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
     ASSERT(Console);
     *Console = NULL;
 
-    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
     if (ConSrvValidateConsole(&GrabConsole,
                               ProcessData->ConsoleHandle,
                               CONSOLE_RUNNING,
@@ -295,7 +291,6 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
         Status = STATUS_SUCCESS;
     }
 
-    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return Status;
 }
 
@@ -345,15 +340,15 @@ ConSrvInitConsoleSupport(VOID)
 
 NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
-                   IN OUT PCONSOLE_INFO ConsoleInfo,
-                   IN OUT PVOID ExtraConsoleInfo,
-                   IN ULONG ProcessId);
+                   IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                   IN HANDLE ConsoleLeaderProcessHandle);
 NTSTATUS NTAPI
 ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal);
 
 
 static BOOL
-LoadShellLinkConsoleInfo(IN OUT PCONSOLE_INFO ConsoleInfo,
+LoadShellLinkConsoleInfo(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
                          IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo)
 {
 #define PATH_SEPARATOR L'\\'
@@ -393,7 +388,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_INFO ConsoleInfo,
         /* Get a pointer to the IShellLink interface */
         IShellLinkW* pshl = NULL;
         hRes = CoCreateInstance(&CLSID_ShellLink,
-                                NULL, 
+                                NULL,
                                 CLSCTX_INPROC_SERVER,
                                 &IID_IShellLinkW,
                                 (LPVOID*)&pshl);
@@ -417,9 +412,9 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_INFO ConsoleInfo,
 
                     /* Reset the name of the console with the name of the shortcut */
                     Length = min(/*Length*/ Length - 4, // 4 == len(".lnk")
-                                 sizeof(ConsoleInfo->ConsoleTitle) / sizeof(ConsoleInfo->ConsoleTitle[0]) - 1);
+                                 (ConsoleInfo->cbSize - FIELD_OFFSET(CONSOLE_STATE_INFO, ConsoleTitle) - sizeof(UNICODE_NULL)) / sizeof(WCHAR));
                     wcsncpy(ConsoleInfo->ConsoleTitle, LinkName, Length);
-                    ConsoleInfo->ConsoleTitle[Length] = L'\0';
+                    ConsoleInfo->ConsoleTitle[Length] = UNICODE_NULL;
 
                     /* Get the window showing command */
                     hRes = IShellLinkW_GetShowCmd(pshl, &ShowCmd);
@@ -476,17 +471,33 @@ Finish:
 
             // ConsoleInitInfo->ConsoleStartInfo->IconIndex = 0;
         }
-        DPRINT1("IconPath = '%S' ; IconIndex = %lu\n",
-                IconPath, ConsoleInitInfo->ConsoleStartInfo->IconIndex);
+        DPRINT("IconPath = '%S' ; IconIndex = %lu\n",
+               IconPath, ConsoleInitInfo->ConsoleStartInfo->IconIndex);
         if (IconPath && *IconPath)
         {
             HICON hIcon = NULL, hIconSm = NULL;
+            /*
+             * FIXME!! Because of a strange bug we have in PrivateExtractIconExW
+             * (see r65683 for more details), we cannot use this API to extract
+             * at the same time the large and small icons from the app.
+             * Instead we just use PrivateExtractIconsW.
+             *
             PrivateExtractIconExW(IconPath,
                                   ConsoleInitInfo->ConsoleStartInfo->IconIndex,
                                   &hIcon,
                                   &hIconSm,
                                   1);
-            DPRINT1("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
+             */
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 32, 32,
+                                 &hIcon, NULL, 1, LR_COPYFROMRESOURCE);
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 16, 16,
+                                 &hIconSm, NULL, 1, LR_COPYFROMRESOURCE);
+
+            DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
             if (hIcon   != NULL) ConsoleInitInfo->ConsoleStartInfo->hIcon   = hIcon;
             if (hIconSm != NULL) ConsoleInitInfo->ConsoleStartInfo->hIconSm = hIconSm;
         }
@@ -502,12 +513,16 @@ NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSRV_CONSOLE* NewConsole,
                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
-                  IN ULONG ConsoleLeaderProcessId)
+                  IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     HANDLE ConsoleHandle;
     PCONSRV_CONSOLE Console;
-    CONSOLE_INFO ConsoleInfo;
+
+    BYTE ConsoleInfoBuffer[sizeof(CONSOLE_STATE_INFO) + MAX_PATH * sizeof(WCHAR)]; // CONSRV console information
+    PCONSOLE_STATE_INFO ConsoleInfo = (PCONSOLE_STATE_INFO)&ConsoleInfoBuffer;
+    CONSOLE_INFO DrvConsoleInfo; // Console information for CONDRV
+
     SIZE_T Length = 0;
 
     TERMINAL Terminal; /* The ConSrv terminal for this console */
@@ -520,30 +535,24 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /*
      * Load the console settings
      */
+    RtlZeroMemory(ConsoleInfo, sizeof(ConsoleInfoBuffer));
+    ConsoleInfo->cbSize = sizeof(ConsoleInfoBuffer);
 
-    /* 1. Load the default settings */
-    ConSrvGetDefaultSettings(&ConsoleInfo, ConsoleLeaderProcessId);
-
-    /* 2. Get the title of the console (initialize ConsoleInfo.ConsoleTitle) */
+    /* 1. Get the title of the console (initialize ConsoleInfo->ConsoleTitle) */
     Length = min(ConsoleInitInfo->TitleLength,
-                 sizeof(ConsoleInfo.ConsoleTitle) / sizeof(ConsoleInfo.ConsoleTitle[0]) - 1);
-    wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleInitInfo->ConsoleTitle, Length);
-    ConsoleInfo.ConsoleTitle[Length] = L'\0'; // NULL-terminate it.
+                 (ConsoleInfo->cbSize - FIELD_OFFSET(CONSOLE_STATE_INFO, ConsoleTitle) - sizeof(UNICODE_NULL)) / sizeof(WCHAR));
+    wcsncpy(ConsoleInfo->ConsoleTitle, ConsoleInitInfo->ConsoleTitle, Length);
+    ConsoleInfo->ConsoleTitle[Length] = UNICODE_NULL; // NULL-terminate it.
 
-    /* 3. Initialize the ConSrv terminal */
-    Status = ConSrvInitTerminal(&Terminal,
-                                &ConsoleInfo,
-                                ConsoleInitInfo,
-                                ConsoleLeaderProcessId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CONSRV: Failed to initialize a terminal, Status = 0x%08lx\n", Status);
-        return Status;
-    }
-    DPRINT("CONSRV: Terminal initialized\n");
+    /* 2. Impersonate the caller in order to retrieve settings in its context */
+    if (!CsrImpersonateClient(NULL))
+        return STATUS_BAD_IMPERSONATION_LEVEL;
+
+    /* 3. Load the default settings */
+    ConCfgGetDefaultSettings(ConsoleInfo);
 
     /*
-     * Load per-application terminal settings.
+     * 4. Load per-application terminal settings.
      *
      * Check whether the process creating the console was launched via
      * a shell-link. ConsoleInfo->ConsoleTitle may be updated with the
@@ -551,14 +560,14 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
      */
     // if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) // FIXME!! (for icon loading)
     {
-        if (!LoadShellLinkConsoleInfo(&ConsoleInfo, ConsoleInitInfo))
+        if (!LoadShellLinkConsoleInfo(ConsoleInfo, ConsoleInitInfo))
         {
             ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags &= ~STARTF_TITLEISLINKNAME;
         }
     }
 
     /*
-     * 4. Load the remaining console settings via the registry.
+     * 5. Load the remaining console settings via the registry.
      */
     if ((ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
     {
@@ -567,7 +576,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          * or we failed to load shell-link console properties.
          * Therefore, load the console infos for the application from the registry.
          */
-        ConSrvReadUserSettings(&ConsoleInfo, ConsoleLeaderProcessId);
+        ConCfgReadUserSettings(ConsoleInfo, FALSE);
 
         /*
          * Now, update them with the properties the user might gave to us
@@ -577,23 +586,68 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          */
         if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
-            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleInitInfo->ConsoleStartInfo->wFillAttribute;
+            ConsoleInfo->ScreenAttributes = (USHORT)ConsoleInitInfo->ConsoleStartInfo->wFillAttribute;
         }
         if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
         {
-            ConsoleInfo.ScreenBufferSize = ConsoleInitInfo->ConsoleStartInfo->dwScreenBufferSize;
+            ConsoleInfo->ScreenBufferSize = ConsoleInitInfo->ConsoleStartInfo->dwScreenBufferSize;
         }
         if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
         {
-            ConsoleInfo.ConsoleSize = ConsoleInitInfo->ConsoleStartInfo->dwWindowSize;
+            ConsoleInfo->WindowSize = ConsoleInitInfo->ConsoleStartInfo->dwWindowSize;
         }
+
+#if 0
+        /*
+         * Now, update them with the properties the user might gave to us
+         * via the STARTUPINFO structure before calling CreateProcess
+         * (and which was transmitted via the ConsoleStartInfo structure).
+         * We therefore overwrite the values read in the registry.
+         */
+        if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
+        {
+            ConsoleInfo->AutoPosition = FALSE;
+            ConsoleInfo->WindowPosition.x = ConsoleInitInfo->ConsoleStartInfo->dwWindowOrigin.X;
+            ConsoleInfo->WindowPosition.y = ConsoleInitInfo->ConsoleStartInfo->dwWindowOrigin.Y;
+        }
+        if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
+        {
+            ConsoleInfo->FullScreen = TRUE;
+        }
+#endif
     }
 
+    /* 6. Revert impersonation */
+    CsrRevertToSelf();
+
     /* Set-up the code page */
-    ConsoleInfo.CodePage = GetOEMCP();
+    ConsoleInfo->CodePage = GetOEMCP();
+
+    /*
+     * Initialize the ConSrv terminal and give it a chance to load
+     * its own settings and override the console settings.
+     */
+    Status = ConSrvInitTerminal(&Terminal,
+                                ConsoleInfo,
+                                ConsoleInitInfo,
+                                ConsoleLeaderProcess->ProcessHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CONSRV: Failed to initialize a terminal, Status = 0x%08lx\n", Status);
+        return Status;
+    }
+    DPRINT("CONSRV: Terminal initialized\n");
 
     /* Initialize a new console via the driver */
-    Status = ConDrvInitConsole(&Console, &ConsoleInfo);
+    // DrvConsoleInfo.InputBufferSize = 0;
+    DrvConsoleInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
+    DrvConsoleInfo.ConsoleSize = ConsoleInfo->WindowSize;
+    DrvConsoleInfo.CursorSize = ConsoleInfo->CursorSize;
+    // DrvConsoleInfo.CursorBlinkOn = ConsoleInfo->CursorBlinkOn;
+    DrvConsoleInfo.ScreenAttrib = ConsoleInfo->ScreenAttributes;
+    DrvConsoleInfo.PopupAttrib = ConsoleInfo->PopupAttributes;
+    DrvConsoleInfo.CodePage = ConsoleInfo->CodePage;
+    Status = ConDrvInitConsole(&Console, &DrvConsoleInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
@@ -610,9 +664,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 #if 0
     WCHAR DefaultTitle[128];
 #endif
-    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
+    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo->ConsoleTitle);
 #if 0
-    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
+    if (ConsoleInfo->ConsoleTitle[0] == UNICODE_NULL)
     {
         if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
         {
@@ -626,7 +680,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     else
     {
 #endif
-        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
+        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo->ConsoleTitle);
 #if 0
     }
 #endif
@@ -635,6 +689,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     InitializeListHead(&Console->ProcessList);
     Console->NotifiedLastCloseProcess = NULL;
     Console->NotifyLastClose = FALSE;
+    Console->HasFocus = FALSE;
 
     /* Initialize pausing support */
     Console->PauseFlags = 0;
@@ -644,9 +699,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /* Initialize the alias and history buffers */
     Console->Aliases = NULL;
     InitializeListHead(&Console->HistoryBuffers);
-    Console->HistoryBufferSize      = ConsoleInfo.HistoryBufferSize;
-    Console->NumberOfHistoryBuffers = ConsoleInfo.NumberOfHistoryBuffers;
-    Console->HistoryNoDup           = ConsoleInfo.HistoryNoDup;
+    Console->HistoryBufferSize      = ConsoleInfo->HistoryBufferSize;
+    Console->NumberOfHistoryBuffers = ConsoleInfo->NumberOfHistoryBuffers;
+    Console->HistoryNoDup           = ConsoleInfo->HistoryNoDup;
 
     /* Initialize the Input Line Discipline */
     Console->LineBuffer = NULL;
@@ -654,31 +709,59 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->LineComplete = Console->LineUpPressed = FALSE;
     // LineWakeupMask
     Console->LineInsertToggle =
-    Console->InsertMode = ConsoleInfo.InsertMode;
-    Console->QuickEdit  = ConsoleInfo.QuickEdit;
+    Console->InsertMode = ConsoleInfo->InsertMode;
+    Console->QuickEdit  = ConsoleInfo->QuickEdit;
 
     /* Popup windows */
     InitializeListHead(&Console->PopupWindows);
 
     /* Colour table */
-    memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
+    RtlCopyMemory(Console->Colors, ConsoleInfo->ColorTable,
+                  sizeof(ConsoleInfo->ColorTable));
+
+    /* Create the Initialization Events */
+    Status = NtCreateEvent(&Console->InitEvents[INIT_SUCCESS], EVENT_ALL_ACCESS,
+                           NULL, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateEvent(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
+        ConDrvDeleteConsole(Console);
+        ConSrvDeinitTerminal(&Terminal);
+        return Status;
+    }
+    Status = NtCreateEvent(&Console->InitEvents[INIT_FAILURE], EVENT_ALL_ACCESS,
+                           NULL, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateEvent(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(Console->InitEvents[INIT_SUCCESS]);
+        ConDrvDeleteConsole(Console);
+        ConSrvDeinitTerminal(&Terminal);
+        return Status;
+    }
 
     /*
      * Attach the ConSrv terminal to the console.
      * This call makes a copy of our local Terminal variable.
      */
-    Status = ConDrvRegisterTerminal(Console, &Terminal);
+    Status = ConDrvAttachTerminal(Console, &Terminal);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to register terminal to the given console, Status = 0x%08lx\n", Status);
+        NtClose(Console->InitEvents[INIT_FAILURE]);
+        NtClose(Console->InitEvents[INIT_SUCCESS]);
         ConDrvDeleteConsole(Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
-    DPRINT("Terminal registered\n");
+    DPRINT("Terminal attached\n");
 
     /* All went right, so add the console to the list */
     Status = InsertConsole(&ConsoleHandle, Console);
+
+    // FIXME! We do not support at all asynchronous console creation!
+    NtSetEvent(Console->InitEvents[INIT_SUCCESS], NULL);
+    // NtSetEvent(Console->InitEvents[INIT_FAILURE], NULL);
 
     /* Return the newly created console to the caller and a success code too */
     *NewConsoleHandle = ConsoleHandle;
@@ -696,6 +779,10 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
     /* Remove the console from the list */
     RemoveConsoleByPointer(Console);
 
+    /* Destroy the Initialization Events */
+    NtClose(Console->InitEvents[INIT_FAILURE]);
+    NtClose(Console->InitEvents[INIT_SUCCESS]);
+
     /* Clean the Input Line Discipline */
     if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
 
@@ -707,12 +794,12 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
     ConsoleFreeUnicodeString(&Console->OriginalTitle);
     ConsoleFreeUnicodeString(&Console->Title);
 
-    /* Now, call the driver. ConDrvDeregisterTerminal is called on-demand. */
+    /* Now, call the driver. ConDrvDetachTerminal is called on-demand. */
     ConDrvDeleteConsole((PCONSOLE)Console);
 
     /* Deinit the ConSrv terminal */
     // FIXME!!
-    // ConSrvDeinitTerminal(&Terminal); // &ConSrvConsole->Console->TermIFace
+    // ConSrvDeinitTerminal(&Terminal);
 }
 
 
@@ -729,42 +816,44 @@ ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
 
     DPRINT("ConSrvConsoleCtrlEventTimeout Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
-    if (ProcessData->CtrlRoutine)
+    /*
+     * Be sure we effectively have a control routine. It resides in kernel32.dll (client).
+     */
+    if (ProcessData->CtrlRoutine == NULL) return Status;
+
+    _SEH2_TRY
     {
+        HANDLE Thread = NULL;
+
         _SEH2_TRY
         {
-            HANDLE Thread = NULL;
-
-            _SEH2_TRY
+            Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
+                                        ProcessData->CtrlRoutine,
+                                        UlongToPtr(CtrlEvent), 0, NULL);
+            if (NULL == Thread)
             {
-                Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                            ProcessData->CtrlRoutine,
-                                            UlongToPtr(CtrlEvent), 0, NULL);
-                if (NULL == Thread)
-                {
-                    Status = RtlGetLastNtStatus();
-                    DPRINT1("Failed thread creation, Status = 0x%08lx\n", Status);
-                }
-                else
-                {
-                    DPRINT("ProcessData->CtrlRoutine remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n",
-                           ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
-                    WaitForSingleObject(Thread, Timeout);
-                }
+                Status = RtlGetLastNtStatus();
+                DPRINT1("Failed thread creation, Status = 0x%08lx\n", Status);
             }
-            _SEH2_FINALLY
+            else
             {
-                CloseHandle(Thread);
+                DPRINT("ProcessData->CtrlRoutine remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n",
+                       ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                WaitForSingleObject(Thread, Timeout);
             }
-            _SEH2_END;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_FINALLY
         {
-            Status = _SEH2_GetExceptionCode();
-            DPRINT1("ConSrvConsoleCtrlEventTimeout - Caught an exception, Status = 0x%08lx\n", Status);
+            CloseHandle(Thread);
         }
         _SEH2_END;
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("ConSrvConsoleCtrlEventTimeout - Caught an exception, Status = 0x%08lx\n", Status);
+    }
+    _SEH2_END;
 
     return Status;
 }
@@ -853,6 +942,46 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
     return Status;
 }
 
+VOID
+ConSrvSetProcessFocus(IN PCSR_PROCESS CsrProcess,
+                      IN BOOLEAN SetForeground)
+{
+    // FIXME: Call NtUserSetInformationProcess (currently unimplemented!)
+    // for setting Win32 foreground/background flags.
+
+    if (SetForeground)
+        CsrSetForegroundPriority(CsrProcess);
+    else
+        CsrSetBackgroundPriority(CsrProcess);
+}
+
+NTSTATUS NTAPI
+ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
+                             IN BOOLEAN SetForeground)
+{
+    PLIST_ENTRY current_entry;
+    PCONSOLE_PROCESS_DATA current;
+
+    /* If the console is already being destroyed, just return */
+    if (!ConDrvValidateConsoleState((PCONSOLE)Console, CONSOLE_RUNNING))
+        return STATUS_UNSUCCESSFUL;
+
+    /*
+     * Loop through the process list, from the most recent process
+     * to the oldest one, and for each, set its foreground priority.
+     */
+    current_entry = Console->ProcessList.Flink;
+    while (current_entry != &Console->ProcessList)
+    {
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
+        current_entry = current_entry->Flink;
+
+        ConSrvSetProcessFocus(current->Process, SetForeground);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 /* PUBLIC SERVER APIS *********************************************************/
 
@@ -896,6 +1025,7 @@ CSR_API(SrvAllocConsole)
 
     /* Initialize the console initialization info structure */
     ConsoleInitInfo.ConsoleStartInfo = AllocConsoleRequest->ConsoleStartInfo;
+    ConsoleInitInfo.IsWindowVisible  = TRUE; // The console window is always visible.
     ConsoleInitInfo.TitleLength      = AllocConsoleRequest->TitleLength;
     ConsoleInitInfo.ConsoleTitle     = AllocConsoleRequest->ConsoleTitle;
     ConsoleInitInfo.DesktopLength    = AllocConsoleRequest->DesktopLength;
@@ -916,14 +1046,6 @@ CSR_API(SrvAllocConsole)
         DPRINT1("Console allocation failed\n");
         return Status;
     }
-
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    CsrProcess->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    AllocConsoleRequest->ConsoleStartInfo->ConsoleHandle   = ProcessData->ConsoleHandle;
-    AllocConsoleRequest->ConsoleStartInfo->InputWaitHandle = ProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropRoutine = AllocConsoleRequest->PropRoutine;
@@ -963,7 +1085,7 @@ CSR_API(SrvAttachConsole)
         PROCESS_BASIC_INFORMATION ProcessInfo;
         ULONG Length = sizeof(ProcessInfo);
 
-        /* Get the real parent's ID */
+        /* Get the real parent's PID */
 
         Status = NtQueryInformationProcess(TargetProcess->ProcessHandle,
                                            ProcessBasicInformation,
@@ -971,7 +1093,7 @@ CSR_API(SrvAttachConsole)
                                            Length, &Length);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SrvAttachConsole - Cannot retrieve basic process info, Status = %lu\n", Status);
+            DPRINT1("SrvAttachConsole - Cannot retrieve basic process info, Status = 0x%08lx\n", Status);
             return Status;
         }
 
@@ -999,20 +1121,13 @@ CSR_API(SrvAttachConsole)
                                   TRUE,
                                   &AttachConsoleRequest->ConsoleStartInfo->InputHandle,
                                   &AttachConsoleRequest->ConsoleStartInfo->OutputHandle,
-                                  &AttachConsoleRequest->ConsoleStartInfo->ErrorHandle);
+                                  &AttachConsoleRequest->ConsoleStartInfo->ErrorHandle,
+                                  AttachConsoleRequest->ConsoleStartInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console inheritance failed\n");
         goto Quit;
     }
-
-    /* Mark the process as having a console */
-    TargetProcessData->ConsoleApp = TRUE;
-    TargetProcess->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    AttachConsoleRequest->ConsoleStartInfo->ConsoleHandle   = TargetProcessData->ConsoleHandle;
-    AttachConsoleRequest->ConsoleStartInfo->InputWaitHandle = TargetProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     TargetProcessData->PropRoutine = AttachConsoleRequest->PropRoutine;
@@ -1028,16 +1143,7 @@ Quit:
 
 CSR_API(SrvFreeConsole)
 {
-    PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-
-    ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
-
-    /* Mark the process as not having a console anymore */
-    ProcessData->ConsoleApp = FALSE;
-    CsrProcess->Flags &= ~CsrProcessIsConsoleApp;
-
-    return STATUS_SUCCESS;
+    return ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
 }
 
 NTSTATUS NTAPI
@@ -1158,7 +1264,7 @@ CSR_API(SrvGetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -1169,7 +1275,7 @@ CSR_API(SrvGetConsoleTitle)
         {
             Length = min(TitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
             RtlCopyMemory(TitleRequest->Title, Console->Title.Buffer, Length);
-            ((PWCHAR)TitleRequest->Title)[Length / sizeof(WCHAR)] = L'\0';
+            ((PWCHAR)TitleRequest->Title)[Length / sizeof(WCHAR)] = UNICODE_NULL;
             TitleRequest->Length = Length;
         }
         else
@@ -1186,7 +1292,7 @@ CSR_API(SrvGetConsoleTitle)
                                          Console->Title.Buffer, Length,
                                          TitleRequest->Title, Length,
                                          NULL, NULL);
-            ((PCHAR)TitleRequest->Title)[Length] = '\0';
+            ((PCHAR)TitleRequest->Title)[Length] = ANSI_NULL;
             TitleRequest->Length = Length;
         }
         else
@@ -1219,7 +1325,7 @@ CSR_API(SrvSetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -1267,7 +1373,7 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     /* NULL-terminate */
-    Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
+    Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     TermChangeTitle(Console);
     Status = STATUS_SUCCESS;

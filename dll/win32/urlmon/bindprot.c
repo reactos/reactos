@@ -80,14 +80,36 @@ static LRESULT WINAPI notif_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
+static const WCHAR wszURLMonikerNotificationWindow[] =
+    {'U','R','L',' ','M','o','n','i','k','e','r',' ',
+     'N','o','t','i','f','i','c','a','t','i','o','n',' ','W','i','n','d','o','w',0};
+
+static ATOM notif_wnd_class;
+
+static BOOL WINAPI register_notif_wnd_class(INIT_ONCE *once, void *param, void **context)
+{
+    static WNDCLASSEXW wndclass = {
+        sizeof(wndclass), 0, notif_wnd_proc, 0, 0,
+        NULL, NULL, NULL, NULL, NULL,
+        wszURLMonikerNotificationWindow, NULL
+    };
+
+    wndclass.hInstance = hProxyDll;
+    notif_wnd_class = RegisterClassExW(&wndclass);
+    return TRUE;
+}
+
+void unregister_notif_wnd_class(void)
+{
+    if(notif_wnd_class)
+        UnregisterClassW(MAKEINTRESOURCEW(notif_wnd_class), hProxyDll);
+}
+
 HWND get_notif_hwnd(void)
 {
-    static ATOM wnd_class = 0;
     tls_data_t *tls_data;
 
-    static const WCHAR wszURLMonikerNotificationWindow[] =
-        {'U','R','L',' ','M','o','n','i','k','e','r',' ',
-         'N','o','t','i','f','i','c','a','t','i','o','n',' ','W','i','n','d','o','w',0};
+    static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
 
     tls_data = get_tls_data();
     if(!tls_data)
@@ -98,23 +120,11 @@ HWND get_notif_hwnd(void)
         return tls_data->notif_hwnd;
     }
 
-    if(!wnd_class) {
-        static WNDCLASSEXW wndclass = {
-            sizeof(wndclass), 0,
-            notif_wnd_proc, 0, 0,
-            NULL, NULL, NULL, NULL, NULL,
-            wszURLMonikerNotificationWindow,
-            NULL
-        };
+    InitOnceExecuteOnce(&init_once, register_notif_wnd_class, NULL, NULL);
+    if(!notif_wnd_class)
+        return NULL;
 
-        wndclass.hInstance = hProxyDll;
-
-        wnd_class = RegisterClassExW(&wndclass);
-        if (!wnd_class && GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
-            wnd_class = 1;
-    }
-
-    tls_data->notif_hwnd = CreateWindowExW(0, wszURLMonikerNotificationWindow,
+    tls_data->notif_hwnd = CreateWindowExW(0, MAKEINTRESOURCEW(notif_wnd_class),
             wszURLMonikerNotificationWindow, 0, 0, 0, 0, 0, HWND_MESSAGE,
             NULL, hProxyDll, NULL);
     if(tls_data->notif_hwnd)
@@ -685,6 +695,9 @@ static HRESULT WINAPI ProtocolHandler_Terminate(IInternetProtocol *iface, DWORD 
     if(!This->reported_result)
         return E_FAIL;
 
+    /* This may get released in Terminate call. */
+    IInternetProtocolEx_AddRef(&This->IInternetProtocolEx_iface);
+
     IInternetProtocol_Terminate(This->protocol, 0);
 
     set_binding_sink(This, NULL, NULL);
@@ -694,6 +707,7 @@ static HRESULT WINAPI ProtocolHandler_Terminate(IInternetProtocol *iface, DWORD 
         This->bind_info = NULL;
     }
 
+    IInternetProtocolEx_Release(&This->IInternetProtocolEx_iface);
     return S_OK;
 }
 

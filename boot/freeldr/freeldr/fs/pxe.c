@@ -29,6 +29,7 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 static IP4 _ServerIP = { 0, };
 static ULONG _OpenFile = NO_FILE;
+static CHAR _OpenFileName[128];
 static ULONG _FileSize = 0;
 static ULONG _FilePosition = 0;
 static ULONG _PacketPosition = 0;
@@ -83,7 +84,7 @@ static PPXE GetPxeStructure(VOID)
     return pPxe;
 }
 
-extern PXENV_EXIT PxeCallApi(UINT16 Segment, UINT16 Offset, UINT16 Service, VOID *Parameter);
+extern PXENV_EXIT __cdecl PxeCallApi(UINT16 Segment, UINT16 Offset, UINT16 Service, VOID *Parameter);
 BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
 {
     PPXE pxe;
@@ -116,7 +117,7 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     return TRUE;
 }
 
-static LONG PxeClose(ULONG FileId)
+static ARC_STATUS PxeClose(ULONG FileId)
 {
     t_PXENV_TFTP_CLOSE closeData;
 
@@ -136,44 +137,64 @@ static LONG PxeClose(ULONG FileId)
     return ESUCCESS;
 }
 
-static LONG PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     if (_OpenFile == NO_FILE || FileId != _OpenFile)
         return EBADF;
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = _FileSize;
     Information->CurrentAddress.LowPart = _FilePosition;
 
     return ESUCCESS;
 }
 
-static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     t_PXENV_TFTP_GET_FSIZE sizeData;
     t_PXENV_TFTP_OPEN openData;
+    SIZE_T PathLen, i;
 
     if (_OpenFile != NO_FILE)
         return EIO;
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
+    /* Retrieve the path length without NULL terminator */
+    PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
+
+    /* Lowercase the path and always use slashes as separators */
+    for (i = 0; i < PathLen; i++)
+    {
+        if (Path[i] == '\\')
+            _OpenFileName[i] = '/';
+        else
+            _OpenFileName[i] = tolower(Path[i]);
+    }
+
+    /* Zero out rest of the file name */
+    RtlZeroMemory(_OpenFileName + PathLen, sizeof(_OpenFileName) - PathLen);
+
     RtlZeroMemory(&sizeData, sizeof(sizeData));
     sizeData.ServerIPAddress = _ServerIP;
-    strncpy((CHAR*)sizeData.FileName, Path, sizeof(sizeData.FileName));
+    RtlCopyMemory(sizeData.FileName, _OpenFileName, sizeof(_OpenFileName));
     if (!CallPxe(PXENV_TFTP_GET_FSIZE, &sizeData))
+    {
+        ERR("Failed to get '%s' size\n", Path);
         return EIO;
+    }
+
     _FileSize = sizeData.FileSize;
     if (_FileSize < 1024 * 1024)
     {
         _CachedFile = FrLdrTempAlloc(_FileSize, TAG_PXE_FILE);
-        // Don't check for allocation failure, we support _CachedFile = NULL
+        // Don't check for allocation failure, we support _CachedFile == NULL
     }
     _CachedLength = 0;
 
     RtlZeroMemory(&openData, sizeof(openData));
     openData.ServerIPAddress = _ServerIP;
-    strncpy((CHAR*)openData.FileName, Path, sizeof(openData.FileName));
+    RtlCopyMemory(openData.FileName, _OpenFileName, sizeof(_OpenFileName));
     openData.PacketSize = sizeof(_Packet);
 
     if (!CallPxe(PXENV_TFTP_OPEN, &openData))
@@ -193,7 +214,7 @@ static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-static LONG PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     t_PXENV_TFTP_READ readData;
     ULONG i;
@@ -236,7 +257,7 @@ static LONG PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
-static LONG PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     t_PXENV_TFTP_READ readData;
 
@@ -247,8 +268,13 @@ static LONG PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
         return EINVAL;
 
     if (!_CachedFile && Position->LowPart < _FilePosition)
-        // We don't support backward seek without caching
-        return EINVAL;
+    {
+        // Close and reopen the file to go to position 0
+        if (PxeClose(FileId) != ESUCCESS)
+            return EIO;
+        if (PxeOpen(_OpenFileName, OpenReadOnly, &FileId) != ESUCCESS)
+            return EIO;
+    }
 
     RtlZeroMemory(&readData, sizeof(readData));
     readData.Buffer.segment = ((UINT32)_Packet & 0xf0000) / 16;
@@ -286,31 +312,31 @@ const DEVVTBL* PxeMount(ULONG DeviceId)
     return &PxeVtbl;
 }
 
-static LONG PxeDiskClose(ULONG FileId)
+static ARC_STATUS PxeDiskClose(ULONG FileId)
 {
     // Nothing to do
     return ESUCCESS;
 }
 
-static LONG PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     // No disk access in PXE mode
     return EINVAL;
 }
 
-static LONG PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     // Nothing to do
     return ESUCCESS;
 }
 
-static LONG PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     // No disk access in PXE mode
     return EINVAL;
 }
 
-static LONG PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     // No disk access in PXE mode
     return EINVAL;
@@ -346,20 +372,20 @@ static BOOLEAN GetCachedInfo(VOID)
 BOOLEAN PxeInit(VOID)
 {
     static BOOLEAN Initialized = FALSE;
-    static BOOLEAN Status = FALSE;
+    static BOOLEAN Success = FALSE;
 
     // Do initialization only once
     if (Initialized)
-        return Status;
+        return Success;
     Initialized = TRUE;
 
     // Check if PXE is available
     if (GetPxeStructure() && GetCachedInfo())
     {
         FsRegisterDevice("net(0)", &PxeDiskVtbl);
-        Status = TRUE;
+        Success = TRUE;
     }
 
-    return Status;
+    return Success;
 }
 

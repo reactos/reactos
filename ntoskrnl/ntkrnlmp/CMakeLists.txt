@@ -1,5 +1,7 @@
+
 include(../ntos.cmake)
 
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl)
 spec2def(ntkrnlmp.exe ../ntoskrnl.spec)
 
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
@@ -26,21 +28,18 @@ set_subsystem(ntkrnlmp native)
 
 if(MSVC)
     set_image_base(ntkrnlmp 0x00400000)
+    add_target_link_flags(ntkrnlmp "/SECTION:.rsrc,!DP") #Accessed from bugcheck code
 else()
     set_image_base(ntkrnlmp 0x80800000)
 endif()
 
-target_link_libraries(ntkrnlmp
-    cportlib
-    csq
-    ${PSEH_LIB}
-    cmlib
-    rtl
-    ${ROSSYM_LIB}
-    libcntpr
-    wdmguid
-    ioevent)
+if(STACK_PROTECTOR)
+    target_link_libraries(ntkrnlmp gcc_ssp)
+elseif(RUNTIME_CHECKS)
+    target_link_libraries(ntkrnlmp runtmchk)
+endif()
 
+target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 add_importlibs(ntkrnlmp hal kdcom bootvid)
 add_pch(ntkrnlmp ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTKRNLMP_SOURCE)
 add_dependencies(ntkrnlmp psdk bugcodes asm)

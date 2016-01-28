@@ -98,7 +98,7 @@ extern "C" {
     UCHAR DataIn;
     ULONG DataTransferLength;
     ULONG TimeOutValue;
-    VOID *DataBuffer;
+    VOID * POINTER_32 DataBuffer;
     ULONG SenseInfoOffset;
     UCHAR Cdb[16];
   } SCSI_PASS_THROUGH_DIRECT32,*PSCSI_PASS_THROUGH_DIRECT32;
@@ -161,7 +161,7 @@ extern "C" {
     ULONG DataTransferLength;
     ULONG TimeOutValue;
     ULONG ReservedAsUlong;
-    VOID *DataBuffer;
+    VOID * POINTER_32 DataBuffer;
     UCHAR PreviousTaskFile[8];
     UCHAR CurrentTaskFile[8];
   } ATA_PASS_THROUGH_DIRECT32,*PATA_PASS_THROUGH_DIRECT32;

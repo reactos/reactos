@@ -44,7 +44,7 @@ InsertConsole(IN PCONSOLE Console)
     /* All went right, so add the console to the list */
     ConDrvLockConsoleListExclusive();
 
-    DPRINT1("Insert in the list\n");
+    DPRINT("Insert in the list\n");
     InsertTailList(&ConsoleList, &Console->ListEntry);
 
     // FIXME: Move this code to the caller function!!
@@ -79,19 +79,24 @@ RemoveConsole(IN PCONSOLE Console)
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
 {
-    if (!Console->UnpauseEvent)
-        Console->UnpauseEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    /* In case we already have a pause event, just exit... */
+    if (Console->UnpauseEvent) return;
+
+    /* ... otherwise create it */
+    NtCreateEvent(&Console->UnpauseEvent, EVENT_ALL_ACCESS,
+                  NULL, NotificationEvent, FALSE);
 }
 
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console)
 {
-    if (Console->UnpauseEvent)
-    {
-        SetEvent(Console->UnpauseEvent);
-        CloseHandle(Console->UnpauseEvent);
-        Console->UnpauseEvent = NULL;
-    }
+    /* In case we already freed the event, just exit... */
+    if (!Console->UnpauseEvent) return;
+
+    /* ... otherwise set and free it */
+    NtSetEvent(Console->UnpauseEvent, NULL);
+    NtClose(Console->UnpauseEvent);
+    Console->UnpauseEvent = NULL;
 }
 
 
@@ -149,8 +154,6 @@ ConDrvInitConsoleSupport(VOID)
     /* Initialize the console list and its lock */
     InitializeListHead(&ConsoleList);
     RtlInitializeResource(&ListLock);
-
-    /* Should call LoadKeyboardLayout */
 }
 
 /* For resetting the terminal - defined in dummyterm.c */
@@ -226,6 +229,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     InitializeListHead(&Console->BufferList);
     Status = ConDrvCreateScreenBuffer(&NewBuffer,
                                       Console,
+                                      NULL,
                                       CONSOLE_TEXTMODE_BUFFER,
                                       &ScreenBufferInfo);
     if (!NT_SUCCESS(Status))
@@ -261,8 +265,8 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
 }
 
 NTSTATUS NTAPI
-ConDrvRegisterTerminal(IN PCONSOLE Console,
-                       IN PTERMINAL Terminal)
+ConDrvAttachTerminal(IN PCONSOLE Console,
+                     IN PTERMINAL Terminal)
 {
     NTSTATUS Status;
 
@@ -288,21 +292,18 @@ ConDrvRegisterTerminal(IN PCONSOLE Console,
         /* We failed, detach the terminal from the console */
         Terminal->Console = NULL; // For the caller
         ResetTerminal(Console);
-
         return Status;
     }
 
     /* Copy buffer contents to screen */
     // Terminal.Draw();
-    // ConioDrawConsole(Console);
-    DPRINT("Console drawn\n");
 
     DPRINT("Terminal initialization done\n");
     return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
-ConDrvDeregisterTerminal(IN PCONSOLE Console)
+ConDrvDetachTerminal(IN PCONSOLE Console)
 {
     if (Console == NULL) return STATUS_INVALID_PARAMETER;
 
@@ -362,11 +363,9 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     LeaveCriticalSection(&Console->Lock);
     ConDrvUnlockConsoleList();
 
-    /* FIXME: Send a terminate message to all the processes owning this console */
-
     /* Deregister the terminal */
     DPRINT("Deregister terminal\n");
-    ConDrvDeregisterTerminal(Console);
+    ConDrvDetachTerminal(Console);
     DPRINT("Terminal deregistered\n");
 
     /***

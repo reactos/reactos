@@ -3,7 +3,7 @@
 /*
 	optimize: get a grip on the different optimizations
 
-	copyright 2007 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2007-2013 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis, taking from mpg123.[hc]
 
@@ -16,9 +16,14 @@
 	OPT_I586_DITHER (Intel Pentium with dithering/noise shaping for enhanced quality)
 	OPT_MMX (Intel Pentium and compatibles with MMX, fast, but not the best accuracy)
 	OPT_3DNOW (AMD 3DNow!, K6-2/3, Athlon, compatibles...)
+	OPT_3DNOW_VINTAGE
 	OPT_3DNOWEXT (AMD 3DNow! extended, generally Athlon, compatibles...)
+	OPT_3DNOWEXT_VINTAGE
+	OPT_SSE
+	OPT_SSE_VINTAGE
 	OPT_ALTIVEC (Motorola/IBM PPC with AltiVec under MacOSX)
 	OPT_X86_64 (x86-64 / AMD64 / Intel 64)
+	OPT_AVX
 
 	or you define OPT_MULTI and give a combination which makes sense (do not include i486, do not mix altivec and x86).
 
@@ -33,13 +38,131 @@
 
 /* Runtime optimization interface now here: */
 
+/* Nedit inline Perl script to generate decoder list and name mapping in one place
+   optimize.c defining I_AM_OPTIMIZE to get the names
+
+perl <<'EOT'
+## order is important (autodec first, nodec last)
+@names=
+(
+ ['autodec', 'auto']
+,['generic', 'generic']
+,['generic_dither', 'generic_dither']
+,['idrei', 'i386']
+,['ivier', 'i486']
+,['ifuenf', 'i586']
+,['ifuenf_dither', 'i586_dither']
+,['mmx', 'MMX']
+,['dreidnow', '3DNow']
+,['dreidnowext', '3DNowExt']
+,['altivec', 'AltiVec']
+,['sse', 'SSE']
+,['x86_64', 'x86-64']
+,['arm','ARM']
+,['neon','NEON']
+,['avx','AVX']
+,['dreidnow_vintage', '3DNow_vintage']
+,['dreidnowext_vintage', '3DNowExt_vintage']
+,['sse_vintage', 'SSE_vintage']
+,['nodec', 'nodec']
+);
+
+print "enum optdec\n{\n";
+for my $n (@names)
+{
+	$name = $n->[0];
+	$enum = $name eq 'autodec' ? $name = " $name=0" : ",$name";
+	print "\t$enum\n"
+}
+print "};\n";
+print "##ifdef I_AM_OPTIMIZE\n";
+for my $n (@names)
+{
+	my $key = $n->[0];
+	my $val = $n->[1];
+	print "static const char dn_$key\[\] = \"$val\";\n";
+}
+print "static const char* decname[] =\n{\n";
+for my $n (@names)
+{
+	my $key = $n->[0];
+	print "\t".($key eq 'autodec' ? ' ' : ',')."dn_$key\n";
+}
+print "};\n##endif"
+EOT
+*/
 enum optdec
-{ /* autodec needs to be =0 and the first, nodec needs to be the last -- for loops! */
-	autodec=0, generic, generic_dither, idrei,
-	ivier, ifuenf, ifuenf_dither, mmx,
-	dreidnow, dreidnowext, altivec, sse, x86_64, arm,
-	nodec
+{
+	 autodec=0
+	,generic
+	,generic_dither
+	,idrei
+	,ivier
+	,ifuenf
+	,ifuenf_dither
+	,mmx
+	,dreidnow
+	,dreidnowext
+	,altivec
+	,sse
+	,x86_64
+	,arm
+	,neon
+	,neon64
+	,avx
+	,dreidnow_vintage
+	,dreidnowext_vintage
+	,sse_vintage
+	,nodec
 };
+#ifdef I_AM_OPTIMIZE
+static const char dn_autodec[] = "auto";
+static const char dn_generic[] = "generic";
+static const char dn_generic_dither[] = "generic_dither";
+static const char dn_idrei[] = "i386";
+static const char dn_ivier[] = "i486";
+static const char dn_ifuenf[] = "i586";
+static const char dn_ifuenf_dither[] = "i586_dither";
+static const char dn_mmx[] = "MMX";
+static const char dn_dreidnow[] = "3DNow";
+static const char dn_dreidnowext[] = "3DNowExt";
+static const char dn_altivec[] = "AltiVec";
+static const char dn_sse[] = "SSE";
+static const char dn_x86_64[] = "x86-64";
+static const char dn_arm[] = "ARM";
+static const char dn_neon[] = "NEON";
+static const char dn_neon64[] = "NEON64";
+static const char dn_avx[] = "AVX";
+static const char dn_dreidnow_vintage[] = "3DNow_vintage";
+static const char dn_dreidnowext_vintage[] = "3DNowExt_vintage";
+static const char dn_sse_vintage[] = "SSE_vintage";
+static const char dn_nodec[] = "nodec";
+static const char* decname[] =
+{
+	 dn_autodec
+	,dn_generic
+	,dn_generic_dither
+	,dn_idrei
+	,dn_ivier
+	,dn_ifuenf
+	,dn_ifuenf_dither
+	,dn_mmx
+	,dn_dreidnow
+	,dn_dreidnowext
+	,dn_altivec
+	,dn_sse
+	,dn_x86_64
+	,dn_arm
+	,dn_neon
+	,dn_neon64
+	,dn_avx
+	,dn_dreidnow_vintage
+	,dn_dreidnowext_vintage
+	,dn_sse_vintage
+	,dn_nodec
+};
+#endif
+
 enum optcla { nocla=0, normal, mmxsse };
 
 /*  - Set up the table of synth functions for current decoder choice. */
@@ -71,7 +194,11 @@ enum optcla decclass(const enum optdec);
 #ifdef REAL_IS_FIXED
 #if (defined OPT_I486)  || (defined OPT_I586) || (defined OPT_I586_DITHER) \
  || (defined OPT_MMX)   || (defined OPT_SSE)  || (defined_OPT_ALTIVEC) \
- || (defined OPT_3DNOW) || (defined OPT_3DNOWEXT) || (defined OPT_X86_64) || (defined OPT_GENERIC_DITHER)
+ || (defined OPT_3DNOW) || (defined OPT_3DNOWEXT) || (defined OPT_X86_64) \
+ || (defined OPT_3DNOW_VINTAGE) || (defined OPT_3DNOWEXT_VINTAGE) \
+ || (defined OPT_SSE_VINTAGE) \
+ || (defined OPT_NEON) || (defined OPT_NEON64) || (defined OPT_AVX) \
+ || (defined OPT_GENERIC_DITHER)
 #error "Bad decoder choice together with fixed point math!"
 #endif
 #endif
@@ -142,6 +269,16 @@ enum optcla decclass(const enum optdec);
 #define OPT_X86
 #ifndef OPT_MULTI
 #	define defopt sse
+#	define opt_dct36(fr) dct36_sse
+#endif
+#endif
+
+#ifdef OPT_SSE_VINTAGE
+#define OPT_MMXORSSE
+#define OPT_MPLAYER
+#define OPT_X86
+#ifndef OPT_MULTI
+#	define defopt sse
 #endif
 #endif
 
@@ -151,6 +288,16 @@ enum optcla decclass(const enum optdec);
 #define OPT_X86
 #ifndef OPT_MULTI
 #	define defopt dreidnowext
+#endif
+#endif
+
+/* same as above but also using 3DNowExt dct36 */
+#ifdef OPT_3DNOWEXT_VINTAGE
+#define OPT_MMXORSSE
+#define OPT_MPLAYER
+#define OPT_X86
+#ifndef OPT_MULTI
+#	define defopt dreidnowext_vintage
 #	define opt_dct36(fr) dct36_3dnowext
 #endif
 #endif
@@ -165,6 +312,14 @@ extern const int costab_mmxsse[];
 #define OPT_X86
 #ifndef OPT_MULTI
 #	define defopt dreidnow
+#endif
+#endif
+
+/* same as above but also using 3DNow dct36 */
+#ifdef OPT_3DNOW_VINTAGE
+#define OPT_X86
+#ifndef OPT_MULTI
+#	define defopt dreidnow_vintage
 #	define opt_dct36(fr) dct36_3dnow
 #endif
 #endif
@@ -179,12 +334,37 @@ extern const int costab_mmxsse[];
 #define OPT_MMXORSSE
 #ifndef OPT_MULTI
 #	define defopt x86_64
+#	define opt_dct36(fr) dct36_x86_64
+#endif
+#endif
+
+#ifdef OPT_AVX
+#define OPT_MMXORSSE
+#ifndef OPT_MULTI
+#	define defopt avx
+#	define opt_dct36(fr) dct36_avx
 #endif
 #endif
 
 #ifdef OPT_ARM
 #ifndef OPT_MULTI
 #	define defopt arm
+#endif
+#endif
+
+#ifdef OPT_NEON
+#define OPT_MMXORSSE
+#ifndef OPT_MULTI
+#	define defopt neon
+#	define opt_dct36(fr) dct36_neon
+#endif
+#endif
+
+#ifdef OPT_NEON64
+#define OPT_MMXORSSE
+#ifndef OPT_MULTI
+#	define defopt neon64
+#	define opt_dct36(fr) dct36_neon64
 #endif
 #endif
 
@@ -201,7 +381,7 @@ void check_decoders(void);
 
 #	define defopt nodec
 
-#	if (defined OPT_3DNOW || defined OPT_3DNOWEXT)
+#	if (defined OPT_3DNOW_VINTAGE || defined OPT_3DNOWEXT_VINTAGE || defined OPT_SSE || defined OPT_X86_64 || defined OPT_AVX || defined OPT_NEON || defined OPT_NEON64)
 #		define opt_dct36(fr) ((fr)->cpu_opts.the_dct36)
 #	endif
 

@@ -123,8 +123,7 @@ Bus_AddDevice(
         goto End;
     }
 
-    deviceName = ExAllocatePoolWithTag (NonPagedPool,
-                            nameLength, 'IPCA');
+    deviceName = ExAllocatePoolWithTag(NonPagedPool, nameLength, 'MpcA');
 
     if (NULL == deviceName) {
         DPRINT1("AddDevice: no memory to alloc for deviceName(0x%x)\n", nameLength);
@@ -160,7 +159,7 @@ Bus_AddDevice(
 
 End:
     if (deviceName){
-        ExFreePoolWithTag(deviceName, 'IPCA');
+        ExFreePoolWithTag(deviceName, 'MpcA');
     }
     if (!NT_SUCCESS(status) && deviceObject){
         if (deviceData && deviceData->NextLowerDriver){
@@ -270,23 +269,23 @@ ACPIDispatchDeviceControl(
                    */
                   if (power_button)
                   {
-                      DPRINT1("Fixed power button reported to power manager\n");
+                      DPRINT("Fixed power button reported to power manager\n");
                       Caps |= SYS_BUTTON_POWER;
                   }
                   if (sleep_button)
                   {
-                      DPRINT1("Fixed sleep button reported to power manager\n");
+                      DPRINT("Fixed sleep button reported to power manager\n");
                       Caps |= SYS_BUTTON_SLEEP;
                   }
               }
               else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
               {
-                  DPRINT1("Control method power button reported to power manager\n");
+                  DPRINT("Control method power button reported to power manager\n");
                   Caps |= SYS_BUTTON_POWER;
               }
               else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E"))
               {
-                  DPRINT1("Control method sleep reported to power manager\n");
+                  DPRINT("Control method sleep reported to power manager\n");
                   Caps |= SYS_BUTTON_SLEEP;
               }
               else
@@ -376,7 +375,7 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
         BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
 
         /* Allocate memory for the value */
-        ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferLength, 'IPCA');
+        ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferLength, 'MpcA');
         if (ValueInfo == NULL)
             return STATUS_NO_MEMORY;
     }
@@ -436,7 +435,7 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
     /* Free the memory and return status */
     if (ValueInfo != NULL)
     {
-        ExFreePoolWithTag(ValueInfo, 'IPCA');
+        ExFreePoolWithTag(ValueInfo, 'MpcA');
     }
 
     return Status;
@@ -450,7 +449,7 @@ GetProcessorInformation(VOID)
     LPWSTR ProcessorVendorIdentifier = NULL;
     LPWSTR HardwareIdsBuffer = NULL;
     HANDLE ProcessorHandle = NULL;
-    ULONG Length, Level1Length = 0, Level2Length = 0, Level3Length = 0;
+    ULONG Length = 0, Level1Length = 0, Level2Length = 0, Level3Length = 0;
     SIZE_T HardwareIdsLength = 0;
     SIZE_T VendorIdentifierLength;
     ULONG i;
@@ -487,7 +486,7 @@ GetProcessorInformation(VOID)
 
     /* Allocate a buffer large enough to be zero terminated */
     Length += sizeof(UNICODE_NULL);
-    ProcessorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    ProcessorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
     if (ProcessorIdentifier == NULL)
     {
         DPRINT1("Failed to allocate 0x%lx bytes\n", Length);
@@ -522,7 +521,7 @@ GetProcessorInformation(VOID)
 
     /* Allocate a buffer large enough to be zero terminated */
     Length += sizeof(UNICODE_NULL);
-    ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
     if (ProcessorNameString == NULL)
     {
         DPRINT1("Failed to allocate 0x%lx bytes\n", Length);
@@ -557,7 +556,7 @@ GetProcessorInformation(VOID)
 
     /* Allocate a buffer large enough to be zero terminated */
     Length += sizeof(UNICODE_NULL);
-    ProcessorVendorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    ProcessorVendorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
     if (ProcessorVendorIdentifier == NULL)
     {
         DPRINT1("Failed to allocate 0x%lx bytes\n", Length);
@@ -617,7 +616,7 @@ GetProcessorInformation(VOID)
                          1) * sizeof(WCHAR);
 
     /* Allocate a buffer to the data */
-    HardwareIdsBuffer = ExAllocatePoolWithTag(PagedPool, HardwareIdsLength, 'IPCA');
+    HardwareIdsBuffer = ExAllocatePoolWithTag(PagedPool, HardwareIdsLength, 'IpcA');
     if (HardwareIdsBuffer == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -656,15 +655,15 @@ done:
         ZwClose(ProcessorHandle);
 
     if (ProcessorIdentifier != NULL)
-        ExFreePoolWithTag(ProcessorIdentifier, 'IPCA');
+        ExFreePoolWithTag(ProcessorIdentifier, 'IpcA');
 
     if (ProcessorVendorIdentifier != NULL)
-        ExFreePoolWithTag(ProcessorVendorIdentifier, 'IPCA');
+        ExFreePoolWithTag(ProcessorVendorIdentifier, 'IpcA');
 
     if (!NT_SUCCESS(Status))
     {
         if (HardwareIdsBuffer != NULL)
-            ExFreePoolWithTag(HardwareIdsBuffer, 'IPCA');
+            ExFreePoolWithTag(HardwareIdsBuffer, 'IpcA');
     }
 
     return Status;

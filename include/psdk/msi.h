@@ -1049,6 +1049,10 @@ MsiGetUserInfoW(
 
 #define MsiGetUserInfo WINELIB_NAME_AW(MsiGetUserInfo)
 
+UINT WINAPI MsiProvidedComponentA(LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
+UINT WINAPI MsiProvideComponentW(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPWSTR, LPDWORD);
+#define MsiProvideComponent WINELIB_NAME_AW(MsiProvideComponent)
+
 UINT WINAPI MsiCollectUserInfoA(_In_ LPCSTR);
 UINT WINAPI MsiCollectUserInfoW(_In_ LPCWSTR);
 #define MsiCollectUserInfo WINELIB_NAME_AW(MsiCollectUserInfo)

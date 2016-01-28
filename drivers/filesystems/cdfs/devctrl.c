@@ -17,16 +17,21 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS NTAPI
-CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
-                  PIRP Irp)
+CdfsDeviceControl(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
     NTSTATUS Status;
     PVCB Vcb = NULL;
     PFILE_OBJECT FileObject;
-    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+    PIO_STACK_LOCATION Stack;
 
-    UNREFERENCED_PARAMETER(DeviceObject);
+    DPRINT("CdfsDeviceControl()\n");
 
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
     FileObject = Stack->FileObject;
     Irp->IoStatus.Information = 0;
 
@@ -34,16 +39,12 @@ CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
     if (!FileObject)
     {
         DPRINT1("FIXME: CdfsDeviceControl called without FileObject!\n");
-        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
     /* Only support such operations on volume */
     if (!(FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
     {
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -51,14 +52,16 @@ CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
     {
         /* We should handle this one, but we don't! */
         Status = STATUS_NOT_IMPLEMENTED;
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     else
     {
         /* Pass it to storage driver */
         IoSkipCurrentIrpStackLocation(Irp);
         Vcb = (PVCB)Stack->DeviceObject->DeviceExtension;
+
+        /* Lower driver will complete - we don't have to */
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
+
         Status = IoCallDriver(Vcb->StorageDevice, Irp);
     }
 

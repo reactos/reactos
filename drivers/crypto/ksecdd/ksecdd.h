@@ -9,6 +9,7 @@
 #define _NO_KSECDD_IMPORT_
 #include <ntifs.h>
 #include <ndk/exfuncs.h>
+#include <ndk/ketypes.h>
 #include <pseh/pseh2.h>
 #include <ntstrsafe.h>
 
@@ -43,8 +44,13 @@ typedef struct _KSEC_MACHINE_SPECIFIC_COUNTERS
     ULONG64 Ctr0;
     ULONG64 Ctr1;
 } KSEC_MACHINE_SPECIFIC_COUNTERS, *PKSEC_MACHINE_SPECIFIC_COUNTERS;
+#elif defined(_M_ARM)
+typedef struct _KSEC_MACHINE_SPECIFIC_COUNTERS
+{
+    ULONG Ccr;
+} KSEC_MACHINE_SPECIFIC_COUNTERS, *PKSEC_MACHINE_SPECIFIC_COUNTERS;
 #else
-typedef ULONG KSEC_MACHINE_SPECIFIC_COUNTERS;
+typedef ULONG KSEC_MACHINE_SPECIFIC_COUNTERS, *PKSEC_MACHINE_SPECIFIC_COUNTERS;
 #endif
 
 typedef struct _KSEC_ENTROPY_DATA

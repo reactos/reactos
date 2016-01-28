@@ -9,7 +9,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
@@ -20,7 +20,6 @@ if(MSVC)
 endif()
 
 spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
-
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE
@@ -64,6 +63,6 @@ add_library(windowscodecs SHARED
 
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
-add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_pch(windowscodecs wincodecs_private.h SOURCE)
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

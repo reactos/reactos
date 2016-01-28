@@ -181,10 +181,137 @@ static IOleUndoManager *create_undomgr(void)
 {
     UndoManager *ret = heap_alloc(sizeof(UndoManager));
 
+    if (!ret) return NULL;
+
     ret->IOleUndoManager_iface.lpVtbl = &OleUndoManagerVtbl;
     ret->ref = 1;
 
     return &ret->IOleUndoManager_iface;
+}
+
+typedef struct {
+    IHTMLEditServices IHTMLEditServices_iface;
+    LONG ref;
+} editsvcs;
+
+static inline editsvcs *impl_from_IHTMLEditServices(IHTMLEditServices *iface)
+{
+    return CONTAINING_RECORD(iface, editsvcs, IHTMLEditServices_iface);
+}
+
+static HRESULT WINAPI editsvcs_QueryInterface(IHTMLEditServices *iface, REFIID riid, void **ppv)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
+    if(IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppv = &This->IHTMLEditServices_iface;
+    } else if(IsEqualGUID(riid, &IID_IHTMLEditServices)) {
+        *ppv = &This->IHTMLEditServices_iface;
+    } else {
+        *ppv = NULL;
+        FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI editsvcs_AddRef(IHTMLEditServices *iface)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+    return ref;
+}
+
+static ULONG WINAPI editsvcs_Release(IHTMLEditServices *iface)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        heap_free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI editsvcs_AddDesigner(IHTMLEditServices *iface,
+    IHTMLEditDesigner *pIDesigner)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p)\n", This, pIDesigner);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI editsvcs_RemoveDesigner(IHTMLEditServices *iface,
+    IHTMLEditDesigner *pIDesigner)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p)\n", This, pIDesigner);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI editsvcs_GetSelectionServices(IHTMLEditServices *iface,
+    IMarkupContainer *pIContainer, ISelectionServices **ppSelSvc)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p,%p)\n", This, pIContainer, ppSelSvc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI editsvcs_MoveToSelectionAnchor(IHTMLEditServices *iface,
+    IMarkupPointer *pIStartAnchor)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p)\n", This, pIStartAnchor);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI editsvcs_MoveToSelectionEnd(IHTMLEditServices *iface,
+    IMarkupPointer *pIEndAnchor)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p)\n", This, pIEndAnchor);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI editsvcs_SelectRange(IHTMLEditServices *iface,
+    IMarkupPointer *pStart, IMarkupPointer *pEnd, SELECTION_TYPE eType)
+{
+    editsvcs *This = impl_from_IHTMLEditServices(iface);
+    FIXME("(%p)->(%p,%p,%#x)\n", This, pStart, pEnd, eType);
+    return E_NOTIMPL;
+}
+
+static const IHTMLEditServicesVtbl editsvcsVtbl = {
+    editsvcs_QueryInterface,
+    editsvcs_AddRef,
+    editsvcs_Release,
+    editsvcs_AddDesigner,
+    editsvcs_RemoveDesigner,
+    editsvcs_GetSelectionServices,
+    editsvcs_MoveToSelectionAnchor,
+    editsvcs_MoveToSelectionEnd,
+    editsvcs_SelectRange,
+};
+
+static IHTMLEditServices *create_editsvcs(void)
+{
+    editsvcs *ret = heap_alloc(sizeof(*ret));
+
+    if (ret) {
+        ret->IHTMLEditServices_iface.lpVtbl = &editsvcsVtbl;
+        ret->ref = 1;
+        return &ret->IHTMLEditServices_iface;
+    }
+
+    return NULL;
 }
 
 /**********************************************************
@@ -230,6 +357,9 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
         if(!This->doc_obj->undomgr)
             This->doc_obj->undomgr = create_undomgr();
 
+        if (!This->doc_obj->undomgr)
+            return E_OUTOFMEMORY;
+
         return IOleUndoManager_QueryInterface(This->doc_obj->undomgr, riid, ppv);
     }
 
@@ -241,6 +371,18 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
     if(IsEqualGUID(&IID_IWindowForBindingUI, guidService)) {
         TRACE("IID_IWindowForBindingUI\n");
         return IWindowForBindingUI_QueryInterface(&This->doc_obj->IWindowForBindingUI_iface, riid, ppv);
+    }
+
+    if(IsEqualGUID(&SID_SHTMLEditServices, guidService)) {
+        TRACE("SID_SHTMLEditServices\n");
+
+        if(!This->doc_obj->editsvcs)
+            This->doc_obj->editsvcs = create_editsvcs();
+
+        if (!This->doc_obj->editsvcs)
+            return E_OUTOFMEMORY;
+
+        return IHTMLEditServices_QueryInterface(This->doc_obj->editsvcs, riid, ppv);
     }
 
     TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);

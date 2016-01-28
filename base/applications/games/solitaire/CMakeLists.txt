@@ -1,6 +1,5 @@
 
 set_cpp(WITH_RUNTIME)
-
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib)
 
 list(APPEND SOURCE
@@ -9,6 +8,7 @@ list(APPEND SOURCE
     solitaire.cpp
     solitaire.h)
 
+add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/solitaire.ico)
 add_executable(sol ${SOURCE} rsrc.rc)
 target_link_libraries(sol cardlib)
 set_module_type(sol win32gui UNICODE)

@@ -1,0 +1,30 @@
+@ECHO OFF
+REM Virtual DOS Machine (VDM) Default Environment Configuration
+
+REM NOTE: NTVDM does not use AUTOEXEC.BAT as the default
+REM environment settings file when running a DOS application. If you
+REM wish to change the default settings for DOS programs, make changes
+REM to this file instead.
+
+REM Sound Blaster Settings
+REM ======================
+REM     A = The I/O address of the Sound Blaster.
+REM         * Possible values: 220, 240, 260, 280, 2a0, 2c0, 2e0, 300.
+REM     I = The IRQ number of the Sound Blaster.
+REM         * Possible values: 7, 5, 3, 9, 10, 11, 12.
+REM     D = The DMA number of the Sound Blaster.
+REM         * Possible values: 1, 5, 0, 3, 6, 7.
+REM     H = The High DMA number of the Sound Blaster.
+REM         * Possible values: 1, 5, 0, 3, 6, 7.
+REM     T = Type of Sound Blaster Card
+REM         * 1 - SB 1.5
+REM         * 2 - SB Pro I
+REM         * 3 - SB 2.0
+REM         * 4 - SB Pro II
+REM         * 6 - SB 16/AWE 32/32/64
+REM
+REM     NOTE: To disable Sound Blaster support, simply place an invalid
+REM     I/O Port Address (e.g. SET BLASTER=A0). However, if SET BLASTER is 
+REM     not specified in this file, then the default values (A220 I7 D1 H5 T6)
+REM     will be used instead.
+SET BLASTER=A220 I7 D1 H5 T6

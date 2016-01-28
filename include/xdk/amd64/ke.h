@@ -15,7 +15,7 @@ $if (_WDMDDK_)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA     0xFFFFF78000000000ULL
-#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 #define SharedInterruptTime     (KI_USER_SHARED_DATA + 0x8)
 #define SharedSystemTime        (KI_USER_SHARED_DATA + 0x14)
 #define SharedTickCount         (KI_USER_SHARED_DATA + 0x320)
@@ -27,8 +27,9 @@ $if (_WDMDDK_)
 #define EFLAG_ZERO              0x4000
 #define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
 
-typedef struct _KFLOATING_SAVE {
-  ULONG Dummy;
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
 typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
@@ -54,78 +55,101 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 FORCEINLINE
 VOID
-KeMemoryBarrier(VOID)
+KeMemoryBarrier(
+    VOID)
 {
-  // FIXME: Do we really need lfence after the __faststorefence ?
-  FastFence();
-  LFENCE_ACQUIRE();
+    // FIXME: Do we really need lfence after the __faststorefence ?
+    FastFence();
+    LFENCE_ACQUIRE();
 }
 
 #define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
 KeGetCurrentIrql(VOID)
 {
-  return (KIRQL)__readcr8();
+    return (KIRQL)__readcr8();
 }
 
+_IRQL_requires_max_(HIGH_LEVEL)
 FORCEINLINE
 VOID
-KeLowerIrql(IN KIRQL NewIrql)
+KeLowerIrql(
+    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql)
 {
-  //ASSERT((KIRQL)__readcr8() >= NewIrql);
-  __writecr8(NewIrql);
+    //ASSERT((KIRQL)__readcr8() >= NewIrql);
+    __writecr8(NewIrql);
 }
 
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_raises_(NewIrql)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
-KfRaiseIrql(IN KIRQL NewIrql)
+KfRaiseIrql(
+    _In_ KIRQL NewIrql)
 {
-  KIRQL OldIrql;
+    KIRQL OldIrql;
 
-  OldIrql = (KIRQL)__readcr8();
-  //ASSERT(OldIrql <= NewIrql);
-  __writecr8(NewIrql);
-  return OldIrql;
+    OldIrql = (KIRQL)__readcr8();
+    //ASSERT(OldIrql <= NewIrql);
+    __writecr8(NewIrql);
+    return OldIrql;
 }
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(DISPATCH_LEVEL)
 FORCEINLINE
 KIRQL
-KeRaiseIrqlToDpcLevel(VOID)
+KeRaiseIrqlToDpcLevel(
+    VOID)
 {
-  return KfRaiseIrql(DISPATCH_LEVEL);
+    return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 FORCEINLINE
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
-  return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread(VOID)
 {
-  return (struct _KTHREAD *)__readgsqword(0x188);
+    return (struct _KTHREAD *)__readgsqword(0x188);
 }
 
+_Always_(_Post_satisfies_(return<=0))
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Kernel_float_saved_
+_At_(*FloatSave, _Kernel_requires_resource_not_held_(FloatState) _Kernel_acquires_resource_(FloatState))
 FORCEINLINE
 NTSTATUS
-KeSaveFloatingPointState(PVOID FloatingState)
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE FloatSave)
 {
-  UNREFERENCED_PARAMETER(FloatingState);
-  return STATUS_SUCCESS;
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
 }
 
+_Success_(1)
+_Kernel_float_restored_
+_At_(*FloatSave, _Kernel_requires_resource_held_(FloatState) _Kernel_releases_resource_(FloatState))
 FORCEINLINE
 NTSTATUS
-KeRestoreFloatingPointState(PVOID FloatingState)
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE FloatSave)
 {
-  UNREFERENCED_PARAMETER(FloatingState);
-  return STATUS_SUCCESS;
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
 }
 
 /* VOID

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS BDA Proxy
- * FILE:            dll/directx/bdaplgin/classfactory.cpp
+ * FILE:            dll/directx/bdaplgin/bdaplgin.cpp
  * PURPOSE:         ClassFactory interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

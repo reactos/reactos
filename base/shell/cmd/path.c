@@ -59,7 +59,13 @@ INT cmd_path (LPTSTR param)
         }
         else if (dwBuffer > ENV_BUFFER_SIZE)
         {
+            LPTSTR pszOldBuffer = pszBuffer;
             pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
+            if (pszBuffer == NULL)
+            {
+                cmd_free(pszOldBuffer);
+                return 1;
+            }
             GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer);
         }
 

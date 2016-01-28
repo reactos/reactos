@@ -1809,7 +1809,7 @@ RtlUpcaseUnicodeString(
 
     PAGED_CODE_RTL();
 
-    if (AllocateDestinationString == TRUE)
+    if (AllocateDestinationString)
     {
         UniDest->MaximumLength = UniSource->Length;
         UniDest->Buffer = RtlpAllocateStringMemory(UniDest->MaximumLength, TAG_USTR);
@@ -2620,7 +2620,7 @@ RtlDnsHostNameToComputerName(PUNICODE_STRING ComputerName, PUNICODE_STRING DnsHo
             ComputerNameOem.Length = (USHORT)ComputerNameOemNLength;
             ComputerNameOem.MaximumLength = (USHORT)(MAX_COMPUTERNAME_LENGTH + 1);
 
-            if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem) == TRUE)
+            if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem))
             {
                 /* no unmapped character so convert it back to an unicode string */
                 Status = RtlOemStringToUnicodeString(ComputerName,

@@ -3,7 +3,8 @@
  *
  *  perfdata.c
  *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *  Copyright (C) 1999 - 2001  Brian Palmer                <brianp@reactos.org>
+ *  Copyright (C)        2014  Ismael Ferreras Morezuelas  <swyterzone+ros@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,11 +27,12 @@
 #include <aclapi.h>
 
 #define NTOS_MODE_USER
+#include <ndk/psfuncs.h>
 #include <ndk/exfuncs.h>
 
 CRITICAL_SECTION                           PerfDataCriticalSection;
 PPERFDATA                                  pPerfDataOld = NULL;    /* Older perf data (saved to establish delta values) */
-PPERFDATA                                  pPerfData = NULL;    /* Most recent copy of perf data */
+PPERFDATA                                  pPerfData = NULL;       /* Most recent copy of perf data */
 ULONG                                      ProcessCountOld = 0;
 ULONG                                      ProcessCount = 0;
 double                                     dbIdleTime;
@@ -45,6 +47,10 @@ SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
 SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
+
+PCMD_LINE_CACHE global_cache = NULL;
+
+#define CMD_LINE_MIN(a, b) (a < b ? a - sizeof(WCHAR) : b)
 
 typedef struct _SIDTOUSERNAME
 {
@@ -99,6 +105,10 @@ void PerfDataUninitialize(void)
         pEntry = CONTAINING_RECORD(pCur, SIDTOUSERNAME, List);
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
+    }
+
+    if (SystemProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
 }
 
@@ -292,6 +302,12 @@ void PerfDataRefresh(void)
         /*  CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors */
         dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
         dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
+
+        if (dbIdleTime < 0.0) dbIdleTime = 0.0;
+        if (dbIdleTime > 100.0) dbIdleTime = 100.0;
+        if (dbKernelTime < 0.0) dbKernelTime = 0.0;
+        if (dbKernelTime > 100.0) dbKernelTime = 100.0;
+
     }
 
     /* Store new CPU's idle and system time */
@@ -314,21 +330,19 @@ void PerfDataRefresh(void)
     }
 
     /* Now alloc a new PERFDATA array and fill in the data */
-    if (pPerfDataOld) {
-        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
-    }
-    pPerfDataOld = pPerfData;
-    /* Clear out process perf data structures with HEAP_ZERO_MEMORY flag: */
     pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
+
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
         /* so that we can establish delta values */
         pPDOld = NULL;
-        for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-            if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
-                pPDOld = &pPerfDataOld[Idx2];
-                break;
+        if (pPerfDataOld) {
+            for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
+                if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
+                    pPDOld = &pPerfDataOld[Idx2];
+                    break;
+                }
             }
         }
 
@@ -371,7 +385,7 @@ void PerfDataRefresh(void)
         pPerfData[Idx].HandleCount = pSPI->HandleCount;
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
-        pPerfData[Idx].UserName[0] = L'\0';
+        pPerfData[Idx].UserName[0] = UNICODE_NULL;
         pPerfData[Idx].USERObjectCount = 0;
         pPerfData[Idx].GDIObjectCount = 0;
         ProcessUser = SystemUserSid;
@@ -431,6 +445,10 @@ ClearInfo:
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
     HeapFree(GetProcessHeap(), 0, pBuffer);
+    if (pPerfDataOld) {
+        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
+    }
+    pPerfDataOld = pPerfData;
     LeaveCriticalSection(&PerfDataCriticalSection);
 }
 
@@ -472,7 +490,7 @@ ULONG PerfDataGetProcessorSystemUsage(void)
     return (ULONG)dbKernelTime;
 }
 
-BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, int nMaxCount)
+BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount)
 {
     BOOL  bSuccessful;
 
@@ -504,7 +522,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     return ProcessId;
 }
 
-BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, int nMaxCount)
+BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount)
 {
     BOOL  bSuccessful;
 
@@ -520,6 +538,130 @@ BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, int nMaxCount)
     LeaveCriticalSection(&PerfDataCriticalSection);
 
     return bSuccessful;
+}
+
+BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
+{
+    static const LPWSTR ellipsis = L"...";
+
+    PROCESS_BASIC_INFORMATION pbi = {0};
+    UNICODE_STRING CommandLineStr = {0};
+
+    PVOID ProcessParams = NULL;
+    HANDLE hProcess;
+    ULONG ProcessId;
+
+    NTSTATUS Status;
+    BOOL result;
+
+    PCMD_LINE_CACHE new_entry;
+    LPWSTR new_string;
+
+    PCMD_LINE_CACHE cache = global_cache;
+
+    /* [A] Search for a string already in cache? If so, use it */
+    while (cache && cache->pnext != NULL)
+    {
+        if (cache->idx == Index && cache->str != NULL)
+        {
+            /* Found it. Use it, and add some ellipsis at the very end to make it cute */
+            wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
+            wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - sizeof(ellipsis)/sizeof(WCHAR), ellipsis);
+            return TRUE;
+        }
+
+        cache = cache->pnext;
+    }
+
+    /* [B] We don't; let's allocate and load a value from the process mem... and cache it */
+    ProcessId = PerfDataGetProcessId(Index);
+
+    /* Default blank command line in case things don't work out */
+    wcsncpy(lpCommandLine, L"", nMaxCount);
+
+    /* Ask for a handle to the target process so that we can read its memory and query stuff */
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId);
+    if (!hProcess)
+        goto cleanup;
+
+    /* First off, get the ProcessEnvironmentBlock location in that process' address space */
+    Status = NtQueryInformationProcess(hProcess, 0, &pbi, sizeof(pbi), NULL);
+    if (!NT_SUCCESS(Status))
+        goto cleanup;
+
+    /* Then get the PEB.ProcessParameters member pointer */
+    result = ReadProcessMemory(hProcess,
+                               (PVOID)((ULONG_PTR)pbi.PebBaseAddress + FIELD_OFFSET(PEB, ProcessParameters)),
+                               &ProcessParams,
+                               sizeof(ProcessParams),
+                               NULL);
+    if (!result)
+        goto cleanup;
+
+    /* Then copy the PEB->ProcessParameters.CommandLine member
+       to get the pointer to the string buffer and its size */
+    result = ReadProcessMemory(hProcess,
+                               (PVOID)((ULONG_PTR)ProcessParams + FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, CommandLine)),
+                               &CommandLineStr,
+                               sizeof(CommandLineStr),
+                               NULL);
+    if (!result)
+        goto cleanup;
+
+    /* Allocate the next cache entry and its accompanying string in one go */
+    new_entry = HeapAlloc(GetProcessHeap(),
+                          HEAP_ZERO_MEMORY,
+                          sizeof(CMD_LINE_CACHE) + CommandLineStr.Length + sizeof(UNICODE_NULL));
+    if (!new_entry)
+        goto cleanup;
+
+    new_string = (LPWSTR)((ULONG_PTR)new_entry + sizeof(CMD_LINE_CACHE));
+
+    /* Bingo, the command line should be stored there,
+       copy the string from the other process */
+    result = ReadProcessMemory(hProcess,
+                               CommandLineStr.Buffer,
+                               new_string,
+                               CommandLineStr.Length,
+                               NULL);
+    if (!result)
+    {
+        /* Weird, after sucessfully reading the mem of that process
+           various times it fails now, forget it and bail out */
+        HeapFree(GetProcessHeap(), 0, new_entry);
+        goto cleanup;
+    }
+
+    /* Add our pointer to the cache... */
+    new_entry->idx = Index;
+    new_entry->str = new_string;
+    new_entry->len = CommandLineStr.Length;
+
+    if (!global_cache)
+        global_cache = new_entry;
+    else
+        cache->pnext = new_entry;
+
+    /* ... and print the buffer for the first time */
+    wcsncpy(lpCommandLine, new_string, CMD_LINE_MIN(nMaxCount, CommandLineStr.Length));
+
+cleanup:
+    if (hProcess) CloseHandle(hProcess);
+    return TRUE;
+}
+
+void PerfDataDeallocCommandLineCache()
+{
+    PCMD_LINE_CACHE cache = global_cache;
+    PCMD_LINE_CACHE cache_old;
+
+    while (cache && cache->pnext != NULL)
+    {
+        cache_old = cache;
+        cache = cache->pnext;
+
+        HeapFree(GetProcessHeap(), 0, cache_old);
+    }
 }
 
 ULONG PerfDataGetSessionId(ULONG Index)

@@ -726,6 +726,8 @@ USBSTOR_SendRequest(
                             //
                             // failed to allocate MDL
                             //
+                            FreeItem(Context->cbw);
+                            FreeItem(Context);
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
 
@@ -755,6 +757,8 @@ USBSTOR_SendRequest(
                     //
                     // failed to allocate MDL
                     //
+                    FreeItem(Context->cbw);
+                    FreeItem(Context);
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
 
@@ -775,6 +779,8 @@ USBSTOR_SendRequest(
                 //
                 // failed to allocate MDL
                 //
+                FreeItem(Context->cbw);
+                FreeItem(Context);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 

@@ -281,7 +281,7 @@ int wmain(int argc, WCHAR *argv[])
     }
 
     /* Ensure that the timout amount is not too high or a negative number */
-    if ((opts.shutdown_delay < 0) || (opts.shutdown_delay > MAX_TIMEOUT))
+    if (opts.shutdown_delay > MAX_SHUTDOWN_TIMEOUT)
     {
         PrintResourceString(IDS_ERROR_TIMEOUT, opts.shutdown_delay);
         return EXIT_FAILURE;
@@ -342,20 +342,13 @@ int wmain(int argc, WCHAR *argv[])
             return EXIT_SUCCESS;
         }
 
-        /**
-         ** HACK: When InitiateSystemShutdownExW will become really implemented,
-         ** activate this line and delete the other...
-         **
-        if(!InitiateSystemShutdownExW(opts.remote_system,
-                                      opts.message,
-                                      opts.shutdown_delay,
-                                      opts.force,
-                                      opts.restart,
-                                      opts.reason))
-        ***/
-        if (!ExitWindowsEx((opts.shutdown ? EWX_SHUTDOWN : EWX_REBOOT) |
-                           (opts.force ? EWX_FORCE : 0),
-                           opts.reason))
+        /* Initiate the shutdown */
+        if (!InitiateSystemShutdownExW(opts.remote_system,
+                                       opts.message,
+                                       opts.shutdown_delay,
+                                       opts.force,
+                                       opts.restart,
+                                       opts.reason))
         {
             /*
              * If there is an error, give the proper output depending

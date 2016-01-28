@@ -68,6 +68,7 @@ typedef struct
     const char *web_charset;
     const char *header_charset;
     const char *body_charset;
+    const WCHAR *alias;
 } MIME_CP_INFO;
 
 /* These data are based on the codepage info in libs/unicode/cpmap.pl */
@@ -125,7 +126,13 @@ static const MIME_CP_INFO chinese_simplified_cp[] =
            MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID_NLS |
            MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
-      "gb2312", "gb2312", "gb2312" }
+      "gb2312", "gb2312", "gb2312" },
+      { "Chinese Simplified (GBK)",
+      936, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL |
+           MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+           MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID_NLS |
+           MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+      "gbk", "gbk", "gbk" }
 };
 static const MIME_CP_INFO chinese_traditional_cp[] =
 {
@@ -360,6 +367,9 @@ static const MIME_CP_INFO vietnamese_cp[] =
             MIMECONTF_MIME_LATEST,
       "windows-1258", "windows-1258", "windows-1258" }
 };
+
+static const WCHAR asciiW[] = {'a','s','c','i','i',0};
+
 static const MIME_CP_INFO western_cp[] =
 {
     { "IBM EBCDIC (US-Canada)",
@@ -412,7 +422,7 @@ static const MIME_CP_INFO western_cp[] =
       20127, MIMECONTF_MAILNEWS | MIMECONTF_IMPORT | MIMECONTF_EXPORT |
              MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_VALID |
              MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
-      "us-ascii", "us-ascii", "us-ascii" },
+      "us-ascii", "us-ascii", "us-ascii", asciiW },
     { "Western European (ISO)",
       28591, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT |
              MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER |
@@ -956,7 +966,7 @@ HRESULT WINAPI ConvertINetMultiByteToUnicode(
             *pcDstSize = MultiByteToWideChar(dwEncoding, 0, pSrcStr, *pcSrcSize, NULL, 0);
         break;
     }
-    
+
     if (!*pcDstSize)
         return E_FAIL;
 
@@ -1347,7 +1357,7 @@ static HRESULT WINAPI MLANGCF_CreateInstance(IClassFactory *iface, IUnknown *pOu
     IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     HRESULT hres;
     LPUNKNOWN punk;
-    
+
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
     *ppobj = NULL;
@@ -2266,7 +2276,7 @@ static BOOL CALLBACK enum_locales_proc(LPWSTR locale)
     info->wszLocaleName[0] = 0;
     GetLocaleInfoW(info->lcid, LOCALE_SLANGUAGE, info->wszLocaleName, MAX_LOCALE_NAME);
     TRACE("ISO639: %s SLANGUAGE: %s\n", wine_dbgstr_w(info->wszRfc1766), wine_dbgstr_w(info->wszLocaleName));
-    
+
     data->total++;
 
     return TRUE;
@@ -2597,6 +2607,13 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCharsetInfo(
                 strcpyW(pCharsetInfo->wszCharset, csetW);
                 return S_OK;
             }
+            if (mlang_data[i].mime_cp_info[n].alias && !lstrcmpiW(Charset, mlang_data[i].mime_cp_info[n].alias))
+            {
+                pCharsetInfo->uiCodePage = mlang_data[i].family_codepage;
+                pCharsetInfo->uiInternetEncoding = mlang_data[i].mime_cp_info[n].cp;
+                strcpyW(pCharsetInfo->wszCharset, mlang_data[i].mime_cp_info[n].alias);
+                return S_OK;
+            }
         }
     }
 
@@ -2872,7 +2889,7 @@ static HRESULT WINAPI fnIMultiLanguage3_ConvertStringToUnicodeEx(
  *
  * PARAMS
  *   see ConvertStringToUnicode
- *   dwFlag 
+ *   dwFlag
  *   lpFallBack if dwFlag contains MLCONVCHARF_USEDEFCHAR, lpFallBack string used
  *              instead unconvertible characters.
  *
@@ -3050,10 +3067,17 @@ static HRESULT WINAPI fnIMultiLanguage3_DetectOutboundCodePage(
 {
     MLang_impl *This = impl_from_IMultiLanguage3( iface );
 
-    FIXME("(%p)->(%08x %s %u %p %u %p %p %p)\n", This, dwFlags, debugstr_w(lpWideCharStr),
-          cchWideChar, puiPreferredCodePages, nPreferredCodePages, puiDetectedCodePages,
-          pnDetectedCodePages, lpSpecialChar);
-    return E_NOTIMPL;
+    FIXME("(%p)->(%08x %s %p %u %p %p(%u) %s)\n", This, dwFlags, debugstr_w(lpWideCharStr),
+          puiPreferredCodePages, nPreferredCodePages, puiDetectedCodePages,
+          pnDetectedCodePages, pnDetectedCodePages ? *pnDetectedCodePages : 0,
+          debugstr_w(lpSpecialChar));
+
+    if (!puiDetectedCodePages || !pnDetectedCodePages || !*pnDetectedCodePages)
+        return E_INVALIDARG;
+
+    puiDetectedCodePages[0] = CP_UTF8;
+    *pnDetectedCodePages = 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI fnIMultiLanguage3_DetectOutboundCodePageInIStream(
@@ -3068,10 +3092,17 @@ static HRESULT WINAPI fnIMultiLanguage3_DetectOutboundCodePageInIStream(
 {
     MLang_impl *This = impl_from_IMultiLanguage3( iface );
 
-    FIXME("(%p)->(%08x %p %p %u %p %p %p)\n", This, dwFlags, pStrIn,
+    FIXME("(%p)->(%08x %p %p %u %p %p(%u) %s)\n", This, dwFlags, pStrIn,
           puiPreferredCodePages, nPreferredCodePages, puiDetectedCodePages,
-          pnDetectedCodePages, lpSpecialChar);
-    return E_NOTIMPL;
+          pnDetectedCodePages, pnDetectedCodePages ? *pnDetectedCodePages : 0,
+          debugstr_w(lpSpecialChar));
+
+    if (!puiDetectedCodePages || !pnDetectedCodePages || !*pnDetectedCodePages)
+        return E_INVALIDARG;
+
+    puiDetectedCodePages[0] = CP_UTF8;
+    *pnDetectedCodePages = 1;
+    return S_OK;
 }
 
 static const IMultiLanguage3Vtbl IMultiLanguage3_vtbl =

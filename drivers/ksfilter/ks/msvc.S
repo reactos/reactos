@@ -1,4 +1,8 @@
 
+#ifdef _M_ARM
+
+#else
+
 #include <asm.inc>
 
 .code
@@ -38,5 +42,6 @@ DEFINE_ALIAS ?IndirectedRelease@CBaseUnknown@@UAGKXZ, IIndirectedUnknown_fnRelea
 DEFINE_ALIAS ?NonDelegatedAddRef@CBaseUnknown@@UAGKXZ, INonDelegatedUnknown_fnAddRef
 DEFINE_ALIAS ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z, INonDelegatedUnknown_fnQueryInterface
 #endif
+#endif
 
-END
+    END

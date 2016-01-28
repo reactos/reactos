@@ -22,9 +22,6 @@
        &RectBounds,                              \
        ROP2_TO_MIX(pdcattr->jROP2));
 
-#define Rsin(d) ((d) == 0.0 ? 0.0 : ((d) == 90.0 ? 1.0 : sin(d*M_PI/180.0)))
-#define Rcos(d) ((d) == 0.0 ? 1.0 : ((d) == 90.0 ? 0.0 : cos(d*M_PI/180.0)))
-
 static
 BOOL
 FASTCALL
@@ -46,8 +43,7 @@ IntArc( DC *dc,
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
     double AngleStart, AngleEnd;
-    LONG RadiusX, RadiusY, CenterX, CenterY;
-    LONG SfCx, SfCy, EfCx, EfCy;
+    LONG CenterX, CenterY;
 
     if (Right < Left)
     {
@@ -79,7 +75,7 @@ IntArc( DC *dc,
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrPen->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrPen->lWidth;
     if (pbrPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrPen->ulPenStyle == PS_INSIDEFRAME)
@@ -93,7 +89,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrPen->ptPenWidth.x = PenWidth;
+    pbrPen->lWidth = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -124,8 +120,6 @@ IntArc( DC *dc,
     DPRINT("1: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
                RectBounds.left,RectBounds.top,RectBounds.right,RectBounds.bottom);
 
-    RadiusX = max((RectBounds.right - RectBounds.left) / 2, 1);
-    RadiusY = max((RectBounds.bottom - RectBounds.top) / 2, 1);
     CenterX = (RectBounds.right + RectBounds.left) / 2;
     CenterY = (RectBounds.bottom + RectBounds.top) / 2;
     AngleEnd   = atan2((RectSEpts.bottom - CenterY), RectSEpts.right - CenterX)*(360.0/(M_PI*2));
@@ -136,11 +130,6 @@ IntArc( DC *dc,
     {
         AngleStart = AngleEnd + 360.0; // Arc(), ArcTo(), Pie() and Chord() are counterclockwise APIs.
     }
-
-    SfCx = (LONG)(Rcos(AngleStart) * RadiusX);
-    SfCy = (LONG)(Rsin(AngleStart) * RadiusY);
-    EfCx = (LONG)(Rcos(AngleEnd) * RadiusX);
-    EfCy = (LONG)(Rsin(AngleEnd) * RadiusY);
 
     if ((arctype == GdiTypePie) || (arctype == GdiTypeChord))
     {
@@ -175,13 +164,13 @@ IntArc( DC *dc,
 
     if (arctype == GdiTypePie)
     {
-       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, dc->eboLine);
+        PUTLINE(CenterX, CenterY, RectSEpts.left, RectSEpts.top, dc->eboLine);
+        PUTLINE(RectSEpts.right, RectSEpts.bottom, CenterX, CenterY, dc->eboLine);
     }
     if (arctype == GdiTypeChord)
-        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
+        PUTLINE(RectSEpts.right, RectSEpts.bottom, RectSEpts.left, RectSEpts.top, dc->eboLine);
 
-    pbrPen->ptPenWidth.x = PenOrigWidth;
+    pbrPen->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrPen);
     DPRINT("IntArc Exit.\n");
     return ret;
@@ -317,6 +306,7 @@ NtGdiAngleArc(
   BOOL Ret = FALSE;
   gxf_long worker, worker1;
   KFLOATING_SAVE FloatSave;
+  NTSTATUS status;
 
   pDC = DC_LockDc (hDC);
   if(!pDC)
@@ -331,7 +321,12 @@ NtGdiAngleArc(
     return TRUE;
   }
 
-  KeSaveFloatingPointState(&FloatSave);
+  status = KeSaveFloatingPointState(&FloatSave);
+  if (!NT_SUCCESS(status))
+  {
+      DC_UnlockDc( pDC );
+      return FALSE;
+  }
 
   worker.l  = dwStartAngle;
   worker1.l = dwSweepAngle;
@@ -366,6 +361,7 @@ NtGdiArcInternal(
   DC *dc;
   BOOL Ret;
   KFLOATING_SAVE FloatSave;
+  NTSTATUS status;
 
   dc = DC_LockDc (hDC);
   if(!dc)
@@ -388,7 +384,12 @@ NtGdiArcInternal(
   if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
     DC_vUpdateLineBrush(dc);
 
-  KeSaveFloatingPointState(&FloatSave);
+  status = KeSaveFloatingPointState(&FloatSave);
+  if (!NT_SUCCESS(status))
+  {
+      DC_UnlockDc( dc );
+      return FALSE;
+  }
 
   Ret = IntGdiArcInternal(
                   arctype,

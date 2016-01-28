@@ -8,11 +8,11 @@
  *                  Eric Pouech
  *                  Jacek Caban for CodeWeavers
  *                  Alexandre Julliard
- *                  Stefan Ginsberg (stefan__100__@hotmail.com)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  *                  Samuel Serapión
  */
 
-/* Based on Wine 1.7.17 */
+/* Based on Wine Staging 1.7.37 */
 
 #include <rtl.h>
 
@@ -78,6 +78,7 @@ struct assembly_identity
     WCHAR                *type;
     struct assembly_version version;
     BOOL                  optional;
+    BOOL                  delayed;
 };
 
 struct strsection_header
@@ -582,13 +583,13 @@ static const WCHAR dependencyW[] = {'d','e','p','e','n','d','e','n','c','y',0};
 static const WCHAR dependentAssemblyW[] = {'d','e','p','e','n','d','e','n','t','A','s','s','e','m','b','l','y',0};
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR fileW[] = {'f','i','l','e',0};
+static const WCHAR hashW[] = {'h','a','s','h',0};
 static const WCHAR noInheritW[] = {'n','o','I','n','h','e','r','i','t',0};
 static const WCHAR noInheritableW[] = {'n','o','I','n','h','e','r','i','t','a','b','l','e',0};
 static const WCHAR typelibW[] = {'t','y','p','e','l','i','b',0};
 static const WCHAR windowClassW[] = {'w','i','n','d','o','w','C','l','a','s','s',0};
 
 static const WCHAR clsidW[] = {'c','l','s','i','d',0};
-static const WCHAR hashW[] = {'h','a','s','h',0};
 static const WCHAR hashalgW[] = {'h','a','s','h','a','l','g',0};
 static const WCHAR helpdirW[] = {'h','e','l','p','d','i','r',0};
 static const WCHAR iidW[] = {'i','i','d',0};
@@ -684,6 +685,7 @@ static const struct olemisc_entry olemisc_values[] =
 
 static const WCHAR g_xmlW[] = {'?','x','m','l',0};
 static const WCHAR manifestv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','1',0};
+static const WCHAR manifestv2W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','2',0};
 static const WCHAR manifestv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
 
 static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
@@ -770,6 +772,8 @@ static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_t
 {
     struct assembly *assembly;
 
+    DPRINT("add_assembly() actctx %p, activeframe ??\n", actctx);
+
     if (actctx->num_assemblies == actctx->allocated_assemblies)
     {
         void *ptr;
@@ -797,6 +801,8 @@ static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_t
 
 static struct dll_redirect* add_dll_redirect(struct assembly* assembly)
 {
+    DPRINT("add_dll_redirect() to assembly %p, num_dlls %d\n", assembly, assembly->allocated_dlls);
+
     if (assembly->num_dlls == assembly->allocated_dlls)
     {
         void *ptr;
@@ -879,6 +885,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.base);
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.ps32);
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.name);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.tlib);
             break;
         case ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION:
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.typelib.tlbid);
@@ -1060,6 +1067,7 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     append_string( ret, versionW2, version );
     return ret;
 }
+
 static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 {
     ACTIVATION_CONTEXT *ret = NULL, *actctx = h;
@@ -1114,6 +1122,14 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->config.info );
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->appdir.info );
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->assemblies );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->tlib_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->comserver_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->ifaceps_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->clrsurrogate_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+
         pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
         pActual->MagicMarker = 0;
         RtlFreeHeap(RtlGetProcessHeap(), 0, pActual);
@@ -1891,16 +1907,26 @@ static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
 
 static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
 {
-    xmlstr_t    elem, content;
-    UNICODE_STRING elemU;
-    BOOL        end = FALSE, ret = TRUE;
+    xmlstr_t    elem, content, attr_name, attr_value;
+    BOOL        end = FALSE, ret = TRUE, error = FALSE;
 
-    if (!parse_expect_no_attr(xmlbuf, &end) || end ||
-        !parse_text_content(xmlbuf, &content))
+    UNICODE_STRING elem1U, elem2U;
+
+    while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+    {
+        elem1U = xmlstr2unicode(&attr_name);
+        elem2U = xmlstr2unicode(&attr_value);
+        DPRINT1("unknown attr %s=%s\n", &elem1U, &elem2U);
+    }
+
+    if (error) return FALSE;
+    if (end) return TRUE;
+
+    if (!parse_text_content(xmlbuf, &content))
         return FALSE;
 
-    elemU = xmlstr2unicode(&content);
-    DPRINT("Got description %wZ\n", &elemU);
+    elem1U = xmlstr2unicode(&content);
+    DPRINT("Got description %wZ\n", &elem1U);
 
     while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
     {
@@ -1911,8 +1937,8 @@ static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
         }
         else
         {
-            elemU = xmlstr2unicode(&elem);
-            DPRINT1("unknown elem %wZ\n", &elemU);
+            elem1U = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elem1U);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2092,13 +2118,31 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
 static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl, BOOL optional)
 {
     struct assembly_identity    ai;
-    xmlstr_t                    elem;
-    BOOL                        end = FALSE, ret = TRUE;
+    xmlstr_t                    elem, attr_name, attr_value;
+    BOOL                        end = FALSE, error = FALSE, ret = TRUE, delayed = FALSE;
 
-    if (!parse_expect_no_attr(xmlbuf, &end) || end) return end;
+    UNICODE_STRING elem1U, elem2U;
+
+    while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+    {
+        static const WCHAR allowDelayedBindingW[] = {'a','l','l','o','w','D','e','l','a','y','e','d','B','i','n','d','i','n','g',0};
+        static const WCHAR trueW[] = {'t','r','u','e',0};
+
+        if (xmlstr_cmp(&attr_name, allowDelayedBindingW))
+            delayed = xmlstr_cmp(&attr_value, trueW);
+        else
+        {
+            elem1U = xmlstr2unicode(&attr_name);
+            elem2U = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %s=%s\n", &elem1U, &elem2U);
+        }
+    }
+
+    if (error || end) return end;
 
     memset(&ai, 0, sizeof(ai));
     ai.optional = optional;
+    ai.delayed = delayed;
 
     if (!parse_expect_elem(xmlbuf, assemblyIdentityW, asmv1W) ||
         !parse_assembly_identity_elem(xmlbuf, acl->actctx, &ai))
@@ -2297,7 +2341,9 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         }
         else if (xmlstr_cmp(&attr_name, xmlnsW))
         {
-            if (!xmlstr_cmp(&attr_value, manifestv1W) && !xmlstr_cmp(&attr_value, manifestv3W))
+            if (!xmlstr_cmp(&attr_value, manifestv1W) &&
+                !xmlstr_cmp(&attr_value, manifestv2W) &&
+                !xmlstr_cmp(&attr_value, manifestv3W))
             {
                 DPRINT1("wrong namespace %wZ\n", &attr_valueU);
                 return FALSE;
@@ -2537,7 +2583,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
 static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
 {
     NTSTATUS status;
-    ULONG magic;
+    ULONG_PTR magic;
     LDR_DATA_TABLE_ENTRY *pldr;
 
     LdrLockLoaderLock(0, NULL, &magic);
@@ -2569,6 +2615,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
 
     //DPRINT( "looking for res %s in module %p %s\n", resname,
     //                hModule, filename );
+    DPRINT("get_manifest_in_module %p\n", hModule);
 
 #if 0
     if (TRACE_ON(actctx))
@@ -2763,8 +2810,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
 {
     static const WCHAR lookup_fmtW[] =
         {'%','s','_','%','s','_','%','s','_','%','u','.','%','u','.','*','.','*','_',
-         '*', /* FIXME */
-         '.','m','a','n','i','f','e','s','t',0};
+         '%','s','_','*','.','m','a','n','i','f','e','s','t',0};
+    static const WCHAR wine_trailerW[] = {'d','e','a','d','b','e','e','f','.','m','a','n','i','f','e','s','t'};
 
     WCHAR *lookup, *ret = NULL;
     UNICODE_STRING lookup_us;
@@ -2788,6 +2835,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                           FileBothDirectoryInformation, FALSE, &lookup_us, TRUE );
     if (io.Status == STATUS_SUCCESS)
     {
+        ULONG min_build = ai->version.build, min_revision = ai->version.revision;
         FILE_BOTH_DIR_INFORMATION *dir_info;
         WCHAR *tmp;
         ULONG build, revision;
@@ -2811,20 +2859,32 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
 
             tmp = (WCHAR *)dir_info->FileName + (strchrW(lookup, '*') - lookup);
             build = atoiW(tmp);
-            if (build < ai->version.build) continue;
+            if (build < min_build) continue;
             tmp = strchrW(tmp, '.') + 1;
             revision = atoiW(tmp);
-            if (build == ai->version.build && revision < ai->version.revision)
-                continue;
-            ai->version.build = (USHORT)build;
-            ai->version.revision = (USHORT)revision;
-
-            if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength * sizeof(WCHAR) )))
+            if (build == min_build && revision < min_revision) continue;
+            tmp = strchrW(tmp, '_') + 1;
+            tmp = strchrW(tmp, '_') + 1;
+            if (dir_info->FileNameLength - (tmp - dir_info->FileName) * sizeof(WCHAR) == sizeof(wine_trailerW) &&
+                !memicmpW( tmp, wine_trailerW, sizeof(wine_trailerW) / sizeof(WCHAR) ))
+            {
+                /* prefer a non-Wine manifest if we already have one */
+                /* we'll still load the builtin dll if specified through DllOverrides */
+                if (ret) continue;
+            }
+            else
+            {
+                min_build = build;
+                min_revision = revision;
+            }
+            ai->version.build = build;
+            ai->version.revision = revision;
+            RtlFreeHeap( RtlGetProcessHeap(), 0, ret );
+            if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength + sizeof(WCHAR) )))
             {
                 memcpy( ret, dir_info->FileName, dir_info->FileNameLength );
                 ret[dir_info->FileNameLength/sizeof(WCHAR)] = 0;
             }
-            break;
         }
     }
     else DPRINT1("no matching file for %S\n", lookup);
@@ -2921,7 +2981,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     DWORD len;
 
     DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
-           ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
+            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
 
@@ -3006,7 +3066,7 @@ static NTSTATUS parse_depend_manifests(struct actctx_loader* acl)
     {
         if (lookup_assembly(acl, &acl->dependencies[i]) != STATUS_SUCCESS)
         {
-            if (!acl->dependencies[i].optional)
+            if (!acl->dependencies[i].optional && !acl->dependencies[i].delayed)
             {
                 const struct assembly_version *ver = &acl->dependencies[i].version;
                 DPRINT1( "Could not find dependent assembly %S (%u.%u.%u.%u)\n",
@@ -3035,7 +3095,7 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
     }
     else if (flags & (RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS | RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE))
     {
-        ULONG magic;
+        ULONG_PTR magic;
         LDR_DATA_TABLE_ENTRY *pldr;
 
         if (!*handle) return STATUS_INVALID_PARAMETER;
@@ -3065,6 +3125,8 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
     struct string_index *index;
     ULONG name_offset;
 
+    DPRINT("actctx %p, num_assemblies %d\n", actctx, actctx->num_assemblies);
+
     /* compute section length */
     for (i = 0; i < actctx->num_assemblies; i++)
     {
@@ -3077,6 +3139,8 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             total_len += sizeof(*index);
             total_len += sizeof(*data);
             total_len += aligned_string_len((strlenW(dll->name)+1)*sizeof(WCHAR));
+
+            DPRINT("assembly %d (%p), dll %d: dll name %S\n", i, assembly, j, dll->name);
         }
 
         dll_count += assembly->num_dlls;
@@ -3098,15 +3162,19 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
     for (i = 0; i < actctx->num_assemblies; i++)
     {
         struct assembly *assembly = &actctx->assemblies[i];
+
+        DPRINT("assembly->num_dlls %d\n", assembly->num_dlls);
+
         for (j = 0; j < assembly->num_dlls; j++)
         {
             struct dll_redirect *dll = &assembly->dlls[j];
             UNICODE_STRING str;
             WCHAR *ptrW;
 
+            DPRINT("%d: dll name %S\n", j, dll->name);
             /* setup new index entry */
             str.Buffer = dll->name;
-            str.Length = strlenW(dll->name)*sizeof(WCHAR);
+            str.Length = (USHORT)strlenW(dll->name)*sizeof(WCHAR);
             str.MaximumLength = str.Length + sizeof(WCHAR);
             /* hash original class name */
             RtlHashUnicodeString(&str, TRUE, HASH_STRING_ALGORITHM_X65599, &index->hash);
@@ -3144,11 +3212,14 @@ static struct string_index *find_string_index(const struct strsection_header *se
     struct string_index *iter, *index = NULL;
     ULONG hash = 0, i;
 
+    DPRINT("section %p, name %wZ\n", section, name);
     RtlHashUnicodeString(name, TRUE, HASH_STRING_ALGORITHM_X65599, &hash);
     iter = (struct string_index*)((BYTE*)section + section->index_offset);
 
     for (i = 0; i < section->count; i++)
     {
+        DPRINT("iter->hash 0x%x ?= 0x%x\n", iter->hash, hash);
+        DPRINT("iter->name %S\n", (WCHAR*)((BYTE*)section + iter->name_offset));
         if (iter->hash == hash)
         {
             const WCHAR *nameW = (WCHAR*)((BYTE*)section + iter->name_offset);
@@ -3198,8 +3269,10 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
     struct dllredirect_data *dll;
     struct string_index *index;
 
+    DPRINT("sections: 0x%08X\n", actctx->sections);
     if (!(actctx->sections & DLLREDIRECT_SECTION)) return STATUS_SXS_KEY_NOT_FOUND;
 
+    DPRINT("actctx->dllredirect_section: %p\n", actctx->dllredirect_section);
     if (!actctx->dllredirect_section)
     {
         struct strsection_header *section;
@@ -3212,21 +3285,25 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
     }
 
     index = find_string_index(actctx->dllredirect_section, name);
+    DPRINT("index: %d\n", index);
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    dll = get_dllredirect_data(actctx, index);
+    if (data)
+    {
+        dll = get_dllredirect_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = dll;
-    data->ulLength = dll->size;
-    data->lpSectionGlobalData = NULL;
-    data->ulSectionGlobalDataLength = 0;
-    data->lpSectionBase = actctx->dllredirect_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = dll;
+        data->ulLength = dll->size;
+        data->lpSectionGlobalData = NULL;
+        data->ulSectionGlobalDataLength = 0;
+        data->lpSectionBase = actctx->dllredirect_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -3314,7 +3391,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
 
                     /* setup new index entry */
                     str.Buffer = entity->u.class.name;
-                    str.Length = strlenW(entity->u.class.name)*sizeof(WCHAR);
+                    str.Length = (USHORT)strlenW(entity->u.class.name)*sizeof(WCHAR);
                     str.MaximumLength = str.Length + sizeof(WCHAR);
                     /* hash original class name */
                     RtlHashUnicodeString(&str, TRUE, HASH_STRING_ALGORITHM_X65599, &index->hash);
@@ -3410,7 +3487,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
         {
             const WCHAR *nameW = (WCHAR*)((BYTE*)actctx->wndclass_section + iter->name_offset);
 
-            if (!strcmpW(nameW, name->Buffer))
+            if (!strcmpiW(nameW, name->Buffer))
             {
                 index = iter;
                 break;
@@ -3423,20 +3500,23 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
 
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    class = get_wndclass_data(actctx, index);
+    if (data)
+    {
+        class = get_wndclass_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = class;
-    /* full length includes string length with nulls */
-    data->ulLength = class->size + class->name_len + class->module_len + 2*sizeof(WCHAR);
-    data->lpSectionGlobalData = NULL;
-    data->ulSectionGlobalDataLength = 0;
-    data->lpSectionBase = actctx->wndclass_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = class;
+        /* full length includes string length with nulls */
+        data->ulLength = class->size + class->name_len + class->module_len + 2*sizeof(WCHAR);
+        data->lpSectionGlobalData = NULL;
+        data->ulSectionGlobalDataLength = 0;
+        data->lpSectionBase = actctx->wndclass_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -4478,19 +4558,22 @@ static NTSTATUS find_progid_redirection(ACTIVATION_CONTEXT* actctx, const UNICOD
     index = find_string_index(actctx->progid_section, name);
     if (!index) return STATUS_SXS_KEY_NOT_FOUND;
 
-    progid = get_progid_data(actctx, index);
+    if (data)
+    {
+        progid = get_progid_data(actctx, index);
 
-    data->ulDataFormatVersion = 1;
-    data->lpData = progid;
-    data->ulLength = progid->size;
-    data->lpSectionGlobalData = (BYTE*)actctx->progid_section + actctx->progid_section->global_offset;
-    data->ulSectionGlobalDataLength = actctx->progid_section->global_len;
-    data->lpSectionBase = actctx->progid_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
-    data->hActCtx = NULL;
+        data->ulDataFormatVersion = 1;
+        data->lpData = progid;
+        data->ulLength = progid->size;
+        data->lpSectionGlobalData = (BYTE*)actctx->progid_section + actctx->progid_section->global_offset;
+        data->ulSectionGlobalDataLength = actctx->progid_section->global_len;
+        data->lpSectionBase = actctx->progid_section;
+        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+        data->hActCtx = NULL;
 
-    if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
-        data->ulAssemblyRosterIndex = index->rosterindex;
+        if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
+            data->ulAssemblyRosterIndex = index->rosterindex;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -4503,6 +4586,9 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
 
     switch (section_kind)
     {
+    case ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION:
+        DPRINT1("Unsupported yet section_kind %x\n", section_kind);
+        return STATUS_SXS_KEY_NOT_FOUND;
     case ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION:
         status = find_dll_redirection(actctx, section_name, data);
         break;
@@ -4522,7 +4608,7 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
 
     if (status != STATUS_SUCCESS) return status;
 
-    if (flags & FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    if (data && (flags & FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX))
     {
         actctx_addref(actctx);
         data->hActCtx = actctx;
@@ -4584,6 +4670,11 @@ void actctx_init(void)
 
 /* FUNCTIONS ***************************************************************/
 
+/***********************************************************************
+ * RtlCreateActivationContext (NTDLL.@)
+ *
+ * Create an activation context.
+ */
 NTSTATUS
 NTAPI
 RtlCreateActivationContext(IN ULONG Flags,
@@ -4603,7 +4694,7 @@ RtlCreateActivationContext(IN ULONG Flags,
     HANDLE file = 0;
     struct actctx_loader acl;
 
-    DPRINT("%p %08x\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
+    DPRINT("RtlCreateActivationContext %p %08x, Image Base: %p\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0, ((ACTCTXW*)ActivationContextData)->hModule);
 
     if (!pActCtx || pActCtx->cbSize < sizeof(*pActCtx) ||
         (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL))
@@ -4633,7 +4724,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         if (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID) module = pActCtx->hModule;
         else module = NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress;
 
-        status = get_module_filename(module, &dir, 0);
+        status = get_module_filename( module, &dir, 0 );
         if (!NT_SUCCESS(status)) goto error;
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
@@ -4645,7 +4736,30 @@ RtlCreateActivationContext(IN ULONG Flags,
     if (pActCtx->lpSource && !((pActCtx->dwFlags & ACTCTX_FLAG_RESOURCE_NAME_VALID) &&
                                (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID)))
     {
-        if (!RtlDosPathNameToNtPathName_U(pActCtx->lpSource, &nameW, NULL, NULL))
+        WCHAR *source = NULL;
+        BOOLEAN ret;
+
+        if (pActCtx->dwFlags & ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID &&
+            RtlDetermineDosPathNameType_U(pActCtx->lpSource) == RtlPathTypeRelative)
+        {
+            DWORD dir_len, source_len;
+
+            dir_len = strlenW(pActCtx->lpAssemblyDirectory);
+            source_len = strlenW(pActCtx->lpSource);
+            if (!(source = RtlAllocateHeap( RtlGetProcessHeap(), 0, (dir_len+source_len+2)*sizeof(WCHAR))))
+            {
+                status = STATUS_NO_MEMORY;
+                goto error;
+            }
+
+            memcpy(source, pActCtx->lpAssemblyDirectory, dir_len*sizeof(WCHAR));
+            source[dir_len] = '\\';
+            memcpy(source+dir_len+1, pActCtx->lpSource, (source_len+1)*sizeof(WCHAR));
+        }
+
+        ret = RtlDosPathNameToNtPathName_U(source ? source : pActCtx->lpSource, &nameW, NULL, NULL);
+        if (source) RtlFreeHeap( RtlGetProcessHeap(), 0, source );
+        if (!ret)
         {
             status = STATUS_NO_SUCH_FILE;
             goto error;
@@ -4759,24 +4873,43 @@ RtlReleaseActivationContext( HANDLE handle )
     }
 }
 #else
-VOID
-NTAPI
-RtlAddRefActivationContext( HANDLE handle )
+
+/***********************************************************************
+ *		RtlAddRefActivationContext (NTDLL.@)
+ */
+VOID NTAPI RtlAddRefActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
-    if ((actctx = check_actctx(handle))) actctx_addref(actctx);
+    if ((actctx = check_actctx( handle ))) actctx_addref( actctx );
 }
 
-VOID
-NTAPI
-RtlReleaseActivationContext( HANDLE handle )
+
+/******************************************************************
+ *		RtlReleaseActivationContext (NTDLL.@)
+ */
+VOID NTAPI RtlReleaseActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
-    if ((actctx = check_actctx(handle))) actctx_release(actctx);
+    if ((actctx = check_actctx( handle ))) actctx_release( actctx );
 }
+
 #endif
+
+/******************************************************************
+ *              RtlZombifyActivationContext (NTDLL.@)
+ *
+ */
+NTSTATUS NTAPI RtlZombifyActivationContext(PVOID Context)
+{
+    UNIMPLEMENTED;
+
+    if (Context == ACTCTX_FAKE_HANDLE)
+        return STATUS_SUCCESS;
+
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS
 NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
@@ -4790,6 +4923,10 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
     frame->ActivationContext = handle;
     frame->Flags = 0;
 
+    DPRINT("ActiveSP %p: ACTIVATE (ActiveFrame %p -> NewFrame %p, Context %p)\n",
+        tebAddress->ActivationContextStackPointer, tebAddress->ActivationContextStackPointer->ActiveFrame,
+        frame, handle);
+
     tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
 
@@ -4798,16 +4935,18 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
+/******************************************************************
+ *		RtlActivateActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
 {
     return RtlActivateActivationContextEx(flags, NtCurrentTeb(), handle, cookie);
 }
 
-NTSTATUS
-NTAPI
-RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
+/***********************************************************************
+ *		RtlDeactivateActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
@@ -4823,6 +4962,11 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 
     if (frame != top && !(flags & RTL_DEACTIVATE_ACTIVATION_CONTEXT_FLAG_FORCE_EARLY_DEACTIVATION))
         RtlRaiseStatus( STATUS_SXS_EARLY_DEACTIVATION );
+
+    DPRINT("ActiveSP %p: DEACTIVATE (ActiveFrame %p -> PreviousFrame %p)\n",
+        NtCurrentTeb()->ActivationContextStackPointer,
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame,
+        frame->Previous);
 
     /* pop everything up to and including frame */
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
@@ -4869,16 +5013,20 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
     RtlFreeHeap(RtlGetProcessHeap(), 0, Stack);
 }
 
-VOID
-NTAPI RtlFreeThreadActivationContextStack(VOID)
+/******************************************************************
+ *		RtlFreeThreadActivationContextStack (NTDLL.@)
+ */
+VOID NTAPI RtlFreeThreadActivationContextStack(VOID)
 {
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
 }
 
 
-NTSTATUS
-NTAPI RtlGetActiveActivationContext( HANDLE *handle )
+/******************************************************************
+ *		RtlGetActiveActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlGetActiveActivationContext( HANDLE *handle )
 {
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
@@ -4892,8 +5040,10 @@ NTAPI RtlGetActiveActivationContext( HANDLE *handle )
 }
 
 
-BOOLEAN
-NTAPI RtlIsActivationContextActive( HANDLE handle )
+/******************************************************************
+ *		RtlIsActivationContextActive (NTDLL.@)
+ */
+BOOLEAN NTAPI RtlIsActivationContextActive( HANDLE handle )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
@@ -4902,11 +5052,16 @@ NTAPI RtlIsActivationContextActive( HANDLE handle )
     return FALSE;
 }
 
-NTSTATUS
-NTAPI
-RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
-                                      ULONG class, PVOID buffer,
-                                      SIZE_T bufsize, SIZE_T *retlen )
+
+/***********************************************************************
+ *		RtlQueryInformationActivationContext (NTDLL.@)
+ *
+ * Get information about an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
+NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
+                                                     ULONG class, PVOID buffer,
+                                                     SIZE_T bufsize, SIZE_T *retlen )
 {
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
@@ -5149,45 +5304,67 @@ RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
-                                       const UNICODE_STRING *section_name, PVOID ptr )
+/***********************************************************************
+ *		RtlFindActivationContextSectionString (NTDLL.@)
+ *
+ * Find information about a string in an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
+NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
+                                                      const UNICODE_STRING *section_name, PVOID ptr )
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status;
 
+    DPRINT("RtlFindActivationContextSectionString(%x %p %x %wZ %p)\n", flags, guid, section_kind, section_name, ptr);
     status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
-    if (!NT_SUCCESS(status)) return status;
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("RtlFindActivationContextSectionString() failed with status %x\n", status);
+        return status;
+    }
 
     status = STATUS_SXS_KEY_NOT_FOUND;
 
     /* if there is no data, but params are valid,
        we return that sxs key is not found to be at least somehow compatible */
-    if (!data) return status;
+    if (!data)
+    {
+        DPRINT("RtlFindActivationContextSectionString() failed with status %x\n", status);
+        return status;
+    }
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
 
+    DPRINT("ActiveFrame: %p\n",NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame);
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
         ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
         if (actctx) status = find_string( actctx, section_kind, section_name, flags, data );
     }
 
+    DPRINT("status %x\n", status);
     if (status != STATUS_SUCCESS)
         status = find_string( process_actctx, section_kind, section_name, flags, data );
 
+    DPRINT("RtlFindActivationContextSectionString() returns status %x\n", status);
     return status;
 }
 
+/***********************************************************************
+ *		RtlFindActivationContextSectionGuid (NTDLL.@)
+ *
+ * Find information about a GUID in an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
 NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *extguid, ULONG section_kind,
                                                      const GUID *guid, void *ptr )
 {
-   ACTCTX_SECTION_KEYED_DATA *data = ptr;
-   NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    ACTCTX_SECTION_KEYED_DATA *data = ptr;
+    NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
-   if (extguid)
+    if (extguid)
     {
         DPRINT1("expected extguid == NULL\n");
         return STATUS_INVALID_PARAMETER;
@@ -5201,7 +5378,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (!data || data->cbSize < FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) || !guid)
         return STATUS_INVALID_PARAMETER;
-    
+
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
         ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
@@ -5249,91 +5426,129 @@ FASTCALL
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
-#if NEW_NTDLL_LOADER
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *NewFrame;
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
 
-    /* Get the curren active frame */
+    /* Get the current active frame */
     ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    DPRINT1("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
+    DPRINT("ActiveSP %p: ACTIVATE (ActiveFrame %p -> NewFrame %p, Context %p)\n",
+        NtCurrentTeb()->ActivationContextStackPointer, ActiveFrame,
+        &Frame->Frame, Context);
+
+    /* Ensure it's in the right format and at least fits basic info */
+    ASSERT(Frame->Format == RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER);
+    ASSERT(Frame->Size >= sizeof(RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_BASIC));
+
+    /* Set debug info if size allows*/
+    if (Frame->Size >= sizeof(RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED))
+    {
+        Frame->Extra1 = (PVOID)(~(ULONG_PTR)ActiveFrame);
+        Frame->Extra2 = (PVOID)(~(ULONG_PTR)Context);
+        //Frame->Extra3 = ...;
+    }
+
+    if (ActiveFrame)
+    {
+        /*ASSERT((ActiveFrame->Flags &
+            (RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED |
+             RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED |
+             RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_NOT_REALLY_ACTIVATED)) == RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED);*/
+
+        if (!(ActiveFrame->Flags & RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_HEAP_ALLOCATED))
+        {
+            // TODO: Perform some additional checks if it was not heap allocated
+        }
+    }
+
+    /* Save pointer to the new activation frame */
+    NewFrame = &Frame->Frame;
 
     /* Actually activate it */
     Frame->Frame.Previous = ActiveFrame;
     Frame->Frame.ActivationContext = Context;
-    Frame->Frame.Flags = 0;
+    Frame->Frame.Flags = RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED;
 
     /* Check if we can activate this context */
     if ((ActiveFrame && (ActiveFrame->ActivationContext != Context)) ||
         Context)
     {
         /* Set new active frame */
-        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
-        return &Frame->Frame;
+        DPRINT("Setting new active frame %p instead of old %p\n", NewFrame, ActiveFrame);
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NewFrame;
+        return NewFrame;
     }
 
     /* We can get here only one way: it was already activated */
-    DPRINT1("Trying to activate improper activation context\n");
+    DPRINT("Trying to activate already activated activation context\n");
 
     /* Activate only if we are allowing multiple activation */
+#if 0
     if (!RtlpNotAllowingMultipleActivation)
     {
-        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
+        Frame->Frame.Flags = RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED | RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_NOT_REALLY_ACTIVATED;
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NewFrame;
     }
-    else
-    {
-        /* Set flag */
-        Frame->Frame.Flags = 0x30;
-    }
+#else
+    // Activate it anyway
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NewFrame;
+#endif
 
     /* Return pointer to the activation frame */
-    return &Frame->Frame;
-#else
-
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
-
-    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
-    frame->ActivationContext = Context;
-    frame->Flags = 0;
-
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
-
-    return STATUS_SUCCESS;
-#endif
+    return NewFrame;
 }
 
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME
 FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
-    //RTL_ACTIVATION_CONTEXT_STACK_FRAME *top;
+    PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame, NewFrame;
 
-    /* find the right frame */
-    //top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
-    frame = &Frame->Frame;
+    ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    if (!frame)
+    /* Ensure it's in the right format and at least fits basic info */
+    ASSERT(Frame->Format == RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER);
+    ASSERT(Frame->Size >= sizeof(RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_BASIC));
+
+    /* Make sure it is not deactivated and it is activated */
+    ASSERT((Frame->Frame.Flags & RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED) == 0);
+    ASSERT(Frame->Frame.Flags & RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED);
+    ASSERT((Frame->Frame.Flags & (RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED | RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED)) == RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED);
+
+    /* Check debug info if it is present */
+    if (Frame->Size >= sizeof(RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED))
     {
-        DPRINT1("No top frame!\n");
-        RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
+        ASSERT(Frame->Extra1 == (PVOID)(~(ULONG_PTR)Frame->Frame.Previous));
+        ASSERT(Frame->Extra2 == (PVOID)(~(ULONG_PTR)Frame->Frame.ActivationContext));
+        //Frame->Extra3 = ...;
     }
 
-    /* pop everything up to and including frame */
-    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
+    if (ActiveFrame)
+    {
+        // TODO: Perform some additional checks here
+    }
 
-    return frame;
+    /* Special handling for not-really-activated */
+    if (Frame->Frame.Flags & RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_NOT_REALLY_ACTIVATED)
+    {
+        DPRINT1("Deactivating not really activated activation context\n");
+        Frame->Frame.Flags |= RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED;
+        return &Frame->Frame;
+    }
+
+    /* find the right frame */
+    NewFrame = &Frame->Frame;
+    if (ActiveFrame != NewFrame)
+    {
+        DPRINT1("Deactivating wrong active frame: %p != %p\n", ActiveFrame, NewFrame);
+    }
+
+    DPRINT("ActiveSP %p: DEACTIVATE (ActiveFrame %p -> PreviousFrame %p)\n",
+        NtCurrentTeb()->ActivationContextStackPointer, NewFrame, NewFrame->Previous);
+
+    /* Pop everything up to and including frame */
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = NewFrame->Previous;
+
+    Frame->Frame.Flags |= RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED;
+    return NewFrame->Previous;
 }
-
-
-NTSTATUS
-NTAPI
-RtlZombifyActivationContext(PVOID Context)
-{
-    UNIMPLEMENTED;
-
-    if (Context == ACTCTX_FAKE_HANDLE)
-        return STATUS_SUCCESS;
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-

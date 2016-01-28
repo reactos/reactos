@@ -103,7 +103,7 @@ static HRESULT WINAPI IEHTMLWindow2_Invoke(IHTMLWindow2 *iface, DISPID dispIdMem
 static HRESULT WINAPI IEHTMLWindow2_item(IHTMLWindow2 *iface, VARIANT *pvarIndex, VARIANT *pvarResult)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%p %p)\n", This, pvarIndex, pvarResult);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_variant(pvarIndex), pvarResult);
     return E_NOTIMPL;
 }
 
@@ -153,7 +153,7 @@ static HRESULT WINAPI IEHTMLWindow2_setTimeout(IHTMLWindow2 *iface, BSTR express
         LONG msec, VARIANT *language, LONG *timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s %d %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
+    FIXME("(%p)->(%s %d %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
     return E_NOTIMPL;
 }
 
@@ -223,7 +223,7 @@ static HRESULT WINAPI IEHTMLWindow2_close(IHTMLWindow2 *iface)
 static HRESULT WINAPI IEHTMLWindow2_put_opener(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -302,7 +302,7 @@ static HRESULT WINAPI IEHTMLWindow2_navigate(IHTMLWindow2 *iface, BSTR url)
 static HRESULT WINAPI IEHTMLWindow2_put_onfocus(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -316,7 +316,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onfocus(IHTMLWindow2 *iface, VARIANT *p)
 static HRESULT WINAPI IEHTMLWindow2_put_onblur(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -344,7 +344,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onload(IHTMLWindow2 *iface, VARIANT *p)
 static HRESULT WINAPI IEHTMLWindow2_put_onbeforeunload(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -358,7 +358,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onbeforeunload(IHTMLWindow2 *iface, VARI
 static HRESULT WINAPI IEHTMLWindow2_put_onunload(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -372,7 +372,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onunload(IHTMLWindow2 *iface, VARIANT *p
 static HRESULT WINAPI IEHTMLWindow2_put_onhelp(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -386,7 +386,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onhelp(IHTMLWindow2 *iface, VARIANT *p)
 static HRESULT WINAPI IEHTMLWindow2_put_onerror(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -414,7 +414,7 @@ static HRESULT WINAPI IEHTMLWindow2_get_onresize(IHTMLWindow2 *iface, VARIANT *p
 static HRESULT WINAPI IEHTMLWindow2_put_onscroll(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -450,7 +450,8 @@ static HRESULT WINAPI IEHTMLWindow2_showModalDialog(IHTMLWindow2 *iface, BSTR di
         VARIANT *varArgIn, VARIANT *varOptions, VARIANT *varArgOut)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s %p %p %p)\n", This, debugstr_w(dialog), varArgIn, varOptions, varArgOut);
+    FIXME("(%p)->(%s %s %s %p)\n", This, debugstr_w(dialog), debugstr_variant(varArgIn),
+        debugstr_variant(varOptions), varArgOut);
     return E_NOTIMPL;
 }
 
@@ -458,7 +459,7 @@ static HRESULT WINAPI IEHTMLWindow2_showHelp(IHTMLWindow2 *iface, BSTR helpURL, 
         BSTR features)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s v(%d) %s)\n", This, debugstr_w(helpURL), V_VT(&helpArg), debugstr_w(features));
+    FIXME("(%p)->(%s %s %s)\n", This, debugstr_w(helpURL), debugstr_variant(&helpArg), debugstr_w(features));
     return E_NOTIMPL;
 }
 
@@ -515,7 +516,7 @@ static HRESULT WINAPI IEHTMLWindow2_setInterval(IHTMLWindow2 *iface, BSTR expres
         LONG msec, VARIANT *language, LONG *timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s %d %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
+    FIXME("(%p)->(%s %d %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
     return E_NOTIMPL;
 }
 
@@ -529,7 +530,7 @@ static HRESULT WINAPI IEHTMLWindow2_clearInterval(IHTMLWindow2 *iface, LONG time
 static HRESULT WINAPI IEHTMLWindow2_put_offscreenBuffering(IHTMLWindow2 *iface, VARIANT v)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 

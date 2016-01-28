@@ -177,7 +177,7 @@ PspReapRoutine(IN PVOID Context)
     do
     {
         /* Write magic value and return the next entry to process */
-        NextEntry = InterlockedExchangePointer(&PspReaperListHead.Flink,
+        NextEntry = InterlockedExchangePointer((PVOID*)&PspReaperListHead.Flink,
                                                (PVOID)1);
         ASSERT((NextEntry != NULL) && (NextEntry != (PVOID)1));
 
@@ -200,7 +200,7 @@ PspReapRoutine(IN PVOID Context)
         } while ((NextEntry != NULL) && (NextEntry != (PVOID)1));
 
         /* Remove magic value, keep looping if it got changed */
-    } while (InterlockedCompareExchangePointer(&PspReaperListHead.Flink,
+    } while (InterlockedCompareExchangePointer((PVOID*)&PspReaperListHead.Flink,
                                                0,
                                                (PVOID)1) != (PVOID)1);
 }
@@ -208,7 +208,7 @@ PspReapRoutine(IN PVOID Context)
 #if DBG
 VOID
 NTAPI
-PspCheckProcessList()
+PspCheckProcessList(VOID)
 {
     PLIST_ENTRY Entry;
 
@@ -696,11 +696,11 @@ PspExitThread(IN NTSTATUS ExitStatus)
          * port, which means that it died before being fully created. Since we
          * still have to notify an LPC Server, we'll use the exception port,
          * which we know exists. However, we need to know how far the thread
-         * actually got created. We have three possibilites:
+         * actually got created. We have three possibilities:
          *
          *  - NtCreateThread returned an error really early: DeadThread is set.
          *  - NtCreateThread managed to create the thread: DeadThread is off.
-         *  - NtCreateThread was creating the thread (with Deadthread set,
+         *  - NtCreateThread was creating the thread (with DeadThread set,
          *    but the thread got killed prematurely: STATUS_THREAD_IS_TERMINATING
          *    is our exit code.)
          *
@@ -709,6 +709,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
          */
 
         /* Setup the message header */
+        TerminationMsg.h.u2.ZeroInit = 0;
         TerminationMsg.h.u2.s2.Type = LPC_CLIENT_DIED;
         TerminationMsg.h.u1.s1.TotalLength = sizeof(TerminationMsg);
         TerminationMsg.h.u1.s1.DataLength = sizeof(TerminationMsg) -
@@ -1065,7 +1066,7 @@ BOOLEAN
 NTAPI
 PspIsProcessExiting(IN PEPROCESS Process)
 {
-	return Process->Flags & PSF_PROCESS_EXITING_BIT;
+    return Process->Flags & PSF_PROCESS_EXITING_BIT;
 }
 
 VOID
@@ -1202,7 +1203,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     if (!ExAcquireRundownProtection(&Process->RundownProtect))
     {
         /* Failed to lock, fail */
-        ObDereferenceObject (Process);
+        ObDereferenceObject(Process);
         return STATUS_PROCESS_IS_TERMINATING;
     }
 
@@ -1372,6 +1373,6 @@ NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
     }
 
     /* Dereference and Fail */
-    ObDereferenceObject(TerminationPort);
+    ObDereferenceObject(TerminationLpcPort);
     return STATUS_INSUFFICIENT_RESOURCES;
 }

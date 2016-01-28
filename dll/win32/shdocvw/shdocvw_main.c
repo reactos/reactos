@@ -64,7 +64,7 @@ static HRESULT get_ieframe_object(REFCLSID rclsid, REFIID riid, void **ppv)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 {
-    TRACE("\n");
+    TRACE("(%s %s %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
     if(IsEqualGUID(&CLSID_WebBrowser, rclsid)
        || IsEqualGUID(&CLSID_WebBrowser_V1, rclsid)
@@ -132,7 +132,8 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     TRACE("%p 0x%x %p\n", hinst, fdwReason, fImpLoad);
     switch (fdwReason)
     {
-        case DLL_PROCESS_ATTACH:
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinst);
         break;
     case DLL_PROCESS_DETACH:
         if (fImpLoad) break;
@@ -243,9 +244,9 @@ DWORD WINAPI RunInstallUninstallStubs(void)
  *
  * Called by Emerge Desktop (alternative Windows Shell).
  */
-DWORD WINAPI RunInstallUninstallStubs2(void)
+DWORD WINAPI RunInstallUninstallStubs2(int arg)
 {
-    FIXME("(), stub!\n");
+    FIXME("(%d), stub!\n", arg);
     return 0x0deadbee;
 }
 
@@ -303,12 +304,12 @@ void WINAPI StopWatchFlushFORWARD(void)
 }
 
 /******************************************************************
- *		StopWatchWFORWARD            (SHDOCVW.@)
+ *		StopWatchAFORWARD            (SHDOCVW.@)
  */
-DWORD WINAPI StopWatchWFORWARD(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
+DWORD WINAPI StopWatchAFORWARD(DWORD dwClass, LPCSTR lpszStr, DWORD dwUnknown,
                                DWORD dwMode, DWORD dwTimeStamp)
 {
-    static DWORD (WINAPI *p)(DWORD, LPCWSTR, DWORD, DWORD, DWORD);
+    static DWORD (WINAPI *p)(DWORD, LPCSTR, DWORD, DWORD, DWORD);
 
     if (p || (p = fetch_shlwapi_ordinal(243)))
         return p(dwClass, lpszStr, dwUnknown, dwMode, dwTimeStamp);
@@ -316,12 +317,12 @@ DWORD WINAPI StopWatchWFORWARD(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
 }
 
 /******************************************************************
- *		StopWatchAFORWARD            (SHDOCVW.@)
+ *		StopWatchWFORWARD            (SHDOCVW.@)
  */
-DWORD WINAPI StopWatchAFORWARD(DWORD dwClass, LPCSTR lpszStr, DWORD dwUnknown,
+DWORD WINAPI StopWatchWFORWARD(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
                                DWORD dwMode, DWORD dwTimeStamp)
 {
-    static DWORD (WINAPI *p)(DWORD, LPCSTR, DWORD, DWORD, DWORD);
+    static DWORD (WINAPI *p)(DWORD, LPCWSTR, DWORD, DWORD, DWORD);
 
     if (p || (p = fetch_shlwapi_ordinal(244)))
         return p(dwClass, lpszStr, dwUnknown, dwMode, dwTimeStamp);
@@ -364,8 +365,7 @@ DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, L
     HRESULT hr;
     DWORD needed;
     DWORD len;
-    DWORD res = 0;
-
+    DWORD res;
 
     TRACE("(%s, %p, %p, %p) len: %d, unknown: 0x%x\n", debugstr_w(url), out, plen, unknown,
             plen ? *plen : 0, unknown ? *unknown : 0);
@@ -391,10 +391,12 @@ DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, L
     needed = lstrlenW(buffer_out)+1;
     TRACE("got 0x%x with %s (need %d)\n", hr, debugstr_w(buffer_out), needed);
 
+    res = 0;
     if (*plen >= needed) {
         if (out != NULL) {
             lstrcpyW(out, buffer_out);
-            res++;
+            /* On success, 1 is returned for unicode version */
+            res = 1;
         }
         needed--;
     }
@@ -437,6 +439,7 @@ DWORD WINAPI ParseURLFromOutsideSourceA(LPCSTR url, LPSTR out, LPDWORD plen, LPD
     if (*plen >= needed) {
         if (out != NULL) {
             WideCharToMultiByte(CP_ACP, 0, buffer, -1, out, *plen, NULL, NULL);
+            /* On success, string size including terminating 0 is returned for ansi version */
             res = needed;
         }
         needed--;
@@ -518,4 +521,30 @@ BOOL WINAPI ImportPrivacySettings(LPCWSTR filename, BOOL *pGlobalPrefs, BOOL * p
     if (pPerSitePrefs) *pPerSitePrefs = FALSE;
 
     return TRUE;
+}
+
+/******************************************************************
+ * ResetProfileSharing (SHDOCVW.164)
+ */
+HRESULT WINAPI ResetProfileSharing(HWND hwnd)
+{
+    FIXME("(%p) stub\n", hwnd);
+    return E_NOTIMPL;
+}
+
+/******************************************************************
+ * InstallReg_RunDLL (SHDOCVW.@)
+ */
+void WINAPI InstallReg_RunDLL(HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show)
+{
+    FIXME("(%p %p %s %x)\n", hwnd, handle, debugstr_a(cmdline), show);
+}
+
+/******************************************************************
+ * DoFileDownload (SHDOCVW.@)
+ */
+BOOL WINAPI DoFileDownload(LPWSTR filename)
+{
+    FIXME("(%s) stub\n", debugstr_w(filename));
+    return FALSE;
 }

@@ -2,16 +2,16 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ημερομηνία && Ώρα"
+CAPTION "Ξ—ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ± && ΞΟΞ±"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Ημερομηνία", -1, 4, 2, 122, 125
+    GROUPBOX "&Ξ—ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ±", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT, 65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 120, 17, 50, 12
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&Ώρα", -1, 132, 2, 113, 125
+    GROUPBOX "&ΞΟΞ±", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 144, 105, 90, 12
     LTEXT "", IDC_TIMEZONE, 6, 132, 242, 11
     CONTROL "", IDC_CLOCKWND, "ClockWndClass", WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
@@ -19,12 +19,12 @@ END
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Χρονική ζώνη"
+CAPTION "Ξ§ΟΞΏΞ½ΞΉΞΊΞ® Ξ¶ΟΞ½Ξ·"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Αυτόματη ρύθμιση ρολογιού για &αλλαγές",
+    AUTOCHECKBOX "Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ· ΟΟΞΈΞΌΞΉΟƒΞ· ΟΞΏΞ»ΞΏΞ³ΞΉΞΏΟ Ξ³ΞΉΞ± &Ξ±Ξ»Ξ»Ξ±Ξ³Ξ­Ο‚",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -45,11 +45,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Ημερομηνία/Ώρα"
-    IDS_CPLDESCRIPTION "Αλλάζει την ημερομηνία, την ώρα και τη χρονική ζώνη."
-    IDS_TIMEZONETEXT "Τωρινή χρονική ζώνη: %s"
-    IDS_TIMEZONEINVALID "Μη έγγυρο"
-    IDS_TIMEZONEUNKNOWN "Άγνωστο"
+    IDS_CPLNAME "Ξ—ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ±/ΞΟΞ±"
+    IDS_CPLDESCRIPTION "Ξ‘Ξ»Ξ»Ξ¬Ξ¶ΞµΞΉ Ο„Ξ·Ξ½ Ξ·ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ±, Ο„Ξ·Ξ½ ΟΟΞ± ΞΊΞ±ΞΉ Ο„Ξ· Ο‡ΟΞΏΞ½ΞΉΞΊΞ® Ξ¶ΟΞ½Ξ·."
+    IDS_TIMEZONETEXT "Ξ¤Ο‰ΟΞΉΞ½Ξ® Ο‡ΟΞΏΞ½ΞΉΞΊΞ® Ξ¶ΟΞ½Ξ·: %s"
+    IDS_TIMEZONEINVALID "ΞΞ· Ξ­Ξ³Ξ³Ο…ΟΞΏ"
+    IDS_TIMEZONEUNKNOWN "Ξ†Ξ³Ξ½Ο‰ΟƒΟ„ΞΏ"
     IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
     IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"

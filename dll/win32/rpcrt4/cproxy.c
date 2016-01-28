@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * 
+ *
  * TODO: Handle non-i386 architectures
  */
 
@@ -148,6 +148,30 @@ static inline void init_thunk( struct thunk *thunk, unsigned int index )
     *thunk = thunk_template;
     thunk->index = index;
     thunk->call_stubless = call_stubless_func;
+}
+
+#elif defined(__arm__)
+
+extern void call_stubless_func(void);
+__ASM_GLOBAL_FUNC(call_stubless_func,
+                  "DCD 0xDEFC\n\t" // _assertfail
+                  "" );
+
+#include "pshpack1.h"
+struct thunk
+{
+    DWORD assertfail;
+};
+#include "poppack.h"
+
+static const struct thunk thunk_template =
+{
+    { 0xDEFC }            /* _assertfail */
+};
+
+static inline void init_thunk( struct thunk *thunk, unsigned int index )
+{
+    *thunk = thunk_template;
 }
 
 #else  /* __i386__ */

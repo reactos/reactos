@@ -148,9 +148,9 @@ FT_BEGIN_HEADER
     int            nprops;
     PCF_Property   properties;
 
-    FT_Long        nmetrics;
+    FT_ULong       nmetrics;
     PCF_Metric     metrics;
-    FT_Long        nencodings;
+    FT_ULong       nencodings;
     PCF_Encoding   encodings;
 
     FT_Short       defaultChar;
@@ -226,8 +226,9 @@ FT_BEGIN_HEADER
 #define GLYPHPADOPTIONS  4 /* I'm not sure about this */
 
   FT_LOCAL( FT_Error )
-  pcf_load_font( FT_Stream,
-                 PCF_Face );
+  pcf_load_font( FT_Stream  stream,
+                 PCF_Face   face,
+                 FT_Long    face_index );
 
 FT_END_HEADER
 

@@ -583,6 +583,7 @@ static int get_token( const WCHAR *s, int *token )
     {
     case ' ':
     case '\t':
+    case '\r':
     case '\n':
         for (i = 1; isspaceW( s[i] ); i++) {}
         *token = TK_SPACE;

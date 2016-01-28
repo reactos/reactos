@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/i386/wlmemory.c
+ * FILE:            boot/freeldr/freeldr/arch/i386/winldr.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
@@ -17,7 +17,7 @@
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 
-#define HYPER_SPACE_ENTRY       0x300
+#define SELFMAP_ENTRY       0x300
 
 // This is needed only for SetProcessorContext routine
 #pragma pack(2)
@@ -47,7 +47,7 @@ PVOID GdtIdt;
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
-MempAllocatePageTables()
+MempAllocatePageTables(VOID)
 {
     ULONG NumPageTables, TotalSize;
     PUCHAR Buffer;
@@ -93,9 +93,9 @@ MempAllocatePageTables()
     PDE = (PHARDWARE_PTE)Buffer;
 
     // Map the page directory at 0xC0000000 (maps itself)
-    PDE[HYPER_SPACE_ENTRY].PageFrameNumber = (ULONG)PDE >> MM_PAGE_SHIFT;
-    PDE[HYPER_SPACE_ENTRY].Valid = 1;
-    PDE[HYPER_SPACE_ENTRY].Write = 1;
+    PDE[SELFMAP_ENTRY].PageFrameNumber = (ULONG)PDE >> MM_PAGE_SHIFT;
+    PDE[SELFMAP_ENTRY].Valid = 1;
+    PDE[SELFMAP_ENTRY].Write = 1;
 
     // The last PDE slot is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF)
     HalPageTable = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
@@ -204,8 +204,8 @@ MempUnmapPage(PFN_NUMBER Page)
     PHARDWARE_PTE KernelPT;
     PFN_NUMBER Entry = (Page >> 10) + (KSEG0_BASE >> 22);
 
-    /* Don't unmap hyperspace or HAL entries */
-    if (Entry == HYPER_SPACE_ENTRY || Entry == 1023)
+    /* Don't unmap page directory or HAL entries */
+    if (Entry == SELFMAP_ENTRY || Entry == 1023)
         return;
 
     if (PDE[Entry].Valid)
@@ -222,7 +222,7 @@ MempUnmapPage(PFN_NUMBER Page)
 }
 
 VOID
-WinLdrpMapApic()
+WinLdrpMapApic(VOID)
 {
     BOOLEAN LocalAPIC;
     LARGE_INTEGER MsrValue;
@@ -297,7 +297,7 @@ enum
     UltraVision_8x10Font = 0x12,
 };
 
-void WinLdrSetupSpecialDataPointers()
+void WinLdrSetupSpecialDataPointers(VOID)
 {
     REGS BiosRegs;
 
@@ -365,7 +365,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (Pcr == 0)
     {
-        UiMessageBox("Can't allocate PCR\n");
+        UiMessageBox("Can't allocate PCR.");
         return;
     }
 
@@ -384,7 +384,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (GdtIdt == NULL)
     {
-        UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+        UiMessageBox("Can't allocate pages for GDT+IDT!");
         return;
     }
 
@@ -670,7 +670,7 @@ WinLdrSetProcessorContext(void)
 
 #if DBG
 VOID
-MempDump()
+MempDump(VOID)
 {
     ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
     int i, j;

@@ -370,7 +370,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG StringLength;
-    PWCHAR StringBuffer = NULL;
+    PWCHAR _SEH2_VOLATILE StringBuffer = NULL;
     UNICODE_STRING LocalName;
     PAGED_CODE();
 
@@ -474,7 +474,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
             /* Validate the Size and Attributes */
             if ((ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES)) ||
-                (ObjectAttributes->Attributes & ~OBJ_VALID_ATTRIBUTES))
+                (ObjectAttributes->Attributes & ~OBJ_VALID_KERNEL_ATTRIBUTES))
             {
                 /* Invalid combination, fail */
                 _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
@@ -482,7 +482,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
             /* Set some Create Info and do not allow user-mode kernel handles */
             ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
-            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes & OBJ_VALID_ATTRIBUTES;
+            ObjectCreateInfo->Attributes = ObjectAttributes->Attributes & OBJ_VALID_KERNEL_ATTRIBUTES;
             if (CreatorMode != KernelMode) ObjectCreateInfo->Attributes &= ~OBJ_KERNEL_HANDLE;
             LocalObjectName = ObjectAttributes->ObjectName;
             SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
@@ -491,7 +491,8 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
             /* Check if we have a security descriptor */
             if (SecurityDescriptor)
             {
-                /* Capture it */
+                /* Capture it. Note: This has an implicit memory barrier due
+                   to the function call, so cleanup is safe here.) */
                 Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                                      AccessMode,
                                                      NonPagedPool,
@@ -730,10 +731,10 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         /* Check if this is a call with the special protection flag */
         if ((PreviousMode == KernelMode) &&
             (ObjectCreateInfo) &&
-            (ObjectCreateInfo->Attributes & 0x10000))
+            (ObjectCreateInfo->Attributes & OBJ_KERNEL_EXCLUSIVE))
         {
             /* Set flag which will make the object protected from user-mode */
-            NameInfo->QueryReferences |= 0x40000000;
+            NameInfo->QueryReferences |= OB_FLAG_KERNEL_EXCLUSIVE;
         }
 
         /* Set the header pointer */
@@ -1040,7 +1041,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         (TypeName->Length % sizeof(WCHAR)) ||
         !(ObjectTypeInitializer) ||
         (ObjectTypeInitializer->Length != sizeof(*ObjectTypeInitializer)) ||
-        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_ATTRIBUTES) ||
+        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_KERNEL_ATTRIBUTES) ||
         (ObjectTypeInitializer->MaintainHandleCount &&
          (!(ObjectTypeInitializer->OpenProcedure) &&
           !ObjectTypeInitializer->CloseProcedure)) ||
@@ -1244,7 +1245,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Set the index and the entry into the object type array */
     LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;
 
-    NT_ASSERT(LocalObjectType->Index != 0);
+    ASSERT(LocalObjectType->Index != 0);
 
     if (LocalObjectType->Index < 32)
     {

@@ -453,6 +453,7 @@ NtRequestPort(IN HANDLE PortHandle,
     PLPCP_MESSAGE Message;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD Thread = PsGetCurrentThread();
+    PORT_MESSAGE CapturedLpcRequest;
 
     PAGED_CODE();
 
@@ -462,15 +463,37 @@ NtRequestPort(IN HANDLE PortHandle,
              LpcRequest,
              LpcpGetMessageType(LpcRequest));
 
+    /* Check if the call comes from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe and capture the LpcRequest */
+            ProbeForRead(LpcRequest, sizeof(PORT_MESSAGE), sizeof(ULONG));
+            ProbeForRead(LpcRequest, LpcRequest->u1.s1.TotalLength, sizeof(ULONG));
+            CapturedLpcRequest = *LpcRequest;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Access the LpcRequest directly */
+        CapturedLpcRequest = *LpcRequest;
+    }
+
     /* Get the message type */
-    MessageType = LpcRequest->u2.s2.Type | LPC_DATAGRAM;
+    MessageType = CapturedLpcRequest.u2.s2.Type | LPC_DATAGRAM;
 
     /* Can't have data information on this type of call */
-    if (LpcRequest->u2.s2.DataInfoOffset) return STATUS_INVALID_PARAMETER;
+    if (CapturedLpcRequest.u2.s2.DataInfoOffset) return STATUS_INVALID_PARAMETER;
 
     /* Validate the length */
-    if (((ULONG)LpcRequest->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
-         (ULONG)LpcRequest->u1.s1.TotalLength)
+    if (((ULONG)CapturedLpcRequest.u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
+         (ULONG)CapturedLpcRequest.u1.s1.TotalLength)
     {
         /* Fail */
         return STATUS_INVALID_PARAMETER;
@@ -486,8 +509,8 @@ NtRequestPort(IN HANDLE PortHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate the message length */
-    if (((ULONG)LpcRequest->u1.s1.TotalLength > Port->MaxMessageLength) ||
-        ((ULONG)LpcRequest->u1.s1.TotalLength <= (ULONG)LpcRequest->u1.s1.DataLength))
+    if (((ULONG)CapturedLpcRequest.u1.s1.TotalLength > Port->MaxMessageLength) ||
+        ((ULONG)CapturedLpcRequest.u1.s1.TotalLength <= (ULONG)CapturedLpcRequest.u1.s1.DataLength))
     {
         /* Fail */
         ObDereferenceObject(Port);
@@ -729,7 +752,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             DPRINT1("Got exception\n");
-            return _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -743,6 +766,9 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             return Status;
         }
     }
+
+    /* This flag is undocumented. Remove it before continuing */
+    LocalLpcRequest.u2.s2.Type &= ~0x4000;
 
     /* Check if this is an LPC Request */
     if (LpcpGetMessageType(&LocalLpcRequest) == LPC_REQUEST)
@@ -767,7 +793,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     MessageType = LocalLpcRequest.u2.s2.Type;
 
     /* Due to the above probe, we know that TotalLength is positive */
-    NT_ASSERT(LocalLpcRequest.u1.s1.TotalLength >= 0);
+    ASSERT(LocalLpcRequest.u1.s1.TotalLength >= 0);
 
     /* Validate the length */
     if ((((ULONG)(USHORT)LocalLpcRequest.u1.s1.DataLength + sizeof(PORT_MESSAGE)) >

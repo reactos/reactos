@@ -1,7 +1,7 @@
 /*
  * PROJECT:    ReactOS find command
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/cmdutils/find/lang/lt-LT.rc
+ * FILE:       base/applications/findstr/lang/lt-LT.rc
  * PURPOSE:    Lithuanian Language File
  * TRANSLATOR: Vytis "CMan" Girdžijauskas (cman@cman.us)
  * DATE:       2007-09-23

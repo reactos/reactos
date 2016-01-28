@@ -12,12 +12,14 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
 #endif
 
+#define ADDR_TO_PDE_OFFSET MiAddressToPdeOffset
+#define ADDR_TO_PAGE_TABLE(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
 
 /* GLOBALS *****************************************************************/
 
@@ -43,6 +45,8 @@
 
 #define PTE_TO_PFN(X)  ((X) >> PAGE_SHIFT)
 #define PFN_TO_PTE(X)  ((X) << PAGE_SHIFT)
+
+#define PAGE_MASK(x)		((x)&(~0xfff))
 
 const
 ULONG
@@ -358,7 +362,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
                        BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -369,8 +373,8 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     ULONG Pte;
     PULONG Pt;
 
-    DPRINT("MmDeleteVirtualMapping(%p, %p, %u, %p, %p)\n",
-           Process, Address, FreePage, WasDirty, Page);
+    DPRINT("MmDeleteVirtualMapping(%p, %p, %p, %p)\n",
+           Process, Address, WasDirty, Page);
 
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
 
@@ -410,12 +414,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 		}
 
         Pfn = PTE_TO_PFN(Pte);
-
-        if (FreePage)
-        {
-            MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
-            Pfn = 0;
-        }
     }
     else
     {

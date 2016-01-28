@@ -22,8 +22,8 @@
 #define __MINGW32_MAJOR_VERSION 3
 #define __MINGW32_MINOR_VERSION 11
 
-#ifdef _WIN64
-/* MS does not prefix symbols by underscores for 64-bit.  */
+#ifndef _M_IX86
+/* MS does not prefix symbols by underscores for anything other than x86.  */
 #ifndef __MINGW_USE_UNDERSCORE_PREFIX
 /* As we have to support older gcc version, which are using underscores
    as symbol prefix for x64, we have to check here for the user label

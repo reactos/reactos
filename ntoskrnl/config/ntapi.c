@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmapi.c
+ * FILE:            ntoskrnl/config/ntapi.c
  * PURPOSE:         Configuration Manager - Internal Registry APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
@@ -15,6 +15,7 @@
 
 BOOLEAN CmBootAcceptFirstTime = TRUE;
 BOOLEAN CmFirstTime = TRUE;
+extern ULONG InitSafeBootMode;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -947,7 +948,7 @@ NtInitializeRegistry(IN USHORT Flag)
 
     /* Enough of the system has booted by now */
     Ki386PerfEnd();
-            
+
     /* Validate flag */
     if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;
 
@@ -1016,13 +1017,52 @@ NtCompressKey(IN HANDLE Key)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+// FIXME: different for different windows versions!
+#define PRODUCT_ACTIVATION_VERSION 7749
+
 NTSTATUS
 NTAPI
 NtLockProductActivationKeys(IN PULONG pPrivateVer,
                             IN PULONG pSafeMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+
+    PreviousMode = ExGetPreviousMode();
+    _SEH2_TRY
+    {
+        /* Check if the caller asked for the version */
+        if (pPrivateVer != NULL)
+        {
+            /* For user mode, probe it */
+            if (PreviousMode != KernelMode)
+            {
+                ProbeForRead(pPrivateVer, sizeof(ULONG), sizeof(ULONG));
+            }
+
+            /* Return the expected version */
+            *pPrivateVer = PRODUCT_ACTIVATION_VERSION;
+        }
+
+        /* Check if the caller asked for safe mode mode state */
+        if (pSafeMode != NULL)
+        {
+            /* For user mode, probe it */
+            if (PreviousMode != KernelMode)
+            {
+                ProbeForRead(pSafeMode, sizeof(ULONG), sizeof(ULONG));
+            }
+
+            /* Return the safe boot mode state */
+            *pSafeMode = InitSafeBootMode;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1218,7 +1258,7 @@ NtSaveKeyEx(IN HANDLE KeyHandle,
 
     PAGED_CODE();
 
-    DPRINT("NtSaveKeyEx(0x%08X, 0x%08X, %lu)\n", KeyHandle, FileHandle, Flags);
+    DPRINT("NtSaveKeyEx(0x%p, 0x%p, %lu)\n", KeyHandle, FileHandle, Flags);
 
     /* Verify the flags */
     if ((Flags != REG_STANDARD_FORMAT)
@@ -1257,8 +1297,56 @@ NtSaveMergedKeys(IN HANDLE HighPrecedenceKeyHandle,
                  IN HANDLE LowPrecedenceKeyHandle,
                  IN HANDLE FileHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+    PCM_KEY_BODY HighPrecedenceKeyObject = NULL;
+    PCM_KEY_BODY LowPrecedenceKeyObject = NULL;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    DPRINT("NtSaveMergedKeys(0x%p, 0x%p, 0x%p)\n",
+           HighPrecedenceKeyHandle, LowPrecedenceKeyHandle, FileHandle);
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Check for the SeBackupPrivilege */
+    if (!SeSinglePrivilegeCheck(SeBackupPrivilege, PreviousMode))
+    {
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Verify that the handles are valid and are registry keys */
+    Status = ObReferenceObjectByHandle(HighPrecedenceKeyHandle,
+                                       KEY_READ,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&HighPrecedenceKeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = ObReferenceObjectByHandle(LowPrecedenceKeyHandle,
+                                       KEY_READ,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&LowPrecedenceKeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Call the internal API */
+    Status = CmSaveMergedKeys(HighPrecedenceKeyObject->KeyControlBlock,
+                              LowPrecedenceKeyObject->KeyControlBlock,
+                              FileHandle);
+
+done:
+    if (LowPrecedenceKeyObject)
+        ObDereferenceObject(LowPrecedenceKeyObject);
+
+    if (HighPrecedenceKeyObject)
+        ObDereferenceObject(HighPrecedenceKeyObject);
+
+    return Status;
 }
 
 NTSTATUS
@@ -1284,7 +1372,6 @@ NTAPI
 NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
              IN ULONG Flags)
 {
-#if 0
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ObjectName;
@@ -1293,6 +1380,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     PCM_KEY_BODY KeyBody = NULL;
     ULONG ParentConv = 0, ChildConv = 0;
     HANDLE Handle;
+
     PAGED_CODE();
 
     /* Validate privilege */
@@ -1427,11 +1515,11 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            /* Release the hive loading lock */
-            ExReleasePushLockExclusive(&CmpLoadHiveLock);
-
             /* Release two KCBs lock */
             CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
+
+            /* Release the hive loading lock */
+            ExReleasePushLockExclusive(&CmpLoadHiveLock);
         }
 
         /* Unlock the registry */
@@ -1444,10 +1532,6 @@ Quickie:
 
     /* Return status */
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 NTSTATUS

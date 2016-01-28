@@ -437,13 +437,13 @@ static HRESULT WINAPI AsyncReader_QueryInterface(IBaseFilter * iface, REFIID rii
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
     else if (IsEqualIID(riid, &IID_IFileSourceFilter))
         *ppv = &This->IFileSourceFilter_iface;
     else if (IsEqualIID(riid, &IID_IAMFilterMiscFlags))
@@ -795,20 +795,18 @@ static HRESULT WINAPI FileAsyncReaderPin_QueryInterface(IPin * iface, REFIID rii
 
     *ppv = NULL;
 
-    if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IPin))
-        *ppv = This;
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IPin))
+        *ppv = &This->pin.pin.IPin_iface;
     else if (IsEqualIID(riid, &IID_IAsyncReader))
         *ppv = &This->IAsyncReader_iface;
 
     if (*ppv)
     {
-        IUnknown_AddRef((IUnknown *)(*ppv));
+        IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
 
-    if (!IsEqualIID(riid, &IID_IPin) && !IsEqualIID(riid, &IID_IMediaSeeking))
+    if (!IsEqualIID(riid, &IID_IMediaSeeking))
         FIXME("No interface for %s!\n", qzdebugstr_guid(riid));
 
     return E_NOINTERFACE;
@@ -834,7 +832,7 @@ static ULONG WINAPI FileAsyncReaderPin_Release(IPin * iface)
         CloseHandle(This->hFile);
         This->csList.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->csList);
-        CoTaskMemFree(This);
+        BaseOutputPin_Destroy(&This->pin);
         return 0;
     }
     return refCount;

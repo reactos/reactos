@@ -1,0 +1,7 @@
+; Disk class driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Group",0x00000000,"SCSI Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ImagePath",0x00020000,"system32\drivers\disk.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001

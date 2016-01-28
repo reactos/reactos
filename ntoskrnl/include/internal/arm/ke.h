@@ -4,6 +4,9 @@
 
 #define KiServiceExit2 KiExceptionExit
 
+#define SYNCH_LEVEL DISPATCH_LEVEL
+#define PCR                     ((KPCR * const)KIP0PCRADDRESS)
+
 //
 //Lockdown TLB entries
 //
@@ -15,7 +18,12 @@
 //
 #define KD_BREAKPOINT_TYPE        ULONG
 #define KD_BREAKPOINT_SIZE        sizeof(ULONG)
-//#define KD_BREAKPOINT_VALUE
+#define KD_BREAKPOINT_VALUE       0xDEFE
+
+//
+// Maximum IRQs
+//
+#define MAXIMUM_VECTOR          16
 
 //
 // Macros for getting and setting special purpose registers in portable code
@@ -51,7 +59,7 @@
 // All architectures but x86 have it in the PRCB's KeContextSwitches
 //
 #define KeGetContextSwitches(Prcb)  \
-    CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
+    (Prcb)->KeContextSwitches
 
 //
 // Macro to get the second level cache size field name which differs between
@@ -63,7 +71,7 @@
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //
-//#define KeGetTrapFrameInterruptState(TrapFrame)
+#define KeGetTrapFrameInterruptState(TrapFrame) 0
 
 FORCEINLINE
 BOOLEAN
@@ -110,6 +118,19 @@ KeFlushProcessTb(VOID)
 
 FORCEINLINE
 VOID
+KeSweepICache(IN PVOID BaseAddress,
+              IN SIZE_T FlushSize)
+{
+    //
+    // Always sweep the whole cache
+    //
+    UNREFERENCED_PARAMETER(BaseAddress);
+    UNREFERENCED_PARAMETER(FlushSize);
+    _MoveToCoprocessor(0, CP15_ICIALLU);
+}
+
+FORCEINLINE
+VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
     /* FIXME */
@@ -137,11 +158,24 @@ KeFlushTb(
     VOID
 );
 
+//
+// Cache clean and flush
+//
+VOID
+HalSweepDcache(
+    VOID
+);
+
+VOID
+HalSweepIcache(
+    VOID
+);
+
 #define Ki386PerfEnd()
 #define KiEndInterrupt(x,y)
 
 #define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->PreviousTrapFrame)
+    (PKTRAP_FRAME)((x)->TrapFrame)
 
 #define KiGetPreviousMode(tf) \
-    ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
+    ((tf->Cpsr & CPSRM_MASK) == CPSRM_USER) ? UserMode: KernelMode

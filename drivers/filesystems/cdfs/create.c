@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/cdfs.c
+ * FILE:             drivers/filesystems/cdfs/cdfs.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
@@ -50,7 +50,8 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
     /* verify related object is a directory and target name
     don't start with \. */
     if ((Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY) == 0 ||
-        RelativeFileName->Buffer[0] == L'\\')
+        (RelativeFileName->Length >= sizeof(WCHAR) &&
+         RelativeFileName->Buffer[0] == L'\\'))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -62,8 +63,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
         sizeof(WCHAR);
     AbsoluteFileName->Length = 0;
     AbsoluteFileName->MaximumLength = Length;
-    AbsoluteFileName->Buffer = ExAllocatePool(NonPagedPool,
-        Length);
+    AbsoluteFileName->Buffer = ExAllocatePoolWithTag(NonPagedPool, Length, CDFS_FILENAME_TAG);
     if (AbsoluteFileName->Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -140,10 +140,6 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     DPRINT ("Status %lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
-        if (Status == STATUS_NO_MEDIA_IN_DEVICE || Status == STATUS_VERIFY_REQUIRED)
-        {
-            DeviceExt->VolumeDevice->Flags |= DO_VERIFY_VOLUME;
-        }
         DPRINT1 ("Status %lx\n", Status);
         return Status;
     }
@@ -184,7 +180,7 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         FileObject);
 
     if ((FileName == &AbsFileName) && AbsFileName.Buffer)
-        ExFreePool(AbsFileName.Buffer);
+        ExFreePoolWithTag(AbsFileName.Buffer, CDFS_FILENAME_TAG);
 
     return Status;
 }
@@ -252,26 +248,30 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
     * fail immediately
     */
     Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
-    Irp->IoStatus.Status = Status;
 
     return Status;
 }
 
 
 NTSTATUS NTAPI
-CdfsCreate(PDEVICE_OBJECT DeviceObject,
-           PIRP Irp)
+CdfsCreate(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
+    DPRINT("CdfsCreate()\n");
+
+    ASSERT(IrpContext);
+
+    DeviceObject = IrpContext->DeviceObject;
     if (DeviceObject == CdfsGlobalData->DeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");
-        Irp->IoStatus.Information = FILE_OPENED;
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+        return STATUS_SUCCESS;
     }
 
     DeviceExt = DeviceObject->DeviceExtension;
@@ -280,14 +280,9 @@ CdfsCreate(PDEVICE_OBJECT DeviceObject,
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
         TRUE);
     Status = CdfsCreateFile(DeviceObject,
-        Irp);
+                            IrpContext->Irp);
     ExReleaseResourceLite(&DeviceExt->DirResource);
     KeLeaveCriticalRegion();
-
-ByeBye:
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,
-        NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
 
     return Status;
 }

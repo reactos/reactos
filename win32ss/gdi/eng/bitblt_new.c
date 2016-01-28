@@ -210,7 +210,7 @@ EngBitBlt(
     if (ROP4_USES_PATTERN(rop4))
     {
         /* Must have a brush */
-        ASSERT(pbo); // FIXME: test this!
+        NT_ASSERT(pbo); // FIXME: test this!
 
         /* Copy the solid color */
         bltdata.ulSolidColor = pbo->iSolidColor;
@@ -253,11 +253,22 @@ EngBitBlt(
     /* Check if the ROP uses a mask */
     if (ROP4_USES_MASK(rop4))
     {
-        /* Must have a mask surface and point */
-        ASSERT(psoMask);
-        ASSERT(pptlMask);
-
         //__debugbreak();
+
+        /* Check if we don't have a mask surface */
+        if (psoMask == NULL)
+        {
+            /* Must have a brush */
+            NT_ASSERT(pbo); // FIXME: test this!
+
+            /* Check if the BRUSHOBJ can provide the mask */
+            psoMask = BRUSHOBJ_psoMask(pbo);
+            if (psoMask == NULL)
+            {
+                /* We have no mask, assume the mask is all foreground */
+                rop4 = (rop4 & 0xFF) || ((rop4 & 0xFF) << 8);
+            }
+        }
 
         /* Set the mask format info */
         bltdata.siMsk.iFormat = psoMask->iBitmapFormat;

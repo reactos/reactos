@@ -37,7 +37,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR SourceString[54];
-    
+
     //
     // Scan memory descriptors
     //
@@ -52,7 +52,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         MemoryDescriptor = CONTAINING_RECORD(NextEntry,
                                              MEMORY_ALLOCATION_DESCRIPTOR,
                                              ListEntry);
-        
+
         //
         // Needs to be a ROM/RAM descriptor
         //
@@ -63,7 +63,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         NextEntry = NextEntry->Flink;
     }
-    
+
     //
     // Nothing found?
     //
@@ -78,7 +78,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0,
                      0);
     }
-    
+
     //
     // Setup the input buffer
     //
@@ -91,7 +91,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RamdiskCreate.DiskGuid = RAMDISK_BOOTDISK_GUID;
     RamdiskCreate.DriveLetter = L'C';
     RamdiskCreate.Options.Fixed = TRUE;
-    
+
     //
     // Check for commandline parameters
     //
@@ -102,7 +102,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         // Make everything upper case
         //
         _strupr(CommandLine);
-        
+
         //
         // Check for offset parameter
         //
@@ -121,12 +121,12 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 RamdiskCreate.DiskOffset = atol(OffsetValue + 1);
             }
         }
-        
+
         //
         // Reduce the disk length
         //
         RamdiskCreate.DiskLength.QuadPart -= RamdiskCreate.DiskOffset;
-        
+
         //
         // Check for length parameter
         //
@@ -146,7 +146,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
         }
     }
-    
+
     //
     // Setup object attributes
     //
@@ -156,7 +156,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    
+
     //
     // Open a handle to the driver
     //
@@ -177,7 +177,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0,
                      0);
     }
-    
+
     //
     // Send create command
     //
@@ -203,7 +203,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0,
                      0);
     }
-    
+
     //
     // Convert the GUID
     //
@@ -219,7 +219,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0,
                      0);
     }
-    
+
     //
     // Build the symbolic link name and target
     //
@@ -230,7 +230,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SymbolicLinkName.Length = 38;
     SymbolicLinkName.MaximumLength = 38 + sizeof(UNICODE_NULL);
     SymbolicLinkName.Buffer = L"\\ArcName\\ramdisk(0)";
-    
+
     //
     // Create the symbolic link
     //
@@ -248,7 +248,26 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                      0,
                      0);
     }
-    
+
+    //
+    // ReactOS hack (drive letter should not be hardcoded, and maybe set by mountmgr.sys)
+    //
+    {
+        ANSI_STRING AnsiPath;
+        CHAR Buffer[256];
+        UNICODE_STRING NtSystemRoot;
+        UNICODE_STRING DriveLetter = RTL_CONSTANT_STRING(L"\\??\\X:");
+
+        AnsiPath.Length = sprintf(Buffer, "X:%s", LoaderBlock->NtBootPathName);
+        AnsiPath.MaximumLength = AnsiPath.Length + 1;
+        AnsiPath.Buffer = Buffer;
+        RtlInitEmptyUnicodeString(&NtSystemRoot,
+                                  SharedUserData->NtSystemRoot,
+                                  sizeof(SharedUserData->NtSystemRoot));
+        RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
+        IoCreateSymbolicLink(&DriveLetter, &DeviceString);
+    }
+
     //
     // We made it
     //

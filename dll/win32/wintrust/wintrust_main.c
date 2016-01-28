@@ -43,20 +43,6 @@ void WINAPI WINTRUST_Free(void *p)
 }
 
 /***********************************************************************
- *		DllMain  (WINTRUST.@)
- */
-BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
-{
-    switch(reason)
-    {
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( inst );
-        break;
-    }
-    return TRUE;
-}
-
-/***********************************************************************
  *		TrustIsCertificateSelfSigned (WINTRUST.@)
  */
 BOOL WINAPI TrustIsCertificateSelfSigned( PCCERT_CONTEXT cert )

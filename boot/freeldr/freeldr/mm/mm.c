@@ -21,8 +21,7 @@
 #include <debug.h>
 
 #if DBG
-VOID        DumpMemoryAllocMap(VOID);
-VOID        MemAllocTest(VOID);
+VOID    DumpMemoryAllocMap(VOID);
 #endif // DBG
 
 DBG_DEFAULT_CHANNEL(MEMORY);

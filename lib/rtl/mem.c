@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/mem.c
  * PURPOSE:         Memory functions
@@ -144,21 +145,6 @@ RtlMoveMemory(PVOID Destination,
 {
     memmove(Destination, Source, Length);
 }
-
-
-/*
-* @implemented
-*/
-VOID
-FASTCALL
-RtlPrefetchMemoryNonTemporal(IN PVOID Source,
-                             IN SIZE_T Length)
-{
-    /* By nature of prefetch, this is non-portable. */
-    (void)Source;
-    (void)Length;
-}
-
 
 #undef RtlZeroMemory
 /*

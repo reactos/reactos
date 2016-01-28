@@ -460,3 +460,17 @@ HRESULT WINAPI D3DStripShader(const void *data, SIZE_T data_size, UINT flags, ID
 
     return d3dcompiler_strip_shader(data, data_size, flags, blob);
 }
+
+HRESULT WINAPI D3DReadFileToBlob(const WCHAR *filename, ID3DBlob **contents)
+{
+    FIXME("filename %s, contents %p\n", debugstr_w(filename), contents);
+
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI D3DWriteBlobToFile(ID3DBlob* blob, const WCHAR *filename, BOOL overwrite)
+{
+    FIXME("blob %p, filename %s, overwrite %d\n", blob, debugstr_w(filename), overwrite);
+
+    return E_NOTIMPL;
+}

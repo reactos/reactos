@@ -262,12 +262,6 @@ MiCowCacheSectionPage (
     _In_ BOOLEAN Locked,
     _Inout_ PMM_REQUIRED_RESOURCES Required);
 
-NTSTATUS
-NTAPI
-MiZeroFillSection(PVOID Address,
-                  PLARGE_INTEGER FileOffsetPtr,
-                  ULONG Length);
-
 VOID
 MmPageOutDeleteMapping(PVOID Context,
                        PEPROCESS Process,

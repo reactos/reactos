@@ -489,23 +489,23 @@ const scriptData scriptInformation[] = {
     {{Script_Tai_Le, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('t','a','l','e'),
-     {'M','i','c','r','o','s','o','f','t',' ','T','a','i',' ','L','e'}},
+     {'M','i','c','r','o','s','o','f','t',' ','T','a','i',' ','L','e',0}},
     {{Script_New_Tai_Lue, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('t','a','l','u'),
-     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e'}},
+     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e',0}},
     {{Script_New_Tai_Lue_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('t','a','l','u'),
-     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e'}},
+     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e',0}},
     {{Script_Khmer, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x53, 0, 1, 1, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 1, 0, 0, 0, 0},
      MS_MAKE_TAG('k','h','m','r'),
-     {'D','a','u','n','P','e','n','h'}},
+     {'D','a','u','n','P','e','n','h',0}},
     {{Script_Khmer_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x53, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('k','h','m','r'),
-     {'D','a','u','n','P','e','n','h'}},
+     {'D','a','u','n','P','e','n','h',0}},
     {{Script_CJK_Han, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      MS_MAKE_TAG('h','a','n','i'),
@@ -529,59 +529,59 @@ const scriptData scriptInformation[] = {
     {{Script_Yi, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      MS_MAKE_TAG('y','i',' ',' '),
-     {'M','i','c','r','o','s','o','f','t',' ','Y','i',' ','B','a','i','t','i'}},
+     {'M','i','c','r','o','s','o','f','t',' ','Y','i',' ','B','a','i','t','i',0}},
     {{Script_Ethiopic, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x5e, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('e','t','h','i'),
-     {'N','y','a','l','a'}},
+     {'N','y','a','l','a',0}},
     {{Script_Ethiopic_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x5e, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('e','t','h','i'),
-     {'N','y','a','l','a'}},
+     {'N','y','a','l','a',0}},
     {{Script_Mongolian, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_MONGOLIAN, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('m','o','n','g'),
-     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i'}},
+     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i',0}},
     {{Script_Mongolian_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_MONGOLIAN, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('m','o','n','g'),
-     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i'}},
+     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i',0}},
     {{Script_Tifinagh, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('t','f','n','g'),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_NKo, 1, 1, 0, 0, 0, 0, { 1,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('n','k','o',' '),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_Vai, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('v','a','i',' '),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_Vai_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('v','a','i',' '),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_Cherokee, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x5c, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('c','h','e','r'),
-     {'P','l','a','n','t','a','g','e','n','e','t',' ','C','h','e','r','o','k','e','e'}},
+     {'P','l','a','n','t','a','g','e','n','e','t',' ','C','h','e','r','o','k','e','e',0}},
     {{Script_Canadian, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x5d, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('c','a','n','s'),
-     {'E','u','p','h','e','m','i','a'}},
+     {'E','u','p','h','e','m','i','a',0}},
     {{Script_Ogham, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('o','g','a','m'),
-     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l',0}},
     {{Script_Runic, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('r','u','n','r'),
-     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l',0}},
     {{Script_Braille, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('b','r','a','i'),
-     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l',0}},
     {{Script_Surrogates, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      0x00000000,
@@ -593,19 +593,19 @@ const scriptData scriptInformation[] = {
     {{Script_Deseret, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('d','s','r','t'),
-     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l',0}},
     {{Script_Osmanya, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('o','s','m','a'),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_Osmanya_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('o','s','m','a'),
-     {'E','b','r','i','m','a'}},
+     {'E','b','r','i','m','a',0}},
     {{Script_MathAlpha, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('m','a','t','h'),
-     {'C','a','m','b','r','i','a',' ','M','a','t','h'}},
+     {'C','a','m','b','r','i','a',' ','M','a','t','h',0}},
     {{Script_Hebrew_Currency, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_HEBREW, 0, 1, 0, 0, HEBREW_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('h','e','b','r'),
@@ -893,7 +893,7 @@ static WORD get_char_script( LPCWSTR str, INT index, INT end, INT *consumed)
     if (str[index] == 0xc || str[index] == 0x20 || str[index] == 0x202f)
         return Script_CR;
 
-    /* These punctuation are separated out as Latin punctuation */
+    /* These punctuation characters are separated out as Latin punctuation */
     if (strchrW(latin_punc,str[index]))
         return Script_Punctuation2;
 
@@ -1269,6 +1269,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
     WORD layoutRTL = 0;
     BOOL forceLevels = FALSE;
     INT consumed = 0;
+    HRESULT res = E_OUTOFMEMORY;
 
     TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems, 
           psControl, psState, pItems, pcItems);
@@ -1363,10 +1364,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
     {
         levels = heap_alloc_zero(cInChars * sizeof(WORD));
         if (!levels)
-        {
-            heap_free(scripts);
-            return E_OUTOFMEMORY;
-        }
+            goto nomemory;
 
         BIDI_DetermineLevels(pwcInChars, cInChars, psState, psControl, levels);
         baselevel = levels[0];
@@ -1385,11 +1383,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
 
             strength = heap_alloc_zero(cInChars * sizeof(WORD));
             if (!strength)
-            {
-                heap_free(scripts);
-                heap_free(levels);
-                return E_OUTOFMEMORY;
-            }
+                goto nomemory;
             BIDI_GetStrengths(pwcInChars, cInChars, psControl, strength);
 
             /* We currently mis-level leading Diacriticals */
@@ -1472,7 +1466,8 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
         }
     }
 
-    while ((!levels || (levels && levels[cnt+1] == levels[0])) && (pwcInChars[cnt] == Numeric_space) && cnt < cInChars)
+    while ((!levels || (levels && cnt+1 < cInChars && levels[cnt+1] == levels[0]))
+            && (cnt < cInChars && pwcInChars[cnt] == Numeric_space))
         cnt++;
 
     if (cnt == cInChars) /* All Spaces */
@@ -1569,7 +1564,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
 
             index++;
             if  (index+1 > cMaxItems)
-                return E_OUTOFMEMORY;
+                goto nomemory;
 
             if (strength)
                 str = strength[cnt];
@@ -1605,7 +1600,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
      * item is set up to prevent random behaviour if the caller erroneously
      * checks the n+1 structure                                              */
     index++;
-    if (index + 1 > cMaxItems) return E_OUTOFMEMORY;
+    if (index + 1 > cMaxItems) goto nomemory;
     memset(&pItems[index].a, 0, sizeof(SCRIPT_ANALYSIS));
 
     TRACE("index=%d cnt=%d iCharPos=%d\n", index, cnt, pItems[index].iCharPos);
@@ -1615,10 +1610,12 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
 
     /*  Set SCRIPT_ITEM                                     */
     pItems[index].iCharPos = cnt;         /* the last item contains the ptr to the lastchar */
+    res = S_OK;
+nomemory:
     heap_free(levels);
     heap_free(strength);
     heap_free(scripts);
-    return S_OK;
+    return res;
 }
 
 /***********************************************************************
@@ -1945,9 +1942,8 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && !scriptInformation[analysis->pItem[i].a.eScript].props.fComplex && !analysis->pItem[i].a.fRTL)
                 analysis->pItem[i].a.fNoGlyphIndex = TRUE;
 
-            hr = ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos],
-                             cChar, numGlyphs, &analysis->pItem[i].a,
-                             glyphs, pwLogClust, psva, &numGlyphsReturned);
+            ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos], cChar, numGlyphs,
+                        &analysis->pItem[i].a, glyphs, pwLogClust, psva, &numGlyphsReturned);
             hr = ScriptPlace(hdc, sc, glyphs, numGlyphsReturned, psva, &analysis->pItem[i].a,
                              piAdvance, pGoffset, abc);
             if (originalFont)
@@ -2837,6 +2833,7 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
     unsigned int g;
     BOOL rtl;
     int cluster;
+    static int once = 0;
 
     TRACE("(%p, %p, %p, %s, %s, %p, %p, %d, %s, %d, %d, %p, %p, %p, %p, %p )\n",
      hdc, psc, psa,
@@ -2851,7 +2848,7 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
     if (cChars > cMaxGlyphs) return E_OUTOFMEMORY;
 
     if (cRanges)
-        FIXME("Ranges not supported yet\n");
+        if(!once++) FIXME("Ranges not supported yet\n");
 
     rtl = (psa && !psa->fLogicalOrder && psa->fRTL);
 
@@ -2960,6 +2957,15 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
             /* No mirroring done here */
             if (rtl) idx = cChars - 1 - i;
             pwOutGlyphs[i] = pwcChars[idx];
+
+            /* overwrite some basic control glyphs to blank */
+            if (psa && psa->eScript == Script_Control &&
+                pwcChars[idx] < ((ScriptCache *)*psc)->tm.tmFirstChar)
+            {
+                if (pwcChars[idx] == 0x0009 || pwcChars[idx] == 0x000A ||
+                    pwcChars[idx] == 0x000D || pwcChars[idx] >= 0x001C)
+                    pwOutGlyphs[i] = ((ScriptCache *)*psc)->sfp.wgBlank;
+            }
         }
     }
 
@@ -3066,6 +3072,7 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
 {
     HRESULT hr;
     int i;
+    static int once = 0;
 
     TRACE("(%p, %p, %p, %s, %s, %p, %p, %d, %s, %p, %p, %d, %p, %p, %d, %p %p %p)\n",
      hdc, psc, psa,
@@ -3079,7 +3086,7 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
     if (!pGoffset) return E_FAIL;
 
     if (cRanges)
-        FIXME("Ranges not supported yet\n");
+        if (!once++) FIXME("Ranges not supported yet\n");
 
     ((ScriptCache *)*psc)->userScript = tagScript;
     ((ScriptCache *)*psc)->userLang = tagLangSys;
@@ -3398,10 +3405,6 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
  *  Success: S_OK
  *  Failure: Non-zero HRESULT value.
  *
- * BUGS
- *  This stub works correctly for any sequence of a single
- *  embedding level but not for sequences of different
- *  embedding levels, i.e. mixtures of RTL and LTR scripts.
  */
 HRESULT WINAPI ScriptLayout(int runs, const BYTE *level, int *vistolog, int *logtovis)
 {
@@ -3740,8 +3743,10 @@ HRESULT WINAPI ScriptGetFontFeatureTags( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANAL
     return SHAPE_GetFontFeatureTags(hdc, (ScriptCache *)*psc, psa, tagScript, tagLangSys, cMaxTags, pFeatureTags, pcTags);
 }
 
+#ifdef __REACTOS__
 BOOL gbLpkPresent = FALSE;
 VOID WINAPI LpkPresent()
 {
     gbLpkPresent = TRUE; /* Turn it on this way! Wine is out of control! */
 }
+#endif

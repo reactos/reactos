@@ -554,7 +554,7 @@ static LPSTR convert_file_list(LPCSTR FileList, DWORD *dwNumFiles)
     szConvertedList[dwLen - 1] = '\0';
 
     /* empty list */
-    if (!lstrlenA(szConvertedList))
+    if (!szConvertedList[0])
     {
         HeapFree(GetProcessHeap(), 0, szConvertedList);
         return NULL;

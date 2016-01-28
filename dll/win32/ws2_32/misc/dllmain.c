@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/dllmain.c
+ * FILE:        dll/win32/ws2_32/misc/dllmain.c
  * PURPOSE:     DLL entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -887,9 +887,11 @@ DllMain(HANDLE hInstDll,
 
         case DLL_PROCESS_DETACH:
         {
-            DestroyCatalog();
-
-            FreeProviderHandleTable();
+            if (!lpReserved)
+            {
+                FreeProviderHandleTable();
+                DestroyCatalog();
+            }
         }
         break;
 

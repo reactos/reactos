@@ -804,6 +804,118 @@ cleanup:
     return retval;
 }
 
+
+BOOL
+WINAPI
+InstallDevInst(
+    IN HWND hWndParent,
+    IN LPCWSTR InstanceId,
+    IN BOOL bUpdate,
+    OUT LPDWORD lpReboot)
+{
+    PDEVINSTDATA DevInstData = NULL;
+    BOOL ret;
+    BOOL retval = FALSE;
+
+    TRACE("InstllDevInst(%p, %s, %d, %p)\n", hWndParent, debugstr_w(InstanceId), bUpdate, lpReboot);
+
+    DevInstData = HeapAlloc(GetProcessHeap(), 0, sizeof(DEVINSTDATA));
+    if (!DevInstData)
+    {
+        TRACE("HeapAlloc() failed\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+
+    /* Clear devinst data */
+    ZeroMemory(DevInstData, sizeof(DEVINSTDATA));
+    DevInstData->devInfoData.cbSize = 0; /* Tell if the devInfoData is valid */
+    DevInstData->bUpdate = bUpdate;
+
+    /* Fill devinst data */
+    DevInstData->hDevInfo = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
+    if (DevInstData->hDevInfo == INVALID_HANDLE_VALUE)
+    {
+        TRACE("SetupDiCreateDeviceInfoListExW() failed with error 0x%x\n", GetLastError());
+        goto cleanup;
+    }
+
+    DevInstData->devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+    ret = SetupDiOpenDeviceInfoW(
+        DevInstData->hDevInfo,
+        InstanceId,
+        NULL,
+        0, /* Open flags */
+        &DevInstData->devInfoData);
+    if (!ret)
+    {
+        TRACE("SetupDiOpenDeviceInfoW() failed with error 0x%x (InstanceId %s)\n",
+            GetLastError(), debugstr_w(InstanceId));
+        DevInstData->devInfoData.cbSize = 0;
+        goto cleanup;
+    }
+
+    SetLastError(ERROR_GEN_FAILURE);
+    ret = SetupDiGetDeviceRegistryProperty(
+        DevInstData->hDevInfo,
+        &DevInstData->devInfoData,
+        SPDRP_DEVICEDESC,
+        &DevInstData->regDataType,
+        NULL, 0,
+        &DevInstData->requiredSize);
+
+    if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER && DevInstData->regDataType == REG_SZ)
+    {
+        DevInstData->buffer = HeapAlloc(GetProcessHeap(), 0, DevInstData->requiredSize);
+        if (!DevInstData->buffer)
+        {
+            TRACE("HeapAlloc() failed\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        }
+        else
+        {
+            ret = SetupDiGetDeviceRegistryPropertyW(
+                DevInstData->hDevInfo,
+                &DevInstData->devInfoData,
+                SPDRP_DEVICEDESC,
+                &DevInstData->regDataType,
+                DevInstData->buffer, DevInstData->requiredSize,
+                &DevInstData->requiredSize);
+        }
+    }
+
+    if (!ret)
+    {
+        TRACE("SetupDiGetDeviceRegistryProperty() failed with error 0x%x (InstanceId %s)\n",
+            GetLastError(), debugstr_w(InstanceId));
+        goto cleanup;
+    }
+
+    /* Prepare the wizard, and display it */
+    TRACE("Need to show install wizard\n");
+    retval = DisplayWizard(DevInstData, hWndParent, IDD_WELCOMEPAGE);
+
+cleanup:
+    if (DevInstData)
+    {
+        if (DevInstData->devInfoData.cbSize != 0)
+        {
+            if (!SetupDiDestroyDriverInfoList(DevInstData->hDevInfo, &DevInstData->devInfoData, SPDIT_COMPATDRIVER))
+                TRACE("SetupDiDestroyDriverInfoList() failed with error 0x%lx\n", GetLastError());
+        }
+        if (DevInstData->hDevInfo != INVALID_HANDLE_VALUE)
+        {
+            if (!SetupDiDestroyDeviceInfoList(DevInstData->hDevInfo))
+                TRACE("SetupDiDestroyDeviceInfoList() failed with error 0x%lx\n", GetLastError());
+        }
+        HeapFree(GetProcessHeap(), 0, DevInstData->buffer);
+        HeapFree(GetProcessHeap(), 0, DevInstData);
+    }
+
+    return retval;
+}
+
+
 /*
 * @implemented
 */
@@ -821,6 +933,7 @@ ClientSideInstallW(
     HANDLE hPipe = INVALID_HANDLE_VALUE;
     PWSTR DeviceInstance = NULL;
     PWSTR InstallEventName = NULL;
+    HANDLE hInstallEvent;
 
     /* Open the pipe */
     hPipe = CreateFileW(lpNamedPipeName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -871,6 +984,21 @@ ClientSideInstallW(
     }
 
     ReturnValue = DevInstallW(NULL, NULL, DeviceInstance, ShowWizard ? SW_SHOWNOACTIVATE : SW_HIDE);
+    if(!ReturnValue)
+    {
+        ERR("DevInstallW failed with error %lu\n", GetLastError());
+        goto cleanup;
+    }
+
+    hInstallEvent = CreateEventW(NULL, TRUE, FALSE, InstallEventName);
+    if(!hInstallEvent)
+    {
+        TRACE("CreateEventW('%ls') failed with error %lu\n", InstallEventName, GetLastError());
+        goto cleanup;
+    }
+
+    SetEvent(hInstallEvent);
+    CloseHandle(hInstallEvent);
 
 cleanup:
     if(hPipe != INVALID_HANDLE_VALUE)

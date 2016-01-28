@@ -44,8 +44,6 @@ typedef struct _EPATHOBJ
 
 #define  PATH_AllocPath() ((PPATH) GDIOBJ_AllocObj(GDIObjType_PATH_TYPE))
 #define  PATH_AllocPathWithHandle() ((PPATH) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_PATH, sizeof(PATH)))
-#define  PATH_FreePath(pPath)  GDIOBJ_FreeObj((POBJ)pPath, GDIObjType_PATH_TYPE)
-#define  PATH_FreeExtPathByHandle(hPath) GDIOBJ_FreeObjByHandle((HGDIOBJ) hPath, GDI_OBJECT_TYPE_PATH)
 #define  PATH_LockPath(hPath) ((PPATH)GDIOBJ_ShareLockObj((HGDIOBJ)hPath, GDI_OBJECT_TYPE_PATH))
 #define  PATH_UnlockPath(pPath) GDIOBJ_vDereferenceObject((POBJ)pPath)
 

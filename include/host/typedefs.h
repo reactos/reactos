@@ -69,7 +69,7 @@ typedef uint16_t USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR
 typedef const uint16_t *PCWSTR, *LPCWSTR;
 typedef int32_t INT, LONG, *PLONG, *LPLONG, BOOL, WINBOOL;
 typedef uint32_t UINT, *PUINT, *LPUINT, ULONG, *PULONG, DWORD, *PDWORD, *LPDWORD, UINT32;
-#ifdef _LP64
+#if defined(_LP64) || defined(_WIN64)
 typedef int64_t LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
 typedef uint64_t ULONG_PTR, DWORD_PTR, *PULONG_PTR, UINT_PTR, *PUINT_PTR;
 #else

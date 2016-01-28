@@ -253,15 +253,18 @@ static const IPropertyBag2Vtbl PropertyBag2Vtbl = {
 
 static HRESULT fill_props(nsIDOMHTMLElement *nselem, PropertyBag *prop_bag)
 {
-    nsIDOMHTMLParamElement *nsparam;
+    const PRUnichar *name, *value;
     nsAString name_str, value_str;
     nsIDOMHTMLCollection *params;
+    nsIDOMHTMLElement *param_elem;
     UINT32 length, i;
     nsIDOMNode *nsnode;
     nsresult nsres;
     HRESULT hres = S_OK;
 
+    static const PRUnichar nameW[] = {'n','a','m','e',0};
     static const PRUnichar paramW[] = {'p','a','r','a','m',0};
+    static const PRUnichar valueW[] = {'v','a','l','u','e',0};
 
     nsAString_InitDepend(&name_str, paramW);
     nsres = nsIDOMHTMLElement_GetElementsByTagName(nselem, &name_str, &params);
@@ -280,31 +283,25 @@ static HRESULT fill_props(nsIDOMHTMLElement *nselem, PropertyBag *prop_bag)
             break;
         }
 
-        nsres = nsIDOMNode_QueryInterface(nsnode, &IID_nsIDOMHTMLParamElement, (void**)&nsparam);
+        nsres = nsIDOMNode_QueryInterface(nsnode, &IID_nsIDOMHTMLElement, (void**)&param_elem);
         nsIDOMNode_Release(nsnode);
         if(NS_FAILED(nsres)) {
             hres = E_FAIL;
             break;
         }
 
-        nsAString_Init(&name_str, NULL);
-        nsres = nsIDOMHTMLParamElement_GetName(nsparam, &name_str);
+        nsres = get_elem_attr_value(param_elem, nameW, &name_str, &name);
         if(NS_SUCCEEDED(nsres)) {
-            nsAString_Init(&value_str, NULL);
-            nsres = nsIDOMHTMLParamElement_GetValue(nsparam, &value_str);
+            nsres = get_elem_attr_value(param_elem, valueW, &value_str, &value);
             if(NS_SUCCEEDED(nsres)) {
-                const PRUnichar *name, *value;
-
-                nsAString_GetData(&name_str, &name);
-                nsAString_GetData(&value_str, &value);
-
                 hres = add_prop(prop_bag, name, value);
+                nsAString_Finish(&value_str);
             }
-            nsAString_Finish(&value_str);
+
+            nsAString_Finish(&name_str);
         }
 
-        nsAString_Finish(&name_str);
-        nsIDOMHTMLParamElement_Release(nsparam);
+        nsIDOMHTMLElement_Release(param_elem);
         if(FAILED(hres))
             break;
         if(NS_FAILED(nsres)) {

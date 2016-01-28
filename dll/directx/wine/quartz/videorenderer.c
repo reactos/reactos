@@ -352,11 +352,11 @@ static HRESULT WINAPI VideoRenderer_EndFlush(BaseRenderer* iface)
     if (This->renderer.pMediaSample) {
         ResetEvent(This->hEvent);
         LeaveCriticalSection(iface->pInputPin->pin.pCritSec);
-        LeaveCriticalSection(&iface->csRenderLock);
         LeaveCriticalSection(&iface->filter.csFilter);
+        LeaveCriticalSection(&iface->csRenderLock);
         WaitForSingleObject(This->hEvent, INFINITE);
-        EnterCriticalSection(&iface->filter.csFilter);
         EnterCriticalSection(&iface->csRenderLock);
+        EnterCriticalSection(&iface->filter.csFilter);
         EnterCriticalSection(iface->pInputPin->pin.pCritSec);
     }
     if (This->renderer.filter.state == State_Paused) {

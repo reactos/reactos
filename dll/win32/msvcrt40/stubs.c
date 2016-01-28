@@ -3,6 +3,8 @@
 #undef UNIMPLEMENTED
 #define UNIMPLEMENTED __wine_spec_unimplemented_stub("msvcrt.dll", __FUNCTION__)
 
+#ifdef _M_IX86
+
 int MSVCRT__inp(
    unsigned short port)
 {
@@ -42,6 +44,7 @@ unsigned long MSVCRT__outpd(
 {
     return _outpd(port, dataword);
 }
+#endif // _M_IX86
 
 size_t _heapused( size_t *pUsed, size_t *pCommit )
 {

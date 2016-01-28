@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/tui/tuiterm.c
+ * FILE:            win32ss/user/winsrv/consrv_new/frontends/tui/tuiterm.c
  * PURPOSE:         TUI Terminal Front-End - Virtual Consoles...
  * PROGRAMMERS:     David Welch
  *                  Gé van Geldorp
@@ -813,11 +813,6 @@ static FRONTEND_VTBL TuiVtbl =
     TuiSetMenuClose,
 };
 
-// static BOOL
-// DtbgIsDesktopVisible(VOID)
-// {
-    // return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
-// }
 static BOOLEAN
 IsConsoleMode(VOID)
 {

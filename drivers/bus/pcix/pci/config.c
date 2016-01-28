@@ -173,7 +173,7 @@ PciQueryForPciBusInterface(IN PPCI_FDO_EXTENSION FdoExtension)
         ASSERT(IoStackLocation->MajorFunction == IRP_MJ_PNP);
         IoStackLocation->MinorFunction = IRP_MN_QUERY_INTERFACE;
         IoStackLocation->Parameters.QueryInterface.InterfaceType = &GUID_PCI_BUS_INTERFACE_STANDARD;
-        IoStackLocation->Parameters.QueryInterface.Size = sizeof(GUID_PCI_BUS_INTERFACE_STANDARD);
+        IoStackLocation->Parameters.QueryInterface.Size = sizeof(PCI_BUS_INTERFACE_STANDARD);
         IoStackLocation->Parameters.QueryInterface.Version = PCI_BUS_INTERFACE_STANDARD_VERSION;
         IoStackLocation->Parameters.QueryInterface.Interface = (PINTERFACE)PciInterface;
         IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData = NULL;

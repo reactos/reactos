@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/iocompl.c
+ * FILE:            dll/win32/kernel32/client/file/iocompl.c
  * PURPOSE:         Io Completion functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -11,6 +11,34 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
+
+/*
+ * SetFileCompletionNotificationModes is not entirely Vista-exclusive,
+ * it was actually added to Windows 2003 in SP2. Headers restrict it from
+ * pre-Vista though so define the flags we need for it.
+ */
+#if (_WIN32_WINNT < 0x0600)
+#define FILE_SKIP_COMPLETION_PORT_ON_SUCCESS 0x1
+#define FILE_SKIP_SET_EVENT_ON_HANDLE        0x2
+#endif
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFileCompletionNotificationModes(IN HANDLE FileHandle,
+                                   IN UCHAR Flags)
+{
+    if (Flags & ~(FILE_SKIP_COMPLETION_PORT_ON_SUCCESS | FILE_SKIP_SET_EVENT_ON_HANDLE))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 /*
  * @implemented

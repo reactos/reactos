@@ -221,7 +221,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     FreePool(SymLink.Buffer);
     MountMgrNotify(DeviceExtension);
 
-    if (!DeviceInformation->Volume)
+    if (!DeviceInformation->ManuallyRegistered)
     {
         MountMgrNotifyNameChange(DeviceExtension, DeviceName, FALSE);
     }
@@ -356,7 +356,7 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         /* Find back correct mount point */
         if (UniqueId)
         {
-            if (!UniqueId->UniqueIdLength != DeviceInformation->UniqueId->UniqueIdLength)
+            if (UniqueId->UniqueIdLength != DeviceInformation->UniqueId->UniqueIdLength)
             {
                 continue;
             }

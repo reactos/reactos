@@ -15,7 +15,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Su equipo debe ser reinicializada para completar la instalación. ¿Desea continuar?"
+    IDS_QUERY_REBOOT_TEXT "Su equipo debe ser reinicializada para completar la instalaciÃ³n. Â¿Desea continuar?"
     IDS_QUERY_REBOOT_CAPTION "Reinicializar"
-    IDS_INF_FILE "Información del instalador"
+    IDS_INF_FILE "InformaciÃ³n del instalador"
 END

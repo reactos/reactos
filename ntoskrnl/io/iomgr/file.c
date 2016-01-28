@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/file.c
+ * FILE:            ntoskrnl/io/iomgr/file.c
  * PURPOSE:         Functions that deal with managing the FILE_OBJECT itself.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
@@ -14,6 +14,8 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+extern ERESOURCE IopSecurityResource;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -162,6 +164,107 @@ IopCheckDeviceAndDriver(IN POPEN_PACKET OpenPacket,
     }
 }
 
+VOID
+NTAPI
+IopDoNameTransmogrify(IN PIRP Irp,
+                      IN PFILE_OBJECT FileObject,
+                      IN PREPARSE_DATA_BUFFER DataBuffer)
+{
+    PWSTR Buffer;
+    USHORT Length;
+    USHORT RequiredLength;
+    PWSTR NewBuffer;
+
+    PAGED_CODE();
+
+    ASSERT(Irp->IoStatus.Status == STATUS_REPARSE);
+    ASSERT(Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT);
+    ASSERT(Irp->Tail.Overlay.AuxiliaryBuffer != NULL);
+    ASSERT(DataBuffer != NULL);
+    ASSERT(DataBuffer->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT);
+    ASSERT(DataBuffer->ReparseDataLength < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+    ASSERT(DataBuffer->Reserved < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+    /* First of all, validate data */
+    if (DataBuffer->ReparseDataLength < REPARSE_DATA_BUFFER_HEADER_SIZE ||
+        (DataBuffer->SymbolicLinkReparseBuffer.PrintNameLength +
+         DataBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength +
+         FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer.PathBuffer[0])) > MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+    {
+        Irp->IoStatus.Status = STATUS_IO_REPARSE_DATA_INVALID;
+    }
+
+    /* Everything went right */
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* Compute buffer & length */
+        Buffer = (PWSTR)((ULONG_PTR)DataBuffer->MountPointReparseBuffer.PathBuffer +
+                                    DataBuffer->MountPointReparseBuffer.SubstituteNameOffset);
+        Length = DataBuffer->MountPointReparseBuffer.SubstituteNameLength;
+
+        /* Check we don't overflow */
+        if (((ULONG)MAXUSHORT - DataBuffer->Reserved) <= (Length + sizeof(UNICODE_NULL)))
+        {
+            Irp->IoStatus.Status = STATUS_IO_REPARSE_DATA_INVALID;
+        }
+        else
+        {
+            /* Compute how much mem we'll need */
+            RequiredLength = DataBuffer->Reserved + Length + sizeof(UNICODE_NULL);
+
+            /* Check if FileObject can already hold what we need */
+            if (FileObject->FileName.MaximumLength >= RequiredLength)
+            {
+                NewBuffer = FileObject->FileName.Buffer;
+            }
+            else
+            {
+                /* Allocate otherwise */
+                NewBuffer = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_IO_NAME);
+                if (NewBuffer == NULL)
+                {
+                     Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+        }
+    }
+
+    /* Everything went right */
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* Copy reserved */
+        if (DataBuffer->Reserved)
+        {
+            RtlMoveMemory((PWSTR)((ULONG_PTR)NewBuffer + Length),
+                          (PWSTR)((ULONG_PTR)FileObject->FileName.Buffer + FileObject->FileName.Length - DataBuffer->Reserved),
+                          DataBuffer->Reserved);
+        }
+
+        /* Then, buffer */
+        if (Length)
+        {
+            RtlCopyMemory(NewBuffer, Buffer, Length);
+        }
+
+        /* And finally replace buffer if new one was allocated */
+        FileObject->FileName.Length = RequiredLength - sizeof(UNICODE_NULL);
+        if (NewBuffer != FileObject->FileName.Buffer)
+        {
+            if (FileObject->FileName.Buffer)
+            {
+                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+            }
+
+            FileObject->FileName.Buffer = NewBuffer;
+            FileObject->FileName.MaximumLength = RequiredLength;
+            FileObject->FileName.Buffer[RequiredLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        }
+    }
+
+    /* We don't need them anymore - it was allocated by the driver */
+    ExFreePool(DataBuffer);
+}
+
 NTSTATUS
 NTAPI
 IopParseDevice(IN PVOID ParseObject,
@@ -197,616 +300,760 @@ IopParseDevice(IN PVOID ParseObject,
     BOOLEAN AccessGranted, LockHeld = FALSE;
     PPRIVILEGE_SET Privileges = NULL;
     UNICODE_STRING FileString;
+    USHORT Attempt;
     IOTRACE(IO_FILE_DEBUG, "ParseObject: %p. RemainingName: %wZ\n",
             ParseObject, RemainingName);
 
-    /* Assume failure */
-    *Object = NULL;
-
-    /* Validate the open packet */
-    if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
-
-    /* Check if we have a related file object */
-    if (OpenPacket->RelatedFileObject)
+    for (Attempt = 0; Attempt < IOP_MAX_REPARSE_TRAVERSAL; ++Attempt)
     {
-        /* Use the related file object's device object */
-        OriginalDeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
-    }
+        /* Assume failure */
+        *Object = NULL;
 
-    /* Validate device status */
-    Status = IopCheckDeviceAndDriver(OpenPacket, OriginalDeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        /* We failed, return status */
-        OpenPacket->FinalStatus = Status;
-        return Status;
-    }
+        /* Validate the open packet */
+        if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
 
-    /* Map the generic mask and set the new mapping in the access state */
-    RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
-                      &IoFileObjectType->TypeInfo.GenericMapping);
-    RtlMapGenericMask(&AccessState->OriginalDesiredAccess,
-                      &IoFileObjectType->TypeInfo.GenericMapping);
-    SeSetAccessStateGenericMapping(AccessState,
-                                   &IoFileObjectType->TypeInfo.GenericMapping);
-    DesiredAccess = AccessState->RemainingDesiredAccess;
-
-    /* Check what kind of access checks to do */
-    if ((AccessMode != KernelMode) ||
-        (OpenPacket->Options & IO_FORCE_ACCESS_CHECK))
-    {
-        /* Call is from user-mode or kernel is forcing checks */
-        CheckMode = UserMode;
-    }
-    else
-    {
-        /* Call is from the kernel */
-        CheckMode = KernelMode;
-    }
-
-    /* Check privilege for backup or restore operation */
-    IopCheckBackupRestorePrivilege(AccessState,
-                                   &OpenPacket->CreateOptions,
-                                   CheckMode,
-                                   OpenPacket->Disposition);
-
-    /* Check if we are re-parsing */
-    if (((OpenPacket->Override) && !(RemainingName->Length)) ||
-        (AccessState->Flags & SE_BACKUP_PRIVILEGES_CHECKED))
-    {
-        /* Get granted access from the last call */
-        DesiredAccess |= AccessState->PreviouslyGrantedAccess;
-    }
-
-    /* Check if this is a volume open */
-    if ((OpenPacket->RelatedFileObject) &&
-        (OpenPacket->RelatedFileObject->Flags & FO_VOLUME_OPEN) &&
-        !(RemainingName->Length))
-    {
-        /* It is */
-        VolumeOpen = TRUE;
-    }
-
-    /* Now check if we need access checks */
-    if (((AccessMode != KernelMode) ||
-         (OpenPacket->Options & IO_FORCE_ACCESS_CHECK)) &&
-        (!(OpenPacket->RelatedFileObject) || (VolumeOpen)) &&
-        !(OpenPacket->Override))
-    {
-        /* Check if a device object is being parsed  */
-        if (!RemainingName->Length)
+        /* Valide reparse point in case we traversed a mountpoint */
+        if (OpenPacket->TraversedMountPoint)
         {
-            /* Lock the subject context */
-            SeLockSubjectContext(&AccessState->SubjectSecurityContext);
-            LockHeld = TRUE;
+            /* This is a reparse point we understand */
+            ASSERT(OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT);
 
-            /* Do access check */
-            AccessGranted = SeAccessCheck(OriginalDeviceObject->
-                                          SecurityDescriptor,
-                                          &AccessState->SubjectSecurityContext,
-                                          LockHeld,
-                                          DesiredAccess,
-                                          0,
-                                          &Privileges,
-                                          &IoFileObjectType->
-                                          TypeInfo.GenericMapping,
-                                          UserMode,
-                                          &GrantedAccess,
-                                          &Status);
-            if (Privileges)
+            /* Make sure we're dealing with correct DO */
+            if (OriginalDeviceObject->DeviceType != FILE_DEVICE_DISK &&
+                OriginalDeviceObject->DeviceType != FILE_DEVICE_CD_ROM &&
+                OriginalDeviceObject->DeviceType != FILE_DEVICE_VIRTUAL_DISK &&
+                OriginalDeviceObject->DeviceType != FILE_DEVICE_TAPE)
             {
-                /* Append and free the privileges */
-                SeAppendPrivileges(AccessState, Privileges);
-                SeFreePrivileges(Privileges);
-            }
-
-            /* Check if we got access */
-            if (AccessGranted)
-            {
-                /* Update access state */
-                AccessState->PreviouslyGrantedAccess |= GrantedAccess;
-                AccessState->RemainingDesiredAccess &= ~(GrantedAccess &
-                                                         MAXIMUM_ALLOWED);
-                OpenPacket->Override= TRUE;
-            }
-
-            FileString.Length = 8;
-            FileString.MaximumLength = 8;
-            FileString.Buffer = L"File";
-
-            /* Do Audit/Alarm for open operation */
-            SeOpenObjectAuditAlarm(&FileString,
-                                   OriginalDeviceObject,
-                                   CompleteName,
-                                   OriginalDeviceObject->SecurityDescriptor,
-                                   AccessState,
-                                   FALSE,
-                                   AccessGranted,
-                                   UserMode,
-                                   &AccessState->GenerateOnClose);
-        }
-        else
-        {
-            /* Check if we need to do traverse validation */
-            if (!(AccessState->Flags & TOKEN_HAS_TRAVERSE_PRIVILEGE) ||
-                ((OriginalDeviceObject->DeviceType == FILE_DEVICE_DISK) ||
-                 (OriginalDeviceObject->DeviceType == FILE_DEVICE_CD_ROM)))
-            {
-                /* Check if this is a restricted token */
-                if (!(AccessState->Flags & TOKEN_IS_RESTRICTED))
-                {
-                    /* Do the FAST traverse check */
-                    AccessGranted = SeFastTraverseCheck(OriginalDeviceObject->SecurityDescriptor,
-                                                        AccessState,
-                                                        FILE_TRAVERSE,
-                                                        UserMode);
-                }
-                else
-                {
-                    /* Fail */
-                    AccessGranted = FALSE;
-                }
-
-                /* Check if we failed to get access */
-                if (!AccessGranted)
-                {
-                    /* Lock the subject context */
-                    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
-                    LockHeld = TRUE;
-
-                    /* Do access check */
-                    AccessGranted = SeAccessCheck(OriginalDeviceObject->
-                                                  SecurityDescriptor,
-                                                  &AccessState->SubjectSecurityContext,
-                                                  LockHeld,
-                                                  FILE_TRAVERSE,
-                                                  0,
-                                                  &Privileges,
-                                                  &IoFileObjectType->
-                                                  TypeInfo.GenericMapping,
-                                                  UserMode,
-                                                  &GrantedAccess,
-                                                  &Status);
-                    if (Privileges)
-                    {
-                        /* Append and free the privileges */
-                        SeAppendPrivileges(AccessState, Privileges);
-                        SeFreePrivileges(Privileges);
-                    }
-                }
-
-                /* FIXME: Do Audit/Alarm for traverse check */
-            }
-            else
-            {
-                /* Access automatically granted */
-                AccessGranted = TRUE;
+                OpenPacket->FinalStatus = STATUS_IO_REPARSE_DATA_INVALID;
+                return STATUS_IO_REPARSE_DATA_INVALID;
             }
         }
 
-        /* Check if we hold the lock */
-        if (LockHeld)
+        /* Check if we have a related file object */
+        if (OpenPacket->RelatedFileObject)
         {
-            /* Release it */
-            SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+            /* Use the related file object's device object */
+            OriginalDeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
         }
 
-        /* Check if access failed */
-        if (!AccessGranted)
-        {
-            /* Dereference the device and fail */
-            DPRINT1("Traverse access failed!\n");
-            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            return STATUS_ACCESS_DENIED;
-        }
-    }
-
-    /* Check if we can simply use a dummy file */
-    UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
-
-    /* Check if this is a direct open */
-    if (!(RemainingName->Length) &&
-        !(OpenPacket->RelatedFileObject) &&
-        ((DesiredAccess & ~(SYNCHRONIZE |
-                            FILE_READ_ATTRIBUTES |
-                            READ_CONTROL |
-                            ACCESS_SYSTEM_SECURITY |
-                            WRITE_OWNER |
-                            WRITE_DAC)) == 0) &&
-        !(UseDummyFile))
-    {
-        /* Remember this for later */
-        DirectOpen = TRUE;
-    }
-
-    /* FIXME: Small hack still exists, have to check why...
-     * This is triggered multiple times by usetup and then once per boot.
-     */
-    if (!(DirectOpen) &&
-        !(RemainingName->Length) &&
-        !(OpenPacket->RelatedFileObject) &&
-        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
-         (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
-        !(UseDummyFile))
-    {
-        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
-        DesiredAccess & ~(SYNCHRONIZE |
-                          FILE_READ_ATTRIBUTES |
-                          READ_CONTROL |
-                          ACCESS_SYSTEM_SECURITY |
-                          WRITE_OWNER |
-                          WRITE_DAC));
-        DirectOpen = TRUE;
-    }
-
-    /* Check if we have a related FO that wasn't a direct open */
-    if ((OpenPacket->RelatedFileObject) &&
-        !(OpenPacket->RelatedFileObject->Flags & FO_DIRECT_DEVICE_OPEN))
-    {
-        /* The device object is the one we were given */
-        DeviceObject = ParseObject;
-
-        /* Check if the related FO had a VPB */
-        if (OpenPacket->RelatedFileObject->Vpb)
-        {
-            /* Yes, remember it */
-            Vpb = OpenPacket->RelatedFileObject->Vpb;
-
-            /* Reference it */
-            InterlockedIncrement((PLONG)&Vpb->ReferenceCount);
-        }
-    }
-    else
-    {
-        /* The device object is the one we were given */
-        DeviceObject = OriginalDeviceObject;
-
-        /* Check if it has a VPB */
-        if ((OriginalDeviceObject->Vpb) && !(DirectOpen))
-        {
-            /* Check if the VPB is mounted, and mount it */
-            Vpb = IopCheckVpbMounted(OpenPacket,
-                                     OriginalDeviceObject,
-                                     RemainingName,
-                                     &Status);
-            if (!Vpb) return Status;
-
-            /* Get the VPB's device object */
-            DeviceObject = Vpb->DeviceObject;
-        }
-
-        /* Check if there's an attached device */
-        if (DeviceObject->AttachedDevice)
-        {
-            /* Get the attached device */
-            DeviceObject = IoGetAttachedDevice(DeviceObject);
-        }
-    }
-
-    /* Check if this is a secure FSD */
-    if ((DeviceObject->Characteristics & FILE_DEVICE_SECURE_OPEN) &&
-        ((OpenPacket->RelatedFileObject) || (RemainingName->Length)) &&
-        (!VolumeOpen))
-    {
-        DPRINT("Fix Secure FSD support!!!\n");
-    }
-
-    /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp)
-    {
-        /* Dereference the device and VPB, then fail */
-        IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-        if (Vpb) IopDereferenceVpbAndFree(Vpb);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Now set the IRP data */
-    Irp->RequestorMode = AccessMode;
-    Irp->Flags = IRP_CREATE_OPERATION | IRP_SYNCHRONOUS_API | IRP_DEFER_IO_COMPLETION;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->UserIosb = &IoStatusBlock;
-    Irp->MdlAddress = NULL;
-    Irp->PendingReturned = FALSE;
-    Irp->UserEvent = NULL;
-    Irp->Cancel = FALSE;
-    Irp->CancelRoutine = NULL;
-    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
-
-    /* Setup the security context */
-    SecurityContext.SecurityQos = SecurityQos;
-    SecurityContext.AccessState = AccessState;
-    SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
-    SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
-
-    /* Get the I/O Stack location */
-    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
-    StackLoc->Control = 0;
-
-    /* Check what kind of file this is */
-    switch (OpenPacket->CreateFileType)
-    {
-        /* Normal file */
-        case CreateFileTypeNone:
-
-            /* Set the major function and EA Length */
-            StackLoc->MajorFunction = IRP_MJ_CREATE;
-            StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
-
-            /* Set the flags */
-            StackLoc->Flags = (UCHAR)OpenPacket->Options;
-            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
-            break;
-
-        /* Named pipe */
-        case CreateFileTypeNamedPipe:
-
-            /* Set the named pipe MJ and set the parameters */
-            StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters = OpenPacket->ExtraCreateParameters;
-            break;
-
-        /* Mailslot */
-        case CreateFileTypeMailslot:
-
-            /* Set the mailslot MJ and set the parameters */
-            StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-            StackLoc->Parameters.CreateMailslot.Parameters = OpenPacket->ExtraCreateParameters;
-            break;
-    }
-
-    /* Set the common data */
-    Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
-    Irp->AssociatedIrp.SystemBuffer = OpenPacket->EaBuffer;
-    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) |
-                                          (OpenPacket->CreateOptions &
-                                           0xFFFFFF);
-    StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
-    StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
-    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
-
-    /* Check if we really need to create an object */
-    if (!UseDummyFile)
-    {
-        /* Create the actual file object */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   NULL,
-                                   Attributes,
-                                   NULL,
-                                   NULL);
-        Status = ObCreateObject(KernelMode,
-                                IoFileObjectType,
-                                &ObjectAttributes,
-                                AccessMode,
-                                NULL,
-                                sizeof(FILE_OBJECT),
-                                0,
-                                0,
-                                (PVOID*)&FileObject);
+        /* Validate device status */
+        Status = IopCheckDeviceAndDriver(OpenPacket, OriginalDeviceObject);
         if (!NT_SUCCESS(Status))
         {
-            /* Create failed, free the IRP */
-            IoFreeIrp(Irp);
-
-            /* Dereference the device and VPB */
-            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            if (Vpb) IopDereferenceVpbAndFree(Vpb);
-
             /* We failed, return status */
             OpenPacket->FinalStatus = Status;
             return Status;
         }
 
-        /* Clear the file object */
-        RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
+        /* Map the generic mask and set the new mapping in the access state */
+        RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
+                          &IoFileObjectType->TypeInfo.GenericMapping);
+        RtlMapGenericMask(&AccessState->OriginalDesiredAccess,
+                          &IoFileObjectType->TypeInfo.GenericMapping);
+        SeSetAccessStateGenericMapping(AccessState,
+                                       &IoFileObjectType->TypeInfo.GenericMapping);
+        DesiredAccess = AccessState->RemainingDesiredAccess;
 
-        /* Check if this is Synch I/O */
-        if (OpenPacket->CreateOptions &
-            (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+        /* Check what kind of access checks to do */
+        if ((AccessMode != KernelMode) ||
+            (OpenPacket->Options & IO_FORCE_ACCESS_CHECK))
         {
-            /* Set the synch flag */
-            FileObject->Flags |= FO_SYNCHRONOUS_IO;
+            /* Call is from user-mode or kernel is forcing checks */
+            CheckMode = UserMode;
+        }
+        else
+        {
+            /* Call is from the kernel */
+            CheckMode = KernelMode;
+        }
 
-            /* Check if it's also alertable */
-            if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+        /* Check privilege for backup or restore operation */
+        IopCheckBackupRestorePrivilege(AccessState,
+                                       &OpenPacket->CreateOptions,
+                                       CheckMode,
+                                       OpenPacket->Disposition);
+
+        /* Check if we are re-parsing */
+        if (((OpenPacket->Override) && !(RemainingName->Length)) ||
+            (AccessState->Flags & SE_BACKUP_PRIVILEGES_CHECKED))
+        {
+            /* Get granted access from the last call */
+            DesiredAccess |= AccessState->PreviouslyGrantedAccess;
+        }
+
+        /* Check if this is a volume open */
+        if ((OpenPacket->RelatedFileObject) &&
+            (OpenPacket->RelatedFileObject->Flags & FO_VOLUME_OPEN) &&
+            !(RemainingName->Length))
+        {
+            /* It is */
+            VolumeOpen = TRUE;
+        }
+
+        /* Now check if we need access checks */
+        if (((AccessMode != KernelMode) ||
+             (OpenPacket->Options & IO_FORCE_ACCESS_CHECK)) &&
+            (!(OpenPacket->RelatedFileObject) || (VolumeOpen)) &&
+            !(OpenPacket->Override))
+        {
+            KeEnterCriticalRegion();
+            ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+
+            /* Check if a device object is being parsed  */
+            if (!RemainingName->Length)
             {
-                /* It is, set the alertable flag */
-                FileObject->Flags |= FO_ALERTABLE_IO;
+                /* Lock the subject context */
+                SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+                LockHeld = TRUE;
+
+                /* Do access check */
+                AccessGranted = SeAccessCheck(OriginalDeviceObject->
+                                              SecurityDescriptor,
+                                              &AccessState->SubjectSecurityContext,
+                                              LockHeld,
+                                              DesiredAccess,
+                                              0,
+                                              &Privileges,
+                                              &IoFileObjectType->
+                                              TypeInfo.GenericMapping,
+                                              UserMode,
+                                              &GrantedAccess,
+                                              &Status);
+                if (Privileges)
+                {
+                    /* Append and free the privileges */
+                    SeAppendPrivileges(AccessState, Privileges);
+                    SeFreePrivileges(Privileges);
+                }
+
+                /* Check if we got access */
+                if (AccessGranted)
+                {
+                    /* Update access state */
+                    AccessState->PreviouslyGrantedAccess |= GrantedAccess;
+                    AccessState->RemainingDesiredAccess &= ~(GrantedAccess &
+                                                             MAXIMUM_ALLOWED);
+                    OpenPacket->Override= TRUE;
+                }
+
+                FileString.Length = 8;
+                FileString.MaximumLength = 8;
+                FileString.Buffer = L"File";
+
+                /* Do Audit/Alarm for open operation */
+                SeOpenObjectAuditAlarm(&FileString,
+                                       OriginalDeviceObject,
+                                       CompleteName,
+                                       OriginalDeviceObject->SecurityDescriptor,
+                                       AccessState,
+                                       FALSE,
+                                       AccessGranted,
+                                       UserMode,
+                                       &AccessState->GenerateOnClose);
+            }
+            else
+            {
+                /* Check if we need to do traverse validation */
+                if (!(AccessState->Flags & TOKEN_HAS_TRAVERSE_PRIVILEGE) ||
+                    ((OriginalDeviceObject->DeviceType == FILE_DEVICE_DISK) ||
+                     (OriginalDeviceObject->DeviceType == FILE_DEVICE_CD_ROM)))
+                {
+                    /* Check if this is a restricted token */
+                    if (!(AccessState->Flags & TOKEN_IS_RESTRICTED))
+                    {
+                        /* Do the FAST traverse check */
+                        AccessGranted = SeFastTraverseCheck(OriginalDeviceObject->SecurityDescriptor,
+                                                            AccessState,
+                                                            FILE_TRAVERSE,
+                                                            UserMode);
+                    }
+                    else
+                    {
+                        /* Fail */
+                        AccessGranted = FALSE;
+                    }
+
+                    /* Check if we failed to get access */
+                    if (!AccessGranted)
+                    {
+                        /* Lock the subject context */
+                        SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+                        LockHeld = TRUE;
+
+                        /* Do access check */
+                        AccessGranted = SeAccessCheck(OriginalDeviceObject->
+                                                      SecurityDescriptor,
+                                                      &AccessState->SubjectSecurityContext,
+                                                      LockHeld,
+                                                      FILE_TRAVERSE,
+                                                      0,
+                                                      &Privileges,
+                                                      &IoFileObjectType->
+                                                      TypeInfo.GenericMapping,
+                                                      UserMode,
+                                                      &GrantedAccess,
+                                                      &Status);
+                        if (Privileges)
+                        {
+                            /* Append and free the privileges */
+                            SeAppendPrivileges(AccessState, Privileges);
+                            SeFreePrivileges(Privileges);
+                        }
+                    }
+
+                    /* FIXME: Do Audit/Alarm for traverse check */
+                }
+                else
+                {
+                    /* Access automatically granted */
+                    AccessGranted = TRUE;
+                }
+            }
+
+            ExReleaseResourceLite(&IopSecurityResource);
+            KeLeaveCriticalRegion();
+
+            /* Check if we hold the lock */
+            if (LockHeld)
+            {
+                /* Release it */
+                SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+            }
+
+            /* Check if access failed */
+            if (!AccessGranted)
+            {
+                /* Dereference the device and fail */
+                DPRINT1("Traverse access failed!\n");
+                IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+                return STATUS_ACCESS_DENIED;
             }
         }
 
-        /* Check if this is synch I/O */
-        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        /* Check if we can simply use a dummy file */
+        UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
+
+#if 1
+        /* FIXME: Small hack still exists, have to check why...
+         * This is triggered multiple times by usetup and then once per boot.
+         */
+        if (ExpInTextModeSetup &&
+            !(DirectOpen) &&
+            !(RemainingName->Length) &&
+            !(OpenPacket->RelatedFileObject) &&
+            ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
+            (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
+            !(UseDummyFile))
         {
-            /* Initialize the event */
-            KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, FALSE);
+            DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
+            DesiredAccess & ~(SYNCHRONIZE |
+                              FILE_READ_ATTRIBUTES |
+                              READ_CONTROL |
+                              ACCESS_SYSTEM_SECURITY |
+                              WRITE_OWNER |
+                              WRITE_DAC));
+            DirectOpen = TRUE;
+        }
+#endif
+
+        /* Check if this is a direct open */
+        if (!(RemainingName->Length) &&
+            !(OpenPacket->RelatedFileObject) &&
+            ((DesiredAccess & ~(SYNCHRONIZE |
+                                FILE_READ_ATTRIBUTES |
+                                READ_CONTROL |
+                                ACCESS_SYSTEM_SECURITY |
+                                WRITE_OWNER |
+                                WRITE_DAC)) == 0) &&
+            !(UseDummyFile))
+        {
+            /* Remember this for later */
+            DirectOpen = TRUE;
         }
 
-        /* Check if the caller requested no intermediate buffering */
-        if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+        /* Check if we have a related FO that wasn't a direct open */
+        if ((OpenPacket->RelatedFileObject) &&
+            !(OpenPacket->RelatedFileObject->Flags & FO_DIRECT_DEVICE_OPEN))
         {
-            /* Set the correct flag for the FSD to read */
-            FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+            /* The device object is the one we were given */
+            DeviceObject = ParseObject;
+
+            /* Check if the related FO had a VPB */
+            if (OpenPacket->RelatedFileObject->Vpb)
+            {
+                /* Yes, remember it */
+                Vpb = OpenPacket->RelatedFileObject->Vpb;
+
+                /* Reference it */
+                InterlockedIncrement((PLONG)&Vpb->ReferenceCount);
+            }
+        }
+        else
+        {
+            /* The device object is the one we were given */
+            DeviceObject = OriginalDeviceObject;
+
+            /* Check if it has a VPB */
+            if ((OriginalDeviceObject->Vpb) && !(DirectOpen))
+            {
+                /* Check if the VPB is mounted, and mount it */
+                Vpb = IopCheckVpbMounted(OpenPacket,
+                                         OriginalDeviceObject,
+                                         RemainingName,
+                                         &Status);
+                if (!Vpb) return Status;
+
+                /* Get the VPB's device object */
+                DeviceObject = Vpb->DeviceObject;
+            }
+
+            /* Check if there's an attached device */
+            if (DeviceObject->AttachedDevice)
+            {
+                /* Get the attached device */
+                DeviceObject = IoGetAttachedDevice(DeviceObject);
+            }
         }
 
-        /* Check if the caller requested write through support */
-        if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
+        /* If we traversed a mount point, reset the information */
+        if (OpenPacket->TraversedMountPoint)
         {
-            /* Set the correct flag for the FSD to read */
-            FileObject->Flags |= FO_WRITE_THROUGH;
+            OpenPacket->TraversedMountPoint = FALSE;
         }
 
-        /* Check if the caller says the file will be only read sequentially */
-        if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
+        /* Check if this is a secure FSD */
+        if ((DeviceObject->Characteristics & FILE_DEVICE_SECURE_OPEN) &&
+            ((OpenPacket->RelatedFileObject) || (RemainingName->Length)) &&
+            (!VolumeOpen))
         {
-            /* Set the correct flag for the FSD to read */
-            FileObject->Flags |= FO_SEQUENTIAL_ONLY;
+            DPRINT("Fix Secure FSD support!!!\n");
         }
 
-        /* Check if the caller believes the file will be only read randomly */
-        if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
+        /* Allocate the IRP */
+        Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        if (!Irp)
         {
-            /* Set the correct flag for the FSD to read */
-            FileObject->Flags |= FO_RANDOM_ACCESS;
-        }
-    }
-    else
-    {
-        /* Use the dummy object instead */
-        LocalFileObject = OpenPacket->LocalFileObject;
-        RtlZeroMemory(LocalFileObject, sizeof(DUMMY_FILE_OBJECT));
-
-        /* Set it up */
-        FileObject = (PFILE_OBJECT)&LocalFileObject->ObjectHeader.Body;
-        LocalFileObject->ObjectHeader.Type = IoFileObjectType;
-        LocalFileObject->ObjectHeader.PointerCount = 1;
-    }
-
-    /* Setup the file header */
-    FileObject->Type = IO_TYPE_FILE;
-    FileObject->Size = sizeof(FILE_OBJECT);
-    FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
-    FileObject->DeviceObject = OriginalDeviceObject;
-
-    /* Check if this is a direct device open */
-    if (DirectOpen) FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-
-    /* Check if the caller wants case sensitivity */
-    if (!(Attributes & OBJ_CASE_INSENSITIVE))
-    {
-        /* Tell the driver about it */
-        FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
-    }
-
-    /* Now set the file object */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    StackLoc->FileObject = FileObject;
-
-    /* Check if the file object has a name */
-    if (RemainingName->Length)
-    {
-        /* Setup the unicode string */
-        FileObject->FileName.MaximumLength = RemainingName->Length +
-                                             sizeof(WCHAR);
-        FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                            FileObject->
-                                                            FileName.
-                                                            MaximumLength,
-                                                            TAG_IO_NAME);
-        if (!FileObject->FileName.Buffer)
-        {
-            /* Failed to allocate the name, free the IRP */
-            IoFreeIrp(Irp);
-
-            /* Dereference the device object and VPB */
+            /* Dereference the device and VPB, then fail */
             IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
             if (Vpb) IopDereferenceVpbAndFree(Vpb);
-
-            /* Clear the FO and dereference it */
-            FileObject->DeviceObject = NULL;
-            if (!UseDummyFile) ObDereferenceObject(FileObject);
-
-            /* Fail */
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-    }
 
-    /* Copy the name */
-    RtlCopyUnicodeString(&FileObject->FileName, RemainingName);
+        /* Now set the IRP data */
+        Irp->RequestorMode = AccessMode;
+        Irp->Flags = IRP_CREATE_OPERATION | IRP_SYNCHRONOUS_API | IRP_DEFER_IO_COMPLETION;
+        Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+        Irp->UserIosb = &IoStatusBlock;
+        Irp->MdlAddress = NULL;
+        Irp->PendingReturned = FALSE;
+        Irp->UserEvent = NULL;
+        Irp->Cancel = FALSE;
+        Irp->CancelRoutine = NULL;
+        Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
 
-    /* Initialize the File Object event and set the FO */
-    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
-    OpenPacket->FileObject = FileObject;
+        /* Setup the security context */
+        SecurityContext.SecurityQos = SecurityQos;
+        SecurityContext.AccessState = AccessState;
+        SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
+        SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
 
-    /* Queue the IRP and call the driver */
-    IopQueueIrpToThread(Irp);
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for the driver to complete the create */
-        KeWaitForSingleObject(&FileObject->Event,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
+        /* Get the I/O Stack location */
+        StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+        StackLoc->Control = 0;
 
-        /* Get the new status */
-        Status = IoStatusBlock.Status;
-    }
-    else
-    {
-        /* We'll have to complete it ourselves */
-        ASSERT(!Irp->PendingReturned);
-        ASSERT(!Irp->MdlAddress);
-
-        /* Completion happens at APC_LEVEL */
-        KeRaiseIrql(APC_LEVEL, &OldIrql);
-
-        /* Get the new I/O Status block ourselves */
-        IoStatusBlock = Irp->IoStatus;
-        Status = IoStatusBlock.Status;
-
-        /* Manually signal the even, we can't have any waiters */
-        FileObject->Event.Header.SignalState = 1;
-
-        /* Now that we've signaled the events, de-associate the IRP */
-        IopUnQueueIrpFromThread(Irp);
-
-        /* Check if the IRP had an input buffer */
-        if ((Irp->Flags & IRP_BUFFERED_IO) &&
-            (Irp->Flags & IRP_DEALLOCATE_BUFFER))
+        /* Check what kind of file this is */
+        switch (OpenPacket->CreateFileType)
         {
-            /* Free it. A driver might've tacked one on */
-            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+            /* Normal file */
+            case CreateFileTypeNone:
+
+                /* Set the major function and EA Length */
+                StackLoc->MajorFunction = IRP_MJ_CREATE;
+                StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
+
+                /* Set the flags */
+                StackLoc->Flags = (UCHAR)OpenPacket->Options;
+                StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
+                break;
+
+            /* Named pipe */
+            case CreateFileTypeNamedPipe:
+
+                /* Set the named pipe MJ and set the parameters */
+                StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
+                StackLoc->Parameters.CreatePipe.Parameters = OpenPacket->ExtraCreateParameters;
+                break;
+
+            /* Mailslot */
+            case CreateFileTypeMailslot:
+
+                /* Set the mailslot MJ and set the parameters */
+                StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
+                StackLoc->Parameters.CreateMailslot.Parameters = OpenPacket->ExtraCreateParameters;
+                break;
         }
 
-        /* Free the IRP and bring the IRQL back down */
-        IoFreeIrp(Irp);
-        KeLowerIrql(OldIrql);
-    }
+        /* Set the common data */
+        Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
+        Irp->AssociatedIrp.SystemBuffer = OpenPacket->EaBuffer;
+        StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) |
+                                              (OpenPacket->CreateOptions &
+                                               0xFFFFFF);
+        StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
+        StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
+        StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
 
-    /* Copy the I/O Status */
-    OpenPacket->Information = IoStatusBlock.Information;
-
-    /* The driver failed to create the file */
-    if (!NT_SUCCESS(Status))
-    {
-        /* Check if we have a name */
-        if (FileObject->FileName.Length)
+        /* Check if we really need to create an object */
+        if (!UseDummyFile)
         {
-            /* Free it */
-            ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
-            FileObject->FileName.Length = 0;
+            /* Create the actual file object */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       NULL,
+                                       Attributes,
+                                       NULL,
+                                       NULL);
+            Status = ObCreateObject(KernelMode,
+                                    IoFileObjectType,
+                                    &ObjectAttributes,
+                                    AccessMode,
+                                    NULL,
+                                    sizeof(FILE_OBJECT),
+                                    0,
+                                    0,
+                                    (PVOID*)&FileObject);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Create failed, free the IRP */
+                IoFreeIrp(Irp);
+
+                /* Dereference the device and VPB */
+                IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+                if (Vpb) IopDereferenceVpbAndFree(Vpb);
+
+                /* We failed, return status */
+                OpenPacket->FinalStatus = Status;
+                return Status;
+            }
+
+            /* Clear the file object */
+            RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
+
+            /* Check if this is Synch I/O */
+            if (OpenPacket->CreateOptions &
+                (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+            {
+                /* Set the synch flag */
+                FileObject->Flags |= FO_SYNCHRONOUS_IO;
+
+                /* Check if it's also alertable */
+                if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+                {
+                    /* It is, set the alertable flag */
+                    FileObject->Flags |= FO_ALERTABLE_IO;
+                }
+            }
+
+            /* Check if this is synch I/O */
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Initialize the event */
+                KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, FALSE);
+            }
+
+            /* Check if the caller requested no intermediate buffering */
+            if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+            {
+                /* Set the correct flag for the FSD to read */
+                FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+            }
+
+            /* Check if the caller requested write through support */
+            if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
+            {
+                /* Set the correct flag for the FSD to read */
+                FileObject->Flags |= FO_WRITE_THROUGH;
+            }
+
+            /* Check if the caller says the file will be only read sequentially */
+            if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
+            {
+                /* Set the correct flag for the FSD to read */
+                FileObject->Flags |= FO_SEQUENTIAL_ONLY;
+            }
+
+            /* Check if the caller believes the file will be only read randomly */
+            if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
+            {
+                /* Set the correct flag for the FSD to read */
+                FileObject->Flags |= FO_RANDOM_ACCESS;
+            }
+        }
+        else
+        {
+            /* Use the dummy object instead */
+            LocalFileObject = OpenPacket->LocalFileObject;
+            RtlZeroMemory(LocalFileObject, sizeof(DUMMY_FILE_OBJECT));
+
+            /* Set it up */
+            FileObject = (PFILE_OBJECT)&LocalFileObject->ObjectHeader.Body;
+            LocalFileObject->ObjectHeader.Type = IoFileObjectType;
+            LocalFileObject->ObjectHeader.PointerCount = 1;
         }
 
-        /* Clear its device object */
-        FileObject->DeviceObject = NULL;
+        /* Setup the file header */
+        FileObject->Type = IO_TYPE_FILE;
+        FileObject->Size = sizeof(FILE_OBJECT);
+        FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
+        FileObject->DeviceObject = OriginalDeviceObject;
 
-        /* Save this now because the FO might go away */
-        OpenCancelled = FileObject->Flags & FO_FILE_OPEN_CANCELLED ?
-                        TRUE : FALSE;
+        /* Check if this is a direct device open */
+        if (DirectOpen) FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
-        /* Clear the file object in the open packet */
-        OpenPacket->FileObject = NULL;
+        /* Check if the caller wants case sensitivity */
+        if (!(Attributes & OBJ_CASE_INSENSITIVE))
+        {
+            /* Tell the driver about it */
+            FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
+        }
 
-        /* Dereference the file object */
-        if (!UseDummyFile) ObDereferenceObject(FileObject);
+        /* Now set the file object */
+        Irp->Tail.Overlay.OriginalFileObject = FileObject;
+        StackLoc->FileObject = FileObject;
 
-        /* Dereference the device object */
-        IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+        /* Check if the file object has a name */
+        if (RemainingName->Length)
+        {
+            /* Setup the unicode string */
+            FileObject->FileName.MaximumLength = RemainingName->Length +
+                                                 sizeof(WCHAR);
+            FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                                FileObject->
+                                                                FileName.
+                                                                MaximumLength,
+                                                                TAG_IO_NAME);
+            if (!FileObject->FileName.Buffer)
+            {
+                /* Failed to allocate the name, free the IRP */
+                IoFreeIrp(Irp);
 
-        /* Unless the driver cancelled the open, dereference the VPB */
-        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpbAndFree(Vpb);
+                /* Dereference the device object and VPB */
+                IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+                if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
-        /* Set the status and return */
-        OpenPacket->FinalStatus = Status;
-        return Status;
+                /* Clear the FO and dereference it */
+                FileObject->DeviceObject = NULL;
+                if (!UseDummyFile) ObDereferenceObject(FileObject);
+
+                /* Fail */
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+
+        /* Copy the name */
+        RtlCopyUnicodeString(&FileObject->FileName, RemainingName);
+
+        /* Initialize the File Object event and set the FO */
+        KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
+        OpenPacket->FileObject = FileObject;
+
+        /* Queue the IRP and call the driver */
+        IopQueueIrpToThread(Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait for the driver to complete the create */
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            /* Get the new status */
+            Status = IoStatusBlock.Status;
+        }
+        else
+        {
+            /* We'll have to complete it ourselves */
+            ASSERT(!Irp->PendingReturned);
+            ASSERT(!Irp->MdlAddress);
+
+            /* Handle name change if required */
+            if (Status == STATUS_REPARSE)
+            {
+                /* Check this is a mount point */
+                if (Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    PREPARSE_DATA_BUFFER ReparseData;
+
+                    /* Reparse point attributes were passed by the driver in the auxiliary buffer */
+                    ASSERT(Irp->Tail.Overlay.AuxiliaryBuffer != NULL);
+                    ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+
+                    ASSERT(ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT);
+                    ASSERT(ReparseData->ReparseDataLength < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+                    ASSERT(ReparseData->Reserved < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+                    IopDoNameTransmogrify(Irp, FileObject, ReparseData);
+                }
+            }
+
+            /* Completion happens at APC_LEVEL */
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+            /* Get the new I/O Status block ourselves */
+            IoStatusBlock = Irp->IoStatus;
+            Status = IoStatusBlock.Status;
+
+            /* Manually signal the even, we can't have any waiters */
+            FileObject->Event.Header.SignalState = 1;
+
+            /* Now that we've signaled the events, de-associate the IRP */
+            IopUnQueueIrpFromThread(Irp);
+
+            /* Check if the IRP had an input buffer */
+            if ((Irp->Flags & IRP_BUFFERED_IO) &&
+                (Irp->Flags & IRP_DEALLOCATE_BUFFER))
+            {
+                /* Free it. A driver might've tacked one on */
+                ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+            }
+
+            /* Free the IRP and bring the IRQL back down */
+            IoFreeIrp(Irp);
+            KeLowerIrql(OldIrql);
+        }
+
+        /* Copy the I/O Status */
+        OpenPacket->Information = IoStatusBlock.Information;
+
+        /* The driver failed to create the file */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Check if we have a name */
+            if (FileObject->FileName.Length)
+            {
+                /* Free it */
+                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+                FileObject->FileName.Length = 0;
+            }
+
+            /* Clear its device object */
+            FileObject->DeviceObject = NULL;
+
+            /* Save this now because the FO might go away */
+            OpenCancelled = FileObject->Flags & FO_FILE_OPEN_CANCELLED ?
+                            TRUE : FALSE;
+
+            /* Clear the file object in the open packet */
+            OpenPacket->FileObject = NULL;
+
+            /* Dereference the file object */
+            if (!UseDummyFile) ObDereferenceObject(FileObject);
+
+            /* Dereference the device object */
+            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+
+            /* Unless the driver cancelled the open, dereference the VPB */
+            if (!(OpenCancelled) && (Vpb)) IopDereferenceVpbAndFree(Vpb);
+
+            /* Set the status and return */
+            OpenPacket->FinalStatus = Status;
+            return Status;
+        }
+        else if (Status == STATUS_REPARSE)
+        {
+            if (OpenPacket->Information == IO_REPARSE ||
+                OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                /* Update CompleteName with reparse info which got updated in IopDoNameTransmogrify() */
+                if (CompleteName->MaximumLength < FileObject->FileName.Length)
+                {
+                    PWSTR NewCompleteName;
+
+                    /* Allocate a new buffer for the string */
+                    NewCompleteName = ExAllocatePoolWithTag(PagedPool, FileObject->FileName.Length, TAG_IO_NAME);
+                    if (NewCompleteName == NULL)
+                    {
+                        OpenPacket->FinalStatus = STATUS_INSUFFICIENT_RESOURCES;
+                        return STATUS_INSUFFICIENT_RESOURCES;
+                    }
+
+                    /* Release the old one */
+                    if (CompleteName->Buffer != NULL)
+                    {
+                        ExFreePoolWithTag(CompleteName->Buffer, 0);
+                    }
+
+                    /* And setup the new one */
+                    CompleteName->Buffer = NewCompleteName;
+                    CompleteName->MaximumLength = FileObject->FileName.Length;
+                }
+
+                /* Copy our new complete name */
+                RtlCopyUnicodeString(CompleteName, &FileObject->FileName);
+
+                if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    OpenPacket->RelatedFileObject = NULL;
+                }
+            }
+
+            /* Check if we have a name */
+            if (FileObject->FileName.Length)
+            {
+                /* Free it */
+                ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
+                FileObject->FileName.Length = 0;
+            }
+
+            /* Clear its device object */
+            FileObject->DeviceObject = NULL;
+
+            /* Clear the file object in the open packet */
+            OpenPacket->FileObject = NULL;
+
+            /* Dereference the file object */
+            if (!UseDummyFile) ObDereferenceObject(FileObject);
+
+            /* Dereference the device object */
+            IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+
+            /* Unless the driver cancelled the open, dereference the VPB */
+            if (Vpb != NULL) IopDereferenceVpbAndFree(Vpb);
+
+            if (OpenPacket->Information != IO_REMOUNT)
+            {
+                OpenPacket->RelatedFileObject = NULL;
+
+                /* Inform we traversed a mount point for later attempt */
+                if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    OpenPacket->TraversedMountPoint = 1;
+                }
+
+                /* In case we override checks, but got this on volume open, fail hard */
+                if (OpenPacket->Override)
+                {
+                    KeBugCheckEx(DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN,
+                                 (ULONG_PTR)OriginalDeviceObject,
+                                 (ULONG_PTR)DeviceObject,
+                                 (ULONG_PTR)CompleteName,
+                                 OpenPacket->Information);
+                }
+
+                /* Return to IO/OB so that information can be upgraded */
+                return STATUS_REPARSE;
+            }
+
+            /* Loop again and reattempt an opening */
+            continue;
+        }
+
+        break;
     }
-    else if (Status == STATUS_REPARSE)
-    {
-        /* FIXME: We don't handle this at all! */
-        ASSERT(FALSE);
-    }
+
+    if (Attempt == IOP_MAX_REPARSE_TRAVERSAL)
+        return STATUS_UNSUCCESSFUL;
 
     /* Get the owner of the File Object */
     OwnerDevice = IoGetRelatedDeviceObject(FileObject);
@@ -1078,16 +1325,184 @@ IopDeleteFile(IN PVOID ObjectBody)
     }
 }
 
+PDEVICE_OBJECT
+NTAPI
+IopGetDeviceAttachmentBase(IN PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_OBJECT PDO = DeviceObject;
+
+    /* Go down the stack to attempt to get the PDO */
+    for (; ((PEXTENDED_DEVOBJ_EXTENSION)PDO->DeviceObjectExtension)->AttachedTo != NULL;
+           PDO = ((PEXTENDED_DEVOBJ_EXTENSION)PDO->DeviceObjectExtension)->AttachedTo);
+
+    return PDO;
+}
+
+PDEVICE_OBJECT
+NTAPI
+IopGetDevicePDO(IN PDEVICE_OBJECT DeviceObject)
+{
+    KIRQL OldIrql;
+    PDEVICE_OBJECT PDO;
+
+    ASSERT(DeviceObject != NULL);
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    /* Get the base DO */
+    PDO = IopGetDeviceAttachmentBase(DeviceObject);
+    /* Check whether that's really a PDO and if so, keep it */
+    if ((PDO->Flags & DO_BUS_ENUMERATED_DEVICE) != DO_BUS_ENUMERATED_DEVICE)
+    {
+        PDO = NULL;
+    }
+    else
+    {
+        ObReferenceObject(PDO);
+    }
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
+    return PDO;
+}
+
 NTSTATUS
 NTAPI
-IopSecurityFile(IN PVOID ObjectBody,
-                IN SECURITY_OPERATION_CODE OperationCode,
-                IN PSECURITY_INFORMATION SecurityInformation,
-                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                IN OUT PULONG BufferLength,
-                IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-                IN POOL_TYPE PoolType,
-                IN OUT PGENERIC_MAPPING GenericMapping)
+IopSetDeviceSecurityDescriptor(IN PDEVICE_OBJECT DeviceObject,
+                               IN PSECURITY_INFORMATION SecurityInformation,
+                               IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                               IN POOL_TYPE PoolType,
+                               IN PGENERIC_MAPPING GenericMapping)
+{
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR OldSecurityDescriptor, CachedSecurityDescriptor, NewSecurityDescriptor;
+
+    PAGED_CODE();
+
+    /* Keep attempting till we find our old SD or fail */
+    while (TRUE)
+    {
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+
+        /* Get our old SD and reference it */
+        OldSecurityDescriptor = DeviceObject->SecurityDescriptor;
+        if (OldSecurityDescriptor != NULL)
+        {
+            ObReferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+        }
+
+        ExReleaseResourceLite(&IopSecurityResource);
+        KeLeaveCriticalRegion();
+
+        /* Set the SD information */
+        NewSecurityDescriptor = OldSecurityDescriptor;
+        Status = SeSetSecurityDescriptorInfo(NULL, SecurityInformation,
+                                             SecurityDescriptor, &NewSecurityDescriptor,
+                                             PoolType, GenericMapping);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (OldSecurityDescriptor != NULL)
+            {
+                ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+            }
+
+            break;
+        }
+
+        /* Add the new DS to the internal cache */
+        Status = ObLogSecurityDescriptor(NewSecurityDescriptor,
+                                         &CachedSecurityDescriptor, 1);
+        ExFreePool(NewSecurityDescriptor);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+            break;
+        }
+
+        KeEnterCriticalRegion();
+        ExAcquireResourceExclusiveLite(&IopSecurityResource, TRUE);
+        /* Check if someone changed it in our back */
+        if (DeviceObject->SecurityDescriptor == OldSecurityDescriptor)
+        {
+            /* We're clear, do the swap */
+            DeviceObject->SecurityDescriptor = CachedSecurityDescriptor;
+            ExReleaseResourceLite(&IopSecurityResource);
+            KeLeaveCriticalRegion();
+
+            /* And dereference old SD (twice - us + not in use) */
+            ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 2);
+
+            break;
+        }
+        ExReleaseResourceLite(&IopSecurityResource);
+        KeLeaveCriticalRegion();
+
+        /* If so, try again */
+        ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+        ObDereferenceSecurityDescriptor(CachedSecurityDescriptor, 1);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IopSetDeviceSecurityDescriptors(IN PDEVICE_OBJECT UpperDeviceObject,
+                                IN PDEVICE_OBJECT PhysicalDeviceObject,
+                                IN PSECURITY_INFORMATION SecurityInformation,
+                                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN POOL_TYPE PoolType,
+                                IN PGENERIC_MAPPING GenericMapping)
+{
+    PDEVICE_OBJECT CurrentDO = PhysicalDeviceObject, NextDevice;
+    NTSTATUS Status = STATUS_SUCCESS, TmpStatus;
+
+    PAGED_CODE();
+
+    ASSERT(PhysicalDeviceObject != NULL);
+
+    /* We always reference the DO we're working on */
+    ObReferenceObject(CurrentDO);
+
+    /* Go up from PDO to latest DO */
+    do
+    {
+        /* Attempt to set the new SD on it */
+        TmpStatus = IopSetDeviceSecurityDescriptor(CurrentDO, SecurityInformation,
+                                                   SecurityDescriptor, PoolType,
+                                                   GenericMapping);
+        /* Was our last one? Remember that status then */
+        if (CurrentDO == UpperDeviceObject)
+        {
+            Status = TmpStatus;
+        }
+
+        /* Try to move to the next DO (and thus, reference it) */
+        NextDevice = CurrentDO->AttachedDevice;
+        if (NextDevice)
+        {
+            ObReferenceObject(NextDevice);
+        }
+
+        /* Dereference current DO and move to the next one */
+        ObDereferenceObject(CurrentDO);
+        CurrentDO = NextDevice;
+    }
+    while (CurrentDO != NULL);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IopGetSetSecurityObject(IN PVOID ObjectBody,
+                        IN SECURITY_OPERATION_CODE OperationCode,
+                        IN PSECURITY_INFORMATION SecurityInformation,
+                        IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                        IN OUT PULONG BufferLength,
+                        IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                        IN POOL_TYPE PoolType,
+                        IN OUT PGENERIC_MAPPING GenericMapping)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
@@ -1145,21 +1560,59 @@ IopSecurityFile(IN PVOID ObjectBody,
         }
         else if (OperationCode == AssignSecurityDescriptor)
         {
+            Status = STATUS_SUCCESS;
+
             /* Make absolutely sure this is a device object */
             if (!(FileObject) || !(FileObject->Flags & FO_STREAM_FILE))
             {
-                /* Assign the Security Descriptor */
-                DeviceObject->SecurityDescriptor = SecurityDescriptor;
+                PSECURITY_DESCRIPTOR CachedSecurityDescriptor;
+
+                /* Add the security descriptor in cache */
+                Status = ObLogSecurityDescriptor(SecurityDescriptor, &CachedSecurityDescriptor, 1);
+                if (NT_SUCCESS(Status))
+                {
+                    KeEnterCriticalRegion();
+                    ExAcquireResourceExclusiveLite(&IopSecurityResource, TRUE);
+
+                    /* Assign the Security Descriptor */
+                    DeviceObject->SecurityDescriptor = CachedSecurityDescriptor;
+
+                    ExReleaseResourceLite(&IopSecurityResource);
+                    KeLeaveCriticalRegion();
+                }
             }
 
-            /* Return success */
-            return STATUS_SUCCESS;
+            /* Return status */
+            return Status;
         }
-        else
+        else if (OperationCode == SetSecurityDescriptor)
         {
-            DPRINT1("FIXME: Set SD unimplemented for Devices\n");
+            /* Get the Physical Device Object if any */
+            PDEVICE_OBJECT PDO = IopGetDevicePDO(DeviceObject);
+
+            if (PDO != NULL)
+            {
+                /* Apply the new SD to any DO in the path from PDO to current DO */
+                Status = IopSetDeviceSecurityDescriptors(DeviceObject, PDO,
+                                                         SecurityInformation,
+                                                         SecurityDescriptor,
+                                                         PoolType, GenericMapping);
+                ObDereferenceObject(PDO);
+            }
+            else
+            {
+                /* Otherwise, just set for ourselves */
+                Status = IopSetDeviceSecurityDescriptor(DeviceObject,
+                                                        SecurityInformation,
+                                                        SecurityDescriptor,
+                                                        PoolType, GenericMapping);
+            }
+
             return STATUS_SUCCESS;
         }
+
+        /* Shouldn't happen */
+        return STATUS_SUCCESS;
     }
     else if (OperationCode == DeleteSecurityDescriptor)
     {
@@ -1600,6 +2053,8 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (OpenPacket.ParseCheck != TRUE)
     {
         /* Parse failed */
+        DPRINT("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
+               ObjectAttributes->ObjectName, Status);
         return Status;
     }
     else
@@ -1822,6 +2277,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1835,6 +2291,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_PIPE_OPTION_FLAGS))
             {
                 /* Invalid named pipe create */
+                DPRINT1("Invalid named pipe create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1843,6 +2300,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1853,6 +2311,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_MAILSLOT_OPTION_FLAGS))
             {
                 /* Invalid mailslot create */
+                DPRINT1("Invalid mailslot create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1956,6 +2415,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             if (!OpenPacket->EaBuffer)
             {
                 ExFreePool(OpenPacket);
+                DPRINT1("Failed to allocate open packet EA buffer\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -2096,7 +2556,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Check if we were 100% successful */
-    if ((OpenPacket->ParseCheck == TRUE) && (OpenPacket->FileObject))
+    if ((OpenPacket->ParseCheck != FALSE) && (OpenPacket->FileObject))
     {
         /* Dereference the File Object */
         ObDereferenceObject(OpenPacket->FileObject);
@@ -2367,7 +2827,7 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 DesiredAccess,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE)
+    if (OpenPacket.ParseCheck == FALSE)
     {
         /* Parse failed */
         IoStatus->Status = Status;
@@ -3180,7 +3640,7 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
                                 DELETE,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE) return Status;
+    if (OpenPacket.ParseCheck == FALSE) return Status;
 
     /* Retrn the Io status */
     return OpenPacket.FinalStatus;

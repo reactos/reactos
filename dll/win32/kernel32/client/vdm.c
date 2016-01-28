@@ -15,27 +15,49 @@
 
 /* TYPES **********************************************************************/
 
+#define BINARY_UNKNOWN  (0)
+#define BINARY_PE_EXE32 (1)
+#define BINARY_PE_DLL32 (2)
+#define BINARY_PE_EXE64 (3)
+#define BINARY_PE_DLL64 (4)
+#define BINARY_WIN16    (5)
+#define BINARY_OS216    (6)
+#define BINARY_DOS      (7)
+#define BINARY_UNIX_EXE (8)
+#define BINARY_UNIX_LIB (9)
+
+
+typedef enum _ENV_NAME_TYPE
+{
+    EnvNameNotAPath = 1,
+    EnvNameSinglePath ,
+    EnvNameMultiplePath
+} ENV_NAME_TYPE;
+
 typedef struct _ENV_INFO
 {
-    ULONG NameType;
-    ULONG NameLength;
+    ENV_NAME_TYPE NameType;
+    ULONG  NameLength;
     PWCHAR Name;
 } ENV_INFO, *PENV_INFO;
 
 /* GLOBALS ********************************************************************/
 
-ENV_INFO BasepEnvNameType[] =
+#define ENV_NAME_ENTRY(type, name)  \
+    {(type), _ARRAYSIZE(name) - 1, (name)}
+
+static ENV_INFO BasepEnvNameType[] =
 {
-    {3, sizeof(L"PATH")      , L"PATH"      },
-    {2, sizeof(L"WINDIR")    , L"WINDIR"    },
-    {2, sizeof(L"SYSTEMROOT"), L"SYSTEMROOT"},
-    {3, sizeof(L"TEMP")      , L"TEMP"      },
-    {3, sizeof(L"TMP")       , L"TMP"       },
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"PATH"),
+    ENV_NAME_ENTRY(EnvNameSinglePath  , L"WINDIR"),
+    ENV_NAME_ENTRY(EnvNameSinglePath  , L"SYSTEMROOT"),
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"TEMP"),
+    ENV_NAME_ENTRY(EnvNameMultiplePath, L"TMP"),
 };
 
-UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
-UNICODE_STRING BaseDotPifSuffixName = RTL_CONSTANT_STRING(L".pif");
-UNICODE_STRING BaseDotExeSuffixName = RTL_CONSTANT_STRING(L".exe");
+static UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
+static UNICODE_STRING BaseDotPifSuffixName = RTL_CONSTANT_STRING(L".pif");
+static UNICODE_STRING BaseDotExeSuffixName = RTL_CONSTANT_STRING(L".exe");
 
 /* FUNCTIONS ******************************************************************/
 
@@ -79,7 +101,7 @@ BaseCheckVDM(IN ULONG BinaryType,
 {
     NTSTATUS Status;
     PBASE_CHECK_VDM CheckVdm = &ApiMessage->Data.CheckVDMRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
     PWCHAR CurrentDir = NULL;
     PWCHAR ShortAppName = NULL;
     PWCHAR ShortCurrentDir = NULL;
@@ -289,15 +311,18 @@ BaseCheckVDM(IN ULONG BinaryType,
     AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen + 2);
     AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
     AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
-    if (StartupInfo->lpDesktop) AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                     HEAP_ZERO_MEMORY,
-                                                                     CheckVdm->DesktopLen);
-    if (StartupInfo->lpTitle) AnsiTitle = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                 HEAP_ZERO_MEMORY,
-                                                                 CheckVdm->TitleLen);
-    if (StartupInfo->lpReserved) AnsiReserved = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                       HEAP_ZERO_MEMORY,
-                                                                       CheckVdm->ReservedLen);
+    if (StartupInfo->lpDesktop)
+        AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             CheckVdm->DesktopLen);
+    if (StartupInfo->lpTitle)
+        AnsiTitle = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           CheckVdm->TitleLen);
+    if (StartupInfo->lpReserved)
+        AnsiReserved = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              CheckVdm->ReservedLen);
 
     if (!AnsiCmdLine
         || !AnsiAppName
@@ -388,7 +413,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     }
 
     /* Fill the ANSI startup info structure */
-    RtlCopyMemory(&AnsiStartupInfo, StartupInfo, sizeof(STARTUPINFO));
+    RtlCopyMemory(&AnsiStartupInfo, StartupInfo, sizeof(AnsiStartupInfo));
     AnsiStartupInfo.lpReserved = AnsiReserved;
     AnsiStartupInfo.lpDesktop = AnsiDesktop;
     AnsiStartupInfo.lpTitle = AnsiTitle;
@@ -403,7 +428,7 @@ BaseCheckVDM(IN ULONG BinaryType,
                                              + CheckVdm->TitleLen
                                              + CheckVdm->ReservedLen
                                              + CheckVdm->EnvLen
-                                             + sizeof(STARTUPINFOA));
+                                             + sizeof(*CheckVdm->StartupInfo));
     if (CaptureBuffer == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -439,7 +464,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     /* Capture the startup info structure */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             &AnsiStartupInfo,
-                            sizeof(STARTUPINFOA),
+                            sizeof(*CheckVdm->StartupInfo),
                             (PVOID*)&CheckVdm->StartupInfo);
 
     if (StartupInfo->lpDesktop)
@@ -476,7 +501,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     Status = CsrClientCallServer((PCSR_API_MESSAGE)ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCheckVDM),
-                                 sizeof(BASE_CHECK_VDM));
+                                 sizeof(*CheckVdm));
 
     /* Write back the task ID */
     *iTask = CheckVdm->iTask;
@@ -492,7 +517,7 @@ Cleanup:
     if (AnsiReserved) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiReserved);
 
     /* Free the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
     /* Free the current directory, if it was allocated here, and its short path */
     if (ShortCurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortCurrentDir);
@@ -511,7 +536,6 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
                    IN ULONG IndexInfo,
                    IN ULONG BinaryType)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_UPDATE_VDM_ENTRY UpdateVdmEntry = &ApiMessage.Data.UpdateVDMEntryRequest;
 
@@ -559,14 +583,14 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     UpdateVdmEntry->BinaryType = BinaryType;
 
     /* Send the message to CSRSS */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
-                                 sizeof(BASE_UPDATE_VDM_ENTRY));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
+                        sizeof(*UpdateVdmEntry));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Handle failure */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -607,7 +631,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode),
-                                 sizeof(BASE_GET_VDM_EXIT_CODE));
+                                 sizeof(*GetVdmExitCode));
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get the exit code from the reply */
@@ -651,7 +675,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine) / sizeof(CommandLine[0]),
+                   ARRAYSIZE(CommandLine),
                    L"\"%s\\ntvdm.exe\" -i%lx %s%c",
                    Buffer,
                    DosSeqId,
@@ -665,7 +689,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine) / sizeof(CommandLine[0]),
+                   ARRAYSIZE(CommandLine),
                    L"\"%s\\ntvdm.exe\" %s%c",
                    Buffer,
                    (BinaryType == BINARY_TYPE_DOS) ? L" " : L"-w",
@@ -676,26 +700,27 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
     return RtlCreateUnicodeString(CmdLineString, CommandLine);
 }
 
-UINT
+ENV_NAME_TYPE
 WINAPI
 BaseGetEnvNameType_U(IN PWCHAR Name,
                      IN ULONG NameLength)
 {
     PENV_INFO EnvInfo;
-    ULONG NameType, i;
+    ENV_NAME_TYPE NameType;
+    ULONG i;
 
-    /* Start by assuming unknown type */
-    NameType = 1;
+    /* Start by assuming the environment variable doesn't describe paths */
+    NameType = EnvNameNotAPath;
 
     /* Loop all the environment names */
-    for (i = 0; i < (sizeof(BasepEnvNameType) / sizeof(ENV_INFO)); i++)
+    for (i = 0; i < ARRAYSIZE(BasepEnvNameType); i++)
     {
         /* Get this entry */
         EnvInfo = &BasepEnvNameType[i];
 
         /* Check if it matches the name */
         if ((EnvInfo->NameLength == NameLength) &&
-            !(_wcsnicmp(EnvInfo->Name, Name, NameLength)))
+            (_wcsnicmp(EnvInfo->Name, Name, NameLength) == 0))
         {
             /* It does, return the type */
             NameType = EnvInfo->NameType;
@@ -703,48 +728,32 @@ BaseGetEnvNameType_U(IN PWCHAR Name,
         }
     }
 
-    /* Return what we found, or unknown if nothing */
     return NameType;
 }
 
 BOOL
 NTAPI
-BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
-                          IN PUNICODE_STRING UnicodeEnv)
-{
-    ULONG Dummy = 0;
-
-    /* Clear the ASCII buffer since Rtl creates this for us */
-    if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);
-
-    /* The Unicode buffer is build by hand, though */
-    if (UnicodeEnv->Buffer)
-    {
-        /* So clear it through the API */
-        NtFreeVirtualMemory(NtCurrentProcess(),
-                            (PVOID*)&UnicodeEnv->Buffer,
-                            &Dummy,
-                            MEM_RELEASE);
-    }
-
-    /* All done */
-    return TRUE;
-}
-
-BOOL
-NTAPI
 BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
-                         IN PANSI_STRING AnsiEnv,
-                         IN PUNICODE_STRING UnicodeEnv)
+                         OUT PANSI_STRING AnsiEnv,
+                         OUT PUNICODE_STRING UnicodeEnv)
 {
-    BOOL Result;
-    ULONG RegionSize, EnvironmentSize = 0;
-    PWCHAR SourcePtr, DestPtr, Environment, NewEnvironment = NULL;
-    WCHAR PathBuffer[MAX_PATH];
+#define IS_ALPHA(x)   \
+    ( ((x) >= L'A' && (x) <= L'Z') || ((x) >= L'a' && (x) <= L'z') )
+
+// From lib/rtl/path.c :
+// Can be put in some .h ??
+#define IS_PATH_SEPARATOR(x)    ((x) == L'\\' || (x) == L'/')
+
+    BOOL Success = FALSE;
     NTSTATUS Status;
+    ULONG RegionSize, EnvironmentSize = 0;
+    PWCHAR Environment, NewEnvironment = NULL;
+    ENV_NAME_TYPE NameType;
+    ULONG NameLength, NumChars, Remaining;
+    PWCHAR SourcePtr, DestPtr, StartPtr;
 
     /* Make sure we have both strings */
-    if (!(AnsiEnv) || !(UnicodeEnv))
+    if (!AnsiEnv || !UnicodeEnv)
     {
         /* Fail */
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -756,7 +765,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     {
         /* Nope, create one */
         Status = RtlCreateEnvironment(TRUE, &Environment);
-        if (!NT_SUCCESS(Status)) goto Quickie;
+        if (!NT_SUCCESS(Status)) goto Cleanup;
     }
     else
     {
@@ -767,103 +776,213 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     /* Do we have something now ? */
     if (!Environment)
     {
-        /* Still not, fail out */
+        /* Still not, bail out */
         SetLastError(ERROR_BAD_ENVIRONMENT);
-        goto Quickie;
+        goto Cleanup;
     }
 
-    /* Count how much space the whole environment takes */
+    /*
+     * Count how much space the whole environment takes. The environment block is
+     * doubly NULL-terminated (NULL from last string and final NULL terminator).
+     */
     SourcePtr = Environment;
-    while ((*SourcePtr++ != UNICODE_NULL) && (*SourcePtr != UNICODE_NULL)) EnvironmentSize++;
-    EnvironmentSize += sizeof(UNICODE_NULL);
+    while (!(*SourcePtr++ == UNICODE_NULL && *SourcePtr == UNICODE_NULL))
+        ++EnvironmentSize;
+    EnvironmentSize += 2; // Add the two terminating NULLs
 
-    /* Allocate a new copy */
+    /*
+     * Allocate a new copy large enough to hold all the environment with paths
+     * in their short form. Since the short form of a path can be a bit longer
+     * than its long form, for example in the case where characters that are
+     * invalid in the 8.3 representation are present in the long path name:
+     *   'C:\\a+b' --> 'C:\\A_B~1', or:
+     *   'C:\\a b' --> 'C:\\AB2761~1' (with checksum inserted),
+     * we suppose that the possible total number of extra characters needed to
+     * convert the long paths into their short form is at most equal to MAX_PATH.
+     */
     RegionSize = (EnvironmentSize + MAX_PATH) * sizeof(WCHAR);
-    if (!NT_SUCCESS(NtAllocateVirtualMemory(NtCurrentProcess(),
-                                            (PVOID*)&NewEnvironment,
-                                            0,
-                                            &RegionSize,
-                                            MEM_COMMIT,
-                                            PAGE_READWRITE)))
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     (PVOID*)&NewEnvironment,
+                                     0,
+                                     &RegionSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
     {
         /* We failed, bail out */
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         NewEnvironment = NULL;
-        goto Quickie;
+        goto Cleanup;
     }
 
-    /* Begin parsing the new environment */
+    /* Parse the environment block */
+    Remaining = MAX_PATH - 2; // '-2': remove the last two NULLs. FIXME: is it really needed??
     SourcePtr = Environment;
     DestPtr   = NewEnvironment;
 
+    /* Loop through all the environment strings */
     while (*SourcePtr != UNICODE_NULL)
     {
-        while (*SourcePtr != UNICODE_NULL)
+        /*
+         * 1. Check the type of the environment variable and copy its name.
+         */
+
+        /* Regular environment variable */
+        if (*SourcePtr != L'=')
         {
-            if (*SourcePtr == L'=')
+            StartPtr = SourcePtr;
+
+            /* Copy the environment variable name, including the '=' */
+            while (*SourcePtr != UNICODE_NULL)
             {
-                /* Store the '=' sign */
-                *DestPtr++ = *SourcePtr++;
+                *DestPtr++ = *SourcePtr;
+                if (*SourcePtr++ == L'=') break;
+            }
 
-                /* Check if this is likely a full path */
-                if (isalphaW(SourcePtr[0])
-                    && (SourcePtr[1] == L':')
-                    && ((SourcePtr[2] == '\\') || (SourcePtr[2] == '/')))
+            /* Guess the type of the environment variable */
+            NameType = BaseGetEnvNameType_U(StartPtr, SourcePtr - StartPtr - 1);
+        }
+        /* 'Current directory' environment variable (i.e. of '=X:=' form) */
+        else // if (*SourcePtr == L'=')
+        {
+            /* First assume we have a possibly malformed environment variable */
+            NameType = EnvNameNotAPath;
+
+            /* Check for a valid 'Current directory' environment variable */
+            if (IS_ALPHA(SourcePtr[1]) && SourcePtr[2] == L':' && SourcePtr[3] == L'=')
+            {
+                /*
+                 * Small optimization: convert the path to short form only if
+                 * the current directory is not the root directory (i.e. not
+                 * of the '=X:=Y:\' form), otherwise just do a simple copy.
+                 */
+                if ( wcslen(SourcePtr) >= ARRAYSIZE("=X:=Y:\\")-1 &&
+                     !( IS_ALPHA(SourcePtr[4]) && SourcePtr[5] == L':' &&
+                        IS_PATH_SEPARATOR(SourcePtr[6]) && SourcePtr[7] == UNICODE_NULL ) )
                 {
-                    PWCHAR Delimiter = wcschr(SourcePtr, L';');
-                    ULONG NumChars;
+                    NameType = EnvNameSinglePath;
 
-                    if (Delimiter != NULL)
-                    {
-                        wcsncpy(PathBuffer,
-                                SourcePtr,
-                                min(Delimiter - SourcePtr, MAX_PATH));
-
-                        /* Seek to the part after the delimiter */
-                        SourcePtr = Delimiter + 1;
-                    }
-                    else
-                    {
-                        wcsncpy(PathBuffer, SourcePtr, MAX_PATH);
-
-                        /* Seek to the end of the string */
-                        SourcePtr = wcschr(SourcePtr, UNICODE_NULL);
-                    }
-
-                    /* Convert the path into a short path */
-                    NumChars = GetShortPathNameW(PathBuffer,
-                                                 DestPtr,
-                                                 EnvironmentSize - (DestPtr - NewEnvironment));
-                    if (NumChars)
-                    {
-                        /*
-                         * If it failed, this block won't be executed, so it
-                         * will continue from the character after the '=' sign.
-                         */
-                        DestPtr += NumChars;
-
-                        /* Append the delimiter */
-                        if (Delimiter != NULL) *DestPtr++ = L';';
-                    }
+                    /* Copy the '=X:=' prefix */
+                    *DestPtr++ = SourcePtr[0];
+                    *DestPtr++ = SourcePtr[1];
+                    *DestPtr++ = SourcePtr[2];
+                    *DestPtr++ = SourcePtr[3];
+                    SourcePtr += 4;
                 }
             }
-            else if (islowerW(*SourcePtr)) *DestPtr++ = toupperW(*SourcePtr++);
-            else *DestPtr++ = *SourcePtr++;
+            else
+            {
+                /*
+                 * Invalid stuff starting with '=', i.e.:
+                 * =? (with '?' not being a letter)
+                 * =X??? (with '?' not being ":=" and not followed by something longer than 3 characters)
+                 * =X:=??? (with '?' not being "X:\\")
+                 *
+                 * 'NameType' is already set to 'EnvNameNotAPath'.
+                 */
+            }
         }
 
-        /* Copy the terminating NULL character */
-        *DestPtr++ = *SourcePtr++;
+
+        /*
+         * 2. Copy the environment value and perform conversions accordingly.
+         */
+
+        if (NameType == EnvNameNotAPath)
+        {
+            /* Copy everything, including the NULL terminator */
+            do
+            {
+                *DestPtr++ = *SourcePtr;
+            } while (*SourcePtr++ != UNICODE_NULL);
+        }
+        else if (NameType == EnvNameSinglePath)
+        {
+            /* Convert the path to its short form */
+            NameLength = wcslen(SourcePtr);
+            NumChars = GetShortPathNameW(SourcePtr, DestPtr, NameLength + 1 + Remaining);
+            if (NumChars == 0 || NumChars > NameLength + Remaining)
+            {
+                /* If the conversion failed, just copy the original value */
+                RtlCopyMemory(DestPtr, SourcePtr, NameLength * sizeof(WCHAR));
+                NumChars = NameLength;
+            }
+            DestPtr += NumChars;
+            if (NumChars > NameLength)
+                Remaining -= (NumChars - NameLength);
+
+            SourcePtr += NameLength;
+
+            /* Copy the NULL terminator */
+            *DestPtr++ = *SourcePtr++;
+        }
+        else // if (NameType == EnvNameMultiplePath)
+        {
+            WCHAR Delimiter;
+
+            /* Loop through the list of paths (delimited by ';') and convert each path to its short form */
+            do
+            {
+                /* Copy any trailing ';' before going to the next path */
+                while (*SourcePtr == L';')
+                {
+                    *DestPtr++ = *SourcePtr++;
+                }
+
+                StartPtr = SourcePtr;
+
+                /* Find the next path list delimiter or the NULL terminator */
+                while (*SourcePtr != UNICODE_NULL && *SourcePtr != L';')
+                {
+                    ++SourcePtr;
+                }
+                Delimiter = *SourcePtr;
+
+                NameLength = SourcePtr - StartPtr;
+                if (NameLength)
+                {
+                    /*
+                     * Temporarily replace the possible path list delimiter by NULL.
+                     * 'lpEnvironment' must point to a read+write memory buffer!
+                     */
+                    *SourcePtr = UNICODE_NULL;
+
+                    NumChars = GetShortPathNameW(StartPtr, DestPtr, NameLength + 1 + Remaining);
+                    if ( NumChars == 0 ||
+                        (Delimiter == L';' ? NumChars > NameLength + Remaining
+                                           : NumChars > NameLength /* + Remaining ?? */) )
+                    {
+                        /* If the conversion failed, just copy the original value */
+                        RtlCopyMemory(DestPtr, StartPtr, NameLength * sizeof(WCHAR));
+                        NumChars = NameLength;
+                    }
+                    DestPtr += NumChars;
+                    if (NumChars > NameLength)
+                        Remaining -= (NumChars - NameLength);
+
+                    /* If removed, restore the path list delimiter in the source environment value and copy it */
+                    if (Delimiter != UNICODE_NULL)
+                    {
+                        *SourcePtr = Delimiter;
+                        *DestPtr++ = *SourcePtr++;
+                    }
+                }
+            } while (*SourcePtr != UNICODE_NULL);
+
+            /* Copy the NULL terminator */
+            *DestPtr++ = *SourcePtr++;
+        }
     }
 
-    /* Terminate it */
+    /* NULL-terminate the environment block */
     *DestPtr++ = UNICODE_NULL;
 
-    /* Initialize the unicode string to hold it */
-    EnvironmentSize = (DestPtr - NewEnvironment) * sizeof(WCHAR);
-    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, (USHORT)EnvironmentSize);
-    UnicodeEnv->Length = (USHORT)EnvironmentSize;
+    /* Initialize the Unicode string to hold it */
+    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment,
+                              (DestPtr - NewEnvironment) * sizeof(WCHAR));
+    UnicodeEnv->Length = UnicodeEnv->MaximumLength;
 
-    /* Create the ASCII version of it */
+    /* Create its ANSI version */
     Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
     if (!NT_SUCCESS(Status))
     {
@@ -873,13 +992,13 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     else
     {
         /* Everything went okay, so return success */
-        Result = TRUE;
+        Success = TRUE;
         NewEnvironment = NULL;
     }
 
-Quickie:
-    /* Cleanup path starts here, start by destroying the envrionment copy */
-    if (!(lpEnvironment) && (Environment)) RtlDestroyEnvironment(Environment);
+Cleanup:
+    /* Cleanup path starts here, start by destroying the environment copy */
+    if (!lpEnvironment && Environment) RtlDestroyEnvironment(Environment);
 
     /* See if we are here due to failure */
     if (NewEnvironment)
@@ -898,7 +1017,31 @@ Quickie:
     }
 
     /* Return the result */
-    return Result;
+    return Success;
+}
+
+BOOL
+NTAPI
+BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
+                          IN PUNICODE_STRING UnicodeEnv)
+{
+    ULONG Dummy = 0;
+
+    /* Clear the ANSI buffer since Rtl creates this for us */
+    if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);
+
+    /* The Unicode buffer is build by hand, though */
+    if (UnicodeEnv->Buffer)
+    {
+        /* So clear it through the API */
+        NtFreeVirtualMemory(NtCurrentProcess(),
+                            (PVOID*)&UnicodeEnv->Buffer,
+                            &Dummy,
+                            MEM_RELEASE);
+    }
+
+    /* All done */
+    return TRUE;
 }
 
 
@@ -1003,7 +1146,7 @@ InternalGetBinaryType(HANDLE hFile)
     return BINARY_UNKNOWN;
   }
 
-  /* Mach-o File with Endian set to Big Endian  or Little Endian*/
+  /* Mach-o File with Endian set to Big Endian or Little Endian*/
   if(Header.macho.magic == 0xFEEDFACE ||
      Header.macho.magic == 0xCEFAEDFE)
   {
@@ -1251,7 +1394,7 @@ ExitVDM(BOOL IsWow, ULONG iWowTask)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitVDM),
-                        sizeof(BASE_EXIT_VDM));
+                        sizeof(*ExitVdm));
 
     /* Close the returned wait object handle, if any */
     if (NT_SUCCESS(ApiMessage.Status) && (ExitVdm->WaitObjectForVDM != NULL))
@@ -1267,8 +1410,8 @@ BOOL
 WINAPI
 GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
 {
+    BOOL Success = FALSE;
     NTSTATUS Status;
-    BOOL Result = FALSE;
     BASE_API_MESSAGE ApiMessage;
     PBASE_GET_NEXT_VDM_COMMAND GetNextVdmCommand = &ApiMessage.Data.GetNextVDMCommandRequest;
     PBASE_IS_FIRST_VDM IsFirstVdm = &ApiMessage.Data.IsFirstVDMRequest;
@@ -1276,317 +1419,343 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
     ULONG NumStrings = 0;
 
-    if (CommandData != NULL)
+    /*
+     * Special case to test whether the VDM is the first one.
+     */
+    if (CommandData == NULL)
     {
-        if (CommandData->VDMState & (VDM_NOT_LOADED | VDM_NOT_READY | VDM_READY))
+        /* Call CSRSS */
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                            NULL,
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepIsFirstVDM),
+                            sizeof(*IsFirstVdm));
+        if (!NT_SUCCESS(ApiMessage.Status))
         {
-            /* Clear the structure */
-            ZeroMemory(GetNextVdmCommand, sizeof(*GetNextVdmCommand));
-
-            /* Setup the input parameters */
-            GetNextVdmCommand->iTask = CommandData->TaskId;
-            GetNextVdmCommand->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-            GetNextVdmCommand->CmdLen = CommandData->CmdLen;
-            GetNextVdmCommand->AppLen = CommandData->AppLen;
-            GetNextVdmCommand->PifLen = CommandData->PifLen;
-            GetNextVdmCommand->CurDirectoryLen = CommandData->CurDirectoryLen;
-            GetNextVdmCommand->EnvLen = CommandData->EnvLen;
-            GetNextVdmCommand->DesktopLen = CommandData->DesktopLen;
-            GetNextVdmCommand->TitleLen = CommandData->TitleLen;
-            GetNextVdmCommand->ReservedLen = CommandData->ReservedLen;
-            GetNextVdmCommand->VDMState = CommandData->VDMState;
-
-            /* Count the number of strings */
-            if (CommandData->CmdLen) NumStrings++;
-            if (CommandData->AppLen) NumStrings++;
-            if (CommandData->PifLen) NumStrings++;
-            if (CommandData->CurDirectoryLen) NumStrings++;
-            if (CommandData->EnvLen) NumStrings++;
-            if (CommandData->DesktopLen) NumStrings++;
-            if (CommandData->TitleLen) NumStrings++;
-            if (CommandData->ReservedLen) NumStrings++;
-
-            /* Allocate the capture buffer */
-            CaptureBuffer = CsrAllocateCaptureBuffer(NumStrings + 1,
-                                                     GetNextVdmCommand->CmdLen
-                                                     + GetNextVdmCommand->AppLen
-                                                     + GetNextVdmCommand->PifLen
-                                                     + GetNextVdmCommand->CurDirectoryLen
-                                                     + GetNextVdmCommand->EnvLen
-                                                     + GetNextVdmCommand->DesktopLen
-                                                     + GetNextVdmCommand->TitleLen
-                                                     + GetNextVdmCommand->ReservedLen
-                                                     + sizeof(STARTUPINFOA));
-            if (CaptureBuffer == NULL)
-            {
-                BaseSetLastNTError(STATUS_NO_MEMORY);
-                goto Cleanup;
-            }
-
-            /* Allocate memory for the startup info */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      sizeof(STARTUPINFOA),
-                                      (PVOID*)&GetNextVdmCommand->StartupInfo);
-
-            if (CommandData->CmdLen)
-            {
-                /* Allocate memory for the command line */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->CmdLen,
-                                          (PVOID*)&GetNextVdmCommand->CmdLine);
-            }
-
-            if (CommandData->AppLen)
-            {
-                /* Allocate memory for the application name */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->AppLen,
-                                          (PVOID*)&GetNextVdmCommand->AppName);
-            }
-
-            if (CommandData->PifLen)
-            {
-                /* Allocate memory for the PIF file name */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->PifLen,
-                                          (PVOID*)&GetNextVdmCommand->PifFile);
-            }
-
-            if (CommandData->CurDirectoryLen)
-            {
-                /* Allocate memory for the current directory */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->CurDirectoryLen,
-                                          (PVOID*)&GetNextVdmCommand->CurDirectory);
-            }
-
-            if (CommandData->EnvLen)
-            {
-                /* Allocate memory for the environment */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->EnvLen,
-                                          (PVOID*)&GetNextVdmCommand->Env);
-            }
-
-            if (CommandData->DesktopLen)
-            {
-                /* Allocate memory for the desktop name */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->DesktopLen,
-                                          (PVOID*)&GetNextVdmCommand->Desktop);
-            }
-
-            if (CommandData->TitleLen)
-            {
-                /* Allocate memory for the title */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->TitleLen,
-                                          (PVOID*)&GetNextVdmCommand->Title);
-            }
-
-            if (CommandData->ReservedLen)
-            {
-                /* Allocate memory for the reserved parameter */
-                CsrAllocateMessagePointer(CaptureBuffer,
-                                          CommandData->ReservedLen,
-                                          (PVOID*)&GetNextVdmCommand->Reserved);
-            }
-
-            do
-            {
-                /* Call CSRSS */
-                Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                             CaptureBuffer,
-                                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetNextVDMCommand),
-                                             sizeof(BASE_GET_NEXT_VDM_COMMAND));
-
-                if (!NT_SUCCESS(Status))
-                {
-                    /* Store the correct lengths */
-                    CommandData->CmdLen = GetNextVdmCommand->CmdLen;
-                    CommandData->AppLen = GetNextVdmCommand->AppLen;
-                    CommandData->PifLen = GetNextVdmCommand->PifLen;
-                    CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
-                    CommandData->EnvLen = GetNextVdmCommand->EnvLen;
-                    CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
-                    CommandData->TitleLen = GetNextVdmCommand->TitleLen;
-                    CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
-
-                    BaseSetLastNTError(Status);
-                    goto Cleanup;
-                }
-
-                /* Did we receive an event handle? */
-                if (GetNextVdmCommand->WaitObjectForVDM != NULL)
-                {
-                    /* Wait for the event to become signaled and try again */
-                    Status = NtWaitForSingleObject(GetNextVdmCommand->WaitObjectForVDM,
-                                                   FALSE,
-                                                   NULL);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        BaseSetLastNTError(Status);
-                        goto Cleanup;
-                    }
-
-                    /* Set the retry flag and clear the exit code */
-                    GetNextVdmCommand->VDMState |= VDM_FLAG_RETRY;
-                    GetNextVdmCommand->ExitCode = 0;
-                }
-            }
-            while (GetNextVdmCommand->WaitObjectForVDM != NULL);
-
-            /* Write back the standard handles */
-            CommandData->StdIn = GetNextVdmCommand->StdIn;
-            CommandData->StdOut = GetNextVdmCommand->StdOut;
-            CommandData->StdErr = GetNextVdmCommand->StdErr;
-
-            /* Write back the startup info */
-            RtlMoveMemory(&CommandData->StartupInfo,
-                          GetNextVdmCommand->StartupInfo,
-                          sizeof(STARTUPINFOA));
-
-            if (CommandData->CmdLen)
-            {
-                /* Write back the command line */
-                RtlMoveMemory(CommandData->CmdLine,
-                              GetNextVdmCommand->CmdLine,
-                              GetNextVdmCommand->CmdLen);
-
-                /* Set the actual length */
-                CommandData->CmdLen = GetNextVdmCommand->CmdLen;
-            }
-
-            if (CommandData->AppLen)
-            {
-                /* Write back the application name */
-                RtlMoveMemory(CommandData->AppName,
-                              GetNextVdmCommand->AppName,
-                              GetNextVdmCommand->AppLen);
-
-                /* Set the actual length */
-                CommandData->AppLen = GetNextVdmCommand->AppLen;
-            }
-
-            if (CommandData->PifLen)
-            {
-                /* Write back the PIF file name */
-                RtlMoveMemory(CommandData->PifFile,
-                              GetNextVdmCommand->PifFile,
-                              GetNextVdmCommand->PifLen);
-
-                /* Set the actual length */
-                CommandData->PifLen = GetNextVdmCommand->PifLen;
-            }
-
-            if (CommandData->CurDirectoryLen)
-            {
-                /* Write back the current directory */
-                RtlMoveMemory(CommandData->CurDirectory,
-                              GetNextVdmCommand->CurDirectory,
-                              GetNextVdmCommand->CurDirectoryLen);
-
-                /* Set the actual length */
-                CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
-            }
-
-            if (CommandData->EnvLen)
-            {
-                /* Write back the environment */
-                RtlMoveMemory(CommandData->Env,
-                              GetNextVdmCommand->Env,
-                              GetNextVdmCommand->EnvLen);
-
-                /* Set the actual length */
-                CommandData->EnvLen = GetNextVdmCommand->EnvLen;
-            }
-
-            if (CommandData->DesktopLen)
-            {
-                /* Write back the desktop name */
-                RtlMoveMemory(CommandData->Desktop,
-                              GetNextVdmCommand->Desktop,
-                              GetNextVdmCommand->DesktopLen);
-
-                /* Set the actual length */
-                CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
-            }
-
-            if (CommandData->TitleLen)
-            {
-                /* Write back the title */
-                RtlMoveMemory(CommandData->Title,
-                              GetNextVdmCommand->Title,
-                              GetNextVdmCommand->TitleLen);
-
-                /* Set the actual length */
-                CommandData->TitleLen = GetNextVdmCommand->TitleLen;
-            }
-
-            if (CommandData->ReservedLen)
-            {
-                /* Write back the reserved parameter */
-                RtlMoveMemory(CommandData->Reserved,
-                              GetNextVdmCommand->Reserved,
-                              GetNextVdmCommand->ReservedLen);
-
-                /* Set the actual length */
-                CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
-            }
-
-            /* Write the remaining output parameters */
-            CommandData->TaskId = GetNextVdmCommand->iTask;
-            CommandData->CreationFlags = GetNextVdmCommand->dwCreationFlags;
-            CommandData->CodePage = GetNextVdmCommand->CodePage;
-            CommandData->ExitCode = GetNextVdmCommand->ExitCode;
-            CommandData->CurrentDrive = GetNextVdmCommand->CurrentDrive;
-            CommandData->VDMState = GetNextVdmCommand->VDMState;
-            CommandData->ComingFromBat = GetNextVdmCommand->fComingFromBat;
-
-            /* It was successful */
-            Result = TRUE;
+            BaseSetLastNTError(ApiMessage.Status);
+            return FALSE;
         }
-        else if ((CommandData->VDMState == VDM_INC_REENTER_COUNT)
-                 || (CommandData->VDMState == VDM_DEC_REENTER_COUNT))
-        {
-            /* Setup the input parameters */
-            SetReenterCount->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-            SetReenterCount->fIncDec = CommandData->VDMState;
 
-            /* Call CSRSS */
-            Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                         NULL,
-                                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
-                                         sizeof(BASE_SET_REENTER_COUNT));
-            BaseSetLastNTError(Status);
-            Result = NT_SUCCESS(Status);
-        }
-        else
-        {
-            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
-            Result = FALSE;
-        }
+        /* Return TRUE if this is the first VDM */
+        return IsFirstVdm->FirstVDM;
     }
-    else
+
+    /* CommandData != NULL */
+
+    /*
+     * Special case to increment or decrement the reentrancy count.
+     */
+    if ((CommandData->VDMState == VDM_INC_REENTER_COUNT) ||
+        (CommandData->VDMState == VDM_DEC_REENTER_COUNT))
+    {
+        /* Setup the input parameters */
+        SetReenterCount->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+        SetReenterCount->fIncDec = CommandData->VDMState;
+
+        /* Call CSRSS */
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                            NULL,
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
+                            sizeof(*SetReenterCount));
+        if (!NT_SUCCESS(ApiMessage.Status))
+        {
+            BaseSetLastNTError(ApiMessage.Status);
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    /*
+     * TODO!
+     * Special case to retrieve or set WOW information.
+     */
+    // TODO: if CommandData->VDMState & (VDM_LIST_WOW_PROCESSES | VDM_LIST_WOW_TASKS | VDM_ADD_WOW_TASK)
+    // then call BasepGetNextVDMCommand in a simpler way!
+
+    /*
+     * Regular case.
+     */
+
+    /* Clear the structure */
+    RtlZeroMemory(GetNextVdmCommand, sizeof(*GetNextVdmCommand));
+
+    /* Setup the input parameters */
+    GetNextVdmCommand->iTask = CommandData->TaskId;
+    GetNextVdmCommand->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetNextVdmCommand->CmdLen = CommandData->CmdLen;
+    GetNextVdmCommand->AppLen = CommandData->AppLen;
+    GetNextVdmCommand->PifLen = CommandData->PifLen;
+    GetNextVdmCommand->CurDirectoryLen = CommandData->CurDirectoryLen;
+    GetNextVdmCommand->EnvLen = CommandData->EnvLen;
+    GetNextVdmCommand->DesktopLen = CommandData->DesktopLen;
+    GetNextVdmCommand->TitleLen = CommandData->TitleLen;
+    GetNextVdmCommand->ReservedLen = CommandData->ReservedLen;
+    GetNextVdmCommand->VDMState = CommandData->VDMState;
+
+    /* Count the number of strings */
+    if (CommandData->CmdLen) NumStrings++;
+    if (CommandData->AppLen) NumStrings++;
+    if (CommandData->PifLen) NumStrings++;
+    if (CommandData->CurDirectoryLen) NumStrings++;
+    if (CommandData->EnvLen) NumStrings++;
+    if (CommandData->DesktopLen) NumStrings++;
+    if (CommandData->TitleLen) NumStrings++;
+    if (CommandData->ReservedLen) NumStrings++;
+
+    /* Allocate the capture buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(NumStrings + 1,
+                                             GetNextVdmCommand->CmdLen
+                                             + GetNextVdmCommand->AppLen
+                                             + GetNextVdmCommand->PifLen
+                                             + GetNextVdmCommand->CurDirectoryLen
+                                             + GetNextVdmCommand->EnvLen
+                                             + GetNextVdmCommand->DesktopLen
+                                             + GetNextVdmCommand->TitleLen
+                                             + GetNextVdmCommand->ReservedLen
+                                             + sizeof(*GetNextVdmCommand->StartupInfo));
+    if (CaptureBuffer == NULL)
+    {
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        goto Cleanup;
+    }
+
+    /* Capture the data */
+
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              sizeof(*GetNextVdmCommand->StartupInfo),
+                              (PVOID*)&GetNextVdmCommand->StartupInfo);
+
+    if (CommandData->CmdLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->CmdLen,
+                                  (PVOID*)&GetNextVdmCommand->CmdLine);
+    }
+
+    if (CommandData->AppLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->AppLen,
+                                  (PVOID*)&GetNextVdmCommand->AppName);
+    }
+
+    if (CommandData->PifLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->PifLen,
+                                  (PVOID*)&GetNextVdmCommand->PifFile);
+    }
+
+    if (CommandData->CurDirectoryLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->CurDirectoryLen,
+                                  (PVOID*)&GetNextVdmCommand->CurDirectory);
+    }
+
+    if (CommandData->EnvLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->EnvLen,
+                                  (PVOID*)&GetNextVdmCommand->Env);
+    }
+
+    if (CommandData->DesktopLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->DesktopLen,
+                                  (PVOID*)&GetNextVdmCommand->Desktop);
+    }
+
+    if (CommandData->TitleLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->TitleLen,
+                                  (PVOID*)&GetNextVdmCommand->Title);
+    }
+
+    if (CommandData->ReservedLen)
+    {
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  CommandData->ReservedLen,
+                                  (PVOID*)&GetNextVdmCommand->Reserved);
+    }
+
+    while (TRUE)
     {
         /* Call CSRSS */
         Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     NULL,
-                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepIsFirstVDM),
-                                     sizeof(BASE_IS_FIRST_VDM));
-        if (!NT_SUCCESS(Status))
+                                     CaptureBuffer,
+                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetNextVDMCommand),
+                                     sizeof(*GetNextVdmCommand));
+
+        /* Exit the waiting loop if we did not receive any event handle */
+        if (GetNextVdmCommand->WaitObjectForVDM == NULL)
+            break;
+
+        /* Wait for the event to become signaled and try again */
+        Status = NtWaitForSingleObject(GetNextVdmCommand->WaitObjectForVDM,
+                                       FALSE, NULL);
+        if (Status != STATUS_SUCCESS)
         {
+            /* Fail if we timed out, or if some other error happened */
             BaseSetLastNTError(Status);
             goto Cleanup;
         }
 
-        /* Return TRUE if this is the first VDM */
-        Result = IsFirstVdm->FirstVDM;
+        /* Set the retry flag, clear the exit code, and retry a query */
+        GetNextVdmCommand->VDMState |= VDM_FLAG_RETRY;
+        GetNextVdmCommand->ExitCode = 0;
     }
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_INVALID_PARAMETER)
+        {
+            /*
+             * One of the buffer lengths was less than required. Store the correct ones.
+             * Note that the status code is not STATUS_BUFFER_TOO_SMALL as one would expect,
+             * in order to keep compatibility with Windows 2003 BASESRV.DLL.
+             */
+            CommandData->CmdLen = GetNextVdmCommand->CmdLen;
+            CommandData->AppLen = GetNextVdmCommand->AppLen;
+            CommandData->PifLen = GetNextVdmCommand->PifLen;
+            CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
+            CommandData->EnvLen      = GetNextVdmCommand->EnvLen;
+            CommandData->DesktopLen  = GetNextVdmCommand->DesktopLen;
+            CommandData->TitleLen    = GetNextVdmCommand->TitleLen;
+            CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
+        }
+        else
+        {
+            /* Any other failure */
+            CommandData->CmdLen = 0;
+            CommandData->AppLen = 0;
+            CommandData->PifLen = 0;
+            CommandData->CurDirectoryLen = 0;
+            CommandData->EnvLen      = 0;
+            CommandData->DesktopLen  = 0;
+            CommandData->TitleLen    = 0;
+            CommandData->ReservedLen = 0;
+        }
+
+        BaseSetLastNTError(Status);
+        goto Cleanup;
+    }
+
+    /* Write back the standard handles */
+    CommandData->StdIn  = GetNextVdmCommand->StdIn;
+    CommandData->StdOut = GetNextVdmCommand->StdOut;
+    CommandData->StdErr = GetNextVdmCommand->StdErr;
+
+    /* Write back the startup info */
+    RtlMoveMemory(&CommandData->StartupInfo,
+                  GetNextVdmCommand->StartupInfo,
+                  sizeof(*GetNextVdmCommand->StartupInfo));
+
+    if (CommandData->CmdLen)
+    {
+        /* Write back the command line */
+        RtlMoveMemory(CommandData->CmdLine,
+                      GetNextVdmCommand->CmdLine,
+                      GetNextVdmCommand->CmdLen);
+
+        /* Set the actual length */
+        CommandData->CmdLen = GetNextVdmCommand->CmdLen;
+    }
+
+    if (CommandData->AppLen)
+    {
+        /* Write back the application name */
+        RtlMoveMemory(CommandData->AppName,
+                      GetNextVdmCommand->AppName,
+                      GetNextVdmCommand->AppLen);
+
+        /* Set the actual length */
+        CommandData->AppLen = GetNextVdmCommand->AppLen;
+    }
+
+    if (CommandData->PifLen)
+    {
+        /* Write back the PIF file name */
+        RtlMoveMemory(CommandData->PifFile,
+                      GetNextVdmCommand->PifFile,
+                      GetNextVdmCommand->PifLen);
+
+        /* Set the actual length */
+        CommandData->PifLen = GetNextVdmCommand->PifLen;
+    }
+
+    if (CommandData->CurDirectoryLen)
+    {
+        /* Write back the current directory */
+        RtlMoveMemory(CommandData->CurDirectory,
+                      GetNextVdmCommand->CurDirectory,
+                      GetNextVdmCommand->CurDirectoryLen);
+
+        /* Set the actual length */
+        CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
+    }
+
+    if (CommandData->EnvLen)
+    {
+        /* Write back the environment */
+        RtlMoveMemory(CommandData->Env,
+                      GetNextVdmCommand->Env,
+                      GetNextVdmCommand->EnvLen);
+
+        /* Set the actual length */
+        CommandData->EnvLen = GetNextVdmCommand->EnvLen;
+    }
+
+    if (CommandData->DesktopLen)
+    {
+        /* Write back the desktop name */
+        RtlMoveMemory(CommandData->Desktop,
+                      GetNextVdmCommand->Desktop,
+                      GetNextVdmCommand->DesktopLen);
+
+        /* Set the actual length */
+        CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
+    }
+
+    if (CommandData->TitleLen)
+    {
+        /* Write back the title */
+        RtlMoveMemory(CommandData->Title,
+                      GetNextVdmCommand->Title,
+                      GetNextVdmCommand->TitleLen);
+
+        /* Set the actual length */
+        CommandData->TitleLen = GetNextVdmCommand->TitleLen;
+    }
+
+    if (CommandData->ReservedLen)
+    {
+        /* Write back the reserved parameter */
+        RtlMoveMemory(CommandData->Reserved,
+                      GetNextVdmCommand->Reserved,
+                      GetNextVdmCommand->ReservedLen);
+
+        /* Set the actual length */
+        CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
+    }
+
+    /* Write the remaining output parameters */
+    CommandData->TaskId        = GetNextVdmCommand->iTask;
+    CommandData->CreationFlags = GetNextVdmCommand->dwCreationFlags;
+    CommandData->CodePage      = GetNextVdmCommand->CodePage;
+    CommandData->ExitCode      = GetNextVdmCommand->ExitCode;
+    CommandData->CurrentDrive  = GetNextVdmCommand->CurrentDrive;
+    CommandData->VDMState      = GetNextVdmCommand->VDMState;
+    CommandData->ComingFromBat = GetNextVdmCommand->fComingFromBat;
+
+    /* It was successful */
+    Success = TRUE;
 
 Cleanup:
     if (CaptureBuffer != NULL) CsrFreeCaptureBuffer(CaptureBuffer); 
-    return Result;
+    return Success;
 }
 
 
@@ -1619,7 +1788,7 @@ GetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMCurDirs),
-                        sizeof(BASE_GETSET_VDM_CURDIRS));
+                        sizeof(*VDMCurrentDirsRequest));
 
     /* Set the last error */
     BaseSetLastNTError(ApiMessage.Status);
@@ -1796,7 +1965,7 @@ SetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetVDMCurDirs),
-                        sizeof(BASE_GETSET_VDM_CURDIRS));
+                        sizeof(*VDMCurrentDirsRequest));
 
     /* Free the capture buffer */
     CsrFreeCaptureBuffer(CaptureBuffer);

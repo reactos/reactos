@@ -16,14 +16,13 @@ list(APPEND SOURCE
     editor.c
     hlink.c
     htmlanchor.c
+    htmlarea.c
     htmlattr.c
     htmlbody.c
     htmlcomment.c
     htmlcurstyle.c
     htmldoc.c
     htmlelem.c
-    htmlelem2.c
-    htmlelem3.c
     htmlelemcol.c
     htmlembed.c
     htmlevent.c
@@ -83,6 +82,7 @@ list(APPEND SOURCE
     task.c
     txtrange.c
     view.c
+    xmlhttprequest.c
     mshtml_private.h)
 
 if(MSVC)
@@ -103,7 +103,6 @@ list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/mshtml_classes.rgs)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_rc_deps}")
-
 set_module_type(mshtml win32dll)
 target_link_libraries(mshtml uuid wine strmiids oldnames)
 

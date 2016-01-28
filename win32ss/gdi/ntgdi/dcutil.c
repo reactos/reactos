@@ -46,6 +46,21 @@ GreGetBkMode(HDC hdc)
    return lBkMode;
 }
 
+COLORREF FASTCALL
+GreGetBkColor(HDC hdc)
+{
+   PDC dc;
+   COLORREF crBk;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   crBk = dc->pdcattr->ulBackgroundClr;
+   DC_UnlockDc(dc);
+   return crBk;
+}
+
 int FASTCALL
 GreGetMapMode(HDC hdc)
 {
@@ -159,9 +174,15 @@ IntGdiSetTextColor(HDC hDC,
     }
     pdcattr = pdc->pdcattr;
 
-    // What about ulForegroundClr, like in gdi32?
-    crOldColor = pdcattr->crForegroundClr;
-    pdcattr->crForegroundClr = color;
+    crOldColor = (COLORREF) pdcattr->ulForegroundClr;
+    pdcattr->ulForegroundClr = (ULONG)color;
+
+    if (pdcattr->crForegroundClr != color)
+    {
+        pdcattr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+        pdcattr->crForegroundClr = color;
+    }
+
     DC_vUpdateTextBrush(pdc);
 
     DC_UnlockDc(pdc);
@@ -241,6 +262,21 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
     return oSMode;
 }
 
+int FASTCALL
+GreGetGraphicsMode(HDC hdc)
+{
+   PDC dc;
+   int GraphicsMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   GraphicsMode = dc->pdcattr->iGraphicsMode;;
+   DC_UnlockDc(dc);
+   return GraphicsMode;
+}
+
 VOID
 FASTCALL
 DCU_SetDcUndeletable(HDC  hDC)
@@ -274,7 +310,7 @@ FASTCALL
 IntSetDefaultRegion(PDC pdc)
 {
     PSURFACE pSurface;
-    PROSRGNDATA prgn;
+    PREGION prgn;
     RECTL rclWnd, rclClip;
 
     IntGdiReleaseRaoRgn(pdc);
@@ -429,6 +465,7 @@ NtGdiGetDCDword(
             break;
 
         case GdiGetEMFRestorDc:
+            SafeResult = pdc->dclevel.lSaveDepth;
             break;
 
         case GdiGetFontLanguageInfo:
@@ -673,7 +710,7 @@ NtGdiSetBoundsRect(
         RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
     }
 
-    if (flags & DCB_ACCUMULATE)
+    if (flags & DCB_ACCUMULATE && prc != NULL)
     {
         /* Capture the rect */
         _SEH2_TRY

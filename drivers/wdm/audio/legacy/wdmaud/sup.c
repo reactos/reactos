@@ -14,12 +14,14 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_WDMAUD 'DMDW'
+
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_WDMAUD);
     if (!Item)
         return Item;
 

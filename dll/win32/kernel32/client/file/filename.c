@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/file.c
+ * FILE:            dll/win32/kernel32/client/file/filename.c
  * PURPOSE:         Directory functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
@@ -86,10 +86,10 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
                  IN UINT uUnique,
                  OUT LPWSTR lpTempFileName)
 {
-    CHAR * Let;
+    PUCHAR Let;
     HANDLE TempFile;
     UINT ID, Num = 0;
-    CHAR IDString[5];
+    UCHAR IDString[5];
     WCHAR * TempFileName;
     BASE_API_MESSAGE ApiMessage;
     PBASE_GET_TEMP_FILE GetTempFile = &ApiMessage.Data.GetTempFileRequest;
@@ -161,7 +161,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
             CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                 NULL,
                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetTempFile),
-                                sizeof(BASE_GET_TEMP_FILE));
+                                sizeof(*GetTempFile));
             if (GetTempFile->UniqueID == 0)
             {
                 Num++;
@@ -176,7 +176,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         }
  
         /* Convert that ID to wchar */
-        RtlIntegerToChar(ID, 0x10, sizeof(IDString), IDString);
+        RtlIntegerToChar(ID, 0x10, sizeof(IDString), (PCHAR)IDString);
         Let = IDString;
         do
         {
@@ -328,6 +328,7 @@ CheckNameLegalDOS8Dot3W(
 {
     UNICODE_STRING Name;
     ANSI_STRING AnsiName;
+    BOOLEAN NameContainsSpaces;
 
     if(lpName == NULL ||
        (lpOemName == NULL && OemNameSize != 0) ||
@@ -348,7 +349,9 @@ CheckNameLegalDOS8Dot3W(
 
     *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
                                           (lpOemName ? &AnsiName : NULL),
-                                          (BOOLEAN*)pbNameContainsSpaces);
+                                          &NameContainsSpaces);
+    if (*pbNameLegal && pbNameContainsSpaces)
+        *pbNameContainsSpaces = NameContainsSpaces;
 
     return TRUE;
 }
@@ -370,6 +373,7 @@ CheckNameLegalDOS8Dot3A(
     UNICODE_STRING Name;
     ANSI_STRING AnsiName, AnsiInputName;
     NTSTATUS Status;
+    BOOLEAN NameContainsSpaces;
 
     if(lpName == NULL ||
        (lpOemName == NULL && OemNameSize != 0) ||
@@ -400,7 +404,9 @@ CheckNameLegalDOS8Dot3A(
 
     *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
                                           (lpOemName ? &AnsiName : NULL),
-                                          (BOOLEAN*)pbNameContainsSpaces);
+                                          &NameContainsSpaces);
+    if (*pbNameLegal && pbNameContainsSpaces)
+        *pbNameContainsSpaces = NameContainsSpaces;
 
     RtlFreeUnicodeString(&Name);
 

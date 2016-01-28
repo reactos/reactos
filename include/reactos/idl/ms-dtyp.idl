@@ -185,12 +185,6 @@ typedef struct _ULARGE_INTEGER {
     ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
-typedef struct _UNICODE_STRING {
-    USHORT Length;
-    USHORT MaximumLength;
-    [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
-
 cpp_quote("#endif")
 
 /* Constructed security types */

@@ -3,16 +3,15 @@
 /*
  * Use these to place a function in a specific section of the executable
  */
-#define PLACE_IN_SECTION(s)	__attribute__((section (s)))
 #ifdef __GNUC__
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
-#define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#define INIT_SECTION __attribute__((section ("INIT")))
+#define INIT_FUNCTION INIT_SECTION
 #else
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION
-#define PAGE_UNLOCKED_FUNCTION
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#define INIT_FUNCTION INIT_SECTION
 #endif
+
+
 
 #ifdef _NTOSKRNL_
 
@@ -80,7 +79,7 @@
 #include "lpc.h"
 #include "rtl.h"
 #ifdef KDBG
-#include "../kdbg/kdb.h"
+#include <kdbg/kdb.h>
 #endif
 #include "dbgk.h"
 #include "spinlock.h"

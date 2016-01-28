@@ -48,7 +48,7 @@ CAPTION "Zobrazení"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Funkce Vysoký kontrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Vyberte tuto možnost pokud chcete, aby Reactos používal barvy a písma určené pro snadnou čitelnost.",
+    LTEXT "Vyberte tuto možnost pokud chcete, aby ReactOS používal barvy a písma určené pro snadnou čitelnost.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Použít funkci Vysoký kontrast", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Nastavení", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

@@ -341,7 +341,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"LargeStackSize",
-        &DummyData,
+        &MmLargeStackSize,
         NULL,
         NULL
     },
@@ -699,6 +699,14 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
 
     {
+        L"Windows",
+        L"CSDReleaseType",
+        &CmNtCSDReleaseType,
+        NULL,
+        NULL
+    },
+
+    {
         L"Nls\\Language",
         L"Default",
         CmDefaultLanguageId,
@@ -757,7 +765,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"PriorityControl",
         L"Win32PrioritySeparation",
-        &DummyData,
+        &PsRawPrioritySeparation,
         NULL,
         NULL
     },

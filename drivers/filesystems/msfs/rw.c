@@ -4,6 +4,7 @@
  * FILE:       drivers/filesystems/msfs/rw.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
+ *             Nikita Pechenkin (n.pechenkin@mail.ru)
  */
 
 /* INCLUDES ******************************************************************/
@@ -28,7 +29,11 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG Length;
     ULONG LengthRead = 0;
     PVOID Buffer;
-    NTSTATUS Status;
+    LARGE_INTEGER Timeout;
+    PKTIMER Timer;
+    PMSFS_DPC_CTX Context;
+    PKDPC Dpc;
+    PLIST_ENTRY Entry;
 
     DPRINT("MsfsRead(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -52,51 +57,74 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
     Length = IoStack->Parameters.Read.Length;
     if (Irp->MdlAddress)
-        Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     else
         Buffer = Irp->UserBuffer;
 
-    Status = KeWaitForSingleObject(&Fcb->MessageEvent,
-                                   UserRequest,
-                                   KernelMode,
-                                   FALSE,
-                                   &Fcb->TimeOut);
-    if (NT_SUCCESS(Status))
+
+    KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+    if (Fcb->MessageCount > 0)
     {
-        if (Fcb->MessageCount > 0)
-        {
-            /* copy current message into buffer */
-            Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
-                                        MSFS_MESSAGE,
-                                        MessageListEntry);
+        Entry = RemoveHeadList(&Fcb->MessageListHead);
+        Fcb->MessageCount--;
+        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-            memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
-            LengthRead = Message->Size;
+        /* copy current message into buffer */
+        Message = CONTAINING_RECORD(Entry, MSFS_MESSAGE, MessageListEntry);
+        memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
+        LengthRead = Message->Size;
 
-            KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
-            RemoveHeadList(&Fcb->MessageListHead);
-            KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
+        ExFreePoolWithTag(Message, 'rFsM');
 
-            ExFreePool(Message);
-            Fcb->MessageCount--;
-            if (Fcb->MessageCount == 0)
-            {
-                KeClearEvent(&Fcb->MessageEvent);
-            }
-        }
-        else if (Fcb->TimeOut.QuadPart != 0LL)
-        {
-            /* No message found after waiting */
-            Status = STATUS_IO_TIMEOUT;
-        }
-     }
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = LengthRead;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = LengthRead;
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
+    }
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    Timeout = Fcb->TimeOut;
+    if (Timeout.HighPart == 0 && Timeout.LowPart == 0)
+    {
+        Irp->IoStatus.Status = STATUS_IO_TIMEOUT;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return Status;
+        return STATUS_IO_TIMEOUT;
+    }
+
+    Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(MSFS_DPC_CTX), 'NFsM');
+    if (Context == NULL)
+    {
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    KeInitializeEvent(&Context->Event, SynchronizationEvent, FALSE);
+    IoCsqInsertIrp(&Fcb->CancelSafeQueue, Irp, &Context->CsqContext);
+    Timer = &Context->Timer;
+    Dpc = &Context->Dpc;
+    Context->Csq = &Fcb->CancelSafeQueue;
+    Irp->Tail.Overlay.DriverContext[0] = Context;
+
+    /* No timer for INFINITY_WAIT */
+    if (Timeout.QuadPart != -1)
+    {
+        KeInitializeTimer(Timer);
+        KeInitializeDpc(Dpc, MsfsTimeout, (PVOID)Context);
+        KeSetTimer(Timer, Timeout, Dpc);
+    }
+
+    IoMarkIrpPending(Irp);
+
+    return STATUS_PENDING;
 }
 
 
@@ -112,6 +140,8 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
     KIRQL oldIrql;
     ULONG Length;
     PVOID Buffer;
+    PIRP CsqIrp;
+    PMSFS_DPC_CTX Context;
 
     DPRINT("MsfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -135,15 +165,16 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
     Length = IoStack->Parameters.Write.Length;
     if (Irp->MdlAddress)
-        Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     else
         Buffer = Irp->UserBuffer;
 
     DPRINT("Length: %lu Message: %s\n", Length, (PUCHAR)Buffer);
 
     /* Allocate new message */
-    Message = ExAllocatePool(NonPagedPool,
-                             sizeof(MSFS_MESSAGE) + Length);
+    Message = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(MSFS_MESSAGE) + Length,
+                                    'rFsM');
     if (Message == NULL)
     {
         Irp->IoStatus.Status = STATUS_NO_MEMORY;
@@ -159,14 +190,23 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
     KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
     InsertTailList(&Fcb->MessageListHead, &Message->MessageListEntry);
+    Fcb->MessageCount++;
     KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-    Fcb->MessageCount++;
-    if (Fcb->MessageCount == 1)
+    CsqIrp = IoCsqRemoveNextIrp(&Fcb->CancelSafeQueue, NULL);
+    if (CsqIrp != NULL)
     {
-        KeSetEvent(&Fcb->MessageEvent,
-                   0,
-                   FALSE);
+        /* Get the context */
+        Context = CsqIrp->Tail.Overlay.DriverContext[0];
+        /* DPC was queued, wait for it to fail (IRP is ours) */
+        if (Fcb->TimeOut.QuadPart != -1 && !KeCancelTimer(&Context->Timer))
+        {
+            KeWaitForSingleObject(&Context->Event, Executive, KernelMode, FALSE, NULL);
+        }
+
+        /* Free context & attempt read */
+        ExFreePoolWithTag(Context, 'NFsM');
+        MsfsRead(DeviceObject, CsqIrp);
     }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;

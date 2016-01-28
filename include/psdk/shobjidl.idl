@@ -847,6 +847,126 @@ interface IFolderView : IUnknown
     );
 }
 
+[v1_enum] enum tagSORTDIRECTION
+{
+    SORT_DESCENDING = -1,
+    SORT_ASCENDING = 1
+};
+typedef int SORTDIRECTION;
+
+typedef struct SORTCOLUMN
+{
+    PROPERTYKEY propkey;
+    SORTDIRECTION direction;
+} SORTCOLUMN;
+
+typedef [v1_enum] enum FVTEXTTYPE
+{
+    FVST_EMPTYTEXT = 0
+} FVTEXTTYPE;
+
+[
+    uuid(1af3a467-214f-4298-908e-06b03e0b39f9),
+    object,
+    pointer_default(unique)
+]
+interface IFolderView2 : IFolderView
+{
+    HRESULT SetGroupBy(
+        [in] REFPROPERTYKEY key,
+        [in] BOOL ascending);
+
+    [local]
+    HRESULT GetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    [call_as(GetGroupBy)]
+    HRESULT RemoteGetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    HRESULT SetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [in] REFPROPVARIANT propvar);
+
+    HRESULT GetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [out] PROPVARIANT *propvar);
+
+    HRESULT SetTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetExtendedTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetText(
+        [in] FVTEXTTYPE type,
+        [in] LPCWSTR text);
+
+    HRESULT SetCurrentFolderFlags(
+        [in] DWORD mask,
+        [in] DWORD flags);
+
+    HRESULT GetCurrentFolderFlags([out] DWORD *flags);
+
+    HRESULT GetSortColumnCount([out] int *columns);
+
+    HRESULT SetSortColumns(
+        [in, size_is(count)] const SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetSortColumns(
+        [out, size_is(count)] SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetItem(
+        [in] int ittem,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT GetVisibleItem(
+        [in] int start,
+        [in] BOOL previous,
+        [out] int *item);
+
+    HRESULT GetSelectedItem(
+        [in] int start,
+        [out] int *item);
+
+    HRESULT GetSelection(
+        [in] BOOL none_implies_folder,
+        [out] IShellItemArray **array);
+
+    HRESULT GetSelectionState(
+        [in] PCUITEMID_CHILD pidl,
+        [out] DWORD *flags);
+
+    HRESULT InvokeVerbOnSelection([in, unique, string] LPCSTR verb);
+
+    HRESULT SetViewModeAndIconSize(
+        [in] FOLDERVIEWMODE mode,
+        [in] int size);
+
+    HRESULT GetViewModeAndIconSize(
+        [out] FOLDERVIEWMODE *mode,
+        [out] int *size);
+
+    HRESULT SetGroupSubsetCount([in] UINT visible_rows);
+
+    HRESULT GetGroupSubsetCount([out] UINT *visible_rows);
+
+    HRESULT SetRedraw([in] BOOL redraw);
+
+    HRESULT IsMoveInSameFolder();
+
+    HRESULT DoRename();
+}
+
 /*****************************************************************************
  * IShellBrowser interface
  */
@@ -2613,7 +2733,9 @@ typedef [v1_enum] enum tagEXPLORER_BROWSER_OPTIONS {
     EBO_ALWAYSNAVIGATE     = 0x04,
     EBO_NOTRAVELLOG        = 0x08,
     EBO_NOWRAPPERWINDOW    = 0x10,
-    EBO_HTMLSHAREPOINTVIEW = 0x20
+    EBO_HTMLSHAREPOINTVIEW = 0x20,
+    EBO_NOBORDER           = 0x40,
+    EBO_NOPERSISTVIEWSTATE = 0x80,
 } EXPLORER_BROWSER_OPTIONS;
 
 cpp_quote("#define SID_SExplorerBrowserFrame IID_ICommDlgBrowser")
@@ -3069,7 +3191,7 @@ interface IFileDialog;
 typedef [v1_enum] enum FDE_OVERWRITE_RESPONSE
 {
     FDEOR_DEFAULT  = 0,
-    FDEOR_ACCCEP   = 1,
+    FDEOR_ACCEPT   = 1,
     FDEOR_REFUSE   = 2
 } FDE_OVERWRITE_RESPONSE;
 
@@ -3855,7 +3977,7 @@ interface ITransferAdviseSink : IUnknown
     HRESULT FileFailure([in] IShellItem *item,
                         [in, unique, string] LPCWSTR itemname,
                         [in] HRESULT hr,
-                        [out, unique, size_is(crename)] LPWSTR rename,
+                        [in, out, unique, size_is(crename)] LPWSTR rename,
                         [in] ULONG crename);
     HRESULT SubStreamFailure([in] IShellItem *item,
                              [in, string] LPCWSTR stream,
@@ -4039,4 +4161,179 @@ library ShellObjects
     coclass ShellItem {
         interface IShellItem2;
     }
+}
+
+enum _OPPROGDLGF
+{
+    OPPROGDLG_DEFAULT = 0,
+    OPPROGDLG_ENABLEPAUSE = 0x80,
+    OPPROGDLG_ALLOWUNDO = 0x100,
+    OPPROGDLG_DONTDISPLAYSOURCEPATH = 0x200,
+    OPPROGDLG_DONTDISPLAYDESTPATH = 0x400,
+    OPPROGDLG_NOMULTIDAYESTIMATES = 0x800,
+    OPPROGDLG_DONTDISPLAYLOCATIONS = 0x1000
+};
+typedef DWORD OPPROGDLGF;
+
+enum _PDMODE
+{
+    PDM_DEFAULT = 0,
+    PDM_RUN = 0x1,
+    PDM_PREFLIGHT = 0x2,
+    PDM_UNDOING = 0x4,
+    PDM_ERRORSBLOCKING = 0x8,
+    PDM_INDETERMINATE = 0x10
+};
+typedef DWORD PDMODE;
+
+typedef enum PDOPSTATUS
+{
+    PDOPS_RUNNING = 1,
+    PDOPS_PAUSED = 2,
+    PDOPS_CANCELLED = 3,
+    PDOPS_STOPPED = 4,
+    PDOPS_ERRORS = 5
+} 	PDOPSTATUS;
+
+typedef enum _SPACTION
+{
+    SPACTION_NONE = 0,
+    SPACTION_MOVING = 1,
+    SPACTION_COPYING = 2,
+    SPACTION_RECYCLING = 3,
+    SPACTION_APPLYINGATTRIBS = 4,
+    SPACTION_DOWNLOADING = 5,
+    SPACTION_SEARCHING_INTERNET = 6,
+    SPACTION_CALCULATING = 7,
+    SPACTION_UPLOADING = 8,
+    SPACTION_SEARCHING_FILES = 9,
+    SPACTION_DELETING = 10,
+    SPACTION_RENAMING = 11,
+    SPACTION_FORMATTING = 12,
+    SPACTION_COPY_MOVING = 13
+} 	SPACTION;
+
+[
+    uuid(0C9FB851-E5C9-43EB-A370-F0677B13874C),
+    object,
+    pointer_default(unique)
+]
+interface IOperationsProgressDialog : IUnknown
+{
+     HRESULT StartProgressDialog(
+         [in] HWND hwndOwner,
+         [in] OPPROGDLGF flags);
+     HRESULT StopProgressDialog();
+     HRESULT SetOperation(
+         [in] SPACTION action);
+     HRESULT SetMode(
+         [in] PDMODE mode);
+     HRESULT UpdateProgress(
+        [in] ULONGLONG ullPointsCurrent,
+        [in] ULONGLONG ullPointsTotal,
+        [in] ULONGLONG ullSizeCurrent,
+        [in] ULONGLONG ullSizeTotal,
+        [in] ULONGLONG ullItemsCurrent,
+        [in] ULONGLONG ullItemsTotal);
+     HRESULT UpdateLocations(
+         [in, optional] IShellItem *psiSource,
+         [in, optional] IShellItem *psiTarget,
+         [in, optional] IShellItem *psiItem);
+     HRESULT ResetTimer();
+     HRESULT PauseTimer();
+     HRESULT ResumeTimer();
+     HRESULT GetMilliseconds(
+         [out] ULONGLONG *pullElapsed, 
+         [out] ULONGLONG *pullRemaining);
+     HRESULT GetOperationStatus(
+         [out] PDOPSTATUS *popstatus);
+};
+
+[
+    uuid(947aab5f-0a5c-4c13-b4d6-4bf7836fc9f8),
+    object,
+    pointer_default(unique)
+]
+interface IFileOperation : IUnknown
+{
+     HRESULT Advise(
+         [in] IFileOperationProgressSink *pfops, 
+         [out] DWORD *pdwCookie);
+     HRESULT Unadvise(
+         [in] DWORD dwCookie);
+     HRESULT SetOperationFlags(
+         [in] DWORD dwOperationFlags);
+     HRESULT SetProgressMessage(
+         [in] LPCWSTR pszMessage);
+     HRESULT SetProgressDialog(
+         [in] IOperationsProgressDialog *popd);
+     HRESULT SetProperties(
+         [in] IPropertyChangeArray *pproparray);
+     HRESULT SetOwnerWindow(
+         [in] HWND hwndOwner);
+     HRESULT ApplyPropertiesToItem(
+         [in] IShellItem *psiItem);
+     HRESULT ApplyPropertiesToItems(
+         [in] IUnknown *punkItems);
+     HRESULT RenameItem(
+         [in] IShellItem *psiItem, 
+         [in] LPCWSTR pszNewName,
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT RenameItems(
+         [in] IUnknown *pUnkItems,
+         [in] LPCWSTR pszNewName);
+     HRESULT MoveItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszNewName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT MoveItems(
+         [in] IUnknown *punkItems,
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT CopyItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszCopyName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT CopyItems(
+         [in] IUnknown *punkItems, 
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT DeleteItem(
+         [in] IShellItem *psiItem, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT DeleteItems(
+         [in] IUnknown *punkItems);
+     HRESULT NewItem(
+         [in] IShellItem *psiDestinationFolder, 
+         [in] DWORD dwFileAttributes, 
+         [in] LPCWSTR pszName, 
+         [in] LPCWSTR pszTemplateName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT PerformOperations();
+     HRESULT GetAnyOperationsAborted(
+         [out] BOOL *pfAnyOperationsAborted);
+};
+
+[
+    uuid(6CCB7BE0-6807-11d0-B810-00C04FD706EC),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface IShellTaskScheduler : IUnknown
+{
+    HRESULT AddTask(
+        [in] IRunnableTask *pTask, 
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] DWORD dwPriority);
+    HRESULT RemoveTasks(
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] BOOL fWaitIfRunning);
+    UINT CountTasks(
+        [in] REFGUID rtoid);
+    HRESULT Status(
+        [in] DWORD dwReleaseStatus, 
+        [in] DWORD dwThreadTimeout);
 }

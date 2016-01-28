@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/wingl.c
+ * FILE:            win32ss/gdi/ntgdi/wingl.c
  * PURPOSE:         WinGL API
  * PROGRAMMER:
  */
@@ -39,13 +39,14 @@ IntGetipfdDevMax(PDC pdc)
 }
 
 _Success_(return != 0)
+__kernel_entry
 INT
 APIENTRY
 NtGdiDescribePixelFormat(
     _In_ HDC hdc,
     _In_ INT ipfd,
     _In_ UINT cjpfd,
-    _When_(cjpfd != 0, _Out_) PPIXELFORMATDESCRIPTOR ppfd)
+    _Out_writes_bytes_(cjpfd) PPIXELFORMATDESCRIPTOR ppfd)
 {
     PDC pdc;
     PPDEVOBJ ppdev;

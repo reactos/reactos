@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS kernel
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             services/eventlog/logport.c
+ * FILE:             base/services/eventlog/logport.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2002 Eric Kohl
  *                   Copyright 2005 Saveliy Tretiakov

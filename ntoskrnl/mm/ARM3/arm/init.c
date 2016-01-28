@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/init.c
+ * FILE:            ntoskrnl/mm/ARM3/arm/init.c
  * PURPOSE:         ARM Memory Manager Initialization
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 

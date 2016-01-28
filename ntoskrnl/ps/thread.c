@@ -481,7 +481,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
 
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -523,7 +523,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
             return Status;
         }
 
@@ -654,10 +654,10 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     CidEntry = ExMapHandleToPointer(PspCidTable, ThreadId);
     if (CidEntry)
     {
-        /* Get the Process */
+        /* Get the Thread */
         FoundThread = CidEntry->Object;
 
-        /* Make sure it's really a process */
+        /* Make sure it's really a thread */
         if (FoundThread->Tcb.Header.Type == ThreadObject)
         {
             /* Safe Reference and return it */
@@ -929,6 +929,15 @@ PsSetThreadWin32Thread(
 
 NTSTATUS
 NTAPI
+PsWrapApcWow64Thread(IN OUT PVOID *ApcContext,
+                     IN OUT PVOID *ApcRoutine)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}    
+
+NTSTATUS
+NTAPI
 NtCreateThread(OUT PHANDLE ThreadHandle,
                IN ACCESS_MASK DesiredAccess,
                IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -1045,7 +1054,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
-            Attributes = ObjectAttributes->Attributes;
+
+            /* Validate user attributes */
+            Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1058,7 +1069,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     {
         /* Otherwise just get the data directly */
         HasObjectName = (ObjectAttributes->ObjectName != NULL);
-        Attributes = ObjectAttributes->Attributes;
+
+        /* Still have to sanitize attributes */
+        Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
     }
 
     /* Can't pass both, fail */
@@ -1068,7 +1081,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     Status = SeCreateAccessState(&AccessState,
                                  &AuxData,
                                  DesiredAccess,
-                                 &PsProcessType->TypeInfo.GenericMapping);
+                                 &PsThreadType->TypeInfo.GenericMapping);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if this is a debugger */

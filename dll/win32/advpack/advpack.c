@@ -194,19 +194,6 @@ HRESULT WINAPI CloseINFEngine(HINF hInf)
 }
 
 /***********************************************************************
- *           DllMain (ADVPACK.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-    if (fdwReason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(hinstDLL);
-
-    return TRUE;
-}
-
-/***********************************************************************
  *              IsNTAdmin	(ADVPACK.@)
  *
  * Checks if the user has admin privileges.
@@ -678,7 +665,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
                                     dwBufferSize, NULL, NULL);
             }
             else
-                res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+                res = E_NOT_SUFFICIENT_BUFFER;
         }
         
         HeapFree(GetProcessHeap(), 0, bufferW);
@@ -738,7 +725,7 @@ HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSec
                            pszBuffer, dwBufferSize, pdwRequiredSize))
     {
         if (dwBufferSize < *pdwRequiredSize)
-            hret = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            hret = E_NOT_SUFFICIENT_BUFFER;
         else
             hret = SPAPI_E_LINE_NOT_FOUND;
     }
@@ -795,7 +782,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
                                     dwBufferSize, NULL, NULL);
             }
             else
-                res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+                res = E_NOT_SUFFICIENT_BUFFER;
         }
         
         HeapFree(GetProcessHeap(), 0, bufferW);
@@ -853,7 +840,7 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
                            pszBuffer, dwBufferSize, pdwRequiredSize))
     {
         if (dwBufferSize < *pdwRequiredSize)
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            return E_NOT_SUFFICIENT_BUFFER;
 
         return SPAPI_E_LINE_NOT_FOUND;
     }

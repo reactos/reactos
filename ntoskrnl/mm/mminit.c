@@ -38,211 +38,83 @@ extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+//
+// Helper function to create initial memory areas.
+// The created area is always read/write.
+//
 VOID
 INIT_FUNCTION
 NTAPI
-MiInitSystemMemoryAreas()
+MiCreateArm3StaticMemoryArea(PVOID BaseAddress, ULONG Size, BOOLEAN Executable)
 {
-    PVOID BaseAddress;
+    const ULONG Protection = Executable ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
+    PVOID pBaseAddress = BaseAddress;
     PMEMORY_AREA MArea;
     NTSTATUS Status;
 
-    //
-    // Create the memory area to define the loader mappings
-    //
-    BaseAddress = (PVOID)KSEG0_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmBootImageSize,
-                                PAGE_EXECUTE_READWRITE,
+                                &pBaseAddress,
+                                Size,
+                                Protection,
                                 &MArea,
-                                TRUE,
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
+    // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
+}
 
+VOID
+INIT_FUNCTION
+NTAPI
+MiInitSystemMemoryAreas(VOID)
+{
     //
-    // Create the memory area to define the PTE base
+    // Create all the static memory areas.
     //
-    BaseAddress = (PVOID)PTE_BASE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PTE_TOP - PTE_BASE + 1,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
 
-    //
-    // Create the memory area to define Hyperspace
-    //
-    BaseAddress = (PVOID)HYPER_SPACE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                HYPER_SPACE_END - HYPER_SPACE + 1,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // The loader mappings. The only Executable area.
+    MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
 
-    //
+    // The PTE base
+    MiCreateArm3StaticMemoryArea((PVOID)PTE_BASE, PTE_TOP - PTE_BASE + 1, FALSE);
+
+    // Hyperspace
+    MiCreateArm3StaticMemoryArea((PVOID)HYPER_SPACE, HYPER_SPACE_END - HYPER_SPACE + 1, FALSE);
+
     // Protect the PFN database
-    //
-    BaseAddress = MmPfnDatabase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                (MxPfnAllocation << PAGE_SHIFT),
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    MiCreateArm3StaticMemoryArea(MmPfnDatabase, (MxPfnAllocation << PAGE_SHIFT), FALSE);
 
-    //
     // ReactOS requires a memory area to keep the initial NP area off-bounds
-    //
-    BaseAddress = MmNonPagedPoolStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSizeOfNonPagedPoolInBytes,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
-    //
-    // And we need one more for the system NP
-    //
-    BaseAddress = MmNonPagedSystemStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MiNonPagedSystemSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // System NP
+    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, MiNonPagedSystemSize, FALSE);
 
-    //
-    // We also need one for system view space
-    //
-    BaseAddress = MiSystemViewStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSystemViewSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // System view space
+    MiCreateArm3StaticMemoryArea(MiSystemViewStart, MmSystemViewSize, FALSE);
 
-    //
-    // And another for session space
-    //
-    BaseAddress = MmSessionBase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                (ULONG_PTR)MiSessionSpaceEnd -
-                                (ULONG_PTR)MmSessionBase,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Session space
+    MiCreateArm3StaticMemoryArea(MmSessionBase, (ULONG_PTR)MiSessionSpaceEnd - (ULONG_PTR)MmSessionBase, FALSE);
 
-    //
-    // One more for ARM paged pool
-    //
-    BaseAddress = MmPagedPoolStart;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmSizeOfPagedPoolInBytes,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Paged pool
+    MiCreateArm3StaticMemoryArea(MmPagedPoolStart, MmSizeOfPagedPoolInBytes, FALSE);
+
 #ifndef _M_AMD64
-    //
-    // Next, the KPCR
-    //
-    BaseAddress = (PVOID)PCR;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE * KeNumberProcessors,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // KPCR, one page per CPU. Only for 32-bit kernel.
+    MiCreateArm3StaticMemoryArea(PCR, PAGE_SIZE * KeNumberProcessors, FALSE);
 #endif
-    //
-    // Now the KUSER_SHARED_DATA
-    //
-    BaseAddress = (PVOID)KI_USER_SHARED_DATA;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
 
-    //
-    // And the debugger mapping
-    //
-    BaseAddress = MI_DEBUG_MAPPING;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // KUSER_SHARED_DATA
+    MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
+
+    // Debugger mapping
+    MiCreateArm3StaticMemoryArea(MI_DEBUG_MAPPING, PAGE_SIZE, FALSE);
 
 #if defined(_X86_)
-    //
-    // Finally, reserve the 2 pages we currently make use of for HAL mappings
-    //
-    BaseAddress = (PVOID)0xFFC00000;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                PAGE_SIZE * 2,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(Status == STATUS_SUCCESS);
+    // Reserve the 2 pages we currently make use of for HAL mappings.
+    // TODO: Remove hard-coded constant and replace with a define.
+    MiCreateArm3StaticMemoryArea((PVOID)0xFFC00000, PAGE_SIZE * 2, FALSE);
 #endif
 }
 
@@ -300,177 +172,36 @@ NTAPI
 MmMpwThreadMain(PVOID Parameter)
 {
     NTSTATUS Status;
-    PMMPTE SysPte, PteTable;
+#ifndef NEWCC
+    ULONG PagesWritten;
+#endif
+    LARGE_INTEGER Timeout;
 
     UNREFERENCED_PARAMETER(Parameter);
 
-    /* Reserve a PTE for the page table */
-    SysPte = MiReserveSystemPtes(1, SystemPteSpace);
-    ASSERT(SysPte != NULL);
-    PteTable = MiPteToAddress(SysPte);
+    Timeout.QuadPart = -50000000;
 
     for(;;)
     {
-        KIRQL OldIrql;
-        PFN_NUMBER PageFrameIndex;
-        PMMPFN Pfn;
-        MMPTE TempPte, PdePte;
-        PMMPTE PointerPte;
-        BOOLEAN PageFileEntryFromPage = FALSE;
-        /*
-         * To start working, we wait for two conditions:
-         *  - there are pages to be paged out.
-         *  - We are in a low memory situation.
-         */
-        Status = KeWaitForSingleObject(
-            &MpwThreadEvent,
-            WrPageOut,
-            KernelMode,
-            FALSE,
-            NULL);
-
-        DPRINT("THE KRAKEN WAS RELEASED AND WILL PAGE YOUR ASS OUT!\n");
-
+        Status = KeWaitForSingleObject(&MpwThreadEvent,
+                                       0,
+                                       KernelMode,
+                                       FALSE,
+                                       &Timeout);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("MpwThread: Wait failed\n");
+            DbgPrint("MpwThread: Wait failed\n");
             KeBugCheck(MEMORY_MANAGEMENT);
             return;
         }
 
-        /* Lock the PFN database */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+#ifndef NEWCC
+        PagesWritten = 0;
 
-        /* The true main loop */
-        while ((MmTotalPagesForPagingFile != 0) && (MiFreeSwapPages != 0))
-        {
-            /* Get the first page from the list */
-            PageFrameIndex = MmModifiedPageListByColor[0].Flink;
-
-            /* Get The Pfn */
-            Pfn = MI_PFN_ELEMENT(PageFrameIndex);
-
-            /* Some things which must always hold */
-            ASSERT(Pfn->OriginalPte.u.Soft.Transition == 0);
-            ASSERT(Pfn->u3.ReferenceCount == 0);
-
-            /* And some that are not yet supported */
-            ASSERT(Pfn->OriginalPte.u.Soft.Prototype == 0);
-
-            /* Maybe this is not the first time */
-            if ((Pfn->OriginalPte.u.Soft.Prototype == 0) &&
-                    (Pfn->OriginalPte.u.Soft.PageFileHigh != 0))
-            {
-                /* Use that */
-                TempPte = Pfn->OriginalPte;
-                PageFileEntryFromPage = TRUE;
-            }
-            else
-            {
-                MiReservePageFileEntry(&TempPte);
-            }
-
-            /* Get it out of the list and reference it */
-            MiUnlinkPageFromList(Pfn);
-            MiReferenceUnusedPageAndBumpLockCount(Pfn);
-
-            ASSERT(Pfn->u3.e1.PageLocation == ModifiedPageList);
-
-            /* Mark it as write in progress */
-            Pfn->u3.e1.WriteInProgress = 1;
-            Pfn->u1.Event = NULL;
-
-            /* Release the PFN lock while we are writing */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-            /* Do the actual write */
-            Status = MiWritePageFile(PageFrameIndex, &TempPte);
-
-            /* Get the lock again */
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-            /* Get a mapping to the page table */
-            MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
-                                        SysPte,
-                                        MM_READWRITE,
-                                        Pfn->u4.PteFrame);
-            MI_WRITE_VALID_PTE(SysPte, PdePte);
-
-            /* Finally get a pointer to the PTE this page represents */
-            PointerPte = &PteTable[MiAddressToPteOffset(MiPteToAddress(Pfn->PteAddress))];
-
-            /* Get relevant values from the original PTE */
-            TempPte.u.Soft.Protection = PointerPte->u.Soft.Protection;
-
-            /* Maybe someone aborted the operation */
-            if (Pfn->u3.e1.WriteInProgress == 0)
-            {
-                DPRINT1("Someone aborted the page-out operation!\n");
-                /* Just set the event and let the waiter go along */
-                ASSERT(Pfn->u1.Event != NULL);
-                KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
-                Pfn->u1.Event = NULL;
-                /* This is now useless */
-                if (!PageFileEntryFromPage)
-                    MiFreePageFileEntry(&TempPte);
-            }
-            /* Maybe someone tried to access the page while we were not looking */
-            else if (Pfn->u1.Event != NULL)
-            {
-                DPRINT1("Page fault occured while we were paging out!\n");
-
-                /* So the page fault handler marked the page as unmodified */
-                ASSERT(Pfn->u3.e1.Modified == 0);
-
-                /* Save the pagefile entry for this page */
-                Pfn->OriginalPte = TempPte;
-                KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
-                Pfn->u1.Event = NULL;
-            }
-            else if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to write page to pagefile!\n");
-                /* This is now useless */
-                if (!PageFileEntryFromPage)
-                    MiFreePageFileEntry(&TempPte);
-                /* MiDereferencePfnAndDropLockCount will put it back on the tail of the list */
-            }
-            else
-            {
-                DPRINT1("Page %x successfully paged out. PTE pointer %p (-> %x)\n",
-                    PageFrameIndex, Pfn->PteAddress, TempPte.u.Long);
-
-                /* Of course it must already be invalid */
-                ASSERT(PointerPte->u.Hard.Valid == 0);
-
-                /* And be in transition */
-                ASSERT(PointerPte->u.Soft.Transition == 1);
-
-                /* So the PTE is now officially paged out */
-                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-
-                /* And the pagefile entry belongs to the PTE, not to the page! */
-                Pfn->OriginalPte.u.Long = 0;
-
-                /* And dereference the page table frame */
-                MiDecrementShareCount(MI_PFN_ELEMENT(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
-                /* We can finally make it available for real */
-                MI_SET_PFN_DELETED(Pfn);
-            }
-
-            /* We're done with this */
-            Pfn->u3.e1.WriteInProgress = 0;
-
-            /* This will put it back in the free list */
-            MiDereferencePfnAndDropLockCount(Pfn);
-
-            /* Unmap the Page Table */
-            MI_ERASE_PTE(SysPte);
-            KeInvalidateTlbEntry(PteTable);
-        }
-
-        /* We're done for this run */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        // XXX arty -- we flush when evicting pages or destorying cache
+        // sections.
+        CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
+#endif
     }
 }
 
@@ -479,31 +210,31 @@ NTAPI
 INIT_FUNCTION
 MmInitMpwThread(VOID)
 {
-   KPRIORITY Priority;
-   NTSTATUS Status;
-   CLIENT_ID MpwThreadId;
+    KPRIORITY Priority;
+    NTSTATUS Status;
+    CLIENT_ID MpwThreadId;
 
-   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
 
-   Status = PsCreateSystemThread(&MpwThreadHandle,
-                                 THREAD_ALL_ACCESS,
-                                 NULL,
-                                 NULL,
-                                 &MpwThreadId,
-                                 MmMpwThreadMain,
-                                 NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
+    Status = PsCreateSystemThread(&MpwThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  NULL,
+                                  NULL,
+                                  &MpwThreadId,
+                                  MmMpwThreadMain,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
 
-   Priority = 27;
-   NtSetInformationThread(MpwThreadHandle,
-                          ThreadPriority,
-                          &Priority,
-                          sizeof(Priority));
+    Priority = 27;
+    NtSetInformationThread(MpwThreadHandle,
+                           ThreadPriority,
+                           &Priority,
+                           sizeof(Priority));
 
-   return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -573,8 +304,8 @@ MmInitSystem(IN ULONG Phase,
     // by the fault handler.
     //
     MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
-                                                sizeof(MMPTE),
-                                                '  mM');
+                          sizeof(MMPTE),
+                          TAG_MM);
     if (!MmSharedUserDataPte) return FALSE;
 
     //

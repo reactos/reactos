@@ -25,16 +25,6 @@ typedef struct _EX_KEYED_EVENT
     } HashTable[NUM_KEY_HASH_BUCKETS];
 } EX_KEYED_EVENT, *PEX_KEYED_EVENT;
 
-NTSTATUS
-NTAPI
-ZwCreateKeyedEvent(
-    _Out_ PHANDLE OutHandle,
-    _In_ ACCESS_MASK AccessMask,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ ULONG Flags);
-
-#define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess())
-
 /* GLOBALS *******************************************************************/
 
 PEX_KEYED_EVENT ExpCritSecOutOfMemoryEvent;
@@ -43,10 +33,10 @@ POBJECT_TYPE ExKeyedEventObjectType;
 static
 GENERIC_MAPPING ExpKeyedEventMapping =
 {
-    STANDARD_RIGHTS_READ | EVENT_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE | EVENT_MODIFY_STATE,
+    STANDARD_RIGHTS_READ | KEYEDEVENT_WAIT,
+    STANDARD_RIGHTS_WRITE | KEYEDEVENT_WAKE,
     STANDARD_RIGHTS_EXECUTE,
-    EVENT_ALL_ACCESS
+    KEYEDEVENT_ALL_ACCESS
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -68,7 +58,7 @@ ExpInitializeKeyedEventImplementation(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpKeyedEventMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
-    ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
+    ObjectTypeInitializer.ValidAccessMask = KEYEDEVENT_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
 
     /* Create the keyed event object type */
@@ -81,14 +71,14 @@ ExpInitializeKeyedEventImplementation(VOID)
     /* Create the out of memory event for critical sections */
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_PERMANENT, NULL, NULL);
     Status = ZwCreateKeyedEvent(&EventHandle,
-                                EVENT_ALL_ACCESS,
+                                KEYEDEVENT_ALL_ACCESS,
                                 &ObjectAttributes,
                                 0);
     if (NT_SUCCESS(Status))
     {
         /* Take a reference so we can get rid of the handle */
         Status = ObReferenceObjectByHandle(EventHandle,
-                                           EVENT_ALL_ACCESS,
+                                           KEYEDEVENT_ALL_ACCESS,
                                            ExKeyedEventObjectType,
                                            KernelMode,
                                            (PVOID*)&ExpCritSecOutOfMemoryEvent,
@@ -128,13 +118,14 @@ ExpReleaseOrWaitForKeyedEvent(
     _In_ BOOLEAN Release)
 {
     PETHREAD Thread, CurrentThread;
-    PKPROCESS CurrentProcess;
+    PEPROCESS CurrentProcess;
     PLIST_ENTRY ListEntry, WaitListHead1, WaitListHead2;
     NTSTATUS Status;
     ULONG_PTR HashIndex;
+    PVOID PreviousKeyedWaitValue;
 
     /* Get the current process */
-    CurrentProcess = KeGetCurrentProcess();
+    CurrentProcess = PsGetCurrentProcess();
 
     /* Calculate the hash index */
     HashIndex = (ULONG_PTR)KeyedWaitValue >> 5;
@@ -167,9 +158,10 @@ ExpReleaseOrWaitForKeyedEvent(
            be signaled by this thread or, when the wait is aborted due to thread
            termination, then it first needs to acquire the list lock. */
         Thread = CONTAINING_RECORD(ListEntry, ETHREAD, KeyedWaitChain);
+        ListEntry = ListEntry->Flink;
 
         /* Check if this thread is a correct waiter */
-        if ((Thread->Tcb.Process == CurrentProcess) &&
+        if ((Thread->Tcb.Process == &CurrentProcess->Pcb) &&
             (Thread->KeyedWaitValue == KeyedWaitValue))
         {
             /* Remove the thread from the list */
@@ -179,7 +171,10 @@ ExpReleaseOrWaitForKeyedEvent(
             InitializeListHead(&Thread->KeyedWaitChain);
 
             /* Wake the thread */
-            KeReleaseSemaphore(&Thread->KeyedWaitSemaphore, 0, 1, FALSE);
+            KeReleaseSemaphore(&Thread->KeyedWaitSemaphore,
+                               IO_NO_INCREMENT,
+                               1,
+                               FALSE);
             Thread = NULL;
 
             /* Unlock the list. After this it is not safe to access Thread */
@@ -193,7 +188,8 @@ ExpReleaseOrWaitForKeyedEvent(
     /* Get the current thread */
     CurrentThread = PsGetCurrentThread();
 
-    /* Set the wait key */
+    /* Set the wait key and remember the old value */
+    PreviousKeyedWaitValue = CurrentThread->KeyedWaitValue;
     CurrentThread->KeyedWaitValue = KeyedWaitValue;
 
     /* Initialize the wait semaphore */
@@ -221,16 +217,20 @@ ExpReleaseOrWaitForKeyedEvent(
         ExAcquirePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
 
         /* Check if the wait list entry is still in the list */
-        if (CurrentThread->KeyedWaitChain.Flink != &CurrentThread->KeyedWaitChain)
+        if (!IsListEmpty(&CurrentThread->KeyedWaitChain))
         {
             /* Remove the thread from the list */
             RemoveEntryList(&CurrentThread->KeyedWaitChain);
+            InitializeListHead(&CurrentThread->KeyedWaitChain);
         }
 
         /* Unlock the list */
         ExReleasePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
         KeLeaveCriticalRegion();
     }
+
+    /* Restore the previous KeyedWaitValue, since this is a union member */
+    CurrentThread->KeyedWaitValue = PreviousKeyedWaitValue;
 
     return Status;
 }
@@ -258,8 +258,8 @@ NTAPI
 ExpReleaseKeyedEvent(
     _Inout_ PEX_KEYED_EVENT KeyedEvent,
     _In_ PVOID KeyedWaitValue,
-	_In_ BOOLEAN Alertable,
-	_In_ PLARGE_INTEGER Timeout)
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Timeout)
 {
     /* Call the generic internal function */
     return ExpReleaseOrWaitForKeyedEvent(KeyedEvent,
@@ -412,6 +412,12 @@ NtWaitForKeyedEvent(
     NTSTATUS Status;
     LARGE_INTEGER TimeoutCopy;
 
+    /* Key must always be two-byte aligned */
+    if ((ULONG_PTR)Key & 1)
+    {
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
     /* Check if the caller passed a timeout value and this is from user mode */
     if ((Timeout != NULL) && (PreviousMode != KernelMode))
     {
@@ -433,7 +439,7 @@ NtWaitForKeyedEvent(
     {
         /* Get the keyed event object */
         Status = ObReferenceObjectByHandle(Handle,
-                                           EVENT_MODIFY_STATE,
+                                           KEYEDEVENT_WAIT,
                                            ExKeyedEventObjectType,
                                            PreviousMode,
                                            (PVOID*)&KeyedEvent,
@@ -472,6 +478,12 @@ NtReleaseKeyedEvent(
     NTSTATUS Status;
     LARGE_INTEGER TimeoutCopy;
 
+    /* Key must always be two-byte aligned */
+    if ((ULONG_PTR)Key & 1)
+    {
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
     /* Check if the caller passed a timeout value and this is from user mode */
     if ((Timeout != NULL) && (PreviousMode != KernelMode))
     {
@@ -493,7 +505,7 @@ NtReleaseKeyedEvent(
     {
         /* Get the keyed event object */
         Status = ObReferenceObjectByHandle(Handle,
-                                           EVENT_MODIFY_STATE,
+                                           KEYEDEVENT_WAKE,
                                            ExKeyedEventObjectType,
                                            PreviousMode,
                                            (PVOID*)&KeyedEvent,

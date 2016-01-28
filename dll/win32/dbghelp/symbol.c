@@ -1760,32 +1760,69 @@ BOOL WINAPI SymUnDName64(PIMAGEHLP_SYMBOL64 sym, PSTR UnDecName, DWORD UnDecName
 static void * CDECL und_alloc(size_t len) { return HeapAlloc(GetProcessHeap(), 0, len); }
 static void   CDECL und_free (void* ptr)  { HeapFree(GetProcessHeap(), 0, ptr); }
 
-/***********************************************************************
- *		UnDecorateSymbolName (DBGHELP.@)
- */
-DWORD WINAPI UnDecorateSymbolName(PCSTR DecoratedName, PSTR UnDecoratedName,
-                                  DWORD UndecoratedLength, DWORD Flags)
+static char *und_name(char *buffer, const char *mangled, int buflen, unsigned short flags)
 {
     /* undocumented from msvcrt */
     static HANDLE hMsvcrt;
     static char* (CDECL *p_undname)(char*, const char*, int, void* (CDECL*)(size_t), void (CDECL*)(void*), unsigned short);
     static const WCHAR szMsvcrt[] = {'m','s','v','c','r','t','.','d','l','l',0};
 
-    TRACE("(%s, %p, %d, 0x%08x)\n",
-          debugstr_a(DecoratedName), UnDecoratedName, UndecoratedLength, Flags);
-
     if (!p_undname)
     {
         if (!hMsvcrt) hMsvcrt = LoadLibraryW(szMsvcrt);
         if (hMsvcrt) p_undname = (void*)GetProcAddress(hMsvcrt, "__unDName");
-        if (!p_undname) return 0;
+        if (!p_undname) return NULL;
     }
 
-    if (!UnDecoratedName) return 0;
-    if (!p_undname(UnDecoratedName, DecoratedName, UndecoratedLength, 
-                   und_alloc, und_free, Flags))
+    return p_undname(buffer, mangled, buflen, und_alloc, und_free, flags);
+}
+
+/***********************************************************************
+ *		UnDecorateSymbolName (DBGHELP.@)
+ */
+DWORD WINAPI UnDecorateSymbolName(const char *decorated_name, char *undecorated_name,
+                                  DWORD undecorated_length, DWORD flags)
+{
+    TRACE("(%s, %p, %d, 0x%08x)\n",
+          debugstr_a(decorated_name), undecorated_name, undecorated_length, flags);
+
+    if (!undecorated_name || !undecorated_length)
         return 0;
-    return strlen(UnDecoratedName);
+    if (!und_name(undecorated_name, decorated_name, undecorated_length, flags))
+        return 0;
+    return strlen(undecorated_name);
+}
+
+/***********************************************************************
+ *		UnDecorateSymbolNameW (DBGHELP.@)
+ */
+DWORD WINAPI UnDecorateSymbolNameW(const WCHAR *decorated_name, WCHAR *undecorated_name,
+                                   DWORD undecorated_length, DWORD flags)
+{
+    char *buf, *ptr;
+    int len, ret = 0;
+
+    TRACE("(%s, %p, %d, 0x%08x)\n",
+          debugstr_w(decorated_name), undecorated_name, undecorated_length, flags);
+
+    if (!undecorated_name || !undecorated_length)
+        return 0;
+
+    len = WideCharToMultiByte(CP_ACP, 0, decorated_name, -1, NULL, 0, NULL, NULL);
+    if ((buf = HeapAlloc(GetProcessHeap(), 0, len)))
+    {
+        WideCharToMultiByte(CP_ACP, 0, decorated_name, -1, buf, len, NULL, NULL);
+        if ((ptr = und_name(NULL, buf, 0, flags)))
+        {
+            MultiByteToWideChar(CP_ACP, 0, ptr, -1, undecorated_name, undecorated_length);
+            undecorated_name[undecorated_length - 1] = 0;
+            ret = strlenW(undecorated_name);
+            und_free(ptr);
+        }
+        HeapFree(GetProcessHeap(), 0, buf);
+    }
+
+    return ret;
 }
 
 #define WILDCHAR(x)      (-(x))

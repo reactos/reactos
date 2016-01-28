@@ -38,6 +38,7 @@ static PKDB_BREAKPOINT KdbSwBreakPoints[KDB_MAXIMUM_SW_BREAKPOINT_COUNT]; /* Ena
 static PKDB_BREAKPOINT KdbHwBreakPoints[KDB_MAXIMUM_HW_BREAKPOINT_COUNT]; /* Enabled hardware breakpoints, orderless */
 static PKDB_BREAKPOINT KdbBreakPointToReenable = NULL; /* Set to a breakpoint struct when single stepping after
                                                           a software breakpoint was hit, to reenable it */
+static BOOLEAN KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep;
 LONG KdbLastBreakPointNr = -1;  /* Index of the breakpoint which cause KDB to be entered */
 ULONG KdbNumSingleSteps = 0; /* How many single steps to do */
 BOOLEAN KdbSingleStepOver = FALSE; /* Whether to step over calls/reps. */
@@ -57,26 +58,27 @@ extern BOOLEAN KdbpBugCheckRequested;
 static KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 {
     /* First chance       Last chance */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
-    { KdbEnterFromKmode,  KdbDoNotEnter },       /* Debug trap */
-    { KdbDoNotEnter,      KdbEnterAlways },      /* NMI */
-    { KdbEnterFromKmode,  KdbDoNotEnter },       /* INT3 */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Overflow */
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Invalid opcode */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* No math coprocessor fault */
-    { KdbEnterAlways,     KdbEnterAlways },
-    { KdbEnterAlways,     KdbEnterAlways },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Stack fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* General protection fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Page fault */
-    { KdbEnterAlways,     KdbEnterAlways },      /* Reserved (15) */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* FPU fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* SIMD fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 0: Zero divide */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 1: Debug trap */
+    { KdbDoNotEnter,      KdbEnterAlways },      /* 2: NMI */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 3: INT3 */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 4: Overflow */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 5: BOUND range exceeded */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 6: Invalid opcode */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 7: No math coprocessor fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 8: Double Fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 9: Unknown(9) */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 10: Invalid TSS */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 11: Segment Not Present */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 12: Stack fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 13: General protection fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 14: Page fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 15: Reserved (15) */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 16: FPU fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 17: Alignment Check */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 18: Machine Check */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 19: SIMD fault */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 20: Assertion failure */
     { KdbDoNotEnter,      KdbEnterFromKmode }    /* Last entry: used for unknown exceptions */
 };
 
@@ -102,7 +104,8 @@ static const CHAR *ExceptionNrToString[] =
     "Math Fault",
     "Alignment Check",
     "Machine Check",
-    "SIMD Fault"
+    "SIMD Fault",
+    "Assertion Failure"
 };
 
 ULONG
@@ -1234,7 +1237,7 @@ KdbpCallMainLoop(VOID)
  * Disables interrupts, releases display ownership, ...
  */
 static VOID
-KdbpInternalEnter()
+KdbpInternalEnter(VOID)
 {
     PETHREAD Thread;
     PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
@@ -1320,6 +1323,9 @@ KdbpGetExceptionNumberFromStatus(
         case STATUS_FLOAT_MULTIPLE_TRAPS:
             Ret = 18;
             break;
+        case STATUS_ASSERTION_FAILURE:
+            Ret = 20;
+            break;
 
         default:
             Ret = RTL_NUMBER_OF(KdbEnterConditions) - 1;
@@ -1366,8 +1372,12 @@ KdbEnterDebuggerException(
     KdbCurrentProcess = PsGetCurrentProcess();
 
     /* Set continue type to kdContinue for single steps and breakpoints */
-    if (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT)
+    if (ExceptionCode == STATUS_SINGLE_STEP ||
+        ExceptionCode == STATUS_BREAKPOINT ||
+        ExceptionCode == STATUS_ASSERTION_FAILURE)
+    {
         ContinueType = kdContinue;
+    }
 
     /* Check if we should handle the exception. */
     /* FIXME - won't get all exceptions here :( */
@@ -1398,6 +1408,15 @@ KdbEnterDebuggerException(
                 KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
                 KeBugCheck(0); // FIXME: Proper bugcode!
             }
+
+            /* Also since we are past the int3 now, decrement EIP in the
+               TrapFrame. This is only needed because KDBG insists on working
+               with the TrapFrame instead of with the Context, as it is supposed
+               to do. The context has already EIP point to the int3, since
+               KiDispatchException accounts for that. Whatever we do here with
+               the TrapFrame does not matter anyway, since KiDispatchException
+               will overwrite it with the values from the Context! */
+            TrapFrame->Eip--;
         }
 
         if ((BreakPoint->Type == KdbBreakPointHardware) &&
@@ -1418,8 +1437,6 @@ KdbEnterDebuggerException(
 
             /* Delete the temporary breakpoint which was used to step over or into the instruction. */
             KdbpDeleteBreakPoint(-1, BreakPoint);
-
-            TrapFrame->Eip--;
 
             if (--KdbNumSingleSteps > 0)
             {
@@ -1511,8 +1528,14 @@ KdbEnterDebuggerException(
             if (KdbNumSingleSteps == 0)
                 Context->EFlags &= ~EFLAGS_TF;
 
-            goto continue_execution; /* return */
+            if (!KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep)
+            {
+                goto continue_execution; /* return */
+            }
         }
+
+        /* Quoth the raven, 'Nevermore!' */
+        KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep = FALSE;
 
         /* Check if we expect a single step */
         if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
@@ -1636,6 +1659,9 @@ KdbEnterDebuggerException(
     /* Check if we should single step */
     if (KdbNumSingleSteps > 0)
     {
+        /* Variable explains itself! */
+        KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep = TRUE;
+
         if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
             (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
         {

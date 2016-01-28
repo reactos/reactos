@@ -126,7 +126,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     /*
      * We pass on all non-handled messages
      */
-    return CallWindowProcW((WNDPROC)OldGraphWndProc, hWnd, message, wParam, lParam);
+    return CallWindowProcW(OldGraphWndProc, hWnd, message, wParam, lParam);
 }
 
 void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)

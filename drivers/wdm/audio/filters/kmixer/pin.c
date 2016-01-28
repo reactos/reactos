@@ -10,7 +10,7 @@
 
 #include <samplerate.h>
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};

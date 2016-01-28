@@ -1,10 +1,4 @@
-/* 
- * FILE:        base/applications/sndvol32/lang/ro-RO.rc
- *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * LAST CHANGE: 2011-12-19 small correction
- */
- 
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */ 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL 
 
 IDM_MAINMENU MENU
@@ -16,7 +10,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDC_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

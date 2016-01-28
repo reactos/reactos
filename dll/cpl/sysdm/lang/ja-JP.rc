@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "ライセンスを表示(&L)...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -31,7 +31,7 @@ BEGIN
     LTEXT "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "ハードウェア ウィザード", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "ハードウェアウィザードはハードウェアのインストール、アンインストール、修復、 取り外し、取り出し、設定の手助けをします。", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "ハードウェア ウィザード(&H)...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "ハードウェア プロファイル", IDC_STATIC, 6, 149, 244, 61
@@ -55,13 +55,13 @@ BEGIN
     GROUPBOX "起動と回復", IDC_STATIC, 6, 131, 244, 52
     LTEXT "起動と回復オプションではコンピュータの起動方法と、コンピュータが停止するエラーが 発生した場合、どう処理するかを設定します。", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "設定", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "システムの設定", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "環境変数", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "システムの設定", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "環境変数", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "エラー報告", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "システムの設定"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
@@ -98,10 +98,30 @@ BEGIN
     PUSHBUTTON "キャンセル", IDCANCEL, 197, 213, 50, 14
 END
 
+IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
+    LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
+    LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
+    LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
+    LTEXT "Serial Number:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
+    GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
+    AUTOCHECKBOX "This is a &portable computer", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+END
+
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Copy Profile"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
@@ -125,7 +145,7 @@ BEGIN
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ユーザー プロファイル"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -150,7 +170,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "システムの起動", IDC_STATIC, 7, 12, 238, 95
     LTEXT "既定のオペレーティング システム(&S):", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "オペレーティング システムの一覧を表示する時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -170,7 +190,7 @@ BEGIN
     GROUPBOX "デバッグ情報の書き込み", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "ダンプ ファイル(&F):", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "既存のファイルに上書きする(&O)", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 195, 259, 50, 14
@@ -234,9 +254,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "変数の編集"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "変数名(&N):", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "変数名(&N):", IDC_STATIC, 7, 14, 68, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "変数の値(&V):", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "変数の値(&V):", IDC_STATIC, 7, 32, 68, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 170, 50, 50, 14
@@ -262,7 +282,7 @@ BEGIN
     IDS_VARIABLE "可変"
     IDS_VALUE "値"
     IDS_NO_DUMP "(なし)"
-    IDS_MINI_DUMP "ミニダンプ(64KB)"
+    IDS_MINI_DUMP "ミニダンプ (64KB)"
     IDS_KERNEL_DUMP "カーネル ダンプ"
     IDS_FULL_DUMP "完全 ダンプ"
     IDS_USERPROFILE_NAME "名前"
@@ -273,10 +293,15 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
-    IDS_PAGEFILE_NONE "none"
-    IDS_PAGEFILE_SYSTEM "system managed"
-    IDS_INFOREBOOT "You have to reboot the computer, in order to apply the changes."
+    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
+    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
+    IDS_PAGEFILE_NONE "なし"
+    IDS_PAGEFILE_SYSTEM "System Managed"
+    IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
     IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
+    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
+    IDS_HWPROFILE_PROFILE "Profile"
+    IDS_HWPROFILE_WARNING "Warning"
 END

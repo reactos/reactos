@@ -23,15 +23,17 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "Nie uda³o siê otworzyæ wybranego pakietu instalacyjnego. SprawdŸ czy œcie¿ka jest poprawna i spróbuj ponownie."
-	5 "œcie¿ka '%s' nie zosta³a odnaleziona"
-	9 "w³ó¿ dysk '%s'"
+	4 "Nie udaÅ‚o siÄ™ otworzyÄ‡ wybranego pakietu instalacyjnego. SprawdÅº czy Å›cieÅ¼ka jest poprawna i sprÃ³buj ponownie."
+	5 "Å›cieÅ¼ka '%s' nie zostaÅ‚a odnaleziona"
+	9 "wÅ‚Ã³Å¼ dysk '%s'"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-	11 "wprowadŸ sice¿kê do folderu zawieraj¹cego '%s'"
-	12 "Ÿród³o danych zawieraj¹ce ¿¹danê funkcjê jest niedostêpne"
-	13 "dysk siecowy zawieraj¹cy ¿¹dan¹ funckje jest niedostêpny"
+	11 "wprowadÅº siceÅ¼kÄ™ do folderu zawierajÄ…cego '%s'"
+	12 "ÅºrÃ³dÅ‚o danych zawierajÄ…ce Å¼Ä…danÄ™ funkcjÄ™ jest niedostÄ™pne"
+	13 "dysk siecowy zawierajÄ…cy Å¼Ä…danÄ… funckje jest niedostÄ™pny"
 	14 "funkcja z:"
-	15 "wybierz folder zawieraj¹cy '%s'"
+	15 "wybierz folder zawierajÄ…cy '%s'"
 }

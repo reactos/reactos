@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Przyjazna nazwa"
     IDS_ALLOWED_PURPOSE_ALL "<Wszyscy>"
     IDS_ALLOWED_PURPOSE_NONE "<Brak>"
-    IDS_WARN_REMOVE_MY "Już nie będziesz mógł odszyfrowywać i podpisywać wiadomości tym certyfikatem.\n\
-Czy jesteś pewien, że chcesz usunąć ten certyfikat?"
-    IDS_WARN_REMOVE_PLURAL_MY "Już nie będziesz mógł odszyfrowywać i podpisywać wiadomości tymi certyfikatami.\n\
-Czy jesteś pewien, że chcesz usunąć te certyfikaty?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Już nie będziesz mógł szyfrować i weryfikować wiadomości podpisanych tym certyfikatem.\n\
-Czy jesteś pewien, że chcesz usunąć ten certyfikat?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Już nie będziesz mógł szyfrować i weryfikować wiadomości podpisanych tymi certyfikatami.\n\
-Czy jesteś pewien, że chcesz usunąć te certyfikaty?"
-    IDS_WARN_REMOVE_CA "Certyfikaty wydane przez ten urząd certyfikacji stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć ten certyfikat?"
-    IDS_WARN_REMOVE_PLURAL_CA "Certyfikaty wydane przez te urzędy certyfikacji stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć te certyfikaty?"
-    IDS_WARN_REMOVE_ROOT "Certyfikaty wydane przez ten główny urząd certyfikacji, albo jakiekolwiek urzędy certyfikacji, które wydał, stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć ten główny zaufany certyfikat?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Certyfikaty wydane przez te główne urzędy certyfikacji, albo jakiekolwiek urzędy certyfikacji, które wydały, stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć te główne zaufane certyfikaty?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Oprogramowanie podpisane przez tego wydawce stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć ten certyfikat?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Oprogramowanie podpisane przez tych wydawców stracą zaufanie.\n\
-Czy jesteś pewien, że chcesz usunąć te certyfikaty?"
+    IDS_WARN_REMOVE_MY "Już nie będziesz mógł odszyfrowywać i podpisywać wiadomości tym certyfikatem.\nCzy jesteś pewien, że chcesz usunąć ten certyfikat?"
+    IDS_WARN_REMOVE_PLURAL_MY "Już nie będziesz mógł odszyfrowywać i podpisywać wiadomości tymi certyfikatami.\nCzy jesteś pewien, że chcesz usunąć te certyfikaty?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Już nie będziesz mógł szyfrować i weryfikować wiadomości podpisanych tym certyfikatem.\nCzy jesteś pewien, że chcesz usunąć ten certyfikat?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Już nie będziesz mógł szyfrować i weryfikować wiadomości podpisanych tymi certyfikatami.\nCzy jesteś pewien, że chcesz usunąć te certyfikaty?"
+    IDS_WARN_REMOVE_CA "Certyfikaty wydane przez ten urząd certyfikacji stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć ten certyfikat?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certyfikaty wydane przez te urzędy certyfikacji stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć te certyfikaty?"
+    IDS_WARN_REMOVE_ROOT "Certyfikaty wydane przez ten główny urząd certyfikacji, albo jakiekolwiek urzędy certyfikacji, które wydał, stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć ten główny zaufany certyfikat?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Certyfikaty wydane przez te główne urzędy certyfikacji, albo jakiekolwiek urzędy certyfikacji, które wydały, stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć te główne zaufane certyfikaty?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Oprogramowanie podpisane przez tego wydawce stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć ten certyfikat?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Oprogramowanie podpisane przez tych wydawców stracą zaufanie.\nCzy jesteś pewien, że chcesz usunąć te certyfikaty?"
     IDS_WARN_REMOVE_DEFAULT "Czy jesteś pewien, że chcesz usunąć ten certyfikat?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Czy jesteś pewien, że chcesz usunąć te certyfikaty?"
     IDS_CERT_MGR "Certyfikaty"
     IDS_FRIENDLY_NAME_NONE "<Brak>"
     IDS_PURPOSE_SERVER_AUTH "Zapewnia identyfikację komputera zdalnego"
     IDS_PURPOSE_CLIENT_AUTH "Zapewnia tobie identyfikację dla komputera zdalnego"
-    IDS_PURPOSE_CODE_SIGNING "Zapewnia, że oprogramowanie pochodzi od wydawcy oprogramowania\n\
-Chroni oprogramowanie przed zmianą po wydaniu"
+    IDS_PURPOSE_CODE_SIGNING "Zapewnia, że oprogramowanie pochodzi od wydawcy oprogramowania\nChroni oprogramowanie przed zmianą po wydaniu"
     IDS_PURPOSE_EMAIL_PROTECTION "Chroni wiadomości e-mail"
     IDS_PURPOSE_IPSEC "Pozwala na bezpieczną komunikację przez internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Pozwala na podpisywanie danych z aktualnym czasem"
@@ -184,9 +173,9 @@ Chroni oprogramowanie przed zmianą po wydaniu"
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Uwaga: Klucz prywatny dla tego certyfikatu jest oznaczony jako nie do eksportu."
 }
 
-IDD_GENERAL DIALOG 0, 0, 255, 236
+IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Ogólne"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
@@ -200,9 +189,9 @@ BEGIN
   PUSHBUTTON "&Oświadczenie wystawcy", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
-IDD_DETAIL DIALOG 0, 0, 255, 236
+IDD_DETAIL DIALOGEX 0, 0, 255, 236
 CAPTION "Szczegóły"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Pokaż:", -1, 6,12,40,14
@@ -214,9 +203,9 @@ BEGIN
   PUSHBUTTON "&Kopiuj do pliku...", IDC_EXPORT,152,216,95,14
 END
 
-IDD_HIERARCHY DIALOG 0, 0, 255, 236
+IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
 CAPTION "Ścieżka certyfikacji"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Ścieżka certyfikacji", -1,6,10,245,165, BS_GROUPBOX
@@ -228,9 +217,9 @@ BEGIN
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
-IDD_USERNOTICE DIALOG 0, 0, 255, 256
+IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
 CAPTION "Zrzeczenie"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
@@ -239,9 +228,9 @@ BEGIN
   PUSHBUTTON "Więcej &informacji", IDC_CPS,162,216,85,14
 END
 
-IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
+IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Ogólne"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Przyjazna nazwa:", -1, 6,14,60,14
@@ -261,8 +250,9 @@ BEGIN
   PUSHBUTTON "&Dodaj cel...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
-IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
+IDD_ADD_CERT_PURPOSE DIALOGEX 0,0,200,68
 CAPTION "Dodaj cel"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wpisz identyfikator obiektu (OID) dla celu certyfikatu, który chcesz dodać:",
@@ -272,8 +262,9 @@ BEGIN
   PUSHBUTTON "Anuluj", IDCANCEL, 100,48,60,14
 END
 
-IDD_SELECT_STORE DIALOG 0,0,200,136
+IDD_SELECT_STORE DIALOGEX 0,0,200,136
 CAPTION "Wybór magazynu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wybierz magazyn certyfikatów, który chcesz użyć:", IDC_STORE_TEXT, 6,6,190,28
@@ -284,21 +275,21 @@ BEGIN
   PUSHBUTTON "Anuluj", IDCANCEL, 144,118,50,14
 END
 
-IDD_IMPORT_WELCOME DIALOG 0,0,317,143
+IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Kreator importu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Witamy w kreatorze importu certyfikatów", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Asystent ten pomaga tobie importować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z pliku do magazynu certyfikatów.\n\
-\n\
-Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\
-\n\
+  LTEXT "Asystent ten pomaga tobie importować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z pliku do magazynu certyfikatów.\n\n\
+Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\n\
 Aby kontynuować, naciśnij Dalej.",
     -1, 115,40,195,120
 END
 
-IDD_IMPORT_FILE DIALOG 0,0,317,178
+IDD_IMPORT_FILE DIALOGEX 0,0,317,178
 CAPTION "Kreator importu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nazwa pliku:", -1, 21,1,195,10
@@ -306,16 +297,17 @@ BEGIN
   PUSHBUTTON "Przeglądaj", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Uwaga:  Następujące formaty plików mogą zawierać więcej niż jeden certyfikat, listę odwołania certyfikatu lub listę zaufania certyfikatu:",
     -1, 21,30,265,16
-  LTEXT "Standard składni wiadomości kryptograficznych - certyfikaty PKCS #7 (.p7b)",
+  LTEXT "Standard składni wiadomości kryptograficznych - certyfikaty PKCS #7 (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Wymiana informacji osobistych/PKCS #12 (.pfx, .p12)",
+  LTEXT "Wymiana informacji osobistych/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Magazyn certyfikatów seryjnych firmy Microsoft (.sst)",
+  LTEXT "Magazyn certyfikatów seryjnych firmy Microsoft (*.sst)",
     -1, 31,83,265,10
 END
 
-IDD_IMPORT_STORE DIALOG 0,0,317,143
+IDD_IMPORT_STORE DIALOGEX 0,0,317,143
 CAPTION "Kreator importu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine może automatycznie wybrać magazyn certyfikatów. Możesz także ręcznie określić położenie certyfikatów.",
@@ -328,8 +320,9 @@ BEGIN
   PUSHBUTTON "Przeglądaj", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG 0,0,317,178
+IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Kreator importu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Kończenie pracy kreatora importu certyfikatów", IDC_IMPORT_TITLE,
@@ -343,8 +336,9 @@ BEGIN
     115,67,174,100
 END
 
-IDD_CERT_MGR DIALOG 0,0,335,270
+IDD_CERT_MGR DIALOGEX 0,0,335,270
 CAPTION "Certyfikaty"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Zamierzone cele:", -1, 7,9,100,12
@@ -361,8 +355,9 @@ BEGIN
   PUSHBUTTON "&Zamknij", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
-IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
+IDD_CERT_MGR_ADVANCED DIALOGEX 0,0,248,176
 CAPTION "Zaawansowane opcje"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Cel certyfikatu", -1, 7,7,234,141, BS_GROUPBOX
@@ -376,21 +371,21 @@ BEGIN
   PUSHBUTTON "Anuluj", IDCANCEL, 190,155,51,14
 END
 
-IDD_EXPORT_WELCOME DIALOG 0,0,317,143
+IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Witamy w kreatorze eksportu certyfikatów", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Asystent ten pomaga tobie eksportować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z magazynu certyfikatów do pliku.\n\
-\n\
-Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\
-\n\
+  LTEXT "Asystent ten pomaga tobie eksportować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z magazynu certyfikatów do pliku.\n\n\
+Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\n\
 Aby kontynuować, naciśnij Dalej.",
     -1, 115,40,195,120
 END
 
-IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
+IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Jeżeli wybierzesz wyeksportowanie klucza prywatnego to w kolejnym kroku będziesz zapytany o hasło chroniące klucz prywatny.", -1, 21,1,195,25
@@ -402,8 +397,9 @@ BEGIN
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
-IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
+IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Hasło:", -1, 21,1,195,10
@@ -412,20 +408,21 @@ BEGIN
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
-IDD_EXPORT_FORMAT DIALOG 0,0,317,143
+IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wybierz format, którego chcesz użyć:", -1, 21,1,195,10
-  AUTORADIOBUTTON "Certyfikat X.509 szyfrowany binarnie algorytmem DER (.&cer)",
+  AUTORADIOBUTTON "Certyfikat X.509 szyfrowany binarnie algorytmem DER (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Certyfikat X.509 szyfrowany algorytmem B&ase64 (.cer):",
+  AUTORADIOBUTTON "Certyfikat X.509 szyfrowany algorytmem B&ase64 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Standard składni wiadomości kryptograficznych - certyfikat PKCS #7 (.p7b)",
+  AUTORADIOBUTTON "&Standard składni wiadomości kryptograficznych - certyfikat PKCS #7 (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Jeżeli jest to możliwe, dołącz wszystkie certyfikaty do ścieżki certyfikacji",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "Wymiana informacji &osobistych - PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "Wymiana informacji &osobistych - PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "J&eżeli jest to możliwe, dołącz wszystkie certyfikaty do ścieżki certyfikacji",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -435,8 +432,9 @@ BEGIN
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
-IDD_EXPORT_FILE DIALOG 0,0,317,143
+IDD_EXPORT_FILE DIALOGEX 0,0,317,143
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nazwa pliku:", -1, 21,1,195,10
@@ -444,8 +442,9 @@ BEGIN
   PUSHBUTTON "Przeglądaj", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG 0,0,317,178
+IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Kreator eksportu certyfikatów"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Kończenie pracy kreatora eksportu certyfikatów", IDC_EXPORT_TITLE,

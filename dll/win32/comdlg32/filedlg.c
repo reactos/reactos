@@ -1556,41 +1556,37 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   /* 2. (All platforms) If initdir is not null, then use it */
   if (!handledPath && fodInfos->initdir && *fodInfos->initdir)
   {
-      /* Work out the proper path as supplied one might be relative          */
-      /* (Here because supplying '.' as dir browses to My Computer)          */
-      if (!handledPath) {
-          WCHAR tmpBuf[MAX_PATH];
-          WCHAR tmpBuf2[MAX_PATH];
-          WCHAR *nameBit;
-          DWORD result;
+        /* Work out the proper path as supplied one might be relative          */
+        /* (Here because supplying '.' as dir browses to My Computer)          */
+        WCHAR tmpBuf[MAX_PATH];
+        WCHAR tmpBuf2[MAX_PATH];
+        WCHAR *nameBit;
+        DWORD result;
 
-          lstrcpyW(tmpBuf, fodInfos->initdir);
-          if( PathFileExistsW(tmpBuf) ) {
-              /* initdir does not have to be a directory. If a file is
-               * specified, the dir part is taken */
-              if( PathIsDirectoryW(tmpBuf)) {
-                  if (tmpBuf[lstrlenW(tmpBuf)-1] != '\\') {
-                     lstrcatW(tmpBuf, szwSlash);
-                  }
-                  lstrcatW(tmpBuf, szwStar);
-              }
-              result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
-              if (result) {
-                 *nameBit = 0x00;
-                 MemFree(fodInfos->initdir);
-                 fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf2) + 1)*sizeof(WCHAR));
-                 lstrcpyW(fodInfos->initdir, tmpBuf2);
-                 handledPath = TRUE;
-                 TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
-              }
-          }
-          else if (fodInfos->initdir)
-          {
-                    MemFree(fodInfos->initdir);
-                    fodInfos->initdir = NULL;
-                    TRACE("Value in InitDir is not an existing path, changed to (nil)\n");
-          }
-      }
+        lstrcpyW(tmpBuf, fodInfos->initdir);
+        if (PathFileExistsW(tmpBuf)) {
+            /* initdir does not have to be a directory. If a file is
+             * specified, the dir part is taken */
+            if (PathIsDirectoryW(tmpBuf)) {
+                PathAddBackslashW(tmpBuf);
+                lstrcatW(tmpBuf, szwStar);
+            }
+            result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
+            if (result) {
+                *nameBit = 0x00;
+                MemFree(fodInfos->initdir);
+                fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf2) + 1) * sizeof(WCHAR));
+                lstrcpyW(fodInfos->initdir, tmpBuf2);
+                handledPath = TRUE;
+                TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
+            }
+        }
+        else if (fodInfos->initdir)
+        {
+            MemFree(fodInfos->initdir);
+            fodInfos->initdir = NULL;
+            TRACE("Value in InitDir is not an existing path, changed to (nil)\n");
+        }
   }
 
   if (!handledPath && (!fodInfos->initdir || !*fodInfos->initdir))
@@ -1776,7 +1772,7 @@ static LRESULT FILEDLG95_ResizeControls(HWND hwnd, WPARAM wParam, LPARAM lParam)
   }
   else
   {
-    /* Resize the height, if open as read only checkbox ad help button are
+    /* Resize the height; if opened as read-only, checkbox and help button are
      * hidden and we are not using a custom template nor a customDialog
      */
     if ( (fodInfos->ofnInfos->Flags & OFN_HIDEREADONLY) &&
@@ -2571,10 +2567,11 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                     filterSearchIndex[0] = '\0';
                 }
 
+                /* find the file extension by searching for the first dot in filterExt */
                 /* strip the * or anything else from the extension, "*.abc" becomes "abc" */
                 /* if the extension is invalid or contains a glob, ignore it */
-                filterSearchIndex = PathFindExtensionW(filterExt);
-                if (*filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
+                filterSearchIndex = strchrW(filterExt, '.');
+                if (filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
                 {
                     strcpyW(filterExt, filterSearchIndex);
                 }
@@ -3240,7 +3237,6 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
   int iIndentation;
   TEXTMETRICW tm;
   LPSFOLDER tmpFolder;
-  LookInInfos *liInfos = GetPropA(pDIStruct->hwndItem,LookInInfosStr);
   UINT shgfi_flags = SHGFI_PIDL | SHGFI_OPENICON | SHGFI_SYSICONINDEX | SHGFI_DISPLAYNAME;
   UINT icon_width, icon_height;
 
@@ -3263,16 +3259,8 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
       shgfi_flags |= SHGFI_SMALLICON;
   }
 
-  if(pDIStruct->itemID == liInfos->uSelectedItem)
-  {
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                               0, &sfi, sizeof (sfi), shgfi_flags );
-  }
-  else
-  {
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                               0, &sfi, sizeof (sfi), shgfi_flags );
-  }
+  ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
+                                             0, &sfi, sizeof (sfi), shgfi_flags );
 
   /* Is this item selected ? */
   if(pDIStruct->itemState & ODS_SELECTED)
@@ -3290,16 +3278,10 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 
   /* Do not indent item if drawing in the edit of the combo */
   if(pDIStruct->itemState & ODS_COMBOBOXEDIT)
-  {
     iIndentation = 0;
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                               0, &sfi, sizeof (sfi), shgfi_flags );
-
-  }
   else
-  {
     iIndentation = tmpFolder->m_iIndent;
-  }
+
   /* Draw text and icon */
 
   /* Initialise the icon display area */

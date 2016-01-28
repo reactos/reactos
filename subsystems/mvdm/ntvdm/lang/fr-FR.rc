@@ -1,0 +1,22 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTURE_MOUSE, "&Capturer le pointeur de la souris"
+    IDS_RELEASE_MOUSE, "&Libérer le pointeur de la souris"
+    IDS_VDM_MENU     , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT ,   "Vidage Mémoire (&Texte)"
+    IDS_VDM_DUMPMEM_BIN ,   "Vidage Mémoire (&Binaire)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insérer une disquette dans le lecteur %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Éjecter la disquette du lecteur %d"
+    IDS_VDM_QUIT        ,   "&Quitter ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "Aucun média"
+END

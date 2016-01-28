@@ -100,27 +100,27 @@
 @ stdcall ExInitializeRundownProtectionCacheAware(ptr long)
 @ stdcall ExInitializeZone(ptr long ptr long)
 @ stdcall ExInterlockedAddLargeInteger(ptr long long ptr)
-@ fastcall -arch=i386,arm ExInterlockedAddLargeStatistic(ptr long)
+@ fastcall -arch=i386 ExInterlockedAddLargeStatistic(ptr long)
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
 @ fastcall -arch=i386 ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall -arch=i386 ExInterlockedDecrementLong(ptr ptr)
 @ stdcall -arch=i386 ExInterlockedExchangeUlong(ptr long ptr)
 @ stdcall ExInterlockedExtendZone(ptr ptr long ptr)
-@ fastcall -arch=i386,arm ExInterlockedFlushSList(ptr)
-@ stdcall -arch=i386,arm ExInterlockedIncrementLong(ptr ptr)
+@ fastcall -arch=i386 ExInterlockedFlushSList(ptr)
+@ stdcall -arch=i386 ExInterlockedIncrementLong(ptr ptr)
 @ stdcall ExInterlockedInsertHeadList(ptr ptr ptr)
 @ stdcall ExInterlockedInsertTailList(ptr ptr ptr)
 @ stdcall ExInterlockedPopEntryList(ptr ptr)
-@ fastcall -arch=i386,arm ExInterlockedPopEntrySList(ptr ptr)
+@ fastcall -arch=i386 ExInterlockedPopEntrySList(ptr ptr)
 @ stdcall ExInterlockedPushEntryList(ptr ptr ptr)
-@ fastcall -arch=i386,arm ExInterlockedPushEntrySList(ptr ptr ptr)
+@ fastcall -arch=i386 ExInterlockedPushEntrySList(ptr ptr ptr)
 @ stdcall ExInterlockedRemoveHeadList(ptr ptr)
 @ stdcall ExIsProcessorFeaturePresent(long)
 @ stdcall ExIsResourceAcquiredExclusiveLite(ptr)
 @ stdcall ExIsResourceAcquiredSharedLite(ptr)
 @ stdcall ExLocalTimeToSystemTime(ptr ptr)
 @ stdcall ExNotifyCallback(ptr ptr ptr)
-@ stdcall -arch=x86_64 ExQueryDepthSList(ptr)
+@ stdcall -arch=x86_64,arm ExQueryDepthSList(ptr) RtlQueryDepthSList
 @ stdcall ExQueryPoolBlockSize(ptr ptr)
 @ stdcall ExQueueWorkItem(ptr long)
 @ stdcall ExRaiseAccessViolation()
@@ -159,21 +159,21 @@
 @ extern ExWindowStationObjectType
 @ fastcall ExfAcquirePushLockExclusive(ptr)
 @ fastcall ExfAcquirePushLockShared(ptr)
-@ fastcall -arch=i386,arm ExfInterlockedAddUlong(ptr long ptr)
-@ fastcall -arch=i386,arm ExfInterlockedCompareExchange64(ptr ptr ptr)
-@ fastcall -arch=i386,arm ExfInterlockedInsertHeadList(ptr ptr ptr)
-@ fastcall -arch=i386,arm ExfInterlockedInsertTailList(ptr ptr ptr)
-@ fastcall -arch=i386,arm ExfInterlockedPopEntryList(ptr ptr)
-@ fastcall -arch=i386,arm ExfInterlockedPushEntryList(ptr ptr ptr)
-@ fastcall -arch=i386,arm ExfInterlockedRemoveHeadList(ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedAddUlong(ptr long ptr)
+@ fastcall -arch=i386 ExfInterlockedCompareExchange64(ptr ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedInsertHeadList(ptr ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedInsertTailList(ptr ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedPopEntryList(ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedPushEntryList(ptr ptr ptr)
+@ fastcall -arch=i386 ExfInterlockedRemoveHeadList(ptr ptr)
 @ fastcall ExfReleasePushLock(ptr)
 @ fastcall ExfReleasePushLockExclusive(ptr)
 @ fastcall ExfReleasePushLockShared(ptr)
 @ fastcall ExfTryToWakePushLock(ptr)
 @ fastcall ExfUnblockPushLock(ptr ptr)
-@ stdcall -arch=x86_64 ExpInterlockedFlushSList(ptr)
-@ stdcall -arch=x86_64 ExpInterlockedPopEntrySList(ptr ptr)
-@ stdcall -arch=x86_64 ExpInterlockedPushEntrySList(ptr ptr)
+@ stdcall -arch=x86_64,arm ExpInterlockedFlushSList(ptr) RtlInterlockedFlushSList
+@ stdcall -arch=x86_64,arm ExpInterlockedPopEntrySList(ptr ptr) RtlInterlockedPopEntrySList
+@ stdcall -arch=x86_64,arm ExpInterlockedPushEntrySList(ptr ptr) RtlInterlockedPushEntrySList
 @ fastcall -arch=i386 Exfi386InterlockedDecrementLong(ptr)
 @ fastcall -arch=i386 Exfi386InterlockedExchangeUlong(ptr long)
 @ fastcall -arch=i386 Exfi386InterlockedIncrementLong(ptr)
@@ -324,8 +324,10 @@
 @ fastcall -arch=i386,arm InterlockedExchange(ptr long)
 @ fastcall -arch=i386,arm InterlockedExchangeAdd(ptr long)
 @ fastcall -arch=i386,arm InterlockedIncrement(ptr)
-@ fastcall -arch=i386,arm InterlockedPopEntrySList(ptr)
-@ fastcall -arch=i386,arm InterlockedPushEntrySList(ptr ptr)
+@ fastcall -arch=i386 InterlockedPopEntrySList(ptr)
+@ fastcall -arch=i386 InterlockedPushEntrySList(ptr ptr)
+@ stdcall -arch=arm InterlockedPopEntrySList(ptr) RtlInterlockedPopEntrySList
+@ stdcall -arch=arm InterlockedPushEntrySList(ptr ptr) RtlInterlockedPushEntrySList
 @ stdcall -arch=x86_64 InitializeSListHead(ptr) RtlInitializeSListHead
 @ stdcall IoAcquireCancelSpinLock(ptr)
 @ stdcall IoAcquireRemoveLockEx(ptr ptr str long long)
@@ -582,21 +584,22 @@
 @ stdcall KeFindConfigurationEntry(ptr long long ptr)
 @ stdcall KeFindConfigurationNextEntry(ptr long long ptr ptr)
 @ stdcall KeFlushEntireTb(long long)
+@ stdcall -arch=arm KeFlushIoBuffers(ptr long long)
 @ stdcall KeFlushQueuedDpcs()
 @ stdcall KeGenericCallDpc(ptr ptr)
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
-; -arch=i386 KeI386AbiosCall
+@ stdcall -arch=i386 KeI386AbiosCall(long ptr ptr long)
 @ stdcall -arch=i386 KeI386AllocateGdtSelectors(ptr long)
-; -arch=i386 KeI386Call16BitCStyleFunction
-; -arch=i386 KeI386Call16BitFunction
+@ stdcall -arch=i386 KeI386Call16BitCStyleFunction(long long ptr long)
+@ stdcall -arch=i386 KeI386Call16BitFunction(ptr)
 @ stdcall -arch=i386 KeI386FlatToGdtSelector(long long long)
-; -arch=i386 KeI386GetLid
+@ stdcall -arch=i386 KeI386GetLid(long long long ptr ptr)
 @ extern -arch=i386 KeI386MachineType
 @ stdcall -arch=i386 KeI386ReleaseGdtSelectors(ptr long)
-; -arch=i386 KeI386ReleaseLid
-; -arch=i386 KeI386SetGdtSelector
+@ stdcall -arch=i386 KeI386ReleaseLid(long ptr)
+@ stdcall -arch=i386 KeI386SetGdtSelector(long ptr)
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
 @ stdcall KeInitializeDeviceQueue(ptr)
@@ -622,13 +625,13 @@
 @ stdcall KeIpiGenericCall(ptr ptr)
 @ stdcall KeIsAttachedProcess()
 @ stdcall -arch=i386,arm KeIsExecutingDpc()
-;KeIsWaitListEmpty
+@ stdcall KeIsWaitListEmpty(ptr)
 ;@ cdecl -arch=x86_64 KeLastBranchMSR()
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
 @ cdecl -arch=x86_64 -private KeLowerIrql(long)
-@ extern KeNumberProcessors _KeNumberProcessors
+@ extern KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)
@@ -718,11 +721,11 @@
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
 @ cdecl -arch=x86_64 -private KfRaiseIrql(long)
-@ fastcall -arch=i386 KiEoiHelper(ptr)
+@ fastcall -arch=i386 KiEoiHelper(ptr) #ReactOS-Specific
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
-;-arch=i386,arm KiCheckForSListAddress
+@ fastcall -arch=i386 KiCheckForSListAddress(ptr)
 @ stdcall -arch=i386 KiCoprocessorError()
 ;@ cdecl -arch=x86_64 KiCpuId()
 @ stdcall -arch=i386,arm KiDeliverApc(long ptr ptr)
@@ -760,9 +763,10 @@
 @ stdcall MmCanFileBeTruncated(ptr ptr)
 @ stdcall MmCommitSessionMappedView(ptr ptr)
 @ stdcall MmCreateMdl(ptr ptr long)
-;MmCreateMirror
+@ stdcall MmCreateMirror()
 @ stdcall MmCreateSection(ptr long ptr ptr long long ptr ptr)
 @ stdcall MmDisableModifiedWriteOfSection(long)
+@ stdcall MmDoesFileHaveUserWritableReferences(ptr)
 @ stdcall MmFlushImageSection(ptr long)
 @ stdcall MmForceSectionClosed(ptr long)
 @ stdcall MmFreeContiguousMemory(ptr)
@@ -778,7 +782,7 @@
 @ extern MmHighestUserAddress
 @ stdcall MmIsAddressValid(ptr)
 @ stdcall MmIsDriverVerifying(ptr)
-;MmIsIoSpaceActive
+@ stdcall MmIsIoSpaceActive(long long ptr)
 @ stdcall MmIsNonPagedSystemAddressValid(ptr)
 @ stdcall MmIsRecursiveIoFault()
 @ stdcall MmIsThisAnNtAsSystem()
@@ -833,7 +837,6 @@
 @ extern NlsOemLeadByteInfo
 @ stdcall NtAddAtom(wstr long ptr)
 @ stdcall NtAdjustPrivilegesToken(ptr long ptr long ptr ptr)
-@ stdcall -arch=i386,arm NtAlertThread(ptr)
 @ stdcall NtAllocateLocallyUniqueId(ptr)
 @ stdcall NtAllocateUuids(ptr ptr ptr ptr)
 @ stdcall NtAllocateVirtualMemory(ptr ptr long ptr long long)
@@ -843,7 +846,6 @@
 @ stdcall NtCreateEvent(ptr long ptr long long)
 @ stdcall NtCreateFile(ptr long ptr ptr ptr long long long long ptr long)
 @ stdcall NtCreateSection(ptr long ptr ptr long long ptr)
-@ stdcall -arch=i386,arm NtCreateTimer(ptr long ptr long)
 @ stdcall NtDeleteAtom(ptr)
 @ stdcall NtDeleteFile(ptr)
 @ stdcall NtDeviceIoControlFile(ptr ptr ptr ptr ptr long ptr long ptr long)
@@ -857,7 +859,6 @@
 @ stdcall NtMakePermanentObject(ptr)
 @ stdcall NtMapViewOfSection(ptr ptr ptr long long ptr ptr long long long)
 @ stdcall NtNotifyChangeDirectoryFile(ptr ptr ptr ptr ptr ptr long long long)
-@ stdcall -arch=i386,arm NtOpenEvent(ptr long ptr)
 @ stdcall NtOpenFile(ptr long ptr ptr long long)
 @ stdcall NtOpenProcess(ptr long ptr ptr)
 @ stdcall NtOpenProcessToken(ptr long ptr)
@@ -901,12 +902,10 @@
 @ stdcall ObCreateObjectType(ptr ptr ptr ptr)
 @ stdcall ObDeleteCapturedInsertInfo(ptr)
 @ stdcall ObDereferenceObject(ptr)
-@ stdcall -arch=i386,arm ObDereferenceObjectDeferDelete(ptr)
 @ stdcall ObDereferenceSecurityDescriptor(ptr long)
 @ stdcall ObFindHandleForObject(ptr ptr ptr ptr ptr)
 @ stdcall ObGetObjectSecurity(ptr ptr ptr)
 @ stdcall ObInsertObject(ptr ptr long long ptr ptr)
-@ stdcall -arch=i386,arm ObIsKernelHandle(ptr)
 @ stdcall ObLogSecurityDescriptor(ptr ptr long)
 @ stdcall ObMakeTemporaryObject(ptr)
 @ stdcall ObOpenObjectByName(ptr ptr long ptr long ptr ptr)
@@ -923,10 +922,10 @@
 @ stdcall ObSetSecurityObjectByPointer(ptr long ptr)
 @ fastcall ObfDereferenceObject(ptr)
 @ fastcall ObfReferenceObject(ptr)
-;PfxFindPrefix
-;PfxInitialize
-;PfxInsertPrefix
-;PfxRemovePrefix
+@ stdcall PfxFindPrefix(ptr ptr)
+@ stdcall PfxInitialize(ptr)
+@ stdcall PfxInsertPrefix(ptr ptr ptr)
+@ stdcall PfxRemovePrefix(ptr ptr)
 @ stdcall PoCallDriver(ptr ptr)
 @ stdcall PoCancelDeviceNotify(ptr)
 @ stdcall PoQueueShutdownWorkItem(ptr)
@@ -1037,7 +1036,7 @@
 @ stdcall PsSetThreadWin32Thread(ptr ptr ptr)
 @ stdcall PsTerminateSystemThread(long)
 @ extern PsThreadType
-;PsWrapApcWow64Thread
+@ stdcall PsWrapApcWow64Thread(ptr ptr)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_ULONG(ptr ptr long)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_USHORT(ptr ptr long)
@@ -1050,7 +1049,6 @@
 @ stdcall RtlAddAce(ptr long long ptr long)
 @ stdcall RtlAddAtomToAtomTable(ptr wstr ptr)
 @ stdcall RtlAddRange(ptr long long long long long long ptr ptr)
-@ stdcall -arch=i386,arm RtlAllocateAndInitializeSid(ptr long long long long long long long long long ptr)
 @ stdcall RtlAllocateHeap(ptr long long)
 @ stdcall RtlAnsiCharToUnicodeChar(ptr)
 @ stdcall RtlAnsiStringToUnicodeSize(ptr) RtlxAnsiStringToUnicodeSize
@@ -1287,14 +1285,14 @@
 @ stdcall RtlTimeToSecondsSince1970(ptr ptr)
 @ stdcall RtlTimeToSecondsSince1980(ptr ptr)
 @ stdcall RtlTimeToTimeFields(ptr ptr)
-;RtlTraceDatabaseAdd
-;RtlTraceDatabaseCreate
-;RtlTraceDatabaseDestroy
-;RtlTraceDatabaseEnumerate
-;RtlTraceDatabaseFind
-;RtlTraceDatabaseLock
-;RtlTraceDatabaseUnlock
-;RtlTraceDatabaseValidate
+@ stdcall RtlTraceDatabaseAdd(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseCreate(long ptr long long ptr)
+@ stdcall RtlTraceDatabaseDestroy(ptr)
+@ stdcall RtlTraceDatabaseEnumerate(ptr ptr ptr)
+@ stdcall RtlTraceDatabaseFind(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseLock(ptr)
+@ stdcall RtlTraceDatabaseUnlock(ptr)
+@ stdcall RtlTraceDatabaseValidate(ptr)
 @ fastcall -arch=i386,arm RtlUlongByteSwap(long)
 @ fastcall -arch=i386,arm RtlUlonglongByteSwap(long long)
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
@@ -1383,7 +1381,6 @@
 @ stdcall SeTokenImpersonationLevel(ptr)
 @ stdcall SeTokenIsAdmin(ptr)
 @ stdcall SeTokenIsRestricted(ptr)
-@ stdcall SeTokenIsWriteRestricted(ptr)
 @ extern SeTokenObjectType
 @ stdcall SeTokenType(ptr)
 @ stdcall SeUnlockSubjectContext(ptr)
@@ -1391,7 +1388,7 @@
 @ stdcall SeValidSecurityDescriptor(long ptr)
 @ stdcall VerSetConditionMask(long long long long)
 @ cdecl VfFailDeviceNode(ptr long long long ptr ptr ptr)
-;VfFailDriver
+@ cdecl VfFailDriver(long long long ptr ptr ptr)
 @ cdecl VfFailSystemBIOS(long long long ptr ptr ptr)
 @ stdcall VfIsVerificationEnabled(long ptr)
 @ stdcall -arch=i386,arm WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)
@@ -1400,17 +1397,17 @@
 @ stdcall -arch=i386,arm WRITE_REGISTER_UCHAR(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_ULONG(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_USHORT(ptr long)
-;WmiFlushTrace
-;WmiGetClock
-;WmiQueryTrace
+@ stdcall WmiFlushTrace(ptr)
+@ fastcall WmiGetClock(long ptr)
+@ stdcall WmiQueryTrace(ptr)
 @ stdcall WmiQueryTraceInformation(long ptr long ptr ptr)
-;WmiStartTrace
-;WmiStopTrace
-;WmiTraceFastEvent
+@ stdcall WmiStartTrace(ptr)
+@ stdcall WmiStopTrace(ptr)
+@ fastcall WmiTraceFastEvent(ptr)
 @ cdecl WmiTraceMessage()
 @ stdcall WmiTraceMessageVa(double long ptr long long)
-;WmiUpdateTrace
-;XIPDispatch
+@ stdcall WmiUpdateTrace(ptr)
+@ stdcall XIPDispatch(long ptr long)
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)
 @ stdcall ZwAddBootEntry(ptr long)
 @ stdcall ZwAddDriverEntry(ptr long)
@@ -1484,7 +1481,6 @@
 @ stdcall ZwQueryDriverEntryOrder(ptr ptr)
 @ stdcall ZwQueryEaFile(ptr ptr ptr long long ptr long ptr long)
 @ stdcall ZwQueryFullAttributesFile(ptr ptr)
-@ stdcall -arch=i386,arm ZwQueryInformationAtom(ptr long ptr long ptr)
 @ stdcall ZwQueryInformationFile(ptr ptr ptr long long)
 @ stdcall ZwQueryInformationJobObject(ptr long ptr long ptr)
 @ stdcall ZwQueryInformationProcess(ptr long ptr long ptr)
@@ -1535,12 +1531,13 @@
 @ stdcall ZwWaitForSingleObject(ptr long ptr)
 @ stdcall ZwWriteFile(ptr ptr ptr ptr ptr ptr long ptr ptr)
 @ stdcall ZwYieldExecution()
-@ cdecl -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
+@ cdecl -arch=x86_64,arm __C_specific_handler(ptr long ptr ptr)
+@ cdecl -arch=arm __jump_unwind()
 @ cdecl -arch=x86_64 __chkstk()
 ;@ cdecl -arch=x86_64 __misaligned_access()
-;@ cdecl -arch=i386 _CIcos
-;@ cdecl -arch=i386 _CIsin
-;@ cdecl -arch=i386 _CIsqrt
+@ cdecl -arch=i386 _CIcos()
+@ cdecl -arch=i386 _CIsin()
+@ cdecl -arch=i386 _CIsqrt()
 @ cdecl -arch=i386,arm _abnormal_termination()
 @ cdecl -arch=i386 _alldiv()
 @ cdecl -arch=i386 _alldvrm()
@@ -1561,7 +1558,7 @@
 @ cdecl -arch=i386,arm _local_unwind2()
 @ cdecl -arch=x86_64 _local_unwind()
 @ cdecl _purecall()
-@ cdecl -arch=x86_64 _setjmp(ptr ptr)
+@ cdecl -arch=x86_64,arm _setjmp(ptr ptr)
 @ cdecl -arch=x86_64 _setjmpex(ptr ptr)
 @ cdecl _snprintf()
 @ cdecl _snwprintf()
@@ -1588,7 +1585,7 @@
 @ cdecl isspace()
 @ cdecl isupper()
 @ cdecl isxdigit()
-@ cdecl -arch=x86_64 longjmp(ptr long)
+@ cdecl -arch=x86_64,arm longjmp(ptr long)
 @ cdecl mbstowcs()
 @ cdecl mbtowc()
 @ cdecl memchr()
@@ -1633,3 +1630,14 @@
 @ cdecl wcsstr()
 @ cdecl wcstombs()
 @ cdecl wctomb()
+
+# FIXME: check if this is correct
+@ stdcall -arch=arm __dtoi64()
+@ stdcall -arch=arm __dtou64()
+@ stdcall -arch=arm __i64tod()
+@ stdcall -arch=arm __u64tod()
+@ stdcall -arch=arm __rt_sdiv()
+@ stdcall -arch=arm __rt_sdiv64()
+@ stdcall -arch=arm __rt_udiv()
+@ stdcall -arch=arm __rt_udiv64()
+@ stdcall -arch=arm __rt_srsh()

@@ -1,54 +1,10 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/cm/cm_x.h
+* FILE:            ntoskrnl/include/internal/cm_x.h
 * PURPOSE:         Inlined Functions for the Configuration Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
-
-//
-// Returns whether or not this is a small valued key
-//
-FORCEINLINE
-BOOLEAN
-CmpIsKeyValueSmall(OUT PULONG RealLength,
-                   IN ULONG Length)
-{
-    /* Check if the length has the special size value */
-    if (Length >= CM_KEY_VALUE_SPECIAL_SIZE)
-    {
-        /* It does, so this is a small key: return the real length */
-        *RealLength = Length - CM_KEY_VALUE_SPECIAL_SIZE;
-        return TRUE;
-    }
-
-    /* This is not a small key, return the length we read */
-    *RealLength = Length;
-    return FALSE;
-}
-
-//
-// Returns whether or not this is a big valued key
-//
-FORCEINLINE
-BOOLEAN
-CmpIsKeyValueBig(IN PHHIVE Hive,
-                 IN ULONG Length)
-{
-    /* Check if the hive is XP Beta 1 or newer */
-    if (Hive->Version >= HSYS_WHISTLER_BETA1)
-    {
-        /* Check if the key length is valid for a big value key */
-        if ((Length < CM_KEY_VALUE_SPECIAL_SIZE) && (Length > CM_KEY_VALUE_BIG))
-        {
-            /* Yes, this value is big */
-            return TRUE;
-        }
-    }
-
-    /* Not a big value key */
-    return FALSE;
-}
 
 //
 // Returns the hashkey corresponding to a convkey
@@ -311,25 +267,3 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
            (CmpTestHiveFlusherLockShared((PCMHIVE)h) == TRUE) ||    \
            (CmpTestHiveFlusherLockExclusive((PCMHIVE)h) == TRUE) || \
            (CmpTestRegistryLockExclusive() == TRUE));
-
-//
-// Asserts that either the registry or the KCB is locked
-//
-#define CMP_ASSERT_HASH_ENTRY_LOCK(k)                               \
-{                                                                   \
-    ASSERT(((GET_HASH_ENTRY(CmpCacheTable, k).Owner ==              \
-            KeGetCurrentThread())) ||                               \
-           (CmpTestRegistryLockExclusive() == TRUE));               \
-}
-
-//
-// Gets the page attached to the KCB
-//
-#define CmpGetAllocPageFromKcb(k)                                   \
-    (PCM_ALLOC_PAGE)(((ULONG_PTR)(k)) & ~(PAGE_SIZE - 1))
-
-//
-// Gets the page attached to the delayed allocation
-//
-#define CmpGetAllocPageFromDelayAlloc(a)                            \
-    (PCM_ALLOC_PAGE)(((ULONG_PTR)(a)) & ~(PAGE_SIZE - 1))

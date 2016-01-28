@@ -14,4 +14,4 @@ list(APPEND SOURCE
 
 add_library(soundblaster ${SOURCE})
 add_pch(soundblaster precomp.h)
-add_dependencies(soundblaster bugcodes)
+add_dependencies(soundblaster bugcodes xdk)

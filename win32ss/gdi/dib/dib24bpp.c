@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/dib24bpp.c
+ * FILE:            win32ss/gdi/dib/dib24bpp.c
  * PURPOSE:         Device Independant Bitmap functions, 24bpp
  * PROGRAMMERS:     Jason Filby
  *                  Thomas Bluemel
@@ -431,7 +431,7 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
         if(Source != iTransColor)
         {
-          Dest = (BYTE)XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
+          Dest = XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
            *(PUSHORT)(DestBits) = Dest & 0xFFFF;
            *(DestBits + 2) = (BYTE)(Dest >> 16);
         }

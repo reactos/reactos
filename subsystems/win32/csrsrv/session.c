@@ -234,11 +234,11 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
         return TRUE;
     }
 
-    /* Set the exception port */
+    /* Set the Exception Port for us */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessExceptionPort,
                                      &CsrApiPort,
-                                     sizeof(HANDLE));
+                                     sizeof(CsrApiPort));
 
     /* Check for success */
     if (!NT_SUCCESS(Status))
@@ -255,7 +255,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     Status = NtQueryInformationThread(hThread,
                                       ThreadTimes,
                                       &KernelTimes,
-                                      sizeof(KERNEL_USER_TIMES),
+                                      sizeof(KernelTimes),
                                       NULL);
 
     /* Check for success */

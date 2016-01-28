@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/console.h
+ * FILE:            base/setup/usetup/interface/consup.h
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -79,6 +79,11 @@ CONSOLE_ConOutPuts(
 BOOL
 CONSOLE_Flush(VOID);
 
+VOID
+CONSOLE_GetCursorXY(
+    PSHORT x,
+    PSHORT y);
+
 SHORT
 CONSOLE_GetCursorX(VOID);
 
@@ -132,13 +137,6 @@ CONSOLE_SetHighlightedTextXY(
 	IN SHORT x,
 	IN SHORT y,
 	IN LPCSTR Text);
-
-VOID
-CONSOLE_SetInputTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCWSTR Text);
 
 VOID
 CONSOLE_SetInputTextXY(

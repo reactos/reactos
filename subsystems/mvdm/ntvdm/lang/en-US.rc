@@ -1,0 +1,22 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT ,   "Dump Memory (&Text)"
+    IDS_VDM_DUMPMEM_BIN ,   "Dump Memory (&Binary)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_QUIT        ,   "&Quit the ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "No media"
+END

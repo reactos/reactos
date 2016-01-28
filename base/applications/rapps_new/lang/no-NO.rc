@@ -1,0 +1,200 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Fil"
+    BEGIN
+        MENUITEM "&Innstillinger", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "A&vslutt", ID_EXIT
+    END
+    POPUP "&Programmer"
+    BEGIN
+        MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Endre", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Oppdatere\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Hjelp"
+    BEGIN
+        MENUITEM "Hjelp\tF1", ID_HELP, GRAYED
+        MENUITEM "Om", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Åpne lenke i en nettleser", ID_OPEN_LINK
+        MENUITEM "&Kopier lenke til utklipptavlen", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Endre", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Oppdater\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "General", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Save window position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Downloading", -1, 4, 65, 240, 51
+    LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Program installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Install from a disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Download and install", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Lastet ned..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS,  10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Avbryt", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Om"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Programbehandler\nEnerett (C) 2009\nav Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Lukk", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Installere"
+    IDS_TOOLTIP_UNINSTALL "Avinstallere"
+    IDS_TOOLTIP_MODIFY "Rediger"
+    IDS_TOOLTIP_SETTINGS "Innstillinger"
+    IDS_TOOLTIP_REFRESH "Oppdatere"
+    IDS_TOOLTIP_EXIT "Avslutt"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Navn"
+    IDS_APP_INST_VERSION "Versjon"
+    IDS_APP_DESCRIPTION "Beskrivelse"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVersjon: "
+    IDS_INFO_DESCRIPTION "\nBeskrivelse: "
+    IDS_INFO_PUBLISHER "\nUtgiver: "
+    IDS_INFO_HELPLINK "\nHjelpelenke: "
+    IDS_INFO_HELPPHONE "\nHjelptelefon: "
+    IDS_INFO_README "\nLes meg: "
+    IDS_INFO_REGOWNER "\nRegistert eier: "
+    IDS_INFO_PRODUCTID "\nProdukt ID: "
+    IDS_INFO_CONTACT "\nKontakt: "
+    IDS_INFO_UPDATEINFO "\nOppdatert informasjon: "
+    IDS_INFO_INFOABOUT "\nInformasjon om: "
+    IDS_INFO_COMMENTS "\nKomentarer: "
+    IDS_INFO_INSTLOCATION "\nInstallering plassering: "
+    IDS_INFO_INSTALLSRC "\nInstallering kilde: "
+    IDS_INFO_UNINSTALLSTR "\nAvinstallering plassering: "
+    IDS_INFO_MODIFYPATH "\nEndret mappe: "
+    IDS_INFO_INSTALLDATE "\nInstallert dato: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVersjon: "
+    IDS_AINFO_DESCRIPTION "\nBeskrivelse: "
+    IDS_AINFO_SIZE "\nStørrelse: "
+    IDS_AINFO_URLSITE "\nHjemmeside: "
+    IDS_AINFO_LICENSE "\nLisens: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Lyd"
+    IDS_CAT_DEVEL "Utvikling"
+    IDS_CAT_DRIVERS "Drivere"
+    IDS_CAT_EDU "Edutainment"
+    IDS_CAT_ENGINEER "Engineering"
+    IDS_CAT_FINANCE "Finans"
+    IDS_CAT_GAMES "Spill & morro"
+    IDS_CAT_GRAPHICS "Grafikk"
+    IDS_CAT_INTERNET "Internett & Nettverk"
+    IDS_CAT_LIBS "Biblioteker"
+    IDS_CAT_OFFICE "Kontor"
+    IDS_CAT_OTHER "Andre"
+    IDS_CAT_SCIENCE "Vitenskap"
+    IDS_CAT_TOOLS "Verktøy"
+    IDS_CAT_VIDEO "Filmer"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS programbehandler"
+    IDS_SEARCH_TEXT "Søk..."
+    IDS_INSTALL "Installere"
+    IDS_UNINSTALL "Avinstallere"
+    IDS_MODIFY "Endre"
+    IDS_APPS_COUNT "Program oppsummering: %d"
+    IDS_WELCOME_TITLE "Velkommen til ReactOS programbehandler!\n\n"
+    IDS_WELCOME_TEXT "Velg en kategori til venstre, og velg et program for installere eller avinstallere programvaren.\nReactOS internettside: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Installert"
+    IDS_AVAILABLEFORINST "Tilgjengelig for installasjon"
+    IDS_UPDATES "Oppdateringer"
+    IDS_APPLICATIONS "Programmer"
+    IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
+    IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
+    IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
+    IDS_INFORMATION "Information"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+END

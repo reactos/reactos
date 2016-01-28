@@ -178,7 +178,7 @@ CUSBHardwareDevice::Initialize(
 
     //
     // store device objects
-    // 
+    //
     m_DriverObject = DriverObject;
     m_FunctionalDeviceObject = FunctionalDeviceObject;
     m_PhysicalDeviceObject = PhysicalDeviceObject;
@@ -289,7 +289,7 @@ CUSBHardwareDevice::PnpStart(
                 }
 
                 //
-                // Get controllers capabilities 
+                // Get controllers capabilities
                 //
                 Version = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)ResourceBase + OHCI_REVISION_OFFSET));
 
@@ -380,7 +380,7 @@ CUSBHardwareDevice::PnpStart(
     //
     // Start the controller
     //
-    DPRINT1("Starting Controller\n");
+    DPRINT("Starting Controller\n");
     Status = StartController();
 
     //
@@ -503,7 +503,7 @@ CUSBHardwareDevice::StartController(void)
                 //
                 break;
             }
-        }    
+        }
 
         //
         // if the ownership is still not changed, perform reset
@@ -521,17 +521,17 @@ CUSBHardwareDevice::StartController(void)
     //
     // read contents of control register
     //
-    
+
     Control = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET)) & OHCI_HC_FUNCTIONAL_STATE_MASK);
-    DPRINT1("Controller State %x\n", Control);
-    
+    DPRINT("Controller State %x\n", Control);
+
     switch (Control)
     {
         case OHCI_HC_FUNCTIONAL_STATE_RESET:
             NewControl |= OHCI_HC_FUNCTIONAL_STATE_RESET;
             WaitInMs = 50;
             break;
-        
+
         case OHCI_HC_FUNCTIONAL_STATE_SUSPEND:
         case OHCI_HC_FUNCTIONAL_STATE_RESUME:
             NewControl |= OHCI_HC_FUNCTIONAL_STATE_RESUME;
@@ -555,13 +555,13 @@ retry:
             // delay is 100 ms
             //
             Timeout.QuadPart = WaitInMs;
-            DPRINT1("Waiting %lu milliseconds for controller to transition state\n", Timeout.LowPart);
-            
+            DPRINT("Waiting %lu milliseconds for controller to transition state\n", Timeout.LowPart);
+
             //
             // convert to 100 ns units (absolute)
             //
             Timeout.QuadPart *= -10000;
-            
+
             //
             // perform the wait
             //
@@ -617,9 +617,9 @@ retry:
 
     FrameInterval = ((FrameInterval & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE);
 
-    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
+    DPRINT("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
     FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
-    DPRINT1("Computed FrameInterval %x\n", FrameInterval);
+    DPRINT("Computed FrameInterval %x\n", FrameInterval);
 
     //
     // write frame interval
@@ -627,17 +627,17 @@ retry:
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
 
     FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
-    DPRINT1("Read FrameInterval %x\n", FrameInterval);
+    DPRINT("Read FrameInterval %x\n", FrameInterval);
 
     //
     // 90 % periodic
     //
     Periodic = OHCI_PERIODIC(m_IntervalValue);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
-    DPRINT1("Computed Periodic Start %x\n", Periodic);
+    DPRINT("Computed Periodic Start %x\n", Periodic);
 
     Periodic = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET));
-    DPRINT1("Read Periodic Start %x\n", Periodic);
+    DPRINT("Read Periodic Start %x\n", Periodic);
 
     // Linux does this hack for some bad controllers
     if (!(FrameInterval & 0x3FFF0000) ||
@@ -680,7 +680,7 @@ retry:
         m_NumberOfPorts = OHCI_RH_GET_PORT_COUNT(Descriptor);
     } while (m_NumberOfPorts == 0);
 
-    DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
+    DPRINT("NumberOfPorts %lu\n", m_NumberOfPorts);
     ASSERT(m_NumberOfPorts < OHCI_MAX_PORT_COUNT);
 
     //
@@ -701,7 +701,7 @@ retry:
     //
     // write the configuration back
     //
-    DPRINT1("Descriptor A: %x\n", Descriptor);
+    DPRINT("Descriptor A: %x\n", Descriptor);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
 
     //
@@ -720,7 +720,7 @@ retry:
     //
     // write the configuration back
     //
-    DPRINT1("Descriptor B: %x\n", Descriptor);
+    DPRINT("Descriptor B: %x\n", Descriptor);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_B_OFFSET), Descriptor);
 
     //
@@ -730,7 +730,7 @@ retry:
     KeStallExecutionProcessor(10);
     Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_HCCA_OFFSET));
     ASSERT((m_HCCAPhysicalAddress.LowPart & Control) == m_HCCAPhysicalAddress.LowPart);
-    DPRINT1("HCCA: %x Alignment mask: %x\n", m_HCCAPhysicalAddress.LowPart, Control);
+    DPRINT("HCCA: %x Alignment mask: %x\n", m_HCCAPhysicalAddress.LowPart, Control);
 
     //
     // write address of HCCA
@@ -770,12 +770,12 @@ retry:
     //
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
     ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
-    DPRINT1("Control %x\n", Control);
+    DPRINT("Control %x\n", Control);
 
     //
     // done
     //
-    DPRINT1("OHCI controller is operational\n");
+    DPRINT("OHCI controller is operational\n");
     return STATUS_SUCCESS;
 }
 
@@ -1152,7 +1152,7 @@ CUSBHardwareDevice::ClearPortStatus(
     //
     // re-enable root hub change
     //
-    DPRINT1("Enabling status change\n");
+    DPRINT("Enabling status change\n");
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
 
     return STATUS_SUCCESS;
@@ -1206,7 +1206,7 @@ CUSBHardwareDevice::SetPortFeature(
         // delay is multiplied by 2 ms
         //
         Timeout.QuadPart *= 2;
-        DPRINT1("Waiting %lu milliseconds for port power up\n", Timeout.LowPart);
+        DPRINT("Waiting %lu milliseconds for port power up\n", Timeout.LowPart);
 
         //
         // convert to 100 ns units (absolute)
@@ -1322,9 +1322,9 @@ InterruptServiceRoutine(
         // the interrupt was not caused by DoneHead update
         // check if something important happened
         //
-        DPRINT("InterruptStatus %x  InterruptEnable %x\n", READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), 
+        DPRINT("InterruptStatus %x  InterruptEnable %x\n", READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)),
                                                             READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)));
-        Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)) & (~OHCI_WRITEBACK_DONE_HEAD); 
+        Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)) & (~OHCI_WRITEBACK_DONE_HEAD);
         if (Status == 0)
         {
             //
@@ -1387,7 +1387,7 @@ InterruptServiceRoutine(
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
     }
 
-    if (Status & OHCI_ROOT_HUB_STATUS_CHANGE) 
+    if (Status & OHCI_ROOT_HUB_STATUS_CHANGE)
     {
         //
         // disable interrupt as it will fire untill the port has been reset

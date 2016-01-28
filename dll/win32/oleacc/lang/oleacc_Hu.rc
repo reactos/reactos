@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "oleacc.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -92,4 +90,37 @@ STRINGTABLE
     ROLE_SYSTEM_SPLITBUTTON  "felosztott gomb"
     ROLE_SYSTEM_IPADDRESS    "IP cím"
     ROLE_SYSTEM_OUTLINEBUTTON "körvonalazott gomb"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
 }

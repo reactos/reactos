@@ -2,7 +2,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "…rzÈkenysÈg"
+CAPTION "√ârz√©kenys√©g"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Character repeat", -1, 5, 5, 236, 135
@@ -140,10 +140,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "EgÈr"
-    IDS_CPLDESCRIPTION_1 "EgÈr be·llÌt·sok."
-    IDS_CPLNAME_2 "Billenty˚zet"
-    IDS_CPLDESCRIPTION_2 "Billenty˚zet be·llÌt·sok."
+    IDS_CPLNAME_1 "Eg√©r"
+    IDS_CPLDESCRIPTION_1 "Eg√©r be√°ll√≠t√°sok."
+    IDS_CPLNAME_2 "Billenty≈±zet"
+    IDS_CPLDESCRIPTION_2 "Billenty≈±zet be√°ll√≠t√°sok."
     IDS_ARROW "Normal Select"
     IDS_HELP "Help Select"
     IDS_APPSTARTING "Working in Background"

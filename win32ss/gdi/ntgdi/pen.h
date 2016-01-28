@@ -2,24 +2,28 @@
 
 /* Internal interface */
 
-#define PEN_AllocPen() ((HPEN)GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
-#define PEN_AllocPenWithHandle() ((PBRUSH)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PEN, sizeof(BRUSH)))
+typedef BRUSH PEN, *PPEN;
 
-#define PEN_FreePen(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_BRUSH_TYPE)
-#define PEN_FreePenByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN)
+PPEN
+NTAPI
+PEN_AllocPenWithHandle(
+    VOID);
 
-#define PEN_AllocExtPen() ((PBRUSH)GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
-#define PEN_AllocExtPenWithHandle() ((PBRUSH)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_EXTPEN, sizeof(BRUSH)))
-
-#define PEN_FreeExtPen(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_BRUSH_TYPE)
-#define PEN_FreeExtPenByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_EXTPEN)
-
-//#define PEN_LockExtPen(hBMObj) ((PBRUSH)GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_EXTPEN))
+PPEN
+NTAPI
+PEN_AllocExtPenWithHandle(
+    VOID);
 
 #define PEN_UnlockPen(pPenObj) GDIOBJ_vUnlockObject((POBJ)pPenObj)
+#define PEN_ShareUnlockPen(ppen) GDIOBJ_vDereferenceObject((POBJ)ppen)
 
-#define  PEN_ShareUnlockPen(ppen) GDIOBJ_vDereferenceObject((POBJ)ppen)
+PPEN
+FASTCALL
+PEN_ShareLockPen(HPEN hpen);
 
-PBRUSH FASTCALL PEN_ShareLockPen(HGDIOBJ);
-
-INT APIENTRY PEN_GetObject(PBRUSH pPen, INT Count, PLOGPEN Buffer);
+INT
+NTAPI
+PEN_GetObject(
+    _In_ PPEN pPen,
+    _In_ INT Count,
+    _Out_ PLOGPEN Buffer);

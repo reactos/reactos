@@ -30,6 +30,7 @@ VfIsVerificationEnabled(IN VF_OBJECT_TYPE VfObjectType,
  * @unimplemented
  */
 VOID
+__cdecl
 VfFailDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject,
                  IN ULONG BugCheckMajorCode,
                  IN ULONG BugCheckMinorCode,
@@ -46,6 +47,7 @@ VfFailDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject,
  * @unimplemented
  */
 VOID
+__cdecl
 VfFailSystemBIOS(IN ULONG BugCheckMajorCode,
                  IN ULONG BugCheckMinorCode,
                  IN VF_FAILURE_CLASS FailureClass,
@@ -53,6 +55,19 @@ VfFailSystemBIOS(IN ULONG BugCheckMajorCode,
                  IN PSTR DebuggerMessageText,
                  IN PSTR ParameterFormatString,
                  ...)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+__cdecl
+VfFailDriver(IN ULONG BugCheckMajorCode,
+             IN ULONG BugCheckMinorCode,
+             IN VF_FAILURE_CLASS FailureClass,
+             IN OUT PULONG AssertionControl,
+             IN PSTR DebuggerMessageText,
+             IN PSTR ParameterFormatString,
+             ...)
 {
     UNIMPLEMENTED;
 }

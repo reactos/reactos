@@ -29,6 +29,13 @@
 
 typedef struct
 {
+    UINT16     lbStyle;
+    COLORREF   lbColor;
+    INT16      lbHatch;
+} LOGBRUSH16, *LPLOGBRUSH16;
+
+typedef struct
+{
     INT16  lfHeight;
     INT16  lfWidth;
     INT16  lfEscapement;
@@ -52,6 +59,13 @@ typedef struct
     INT16        yExt;
     HMETAFILE16  hMF;
 } METAFILEPICT16, *LPMETAFILEPICT16;
+
+typedef struct
+{
+    UINT16   lopnStyle;
+    POINT16  lopnWidth;
+    COLORREF lopnColor;
+} LOGPEN16, *LPLOGPEN16;
 
 #include <poppack.h>
 

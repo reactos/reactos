@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål resource file for MS ACM
+ * Norwegian BokmÃ¥l resource file for MS ACM
  *
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,32 +20,32 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 100
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+DLG_ACMFORMATCHOOSE_ID DIALOGEX  10, 20, 225, 118
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Lydutvalg"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
     LTEXT           "&Navn:", -1, 5, 5, 115, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "Lagre &som...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "Fje&rn", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "Lagre &som...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "Fje&rn", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
 
-    LTEXT           "&Format:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "&Format:", -1, 5, 56, 44, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 54, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Attributter:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "&Attributter:", -1, 5, 76, 44, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 74, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    DEFPUSHBUTTON   "OK", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Avbryt", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "&Hjelp", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    PUSHBUTTON      "&Hjelp", IDD_ACMFORMATCHOOSE_BTN_HELP, 5, 100, 50, 14
+    DEFPUSHBUTTON   "OK", IDOK, 115, 100, 50, 14
+    PUSHBUTTON      "Avbryt", IDCANCEL, 170, 100, 50, 14
 
 END

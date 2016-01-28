@@ -696,6 +696,17 @@ StartPage(
  */
 int
 WINAPI
+StartFormPage(HDC hdc)
+{
+    return StartPage(hdc);
+}
+
+
+/*
+ * @implemented
+ */
+int
+WINAPI
 SetAbortProc(
     HDC hdc,
     ABORTPROC lpAbortProc)
@@ -731,3 +742,203 @@ SetAbortProc(
     return SP_ERROR;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+gdiPlaySpoolStream(
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3,
+    DWORD	a4,
+    DWORD	a5
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HDC
+WINAPI
+GdiGetDC(HANDLE SpoolFileHandle)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+GdiGetPageHandle(HANDLE SpoolFileHandle,
+                 DWORD Page,
+                 LPDWORD pdwPageType)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiStartDocEMF(HANDLE SpoolFileHandle,
+               DOCINFOW *pDocInfo)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiStartPageEMF(HANDLE SpoolFileHandle)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiPlayPageEMF(HANDLE SpoolFileHandle,
+               HANDLE hemf,
+               RECT *prectDocument,
+               RECT *prectBorder,
+               RECT *prectClip)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiEndPageEMF(HANDLE SpoolFileHandle,
+              DWORD dwOptimization)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiEndDocEMF(HANDLE SpoolFileHandle)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiGetDevmodeForPage(HANDLE SpoolFileHandle,
+                     DWORD dwPageNumber,
+                     PDEVMODEW *pCurrDM,
+                     PDEVMODEW *pLastDM)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiResetDCEMF(HANDLE SpoolFileHandle,
+              PDEVMODEW pCurrDM)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiPlayEMF(LPWSTR pwszPrinterName,
+           LPDEVMODEW pDevmode,
+           LPWSTR pwszDocName,
+           EMFPLAYPROC pfnEMFPlayFn,
+           HANDLE hPageQuery
+          )
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiPlayPrivatePageEMF(HANDLE SpoolFileHandle,
+                      DWORD unknown,
+                      RECT *prectDocument)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiPrinterThunk(
+    IN HUMPD humpd,
+    DWORD *status,
+    DWORD unuse)
+{
+    /* FIXME figout the protypes, the HUMPD are a STRUCT or COM object */
+    /* status contain some form of return value that being save, what it is I do not known */
+    /* unsue seam have zero effect, what it is for I do not known */
+
+    // ? return NtGdiSetPUMPDOBJ(humpd->0x10,TRUE, humpd, ?) <- blackbox, OpenRCE info, and api hooks for anylaysing;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}

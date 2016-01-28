@@ -7,6 +7,7 @@ list(APPEND SOURCE
     buffer.c
     clock.c
     collection.c
+    dmobject.c
     dmusic.c
     dmusic_main.c
     download.c

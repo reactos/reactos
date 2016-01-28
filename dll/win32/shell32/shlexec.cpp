@@ -404,7 +404,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
 static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 {
     STRRET strret;
-    IShellFolder *desktop;
+    CComPtr<IShellFolder> desktop;
 
     HRESULT hr = SHGetDesktopFolder(&desktop);
 
@@ -414,8 +414,6 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
 
         if (SUCCEEDED(hr))
             StrRetToStrNW(pszPath, uOutSize, &strret, pidl);
-
-        desktop->Release();
     }
 
     return hr;
@@ -1276,8 +1274,8 @@ static HKEY ShellExecute_GetClassKey(const SHELLEXECUTEINFOW *sei)
 static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
 {
     LPCITEMIDLIST pidllast = NULL;
-    IDataObject *dataobj = NULL;
-    IShellFolder *shf = NULL;
+    CComPtr<IDataObject> dataobj;
+    CComPtr<IShellFolder> shf;
     LPITEMIDLIST pidl = NULL;
     HRESULT r;
 
@@ -1300,21 +1298,18 @@ static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
     if (FAILED(r))
         goto end;
 
-    shf->GetUIObjectOf(NULL, 1, &pidllast,
-                       IID_IDataObject, NULL, (LPVOID*) &dataobj);
+    shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataobj));
 
 end:
     if (pidl != sei->lpIDList)
         ILFree(pidl);
-    if (shf)
-        shf->Release();
-    return dataobj;
+    return dataobj.Detach();
 }
 
 static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
         LPSHELLEXECUTEINFOW sei)
 {
-    IContextMenu *cm = NULL;
+    CComPtr<IContextMenu> cm = NULL;
     CMINVOKECOMMANDINFOEX ici;
     MENUITEMINFOW info;
     WCHAR string[0x80];
@@ -1324,7 +1319,7 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 
     TRACE("%p %p\n", obj, sei);
 
-    r = obj->QueryInterface(IID_IContextMenu, (LPVOID*) &cm);
+    r = obj->QueryInterface(IID_PPV_ARG(IContextMenu, &cm));
     if (FAILED(r))
         return r;
 
@@ -1377,13 +1372,12 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 end:
     if (hmenu)
         DestroyMenu( hmenu );
-    if (cm)
-        cm->Release();
     return r;
 }
 
 static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECUTEINFOW sei)
 {
+    // Can not use CComPtr here because of CoUninitialize at the end, before the destructors would run.
     IDataObject *dataobj = NULL;
     IObjectWithSite *ows = NULL;
     IShellExtInit *obj = NULL;
@@ -1414,7 +1408,7 @@ static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECU
     if (FAILED(r))
         goto end;
 
-    r = obj->QueryInterface(IID_IObjectWithSite, (LPVOID*) &ows);
+    r = obj->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows));
     if (FAILED(r))
         goto end;
 
@@ -1783,15 +1777,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     /* process the IDList */
     if (sei_tmp.fMask & SEE_MASK_IDLIST)
     {
-        IShellExecuteHookW* pSEH;
+        CComPtr<IShellExecuteHookW> pSEH;
 
         HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
 
         if (SUCCEEDED(hr))
         {
             hr = pSEH->Execute(&sei_tmp);
-
-            pSEH->Release();
 
             if (hr == S_OK)
             {

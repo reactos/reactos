@@ -123,7 +123,8 @@ _gmtime64_s(
    struct tm* ptm,
    const __time64_t* ptime)
 {
-    __time64_t time = *ptime;
+    __time64_t time;
+
     if (!ptm)
     {
         MSVCRT_INVALID_PMT("ptm == NULL", ERROR_BAD_COMMAND);
@@ -135,6 +136,8 @@ _gmtime64_s(
         MSVCRT_INVALID_PMT("ptime == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
+
+    time = *ptime;
 
     _gmtime_worker(ptm, time, 0);
 

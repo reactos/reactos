@@ -482,6 +482,7 @@ static const char * const CRYPT_knownLocations[] = {
  "/usr/share/ca-certificates/ca-bundle.crt",
  "/usr/local/share/certs/",
  "/etc/sfw/openssl/certs",
+ "/etc/security/cacerts",  /* Android */
 };
 
 static const BYTE authenticode[] = {
@@ -808,6 +809,7 @@ static HCERTSTORE create_root_store(void)
                 HCERTSTORE collStore = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
                     CERT_STORE_CREATE_NEW_FLAG, NULL);
                 CertAddStoreToCollection(collStore, regStore, 0, 0);
+                CertAddStoreToCollection(collStore, root, 0, 0);
                 root = collStore;
             }
         }

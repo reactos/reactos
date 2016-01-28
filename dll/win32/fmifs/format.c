@@ -23,6 +23,13 @@ Format(
     IN BOOLEAN QuickFormat,
     IN PFMIFSCALLBACK Callback)
 {
+    FormatEx(DriveRoot,
+             MediaFlag,
+             Format,
+             Label,
+             QuickFormat,
+             0,
+             Callback);
 }
 
 /* FMIFS.7 */

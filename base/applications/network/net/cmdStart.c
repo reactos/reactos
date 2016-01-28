@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
- * FILE:
+ * FILE:            base/applications/network/net/cmdStart.c
  * PURPOSE:
  *
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
@@ -57,11 +57,11 @@ EnumerateRunningServices(VOID)
                                     &dwServiceCount,
                                     &dwResumeHandle))
             {
-                printf("The following services hav been started:\n\n");
+                PrintToConsole(L"The following services hav been started:\n\n");
 
                 for (i = 0; i < dwServiceCount; i++)
                 {
-                    printf("  %S\n", lpServiceBuffer[i].lpDisplayName);
+                    PrintToConsole(L"  %s\n", lpServiceBuffer[i].lpDisplayName);
                 }
             }
 

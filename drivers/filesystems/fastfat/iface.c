@@ -30,6 +30,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#endif
+
+
 /* GLOBALS *****************************************************************/
 
 PVFAT_GLOBAL_DATA VfatGlobalData;
@@ -43,6 +48,7 @@ PVFAT_GLOBAL_DATA VfatGlobalData;
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+INIT_SECTION
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -85,6 +91,9 @@ DriverEntry(
     RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
     VfatGlobalData->DriverObject = DriverObject;
     VfatGlobalData->DeviceObject = DeviceObject;
+    /* Enable this to enter the debugger when file system corruption
+     * has been detected:
+    VfatGlobalData->Flags = VFAT_BREAK_ON_CORRUPTION; */
 
     DeviceObject->Flags |= DO_DIRECT_IO;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
@@ -99,6 +108,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_PNP] = VfatBuildRequest;

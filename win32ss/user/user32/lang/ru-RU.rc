@@ -31,7 +31,7 @@ END
 
 SYSMENU MENU
 BEGIN
-    MENUITEM "&Востановить", SC_RESTORE
+    MENUITEM "&Восстановить", SC_RESTORE
     MENUITEM "&Переместить", SC_MOVE
     MENUITEM "Р&азмер", SC_SIZE
     MENUITEM "&Свернуть", SC_MINIMIZE
@@ -42,7 +42,7 @@ END
 
 SYSMENUMDI MENU
 BEGIN
-    MENUITEM "&Востановить", SC_RESTORE
+    MENUITEM "&Восстановить", SC_RESTORE
     MENUITEM "&Переместить", SC_MOVE
     MENUITEM "Р&азмер", SC_SIZE
     MENUITEM "&Свернуть", SC_MINIMIZE
@@ -50,7 +50,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Закрыть\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "С&ледующее\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "С&ледующее окно\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -60,14 +60,15 @@ BEGIN
     IDS_ERROR "Ошибка"
     IDS_OK "OK"
     IDS_CANCEL "Отмена"
-    IDS_ABORT "&Прекратить"
-    IDS_RETRY "П&овторить"
-    IDS_IGNORE "&Игнорировать"
+    IDS_ABORT "Пр&ервать"
+    IDS_RETRY "По&вторить"
+    IDS_IGNORE "&Пропустить"
     IDS_YES "&Да"
     IDS_NO "&Нет"
+    IDS_CLOSE "&Закрыть"
     IDS_HELP "Справка"
-    IDS_TRYAGAIN "&Повторить позднее"
-    IDS_CONTINUE "П&родолжить"
+    IDS_TRYAGAIN "&Повторить"
+    IDS_CONTINUE "&Продолжить"
 END
 
 STRINGTABLE

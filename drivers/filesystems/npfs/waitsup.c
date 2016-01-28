@@ -99,6 +99,22 @@ NpInitializeWaitQueue(IN PNP_WAIT_QUEUE WaitQueue)
     KeInitializeSpinLock(&WaitQueue->WaitLock);
 }
 
+static
+BOOLEAN
+NpEqualUnicodeString(IN PCUNICODE_STRING String1,
+                     IN PCUNICODE_STRING String2)
+{
+    SIZE_T EqualLength;
+
+    if (String1->Length != String2->Length)
+        return FALSE;
+
+    EqualLength = RtlCompareMemory(String1->Buffer,
+                                   String2->Buffer,
+                                   String1->Length);
+    return EqualLength == String1->Length;
+}
+
 NTSTATUS
 NTAPI
 NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
@@ -156,7 +172,8 @@ NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
             PipeName.MaximumLength = PipeName.Length;
         }
 
-        if (RtlEqualUnicodeString(&WaitName, &PipeName, FALSE))
+        /* Can't use RtlEqualUnicodeString with a spinlock held */
+        if (NpEqualUnicodeString(&WaitName, &PipeName))
         {
             /* Found a matching wait. Cancel it */
             RemoveEntryList(&WaitIrp->Tail.Overlay.ListEntry);

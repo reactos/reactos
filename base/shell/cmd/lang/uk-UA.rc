@@ -154,7 +154,7 @@ DELAY [/m]n\n\n\
   /m          вказує, що n це мiлiсекунди\n\
               iнакше n це кiлькiсть секунд\n"
     STRING_DIR_HELP1 "DIR [диск:][шлях][iм'я_файлу] [/A[[:]атрибути]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]порядок]] [/P] [/Q] [/S] [/T[[:]час]] [/W] [/X] [/4]\n\n\
+  [/O[[:]порядок]] [/P] [/Q] [/R] [/S] [/T[[:]час]] [/W] [/X] [/4]\n\n\
   [диск:][шлях][iм'я_файлу]\n\
               Визначає диск, директорію, та/чи файли для їх виведення в списку.\n\n\
   /A          Вiдображення файлiв з вказаними атрибутами.\n\
@@ -173,6 +173,7 @@ DELAY [/m]n\n\n\
                G  Почати список з каталогiв     Префiкс ""-"" для зворотнього порядку\n\
   /P          Пауза пiсля кожного заповнення екрану.\n\
   /Q          Вiдображення даних про власника файлу.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Вiдображення файлiв з вказаного каталогу та всiх пiдкаталогiв.\n\
   /T          Вибiр поля часу для вiдображення чи сортування\n\
   час         C  Створення\n\
@@ -506,7 +507,6 @@ title         новий заголовок\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Помилка]\n"
     STRING_REN_ERROR1 "Невдачне виконання MoveFile(). Помилка: %lu\n"
-    STRING_START_ERROR1 "На даний момент пакетнi файли не пiдтримуються!"
     STRING_TIME_ERROR1 "Невiрний час."
     STRING_TYPE_ERROR1 "Невiрний параметр '/%s'\n"
     STRING_WINDOW_ERROR1 "вiкно не знайдено"
@@ -531,9 +531,11 @@ title         новий заголовок\n"
     STRING_REPLACE_ERROR5 "Немає доступу - %s\n"
     STRING_REPLACE_ERROR6 "Файли не знайдено - %s\n"
     STRING_REPLACE_ERROR7 "Розширена помилка 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "Операцiйна Система ReactOS [Версiя %s-%s]\n"
     STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка ReactOS\nVersion %s %s"
-    STRING_VERSION_RUNVER " запущений на %s"
+    STRING_VERSION_RUNNING_ON "Запущений на: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d файл(iв) скопiйовано\n"
     STRING_DELETE_WIPE "витерто"
     STRING_FOR_ERROR "невiрна специфiкацiя змiнної."

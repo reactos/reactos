@@ -9,6 +9,7 @@ list(APPEND SOURCE
     access.c
     acl.c
     actctx.c
+    appverifier.c
     assert.c
     atom.c
     avltable.c
@@ -41,6 +42,7 @@ list(APPEND SOURCE
     nls.c
     path.c
     ppb.c
+    prefix.c
     priv.c
     process.c
     propvar.c
@@ -60,6 +62,7 @@ list(APPEND SOURCE
     time.c
     timezone.c
     timerqueue.c
+    trace.c
     unicode.c
     unicodeprefix.c
     vectoreh.c
@@ -93,6 +96,7 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE arm/debug_asm.S)
     list(APPEND SOURCE
+        arm/except.c
         byteswap.c
         mem.c)
 elseif(ARCH STREQUAL "powerpc")

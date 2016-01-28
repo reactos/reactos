@@ -23,14 +23,9 @@
 
 RTL_CRITICAL_SECTION ConsoleLock;
 BOOLEAN ConsoleInitialized = FALSE;
-
 extern HANDLE InputWaitHandle;
 
-static HMODULE ConsoleApplet = NULL;
-static BOOL AlreadyDisplayingProps = FALSE;
-
 static const PWSTR DefaultConsoleTitle = L"ReactOS Console";
-
 
 /* FUNCTIONS ******************************************************************/
 
@@ -41,7 +36,10 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
     // NOTE: lpThreadParameter corresponds to the client shared section handle.
 
     NTSTATUS Status = STATUS_SUCCESS;
-    APPLET_PROC CPLFunc;
+    HMODULE hConsoleApplet = NULL;
+    APPLET_PROC CPlApplet;
+    static BOOL AlreadyDisplayingProps = FALSE;
+    WCHAR szBuffer[MAX_PATH];
 
     /*
      * Do not launch more than once the console property dialog applet,
@@ -51,57 +49,61 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
     {
         /* Close the associated client shared section handle if needed */
         if (lpThreadParameter)
-        {
             CloseHandle((HANDLE)lpThreadParameter);
-        }
+
         return STATUS_UNSUCCESSFUL;
     }
 
     AlreadyDisplayingProps = TRUE;
 
-    /* Load the Control Applet if needed */
-    if (ConsoleApplet == NULL)
+    /* Load the control applet */
+    GetSystemDirectoryW(szBuffer, MAX_PATH);
+    wcscat(szBuffer, L"\\console.dll");
+    hConsoleApplet = LoadLibraryW(szBuffer);
+    if (hConsoleApplet == NULL)
     {
-        WCHAR szBuffer[MAX_PATH];
-
-        GetSystemDirectoryW(szBuffer, MAX_PATH);
-        wcscat(szBuffer, L"\\console.dll");
-        ConsoleApplet = LoadLibraryW(szBuffer);
-        if (ConsoleApplet == NULL)
-        {
-            DPRINT1("Failed to load console.dll\n");
-            Status = STATUS_UNSUCCESSFUL;
-            goto Quit;
-        }
-    }
-
-    /* Load its main function */
-    CPLFunc = (APPLET_PROC)GetProcAddress(ConsoleApplet, "CPlApplet");
-    if (CPLFunc == NULL)
-    {
-        DPRINT1("Error: Console.dll misses CPlApplet export\n");
+        DPRINT1("Failed to load console.dll\n");
         Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
 
-    if (CPLFunc(NULL, CPL_INIT, 0, 0) == FALSE)
+    /* Load its main function */
+    CPlApplet = (APPLET_PROC)GetProcAddress(hConsoleApplet, "CPlApplet");
+    if (CPlApplet == NULL)
+    {
+        DPRINT1("Error: console.dll misses CPlApplet export\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
+
+    /* Initialize the applet */
+    if (CPlApplet(NULL, CPL_INIT, 0, 0) == FALSE)
     {
         DPRINT1("Error: failed to initialize console.dll\n");
         Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
 
-    if (CPLFunc(NULL, CPL_GETCOUNT, 0, 0) != 1)
+    /* Check the count */
+    if (CPlApplet(NULL, CPL_GETCOUNT, 0, 0) != 1)
     {
         DPRINT1("Error: console.dll returned unexpected CPL count\n");
         Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
 
-    CPLFunc(NULL, CPL_DBLCLK, (LPARAM)lpThreadParameter, 0);
-    CPLFunc(NULL, CPL_EXIT  , 0, 0);
+    /*
+     * Start the applet. For Windows compatibility purposes we need
+     * to pass the client shared section handle (lpThreadParameter)
+     * via the hWnd parameter of the CPlApplet function.
+     */
+    CPlApplet((HWND)lpThreadParameter, CPL_DBLCLK, 0, 0);
+
+    /* We have finished */
+    CPlApplet(NULL, CPL_EXIT, 0, 0);
 
 Quit:
+    if (hConsoleApplet) FreeLibrary(hConsoleApplet);
     AlreadyDisplayingProps = FALSE;
     return Status;
 }
@@ -111,7 +113,7 @@ static INT
 ParseShellInfo(LPCWSTR lpszShellInfo,
                LPCWSTR lpszKeyword)
 {
-    DPRINT1("ParseShellInfo is UNIMPLEMENTED\n");
+    DPRINT("ParseShellInfo is UNIMPLEMENTED\n");
     return 0;
 }
 
@@ -282,7 +284,7 @@ IsConsoleApp(VOID)
 static BOOLEAN
 ConnectConsole(IN PWSTR SessionDir,
                IN PCONSRV_API_CONNECTINFO ConnectInfo,
-               OUT PBOOLEAN IsServerProcess)
+               OUT PBOOLEAN InServerProcess)
 {
     NTSTATUS Status;
     ULONG ConnectInfoSize = sizeof(*ConnectInfo);
@@ -295,7 +297,7 @@ ConnectConsole(IN PWSTR SessionDir,
                                       CONSRV_SERVERDLL_INDEX,
                                       ConnectInfo,
                                       &ConnectInfoSize,
-                                      IsServerProcess);
+                                      InServerProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to connect to the Console Server (Status %lx)\n", Status);
@@ -303,14 +305,15 @@ ConnectConsole(IN PWSTR SessionDir,
     }
 
     /* Nothing to do for server-to-server */
-    if (*IsServerProcess) return TRUE;
+    if (*InServerProcess) return TRUE;
 
     /* Nothing to do if this is not a console app */
     if (!ConnectInfo->IsConsoleApp) return TRUE;
 
-#ifdef USE_CONSOLE_INIT_HANDLES
     /* Wait for the connection to finish */
-    Status = NtWaitForMultipleObjects(2, ConnectInfo->ConsoleStartInfo.Events,
+    // Is ConnectInfo->ConsoleStartInfo.InitEvents aligned on handle boundary ????
+    Status = NtWaitForMultipleObjects(MAX_INIT_EVENTS,
+                                      ConnectInfo->ConsoleStartInfo.InitEvents,
                                       WaitAny, FALSE, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -318,15 +321,13 @@ ConnectConsole(IN PWSTR SessionDir,
         return FALSE;
     }
 
-    NtClose(ConnectInfo->ConsoleStartInfo.Events[0]);
-    NtClose(ConnectInfo->ConsoleStartInfo.Events[1]);
-
-    if (Status != STATUS_SUCCESS)
+    NtClose(ConnectInfo->ConsoleStartInfo.InitEvents[INIT_SUCCESS]);
+    NtClose(ConnectInfo->ConsoleStartInfo.InitEvents[INIT_FAILURE]);
+    if (Status != INIT_SUCCESS)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
         return FALSE;
     }
-#endif
 
     return TRUE;
 }
@@ -339,7 +340,7 @@ ConDllInitialize(IN ULONG Reason,
 {
     NTSTATUS Status;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
-    BOOLEAN IsServerProcess;
+    BOOLEAN InServerProcess = FALSE;
     CONSRV_API_CONNECTINFO ConnectInfo;
     LCID lcid;
 
@@ -355,8 +356,6 @@ ConDllInitialize(IN ULONG Reason,
             /* Free our resources */
             if (ConsoleInitialized == TRUE)
             {
-                if (ConsoleApplet) FreeLibrary(ConsoleApplet);
-
                 ConsoleInitialized = FALSE;
                 RtlDeleteCriticalSection(&ConsoleLock);
             }
@@ -508,14 +507,14 @@ ConDllInitialize(IN ULONG Reason,
     /* Connect to the Console Server */
     if (!ConnectConsole(SessionDir,
                         &ConnectInfo,
-                        &IsServerProcess))
+                        &InServerProcess))
     {
         // DPRINT1("Failed to connect to the Console Server (Status %lx)\n", Status);
         return FALSE;
     }
 
     /* If we are not doing server-to-server init and if this is a console app... */
-    if (!IsServerProcess && ConnectInfo.IsConsoleApp)
+    if (!InServerProcess && ConnectInfo.IsConsoleApp)
     {
         /* ... set the handles that we got */
         if (Parameters->ConsoleHandle == NULL)

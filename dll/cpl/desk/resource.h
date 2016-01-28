@@ -33,7 +33,6 @@
 #define IDC_COLOR_BUTTON             1004
 #define IDC_PLACEMENT_COMBO          1005
 #define IDS_BACKGROUND_COMDLG_FILTER 1006
-#define IDS_SUPPORTED_EXT            1007
 
 /* Screensaver Page */
 #define IDC_SCREENS_PREVIEW      1010

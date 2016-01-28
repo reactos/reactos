@@ -239,7 +239,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { VK_OEM_PLUS,   0, { WCH_DEAD, WCH_DEAD, WCH_NONE, 0x00b8   } }, // dead letters - acute, caron
   { VK_EMPTY,      0, { 0x00b4,   0x02c7,   WCH_NONE, WCH_NONE } }, // VK_OEM_PLUS dead letter
   { VK_OEM_1,      0, { 0x016f,   '\"',     WCH_NONE, '$'      } }, // u with ring
-  { VK_OEM_7,      0, { '§',      '!',      WCH_NONE, 0x00df   } }, // section sign
+  { VK_OEM_7,      0, { 0x00a7,   '!',      WCH_NONE, 0x00df   } }, // section sign
   { VK_OEM_4,      0, { 0x00fa,   '/',      WCH_NONE, 0x00f7   } }, // u with acute
   { VK_OEM_5,      0, { WCH_DEAD, 0x2018,   WCH_NONE, 0x00a4   } }, // diaeresis, left single quotation mark
   { VK_EMPTY,      0, { 0x00a8,   WCH_NONE, WCH_NONE, WCH_NONE } }, // VK_OEM_5 dead letter

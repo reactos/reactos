@@ -49,6 +49,9 @@ add_library(user32_wsprintf
 add_dependencies(user32_wsprintf psdk)
 add_target_compile_definitions(user32_wsprintf _USER32_WSPRINTF)
 
+add_library(memcmp mem/memcmp.c)
+add_dependencies(memcmp psdk)
+
 add_library(getopt misc/getopt.c)
 add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)

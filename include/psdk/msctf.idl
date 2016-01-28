@@ -22,7 +22,6 @@ import "comcat.idl";
 import "textstor.idl";
 import "ctfutb.idl";
 #endif
-cpp_quote("#include <winuser.h>")
 
 cpp_quote("#define TF_E_STACKFULL MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0501)")
 cpp_quote("#define TF_E_DISCONNECTED    MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0504)")
@@ -33,6 +32,8 @@ cpp_quote("HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim);")
 cpp_quote("HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim);")
 cpp_quote("HRESULT WINAPI TF_CreateInputProcessorProfiles(ITfInputProcessorProfiles **ppipr);")
 cpp_quote("HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm);")
+cpp_quote("HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim);")
+cpp_quote("HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(void);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
 cpp_quote("DEFINE_GUID(GUID_PROP_ATTRIBUTE,0x34b45670,0x7526,0x11d2,0xa1,0x47,0x00,0x10,0x5a,0x27,0x99,0xb5);")
@@ -79,25 +80,37 @@ cpp_quote("#define TF_MOD_LSHIFT                0x0100")
 cpp_quote("#define TF_MOD_ON_KEYUP              0x0200")
 cpp_quote("#define TF_MOD_IGNORE_ALL_MODIFIER   0x0400")
 
+cpp_quote("#define TF_PROFILETYPE_INPUTPROCESSOR  0x0001")
+cpp_quote("#define TF_PROFILETYPE_KEYBOARDLAYOUT  0x0002")
+
+cpp_quote("#define TF_IPSINK_FLAG_ACTIVE 0x0001")
+
 interface ITfDocumentMgr;
 interface ITfContext;
 interface IEnumTfDocumentMgrs;
 interface IEnumTfContexts;
-interface ITfFunctionProvider;
-interface IEnumTfFunctionProviders;
 interface ITfCompartmentMgr;
 interface ITfEditSession;
 interface ITfRange;
-interface ITfContextView;
-interface IEnumTfContextViews;
 interface ITfProperty;
 interface ITfReadOnlyProperty;
-interface IEnumTfProperties;
-interface ITfRangeBackup;
 interface IEnumTfLanguageProfiles;
-interface ITfEditRecord;
 interface ITfCompositionView;
 interface ITfKeyEventSink;
+
+cpp_quote("#if 0")
+typedef [uuid(4f5d560f-5ab5-4dde-8c4d-404592857ab0)] UINT_PTR HKL;
+cpp_quote("#endif")
+
+typedef [uuid(e26d9e1d-691e-4f29-90d7-338dcf1f8cef)] struct TF_PERSISTENT_PROPERTY_HEADER_ACP
+{
+    GUID guidType;
+    LONG ichStart;
+    LONG cch;
+    ULONG cb;
+    DWORD dwPrivate;
+    CLSID clsidTIP;
+} TF_PERSISTENT_PROPERTY_HEADER_ACP;
 
 typedef [uuid(e1b5808d-1e46-4c19-84dc-68c5f5978cc8)] struct TF_LANGUAGEPROFILE
 {
@@ -115,6 +128,46 @@ typedef [uuid(77c12f95-b783-450d-879f-1cd2362c6521)] struct TF_PRESERVEDKEY
 } TF_PRESERVEDKEY;
 
 typedef [uuid(5a886226-ae9a-489b-b991-2b1e25ee59a9)]  enum { TF_ANCHOR_START = 0, TF_ANCHOR_END = 1 } TfAnchor;
+
+[
+    object,
+    uuid(101d6610-0990-11d3-8df0-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfFunctionProvider : IUnknown
+{
+    HRESULT GetType(
+        [out] GUID *guid);
+
+    HRESULT GetDescription(
+        [out] BSTR *desc);
+
+    HRESULT GetFunction(
+        [in] REFGUID guid,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **func);
+}
+
+[
+    object,
+    uuid(e4b24db0-0990-11d3-8df0-00105a2799b5),
+    pointer_default(unique)
+]
+interface IEnumTfFunctionProviders : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfFunctionProviders **ret);
+
+    HRESULT Next(
+        [in] ULONG count,
+        [out, size_is(count), length_is(*fetched)] ITfFunctionProvider **prov,
+        [out] ULONG *fetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG count);
+}
 
 [
     object,
@@ -157,7 +210,21 @@ interface ITfThreadMgr: IUnknown
 
     HRESULT GetGlobalCompartment(
         [out] ITfCompartmentMgr **ppCompMgr);
-};
+}
+
+[
+    object,
+    uuid(3e90ade3-7594-4cb0-bb58-69628f5f458c),
+    pointer_default(unique)
+]
+interface ITfThreadMgrEx : ITfThreadMgr
+{
+    HRESULT ActivateEx(
+        [out] TfClientId *id,
+        [in] DWORD flags);
+    HRESULT GetActiveFlags(
+        [out] DWORD *flags);
+}
 
 [
     object,
@@ -201,7 +268,87 @@ interface ITfDocumentMgr: IUnknown
 
     HRESULT EnumContexts(
         [out] IEnumTfContexts **ppEnum);
-};
+}
+
+[
+    object,
+    uuid(2433bf8e-0f9b-435c-ba2c-180611978c30),
+    pointer_default(unique)
+]
+interface ITfContextView : IUnknown
+{
+    HRESULT GetRangeFromPoint(
+        [in] TfEditCookie cookie,
+        [in] const POINT *pt,
+        [in] DWORD flags,
+        [out] ITfRange **range);
+
+    HRESULT GetTextExt(
+        [in] TfEditCookie cookie,
+        [in] ITfRange *range,
+        [out] RECT *rect,
+        [out] BOOL *clipped);
+
+    HRESULT GetScreenExt(
+        [out] RECT *rect);
+
+    HRESULT GetWnd(
+        [out] HWND *hwnd);
+}
+
+[
+    object,
+    uuid(f0c0f8dd-cf38-44e1-bb0f-68cf0d551c78),
+    pointer_default(unique)
+]
+interface IEnumTfContextViews : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfContextViews **ret);
+
+    HRESULT Next(
+        [in] ULONG count,
+        [out, size_is(count), length_is(*fetched)] ITfContextView **views,
+        [out] ULONG *fetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG count);
+}
+
+[
+    object,
+    uuid(19188cb0-aca9-11d2-afc5-00105a2799b5),
+    pointer_default(unique)
+]
+interface IEnumTfProperties : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfProperties **ret);
+
+    HRESULT Next(
+        [in] ULONG count,
+        [out, size_is(count), length_is(*fetched)] ITfProperty **props,
+        [out] ULONG *fetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG count);
+}
+
+[
+    object,
+    uuid(463a506d-6992-49d2-9b88-93d55e70bb16),
+    pointer_default(unique)
+]
+interface ITfRangeBackup : IUnknown
+{
+    HRESULT Restore(
+        [in] TfEditCookie cookie,
+        [in] ITfRange *range);
+}
 
 [
     object,
@@ -304,8 +451,9 @@ interface ITfContext : IUnknown
         [in] TfEditCookie ec,
         [in] ITfRange *pRange,
         [out] ITfRangeBackup **ppBackup);
+}
 
-};
+const DWORD TF_INVALID_COOKIE = 0xffffffff;
 
 [
   object,
@@ -321,7 +469,7 @@ interface ITfSource : IUnknown
 
     HRESULT UnadviseSink(
         [in] DWORD dwCookie);
-};
+}
 
 [
   object,
@@ -419,7 +567,106 @@ interface ITfInputProcessorProfiles : IUnknown
         [in] LANGID langid,
         [in] REFGUID guidProfile,
         [in] HKL hKL);
-};
+}
+
+typedef [uuid(44d2825a-10e5-43b2-877f-6cb2f43b7e7e)]
+struct TF_INPUTPROCESSORPROFILE {
+    DWORD dwProfileType;
+    LANGID langid;
+    CLSID clsid;
+    GUID guidProfile;
+    GUID catid;
+    HKL hklSubstitute;
+    DWORD dwCaps;
+    HKL hkl;
+    DWORD dwFlags;
+} TF_INPUTPROCESSORPROFILE;
+
+[
+    object,
+    uuid(71c6e74d-0f28-11d8-a82a-00065b84435c),
+    pointer_default(unique)
+]
+interface IEnumTfInputProcessorProfiles : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfInputProcessorProfiles **ppEnum);
+
+    HRESULT Next(
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetch)] TF_INPUTPROCESSORPROFILE *pProfile,
+        [out] ULONG *pcFetch);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG ulCount);
+}
+
+[
+    object,
+    uuid(71c6e74c-0f28-11d8-a82a-00065b84435c),
+    pointer_default(unique)
+]
+interface ITfInputProcessorProfileMgr : IUnknown
+{
+    HRESULT ActivateProfile(
+        [in] DWORD dwProfileType,
+        [in] LANGID langid,
+        [in] REFCLSID clsid,
+        [in] REFGUID guidProfile,
+        [in] HKL hkl,
+        [in] DWORD dwFlags);
+
+    HRESULT DeactivateProfile(
+        [in] DWORD dwProfileType,
+        [in] LANGID langid,
+        [in] REFCLSID clsid,
+        [in] REFGUID guidProfile,
+        [in] HKL hkl,
+        [in] DWORD dwFlags);
+
+    HRESULT GetProfile(
+        [in] DWORD dwProfileType,
+        [in] LANGID langid,
+        [in] REFCLSID clsid,
+        [in] REFGUID guidProfile,
+        [in] HKL hkl,
+        [out] TF_INPUTPROCESSORPROFILE *pProfile);
+
+
+    HRESULT EnumProfiles(
+        [in] LANGID langid,
+        [out] IEnumTfInputProcessorProfiles **ppEnum);
+
+    HRESULT ReleaseInputProcessor(
+        [in] REFCLSID rclsid,
+        [in] DWORD dwFlags);
+
+    HRESULT RegisterProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in, size_is(cchDesc)] const WCHAR *pchDesc,
+        [in] ULONG cchDesc,
+        [in, size_is(cchFile)] const WCHAR *pchIconFile,
+        [in] ULONG cchFile,
+        [in] ULONG uIconIndex,
+        [in] HKL hklsubstitute,
+        [in] DWORD dwPreferredLayout,
+        [in] BOOL bEnabledByDefault,
+        [in] DWORD dwFlags);
+
+    HRESULT UnregisterProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in] DWORD dwFlags);
+
+    HRESULT GetActiveProfile(
+        [in] REFGUID catid,
+        [out] TF_INPUTPROCESSORPROFILE *pProfile);
+}
 
 typedef [uuid(c4cc07f1-80cc-4a7b-bc54-98512782cbe3)]
 enum {
@@ -581,7 +828,45 @@ interface ITfCategoryMgr : IUnknown
     HRESULT IsEqualTfGuidAtom([in] TfGuidAtom guidatom,
                               [in] REFGUID rguid,
                               [out] BOOL *pfEqual);
-};
+}
+
+[
+    object,
+    uuid(f99d3f40-8e32-11d2-bf46-00105a2799b5),
+    pointer_default(unique)
+]
+interface IEnumTfRanges : IUnknown
+{
+    HRESULT Clone([out] IEnumTfRanges **ppEnum);
+
+    HRESULT Next(
+            [in] ULONG ulCount,
+            [out, size_is(ulCount), length_is(*pcFetched)] ITfRange **ppRange,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(ULONG ulCount);
+}
+
+[
+    object,
+    uuid(42d4d099-7c1a-4a89-b836-6c6f22160df0),
+    pointer_default(unique)
+]
+interface ITfEditRecord : IUnknown
+{
+    const DWORD TF_GTP_INCL_TEXT = 0x1;
+
+    HRESULT GetSelectionStatus(
+        [out] BOOL *changed);
+
+    HRESULT GetTextAndPropertyUpdates(
+        [in] DWORD flags,
+        [in, size_is(count)] const GUID **props,
+        [in] ULONG count,
+        [out] IEnumTfRanges **ret);
+}
 
 [
   object,
@@ -594,7 +879,7 @@ interface ITfTextEditSink : IUnknown
         [in] ITfContext *pic,
         [in] TfEditCookie ecReadOnly,
         [in] ITfEditRecord *pEditRecord);
-};
+}
 
 [
     object,
@@ -613,7 +898,20 @@ interface ITfContextOwnerCompositionSink : IUnknown
 
     HRESULT OnEndComposition(
         [in] ITfCompositionView *pComposition);
-};
+}
+
+[
+    object,
+    uuid(b246cb75-a93e-4652-bf8c-b3fe0cfd7e57),
+    pointer_default(unique)
+]
+interface ITfActiveLanguageProfileNotifySink : IUnknown
+{
+    HRESULT OnActivated(
+        [in] REFCLSID clsid,
+        [in] REFGUID guidProfile,
+        [in] BOOL fActivated);
+}
 
 [
   object,
@@ -634,7 +932,7 @@ interface IEnumTfLanguageProfiles : IUnknown
 
     HRESULT Skip(
         [in] ULONG ulCount);
-};
+}
 
 [
   object,
@@ -649,7 +947,7 @@ interface ITfTextInputProcessor : IUnknown
         [in] TfClientId tid);
 
     HRESULT Deactivate();
-};
+}
 
 [
   object,
@@ -673,7 +971,7 @@ interface ITfThreadMgrEventSink : IUnknown
 
     HRESULT OnPopContext(
         [in] ITfContext *pic);
-};
+}
 
 [
   object,
@@ -748,7 +1046,7 @@ interface ITfKeystrokeMgr : IUnknown
         [in] ITfContext *pic,
         [in] REFGUID rguid,
         [out] BOOL *pfEaten);
-};
+}
 
 [
   object,
@@ -789,7 +1087,7 @@ interface ITfKeyEventSink : IUnknown
         [in] ITfContext *pic,
         [in] REFGUID rguid,
         [out] BOOL *pfEaten);
-};
+}
 
 [
   object,
@@ -828,7 +1126,7 @@ interface ITfMessagePump : IUnknown
         [in] UINT wMsgFilterMin,
         [in] UINT wMsgFilterMax,
         [out] BOOL *pfResult);
-};
+}
 
 [
   object,
@@ -841,7 +1139,7 @@ interface ITfClientId : IUnknown
     HRESULT GetClientId(
         [in] REFCLSID rclsid,
         [out] TfClientId *ptid);
-};
+}
 
 [
   object,
@@ -1005,7 +1303,7 @@ interface ITfRange : IUnknown
 
     HRESULT GetContext(
         [out] ITfContext **ppContext);
-};
+}
 
 [
     object,
@@ -1044,7 +1342,7 @@ interface ITfInsertAtSelection : IUnknown
         [in] DWORD dwFlags,
         [in] IDataObject *pDataObject,
         [out] ITfRange **ppRange);
-};
+}
 
 [
     object,
@@ -1084,25 +1382,6 @@ interface ITfPropertyStore : IUnknown
     HRESULT Serialize(
             [in] IStream *pStream,
             [out] ULONG *pcb);
-}
-
-[
-    object,
-    uuid(f99d3f40-8e32-11d2-bf46-00105a2799b5),
-    pointer_default(unique)
-]
-interface IEnumTfRanges : IUnknown
-{
-    HRESULT Clone([out] IEnumTfRanges **ppEnum);
-
-    HRESULT Next(
-            [in] ULONG ulCount,
-            [out, size_is(ulCount), length_is(*pcFetched)] ITfRange **ppRange,
-            [out] ULONG *pcFetched);
-
-    HRESULT Reset();
-
-    HRESULT Skip(ULONG ulCount);
 }
 
 [
@@ -1195,6 +1474,51 @@ interface ITfContextOwnerCompositionServices : ITfContextComposition
 
 [
     object,
+    uuid(4ef89150-0807-11d3-8df0-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfPersistentPropertyLoaderACP : IUnknown
+{
+    HRESULT LoadProperty(
+            [in] const TF_PERSISTENT_PROPERTY_HEADER_ACP *pHdr,
+            [out] IStream **ppStream);
+}
+
+[
+    object,
+    uuid(b23eb630-3e1c-11d3-a745-0050040ab407),
+    pointer_default(unique)
+]
+interface ITfContextOwnerServices : IUnknown
+{
+    HRESULT OnLayoutChange();
+
+    HRESULT OnStatusChange([in] DWORD dwFlags);
+
+    HRESULT OnAttributeChange([in] REFGUID rguidAttribute);
+
+    HRESULT Serialize(
+            [in] ITfProperty *pProp,
+            [in] ITfRange *pRange,
+            [out] TF_PERSISTENT_PROPERTY_HEADER_ACP *pHdr,
+            [in] IStream *pStream);
+
+    HRESULT Unserialize(
+            [in] ITfProperty *pProp,
+            [in] const TF_PERSISTENT_PROPERTY_HEADER_ACP *pHdr,
+            [in] IStream *pStream,
+            [in] ITfPersistentPropertyLoaderACP *pLoader);
+
+    HRESULT ForceLoadProperty([in] ITfProperty *pProp);
+
+    HRESULT CreateRange(
+            [in] LONG acpStart,
+            [in] LONG acpEnd,
+            [out] ITfRangeACP **ppRange);
+}
+
+[
+    object,
     uuid(17d49a3d-f8b8-4b2f-b254-52319dd64c53),
     pointer_default(unique)
 ]
@@ -1256,7 +1580,7 @@ interface ITfCompartment : IUnknown
 
     HRESULT GetValue(
         [out] VARIANT *pvarValue);
-};
+}
 
 [
   object,
@@ -1275,7 +1599,7 @@ interface ITfCompartmentMgr : IUnknown
 
     HRESULT EnumCompartments(
         [out] IEnumGUID **ppEnum);
-};
+}
 
 [
   object,
@@ -1307,7 +1631,7 @@ interface IEnumTfContexts : IUnknown
 
     HRESULT Skip(
         [in] ULONG ulCount);
-};
+}
 
 [
   object,
@@ -1328,7 +1652,77 @@ interface IEnumTfDocumentMgrs : IUnknown
 
     HRESULT Skip(
         [in] ULONG ulCount);
-};
+}
+
+[
+    object,
+    local,
+    uuid(ea1ea137-19df-11d7-a6d2-00065b84435c),
+    pointer_default(unique)
+]
+interface ITfUIElement : IUnknown
+{
+    HRESULT GetDescription(
+        [out] BSTR *description);
+
+    HRESULT GetGUID(
+        [out] GUID *guid);
+
+    HRESULT Show(
+        [in] BOOL show);
+
+    HRESULT IsShown(
+        [out] BOOL *show);
+}
+
+[
+    object,
+    local,
+    uuid(887aa91e-acba-4931-84da-3c5208cf543f),
+    pointer_default(unique)
+]
+interface IEnumTfUIElements : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfUIElements **enum_elements);
+
+    HRESULT Next(
+        [in] ULONG count,
+        [out, size_is(count), length_is(fetched)] ITfUIElement **element,
+        [out] ULONG fetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG count);
+}
+
+[
+    object,
+    local,
+    uuid(ea1ea135-19df-11d7-a6d2-00065b84435c),
+    pointer_default(unique)
+]
+interface ITfUIElementMgr : IUnknown
+{
+    HRESULT BeginUIElement(
+        [in] ITfUIElement *element,
+        [in, out] BOOL *show,
+        [out] DWORD *id);
+
+    HRESULT UpdateUIElement(
+        [in] DWORD id);
+
+    HRESULT EndUIElement(
+        [in] DWORD id);
+
+    HRESULT GetUIElement(
+        [in] DWORD id,
+        [out] ITfUIElement **element);
+
+    HRESULT EnumUIElements(
+        [out] IEnumTfUIElements **enum_elements);
+}
 
 [
   object,
@@ -1345,7 +1739,7 @@ interface ITfSourceSingle : IUnknown
     HRESULT UnadviseSingleSink(
         [in] TfClientId tid,
         [in] REFIID riid);
-};
+}
 
 [
   object,
@@ -1358,143 +1752,66 @@ interface ITfThreadFocusSink : IUnknown
     HRESULT OnSetThreadFocus();
 
     HRESULT OnKillThreadFocus();
-};
-
-[
-  object,
-  uuid(101d6610-0990-11d3-8df0-00105a2799b5),
-  pointer_default(unique)
-]
-interface ITfFunctionProvider : IUnknown
-{
-    HRESULT GetType(
-        [out] GUID *pguid);
-
-    HRESULT GetDescription(
-        [out] BSTR *pbstrDesc);
-
-    HRESULT GetFunction(
-        [in] REFGUID rguid,
-        [in] REFIID riid,
-        [out, iid_is(riid)] IUnknown **ppunk);
 }
 
 [
   object,
-  uuid(e4b24db0-0990-11d3-8df0-00105a2799b5),
+  uuid(71c6e74e-0f28-11d8-a82a-00065b84435c),
   pointer_default(unique)
 ]
-interface IEnumTfFunctionProviders : IUnknown
+interface ITfInputProcessorProfileActivationSink : IUnknown
 {
-    HRESULT Clone(
-        [out] IEnumTfFunctionProviders **ppEnum);
-
-    HRESULT Next(
-        [in] ULONG ulCount,
-        [out, size_is(ulCount), length_is(*pcFetch)] ITfFunctionProvider **ppCmdobj,
-        [out] ULONG *pcFetch);
-
-    HRESULT Reset();
-
-    HRESULT Skip(
-        [in] ULONG ulCount);
-};
-
-[
-  object,
-  uuid(2433bf8e-0f9b-435c-ba2c-180611978c30),
-  pointer_default(unique)
-]
-interface ITfContextView : IUnknown
-{
-    HRESULT GetRangeFromPoint(
-        [in] TfEditCookie ec,
-        [in] const POINT *ppt,
-        [in] DWORD dwFlags,
-        [out] ITfRange **ppRange);
-
-    HRESULT GetTextExt(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pRange,
-        [out] RECT *prc,
-        [out] BOOL *pfClipped);
-
-    HRESULT GetScreenExt(
-        [out] RECT *prc);
-
-    HRESULT GetWnd(
-        [out] HWND *phwnd);
-};
-
-[
-  object,
-  uuid(f0c0f8dd-cf38-44e1-bb0f-68cf0d551c78),
-  pointer_default(unique)
-]
-interface IEnumTfContextViews : IUnknown
-{
-    HRESULT Clone(
-        [out] IEnumTfContextViews **ppEnum);
-
-    HRESULT Next(
-        [in] ULONG ulCount,
-        [out, size_is(ulCount), length_is(*pcFetched)] ITfContextView **rgViews,
-        [out] ULONG *pcFetched);
-
-    HRESULT Reset();
-
-    HRESULT Skip(
-        [in] ULONG ulCount);
-};
-
-[
-  object,
-  uuid(19188cb0-aca9-11d2-afc5-00105a2799b5),
-  pointer_default(unique)
-]
-interface IEnumTfProperties : IUnknown
-{
-    HRESULT Clone(
-        [out] IEnumTfProperties **ppEnum);
-
-    HRESULT Next(
-        [in] ULONG ulCount,
-        [out, size_is(ulCount), length_is(*pcFetched)] ITfProperty **ppProp,
-        [out] ULONG *pcFetched);
-
-    HRESULT Reset();
-
-    HRESULT Skip(
-        [in] ULONG ulCount);
+    HRESULT OnActivated(
+        [in] DWORD dwProfileType,
+        [in] LANGID langid,
+        [in] REFCLSID clsid,
+        [in] REFGUID catid,
+        [in] REFGUID guidProfile,
+        [in] HKL hkl,
+        [in] DWORD dwFlags);
 }
 
 [
-  object,
-  uuid(463a506d-6992-49d2-9b88-93d55e70bb16),
-  pointer_default(unique)
+    object,
+    local,
+    uuid(a1adaaa2-3a24-449d-ac96-5183e7f5c217),
+    pointer_default(unique)
 ]
-interface ITfRangeBackup : IUnknown
+interface ITfMouseSink : IUnknown
 {
-    HRESULT Restore(
-        [in] TfEditCookie ec,
-        [in] ITfRange *pRange);
-};
+    HRESULT OnMouseEvent(
+        [in] ULONG uEdge,
+        [in] ULONG uQuadrant,
+        [in] DWORD dwBtnStatus,
+        [out] BOOL *pfEaten);
+}
 
 [
-  object,
-  uuid(42d4d099-7c1a-4a89-b836-6c6f22160df0),
-  pointer_default(unique)
+    object,
+    uuid(09d146cd-a544-4132-925b-7afa8ef322d0),
+    pointer_default(unique)
 ]
-interface ITfEditRecord : IUnknown
+interface ITfMouseTracker : IUnknown
 {
-    const DWORD TF_GTP_INCL_TEXT = 0x1;
+    HRESULT AdviseMouseSink(
+        [in] ITfRange *range,
+        [in] ITfMouseSink *pSink,
+        [out] DWORD *pdwCookie);
 
-    HRESULT GetSelectionStatus(
-        [out] BOOL *pfChanged);
+    HRESULT UnadviseMouseSink([in] DWORD dwCookie);
+}
 
-    HRESULT GetTextAndPropertyUpdates(
-        [in] DWORD dwFlags,
-        [in, size_is(cProperties)] const GUID **prgProperties,
-        [in] ULONG cProperties,
-        [out] IEnumTfRanges **ppEnum);
-};
+[
+    object,
+    uuid(3bdd78e2-c16e-47fd-b883-ce6facc1a208),
+    pointer_default(unique)
+]
+interface ITfMouseTrackerACP : IUnknown
+{
+    HRESULT AdviseMouseSink(
+        [in] ITfRangeACP *range,
+        [in] ITfMouseSink *pSink,
+        [out] DWORD *pdwCookie);
+
+    HRESULT UnadviseMouseSink([in] DWORD dwCookie);
+}

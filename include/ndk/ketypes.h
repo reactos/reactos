@@ -30,6 +30,66 @@ Author:
 #endif
 
 //
+// A system call ID is formatted as such:
+// .________________________________________________________________.
+// | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+// |--------------|-------------------------------------------------|
+// | TABLE NUMBER |                  TABLE OFFSET                   |
+// \----------------------------------------------------------------/
+//
+// The table number is then used as an index into the service descriptor table.
+#define TABLE_NUMBER_BITS 1
+#define TABLE_OFFSET_BITS 12
+
+//
+// There are 2 tables (kernel and shadow, used by Win32K)
+//
+#define NUMBER_SERVICE_TABLES 2
+#define NTOS_SERVICE_INDEX   0
+#define WIN32K_SERVICE_INDEX 1
+
+//
+// NB. From assembly code, the table number must be computed as an offset into
+//     the service descriptor table.
+//
+//     Each entry into the table is 16 bytes long on 32-bit architectures, and
+//     32 bytes long on 64-bit architectures.
+//
+//     Thus, Table Number 1 is offset 16 (0x10) on x86, and offset 32 (0x20) on
+//     x64.
+//
+#ifdef _WIN64
+#define BITS_PER_ENTRY 5 // (1 << 5) = 32 bytes
+#else
+#define BITS_PER_ENTRY 4 // (1 << 4) = 16 bytes
+#endif
+
+//
+// We want the table number, but leave some extra bits to we can have the offset
+// into the descriptor table.
+//
+#define SERVICE_TABLE_SHIFT (12 - BITS_PER_ENTRY)
+
+//
+// Now the table number (as an offset) is corrupted with part of the table offset
+// This mask will remove the extra unwanted bits, and give us the offset into the
+// descriptor table proper.
+//
+#define SERVICE_TABLE_MASK  (((1 << TABLE_NUMBER_BITS) - 1) << BITS_PER_ENTRY)
+
+//
+// To get the table offset (ie: the service call number), just keep the 12 bits
+//
+#define SERVICE_NUMBER_MASK ((1 << TABLE_OFFSET_BITS) - 1)
+
+//
+// We'll often need to check if this is a graphics call. This is done by comparing
+// the table number offset with the known Win32K table number offset.
+// This is usually index 1, so table number offset 0x10 (x86) or 0x20 (x64)
+//
+#define SERVICE_TABLE_TEST  (WIN32K_SERVICE_INDEX << BITS_PER_ENTRY)
+
+//
 // Context Record Flags
 //
 #define CONTEXT_DEBUGGER                (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
@@ -98,15 +158,44 @@ Author:
 #define KF_AMDK6MTRR                    0x00008000
 #define KF_XMMI64                       0x00010000
 #define KF_DTS                          0x00020000
+#define KF_BRANCH                       0x00020000 // from ksamd64.inc
+#define KF_SSE3                         0x00080000
+#define KF_CMPXCHG16B                   0x00100000
+#define KF_XSTATE                       0x00800000 // from ks386.inc, ksamd64.inc
 #define KF_NX_BIT                       0x20000000
 #define KF_NX_DISABLED                  0x40000000
 #define KF_NX_ENABLED                   0x80000000
+
+#define KF_XSAVEOPT_BIT                 15
+#define KF_XSTATE_BIT                   23
+#define KF_RDWRFSGSBASE_BIT             28
 
 //
 // Internal Exception Codes
 //
 #define KI_EXCEPTION_INTERNAL           0x10000000
 #define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
+
+typedef struct _FIBER                                    /* Field offsets:    */
+{                                                        /* i386  arm   x64   */
+    PVOID FiberData;                                     /* 0x000 0x000 0x000 */
+    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;/* 0x004 0x004 0x008 */
+    PVOID StackBase;                                     /* 0x008 0x008 0x010 */
+    PVOID StackLimit;                                    /* 0x00C 0x00C 0x018 */
+    PVOID DeallocationStack;                             /* 0x010 0x010 0x020 */
+    CONTEXT FiberContext;                                /* 0x014 0x018 0x030 */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID Wx86Tib;                                       /* 0x2E0 0x1b8 0x500 */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer; /* 0x2E4 0x1bc 0x508 */
+    PVOID FlsData;                                       /* 0x2E8 0x1c0 0x510 */
+    ULONG GuaranteedStackBytes;                          /* 0x2EC 0x1c4 0x518 */
+    ULONG TebFlags;                                      /* 0x2F0 0x1c8 0x51C */
+#else
+    ULONG GuaranteedStackBytes;                          /* 0x2E0         */
+    PVOID FlsData;                                       /* 0x2E4         */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer;
+#endif
+} FIBER, *PFIBER;
 
 #ifndef NTOS_MODE_USER
 //
@@ -538,6 +627,26 @@ VOID
     PVOID StartContext
 );
 
+#ifndef _NTSYSTEM_
+typedef VOID
+(NTAPI *PKNORMAL_ROUTINE)(
+  IN PVOID NormalContext OPTIONAL,
+  IN PVOID SystemArgument1 OPTIONAL,
+  IN PVOID SystemArgument2 OPTIONAL);
+
+typedef VOID
+(NTAPI *PKRUNDOWN_ROUTINE)(
+  IN struct _KAPC *Apc);
+
+typedef VOID
+(NTAPI *PKKERNEL_ROUTINE)(
+  IN struct _KAPC *Apc,
+  IN OUT PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+  IN OUT PVOID *NormalContext OPTIONAL,
+  IN OUT PVOID *SystemArgument1 OPTIONAL,
+  IN OUT PVOID *SystemArgument2 OPTIONAL);
+#endif
+
 //
 // APC Environment Types
 //
@@ -549,19 +658,97 @@ typedef enum _KAPC_ENVIRONMENT
     InsertApcEnvironment
 } KAPC_ENVIRONMENT;
 
+typedef struct _KTIMER_TABLE_ENTRY
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_M_ARM) || defined(_M_AMD64)
+    KSPIN_LOCK Lock;
+#endif
+    LIST_ENTRY Entry;
+    ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+typedef struct _KTIMER_TABLE
+{
+    PKTIMER TimerExpiry[64];
+    KTIMER_TABLE_ENTRY TimerEntries[256];
+} KTIMER_TABLE, *PKTIMER_TABLE;
+
+typedef struct _KDPC_LIST
+{
+    SINGLE_LIST_ENTRY ListHead;
+    SINGLE_LIST_ENTRY* LastEntry;
+} KDPC_LIST, *PKDPC_LIST;
+
+typedef struct _SYNCH_COUNTERS
+{
+    ULONG SpinLockAcquireCount;
+    ULONG SpinLockContentionCount;
+    ULONG SpinLockSpinCount;
+    ULONG IpiSendRequestBroadcastCount;
+    ULONG IpiSendRequestRoutineCount;
+    ULONG IpiSendSoftwareInterruptCount;
+    ULONG ExInitializeResourceCount;
+    ULONG ExReInitializeResourceCount;
+    ULONG ExDeleteResourceCount;
+    ULONG ExecutiveResourceAcquiresCount;
+    ULONG ExecutiveResourceContentionsCount;
+    ULONG ExecutiveResourceReleaseExclusiveCount;
+    ULONG ExecutiveResourceReleaseSharedCount;
+    ULONG ExecutiveResourceConvertsCount;
+    ULONG ExAcqResExclusiveAttempts;
+    ULONG ExAcqResExclusiveAcquiresExclusive;
+    ULONG ExAcqResExclusiveAcquiresExclusiveRecursive;
+    ULONG ExAcqResExclusiveWaits;
+    ULONG ExAcqResExclusiveNotAcquires;
+    ULONG ExAcqResSharedAttempts;
+    ULONG ExAcqResSharedAcquiresExclusive;
+    ULONG ExAcqResSharedAcquiresShared;
+    ULONG ExAcqResSharedAcquiresSharedRecursive;
+    ULONG ExAcqResSharedWaits;
+    ULONG ExAcqResSharedNotAcquires;
+    ULONG ExAcqResSharedStarveExclusiveAttempts;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresExclusive;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresShared;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresSharedRecursive;
+    ULONG ExAcqResSharedStarveExclusiveWaits;
+    ULONG ExAcqResSharedStarveExclusiveNotAcquires;
+    ULONG ExAcqResSharedWaitForExclusiveAttempts;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresExclusive;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresShared;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresSharedRecursive;
+    ULONG ExAcqResSharedWaitForExclusiveWaits;
+    ULONG ExAcqResSharedWaitForExclusiveNotAcquires;
+    ULONG ExSetResOwnerPointerExclusive;
+    ULONG ExSetResOwnerPointerSharedNew;
+    ULONG ExSetResOwnerPointerSharedOld;
+    ULONG ExTryToAcqExclusiveAttempts;
+    ULONG ExTryToAcqExclusiveAcquires;
+    ULONG ExBoostExclusiveOwner;
+    ULONG ExBoostSharedOwners;
+    ULONG ExEtwSynchTrackingNotificationsCount;
+    ULONG ExEtwSynchTrackingNotificationsAccountedCount;
+} SYNCH_COUNTERS, *PSYNCH_COUNTERS;
+
 //
 // PRCB DPC Data
 //
 typedef struct _KDPC_DATA
 {
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KDPC_LIST DpcList;
+#else
     LIST_ENTRY DpcListHead;
+#endif
     ULONG_PTR DpcLock;
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM)
     volatile LONG DpcQueueDepth;
 #else
     volatile ULONG DpcQueueDepth;
 #endif
     ULONG DpcCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_M_ARM)
+    PKDPC ActiveDpc;
+#endif
 } KDPC_DATA, *PKDPC_DATA;
 
 //
@@ -587,15 +774,29 @@ typedef struct _KNODE
     SLIST_HEADER DeadStackList;
     SLIST_HEADER PfnDereferenceSListHead;
     KAFFINITY ProcessorMask;
-    ULONG Color;
+    UCHAR Color;
     UCHAR Seed;
     UCHAR NodeNumber;
-    ULONG Flags;
+    struct _flags {
+        UCHAR Removable : 1;
+        UCHAR Fill : 7;
+    } Flags;
     ULONG MmShiftedColor;
     ULONG FreeCount[2];
     struct _SINGLE_LIST_ENTRY *PfnDeferredList;
 } KNODE, *PKNODE;
 #include <poppack.h>
+
+//
+// Structure for Get/SetContext APC
+//
+typedef struct _GETSETCONTEXT
+{
+    KAPC Apc;
+    KEVENT Event;
+    KPROCESSOR_MODE Mode;
+    CONTEXT Context;
+} GETSETCONTEXT, *PGETSETCONTEXT;
 
 //
 // Kernel Profile Object
@@ -1249,6 +1450,28 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
     PUCHAR Number;
 } KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
 
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+//
+// Entropy Timing State
+//
+typedef struct _KENTROPY_TIMING_STATE
+{
+    ULONG EntropyCount;
+    ULONG Buffer[64];
+    KDPC Dpc;
+    ULONG LastDeliveredBuffer;
+    PULONG RawDataBuffer;
+} KENTROPY_TIMING_STATE, *PKENTROPY_TIMING_STATE;
+
+//
+// Constants from ks386.inc, ksamd64.inc and ksarm.h
+//
+#define KENTROPY_TIMING_INTERRUPTS_PER_BUFFER 0x400
+#define KENTROPY_TIMING_BUFFER_MASK 0x7ff
+#define KENTROPY_TIMING_ANALYSIS 0x0
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
 //
 // Exported Loader Parameter Block
 //
@@ -1257,17 +1480,6 @@ extern struct _LOADER_PARAMETER_BLOCK NTSYSAPI *KeLoaderBlock;
 //
 // Exported Hardware Data
 //
-extern KAFFINITY NTSYSAPI KeActiveProcessors;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-extern volatile CCHAR NTSYSAPI KeNumberProcessors;
-#else
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-extern CCHAR NTSYSAPI KeNumberProcessors;
-#else
-//extern PCCHAR KeNumberProcessors;
-extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix this atm, since I prefer to discuss this with you first.
-#endif
-#endif
 extern ULONG NTSYSAPI KiDmaIoCoherency;
 extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;

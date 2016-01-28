@@ -12,6 +12,8 @@
 IDI_COMPNAME ICON "res/101.ico"
 IDI_WARNINGICO ICON "res/102.ico"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -74,4 +76,10 @@ IDI_WARNINGICO ICON "res/102.ico"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

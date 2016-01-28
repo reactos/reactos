@@ -243,7 +243,6 @@ static NTSTATUS NTAPI SendComplete
                           0,
                           FCB->Send.Window,
                           FCB->Send.BytesUsed,
-                          &FCB->SendIrp.Iosb,
                           SendComplete,
                           FCB );
     }
@@ -380,14 +379,23 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
             if (Status == STATUS_PENDING)
             {
-                TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
-                                FCB->AddressFile.Object,
-                                SendReq->BufferArray[0].buf,
-                                SendReq->BufferArray[0].len,
-                                TargetAddress,
-                                &FCB->SendIrp.Iosb,
-                                PacketSocketSendComplete,
-                                FCB);
+                Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
+                                         FCB->AddressFile.Object,
+                                         SendReq->BufferArray[0].buf,
+                                         SendReq->BufferArray[0].len,
+                                         TargetAddress,
+                                         PacketSocketSendComplete,
+                                         FCB);
+                if (Status != STATUS_PENDING)
+                {
+                    NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
+                    Irp->IoStatus.Status = Status;
+                    Irp->IoStatus.Information = 0;
+                    (void)IoSetCancelRoutine(Irp, NULL);
+                    UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+                    UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
+                    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+                }
             }
 
             ExFreePool( TargetAddress );
@@ -444,15 +452,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Socket state %u\n", FCB->State));
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
-        if (!(SendReq->AfdFlags & AFD_OVERLAPPED) && 
-            ((SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking))) {
-            AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
-            UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
-            return UnlockAndMaybeComplete( FCB, STATUS_CANT_WAIT, Irp, 0 );
-        } else {
-            AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
-            return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
-        }
+        AFD_DbgPrint(MID_TRACE,("Socket not connected\n"));
+        UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
+        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_CONNECTION, Irp, 0 );
     }
 
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %u\n",
@@ -549,7 +551,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 0,
                 FCB->Send.Window,
                 FCB->Send.BytesUsed,
-                &FCB->SendIrp.Iosb,
                 SendComplete,
                 FCB);
     }
@@ -640,14 +641,23 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_SEND);
         if (Status == STATUS_PENDING)
         {
-            TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
-                            FCB->AddressFile.Object,
-                            SendReq->BufferArray[0].buf,
-                            SendReq->BufferArray[0].len,
-                            TargetAddress,
-                            &FCB->SendIrp.Iosb,
-                            PacketSocketSendComplete,
-                            FCB);
+            Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
+                                     FCB->AddressFile.Object,
+                                     SendReq->BufferArray[0].buf,
+                                     SendReq->BufferArray[0].len,
+                                     TargetAddress,
+                                     PacketSocketSendComplete,
+                                     FCB);
+            if (Status != STATUS_PENDING)
+            {
+                NT_VERIFY(RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]) == &Irp->Tail.Overlay.ListEntry);
+                Irp->IoStatus.Status = Status;
+                Irp->IoStatus.Information = 0;
+                (void)IoSetCancelRoutine(Irp, NULL);
+                UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+                UnlockRequest(Irp, IoGetCurrentIrpStackLocation(Irp));
+                IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+            }
         }
 
         ExFreePool(TargetAddress);

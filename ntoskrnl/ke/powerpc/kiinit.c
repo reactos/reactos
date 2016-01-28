@@ -41,19 +41,21 @@ extern int syscall_start[], syscall_end, KiDecrementerTrapHandler[],
 
 VOID
 NTAPI
-KiSetupSyscallHandler()
+KiSetupSyscallHandler(VOID)
 {
     paddr_t handler_target;
     int *source;
     for(source = syscall_start, handler_target = 0xc00;
-	source < &syscall_end;
-	source++, handler_target += sizeof(int))
-	SetPhys(handler_target, *source);
+        source < &syscall_end;
+        source++, handler_target += sizeof(int))
+    {
+        SetPhys(handler_target, *source);
+    }
 }
 
 VOID
 NTAPI
-KiSetupDecrementerTrap()
+KiSetupDecrementerTrap(VOID)
 {
     paddr_t handler_target;
     int *source;
@@ -165,7 +167,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                             0,
                             0xFFFFFFFF,
                             &PageDirectory,
-			    TRUE);
+                            TRUE);
         InitProcess->QuantumReset = MAXCHAR;
     }
     else
@@ -270,26 +272,26 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Cpu = KeNumberProcessors;
     if (!Cpu)
     {
-	/* We'll allocate a page from the end of the kernel area for KPCR.  This code will probably
-	 * change when we get SMP support.
-	 */
-	info[0].phys = 0;
-	info[0].proc = 2;
-	info[0].addr = (vaddr_t)Pcr;
-	info[0].flags = MMU_KRW_UR;
-	info[1].phys = 0;
-	info[1].proc = 2;
-	info[1].addr = ((vaddr_t)Pcr) + (1 << PAGE_SHIFT);
-	info[1].flags = MMU_KRW_UR;
-	info[2].phys = 0;
-	info[2].proc = 2;
-	info[2].addr = (vaddr_t)KI_USER_SHARED_DATA;
-	info[2].flags = MMU_KRW_UR;
+        /* We'll allocate a page from the end of the kernel area for KPCR.  This code will probably
+         * change when we get SMP support.
+         */
+        info[0].phys = 0;
+        info[0].proc = 2;
+        info[0].addr = (vaddr_t)Pcr;
+        info[0].flags = MMU_KRW_UR;
+        info[1].phys = 0;
+        info[1].proc = 2;
+        info[1].addr = ((vaddr_t)Pcr) + (1 << PAGE_SHIFT);
+        info[1].flags = MMU_KRW_UR;
+        info[2].phys = 0;
+        info[2].proc = 2;
+        info[2].addr = (vaddr_t)KI_USER_SHARED_DATA;
+        info[2].flags = MMU_KRW_UR;
         info[3].phys = 0;
         info[3].proc = 2;
         info[3].addr = (vaddr_t)KIP0PCRADDRESS;
         info[3].flags = MMU_KRW_UR;
-	MmuMapPage(info, 4);
+        MmuMapPage(info, 4);
     }
 
     /* Skip initial setup if this isn't the Boot CPU */
@@ -326,7 +328,7 @@ AppCpuInit:
     /* Check for break-in */
     if (KdPollBreakIn())
     {
-	DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     /* Raise to HIGH_LEVEL */
@@ -347,7 +349,7 @@ KiInitMachineDependent(VOID)
 {
 }
 
-void abort()
+void abort(VOID)
 {
     KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
     while(1);

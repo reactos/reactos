@@ -54,11 +54,12 @@ extern WINBOOL WINAPI DllMain (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreser
 
 extern WINBOOL WINAPI DllEntryPoint (HANDLE, DWORD, LPVOID);
 
-static int pre_c_init (void);
+static int __cdecl pre_c_init (void);
 
 _CRTALLOC(".CRT$XIAA") _PIFV pcinit = pre_c_init;
 
 static int
+__cdecl
 pre_c_init (void)
 {
   _PVFV *onexitbegin;

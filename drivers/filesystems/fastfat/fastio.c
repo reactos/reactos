@@ -1,15 +1,20 @@
 /*
- * FILE:             drivers/fs/vfat/fastio.c
+ * FILE:             drivers/filesystems/fastfat/fastio.c
  * PURPOSE:          Fast IO routines.
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PROGRAMMER:       Herve Poussineau (hpoussin@reactos.org)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 #include "vfat.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, VfatInitFastIoRoutines)
+#endif
 
 static FAST_IO_CHECK_IF_POSSIBLE VfatFastIoCheckIfPossible;
 
@@ -111,15 +116,51 @@ VfatFastIoQueryBasicInfo(
     OUT PIO_STATUS_BLOCK IoStatus,
     IN PDEVICE_OBJECT DeviceObject)
 {
+    NTSTATUS Status;
+    PVFATFCB FCB = NULL;
+    BOOLEAN Success = FALSE;
+    ULONG BufferLength = sizeof(FILE_BASIC_INFORMATION);
+
     DPRINT("VfatFastIoQueryBasicInfo()\n");
 
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(Wait);
-    UNREFERENCED_PARAMETER(Buffer);
-    UNREFERENCED_PARAMETER(IoStatus);
-    UNREFERENCED_PARAMETER(DeviceObject);
+    FCB = (PVFATFCB)FileObject->FsContext;
+    if (FCB == NULL)
+    {
+        return FALSE;
+    }
 
-    return FALSE;
+    FsRtlEnterFileSystem();
+
+    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    {
+        if (!ExAcquireResourceSharedLite(&FCB->MainResource, Wait))
+        {
+            FsRtlExitFileSystem();
+            return FALSE;
+        }
+    }
+
+    Status = VfatGetBasicInformation(FileObject,
+                                     FCB,
+                                     DeviceObject,
+                                     Buffer,
+                                     &BufferLength);
+
+    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    {
+        ExReleaseResourceLite(&FCB->MainResource);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        IoStatus->Status = STATUS_SUCCESS;
+        IoStatus->Information = sizeof(FILE_BASIC_INFORMATION) - BufferLength;
+        Success = TRUE;
+    }
+
+    FsRtlExitFileSystem();
+
+    return Success;
 }
 
 static FAST_IO_QUERY_STANDARD_INFO VfatFastIoQueryStandardInfo;
@@ -134,15 +175,51 @@ VfatFastIoQueryStandardInfo(
     OUT PIO_STATUS_BLOCK IoStatus,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT("VfatFastIoQueryStandardInfo\n");
+    NTSTATUS Status;
+    PVFATFCB FCB = NULL;
+    BOOLEAN Success = FALSE;
+    ULONG BufferLength = sizeof(FILE_STANDARD_INFORMATION);
 
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(Wait);
-    UNREFERENCED_PARAMETER(Buffer);
-    UNREFERENCED_PARAMETER(IoStatus);
+    DPRINT("VfatFastIoQueryStandardInfo()\n");
+
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    return FALSE;
+    FCB = (PVFATFCB)FileObject->FsContext;
+    if (FCB == NULL)
+    {
+        return FALSE;
+    }
+
+    FsRtlEnterFileSystem();
+
+    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    {
+        if (!ExAcquireResourceSharedLite(&FCB->MainResource, Wait))
+        {
+            FsRtlExitFileSystem();
+            return FALSE;
+        }
+    }
+
+    Status = VfatGetStandardInformation(FCB,
+                                        Buffer,
+                                        &BufferLength);
+
+    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    {
+        ExReleaseResourceLite(&FCB->MainResource);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        IoStatus->Status = STATUS_SUCCESS;
+        IoStatus->Information = sizeof(FILE_STANDARD_INFORMATION) - BufferLength;
+        Success = TRUE;
+    }
+
+    FsRtlExitFileSystem();
+
+    return Success;
 }
 
 static FAST_IO_LOCK VfatFastIoLock;
@@ -706,6 +783,7 @@ VfatReleaseFromReadAhead(
     ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
+INIT_SECTION
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch)

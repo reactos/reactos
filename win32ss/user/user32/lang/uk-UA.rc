@@ -50,7 +50,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Закрити\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "Нас&тупний\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "Нас&тупне вікно\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "Пр&опустити"
     IDS_YES "&Так"
     IDS_NO "Н&і"
+    IDS_CLOSE "&Закрити"
     IDS_HELP "Довідка"
     IDS_TRYAGAIN "По&вторити"
     IDS_CONTINUE "&Продовжити"

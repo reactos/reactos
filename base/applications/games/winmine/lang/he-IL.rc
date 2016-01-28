@@ -7,7 +7,7 @@ BEGIN
     IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
 
-MENU_WINEMINE MENU
+IDM_WINEMINE MENU
 BEGIN
     POPUP "&אפשרויות"
     BEGIN

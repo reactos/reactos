@@ -21,16 +21,24 @@ static
 VOID
 FixupChildLinks(PRTL_SPLAY_LINKS Links, BOOLEAN Root, BOOLEAN LeftChild)
 {
-    if (RtlLeftChild(Links)) {
+    if (RtlLeftChild(Links))
+    {
         RtlInsertAsLeftChild(Links, RtlLeftChild(Links));
     }
-    if (RtlRightChild(Links)) {
+
+    if (RtlRightChild(Links))
+    {
         RtlInsertAsRightChild(Links, RtlRightChild(Links));
     }
-    if (!Root) {
-        if (LeftChild) {
+
+    if (!Root)
+    {
+        if (LeftChild)
+        {
             RtlInsertAsLeftChild(RtlParent(Links), Links);
-        } else {
+        }
+        else
+        {
             RtlInsertAsRightChild(RtlParent(Links), Links);
         }
     }
@@ -57,14 +65,16 @@ When Q is the immediate parent of S,
   Set Q's parent to S, and the proper child ptr of S to Q
 When Q is the root,
   Set S's parent to S
- */
+
+*/
 
 static
 VOID
 SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                PRTL_SPLAY_LINKS LinkB)
 {
-    if (RtlParent(LinkA) == LinkB || RtlIsRoot(LinkB)) {
+    if (RtlParent(LinkA) == LinkB || RtlIsRoot(LinkB))
+    {
         PRTL_SPLAY_LINKS Tmp = LinkA;
         LinkA = LinkB;
         LinkB = Tmp;
@@ -72,23 +82,33 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
 
     {
         RTL_SPLAY_LINKS Ta = *LinkA, Tb = *LinkB;
-        BOOLEAN RootA = RtlIsRoot(LinkA), 
-            LeftA = RtlIsLeftChild(LinkA), 
-            LeftB = RtlIsLeftChild(LinkB);
+        BOOLEAN RootA = RtlIsRoot(LinkA),
+                LeftA = RtlIsLeftChild(LinkA),
+                LeftB = RtlIsLeftChild(LinkB);
+
         *LinkB = Ta; *LinkA = Tb;
 
         // A was parent of B is a special case: A->Parent is now B
-        if (RtlParent(&Tb) == LinkA) {
-            if (!RootA) {
-                if (LeftA) {
+        if (RtlParent(&Tb) == LinkA)
+        {
+            if (!RootA)
+            {
+                if (LeftA)
+                {
                     RtlInsertAsLeftChild(RtlParent(&Ta), LinkB);
-                } else {
+                }
+                else
+                {
                     RtlInsertAsRightChild(RtlParent(&Ta), LinkB);
                 }
             }
-            if (LeftB) {
+
+            if (LeftB)
+            {
                 RtlInsertAsLeftChild(LinkB, LinkA);
-            } else {
+            }
+            else
+            {
                 RtlInsertAsRightChild(LinkB, LinkA);
             }
         }
@@ -102,8 +122,10 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
 
 #ifdef VERIFY_SWAP_SPLAY_LINKS
         // Verify the distinct cases of node swap
-        if (RootA) {
-            if (RtlParent(&Tb) == LinkA) {
+        if (RootA)
+        {
+            if (RtlParent(&Tb) == LinkA)
+            {
                 // LinkA = D, LinkB = B
                 // D B   S   S.L S.R S   Q   Q.R
                 ASSERT(RtlParent(LinkA) == LinkB);
@@ -112,7 +134,9 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                 ASSERT(RtlParent(LinkB) == LinkB);
                 ASSERT(RtlLeftChild(LinkB) == (LeftB ? LinkA : RtlLeftChild(&Ta)));
                 ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));
-            } else {
+            }
+            else
+            {
                 // LinkA = D, LinkB = A
                 // D A   S.P S.L S.R S   Q.L Q.R
                 ASSERT(RtlParent(LinkA) == RtlParent(&Tb));
@@ -122,8 +146,11 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                 ASSERT(RtlLeftChild(LinkB) == RtlLeftChild(&Ta));
                 ASSERT(RtlRightChild(LinkB) == RtlRightChild(&Ta));
             }
-        } else {
-            if (RtlParent(&Tb) == LinkA) {
+        }
+        else
+        {
+            if (RtlParent(&Tb) == LinkA)
+            {
                 // LinkA = B, LinkB = A
                 // B A   S   S.L S.R Q.P Q   Q.R
                 ASSERT(RtlParent(LinkA) == LinkB);
@@ -132,7 +159,9 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                 ASSERT(RtlParent(LinkB) == RtlParent(&Ta));
                 ASSERT(RtlLeftChild(LinkB) == (LeftB ? LinkA : RtlLeftChild(&Ta)));
                 ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));            
-            } else {
+            }
+            else
+            {
                 // LinkA = A, LinkB = C
                 // A C   S.P S.L S.R Q.P Q.L Q.R
                 ASSERT(!memcmp(LinkA, &Tb, sizeof(Tb)));
@@ -154,17 +183,17 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
     N = Links;
 
     /* Check if we have two children */
-    if ((RtlLeftChild(N)) && (RtlRightChild(N)))
+    if (RtlLeftChild(N) && RtlRightChild(N))
     {
         /* Get the predecessor */
         SP = RtlSubtreePredecessor(N);
 
-        /* Swap it with N, this will guarantee that N will have only a child */
+        /* Swap it with N, this will guarantee that N will only have a child */
         SwapSplayLinks(SP, N);
     }
 
     /* Check if we have no children */
-    if (!(RtlLeftChild(N)) && !(RtlRightChild(N)))
+    if (!RtlLeftChild(N) && !RtlRightChild(N))
     {
         /* If we are also the root, then the tree is gone */
         if (RtlIsRoot(N)) return NULL;
@@ -176,12 +205,12 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
         if (RtlIsLeftChild(N))
         {
             /* N was a left child, so erase its parent's left child link */
-            RtlLeftChild(RtlParent(N)) = NULL;
+            RtlLeftChild(P) = NULL;
         }
         else
         {
             /* N was a right child, so erase its parent's right child link */
-            RtlRightChild(RtlParent(N)) = NULL;
+            RtlRightChild(P) = NULL;
         }
 
         /* And finally splay the parent */
@@ -196,49 +225,135 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
     }
     else
     {
-        /* We have a right child, get him instead */
+        /* We have a right child, get it instead */
         C = RtlRightChild(N);
     }
 
     /* Check if we are the root entry */
     if (RtlIsRoot(N))
     {
-        /* Our child is now root, return him */
-        C->Parent = C;
+        /* Our child is now root, return it */
+        RtlParent(C) = C;
         return C;
     }
+
+    /* Get our parent */
+    P = RtlParent(N);
 
     /* Find out who is referencing us and link to our child instead */
     if (RtlIsLeftChild(N))
     {
         /* N was a left child, so set its parent's left child as our child */
-        RtlLeftChild(RtlParent(N)) = C;
+        RtlLeftChild(P) = C;
     }
     else
     {
         /* N was a right child, so set its parent's right child as our child */
-        RtlRightChild(RtlParent(N)) = C;
+        RtlRightChild(P) = C;
     }
 
     /* Finally, inherit our parent and splay the parent */
-    C->Parent = N->Parent;
-    return RtlSplay(RtlParent(C));
+    RtlParent(C) = P;
+    return RtlSplay(P);
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 VOID
 NTAPI
 RtlDeleteNoSplay(PRTL_SPLAY_LINKS Links,
                  PRTL_SPLAY_LINKS *Root)
 {
-    UNIMPLEMENTED;
+    PRTL_SPLAY_LINKS N, P, C, SP;
+    N = Links;
+
+    /* Check if we have two children */
+    if (RtlLeftChild(N) && RtlRightChild(N))
+    {
+        /* Get the predecessor */
+        SP = RtlSubtreePredecessor(N);
+
+        /* If we are the root, the new root will be our predecessor after swapping */
+        if (RtlIsRoot(N)) *Root = SP;
+
+        /* Swap the predecessor with N, this will guarantee that N will only have a child */
+        SwapSplayLinks(SP, N);
+    }
+
+    /* Check if we have no children */
+    if (!RtlLeftChild(N) && !RtlRightChild(N))
+    {
+        /* If we are also the root, then the tree is gone */
+        if (RtlIsRoot(N))
+        {
+            *Root = NULL;
+            return;
+        }
+
+        /* Get our parent */
+        P = RtlParent(N);
+
+        /* Find out who is referencing us and delete the reference */
+        if (RtlIsLeftChild(N))
+        {
+            /* N was a left child, so erase its parent's left child link */
+            RtlLeftChild(P) = NULL;
+        }
+        else
+        {
+            /* N was a right child, so erase its parent's right child link */
+            RtlRightChild(P) = NULL;
+        }
+
+        /* We are done */
+        return;
+    }
+
+    /* If we got here, we have a child (not two: we swapped above!) */
+    if (RtlLeftChild(N))
+    {
+        /* We have a left child, so get it */
+        C = RtlLeftChild(N);
+    }
+    else
+    {
+        /* We have a right child, get it instead */
+        C = RtlRightChild(N);
+    }
+
+    /* Check if we are the root entry */
+    if (RtlIsRoot(N))
+    {
+        /* Our child is now root, return it */
+        RtlParent(C) = C;
+        *Root = C;
+        return;
+    }
+
+    /* Get our parent */
+    P = RtlParent(N);
+
+    /* Find out who is referencing us and link to our child instead */
+    if (RtlIsLeftChild(N))
+    {
+        /* N was a left child, so set its parent's left child as our child */
+        RtlLeftChild(P) = C;
+    }
+    else
+    {
+        /* N was a right child, so set its parent's right child as our child */
+        RtlRightChild(P) = C;
+    }
+
+    /* Finally, inherit our parent and we are done */
+    RtlParent(C) = P;
+    return;
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
 RtlRealPredecessor(PRTL_SPLAY_LINKS Links)
@@ -266,8 +381,8 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links)
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
 RtlRealSuccessor(PRTL_SPLAY_LINKS Links)
@@ -295,8 +410,8 @@ RtlRealSuccessor(PRTL_SPLAY_LINKS Links)
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
 RtlSplay(PRTL_SPLAY_LINKS Links)
@@ -639,8 +754,8 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
 RtlSubtreePredecessor(IN PRTL_SPLAY_LINKS Links)
@@ -659,8 +774,8 @@ RtlSubtreePredecessor(IN PRTL_SPLAY_LINKS Links)
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
 RtlSubtreeSuccessor(IN PRTL_SPLAY_LINKS Links)

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/wstring/wcsxfrm.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-size_t wcsxfrm(wchar_t *dst,const wchar_t *src, size_t n)
+size_t CDECL wcsxfrm(wchar_t *dst,const wchar_t *src, size_t n)
 {
   size_t r = 0;
   int c;

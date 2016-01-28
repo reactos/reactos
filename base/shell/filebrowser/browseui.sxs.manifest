@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+
+<assemblyIdentity
+    type="win32"
+    name="browseui.sxs"
+    version="6.0.2900.2180" />
+
+<file name="browseui.dll">
+
+    <comClass clsid="{0BE35200-8F91-11CE-9DE3-00AA004BB851}"/>
+    <comClass clsid="{00BB2765-6A77-11D0-A535-00C04FD7D062}"/>
+    <comClass clsid="{01E04581-4EEE-11d0-BFE9-00AA005B4383}"/>
+    <comClass clsid="{A08C11D2-A228-11d0-825B-00AA005B4383}"/>
+    <comClass clsid="{F61FFEC1-754F-11d0-80CA-00AA005B4383}"/>
+    <comClass clsid="{ECD4FC4D-521C-11D0-B792-00A0C90312E1}"/>
+    <comClass clsid="{ECD4FC4E-521C-11D0-B792-00A0C90312E1}"/>
+    <comClass clsid="{22BF0C20-6DA7-11D0-B373-00A0C9034938}"/>
+    <comClass clsid="{AF604EFE-8897-11D1-B944-00A0C90312E1}"/>
+    <comClass clsid="{EF8AD2D1-AE36-11D1-B2D2-006097DF8C11}"/>
+    <comClass clsid="{5E6AB780-7743-11CF-A12B-00AA004AE837}"/>
+    <comClass clsid="{AF4F6510-F982-11d0-8595-00AA004CD6D8}"/>
+</file>
+
+</assembly>

@@ -45,6 +45,11 @@
 #define IDC_INSTALL_TEXT         1010
 #define IDC_CD_INSTALL           1011
 #define IDC_DOWNLOAD_INSTALL     1012
+#define IDC_PROXY_DEFAULT        1013
+#define IDC_NO_PROXY             1014
+#define IDC_USE_PROXY            1015
+#define IDC_PROXY_SERVER         1016
+#define IDC_NO_PROXY_FOR         1017
 
 /* Dialogs */
 #define IDD_SETTINGS_DIALOG      300
@@ -90,6 +95,10 @@
 #define IDS_APP_REG_REMOVE       116
 #define IDS_INFORMATION          117
 #define IDS_UNABLE_TO_REMOVE     118
+#define IDS_UNABLE_TO_DOWNLOAD   119
+#define IDS_CERT_DOES_NOT_MATCH  120
+#define IDS_INTEG_CHECK_TITLE    121
+#define IDS_INTEG_CHECK_FAIL     122
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
@@ -128,7 +137,7 @@
 #define IDS_AINFO_DESCRIPTION    351
 #define IDS_AINFO_SIZE           352
 #define IDS_AINFO_URLSITE        353
-#define IDS_AINFO_LICENCE        354
+#define IDS_AINFO_LICENSE        354
 
 /* Names of categories */
 #define IDS_CAT_AUDIO            700
@@ -146,6 +155,9 @@
 #define IDS_CAT_SCIENCE          712
 #define IDS_CAT_TOOLS            713
 #define IDS_CAT_VIDEO            714
+
+/* Accelerators */
+#define HOTKEYS                  715
 
 /* Other */
 #ifndef IDC_STATIC

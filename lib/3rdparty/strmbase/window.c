@@ -240,8 +240,8 @@ HRESULT WINAPI BaseControlWindowImpl_GetIDsOfNames(IVideoWindow *iface, REFIID r
 HRESULT WINAPI BaseControlWindowImpl_Invoke(IVideoWindow *iface, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExepInfo, UINT *puArgErr)
 {
     BaseControlWindow*  This = impl_from_IVideoWindow(iface);
-    HRESULT hr = S_OK;
     ITypeInfo *pTypeInfo;
+    HRESULT hr;
 
     hr = BaseDispatchImpl_GetTypeInfo(&This->baseDispatch, riid, 1, lcid, &pTypeInfo);
     if (SUCCEEDED(hr))

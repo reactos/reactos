@@ -64,7 +64,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
 
     /* Check if we should print it or not */
     if ((ComponentId != MAXULONG) &&
-        (NtQueryDebugFilterState(ComponentId, Level)) != TRUE)
+        (NtQueryDebugFilterState(ComponentId, Level)) != (NTSTATUS)TRUE)
     {
         /* This message is masked */
         return STATUS_SUCCESS;
@@ -388,4 +388,35 @@ DbgCommandString(IN PCCH Name,
 
     /* Send them to the debugger */
     DebugService2(&NameString, &CommandString, BREAKPOINT_COMMAND_STRING);
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+RtlPopFrame(IN PTEB_ACTIVE_FRAME Frame)
+{
+    /* Restore the previous frame as the active one */
+    NtCurrentTeb()->ActiveFrame = Frame->Previous;
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+RtlPushFrame(IN PTEB_ACTIVE_FRAME Frame)
+{
+    /* Save the current frame and set the new one as active */
+    Frame->Previous = NtCurrentTeb()->ActiveFrame;
+    NtCurrentTeb()->ActiveFrame = Frame;
+}
+
+PTEB_ACTIVE_FRAME
+NTAPI
+RtlGetFrame(VOID)
+{
+    /* Return the frame that's currently active */
+    return NtCurrentTeb()->ActiveFrame;
 }

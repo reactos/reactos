@@ -704,15 +704,15 @@ static	LRESULT PCM_DriverDetails(PACMDRIVERDETAILSW add)
 
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0xFF;
-    add->wPid = 0x00;
+    add->wMid = MM_MICROSOFT;
+    add->wPid = MM_MSFT_ACM_PCM;
     add->vdwACM = 0x01000000;
     add->vdwDriver = 0x01000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CONVERTER;
     add->cFormatTags = 1;
     add->cFilterTags = 0;
     add->hicon = NULL;
-    MultiByteToWideChar( CP_ACP, 0, "WINE-PCM", -1,
+    MultiByteToWideChar( CP_ACP, 0, "MS-PCM", -1,
                          add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, "Wine PCM converter", -1,
                          add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
@@ -820,28 +820,33 @@ static	LRESULT	PCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
 
     /* some tests ... */
     if (adfs->cbwfxSrc < sizeof(PCMWAVEFORMAT) ||
-	adfs->cbwfxDst < sizeof(PCMWAVEFORMAT) ||
-	PCM_GetFormatIndex(adfs->pwfxSrc) == 0xFFFFFFFF) {
+        adfs->cbwfxDst < sizeof(PCMWAVEFORMAT) ||
+        PCM_GetFormatIndex(adfs->pwfxSrc) == 0xFFFFFFFF) {
             WARN("not possible\n");
             return ACMERR_NOTPOSSIBLE;
     }
 
     /* is no suggestion for destination, then copy source value */
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_NCHANNELS)) {
-	adfs->pwfxDst->nChannels = adfs->pwfxSrc->nChannels;
+        adfs->pwfxDst->nChannels = adfs->pwfxSrc->nChannels;
     }
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_NSAMPLESPERSEC)) {
-	adfs->pwfxDst->nSamplesPerSec = adfs->pwfxSrc->nSamplesPerSec;
+        adfs->pwfxDst->nSamplesPerSec = adfs->pwfxSrc->nSamplesPerSec;
     }
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_WBITSPERSAMPLE)) {
-	adfs->pwfxDst->wBitsPerSample = adfs->pwfxSrc->wBitsPerSample;
+        adfs->pwfxDst->wBitsPerSample = adfs->pwfxSrc->wBitsPerSample;
     }
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_WFORMATTAG)) {
-	if (adfs->pwfxSrc->wFormatTag != WAVE_FORMAT_PCM) {
-            WARN("not possible\n");
+        if (adfs->pwfxSrc->wFormatTag != WAVE_FORMAT_PCM) {
+            WARN("source format 0x%x not supported\n", adfs->pwfxSrc->wFormatTag);
             return ACMERR_NOTPOSSIBLE;
         }
-	adfs->pwfxDst->wFormatTag = adfs->pwfxSrc->wFormatTag;
+        adfs->pwfxDst->wFormatTag = adfs->pwfxSrc->wFormatTag;
+    } else {
+        if (adfs->pwfxDst->wFormatTag != WAVE_FORMAT_PCM) {
+            WARN("destination format 0x%x not supported\n", adfs->pwfxDst->wFormatTag);
+            return ACMERR_NOTPOSSIBLE;
+        }
     }
     /* check if result is ok */
     if (PCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) {

@@ -1,0 +1,13 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "pornește"
+    IDS_SERVICE_STOP    "oprește"
+    IDS_SERVICE_PAUSE   "întrerupe"
+    IDS_SERVICE_RESUME  "reia"
+    IDS_SERVICE_RUNNING "În curs"
+    IDS_SERVICE_STOPPED "Oprit"
+    IDS_SERVICE_PAUSED  "Întrerupt"
+END

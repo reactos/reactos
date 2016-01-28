@@ -1,0 +1,13 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {F8383852-FCD3-11D1-A6B9-006097DF5BD4} = s 'Progress Dialog'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

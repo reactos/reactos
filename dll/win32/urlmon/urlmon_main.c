@@ -127,6 +127,7 @@ static void process_detach(void)
 
     free_session();
     free_tls_list();
+    unregister_notif_wnd_class();
 }
 
 /***********************************************************************

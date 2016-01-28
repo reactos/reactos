@@ -139,6 +139,7 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
   {
     ME_SetCursorToStart(editor, &editor->pCursors[1]);
     ME_SetCursorToEnd(editor, &editor->pCursors[0]);
+    editor->pCursors[0].nOffset = editor->pCursors[0].pRun->member.run.len;
     ME_InvalidateSelection(editor);
     return len + 1;
   }
@@ -159,6 +160,11 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
       ME_GetSelectionOfs(editor, &start, &end);
       if (start != end)
       {
+          if (end > len)
+          {
+              editor->pCursors[0].nOffset = 0;
+              end --;
+          }
           editor->pCursors[1] = editor->pCursors[0];
           ME_Repaint(editor);
       }
@@ -200,7 +206,12 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
   if (editor->pCursors[1].pRun->member.run.nFlags & MERF_ENDPARA)
     editor->pCursors[1].nOffset = 0;
   if (editor->pCursors[0].pRun->member.run.nFlags & MERF_ENDPARA)
-    editor->pCursors[0].nOffset = 0;
+  {
+    if (to > len)
+      editor->pCursors[0].nOffset = editor->pCursors[0].pRun->member.run.len;
+    else
+      editor->pCursors[0].nOffset = 0;
+  }
   return to;
 }
 
@@ -435,7 +446,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
       continue;
     }
   }
-  if (delete_all) ME_SetDefaultParaFormat( start_para->member.para.pFmt );
+  if (delete_all) ME_SetDefaultParaFormat( editor, start_para->member.para.pFmt );
   return TRUE;
 }
 
@@ -699,7 +710,7 @@ int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
 }
 
 
-static BOOL
+BOOL
 ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
 {
   ME_DisplayItem *pRun = cursor->pRun, *pOtherRun;

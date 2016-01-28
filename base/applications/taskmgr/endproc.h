@@ -23,4 +23,5 @@
 #pragma once
 
 void ProcessPage_OnEndProcess(void);
+BOOL IsCriticalProcess(HANDLE hProcess);
 void ProcessPage_OnEndProcessTree(void);

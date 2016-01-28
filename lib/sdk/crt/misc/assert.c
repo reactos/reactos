@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            lib/sdk/crt/assert.c
+ * FILE:            lib/sdk/crt/misc/assert.c
  * PURPOSE:         _assert implementation
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */

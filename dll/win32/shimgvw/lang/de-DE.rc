@@ -15,3 +15,14 @@ BEGIN
     IDS_TOOLTIP_PRINT "Drucken (Strg+P)"
     IDS_TOOLTIP_SAVEAS "Speichern unter... (Strg+S)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF-Bilddatei"
+    IDS_GIF_FILE    "GIF-Bilddatei"
+    IDS_JPG_FILE    "JPEG-Bilddatei"
+    IDS_BMP_FILE    "Bitmap-Bilddatei"
+    IDS_PNG_FILE    "PNG-Bilddatei"
+    IDS_TIF_FILE    "TIF-Bilddatei"
+    IDS_WMF_FILE    "WMF-Bilddatei"
+END

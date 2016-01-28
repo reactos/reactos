@@ -35,6 +35,8 @@
 #include <rtlfuncs.h>
 #include <cmfuncs.h>
 
+WINE_DECLARE_DEBUG_CHANNEL(tid);
+
 ULONG
 NTAPI
 vDbgPrintExWithPrefix(
@@ -415,6 +417,9 @@ static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_ch
                              const char *file, const char *func, const int line, const char *format, va_list args )
 {
     int ret = 0;
+
+    if (TRACE_ON(tid))
+        ret += wine_dbg_printf("%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread));
 
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
         ret += wine_dbg_printf( "%s:", debug_classes[cls] );

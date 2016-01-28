@@ -602,6 +602,8 @@ DestroyDeviceInfo(struct DeviceInfo *deviceInfo)
             return FALSE;
     }
     DestroyClassInstallParams(&deviceInfo->ClassInstallParams);
+    if (deviceInfo->hmodDevicePropPageProvider)
+        FreeLibrary(deviceInfo->hmodDevicePropPageProvider);
     return HeapFree(GetProcessHeap(), 0, deviceInfo);
 }
 
@@ -622,6 +624,8 @@ DestroyDeviceInfoSet(struct DeviceInfoSet* list)
         RegCloseKey(list->HKLM);
     CM_Disconnect_Machine(list->hMachine);
     DestroyClassInstallParams(&list->ClassInstallParams);
+    if (list->hmodClassPropPageProvider)
+        FreeLibrary(list->hmodClassPropPageProvider);
     return HeapFree(GetProcessHeap(), 0, list);
 }
 
@@ -657,7 +661,7 @@ BOOL WINAPI SetupDiBuildClassInfoList(
  *              SetupDiBuildClassInfoListExA  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -704,7 +708,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExA(
  *              SetupDiBuildClassInfoListExW  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -1254,7 +1258,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
  * Create an empty DeviceInfoSet list.
  *
  * PARAMS
- *   ClassGuid [I] if not NULL only devices with GUID ClcassGuid are associated
+ *   ClassGuid [I] if not NULL only devices with GUID ClassGuid are associated
  *                 with this list.
  *   hwndParent [I] hwnd needed for interface related actions.
  *   MachineName [I] name of machine to create emtpy DeviceInfoSet list, if NULL
@@ -4715,7 +4719,7 @@ OpenHardwareProfileKey(
     rc = RegOpenKeyExW(HKLM,
                        REGSTR_PATH_HWPROFILES,
                        0,
-                       0,
+                       READ_CONTROL,
                        &hHWProfilesKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -4905,7 +4909,7 @@ SetupDiOpenDeviceInfoW(
                 list->HKLM,
                 REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
-                0,
+                READ_CONTROL,
                 &hEnumKey);
             if (rc != ERROR_SUCCESS)
             {
@@ -5693,7 +5697,7 @@ static HKEY SETUPDI_OpenDevKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
     HKEY enumKey, key = INVALID_HANDLE_VALUE;
     LONG l;
 
-    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, 0, &enumKey);
+    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, READ_CONTROL, &enumKey);
     if (!l)
     {
         l = RegOpenKeyExW(enumKey, devInfo->instanceId, 0, samDesired, &key);
@@ -5748,7 +5752,7 @@ static HKEY SETUPDI_OpenDrvKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
         RootKey,
         REGSTR_PATH_CLASS_NT,
         0, /* Options */
-        0,
+        READ_CONTROL,
         &hEnumKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -5773,6 +5777,8 @@ cleanup:
         RegCloseKey(hEnumKey);
     if (hKey != NULL && hKey != key)
         RegCloseKey(hKey);
+    if (DriverKey)
+        HeapFree(GetProcessHeap(), 0, DriverKey);
     return key;
 }
 

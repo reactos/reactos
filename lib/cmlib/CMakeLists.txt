@@ -1,12 +1,14 @@
 
 add_definitions(
-    -D_NTOSKRNL_
     -D_NTSYSTEM_
     -DNASSERT)
 
 list(APPEND SOURCE
     cminit.c
-    cmtools.c
+    cmindex.c
+    cmkeydel.c
+    cmname.c
+    cmvalue.c
     hivebin.c
     hivecell.c
     hiveinit.c
@@ -16,7 +18,7 @@ list(APPEND SOURCE
 
 if(CMAKE_CROSSCOMPILING)
     add_library(cmlib ${SOURCE})
-    add_dependencies(cmlib bugcodes)
+    add_dependencies(cmlib bugcodes xdk)
     add_pch(cmlib cmlib.h SOURCE)
 else()
     add_definitions(

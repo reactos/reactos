@@ -57,7 +57,7 @@ CsrSetToNormalPriority(VOID)
     NtSetInformationProcess(NtCurrentProcess(),
                             ProcessBasePriority,
                             &BasePriority,
-                            sizeof(KPRIORITY));
+                            sizeof(BasePriority));
 }
 
 /*++
@@ -79,7 +79,7 @@ VOID
 NTAPI
 CsrSetToShutdownPriority(VOID)
 {
-    KPRIORITY SetBasePriority = (8 + 1) + 6;
+    KPRIORITY BasePriority = (8 + 1) + 6;
     BOOLEAN Old;
 
     /* Get the shutdown privilege */
@@ -91,8 +91,8 @@ CsrSetToShutdownPriority(VOID)
         /* Set the Priority */
         NtSetInformationProcess(NtCurrentProcess(),
                                 ProcessBasePriority,
-                                &SetBasePriority,
-                                sizeof(KPRIORITY));
+                                &BasePriority,
+                                sizeof(BasePriority));
     }
 }
 
@@ -488,11 +488,11 @@ CsrCreateProcess(IN HANDLE hProcess,
         }
     }
 
-    /* Set the Exception port for us */
+    /* Set the Exception Port for us */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessExceptionPort,
                                      &CsrApiPort,
-                                     sizeof(HANDLE));
+                                     sizeof(CsrApiPort));
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -549,7 +549,7 @@ CsrCreateProcess(IN HANDLE hProcess,
         Status = NtSetInformationProcess(hProcess,
                                          ProcessDebugPort,
                                          &CsrApiPort,
-                                         sizeof(HANDLE));
+                                         sizeof(CsrApiPort));
         ASSERT(NT_SUCCESS(Status));
         if (!NT_SUCCESS(Status))
         {
@@ -563,7 +563,7 @@ CsrCreateProcess(IN HANDLE hProcess,
     /* Get the Thread Create Time */
     Status = NtQueryInformationThread(hThread,
                                       ThreadTimes,
-                                      (PVOID)&KernelTimes,
+                                      &KernelTimes,
                                       sizeof(KernelTimes),
                                       NULL);
     if (!NT_SUCCESS(Status))
@@ -1072,7 +1072,7 @@ CsrRevertToSelf(VOID)
     Status = NtSetInformationThread(NtCurrentThread(),
                                     ThreadImpersonationToken,
                                     &ImpersonationToken,
-                                    sizeof(HANDLE));
+                                    sizeof(ImpersonationToken));
 
     /* Return TRUE or FALSE */
     return NT_SUCCESS(Status);
@@ -1097,16 +1097,16 @@ VOID
 NTAPI
 CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess)
 {
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    PROCESS_FOREGROUND_BACKGROUND ProcessPriority;
 
     /* Set the Foreground bit off */
-    PriorityClass.Foreground = FALSE;
+    ProcessPriority.Foreground = FALSE;
 
-    /* Set the new Priority */
+    /* Set the new priority */
     NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+                            ProcessForegroundInformation,
+                            &ProcessPriority,
+                            sizeof(ProcessPriority));
 }
 
 /*++
@@ -1128,16 +1128,16 @@ VOID
 NTAPI
 CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
 {
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    PROCESS_FOREGROUND_BACKGROUND ProcessPriority;
 
     /* Set the Foreground bit on */
-    PriorityClass.Foreground = TRUE;
+    ProcessPriority.Foreground = TRUE;
 
-    /* Set the new Priority */
+    /* Set the new priority */
     NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+                            ProcessForegroundInformation,
+                            &ProcessPriority,
+                            sizeof(ProcessPriority));
 }
 
 /*++

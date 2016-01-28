@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/kddll.h
  * PURPOSE:         Base definitions for the kernel debugger.
- * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #ifndef _KDDLL_H_
@@ -13,22 +13,20 @@
 #include <ntifs.h>
 #include <windbgkd.h>
 
-//#define KDDEBUG /* uncomment to enable debugging this dll */
-
-typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
-extern PFNDBGPRNT KdpDbgPrint;
+// #define KDDEBUG /* uncomment to enable debugging this dll */
 
 #ifndef KDDEBUG
 #define KDDBGPRINT(...)
 #else
+extern ULONG KdpDbgPrint(const char* Format, ...);
 #define KDDBGPRINT KdpDbgPrint
 #endif
 
 typedef enum
 {
     KDP_PACKET_RECEIVED = 0,
-    KDP_PACKET_TIMEOUT = 1,
-    KDP_PACKET_RESEND = 2
+    KDP_PACKET_TIMEOUT  = 1,
+    KDP_PACKET_RESEND   = 2
 } KDP_STATUS;
 
 VOID

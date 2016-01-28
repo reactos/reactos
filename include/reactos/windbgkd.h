@@ -111,7 +111,10 @@
 #define DbgKdFillMemoryApi                  0x0000315B
 #define DbgKdQueryMemoryApi                 0x0000315C
 #define DbgKdSwitchPartition                0x0000315D
-#define DbgKdMaximumManipulate              0x0000315E
+#define DbgKdWriteCustomBreakpointApi       0x0000315E
+#define DbgKdGetContextExApi                0x0000315F
+#define DbgKdSetContextExApi                0x00003160
+#define DbgKdMaximumManipulate              0x00003161
 
 //
 // Debug I/O Types
@@ -705,6 +708,22 @@ typedef struct _DBGKD_SWITCH_PARTITION
     ULONG Partition;
 } DBGKD_SWITCH_PARTITION;
 
+typedef struct _DBGKD_CONTEXT_EX
+{
+   ULONG Offset;
+   ULONG ByteCount;
+   ULONG BytesCopied;
+} DBGKD_CONTEXT_EX, *PDBGKD_CONTEXT_EX;
+
+typedef struct _DBGKD_WRITE_CUSTOM_BREAKPOINT
+{
+   ULONG64 BreakPointAddress;
+   ULONG64 BreakPointInstruction;
+   ULONG BreakPointHandle;
+   UCHAR BreakPointInstructionSize;
+   UCHAR BreakPointInstructionAlignment;
+} DBGKD_WRITE_CUSTOM_BREAKPOINT, *PDBGKD_WRITE_CUSTOM_BREAKPOINT;
+
 //
 // DBGKD Structure for Manipulate
 //
@@ -773,6 +792,8 @@ typedef struct _DBGKD_MANIPULATE_STATE64
         DBGKD_FILL_MEMORY FillMemory;
         DBGKD_QUERY_MEMORY QueryMemory;
         DBGKD_SWITCH_PARTITION SwitchPartition;
+        DBGKD_WRITE_CUSTOM_BREAKPOINT WriteCustomBreakpoint;
+        DBGKD_CONTEXT_EX ContextEx;
     } u;
 } DBGKD_MANIPULATE_STATE64, *PDBGKD_MANIPULATE_STATE64;
 

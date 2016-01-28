@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/version.c
+ * FILE:            dll/win32/kernel32/client/version.c
  * PURPOSE:         Version functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
                     Ged Murphy (gedmurphy@reactos.org)
@@ -131,7 +131,7 @@ VerifyVersionInfoW(IN LPOSVERSIONINFOEXW lpVersionInformation,
             return FALSE;
 
         case STATUS_REVISION_MISMATCH:
-            DPRINT1("ReactOS returning version mismatch. Investigate!\n");
+            DPRINT1("VerifyVersionInfo -- Version mismatch\n");
             SetLastError(ERROR_OLD_WIN_VERSION);
             return FALSE;
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Logon User Interface Host
- * FILE:        subsys/system/logonui/logonui.c
+ * FILE:        base/system/logonui/logonui.c
  * PROGRAMMERS: Ged Murphy (gedmurphy@reactos.org)
  */
 
@@ -89,7 +89,7 @@ ParseCmdline(int argc, WCHAR* argv[])
 }
 
 static VOID
-Run()
+Run(VOID)
 {
     HWND hDesktopWnd;
     HDC hdcDesktop, hdcMem;

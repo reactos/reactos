@@ -51,11 +51,11 @@ unsigned long ntom_val(mpg123_handle *fr, off_t frame)
 	ntm = NTOM_MUL>>1; /* for frame 0 */
 	for(f=0; f<frame; ++f)   /* for frame > 0 */
 	{
-		ntm += spf(fr)*fr->ntom_step;
+		ntm += fr->spf*fr->ntom_step;
 		ntm -= (ntm/NTOM_MUL)*NTOM_MUL;
 	}
 #else /* Just make one computation with overall sample offset. */
-	ntm  = (NTOM_MUL>>1) + spf(fr)*frame*fr->ntom_step;
+	ntm  = (NTOM_MUL>>1) + fr->spf*frame*fr->ntom_step;
 	ntm -= (ntm/NTOM_MUL)*NTOM_MUL;
 #endif
 	return (unsigned long) ntm;
@@ -74,7 +74,7 @@ off_t ntom_frame_outsamples(mpg123_handle *fr)
 {
 	/* The do this before decoding the separate channels, so there is only one common ntom value. */
 	int ntm = fr->ntom_val[0];
-	ntm += spf(fr)*fr->ntom_step;
+	ntm += fr->spf*fr->ntom_step;
 	return ntm/NTOM_MUL;
 }
 
@@ -90,12 +90,12 @@ off_t ntom_frmouts(mpg123_handle *fr, off_t frame)
 	if(frame <= 0) return 0;
 	for(f=0; f<frame; ++f)
 	{
-		ntm  += spf(fr)*fr->ntom_step;
+		ntm  += fr->spf*fr->ntom_step;
 		soff += ntm/NTOM_MUL;
 		ntm  -= (ntm/NTOM_MUL)*NTOM_MUL;
 	}
 #else
-	soff = (ntm + frame*(off_t)spf(fr)*(off_t)fr->ntom_step)/(off_t)NTOM_MUL;
+	soff = (ntm + frame*(off_t)fr->spf*(off_t)fr->ntom_step)/(off_t)NTOM_MUL;
 #endif
 	return soff;
 }
@@ -107,7 +107,7 @@ off_t ntom_ins2outs(mpg123_handle *fr, off_t ins)
 	off_t ntm = ntom_val(fr,0);
 #ifdef SAFE_NTOM
 	{
-		off_t block = spf(fr);
+		off_t block = fr->spf;
 		if(ins <= 0) return 0;
 		do
 		{
@@ -135,7 +135,7 @@ off_t ntom_frameoff(mpg123_handle *fr, off_t soff)
 	if(soff <= 0) return 0;
 	for(ioff=0; 1; ++ioff)
 	{
-		ntm  += spf(fr)*fr->ntom_step;
+		ntm  += fr->spf*fr->ntom_step;
 		if(ntm/NTOM_MUL > soff) break;
 		soff -= ntm/NTOM_MUL;
 		ntm  -= (ntm/NTOM_MUL)*NTOM_MUL;
@@ -143,6 +143,6 @@ off_t ntom_frameoff(mpg123_handle *fr, off_t soff)
 	return ioff;
 #else
 	ioff = (soff*(off_t)NTOM_MUL-ntm)/(off_t)fr->ntom_step;
-	return ioff/(off_t)spf(fr);
+	return ioff/(off_t)fr->spf;
 #endif
 }

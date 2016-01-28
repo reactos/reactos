@@ -25,25 +25,7 @@
 /***********************************************************************
  *           Data
  */
-
-static PLOADED_IMAGE IMAGEHLP_pFirstLoadedImage=NULL;
-
-static LOADED_IMAGE IMAGEHLP_EmptyLoadedImage = {
-  NULL,       /* ModuleName */
-  0,          /* hFile */
-  NULL,       /* MappedAddress */
-  NULL,       /* FileHeader */
-  NULL,       /* LastRvaSection */
-  0,          /* NumberOfSections */
-  NULL,       /* Sections */
-  1,          /* Characteristics */
-  FALSE,      /* fSystemImage */
-  FALSE,      /* fDOSImage */
-  FALSE,      /* fReadOnly */
-  0,          /* Version */
-  { &IMAGEHLP_EmptyLoadedImage.Links, &IMAGEHLP_EmptyLoadedImage.Links }, /* Links */
-  148,        /* SizeOfImage; */
-};
+LIST_ENTRY image_list = { &image_list, &image_list };
 
 DECLSPEC_HIDDEN extern HANDLE IMAGEHLP_hHeap;
 
@@ -78,57 +60,69 @@ DWORD WINAPI GetImageUnusedHeaderBytes(
 /***********************************************************************
  *		ImageLoad (IMAGEHLP.@)
  */
-PLOADED_IMAGE WINAPI ImageLoad(PCSTR DllName, PCSTR DllPath)
+PLOADED_IMAGE WINAPI ImageLoad(PCSTR dll_name, PCSTR dll_path)
 {
-  PLOADED_IMAGE pLoadedImage;
+    LOADED_IMAGE *image;
 
-  FIXME("(%s, %s): stub\n", DllName, DllPath);
-	  
-  pLoadedImage = HeapAlloc(IMAGEHLP_hHeap, 0, sizeof(LOADED_IMAGE));
-  if (pLoadedImage)
-    pLoadedImage->FileHeader = HeapAlloc(IMAGEHLP_hHeap, 0, sizeof(IMAGE_NT_HEADERS));
-  
-  return pLoadedImage;
+    TRACE("(%s, %s)\n", dll_name, dll_path);
+
+    image = HeapAlloc(IMAGEHLP_hHeap, 0, sizeof(*image));
+    if (!image) return NULL;
+
+    if (!MapAndLoad(dll_name, dll_path, image, TRUE, TRUE))
+    {
+        HeapFree(IMAGEHLP_hHeap, 0, image);
+        return NULL;
+    }
+
+    image->Links.Flink = image_list.Flink;
+    image->Links.Blink = &image_list;
+    image_list.Flink->Blink = &image->Links;
+    image_list.Flink = &image->Links;
+
+    return image;
 }
 
 /***********************************************************************
  *		ImageUnload (IMAGEHLP.@)
  */
-BOOL WINAPI ImageUnload(PLOADED_IMAGE pLoadedImage)
+BOOL WINAPI ImageUnload(PLOADED_IMAGE loaded_image)
 {
-  LIST_ENTRY *pCurrent, *pFind;
+    LIST_ENTRY *entry, *mark;
+    PLOADED_IMAGE image;
 
-  TRACE("(%p)\n", pLoadedImage);
-  
-  if(!IMAGEHLP_pFirstLoadedImage || !pLoadedImage)
+    FIXME("(%p)\n", loaded_image);
+
+    if (!loaded_image)
     {
-      /* No image loaded or null pointer */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
+        /* No image loaded or null pointer */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
-  pFind=&pLoadedImage->Links;
-  pCurrent=&IMAGEHLP_pFirstLoadedImage->Links;
-  while((pCurrent != pFind) &&
-    (pCurrent != NULL))
-      pCurrent = pCurrent->Flink;
-  if(!pCurrent)
+    /* FIXME: do we really need to check this? */
+    mark = &image_list;
+    for (entry = mark->Flink; entry != mark; entry = entry->Flink)
     {
-      /* Not found */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
+        image = CONTAINING_RECORD(entry, LOADED_IMAGE, Links);
+        if (image == loaded_image)
+            break;
     }
 
-  if(pCurrent->Blink)
-    pCurrent->Blink->Flink = pCurrent->Flink;
-  else
-    IMAGEHLP_pFirstLoadedImage = pCurrent->Flink?CONTAINING_RECORD(
-      pCurrent->Flink, LOADED_IMAGE, Links):NULL;
+    if (entry == mark)
+    {
+        /* Not found */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  if(pCurrent->Flink)
-    pCurrent->Flink->Blink = pCurrent->Blink;
+    entry->Blink->Flink = entry->Flink;
+    entry->Flink->Blink = entry->Blink;
 
-  return FALSE;
+    UnMapAndLoad(loaded_image);
+    HeapFree(IMAGEHLP_hHeap, 0, loaded_image);
+
+    return TRUE;
 }
 
 /***********************************************************************

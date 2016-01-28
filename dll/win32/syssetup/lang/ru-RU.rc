@@ -47,7 +47,7 @@ BEGIN
     LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "При установке будет создан профиль пользователя с именем Administrator Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "При установке будет создан профиль пользователя с именем Administrator. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Введите пароль администратора (не более 127 символов).", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -103,7 +103,7 @@ BEGIN
     LTEXT "Завершение мастера установки ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Вы успешно закончили установку ReactOS.\n\nНажмите ""Готово"" для перезагрузки вашего компьютера.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Если в CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Если CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -118,7 +118,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Пожалуйста подождите..."
-FONT 8, "MS Shell Dlg 2", 400, 0, 1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
@@ -126,7 +126,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Подтверждение лицензии"
-    IDS_ACKSUBTITLE "Информация о разработчиках ReactOS и лизензионное соглашение."
+    IDS_ACKSUBTITLE "Информация о разработчиках ReactOS и лицензионное соглашение."
     IDS_OWNERTITLE "Персональные данные"
     IDS_OWNERSUBTITLE "Установка информации о пользователях ReactOS."
     IDS_COMPUTERTITLE "Имя компьютера и пароль администратора"
@@ -148,7 +148,7 @@ BEGIN
     IDS_GETPROCADDR_FAILED "Ошибка GetProcAddr: "
     IDS_REGSVR_FAILED "Ошибка DllRegisterServer: "
     IDS_DLLINSTALL_FAILED "Ошибка DllInstall: "
-    IDS_TIMEOUT "Таймаут в ходе регистрации"
+    IDS_TIMEOUT "Тайм-аут в ходе регистрации"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION: 
@@ -157,6 +157,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Владелец"
 END
 
 STRINGTABLE

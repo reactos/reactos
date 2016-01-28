@@ -560,5 +560,7 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = i8042SystemControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP]     = i8042Pnp;
 
+    i8042InitializeHwHacks();
+
 	return STATUS_SUCCESS;
 }

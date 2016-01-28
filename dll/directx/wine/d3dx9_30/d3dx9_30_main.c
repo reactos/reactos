@@ -35,6 +35,10 @@
 
 #include <d3dx9.h>
 
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+
 /***********************************************************************
  * DllMain.
  */
@@ -61,4 +65,18 @@ BOOL WINAPI D3DXCheckVersion(UINT d3dsdkvers, UINT d3dxsdkvers)
         return TRUE;
     else
         return FALSE;
+}
+
+typedef enum _D3DX_CPU_OPTIMIZATION
+{
+    D3DX_NOT_OPTIMIZED      = 0,
+    D3DX_3DNOW_OPTIMIZED    = 1,
+    D3DX_SSE2_OPTIMIZED     = 2,
+    D3DX_SSE_OPTIMIZED      = 3
+} D3DX_CPU_OPTIMIZATION;
+
+D3DX_CPU_OPTIMIZATION WINAPI D3DXCpuOptimizations(BOOL enable)
+{
+    FIXME("%i - stub\n", enable);
+    return D3DX_NOT_OPTIMIZED;
 }

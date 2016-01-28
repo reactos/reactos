@@ -1,8 +1,8 @@
-	.section .text
-	.globl ofw_functions
-	.globl ofw_call_addr
-	.globl call_ofw
-call_ofw:	
+    .section .text
+    .globl ofw_functions
+    .globl ofw_call_addr
+    .globl call_ofw
+call_ofw:
        /* R3 has the function offset to call (n * 4)
         * Other arg registers are unchanged. */
        subi    %r1,%r1,0x100
@@ -46,4 +46,3 @@ call_ofw:
        lwz     %r20,36(%r1)
        addi    %r1,%r1,0x100
        blr
-

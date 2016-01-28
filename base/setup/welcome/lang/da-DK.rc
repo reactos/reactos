@@ -7,7 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Velkommen"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Velkommen til ReactOs operativ System.\n\nKlik på et emne til venstre."
+    IDS_DEFAULTTOPICDESC "Velkommen til ReactOS operativ System.\n\nKlik på et emne til venstre."
 //    IDS_CHECKTEXT "Vis denne dialog igen ved opstart"
 //    IDS_CLOSETEXT "Afslut"
 END
@@ -46,7 +46,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOPICDESC0 "Opret en ny ReactOS installation på din computer eller opgradere en eksisterende installation."
-    IDS_TOPICDESC1 "Gennemse Reactos Installations Cdrom"
+    IDS_TOPICDESC1 "Gennemse ReactOS Installations Cdrom"
     IDS_TOPICDESC2 "Klik på Afslut for at lukke."
 //    IDS_TOPICDESC3 "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4 "Topic description 4.\n\nDescribe topic 4 here."

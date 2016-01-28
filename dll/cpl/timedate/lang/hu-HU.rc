@@ -4,16 +4,16 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "D·tum Ès idı"
+CAPTION "D√°tum √©s id≈ë"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&D·tum", -1, 4, 2, 122, 125
+    GROUPBOX "&D√°tum", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT, 65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 120, 17, 50, 12
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&Idı", -1, 132, 2, 113, 125
+    GROUPBOX "&Id≈ë", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 144, 105, 90, 12
     LTEXT "", IDC_TIMEZONE, 6, 132, 242, 11
     CONTROL "", IDC_CLOCKWND, "ClockWndClass", WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
@@ -21,39 +21,39 @@ END
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "IdızÛna"
+CAPTION "Id≈ëz√≥na"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Automatikus ·t·ll·s a ny·ri idısz·mÌt·sra",
+    AUTOCHECKBOX "Automatikus √°t√°ll√°s a ny√°ri id≈ësz√°m√≠t√°sra",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet Idı"
+CAPTION "Internet Id≈ë"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Szinkroniz·lja a sz·mÌtÛgÈp Ûr·j·t egy internetes kiszolg·lÛval",
+    AUTOCHECKBOX "Szinkroniz√°lja a sz√°m√≠t√≥g√©p √≥r√°j√°t egy internetes kiszolg√°l√≥val",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT "Kiszolg·lÛ:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Szinkroniz·ljon most", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT "Kiszolg√°l√≥:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON "Szinkroniz√°ljon most", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "A szinkroniz·l·s csak akkˆr tˆrtÈnhet meg, ha az internetre fel van csatlakozva a gÈp.", -1, 12, 114, 225, 25
+    LTEXT "A szinkroniz√°l√°s csak akk√∂r t√∂rt√©nhet meg, ha az internetre fel van csatlakozva a g√©p.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "D·tum Ès idı"
-    IDS_CPLDESCRIPTION "D·tum, idı Ès idızÛna be·llÌt·sa."
-    IDS_TIMEZONETEXT "Haszn·lt idızÛna: %s"
-    IDS_TIMEZONEINVALID "…rvÈnytelen"
+    IDS_CPLNAME "D√°tum √©s id≈ë"
+    IDS_CPLDESCRIPTION "D√°tum, id≈ë √©s id≈ëz√≥na be√°ll√≠t√°sa."
+    IDS_TIMEZONETEXT "Haszn√°lt id≈ëz√≥na: %s"
+    IDS_TIMEZONEINVALID "√ârv√©nytelen"
     IDS_TIMEZONEUNKNOWN "Ismeretlen"
-    IDS_INETTIMESUCSYNC "A sz·mÌtÛgÈp Ûr·ja sikeresen szinkroniz·lva lett: %s (%s %s-kor)"
-    IDS_INETTIMENEXTSYNC "A kˆvetkezı szinkroniz·l·s: %s %s-kor"
+    IDS_INETTIMESUCSYNC "A sz√°m√≠t√≥g√©p √≥r√°ja sikeresen szinkroniz√°lva lett: %s (%s %s-kor)"
+    IDS_INETTIMENEXTSYNC "A k√∂vetkez≈ë szinkroniz√°l√°s: %s %s-kor"
     IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
     IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
 END

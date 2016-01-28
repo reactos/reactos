@@ -147,7 +147,7 @@ DELAY [/m]n\n\n\
   /m          specifikoni se n janë millisekonda\n\
               ndryshe n janë sekonda\n"
     STRING_DIR_HELP1 "DIR [drive:][rrugë][emer] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]radhitje]] [/P] [/Q] [/S] [/T[[:]koha]] [/W] [/X] [/4]\n\n\
+  [/O[[:]radhitje]] [/P] [/Q] [/R] [/S] [/T[[:]koha]] [/W] [/X] [/4]\n\n\
   [drive:][rrugë][emer]\n\
               Përcakton, Drejtorin, dhe / ose dokumentin në listë.\n\n\
   /A          Shfaq dokumentat me atributet e specifikuara.\n\
@@ -166,6 +166,7 @@ DELAY [/m]n\n\n\
                G  Grupi skedave se pari      -  Parashtese të kthejë renditjen\n\
   /P          Pauzo pas çdo informacioni në ekran.\n\
   /Q          Shfaq zotëruesin e dosjes.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Shfaq dokumentet në skedën e specifikuar dhe të gjitha nën-skedat.\n\
   /T          Kontrollon secilen fushë kohohore e shfaqura ose e përdorur për klasifikimin\n\
   timefield   C  Krijim\n\
@@ -500,7 +501,6 @@ title         titull i ri\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
     STRING_REN_ERROR1 "MoveFile() dështoj. Error: %lu\n"
-    STRING_START_ERROR1 "Nuk ka mbështetje në këtë moment bër dokumentin batch!"
     STRING_TIME_ERROR1 "Ora invalide."
     STRING_TYPE_ERROR1 "opsion ivalid '/%s'\n"
     STRING_WINDOW_ERROR1 "dritaria nuk i gjend"
@@ -525,9 +525,11 @@ title         titull i ri\n"
     STRING_REPLACE_ERROR5 "Refuzot hyrja - %s\n"
     STRING_REPLACE_ERROR6 "Nuk u gjet dokumenti - %s\n"
     STRING_REPLACE_ERROR7 "Error i zgjatur 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "Sistemi Operativ ReactOS [Versioni %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Interpretuesi i komandave\nVersioni %s %s"
-    STRING_VERSION_RUNVER " funksionon në %s"
+    STRING_VERSION_RUNNING_ON "Funksionon në: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(s) copied\n"
     STRING_DELETE_WIPE "spastruar"
     STRING_FOR_ERROR "specifikimi i varibleve i keq."

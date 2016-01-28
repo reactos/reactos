@@ -2,11 +2,20 @@
 # Show a note about ccache build
 if(ENABLE_CCACHE)
     message("-- Enabling ccache build - done")
+    set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+    set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
 endif()
 
 # PDB style debug info
 if(NOT DEFINED SEPARATE_DBG)
     set(SEPARATE_DBG FALSE)
+endif()
+
+# Dwarf based builds (no rsym)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(NO_ROSSYM TRUE)
+elseif(NOT DEFINED NO_ROSSYM)
+    set(NO_ROSSYM FALSE)
 endif()
 
 if(NOT DEFINED USE_PSEH3)
@@ -25,8 +34,16 @@ if(USE_DUMMY_PSEH)
     add_definitions(-D_USE_DUMMY_PSEH=1)
 endif()
 
+if(STACK_PROTECTOR)
+    add_compile_flags(${MODULE} "-fstack-protector-all")
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
+
+# Prevent GCC from searching any of the default directories
+add_compile_flags("-nostdinc")
+
 if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
@@ -70,12 +87,14 @@ if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT SEPARATE_DBG))
 endif()
 
 # Debugging
-if(SEPARATE_DBG)
-    add_compile_flags("-gdwarf-2 -ggdb")
-else()
-    add_compile_flags("-gdwarf-2 -gstrict-dwarf")
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_flags("-femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(SEPARATE_DBG)
+        add_compile_flags("-gdwarf-2 -ggdb")
+    else()
+        add_compile_flags("-gdwarf-2 -gstrict-dwarf")
+        if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            add_compile_flags("-femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+        endif()
     endif()
 endif()
 
@@ -92,7 +111,7 @@ else()
 endif()
 
 # Warnings, errors
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
     add_compile_flags("-Werror")
 endif()
 
@@ -101,10 +120,7 @@ add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-maybe-uninitialized")
-    add_compile_flags("-Wno-error=unused-but-set-variable")
 endif()
-
-add_compile_flags("-Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
@@ -113,20 +129,25 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 # Optimizations
-if(OPTIMIZE STREQUAL "1")
-    add_compile_flags("-Os -ftracer")
-elseif(OPTIMIZE STREQUAL "2")
-    add_compile_flags("-Os")
-elseif(OPTIMIZE STREQUAL "3")
-    add_compile_flags("-Og")
-elseif(OPTIMIZE STREQUAL "4")
-    add_compile_flags("-O1")
-elseif(OPTIMIZE STREQUAL "5")
-    add_compile_flags("-O2")
-elseif(OPTIMIZE STREQUAL "6")
-    add_compile_flags("-O3")
-elseif(OPTIMIZE STREQUAL "7")
-    add_compile_flags("-Ofast")
+# FIXME: Revisit this to see if we even need these levels
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_flags("-O2 -DNDEBUG")
+else()
+    if(OPTIMIZE STREQUAL "1")
+        add_compile_flags("-Os -ftracer")
+    elseif(OPTIMIZE STREQUAL "2")
+        add_compile_flags("-Os")
+    elseif(OPTIMIZE STREQUAL "3")
+        add_compile_flags("-Og")
+    elseif(OPTIMIZE STREQUAL "4")
+        add_compile_flags("-O1")
+    elseif(OPTIMIZE STREQUAL "5")
+        add_compile_flags("-O2")
+    elseif(OPTIMIZE STREQUAL "6")
+        add_compile_flags("-O3")
+    elseif(OPTIMIZE STREQUAL "7")
+        add_compile_flags("-Ofast")
+    endif()
 endif()
 
 # Link-time code generation
@@ -194,9 +215,23 @@ if(SEPARATE_DBG)
         "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
         "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         "${OBJCOPY} --strip-debug <TARGET>")
+elseif(NO_ROSSYM)
+    # Dwarf-based build
+    message(STATUS "Generating a dwarf-based build (no rsym)")
+    set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 else()
     # Normal rsym build
-    get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
+    if(NEW_STYLE_BUILD)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
+        get_target_property(RSYM native-rsym IMPORTED_LOCATION_${_build_type})
+    else()
+        get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
+    endif()
+    
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
@@ -216,12 +251,14 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Release"))
+    # FIXME: Set this once Clang toolchain works with it
     set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
 endif()
 
-SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <FLAGS> -o <OBJECT> -c <SOURCE>")
-SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <FLAGS> -o <OBJECT> -c <SOURCE>")
+# FIXME: Once the GCC toolchain bugs are fixed, add _compress_debug_sections_flag to CXX too
+set(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
@@ -268,6 +305,10 @@ function(set_module_type_toolchain MODULE TYPE)
             add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
         endif()
     endif()
+    
+    if(STACK_PROTECTOR)
+        target_link_libraries(${MODULE} gcc_ssp)
+    endif()
 endfunction()
 
 function(add_delay_importlibs _module)
@@ -289,7 +330,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
@@ -306,14 +347,8 @@ endfunction()
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    # Do we also want to add importlib targets?
-    if(${ARGC} GREATER 2)
-        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
-            set(__add_importlib TRUE)
-        else()
-            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
-        endif()
-    endif()
+    
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -323,14 +358,23 @@ function(spec2def _dllname _spec_file)
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
+    if (__spec2def_WITH_RELAY)
+        set(__with_relay_arg "--with-tracing")
+    endif()
+
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(__add_importlib)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+    if(__spec2def_ADD_IMPORTLIB)
+        set(_extraflags)
+        if(__spec2def_NO_PRIVATE_WARNINGS)
+            set(_extraflags --no-private-warnings)
+        endif()
+        
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
     endif()
 endfunction()
 
@@ -342,7 +386,7 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-if(PCH)
+if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
     add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first
@@ -364,10 +408,6 @@ if(PCH)
             EXTERNAL_SOURCE TRUE
             OBJECT_LOCATION ${_gch})
 
-        if(ENABLE_CCACHE)
-            set(_ccache_flag "-fpch-preprocess")
-        endif()
-
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
         foreach(_src ${${_sources}})
@@ -385,7 +425,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -D__ASM__ -c ${_asm_file}
+        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -I${REACTOS_SOURCE_DIR}/boot/freeldr -D__ASM__ -c ${_asm_file}
         DEPENDS ${_asm_file})
 
     add_custom_command(
@@ -401,7 +441,8 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 endfunction()
 
 function(allow_warnings __module)
-    add_target_compile_flags(${__module} "-Wno-error")
+    # We don't allow warnings in trunk, this needs to be reworked. See CORE-6959.
+    #add_target_compile_flags(${__module} "-Wno-error")
 endfunction()
 
 macro(add_asm_files _target)

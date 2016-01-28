@@ -15,7 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef BOOL (WINAPI *PUSER_SOUND_SENTRY)(VOID);
+typedef BOOL (NTAPI *PUSER_SOUND_SENTRY)(VOID);
 BOOL NTAPI FirstSoundSentry(VOID);
 
 static PUSER_SOUND_SENTRY _UserSoundSentry = FirstSoundSentry;
@@ -50,7 +50,7 @@ FirstSoundSentry(VOID)
                                         0,
                                         (PVOID*)&NewSoundSentry);
     }
-    
+
     /* Set it as the callback for the future, and call it */
     _UserSoundSentry = NewSoundSentry;
     return _UserSoundSentry();

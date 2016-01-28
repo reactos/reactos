@@ -1,0 +1,7 @@
+; Beep device driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ImagePath",0x00020000,"system32\drivers\beep.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Type",0x00010001,0x00000001

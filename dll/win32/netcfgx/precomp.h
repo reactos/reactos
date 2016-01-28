@@ -19,6 +19,7 @@
 #include <setupapi.h>
 #include <netcfgn.h>
 #include <devguid.h>
+#include <commctrl.h>
 
 #include "resource.h"
 

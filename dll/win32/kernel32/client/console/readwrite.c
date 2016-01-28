@@ -1172,6 +1172,7 @@ IntFillConsoleOutputCode(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleW(IN HANDLE hConsoleInput,
              OUT LPVOID lpBuffer,
              IN DWORD nNumberOfCharsToRead,
@@ -1192,6 +1193,7 @@ ReadConsoleW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleA(IN HANDLE hConsoleInput,
              OUT LPVOID lpBuffer,
              IN DWORD nNumberOfCharsToRead,
@@ -1212,6 +1214,7 @@ ReadConsoleA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PeekConsoleInputW(IN HANDLE hConsoleInput,
                   OUT PINPUT_RECORD lpBuffer,
                   IN DWORD nLength,
@@ -1231,6 +1234,7 @@ PeekConsoleInputW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PeekConsoleInputA(IN HANDLE hConsoleInput,
                   OUT PINPUT_RECORD lpBuffer,
                   IN DWORD nLength,
@@ -1250,6 +1254,7 @@ PeekConsoleInputA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleInputW(IN HANDLE hConsoleInput,
                   OUT PINPUT_RECORD lpBuffer,
                   IN DWORD nLength,
@@ -1269,6 +1274,7 @@ ReadConsoleInputW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleInputA(IN HANDLE hConsoleInput,
                   OUT PINPUT_RECORD lpBuffer,
                   IN DWORD nLength,
@@ -1288,6 +1294,7 @@ ReadConsoleInputA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleInputExW(IN HANDLE hConsoleInput,
                     OUT PINPUT_RECORD lpBuffer,
                     IN DWORD nLength,
@@ -1308,6 +1315,7 @@ ReadConsoleInputExW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleInputExA(IN HANDLE hConsoleInput,
                     OUT PINPUT_RECORD lpBuffer,
                     IN DWORD nLength,
@@ -1328,6 +1336,7 @@ ReadConsoleInputExA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleOutputW(IN HANDLE hConsoleOutput,
                    OUT PCHAR_INFO lpBuffer,
                    IN COORD dwBufferSize,
@@ -1348,6 +1357,7 @@ ReadConsoleOutputW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleOutputA(IN HANDLE hConsoleOutput,
                    OUT PCHAR_INFO lpBuffer,
                    IN COORD dwBufferSize,
@@ -1368,6 +1378,7 @@ ReadConsoleOutputA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
                             OUT LPWSTR lpCharacter,
                             IN DWORD nLength,
@@ -1388,6 +1399,7 @@ ReadConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
                             OUT LPSTR lpCharacter,
                             IN DWORD nLength,
@@ -1408,6 +1420,7 @@ ReadConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReadConsoleOutputAttribute(IN HANDLE hConsoleOutput,
                            OUT LPWORD lpAttribute,
                            IN DWORD nLength,
@@ -1432,6 +1445,7 @@ ReadConsoleOutputAttribute(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleW(IN HANDLE hConsoleOutput,
               IN CONST VOID *lpBuffer,
               IN DWORD nNumberOfCharsToWrite,
@@ -1452,6 +1466,7 @@ WriteConsoleW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleA(IN HANDLE hConsoleOutput,
               IN CONST VOID *lpBuffer,
               IN DWORD nNumberOfCharsToWrite,
@@ -1472,6 +1487,7 @@ WriteConsoleA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleInputW(IN HANDLE hConsoleInput,
                    IN CONST INPUT_RECORD *lpBuffer,
                    IN DWORD nLength,
@@ -1491,6 +1507,7 @@ WriteConsoleInputW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleInputA(IN HANDLE hConsoleInput,
                    IN CONST INPUT_RECORD *lpBuffer,
                    IN DWORD nLength,
@@ -1510,6 +1527,7 @@ WriteConsoleInputA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleInputVDMW(IN HANDLE hConsoleInput,
                       IN CONST INPUT_RECORD *lpBuffer,
                       IN DWORD nLength,
@@ -1529,6 +1547,7 @@ WriteConsoleInputVDMW(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleInputVDMA(IN HANDLE hConsoleInput,
                       IN CONST INPUT_RECORD *lpBuffer,
                       IN DWORD nLength,
@@ -1548,6 +1567,7 @@ WriteConsoleInputVDMA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleOutputW(IN HANDLE hConsoleOutput,
                     IN CONST CHAR_INFO *lpBuffer,
                     IN COORD dwBufferSize,
@@ -1568,6 +1588,7 @@ WriteConsoleOutputW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleOutputA(IN HANDLE hConsoleOutput,
                     IN CONST CHAR_INFO *lpBuffer,
                     IN COORD dwBufferSize,
@@ -1588,6 +1609,7 @@ WriteConsoleOutputA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
                              IN LPCWSTR lpCharacter,
                              IN DWORD nLength,
@@ -1608,6 +1630,7 @@ WriteConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
                              IN LPCSTR lpCharacter,
                              IN DWORD nLength,
@@ -1628,6 +1651,7 @@ WriteConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 WriteConsoleOutputAttribute(IN HANDLE hConsoleOutput,
                             IN CONST WORD *lpAttribute,
                             IN DWORD nLength,
@@ -1648,6 +1672,7 @@ WriteConsoleOutputAttribute(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 FillConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
                             IN WCHAR cCharacter,
                             IN DWORD nLength,
@@ -1670,6 +1695,7 @@ FillConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 FillConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
                             IN CHAR cCharacter,
                             IN DWORD nLength,
@@ -1692,6 +1718,7 @@ FillConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 FillConsoleOutputAttribute(IN HANDLE hConsoleOutput,
                            IN WORD wAttribute,
                            IN DWORD nLength,

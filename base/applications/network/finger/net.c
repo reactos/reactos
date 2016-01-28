@@ -128,4 +128,5 @@ netfinger(char *name)
 	if (lastc != '\n')
 		putchar('\n');
 	putchar('\n');
+	(void)closesocket(s);
 }

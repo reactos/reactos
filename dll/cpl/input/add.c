@@ -1,6 +1,6 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/win32/input/add.c
+ * FILE:            dll/cpl/input/add.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck

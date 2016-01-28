@@ -748,7 +748,7 @@ static HRESULT WINAPI IWICStreamImpl_QueryInterface(IWICStream *iface,
     if (IsEqualIID(&IID_IUnknown, iid) || IsEqualIID(&IID_IStream, iid) ||
         IsEqualIID(&IID_ISequentialStream, iid) || IsEqualIID(&IID_IWICStream, iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICStream_iface;
         IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }

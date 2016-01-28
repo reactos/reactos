@@ -302,10 +302,10 @@ BEGIN
     CONTROL "C&hyby stránkovania pamäte", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 102, 10
     CONTROL "O&bjekty USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
     CONTROL "Vstup a výstup - čítanie", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 92, 10
-    CONTROL "Vstup a výstup - prečítané bajty", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 112, 10
+    CONTROL "Vstup a výstup - prečítané bajty", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 115, 10
     CONTROL "&Identifikácia relácie", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 73, 10
     CONTROL "&Meno používateľa", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 71, 10
-    CONTROL "Rozdiel &chýb stránkovania pamäte", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 28, 120, 10
+    CONTROL "Rozdiel &chýb stránkovania pamäte", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 28, 125, 10
     CONTROL "V&eľkosť virtuálnej pamäte", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 39, 97, 10
     CONTROL "Stránkovaný &fond", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 50, 73, 10
     CONTROL "Nes&tránkovaný fond", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 61, 77, 10
@@ -314,9 +314,10 @@ BEGIN
     CONTROL "&Počet vlákien", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 94, 59, 10
     CONTROL "Objekty &GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 105, 55, 10
     CONTROL "Vstup a výstup - zápis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 116, 92, 10
-    CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 112, 10
+    CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 115, 10
     CONTROL "Vstup a výstup - iné", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 138, 77, 10
     CONTROL "Vstup a výstup - iné bajty", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 149, 97, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 160, 95, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Vstup a výstup - prečítané bajty"
     IDS_TAB_IOWRITESBYTES "Vstup a výstup - zapísané bajty"
     IDS_TAB_IOOTHERBYTES "Vstup a výstup - iné bajty"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Vybrať stĺpce..."
     IDS_MENU_16BITTASK "&Zobraziť 16-bitové úlohy"
     IDS_MENU_WINDOWS "&Okna"
@@ -432,10 +434,11 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Upozornenie Správcu úloh"
     IDS_MSG_WARNINGTERMINATING "UPOZORNENIE: Ukončenie procesu môže mať nežiadúce\ndôsledky vrátane nestability systému.\nStav alebo údaje o procese sa nebudú dať\npred ukončením uložiť.\nNaozaj chcete proces ukončiť?"
     IDS_MSG_UNABLETERMINATEPRO "Proces sa nedá ukončiť."
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Priorita sa nedá zmeniť."
     IDS_MSG_WARNINGCHANGEPRIORITY "UPOZORNENIE: Zmena triedy priority procesu môže mať\nnežiadúce dôsledky vrátane nestability systému.\nNaozaj chcete zmeniť triedu priority procesu?"
     IDS_MSG_TRAYICONCPUUSAGE "Využitie procesora: %d%%"
-    IDS_STATUS_MEMUSAGE "Využitá pamäť: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Využitá pamäť: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Využitie procesora: %3d%%"
     IDS_STATUS_PROCESSES "Procesy: %d"
     IDS_NOT_RESPONDING "Neodpovedá"

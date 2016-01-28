@@ -126,7 +126,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
 {
     RECT rect;
     HFONT hPrevFont;
-    HBRUSH hBrush = 0;
+    HBRUSH hBrush;
     COLORREF textColor = 0;
 
     if( bActive )
@@ -213,7 +213,7 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
 	case WM_CLOSE:
 	     return 0;
 	case WM_SHOWWINDOW:
-            if (wParam) ICONTITLE_SetTitlePos( hWnd, owner );
+             if (wParam) ICONTITLE_SetTitlePos( hWnd, owner );
 	     return 0;
 	case WM_ERASEBKGND:
             if( GetWindowLongPtrW( owner, GWL_STYLE ) & WS_CHILD )

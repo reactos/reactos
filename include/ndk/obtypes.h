@@ -86,6 +86,12 @@ typedef enum _OBJECT_INFORMATION_CLASS
 #else
 
 //
+// Undocumented Attribute for Kernel-Only Access
+//
+#define OBJ_KERNEL_EXCLUSIVE                    0x00010000L
+#define OBJ_VALID_KERNEL_ATTRIBUTES             (OBJ_VALID_ATTRIBUTES | \
+                                                 OBJ_KERNEL_EXCLUSIVE)
+//
 // Object Flags
 //
 #define OB_FLAG_CREATE_INFO                     0x01
@@ -96,6 +102,11 @@ typedef enum _OBJECT_INFORMATION_CLASS
 #define OB_FLAG_SECURITY                        0x20
 #define OB_FLAG_SINGLE_PROCESS                  0x40
 #define OB_FLAG_DEFER_DELETE                    0x80
+
+//
+// Object Flags encoded in "QueryReferences" field
+//
+#define OB_FLAG_KERNEL_EXCLUSIVE                0x40000000
 
 #define OBJECT_TO_OBJECT_HEADER(o)                          \
     CONTAINING_RECORD((o), OBJECT_HEADER, Body)

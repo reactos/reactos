@@ -30,32 +30,6 @@ BOOL WINAPI pSetupRegistryDelnode(DWORD x, DWORD y)
 }
 
 /***********************************************************************
- *      SetupCloseLog(SETUPAPI.@)
- */
-void WINAPI SetupCloseLog(void)
-{
-    FIXME("() stub\n");
-}
-
-/***********************************************************************
- *      SetupLogErrorW(SETUPAPI.@)
- */
-BOOL WINAPI SetupLogErrorW(LPCWSTR MessageString, LogSeverity Severity)
-{
-    FIXME("(%s, %d) stub\n", debugstr_w(MessageString), Severity);
-    return TRUE;
-}
-
-/***********************************************************************
- *      SetupOpenLog(SETUPAPI.@)
- */
-BOOL WINAPI SetupOpenLog(BOOL Reserved)
-{
-    FIXME("(%d) stub\n", Reserved);
-    return TRUE;
-}
-
-/***********************************************************************
  *      SetupPromptReboot(SETUPAPI.@)
  */
 INT WINAPI SetupPromptReboot( HSPFILEQ file_queue, HWND owner, BOOL scan_only )

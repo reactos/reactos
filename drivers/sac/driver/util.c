@@ -434,7 +434,7 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
     *Buffer = SacAllocatePool(ResultLength, GLOBAL_BLOCK_TAG);
     if (!*Buffer)
     {
-        SAC_DBG(1, "SAC GetRegistryValueBuffer: failed allocation\n");
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC GetRegistryValueBuffer: failed allocation\n");
         return Status;
     }
 
@@ -497,7 +497,7 @@ SetRegistryValue(IN PCWSTR KeyName,
     if (!NT_SUCCESS(Status))
     {
         /* Print error on failure */
-        SAC_DBG(1, "SAC SetRegistryValue: failed ZwSetValueKey: %X.\n", Status);
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SetRegistryValue: failed ZwSetValueKey: %X.\n", Status);
     }
 
     /* Close the handle and exit */

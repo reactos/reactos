@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/close.c
+ * FILE:             drivers/filesystems/cdfs/close.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  * UPDATE HISTORY:
@@ -67,24 +67,32 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 
     if (Ccb->DirectorySearchPattern.Buffer)
     {
-        ExFreePoolWithTag(Ccb->DirectorySearchPattern.Buffer, TAG_CCB);
+        ExFreePoolWithTag(Ccb->DirectorySearchPattern.Buffer, CDFS_SEARCH_PATTERN_TAG);
     }
-    ExFreePoolWithTag(Ccb, TAG_CCB);
+    ExFreePoolWithTag(Ccb, CDFS_CCB_TAG);
 
     return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS NTAPI
-CdfsClose(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp)
+CdfsClose(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
     PDEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
 
     DPRINT("CdfsClose() called\n");
+
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    DeviceObject = IrpContext->DeviceObject;
+    Stack = IrpContext->Stack;
 
     if (DeviceObject == CdfsGlobalData->DeviceObject)
     {
@@ -93,17 +101,14 @@ CdfsClose(PDEVICE_OBJECT DeviceObject,
         goto ByeBye;
     }
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
     DeviceExtension = DeviceObject->DeviceExtension;
 
     Status = CdfsCloseFile(DeviceExtension,FileObject);
 
 ByeBye:
-    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return(Status);
 }
 

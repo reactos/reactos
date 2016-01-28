@@ -232,7 +232,7 @@ static HRESULT WINAPI PropertyBag_GetPropertyInfo(IPropertyBag2 *iface, ULONG iP
     if (iProperty+cProperties > This->prop_count )
         return WINCODEC_ERR_VALUEOUTOFRANGE;
 
-    *pcProperties = max(cProperties, This->prop_count-iProperty);
+    *pcProperties = min(cProperties, This->prop_count-iProperty);
 
     for (i=0; i < *pcProperties; i++)
     {

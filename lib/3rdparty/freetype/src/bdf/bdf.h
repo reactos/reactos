@@ -40,12 +40,12 @@ FT_BEGIN_HEADER
 
 /* Imported from bdfP.h */
 
-#define _bdf_glyph_modified( map, e )                 \
-          ( (map)[(e) >> 5] & ( 1 << ( (e) & 31 ) ) )
-#define _bdf_set_glyph_modified( map, e )              \
-          ( (map)[(e) >> 5] |= ( 1 << ( (e) & 31 ) ) )
-#define _bdf_clear_glyph_modified( map, e )             \
-          ( (map)[(e) >> 5] &= ~( 1 << ( (e) & 31 ) ) )
+#define _bdf_glyph_modified( map, e )                     \
+          ( (map)[(e) >> 5] & ( 1UL << ( (e) & 31 ) ) )
+#define _bdf_set_glyph_modified( map, e )                 \
+          ( (map)[(e) >> 5] |= ( 1UL << ( (e) & 31 ) ) )
+#define _bdf_clear_glyph_modified( map, e )               \
+          ( (map)[(e) >> 5] &= ~( 1UL << ( (e) & 31 ) ) )
 
 /* end of bdfP.h */
 
@@ -167,10 +167,10 @@ FT_BEGIN_HEADER
 
   typedef struct  hashtable_
   {
-    int        limit;
-    int        size;
-    int        used;
-    hashnode*  table;
+    unsigned int  limit;
+    unsigned int  size;
+    unsigned int  used;
+    hashnode*     table;
 
   } hashtable;
 
@@ -194,7 +194,7 @@ FT_BEGIN_HEADER
     char*            name;           /* Name of the font.                   */
     bdf_bbx_t        bbx;            /* Font bounding box.                  */
 
-    long             point_size;     /* Point size of the font.             */
+    unsigned long    point_size;     /* Point size of the font.             */
     unsigned long    resolution_x;   /* Font horizontal resolution.         */
     unsigned long    resolution_y;   /* Font vertical resolution.           */
 

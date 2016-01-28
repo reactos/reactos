@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS HAL
- * FILE:            ntoskrnl/hal/x86/fmutex.c
+ * FILE:            hal/halppc/generic/fmutex.c
  * PURPOSE:         Deprecated HAL Fast Mutex
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

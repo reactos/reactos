@@ -1,12 +1,13 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Cache routines
-   Copyright (C) Matthew Chapman 1999-2005
-   Copyright (C) Jeroen Meijer 2005
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008
+   Copyright (C) Jeroen Meijer <jeroen@oldambt7.com> 2005
+   Copyright 2003-2011 Peter Astrand <astrand@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,9 +15,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
@@ -50,6 +50,7 @@ static RD_HBITMAP g_volatile_bc[3];
 
 static int g_bmpcache_lru[3] = { NOT_SET, NOT_SET, NOT_SET };
 static int g_bmpcache_mru[3] = { NOT_SET, NOT_SET, NOT_SET };
+
 static int g_bmpcache_count[3];
 
 /* Setup the bitmap cache lru/mru linked list */
@@ -94,7 +95,7 @@ cache_rebuild_bmpcache_linked_list(uint8 id, sint16 * idx, int count)
 	{
 		error("Oops. %d in bitmap cache linked list, %d in ui cache...\n", c,
 		      g_bmpcache_count[id]);
-		exit(1);
+		exit(EX_SOFTWARE);
 	}
 }
 
@@ -176,7 +177,7 @@ cache_evict_bitmap(uint8 id)
 
 	idx = g_bmpcache_lru[id];
 	n_idx = g_bmpcache[id][idx].next;
-	DEBUG_RDP5(("evict bitmap: id=%d idx=%d n_idx=%d bmp=0x%x\n", id, idx, n_idx,
+	DEBUG_RDP5(("evict bitmap: id=%d idx=%d n_idx=%d bmp=%p\n", id, idx, n_idx,
 		    g_bmpcache[id][idx].bitmap));
 
 	ui_destroy_bitmap(g_bmpcache[id][idx].bitmap);
@@ -262,7 +263,7 @@ cache_save_state(void)
 			idx = g_bmpcache_lru[id];
 			while (idx >= 0)
 			{
-				pstcache_touch_bitmap((uint8) id, (uint16) idx, ++t);
+				pstcache_touch_bitmap(id, idx, ++t);
 				idx = g_bmpcache[id][idx].next;
 			}
 			DEBUG_RDP5((" %d stamps written.\n", t));
@@ -428,5 +429,45 @@ cache_put_cursor(uint16 cache_idx, RD_HCURSOR cursor)
 	else
 	{
 		error("put cursor %d\n", cache_idx);
+	}
+}
+
+/* BRUSH CACHE */
+/* index 0 is 2 colour brush, index 1 is muti colour brush */
+static BRUSHDATA g_brushcache[2][64];
+
+/* Retrieve brush from cache */
+BRUSHDATA *
+cache_get_brush_data(uint8 colour_code, uint8 idx)
+{
+	colour_code = colour_code == 1 ? 0 : 1;
+	if (idx < NUM_ELEMENTS(g_brushcache[0]))
+	{
+		return &g_brushcache[colour_code][idx];
+	}
+	error("get brush %d %d\n", colour_code, idx);
+	return NULL;
+}
+
+/* Store brush in cache */
+/* this function takes over the data pointer in struct, eg, caller gives it up */
+void
+cache_put_brush_data(uint8 colour_code, uint8 idx, BRUSHDATA * brush_data)
+{
+	BRUSHDATA *bd;
+
+	colour_code = colour_code == 1 ? 0 : 1;
+	if (idx < NUM_ELEMENTS(g_brushcache[0]))
+	{
+		bd = &g_brushcache[colour_code][idx];
+		if (bd->data != 0)
+		{
+			xfree(bd->data);
+		}
+		memcpy(bd, brush_data, sizeof(BRUSHDATA));
+	}
+	else
+	{
+		error("put brush %d %d\n", colour_code, idx);
 	}
 }

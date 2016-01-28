@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FreeLoader
- * FILE:            freeldr/ui/minitui.c
+ * FILE:            boot/freeldr/freeldr/ui/minitui.c
  * PURPOSE:         Mini Text UI interface
  * PROGRAMMERS:     Brian Palmer <brianp@sginet.com>
  *                  Hervé Poussineau
@@ -154,7 +154,7 @@ const UIVTBL MiniTuiVtbl =
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,
-    MiniTuiDrawBackdrop, /* no FadeIn */ 
+    MiniTuiDrawBackdrop, /* no FadeIn */
     TuiFadeOut,
     TuiDisplayMenu,
     MiniTuiDrawMenu,

@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/settings.c
+ * FILE:            base/setup/usetup/settings.c
  * PURPOSE:         Device settings support functions
  * PROGRAMMERS:     Eric Kohl
  *                  Colin Finck
@@ -80,7 +80,7 @@ IsAcpiComputer(VOID)
    }
 
    pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
-   if (!pDeviceInformation)
+   if (!pValueInformation)
    {
       DPRINT("RtlAllocateHeap() failed\n");
       Status = STATUS_NO_MEMORY;
@@ -691,20 +691,20 @@ ProcessDisplayRegistry(
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
     {
-        DPRINT("GetCurrentListEntry() failed\n");
+        DPRINT1("GetCurrentListEntry() failed\n");
         return FALSE;
     }
 
     if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*)GetListEntryUserData(Entry), &Context))
     {
-        DPRINT("SetupFindFirstLineW() failed\n");
+        DPRINT1("SetupFindFirstLineW() failed\n");
         return FALSE;
     }
 
     /* Enable the right driver */
     if (!INF_GetDataField(&Context, 3, &ServiceName))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -720,7 +720,7 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
@@ -729,7 +729,7 @@ ProcessDisplayRegistry(
 
     if (!INF_GetDataField(&Context, 4, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -742,13 +742,13 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 5, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -761,13 +761,13 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 6, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -780,7 +780,7 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
@@ -810,6 +810,43 @@ ProcessLocaleRegistry(
     LanguageId = (PWCHAR)GetListEntryUserData(Entry);
     if (LanguageId == NULL)
         return FALSE;
+
+    DPRINT("LanguageId: %S\n", LanguageId);
+
+    /* Open the default users locale key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\User\\.DEFAULT\\Control Panel\\International");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_SET_VALUE,
+                        &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Set default user locale */
+    RtlInitUnicodeString(&ValueName,
+                         L"Locale");
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)LanguageId,
+                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
+    NtClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
 
     /* Skip first 4 zeroes */
     if (wcslen(LanguageId) >= 4)
@@ -928,7 +965,7 @@ GetDefaultLanguageIndex(VOID)
 PGENERIC_LIST
 CreateLanguageList(
     HINF InfFile,
-    WCHAR *DefaultLanguage) 
+    WCHAR *DefaultLanguage)
 {
     CHAR Buffer[128];
     PGENERIC_LIST List;
@@ -956,7 +993,7 @@ CreateLanguageList(
     if (!SetupFindFirstLineW (InfFile, L"Language", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
-        return NULL; 
+        return NULL;
     }
 
     do
@@ -1052,7 +1089,6 @@ CreateKeyboardLayoutList(
                 return NULL;
             }
 
-            if (_wcsicmp(LayoutsList[uIndex].LayoutID, KeyName) == 0)
             {
                 UserData = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                                    0,

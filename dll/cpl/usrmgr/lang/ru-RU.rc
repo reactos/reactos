@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
@@ -11,8 +11,8 @@ BEGIN
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 7, 238, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON "Добавить...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "Удалить", IDC_USERS_REMOVE, 141, 98, 50, 14
-    PUSHBUTTON "Своиства", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Требуется имя пользователя и пароль при загрузке системы.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+    PUSHBUTTON "Свойства", IDC_USERS_PROPERTIES, 195, 98, 50, 14
+    AUTOCHECKBOX "Требуется имя пользователя и пароль при загрузке системы", IDC_USERS_STARTUP_REQUIRE, 10, 118, 220, 14, WS_DISABLED
     PUSHBUTTON "Сбросить пароль", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 
@@ -25,7 +25,7 @@ BEGIN
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 7, 238, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON "Добавить...", IDC_GROUPS_ADD, 87, 98, 50, 14
     PUSHBUTTON "Удалить", IDC_GROUPS_REMOVE, 141, 98, 50, 14
-    PUSHBUTTON "Своиства", IDC_GROUPS_PROPERTIES, 195, 98, 50, 14
+    PUSHBUTTON "Свойства", IDC_GROUPS_PROPERTIES, 195, 98, 50, 14
 END
 
 IDD_EXTRA DIALOGEX 0, 0, 252, 223
@@ -33,7 +33,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Это место преднамерено оставлено незаполненным", IDC_STATIC, 66, 90, 112, 8
+    LTEXT "Это место преднамеренно оставлено незаполненным", IDC_STATIC, 66, 70, 200, 8
 END
 
 IDD_USER_GENERAL DIALOGEX 0, 0, 252, 223
@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Членство в группах"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Член групп:", -1, 7, 7, 56, 8
+    LTEXT "Член групп:", -1, 7, 7, 170, 8
     CONTROL "", IDC_USER_MEMBERSHIP_LIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 18, 238, 173, WS_EX_CLIENTEDGE
     PUSHBUTTON "Добавить...", IDC_USER_MEMBERSHIP_ADD, 7, 197, 50, 14
@@ -76,12 +76,12 @@ BEGIN
     LTEXT "Сценарий входа:", -1, 16, 40, 80, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 88, 37, 150, 13, ES_AUTOHSCROLL
     GROUPBOX "Домашняя папка", -1, 7, 68, 238, 54
-    AUTORADIOBUTTON "Локальный путь:", IDC_USER_PROFILE_LOCAL, 16, 83, 80, 10
+    AUTORADIOBUTTON "Локальный путь:", IDC_USER_PROFILE_LOCAL, 16, 83, 70, 10
     AUTORADIOBUTTON "Подключить:", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
     EDITTEXT IDC_USER_PROFILE_LOCAL_PATH, 88, 81, 150, 13, ES_AUTOHSCROLL
     COMBOBOX IDC_USER_PROFILE_DRIVE, 78, 99, 26, 153, CBS_DROPDOWNLIST | CBS_SORT |
              WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "на:", -1, 112, 101, 12, 8
+    LTEXT "к:", -1, 112, 101, 12, 8
     EDITTEXT IDC_USER_PROFILE_REMOTE_PATH, 130, 99, 108, 13, ES_AUTOHSCROLL
 END
 
@@ -127,8 +127,8 @@ BEGIN
     EDITTEXT IDC_USER_NEW_PASSWORD1, 107, 67, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Пароль:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "Подтвердите:", -1, 7, 88, 96, 8
-    AUTOCHECKBOX "Потребовать смену пароля при следующем входе в систему", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
+    RTEXT "Пароль еще раз:", -1, 7, 88, 96, 8
+    AUTOCHECKBOX "Потребовать смену пароля при следующем входе в систему", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 230, 10
     AUTOCHECKBOX "Запретить смену пароля пользователем", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Срок действия пароля не ограничен", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Отключить учётную запись", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
@@ -201,7 +201,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Учётные записи пользователей"
+    IDS_CPLNAME "Учетные записи пользователей"
     IDS_CPLDESCRIPTION "Управление пользователями и группами."
 END
 

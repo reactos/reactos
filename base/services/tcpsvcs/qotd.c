@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/qotd.c
+ * FILE:        base/services/tcpsvcs/qotd.c
  * PURPOSE:     Sends a random quote to the client
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *

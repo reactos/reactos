@@ -1,7 +1,7 @@
 /*
  * Help Viewer
  *
- * Copyright 2005-2008 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2008 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,12 +20,10 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Fil" {
-  MENUITEM "&Åpne", MNID_FILE_OPEN
+  MENUITEM "&Ã…pne", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Skriv &ut", MNID_FILE_PRINT
   MENUITEM "Opp&sett av skriveren...", MNID_FILE_SETUP
@@ -41,46 +39,37 @@ MAIN_MENU MENU
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Innstillinger" {
-   POPUP	"Synlighet"
-   BEGIN
-     MENUITEM "Standard",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Synlig",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Ikke synlig",	MNID_OPTS_HELP_NONVISIBLE
-  END
+  MENUITEM "All&tid Ã¸verst", MNID_HELP_HELPTOP
   MENUITEM "Historikk",		MNID_OPTS_HISTORY
-  POPUP    "Skriftstørrelse"
+  POPUP    "SkriftstÃ¸rrelse"
   BEGIN
     MENUITEM "Liten",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Stor",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Bruk systemfarger",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Hjelp" {
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
-   MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Informasjon...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Innhold"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Kommentar...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopier",                MNID_CTXT_COPY
+		MENUITEM "Skriv ut...",            MNID_CTXT_PRINT
+		POPUP    "SkriftstÃ¸rrelse"
+		BEGIN
+			MENUITEM "Liten",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Søk"
-{
-    LTEXT  "Ikke laget ennå", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Hjelp"
@@ -88,36 +77,29 @@ STID_WHERROR, 		"FEIL"
 STID_WARNING,  		"ADVARSEL"
 STID_INFO,  		"Informasjon"
 STID_NOT_IMPLEMENTED, 	"Ikke implementert"
-STID_HLPFILE_ERROR_s, 	"Klarte ikke lese hjelpefilen «%s»"
+STID_HLPFILE_ERROR_s, 	"Klarte ikke lese hjelpefilen Â«%sÂ»"
 STID_INDEX, 		"&Innhold"
-STID_CONTENTS, 		"&Oppsummering"
+STID_CONTENTS,		"&Oppsummering"
 STID_BACK, 		"Til&bake"
 STID_ALL_FILES, 	"Alle filer (*.*)"
 STID_HELP_FILES_HLP, 	"Hjelp-filer (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Klarte ikke finne «%s». Vil du finne filen selv?"
+STID_FILE_NOT_FOUND_s	"Klarte ikke finne Â«%sÂ». Vil du finne filen selv?"
 STID_NO_RICHEDIT	"Klarte ikke finne richedit; avbryter"
 STID_PSH_INDEX,		"Emner i Hjelp: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "Kommentar...",       MNID_CTXT_ANNOTATE
-        MENUITEM "Kopier",                MNID_CTXT_COPY
-        MENUITEM "Skriv ut...",            MNID_CTXT_PRINT
-        POPUP    "Skriftstørrelse"
-        BEGIN
-            MENUITEM "Liten",       MNID_CTXT_FONTS_SMALL
-            MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-            MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
-        END
-        POPUP   "Synlighet"
-        BEGIN
-            MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
-            MENUITEM "Synlig",     MNID_CTXT_HELP_VISIBLE
-            MENUITEM "Ikke synlig", MNID_CTXT_HELP_NONVISIBLE
-        END
-        MENUITEM "Bruk systemfarger",   MNID_CTXT_SYSTEM_COLORS
-    END
-END
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Innhold"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "SÃ¸k"
+{
+    LTEXT  "Ikke laget ennÃ¥", -1, 10, 10, 180, 150
+}

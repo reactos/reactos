@@ -148,7 +148,7 @@ DELAY [/m]n\n\n\
               指定しない場合、単位には秒が使われます。\n"
     STRING_DIR_HELP1 "ディレクトリ中のファイルとサブディレクトリを一覧表示します。\n\n\
 DIR [ドライブ:][パス][ファイル名] [/A[[:]属性]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]ソート順]] [/P] [/Q] [/S] [/T[[:]タイムフィールド]] [/W] [/X] [/4]\n\n\
+  [/O[[:]ソート順]] [/P] [/Q] [/R] [/S] [/T[[:]タイムフィールド]] [/W] [/X] [/4]\n\n\
   [ドライブ:][パス][ファイル名]\n\
               一覧表示するドライブ、ディレクトリ、またはファイルを指定します。\n\
   /A          指定された属性のファイルを表示します。\n\
@@ -167,6 +167,7 @@ DIR [ドライブ:][パス][ファイル名] [/A[[:]属性]] [/B] [/C] [/D] [/L]
                G  グループ (ディレクトリから) -  降順\n\
   /P          1 画面ごとに停止して表示します。\n\
   /Q          ファイルの所有者を表示します。\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          指定されたディレクトリおよびそのサブディレクトリのすべての\n\
               ファイルを表示します。\n\
   /T          どのタイムフィールドを表示するか、または並べ替えに使用するかを\n\
@@ -503,7 +504,6 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[エラー]\n"
     STRING_REN_ERROR1 "MoveFile() failed. エラー: %lu\n"
-    STRING_START_ERROR1 "現時点ではバッチはサポートされていません!"
     STRING_TIME_ERROR1 "無効な時刻です。"
     STRING_TYPE_ERROR1 "'/%s' は無効なオプションです\n"
     STRING_WINDOW_ERROR1 "ウィンドウが見つかりません。"
@@ -528,9 +528,11 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_REPLACE_ERROR5 "Access denied - %s\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
-    STRING_VERSION_RUNVER " running on %s"
+    STRING_VERSION_RUNNING_ON "Running on: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d 個のファイルがコピーされました\n"
     STRING_DELETE_WIPE "完全に消去されました。"
     STRING_FOR_ERROR "無効な変数が指定されました。"

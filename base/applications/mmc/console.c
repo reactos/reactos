@@ -21,10 +21,51 @@
 
 #include "resource.h"
 
+#define NDEBUG
+#include <debug.h>
+
+typedef struct _CONSOLE_MAINFRAME_WND
+{
+    HWND hwnd;
+    HWND hwndMDIClient;
+
+    HMENU hMenuConsoleSmall;
+    HMENU hMenuConsoleLarge;
+    INT nConsoleCount;
+    union
+    {
+        DWORD Flags;
+        struct
+        {
+            DWORD AppAuthorMode : 1;
+        };
+    };
+} CONSOLE_MAINFRAME_WND, *PCONSOLE_MAINFRAME_WND;
+
+typedef struct _CONSOLE_CHILDFRM_WND
+{
+    HWND hwnd;
+    PCONSOLE_MAINFRAME_WND MainFrame;
+    PTSTR pFileName;
+} CONSOLE_CHILDFRM_WND, *PCONSOLE_CHILDFRM_WND;
+
 static const TCHAR szMMCMainFrame[] = TEXT("MMCMainFrame");
 static const TCHAR szMMCChildFrm[] = TEXT("MMCChildFrm");
 
 static ULONG NewConsoleCount = 0;
+
+PCONSOLE_CHILDFRM_WND
+GetActiveChildInfo(VOID)
+{
+    HWND hWndMDIChild;
+
+    hWndMDIChild = (HWND)SendMessageW(hwndMDIClient, WM_MDIGETACTIVE, 0, 0);
+    if (hWndMDIChild == NULL)
+        return NULL;
+
+    return (PCONSOLE_CHILDFRM_WND)GetWindowLongPtr(hWndMDIChild, 0);
+}
+
 
 static LPTSTR
 CreateNewConsoleTitle(VOID)
@@ -41,27 +82,6 @@ CreateNewConsoleTitle(VOID)
 
     return lpTitle;
 }
-
-
-typedef struct _CONSOLE_MAINFRAME_WND
-{
-    HWND hwnd;
-    HWND hwndMDIClient;
-
-    LPCTSTR lpConsoleTitle;
-    HMENU hMenuConsoleSmall;
-    HMENU hMenuConsoleLarge;
-    INT nConsoleCount;
-    union
-    {
-        DWORD Flags;
-        struct
-        {
-            DWORD AppAuthorMode : 1;
-        };
-    };
-} CONSOLE_MAINFRAME_WND, *PCONSOLE_MAINFRAME_WND;
-
 
 HWND
 CreateNewMDIChild(PCONSOLE_MAINFRAME_WND Info,
@@ -96,13 +116,10 @@ FrameOnCreate(HWND hwnd,
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
 
     Info = HeapAlloc(hAppHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(CONSOLE_MAINFRAME_WND));
     if (Info == NULL)
         return -1;
-
-    ZeroMemory(Info,
-               sizeof(CONSOLE_MAINFRAME_WND));
 
     Info->hwnd = hwnd;
 
@@ -120,19 +137,18 @@ FrameOnCreate(HWND hwnd,
     {
         /* FIXME */
         Info->AppAuthorMode = TRUE;
-        Info->lpConsoleTitle = TEXT("ReactOS Management Console");
+//        Info->lpConsoleTitle = TEXT("ReactOS Management Console");
     }
     else
     {
         Info->AppAuthorMode = TRUE;
-        Info->lpConsoleTitle = CreateNewConsoleTitle();
+//        Info->lpConsoleTitle = CreateNewConsoleTitle();
     }
 
     SetMenu(Info->hwnd,
             Info->hMenuConsoleSmall);
 
-    SetWindowText(Info->hwnd,
-                  Info->lpConsoleTitle);
+    SetWindowText(Info->hwnd, TEXT("ReactOS Management Console"));
 
     ccs.hWindowMenu = GetSubMenu(Info->hMenuConsoleLarge, 1);
     ccs.idFirstChild = IDM_MDI_FIRSTCHILD;
@@ -158,6 +174,134 @@ FrameOnCreate(HWND hwnd,
 
 
 static VOID
+SetFileName(
+    PCONSOLE_CHILDFRM_WND Info,
+    PWSTR pFileName)
+{
+    DPRINT1("SetFileName(&p \'%S\')\n", Info, pFileName);
+
+    if (Info->pFileName != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, Info->pFileName);
+        Info->pFileName = NULL;
+    }
+
+    if (pFileName != NULL)
+    {
+        Info->pFileName = HeapAlloc(GetProcessHeap(),
+                                    0,
+                                    (_tcslen(pFileName) + 1) * sizeof(TCHAR));
+        if (Info->pFileName != NULL)
+            _tcscpy(Info->pFileName, pFileName);
+    }
+}
+
+static BOOL
+DoSaveFileAs(
+    HWND hWnd,
+    PCONSOLE_CHILDFRM_WND pChildInfo);
+
+static BOOL
+DoSaveFile(
+    HWND hWnd,
+    PCONSOLE_CHILDFRM_WND pChildInfo)
+{
+    DPRINT1("pChildInfo %p\n", pChildInfo);
+
+    DPRINT1("FileName %S\n", pChildInfo->pFileName);
+
+    if (pChildInfo->pFileName == NULL)
+        return DoSaveFileAs(hWnd, pChildInfo);
+
+    /* FIXME: Save the console here! */
+
+    return TRUE;
+}
+
+static BOOL
+DoSaveFileAs(
+    HWND hWnd,
+    PCONSOLE_CHILDFRM_WND pChildInfo)
+{
+    OPENFILENAME saveas;
+    TCHAR szPath[MAX_PATH];
+
+    DPRINT1("pChildInfo %p\n", pChildInfo);
+    DPRINT1("FileName %S\n", pChildInfo->pFileName);
+
+    ZeroMemory(&saveas, sizeof(saveas));
+
+    if (pChildInfo->pFileName != NULL)
+    {
+        _tcscpy(szPath, pChildInfo->pFileName);
+    }
+    else
+    {
+        GetWindowText(pChildInfo->hwnd, szPath, MAX_PATH);
+        _tcscat(szPath, TEXT(".msc"));
+    }
+
+    saveas.lStructSize = sizeof(OPENFILENAME);
+    saveas.hwndOwner = hWnd;
+    saveas.hInstance = hAppInstance;
+    saveas.lpstrFilter = L"MSC Files\0*.msc\0";
+    saveas.lpstrFile = szPath;
+    saveas.nMaxFile = MAX_PATH;
+    saveas.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    saveas.lpstrDefExt = L"msc";
+
+    if (GetSaveFileName(&saveas))
+    {
+        /* HACK: Because in ROS, Save-As boxes don't check the validity
+         * of file names and thus, here, szPath can be invalid !! We only
+         * see its validity when we call DoSaveFile()... */
+        SetFileName(pChildInfo, szPath);
+
+        if (DoSaveFile(hWnd, pChildInfo))
+        {
+//            UpdateWindowCaption();
+            return TRUE;
+        }
+        else
+        {
+            SetFileName(pChildInfo, NULL);
+            return FALSE;
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+static BOOL
+FrameOnSave(
+    HWND hWnd)
+{
+    PCONSOLE_CHILDFRM_WND pChildInfo;
+
+    pChildInfo = GetActiveChildInfo();
+    if (pChildInfo == NULL)
+        return FALSE;
+
+    return DoSaveFile(hWnd, pChildInfo);
+}
+
+
+static BOOL
+FrameOnSaveAs(
+    HWND hWnd)
+{
+    PCONSOLE_CHILDFRM_WND pChildInfo;
+
+    pChildInfo = GetActiveChildInfo();
+    if (pChildInfo == NULL)
+        return FALSE;
+
+    return DoSaveFileAs(hWnd, pChildInfo);
+}
+
+static VOID
 FrameOnCommand(HWND hwnd,
                UINT uMsg,
                WPARAM wParam,
@@ -174,6 +318,14 @@ FrameOnCommand(HWND hwnd,
             CreateNewMDIChild(Info, hwndMDIClient);
             SetMenu(Info->hwnd,
                     Info->hMenuConsoleLarge);
+            break;
+
+        case IDM_FILE_SAVE:
+            FrameOnSave(hwnd);
+            break;
+
+        case IDM_FILE_SAVEAS:
+            FrameOnSaveAs(hwnd);
             break;
 
         case IDM_FILE_EXIT:
@@ -310,12 +462,6 @@ ConsoleMainFrameWndProc(IN HWND hwnd,
 }
 
 
-typedef struct _CONSOLE_CHILDFRM_WND
-{
-    HWND hwnd;
-    PCONSOLE_MAINFRAME_WND MainFrame;
-} CONSOLE_CHILDFRM_WND, *PCONSOLE_CHILDFRM_WND;
-
 static LRESULT CALLBACK
 ConsoleChildFrmProc(IN HWND hwnd,
                     IN UINT uMsg,
@@ -331,13 +477,10 @@ ConsoleChildFrmProc(IN HWND hwnd,
     {
         case WM_CREATE:
             Info = HeapAlloc(hAppHeap,
-                             0,
+                             HEAP_ZERO_MEMORY,
                              sizeof(CONSOLE_CHILDFRM_WND));
             if (Info != NULL)
             {
-                ZeroMemory(Info,
-                           sizeof(CONSOLE_CHILDFRM_WND));
-
                 Info->hwnd = hwnd;
 
                 SetWindowLongPtr(hwnd,
@@ -348,7 +491,12 @@ ConsoleChildFrmProc(IN HWND hwnd,
 
        case WM_DESTROY:
            if (Info != NULL)
-                HeapFree(hAppHeap, 0, Info);
+           {
+               if (Info->pFileName)
+                   HeapFree(hAppHeap, 0, Info->pFileName);
+
+               HeapFree(hAppHeap, 0, Info);
+           }
 
            PostMessage(hwndMainConsole, WM_USER_CLOSE_CHILD, 0, 0);
            break;

@@ -464,6 +464,12 @@ GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
     HKEY hKey;
     LONG Error;
 
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
                           0,
@@ -533,8 +539,8 @@ GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
             return FALSE;
         }
 
-        wcscpy(lpProfileDir, szProfilePath);
-    }
+            wcscpy(lpProfileDir, szProfilePath);
+        }
 
     *lpcchSize = dwLength;
 
@@ -585,6 +591,12 @@ GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
     DWORD dwLength;
     HKEY hKey;
     LONG Error;
+
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -655,8 +667,8 @@ GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
             return FALSE;
         }
 
-        wcscpy(lpProfileDir, szProfilePath);
-    }
+            wcscpy(lpProfileDir, szProfilePath);
+        }
 
     *lpcchSize = dwLength;
 
@@ -672,6 +684,12 @@ GetProfilesDirectoryA(LPSTR lpProfileDir,
     LPWSTR lpBuffer;
     BOOL bResult;
 
+    if (!lpProfileDir || !lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     lpBuffer = GlobalAlloc(GMEM_FIXED,
                            *lpcchSize * sizeof(WCHAR));
     if (lpBuffer == NULL)
@@ -681,14 +699,14 @@ GetProfilesDirectoryA(LPSTR lpProfileDir,
                                     lpcchSize);
     if (bResult)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpBuffer,
-                            -1,
-                            lpProfileDir,
-                            *lpcchSize,
-                            NULL,
-                            NULL);
+        bResult = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      lpBuffer,
+                                      -1,
+                                      lpProfileDir,
+                                      *lpcchSize,
+                                      NULL,
+                                      NULL);
     }
 
     GlobalFree(lpBuffer);
@@ -707,6 +725,13 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
     DWORD dwLength;
     HKEY hKey;
     LONG Error;
+    BOOL bRet = FALSE;
+
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -752,17 +777,22 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
     {
         if (*lpcchSize < dwLength)
         {
-            *lpcchSize = dwLength;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
         }
-
-        wcscpy(lpProfilesDir, szProfilesPath);
+        else
+        {
+            wcscpy(lpProfilesDir, szProfilesPath);
+            bRet = TRUE;
+        }
+    }
+    else
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
     }
 
     *lpcchSize = dwLength;
 
-    return TRUE;
+    return bRet;
 }
 
 
@@ -774,6 +804,12 @@ GetUserProfileDirectoryA(HANDLE hToken,
 {
     LPWSTR lpBuffer;
     BOOL bResult;
+
+    if (!lpProfileDir || !lpcchSize)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
 
     lpBuffer = GlobalAlloc(GMEM_FIXED,
                            *lpcchSize * sizeof(WCHAR));
@@ -814,6 +850,18 @@ GetUserProfileDirectoryW(HANDLE hToken,
     DWORD dwLength;
     HKEY hKey;
     LONG Error;
+
+    if (!hToken)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     if (!GetUserSidStringFromToken(hToken,
                                    &SidString))
@@ -1260,6 +1308,25 @@ UnloadUserProfile(HANDLE hToken,
         RtlFreeUnicodeString(&SidString);
         return FALSE;
     }
+
+    /* HACK */
+    {
+        HKEY hUserKey;
+
+        Error = RegOpenKeyExW(HKEY_USERS,
+                              SidString.Buffer,
+                              0,
+                              KEY_WRITE,
+                              &hUserKey);
+        if (Error == ERROR_SUCCESS)
+        {
+            RegDeleteKeyW(hUserKey,
+                          L"Volatile Environment");
+
+            RegCloseKey(hUserKey);
+        }
+    }
+    /* End of HACK */
 
     /* Unload the hive */
     Error = RegUnLoadKeyW(HKEY_USERS,

@@ -14,19 +14,19 @@ BEGIN
     END
     POPUP "&Приложения"
     BEGIN
-        MENUITEM "&Слагане", ID_INSTALL
-        MENUITEM "&Махане", ID_UNINSTALL
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване", ID_REFRESH
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ", ID_HELP, GRAYED
+        MENUITEM "Помощ\tF1", ID_HELP, GRAYED
         MENUITEM "За", ID_ABOUT
     END
 END
@@ -44,19 +44,19 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Слагане", ID_INSTALL
-        MENUITEM "&Махане", ID_UNINSTALL
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване", ID_REFRESH
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 254, 144
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 254, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
@@ -70,9 +70,16 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "Из&бор", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "След слагане, използваните файлове да се изтриват", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    PUSHBUTTON "Подразбирано", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-    PUSHBUTTON "Добре", IDOK, 116, 124, 60, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 181, 124, 60, 14
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Подразбирано", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "Добре", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -87,14 +94,14 @@ BEGIN
     PUSHBUTTON "Отказ", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 76
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
 CAPTION "Сваляне"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON "Отказ", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Отказ", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 66
@@ -151,7 +158,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nОписание: "
     IDS_AINFO_SIZE "\nРазмер: "
     IDS_AINFO_URLSITE "\nДомашна страница: "
-    IDS_AINFO_LICENCE "\nРазрешително: "
+    IDS_AINFO_LICENSE "\nРазрешително: "
 END
 
 STRINGTABLE
@@ -192,5 +199,9 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Указали сте несъществуваща папка!"
     IDS_APP_REG_REMOVE "Уверен ли сте, че искате да изтриете данните за сложеното приложение от регистъра?"
     IDS_INFORMATION "Сведения"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
+    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
+    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
 END

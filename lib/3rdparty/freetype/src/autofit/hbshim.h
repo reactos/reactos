@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    HarfBuzz interface for accessing OpenType features (specification).  */
 /*                                                                         */
-/*  Copyright 2013 by                                                      */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,7 +38,7 @@ FT_BEGIN_HEADER
   FT_Error
   af_get_coverage( AF_FaceGlobals  globals,
                    AF_StyleClass   style_class,
-                   FT_Byte*        gstyles );
+                   FT_UShort*      gstyles );
 
   FT_Error
   af_get_char_index( AF_StyleMetrics  metrics,

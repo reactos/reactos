@@ -11,7 +11,7 @@ BEGIN
     IDS_ABOUT "Te Drejtat 2000 Joshua Thielen"
 END
 
-MENU_WINEMINE MENU
+IDM_WINEMINE MENU
 BEGIN
     POPUP "&Opsione"
     BEGIN

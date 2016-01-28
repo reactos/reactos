@@ -238,14 +238,62 @@ typedef unsigned int JDIMENSION;
  * or code profilers that require it.
  */
 
+#ifdef _WIN32
+#  if defined(ALL_STATIC)
+#    if defined(JPEG_DLL)
+#      undef JPEG_DLL
+#    endif
+#    if !defined(JPEG_STATIC)
+#      define JPEG_STATIC
+#    endif
+#  endif
+#  if defined(JPEG_DLL)
+#    if defined(JPEG_STATIC)
+#      undef JPEG_STATIC
+#    endif
+#  endif
+#  if defined(JPEG_DLL)
+/* building a DLL */
+#    define JPEG_IMPEXP __declspec(dllexport)
+#  elif defined(JPEG_STATIC)
+/* building or linking to a static library */
+#    define JPEG_IMPEXP
+#  else
+/* linking to the DLL */
+#    define JPEG_IMPEXP __declspec(dllimport)
+#  endif
+#  if !defined(JPEG_API)
+#    define JPEG_API __cdecl
+#  endif
+/* The only remaining magic that is necessary for cygwin */
+#elif defined(__CYGWIN__)
+#  if !defined(JPEG_IMPEXP)
+#    define JPEG_IMPEXP
+#  endif
+#  if !defined(JPEG_API)
+#    define JPEG_API __cdecl
+#  endif
+#endif
+
+/* Ensure our magic doesn't hurt other platforms */
+#if !defined(JPEG_IMPEXP)
+#  define JPEG_IMPEXP
+#endif
+#if !defined(JPEG_API)
+#  define JPEG_API
+#endif
+
 /* a function called through method pointers: */
 #define METHODDEF(type)		static type
 /* a function used only in its module: */
 #define LOCAL(type)		static type
 /* a function referenced thru EXTERNs: */
-#define GLOBAL(type)		type
+#define GLOBAL(type)		type JPEG_API
 /* a reference to a GLOBAL function: */
-#define EXTERN(type)		extern type
+#ifndef EXTERN
+# define EXTERN(type)		extern JPEG_IMPEXP type JPEG_API
+/* a reference to a "GLOBAL" function exported by sourcefiles of utility progs */
+#endif /* EXTERN */
 
 
 /* This macro is used to declare a "method", that is, a function pointer.

@@ -62,4 +62,21 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
     return STATUS_SUCCESS;
 }
 
+#if !defined(_M_IX86)
+//
+// Stub for architectures which don't have this implemented
+//
+VOID
+FASTCALL
+RtlPrefetchMemoryNonTemporal(IN PVOID Source,
+                             IN SIZE_T Length)
+{
+    //
+    // Do nothing
+    //
+    UNREFERENCED_PARAMETER(Source);
+    UNREFERENCED_PARAMETER(Length);
+}
+#endif
+
 /* EOF */

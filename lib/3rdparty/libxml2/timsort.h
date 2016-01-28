@@ -61,12 +61,12 @@ int clzll(uint64_t x) /* {{{ */
 
   if (x == 0) return(64);
   n = 0;
-  if (x <= 0x00000000FFFFFFFFL) {n = n + 32; x = x << 32;}
-  if (x <= 0x0000FFFFFFFFFFFFL) {n = n + 16; x = x << 16;}
-  if (x <= 0x00FFFFFFFFFFFFFFL) {n = n + 8; x = x << 8;}
-  if (x <= 0x0FFFFFFFFFFFFFFFL) {n = n + 4; x = x << 4;}
-  if (x <= 0x3FFFFFFFFFFFFFFFL) {n = n + 2; x = x << 2;}
-  if (x <= 0x7FFFFFFFFFFFFFFFL) {n = n + 1;}
+  if (x <= MK_UINT64(0x00000000FFFFFFFF)) {n = n + 32; x = x << 32;}
+  if (x <= MK_UINT64(0x0000FFFFFFFFFFFF)) {n = n + 16; x = x << 16;}
+  if (x <= MK_UINT64(0x00FFFFFFFFFFFFFF)) {n = n + 8; x = x << 8;}
+  if (x <= MK_UINT64(0x0FFFFFFFFFFFFFFF)) {n = n + 4; x = x << 4;}
+  if (x <= MK_UINT64(0x3FFFFFFFFFFFFFFF)) {n = n + 2; x = x << 2;}
+  if (x <= MK_UINT64(0x7FFFFFFFFFFFFFFF)) {n = n + 1;}
   return n;
 }
 /* }}} */
@@ -392,62 +392,66 @@ static void TIM_SORT_MERGE(SORT_TYPE *dst, const TIM_SORT_RUN_T *stack, const in
 
 static int TIM_SORT_COLLAPSE(SORT_TYPE *dst, TIM_SORT_RUN_T *stack, int stack_curr, TEMP_STORAGE_T *store, const size_t size)
 {
-  while (1)
-  {
-    int64_t A, B, C;
+  while (1) {
+    int64_t A, B, C, D;
+    int ABC, BCD, BD, CD;
+
     /* if the stack only has one thing on it, we are done with the collapse */
-    if (stack_curr <= 1) break;
+    if (stack_curr <= 1) {
+      break;
+    }
+
     /* if this is the last merge, just do it */
-    if ((stack_curr == 2) &&
-        (stack[0].length + stack[1].length == (int64_t) size))
-    {
+    if ((stack_curr == 2) && (stack[0].length + stack[1].length == size)) {
       TIM_SORT_MERGE(dst, stack, stack_curr, store);
       stack[0].length += stack[1].length;
       stack_curr--;
       break;
     }
     /* check if the invariant is off for a stack of 2 elements */
-    else if ((stack_curr == 2) && (stack[0].length <= stack[1].length))
-    {
+    else if ((stack_curr == 2) && (stack[0].length <= stack[1].length)) {
       TIM_SORT_MERGE(dst, stack, stack_curr, store);
       stack[0].length += stack[1].length;
       stack_curr--;
       break;
-    }
-    else if (stack_curr == 2)
+    } else if (stack_curr == 2) {
       break;
-
-    A = stack[stack_curr - 3].length;
-    B = stack[stack_curr - 2].length;
-    C = stack[stack_curr - 1].length;
-
-    /* check first invariant */
-    if (A <= B + C)
-    {
-      if (A < C)
-      {
-        TIM_SORT_MERGE(dst, stack, stack_curr - 1, store);
-        stack[stack_curr - 3].length += stack[stack_curr - 2].length;
-        stack[stack_curr - 2] = stack[stack_curr - 1];
-        stack_curr--;
-      }
-      else
-      {
-        TIM_SORT_MERGE(dst, stack, stack_curr, store);
-        stack[stack_curr - 2].length += stack[stack_curr - 1].length;
-        stack_curr--;
-      }
     }
-    /* check second invariant */
-    else if (B <= C)
-    {
+
+    B = stack[stack_curr - 3].length;
+    C = stack[stack_curr - 2].length;
+    D = stack[stack_curr - 1].length;
+
+    if (stack_curr >= 4) {
+      A = stack[stack_curr - 4].length;
+      ABC = (A <= B + C);
+    } else {
+      ABC = 0;
+    }
+
+    BCD = (B <= C + D) || ABC;
+    CD = (C <= D);
+    BD = (B < D);
+
+    /* Both invariants are good */
+    if (!BCD && !CD) {
+      break;
+    }
+
+    /* left merge */
+    if (BCD && !CD) {
+      TIM_SORT_MERGE(dst, stack, stack_curr - 1, store);
+      stack[stack_curr - 3].length += stack[stack_curr - 2].length;
+      stack[stack_curr - 2] = stack[stack_curr - 1];
+      stack_curr--;
+    } else {
+      /* right merge */
       TIM_SORT_MERGE(dst, stack, stack_curr, store);
       stack[stack_curr - 2].length += stack[stack_curr - 1].length;
       stack_curr--;
     }
-    else
-      break;
   }
+
   return stack_curr;
 }
 

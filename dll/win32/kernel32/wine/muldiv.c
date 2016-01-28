@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/muldiv.c
+ * FILE:            dll/win32/kernel32/wine/muldiv.c
  * PURPOSE:         
  * PROGRAMMER:      Casper S. Hornstrup
  *                  Gunnar Andre Dalsnes

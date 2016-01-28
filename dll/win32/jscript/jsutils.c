@@ -20,35 +20,6 @@
 
 WINE_DECLARE_DEBUG_CHANNEL(heap);
 
-const char *debugstr_variant(const VARIANT *v)
-{
-    if(!v)
-        return "(null)";
-
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_UI4:
-        return wine_dbg_sprintf("{VT_UI4: %u}", V_UI4(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    case VT_ARRAY|VT_VARIANT:
-        return "{VT_ARRAY|VT_VARIANT: ...}";
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
-    }
-}
-
 const char *debugstr_jsval(const jsval_t v)
 {
     switch(jsval_type(v)) {
@@ -265,6 +236,9 @@ HRESULT jsval_copy(jsval_t v, jsval_t *r)
 
 HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
 {
+    if(V_VT(var) == (VT_VARIANT|VT_BYREF))
+        var = V_VARIANTREF(var);
+
     switch(V_VT(var)) {
     case VT_EMPTY:
         *r = jsval_undefined();
@@ -306,6 +280,9 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
         return S_OK;
     case VT_INT:
         *r = jsval_number(V_INT(var));
+        return S_OK;
+    case VT_UI4:
+        *r = jsval_number(V_UI4(var));
         return S_OK;
     case VT_UNKNOWN:
         if(V_UNKNOWN(var)) {

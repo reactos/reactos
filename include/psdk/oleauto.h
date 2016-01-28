@@ -203,11 +203,15 @@ HRESULT WINAPI GetRecordInfoFromGuids(REFGUID,ULONG,ULONG,LCID,REFGUID,IRecordIn
 
 /* Macros for accessing the fields of the VARIANT type */
 #if (__STDC__ && !defined(_FORCENAMELESSUNION)) || defined(NONAMELESSUNION)
-#define V_UNION(A,B) ((A)->n1.n2.n3.B)
-#define V_VT(A)      ((A)->n1.n2.vt)
+#define V_VT(A)         ((A)->n1.n2.vt)
+#define V_UNION(A,B)    ((A)->n1.n2.n3.B)
+#define V_RECORD(A)     (V_UNION(A,brecVal).pvRecord)
+#define V_RECORDINFO(A) (V_UNION(A,brecVal).pRecInfo)
 #else
-#define V_UNION(A,B) ((A)->B)
-#define V_VT(A)      ((A)->vt)
+#define V_VT(A)         ((A)->vt)
+#define V_UNION(A,B)    ((A)->B)
+#define V_RECORD(A)     ((A)->pvRecord)
+#define V_RECORDINFO(A) ((A)->pRecInfo)
 #endif
 
 #define V_ISBYREF(A)  (V_VT(A) & VT_BYREF)

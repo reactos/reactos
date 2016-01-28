@@ -166,8 +166,8 @@ static HRESULT WINAPI InternetExplorer_Navigate(IWebBrowser2 *iface, BSTR szUrl,
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
 
-    TRACE("(%p)->(%s %p %p %p %p)\n", This, debugstr_w(szUrl), Flags, TargetFrameName,
-          PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_w(szUrl), debugstr_variant(Flags),
+          debugstr_variant(TargetFrameName), debugstr_variant(PostData), debugstr_variant(Headers));
 
     return navigate_url(&This->doc_host, szUrl, Flags, TargetFrameName, PostData, Headers);
 }
@@ -178,14 +178,16 @@ static HRESULT WINAPI InternetExplorer_Refresh(IWebBrowser2 *iface)
 
     TRACE("(%p)\n", This);
 
-    return refresh_document(&This->doc_host);
+    return refresh_document(&This->doc_host, NULL);
 }
 
 static HRESULT WINAPI InternetExplorer_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, Level);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(Level));
+
+    return refresh_document(&This->doc_host, Level);
 }
 
 static HRESULT WINAPI InternetExplorer_Stop(IWebBrowser2 *iface)
@@ -333,7 +335,7 @@ static HRESULT WINAPI InternetExplorer_ClientToWindow(IWebBrowser2 *iface, int *
 static HRESULT WINAPI InternetExplorer_PutProperty(IWebBrowser2 *iface, BSTR szProperty, VARIANT vtValue)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(szProperty));
+    FIXME("(%p)->(%s %s)\n", This, debugstr_w(szProperty), debugstr_variant(&vtValue));
     return E_NOTIMPL;
 }
 
@@ -354,8 +356,11 @@ static HRESULT WINAPI InternetExplorer_get_Name(IWebBrowser2 *iface, BSTR *Name)
 static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, SHANDLE_PTR *pHWND)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, pHWND);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, pHWND);
+
+    *pHWND = (SHANDLE_PTR)This->frame_hwnd;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_get_FullName(IWebBrowser2 *iface, BSTR *FullName)
@@ -478,7 +483,8 @@ static HRESULT WINAPI InternetExplorer_Navigate2(IWebBrowser2 *iface, VARIANT *U
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
 
-    TRACE("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_variant(URL), debugstr_variant(Flags),
+        debugstr_variant(TargetFrameName), debugstr_variant(PostData), debugstr_variant(Headers));
 
     if(!URL)
         return S_OK;
@@ -502,7 +508,7 @@ static HRESULT WINAPI InternetExplorer_ExecWB(IWebBrowser2 *iface, OLECMDID cmdI
         OLECMDEXECOPT cmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d %d %p %p)\n", This, cmdID, cmdexecopt, pvaIn, pvaOut);
+    FIXME("(%p)->(%d %d %s %p)\n", This, cmdID, cmdexecopt, debugstr_variant(pvaIn), pvaOut);
     return E_NOTIMPL;
 }
 
@@ -510,7 +516,8 @@ static HRESULT WINAPI InternetExplorer_ShowBrowserBar(IWebBrowser2 *iface, VARIA
         VARIANT *pvarShow, VARIANT *pvarSize)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p %p %p)\n", This, pvaClsid, pvarShow, pvarSize);
+    FIXME("(%p)->(%s %s %s)\n", This, debugstr_variant(pvaClsid), debugstr_variant(pvarShow),
+        debugstr_variant(pvarSize));
     return E_NOTIMPL;
 }
 

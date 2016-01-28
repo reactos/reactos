@@ -1,11 +1,9 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
-
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(appwiz.cpl appwiz.spec)
 
 list(APPEND SOURCE
@@ -13,6 +11,9 @@ list(APPEND SOURCE
     appwiz.c
     createlink.c
     appwiz.h)
+
+file(GLOB appwiz_rc_deps resources/*.*)
+add_rc_deps(appwiz.rc ${appwiz_rc_deps})
 
 add_library(appwiz SHARED
     ${SOURCE}

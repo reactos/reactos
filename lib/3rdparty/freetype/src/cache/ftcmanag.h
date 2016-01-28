@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (specification).                              */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006, 2010, 2013 by                   */
+/*  Copyright 2000-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

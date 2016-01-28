@@ -23,8 +23,7 @@ if((ARCH STREQUAL "i386") AND (NOT MSVC))
         -DUSE_X86_ASM
         -DUSE_MMX_ASM
         -DUSE_3DNOW_ASM
-        -DUSE_SSE_ASM
-    )
+        -DUSE_SSE_ASM)
     add_subdirectory(x86)
 endif()
 

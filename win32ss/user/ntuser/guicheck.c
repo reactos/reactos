@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GUI state check
- * FILE:             subsys/win32k/ntuser/guicheck.c
+ * FILE:             win32ss/user/ntuser/guicheck.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:            The GuiCheck() function performs a few delayed operations:
  *                   1) A GUI process is assigned a window station
@@ -74,28 +74,18 @@ co_IntGraphicsCheck(BOOL Create)
 
 VOID
 FASTCALL
-IntUserManualGuiCheck(LONG Check)
+co_IntUserManualGuiCheck(BOOL Create)
 {
-   PPROCESSINFO W32Data;
+   PPROCESSINFO W32Data = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+   W32Data->W32PF_flags |= W32PF_MANUALGUICHECK;
 
-   W32Data = PsGetCurrentProcessWin32Process();
-   if (0 == Check)
+   if (Create)
    {
-      W32Data->W32PF_flags |= W32PF_MANUALGUICHECK;
-   }
-   else if (0 < Check)
-   {
-      if (! (W32Data->W32PF_flags & W32PF_CREATEDWINORDC))
-      {
-         co_AddGuiApp(W32Data);
-      }
+       co_AddGuiApp(W32Data);
    }
    else
    {
-      if (W32Data->W32PF_flags & W32PF_CREATEDWINORDC)
-      {
-         RemoveGuiApp(W32Data);
-      }
+       RemoveGuiApp(W32Data);
    }
 }
 

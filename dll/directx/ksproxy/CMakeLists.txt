@@ -1,6 +1,5 @@
 
 set_cpp(WITH_STL)
-
 spec2def(ksproxy.ax ksproxy.spec)
 
 list(APPEND SOURCE
@@ -26,7 +25,6 @@ list(APPEND SOURCE
 add_library(ksproxy SHARED ${SOURCE} ksproxy.rc)
 set_module_type(ksproxy win32dll)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
-
 target_link_libraries(ksproxy strmiids)
 add_importlibs(ksproxy advapi32 ole32 setupapi ksuser msvcrt kernel32 ntdll)
 add_dependencies(ksproxy dxsdk)

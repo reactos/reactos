@@ -17,8 +17,8 @@
 #if (_WIN32_IE < 0x0500)
 #error _WIN32_IE setting conflicts
 #endif
-#endif
-#endif
+#endif /* !_WIN32_IE */
+#endif /* !_WINRESRC_ */
 
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
@@ -26,13 +26,14 @@ typedef _Return_type_success_(return >= 0) LONG HRESULT;
 #endif
 
 #ifndef NOUSER
+
 #ifndef WINCOMMCTRLAPI
 #ifndef _COMCTL32_
 #define WINCOMMCTRLAPI DECLSPEC_IMPORT
 #else
 #define WINCOMMCTRLAPI
 #endif
-#endif
+#endif /* !WINCOMMCTRLAPI */
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +47,7 @@ extern "C" {
 #else
 #define SNDMSG SendMessage
 #endif
-#endif
+#endif /* !SNDMSG */
 
   WINCOMMCTRLAPI void WINAPI InitCommonControls(void);
 
@@ -102,13 +103,23 @@ extern "C" {
     COLORREF clrBtnShadow;
   } COLORSCHEME,*LPCOLORSCHEME;
 
-#define COMCTL32_VERSION 6
+#if (_WIN32_IE >= 0x0500)
+
+#if (_WIN32_WINNT >= 0x0501)
+#define COMCTL32_VERSION  6
+#else
+#define COMCTL32_VERSION  5
+#endif
 
 #define CCM_SETVERSION (CCM_FIRST+0x7)
 #define CCM_GETVERSION (CCM_FIRST+0x8)
 #define CCM_SETNOTIFYWINDOW (CCM_FIRST+0x9)
+#if (_WIN32_WINNT >= 0x0501)
 #define CCM_SETWINDOWTHEME (CCM_FIRST+0xb)
 #define CCM_DPISCALE (CCM_FIRST+0xc)
+#endif
+
+#endif /* _WIN32_IE >= 0x0500 */
 
 #define INFOTIPSIZE 1024
 
@@ -247,6 +258,7 @@ extern "C" {
 #define CDRF_NOTIFYITEMDRAW 0x20
 #define CDRF_NOTIFYSUBITEMDRAW 0x20
 #define CDRF_NOTIFYPOSTERASE 0x40
+#define CDRF_NOTIFYITEMERASE 0x00000080 /* obsolete ??? */
 
 #define CDDS_PREPAINT 0x1
 #define CDDS_POSTPAINT 0x2
@@ -587,7 +599,7 @@ extern "C" {
 
   WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Duplicate(_In_ HIMAGELIST himl);
 
-#endif
+#endif /* !NOIMAGEAPIS */
 
 #ifndef NOHEADER
 
@@ -891,7 +903,8 @@ extern "C" {
     INT iItem;
     RECT rc;
   } NMHDFILTERBTNCLICK,*LPNMHDFILTERBTNCLICK;
-#endif
+
+#endif /* !NOHEADER */
 
 #ifndef NOTOOLBAR
 
@@ -1128,6 +1141,8 @@ extern "C" {
 #define TB_GETANCHORHIGHLIGHT (WM_USER+74)
 #define TB_MAPACCELERATORA (WM_USER+78)
 
+#define TB_SETBOUNDINGSIZE (WM_USER+93)
+
   typedef struct {
     int iButton;
     DWORD dwFlags;
@@ -1231,6 +1246,7 @@ extern "C" {
 #define TB_GETSTRING __MINGW_NAME_AW(TB_GETSTRING)
 
 #define TB_SETHOTITEM2 (WM_USER+94)
+#define TB_HASACCELERATOR (WM_USER+95)
 #define TB_SETLISTGAP (WM_USER+96)
 #define TB_GETIMAGELISTCOUNT (WM_USER+98)
 #define TB_GETIDEALSIZE (WM_USER+99)
@@ -1408,7 +1424,7 @@ extern "C" {
 #define NMTOOLBAR __MINGW_NAME_AW(NMTOOLBAR)
 #define LPNMTOOLBAR __MINGW_NAME_AW(LPNMTOOLBAR)
 
-#endif
+#endif /* !NOTOOLBAR */
 
 #ifndef NOREBAR
 
@@ -1651,7 +1667,8 @@ extern "C" {
     UINT flags;
     int iBand;
   } RBHITTESTINFO,*LPRBHITTESTINFO;
-#endif
+
+#endif /* !NOREBAR */
 
 #ifndef NOTOOLTIPS
 
@@ -1866,7 +1883,8 @@ extern "C" {
 #define LPNMTTDISPINFO __MINGW_NAME_AW(LPNMTTDISPINFO)
 
 #define NMTTDISPINFO_V1_SIZE __MINGW_NAME_AW_EXT(NMTTDISPINFO,_V1_SIZE)
-#endif
+
+#endif /* !NOTOOLTIPS */
 
 #ifndef NOSTATUSBAR
 
@@ -1928,7 +1946,8 @@ extern "C" {
 #define SBN_SIMPLEMODECHANGE (SBN_FIRST - 0)
 
 #define SB_SIMPLEID 0xff
-#endif
+
+#endif /* !NOSTATUSBAR */
 
 #ifndef NOMENUHELP
 
@@ -1951,7 +1970,8 @@ extern "C" {
     _In_z_ const INT *lpInfo);
 
 #define MINSYSCOMMAND SC_SIZE
-#endif
+
+#endif /* !NOMENUHELP */
 
 #ifndef NOTRACKBAR
 
@@ -2031,7 +2051,8 @@ extern "C" {
 #define TBCD_TICS 0x1
 #define TBCD_THUMB 0x2
 #define TBCD_CHANNEL 0x3
-#endif
+
+#endif /* !NOTRACKBAR */
 
 #ifndef NODRAGLIST
 
@@ -2057,7 +2078,8 @@ extern "C" {
   WINCOMMCTRLAPI void WINAPI DrawInsert(HWND handParent,HWND hLB,int nItem);
 
   WINCOMMCTRLAPI int WINAPI LBItemFromPt(HWND hLB,POINT pt,BOOL bAutoScroll);
-#endif
+
+#endif /* !NODRAGLIST */
 
 #ifndef NOUPDOWN
 
@@ -2113,7 +2135,8 @@ extern "C" {
   } NMUPDOWN,*LPNMUPDOWN;
 
 #define UDN_DELTAPOS (UDN_FIRST - 1)
-#endif
+
+#endif /* !NOUPDOWN */
 
 #ifndef NOPROGRESS
 
@@ -2181,7 +2204,8 @@ extern "C" {
 #define HOTKEY_CLASSW L"msctls_hotkey32"
 
 #define HOTKEY_CLASS __MINGW_NAME_AW(HOTKEY_CLASS)
-#endif
+
+#endif /* !NOHOTKEY */
 
 #define CCS_TOP 0x1L
 #define CCS_NOMOVEY 0x2L
@@ -3175,7 +3199,8 @@ extern "C" {
 
 #define LVN_BEGINSCROLL (LVN_FIRST-80)
 #define LVN_ENDSCROLL (LVN_FIRST-81)
-#endif
+
+#endif /* !NOLISTVIEW */
 
 #ifndef NOTREEVIEW
 
@@ -3713,7 +3738,8 @@ typedef struct tagTVDISPINFOEXW {
 #define LPNMTVGETINFOTIP __MINGW_NAME_AW(LPNMTVGETINFOTIP)
 
 #define TVCDRF_NOIMAGES 0x10000
-#endif
+
+#endif /* !NOTREEVIEW */
 
 #ifndef NOUSEREXCONTROLS
 
@@ -3866,7 +3892,7 @@ typedef struct tagTVDISPINFOEXW {
 #define LPNMCBEENDEDIT __MINGW_NAME_AW(LPNMCBEENDEDIT)
 #define PNMCBEENDEDIT __MINGW_NAME_AW(PNMCBEENDEDIT)
 
-#endif
+#endif /* !NOUSEREXCONTROLS */
 
 #ifndef NOTABCONTROL
 
@@ -4072,7 +4098,8 @@ typedef struct tagTVDISPINFOEXW {
 #define TCN_SELCHANGING (TCN_FIRST - 2)
 #define TCN_GETOBJECT (TCN_FIRST - 3)
 #define TCN_FOCUSCHANGE (TCN_FIRST - 4)
-#endif
+
+#endif /* !NOTABCONTROL */
 
 #ifndef NOANIMATE
 
@@ -4105,9 +4132,11 @@ typedef struct tagTVDISPINFOEXW {
 #define Animate_Stop(hwnd) (BOOL)SNDMSG(hwnd,ACM_STOP,0,0)
 #define Animate_Close(hwnd) Animate_Open(hwnd,NULL)
 #define Animate_Seek(hwnd,frame) Animate_Play(hwnd,frame,frame,1)
-#endif
+
+#endif /* !NOANIMATE */
 
 #ifndef NOMONTHCAL
+
 #define MONTHCAL_CLASSW L"SysMonthCal32"
 #define MONTHCAL_CLASSA "SysMonthCal32"
 
@@ -4249,9 +4278,11 @@ typedef struct {
 
 #define GMR_VISIBLE 0
 #define GMR_DAYSTATE 1
-#endif
+
+#endif /* !NOMONTHCAL */
 
 #ifndef NODATETIMEPICK
+
 #define DATETIMEPICK_CLASSW L"SysDateTimePick32"
 #define DATETIMEPICK_CLASSA "SysDateTimePick32"
 
@@ -4392,6 +4423,7 @@ typedef struct {
 #define GDT_NONE 1
 
 #ifndef NOIPADDRESS
+
 #define IPM_CLEARADDRESS (WM_USER+100)
 #define IPM_SETADDRESS (WM_USER+101)
 #define IPM_GETADDRESS (WM_USER+102)
@@ -4419,9 +4451,11 @@ typedef struct {
 #define SECOND_IPADDRESS(x) ((x>>16) & 0xff)
 #define THIRD_IPADDRESS(x) ((x>>8) & 0xff)
 #define FOURTH_IPADDRESS(x) (x & 0xff)
-#endif
+
+#endif /* !NOIPADDRESS */
 
 #ifndef NOPAGESCROLLER
+
 #define WC_PAGESCROLLERW L"SysPager"
 #define WC_PAGESCROLLERA "SysPager"
 
@@ -4526,7 +4560,8 @@ typedef struct {
     int idNew;
     DWORD dwFlags;
   } NMPGHOTITEM,*LPNMPGHOTITEM;
-#endif
+
+#endif /* !NOPAGESCROLLER */
 
 #ifndef NONATIVEFONTCTL
 
@@ -4541,9 +4576,11 @@ typedef struct {
 #define NFS_BUTTON 0x8
 #define NFS_ALL 0x10
 #define NFS_USEFONTASSOC 0x20
-#endif
+
+#endif /* !NONATIVEFONTCTL */
 
 #ifndef NOBUTTON
+
 #define WC_BUTTONA "Button"
 #define WC_BUTTONW L"Button"
 
@@ -4584,15 +4621,17 @@ typedef struct {
 
 #define BST_HOT 0x200
 
-#endif
+#endif /* !NOBUTTON */
 
 #ifndef NOSTATIC
+
 #define WC_STATICA "Static"
 #define WC_STATICW L"Static"
 
 #define WC_STATIC __MINGW_NAME_AW(WC_STATIC)
 
 #ifndef NOEDIT
+
 #define WC_EDITA "Edit"
 #define WC_EDITW L"Edit"
 
@@ -4613,23 +4652,20 @@ typedef struct {
 #define Edit_ShowBalloonTip(hwnd,peditballoontip) (BOOL)SNDMSG((hwnd),EM_SHOWBALLOONTIP,0,(LPARAM)(peditballoontip))
 #define EM_HIDEBALLOONTIP (ECM_FIRST+4)
 #define Edit_HideBalloonTip(hwnd) (BOOL)SNDMSG((hwnd),EM_HIDEBALLOONTIP,0,0)
-#endif
+
+#endif /* !NOEDIT */
 
 #ifndef NOLISTBOX
 #define WC_LISTBOXA "ListBox"
 #define WC_LISTBOXW L"ListBox"
-
 #define WC_LISTBOX __MINGW_NAME_AW(WC_LISTBOX)
-
-#endif
+#endif /* !NOLISTBOX */
 
 #ifndef NOCOMBOBOX
 #define WC_COMBOBOXA "ComboBox"
 #define WC_COMBOBOXW L"ComboBox"
-
 #define WC_COMBOBOX __MINGW_NAME_AW(WC_COMBOBOX)
-
-#endif
+#endif /* !NOCOMBOBOX */
 
 #define CB_SETMINVISIBLE (CBM_FIRST+1)
 #define CB_GETMINVISIBLE (CBM_FIRST+2)
@@ -4640,10 +4676,8 @@ typedef struct {
 #ifndef NOSCROLLBAR
 #define WC_SCROLLBARA "ScrollBar"
 #define WC_SCROLLBARW L"ScrollBar"
-
 #define WC_SCROLLBAR __MINGW_NAME_AW(WC_SCROLLBAR)
-
-#endif
+#endif /* !NOSCROLLBAR */
 
 #define INVALID_LINK_INDEX (-1)
 #define MAX_LINKID_TEXT 48
@@ -4691,7 +4725,8 @@ typedef struct {
   void WINAPI InitMUILanguage(LANGID uiLang);
   LANGID WINAPI GetMUILanguage(void);
 #endif
-#endif
+
+#endif /* !NOSTATIC */
 
 #define DA_LAST (0x7fffffff)
 #define DPA_APPEND (0x7fffffff)
@@ -4716,7 +4751,17 @@ typedef struct {
     _In_ PFNDSAENUMCALLBACK pfnCB,
     _In_opt_ void *pData);
 
+  WINCOMMCTRLAPI
+  VOID
+  WINAPI
+  DSA_EnumCallback(
+    _In_ HDSA hdsa,
+    _In_ PFNDSAENUMCALLBACK enumProc,
+    _In_opt_ LPVOID lParam);
+
   WINCOMMCTRLAPI PVOID WINAPI DSA_GetItemPtr(_In_ HDSA hdsa, int i);
+
+  WINCOMMCTRLAPI BOOL WINAPI DSA_DeleteAllItems(_In_ HDSA hdsa);
 
   WINCOMMCTRLAPI
   int
@@ -4891,7 +4936,8 @@ typedef const void*
     HWND hwndTrack;
     DWORD dwHoverTime;
   } TRACKMOUSEEVENT,*LPTRACKMOUSEEVENT;
-#endif
+
+#endif /* !TME_HOVER */
 
   WINCOMMCTRLAPI
   BOOL
@@ -4899,7 +4945,7 @@ typedef const void*
   _TrackMouseEvent(
     _Inout_ LPTRACKMOUSEEVENT lpEventTrack);
 
-#endif
+#endif /* !NOTRACKMOUSEEVENT */
 
 #ifndef NOFLATSBAPIS
 
@@ -4940,8 +4986,10 @@ typedef const void*
 #define FlatSB_SetScrollPropPtr FlatSB_SetScrollProp
   WINCOMMCTRLAPI BOOL WINAPI InitializeFlatSB(HWND);
   WINCOMMCTRLAPI HRESULT WINAPI UninitializeFlatSB(HWND);
-#endif
-#endif
+
+#endif /* !NOFLATSBAPIS */
+
+#endif /* !NODATETIMEPICK */
 
   typedef LRESULT (CALLBACK *SUBCLASSPROC)(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
 
@@ -5082,11 +5130,20 @@ TaskDialogIndirect(
 
 #include <poppack.h>
 
-#endif /* NOTASKDIALOG */
+#endif /* !NOTASKDIALOG */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+enum _LI_METRIC
+{
+   LIM_SMALL,
+   LIM_LARGE,
+};
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-#endif
+#endif /* !NOUSER */
+
+#endif /* _INC_COMMCTRL */

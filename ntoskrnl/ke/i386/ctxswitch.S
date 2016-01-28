@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/ctxswitch.S
  * PURPOSE:         Thread Context Switching
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Gregor Anich (FPU Code)
  */
@@ -18,6 +18,7 @@ EXTERN @KiSwapContextExit@8:PROC
 EXTERN @KiRetireDpcList@4:PROC
 EXTERN @KiEnterV86Mode@4:PROC
 EXTERN @KiExitV86Mode@4:PROC
+EXTERN _KeI386FxsrPresent:DWORD
 
 /* FUNCTIONS ****************************************************************/
 .code
@@ -63,7 +64,7 @@ PUBLIC @KiSwitchThreads@8
     /* Load the new kernel stack and switch OS to new thread */
     mov esp, edx
     call @KiSwapContextExit@8
-    
+
     /* Now we're on the new thread. Return to the caller to restore registers */
     add esp, 2 * 4
     ret
@@ -158,5 +159,29 @@ PUBLIC @Ki386BiosCallReturnAddress@4
     add esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH + 16)
     popad
     ret 4
+
+PUBLIC _FrRestore
+PUBLIC @Ke386LoadFpuState@4
+@Ke386LoadFpuState@4:
+
+    /* Check if we have FXSR and choose which operand to use */
+    test byte ptr [_KeI386FxsrPresent], 1
+    jz _FrRestore
+
+    /* Restore all the FPU, MMX, XMM and MXCSR registers */
+    fxrstor [ecx]
+    ret
+
+    /*
+     * Just restore the basic FPU registers.
+     * This may raise an exception depending
+     * on the status word, which KiNpxHandler will
+     * need to check for and handle during delayed load
+     * to avoid raising an unhandled exception
+     * and crashing the system.
+     */
+_FrRestore:
+    frstor [ecx]
+    ret
 
 END

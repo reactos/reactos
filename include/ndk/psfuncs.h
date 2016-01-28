@@ -69,8 +69,8 @@ PVOID
 NTAPI
 PsSetThreadWin32Thread(
     _Inout_ PETHREAD Thread,
-    _In_ PVOID Win32Thread,
-    _In_ PVOID OldWin32Thread
+    _In_opt_ PVOID Win32Thread,
+    _In_opt_ PVOID OldWin32Thread
 );
 
 NTKERNELAPI
@@ -92,7 +92,7 @@ VOID
 NTAPI
 PsSetProcessWindowStation(
     _Inout_ PEPROCESS Process,
-    _In_ PVOID WindowStation
+    _In_opt_ PVOID WindowStation
 );
 
 NTKERNELAPI
@@ -113,6 +113,13 @@ NTKERNELAPI
 PEPROCESS
 NTAPI
 PsGetThreadProcess(
+    _In_ PETHREAD Thread
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+PsGetThreadFreezeCount(
     _In_ PETHREAD Thread
 );
 
@@ -326,13 +333,12 @@ NtAlertResumeThread(
     _Out_opt_ PULONG SuspendCount
 );
 
-typedef ULONG APPHELPCACHESERVICECLASS;
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtApphelpCacheControl(
     _In_ APPHELPCACHESERVICECLASS Service,
-    _In_ PVOID ServiceData
+    _In_opt_ PAPPHELP_CACHE_SERVICE_LOOKUP ServiceData
 );
 
 NTSYSCALLAPI
@@ -410,7 +416,6 @@ NtCreateThread(
     _In_ BOOLEAN CreateSuspended
 );
 
-#ifndef _M_ARM
 #ifndef NTOS_MODE_USER
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
@@ -418,11 +423,12 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
     return (PTEB)__readfsdword(0x18);
 #elif defined (_M_AMD64)
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+#elif defined (_M_ARM)
+    return (struct _TEB *)KeGetPcr()->Used_Self;
 #endif
 }
 #else
 struct _TEB * NtCurrentTeb(void);
-#endif
 #endif
 
 NTSYSCALLAPI
@@ -507,6 +513,7 @@ NtQueryInformationJobObject(
 );
 
 #ifndef _NTDDK_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -515,7 +522,7 @@ NtQueryInformationProcess(
     _In_ PROCESSINFOCLASS ProcessInformationClass,
     _Out_ PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength,
-    _Out_opt_ PULONG ReturnLength OPTIONAL
+    _Out_opt_ PULONG ReturnLength
 );
 #endif
 

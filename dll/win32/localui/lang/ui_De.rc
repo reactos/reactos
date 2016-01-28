@@ -16,16 +16,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  */
-
-#include "localui.h"
 
 #pragma code_page(65001)
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-ADDPORT_DIALOG DIALOG 6, 18, 245, 47
-STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+STRINGTABLE
+{
+    IDS_LOCALPORT "Lokaler Anschluss"
+    IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
+    IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
+    IDS_NOTHINGTOCONFIG "Dieser Anschluss besitzt keine zu konfigurierenden Optionen"
+}
+
+ADDPORT_DIALOG DIALOGEX 6, 18, 245, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Lokalen Anschluss hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -36,8 +43,8 @@ BEGIN
 END
 
 
-LPTCONFIG_DIALOG DIALOG 6, 18, 220, 47
-STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+LPTCONFIG_DIALOG DIALOGEX 6, 18, 220, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "LPT-Anschluss konfigurieren"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -47,12 +54,3 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Abbrechen", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END
-
-
-STRINGTABLE
-{
-    IDS_LOCALPORT "Lokaler Anschluss"
-    IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
-    IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
-    IDS_NOTHINGTOCONFIG "Dieser Anschluss besitzt keine zu konfigurierenden Optionen"
-}

@@ -30,15 +30,11 @@
 #include "compat.h"
 #include "debug.h"
 
-#include "aligncheck.h"
-
-#include "mpg123.h"
-
 /*
 	Now, start off easy... translate simple API calls.
 	I need to deal with these here:
 perl -ne '
-if(/^\s*EXPORT\s+(\S+)\s+(mpg123_\S+)\((.*)\);\s*$/)
+if(/^\s*MPG123_EXPORT\s+(\S+)\s+(mpg123_\S+)\((.*)\);\s*$/)
 {
 	$type = $1;
 	$name = $2;
@@ -50,6 +46,7 @@ if(/^\s*EXPORT\s+(\S+)\s+(mpg123_\S+)\((.*)\);\s*$/)
 
 mpg123_decode_frame
 mpg123_framebyframe_decode
+mpg123_framepos
 mpg123_tell
 mpg123_tellframe
 mpg123_tell_stream
@@ -62,6 +59,7 @@ mpg123_set_index
 mpg123_position
 mpg123_length
 mpg123_set_filesize
+mpg123_decode_raw  ... that's experimental.
 
 Let's work on them in that order.
 */
@@ -84,11 +82,11 @@ struct wrap_data
 	int fd;
 	int my_fd; /* A descriptor that the wrapper code opened itself. */
 	/* The actual callbacks from the outside. */
-	long (*r_read) (int, void *, size_t);
+	ssize_t (*r_read) (int, void *, size_t);
 	long (*r_lseek)(int, long, int);
 	/* Data for IO_HANDLE. */
 	void* handle;
-	long (*r_h_read)(void *, void *, size_t);
+	ssize_t (*r_h_read)(void *, void *, size_t);
 	long (*r_h_lseek)(void*, long, int);
 	void (*h_cleanup)(void*);
 };
@@ -169,7 +167,7 @@ int attribute_align_arg mpg123_decode_frame(mpg123_handle *mh, long *num, unsign
 {
 	off_t largenum;
 	int err;
-	ALIGNCHECK(mh);
+
 	err = MPG123_LARGENAME(mpg123_decode_frame)(mh, &largenum, audio, bytes);
 	if(err == MPG123_OK && num != NULL)
 	{
@@ -189,7 +187,7 @@ int attribute_align_arg mpg123_framebyframe_decode(mpg123_handle *mh, long *num,
 {
 	off_t largenum;
 	int err;
-	ALIGNCHECK(mh);
+
 	err = MPG123_LARGENAME(mpg123_framebyframe_decode)(mh, &largenum, audio, bytes);
 	if(err == MPG123_OK && num != NULL)
 	{
@@ -203,13 +201,30 @@ int attribute_align_arg mpg123_framebyframe_decode(mpg123_handle *mh, long *num,
 	return err;
 }
 
+#undef mpg123_framepos
+/* off_t mpg123_framepos(mpg123_handle *mh); */
+long attribute_align_arg mpg123_framepos(mpg123_handle *mh)
+{
+	long val;
+	off_t largeval;
+
+	largeval = MPG123_LARGENAME(mpg123_framepos)(mh);
+	val = largeval;
+	if(val != largeval)
+	{
+		mh->err = MPG123_LFS_OVERFLOW;
+		return MPG123_ERR;
+	}
+	return val;
+}
+
 #undef mpg123_tell
 /* off_t mpg123_tell(mpg123_handle *mh); */
 long attribute_align_arg mpg123_tell(mpg123_handle *mh)
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_tell)(mh);
 	val = largeval;
 	if(val != largeval)
@@ -226,7 +241,7 @@ long attribute_align_arg mpg123_tellframe(mpg123_handle *mh)
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_tellframe)(mh);
 	val = largeval;
 	if(val != largeval)
@@ -243,7 +258,7 @@ long attribute_align_arg mpg123_tell_stream(mpg123_handle *mh)
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_tell_stream)(mh);
 	val = largeval;
 	if(val != largeval)
@@ -260,7 +275,7 @@ long attribute_align_arg mpg123_seek(mpg123_handle *mh, long sampleoff, int when
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_seek)(mh, sampleoff, whence);
 	val = largeval;
 	if(val != largeval)
@@ -278,7 +293,7 @@ long attribute_align_arg mpg123_feedseek(mpg123_handle *mh, long sampleoff, int 
 	long val;
 	off_t largeioff;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_feedseek)(mh, sampleoff, whence, &largeioff);
 	/* Error/message codes are small... */
 	if(largeval < 0) return (long)largeval;
@@ -299,7 +314,7 @@ long attribute_align_arg mpg123_seek_frame(mpg123_handle *mh, long frameoff, int
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_seek_frame)(mh, frameoff, whence);
 	val = largeval;
 	if(val != largeval)
@@ -316,7 +331,7 @@ long attribute_align_arg mpg123_timeframe(mpg123_handle *mh, double sec)
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_timeframe)(mh, sec);
 	val = largeval;
 	if(val != largeval)
@@ -340,7 +355,7 @@ int attribute_align_arg mpg123_index(mpg123_handle *mh, long **offsets, long *st
 	off_t largestep;
 	off_t *largeoffsets;
 	struct wrap_data *whd;
-	ALIGNCHECK(mh);
+
 	whd = wrap_get(mh);
 	if(whd == NULL) return MPG123_ERR;
 
@@ -394,7 +409,7 @@ int attribute_align_arg mpg123_set_index(mpg123_handle *mh, long *offsets, long 
 	size_t i;
 	struct wrap_data *whd;
 	off_t *indextmp;
-	ALIGNCHECK(mh);
+
 	whd = wrap_get(mh);
 	if(whd == NULL) return MPG123_ERR;
 
@@ -432,7 +447,7 @@ int attribute_align_arg mpg123_position(mpg123_handle *mh, long frame_offset, lo
 	off_t curframe, frameleft;
 	long small_curframe, small_frameleft;
 	int err;
-	ALIGNCHECK(mh);
+
 	err = MPG123_LARGENAME(mpg123_position)(mh, frame_offset, buffered_bytes, &curframe, &frameleft, current_seconds, seconds_left);
 	if(err != MPG123_OK) return err;
 
@@ -458,7 +473,7 @@ long attribute_align_arg mpg123_length(mpg123_handle *mh)
 {
 	long val;
 	off_t largeval;
-	ALIGNCHECK(mh);
+
 	largeval = MPG123_LARGENAME(mpg123_length)(mh);
 	val = largeval;
 	if(val != largeval)
@@ -474,7 +489,6 @@ long attribute_align_arg mpg123_length(mpg123_handle *mh)
 /* int mpg123_set_filesize(mpg123_handle *mh, off_t size); */
 int attribute_align_arg mpg123_set_filesize(mpg123_handle *mh, long size)
 {
-	ALIGNCHECK(mh);
 	return MPG123_LARGENAME(mpg123_set_filesize)(mh, size);
 }
 
@@ -497,7 +511,7 @@ int attribute_align_arg mpg123_set_filesize(mpg123_handle *mh, long size)
 #endif
 
 /* Read callback needs nothing special. */
-long wrap_read(void* handle, void *buf, size_t count)
+ssize_t wrap_read(void* handle, void *buf, size_t count)
 {
 	struct wrap_data *ioh = handle;
 	switch(ioh->iotype)
@@ -545,7 +559,7 @@ off_t wrap_lseek(void *handle, off_t offset, int whence)
 
 
 /* Normal reader replacement needs fallback implementations. */
-static long fallback_read(int fd, void *buf, size_t count)
+static ssize_t fallback_read(int fd, void *buf, size_t count)
 {
 	return read(fd, buf, count);
 }
@@ -567,10 +581,10 @@ static long fallback_lseek(int fd, long offset, int whence)
 }
 
 /* Reader replacement prepares the hidden handle storage for next mpg123_open_fd() or plain mpg123_open(). */
-int attribute_align_arg mpg123_replace_reader(mpg123_handle *mh, long (*r_read) (int, void *, size_t), long (*r_lseek)(int, long, int) )
+int attribute_align_arg mpg123_replace_reader(mpg123_handle *mh, ssize_t (*r_read) (int, void *, size_t), long (*r_lseek)(int, long, int) )
 {
 	struct wrap_data* ioh;
-	ALIGNCHECK(mh);
+
 	if(mh == NULL) return MPG123_ERR;
 
 	mpg123_close(mh);
@@ -598,10 +612,10 @@ int attribute_align_arg mpg123_replace_reader(mpg123_handle *mh, long (*r_read) 
 	return MPG123_OK;
 }
 
-int attribute_align_arg mpg123_replace_reader_handle(mpg123_handle *mh, long (*r_read) (void*, void *, size_t), long (*r_lseek)(void*, long, int), void (*cleanup)(void*))
+int attribute_align_arg mpg123_replace_reader_handle(mpg123_handle *mh, ssize_t (*r_read) (void*, void *, size_t), long (*r_lseek)(void*, long, int), void (*cleanup)(void*))
 {
 	struct wrap_data* ioh;
-	ALIGNCHECK(mh);
+
 	if(mh == NULL) return MPG123_ERR;
 
 	mpg123_close(mh);
@@ -628,7 +642,6 @@ int attribute_align_arg mpg123_replace_reader_handle(mpg123_handle *mh, long (*r
 int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
 {
 	struct wrap_data* ioh;
-	ALIGNCHECK(mh);
 
 	if(mh == NULL) return MPG123_ERR;
 
@@ -681,7 +694,6 @@ int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
 int attribute_align_arg mpg123_open_fd(mpg123_handle *mh, int fd)
 {
 	struct wrap_data* ioh;
-	ALIGNCHECK(mh);
 
 	if(mh == NULL) return MPG123_ERR;
 
@@ -713,7 +725,6 @@ int attribute_align_arg mpg123_open_fd(mpg123_handle *mh, int fd)
 int attribute_align_arg mpg123_open_handle(mpg123_handle *mh, void *handle)
 {
 	struct wrap_data* ioh;
-	ALIGNCHECK(mh);
 
 	if(mh == NULL) return MPG123_ERR;
 

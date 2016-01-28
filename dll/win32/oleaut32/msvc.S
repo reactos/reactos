@@ -1,7 +1,15 @@
 
-#include <asm.inc>
+#ifdef _M_ARM
 
-#ifdef _M_AMD64
+#include <kxarm.h>
+
+    LEAF_ENTRY call_method
+        __assertfail
+    LEAF_END call_method
+
+#elif defined(_M_AMD64)
+
+#include <asm.inc>
 .code64
 
 PUBLIC call_method
@@ -10,6 +18,8 @@ call_method:
     ret
 
 #else
+
+#include <asm.inc>
 .code32
 
 PUBLIC _call_method
@@ -41,4 +51,4 @@ cm1:
     ret
 #endif
 
-END
+    END

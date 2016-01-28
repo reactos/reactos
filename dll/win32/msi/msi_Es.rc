@@ -1,7 +1,7 @@
 /*
  * Spanish resources for MSI
  *
- * Copyright 2005, 2006 José Manuel Ferrer Ortiz
+ * Copyright 2005, 2006 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "No se ha podido abrir el paquete de instalación especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
+	4 "No se ha podido abrir el paquete de instalaciÃ³n especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
 	5 "ruta %s no encontrada"
 	9 "inserte el disco %s"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-	11 "introduzca qué carpeta contiene %s"
-	12 "instalar fuente para característica ausente"
-	13 "unidad de red para característica ausente"
-	14 "característica de:"
-	15 "elija qué carpeta contiene %s"
+	11 "introduzca quÃ© carpeta contiene %s"
+	12 "instalar fuente para caracterÃ­stica ausente"
+	13 "unidad de red para caracterÃ­stica ausente"
+	14 "caracterÃ­stica de:"
+	15 "elija quÃ© carpeta contiene %s"
 }

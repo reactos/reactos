@@ -4,14 +4,14 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "通过帮助实用程序不支持此命令。\n试 ""%s /?""\n。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "提供ReactOS命令的帮助信息。\n\n\
 HELP [command]\n\n\
-  command - Display help information for this command.\n"
+  command - 显示此命令的帮助信息。\n"
     IDS_HELP1 "列出所有可用命令 (+ 它们的描述)\n\n\
   help 命令\n\
   命令 /?         得到特定命令的更多信息\n\n\

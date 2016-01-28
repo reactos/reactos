@@ -45,7 +45,7 @@ PrintDiskInfo (LPTSTR szDisk)
     if (!GetVolumeInformation (szRootPath, szVolume, 64, &dwSerial,
                                NULL, NULL, NULL, 0))
     {
-        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, ARRAYSIZE(szMsg));
         ConErrPrintf(_T("%s %s:\n"), szMsg, szDrive);
         return;
     }
@@ -53,7 +53,7 @@ PrintDiskInfo (LPTSTR szDisk)
     if (szVolume[0] == _T('\0'))
     {
 
-        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR2, szMsg, ARRAYSIZE(szMsg));
         _tcscpy (szVolume, szMsg);
     }
 
@@ -65,7 +65,7 @@ PrintDiskInfo (LPTSTR szDisk)
     if (!GetDiskFreeSpace (szRootPath, &dwSecPerCl,
                            &dwBytPerSec, &dwFreeCl, &dwTotCl))
     {
-        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+        LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, ARRAYSIZE(szMsg));
         ConErrPrintf(_T("%s %s:\n"), szMsg, szDrive);
         return;
     }

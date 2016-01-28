@@ -20,8 +20,8 @@ STRINGTABLE LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 BEGIN
 
 /* MMSYS errors */
-MMSYSERR_NOERROR, 		"äpecifikovan˝ prÌkaz bol vykonan˝."
-MMSYSERR_ERROR, 		"Nedefinovan· extern· chyba."
+MMSYSERR_NOERROR, 		"≈†pecifikovan√Ω pr√≠kaz bol vykonan√Ω."
+MMSYSERR_ERROR, 		"Nedefinovan√° extern√° chyba."
 MMSYSERR_BADDEVICEID, 		"A device ID has been used that is out of range for your system."
 MMSYSERR_NOTENABLED, 		"The driver was not enabled."
 MMSYSERR_ALLOCATED, 		"The specified device is already in use. Wait until it is free, and then try again."
@@ -56,7 +56,7 @@ MCIERR_INVALID_DEVICE_NAME, 	"The specified device is not open or is not recogni
 MCIERR_OUT_OF_MEMORY, 		"Not enough memory available for this task. \nQuit one or more applications to increase available memory, and then try again."
 MCIERR_DEVICE_OPEN, 		"The device name is already being used as an alias by this application. Use a unique alias."
 MCIERR_CANNOT_LOAD_DRIVER, 	"There is an undetectable problem in loading the specified device driver."
-MCIERR_MISSING_COMMAND_STRING, 	"Nebol öpecifikovan˝ ûiadny prÌkaz."
+MCIERR_MISSING_COMMAND_STRING, 	"Nebol ≈°pecifikovan√Ω ≈æiadny pr√≠kaz."
 MCIERR_PARAM_OVERFLOW, 		"The output string was to large to fit in the return buffer. Increase the size of the buffer."
 MCIERR_MISSING_STRING_ARGUMENT, "The specified command requires a character-string parameter. Please provide one."
 MCIERR_BAD_INTEGER, 		"The specified integer is invalid for this command."
@@ -65,7 +65,7 @@ MCIERR_DRIVER_INTERNAL, 	"There is a problem with the device driver. Check with 
 MCIERR_MISSING_PARAMETER, 	"The specified command requires a parameter. Please supply one."
 MCIERR_UNSUPPORTED_FUNCTION, 	"The MCI device you are using does not support the specified command."
 MCIERR_FILE_NOT_FOUND, 		"Cannot find the specified file. Make sure the path and filename are correct."
-MCIERR_DEVICE_NOT_READY, 	"Ovl·daË zariadenia nie je pripraven˝."
+MCIERR_DEVICE_NOT_READY, 	"Ovl√°daƒç zariadenia nie je pripraven√Ω."
 MCIERR_INTERNAL, 		"A problem occurred in initializing MCI. Try restarting ReactOS."
 MCIERR_DRIVER, 			"There is a problem with the device driver. The driver has closed. Cannot access error."
 MCIERR_CANNOT_USE_ALL, 		"Cannot use 'all' as the device name with the specified command."
@@ -111,7 +111,7 @@ MCIERR_WAVE_SETOUTPUTUNSUITABLE,"The device you are trying to play to cannot rec
 MCIERR_WAVE_INPUTSUNSUITABLE, 	"No wave device that can record files in the current format is installed. Use the Drivers option to install the wave device."
 MCIERR_WAVE_SETINPUTUNSUITABLE, "The device you are trying to record from cannot recognize the current file format."
 MCIERR_NO_WINDOW, 		"There is no display window."
-MCIERR_CREATEWINDOW, 		"NemÙûem vytvoriù alebo pouûiù okno."
+MCIERR_CREATEWINDOW, 		"Nem√¥≈æem vytvori≈• alebo pou≈æi≈• okno."
 MCIERR_FILE_READ, 		"Cannot read the specified file. Make sure the file is still present, or check your disk or network connection."
 MCIERR_FILE_WRITE, 		"Cannot write to the specified file. Make sure you have enough disk space or are still connected to the network."
 MCIERR_SEQ_DIV_INCOMPATIBLE, 	"The time formats of the ""song pointer"" and SMPTE are mutually exclusive. You can't use them together."

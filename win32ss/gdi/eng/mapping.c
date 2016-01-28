@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for mapping files and sections
- * FILE:              subsys/win32k/eng/device.c
+ * FILE:              win32ss/gdi/eng/mapping.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -86,13 +86,12 @@ EngUnmapSectionView(
     ASSERT(NT_SUCCESS(Status));
 }
 
-
 PVOID
 NTAPI
 EngCreateSection(
-    IN ULONG fl,
-    IN SIZE_T cjSize,
-    IN ULONG ulTag)
+    _In_ ULONG fl,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG ulTag)
 {
     NTSTATUS Status;
     PENGSECTION pSection;
@@ -131,9 +130,9 @@ EngCreateSection(
 PVOID
 NTAPI
 EngCreateSectionHack(
-    IN ULONG fl,
-    IN SIZE_T cjSize,
-    IN ULONG ulTag)
+    _In_ ULONG fl,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG ulTag)
 {
     NTSTATUS Status;
     PENGSECTION pSection;
@@ -169,15 +168,14 @@ EngCreateSectionHack(
     return pSection;
 }
 
-
-
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 EngMapSection(
-    IN PVOID pvSection,
-    IN BOOL bMap,
-    IN HANDLE hProcess,
-    OUT PVOID* pvBaseAddress)
+    _In_ PVOID pvSection,
+    _In_ BOOL bMap,
+    _In_ HANDLE hProcess,
+    _When_(bMap, _Outptr_) PVOID* pvBaseAddress)
 {
     NTSTATUS Status;
     PENGSECTION pSection = pvSection;
@@ -246,8 +244,8 @@ EngMapSection(
 BOOL
 APIENTRY
 EngFreeSectionMem(
-    IN PVOID pvSection OPTIONAL,
-    IN PVOID pvMappedBase OPTIONAL)
+    _In_opt_ PVOID pvSection,
+    _In_opt_ PVOID pvMappedBase)
 {
     NTSTATUS Status;
     PENGSECTION pSection = pvSection;
@@ -277,13 +275,17 @@ EngFreeSectionMem(
     return bResult;
 }
 
+_Check_return_
+_Success_(return!=NULL)
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(cjSize)
 PVOID
 APIENTRY
 EngAllocSectionMem(
-    OUT PVOID *ppvSection,
-    IN ULONG fl,
-    IN SIZE_T cjSize,
-    IN ULONG ulTag)
+    _Outptr_ PVOID *ppvSection,
+    _In_ ULONG fl,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG ulTag)
 {
     NTSTATUS Status;
     PENGSECTION pSection;
@@ -321,13 +323,13 @@ EngAllocSectionMem(
     return pSection->pvMappedBase;
 }
 
-
+_Check_return_
 PFILEVIEW
 NTAPI
 EngLoadModuleEx(
-    LPWSTR pwsz,
-    ULONG cjSizeOfModule,
-    FLONG fl)
+    _In_z_ LPWSTR pwsz,
+    _In_ ULONG cjSizeOfModule,
+    _In_ FLONG fl)
 {
     PFILEVIEW pFileView = NULL;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -381,6 +383,12 @@ EngLoadModuleEx(
                           FILE_NON_DIRECTORY_FILE,
                           NULL,
                           0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open file, hFile=%p, Status=0x%x\n", hFile, Status);
+        EngFreeMem(pFileView);
+        return NULL;
+    }
 
     Status = ZwQueryInformationFile(hFile,
                                     &IoStatusBlock,
@@ -440,6 +448,9 @@ EngLoadModuleForWrite(
     return (HANDLE)EngLoadModuleEx(pwsz, cjSizeOfModule, FVF_SYSTEMROOT);
 }
 
+_Check_return_
+_Success_(return!=NULL)
+_Post_writable_byte_size_(*pulSize)
 PVOID
 APIENTRY
 EngMapModule(
@@ -469,7 +480,7 @@ EngMapModule(
 VOID
 APIENTRY
 EngFreeModule(
-    _In_ HANDLE h)
+    _In_ _Post_invalid_ HANDLE h)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
@@ -534,7 +545,8 @@ EngUnmapFile(
     return TRUE;
 }
 
-
+_Check_return_
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 EngMapFontFileFD(
@@ -556,6 +568,9 @@ EngUnmapFontFileFD(
     UNIMPLEMENTED;
 }
 
+__drv_preferredFunction("EngMapFontFileFD", "Obsolete")
+_Check_return_
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 EngMapFontFile(

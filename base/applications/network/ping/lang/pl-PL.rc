@@ -33,6 +33,7 @@ Opcje:\n\
     IDS_BAD_OPTION_FORMAT "Nieprawidłowy format opcji %1.\n\0"
     IDS_BAD_OPTION "Nieprawidłowa opcja %1.\n\0"
     IDS_BAD_VALUE_OPTION_L "Nieprawidłowa wartość dla opcji -l, wymagana liczba naturalna od 0 do %1!d!.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Nieprawidłowa wartość dla opcji -n, wymagana liczba naturalna od 1 do %1!u!.\n\0"
     IDS_REPLY_FROM "Odpowiedź z %1: bajtów=%2!d! czas%3%4 TTL=%5!d!\n\0"
     IDS_DEST_UNREACHABLE "Host docelowy nieosiągalny.\n\0"
     IDS_COULD_NOT_TRANSMIT "Błąd podczas transmisji danych (%1!d!).\n\0"

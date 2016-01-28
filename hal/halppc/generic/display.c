@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/display.c
+ * FILE:            hal/halppc/generic/display.c
  * PURPOSE:         Blue screen display
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
@@ -82,7 +82,7 @@
  * Last but not least, HalDisplayString is used a lot more in ReactOS,
  * e.g. to print debug messages when the /DEBUGPORT=SCREEN boot option
  * is present.
- * 3 Components are involved in Reactos: HAL, BLUE.SYS and VIDEOPRT.SYS.
+ * 3 Components are involved in ReactOS: HAL, BLUE.SYS and VIDEOPRT.SYS.
  * As in NT, on boot HAL owns the display. When entering the text mode
  * command interpreter, BLUE.SYS kicks in. It will write directly to the
  * screen, more or less behind HALs back.

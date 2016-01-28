@@ -1,0 +1,172 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+        {
+            '1.0' = s 'Windows Script Host Object Model'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{53BAD8C1-E718-11CF-893D-00A0C9054228}' = s 'ITextStream'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A0-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IDrive'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A4-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFile'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A5-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFileCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A2-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolder'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A3-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolderCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{F935DC27-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'IWshCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{F935DC29-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'IWshEnvironment'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{08FED190-BE19-11D3-A28B-00104BD35090}' = s 'IWshExec'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{F935DC23-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'IWshShortcut'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{F935DC21-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'IWshShell'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{24BE5A30-EDFE-11D2-B933-00104B365C9F}' = s 'IWshShell2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{41904400-BE18-11D3-A28B-00104BD35090}' = s 'IWshShell3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+        '{24BE5A31-EDFE-11D2-B933-00104B365C9F}' = s 'IWshNetwork2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{F935DC22-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'Windows Script Host Shell Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WScript.Shell.1'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'WScript.Shell'
+        }
+        '{72C24DD5-D70A-438B-8A42-98424B88AFB8}' = s 'Windows Script Host Shell Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WScript.Shell.1'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'WScript.Shell'
+        }
+        '{F935DC26-1CF0-11D0-ADB9-00C04FD58A0B}' = s 'Windows Script Host Network Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WScript.Network.1'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'WScript.Network'
+        }
+        '{093FF999-1EA0-4079-9525-9614C3504B74}' = s 'Windows Script Host Network Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WScript.Network.1'
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'WScript.Network'
+        }
+    }
+    'WScript.Shell.1' = s 'Windows Script Host Shell Object'
+    {
+        CLSID = s '{F935DC22-1CF0-11D0-ADB9-00C04FD58A0B}'
+    }
+    'WScript.Shell' = s 'Windows Script Host Shell Object'
+    {
+        CLSID = s '{F935DC22-1CF0-11D0-ADB9-00C04FD58A0B}'
+        CurVer = s 'WScript.Shell.1'
+    }
+    'WScript.Shell.1' = s 'Windows Script Host Shell Object'
+    {
+        CLSID = s '{72C24DD5-D70A-438B-8A42-98424B88AFB8}'
+    }
+    'WScript.Shell' = s 'Windows Script Host Shell Object'
+    {
+        CLSID = s '{72C24DD5-D70A-438B-8A42-98424B88AFB8}'
+        CurVer = s 'WScript.Shell.1'
+    }
+    'WScript.Network.1' = s 'Windows Script Host Network Object'
+    {
+        CLSID = s '{F935DC26-1CF0-11D0-ADB9-00C04FD58A0B}'
+    }
+    'WScript.Network' = s 'Windows Script Host Network Object'
+    {
+        CLSID = s '{F935DC26-1CF0-11D0-ADB9-00C04FD58A0B}'
+        CurVer = s 'WScript.Network.1'
+    }
+    'WScript.Network.1' = s 'Windows Script Host Network Object'
+    {
+        CLSID = s '{093FF999-1EA0-4079-9525-9614C3504B74}'
+    }
+    'WScript.Network' = s 'Windows Script Host Network Object'
+    {
+        CLSID = s '{093FF999-1EA0-4079-9525-9614C3504B74}'
+        CurVer = s 'WScript.Network.1'
+    }
+}

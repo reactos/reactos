@@ -102,7 +102,7 @@ static void set_status_text(BindStatusCallback *This, ULONG statuscode, LPCWSTR 
     }
 
     V_VT(&arg) = VT_BSTR;
-    V_BSTR(&arg) = str ? SysAllocString(buffer) : NULL;
+    V_BSTR(&arg) = str ? SysAllocString(buffer) : SysAllocString(emptyW);
     TRACE("=> %s\n", debugstr_w(V_BSTR(&arg)));
 
     call_sink(This->doc_host->cps.wbe2, DISPID_STATUSTEXTCHANGE, &dispparams);
@@ -129,8 +129,15 @@ HRESULT set_dochost_url(DocHost *This, const WCHAR *url)
     heap_free(This->url);
     This->url = new_url;
 
-    This->container_vtbl->SetURL(This, This->url);
+    This->container_vtbl->set_url(This, This->url);
     return S_OK;
+}
+
+void notify_download_state(DocHost *dochost, BOOL is_downloading)
+{
+    DISPPARAMS dwl_dp = {NULL};
+    TRACE("(%x)\n", is_downloading);
+    call_sink(dochost->cps.wbe2, is_downloading ? DISPID_DOWNLOADBEGIN : DISPID_DOWNLOADCOMPLETE, &dwl_dp);
 }
 
 static inline BindStatusCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
@@ -344,6 +351,8 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
     if(!This->doc_host)
         return S_OK;
 
+    if(!This->doc_host->olecmd)
+        notify_download_state(This->doc_host, FALSE);
     if(FAILED(hresult))
         handle_navigation_error(This->doc_host, hresult, This->url, NULL);
 
@@ -653,7 +662,7 @@ static HRESULT create_moniker(LPCWSTR url, IMoniker **mon)
         return CreateURLMoniker(NULL, url, mon);
 
     size = sizeof(new_url)/sizeof(WCHAR);
-    hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE);
+    hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE | URL_APPLY_DEFAULT);
     TRACE("was %s got %s\n", debugstr_w(url), debugstr_w(new_url));
     if(FAILED(hres)) {
         WARN("UrlApplyScheme failed: %08x\n", hres);
@@ -862,6 +871,10 @@ static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mo
         return S_OK;
     }
 
+    notify_download_state(This, TRUE);
+    on_commandstate_change(This, CSC_NAVIGATEBACK, VARIANT_FALSE);
+    on_commandstate_change(This, CSC_NAVIGATEFORWARD, VARIANT_FALSE);
+
     if(This->document)
         deactivate_document(This);
 
@@ -907,6 +920,7 @@ static void navigate_bsc_proc(DocHost *This, task_header_t *t)
 HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
                      const VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
+    SAFEARRAY *post_array = NULL;
     PBYTE post_data = NULL;
     ULONG post_data_len = 0;
     LPWSTR headers = NULL;
@@ -914,15 +928,22 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
 
     TRACE("navigating to %s\n", debugstr_w(url));
 
-    if((Flags && V_VT(Flags) != VT_EMPTY)
-       || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY))
-        FIXME("Unsupported args (Flags %p:%d; TargetFrameName %p:%d)\n",
-                Flags, Flags ? V_VT(Flags) : -1, TargetFrameName,
-                TargetFrameName ? V_VT(TargetFrameName) : -1);
+    if((Flags && V_VT(Flags) != VT_EMPTY && V_VT(Flags) != VT_ERROR)
+       || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY && V_VT(TargetFrameName) != VT_ERROR))
+        FIXME("Unsupported args (Flags %s; TargetFrameName %s)\n", debugstr_variant(Flags), debugstr_variant(TargetFrameName));
 
-    if(PostData && V_VT(PostData) == (VT_ARRAY | VT_UI1) && V_ARRAY(PostData)) {
-        SafeArrayAccessData(V_ARRAY(PostData), (void**)&post_data);
-        post_data_len = V_ARRAY(PostData)->rgsabound[0].cElements;
+    if(PostData) {
+        if(V_VT(PostData) & VT_ARRAY)
+            post_array = V_ISBYREF(PostData) ? *V_ARRAYREF(PostData) : V_ARRAY(PostData);
+        else
+            WARN("Invalid post data %s\n", debugstr_variant(PostData));
+    }
+
+    if(post_array) {
+        LONG elem_max;
+        SafeArrayAccessData(post_array, (void**)&post_data);
+        SafeArrayGetUBound(post_array, 1, &elem_max);
+        post_data_len = (elem_max+1) * SafeArrayGetElemsize(post_array);
     }
 
     if(Headers && V_VT(Headers) == VT_BSTR) {
@@ -961,7 +982,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
     }
 
     if(post_data)
-        SafeArrayUnaccessData(V_ARRAY(PostData));
+        SafeArrayUnaccessData(post_array);
 
     return hres;
 }
@@ -1059,6 +1080,8 @@ static HRESULT navigate_history(DocHost *This, unsigned travellog_pos)
 
     This->travellog.loading_pos = travellog_pos;
     entry = This->travellog.log + This->travellog.loading_pos;
+
+    update_navigation_commands(This);
 
     if(!entry->stream)
         return async_doc_navigate(This, entry->url, NULL, NULL, 0, FALSE);

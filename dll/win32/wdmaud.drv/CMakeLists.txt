@@ -1,6 +1,4 @@
 
-
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound
     ${REACTOS_SOURCE_DIR}/drivers/wdm/audio/legacy/wdmaud
@@ -22,13 +20,8 @@ add_library(wdmaud.drv SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/wdmaud.def)
 
 set_module_type(wdmaud.drv win32dll UNICODE)
-
 set_target_properties(wdmaud.drv PROPERTIES SUFFIX "")
-
-target_link_libraries(wdmaud.drv
-    mmebuddy
-    libsamplerate
-    mmixer)
+target_link_libraries(wdmaud.drv mmebuddy libsamplerate mmixer)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(wdmaud.drv mingwex)

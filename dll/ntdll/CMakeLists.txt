@@ -8,8 +8,7 @@ add_definitions(
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 list(APPEND SOURCE
     csr/api.c
@@ -44,7 +43,7 @@ add_library(ntdll SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
 
-set_module_type(ntdll win32dll HOTPATCHABLE ENTRYPOINT 0)
+set_module_type(ntdll win32dll ENTRYPOINT 0)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##
 set_subsystem(ntdll console)
@@ -54,15 +53,7 @@ if(MSVC)
     add_target_link_flags(ntdll "/RELEASE")
 endif()
 
-target_link_libraries(ntdll
-                      rtl
-                      ntdllsys
-                      libcntpr
-                      uuid
-                      ${PSEH_LIB})
-
+target_link_libraries(ntdll rtl ntdllsys libcntpr uuid ${PSEH_LIB})
 add_pch(ntdll include/ntdll.h SOURCE)
 add_dependencies(ntdll ntstatus asm)
-
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
-

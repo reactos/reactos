@@ -676,15 +676,15 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
      * or switched from pulseaudio to alsa, delete all old devices first
      */
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioRendererCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioInputDeviceCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoInputDeviceCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_MidiRendererCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoCompressorCategory, &basekey, path, MAX_PATH)))
-        SHDeleteKeyW(basekey, path);
+        RegDeleteTreeW(basekey, path);
 
     rf2.dwVersion = 2;
     rf2.dwMerit = MERIT_PREFERRED;
@@ -756,7 +756,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
                     VARIANT var;
 
                     V_VT(&var) = VT_I4;
-                    V_UNION(&var, ulVal) = i;
+                    V_I4(&var) = i;
                     res = IMoniker_BindToStorage(pMoniker, NULL, NULL, &IID_IPropertyBag, (LPVOID)&pPropBag);
                     if (SUCCEEDED(res))
                         res = IPropertyBag_Write(pPropBag, wszWaveOutID, &var);
@@ -764,7 +764,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
                         pPropBag = NULL;
 
                     V_VT(&var) = VT_LPWSTR;
-                    V_UNION(&var, bstrVal) = wocaps.szPname;
+                    V_BSTR(&var) = wocaps.szPname;
                     if (SUCCEEDED(res))
                         res = IPropertyBag_Write(pPropBag, wszFriendlyName, &var);
                     if (pPropBag)
@@ -837,7 +837,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
                     VARIANT var;
 
                     V_VT(&var) = VT_I4;
-                    V_UNION(&var, ulVal) = i;
+                    V_I4(&var) = i;
                     res = IMoniker_BindToStorage(pMoniker, NULL, NULL, &IID_IPropertyBag, (LPVOID)&pPropBag);
                     if (SUCCEEDED(res))
                         res = IPropertyBag_Write(pPropBag, wszWaveInID, &var);
@@ -845,7 +845,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
                         pPropBag = NULL;
 
                     V_VT(&var) = VT_LPWSTR;
-                    V_UNION(&var, bstrVal) = wicaps.szPname;
+                    V_BSTR(&var) = wicaps.szPname;
                     if (SUCCEEDED(res))
                         res = IPropertyBag_Write(pPropBag, wszFriendlyName, &var);
 
@@ -947,7 +947,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
                        OLECHAR wszVfwIndex[] = { 'V','F','W','I','n','d','e','x',0 };
                        VARIANT var;
                        V_VT(&var) = VT_I4;
-                       V_UNION(&var, ulVal) = i;
+                       V_I4(&var) = i;
                        res = IMoniker_BindToStorage(pMoniker, NULL, NULL, &IID_IPropertyBag, (LPVOID)&pPropBag);
                        if (SUCCEEDED(res)) {
                            res = IPropertyBag_Write(pPropBag, wszVfwIndex, &var);

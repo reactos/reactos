@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål resources for WLDAP32
+ * Norwegian BokmÃ¥l resources for WLDAP32
  *
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,10 +26,10 @@ STRINGTABLE
     1 "Operasjonsfeil"
     2 "Protokollfeil"
     3 "Tidsbegrensning overskredet"
-    4 "Størrelsesbegrensing overskredet"
+    4 "StÃ¸rrelsesbegrensing overskredet"
     5 "Sammenlikne usann"
     6 "Sammenlikne sann"
-    7 "Autentiseringsmetoden støttes ikke"
+    7 "Autentiseringsmetoden stÃ¸ttes ikke"
     8 "Sterk autentisering kreves"
     9 "Henvisning (v2)"
     10 "Henvisning"
@@ -38,7 +38,7 @@ STRINGTABLE
     13 "Krever konfidensialitet"
     14 ""
     15 ""
-    16 "Ingen sånn attributt"
+    16 "Ingen sÃ¥nn attributt"
     17 "Udefinert type"
     18 "Upassende sammenlikning"
     19 "Pressovertredelse"
@@ -54,7 +54,7 @@ STRINGTABLE
     29 ""
     30 ""
     31 ""
-    32 "Ikke noe sånt objekt"
+    32 "Ikke noe sÃ¥nt objekt"
     33 "Alias-problem"
     34 "Ugyldig DN-syntaks"
     35 "Er blad"
@@ -75,8 +75,8 @@ STRINGTABLE
     50 "Manglende rettigheter"
     51 "Opptatt"
     52 "Utilgjengelig"
-    53 "Uvillig til å utføre"
-    54 "Løkke oppdaget"
+    53 "Uvillig til Ã¥ utfÃ¸re"
+    54 "LÃ¸kke oppdaget"
     55 ""
     56 ""
     57 ""
@@ -88,12 +88,12 @@ STRINGTABLE
     63 ""
     64 "Navngivingsovertredelse"
     65 "Objektklasseovertredelse"
-    66 "Ikke tillatt på ikke-blad"
-    67 "Ikke tillatt på RDN"
+    66 "Ikke tillatt pÃ¥ ikke-blad"
+    67 "Ikke tillatt pÃ¥ RDN"
     68 "Finnes allerede"
     69 "Ingen objektklassemodifiserere"
     70 "Resultatene er for store"
-    71 "Berører flere DSA'er"
+    71 "BerÃ¸rer flere DSA'er"
     72 ""
     73 ""
     74 ""
@@ -110,14 +110,14 @@ STRINGTABLE
     85 "Tidsavbrudd"
     86 "Ukjent autentisering"
     87 "Filterfeil"
-    88 "Bruker avbrøt"
+    88 "Bruker avbrÃ¸t"
     89 "Parameterfeil"
     90 "Intet minne"
     91 "Kunne ikke koble til LDAP-tjeneren"
-    92 "Operasjonen støttes ikke av denne versjonen av LDAP-protokollen"
+    92 "Operasjonen stÃ¸ttes ikke av denne versjonen av LDAP-protokollen"
     93 "Den oppgitte kontrolleren ble ikke funnet i meldingen"
     94 "Ingen resultater i melding"
     95 "Flere resultater returnert"
-    96 "Løkke under håndtering av henvisninger"
+    96 "LÃ¸kke under hÃ¥ndtering av henvisninger"
     97 "Grense for henvisningshopp overskredet"
 }

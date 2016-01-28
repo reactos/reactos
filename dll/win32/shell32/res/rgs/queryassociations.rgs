@@ -1,0 +1,13 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {a07034fd-6caa-4954-ac3f-97a27216f98a} = s 'Query file associations'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

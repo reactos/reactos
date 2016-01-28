@@ -129,8 +129,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 //
 // Process Priority Separation Values (OR)
 //
-#define PSP_VARIABLE_QUANTUMS                   4
-#define PSP_LONG_QUANTUMS                       16
+#define PSP_DEFAULT_QUANTUMS                    0x00
+#define PSP_VARIABLE_QUANTUMS                   0x04
+#define PSP_FIXED_QUANTUMS                      0x08
+#define PSP_LONG_QUANTUMS                       0x10
+#define PSP_SHORT_QUANTUMS                      0x20
 
 #ifndef NTOS_MODE_USER
 //
@@ -178,6 +181,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 // TLS Slots
 //
 #define TLS_MINIMUM_AVAILABLE                   64
+
+//
+// TEB Active Frame Flags
+//
+#define TEB_ACTIVE_FRAME_CONTEXT_FLAG_EXTENDED 	0x1
 
 //
 // Job Access Types
@@ -681,13 +689,29 @@ typedef struct _TEB_ACTIVE_FRAME_CONTEXT
     ULONG Flags;
     LPSTR FrameName;
 } TEB_ACTIVE_FRAME_CONTEXT, *PTEB_ACTIVE_FRAME_CONTEXT;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT *PCTEB_ACTIVE_FRAME_CONTEXT;
+
+typedef struct _TEB_ACTIVE_FRAME_CONTEXT_EX
+{
+    TEB_ACTIVE_FRAME_CONTEXT BasicContext;
+    PCSTR SourceLocation;
+} TEB_ACTIVE_FRAME_CONTEXT_EX, *PTEB_ACTIVE_FRAME_CONTEXT_EX;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT_EX *PCTEB_ACTIVE_FRAME_CONTEXT_EX;
 
 typedef struct _TEB_ACTIVE_FRAME
 {
     ULONG Flags;
     struct _TEB_ACTIVE_FRAME *Previous;
-    PTEB_ACTIVE_FRAME_CONTEXT Context;
+    PCTEB_ACTIVE_FRAME_CONTEXT Context;
 } TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
+typedef const struct _TEB_ACTIVE_FRAME *PCTEB_ACTIVE_FRAME;
+
+typedef struct _TEB_ACTIVE_FRAME_EX
+{
+    TEB_ACTIVE_FRAME BasicFrame;
+    PVOID ExtensionIdentifier;
+} TEB_ACTIVE_FRAME_EX, *PTEB_ACTIVE_FRAME_EX;
+typedef const struct _TEB_ACTIVE_FRAME_EX *PCTEB_ACTIVE_FRAME_EX;
 
 typedef struct _CLIENT_ID32
 {
@@ -809,6 +833,29 @@ typedef struct _PROCESS_FOREGROUND_BACKGROUND
 {
     BOOLEAN Foreground;
 } PROCESS_FOREGROUND_BACKGROUND, *PPROCESS_FOREGROUND_BACKGROUND;
+
+//
+// Apphelp SHIM Cache
+//
+typedef enum _APPHELPCACHESERVICECLASS
+{
+    ApphelpCacheServiceLookup = 0,
+    ApphelpCacheServiceRemove = 1,
+    ApphelpCacheServiceUpdate = 2,
+    ApphelpCacheServiceFlush = 3,
+    ApphelpCacheServiceDump = 4,
+
+    ApphelpDBGReadRegistry = 0x100,
+    ApphelpDBGWriteRegistry = 0x101,
+} APPHELPCACHESERVICECLASS;
+
+
+typedef struct _APPHELP_CACHE_SERVICE_LOOKUP
+{
+    UNICODE_STRING ImageName;
+    HANDLE ImageHandle;
+} APPHELP_CACHE_SERVICE_LOOKUP, *PAPPHELP_CACHE_SERVICE_LOOKUP;
+
 
 //
 // Thread Information Structures for NtQueryProcessInformation

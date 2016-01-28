@@ -54,20 +54,20 @@
 #define MAXSTRING 8192
 
 /* Translation ids */
-#define STRING_INVPARMS  101
-#define STRING_INVPARM   102
-#define STRING_PAUSE     103
-#define STRING_SIMCOPY   104
-#define STRING_COPY      105
-#define STRING_QISDIR    106
-#define STRING_SRCPROMPT 107
-#define STRING_OVERWRITE 108
-#define STRING_COPYFAIL  109
-#define STRING_OPENFAIL  110
-#define STRING_READFAIL  111
-#define STRING_YES_CHAR  112
-#define STRING_NO_CHAR   113
-#define STRING_ALL_CHAR  114
-#define STRING_FILE_CHAR 115
-#define STRING_DIR_CHAR  116
-#define STRING_HELP      117
+#define STRING_INVPARMS         101
+#define STRING_INVPARM          102
+#define STRING_PAUSE            103
+#define STRING_SIMCOPY          104
+#define STRING_COPY             105
+#define STRING_QISDIR           106
+#define STRING_SRCPROMPT        107
+#define STRING_OVERWRITE        108
+#define STRING_COPYFAIL         109
+#define STRING_OPENFAIL         110
+#define STRING_READFAIL         111
+#define STRING_YES_CHAR         112
+#define STRING_NO_CHAR          113
+#define STRING_ALL_CHAR         114
+#define STRING_FILE_CHAR        115
+#define STRING_DIR_CHAR         116
+#define STRING_HELP             117

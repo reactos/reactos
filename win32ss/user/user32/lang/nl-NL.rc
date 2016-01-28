@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "&Negeren"
     IDS_YES "&Ja"
     IDS_NO "&Nee"
+    IDS_CLOSE "&Afsluiten"
     IDS_HELP "Help"
     IDS_TRYAGAIN "&Probeer opnieuw"
     IDS_CONTINUE "&Verder"

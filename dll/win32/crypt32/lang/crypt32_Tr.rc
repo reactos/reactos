@@ -1,7 +1,7 @@
 /*
  * crypt32 dll resources
  *
- * Copyright: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -148,7 +148,7 @@ STRINGTABLE
     IDS_KEY_PACK_LICENSES "Anahtar Paketi Rusatları"
     IDS_LICENSE_SERVER "Ruhsat Sunucusu Doğrulaması"
     IDS_SMART_CARD_LOGON "Akıllı Kartla Oturum Açma"
-    IDS_DIGITAL_RIGHTS "Sayılık Hakları"
+    IDS_DIGITAL_RIGHTS "Sayılık Yetkileri"
     IDS_QUALIFIED_SUBORDINATION "Nitelikli Bağlılık"
     IDS_KEY_RECOVERY "Anahtar Kurtarma"
     IDS_DOCUMENT_SIGNING "Belge İmzâlama"
@@ -220,7 +220,7 @@ STRINGTABLE
     IDS_NON_REPUDIATION "Geri Çevrilmiş Olmayan"
     IDS_KEY_ENCIPHERMENT "Anahtar Şifreleme"
     IDS_DATA_ENCIPHERMENT "Veri Şifreleme"
-    IDS_KEY_AGREEMENT "Anahtar Onaylanması"
+    IDS_KEY_AGREEMENT "Anahtar Kabûlü"
     IDS_CERT_SIGN "Onay Belgesi İmzâlama"
     IDS_OFFLINE_CRL_SIGN "Çevrim Dışı CRL İmzâlama"
     IDS_CRL_SIGN "CRL İmzâlama"

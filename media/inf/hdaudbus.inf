@@ -1,0 +1,89 @@
+[Version]
+Signature = "$Windows NT$"
+Class = System
+ClassGuid = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider = ReactOS
+DriverVer=11/19/2010,6.1.7601.17514
+PnPLockdown=1
+
+[SourceDisksFiles]
+hdaudbus.sys 		= 3426
+
+[DestinationDirs]
+DefaultDestDir = 12 ; windows\system32\drivers
+
+[Manufacturer]
+Microsoft = GenericMfg
+
+[ControlFlags]
+ExcludeFromSelect = PCI\CC_0403
+;ExcludeFromSelect = PCI\VEN_8086&DEV_2668
+
+[GenericMfg]
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\CC_0403
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_2668
+
+[HDAudio_Device.NT]
+CopyFiles = Drivers_Dir
+AddReg = HDAudio.AddReg
+
+[Drivers_Dir]
+hdaudbus.sys,,,0x0100
+
+[HDAudio.AddReg]
+HKR,Settings,DeviceDescription_FUNC_01,,%AUDIOFG%
+HKR,Settings,DeviceDescription_FUNC_02,,%MODEMFG%
+HKR,Settings,DeviceDescription_Default,,%UNKNOWNFG%
+HKR,Settings,DeviceLocation,,%HDAudioBUS%
+HKR,Interrupt Management,,0x00000010
+HKR,Interrupt Management\MessageSignaledInterruptProperties,,0x00000010
+HKR,Interrupt Management\MessageSignaledInterruptProperties,MSISupported,0x00010001,1
+
+
+;-------------- Service installation
+[HDAudio_Device.NT.Services]
+AddService = HDAudBus, 0x00000002, HDAudio_Service_Inst
+
+; -------------- HDAudio driver install sections
+[HDAudio_Service_Inst]
+DisplayName    = %HDAudBus.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\HDAudBus.sys
+LoadOrderGroup = Extended Base
+
+[SignatureAttributes]
+hdaudbus.sys=SignatureAttributes.DRM
+
+[SignatureAttributes.DRM]
+DRMLevel=1300
+
+
+
+[Strings]
+DiskId1 = "ReactOS UAA Bus Driver for High Definition Audio. Installation Disk #1"
+HDAudio.DeviceDesc = "High Definition Audio Controller"
+HDAudBus.SVCDESC = "ReactOS UAA Bus Driver for High Definition Audio"
+AUDIOFG = "Audio Device on High Definition Audio Bus"
+MODEMFG = "Modem Device on High Definition Audio Bus"
+UNKNOWNFG = "Unknown Device on High Definition Audio Bus"
+HDAudioBUS = "Internal High Definition Audio Bus"
+
+[Strings.0418]
+DiskId1 = "Modúl-pilot ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
+HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
+HDAudBus.SVCDESC = "Modúl-pilot ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
+AUDIOFG = "Dispozitiv audio pe magistrala audio de înaltă definiție"
+MODEMFG = "Dispozitiv modem pe magistrala audio de înaltă definiție"
+UNKNOWNFG = "Dispozitiv nespecificat pe magistrala audio de înaltă definiție"
+HDAudioBUS = "Magistrală internă audio de înaltă definiție"
+
+[Strings.041f]
+DiskId1 = "Yüksek Tanımlı Ses İçin ReactOS UAA Veri Yolu Sürücüsü. 1. Kurulum Diski"
+HDAudio.DeviceDesc = "Yüksek Tanımlı Ses Denetleyicisi"
+HDAudBus.SVCDESC = "Yüksek Tanımlı Ses için ReactOS UAA Veri Yolu Sürücüsü"
+AUDIOFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Ses Aygıtı"
+MODEMFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Çevirge Aygıtı"
+UNKNOWNFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Bilinmeyen Aygıt"
+HDAudioBUS = "İç Yüksek Tanımlı Ses Veri Yolu"

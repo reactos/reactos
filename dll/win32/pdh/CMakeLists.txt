@@ -14,5 +14,5 @@ list(APPEND SOURCE
 add_library(pdh SHARED ${SOURCE})
 set_module_type(pdh win32dll)
 target_link_libraries(pdh wine)
-add_importlibs(pdh msvcrt kernel32 ntdll)
+add_importlibs(pdh msvcrt kernel32_vista kernel32 ntdll)
 add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

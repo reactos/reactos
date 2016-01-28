@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Google (Lei Zhang)
+ * Copyright (C) 2013 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,6 +64,28 @@
 
 #define FLAGS_NOFLAGS   0x0
 #define FLAGS_INTPATH   0x4000
+
+struct memory_buffer
+{
+    const BYTE *buffer;
+    INT size, pos;
+};
+
+struct region_header
+{
+    DWORD size;
+    DWORD checksum;
+    DWORD magic;
+    DWORD num_children;
+};
+
+struct path_header
+{
+    DWORD size;
+    DWORD magic;
+    DWORD count;
+    DWORD flags;
+};
 
 /* Header size as far as header->size is concerned. This doesn't include
  * header->size or header->checksum
@@ -154,7 +177,7 @@ static inline GpStatus clone_element(const region_element* element,
 
     /* root node is allocated with GpRegion */
     if(!*element2){
-        *element2 = GdipAlloc(sizeof(region_element));
+        *element2 = heap_alloc_zero(sizeof(region_element));
         if (!*element2)
             return OutOfMemory;
     }
@@ -227,7 +250,7 @@ GpStatus WINGDIPAPI GdipCloneRegion(GpRegion *region, GpRegion **clone)
     if (!(region && clone))
         return InvalidParameter;
 
-    *clone = GdipAlloc(sizeof(GpRegion));
+    *clone = heap_alloc_zero(sizeof(GpRegion));
     if (!*clone)
         return OutOfMemory;
     element = &(*clone)->node;
@@ -258,11 +281,11 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
     if(mode == CombineModeReplace){
         delete_element(&region->node);
         memcpy(region, path_region, sizeof(GpRegion));
-        GdipFree(path_region);
+        heap_free(path_region);
         return Ok;
     }
 
-    left = GdipAlloc(sizeof(region_element));
+    left = heap_alloc_zero(sizeof(region_element));
     if (left)
     {
         *left = region->node;
@@ -277,7 +300,7 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
     else
         stat = OutOfMemory;
 
-    GdipFree(left);
+    heap_free(left);
     GdipDeleteRegion(path_region);
     return stat;
 }
@@ -305,11 +328,11 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
     if(mode == CombineModeReplace){
         delete_element(&region->node);
         memcpy(region, rect_region, sizeof(GpRegion));
-        GdipFree(rect_region);
+        heap_free(rect_region);
         return Ok;
     }
 
-    left = GdipAlloc(sizeof(region_element));
+    left = heap_alloc_zero(sizeof(region_element));
     if (left)
     {
         memcpy(left, &region->node, sizeof(region_element));
@@ -324,7 +347,7 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
     else
         stat = OutOfMemory;
 
-    GdipFree(left);
+    heap_free(left);
     GdipDeleteRegion(rect_region);
     return stat;
 }
@@ -372,11 +395,11 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
 
         delete_element(&region1->node);
         memcpy(region1, reg2copy, sizeof(GpRegion));
-        GdipFree(reg2copy);
+        heap_free(reg2copy);
         return Ok;
     }
 
-    left  = GdipAlloc(sizeof(region_element));
+    left  = heap_alloc_zero(sizeof(region_element));
     if (!left)
         return OutOfMemory;
 
@@ -384,7 +407,7 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
     stat = clone_element(&region2->node, &right);
     if (stat != Ok)
     {
-        GdipFree(left);
+        heap_free(left);
         return OutOfMemory;
     }
 
@@ -404,7 +427,7 @@ GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **region)
     if(!region)
         return InvalidParameter;
 
-    *region = GdipAlloc(sizeof(GpRegion));
+    *region = heap_alloc_zero(sizeof(GpRegion));
     if(!*region)
         return OutOfMemory;
 
@@ -442,7 +465,7 @@ GpStatus WINGDIPAPI GdipCreateRegionPath(GpPath *path, GpRegion **region)
     if (!(path && region))
         return InvalidParameter;
 
-    *region = GdipAlloc(sizeof(GpRegion));
+    *region = heap_alloc_zero(sizeof(GpRegion));
     if(!*region)
         return OutOfMemory;
     stat = init_region(*region, RegionDataPath);
@@ -476,7 +499,7 @@ GpStatus WINGDIPAPI GdipCreateRegionRect(GDIPCONST GpRectF *rect,
     if (!(rect && region))
         return InvalidParameter;
 
-    *region = GdipAlloc(sizeof(GpRegion));
+    *region = heap_alloc_zero(sizeof(GpRegion));
     stat = init_region(*region, RegionDataRect);
     if(stat != Ok)
     {
@@ -510,15 +533,6 @@ GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *rect,
     return GdipCreateRegionRect(&rectf, region);
 }
 
-GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *data, INT size, GpRegion **region)
-{
-    FIXME("(%p, %d, %p): stub\n", data, size, region);
-
-    *region = NULL;
-    return NotImplemented;
-}
-
-
 /******************************************************************************
  * GdipCreateRegionHrgn [GDIPLUS.@]
  */
@@ -537,32 +551,32 @@ GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
     if(!region || !(size = GetRegionData(hrgn, 0, NULL)))
         return InvalidParameter;
 
-    buf = GdipAlloc(size);
+    buf = heap_alloc_zero(size);
     if(!buf)
         return OutOfMemory;
 
     if(!GetRegionData(hrgn, size, buf)){
-        GdipFree(buf);
+        heap_free(buf);
         return GenericError;
     }
 
     if(buf->rdh.nCount == 0){
         if((stat = GdipCreateRegion(&local)) != Ok){
-            GdipFree(buf);
+            heap_free(buf);
             return stat;
         }
         if((stat = GdipSetEmpty(local)) != Ok){
-            GdipFree(buf);
+            heap_free(buf);
             GdipDeleteRegion(local);
             return stat;
         }
         *region = local;
-        GdipFree(buf);
+        heap_free(buf);
         return Ok;
     }
 
     if((stat = GdipCreatePath(FillModeAlternate, &path)) != Ok){
-        GdipFree(buf);
+        heap_free(buf);
         return stat;
     }
 
@@ -570,7 +584,7 @@ GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
     for(i = 0; i < buf->rdh.nCount; i++){
         if((stat = GdipAddPathRectangle(path, (REAL)rect->left, (REAL)rect->top,
                         (REAL)(rect->right - rect->left), (REAL)(rect->bottom - rect->top))) != Ok){
-            GdipFree(buf);
+            heap_free(buf);
             GdipDeletePath(path);
             return stat;
         }
@@ -579,7 +593,7 @@ GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
 
     stat = GdipCreateRegionPath(path, region);
 
-    GdipFree(buf);
+    heap_free(buf);
     GdipDeletePath(path);
     return stat;
 }
@@ -595,7 +609,7 @@ GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *region)
         return InvalidParameter;
 
     delete_element(&region->node);
-    GdipFree(region);
+    heap_free(region);
 
     return Ok;
 }
@@ -726,15 +740,9 @@ static void write_element(const region_element* element, DWORD *buffer,
         {
             INT i;
             const GpPath* path = element->elementdata.path;
-            struct _pathheader
-            {
-                DWORD size;
-                DWORD magic;
-                DWORD count;
-                DWORD flags;
-            } *pathheader;
+            struct path_header *pathheader;
 
-            pathheader = (struct _pathheader *)(buffer + *filled);
+            pathheader = (struct path_header *)(buffer + *filled);
 
             pathheader->flags = is_integer_path(path) ? FLAGS_INTPATH : FLAGS_NOFLAGS;
             /* 3 for headers, once again size doesn't count itself */
@@ -811,13 +819,7 @@ static void write_element(const region_element* element, DWORD *buffer,
 GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size,
         UINT *needed)
 {
-    struct _region_header
-    {
-        DWORD size;
-        DWORD checksum;
-        DWORD magic;
-        DWORD num_children;
-    } *region_header;
+    struct region_header *region_header;
     INT filled = 0;
     UINT required;
     GpStatus status;
@@ -835,7 +837,7 @@ GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size,
         return InsufficientBuffer;
     }
 
-    region_header = (struct _region_header *)buffer;
+    region_header = (struct region_header *)buffer;
     region_header->size = sizeheader_size + get_element_size(&region->node);
     region_header->checksum = 0;
     region_header->magic = VERSION_MAGIC;
@@ -849,6 +851,232 @@ GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size,
         *needed = filled * sizeof(DWORD);
 
     return Ok;
+}
+
+static inline void init_memory_buffer(struct memory_buffer *mbuf, const BYTE *buffer, INT size)
+{
+    mbuf->buffer = buffer;
+    mbuf->size = size;
+    mbuf->pos = 0;
+}
+
+static inline const void *buffer_read(struct memory_buffer *mbuf, INT size)
+{
+    if (mbuf->size - mbuf->pos >= size)
+    {
+        const void *data = mbuf->buffer + mbuf->pos;
+        mbuf->pos += size;
+        return data;
+    }
+    return NULL;
+}
+
+static GpStatus read_element(struct memory_buffer *mbuf, GpRegion *region, region_element *node, INT *count)
+{
+    GpStatus status;
+    const DWORD *type;
+
+    type = buffer_read(mbuf, sizeof(*type));
+    if (!type) return Ok;
+
+    TRACE("type %#x\n", *type);
+
+    node->type = *type;
+
+    switch (node->type)
+    {
+    case CombineModeReplace:
+    case CombineModeIntersect:
+    case CombineModeUnion:
+    case CombineModeXor:
+    case CombineModeExclude:
+    case CombineModeComplement:
+    {
+        region_element *left, *right;
+
+        left = heap_alloc_zero(sizeof(region_element));
+        if (!left) return OutOfMemory;
+        right = heap_alloc_zero(sizeof(region_element));
+        if (!right)
+        {
+            heap_free(left);
+            return OutOfMemory;
+        }
+
+        status = read_element(mbuf, region, left, count);
+        if (status == Ok)
+        {
+            status = read_element(mbuf, region, right, count);
+            if (status == Ok)
+            {
+                node->elementdata.combine.left = left;
+                node->elementdata.combine.right = right;
+                region->num_children += 2;
+                return Ok;
+            }
+        }
+
+        heap_free(left);
+        heap_free(right);
+        return status;
+    }
+
+    case RegionDataRect:
+    {
+        const GpRectF *rc;
+
+        rc = buffer_read(mbuf, sizeof(*rc));
+        if (!rc)
+        {
+            ERR("failed to read rect data\n");
+            return InvalidParameter;
+        }
+
+        node->elementdata.rect = *rc;
+        *count += 1;
+        return Ok;
+    }
+
+    case RegionDataPath:
+    {
+        GpPath *path;
+        const struct path_header *path_header;
+        const BYTE *types;
+
+        path_header = buffer_read(mbuf, sizeof(*path_header));
+        if (!path_header)
+        {
+            ERR("failed to read path header\n");
+            return InvalidParameter;
+        }
+        if (path_header->magic != VERSION_MAGIC)
+        {
+            ERR("invalid path header magic %#x\n", path_header->magic);
+            return InvalidParameter;
+        }
+
+        /* Windows always fails to create an empty path in a region */
+        if (!path_header->count)
+        {
+            TRACE("refusing to create an empty path in a region\n");
+            return GenericError;
+        }
+
+        status = GdipCreatePath(FillModeAlternate, &path);
+        if (status) return status;
+
+        node->elementdata.path = path;
+
+        if (!lengthen_path(path, path_header->count))
+            return OutOfMemory;
+
+        path->pathdata.Count = path_header->count;
+
+        if (path_header->flags & ~FLAGS_INTPATH)
+            FIXME("unhandled path flags %#x\n", path_header->flags);
+
+        if (path_header->flags & FLAGS_INTPATH)
+        {
+            const packed_point *pt;
+            DWORD i;
+
+            pt = buffer_read(mbuf, sizeof(*pt) * path_header->count);
+            if (!pt)
+            {
+                ERR("failed to read packed %u path points\n", path_header->count);
+                return InvalidParameter;
+            }
+
+            for (i = 0; i < path_header->count; i++)
+            {
+                path->pathdata.Points[i].X = (REAL)pt[i].X;
+                path->pathdata.Points[i].Y = (REAL)pt[i].Y;
+            }
+        }
+        else
+        {
+            const GpPointF *ptf;
+
+            ptf = buffer_read(mbuf, sizeof(*ptf) * path_header->count);
+            if (!ptf)
+            {
+                ERR("failed to read %u path points\n", path_header->count);
+                return InvalidParameter;
+            }
+            memcpy(path->pathdata.Points, ptf, sizeof(*ptf) * path_header->count);
+        }
+
+        types = buffer_read(mbuf, path_header->count);
+        if (!types)
+        {
+            ERR("failed to read %u path types\n", path_header->count);
+            return InvalidParameter;
+        }
+        memcpy(path->pathdata.Types, types, path_header->count);
+        if (path_header->count & 3)
+        {
+            if (!buffer_read(mbuf, 4 - (path_header->count & 3)))
+            {
+                ERR("failed to read rounding %u bytes\n", 4 - (path_header->count & 3));
+                return InvalidParameter;
+            }
+        }
+
+        *count += 1;
+        return Ok;
+    }
+
+    case RegionDataEmptyRect:
+    case RegionDataInfiniteRect:
+        *count += 1;
+        return Ok;
+
+    default:
+        FIXME("element type %#x is not supported\n", *type);
+        break;
+    }
+
+    return InvalidParameter;
+}
+
+/*****************************************************************************
+ * GdipCreateRegionRgnData [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *data, INT size, GpRegion **region)
+{
+    const struct region_header *region_header;
+    struct memory_buffer mbuf;
+    GpStatus status;
+    INT count;
+
+    TRACE("(%p, %d, %p)\n", data, size, region);
+
+    if (!data || !size)
+        return InvalidParameter;
+
+    init_memory_buffer(&mbuf, data, size);
+
+    region_header = buffer_read(&mbuf, sizeof(*region_header));
+    if (!region_header || (region_header->magic != VERSION_MAGIC &&
+                           region_header->magic != VERSION_MAGIC2))
+        return InvalidParameter;
+
+    status = GdipCreateRegion(region);
+    if (status != Ok)
+        return status;
+
+    count = 0;
+    status = read_element(&mbuf, *region, &(*region)->node, &count);
+    if (status == Ok && !count)
+        status = InvalidParameter;
+
+    if (status != Ok)
+    {
+        GdipDeleteRegion(*region);
+        *region = NULL;
+    }
+
+    return status;
 }
 
 /*****************************************************************************
@@ -976,7 +1204,7 @@ static GpStatus get_region_hrgn(struct region_element *element, GpGraphics *grap
                     case CombineModeIntersect:
                         return get_region_hrgn(element->elementdata.combine.right, graphics, hrgn);
                     case CombineModeXor: case CombineModeExclude:
-                        left = CreateRectRgn(-4194304, -4194304, 4194304, 4194304);
+                        left = CreateRectRgn(-(1 << 22), -(1 << 22), 1 << 22, 1 << 22);
                         break;
                     case CombineModeUnion: case CombineModeComplement:
                         *hrgn = NULL;
@@ -1001,7 +1229,7 @@ static GpStatus get_region_hrgn(struct region_element *element, GpGraphics *grap
                         *hrgn = left;
                         return Ok;
                     case CombineModeXor: case CombineModeComplement:
-                        right = CreateRectRgn(-4194304, -4194304, 4194304, 4194304);
+                        right = CreateRectRgn(-(1 << 22), -(1 << 22), 1 << 22, 1 << 22);
                         break;
                     case CombineModeUnion: case CombineModeExclude:
                         DeleteObject(left);
@@ -1285,7 +1513,7 @@ static GpStatus transform_region_element(region_element* element, GpMatrix *matr
             {
                 /* Steal the element from the created region. */
                 memcpy(element, &new_region->node, sizeof(region_element));
-                GdipFree(new_region);
+                heap_free(new_region);
             }
             else
                 return stat;
@@ -1391,7 +1619,7 @@ static GpStatus get_region_scans_data(GpRegion *region, GpMatrix *matrix, LPRGND
             {
                 data_size = GetRegionData(hrgn, 0, NULL);
 
-                *data = GdipAlloc(data_size);
+                *data = heap_alloc_zero(data_size);
 
                 if (*data)
                     GetRegionData(hrgn, data_size, *data);
@@ -1404,7 +1632,7 @@ static GpStatus get_region_scans_data(GpRegion *region, GpMatrix *matrix, LPRGND
             {
                 data_size = sizeof(RGNDATAHEADER) + sizeof(RECT);
 
-                *data = GdipAlloc(data_size);
+                *data = heap_alloc_zero(data_size);
 
                 if (*data)
                 {
@@ -1443,7 +1671,7 @@ GpStatus WINGDIPAPI GdipGetRegionScansCount(GpRegion *region, UINT *count, GpMat
     if (stat == Ok)
     {
         *count = data->rdh.nCount;
-        GdipFree(data);
+        heap_free(data);
     }
 
     return stat;
@@ -1477,7 +1705,7 @@ GpStatus WINGDIPAPI GdipGetRegionScansI(GpRegion *region, GpRect *scans, INT *co
             }
         }
 
-        GdipFree(data);
+        heap_free(data);
     }
 
     return Ok;
@@ -1511,7 +1739,7 @@ GpStatus WINGDIPAPI GdipGetRegionScans(GpRegion *region, GpRectF *scans, INT *co
             }
         }
 
-        GdipFree(data);
+        heap_free(data);
     }
 
     return Ok;

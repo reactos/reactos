@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * opcodes.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,13 +29,15 @@
 #define FAST486_NUM_OPCODE_HANDLERS 256
 #define FAST486_OPCODE_WRITE_REG (1 << 1)
 #define FAST486_OPCODE_HANDLER(x)   \
-    BOOLEAN FASTCALL x(PFAST486_STATE State, UCHAR Opcode)
+    VOID FASTCALL x(PFAST486_STATE State, UCHAR Opcode)
 
-typedef BOOLEAN (FASTCALL *FAST486_OPCODE_HANDLER_PROC)(PFAST486_STATE, UCHAR);
+typedef VOID (FASTCALL *FAST486_OPCODE_HANDLER_PROC)(PFAST486_STATE, UCHAR);
 
 extern
 FAST486_OPCODE_HANDLER_PROC
 Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS];
+
+FAST486_OPCODE_HANDLER(Fast486OpcodeInvalid);
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePrefix);
 FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement);
@@ -155,3 +157,5 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns);
 FAST486_OPCODE_HANDLER(Fast486OpcodeOuts);
 
 #endif // _OPCODES_H_
+
+/* EOF */

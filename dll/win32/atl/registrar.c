@@ -18,11 +18,6 @@
 
 #include <precomp.h>
 
-#define NO_SHLWAPI_PATH
-#define NO_SHLWAPI_STRFCNS
-#define NO_SHLWAPI_GDI
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
 
 /**************************************************************
  * ATLRegistrar implementation
@@ -183,7 +178,7 @@ static HRESULT do_preprocess(const Registrar *This, LPCOLESTR data, strbuf *buf)
 
 static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOOL do_register)
 {
-    LPCOLESTR iter = *pstr;
+    LPCOLESTR iter;
     HRESULT hres;
     LONG lres;
     HKEY hkey = 0;
@@ -232,10 +227,10 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                 strbuf_write(buf->str, &name, -1);
             }else if(key_type == DO_DELETE) {
                 TRACE("Deleting %s\n", debugstr_w(buf->str));
-                SHDeleteKeyW(parent_key, buf->str);
+                RegDeleteTreeW(parent_key, buf->str);
             }else {
                 if(key_type == FORCE_REMOVE)
-                    SHDeleteKeyW(parent_key, buf->str);
+                    RegDeleteTreeW(parent_key, buf->str);
                 lres = RegCreateKeyW(parent_key, buf->str, &hkey);
                 if(lres != ERROR_SUCCESS) {
                     WARN("Could not create(open) key: %08x\n", lres);
@@ -379,7 +374,7 @@ static HRESULT do_process_root_key(LPCOLESTR data, BOOL do_register)
 {
     LPCOLESTR iter = data;
     strbuf buf;
-    HRESULT hres = S_OK;
+    HRESULT hres;
     unsigned int i;
 
     strbuf_init(&buf);

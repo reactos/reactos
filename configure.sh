@@ -9,6 +9,7 @@ BUILD_ENVIRONMENT=MinGW
 ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
+USE_NEW_STYLE=1
 
 usage() {
 	echo Invalid parameter given.
@@ -33,6 +34,9 @@ while [ $# -gt 0 ]; do
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
 		;;
+		with-host-tools)
+			USE_NEW_STYLE=0
+		;;
 		*)
 			usage
 	esac
@@ -46,19 +50,27 @@ if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
 	cd "$REACTOS_OUTPUT_PATH"
 fi
 
-mkdir -p host-tools reactos
+mkdir -p reactos
 
-echo Preparing host tools...
-cd host-tools
-rm -f CMakeCache.txt
+EXTRA_ARGS=""
+if [ $USE_NEW_STYLE -eq 0 ]; then
+	mkdir -p host-tools
+	echo Preparing host tools...
+	cd host-tools
+	rm -f CMakeCache.txt
 
-REACTOS_BUILD_TOOLS_DIR="$PWD"
-cmake -G "$CMAKE_GENERATOR" -DARCH:STRING=$ARCH $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
+	REACTOS_BUILD_TOOLS_DIR="$PWD"
+	cmake -G "$CMAKE_GENERATOR" -DARCH:STRING=$ARCH $ROS_CMAKEOPTS -DNEW_STYLE_BUILD:BOOL=0 "$REACTOS_SOURCE_DIR"
+
+	EXTRA_ARGS="-DREACTOS_BUILD_TOOLS_DIR:PATH=$REACTOS_BUILD_TOOLS_DIR"
+
+	cd ..
+fi
 
 echo Preparing reactos...
-cd ../reactos
+cd reactos
 rm -f CMakeCache.txt
 
-cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DREACTOS_BUILD_TOOLS_DIR:PATH="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
+cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DNEW_STYLE_BUILD:BOOL=$USE_NEW_STYLE $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
 echo Configure script complete! Enter directories and execute appropriate build commands \(ex: ninja, make, makex, etc...\).

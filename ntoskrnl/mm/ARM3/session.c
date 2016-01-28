@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -35,29 +35,6 @@ PETHREAD MiExpansionLockOwner;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-FORCEINLINE
-KIRQL
-MiAcquireExpansionLock()
-{
-    KIRQL OldIrql;
-
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    KeAcquireSpinLock(&MmExpansionLock, &OldIrql);
-    ASSERT(MiExpansionLockOwner == NULL);
-    MiExpansionLockOwner = PsGetCurrentThread();
-    return OldIrql;
-}
-
-FORCEINLINE
-VOID
-MiReleaseExpansionLock(KIRQL OldIrql)
-{
-    ASSERT(MiExpansionLockOwner == PsGetCurrentThread());
-    MiExpansionLockOwner = NULL;
-    KeReleaseSpinLock(&MmExpansionLock, OldIrql);
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-}
-
 VOID
 NTAPI
 MiInitializeSessionWsSupport(VOID)
@@ -65,6 +42,14 @@ MiInitializeSessionWsSupport(VOID)
     /* Initialize the list heads */
     InitializeListHead(&MiSessionWsList);
     InitializeListHead(&MmWorkingSetExpansionHead);
+}
+
+BOOLEAN
+NTAPI
+MmIsSessionAddress(IN PVOID Address)
+{
+    /* Check if it is in range */
+    return MI_IS_SESSION_ADDRESS(Address) ? TRUE : FALSE;
 }
 
 LCID
@@ -158,7 +143,7 @@ MiInitializeSessionIds(VOID)
     BitmapSize = ((Size + 31) / 32) * sizeof(ULONG);
     MiSessionIdBitmap = ExAllocatePoolWithTag(PagedPool,
                                               sizeof(RTL_BITMAP) + BitmapSize,
-                                              '  mM');
+                                              TAG_MM);
     if (MiSessionIdBitmap)
     {
         /* Free all the bits */
@@ -185,9 +170,9 @@ MiSessionLeader(IN PEPROCESS Process)
     KIRQL OldIrql;
 
     /* Set the flag while under the expansion lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
+    OldIrql = MiAcquireExpansionLock();
     Process->Vm.Flags.SessionLeader = TRUE;
-    KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+    MiReleaseExpansionLock(OldIrql);
 }
 
 ULONG
@@ -480,8 +465,10 @@ NTAPI
 MiSessionInitializeWorkingSetList(VOID)
 {
     KIRQL OldIrql;
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
+    MMPDE TempPde;
     ULONG Color, Index;
     PFN_NUMBER PageFrameIndex;
     PMM_SESSION_SPACE SessionGlobal;
@@ -501,7 +488,9 @@ MiSessionInitializeWorkingSetList(VOID)
     if (PointerPde->u.Hard.Valid == 1)
     {
         /* Nope, we'll have to do it */
+#ifndef _M_ARM
         ASSERT(PointerPde->u.Hard.Global == 0);
+#endif
         AllocatedPageTable = FALSE;
     }
     else
@@ -519,7 +508,7 @@ MiSessionInitializeWorkingSetList(VOID)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Check if we need a page table */
-    if (AllocatedPageTable == TRUE)
+    if (AllocatedPageTable != FALSE)
     {
         /* Get a zeroed colored zero page */
         Color = MI_GET_NEXT_COLOR();
@@ -536,14 +525,14 @@ MiSessionInitializeWorkingSetList(VOID)
         }
 
         /* Write a valid PDE for it */
-        TempPte.u.Long = ValidKernelPdeLocal.u.Long;
-        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        MI_WRITE_VALID_PTE(PointerPde, TempPte);
+        TempPde = ValidKernelPdeLocal;
+        TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+        MI_WRITE_VALID_PDE(PointerPde, TempPde);
 
         /* Add this into the list */
         Index = ((ULONG_PTR)WorkingSetList - (ULONG_PTR)MmSessionBase) >> 22;
 #ifndef _M_AMD64
-        MmSessionSpace->PageTables[Index] = TempPte;
+        MmSessionSpace->PageTables[Index] = TempPde;
 #endif
         /* Initialize the page directory page, and now zero the working set list itself */
         MiInitializePfnForOtherProcess(PageFrameIndex,
@@ -567,8 +556,8 @@ MiSessionInitializeWorkingSetList(VOID)
     }
 
     /* Write a valid PTE for it */
-    TempPte.u.Long = ValidKernelPteLocal.u.Long;
-    TempPte.u.Hard.Dirty = TRUE;
+    TempPte = ValidKernelPteLocal;
+    MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
 
     /* Initialize the working set list page */
@@ -614,10 +603,11 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     PEPROCESS Process = PsGetCurrentProcess();
     ULONG NewFlags, Flags, Size, i, Color;
     KIRQL OldIrql;
-    PMMPTE PointerPte, PageTables, SessionPte;
-    PMMPDE PointerPde;
+    PMMPTE PointerPte, SessionPte;
+    PMMPDE PointerPde, PageTables;
     PMM_SESSION_SPACE SessionGlobal;
     MMPTE TempPte;
+    MMPDE TempPde;
     NTSTATUS Status;
     BOOLEAN Result;
     PFN_NUMBER SessionPageDirIndex;
@@ -685,7 +675,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Loop the global PTEs */
-    TempPte.u.Long = ValidKernelPte.u.Long;
+    TempPte = ValidKernelPte;
     for (i = 0; i < MiSessionDataPages; i++)
     {
         /* Get a zeroed colored zero page */
@@ -725,20 +715,20 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     }
 
     /* Fill the PTE out */
-    TempPte.u.Long = ValidKernelPdeLocal.u.Long;
-    TempPte.u.Hard.PageFrameNumber = SessionPageDirIndex;
+    TempPde = ValidKernelPdeLocal;
+    TempPde.u.Hard.PageFrameNumber = SessionPageDirIndex;
 
     /* Setup, allocate, fill out the MmSessionSpace PTE */
     PointerPde = MiAddressToPde(MmSessionSpace);
     ASSERT(PointerPde->u.Long == 0);
-    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+    MI_WRITE_VALID_PDE(PointerPde, TempPde);
     MiInitializePfnForOtherProcess(SessionPageDirIndex,
                                    PointerPde,
                                    SessionPageDirIndex);
     ASSERT(MI_PFN_ELEMENT(SessionPageDirIndex)->u1.WsIndex == 0);
 
      /* Loop all the local PTEs for it */
-    TempPte.u.Long = ValidKernelPteLocal.u.Long;
+    TempPte = ValidKernelPteLocal;
     PointerPte = MiAddressToPte(MmSessionSpace);
     for (i = 0; i < MiSessionDataPages; i++)
     {
@@ -925,7 +915,7 @@ MmAttachSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -993,7 +983,7 @@ MmDetachSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
@@ -1034,7 +1024,7 @@ MmQuitNextSession(
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
-    NT_ASSERT(EntryProcess != NULL);
+    ASSERT(EntryProcess != NULL);
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql () <= APC_LEVEL);

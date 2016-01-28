@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             drivers/directx/dxg/ddhmg.c
+ * FILE:             win32ss/reactx/dxg/ddhmg.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       30/12-2007   Magnus Olsen

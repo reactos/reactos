@@ -2,7 +2,7 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Clip region functions
- * FILE:             subsystems/win32/win32k/objects/cliprgn.c
+ * FILE:             win32ss/gdi/ntgdi/cliprgn.c
  * PROGRAMER:        Unknown
  */
 
@@ -10,6 +10,32 @@
 
 #define NDEBUG
 #include <debug.h>
+
+VOID
+FASTCALL
+IntGdiReleaseRaoRgn(PDC pDC)
+{
+    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
+    RECTL_vSetEmptyRect(&pDC->erclClip);
+    REGION_Delete(pDC->prgnRao);
+    pDC->prgnRao = NULL;
+}
+
+VOID
+FASTCALL
+IntGdiReleaseVisRgn(PDC pDC)
+{
+    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
+    RECTL_vSetEmptyRect(&pDC->erclClip);
+    REGION_Delete(pDC->prgnVis);
+    pDC->prgnVis = prgnDefault;
+}
 
 VOID
 FASTCALL
@@ -31,7 +57,7 @@ GdiSelectVisRgn(
     ASSERT(prgn != NULL);
 
     IntGdiCombineRgn(dc->prgnVis, prgn, NULL, RGN_COPY);
-    IntGdiOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    REGION_bOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
 
     DC_UnlockDc(dc);
 }
@@ -117,6 +143,7 @@ NtGdiExtSelectClipRgn(
     return retval;
 }
 
+_Success_(return!=ERROR)
 INT
 FASTCALL
 GdiGetClipBox(
@@ -160,6 +187,7 @@ GdiGetClipBox(
     return iComplexity;
 }
 
+_Success_(return!=ERROR)
 INT
 APIENTRY
 NtGdiGetAppClipBox(
@@ -190,55 +218,72 @@ NtGdiGetAppClipBox(
     return iComplexity;
 }
 
-int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
-                         int  LeftRect,
-                         int  TopRect,
-                         int  RightRect,
-                         int  BottomRect)
+INT
+APIENTRY
+NtGdiExcludeClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    INT Result;
-    RECTL Rect;
-    PREGION prgnNew;
-    PDC dc = DC_LockDc(hDC);
+    INT iComplexity;
+    RECTL rect;
+    PDC pdc;
 
-    if (!dc)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    Rect.left = LeftRect;
-    Rect.top = TopRect;
-    Rect.right = RightRect;
-    Rect.bottom = BottomRect;
+    /* Convert coordinates to device space */
+    rect.left = xLeft;
+    rect.top = yTop;
+    rect.right = xRight;
+    rect.bottom = yBottom;
+    RECTL_vMakeWellOrdered(&rect);
+    IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-
-    prgnNew = IntSysCreateRectpRgnIndirect(&Rect);
-    if (!prgnNew)
+    /* Check if we already have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        Result = ERROR;
+        /* We have a region, subtract the rect */
+        iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
+                                                 pdc->dclevel.prgnClip,
+                                                 &rect);
     }
     else
     {
-        if (!dc->dclevel.prgnClip)
+        /* We don't have a clip region yet, create an empty region */
+        pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+        if (pdc->dclevel.prgnClip == NULL)
         {
-            dc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
-            IntGdiCombineRgn(dc->dclevel.prgnClip, dc->prgnVis, prgnNew, RGN_DIFF);
-            Result = SIMPLEREGION;
+            iComplexity = ERROR;
         }
         else
         {
-            Result = IntGdiCombineRgn(dc->dclevel.prgnClip, dc->dclevel.prgnClip, prgnNew, RGN_DIFF);
+            /* Subtract the rect from the VIS region */
+            iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
+                                                     pdc->prgnVis,
+                                                     &rect);
         }
-        REGION_Delete(prgnNew);
     }
-    if (Result != ERROR)
-        dc->fs |= DC_FLAG_DIRTY_RAO;
 
-    DC_UnlockDc(dc);
+    /* Emulate Windows behavior */
+    if (iComplexity == SIMPLEREGION)
+        iComplexity = COMPLEXREGION;
 
-    return Result;
+    /* If we succeeded, mark the RAO region as dirty */
+    if (iComplexity != ERROR)
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    return iComplexity;
 }
 
 INT
@@ -277,10 +322,9 @@ NtGdiIntersectClipRect(
     if (pdc->dclevel.prgnClip != NULL)
     {
         /* We have a region, crop it */
-        iComplexity = REGION_CropAndOffsetRegion(pdc->dclevel.prgnClip,
-                                                 pdc->dclevel.prgnClip,
-                                                 &rect,
-                                                 NULL);
+        iComplexity = REGION_CropRegion(pdc->dclevel.prgnClip,
+                                        pdc->dclevel.prgnClip,
+                                        &rect);
     }
     else
     {
@@ -308,33 +352,59 @@ NtGdiIntersectClipRect(
     return iComplexity;
 }
 
-int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
-                       int  XOffset,
-                       int  YOffset)
+INT
+APIENTRY
+NtGdiOffsetClipRgn(
+    _In_ HDC hdc,
+    _In_ INT xOffset,
+    _In_ INT yOffset)
 {
-    INT Result;
-    DC *dc;
+    INT iComplexity;
+    PDC pdc;
+    POINTL apt[2];
 
-    if(!(dc = DC_LockDc(hDC)))
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    if(dc->dclevel.prgnClip != NULL)
+    /* Check if we have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        Result = IntGdiOffsetRgn(dc->dclevel.prgnClip,
-                                XOffset,
-                                YOffset);
-        dc->fs |= DC_FLAG_DIRTY_RAO;
+        /* Convert coordinates into device space. Note that we need to convert
+           2 coordinates to account for rotation / shear / offset */
+        apt[0].x = 0;
+        apt[0].y = 0;
+        apt[1].x = xOffset;
+        apt[1].y = yOffset;
+        IntLPtoDP(pdc, &apt, 2);
+
+        /* Offset the clip region */
+        if (!REGION_bOffsetRgn(pdc->dclevel.prgnClip,
+                               apt[1].x - apt[0].x,
+                               apt[1].y - apt[0].y))
+        {
+            iComplexity = ERROR;
+        }
+        else
+        {
+            iComplexity = REGION_Complexity(pdc->dclevel.prgnClip);
+        }
+
+        /* Mark the RAO region as dirty */
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
     }
     else
     {
-        Result = NULLREGION;
+        /* NULL means no clipping, i.e. the "whole" region */
+        iComplexity = SIMPLEREGION;
     }
 
-    DC_UnlockDc(dc);
-    return Result;
+    /* Unlock the DC and return the complexity */
+    DC_UnlockDc(pdc);
+    return iComplexity;
 }
 
 BOOL APIENTRY NtGdiPtVisible(HDC  hDC,
@@ -422,6 +492,7 @@ IntGdiSetMetaRgn(PDC pDC)
     {
         if ( pDC->dclevel.prgnClip )
         {
+            // preferably REGION_IntersectRegion
             Ret = IntGdiCombineRgn(pDC->dclevel.prgnMeta, pDC->dclevel.prgnMeta, pDC->dclevel.prgnClip, RGN_AND);
             if (Ret != ERROR)
             {
@@ -530,7 +601,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
     }
 
 
-    IntGdiOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
+    REGION_bOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
 
     RtlCopyMemory(&pDC->erclClip,
                 &pDC->prgnRao->rdh.rcBound,
@@ -548,7 +619,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
                            pDC->prgnRao->Buffer,
                            &pDC->erclClip);
 
-    IntGdiOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
+    REGION_bOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 }
 
 /* EOF */

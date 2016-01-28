@@ -16,10 +16,10 @@
 BOOL
 WINAPI
 AbortPath(
-    HDC	hdc
-)
+    HDC hdc)
 {
-    return NtGdiAbortPath( hdc );
+    HANDLE_METADC0P(BOOL, AbortPath, FALSE, hdc);
+    return NtGdiAbortPath(hdc);
 }
 
 
@@ -29,10 +29,10 @@ AbortPath(
 BOOL
 WINAPI
 BeginPath(
-    HDC	hdc
-)
+    HDC hdc)
 {
-    return NtGdiBeginPath( hdc );
+    HANDLE_METADC0P(BOOL, BeginPath, FALSE, hdc);
+    return NtGdiBeginPath(hdc);
 }
 
 /*
@@ -41,10 +41,10 @@ BeginPath(
 BOOL
 WINAPI
 CloseFigure(
-    HDC	hdc
-)
+    HDC	hdc)
 {
-    return NtGdiCloseFigure ( hdc );
+    HANDLE_METADC0P(BOOL, CloseFigure, FALSE, hdc);
+    return NtGdiCloseFigure(hdc);
 }
 
 
@@ -54,9 +54,9 @@ CloseFigure(
 BOOL
 WINAPI
 EndPath(
-    HDC	hdc
-)
+    HDC hdc)
 {
+    HANDLE_METADC0P(BOOL, EndPath, FALSE, hdc);
     return NtGdiEndPath( hdc );
 }
 
@@ -67,9 +67,9 @@ EndPath(
 BOOL
 WINAPI
 FillPath(
-    HDC	hdc
-)
+    HDC	hdc)
 {
+    HANDLE_METADC0P(BOOL, FillPath, FALSE, hdc);
     return NtGdiFillPath( hdc );
 }
 
@@ -80,9 +80,9 @@ FillPath(
 BOOL
 WINAPI
 FlattenPath(
-    HDC	hdc
-)
+    HDC	hdc)
 {
+    HANDLE_METADC0P(BOOL, FlattenPath, FALSE, hdc);
     return NtGdiFlattenPath ( hdc );
 }
 
@@ -118,10 +118,10 @@ GetPath(HDC hdc,
 HRGN
 WINAPI
 PathToRegion(
-    HDC	hdc
-)
+    HDC	hdc)
 {
-    return NtGdiPathToRegion ( hdc );
+    HANDLE_METADC0P(HRGN, PathToRegion, NULL, hdc);
+    return NtGdiPathToRegion(hdc);
 }
 
 /*
@@ -151,9 +151,9 @@ SetMiterLimit(
 BOOL
 WINAPI
 StrokeAndFillPath(
-    HDC	hdc
-)
+    HDC	hdc)
 {
+    HANDLE_METADC0P(BOOL, StrokeAndFillPath, FALSE, hdc);
     return NtGdiStrokeAndFillPath ( hdc );
 }
 
@@ -164,9 +164,9 @@ StrokeAndFillPath(
 BOOL
 WINAPI
 StrokePath(
-    HDC	hdc
-)
+    HDC	hdc)
 {
+    HANDLE_METADC0P(BOOL, StrokePath, FALSE, hdc);
     return NtGdiStrokePath ( hdc );
 }
 
@@ -177,9 +177,9 @@ StrokePath(
 BOOL
 WINAPI
 WidenPath(
-    HDC	hdc
-)
+    HDC	hdc)
 {
+    HANDLE_METADC0P(BOOL, WidenPath, FALSE, hdc);
     return NtGdiWidenPath ( hdc );
 }
 
@@ -190,8 +190,8 @@ BOOL
 WINAPI
 SelectClipPath(
     HDC	hdc,
-    int	Mode
-)
+    int	iMode)
 {
-    return NtGdiSelectClipPath ( hdc, Mode );
+    HANDLE_METADC(BOOL, SelectClipPath, FALSE, hdc, iMode);
+    return NtGdiSelectClipPath(hdc, iMode);
 }

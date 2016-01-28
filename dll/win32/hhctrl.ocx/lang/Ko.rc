@@ -24,36 +24,66 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "∏Ò∑œ(&C)"
-    IDS_INDEX        "¿Œµ¶Ω∫(&N)"
-    IDS_SEARCH       "√£±‚(&S)"
-    IDS_FAVORITES    "¡Ò∞‹√£±‚(&I)"
+    IDS_CONTENTS     "Î™©Î°ù(&C)"
+    IDS_INDEX        "Ïù∏Îç±Ïä§(&N)"
+    IDS_SEARCH       "Ï∞æÍ∏∞(&S)"
+    IDS_FAVORITES    "Ï¶êÍ≤®Ï∞æÍ∏∞(&I)"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "∫∏ø©¡÷±‚"
-    IDTB_CONTRACT    "º˚±‚±‚"
-    IDTB_STOP        "¡§¡ˆ"
-    IDTB_REFRESH     "ªı∑Œ ∞Ìƒß"
-    IDTB_BACK        "µ⁄∑Œ"
-    IDTB_HOME        "»®"
-    IDTB_SYNC        "µø±‚»≠"
-    IDTB_PRINT       "¿Œº‚"
-    IDTB_OPTIONS     "ø…º«"
-    IDTB_FORWARD     "æ’¿∏∑Œ"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "ªÁøÎ¿⁄¡§¿«"
-    IDTB_ZOOM        "»Æ¥Î"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+    IDTB_EXPAND      "Î≥¥Ïó¨Ï£ºÍ∏∞"
+    IDTB_CONTRACT    "Ïà®Í∏∞Í∏∞"
+    IDTB_STOP        "Ï†ïÏßÄ"
+    IDTB_REFRESH     "ÏÉàÎ°ú Í≥†Ïπ®"
+    IDTB_BACK        "Îí§Î°ú"
+    IDTB_HOME        "Ìôà"
+    IDTB_SYNC        "ÎèôÍ∏∞Ìôî"
+    IDTB_PRINT       "Ïù∏ÏáÑ"
+    IDTB_OPTIONS     "ÏòµÏÖò"
+    IDTB_FORWARD     "ÏïûÏúºÎ°ú"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

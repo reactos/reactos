@@ -55,7 +55,7 @@ static HRESULT WINAPI IAssemblyEnumImpl_QueryInterface(IAssemblyEnum *iface,
         IsEqualIID(riid, &IID_IAssemblyEnum))
     {
         IAssemblyEnum_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IAssemblyEnum_iface;
         return S_OK;
     }
 

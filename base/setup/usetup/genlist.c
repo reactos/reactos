@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/genlist.c
+ * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Eric Kohl
  *                  Christoph von Wittich <christoph at reactos.org>
@@ -341,6 +341,51 @@ DrawScrollBarGenericList(
 }
 
 
+static
+VOID
+CenterCurrentListItem(
+    PGENERIC_LIST List)
+{
+    PLIST_ENTRY Entry;
+    ULONG MaxVisibleItems, ItemCount, i;
+
+    if ((List->Top == 0 && List->Bottom == 0) ||
+        IsListEmpty(&List->ListHead) ||
+        List->CurrentEntry == NULL)
+        return;
+
+    MaxVisibleItems = (ULONG)(List->Bottom - List->Top - 1);
+
+    ItemCount = 0;
+    Entry = List->ListHead.Flink;
+    while (Entry != &List->ListHead)
+    {
+        ItemCount++;
+        Entry = Entry->Flink;
+    }
+
+    if (ItemCount > MaxVisibleItems)
+    {
+        Entry = &List->CurrentEntry->Entry;
+        for (i = 0; i < MaxVisibleItems / 2; i++)
+        {
+            if (Entry->Blink != &List->ListHead)
+                Entry = Entry->Blink;
+        }
+
+        List->FirstShown = Entry;
+
+        for (i = 0; i < MaxVisibleItems; i++)
+        {
+            if (Entry->Flink != &List->ListHead)
+                Entry = Entry->Flink;
+        }
+
+        List->LastShown = Entry;
+    }
+}
+
+
 VOID
 DrawGenericList(
     PGENERIC_LIST List,
@@ -359,6 +404,8 @@ DrawGenericList(
 
     if (IsListEmpty(&List->ListHead))
         return;
+
+    CenterCurrentListItem(List);
 
     DrawListEntries(List);
     DrawScrollBarGenericList(List);
@@ -651,6 +698,19 @@ RestoreGenericListState(
     PGENERIC_LIST List)
 {
     List->CurrentEntry = List->BackupEntry;
+}
+
+
+BOOL
+GenericListHasSingleEntry(
+    PGENERIC_LIST List)
+{
+    if (!IsListEmpty(&List->ListHead) && List->ListHead.Flink == List->ListHead.Blink)
+        return TRUE;
+
+    /* if both list head pointers (which normally point to the first and last list member, respectively)
+       point to the same entry then it means that there's just a single thing in there, otherwise... false! */
+    return FALSE;
 }
 
 /* EOF */

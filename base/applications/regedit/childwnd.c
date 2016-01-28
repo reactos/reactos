@@ -286,7 +286,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     WNDPROC oldwndproc;
     static WCHAR s_szNode[256];
-    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    oldwndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -348,6 +348,12 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
             }
         }
     }
+    else
+    {
+        (void)ListView_DeleteAllItems(g_pChildWnd->hListWnd);
+        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
+        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
+    }
 }
 
 /*******************************************************************************
@@ -385,7 +391,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"»", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
+        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
@@ -406,7 +412,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                          0);
         }
         /* Subclass the AddressBar */
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC);
+        oldproc = (WNDPROC)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC);
         SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_USERDATA, (DWORD_PTR)oldproc);
         SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC, (DWORD_PTR)AddressBarProc);
         break;

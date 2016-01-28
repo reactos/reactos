@@ -160,7 +160,7 @@ MiniIsBusy(
     {
        Busy = TRUE;
     }
-    else if (Type == NdisWorkItemResetRequested && 
+    else if (Type == NdisWorkItemResetRequested &&
              Adapter->NdisMiniportBlock.ResetStatus == NDIS_STATUS_PENDING)
     {
        Busy = TRUE;
@@ -340,7 +340,7 @@ MiniIndicateReceivePacket(
                                              &NdisBufferVA,
                                              &FirstBufferLength,
                                              &TotalBufferLength);
-                
+
                 HeaderSize = NDIS_GET_PACKET_HEADER_SIZE(PacketArray[i]);
 
                 LookAheadSize = TotalBufferLength - HeaderSize;
@@ -352,12 +352,12 @@ MiniIndicateReceivePacket(
                     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
                     return;
                 }
-                
+
                 CopyBufferChainToBuffer(LookAheadBuffer,
                                         NdisBuffer,
                                         HeaderSize,
                                         LookAheadSize);
-                
+
                 NDIS_DbgPrint(MID_TRACE, ("Indicating packet to protocol's legacy Receive handler\n"));
                 (*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)(
                      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
@@ -367,7 +367,7 @@ MiniIndicateReceivePacket(
                      LookAheadBuffer,
                      LookAheadSize,
                      TotalBufferLength - HeaderSize);
-                
+
                 ExFreePool(LookAheadBuffer);
             }
         }
@@ -495,18 +495,32 @@ MiniRequestComplete(
 
     MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
 
-    if( MacBlock->Binding->RequestCompleteHandler ) {
-        (*MacBlock->Binding->RequestCompleteHandler)(
-            MacBlock->Binding->ProtocolBindingContext,
-            Request,
-            Status);
+    /* We may or may not be doing this request on behalf of an adapter binding */
+    if (MacBlock->Binding != NULL)
+    {
+        /* We are, so invoke its request complete handler */
+        if (MacBlock->Binding->RequestCompleteHandler != NULL)
+        {
+            (*MacBlock->Binding->RequestCompleteHandler)(
+                MacBlock->Binding->ProtocolBindingContext,
+                Request,
+                Status);
+        }
+    }
+    else
+    {
+        /* We are doing this internally, so we'll signal this event we've stashed in the MacBlock */
+        ASSERT(MacBlock->Unknown1 != NULL);
+        ASSERT(MacBlock->Unknown3 == NULL);
+        MacBlock->Unknown3 = (PVOID)Status;
+        KeSetEvent(MacBlock->Unknown1, IO_NO_INCREMENT, FALSE);
     }
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     Adapter->NdisMiniportBlock.PendingRequest = NULL;
     KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     KeLowerIrql(OldIrql);
-    
+
     MiniWorkItemComplete(Adapter, NdisWorkItemRequest);
 }
 
@@ -558,7 +572,7 @@ MiniSendComplete(
         Status);
 
     KeLowerIrql(OldIrql);
-    
+
     MiniWorkItemComplete(Adapter, NdisWorkItemSend);
 }
 
@@ -702,7 +716,7 @@ MiniLocateDevice(
     KeAcquireSpinLock(&AdapterListLock, &OldIrql);
     {
         CurrentEntry = AdapterListHead.Flink;
-        
+
         while (CurrentEntry != &AdapterListHead)
         {
             Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
@@ -746,6 +760,8 @@ MiniSetInformation(
 {
   NDIS_STATUS NdisStatus;
   PNDIS_REQUEST NdisRequest;
+  KEVENT Event;
+  PNDIS_REQUEST_MAC_BLOCK MacBlock;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
@@ -762,11 +778,19 @@ MiniSetInformation(
   NdisRequest->DATA.SET_INFORMATION.InformationBuffer = Buffer;
   NdisRequest->DATA.SET_INFORMATION.InformationBufferLength = Size;
 
+  /* We'll need to give the completion routine some way of letting us know
+   * when it's finished. We'll stash a pointer to an event in the MacBlock */
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
+  MacBlock->Unknown1 = &Event;
+
   NdisStatus = MiniDoRequest(Adapter, NdisRequest);
 
-  /* FIXME: Wait in pending case! */
-
-  ASSERT(NdisStatus != NDIS_STATUS_PENDING);
+  if (NdisStatus == NDIS_STATUS_PENDING)
+  {
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      NdisStatus = (NDIS_STATUS)MacBlock->Unknown3;
+  }
 
   *BytesRead = NdisRequest->DATA.SET_INFORMATION.BytesRead;
 
@@ -796,6 +820,8 @@ MiniQueryInformation(
 {
   NDIS_STATUS NdisStatus;
   PNDIS_REQUEST NdisRequest;
+  KEVENT Event;
+  PNDIS_REQUEST_MAC_BLOCK MacBlock;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
@@ -812,11 +838,19 @@ MiniQueryInformation(
   NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer = Buffer;
   NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength = Size;
 
+  /* We'll need to give the completion routine some way of letting us know
+   * when it's finished. We'll stash a pointer to an event in the MacBlock */
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
+  MacBlock->Unknown1 = &Event;
+
   NdisStatus = MiniDoRequest(Adapter, NdisRequest);
 
-  /* FIXME: Wait in pending case! */
-
-  ASSERT(NdisStatus != NDIS_STATUS_PENDING);
+  if (NdisStatus == NDIS_STATUS_PENDING)
+  {
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      NdisStatus = (NDIS_STATUS)MacBlock->Unknown3;
+  }
 
   *BytesWritten = NdisRequest->DATA.QUERY_INFORMATION.BytesWritten;
 
@@ -902,7 +936,7 @@ MiniReset(
 
        NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
        NdisMIndicateStatusComplete(Adapter);
-       
+
        MiniWorkItemComplete(Adapter, NdisWorkItemResetRequested);
    }
 
@@ -1674,6 +1708,12 @@ NdisMRegisterAdapterShutdownHandler(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
+  if (Adapter->BugcheckContext != NULL)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Attempted to register again for a shutdown callback\n"));
+      return;
+  }
+
   BugcheckContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_BUGCHECK_CONTEXT));
   if(!BugcheckContext)
     {
@@ -2360,6 +2400,19 @@ NdisIDispatchPnp(
 
 NTSTATUS
 NTAPI
+NdisIPower(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+
+  PoStartNextPowerIrp(Irp);
+  IoSkipCurrentIrpStackLocation(Irp);
+  return PoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+}
+
+NTSTATUS
+NTAPI
 NdisIAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -2540,6 +2593,12 @@ NdisGenericIrpHandler(
         {
             return NdisIDeviceIoControl(DeviceObject, Irp);
         }
+        else if (IrpSp->MajorFunction == IRP_MJ_POWER)
+        {
+            return NdisIPower(DeviceObject, Irp);
+        }
+        NDIS_DbgPrint(MIN_TRACE, ("Unexpected IRP MajorFunction 0x%x\n", IrpSp->MajorFunction));
+        ASSERT(FALSE);
     }
     else if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK)
     {
@@ -2608,11 +2667,11 @@ NdisMRegisterMiniport(
             case 0x00:
                 MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
                 break;
-                
+
             case 0x01:
                 MinSize = sizeof(NDIS51_MINIPORT_CHARACTERISTICS);
                 break;
-                
+
             default:
                 NDIS_DbgPrint(MIN_TRACE, ("Bad 5.x minor characteristics version.\n"));
                 return NDIS_STATUS_BAD_VERSION;
@@ -2624,7 +2683,7 @@ NdisMRegisterMiniport(
         return NDIS_STATUS_BAD_VERSION;
     }
 
-   NDIS_DbgPrint(MIN_TRACE, ("Initializing an NDIS %u.%u miniport\n", 
+   NDIS_DbgPrint(MID_TRACE, ("Initializing an NDIS %u.%u miniport\n",
                               MiniportCharacteristics->MajorNdisVersion,
                               MiniportCharacteristics->MinorNdisVersion));
 
@@ -2845,7 +2904,7 @@ NdisMSetAttributesEx(
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
     NDIS_DbgPrint(MIN_TRACE, ("Intermediate drivers not supported yet.\n"));
 
-  NDIS_DbgPrint(MIN_TRACE, ("Miniport attribute flags: 0x%x\n", AttributeFlags));
+  NDIS_DbgPrint(MID_TRACE, ("Miniport attribute flags: 0x%x\n", AttributeFlags));
 
   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.AdapterShutdownHandler)
   {
@@ -3141,7 +3200,7 @@ NdisMRegisterDevice(
         NDIS_DbgPrint(MIN_TRACE, ("IoCreateDevice failed (%x)\n", Status));
         return Status;
     }
-    
+
     Status = IoCreateSymbolicLink(SymbolicName, DeviceName);
 
     if (!NT_SUCCESS(Status))

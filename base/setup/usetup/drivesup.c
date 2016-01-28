@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/drivesup.c
+ * FILE:            base/setup/usetup/drivesup.c
  * PURPOSE:         Drive support functions
  * PROGRAMMER:      Eric Kohl
  */

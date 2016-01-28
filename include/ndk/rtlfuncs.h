@@ -1730,46 +1730,18 @@ RtlCharToInteger(
 //
 #ifdef NTOS_MODE_USER
 
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
-    ((defined(_M_AMD64) || \
-     defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
-
 unsigned short __cdecl _byteswap_ushort(unsigned short);
 unsigned long  __cdecl _byteswap_ulong (unsigned long);
 unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
+#ifdef _MSC_VER
 #pragma intrinsic(_byteswap_ushort)
 #pragma intrinsic(_byteswap_ulong)
 #pragma intrinsic(_byteswap_uint64)
+#endif // _MSC_VER
 #define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
-#elif defined (__GNUC__)
-
-#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
-#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
-#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
-
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-USHORT
-FASTCALL
-RtlUshortByteSwap(IN USHORT Source);
-
-NTSYSAPI
-ULONG
-FASTCALL
-RtlUlongByteSwap(IN ULONG Source);
-
-NTSYSAPI
-ULONGLONG
-FASTCALL
-RtlUlonglongByteSwap(IN ULONGLONG Source);
-#endif
-
-#endif
 #endif // NTOS_MODE_USER
 
 //
@@ -1955,12 +1927,12 @@ RtlOemToUnicodeN(
 //
 // Ansi->Unicode String Functions
 //
+_IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
-ULONG
+WCHAR
 NTAPI
-RtlxAnsiStringToUnicodeSize(
-    PCANSI_STRING AnsiString
-);
+RtlAnsiCharToUnicodeChar(
+  _Inout_ PUCHAR *SourceCharacter);
 
 NTSYSAPI
 NTSTATUS
@@ -1969,6 +1941,13 @@ RtlAnsiStringToUnicodeString(
     PUNICODE_STRING DestinationString,
     PCANSI_STRING SourceString,
     BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxAnsiStringToUnicodeSize(
+    PCANSI_STRING AnsiString
 );
 
 #ifdef NTOS_MODE_USER
@@ -2074,6 +2053,14 @@ RtlFillMemoryUlonglong(
     _In_ ULONGLONG Pattern
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyMappedMemory(
+    _Out_writes_bytes_all_(Size) PVOID Destination,
+    _In_reads_bytes_(Size) const VOID *Source,
+    _In_ SIZE_T Size
+);
 
 NTSYSAPI
 SIZE_T
@@ -2084,8 +2071,10 @@ RtlCompareMemoryUlong(
     _In_ ULONG Pattern
 );
 
+#ifndef RtlEqualMemory
 #define RtlEqualMemory(Destination, Source, Length) \
     (!memcmp(Destination, Source, Length))
+#endif
 
 #define RtlCopyBytes RtlCopyMemory
 #define RtlFillBytes RtlFillMemory
@@ -3018,6 +3007,30 @@ RtlGetCompressionWorkSpaceSize(
 );
 
 //
+// Frame Functions
+//
+NTSYSAPI
+VOID
+NTAPI
+RtlPopFrame(
+    _In_ PTEB_ACTIVE_FRAME Frame
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlPushFrame(
+    _In_ PTEB_ACTIVE_FRAME Frame
+);
+
+NTSYSAPI
+PTEB_ACTIVE_FRAME
+NTAPI
+RtlGetFrame(
+    VOID
+);
+
+//
 // Debug Info Functions
 //
 NTSYSAPI
@@ -3095,6 +3108,33 @@ RtlFindClearBitsAndSet(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_ ULONG NumberToFind,
     _In_ ULONG HintIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindFirstRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_ PULONG StartingIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindClearRuns(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_writes_to_(SizeOfRunArray, return) PRTL_BITMAP_RUN RunArray,
+    _In_range_(>, 0) ULONG SizeOfRunArray,
+    _In_ BOOLEAN LocateLongestRuns
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindLastBackwardRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _In_ ULONG FromIndex,
+    _Out_ PULONG StartingRunIndex
 );
 
 NTSYSAPI
@@ -3992,6 +4032,41 @@ RtlComputeCrc32(
 // Network Functions
 //
 NTSYSAPI
+PSTR
+NTAPI
+RtlIpv4AddressToStringA(
+    _In_ const struct in_addr *Addr,
+    _Out_writes_(16) PCHAR S
+);
+
+NTSYSAPI
+PWSTR
+NTAPI
+RtlIpv4AddressToStringW(
+    _In_ const struct in_addr *Addr,
+    _Out_writes_(16) PWCHAR S
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv4AddressToStringExA(
+    _In_ const struct in_addr *Address,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PCHAR AddressString,
+    _Inout_ PULONG AddressStringLength
+);
+
+NTSTATUS
+NTAPI
+RtlIpv4AddressToStringExW(
+    _In_ const struct in_addr *Address,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWCHAR AddressString,
+    _Inout_ PULONG AddressStringLength
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv4StringToAddressA(
@@ -4032,11 +4107,49 @@ RtlIpv4StringToAddressExW(
 );
 
 NTSYSAPI
+PSTR
+NTAPI
+RtlIpv6AddressToStringA(
+    _In_ const struct in6_addr *Addr,
+    _Out_writes_(46) PSTR S
+);
+
+NTSYSAPI
+PWSTR
+NTAPI
+RtlIpv6AddressToStringW(
+    _In_ const struct in6_addr *Addr,
+    _Out_writes_(46) PWSTR S
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6AddressToStringExA(
+    _In_ const struct in6_addr *Address,
+    _In_ ULONG ScopeId,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PSTR AddressString,
+    _Inout_ PULONG AddressStringLength
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6AddressToStringExW(
+    _In_ const struct in6_addr *Address,
+    _In_ ULONG ScopeId,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWCHAR AddressString,
+    _Inout_ PULONG AddressStringLength
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv6StringToAddressA(
-    _In_ PCHAR Name,
-    _Out_ PCHAR *Terminator,
+    _In_ PCSTR String,
+    _Out_ PCSTR *Terminator,
     _Out_ struct in6_addr *Addr
 );
 
@@ -4044,8 +4157,8 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv6StringToAddressW(
-    _In_ PWCHAR Name,
-    _Out_ PCHAR *Terminator,
+    _In_ PCWSTR String,
+    _Out_ PCWSTR *Terminator,
     _Out_ struct in6_addr *Addr
 );
 
@@ -4053,20 +4166,20 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv6StringToAddressExA(
-    _In_ PCHAR AddressString,
-    _In_ struct in6_addr *Address,
-    _In_ PULONG ScopeId,
-    _In_ PUSHORT Port
+    _In_ PCSTR AddressString,
+    _Out_ struct in6_addr *Address,
+    _Out_ PULONG ScopeId,
+    _Out_ PUSHORT Port
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv6StringToAddressExW(
-    _In_ PWCHAR AddressName,
-    _In_ struct in6_addr *Address,
-    _In_ PULONG ScopeId,
-    _In_ PUSHORT Port
+    _In_ PCWSTR AddressString,
+    _Out_ struct in6_addr *Address,
+    _Out_ PULONG ScopeId,
+    _Out_ PUSHORT Port
 );
 
 

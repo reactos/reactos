@@ -22,13 +22,22 @@
 #define IDS_TOOLTIP_SEEKBACK 105
 #define IDS_TOOLTIP_SEEKFORW 106
 #define IDS_TOOLTIP_FORWARD  107
-#define IDS_ALL_TYPES_FILTER 108
-#define IDS_PLAY             109
-#define IDS_DEFAULTMCIERRMSG 110
-#define IDS_UNKNOWNFILEEXT   111
+#define IDS_TOOLTIP_PAUSE    108
+#define IDS_ALL_TYPES_FILTER 109
+#define IDS_PLAY             110
+#define IDS_DEFAULTMCIERRMSG 111
+
+#define IDS_MODE_UNKNOWN     120
+#define IDS_MODE_OPEN        121
+#define IDS_MODE_STOP        122
+#define IDS_MODE_PLAY        123
+#define IDS_MODE_PAUSE       124
+#define IDS_MODE_RECORD      125
+#define IDS_MODE_SEEK        126
+#define IDS_MODE_NOT_READY   127
 
 /* Menu */
-#define IDR_MAINMENU 500
+#define IDR_MAINMENU    500
 
 /* Accelerators */
 #define ID_ACCELERATORS 800
@@ -42,6 +51,9 @@
 #define IDM_DEVPROPS   1005
 #define IDM_REPEAT     1006
 #define IDM_SWITCHVIEW 1007
+
+/* The device specific items in the device menu start here */
+#define IDM_DEVICE_FIRST 10000
 
 /* ToolBar Icons */
 #define TBICON_PLAY     0
@@ -60,3 +72,4 @@
 #define IDC_SEEKBACK 1504
 #define IDC_SEEKFORW 1505
 #define IDC_FORWARD  1506
+#define IDC_PAUSE    1507

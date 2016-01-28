@@ -1,0 +1,30 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = PDFsam
+Version = 2.2.4
+License = GPLv2
+Description = A free, open source, platform independent tool designed to perform split, merge and other manipulations on pdf document. Java Runtime needed!
+Size = 15.6 MB
+Category = 6
+URLSite = http://www.pdfsam.org/
+URLDownload = http://download.sourceforge.net/project/pdfsam/pdfsam/2.2.4/pdfsam-v2_2_4.msi
+SHA1 = e406c16e0816e5792bcca161ec9aaf1df3ecf910
+CDPath = none
+
+[Section.0407]
+Description = Freies, quelloffenes, Plattformunabhängiges Werkzeug zum spiltten, zusammenfügen und anderer Manipulationen an PDF Dokumenten. Java Runtime benötigt!
+
+[Section.0418]
+Description = Un instrument gratuit, cu surse deschise, multiplatformă, pentru împărțirea, unirea, și manipularea documentelor PDF. Este necesară Java Runtime!
+Size = 15,6 Mo
+
+[Section.041f]
+License = GPL sürüm 2
+Description = PDF belgesi üzerinde bölme, birleştirme ve başka oynamalar yapmak için tasarlanmış, ücretsiz, açık kaynak, platform bağımsız bir araç. Java Yürütücüsü gereklidir!
+Size = 15,6 MB
+
+[Section.0804]
+Description = 免费、 开源、 平台独立的工具，旨在对 PDF 文档执行拆分、 合并和其他操作。Java Runtime 所需!

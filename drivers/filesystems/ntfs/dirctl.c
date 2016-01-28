@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
+ *  Copyright (C) 2002, 2003, 2014 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMERS:      Eric Kohl
+ *                   Pierre Schweitzer (pierre@reactos.org)
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -32,504 +34,285 @@
 
 /* FUNCTIONS ****************************************************************/
 
-#if 0
-static NTSTATUS
-CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
-		 PVOID *Context,
-		 PVOID *Block,
-		 PLARGE_INTEGER StreamOffset,
-		 ULONG DirLength,
-		 PVOID *Ptr,
-		 PWSTR Name,
-		 PULONG pIndex,
-		 PULONG pIndex2)
-/*
- * FUNCTION: Retrieves the file name, be it in short or long file name format
- */
+
+ULONGLONG
+NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
+                PFILE_RECORD_HEADER FileRecord,
+                PCWSTR Stream,
+                ULONG StreamLength,
+                PULONGLONG AllocatedSize)
 {
-  PDIR_RECORD Record;
-  NTSTATUS Status;
-  ULONG Index = 0;
-  ULONG Offset = 0;
-  ULONG BlockOffset = 0;
+    ULONGLONG Size = 0ULL;
+    ULONGLONG Allocated = 0ULL;
+    NTSTATUS Status;
+    PNTFS_ATTR_CONTEXT DataContext;
 
-  Record = (PDIR_RECORD)*Block;
-  while(Index < *pIndex)
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext);
+    if (NT_SUCCESS(Status))
     {
-      BlockOffset += Record->RecordLength;
-      Offset += Record->RecordLength;
-
-      Record = (PDIR_RECORD)(*Block + BlockOffset);
-      if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
-	{
-	  DPRINT("Map next sector\n");
-	  CcUnpinData(*Context);
-	  StreamOffset->QuadPart += BLOCKSIZE;
-	  Offset = ROUND_UP(Offset, BLOCKSIZE);
-	  BlockOffset = 0;
-
-	  if (!CcMapData(DeviceExt->StreamFileObject,
-			 StreamOffset,
-			 BLOCKSIZE, TRUE,
-			 Context, Block))
-	    {
-	      DPRINT("CcMapData() failed\n");
-	      return(STATUS_UNSUCCESSFUL);
-	    }
-	  Record = (PDIR_RECORD)(*Block + BlockOffset);
-	}
-
-      if (Offset >= DirLength)
-	return(STATUS_NO_MORE_ENTRIES);
-
-      Index++;
+        Size = AttributeDataLength(&DataContext->Record);
+        Allocated = AttributeAllocatedLength(&DataContext->Record);
+        ReleaseAttributeContext(DataContext);
     }
 
-  DPRINT("Index %lu  RecordLength %lu  Offset %lu\n",
-	 Index, Record->RecordLength, Offset);
+    if (AllocatedSize != NULL) *AllocatedSize = Allocated;
 
-  if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
-    {
-      wcscpy(Name, L".");
-    }
-  else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
-    {
-      wcscpy(Name, L"..");
-    }
-  else
-    {
-      if (DeviceExt->CdInfo.JolietLevel == 0)
-	{
-	  ULONG i;
-
-	  for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
-	    Name[i] = (WCHAR)Record->FileId[i];
-	  Name[i] = 0;
-	}
-      else
-	{
-	  CdfsSwapString(Name, Record->FileId, Record->FileIdLength);
-	}
-    }
-
-  DPRINT("Name '%S'\n", Name);
-
-  *Ptr = Record;
-
-  *pIndex = Index;
-
-  return(STATUS_SUCCESS);
+    return Size;
 }
 
 
 static NTSTATUS
-CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
-	     PFCB Fcb,
-	     PFCB Parent,
-	     PWSTR FileToFind,
-	     PULONG pDirIndex,
-	     PULONG pDirIndex2)
-/*
- * FUNCTION: Find a file
- */
+NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
+                       PFILE_RECORD_HEADER FileRecord,
+                       ULONGLONG MFTIndex,
+                       PFILE_NAMES_INFORMATION Info,
+                       ULONG BufferLength)
 {
-  WCHAR name[256];
-  WCHAR TempStr[2];
-  PVOID Block;
-  NTSTATUS Status;
-  ULONG len;
-  ULONG DirIndex;
-  ULONG Offset;
-  ULONG Read;
-  BOOLEAN IsRoot;
-  PVOID Context = NULL;
-  ULONG DirSize;
-  PUCHAR Ptr;
-  PDIR_RECORD Record;
-  LARGE_INTEGER StreamOffset;
+    ULONG Length;
+    PFILENAME_ATTRIBUTE FileName;
 
-  DPRINT("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n",
-	 Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
-  DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",
-	 Fcb->PathName, Fcb->ObjectName);
+    DPRINT("NtfsGetNameInformation() called\n");
 
-  IsRoot = FALSE;
-  DirIndex = 0;
-  if (wcslen (FileToFind) == 0)
+    FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
+    if (FileName == NULL)
     {
-      CHECKPOINT;
-      TempStr[0] = (WCHAR) '.';
-      TempStr[1] = 0;
-      FileToFind = (PWSTR)&TempStr;
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(DeviceExt, FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-  if (Parent)
-    {
-      if (Parent->Entry.ExtentLocationL == DeviceExt->CdInfo.RootStart)
-	{
-	  IsRoot = TRUE;
-	}
-    }
-  else
-    {
-      IsRoot = TRUE;
-    }
+    Length = FileName->NameLength * sizeof (WCHAR);
+    if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
+        return(STATUS_BUFFER_OVERFLOW);
 
-  if (IsRoot == TRUE)
-    {
-      StreamOffset.QuadPart = (LONGLONG)DeviceExt->CdInfo.RootStart * (LONGLONG)BLOCKSIZE;
-      DirSize = DeviceExt->CdInfo.RootSize;
+    Info->FileNameLength = Length;
+    Info->NextEntryOffset =
+        ROUND_UP(sizeof(FILE_NAMES_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, FileName->Name, Length);
 
-
-      if (FileToFind[0] == 0 || (FileToFind[0] == '\\' && FileToFind[1] == 0)
-	  || (FileToFind[0] == '.' && FileToFind[1] == 0))
-	{
-	  /* it's root : complete essentials fields then return ok */
-	  RtlZeroMemory(Fcb, sizeof(FCB));
-
-	  Fcb->PathName[0]='\\';
-	  Fcb->ObjectName = &Fcb->PathName[1];
-	  Fcb->Entry.ExtentLocationL = DeviceExt->CdInfo.RootStart;
-	  Fcb->Entry.DataLengthL = DeviceExt->CdInfo.RootSize;
-	  Fcb->Entry.FileFlags = 0x02; //FILE_ATTRIBUTE_DIRECTORY;
-
-	  if (pDirIndex)
-	    *pDirIndex = 0;
-	  if (pDirIndex2)
-	    *pDirIndex2 = 0;
-	  DPRINT("CdfsFindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
-	  return (STATUS_SUCCESS);
-	}
-    }
-  else
-    {
-      StreamOffset.QuadPart = (LONGLONG)Parent->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
-      DirSize = Parent->Entry.DataLengthL;
-    }
-
-  DPRINT("StreamOffset %I64u  DirSize %lu\n", StreamOffset.QuadPart, DirSize);
-
-  if (pDirIndex && (*pDirIndex))
-    DirIndex = *pDirIndex;
-
-  if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
-		BLOCKSIZE, TRUE, &Context, &Block))
-  {
-    DPRINT("CcMapData() failed\n");
-    return(STATUS_UNSUCCESSFUL);
-  }
-
-  Ptr = (PUCHAR)Block;
-  while(TRUE)
-    {
-      Record = (PDIR_RECORD)Ptr;
-      if (Record->RecordLength == 0)
-	{
-	  DPRINT1("Stopped!\n");
-	  break;
-	}
-
-      DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
-	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
-
-      Status = CdfsGetEntryName(DeviceExt, &Context, &Block, &StreamOffset,
-				DirSize, (PVOID*)&Ptr, name, &DirIndex, pDirIndex2);
-      if (Status == STATUS_NO_MORE_ENTRIES)
-	{
-	  break;
-	}
-      else if (Status == STATUS_UNSUCCESSFUL)
-	{
-	  /* Note: the directory cache has already been unpinned */
-	  return(Status);
-	}
-
-      DPRINT("Name '%S'\n", name);
-
-      if (wstrcmpjoki(name, FileToFind)) /* || wstrcmpjoki (name2, FileToFind)) */
-	{
-	  if (Parent && Parent->PathName)
-	    {
-	      len = wcslen(Parent->PathName);
-	      memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));
-	      Fcb->ObjectName=&Fcb->PathName[len];
-	      if (len != 1 || Fcb->PathName[0] != '\\')
-		{
-		  Fcb->ObjectName[0] = '\\';
-		  Fcb->ObjectName = &Fcb->ObjectName[1];
-		}
-	    }
-	  else
-	    {
-	      Fcb->ObjectName=Fcb->PathName;
-	      Fcb->ObjectName[0]='\\';
-	      Fcb->ObjectName=&Fcb->ObjectName[1];
-	    }
-
-	  DPRINT("PathName '%S'  ObjectName '%S'\n", Fcb->PathName, Fcb->ObjectName);
-
-	  memcpy(&Fcb->Entry, Ptr, sizeof(DIR_RECORD));
-	  wcsncpy(Fcb->ObjectName, name, MAX_PATH);
-	  if (pDirIndex)
-	    *pDirIndex = DirIndex;
-
-	  DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
-		 Fcb->PathName, Fcb->ObjectName, DirIndex);
-
-	  CcUnpinData(Context);
-
-	  return(STATUS_SUCCESS);
-	}
-
-
-      Ptr = Ptr + Record->RecordLength;
-      DirIndex++;
-
-      if (((ULONG)Ptr - (ULONG)Block) >= DirSize)
-	{
-	  DPRINT("Stopped!\n");
-	  break;
-	}
-    }
-
-  CcUnpinData(Context);
-
-  if (pDirIndex)
-    *pDirIndex = DirIndex;
-
-  return(STATUS_UNSUCCESSFUL);
+    return(STATUS_SUCCESS);
 }
 
 
 static NTSTATUS
-CdfsGetNameInformation(PFCB Fcb,
-		       PDEVICE_EXTENSION DeviceExt,
-		       PFILE_NAMES_INFORMATION Info,
-		       ULONG BufferLength)
+NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
+                            PFILE_RECORD_HEADER FileRecord,
+                            ULONGLONG MFTIndex,
+                            PFILE_DIRECTORY_INFORMATION Info,
+                            ULONG BufferLength)
 {
-  ULONG Length;
+    ULONG Length;
+    PFILENAME_ATTRIBUTE FileName;
+    PSTANDARD_INFORMATION StdInfo;
 
-  DPRINT("CdfsGetNameInformation() called\n");
+    DPRINT("NtfsGetDirectoryInformation() called\n");
 
-  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
-    return(STATUS_BUFFER_OVERFLOW);
-
-  Info->FileNameLength = Length;
-  Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
-  memcpy(Info->FileName, Fcb->ObjectName, Length);
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS
-CdfsGetDirectoryInformation(PFCB Fcb,
-			    PDEVICE_EXTENSION DeviceExt,
-			    PFILE_DIRECTORY_INFORMATION Info,
-			    ULONG BufferLength)
-{
-  ULONG Length;
-
-  DPRINT("CdfsGetDirectoryInformation() called\n");
-
-  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
-    return(STATUS_BUFFER_OVERFLOW);
-
-  Info->FileNameLength = Length;
-  Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
-  memcpy(Info->FileName, Fcb->ObjectName, Length);
-
-  /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
-
-  /* Convert file flags */
-  CdfsFileFlagsToAttributes(Fcb,
-			    &Info->FileAttributes);
-
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
-
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
-
-//  Info->FileIndex=;
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS
-CdfsGetFullDirectoryInformation(PFCB Fcb,
-				PDEVICE_EXTENSION DeviceExt,
-				PFILE_FULL_DIRECTORY_INFORMATION Info,
-				ULONG BufferLength)
-{
-  ULONG Length;
-
-  DPRINT("CdfsGetFullDirectoryInformation() called\n");
-
-  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
-    return(STATUS_BUFFER_OVERFLOW);
-
-  Info->FileNameLength = Length;
-  Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
-  memcpy(Info->FileName, Fcb->ObjectName, Length);
-
-  /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
-
-  /* Convert file flags */
-  CdfsFileFlagsToAttributes(Fcb,
-			    &Info->FileAttributes);
-
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
-
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
-
-//  Info->FileIndex=;
-  Info->EaSize = 0;
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS
-CdfsGetBothDirectoryInformation(PFCB Fcb,
-				PDEVICE_EXTENSION DeviceExt,
-				PFILE_BOTH_DIRECTORY_INFORMATION Info,
-				ULONG BufferLength)
-{
-  ULONG Length;
-
-  DPRINT("CdfsGetBothDirectoryInformation() called\n");
-
-  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
-    return(STATUS_BUFFER_OVERFLOW);
-
-  Info->FileNameLength = Length;
-  Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
-  memcpy(Info->FileName, Fcb->ObjectName, Length);
-
-  /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
-
-  /* Convert file flags */
-  CdfsFileFlagsToAttributes(Fcb,
-			    &Info->FileAttributes);
-
-  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
-
-  /* Make AllocSize a rounded up multiple of the sector size */
-  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
-
-//  Info->FileIndex=;
-  Info->EaSize = 0;
-
-  if (DeviceExt->CdInfo.JolietLevel == 0)
+    FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
+    if (FileName == NULL)
     {
-      /* Standard ISO-9660 format */
-      Info->ShortNameLength = Length;
-      memcpy(Info->ShortName, Fcb->ObjectName, Length);
-    }
-  else
-    {
-      /* Joliet extension */
-
-      /* FIXME: Copy or create a short file name */
-
-      Info->ShortName[0] = 0;
-      Info->ShortNameLength = 0;
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(DeviceExt, FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-  return(STATUS_SUCCESS);
+    StdInfo = GetStandardInformationFromRecord(DeviceExt, FileRecord);
+    ASSERT(StdInfo != NULL);
+
+    Length = FileName->NameLength * sizeof (WCHAR);
+    if ((sizeof(FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
+        return(STATUS_BUFFER_OVERFLOW);
+
+    Info->FileNameLength = Length;
+    Info->NextEntryOffset =
+        ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, FileName->Name, Length);
+
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
+
+    /* Convert file flags */
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
+
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, (PULONGLONG)&Info->AllocationSize.QuadPart);
+
+    Info->FileIndex = MFTIndex;
+
+    return STATUS_SUCCESS;
 }
-#endif
+
+
+static NTSTATUS
+NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
+                                PFILE_RECORD_HEADER FileRecord,
+                                ULONGLONG MFTIndex,
+                                PFILE_FULL_DIRECTORY_INFORMATION Info,
+                                ULONG BufferLength)
+{
+    ULONG Length;
+    PFILENAME_ATTRIBUTE FileName;
+    PSTANDARD_INFORMATION StdInfo;
+
+    DPRINT("NtfsGetFullDirectoryInformation() called\n");
+
+    FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(DeviceExt, FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    StdInfo = GetStandardInformationFromRecord(DeviceExt, FileRecord);
+    ASSERT(StdInfo != NULL);
+
+    Length = FileName->NameLength * sizeof (WCHAR);
+    if ((sizeof(FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
+        return(STATUS_BUFFER_OVERFLOW);
+
+    Info->FileNameLength = Length;
+    Info->NextEntryOffset =
+        ROUND_UP(sizeof(FILE_FULL_DIRECTORY_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, FileName->Name, Length);
+
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
+
+    /* Convert file flags */
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
+
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, (PULONGLONG)&Info->AllocationSize.QuadPart);
+
+    Info->FileIndex = MFTIndex;
+    Info->EaSize = 0;
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
+                                PFILE_RECORD_HEADER FileRecord,
+                                ULONGLONG MFTIndex,
+                                PFILE_BOTH_DIR_INFORMATION Info,
+                                ULONG BufferLength)
+{
+    ULONG Length;
+    PFILENAME_ATTRIBUTE FileName, ShortFileName;
+    PSTANDARD_INFORMATION StdInfo;
+
+    DPRINT("NtfsGetBothDirectoryInformation() called\n");
+
+    FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
+    if (FileName == NULL)
+    {
+        DPRINT1("No name information for file ID: %#I64x\n", MFTIndex);
+        NtfsDumpFileAttributes(DeviceExt, FileRecord);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+    ShortFileName = GetFileNameFromRecord(DeviceExt, FileRecord, NTFS_FILE_NAME_DOS);
+
+    StdInfo = GetStandardInformationFromRecord(DeviceExt, FileRecord);
+    ASSERT(StdInfo != NULL);
+
+    Length = FileName->NameLength * sizeof (WCHAR);
+    if ((sizeof(FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
+        return(STATUS_BUFFER_OVERFLOW);
+
+    Info->FileNameLength = Length;
+    Info->NextEntryOffset =
+        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, FileName->Name, Length);
+
+    if (ShortFileName)
+    {
+        /* Should we upcase the filename? */
+        ASSERT(ShortFileName->NameLength <= ARRAYSIZE(Info->ShortName));
+        Info->ShortNameLength = ShortFileName->NameLength * sizeof(WCHAR);
+        RtlCopyMemory(Info->ShortName, ShortFileName->Name, Info->ShortNameLength);
+    }
+    else
+    {
+        Info->ShortName[0] = 0;
+        Info->ShortNameLength = 0;
+    }
+
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
+
+    /* Convert file flags */
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
+
+    Info->EndOfFile.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, (PULONGLONG)&Info->AllocationSize.QuadPart);
+
+    Info->FileIndex = MFTIndex;
+    Info->EaSize = 0;
+
+    return STATUS_SUCCESS;
+}
 
 
 NTSTATUS
 NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 {
     PIRP Irp;
-    //PDEVICE_OBJECT DeviceObject;
-    //PDEVICE_EXTENSION DeviceExtension;
-    //LONG BufferLength = 0;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_EXTENSION DeviceExtension;
+    LONG BufferLength = 0;
     PUNICODE_STRING SearchPattern = NULL;
-    //FILE_INFORMATION_CLASS FileInformationClass;
+    FILE_INFORMATION_CLASS FileInformationClass;
     ULONG FileIndex = 0;
     PUCHAR Buffer = NULL;
     PFILE_NAMES_INFORMATION Buffer0 = NULL;
-    //PNTFS_FCB Fcb;
+    PNTFS_FCB Fcb;
     PNTFS_CCB Ccb;
-//    FCB TempFcb;
     BOOLEAN First = FALSE;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
-    //NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_RECORD_HEADER FileRecord;
+    ULONGLONG MFTRecord, OldMFTRecord = 0;
+    UNICODE_STRING Pattern;
 
     DPRINT1("NtfsQueryDirectory() called\n");
 
     ASSERT(IrpContext);
     Irp = IrpContext->Irp;
-//    DeviceObject = IrpContext->DeviceObject;
+    DeviceObject = IrpContext->DeviceObject;
 
-//    DeviceExtension = DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
 
     Ccb = (PNTFS_CCB)FileObject->FsContext2;
-//    Fcb = (PNTFS_FCB)FileObject->FsContext;
+    Fcb = (PNTFS_FCB)FileObject->FsContext;
 
     /* Obtain the callers parameters */
-    //BufferLength = Stack->Parameters.QueryDirectory.Length;
+    BufferLength = Stack->Parameters.QueryDirectory.Length;
     SearchPattern = Stack->Parameters.QueryDirectory.FileName;
-    //FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
+    FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
     FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
-
 
     if (SearchPattern != NULL)
     {
         if (!Ccb->DirectorySearchPattern)
         {
             First = TRUE;
-            Ccb->DirectorySearchPattern =
-                ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_NTFS);
+            Pattern.Length = 0;
+            Pattern.MaximumLength = SearchPattern->Length + sizeof(WCHAR);
+            Ccb->DirectorySearchPattern = Pattern.Buffer =
+                ExAllocatePoolWithTag(NonPagedPool, Pattern.MaximumLength, TAG_NTFS);
             if (!Ccb->DirectorySearchPattern)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            memcpy(Ccb->DirectorySearchPattern,
-                   SearchPattern->Buffer,
-                   SearchPattern->Length);
+            memcpy(Ccb->DirectorySearchPattern, SearchPattern->Buffer, SearchPattern->Length);
             Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
         }
     }
@@ -546,7 +329,9 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         Ccb->DirectorySearchPattern[1] = 0;
     }
 
+    RtlInitUnicodeString(&Pattern, Ccb->DirectorySearchPattern);
     DPRINT("Search pattern '%S'\n", Ccb->DirectorySearchPattern);
+    DPRINT("In: '%S'\n", Fcb->PathName);
 
     /* Determine directory index */
     if (Stack->Flags & SL_INDEX_SPECIFIED)
@@ -558,105 +343,111 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         Ccb->Entry = 0;
     }
 
-    /* Determine Buffer for result */
-    if (Irp->MdlAddress)
-    {
-        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-    }
-    else
-    {
-        Buffer = Irp->UserBuffer;
-    }
+    /* Get Buffer for result */
+    Buffer = NtfsGetUserBuffer(Irp, FALSE);
 
     DPRINT("Buffer=%p tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
 
-#if 0
-  TempFcb.ObjectName = TempFcb.PathName;
-  while (Status == STATUS_SUCCESS && BufferLength > 0)
+    while (Status == STATUS_SUCCESS && BufferLength > 0)
     {
-      Status = CdfsFindFile(DeviceExtension,
-			    &TempFcb,
-			    Fcb,
-			    Ccb->DirectorySearchPattern,
-			    &Ccb->Entry,
-			    NULL);
-      DPRINT("Found %S, Status=%x, entry %x\n", TempFcb.ObjectName, Status, Ccb->Entry);
+        Status = NtfsFindFileAt(DeviceExtension,
+                                &Pattern,
+                                &Ccb->Entry,
+                                &FileRecord,
+                                &MFTRecord,
+                                Fcb->MFTIndex);
 
-      if (NT_SUCCESS(Status))
-	{
-	  switch (FileInformationClass)
-	    {
-	      case FileNameInformation:
-		Status = CdfsGetNameInformation(&TempFcb,
-						DeviceExtension,
-						(PFILE_NAMES_INFORMATION)Buffer,
-						BufferLength);
-		break;
+        if (NT_SUCCESS(Status))
+        {
+            /* HACK: files with both a short name and a long name are present twice in the index.
+             * Ignore the second entry, if it is immediately following the first one.
+             */
+            if (MFTRecord == OldMFTRecord)
+            {
+                DPRINT1("Ignoring duplicate MFT entry 0x%x\n", MFTRecord);
+                Ccb->Entry++;
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                continue;
+            }
+            OldMFTRecord = MFTRecord;
 
-	      case FileDirectoryInformation:
-		Status = CdfsGetDirectoryInformation(&TempFcb,
-						     DeviceExtension,
-						     (PFILE_DIRECTORY_INFORMATION)Buffer,
-						     BufferLength);
-		break;
+            switch (FileInformationClass)
+            {
+                case FileNameInformation:
+                    Status = NtfsGetNameInformation(DeviceExtension,
+                                                    FileRecord,
+                                                    MFTRecord,
+                                                    (PFILE_NAMES_INFORMATION)Buffer,
+                                                    BufferLength);
+                    break;
 
-	      case FileFullDirectoryInformation:
-		Status = CdfsGetFullDirectoryInformation(&TempFcb,
-							 DeviceExtension,
-							 (PFILE_FULL_DIRECTORY_INFORMATION)Buffer,
-							 BufferLength);
-		break;
+                case FileDirectoryInformation:
+                    Status = NtfsGetDirectoryInformation(DeviceExtension,
+                                                         FileRecord,
+                                                         MFTRecord,
+                                                         (PFILE_DIRECTORY_INFORMATION)Buffer,
+                                                         BufferLength);
+                    break;
 
-	      case FileBothDirectoryInformation:
-		Status = NtfsGetBothDirectoryInformation(&TempFcb,
-							 DeviceExtension,
-							 (PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,
-							 BufferLength);
-		break;
+                case FileFullDirectoryInformation:
+                    Status = NtfsGetFullDirectoryInformation(DeviceExtension,
+                                                             FileRecord,
+                                                             MFTRecord,
+                                                             (PFILE_FULL_DIRECTORY_INFORMATION)Buffer,
+                                                             BufferLength);
+                    break;
 
-	      default:
-		Status = STATUS_INVALID_INFO_CLASS;
-	    }
+                case FileBothDirectoryInformation:
+                    Status = NtfsGetBothDirectoryInformation(DeviceExtension,
+                                                             FileRecord,
+                                                             MFTRecord,
+                                                             (PFILE_BOTH_DIR_INFORMATION)Buffer,
+                                                             BufferLength);
+                    break;
 
-	  if (Status == STATUS_BUFFER_OVERFLOW)
-	    {
-	      if (Buffer0)
-		{
-		  Buffer0->NextEntryOffset = 0;
-		}
-	      break;
-	    }
-	}
-      else
-	{
-	  if (Buffer0)
-	    {
-	      Buffer0->NextEntryOffset = 0;
-	    }
+                default:
+                    Status = STATUS_INVALID_INFO_CLASS;
+            }
 
-	  if (First)
-	    {
-	      Status = STATUS_NO_SUCH_FILE;
-	    }
-	  else
-	    {
-	      Status = STATUS_NO_MORE_FILES;
-	    }
-	  break;
-	}
+            if (Status == STATUS_BUFFER_OVERFLOW)
+            {
+                if (Buffer0)
+                {
+                    Buffer0->NextEntryOffset = 0;
+                }
+                break;
+            }
+        }
+        else
+        {
+            if (Buffer0)
+            {
+                Buffer0->NextEntryOffset = 0;
+            }
 
-      Buffer0 = (PFILE_NAMES_INFORMATION)Buffer;
-      Buffer0->FileIndex = FileIndex++;
-      Ccb->Entry++;
+            if (First)
+            {
+                Status = STATUS_NO_SUCH_FILE;
+            }
+            else
+            {
+                Status = STATUS_NO_MORE_FILES;
+            }
+            break;
+        }
 
-      if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
-	{
-	  break;
-	}
-      BufferLength -= Buffer0->NextEntryOffset;
-      Buffer += Buffer0->NextEntryOffset;
+        Buffer0 = (PFILE_NAMES_INFORMATION)Buffer;
+        Buffer0->FileIndex = FileIndex++;
+        Ccb->Entry++;
+
+        if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+        {
+            break;
+        }
+        BufferLength -= Buffer0->NextEntryOffset;
+        Buffer += Buffer0->NextEntryOffset;
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
     }
-#endif
 
     if (Buffer0)
     {
@@ -665,61 +456,38 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
     if (FileIndex > 0)
     {
-        //Status = STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
     }
 
-//    return Status;
-    return STATUS_NO_MORE_FILES;
+    return Status;
 }
 
 
 NTSTATUS
-NTAPI
-NtfsFsdDirectoryControl(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp)
+NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext)
 {
-    PNTFS_IRP_CONTEXT IrpContext = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     DPRINT1("NtfsDirectoryControl() called\n");
 
-    FsRtlEnterFileSystem();
-    ASSERT(DeviceObject);
-    ASSERT(Irp);
-
-    NtfsIsIrpTopLevel(Irp);
-
-    IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
-    if (IrpContext)
+    switch (IrpContext->MinorFunction)
     {
-        switch (IrpContext->MinorFunction)
-        {
-            case IRP_MN_QUERY_DIRECTORY:
-                Status = NtfsQueryDirectory(IrpContext);
-                break;
+        case IRP_MN_QUERY_DIRECTORY:
+            Status = NtfsQueryDirectory(IrpContext);
+            break;
 
-            case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-                DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-                Status = STATUS_NOT_IMPLEMENTED;
-                break;
+        case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
+            DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
 
-            default:
-                Status = STATUS_INVALID_DEVICE_REQUEST;
-                break;
-        }
+        default:
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
     }
-    else
-        Status = STATUS_INSUFFICIENT_RESOURCES;
 
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IrpContext->Irp->IoStatus.Information = 0;
 
-    if (IrpContext)
-        ExFreePoolWithTag(IrpContext, 'PRIN');
-
-    IoSetTopLevelIrp(NULL);
-    FsRtlExitFileSystem();
     return Status;
 }
 

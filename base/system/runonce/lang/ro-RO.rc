@@ -1,16 +1,14 @@
 /*
  * FILE:       base/system/runonce/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-08-29  initial translation
- *             2011-11-05  minor change
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_RUNONCE_DLG DIALOG 0, 0, 239, 170
+IDD_RUNONCE_DLG DIALOGEX 0, 0, 239, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalatorul ReactOS"
+CAPTION "Asistent de instalare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Se instalează următoarele elemente:", -1, 38, 8, 196, 18

@@ -30,6 +30,13 @@ ULONG CDECL wined3d_rendertarget_view_incref(struct wined3d_rendertarget_view *v
     return refcount;
 }
 
+#if defined(STAGING_CSMT)
+void wined3d_rendertarget_view_destroy(struct wined3d_rendertarget_view *view)
+{
+    HeapFree(GetProcessHeap(), 0, view);
+}
+
+#endif /* STAGING_CSMT */
 ULONG CDECL wined3d_rendertarget_view_decref(struct wined3d_rendertarget_view *view)
 {
     ULONG refcount = InterlockedDecrement(&view->refcount);
@@ -38,11 +45,21 @@ ULONG CDECL wined3d_rendertarget_view_decref(struct wined3d_rendertarget_view *v
 
     if (!refcount)
     {
+#if defined(STAGING_CSMT)
+        struct wined3d_device *device = view->resource->device;
+
+        /* Call wined3d_object_destroyed() before releasing the resource,
+         * since releasing the resource may end up destroying the parent. */
+        view->parent_ops->wined3d_object_destroyed(view->parent);
+        wined3d_resource_decref(view->resource);
+        wined3d_cs_emit_view_destroy(device->cs, view);
+#else  /* STAGING_CSMT */
         /* Call wined3d_object_destroyed() before releasing the resource,
          * since releasing the resource may end up destroying the parent. */
         view->parent_ops->wined3d_object_destroyed(view->parent);
         wined3d_resource_decref(view->resource);
         HeapFree(GetProcessHeap(), 0, view);
+#endif /* STAGING_CSMT */
     }
 
     return refcount;
@@ -98,6 +115,7 @@ static void wined3d_rendertarget_view_init(struct wined3d_rendertarget_view *vie
     view->parent_ops = parent_ops;
 
     view->format = wined3d_get_format(gl_info, desc->format_id);
+    view->format_flags = view->format->flags[resource->gl_type];
     if (resource->type == WINED3D_RTYPE_BUFFER)
     {
         view->sub_resource_idx = 0;
@@ -127,8 +145,8 @@ HRESULT CDECL wined3d_rendertarget_view_create(const struct wined3d_rendertarget
 {
     struct wined3d_rendertarget_view *object;
 
-    TRACE("desc %p, resource %p, parent %p, view %p.\n",
-            desc, resource, parent, view);
+    TRACE("desc %p, resource %p, parent %p, parent_ops %p, view %p.\n",
+            desc, resource, parent, parent_ops, view);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -146,7 +164,7 @@ HRESULT CDECL wined3d_rendertarget_view_create_from_surface(struct wined3d_surfa
 {
     struct wined3d_rendertarget_view_desc desc;
 
-    TRACE("surface %p, view %p.\n", surface, view);
+    TRACE("surface %p, parent %p, parent_ops %p, view %p.\n", surface, parent, parent_ops, view);
 
     desc.format_id = surface->resource.format->id;
     desc.u.texture.level_idx = surface->texture_level;
@@ -154,6 +172,28 @@ HRESULT CDECL wined3d_rendertarget_view_create_from_surface(struct wined3d_surfa
     desc.u.texture.layer_count = 1;
 
     return wined3d_rendertarget_view_create(&desc, &surface->container->resource, parent, parent_ops, view);
+}
+
+HRESULT CDECL wined3d_rendertarget_view_create_from_sub_resource(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, void *parent, const struct wined3d_parent_ops *parent_ops,
+        struct wined3d_rendertarget_view **view)
+{
+    struct wined3d_resource *sub_resource;
+
+    TRACE("texture %p, sub_resource_idx %u, parent %p, parent_ops %p, view %p.\n",
+            texture, sub_resource_idx, parent, parent_ops, view);
+
+    if (!(sub_resource = wined3d_texture_get_sub_resource(texture, sub_resource_idx)))
+        return WINED3DERR_INVALIDCALL;
+
+    if (sub_resource->type != WINED3D_RTYPE_SURFACE)
+    {
+        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(texture->resource.type));
+        return WINED3DERR_INVALIDCALL;
+    }
+
+    return wined3d_rendertarget_view_create_from_surface(surface_from_resource(sub_resource),
+            parent, parent_ops, view);
 }
 
 ULONG CDECL wined3d_shader_resource_view_incref(struct wined3d_shader_resource_view *view)
@@ -173,7 +213,10 @@ ULONG CDECL wined3d_shader_resource_view_decref(struct wined3d_shader_resource_v
 
     if (!refcount)
     {
+        /* Call wined3d_object_destroyed() before releasing the resource,
+         * since releasing the resource may end up destroying the parent. */
         view->parent_ops->wined3d_object_destroyed(view->parent);
+        wined3d_resource_decref(view->resource);
         HeapFree(GetProcessHeap(), 0, view);
     }
 
@@ -187,17 +230,19 @@ void * CDECL wined3d_shader_resource_view_get_parent(const struct wined3d_shader
     return view->parent;
 }
 
-HRESULT CDECL wined3d_shader_resource_view_create(void *parent, const struct wined3d_parent_ops *parent_ops,
-        struct wined3d_shader_resource_view **view)
+HRESULT CDECL wined3d_shader_resource_view_create(struct wined3d_resource *resource, void *parent,
+        const struct wined3d_parent_ops *parent_ops, struct wined3d_shader_resource_view **view)
 {
     struct wined3d_shader_resource_view *object;
 
-    TRACE("parent %p, parent_ops %p, view %p.\n", parent, parent_ops, view);
+    TRACE("resource %p, parent %p, parent_ops %p, view %p.\n", resource, parent, parent_ops, view);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->refcount = 1;
+    object->resource = resource;
+    wined3d_resource_incref(resource);
     object->parent = parent;
     object->parent_ops = parent_ops;
 

@@ -335,7 +335,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
             if ((type & MSI_DATASIZEMASK) == 2)
                 MSI_RecordSetInteger(*rec, i, ival - (1<<15));
             else
-                MSI_RecordSetInteger(*rec, i, ival - (1<<31));
+                MSI_RecordSetInteger(*rec, i, ival - (1u<<31));
         }
     }
 
@@ -821,8 +821,13 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
 
     /* FIXME: lock the database */
 
-    r = MSI_CommitTables( db );
-    if (r != ERROR_SUCCESS) ERR("Failed to commit tables!\n");
+    r = msi_commit_streams( db );
+    if (r != ERROR_SUCCESS) ERR("Failed to commit streams!\n");
+    else
+    {
+        r = MSI_CommitTables( db );
+        if (r != ERROR_SUCCESS) ERR("Failed to commit tables!\n");
+    }
 
     /* FIXME: unlock the database */
 

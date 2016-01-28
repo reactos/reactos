@@ -282,7 +282,19 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                         if (!lpEnumProc(ItemIndex, pszDisplayName, &Info))
                             break;
                     }
+                    else
+                    {
+                        RegCloseKey(Info.hSubKey);
+                    }
                 }
+                else
+                {
+                    RegCloseKey(Info.hSubKey);
+                }
+            }
+            else
+            {
+                RegCloseKey(Info.hSubKey);
             }
         }
 

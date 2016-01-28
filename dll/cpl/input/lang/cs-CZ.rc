@@ -1,6 +1,6 @@
 /* FILE:       dll/cpl/input/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-06-02
+ * UPDATED:    2015-04-12
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -22,12 +22,12 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Rozšířená nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "Nastavení systému", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Vypnout rozšířené textové služby", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Vybráním tohoto políčka se vypnou rozšířené textové služby ve všech\nprogramech. Toto není doporučeno pro uživatele východoasijských\njazyků, protože se zavře panel jazyků.\n", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

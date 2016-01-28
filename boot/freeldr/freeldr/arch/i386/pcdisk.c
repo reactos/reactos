@@ -389,12 +389,19 @@ PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
 BOOLEAN
 PcDiskGetBootPath(char *BootPath, unsigned Size)
 {
-  if (PxeInit())
+    // FIXME: Keep it there, or put it in DiskGetBootPath?
+    // Or, abstract the notion of network booting to make
+    // sense for other platforms than the PC (and this idea
+    // already exists), then we would need to check whether
+    // we were booting from network (and: PC --> PXE, etc...)
+    // and if so, set the correct ARC path. But then this new
+    // logic could be moved back to DiskGetBootPath...
+    if (PxeInit())
     {
-      strcpy(BootPath, "net(0)");
-      return 0;
+        strcpy(BootPath, "net(0)");
+        return TRUE;
     }
-  return DiskGetBootPath(BootPath, Size);
+    return DiskGetBootPath(BootPath, Size);
 }
 
 /* EOF */

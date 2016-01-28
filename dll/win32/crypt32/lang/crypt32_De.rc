@@ -21,8 +21,6 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID "Autoritätsschlüsselkennung"

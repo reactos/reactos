@@ -3,6 +3,7 @@
  * English Language Support
  *
  * Copyright 2005 James Hawkins
+ * Copyright 2011 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +28,9 @@ BEGIN
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Search"
     IDS_FAVORITES    "Favor&ites"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
@@ -41,28 +45,45 @@ BEGIN
     IDTB_PRINT       "Print"
     IDTB_OPTIONS     "Options"
     IDTB_FORWARD     "Forward"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Customize"
-    IDTB_ZOOM        "Zoom"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
 
-LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
 
-STRINGTABLE
-BEGIN
-    IDS_CONTENTS     "&Contents"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Search"
-    IDS_FAVORITES    "Favour&ites"
-END
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

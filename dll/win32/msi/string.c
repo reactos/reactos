@@ -214,7 +214,7 @@ static void set_st_entry( string_table *st, UINT n, WCHAR *str, int len, USHORT 
         st->freeslot = n + 1;
 }
 
-static UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
+static UINT string2id( const string_table *st, const char *buffer, UINT *id )
 {
     DWORD sz;
     UINT r = ERROR_INVALID_PARAMETER;
@@ -241,7 +241,7 @@ static UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
     return r;
 }
 
-static int msi_addstring( string_table *st, UINT n, const char *data, UINT len, USHORT refcount, enum StringPersistence persistence )
+static int add_string( string_table *st, UINT n, const char *data, UINT len, USHORT refcount, enum StringPersistence persistence )
 {
     LPWSTR str;
     int sz;
@@ -256,7 +256,7 @@ static int msi_addstring( string_table *st, UINT n, const char *data, UINT len, 
     }
     else
     {
-        if( ERROR_SUCCESS == msi_string2idA( st, data, &n ) )
+        if (string2id( st, data, &n ) == ERROR_SUCCESS)
         {
             if (persistence == StringPersistent)
                 st->strings[n].persistent_refcount += refcount;
@@ -287,7 +287,7 @@ static int msi_addstring( string_table *st, UINT n, const char *data, UINT len, 
     return n;
 }
 
-int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcount, enum StringPersistence persistence )
+int msi_add_string( string_table *st, const WCHAR *data, int len, enum StringPersistence persistence )
 {
     UINT n;
     LPWSTR str;
@@ -303,9 +303,9 @@ int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcoun
     if (msi_string2id( st, data, len, &n) == ERROR_SUCCESS )
     {
         if (persistence == StringPersistent)
-            st->strings[n].persistent_refcount += refcount;
+            st->strings[n].persistent_refcount++;
         else
-            st->strings[n].nonpersistent_refcount += refcount;
+            st->strings[n].nonpersistent_refcount++;
         return n;
     }
 
@@ -322,7 +322,7 @@ int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcoun
     memcpy( str, data, len*sizeof(WCHAR) );
     str[len] = 0;
 
-    set_st_entry( st, n, str, len, refcount, persistence );
+    set_st_entry( st, n, str, len, 1, persistence );
     return n;
 }
 
@@ -346,7 +346,7 @@ const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len )
 }
 
 /*
- *  msi_id2stringA
+ *  id2string
  *
  *  [in] st         - pointer to the string table
  *  [in] id         - id of the string to retrieve
@@ -356,7 +356,7 @@ const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len )
  *
  *  Returned string is not nul terminated.
  */
-static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
+static UINT id2string( const string_table *st, UINT id, char *buffer, UINT *sz )
 {
     int len, lenW;
     const WCHAR *str;
@@ -529,7 +529,7 @@ string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref )
             break;
         }
 
-        r = msi_addstring( st, n, data+offset, len, refs, StringPersistent );
+        r = add_string( st, n, data+offset, len, refs, StringPersistent );
         if( r != n )
             ERR("Failed to add string %d\n", n );
         n++;
@@ -599,7 +599,7 @@ UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *byt
         }
 
         sz = datasize - used;
-        r = msi_id2stringA( st, i, data+used, &sz );
+        r = id2string( st, i, data+used, &sz );
         if( r != ERROR_SUCCESS )
         {
             ERR("failed to fetch string\n");

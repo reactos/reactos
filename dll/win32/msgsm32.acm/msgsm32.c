@@ -119,14 +119,14 @@ static	LRESULT GSM_DriverDetails(PACMDRIVERDETAILSW add)
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
     /* Details found from probing native msgsm32.acm */
     add->wMid = MM_MICROSOFT;
-    add->wPid = 36;
+    add->wPid = MM_MSFT_ACM_GSM610;
     add->vdwACM = 0x3320000;
     add->vdwDriver = 0x4000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
     add->cFormatTags = 2;
     add->cFilterTags = 0;
     add->hicon = NULL;
-    MultiByteToWideChar( CP_ACP, 0, "Wine GSM 6.10", -1,
+    MultiByteToWideChar( CP_ACP, 0, "Microsoft GSM 6.10", -1,
                          add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, "Wine GSM 6.10 libgsm codec", -1,
                          add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );

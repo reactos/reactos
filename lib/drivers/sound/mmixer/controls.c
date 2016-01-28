@@ -1358,7 +1358,10 @@ MMixerHandlePhysicalConnection(
 
         /* sanity checks */
         ASSERT(PinsCount != 0);
-        ASSERT(PinsCount == 1);
+        if (PinsCount != 1)
+        {
+            DPRINT1("MMixerHandlePhysicalConnection Expected 1 pin but got %lu\n", PinsCount);
+        }
 
         /* create destination line */
         Status = MMixerBuildMixerDestinationLine(MixerContext, MixerInfo, MixerData->hDevice, Pins[0], bInput);
@@ -1586,7 +1589,7 @@ MMixerHandleAlternativeMixers(
         MMixerIsTopologyPinReserved(Topology, Index, &Reserved);
 
         /* check if it has already been reserved */
-        if (Reserved == TRUE)
+        if (Reserved)
         {
             /* pin has already been reserved */
             continue;
@@ -1644,7 +1647,7 @@ MMixerSetupFilter(
     IN LPMIXER_DATA MixerData,
     IN PULONG DeviceCount)
 {
-    MIXER_STATUS Status;
+    MIXER_STATUS Status = MM_STATUS_SUCCESS;
     PTOPOLOGY Topology;
     ULONG NodeIndex;
     LPMIXER_INFO MixerInfo = NULL;

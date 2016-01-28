@@ -22,7 +22,7 @@
 
 #include <wine/config.h>
 
-#if defined(SONAME_LIBGNUTLS) || defined (HAVE_SECURITY_SECURITY_H)
+#if defined(SONAME_LIBGNUTLS) || defined (HAVE_SECURITY_SECURITY_H) || defined (SONAME_LIBMBEDTLS)
 
 #define SCHAN_INVALID_HANDLE ~0UL
 
@@ -1459,7 +1459,7 @@ void SECUR32_deinitSchannelSP(void)
     schan_imp_deinit();
 }
 
-#else /* SONAME_LIBGNUTLS || HAVE_SECURITY_SECURITY_H */
+#else /* SONAME_LIBGNUTLS || HAVE_SECURITY_SECURITY_H || SONAME_LIBMBEDTLS  */
 
 void SECUR32_initSchannelSP(void)
 {
@@ -1468,4 +1468,4 @@ void SECUR32_initSchannelSP(void)
 
 void SECUR32_deinitSchannelSP(void) {}
 
-#endif /* SONAME_LIBGNUTLS || HAVE_SECURITY_SECURITY_H */
+#endif /* SONAME_LIBGNUTLS || HAVE_SECURITY_SECURITY_H || SONAME_LIBMBEDTLS  */

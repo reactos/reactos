@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/console.c
+ * FILE:            base/setup/usetup/interface/consup.c
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -132,6 +132,19 @@ BOOL
 CONSOLE_Flush(VOID)
 {
     return FlushConsoleInputBuffer(StdInput);
+}
+
+VOID
+CONSOLE_GetCursorXY(
+    PSHORT x,
+    PSHORT y)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+    *x = csbi.dwCursorPosition.X;
+    *y = csbi.dwCursorPosition.Y;
 }
 
 SHORT

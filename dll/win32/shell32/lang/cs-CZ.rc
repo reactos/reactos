@@ -1,6 +1,6 @@
 /* FILE:       dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-04-25
+ * UPDATED:    2015-04-12
  * THANKS TO:  navaraf, who translated major part of this file
  */
 
@@ -45,6 +45,23 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Vlastnosti", FCIDM_SHVIEW_PROPERTIES
     END
+END
+
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Zpět\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Vy&jmou&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Kopírovat\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Vložit\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Vložit zá&stupce", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Ko&pírovat do složky...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Pře&sunout do složky...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Vybr&at vše\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invertovat výběr", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -145,7 +162,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Spustit"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Zadejte název programu, složky, dokumentu, nebo zdroje v síti Internet a ReactOS jej pro vás otevře.", 12289, 36, 11, 182, 18
     LTEXT "&Otevřít:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -183,14 +200,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Rozšířené vlastnosti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Zvolte rozšířené vlastnosti, které požadujtete pro tohoto zástupce.", -1, 5, 30, 210, 10
     CHECKBOX "Spustit s jinými pověřeními", 14000, 25, 50, 150, 10
     LTEXT "Tato možnost umožní spustit tohoto zástupce jako jiný uživatel nebo při spuštění se současným uživatelem chránit počítač před nepovolenou aktivitou programu.", -1, 50, 60, 175, 40
-    CHECKBOX "Spustit v odděleném paměťovém prostoru", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Spustit v odděleném paměťovém prostoru", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Storno", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -317,13 +335,16 @@ CAPTION "Nástroje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kontrola chyb", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Tento nástroj otestuje svazek na chyby.", -1, 40, 25, 160, 20
     PUSHBUTTON "Zkontrolovat...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentace", -1, 5, 65, 230, 60
-    LTEXT "Tento nástroj zdefragmentuje soubory na svazku", -1, 40, 85, 160, 20
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
+    LTEXT "Tento nástroj zdefragmentuje soubory na svazku.", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmentovat...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Záloha", -1, 5, 130, 230, 60
-    LTEXT "Tímto nástrojem zazálohuje soubory na svazku.", -1, 40, 150, 160, 20
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
+    LTEXT "Tento nástroj zazálohuje soubory na svazku.", -1, 40, 150, 160, 20
     PUSHBUTTON "Zálohovat...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
@@ -375,23 +396,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Vyberte program, ve kterém chcete otevřít tento soubor: ", -1, 44, 12, 211, 10
-    LTEXT "Soubor:    ", 14001, 44, 25, 188, 10
+    LTEXT "Soubor:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
     CONTROL "Programy", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Vždy použít vybraný program k otevření tohoto typu souboru", 14003, 20, 193, 225, 10
     PUSHBUTTON "P&rocházet...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Kopírování..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Storno", 14002, 195, 14, 60, 16
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "Soubor", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -422,7 +433,7 @@ CAPTION "Zobrazení"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Zobrazení složky", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Zobrazení použité pro tuto složku (jako třeba Podrobnosti nebo Miniatury)\n lze použít pro všechny složky.", -1, 60, 20, 180, 20
     PUSHBUTTON "&Použít pro všechny složky", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "Ob&novit všechny složky", 14002, 150, 50, 80, 14, WS_TABSTOP
@@ -584,17 +595,17 @@ BEGIN
     AUTOCHECKBOX "&Aktivovat kompresi", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zkontrolovat disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 50
-    PUSHBUTTON "Storno", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Automaticky opravovat chyby souborového systému", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 40
+    PUSHBUTTON "Storno", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Automaticky opravovat chyby", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Vyhledat a pokusit se obnovit vadné sektory", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -610,6 +621,20 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Varování"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "Tento soubor může být využíván operačním systémem nebo\n\
+jinou aplikací. Změnou tohoto souboru může být systém\n\
+poškozen nebo omezena jeho funkcionalita.\n\n\
+Určitě chcete otevřít tento soubor?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Ano", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Ne", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -661,7 +686,7 @@ BEGIN
     IDS_RESTORE "Obnovit"
     IDS_FORMATDRIVE "Formátovat..."
     IDS_RENAME "Přejmenovat"
-    IDS_INSERT "Vložit"
+    IDS_PASTE "Vložit"
 
     IDS_CREATEFOLDER_DENIED "Nelze vytvořit novou složku, protože přístup byl odepřen."
     IDS_CREATEFOLDER_CAPTION "Chyba při pokusu vytvořit novou složku"
@@ -677,6 +702,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Tato složka již obsahuje soubor s názvem '%1'.\n\nChcete jej přepsat?"
     IDS_OVERWRITEFILE_CAPTION "Potvrdit přepsání souboru"
     IDS_OVERWRITEFOLDER_TEXT "Tato složka již obsahuje složku s názvem '%1'.\n\nPokud mají soubory v cílové složce stejné názvy jako soubory ve zvolené\nsložce, budou přepsány. Opravdu chcete přesunout nebo zkopírovat tuto složku?"
+
+    IDS_FILEOOP_COPYING "Kopírování"
+    IDS_FILEOOP_MOVING "Přesouvání"
+    IDS_FILEOOP_DELETING "Odstraňování"
+    IDS_FILEOOP_FROM_TO "Z %1 do %2"
+    IDS_FILEOOP_FROM "Z %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Restartovat"
@@ -725,8 +757,11 @@ BEGIN
     IDS_NEWFOLDER "Nová složka"
 
     IDS_DRIVE_FIXED "Místní disk"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Síťový Disk"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Otevřít v"
@@ -746,11 +781,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Zvolit ikonu"
     IDS_PICK_ICON_FILTER "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Spustitelné soubory (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Složka"
-    IDS_VIRTUAL_DRIVER "Virtuální ovladač zařízení"
     IDS_BAT_FILE "ReactOS dávkový soubor"
     IDS_CMD_FILE "ReactOS příkazový skript"
-    IDS_COM_FILE "DOSová aplikace"
+    IDS_COM_FILE "DOS Aplikace"
     IDS_CPL_FILE "Položka Ovládacích panelů"
     IDS_CUR_FILE "Kurzor"
     IDS_DLL_FILE "Rozšíření aplikace"
@@ -758,14 +793,19 @@ BEGIN
     IDS_EXE_FILE "Aplikace"
     IDS_FON_FILE "Soubor písma"
     IDS_TTF_FILE "Soubor písma TrueType"
+    IDS_OTF_FILE "Soubor písma OpenType"
     IDS_HLP_FILE "Soubor nápovědy"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Konfigurační nastavení"
     IDS_LNK_FILE "Zástupce"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Systémový soubor"
+    IDS_VXD_FILE "Virtuální ovladač zařízení"
 
     IDS_OPEN_VERB "Otevřít"
     IDS_EXPLORE_VERB "Prozkoumat"
-    IDS_RUNAS_VERB "Spustit jako "
+    IDS_RUNAS_VERB "Spustit jako..."
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"
     IDS_PRINT_VERB "Tisknout"
@@ -787,4 +827,8 @@ BEGIN
     IDS_BYTES_FORMAT "bajtů"
     IDS_UNKNOWN_APP "Neznámá aplikace"
     IDS_EXE_DESCRIPTION "Popis:"
+
+    IDS_MENU_EMPTY "(Prázdné)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

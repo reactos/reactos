@@ -258,94 +258,6 @@ CreateBrushIndirect(
     return hBrush;
 }
 
-BOOL
-WINAPI
-PatBlt(HDC hdc,
-       int nXLeft,
-       int nYLeft,
-       int nWidth,
-       int nHeight,
-       DWORD dwRop)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
-}
-
-BOOL
-WINAPI
-PolyPatBlt(IN HDC hdc,
-           IN DWORD rop4,
-           IN PPOLYPATBLT pPoly,
-           IN DWORD Count,
-           IN DWORD Mode)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiPolyPatBlt(hdc, rop4, pPoly,Count,Mode);
-}
-
-/*
- * @implemented
- *
- */
-int
-WINAPI
-GetROP2(HDC hdc)
-{
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    return Dc_Attr->jROP2;
-}
-
-/*
- * @implemented
- */
-int
-WINAPI
-SetROP2(HDC hdc,
-        int fnDrawMode)
-{
-    PDC_ATTR Dc_Attr;
-    INT Old_ROP2;
-
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetROP2( hdc, fnDrawMode);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetROP2(( hdc, fnDrawMode);
-                                  }
-                                  return FALSE;
-        }
-    }
-#endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
-
-    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
-    {
-        if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
-        {
-            NtGdiFlush();
-            Dc_Attr->ulDirty_ &= ~DC_MODE_DIRTY;
-        }
-    }
-
-    Old_ROP2 = Dc_Attr->jROP2;
-    Dc_Attr->jROP2 = fnDrawMode;
-
-    return Old_ROP2;
-}
-
 /*
  * @implemented
  *
@@ -426,4 +338,69 @@ SetBrushOrgEx(HDC hdc,
 
     /* Fall back to the slower kernel path */
     return NtGdiSetBrushOrg(hdc, nXOrg, nYOrg, lppt);
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetBrushAttributes(HBRUSH hbr)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+WINAPI
+SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+WINAPI
+ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnrealizeObject(HGDIOBJ  hgdiobj)
+{
+    BOOL retValue = TRUE;
+    /*
+       Win 2k Graphics API, Black Book. by coriolis.com
+       Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
+       and Windows 2000(tm).
+
+       Step 5. UnrealizeObject(hTrackBrush);
+     */
+    /*
+        msdn.microsoft.com,
+        "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
+        and the function returns TRUE. Use SetBrushOrgEx to set the origin of
+        a brush."
+     */
+    if (GDI_HANDLE_GET_TYPE(hgdiobj) != GDI_OBJECT_TYPE_BRUSH)
+    {
+        retValue = NtGdiUnrealizeObject(hgdiobj);
+    }
+
+    return retValue;
 }

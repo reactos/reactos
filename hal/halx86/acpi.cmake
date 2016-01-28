@@ -6,7 +6,7 @@ list(APPEND HAL_ACPI_SOURCE
     legacy/bus/pcibus.c)
 
 add_object_library(lib_hal_acpi ${HAL_ACPI_SOURCE})
-add_dependencies(lib_hal_acpi bugcodes)
+add_dependencies(lib_hal_acpi bugcodes xdk)
 #add_pch(lib_hal_acpi include/hal.h)
 
 if(MSVC)

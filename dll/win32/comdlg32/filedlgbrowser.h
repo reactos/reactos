@@ -94,6 +94,7 @@ typedef struct
 #define IDS_INVALID_FILENAME		121
 #define IDS_PATHNOTEXISTING		122
 #define IDS_FILENOTEXISTING		123
+#define IDS_INVALID_FOLDERNAME		124
 
 /* File Dialog Tooltips string IDs */
 

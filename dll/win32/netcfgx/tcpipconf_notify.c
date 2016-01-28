@@ -123,6 +123,7 @@ HRESULT InitializeTcpipBasicDlgCtrls(HWND hwndDlg, TcpipSettings * pCurSettings)
 VOID InsertColumnToListView(HWND hDlgCtrl, UINT ResId, UINT SubItem, UINT Size);
 INT_PTR StoreTcpipBasicSettings(HWND hwndDlg, TcpipConfNotifyImpl * This, BOOL bApply);
 HRESULT Initialize(TcpipConfNotifyImpl * This);
+UINT GetIpAddressFromStringW(WCHAR *szBuffer);
 
 VOID
 DisplayError(UINT ResTxt, UINT ResTitle, UINT Type)
@@ -665,6 +666,31 @@ InsertIpAddressToListView(
     }
 }
 
+static
+VOID
+EnableIpButtons(
+    HWND hwndDlg)
+{
+    BOOL bEnable;
+
+    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_IPLIST)) != 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), bEnable);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), bEnable);
+}
+
+static
+VOID
+EnableGwButtons(
+    HWND hwndDlg)
+{
+    BOOL bEnable;
+
+    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_GWLIST)) != 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), bEnable);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), bEnable);
+}
 
 VOID
 InitializeTcpipAdvancedIpDlg(
@@ -696,6 +722,7 @@ InitializeTcpipAdvancedIpDlg(
     else
     {
         InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_IPLIST), This->pCurrentConfig->Ip, TRUE);
+        EnableIpButtons(hwndDlg);
     }
 
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_GATEWAY, 0, 100);
@@ -703,6 +730,8 @@ InitializeTcpipAdvancedIpDlg(
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_METRIC, 1, (rect.right - rect.left - 100));
 
     InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_GWLIST), This->pCurrentConfig->Gw, FALSE);
+    EnableGwButtons(hwndDlg);
+
     SendDlgItemMessageW(hwndDlg, IDC_METRIC, EM_LIMITTEXT, 4, 0);
 
 }
@@ -727,6 +756,12 @@ TcpipAdvGwDlg(
         case WM_INITDIALOG:
             pGwSettings = (TcpipGwSettings *)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
+
+            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
+            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
             if (pGwSettings->bAdd)
             {
                 if (LoadStringW(netcfgx_hInstance, IDS_ADD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
@@ -744,7 +779,10 @@ TcpipAdvGwDlg(
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
-                SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_SETTEXT, 0, (LPARAM)pGwSettings->szIP);
+
+                if (pGwSettings->szIP)
+                    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pGwSettings->szIP));
+
                 if (pGwSettings->Metric)
                 {
                     SetDlgItemInt(hwndDlg, IDC_METRIC, pGwSettings->Metric, FALSE);
@@ -758,10 +796,6 @@ TcpipAdvGwDlg(
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), FALSE);
                 }
             }
-            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
-            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
-            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
-            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
             return TRUE;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_USEMETRIC)
@@ -906,8 +940,12 @@ TcpipAddIpDlg(
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
-                SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_SETTEXT, 0, (LPARAM)pIpSettings->szIP);
-                SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, WM_SETTEXT, 0, (LPARAM)pIpSettings->szMask);
+
+                if (pIpSettings->szIP)
+                    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szIP));
+
+                if (pIpSettings->szMask)
+                    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szMask));
             }
             return TRUE;
         case WM_NOTIFY:
@@ -1329,6 +1367,8 @@ TcpipAdvancedIpDlg(
                         li.pszText = Ip.szMask;
                         SendDlgItemMessageW(hwndDlg, IDC_IPLIST, LVM_SETITEMW, 0, (LPARAM)&li);
                     }
+
+                    EnableIpButtons(hwndDlg);
                 }
             }
             else if (LOWORD(wParam) == IDC_IPMOD)
@@ -1361,6 +1401,7 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_IPDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_IPLIST));
+                EnableIpButtons(hwndDlg);
                 break;
             }
             else if (LOWORD(wParam) == IDC_GWADD)
@@ -1395,6 +1436,8 @@ TcpipAdvancedIpDlg(
                             }
                         }
                     }
+
+                    EnableGwButtons(hwndDlg);
                 }
                 break;
             }
@@ -1443,6 +1486,7 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_GWDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_GWLIST));
+                EnableGwButtons(hwndDlg);
                 break;
             }
     }

@@ -9,7 +9,7 @@
 
   void dump_fontinfo( AFM_FontInfo  fi )
   {
-    FT_Int  i;
+    FT_UInt  i;
 
 
     printf( "This AFM is for %sCID font.\n\n",

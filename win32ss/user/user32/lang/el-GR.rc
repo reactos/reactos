@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "Παρά&βλεψη"
     IDS_YES "&Ναι"
     IDS_NO "Ο&χι"
+    IDS_CLOSE "&Κλείσημο"
     IDS_HELP "Βοήθεια"
     IDS_TRYAGAIN "&Επανάληψη"
     IDS_CONTINUE "&Συνέχεια"

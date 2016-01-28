@@ -352,10 +352,6 @@ typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned long ULONG, *PULONG;
 
-typedef CONST UCHAR *PCUCHAR;
-typedef CONST USHORT *PCUSHORT;
-typedef CONST ULONG *PCULONG;
-
 typedef double DOUBLE;
 $endif(_NTDEF_)
 
@@ -684,8 +680,13 @@ typedef struct _GROUP_AFFINITY {
  #define RTL_NUMBER_OF_V2(A) \
      (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
      RTL_NUMBER_OF_V1(A))
+#elif defined(__cplusplus)
+extern "C++" {
+ template <typename T, size_t N>
+ static char (& SAFE_RTL_NUMBER_OF(T (&)[N]))[N];
+}
+ #define RTL_NUMBER_OF_V2(A) sizeof(SAFE_RTL_NUMBER_OF(A))
 #else
- /// \todo implement security checks for cplusplus / MSVC
  #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #endif
 
@@ -712,6 +713,26 @@ typedef struct _GROUP_AFFINITY {
  #define RTL_CONST_CAST(type) (type)
 #endif
 
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE) \
+extern "C++" { \
+  inline _ENUMTYPE operator|(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) | ((int)b)); } \
+  inline _ENUMTYPE &operator|=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+  inline _ENUMTYPE operator&(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) & ((int)b)); } \
+  inline _ENUMTYPE &operator&=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+  inline _ENUMTYPE operator~(_ENUMTYPE a) { return _ENUMTYPE(~((int)a)); } \
+  inline _ENUMTYPE operator^(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) ^ ((int)b)); } \
+  inline _ENUMTYPE &operator^=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE)
+#endif
+
+#define COMPILETIME_OR_2FLAGS(a,b)          ((UINT)(a)|(UINT)(b))
+#define COMPILETIME_OR_3FLAGS(a,b,c)        ((UINT)(a)|(UINT)(b)|(UINT)(c))
+#define COMPILETIME_OR_4FLAGS(a,b,c,d)      ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d))
+#define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
+
 /* Type Limits */
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
@@ -731,12 +752,17 @@ $if(_WINNT_)
 $endif(_WINNT_)
 #define MAXLONGLONG (0x7fffffffffffffffLL)
 
-/* Multiplication and Shift Operations. Note: we don't use inline
-   asm functions, the compiler can optimize this better. */
-#define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
-#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+/* 32 to 64 bit multiplication. GCC is really bad at optimizing the native math */
+#if defined(_M_IX86) && defined(__GNUC__) && \
+    !defined(MIDL_PASS)&& !defined(RC_INVOKED) && !defined(_M_CEE_PURE)
+ #define Int32x32To64(a,b) __emul(a,b)
+ #define UInt32x32To64(a,b) __emulu(a,b)
+#else
+ #define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
+ #define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+#endif
 
-#if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
+#if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE) || defined(_M_ARM)
 /* Use native math */
  #define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
  #define Int64ShraMod32(a,b) (((__int64)(a))>>(b))

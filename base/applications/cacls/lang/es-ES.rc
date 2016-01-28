@@ -1,37 +1,40 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Muestra o modifica la lista de control de accesos (ACLs) de los archivos\n\n\
+    IDS_HELP "Muestra o modifica listas de control de acceso (ACL) de archivos\n\n\
 CACLS archivo  [/T] [/E] [/C] [/G user:perm [...]] [/R usuario [...]]\n\
                [/P user:perm [...]] [/D usuario [...]]\n\
-   archivo       Mostrar ACLs.\n\
-   /T            Cambia ACLs de los archivos especificados en\n\
+   archivo       Mostrar ACL.\n\
+   /T            Cambia ACL de los archivos especificados en\n\
                  el directorio actual y todos sus subdirectorios.\n\
    /E            Edita la ACL en lugar de reemplazarla.\n\
    /C            Continúa en caso de errores de acceso.\n\
    /G user:perm  Da los derechos de acceso al usuario especificado.\n\
-                 Perm puede ser: R  Lectura\n\
-                                 W  Escritura\n\
-                                 C  Modificación (Escritura)\n\
+                 Perm puede ser: R  Leer\n\
+                                 W  Escribir\n\
+                                 C  Cambiar (escribir)\n\
                                  F  Control total\n\
    /R usuario    Revoca los derechos de acceso al usuario especificado (unicamente válido con /E).\n\
    /P user:perm  Reemplaza los derechos de acceso del usuario especificado.\n\
-                 Perm puede ser: N  Nada\n\
-                                 R  Lectura\n\
-                                 W  Escritura\n\
-                                 C  Modificación (Escritura)\n\
+                 Perm puede ser: N  Ninguno\n\
+                                 R  Leer\n\
+                                 W  Escribir\n\
+                                 C  Cambiar (escribir)\n\
                                  F  Control total\n\
    /D usuario    Revoca el acceso al usuario especificado.\n\
 Es posible usar comodines para especificar más de un archivo por comando.\n\
 Se puede especificar más de un usuario por comando.\n\n\
-Abreviaciones:\n\
+Abreviaturas:\n\
    CI - Herencia del contenedor.\n\
-        ACE será heredado a los directorios.\n\
+        ACE se heredará por directorios.\n\
    OI - Herencia del objeto.\n\
-        ACE sera heredado a los archivos.\n\
-   IO - Herencia sola.\n\
-        ACE no se aplicará al archivo/directorio actual.\n"
+        ACE se heredará por archivos.\n\
+   IO - Sólo heredar.\n\
+        ACE no se aplicará al archivo o directorio actual.\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"

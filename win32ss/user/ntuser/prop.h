@@ -1,7 +1,29 @@
 #pragma once
 
-PPROPERTY FASTCALL IntGetProp(PWND,ATOM);
-BOOL FASTCALL IntRemoveProp(PWND,ATOM);
-BOOL FASTCALL IntSetProp(PWND, ATOM, HANDLE);
-HANDLE FASTCALL UserGetProp(PWND, ATOM);
-VOID FASTCALL IntRemoveWindowProp(PWND Window);
+HANDLE
+FASTCALL
+UserGetProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp);
+
+HANDLE
+FASTCALL
+UserRemoveProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp);
+
+_Success_(return)
+BOOL
+FASTCALL
+UserSetProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ HANDLE Data,
+    _In_ BOOLEAN SystemProp);
+
+VOID
+FASTCALL
+UserRemoveWindowProps(
+    _In_ PWND Window);

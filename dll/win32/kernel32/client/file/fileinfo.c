@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/file.c
+ * FILE:            dll/win32/kernel32/client/file/fileinfo.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)

@@ -161,42 +161,12 @@ static MUI_ENTRY sqALIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalimi nuk p‰rballoje m‰ shum‰ se nj‰ particion primare p‰r disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalimi nuk mund t‰ fshij‰ nj‰ particion primare nga hard disku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  p‰r aq koh‰ sa nj‰ particion i zgjatur ekziston n‰ k‰t‰ hard disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalimi nuk mund t‰ fshij particionin e pare nga nj‰ hard disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  p‰r aq koh‰ sa particione t‰ tjera t‰ zgjatura ekzistojne n‰ hard disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalimi suporton vet‰m dokumentat FAT t‰ sistemit.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrollet e dokumentave t‰ sistemit nuk jan‰ implementuar ende.",
         TEXT_STYLE_NORMAL
     },
@@ -506,6 +476,7 @@ static MUI_ENTRY sqALRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY sqALComputerPageEntries[] =
 {
     {
@@ -836,6 +807,12 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Kliko D p‰r t‰ fshir‰ nj‰ particion ekzistues.",
         TEXT_STYLE_NORMAL
     },
@@ -843,6 +820,100 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
         0,
         0,
         "Ju luttem prisni...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY sqALConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1367,7 +1438,7 @@ MUI_ERROR sqALErrorEntries[] =
           "\n"
           "  \x07  Kliko F3 p‰r daljen nga instalimi.\n"
           "  \x07  Kliko ENTER p‰r t‰ vazhduar.",
-          "F3= Dil  ENTER = Vazhdo"
+          "F3 = Dil  ENTER = Vazhdo"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1498,8 +1569,16 @@ MUI_ERROR sqALErrorEntries[] =
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Jo mjaft hapesir‰ e lir‰ n‰ particionin e p‰rzgjedhur.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Shtypni nj‰ tast cfar‰do p‰r t‰ vazhduar.",
         NULL
     },
@@ -1517,17 +1596,11 @@ MUI_ERROR sqALErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1576,6 +1649,10 @@ MUI_PAGE sqALPages[] =
     {
         SELECT_PARTITION_PAGE,
         sqALSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        sqALConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1665,12 +1742,16 @@ MUI_STRING sqALStrings[] =
     "Ky particion do t‰ formatohet tani."},
     {STRING_NONFORMATTEDPART,
     "Ju zgjodh‰t ReactOS p‰r tu instaluar n‰ nj‰ particion t'ri t‰ paformatuar."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalimi i ReactOS ne Particion"},
     {STRING_CHECKINGPART,
     "Instalimi tani ‰sht‰ duke kontrolluar particionin e p‰rzgjedhur."},
     {STRING_QUITCONTINUE,
-    "F3= Dil  ENTER = Vazhdo"},
+    "F3 = Dil  ENTER = Vazhdo"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Ristarto kompjuterin"},
     {STRING_TXTSETUPFAILED,
@@ -1728,7 +1809,7 @@ MUI_STRING sqALStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "on Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipi %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipi %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/cm/cm.h
+ * FILE:            ntoskrnl/include/internal/cm.h
  * PURPOSE:         Internal header for the Configuration Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -552,12 +552,24 @@ CmpInitHiveViewList(
     IN PCMHIVE Hive
 );
 
+VOID
+NTAPI
+CmpDestroyHiveViewList(
+    IN PCMHIVE Hive
+);
+
 //
 // Security Cache Functions
 //
 VOID
 NTAPI
 CmpInitSecurityCache(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpDestroySecurityCache(
     IN PCMHIVE Hive
 );
 
@@ -780,8 +792,8 @@ NTSTATUS
 NTAPI
 CmpInitializeHive(
     OUT PCMHIVE *CmHive,
-    IN ULONG Operation,
-    IN ULONG Flags,
+    IN ULONG OperationType,
+    IN ULONG HiveFlags,
     IN ULONG FileType,
     IN PVOID HiveData OPTIONAL,
     IN HANDLE Primary,
@@ -826,6 +838,12 @@ CmpOpenHiveFiles(
     IN BOOLEAN MarkAsSystemHive,
     IN BOOLEAN NoBuffering,
     OUT PULONG ClusterSize OPTIONAL
+);
+
+VOID
+NTAPI
+CmpCloseHiveFiles(
+    IN PCMHIVE Hive
 );
 
 NTSTATUS
@@ -1041,14 +1059,6 @@ DelistKeyBodyFromKCB(
     IN BOOLEAN LockHeld
 );
 
-NTSTATUS
-NTAPI
-CmpFreeKeyByCell(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell,
-    IN BOOLEAN Unlink
-);
-
 VOID
 NTAPI
 CmpAcquireTwoKcbLocksExclusiveByKey(
@@ -1068,58 +1078,6 @@ NTAPI
 CmpFlushNotifiesOnKeyBodyList(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeld
-);
-
-//
-// Name Functions
-//
-LONG
-NTAPI
-CmpCompareCompressedName(
-    IN PCUNICODE_STRING SearchName,
-    IN PWCHAR CompressedName,
-    IN ULONG NameLength
-);
-
-USHORT
-NTAPI
-CmpNameSize(
-    IN PHHIVE Hive,
-    IN PUNICODE_STRING Name
-);
-
-USHORT
-NTAPI
-CmpCompressedNameSize(
-    IN PWCHAR Name,
-    IN ULONG Length
-);
-
-VOID
-NTAPI
-CmpCopyCompressedName(
-    IN PWCHAR Destination,
-    IN ULONG DestinationLength,
-    IN PWCHAR Source,
-    IN ULONG SourceLength
-);
-
-USHORT
-NTAPI
-CmpCopyName(
-    IN PHHIVE Hive,
-    IN PWCHAR Destination,
-    IN PUNICODE_STRING Source
-);
-
-BOOLEAN
-NTAPI
-CmpFindNameInList(
-    IN PHHIVE Hive,
-    IN PCHILD_LIST ChildList,
-    IN PUNICODE_STRING Name,
-    IN PULONG ChildIndex,
-    IN PHCELL_INDEX CellIndex
 );
 
 //
@@ -1201,149 +1159,6 @@ CmpCreateLinkNode(
 );
 
 //
-// Cell Index Routines
-//
-
-HCELL_INDEX
-NTAPI
-CmpFindSubKeyByName(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE Parent,
-    IN PCUNICODE_STRING SearchName
-);
-
-HCELL_INDEX
-NTAPI
-CmpFindSubKeyByNumber(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE Node,
-    IN ULONG Number
-);
-
-ULONG
-NTAPI
-CmpComputeHashKey(
-    IN ULONG Hash,
-    IN PCUNICODE_STRING Name,
-    IN BOOLEAN AllowSeparators
-);
-
-BOOLEAN
-NTAPI
-CmpAddSubKey(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Parent,
-    IN HCELL_INDEX Child
-);
-
-BOOLEAN
-NTAPI
-CmpRemoveSubKey(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ParentKey,
-    IN HCELL_INDEX TargetKey
-);
-
-BOOLEAN
-NTAPI
-CmpMarkIndexDirty(
-    IN PHHIVE Hive,
-    HCELL_INDEX ParentKey,
-    HCELL_INDEX TargetKey
-);
-
-//
-// Cell Value Routines
-//
-HCELL_INDEX
-NTAPI
-CmpFindValueByName(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE KeyNode,
-    IN PUNICODE_STRING Name
-);
-
-PCELL_DATA
-NTAPI
-CmpValueToData(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value,
-    OUT PULONG Length
-);
-
-NTSTATUS
-NTAPI
-CmpSetValueDataNew(
-    IN PHHIVE Hive,
-    IN PVOID Data,
-    IN ULONG DataSize,
-    IN ULONG StorageType,
-    IN HCELL_INDEX ValueCell,
-    OUT PHCELL_INDEX DataCell
-);
-
-NTSTATUS
-NTAPI
-CmpAddValueToList(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ValueCell,
-    IN ULONG Index,
-    IN ULONG Type,
-    IN OUT PCHILD_LIST ChildList
-);
-
-BOOLEAN
-NTAPI
-CmpFreeValue(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell
-);
-
-BOOLEAN
-NTAPI
-CmpMarkValueDataDirty(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value
-);
-
-BOOLEAN
-NTAPI
-CmpFreeValueData(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX DataCell,
-    IN ULONG DataLength
-);
-
-NTSTATUS
-NTAPI
-CmpRemoveValueFromList(
-    IN PHHIVE Hive,
-    IN ULONG Index,
-    IN OUT PCHILD_LIST ChildList
-);
-
-BOOLEAN
-NTAPI
-CmpGetValueData(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value,
-    IN PULONG Length,
-    OUT PVOID *Buffer,
-    OUT PBOOLEAN BufferAllocated,
-    OUT PHCELL_INDEX CellToRelease
-);
-
-NTSTATUS
-NTAPI
-CmpCopyKeyValueList(
-    IN PHHIVE SourceHive,
-    IN PCHILD_LIST SrcValueList,
-    IN PHHIVE DestinationHive,
-    IN OUT PCHILD_LIST DestValueList,
-    IN HSTORAGE_TYPE StorageType
-);
-
-//
 // Boot Routines
 //
 HCELL_INDEX
@@ -1361,7 +1176,6 @@ CmGetSystemControlValues(
     IN PVOID SystemHiveData,
     IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
 );
-
 
 //
 // Hardware Configuration Routines
@@ -1575,6 +1389,14 @@ CmSaveKey(
     IN ULONG Flags
 );
 
+NTSTATUS
+NTAPI
+CmSaveMergedKeys(
+    IN PCM_KEY_CONTROL_BLOCK HighKcb,
+    IN PCM_KEY_CONTROL_BLOCK LowKcb,
+    IN HANDLE FileHandle
+);
+
 //
 // Startup and Shutdown
 //
@@ -1651,6 +1473,7 @@ extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;
 extern BOOLEAN CmpMiniNTBoot;
+extern BOOLEAN CmpNoVolatileCreates;
 extern EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;

@@ -299,7 +299,8 @@ UINT WINAPI WNetEnumCachedPasswords(
         entry->cbPassword = data_sz;
         entry->iEntry = i;
         entry->nType = nType;
-        r = RegEnumValueA( hkey, i, NULL, &val_sz, NULL, &type, 
+        size = sizeof val;
+        r = RegEnumValueA( hkey, i, val, &size, NULL, &type,
                            &entry->abResource[val_sz], &data_sz );
         if( r == ERROR_SUCCESS )
             enumPasswordProc( entry, param );

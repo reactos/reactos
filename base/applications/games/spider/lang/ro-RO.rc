@@ -1,11 +1,4 @@
-/*
- * PROJECT:     Spider Solitaire
- * LICENSE:     See COPYING in top level directory
- * FILE:        base/applications/games/spider/lang/en-US.rc
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * LAST CHANGE: 2011-12-18  corrections
- */
-
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialoguri */
@@ -66,7 +59,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_GAME_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Despre…", IDM_HELP_ABOUT

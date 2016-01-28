@@ -357,6 +357,7 @@ extern "C" {
     _In_opt_ _locale_t _Locale);
 
   char*
+  __cdecl
   strncpy(
     char *_Dest,
     const char *_Source,
@@ -671,6 +672,7 @@ extern "C" {
 
   _CRTIMP
   wchar_t*
+  __cdecl
   wcsncat(
     wchar_t *_Dest,
     const wchar_t *_Source,
@@ -707,6 +709,7 @@ extern "C" {
   _CRTIMP
   _CRT_INSECURE_DEPRECATE(wcsncpy_s)
   wchar_t*
+  __cdecl
   wcsncpy(
     wchar_t *_Dest,
     const wchar_t *_Source,
@@ -1148,5 +1151,5 @@ extern "C" {
 #define stricmp _stricmp
 #define wcsicmp _wcsicmp
 
+#include <sec_api/string_s.h>
 #endif
-

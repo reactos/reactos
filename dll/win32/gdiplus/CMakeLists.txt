@@ -4,7 +4,6 @@ add_definitions(
     -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

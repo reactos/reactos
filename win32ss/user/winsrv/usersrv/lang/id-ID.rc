@@ -22,11 +22,3 @@ BEGIN
     LTEXT "Untuk kembali ke ReactOS dan memeriksa status program, klik Batal.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Jika anda memilih untuk segera mengakhiri program, anda akan kehilangan data yang belum disimpan. Untuk mengakhiri program sekarang, klik Akhiri Sekarang.", IDC_STATIC, 7, 53, 178, 26
 END
-
-IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170
-STYLE DS_SYSMODAL | DS_SETFONT | DS_SETFOREGROUND | DS_3DLOOK | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE
-EXSTYLE WS_EX_TOPMOST | WS_EX_WINDOWEDGE
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LTEXT "", IDC_STATIC_CUR_APP, 39, 139, 204, 16, SS_SUNKEN, WS_EX_STATICEDGE
-END

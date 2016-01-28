@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 typedef struct {
     HTMLElement element;
 
@@ -24,6 +26,8 @@ typedef struct {
     nsIDOMHTMLScriptElement *nsscript;
     BOOL parsed;
     BOOL parse_on_bind;
+    BOOL pending_readystatechange_event;
+    READYSTATE readystate;
 } HTMLScriptElement;
 
 typedef struct {

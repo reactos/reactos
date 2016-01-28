@@ -14,7 +14,7 @@
 @ stdcall CoAddRefServerProcess()
 @ stdcall CoAllowSetForegroundWindow(ptr ptr)
 @ stdcall CoBuildVersion()
-# CoCancelCall
+@ stdcall -stub CoCancelCall(long long)
 @ stdcall CoCopyProxy(ptr ptr)
 @ stdcall CoCreateFreeThreadedMarshaler(ptr ptr)
 @ stdcall CoCreateGuid(ptr)
@@ -22,10 +22,10 @@
 @ stdcall CoCreateInstanceEx(ptr ptr long ptr long ptr)
 # CoCreateObjectInContext
 # CoDeactivateObject
-# CoDisableCallCancellation
+@ stdcall -stub CoDisableCallCancellation(ptr)
 @ stdcall CoDisconnectObject(ptr long)
 @ stdcall CoDosDateTimeToFileTime(long long ptr) kernel32.DosDateTimeToFileTime
-# CoEnableCallCancellation
+@ stdcall -stub CoEnableCallCancellation(ptr)
 @ stdcall CoFileTimeNow(ptr)
 @ stdcall CoFileTimeToDosDateTime(ptr ptr ptr) kernel32.FileTimeToDosDateTime
 @ stdcall CoFreeAllLibraries()
@@ -156,10 +156,10 @@
 @ stdcall HBITMAP_UserMarshal(ptr ptr ptr)
 @ stdcall HBITMAP_UserSize(ptr long ptr)
 @ stdcall HBITMAP_UserUnmarshal(ptr ptr ptr)
-@ stub HBRUSH_UserFree
-@ stub HBRUSH_UserMarshal
-@ stub HBRUSH_UserSize
-@ stub HBRUSH_UserUnmarshal
+@ stdcall HBRUSH_UserFree(ptr ptr)
+@ stdcall HBRUSH_UserMarshal(ptr ptr ptr)
+@ stdcall HBRUSH_UserSize(ptr long ptr)
+@ stdcall HBRUSH_UserUnmarshal(ptr ptr ptr)
 @ stdcall HDC_UserFree(ptr ptr)
 @ stdcall HDC_UserMarshal(ptr ptr ptr)
 @ stdcall HDC_UserSize(ptr long ptr)
@@ -218,8 +218,8 @@
 @ stub OleCreateEx
 @ stdcall OleCreateFromData(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateFromDataEx(ptr ptr long long long ptr ptr ptr ptr ptr ptr ptr)
-@ stdcall OleCreateFromFile(ptr ptr ptr long ptr ptr ptr ptr)
-@ stub OleCreateFromFileEx
+@ stdcall OleCreateFromFile(ptr wstr ptr long ptr ptr ptr ptr)
+@ stdcall OleCreateFromFileEx(ptr wstr ptr long long long ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall OleCreateLink(ptr ptr long ptr ptr ptr ptr)
 @ stub OleCreateLinkEx
 @ stdcall OleCreateLinkFromData(ptr ptr long ptr ptr ptr ptr)

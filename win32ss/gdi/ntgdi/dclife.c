@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystem/win32/win32k/objects/dclife.c
+ * FILE:              win32ss/gdi/ntgdi/dclife.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -17,7 +17,7 @@
 PSURFACE psurfDefaultBitmap = NULL;
 PBRUSH pbrDefaultBrush = NULL;
 
-static const MATRIX	gmxWorldToDeviceDefault =
+const MATRIX gmxWorldToDeviceDefault =
 {
     FLOATOBJ_16, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_16,
@@ -25,7 +25,7 @@ static const MATRIX	gmxWorldToDeviceDefault =
     0, 0, 0x4b
 };
 
-static const MATRIX	gmxDeviceToWorldDefault =
+const MATRIX gmxDeviceToWorldDefault =
 {
     FLOATOBJ_1_16, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_1_16,
@@ -33,7 +33,7 @@ static const MATRIX	gmxDeviceToWorldDefault =
     0, 0, 0x53
 };
 
-static const MATRIX	gmxWorldToPageDefault =
+const MATRIX gmxWorldToPageDefault =
 {
     FLOATOBJ_1, FLOATOBJ_0,
     FLOATOBJ_0, FLOATOBJ_1,
@@ -50,7 +50,7 @@ static const MATRIX	gmxWorldToPageDefault =
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitDcImpl()
+InitDcImpl(VOID)
 {
     psurfDefaultBitmap = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
     if (!psurfDefaultBitmap)
@@ -66,10 +66,14 @@ InitDcImpl()
 
 PDC
 NTAPI
-DC_AllocDcWithHandle()
+DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType)
 {
     PDC pdc;
 
+    NT_ASSERT((eDcObjType == GDILoObjType_LO_DC_TYPE) ||
+              (eDcObjType == GDILoObjType_LO_ALTDC_TYPE));
+
+    /* Allocate the object */
     pdc = (PDC)GDIOBJ_AllocateObject(GDIObjType_DC_TYPE,
                                      sizeof(DC),
                                      BASEFLAG_LOOKASIDE);
@@ -79,14 +83,19 @@ DC_AllocDcWithHandle()
         return NULL;
     }
 
+    /* Set the actual DC type */
+    pdc->BaseObject.hHmgr = UlongToHandle(eDcObjType);
+
+    pdc->pdcattr = &pdc->dcattr;
+
+    /* Insert the object */
     if (!GDIOBJ_hInsertObject(&pdc->BaseObject, GDI_OBJ_HMGR_POWNED))
     {
+        /// FIXME: this is broken, since the DC is not initialized yet...
         DPRINT1("Could not insert DC into handle table.\n");
         GDIOBJ_vFreeObject(&pdc->BaseObject);
         return NULL;
     }
-
-    pdc->pdcattr = &pdc->dcattr;
 
     return pdc;
 }
@@ -95,6 +104,15 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
+    if (defaultDCstate == NULL)
+    {
+        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+        ASSERT(defaultDCstate);
+        RtlZeroMemory(defaultDCstate, sizeof(DC));
+        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+        DC_vCopyState(pdc, defaultDCstate, TRUE);
+    }
+
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -160,8 +178,6 @@ DC_vInitDc(
         pdc->erclBoundsApp.bottom = 0x00000333; // FIXME
         pdc->erclClip = pdc->erclBounds;
         pdc->co = gxcoTrivial;
-
-        pdc->fs |= DC_SYNCHRONIZEACCESS | DC_ACCUM_APP | DC_PERMANANT | DC_DISPLAY;
     }
     else
     {
@@ -327,15 +343,6 @@ DC_vInitDc(
 	pdc->dcattr.iGraphicsMode = GM_COMPATIBLE;
 	pdc->dcattr.iCS_CP = 0;
     pdc->pSurfInfo = NULL;
-
-    if (defaultDCstate == NULL)
-    {
-        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
-        ASSERT(defaultDCstate);
-        RtlZeroMemory(defaultDCstate, sizeof(DC));
-        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-        DC_vCopyState(pdc, defaultDCstate, TRUE);
-    }
 }
 
 VOID
@@ -385,13 +392,16 @@ DC_vCleanup(PVOID ObjectBody)
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
-    PDEVOBJ_vRelease(pdc->ppdev) ;
+    PDEVOBJ_vRelease(pdc->ppdev);
 }
 
 VOID
 NTAPI
 DC_vSetOwner(PDC pdc, ULONG ulOwner)
 {
+    /* Delete saved DCs */
+    DC_vRestoreDC(pdc, 1);
+
     if (pdc->dclevel.hPath)
     {
         GreSetObjectOwner(pdc->dclevel.hPath, ulOwner);
@@ -451,7 +461,7 @@ void
 DC_vUpdateDC(PDC pdc)
 {
     // PREGION VisRgn ;
-    PPDEVOBJ ppdev = pdc->ppdev ;
+    PPDEVOBJ ppdev = pdc->ppdev;
 
     pdc->dhpdev = ppdev->dhpdev;
 
@@ -496,9 +506,10 @@ DC_vPrepareDCsForBlit(
         DC_vUpdateTextBrush(pdcDest);
 
     /* Lock them in good order */
-    if(pdcSrc)
+    if (pdcSrc)
     {
-        if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >= (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
+        if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >=
+           (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
         {
             pdcFirst = pdcDest;
             prcFirst = rcDest;
@@ -515,35 +526,28 @@ DC_vPrepareDCsForBlit(
     }
     else
     {
-        pdcFirst = pdcDest ;
+        pdcFirst = pdcDest;
         prcFirst = rcDest;
         pdcSecond = NULL;
         prcSecond = NULL;
-    }
-
-    /* Update clipping of dest DC if needed */
-    if (pdcDest->dctype == DCTYPE_DIRECT)
-    {
-        DCE* dce = DceGetDceFromDC(pdcDest->BaseObject.hHmgr);
-        if (dce)
-            DceUpdateVisRgn(dce, dce->pwndOrg, dce->DCXFlags);
     }
 
     if (pdcDest->fs & DC_FLAG_DIRTY_RAO)
         CLIPPING_UpdateGCRegion(pdcDest);
 
     /* Lock and update first DC */
-    if(pdcFirst->dctype == DCTYPE_DIRECT)
+    if (pdcFirst->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
+
         /* Update surface if needed */
-        if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
+        if (pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcFirst);
         }
     }
 
-    if(pdcFirst->dctype == DCTYPE_DIRECT)
+    if (pdcFirst->dctype == DCTYPE_DIRECT)
     {
         if (!prcFirst)
             prcFirst = &pdcFirst->erclClip;
@@ -555,21 +559,26 @@ DC_vPrepareDCsForBlit(
                                prcFirst->bottom) ;
     }
 
+#if DBG
+    pdcFirst->fs |= DC_PREPARED;
+#endif
+
     if (!pdcSecond)
         return;
 
     /* Lock and update second DC */
-    if(pdcSecond->dctype == DCTYPE_DIRECT)
+    if (pdcSecond->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
+
         /* Update surface if needed */
-        if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
+        if (pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcSecond);
         }
     }
 
-    if(pdcSecond->dctype == DCTYPE_DIRECT)
+    if (pdcSecond->dctype == DCTYPE_DIRECT)
     {
         if (!prcSecond)
             prcSecond = &pdcSecond->erclClip;
@@ -579,6 +588,10 @@ DC_vPrepareDCsForBlit(
                                prcSecond->right,
                                prcSecond->bottom) ;
     }
+
+#if DBG
+    pdcSecond->fs |= DC_PREPARED;
+#endif
 }
 
 /* Finishes a blit for one or two DCs */
@@ -586,19 +599,25 @@ VOID
 FASTCALL
 DC_vFinishBlit(PDC pdc1, PDC pdc2)
 {
-    if(pdc1->dctype == DCTYPE_DIRECT)
+    if (pdc1->dctype == DCTYPE_DIRECT)
     {
         MouseSafetyOnDrawEnd(pdc1->ppdev);
         EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
     }
+#if DBG
+    pdc1->fs &= ~DC_PREPARED;
+#endif
 
-    if(pdc2)
+    if (pdc2)
     {
-        if(pdc2->dctype == DCTYPE_DIRECT)
+        if (pdc2->dctype == DCTYPE_DIRECT)
         {
             MouseSafetyOnDrawEnd(pdc2->ppdev);
             EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
         }
+#if DBG
+        pdc2->fs &= ~DC_PREPARED;
+#endif
     }
 }
 
@@ -631,7 +650,7 @@ GreOpenDCW(
 
     DPRINT("GreOpenDCW - ppdev = %p\n", ppdev);
 
-    pdc = DC_AllocDcWithHandle();
+    pdc = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (!pdc)
     {
         DPRINT1("Could not Allocate a DC\n");
@@ -654,17 +673,17 @@ GreOpenDCW(
     return hdc;
 }
 
+__kernel_entry
 HDC
 APIENTRY
 NtGdiOpenDCW(
-    PUNICODE_STRING pustrDevice,
-    DEVMODEW *pdmInit,
-    PUNICODE_STRING pustrLogAddr,
-    ULONG iType,
-    BOOL bDisplay,
-    HANDLE hspool,
-    VOID *pDriverInfo2,
-    VOID *pUMdhpdev)
+    _In_opt_ PUNICODE_STRING pustrDevice,
+    _In_ DEVMODEW *pdmInit,
+    _In_ PUNICODE_STRING pustrLogAddr,
+    _In_ ULONG iType,
+    _In_ BOOL bDisplay,
+    _In_opt_ HANDLE hspool,
+    _At_((PUMDHPDEV*)pUMdhpdev, _Out_) PVOID pUMdhpdev)
 {
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
@@ -690,6 +709,8 @@ NtGdiOpenDCW(
             if (pdmInit)
             {
                 /* FIXME: could be larger */
+                /* According to a comment in Windows SDK the size of the buffer for
+                   pdm is (pdm->dmSize + pdm->dmDriverExtra) */
                 ProbeForRead(pdmInit, sizeof(DEVMODEW), 1);
                 RtlCopyMemory(&dmInit, pdmInit, sizeof(DEVMODEW));
             }
@@ -755,8 +776,9 @@ NtGdiOpenDCW(
 
 HDC
 APIENTRY
-NtGdiCreateCompatibleDC(HDC hdc)
+GreCreateCompatibleDC(HDC hdc, BOOL bAltDc)
 {
+    GDILOOBJTYPE eDcObjType;
     HDC hdcNew;
     PPDEVOBJ ppdev;
     PDC pdc, pdcNew;
@@ -794,7 +816,8 @@ NtGdiCreateCompatibleDC(HDC hdc)
     }
 
     /* Allocate a new DC */
-    pdcNew = DC_AllocDcWithHandle();
+    eDcObjType = bAltDc ? GDILoObjType_LO_ALTDC_TYPE : GDILoObjType_LO_DC_TYPE;
+    pdcNew = DC_AllocDcWithHandle(eDcObjType);
     if (!pdcNew)
     {
         DPRINT1("Could not allocate a new DC\n");
@@ -804,7 +827,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     hdcNew = pdcNew->BaseObject.hHmgr;
 
     /* Lock ppdev and initialize the new DC */
-    DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
+    DC_vInitDc(pdcNew, bAltDc ? DCTYPE_INFO : DCTYPE_MEMORY, ppdev);
     /* FIXME: HACK! */
     DC_InitHack(pdcNew);
 
@@ -816,6 +839,14 @@ NtGdiCreateCompatibleDC(HDC hdc)
     DPRINT("Leave NtGdiCreateCompatibleDC hdcNew = %p\n", hdcNew);
 
     return hdcNew;
+}
+
+HDC
+APIENTRY
+NtGdiCreateCompatibleDC(HDC hdc)
+{
+    /* Call the internal function to create a normal memory DC */
+    return GreCreateCompatibleDC(hdc, FALSE);
 }
 
 BOOL
@@ -864,11 +895,13 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         if (!GreDeleteObject(hDC))
         {
             DPRINT1("DC_FreeDC failed\n");
+            return FALSE;
         }
     }
     else
     {
         DPRINT1("Attempted to Delete 0x%p currently being destroyed!!!\n", hDC);
+        return FALSE;
     }
 
     return TRUE;

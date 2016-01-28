@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        subsys/system/sndvol32/mixer.c
+ * FILE:        base/applications/sndvol32/mixer.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
 
@@ -90,6 +90,7 @@ SndMixerCreate(HWND hWndNotification)
 VOID
 SndMixerDestroy(PSND_MIXER Mixer)
 {
+    ClearMixerCache(Mixer);
     SndMixerClose(Mixer);
     HeapFree(GetProcessHeap(),
              0,

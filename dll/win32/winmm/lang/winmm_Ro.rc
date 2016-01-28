@@ -1,6 +1,6 @@
 /*
  * Copyright 1999 Eric Pouech
- * Transl. Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * Transl. Ștefan Fulea (stefan dot fulea at mail dot md)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,8 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  LAST CHANGE:  2011-12-17  oust tab, fix identations
  */
 
 STRINGTABLE LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -26,12 +24,12 @@ BEGIN
 MMSYSERR_NOERROR,        "Comanda specificată a fost îndeplinită."
 MMSYSERR_ERROR,          "Eroare externă nedefinită."
 MMSYSERR_BADDEVICEID,    "A fost utilizat un identificator de dispozitiv nevalid pentru acest sistem."
-MMSYSERR_NOTENABLED,     "Modulul pilot nu a fost activat."
+MMSYSERR_NOTENABLED,     "Modulul-pilot nu a fost activat."
 MMSYSERR_ALLOCATED,      "Dispozitivul specificat deja este în uz. Așteptați până se eliberează, apoi reîncercați."
 MMSYSERR_INVALHANDLE,    "Rutina dispozitivului specificat este invalidă."
-MMSYSERR_NODRIVER,       "Modulul pilot nu este instalat în sistem!\n"
+MMSYSERR_NODRIVER,       "Modulul-pilot nu este instalat în sistem!\n"
 MMSYSERR_NOMEM,          "Memorie disponibilă pentru această activitate este insuficientă. Închideți una sau mai multe aplicații pentru a elibera memorie, apoi reîncercați."
-MMSYSERR_NOTSUPPORTED,   "Această funcție nu este acceptată. Petru a determina ce funcții și mesaje se acceptă în modulul pilot, utilizați „Capabilități”."
+MMSYSERR_NOTSUPPORTED,   "Această funcție nu este acceptată. Petru a determina ce funcții și mesaje se acceptă în modulul-pilot, utilizați „Capabilități”."
 MMSYSERR_BADERRNUM,      "A fost specificat un număr de eroare nespecificat în acest sistem."
 MMSYSERR_INVALFLAG,      "A fost transmis un indicator nevalid într-o funcție de sistem."
 MMSYSERR_INVALPARAM,     "A fost transmis un parametru nevalid într-o funcție de sistem."
@@ -45,32 +43,32 @@ WAVERR_SYNC,             "Dispozitivul nu poate fi deschis fără indicativul WA
 /* MIDI errors */
 MIDIERR_UNPREPARED,      "Antetuul MIDI nu este pregătit. Utilizați funcția „Prepare” pentru a pregăti antetul, apoi reîncercați."
 MIDIERR_STILLPLAYING,    "Această operație nu poate fi executată cât timp sunt accesate date media. Reinițializați dispozitivul sau așteptați contenirea accesării datelor media."
-MIDIERR_NOMAP,           "Lipsește harta MIDI. Poate fi o problemă cu modulul pilot, sau cu fișierul MIDIMAP.CFG care fie lipsește, fie este corupt."
+MIDIERR_NOMAP,           "Lipsește harta MIDI. Poate fi o problemă cu modulul-pilot, sau cu fișierul MIDIMAP.CFG care fie lipsește, fie este corupt."
 MIDIERR_NOTREADY,        "Portul transmite date către dispozitiv. Așteptați până datele sunt transmise în totalitate, apoi reîncercați."
 MIDIERR_NODEVICE,        "Configuratorul MIDI se referă la un dispozitiv care nu este instalat în sistem."
 MIDIERR_INVALIDSETUP,    "Configuratorul MIDI este deteriorat. Copiați fișierul original MIDIMAP.CFG în directorul SYSTEM din ReactOS, apoi reîncercați."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID,         "Identificator de dispozitiv MCI nevalid. Utilizați identificatorul obținut la deschiderea dispozitivului MCI."
-MCIERR_UNRECOGNIZED_KEYWORD,      "Modulul pilot nu recunoaște parametrul de comandă specificat."
-MCIERR_UNRECOGNIZED_COMMAND,      "Modulul pilot nu recunoaște comanda specificată."
+MCIERR_UNRECOGNIZED_KEYWORD,      "Modulul-pilot nu recunoaște parametrul de comandă specificat."
+MCIERR_UNRECOGNIZED_COMMAND,      "Modulul-pilot nu recunoaște comanda specificată."
 MCIERR_HARDWARE,                  "A survenit o problemă la dispozitivul media. Asigurați-vă că funcționează corect sau contactați producătorul dispozitivului."
 MCIERR_INVALID_DEVICE_NAME,       "Dispozitivul specificat nu este deschis sau nu este recunoscut de către MCI."
 MCIERR_OUT_OF_MEMORY,             "Memorie disponibilă pentru această activitate este insuficientă. \nÎnchideți una sau mai multe aplicații pentru a elibera memorie, apoi reîncercați."
 MCIERR_DEVICE_OPEN,               "Numele de dispozitiv deja este utilizat ca alias de către aplicație. Utilizați un alias unic."
-MCIERR_CANNOT_LOAD_DRIVER,        "A survenit o eroare neidentificabilă la încărcarea modulului pilot al dispozitivului."
+MCIERR_CANNOT_LOAD_DRIVER,        "A survenit o eroare neidentificabilă la încărcarea modulului-pilot al dispozitivului."
 MCIERR_MISSING_COMMAND_STRING,    "Nu a fost specificată comanda."
 MCIERR_PARAM_OVERFLOW,            "Șirul de ieșire este prea voluminos pentru a fi inclus în memoria rezervată pentru rezultat. Măriți această memorie."
 MCIERR_MISSING_STRING_ARGUMENT,   "Comanda specificată necesită parametru șir-de-caractere. Furnizați un asemenea parametru."
 MCIERR_BAD_INTEGER,               "Numărul întreg specificat nu este valid pentru această comandă."
-MCIERR_PARSER_INTERNAL,           "Modulul pilot a răspuns cu un tip de date eronat. Căutați un nou modul pilot la producătorul dispozitivului."
-MCIERR_DRIVER_INTERNAL,           "A apărut o problemă în modulul pilot al dispozitivului. Căutați un nou modul pilot la producătorul dispozitivului."
+MCIERR_PARSER_INTERNAL,           "Modulul-pilot a răspuns cu un tip de date eronat. Căutați un nou modúl-pilot la producătorul dispozitivului."
+MCIERR_DRIVER_INTERNAL,           "A apărut o problemă în modulul-pilot al dispozitivului. Căutați un nou modúl-pilot la producătorul dispozitivului."
 MCIERR_MISSING_PARAMETER,         "Comanda specificată necesită un parametru. Furnizați un parametru."
 MCIERR_UNSUPPORTED_FUNCTION,      "Dispozitivul MCI pe care-l utilizați nu acceptă comanda specificată."
 MCIERR_FILE_NOT_FOUND,            "Nu se poate găsi fișierul specificat. Asigurați-vă că numele și calea fișierului sunt corecte."
-MCIERR_DEVICE_NOT_READY,          "Modulul pilot al dispozitivului nu este gata."
+MCIERR_DEVICE_NOT_READY,          "Modulul-pilot al dispozitivului nu este gata."
 MCIERR_INTERNAL,                  "A apărut o problemă la inițializarea MCI. Încercați repornirea ReactOS."
-MCIERR_DRIVER,                    "A apărut o problemă la modulul pilot al dispozitibului. Modulul pilot este închis. Nu se poate accesa eroarea."
+MCIERR_DRIVER,                    "A apărut o problemă la modulul-pilot al dispozitibului. Modulul-pilot este închis. Nu se poate accesa eroarea."
 MCIERR_CANNOT_USE_ALL,            "În această comandă nu se poate utiliza 'all' ca nume de dispozitiv."
 MCIERR_MULTIPLE,                  "Au survenit erori în mai mult de un dispozitiv. Specificați separat fiecare comandă și dispozitiv pentru a identifica dispozitivul care a cauzat eroarea."
 MCIERR_EXTENSION_NOT_FOUND,       "Nu se poate identifica tipul dispozitivului din extensia fișierului dat."
@@ -81,8 +79,8 @@ MCIERR_DEVICE_TYPE_REQUIRED,      "Dispozitivul specificat nu se poate localiza.
 MCIERR_DEVICE_LOCKED,             "Dispozitivul specificat este blocat. Așteptați câteva secunde, apoi reîncercați."
 MCIERR_DUPLICATE_ALIAS,           "În această aplicație deja există un asemenea alias. Utilizați un alias unic."
 MCIERR_BAD_CONSTANT,              "Parametrul specificat nu este valid pentru această comandă."
-MCIERR_MUST_USE_SHAREABLE,        "Acest modul pilot este deja în uz. Pentru a-l partaja, utilizați parametrul „shareable” pentru fiecare comandă „open”."
-MCIERR_MISSING_DEVICE_NAME,       "Comanda specificată necesită un alias, fișier, modul pilot, sau un nume de dispozitiv. Furnizați o asemenea parametru."
+MCIERR_MUST_USE_SHAREABLE,        "Acest modúl-pilot este deja în uz. Pentru a-l partaja, utilizați parametrul „shareable” pentru fiecare comandă „open”."
+MCIERR_MISSING_DEVICE_NAME,       "Comanda specificată necesită un alias, fișier, modúl-pilot, sau un nume de dispozitiv. Furnizați o asemenea parametru."
 MCIERR_BAD_TIME_FORMAT,           "Valoarea specificată pentru formatul orei nu este validă. Consultați documentația MCI în vederea formatelor valide."
 MCIERR_NO_CLOSING_QUOTE,          "În valoarea parametru, ghilimelele nu au fost închise. Închideți-le."
 MCIERR_DUPLICATE_FLAGS,           "Un parametru sau valoare a fost duplicat. Specificați singură dată."
@@ -96,12 +94,12 @@ MCIERR_NONAPPLICABLE_FUNCTION,    "Nu se pot executa comenzile în ordinea speci
 MCIERR_ILLEGAL_FOR_AUTO_OPEN,     "Comanda specificată nu poate fi executată pe un dispozitiv cu auto-deschidere. Așteptați închiderea despozitivului, apoi reîncercați."
 MCIERR_FILENAME_REQUIRED,         "Numele de fișier este nevalid. Asigurați-vă că numele de fișier nu este mai lung de 8 caractere, urmate de un punct și o extensie."
 MCIERR_EXTRA_CHARACTERS,          "Nu se pot specifica alte caractere suplimentare în afara ghilimelelor."
-MCIERR_DEVICE_NOT_INSTALLED,      "Dispozitivul specificat nu este insalat în sistem. Utilizați în Panoul de control opțiunile de Module pilot pentru a instala dispozitivul."
+MCIERR_DEVICE_NOT_INSTALLED,      "Dispozitivul specificat nu este insalat în sistem. Utilizați în Panoul de control opțiunile de Modúle-pilot pentru a instala dispozitivul."
 MCIERR_GET_CD,                    "Nu se poate accesa fișierul specificat pentru dispozitivul MCI. Încercați schimbarea directoarelor sau repornirea calculatorului."
 MCIERR_SET_CD,                    "Nu se poate accesa fișierul specificat sau dispozitivul MCI din cauză că aplicația nu poate schimba directoare."
 MCIERR_SET_DRIVE,                 "Nu se poate accesa fișierul specificat sau dispozitivul MCI din cauză că aplicația nu poate schimba unitățile de stocare."
-MCIERR_DEVICE_LENGTH,             "Specificați un nume de dispozitiv sau modul pilot sub 79 de caractere."
-MCIERR_DEVICE_ORD_LENGTH,         "Specificați un nume de dispozitiv sau modul pilot sub 69 de caractere."
+MCIERR_DEVICE_LENGTH,             "Specificați un nume de dispozitiv sau modúl-pilot sub 79 de caractere."
+MCIERR_DEVICE_ORD_LENGTH,         "Specificați un nume de dispozitiv sau modúl-pilot sub 69 de caractere."
 MCIERR_NO_INTEGER,                "Comanda specificată necesită un parametru număr întreg. Vă rugăm furnizați unul."
 MCIERR_WAVE_OUTPUTSINUSE,         "Toate dispozitivele care pot lectura fișierele în formatul curent sunt ocupate. Așteptați până se eliberează unul dintre dispozitive, apoi reîncercați."
 MCIERR_WAVE_SETOUTPUTINUSE,       "Dispozitivul curent nu poate fi desemnat ca lector deoarece este ocupat. Așteptați eliberarea dispozitivului, apoi reîncercați."
@@ -109,20 +107,20 @@ MCIERR_WAVE_INPUTSINUSE,          "Toate dispozitivele care pot înregistra fiș
 MCIERR_WAVE_SETINPUTINUSE,        "Dispozitivul curent nu poate fi desemnat ca înregistrator deoarece este ocupat. Așteptați eliberarea dispozitivului, apoi reîncercați."
 MCIERR_WAVE_OUTPUTUNSPECIFIED,    "Poate fi utilizat orice dispozitiv capabil de a reda forme de undă."
 MCIERR_WAVE_INPUTUNSPECIFIED,     "Poate fi utilizat orice dispozitiv capabil de a înregistra forme de undă."
-MCIERR_WAVE_OUTPUTSUNSUITABLE,    "Nu există nici un dispozitiv instalat care să poată lectura fișiere în formatul curent. Utilizați opțiunea „Module pilot” pentru a instala un asemenea dispozitiv."
+MCIERR_WAVE_OUTPUTSUNSUITABLE,    "Nu există nici un dispozitiv instalat care să poată lectura fișiere în formatul curent. Utilizați opțiunea „Modúle-pilot” pentru a instala un asemenea dispozitiv."
 MCIERR_WAVE_SETOUTPUTUNSUITABLE,  "Dispozitivul pe care-l folosiți nu recunoaște formatul de fișier curent."
-MCIERR_WAVE_INPUTSUNSUITABLE,     "Nu există dispozitive instalate care să poată înregistra fișiere în formatul curent. Utilizați opțiunea „Module pilot” pentru a instala un asemenea dispozitiv."
+MCIERR_WAVE_INPUTSUNSUITABLE,     "Nu există dispozitive instalate care să poată înregistra fișiere în formatul curent. Utilizați opțiunea „Modúle-pilot” pentru a instala un asemenea dispozitiv."
 MCIERR_WAVE_SETINPUTUNSUITABLE,   "Dispozitivul din care încercați să înregistrați nu recunoaște formatul de fișier curent."
 MCIERR_NO_WINDOW,                 "Nu există fereastră de afișare."
 MCIERR_CREATEWINDOW,              "Fereastra nu poate fi creată sau utilizată."
 MCIERR_FILE_READ,                 "Fișierul specificat nu poate fi citit. Asigurați-vă că fișierul încă există, verificați conexiunea rețelei și disponibilitatea discului."
 MCIERR_FILE_WRITE,                "Nu se poate scrie în fișierul specificat. Asigurați disponibilitatea spațiului de disc și conectivitatea rețelei."
 MCIERR_SEQ_DIV_INCOMPATIBLE,      "Formatul temporal al „referinței cântec” și SMPTE sunt reciproc exclusive. Nu le puteți utiliza împreună."
-MCIERR_SEQ_NOMIDIPRESENT,         "Sistemul nu are instalate dispozitive MIDI. Utilizați „Module pilot” din Panoul de control pentru a instala un modul pilot MIDI."
+MCIERR_SEQ_NOMIDIPRESENT,         "Sistemul nu are instalate dispozitive MIDI. Utilizați „Modúle-pilot” din Panoul de control pentru a instala un modúl-pilot MIDI."
 MCIERR_SEQ_PORT_INUSE,            "Portul MIDI specificat este ocupat. Așteptați eliberarea portului, apoi reîncercați."
 MCIERR_SEQ_PORT_MAPNODEVICE,      "Configuratorul MIDI curent se referă la un dispozitiv MIDI care nu este instalat în sistem. Utilizați opțiunile de configurare MIDI din Panoul de control pentru a modifica configurația curentă."
 MCIERR_SEQ_PORT_MISCERROR,        "La portul specificat a survenit o eroare."
-MCIERR_SEQ_PORT_NONEXISTENT,      "Dispozitivul MIDI specificat nu este instalat în sistem. Utilizați opțiunile Modul pilot din Panoul de control pentur a instala un dispozitiv MIDI."
+MCIERR_SEQ_PORT_NONEXISTENT,      "Dispozitivul MIDI specificat nu este instalat în sistem. Utilizați opțiunile Modúl-pilot din Panoul de control pentur a instala un dispozitiv MIDI."
 MCIERR_SEQ_PORTUNSPECIFIED,       "În sistem nu există portul MIDI specificat."
 MCIERR_SEQ_TIMER,                 "Toate cronometrele multimedia sunt utilizate de către alte aplicații. Închideți una dintre aceste aplicații, apoi reîncercați."
 

@@ -47,12 +47,7 @@
  *  3 Sep 90 - Version 1.1 by Gershon Elber (Support for Gif89, Unique names).
  *****************************************************************************/
 
-//#include <stdlib.h>
-//#include <string.h>
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
+#include "wincodecs_private.h"
 
 #include "ungif.h"
 
@@ -405,10 +400,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
     GifFile->Image.Interlace = (Buf[0] & 0x40);
     if (Buf[0] & 0x80) {    /* Does this image have local color map? */
 
-        /*** FIXME: Why do we check both of these in order to do this?
-         * Why do we have both Image and SavedImages? */
-        if (GifFile->Image.ColorMap && GifFile->SavedImages == NULL)
-            FreeMapObject(GifFile->Image.ColorMap);
+        FreeMapObject(GifFile->Image.ColorMap);
 
         GifFile->Image.ColorMap = MakeMapObject(1 << BitsPerPixel, NULL);
         if (GifFile->Image.ColorMap == NULL) {
@@ -494,7 +486,10 @@ DGifGetLine(GifFileType * GifFile,
              * image until empty block (size 0) detected. We use GetCodeNext. */
             do
                 if (DGifGetCodeNext(GifFile, &Dummy) == GIF_ERROR)
-                    return GIF_ERROR;
+                {
+                    WARN("GIF is not properly terminated\n");
+                    break;
+                }
             while (Dummy != NULL) ;
         }
         return GIF_OK;
@@ -930,9 +925,17 @@ DGifSlurp(GifFileType * GifFile) {
 
               Extensions->Function = Function;
 
-              /* Create an extension block with our data */
-              if (AddExtensionBlock(Extensions, ExtData[0], &ExtData[1]) == GIF_ERROR)
-                  return (GIF_ERROR);
+              if (ExtData)
+              {
+                  /* Create an extension block with our data */
+                  if (AddExtensionBlock(Extensions, ExtData[0], &ExtData[1]) == GIF_ERROR)
+                      return (GIF_ERROR);
+              }
+              else /* Empty extension block */
+              {
+                  if (AddExtensionBlock(Extensions, 0, NULL) == GIF_ERROR)
+                      return (GIF_ERROR);
+              }
 
               while (ExtData != NULL) {
                   int Len;

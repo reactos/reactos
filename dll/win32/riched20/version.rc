@@ -28,3 +28,6 @@
 #include "res.h"
 
 OCR_REVERSE CURSOR ocr_reverse.cur
+
+1 TYPELIB riched_tom.tlb
+1 WINE_REGISTRY riched_tom.rgs

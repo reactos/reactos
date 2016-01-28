@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dprocess.c
+ * FILE:        dll/win32/ws2_32_new/src/dthread.c
  * PURPOSE:     Thread Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
@@ -123,7 +123,7 @@ WsThreadGetProtoBuffer(IN PWSTHREAD Thread)
     if (!Thread->ProtocolInfo)
     {
         /* We don't have a buffer; allocate it */
-        Thread->ProtocolInfo = HeapAlloc(WsSockHeap, 0, sizeof(PWSPROTO_BUFFER));
+        Thread->ProtocolInfo = HeapAlloc(WsSockHeap, 0, sizeof(WSPROTO_BUFFER));
     }
 
     /* Return it */

@@ -17,10 +17,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 
-#define TAG_STRING ' rtS'
+#define TAG_STRING  ' rtS'
 #define TAG_OS_ITEM 'tISO'
+
+/* FUNCTIONS ******************************************************************/
 
 static PCSTR CopyString(PCSTR Source)
 {
@@ -28,11 +32,10 @@ static PCSTR CopyString(PCSTR Source)
 
     if (!Source)
         return NULL;
+
     Dest = FrLdrHeapAlloc(strlen(Source) + 1, TAG_STRING);
     if (Dest)
-    {
         strcpy(Dest, Source);
-    }
 
     return Dest;
 }
@@ -48,38 +51,24 @@ OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer)
     ULONG Count;
     OperatingSystemItem* Items;
 
-    //
-    // Open the [FreeLoader] section
-    //
+    /* Open the [FreeLoader] section */
     if (!IniOpenSection("Operating Systems", &SectionId))
-    {
         return NULL;
-    }
 
-    //
-    // Count number of operating systems in the section
-    //
+    /* Count number of operating systems in the section */
     Count = IniGetNumSectionItems(SectionId);
 
-    //
-    // Allocate memory to hold operating system lists
-    //
+    /* Allocate memory to hold operating system lists */
     Items = FrLdrHeapAlloc(Count * sizeof(OperatingSystemItem), TAG_OS_ITEM);
     if (!Items)
-    {
         return NULL;
-    }
 
-    //
-    // Now loop through and read the operating system section and display names
-    //
+    /* Now loop through and read the operating system section and display names */
     for (Idx = 0; Idx < Count; Idx++)
     {
         IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-        //
-        // Search start and end of the title
-        //
+        /* Search start and end of the title */
         OsLoadOptions = NULL;
         TitleStart = SettingValue;
         while (*TitleStart == ' ' || *TitleStart == '"')
@@ -95,17 +84,13 @@ OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer)
             OsLoadOptions = TitleEnd + 1;
         }
 
-        //
-        // Copy the system partition, identifier and options
-        //
+        /* Copy the system partition, identifier and options */
         Items[Idx].SystemPartition = CopyString(SettingName);
         Items[Idx].LoadIdentifier = CopyString(TitleStart);
         Items[Idx].OsLoadOptions = CopyString(OsLoadOptions);
     }
 
-    //
-    // Return success
-    //
+    /* Return success */
     *OperatingSystemCountPointer = Count;
     return Items;
 }

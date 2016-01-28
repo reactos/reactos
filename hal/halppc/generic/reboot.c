@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/reboot.c
+ * FILE:            hal/halppc/generic/reboot.c
  * PURPOSE:         Reboot functions.
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:

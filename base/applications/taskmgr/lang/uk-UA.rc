@@ -46,17 +46,17 @@ BEGIN
         MENUITEM "&Каскадом", ID_WINDOWS_CASCADE
         MENUITEM "На передні&й план", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "&Завершення роботи"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Перехід до режиму &очікування",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "Перехід до &сну",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Ви&мкнення",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Перезавантаження",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Завершення сеансу %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "Змінити &користувача\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "За&блокувати комп'ютер\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Від'єднатися",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Зняти комп'ютер з &док-станції",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Довідка"
     BEGIN
@@ -160,8 +160,8 @@ BEGIN
     CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Нове завдання...", IDC_NEWTASK, 181, 189, 60, 14
-    PUSHBUTTON "П&ереключитися", IDC_SWITCHTO, 120, 189, 55, 14, WS_DISABLED
-    PUSHBUTTON "Зн&яти завдання", IDC_ENDTASK, 58, 189, 56, 14, WS_DISABLED
+    PUSHBUTTON "П&ереключитися", IDC_SWITCHTO, 118, 189, 60, 14, WS_DISABLED
+    PUSHBUTTON "Зн&яти завдання", IDC_ENDTASK, 55, 189, 60, 14, WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
@@ -215,12 +215,12 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Усього", IDS_KERNEL_MEMORY_TOTAL, 137, 174, 27, 8
     LTEXT "Вивантажувана", IDS_KERNEL_MEMORY_PAGED, 137, 184, 53, 8
-    LTEXT "Невивантажувана", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 61, 8
+    LTEXT "Невивантажувана", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 63, 8
     EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 198, 174, 35, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_KERNEL_MEMORY_PAGED, 198, 184, 35, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 198, 193, 35, 8, ES_RIGHT | ES_READONLY |
+    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 200, 193, 33, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Хронологія використання ЦП", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Хронологія використання пам'яті", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
@@ -315,6 +315,7 @@ BEGIN
     CONTROL "Записано байтів", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 67, 10
     CONTROL "Інший ввід-вивід", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 71, 10
     CONTROL "Інших байтів при вводі-виводі", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 114, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Прочитано байтів"
     IDS_TAB_IOWRITESBYTES "Записано байтів"
     IDS_TAB_IOOTHERBYTES "Інших байтів під час вводу-виводу"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "В&ибрати стовпці..."
     IDS_MENU_16BITTASK "&Відображати 16-розрядні завдання"
     IDS_MENU_WINDOWS "В&ікна"
@@ -430,10 +432,11 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Попередження диспетчера завдань"
     IDS_MSG_WARNINGTERMINATING "УВАГА! Припинення процесу може призвести до \nнебажаних наслідків, включаючи втрату даних і \nнестабільну роботу системи. Процес не зможе \nзберегти свій стан або дані перед припиненням. \nВи дійсно бажаєте припинити процес?"
     IDS_MSG_UNABLETERMINATEPRO "Неможливо завершити процес"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Неможливо змінити пріоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "УВАГА! Зміна класу пріоритету цього процесу може призвести до \nнебажаних наслідків, включаючи нестабільну роботу \nсистеми.  Ви дійсно бажаєте змінити пріоритет класу?"
     IDS_MSG_TRAYICONCPUUSAGE "Використання ЦП: %d%%"
-    IDS_STATUS_MEMUSAGE "Пам'ять: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Пам'ять: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Використання ЦП: %3d%%"
     IDS_STATUS_PROCESSES "Процесів: %d"
     IDS_NOT_RESPONDING "Не відповідає"

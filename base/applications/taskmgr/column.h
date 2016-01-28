@@ -47,7 +47,8 @@
 #define COLUMN_IOREADBYTES          22
 #define COLUMN_IOWRITEBYTES         23
 #define COLUMN_IOOTHERBYTES         24
-#define COLUMN_NMAX                 25
+#define COLUMN_COMMANDLINE          25
+#define COLUMN_NMAX                 26
 
 /*
  * temporary fix:
@@ -104,6 +105,7 @@ extern const PresetColumnEntry ColumnPresets[COLUMN_NMAX];
 #define Column_IOWriteBytes         Columns[COLUMN_IOWRITEBYTES]
 #define Column_IOOther              Columns[COLUMN_IOOTHER]
 #define Column_IOOtherBytes         Columns[COLUMN_IOOTHERBYTES]
+#define Column_CommandLine          Columns[COLUMN_COMMANDLINE]
 
 void ProcessPage_OnViewSelectColumns(void);
 void AddColumns(void);

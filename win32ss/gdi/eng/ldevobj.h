@@ -43,8 +43,8 @@ LDEVOBJ_pdmiGetModes(
 PLDEVOBJ
 APIENTRY
 EngLoadImageEx(
-    LPWSTR pwszDriverName,
-    ULONG ldevtype);
+    _In_z_ LPWSTR pwszDriverName,
+    _In_ ULONG ldevtype);
 
 PLDEVOBJ
 NTAPI

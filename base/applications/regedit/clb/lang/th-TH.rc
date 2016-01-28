@@ -6,21 +6,21 @@ CAPTION "Column List Box Styles"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
    GROUPBOX "Column List Box Styles", -1, 6, 7, 158, 71
-   CHECKBOX "&�ҵðҹ", 1710, 10, 20, 42, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&��ͺ", 1713, 10, 30, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&�Ѵ���§", 1705, 10, 40, 26, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "��&��������´", 1706, 10, 50, 32, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "ᶺ����͹��&���", 1707, 10, 60, 64, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "���͡����&��ǹ", -1, 79, 20, 72, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP | WS_DISABLED
-   CHECKBOX "&������ǹ������͡���", -1, 79, 30, 77, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP | WS_DISABLED
-   CHECKBOX "&�Դ˹�ҵ�ҧ������ͧ����", 1714, 79, 40, 68, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&�״�ǵ��", 1715, 79, 50, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   GROUPBOX "�ٻẺ��鹰ҹ", -1, 6, 80, 158, 34
-   CHECKBOX "&�ͧ�����", 1701, 10, 92, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&�������", 1702, 10, 102, 41, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&�Ѵ�����", 1703, 79, 92, 32, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   CHECKBOX "&��ش��駡��˹��", 1704, 79, 102, 44, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-   PUSHBUTTON "��ŧ", IDOK, 37, 125, 40, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-   PUSHBUTTON "¡��ԡ", IDCANCEL, 93, 125, 40, 14, BS_PUSHBUTTON | WS_GROUP | WS_TABSTOP
-   CHECKBOX "���&��ᶺ����͹", 1708, 79, 60, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&มาตรฐาน", 1710, 10, 20, 42, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&กรอบ", 1713, 10, 30, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&จัดเรียง", 1705, 10, 40, 26, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "แจ้ง&รายละเอียด", 1706, 10, 50, 32, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "แถบเลื่อนแนว&ตั้ง", 1707, 10, 60, 64, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "เลือกหลาย&ส่วน", -1, 79, 20, 72, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP | WS_DISABLED
+   CHECKBOX "&ขยายส่วนที่เลือกไว้", -1, 79, 30, 77, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP | WS_DISABLED
+   CHECKBOX "&เปิดหน้าต่างต้นเรื่องใหม่", 1714, 79, 40, 68, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&ยืดแนวตั้ง", 1715, 79, 50, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   GROUPBOX "รูปแบบพื้นฐาน", -1, 6, 80, 158, 34
+   CHECKBOX "&มองเห็นได้", 1701, 10, 92, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&ทำไม่ได้", 1702, 10, 102, 41, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&จัดกลุ่ม", 1703, 79, 92, 32, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   CHECKBOX "&หยุดตั้งกั้นหน้า", 1704, 79, 102, 44, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+   PUSHBUTTON "ตกลง", IDOK, 37, 125, 40, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+   PUSHBUTTON "ยกเลิก", IDCANCEL, 93, 125, 40, 14, BS_PUSHBUTTON | WS_GROUP | WS_TABSTOP
+   CHECKBOX "ไม่&มีแถบเลื่อน", 1708, 79, 60, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 END

@@ -120,10 +120,10 @@ typedef struct _IDocHostContainerVtbl
 {
     ULONG (*addref)(DocHost*);
     ULONG (*release)(DocHost*);
-    void (WINAPI* GetDocObjRect)(DocHost*,RECT*);
-    HRESULT (WINAPI* SetStatusText)(DocHost*,LPCWSTR);
-    void (WINAPI* SetURL)(DocHost*,LPCWSTR);
-    HRESULT (*exec)(DocHost*,const GUID*,DWORD,DWORD,VARIANT*,VARIANT*);
+    void (*get_docobj_rect)(DocHost*,RECT*);
+    HRESULT (*set_status_text)(DocHost*,const WCHAR*);
+    void (*on_command_state_change)(DocHost*,LONG,BOOL);
+    void (*set_url)(DocHost*,const WCHAR*);
 } IDocHostContainerVtbl;
 
 struct DocHost {
@@ -145,6 +145,7 @@ struct DocHost {
     IDispatch *client_disp;
     IDocHostUIHandler *hostui;
     IOleInPlaceFrame *frame;
+    IOleCommandTarget *olecmd;
 
     IUnknown *document;
     IOleDocumentView *view;
@@ -208,6 +209,10 @@ struct WebBrowser {
     IOleContainer *container;
     IOleInPlaceSiteEx *inplace;
 
+    IAdviseSink *sink;
+    DWORD sink_aspects;
+    DWORD sink_flags;
+
     /* window context */
 
     HWND frame_hwnd;
@@ -243,6 +248,7 @@ struct InternetExplorer {
 
     HWND frame_hwnd;
     HWND status_hwnd;
+    HWND toolbar_hwnd;
     HMENU menu;
     BOOL nohome;
 
@@ -281,7 +287,7 @@ HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VAR
 HRESULT go_home(DocHost*) DECLSPEC_HIDDEN;
 HRESULT go_back(DocHost*) DECLSPEC_HIDDEN;
 HRESULT go_forward(DocHost*) DECLSPEC_HIDDEN;
-HRESULT refresh_document(DocHost*) DECLSPEC_HIDDEN;
+HRESULT refresh_document(DocHost*,const VARIANT*) DECLSPEC_HIDDEN;
 HRESULT get_location_url(DocHost*,BSTR*) DECLSPEC_HIDDEN;
 HRESULT set_dochost_url(DocHost*,const WCHAR*) DECLSPEC_HIDDEN;
 void handle_navigation_error(DocHost*,HRESULT,BSTR,IHTMLWindow2*) DECLSPEC_HIDDEN;
@@ -289,6 +295,9 @@ HRESULT dochost_object_available(DocHost*,IUnknown*) DECLSPEC_HIDDEN;
 void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
 void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
 void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
+void on_commandstate_change(DocHost*,LONG,VARIANT_BOOL) DECLSPEC_HIDDEN;
+void notify_download_state(DocHost*,BOOL) DECLSPEC_HIDDEN;
+void update_navigation_commands(DocHost *dochost) DECLSPEC_HIDDEN;
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
 void push_dochost_task(DocHost*,task_header_t*,task_proc_t,task_destr_t,BOOL) DECLSPEC_HIDDEN;
@@ -325,8 +334,6 @@ HRESULT WINAPI InternetExplorer_Create(IClassFactory*,IUnknown*,REFIID,void**) D
 HRESULT WINAPI InternetShortcut_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowser_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowserV1_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-
-const char *debugstr_variant(const VARIANT*) DECLSPEC_HIDDEN;
 
 extern LONG module_ref DECLSPEC_HIDDEN;
 extern HINSTANCE ieframe_instance DECLSPEC_HIDDEN;

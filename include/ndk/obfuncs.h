@@ -153,8 +153,8 @@ ObFindHandleForObject(
     _In_ PEPROCESS Process,
     _In_ PVOID Object,
     _In_ POBJECT_TYPE ObjectType,
-    _In_ POBJECT_HANDLE_INFORMATION HandleInformation,
-    _Out_ PHANDLE Handle
+    _In_opt_ POBJECT_HANDLE_INFORMATION HandleInformation,
+    _Out_opt_ PHANDLE Handle
 );
 
 NTKERNELAPI
@@ -373,7 +373,7 @@ NTAPI
 NtWaitForSingleObject(
     _In_ HANDLE Object,
     _In_ BOOLEAN Alertable,
-    _In_opt_ PLARGE_INTEGER Time
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSAPI

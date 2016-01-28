@@ -67,10 +67,26 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     //
     // Save some critical stuff we use
     //
+    __debugbreak();
+#if 0
     ProcessorState->SpecialRegisters.ControlRegister = KeArmControlRegisterGet();
     ProcessorState->SpecialRegisters.LockdownRegister = KeArmLockdownRegisterGet();
     ProcessorState->SpecialRegisters.CacheRegister = KeArmCacheRegisterGet();
     ProcessorState->SpecialRegisters.StatusRegister = KeArmStatusRegisterGet();
+#endif
+}
+
+VOID
+NTAPI
+KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
+{
+    __debugbreak();
+#if 0
+    KeArmControlRegisterSet(ProcessorState->SpecialRegisters.ControlRegister);
+    KeArmLockdownRegisterSet(ProcessorState->SpecialRegisters.LockdownRegister);
+    KeArmCacheRegisterSet(ProcessorState->SpecialRegisters.CacheRegister);
+    KeArmStatusRegisterSet(ProcessorState->SpecialRegisters.StatusRegister);
+#endif
 }
 
 BOOLEAN
@@ -170,30 +186,14 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
     KiSaveProcessorControlState(State);
 }
 
-/*
- * @implemented
- */
-NTSTATUS
+VOID
 NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+KeFlushIoBuffers(
+    _In_ PMDL Mdl,
+    _In_ BOOLEAN ReadOperation,
+    _In_ BOOLEAN DmaOperation)
 {
-    //
-    // Nothing to do on ARM
-    //
-    return STATUS_SUCCESS;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
-{
-    //
-    // Nothing to do on ARM
-    //
-    return STATUS_SUCCESS;
+    DbgBreakPoint();
 }
 
 /* SYSTEM CALLS NOT VALID ON THIS CPU *****************************************/

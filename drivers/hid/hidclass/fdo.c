@@ -384,6 +384,7 @@ HidClassFDO_GetDescriptors(
     //
     // completed successfully
     //
+    IoFreeIrp(Irp);
     return STATUS_SUCCESS;
 }
 

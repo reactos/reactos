@@ -144,7 +144,7 @@ static BOOL arm_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
 }
 #endif
 
-static unsigned arm_map_dwarf_register(unsigned regno)
+static unsigned arm_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     if (regno <= 15) return CV_ARM_R0 + regno;
     if (regno == 128) return CV_ARM_CPSR;

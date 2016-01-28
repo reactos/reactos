@@ -17,7 +17,7 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/section.c
+ * FILE:            ntoskrnl/cache/section/data.c
  * PURPOSE:         Implements section objects
  *
  * PROGRAMMERS:     Rex Jolliff
@@ -76,10 +76,10 @@ entry.
 
 #include <ntoskrnl.h>
 #include "newmm.h"
-#include "../newcc.h"
+#include <cache/newcc.h>
 #define NDEBUG
 #include <debug.h>
-#include "../mm/ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #define DPRINTC DPRINT
 
@@ -110,78 +110,6 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
     Segment->Locked = FALSE;
     ExReleaseFastMutex(&Segment->Lock);
     //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
-}
-
-NTSTATUS
-NTAPI
-MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length)
-{
-    PFN_NUMBER Page;
-    PMMSUPPORT AddressSpace;
-    PMEMORY_AREA MemoryArea;
-    PMM_SECTION_SEGMENT Segment;
-    LARGE_INTEGER FileOffset = *FileOffsetPtr, End, FirstMapped;
-    KIRQL OldIrql;
-
-    DPRINT("MiZeroFillSection(Address %p, Offset 0x%I64x,Length 0x%lx)\n",
-           Address,
-           FileOffset.QuadPart,
-           Length);
-
-    AddressSpace = MmGetKernelAddressSpace();
-
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-    MmUnlockAddressSpace(AddressSpace);
-    if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW || MemoryArea->DeleteInProgress)
-    {
-        return STATUS_NOT_MAPPED_DATA;
-    }
-
-    Segment = MemoryArea->Data.SectionData.Segment;
-    End.QuadPart = FileOffset.QuadPart + Length;
-    End.LowPart = PAGE_ROUND_DOWN(End.LowPart);
-    FileOffset.LowPart = PAGE_ROUND_UP(FileOffset.LowPart);
-    FirstMapped.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-    DPRINT("Pulling zero pages for %08x%08x-%08x%08x\n",
-           FileOffset.u.HighPart, FileOffset.u.LowPart,
-           End.u.HighPart, End.u.LowPart);
-
-    while (FileOffset.QuadPart < End.QuadPart)
-    {
-        PVOID CurrentAddress;
-        ULONG_PTR Entry;
-
-        if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page)))
-            break;
-
-        MmLockAddressSpace(AddressSpace);
-        MmLockSectionSegment(Segment);
-
-        Entry = MmGetPageEntrySectionSegment(Segment, &FileOffset);
-        if (Entry == 0)
-        {
-            MmSetPageEntrySectionSegment(Segment, &FileOffset, MAKE_PFN_SSE(Page));
-            CurrentAddress = ((PCHAR)MemoryArea->StartingAddress) + FileOffset.QuadPart - FirstMapped.QuadPart;
-
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-            MmReferencePage(Page);
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-            MmCreateVirtualMapping(NULL, CurrentAddress, PAGE_READWRITE, &Page, 1);
-            MmInsertRmap(Page, NULL, CurrentAddress);
-        }
-        else
-        {
-            MmReleasePageMemoryConsumer(MC_CACHE, Page);
-        }
-
-        MmUnlockSectionSegment(Segment);
-        MmUnlockAddressSpace(AddressSpace);
-
-        FileOffset.QuadPart += PAGE_SIZE;
-    }
-    return STATUS_SUCCESS;
 }
 
 /*
@@ -232,8 +160,8 @@ _MiFlushMappedSection(PVOID BaseAddress,
         DPRINT("STATUS_NOT_MAPPED_DATA\n");
         return STATUS_NOT_MAPPED_DATA;
     }
-    BeginningAddress = PAGE_ROUND_DOWN((ULONG_PTR)MemoryArea->StartingAddress);
-    EndingAddress = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress);
+    BeginningAddress = PAGE_ROUND_DOWN(MA_GetStartingAddress(MemoryArea));
+    EndingAddress = PAGE_ROUND_UP(MA_GetEndingAddress(MemoryArea));
     Segment = MemoryArea->Data.SectionData.Segment;
     ViewOffset.QuadPart = MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
@@ -461,7 +389,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         FileSizes.ValidDataLength = FileInfo.EndOfFile;
         FileSizes.FileSize = FileInfo.EndOfFile;
     }
-    DPRINT("Got %08x\n", FileSizes.ValidDataLength.u.LowPart);
+    DPRINT("Got %I64x\n", FileSizes.ValidDataLength.QuadPart);
 
     /*
     * FIXME: Revise this once a locking order for file size changes is
@@ -471,15 +399,12 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     */
     if (UMaximumSize != NULL && UMaximumSize->QuadPart)
     {
-        DPRINT("Taking maximum %x\n", UMaximumSize->LowPart);
+        DPRINT("Taking maximum %I64x\n", UMaximumSize->QuadPart);
         MaximumSize.QuadPart = UMaximumSize->QuadPart;
     }
     else
     {
-        DPRINT("Got file size %08x%08x\n",
-               FileSizes.FileSize.u.HighPart,
-               FileSizes.FileSize.u.LowPart);
-
+        DPRINT("Got file size %I64x\n", FileSizes.FileSize.QuadPart);
         MaximumSize.QuadPart = FileSizes.FileSize.QuadPart;
     }
 
@@ -626,7 +551,6 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
                                 ViewSize,
                                 Protect,
                                 &MArea,
-                                FALSE,
                                 AllocationType,
                                 *BaseAddress ?
                                 PAGE_SIZE : MM_ALLOCATION_GRANULARITY);
@@ -756,7 +680,7 @@ MmFreeCacheSectionPage(PVOID Context,
     Process = MmGetAddressSpaceOwner(AddressSpace);
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
     Segment = ContextData[1];
-    Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
+    Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea) +
                       MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
@@ -771,7 +695,7 @@ MmFreeCacheSectionPage(PVOID Context,
         DPRINT("Removing page %p:%I64x -> %x\n", Segment, Offset.QuadPart, Entry);
         MmSetSavedSwapEntryPage(Page, 0);
         MmDeleteRmap(Page, Process, Address);
-        MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
+        MmDeleteVirtualMapping(Process, Address, NULL, NULL);
         MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
     if (SwapEntry != 0)
@@ -807,7 +731,7 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
 
     DPRINT("MmFreeMemoryArea(%p,%p)\n",
            MmGetAddressSpaceOwner(AddressSpace),
-           MemoryArea->StartingAddress);
+           MA_GetStartingAddress(MemoryArea));
 
     MmLockAddressSpace(AddressSpace);
 

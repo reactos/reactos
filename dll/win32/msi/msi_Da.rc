@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "Kunne ikke åbne den specificerede installationspakke. Kontroller stien og prøv igen."
+	4 "Kunne ikke Ã¥bne den specificerede installationspakke. Kontroller stien og prÃ¸v igen."
 	5 "kunne ikke finden stien '%s'."
-	9 "indsæt disk '%s'"
+	9 "indsÃ¦t disk '%s'"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
 	11 "angiv kataloget som indeholder '%s'."
 	12 "featurens installationskilde mangler."
-        13 "featurens netværksdrev mangler."
+        13 "featurens netvÃ¦rksdrev mangler."
         14 "feature fra:"
-	15 "Vælg kataloget som indeholder '%s'."
+	15 "VÃ¦lg kataloget som indeholder '%s'."
 }

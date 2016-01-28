@@ -19,7 +19,7 @@
 
 #include <freeldr.h>
 
-CHAR    FreeLoaderVersionString[80];
+CHAR FreeLoaderVersionString[80];
 
 PCHAR GetFreeLoaderVersionString(VOID)
 {

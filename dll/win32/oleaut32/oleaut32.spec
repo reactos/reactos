@@ -375,7 +375,7 @@
 420 stdcall OleCreateFontIndirect(ptr ptr ptr)
 421 stdcall OleTranslateColor(long long long)
 422 stub OleLoadPictureFile
-423 stub OleSavePictureFile
+423 stdcall OleSavePictureFile(ptr wstr)
 424 stdcall OleLoadPicturePath(wstr ptr long long ptr ptr)
 425 stdcall VarUI4FromI8(int64 ptr)
 426 stdcall VarUI4FromUI8(int64 ptr)

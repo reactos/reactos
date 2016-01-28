@@ -33,10 +33,25 @@ ScmSetServiceGroup(PSERVICE lpService,
 
     if (lpService->lpGroup != NULL)
     {
-        lpService->lpGroup->dwRefCount--;
-
-        /* FIXME: What do we have to do when dwRefCount is 0? */
+        ASSERT(lpService->lpGroup->dwRefCount != 0);
+        ASSERT(lpService->lpGroup->dwRefCount == (DWORD)-1 ||
+               lpService->lpGroup->dwRefCount < 10000);
+        if (lpService->lpGroup->dwRefCount != (DWORD)-1)
+        {
+            lpService->lpGroup->dwRefCount--;
+            if (lpService->lpGroup->dwRefCount == 0)
+            {
+                ASSERT(lpService->lpGroup->TagCount == 0);
+                ASSERT(lpService->lpGroup->TagArray == NULL);
+                RemoveEntryList(&lpService->lpGroup->GroupListEntry);
+                HeapFree(GetProcessHeap(), 0, lpService->lpGroup);
+                lpService->lpGroup = NULL;
+            }
+        }
     }
+
+    if (lpGroupName == NULL)
+        return ERROR_SUCCESS;
 
     GroupEntry = GroupListHead.Flink;
     while (GroupEntry != &GroupListHead)

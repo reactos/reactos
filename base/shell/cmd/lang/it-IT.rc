@@ -143,7 +143,7 @@ DELAY [/m]n\n\n\
   /m          precisa che n è in millisecondi\n\
               altrimenti n è in secondi\n"
     STRING_DIR_HELP1 "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]orderinamento]] [/P] [/Q] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
+  [/O[[:]orderinamento]] [/P] [/Q] [/R] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
   [disco:][percorso][nomefilen]\n\
               Indica disco, percorso e/o file da elencare.\n\n\
   /A          Visualizza i file con gli attributi indicati.\n\
@@ -162,6 +162,7 @@ DELAY [/m]n\n\n\
                G  Le cartelle per prime    -  Prefisso per invertire l'ordine\n\
   /P          Pasa dopo ogni schermata piena.\n\
   /Q          Visualizza il proprietario del file.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Visualizza i file nella cartella indicata e nelle sottocartelle.\n\
   /T          Sceglie quale campo di tempo è usato per gli ordinamenti.\n\
   timefield   C  Creazione\n\
@@ -506,7 +507,6 @@ titolo        il nuovo titolo\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Errore]\n"
     STRING_REN_ERROR1 "MoveFile() fallita. Errore: %lu\n"
-    STRING_START_ERROR1 "Nessun supporto ai batch al momento!"
     STRING_TIME_ERROR1 "Ora non valida."
     STRING_TYPE_ERROR1 "Opzione '/%s' non valida\n"
     STRING_WINDOW_ERROR1 "finestra non trovata"
@@ -531,9 +531,11 @@ titolo        il nuovo titolo\n"
     STRING_REPLACE_ERROR5 "Accesso negato - %s\n"
     STRING_REPLACE_ERROR6 "Nessun file trovato - %s\n"
     STRING_REPLACE_ERROR7 "Errore esteso 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
     STRING_CMD_SHELLINFO "\nInterprete di linea di comando di ReactOS\nVersion %s %s"
-    STRING_VERSION_RUNVER " in esecuzione su %s"
+    STRING_VERSION_RUNNING_ON "In esecuzione su: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file copiati\n"
     STRING_DELETE_WIPE "resi illeggibili"
     STRING_FOR_ERROR "variabile non valida."

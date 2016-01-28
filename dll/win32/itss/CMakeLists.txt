@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(itss.dll itss.spec)
 
 list(APPEND SOURCE
@@ -24,4 +23,5 @@ set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)
 add_importlibs(itss urlmon shlwapi ole32 msvcrt kernel32 ntdll)
 add_pch(itss precomp.h SOURCE)
+add_dependencies(itss wineheaders)
 add_cd_file(TARGET itss DESTINATION reactos/system32 FOR all)

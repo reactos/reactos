@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "Прене&брегване"
     IDS_YES "&Да"
     IDS_NO "&Не"
+    IDS_CLOSE "&Затваряне"
     IDS_HELP "Помощ"
     IDS_TRYAGAIN "&Нов опит"
     IDS_CONTINUE "Про&дължаване"

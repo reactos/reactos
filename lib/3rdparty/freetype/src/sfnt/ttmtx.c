@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Load the metrics tables common to TTF and OTF fonts (body).          */
 /*                                                                         */
-/*  Copyright 2006-2009, 2011-2013 by                                      */
+/*  Copyright 2006-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -201,7 +201,7 @@
   /*    aadvance :: The advance width or advance height, depending on      */
   /*                the `vertical' flag.                                   */
   /*                                                                       */
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL_DEF( void )
   tt_face_get_metrics( TT_Face     face,
                        FT_Bool     vertical,
                        FT_UInt     gindex,
@@ -274,8 +274,6 @@
       *abearing = 0;
       *aadvance = 0;
     }
-
-    return FT_Err_Ok;
   }
 
 

@@ -15,7 +15,7 @@ BEGIN
     AUTOCHECKBOX "&Perdor StickyKeys", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Konfigurime", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "FilterKeys", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Perdp FilterKeys nese doni Reactos te injorohe ose perserise keystrokes, ose te ngadalsoje kohen e perseritjes.",
+    LTEXT "Perdp FilterKeys nese doni ReactOS te injorohe ose perserise keystrokes, ose te ngadalsoje kohen e perseritjes.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Perdor &FilterKeys", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Konfigurime", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -34,7 +34,7 @@ CAPTION "Zë"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "SoundSentry", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Perdor SoundSentry nese doni qe Reactos te gjeneroj gabime vizuale kur sistemi juaj jep nje zë.",
+    LTEXT "Perdor SoundSentry nese doni qe ReactOS te gjeneroj gabime vizuale kur sistemi juaj jep nje zë.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Perdor &SoundSentry", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Perdor gabimet e metejshme:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -52,7 +52,7 @@ CAPTION "Ekrani"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kontrast i lartë", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Përdoreni këtë mundësi nëse doni Reactos të përdorni ngjyrat dhe gërmat projektuar për leximin e lehtë.",
+    LTEXT "Përdoreni këtë mundësi nëse doni ReactOS të përdorni ngjyrat dhe gërmat projektuar për leximin e lehtë.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Perdor kontrast te larte", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Konfigurime", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

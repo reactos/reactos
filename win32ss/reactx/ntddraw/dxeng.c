@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS Win32 Subsystem
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             subsystems/win32/win32k/ntddraw/dxeng.c
+ * FILE:             win32ss/reactx/ntddraw/dxeng.c
  * PURPOSE:          Implementation of DxEng functions
  * PROGRAMMERS:      Magnus Olsen (magnus@greatlord.com)
  */
@@ -12,7 +12,7 @@
 HSEMAPHORE  ghsemShareDevLock = NULL;
 
 ULONG gcEngFuncs = DXENG_INDEX_DxEngLoadImage + 1;
-DRVFN gaEngFuncs [] =
+DRVFN gaEngFuncs[] =
 {
     {0, (PFN) NULL},
     {DXENG_INDEX_DxEngNUIsTermSrv, (PFN)DxEngNUIsTermSrv},
@@ -75,7 +75,7 @@ DRVFN gaEngFuncs [] =
 *--*/
 ULONG
 APIENTRY
-DxEngDispUniq()
+DxEngDispUniq(VOID)
 {
     DPRINT1("ReactX Calling : DxEngDispUniq\n");
     return GdiHandleTable->flDeviceUniq;
@@ -176,11 +176,11 @@ DxEngUnlockDC(PDC pDC)
 *--*/
 BOOLEAN
 APIENTRY
-DxEngLockShareSem()
+DxEngLockShareSem(VOID)
 {
     DPRINT1("ReactX Calling : DxEngLockShareSem\n");
     if(!ghsemShareDevLock) ghsemShareDevLock = EngCreateSemaphore(); // Hax, should be in dllmain.c
-    IntGdiAcquireSemaphore(ghsemShareDevLock);
+    EngAcquireSemaphore(ghsemShareDevLock);
     return TRUE;
 }
 
@@ -199,10 +199,10 @@ DxEngLockShareSem()
 *--*/
 BOOLEAN
 APIENTRY
-DxEngUnlockShareSem()
+DxEngUnlockShareSem(VOID)
 {
     DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
-    IntGdiReleaseSemaphore(ghsemShareDevLock);
+    EngReleaseSemaphore(ghsemShareDevLock);
     return TRUE;
 }
 
@@ -498,7 +498,7 @@ DxEngGetDCState(HDC hDC,
 *--*/
 BOOLEAN
 APIENTRY
-DxEngIncDispUniq()
+DxEngIncDispUniq(VOID)
 {
     DPRINT1("ReactX Calling : DxEngIncDispUniq \n");
 
@@ -596,7 +596,7 @@ DxEngReferenceHdev(HDEV hDev)
 /* Notes: Check if terminal server got connections or not */
 BOOLEAN
 APIENTRY
-DxEngNUIsTermSrv()
+DxEngNUIsTermSrv(VOID)
 {
     /* FIXME: ReactOS does not suport terminal server yet, we can not check if we got connections or not */
     UNIMPLEMENTED;
@@ -611,7 +611,7 @@ DxEngNUIsTermSrv()
    (redraws current desktop) */
 BOOLEAN
 APIENTRY
-DxEngRedrawDesktop()
+DxEngRedrawDesktop(VOID)
 {
     UserRedrawDesktop();
     return TRUE;
@@ -626,7 +626,7 @@ ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 /* Notes: returns the VisRgnUniq counter for win32k */
 ULONG
 APIENTRY
-DxEngVisRgnUniq()
+DxEngVisRgnUniq(VOID)
 {
     DPRINT1("ReactX Calling : DxEngVisRgnUniq \n");
 
@@ -659,7 +659,7 @@ DxEngCreateMemoryDC(HDEV hDev)
 /************************************************************************/
 /* DxEngScreenAccessCheck                                               */
 /************************************************************************/
-DWORD APIENTRY DxEngScreenAccessCheck()
+DWORD APIENTRY DxEngScreenAccessCheck(VOID)
 {
     UNIMPLEMENTED;
 

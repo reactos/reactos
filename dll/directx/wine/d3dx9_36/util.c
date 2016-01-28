@@ -178,6 +178,7 @@ HRESULT write_buffer_to_file(const WCHAR *dst_filename, ID3DXBuffer *buffer)
     HRESULT hr = S_OK;
     void *buffer_pointer;
     DWORD buffer_size;
+    DWORD bytes_written;
     HANDLE file = CreateFileW(dst_filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
@@ -185,7 +186,7 @@ HRESULT write_buffer_to_file(const WCHAR *dst_filename, ID3DXBuffer *buffer)
     buffer_pointer = ID3DXBuffer_GetBufferPointer(buffer);
     buffer_size = ID3DXBuffer_GetBufferSize(buffer);
 
-    if (!WriteFile(file, buffer_pointer, buffer_size, NULL, NULL))
+    if (!WriteFile(file, buffer_pointer, buffer_size, &bytes_written, NULL))
         hr = HRESULT_FROM_WIN32(GetLastError());
 
     CloseHandle(file);

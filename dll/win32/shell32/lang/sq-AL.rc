@@ -45,6 +45,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -143,7 +160,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "EKzekuto"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Shkruaj emrin e një programi, dosje, dokumenti, apo burim interneti, dhe ReactOS do të hap atë për ju.", 12289, 36, 11, 182, 18
     LTEXT "&Hap:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -181,14 +198,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Karakteristika Zgjeruara"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Zgjidhni karakteristikat e avancuara që ju dëshironi për këtë ikonë.", -1, 5, 30, 210, 10
     CHECKBOX "Ekzekuto me kredenciale të ndryshme", 14000, 25, 50, 150, 10
     LTEXT "Ky opsion mund të lejojë për të drejtuar këtë ikonë si një përdorues tjetër, ose të vazhdojë si veten tënde, duke mbrojtur kompjuterin tuaj dhe të dhënat nga aktiviteti i paautorizuar i programit.", -1, 50, 60, 175, 40
-    CHECKBOX "Ekzekuto në hapësirë ​​të veçantë që e kujtesës", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Ekzekuto në hapësirë ​​të veçantë që e kujtesës", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Ndërprej", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -201,7 +219,7 @@ BEGIN
     ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
     LTEXT "Tipi i dokumentit:", 14004, 8, 40, 55, 10
-    CONTROL "Dosje", 14005, "modifiko", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
+    CONTROL "Dosje", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Vendndodhje:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -231,7 +249,7 @@ BEGIN
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tipi i dokumentit:", 14004, 8, 35, 50, 10
-    CONTROL "Dokumenti", 14005, "modifiko", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
+    CONTROL "Dokumenti", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Hap me:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Ndrysho...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -315,12 +333,15 @@ CAPTION "Vegla"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Bagim-kontroll", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Ky opsion do të kontrollojë volumin për\ngabime.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontrollo tani...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentacion", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Ky opsion do të defragmentojë dokumentat nga vëllimi", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmento Tani...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Rezervat", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Ky opsion do të ruaj/rezervoj dokumentat nga vëllimi.", -1, 40, 150, 160, 20
     PUSHBUTTON "Rezerv Tani...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -373,23 +394,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Zgjidhni programin që dëshironi të përdorni për të hapur këtë dokument:", -1, 44, 12, 211, 10
-    LTEXT "Dokument:    ", 14001, 44, 25, 188, 10
+    LTEXT "Dokument:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programe", -1, 7, 42, 249, 187
     CONTROL "Programe", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Gjithmonë përdorni programin e përzgjedhur për të hapur këtë lloj dokumenti", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Shfleto...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Anulo", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Kopjim..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Anulo", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "Dokument", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -420,7 +431,7 @@ CAPTION "Vëzhgo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vëzhgo Dosjen", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Ju mund të aplikoni pamje (të tilla si Detaje ose Pllaka) që\nJu jeni duke përdorur për këtë dosje të gjitha dosjet.", -1, 60, 20, 180, 20
     PUSHBUTTON "Apliko për të gjitha Dosjet", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Rivë të gjitha Dosjet", 14002, 150, 50, 80, 14, WS_TABSTOP
@@ -582,17 +593,17 @@ BEGIN
     AUTOCHECKBOX "Mundëso Kompresimin", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Kontrollo Diskun"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Fillo", IDOK, 53, 100, 60, 14
-    GROUPBOX "Opsione kontrollo diskun", -1, 7, 6, 179, 50
-    PUSHBUTTON "Anulo", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Rregullo dokumentet e sistemit automatikisht", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Fillo", IDOK, 63, 95, 60, 14
+    GROUPBOX "Opsione kontrollo diskun", -1, 7, 6, 179, 40
+    PUSHBUTTON "Anulo", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Rregullo dokumentet e sistemit automatikisht", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Skano për shërim dhe përpjekje të sektorëve të këqij", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -608,6 +619,20 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Anulo", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -659,7 +684,7 @@ BEGIN
     IDS_RESTORE "Rikthe"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Riemërto"
-    IDS_INSERT "Fut"
+    IDS_PASTE "Fut"
 
     IDS_CREATEFOLDER_DENIED "Në pamundësi për të krijuar dosje të re: Ndalohet hyrja."
     IDS_CREATEFOLDER_CAPTION "Gabim gjatë krijimit të një dosje të re"
@@ -675,6 +700,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Kjo dosje tashmë përmban një dokument të quajtur '% '.\n\nA doni ta zëvendësoni atë?"
     IDS_OVERWRITEFILE_CAPTION "Konfirmo mbishkrim dokumenti"
     IDS_OVERWRITEFOLDER_TEXT "Kjo dosje tashmë përmban një dosje me emrin '%1'.\n\nNëse dosjet në dosjen e destinacionit kanë emër të njëjtë me dokumentet në dosje\npërzgjedh ata që do të zëvendësohen. A doni ende të hyni ose kopjoni\nkëtë dosje?"
+
+    IDS_FILEOOP_COPYING "Copying..."
+    IDS_FILEOOP_MOVING "Moving..."
+    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Rifillo"
@@ -723,8 +755,11 @@ BEGIN
     IDS_NEWFOLDER "Dosje e're"
 
     IDS_DRIVE_FIXED "Disku Vendorë"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Disku Rrjetit"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Hap me"
@@ -744,26 +779,31 @@ BEGIN
     IDS_PICK_ICON_TITLE "Ndrysho Ikonë"
     IDS_PICK_ICON_FILTER "Ikonë Programi (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0T'gjith Dokumentat (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Dokumente Ekzekutues (*.exe)\0*.exe\0T'gjith Dokumentat (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Dosje"
-    IDS_VIRTUAL_DRIVER "Udhëzuesi Virtual Pajisjes"
     IDS_BAT_FILE "ReactOS Dokument Batch"
     IDS_CMD_FILE "ReactOS Skript Komande"
-    IDS_COM_FILE "Aplikacion Dos"
+    IDS_COM_FILE "Aplikacion DOS"
     IDS_CPL_FILE "Artikuj Kontroll Panelit"
     IDS_CUR_FILE "Tregues"
     IDS_DLL_FILE "Zgjatja Aplikacionit"
     IDS_DRV_FILE "Drejtuesi Pajisjes"
     IDS_EXE_FILE "Aplikacion"
     IDS_FON_FILE "Dokument Fonti"
-    IDS_TTF_FILE "Dokument Fonti TipiVërtetë"
+    IDS_TTF_FILE "Dokument Fonti TrueType"
+    IDS_OTF_FILE "Dokument Fonti OpenType"
     IDS_HLP_FILE "Dokumente Ndihme"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Konfigum Cilësimesh"
     IDS_LNK_FILE "Shkurtues"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Dokumente Sistemi"
+    IDS_VXD_FILE "Udhëzuesi Virtual Pajisjes"
 
     IDS_OPEN_VERB "Hap"
     IDS_EXPLORE_VERB "Eksplorer"
-    IDS_RUNAS_VERB "Ekzekuto Si "
+    IDS_RUNAS_VERB "Ekzekuto Si..."
     IDS_EDIT_VERB "Modifiko"
     IDS_FIND_VERB "Gjej"
     IDS_PRINT_VERB "Printo"
@@ -785,4 +825,8 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplikacion panjohur"
     IDS_EXE_DESCRIPTION "Përshkrimi:"
+
+    IDS_MENU_EMPTY "(Empty)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

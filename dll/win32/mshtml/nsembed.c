@@ -25,13 +25,14 @@ WINE_DECLARE_DEBUG_CHANNEL(gecko);
 
 #define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
 #define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
-#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
 #define NS_COMMANDPARAMS_CONTRACTID "@mozilla.org/embedcomp/command-params;1"
 #define NS_HTMLSERIALIZER_CONTRACTID "@mozilla.org/layout/contentserializer;1?mimetype=text/html"
 #define NS_EDITORCONTROLLER_CONTRACTID "@mozilla.org/editor/editorcontroller;1"
 #define NS_PREFERENCES_CONTRACTID "@mozilla.org/preferences;1"
 #define NS_VARIANT_CONTRACTID "@mozilla.org/variant;1"
 #define NS_CATEGORYMANAGER_CONTRACTID "@mozilla.org/categorymanager;1"
+#define NS_XMLHTTPREQUEST_CONTRACTID "@mozilla.org/xmlextras/xmlhttprequest;1"
+#define NS_SCRIPTSECURITYMANAGER_CONTRACTID "@mozilla.org/scriptsecuritymanager;1"
 
 #define PR_UINT32_MAX 0xffffffff
 
@@ -52,13 +53,14 @@ static nsresult (CDECL *NS_CStringSetData)(nsACString*,const char*,PRUint32);
 static nsresult (CDECL *NS_NewLocalFile)(const nsAString*,cpp_bool,nsIFile**);
 static PRUint32 (CDECL *NS_StringGetData)(const nsAString*,const PRUnichar **,cpp_bool*);
 static PRUint32 (CDECL *NS_CStringGetData)(const nsACString*,const char**,cpp_bool*);
+static void* (CDECL *NS_Alloc)(SIZE_T);
+static void (CDECL *NS_Free)(void*);
 
 static HINSTANCE xul_handle = NULL;
 
 static nsIServiceManager *pServMgr = NULL;
 static nsIComponentManager *pCompMgr = NULL;
 static nsICategoryManager *cat_mgr;
-static nsIMemory *nsmem = NULL;
 static nsIFile *profile_directory, *plugin_directory;
 
 static const WCHAR wszNsContainer[] = {'N','s','C','o','n','t','a','i','n','e','r',0};
@@ -423,8 +425,10 @@ static BOOL install_wine_gecko(void)
 
 static void set_environment(LPCWSTR gre_path)
 {
-    WCHAR path_env[MAX_PATH], buf[20];
-    int len, debug_level = 0;
+    size_t len, gre_path_len;
+    int debug_level = 0;
+    WCHAR *path, buf[20];
+    const WCHAR *ptr;
 
     static const WCHAR pathW[] = {'P','A','T','H',0};
     static const WCHAR warnW[] = {'w','a','r','n',0};
@@ -433,13 +437,6 @@ static void set_environment(LPCWSTR gre_path)
     static const WCHAR nspr_log_modulesW[] =
         {'N','S','P','R','_','L','O','G','_','M','O','D','U','L','E','S',0};
     static const WCHAR debug_formatW[] = {'a','l','l',':','%','d',0};
-
-    /* We have to modify PATH as XPCOM loads other DLLs from this directory. */
-    GetEnvironmentVariableW(pathW, path_env, sizeof(path_env)/sizeof(WCHAR));
-    len = strlenW(path_env);
-    path_env[len++] = ';';
-    strcpyW(path_env+len, gre_path);
-    SetEnvironmentVariableW(pathW, path_env);
 
     SetEnvironmentVariableW(xpcom_debug_breakW, warnW);
 
@@ -452,6 +449,24 @@ static void set_environment(LPCWSTR gre_path)
 
     sprintfW(buf, debug_formatW, debug_level);
     SetEnvironmentVariableW(nspr_log_modulesW, buf);
+
+    len = GetEnvironmentVariableW(pathW, NULL, 0);
+    gre_path_len = strlenW(gre_path);
+    path = heap_alloc((len+gre_path_len+1)*sizeof(WCHAR));
+    if(!path)
+        return;
+    GetEnvironmentVariableW(pathW, path, len);
+
+    /* We have to modify PATH as xul.dll loads other DLLs from this directory. */
+    if(!(ptr = strstrW(path, gre_path))
+       || (ptr > path && *(ptr-1) != ';')
+       || (ptr[gre_path_len] && ptr[gre_path_len] != ';')) {
+        if(len)
+            path[len-1] = ';';
+        strcpyW(path+len, gre_path);
+        SetEnvironmentVariableW(pathW, path);
+    }
+    heap_free(path);
 }
 
 static BOOL load_xul(const PRUnichar *gre_path)
@@ -489,18 +504,11 @@ static BOOL load_xul(const PRUnichar *gre_path)
     NS_DLSYM(NS_NewLocalFile);
     NS_DLSYM(NS_StringGetData);
     NS_DLSYM(NS_CStringGetData);
-
-#undef NS_DLSYM
-
-#define NS_DLSYM(func) \
-    func = (void *)GetProcAddress(xul_handle, #func); \
-    if(!func) \
-        ERR("Could not GetProcAddress(" #func ") failed\n")
-
+    NS_DLSYM(NS_Alloc);
+    NS_DLSYM(NS_Free);
     NS_DLSYM(ccref_incr);
     NS_DLSYM(ccref_decr);
     NS_DLSYM(ccref_init);
-    NS_DLSYM(ccref_unmark_if_purple);
     NS_DLSYM(ccp_init);
     NS_DLSYM(describe_cc_node);
     NS_DLSYM(note_cc_edge);
@@ -707,11 +715,6 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
     init_mutation(pCompMgr);
     set_preferences();
 
-    nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_MEMORY_CONTRACTID,
-            NULL, &IID_nsIMemory, (void**)&nsmem);
-    if(NS_FAILED(nsres))
-        ERR("Could not get nsIMemory: %08x\n", nsres);
-
     nsres = nsIServiceManager_GetServiceByContractID(pServMgr, NS_CATEGORYMANAGER_CONTRACTID,
             &IID_nsICategoryManager, (void**)&cat_mgr);
     if(NS_FAILED(nsres))
@@ -774,15 +777,15 @@ BOOL load_gecko(void)
 
 void *nsalloc(size_t size)
 {
-    return nsIMemory_Alloc(nsmem, size);
+    return NS_Alloc(size);
 }
 
 void nsfree(void *mem)
 {
-    nsIMemory_Free(nsmem, mem);
+    NS_Free(mem);
 }
 
-static BOOL nsACString_Init(nsACString *str, const char *data)
+BOOL nsACString_Init(nsACString *str, const char *data)
 {
     return NS_SUCCEEDED(NS_CStringContainerInit2(str, data, PR_UINT32_MAX, 0));
 }
@@ -823,11 +826,6 @@ BOOL nsAString_Init(nsAString *str, const PRUnichar *data)
 void nsAString_InitDepend(nsAString *str, const PRUnichar *data)
 {
     NS_StringContainerInit2(str, data, PR_UINT32_MAX, NS_STRING_CONTAINER_INIT_DEPEND);
-}
-
-void nsAString_SetData(nsAString *str, const PRUnichar *data)
-{
-    NS_StringSetData(str, data, PR_UINT32_MAX);
 }
 
 UINT32 nsAString_GetData(const nsAString *str, const PRUnichar **data)
@@ -1101,9 +1099,6 @@ void close_gecko(void)
     if(cat_mgr)
         nsICategoryManager_Release(cat_mgr);
 
-    if(nsmem)
-        nsIMemory_Release(nsmem);
-
     /* Gecko doesn't really support being unloaded */
     /* if (hXPCOM) FreeLibrary(hXPCOM); */
 
@@ -1130,6 +1125,28 @@ BOOL is_gecko_path(const char *path)
     ret = !strcmpiW(buf, gecko_path);
     heap_free(buf);
     return ret;
+}
+
+void set_viewer_zoom(NSContainer *nscontainer, float factor)
+{
+    nsIContentViewer *content_viewer;
+    nsIDocShell *doc_shell;
+    nsresult nsres;
+
+    TRACE("Setting to %f\n", factor);
+
+    nsres = get_nsinterface((nsISupports*)nscontainer->navigation, &IID_nsIDocShell, (void**)&doc_shell);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
+    assert(nsres == NS_OK && content_viewer);
+    nsIDocShell_Release(doc_shell);
+
+    nsres = nsIContentViewer_SetFullZoom(content_viewer, factor);
+    if(NS_FAILED(nsres))
+        ERR("SetFullZoom failed: %08x\n", nsres);
+
+    nsIContentViewer_Release(content_viewer);
 }
 
 struct nsWeakReference {
@@ -1451,9 +1468,21 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
     switch(aContextFlags) {
     case CONTEXT_NONE:
     case CONTEXT_DOCUMENT:
-    case CONTEXT_TEXT:
-        dwID = CONTEXT_MENU_DEFAULT;
+    case CONTEXT_TEXT: {
+        nsISelection *selection;
+
+        nsres = nsIDOMHTMLDocument_GetSelection(This->doc->basedoc.doc_node->nsdoc, &selection);
+        if(NS_SUCCEEDED(nsres) && selection) {
+            cpp_bool is_collapsed;
+
+            /* FIXME: Check if the click was inside selection. */
+            nsres = nsISelection_GetIsCollapsed(selection, &is_collapsed);
+            nsISelection_Release(selection);
+            if(NS_SUCCEEDED(nsres) && !is_collapsed)
+                dwID = CONTEXT_MENU_TEXTSELECT;
+        }
         break;
+    }
     case CONTEXT_IMAGE:
     case CONTEXT_IMAGE|CONTEXT_LINK:
         dwID = CONTEXT_MENU_IMAGE;
@@ -1538,12 +1567,12 @@ static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener 
 }
 
 static nsresult NSAPI nsURIContentListener_DoContent(nsIURIContentListener *iface,
-        const char *aContentType, cpp_bool aIsContentPreferred, nsIRequest *aRequest,
+        const nsACString *aContentType, cpp_bool aIsContentPreferred, nsIRequest *aRequest,
         nsIStreamListener **aContentHandler, cpp_bool *_retval)
 {
     NSContainer *This = impl_from_nsIURIContentListener(iface);
 
-    TRACE("(%p)->(%s %x %p %p %p)\n", This, debugstr_a(aContentType), aIsContentPreferred,
+    TRACE("(%p)->(%p %x %p %p %p)\n", This, aContentType, aIsContentPreferred,
             aRequest, aContentHandler, _retval);
 
     return This->content_listener
@@ -1695,8 +1724,24 @@ static nsresult NSAPI nsEmbeddingSiteWindow_GetDimensions(nsIEmbeddingSiteWindow
         UINT32 flags, LONG *x, LONG *y, LONG *cx, LONG *cy)
 {
     NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
-    WARN("(%p)->(%08x %p %p %p %p)\n", This, flags, x, y, cx, cy);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    RECT r;
+
+    TRACE("(%p)->(%x %p %p %p %p)\n", This, flags, x, y, cx, cy);
+
+    if(!GetWindowRect(This->hwnd, &r)) {
+        ERR("GetWindowRect failed\n");
+        return NS_ERROR_FAILURE;
+    }
+
+    if(x)
+        *x = r.left;
+    if(y)
+        *y = r.top;
+    if(cx)
+        *cx = r.right-r.left;
+    if(cy)
+        *cy = r.bottom-r.top;
+    return NS_OK;
 }
 
 static nsresult NSAPI nsEmbeddingSiteWindow_SetFocus(nsIEmbeddingSiteWindow *iface)
@@ -2106,4 +2151,52 @@ void NSContainer_Release(NSContainer *This)
     }
 
     nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
+}
+
+nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
+{
+    nsIScriptSecurityManager *secman;
+    nsIPrincipal             *nspri;
+    nsIGlobalObject          *nsglo;
+    nsIXMLHttpRequest        *nsxhr;
+    nsresult                  nsres;
+
+    nsres = nsIServiceManager_GetServiceByContractID(pServMgr,
+            NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+            &IID_nsIScriptSecurityManager, (void**)&secman);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get sec manager service: %08x\n", nsres);
+        return NULL;
+    }
+
+    nsres = nsIScriptSecurityManager_GetSystemPrincipal(secman, &nspri);
+    nsIScriptSecurityManager_Release(secman);
+    if(NS_FAILED(nsres)) {
+        ERR("GetSystemPrincipal failed: %08x\n", nsres);
+        return NULL;
+    }
+
+    nsres = nsIDOMWindow_QueryInterface(nswindow, &IID_nsIGlobalObject, (void **)&nsglo);
+    assert(nsres == NS_OK);
+
+    nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
+            NS_XMLHTTPREQUEST_CONTRACTID, NULL, &IID_nsIXMLHttpRequest,
+            (void**)&nsxhr);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIXMLHttpRequest: %08x\n", nsres);
+        nsISupports_Release(nspri);
+        nsIGlobalObject_Release(nsglo);
+        return NULL;
+    }
+
+    nsres = nsIXMLHttpRequest_Init(nsxhr, nspri, NULL, nsglo, NULL, NULL);
+
+    nsISupports_Release(nspri);
+    nsIGlobalObject_Release(nsglo);
+    if(NS_FAILED(nsres)) {
+        ERR("nsIXMLHttpRequest_Init failed: %08x\n", nsres);
+        nsIXMLHttpRequest_Release(nsxhr);
+        return NULL;
+    }
+    return nsxhr;
 }

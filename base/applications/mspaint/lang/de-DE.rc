@@ -17,6 +17,10 @@ BEGIN
         MENUITEM "Speichern\tStrg+S", IDM_FILESAVE
         MENUITEM "Speichern unter...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Seitenansicht", IDM_FILEPAGEVIEW
+        MENUITEM "Seite einrichten...", IDM_FILEPAGESETUP
+        MENUITEM "Drucken...\tStrg+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Als Hintergrund (Fläche)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Als Hintergrund (Zentriert)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Als Hintergrund (Gestreckt)", IDM_FILEASWALLPAPERSTRETCHED
@@ -80,7 +84,7 @@ BEGIN
         MENUITEM "Moderne Palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Alte Palette", IDM_COLORSOLDPALETTE
     END
-    POPUP "&?"
+    POPUP "&Hilfe"
     BEGIN
         MENUITEM "Hilfethemen", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "Der Prozentsatz muss zwischen 1 und 500 liegen."
     IDS_ANGLE "Der Winkel muss zwischen -89 und 89 liegen."
     IDS_LOADERRORTEXT "Die Datei %s konnte nicht geladen werden."
+    IDS_ENLARGEPROMPTTEXT "Das Bild in der Zwischenablage ist größer als die Bitmap.\nSoll die Bitmap vergrößert werden?"
 END

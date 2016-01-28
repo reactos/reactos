@@ -191,11 +191,11 @@ NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
     TRACE("Entered\n");
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireSharedVcb();
 
     Status = NpCommonQueryVolumeInformation(DeviceObject, Irp);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)

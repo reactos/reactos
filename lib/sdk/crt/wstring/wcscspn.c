@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/wstring/wcscspn.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-size_t wcscspn(const wchar_t *str,const wchar_t *reject)
+size_t CDECL wcscspn(const wchar_t *str,const wchar_t *reject)
 {
 	wchar_t *s;
 	wchar_t *t;

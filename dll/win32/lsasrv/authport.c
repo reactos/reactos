@@ -9,7 +9,6 @@
 #include "lsasrv.h"
 
 #include <ndk/lpcfuncs.h>
-#include <ndk/psfuncs.h>
 
 static LIST_ENTRY LsapLogonContextList;
 
@@ -92,18 +91,21 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
     HANDLE ConnectionHandle = NULL;
     BOOLEAN Accept;
     REMOTE_PORT_VIEW RemotePortView;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("(%p)\n", RequestMsg);
 
     TRACE("Logon Process Name: %s\n", RequestMsg->ConnectInfo.LogonProcessNameBuffer);
 
-    Status = LsapCheckLogonProcess(RequestMsg,
-                                   &LogonContext);
+    if (RequestMsg->ConnectInfo.CreateContext == TRUE)
+    {
+        Status = LsapCheckLogonProcess(RequestMsg,
+                                       &LogonContext);
 
-    RequestMsg->ConnectInfo.OperationalMode = 0x43218765;
+        RequestMsg->ConnectInfo.OperationalMode = 0x43218765;
 
-    RequestMsg->ConnectInfo.Status = Status;
+        RequestMsg->ConnectInfo.Status = Status;
+    }
 
     if (NT_SUCCESS(Status))
     {
@@ -129,10 +131,13 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
 
     if (Accept == TRUE)
     {
-        LogonContext->ConnectionHandle = ConnectionHandle;
+        if (LogonContext != NULL)
+        {
+            LogonContext->ConnectionHandle = ConnectionHandle;
 
-        InsertHeadList(&LsapLogonContextList,
-                       &LogonContext->Entry);
+            InsertHeadList(&LsapLogonContextList,
+                           &LogonContext->Entry);
+        }
 
         Status = NtCompleteConnectPort(ConnectionHandle);
         if (!NT_SUCCESS(Status))
@@ -224,6 +229,16 @@ AuthPortThreadRoutine(PVOID Param)
                     case LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE:
                         RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg,
                                                                             LogonContext);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
+                    case LSASS_REQUEST_ENUM_LOGON_SESSIONS:
+                        RequestMsg.Status = LsapEnumLogonSessions(&RequestMsg);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
+                    case LSASS_REQUEST_GET_LOGON_SESSION_DATA:
+                        RequestMsg.Status = LsapGetLogonSessionData(&RequestMsg);
                         ReplyMsg = &RequestMsg;
                         break;
 

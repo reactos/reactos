@@ -87,35 +87,158 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 /***********************************************************************
  *           OleUIAddVerbMenuA (OLEDLG.1)
  */
-BOOL WINAPI OleUIAddVerbMenuA(
-  LPOLEOBJECT lpOleObj, LPCSTR lpszShortType,
-  HMENU hMenu, UINT uPos, UINT uIDVerbMin, UINT uIDVerbMax,
-  BOOL bAddConvert, UINT idConvert, HMENU *lphMenu)
+BOOL WINAPI OleUIAddVerbMenuA(IOleObject *object, LPCSTR shorttype,
+    HMENU hMenu, UINT uPos, UINT uIDVerbMin, UINT uIDVerbMax,
+    BOOL addConvert, UINT idConvert, HMENU *lphMenu)
 {
-  FIXME("(%p, %s, %p, %d, %d, %d, %d, %d, %p): stub\n",
-    lpOleObj, debugstr_a(lpszShortType),
-    hMenu, uPos, uIDVerbMin, uIDVerbMax,
-    bAddConvert, idConvert, lphMenu
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    WCHAR *shorttypeW = NULL;
+    BOOL ret;
+
+    TRACE("(%p, %s, %p, %d, %d, %d, %d, %d, %p)\n", object, debugstr_a(shorttype),
+        hMenu, uPos, uIDVerbMin, uIDVerbMax, addConvert, idConvert, lphMenu);
+
+    if (shorttype)
+    {
+        INT len = MultiByteToWideChar(CP_ACP, 0, shorttype, -1, NULL, 0);
+        shorttypeW = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        if (shorttypeW)
+            MultiByteToWideChar(CP_ACP, 0, shorttype, -1, shorttypeW, len);
+    }
+
+    ret = OleUIAddVerbMenuW(object, shorttypeW, hMenu, uPos, uIDVerbMin, uIDVerbMax,
+        addConvert, idConvert, lphMenu);
+    HeapFree(GetProcessHeap(), 0, shorttypeW);
+    return ret;
+}
+
+static inline BOOL is_verb_in_range(const OLEVERB *verb, UINT idmin, UINT idmax)
+{
+    if (idmax == 0) return TRUE;
+    return (verb->lVerb + idmin <= idmax);
+}
+
+static HRESULT get_next_insertable_verb(IEnumOLEVERB *enumverbs, UINT idmin, UINT idmax, OLEVERB *verb)
+{
+    memset(verb, 0, sizeof(*verb));
+
+    while (IEnumOLEVERB_Next(enumverbs, 1, verb, NULL) == S_OK) {
+        if (is_verb_in_range(verb, idmin, idmax) && (verb->grfAttribs & OLEVERBATTRIB_ONCONTAINERMENU))
+            return S_OK;
+
+        CoTaskMemFree(verb->lpszVerbName);
+        memset(verb, 0, sizeof(*verb));
+    }
+
+    return S_FALSE;
+}
+
+static void insert_verb_to_menu(HMENU menu, UINT idmin, const OLEVERB *verb)
+{
+    InsertMenuW(menu, ~0, verb->fuFlags | MF_BYPOSITION | MF_STRING, verb->lVerb + idmin, verb->lpszVerbName);
 }
 
 /***********************************************************************
  *           OleUIAddVerbMenuW (OLEDLG.14)
  */
-BOOL WINAPI OleUIAddVerbMenuW(
-  LPOLEOBJECT lpOleObj, LPCWSTR lpszShortType,
-  HMENU hMenu, UINT uPos, UINT uIDVerbMin, UINT uIDVerbMax,
-  BOOL bAddConvert, UINT idConvert, HMENU *lphMenu)
+BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
+    HMENU hMenu, UINT uPos, UINT idmin, UINT idmax, BOOL addConvert, UINT idConvert, HMENU *ret_submenu)
 {
-  FIXME("(%p, %s, %p, %d, %d, %d, %d, %d, %p): stub\n",
-    lpOleObj, debugstr_w(lpszShortType),
-    hMenu, uPos, uIDVerbMin, uIDVerbMax,
-    bAddConvert, idConvert, lphMenu
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    IEnumOLEVERB *enumverbs = NULL;
+    LPOLESTR usertype = NULL;
+    OLEVERB firstverb, verb;
+    WCHAR *objecttype;
+    WCHAR resstrW[32]; /* should be enough */
+    DWORD_PTR args[2];
+    BOOL singleverb;
+    HMENU submenu;
+    WCHAR *str;
+
+    TRACE("(%p, %s, %p, %d, %d, %d, %d, %d, %p)\n", object, debugstr_w(shorttype),
+        hMenu, uPos, idmin, idmax, addConvert, idConvert, ret_submenu);
+
+    if (ret_submenu)
+        *ret_submenu = NULL;
+
+    if (!hMenu || !ret_submenu)
+        return FALSE;
+
+    /* check if we can get verbs at all */
+    if (object)
+        IOleObject_EnumVerbs(object, &enumverbs);
+
+    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+    /* no object, or object without enumeration support */
+    if (!object || !enumverbs) {
+        InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_STRING|MF_GRAYED, idmin, resstrW);
+        return FALSE;
+    }
+
+    /* root entry string */
+    if (!shorttype && (IOleObject_GetUserType(object, USERCLASSTYPE_SHORT, &usertype) == S_OK))
+        objecttype = usertype;
+    else
+        objecttype = (WCHAR*)shorttype;
+
+    /* iterate through verbs */
+
+    /* find first suitable verb */
+    get_next_insertable_verb(enumverbs, idmin, idmax, &firstverb);
+    singleverb = get_next_insertable_verb(enumverbs, idmin, idmax, &verb) != S_OK;
+
+    if (singleverb && !addConvert) {
+        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_SINGLEVERB_OBJECT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+
+        args[0] = (DWORD_PTR)firstverb.lpszVerbName;
+        args[1] = (DWORD_PTR)objecttype;
+
+        FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_ARGUMENT_ARRAY,
+            resstrW, 0, 0, (WCHAR*)&str, 0, (__ms_va_list*)args);
+
+        RemoveMenu(hMenu, uPos, MF_BYPOSITION);
+        InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_STRING, idmin, str);
+        CoTaskMemFree(firstverb.lpszVerbName);
+        HeapFree(GetProcessHeap(), 0, str);
+        IEnumOLEVERB_Release(enumverbs);
+        CoTaskMemFree(usertype);
+        return TRUE;
+    }
+
+    submenu = CreatePopupMenu();
+    insert_verb_to_menu(submenu, idmin, &firstverb);
+    CoTaskMemFree(firstverb.lpszVerbName);
+
+    if (!singleverb) {
+        insert_verb_to_menu(submenu, idmin, &verb);
+        CoTaskMemFree(verb.lpszVerbName);
+    }
+
+    while (get_next_insertable_verb(enumverbs, idmin, idmax, &verb) == S_OK) {
+        insert_verb_to_menu(submenu, idmin, &verb);
+        CoTaskMemFree(verb.lpszVerbName);
+    }
+
+    /* convert verb is at the bottom of a popup, separated from verbs */
+    if (addConvert) {
+        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_CONVERT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+        InsertMenuW(submenu, ~0, MF_BYPOSITION|MF_SEPARATOR, 0, NULL);
+        InsertMenuW(submenu, ~0, MF_BYPOSITION|MF_STRING, idConvert, resstrW);
+    }
+
+    if (submenu)
+        *ret_submenu = submenu;
+
+    /* now submenu is ready, add root entry to original menu, attach submenu */
+    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT_WITH_NAME, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+
+    args[0] = (DWORD_PTR)objecttype;
+    FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_ARGUMENT_ARRAY,
+        resstrW, 0, 0, (WCHAR*)&str, 0, (__ms_va_list*)args);
+
+    InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_POPUP|MF_STRING, (UINT_PTR)submenu, str);
+    HeapFree(GetProcessHeap(), 0, str);
+    IEnumOLEVERB_Release(enumverbs);
+    CoTaskMemFree(usertype);
+    return TRUE;
 }
 
 /***********************************************************************

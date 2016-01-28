@@ -59,6 +59,7 @@
 #define FACILITY_PLA                         48
 #define FACILITY_FVE                         49
 #define FACILITY_WINDOWS_DEFENDER            80
+#define FACILITY_DIRECT3D11                  0x87c
 
 #define SEVERITY_SUCCESS    0
 #define SEVERITY_ERROR      1
@@ -2151,6 +2152,8 @@
 
 /* HRESULT values for OLE, SHELL and other Interface stuff */
 /* the codes 4000-40ff are reserved for OLE */
+
+#define E_NOT_SUFFICIENT_BUFFER                            HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)
 
 #ifdef RC_INVOKED
 #define _HRESULT_TYPEDEF_(x) (x)

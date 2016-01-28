@@ -150,7 +150,7 @@ xlinkIsLink	(xmlDocPtr doc, xmlNodePtr node) {
     if (type != NULL) {
 	if (xmlStrEqual(type, BAD_CAST "simple")) {
             ret = XLINK_TYPE_SIMPLE;
-	} if (xmlStrEqual(type, BAD_CAST "extended")) {
+	} else if (xmlStrEqual(type, BAD_CAST "extended")) {
 	    role = xmlGetNsProp(node, BAD_CAST "role", XLINK_NAMESPACE);
 	    if (role != NULL) {
 		xmlNsPtr xlink;

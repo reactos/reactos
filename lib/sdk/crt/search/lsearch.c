@@ -5,7 +5,7 @@
 /*
  * @implemented
  */
-void *_lsearch(const void *key, void *base, unsigned int *nelp, unsigned int width,
+void * __cdecl _lsearch(const void *key, void *base, unsigned int *nelp, unsigned int width,
          int (__cdecl *compar)(const void *, const void *))
 {
   void *ret_find = _lfind(key,base,nelp,width,compar);

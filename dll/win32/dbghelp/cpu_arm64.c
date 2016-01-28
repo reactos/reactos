@@ -33,7 +33,7 @@ static BOOL arm64_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #ifdef __aarch64__
     case cpu_addr_pc:    addr->Offset = ctx->Pc;  return TRUE;
     case cpu_addr_stack: addr->Offset = ctx->Sp;  return TRUE;
-    case cpu_addr_frame: addr->Offset = ctx->X29; return TRUE;
+    case cpu_addr_frame: addr->Offset = ctx->Fp; return TRUE;
 #endif
     default: addr->Mode = -1;
         return FALSE;
@@ -61,7 +61,7 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
                                CONTEXT* context, DWORD_PTR curr_pc)
 {
     DWORD_PTR               xframe;
-    DWORD_PTR               oldReturn = context->X30;
+    DWORD_PTR               oldReturn = context->Lr;
 
     if (dwarf2_virtual_unwind(csw, curr_pc, context, &xframe))
     {
@@ -70,7 +70,7 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
         return TRUE;
     }
 
-    if (context->Pc == context->X30) return FALSE;
+    if (context->Pc == context->Lr) return FALSE;
     context->Pc = oldReturn;
 
     return TRUE;
@@ -115,8 +115,8 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
 
     /* set frame information */
     frame->AddrStack.Offset = context->Sp;
-    frame->AddrReturn.Offset = context->X30;
-    frame->AddrFrame.Offset = context->X29;
+    frame->AddrReturn.Offset = context->Lr;
+    frame->AddrFrame.Offset = context->Fp;
     frame->AddrPC.Offset = context->Pc;
 
     frame->Far = TRUE;
@@ -128,7 +128,7 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
           wine_dbgstr_addr(&frame->AddrFrame),
           wine_dbgstr_addr(&frame->AddrReturn),
           wine_dbgstr_addr(&frame->AddrStack),
-          curr_mode == stm_start ? "start" : "ARM",
+          curr_mode == stm_start ? "start" : "ARM64",
           wine_dbgstr_longlong(curr_count),
           frame->FuncTableEntry);
 
@@ -144,9 +144,11 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
 }
 #endif
 
-static unsigned arm64_map_dwarf_register(unsigned regno)
+static unsigned arm64_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
-    if (regno <= 30) return CV_ARM64_X0 + regno;
+    if (regno <= 28) return CV_ARM64_X0 + regno;
+    if (regno == 29) return CV_ARM64_FP;
+    if (regno == 30) return CV_ARM64_LR;
     if (regno == 31) return CV_ARM64_SP;
 
     FIXME("Don't know how to map register %d\n", regno);
@@ -158,7 +160,7 @@ static void* arm64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* siz
 #ifdef __aarch64__
     switch (regno)
     {
-
+    case CV_ARM64_PSTATE: *size = sizeof(ctx->Cpsr); return &ctx->Cpsr;
     case CV_ARM64_X0 +  0: *size = sizeof(ctx->X0);  return &ctx->X0;
     case CV_ARM64_X0 +  1: *size = sizeof(ctx->X1);  return &ctx->X1;
     case CV_ARM64_X0 +  2: *size = sizeof(ctx->X2);  return &ctx->X2;
@@ -188,12 +190,11 @@ static void* arm64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* siz
     case CV_ARM64_X0 + 26: *size = sizeof(ctx->X26); return &ctx->X26;
     case CV_ARM64_X0 + 27: *size = sizeof(ctx->X27); return &ctx->X27;
     case CV_ARM64_X0 + 28: *size = sizeof(ctx->X28); return &ctx->X28;
-    case CV_ARM64_X0 + 29: *size = sizeof(ctx->X29); return &ctx->X29;
-    case CV_ARM64_X0 + 30: *size = sizeof(ctx->X30); return &ctx->X30;
 
+    case CV_ARM64_FP:     *size = sizeof(ctx->Fp);     return &ctx->Fp;
+    case CV_ARM64_LR:     *size = sizeof(ctx->Lr);     return &ctx->Lr;
     case CV_ARM64_SP:     *size = sizeof(ctx->Sp);     return &ctx->Sp;
     case CV_ARM64_PC:     *size = sizeof(ctx->Pc);     return &ctx->Pc;
-    case CV_ARM64_PSTATE: *size = sizeof(ctx->PState); return &ctx->PState;
     }
 #endif
     FIXME("Unknown register %x\n", regno);
@@ -204,6 +205,7 @@ static const char* arm64_fetch_regname(unsigned regno)
 {
     switch (regno)
     {
+    case CV_ARM64_PSTATE:  return "cpsr";
     case CV_ARM64_X0 +  0: return "x0";
     case CV_ARM64_X0 +  1: return "x1";
     case CV_ARM64_X0 +  2: return "x2";
@@ -233,12 +235,11 @@ static const char* arm64_fetch_regname(unsigned regno)
     case CV_ARM64_X0 + 26: return "x26";
     case CV_ARM64_X0 + 27: return "x27";
     case CV_ARM64_X0 + 28: return "x28";
-    case CV_ARM64_X0 + 29: return "x29";
-    case CV_ARM64_X0 + 30: return "x30";
 
+    case CV_ARM64_FP:     return "fp";
+    case CV_ARM64_LR:     return "lr";
     case CV_ARM64_SP:     return "sp";
     case CV_ARM64_PC:     return "pc";
-    case CV_ARM64_PSTATE: return "cpsr";
     }
     FIXME("Unknown register %x\n", regno);
     return NULL;
@@ -269,7 +270,7 @@ static BOOL arm64_fetch_minidump_module(struct dump_context* dc, unsigned index,
 DECLSPEC_HIDDEN struct cpu cpu_arm64 = {
     IMAGE_FILE_MACHINE_ARM64,
     8,
-    CV_ARM64_X0 + 29,
+    CV_ARM64_FP,
     arm64_get_addr,
     arm64_stack_walk,
     NULL,

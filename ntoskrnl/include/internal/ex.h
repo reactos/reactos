@@ -9,9 +9,6 @@ extern ULONG ExpTickCountMultiplier;
 extern ULONG ExpLastTimeZoneBias;
 extern POBJECT_TYPE ExEventPairObjectType;
 extern POBJECT_TYPE _ExEventObjectType, _ExSemaphoreObjectType;
-extern ULONG NtBuildNumber;
-extern ULONG NtMajorVersion;
-extern ULONG NtMinorVersion;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -20,9 +17,8 @@ extern LIST_ENTRY ExpSystemResourcesList;
 extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 extern ULONG ExpUnicodeCaseTableDataOffset;
 extern PVOID ExpNlsSectionPointer;
-extern CHAR NtBuildLab[];
-extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
+extern UNICODE_STRING NtSystemRoot;
 extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
 extern LIST_ENTRY ExSystemLookasideListHead;
@@ -32,6 +28,38 @@ extern LIST_ENTRY ExpNonPagedLookasideListHead;
 extern LIST_ENTRY ExpPagedLookasideListHead;
 extern KSPIN_LOCK ExpNonPagedLookasideListLock;
 extern KSPIN_LOCK ExpPagedLookasideListLock;
+
+/*
+ * NT/Cm Version Info variables
+ */
+extern ULONG NtMajorVersion;
+extern ULONG NtMinorVersion;
+extern ULONG NtBuildNumber;
+extern ULONG CmNtSpBuildNumber;
+extern ULONG CmNtCSDVersion;
+extern ULONG CmNtCSDReleaseType;
+extern UNICODE_STRING CmVersionString;
+extern UNICODE_STRING CmCSDVersionString;
+extern CHAR NtBuildLab[];
+
+// #ifdef _WINKD_
+/*
+ * WinDBG Debugger Worker State Machine data (see dbgctrl.c)
+ */
+typedef enum _WINKD_WORKER_STATE
+{
+    WinKdWorkerReady = 0,
+    WinKdWorkerStart,
+    WinKdWorkerInitialized
+} WINKD_WORKER_STATE;
+
+extern WORK_QUEUE_ITEM ExpDebuggerWorkItem;
+extern WINKD_WORKER_STATE ExpDebuggerWork;
+extern PEPROCESS ExpDebuggerProcessAttach;
+extern PEPROCESS ExpDebuggerProcessKill;
+extern ULONG_PTR ExpDebuggerPageIn;
+VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
+// #endif /* _WINKD_ */
 
 #ifdef _WIN64
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
@@ -1004,7 +1032,6 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
 }
 
 /*++
@@ -1105,7 +1132,6 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
 
     /* Try to clear the pushlock */
     OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
@@ -1145,7 +1171,6 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
     /* Sanity checks */
     ASSERT(PushLock->Locked);
-    ASSERT(PushLock->Waiting || PushLock->Shared == 0);
 
     /* Unlock the pushlock */
     OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
@@ -1363,28 +1388,40 @@ ExTryToAcquireResourceExclusiveLite(
 );
 
 NTSTATUS
-ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+ExpSetTimeZoneInformation(
+    IN PTIME_ZONE_INFORMATION TimeZoneInformation
+);
 
 BOOLEAN
 NTAPI
-ExAcquireTimeRefreshLock(BOOLEAN Wait);
+ExAcquireTimeRefreshLock(
+    IN BOOLEAN Wait
+);
 
 VOID
 NTAPI
-ExReleaseTimeRefreshLock(VOID);
+ExReleaseTimeRefreshLock(
+    VOID
+);
 
 VOID
 NTAPI
-ExUpdateSystemTimeFromCmos(IN BOOLEAN UpdateInterruptTime,
-                           IN ULONG MaxSepInSeconds);
-
-NTSTATUS
-NTAPI
-ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
+ExUpdateSystemTimeFromCmos(
+    IN BOOLEAN UpdateInterruptTime,
+    IN ULONG MaxSepInSeconds
+);
 
 VOID
 NTAPI
-ExTimerRundown(VOID);
+ExAllocateLocallyUniqueId(
+    OUT LUID *LocallyUniqueId
+);
+
+VOID
+NTAPI
+ExTimerRundown(
+    VOID
+);
 
 VOID
 NTAPI

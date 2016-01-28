@@ -26,6 +26,8 @@ UpdateDisplay(IN HWND hwndDlg, PDATA pData, IN BOOL bUpdateThumb)
     TCHAR Buffer[64];
     TCHAR Pixel[64];
     DWORD index;
+    HWND hwndMonSel;
+    MONSL_MONINFO info;
 
     LoadString(hApplet, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
     _stprintf(Buffer, Pixel, pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
@@ -43,6 +45,15 @@ UpdateDisplay(IN HWND hwndDlg, PDATA pData, IN BOOL bUpdateThumb)
     }
     if (LoadString(hApplet, (2900 + pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
         SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, (WPARAM)-1, (LPARAM)Buffer);
+
+    hwndMonSel = GetDlgItem(hwndDlg, IDC_SETTINGS_MONSEL);
+    index = (INT)SendMessage(hwndMonSel, MSLM_GETCURSEL, 0, 0);
+    if (index != (DWORD)-1 && SendMessage(hwndMonSel, MSLM_GETMONITORINFO, index, (LPARAM)&info))
+    {
+        info.Size.cx = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+        info.Size.cy = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+        SendMessage(hwndMonSel, MSLM_SETMONITORINFO, index, (LPARAM)&info);
+    }
 }
 
 static PSETTINGS_ENTRY
@@ -146,7 +157,7 @@ AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
     LPTSTR name = NULL;
     LPTSTR key = NULL;
     LPTSTR devid = NULL;
-    DWORD descriptionSize, nameSize, keySize, devidSize;
+    SIZE_T descriptionSize, nameSize, keySize, devidSize;
     PSETTINGS_ENTRY Current;
     DWORD ResolutionsCount = 1;
     DWORD i;
@@ -165,8 +176,8 @@ AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
     for (Current = newEntry->Settings; Current != NULL; Current = Current->Flink)
     {
         if (Current->Flink != NULL &&
-            ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) &&
-            (Current->dmPelsHeight != Current->Flink->dmPelsHeight)))
+            ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+             (Current->dmPelsHeight != Current->Flink->dmPelsHeight)))
         {
             ResolutionsCount++;
         }
@@ -182,8 +193,8 @@ AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
     {
         if (Current->Flink == NULL ||
             (Current->Flink != NULL &&
-            ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) &&
-            (Current->dmPelsHeight != Current->Flink->dmPelsHeight))))
+            ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+             (Current->dmPelsHeight != Current->Flink->dmPelsHeight))))
         {
             newEntry->Resolutions[i].dmPelsWidth = Current->dmPelsWidth;
             newEntry->Resolutions[i].dmPelsHeight = Current->dmPelsHeight;

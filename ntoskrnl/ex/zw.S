@@ -1,6 +1,15 @@
 
-#include <asm.inc>
 #include <syscalls.inc>
+
+#ifdef _M_ARM
+
+    TEXTAREA
+
+#define SVC_(name, argcount) STUB_K name
+
+#include <sysfuncs.h>
+
+#else
 
 #ifdef _M_IX86
 EXTERN _KiSystemService:PROC
@@ -12,9 +21,10 @@ EXTERN KiZwSystemService:PROC
 
 .code
 
-SyscallId = 0
 #define SVC_(name, argcount) STUB_K name, argcount
 
 #include <sysfuncs.h>
 
-END
+#endif
+
+    END

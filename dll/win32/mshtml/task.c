@@ -52,14 +52,8 @@ HRESULT push_task(task_t *task, task_proc_t proc, task_proc_t destr, LONG magic)
     task->target_magic = magic;
     task->proc = proc;
     task->destr = destr ? destr : default_task_destr;
-    task->next = NULL;
 
-    if(thread_data->task_queue_tail)
-        thread_data->task_queue_tail->next = task;
-    else
-        thread_data->task_queue_head = task;
-
-    thread_data->task_queue_tail = task;
+    list_add_tail(&thread_data->task_list, &task->entry);
 
     PostMessageW(thread_data->thread_hwnd, WM_PROCESSTASK, 0, 0);
     return S_OK;
@@ -74,14 +68,11 @@ static task_t *pop_task(void)
     if(!thread_data)
         return NULL;
 
-    task = thread_data->task_queue_head;
-    if(!task)
+    if(list_empty(&thread_data->task_list))
         return NULL;
 
-    thread_data->task_queue_head = task->next;
-    if(!thread_data->task_queue_head)
-        thread_data->task_queue_tail = NULL;
-
+    task = LIST_ENTRY(thread_data->task_list.next, task_t, entry);
+    list_remove(&task->entry);
     return task;
 }
 
@@ -94,12 +85,31 @@ static void release_task_timer(HWND thread_hwnd, task_timer_t *timer)
     heap_free(timer);
 }
 
+void flush_pending_tasks(LONG target)
+{
+    thread_data_t *thread_data = get_thread_data(FALSE);
+    struct list *liter, *ltmp;
+    task_t *task;
+
+    if(!thread_data)
+        return;
+
+    LIST_FOR_EACH_SAFE(liter, ltmp, &thread_data->task_list) {
+        task = LIST_ENTRY(liter, task_t, entry);
+        if(task->target_magic == target) {
+            list_remove(&task->entry);
+            task->proc(task);
+            task->destr(task);
+        }
+    }
+}
+
 void remove_target_tasks(LONG target)
 {
     thread_data_t *thread_data = get_thread_data(FALSE);
     struct list *liter, *ltmp;
     task_timer_t *timer;
-    task_t *iter, *tmp;
+    task_t *task;
 
     if(!thread_data)
         return;
@@ -117,20 +127,12 @@ void remove_target_tasks(LONG target)
         SetTimer(thread_data->thread_hwnd, TIMER_ID, max( (int)(timer->time - tc), 0 ), NULL);
     }
 
-    while(thread_data->task_queue_head && thread_data->task_queue_head->target_magic == target) {
-        iter = pop_task();
-        iter->destr(iter);
-    }
-
-    for(iter = thread_data->task_queue_head; iter; iter = iter->next) {
-        while(iter->next && iter->next->target_magic == target) {
-            tmp = iter->next;
-            iter->next = tmp->next;
-            tmp->destr(tmp);
+    LIST_FOR_EACH_SAFE(liter, ltmp, &thread_data->task_list) {
+        task = LIST_ENTRY(liter, task_t, entry);
+        if(task->target_magic == target) {
+            list_remove(&task->entry);
+            task->destr(task);
         }
-
-        if(!iter->next)
-            thread_data->task_queue_tail = iter;
     }
 }
 
@@ -373,6 +375,7 @@ thread_data_t *get_thread_data(BOOL create)
             return NULL;
 
         TlsSetValue(mshtml_tls, thread_data);
+        list_init(&thread_data->task_list);
         list_init(&thread_data->timer_list);
     }
 

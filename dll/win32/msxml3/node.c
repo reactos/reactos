@@ -52,6 +52,8 @@ MAKE_FUNCPTR(xsltParseStylesheetDoc);
 MAKE_FUNCPTR(xsltQuoteUserParams);
 MAKE_FUNCPTR(xsltSaveResultTo);
 # undef MAKE_FUNCPTR
+#else
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 #endif
 
 static const IID IID_xmlnode = {0x4f2f4ba2,0xb822,0x11df,{0x8b,0x8a,0x68,0x50,0xdf,0xd7,0x20,0x85}};
@@ -456,42 +458,38 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
         xmlnode *before_node_obj = get_node_obj(before);
         IXMLDOMNode_Release(before);
         if(!before_node_obj) return E_FAIL;
+    }
 
-        /* unlink from current parent first */
-        if(node_obj->parent)
-        {
-            hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
-            if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
-        }
+    /* unlink from current parent first */
+    if(node_obj->parent)
+    {
+        hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
+        if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
+    }
+    doc = node_obj->node->doc;
 
-        doc = node_obj->node->doc;
+    if(before)
+    {
+        xmlnode *before_node_obj = get_node_obj(before);
 
         /* refs count including subtree */
         if (doc != before_node_obj->node->doc)
             refcount = xmlnode_get_inst_cnt(node_obj);
 
         if (refcount) xmldoc_add_refs(before_node_obj->node->doc, refcount);
-        xmlAddPrevSibling(before_node_obj->node, node_obj->node);
+        node_obj->node = xmlAddPrevSibling(before_node_obj->node, node_obj->node);
         if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->parent;
     }
     else
     {
-        /* unlink from current parent first */
-        if(node_obj->parent)
-        {
-            hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
-            if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
-        }
-        doc = node_obj->node->doc;
-
         if (doc != This->node->doc)
             refcount = xmlnode_get_inst_cnt(node_obj);
 
         if (refcount) xmldoc_add_refs(This->node->doc, refcount);
         /* xmlAddChild doesn't unlink node from previous parent */
         xmlUnlinkNode(node_obj->node);
-        xmlAddChild(This->node, node_obj->node);
+        node_obj->node = xmlAddChild(This->node, node_obj->node);
         if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->iface;
     }
@@ -637,6 +635,8 @@ HRESULT node_has_childnodes(const xmlnode *This, VARIANT_BOOL *ret)
 
 HRESULT node_get_owner_doc(const xmlnode *This, IXMLDOMDocument **doc)
 {
+    if(!doc)
+        return E_INVALIDARG;
     return get_domdoc_from_xmldoc(This->node->doc, (IXMLDOMDocument3**)doc);
 }
 
@@ -1289,7 +1289,8 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
 
     return hr;
 #else
-    FIXME("libxslt headers were not found at compile time\n");
+    ERR_(winediag)("libxslt headers were not found at compile time. Expect problems.\n");
+
     return E_NOTIMPL;
 #endif
 }
@@ -1599,7 +1600,29 @@ static HRESULT WINAPI unknode_get_nodeType(
 
     FIXME("(%p)->(%p)\n", This, domNodeType);
 
-    *domNodeType = This->node.node->type;
+    switch (This->node.node->type)
+    {
+    case XML_ELEMENT_NODE:
+    case XML_ATTRIBUTE_NODE:
+    case XML_TEXT_NODE:
+    case XML_CDATA_SECTION_NODE:
+    case XML_ENTITY_REF_NODE:
+    case XML_ENTITY_NODE:
+    case XML_PI_NODE:
+    case XML_COMMENT_NODE:
+    case XML_DOCUMENT_NODE:
+    case XML_DOCUMENT_TYPE_NODE:
+    case XML_DOCUMENT_FRAG_NODE:
+    case XML_NOTATION_NODE:
+        /* we only care about this set of types, libxml2 type values are
+           exactly what we need */
+        *domNodeType = (DOMNodeType)This->node.node->type;
+        break;
+    default:
+        *domNodeType = NODE_INVALID;
+        break;
+    }
+
     return S_OK;
 }
 
@@ -1998,9 +2021,11 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         pUnk = create_doc_fragment( node );
         break;
     case XML_DTD_NODE:
+    case XML_DOCUMENT_TYPE_NODE:
         pUnk = create_doc_type( node );
         break;
-    default: {
+    case XML_ENTITY_NODE:
+    case XML_NOTATION_NODE: {
         unknode *new_node;
 
         FIXME("only creating basic node for type %d\n", node->type);
@@ -2013,7 +2038,11 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         new_node->ref = 1;
         init_xmlnode(&new_node->node, node, &new_node->IXMLDOMNode_iface, NULL);
         pUnk = (IUnknown*)&new_node->IXMLDOMNode_iface;
+        break;
     }
+    default:
+        ERR("Called for unsupported node type %d\n", node->type);
+        return NULL;
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IXMLDOMNode, (LPVOID*)&ret);

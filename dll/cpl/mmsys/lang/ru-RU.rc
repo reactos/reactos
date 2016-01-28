@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Отображать &значок на панели задач", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "&Дополнительно...", IDC_ADVANCED_BTN, 155, 110, 75, 15
     GROUPBOX "Настройки динамиков", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "Расположенные ниже кнопки позволяют выполнить индивидуальную настройку громкости динамиков и других параметров.", -1, 70, 155, 150, 36
     PUSHBUTTON "Гром&кость...", IDC_SPEAKER_VOL_BTN, 70, 200, 80, 15
     PUSHBUTTON "Д&ополнительно...", IDC_ADVANCED2_BTN, 155, 200, 75, 15
@@ -54,7 +54,7 @@ BEGIN
     PUSHBUTTON "&Настройка...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "Запись звука", -1, 7, 75, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
-    LTEXT "И&используемое по умолчанию устройство:", -1, 50, 88, 180, 9
+    LTEXT "И&спользуемое по умолчанию устройство:", -1, 50, 88, 180, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Гро&мкость...", IDC_VOLUME2_BTN, 85, 115, 70, 15
     PUSHBUTTON "Н&астройка...", IDC_ADV1_BTN, 160, 115, 70, 15
@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
+IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Сохранить схему как"
 FONT 8, "MS Shell Dlg"
@@ -106,7 +106,7 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 157, 36, 60, 14
 END
 
-IDD_SPEAKERS DIALOG 0, 0, 257, 204
+IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Динамики"
 FONT 8, "MS Shell Dlg"
@@ -118,7 +118,7 @@ BEGIN
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
-IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Производительность"
 FONT 8, "MS Shell Dlg"
@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Этот параметр описывает настройку устройства обработки звука", 5398, 13, 78, 227, 22
 END
 
-IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Производительность"
 FONT 8, "MS Shell Dlg"
@@ -160,7 +160,7 @@ BEGIN
     LTEXT "Этот параметр описывает настройку устройства обработки звука", 5398, 13, 68, 218, 17
 END
 
-IDD_SETUP1 DIALOG 0, 0, 227, 206
+IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка"
 FONT 8, "MS Shell Dlg"
@@ -174,7 +174,7 @@ BEGIN
     LTEXT "2. После того, как вы включите Звук ReactOS, вы должны перезагрузить компьютер.", 10248, 60, 140, 150, 40
 END
 
-IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
+IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Многоканальный"
 FONT 8, "MS Shell Dlg"
@@ -216,14 +216,14 @@ BEGIN
     PUSHBUTTON "&Востановить умолчания", 9505, 110, 199, 110, 14
 END
 
-IDD_SETUP2 DIALOG 0, 0, 227, 206
+IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Звук ReactOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS сервис Audio включен. Однако, звук может не функционировать должным образом, пока вы не перезагрузите ReactOS. Если вы хотите перезагрузить компьютер сейчас, сначала сохраните данные и закройте все программы.", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS служба Звука включена. Однако, звук может не функционировать должным образом, пока вы не перезагрузите ReactOS. Если вы хотите перезагрузить компьютер сейчас, сначала сохраните данные и закройте все программы.", 10261, 60, 25, 150, 50
     LTEXT "Для перезагрузки ReactOS нажмите ""OK"".", 10262, 60, 75, 150, 20
     LTEXT "Нажмите Отмена, чтобы перезапустить ReactOS позже.", 10263, 60, 100, 150, 40
 END
@@ -235,12 +235,12 @@ BEGIN
     IDS_NO_SOUND "(Нет)"
     IDS_NO_DEVICES "Нет устройств"
     5825 "Ошибка программы"
-    5826 "Закрыть программу"
+    5826 "Закрытие программы"
     5827 "Сигнал почти полной разрядки батарей"
     5828 "Подключение устройства"
     5829 "Отключение устройства"
     5830 "Ошибка подключения устройства"
-    5831 "Очистка карзины"
+    5831 "Очистка корзины"
     5832 "Сигнал низкого заряда батарей"
     5833 "Развертывание"
     5834 "Команда меню"
@@ -249,7 +249,7 @@ BEGIN
     5837 "Уведомление о получении почты"
     5838 "Начать обзор"
     5839 "Открытие программы"
-    5840 "Печать завершена"
+    5840 "Завершение печати"
     5841 "Восстановление окна с полного экрана"
     5842 "Восстановление окна из значка"
     5843 "Звездочка"

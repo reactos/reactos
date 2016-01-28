@@ -19,7 +19,7 @@
 static int InfpHeapRefCount;
 
 static VOID
-CheckHeap()
+CheckHeap(VOID)
 {
   if (NULL == InfpHeap)
     {

@@ -16,41 +16,39 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  */
-
-#include "localui.h"
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-ADDPORT_DIALOG DIALOG 6, 18, 245, 47
-STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+STRINGTABLE
+{
+    IDS_LOCALPORT "Porta Local"
+    IDS_INVALIDNAME "'%s' n√£o √© um nome de porta v√°lido"
+    IDS_PORTEXISTS "Porta %s j√° existe"
+    IDS_NOTHINGTOCONFIG "Esta porta n√£o possui op√ß√µes de configura√ß√£o"
+}
+
+ADDPORT_DIALOG DIALOGEX 6, 18, 245, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Adicionar uma porta local"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Introduza o nome da porta a adicionar:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 199, 10, 40, 14, WS_VISIBLE
-    PUSHBUTTON "Cancelar", IDCANCEL, 199, 27, 40, 14, WS_VISIBLE
+    DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "Cancelar", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
 END
 
 
-LPTCONFIG_DIALOG DIALOG 6, 18, 220, 47
-STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+LPTCONFIG_DIALOG DIALOGEX 6, 18, 220, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Configurar porta LPT"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Tempo expirado (segundos)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "&RecomeÁo da transmiss„o:", -1, 14, 22, 90, 13, WS_VISIBLE
+    LTEXT "&Recome√ßo da transmiss√£o:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Cancelar", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END
-
-
-STRINGTABLE
-{
-    IDS_LOCALPORT "Porta Local"
-    IDS_INVALIDNAME "'%s' n„o È um nome de porta v·lido"
-    IDS_PORTEXISTS "Porta %s j· existe"
-    IDS_NOTHINGTOCONFIG "Esta porta n„o possui opÁıes de configuraÁ„o"
-}

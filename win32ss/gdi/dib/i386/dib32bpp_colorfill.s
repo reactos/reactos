@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/i386/dib32bpp_colorfill.c
+ * FILE:            win32ss/gdi/dib/i386/dib32bpp_colorfill.s
  * PURPOSE:         ASM optimised 32bpp ColorFill
  * PROGRAMMERS:     Magnus Olsen
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)

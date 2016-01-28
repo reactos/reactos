@@ -694,7 +694,7 @@ cleanup:
 		{
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_INDICATORS\n");
 
-			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
 			{
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
@@ -855,13 +855,14 @@ i8042KbdInterruptService(
             if (InputData->MakeCode == 0x25)
             {
                 /* k - Breakpoint */
-                DbgBreakPoint();
+                DbgBreakPointWithStatus(DBG_STATUS_SYSRQ);
             }
             else if (InputData->MakeCode == 0x30)
             {
                 /* b - Bugcheck */
                 KeBugCheck(MANUALLY_INITIATED_CRASH);
             }
+#if defined(KDBG)
             else
             {
 			    /* Send request to the kernel debugger.
@@ -874,6 +875,7 @@ i8042KbdInterruptService(
 			                         NULL,
 			                         KernelMode);
             }
+#endif
 		}
 	}
 

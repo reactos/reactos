@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType bbox computation (body).                                    */
 /*                                                                         */
-/*  Copyright 1996-2002, 2004, 2006, 2010, 2013 by                         */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -42,16 +42,35 @@
   } TBBox_Rec;
 
 
+#define FT_UPDATE_BBOX( p, bbox ) \
+  FT_BEGIN_STMNT                  \
+    if ( p->x < bbox.xMin )       \
+      bbox.xMin = p->x;           \
+    if ( p->x > bbox.xMax )       \
+      bbox.xMax = p->x;           \
+    if ( p->y < bbox.yMin )       \
+      bbox.yMin = p->y;           \
+    if ( p->y > bbox.yMax )       \
+      bbox.yMax = p->y;           \
+  FT_END_STMNT
+
+#define CHECK_X( p, bbox )                         \
+          ( p->x < bbox.xMin || p->x > bbox.xMax )
+
+#define CHECK_Y( p, bbox )                         \
+          ( p->y < bbox.yMin || p->y > bbox.yMax )
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
   /*    BBox_Move_To                                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This function is used as a `move_to' and `line_to' emitter during  */
+  /*    This function is used as a `move_to' emitter during                */
   /*    FT_Outline_Decompose().  It simply records the destination point   */
-  /*    in `user->last'; no further computations are necessary since we    */
-  /*    use the cbox as the starting bbox which must be refined.           */
+  /*    in `user->last'. We also update bbox in case contour starts with   */
+  /*    an implicit `on' point.                                            */
   /*                                                                       */
   /* <Input>                                                               */
   /*    to   :: A pointer to the destination vector.                       */
@@ -66,17 +85,42 @@
   BBox_Move_To( FT_Vector*  to,
                 TBBox_Rec*  user )
   {
+    FT_UPDATE_BBOX( to, user->bbox );
+
     user->last = *to;
 
     return 0;
   }
 
 
-#define CHECK_X( p, bbox )  \
-          ( p->x < bbox.xMin || p->x > bbox.xMax )
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    BBox_Line_To                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This function is used as a `line_to' emitter during                */
+  /*    FT_Outline_Decompose().  It simply records the destination point   */
+  /*    in `user->last'; no further computations are necessary because     */
+  /*    bbox already contains both explicit ends of the line segment.      */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    to   :: A pointer to the destination vector.                       */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    user :: A pointer to the current walk context.                     */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    Always 0.  Needed for the interface only.                          */
+  /*                                                                       */
+  static int
+  BBox_Line_To( FT_Vector*  to,
+                TBBox_Rec*  user )
+  {
+    user->last = *to;
 
-#define CHECK_Y( p, bbox )  \
-          ( p->y < bbox.yMin || p->y > bbox.yMax )
+    return 0;
+  }
 
 
   /*************************************************************************/
@@ -155,8 +199,8 @@
                  FT_Vector*  to,
                  TBBox_Rec*  user )
   {
-    /* we don't need to check `to' since it is always an `on' point, thus */
-    /* within the bbox                                                    */
+    /* in case `to' is implicit and not included in bbox yet */
+    FT_UPDATE_BBOX( to, user->bbox );
 
     if ( CHECK_X( control, user->bbox ) )
       BBox_Conic_Check( user->last.x,
@@ -203,15 +247,51 @@
   /*    max :: The address of the current maximum.                         */
   /*                                                                       */
   static FT_Pos
-  update_cubic_max( FT_Pos  q1,
-                    FT_Pos  q2,
-                    FT_Pos  q3,
-                    FT_Pos  q4,
-                    FT_Pos  max )
+  cubic_peak( FT_Pos  q1,
+              FT_Pos  q2,
+              FT_Pos  q3,
+              FT_Pos  q4 )
   {
-    /* for a cubic segment to possibly reach new maximum, at least */
-    /* one of its off-points must stay above the current value     */
-    while ( q2 > max || q3 > max )
+    FT_Pos  peak = 0;
+    FT_Int  shift;
+
+
+    /* This function finds a peak of a cubic segment if it is above 0    */
+    /* using iterative bisection of the segment, or returns 0.           */
+    /* The fixed-point arithmetic of bisection is inherently stable      */
+    /* but may loose accuracy in the two lowest bits.  To compensate,    */
+    /* we upscale the segment if there is room.  Large values may need   */
+    /* to be downscaled to avoid overflows during bisection.             */
+    /* It is called with either q2 or q3 positive, which is necessary    */
+    /* for the peak to exist and avoids undefined FT_MSB.                */
+
+    shift = 27 - FT_MSB( (FT_UInt32)( FT_ABS( q1 ) |
+                                      FT_ABS( q2 ) |
+                                      FT_ABS( q3 ) |
+                                      FT_ABS( q4 ) ) );
+
+    if ( shift > 0 )
+    {
+      /* upscaling too much just wastes time */
+      if ( shift > 2 )
+        shift = 2;
+
+      q1 <<=  shift;
+      q2 <<=  shift;
+      q3 <<=  shift;
+      q4 <<=  shift;
+    }
+    else
+    {
+      q1 >>= -shift;
+      q2 >>= -shift;
+      q3 >>= -shift;
+      q4 >>= -shift;
+    }
+
+    /* for a peak to exist above 0, the cubic segment must have */
+    /* at least one of its control off-points above 0.          */
+    while ( q2 > 0 || q3 > 0 )
     {
       /* determine which half contains the maximum and split */
       if ( q1 + q2 > q3 + q4 ) /* first half */
@@ -240,17 +320,22 @@
       /* check whether either end reached the maximum */
       if ( q1 == q2 && q1 >= q3 )
       {
-        max = q1;
+        peak = q1;
         break;
       }
       if ( q3 == q4 && q2 <= q4 )
       {
-        max = q4;
+        peak = q4;
         break;
       }
     }
 
-    return max;
+    if ( shift > 0 )
+      peak >>=  shift;
+    else
+      peak <<= -shift;
+
+    return peak;
   }
 
 
@@ -262,65 +347,17 @@
                     FT_Pos*  min,
                     FT_Pos*  max )
   {
-    FT_Pos  nmin, nmax;
-    FT_Int  shift;
-
-
     /* This function is only called when a control off-point is outside  */
-    /* the bbox that contains all on-points.  It finds a local extremum  */
-    /* within the segment using iterative bisection of the segment.      */
-    /* The fixed-point arithmetic of bisection is inherently stable      */
-    /* but may loose accuracy in the two lowest bits.  To compensate,    */
-    /* we upscale the segment if there is room.  Large values may need   */
-    /* to be downscaled to avoid overflows during bisection.             */
-    /* The control off-point outside the bbox is likely to have the top  */
-    /* absolute value among arguments.                                   */
+    /* the bbox that contains all on-points.  So at least one of the     */
+    /* conditions below holds and cubic_peak is called with at least one */
+    /* non-zero argument.                                                */
 
-    shift = 27 - FT_MSB( FT_ABS( p2 ) | FT_ABS( p3 ) );
-
-    if ( shift > 0 )
-    {
-      /* upscaling too much just wastes time */
-      if ( shift > 2 )
-        shift = 2;
-
-      p1 <<=  shift;
-      p2 <<=  shift;
-      p3 <<=  shift;
-      p4 <<=  shift;
-      nmin = *min << shift;
-      nmax = *max << shift;
-    }
-    else
-    {
-      p1 >>= -shift;
-      p2 >>= -shift;
-      p3 >>= -shift;
-      p4 >>= -shift;
-      nmin = *min >> -shift;
-      nmax = *max >> -shift;
-    }
-
-    nmax =  update_cubic_max(  p1,  p2,  p3,  p4,  nmax );
+    if ( p2 > *max || p3 > *max )
+      *max += cubic_peak( p1 - *max, p2 - *max, p3 - *max, p4 - *max );
 
     /* now flip the signs to update the minimum */
-    nmin = -update_cubic_max( -p1, -p2, -p3, -p4, -nmin );
-
-    if ( shift > 0 )
-    {
-      nmin >>=  shift;
-      nmax >>=  shift;
-    }
-    else
-    {
-      nmin <<= -shift;
-      nmax <<= -shift;
-    }
-
-    if ( nmin < *min )
-      *min = nmin;
-    if ( nmax > *max )
-      *max = nmax;
+    if ( p2 < *min || p3 < *min )
+      *min -= cubic_peak( *min - p1, *min - p2, *min - p3, *min - p4 );
   }
 
 
@@ -385,13 +422,15 @@
     return 0;
   }
 
-FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
+
+  FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
     (FT_Outline_MoveTo_Func) BBox_Move_To,
-    (FT_Outline_LineTo_Func) BBox_Move_To,
+    (FT_Outline_LineTo_Func) BBox_Line_To,
     (FT_Outline_ConicTo_Func)BBox_Conic_To,
     (FT_Outline_CubicTo_Func)BBox_Cubic_To,
     0, 0
   )
+
 
   /* documentation is in ftbbox.h */
 
@@ -399,8 +438,10 @@ FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
   FT_Outline_Get_BBox( FT_Outline*  outline,
                        FT_BBox     *abbox )
   {
-    FT_BBox     cbox;
-    FT_BBox     bbox;
+    FT_BBox     cbox = {  0x7FFFFFFFL,  0x7FFFFFFFL,
+                         -0x7FFFFFFFL, -0x7FFFFFFFL };
+    FT_BBox     bbox = {  0x7FFFFFFFL,  0x7FFFFFFFL,
+                         -0x7FFFFFFFL, -0x7FFFFFFFL };
     FT_Vector*  vec;
     FT_UShort   n;
 
@@ -424,32 +465,13 @@ FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
     /* coincide, we exit immediately.                             */
 
     vec = outline->points;
-    bbox.xMin = bbox.xMax = cbox.xMin = cbox.xMax = vec->x;
-    bbox.yMin = bbox.yMax = cbox.yMin = cbox.yMax = vec->y;
-    vec++;
 
-    for ( n = 1; n < outline->n_points; n++ )
+    for ( n = 0; n < outline->n_points; n++ )
     {
-      FT_Pos  x = vec->x;
-      FT_Pos  y = vec->y;
-
-
-      /* update control box */
-      if ( x < cbox.xMin ) cbox.xMin = x;
-      if ( x > cbox.xMax ) cbox.xMax = x;
-
-      if ( y < cbox.yMin ) cbox.yMin = y;
-      if ( y > cbox.yMax ) cbox.yMax = y;
+      FT_UPDATE_BBOX( vec, cbox);
 
       if ( FT_CURVE_TAG( outline->tags[n] ) == FT_CURVE_TAG_ON )
-      {
-        /* update bbox for `on' points only */
-        if ( x < bbox.xMin ) bbox.xMin = x;
-        if ( x > bbox.xMax ) bbox.xMax = x;
-
-        if ( y < bbox.yMin ) bbox.yMin = y;
-        if ( y > bbox.yMax ) bbox.yMax = y;
-      }
+        FT_UPDATE_BBOX( vec, bbox);
 
       vec++;
     }

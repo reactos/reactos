@@ -12,14 +12,13 @@
 #include <ntddscsi.h>
 #include <mountdev.h>
 #include <mountmgr.h>
+#include <ntiologc.h>
 #include <include/class2.h>
 #include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#define IO_WRITE_CACHE_ENABLED  ((NTSTATUS)0x80040020L)
-#define IO_WRITE_CACHE_DISABLED ((NTSTATUS)0x80040022L)
 
 #ifdef POOL_TAGGING
 #ifdef ExAllocatePool
@@ -309,6 +308,11 @@ NTAPI
 ResetScsiBus(
     IN PDEVICE_OBJECT DeviceObject
     );
+
+NTSTATUS
+NTAPI
+ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, DriverEntry)
@@ -1510,6 +1514,15 @@ Return Value:
     LARGE_INTEGER startingOffset;
 
     //
+    // HACK: How can we end here with null sector size?!
+    //
+
+    if (deviceExtension->DiskGeometry->Geometry.BytesPerSector == 0) {
+        DPRINT1("Hack! Received invalid sector size\n");
+        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
+    }
+
+    //
     // Verify parameters of this request.
     // Check that ending sector is within partition and
     // that number of bytes to transfer is a multiple of
@@ -1543,6 +1556,18 @@ Return Value:
             //
 
             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        }
+
+        if (startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) {
+            DPRINT1("Reading beyond partition end! startingOffset: %I64d, PartitionLength: %I64d\n", startingOffset.QuadPart, deviceExtension->PartitionLength.QuadPart);
+        }
+
+        if (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1)) {
+            DPRINT1("Not reading sectors! TransferByteCount: %lu, BytesPerSector: %lu\n", transferByteCount, deviceExtension->DiskGeometry->Geometry.BytesPerSector);
+        }
+
+        if (Irp->IoStatus.Status == STATUS_DEVICE_NOT_READY) {
+            DPRINT1("Failing due to device not ready!\n");
         }
 
         return STATUS_INVALID_PARAMETER;
@@ -5202,3 +5227,4 @@ Return Value:
     }
 
 } // end UpdateDeviceObjects()
+

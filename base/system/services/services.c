@@ -53,7 +53,8 @@ PrintString(LPCSTR fmt, ...)
 
 
 VOID
-ScmLogError(DWORD dwEventId,
+ScmLogEvent(DWORD dwEventId,
+            WORD wType,
             WORD wStrings,
             LPCWSTR *lpStrings)
 {
@@ -68,10 +69,10 @@ ScmLogError(DWORD dwEventId,
     }
 
     if (!ReportEventW(hLog,
-                      EVENTLOG_ERROR_TYPE,
+                      wType,
                       0,
                       dwEventId,
-                      NULL, // Sid,
+                      NULL,
                       wStrings,
                       0,
                       lpStrings,
@@ -314,6 +315,9 @@ wWinMain(HINSTANCE hInstance,
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
+
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, TRUE);
 
     /* We are initializing ourselves */
     ScmInitialize = TRUE;

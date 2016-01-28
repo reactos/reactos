@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
  * PURPOSE:          Built-in control registration
- * FILE:             include/user32/regcontrol.h
+ * FILE:             win32ss/user/user32/include/regcontrol.h
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:
@@ -41,3 +41,8 @@ extern const struct builtin_class_descr STATIC_builtin_class;
 
 ATOM WINAPI RegisterClassExWOWW(WNDCLASSEXW *,LPDWORD,WORD,DWORD,BOOL);
 BOOL FASTCALL VersionRegisterClass(PCWSTR,LPCWSTR,HANDLE,HMODULE *);
+
+LRESULT WINAPI ImeWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL);
+LRESULT WINAPI ImeWndProcA(HWND,UINT,WPARAM,LPARAM);
+LRESULT WINAPI ImeWndProcW(HWND,UINT,WPARAM,LPARAM);
+BOOL WINAPI RegisterIMEClass(VOID);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2008 Samuel LidÈn Borell
+ * Copyright 2006-2008 Samuel Lid√©n Borell
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,20 +33,20 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "&BakÂt",                         IDM_GOBACKWARD
-        MENUITEM "&FramÂt",                        IDM_GOFORWARD
+        MENUITEM "&Bak√•t",                         IDM_GOBACKWARD
+        MENUITEM "&Fram√•t",                        IDM_GOFORWARD
         MENUITEM SEPARATOR
         MENUITEM "Spara bakg&rund som...",         IDM_SAVEBACKGROUND
-        MENUITEM "A&nv‰nd som skrivbordsbakgrund", IDM_SETWALLPAPER
+        MENUITEM "A&nv√§nd som skrivbordsbakgrund", IDM_SETWALLPAPER
         MENUITEM "K&opiera bakgrund",              IDM_COPYBACKGROUND
-        MENUITEM "Anv‰nd som &skrivbordsobjekt",   IDM_SETDESKTOPITEM
+        MENUITEM "Anv√§nd som &skrivbordsobjekt",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Markera allt",                  IDM_SELECTALL
         MENUITEM "K&listra in",                    IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Skapa genv&‰g",                  IDM_CREATESHORTCUT
-        MENUITEM "L‰gg till &i Favoriter",         IDM_ADDFAVORITES
-        MENUITEM "&Visa k‰llkod",                  IDM_VIEWSOURCE
+        MENUITEM "Skapa genv&√§g",                  IDM_CREATESHORTCUT
+        MENUITEM "L√§gg till &i Favoriter",         IDM_ADDFAVORITES
+        MENUITEM "&Visa k√§llkod",                  IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "Tecken&kodning",                 IDM_LANGUAGE
         MENUITEM SEPARATOR
@@ -58,32 +58,32 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Image */
     {
-        MENUITEM "&÷ppna l‰nk",                        IDM_FOLLOWLINKC
-        MENUITEM "÷ppna l‰nk i nytt &fˆnster",         IDM_FOLLOWLINKN
-        MENUITEM "Spara &mÂl som...",                  IDM_SAVETARGET
-        MENUITEM "Skriv ut m&Âl",                      IDM_PRINTTARGET
+        MENUITEM "&√ñppna l√§nk",                        IDM_FOLLOWLINKC
+        MENUITEM "√ñppna l√§nk i nytt &f√∂nster",         IDM_FOLLOWLINKN
+        MENUITEM "Spara &m√•l som...",                  IDM_SAVETARGET
+        MENUITEM "Skriv ut m&√•l",                      IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Visa &bild",                         IDM_SHOWPICTURE
         MENUITEM "Spara bil&d som...",                 IDM_SAVEPICTURE
         MENUITEM "Ski&cka bild i e-postmeddelande...", IDM_MP_EMAILPICTURE
         MENUITEM "Skriv &ut bild...",                  IDM_MP_PRINTPICTURE
-        MENUITEM "&GÂ till Mina bilder",               IDM_MP_MYPICS
-        MENUITEM "A&nv‰nd som skrivbordsbakgrund",     IDM_SETWALLPAPER
-        MENUITEM "Anv‰nd som &skrivbordsobjekt...",    IDM_SETDESKTOPITEM
+        MENUITEM "&G√• till Mina bilder",               IDM_MP_MYPICS
+        MENUITEM "A&nv√§nd som skrivbordsbakgrund",     IDM_SETWALLPAPER
+        MENUITEM "Anv√§nd som &skrivbordsobjekt...",    IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Klipp ut",                          IDM_CUT
         MENUITEM "K&opiera",                           IDM_COPY
-        MENUITEM "Kopier&a genv‰g",                    IDM_COPYSHORTCUT
+        MENUITEM "Kopier&a genv√§g",                    IDM_COPYSHORTCUT
         MENUITEM "K&listra in",                        IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "L‰gg till &i Favoriter...",          IDM_ADDFAVORITES
+        MENUITEM "L√§gg till &i Favoriter...",          IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "&Egenskaper",                        IDM_PROPERTIES
     }
 
     POPUP "" /* Control */
     {
-        MENUITEM "&≈ngra",        IDM_UNDO
+        MENUITEM "&√Öngra",        IDM_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Klipp ut",     IDM_CUT
         MENUITEM "K&opiera",      IDM_COPY
@@ -119,17 +119,17 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Anchor */
     {
-        MENUITEM "&÷ppna",                    IDM_FOLLOWLINKC
-        MENUITEM "÷ppna i nytt &fˆnster",     IDM_FOLLOWLINKN
-        MENUITEM "Spara &mÂl som...",         IDM_SAVETARGET
-        MENUITEM "Skriv ut m&Âl",             IDM_PRINTTARGET
+        MENUITEM "&√ñppna",                    IDM_FOLLOWLINKC
+        MENUITEM "√ñppna i nytt &f√∂nster",     IDM_FOLLOWLINKN
+        MENUITEM "Spara &m√•l som...",         IDM_SAVETARGET
+        MENUITEM "Skriv ut m&√•l",             IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Klipp ut",                 IDM_CUT
         MENUITEM "K&opiera",                  IDM_COPY
-        MENUITEM "Kopier&a genv‰g",           IDM_COPYSHORTCUT
+        MENUITEM "Kopier&a genv√§g",           IDM_COPYSHORTCUT
         MENUITEM "K&listra in",               IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "L‰gg till &i Favoriter...", IDM_ADDFAVORITES
+        MENUITEM "L√§gg till &i Favoriter...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "&Egenskaper",               IDM_PROPERTIES
     }
@@ -141,22 +141,22 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "&÷ppna",                          IDM_FOLLOWLINKC
-        MENUITEM "÷ppna i nytt &fˆnster",           IDM_FOLLOWLINKN
-        MENUITEM "Spara &mÂl som...",               IDM_SAVETARGET
-        MENUITEM "Skriv ut m&Âl",                   IDM_PRINTTARGET
+        MENUITEM "&√ñppna",                          IDM_FOLLOWLINKC
+        MENUITEM "√ñppna i nytt &f√∂nster",           IDM_FOLLOWLINKN
+        MENUITEM "Spara &m√•l som...",               IDM_SAVETARGET
+        MENUITEM "Skriv ut m&√•l",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Visa &bild",                      IDM_SHOWPICTURE
         MENUITEM "Spara bil&d som...",              IDM_SAVEPICTURE
-        MENUITEM "A&nv‰nd som skrivbordsbakgrund",  IDM_SETWALLPAPER
-        MENUITEM "Anv‰nd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
+        MENUITEM "A&nv√§nd som skrivbordsbakgrund",  IDM_SETWALLPAPER
+        MENUITEM "Anv√§nd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Klipp ut",                       IDM_CUT
         MENUITEM "K&opiera",                        IDM_COPY
-        MENUITEM "Kopier&a genv‰g",                 IDM_COPYSHORTCUT
+        MENUITEM "Kopier&a genv√§g",                 IDM_COPYSHORTCUT
         MENUITEM "K&listra in",                     IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "L‰gg till &i Favoriter...",       IDM_ADDFAVORITES
+        MENUITEM "L√§gg till &i Favoriter...",       IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "Spela upp",                       IDM_DYNSRCPLAY
         MENUITEM "Stoppa",                          IDM_DYNSRCSTOP
@@ -165,22 +165,22 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "&÷ppna",                          IDM_FOLLOWLINKC
-        MENUITEM "÷ppna i nytt &fˆnster",           IDM_FOLLOWLINKN
-        MENUITEM "Spara &mÂl som...",               IDM_SAVETARGET
-        MENUITEM "Skriv ut m&Âl",                   IDM_PRINTTARGET
+        MENUITEM "&√ñppna",                          IDM_FOLLOWLINKC
+        MENUITEM "√ñppna i nytt &f√∂nster",           IDM_FOLLOWLINKN
+        MENUITEM "Spara &m√•l som...",               IDM_SAVETARGET
+        MENUITEM "Skriv ut m&√•l",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Visa &bild",                      IDM_SHOWPICTURE
         MENUITEM "Spara bil&d som...",              IDM_SAVEPICTURE
-        MENUITEM "A&nv‰nd som skrivbordsbakgrund",  IDM_SETWALLPAPER
-        MENUITEM "Anv‰nd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
+        MENUITEM "A&nv√§nd som skrivbordsbakgrund",  IDM_SETWALLPAPER
+        MENUITEM "Anv√§nd som &skrivbordsobjekt...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Klipp ut",                       IDM_CUT
         MENUITEM "K&opiera",                        IDM_COPY
-        MENUITEM "Kopier&a genv‰g",                 IDM_COPYSHORTCUT
+        MENUITEM "Kopier&a genv√§g",                 IDM_COPYSHORTCUT
         MENUITEM "K&listra in",                     IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "L‰gg till &i Favoriter...",       IDM_ADDFAVORITES
+        MENUITEM "L√§gg till &i Favoriter...",       IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "Spela upp",                       IDM_IMGARTPLAY
         MENUITEM "Stoppa",                          IDM_IMGARTSTOP
@@ -201,11 +201,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Dump DisplayTree",   IDM_DUMPDISPLAYTREE
         MENUITEM "Dump FormatCaches",  IDM_DUMPFORMATCACHES
         MENUITEM "Dump LayoutRects",   IDM_DUMPLAYOUTRECTS
-        MENUITEM "Minnesm‰tare",       IDM_MEMORYMONITOR
-        MENUITEM "Prestandam‰tare",    IDM_PERFORMANCEMETERS
+        MENUITEM "Minnesm√§tare",       IDM_MEMORYMONITOR
+        MENUITEM "Prestandam√§tare",    IDM_PERFORMANCEMETERS
         MENUITEM "Spara HTML",         IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "&Bl‰ddra vy",        IDM_BROWSEMODE
+        MENUITEM "&Bl√§ddra vy",        IDM_BROWSEMODE
         MENUITEM "R&edigera vy",       IDM_EDITMODE
     }
 
@@ -213,27 +213,27 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Rulla hit",   IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "L‰ngst upp",  IDM_SCROLL_TOP
-        MENUITEM "L‰ngst ned",  IDM_SCROLL_BOTTOM
+        MENUITEM "L√§ngst upp",  IDM_SCROLL_TOP
+        MENUITEM "L√§ngst ned",  IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
         MENUITEM "En sida upp", IDM_SCROLL_PAGEUP
         MENUITEM "En sida ned", IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
-        MENUITEM "Rulla uppÂt", IDM_SCROLL_UP
-        MENUITEM "Rulla nedÂt", IDM_SCROLL_DOWN
+        MENUITEM "Rulla upp√•t", IDM_SCROLL_UP
+        MENUITEM "Rulla ned√•t", IDM_SCROLL_DOWN
     }
 
     POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "Rulla hit",          IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "L‰ngst Ât v‰nster",  IDM_SCROLL_LEFTEDGE
-        MENUITEM "L‰ngst Ât hˆger",    IDM_SCROLL_RIGHTEDGE
+        MENUITEM "L√§ngst √•t v√§nster",  IDM_SCROLL_LEFTEDGE
+        MENUITEM "L√§ngst √•t h√∂ger",    IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
-        MENUITEM "En sida Ât v‰nster", IDM_SCROLL_PAGELEFT
-        MENUITEM "En sida Ât hˆger",   IDM_SCROLL_PAGERIGHT
+        MENUITEM "En sida √•t v√§nster", IDM_SCROLL_PAGELEFT
+        MENUITEM "En sida √•t h√∂ger",   IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
-        MENUITEM "Rulla Ât v‰nster",   IDM_SCROLL_LEFT
-        MENUITEM "Rulla Ât hˆger",     IDM_SCROLL_RIGHT
+        MENUITEM "Rulla √•t v√§nster",   IDM_SCROLL_LEFT
+        MENUITEM "Rulla √•t h√∂ger",     IDM_SCROLL_RIGHT
     }
 }

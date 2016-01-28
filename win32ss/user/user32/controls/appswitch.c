@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/user32/controls/appswitch.c
+ * FILE:            win32ss/user/user32/controls/appswitch.c
  * PURPOSE:         app switching functionality
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  David Quintana (gigaherz@gmail.com)
@@ -54,7 +54,7 @@ void MakeWindowActive(HWND hwnd)
 
    wpl.length = sizeof(WINDOWPLACEMENT);
    GetWindowPlacement(hwnd, &wpl);
-  
+
    TRACE("GetWindowPlacement wpl.showCmd %d\n",wpl.showCmd);
    if (wpl.showCmd == SW_SHOWMINIMIZED)
       ShowWindowAsync(hwnd, SW_RESTORE);
@@ -82,8 +82,8 @@ void CompleteSwitch(BOOL doSwitch)
       //if(selectedWindow != 0)
       {
          HWND hwnd = windowList[selectedWindow];
-                  
-         GetWindowTextW(hwnd, windowText, 1023);
+
+         GetWindowTextW(hwnd, windowText, _countof(windowText));
 
          TRACE("[ATbot] CompleteSwitch Switching to 0x%08x (%ls)\n", hwnd, windowText);
 
@@ -103,11 +103,11 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    if (!IsWindowVisible(window))
             return TRUE;
 
-   GetClassNameW(window,windowText,4095);
-   if ((wcscmp(L"Shell_TrayWnd",windowText)==0) ||
-       (wcscmp(L"Progman",windowText)==0) )
+   GetClassNameW(window, windowText, _countof(windowText));
+   if ((wcscmp(L"Shell_TrayWnd", windowText)==0) ||
+       (wcscmp(L"Progman", windowText)==0) )
             return TRUE;
-      
+
    // First try to get the big icon assigned to the window
    hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
    if (!hIcon)
@@ -121,8 +121,13 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
          hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
          if (!hIcon)
          {
-            // If all fails, give up and continue with the next window
-            return TRUE;
+            // using windows logo icon as default
+            hIcon = gpsi->hIconWindows;
+            if (!hIcon)
+            {
+               //if all attempts to get icon fails go to the next window
+               return TRUE;
+            }
          }
       }
    }
@@ -156,8 +161,8 @@ void EnumWindowsZOrder(WNDENUMPROC callback, LPARAM lParam)
 
 void ProcessMouseMessage(UINT message, LPARAM lParam)
 {
-   int xPos = LOWORD(lParam); 
-   int yPos = HIWORD(lParam); 
+   int xPos = LOWORD(lParam);
+   int yPos = HIWORD(lParam);
 
    int xIndex = (xPos - xOffset)/40;
    int xOff   = (xPos - xOffset)%40;
@@ -194,7 +199,7 @@ void OnPaint(HWND hWnd)
    HPEN hPen;
    HFONT dcFont;
    COLORREF cr;
-   int nch = GetWindowTextW(windowList[selectedWindow], windowText, 1023);
+   int nch = GetWindowTextW(windowList[selectedWindow], windowText, _countof(windowText));
 
    dialogDC = BeginPaint(hWnd, &paint);
    {
@@ -204,7 +209,7 @@ void OnPaint(HWND hWnd)
       for(i=0; i< windowCount; i++)
       {
          HICON hIcon = iconList[i];
-         
+
          int xpos = xOffset + 40 * (i % nCols);
          int ypos = yOffset + 40 * (i / nCols);
 
@@ -261,12 +266,12 @@ DWORD CreateSwitcherWindow(HINSTANCE hInstance)
        TRACE("[ATbot] Task Switcher Window failed to create.\n");
        return 0;
     }
-                                
+
     isOpen = FALSE;
     return 1;
 }
-                                        
-DWORD GetDialogFont()
+
+DWORD GetDialogFont(VOID)
 {
    HDC tDC;
    TEXTMETRIC tm;
@@ -281,11 +286,11 @@ DWORD GetDialogFont()
    return 1;
 }
 
-void PrepareWindow()
+void PrepareWindow(VOID)
 {
    cxBorder = GetSystemMetrics(SM_CXBORDER);
    cyBorder = GetSystemMetrics(SM_CYBORDER);
-   
+
    nItems = windowCount;
    nCols = min(max(nItems,8),12);
    nRows = (nItems+nCols-1)/nCols;
@@ -307,7 +312,7 @@ void PrepareWindow()
    ResizeAndCenter(switchdialog, totalW, totalH);
 }
 
-void ProcessHotKey()
+void ProcessHotKey(VOID)
 {
    if (!isOpen)
    {
@@ -373,7 +378,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
          }
          TRACE("DoAppSwitch VK_ESCAPE 1 Count %d windowCount %d\n",Count,windowCount);
          hwnd = windowList[Count];
-         GetWindowTextW(hwnd, Text, 1023);
+         GetWindowTextW(hwnd, Text, _countof(Text));
          TRACE("[ATbot] Switching to 0x%08x (%ls)\n", hwnd, Text);
          MakeWindowActive(hwnd);
          Esc = TRUE;
@@ -456,7 +461,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
                       Count = windowCount - 1;
                 }
                 hwnd = windowList[Count];
-                GetWindowTextW(hwnd, Text, 1023);
+                GetWindowTextW(hwnd, Text, _countof(Text));
                 MakeWindowActive(hwnd);
              }
           }
@@ -487,7 +492,7 @@ Exit:
 }
 
 VOID
-DestroyAppWindows()
+DestroyAppWindows(VOID)
 {
    INT i;
    for (i=0; i< windowCount; i++)
@@ -511,7 +516,7 @@ LRESULT WINAPI SwitchWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
       {
          NtUserSetWindowFNID(hWnd, FNID_SWITCH);
       }
-   }    
+   }
 
    switch (uMsg)
    {
@@ -522,7 +527,7 @@ LRESULT WINAPI SwitchWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
          return TRUE;
 
       case WM_SHOWWINDOW:
-         if (wParam == TRUE)
+         if (wParam)
          {
             PrepareWindow();
             ati = (PALTTABINFO)GetWindowLongPtrW(hWnd, 0);

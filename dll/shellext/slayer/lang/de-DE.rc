@@ -2,30 +2,30 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_SLAYERSHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Kompatibilität"
+CAPTION "KompatibilitÃ¤t"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie einen Kompatibilitätsmodus, unter dem das Programm möglicherweise korrekt funktioniert.", -1, 7, 7, 210, 31
-    GROUPBOX "Kompatibilitätsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Programm im Kompatibilitätsmodus ausführen für:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Falls dieses Programm Probleme verursacht, wÃ¤hlen Sie einen KompatibilitÃ¤tsmodus, unter dem das Programm mÃ¶glicherweise korrekt funktioniert.", -1, 7, 7, 210, 31
+    GROUPBOX "KompatibilitÃ¤tsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Programm im KompatibilitÃ¤tsmodus ausfÃ¼hren fÃ¼r:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Anzeigeeinstellungen", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
-    CHECKBOX "Mit 256 Farben ausführen", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "In Bildschirmauflösung 640 x 480 ausführen", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "Mit 256 Farben ausfÃ¼hren", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "In BildschirmauflÃ¶sung 640 x 480 ausfÃ¼hren", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Visuelle Designs deaktivieren", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "Kompatibilitätsmodus ändern", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "Weitere Informationen über <A>Programmkompatibilität</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    PUSHBUTTON "KompatibilitÃ¤tsmodus Ã¤ndern", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    /* CONTROL "Weitere Informationen Ã¼ber <A>ProgrammkompatibilitÃ¤t</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kompatibilitätsmodus ändern"
+CAPTION "KompatibilitÃ¤tsmodus Ã¤ndern"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX IDC_COMPATIBILITYMODE, 9, 6, 148, 108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
-    PUSHBUTTON "&Hinzufügen...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
-    PUSHBUTTON "&Ändern...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
-    PUSHBUTTON "&Löschen", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
+    PUSHBUTTON "&HinzufÃ¼gen...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Ã„ndern...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
+    PUSHBUTTON "&LÃ¶schen", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
     PUSHBUTTON "&OK", IDOK, 95, 116, 60, 14
     PUSHBUTTON "&Abbrechen", IDCANCEL, 162, 116, 60, 14
 END
@@ -33,5 +33,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Shell-Erweiterung der Anwendungs-Kompatibilitätsschicht"
+    IDS_DESCRIPTION "Shell-Erweiterung der Anwendungs-KompatibilitÃ¤tsschicht"
 END

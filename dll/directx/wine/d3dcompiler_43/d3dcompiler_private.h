@@ -535,8 +535,8 @@ enum bwritershader_param_srcmod_type
     BWRITERSPSM_NOT,
 };
 
-#define BWRITER_SM1_VS  0xfffe
-#define BWRITER_SM1_PS  0xffff
+#define BWRITER_SM1_VS  0xfffeu
+#define BWRITER_SM1_PS  0xffffu
 
 #define BWRITERPS_VERSION(major, minor) ((BWRITER_SM1_PS << 16) | ((major) << 8) | (minor))
 #define BWRITERVS_VERSION(major, minor) ((BWRITER_SM1_VS << 16) | ((major) << 8) | (minor))
@@ -750,12 +750,19 @@ struct hlsl_ir_node
 
 #define HLSL_MODIFIERS_COMPARISON_MASK (HLSL_MODIFIER_ROW_MAJOR | HLSL_MODIFIER_COLUMN_MAJOR)
 
+struct reg_reservation
+{
+    enum bwritershader_param_register_type type;
+    DWORD regnum;
+};
+
 struct hlsl_ir_var
 {
     struct hlsl_ir_node node;
     const char *name;
     const char *semantic;
     unsigned int modifiers;
+    const struct reg_reservation *reg_reservation;
     struct list scope_entry;
 
     struct hlsl_var_allocation *allocation;
@@ -829,6 +836,11 @@ enum hlsl_ir_expr_op {
 
     HLSL_IR_UNOP_SAT,
 
+    HLSL_IR_UNOP_PREINC,
+    HLSL_IR_UNOP_PREDEC,
+    HLSL_IR_UNOP_POSTINC,
+    HLSL_IR_UNOP_POSTDEC,
+
     HLSL_IR_BINOP_ADD,
     HLSL_IR_BINOP_SUB,
     HLSL_IR_BINOP_MUL,
@@ -858,11 +870,6 @@ enum hlsl_ir_expr_op {
     HLSL_IR_BINOP_MAX,
 
     HLSL_IR_BINOP_POW,
-
-    HLSL_IR_BINOP_PREINC,
-    HLSL_IR_BINOP_PREDEC,
-    HLSL_IR_BINOP_POSTINC,
-    HLSL_IR_BINOP_POSTDEC,
 
     HLSL_IR_TEROP_LERP,
 
@@ -964,7 +971,14 @@ struct parse_parameter
     struct hlsl_type *type;
     const char *name;
     const char *semantic;
+    const struct reg_reservation *reg_reservation;
     unsigned int modifiers;
+};
+
+struct parse_colon_attribute
+{
+    const char *semantic;
+    struct reg_reservation *reg_reservation;
 };
 
 struct parse_variable_def
@@ -974,7 +988,8 @@ struct parse_variable_def
 
     char *name;
     unsigned int array_size;
-    char *semantic;
+    const char *semantic;
+    struct reg_reservation *reg_reservation;
     struct list *initializer;
 };
 
@@ -1109,8 +1124,6 @@ static inline struct hlsl_ir_loop *loop_from_node(const struct hlsl_ir_node *nod
 BOOL add_declaration(struct hlsl_scope *scope, struct hlsl_ir_var *decl, BOOL local_var) DECLSPEC_HIDDEN;
 struct hlsl_ir_var *get_variable(struct hlsl_scope *scope, const char *name) DECLSPEC_HIDDEN;
 void free_declaration(struct hlsl_ir_var *decl) DECLSPEC_HIDDEN;
-BOOL add_func_parameter(struct list *list, struct parse_parameter *param,
-        const struct source_location *loc) DECLSPEC_HIDDEN;
 struct hlsl_type *new_hlsl_type(const char *name, enum hlsl_type_class type_class,
         enum hlsl_base_type base_type, unsigned dimx, unsigned dimy) DECLSPEC_HIDDEN;
 struct hlsl_type *new_array_type(struct hlsl_type *basic_type, unsigned int array_size) DECLSPEC_HIDDEN;

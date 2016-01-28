@@ -1,0 +1,61 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "I pavlershem numri i parametrave - perdor xcopy /? per ndihmë\n"
+    STRING_INVPARM,  "Parametra te pavlershme '%1' -  perdor xcopy /? per ndihmë\n"
+    STRING_PAUSE,    "Shtyp <enter> per të kopjuar\n"
+    STRING_SIMCOPY,  "%1!d! dokumenta(t) do të kopjohen\n"
+    STRING_COPY,     "%1!d! dokumenta(t) u kopjuan\n"
+    STRING_QISDIR,   "është '%1' një dokument ose skedare\n\
+                     në ogjekt?\n\
+                     (F - Dokument, D - Skedë)\n"
+    STRING_SRCPROMPT,"%1? (Po|Jo)\n"
+    STRING_OVERWRITE,"Overwrite %1? (Po|Jo|Të gjith)\n"
+    STRING_COPYFAIL, "Kopje e '%1' në '%2' dështuar me r/c %3!d!\n"
+    STRING_OPENFAIL, "Dështuar per tu hapur '%1'\n"
+    STRING_READFAIL, "Dështuar duke lexuar në '%1'\n"
+    STRING_YES_CHAR, "P"
+    STRING_NO_CHAR,  "J"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"D"
+    STRING_DIR_CHAR, "S"
+
+    STRING_HELP,
+"XCOPY - Copies source files or directory trees to a destination\n\
+\n\
+Syntax:\n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Where:\n\
+\n\
+[/I]  Supozojmë skedarin nëse destinacioni nuk ekziston dhe kopjimi i dy ose\n\
+\tmë shumë dokumentave\n\
+[/S]  Kopjo dokumentat dhe nendokumentat\n\
+[/E]  Kopjo dokumentat dhe nendokumentat, përfshire dhe ato bosh\n\
+[/Q]  Mos listo emrat gjate kopjimit, ie del.\n\
+[/F]  Shfaq burimin e plotë dhe destinacion e emrat gjatë kopjimit\n\
+[/L]  Simulo operacionin, duke treguar emrat që do të kopjohen\n\
+[/W]  Nxis para fillimit të operacionit se kopjimit\n\
+[/T]  Krijon strukturën e skedareve të zbrazët por nuk kopjon dokumentat\n\
+[/Y]  Shtyp nxjerren gjate mbishkrimin e dokumentave\n\
+[/-Y] Aktivizo nxjerrjen gjate mbishkrimet e dokumentave\n\
+[/P]  Nxjerr secilin burim te dokumentit para se ta kopjosh\n\
+[/N]  Kopjo duke perdorur emra te shkrutër\n\
+[/U]  Kopjoni dokumenta që vetëm tashmë ekzistojnë në destinacion\n\
+[/R]  Mbishkruaj qdo dokument qe vetem lexohet\n\
+[/H]  Përfshij dokumenta të fshehura të sistemit në kopjim\n\
+[/C]  Vazhdojë edhe në qoftë se ndodh një gabim gjatë kopjimit\n\
+[/A]  Kopjo vetëm dokumenta me arkiva me atribjute te përcaktuar\n\
+[/M]  Kopjo vetëm dokumente me arkiva dhe atribjute te caktuar, hiqnt\n\
+\tarkivat te atribuara\n\
+[/D | /D:m-d-y] Kopjo dokumentët e ri ose modifiko ato pas datës së furnizuar.\n\
+\t\tNëse asnjë datë është paraqitur, vetëm kopjoni nëse destinacioni është i vjetër\n\
+\t\tse burimi\n\n"
+
+}

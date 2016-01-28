@@ -41,6 +41,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Rückgängig\tStrg+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Ausschneiden\tStrg+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Kopieren\tStrg+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Einfügen\tStrg+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Verknüp&fung Einfügen", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "In &Ordner kopieren...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "In Ordner &verschieben...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Alles &markieren\tStrg+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Markieru&ng umkehren", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -139,7 +156,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ausführen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Geben Sie den Namen eines Programms, eines Ordners, eines Dokuments oder einer Internetressource an.", 12289, 36, 11, 182, 18
     LTEXT "&Öffnen:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -177,10 +194,11 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 210, 10
     CHECKBOX "Als anderer Benutzer ausführen", 14000, 25, 50, 150, 10
     LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter einem anderen oder Ihrem eigenen Benutzerkonto auszuführen während der Computer und Ihre Daten vor unautorisierten Programmaktivitäten geschützt werden können.", -1, 50, 60, 175, 40
@@ -311,12 +329,15 @@ CAPTION "Extras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Fehlerüberprüfung", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Bei Wahl dieser Option wird der Datenträger\nauf Fehler überprüft.", -1, 40, 25, 160, 20
     PUSHBUTTON "Jetzt &prüfen...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentierung", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Bei Wahl dieser Option werden die Dateien auf\ndem Datenträger defragmentiert.", -1, 40, 85, 160, 20
     PUSHBUTTON "Jetzt &defragmentieren...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sicherung", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Bei Wahl dieser Option werden die auf dem\nDatenträger gespeicherten Dateien gesichert.", -1, 40, 150, 160, 20
     PUSHBUTTON "Jetzt &sichern...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -378,16 +399,6 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Kopiere..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Abbrechen", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
-END
-
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Allgemein"
@@ -416,7 +427,7 @@ CAPTION "Ansicht"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Ordneransicht", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Sie können die Ansicht (Details oder Kacheln), die Sie für\ndiesen Ordner verwenden, auf alle Ordner anwenden.", -1, 60, 20, 180, 20
     PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 90, 14, WS_TABSTOP
     PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 160, 50, 90, 14, WS_TABSTOP
@@ -578,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Komprimierung aktivieren", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Überprüfen des Datenträgers"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Starten", IDOK, 53, 100, 60, 14
-    GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 50
-    PUSHBUTTON "S&chließen", IDCANCEL, 118, 100, 60, 14
+    DEFPUSHBUTTON "&Starten", IDOK, 63, 95, 60, 14
+    GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 40
+    PUSHBUTTON "S&chließen", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "&Dateisystemfehler automatisch korrigieren", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "&Fehlerhafte Sektoren suchen/wiederherstellen", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 0, 7, 60, 179, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -604,6 +615,21 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Warnung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "Diese Datei wird entweder durch das Betriebssystem oder\n\
+durch eine andere Anwendung verwendet. Diese Datei zu\n\
+verändern kann Ihr System beschädigen\n\
+oder die Funktion beeinträchtigen.\n\n\
+Sind Sie sicher, dass Sie diese Datei öffnen möchten?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "&Ja", IDYES, 125, 60, 50, 14
+    PUSHBUTTON "&Nein", IDNO, 180, 60, 50, 14
 END
 
 STRINGTABLE
@@ -655,7 +681,7 @@ BEGIN
     IDS_RESTORE "Wiederherstellen"
     IDS_FORMATDRIVE "Formatieren..."
     IDS_RENAME "Umbenennen"
-    IDS_INSERT "Einfügen"
+    IDS_PASTE "Einfügen"
 
     IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
     IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."
@@ -671,6 +697,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei namens '%1'.\n\nWollen Sie diese überschreiben?"
     IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
     IDS_OVERWRITEFOLDER_TEXT "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\nWenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\nim gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
+
+    IDS_FILEOOP_COPYING "Kopieren"
+    IDS_FILEOOP_MOVING "Verschieben"
+    IDS_FILEOOP_DELETING "Löschen"
+    IDS_FILEOOP_FROM_TO "von %1 nach %2"
+    IDS_FILEOOP_FROM "von %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Neu starten"
@@ -721,6 +754,9 @@ BEGIN
     IDS_DRIVE_FIXED "Lokaler Datenträger"
     IDS_DRIVE_CDROM "CD-Laufwerk"
     IDS_DRIVE_NETWORK "Netzlaufwerk"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Wechseldatenträger"
+    IDS_FS_UNKNOWN "Unbekannt"
 
     /* Open With */
     IDS_OPEN_WITH "Öffnen mit..."
@@ -740,11 +776,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Symbol auswählen"
     IDS_PICK_ICON_FILTER "Symboldateien (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Alle Dateien (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programme (*.exe)\0*.exe\0Alle Dateien (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Dateiordner"
-    IDS_VIRTUAL_DRIVER "Virtueller Gerätetreiber"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
     IDS_CMD_FILE "ReactOS-Befehlsskript"
-    IDS_COM_FILE "Dos Anwendung"
+    IDS_COM_FILE "DOS Anwendung"
     IDS_CPL_FILE "Systemsteuerungselement"
     IDS_CUR_FILE "Cursor"
     IDS_DLL_FILE "Programmbibliothek"
@@ -752,14 +788,19 @@ BEGIN
     IDS_EXE_FILE "Anwendung"
     IDS_FON_FILE "Schriftartendatei"
     IDS_TTF_FILE "TrueType-Schriftartendatei"
+    IDS_OTF_FILE "OpenType-Schriftartendatei"
     IDS_HLP_FILE "Hilfedatei"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Konfigurationseinstellungen"
     IDS_LNK_FILE "Verknüpfung"
+    IDS_PIF_FILE "NTVDM Programminformationsdatei"
+    IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
+    IDS_VXD_FILE "Virtueller Gerätetreiber"
 
     IDS_OPEN_VERB "Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"
-    IDS_RUNAS_VERB "Ausführen als "
+    IDS_RUNAS_VERB "Ausführen als..."
     IDS_EDIT_VERB "Bearbeiten"
     IDS_FIND_VERB "Finden"
     IDS_PRINT_VERB "Drucken"
@@ -781,4 +822,8 @@ BEGIN
     IDS_BYTES_FORMAT "Bytes"
     IDS_UNKNOWN_APP "Unbekannte Anwendung"
     IDS_EXE_DESCRIPTION "Beschreibung:"
+
+    IDS_MENU_EMPTY "(Leer)"
+    IDS_OBJECTS "%d Objekte"
+    IDS_OBJECTS_SELECTED "%d Objekte ausgewählt"
 END

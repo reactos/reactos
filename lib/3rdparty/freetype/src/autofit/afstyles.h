@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter styles (specification only).                             */
 /*                                                                         */
-/*  Copyright 2013, 2014 by                                                */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,9 @@
   /* coverage.                                                     */
   /*                                                               */
   /* Note that styles using `AF_COVERAGE_DEFAULT' should always    */
-  /* come after styles with other coverages.                       */
+  /* come after styles with other coverages.  Also note that       */
+  /* fallback scripts only use `AF_COVERAGE_DEFAULT' for its       */
+  /* style.                                                        */
   /*                                                               */
   /* Example:                                                      */
   /*                                                               */
@@ -80,15 +82,54 @@
                        "default",                        \
                        DEFAULT )
 
+
+  STYLE( arab_dflt, ARAB_DFLT,
+         "Arabic default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_ARAB,
+         AF_BLUE_STRINGSET_ARAB,
+         AF_COVERAGE_DEFAULT )
+
   META_STYLE_LATIN( cyrl, CYRL, "Cyrillic" )
+
+  STYLE( deva_dflt, DEVA_DFLT,
+         "Devanagari default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_DEVA,
+         AF_BLUE_STRINGSET_DEVA,
+         AF_COVERAGE_DEFAULT )
+
   META_STYLE_LATIN( grek, GREK, "Greek" )
+
   STYLE( hebr_dflt, HEBR_DFLT,
          "Hebrew default style",
          AF_WRITING_SYSTEM_LATIN,
          AF_SCRIPT_HEBR,
          AF_BLUE_STRINGSET_HEBR,
          AF_COVERAGE_DEFAULT )
+
+  STYLE( lao_dflt, LAO_DFLT,
+         "Lao default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_LAO,
+         AF_BLUE_STRINGSET_LAO,
+         AF_COVERAGE_DEFAULT )
+
   META_STYLE_LATIN( latn, LATN, "Latin" )
+
+  STYLE( latb_dflt, LATB_DFLT,
+         "Latin subscript fallback default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_LATB,
+         AF_BLUE_STRINGSET_LATB,
+         AF_COVERAGE_DEFAULT )
+
+  STYLE( latp_dflt, LATP_DFLT,
+         "Latin superscript fallback default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_LATP,
+         AF_BLUE_STRINGSET_LATP,
+         AF_COVERAGE_DEFAULT )
 
 #ifdef FT_OPTION_AUTOFIT2
   STYLE( ltn2_dflt, LTN2_DFLT,
@@ -106,6 +147,20 @@
          (AF_Blue_Stringset)0,
          AF_COVERAGE_DEFAULT )
 
+  STYLE( telu_dflt, TELU_DFLT,
+         "Telugu default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_TELU,
+         AF_BLUE_STRINGSET_TELU,
+         AF_COVERAGE_DEFAULT )
+
+  STYLE( thai_dflt, THAI_DFLT,
+         "Thai default style",
+         AF_WRITING_SYSTEM_LATIN,
+         AF_SCRIPT_THAI,
+         AF_BLUE_STRINGSET_THAI,
+         AF_COVERAGE_DEFAULT )
+
 #ifdef AF_CONFIG_OPTION_INDIC
 
   /* no blue stringset support for the Indic writing system yet */
@@ -119,7 +174,6 @@
                  AF_COVERAGE_DEFAULT )
 
   STYLE_DEFAULT_INDIC( beng, BENG, "Bengali" )
-  STYLE_DEFAULT_INDIC( deva, DEVA, "Devanagari" )
   STYLE_DEFAULT_INDIC( gujr, GUJR, "Gujarati" )
   STYLE_DEFAULT_INDIC( guru, GURU, "Gurmukhi" )
   STYLE_DEFAULT_INDIC( knda, KNDA, "Kannada" )
@@ -130,7 +184,6 @@
   STYLE_DEFAULT_INDIC( sund, SUND, "Sundanese" )
   STYLE_DEFAULT_INDIC( sylo, SYLO, "Syloti Nagri" )
   STYLE_DEFAULT_INDIC( taml, TAML, "Tamil" )
-  STYLE_DEFAULT_INDIC( telu, TELU, "Telugu" )
   STYLE_DEFAULT_INDIC( tibt, TIBT, "Tibetan" )
 
 #endif /* AF_CONFIG_OPTION_INDIC */

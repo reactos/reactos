@@ -39,7 +39,7 @@ else()
     endif()
 
     include_directories(
-        ${REACTOS_SOURCE_DIR}/include/reactos/wine
+        BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
         ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
     spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)

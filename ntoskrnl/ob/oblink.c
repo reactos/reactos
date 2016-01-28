@@ -452,7 +452,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
         MaximumLength = LengthUsed + sizeof(WCHAR);
         NewTargetPath = ExAllocatePoolWithTag(NonPagedPool,
                                               MaximumLength,
-                                              TAG_SYMLINK_TTARGET);
+                                              OB_NAME_TAG);
         if (!NewTargetPath) return STATUS_INSUFFICIENT_RESOURCES;
     }
     else

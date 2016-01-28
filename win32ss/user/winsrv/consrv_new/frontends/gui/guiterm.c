@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
+ * FILE:            win32ss/user/winsrv/consrv_new/frontends/gui/guiterm.c
  * PURPOSE:         GUI Terminal Front-End
  * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald
@@ -1336,7 +1336,7 @@ VOID GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer);
 static VOID
 GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE Console = GuiData->Console;
         PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
@@ -1364,7 +1364,7 @@ VOID GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer);
 static VOID
 GuiConsolePaste(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE Console = GuiData->Console;
         PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);

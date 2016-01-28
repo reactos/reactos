@@ -1,6 +1,7 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/mem.c
+ * FILE:            lib/rtl/memstream.c
  * PURPOSE:         MemoryStream functions
  * PROGRAMMER:      David Quintana (gigaherz@gmail.com)
  */
@@ -463,4 +464,29 @@ RtlCloneMemoryStream(
     UNREFERENCED_PARAMETER(ResultStream);
 
     return E_NOTIMPL;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlCopyMappedMemory(
+    _Out_writes_bytes_all_(Size) PVOID Destination,
+    _In_reads_bytes_(Size) const VOID *Source,
+    _In_ SIZE_T Size)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Destination, Source, Size);
+    }
+    _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_IN_PAGE_ERROR
+                    ? EXCEPTION_EXECUTE_HANDLER
+                    : EXCEPTION_CONTINUE_SEARCH)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    return Status;
 }

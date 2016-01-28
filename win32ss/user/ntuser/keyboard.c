@@ -61,7 +61,7 @@ IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
 
     while (pRet)
     {
-        Status = NtDeviceIoControlFile(hKeyboardDevice,
+        Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -104,8 +104,7 @@ static
 NTSTATUS APIENTRY
 IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
                       WORD wVk,
-                      WORD wScanCode,
-                      BOOL bEnabled)
+                      WORD wScanCode)
 {
     NTSTATUS Status;
     UINT i;
@@ -133,13 +132,10 @@ IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
 
     if (LedFlag)
     {
-        if (bEnabled)
-            gIndicators.LedFlags |= LedFlag;
-        else
-            gIndicators.LedFlags = ~LedFlag;
+        gIndicators.LedFlags ^= LedFlag;
 
         /* Update the lights on the hardware */
-        Status = NtDeviceIoControlFile(hKeyboardDevice,
+        Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -164,31 +160,35 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK Block;
-/*
+
     IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
 
-    Status = NtDeviceIoControlFile(hKeyboardDevice,
+    Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                    NULL,
                                    NULL,
                                    NULL,
                                    &Block,
                                    IOCTL_KEYBOARD_QUERY_INDICATORS,
                                    NULL, 0,
-                                   &gIndicators, sizeof(gIndicators));
+                                   &gIndicators,
+                                   sizeof(gIndicators));
 
     if (!NT_SUCCESS(Status))
     {
         WARN("NtDeviceIoControlFile() failed, ignored\n");
+        gIndicators.LedFlags = 0;
+        gIndicators.UnitId = 0;
     }
+
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,
                    gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
                    gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
-*/
+
     // FIXME: Need device driver to work! HID support more than one!!!!
-    Status = NtDeviceIoControlFile(hKeyboardDevice,
+    Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                    NULL,
                                    NULL,
                                    NULL,
@@ -201,7 +201,7 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
     {
         ERR("NtDeviceIoControlFile() failed, ignored\n");
     }
-    ERR("Keyboard type %d, subtype %d and number of func keys %d\n",
+    TRACE("Keyboard type %u, subtype %u and number of func keys %u\n",
              gKeyboardInfo.KeyboardIdentifier.Type,
              gKeyboardInfo.KeyboardIdentifier.Subtype,
              gKeyboardInfo.NumberOfFunctionKeys);
@@ -808,8 +808,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         /* Update keyboard LEDs */
         IntKeyboardUpdateLeds(ghKeyboardDevice,
                               wSimpleVk,
-                              wScanCode,
-                              IS_KEY_LOCKED(gafAsyncKeyState, wSimpleVk));
+                              wScanCode);
     }
 
     /* Call WH_KEYBOARD_LL hook */
@@ -825,7 +824,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
     }
- 
+
     wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
@@ -937,16 +936,21 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */
             if (pFocusQueue->QF_flags & QF_DIALOGACTIVE)
                 Msg.lParam |= KF_DLGMODE << 16;
-            if (pFocusQueue->MenuOwner) // pFocusQueue->MenuState) // MenuState needs a start flag...
+            if (pFocusQueue->MenuOwner) // pti->pMenuState->fMenuStarted
                 Msg.lParam |= KF_MENUMODE << 16;
+        }
+
+        // Post mouse move before posting key buttons, to keep it syned.
+        if (pFocusQueue->QF_flags & QF_MOUSEMOVED)
+        {
+           IntCoalesceMouseMove(pti);
         }
 
         /* Post a keyboard message */
         TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
         if (!Wnd) {ERR("Window is NULL\n");}
-        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0);
+        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0, dwExtraInfo);
     }
-
     return TRUE;
 }
 
@@ -1066,7 +1070,7 @@ UserProcessKeyboardInput(
              but it wouldn't interpret E1 key(s) properly */
     wVk = IntVscToVk(wScanCode, pKbdTbl);
     TRACE("UserProcessKeyboardInput: %x (break: %u) -> %x\n",
-          wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1 : 0, wVk);
+          wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1u : 0, wVk);
 
     if (wVk)
     {
@@ -1159,7 +1163,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
         NewMsg.wParam = HIWORD(lpMsg->lParam);
         NewMsg.lParam = LOWORD(lpMsg->lParam);
-        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
+        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0, 0);
         return TRUE;
     }
 
@@ -1188,12 +1192,12 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         {
             TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
             NewMsg.wParam = wch[i];
-            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
+            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0, 0);
         }
         bResult = TRUE;
     }
 
-    TRACE("Leave IntTranslateKbdMessage ret %u, cch %d, msg %x, wch %x\n",
+    TRACE("Leave IntTranslateKbdMessage ret %d, cch %d, msg %x, wch %x\n",
         bResult, cch, NewMsg.message, NewMsg.wParam);
     return bResult;
 }

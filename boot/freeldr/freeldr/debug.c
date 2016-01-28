@@ -18,52 +18,45 @@
  */
 
 #include <freeldr.h>
-
 #include <debug.h>
 
 #if DBG && !defined(_M_ARM)
 
-//#define DEBUG_ALL
-//#define DEBUG_WARN
-//#define DEBUG_ERR
-//#define DEBUG_INIFILE
-//#define DEBUG_REACTOS
-//#define DEBUG_CUSTOM
+// #define DEBUG_ALL
+// #define DEBUG_WARN
+// #define DEBUG_ERR
+// #define DEBUG_INIFILE
+// #define DEBUG_REACTOS
+// #define DEBUG_CUSTOM
 #define DEBUG_NONE
 
 #define DBG_DEFAULT_LEVELS (ERR_LEVEL|FIXME_LEVEL)
 
-#define    SCREEN                1
-#define    RS232                2
-#define BOCHS                4
-
-#define    COM1                1
-#define    COM2                2
-#define    COM3                3
-#define    COM4                4
-
-#define BOCHS_OUTPUT_PORT    0xe9
-
-
 static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 
-ULONG        DebugPort = RS232;
-//ULONG        DebugPort = SCREEN;
-//ULONG        DebugPort = BOCHS;
-//ULONG        DebugPort = SCREEN|BOCHS;
-#ifdef _WINKD_
-/* COM1 is the WinDbg port */
-ULONG        ComPort = COM2;
-#else
-ULONG        ComPort = COM1;
-#endif
-//ULONG        BaudRate = 19200;
-ULONG        BaudRate = 115200;
+#define SCREEN  1
+#define RS232   2
+#define BOCHS   4
 
-BOOLEAN    DebugStartOfLine = TRUE;
+#define BOCHS_OUTPUT_PORT   0xE9
 
-VOID DebugInit(VOID)
+ULONG DebugPort = RS232;
+
+/* Serial debug connection */
+ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
+ULONG BaudRate = 115200;
+ULONG PortIrq  = 0; // Not used at the moment.
+
+BOOLEAN DebugStartOfLine = TRUE;
+
+VOID DebugInit(BOOLEAN MainInit)
 {
+    PCHAR CommandLine, PortString, BaudString, IrqString;
+    ULONG Value;
+    CHAR  DebugString[256];
+
+    /* Always reset the debugging channels */
+
 #if defined (DEBUG_ALL)
     memset(DbgChannels, MAX_LEVEL, DBG_CHANNELS_COUNT);
 #elif defined (DEBUG_WARN)
@@ -84,25 +77,134 @@ VOID DebugInit(VOID)
     DbgChannels[DPRINT_WINDOWS] = MAX_LEVEL;
 #endif
 
+    /* Check for pre- or main initialization phase */
+    if (!MainInit)
+    {
+        /* Pre-initialization phase: use the FreeLdr command-line debugging string */
+        CommandLine = (PCHAR)CmdLineGetDebugString();
+
+        /* If no command-line is provided, initialize the debug port with default settings */
+        if (CommandLine == NULL)
+            goto Done;
+
+        strcpy(DebugString, CommandLine);
+    }
+    else
+    {
+        /* Main initialization phase: use the FreeLdr INI debugging string */
+
+        ULONG_PTR SectionId;
+
+        if (!IniOpenSection("FreeLoader", &SectionId))
+            return;
+
+        if (!IniReadSettingByName(SectionId, "Debug", DebugString, sizeof(DebugString)))
+            return;
+    }
+
+    /* Get the Command Line */
+    CommandLine = DebugString;
+
+    /* Upcase it */
+    _strupr(CommandLine);
+
+    /* Get the port and baud rate */
+    PortString = strstr(CommandLine, "DEBUGPORT");
+    BaudString = strstr(CommandLine, "BAUDRATE");
+    IrqString  = strstr(CommandLine, "IRQ");
+
+    /*
+     * Check if we got /DEBUGPORT parameters.
+     * NOTE: Inspired by reactos/ntoskrnl/kd/kdinit.c, KdInitSystem(...)
+     */
+    while (PortString)
+    {
+        /* Move past the actual string, to reach the port*/
+        PortString += strlen("DEBUGPORT");
+
+        /* Now get past any spaces and skip the equal sign */
+        while (*PortString == ' ') PortString++;
+        PortString++;
+
+        /* Check for possible ports and set the port to use */
+        if (strncmp(PortString, "SCREEN", 6) == 0)
+        {
+            PortString += 6;
+            DebugPort |= SCREEN;
+        }
+        else if (strncmp(PortString, "BOCHS", 5) == 0)
+        {
+            PortString += 5;
+            DebugPort |= BOCHS;
+        }
+        else if (strncmp(PortString, "COM", 3) == 0)
+        {
+            PortString += 3;
+            DebugPort |= RS232;
+
+            /* Set the port to use */
+            Value = atol(PortString);
+            if (Value) ComPort = Value;
+        }
+
+        PortString = strstr(PortString, "DEBUGPORT");
+   }
+
+    /* Check if we got a baud rate */
+    if (BaudString)
+    {
+        /* Move past the actual string, to reach the rate */
+        BaudString += strlen("BAUDRATE");
+
+        /* Now get past any spaces */
+        while (*BaudString == ' ') BaudString++;
+
+        /* And make sure we have a rate */
+        if (*BaudString)
+        {
+            /* Read and set it */
+            Value = atol(BaudString + 1);
+            if (Value) BaudRate = Value;
+        }
+    }
+
+    /* Check Serial Port Settings [IRQ] */
+    if (IrqString)
+    {
+        /* Move past the actual string, to reach the rate */
+        IrqString += strlen("IRQ");
+
+        /* Now get past any spaces */
+        while (*IrqString == ' ') IrqString++;
+
+        /* And make sure we have an IRQ */
+        if (*IrqString)
+        {
+            /* Read and set it */
+            Value = atol(IrqString + 1);
+            if (Value) PortIrq = Value;
+        }
+    }
+
+Done:
+    /* Try to initialize the port; if it fails, remove the corresponding flag */
     if (DebugPort & RS232)
     {
-        Rs232PortInitialize(ComPort, BaudRate);
+        if (!Rs232PortInitialize(ComPort, BaudRate))
+            DebugPort &= ~RS232;
     }
 }
 
 VOID DebugPrintChar(UCHAR Character)
 {
     if (Character == '\n')
-    {
         DebugStartOfLine = TRUE;
-    }
 
     if (DebugPort & RS232)
     {
         if (Character == '\n')
-        {
             Rs232PortPutByte('\r');
-        }
+
         Rs232PortPutByte(Character);
     }
     if (DebugPort & BOCHS)
@@ -118,9 +220,9 @@ VOID DebugPrintChar(UCHAR Character)
 ULONG
 DbgPrint(const char *Format, ...)
 {
-    int i;
-    int Length;
     va_list ap;
+    int Length;
+    char* ptr;
     CHAR Buffer[512];
 
     va_start(ap, Format);
@@ -137,10 +239,9 @@ DbgPrint(const char *Format, ...)
         Length = sizeof(Buffer);
     }
 
-    for (i = 0; i < Length; i++)
-    {
-        DebugPrintChar(Buffer[i]);
-    }
+    ptr = Buffer;
+    while (Length--)
+        DebugPrintChar(*ptr++);
 
     return 0;
 }
@@ -152,13 +253,13 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     char Buffer[2096];
     char *ptr = Buffer;
 
-    // Mask out unwanted debug messages
-    if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS ))
+    /* Mask out unwanted debug messages */
+    if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS))
     {
         return;
     }
 
-    // Print the header if we have started a new line
+    /* Print the header if we have started a new line */
     if (DebugStartOfLine)
     {
         DbgPrint("(%s:%lu) ", File, Line);
@@ -195,41 +296,30 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
 VOID
 DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 {
-    PUCHAR    BufPtr = (PUCHAR)Buffer;
-    ULONG        Idx;
-    ULONG        Idx2;
+    PUCHAR BufPtr = (PUCHAR)Buffer;
+    ULONG  Idx, Idx2;
 
-    // Mask out unwanted debug messages
+    /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & TRACE_LEVEL))
-    {
         return;
-    }
 
     DebugStartOfLine = FALSE; // We don't want line headers
     DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
 
-    for (Idx=0; Idx<Length; )
+    for (Idx = 0; Idx < Length; )
     {
         DebugStartOfLine = FALSE; // We don't want line headers
 
         if (Idx < 0x0010)
-        {
             DbgPrint("000%x:\t", Idx);
-        }
         else if (Idx < 0x0100)
-        {
             DbgPrint("00%x:\t", Idx);
-        }
         else if (Idx < 0x1000)
-        {
             DbgPrint("0%x:\t", Idx);
-        }
         else
-        {
             DbgPrint("%x:\t", Idx);
-        }
 
-        for (Idx2=0; Idx2<16; Idx2++,Idx++)
+        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
         {
             if (BufPtr[Idx] < 0x10)
             {
@@ -250,7 +340,7 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
         Idx -= 16;
         DbgPrint(" ");
 
-        for (Idx2=0; Idx2<16; Idx2++,Idx++)
+        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
         {
             if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
             {
@@ -267,46 +357,46 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 }
 
 static BOOLEAN
-DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
+DbgAddDebugChannel(CHAR* channel, CHAR* level, CHAR op)
 {
     int iLevel, iChannel;
 
-    if(channel == NULL || *channel == L'\0' ||strlen(channel) == 0 )
+    if (channel == NULL || *channel == '\0' || strlen(channel) == 0)
         return FALSE;
 
-    if(level == NULL || *level == L'\0' ||strlen(level) == 0 )
+    if (level == NULL || *level == '\0' || strlen(level) == 0)
         iLevel = MAX_LEVEL;
-    else if(strcmp(level, "err") == 0)
+    else if (strcmp(level, "err") == 0)
         iLevel = ERR_LEVEL;
-    else if(strcmp(level, "fixme") == 0)
+    else if (strcmp(level, "fixme") == 0)
         iLevel = FIXME_LEVEL;
-    else if(strcmp(level, "warn") == 0)
+    else if (strcmp(level, "warn") == 0)
         iLevel = WARN_LEVEL;
     else if (strcmp(level, "trace") == 0)
         iLevel = TRACE_LEVEL;
     else
         return FALSE;
 
-    if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
-    else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
-    else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
-    else if(strcmp(channel, "ui") == 0) iChannel = DPRINT_UI;
-    else if(strcmp(channel, "disk") == 0) iChannel = DPRINT_DISK;
-    else if(strcmp(channel, "cache") == 0) iChannel = DPRINT_CACHE;
-    else if(strcmp(channel, "registry") == 0) iChannel = DPRINT_REGISTRY;
-    else if(strcmp(channel, "linux") == 0) iChannel = DPRINT_LINUX;
-    else if(strcmp(channel, "hwdetect") == 0) iChannel = DPRINT_HWDETECT;
-    else if(strcmp(channel, "windows") == 0) iChannel = DPRINT_WINDOWS;
-    else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
-    else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
-    else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
-    else if(strcmp(channel, "all") == 0)
+         if (strcmp(channel, "memory"    ) == 0) iChannel = DPRINT_MEMORY;
+    else if (strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
+    else if (strcmp(channel, "inifile"   ) == 0) iChannel = DPRINT_INIFILE;
+    else if (strcmp(channel, "ui"        ) == 0) iChannel = DPRINT_UI;
+    else if (strcmp(channel, "disk"      ) == 0) iChannel = DPRINT_DISK;
+    else if (strcmp(channel, "cache"     ) == 0) iChannel = DPRINT_CACHE;
+    else if (strcmp(channel, "registry"  ) == 0) iChannel = DPRINT_REGISTRY;
+    else if (strcmp(channel, "linux"     ) == 0) iChannel = DPRINT_LINUX;
+    else if (strcmp(channel, "hwdetect"  ) == 0) iChannel = DPRINT_HWDETECT;
+    else if (strcmp(channel, "windows"   ) == 0) iChannel = DPRINT_WINDOWS;
+    else if (strcmp(channel, "peloader"  ) == 0) iChannel = DPRINT_PELOADER;
+    else if (strcmp(channel, "scsiport"  ) == 0) iChannel = DPRINT_SCSIPORT;
+    else if (strcmp(channel, "heap"      ) == 0) iChannel = DPRINT_HEAP;
+    else if (strcmp(channel, "all"       ) == 0)
     {
         int i;
 
-        for(i= 0 ; i < DBG_CHANNELS_COUNT; i++)
+        for (i = 0; i < DBG_CHANNELS_COUNT; i++)
         {
-            if(op==L'+')
+            if (op == '+')
                 DbgChannels[i] |= iLevel;
             else
                 DbgChannels[i] &= ~iLevel;
@@ -316,7 +406,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
     }
     else return FALSE;
 
-    if(op==L'+')
+    if (op == '+')
         DbgChannels[iChannel] |= iLevel;
     else
         DbgChannels[iChannel] &= ~iLevel;
@@ -333,25 +423,25 @@ DbgParseDebugChannels(PCHAR Value)
 
     do
     {
-        separator = strchr(str, L',');
-        if(separator != NULL)
-            *separator = L'\0';
+        separator = strchr(str, ',');
+        if (separator != NULL)
+            *separator = '\0';
 
-        c = strchr(str, L'+');
-        if(c == NULL)
-            c = strchr(str, L'-');
+        c = strchr(str, '+');
+        if (c == NULL)
+            c = strchr(str, '-');
 
-        if(c != NULL)
+        if (c != NULL)
         {
             op = *c;
-            *c = L'\0';
+            *c = '\0';
             c++;
 
             DbgAddDebugChannel(c, str, op);
         }
 
         str = separator + 1;
-    } while(separator != NULL);
+    } while (separator != NULL);
 }
 
 #else
@@ -394,7 +484,7 @@ MsgBoxPrint(const char *Format, ...)
     return 0;
 }
 
-//DECLSPEC_NORETURN
+// DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
@@ -406,10 +496,10 @@ KeBugCheckEx(
 {
     char Buffer[70];
     sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
-        BugCheckCode, BugCheckParameter1, BugCheckParameter2,
-        BugCheckParameter3, BugCheckParameter4);
+            BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+            BugCheckParameter3, BugCheckParameter4);
     UiMessageBoxCritical(Buffer);
-    assert(FALSE);
+    ASSERT(FALSE);
     for (;;);
 }
 
@@ -420,23 +510,23 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
-   if (Message)
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber,
-               Message);
-   }
-   else
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber);
-   }
+    if (Message)
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+    }
+    else
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+    }
 
-   DbgBreakPoint();
+    DbgBreakPoint();
 }
 
 char *BugCodeStrings[] =
@@ -444,7 +534,7 @@ char *BugCodeStrings[] =
     "TEST_BUGCHECK",
     "MISSING_HARDWARE_REQUIREMENTS",
     "FREELDR_IMAGE_CORRUPTION",
+    "MEMORY_INIT_FAILURE",
 };
 
 ULONG_PTR BugCheckInfo[5];
-

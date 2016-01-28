@@ -685,7 +685,7 @@ static DWORD MIDI_mciOpen(WINE_MCIMIDI* wmm, DWORD dwFlags, LPMCI_OPEN_PARMSW lp
 
     if (dwFlags & MCI_OPEN_ELEMENT) {
 	TRACE("MCI_OPEN_ELEMENT %s!\n", debugstr_w(lpParms->lpstrElementName));
-	if (lpParms->lpstrElementName && strlenW(lpParms->lpstrElementName) > 0) {
+        if (lpParms->lpstrElementName && lpParms->lpstrElementName[0]) {
 	    wmm->hFile = mmioOpenW((LPWSTR)lpParms->lpstrElementName, NULL,
 				   MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
 	    if (wmm->hFile == 0) {
@@ -778,7 +778,7 @@ static DWORD MIDI_mciStop(WINE_MCIMIDI* wmm, DWORD dwFlags, LPMCI_GENERIC_PARMS 
 	if (oldstat == MCI_MODE_PAUSE)
 	    dwRet = midiOutReset((HMIDIOUT)wmm->hMidi);
 
-	if ((dwFlags & MCI_WAIT) && wmm->hThread)
+	if (wmm->hThread)
 	    WaitForSingleObject(wmm->hThread, INFINITE);
     }
 
@@ -810,7 +810,10 @@ static DWORD MIDI_mciClose(WINE_MCIMIDI* wmm, DWORD dwFlags, LPMCI_GENERIC_PARMS
 	    wmm->hFile = 0;
 	    TRACE("hFile closed !\n");
 	}
-	if (wmm->hThread) CloseHandle(wmm->hThread);
+	if (wmm->hThread) {
+	    CloseHandle(wmm->hThread);
+	    wmm->hThread = 0;
+	}
 	HeapFree(GetProcessHeap(), 0, wmm->tracks);
 	HeapFree(GetProcessHeap(), 0, wmm->lpstrElementName);
 	HeapFree(GetProcessHeap(), 0, wmm->lpstrCopyright);

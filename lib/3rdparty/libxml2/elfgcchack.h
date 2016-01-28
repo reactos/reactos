@@ -1061,7 +1061,7 @@ extern __typeof (xmlAddNotationDecl) xmlAddNotationDecl__internal_alias __attrib
 #endif
 #endif
 
-#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED)
+#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_XINCLUDE_ENABLED)
 #ifdef bottom_tree
 #undef xmlAddPrevSibling
 extern __typeof (xmlAddPrevSibling) xmlAddPrevSibling __attribute((alias("xmlAddPrevSibling__internal_alias")));
@@ -8885,7 +8885,7 @@ extern __typeof (xmlSAX2EndDocument) xmlSAX2EndDocument__internal_alias __attrib
 #endif
 #endif
 
-#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
+#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED) || defined(LIBXML_LEGACY_ENABLED)
 #ifdef bottom_SAX2
 #undef xmlSAX2EndElement
 extern __typeof (xmlSAX2EndElement) xmlSAX2EndElement __attribute((alias("xmlSAX2EndElement__internal_alias")));
@@ -9131,7 +9131,7 @@ extern __typeof (xmlSAX2StartDocument) xmlSAX2StartDocument__internal_alias __at
 #endif
 #endif
 
-#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
+#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED) || defined(LIBXML_LEGACY_ENABLED)
 #ifdef bottom_SAX2
 #undef xmlSAX2StartElement
 extern __typeof (xmlSAX2StartElement) xmlSAX2StartElement __attribute((alias("xmlSAX2StartElement__internal_alias")));
@@ -15363,7 +15363,7 @@ extern __typeof (xmlValidateElementDecl) xmlValidateElementDecl__internal_alias 
 #endif
 #endif
 
-#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_XPATH_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_DEBUG_ENABLED) || defined (LIBXML_HTML_ENABLED) || defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
+#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_XPATH_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_DEBUG_ENABLED) || defined (LIBXML_HTML_ENABLED) || defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED) || defined(LIBXML_LEGACY_ENABLED)
 #ifdef bottom_tree
 #undef xmlValidateNCName
 extern __typeof (xmlValidateNCName) xmlValidateNCName __attribute((alias("xmlValidateNCName__internal_alias")));
@@ -16769,6 +16769,18 @@ extern __typeof (xmlXPathNextSelf) xmlXPathNextSelf__internal_alias __attribute(
 
 #if defined(LIBXML_XPATH_ENABLED)
 #ifdef bottom_xpath
+#undef xmlXPathNodeEval
+extern __typeof (xmlXPathNodeEval) xmlXPathNodeEval __attribute((alias("xmlXPathNodeEval__internal_alias")));
+#else
+#ifndef xmlXPathNodeEval
+extern __typeof (xmlXPathNodeEval) xmlXPathNodeEval__internal_alias __attribute((visibility("hidden")));
+#define xmlXPathNodeEval xmlXPathNodeEval__internal_alias
+#endif
+#endif
+#endif
+
+#if defined(LIBXML_XPATH_ENABLED)
+#ifdef bottom_xpath
 #undef xmlXPathNodeLeading
 extern __typeof (xmlXPathNodeLeading) xmlXPathNodeLeading __attribute((alias("xmlXPathNodeLeading__internal_alias")));
 #else
@@ -17267,6 +17279,18 @@ extern __typeof (xmlXPathRoundFunction) xmlXPathRoundFunction __attribute((alias
 #ifndef xmlXPathRoundFunction
 extern __typeof (xmlXPathRoundFunction) xmlXPathRoundFunction__internal_alias __attribute((visibility("hidden")));
 #define xmlXPathRoundFunction xmlXPathRoundFunction__internal_alias
+#endif
+#endif
+#endif
+
+#if defined(LIBXML_XPATH_ENABLED)
+#ifdef bottom_xpath
+#undef xmlXPathSetContextNode
+extern __typeof (xmlXPathSetContextNode) xmlXPathSetContextNode __attribute((alias("xmlXPathSetContextNode__internal_alias")));
+#else
+#ifndef xmlXPathSetContextNode
+extern __typeof (xmlXPathSetContextNode) xmlXPathSetContextNode__internal_alias __attribute((visibility("hidden")));
+#define xmlXPathSetContextNode xmlXPathSetContextNode__internal_alias
 #endif
 #endif
 #endif

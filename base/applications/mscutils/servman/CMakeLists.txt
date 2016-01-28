@@ -21,6 +21,8 @@ list(APPEND SOURCE
     stop_dependencies.c
     precomp.h)
 
+file(GLOB servman_rc_deps res/*.*)
+add_rc_deps(servman.rc ${servman_rc_deps})
 add_executable(servman ${SOURCE} servman.rc)
 set_module_type(servman win32gui UNICODE)
 add_importlibs(servman user32 gdi32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)

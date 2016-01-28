@@ -62,8 +62,8 @@ HRESULT WINAPI BasicAudioImpl_GetIDsOfNames(IBasicAudio *iface, REFIID riid, LPO
 HRESULT WINAPI BasicAudioImpl_Invoke(IBasicAudio *iface, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExepInfo, UINT *puArgErr)
 {
     BasicAudio *This = impl_from_IBasicAudio(iface);
-    HRESULT hr = S_OK;
     ITypeInfo *pTypeInfo;
+    HRESULT hr;
 
     hr = BaseDispatchImpl_GetTypeInfo(&This->baseDispatch, riid, 1, lcid, &pTypeInfo);
     if (SUCCEEDED(hr))

@@ -572,3 +572,31 @@ WaitForMachinePolicyForegroundProcessing(VOID)
 
     return Ret;
 }
+
+DWORD
+WINAPI
+GetAppliedGPOListA(
+    _In_   DWORD dwFlags,
+    _In_   LPCSTR pMachineName,
+    _In_   PSID pSidUser,
+    _In_   GUID *pGuidExtension,
+    _Out_  PGROUP_POLICY_OBJECTA *ppGPOList
+)
+{
+    DPRINT1("GetAppliedGPOListA is UNIMPLEMENTED!\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD
+WINAPI
+GetAppliedGPOListW(
+    _In_   DWORD dwFlags,
+    _In_   LPCWSTR pMachineName,
+    _In_   PSID pSidUser,
+    _In_   GUID *pGuidExtension,
+    _Out_  PGROUP_POLICY_OBJECTW *ppGPOList
+)
+{
+    DPRINT1("GetAppliedGPOListW is UNIMPLEMENTED!\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}

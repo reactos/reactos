@@ -1,0 +1,448 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+101 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "拨号规则"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 21, 20
+    LTEXT "下面的列表显示您指定的位置。选择您拨号的位置。", -1, 35, 7, 210, 16
+    LTEXT "地点位置:(&L)", -1, 7, 35, 210, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
+    PUSHBUTTON "新建...(&N)", 1030, 87, 155, 50, 14
+    PUSHBUTTON "编辑...(&E)", 1031, 141, 155, 50, 14
+    PUSHBUTTON "删除(&D)", 1032, 195, 155, 50, 14
+    LTEXT "要拨的电话号码:", 1052, 7, 181, 100, 8
+    LTEXT "", 1053, 14, 195, 224, 16
+END
+
+102 DIALOGEX 0, 0, 252, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "常规"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 202, 2000, 7, 7, 20, 20
+    LTEXT "地点位置名称:(&N)", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "指定从中你将拨号的位置。", 2001, 7, 33, 238, 8
+    LTEXT "国家/地区:(&R)", -1, 7, 49, 161, 8
+    COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "地区代码:(&C)", -1, 190, 49, 48, 8
+    EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
+    GROUPBOX "拨号规则", 2002, 7, 80, 238, 92
+    LTEXT "当从该位置拨号，使用以下规则:", 2003, 14, 92, 224, 8
+    LTEXT "若要访问本地电话的外线电话，请拨:(&L)", -1, 14, 106, 170, 8
+    EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
+    LTEXT "要访问外线长途电话，请先拨:(&D)", -1, 14, 122, 170, 8
+    EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
+    LTEXT "使用此载波码来打长途电话:(&E)", -1, 14, 138, 170, 8
+    EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
+    LTEXT "使用此载波码来打国际电话:(&I)", -1, 14, 154, 170, 8
+    EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "若要禁用呼叫等待，请拨打:(&W)", 1035, 14, 177, 170, 10
+    COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
+    LTEXT "使用拨号:", -1, 14, 195, 40, 8
+    AUTORADIOBUTTON "语气(&T)", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "脉冲(&P)", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
+    LTEXT "要拨的电话号码:", 1052, 7, 219, 100, 8
+    LTEXT "", 1053, 14, 232, 224, 16
+END
+
+103 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "区号规则"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "区号规则确定电话号码的拨号方式从你当前的地区代码于其他地区代码和区号中。", 2000, 7, 7, 238, 16
+    LTEXT "区号规则:(&C)", -1, 7, 31, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
+    PUSHBUTTON "新建...(&N)", 1030, 87, 147, 50, 14
+    PUSHBUTTON "编辑...(&E)", 1031, 141, 147, 50, 14
+    PUSHBUTTON "删除(&D)", 1032, 195, 147, 50, 14
+    GROUPBOX "描述", 2006, 7, 166, 238, 45
+    LTEXT "", 1039, 14, 180, 224, 24
+END
+
+104 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "电话卡"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "选择您将使用的电话卡，或单击新建添加不同的卡。", 2000, 7, 7, 238, 8
+    LTEXT "卡类型:(&T)", -1, 7, 23, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
+    PUSHBUTTON "新建...(&N)", 1030, 87, 103, 50, 14
+    PUSHBUTTON "编辑...(&E)", 1031, 141, 103, 50, 14
+    PUSHBUTTON "删除(&D)", 1032, 195, 103, 50, 14
+    LTEXT "帐号:(&C)", -1, 7, 127, 91, 8
+    EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
+    LTEXT "个人ID号 (PIN):(&P)", -1, 7, 145, 91, 8
+    EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
+    GROUPBOX "访问的电话号码", 2001, 7, 158, 238, 53
+    LTEXT "长途电话:", -1, 14, 172, 84, 8
+    LTEXT "", 1042, 102, 172, 136, 8
+    LTEXT "国际电话:", -1, 14, 184, 84, 8
+    LTEXT "", 1043, 102, 184, 136, 8
+    LTEXT "本地电话:", -1, 14, 196, 84, 8
+    LTEXT "", 1051, 102, 196, 136, 8
+END
+
+105 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "常规"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 203, 2000, 7, 7, 20, 20
+    LTEXT "电话卡名:(&C)", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
+    LTEXT "帐号:(&N)", -1, 7, 35, 238, 8
+    EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
+    LTEXT "个人识别号码 (PIN):(&P)", -1, 7, 68, 238, 8
+    EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
+    LTEXT "此电话卡将时使用:", 1056, 14, 117, 224, 8
+    GROUPBOX "电话卡详细信息", 2001, 7, 105, 238, 66
+    LTEXT "", 1000, 22, 131, 216, 8
+    LTEXT "", 1001, 22, 143, 216, 8
+    LTEXT "", 1002, 22, 155, 216, 8
+END
+
+106 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "长途"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "长途电话访问号码:(&L)", -1, 7, 7, 238, 8
+    EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "使用下面的按钮来输入打长途电话拨号步骤。当它们出现在你的名片上，按准确顺序输入这些步骤。", 2000, 7, 40, 238, 24
+    LTEXT "电话卡拨号步骤:(&R)", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "向上移动(&U)", 1022, 195, 83, 50, 14
+    PUSHBUTTON "向下移动(&M)", 1023, 195, 101, 50, 14
+    PUSHBUTTON "删除(&D)", 1024, 195, 119, 50, 14
+    PUSHBUTTON "访问号码(&N)", 1025, 7, 161, 90, 14
+    PUSHBUTTON "帐号(&C)", 1018, 101, 161, 90, 14
+    PUSHBUTTON "密码(&P)", 1019, 7, 179, 90, 14
+    PUSHBUTTON "目标号码...(&E)", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定数字...(&S)", 1021, 101, 197, 90, 14
+END
+
+107 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "国际"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "国际电话访问号码:(&I)", -1, 7, 7, 238, 8
+    EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "使用下面的按钮来输入打国际电话拨号步骤。当它们出现在你的名片上，按准确顺序输入这些步骤。", 2000, 7, 40, 244, 24
+    LTEXT "电话卡拨号步骤:(&R)", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "向上移动(&U)", 1022, 195, 83, 50, 14
+    PUSHBUTTON "向下移动(&M)", 1023, 195, 101, 50, 14
+    PUSHBUTTON "删除(&D)", 1024, 195, 119, 50, 14
+    PUSHBUTTON "访问号码(&N)", 1025, 7, 161, 90, 14
+    PUSHBUTTON "帐号(&C)", 1018, 101, 161, 90, 14
+    PUSHBUTTON "密码(&P)", 1019, 7, 179, 90, 14
+    PUSHBUTTON "目标号码...(&E)", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定数字...(&S)", 1021, 101, 197, 90, 14
+END
+
+108 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "本地电话"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "本地电话访问号码:(&L)", -1, 7, 7, 238, 8
+    EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "使用下面的按钮来输入打市内电话拨号步骤。当他们出现在你的名片上，按准确顺序输入这些步骤。来而无需使用您的电话卡打本地电话，请将此部分留为空白。", 2000, 7, 40, 238, 24
+    LTEXT "电话卡拨号步骤:(&R)", -1, 7, 72, 238, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "向上移动(&U)", 1022, 195, 83, 50, 14
+    PUSHBUTTON "向下移动(&M)", 1023, 195, 101, 50, 14
+    PUSHBUTTON "删除(&D)", 1024, 195, 119, 50, 14
+    PUSHBUTTON "访问号码(&N)", 1025, 7, 161, 90, 14
+    PUSHBUTTON "帐号(&C)", 1018, 101, 161, 90, 14
+    PUSHBUTTON "密码(&P)", 1019, 7, 179, 90, 14
+    PUSHBUTTON "目标号码...(&E)", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定数字...(&S)", 1021, 101, 197, 90, 14
+END
+
+109 DIALOGEX 0, 0, 252, 257
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "新的区号规则"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "此区号规则只适用于电话的区号和您在下面指定的前缀组合作出。", 2000, 7, 6, 238, 16
+    LTEXT "要调用的地区代码:", -1, 7, 31, 110, 8
+    LTEXT "地区代码:(&R)", -1, 7, 47, 36, 8
+    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "指定要用于此区号规则的前缀。", -1, 14, 78, 224, 8
+    AUTORADIOBUTTON "包含此区号之内的所有前缀(&I)", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "在下面的列表中包括唯一的前缀:(&O)", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "要包含的前缀:(&P)", 1057, 26, 117, 119, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
+    PUSHBUTTON "添加...(&A)", 1005, 95, 128, 50, 14
+    PUSHBUTTON "删除(&E)", 1024, 95, 146, 50, 14
+    LTEXT "当拨号电话号码包含上述前缀:", -1, 14, 184, 224, 8
+    AUTOCHECKBOX "拨打:(&D)", 1012, 14, 198, 30, 12
+    EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "包括地区代码(&C)", 1029, 14, 214, 85, 12
+    DEFPUSHBUTTON "确定", 1, 141, 236, 50, 14
+    PUSHBUTTON "取消", 2, 195, 236, 50, 14
+    RTEXT "地区代码", 2001, 133, 31, 51, 8
+    LTEXT "前缀", 2002, 200, 31, 45, 8
+    CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
+    CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
+    RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
+    GROUPBOX "前缀", -1, 7, 64, 238, 102
+    GROUPBOX "规则", -1, 7, 170, 238, 60
+END
+
+110 DIALOGEX 0, 0, 227, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 1003, 7, 7, 213, 8
+    LTEXT "", 1039, 7, 23, 213, 8
+    EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "确定", 1, 116, 62, 50, 14
+    PUSHBUTTON "取消", 2, 170, 62, 50, 14
+END
+
+111 DIALOGEX 0, 0, 252, 124
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "等待"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "选择提示继续拨号序列之前等待的类型。", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "等待拨号音(&D)", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "等待完成语音消息(&V)", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "等待一个特定的时间长度:(&T)", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
+    LTEXT "秒(&S)", -1, 58, 81, 187, 8
+    DEFPUSHBUTTON "确定", 1, 141, 103, 50, 14
+    PUSHBUTTON "取消", 2, 195, 103, 50, 14
+END
+
+112 DIALOGEX 0, 0, 252, 111
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "目标号码"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "此步骤将把您将拨入电话卡序列的目标数。当拨打目标号码，你想拨数中的哪些部分?:", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "拨打国家/地区代码(&C)", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "拨区号(&A)", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "拨号码(&N)", 1008, 7, 71, 238, 10, WS_DISABLED
+    DEFPUSHBUTTON "确定", 1, 141, 92, 50, 14
+    PUSHBUTTON "取消", 2, 195, 92, 50, 14
+END
+
+113 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "高级"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 20, 20
+    LTEXT "在此计算机上安装下列电话服务提供程序:", -1, 40, 7, 205, 8
+    LTEXT "提供商:(&P)", -1, 7, 35, 238, 8
+    LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    PUSHBUTTON "添加...(&D)", 1005, 87, 197, 50, 14
+    PUSHBUTTON "删除(&R)", 1024, 141, 197, 50, 14
+    PUSHBUTTON "配置...(&C)", 1031, 195, 197, 50, 14
+END
+
+114 DIALOGEX 20, 15, 252, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "添加提供程序"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "选择你想从下面列表中安装的提供程序并单击添加。", 2000, 7, 7, 241, 8
+    LTEXT "电话服务提供程序:(&T)", -1, 7, 23, 144, 10
+    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "添加(&A)", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "取消", 2, 195, 106, 50, 14
+END
+
+115 DIALOGEX 10, 10, 303, 228
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "位置信息"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
+    LTEXT "您可以使任何电话或调制解调器的连接之前，电脑需要以下有关您当前的位置信息。", 2000, 107, 15, 188, 25
+    LTEXT "你现在在什么国家/地区?(&W)", -1, 107, 43, 189, 10
+    COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "现在你的是什么区号 (或城市代码) ?(&C)", -1, 107, 74, 189, 10
+    EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
+    LTEXT "如果您需要指定承运人代码，是什么?(&R)", -1, 107, 105, 189, 10
+    EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "如果你拨一个号码才能拨打外线，它是什么?(&O)", -1, 107, 137, 189, 10
+    EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "在此位置的电话系统使用:", -1, 107, 168, 189, 10
+    AUTORADIOBUTTON "音频拨号(&T)", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "脉冲拨号(&P)", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    DEFPUSHBUTTON "确定", 1, 192, 204, 50, 14
+    PUSHBUTTON "取消", 2, 246, 204, 50, 14
+END
+
+400 DIALOGEX 0, 0, 290, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
+    LTEXT "您可以使任何电话或调制解调器的连接之前，电脑需要以下有关您当前的位置信息。", 2000, 95, 2, 188, 25
+    LTEXT "你现在在什么国家/地区?(&W)", -1, 95, 30, 188, 10
+    COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "现在你的是什么区号 (或城市代码) ?(&C)", -1, 95, 61, 188, 10
+    EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
+    LTEXT "如果你拨一个号码才能拨打外线，它是什么?(&O)", -1, 95, 96, 188, 10
+    EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "在此位置的电话系统使用:", -1, 95, 129, 159, 10
+    AUTORADIOBUTTON "音频拨号(&T)", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "脉冲拨号(&P)", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+END
+
+500 DIALOGEX 0, 0, 235, 88
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "ReactOS 浏览器"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 504, 501, 13, 14, 21, 20
+    LTEXT "", 502, 47, 15, 180, 32
+    AUTOCHECKBOX "在将来，一直信任此页(&I)", 503, 50, 47, 147, 12
+    DEFPUSHBUTTON "确定(&O)", 505, 110, 65, 50, 14
+    PUSHBUTTON "取消(&C)", 506, 164, 65, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    1 "电话和调制解调器选项"
+    2 "配置拨号规则和使用调制解调器的属性。"
+    3 "位置"
+    4 "若要创建一个新的位置，单击新建。"
+    5 "新位置"
+    6 "编辑位置"
+    7 "新名片"
+    8 "编辑名片"
+    9 "区号"
+    10 "前缀"
+    11 "规则"
+    12 "您输入的字符无效。\n\n有效的字符是 0 到 9, *, #, 和逗号。"
+    13 "您输入的字符无效。\n\n有效的字符是 0 到 9, *, #, 空格和逗号。"
+    14 "您输入的字符无效。\n\n有效的字符是 0 到 9."
+    15 "您输入的字符无效。"
+    16 "拨打 %1"
+    17 "拨打 %1 再加上区号"
+    18 "拨打区号"
+    19 "拨打号码而已"
+    20 "全部"
+    21 "选择"
+    22 "编辑区号规则"
+    23 "上面可以查看其描述的列表中选择一个规则或单击新建添加一个规则。"
+    24 "拨打 '%2' 再加上之前的所有 %1 区号之内的电话号码的区号。"
+    25 "%1 区号之内的电话号码前拨打 '%2'。"
+    26 "拨 %1 区号之内的电话号码前区码。"
+    27 "拨 %1 区号之内的电话号码。"
+    28 "拨打 '%2' 再加上之前的 %1 区号之内的电话号码包含您指定的前缀的区号。"
+    29 "拨打 '%2' 的数字前调用包含您指定的前缀 %1 区号之内。"
+    30 "拨区号之前的 %1 区号之内的电话号码包含您指定的前缀。"
+    31 "拨号包含您指定的前缀的 %1 区号之内的电话号码。"
+    32 "拨打所有其它区号之内先 '1' 并且包括所有前缀的区号。"
+    33 "添加前缀"
+    34 "输入用空格或逗号分隔的一个或多个前缀。"
+    35 "指定位数"
+    36 "输入一个或多个数字 (包括 * 和 #) 要拨打。"
+    37 "你试着输入一个无效字符。\n\n有效的字符是 0 到 9 和空格。"
+    38 "等待 %1! d!秒。"
+    39 "先拨访问号码。"
+    40 "拨号的帐号。"
+    41 "拨号的 PIN 号码。"
+    42 "等待拨号音。"
+    43 "等待留言结束。"
+    44 "拨打国家/地区代码、 区号和号码。"
+    45 "拨国家 (地区) 代码和号码。"
+    46 "拨区号和号码。"
+    47 "拨打国家/地区代码。"
+    48 "拨区号。"
+    49 "拨打号码。"
+    50 "拨打长途电话中。"
+    51 "拨打国际电话中。"
+    52 "拨打本地电话中。"
+    53 "没有定义为应如何使用此电话卡的规则。"
+    54 "您必须输入此位置的长途载体代码。"
+    55 "您必须输入此位置的名称。"
+    56 "您必须输入此位置的地区代码。"
+    57 "您必须选择要拨打要禁用呼叫等待的号码。"
+    58 "您打的电话必须选择国家或地区。"
+    59 "缺少的信息"
+    60 "你所输入的位置名称已在使用。请输入一个唯一的名称。"
+    61 "此电话卡缺少一些必需的信息。使用此卡，请单击编辑，提供更多的信息，或选择另一个卡。"
+    62 "您必须选择一个默认电话卡。从列表中，选择一个卡，或单击新建创建一个新的卡。"
+    63 "您必须输入电话卡名称。"
+    64 "您必须输入帐户号码。"
+    65 "您必须输入的 PIN 号码。"
+    66 "没有定义该电话卡的规则。若要创建一个规则，请选择长途、 国际或本地电话选项卡。"
+    67 "你长途规则需要您的电话卡长途访问号码。"
+    68 "您的国际规则需要您的电话卡国际访问号码。"
+    69 "您的本地规则需要您的电话卡的本地访问号码。"
+    70 "无"
+    71 "确实要删除选定的电话服务提供程序吗?"
+    72 "< 没有服务提供商安装 >"
+    73 "您必须输入此规则适用的前缀。"
+    74 "数字:(&D)"
+    75 "前缀:(&P)"
+    76 "你试着输入一个无效字符。\n\n有效的字符是 0 至 9，空格和逗号。"
+    77 "确认删除"
+    78 "是否确实要删除此位置?"
+    79 "确实要删除此电话卡吗?"
+    80 "是否确实要删除此区号规则?"
+    81 "您必须输入要拨打的号码。"
+    82 "您输入的电话卡名称已在使用。请输入一个唯一的名称。"
+    83 "ReactOS 需要从中你将拨号的位置电话信息。如果您取消没有提供此信息，此程序可能无法正常拨号时。此外，一些应用程序响应您取消此对话框由立即重新发布它。\n确实要取消吗?"
+    84 "确认取消"
+    85 "我的位置"
+    86 "< 没有服务提供商可用于安装 >"
+    87 "您输入的字符无效。\n\n有效的字符是 0 到 9，A 到 D，*，#，+，!，空格和逗号。"
+    88 "您必须输入此位置国际承运人代码。"
+    89 "您必须输入此位置的承运人代码。"
+    90 "此页正在尝试进行或监视电话呼叫或其他多媒体连接您的计算机上。\n您想允许它继续吗?"
+    91 "此页正在尝试访问您的网络上的目录信息。\n你想允许它继续吗?"
+    92 "此页尝试访问或更改网络会议信息。\n你想允许它继续吗?"
+    93 "此页尝试访问或更改注册表信息。\n你想允许它继续吗?"
+    1064 "不能打开电话和调制解调器控制面板。你可能有问题启动电话服务。"
+    1065 "删除提供商"
+    15800 "23"
+    15801 "0,""None (Direct Dial)"","""","""","""","""","""","""","""","""",1"
+    15802 "1,""AT&T Direct Dial via 1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1"
+    15803 "2,""AT&T via 1010ATT0"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010288"",""1010288"",1"
+    15804 "3,""AT&T via 1-800-321-0288"","""",""G"",""J$TFG$TH"",""J$T01EFG$TH"","""","""",""18003210288"",""18003210288"",1"
+    15805 "4,""MCI Direct Dial via 10102221"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010222"",""1010222"",1"
+    15806 "5,""MCI via 10102220"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010222"",""1010222"",1"
+    15807 "6,""MCI via 1-800-888-8000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18008888000"",""18008888000"",1"
+    15808 "7,""MCI via 1-800-674-0700"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006740700"",""18006740700"",1"
+    15809 "8,""MCI via 1-800-674-7000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006747000"",""18006747000"",1"
+    15810 "9,""US Sprint Direct Dial via 10103331"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010333"",""1010333"",1"
+    15811 "10,""US Sprint via 10103330"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010333"",""1010333"",1"
+    15812 "11,""US Sprint via 1-800-877-8000"","""",""G"",""J,,,T0FG,,H"",""J,,,T01EFG#,H"","""","""",""18008778000"",""18008778000"",1"
+    15813 "12,""Calling Card via 0"","""",""G"",""0FG$TH"",""01EFG$TH"","""","""","""","""",1"
+    15814 "13,""Carte France Telecom"","""",""T3010,H,0FG#"",""T3010,H,0FG#"",""T3010,H,00EFG#"","""","""","""","""",1"
+    15815 "14,""Mercury (UK)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,0FG"","""",""0500800800"",""0500800800"",""0500800800"",1"
+    15816 "15,""British Telecom (UK)"","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1"
+    15817 "16,""CLEAR Communications (New Zealand)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1"
+    15818 "17,""Telecom New Zealand"","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1"
+    15819 "18,""Global Card (Taiwan to USA)"","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1"
+    15820 "19,""Telstra (Australia) via 1818 (voice)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1"
+    15821 "20,""Telstra (Australia) via 1818 (fax)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1"
+    15822 "21,""Optus (Australia) via 1812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1"
+    15823 "22,""Optus (Australia) via 008551812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""008551812"",1"
+END

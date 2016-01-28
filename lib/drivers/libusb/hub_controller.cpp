@@ -312,7 +312,7 @@ CHubController::QueryStatusChangeEndpoint(
     // Get the number of ports and check each one for device connected
     //
     m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
-    DPRINT1("[%s] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", m_USBType, Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+    DPRINT("[%s] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", m_USBType, Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
 
     TransferBuffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
 
@@ -323,11 +323,11 @@ CHubController::QueryStatusChangeEndpoint(
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
-        DPRINT1("[%s] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
+        DPRINT("[%s] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
 
 
         //
-        // If theres a flag in PortChange return TRUE so the SCE Irp will be completed
+        // If there's a flag in PortChange return TRUE so the SCE Irp will be completed
         //
         if (PortChange != 0)
         {
@@ -3680,13 +3680,10 @@ CHubController::HandleQueryInterface(
         //
         // Interface version 0
         //
-        if (IoStack->Parameters.QueryInterface.Version >= 0)
-        {
-            InterfaceHub->Size = IoStack->Parameters.QueryInterface.Size;
-            InterfaceHub->BusContext = PVOID(this);
-            InterfaceHub->InterfaceReference = USBI_InterfaceReference;
-            InterfaceHub->InterfaceDereference = USBI_InterfaceDereference;
-        }
+        InterfaceHub->Size = IoStack->Parameters.QueryInterface.Size;
+        InterfaceHub->BusContext = PVOID(this);
+        InterfaceHub->InterfaceReference = USBI_InterfaceReference;
+        InterfaceHub->InterfaceDereference = USBI_InterfaceDereference;
 
         //
         // Interface version 1
@@ -3768,17 +3765,14 @@ CHubController::HandleQueryInterface(
         //
         // interface version 0
         //
-        if (IoStack->Parameters.QueryInterface.Version >= 0)
-        {
-            InterfaceDI->Size = IoStack->Parameters.QueryInterface.Size;
-            InterfaceDI->BusContext = PVOID(this);
-            InterfaceDI->InterfaceReference = USBI_InterfaceReference;
-            InterfaceDI->InterfaceDereference = USBI_InterfaceDereference;
-            InterfaceDI->GetUSBDIVersion = USBDI_GetUSBDIVersion;
-            InterfaceDI->QueryBusTime = USBDI_QueryBusTime;
-            InterfaceDI->SubmitIsoOutUrb = USBDI_SubmitIsoOutUrb;
-            InterfaceDI->QueryBusInformation = USBDI_QueryBusInformation;
-        }
+        InterfaceDI->Size = IoStack->Parameters.QueryInterface.Size;
+        InterfaceDI->BusContext = PVOID(this);
+        InterfaceDI->InterfaceReference = USBI_InterfaceReference;
+        InterfaceDI->InterfaceDereference = USBI_InterfaceDereference;
+        InterfaceDI->GetUSBDIVersion = USBDI_GetUSBDIVersion;
+        InterfaceDI->QueryBusTime = USBDI_QueryBusTime;
+        InterfaceDI->SubmitIsoOutUrb = USBDI_SubmitIsoOutUrb;
+        InterfaceDI->QueryBusInformation = USBDI_QueryBusInformation;
 
         //
         // interface version 1
@@ -3935,7 +3929,7 @@ CHubController::CreatePDO(
         }
     }
 
-    DPRINT1("CHubController::CreatePDO: DeviceName %wZ\n", &DeviceName);
+    DPRINT("CHubController::CreatePDO: DeviceName %wZ\n", &DeviceName);
 
     //
     // fixup device stack voodoo part #1

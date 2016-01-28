@@ -3162,8 +3162,10 @@ xmlFARegExecRollBack(xmlRegExecCtxtPtr exec) {
 	    exec->status = -6;
 	    return;
 	}
-	memcpy(exec->counts, exec->rollbacks[exec->nbRollbacks].counts,
+	if (exec->counts) {
+	    memcpy(exec->counts, exec->rollbacks[exec->nbRollbacks].counts,
 	       exec->comp->nbCounters * sizeof(int));
+	}
     }
 
 #ifdef DEBUG_REGEXP_EXEC
@@ -4091,7 +4093,7 @@ rollback:
 	     */
 	    exec->determinist = 0;
 	    xmlFARegExecRollBack(exec);
-	    if (exec->status == 0) {
+	    if ((exec->inputStack != NULL ) && (exec->status == 0)) {
 		value = exec->inputStack[exec->index].value;
 		data = exec->inputStack[exec->index].data;
 #ifdef DEBUG_PUSH
@@ -4306,7 +4308,7 @@ xmlRegExecGetValues(xmlRegExecCtxtPtr exec, int err,
 		    (*nbval)++;
 		}
 	    } else {
-                if ((exec->comp->states[trans->to] != NULL) &&
+                if ((exec->comp != NULL) && (exec->comp->states[trans->to] != NULL) &&
 		    (exec->comp->states[trans->to]->type !=
 		     XML_REGEXP_SINK_STATE)) {
 		    if (atom->neg)
@@ -5707,8 +5709,6 @@ xmlAutomataNewTransition(xmlAutomataPtr am, xmlAutomataStatePtr from,
     if (atom == NULL)
         return(NULL);
     atom->data = data;
-    if (atom == NULL)
-	return(NULL);
     atom->valuep = xmlStrdup(token);
 
     if (xmlFAGenerateTransitions(am, from, to, atom) < 0) {

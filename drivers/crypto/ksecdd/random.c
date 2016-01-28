@@ -76,6 +76,9 @@ KsecReadMachineSpecificCounters(
         MachineSpecificCounters->Pmc1 = __readpmc(1);
     }
 #endif
+#elif defined(_M_ARM)
+    /* Read the Cycle Counter Register */
+    MachineSpecificCounters->Ccr = _MoveFromCoprocessor(CP15_PMCCNTR);
 #else
     #error Implement me!
 #endif

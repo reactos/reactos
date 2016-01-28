@@ -9,11 +9,11 @@ BEGIN
     GROUPBOX "Prisijungimo nuostatos", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Ryšio nuostatos", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Įveskite serverio adresą", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Įveskite serverio adresą.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Serveris:", IDC_STATIC, 47, 41, 30, 8
     LTEXT "Vartotojo vardas:", IDC_STATIC, 47, 58, 60, 8
-    COMBOBOX IDC_SERVERCOMBO, 107, 39, 113, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    COMBOBOX IDC_SERVERCOMBO, 107, 39, 113, 13, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_NAMEEDIT, 107, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Saugoti", IDC_SAVE, 67, 139, 50, 14
     PUSHBUTTON "Saugoti kaip...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Atidaryti...", IDC_OPEN, 177, 139, 50, 14
@@ -57,6 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 spalvos (15 bitų)"
     IDS_HIGHCOLOR16 "65,536 spalvos (16 bitų)"
     IDS_HIGHCOLOR24 "16,777,216 spalvų (24 bitai)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu taškų"
     IDS_FULLSCREEN "Visas ekranas"
     IDS_BROWSESERVER "<Daugiau...>"

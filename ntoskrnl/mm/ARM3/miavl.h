@@ -28,9 +28,30 @@
 #define PRTL_BALANCED_LINKS         PMMADDRESS_NODE
 #define MI_ASSERT(x)                ASSERT(x)
 
+/* We need to rename the functions to prevent conflicts when not inlined! */
+#define RtlpFindAvlTableNodeOrParent MiFindAvlTableNodeOrParent
+#define RtlpPromoteAvlTreeNode MiPromoteAvlTreeNode
+#define RtlpRebalanceAvlTreeNode MiRebalanceAvlTreeNode
+#define RtlpInsertAvlTreeNode MiInsertAvlTreeNode
+#define RtlpDeleteAvlTreeNode MiDeleteAvlTreeNode
+
+/* These are implementation specific */
+#define RtlpCopyAvlNodeData MiCopyAvlNodeData
+#define RtlpAvlCompareRoutine MiAvlCompareRoutine
+#define RtlSetParent MiSetParent
+#define RtlSetBalance MiSetBalance
+#define RtlBalance MiBalance
+#define RtlParentAvl MiParentAvl
+#define RtlRightChildAvl MiRightChildAvl
+#define RtlLeftChildAvl MiLeftChildAvl
+#define RtlIsLeftChildAvl MiIsLeftChildAvl
+#define RtlIsRightChildAvl MiIsRightChildAvl
+#define RtlInsertAsLeftChildAvl MiInsertAsLeftChildAvl
+#define RtlInsertAsRightChildAvl MiInsertAsRightChildAvl
+
 FORCEINLINE
 VOID
-RtlpCopyAvlNodeData(IN PRTL_BALANCED_LINKS Node1,
+MiCopyAvlNodeData(IN PRTL_BALANCED_LINKS Node1,
                     IN PRTL_BALANCED_LINKS Node2)
 {
     Node1->u1.Parent = Node2->u1.Parent;
@@ -40,7 +61,7 @@ RtlpCopyAvlNodeData(IN PRTL_BALANCED_LINKS Node1,
 
 FORCEINLINE
 RTL_GENERIC_COMPARE_RESULTS
-RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,
+MiAvlCompareRoutine(IN PRTL_AVL_TABLE Table,
                       IN PVOID Buffer,
                       IN PVOID UserData)
 {
@@ -62,7 +83,7 @@ RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,
 
 FORCEINLINE
 VOID
-RtlSetParent(IN PRTL_BALANCED_LINKS Node,
+MiSetParent(IN PRTL_BALANCED_LINKS Node,
              IN PRTL_BALANCED_LINKS Parent)
 {
     Node->u1.Parent = (PRTL_BALANCED_LINKS)((ULONG_PTR)Parent | (Node->u1.Balance & 0x3));
@@ -70,7 +91,7 @@ RtlSetParent(IN PRTL_BALANCED_LINKS Node,
 
 FORCEINLINE
 VOID
-RtlSetBalance(IN PRTL_BALANCED_LINKS Node,
+MiSetBalance(IN PRTL_BALANCED_LINKS Node,
               IN SCHAR Balance)
 {
     Node->u1.Balance = Balance;
@@ -78,56 +99,49 @@ RtlSetBalance(IN PRTL_BALANCED_LINKS Node,
 
 FORCEINLINE
 SCHAR
-RtlBalance(IN PRTL_BALANCED_LINKS Node)
+MiBalance(IN PRTL_BALANCED_LINKS Node)
 {
     return (SCHAR)Node->u1.Balance;
 }
 
 FORCEINLINE
 PRTL_BALANCED_LINKS
-RtlParentAvl(IN PRTL_BALANCED_LINKS Node)
+MiParentAvl(IN PRTL_BALANCED_LINKS Node)
 {
     return (PRTL_BALANCED_LINKS)((ULONG_PTR)Node->u1.Parent & ~3);
 }
 
 FORCEINLINE
-BOOLEAN
-RtlIsRootAvl(IN PRTL_BALANCED_LINKS Node)
-{
-   return (RtlParentAvl(Node) == Node);
-}
-
-FORCEINLINE
 PRTL_BALANCED_LINKS
-RtlRightChildAvl(IN PRTL_BALANCED_LINKS Node)
+MiRightChildAvl(IN PRTL_BALANCED_LINKS Node)
 {
     return Node->RightChild;
 }
 
 FORCEINLINE
 PRTL_BALANCED_LINKS
-RtlLeftChildAvl(IN PRTL_BALANCED_LINKS Node)
+MiLeftChildAvl(IN PRTL_BALANCED_LINKS Node)
 {
     return Node->LeftChild;
 }
 
 FORCEINLINE
 BOOLEAN
-RtlIsLeftChildAvl(IN PRTL_BALANCED_LINKS Node)
+MiIsLeftChildAvl(IN PRTL_BALANCED_LINKS Node)
 {
    return (RtlLeftChildAvl(RtlParentAvl(Node)) == Node);
 }
 
 FORCEINLINE
 BOOLEAN
-RtlIsRightChildAvl(IN PRTL_BALANCED_LINKS Node)
+MiIsRightChildAvl(IN PRTL_BALANCED_LINKS Node)
 {
    return (RtlRightChildAvl(RtlParentAvl(Node)) == Node);
 }
 
 FORCEINLINE
 VOID
-RtlInsertAsLeftChildAvl(IN PRTL_BALANCED_LINKS Parent,
+MiInsertAsLeftChildAvl(IN PRTL_BALANCED_LINKS Parent,
                         IN PRTL_BALANCED_LINKS Node)
 {
     Parent->LeftChild = Node;
@@ -136,7 +150,7 @@ RtlInsertAsLeftChildAvl(IN PRTL_BALANCED_LINKS Parent,
 
 FORCEINLINE
 VOID
-RtlInsertAsRightChildAvl(IN PRTL_BALANCED_LINKS Parent,
+MiInsertAsRightChildAvl(IN PRTL_BALANCED_LINKS Parent,
                          IN PRTL_BALANCED_LINKS Node)
 {
     Parent->RightChild = Node;

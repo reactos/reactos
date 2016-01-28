@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for smooth module.   */
 /*                                                                         */
-/*  Copyright 2009 by                                                      */
+/*  Copyright 2009-2015 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,9 +20,10 @@
 #define __FTSPIC_H__
 
 
-FT_BEGIN_HEADER
-
 #include FT_INTERNAL_PIC_H
+
+
+FT_BEGIN_HEADER
 
 #ifndef FT_CONFIG_OPTION_PIC
 

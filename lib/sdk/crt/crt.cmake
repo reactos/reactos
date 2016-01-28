@@ -34,6 +34,7 @@ list(APPEND CRT_SOURCE
     float/nafter.c
     float/scalb.c
     locale/locale.c
+    math/abs.c
     math/acos.c
     math/adjust.c
     math/asin.c
@@ -51,12 +52,12 @@ list(APPEND CRT_SOURCE
     math/j0_y0.c
     math/j1_y1.c
     math/jn_yn.c
+    math/labs.c
     math/ldiv.c
     math/logf.c
     math/modf.c
     math/powf.c
     math/rand.c
-    math/sqrtf.c
     math/s_modf.c
     math/sinf.c
     math/sinh.c
@@ -446,23 +447,23 @@ elseif(ARCH STREQUAL "amd64")
         float/amd64/fpreset.S
         float/amd64/logb.S
         # math/amd64/acos.S
-        math/amd64/acosf.S
+        # math/amd64/acosf.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S
-        math/amd64/ceilf.S
+        # math/amd64/ceilf.S
         math/amd64/exp.S
         math/amd64/fabs.S
         math/amd64/floor.S
-        math/amd64/floorf.S
+        # math/amd64/floorf.S
         math/amd64/fmod.S
-        math/amd64/fmodf.S
+        # math/amd64/fmodf.S
         math/amd64/ldexp.S
         math/amd64/log.S
         math/amd64/log10.S
         math/amd64/pow.S
         math/amd64/sqrt.S
-        math/amd64/sqrtf.S
+        # math/amd64/sqrtf.S
         math/amd64/tan.S
         setjmp/amd64/setjmp.s)
 
@@ -474,12 +475,82 @@ elseif(ARCH STREQUAL "amd64")
         list(APPEND CRT_ASM_SOURCE
             except/amd64/cpp.s)
     endif()
+elseif(ARCH STREQUAL "arm")
+    list(APPEND CRT_SOURCE
+        except/arm/ehandler.c
+        math/fabsf.c
+        math/sqrt.c
+        math/arm/__rt_sdiv.c
+        math/arm/__rt_sdiv64_worker.c
+        math/arm/__rt_udiv.c
+        math/arm/__rt_udiv64_worker.c
+    )
+    list(APPEND CRT_ASM_SOURCE
+        except/arm/_abnormal_termination.s
+        except/arm/_except_handler2.s
+        except/arm/_except_handler3.s
+        except/arm/_global_unwind2.s
+        except/arm/_local_unwind2.s
+        except/arm/chkstk_asm.s
+        float/arm/_clearfp.s
+        float/arm/_controlfp.s
+        float/arm/_fpreset.s
+        float/arm/_statusfp.s
+        math/arm/atan.s
+        math/arm/atan2.s
+        math/arm/ceil.s
+        math/arm/exp.s
+        math/arm/fabs.s
+        math/arm/fmod.s
+        math/arm/floor.s
+        math/arm/ldexp.s
+        math/arm/log.s
+        math/arm/log10.s
+        math/arm/pow.s
+        math/arm/tan.s
+        math/arm/_logb.s
+        math/arm/__dtoi64.s
+        math/arm/__dtou64.s
+        math/arm/__i64tod.s
+        math/arm/__i64tos.s
+        math/arm/__stoi64.s
+        math/arm/__stou64.s
+        math/arm/__u64tod.s
+        math/arm/__u64tos.s
+        math/arm/__rt_sdiv64.s
+        math/arm/__rt_srsh.s
+        math/arm/__rt_udiv64.s
+        setjmp/arm/setjmp.s
+    )
+    if(MSVC)
+        list(APPEND CRT_ASM_SOURCE
+            except/arm/cpp.s)
+    endif()
 endif()
 
 if(NOT ARCH STREQUAL "i386")
     list(APPEND CRT_SOURCE
+        math/_chgsignf.c
+        math/_copysignf.c
+        math/_hypotf.c
+        math/acosf.c
+        math/asinf.c
+        math/atan2f.c
+        math/atanf.c
+        math/ceilf.c
         math/cos.c
+        math/coshf.c
+        math/expf.c
+        math/floorf.c
+        math/fmodf.c
+        math/log10f.c
+        math/modff.c
         math/sin.c
+        math/sinhf.c
+        math/sqrt.c
+        math/sqrtf.c
+        math/tanf.c
+        math/tanhf.c
         math/stubs.c
         mem/memchr.c
         mem/memcpy.c

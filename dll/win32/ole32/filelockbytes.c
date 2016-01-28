@@ -29,7 +29,6 @@ typedef struct FileLockBytesImpl
 {
     ILockBytes ILockBytes_iface;
     LONG ref;
-    ULARGE_INTEGER filesize;
     HANDLE hfile;
     DWORD flProtect;
     LPWSTR pwcsName;
@@ -45,10 +44,6 @@ static inline FileLockBytesImpl *impl_from_ILockBytes(ILockBytes *iface)
 /***********************************************************
  * Prototypes for private methods
  */
-
-/* Note that this evaluates a and b multiple times, so don't
- * pass expressions with side effects. */
-#define ROUND_UP(a, b) ((((a) + (b) - 1)/(b))*(b))
 
 /****************************************************************************
  *      GetProtectMode
@@ -88,8 +83,6 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
   This->ILockBytes_iface.lpVtbl = &FileLockBytesImpl_Vtbl;
   This->ref = 1;
   This->hfile = hFile;
-  This->filesize.u.LowPart = GetFileSize(This->hfile,
-					 &This->filesize.u.HighPart);
   This->flProtect = GetProtectMode(openFlags);
 
   if(pwcsName) {
@@ -108,8 +101,6 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
   }
   else
     This->pwcsName = NULL;
-
-  TRACE("file len %u\n", This->filesize.u.LowPart);
 
   *pLockBytes = &This->ILockBytes_iface;
 
@@ -228,7 +219,6 @@ static HRESULT WINAPI FileLockBytesImpl_WriteAt(
       ULONG*         pcbWritten)  /* [out] */
 {
     FileLockBytesImpl* This = impl_from_ILockBytes(iface);
-    ULONG size_needed = ulOffset.u.LowPart + cb;
     ULONG bytes_left = cb;
     const BYTE *writePtr = pv;
     BOOL ret;
@@ -246,27 +236,19 @@ static HRESULT WINAPI FileLockBytesImpl_WriteAt(
     if (pcbWritten)
         *pcbWritten = 0;
 
-    if (size_needed > This->filesize.u.LowPart)
-    {
-        ULARGE_INTEGER newSize;
-        newSize.u.HighPart = 0;
-        newSize.u.LowPart = size_needed;
-        ILockBytes_SetSize(iface, newSize);
-    }
-
     offset.QuadPart = ulOffset.QuadPart;
 
     ret = SetFilePointerEx(This->hfile, offset, NULL, FILE_BEGIN);
 
     if (!ret)
-        return STG_E_READFAULT;
+        return STG_E_WRITEFAULT;
 
     while (bytes_left)
     {
         ret = WriteFile(This->hfile, writePtr, bytes_left, &cbWritten, NULL);
 
         if (!ret)
-            return STG_E_READFAULT;
+            return STG_E_WRITEFAULT;
 
         if (pcbWritten)
             *pcbWritten += cbWritten;
@@ -296,10 +278,7 @@ static HRESULT WINAPI FileLockBytesImpl_SetSize(ILockBytes* iface, ULARGE_INTEGE
     HRESULT hr = S_OK;
     LARGE_INTEGER newpos;
 
-    if (This->filesize.u.LowPart == newSize.u.LowPart)
-        return hr;
-
-    TRACE("from %u to %u\n", This->filesize.u.LowPart, newSize.u.LowPart);
+    TRACE("new size %u\n", newSize.u.LowPart);
 
     newpos.QuadPart = newSize.QuadPart;
     if (SetFilePointerEx(This->hfile, newpos, NULL, FILE_BEGIN))
@@ -307,22 +286,64 @@ static HRESULT WINAPI FileLockBytesImpl_SetSize(ILockBytes* iface, ULARGE_INTEGE
         SetEndOfFile(This->hfile);
     }
 
-    This->filesize = newSize;
     return hr;
+}
+
+static HRESULT get_lock_error(void)
+{
+    switch (GetLastError())
+    {
+    case ERROR_LOCK_VIOLATION: return STG_E_LOCKVIOLATION; break;
+    case ERROR_ACCESS_DENIED:  return STG_E_ACCESSDENIED; break;
+    case ERROR_NOT_SUPPORTED:  return STG_E_INVALIDFUNCTION; break;
+    default:
+        FIXME("no mapping for error %d\n", GetLastError());
+        return STG_E_INVALIDFUNCTION;
+    }
 }
 
 static HRESULT WINAPI FileLockBytesImpl_LockRegion(ILockBytes* iface,
     ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
+    OVERLAPPED ol;
+    DWORD lock_flags = LOCKFILE_FAIL_IMMEDIATELY;
+
+    TRACE("ofs %u count %u flags %x\n", libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+
+    if (dwLockType & LOCK_WRITE)
+        return STG_E_INVALIDFUNCTION;
+
+    if (dwLockType & (LOCK_EXCLUSIVE|LOCK_ONLYONCE))
+        lock_flags |= LOCKFILE_EXCLUSIVE_LOCK;
+
+    ol.hEvent = 0;
+    ol.u.s.Offset = libOffset.u.LowPart;
+    ol.u.s.OffsetHigh = libOffset.u.HighPart;
+
+    if (LockFileEx(This->hfile, lock_flags, 0, cb.u.LowPart, cb.u.HighPart, &ol))
+        return S_OK;
+    return get_lock_error();
 }
 
 static HRESULT WINAPI FileLockBytesImpl_UnlockRegion(ILockBytes* iface,
     ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
+    OVERLAPPED ol;
+
+    TRACE("ofs %u count %u flags %x\n", libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+
+    if (dwLockType & LOCK_WRITE)
+        return STG_E_INVALIDFUNCTION;
+
+    ol.hEvent = 0;
+    ol.u.s.Offset = libOffset.u.LowPart;
+    ol.u.s.OffsetHigh = libOffset.u.HighPart;
+
+    if (UnlockFileEx(This->hfile, 0, cb.u.LowPart, cb.u.HighPart, &ol))
+        return S_OK;
+    return get_lock_error();
 }
 
 static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
@@ -341,8 +362,11 @@ static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
         pstatstg->pwcsName = NULL;
 
     pstatstg->type = STGTY_LOCKBYTES;
-    pstatstg->cbSize = This->filesize;
+
+    pstatstg->cbSize.u.LowPart = GetFileSize(This->hfile, &pstatstg->cbSize.u.HighPart);
     /* FIXME: If the implementation is exported, we'll need to set other fields. */
+
+    pstatstg->grfLocksSupported = LOCK_EXCLUSIVE|LOCK_ONLYONCE|WINE_LOCK_READ;
 
     return S_OK;
 }

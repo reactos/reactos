@@ -42,6 +42,9 @@ UINT get_type_size( CIMTYPE type )
     {
     case CIM_BOOLEAN:
         return sizeof(int);
+    case CIM_SINT8:
+    case CIM_UINT8:
+        return sizeof(INT8);
     case CIM_SINT16:
     case CIM_UINT16:
         return sizeof(INT16);
@@ -100,6 +103,12 @@ HRESULT get_value( const struct table *table, UINT row, UINT column, LONGLONG *v
     case CIM_DATETIME:
     case CIM_STRING:
         *val = (INT_PTR)*(const WCHAR **)ptr;
+        break;
+    case CIM_SINT8:
+        *val = *(const INT8 *)ptr;
+        break;
+    case CIM_UINT8:
+        *val = *(const UINT8 *)ptr;
         break;
     case CIM_SINT16:
         *val = *(const INT16 *)ptr;
@@ -205,6 +214,12 @@ HRESULT set_value( const struct table *table, UINT row, UINT column, LONGLONG va
     case CIM_STRING:
         *(WCHAR **)ptr = (WCHAR *)(INT_PTR)val;
         break;
+    case CIM_SINT8:
+        *(INT8 *)ptr = val;
+        break;
+    case CIM_UINT8:
+        *(UINT8 *)ptr = val;
+        break;
     case CIM_SINT16:
         *(INT16 *)ptr = val;
         break;
@@ -263,9 +278,14 @@ void free_row_values( const struct table *table, UINT row )
         if (!(table->columns[i].type & COL_FLAG_DYNAMIC)) continue;
 
         type = table->columns[i].type & COL_TYPE_MASK;
-        if (type == CIM_STRING || type == CIM_DATETIME || (type & CIM_FLAG_ARRAY))
+        if (type == CIM_STRING || type == CIM_DATETIME)
         {
             if (get_value( table, row, i, &val ) == S_OK) heap_free( (void *)(INT_PTR)val );
+        }
+        else if (type & CIM_FLAG_ARRAY)
+        {
+            if (get_value( table, row, i, &val ) == S_OK)
+                destroy_array( (void *)(INT_PTR)val, type & CIM_TYPE_MASK );
         }
     }
 }
@@ -383,31 +403,6 @@ BSTR get_method_name( const WCHAR *class, UINT index )
     for (i = 0; i < table->num_cols; i++)
     {
         if (table->columns[i].type & COL_FLAG_METHOD)
-        {
-            if (index == count)
-            {
-                ret = SysAllocString( table->columns[i].name );
-                release_table( table );
-                return ret;
-            }
-            count++;
-        }
-    }
-    release_table( table );
-    return NULL;
-}
-
-BSTR get_property_name( const WCHAR *class, UINT index )
-{
-    struct table *table;
-    UINT i, count = 0;
-    BSTR ret;
-
-    if (!(table = grab_table( class ))) return NULL;
-
-    for (i = 0; i < table->num_cols; i++)
-    {
-        if (!(table->columns[i].type & COL_FLAG_METHOD))
         {
             if (index == count)
             {

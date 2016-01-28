@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/registry.c
+ * FILE:            base/setup/usetup/registry.c
  * PURPOSE:         Registry creation functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -560,7 +560,7 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
                                   &ObjectAttributes);
               if (!NT_SUCCESS(Status))
                 {
-                  DPRINT("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
                   continue;  /* ignore if it doesn't exist */
                 }
             }
@@ -571,7 +571,7 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
                                         &ObjectAttributes);
               if (!NT_SUCCESS(Status))
                 {
-                  DPRINT("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
                   continue;
                 }
             }

@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights. You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code. No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision. In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change. Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee. Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution. In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government. In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACTBL1_H__
 #define __ACTBL1_H__
@@ -145,6 +73,7 @@
 #define ACPI_SIG_SBST           "SBST"      /* Smart Battery Specification Table */
 #define ACPI_SIG_SLIT           "SLIT"      /* System Locality Distance Information Table */
 #define ACPI_SIG_SRAT           "SRAT"      /* System Resource Affinity Table */
+#define ACPI_SIG_NFIT           "NFIT"      /* NVDIMM Firmware Interface Table */
 
 
 /*
@@ -834,25 +763,28 @@ typedef struct acpi_table_madt
 
 enum AcpiMadtType
 {
-    ACPI_MADT_TYPE_LOCAL_APIC           = 0,
-    ACPI_MADT_TYPE_IO_APIC              = 1,
-    ACPI_MADT_TYPE_INTERRUPT_OVERRIDE   = 2,
-    ACPI_MADT_TYPE_NMI_SOURCE           = 3,
-    ACPI_MADT_TYPE_LOCAL_APIC_NMI       = 4,
-    ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE  = 5,
-    ACPI_MADT_TYPE_IO_SAPIC             = 6,
-    ACPI_MADT_TYPE_LOCAL_SAPIC          = 7,
-    ACPI_MADT_TYPE_INTERRUPT_SOURCE     = 8,
-    ACPI_MADT_TYPE_LOCAL_X2APIC         = 9,
-    ACPI_MADT_TYPE_LOCAL_X2APIC_NMI     = 10,
-    ACPI_MADT_TYPE_GENERIC_INTERRUPT    = 11,
-    ACPI_MADT_TYPE_GENERIC_DISTRIBUTOR  = 12,
-    ACPI_MADT_TYPE_RESERVED             = 13    /* 13 and greater are reserved */
+    ACPI_MADT_TYPE_LOCAL_APIC               = 0,
+    ACPI_MADT_TYPE_IO_APIC                  = 1,
+    ACPI_MADT_TYPE_INTERRUPT_OVERRIDE       = 2,
+    ACPI_MADT_TYPE_NMI_SOURCE               = 3,
+    ACPI_MADT_TYPE_LOCAL_APIC_NMI           = 4,
+    ACPI_MADT_TYPE_LOCAL_APIC_OVERRIDE      = 5,
+    ACPI_MADT_TYPE_IO_SAPIC                 = 6,
+    ACPI_MADT_TYPE_LOCAL_SAPIC              = 7,
+    ACPI_MADT_TYPE_INTERRUPT_SOURCE         = 8,
+    ACPI_MADT_TYPE_LOCAL_X2APIC             = 9,
+    ACPI_MADT_TYPE_LOCAL_X2APIC_NMI         = 10,
+    ACPI_MADT_TYPE_GENERIC_INTERRUPT        = 11,
+    ACPI_MADT_TYPE_GENERIC_DISTRIBUTOR      = 12,
+    ACPI_MADT_TYPE_GENERIC_MSI_FRAME        = 13,
+    ACPI_MADT_TYPE_GENERIC_REDISTRIBUTOR    = 14,
+    ACPI_MADT_TYPE_GENERIC_TRANSLATOR       = 15,
+    ACPI_MADT_TYPE_RESERVED                 = 16    /* 16 and greater are reserved */
 };
 
 
 /*
- * MADT Sub-tables, correspond to Type in ACPI_SUBTABLE_HEADER
+ * MADT Subtables, correspond to Type in ACPI_SUBTABLE_HEADER
  */
 
 /* 0: Processor Local APIC */
@@ -1002,24 +934,37 @@ typedef struct acpi_madt_local_x2apic_nmi
 } ACPI_MADT_LOCAL_X2APIC_NMI;
 
 
-/* 11: Generic Interrupt (ACPI 5.0) */
+/* 11: Generic Interrupt (ACPI 5.0 + ACPI 6.0 changes) */
 
 typedef struct acpi_madt_generic_interrupt
 {
     ACPI_SUBTABLE_HEADER    Header;
     UINT16                  Reserved;           /* Reserved - must be zero */
-    UINT32                  GicId;
+    UINT32                  CpuInterfaceNumber;
     UINT32                  Uid;
     UINT32                  Flags;
     UINT32                  ParkingVersion;
     UINT32                  PerformanceInterrupt;
     UINT64                  ParkedAddress;
     UINT64                  BaseAddress;
+    UINT64                  GicvBaseAddress;
+    UINT64                  GichBaseAddress;
+    UINT32                  VgicInterrupt;
+    UINT64                  GicrBaseAddress;
+    UINT64                  ArmMpidr;
+    UINT8                   EfficiencyClass;
+    UINT8                   Reserved2[3];
 
 } ACPI_MADT_GENERIC_INTERRUPT;
 
+/* Masks for Flags field above */
 
-/* 12: Generic Distributor (ACPI 5.0) */
+/* ACPI_MADT_ENABLED                    (1)      Processor is usable if set */
+#define ACPI_MADT_PERFORMANCE_IRQ_MODE  (1<<1)  /* 01: Performance Interrupt Mode */
+#define ACPI_MADT_VGIC_IRQ_MODE         (1<<2)  /* 02: VGIC Maintenance Interrupt mode */
+
+
+/* 12: Generic Distributor (ACPI 5.0 + ACPI 6.0 changes) */
 
 typedef struct acpi_madt_generic_distributor
 {
@@ -1028,16 +973,73 @@ typedef struct acpi_madt_generic_distributor
     UINT32                  GicId;
     UINT64                  BaseAddress;
     UINT32                  GlobalIrqBase;
-    UINT32                  Reserved2;          /* Reserved - must be zero */
+    UINT8                   Version;
+    UINT8                   Reserved2[3];       /* Reserved - must be zero */
 
 } ACPI_MADT_GENERIC_DISTRIBUTOR;
+
+/* Values for Version field above */
+
+enum AcpiMadtGicVersion
+{
+    ACPI_MADT_GIC_VERSION_NONE          = 0,
+    ACPI_MADT_GIC_VERSION_V1            = 1,
+    ACPI_MADT_GIC_VERSION_V2            = 2,
+    ACPI_MADT_GIC_VERSION_V3            = 3,
+    ACPI_MADT_GIC_VERSION_V4            = 4,
+    ACPI_MADT_GIC_VERSION_RESERVED      = 5     /* 5 and greater are reserved */
+};
+
+
+/* 13: Generic MSI Frame (ACPI 5.1) */
+
+typedef struct acpi_madt_generic_msi_frame
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT16                  Reserved;           /* Reserved - must be zero */
+    UINT32                  MsiFrameId;
+    UINT64                  BaseAddress;
+    UINT32                  Flags;
+    UINT16                  SpiCount;
+    UINT16                  SpiBase;
+
+} ACPI_MADT_GENERIC_MSI_FRAME;
+
+/* Masks for Flags field above */
+
+#define ACPI_MADT_OVERRIDE_SPI_VALUES   (1)
+
+
+/* 14: Generic Redistributor (ACPI 5.1) */
+
+typedef struct acpi_madt_generic_redistributor
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT16                  Reserved;           /* reserved - must be zero */
+    UINT64                  BaseAddress;
+    UINT32                  Length;
+
+} ACPI_MADT_GENERIC_REDISTRIBUTOR;
+
+
+/* 15: Generic Translator (ACPI 6.0) */
+
+typedef struct acpi_madt_generic_translator
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT16                  Reserved;           /* reserved - must be zero */
+    UINT32                  TranslationId;
+    UINT64                  BaseAddress;
+    UINT32                  Reserved2;
+
+} ACPI_MADT_GENERIC_TRANSLATOR;
 
 
 /*
  * Common flags fields for MADT subtables
  */
 
-/* MADT Local APIC flags (LapicFlags) and GIC flags */
+/* MADT Local APIC flags */
 
 #define ACPI_MADT_ENABLED           (1)         /* 00: Processor is usable if set */
 
@@ -1089,6 +1091,186 @@ typedef struct acpi_msct_proximity
     UINT64                  MemoryCapacity;     /* In bytes */
 
 } ACPI_MSCT_PROXIMITY;
+
+
+/*******************************************************************************
+ *
+ * NFIT - NVDIMM Interface Table (ACPI 6.0)
+ *        Version 1
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_nfit
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT32                  Reserved;           /* Reserved, must be zero */
+
+} ACPI_TABLE_NFIT;
+
+/* Subtable header for NFIT */
+
+typedef struct acpi_nfit_header
+{
+    UINT16                   Type;
+    UINT16                   Length;
+
+} ACPI_NFIT_HEADER;
+
+
+/* Values for subtable type in ACPI_NFIT_HEADER */
+
+enum AcpiNfitType
+{
+    ACPI_NFIT_TYPE_SYSTEM_ADDRESS       = 0,
+    ACPI_NFIT_TYPE_MEMORY_MAP           = 1,
+    ACPI_NFIT_TYPE_INTERLEAVE           = 2,
+    ACPI_NFIT_TYPE_SMBIOS               = 3,
+    ACPI_NFIT_TYPE_CONTROL_REGION       = 4,
+    ACPI_NFIT_TYPE_DATA_REGION          = 5,
+    ACPI_NFIT_TYPE_FLUSH_ADDRESS        = 6,
+    ACPI_NFIT_TYPE_RESERVED             = 7     /* 7 and greater are reserved */
+};
+
+/*
+ * NFIT Subtables
+ */
+
+/* 0: System Physical Address Range Structure */
+
+typedef struct acpi_nfit_system_address
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT16                  RangeIndex;
+    UINT16                  Flags;
+    UINT32                  Reserved;           /* Reseved, must be zero */
+    UINT32                  ProximityDomain;
+    UINT8                   RangeGuid[16];
+    UINT64                  Address;
+    UINT64                  Length;
+    UINT64                  MemoryMapping;
+
+} ACPI_NFIT_SYSTEM_ADDRESS;
+
+/* Flags */
+
+#define ACPI_NFIT_ADD_ONLINE_ONLY       (1)     /* 00: Add/Online Operation Only */
+#define ACPI_NFIT_PROXIMITY_VALID       (1<<1)  /* 01: Proximity Domain Valid */
+
+/* Range Type GUIDs appear in the include/acuuid.h file */
+
+
+/* 1: Memory Device to System Address Range Map Structure */
+
+typedef struct acpi_nfit_memory_map
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT32                  DeviceHandle;
+    UINT16                  PhysicalId;
+    UINT16                  RegionId;
+    UINT16                  RangeIndex;
+    UINT16                  RegionIndex;
+    UINT64                  RegionSize;
+    UINT64                  RegionOffset;
+    UINT64                  Address;
+    UINT16                  InterleaveIndex;
+    UINT16                  InterleaveWays;
+    UINT16                  Flags;
+    UINT16                  Reserved;           /* Reserved, must be zero */
+
+} ACPI_NFIT_MEMORY_MAP;
+
+/* Flags */
+
+#define ACPI_NFIT_MEM_SAVE_FAILED       (1)     /* 00: Last SAVE to Memory Device failed */
+#define ACPI_NFIT_MEM_RESTORE_FAILED    (1<<1)  /* 01: Last RESTORE from Memory Device failed */
+#define ACPI_NFIT_MEM_FLUSH_FAILED      (1<<2)  /* 02: Platform flush failed */
+#define ACPI_NFIT_MEM_NOT_ARMED         (1<<3)  /* 03: Memory Device is not armed */
+#define ACPI_NFIT_MEM_HEALTH_OBSERVED   (1<<4)  /* 04: Memory Device observed SMART/health events */
+#define ACPI_NFIT_MEM_HEALTH_ENABLED    (1<<5)  /* 05: SMART/health events enabled */
+
+
+/* 2: Interleave Structure */
+
+typedef struct acpi_nfit_interleave
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT16                  InterleaveIndex;
+    UINT16                  Reserved;           /* Reserved, must be zero */
+    UINT32                  LineCount;
+    UINT32                  LineSize;
+    UINT32                  LineOffset[1];      /* Variable length */
+
+} ACPI_NFIT_INTERLEAVE;
+
+
+/* 3: SMBIOS Management Information Structure */
+
+typedef struct acpi_nfit_smbios
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT32                  Reserved;           /* Reserved, must be zero */
+    UINT8                   Data[1];            /* Variable length */
+
+} ACPI_NFIT_SMBIOS;
+
+
+/* 4: NVDIMM Control Region Structure */
+
+typedef struct acpi_nfit_control_region
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT16                  RegionIndex;
+    UINT16                  VendorId;
+    UINT16                  DeviceId;
+    UINT16                  RevisionId;
+    UINT16                  SubsystemVendorId;
+    UINT16                  SubsystemDeviceId;
+    UINT16                  SubsystemRevisionId;
+    UINT8                   Reserved[6];        /* Reserved, must be zero */
+    UINT32                  SerialNumber;
+    UINT16                  Code;
+    UINT16                  Windows;
+    UINT64                  WindowSize;
+    UINT64                  CommandOffset;
+    UINT64                  CommandSize;
+    UINT64                  StatusOffset;
+    UINT64                  StatusSize;
+    UINT16                  Flags;
+    UINT8                   Reserved1[6];       /* Reserved, must be zero */
+
+} ACPI_NFIT_CONTROL_REGION;
+
+/* Flags */
+
+#define ACPI_NFIT_CONTROL_BUFFERED      (1)     /* Block Data Windows implementation is buffered */
+
+
+/* 5: NVDIMM Block Data Window Region Structure */
+
+typedef struct acpi_nfit_data_region
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT16                  RegionIndex;
+    UINT16                  Windows;
+    UINT64                  Offset;
+    UINT64                  Size;
+    UINT64                  Capacity;
+    UINT64                  StartAddress;
+
+} ACPI_NFIT_DATA_REGION;
+
+
+/* 6: Flush Hint Address Structure */
+
+typedef struct acpi_nfit_flush_address
+{
+    ACPI_NFIT_HEADER        Header;
+    UINT32                  DeviceHandle;
+    UINT16                  HintCount;
+    UINT8                   Reserved[6];        /* Reserved, must be zero */
+    UINT64                  HintAddress[1];     /* Variable length */
+
+} ACPI_NFIT_FLUSH_ADDRESS;
 
 
 /*******************************************************************************
@@ -1146,11 +1328,12 @@ enum AcpiSratType
     ACPI_SRAT_TYPE_CPU_AFFINITY         = 0,
     ACPI_SRAT_TYPE_MEMORY_AFFINITY      = 1,
     ACPI_SRAT_TYPE_X2APIC_CPU_AFFINITY  = 2,
-    ACPI_SRAT_TYPE_RESERVED             = 3     /* 3 and greater are reserved */
+    ACPI_SRAT_TYPE_GICC_AFFINITY        = 3,
+    ACPI_SRAT_TYPE_RESERVED             = 4     /* 4 and greater are reserved */
 };
 
 /*
- * SRAT Sub-tables, correspond to Type in ACPI_SUBTABLE_HEADER
+ * SRAT Subtables, correspond to Type in ACPI_SUBTABLE_HEADER
  */
 
 /* 0: Processor Local APIC/SAPIC Affinity */
@@ -1163,7 +1346,7 @@ typedef struct acpi_srat_cpu_affinity
     UINT32                  Flags;
     UINT8                   LocalSapicEid;
     UINT8                   ProximityDomainHi[3];
-    UINT32                  Reserved;           /* Reserved, must be zero */
+    UINT32                  ClockDomain;
 
 } ACPI_SRAT_CPU_AFFINITY;
 
@@ -1211,6 +1394,23 @@ typedef struct acpi_srat_x2apic_cpu_affinity
 /* Flags for ACPI_SRAT_CPU_AFFINITY and ACPI_SRAT_X2APIC_CPU_AFFINITY */
 
 #define ACPI_SRAT_CPU_ENABLED       (1)         /* 00: Use affinity structure */
+
+
+/* 3: GICC Affinity (ACPI 5.1) */
+
+typedef struct acpi_srat_gicc_affinity
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT32                  ProximityDomain;
+    UINT32                  AcpiProcessorUid;
+    UINT32                  Flags;
+    UINT32                  ClockDomain;
+
+} ACPI_SRAT_GICC_AFFINITY;
+
+/* Flags for ACPI_SRAT_GICC_AFFINITY */
+
+#define ACPI_SRAT_GICC_ENABLED     (1)         /* 00: Use affinity structure */
 
 
 /* Reset to default packing */

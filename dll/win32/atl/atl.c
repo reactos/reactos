@@ -19,6 +19,7 @@
 
 #include <precomp.h>
 
+#include <wine/atlcom.h>
 #include <wingdi.h>
 
 #define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
@@ -244,18 +245,6 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
     return rc;
 }
 
-/* FIXME: should be in a header file */
-typedef struct ATL_PROPMAP_ENTRY
-{
-    LPCOLESTR szDesc;
-    DISPID dispid;
-    const CLSID* pclsidPropPage;
-    const IID* piidDispatch;
-    DWORD dwOffsetData;
-    DWORD dwSizeData;
-    VARTYPE vt;
-} ATL_PROPMAP_ENTRY;
-
 /***********************************************************************
  *           AtlIPersistStreamInit_Load      [atl100.@]
  */
@@ -287,6 +276,18 @@ HRESULT WINAPI AtlIPersistPropertyBag_Load(LPPROPERTYBAG pPropBag, LPERRORLOG pE
                                            IUnknown *pUnk)
 {
     FIXME("(%p, %p, %p, %p, %p)\n", pPropBag, pErrorLog, pMap, pThis, pUnk);
+
+    return S_OK;
+}
+
+/***********************************************************************
+ *           AtlIPersistPropertyBag_Save     [atl100.@]
+ */
+HRESULT WINAPI AtlIPersistPropertyBag_Save(LPPROPERTYBAG pPropBag, BOOL fClearDirty,
+                                           BOOL fSaveAll, ATL_PROPMAP_ENTRY *pMap,
+                                           void *pThis, IUnknown *pUnk)
+{
+    FIXME("(%p, %d, %d, %p, %p, %p)\n", pPropBag, fClearDirty, fSaveAll, pMap, pThis, pUnk);
 
     return S_OK;
 }

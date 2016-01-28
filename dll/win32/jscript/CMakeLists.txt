@@ -10,6 +10,7 @@ list(APPEND SOURCE
     activex.c
     array.c
     bool.c
+    cc_parser.tab.c
     compile.c
     date.c
     decode.c
@@ -48,7 +49,7 @@ add_library(jscript SHARED
 
 add_idl_headers(jscript_idlheader jscript_classes.idl)
 add_typelib(jsglobal.idl)
-add_dependencies(jscript jscript_idlheader stdole2) # jsglobal.tlb needs stdole2.tlb
+add_dependencies(jscript jscript_idlheader stdole2)
 set_module_type(jscript win32dll)
 target_link_libraries(jscript uuid wine)
 add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)

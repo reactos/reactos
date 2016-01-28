@@ -175,7 +175,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '7',         0, {'7', '='} },
   { '8',         0, {'8', '('} },
   { '9',         0, {'9', ')'} },
-  { '0',         0, {'ö', 'Ö'} },
+  { '0',         0, {0xf6, 0xd6} },
   /* First letter row */
   { 'Q',         CAPLOK,   {'q', 'Q'} },
   { 'W',         CAPLOK,   {'w', 'W'} },
@@ -208,10 +208,10 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
   /* Specials */
   /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,0, {'ó', 'Ó'} },
-  { VK_OEM_1       ,0, {'é', 'É'} },
-  { VK_OEM_7       ,0, {'û', 'Û'} },
-  { VK_OEM_3       ,0, {'0', '§'} },
+  { VK_OEM_PLUS    ,0, {0xf3, 0xd3} },
+  { VK_OEM_1       ,0, {0xe9, 0xc9} },
+  { VK_OEM_7       ,0, {0xfb, 0xdb} },
+  { VK_OEM_3       ,0, {'0', 0xa7} },
   { VK_OEM_COMMA   ,0, {',', '?'} },
   { VK_OEM_PERIOD  ,0, {'.', ':'} },
   { VK_OEM_2       ,0, {'-', '_'} },
@@ -229,9 +229,9 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, {'õ', 'Õ', 0x1b /* ESC */} },
-  { VK_OEM_6, 0, {'ú', 'Ú', 0x1d /* GS */} },
-  { VK_OEM_5, 0, {'û','Û', 0x1c /* FS */} },
+  { VK_OEM_4, 0, {0xf5, 0xd5, 0x1b /* ESC */} },
+  { VK_OEM_6, 0, {0xfa, 0xda, 0x1d /* GS */} },
+  { VK_OEM_5, 0, {0xfb, 0xdb, 0x1c /* FS */} },
   { VK_RETURN,0, {'\r', '\r', '\n'} },
   { 0,0 }
 };

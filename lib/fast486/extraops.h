@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * extraops.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,6 +25,10 @@
 #pragma once
 
 /* DEFINES ********************************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeInvalid);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeUnimplemented);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcode0F0B);
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl);
@@ -64,4 +68,3 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExtended);
 #endif // _EXTRAOPS_H_
 
 /* EOF */
-

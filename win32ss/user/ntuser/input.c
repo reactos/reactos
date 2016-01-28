@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          General input functions
- * FILE:             subsystems/win32/win32k/ntuser/input.c
+ * FILE:             win32ss/user/ntuser/input.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -100,7 +100,7 @@ OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceN
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &DeviceName,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -125,17 +125,19 @@ OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceN
  * Reads data from input devices and supports win32 timers
  */
 VOID NTAPI
-RawInputThreadMain()
+RawInputThreadMain(VOID)
 {
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
     IO_STATUS_BLOCK MouIosb, KbdIosb;
     PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
     LARGE_INTEGER ByteOffset;
     //LARGE_INTEGER WaitTimeout;
-    PVOID WaitObjects[3], pSignaledObject = NULL;
-    ULONG cWaitObjects = 0, cMaxWaitObjects = 1;
+    PVOID WaitObjects[4], pSignaledObject = NULL;
+    KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
+    ULONG cWaitObjects = 0, cMaxWaitObjects = 2;
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
+    PVOID ShutdownEvent;
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -153,7 +155,11 @@ RawInputThreadMain()
     StartTheTimers();
     UserLeave();
 
-    for(;;)
+    NT_ASSERT(ghMouseDevice == NULL);
+    NT_ASSERT(ghKeyboardDevice == NULL);
+
+    PoRequestShutdownEvent(&ShutdownEvent);
+    for (;;)
     {
         if (!ghMouseDevice)
         {
@@ -186,6 +192,7 @@ RawInputThreadMain()
 
         /* Reset WaitHandles array */
         cWaitObjects = 0;
+        WaitObjects[cWaitObjects++] = ShutdownEvent;
         WaitObjects[cWaitObjects++] = MasterTimer;
 
         if (ghMouseDevice)
@@ -238,7 +245,7 @@ RawInputThreadMain()
                                               KernelMode,
                                               TRUE,
                                               NULL,//&WaitTimeout,
-                                              NULL);
+                                              WaitBlockArray);
 
             if ((Status >= STATUS_WAIT_0) &&
                 (Status < (STATUS_WAIT_0 + (LONG)cWaitObjects)))
@@ -247,13 +254,23 @@ RawInputThreadMain()
                 pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
 
                 /* Check if it is mouse or keyboard and update status */
-                if (pSignaledObject == &pMouDevice->Event)
+                if ((MouStatus == STATUS_PENDING) &&
+                    (pSignaledObject == &pMouDevice->Event))
+                {
                     MouStatus = MouIosb.Status;
-                else if (pSignaledObject == &pKbdDevice->Event)
+                }
+                else if ((KbdStatus == STATUS_PENDING) &&
+                         (pSignaledObject == &pKbdDevice->Event))
+                {
                     KbdStatus = KbdIosb.Status;
+                }
                 else if (pSignaledObject == MasterTimer)
                 {
                     ProcessTimers();
+                }
+                else if (pSignaledObject == ShutdownEvent)
+                {
+                    break;
                 }
                 else ASSERT(FALSE);
             }
@@ -293,6 +310,23 @@ RawInputThreadMain()
         else if (KbdStatus != STATUS_PENDING)
             ERR("Failed to read from keyboard: %x.\n", KbdStatus);
     }
+
+    if (ghMouseDevice)
+    {
+        (void)ZwCancelIoFile(ghMouseDevice, &MouIosb);
+        ObCloseHandle(ghMouseDevice, KernelMode);
+        ObDereferenceObject(pMouDevice);
+        ghMouseDevice = NULL;
+    }
+
+    if (ghKeyboardDevice)
+    {
+        (void)ZwCancelIoFile(ghKeyboardDevice, &KbdIosb);
+        ObCloseHandle(ghKeyboardDevice, KernelMode);
+        ObDereferenceObject(pKbdDevice);
+        ghKeyboardDevice = NULL;
+    }
+
     ERR("Raw Input Thread Exit!\n");
 }
 
@@ -300,7 +334,7 @@ RawInputThreadMain()
  * CreateSystemThreads
  *
  * Called form dedicated thread in CSRSS. RIT is started in context of this
- * thread because it needs valid Win32 process with TEB initialized
+ * thread because it needs valid Win32 process with TEB initialized.
  */
 DWORD NTAPI
 CreateSystemThreads(UINT Type)
@@ -414,7 +448,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
     do
     {
        if (!gpai) return TRUE;
- 
+
        pai = gpai; // Bottom of the list.
 
        do
@@ -432,7 +466,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
              break;
           }
           pai = pai->paiNext;
-        
+
        } while (pai);
 
        if (!pai && !ptiFrom && !ptiTo) break;
@@ -450,6 +484,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
     MSG msg;
     PATTACHINFO pai;
+    PCURICON_OBJECT CurIcon;
 
     /* Can not be the same thread. */
     if (ptiFrom == ptiTo) return STATUS_INVALID_PARAMETER;
@@ -482,25 +517,16 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 
            ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
 
-           // FIXME: conditions?
-           if (ptiTo->MessageQueue == gpqForeground)
-           {
-              ERR("ptiTo is Foreground\n");
-           }
-           else
-           {
-              ERR("ptiTo NOT Foreground\n");
-           }
-
            if (ptiFrom->MessageQueue == gpqForeground)
            {
               ERR("ptiFrom is Foreground\n");
               ptiTo->MessageQueue->spwndActive  = ptiFrom->MessageQueue->spwndActive;
               ptiTo->MessageQueue->spwndFocus   = ptiFrom->MessageQueue->spwndFocus;
-              ptiTo->MessageQueue->CursorObject = ptiFrom->MessageQueue->CursorObject;
               ptiTo->MessageQueue->spwndCapture = ptiFrom->MessageQueue->spwndCapture;
               ptiTo->MessageQueue->QF_flags    ^= ((ptiTo->MessageQueue->QF_flags ^ ptiFrom->MessageQueue->QF_flags) & QF_CAPTURELOCKED);
-              ptiTo->MessageQueue->CaretInfo    = ptiFrom->MessageQueue->CaretInfo;
+              RtlCopyMemory(&ptiTo->MessageQueue->CaretInfo,
+                            &ptiFrom->MessageQueue->CaretInfo,
+                            sizeof(ptiTo->MessageQueue->CaretInfo));
               IntSetFocusMessageQueue(NULL);
               IntSetFocusMessageQueue(ptiTo->MessageQueue);
               gptiForeground = ptiTo;
@@ -508,14 +534,39 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
            else
            {
               ERR("ptiFrom NOT Foreground\n");
+              if ( ptiTo->MessageQueue->spwndActive == 0 )
+                  ptiTo->MessageQueue->spwndActive = ptiFrom->MessageQueue->spwndActive;
+              if ( ptiTo->MessageQueue->spwndFocus == 0 )
+                  ptiTo->MessageQueue->spwndFocus  = ptiFrom->MessageQueue->spwndFocus;
            }
+
+           CurIcon = ptiFrom->MessageQueue->CursorObject;
 
            MsqDestroyMessageQueue(ptiFrom);
 
+           if (CurIcon)
+           {
+              // Could be global. Keep it above the water line!
+              UserReferenceObject(CurIcon);
+           }
+
+           if (CurIcon && UserObjectInDestroy(UserHMGetHandle(CurIcon)))
+           {
+              UserDereferenceObject(CurIcon);
+              CurIcon = NULL;
+           }
+
            ptiFrom->MessageQueue = ptiTo->MessageQueue;
 
+           // Pass cursor From if To is null. Pass test_SetCursor parent_id == current pti ID.
+           if (CurIcon && ptiTo->MessageQueue->CursorObject == NULL)
+           {
+              ERR("ptiTo receiving ptiFrom Cursor\n");
+              ptiTo->MessageQueue->CursorObject = CurIcon;
+           }
+
            ptiFrom->MessageQueue->cThreads++;
-           ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+           ERR("ptiTo S Share count %u\n", ptiFrom->MessageQueue->cThreads);
 
            IntReferenceMessageQueue(ptiTo->MessageQueue);
         }
@@ -549,11 +600,14 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         }
 
         if (!Hit) return STATUS_INVALID_PARAMETER;
- 
+
         ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
- 
+
         if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
         {
+           PWND spwndActive = ptiTo->MessageQueue->spwndActive;
+           PWND spwndFocus  = ptiTo->MessageQueue->spwndFocus;
+
            if (gptiForeground == ptiFrom)
            {
               ERR("ptiTo is now pti FG.\n");
@@ -561,13 +615,29 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               gptiForeground = ptiTo;
            }
            ptiTo->MessageQueue->cThreads--;
-           ERR("ptiTo E Share count %d\n", ptiTo->MessageQueue->cThreads);
+           ERR("ptiTo E Share count %u\n", ptiTo->MessageQueue->cThreads);
            ASSERT(ptiTo->MessageQueue->cThreads >= 1);
 
            IntDereferenceMessageQueue(ptiTo->MessageQueue);
 
            ptiFrom->MessageQueue = MsqCreateMessageQueue(ptiFrom);
 
+           if (spwndActive)
+           {
+              if (spwndActive->head.pti == ptiFrom)
+              {
+                 ptiFrom->MessageQueue->spwndActive = spwndActive;
+                 ptiTo->MessageQueue->spwndActive = 0;
+              }
+           }
+           if (spwndFocus)
+           {
+              if (spwndFocus->head.pti == ptiFrom)
+              {
+                 ptiFrom->MessageQueue->spwndFocus = spwndFocus;
+                 ptiTo->MessageQueue->spwndFocus = 0;
+              }
+           }
            ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
         }
         else
@@ -580,6 +650,8 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
        ATM which one?
      */
     RtlCopyMemory(ptiTo->MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
+
+    ptiTo->MessageQueue->msgDblClk.message = 0;
 
     /* Generate mouse move message */
     msg.message = WM_MOUSEMOVE;
@@ -603,14 +675,14 @@ NtUserAttachThreadInput(
   BOOL Ret = FALSE;
 
   UserEnterExclusive();
-  ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
+  TRACE("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
 
   pti = IntTID2PTI((HANDLE)idAttach);
   ptiTo = IntTID2PTI((HANDLE)idAttachTo);
 
   if ( !pti || !ptiTo )
   {
-     ERR("AttachThreadInput pti or ptiTo NULL.\n");
+     TRACE("AttachThreadInput pti or ptiTo NULL.\n");
      EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
@@ -618,13 +690,13 @@ NtUserAttachThreadInput(
   Status = UserAttachThreadInput( pti, ptiTo, fAttach);
   if (!NT_SUCCESS(Status))
   {
-     ERR("AttachThreadInput Error Status 0x%x. \n",Status);
+     TRACE("AttachThreadInput Error Status 0x%x. \n",Status);
      EngSetLastError(RtlNtStatusToDosError(Status));
   }
   else Ret = TRUE;
 
 Exit:
-  ERR("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
+  TRACE("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
   UserLeave();
   return Ret;
 }

@@ -27,7 +27,9 @@ public:
 
 
 BEGIN_OBJECT_MAP(ObjectMap)
+OBJECT_ENTRY(CLSID_AutoComplete, CAutoComplete)
 OBJECT_ENTRY(CLSID_ACLMulti, CACLMulti)
+OBJECT_ENTRY(CLSID_ACListISF, CACListISF)
 OBJECT_ENTRY(CLSID_SH_AddressBand, CAddressBand)
 OBJECT_ENTRY(CLSID_AddressEditBox, CAddressEditBox)
 OBJECT_ENTRY(CLSID_BandProxy, CBandProxy)
@@ -38,6 +40,8 @@ OBJECT_ENTRY(CLSID_CCommonBrowser, CCommonBrowser)
 OBJECT_ENTRY(CLSID_GlobalFolderSettings, CGlobalFolderSettings)
 OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
+OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+OBJECT_ENTRY(CLSID_ProgressDialog, CProgressDialog)
 END_OBJECT_MAP()
 
 CBrowseUIModule                             gModule;
@@ -57,12 +61,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 
     if (dwReason == DLL_PROCESS_ATTACH)
     {
-        /* HACK - the global constructors don't run, so I placement new them here */
-        new (&gModule) CBrowseUIModule;
-        new (&gWinModule) CAtlWinModule;
-        new (&_AtlBaseModule) CAtlBaseModule;
-        new (&_AtlComModule) CAtlComModule;
-
         gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls (hInstance);
     }

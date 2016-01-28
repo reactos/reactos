@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/nls.c
+ * FILE:            dll/win32/kernel32/winnls/string/nls.c
  * PURPOSE:         National Language Support
  * PROGRAMMER:      Filip Navara
  *                  Hartmut Birr
@@ -218,6 +218,8 @@ IntGetCodePageEntry(UINT CodePage)
             /* Last error is set by GetLocaleInfoW. */
             return NULL;
         }
+        if (CodePage == 0)
+            return &AnsiCodePage;
     }
     else if (CodePage == CP_MACCP)
     {
@@ -449,13 +451,17 @@ IntMultiByteToWideCharCP(UINT CodePage,
     /* Different handling for DBCS code pages. */
     if (CodePageTable->MaximumCharacterSize > 1)
     {
-        /* FIXME */
-
         UCHAR Char;
         USHORT DBCSOffset;
         LPCSTR MbsEnd = MultiByteString + MultiByteCount;
         INT Count;
 
+        if (Flags & MB_ERR_INVALID_CHARS)
+        {
+            /* FIXME */
+            DPRINT1("IntMultiByteToWideCharCP: MB_ERR_INVALID_CHARS case not implemented!\n");
+        }
+        
         /* Does caller query for output buffer size? */
         if (WideCharCount == 0)
         {
@@ -1269,168 +1275,121 @@ IsValidCodePage(UINT CodePage)
     return GetCPFileNameFromRegistry(CodePage, NULL, 0);
 }
 
-static const signed char
-base64inv[] =
+static inline BOOL utf7_write_w(WCHAR *dst, int dstlen, int *index, WCHAR character)
 {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
-    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
-    -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
-    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1
-};
-
-static VOID Utf7Base64Decode(BYTE *pbDest, LPCSTR pszSrc, INT cchSrc)
-{
-    INT i, j, n;
-    BYTE b;
-
-    for(i = 0; i < cchSrc / 4 * 4; i += 4)
+    if (dstlen > 0)
     {
-        for(j = n = 0; j < 4; )
-        {
-            b = (BYTE) base64inv[(BYTE) *pszSrc++];
-            n |= (((INT) b) << ((3 - j) * 6));
-            j++;
-        }
-        for(j = 0; j < 3; j++)
-            *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+        if (*index >= dstlen)
+            return FALSE;
+
+        dst[*index] = character;
     }
-    for(j = n = 0; j < cchSrc % 4; )
-    {
-        b = (BYTE) base64inv[(BYTE) *pszSrc++];
-        n |= (((INT) b) << ((3 - j) * 6));
-        j++;
-    }
-    for(j = 0; j < ((cchSrc % 4) * 6 / 8); j++)
-        *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+
+    (*index)++;
+
+    return TRUE;
 }
 
-static VOID myswab(LPVOID pv, INT cw)
+static INT Utf7ToWideChar(const char *src, int srclen, WCHAR *dst, int dstlen)
 {
-    LPBYTE pb = (LPBYTE) pv;
-    BYTE b;
-    while(cw > 0)
+    static const signed char base64_decoding_table[] =
     {
-        b = *pb;
-        *pb = pb[1];
-        pb[1] = b;
-        pb += 2;
-        cw--;
-    }
-}
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x00-0x0F */
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x10-0x1F */
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, /* 0x20-0x2F */
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, /* 0x30-0x3F */
+        -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, /* 0x40-0x4F */
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, /* 0x50-0x5F */
+        -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, /* 0x60-0x6F */
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1  /* 0x70-0x7F */
+    };
 
-static INT Utf7ToWideCharSize(LPCSTR pszUtf7, INT cchUtf7)
-{
-    INT n, c, cch;
-    CHAR ch;
-    LPCSTR pch;
+    const char *source_end = src + srclen;
+    int dest_index = 0;
 
-    c = 0;
-    while(cchUtf7 > 0)
+    DWORD byte_pair = 0;
+    short offset = 0;
+
+    while (src < source_end)
     {
-        ch = *pszUtf7++;
-        if (ch == '+')
+        if (*src == '+')
         {
-            ch = *pszUtf7;
-            if (ch == '-')
+            src++;
+            if (src >= source_end)
+                break;
+
+            if (*src == '-')
             {
-                c++;
-                pszUtf7++;
-                cchUtf7 -= 2;
+                /* just a plus sign escaped as +- */
+                if (!utf7_write_w(dst, dstlen, &dest_index, '+'))
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
+                }
+                src++;
                 continue;
             }
-            cchUtf7--;
-            pch = pszUtf7;
-            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 &&
-                  base64inv[*pszUtf7] >= 0)
+
+            do
             {
-                cchUtf7--;
-                pszUtf7++;
+                signed char sextet = *src;
+                if (sextet == '-')
+                {
+                    /* skip over the dash and end base64 decoding
+                     * the current, unfinished byte pair is discarded */
+                    src++;
+                    offset = 0;
+                    break;
+                }
+                if (sextet < 0)
+                {
+                    /* the next character of src is < 0 and therefore not part of a base64 sequence
+                     * the current, unfinished byte pair is NOT discarded in this case
+                     * this is probably a bug in Windows */
+                    break;
+                }
+
+                sextet = base64_decoding_table[sextet];
+                if (sextet == -1)
+                {
+                    /* -1 means that the next character of src is not part of a base64 sequence
+                     * in other words, all sextets in this base64 sequence have been processed
+                     * the current, unfinished byte pair is discarded */
+                    offset = 0;
+                    break;
+                }
+
+                byte_pair = (byte_pair << 6) | sextet;
+                offset += 6;
+
+                if (offset >= 16)
+                {
+                    /* this byte pair is done */
+                    if (!utf7_write_w(dst, dstlen, &dest_index, (byte_pair >> (offset - 16)) & 0xFFFF))
+                    {
+                        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                        return 0;
+                    }
+                    offset -= 16;
+                }
+
+                src++;
             }
-            cch = pszUtf7 - pch;
-            n = (cch * 3) / 8;
-            c += n;
-            if (cchUtf7 > 0 && *pszUtf7 == '-')
-            {
-                pszUtf7++;
-                cchUtf7--;
-            }
+            while (src < source_end);
         }
         else
         {
-            c++;
-            cchUtf7--;
-        }
-    }
-
-    return c;
-}
-
-static INT Utf7ToWideChar(LPCSTR pszUtf7, INT cchUtf7, LPWSTR pszWide, INT cchWide)
-{
-    INT n, c, cch;
-    CHAR ch;
-    LPCSTR pch;
-    WORD *pwsz;
-
-    c = Utf7ToWideCharSize(pszUtf7, cchUtf7);
-    if (cchWide == 0)
-        return c;
-
-    if (cchWide < c)
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
-    }
-
-    while(cchUtf7 > 0)
-    {
-        ch = *pszUtf7++;
-        if (ch == '+')
-        {
-            if (*pszUtf7 == '-')
+            /* we have to convert to unsigned char in case *src < 0 */
+            if (!utf7_write_w(dst, dstlen, &dest_index, (unsigned char)*src))
             {
-                *pszWide++ = L'+';
-                pszUtf7++;
-                cchUtf7 -= 2;
-                continue;
-            }
-            cchUtf7--;
-            pch = pszUtf7;
-            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 &&
-                  base64inv[*pszUtf7] >= 0)
-            {
-                cchUtf7--;
-                pszUtf7++;
-            }
-            cch = pszUtf7 - pch;
-            n = (cch * 3) / 8;
-            pwsz = (WORD *) HeapAlloc(GetProcessHeap(), 0, (n + 1) * sizeof(WORD));
-            if (pwsz == NULL)
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return 0;
-            ZeroMemory(pwsz, n * sizeof(WORD));
-            Utf7Base64Decode((BYTE *) pwsz, pch, cch);
-            myswab(pwsz, n);
-            CopyMemory(pszWide, pwsz, n * sizeof(WORD));
-            HeapFree(GetProcessHeap(), 0, pwsz);
-            pszWide += n;
-            if (cchUtf7 > 0 && *pszUtf7 == '-')
-            {
-                pszUtf7++;
-                cchUtf7--;
             }
-        }
-        else
-        {
-            *pszWide++ = (WCHAR) ch;
-            cchUtf7--;
+            src++;
         }
     }
 
-    return c;
+    return dest_index;
 }
 
 /**
@@ -1523,164 +1482,131 @@ MultiByteToWideChar(UINT CodePage,
     }
 }
 
-static const char mustshift[] =
+static inline BOOL utf7_can_directly_encode(WCHAR codepoint)
 {
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
-};
-
-static const char base64[] =
-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-static INT WideCharToUtf7Size(LPCWSTR pszWide, INT cchWide)
-{
-    WCHAR wch;
-    INT c = 0;
-    BOOL fShift = FALSE;
-
-    while(cchWide > 0)
+    static const BOOL directly_encodable_table[] =
     {
-        wch = *pszWide;
-        if (wch < 0x80 && !mustshift[wch])
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, /* 0x00 - 0x0F */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x10 - 0x1F */
+        1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, /* 0x20 - 0x2F */
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, /* 0x30 - 0x3F */
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x40 - 0x4F */
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, /* 0x50 - 0x5F */
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0x60 - 0x6F */
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1                 /* 0x70 - 0x7A */
+    };
+
+    return codepoint <= 0x7A ? directly_encodable_table[codepoint] : FALSE;
+}
+
+static inline BOOL utf7_write_c(char *dst, int dstlen, int *index, char character)
+{
+    if (dstlen > 0)
+    {
+        if (*index >= dstlen)
+            return FALSE;
+
+        dst[*index] = character;
+    }
+
+    (*index)++;
+
+    return TRUE;
+}
+
+static INT WideCharToUtf7(const WCHAR *src, int srclen, char *dst, int dstlen)
+{
+    static const char base64_encoding_table[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    const WCHAR *source_end = src + srclen;
+    int dest_index = 0;
+
+    while (src < source_end)
+    {
+        if (*src == '+')
         {
-            c++;
-            cchWide--;
-            pszWide++;
+            if (!utf7_write_c(dst, dstlen, &dest_index, '+'))
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            if (!utf7_write_c(dst, dstlen, &dest_index, '-'))
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            src++;
+        }
+        else if (utf7_can_directly_encode(*src))
+        {
+            if (!utf7_write_c(dst, dstlen, &dest_index, *src))
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            src++;
         }
         else
         {
-            if (wch == L'+')
+            unsigned int offset = 0;
+            DWORD byte_pair = 0;
+
+            if (!utf7_write_c(dst, dstlen, &dest_index, '+'))
             {
-                c++;
-                c++;
-                cchWide--;
-                pszWide++;
-                continue;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
             }
-            if (!fShift)
+
+            while (src < source_end && !utf7_can_directly_encode(*src))
             {
-                c++;
-                fShift = TRUE;
-            }
-            pszWide++;
-            cchWide--;
-            c += 3;
-            if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
-            {
-                pszWide++;
-                cchWide--;
-                c += 3;
-                if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
+                byte_pair = (byte_pair << 16) | *src;
+                offset += 16;
+                while (offset >= 6)
                 {
-                    pszWide++;
-                    cchWide--;
-                    c += 2;
+                    if (!utf7_write_c(dst, dstlen, &dest_index, base64_encoding_table[(byte_pair >> (offset - 6)) & 0x3F]))
+                    {
+                        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                        return 0;
+                    }
+                    offset -= 6;
+                }
+                src++;
+            }
+
+            if (offset)
+            {
+                /* Windows won't create a padded base64 character if there's no room for the - sign
+                 * as well ; this is probably a bug in Windows */
+                if (dstlen > 0 && dest_index + 1 >= dstlen)
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
+                }
+
+                byte_pair <<= (6 - offset);
+                if (!utf7_write_c(dst, dstlen, &dest_index, base64_encoding_table[byte_pair & 0x3F]))
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
                 }
             }
-            if (cchWide > 0 && *pszWide < 0x80 && !mustshift[*pszWide])
+
+            /* Windows always explicitly terminates the base64 sequence
+               even though RFC 2152 (page 3, rule 2) does not require this */
+            if (!utf7_write_c(dst, dstlen, &dest_index, '-'))
             {
-                c++;
-                fShift = FALSE;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
             }
         }
     }
-    if (fShift)
-        c++;
 
-    return c;
+    return dest_index;
 }
 
-static INT WideCharToUtf7(LPCWSTR pszWide, INT cchWide, LPSTR pszUtf7, INT cchUtf7)
-{
-    WCHAR wch;
-    INT c, n;
-    WCHAR wsz[3];
-    BOOL fShift = FALSE;
-
-    c = WideCharToUtf7Size(pszWide, cchWide);
-    if (cchUtf7 == 0)
-        return c;
-
-    if (cchUtf7 < c)
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
-    }
-
-    while(cchWide > 0)
-    {
-        wch = *pszWide;
-        if (wch < 0x80 && !mustshift[wch])
-        {
-            *pszUtf7++ = (CHAR) wch;
-            cchWide--;
-            pszWide++;
-        }
-        else
-        {
-            if (wch == L'+')
-            {
-                *pszUtf7++ = '+';
-                *pszUtf7++ = '-';
-                cchWide--;
-                pszWide++;
-                continue;
-            }
-            if (!fShift)
-            {
-                *pszUtf7++ = '+';
-                fShift = TRUE;
-            }
-            wsz[0] = *pszWide++;
-            cchWide--;
-            n = 1;
-            if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
-            {
-                wsz[1] = *pszWide++;
-                cchWide--;
-                n++;
-                if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
-                {
-                    wsz[2] = *pszWide++;
-                    cchWide--;
-                    n++;
-                }
-            }
-            *pszUtf7++ = base64[wsz[0] >> 10];
-            *pszUtf7++ = base64[(wsz[0] >> 4) & 0x3F];
-            *pszUtf7++ = base64[(wsz[0] << 2 | wsz[1] >> 14) & 0x3F];
-            if (n >= 2)
-            {
-                *pszUtf7++ = base64[(wsz[1] >> 8) & 0x3F];
-                *pszUtf7++ = base64[(wsz[1] >> 2) & 0x3F];
-                *pszUtf7++ = base64[(wsz[1] << 4 | wsz[2] >> 12) & 0x3F];
-                if (n >= 3)
-                {
-                    *pszUtf7++ = base64[(wsz[2] >> 6) & 0x3F];
-                    *pszUtf7++ = base64[wsz[2] & 0x3F];
-                }
-            }
-            if (cchWide > 0 && *pszWide < 0x80 && !mustshift[*pszWide])
-            {
-                *pszUtf7++ = '-';
-                fShift = FALSE;
-            }
-        }
-    }
-    if (fShift)
-        *pszUtf7 = '-';
-
-    return c;
-}
-
-static BOOL
-GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
+DWORD
+GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize)
 {
     HRSRC hrsrc;
     LCID lcid;
@@ -1704,6 +1630,16 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
                             (LPWSTR)RT_STRING,
                             MAKEINTRESOURCEW((dwId >> 4) + 1),
                             langId);
+
+    /* english fallback */
+    if(!hrsrc)
+    {
+        hrsrc = FindResourceExW(hCurrentModule,
+                            (LPWSTR)RT_STRING,
+                            MAKEINTRESOURCEW((dwId >> 4) + 1),
+                            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+    }
+
     if (hrsrc)
     {
         HGLOBAL hmem = LoadResource(hCurrentModule, hrsrc);
@@ -1712,18 +1648,32 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
         {
             const WCHAR *p;
             unsigned int i;
+            unsigned int len;
 
             p = LockResource(hmem);
+
             for (i = 0; i < (dwId & 0x0f); i++) p += *p + 1;
 
-            memcpy(lpszDest, p + 1, *p * sizeof(WCHAR));
+            if(dwDestSize == 0)
+                return *p + 1;
+
+            len = *p * sizeof(WCHAR);
+
+            if(len + sizeof(WCHAR) > dwDestSize)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            memcpy(lpszDest, p + 1, len);
             lpszDest[*p] = '\0';
 
             return TRUE;
         }
     }
 
-    DPRINT1("Could not get codepage name. dwResId = %lu\n", dwResId);
+    DPRINT1("Resource not found: dwResId = %lu\n", dwResId);
+    SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
 
@@ -1799,7 +1749,7 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF7;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
 
@@ -1807,7 +1757,7 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF8;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
 
         default:
@@ -1824,7 +1774,7 @@ GetCPInfoExW(UINT CodePage,
 
             lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
-            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
     }

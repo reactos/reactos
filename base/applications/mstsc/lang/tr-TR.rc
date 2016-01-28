@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,13 +12,13 @@ BEGIN
     LTEXT "Sunucu adresini giriniz.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Sunucu:", IDC_STATIC, 47, 41, 25, 8
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 47, 58, 38, 8
-    COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 13, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_NAMEEDIT, 79, 55, 141, 14, WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Sakla", IDC_SAVE, 67, 139, 50, 14
     PUSHBUTTON "Ayrı Sakla...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Aç...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir ayar kütüğünü açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir yapılandırmayı açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -57,6 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 (15 Bitlik) Renk"
     IDS_HIGHCOLOR16 "65,536 (16 Bitlik) Renk"
     IDS_HIGHCOLOR24 "16,777,216 (24 Bitlik) Renk"
+    IDS_HIGHCOLOR32 "En Yüksek Nitelik (32 Bitlik)"
     IDS_PIXEL "%lu*%lu Nokta"
     IDS_FULLSCREEN "Tüm Görüntülük"
     IDS_BROWSESERVER "(Daha Çoğu İçin Göz At...)"

@@ -1,0 +1,32 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {35CEC8A3-2BE6-11D2-8773-92E220524153} = s 'SysTray'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+		}
+	}
+}
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+					NoRemove ShellServiceObjectDelayLoad
+					{
+						val SysTray = s '{35CEC8A3-2BE6-11D2-8773-92E220524153}'
+					}
+				}
+			}
+		}
+	}
+}

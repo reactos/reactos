@@ -16,7 +16,7 @@
 @ stub FilterInstanceFindFirst
 @ stub FilterInstanceFindNext
 @ stub FilterInstanceGetInformation
-@ stub FilterLoad
+@ stdcall FilterLoad(wstr)
 @ stub FilterReplyMessage
 @ stub FilterSendMessage
 @ stdcall FilterUnload(wstr)

@@ -20,6 +20,19 @@
 
 #include "fusionpriv.h"
 
+typedef struct {
+    IAssemblyCache IAssemblyCache_iface;
+
+    LONG ref;
+    HANDLE lock;
+} IAssemblyCacheImpl;
+
+typedef struct {
+    IAssemblyCacheItem IAssemblyCacheItem_iface;
+
+    LONG ref;
+} IAssemblyCacheItemImpl;
+
 static const WCHAR cache_mutex_nameW[] =
     {'_','_','W','I','N','E','_','F','U','S','I','O','N','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};
 
@@ -120,13 +133,6 @@ static BOOL get_assembly_directory(LPWSTR dir, DWORD size, const char *version, 
 
 /* IAssemblyCache */
 
-typedef struct {
-    IAssemblyCache IAssemblyCache_iface;
-
-    LONG ref;
-    HANDLE lock;
-} IAssemblyCacheImpl;
-
 static inline IAssemblyCacheImpl *impl_from_IAssemblyCache(IAssemblyCache *iface)
 {
     return CONTAINING_RECORD(iface, IAssemblyCacheImpl, IAssemblyCache_iface);
@@ -145,7 +151,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryInterface(IAssemblyCache *iface,
         IsEqualIID(riid, &IID_IAssemblyCache))
     {
         IAssemblyCache_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IAssemblyCache_iface;
         return S_OK;
     }
 
@@ -330,16 +336,33 @@ done:
     return hr;
 }
 
+static const IAssemblyCacheItemVtbl AssemblyCacheItemVtbl;
+
 static HRESULT WINAPI IAssemblyCacheImpl_CreateAssemblyCacheItem(IAssemblyCache *iface,
                                                                  DWORD dwFlags,
                                                                  PVOID pvReserved,
                                                                  IAssemblyCacheItem **ppAsmItem,
                                                                  LPCWSTR pszAssemblyName)
 {
-    FIXME("(%p, %d, %p, %p, %s) stub!\n", iface, dwFlags, pvReserved,
+    IAssemblyCacheItemImpl *item;
+
+    FIXME("(%p, %d, %p, %p, %s) semi-stub!\n", iface, dwFlags, pvReserved,
           ppAsmItem, debugstr_w(pszAssemblyName));
 
-    return E_NOTIMPL;
+    if (!ppAsmItem)
+        return E_INVALIDARG;
+
+    *ppAsmItem = NULL;
+
+    item = HeapAlloc(GetProcessHeap(), 0, sizeof(IAssemblyCacheItemImpl));
+    if (!item)
+        return E_OUTOFMEMORY;
+
+    item->IAssemblyCacheItem_iface.lpVtbl = &AssemblyCacheItemVtbl;
+    item->ref = 1;
+
+    *ppAsmItem = &item->IAssemblyCacheItem_iface;
+    return S_OK;
 }
 
 static HRESULT WINAPI IAssemblyCacheImpl_CreateAssemblyScavenger(IAssemblyCache *iface,
@@ -539,12 +562,6 @@ HRESULT WINAPI CreateAssemblyCache(IAssemblyCache **ppAsmCache, DWORD dwReserved
 
 /* IAssemblyCacheItem */
 
-typedef struct {
-    IAssemblyCacheItem IAssemblyCacheItem_iface;
-
-    LONG ref;
-} IAssemblyCacheItemImpl;
-
 static inline IAssemblyCacheItemImpl *impl_from_IAssemblyCacheItem(IAssemblyCacheItem *iface)
 {
     return CONTAINING_RECORD(iface, IAssemblyCacheItemImpl, IAssemblyCacheItem_iface);
@@ -563,7 +580,7 @@ static HRESULT WINAPI IAssemblyCacheItemImpl_QueryInterface(IAssemblyCacheItem *
         IsEqualIID(riid, &IID_IAssemblyCacheItem))
     {
         IAssemblyCacheItem_AddRef(iface);
-        *ppobj = This;
+        *ppobj = &This->IAssemblyCacheItem_iface;
         return S_OK;
     }
 

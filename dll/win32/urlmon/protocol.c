@@ -298,6 +298,12 @@ HINTERNET get_internet_session(IInternetBindInfo *bind_info)
     return internet_session;
 }
 
+void update_user_agent(WCHAR *user_agent)
+{
+    if(internet_session)
+        InternetSetOptionW(internet_session, INTERNET_OPTION_USER_AGENT, user_agent, strlenW(user_agent));
+}
+
 HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,
         IInternetProtocolSink *protocol_sink, IInternetBindInfo *bind_info)
 {

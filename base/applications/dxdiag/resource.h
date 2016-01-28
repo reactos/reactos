@@ -1,5 +1,7 @@
 #pragma once
 
+#define IDC_STATIC -1
+
 /* dialog constants */
 #define IDD_MAIN_DIALOG    100
 #define IDD_SYSTEM_DIALOG  101
@@ -29,6 +31,7 @@
 #define IDC_STATIC_MEM      2008
 #define IDC_STATIC_SWAP     2009
 #define IDC_STATIC_VERSION  2010
+#define IDC_WHQL_SIGN_CHECK 2011
 
 /* DDraw dialog constants */
 #define IDC_STATIC_ADAPTER_ID      3000
@@ -54,6 +57,9 @@
 #define IDC_STATIC_D3DSTATE        3020
 #define IDC_STATIC_AGPSTATE        3021
 #define IDC_TEXT_INFO              3022
+#define IDC_BUTTON_TESTDMUSIC      3023
+#define IDC_BUTTON_TESTDPLAY       3024
+#define IDC_BUTTON_VOICE_OPTIONS   3025
 
 /* DirectSound dialog constants */
 #define IDC_STATIC_DSOUND_NAME      4000
@@ -72,6 +78,14 @@
 #define IDC_BUTTON_TESTDSOUND       4013
 #define IDC_TEXT_DSOUNDINFO         4014
 
+/* DirectMusic dialog constants */
+//#define IDC_LIST_MUSIC_PORTS     5000
+#define IDC_MUSIC_NOTES                      5001
+#define IDC_STATIC_DEFAULT_PORT_ACCELERATION 5002
+#define IDC_BUTTON_DISABLEDMUSIC             5003
+#define IDC_DMUSIC_TEST_LIST                 5004
+#define IDC_MIDI_DLS_COLLECTION              5005
+
 /* DirectInput dialog constants */
 #define IDC_LIST_DEVICE 6000
 #define IDC_TREE_PORT   6001
@@ -79,6 +93,11 @@
 
 /* DirectPlay dialog constants */
 #define IDC_LIST_PROVIDER 7000
+#define IDC_NETWORK_NOTES 7001
+
+/* Help constants */
+#define IDC_BUTTON_SYSINFO       8000
+#define IDC_BUTTON_DDRAW_REFRESH 8001
 
 /* string resource constants */
 #define IDS_MAIN_DIALOG              10000
@@ -133,6 +152,15 @@
 #define IDS_OPTION_NO                10127
 #define IDS_D3DTEST_DESCRIPTION      10128
 #define IDS_D3DTEST_D3Dx             10129
+#define IDS_OS_VERSION               10130
+#define IDS_DMUSIC_DESC              10131
+#define IDS_DMUSIC_TYPE              10132
+#define IDS_DMUSIC_KERNEL            10133
+#define IDS_DMUSIC_IO                10134
+#define IDS_DMUSIC_DLS               10135
+#define IDS_DMUSIC_EXT               10136
+#define IDS_DMUSIC_PORT              10137
+#define IDS_DDDISABLE_MSG            10138
 
 /* icon resource constants */
 #define IDI_APPICON 20000

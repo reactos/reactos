@@ -173,6 +173,9 @@ struct d3d9_device
     LONG device_state;
     BOOL in_destruction;
     BOOL in_scene;
+
+    UINT implicit_swapchain_count;
+    struct d3d9_swapchain **implicit_swapchains;
 };
 
 HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wined3d *wined3d,
@@ -197,12 +200,13 @@ struct d3d9_volume
 {
     IDirect3DVolume9 IDirect3DVolume9_iface;
     struct d3d9_resource resource;
-    struct wined3d_volume *wined3d_volume;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
     struct d3d9_texture *texture;
 };
 
-void volume_init(struct d3d9_volume *volume, struct d3d9_texture *texture,
-        struct wined3d_volume *wined3d_volume, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+void volume_init(struct d3d9_volume *volume, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d9_swapchain
 {
@@ -219,6 +223,8 @@ struct d3d9_surface
 {
     IDirect3DSurface9 IDirect3DSurface9_iface;
     struct d3d9_resource resource;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
     struct wined3d_surface *wined3d_surface;
     struct list rtv_entry;
     struct wined3d_rendertarget_view *wined3d_rtv;
@@ -229,7 +235,7 @@ struct d3d9_surface
 };
 
 struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9_surface *surface) DECLSPEC_HIDDEN;
-void surface_init(struct d3d9_surface *surface, IUnknown *container_parent,
+void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 

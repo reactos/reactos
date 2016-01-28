@@ -2,7 +2,9 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(consrv)
+include_directories(
+    concfg
+    consrv)
 
 list(APPEND CONSRV_SOURCE
     consrv/alias.c
@@ -16,6 +18,7 @@ list(APPEND CONSRV_SOURCE
     consrv/lineinput.c
     consrv/popup.c
     consrv/settings.c
+    consrv/shutdown.c
     consrv/subsysreg.c
     consrv/condrv/coninput.c
     consrv/condrv/conoutput.c
@@ -33,8 +36,7 @@ list(APPEND CONSRV_SOURCE
     consrv/frontends/gui/text.c
     consrv/frontends/tui/tuiterm.c
     # consrv/consrv.rc
-    consrv/consrv.h
-    )
+    consrv/consrv.h)
 
 #
 # Explicitely enable MS extensions to be able to use unnamed (anonymous) nested structs.
@@ -50,11 +52,10 @@ else()
 endif()
 
 add_library(consrv ${CONSRV_SOURCE})
+add_dependencies(consrv psdk)
 add_pch(consrv consrv/consrv.h CONSRV_SOURCE)
 #add_object_library(consrv ${CONSRV_SOURCE})
-
 list(APPEND CONSRV_IMPORT_LIBS psapi)
 list(APPEND CONSRV_DELAY_IMPORT_LIBS ole32)
-list(APPEND CONSRV_TARGET_LINK_LIBS uuid)
-
+list(APPEND CONSRV_TARGET_LINK_LIBS concfg uuid)
 set_module_type(consrv module UNICODE)

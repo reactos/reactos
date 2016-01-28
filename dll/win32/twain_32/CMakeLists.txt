@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 spec2def(twain_32.dll twain_32.spec)
 

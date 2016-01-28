@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/fcb.c
+ * FILE:             drivers/filesystems/cdfs/fcb.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  * UPDATE HISTORY:
@@ -69,7 +69,9 @@ CdfsCreateFCB(PCWSTR FileName)
 {
     PFCB Fcb;
 
-    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(FCB), TAG_FCB);
+    Fcb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(FCB),
+                                CDFS_NONPAGED_FCB_TAG);
     if(!Fcb) return NULL;
 
     RtlZeroMemory(Fcb, sizeof(FCB));
@@ -112,11 +114,11 @@ CdfsDestroyFCB(PFCB Fcb)
     {
         Entry = Fcb->ShortNameList.Flink;
         RemoveEntryList(Entry);
-        ExFreePoolWithTag(Entry, TAG_FCB);
+        ExFreePoolWithTag(Entry, CDFS_SHORT_NAME_TAG);
     }
 
     ExDeleteResourceLite(&Fcb->NameListResource);
-    ExFreePoolWithTag(Fcb, TAG_FCB);
+    ExFreePoolWithTag(Fcb, CDFS_NONPAGED_FCB_TAG);
 }
 
 
@@ -237,7 +239,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
     FileObject = IoCreateStreamFileObject(NULL, Vcb->StorageDevice);
 
-    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), CDFS_CCB_TAG);
     if (newCCB == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -255,11 +257,23 @@ CdfsFCBInitializeCache(PVCB Vcb,
     Fcb->FileObject = FileObject;
     Fcb->DevExt = Vcb;
 
-    CcInitializeCacheMap(FileObject,
-        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-        FALSE,
-        &(CdfsGlobalData->CacheMgrCallbacks),
-        Fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(FileObject,
+            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+            FALSE,
+            &(CdfsGlobalData->CacheMgrCallbacks),
+            Fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        FileObject->FsContext2 = NULL;
+        ExFreePoolWithTag(newCCB, CDFS_CCB_TAG);
+        ObDereferenceObject(FileObject);
+        Fcb->FileObject = NULL;
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     ObDereferenceObject(FileObject);
     Fcb->Flags |= FCB_CACHE_INITIALIZED;
@@ -309,44 +323,6 @@ CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
     }
 
     return(Fcb);
-}
-
-
-static VOID
-CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
-                    PDIR_RECORD Record,
-                    PWSTR Name)
-                    /*
-                    * FUNCTION: Retrieves the file name from a directory record.
-                    */
-{
-    if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
-    {
-        wcscpy(Name, L".");
-    }
-    else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
-    {
-        wcscpy(Name, L"..");
-    }
-    else
-    {
-        if (DeviceExt->CdInfo.JolietLevel == 0)
-        {
-            ULONG i;
-
-            for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
-                Name[i] = (WCHAR)Record->FileId[i];
-            Name[i] = 0;
-        }
-        else
-        {
-            CdfsSwapString(Name,
-                Record->FileId,
-                Record->FileIdLength);
-        }
-    }
-
-    DPRINT("Name '%S'\n", Name);
 }
 
 
@@ -426,7 +402,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 {
     PCCB  newCCB;
 
-    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), CDFS_CCB_TAG);
     if (newCCB == NULL)
     {
         return(STATUS_INSUFFICIENT_RESOURCES);
@@ -444,11 +420,21 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
     if (CdfsFCBIsDirectory(Fcb))
     {
-        CcInitializeCacheMap(FileObject,
-            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-            FALSE,
-            &(CdfsGlobalData->CacheMgrCallbacks),
-            Fcb);
+        _SEH2_TRY
+        {
+            CcInitializeCacheMap(FileObject,
+                (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                FALSE,
+                &(CdfsGlobalData->CacheMgrCallbacks),
+                Fcb);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            FileObject->FsContext2 = NULL;
+            ExFreePoolWithTag(newCCB, CDFS_CCB_TAG);
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
@@ -534,22 +520,29 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
             Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
+        if (!CdfsIsRecordValid(DeviceExt, Record))
+        {
+            RtlFreeUnicodeString(&FileToFindUpcase);
+            CcUnpinData(Context);
+            return STATUS_DISK_CORRUPT_ERROR;
+        }
+
         CdfsGetDirEntryName(DeviceExt, Record, Name);
         DPRINT ("Name '%S'\n", Name);
         DPRINT ("Sector %lu\n", DirectoryFcb->Entry.ExtentLocationL);
         DPRINT ("Offset %lu\n", Offset);
 
         RtlInitUnicodeString(&LongName, Name);
-        ShortName.Length = 0;
-        ShortName.MaximumLength = 26;
-        ShortName.Buffer = ShortNameBuffer;
-        memset(ShortNameBuffer, 0, 26);
+        RtlInitEmptyUnicodeString(&ShortName, ShortNameBuffer, sizeof(ShortNameBuffer));
+        RtlZeroMemory(ShortNameBuffer, sizeof(ShortNameBuffer));
 
         OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
         CdfsShortNameCacheGet(DirectoryFcb, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 
+        ASSERT(LongName.Length >= sizeof(WCHAR));
+        ASSERT(ShortName.Length >= sizeof(WCHAR));
         if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
             FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {

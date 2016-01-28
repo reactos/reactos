@@ -16,6 +16,7 @@
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
 PTEB LdrpTopLevelDllBeingLoadedTeb = NULL;
+PVOID MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -65,7 +66,7 @@ RtlpClearInDbgPrint(VOID)
 
 KPROCESSOR_MODE
 NTAPI
-RtlpGetMode()
+RtlpGetMode(VOID)
 {
    return UserMode;
 }
@@ -125,6 +126,15 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     UNREFERENCED_PARAMETER(Exclusive);
 
     return RtlEnterCriticalSection(&Lock->CriticalSection);
+}
+
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    UNREFERENCED_PARAMETER(Exclusive);
+
+    return RtlTryEnterCriticalSection(&Lock->CriticalSection);
 }
 
 NTSTATUS
@@ -288,8 +298,8 @@ BOOLEAN
 RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    RtlInitializeHandleTable(0xCFFF,
-			    sizeof(RTL_ATOM_HANDLE),
-			    &AtomTable->RtlHandleTable);
+                            sizeof(RTL_ATOM_HANDLE),
+                            &AtomTable->RtlHandleTable);
 
    return TRUE;
 }

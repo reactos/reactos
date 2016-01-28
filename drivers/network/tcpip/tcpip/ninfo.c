@@ -156,18 +156,18 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
                                       PIP_INTERFACE IF,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
-    IPSNMP_INFO SnmpInfo;
+    IPSNMPInfo SnmpInfo;
     UINT IfCount = CountInterfaces();
     UINT RouteCount = CountFIBs(IF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
-    RtlZeroMemory(&SnmpInfo, sizeof(IPSNMP_INFO));
+    RtlZeroMemory(&SnmpInfo, sizeof(SnmpInfo));
 
-    SnmpInfo.NumIf = IfCount;
-    SnmpInfo.NumAddr = 1;
-    SnmpInfo.NumRoutes = RouteCount;
+    SnmpInfo.ipsi_numif = IfCount;
+    SnmpInfo.ipsi_numaddr = 1;
+    SnmpInfo.ipsi_numroutes = RouteCount;
 
     Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo),
 			  Buffer, BufferSize );

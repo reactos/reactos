@@ -854,8 +854,8 @@ found:
 	HeapFree(GetProcessHeap(), 0, wim);
     } else {
         *lpdwUser = (DWORD_PTR)wim;
+        TRACE("Ok (stream=%p)\n", wim->hAcmStream);
     }
-    TRACE("Ok (stream=%p)\n", wim->hAcmStream);
     return MMSYSERR_NOERROR;
 error:
     HeapFree(GetProcessHeap(), 0, wim);

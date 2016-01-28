@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/conio/getch.c
+ * FILE:        lib/sdk/crt/conio/getch.c
  * PURPOSE:     Writes a character to stdout
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

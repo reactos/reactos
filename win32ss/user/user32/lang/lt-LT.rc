@@ -67,6 +67,7 @@ BEGIN
     IDS_IGNORE "&Praleisti"
     IDS_YES "&Taip"
     IDS_NO "&Ne"
+    IDS_CLOSE "&Uþverti"
     IDS_HELP "Pagalba"
     IDS_TRYAGAIN "&Bandyti vël"
     IDS_CONTINUE "Tæ&sti"

@@ -5,14 +5,7 @@
  * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)
  */
 
-/* TODO: #include <exception> instead */
-class type_info {
-public:
-    __declspec(dllimport) virtual ~type_info();
-private:
-    type_info(const type_info &);
-    type_info &operator=(const type_info &);
-};
+#include <typeinfo>
 
 /* These stubs don't need to do anything (those private functions are never
  * called). They need to be in cpprt, though, in order to have the vtable

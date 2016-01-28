@@ -339,7 +339,7 @@ BeepStartIo(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Beep successful, queue a DPC to stop it */
             Status = STATUS_SUCCESS;
-            DueTime.QuadPart = Int32x32To64(BeepParam->Duration, -10000);
+            DueTime.QuadPart = BeepParam->Duration * -10000LL;
             InterlockedIncrement(&DeviceExtension->TimerActive);
             KeSetTimer(&DeviceExtension->Timer, DueTime, &DeviceObject->Dpc);
         }

@@ -27,31 +27,37 @@
 #include <ws2tcpip.h>
 #include <limits.h>
 #include <iphlpapi.h>
+#include <math.h>
 #include "tftpd.h"
 
 //Global Variables
 char serviceName[] = "TFTPServer";
-char displayName[] = "TFTP Server Multithreaded";
-char sVersion[] = "TFTP Server MultiThreaded Version 1.61 Windows Built 1611";
+char displayName[] = "Open TFTP Server, MultiThreaded";
+char sVersion[] = "Open TFTP Server MultiThreaded Version 1.64 Windows Built 2001";
 char iniFile[_MAX_PATH];
 char logFile[_MAX_PATH];
+char lnkFile[_MAX_PATH];
 char tempbuff[256];
+char extbuff[256];
 char logBuff[512];
 char fileSep = '\\';
 char notFileSep = '/';
-WORD blksize = 65464;
+MYWORD blksize = 65464;
 char verbatim = 0;
-WORD timeout = 3;
+MYWORD timeout = 3;
+MYWORD loggingDay;
+data1 network;
+data1 newNetwork;
 data2 cfig;
 //ThreadPool Variables
 HANDLE tEvent;
 HANDLE cEvent;
 HANDLE sEvent;
 HANDLE lEvent;
-BYTE currentServer = UCHAR_MAX;
-WORD totalThreads=0;
-WORD minThreads=1;
-WORD activeThreads=0;
+MYBYTE currentServer = UCHAR_MAX;
+MYWORD totalThreads=0;
+MYWORD minThreads=1;
+MYWORD activeThreads=0;
 
 //Service Variables
 SERVICE_STATUS serviceStatus;
@@ -108,7 +114,17 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
 
         //init
         verbatim = false;
-        init();
+
+        if (_beginthread(init, 0, 0) == 0)
+        {
+            if (cfig.logLevel)
+            {
+                sprintf(logBuff, "Thread Creation Failed");
+                logMess(logBuff, 1);
+            }
+            exit(-1);
+        }
+
         fd_set readfds;
         timeval tv;
         tv.tv_sec = 20;
@@ -122,41 +138,51 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
 
         do
         {
+            network.busy = false;
+
+            if (!network.tftpConn[0].ready || !network.ready)
+            {
+                Sleep(1000);
+                continue;
+            }
+
             FD_ZERO(&readfds);
 
-            for (int i = 0; i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
-                FD_SET(cfig.tftpConn[i].sock, &readfds);
+            for (int i = 0; i < MAX_SERVERS && network.tftpConn[i].ready; i++)
+                FD_SET(network.tftpConn[i].sock, &readfds);
 
-            int fdsReady = select(cfig.maxFD, &readfds, NULL, NULL, &tv);
+            int fdsReady = select(network.maxFD, &readfds, NULL, NULL, &tv);
 
-            for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
+            for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && network.tftpConn[i].ready; i++)
             {
-                if (FD_ISSET(cfig.tftpConn[i].sock, &readfds))
+                if (network.ready)
                 {
-                    WaitForSingleObject(sEvent, INFINITE);
+                    network.busy = true;
 
-                    currentServer = i;
-
-                    if (!totalThreads || activeThreads >= totalThreads)
+                    if (FD_ISSET(network.tftpConn[i].sock, &readfds))
                     {
-                        _beginthread(
-                              processRequest,                 // thread function
-                              0,                            // default security attributes
-                              NULL);                          // argument to thread function
+                        WaitForSingleObject(sEvent, INFINITE);
 
+                        currentServer = i;
+
+                        if (!totalThreads || activeThreads >= totalThreads)
+                        {
+                            _beginthread(
+                                  processRequest,                 // thread function
+                                  0,                            // default security attributes
+                                  NULL);                          // argument to thread function
+
+                        }
+
+                        SetEvent(tEvent);
+                        WaitForSingleObject(sEvent, INFINITE);
+                        fdsReady--;
+                        SetEvent(sEvent);
                     }
-
-                    SetEvent(tEvent);
-                    WaitForSingleObject(sEvent, INFINITE);
-                    fdsReady--;
-                    SetEvent(sEvent);
                 }
             }
         }
         while (WaitForSingleObject(stopServiceEvent, 0) == WAIT_TIMEOUT);
-
-        if (cfig.logfile)
-            fclose(cfig.logfile);
 
         serviceStatus.dwCurrentState = SERVICE_STOP_PENDING;
         SetServiceStatus(serviceStatusHandle, &serviceStatus);
@@ -164,13 +190,18 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
         sprintf(logBuff, "Closing Network Connections...");
         logMess(logBuff, 1);
 
-        for (int i = 0; i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
-            closesocket(cfig.tftpConn[i].sock);
+        closeConn();
 
         WSACleanup();
 
-        sprintf(logBuff, "TFTP Server Stopped !");
+        sprintf(logBuff, "TFTP Server Stopped !\n");
         logMess(logBuff, 1);
+
+        if (cfig.logfile)
+        {
+            fclose(cfig.logfile);
+            cfig.logfile = NULL;
+        }
 
         serviceStatus.dwControlsAccepted &= ~(SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN);
         serviceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -291,7 +322,7 @@ void uninstallService()
 
 void printWindowsError()
 {
-    DWORD dw = GetLastError();
+    MYDWORD dw = GetLastError();
 
     if (dw)
     {
@@ -307,11 +338,8 @@ void printWindowsError()
             (LPTSTR) &lpMsgBuf,
             0, NULL );
 
-        _tprintf(_T("Error: %s\nPress Enter..\n"), (LPTSTR)lpMsgBuf);
+        printf("Error: %s\nPress Enter..\n", (LPTSTR)lpMsgBuf);
         getchar();
-
-        if(lpMsgBuf)
-            LocalFree(lpMsgBuf);
     }
 }
 
@@ -365,7 +393,17 @@ int main(int argc, TCHAR* argv[])
 void runProg()
 {
     verbatim = true;
-    init();
+
+    if (_beginthread(init, 0, 0) == 0)
+    {
+        if (cfig.logLevel)
+        {
+            sprintf(logBuff, "Thread Creation Failed");
+            logMess(logBuff, 1);
+        }
+        exit(-1);
+    }
+
     fd_set readfds;
     timeval tv;
     int fdsReady = 0;
@@ -376,51 +414,75 @@ void runProg()
 
     do
     {
+        network.busy = false;
+
         //printf("Active=%u Total=%u\n",activeThreads, totalThreads);
+
+        if (!network.tftpConn[0].ready || !network.ready)
+        {
+            Sleep(1000);
+            continue;
+        }
 
         FD_ZERO(&readfds);
 
-        for (int i = 0; i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
-            FD_SET(cfig.tftpConn[i].sock, &readfds);
+        for (int i = 0; i < MAX_SERVERS && network.tftpConn[i].ready; i++)
+            FD_SET(network.tftpConn[i].sock, &readfds);
 
-        fdsReady = select(cfig.maxFD, &readfds, NULL, NULL, &tv);
+        fdsReady = select(network.maxFD, &readfds, NULL, NULL, &tv);
+
+        if (!network.ready)
+            continue;
+
+        //errno = WSAGetLastError();
 
         //if (errno)
-        //    printf("%s\n", strerror(errno));
+        //    printf("%d\n", errno);
 
-        for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
+        for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && network.tftpConn[i].ready; i++)
         {
-            if (FD_ISSET(cfig.tftpConn[i].sock, &readfds))
+            if (network.ready)
             {
-                //printf("Request Waiting\n");
+                network.busy = true;
 
-                WaitForSingleObject(sEvent, INFINITE);
-
-                currentServer = i;
-
-                if (!totalThreads || activeThreads >= totalThreads)
+                if (FD_ISSET(network.tftpConn[i].sock, &readfds))
                 {
-                    _beginthread(
-                          processRequest,                 // thread function
-                          0,                            // default security attributes
-                          NULL);                          // argument to thread function
+                    //printf("%d Requests Waiting\n", fdsReady);
+
+                    WaitForSingleObject(sEvent, INFINITE);
+
+                    currentServer = i;
+
+                    if (!totalThreads || activeThreads >= totalThreads)
+                    {
+                        _beginthread(
+                              processRequest,                 // thread function
+                              0,                            // default security attributes
+                              NULL);                          // argument to thread function
+                    }
+                    SetEvent(tEvent);
+
+                    //printf("thread signalled=%u\n",SetEvent(tEvent));
+
+                    WaitForSingleObject(sEvent, INFINITE);
+                    fdsReady--;
+                    SetEvent(sEvent);
                 }
-                SetEvent(tEvent);
-
-                //printf("thread signalled=%u\n",SetEvent(tEvent));
-
-                WaitForSingleObject(sEvent, INFINITE);
-                fdsReady--;
-                SetEvent(sEvent);
             }
         }
     }
     while (true);
 
-    for (int i = 0; i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
-        closesocket(cfig.tftpConn[i].sock);
+    closeConn();
 
     WSACleanup();
+}
+
+void closeConn()
+{
+    for (int i = 0; i < MAX_SERVERS && network.tftpConn[i].loaded; i++)
+        if (network.tftpConn[i].ready)
+            closesocket(network.tftpConn[i].sock);
 }
 
 void processRequest(void *lpParam)
@@ -442,7 +504,7 @@ void processRequest(void *lpParam)
         activeThreads++;
         SetEvent(cEvent);
 
-        if (currentServer >= MAX_SERVERS || !cfig.tftpConn[currentServer].port)
+        if (currentServer >= MAX_SERVERS || !network.tftpConn[currentServer].port)
         {
             SetEvent(sEvent);
             req.attempt = UCHAR_MAX;
@@ -455,7 +517,7 @@ void processRequest(void *lpParam)
         req.clientsize = sizeof(req.client);
         req.sockInd = currentServer;
         currentServer = UCHAR_MAX;
-        req.knock = cfig.tftpConn[req.sockInd].sock;
+        req.knock = network.tftpConn[req.sockInd].sock;
 
         if (req.knock == INVALID_SOCKET)
         {
@@ -475,7 +537,7 @@ void processRequest(void *lpParam)
         {
             if (cfig.hostRanges[0].rangeStart)
             {
-                DWORD iip = ntohl(req.client.sin_addr.s_addr);
+                MYDWORD iip = ntohl(req.client.sin_addr.s_addr);
                 bool allowed = false;
 
                 for (int j = 0; j <= 32 && cfig.hostRanges[j].rangeStart; j++)
@@ -545,11 +607,11 @@ void processRequest(void *lpParam)
 
         sockaddr_in service;
         service.sin_family = AF_INET;
-        service.sin_addr.s_addr = cfig.tftpConn[req.sockInd].server;
+        service.sin_addr.s_addr = network.tftpConn[req.sockInd].server;
 
         if (cfig.minport)
         {
-            for (WORD comport = cfig.minport; ; comport++)
+            for (MYWORD comport = cfig.minport; ; comport++)
             {
                 service.sin_port = htons(comport);
 
@@ -630,7 +692,7 @@ void processRequest(void *lpParam)
 
         inPtr += strlen(inPtr) + 1;
 
-        for (DWORD i = 0; i < strlen(req.filename); i++)
+        for (MYDWORD i = 0; i < strlen(req.filename); i++)
             if (req.filename[i] == notFileSep)
                 req.filename[i] = fileSep;
 
@@ -747,7 +809,7 @@ void processRequest(void *lpParam)
                     if (!strcasecmp(tmp, "blksize"))
                     {
                         tmp += strlen(tmp) + 1;
-                        DWORD val = atol(tmp);
+                        MYDWORD val = atol(tmp);
 
                         if (val < 512)
                             val = 512;
@@ -779,8 +841,6 @@ void processRequest(void *lpParam)
                 req.attempt = UCHAR_MAX;
                 continue;
             }
-
-            setvbuf(req.file, NULL, _IOFBF, req.blksize);
         }
         else
         {
@@ -843,12 +903,14 @@ void processRequest(void *lpParam)
             }
         }
 
+        setvbuf(req.file, NULL, _IOFBF, 5 * req.blksize);
+
         if (*inPtr)
         {
             fetchAck = true;
             char *outPtr = req.mesout.buffer;
             req.mesout.opcode = htons(6);
-            DWORD val;
+            MYDWORD val;
             while (*inPtr)
             {
                 //printf("%s\n", inPtr);
@@ -865,7 +927,7 @@ void processRequest(void *lpParam)
                         val = blksize;
 
                     req.blksize = val;
-                    sprintf(outPtr, "%lu", val);
+                    sprintf(outPtr, "%u", val);
                     outPtr += strlen(outPtr) + 1;
                 }
                 else if (!strcasecmp(inPtr, "tsize"))
@@ -881,7 +943,7 @@ void processRequest(void *lpParam)
                             if (ftell(req.file) >= 0)
                             {
                                 req.tsize = ftell(req.file);
-                                sprintf(outPtr, "%lu", req.tsize);
+                                sprintf(outPtr, "%u", req.tsize);
                                 outPtr += strlen(outPtr) + 1;
                             }
                             else
@@ -909,7 +971,7 @@ void processRequest(void *lpParam)
                     else
                     {
                         req.tsize = 0;
-                        sprintf(outPtr, "%lu", req.tsize);
+                        sprintf(outPtr, "%u", req.tsize);
                         outPtr += strlen(outPtr) + 1;
                     }
                 }
@@ -927,7 +989,7 @@ void processRequest(void *lpParam)
 
                     req.timeout = val;
                     req.expiry = time(NULL) + req.timeout;
-                    sprintf(outPtr, "%lu", val);
+                    sprintf(outPtr, "%u", val);
                     outPtr += strlen(outPtr) + 1;
                 }
 
@@ -939,7 +1001,7 @@ void processRequest(void *lpParam)
                 continue;
 
             errno = 0;
-            req.bytesReady = (DWORD_PTR)outPtr - (DWORD_PTR)&req.mesout;
+            req.bytesReady = (MYDWORD)outPtr - (MYDWORD)&req.mesout;
             //printf("Bytes Ready=%u\n", req.bytesReady);
             send(req.sock, (const char*)&req.mesout, req.bytesReady, 0);
             errno = WSAGetLastError();
@@ -1222,7 +1284,7 @@ void processRequest(void *lpParam)
                 }
                 else
                 {
-                    sprintf(req.serverError.errormessage, "%lu Blocks Served", req.fblock - 1);
+                    sprintf(req.serverError.errormessage, "%u Blocks Served", req.fblock - 1);
                     logMess(&req, 2);
                     req.attempt = UCHAR_MAX;
                     break;
@@ -1313,11 +1375,11 @@ void processRequest(void *lpParam)
                             else
                                 req.attempt = 0;
 
-                            if ((WORD)req.bytesRecd < req.blksize + 4)
+                            if ((MYWORD)req.bytesRecd < req.blksize + 4)
                             {
                                 fclose(req.file);
                                 req.file = 0;
-                                sprintf(req.serverError.errormessage, "%lu Blocks Received", req.fblock);
+                                sprintf(req.serverError.errormessage, "%u Blocks Received", req.fblock);
                                 logMess(&req, 2);
                                 req.attempt = UCHAR_MAX;
                                 break;
@@ -1460,7 +1522,102 @@ bool cleanReq(request* req)
     return (totalThreads <= minThreads);
 }
 
-char* myGetToken(char* buff, BYTE index)
+bool getSection(const char *sectionName, char *buffer, MYBYTE serial, char *fileName)
+{
+    //printf("%s=%s\n",fileName,sectionName);
+    char section[128];
+    sprintf(section, "[%s]", sectionName);
+    myUpper(section);
+    FILE *f = fopen(fileName, "rt");
+    char buff[512];
+    MYBYTE found = 0;
+
+    if (f)
+    {
+        while (fgets(buff, 511, f))
+        {
+            myUpper(buff);
+            myTrim(buff, buff);
+
+            if (strstr(buff, section) == buff)
+            {
+                found++;
+                if (found == serial)
+                {
+                    //printf("%s=%s\n",fileName,sectionName);
+                    while (fgets(buff, 511, f))
+                    {
+                        myTrim(buff, buff);
+
+                        if (strstr(buff, "[") == buff)
+                            break;
+
+                        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || ((*buff) && strchr("/\\?*", (*buff))))
+                        {
+                            buffer += sprintf(buffer, "%s", buff);
+                            buffer++;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        fclose(f);
+    }
+
+    *buffer = 0;
+    *(buffer + 1) = 0;
+    return (found == serial);
+}
+
+FILE *openSection(const char *sectionName, MYBYTE serial, char *fileName)
+{
+    //printf("%s=%s\n",fileName,sectionName);
+    char section[128];
+    sprintf(section, "[%s]", sectionName);
+    myUpper(section);
+    FILE *f = fopen(fileName, "rt");
+    char buff[512];
+    MYBYTE found = 0;
+
+    if (f)
+    {
+        while (fgets(buff, 511, f))
+        {
+            myUpper(buff);
+            myTrim(buff, buff);
+
+            if (strstr(buff, section) == buff)
+            {
+                found++;
+
+                if (found == serial)
+                    return f;
+            }
+        }
+        fclose(f);
+    }
+    return NULL;
+}
+
+char *readSection(char* buff, FILE *f)
+{
+    while (fgets(buff, 511, f))
+    {
+        myTrim(buff, buff);
+
+        if (*buff == '[')
+            break;
+
+        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || ((*buff) && strchr("/\\?*", (*buff))))
+            return buff;
+    }
+
+    fclose(f);
+    return NULL;
+}
+
+char* myGetToken(char* buff, MYBYTE index)
 {
     while (*buff)
     {
@@ -1475,11 +1632,11 @@ char* myGetToken(char* buff, BYTE index)
     return buff;
 }
 
-WORD myTokenize(char *target, char *source, char *sep, bool whiteSep)
+MYWORD myTokenize(char *target, char *source, char *sep, bool whiteSep)
 {
     bool found = true;
     char *dp = target;
-    WORD kount = 0;
+    MYWORD kount = 0;
 
     while (*source)
     {
@@ -1489,7 +1646,7 @@ WORD myTokenize(char *target, char *source, char *sep, bool whiteSep)
             source++;
             continue;
         }
-        else if (whiteSep && *source <= 32)
+        else if (whiteSep && (*source) <= 32)
         {
             found = true;
             source++;
@@ -1540,6 +1697,28 @@ char* myTrim(char *target, char *source)
     return target;
 }
 
+/*
+void mySplit(char *name, char *value, char *source, char splitChar)
+{
+    char *dp = strchr(source, splitChar);
+
+    if (dp)
+    {
+        strncpy(name, source, (dp - source));
+        name[dp - source] = 0;
+        strcpy(value, dp + 1);
+        myTrim(name, name);
+        myTrim(value, value);
+    }
+    else
+    {
+         strcpy(name, source);
+        myTrim(name, name);
+         *value = 0;
+    }
+}
+*/
+
 void mySplit(char *name, char *value, char *source, char splitChar)
 {
     int i = 0;
@@ -1568,55 +1747,8 @@ void mySplit(char *name, char *value, char *source, char splitChar)
     //printf("%s %s\n", name, value);
 }
 
-bool getSection(const char *sectionName, char *buffer, BYTE serial, char *fileName)
-{
-    //printf("%s=%s\n",fileName,sectionName);
-    char section[128];
-    sprintf(section, "[%s]", sectionName);
-    myUpper(section);
-    FILE *f = fopen(fileName, "rt");
-    char buff[512];
-    BYTE found = 0;
 
-    if (f)
-    {
-        while (fgets(buff, 511, f))
-        {
-            myUpper(buff);
-            myTrim(buff, buff);
-
-            if (strstr(buff, section) == buff)
-            {
-                found++;
-                if (found == serial)
-                {
-                    //printf("%s=%s\n",fileName,sectionName);
-                    while (fgets(buff, 511, f))
-                    {
-                        myTrim(buff, buff);
-
-                        if (strstr(buff, "[") == buff)
-                            break;
-
-                        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || (((*buff) && strchr("/\\?*", (*buff)))))
-                        {
-                            buffer += sprintf(buffer, "%s", buff);
-                            buffer++;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        fclose(f);
-    }
-
-    *buffer = 0;
-    *(buffer + 1) = 0;
-    return (found == serial);
-}
-
-char *IP2String(char *target, DWORD ip)
+char *IP2String(char *target, MYDWORD ip)
 {
     data15 inaddr;
     inaddr.ip = ip;
@@ -1645,7 +1777,7 @@ bool isIP(char *string)
 char *myUpper(char *string)
 {
     char diff = 'a' - 'A';
-    WORD len = strlen(string);
+    MYWORD len = strlen(string);
     for (int i = 0; i < len; i++)
         if (string[i] >= 'a' && string[i] <= 'z')
             string[i] -= diff;
@@ -1655,69 +1787,78 @@ char *myUpper(char *string)
 char *myLower(char *string)
 {
     char diff = 'a' - 'A';
-    WORD len = strlen(string);
+    MYWORD len = strlen(string);
     for (int i = 0; i < len; i++)
         if (string[i] >= 'A' && string[i] <= 'Z')
             string[i] += diff;
     return string;
 }
 
-void init()
+void init(void *lpParam)
 {
     memset(&cfig, 0, sizeof(cfig));
 
-    GetModuleFileName(NULL, iniFile, MAX_PATH);
-    char *iniFileExt = strrchr(iniFile, '.');
-    strcpy(iniFileExt, ".ini");
-    GetModuleFileName(NULL, logFile, MAX_PATH);
-    iniFileExt = strrchr(logFile, '.');
-    strcpy(iniFileExt, ".log");
+    GetModuleFileName(NULL, extbuff, _MAX_PATH);
+    char *fileExt = strrchr(extbuff, '.');
+    *fileExt = 0;
+    sprintf(iniFile, "%s.ini", extbuff);
+    sprintf(lnkFile, "%s.url", extbuff);
+    fileExt = strrchr(extbuff, '\\');
+    *fileExt = 0;
+    fileExt++;
+    sprintf(logFile, "%s\\log\\%s%%Y%%m%%d.log", extbuff, fileExt);
 
-    char iniStr[4096];
-    char name[256];
-    char value[256];
+    FILE *f = NULL;
+    char raw[512];
+    char name[512];
+    char value[512];
 
     if (verbatim)
     {
         cfig.logLevel = 2;
         printf("%s\n\n", sVersion);
     }
-    else if (getSection("LOGGING", iniStr, 1, iniFile))
+    else if ((f = openSection("LOGGING", 1, iniFile)))
     {
-        char *iniStrPtr = myGetToken(iniStr, 0);
+        cfig.logLevel = 1;
+        tempbuff[0] = 0;
 
-        if (!iniStrPtr[0] || !strcasecmp(iniStrPtr, "None"))
-            cfig.logLevel = 0;
-        else if (!strcasecmp(iniStrPtr, "Errors"))
-            cfig.logLevel = 1;
-        else if (!strcasecmp(iniStrPtr, "All"))
-            cfig.logLevel = 2;
-        else if (!strcasecmp(iniStrPtr, "Debug"))
-            cfig.logLevel = 3;
-        else
-            cfig.logLevel = UCHAR_MAX;
-    }
-
-    if (!verbatim && cfig.logLevel)
-    {
-        cfig.logfile = fopen(logFile, "wt");
-
-        if (cfig.logfile)
+        while (readSection(raw, f))
         {
-            fclose(cfig.logfile);
-            cfig.logfile = fopen(logFile, "at");
-            fprintf(cfig.logfile, "%s\n", sVersion);
+            if (!strcasecmp(raw, "None"))
+                cfig.logLevel = 0;
+            else if (!strcasecmp(raw, "Errors"))
+                cfig.logLevel = 1;
+            else if (!strcasecmp(raw, "All"))
+                cfig.logLevel = 2;
+            else
+                sprintf(tempbuff, "Section [LOGGING], Invalid LogLevel: %s", raw);
         }
     }
 
-    if (cfig.logLevel == UCHAR_MAX)
+    if (!verbatim && cfig.logLevel && logFile[0])
     {
-        cfig.logLevel = 1;
-        sprintf(logBuff, "Section [LOGGING], Invalid Logging Level: %s, ignored", myGetToken(iniStr, 0));
-        logMess(logBuff, 1);
+        time_t t = time(NULL);
+        tm *ttm = localtime(&t);
+        loggingDay = ttm->tm_yday;
+        strftime(extbuff, sizeof(extbuff), logFile, ttm);
+
+        cfig.logfile = fopen(extbuff, "at");
+
+        if (cfig.logfile)
+        {
+            WritePrivateProfileString("InternetShortcut","URL", extbuff, lnkFile);
+            WritePrivateProfileString("InternetShortcut","IconIndex", "0", lnkFile);
+            WritePrivateProfileString("InternetShortcut","IconFile", extbuff, lnkFile);
+            sprintf(logBuff, "%s Starting..", sVersion);
+            logMess(logBuff, 1);
+
+            if (tempbuff[0])
+                logMess(tempbuff, 0);
+        }
     }
 
-    WORD wVersionRequested = MAKEWORD(1, 1);
+    MYWORD wVersionRequested = MAKEWORD(1, 1);
     WSAStartup(wVersionRequested, &cfig.wsaData);
 
     if (cfig.wsaData.wVersion != wVersionRequested)
@@ -1726,58 +1867,17 @@ void init()
         logMess(logBuff, 1);
     }
 
-    if (getSection("LISTEN-ON", iniStr, 1, iniFile))
+    if ((f = openSection("HOME", 1, iniFile)))
     {
-        char *iniStrPtr = myGetToken(iniStr, 0);
-
-        for (int i = 0; i < MAX_SERVERS && iniStrPtr[0]; iniStrPtr = myGetToken(iniStrPtr, 1))
+        while (readSection(raw, f))
         {
-            strncpy(name, iniStrPtr, UCHAR_MAX);
-            WORD port = 69;
-            char *dp = strchr(name, ':');
-            if (dp)
-            {
-                *dp = 0;
-                dp++;
-                port = atoi(dp);
-            }
+            mySplit(name, value, raw, '=');
 
-            DWORD ip = my_inet_addr(name);
-
-            if (isIP(name) && ip)
-            {
-                for (BYTE j = 0; j < MAX_SERVERS; j++)
-                {
-                    if (cfig.servers[j] == ip)
-                        break;
-                    else if (!cfig.servers[j])
-                    {
-                        cfig.servers[j] = ip;
-                        cfig.ports[j] = port;
-                        i++;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                sprintf(logBuff, "Warning: Section [LISTEN-ON], Invalid IP Address %s, ignored", iniStrPtr);
-                logMess(logBuff, 1);
-            }
-        }
-    }
-
-    if (getSection("HOME", iniStr, 1, iniFile))
-    {
-        char *iniStrPtr = myGetToken(iniStr, 0);
-        for (; iniStrPtr[0]; iniStrPtr = myGetToken(iniStrPtr, 1))
-        {
-            mySplit(name, value, iniStrPtr, '=');
             if (strlen(value))
             {
                 if (!cfig.homes[0].alias[0] && cfig.homes[0].target[0])
                 {
-                    sprintf(logBuff, "Section [HOME], alias and bare path mixup, entry %s ignored", iniStrPtr);
+                    sprintf(logBuff, "Section [HOME], alias and bare path mixup, entry %s ignored", raw);
                     logMess(logBuff, 1);
                 }
                 else if (strchr(name, notFileSep) || strchr(name, fileSep) || strchr(name, '>') || strchr(name, '<') || strchr(name, '.'))
@@ -1791,7 +1891,7 @@ void init()
                     {
                         if (cfig.homes[i].alias[0] && !strcasecmp(name, cfig.homes[i].alias))
                         {
-                            sprintf(logBuff, "Section [HOME], Duplicate Entry: %s ignored", iniStrPtr);
+                            sprintf(logBuff, "Section [HOME], Duplicate Entry: %s ignored", raw);
                             logMess(logBuff, 1);
                             break;
                         }
@@ -1830,17 +1930,17 @@ void init()
             }
             else if (cfig.homes[0].alias[0])
             {
-                sprintf(logBuff, "Section [HOME], alias and bare path mixup, entry %s ignored", iniStrPtr);
+                sprintf(logBuff, "Section [HOME], alias and bare path mixup, entry %s ignored", raw);
                 logMess(logBuff, 1);
             }
             else if (cfig.homes[0].target[0])
             {
-                sprintf(logBuff, "Section [HOME], Duplicate Path: %s ignored", iniStrPtr);
+                sprintf(logBuff, "Section [HOME], Duplicate Path: %s ignored", raw);
                 logMess(logBuff, 1);
             }
             else
             {
-                sprintf(logBuff, "Section [HOME], missing = sign, Invalid Entry: %s ignored", iniStrPtr);
+                sprintf(logBuff, "Section [HOME], missing = sign, Invalid Entry: %s ignored", raw);
                 logMess(logBuff, 1);
             }
         }
@@ -1855,17 +1955,17 @@ void init()
 
     cfig.fileRead = true;
 
-    if (getSection("TFTP-OPTIONS", iniStr, 1, iniFile))
+    if ((f = openSection("TFTP-OPTIONS", 1, iniFile)))
     {
-        char *iniStrPtr = myGetToken(iniStr, 0);
-        for (;strlen(iniStrPtr);iniStrPtr = myGetToken(iniStrPtr, 1))
+        while (readSection(raw, f))
         {
-            mySplit(name, value, iniStrPtr, '=');
+            mySplit(name, value, raw, '=');
+
             if (strlen(value))
             {
                 if (!strcasecmp(name, "blksize"))
                 {
-                    DWORD tblksize = atol(value);
+                    MYDWORD tblksize = atol(value);
 
                     if (tblksize < 512)
                         blksize = 512;
@@ -1944,95 +2044,40 @@ void init()
         }
     }
 
-    if (getSection("ALLOWED-CLIENTS", iniStr, 1, iniFile))
+    if ((f = openSection("ALLOWED-CLIENTS", 1, iniFile)))
     {
-        char *iniStrPtr = myGetToken(iniStr, 0);
-        for (int i = 0; i < 32 && iniStrPtr[0]; iniStrPtr = myGetToken(iniStrPtr, 1))
+        int i = 0;
+
+        while (readSection(raw, f))
         {
-            DWORD rs = 0;
-            DWORD re = 0;
-            mySplit(name, value, iniStrPtr, '-');
-            rs = htonl(my_inet_addr(name));
-
-            if (strlen(value))
-                re = htonl(my_inet_addr(value));
-            else
-                re = rs;
-
-            if (rs && rs != INADDR_NONE && re && re != INADDR_NONE && rs <= re)
+            if (i < 32)
             {
-                cfig.hostRanges[i].rangeStart = rs;
-                cfig.hostRanges[i].rangeEnd = re;
-                i++;
+                MYDWORD rs = 0;
+                MYDWORD re = 0;
+                mySplit(name, value, raw, '-');
+                rs = htonl(my_inet_addr(name));
+
+                if (strlen(value))
+                    re = htonl(my_inet_addr(value));
+                else
+                    re = rs;
+
+                if (rs && rs != INADDR_NONE && re && re != INADDR_NONE && rs <= re)
+                {
+                    cfig.hostRanges[i].rangeStart = rs;
+                    cfig.hostRanges[i].rangeEnd = re;
+                    i++;
+                }
+                else
+                {
+                    sprintf(logBuff, "Section [ALLOWED-CLIENTS] Invalid entry %s in ini file, ignored", raw);
+                    logMess(logBuff, 1);
+                }
             }
-            else
-            {
-                sprintf(logBuff, "Section [ALLOWED-CLIENTS] Invalid entry %s in ini file, ignored", iniStrPtr);
-                logMess(logBuff, 1);
-            }
         }
     }
 
-//    if (!cfig.servers[0])
-//        getServ();
-
-    int i = 0;
-
-    for (int j = 0; j < MAX_SERVERS; j++)
-    {
-         if (j && !cfig.servers[j])
-             break;
-
-         cfig.tftpConn[i].sock = socket(PF_INET,
-                                       SOCK_DGRAM,
-                                       IPPROTO_UDP);
-
-        if (cfig.tftpConn[i].sock == INVALID_SOCKET)
-        {
-            sprintf(logBuff, "Failed to Create Socket");
-            logMess(logBuff, 1);
-            continue;
-        }
-
-        cfig.tftpConn[i].addr.sin_family = AF_INET;
-
-        if (!cfig.ports[j])
-            cfig.ports[j] = 69;
-
-        cfig.tftpConn[i].addr.sin_addr.s_addr = cfig.servers[j];
-        cfig.tftpConn[i].addr.sin_port = htons(cfig.ports[j]);
-
-        socklen_t nRet = bind(cfig.tftpConn[i].sock,
-                              (sockaddr*)&cfig.tftpConn[i].addr,
-                              sizeof(struct sockaddr_in)
-                             );
-
-        if (nRet == SOCKET_ERROR)
-        {
-            closesocket(cfig.tftpConn[i].sock);
-            sprintf(logBuff, "%s Port %u, bind failed", IP2String(tempbuff, cfig.servers[j]), cfig.ports[j]);
-            logMess(logBuff, 1);
-            continue;
-        }
-
-        if (cfig.maxFD < cfig.tftpConn[i].sock)
-            cfig.maxFD = cfig.tftpConn[i].sock;
-
-        cfig.tftpConn[i].server = cfig.tftpConn[i].addr.sin_addr.s_addr;
-        cfig.tftpConn[i].port = htons(cfig.tftpConn[i].addr.sin_port);
-        i++;
-    }
-
-    cfig.maxFD++;
-
-    if (!cfig.tftpConn[0].port)
-    {
-        sprintf(logBuff, "no listening interfaces available, stopping..\nPress Enter to exit\n");
-        logMess(logBuff, 1);
-        getchar();
-        exit(-1);
-    }
-    else if (verbatim)
+    if (verbatim)
     {
         printf("starting TFTP...\n");
     }
@@ -2053,7 +2098,7 @@ void init()
     {
         char temp[128];
 
-        for (WORD i = 0; i <= sizeof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
+        for (MYWORD i = 0; i <= sizeof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
         {
             sprintf(logBuff, "%s", "permitted clients: ");
             sprintf(temp, "%s-", IP2String(tempbuff, htonl(cfig.hostRanges[i].rangeStart)));
@@ -2185,14 +2230,331 @@ void init()
         logMess(logBuff, 1);
     }
 
-    for (int i = 0; i < MAX_SERVERS && cfig.tftpConn[i].port; i++)
+    for (int i = 0; i < MAX_SERVERS && network.tftpConn[i].port; i++)
     {
-        sprintf(logBuff, "listening on: %s:%i", IP2String(tempbuff, cfig.tftpConn[i].server), cfig.tftpConn[i].port);
+        sprintf(logBuff, "listening on: %s:%i", IP2String(tempbuff, network.tftpConn[i].server), network.tftpConn[i].port);
         logMess(logBuff, 1);
     }
+
+    do
+    {
+        memset(&newNetwork, 0, sizeof(data1));
+
+        bool bindfailed = false;
+
+        if ((f = openSection("LISTEN-ON", 1, iniFile)))
+        {
+            MYBYTE i = 0;
+
+            while (readSection(raw, f))
+            {
+                MYWORD port = 69;
+
+                cfig.ifspecified = true;
+                mySplit(name, value, raw, ':');
+
+                if (value[0])
+                    port = atoi(value);
+
+                if(i < MAX_SERVERS)
+                {
+                    if (isIP(name))
+                    {
+                        MYDWORD addr = my_inet_addr(name);
+
+                        if (!addr)
+                        {
+                            newNetwork.listenServers[0] = 0;
+                            newNetwork.listenPorts[0] = port;
+                            fclose(f);
+                            break;
+                        }
+                        else if (!findServer(newNetwork.listenServers, addr))
+                        {
+                            newNetwork.listenServers[i] = addr;
+                            newNetwork.listenPorts[i] = port;
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        sprintf(logBuff, "Warning: Section [LISTEN-ON], Invalid Interface Address %s, ignored", raw);
+                        logMess(logBuff, 1);
+                    }
+                }
+            }
+        }
+
+        if (!cfig.ifspecified)
+        {
+            sprintf(logBuff, "detecting Interfaces..");
+            logMess(logBuff, 1);
+            getInterfaces(&newNetwork);
+
+            for (MYBYTE n = 0; n < MAX_SERVERS && newNetwork.staticServers[n]; n++)
+            {
+                newNetwork.listenServers[n] = newNetwork.staticServers[n];
+                newNetwork.listenPorts[n] = 69;
+            }
+        }
+
+        MYBYTE i = 0;
+
+        for (int j = 0; j < MAX_SERVERS && newNetwork.listenPorts[j]; j++)
+        {
+            int k = 0;
+
+            for (; k < MAX_SERVERS && network.tftpConn[k].loaded; k++)
+            {
+                if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j] && network.tftpConn[k].port == newNetwork.listenPorts[j])
+                    break;
+            }
+
+            if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j] && network.tftpConn[k].port == newNetwork.listenPorts[j])
+            {
+                memcpy(&(newNetwork.tftpConn[i]), &(network.tftpConn[k]), sizeof(tftpConnType));
+
+                if (newNetwork.maxFD < newNetwork.tftpConn[i].sock)
+                    newNetwork.maxFD = newNetwork.tftpConn[i].sock;
+
+                network.tftpConn[k].ready = false;
+                //printf("%d, %s found\n", i, IP2String(tempbuff, newNetwork.tftpConn[i].server));
+                i++;
+                continue;
+            }
+            else
+            {
+                newNetwork.tftpConn[i].sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+                if (newNetwork.tftpConn[i].sock == INVALID_SOCKET)
+                {
+                    bindfailed = true;
+                    sprintf(logBuff, "Failed to Create Socket");
+                    logMess(logBuff, 1);
+                    continue;
+                }
+
+                //printf("Socket %u\n", newNetwork.tftpConn[i].sock);
+
+                errno = 0;
+                newNetwork.tftpConn[i].addr.sin_family = AF_INET;
+                newNetwork.tftpConn[i].addr.sin_addr.s_addr = newNetwork.listenServers[j];
+                newNetwork.tftpConn[i].addr.sin_port = htons(newNetwork.listenPorts[j]);
+                int nRet = bind(newNetwork.tftpConn[i].sock, (sockaddr*)&newNetwork.tftpConn[i].addr, sizeof(struct sockaddr_in));
+
+                if (nRet == SOCKET_ERROR || errno)
+                {
+                    bindfailed = true;
+                    closesocket(newNetwork.tftpConn[i].sock);
+                    sprintf(logBuff, "%s Port %i bind failed", IP2String(tempbuff, newNetwork.listenServers[j]), newNetwork.listenPorts[j]);
+                    logMess(logBuff, 1);
+                    continue;
+                }
+
+                newNetwork.tftpConn[i].loaded = true;
+                newNetwork.tftpConn[i].ready = true;
+                newNetwork.tftpConn[i].server = newNetwork.listenServers[j];
+                newNetwork.tftpConn[i].port = newNetwork.listenPorts[j];
+
+                //printf("%d, %s created\n", i, IP2String(tempbuff, newNetwork.tftpConn[i].server));
+
+                if (newNetwork.maxFD < newNetwork.tftpConn[i].sock)
+                    newNetwork.maxFD = newNetwork.tftpConn[i].sock;
+
+                if (!newNetwork.listenServers[j])
+                    break;
+
+                i++;
+            }
+        }
+
+        if (bindfailed)
+            cfig.failureCount++;
+        else
+            cfig.failureCount = 0;
+
+        closeConn();
+        memcpy(&network, &newNetwork, sizeof(data1));
+
+        //printf("%i %i %i\n", network.tftpConn[0].ready, network.dnsUdpConn[0].ready, network.dnsTcpConn[0].ready);
+
+        if (!network.tftpConn[0].ready)
+        {
+            sprintf(logBuff, "No Static Interface ready, Waiting...");
+            logMess(logBuff, 1);
+            continue;
+        }
+
+        for (int i = 0; i < MAX_SERVERS && network.tftpConn[i].loaded; i++)
+        {
+            sprintf(logBuff, "Listening On: %s:%d", IP2String(tempbuff, network.tftpConn[i].server), network.tftpConn[i].port);
+            logMess(logBuff, 1);
+        }
+
+        network.ready = true;
+
+    } while (detectChange());
+
+    //printf("Exiting Init\n");
+
+    _endthread();
+    return;
 }
 
-void logMess(char *logBuff, BYTE logLevel)
+bool detectChange()
+{
+    if (!cfig.failureCount)
+    {
+        if (cfig.ifspecified)
+            return false;
+    }
+
+    MYDWORD eventWait = UINT_MAX;
+
+    if (cfig.failureCount)
+        eventWait = 10000 * pow(2, cfig.failureCount);
+
+    OVERLAPPED overlap;
+    MYDWORD ret;
+    HANDLE hand = NULL;
+    overlap.hEvent = WSACreateEvent();
+
+    ret = NotifyAddrChange(&hand, &overlap);
+
+    if (ret != NO_ERROR)
+    {
+        if (WSAGetLastError() != WSA_IO_PENDING)
+        {
+            printf("NotifyAddrChange error...%d\n", WSAGetLastError());
+            return true;
+        }
+    }
+
+    if ( WaitForSingleObject(overlap.hEvent, eventWait) == WAIT_OBJECT_0 )
+        WSACloseEvent(overlap.hEvent);
+
+    network.ready = false;
+
+    while (network.busy)
+        Sleep(1000);
+
+    if (cfig.failureCount)
+    {
+        sprintf(logBuff, "Retrying failed Listening Interfaces..");
+        logMess(logBuff, 1);
+    }
+    else
+    {
+        sprintf(logBuff, "Network changed, re-detecting Interfaces..");
+        logMess(logBuff, 1);
+    }
+
+    return true;
+}
+
+/*
+void getInterfaces(data1 *network)
+{
+    memset(network, 0, sizeof(data1));
+
+    SOCKET sd = WSASocket(PF_INET, SOCK_DGRAM, 0, 0, 0, 0);
+
+    if (sd == INVALID_SOCKET)
+        return;
+
+    INTERFACE_INFO InterfaceList[MAX_SERVERS];
+    unsigned long nBytesReturned;
+
+    if (WSAIoctl(sd, SIO_GET_INTERFACE_LIST, 0, 0, &InterfaceList,
+                 sizeof(InterfaceList), &nBytesReturned, 0, 0) == SOCKET_ERROR)
+        return ;
+
+    int nNumInterfaces = nBytesReturned / sizeof(INTERFACE_INFO);
+
+    for (int i = 0; i < nNumInterfaces; ++i)
+    {
+        sockaddr_in *pAddress = (sockaddr_in*)&(InterfaceList[i].iiAddress);
+        u_long nFlags = InterfaceList[i].iiFlags;
+
+        if (!(nFlags & IFF_POINTTOPOINT))
+        {
+            //printf("%s\n", IP2String(tempbuff, pAddress->sin_addr.S_un.S_addr));
+            addServer(network->staticServers, pAddress->sin_addr.s_addr);
+        }
+    }
+
+    closesocket(sd);
+}
+*/
+
+
+void getInterfaces(data1 *network)
+{
+    memset(network, 0, sizeof(data1));
+
+    SOCKET sd = WSASocket(PF_INET, SOCK_DGRAM, 0, 0, 0, 0);
+
+    if (sd == INVALID_SOCKET)
+        return;
+
+    INTERFACE_INFO InterfaceList[MAX_SERVERS];
+    unsigned long nBytesReturned;
+
+    if (WSAIoctl(sd, SIO_GET_INTERFACE_LIST, 0, 0, &InterfaceList,
+                 sizeof(InterfaceList), &nBytesReturned, 0, 0) == SOCKET_ERROR)
+        return ;
+
+    int nNumInterfaces = nBytesReturned / sizeof(INTERFACE_INFO);
+
+    for (int i = 0; i < nNumInterfaces; ++i)
+    {
+        sockaddr_in *pAddress = (sockaddr_in*)&(InterfaceList[i].iiAddress);
+        u_long nFlags = InterfaceList[i].iiFlags;
+
+        if (pAddress->sin_addr.s_addr)
+        {
+            addServer(network->allServers, pAddress->sin_addr.s_addr);
+
+            if (!(nFlags & IFF_POINTTOPOINT) && (nFlags & IFF_UP))
+            {
+                addServer(network->staticServers, pAddress->sin_addr.s_addr);
+            }
+        }
+    }
+
+    closesocket(sd);
+}
+
+
+bool addServer(MYDWORD *array, MYDWORD ip)
+{
+    for (MYBYTE i = 0; i < MAX_SERVERS; i++)
+    {
+        if (!ip || array[i] == ip)
+            return 0;
+        else if (!array[i])
+        {
+            array[i] = ip;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+MYDWORD *findServer(MYDWORD *array, MYDWORD ip)
+{
+    if (ip)
+    {
+        for (MYBYTE i = 0; i < MAX_SERVERS && array[i]; i++)
+        {
+            if (array[i] == ip)
+                return &(array[i]);
+        }
+    }
+    return 0;
+}
+
+void logMess(char *logBuff, MYBYTE logLevel)
 {
     WaitForSingleObject(lEvent, INFINITE);
 
@@ -2200,17 +2562,36 @@ void logMess(char *logBuff, BYTE logLevel)
         printf("%s\n", logBuff);
     else if (cfig.logfile && logLevel <= cfig.logLevel)
     {
-        char currentTime[32];
         time_t t = time(NULL);
         tm *ttm = localtime(&t);
-        strftime(currentTime, sizeof(currentTime), "%d-%b-%y %X", ttm);
-        fprintf(cfig.logfile, "[%s] %s\n", currentTime, logBuff);
+
+        if (ttm->tm_yday != loggingDay)
+        {
+            loggingDay = ttm->tm_yday;
+            strftime(extbuff, sizeof(extbuff), logFile, ttm);
+            fprintf(cfig.logfile, "Logging Continued on file %s\n", extbuff);
+            fclose(cfig.logfile);
+            cfig.logfile = fopen(extbuff, "at");
+
+            if (cfig.logfile)
+            {
+                fprintf(cfig.logfile, "%s\n\n", sVersion);
+                WritePrivateProfileString("InternetShortcut","URL", extbuff, lnkFile);
+                WritePrivateProfileString("InternetShortcut","IconIndex", "0", lnkFile);
+                WritePrivateProfileString("InternetShortcut","IconFile", extbuff, lnkFile);
+            }
+            else
+                return;
+        }
+
+        strftime(extbuff, sizeof(extbuff), "%d-%b-%y %X", ttm);
+        fprintf(cfig.logfile, "[%s] %s\n", extbuff, logBuff);
         fflush(cfig.logfile);
     }
     SetEvent(lEvent);
 }
 
-void logMess(request *req, BYTE logLevel)
+void logMess(request *req, MYBYTE logLevel)
 {
     WaitForSingleObject(lEvent, INFINITE);
 
@@ -2228,15 +2609,34 @@ void logMess(request *req, BYTE logLevel)
     }
     else if (cfig.logfile && logLevel <= cfig.logLevel)
     {
-        char currentTime[32];
         time_t t = time(NULL);
         tm *ttm = localtime(&t);
-        strftime(currentTime, sizeof(currentTime), "%d-%b-%y %X", ttm);
+
+        if (ttm->tm_yday != loggingDay)
+        {
+            loggingDay = ttm->tm_yday;
+            strftime(extbuff, sizeof(extbuff), logFile, ttm);
+            fprintf(cfig.logfile, "Logging Continued on file %s\n", extbuff);
+            fclose(cfig.logfile);
+            cfig.logfile = fopen(extbuff, "at");
+
+            if (cfig.logfile)
+            {
+                fprintf(cfig.logfile, "%s\n\n", sVersion);
+                WritePrivateProfileString("InternetShortcut","URL", extbuff, lnkFile);
+                WritePrivateProfileString("InternetShortcut","IconIndex", "0", lnkFile);
+                WritePrivateProfileString("InternetShortcut","IconFile", extbuff, lnkFile);
+            }
+            else
+                return;
+        }
+
+        strftime(extbuff, sizeof(extbuff), "%d-%b-%y %X", ttm);
 
         if (req->path[0])
-            fprintf(cfig.logfile, "[%s] Client %s:%u %s, %s\n", currentTime, IP2String(tempbuff, req->client.sin_addr.s_addr), ntohs(req->client.sin_port), req->path, req->serverError.errormessage);
+            fprintf(cfig.logfile, "[%s] Client %s:%u %s, %s\n", extbuff, IP2String(tempbuff, req->client.sin_addr.s_addr), ntohs(req->client.sin_port), req->path, req->serverError.errormessage);
         else
-            fprintf(cfig.logfile, "[%s] Client %s:%u, %s\n", currentTime, IP2String(tempbuff, req->client.sin_addr.s_addr), ntohs(req->client.sin_port), req->serverError.errormessage);
+            fprintf(cfig.logfile, "[%s] Client %s:%u, %s\n", extbuff, IP2String(tempbuff, req->client.sin_addr.s_addr), ntohs(req->client.sin_port), req->serverError.errormessage);
 
         fflush(cfig.logfile);
     }

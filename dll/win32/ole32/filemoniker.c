@@ -484,12 +484,12 @@ FileMonikerImpl_BindToObject(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLeft
             /* if the requested class was loaded before ! we don't need to reload it */
             res = IRunningObjectTable_GetObject(prot,iface,&pObj);
 
-            if (res==S_FALSE){
+            if (res != S_OK){
                 /* first activation of this class */
                 res=GetClassFile(This->filePathName,&clsID);
                 if (SUCCEEDED(res)){
 
-                    res=CoCreateInstance(&clsID,NULL,CLSCTX_ALL,&IID_IPersistFile,(void**)&ppf);
+                    res=CoCreateInstance(&clsID,NULL,CLSCTX_SERVER,&IID_IPersistFile,(void**)&ppf);
                     if (SUCCEEDED(res)){
 
                         res=IPersistFile_Load(ppf,This->filePathName,STGM_READ);
@@ -588,22 +588,11 @@ FileMonikerImpl_BindToStorage(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLef
             /* get the file name */
             IMoniker_GetDisplayName(iface,pbc,pmkToLeft,&filePath);
 
-            /* verify if the file contains a storage object */
-            res=StgIsStorageFile(filePath);
+            res=StgOpenStorage(filePath,NULL,STGM_READWRITE|STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
 
-            if(res==S_OK){
+            if (SUCCEEDED(res))
+                *ppvObject=pstg;
 
-                res=StgOpenStorage(filePath,NULL,STGM_READWRITE|STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
-
-                if (SUCCEEDED(res)){
-
-                    *ppvObject=pstg;
-
-                    IStorage_AddRef(pstg);
-
-                    return res;
-                }
-            }
             CoTaskMemFree(filePath);
         }
         else
@@ -918,7 +907,8 @@ static HRESULT WINAPI
 FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
 {
 
-    LPOLESTR pathThis = NULL, pathOther = NULL,*stringTable1,*stringTable2,commonPath = NULL;
+    LPOLESTR pathThis = NULL, pathOther = NULL, *stringTable1 = NULL;
+    LPOLESTR *stringTable2 = NULL, commonPath = NULL;
     IBindCtx *bindctx;
     DWORD mkSys;
     ULONG nb1,nb2,i,sameIdx;
@@ -1006,8 +996,8 @@ failed:
     CoTaskMemFree(pathThis);
     CoTaskMemFree(pathOther);
     CoTaskMemFree(commonPath);
-    free_stringtable(stringTable1);
-    free_stringtable(stringTable2);
+    if (stringTable1) free_stringtable(stringTable1);
+    if (stringTable2) free_stringtable(stringTable2);
 
     return ret;
 }

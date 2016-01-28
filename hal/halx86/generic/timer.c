@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitializeClock)
+#endif
+
 /* GLOBALS *******************************************************************/
 
 #define PIT_LATCH  0x00
@@ -107,9 +111,9 @@ HalpSetTimerRollOver(USHORT RollOver)
     __writeeflags(Flags);
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
     ULONG Increment;
@@ -188,9 +192,21 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
     {
-        /* Profiling isn't yet enabled */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Spin until the interrupt pending bit is clear */
+        HalpAcquireCmosSpinLock();
+        while (HalpReadCmos(RTC_REGISTER_C) & RTC_REG_C_IRQ)
+            ;
+        HalpReleaseCmosSpinLock();
+
+        /* If profiling is enabled, call the kernel function */
+        if (!HalpProfilingStopped)
+        {
+            KeProfileInterrupt(TrapFrame);
+        }
+
+        /* Finish the interrupt */
+        _disable();
+        HalEndSystemInterrupt(Irql, TrapFrame);
     }
 
     /* Spurious, just end the interrupt */

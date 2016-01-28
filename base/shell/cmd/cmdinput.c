@@ -137,6 +137,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
     INT   current = 0;  /*the position of the cursor in the string (str)*/
     INT   charcount = 0;/*chars in the string (str)*/
     INPUT_RECORD ir;
+    DWORD dwControlKeyState;
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
     WORD   wLastKey = 0;
 #endif
@@ -185,7 +186,9 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
         bReturn = FALSE;
         ConInKey (&ir);
 
-        if (ir.Event.KeyEvent.dwControlKeyState &
+        dwControlKeyState = ir.Event.KeyEvent.dwControlKeyState;
+
+        if (dwControlKeyState &
             (RIGHT_ALT_PRESSED |LEFT_ALT_PRESSED|
              RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) )
         {
@@ -194,7 +197,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #ifdef FEATURE_HISTORY
                 case 'K':
                     /*add the current command line to the history*/
-                    if (ir.Event.KeyEvent.dwControlKeyState &
+                    if (dwControlKeyState &
                         (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
                     {
                         if (str[0])
@@ -210,7 +213,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 
                 case 'D':
                     /*delete current history entry*/
-                    if (ir.Event.KeyEvent.dwControlKeyState &
+                    if (dwControlKeyState &
                         (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
                     {
                         ClearCommandLine (str, maxlen, orgx, orgy);
@@ -481,59 +484,137 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                 break;
 
             case VK_LEFT:
-                /* move cursor left */
-                if (current > 0)
+                if (dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED))
                 {
-                    current--;
-                    if (GetCursorX () == 0)
+                    /* move cursor to the previous word */
+                    if (current > 0)
                     {
-                        SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
-                        curx = maxx - 1;
-                        cury--;
-                    }
-                    else
-                    {
-                        SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
-                        curx--;
+                        while (current > 0 && str[current - 1] == _T(' '))
+                        {
+                            current--;
+                            if (curx == 0)
+                            {
+                                cury--;
+                                curx = maxx -1;
+                            }
+                            else
+                            {
+                                curx--;
+                            }
+                        }
+
+                        while (current > 0 && str[current -1] != _T(' '))
+                        {
+                            current--;
+                            if (curx == 0)
+                            {
+                                cury--;
+                                curx = maxx -1;
+                            }
+                            else
+                            {
+                                curx--;
+                            }
+                        }
+
+                        SetCursorXY(curx, cury);
                     }
                 }
                 else
                 {
-                    MessageBeep (-1);
+                    /* move cursor left */
+                    if (current > 0)
+                    {
+                        current--;
+                        if (GetCursorX () == 0)
+                        {
+                            SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+                            curx = maxx - 1;
+                            cury--;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
+                            curx--;
+                        }
+                    }
+                    else
+                    {
+                        MessageBeep (-1);
+                    }
                 }
                 break;
 
             case VK_RIGHT:
-                /* move cursor right */
-                if (current != charcount)
+                if (dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED))
                 {
-                    current++;
-                    if (GetCursorX () == maxx - 1)
+                    /* move cursor to the next word */
+                    if (current != charcount)
                     {
-                        SetCursorXY (0, (SHORT)(GetCursorY () + 1));
-                        curx = 0;
-                        cury++;
-                    }
-                    else
-                    {
-                        SetCursorXY ((SHORT)(GetCursorX () + 1), GetCursorY ());
-                        curx++;
+                        while (current != charcount && str[current] != _T(' '))
+                        {
+                            current++;
+                            if (curx == maxx - 1)
+                            {
+                                cury++;
+                                curx = 0;
+                            }
+                            else
+                            {
+                                curx++;
+                            }
+                        }
+
+                        while (current != charcount && str[current] == _T(' '))
+                        {
+                            current++;
+                            if (curx == maxx - 1)
+                            {
+                                cury++;
+                                curx = 0;
+                            }
+                            else
+                            {
+                                curx++;
+                            }
+                        }
+
+                        SetCursorXY(curx, cury);
                     }
                 }
-#ifdef FEATURE_HISTORY
                 else
                 {
-                    LPCTSTR last = PeekHistory(-1);
-                    if (last && charcount < (INT)_tcslen (last))
+                    /* move cursor right */
+                    if (current != charcount)
                     {
-                        PreviousChar = last[current];
-                        ConOutChar(PreviousChar);
-                        GetCursorXY(&curx, &cury);
-                        str[current++] = PreviousChar;
-                        charcount++;
+                        current++;
+                        if (GetCursorX () == maxx - 1)
+                        {
+                            SetCursorXY (0, (SHORT)(GetCursorY () + 1));
+                            curx = 0;
+                            cury++;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(GetCursorX () + 1), GetCursorY ());
+                            curx++;
+                        }
                     }
-                }
+#ifdef FEATURE_HISTORY
+                    else
+                    {
+                        LPCTSTR last = PeekHistory(-1);
+                        if (last && charcount < (INT)_tcslen (last))
+                        {
+                            PreviousChar = last[current];
+                            ConOutChar(PreviousChar);
+                            GetCursorXY(&curx, &cury);
+                            str[current++] = PreviousChar;
+                            charcount++;
+                        }
+                    }
 #endif
+                }
                 break;
 
             default:

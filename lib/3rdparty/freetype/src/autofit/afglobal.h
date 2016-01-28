@@ -5,7 +5,7 @@
 /*    Auto-fitter routines to compute global hinting values                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2003-2005, 2007, 2009, 2011-2014 by                          */
+/*  Copyright 2003-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -66,16 +66,22 @@ FT_BEGIN_HEADER
 
   /* index of fallback style in `af_style_classes' */
 #ifdef AF_CONFIG_OPTION_CJK
-#define AF_STYLE_FALLBACK  AF_STYLE_HANI_DFLT
+#define AF_STYLE_FALLBACK    AF_STYLE_HANI_DFLT
 #else
-#define AF_STYLE_FALLBACK  AF_STYLE_NONE_DFLT
+#define AF_STYLE_FALLBACK    AF_STYLE_NONE_DFLT
 #endif
   /* default script for OpenType; ignored if HarfBuzz isn't used */
-#define AF_SCRIPT_DEFAULT  AF_SCRIPT_LATN
-  /* a bit mask indicating an uncovered glyph        */
-#define AF_STYLE_UNASSIGNED  0x7F
-  /* if this flag is set, we have an ASCII digit     */
-#define AF_DIGIT              0x80
+#define AF_SCRIPT_DEFAULT    AF_SCRIPT_LATN
+
+  /* a bit mask for AF_DIGIT and AF_NONBASE */
+#define AF_STYLE_MASK        0x3FFF
+  /* an uncovered glyph      */
+#define AF_STYLE_UNASSIGNED  AF_STYLE_MASK
+
+  /* if this flag is set, we have an ASCII digit   */
+#define AF_DIGIT             0x8000U
+  /* if this flag is set, we have a non-base character */
+#define AF_NONBASE           0x4000U
 
   /* `increase-x-height' property */
 #define AF_PROP_INCREASE_X_HEIGHT_MIN  6
@@ -100,7 +106,7 @@ FT_BEGIN_HEADER
   {
     FT_Face          face;
     FT_Long          glyph_count;    /* same as face->num_glyphs */
-    FT_Byte*         glyph_styles;
+    FT_UShort*       glyph_styles;
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
     hb_font_t*       hb_font;
@@ -111,6 +117,22 @@ FT_BEGIN_HEADER
 
     AF_StyleMetrics  metrics[AF_STYLE_MAX];
 
+    /* Compute darkening amount once per size.  Use this to check whether */
+    /* darken_{x,y} needs to be recomputed.                               */
+    FT_UShort        stem_darkening_for_ppem;
+    /* Copy from e.g. AF_LatinMetrics.axis[AF_DIMENSION_HORZ] */
+    /* to compute the darkening amount.                       */
+    FT_Pos           standard_vertical_width;
+    /* Copy from e.g. AF_LatinMetrics.axis[AF_DIMENSION_VERT] */
+    /* to compute the darkening amount.                       */
+    FT_Pos           standard_horizontal_width;
+    /* The actual amount to darken a glyph along the X axis. */
+    FT_Pos           darken_x;
+    /* The actual amount to darken a glyph along the Y axis. */
+    FT_Pos           darken_y;
+    /* Amount to scale down by to keep emboldened points */
+    /* on the Y-axis in pre-computed blue zones.         */
+    FT_Fixed         scale_down_factor;
     AF_Module        module;         /* to access global properties */
 
   } AF_FaceGlobalsRec;

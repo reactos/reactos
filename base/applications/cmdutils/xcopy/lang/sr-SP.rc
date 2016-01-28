@@ -1,0 +1,115 @@
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Неисправан број параметара. Користите xcopy /? за помоћ\n"
+    STRING_INVPARM,  "Неисправан параметар „%1“. Користите xcopy /? за помоћ\n"
+    STRING_PAUSE,    "Притисните <enter> да започнете умножавање\n"
+    STRING_SIMCOPY,  "%1!d! датотека/е ће бити уможено\n"
+    STRING_COPY,     "%1!d! датотека/е је умножено\n"
+    STRING_QISDIR,   "Да ли је „%1“ назив датотеке или фасцикла\n\
+                     на одредишту?\n\
+                     (Д - датотека, Ф - фасцикла)\n"
+    STRING_SRCPROMPT,"%1? (Да|Не)\n"
+    STRING_OVERWRITE,"Заменити %1? (Да|Не|Све)\n"
+    STRING_COPYFAIL, "Умножавање „%1“ у „%2“ није успело са r/c %3!d!\n"
+    STRING_OPENFAIL, "Отварање „%1“ датотеке није успело\n"
+    STRING_READFAIL, "Читање „%1“ датотеке није успело\n"
+    STRING_YES_CHAR, "Д"
+    STRING_NO_CHAR,  "Н"
+    STRING_ALL_CHAR, "С"
+    STRING_FILE_CHAR,"Д"
+    STRING_DIR_CHAR, "Ф"
+
+    STRING_HELP,
+"XCOPY — умножава изворне датотеке или гране фасцикли у одредиште\n\
+\n\
+Синтакса:\n\
+XCOPY извор [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Где:\n\
+\n\
+[/I]  Претпостави фасциклу када одредиште не постоји и када се умножавају две или\n\
+\tвише датотека\n\
+[/S]  Умножи фасцикле и потфасцикле\n\
+[/E]  Умножи фасцикле и потфасцикле заједно с празним\n\
+[/Q]  Не приказуј називе током умножавања.\n\
+[/F]  Прикажи цео извор и одредиште током умножавања\n\
+[/L]  Опонашај радњу приказујући називе који ће бити умножени\n\
+[/W]  Питај пре почињања умножавања\n\
+[/T]  Прави празну структуру фасцикле, али не умножава датотеке\n\
+[/Y]  Потисни упит при замењивању датотека\n\
+[/-Y] Омогући упит при замењивању датотека\n\
+[/P]  Питај за сваку изворну датотеку пре умножавања\n\
+[/N]  Умножи користећи кратке називе\n\
+[/U]  Умножи само оне датотеке које постоје у одредишту\n\
+[/R]  Замени све датотеке које се само читају\n\
+[/H]  Укључи сакривене и системске датотеке у умножавање\n\
+[/C]  Настави иако дође до грешке у умножавању\n\
+[/A]  Умножи само архивиране датотеке\n\
+[/M]  Умножи само архивиране датотеке и уклони\n\
+\tособине архиве\n\
+[/D | /D:m-d-y] Умножи нове или измењене датотеке након одређеног датума.\n\
+\t\tАко датум није унесен, умножи само ако је одредиште старије\n\
+\t\tод извора\n\n"
+
+}
+
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Neispravan broj parametara. Koristite xcopy /? za pomoć\n"
+    STRING_INVPARM,  "Neispravan parametar „%1“. Koristite xcopy /? za pomoć\n"
+    STRING_PAUSE,    "Pritisnite <enter> da započnete umnožavanje\n"
+    STRING_SIMCOPY,  "%1!d! datoteka/e će biti umoženo\n"
+    STRING_COPY,     "%1!d! datoteka/e je umnoženo\n"
+    STRING_QISDIR,   "Da li je „%1“ naziv datoteke ili fascikla\n\
+                     na odredištu?\n\
+                     (D - datoteka, F - fascikla)\n"
+    STRING_SRCPROMPT,"%1? (Da|Ne)\n"
+    STRING_OVERWRITE,"Zameniti %1? (Da|Ne|Sve)\n"
+    STRING_COPYFAIL, "Umnožavanje „%1“ u „%2“ nije uspelo sa r/c %3!d!\n"
+    STRING_OPENFAIL, "Otvaranje „%1“ datoteke nije uspelo\n"
+    STRING_READFAIL, "Čitanje „%1“ datoteke nije uspelo\n"
+    STRING_YES_CHAR, "D"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "S"
+    STRING_FILE_CHAR,"D"
+    STRING_DIR_CHAR, "F"
+
+    STRING_HELP,
+"XCOPY — umnožava izvorne datoteke ili grane fascikli u odredište\n\
+\n\
+Sintaksa:\n\
+XCOPY izvor [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Gde:\n\
+\n\
+[/I]  Pretpostavi fasciklu kada odredište ne postoji i kada se umnožavaju dve ili\n\
+\tviše datoteka\n\
+[/S]  Umnoži fascikle i potfascikle\n\
+[/E]  Umnoži fascikle i potfascikle zajedno s praznim\n\
+[/Q]  Ne prikazuj nazive tokom umnožavanja.\n\
+[/F]  Prikaži ceo izvor i odredište tokom umnožavanja\n\
+[/L]  Oponašaj radnju prikazujući nazive koji će biti umnoženi\n\
+[/W]  Pitaj pre počinjanja umnožavanja\n\
+[/T]  Pravi praznu strukturu fascikle, ali ne umnožava datoteke\n\
+[/Y]  Potisni upit pri zamenjivanju datoteka\n\
+[/-Y] Omogući upit pri zamenjivanju datoteka\n\
+[/P]  Pitaj za svaku izvornu datoteku pre umnožavanja\n\
+[/N]  Umnoži koristeći kratke nazive\n\
+[/U]  Umnoži samo one datoteke koje postoje u odredištu\n\
+[/R]  Zameni sve datoteke koje se samo čitaju\n\
+[/H]  Uključi sakrivene i sistemske datoteke u umnožavanje\n\
+[/C]  Nastavi iako dođe do greške u umnožavanju\n\
+[/A]  Umnoži samo arhivirane datoteke\n\
+[/M]  Umnoži samo arhivirane datoteke i ukloni\n\
+\tosobine arhive\n\
+[/D | /D:m-d-y] Umnoži nove ili izmenjene datoteke nakon određenog datuma.\n\
+\t\tAko datum nije unesen, umnoži samo ako je odredište starije\n\
+\t\tod izvora\n\n"
+
+}

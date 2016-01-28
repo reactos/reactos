@@ -395,6 +395,18 @@ interface IMLangConvertCharset : IUnknown
         MLCONVCHARF_DETECTJPN       = 32
     } MLCONVCHAR;
 
+    typedef enum tagMLCPF
+    {
+        MLDETECTF_MAILNEWS              = 0x0001,
+        MLDETECTF_BROWSER               = 0x0002,
+        MLDETECTF_VALID                 = 0x0004,
+        MLDETECTF_VALID_NLS             = 0x0008,
+        MLDETECTF_PRESERVE_ORDER        = 0x0010,
+        MLDETECTF_PREFERRED_ONLY        = 0x0020,
+        MLDETECTF_FILTER_SPECIALCHAR    = 0x0040,
+        MLDETECTF_EURO_UTF8             = 0x0080
+    } MLCP;
+
     HRESULT Initialize(      
         [in] UINT uiSrcCodePage,
         [in] UINT uiDstCodePage,

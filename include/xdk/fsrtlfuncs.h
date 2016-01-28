@@ -1560,24 +1560,40 @@ FsRtlRemovePerFileObjectContext(
   _In_opt_ PVOID OwnerId,
   _In_opt_ PVOID InstanceId);
 
-#define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
-     FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
-)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterFileSystemFilterCallbacks(
+  _In_ struct _DRIVER_OBJECT *FilterDriverObject,
+  _In_ PFS_FILTER_CALLBACKS Callbacks);
 
-#define FsRtlAreThereCurrentFileLocks(FL) ( \
-    ((FL)->FastIoIsQuestionable)            \
-)
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyStreamFileObject(
+  _In_ struct _FILE_OBJECT * StreamFileObject,
+  _In_opt_ struct _DEVICE_OBJECT *DeviceObjectHint,
+  _In_ FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
+  _In_ BOOLEAN SafeToRecurse);
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
-#define FsRtlIncrementLockRequestsInProgress(FL) {                           \
-    ASSERT( (FL)->LockRequestsInProgress >= 0 );                             \
-    (void)                                                                   \
-    (InterlockedIncrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
+#define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)            \
+     FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)
+
+#define FsRtlAreThereCurrentFileLocks(FL)                                      \
+    ((FL)->FastIoIsQuestionable)
+
+#define FsRtlIncrementLockRequestsInProgress(FL) {                             \
+    ASSERT((FL)->LockRequestsInProgress >= 0);                                 \
+    (void)                                                                     \
+    (InterlockedIncrement((LONG volatile *)&((FL)->LockRequestsInProgress)));  \
 }
 
-#define FsRtlDecrementLockRequestsInProgress(FL) {                           \
-    ASSERT( (FL)->LockRequestsInProgress > 0 );                              \
-    (void)                                                                   \
-    (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
+#define FsRtlDecrementLockRequestsInProgress(FL) {                             \
+    ASSERT((FL)->LockRequestsInProgress > 0);                                  \
+    (void)                                                                     \
+    (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));  \
 }
 
 #ifdef _NTSYSTEM_
@@ -1589,97 +1605,81 @@ extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY (*FsRtlLegalAnsiCharacterArray)
 #endif
 
-#define FsRtlIsAnsiCharacterWild(C) (                                       \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
-)
+#define FsRtlIsAnsiCharacterWild(C)                                            \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], FSRTL_WILD_CHARACTER)
 
-#define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
+#define FsRtlIsAnsiCharacterLegalFat(C, WILD)                                  \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |         \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
 
-#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
+#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD)                                 \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |        \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
 
-#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
+#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD)                                 \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |        \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
 
-#define FsRtlIsAnsiCharacterLegalNtfsStream(C,WILD_OK) (                    \
-    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_STREAM_LEGAL)   \
-)
+#define FsRtlIsAnsiCharacterLegalNtfsStream(C,WILD_OK)                         \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_STREAM_LEGAL)
 
-#define FsRtlIsAnsiCharacterLegal(C,FLAGS) (          \
-    FsRtlTestAnsiCharacter((C), TRUE, FALSE, (FLAGS)) \
-)
+#define FsRtlIsAnsiCharacterLegal(C,FLAGS)                                     \
+    FsRtlTestAnsiCharacter((C), TRUE, FALSE, (FLAGS))
 
-#define FsRtlTestAnsiCharacter(C, DEFAULT_RET, WILD_OK, FLAGS) (            \
-        ((SCHAR)(C) < 0) ? DEFAULT_RET :                                    \
-                           FlagOn( LEGAL_ANSI_CHARACTER_ARRAY[(C)],         \
-                                   (FLAGS) |                                \
-                                   ((WILD_OK) ? FSRTL_WILD_CHARACTER : 0) ) \
-)
+#define FsRtlTestAnsiCharacter(C, DEFAULT_RET, WILD_OK, FLAGS)                 \
+    (((SCHAR)(C) < 0) ? DEFAULT_RET :                                          \
+         FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(C)],                               \
+                (FLAGS) | ((WILD_OK) ? FSRTL_WILD_CHARACTER : 0)))
 
-#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
-    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
-              (NLS_MB_CODE_PAGE_TAG &&                                      \
-               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
-)
+#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR)                                    \
+    ((BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                             \
+              (NLS_MB_CODE_PAGE_TAG &&                                         \
+               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0))))
 
-#define FsRtlIsUnicodeCharacterWild(C) (                                    \
-    (((C) >= 0x40) ?                                                        \
-    FALSE :                                                                 \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(C)], FSRTL_WILD_CHARACTER ))       \
-)
+#define FsRtlIsUnicodeCharacterWild(C)                                         \
+    ((((C) >= 0x40) ? FALSE :                                                  \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(C)], FSRTL_WILD_CHARACTER )))
 
-#define FsRtlInitPerFileContext( _fc, _owner, _inst, _cb)   \
-    ((_fc)->OwnerId = (_owner),                               \
-     (_fc)->InstanceId = (_inst),                             \
+#define FsRtlInitPerFileContext(_fc, _owner, _inst, _cb)                       \
+    ((_fc)->OwnerId = (_owner),                                                \
+     (_fc)->InstanceId = (_inst),                                              \
      (_fc)->FreeCallback = (_cb))
 
-#define FsRtlGetPerFileContextPointer(_fo) \
-    (FsRtlSupportsPerFileContexts(_fo) ? \
-        FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer : \
-        NULL)
+#define FsRtlGetPerFileContextPointer(_fo)                                     \
+    (FsRtlSupportsPerFileContexts(_fo) ?                                       \
+        FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer : NULL)
 
-#define FsRtlSupportsPerFileContexts(_fo)                     \
-    ((FsRtlGetPerStreamContextPointer(_fo) != NULL) &&        \
-     (FsRtlGetPerStreamContextPointer(_fo)->Version >= FSRTL_FCB_HEADER_V1) &&  \
+#define FsRtlSupportsPerFileContexts(_fo)                                      \
+    ((FsRtlGetPerStreamContextPointer(_fo) != NULL) &&                         \
+     (FsRtlGetPerStreamContextPointer(_fo)->Version >= FSRTL_FCB_HEADER_V1) && \
      (FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer != NULL))
 
-#define FsRtlSetupAdvancedHeaderEx( _advhdr, _fmutx, _fctxptr )                     \
-{                                                                                   \
-    FsRtlSetupAdvancedHeader( _advhdr, _fmutx );                                    \
-    if ((_fctxptr) != NULL) {                                                       \
-        (_advhdr)->FileContextSupportPointer = (_fctxptr);                          \
-    }                                                                               \
+#define FsRtlSetupAdvancedHeaderEx(_advhdr, _fmutx, _fctxptr)                  \
+{                                                                              \
+    FsRtlSetupAdvancedHeader( _advhdr, _fmutx );                               \
+    if ((_fctxptr) != NULL) {                                                  \
+        (_advhdr)->FileContextSupportPointer = (_fctxptr);                     \
+    }                                                                          \
 }
 
-#define FsRtlGetPerStreamContextPointer(FO) (   \
-    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
-)
+#define FsRtlGetPerStreamContextPointer(FO)                                    \
+    ((PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext)
 
-#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
-    (PSC)->OwnerId = (O),                          \
-    (PSC)->InstanceId = (I),                       \
-    (PSC)->FreeCallback = (FC)                     \
-)
+#define FsRtlInitPerStreamContext(PSC, O, I, FC)                               \
+    ((PSC)->OwnerId = (O),                                                     \
+    (PSC)->InstanceId = (I),                                                   \
+    (PSC)->FreeCallback = (FC))
 
-#define FsRtlSupportsPerStreamContexts(FO) (                       \
-    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
-              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
-              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
-)
+#define FsRtlSupportsPerStreamContexts(FO)                                     \
+    ((BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&                 \
+               FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2,             \
+               FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS)))
 
-#define FsRtlLookupPerStreamContext(_sc, _oid, _iid)                          \
- (((NULL != (_sc)) &&                                                         \
-   FlagOn((_sc)->Flags2,FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS) &&              \
-   !IsListEmpty(&(_sc)->FilterContexts)) ?                                    \
-        FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) :          \
-        NULL)
+#define FsRtlLookupPerStreamContext(_sc, _oid, _iid)                           \
+    (((NULL != (_sc)) &&                                                       \
+      FlagOn((_sc)->Flags2,FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS) &&            \
+      !IsListEmpty(&(_sc)->FilterContexts)) ?                                  \
+          FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) : NULL)
 
 _IRQL_requires_max_(APC_LEVEL)
 FORCEINLINE
@@ -1708,11 +1708,11 @@ FsRtlSetupAdvancedHeader(
 #endif
 }
 
-#define FsRtlInitPerFileObjectContext(_fc, _owner, _inst)         \
+#define FsRtlInitPerFileObjectContext(_fc, _owner, _inst)                      \
            ((_fc)->OwnerId = (_owner), (_fc)->InstanceId = (_inst))
 
-#define FsRtlCompleteRequest(IRP,STATUS) {         \
-    (IRP)->IoStatus.Status = (STATUS);             \
-    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
+#define FsRtlCompleteRequest(IRP, STATUS) {                                    \
+    (IRP)->IoStatus.Status = (STATUS);                                         \
+    IoCompleteRequest( (IRP), IO_DISK_INCREMENT );                             \
 }
 $endif (_NTIFS_)

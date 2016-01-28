@@ -2,20 +2,20 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "¡llom·nyok m·sol·sa..."
+CAPTION "√Ållom√°nyok m√°sol√°sa..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "MÈgse", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Forr·s:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "M√©gse", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Forr√°s:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "CÈl:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "C√©l:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "A sz·mÌtÛgÈpet ˙jra kell indÌtani a telepÌtÈs befejezÈsÈhez. SzeretnÈd most ˙jraindÌtani?"
-    IDS_QUERY_REBOOT_CAPTION "⁄jraindÌt·s"
+    IDS_QUERY_REBOOT_TEXT "A sz√°m√≠t√≥g√©pet √∫jra kell ind√≠tani a telep√≠t√©s befejez√©s√©hez. Szeretn√©d most √∫jraind√≠tani?"
+    IDS_QUERY_REBOOT_CAPTION "√öjraind√≠t√°s"
     IDS_INF_FILE "Setup Information"
 END

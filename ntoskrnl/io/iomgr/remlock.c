@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/remlock.c
+ * FILE:            ntoskrnl/io/iomgr/remlock.c
  * PURPOSE:         Remove Lock Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
@@ -38,6 +38,8 @@ IoInitializeRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
 {
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
     PAGED_CODE();
+
+    DPRINT("%s(%p 0x%08x %u %u %u)\n", __FUNCTION__, RemoveLock, AllocateTag, MaxLockedMinutes, HighWatermark, RemlockSize);
 
     ASSERT(HighWatermark < MAXLONG);
 
@@ -86,6 +88,8 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
 
+    DPRINT("%s(%p %p %s %u %u)\n", __FUNCTION__, RemoveLock, Tag, File, Line, RemlockSize);
+
     /* Increase the lock count */
     LockValue = InterlockedIncrement(&(Lock->Common.IoCount));
     ASSERT(LockValue > 0);
@@ -100,7 +104,7 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
             TrackingBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_REMOVE_LOCK_TRACKING_BLOCK), Lock->Dbg.AllocateTag);
             if (!TrackingBlock)
             {
-                /* Keep count of failures for lock release and missing tags */ 
+                /* Keep count of failures for lock release and missing tags */
                 InterlockedIncrement(&(Lock->Dbg.LowMemoryCount));
             }
             else
@@ -153,6 +157,8 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PIO_REMOVE_LOCK_TRACKING_BLOCK *TrackingBlockLink;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
+
+    DPRINT("%s(%p %p %u)\n", __FUNCTION__, RemoveLock, Tag, RemlockSize);
 
     /* Check what kind of lock this is */
     if (RemlockSize == (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)))
@@ -242,6 +248,8 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
     PAGED_CODE();
+
+    DPRINT("%s(%p %p %u)\n", __FUNCTION__, RemoveLock, Tag, RemlockSize);
 
     /* Remove the lock and decrement the count */
     Lock->Common.Removed = TRUE;

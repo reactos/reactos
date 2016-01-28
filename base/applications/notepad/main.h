@@ -21,7 +21,7 @@
 
 #pragma once
 
-#define SIZEOF(a) (sizeof(a)/sizeof((a)[0]))
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 
 #include "notepad_res.h"
 
@@ -33,10 +33,22 @@
 
 #define MAX_STRING_LEN      255
 
-#define ENCODING_ANSI		0
-#define ENCODING_UNICODE	1
-#define ENCODING_UNICODE_BE	2
-#define ENCODING_UTF8		3
+/* Values are indexes of the items in the Encoding combobox. */
+typedef enum
+{
+    ENCODING_AUTO    = -1,
+    ENCODING_ANSI    =  0,
+    ENCODING_UTF16LE =  1,
+    ENCODING_UTF16BE =  2,
+    ENCODING_UTF8    =  3
+} ENCODING;
+// #define ENCODING_ANSI       0
+#define ENCODING_UNICODE    1
+#define ENCODING_UNICODE_BE 2
+// #define ENCODING_UTF8       3
+
+// #define MIN_ENCODING   0
+// #define MAX_ENCODING   3
 
 #define EOLN_CRLF           0
 #define EOLN_LF             1
@@ -44,34 +56,34 @@
 
 typedef struct
 {
-  HINSTANCE  hInstance;
-  HWND       hMainWnd;
-  HWND       hFindReplaceDlg;
-  HWND       hEdit;
-  HWND       hStatusBar;
-  HFONT      hFont; /* Font used by the edit control */
-  HMENU      hMenu;
-  LOGFONT    lfFont;
-  BOOL       bWrapLongLines;
-  BOOL       bShowStatusBar;
-  TCHAR      szFindText[MAX_PATH];
-  TCHAR      szReplaceText[MAX_PATH];
-  TCHAR      szFileName[MAX_PATH];
-  TCHAR      szFileTitle[MAX_PATH];
-  TCHAR      szFilter[2 * MAX_STRING_LEN + 100];
-  TCHAR      szMarginTop[MAX_PATH];
-  TCHAR      szMarginBottom[MAX_PATH];
-  TCHAR      szMarginLeft[MAX_PATH];
-  TCHAR      szMarginRight[MAX_PATH];
-  TCHAR      szHeader[MAX_PATH];
-  TCHAR      szFooter[MAX_PATH];
-  TCHAR      szStatusBarLineCol[MAX_PATH];
-  int        iEncoding;
-  int        iEoln;
+    HINSTANCE hInstance;
+    HWND hMainWnd;
+    HWND hFindReplaceDlg;
+    HWND hEdit;
+    HWND hStatusBar;
+    HFONT hFont; /* Font used by the edit control */
+    HMENU hMenu;
+    HGLOBAL hDevMode;
+    HGLOBAL hDevNames;
+    LOGFONT lfFont;
+    BOOL bWrapLongLines;
+    BOOL bShowStatusBar;
+    TCHAR szFindText[MAX_PATH];
+    TCHAR szReplaceText[MAX_PATH];
+    TCHAR szFileName[MAX_PATH];
+    TCHAR szFileTitle[MAX_PATH];
+    TCHAR szFilter[2 * MAX_STRING_LEN + 100];
+    RECT lMargins;
+    TCHAR szHeader[MAX_PATH];
+    TCHAR szFooter[MAX_PATH];
+    TCHAR szStatusBarLineCol[MAX_PATH];
 
-  FINDREPLACE find;
-  WNDPROC    EditProc;
-  RECT       main_rect;
+    ENCODING encFile;
+    int iEoln;
+
+    FINDREPLACE find;
+    WNDPROC EditProc;
+    RECT main_rect;
 } NOTEPAD_GLOBALS;
 
 extern NOTEPAD_GLOBALS Globals;
@@ -79,12 +91,12 @@ extern NOTEPAD_GLOBALS Globals;
 VOID SetFileName(LPCTSTR szFileName);
 
 /* from text.c */
-BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln);
+BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *piEoln);
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile, int iEoln);
 
 /* from settings.c */
-void LoadSettings(void);
-void SaveSettings(void);
+void NOTEPAD_LoadSettingsFromRegistry(void);
+void NOTEPAD_SaveSettingsToRegistry(void);
 
 /* from main.c */
 BOOL NOTEPAD_FindNext(FINDREPLACE *, BOOL , BOOL );

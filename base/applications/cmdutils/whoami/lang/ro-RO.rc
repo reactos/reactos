@@ -1,0 +1,57 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "INFORMAȚII DE UTILIZATOR"
+    IDS_GROU_HEADER "INFORMAȚII DE GRUP"
+    IDS_PRIV_HEADER "INFORMAȚII DE PRIVILEGIU"
+    IDS_COL_USER_NAME "Nume utilizator"
+    IDS_COL_GROUP_NAME "Nume grup"
+    IDS_COL_TYPE "Tip"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Atribute"
+    IDS_COL_PRIV_NAME "Privilegiu"
+    IDS_COL_DESCRIPTION "Descriere"
+    IDS_COL_STATE "Stare"
+    IDS_TP_WELL_KNOWN_GROUP "Grup binecunoscut"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Etichetă"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Grup obligatoriu, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Activat implicit, "
+    IDS_ATTR_GROUP_ENABLED "Grup activat, "
+    IDS_ATTR_GROUP_OWNER "Posesorul grupului, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Activat"
+    IDS_STATE_DISABLED "Dezactivat"
+    IDS_ERROR_UPN "EROARE: Nu se poate obține Numele Principal al Utilizatorului (UPN) deoarece\n utilizatorul actualmente autentificat nu este un un utilizator de domeniu.\n"
+    IDS_ERROR_FQDN "EROARE: Nu se poate obține Numele Complet Distinctiv Calificat (FQDN) deoarece\nutilizatorul actualmente autentificat nu este un un utilizator de domeniu.\n"
+    IDS_ERROR_VALUEXPECTED "EROARE: Sintaxă eronată. Este așteptată o valoare pentru «/fo».\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_ERROR_VALUENOTALLOWED "EROARE: Sintaxă eronată. Valoarea «%s» nu este permisă pentru opțiunea «/fo».\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_ERROR_1TIMES "EROARE: Sintaxă eronată. Utilizarea opțiunii «%s» nu este permisă mai mult de o\nsingură dată.\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_ERROR_INVALIDSYNTAX "EROARE: Sintaxă eronată.\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_ERROR_INVALIDARG "EROARE: Argument/opțiune eronat(ă) - «%s».\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_ERROR_NH_LIST "EROARE: Opțiunea /NH nu poate fi utilizată în formatul LIST.\nTastați ""WHOAMI /?"" pentru informații de utilizare.\n"
+    IDS_HELP "DESCRIERE:\n\
+  Afișează informațiile de utilizator, de grup, și de privilegii pentru un\n\
+  utilizator autentificat local. Dacă nu sunt furnizate argumente, se vor afișa\n\
+  numele și domeniul utilizatorului curent.\n\
+  \n\
+  Formatele disponibile pentru opțiunea «/fo» sunt «csv», «list», și «table».\n\
+  Argumentul «/nh» ascunde anteturile. Datele sunt implicit afișate tabelar.\n\
+  \n\
+            SINTAXĂ:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
+  \n\
+            EXEMPLE: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END

@@ -18,6 +18,10 @@ BEGIN
         MENUITEM "&Uložiť\tCtrl+S", IDM_FILESAVE
         MENUITEM "Uložiť &ako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Nastaviť ako pozadie (vydláždené)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Nastaviť ako pozadie (v strede)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Nastaviť ako pozadie (roztiahnuté)", IDM_FILEASWALLPAPERSTRETCHED
@@ -215,4 +219,5 @@ BEGIN
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

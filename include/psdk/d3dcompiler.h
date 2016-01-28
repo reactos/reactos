@@ -54,7 +54,10 @@ static const WCHAR D3DCOMPILER_DLL_W[] = {'d','3','d','c','o','m','p','i','l','e
 #define D3DCOMPILE_OPTIMIZATION_LEVEL1              0x00000000
 #define D3DCOMPILE_OPTIMIZATION_LEVEL2              0x0000c000
 #define D3DCOMPILE_OPTIMIZATION_LEVEL3              0x00008000
+#define D3DCOMPILE_RESERVED16                       0x00010000
+#define D3DCOMPILE_RESERVED17                       0x00020000
 #define D3DCOMPILE_WARNINGS_ARE_ERRORS              0x00040000
+#define D3DCOMPILE_RESOURCES_MAY_ALIAS              0x00080000
 
 #define D3D_DISASM_ENABLE_COLOR_CODE                0x00000001
 #define D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS      0x00000002
@@ -104,7 +107,8 @@ HRESULT WINAPI D3DGetInputSignatureBlob(const void *data, SIZE_T data_size, ID3D
 HRESULT WINAPI D3DGetOutputSignatureBlob(const void *data, SIZE_T data_size, ID3DBlob **blob);
 HRESULT WINAPI D3DGetInputAndOutputSignatureBlob(const void *data, SIZE_T data_size, ID3DBlob **blob);
 HRESULT WINAPI D3DGetDebugInfo(const void *data, SIZE_T data_size, ID3DBlob **blob);
-
+HRESULT WINAPI D3DReadFileToBlob(const WCHAR *filename, ID3DBlob **contents);
+HRESULT WINAPI D3DWriteBlobToFile(ID3DBlob *blob, const WCHAR *filename, BOOL overwrite);
 HRESULT WINAPI D3DReflect(const void *data, SIZE_T data_size, REFIID riid, void **reflector);
 
 HRESULT WINAPI D3DCreateBlob(SIZE_T data_size, ID3DBlob **blob);

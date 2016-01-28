@@ -25,8 +25,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 
 #define WLX_VERSION_1_0				(0x00010000)
 #define WLX_VERSION_1_1				(0x00010001)
@@ -650,8 +648,6 @@ struct _WLX_NOTIFICATION_INFO
 	PFNMSGECALLBACK pStatusCallback;
 } WLX_NOTIFICATION_INFO, *PWLX_NOTIFICATION_INFO;
 
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

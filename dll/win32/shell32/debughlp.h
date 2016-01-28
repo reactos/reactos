@@ -23,6 +23,9 @@
 
 extern void pdump (LPCITEMIDLIST pidl);
 extern BOOL pcheck (LPCITEMIDLIST pidl);
-extern const char * shdebugstr_guid( const struct _GUID *id );
+#ifdef __cplusplus
+extern "C"
+#endif
+const char * shdebugstr_guid( const struct _GUID *id );
 
 #endif /* __WINE_SHELL32_DEBUGHLP_H */

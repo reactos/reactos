@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <limits.h>
 
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <wine/debug.h>
 
 #include "winesup.h"
@@ -84,6 +84,14 @@ static int wchar2digit(wchar_t c, int base) {
 #define WIDE_SCANF 1
 #undef CONSOLE
 #define STRING 1
+#undef SECURE
+#include "scanf.h"
+
+/* vsnscanf_l */
+#undef WIDE_SCANF
+#undef CONSOLE
+#define STRING 1
+#define STRING_LEN 1
 #undef SECURE
 #include "scanf.h"
 
@@ -199,3 +207,17 @@ int CDECL _cscanf(const char *format, ...)
     return res;
 }
 #endif
+
+/*********************************************************************
+ *		_snscanf (MSVCRT.@)
+ */
+int CDECL _snscanf(const char *input, size_t length, const char *format, ...)
+{
+    __ms_va_list valist;
+    int res;
+
+    __ms_va_start(valist, format);
+    res = vsnscanf_l(input, length, format, NULL, valist);
+    __ms_va_end(valist);
+    return res;
+}

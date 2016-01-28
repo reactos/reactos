@@ -948,6 +948,14 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     WCHAR Symbol;
     switch(uFlags & 0xff)
     {
+        case DFCS_MENUARROWUP:
+            Symbol = '5';
+            break;
+
+        case DFCS_MENUARROWDOWN:
+            Symbol = '6';
+            break;
+
         case DFCS_MENUARROW:
             Symbol = '8';
             break;
@@ -980,16 +988,20 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = GreCreateFontIndirectW(&lf);
     /* save font */
     hOldFont = NtGdiSelectFont(dc, hFont);
-    // FIXME selecting color doesn't work
-#if 0
-    if(uFlags & DFCS_INACTIVE)
+
+    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||
+        (uFlags & 0xff) == DFCS_MENUARROWDOWN )
     {
-        /* draw shadow */
-        IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
-        GreTextOutW(dc, r->left + 1, r->top + 1, &Symbol, 1);
-    }
-    IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+#if 0
+       if (uFlags & DFCS_INACTIVE)
+       {
+           /* draw shadow */
+           IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
+           GreTextOutW(dc, r->left + 1, r->top + 1, &Symbol, 1);
+       }
 #endif
+       IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+    }
     /* draw selected symbol */
     GreTextOutW(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
@@ -1003,6 +1015,25 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 //	Win32ss API support.
 //
 //
+
+
+INT WINAPI
+FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
+{
+    HBRUSH oldbrush;
+    RECT r = *lprc;
+
+    if ((r.right <= r.left) || (r.bottom <= r.top)) return 0;
+    if (!(oldbrush = NtGdiSelectBrush(hDC, hbr))) return 0;
+
+    NtGdiPatBlt(hDC, r.left, r.top, 1, r.bottom - r.top, PATCOPY);
+    NtGdiPatBlt(hDC, r.right - 1, r.top, 1, r.bottom - r.top, PATCOPY);
+    NtGdiPatBlt(hDC, r.left, r.top, r.right - r.left, 1, PATCOPY);
+    NtGdiPatBlt(hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY);
+
+    NtGdiSelectBrush(hDC, oldbrush);
+    return TRUE;
+}
 
 
 INT WINAPI

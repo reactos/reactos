@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/gdi32/include/gdi32p.h
+ * FILE:            win32ss/gdi/gdi32/include/gdi32p.h
  * PURPOSE:         User-Mode Win32 GDI Library Private Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -39,6 +39,8 @@ typedef INT
 /* MACRO ********************************************************************/
 
 #define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
+#define RCAST(_Type, _Value)   (*((_Type*)&_Value))
+
 
 /* TYPES *********************************************************************/
 
@@ -213,6 +215,10 @@ PLDC
 FASTCALL
 GdiGetLDC(HDC hDC);
 
+BOOL
+FASTCALL
+GdiSetLDC(HDC hdc, PVOID pvLDC);
+
 HGDIOBJ
 WINAPI
 GdiFixUpHandle(HGDIOBJ hGO);
@@ -236,11 +242,20 @@ ConvertBitmapInfo(
 
 DWORD
 WINAPI
-GetAndSetDCDWord( HDC, INT, DWORD, DWORD, DWORD, DWORD );
+GetAndSetDCDWord(
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwIn,
+    _In_ ULONG ulMFId,
+    _In_ USHORT usMF16Id,
+    _In_ DWORD dwError);
 
 DWORD
 WINAPI
-GetDCDWord( HDC, INT, DWORD);
+GetDCDWord(
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwError);
 
 HGDIOBJ
 WINAPI
@@ -265,6 +280,11 @@ WINAPI
 EnumLogFontExW2A(
     LPENUMLOGFONTEXA fontA,
     CONST ENUMLOGFONTEXW *fontW );
+
+BOOL
+WINAPI
+GetETM(HDC hdc,
+       EXTTEXTMETRIC *petm);
 
 /* FIXME: Put in some public header */
 UINT
@@ -360,10 +380,39 @@ FORCEINLINE
 PDC_ATTR
 GdiGetDcAttr(HDC hdc)
 {
+    GDILOOBJTYPE eDcObjType;
     PDC_ATTR pdcattr;
 
-    if (!GdiGetHandleUserData((HGDIOBJ)hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr)) return NULL;
+    /* Check DC object type */
+    eDcObjType = GDI_HANDLE_GET_TYPE(hdc);
+    if ((eDcObjType != GDILoObjType_LO_DC_TYPE) &&
+        (eDcObjType != GDILoObjType_LO_ALTDC_TYPE))
+    {
+        return NULL;
+    }
+
+    /* Get the DC attribute */
+    if (!GdiGetHandleUserData((HGDIOBJ)hdc, eDcObjType, (PVOID*)&pdcattr))
+    {
+        return NULL;
+    }
+
     return pdcattr;
+}
+
+FORCEINLINE
+PRGN_ATTR
+GdiGetRgnAttr(HRGN hrgn)
+{
+    PRGN_ATTR prgnattr;
+
+    /* Get the region attribute */
+    if (!GdiGetHandleUserData(hrgn, GDILoObjType_LO_REGION_TYPE, (PVOID*)&prgnattr))
+    {
+        return NULL;
+    }
+
+    return prgnattr;
 }
 
 #ifdef _M_IX86
@@ -394,5 +443,230 @@ _lrintf(float f)
     return (int)(f >= 0 ? f+0.5 : f-0.5);
 #endif
 }
+
+HBRUSH
+WINAPI
+GdiSelectBrush(
+    _In_ HDC hdc,
+    _In_ HBRUSH hbr);
+
+HPEN
+WINAPI
+GdiSelectPen(
+    _In_ HDC hdc,
+    _In_ HPEN hpen);
+
+HFONT
+WINAPI
+GdiSelectFont(
+    _In_ HDC hdc,
+    _In_ HFONT hfont);
+
+HGDIOBJ
+WINAPI
+GdiCreateClientObj(
+    _In_ PVOID pvObject,
+    _In_ GDILOOBJTYPE eObjType);
+
+PVOID
+WINAPI
+GdiDeleteClientObj(
+    _In_ HGDIOBJ hobj);
+
+BOOL
+WINAPI
+GdiCreateClientObjLink(
+    _In_ HGDIOBJ hobj,
+    _In_ PVOID pvObject);
+
+PVOID
+WINAPI
+GdiGetClientObjLink(
+    _In_ HGDIOBJ hobj);
+
+PVOID
+WINAPI
+GdiRemoveClientObjLink(
+    _In_ HGDIOBJ hobj);
+
+extern ULONG gcClientObj;
+
+VOID
+WINAPI
+METADC_DeleteObject(HGDIOBJ hobj);
+
+BOOL
+WINAPI
+METADC_DeleteDC(
+    _In_ HDC hdc);
+
+INT
+WINAPI
+METADC16_Escape(
+    _In_ HDC hdc,
+    _In_ INT nEscape,
+    _In_ INT cbInput,
+    _In_ LPCSTR lpvInData,
+    _Out_ LPVOID lpvOutData);
+
+BOOL
+WINAPI
+METADC_ExtTextOutW(
+    HDC hdc,
+    INT x,
+    INT y,
+    UINT fuOptions,
+    const RECT *lprc,
+    LPCWSTR lpString,
+    UINT cchString,
+    const INT *lpDx);
+
+BOOL
+WINAPI
+METADC_PatBlt(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT nWidth,
+    _In_ INT nHeight,
+    _In_ DWORD dwRop);
+
+
+/* The following METADC_* functions follow this pattern: */
+#define HANDLE_METADC0P(_RetType, _Func, dwError, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+        DWORD_PTR dwResult; \
+        if (METADC_Dispatch(DCFUNC_##_Func, &dwResult, (DWORD_PTR)dwError, hdc)) \
+        { \
+            return (_RetType)dwResult; \
+        } \
+    }
+
+#define HANDLE_METADC(_RetType, _Func, dwError, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+        DWORD_PTR dwResult = 1; \
+        if (METADC_Dispatch(DCFUNC_##_Func, &dwResult, (DWORD_PTR)dwError, hdc, __VA_ARGS__)) \
+        { \
+            return (_RetType)dwResult; \
+        } \
+    }
+
+
+typedef enum _DCFUNC
+{
+    //DCFUNC_AbortDoc,
+    DCFUNC_AbortPath,
+    DCFUNC_AlphaBlend, // UNIMPLEMENTED
+    DCFUNC_AngleArc, // UNIMPLEMENTED
+    DCFUNC_Arc,
+    DCFUNC_ArcTo, // UNIMPLEMENTED
+    DCFUNC_BeginPath,
+    //DCFUNC_BitBlt,
+    DCFUNC_Chord,
+    DCFUNC_CloseFigure,
+    DCFUNC_Ellipse,
+    DCFUNC_EndPath,
+    DCFUNC_ExcludeClipRect,
+    DCFUNC_ExtEscape,
+    DCFUNC_ExtFloodFill,
+    DCFUNC_ExtSelectClipRgn,
+    DCFUNC_ExtTextOut,
+    DCFUNC_FillPath,
+    DCFUNC_FillRgn,
+    DCFUNC_FlattenPath,
+    DCFUNC_FrameRgn,
+    DCFUNC_GetDeviceCaps,
+    DCFUNC_GdiComment,
+    DCFUNC_GradientFill, // UNIMPLEMENTED
+    DCFUNC_IntersectClipRect,
+    DCFUNC_InvertRgn,
+    DCFUNC_LineTo,
+    DCFUNC_MaskBlt, // UNIMPLEMENTED
+    DCFUNC_ModifyWorldTransform,
+    DCFUNC_MoveTo,
+    DCFUNC_OffsetClipRgn,
+    DCFUNC_OffsetViewportOrgEx,
+    DCFUNC_OffsetWindowOrgEx,
+    DCFUNC_PathToRegion, // UNIMPLEMENTED
+    DCFUNC_PatBlt,
+    DCFUNC_Pie,
+    DCFUNC_PlgBlt, // UNIMPLEMENTED
+    DCFUNC_PolyBezier,
+    DCFUNC_PolyBezierTo,
+    DCFUNC_PolyDraw,
+    DCFUNC_Polygon,
+    DCFUNC_Polyline,
+    DCFUNC_PolylineTo,
+    DCFUNC_PolyPolygon,
+    DCFUNC_PolyPolyline,
+    DCFUNC_RealizePalette,
+    DCFUNC_Rectangle,
+    DCFUNC_RestoreDC,
+    DCFUNC_RoundRect,
+    DCFUNC_SaveDC,
+    DCFUNC_ScaleViewportExtEx,
+    DCFUNC_ScaleWindowExtEx,
+    DCFUNC_SelectBrush,
+    DCFUNC_SelectClipPath,
+    DCFUNC_SelectFont,
+    DCFUNC_SelectPalette,
+    DCFUNC_SelectPen,
+    DCFUNC_SetDCBrushColor,
+    DCFUNC_SetDCPenColor,
+    DCFUNC_SetDIBitsToDevice,
+    DCFUNC_SetBkColor,
+    DCFUNC_SetBkMode,
+    DCFUNC_SetLayout,
+    //DCFUNC_SetMapMode,
+    DCFUNC_SetPixel,
+    DCFUNC_SetPolyFillMode,
+    DCFUNC_SetROP2,
+    DCFUNC_SetStretchBltMode,
+    DCFUNC_SetTextAlign,
+    DCFUNC_SetTextCharacterExtra,
+    DCFUNC_SetTextColor,
+    DCFUNC_SetTextJustification,
+    DCFUNC_SetViewportExtEx,
+    DCFUNC_SetViewportOrgEx,
+    DCFUNC_SetWindowExtEx,
+    DCFUNC_SetWindowOrgEx,
+    DCFUNC_StretchBlt,
+    DCFUNC_StrokeAndFillPath,
+    DCFUNC_StrokePath,
+    DCFUNC_TransparentBlt, // UNIMPLEMENTED
+    DCFUNC_WidenPath,
+
+} DCFUNC;
+
+BOOL
+METADC_Dispatch(
+    _In_ DCFUNC eFunction,
+    _Out_ PDWORD_PTR pdwResult,
+    _In_ DWORD_PTR dwError,
+    _In_ HDC hdc,
+    ...);
+
+#define HANDLE_METADC2(_RetType, _Func, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+        _RetType result; \
+        if (METADC_##_Func(&result, hdc, __VA_ARGS__)) \
+        { \
+            return result; \
+        } \
+    }
+
+BOOL
+WINAPI
+METADC_GetAndSetDCDWord(
+    _Out_ PDWORD pdwResult,
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwIn,
+    _In_ ULONG ulMFId,
+    _In_ USHORT usMF16Id,
+    _In_ DWORD dwError);
 
 /* EOF */

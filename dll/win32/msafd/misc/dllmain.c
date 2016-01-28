@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        misc/dllmain.c
+ * FILE:        dll/win32/msafd/misc/dllmain.c
  * PURPOSE:     DLL entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Alex Ionescu (alex@relsoft.net)
@@ -14,10 +14,8 @@
 
 #include <winuser.h>
 
-#if DBG
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
-#endif /* DBG */
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
@@ -71,9 +69,8 @@ WSPSocket(int AddressFamily,
     LARGE_INTEGER               GroupData;
     INT                         Status;
 
-    AFD_DbgPrint(MAX_TRACE, ("Creating Socket, getting TDI Name\n"));
-    AFD_DbgPrint(MAX_TRACE, ("AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
-                             AddressFamily, SocketType, Protocol));
+    TRACE("Creating Socket, getting TDI Name - AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
+        AddressFamily, SocketType, Protocol);
 
     /* Get Helper Data and Transport */
     Status = SockGetTdiName (&AddressFamily,
@@ -89,7 +86,7 @@ WSPSocket(int AddressFamily,
     /* Check for error */
     if (Status != NO_ERROR)
     {
-        AFD_DbgPrint(MID_TRACE,("SockGetTdiName: Status %x\n", Status));
+        ERR("SockGetTdiName: Status %x\n", Status);
         goto error;
     }
 
@@ -118,7 +115,6 @@ WSPSocket(int AddressFamily,
     Socket->SharedData.SizeOfRemoteAddress = HelperData->MaxWSAddressLength;
     Socket->SharedData.UseDelayedAcceptance = HelperData->UseDelayedAcceptance;
     Socket->SharedData.CreateFlags = dwFlags;
-    Socket->SharedData.CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     Socket->SharedData.ServiceFlags1 = lpProtocolInfo->dwServiceFlags1;
     Socket->SharedData.ProviderFlags = lpProtocolInfo->dwProviderFlags;
     Socket->SharedData.GroupID = g;
@@ -126,12 +122,13 @@ WSPSocket(int AddressFamily,
     Socket->SharedData.UseSAN = FALSE;
     Socket->SharedData.NonBlocking = FALSE; /* Sockets start blocking */
     Socket->SanData = NULL;
+    RtlCopyMemory(&Socket->ProtocolInfo, lpProtocolInfo, sizeof(Socket->ProtocolInfo));
 
     /* Ask alex about this */
     if( Socket->SharedData.SocketType == SOCK_DGRAM ||
         Socket->SharedData.SocketType == SOCK_RAW )
     {
-        AFD_DbgPrint(MID_TRACE,("Connectionless socket\n"));
+        TRACE("Connectionless socket\n");
         Socket->SharedData.ServiceFlags1 |= XP1_CONNECTIONLESS;
     }
 
@@ -249,9 +246,9 @@ WSPSocket(int AddressFamily,
 
     HeapFree(GlobalHeap, 0, EABuffer);
 
-    if (Status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
     {
-        AFD_DbgPrint(MIN_TRACE, ("Failed to open socket\n"));
+        ERR("Failed to open socket. Status 0x%08x\n", Status);
 
         HeapFree(GlobalHeap, 0, Socket);
 
@@ -292,18 +289,21 @@ WSPSocket(int AddressFamily,
     CreateContext(Socket);
 
     /* Notify Winsock */
-    Upcalls.lpWPUModifyIFSHandle(1, (SOCKET)Sock, lpErrno);
+    Upcalls.lpWPUModifyIFSHandle(Socket->ProtocolInfo.dwCatalogEntryId, (SOCKET)Sock, lpErrno);
 
     /* Return Socket Handle */
-    AFD_DbgPrint(MID_TRACE,("Success %x\n", Sock));
+    TRACE("Success %x\n", Sock);
 
     return (SOCKET)Sock;
 
 error:
-    AFD_DbgPrint(MID_TRACE,("Ending %x\n", Status));
+    ERR("Ending %x\n", Status);
 
     if( Socket )
         HeapFree(GlobalHeap, 0, Socket);
+
+    if( EABuffer )
+        HeapFree(GlobalHeap, 0, EABuffer);
 
     if( lpErrno )
         *lpErrno = Status;
@@ -334,56 +334,50 @@ TranslateNtStatusError(NTSTATUS Status)
 
        case STATUS_BUFFER_TOO_SMALL:
        case STATUS_BUFFER_OVERFLOW:
-          DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n");
           return WSAEMSGSIZE;
 
        case STATUS_NO_MEMORY:
        case STATUS_INSUFFICIENT_RESOURCES:
-          DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n");
           return WSAENOBUFS;
 
        case STATUS_INVALID_CONNECTION:
-          DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
+          return WSAENOTCONN;
+
+       case STATUS_PROTOCOL_NOT_SUPPORTED:
           return WSAEAFNOSUPPORT;
 
        case STATUS_INVALID_ADDRESS:
-          DbgPrint("MSAFD: STATUS_INVALID_ADDRESS\n");
           return WSAEADDRNOTAVAIL;
 
        case STATUS_REMOTE_NOT_LISTENING:
-          DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n");
           return WSAECONNREFUSED;
 
        case STATUS_NETWORK_UNREACHABLE:
-          DbgPrint("MSAFD: STATUS_NETWORK_UNREACHABLE\n");
           return WSAENETUNREACH;
 
        case STATUS_INVALID_PARAMETER:
-          DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n");
           return WSAEINVAL;
 
        case STATUS_CANCELLED:
-          DbgPrint("MSAFD: STATUS_CANCELLED\n");
           return WSA_OPERATION_ABORTED;
 
        case STATUS_ADDRESS_ALREADY_EXISTS:
-          DbgPrint("MSAFD: STATUS_ADDRESS_ALREADY_EXISTS\n");
           return WSAEADDRINUSE;
 
        case STATUS_LOCAL_DISCONNECT:
-          DbgPrint("MSAFD: STATUS_LOCAL_DISCONNECT\n");
           return WSAECONNABORTED;
 
        case STATUS_REMOTE_DISCONNECT:
-          DbgPrint("MSAFD: STATUS_REMOTE_DISCONNECT\n");
           return WSAECONNRESET;
 
        case STATUS_ACCESS_VIOLATION:
-          DbgPrint("MSAFD: STATUS_ACCESS_VIOLATION\n");
           return WSAEFAULT;
 
+       case STATUS_ACCESS_DENIED:
+          return WSAEACCES;
+
        default:
-          DbgPrint("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
+          ERR("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
           return WSAENETDOWN;
     }
 }
@@ -417,8 +411,10 @@ WSPCloseSocket(IN SOCKET Handle,
                            FALSE);
 
     if(!NT_SUCCESS(Status))
+    {
+        ERR("NtCreateEvent failed: 0x%08x", Status);
         return SOCKET_ERROR;
-
+    }
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
     if (!Socket)
@@ -439,6 +435,7 @@ WSPCloseSocket(IN SOCKET Handle,
         if (Status)
         {
             if (lpErrno) *lpErrno = Status;
+            ERR("WSHNotify failed. Error 0x%#x", Status);
             NtClose(SockEvent);
             return SOCKET_ERROR;
         }
@@ -447,6 +444,7 @@ WSPCloseSocket(IN SOCKET Handle,
     /* If a Close is already in Process, give up */
     if (Socket->SharedData.State == SocketClosed)
     {
+        WARN("Socket is closing.\n");
         NtClose(SockEvent);
         *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
@@ -497,6 +495,7 @@ WSPCloseSocket(IN SOCKET Handle,
              */
             if (Socket->SharedData.NonBlocking)
             {
+                WARN("Would block!\n");
                 NtClose(SockEvent);
                 Socket->SharedData.State = OldState;
                 *lpErrno = WSAEWOULDBLOCK;
@@ -828,23 +827,21 @@ WSPSelect(IN int nfds,
 
     if ( HandleCount == 0 )
     {
-        AFD_DbgPrint(MAX_TRACE,("HandleCount: %u. Return SOCKET_ERROR\n",
-                     HandleCount));
+        WARN("No handles! Returning SOCKET_ERROR\n", HandleCount);
         if (lpErrno) *lpErrno = WSAEINVAL;
         return SOCKET_ERROR;
     }
 
     PollBufferSize = sizeof(*PollInfo) + ((HandleCount - 1) * sizeof(AFD_HANDLE));
 
-    AFD_DbgPrint(MID_TRACE,("HandleCount: %u BufferSize: %u\n",
-                 HandleCount, PollBufferSize));
+    TRACE("HandleCount: %u BufferSize: %u\n", HandleCount, PollBufferSize);
 
     /* Convert Timeout to NT Format */
     if (timeout == NULL)
     {
         Timeout.u.LowPart = -1;
         Timeout.u.HighPart = 0x7FFFFFFF;
-        AFD_DbgPrint(MAX_TRACE,("Infinite timeout\n"));
+        TRACE("Infinite timeout\n");
     }
     else
     {
@@ -859,9 +856,9 @@ WSPSelect(IN int nfds,
             if (lpErrno) *lpErrno = WSAEINVAL;
                 return SOCKET_ERROR;
         }
-        AFD_DbgPrint(MAX_TRACE,("Timeout: Orig %d.%06d kernel %d\n",
+        TRACE("Timeout: Orig %d.%06d kernel %d\n",
                      timeout->tv_sec, timeout->tv_usec,
-                     Timeout.u.LowPart));
+                     Timeout.u.LowPart);
     }
 
     Status = NtCreateEvent(&SockEvent,
@@ -870,8 +867,11 @@ WSPSelect(IN int nfds,
                            1,
                            FALSE);
 
-    if( !NT_SUCCESS(Status) )
+    if(!NT_SUCCESS(Status))
+    {
+        ERR("NtCreateEvent failed, 0x%08x\n", Status);
         return SOCKET_ERROR;
+    }
 
     /* Allocate */
     PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
@@ -935,7 +935,7 @@ WSPSelect(IN int nfds,
                                    PollInfo,
                                    PollBufferSize);
 
-    AFD_DbgPrint(MID_TRACE,("DeviceIoControlFile => %x\n", Status));
+    TRACE("DeviceIoControlFile => %x\n", Status);
 
     /* Wait for Completition */
     if (Status == STATUS_PENDING)
@@ -968,9 +968,9 @@ WSPSelect(IN int nfds,
                 case AFD_EVENT_ABORT:
                 case AFD_EVENT_ACCEPT:
                 case AFD_EVENT_CLOSE:
-                    AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
-                                 PollInfo->Handles[i].Events,
-                                 PollInfo->Handles[i].Handle));
+                    TRACE("Event %x on handle %x\n",
+                        PollInfo->Handles[i].Events,
+                        PollInfo->Handles[i].Handle);
                     if (! HandleCounted)
                     {
                         OutCount++;
@@ -981,9 +981,9 @@ WSPSelect(IN int nfds,
                     break;
                 case AFD_EVENT_SEND:
                 case AFD_EVENT_CONNECT:
-                    AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
-                                 PollInfo->Handles[i].Events,
-                                 PollInfo->Handles[i].Handle));
+                    TRACE("Event %x on handle %x\n",
+                        PollInfo->Handles[i].Events,
+                        PollInfo->Handles[i].Handle);
                     if (! HandleCounted)
                     {
                         OutCount++;
@@ -994,9 +994,9 @@ WSPSelect(IN int nfds,
                     break;
                 case AFD_EVENT_OOB_RECEIVE:
                 case AFD_EVENT_CONNECT_FAIL:
-                    AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
-                                 PollInfo->Handles[i].Events,
-                                 PollInfo->Handles[i].Handle));
+                    TRACE("Event %x on handle %x\n",
+                        PollInfo->Handles[i].Events,
+                        PollInfo->Handles[i].Handle);
                     if (! HandleCounted)
                     {
                         OutCount++;
@@ -1024,10 +1024,10 @@ WSPSelect(IN int nfds,
                 *lpErrno = WSAEINVAL;
                 break;
         }
-        AFD_DbgPrint(MID_TRACE,("*lpErrno = %x\n", *lpErrno));
+        TRACE("*lpErrno = %x\n", *lpErrno);
     }
 
-    AFD_DbgPrint(MID_TRACE,("%d events\n", OutCount));
+    TRACE("%d events\n", OutCount);
 
     return OutCount;
 }
@@ -1057,7 +1057,6 @@ WSPAccept(SOCKET Handle,
     PSOCKADDR                   RemoteAddress =  NULL;
     GROUP                       GroupID = 0;
     ULONG                       CallBack;
-    WSAPROTOCOL_INFOW           ProtocolInfo;
     SOCKET                      AcceptSocket;
     PSOCKET_INFORMATION         AcceptSocketInfo;
     UCHAR                       ReceiveBuffer[0x1A];
@@ -1331,14 +1330,10 @@ WSPAccept(SOCKET Handle,
     }
 
     /* Create a new Socket */
-    ProtocolInfo.dwCatalogEntryId = Socket->SharedData.CatalogEntryId;
-    ProtocolInfo.dwServiceFlags1 = Socket->SharedData.ServiceFlags1;
-    ProtocolInfo.dwProviderFlags = Socket->SharedData.ProviderFlags;
-
     AcceptSocket = WSPSocket (Socket->SharedData.AddressFamily,
                               Socket->SharedData.SocketType,
                               Socket->SharedData.Protocol,
-                              &ProtocolInfo,
+                              &Socket->ProtocolInfo,
                               GroupID,
                               Socket->SharedData.CreateFlags,
                               lpErrno);
@@ -1381,7 +1376,7 @@ WSPAccept(SOCKET Handle,
     {
         NtClose(SockEvent);
         WSPCloseSocket( AcceptSocket, lpErrno );
-        MsafdReturnWithErrno( STATUS_INVALID_CONNECTION, lpErrno, 0, NULL );
+        MsafdReturnWithErrno( STATUS_PROTOCOL_NOT_SUPPORTED, lpErrno, 0, NULL );
         return INVALID_SOCKET;
     }
 
@@ -1402,7 +1397,7 @@ WSPAccept(SOCKET Handle,
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_ACCEPT);
 
-    AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
+    TRACE("Socket %x\n", AcceptSocket);
 
     if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_ACCEPT))
     {
@@ -1457,7 +1452,7 @@ WSPConnect(SOCKET Handle,
     if (!NT_SUCCESS(Status))
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    TRACE("Called\n");
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -1578,7 +1573,7 @@ WSPConnect(SOCKET Handle,
     /* FIXME: Handle Async Connect */
     if (Socket->SharedData.NonBlocking)
     {
-        AFD_DbgPrint(MIN_TRACE, ("Async Connect UNIMPLEMENTED!\n"));
+        ERR("Async Connect UNIMPLEMENTED!\n");
     }
 
     /* Send IOCTL */
@@ -1626,7 +1621,7 @@ WSPConnect(SOCKET Handle,
         }
     }
 
-    AFD_DbgPrint(MID_TRACE,("Ending\n"));
+    TRACE("Ending\n");
 
 notify:
     if (ConnectInfo) HeapFree(GetProcessHeap(), 0, ConnectInfo);
@@ -1692,7 +1687,7 @@ WSPShutdown(SOCKET Handle,
     if( !NT_SUCCESS(Status) )
         return -1;
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    TRACE("Called\n");
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -1742,7 +1737,7 @@ WSPShutdown(SOCKET Handle,
         Status = IOSB.Status;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Ending\n"));
+    TRACE("Ending\n");
 
     NtClose( SockEvent );
 
@@ -1834,9 +1829,9 @@ WSPGetSockName(IN SOCKET Handle,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
             *NameLength = Socket->SharedData.SizeOfLocalAddress;
-            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %x Port %x\n",
+            TRACE("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
-                          ((struct sockaddr_in *)Name)->sin_port));
+                          ((struct sockaddr_in *)Name)->sin_port);
             HeapFree(GlobalHeap, 0, TdiAddress);
             return 0;
         }
@@ -1941,9 +1936,9 @@ WSPGetPeerName(IN SOCKET s,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
             *NameLength = Socket->SharedData.SizeOfRemoteAddress;
-            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %x Port %x\n",
+            TRACE("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
-                          ((struct sockaddr_in *)Name)->sin_port));
+                          ((struct sockaddr_in *)Name)->sin_port);
             HeapFree(GlobalHeap, 0, SocketAddress);
             return 0;
         }
@@ -2085,7 +2080,7 @@ WSPGetSockOpt(IN SOCKET Handle,
         return SOCKET_ERROR;
     }
 
-    AFD_DbgPrint(MID_TRACE, ("Called\n"));
+    TRACE("Called\n");
 
     switch (Level)
     {
@@ -2132,6 +2127,11 @@ WSPGetSockOpt(IN SOCKET Handle,
                     break;
 
                 case SO_LINGER:
+                    if (Socket->SharedData.SocketType == SOCK_DGRAM)
+                    {
+                        *lpErrno = WSAENOPROTOOPT;
+                        return SOCKET_ERROR;
+                    }
                     Buffer = &Socket->SharedData.LingerData;
                     BufferSize = sizeof(struct linger);
                     break;
@@ -2173,11 +2173,22 @@ WSPGetSockOpt(IN SOCKET Handle,
                     Buffer = &IntBuffer;
                     BufferSize = sizeof(INT);
                     break;
+                case SO_SNDTIMEO:
+                    Buffer = &Socket->SharedData.SendTimeout;
+                    BufferSize = sizeof(DWORD);
+                    break;
+                case SO_RCVTIMEO:
+                    Buffer = &Socket->SharedData.RecvTimeout;
+                    BufferSize = sizeof(DWORD);
+                    break;
+                case SO_PROTOCOL_INFOW:
+                    Buffer = &Socket->ProtocolInfo;
+                    BufferSize = sizeof(Socket->ProtocolInfo);
+                    break;
 
                 case SO_GROUP_ID:
                 case SO_GROUP_PRIORITY:
                 case SO_MAX_MSG_SIZE:
-                case SO_PROTOCOL_INFO:
 
                 default:
                     DbgPrint("MSAFD: Get unknown optname %x\n", OptionName);
@@ -2292,7 +2303,7 @@ WSPSetSockOpt(
               }
 
               /* TODO: The total per-socket buffer space reserved for sends */
-              AFD_DbgPrint(MIN_TRACE,("Setting send buf to %x is not implemented yet\n", optval));
+              ERR("Setting send buf to %x is not implemented yet\n", optval);
               return 0;
 
            case SO_SNDTIMEO:
@@ -2326,7 +2337,7 @@ WSPSetSockOpt(
 
            default:
               /* Obviously this is a hack */
-              DbgPrint("MSAFD: Set unknown optname %x\n", optname);
+              ERR("MSAFD: Set unknown optname %x\n", optname);
               return 0;
         }
     }
@@ -2365,7 +2376,7 @@ WSPStartup(IN  WORD wVersionRequested,
 {
     NTSTATUS Status;
 
-    AFD_DbgPrint(MAX_TRACE, ("wVersionRequested (0x%X) \n", wVersionRequested));
+    ERR("wVersionRequested (0x%X) \n", wVersionRequested);
     Status = NO_ERROR;
     Upcalls = UpcallTable;
 
@@ -2405,8 +2416,7 @@ WSPStartup(IN  WORD wVersionRequested,
         lpWSPData->wHighVersion = MAKEWORD(2, 2);
     }
 
-    AFD_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
-
+    TRACE("Status (%d).\n", Status);
     return Status;
 }
 
@@ -2423,8 +2433,7 @@ WSPAPI
 WSPCleanup(OUT LPINT lpErrno)
 
 {
-    AFD_DbgPrint(MAX_TRACE, ("\n"));
-    AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+    TRACE("Leaving.\n");
     *lpErrno = NO_ERROR;
 
     return 0;
@@ -2660,7 +2669,7 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
                                       2); // Allow 2 threads only
         if (!NT_SUCCESS(Status))
         {
-             AFD_DbgPrint(MID_TRACE,("Failed to create completion port\n"));
+             ERR("Failed to create completion port: 0x%08x\n", Status);
              return FALSE;
         }
         /* Protect Handle */
@@ -3093,7 +3102,7 @@ DllMain(HANDLE hInstDll,
     {
     case DLL_PROCESS_ATTACH:
 
-        AFD_DbgPrint(MAX_TRACE, ("Loading MSAFD.DLL \n"));
+        TRACE("Loading MSAFD.DLL \n");
 
         /* Don't need thread attach notifications
         so disable them to improve performance */
@@ -3108,7 +3117,7 @@ DllMain(HANDLE hInstDll,
         /* Initialize the lock that protects our socket list */
         InitializeCriticalSection(&SocketListLock);
 
-        AFD_DbgPrint(MAX_TRACE, ("MSAFD.DLL has been loaded\n"));
+        TRACE("MSAFD.DLL has been loaded\n");
 
         break;
 
@@ -3126,7 +3135,7 @@ DllMain(HANDLE hInstDll,
         break;
     }
 
-    AFD_DbgPrint(MAX_TRACE, ("DllMain of msafd.dll (leaving)\n"));
+    TRACE("DllMain of msafd.dll (leaving)\n");
 
     return TRUE;
 }

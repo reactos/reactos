@@ -675,7 +675,8 @@ MMixerSetGetVolumeControlDetails(
     LPMIXERLINE_EXT MixerLine)
 {
     LPMIXERCONTROLDETAILS_UNSIGNED Input;
-    LONG Value, Index, Channel = 0;
+    LONG Value;
+    ULONG Index, Channel = 0;
     ULONG dwValue;
     MIXER_STATUS Status;
     LPMIXERVOLUME_DATA VolumeData;

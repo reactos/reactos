@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/filesup.c
+ * FILE:            base/setup/usetup/filesup.c
  * PURPOSE:         File support functions
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -48,8 +48,9 @@ SetupCreateSingleDirectory(
     HANDLE DirectoryHandle;
     NTSTATUS Status;
 
-    RtlCreateUnicodeString(&PathName,
-                           DirectoryName);
+    if(!RtlCreateUnicodeString(&PathName, DirectoryName))
+        return STATUS_NO_MEMORY;
+
     if (PathName.Length > sizeof(WCHAR) &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
@@ -125,6 +126,26 @@ DoesPathExist(
     }
 
     NtClose(FileHandle);
+
+    return TRUE;
+}
+
+
+BOOLEAN
+IsValidPath(
+    PWCHAR InstallDir,
+    ULONG Length)
+{
+    UINT i;
+
+    // TODO: Add check for 8.3 too.
+
+    /* Check for whitespaces */
+    for (i = 0; i < Length; i++)
+    {
+        if (isspace(InstallDir[i]))
+            return FALSE;
+    }
 
     return TRUE;
 }
@@ -327,7 +348,7 @@ SetupCopyFile(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtCreateFile failed: %x\n", Status);
+        DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
         goto unmapsrcsec;
     }
 

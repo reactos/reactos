@@ -18,6 +18,7 @@
 
 #pragma once
 
+#define IDC_COMP_LIST 880
 #define IDS_FULLFRAMES 901
 
 #define IDC_CONFIGURE 882

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/mntpoint.c
+ * FILE:            dll/win32/kernel32/client/file/mntpoint.c
  * PURPOSE:         File volume mount point functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Erik Bos, Alexandre Julliard :
@@ -118,14 +118,15 @@ GetVolumeNameForVolumeMountPointW(IN LPCWSTR VolumeMountPoint,
                                      NULL, 0, MountDevName, BufferLength);
       if (!NT_SUCCESS(Status))
       {
-         RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
          if (Status == STATUS_BUFFER_OVERFLOW)
          {
             BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
+            RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
             continue;
          }
          else
          {
+            RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
             NtClose(FileHandle);
             BaseSetLastNTError(Status);
             return FALSE;

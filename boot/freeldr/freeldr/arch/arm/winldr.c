@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/arch/arm/loader.c
+ * FILE:            boot/freeldr/freeldr/arch/arm/winldr.c
  * PURPOSE:         ARM Kernel Loader
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -81,7 +81,8 @@ PKPDR_PAGE PdrPage;
 
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-                IN PFN_COUNT NumberOfPages)
+                IN PFN_NUMBER NumberOfPages,
+                IN BOOLEAN KernelMapping)
 {
     return TRUE;
 }
@@ -106,12 +107,12 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
     PHARDWARE_PDE_ARMV6 PointerPde;
     PHARDWARE_LARGE_PTE_ARMV6 LargePte;
     PFN_NUMBER Pfn;
-    
+
     /* Setup the Startup PDE */
     LargePte = &PdrPage->PageDir.Pte[StartupPdePageTableIndex];
     TempLargePte.PageFrameNumber = PaToLargePfn((ULONG_PTR)&PdrPage->PageDir);
     *LargePte = TempLargePte;
-    
+
     /* Map-in the PDR */
     LargePte = &PdrPage->PageDir.Pte[PdrPageTableIndex];
     *LargePte = TempLargePte;
@@ -130,7 +131,7 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
         *PointerPde++ = TempPde;
     }
 
-    /* 
+    /*
      * Now map these page tables in PTE space (MiAddressToPte(PTE_BASE)).
      * Note that they all live on a single page, since each is 1KB.
      */
@@ -156,7 +157,7 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
     TempPte.PageFrameNumber = 0;
     *PointerPte = TempPte;
 
-    /* TODO: Map in the kernel CPTs */ 
+    /* TODO: Map in the kernel CPTs */
     return TRUE;
 }
 
@@ -177,7 +178,7 @@ WinLdrSetupForNt(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     LoaderBlock->u.Arm.SecondLevelDcacheFillSize = SecondLevelDcacheFillSize;
     LoaderBlock->u.Arm.SecondLevelIcacheSize = SecondLevelIcacheSize;
     LoaderBlock->u.Arm.SecondLevelIcacheFillSize = SecondLevelIcacheSize;
-    
+
     /* Write initial context information */
     LoaderBlock->KernelStack = (ULONG_PTR)PdrPage->KernelStack;
     LoaderBlock->KernelStack += KERNEL_STACK_SIZE;
@@ -245,14 +246,12 @@ MempAllocatePageTables(VOID)
 }
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt,
-                          IN ULONG Pcr,
-                          IN ULONG Tss)
-{    
+WinLdrSetProcessorContext(VOID)
+{
     ARM_CONTROL_REGISTER ControlRegister;
     ARM_TTB_REGISTER TtbRegister;
     ARM_DOMAIN_REGISTER DomainRegister;
-    
+
     /* Set the TTBR */
     TtbRegister.AsUlong = (ULONG_PTR)&PdrPage->PageDir;
     ASSERT(TtbRegister.Reserved == 0);
@@ -270,5 +269,32 @@ WinLdrSetProcessorContext(PVOID GdtIdt,
     ControlRegister.DCacheEnabled = TRUE;
     ControlRegister.ForceAp = TRUE;
     ControlRegister.ExtendedPageTables = TRUE;
-    KeArmControlRegisterSet(ControlRegister); 
+    KeArmControlRegisterSet(ControlRegister);
+}
+
+VOID
+WinLdrSetupMachineDependent(
+    PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+}
+
+VOID DiskStopFloppyMotor(VOID)
+{
+}
+
+VOID
+RealEntryPoint(VOID)
+{
+    BootMain("");
+}
+
+VOID
+FrLdrBugCheckWithMessage(
+    ULONG BugCode,
+    PCHAR File,
+    ULONG Line,
+    PSTR Format,
+    ...)
+{
+
 }

@@ -91,8 +91,8 @@ HRESULT DEVENUM_GetCategoryKey(REFCLSID clsidDeviceClass, HKEY *pBaseKey, WCHAR 
 /**********************************************************************
  * Global string constant declarations
  */
-extern const WCHAR clsid_keyname[6];
-extern const WCHAR wszInstanceKeyName[];
+extern const WCHAR clsid_keyname[6] DECLSPEC_HIDDEN;
+extern const WCHAR wszInstanceKeyName[] DECLSPEC_HIDDEN;
 #define CLSID_STR_LEN (sizeof(clsid_keyname) / sizeof(WCHAR))
 
 #endif /* __WINE_DEVENUM_H */

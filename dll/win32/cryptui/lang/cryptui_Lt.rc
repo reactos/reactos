@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Draugiškas vardas"
     IDS_ALLOWED_PURPOSE_ALL "<visi laukai>"
     IDS_ALLOWED_PURPOSE_NONE "<jokios>"
-    IDS_WARN_REMOVE_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_CA "Liudijimais, išduotais šios liudijimo įstaigos, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_CA "Liudijimais, išduotais šių liudijimo įstaigų, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_ROOT "Liudijimais, išduotais šios vyriausiosios liudijimo įstaigos, ar bet kurios jos išduotos liudijimų įstaigos liudijimais, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šį patikimą vyriausiąjį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Liudijimais, išduotais šių vyriausiųjų liudijimo įstaigų, ar bet kurių jų išduotų liudijimų įstaigų liudijimais, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šiuos patikimus vyriausiuosius liudijimus?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šio leidėjo.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šių leidėjų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_CA "Liudijimais, išduotais šios liudijimo įstaigos, nebebus pasitikima.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_CA "Liudijimais, išduotais šių liudijimo įstaigų, nebebus pasitikima.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_ROOT "Liudijimais, išduotais šios vyriausiosios liudijimo įstaigos, ar bet kurios jos išduotos liudijimų įstaigos liudijimais, nebebus pasitikima.\nAr tikrai norite pašalinti šį patikimą vyriausiąjį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Liudijimais, išduotais šių vyriausiųjų liudijimo įstaigų, ar bet kurių jų išduotų liudijimų įstaigų liudijimais, nebebus pasitikima.\nAr tikrai norite pašalinti šiuos patikimus vyriausiuosius liudijimus?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šio leidėjo.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šių leidėjų.\nAr tikrai norite pašalinti šiuos liudijimus?"
     IDS_WARN_REMOVE_DEFAULT "Ar tikrai norite pašalinti šį liudijimą?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Ar tikrai norite pašalinti šiuos liudijimus?"
     IDS_CERT_MGR "Liudijimai"
     IDS_FRIENDLY_NAME_NONE "<jokios>"
     IDS_PURPOSE_SERVER_AUTH "Garantuoja nutolusio kompiuterio tapatumą"
     IDS_PURPOSE_CLIENT_AUTH "Įrodo jūsų tapatumą nutolusiam kompiuteriui"
-    IDS_PURPOSE_CODE_SIGNING "Garantuoja, kad programinė įranga yra iš šio leidėjo\n\
-Apsaugo programinę įrangą nuo pakeitimų po išleidimo"
+    IDS_PURPOSE_CODE_SIGNING "Garantuoja, kad programinė įranga yra iš šio leidėjo\nApsaugo programinę įrangą nuo pakeitimų po išleidimo"
     IDS_PURPOSE_EMAIL_PROTECTION "Apsaugo el. pašto pranešimus"
     IDS_PURPOSE_IPSEC "Leidžia saugu ryšį internete"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Leidžia pasirašyti duomenis dabartiniu laiku"
@@ -184,9 +173,9 @@ Apsaugo programinę įrangą nuo pakeitimų po išleidimo"
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Pastaba: šio liudijimo privatusis raktas neišeksportuojamas."
 }
 
-IDD_GENERAL DIALOG 0, 0, 255, 236
+IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Bendrosios"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
@@ -200,9 +189,9 @@ BEGIN
   PUSHBUTTON "Išdavėjo &teiginys", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
-IDD_DETAIL DIALOG 0, 0, 255, 236
+IDD_DETAIL DIALOGEX 0, 0, 255, 236
 CAPTION "Išsamiai"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Rodyti:", -1, 6,12,40,14
@@ -214,9 +203,9 @@ BEGIN
   PUSHBUTTON "&Kopijuoti į failą...", IDC_EXPORT,152,216,95,14
 END
 
-IDD_HIERARCHY DIALOG 0, 0, 255, 236
+IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
 CAPTION "Liudijimo kelias"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Liudijimo kelias", -1,6,10,245,165, BS_GROUPBOX
@@ -228,9 +217,9 @@ BEGIN
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
-IDD_USERNOTICE DIALOG 0, 0, 255, 256
+IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
 CAPTION "Garantijų nedavimas"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
@@ -239,9 +228,9 @@ BEGIN
   PUSHBUTTON "Daugiau &informacijos", IDC_CPS,162,216,85,14
 END
 
-IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
+IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Bendrosios"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Draugiškas vardas:", -1, 6,14,60,14
@@ -261,8 +250,9 @@ BEGIN
   PUSHBUTTON "Pridėti &paskirtį...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
-IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
+IDD_ADD_CERT_PURPOSE DIALOGEX 0,0,200,68
 CAPTION "Pridėti paskirtį"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Pridėkite objekto identifikatorių (OID) liudijimo paskirčiai, kurią norite pridėti:",
@@ -272,8 +262,9 @@ BEGIN
   PUSHBUTTON "Atsisakyti", IDCANCEL, 100,48,60,14
 END
 
-IDD_SELECT_STORE DIALOG 0,0,200,136
+IDD_SELECT_STORE DIALOGEX 0,0,200,136
 CAPTION "Išrinkite liudijimų saugyklą"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Išrinkite liudijimų saugyklą, kurią norite naudoti:", IDC_STORE_TEXT, 6,6,190,28
@@ -284,21 +275,21 @@ BEGIN
   PUSHBUTTON "Atsisakyti", IDCANCEL, 144,118,50,14
 END
 
-IDD_IMPORT_WELCOME DIALOG 0,0,317,143
+IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Liudijimo importo vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo importo vediklį", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\
-\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\
-\n\
+  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\n\
+Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
 Jei norite tęsti, spauskite Kitas.",
     -1, 115,40,195,120
 END
 
-IDD_IMPORT_FILE DIALOG 0,0,317,178
+IDD_IMPORT_FILE DIALOGEX 0,0,317,178
 CAPTION "Liudijimo importo vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Failas:", -1, 21,1,195,10
@@ -306,16 +297,17 @@ BEGIN
   PUSHBUTTON "Pari&nkti...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Pastaba: Šie failų formatai gali turėti daugiau negu vieną liudijimą, atšauktų liudijimų sąrašą ar patikintų liudijimų sąrašą:",
     -1, 21,30,265,16
-  LTEXT "Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimai (.p7b)",
+  LTEXT "Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimai (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Asmeninės informacijos mainai/PKCS #12 (.pfx, .p12)",
+  LTEXT "Asmeninės informacijos mainai/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft išdėstyta serijomis liudijimų saugykla (.sst)",
+  LTEXT "Microsoft išdėstyta serijomis liudijimų saugykla (*.sst)",
     -1, 31,83,265,10
 END
 
-IDD_IMPORT_STORE DIALOG 0,0,317,143
+IDD_IMPORT_STORE DIALOGEX 0,0,317,143
 CAPTION "Liudijimo importo vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine gali automatiškai parinkti liudijimų saugyklą arba jūs galite nurodyti vietą liudijimams.",
@@ -328,8 +320,9 @@ BEGIN
   PUSHBUTTON "Pari&nkti...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG 0,0,317,178
+IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Liudijimo importo vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Liudijimo importo vediklio pabaiga", IDC_IMPORT_TITLE,
@@ -343,8 +336,9 @@ BEGIN
     115,67,174,100
 END
 
-IDD_CERT_MGR DIALOG 0,0,335,270
+IDD_CERT_MGR DIALOGEX 0,0,335,270
 CAPTION "Liudijimai"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Numatytos paskirtys:", -1, 7,9,100,12
@@ -361,8 +355,9 @@ BEGIN
   PUSHBUTTON "&Užverti", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
-IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
+IDD_CERT_MGR_ADVANCED DIALOGEX 0,0,248,176
 CAPTION "Išsamios parinktys"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Liudijimo paskirtis", -1, 7,7,234,141, BS_GROUPBOX
@@ -376,21 +371,21 @@ BEGIN
   PUSHBUTTON "Atsisakyti", IDCANCEL, 190,155,51,14
 END
 
-IDD_EXPORT_WELCOME DIALOG 0,0,317,143
+IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo eksporto vediklį", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\
-\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\
-\n\
+  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\n\
+Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
 Jei norite tęsti, spauskite Kitas.",
     -1, 115,40,195,120
 END
 
-IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
+IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Jei pasirinksite eksportuoti privatųjį raktą, kitame lape būsite paklausti įvesti slaptažodį raktui apsaugoti.", -1, 21,1,195,25
@@ -402,8 +397,9 @@ BEGIN
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
-IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
+IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Slaptažodis:", -1, 21,1,195,10
@@ -412,20 +408,21 @@ BEGIN
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
-IDD_EXPORT_FORMAT DIALOG 0,0,317,143
+IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Išrinkite formatą, kurį norite naudoti:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-užkoduotas X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-užkoduotas X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-užkoduotas X.509 (.cer)",
+  AUTORADIOBUTTON "Ba&se64-užkoduotas X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimas (.p7b):",
+  AUTORADIOBUTTON "&Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimas (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Jei įmanoma, apimti visus liudijimus liudijimų kelyje",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Asmeninės informacijos mainai/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "&Asmeninės informacijos mainai/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "A&pimti visus liudijimus liudijimų kelyje",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -435,8 +432,9 @@ BEGIN
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
-IDD_EXPORT_FILE DIALOG 0,0,317,143
+IDD_EXPORT_FILE DIALOGEX 0,0,317,143
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Failas:", -1, 21,1,195,10
@@ -444,8 +442,9 @@ BEGIN
   PUSHBUTTON "Pari&nkti...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG 0,0,317,178
+IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Liudijimo eksporto vediklis"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Liudijimo eksporto vediklio pabaiga", IDC_EXPORT_TITLE,

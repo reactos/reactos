@@ -28,6 +28,7 @@ class CBandSiteMenu :
     public IContextMenu3,
     public IShellService
 {
+    CComPtr<IUnknown> m_Owner;
 public:
     CBandSiteMenu();
     ~CBandSiteMenu();

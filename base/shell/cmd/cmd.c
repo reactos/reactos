@@ -163,7 +163,6 @@ BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
 DWORD dwChildProcessId = 0;
-OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
 LPTSTR lpOriginalEnvironment;
@@ -1622,9 +1621,8 @@ Initialize()
     BOOL AlwaysStrip = FALSE;
     BOOL AutoRun = TRUE;
 
-    /* get version information */
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx (&osvi);
+    /* Get version information */
+    InitOSVersion();
 
     /* Some people like to run ReactOS cmd.exe on Win98, it helps in the
      * build process. So don't link implicitly against ntdll.dll, load it

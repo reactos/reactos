@@ -17,7 +17,7 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/section/fault.c
+ * FILE:            ntoskrnl/cache/section/fault.c
  * PURPOSE:         Consolidate fault handlers for sections
  *
  * PROGRAMMERS:     Arty
@@ -77,7 +77,7 @@ rmaps, so each mapping should be immediately followed by an rmap addition.
 #include "newmm.h"
 #define NDEBUG
 #include <debug.h>
-#include "../mm/ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #define DPRINTC DPRINT
 
@@ -122,8 +122,8 @@ MmNotPresentFaultCachePage (
     DPRINT("Not Present: %p %p (%p-%p)\n",
            AddressSpace,
            Address,
-           MemoryArea->StartingAddress,
-           MemoryArea->EndingAddress);
+           MA_GetStartingAddress(MemoryArea),
+           MA_GetEndingAddress(MemoryArea));
 
     /*
      * There is a window between taking the page fault and locking the
@@ -138,7 +138,7 @@ MmNotPresentFaultCachePage (
 
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
     TotalOffset.QuadPart = (ULONG_PTR)PAddress -
-                           (ULONG_PTR)MemoryArea->StartingAddress;
+                           MA_GetStartingAddress(MemoryArea);
 
     Segment = MemoryArea->Data.SectionData.Segment;
 
@@ -345,7 +345,7 @@ MiCowCacheSectionPage (
 
    /* Find the offset of the page */
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-    Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
+    Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea) +
                       MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     if (!Segment->WriteCopy /*&&
@@ -584,8 +584,8 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
 
         DPRINT("Type %x (%p -> %p)\n",
                MemoryArea->Type,
-               MemoryArea->StartingAddress,
-               MemoryArea->EndingAddress);
+               MA_GetStartingAddress(MemoryArea),
+               MA_GetEndingAddress(MemoryArea));
 
         Resources.DoAcquisition = NULL;
 
@@ -660,8 +660,8 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         DPRINT1("Completed page fault handling %Ix %x\n", Address, Status);
         DPRINT1("Type %x (%p -> %p)\n",
                 MemoryArea->Type,
-                MemoryArea->StartingAddress,
-                MemoryArea->EndingAddress);
+                MA_GetStartingAddress(MemoryArea),
+                MA_GetEndingAddress(MemoryArea));
     }
 
     if (!FromMdl)
@@ -788,9 +788,9 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
 
         DPRINTC("Type %x (%p -> %08Ix -> %p) in %p\n",
                 MemoryArea->Type,
-                MemoryArea->StartingAddress,
+                MA_GetStartingAddress(MemoryArea),
                 Address,
-                MemoryArea->EndingAddress,
+                MA_GetEndingAddress(MemoryArea),
                 PsGetCurrentThread());
 
         Resources.DoAcquisition = NULL;

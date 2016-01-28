@@ -143,7 +143,7 @@ DELAY [/m]n\n\n\
   /m          anger at n är mikrosekunder\n\
               annars är n sekunder\n"
     STRING_DIR_HELP1 "DIR [enhet:][mapp][filnamn] [/A[[:]attribut]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortering]] [/P] [/Q] [/S] [/T[[:]tidsfält]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortering]] [/P] [/Q] [/R] [/S] [/T[[:]tidsfält]] [/W] [/X] [/4]\n\n\
   [enhet:][mapp][filnamn]\n\
               Anger enhet, mapp, och/eller filer som skall listes.\n\n\
   /A          Vis filer ved att ange attributter.\n\
@@ -162,6 +162,7 @@ DELAY [/m]n\n\n\
                G  Gruppera mappar först          -  Prefix för omvänd ordning\n\
   /P          Pausa efter varje hel skärmbild.\n\
   /Q          Viser vem som äger filen.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Viser alla filer i angiven mapp och alla undermappar.\n\
   /T          Kontrollerar vilket tidsfält som visas eller blir använt för sortering\n\
   timefelt    C  Skapelse \n\
@@ -411,7 +412,7 @@ VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre för att visa aktuell VERIFY inställninar.\n"
     STRING_VERIFY_HELP2 "VERIFY är %s.\n"
     STRING_VERIFY_HELP3 "Må ange ON eller OFF."
-    STRING_VERSION_HELP1 "Vis Reactos versjonen\n\n\
+    STRING_VERSION_HELP1 "Vis ReactOS versjonen\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Vis anerkjennelse.\n\
   /R  Vis videreformidlingsinformasjon.\n\
@@ -494,7 +495,6 @@ tittel        ny tittel\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Feil]\n"
     STRING_REN_ERROR1 "MoveFile() mislykkes. Feil: %lu\n"
-    STRING_START_ERROR1 "Ingen satsvis støtte for øyeblikket!"
     STRING_TIME_ERROR1 "Ugyldig tid."
     STRING_TYPE_ERROR1 "Ugyldig alternativ '/%s'\n"
     STRING_WINDOW_ERROR1 "vinduet ble inte funnet"
@@ -519,9 +519,11 @@ tittel        ny tittel\n"
     STRING_REPLACE_ERROR5 "Tilgang nektet - %s\n"
     STRING_REPLACE_ERROR6 "Ingen filer ble funnet - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operativsystem [Versjon %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersjon %s %s"
-    STRING_VERSION_RUNVER " körs på %s"
+    STRING_VERSION_RUNNING_ON "Körs på: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(r) kopiert\n"
     STRING_DELETE_WIPE "slettet"
     STRING_FOR_ERROR "ugyldig variabel spesifikasjon."

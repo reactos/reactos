@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS ODBC Control Panel Applet
- * FILE:            dll/cpl/main/main.c
+ * FILE:            dll/cpl/odbccp32/odbccp32.c
  * PURPOSE:         applet initialization
  * PROGRAMMER:      Johannes Anderwald
  */

@@ -48,10 +48,10 @@ interface IAccessor : IUnknown
     [call_as(CreateAccessor)]
     HRESULT RemoteCreateAccessor([in] DBACCESSORFLAGS dwAccessorFlags,
                                  [in] DBCOUNTITEM cBindings,
-                                 [in, unique, size_is(cBindings)] DBBINDING *rgBindings,
+                                 [in, unique, size_is((ULONG)cBindings)] DBBINDING *rgBindings,
                                  [in] DBLENGTH cbRowSize,
                                  [out] HACCESSOR *phAccessor,
-                                 [in, out, unique, size_is(cBindings)] DBBINDSTATUS *rgStatus,
+                                 [in, out, unique, size_is((ULONG)cBindings)] DBBINDSTATUS *rgStatus,
                                  [out] IErrorInfo **ppErrorInfoRem);
 
     [local]
@@ -64,7 +64,7 @@ interface IAccessor : IUnknown
     HRESULT RemoteGetBindings([in] HACCESSOR hAccessor,
                               [out] DBACCESSORFLAGS *pdwAccessorFlags,
                               [in, out] DBCOUNTITEM *pcBindings,
-                              [out, size_is(,*pcBindings)] DBBINDING **prgBindings,
+                              [out, size_is(,(ULONG)*pcBindings)] DBBINDING **prgBindings,
                               [out] IErrorInfo **ppErrorInfoRem);
 
     [local]

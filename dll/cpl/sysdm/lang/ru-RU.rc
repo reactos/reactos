@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 204, 220, 10
+    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Лицензия...", IDC_LICENCE, 170, 200, 78, 14
 END
 
@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Диспетчер устройств приводит список всего установленного оборудования на данном компьютере и позволяет изменить свойства любого устройства.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Диспетчер устройств...", IDC_HARDWARE_DEVICE_MANAGER, 144, 48, 100, 14
     GROUPBOX "Мастер оборудования", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Мастер оборудования помогает установить, востановить, отключить или извлечь любое устройство, а также настроить его.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Мастер оборудования...", IDC_HARDWARE_WIZARD, 144, 120, 100, 14
     GROUPBOX "Профили оборудования", IDC_STATIC, 6, 149, 244, 61
@@ -48,24 +48,24 @@ BEGIN
     LTEXT "Для изменения этих параметров требуются права Администратора.", IDC_STATIC, 12, 5, 253, 8
     GROUPBOX "Быстродействие", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Визуальные эффекты, использование процессора, оперативной и виртуальной памяти.", IDC_STATIC, 16, 29, 210, 20
-    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Профили пользователей", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Параметры рабочего стола, относящиеся ко входу в систему.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Загрузка и восстановление", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Загрузка и восстановление системы, отладочная информация.", IDC_STATIC, 16, 144, 210, 20
-    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Системные параметры"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
+    GROUPBOX "Информация о версии", IDC_STATIC, 6, 3, 210, 73
     CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
@@ -98,14 +98,34 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 197, 213, 50, 14
 END
 
+IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Общие"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
+    LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
+    LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
+    LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
+    LTEXT "Серийный номер:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
+    GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
+    AUTOCHECKBOX "Это &переносной компьютер", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Выбор профилей оборудования", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Всегда &отображать этот профиль при запуске ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+END
+
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Копия Профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "из:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Из:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "в:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "В:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
     DEFPUSHBUTTON "&ОК", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
@@ -116,16 +136,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Переименовать профиль"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ИЗ:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Старое:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "в:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Новое:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Профили пользователей"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -145,18 +165,18 @@ END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Загрузка и востановление"
+CAPTION "Загрузка и восстановление"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Загрузка операционной системы", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Операционная система по умолчанию:", IDC_STATIC, 14, 26, 145, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "О&тображать список операционных систем:", IDC_STRECLIST, 14, 56, 161, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "секунд", IDC_STATIC, 213, 56, 25, 8
-    AUTOCHECKBOX "Отображать &варианты востановления:", IDC_STRRECREC, 14, 70, 163, 8
+    AUTOCHECKBOX "Отображать &варианты восстановления:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
@@ -170,7 +190,7 @@ BEGIN
     GROUPBOX "Запись отладочной информации", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "Файл дампа памяти:", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, 17, 228, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 195, 259, 50, 14
@@ -210,10 +230,10 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Перемнные среды"
+CAPTION "Переменные среды"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Переменные пользователя", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX "Пользовательские переменные", IDC_STATIC, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Создать...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
@@ -234,9 +254,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Изменение переменной"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 68, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 68, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 170, 50, 50, 14
@@ -261,8 +281,8 @@ BEGIN
     IDS_PETABYTE "Пб ОЗУ"
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
-    IDS_NO_DUMP "(нет)"
-    IDS_MINI_DUMP "Малый дамп(64Кб)"
+    IDS_NO_DUMP "(Нет)"
+    IDS_MINI_DUMP "Малый дамп (64Кб)"
     IDS_KERNEL_DUMP "Дамп ядра"
     IDS_FULL_DUMP "Полный дамп"
     IDS_USERPROFILE_NAME "Имя"
@@ -273,10 +293,15 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Панель управления системы"
     IDS_WARNINITIALSIZE "Введите числовое значение исходного размера файла подкачки."
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
-    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 2 МБ и не должен превышать свободного места на выбранном диске."
+    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 16 МБ и не должен превышать свободного места на выбранном диске."
     IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
-    IDS_PAGEFILE_NONE "none"
-    IDS_PAGEFILE_SYSTEM "system managed"
-    IDS_INFOREBOOT "You have to reboot the computer, in order to apply the changes."
+    IDS_PAGEFILE_NONE "Нет"
+    IDS_PAGEFILE_SYSTEM "По выбору системы"
+    IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
     IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлексей Брагин\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nГрегор Брюнмар\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЙоханнес Андервальд\nKamil Horníček\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМаттиас Купфер\nМайк Норделл\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТимо Кройцер\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nКолин Финк\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления профиля"
+    IDS_HWPROFILE_CONFIRM_DELETE "Вы уверены что хотите удалить профиль оборудования ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
+    IDS_HWPROFILE_PROFILE "Профиль"
+    IDS_HWPROFILE_WARNING "Внимание"
 END

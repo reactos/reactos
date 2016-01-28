@@ -35,13 +35,17 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+  WSADATA wsaData;
+
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
       interfaceMapInit();
+      WSAStartup(MAKEWORD(2, 2), &wsaData);
       break;
 
     case DLL_PROCESS_DETACH:
+      WSACleanup();
       interfaceMapFree();
       break;
   }
@@ -781,11 +785,24 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
  *
  * NOTES
  */
+
 DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
 {
 	DWORD ret = NO_ERROR;
-	UNIMPLEMENTED;
-	return ret;	
+
+  if (TableClass == TCP_TABLE_OWNER_PID_ALL) {
+    if (*pdwSize == 0) {
+      *pdwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
+      return ERROR_INSUFFICIENT_BUFFER; 
+    } else {
+      ZeroMemory(pTcpTable, sizeof(MIB_TCPTABLE_OWNER_PID));
+      return NO_ERROR;
+    }
+  }
+
+
+    UNIMPLEMENTED;
+    return ret;	
 }
 
 
@@ -1504,22 +1521,6 @@ DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCP
 	return ret;	
 }
 
-
-/******************************************************************
- *    GetPerAdapterInfo (IPHLPAPI.@)
- *
- *
- * PARAMS
- *
- *  IfIndex [In]
- *  pPerAdapterInfo [In/Out]
- *  pOutBufLen [In/Out]
- *
- * RETURNS
- *
- *  DWORD
- *
- */
 static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, PVOID Data)
 {
   IP_ADDR_STRING *pNext;
@@ -1550,6 +1551,21 @@ static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, 
   Context->NumServers++;
 }
 
+/******************************************************************
+ *    GetPerAdapterInfo (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  IfIndex [In]
+ *  pPerAdapterInfo [In/Out]
+ *  pOutBufLen [In/Out]
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
 DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
 {
   HKEY hkey;
@@ -2035,7 +2051,6 @@ DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
   return ERROR_NOT_SUPPORTED;
 }
 
-
 /******************************************************************
  *    SendARP (IPHLPAPI.@)
  *
@@ -2050,15 +2065,19 @@ DWORD WINAPI NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr, PULONG PhyAddrLen)
 {
-  FIXME("(DestIP 0x%08x, SrcIP 0x%08x, pMacAddr %p, PhyAddrLen %p): stub\n",
-   DestIP, SrcIP, pMacAddr, PhyAddrLen);
-  return ERROR_NOT_SUPPORTED;
+  IPAddr IPs[2];
+  ULONG Size;
+
+  if (IsBadWritePtr(pMacAddr, sizeof(ULONG)) || IsBadWritePtr(PhyAddrLen, sizeof(ULONG)))
+    return ERROR_INVALID_PARAMETER;
+
+  IPs[0] = DestIP;
+  IPs[1] = SrcIP;
+  Size = sizeof(IPs);
+  return TCPSendIoctl(INVALID_HANDLE_VALUE, IOCTL_QUERY_IP_HW_ADDRESS, IPs, &Size, pMacAddr, PhyAddrLen);
 }
 
 
@@ -2132,7 +2151,7 @@ DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
   if (!pArpEntry)
       return ERROR_INVALID_PARAMETER;
 
-  if (!NT_SUCCESS(openTcpFile( &tcpFile )))
+  if (!NT_SUCCESS(openTcpFile( &tcpFile, FILE_READ_DATA | FILE_WRITE_DATA )))
       return ERROR_NOT_SUPPORTED;
 
   if (!NT_SUCCESS(getNthIpEntity( tcpFile, pArpEntry->dwIndex, &id )))
@@ -2281,9 +2300,9 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 /*
  * @implemented
  */
+#ifdef GetAdaptersAddressesV1
 DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
-#if 0
     InterfaceIndexTable *indexTable;
     IFInfo ifInfo;
     int i;
@@ -2295,11 +2314,11 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
     if (Reserved) return ERROR_INVALID_PARAMETER;
 
-    indexTable = getNonLoopbackInterfaceIndexTable(); //I think we want non-loopback here
+    indexTable = getInterfaceIndexTable();
     if (!indexTable)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    ret = openTcpFile(&tcpFile);
+    ret = openTcpFile(&tcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(ret))
         return ERROR_NO_DATA;
 
@@ -2332,8 +2351,8 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             /* We're only going to implement what's required for XP SP0 */
         }
     }
-
-    if (*pOutBufLen < requiredSize)
+    TRACE("size: %d, requiredSize: %d\n", *pOutBufLen, requiredSize);
+    if (!pAdapterAddresses || *pOutBufLen < requiredSize)
     {
         *pOutBufLen = requiredSize;
         closeTcpFile(tcpFile);
@@ -2384,16 +2403,15 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             currentLocation += sizeof(WCHAR);
 
             currentAddress->Next = (PVOID)currentLocation;
+            /* Terminate the last address correctly */
+            if(i==0)
+                currentAddress->Next = NULL;
 
             /* We're only going to implement what's required for XP SP0 */
 
             currentAddress = currentAddress->Next;
         }
     }
-
-    /* Terminate the last address correctly */
-    if (currentAddress)
-        currentAddress->Next = NULL;
 
     /* Now again, for real this time */
 
@@ -2457,7 +2475,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             currentAddress->IfType = ifInfo.if_info.ent.if_type;
 
             /* Operational status */
-            currentAddress->OperStatus = ifInfo.if_info.ent.if_operstatus;
+            if(ifInfo.if_info.ent.if_operstatus >= IF_OPER_STATUS_CONNECTING)
+                currentAddress->OperStatus = IfOperStatusUp;
+            else
+                currentAddress->OperStatus = IfOperStatusDown;
 
             /* We're only going to implement what's required for XP SP0 */
 
@@ -2470,16 +2491,8 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     free(indexTable);
 
     return NO_ERROR;
-#else
-    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
-    if (!pAdapterAddresses || *pOutBufLen == 0)
-      return ERROR_BUFFER_OVERFLOW;
-    if (Reserved) return ERROR_INVALID_PARAMETER;
-
-    FIXME(":stub\n");
-    return ERROR_NO_DATA;
-#endif
 }
+#endif
 
 /*
  * @unimplemented
@@ -2514,6 +2527,13 @@ DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **pp
 DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
     FIXME(":stub\n");
+
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
     return 0L;
 }
 

@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001-2004, 2006, 2010, 2012, 2013 by                         */
+/*  Copyright 2001-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -23,7 +23,7 @@
 #include "pshglob.h"
 
 #ifdef DEBUG_HINTER
-  PSH_Globals  ps_debug_globals = 0;
+  PSH_Globals  ps_debug_globals = NULL;
 #endif
 
 
@@ -240,7 +240,7 @@
                        FT_Int     family )
   {
     PSH_Blue_Table  top_table, bot_table;
-    FT_Int          count_top, count_bot;
+    FT_UInt         count_top, count_bot;
 
 
     if ( family )
@@ -339,7 +339,7 @@
             bot   = zone[1].org_bottom;
             delta = bot - top;
 
-            if ( delta < 2 * fuzz )
+            if ( delta / 2 < fuzz )
               zone[0].org_top = zone[1].org_bottom = top + delta / 2;
             else
             {
@@ -369,7 +369,7 @@
   {
     FT_UInt         count;
     FT_UInt         num;
-    PSH_Blue_Table  table = 0;
+    PSH_Blue_Table  table = NULL;
 
     /*                                                        */
     /* Determine whether we need to suppress overshoots or    */
@@ -635,7 +635,7 @@
       FT_FREE( globals );
 
 #ifdef DEBUG_HINTER
-      ps_debug_globals = 0;
+      ps_debug_globals = NULL;
 #endif
     }
   }
@@ -750,7 +750,7 @@
   }
 
 
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL_DEF( void )
   psh_globals_set_scale( PSH_Globals  globals,
                          FT_Fixed     x_scale,
                          FT_Fixed     y_scale,
@@ -780,8 +780,6 @@
       psh_globals_scale_widths( globals, 1 );
       psh_blues_scale_zones( &globals->blues, y_scale, y_delta );
     }
-
-    return 0;
   }
 
 

@@ -1,13 +1,13 @@
 @ stub DsAddSidHistoryA
 @ stub DsAddSidHistoryW
-@ stub DsBindA
-@ stub DsBindW
+@ stdcall DsBindA(str str ptr)
+@ stdcall DsBindW(wstr wstr ptr)
 @ stub DsBindWithCredA
 @ stub DsBindWithCredW
 @ stub DsBindWithSpnA
 @ stub DsBindWithSpnW
 @ stub DsClientMakeSpnForTargetServerA
-@ stub DsClientMakeSpnForTargetServerW
+@ stdcall DsClientMakeSpnForTargetServerW(wstr wstr ptr ptr)
 @ stub DsCrackNamesA
 @ stub DsCrackNamesW
 @ stub DsCrackSpn2A

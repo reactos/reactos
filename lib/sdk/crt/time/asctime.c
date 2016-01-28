@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
  * PROJECT:     ReactOS CRT library
- * FILE:        lib/sdk/crt/time/ftime.c
+ * FILE:        lib/sdk/crt/time/asctime.c
  * PURPOSE:     Implementation of asctime(), _asctime_s()
  * PROGRAMERS:  Timo Kreuzer
  */

@@ -20,6 +20,7 @@
  */
 
 #pragma once
+#ifndef _WINNT_
 #define _WINNT_
 
 /* We require WDK / VS 2008 or newer */
@@ -69,8 +70,11 @@ $define(ULONG=DWORD)
 $define(USHORT=WORD)
 $define(UCHAR=BYTE)
 $include(ntbasedef.h)
+$include(interlocked.h)
 $include(winnt_old.h)
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#endif /* _WINNT_ */

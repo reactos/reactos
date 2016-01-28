@@ -4,32 +4,32 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "\nSkonfiguruj adapter WLAN.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
-\t-c SSID\t\t£πczy z podanym SSID,\n\
-\t-w WEP\t\tWyznacza klucz WEP dla po≥πczenia.\n\
-\t-a\t\tWymusza po≥πczenie typu ad-hoc\n\
-\t-d\t\tRoz≥πcza obecnie po≥πczony AP.\n\
-\t-s\t\tSkauje i wyúwietle listÍ dostÍpnych AP\n\
-\t\t\tw zasiÍgu.\n\n\
-Uruchomienie bez parametr?w wyúwietli informacje o bie?πcym po≥πczeniu WLAN\n"
-    IDS_NO_NETWORK "Brak sieci w zasiÍgu\n"
-    IDS_NO_WLAN_ADAPTER "Adapter WLAN nie zosta≥ wykryty w systemie\n"
-    IDS_SUCCESS "Operacja zako?czy≥a siÍ sukcesem.\n"
-    IDS_WLAN_DISCONNECT "\nWLAN zosta≥ od≥πczony\n"
+\t-c SSID\t\t≈ÅƒÖczy z podanym SSID,\n\
+\t-w WEP\t\tWyznacza klucz WEP dla po≈ÇƒÖczenia.\n\
+\t-a\t\tWymusza po≈ÇƒÖczenie typu ad-hoc\n\
+\t-d\t\tRoz≈ÇƒÖcza obecnie po≈ÇƒÖczony AP.\n\
+\t-s\t\tSkauje i wy≈õwietle listƒô dostƒôpnych AP\n\
+\t\t\tw zasiƒôgu.\n\n\
+Uruchomienie bez parametr?w wy≈õwietli informacje o bie?ƒÖcym po≈ÇƒÖczeniu WLAN\n"
+    IDS_NO_NETWORK "Brak sieci w zasiƒôgu\n"
+    IDS_NO_WLAN_ADAPTER "Adapter WLAN nie zosta≈Ç wykryty w systemie\n"
+    IDS_SUCCESS "Operacja zako?czy≈Ça siƒô sukcesem.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN zosta≈Ç od≈ÇƒÖczony\n"
     IDS_MSG_WEP_ENABLED "WEP w u?yciu: %s\n"
-    IDS_MSG_NETWORK_MODE "Tryb po≥πczenia: %s\n"
+    IDS_MSG_NETWORK_MODE "Tryb po≈ÇƒÖczenia: %s\n"
     IDS_MSG_CURRENT_WIRELESS "\nInformacje o konfiguracji obecnej sieci bezprzewodowej:\n\n"
     IDS_MSG_ENCRYPTED "Szyfrowana: %s\n"
     IDS_MSG_NETWORK_TYPE "Typ sieci: %s\n"
     IDS_MSG_RSSI "RSSI: %i dBm\n"
-    IDS_MSG_SUPPORT_RATE "DostÍpne prÍdkoúci transmisji (Mbps): "
+    IDS_MSG_SUPPORT_RATE "Dostƒôpne prƒôdko≈õci transmisji (Mbps): "
     IDS_MSG_TRANSMISSION_POWER "Moc transmisji: %d mW\n"
     IDS_MSG_ANTENNA_COUNT "Liczba anten: %d\n"
-    IDS_MSG_TRANSMIT_ANTENNA "Antena nadajπca: %d\n"
-    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena nadajπca: Dowolna\n"
-    IDS_MSG_RECEIVE_ANTENNA "Antena odbierajπca: %d\n"
-    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena odbierajπca: Dowolna\n"
-    IDS_MSG_FRAGMENT_THRESHOLD "Pu≥ap fragmentacji: %d bytes\n"
-    IDS_MSG_RTS_THRESHOLD "Pu≥ap RTS: %d bytes\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antena nadajƒÖca: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena nadajƒÖca: Dowolna\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antena odbierajƒÖca: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena odbierajƒÖca: Dowolna\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Pu≈Çap fragmentacji: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Pu≈Çap RTS: %d bytes\n"
     IDS_YES "Tak"
     IDS_NO "Nie"
     IDS_ADHOC "Ad-hoc"

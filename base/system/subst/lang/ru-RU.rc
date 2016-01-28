@@ -1,0 +1,19 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Неверное число параметров - %s\n"
+    IDS_INVALID_PARAMETER "Неверное число параметров - %s\n"
+    IDS_INVALID_PARAMETER2 "Неверный параметр - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Диск уже сопоставлен\n"
+    IDS_FAILED_WITH_ERRORCODE "Сбой с кодом ошибки 0x%x: %s\n"
+    IDS_USAGE "Сопоставление имени диска указанному пути.\n\n\
+SUBST [диск1: [диск2:]путь]\n\
+SUBST диск1: /D\n\n\
+  диск1:         Виртуальный диск, который сопоставляется указанному пути.\n\
+  [диск:]путь    Физические диск и путь,\n                  которым сопоставляется виртуальный диск.\n\
+  /D             Удаление ранее созданного виртуального диска.\n\n\
+Введите SUBST без параметров для вывода текущего списка виртуальных дисков.\n"
+END

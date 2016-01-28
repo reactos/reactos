@@ -141,7 +141,7 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
 ProcessLoop:
     for (;;)
     {
-        /* Wait for Something to Happen on the Queue */
+        /* Wait for something to happen on the queue */
         QueueEntry = KeRemoveQueue(&WorkQueue->WorkerQueue,
                                    WaitMode,
                                    TimeoutPointer);
@@ -230,7 +230,7 @@ ProcessLoop:
  *
  *     The ExpCreateWorkerThread routine creates a new worker thread for the
  *     specified queue.
- **
+ *
  * @param QueueType
  *        Type of the queue to use for this thread. Valid values are:
  *          - DelayedWorkQueue
@@ -314,18 +314,18 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
 }
 
 /*++
- * @name ExpCheckDynamicThreadCount
+ * @name ExpDetectWorkerThreadDeadlock
  *
- *     The ExpCheckDynamicThreadCount routine checks every queue and creates a
- *     dynamic thread if the queue seems to be deadlocked.
+ *     The ExpDetectWorkerThreadDeadlock routine checks every queue and creates
+ *     a dynamic thread if the queue seems to be deadlocked.
  *
  * @param None
  *
  * @return None.
  *
- * @remarks The algorithm for deciding if a new thread must be created is
- *          based on wether the queue has processed no new items in the last
- *          second, and new items are still enqueued.
+ * @remarks The algorithm for deciding if a new thread must be created is based
+ *          on whether the queue has processed no new items in the last second,
+ *          and new items are still enqueued.
  *
  *--*/
 VOID
@@ -362,8 +362,8 @@ ExpDetectWorkerThreadDeadlock(VOID)
 /*++
  * @name ExpCheckDynamicThreadCount
  *
- *     The ExpCheckDynamicThreadCount routine checks every queue and creates a
- *     dynamic thread if the queue requires one.
+ *     The ExpCheckDynamicThreadCount routine checks every queue and creates
+ *     a dynamic thread if the queue requires one.
  *
  * @param None
  *
@@ -485,6 +485,19 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
             ObDereferenceObject(ExpLastWorkerThread);
             PsTerminateSystemThread(STATUS_SYSTEM_SHUTDOWN);
         }
+
+// #ifdef _WINKD_
+        /*
+         * If WinDBG wants to attach or kill a user-mode process, and/or
+         * page-in an address region, queue a debugger worker thread.
+         */
+        if (ExpDebuggerWork == WinKdWorkerStart)
+        {
+             ExInitializeWorkItem(&ExpDebuggerWorkItem, ExpDebuggerWorker, NULL);
+             ExpDebuggerWork = WinKdWorkerInitialized;
+             ExQueueWorkItem(&ExpDebuggerWorkItem, DelayedWorkQueue);
+        }
+// #endif /* _WINKD_ */
     }
 }
 
@@ -744,4 +757,3 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
 }
 
 /* EOF */
-

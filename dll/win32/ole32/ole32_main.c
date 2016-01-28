@@ -147,3 +147,21 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 
 	return hmem;
 }
+
+/***********************************************************************
+ *      CoGetActivationState (ole32.@)
+ */
+HRESULT WINAPI CoGetActivationState(GUID guid, DWORD unknown, DWORD *unknown2)
+{
+    FIXME("%s, %x, %p\n", debugstr_guid(&guid), unknown, unknown2);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      CoGetCallState (ole32.@)
+ */
+HRESULT WINAPI CoGetCallState(int unknown, PULONG unknown2)
+{
+    FIXME("%d, %p\n", unknown, unknown2);
+    return E_NOTIMPL;
+}

@@ -32,3 +32,6 @@ WINE_MANIFEST 24 msxml3.manifest
 2 WINE_REGISTRY "xmlparser.rgs"
 
 #include "schemas.rc"
+#ifdef __REACTOS__
+    #include "resources.rc"
+#endif

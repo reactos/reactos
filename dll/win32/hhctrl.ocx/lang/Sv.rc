@@ -23,36 +23,66 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Innehåll"
+    IDS_CONTENTS     "&InnehÃ¥ll"
     IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Sök"
+    IDS_SEARCH       "&SÃ¶k"
     IDS_FAVORITES    "Favor&iter"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
 BEGIN
     IDTB_EXPAND      "Visa"
-    IDTB_CONTRACT    "Dölj"
+    IDTB_CONTRACT    "DÃ¶lj"
     IDTB_STOP        "Stoppa"
     IDTB_REFRESH     "Uppdatera"
-    IDTB_BACK        "Bakåt"
+    IDTB_BACK        "BakÃ¥t"
     IDTB_HOME        "Hem"
     IDTB_SYNC        "Synkronisera"
     IDTB_PRINT       "Skriv ut"
     IDTB_OPTIONS     "Alternativ"
-    IDTB_FORWARD     "Framåt"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Anpassa"
-    IDTB_ZOOM        "Zoom"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+    IDTB_FORWARD     "FramÃ¥t"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

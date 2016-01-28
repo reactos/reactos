@@ -26,5 +26,5 @@ STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
 	IDS_DESCRIPTION	"Wine MS-RLE videodecoder"
-	IDS_ABOUT       "Wine MS-RLE videodecoder\nCopyright 2002 Michael Günnewig"
+	IDS_ABOUT       "Wine MS-RLE videodecoder\nCopyright 2002 Michael GÃ¼nnewig"
 }

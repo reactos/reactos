@@ -458,7 +458,7 @@ ConMgrProcessInputLine(VOID)
     BOOLEAN EnablePaging;
     NTSTATUS Status;
 
-    SAC_DBG(4, "SAC Input Test: %s\n", InputBuffer);
+    SAC_DBG(SAC_DBG_INIT, "SAC Input Test: %s\n", InputBuffer);
 
     if (!strncmp(InputBuffer, "t", 1))
     {
@@ -508,7 +508,7 @@ ConMgrProcessInputLine(VOID)
                                   sizeof(EnablePaging),
                                   NULL,
                                   0);
-        if (!NT_SUCCESS(Status)) SAC_DBG(4, "SAC Display Log failed.\n");
+        if (!NT_SUCCESS(Status)) SAC_DBG(SAC_DBG_INIT, "SAC Display Log failed.\n");
     }
     else if (!strncmp(InputBuffer, "cmd", 3))
     {

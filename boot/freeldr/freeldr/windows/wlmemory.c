@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/winldr/wlmemory.c
+ * FILE:            boot/freeldr/freeldr/windows/wlmemory.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
@@ -220,7 +220,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     MemoryMap = MmGetMemoryMap(&NoEntries);
     if (MemoryMap == NULL)
     {
-        UiMessageBox("Can not retrieve the current memory map");
+        UiMessageBox("Can not retrieve the current memory map.");
         return FALSE;
     }
 
@@ -334,7 +334,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     /*Status = MempSetupPaging(OsLoaderBase >> MM_PAGE_SHIFT, OsLoaderSize >> MM_PAGE_SHIFT);
     if (!Status)
     {
-        UiMessageBox("Error during MempSetupPaging");
+        UiMessageBox("Error during MempSetupPaging.");
         return;
     }*/
 

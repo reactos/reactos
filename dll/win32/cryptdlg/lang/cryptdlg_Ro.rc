@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "cryptres.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -27,15 +25,15 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_CERT_POLICY            "Politica certificatului"
-    IDS_POLICY_ID              "Identificatorul politicii: "
-    IDS_POLICY_QUALIFIER_INFO  "Informația calificatorului politicii"
-    IDS_POLICY_QUALIFIER_ID    "Identificatorul calificatorului politicii="
-    IDS_CPS                    "CPS"
-    IDS_USER_NOTICE            "Notiță utilizator"
-    IDS_QUALIFIER              "Calificator"
-    IDS_NOTICE_REF             "Referința notiței"
-    IDS_ORGANIZATION           "Organizația="
-    IDS_NOTICE_NUM             "Numărul notiței="
-    IDS_NOTICE_TEXT            "Textul notiței="
+    IDS_CERT_POLICY "Politica certificatului"
+    IDS_POLICY_ID "Identificatorul politicii: "
+    IDS_POLICY_QUALIFIER_INFO "Informația calificatorului politicii"
+    IDS_POLICY_QUALIFIER_ID "Identificatorul calificatorului politicii="
+    IDS_CPS "CPS"
+    IDS_USER_NOTICE "Notiță utilizator"
+    IDS_QUALIFIER "Calificator"
+    IDS_NOTICE_REF "Referința notiței"
+    IDS_ORGANIZATION "Organizația="
+    IDS_NOTICE_NUM "Numărul notiței="
+    IDS_NOTICE_TEXT "Textul notiței="
 }

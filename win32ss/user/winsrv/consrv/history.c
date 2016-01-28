@@ -587,7 +587,7 @@ CSR_API(SrvSetConsoleCommandHistoryMode)
     PCONSOLE_SETHISTORYMODE SetHistoryModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryModeRequest;
     PCONSRV_CONSOLE Console;
 
-    DPRINT1("SrvSetConsoleCommandHistoryMode(Mode = %d) is not yet implemented\n",
+    DPRINT("SrvSetConsoleCommandHistoryMode(Mode = %d) is not yet implemented\n",
             SetHistoryModeRequest->Mode);
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),

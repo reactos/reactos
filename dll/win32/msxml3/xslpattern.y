@@ -70,7 +70,7 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
 
 %start XSLPattern
 
-%pure_parser
+%pure-parser
 %parse-param {parser_param* p}
 %parse-param {void* scanner}
 %lex-param {yyscan_t* scanner}
@@ -185,6 +185,11 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
                                 $$=xmlStrdup(U("@"));
                                 $$=xmlStrcat($$,$2);
                                 xmlFree($2);
+                            }
+                            | '@' '*'
+                            {
+                                TRACE("Got All attributes pattern: \"@*\"\n");
+                                $$=xmlStrdup(U("@*"));
                             }
     ;
 

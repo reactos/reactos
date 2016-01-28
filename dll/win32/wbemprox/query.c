@@ -51,10 +51,10 @@ static BOOL eval_like( const WCHAR *lstr, const WCHAR *rstr )
         {
             while (*q == '%') q++;
             if (!*q) return TRUE;
-            while (*p && toupperW( p[1] ) != toupperW( q[1] )) p++;
-            if (!*p) return TRUE;
+            while (*p && *q && toupperW( *p ) == toupperW( *q )) { p++; q++; };
+            if (!*p && !*q) return TRUE;
         }
-        if (toupperW( *p++ ) != toupperW( *q++ )) return FALSE;
+        if (*q != '%' && toupperW( *p++ ) != toupperW( *q++ )) return FALSE;
     }
     return TRUE;
 }
@@ -412,7 +412,7 @@ done:
     return hr;
 }
 
-static BOOL is_selected_prop( const struct view *view, const WCHAR *name )
+BOOL is_selected_prop( const struct view *view, const WCHAR *name )
 {
     const struct property *prop = view->proplist;
 
@@ -551,7 +551,7 @@ done:
     return ret;
 }
 
-static inline BOOL is_method( const struct table *table, UINT column )
+BOOL is_method( const struct table *table, UINT column )
 {
     return table->columns[column].type & COL_FLAG_METHOD;
 }
@@ -652,6 +652,8 @@ VARTYPE to_vartype( CIMTYPE type )
     case CIM_BOOLEAN:  return VT_BOOL;
     case CIM_STRING:
     case CIM_DATETIME: return VT_BSTR;
+    case CIM_SINT8:    return VT_I1;
+    case CIM_UINT8:    return VT_UI1;
     case CIM_SINT16:   return VT_I2;
     case CIM_UINT16:   return VT_UI2;
     case CIM_SINT32:   return VT_I4;
@@ -686,6 +688,7 @@ SAFEARRAY *to_safearray( const struct array *array, CIMTYPE type )
                 SafeArrayDestroy( ret );
                 return NULL;
             }
+            SysFreeString( str );
         }
         else if (SafeArrayPutElement( ret, &i, ptr ) != S_OK)
         {
@@ -711,6 +714,12 @@ void set_variant( VARTYPE type, LONGLONG val, void *val_ptr, VARIANT *ret )
         break;
     case VT_BSTR:
         V_BSTR( ret ) = val_ptr;
+        break;
+    case VT_I1:
+        V_I1( ret ) = val;
+        break;
+    case VT_UI1:
+        V_UI1( ret ) = val;
         break;
     case VT_I2:
         V_I2( ret ) = val;
@@ -776,6 +785,12 @@ HRESULT get_propval( const struct view *view, UINT index, const WCHAR *name, VAR
         else
             vartype = VT_NULL;
         break;
+    case CIM_SINT8:
+        if (!vartype) vartype = VT_I1;
+        break;
+    case CIM_UINT8:
+        if (!vartype) vartype = VT_UI1;
+        break;
     case CIM_SINT16:
         if (!vartype) vartype = VT_I2;
         break;
@@ -814,6 +829,8 @@ static CIMTYPE to_cimtype( VARTYPE type )
     {
     case VT_BOOL:  return CIM_BOOLEAN;
     case VT_BSTR:  return CIM_STRING;
+    case VT_I1:    return CIM_SINT8;
+    case VT_UI1:   return CIM_UINT8;
     case VT_I2:    return CIM_SINT16;
     case VT_UI2:   return CIM_UINT16;
     case VT_I4:    return CIM_SINT32;
@@ -951,28 +968,31 @@ HRESULT get_properties( const struct view *view, LONG flags, SAFEARRAY **props )
 {
     SAFEARRAY *sa;
     BSTR str;
-    LONG i;
-    UINT num_props = count_properties( view );
+    UINT i, num_props = count_selected_properties( view );
+    LONG j;
 
     if (!(sa = SafeArrayCreateVector( VT_BSTR, 0, num_props ))) return E_OUTOFMEMORY;
 
-    for (i = 0; i < view->table->num_cols; i++)
+    for (i = 0, j = 0; i < view->table->num_cols; i++)
     {
         BOOL is_system;
 
         if (is_method( view->table, i )) continue;
+        if (!is_selected_prop( view, view->table->columns[i].name )) continue;
 
         is_system = is_system_prop( view->table->columns[i].name );
         if ((flags & WBEM_FLAG_NONSYSTEM_ONLY) && is_system) continue;
         else if ((flags & WBEM_FLAG_SYSTEM_ONLY) && !is_system) continue;
 
         str = SysAllocString( view->table->columns[i].name );
-        if (!str || SafeArrayPutElement( sa, &i, str ) != S_OK)
+        if (!str || SafeArrayPutElement( sa, &j, str ) != S_OK)
         {
             SysFreeString( str );
             SafeArrayDestroy( sa );
             return E_OUTOFMEMORY;
         }
+        SysFreeString( str );
+        j++;
     }
     *props = sa;
     return S_OK;

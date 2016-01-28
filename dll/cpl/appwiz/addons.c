@@ -26,11 +26,11 @@
 
 #include <msi.h>
 
-#define GECKO_VERSION "2.24"
+#define GECKO_VERSION "2.40"
 
 #ifdef __i386__
 #define ARCH_STRING "x86"
-#define GECKO_SHA "f6984567b24fef7b0be79837e04d3a913af1a88c"
+#define GECKO_SHA "8a3adedf3707973d1ed4ac3b2e791486abf814bd"
 #else
 #define ARCH_STRING ""
 #define GECKO_SHA "???"
@@ -60,7 +60,7 @@ static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
 
-static WCHAR GeckoUrl[] = L"http://svn.reactos.org/amine/wine_gecko-2.24-x86.msi";
+static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
 
 /* SHA definitions are copied from advapi32. They aren't available in headers. */
 
@@ -397,7 +397,7 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return FALSE;
 }
 
-BOOL install_addon(addon_t addon_type)
+BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
 {
 
     if(!*ARCH_STRING)
@@ -411,7 +411,7 @@ BOOL install_addon(addon_t addon_type)
      * - download the package
      */
     if (install_from_registered_dir() == INSTALL_NEXT)
-        DialogBoxW(hApplet, addon->dialog_template, 0, installer_proc);
+        DialogBoxW(hApplet, addon->dialog_template, hwnd_parent, installer_proc);
 
     return TRUE;
 }

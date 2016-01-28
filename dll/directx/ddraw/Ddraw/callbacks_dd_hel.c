@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/ddraw/callbacks_dd_hel.c
+ * FILE:                 dll/directx/ddraw/Ddraw/callbacks_dd_hel.c
  * PURPOSE:              HEL Callbacks for Direct Draw
  * PROGRAMMER:           Magnus Olsen
  *

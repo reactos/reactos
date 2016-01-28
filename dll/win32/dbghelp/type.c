@@ -682,7 +682,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagFunctionType:
-            return 0;
+            return FALSE;
         }
         break;
 

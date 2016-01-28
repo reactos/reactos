@@ -29,6 +29,7 @@ BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
 BOOLEAN CmpWasSetupBoot;
 BOOLEAN CmpProfileLoaded;
+BOOLEAN CmpNoVolatileCreates;
 ULONG CmpTraceLevel = 0;
 
 extern LONG CmpFlushStarveWriters;
@@ -86,7 +87,7 @@ CmpLinkKeyToHive(
                            0,
                            REG_LINK,
                            TargetKeyName,
-                           wcslen(TargetKeyName) * sizeof(WCHAR));
+                           (ULONG)wcslen(TargetKeyName) * sizeof(WCHAR));
 
     /* Close the link key handle */
     ObCloseHandle(TargetKeyHandle, KernelMode);
@@ -349,7 +350,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     }
 
     /* Initialize the hive */
-    Status = CmpInitializeHive((PCMHIVE*)&NewHive,
+    Status = CmpInitializeHive(&NewHive,
                                Operation,
                                HiveFlags,
                                FileType,
@@ -369,9 +370,6 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
 
     /* Success, return hive */
     *Hive = NewHive;
-
-    /* HACK: ROS: Init root key cell and prepare the hive */
-    if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
 
     /* Duplicate the hive name */
     NewHive->FileFullPath.Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -445,6 +443,78 @@ Quickie:
     return (ExpInTextModeSetup ? STATUS_SUCCESS : Status);
 }
 
+static
+NTSTATUS
+INIT_FUNCTION
+CmpCreateHardwareProfile(HANDLE ControlSetHandle)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE ProfilesHandle = NULL;
+    HANDLE ProfileHandle = NULL;
+    ULONG Disposition;
+    NTSTATUS Status;
+
+    DPRINT("CmpCreateHardwareProfile()\n");
+
+    /* Create the Hardware Profiles key */
+    RtlInitUnicodeString(&KeyName, L"Hardware Profiles");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ControlSetHandle,
+                               NULL);
+    Status = NtCreateKey(&ProfilesHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating the Hardware Profile key failed\n");
+        goto done;
+    }
+
+    /* Sanity check */
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+    /* Create the 0000 key */
+    RtlInitUnicodeString(&KeyName, L"0000");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ProfilesHandle,
+                               NULL);
+    Status = NtCreateKey(&ProfileHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating the Hardware Profile\\0000 key failed\n");
+        goto done;
+    }
+
+    /* Sanity check */
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+done:
+    if (ProfilesHandle)
+        NtClose(ProfilesHandle);
+
+    if (ProfileHandle)
+        NtClose(ProfileHandle);
+
+    DPRINT1("CmpCreateHardwareProfile() done\n");
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 INIT_FUNCTION
@@ -496,6 +566,11 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  0,
                                  &Disposition);
             if (!NT_SUCCESS(Status)) return Status;
+
+            /* Create the Hardware Profile keys */
+            Status = CmpCreateHardwareProfile(KeyHandle);
+            if (!NT_SUCCESS(Status))
+                return Status;
 
             /* Don't need the handle */
             ZwClose(KeyHandle);
@@ -582,23 +657,31 @@ UseSet:
         goto Cleanup;
     }
 
-    /* Now get the current config */
-    RtlInitUnicodeString(&KeyName, L"CurrentConfig");
-    Status = NtQueryValueKey(ConfigHandle,
-                             &KeyName,
-                             KeyValueFullInformation,
-                             ValueInfoBuffer,
-                             sizeof(ValueInfoBuffer),
-                             &ResultLength);
+    /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
+    if (!LoaderBlock->RegistryBase)
+    {
+        HwProfile = 0;
+    }
+    else
+    {
+        /* Now get the current config */
+        RtlInitUnicodeString(&KeyName, L"CurrentConfig");
+        Status = NtQueryValueKey(ConfigHandle,
+                                 &KeyName,
+                                 KeyValueFullInformation,
+                                 ValueInfoBuffer,
+                                 sizeof(ValueInfoBuffer),
+                                 &ResultLength);
 
-    /* Set pointer to buffer */
-    ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
+        /* Set pointer to buffer */
+        ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
 
-    /* Check if we failed or got a non DWORD-value */
-    if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
+        /* Check if we failed or got a non DWORD-value */
+        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
 
-    /* Get the hadware profile */
-    HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
+        /* Get the hadware profile */
+        HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
+    }
 
     /* Open the hardware profile key */
     RtlInitUnicodeString(&KeyName,
@@ -703,6 +786,8 @@ Cleanup:
     if (ConfigHandle) NtClose(ConfigHandle);
     if (ProfileHandle) NtClose(ProfileHandle);
     if (ParentHandle) NtClose(ParentHandle);
+
+    DPRINT1("CmpCreateControlSet() done\n");
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -816,7 +901,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (HiveBase)
     {
         /* Import it */
-        Status = CmpInitializeHive((PCMHIVE*)&SystemHive,
+        Status = CmpInitializeHive(&SystemHive,
                                    HINIT_MEMORY,
                                    HIVE_NOLAZYFLUSH,
                                    HFILE_TYPE_LOG,
@@ -887,16 +972,16 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
-                                 (PCMHIVE)SystemHive,
+                                 SystemHive,
                                  Allocate,
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Add the hive to the hive list */
-    CmpMachineHiveList[3].CmHive = (PCMHIVE)SystemHive;
+    CmpMachineHiveList[3].CmHive = SystemHive;
 
     /* Success! */
     return TRUE;
@@ -945,7 +1030,6 @@ CmpCreateRootNode(IN PHHIVE Hive,
 {
     UNICODE_STRING KeyName;
     PCM_KEY_NODE KeyCell;
-    LARGE_INTEGER SystemTime;
     PAGED_CODE();
 
     /* Initialize the node name and allocate it */
@@ -963,10 +1047,9 @@ CmpCreateRootNode(IN PHHIVE Hive,
     if (!KeyCell) return FALSE;
 
     /* Setup the cell */
-    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
+    KeyCell->Signature = CM_KEY_NODE_SIGNATURE;
     KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
-    KeQuerySystemTime(&SystemTime);
-    KeyCell->LastWriteTime = SystemTime;
+    KeQuerySystemTime(&KeyCell->LastWriteTime);
     KeyCell->Parent = HCELL_NIL;
     KeyCell->SubKeyCounts[Stable] = 0;
     KeyCell->SubKeyCounts[Volatile] = 0;
@@ -983,14 +1066,11 @@ CmpCreateRootNode(IN PHHIVE Hive,
     KeyCell->MaxValueDataLen = 0;
 
     /* Copy the name (this will also set the length) */
-    KeyCell->NameLength = CmpCopyName(Hive, (PWCHAR)KeyCell->Name, &KeyName);
+    KeyCell->NameLength = CmpCopyName(Hive, KeyCell->Name, &KeyName);
 
-    /* Check if the name was compressed */
+    /* Check if the name was compressed and set the flag if so */
     if (KeyCell->NameLength < KeyName.Length)
-    {
-        /* Set the flag */
         KeyCell->Flags |= KEY_COMP_NAME;
-    }
 
     /* Return success */
     HvReleaseCell(Hive, *Index);
@@ -1026,7 +1106,7 @@ CmpCreateRegistryRoot(VOID)
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               NULL);
+                               SecurityDescriptor);
     Status = ObCreateObject(KernelMode,
                             CmpKeyObjectType,
                             &ObjectAttributes,
@@ -1036,7 +1116,7 @@ CmpCreateRegistryRoot(VOID)
                             0,
                             0,
                             (PVOID*)&RootKey);
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Sanity check, and get the key cell */
@@ -1115,7 +1195,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
         /* Setup the object attributes */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
         /* Open the key */
@@ -1463,15 +1543,17 @@ CmpInitializeHiveList(IN USHORT Flag)
     }
 
     /* Get rid of the SD */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
 
     /* Link SECURITY to SAM */
     CmpLinkKeyToHive(L"\\Registry\\Machine\\Security\\SAM",
                      L"\\Registry\\Machine\\SAM\\SAM");
 
     /* Link S-1-5-18 to .Default */
+    CmpNoVolatileCreates = FALSE;
     CmpLinkKeyToHive(L"\\Registry\\User\\S-1-5-18",
                      L"\\Registry\\User\\.Default");
+    CmpNoVolatileCreates = TRUE;
 }
 
 BOOLEAN
@@ -1530,7 +1612,7 @@ CmInitSystem1(VOID)
     }
 
     /* Build the master hive */
-    Status = CmpInitializeHive((PCMHIVE*)&CmiVolatileHive,
+    Status = CmpInitializeHive(&CmiVolatileHive,
                                HINIT_CREATE,
                                HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
@@ -1602,6 +1684,9 @@ CmInitSystem1(VOID)
     /* Close the handle */
     NtClose(KeyHandle);
 
+    /* After this point, do not allow creating keys in the master hive */
+    CmpNoVolatileCreates = TRUE;
+
     /* Initialize the system hive */
     if (!CmpInitializeSystemHive(KeLoaderBlock))
     {
@@ -1618,7 +1703,7 @@ CmInitSystem1(VOID)
     }
 
     /* Create the hardware hive */
-    Status = CmpInitializeHive((PCMHIVE*)&HardwareHive,
+    Status = CmpInitializeHive(&HardwareHive,
                                HINIT_CREATE,
                                HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
@@ -1635,13 +1720,13 @@ CmInitSystem1(VOID)
     }
 
     /* Add the hive to the hive list */
-    CmpMachineHiveList[0].CmHive = (PCMHIVE)HardwareHive;
+    CmpMachineHiveList[0].CmHive = HardwareHive;
 
     /* Attach it to the machine key */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
-                                 (PCMHIVE)HardwareHive,
+                                 HardwareHive,
                                  TRUE,
                                  SecurityDescriptor);
     if (!NT_SUCCESS(Status))
@@ -1654,7 +1739,7 @@ CmInitSystem1(VOID)
     CmpAddToHiveFileList(HardwareHive);
 
     /* Free the security descriptor */
-    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CMSD);
 
     /* Fill out the Hardware key with the ARC Data from the Loader */
     Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);
@@ -2045,7 +2130,6 @@ CmShutdownSystem(VOID)
 {
     PLIST_ENTRY ListEntry;
     PCMHIVE Hive;
-    ULONG i;
 
     /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
@@ -2060,14 +2144,7 @@ CmShutdownSystem(VOID)
     {
         Hive = CONTAINING_RECORD(ListEntry, CMHIVE, HiveList);
 
-        for (i = 0; i < HFILE_TYPE_MAX; i++)
-        {
-            if (Hive->FileHandles[i] != NULL)
-            {
-                ZwClose(Hive->FileHandles[i]);
-                Hive->FileHandles[i] = NULL;
-            }
-        }
+        CmpCloseHiveFiles(Hive);
 
         ListEntry = ListEntry->Flink;
     }
@@ -2079,27 +2156,30 @@ VOID
 NTAPI
 CmpSetVersionData(VOID)
 {
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     UNICODE_STRING ValueData;
+    ANSI_STRING TempString;
     HANDLE SoftwareKeyHandle = NULL;
     HANDLE MicrosoftKeyHandle = NULL;
     HANDLE WindowsNtKeyHandle = NULL;
     HANDLE CurrentVersionKeyHandle = NULL;
-    WCHAR Buffer[128];
-    NTSTATUS Status;
+    WCHAR Buffer[128]; // Buffer large enough to contain a full ULONG in decimal representation,
+                       // and the full 'CurrentType' string.
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"\\REGISTRY\\MACHINE\\SOFTWARE");
+    /*
+     * Open the 'HKLM\Software\Microsoft\Windows NT\CurrentVersion' key
+     * (create the intermediate subkeys if needed).
+     */
 
+    RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE\\SOFTWARE");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
-
     Status = NtCreateKey(&SoftwareKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2113,16 +2193,12 @@ CmpSetVersionData(VOID)
         return;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Microsoft");
-
+    RtlInitUnicodeString(&KeyName, L"Microsoft");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                SoftwareKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&MicrosoftKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2133,19 +2209,15 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Windows NT");
-
+    RtlInitUnicodeString(&KeyName, L"Windows NT");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                MicrosoftKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&WindowsNtKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2156,19 +2228,15 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"CurrentVersion");
-
+    RtlInitUnicodeString(&KeyName, L"CurrentVersion");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                WindowsNtKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&CurrentVersionKeyHandle,
                          KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
                          &ObjectAttributes,
@@ -2179,30 +2247,22 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Set the 'CurrentType' value */
-    RtlInitUnicodeString(&ValueName,
-                         L"CurrentType");
+    /* Set the 'CurrentVersion' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentVersion");
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  CmVersionString.Buffer,
+                  CmVersionString.Length + sizeof(WCHAR));
 
-#ifdef CONFIG_SMP
-    wcscpy(Buffer, L"Multiprocessor");
-#else
-    wcscpy(Buffer, L"Uniprocessor");
-#endif
-
-    wcscat(Buffer, L" ");
-
-#if (DBG == 1)
-    wcscat(Buffer, L"Checked");
-#else
-    wcscat(Buffer, L"Free");
-#endif
-
-    RtlInitUnicodeString(&ValueData,
-                         Buffer);
-
+    /* Set the 'CurrentBuildNumber' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentBuildNumber");
+    RtlInitEmptyUnicodeString(&ValueData, Buffer, sizeof(Buffer));
+    RtlIntegerToUnicodeString(NtBuildNumber & 0xFFFF, 10, &ValueData);
     NtSetValueKey(CurrentVersionKeyHandle,
                   &ValueName,
                   0,
@@ -2210,7 +2270,88 @@ CmpSetVersionData(VOID)
                   ValueData.Buffer,
                   ValueData.Length + sizeof(WCHAR));
 
-done:;
+    /* Set the 'BuildLab' value */
+    RtlInitUnicodeString(&ValueName, L"BuildLab");
+    RtlInitAnsiString(&TempString, NtBuildLab);
+    Status = RtlAnsiStringToUnicodeString(&ValueData, &TempString, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      ValueData.Buffer,
+                      ValueData.Length + sizeof(WCHAR));
+    }
+
+    /* Set the 'CurrentType' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentType");
+
+    swprintf(Buffer, L"%s %s",
+#ifdef CONFIG_SMP
+             L"Multiprocessor"
+#else
+             L"Uniprocessor"
+#endif
+             ,
+#if (DBG == 1)
+             L"Checked"
+#else
+             L"Free"
+#endif
+             );
+    RtlInitUnicodeString(&ValueData, Buffer);
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  ValueData.Buffer,
+                  ValueData.Length + sizeof(WCHAR));
+
+    /* Set the 'CSDVersion' value */
+    RtlInitUnicodeString(&ValueName, L"CSDVersion");
+    if (CmCSDVersionString.Length != 0)
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      CmCSDVersionString.Buffer,
+                      CmCSDVersionString.Length + sizeof(WCHAR));
+    }
+    else
+    {
+        NtDeleteValueKey(CurrentVersionKeyHandle, &ValueName);
+    }
+
+    /* Set the 'CSDBuildNumber' value */
+    RtlInitUnicodeString(&ValueName, L"CSDBuildNumber");
+    if (CmNtSpBuildNumber != 0)
+    {
+        RtlInitEmptyUnicodeString(&ValueData, Buffer, sizeof(Buffer));
+        RtlIntegerToUnicodeString(CmNtSpBuildNumber, 10, &ValueData);
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      ValueData.Buffer,
+                      ValueData.Length + sizeof(WCHAR));
+    }
+    else
+    {
+        NtDeleteValueKey(CurrentVersionKeyHandle, &ValueName);
+    }
+
+    /* Set the 'SystemRoot' value */
+    RtlInitUnicodeString(&ValueName, L"SystemRoot");
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  NtSystemRoot.Buffer,
+                  NtSystemRoot.Length + sizeof(WCHAR));
+
+Quit:
     /* Close the keys */
     if (CurrentVersionKeyHandle != NULL)
         NtClose(CurrentVersionKeyHandle);

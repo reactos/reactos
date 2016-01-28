@@ -2,232 +2,273 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window properties
- * FILE:             subsys/win32k/ntuser/prop.c
+ * FILE:             win32ss/user/ntuser/prop.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
- 
+
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserProp);
 
 /* STATIC FUNCTIONS **********************************************************/
 
-PPROPERTY FASTCALL
-IntGetProp(PWND Window, ATOM Atom)
+PPROPERTY
+FASTCALL
+IntGetProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
-   PLIST_ENTRY ListEntry;
-   PPROPERTY Property;
-   int i;
+    PLIST_ENTRY ListEntry;
+    PPROPERTY Property;
+    UINT i;
+    WORD SystemFlag = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
 
-   ListEntry = Window->PropListHead.Flink;
-   for (i = 0; i < Window->PropListItems; i++ )
-   {
-      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (Property->Atom == Atom)
-      {
-         return(Property);
-      }
-      ListEntry = ListEntry->Flink;
-   }
-   return(NULL);
+    NT_ASSERT(UserIsEntered());
+    ListEntry = Window->PropListHead.Flink;
+
+    for (i = 0; i < Window->PropListItems; i++)
+    {
+        Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+        ListEntry = ListEntry->Flink;
+
+        if (Property->Atom == Atom &&
+            (Property->fs & PROPERTY_FLAG_SYSTEM) == SystemFlag)
+        {
+            return Property;
+        }
+    }
+    NT_ASSERT(ListEntry == &Window->PropListHead);
+    return NULL;
 }
 
 HANDLE
 FASTCALL
-UserGetProp(PWND pWnd, ATOM Atom)
+UserGetProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
-  PPROPERTY Prop;
-  Prop = IntGetProp(pWnd, Atom);
-  return Prop ? Prop->Data : NULL;
+    PPROPERTY Prop;
+
+    NT_ASSERT(UserIsEntered());
+    Prop = IntGetProp(Window, Atom, SystemProp);
+    return Prop ? Prop->Data : NULL;
 }
 
-BOOL FASTCALL
-IntRemoveProp(PWND Window, ATOM Atom)
+_Success_(return)
+HANDLE
+FASTCALL
+UserRemoveProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ BOOLEAN SystemProp)
 {
-   PPROPERTY Prop;
-   Prop = IntGetProp(Window, Atom);
+    PPROPERTY Prop;
+    HANDLE Data;
 
-   if (Prop == NULL)
-   {
-      return FALSE;
-   }
-   RemoveEntryList(&Prop->PropListEntry);
-   UserHeapFree(Prop);
-   Window->PropListItems--;
-   return TRUE;
+    NT_ASSERT(UserIsEnteredExclusive());
+    Prop = IntGetProp(Window, Atom, SystemProp);
+    if (Prop == NULL)
+    {
+        return NULL;
+    }
+
+    Data = Prop->Data;
+    RemoveEntryList(&Prop->PropListEntry);
+    UserHeapFree(Prop);
+    Window->PropListItems--;
+    return Data;
 }
 
-BOOL FASTCALL
-IntSetProp(PWND pWnd, ATOM Atom, HANDLE Data)
+_Success_(return)
+BOOL
+FASTCALL
+UserSetProp(
+    _In_ PWND Window,
+    _In_ ATOM Atom,
+    _In_ HANDLE Data,
+    _In_ BOOLEAN SystemProp)
 {
-   PPROPERTY Prop;
+    PPROPERTY Prop;
 
-   Prop = IntGetProp(pWnd, Atom);
+    NT_ASSERT(UserIsEnteredExclusive());
+    Prop = IntGetProp(Window, Atom, SystemProp);
+    if (Prop == NULL)
+    {
+        Prop = UserHeapAlloc(sizeof(PROPERTY));
+        if (Prop == NULL)
+        {
+            return FALSE;
+        }
+        Prop->Atom = Atom;
+        Prop->fs = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
+        InsertTailList(&Window->PropListHead, &Prop->PropListEntry);
+        Window->PropListItems++;
+    }
 
-   if (Prop == NULL)
-   {
-      Prop = UserHeapAlloc(sizeof(PROPERTY));
-      if (Prop == NULL)
-      {
-         return FALSE;
-      }
-      Prop->Atom = Atom;
-      InsertTailList(&pWnd->PropListHead, &Prop->PropListEntry);
-      pWnd->PropListItems++;
-   }
-
-   Prop->Data = Data;
-   return TRUE;
+    Prop->Data = Data;
+    return TRUE;
 }
 
-VOID FASTCALL
-IntRemoveWindowProp(PWND Window)
+VOID
+FASTCALL
+UserRemoveWindowProps(
+    _In_ PWND Window)
 {
-   PLIST_ENTRY ListEntry;
-   PPROPERTY Property;
-   int i, Count = Window->PropListItems;
+    PLIST_ENTRY ListEntry;
+    PPROPERTY Property;
 
-   ListEntry = Window->PropListHead.Flink;
-   for (i = 0; i < Count; i++ )
-   {
-      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      ListEntry = ListEntry->Flink;
-      RemoveEntryList(&Property->PropListEntry);
-      UserHeapFree(Property);
-      Window->PropListItems--;
-   }
-   return;
+    NT_ASSERT(UserIsEnteredExclusive());
+    while (!IsListEmpty(&Window->PropListHead))
+    {
+        ListEntry = Window->PropListHead.Flink;
+        Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+        RemoveEntryList(&Property->PropListEntry);
+        UserHeapFree(Property);
+        Window->PropListItems--;
+    }
+    return;
 }
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS APIENTRY
-NtUserBuildPropList(HWND hWnd,
-                    LPVOID Buffer,
-                    DWORD BufferSize,
-                    DWORD *Count)
+NTSTATUS
+APIENTRY
+NtUserBuildPropList(
+    _In_ HWND hWnd,
+    _Out_writes_bytes_to_opt_(BufferSize, *Count * sizeof(PROPLISTITEM)) LPVOID Buffer,
+    _In_ DWORD BufferSize,
+    _Out_opt_ DWORD *Count)
 {
-   PWND Window;
-   PPROPERTY Property;
-   PLIST_ENTRY ListEntry;
-   PROPLISTITEM listitem, *li;
-   NTSTATUS Status;
-   DWORD Cnt = 0;
-   DECLARE_RETURN(NTSTATUS);
+    PWND Window;
+    PPROPERTY Property;
+    PLIST_ENTRY ListEntry;
+    PROPLISTITEM listitem, *li;
+    NTSTATUS Status;
+    DWORD Cnt = 0;
 
-   TRACE("Enter NtUserBuildPropList\n");
-   UserEnterShared();
+    TRACE("Enter NtUserBuildPropList\n");
+    UserEnterShared();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( STATUS_INVALID_HANDLE);
-   }
+    Window = UserGetWindowObject(hWnd);
+    if (Window == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Exit;
+    }
 
-   if(Buffer)
-   {
-      if(!BufferSize || (BufferSize % sizeof(PROPLISTITEM) != 0))
-      {
-         RETURN( STATUS_INVALID_PARAMETER);
-      }
+    if (Buffer)
+    {
+        if (!BufferSize || (BufferSize % sizeof(PROPLISTITEM) != 0))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            goto Exit;
+        }
 
-      /* Copy list */
-      li = (PROPLISTITEM *)Buffer;
-      ListEntry = Window->PropListHead.Flink;
-      while((BufferSize >= sizeof(PROPLISTITEM)) && (ListEntry != &Window->PropListHead))
-      {
-         Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-         listitem.Atom = Property->Atom;
-         listitem.Data = Property->Data;
+        /* Copy list */
+        li = (PROPLISTITEM *)Buffer;
+        ListEntry = Window->PropListHead.Flink;
+        while ((BufferSize >= sizeof(PROPLISTITEM)) &&
+               (ListEntry != &Window->PropListHead))
+        {
+            Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+            ListEntry = ListEntry->Flink;
+            if (!(Property->fs & PROPERTY_FLAG_SYSTEM))
+            {
+                listitem.Atom = Property->Atom;
+                listitem.Data = Property->Data;
 
-         Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
-         if(!NT_SUCCESS(Status))
-         {
-            RETURN( Status);
-         }
+                Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Exit;
+                }
 
-         BufferSize -= sizeof(PROPLISTITEM);
-         Cnt++;
-         li++;
-         ListEntry = ListEntry->Flink;
-      }
+                BufferSize -= sizeof(PROPLISTITEM);
+                Cnt++;
+                li++;
+            }
+        }
 
-   }
-   else
-   {
-      Cnt = Window->PropListItems * sizeof(PROPLISTITEM);
-   }
+    }
+    else
+    {
+        /* FIXME: This counts user and system props */
+        Cnt = Window->PropListItems * sizeof(PROPLISTITEM);
+    }
 
-   if(Count)
-   {
-      Status = MmCopyToCaller(Count, &Cnt, sizeof(DWORD));
-      if(!NT_SUCCESS(Status))
-      {
-         RETURN( Status);
-      }
-   }
+    if (Count)
+    {
+        Status = MmCopyToCaller(Count, &Cnt, sizeof(DWORD));
+        if (!NT_SUCCESS(Status))
+        {
+            goto Exit;
+        }
+    }
 
-   RETURN( STATUS_SUCCESS);
+    Status = STATUS_SUCCESS;
 
-CLEANUP:
-   TRACE("Leave NtUserBuildPropList, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+Exit:
+    TRACE("Leave NtUserBuildPropList, ret=%lx\n", Status);
+    UserLeave();
+
+    return Status;
 }
 
-HANDLE APIENTRY
-NtUserRemoveProp(HWND hWnd, ATOM Atom)
+HANDLE
+APIENTRY
+NtUserRemoveProp(
+    _In_ HWND hWnd,
+    _In_ ATOM Atom)
 {
-   PWND Window;
-   PPROPERTY Prop;
-   HANDLE Data;
-   DECLARE_RETURN(HANDLE);
+    PWND Window;
+    HANDLE Data = NULL;
 
-   TRACE("Enter NtUserRemoveProp\n");
-   UserEnterExclusive();
+    TRACE("Enter NtUserRemoveProp\n");
+    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( NULL);
-   }
+    Window = UserGetWindowObject(hWnd);
+    if (Window == NULL)
+    {
+        goto Exit;
+    }
 
-   Prop = IntGetProp(Window, Atom);
+    Data = UserRemoveProp(Window, Atom, FALSE);
 
-   if (Prop == NULL)
-   {
-      RETURN(NULL);
-   }
-   Data = Prop->Data;
-   RemoveEntryList(&Prop->PropListEntry);
-   UserHeapFree(Prop);
-   Window->PropListItems--;
+Exit:
+    TRACE("Leave NtUserRemoveProp, ret=%p\n", Data);
+    UserLeave();
 
-   RETURN(Data);
-
-CLEANUP:
-   TRACE("Leave NtUserRemoveProp, ret=%p\n", _ret_);
-   UserLeave();
-   END_CLEANUP;
+    return Data;
 }
 
-BOOL APIENTRY
-NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
+BOOL
+APIENTRY
+NtUserSetProp(
+    _In_ HWND hWnd,
+    _In_ ATOM Atom,
+    _In_ HANDLE Data)
 {
-   PWND Window;
-   DECLARE_RETURN(BOOL);
+    PWND Window;
+    BOOL Ret;
 
-   TRACE("Enter NtUserSetProp\n");
-   UserEnterExclusive();
+    TRACE("Enter NtUserSetProp\n");
+    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN( FALSE);
-   }
+    Window = UserGetWindowObject(hWnd);
+    if (Window == NULL)
+    {
+        Ret = FALSE;
+        goto Exit;
+    }
 
-   RETURN( IntSetProp(Window, Atom, Data));
+    Ret = UserSetProp(Window, Atom, Data, FALSE);
 
-CLEANUP:
-   TRACE("Leave NtUserSetProp, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+Exit:
+    TRACE("Leave NtUserSetProp, ret=%i\n", Ret);
+    UserLeave();
+
+    return Ret;
 }
 
 /* EOF */

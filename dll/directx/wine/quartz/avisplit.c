@@ -134,6 +134,7 @@ static HRESULT AVISplitter_next_request(AVISplitterImpl *This, DWORD streamnumbe
     PullPin *pin = This->Parser.pInputPin;
     IMediaSample *sample = NULL;
     HRESULT hr;
+    ULONG ref;
 
     TRACE("(%p, %u)->()\n", This, streamnumber);
 
@@ -185,7 +186,7 @@ static HRESULT AVISplitter_next_request(AVISplitterImpl *This, DWORD streamnumbe
                 ++stream->index_next;
             }
 
-            rtSampleStop = rtSampleStart + MEDIATIME_FROM_BYTES(entry->dwSize & ~(1 << 31));
+            rtSampleStop = rtSampleStart + MEDIATIME_FROM_BYTES(entry->dwSize & ~(1u << 31));
 
             TRACE("offset(%u) size(%u)\n", (DWORD)BYTES_FROM_MEDIATIME(rtSampleStart), (DWORD)BYTES_FROM_MEDIATIME(rtSampleStop - rtSampleStart));
         }
@@ -242,12 +243,14 @@ static HRESULT AVISplitter_next_request(AVISplitterImpl *This, DWORD streamnumbe
 
         if (rtSampleStart != rtSampleStop)
         {
-            hr = IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
-
+            IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
             hr = IAsyncReader_Request(pin->pReader, sample, streamnumber);
 
             if (FAILED(hr))
-                assert(IMediaSample_Release(sample) == 0);
+            {
+                ref = IMediaSample_Release(sample);
+                assert(ref == 0);
+            }
         }
         else
         {
@@ -261,7 +264,8 @@ static HRESULT AVISplitter_next_request(AVISplitterImpl *This, DWORD streamnumbe
         if (sample)
         {
             ERR("There should be no sample!\n");
-            assert(IMediaSample_Release(sample) == 0);
+            ref = IMediaSample_Release(sample);
+            assert(ref == 0);
         }
     }
     TRACE("--> %08x\n", hr);
@@ -316,7 +320,7 @@ static HRESULT AVISplitter_Receive(AVISplitterImpl *This, IMediaSample *sample, 
     }
     rtstart = (double)(start - pin->pin.pin.tStart) / pin->pin.pin.dRate;
     rtstop = (double)(stop - pin->pin.pin.tStart) / pin->pin.pin.dRate;
-    hr = IMediaSample_SetMediaTime(sample, &start, &stop);
+    IMediaSample_SetMediaTime(sample, &start, &stop);
     IMediaSample_SetTime(sample, &rtstart, &rtstop);
     IMediaSample_SetMediaTime(sample, &start, &stop);
 
@@ -493,8 +497,8 @@ static HRESULT AVISplitter_first_request(LPVOID iface)
 static HRESULT AVISplitter_done_process(LPVOID iface)
 {
     AVISplitterImpl *This = iface;
-
     DWORD x;
+    ULONG ref;
 
     for (x = 0; x < This->Parser.cStreams; ++x)
     {
@@ -508,7 +512,10 @@ static HRESULT AVISplitter_done_process(LPVOID iface)
         stream->thread = NULL;
 
         if (stream->sample)
-            assert(IMediaSample_Release(stream->sample) == 0);
+        {
+            ref = IMediaSample_Release(stream->sample);
+            assert(ref == 0);
+        }
         stream->sample = NULL;
 
         ResetEvent(stream->packet_queued);
@@ -572,7 +579,7 @@ static HRESULT AVISplitter_ProcessIndex(AVISplitterImpl *This, AVISTDINDEX **ind
         BOOL keyframe = !(pIndex->aIndex[x].dwSize >> 31);
         DWORDLONG offset = pIndex->qwBaseOffset + pIndex->aIndex[x].dwOffset;
         TRACE("dwOffset: %x%08x\n", (DWORD)(offset >> 32), (DWORD)offset);
-        TRACE("dwSize: %u\n", (pIndex->aIndex[x].dwSize & ~(1<<31)));
+        TRACE("dwSize: %u\n", (pIndex->aIndex[x].dwSize & ~(1u << 31)));
         TRACE("Frame is a keyframe: %s\n", keyframe ? "yes" : "no");
     }
 
@@ -970,7 +977,7 @@ static HRESULT AVISplitter_InitializeStreams(AVISplitterImpl *This)
 
                     for (z = 0; z < stream->stdindex[y]->nEntriesInUse; ++z)
                     {
-                        UINT len = stream->stdindex[y]->aIndex[z].dwSize & ~(1 << 31);
+                        UINT len = stream->stdindex[y]->aIndex[z].dwSize & ~(1u << 31);
                         frames += len / stream->streamheader.dwSampleSize + !!(len % stream->streamheader.dwSampleSize);
                     }
                 }
@@ -1085,24 +1092,18 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
         return E_FAIL;
     }
 
-    pos += sizeof(RIFFCHUNK) + list.cb;
-    hr = IAsyncReader_SyncRead(This->pReader, pos, sizeof(list), (BYTE *)&list);
-
-    while (list.fcc == ckidAVIPADDING || (list.fcc == FOURCC_LIST && list.fccListType != listtypeAVIMOVIE))
+    /* Skip any chunks until we find the LIST chunk */
+    do
     {
         pos += sizeof(RIFFCHUNK) + list.cb;
-
         hr = IAsyncReader_SyncRead(This->pReader, pos, sizeof(list), (BYTE *)&list);
     }
+    while (hr == S_OK && (list.fcc != FOURCC_LIST ||
+           (list.fcc == FOURCC_LIST && list.fccListType != listtypeAVIMOVIE)));
 
-    if (list.fcc != FOURCC_LIST)
+    if (hr != S_OK)
     {
-        ERR("Expected LIST, but got %.04s\n", (LPSTR)&list.fcc);
-        return E_FAIL;
-    }
-    if (list.fccListType != listtypeAVIMOVIE)
-    {
-        ERR("Expected AVI movie list, but got %.04s\n", (LPSTR)&list.fccListType);
+        ERR("Failed to find LIST chunk from AVI file\n");
         return E_FAIL;
     }
 
@@ -1110,20 +1111,17 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
 
     /* FIXME: AVIX files are extended beyond the FOURCC chunk "AVI ", and thus won't be played here,
      * once I get one of the files I'll try to fix it */
-    if (hr == S_OK)
+    This->rtStart = pAviSplit->CurrentChunkOffset = MEDIATIME_FROM_BYTES(pos + sizeof(RIFFLIST));
+    pos += list.cb + sizeof(RIFFCHUNK);
+
+    pAviSplit->EndOfFile = This->rtStop = MEDIATIME_FROM_BYTES(pos);
+    if (pos > total)
     {
-        This->rtStart = pAviSplit->CurrentChunkOffset = MEDIATIME_FROM_BYTES(pos + sizeof(RIFFLIST));
-        pos += list.cb + sizeof(RIFFCHUNK);
-
-        pAviSplit->EndOfFile = This->rtStop = MEDIATIME_FROM_BYTES(pos);
-        if (pos > total)
-        {
-            ERR("File smaller (%x%08x) then EndOfFile (%x%08x)\n", (DWORD)(total >> 32), (DWORD)total, (DWORD)(pAviSplit->EndOfFile >> 32), (DWORD)pAviSplit->EndOfFile);
-            return E_FAIL;
-        }
-
-        hr = IAsyncReader_SyncRead(This->pReader, BYTES_FROM_MEDIATIME(pAviSplit->CurrentChunkOffset), sizeof(pAviSplit->CurrentChunk), (BYTE *)&pAviSplit->CurrentChunk);
+        ERR("File smaller (%x%08x) then EndOfFile (%x%08x)\n", (DWORD)(total >> 32), (DWORD)total, (DWORD)(pAviSplit->EndOfFile >> 32), (DWORD)pAviSplit->EndOfFile);
+        return E_FAIL;
     }
+
+    hr = IAsyncReader_SyncRead(This->pReader, BYTES_FROM_MEDIATIME(pAviSplit->CurrentChunkOffset), sizeof(pAviSplit->CurrentChunk), (BYTE *)&pAviSplit->CurrentChunk);
 
     props->cbAlign = 1;
     props->cbPrefix = 0;
@@ -1174,7 +1172,7 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
             indexes = 0;
         }
     }
-    else if (!indexes && pAviSplit->oldindex)
+    else if (pAviSplit->oldindex)
         indexes = pAviSplit->Parser.cStreams;
 
     if (!indexes && pAviSplit->AviHeader.dwFlags & AVIF_MUSTUSEINDEX)
@@ -1202,6 +1200,7 @@ static HRESULT AVISplitter_Flush(LPVOID iface)
 {
     AVISplitterImpl *This = iface;
     DWORD x;
+    ULONG ref;
 
     TRACE("(%p)->()\n", This);
 
@@ -1210,7 +1209,10 @@ static HRESULT AVISplitter_Flush(LPVOID iface)
         StreamData *stream = This->streams + x;
 
         if (stream->sample)
-            assert(IMediaSample_Release(stream->sample) == 0);
+        {
+            ref = IMediaSample_Release(stream->sample);
+            assert(ref == 0);
+        }
         stream->sample = NULL;
 
         ResetEvent(stream->packet_queued);
@@ -1314,7 +1316,7 @@ static HRESULT WINAPI AVISplitter_seek(IMediaSeeking *iface)
                 {
                     if (stream->streamheader.dwSampleSize)
                     {
-                        ULONG len = stream->stdindex[y]->aIndex[z].dwSize & ~(1 << 31);
+                        ULONG len = stream->stdindex[y]->aIndex[z].dwSize & ~(1u << 31);
                         ULONG size = stream->streamheader.dwSampleSize;
 
                         pin->dwSamplesProcessed += len / size;
@@ -1432,7 +1434,7 @@ HRESULT AVISplitter_create(IUnknown * pUnkOuter, LPVOID * ppv)
     if (FAILED(hr))
         return hr;
 
-    *ppv = This;
+    *ppv = &This->Parser.filter.IBaseFilter_iface;
 
     return hr;
 }

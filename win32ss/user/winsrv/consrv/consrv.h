@@ -9,31 +9,19 @@
 #ifndef __CONSRV_H__
 #define __CONSRV_H__
 
+/* Main header */
+#include "../winsrv.h"
+
 /* PSDK/NDK Headers */
-#include <stdarg.h>
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <windef.h>
-#include <winbase.h>
+
 #include <winnls.h>
-#include <winreg.h>
 #include <wincon.h>
-#include <winuser.h>
+
 #define NTOS_MODE_USER
-#include <ndk/exfuncs.h>
 #include <ndk/mmfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/rtlfuncs.h>
-
-/* Public Win32K Headers */
-#include <ntuser.h>
-
-/* PSEH for SEH Support */
-#include <pseh/pseh2.h>
-
-/* CSRSS Header */
-#include <csr/csrsrv.h>
 
 /* CONSOLE Headers */
 #include <win/conmsg.h>
@@ -53,9 +41,7 @@ typedef struct _CONSOLE_PROCESS_DATA
     PCSR_PROCESS Process;   // Process owning this structure.
 
     HANDLE ConsoleHandle;
-    HANDLE InputWaitHandle;
-
-    BOOLEAN ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
+    BOOLEAN ConsoleApp;     // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;
@@ -83,5 +69,12 @@ typedef struct _CONSOLE_PROCESS_DATA
 #include "conoutput.h"
 #include "handle.h"
 #include "lineinput.h"
+
+/* shutdown.c */
+ULONG
+NTAPI
+ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,
+                      IN ULONG Flags,
+                      IN BOOLEAN FirstPhase);
 
 #endif /* __CONSRV_H__ */

@@ -209,7 +209,7 @@ XMLPUBFUN int XMLCALL
 
 xmlParserInputBufferPtr
 	__xmlParserInputBufferCreateFilename(const char *URI,
-										xmlCharEncoding enc);
+						xmlCharEncoding enc);
 
 #ifdef LIBXML_OUTPUT_ENABLED
 /*

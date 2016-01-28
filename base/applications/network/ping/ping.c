@@ -114,30 +114,6 @@ static VOID DisplayBuffer(
 }
 #endif /* !NDEBUG */
 
-LPWSTR
-MyLoadString(UINT uID)
-{
-    HRSRC hres;
-    HGLOBAL hResData;
-    WCHAR *pwsz;
-    UINT string_num, i;
-
-    hres = FindResourceW(NULL, MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1), RT_STRING);
-    if (!hres) return NULL;
-
-    hResData = LoadResource(NULL, hres);
-    if (!hResData) return NULL;
-
-    pwsz = LockResource(hResData);
-    if (!pwsz) return NULL;
-    
-    string_num = uID & 15;
-    for (i = 0; i < string_num; i++)
-        pwsz += *pwsz + 1;
-
-    return pwsz + 1;
-}
-
 void FormatOutput(UINT uID, ...)
 {
     va_list valist;
@@ -146,15 +122,18 @@ void FormatOutput(UINT uID, ...)
     CHAR AnsiBuf[1024];
     LPWSTR pBuf = Buf;
     PCHAR pAnsiBuf = AnsiBuf;
-    LPWSTR Format;
+    WCHAR Format[1024];
     DWORD written;
     UINT DataLength;
     int AnsiLength;
 
-    va_start(valist, uID);
+    if (!LoadString(GetModuleHandle(NULL), uID,
+                    Format, sizeof(Format) / sizeof(WCHAR)))
+    {
+        return;
+    }
 
-    Format = MyLoadString(uID);
-    if (!Format) return;
+    va_start(valist, uID);
 
     DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING, Format, 0, 0, Buf,\
                   sizeof(Buf) / sizeof(WCHAR), &valist);
@@ -162,14 +141,20 @@ void FormatOutput(UINT uID, ...)
     if(!DataLength)
     {
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            va_end(valist);
             return;
+        }
 
         DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING |\
                                     FORMAT_MESSAGE_ALLOCATE_BUFFER,\
                                     Format, 0, 0, (LPWSTR)&pBuf, 0, &valist);
+    }
 
-        if(!DataLength)
-            return;
+    if(!DataLength)
+    {
+        va_end(valist);
+        return;
     }
 
     if(GetFileType(hStdOutput) == FILE_TYPE_CHAR)
@@ -264,7 +249,15 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
                 case L'a': ResolveAddresses = TRUE; break;
                 case L'n':
                     if (i + 1 < argc)
+                    {
                         PingCount = wcstoul(argv[++i], NULL, 0);
+
+                        if (PingCount == 0)
+                        {
+                            FormatOutput(IDS_BAD_VALUE_OPTION_N, UINT_MAX);
+                            return FALSE;
+                        }
+                    }
                     else
                         InvalidOption = TRUE;
                     break;
@@ -272,7 +265,7 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
                     if (i + 1 < argc)
                     {
                         DataSize = wcstoul(argv[++i], NULL, 0);
-                        
+
                         if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
                         {
                             FormatOutput(IDS_BAD_VALUE_OPTION_L, ICMP_MAXSIZE - \
@@ -357,6 +350,14 @@ static WORD Checksum(PUSHORT data, UINT size)
     sum += (sum >> 16);
 
     return (USHORT)(~sum);
+}
+
+static BOOL WINAPI StopLoop(DWORD dwCtrlType)
+{
+    NeverStop = FALSE;
+    PingCount = 0;
+
+    return TRUE;
 }
 
 /* Prepare to ping target */
@@ -446,6 +447,9 @@ static BOOL Setup(VOID)
     MaxRTT.QuadPart = 0;
     SumRTT.QuadPart = 0;
     MinRTTSet       = FALSE;
+
+    SetConsoleCtrlHandler(StopLoop, TRUE);
+
     return TRUE;
 }
 
@@ -484,7 +488,7 @@ static VOID QueryTime(PLARGE_INTEGER Time)
     }
 }
 
-static VOID TimeToMsString(LPWSTR String, LARGE_INTEGER Time)
+static VOID TimeToMsString(LPWSTR String, ULONG Length, LARGE_INTEGER Time)
 {
     WCHAR         Convstr[40];
     LARGE_INTEGER LargeTime;
@@ -494,8 +498,8 @@ static VOID TimeToMsString(LPWSTR String, LARGE_INTEGER Time)
 
     _i64tow(LargeTime.QuadPart, Convstr, 10);
     wcscpy(String, Convstr);
-    ms = MyLoadString(IDS_MS);
-    wcscat(String, ms);
+    ms = String + wcslen(String);
+    LoadString(GetModuleHandle(NULL), IDS_MS, ms, Length - (ms - String));
 }
 
 /* Locate the ICMP data and print it. Returns TRUE if the packet was good,
@@ -555,16 +559,13 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1)
     {
-        LPWSTR ms1;
-
         wcscpy(Sign, L"<");
-        ms1 = MyLoadString(IDS_1MS);
-        wcscpy(Time, ms1);
+        LoadString(GetModuleHandle(NULL), IDS_1MS, Time, sizeof(Time) / sizeof(WCHAR));
     }
     else
     {
         wcscpy(Sign, L"=");
-        TimeToMsString(Time, RelativeTime);
+        TimeToMsString(Time, sizeof(Time) / sizeof(WCHAR), RelativeTime);
     }
 
 
@@ -740,9 +741,9 @@ int wmain(int argc, LPWSTR argv[])
         if (!MinRTTSet)
             MinRTT = MaxRTT;
 
-        TimeToMsString(MinTime, MinRTT);
-        TimeToMsString(MaxTime, MaxRTT);
-        TimeToMsString(AvgTime, AvgRTT);
+        TimeToMsString(MinTime, sizeof(MinTime) / sizeof(WCHAR), MinRTT);
+        TimeToMsString(MaxTime, sizeof(MaxTime) / sizeof(WCHAR), MaxRTT);
+        TimeToMsString(AvgTime, sizeof(AvgTime) / sizeof(WCHAR), AvgRTT);
 
         /* Print statistics */
         FormatOutput(IDS_PING_STATISTICS, TargetIP);

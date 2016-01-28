@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    asn.c
     bitmap.c
     bsops.c
     cache.c
@@ -19,8 +20,18 @@ list(APPEND SOURCE
     tcp.c
     uimain.c
     win32.c
+    bsops.h
+    constants.h
+    orders.h
+    proto.h
+    rdesktop.h
+    resource.h
+    types.h
+    uimain.h
     precomp.h)
 
+file(GLOB mstsc_rc_deps res/*.*)
+add_rc_deps(rdc.rc ${mstsc_rc_deps})
 add_executable(mstsc ${SOURCE} rdc.rc)
 set_module_type(mstsc win32gui UNICODE)
 add_importlibs(mstsc user32 gdi32 comctl32 ws2_32 advapi32 shell32 ole32 comdlg32 msvcrt kernel32)

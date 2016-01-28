@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål resources for MSI
+ * Norwegian BokmÃ¥l resources for MSI
  *
- * Copyright 2005-2007 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2007 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,9 +22,11 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "Klarte ikke åpne den oppgitte installasjonspakken. Kontroller filbanen og prøv igjen."
+	4 "Klarte ikke Ã¥pne den oppgitte installasjonspakken. Kontroller filbanen og prÃ¸v igjen."
 	5 "Fant ikke stien '%s'."
 	9 "Sett i disk '%s'"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"

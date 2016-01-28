@@ -18,31 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "credui_resources.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
-
-IDD_CREDDIALOG DIALOG  0, 0, 213, 149
-STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "IDS_TITLEFORMAT"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
-                    0,213,37
-    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "&Naudotojo vardas:",-1,8,62,72,12,SS_CENTERIMAGE
-    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
-                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "&Slaptažodis:",-1,8,80,72,12,SS_CENTERIMAGE
-    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "Į&siminti mano slaptažodį",IDC_SAVE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
-    DEFPUSHBUTTON   "Gerai",IDOK,97,128,50,14
-    PUSHBUTTON      "Atsisakyti",IDCANCEL,156,128,50,14
-END
 
 STRINGTABLE
 {
@@ -53,3 +32,21 @@ STRINGTABLE
     IDS_CAPSLOCKONTITLE "Didžiųjų raidžių būsena įjungta"
     IDS_CAPSLOCKON      "Kai įjungta didžiųjų raidžių būsena, savo slaptažodį galite įvesti neteisingai.\n\nPaspauskite didžiųjų raidžių klaviatūros klavišą didžiųjų raidžių būsenai išjungti\nprieš rinkdami savo slaptažodį."
 }
+
+IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,213,37
+    LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "&Naudotojo vardas:",-1,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "&Slaptažodis:",-1,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Į&siminti mano slaptažodį",IDC_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "Gerai",IDOK,97,128,50,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,156,128,50,14
+END

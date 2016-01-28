@@ -1688,6 +1688,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_TYPE_STREAM                 (4 << 9)
 #define ALG_TYPE_DH                     (5 << 9)
 #define ALG_TYPE_SECURECHANNEL          (6 << 9)
+#define ALG_TYPE_DH_EPHEM               (7 << 9) /* FIXME: find the real TYPE name */
 
 /* SIDs */
 #define ALG_SID_ANY                     (0)
@@ -1701,6 +1702,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_DSS_ANY                 0
 #define ALG_SID_DSS_PKCS                1
 #define ALG_SID_DSS_DMS                 2
+#define ALG_SID_ECDSA                   3
 
 /* DES SIDs */
 #define ALG_SID_DES                     1
@@ -1717,11 +1719,16 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_AES_192                15
 #define ALG_SID_AES_256                16
 #define ALG_SID_AES                    17
-/* Diffie-Hellmans SIDs */
+/* Fortezza */
+#define ALG_SID_SKIPJACK               10
+#define ALG_SID_TEK                    11
+/* Diffie-Hellman SIDs */
 #define ALG_SID_DH_SANDF                1
 #define ALG_SID_DH_EPHEM                2
 #define ALG_SID_AGREED_KEY_ANY          3
 #define ALG_SID_KEA                     4
+#define ALG_SID_ECDH                    5
+#define ALG_SID_ECDH_EPHEM              6 /* FIXME: find the real SID name */
 /* RC2 SIDs */
 #define ALG_SID_RC4                     1
 #define ALG_SID_RC2                     2
@@ -1752,6 +1759,8 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_SCHANNEL_ENC_KEY        7
 #define ALG_SID_EXAMPLE                80
 
+#define ALG_SID_ECMQV                   1
+
 /* Algorithm Definitions */
 #define CALG_MD2                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD2)
 #define CALG_MD4                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD4)
@@ -1771,11 +1780,18 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_NO_SIGN              (ALG_CLASS_SIGNATURE    | ALG_TYPE_ANY           | ALG_SID_ANY)
 #define CALG_DH_SF                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_SANDF)
 #define CALG_DH_EPHEM             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_EPHEM)
+#define CALG_AGREEDKEY_ANY        (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_AGREED_KEY_ANY)
+#define CALG_KEA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_KEA)
+#define CALG_HUGHES_MD5           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_MD5)
 #define CALG_RSA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_RSA           | ALG_SID_RSA_ANY)
+#define CALG_ECDH                 (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_ECDH)
+#define CALG_ECDH_EPHEM           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH_EPHEM      | ALG_SID_ECDH_EPHEM) /* FIXME: find the original TYPE and SID names */
+#define CALG_ECMQV                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_ECMQV)
 #define CALG_DES                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DES)
 #define CALG_RC2                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_RC2)
 #define CALG_3DES                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES)
 #define CALG_3DES_112             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES_112)
+#define CALG_DESX                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DESX)
 #define CALG_AES_128              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_128)
 #define CALG_AES_192              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_192)
 #define CALG_AES_256              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_256)
@@ -1783,6 +1799,9 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_RC4                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC4)
 #define CALG_SEAL                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_SEAL)
 #define CALG_RC5                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC5)
+#define CALG_SKIPJACK             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_SKIPJACK)
+#define CALG_TEK                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_TEK)
+#define CALG_CYLINK_MEK           (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_CYLINK_MEK)
 #define CALG_SSL3_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL3_MASTER)
 #define CALG_SCHANNEL_MASTER_HASH (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MASTER_HASH)
 #define CALG_SCHANNEL_MAC_KEY     (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MAC_KEY)
@@ -1790,8 +1809,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_PCT1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_PCT1_MASTER)
 #define CALG_SSL2_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL2_MASTER)
 #define CALG_TLS1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_TLS1_MASTER)
-
-
+#define CALG_ECDSA                (ALG_CLASS_SIGNATURE    | ALG_TYPE_DSS           | ALG_SID_ECDSA)
 /* Protocol Flags */
 #define CRYPT_FLAG_PCT1    0x0001
 #define CRYPT_FLAG_SSL2    0x0002
@@ -1958,6 +1976,22 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 };
 #endif
 #define MS_ENH_RSA_AES_PROV                            WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_)
+
+#define MS_ENH_RSA_AES_PROV_XP_A    "Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
+#if defined(__GNUC__)
+# define MS_ENH_RSA_AES_PROV_XP_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',\
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',' ',\
+        '(','P','r','o','t','o','t','y','p','e',')',0 }
+#elif defined(_MSC_VER)
+# define MS_ENH_RSA_AES_PROV_XP_W   L"Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
+#else
+static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f','t',' ',
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',' ',
+        '(','P','r','o','t','o','t','y','p','e',')',0 };
+#endif
+#define MS_ENH_RSA_AES_PROV_XP                   WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_XP_)
 
 /* Key Specs*/
 #define AT_KEYEXCHANGE          1

@@ -6,7 +6,7 @@ CAPTION "Имя компьютера"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "ReactOS использует указанные ниже сведения для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Указанные ниже сведения используются для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Описание:", IDC_STATIC, 6, 40, 70, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Полное имя:", IDC_STATIC, 6, 68, 64, 9
@@ -35,7 +35,7 @@ BEGIN
     AUTORADIOBUTTON "до&мена:", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "рабочей &группы:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "&Поиск домена", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&Найти домен", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "Отмена", 2, 176, 203, 50, 14

@@ -50,18 +50,18 @@
 //  NpFs - npfs.sys - Client security context
 //  NpFw - npfs.sys - Write block
 //  NpFW - npfs.sys - Write block
-#define NPFS_CCB_TAG            'NpFc'
-#define NPFS_ROOT_DCB_CCB_TAG   'NpFC'
-#define NPFS_DCB_TAG            'NpFD'
-#define NPFS_FCB_TAG            'NpFf'
-#define NPFS_GLOBAL_TAG         'NpFg'
-#define NPFS_CLIENT_INFO_TAG    'NpFi'
-#define NPFS_NAME_BLOCK_TAG     'NpFn'
-#define NPFS_QUERY_TEMPLATE_TAG 'NpFq'
-#define NPFS_DATA_ENTRY_TAG     'NpFr'
-#define NPFS_CLIENT_SEC_CTX_TAG 'NpFs'
-#define NPFS_WAIT_BLOCK_TAG     'NpFt'
-#define NPFS_WRITE_BLOCK_TAG    'NpFw'
+#define NPFS_CCB_TAG            'cFpN'
+#define NPFS_ROOT_DCB_CCB_TAG   'CFpN'
+#define NPFS_DCB_TAG            'DFpN'
+#define NPFS_FCB_TAG            'fFpN'
+#define NPFS_GLOBAL_TAG         'gFpN'
+#define NPFS_CLIENT_INFO_TAG    'iFpN'
+#define NPFS_NAME_BLOCK_TAG     'nFpN'
+#define NPFS_QUERY_TEMPLATE_TAG 'qFpN'
+#define NPFS_DATA_ENTRY_TAG     'rFpN'
+#define NPFS_CLIENT_SEC_CTX_TAG 'sFpN'
+#define NPFS_WAIT_BLOCK_TAG     'tFpN'
+#define NPFS_WRITE_BLOCK_TAG    'wFpN'
 
 //
 // NPFS bugchecking support

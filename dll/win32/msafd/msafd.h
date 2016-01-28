@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        include/msafd.h
+ * FILE:        dll/win32/msafd/msafd.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */
 
@@ -27,9 +27,7 @@
 #include <wsahelp.h>
 #include <tdi.h>
 #include <afd/shared.h>
-#include <helpers.h>
-
-#include <debug.h>
+#include "include/helpers.h"
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
@@ -74,7 +72,6 @@ typedef struct _SOCK_SHARED_INFO {
 		BOOLEAN					UseSAN:1;
     }; // Flags
     DWORD						CreateFlags;
-    DWORD						CatalogEntryId;
     DWORD						ServiceFlags1;
     DWORD						ProviderFlags;
     GROUP						GroupID;
@@ -108,6 +105,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	WSAPROTOCOL_INFOW ProtocolInfo;
 	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 

@@ -1,4 +1,4 @@
-﻿/* German translation by David Hinz (fRy2oo5) 2005-12-04 and Friedrich Stange (dj_smith_reactos@online.de) 2006-1-20 */
+/* German translation by David Hinz (fRy2oo5) 2005-12-04 and Friedrich Stange (dj_smith_reactos@online.de) 2006-1-20 */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
@@ -66,8 +66,8 @@ BEGIN
     IDS_DEV_DISABLED "Dieses Gerät ist nicht gestartet."
     IDS_DEV_DISABLED2 "Dieses Gerät ist deaktiviert."
     IDS_DEV_DEVLOADER_NOT_READY "Der Lader für dieses Gerät kann die benötigten Treiber nicht laden."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Diese Grafikkarte funktioniert einwandfrei."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Die Lader für dieses Gerät können die benötigten Treiber nicht laden."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_MOVED "ReactOS ist dabei dieses Gerät zu aktivieren."
     IDS_DEV_TOO_EARLY "ReactOS ist dabei dieses Gerät zu aktivieren."
@@ -226,7 +226,7 @@ BEGIN
     LTEXT "Ressourcen-Einstellungen:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
-            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
@@ -236,4 +236,88 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END
+
+
+
+/*
+ This code relates to the device manager GUI
+ */
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Datei"
+  BEGIN
+    MENUITEM "&Beenden",                       IDC_EXIT
+  END
+  MENUITEM "Ak&tion",                          IDC_ACTIONMENU
+  POPUP "&Ansicht"
+  BEGIN
+    MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
+    MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
+    MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
+  END
+  POPUP "&Hilfe"
+  BEGIN
+    MENUITEM "Ü&ber",                          IDC_ABOUT
+  END
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME               "ReactOS Geräte-Manager"
+  IDS_CONFIRM_DISABLE       "Dieses Gerät zu deaktivieren wird dessen Funktion einstellen.\r\nWollen Sie es wirklich deaktivieren?"
+  IDS_CONFIRM_UNINSTALL     "Warnung: Sie sind dabei, dieses Gerät deinstallieren\r\nMöchten Sie den Vorgang fortsetzen?"
+END
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_MENU_UPDATE           "Treibersoftware aktualisieren ..."
+  IDS_MENU_ENABLE           "Aktivieren"
+  IDS_MENU_DISABLE          "Deaktivieren"
+  IDS_MENU_UNINSTALL        "Deinstallieren"
+  IDS_MENU_SCAN             "Nach geänderter Hardware suchen"
+  IDS_MENU_ADD              "Hardware hinzufügen"
+  IDS_MENU_PROPERTIES       "Eigenschaften"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROPERTIES    "Eigenschaften"
+  IDS_TOOLTIP_SCAN          "Nach geänderter Hardware suchen"
+  IDS_TOOLTIP_ENABLE        "Aktivieren"
+  IDS_TOOLTIP_DISABLE       "Deaktivieren"
+  IDS_TOOLTIP_UPDATE        "Treibersoftware aktualisieren"
+  IDS_TOOLTIP_UNINSTALL     "Deinstallieren"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_PROPERTIES   " Öffnet Eigenschaftsdialog für die aktuelle Auswahl."
+  IDS_HINT_SCAN         " Nach geänderten oder neuen Plug & Play-Geräten suchen."
+  IDS_HINT_ENABLE       " Aktiviert das ausgewählte Gerät."
+  IDS_HINT_DISABLE      " Deaktiviert das ausgewählte Gerät."
+  IDS_HINT_UPDATE       " Startet den Treibersoftware aktualisieren Assistenten für das ausgewählte Gerät."
+  IDS_HINT_UNINSTALL    " Deinstalliert den Treiber für das ausgewählte Gerät."
+  IDS_HINT_ADD          " Fügt ein Legacy (nicht Plug & Play) Gerät dem Computer hinzu."
+  IDS_HINT_ABOUT        " Über ReactOS Geräte-Manager."
+  IDS_HINT_EXIT         " Beendet das Programm."
+
+  IDS_HINT_DEV_BY_TYPE  " Zeigt Geräte nach Hardwaretyp an."
+  IDS_HINT_DEV_BY_CONN  " Zeigt Geräte nach Verbindung an."
+  IDS_HINT_RES_BY_TYPE  " Zeigt Ressourcen nach Typ an."
+  IDS_HINT_RES_BY_CONN  " Zeigt Ressourcen nach Verbindungstyp an."
+  IDS_HINT_SHOW_HIDDEN  " Zeigt Legacy-Geräte und Geräte, die nicht mehr installiert sind an."
+
+  IDS_HINT_SYS_RESTORE  " Stellt dieses Fenster auf die normale Größe zurück."
+  IDS_HINT_SYS_MOVE     " Verschiebt das Fenster."
+  IDS_HINT_SYS_SIZE     " Ändert die Größe dieses Fensters."
+  IDS_HINT_SYS_MINIMIZE " Reduziert dieses Fenster zu einem Symbol."
+  IDS_HINT_SYS_MAXIMIZE " Erweitert dieses Fenster, um den Bildschirm zu füllen."
+  IDS_HINT_SYS_CLOSE    " Schließt dieses Fenster."
 END

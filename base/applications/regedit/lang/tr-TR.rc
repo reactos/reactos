@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "A&ğdaki Değer Defteri'ne Bağlan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "Ağ&daki Değer Defteri'ne Bağlantıyı Kes...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zdır...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "Ya&zdır...\tDenetim+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
@@ -60,13 +60,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&İzinler...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
+        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "A&ra...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "S&onrakini Ara\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "&Bul...\tDenetim+F", ID_EDIT_FIND
+        MENUITEM "S&onrakini Bul\tİ3", ID_EDIT_FINDNEXT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Böl", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tF5", ID_VIEW_REFRESH
+        MENUITEM "&Yenile\tİ5", ID_VIEW_REFRESH
     END
     POPUP "Y&er İmleri"
     BEGIN
@@ -83,9 +83,9 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
+        MENUITEM "&Yardım Konuları\tİ1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine...", ID_HELP_ABOUT
     END
 END
 
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM "&İkili Veriyi Değiştir...", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
-        MENUITEM "&Sil\tDel", ID_EDIT_DELETE
+        MENUITEM "&Sil\tSil", ID_EDIT_DELETE
         MENUITEM "&Adını Değiştir", ID_EDIT_RENAME
     END
     POPUP ""
@@ -125,7 +125,7 @@ BEGIN
             MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "A&ra...", ID_EDIT_FIND
+        MENUITEM "&Bul...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Sil", ID_TREE_DELETE
         MENUITEM "&Adını Değiştir", ID_TREE_RENAME
@@ -242,7 +242,7 @@ BEGIN
     LTEXT "Husûsî Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Arayüz Türü:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Veri Yolu Numarası:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Veriyolu Numarası:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Sürüm:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
@@ -404,7 +404,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Veri Yolu Numarası"
+    IDS_BUSNUMBER "Veriyolu Numarası"
     IDS_INTERFACE "Arayüz"
     IDS_DMA_CHANNEL "Yol"
     IDS_DMA_PORT "Giriş"
@@ -444,15 +444,15 @@ BEGIN
     IDS_BUS_TURBOCHANNEL "TURBOChannel"
     IDS_BUS_PCIBUS "PCI"
     IDS_BUS_VMEBUS "VME"
-    IDS_BUS_NUBUS "Nu Veri Yolu"
+    IDS_BUS_NUBUS "Nu Veriyolu"
     IDS_BUS_PCMCIABUS "PCMCIA"
-    IDS_BUS_CBUS "C Veri Yolu"
-    IDS_BUS_MPIBUS "MPI Veri Yolu"
-    IDS_BUS_MPSABUS "MPSA Veri Yolu"
+    IDS_BUS_CBUS "C Veriyolu"
+    IDS_BUS_MPIBUS "MPI Veriyolu"
+    IDS_BUS_MPSABUS "MPSA Veriyolu"
     IDS_BUS_PROCESSORINTERNAL "İç İşlemci"
-    IDS_BUS_INTERNALPOWERBUS "İç Güç Veri Yolu"
-    IDS_BUS_PNPISABUS "PnP-ISA Veri Yolu"
-    IDS_BUS_PNPBUS "PnP Veri Yolu"
+    IDS_BUS_INTERNALPOWERBUS "İç Güç Veriyolu"
+    IDS_BUS_PNPISABUS "PnP-ISA Veriyolu"
+    IDS_BUS_PNPBUS "PnP Veriyolu"
     IDS_BUS_UNKNOWNTYPE "Bilinmeyen Arayüz Türü"
 END
 
@@ -506,10 +506,10 @@ END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ara"
+CAPTION "Bul"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Sonrakini Ara", IDOK, 197, 7, 50, 14
+    DEFPUSHBUTTON "&Sonrakini Bul", IDOK, 197, 7, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Bak", IDC_STATIC, 7, 25, 63, 51
     LTEXT "Bakılacaklar", IDC_STATIC, 7, 8, 37, 10
@@ -527,7 +527,7 @@ BEGIN
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Arama"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN

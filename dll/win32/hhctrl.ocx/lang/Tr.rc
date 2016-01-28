@@ -2,7 +2,7 @@
  * HTML Help resources
  * Turkish Language Support
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org); 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,9 @@ BEGIN
     IDS_INDEX        "&Dizin"
     IDS_SEARCH       "&Ara"
     IDS_FAVORITES    "&Yer İmleri"
+
+    IDS_HIDETABS     "&Sekmeleri Gizle"
+    IDS_SHOWTABS     "&Sekmeleri Göster"
 END
 
 STRINGTABLE
@@ -41,18 +44,45 @@ BEGIN
     IDTB_PRINT       "Yazdır"
     IDTB_OPTIONS     "Seçenekler"
     IDTB_FORWARD     "İleri"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Husûsileştir"
-    IDTB_ZOOM        "Yakınlaştır"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "&Eşitle", IDTB_SYNC
+        MENUITEM "&Geri", IDTB_BACK
+        MENUITEM "&İleri", IDTB_FORWARD
+        MENUITEM "E&v", IDTB_HOME
+        MENUITEM "&Dur", IDTB_STOP
+        MENUITEM "&Yenile", IDTB_REFRESH
+        MENUITEM "Y&azdır...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Geri", IDTB_BACK
+        MENUITEM "&İleri", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Tümünü Seç", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Kaynağı Görüntüle", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Yazdır...", IDTB_PRINT
+        MENUITEM "Y&enile", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Husûsiyetler", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "&Kes", MIID_CUT
+        MENUITEM "&Çoğalt", MIID_COPY
+        MENUITEM "Yapıştır", MIID_PASTE
+        MENUITEM "&Tümünü Seç", MIID_SELECTALL
+        MENUITEM "&Yazdır", IDTB_PRINT
+    }
+}

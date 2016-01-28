@@ -41,6 +41,8 @@ static int      nApplicationPageHeight;
 static BOOL     bSortAscending = TRUE;
 DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
 BOOL            noApps;
+BOOL            bApplicationPageSelectionMade = FALSE;
+
 BOOL CALLBACK   EnumWindowsProc(HWND hWnd, LPARAM lParam);
 void            AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung);
 void            ApplicationPageUpdate(void);
@@ -86,6 +88,23 @@ GetSystemColorDepth(VOID)
 
     return ColorDepth;
 }
+
+void AppPageCleanup(void)
+{
+    int i;
+    LV_ITEM item;
+    LPAPPLICATION_PAGE_LIST_ITEM pData;
+    for (i = 0; i < ListView_GetItemCount(hApplicationPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hApplicationPageListCtrl, &item);
+        pData = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
+        HeapFree(GetProcessHeap(), 0, pData);
+    }
+}
+
 
 INT_PTR CALLBACK
 ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -138,6 +157,10 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         hApplicationThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, &dwApplicationThread);
 #endif
+
+        /* Refresh page */
+        ApplicationPageUpdate();
+
         return TRUE;
 
     case WM_DESTROY:
@@ -145,6 +168,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         EndLocalThread(&hApplicationThread, dwApplicationThread);
 #endif
+        AppPageCleanup();
         break;
 
     case WM_COMMAND:
@@ -272,7 +296,10 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
             noApps = TRUE;
             EnumWindows(EnumWindowsProc, 0);
             if (noApps)
+            {
                 (void)ListView_DeleteAllItems(hApplicationPageListCtrl);
+                bApplicationPageSelectionMade = FALSE;
+            }
 
             /* Get the image lists */
             hImageListLarge = ListView_GetImageList(hApplicationPageListCtrl, LVSIL_NORMAL);
@@ -457,7 +484,20 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
         item.lParam = (LPARAM)pAPLI;
         (void)ListView_InsertItem(hApplicationPageListCtrl, &item);
     }
-    return;
+
+    /* Select first item if any */
+    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
+        (ListView_GetItemCount(hApplicationPageListCtrl) > 0) && !bApplicationPageSelectionMade)
+    {
+        ListView_SetItemState(hApplicationPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+        bApplicationPageSelectionMade = TRUE;
+    }
+    /*
+    else
+    {
+        bApplicationPageSelectionMade = FALSE;
+    }
+    */
 }
 
 void ApplicationPageUpdate(void)

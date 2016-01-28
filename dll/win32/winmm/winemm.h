@@ -179,6 +179,8 @@ const char*     WINMM_ErrorToString(MMRESULT error);
 
 void		TIME_MMTimeStop(void);
 
+MMRESULT WINMM_CheckCallback(DWORD_PTR dwCallback, DWORD fdwOpen, BOOL mixer) DECLSPEC_HIDDEN;
+
 /* Global variables */
 extern CRITICAL_SECTION WINMM_cs;
 extern HINSTANCE hWinMM32Instance;

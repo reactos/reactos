@@ -18,6 +18,8 @@ list(APPEND SOURCE
 #   binres.idl
     bits.idl
     bits1_5.idl
+    bits2_0.idl
+    bits2_5.idl
     bits3_0.idl
 #   cmdbas.idl
 #   cmdtxt.idl
@@ -41,7 +43,6 @@ list(APPEND SOURCE
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl
-    dxgi.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl
@@ -56,6 +57,7 @@ list(APPEND SOURCE
     imnxport.idl
     indexsrv.idl
     inputscope.idl
+    inseng.idl
     metahost.idl
     mimeinfo.idl
     mimeole.idl
@@ -113,6 +115,7 @@ list(APPEND SOURCE
     urlmon.idl
     vmr9.idl
 #   vmrender.idl
+    vss.idl
     wbemcli.idl
     wbemdisp.idl
     wbemprov.idl
@@ -121,6 +124,9 @@ list(APPEND SOURCE
     wincodec.idl
     wincodecsdk.idl
     winsxs.idl
+    wmiutils.idl
+    wmsbuffer.idl
+    wmsdkidl.idl
     wtypes.idl
     wuapi.idl
     xmldom.idl
@@ -129,12 +135,12 @@ list(APPEND SOURCE
     xmllite.idl)
 
 add_idl_headers(psdk ${SOURCE})
+add_dependencies(psdk xdk)
 add_typelib(stdole2.idl)
 add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
 
-add_idl_headers(d3d_idl_headers d3d10.idl d3dcommon.idl)
+add_idl_headers(d3d_idl_headers d3dcommon.idl)
 
-add_iid_library(dxgi_uuids dxgi.idl)
 add_iid_library(wuguid wuapi.idl)
 add_iid_library(xml_uuids msxml2.idl)
 

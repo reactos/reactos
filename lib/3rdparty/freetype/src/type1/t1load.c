@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2014 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -226,7 +226,7 @@
   /* Given a normalized (blend) coordinate, figure out the design          */
   /* coordinate appropriate for that value.                                */
   /*                                                                       */
-  FT_LOCAL_DEF( FT_Fixed )
+  static FT_Fixed
   mm_axis_unmap( PS_DesignMap  axismap,
                  FT_Fixed      ncv )
   {
@@ -255,7 +255,7 @@
   /* Given a vector of weights, one for each design, figure out the        */
   /* normalized axis coordinates which gave rise to those weights.         */
   /*                                                                       */
-  FT_LOCAL_DEF( void )
+  static void
   mm_weights_unmap( FT_Fixed*  weights,
                     FT_Fixed*  axiscoords,
                     FT_UInt    axis_count )
@@ -336,6 +336,9 @@
       mmvar->axis[i].strid   = ~0U;                      /* Does not apply */
       mmvar->axis[i].tag     = ~0U;                      /* Does not apply */
 
+      if ( !mmvar->axis[i].name )
+        continue;
+
       if ( ft_strcmp( mmvar->axis[i].name, "Weight" ) == 0 )
         mmvar->axis[i].tag = FT_MAKE_TAG( 'w', 'g', 'h', 't' );
       else if ( ft_strcmp( mmvar->axis[i].name, "Width" ) == 0 )
@@ -368,44 +371,43 @@
                    FT_Fixed*  coords )
   {
     PS_Blend  blend = face->blend;
-    FT_Error  error;
     FT_UInt   n, m;
 
 
-    error = FT_ERR( Invalid_Argument );
+    if ( !blend )
+      return FT_THROW( Invalid_Argument );
 
-    if ( blend && blend->num_axis == num_coords )
+    if ( num_coords > blend->num_axis )
+      num_coords = blend->num_axis;
+
+    /* recompute the weight vector from the blend coordinates */
+    for ( n = 0; n < blend->num_designs; n++ )
     {
-      /* recompute the weight vector from the blend coordinates */
-      for ( n = 0; n < blend->num_designs; n++ )
+      FT_Fixed  result = 0x10000L;  /* 1.0 fixed */
+
+
+      for ( m = 0; m < blend->num_axis; m++ )
       {
-        FT_Fixed  result = 0x10000L;  /* 1.0 fixed */
+        FT_Fixed  factor;
 
 
-        for ( m = 0; m < blend->num_axis; m++ )
-        {
-          FT_Fixed  factor;
+        /* get current blend axis position;                  */
+        /* use a default value if we don't have a coordinate */
+        factor = m < num_coords ? coords[m] : 0x8000;
+        if ( factor < 0 )
+          factor = 0;
+        if ( factor > 0x10000L )
+          factor = 0x10000L;
 
+        if ( ( n & ( 1 << m ) ) == 0 )
+          factor = 0x10000L - factor;
 
-          /* get current blend axis position */
-          factor = coords[m];
-          if ( factor < 0 )
-            factor = 0;
-          if ( factor > 0x10000L )
-            factor = 0x10000L;
-
-          if ( ( n & ( 1 << m ) ) == 0 )
-            factor = 0x10000L - factor;
-
-          result = FT_MulFix( result, factor );
-        }
-        blend->weight_vector[n] = result;
+        result = FT_MulFix( result, factor );
       }
-
-      error = FT_Err_Ok;
+      blend->weight_vector[n] = result;
     }
 
-    return error;
+    return FT_Err_Ok;
   }
 
 
@@ -415,68 +417,72 @@
                     FT_Long*  coords )
   {
     PS_Blend  blend = face->blend;
-    FT_Error  error;
     FT_UInt   n, p;
+    FT_Fixed  final_blends[T1_MAX_MM_DESIGNS];
 
 
-    error = FT_ERR( Invalid_Argument );
-    if ( blend && blend->num_axis == num_coords )
+    if ( !blend )
+      return FT_THROW( Invalid_Argument );
+
+    if ( num_coords > blend->num_axis )
+      num_coords = blend->num_axis;
+
+    /* compute the blend coordinates through the blend design map */
+
+    for ( n = 0; n < blend->num_axis; n++ )
     {
-      /* compute the blend coordinates through the blend design map */
-      FT_Fixed  final_blends[T1_MAX_MM_DESIGNS];
+      FT_Long       design;
+      FT_Fixed      the_blend;
+      PS_DesignMap  map     = blend->design_map + n;
+      FT_Long*      designs = map->design_points;
+      FT_Fixed*     blends  = map->blend_points;
+      FT_Int        before  = -1, after = -1;
 
 
-      for ( n = 0; n < blend->num_axis; n++ )
+      /* use a default value if we don't have a coordinate */
+      if ( n < num_coords )
+        design = coords[n];
+      else
+        design = ( designs[map->num_points - 1] - designs[0] ) / 2;
+
+      for ( p = 0; p < (FT_UInt)map->num_points; p++ )
       {
-        FT_Long       design  = coords[n];
-        FT_Fixed      the_blend;
-        PS_DesignMap  map     = blend->design_map + n;
-        FT_Long*      designs = map->design_points;
-        FT_Fixed*     blends  = map->blend_points;
-        FT_Int        before  = -1, after = -1;
+        FT_Long  p_design = designs[p];
 
 
-        for ( p = 0; p < (FT_UInt)map->num_points; p++ )
+        /* exact match? */
+        if ( design == p_design )
         {
-          FT_Long  p_design = designs[p];
-
-
-          /* exact match? */
-          if ( design == p_design )
-          {
-            the_blend = blends[p];
-            goto Found;
-          }
-
-          if ( design < p_design )
-          {
-            after = p;
-            break;
-          }
-
-          before = p;
+          the_blend = blends[p];
+          goto Found;
         }
 
-        /* now interpolate if necessary */
-        if ( before < 0 )
-          the_blend = blends[0];
+        if ( design < p_design )
+        {
+          after = (FT_Int)p;
+          break;
+        }
 
-        else if ( after < 0 )
-          the_blend = blends[map->num_points - 1];
-
-        else
-          the_blend = FT_MulDiv( design         - designs[before],
-                                 blends [after] - blends [before],
-                                 designs[after] - designs[before] );
-
-      Found:
-        final_blends[n] = the_blend;
+        before = (FT_Int)p;
       }
 
-      error = T1_Set_MM_Blend( face, num_coords, final_blends );
+      /* now interpolate if necessary */
+      if ( before < 0 )
+        the_blend = blends[0];
+
+      else if ( after < 0 )
+        the_blend = blends[map->num_points - 1];
+
+      else
+        the_blend = FT_MulDiv( design         - designs[before],
+                               blends [after] - blends [before],
+                               designs[after] - designs[before] );
+
+    Found:
+      final_blends[n] = the_blend;
     }
 
-    return error;
+    return T1_Set_MM_Blend( face, blend->num_axis, final_blends );
   }
 
 
@@ -490,20 +496,17 @@
                      FT_UInt    num_coords,
                      FT_Fixed*  coords )
   {
-     FT_Long   lcoords[4];          /* maximum axis count is 4 */
-     FT_UInt   i;
-     FT_Error  error;
+     FT_Long  lcoords[T1_MAX_MM_AXIS];
+     FT_UInt  i;
 
 
-     error = FT_ERR( Invalid_Argument );
-     if ( num_coords <= 4 && num_coords > 0 )
-     {
-       for ( i = 0; i < num_coords; ++i )
-         lcoords[i] = FIXED_TO_INT( coords[i] );
-       error = T1_Set_MM_Design( face, num_coords, lcoords );
-     }
+     if ( num_coords > T1_MAX_MM_AXIS )
+       num_coords = T1_MAX_MM_AXIS;
 
-     return error;
+     for ( i = 0; i < num_coords; ++i )
+       lcoords[i] = FIXED_TO_INT( coords[i] );
+
+     return T1_Set_MM_Design( face, num_coords, lcoords );
   }
 
 
@@ -599,23 +602,32 @@
     /* each token is an immediate containing the name of the axis */
     for ( n = 0; n < num_axis; n++ )
     {
-      T1_Token    token = axis_tokens + n;
-      FT_Byte*    name;
-      FT_PtrDist  len;
+      T1_Token  token = axis_tokens + n;
+      FT_Byte*  name;
+      FT_UInt   len;
 
 
       /* skip first slash, if any */
       if ( token->start[0] == '/' )
         token->start++;
 
-      len = token->limit - token->start;
+      len = (FT_UInt)( token->limit - token->start );
       if ( len == 0 )
       {
         error = FT_THROW( Invalid_File_Format );
         goto Exit;
       }
 
-      if ( FT_ALLOC( blend->axis_names[n], (FT_Long)( len + 1 ) ) )
+      name = (FT_Byte*)blend->axis_names[n];
+      if ( name )
+      {
+        FT_TRACE0(( "parse_blend_axis_types:"
+                    " overwriting axis name `%s' with `%*.s'\n",
+                    name, len, token->start ));
+        FT_FREE( name );
+      }
+
+      if ( FT_ALLOC( blend->axis_names[n], len + 1 ) )
         goto Exit;
 
       name = (FT_Byte*)blend->axis_names[n];
@@ -692,7 +704,9 @@
           }
 
           num_axis = n_axis;
-          error = t1_allocate_blend( face, num_designs, num_axis );
+          error = t1_allocate_blend( face,
+                                     (FT_UInt)num_designs,
+                                     (FT_UInt)num_axis );
           if ( error )
             goto Exit;
           blend = face->blend;
@@ -757,7 +771,7 @@
     old_cursor = parser->root.cursor;
     old_limit  = parser->root.limit;
 
-    error = t1_allocate_blend( face, 0, num_axis );
+    error = t1_allocate_blend( face, 0, (FT_UInt)num_axis );
     if ( error )
       goto Exit;
     blend = face->blend;
@@ -781,6 +795,13 @@
       if ( num_points <= 0 || num_points > T1_MAX_MM_MAP_POINTS )
       {
         FT_ERROR(( "parse_blend_design_map: incorrect table\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      if ( map->design_points )
+      {
+        FT_ERROR(( "parse_blend_design_map: duplicate table\n" ));
         error = FT_THROW( Invalid_File_Format );
         goto Exit;
       }
@@ -848,7 +869,7 @@
 
     if ( !blend || !blend->num_designs )
     {
-      error = t1_allocate_blend( face, num_designs, 0 );
+      error = t1_allocate_blend( face, (FT_UInt)num_designs, 0 );
       if ( error )
         goto Exit;
       blend = face->blend;
@@ -890,8 +911,8 @@
   parse_buildchar( T1_Face    face,
                    T1_Loader  loader )
   {
-    face->len_buildchar = T1_ToFixedArray( &loader->parser, 0, NULL, 0 );
-
+    face->len_buildchar = (FT_UInt)T1_ToFixedArray( &loader->parser,
+                                                    0, NULL, 0 );
     return;
   }
 
@@ -1038,9 +1059,11 @@
   }
 
 
+  /* return 1 in case of success */
+
   static int
   read_binary_data( T1_Parser  parser,
-                    FT_Long*   size,
+                    FT_ULong*  size,
                     FT_Byte**  base,
                     FT_Bool    incremental )
   {
@@ -1072,7 +1095,7 @@
       if ( s >= 0 && s < limit - *base )
       {
         parser->root.cursor += s + 1;
-        *size = s;
+        *size = (FT_ULong)s;
         return !parser->root.error;
       }
     }
@@ -1103,6 +1126,7 @@
     FT_Int      result;
 
 
+    /* input is scaled by 1000 to accommodate default FontMatrix */
     result = T1_ToFixedArray( parser, 6, temp, 3 );
 
     if ( result < 6 )
@@ -1120,15 +1144,12 @@
       return;
     }
 
-    /* Set Units per EM based on FontMatrix values.  We set the value to */
-    /* 1000 / temp_scale, because temp_scale was already multiplied by   */
-    /* 1000 (in t1_tofixed, from psobjs.c).                              */
-
-    root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
-
-    /* we need to scale the values by 1.0/temp_scale */
+    /* atypical case */
     if ( temp_scale != 0x10000L )
     {
+      /* set units per EM based on FontMatrix values */
+      root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
+
       temp[0] = FT_DivFix( temp[0], temp_scale );
       temp[1] = FT_DivFix( temp[1], temp_scale );
       temp[2] = FT_DivFix( temp[2], temp_scale );
@@ -1190,9 +1211,26 @@
       else
         count = (FT_Int)T1_ToInt( parser );
 
+      /* only composite fonts (which we don't support) */
+      /* can have larger values                        */
+      if ( count > 256 )
+      {
+        FT_ERROR(( "parse_encoding: invalid encoding array size\n" ));
+        parser->root.error = FT_THROW( Invalid_File_Format );
+        return;
+      }
+
       T1_Skip_Spaces( parser );
       if ( parser->root.cursor >= limit )
         return;
+
+      /* PostScript happily allows overwriting of encoding arrays */
+      if ( encode->char_index )
+      {
+        FT_FREE( encode->char_index );
+        FT_FREE( encode->char_name );
+        T1_Release_Table( char_table );
+      }
 
       /* we use a T1_Table to store our charnames */
       loader->num_chars = encode->num_chars = count;
@@ -1211,7 +1249,7 @@
         char*  notdef = (char *)".notdef";
 
 
-        T1_Add_Table( char_table, n, notdef, 8 );
+        (void)T1_Add_Table( char_table, n, notdef, 8 );
       }
 
       /* Now we need to read records of the form                */
@@ -1285,7 +1323,7 @@
 
           if ( cur + 2 < limit && *cur == '/' && n < count )
           {
-            FT_PtrDist  len;
+            FT_UInt  len;
 
 
             cur++;
@@ -1297,7 +1335,7 @@
             if ( parser->root.error )
               return;
 
-            len = parser->root.cursor - cur;
+            len = (FT_UInt)( parser->root.cursor - cur );
 
             parser->root.error = T1_Add_Table( char_table, charcode,
                                                cur, len + 1 );
@@ -1385,6 +1423,21 @@
     }
 
     num_subrs = (FT_Int)T1_ToInt( parser );
+    if ( num_subrs < 0 )
+    {
+      parser->root.error = FT_THROW( Invalid_File_Format );
+      return;
+    }
+
+    /* we certainly need more than 8 bytes per subroutine */
+    if ( num_subrs > ( parser->root.limit - parser->root.cursor ) >> 3 )
+    {
+      FT_TRACE0(( "parse_subrs: adjusting number of subroutines"
+                  " (from %d to %d)\n",
+                  num_subrs,
+                  ( parser->root.limit - parser->root.cursor ) >> 3 ));
+      num_subrs = ( parser->root.limit - parser->root.cursor ) >> 3;
+    }
 
     /* position the parser right before the `dup' of the first subr */
     T1_Skip_PS_Token( parser );         /* `array' */
@@ -1407,7 +1460,8 @@
     /*                         */
     for (;;)
     {
-      FT_Long   idx, size;
+      FT_Long   idx;
+      FT_ULong  size;
       FT_Byte*  base;
 
 
@@ -1457,7 +1511,7 @@
         /* some fonts define empty subr records -- this is not totally */
         /* compliant to the specification (which says they should at   */
         /* least contain a `return'), but we support them anyway       */
-        if ( size < face->type1.private_dict.lenIV )
+        if ( size < (FT_ULong)face->type1.private_dict.lenIV )
         {
           error = FT_THROW( Invalid_File_Format );
           goto Fail;
@@ -1468,7 +1522,7 @@
           goto Fail;
         FT_MEM_COPY( temp, base, size );
         psaux->t1_decrypt( temp, size, 4330 );
-        size -= face->type1.private_dict.lenIV;
+        size -= (FT_ULong)face->type1.private_dict.lenIV;
         error = T1_Add_Table( table, (FT_Int)idx,
                               temp + face->type1.private_dict.lenIV, size );
         FT_FREE( temp );
@@ -1505,10 +1559,10 @@
 
     PSAux_Service  psaux        = (PSAux_Service)face->psaux;
 
-    FT_Byte*       cur;
+    FT_Byte*       cur          = parser->root.cursor;
     FT_Byte*       limit        = parser->root.limit;
     FT_Int         n, num_glyphs;
-    FT_UInt        notdef_index = 0;
+    FT_Int         notdef_index = 0;
     FT_Byte        notdef_found = 0;
 
 
@@ -1517,6 +1571,15 @@
     {
       error = FT_THROW( Invalid_File_Format );
       goto Fail;
+    }
+
+    /* we certainly need more than 8 bytes per glyph */
+    if ( num_glyphs > ( limit - cur ) >> 3 )
+    {
+      FT_TRACE0(( "parse_charstrings: adjusting number of glyphs"
+                  " (from %d to %d)\n",
+                  num_glyphs, ( limit - cur ) >> 3 ));
+      num_glyphs = ( limit - cur ) >> 3;
     }
 
     /* some fonts like Optima-Oblique not only define the /CharStrings */
@@ -1555,7 +1618,7 @@
 
     for (;;)
     {
-      FT_Long   size;
+      FT_ULong  size;
       FT_Byte*  base;
 
 
@@ -1596,22 +1659,27 @@
       }
 
       T1_Skip_PS_Token( parser );
+      if ( parser->root.cursor >= limit )
+      {
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
       if ( parser->root.error )
         return;
 
       if ( *cur == '/' )
       {
-        FT_PtrDist  len;
+        FT_UInt  len;
 
 
-        if ( cur + 1 >= limit )
+        if ( cur + 2 >= limit )
         {
           error = FT_THROW( Invalid_File_Format );
           goto Fail;
         }
 
         cur++;                              /* skip `/' */
-        len = parser->root.cursor - cur;
+        len = (FT_UInt)( parser->root.cursor - cur );
 
         if ( !read_binary_data( parser, &size, &base, IS_INCREMENTAL ) )
           return;
@@ -1644,7 +1712,7 @@
           FT_Byte*  temp;
 
 
-          if ( size <= face->type1.private_dict.lenIV )
+          if ( size <= (FT_ULong)face->type1.private_dict.lenIV )
           {
             error = FT_THROW( Invalid_File_Format );
             goto Fail;
@@ -1655,7 +1723,7 @@
             goto Fail;
           FT_MEM_COPY( temp, base, size );
           psaux->t1_decrypt( temp, size, 4330 );
-          size -= face->type1.private_dict.lenIV;
+          size -= (FT_ULong)face->type1.private_dict.lenIV;
           error = T1_Add_Table( code_table, n,
                                 temp + face->type1.private_dict.lenIV, size );
           FT_FREE( temp );
@@ -1833,15 +1901,11 @@
   };
 
 
-#define T1_FIELD_COUNT                                           \
-          ( sizeof ( t1_keywords ) / sizeof ( t1_keywords[0] ) )
-
-
   static FT_Error
   parse_dict( T1_Face    face,
               T1_Loader  loader,
               FT_Byte*   base,
-              FT_Long    size )
+              FT_ULong   size )
   {
     T1_Parser  parser = &loader->parser;
     FT_Byte   *limit, *start_binary = NULL;
@@ -1897,7 +1961,7 @@
       else if ( *cur == 'R' && cur + 6 < limit && *(cur + 1) == 'D' &&
                 have_integer )
       {
-        FT_Long   s;
+        FT_ULong  s;
         FT_Byte*  b;
 
 
@@ -1910,7 +1974,7 @@
       else if ( *cur == '-' && cur + 6 < limit && *(cur + 1) == '|' &&
                 have_integer )
       {
-        FT_Long   s;
+        FT_ULong  s;
         FT_Byte*  b;
 
 
@@ -1923,7 +1987,7 @@
       /* look for immediates */
       else if ( *cur == '/' && cur + 2 < limit )
       {
-        FT_PtrDist  len;
+        FT_UInt  len;
 
 
         cur++;
@@ -1933,7 +1997,7 @@
         if ( parser->root.error )
           goto Exit;
 
-        len = parser->root.cursor - cur;
+        len = (FT_UInt)( parser->root.cursor - cur );
 
         if ( len > 0 && len < 22 && parser->root.cursor < limit )
         {
@@ -1950,9 +2014,9 @@
             if ( !name )
               break;
 
-            if ( cur[0] == name[0]                                  &&
-                 len == (FT_PtrDist)ft_strlen( (const char *)name ) &&
-                 ft_memcmp( cur, name, len ) == 0                   )
+            if ( cur[0] == name[0]                      &&
+                 len == ft_strlen( (const char *)name ) &&
+                 ft_memcmp( cur, name, len ) == 0       )
             {
               /* We found it -- run the parsing callback!     */
               /* We record every instance of every field      */
@@ -2207,8 +2271,8 @@
     /* the `lengths' field must be released later             */
     type1->glyph_names_block    = loader.glyph_names.block;
     type1->glyph_names          = (FT_String**)loader.glyph_names.elements;
-    loader.glyph_names.block    = 0;
-    loader.glyph_names.elements = 0;
+    loader.glyph_names.block    = NULL;
+    loader.glyph_names.elements = NULL;
 
     /* we must now build type1.encoding when we have a custom array */
     if ( type1->encoding_type == T1_ENCODING_TYPE_ARRAY )

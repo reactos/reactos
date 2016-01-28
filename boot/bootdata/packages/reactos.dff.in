@@ -13,15 +13,18 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 1 = system32
 2 = system32\drivers
 3 = Fonts
-4 =
+4 = "\"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
-8 = bin\data
+8 = bin\testdata
 9 = media
 10 = Microsoft.NET
 11 = Microsoft.NET\Framework
@@ -66,7 +69,6 @@ Signature = "$ReactOS$"
 50 = security\templates
 51 = system32\CatRoot
 52 = system32\CatRoot2
-53 = system32\gnutls
 
 .InfEnd
 
@@ -84,6 +86,9 @@ Signature = "$ReactOS$"
 "modules/optional/b57win32.inf"                       6  optional
 "modules/optional/b57win32.cat"                       6  optional
 "modules/optional/b57xp32.sys"                        2  optional
+"modules/optional/bcmwl5.inf"                         6  optional
+"modules/optional/bcm43xx.cat"                        6  optional
+"modules/optional/bcmwl5.sys"                         2  optional
 "modules/optional/alcxwdm.inf"                        6  optional
 "modules/optional/alcxwdm.sys"                        2  optional
 "modules/optional/mfc42.dll"                          1  optional
@@ -99,13 +104,6 @@ Signature = "$ReactOS$"
 "modules/optional/vmx_mode.dll"                       1  optional
 "modules/optional/vmx_svga.inf"                       6  optional
 "modules/optional/vmx_svga.sys"                       2  optional
-"modules/optional/wine_gecko-2.24-x86.msi"            4  optional
+"modules/optional/wine_gecko-2.40-x86.msi"            4  optional
 "boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
-"modules/optional/gnutls/libgcc_s_sjlj-1.dll"         53 optional
-"modules/optional/gnutls/libgmp-10.dll"               53 optional
-"modules/optional/gnutls/libgnutls-28.dll"            53 optional
-"modules/optional/gnutls/libhogweed-2-5.dll"          53 optional
-"modules/optional/gnutls/libp11-kit-0.dll"            53 optional
-"modules/optional/gnutls/libnettle-4-7.dll"           53 optional
-"modules/optional/gnutls/libwinpthread-1.dll"         53 optional
-"modules/optional/gnutls/zlib1.dll"                   53 optional
+; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !

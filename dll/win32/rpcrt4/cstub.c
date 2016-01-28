@@ -41,7 +41,7 @@ typedef struct
 
 static inline cstdstubbuffer_delegating_t *impl_from_delegating( IRpcStubBuffer *iface )
 {
-    return (cstdstubbuffer_delegating_t*)((char *)iface - FIELD_OFFSET(cstdstubbuffer_delegating_t, stub_buffer));
+    return CONTAINING_RECORD(iface, cstdstubbuffer_delegating_t, stub_buffer);
 }
 
 HRESULT CStdStubBuffer_Construct(REFIID riid,
@@ -156,6 +156,13 @@ typedef struct
 
 static const BYTE opcodes[16] = { 0x48, 0x8b, 0x49, 0x20, 0x48, 0x8b, 0x01,
                                   0xff, 0xa0, 0, 0, 0, 0, 0x48, 0x8d, 0x36 };
+#elif defined(__arm__)
+typedef struct
+{
+    DWORD offset;
+} vtbl_method_t;
+static const BYTE opcodes[1];
+
 #else
 
 #warning You must implement delegated proxies/stubs for your CPU

@@ -1,11 +1,11 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/definitions.h
+ * FILE:        base/applications/mspaint/definitions.h
  * PURPOSE:     Defines the resource ids and other stuff
  * PROGRAMMERS: Benedikt Freisen
  */
- 
+
 /* DEFINES **********************************************************/
 
 #define HISTORYSIZE 11
@@ -50,11 +50,15 @@
 #define IDM_FILESAVE   203
 #define IDM_FILESAVEAS 204
 
+#define IDM_FILEPAGEVIEW  206
+#define IDM_FILEPAGESETUP 207
+#define IDM_FILEPRINT     208
+
 #define IDM_FILEASWALLPAPERPLANE     210
 #define IDM_FILEASWALLPAPERCENTERED  211
 #define IDM_FILEASWALLPAPERSTRETCHED 212
 
-#define IDM_FILEEXIT 205
+#define IDM_FILEEXIT 215
 
 #define IDM_EDITUNDO            220
 #define IDM_EDITREDO            221
@@ -220,3 +224,13 @@
 #define IDS_ANGLE      932
 
 #define IDS_LOADERRORTEXT 933
+#define IDS_ENLARGEPROMPTTEXT 934
+
+#define WM_TOOLSMODELTOOLCHANGED WM_APP
+#define WM_TOOLSMODELSETTINGSCHANGED (WM_APP + 1)
+#define WM_TOOLSMODELZOOMCHANGED (WM_APP + 2)
+#define WM_PALETTEMODELCOLORCHANGED (WM_APP + 3)
+#define WM_PALETTEMODELPALETTECHANGED (WM_APP + 4)
+#define WM_IMAGEMODELDIMENSIONSCHANGED (WM_APP + 5)
+#define WM_IMAGEMODELIMAGECHANGED (WM_APP + 6)
+#define WM_SELECTIONMODELREFRESHNEEDED (WM_APP + 7)

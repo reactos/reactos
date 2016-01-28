@@ -284,10 +284,21 @@ EngMultiByteToWideChar(
 
 VOID
 APIENTRY
-EngQueryLocalTime(OUT PENG_TIME_FIELDS ptf)
+EngQueryLocalTime(
+    _Out_ PENG_TIME_FIELDS ptf)
 {
-    // www.osr.com/ddk/graphics/gdifncs_389z.htm
-    UNIMPLEMENTED;
+    LARGE_INTEGER liSystemTime, liLocalTime;
+    NT_ASSERT(ptf != NULL);
+
+    /* Query the system time */
+    KeQuerySystemTime(&liSystemTime);
+
+    /* Convert it to local time */
+    ExSystemTimeToLocalTime(&liSystemTime, &liLocalTime);
+
+    /* Convert the local time into time fields
+       (note that ENG_TIME_FIELDS is identical to TIME_FIELDS) */
+    RtlTimeToTimeFields(&liLocalTime, (PTIME_FIELDS)ptf);
 }
 
 ULONG
@@ -423,11 +434,13 @@ FONTOBJ_pifi(IN FONTOBJ *FontObj)
 /*
  * @unimplemented
  */
+_Ret_opt_bytecount_(*pcjFile)
+ENGAPI
 PVOID
 APIENTRY
 FONTOBJ_pvTrueTypeFontFile(
-    IN FONTOBJ  *FontObj,
-    IN ULONG    *FileSize)
+    _In_ FONTOBJ *pfo,
+    _Out_ ULONG *pcjFile)
 {
     UNIMPLEMENTED;
     return NULL;
@@ -656,7 +669,7 @@ EngHangNotification(
  */
 BOOL
 APIENTRY
-EngLpkInstalled()
+EngLpkInstalled(VOID)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -729,12 +742,14 @@ FONTOBJ_pfdg(
 /*
  * @unimplemented
  */
+_Ret_opt_bytecount_(*pcjTable)
+ENGAPI
 PBYTE
 APIENTRY
 FONTOBJ_pjOpenTypeTablePointer(
-    IN FONTOBJ *FontObj,
-    IN ULONG Tag,
-    OUT ULONG *Table)
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG ulTag,
+    _Out_ ULONG *pcjTable)
 {
     UNIMPLEMENTED;
     return NULL;
@@ -788,7 +803,7 @@ HT_Get8BPPMaskPalette(
  */
 BOOL
 APIENTRY
-NtGdiAnyLinkedFonts()
+NtGdiAnyLinkedFonts(VOID)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -923,18 +938,6 @@ NtGdiGetUFI(
     return FALSE;
 }
 
-/*
- * @unimplemented
- */
-HBRUSH
-APIENTRY
-NtGdiClearBrushAttributes(
-    IN HBRUSH hbm,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
 
 /*
  * @unimplemented
@@ -1259,19 +1262,6 @@ NtGdiGetLinkedUFIs(
 /*
  * @unimplemented
  */
-HBITMAP
-APIENTRY
-NtGdiGetObjectBitmapHandle(
-    IN HBRUSH hbr,
-    OUT UINT *piUsage)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetMonitorID(
@@ -1413,19 +1403,6 @@ NtGdiSetupPublicCFONT(
 /*
  * @unimplemented
  */
-HBRUSH
-APIENTRY
-NtGdiSetBrushAttributes(
-    IN HBRUSH hbm,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetEmbUFI(
@@ -1535,16 +1512,6 @@ NtGdiIcmBrushInfo(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-NtGdiInit(VOID)
-{
-    return TRUE;
 }
 
 /*
@@ -1676,11 +1643,14 @@ EngControlSprites(
     return FALSE;
 }
 
+_Must_inspect_result_
+_Ret_opt_bytecap_(cjSize)
+ENGAPI
 PVOID
 APIENTRY
 EngFntCacheAlloc(
-    IN ULONG FastCheckSum,
-    IN ULONG ulSize)
+    _In_ ULONG ulFastCheckSum,
+    _In_ ULONG cjSize)
 {
     UNIMPLEMENTED;
     return NULL;

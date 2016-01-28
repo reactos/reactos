@@ -34,7 +34,6 @@
 #include <wine/debug.h>
 
 #define ICM_CHOOSE_COMPRESSOR 1
-#define IDC_COMP_LIST 880
 
 /* HIC struct (same layout as Win95 one) */
 typedef struct tagWINE_HIC {

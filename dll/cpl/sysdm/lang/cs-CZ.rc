@@ -1,6 +1,6 @@
 /* FILE:       dll/cpl/sysdm/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-06-03
+ * UPDATED:    2015-05-04
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -22,7 +22,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Navštívit <A HREF=""http://www.reactos.org/"">stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL "Navštívit <A HREF=""http://www.reactos.org/"">stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Zobrazit &licenci...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -36,7 +36,7 @@ BEGIN
     LTEXT "Správce zařízení zobrazuje seznam všech hardwarových zařízení nainstalovaných na tomto počítači. Ve Správci zařízení lze změnit vlastnosti libovolného zařízení.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Správce zařízení...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Průvodce hardwarem", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Průvodce hardwarem umožňuje přidávat, odebírat, opravovat, odpojovat, vysouvat a konfigurovat hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Průvodce hardwarem...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hardwarové profily", IDC_STATIC, 6, 149, 244, 61
@@ -60,19 +60,19 @@ BEGIN
     GROUPBOX "Spuštění a zotavení systému", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Možnosti spuštění a zotavení říkají počítači, jak se spustit a co dělat, jestliže jej chyba donutí zastavit.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Nastavení", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Nastavení systému", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Proměnné prostředí", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON "Nastavení systému", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Proměnné prostředí", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Hlášení chyb", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Nastavení systému"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informace o verzi", IDC_STATIC, 6, 3, 210, 73
     CONTROL "Hlásit se jako pracovní stanice", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    LTEXT "ReactOS je vytvořen jako serverový OS a jako takový se i hlásí. Po zaškrtnutí tohoto políčka se pro aplikace toto chování změní.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS je vytvořen jako serverový OS a jako takový se také hlásí. Po zaškrtnutí tohoto políčka se pro aplikace toto chování změní.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 
@@ -103,6 +103,26 @@ BEGIN
     PUSHBUTTON "Storno", IDCANCEL, 197, 213, 50, 14
 END
 
+IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
+    LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
+    LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
+    LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
+    LTEXT "Serial Number:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
+    GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
+    AUTOCHECKBOX "This is a &portable computer", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+END
+
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Kopírovat profil"
@@ -130,7 +150,7 @@ BEGIN
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Uživatelské profily"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -155,7 +175,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Spuštění systému", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Výchozí operační s&ystém:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "Dob&a zobrazení seznamu operačních systémů:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -175,7 +195,7 @@ BEGIN
     GROUPBOX "Zapsat ladicí informace", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "Výpis ze &souboru:", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Přepsat &existující soubor", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 195, 259, 50, 14
@@ -239,9 +259,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Úpravy proměnných"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Název proměnné:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT "&Název proměnné:", IDC_STATIC, 7, 14, 68, 8
     EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "&Hodnota proměnné:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT "&Hodnota proměnné:", IDC_STATIC, 7, 32, 68, 8
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 170, 50, 50, 14
@@ -266,8 +286,8 @@ BEGIN
     IDS_PETABYTE "PB RAM"
     IDS_VARIABLE "Proměnná"
     IDS_VALUE "Hodnota"
-    IDS_NO_DUMP "(není)"
-    IDS_MINI_DUMP "Minivýpis(64KB)"
+    IDS_NO_DUMP "(Není)"
+    IDS_MINI_DUMP "Minivýpis (64KB)"
     IDS_KERNEL_DUMP "Výpis kernelu"
     IDS_FULL_DUMP "Kompletní výpis"
     IDS_USERPROFILE_NAME "Název"
@@ -276,12 +296,17 @@ BEGIN
     IDS_USERPROFILE_STATUS "Stav"
     IDS_USERPROFILE_MODIFIED "Upraveno"
     IDS_MESSAGEBOXTITLE "Systémový aplet kontrolních panelů"
-    IDS_WARNINITIALSIZE "Zadejte číselnou hodnotu pro úvodní velikost stránkovacího souboru."
+    IDS_WARNINITIALSIZE "Zadejte číselnou hodnotu pro počáteční velikost stránkovacího souboru."
     IDS_WARNMAXIMUMSIZE "Zadejte číselnou hodnotu pro maximální velikost stránkovacího souboru."
-    IDS_WARNINITIALRANGE "Výchozí velikost stránkovacího souboru nesmí být menší než 2 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
-    IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost výchozí a nesmí překročit množství volného místa na zvolené diskové jednotce."
-    IDS_PAGEFILE_NONE "není"
-    IDS_PAGEFILE_SYSTEM "spravováno systémem"
+    IDS_WARNINITIALRANGE "Počáteční velikost stránkovacího souboru nesmí být menší než 16 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost počáteční, nesmí být větší než 4095 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_PAGEFILE_NONE "Není"
+    IDS_PAGEFILE_SYSTEM "Spravováno systémem"
     IDS_INFOREBOOT "Změny se projeví po restartování počítače."
     IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
+    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
+    IDS_HWPROFILE_PROFILE "Profile"
+    IDS_HWPROFILE_WARNING "Warning"
 END

@@ -261,14 +261,14 @@ ObpDeleteNameCheck(IN PVOID Object)
                     ObpDeleteSymbolicLinkName(Object);
                 }
 
-                /* Check if the magic protection flag is set */
+                /* Check if the kernel exclusive is set */
                 ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
                 if ((ObjectNameInfo) &&
-                    (ObjectNameInfo->QueryReferences & 0x40000000))
+                    (ObjectNameInfo->QueryReferences & OB_FLAG_KERNEL_EXCLUSIVE))
                 {
                     /* Remove protection flag */
                     InterlockedExchangeAdd((PLONG)&ObjectNameInfo->QueryReferences,
-                                           -0x40000000);
+                                           -OB_FLAG_KERNEL_EXCLUSIVE);
                 }
 
                 /* Get the directory */

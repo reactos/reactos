@@ -1,4 +1,4 @@
-/* 2011.11.20 - Fulea Ștefan: minor changes */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -10,7 +10,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
     LTEXT "Aceste opțiuni permit configurarea dispozitivelor de control al jocurilor instalate în acest calculator.", -1, 33, 7, 214, 20, NOT WS_GROUP
-    GROUPBOX "D&ispozitive de control instalate", -1, 7, 34, 238, 117
+    GROUPBOX "Dispo&zitive de control instalate", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Adăugare…", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
@@ -27,13 +27,13 @@ CAPTION "Adăugare dispozitiv de control pentru jocuri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Alegeți un dispozitiv de control din lista de mai jos, apoi confirmați. Dacă dispozitivul pe care îl căutați nu apare, apăsați „Altul”.", -1, 35, 7, 210, 33
+    LTEXT "Alegeți un dispozitiv de control din lista de mai jos, apoi confirmați. Dacă dispozitivul pe care îl căutați nu apare, apăsați „Altceva”.", -1, 35, 7, 210, 33
     LTEXT "&Dispozitive:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "A&ctivează cârmă și pedale", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
     LTEXT "&Port joc:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
     COMBOBOX IDC_GAME_PORT_COMBO, 7, 147, 140, 50, CBS_DROPDOWNLIST | CBS_SORT | NOT WS_VISIBLE | WS_VSCROLL
-    PUSHBUTTON "&Altul…", IDC_CUSTOM_BUTTON, 208, 147, 50, 14
+    PUSHBUTTON "&Altceva…", IDC_CUSTOM_BUTTON, 208, 147, 50, 14
     CONTROL "", -25525, "STATIC", SS_ETCHEDHORZ, 7, 170, 251, 1
     DEFPUSHBUTTON "Con&firmă", IDOK, 155, 179, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 208, 179, 50, 14

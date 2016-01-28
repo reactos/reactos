@@ -2,7 +2,7 @@
  *
  * Czech resource file for MS-RLE
  *
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GÃ¼nnewig
  * Copyright 2004 David Kredba
  *
  * This library is free software; you can redistribute it and/or
@@ -30,5 +30,5 @@ STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
 	IDS_DESCRIPTION	"Wine MS-RLE video kodek"
-	IDS_ABOUT       "Wine MS-RLE video kodek\nCopyright 2002 Michael Günnewig"
+	IDS_ABOUT       "Wine MS-RLE video kodek\nCopyright 2002 Michael GÃ¼nnewig"
 }

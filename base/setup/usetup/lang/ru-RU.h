@@ -12,7 +12,7 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -42,8 +42,8 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить  F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить  F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -58,7 +58,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -118,8 +118,8 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение  R = Восстановление F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить  R = Восстановление  L = Лиц. соглашение  F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -134,7 +134,7 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -158,42 +158,12 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
     {
         8,
         13,
-        "- Установка возможна только на первичный раздел диска",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- При установке нельзя удалить первичный раздел диска",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  пока имеется расширенный раздел.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- При установке нельзя удалить первый расширенный раздел с диска",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  пока существуют другие расширенные разделы.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- При установке поддерживается только файловая система FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Проверка файловой системы не осуществляется.",
         TEXT_STYLE_NORMAL
     },
@@ -212,8 +182,8 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -228,7 +198,7 @@ static MUI_ENTRY ruRULicensePageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -276,13 +246,13 @@ static MUI_ENTRY ruRULicensePageEntries[] =
     {
         8,
         15,
-        "Данное программное обеспечение поставляется БЕЗ ГАРАНТИИ и без ограничений",
+        "Данное программное обеспечение поставляется БЕЗ ГАРАНТИИ и без",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "в использовании, как в местном, так и международном праве.",
+        "ограничений в использовании, как в местном, так и международном праве.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -336,8 +306,8 @@ static MUI_ENTRY ruRULicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Возврат",
-        TEXT_TYPE_STATUS
+        "ENTER = Возврат",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -352,7 +322,7 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -362,34 +332,34 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "      Компьютер:",
-        TEXT_STYLE_NORMAL
+        "Компьютер:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "          Экран:",
-        TEXT_STYLE_NORMAL,
+        "Экран:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "     Клавиатура:",
-        TEXT_STYLE_NORMAL
+        "Клавиатура:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        "      Раскладка:",
-        TEXT_STYLE_NORMAL
+        "Раскладка:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "      Применить:",
-        TEXT_STYLE_NORMAL
+        "Применить:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -429,8 +399,8 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -445,7 +415,7 @@ static MUI_ENTRY ruRURepairPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -493,8 +463,8 @@ static MUI_ENTRY ruRURepairPageEntries[] =
     {
         0,
         0,
-        "   ESC = Главная страница  ENTER = Перезагрузка",
-        TEXT_TYPE_STATUS
+        "ESC = На главную  U = Обновление  R = Восстановление  ENTER = Перезагрузка",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -503,12 +473,13 @@ static MUI_ENTRY ruRURepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ruRUComputerPageEntries[] =
 {
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -544,8 +515,8 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -560,7 +531,7 @@ static MUI_ENTRY ruRUFlushPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -584,8 +555,8 @@ static MUI_ENTRY ruRUFlushPageEntries[] =
     {
         0,
         0,
-        "   Очистка кеша",
-        TEXT_TYPE_STATUS
+        "Очистка кеша",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -600,7 +571,7 @@ static MUI_ENTRY ruRUQuitPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -630,8 +601,8 @@ static MUI_ENTRY ruRUQuitPageEntries[] =
     {
         0,
         0,
-        "   Пожалуйста подождите ...",
-        TEXT_TYPE_STATUS,
+        "Пожалуйста, подождите ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -646,7 +617,7 @@ static MUI_ENTRY ruRUDisplayPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -681,8 +652,8 @@ static MUI_ENTRY ruRUDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -697,7 +668,7 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -727,8 +698,8 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Перезагрузка",
-        TEXT_TYPE_STATUS
+        "ENTER = Перезагрузка",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -743,7 +714,7 @@ static MUI_ENTRY ruRUBootPageEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -773,8 +744,8 @@ static MUI_ENTRY ruRUBootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -790,7 +761,7 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -820,27 +791,126 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Нажмите C для создания нового раздела.",
+        "\x07  Нажмите P для создания первичного раздела.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Нажмите E для создания расширенного раздела.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
+        "\x07  Нажмите L для создания логического раздела.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Нажмите D для удаления существующего раздела.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
-        TEXT_TYPE_STATUS
+        "Пожалуйста, подождите...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ruRUConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Продолжить  ESC=Отмена",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -855,7 +925,7 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -873,8 +943,8 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжение   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -889,7 +959,7 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -907,13 +977,13 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Чтобы изменить выбранную директорию, нажмите BACKSPACE и удалите символы,",
+        "Чтобы изменить выбранную директорию, нажмите BACKSPACE для удаления",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "а за тем наберите новое имя директории для установки ReactOS.",
+        "символов, а за тем наберите новое имя директории для установки ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -925,8 +995,8 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -941,31 +1011,31 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
         "Пожалуйста, подождите, пока программа установки скопирует файлы",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        11,
+        0,
         13,
         "ReactOS в установочную директорию.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        11,
+        0,
         14,
         "Это может занять несколько минут.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Пожалуйста подождите...    ",
+        "\xB3 Пожалуйста, подождите...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -981,7 +1051,7 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1017,8 +1087,8 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1033,7 +1103,7 @@ static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1069,8 +1139,8 @@ static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1085,7 +1155,7 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1121,8 +1191,8 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1138,7 +1208,7 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1150,8 +1220,8 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
     {
         0,
         0,
-        "   Подготовка списка копируемых файлов...",
-        TEXT_TYPE_STATUS
+        "Подготовка списка копируемых файлов...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1167,7 +1237,7 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1197,8 +1267,8 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "ENTER = Продолжить   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1214,7 +1284,7 @@ static MUI_ENTRY ruRUDeletePartitionEntries[] =
     {
         4,
         3,
-        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1244,8 +1314,8 @@ static MUI_ENTRY ruRUDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Удалить раздел   ESC = Отмена   F3 = Выход",
-        TEXT_TYPE_STATUS
+        "D = Удалить раздел   ESC = Отмена   F3 = Выход",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1260,7 +1330,7 @@ static MUI_ENTRY ruRURegistryEntries[] =
     {
         4,
         3,
-        "Установка ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1272,8 +1342,8 @@ static MUI_ENTRY ruRURegistryEntries[] =
     {
         0,
         0,
-        "   Создание кустов системного реестра...",
-        TEXT_TYPE_STATUS
+        "Создание кустов системного реестра...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1288,7 +1358,7 @@ MUI_ERROR ruRUErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Успешно\n"
     },
     {
         //ERROR_NOT_INSTALLED
@@ -1322,7 +1392,7 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Обнаружена некорректная сигнатура в TXTSETUP.SIF.\n",
+        "Обнаружена некорректная подпись в TXTSETUP.SIF.\n",
         "ENTER = Перезагрузка"
     },
     {
@@ -1481,57 +1551,58 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Не удалось установить локаль системы.\n"
+        "Не удалось установить язык системы.\n"
         "ENTER = Перезагрузка"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Не удалось добавить раскладку клавиатуры в реестр.\n"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Не удалось установить geo id.\n"
+        "ENTER = Перезагрузка"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        //ERROR_DIRECTORY_NAME,
+        "Неверное название директории.\n"
+        "\n"
+        "  * Нажмите любую клавишу для продолжения."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Выбранный раздел слишком мал для установки ReactOS.\n"
+        "Установочный раздел должен иметь по крайней мере %lu MB пространства.\n"
+        "\n"
+        "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Вы не можете создать первичный или расширенный раздел в таблице\n"
+        "разделов диска, потому что она заполнена.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Нажмите любую клавишу для продолжения."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Вы не можете создать больше одного расширенного раздела на диск.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Нажмите любую клавишу для продолжения."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Не удалось форматировать раздел:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Перезагрузка"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE ruRUPages[] =
 {
@@ -1574,6 +1645,10 @@ MUI_PAGE ruRUPages[] =
     {
         SELECT_PARTITION_PAGE,
         ruRUSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        ruRUConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1638,23 +1713,21 @@ MUI_STRING ruRUStrings[] =
     {STRING_PLEASEWAIT,
      "   Пожалуйста, подождите..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Установить   C = Создать раздел   F3 = Выход"},
+     "   ENTER = Установить   P = Первичный раздел   E = Расширенный   F3 = Выход"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Установить   L = Создать логический раздел   F3 = Выход"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Установить   D = Удалить раздел   F3 = Выход"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Удалить раздел   F3 = Выход"},
     {STRING_PARTITIONSIZE,
      "Размер нового раздела:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//     "Вы хотите создать новый раздел на"},
+     "Вы хотите создать первичный раздел на"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Вы хотите создать расширенный раздел на"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Вы хотите создать логический раздел на"},
     {STRING_HDDSIZE,
     "Пожалуйста, введите размер нового раздела в мегабайтах."},
     {STRING_CREATEPARTITION,
@@ -1663,18 +1736,22 @@ MUI_STRING ruRUStrings[] =
     "Этот раздел будет отформатирован далее."},
     {STRING_NONFORMATTEDPART,
     "Вы выбрали установку ReactOS на новый неотформатированный раздел."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "Системный раздел не отформатирован."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "Новый раздел не отформатирован."},
     {STRING_INSTALLONPART,
     "ReactOS устанавливается на раздел:"},
     {STRING_CHECKINGPART,
     "Программа установки проверяет выбранный раздел."},
     {STRING_QUITCONTINUE,
-    "F3 = Выход  ENTER = Продолжение"},
+    "F3 = Выход  ENTER = Продолжить"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезагрузка"},
     {STRING_TXTSETUPFAILED,
     "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "   Копирование: %S"},
+     "   Копирование файла: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Программа установки копирует файлы..."},
     {STRING_REGHIVEUPDATE,
@@ -1684,7 +1761,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_DISPLAYETTINGSUPDATE,
     "   Обновление параметров экрана в реестре..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Обновление параметров локали..."},
+    "   Обновление параметров языка..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Обновление параметров раскладки клавиатуры..."},
     {STRING_CODEPAGEINFOUPDATE,
@@ -1726,7 +1803,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sЗапись %-3u%s                       %6lu %s"},
+    "%c%c %c %sЗапись %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %S"},
     {STRING_HDDINFOUNK6,
@@ -1738,7 +1815,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_MAXSIZE,
     "МБ (макс. %lu МБ)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Расширенный раздел"},
     {STRING_UNFORMATTED,
     "Новый (неотформатированный)"},
     {STRING_FORMATUNUSED,
@@ -1752,6 +1829,6 @@ MUI_STRING ruRUStrings[] =
     {STRING_GB,
     "ГБ"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Добавление раскладки клавиатуры"},
     {0, 0}
 };

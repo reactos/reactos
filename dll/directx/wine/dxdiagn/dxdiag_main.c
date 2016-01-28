@@ -54,6 +54,12 @@ static HRESULT WINAPI DXDiagCF_QueryInterface(IClassFactory *iface, REFIID riid,
     TRACE("(%p)->(IID_IUnknown %p)\n", iface, ppv);
   else if (IsEqualGUID(&IID_IClassFactory, riid))
     TRACE("(%p)->(IID_IClassFactory %p)\n", iface, ppv);
+  else if (IsEqualGUID(&IID_IExternalConnection, riid) ||
+           IsEqualGUID(&IID_IMarshal, riid)) {
+    TRACE("(%p)->(%s) ignoring\n", iface, debugstr_guid(riid));
+    *ppv = NULL;
+    return E_NOINTERFACE;
+  }
   else {
     FIXME("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
     *ppv = NULL;

@@ -18,12 +18,7 @@ add_library(usbehci SHARED
     guid.cpp
     usbehci.rc)
 
-target_link_libraries(usbehci
-    uuid
-    libusb
-    libcntpr
-    ${PSEH_LIB})
-
+target_link_libraries(usbehci uuid libusb libcntpr ${PSEH_LIB})
 set_module_type(usbehci kernelmodedriver)
 add_importlibs(usbehci ntoskrnl hal usbd)
 add_pch(usbehci usbehci.h SOURCE)

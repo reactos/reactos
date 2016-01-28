@@ -286,7 +286,6 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
                          TDI_RECEIVE_NORMAL,
                          FCB->Recv.Window,
                          FCB->Recv.Size,
-                         &FCB->ReceiveIrp.Iosb,
                          ReceiveComplete,
                          FCB );
 
@@ -518,7 +517,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                 FCB->Connection.Object,
                                 FCB->ConnectCallInfo,
                                 FCB->ConnectReturnInfo,
-                                &FCB->ConnectIrp.Iosb,
                                 StreamSocketConnectComplete,
                                 FCB );
         }

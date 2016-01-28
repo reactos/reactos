@@ -62,7 +62,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #include "resource.h"
 
 /* Common dialogs implementation globals */
-#define COMDLG32_Atom	((ATOM)0xa000)	/* MS uses this one to identify props */
+#define COMDLG32_Atom   MAKEINTATOM(0xa000)     /* MS uses this one to identify props */
 
 extern HINSTANCE	COMDLG32_hInstance DECLSPEC_HIDDEN;
 

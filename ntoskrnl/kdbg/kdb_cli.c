@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb_cli.c
+ * FILE:            ntoskrnl/kdbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
  *                  Hervé Poussineau
@@ -85,6 +85,7 @@ static BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
 
 static BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdReboot(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
@@ -176,6 +177,7 @@ static const struct
     /* Others */
     { NULL, NULL, "Others", NULL },
     { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
+    { "reboot", "reboot", "Reboots the system.", KdbpCmdReboot},
     { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels", KdbpCmdFilter },
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
@@ -208,7 +210,7 @@ KdbpGetComponentId(
     }
     ComponentTable[] =
     {
-        { "DEFAULT", DPFLTR_DEFAULT_ID },
+        { "DEFAULT", MAXULONG },
         { "SYSTEM", DPFLTR_SYSTEM_ID },
         { "SMSS", DPFLTR_SMSS_ID },
         { "SETUP", DPFLTR_SETUP_ID },
@@ -2176,6 +2178,17 @@ KdbpCmdBugCheck(
     return FALSE;
 }
 
+static BOOLEAN
+KdbpCmdReboot(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    /* Reboot immediately (we do not return) */
+    HalReturnToFirmware(HalRebootRoutine);
+    return FALSE;
+}
+
+
 VOID
 KdbpPager(
     IN PCHAR Buffer,
@@ -3512,7 +3525,7 @@ KdbpCliModuleLoaded(
  * call this function if KdbInitFileBuffer is not NULL.
  */
 VOID
-KdbpCliInterpretInitFile()
+KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
     INT i;
@@ -3558,10 +3571,10 @@ KdbpCliInterpretInitFile()
 
 /*!\brief Called when KDB is initialized
  *
- * Reads the KDBinit file from the SystemRoot\system32\drivers\etc directory and executes it.
+ * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory and executes it.
  */
 VOID
-KdbpCliInit()
+KdbpCliInit(VOID)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -3574,7 +3587,7 @@ KdbpCliInit()
     ULONG OldEflags;
 
     /* Initialize the object attributes */
-    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDBinit");
+    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\drivers\\etc\\KDBinit");
     InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
 
     /* Open the file */
@@ -3584,7 +3597,7 @@ KdbpCliInit()
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
         return;
     }
 
@@ -3594,7 +3607,7 @@ KdbpCliInit()
     if (!NT_SUCCESS(Status))
     {
         ZwClose(hFile);
-        DPRINT("Could not query size of \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
         return;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;
@@ -3745,19 +3758,7 @@ KdpPrompt(IN LPSTR InString,
              * DbgPrompt does not null terminate, but it does
              */
             *(PCHAR)(OutString + i) = 0;
-
-            /* Print a new line */
-            KdPortPutByteEx(&SerialPortInfo, '\r');
-            KdPortPutByteEx(&SerialPortInfo, '\n');
-
-            /* Release spinlock */
-            KiReleaseSpinLock(&KdpSerialSpinLock);
-
-            /* Lower IRQL back */
-            KeLowerIrql(OldIrql);
-
-            /* Return the length  */
-            return OutStringLength + 1;
+            break;
         }
 
         /* Write it back and print it to the log */
@@ -3779,5 +3780,5 @@ KdpPrompt(IN LPSTR InString,
     KeLowerIrql(OldIrql);
 
     /* Return the length  */
-    return OutStringLength;
+    return i;
 }

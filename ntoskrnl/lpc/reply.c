@@ -212,7 +212,6 @@ NtReplyPort(IN HANDLE PortHandle,
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             DPRINT1("SEH crash [1]\n");
-            DbgBreakPoint();
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -401,7 +400,6 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             DPRINT1("SEH crash [1]\n");
-            DbgBreakPoint();
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -692,7 +690,6 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         DPRINT1("SEH crash [2]\n");
-        DbgBreakPoint();
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
@@ -765,7 +762,7 @@ LpcpCopyRequestData(
     PORT_MESSAGE CapturedMessage;
     PLPCP_PORT_OBJECT Port = NULL;
     PETHREAD ClientThread = NULL;
-    ULONG LocalReturnlength;
+    SIZE_T LocalReturnlength;
     PLPCP_MESSAGE InfoMessage;
     PLPCP_DATA_INFO DataInfo;
     PVOID DataInfoBaseAddress;

@@ -30,16 +30,16 @@ EXTERN i386CallRealMode:PROC
 PUBLIC _BootOldLinuxKernel
 _BootOldLinuxKernel:
 
-	/* First we have to copy the kernel down from 0x100000 to 0x10000 */
-	/* The reason we can overwrite low memory is because this code */
-	/* executes between 0000:8000 and 0000:FFFF. That leaves space for */
-	/* 32k of code before we start interfering with Linux kernel address space. */
+    /* First we have to copy the kernel down from 0x100000 to 0x10000 */
+    /* The reason we can overwrite low memory is because this code */
+    /* executes between 0000:8000 and 0000:FFFF. That leaves space for */
+    /* 32k of code before we start interfering with Linux kernel address space. */
 
-	/* Get KernelSize in ECX and move the kernel down */
-	mov ecx, [esp + 4]
-	mov esi, HEX(100000)
-	mov edi, HEX(10000)
-	rep movsb
+    /* Get KernelSize in ECX and move the kernel down */
+    mov ecx, [esp + 4]
+    mov esi, HEX(100000)
+    mov edi, HEX(10000)
+    rep movsb
 
     /* Fall through */
 

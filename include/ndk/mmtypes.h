@@ -377,24 +377,6 @@ typedef struct _SECTION_IMAGE_INFORMATION
 #ifndef NTOS_MODE_USER
 
 //
-// PTE Structures
-//
-typedef struct _MMPTE
-{
-    union
-    {
-        ULONG_PTR Long;
-        HARDWARE_PTE Flush;
-        MMPTE_HARDWARE Hard;
-        MMPTE_PROTOTYPE Proto;
-        MMPTE_SOFTWARE Soft;
-        MMPTE_TRANSITION Trans;
-        MMPTE_SUBSECTION Subsect;
-        MMPTE_LIST List;
-    } u;
-} MMPTE, *PMMPTE;
-
-//
 // Section Extension Information
 //
 typedef struct _MMEXTEND_INFO

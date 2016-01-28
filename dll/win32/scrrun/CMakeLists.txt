@@ -2,7 +2,6 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 spec2def(scrrun.dll scrrun.spec)
-
 add_idl_headers(scrrun_idlheader scrrun.idl)
 add_typelib(scrrun.idl)
 

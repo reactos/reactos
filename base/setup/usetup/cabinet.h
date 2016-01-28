@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        apps/cabman/cabinet.h
+ * FILE:        base/setup/usetup/cabinet.h
  * PURPOSE:     Cabinet definitions
  */
 #pragma once

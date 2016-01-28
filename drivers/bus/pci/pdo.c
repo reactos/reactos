@@ -15,6 +15,15 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
+#define DBGPRINT(...) DbgPrint(__VA_ARGS__)
+#else
+#define DBGPRINT(...)
+#endif
+
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK_64     0xfffffffffffffff0ull
+#define PCI_ADDRESS_IO_ADDRESS_MASK_64         0xfffffffffffffffcull
+
 /*** PRIVATE *****************************************************************/
 
 static NTSTATUS
@@ -141,7 +150,7 @@ PdoQueryBusInformation(
     DPRINT("Called\n");
 
     DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+    BusInformation = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), TAG_PCI);
     Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
     if (BusInformation != NULL)
     {
@@ -185,47 +194,36 @@ PdoQueryCapabilities(
     return STATUS_SUCCESS;
 }
 
-
 static BOOLEAN
-PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
-                  ULONG Offset,
-                  PULONG Base,
-                  PULONG Length,
-                  PULONG Flags)
+PdoReadPciBar(PPDO_DEVICE_EXTENSION DeviceExtension,
+              ULONG Offset,
+              PULONG OriginalValue,
+              PULONG NewValue)
 {
-    ULONG OrigValue;
-    ULONG BaseValue;
-    ULONG NewValue;
     ULONG Size;
-    ULONG XLength;
+    ULONG AllOnes;
 
-    /* Save original value */
-    Size= HalGetBusDataByOffset(PCIConfiguration,
-                                DeviceExtension->PciDevice->BusNumber,
-                                DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                &OrigValue,
-                                Offset,
-                                sizeof(ULONG));
+    /* Read the original value */
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 DeviceExtension->PciDevice->BusNumber,
+                                 DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
     if (Size != sizeof(ULONG))
     {
         DPRINT1("Wrong size %lu\n", Size);
         return FALSE;
     }
 
-    BaseValue = (OrigValue & PCI_ADDRESS_IO_SPACE)
-                ? (OrigValue & PCI_ADDRESS_IO_ADDRESS_MASK)
-                : (OrigValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK);
-
-    *Base = BaseValue;
-
-    /* Set magic value */
-    NewValue = MAXULONG;
-    Size= HalSetBusDataByOffset(PCIConfiguration,
-                                DeviceExtension->PciDevice->BusNumber,
-                                DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                &NewValue,
-                                Offset,
-                                sizeof(ULONG));
+    /* Write all ones to determine which bits are held to zero */
+    AllOnes = MAXULONG;
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 DeviceExtension->PciDevice->BusNumber,
+                                 DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                 &AllOnes,
+                                 Offset,
+                                 sizeof(ULONG));
     if (Size != sizeof(ULONG))
     {
         DPRINT1("Wrong size %lu\n", Size);
@@ -233,12 +231,12 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* Get the range length */
-    Size= HalGetBusDataByOffset(PCIConfiguration,
-                                DeviceExtension->PciDevice->BusNumber,
-                                DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                &NewValue,
-                                Offset,
-                                sizeof(ULONG));
+    Size = HalGetBusDataByOffset(PCIConfiguration,
+                                 DeviceExtension->PciDevice->BusNumber,
+                                 DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                 NewValue,
+                                 Offset,
+                                 sizeof(ULONG));
     if (Size != sizeof(ULONG))
     {
         DPRINT1("Wrong size %lu\n", Size);
@@ -246,19 +244,109 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* Restore original value */
-    Size= HalSetBusDataByOffset(PCIConfiguration,
-                                DeviceExtension->PciDevice->BusNumber,
-                                DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                &OrigValue,
-                                Offset,
-                                sizeof(ULONG));
+    Size = HalSetBusDataByOffset(PCIConfiguration,
+                                 DeviceExtension->PciDevice->BusNumber,
+                                 DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                 OriginalValue,
+                                 Offset,
+                                 sizeof(ULONG));
     if (Size != sizeof(ULONG))
     {
         DPRINT1("Wrong size %lu\n", Size);
         return FALSE;
     }
 
-    if (NewValue == 0)
+    return TRUE;
+}
+
+static BOOLEAN
+PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
+                  UCHAR Bar,
+                  PULONGLONG Base,
+                  PULONGLONG Length,
+                  PULONG Flags,
+                  PUCHAR NextBar,
+                  PULONGLONG MaximumAddress)
+{
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } OriginalValue;
+    union {
+        struct {
+            ULONG Bar0;
+            ULONG Bar1;
+        } Bars;
+        ULONGLONG Bar;
+    } NewValue;
+    ULONG Offset;
+
+    /* Compute the offset of this BAR in PCI config space */
+    Offset = 0x10 + Bar * 4;
+
+    /* Assume this is a 32-bit BAR until we find wrong */
+    *NextBar = Bar + 1;
+
+    /* Initialize BAR values to zero */
+    OriginalValue.Bar = 0ULL;
+    NewValue.Bar = 0ULL;
+
+    /* Read the first BAR */
+    if (!PdoReadPciBar(DeviceExtension, Offset,
+                       &OriginalValue.Bars.Bar0,
+                       &NewValue.Bars.Bar0))
+    {
+        return FALSE;
+    }
+
+    /* Check if this is a memory BAR */
+    if (!(OriginalValue.Bars.Bar0 & PCI_ADDRESS_IO_SPACE))
+    {
+        /* Write the maximum address if the caller asked for it */
+        if (MaximumAddress != NULL)
+        {
+            if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_32BIT)
+            {
+                *MaximumAddress = 0x00000000FFFFFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
+            {
+                *MaximumAddress = 0x00000000000FFFFFULL;
+            }
+            else if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+            {
+                *MaximumAddress = 0xFFFFFFFFFFFFFFFFULL;
+            }
+        }
+
+        /* Check if this is a 64-bit BAR */
+        if ((OriginalValue.Bars.Bar0 & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+        {
+            /* We've now consumed the next BAR too */
+            *NextBar = Bar + 2;
+
+            /* Read the next BAR */
+            if (!PdoReadPciBar(DeviceExtension, Offset + 4,
+                               &OriginalValue.Bars.Bar1,
+                               &NewValue.Bars.Bar1))
+            {
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        /* Write the maximum I/O port address */
+        if (MaximumAddress != NULL)
+        {
+            *MaximumAddress = 0x00000000FFFFFFFFULL;
+        }
+    }
+
+    if (NewValue.Bar == 0)
     {
         DPRINT("Unused address register\n");
         *Base = 0;
@@ -267,47 +355,15 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
         return TRUE;
     }
 
-    XLength = ~((NewValue & PCI_ADDRESS_IO_SPACE)
-                ? (NewValue & PCI_ADDRESS_IO_ADDRESS_MASK)
-                : (NewValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK)) + 1;
+    *Base = OriginalValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64;
 
-#if 0
-    DbgPrint("BaseAddress 0x%08lx  Length 0x%08lx",
-             BaseValue, XLength);
+    *Length = ~((NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+                ? (NewValue.Bar & PCI_ADDRESS_IO_ADDRESS_MASK_64)
+                : (NewValue.Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK_64)) + 1;
 
-    if (NewValue & PCI_ADDRESS_IO_SPACE)
-    {
-        DbgPrint("  IO range");
-    }
-    else
-    {
-        DbgPrint("  Memory range");
-        if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 0)
-        {
-            DbgPrint(" in 32-Bit address space");
-        }
-        else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 2)
-        {
-            DbgPrint(" below 1BM ");
-        }
-        else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 4)
-        {
-            DbgPrint(" in 64-Bit address space");
-        }
-
-        if (NewValue & PCI_ADDRESS_MEMORY_PREFETCHABLE)
-        {
-            DbgPrint(" prefetchable");
-        }
-    }
-
-    DbgPrint("\n");
-#endif
-
-    *Length = XLength;
-    *Flags = (NewValue & PCI_ADDRESS_IO_SPACE)
-             ? (NewValue & ~PCI_ADDRESS_IO_ADDRESS_MASK)
-             : (NewValue & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK);
+    *Flags = (NewValue.Bar & PCI_ADDRESS_IO_SPACE)
+             ? (NewValue.Bar & ~PCI_ADDRESS_IO_ADDRESS_MASK_64)
+             : (NewValue.Bar & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK_64);
 
     return TRUE;
 }
@@ -326,10 +382,11 @@ PdoQueryResourceRequirements(
     ULONG Size;
     ULONG ResCount = 0;
     ULONG ListSize;
-    ULONG i;
-    ULONG Base;
-    ULONG Length;
+    UCHAR Bar;
+    ULONGLONG Base;
+    ULONGLONG Length;
     ULONG Flags;
+    ULONGLONG MaximumAddress;
 
     UNREFERENCED_PARAMETER(IrpSp);
     DPRINT("PdoQueryResourceRequirements() called\n");
@@ -355,13 +412,15 @@ PdoQueryResourceRequirements(
     ResCount = 0;
     if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE0_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
 
             if (Length != 0)
@@ -375,13 +434,15 @@ PdoQueryResourceRequirements(
     }
     else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE1_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
 
             if (Length != 0)
@@ -436,13 +497,15 @@ PdoQueryResourceRequirements(
     Descriptor = &ResourceList->List[0].Descriptors[0];
     if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE0_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   &MaximumAddress))
             {
                 DPRINT1("PdoGetRangeLength() failed\n");
                 break;
@@ -466,19 +529,20 @@ PdoQueryResourceRequirements(
 
                 Descriptor->u.Port.Length = Length;
                 Descriptor->u.Port.Alignment = 1;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)Base;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+                Descriptor->u.Port.MinimumAddress.QuadPart = Base;
+                Descriptor->u.Port.MaximumAddress.QuadPart = Base + Length - 1;
             }
             else
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
 
                 Descriptor->u.Memory.Length = Length;
                 Descriptor->u.Memory.Alignment = 1;
-                Descriptor->u.Memory.MinimumAddress.QuadPart = (ULONGLONG)Base;
-                Descriptor->u.Memory.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+                Descriptor->u.Memory.MinimumAddress.QuadPart = Base;
+                Descriptor->u.Memory.MaximumAddress.QuadPart = Base + Length - 1;
             }
             Descriptor++;
 
@@ -494,19 +558,20 @@ PdoQueryResourceRequirements(
 
                 Descriptor->u.Port.Length = Length;
                 Descriptor->u.Port.Alignment = Length;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
+                Descriptor->u.Port.MinimumAddress.QuadPart = 0;
+                Descriptor->u.Port.MaximumAddress.QuadPart = MaximumAddress;
             }
             else
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
 
                 Descriptor->u.Memory.Length = Length;
                 Descriptor->u.Memory.Alignment = Length;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
+                Descriptor->u.Port.MinimumAddress.QuadPart = 0;
+                Descriptor->u.Port.MaximumAddress.QuadPart = MaximumAddress;
             }
             Descriptor++;
         }
@@ -526,13 +591,15 @@ PdoQueryResourceRequirements(
     }
     else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE1_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   &MaximumAddress))
             {
                 DPRINT1("PdoGetRangeLength() failed\n");
                 break;
@@ -556,19 +623,20 @@ PdoQueryResourceRequirements(
 
                 Descriptor->u.Port.Length = Length;
                 Descriptor->u.Port.Alignment = 1;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)Base;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+                Descriptor->u.Port.MinimumAddress.QuadPart = Base;
+                Descriptor->u.Port.MaximumAddress.QuadPart = Base + Length - 1;
             }
             else
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
 
                 Descriptor->u.Memory.Length = Length;
                 Descriptor->u.Memory.Alignment = 1;
-                Descriptor->u.Memory.MinimumAddress.QuadPart = (ULONGLONG)Base;
-                Descriptor->u.Memory.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+                Descriptor->u.Memory.MinimumAddress.QuadPart = Base;
+                Descriptor->u.Memory.MaximumAddress.QuadPart = Base + Length - 1;
             }
             Descriptor++;
 
@@ -584,19 +652,20 @@ PdoQueryResourceRequirements(
 
                 Descriptor->u.Port.Length = Length;
                 Descriptor->u.Port.Alignment = Length;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
+                Descriptor->u.Port.MinimumAddress.QuadPart = 0;
+                Descriptor->u.Port.MaximumAddress.QuadPart = MaximumAddress;
             }
             else
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
 
                 Descriptor->u.Memory.Length = Length;
                 Descriptor->u.Memory.Alignment = Length;
-                Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-                Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
+                Descriptor->u.Port.MinimumAddress.QuadPart = 0;
+                Descriptor->u.Port.MaximumAddress.QuadPart = MaximumAddress;
             }
             Descriptor++;
         }
@@ -639,9 +708,9 @@ PdoQueryResources(
     ULONG Size;
     ULONG ResCount = 0;
     ULONG ListSize;
-    ULONG i;
-    ULONG Base;
-    ULONG Length;
+    UCHAR Bar;
+    ULONGLONG Base;
+    ULONGLONG Length;
     ULONG Flags;
 
     DPRINT("PdoQueryResources() called\n");
@@ -668,13 +737,15 @@ PdoQueryResources(
     ResCount = 0;
     if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE0_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
 
             if (Length)
@@ -688,13 +759,15 @@ PdoQueryResources(
     }
     else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE1_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
 
             if (Length != 0)
@@ -743,17 +816,16 @@ PdoQueryResources(
     Descriptor = &PartialList->PartialDescriptors[0];
     if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE0_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
-            {
-                DPRINT1("PdoGetRangeLength() failed\n");
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
-            }
 
             if (Length == 0)
             {
@@ -765,7 +837,9 @@ PdoQueryResources(
             {
                 Descriptor->Type = CmResourceTypePort;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_PORT_IO;
+                Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                                    CM_RESOURCE_PORT_16_BIT_DECODE |
+                                    CM_RESOURCE_PORT_POSITIVE_DECODE;
                 Descriptor->u.Port.Start.QuadPart = (ULONGLONG)Base;
                 Descriptor->u.Port.Length = Length;
 
@@ -776,7 +850,8 @@ PdoQueryResources(
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
                 Descriptor->u.Memory.Start.QuadPart = (ULONGLONG)Base;
                 Descriptor->u.Memory.Length = Length;
 
@@ -805,17 +880,16 @@ PdoQueryResources(
     }
     else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
     {
-        for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+        for (Bar = 0; Bar < PCI_TYPE1_ADDRESSES;)
         {
             if (!PdoGetRangeLength(DeviceExtension,
-                                   0x10 + i * 4,
+                                   Bar,
                                    &Base,
                                    &Length,
-                                   &Flags))
-            {
-                DPRINT1("PdoGetRangeLength() failed\n");
+                                   &Flags,
+                                   &Bar,
+                                   NULL))
                 break;
-            }
 
             if (Length == 0)
             {
@@ -827,7 +901,9 @@ PdoQueryResources(
             {
                 Descriptor->Type = CmResourceTypePort;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_PORT_IO;
+                Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                                    CM_RESOURCE_PORT_16_BIT_DECODE |
+                                    CM_RESOURCE_PORT_POSITIVE_DECODE;
                 Descriptor->u.Port.Start.QuadPart = (ULONGLONG)Base;
                 Descriptor->u.Port.Length = Length;
 
@@ -838,7 +914,8 @@ PdoQueryResources(
             {
                 Descriptor->Type = CmResourceTypeMemory;
                 Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+                Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE |
+                    (Flags & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? CM_RESOURCE_MEMORY_PREFETCHABLE : 0;
                 Descriptor->u.Memory.Start.QuadPart = (ULONGLONG)Base;
                 Descriptor->u.Memory.Length = Length;
 
@@ -1266,7 +1343,7 @@ PdoStartDevice(
 
             if (RawPartialDesc->Type == CmResourceTypeInterrupt)
             {
-                DPRINT1("Assigning IRQ %u to PCI device 0x%x on bus 0x%x\n",
+                DPRINT("Assigning IRQ %u to PCI device 0x%x on bus 0x%x\n",
                         RawPartialDesc->u.Interrupt.Vector,
                         DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                         DeviceExtension->PciDevice->BusNumber);
@@ -1284,30 +1361,30 @@ PdoStartDevice(
 
     Command = 0;
 
-    DPRINT1("Enabling command flags for PCI device 0x%x on bus 0x%x: ",
+    DBGPRINT("pci!PdoStartDevice: Enabling command flags for PCI device 0x%x on bus 0x%x: ",
             DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
             DeviceExtension->PciDevice->BusNumber);
     if (DeviceExtension->PciDevice->EnableBusMaster)
     {
         Command |= PCI_ENABLE_BUS_MASTER;
-        DbgPrint("[Bus master] ");
+        DBGPRINT("[Bus master] ");
     }
 
     if (DeviceExtension->PciDevice->EnableMemorySpace)
     {
         Command |= PCI_ENABLE_MEMORY_SPACE;
-        DbgPrint("[Memory space enable] ");
+        DBGPRINT("[Memory space enable] ");
     }
 
     if (DeviceExtension->PciDevice->EnableIoSpace)
     {
         Command |= PCI_ENABLE_IO_SPACE;
-        DbgPrint("[I/O space enable] ");
+        DBGPRINT("[I/O space enable] ");
     }
 
     if (Command != 0)
     {
-        DbgPrint("\n");
+        DBGPRINT("\n");
 
         /* OR with the previous value */
         Command |= DeviceExtension->PciDevice->PciConfig.Command;
@@ -1321,7 +1398,7 @@ PdoStartDevice(
     }
     else
     {
-        DbgPrint("None\n");
+        DBGPRINT("None\n");
     }
 
     return STATUS_SUCCESS;
@@ -1398,7 +1475,7 @@ PdoQueryDeviceRelations(
         return Irp->IoStatus.Status;
 
     /* We can do this because we only return 1 PDO for TargetDeviceRelation */
-    DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(*DeviceRelations), TAG_PCI);
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1411,36 +1488,6 @@ PdoQueryDeviceRelations(
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
     return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-PdoSetPower(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    PIO_STACK_LOCATION IrpSp)
-{
-    NTSTATUS Status;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-    DPRINT("Called\n");
-
-    if (IrpSp->Parameters.Power.Type == DevicePowerState)
-    {
-        Status = STATUS_SUCCESS;
-
-        switch (IrpSp->Parameters.Power.State.SystemState)
-        {
-            default:
-                Status = STATUS_UNSUCCESSFUL;
-        }
-    }
-    else
-    {
-        Status = STATUS_UNSUCCESSFUL;
-    }
-
-    return Status;
 }
 
 
@@ -1544,7 +1591,7 @@ PdoPnpControl(
                 KeReleaseSpinLock(&FdoDeviceExtension->DeviceListLock, OldIrql);
 
                 /* Free the device */
-                ExFreePool(DeviceExtension->PciDevice);
+                ExFreePoolWithTag(DeviceExtension->PciDevice, TAG_PCI);
 
                 /* Complete the IRP */
                 Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -1606,7 +1653,7 @@ PdoPowerControl(
  */
 {
     PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
+    NTSTATUS Status = Irp->IoStatus.Status;
 
     DPRINT("Called\n");
 
@@ -1614,21 +1661,15 @@ PdoPowerControl(
 
     switch (IrpSp->MinorFunction)
     {
+        case IRP_MN_QUERY_POWER:
         case IRP_MN_SET_POWER:
-            Status = PdoSetPower(DeviceObject, Irp, IrpSp);
-            break;
-
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_SUCCESS;
             break;
     }
 
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    PoStartNextPowerIrp(Irp);
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     DPRINT("Leaving. Status 0x%X\n", Status);
 

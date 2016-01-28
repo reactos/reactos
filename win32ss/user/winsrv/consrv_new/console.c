@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/console.c
+ * FILE:            win32ss/user/winsrv/consrv_new/console.c
  * PURPOSE:         Console Management Functions
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
@@ -506,7 +506,7 @@ CSR_API(SrvGetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -539,7 +539,7 @@ CSR_API(SrvSetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 

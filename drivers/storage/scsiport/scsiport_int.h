@@ -51,10 +51,10 @@
 
 typedef enum _SCSI_PORT_TIMER_STATES
 {
-  IDETimerIdle,
-  IDETimerCmdWait,
-  IDETimerResetWaitForBusyNegate,
-  IDETimerResetWaitForDrdyAssert
+    IDETimerIdle,
+    IDETimerCmdWait,
+    IDETimerResetWaitForBusyNegate,
+    IDETimerResetWaitForDrdyAssert
 } SCSI_PORT_TIMER_STATES;
 
 typedef struct _CONFIGURATION_INFO
@@ -80,12 +80,12 @@ typedef struct _CONFIGURATION_INFO
 
 typedef struct _SCSI_PORT_DEVICE_BASE
 {
-  LIST_ENTRY List;
+    LIST_ENTRY List;
 
-  PVOID MappedAddress;
-  ULONG NumberOfBytes;
-  SCSI_PHYSICAL_ADDRESS IoAddress;
-  ULONG SystemIoBusNumber;
+    PVOID MappedAddress;
+    ULONG NumberOfBytes;
+    SCSI_PHYSICAL_ADDRESS IoAddress;
+    ULONG SystemIoBusNumber;
 } SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
 
 typedef struct _SCSI_SG_ADDRESS
@@ -116,38 +116,38 @@ typedef struct _SCSI_REQUEST_BLOCK_INFO
 
 typedef struct _SCSI_PORT_LUN_EXTENSION
 {
-  UCHAR PathId;
-  UCHAR TargetId;
-  UCHAR Lun;
+    UCHAR PathId;
+    UCHAR TargetId;
+    UCHAR Lun;
 
-  ULONG Flags;
+    ULONG Flags;
 
-  struct _SCSI_PORT_LUN_EXTENSION *Next;
+    struct _SCSI_PORT_LUN_EXTENSION *Next;
 
-  BOOLEAN DeviceClaimed;
-  PDEVICE_OBJECT DeviceObject;
+    BOOLEAN DeviceClaimed;
+    PDEVICE_OBJECT DeviceObject;
 
-  INQUIRYDATA InquiryData;
+    INQUIRYDATA InquiryData;
 
-  KDEVICE_QUEUE DeviceQueue;
-  ULONG SortKey;
-  ULONG QueueCount;
-  ULONG MaxQueueCount;
+    KDEVICE_QUEUE DeviceQueue;
+    ULONG SortKey;
+    ULONG QueueCount;
+    ULONG MaxQueueCount;
 
-  ULONG AttemptCount;
-  LONG RequestTimeout;
+    ULONG AttemptCount;
+    LONG RequestTimeout;
 
-  PIRP BusyRequest;
-  PIRP PendingRequest;
+    PIRP BusyRequest;
+    PIRP PendingRequest;
 
-  struct _SCSI_PORT_LUN_EXTENSION *ReadyLun;
-  struct _SCSI_PORT_LUN_EXTENSION *CompletedAbortRequests;
+    struct _SCSI_PORT_LUN_EXTENSION *ReadyLun;
+    struct _SCSI_PORT_LUN_EXTENSION *CompletedAbortRequests;
 
-  SCSI_REQUEST_BLOCK_INFO SrbInfo;
+    SCSI_REQUEST_BLOCK_INFO SrbInfo;
 
-  /* More data? */
+    /* More data? */
 
-  UCHAR MiniportLunExtension[1]; /* must be the last entry */
+    UCHAR MiniportLunExtension[1]; /* must be the last entry */
 } SCSI_PORT_LUN_EXTENSION, *PSCSI_PORT_LUN_EXTENSION;
 
 /* Structures for inquiries support */
@@ -206,94 +206,94 @@ typedef struct _SCSI_PORT_SAVE_INTERRUPT
 
 typedef struct _SCSI_PORT_DEVICE_EXTENSION
 {
-  ULONG Length;
-  ULONG MiniPortExtensionSize;
-  PPORT_CONFIGURATION_INFORMATION PortConfig;
-  PBUSES_CONFIGURATION_INFORMATION BusesConfig;
-  PVOID NonCachedExtension;
-  ULONG PortNumber;
+    ULONG Length;
+    ULONG MiniPortExtensionSize;
+    PPORT_CONFIGURATION_INFORMATION PortConfig;
+    PBUSES_CONFIGURATION_INFORMATION BusesConfig;
+    PVOID NonCachedExtension;
+    ULONG PortNumber;
 
-  LONG ActiveRequestCounter;
-  ULONG SrbFlags;
-  ULONG Flags;
+    LONG ActiveRequestCounter;
+    ULONG SrbFlags;
+    ULONG Flags;
 
-  ULONG BusNum;
-  ULONG MaxTargedIds;
-  ULONG MaxLunCount;
+    ULONG BusNum;
+    ULONG MaxTargedIds;
+    ULONG MaxLunCount;
 
-  KSPIN_LOCK IrqLock; /* Used when there are 2 irqs */
-  ULONG SequenceNumber; /* Global sequence number for packets */
-  KSPIN_LOCK SpinLock;
-  PKINTERRUPT Interrupt[2];
-  PIRP                   CurrentIrp;
-  ULONG IrpFlags;
+    KSPIN_LOCK IrqLock; /* Used when there are 2 irqs */
+    ULONG SequenceNumber; /* Global sequence number for packets */
+    KSPIN_LOCK SpinLock;
+    PKINTERRUPT Interrupt[2];
+    PIRP CurrentIrp;
+    ULONG IrpFlags;
 
-  SCSI_PORT_TIMER_STATES TimerState;
-  LONG                   TimerCount;
+    SCSI_PORT_TIMER_STATES TimerState;
+    LONG TimerCount;
 
-  KTIMER MiniportTimer;
-  KDPC MiniportTimerDpc;
+    KTIMER MiniportTimer;
+    KDPC MiniportTimerDpc;
 
-  PMAPPED_ADDRESS MappedAddressList;
+    PMAPPED_ADDRESS MappedAddressList;
 
-  ULONG LunExtensionSize;
-  PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];
+    ULONG LunExtensionSize;
+    PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];
 
-  SCSI_PORT_INTERRUPT_DATA InterruptData;
+    SCSI_PORT_INTERRUPT_DATA InterruptData;
 
-  /* SRB extension stuff*/
-  ULONG SrbExtensionSize;
-  PVOID SrbExtensionBuffer;
-  PVOID FreeSrbExtensions;
+    /* SRB extension stuff*/
+    ULONG SrbExtensionSize;
+    PVOID SrbExtensionBuffer;
+    PVOID FreeSrbExtensions;
 
-  /* SRB information */
-  PSCSI_REQUEST_BLOCK_INFO SrbInfo;
-  PSCSI_REQUEST_BLOCK_INFO FreeSrbInfo;
-  ULONG SrbDataCount;
+    /* SRB information */
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+    PSCSI_REQUEST_BLOCK_INFO FreeSrbInfo;
+    ULONG SrbDataCount;
 
-  IO_SCSI_CAPABILITIES PortCapabilities;
+    IO_SCSI_CAPABILITIES PortCapabilities;
 
-  PDEVICE_OBJECT DeviceObject;
-  PCONTROLLER_OBJECT ControllerObject;
+    PDEVICE_OBJECT DeviceObject;
+    PCONTROLLER_OBJECT ControllerObject;
 
-  PHW_INITIALIZE HwInitialize;
-  PHW_STARTIO HwStartIo;
-  PHW_INTERRUPT HwInterrupt;
-  PHW_RESET_BUS HwResetBus;
-  PHW_DMA_STARTED HwDmaStarted;
-  PHW_TIMER HwScsiTimer;
+    PHW_INITIALIZE HwInitialize;
+    PHW_STARTIO HwStartIo;
+    PHW_INTERRUPT HwInterrupt;
+    PHW_RESET_BUS HwResetBus;
+    PHW_DMA_STARTED HwDmaStarted;
+    PHW_TIMER HwScsiTimer;
 
-  PSCSI_REQUEST_BLOCK OriginalSrb;
-  SCSI_REQUEST_BLOCK InternalSrb;
-  SENSE_DATA InternalSenseData;
+    PSCSI_REQUEST_BLOCK OriginalSrb;
+    SCSI_REQUEST_BLOCK InternalSrb;
+    SENSE_DATA InternalSenseData;
 
-  /* DMA related stuff */
-  PADAPTER_OBJECT AdapterObject;
-  ULONG MapRegisterCount;
-  BOOLEAN MapBuffers;
-  BOOLEAN MapRegisters;
-  PVOID MapRegisterBase;
+    /* DMA related stuff */
+    PADAPTER_OBJECT AdapterObject;
+    ULONG MapRegisterCount;
+    BOOLEAN MapBuffers;
+    BOOLEAN MapRegisters;
+    PVOID MapRegisterBase;
 
-  /* Features */
-  BOOLEAN CachesData;
-  BOOLEAN SupportsTaggedQueuing;
-  BOOLEAN SupportsAutoSense;
-  BOOLEAN MultipleReqsPerLun;
-  BOOLEAN ReceiveEvent;
+    /* Features */
+    BOOLEAN CachesData;
+    BOOLEAN SupportsTaggedQueuing;
+    BOOLEAN SupportsAutoSense;
+    BOOLEAN MultipleReqsPerLun;
+    BOOLEAN ReceiveEvent;
 
-  PHYSICAL_ADDRESS PhysicalAddress;
-  ULONG CommonBufferLength;
-  ULONG InterruptLevel[2];
-  ULONG IoAddress;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    ULONG CommonBufferLength;
+    ULONG InterruptLevel[2];
+    ULONG IoAddress;
 
-  BOOLEAN NeedSrbExtensionAlloc;
-  BOOLEAN NeedSrbDataAlloc;
+    BOOLEAN NeedSrbExtensionAlloc;
+    BOOLEAN NeedSrbDataAlloc;
 
-  ULONG RequestsNumber;
+    ULONG RequestsNumber;
 
-  ULONG InterruptCount;
+    ULONG InterruptCount;
 
-  UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
+    UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
 typedef struct _RESETBUS_PARAMS

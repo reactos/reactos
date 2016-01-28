@@ -229,6 +229,7 @@ static int query_prop( const WCHAR *alias, const WCHAR *propname )
         }
         if (IWbemClassObject_Get( obj, prop, 0, &v, NULL, NULL ) == WBEM_S_NO_ERROR)
         {
+            VariantChangeType( &v, &v, 0, VT_BSTR );
             output_string( fmtW, V_BSTR( &v ) );
             VariantClear( &v );
         }

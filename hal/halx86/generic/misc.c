@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            halx86/generic/misc.c
+ * FILE:            hal/halx86/generic/misc.c
  * PURPOSE:         NMI, I/O Mapping and x86 Subs
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -11,6 +11,11 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpMarkAcpiHal)
+#pragma alloc_text(INIT, HalpReportSerialNumber)
+#endif
 
 /* GLOBALS  *******************************************************************/
 
@@ -22,9 +27,9 @@ CHAR HalpSerialNumber[31];
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef _MINIHAL_
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpReportSerialNumber(VOID)
 {
     NTSTATUS Status;
@@ -53,9 +58,9 @@ HalpReportSerialNumber(VOID)
     }
 }
 
+INIT_SECTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpMarkAcpiHal(VOID)
 {
     NTSTATUS Status;

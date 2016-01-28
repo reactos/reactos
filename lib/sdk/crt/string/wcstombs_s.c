@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS CRT
  * PURPOSE:           Implementation of mbstowcs_s
- * FILE:              lib/sdk/crt/stdlib/mbstowcs_s.c
+ * FILE:              lib/sdk/crt/string/wcstombs_s.c
  * PROGRAMMER:        Timo Kreuzer
  */
 

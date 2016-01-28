@@ -29,6 +29,8 @@ HRESULT WINAPI D3DXCreateBox(struct IDirect3DDevice9 *device, float width, float
         float depth, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
 HRESULT WINAPI D3DXCreateCylinder(struct IDirect3DDevice9 *device, float radius1, float radius2,
         float length, UINT slices, UINT stacks, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, UINT sides, struct ID3DXMesh **mesh,
+        ID3DXBuffer **adjacency);
 HRESULT WINAPI D3DXCreateSphere(struct IDirect3DDevice9 *device, float radius, UINT slices,
         UINT stacks, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
 HRESULT WINAPI D3DXCreateTeapot(struct IDirect3DDevice9 *device,
@@ -37,6 +39,8 @@ HRESULT WINAPI D3DXCreateTextA(struct IDirect3DDevice9 *device, HDC hdc, const c
         float extrusion, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency, GLYPHMETRICSFLOAT *glyphmetrics);
 HRESULT WINAPI D3DXCreateTextW(struct IDirect3DDevice9 *device, HDC hdc, const WCHAR *text, float deviation,
         FLOAT extrusion, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency, GLYPHMETRICSFLOAT *glyphmetrics);
+HRESULT WINAPI D3DXCreateTorus(struct IDirect3DDevice9 *device,
+        float innerradius, float outerradius, UINT sides, UINT rings, struct ID3DXMesh **mesh, ID3DXBuffer **adjacency);
 #define D3DXCreateText WINELIB_NAME_AW(D3DXCreateText)
 
 #ifdef __cplusplus

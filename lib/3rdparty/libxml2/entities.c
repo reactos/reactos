@@ -502,7 +502,7 @@ xmlGetDtdEntity(xmlDocPtr doc, const xmlChar *name) {
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
-xmlGetDocEntity(xmlDocPtr doc, const xmlChar *name) {
+xmlGetDocEntity(const xmlDoc *doc, const xmlChar *name) {
     xmlEntityPtr cur;
     xmlEntitiesTablePtr table;
 
@@ -783,7 +783,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
  * Returns A newly allocated string with the substitution done.
  */
 xmlChar *
-xmlEncodeSpecialChars(xmlDocPtr doc ATTRIBUTE_UNUSED, const xmlChar *input) {
+xmlEncodeSpecialChars(const xmlDoc *doc ATTRIBUTE_UNUSED, const xmlChar *input) {
     const xmlChar *cur = input;
     xmlChar *buffer = NULL;
     xmlChar *out = NULL;

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/miniport/vga/cmdcnst.h
+ * FILE:            win32ss/drivers/miniport/vga_new/cmdcnst.h
  * PURPOSE:         Command Code Definitions for VGA Command Streams
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation
  */

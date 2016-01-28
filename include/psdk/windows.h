@@ -18,7 +18,7 @@
 #endif
 
 #if !defined(_X86_) && !defined(_AMD64_) && !defined(_IA64_) && !defined(_ALPHA_) && \
-    !defined(_ARM_) && !defined(_PPC_) && !defined(_MIPS_) && !defined(_68K_)
+    !defined(_ARM_) && !defined(_PPC_) && !defined(_MIPS_) && !defined(_68K_) && !defined(_SH_)
 
 #if defined(_M_AMD64) || defined(__x86_64__)
 #define _AMD64_
@@ -36,6 +36,8 @@
 #define _MIPS_
 #elif defined(_M_M68K) || defined(__68k__)
 #define _68K_
+#elif defined(_SHX_) || defined(__sh__)
+#define _SH_
 #endif
 
 #endif

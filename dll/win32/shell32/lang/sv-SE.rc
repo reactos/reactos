@@ -41,6 +41,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -139,7 +156,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Skriv namnet på ett program, en mapp eller ett dokument och wine kommer att öppna det för dig.", 12289, 36, 11, 182, 18
     LTEXT "&Öppna:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -177,14 +194,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Extended Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
     CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-    CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Run in seperate memory space", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -311,12 +329,15 @@ CAPTION "Tools"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Error-checking", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
     PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Backup", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
     PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -369,23 +390,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
-    LTEXT "File:    ", 14001, 44, 25, 188, 10
+    LTEXT "File:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programs", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -416,7 +427,7 @@ CAPTION "View"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Folder views", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
     PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
@@ -578,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Check Disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-    PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Check disk options", -1, 7, 6, 179, 40
+    PUSHBUTTON "Cancel", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -604,6 +615,20 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -636,7 +661,7 @@ BEGIN
     /* special folders */
     IDS_DESKTOP "Desktop"
     IDS_MYCOMPUTER "My Computer"
-    IDS_RECYCLEBIN_FOLDER_NAME "Trash"
+    IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
     IDS_CONTROLPANEL "Control Panel"
     IDS_ADMINISTRATIVETOOLS "Administrative Tools"
 
@@ -655,22 +680,29 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Rename"
-    IDS_INSERT "Insert"
+    IDS_PASTE "Paste"
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
-    IDS_DELETEITEM_CAPTION "Confirm file deletion"
-    IDS_DELETEFOLDER_CAPTION "Confirm folder deletion"
+    IDS_DELETEITEM_CAPTION "Confirm File Deletion"
+    IDS_DELETEFOLDER_CAPTION "Confirm Folder Deletion"
     IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
-    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Trash?"
-    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Trash?"
-    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Trash?"
-    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
+    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Recycle Bin?"
+    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Recycle Bin?"
+    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
+    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
     IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
     IDS_OVERWRITEFILE_CAPTION "Confirm file overwrite"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
+
+    IDS_FILEOOP_COPYING "Copying..."
+    IDS_FILEOOP_MOVING "Moving..."
+    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Restart"
@@ -719,8 +751,11 @@ BEGIN
     IDS_NEWFOLDER "New Folder"
 
     IDS_DRIVE_FIXED "Local Disk"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Network Disk"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Open With"
@@ -740,11 +775,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Choose Icon"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Folder"
-    IDS_VIRTUAL_DRIVER "Virtual Device Driver"
     IDS_BAT_FILE "ReactOS Batch File"
     IDS_CMD_FILE "ReactOS Command Script"
-    IDS_COM_FILE "Dos Application"
+    IDS_COM_FILE "DOS Application"
     IDS_CPL_FILE "Control Panel Item"
     IDS_CUR_FILE "Cursor"
     IDS_DLL_FILE "Application Extension"
@@ -752,14 +787,19 @@ BEGIN
     IDS_EXE_FILE "Application"
     IDS_FON_FILE "Font file"
     IDS_TTF_FILE "TrueType Font file"
+    IDS_OTF_FILE "OpenType Font file"
     IDS_HLP_FILE "Help File"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Configuration Settings"
     IDS_LNK_FILE "Shortcut"
-    IDS_SYS_FILE "System file"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
+    IDS_SYS_FILE "System File"
+    IDS_VXD_FILE "Virtual Device Driver"
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Run as "
+    IDS_RUNAS_VERB "Run as..."
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Find"
     IDS_PRINT_VERB "Print"
@@ -781,4 +821,8 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

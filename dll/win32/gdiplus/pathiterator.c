@@ -28,14 +28,14 @@ GpStatus WINGDIPAPI GdipCreatePathIter(GpPathIterator **iterator, GpPath* path)
     if(!iterator)
         return InvalidParameter;
 
-    *iterator = GdipAlloc(sizeof(GpPathIterator));
+    *iterator = heap_alloc_zero(sizeof(GpPathIterator));
     if(!*iterator)  return OutOfMemory;
 
     if(path){
         size = path->pathdata.Count;
 
-        (*iterator)->pathdata.Types  = GdipAlloc(size);
-        (*iterator)->pathdata.Points = GdipAlloc(size * sizeof(PointF));
+        (*iterator)->pathdata.Types  = heap_alloc_zero(size);
+        (*iterator)->pathdata.Points = heap_alloc_zero(size * sizeof(PointF));
 
         memcpy((*iterator)->pathdata.Types, path->pathdata.Types, size);
         memcpy((*iterator)->pathdata.Points, path->pathdata.Points,size * sizeof(PointF));
@@ -61,9 +61,9 @@ GpStatus WINGDIPAPI GdipDeletePathIter(GpPathIterator *iter)
     if(!iter)
         return InvalidParameter;
 
-    GdipFree(iter->pathdata.Types);
-    GdipFree(iter->pathdata.Points);
-    GdipFree(iter);
+    heap_free(iter->pathdata.Types);
+    heap_free(iter->pathdata.Points);
+    heap_free(iter);
 
     return Ok;
 }

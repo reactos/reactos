@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           
- * FILE:              subsys/win32k/eng/debug.c
+ * FILE:              win32ss/gdi/eng/debug.c
  * PROGRAMER:         Jason Filby
  */
 

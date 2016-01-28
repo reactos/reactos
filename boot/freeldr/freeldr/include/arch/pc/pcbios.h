@@ -114,16 +114,16 @@ typedef union
 // Make sure all memory pointers are in SEG:OFFS format and
 // not linear addresses, unless the interrupt handler
 // specifically handles linear addresses.
-int        Int386(int ivec, REGS* in, REGS* out);
+int __cdecl Int386(int ivec, REGS* in, REGS* out);
 
 // This macro tests the Carry Flag
 // If CF is set then the call failed (usually)
 #define INT386_SUCCESS(regs)    ((regs.x.eflags & EFLAGS_CF) == 0)
 
 void    EnableA20(void);
-VOID    ChainLoadBiosBootSectorCode(VOID);    // Implemented in boot.S
-VOID    Reboot(VOID);                    // Implemented in boot.S
-VOID    DetectHardware(VOID);        // Implemented in hardware.c
+VOID __cdecl ChainLoadBiosBootSectorCode(VOID);    // Implemented in boot.S
+VOID __cdecl Reboot(VOID);                    // Implemented in boot.S
+VOID    DetectHardware(VOID);                 // Implemented in hardware.c
 
 #endif /* ! __ASM__ */
 

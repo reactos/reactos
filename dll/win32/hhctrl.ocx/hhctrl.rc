@@ -24,11 +24,17 @@
 
 #include "resource.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_CS_CZ
     #include "lang/Cs.rc"
 #endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/De.rc"
 #endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/El.rc"
@@ -36,14 +42,32 @@
 #ifdef LANGUAGE_EN_US
     #include "lang/En.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/Es.rc"
+#endif
 #ifdef LANGUAGE_FI_FI
     #include "lang/Fi.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/Hu.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/Nl.rc"
@@ -53,32 +77,6 @@
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/De.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/Es.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/He.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "lang/It.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/Lt.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/Pt.rc"
@@ -94,6 +92,9 @@
 #endif
 #ifdef LANGAUGE_SQ_AL
     #include "lang/Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/Tr.rc"

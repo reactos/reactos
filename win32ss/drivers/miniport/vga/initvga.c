@@ -107,7 +107,7 @@ vgaSetRegisters(PVGA_REGISTERS Registers)
 }
 
 VOID
-InitVGAMode()
+InitVGAMode(VOID)
 {
    vgaSaveRegisters(&TextModeRegs);
    vgaSetRegisters(&Mode12Regs);

@@ -20,8 +20,5 @@ set_module_type(msxml6 win32dll)
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml6_tlb.tlb)
 target_link_libraries(msxml6 wine)
 add_importlibs(msxml6 msxml3 msvcrt kernel32)
-
-# msxml6_tlb.tlb needs stdole2.tlb
 add_dependencies(msxml6 stdole2)
-
 add_cd_file(TARGET msxml6 DESTINATION reactos/system32 FOR all)

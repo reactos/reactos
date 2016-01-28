@@ -1,7 +1,7 @@
 /* Slovak translation for shlwapi
  *
  * Copyright 2004 Jon Griffiths
- * Copyright 2008 M·rio KaËm·r (Mario Kacmar)
+ * Copyright 2008 M√°rio Kaƒçm√°r (Mario Kacmar)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,24 +20,24 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-IDD_ERR_DIALOG DIALOG 0, 0, 220, 60
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Chyba!"
-FONT 8, "MS Shell Dlg"
-{
- LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
- LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "Nabud˙ce toto dialÛgovÈ okno nezo&brazovaù", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Zruöiù", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "¡n&o", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Nie", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
-}
-
 STRINGTABLE
 {
     IDS_BYTES_FORMAT    "%ld bajtov"
     IDS_TIME_INTERVAL_HOURS    " hod."
     IDS_TIME_INTERVAL_MINUTES  " min."
     IDS_TIME_INTERVAL_SECONDS  " s"
+}
+
+IDD_ERR_DIALOG DIALOGEX 0, 0, 220, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Chyba"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
+ LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
+ CHECKBOX "Nabud√∫ce toto dial√≥gov√© okno nezo&brazova≈•", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Zru≈°i≈•", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "√Ån&o", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Nie", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }

@@ -4,116 +4,42 @@
  *
  ******************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights. You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code. No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision. In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change. Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee. Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution. In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government. In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
-
-#define __RSCREATE_C__
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "acpi.h"
 #include "accommon.h"
@@ -149,6 +75,10 @@ AcpiBufferToResource (
     void                    *Resource;
     void                    *CurrentResourcePtr;
 
+
+    ACPI_FUNCTION_TRACE (AcpiBufferToResource);
+
+
     /*
      * Note: we allow AE_AML_NO_RESOURCE_END_TAG, since an end tag
      * is not required here.
@@ -156,15 +86,15 @@ AcpiBufferToResource (
 
     /* Get the required length for the converted resource */
 
-    Status = AcpiRsGetListLength (AmlBuffer, AmlBufferLength,
-                &ListSizeNeeded);
+    Status = AcpiRsGetListLength (
+        AmlBuffer, AmlBufferLength, &ListSizeNeeded);
     if (Status == AE_AML_NO_RESOURCE_END_TAG)
     {
         Status = AE_OK;
     }
     if (ACPI_FAILURE (Status))
     {
-        return (Status);
+        return_ACPI_STATUS (Status);
     }
 
     /* Allocate a buffer for the converted resource */
@@ -173,13 +103,13 @@ AcpiBufferToResource (
     CurrentResourcePtr = Resource;
     if (!Resource)
     {
-        return (AE_NO_MEMORY);
+        return_ACPI_STATUS (AE_NO_MEMORY);
     }
 
     /* Perform the AML-to-Resource conversion */
 
     Status = AcpiUtWalkAmlResources (NULL, AmlBuffer, AmlBufferLength,
-                AcpiRsConvertAmlToResources, &CurrentResourcePtr);
+        AcpiRsConvertAmlToResources, &CurrentResourcePtr);
     if (Status == AE_AML_NO_RESOURCE_END_TAG)
     {
         Status = AE_OK;
@@ -193,8 +123,10 @@ AcpiBufferToResource (
         *ResourcePtr = Resource;
     }
 
-    return (Status);
+    return_ACPI_STATUS (Status);
 }
+
+ACPI_EXPORT_SYMBOL (AcpiBufferToResource)
 
 
 /*******************************************************************************
@@ -265,14 +197,14 @@ AcpiRsCreateResourceList (
 
     Resource = OutputBuffer->Pointer;
     Status = AcpiUtWalkAmlResources (NULL, AmlStart, AmlBufferLength,
-                AcpiRsConvertAmlToResources, &Resource);
+        AcpiRsConvertAmlToResources, &Resource);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "OutputBuffer %p Length %X\n",
-            OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
+        OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
     return_ACPI_STATUS (AE_OK);
 }
 
@@ -323,8 +255,8 @@ AcpiRsCreatePciRoutingTable (
 
     /* Get the required buffer length */
 
-    Status = AcpiRsGetPciRoutingTableLength (PackageObject,
-                &BufferSizeNeeded);
+    Status = AcpiRsGetPciRoutingTableLength (
+        PackageObject,&BufferSizeNeeded);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -346,10 +278,10 @@ AcpiRsCreatePciRoutingTable (
      * package that in turn contains an UINT64 Address, a UINT8 Pin,
      * a Name, and a UINT8 SourceIndex.
      */
-    TopObjectList    = PackageObject->Package.Elements;
+    TopObjectList = PackageObject->Package.Elements;
     NumberOfElements = PackageObject->Package.Count;
-    Buffer           = OutputBuffer->Pointer;
-    UserPrt          = ACPI_CAST_PTR (ACPI_PCI_ROUTING_TABLE, Buffer);
+    Buffer = OutputBuffer->Pointer;
+    UserPrt = ACPI_CAST_PTR (ACPI_PCI_ROUTING_TABLE, Buffer);
 
     for (Index = 0; Index < NumberOfElements; Index++)
     {
@@ -363,9 +295,9 @@ AcpiRsCreatePciRoutingTable (
         UserPrt = ACPI_CAST_PTR (ACPI_PCI_ROUTING_TABLE, Buffer);
 
         /*
-         * Fill in the Length field with the information we have at this point.
-         * The minus four is to subtract the size of the UINT8 Source[4] member
-         * because it is added below.
+         * Fill in the Length field with the information we have at this
+         * point. The minus four is to subtract the size of the UINT8
+         * Source[4] member because it is added below.
          */
         UserPrt->Length = (sizeof (ACPI_PCI_ROUTING_TABLE) - 4);
 
@@ -391,7 +323,8 @@ AcpiRsCreatePciRoutingTable (
         ObjDesc = SubObjectList[0];
         if (!ObjDesc || ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
-            ACPI_ERROR ((AE_INFO, "(PRT[%u].Address) Need Integer, found %s",
+            ACPI_ERROR ((AE_INFO,
+                "(PRT[%u].Address) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
             return_ACPI_STATUS (AE_BAD_DATA);
         }
@@ -434,20 +367,21 @@ AcpiRsCreatePciRoutingTable (
                 /* Use *remaining* length of the buffer as max for pathname */
 
                 PathBuffer.Length = OutputBuffer->Length -
-                                    (UINT32) ((UINT8 *) UserPrt->Source -
-                                    (UINT8 *) OutputBuffer->Pointer);
+                    (UINT32) ((UINT8 *) UserPrt->Source -
+                    (UINT8 *) OutputBuffer->Pointer);
                 PathBuffer.Pointer = UserPrt->Source;
 
-                Status = AcpiNsHandleToPathname ((ACPI_HANDLE) Node, &PathBuffer);
+                Status = AcpiNsHandleToPathname (
+                    (ACPI_HANDLE) Node, &PathBuffer, FALSE);
 
                 /* +1 to include null terminator */
 
-                UserPrt->Length += (UINT32) ACPI_STRLEN (UserPrt->Source) + 1;
+                UserPrt->Length += (UINT32) strlen (UserPrt->Source) + 1;
                 break;
 
             case ACPI_TYPE_STRING:
 
-                ACPI_STRCPY (UserPrt->Source, ObjDesc->String.Pointer);
+                strcpy (UserPrt->Source, ObjDesc->String.Pointer);
 
                 /*
                  * Add to the Length field the length of the string
@@ -458,8 +392,8 @@ AcpiRsCreatePciRoutingTable (
 
             case ACPI_TYPE_INTEGER:
                 /*
-                 * If this is a number, then the Source Name is NULL, since the
-                 * entire buffer was zeroed out, we can leave this alone.
+                 * If this is a number, then the Source Name is NULL, since
+                 * the entire buffer was zeroed out, we can leave this alone.
                  *
                  * Add to the Length field the length of the UINT32 NULL
                  */
@@ -498,7 +432,7 @@ AcpiRsCreatePciRoutingTable (
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "OutputBuffer %p Length %X\n",
-            OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
+        OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
     return_ACPI_STATUS (AE_OK);
 }
 
@@ -539,8 +473,8 @@ AcpiRsCreateAmlResources (
 
     /* Get the buffer size needed for the AML byte stream */
 
-    Status = AcpiRsGetAmlLength (ResourceList->Pointer,
-                ResourceList->Length, &AmlSizeNeeded);
+    Status = AcpiRsGetAmlLength (
+        ResourceList->Pointer, ResourceList->Length, &AmlSizeNeeded);
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "AmlSizeNeeded=%X, %s\n",
         (UINT32) AmlSizeNeeded, AcpiFormatException (Status)));
@@ -560,7 +494,7 @@ AcpiRsCreateAmlResources (
     /* Do the conversion */
 
     Status = AcpiRsConvertResourcesToAml (ResourceList->Pointer,
-                AmlSizeNeeded, OutputBuffer->Pointer);
+        AmlSizeNeeded, OutputBuffer->Pointer);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);

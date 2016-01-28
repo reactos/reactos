@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/stubs.c
+ * FILE:            win32ss/user/user32/misc/stubs.c
  * PURPOSE:         User32.dll stubs
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:           If you implement a function, remove it from this file
@@ -41,7 +41,7 @@ VOID
 WINAPI
 SetDebugErrorLevel( DWORD dwLevel )
 {
-    DbgPrint("(%lu): stub\n", dwLevel);
+    FIXME("(%lu): stub\n", dwLevel);
 }
 
 
@@ -335,7 +335,8 @@ GetRawInputDeviceList(
 {
     if(pRawInputDeviceList)
         memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    *puiNumDevices = 0;
+    if(puiNumDevices)
+       *puiNumDevices = 0;
 
     UNIMPLEMENTED;
     return 0;
@@ -468,24 +469,6 @@ VOID WINAPI ShowStartGlass(DWORD unknown)
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_OF_SERVICE pqosPrev)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)
@@ -512,9 +495,10 @@ BuildReasonArray(PVOID Pointer)
 
 VOID
 WINAPI
-CreateSystemThreads(DWORD dwUnknown)
+CreateSystemThreads(DWORD Unused)
 {
-    NtUserxCreateSystemThreads(dwUnknown);
+    /* Thread call for remote processes (non-CSRSS) only */
+    NtUserxCreateSystemThreads(TRUE);
     ExitThread(0);
 }
 

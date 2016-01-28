@@ -1,7 +1,7 @@
-/* FILE:        setup/usetup/lang/cs-CZ.rc
+/* FILE:        base/setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * THANKS TO:   preston for bugfix advice at line 842
- * UPDATED:     2014-08-31
+ * THANKS TO:   preston for bugfix advice at line 848
+ * UPDATED:     2015-04-12
  */
 
 #pragma once
@@ -165,42 +165,12 @@ static MUI_ENTRY csCZIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalace nedok §e zpracovat v¡ce ne§ jeden prim rn¡ odd¡l na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalace nedok §e vymazat prim rn¡ odd¡l z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  pokud na tomto disku existuj¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalace nedok §e vymazat prvn¡ rozç¡ýenì odd¡l z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  pokud na tomto disku existuj¡ dalç¡ rozç¡ýen‚ odd¡ly.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalace podporuje pouze souborovì syst‚m FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontroly souborovìch syst‚m… zat¡m nejsou implementov ny.",
         TEXT_STYLE_NORMAL
     },
@@ -510,6 +480,7 @@ static MUI_ENTRY csCZRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY csCZComputerPageEntries[] =
 {
     {
@@ -839,6 +810,12 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Stisknut¡m D umo§n¡te smaz n¡ existuj¡c¡ho odd¡lu.",
         TEXT_STYLE_NORMAL
     },
@@ -846,6 +823,100 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
         0,
         0,
         "Cekejte, prosim...", //MUSI ZUSTAT BEZ DIAKRITIKY!
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY csCZConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1370,7 +1441,7 @@ MUI_ERROR csCZErrorEntries[] =
           "\n"
           "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci.\n"
           "  \x07  Stisknut¡m ENTER budete pokraŸovat v instalaci.",
-          "F3= UkonŸit  ENTER = PokraŸovat"
+          "F3 = UkonŸit  ENTER = PokraŸovat"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1501,8 +1572,16 @@ MUI_ERROR csCZErrorEntries[] =
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Na zvolen‚m odd¡lu nen¡ dost voln‚ho m¡sta.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Neplatnì n zev adres ýe.\n"
+        "\n"
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Zvolenì odd¡l nen¡ pro instalaci ReactOS dostateŸnØ velkì.\n"
+        "InstalaŸn¡ odd¡l mus¡ m¡t velikost alespoå %lu MB.\n"
+        "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
         NULL
     },
@@ -1520,24 +1599,17 @@ MUI_ERROR csCZErrorEntries[] =
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Nen¡ mo§n‚ vytvoýit odd¡l za rozç¡ýenìm odd¡lem.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Rozç¡ýenì odd¡l mus¡ bìt v§dy posledn¡ odd¡l\n"
-        "v tabulce odd¡l….\n"
-        "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE csCZPages[] =
 {
@@ -1580,6 +1652,10 @@ MUI_PAGE csCZPages[] =
     {
         SELECT_PARTITION_PAGE,
         csCZSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        csCZConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1667,12 +1743,16 @@ MUI_STRING csCZStrings[] =
     "Tento odd¡l bude zform tov n."},
     {STRING_NONFORMATTEDPART,
     "Zvolili jste instalaci ReactOS na novì nebo nezform tovanì odd¡l."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalace nakop¡ruje ReactOS na odd¡l"},
     {STRING_CHECKINGPART,
     "Instalace nyn¡ kontroluje zvolenì odd¡l."},
     {STRING_QUITCONTINUE,
-    "F3= UkonŸit  ENTER = PokraŸovat"},
+    "F3 = UkonŸit  ENTER = PokraŸovat"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restartovat poŸ¡taŸ"},
     {STRING_TXTSETUPFAILED,
@@ -1730,7 +1810,7 @@ MUI_STRING csCZStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTyp %-3u%s                      %6lu %s"},
+    "%c%c %c %sTyp %-3u%s                     %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,

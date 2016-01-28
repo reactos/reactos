@@ -17,9 +17,13 @@ BEGIN
         MENUITEM "&Save\tCtrl+S", IDM_FILESAVE
         MENUITEM "Save &as...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Set as wallpaper (tiled)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Set as wallpaper (centered)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Set as wallpaper (stretched)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Set as wallpaper (Tiled)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Set as wallpaper (Centered)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Set as wallpaper (Stretched)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "&Quit\tAlt+F4", IDM_FILEEXIT
     END
@@ -80,7 +84,7 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-    POPUP "&?"
+    POPUP "&Help"
     BEGIN
         MENUITEM "&Help topics", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
@@ -214,4 +218,5 @@ BEGIN
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

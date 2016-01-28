@@ -22,11 +22,20 @@
 
 #include "resource.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/oleaut32_Bg.rc"
 #endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/oleaut32_Cz.rc"
+#endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/oleaut32_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/oleaut32_De.rc"
 #endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/oleaut32_El.rc"
@@ -37,11 +46,11 @@
 #ifdef LANGUAGE_ES_ES
     #include "lang/oleaut32_Es.rc"
 #endif
-#ifdef LANGUAGE_CS_CZ
-    #include "lang/oleaut32_Cz.rc"
-#endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/oleaut32_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/oleaut32_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/oleaut32_Hu.rc"
@@ -55,6 +64,9 @@
 #ifdef LANGUAGE_KO_KR
     #include "lang/oleaut32_Ko.rc"
 #endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/oleaut32_Lt.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/oleaut32_Nl.rc"
 #endif
@@ -67,23 +79,6 @@
 #ifdef LANGUAGE_PT_PT
     #include "lang/oleaut32_Pt.rc"
 #endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/oleaut32_Sv.rc"
-#endif
-#ifdef LANGUAGE_TH_TH
-    #include "lang/oleaut32_Th.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/oleaut32_De.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/oleaut32_He.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/oleaut32_Lt.rc"
-#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/oleaut32_Ro.rc"
 #endif
@@ -95,6 +90,12 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/oleaut32_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/oleaut32_Sv.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/oleaut32_Th.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/oleaut32_Tr.rc"

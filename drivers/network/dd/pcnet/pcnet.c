@@ -797,13 +797,13 @@ MiTestCard(
   /* see if we can read/write now */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  DPRINT("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interupt status register is 0x%x\n", Adapter->PortOffset, RAP, CSR0, RDP, Data);
+  DPRINT("Port 0x%x RAP 0x%x CSR0 0x%x RDP 0x%x, Interrupt status register is 0x%x\n", Adapter->PortOffset, RAP, CSR0, RDP, Data);
 
   /* read the BIA */
   for(i = 0; i < 6; i++)
       NdisRawReadPortUchar(Adapter->PortOffset + i, &address[i]);
 
-  DPRINT("burned-in address: %x:%x:%x:%x:%x:%x\n", address[0], address[1], address[2], address[3], address[4], address[5]);
+  DPRINT("burned-in address: %02x:%02x:%02x:%02x:%02x:%02x\n", address[0], address[1], address[2], address[3], address[4], address[5]);
   /* Read status flags from CSR0 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
@@ -812,8 +812,8 @@ MiTestCard(
   /* Read status flags from CSR3 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR3);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-
   DPRINT("CSR3: 0x%x\n", Data);
+  
   /* Read status flags from CSR4 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
@@ -828,6 +828,11 @@ MiTestCard(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR6);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
   DPRINT("CSR6: 0x%x\n", Data);
+  
+  /* Read status flags from BCR4 */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
+  NdisRawReadPortUshort(Adapter->PortOffset + BDP, &Data);
+  DPRINT("BCR4: 0x%x\n", Data);  
 
   return TRUE;
 }

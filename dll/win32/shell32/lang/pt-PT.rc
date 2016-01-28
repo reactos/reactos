@@ -41,6 +41,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -139,7 +156,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o ReactOS irá abrí-lo.", 12289, 36, 11, 182, 18
     LTEXT "&Abrir:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -177,14 +194,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Propriedades Avançadas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Escolha as propriedades avançadas que quer para este atalho.", -1, 5, 30, 210, 10
     CHECKBOX "Executar com diferentes credenciais", 14000, 25, 50, 150, 10
     LTEXT "Esta opção permite executar este atalho como outro utilizador, ou continue com a sua conta enquanto protege o seu computador e dados contra actividade de programas não autorizados.", -1, 50, 60, 175, 40
-    CHECKBOX "Executar num espaço de memória separada", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Executar num espaço de memória separada", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abortar", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -311,12 +329,15 @@ CAPTION "Ferramentas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Verificar por erros...", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Esta opção vai verificar o volume por erros.", -1, 40, 25, 160, 20
     PUSHBUTTON "Verificar agora...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Desfragmentação", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Esta opção vai desfragmentar os ficheiros no volume", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmentar Agora...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Cópia de segurança", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Esta opção vai criar os ficheiros do volume.", -1, 40, 150, 160, 20
     PUSHBUTTON "Executar Cópia de Segurança...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -330,7 +351,7 @@ END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Executar Como..."
+CAPTION "Executar Como"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Que conta de utilizador quer utilizar para executar este programa?", -1, 10, 20, 220, 20
@@ -369,23 +390,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Escolha o programa que quer utilizar para abrir este ficheiro:", -1, 44, 12, 211, 10
-    LTEXT "Ficheiro:    ", 14001, 44, 25, 188, 10
+    LTEXT "Ficheiro:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Utilizar sempre o programa seleccionado para abrir este tipo de ficheiros", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Seleccione...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -416,7 +427,7 @@ CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
     PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP
@@ -578,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Permitir Compressão", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Verificar Disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Iniciar", IDOK, 53, 100, 60, 14
-    GROUPBOX "Opções verificação do disco", -1, 7, 6, 179, 50
-    PUSHBUTTON "Cancelar", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Reparar automáticamente erros nos ficheiros do sistema", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
+    GROUPBOX "Opções verificação do disco", -1, 7, 6, 179, 40
+    PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Reparar automáticamente erros nos ficheiros do sistema", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Procurar e tentar reparar sectores danificados", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -604,6 +615,20 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -655,7 +680,7 @@ BEGIN
     IDS_RESTORE "Restaurar"
     IDS_FORMATDRIVE "Formatar..."
     IDS_RENAME "Renaomear"
-    IDS_INSERT "Inserir"
+    IDS_PASTE "Inserir"
 
     IDS_CREATEFOLDER_DENIED "Não é possível criar nova pasta: Permissão negada."
     IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
@@ -671,6 +696,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
     IDS_OVERWRITEFILE_CAPTION "Confirmar substituição de ficheiro"
     IDS_OVERWRITEFOLDER_TEXT "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
+
+    IDS_FILEOOP_COPYING "Copying..."
+    IDS_FILEOOP_MOVING "Moving..."
+    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Reiniciar"
@@ -719,8 +751,11 @@ BEGIN
     IDS_NEWFOLDER "Nova Pasta"
 
     IDS_DRIVE_FIXED "Disco Local"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Disco de Rede"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Abre com..."
@@ -740,11 +775,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Escolha Ícone"
     IDS_PICK_ICON_FILTER "Ficheiros de Ícones (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Ficheiros Executáveis (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Pasta"
-    IDS_VIRTUAL_DRIVER "Driver de Dispositivo Virtual"
     IDS_BAT_FILE "ReactOS Batch File"
     IDS_CMD_FILE "ReactOS Command Script"
-    IDS_COM_FILE "Aplicação Dos"
+    IDS_COM_FILE "Aplicação DOS"
     IDS_CPL_FILE "Item do Painel de Controle"
     IDS_CUR_FILE "Cursor"
     IDS_DLL_FILE "Extensão da Aplicação"
@@ -752,14 +787,19 @@ BEGIN
     IDS_EXE_FILE "Aplicação"
     IDS_FON_FILE "Ficheiro de tipo de letra"
     IDS_TTF_FILE "Tipo de letra TrueType"
+    IDS_OTF_FILE "Tipo de letra OpenType"
     IDS_HLP_FILE "Ficheiro de Ajuda"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Definições"
     IDS_LNK_FILE "Atalho"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Ficheiro de Sistema"
+    IDS_VXD_FILE "Driver de Dispositivo Virtual"
 
     IDS_OPEN_VERB "Abrir"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Executar como "
+    IDS_RUNAS_VERB "Executar como..."
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Procurar"
     IDS_PRINT_VERB "Imprimir"
@@ -781,4 +821,8 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

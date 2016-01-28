@@ -12,7 +12,7 @@
 
 /* GLOBALS ********************************************************************/
 
-ULONG SACDebug = 0xFFFFFFFF;
+ULONG SACDebug = 0;
 BOOLEAN CommandConsoleLaunchingEnabled;
 BOOLEAN GlobalDataInitialized;
 KMUTEX SACCMDEventInfoMutex;
@@ -100,7 +100,7 @@ NTAPI
 FreeGlobalData(VOID)
 {
     UNICODE_STRING SymbolicLink;
-    SAC_DBG(1, "SAC FreeGlobalData: Entering.\n");
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeGlobalData: Entering.\n");
 
     /* Only free if we allocated */
     if (GlobalDataInitialized)
@@ -139,7 +139,7 @@ FreeGlobalData(VOID)
     }
 
     /* All done */
-    SAC_DBG(1, "SAC FreeGlobalData: Exiting.\n");
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeGlobalData: Exiting.\n");
 }
 
 VOID
@@ -313,7 +313,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
     if (!NT_SUCCESS(Status))
     {
         /* For debugging, write down why we failed */
-        SAC_DBG(1, "Exiting (6) with status FALSE\n");
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "Exiting (6) with status FALSE\n");
         DeviceExtension->PriorityFail = TRUE;
 
         /* Initialize rundown and wait for the thread to do it */

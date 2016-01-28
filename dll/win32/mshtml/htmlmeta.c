@@ -53,14 +53,14 @@ static ULONG WINAPI HTMLMetaElement_Release(IHTMLMetaElement *iface)
 static HRESULT WINAPI HTMLMetaElement_GetTypeInfoCount(IHTMLMetaElement *iface, UINT *pctinfo)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLMetaElement_GetTypeInfo(IHTMLMetaElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
             ppTInfo);
 }
 
@@ -68,7 +68,7 @@ static HRESULT WINAPI HTMLMetaElement_GetIDsOfNames(IHTMLMetaElement *iface, REF
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
             cNames, lcid, rgDispId);
 }
 
@@ -77,7 +77,7 @@ static HRESULT WINAPI HTMLMetaElement_Invoke(IHTMLMetaElement *iface, DISPID dis
         UINT *puArgErr)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
             lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -91,19 +91,11 @@ static HRESULT WINAPI HTMLMetaElement_put_httpEquiv(IHTMLMetaElement *iface, BST
 static HRESULT WINAPI HTMLMetaElement_get_httpEquiv(IHTMLMetaElement *iface, BSTR *p)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    nsAString httpequiv_str, val_str;
-    nsresult nsres;
-
     static const PRUnichar httpEquivW[] = {'h','t','t','p','-','e','q','u','i','v',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsAString_InitDepend(&httpequiv_str, httpEquivW);
-    nsAString_Init(&val_str, NULL);
-    nsres = nsIDOMHTMLElement_GetAttribute(This->element.nselem, &httpequiv_str, &val_str);
-    nsAString_Finish(&httpequiv_str);
-
-    return return_nsstr(nsres, &val_str, p);
+    return elem_string_attr_getter(&This->element, httpEquivW, TRUE, p);
 }
 
 static HRESULT WINAPI HTMLMetaElement_put_content(IHTMLMetaElement *iface, BSTR v)
@@ -116,19 +108,11 @@ static HRESULT WINAPI HTMLMetaElement_put_content(IHTMLMetaElement *iface, BSTR 
 static HRESULT WINAPI HTMLMetaElement_get_content(IHTMLMetaElement *iface, BSTR *p)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    nsAString content_str, val_str;
-    nsresult nsres;
-
     static const PRUnichar contentW[] = {'c','o','n','t','e','n','t',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsAString_InitDepend(&content_str, contentW);
-    nsAString_Init(&val_str, NULL);
-    nsres = nsIDOMHTMLElement_GetAttribute(This->element.nselem, &content_str, &val_str);
-    nsAString_Finish(&content_str);
-
-    return return_nsstr(nsres, &val_str, p);
+    return elem_string_attr_getter(&This->element, contentW, TRUE, p);
 }
 
 static HRESULT WINAPI HTMLMetaElement_put_name(IHTMLMetaElement *iface, BSTR v)
@@ -141,19 +125,11 @@ static HRESULT WINAPI HTMLMetaElement_put_name(IHTMLMetaElement *iface, BSTR v)
 static HRESULT WINAPI HTMLMetaElement_get_name(IHTMLMetaElement *iface, BSTR *p)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    nsAString name_str, val_str;
-    nsresult nsres;
-
     static const PRUnichar nameW[] = {'n','a','m','e',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsAString_InitDepend(&name_str, nameW);
-    nsAString_Init(&val_str, NULL);
-    nsres = nsIDOMHTMLElement_GetAttribute(This->element.nselem, &name_str, &val_str);
-    nsAString_Finish(&name_str);
-
-    return return_nsstr(nsres, &val_str, p);
+    return elem_string_attr_getter(&This->element, nameW, TRUE, p);
 }
 
 static HRESULT WINAPI HTMLMetaElement_put_url(IHTMLMetaElement *iface, BSTR v)
@@ -170,18 +146,24 @@ static HRESULT WINAPI HTMLMetaElement_get_url(IHTMLMetaElement *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
+static const WCHAR charsetW[] = {'c','h','a','r','s','e','t',0};
+
 static HRESULT WINAPI HTMLMetaElement_put_charset(IHTMLMetaElement *iface, BSTR v)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return elem_string_attr_setter(&This->element, charsetW, v);
 }
 
 static HRESULT WINAPI HTMLMetaElement_get_charset(IHTMLMetaElement *iface, BSTR *p)
 {
     HTMLMetaElement *This = impl_from_IHTMLMetaElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return elem_string_attr_getter(&This->element, charsetW, TRUE, p);
 }
 
 static const IHTMLMetaElementVtbl HTMLMetaElementVtbl = {

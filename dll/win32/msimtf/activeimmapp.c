@@ -22,6 +22,7 @@
 
 typedef struct tagActiveIMMApp {
     IActiveIMMApp IActiveIMMApp_iface;
+    IActiveIMMMessagePumpOwner IActiveIMMMessagePumpOwner_iface;
     LONG refCount;
 } ActiveIMMApp;
 
@@ -45,6 +46,10 @@ static HRESULT WINAPI ActiveIMMApp_QueryInterface (IActiveIMMApp* iface,
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IActiveIMMApp))
     {
         *ppvOut = This;
+    }
+    else if (IsEqualIID(iid, &IID_IActiveIMMMessagePumpOwner))
+    {
+        *ppvOut = &This->IActiveIMMMessagePumpOwner_iface;
     }
 
     if (*ppvOut)
@@ -639,7 +644,9 @@ static HRESULT WINAPI ActiveIMMApp_Deactivate(IActiveIMMApp* This)
 static HRESULT WINAPI ActiveIMMApp_OnDefWindowProc(IActiveIMMApp* This,
         HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
 {
-    //FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
+#ifndef __REACTOS__
+    FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
+#endif
     return E_FAIL;
 }
 
@@ -792,6 +799,80 @@ static const IActiveIMMAppVtbl ActiveIMMAppVtbl =
     ActiveIMMApp_EnumInputContext
 };
 
+static inline ActiveIMMApp *impl_from_IActiveIMMMessagePumpOwner(IActiveIMMMessagePumpOwner *iface)
+{
+    return CONTAINING_RECORD(iface, ActiveIMMApp, IActiveIMMMessagePumpOwner_iface);
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_QueryInterface(IActiveIMMMessagePumpOwner* iface,
+        REFIID iid, LPVOID *ppvOut)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    return IActiveIMMApp_QueryInterface(&This->IActiveIMMApp_iface, iid, ppvOut);
+}
+
+static ULONG WINAPI ActiveIMMMessagePumpOwner_AddRef(IActiveIMMMessagePumpOwner* iface)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    return IActiveIMMApp_AddRef(&This->IActiveIMMApp_iface);
+}
+
+static ULONG WINAPI ActiveIMMMessagePumpOwner_Release(IActiveIMMMessagePumpOwner* iface)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    return IActiveIMMApp_Release(&This->IActiveIMMApp_iface);
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_Start(IActiveIMMMessagePumpOwner* iface)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    FIXME("(%p)->(): stub\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_End(IActiveIMMMessagePumpOwner* iface)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    FIXME("(%p)->(): stub\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_OnTranslateMessage(IActiveIMMMessagePumpOwner* iface,
+        const MSG *msg)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    FIXME("(%p)->(%p): stub\n", This, msg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_Pause(IActiveIMMMessagePumpOwner* iface,
+        DWORD *cookie)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    FIXME("(%p)->(%p): stub\n", This, cookie);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ActiveIMMMessagePumpOwner_Resume(IActiveIMMMessagePumpOwner* iface,
+        DWORD cookie)
+{
+    ActiveIMMApp *This = impl_from_IActiveIMMMessagePumpOwner(iface);
+    FIXME("(%p)->(%u): stub\n", This, cookie);
+    return E_NOTIMPL;
+}
+
+static const IActiveIMMMessagePumpOwnerVtbl ActiveIMMMessagePumpOwnerVtbl =
+{
+    ActiveIMMMessagePumpOwner_QueryInterface,
+    ActiveIMMMessagePumpOwner_AddRef,
+    ActiveIMMMessagePumpOwner_Release,
+    ActiveIMMMessagePumpOwner_Start,
+    ActiveIMMMessagePumpOwner_End,
+    ActiveIMMMessagePumpOwner_OnTranslateMessage,
+    ActiveIMMMessagePumpOwner_Pause,
+    ActiveIMMMessagePumpOwner_Resume,
+};
+
 DECLSPEC_HIDDEN HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     ActiveIMMApp *This;
@@ -803,6 +884,7 @@ DECLSPEC_HIDDEN HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown *
         return E_OUTOFMEMORY;
 
     This->IActiveIMMApp_iface.lpVtbl = &ActiveIMMAppVtbl;
+    This->IActiveIMMMessagePumpOwner_iface.lpVtbl = &ActiveIMMMessagePumpOwnerVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n",This);

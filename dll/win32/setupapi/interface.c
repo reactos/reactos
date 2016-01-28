@@ -155,7 +155,7 @@ SETUP_CreateInterfaceList(
             list->HKLM,
             REGSTR_PATH_SYSTEMENUM,
             0, /* Options */
-            0,
+            READ_CONTROL,
             &hEnumKey);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
@@ -586,6 +586,7 @@ SetupDiOpenDeviceInterfaceRegKey(
         Slash = wcsrchr(Path, '\\');
         if (!Guid || !Slash)
         {
+            HeapFree(GetProcessHeap(), 0, Path);
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
         }

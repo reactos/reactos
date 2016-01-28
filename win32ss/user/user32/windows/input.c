@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/input.c
+ * FILE:            win32ss/user/user32/windows/input.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

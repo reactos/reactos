@@ -158,42 +158,12 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         8,
         13,
-        "- ¾¯Ä±¯ÌßÊ 1ÂÉ ÃÞ¨½¸Æ Â· 1Â²¼Þ®³É Ìß×²ÏØ Êß°Ã¨¼®Ý¦ ±Â¶³ºÄ¶Þ ÃÞ·Ï¾Ý¡",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- ¶¸Á®³ Êß°Ã¨¼®Ý¶Þ ºÉ ÃÞ¨½¸¼Þ®³Æ ¿Ý»Þ²½Ù ÊÞ±²¤ ¾¯Ä±¯ÌßÊ",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  Ìß×²ÏØ Êß°Ã¨¼®Ý¦ ÃÞ¨½¸¶× »¸¼Þ® ÃÞ·Ï¾Ý¡",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- ÀÉ ¶¸Á®³ Ø®³²·¶Þ ºÉ ÃÞ¨½¸¼Þ®³Æ ¿Ý»Þ² ¼Ã²Ù ÊÞ±²¤ ¾¯Ä±¯ÌßÊ",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  »²¼®É ¶¸Á®³ Ø®³²·¦ ÃÞ¨½¸¶× »¸¼Þ® ÃÞ·Ï¾Ý¡",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- ¾¯Ä±¯ÌßÊ FAT Ì§²Ù¼½ÃÑ ÉÐ »Îß°Ä ¼Ï½¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Ì§²Ù¼½ÃÑÉ Áª¯¸·É³Ê ÏÀÞ ¼Þ¯¿³ »ÚÃ ²Ï¾Ý¡",
         TEXT_STYLE_NORMAL
     },
@@ -503,6 +473,7 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY jaJPComputerPageEntries[] =
 {
     {
@@ -833,6 +804,12 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  ·¿ÝÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
@@ -840,6 +817,100 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
         0,
         0,
         "µÏÁ ¸ÀÞ»²...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY jaJPConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " ¾¯Ä±¯Ìß ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1364,7 +1435,7 @@ MUI_ERROR jaJPErrorEntries[] =
           "\n"
           "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼ ½ÙÆÊ F3 ·°¦ µ¼Ã ¸ÀÞ»²¡\n"
           "  \x07  ¿Þ¯º³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
-          "F3= Á­³¼  ENTER = ¿Þ¯º³"
+          "F3 = Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1495,8 +1566,16 @@ MUI_ERROR jaJPErrorEntries[] =
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Press any key to continue.",
         NULL
     },
@@ -1514,17 +1593,11 @@ MUI_ERROR jaJPErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1573,6 +1646,10 @@ MUI_PAGE jaJPPages[] =
     {
         SELECT_PARTITION_PAGE,
         jaJPSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        jaJPConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1662,12 +1739,16 @@ MUI_STRING jaJPStrings[] =
     "ºÉ Êß°Ã¨¼®ÝÊ Â·ÞÉ Ã¼Þ­ÝÃÞ Ì«°Ï¯Ä »ÚÏ½¡"},
     {STRING_NONFORMATTEDPART,
     "ReactOS¦ ¼Ý· ÏÀÊ ÐÌ«°Ï¯ÄÉ Êß°Ã¨¼®ÝÆ ²Ý½Ä°Ù½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À¡"},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "¾¯Ä±¯ÌßÊ ReactOS¦ Êß°Ã¨¼®Ý ¼Þ®³Æ ²Ý½Ä°Ù¼Ï½¡"},
     {STRING_CHECKINGPART,
     "¾¯Ä±¯ÌßÊ ¾ÝÀ¸ »ÚÀ Êß°Ã¨¼®Ý¦ ¹Ý» ¼Ã²Ï½¡"},
     {STRING_QUITCONTINUE,
-    "F3= Á­³¼  ENTER = ¿Þ¯º³"},
+    "F3 = Á­³¼  ENTER = ¿Þ¯º³"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"},
     {STRING_TXTSETUPFAILED,
@@ -1725,7 +1806,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %s¼­Ù² %-3u%s                       %6lu %s"},
+    "%c%c %c %s¼­Ù² %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

@@ -55,8 +55,6 @@
 
 #include <rosdhcp.h>
 
-#include <winsvc.h>
-
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)
 #define	bslashchar(c) ((c) == 0x5c)
@@ -108,95 +106,10 @@ int              check_arp( struct interface_info *ip, struct client_lease *lp )
 
 time_t	scripttime;
 
-static WCHAR ServiceName[] = L"DHCP";
 
-SERVICE_STATUS_HANDLE ServiceStatusHandle = 0;
-SERVICE_STATUS ServiceStatus;
-
-
-/* XXX Implement me */
-int check_arp( struct interface_info *ip, struct client_lease *lp ) {
-    return 1;
-}
-
-
-static VOID
-UpdateServiceStatus(DWORD dwState)
+int
+init_client(void)
 {
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-    ServiceStatus.dwCurrentState = dwState;
-
-    ServiceStatus.dwControlsAccepted = 0;
-
-    ServiceStatus.dwWin32ExitCode = 0;
-    ServiceStatus.dwServiceSpecificExitCode = 0;
-    ServiceStatus.dwCheckPoint = 0;
-
-    if (dwState == SERVICE_START_PENDING ||
-        dwState == SERVICE_STOP_PENDING ||
-        dwState == SERVICE_PAUSE_PENDING ||
-        dwState == SERVICE_CONTINUE_PENDING)
-        ServiceStatus.dwWaitHint = 10000;
-    else
-        ServiceStatus.dwWaitHint = 0;
-
-    SetServiceStatus(ServiceStatusHandle,
-                     &ServiceStatus);
-}
-
-
-static DWORD WINAPI
-ServiceControlHandler(DWORD dwControl,
-                      DWORD dwEventType,
-                      LPVOID lpEventData,
-                      LPVOID lpContext)
-{
-    switch (dwControl)
-    {
-        case SERVICE_CONTROL_STOP:
-            UpdateServiceStatus(SERVICE_STOP_PENDING);
-            UpdateServiceStatus(SERVICE_STOPPED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_PAUSE:
-            UpdateServiceStatus(SERVICE_PAUSED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_CONTINUE:
-            UpdateServiceStatus(SERVICE_START_PENDING);
-            UpdateServiceStatus(SERVICE_RUNNING);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_INTERROGATE:
-            SetServiceStatus(ServiceStatusHandle,
-                             &ServiceStatus);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_SHUTDOWN:
-            UpdateServiceStatus(SERVICE_STOP_PENDING);
-            UpdateServiceStatus(SERVICE_STOPPED);
-            return ERROR_SUCCESS;
-
-        default :
-            return ERROR_CALL_NOT_IMPLEMENTED;
-    }
-}
-
-
-VOID NTAPI
-ServiceMain(DWORD argc, LPWSTR *argv)
-{
-    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
-                                                        ServiceControlHandler,
-                                                        NULL);
-    if (!ServiceStatusHandle)
-    {
-        DbgPrint("DHCPCSVC: Unable to register service control handler (%lx)\n", GetLastError());
-        return;
-    }
-
-    UpdateServiceStatus(SERVICE_START_PENDING);
-
     ApiInit();
     AdapterInit();
 
@@ -214,26 +127,23 @@ ServiceMain(DWORD argc, LPWSTR *argv)
         DbgPrint("DHCPCSVC: PipeInit() failed!\n");
         AdapterStop();
         ApiFree();
-        UpdateServiceStatus(SERVICE_STOPPED);
+        return 0; // FALSE
     }
 
-    DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
+    return 1; // TRUE
+}
 
-    UpdateServiceStatus(SERVICE_RUNNING);
-
-    DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
-
-    DH_DbgPrint(MID_TRACE, ("DHCPCSVC: DHCP service is starting up\n"));
-
-    dispatch();
-
-    DbgPrint("DHCPCSVC: DHCP service is shutting down\n");
-
-    //AdapterStop();
-    //ApiFree();
+void
+stop_client(void)
+{
+    // AdapterStop();
+    // ApiFree();
     /* FIXME: Close pipe and kill pipe thread */
+}
 
-    UpdateServiceStatus(SERVICE_STOPPED);
+/* XXX Implement me */
+int check_arp( struct interface_info *ip, struct client_lease *lp ) {
+    return 1;
 }
 
 /*

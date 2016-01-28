@@ -61,11 +61,11 @@ __RtlImageRvaToSection(
     while (Count--)
     {
         Va = SWAPD(Section->VirtualAddress);
-        if ((Va <= Rva) &&
-                (Rva < Va + SWAPD(Section->Misc.VirtualSize)))
+        if ((Va <= Rva) && (Rva < Va + SWAPD(Section->SizeOfRawData)))
             return Section;
         Section++;
     }
+
     return NULL;
 }
 
@@ -83,9 +83,9 @@ __RtlImageRvaToVa
 
     if ((Section == NULL) ||
         (Rva < SWAPD(Section->VirtualAddress)) ||
-        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize)))
+        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData)))
     {
-        Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
+        Section = RtlImageRvaToSection(NtHeader, BaseAddress, Rva);
         if (Section == NULL)
             return NULL;
 
@@ -93,9 +93,8 @@ __RtlImageRvaToVa
             *SectionHeader = Section;
     }
 
-    return (PVOID)((ULONG_PTR)BaseAddress +
-                   Rva +
-                   SWAPD(Section->PointerToRawData) -
+    return (PVOID)((ULONG_PTR)BaseAddress + Rva +
+                   (ULONG_PTR)SWAPD(Section->PointerToRawData) -
                    (ULONG_PTR)SWAPD(Section->VirtualAddress));
 }
 
@@ -132,7 +131,7 @@ __RtlImageDirectoryEntryToData(
     if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
         return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
-    /* image mapped as ordinary file, we must find raw pointer */
+    /* Image mapped as ordinary file, we must find raw pointer */
     return RtlImageRvaToVa(NtHeader, BaseAddress, Va, NULL);
 }
 

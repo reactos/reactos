@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:	See COPYING in the top level directory
  * PROJECT:	ReactOS logoff utility
- * FILE:		base\applications\logoff\logoff.c
+ * FILE:		base/applications/logoff/logoff.c
  * PURPOSE:	Logoff current session, or another session, potentially on another machine
  * AUTHOR:	30.07.2007 - Frode Lillerud
  */
@@ -30,6 +30,7 @@ static void PrintUsage() {
 
 	if (AllocAndLoadString(&lpUsage, GetModuleHandle(NULL), IDS_USAGE)) {
 		_putts(lpUsage);
+		LocalFree(lpUsage);
 	}
 
 }
@@ -88,8 +89,10 @@ BOOL ParseCommandLine(int argc, TCHAR *argv[])
 			}
 		default:
 			//Invalid parameter detected
-			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM))
-			_putts(lpIllegalMsg);
+			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM)) {
+				_putts(lpIllegalMsg);
+				LocalFree(lpIllegalMsg);
+			}
 			return FALSE;
 		}
 	}

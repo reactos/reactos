@@ -179,11 +179,11 @@ HRESULT CBaseBar::ReserveBorderSpace()
     RECT                                    neededBorderSpace;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&dockingWindowSite));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = dockingWindowSite->GetBorderDW(static_cast<IDeskBar *>(this), &availableBorderSpace);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     memset(&neededBorderSpace, 0, sizeof(neededBorderSpace));
     if (fVisible)
@@ -194,7 +194,7 @@ HRESULT CBaseBar::ReserveBorderSpace()
             neededBorderSpace.bottom = fNeededSize + GetSystemMetrics(SM_CXFRAME);
     }
     hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDeskBar *>(this), &neededBorderSpace);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
 }
@@ -272,8 +272,8 @@ HRESULT STDMETHODCALLTYPE CBaseBar::QueryService(REFGUID guidService, REFIID rii
 
     if (fSite == NULL)
         return E_FAIL;
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
     // called for SID_IWebBrowserApp, IID_IConnectionPointContainer
@@ -296,7 +296,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::HasFocusIO()
 HRESULT STDMETHODCALLTYPE CBaseBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     // forward to contained bar
-    return S_OK;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
@@ -309,14 +309,14 @@ HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
         fClient.Release();
     else
     {
-        hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&fClient));
-        if (FAILED(hResult))
+        hResult = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &fClient));
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = fSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-        if (FAILED(hResult))
+        hResult = fSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         Create(ownerWindow, 0, NULL,
             WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
@@ -430,21 +430,6 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Save(IPropertyBag *pPropBag, BOOL fClearDirt
 
 LRESULT CBaseBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-/*    CComPtr<IOleWindow>                       oleWindow;
-    RECT                                    clientRect;
-    HRESULT                                 hResult;
-
-    if (fClientWindow == NULL && fClient.p != NULL)
-    {
-        hResult = fClient->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
-        hResult = oleWindow->GetWindow(&fClientWindow);
-    }
-    if (fClientWindow != NULL)
-    {
-        GetClientRect(&clientRect);
-        ::SetWindowPos(fClientWindow, NULL, clientRect.left, clientRect.top, clientRect.right - clientRect.left - GetSystemMetrics(SM_CXFRAME),
-                    clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
-    }*/
     return 0;
 }
 
@@ -471,7 +456,7 @@ LRESULT CBaseBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     result = 0;
     if (fClient.p != NULL)
     {
-        hResult = fClient->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+        hResult = fClient->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
         if (SUCCEEDED(hResult) && winEventHandler.p != NULL)
             hResult = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
     }
@@ -529,20 +514,5 @@ LRESULT CBaseBar::OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 HRESULT CreateBaseBar(REFIID riid, void **ppv)
 {
-    CComObject<CBaseBar>                    *theBaseBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theBaseBar = new CComObject<CBaseBar>);
-    if (theBaseBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theBaseBar->QueryInterface (riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theBaseBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBaseBar>(riid, ppv);
 }

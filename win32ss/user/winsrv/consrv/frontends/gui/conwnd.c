@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            frontends/gui/conwnd.c
+ * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
  * PURPOSE:         GUI Console Window Class
  * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald
@@ -212,7 +212,7 @@ AppendMenuItems(HMENU hMenu,
             if (LoadStringW(ConSrvDllInstance,
                             Items[i].uID,
                             szMenuString,
-                            sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+                            ARRAYSIZE(szMenuString)) > 0)
             {
                 if (Items[i].SubMenu != NULL)
                 {
@@ -261,7 +261,7 @@ CreateSysMenu(HWND hWnd)
     if (hMenu != NULL)
     {
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STRING;   
+        mii.fMask = MIIM_STRING;
         mii.dwTypeData = szMenuStringBack;
         mii.cch = sizeof(szMenuStringBack)/sizeof(WCHAR);
 
@@ -286,10 +286,11 @@ SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
-    DPRINT1("Menu item ID: %d\n", CmdId);
+    DPRINT("Menu item ID: %d\n", CmdId);
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
+    /* Send a menu event */
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
     ConioProcessInputEvent(Console, &er);
@@ -491,7 +492,7 @@ VOID
 DeleteFonts(PGUI_CONSOLE_DATA GuiData)
 {
     ULONG i;
-    for (i = 0; i < sizeof(GuiData->Font) / sizeof(GuiData->Font[0]); ++i)
+    for (i = 0; i < ARRAYSIZE(GuiData->Font); ++i)
     {
         if (GuiData->Font[i] != NULL) DeleteObject(GuiData->Font[i]);
         GuiData->Font[i] = NULL;
@@ -627,9 +628,8 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      */
     if (FaceName != GuiData->GuiInfo.FaceName)
     {
-        SIZE_T Length = min(wcslen(FaceName) + 1, LF_FACESIZE); // wcsnlen
         wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
-        GuiData->GuiInfo.FaceName[Length] = L'\0'; // NULL-terminate
+        GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
     }
     GuiData->GuiInfo.FontFamily = FontFamily;
     GuiData->GuiInfo.FontSize   = FontSize;
@@ -664,7 +664,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     {
         DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
         GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
+        NtSetEvent(GuiData->hGuiInitEvent, NULL);
         return FALSE;
     }
 
@@ -687,12 +687,16 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
-    SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    if (GuiData->IsWindowVisible)
+    {
+        SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    }
+
     // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
     //CreateSysMenu(GuiData->hWindow);
 
     DPRINT("OnNcCreate - setting start event\n");
-    SetEvent(GuiData->hGuiInitEvent);
+    NtSetEvent(GuiData->hGuiInitEvent, NULL);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
@@ -712,7 +716,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
     WORD ActivationState = LOWORD(wParam);
 
-    DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
+    DPRINT("WM_ACTIVATE - ActivationState = %d\n", ActivationState);
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
@@ -750,8 +754,18 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     PCONSRV_CONSOLE Console = GuiData->Console;
     INPUT_RECORD er;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
+    /* Set console focus state */
+    Console->HasFocus = SetFocus;
+
+    /*
+     * Set the priority of the processes of this console
+     * in accordance with the console focus state.
+     */
+    ConSrvSetConsoleProcessFocus(Console, SetFocus);
+
+    /* Send a focus event */
     er.EventType = FOCUS_EVENT;
     er.Event.FocusEvent.bSetFocus = SetFocus;
     ConioProcessInputEvent(Console, &er);
@@ -759,9 +773,9 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     LeaveCriticalSection(&Console->Lock);
 
     if (SetFocus)
-        DPRINT1("TODO: Create console caret\n");
+        DPRINT("TODO: Create console caret\n");
     else
-        DPRINT1("TODO: Destroy console caret\n");
+        DPRINT("TODO: Destroy console caret\n");
 }
 
 static VOID
@@ -1004,7 +1018,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
                 wcscat(WindowTitle, L" - ");
                 wcscat(WindowTitle, Console->Title.Buffer);
 
-                SetWindowText(GuiData->hWindow, WindowTitle);
+                SetWindowTextW(GuiData->hWindow, WindowTitle);
                 ConsoleFreeHeap(WindowTitle);
             }
 
@@ -1024,7 +1038,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
         ConioUnpause(Console, PAUSED_FROM_SELECTION);
 
         /* Restore the console title */
-        SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+        SetWindowTextW(GuiData->hWindow, Console->Title.Buffer);
     }
 
     DeleteObject(oldRgn);
@@ -1048,6 +1062,9 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PAINTSTRUCT ps;
     RECT rcPaint;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
 
     BeginPaint(GuiData->hWindow, &ps);
     if (ps.hdc != NULL &&
@@ -1097,6 +1114,9 @@ OnPaletteChanged(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     // See WM_PALETTECHANGED message
     // if ((HWND)wParam == hWnd) break;
 
@@ -1142,7 +1162,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     ActiveBuffer = GuiData->ActiveBuffer;
 
@@ -1307,9 +1327,12 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     Buff = GuiData->ActiveBuffer;
 
@@ -1411,7 +1434,7 @@ OnClose(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSRV_CONSOLE Console = GuiData->Console;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
         return TRUE;
 
     // TODO: Prompt for termination ? (Warn the user about possible apps running in this console)
@@ -1432,7 +1455,11 @@ OnNcDestroy(HWND hWnd)
 {
     PGUI_CONSOLE_DATA GuiData = GuiGetGuiData(hWnd);
 
-    KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    if (GuiData->IsWindowVisible)
+    {
+        KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    }
+
     GetSystemMenu(hWnd, TRUE);
 
     if (GuiData)
@@ -1482,19 +1509,35 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     BOOL Err = FALSE;
     PCONSRV_CONSOLE Console = GuiData->Console;
 
-    // FIXME: It's here that we need to check whether we has focus or not
-    // and whether we are in edit mode or not, to know if we need to deal
-    // with the mouse, or not.
+    /*
+     * HACK FOR CORE-8394 (Part 2):
+     *
+     * Check whether we should ignore the next mouse move event.
+     * In either case we reset the HACK flag.
+     *
+     * See Part 1 of this hack below.
+     */
+    if (GuiData->HackCORE8394IgnoreNextMove && msg == WM_MOUSEMOVE)
+    {
+        GuiData->HackCORE8394IgnoreNextMove = FALSE;
+        goto Quit;
+    }
+    GuiData->HackCORE8394IgnoreNextMove = FALSE;
+
+    // FIXME: It's here that we need to check whether we have focus or not
+    // and whether we are or not in edit mode, in order to know if we need
+    // to deal with the mouse.
 
     if (GuiData->IgnoreNextMouseSignal)
     {
         if (msg != WM_LBUTTONDOWN &&
             msg != WM_MBUTTONDOWN &&
-            msg != WM_RBUTTONDOWN)
+            msg != WM_RBUTTONDOWN &&
+            msg != WM_XBUTTONDOWN)
         {
             /*
              * If this mouse signal is not a button-down action
-             * then it is the last signal being ignored.
+             * then this is the last one being ignored.
              */
             GuiData->IgnoreNextMouseSignal = FALSE;
         }
@@ -1509,7 +1552,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         goto Quit;
     }
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
     {
         Err = TRUE;
         goto Quit;
@@ -1656,6 +1699,26 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwEventFlags  = 0;
                 break;
 
+            case WM_XBUTTONDOWN:
+            {
+                /* Get which X-button was pressed */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    Err = TRUE;
+                    break;
+                }
+
+                SetCapture(GuiData->hWindow);
+                dwButtonState = (wButton == XBUTTON1 ? FROM_LEFT_3RD_BUTTON_PRESSED
+                                                     : FROM_LEFT_4TH_BUTTON_PRESSED);
+                dwEventFlags  = 0;
+                break;
+            }
+
             case WM_LBUTTONUP:
                 ReleaseCapture();
                 dwButtonState = 0;
@@ -1674,6 +1737,24 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwEventFlags  = 0;
                 break;
 
+            case WM_XBUTTONUP:
+            {
+                /* Get which X-button was released */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    /* Ok, just release the button anyway... */
+                }
+
+                ReleaseCapture();
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+            }
+
             case WM_LBUTTONDBLCLK:
                 dwButtonState = FROM_LEFT_1ST_BUTTON_PRESSED;
                 dwEventFlags  = DOUBLE_CLICK;
@@ -1688,6 +1769,25 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwButtonState = RIGHTMOST_BUTTON_PRESSED;
                 dwEventFlags  = DOUBLE_CLICK;
                 break;
+
+            case WM_XBUTTONDBLCLK:
+            {
+                /* Get which X-button was double-clicked */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    Err = TRUE;
+                    break;
+                }
+
+                dwButtonState = (wButton == XBUTTON1 ? FROM_LEFT_3RD_BUTTON_PRESSED
+                                                     : FROM_LEFT_4TH_BUTTON_PRESSED);
+                dwEventFlags  = DOUBLE_CLICK;
+                break;
+            }
 
             case WM_MOUSEMOVE:
                 dwButtonState = 0;
@@ -1710,15 +1810,25 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         /*
-         * HACK FOR CORE-8394: Ignore the next mouse move signal
-         * just after mouse down click actions.
+         * HACK FOR CORE-8394 (Part 1):
+         *
+         * It appears that depending on which VM ReactOS runs, the next mouse
+         * signal coming after a button-down action can be a mouse-move (e.g.
+         * on VBox, whereas on QEMU it is not the case). However it is NOT a
+         * rule, so that we cannot use the IgnoreNextMouseSignal flag to just
+         * "ignore" the next mouse event, thinking it would always be a mouse-
+         * move signal.
+         *
+         * To work around this problem (that should really be fixed in Win32k),
+         * we use a second flag to ignore this possible next mouse move signal.
          */
         switch (msg)
         {
             case WM_LBUTTONDOWN:
             case WM_MBUTTONDOWN:
             case WM_RBUTTONDOWN:
-                GuiData->IgnoreNextMouseSignal = TRUE;
+            case WM_XBUTTONDOWN:
+                GuiData->HackCORE8394IgnoreNextMove = TRUE;
             default:
                 break;
         }
@@ -1731,6 +1841,10 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwButtonState |= FROM_LEFT_2ND_BUTTON_PRESSED;
             if (wKeyState & MK_RBUTTON)
                 dwButtonState |= RIGHTMOST_BUTTON_PRESSED;
+            if (wKeyState & MK_XBUTTON1)
+                dwButtonState |= FROM_LEFT_3RD_BUTTON_PRESSED;
+            if (wKeyState & MK_XBUTTON2)
+                dwButtonState |= FROM_LEFT_4TH_BUTTON_PRESSED;
 
             if (GetKeyState(VK_RMENU) & 0x8000)
                 dwControlKeyState |= RIGHT_ALT_PRESSED;
@@ -1752,6 +1866,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (lParam & 0x01000000)
                 dwControlKeyState |= ENHANCED_KEY;
 
+            /* Send a mouse event */
             er.EventType = MOUSE_EVENT;
             er.Event.MouseEvent.dwMousePosition   = PointToCoord(GuiData, lParam);
             er.Event.MouseEvent.dwButtonState     = dwButtonState;
@@ -1785,7 +1900,7 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Copy(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
@@ -1815,7 +1930,7 @@ GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
@@ -1840,7 +1955,7 @@ OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
     DWORD windx, windy;
     UINT  WidthUnit, HeightUnit;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     ActiveBuffer = GuiData->ActiveBuffer;
 
@@ -1869,7 +1984,10 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     PCONSRV_CONSOLE Console = GuiData->Console;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     if ((GuiData->WindowSizeLock == FALSE) &&
         (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
@@ -1897,8 +2015,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         if ((windy % HeightUnit) >= (HeightUnit / 2)) ++chary;
 
         // Compensate for added scroll bars in new window
-        if (charx < Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
-        if (chary < Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
+        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
+        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
@@ -1910,8 +2028,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         // Resize window
         if ((charx != Buff->ViewSize.X) || (chary != Buff->ViewSize.Y))
         {
-            Buff->ViewSize.X = (charx <= Buff->ScreenBufferSize.X) ? charx : Buff->ScreenBufferSize.X;
-            Buff->ViewSize.Y = (chary <= Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
+            Buff->ViewSize.X = (charx <= (DWORD)Buff->ScreenBufferSize.X) ? charx : Buff->ScreenBufferSize.X;
+            Buff->ViewSize.Y = (chary <= (DWORD)Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
         }
 
         ResizeConWnd(GuiData, WidthUnit, HeightUnit);
@@ -1979,7 +2097,7 @@ OnScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
     int old_pos, Maximum;
     PSHORT pShowXY;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return 0;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return 0;
 
     Buff = GuiData->ActiveBuffer;
 
@@ -2192,6 +2310,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SETCURSOR:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) goto Default;
+
             /*
              * The message was sent because we are manually triggering a change.
              * Check whether the mouse is indeed present on this console window
@@ -2241,12 +2362,15 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
+        case WM_XBUTTONDOWN:
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
+        case WM_XBUTTONUP:
         case WM_LBUTTONDBLCLK:
         case WM_MBUTTONDBLCLK:
         case WM_RBUTTONDBLCLK:
+        case WM_XBUTTONDBLCLK:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
@@ -2264,6 +2388,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CONTEXTMENU:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
+
             if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
             {
                 HMENU hMenu = CreatePopupMenu();
@@ -2392,6 +2519,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             DWORD Width, Height;
             UINT  WidthUnit, HeightUnit;
 
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
+
             GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 
             Width  = Buff->ScreenBufferSize.X * WidthUnit ;
@@ -2415,12 +2545,6 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case PM_APPLY_CONSOLE_INFO:
-        {
-            GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
-            break;
-        }
-
         /*
          * Undocumented message sent by Windows' console.dll for applying console info.
          * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
@@ -2429,8 +2553,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
          */
         case WM_SETCONSOLEINFO:
         {
-            DPRINT1("WM_SETCONSOLEINFO message\n");
-            GuiApplyWindowsConsoleSettings(GuiData, (HANDLE)wParam);
+            GuiApplyUserSettings(GuiData, (HANDLE)wParam);
             break;
         }
 
@@ -2440,7 +2563,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         // case PM_CONSOLE_SET_TITLE:
-            // SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
+            // SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
             // break;
 
         default: Default:

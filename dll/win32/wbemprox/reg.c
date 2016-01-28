@@ -41,6 +41,12 @@ static HRESULT to_bstr_array( BSTR *strings, DWORD count, VARIANT *var )
     return S_OK;
 }
 
+static void free_bstr_array( BSTR *strings, DWORD count )
+{
+    while (count--)
+        SysFreeString( *(strings++) );
+}
+
 static HRESULT to_i4_array( DWORD *values, DWORD count, VARIANT *var )
 {
     SAFEARRAY *sa;
@@ -104,7 +110,11 @@ static HRESULT enum_key( HKEY root, const WCHAR *subkey, VARIANT *names, VARIANT
         }
         i++;
     }
-    if (hr == S_OK && !res) hr = to_bstr_array( strings, i, names );
+    if (hr == S_OK && !res)
+    {
+        hr = to_bstr_array( strings, i, names );
+        free_bstr_array( strings, i );
+    }
     set_variant( VT_UI4, res, NULL, retval );
     RegCloseKey( hkey );
     heap_free( strings );
@@ -114,7 +124,7 @@ static HRESULT enum_key( HKEY root, const WCHAR *subkey, VARIANT *names, VARIANT
 HRESULT reg_enum_key( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT defkey, subkey, names, retval;
-    IWbemClassObject *sig;
+    IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
     TRACE("%p, %p\n", in, out);
@@ -130,28 +140,39 @@ HRESULT reg_enum_key( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObj
         VariantClear( &subkey );
         return hr;
     }
-    hr = IWbemClassObject_SpawnInstance( sig, 0, out );
-    if (hr != S_OK)
+    if (out)
     {
-        VariantClear( &subkey );
-        IWbemClassObject_Release( sig );
-        return hr;
+        hr = IWbemClassObject_SpawnInstance( sig, 0, &out_params );
+        if (hr != S_OK)
+        {
+            VariantClear( &subkey );
+            IWbemClassObject_Release( sig );
+            return hr;
+        }
     }
     VariantInit( &names );
     hr = enum_key( (HKEY)(INT_PTR)V_I4(&defkey), V_BSTR(&subkey), &names, &retval );
     if (hr != S_OK) goto done;
-    if (!V_UI4( &retval ))
+    if (out_params)
     {
-        hr = IWbemClassObject_Put( *out, param_namesW, 0, &names, CIM_STRING|CIM_FLAG_ARRAY );
-        if (hr != S_OK) goto done;
+        if (!V_UI4( &retval ))
+        {
+            hr = IWbemClassObject_Put( out_params, param_namesW, 0, &names, CIM_STRING|CIM_FLAG_ARRAY );
+            if (hr != S_OK) goto done;
+        }
+        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
     }
-    hr = IWbemClassObject_Put( *out, param_returnvalueW, 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &names );
     VariantClear( &subkey );
     IWbemClassObject_Release( sig );
-    if (hr != S_OK) IWbemClassObject_Release( *out );
+    if (hr == S_OK && out)
+    {
+        *out = out_params;
+        IWbemClassObject_AddRef( out_params );
+    }
+    if (out_params) IWbemClassObject_Release( out_params );
     return hr;
 }
 
@@ -197,6 +218,7 @@ static HRESULT enum_values( HKEY root, const WCHAR *subkey, VARIANT *names, VARI
     if (hr == S_OK && !res)
     {
         hr = to_bstr_array( value_names, i, names );
+        free_bstr_array( value_names, i );
         if (hr == S_OK) hr = to_i4_array( value_types, i, types );
     }
 
@@ -212,7 +234,7 @@ done:
 HRESULT reg_enum_values( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT defkey, subkey, names, types, retval;
-    IWbemClassObject *sig;
+    IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
     TRACE("%p, %p\n", in, out);
@@ -228,32 +250,43 @@ HRESULT reg_enum_values( IWbemClassObject *obj, IWbemClassObject *in, IWbemClass
         VariantClear( &subkey );
         return hr;
     }
-    hr = IWbemClassObject_SpawnInstance( sig, 0, out );
-    if (hr != S_OK)
+    if (out)
     {
-        VariantClear( &subkey );
-        IWbemClassObject_Release( sig );
-        return hr;
+        hr = IWbemClassObject_SpawnInstance( sig, 0, &out_params );
+        if (hr != S_OK)
+        {
+            VariantClear( &subkey );
+            IWbemClassObject_Release( sig );
+            return hr;
+        }
     }
     VariantInit( &names );
     VariantInit( &types );
     hr = enum_values( (HKEY)(INT_PTR)V_I4(&defkey), V_BSTR(&subkey), &names, &types, &retval );
     if (hr != S_OK) goto done;
-    if (!V_UI4( &retval ))
+    if (out_params)
     {
-        hr = IWbemClassObject_Put( *out, param_namesW, 0, &names, CIM_STRING|CIM_FLAG_ARRAY );
-        if (hr != S_OK) goto done;
-        hr = IWbemClassObject_Put( *out, param_typesW, 0, &types, CIM_SINT32|CIM_FLAG_ARRAY );
-        if (hr != S_OK) goto done;
+        if (!V_UI4( &retval ))
+        {
+            hr = IWbemClassObject_Put( out_params, param_namesW, 0, &names, CIM_STRING|CIM_FLAG_ARRAY );
+            if (hr != S_OK) goto done;
+            hr = IWbemClassObject_Put( out_params, param_typesW, 0, &types, CIM_SINT32|CIM_FLAG_ARRAY );
+            if (hr != S_OK) goto done;
+        }
+        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
     }
-    hr = IWbemClassObject_Put( *out, param_returnvalueW, 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &types );
     VariantClear( &names );
     VariantClear( &subkey );
     IWbemClassObject_Release( sig );
-    if (hr != S_OK) IWbemClassObject_Release( *out );
+    if (hr == S_OK && out)
+    {
+        *out = out_params;
+        IWbemClassObject_AddRef( out_params );
+    }
+    if (out_params) IWbemClassObject_Release( out_params );
     return hr;
 }
 
@@ -284,7 +317,7 @@ done:
 HRESULT reg_get_stringvalue( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT defkey, subkey, name, value, retval;
-    IWbemClassObject *sig;
+    IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
     TRACE("%p, %p\n", in, out);
@@ -303,28 +336,39 @@ HRESULT reg_get_stringvalue( IWbemClassObject *obj, IWbemClassObject *in, IWbemC
         VariantClear( &subkey );
         return hr;
     }
-    hr = IWbemClassObject_SpawnInstance( sig, 0, out );
-    if (hr != S_OK)
+    if (out)
     {
-        VariantClear( &name );
-        VariantClear( &subkey );
-        IWbemClassObject_Release( sig );
-        return hr;
+        hr = IWbemClassObject_SpawnInstance( sig, 0, &out_params );
+        if (hr != S_OK)
+        {
+            VariantClear( &name );
+            VariantClear( &subkey );
+            IWbemClassObject_Release( sig );
+            return hr;
+        }
     }
     VariantInit( &value );
     hr = get_stringvalue( (HKEY)(INT_PTR)V_I4(&defkey), V_BSTR(&subkey), V_BSTR(&name), &value, &retval );
     if (hr != S_OK) goto done;
-    if (!V_UI4( &retval ))
+    if (out_params)
     {
-        hr = IWbemClassObject_Put( *out, param_valueW, 0, &value, CIM_STRING );
-        if (hr != S_OK) goto done;
+        if (!V_UI4( &retval ))
+        {
+            hr = IWbemClassObject_Put( out_params, param_valueW, 0, &value, CIM_STRING );
+            if (hr != S_OK) goto done;
+        }
+        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
     }
-    hr = IWbemClassObject_Put( *out, param_returnvalueW, 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &name );
     VariantClear( &subkey );
     IWbemClassObject_Release( sig );
-    if (hr != S_OK) IWbemClassObject_Release( *out );
+    if (hr == S_OK && out)
+    {
+        *out = out_params;
+        IWbemClassObject_AddRef( out_params );
+    }
+    if (out_params) IWbemClassObject_Release( out_params );
     return hr;
 }

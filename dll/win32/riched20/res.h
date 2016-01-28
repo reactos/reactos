@@ -1,5 +1,5 @@
 /*
- * Top level resource file for MOUSE driver dll
+ * Top level resource file for rich edit control
  *
  * Copyright 2007 Maarten Lankhorst for CodeWeavers
  *

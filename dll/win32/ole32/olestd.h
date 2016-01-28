@@ -19,10 +19,6 @@
 #if !defined( __WINE_OLESTD_H_ )
 #define __WINE_OLESTD_H_
 
-#if !defined(__cplusplus) && !defined( __TURBOC__)
-#define NONAMELESSUNION     /* use strict ANSI standard (for DVOBJ.H) */
-#endif
-
 /* Clipboard format strings */
 #define CF_EMBEDSOURCE      "Embed Source"
 #define CF_EMBEDDEDOBJECT   "Embedded Object"

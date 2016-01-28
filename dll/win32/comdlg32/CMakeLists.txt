@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

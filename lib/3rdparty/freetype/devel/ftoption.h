@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,9 +38,9 @@ FT_BEGIN_HEADER
   /*    library from a single source directory.                            */
   /*                                                                       */
   /*  - You can put a copy of this file in your build directory, more      */
-  /*    precisely in `$BUILD/config/ftoption.h', where `$BUILD' is the     */
-  /*    name of a directory that is included _before_ the FreeType include */
-  /*    path during compilation.                                           */
+  /*    precisely in `$BUILD/freetype/config/ftoption.h', where `$BUILD'   */
+  /*    is the name of a directory that is included _before_ the FreeType  */
+  /*    include path during compilation.                                   */
   /*                                                                       */
   /*    The default FreeType Makefiles and Jamfiles use the build          */
   /*    directory `builds/<system>' by default, but you can easily change  */
@@ -51,7 +51,7 @@ FT_BEGIN_HEADER
   /*    locate this file during the build.  For example,                   */
   /*                                                                       */
   /*      #define FT_CONFIG_OPTIONS_H  <myftoptions.h>                     */
-  /*      #include <config/ftheader.h>                                     */
+  /*      #include <freetype/config/ftheader.h>                            */
   /*                                                                       */
   /*    will use `$BUILD/myftoptions.h' instead of this file for macro     */
   /*    definitions.                                                       */
@@ -59,9 +59,9 @@ FT_BEGIN_HEADER
   /*    Note also that you can similarly pre-define the macro              */
   /*    FT_CONFIG_MODULES_H used to locate the file listing of the modules */
   /*    that are statically linked to the library at compile time.  By     */
-  /*    default, this file is <config/ftmodule.h>.                         */
+  /*    default, this file is <freetype/config/ftmodule.h>.                */
   /*                                                                       */
-  /*  We highly recommend using the third method whenever possible.        */
+  /* We highly recommend using the third method whenever possible.         */
   /*                                                                       */
   /*************************************************************************/
 
@@ -205,7 +205,18 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*  PNG bitmap support.                                                  */
+  /* Define to disable the use of file stream functions and types, FILE,   */
+  /* fopen() etc.  Enables the use of smaller system libraries on embedded */
+  /* systems that have multiple system libraries, some with or without     */
+  /* file stream support, in the cases where file stream support is not    */
+  /* necessary such as memory loading of font files.                       */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* PNG bitmap support.                                                   */
   /*                                                                       */
   /*   FreeType now handles loading color bitmap glyphs in the PNG format. */
   /*   This requires help from the external libpng library.  Uncompressed  */
@@ -219,7 +230,7 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*  HarfBuzz support.                                                    */
+  /* HarfBuzz support.                                                     */
   /*                                                                       */
   /*   FreeType uses the HarfBuzz library to improve auto-hinting of       */
   /*   OpenType fonts.  If available, many glyphs not directly addressable */
@@ -228,17 +239,6 @@ FT_BEGIN_HEADER
   /*   Define this macro if you want to enable this `feature'.             */
   /*                                                                       */
 #define FT_CONFIG_OPTION_USE_HARFBUZZ
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Define to disable the use of file stream functions and types, FILE,   */
-  /* fopen() etc.  Enables the use of smaller system libraries on embedded */
-  /* systems that have multiple system libraries, some with or without     */
-  /* file stream support, in the cases where file stream support is not    */
-  /* necessary such as memory loading of font files.                       */
-  /*                                                                       */
-/* #define FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
 
 
   /*************************************************************************/
@@ -378,10 +378,6 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4KByte if you use FreeType to rasterize     */
-  /* glyphs; otherwise, you may set it to zero to avoid unnecessary        */
-  /* allocation of the render pool.                                        */
-  /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
 
@@ -435,6 +431,8 @@ FT_BEGIN_HEADER
   /*     af_glyph_hints_dump_points                                        */
   /*     af_glyph_hints_dump_segments                                      */
   /*     af_glyph_hints_dump_edges                                         */
+  /*     af_glyph_hints_get_num_segments                                   */
+  /*     af_glyph_hints_get_segment_offset                                 */
   /*                                                                       */
   /*   As an argument, they use another global variable:                   */
   /*                                                                       */
@@ -659,19 +657,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define TT_CONFIG_OPTION_INTERPRETER_SWITCH to compile the TrueType    */
-  /* bytecode interpreter with a huge switch statement, rather than a call */
-  /* table.  This results in smaller and faster code for a number of       */
-  /* architectures.                                                        */
-  /*                                                                       */
-  /* Note however that on some compiler/processor combinations, undefining */
-  /* this macro will generate faster, though larger, code.                 */
-  /*                                                                       */
-#define TT_CONFIG_OPTION_INTERPRETER_SWITCH
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Define TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED to compile the        */
   /* TrueType glyph loader to use Apple's definition of how to handle      */
   /* component offsets in composite glyphs.                                */
@@ -684,7 +669,7 @@ FT_BEGIN_HEADER
   /* fonts will not have them.                                             */
   /*                                                                       */
   /*   http://www.microsoft.com/typography/otspec/glyf.htm                 */
-  /*   http://fonts.apple.com/TTRefMan/RM06/Chap6glyf.html                 */
+  /*   https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html */
   /*                                                                       */
 #undef TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED
 
@@ -705,6 +690,24 @@ FT_BEGIN_HEADER
   /* an embedded `BDF ' table within SFNT-based bitmap formats.            */
   /*                                                                       */
 #define TT_CONFIG_OPTION_BDF
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Option TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES controls the maximum     */
+  /* number of bytecode instructions executed for a single run of the      */
+  /* bytecode interpreter, needed to prevent infinite loops.  You don't    */
+  /* want to change this except for very special situations (e.g., making  */
+  /* a library fuzzer spend less time to handle broken fonts).             */
+  /*                                                                       */
+  /* It is not expected that this value is ever modified by a configuring  */
+  /* script; instead, it gets surrounded with #ifndef ... #endif so that   */
+  /* the value can be set as a preprocessor option on the compiler's       */
+  /* command line.                                                         */
+  /*                                                                       */
+#ifndef TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES
+#define TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES  1000000L
+#endif
 
 
   /*************************************************************************/
@@ -773,6 +776,30 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Using CFF_CONFIG_OPTION_DARKENING_PARAMETER_{X,Y}{1,2,3,4} it is      */
+  /* possible to set up the default values of the four control points that */
+  /* define the stem darkening behaviour of the (new) CFF engine.  For     */
+  /* more details please read the documentation of the                     */
+  /* `darkening-parameters' property of the cff driver module (file        */
+  /* `ftcffdrv.h'), which allows the control at run-time.                  */
+  /*                                                                       */
+  /* Do *not* undefine these macros!                                       */
+  /*                                                                       */
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1   500
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1   400
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2  1000
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3  1667
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4  2333
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4     0
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* CFF_CONFIG_OPTION_OLD_ENGINE controls whether the pre-Adobe CFF       */
   /* engine gets compiled into FreeType.  If defined, it is possible to    */
   /* switch between the two engines using the `hinting-engine' property of */
@@ -811,8 +838,10 @@ FT_BEGIN_HEADER
   /* grid.  To find out the optimal scaling and shifting value, various    */
   /* parameter combinations are tried and scored.                          */
   /*                                                                       */
-  /* This experimental option is only active if the render mode is         */
-  /* FT_RENDER_MODE_LIGHT.                                                 */
+  /* This experimental option is active only if the rendering mode is      */
+  /* FT_RENDER_MODE_LIGHT; you can switch warping on and off with the      */
+  /* `warping' property of the auto-hinter (see file `ftautoh.h' for more  */
+  /* information; by default it is switched off).                          */
   /*                                                                       */
 #define AF_CONFIG_OPTION_USE_WARPER
 
@@ -820,8 +849,8 @@ FT_BEGIN_HEADER
 
 
   /*
-   *  This macro is obsolete.  Support has been removed in FreeType
-   *  version 2.5.
+   * This macro is obsolete.  Support has been removed in FreeType
+   * version 2.5.
    */
 /* #define FT_CONFIG_OPTION_OLD_INTERNALS */
 
@@ -835,6 +864,35 @@ FT_BEGIN_HEADER
 #undef   TT_CONFIG_OPTION_UNPATENTED_HINTING
 #elif defined TT_CONFIG_OPTION_UNPATENTED_HINTING
 #define  TT_USE_BYTECODE_INTERPRETER
+#endif
+
+
+  /*
+   * Check CFF darkening parameters.  The checks are the same as in function
+   * `cff_property_set' in file `cffdrivr.c'.
+   */
+#if CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4     || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
+#error "Invalid CFF darkening parameters!"
 #endif
 
 FT_END_HEADER

@@ -27,8 +27,8 @@ NpCancelListeningQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
-    FsRtlExitFileSystem();
     NpReleaseVcb();
+    FsRtlExitFileSystem();
 
     Irp->IoStatus.Status = STATUS_CANCELLED;
     IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);

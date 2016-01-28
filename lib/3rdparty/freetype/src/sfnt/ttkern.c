@@ -5,7 +5,7 @@
 /*    Load the basic TrueType kerning table.  This doesn't handle          */
 /*    kerning data within the GPOS table at the moment.                    */
 /*                                                                         */
-/*  Copyright 1996-2007, 2009, 2010, 2013 by                               */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -99,7 +99,7 @@
       length   = FT_NEXT_USHORT( p );
       coverage = FT_NEXT_USHORT( p );
 
-      if ( length <= 6 )
+      if ( length <= 6 + 8 )
         break;
 
       p_next += length;
@@ -108,8 +108,8 @@
         p_next = p_limit;
 
       /* only use horizontal kerning tables */
-      if ( ( coverage & ~8 ) != 0x0001 ||
-           p + 8 > p_limit             )
+      if ( ( coverage & ~8U ) != 0x0001 ||
+           p + 8 > p_limit              )
         goto NextTable;
 
       num_pairs = FT_NEXT_USHORT( p );

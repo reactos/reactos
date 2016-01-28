@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/utils.c
+ * FILE:            dll/win32/kernel32/client/utils.c
  * PURPOSE:         Utility and Support Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
@@ -351,8 +351,8 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BaseCreateStack(HANDLE hProcess,
-                 SIZE_T StackReserve,
                  SIZE_T StackCommit,
+                 SIZE_T StackReserve,
                  PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
@@ -548,7 +548,7 @@ BaseInitializeContext(IN PCONTEXT Context,
 
         /* Is FPU state required? */
         Context->ContextFlags |= ContextFlags;
-        if (ContextFlags == CONTEXT_FLOATING_POINT)
+        if ((ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
         {
             /* Set an initial state */
             Context->FloatSave.ControlWord = 0x27F;
@@ -606,6 +606,33 @@ BaseInitializeContext(IN PCONTEXT Context,
 
     /* Give it some room for the Parameter */
     Context->Rsp -= sizeof(PVOID);
+#elif defined(_M_ARM)
+    DPRINT("BaseInitializeContext: %p\n", Context);
+
+    // FIXME: check if this is correct!
+    /* Setup the Initial Win32 Thread Context */
+    Context->R0 = (ULONG_PTR)StartAddress;
+    Context->R1 = (ULONG_PTR)Parameter;
+    Context->Sp = (ULONG_PTR)StackAddress;
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Pc = (ULONG_PTR)BaseThreadStartupThunk;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Pc = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Pc = (ULONG_PTR)BaseProcessStartThunk;
+    }
+
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
+
+    /* Give it some room for the Parameter */
+    Context->Sp -= sizeof(PVOID);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;
@@ -907,7 +934,7 @@ BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
                                OUT PHANDLE JobHandle)
 {
     NTSTATUS Status;
-    
+
     /* Validate that there's a name */
     if ((ApplicationName) && *(ApplicationName))
     {

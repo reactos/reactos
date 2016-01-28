@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -327,23 +327,23 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Onaltılık\tİ5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "O&nluk\tİ6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Sekizlik\tİ7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&İkilik\tİ8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "D&erece\tF2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "&Radyan\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "&Gradyan\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "D&erece\tİ2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radyan\tİ3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradyan\tİ4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
     END
@@ -351,7 +351,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -359,24 +359,24 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Onaltılık\tİ5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "O&nluk\tİ6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Sekizlik\tİ7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&İkilik\tİ8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Dö&rtlü Sözcük\tF12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "İ&kili Sözcük\tF2", IDM_VIEW_DWORD, CHECKED
-        MENUITEM "Sö&zcük\tF3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "&Çoklu\tF4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "Dö&rtlü Sözcük\tİ12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "İ&kili Sözcük\tİ2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "Sö&zcük\tİ3", IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Çoklu\tİ4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
     END
@@ -384,7 +384,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -392,13 +392,13 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
@@ -407,7 +407,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
 END
 

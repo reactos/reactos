@@ -116,6 +116,7 @@ PrintAllAssociations()
         return -2;
     }
 
+    extLength++;
     extName = cmd_alloc(extLength * sizeof(TCHAR));
 
     for(keyCtr = 0; keyCtr < numKeys; keyCtr++)

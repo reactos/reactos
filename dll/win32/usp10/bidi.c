@@ -47,6 +47,8 @@
 
 #include "usp10_internal.h"
 
+extern const unsigned short bidi_bracket_table[];
+
 WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
 #define ASSERT(x) do { if (!(x)) FIXME("assert failed: %s\n", #x); } while(0)
@@ -135,10 +137,15 @@ static const char debug_type[][4] =
 
 static inline void dump_types(const char* header, WORD *types, int start, int end)
 {
-    int i;
+    int i, len = 0;
     TRACE("%s:",header);
-    for (i = start; i< end; i++)
+    for (i = start; i < end && len < 200; i++)
+    {
         TRACE(" %s",debug_type[types[i]]);
+        len += strlen(debug_type[types[i]])+1;
+    }
+    if (i != end)
+        TRACE("...");
     TRACE("\n");
 }
 
@@ -454,6 +461,12 @@ typedef struct tagRun
     WORD e;
 } Run;
 
+typedef struct tagRunChar
+{
+    WCHAR ch;
+    WORD *pcls;
+} RunChar;
+
 typedef struct tagIsolatedRun
 {
     struct list entry;
@@ -462,14 +475,14 @@ typedef struct tagIsolatedRun
     WORD eos;
     WORD e;
 
-    WORD *ppcls[1];
+    RunChar item[1];
 } IsolatedRun;
 
 static inline int iso_nextValidChar(IsolatedRun *iso_run, int index)
 {
     if (index >= (iso_run->length-1)) return -1;
     index ++;
-    while (index < iso_run->length && *iso_run->ppcls[index] == BN) index++;
+    while (index < iso_run->length && *iso_run->item[index].pcls == BN) index++;
     if (index == iso_run->length) return -1;
     return index;
 }
@@ -479,23 +492,22 @@ static inline int iso_previousValidChar(IsolatedRun *iso_run, int index)
 
     if (index <= 0) return -1;
     index --;
-    while (index > -1 && *iso_run->ppcls[index] == BN) index--;
+    while (index > -1 && *iso_run->item[index].pcls == BN) index--;
     return index;
-}
-
-static inline int iso_previousChar(IsolatedRun *iso_run, int index)
-{
-    if (index <= 0) return -1;
-    return index --;
 }
 
 static inline void iso_dump_types(const char* header, IsolatedRun *iso_run)
 {
-    int i;
+    int i, len = 0;
     TRACE("%s:",header);
     TRACE("[ ");
-    for (i = 0; i < iso_run->length; i++)
-        TRACE(" %s",debug_type[*iso_run->ppcls[i]]);
+    for (i = 0; i < iso_run->length && len < 200; i++)
+    {
+        TRACE(" %s",debug_type[*iso_run->item[i].pcls]);
+        len += strlen(debug_type[*iso_run->item[i].pcls])+1;
+    }
+    if (i != iso_run->length)
+        TRACE("...");
     TRACE(" ]\n");
 }
 
@@ -522,30 +534,30 @@ static void resolveWeak(IsolatedRun * iso_run)
     /* W1 */
     for (i=0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == NSM)
+        if (*iso_run->item[i].pcls == NSM)
         {
             int j = iso_previousValidChar(iso_run, i);
             if (j == -1)
-                *iso_run->ppcls[i] = iso_run->sos;
-            else if (*iso_run->ppcls[j] >= LRI)
-                *iso_run->ppcls[i] = ON;
+                *iso_run->item[i].pcls = iso_run->sos;
+            else if (*iso_run->item[j].pcls >= LRI)
+                *iso_run->item[i].pcls = ON;
             else
-                *iso_run->ppcls[i] = *iso_run->ppcls[j];
+                *iso_run->item[i].pcls = *iso_run->item[j].pcls;
         }
     }
 
     /* W2 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == EN)
+        if (*iso_run->item[i].pcls == EN)
         {
             int j = iso_previousValidChar(iso_run, i);
             while (j > -1)
             {
-                if (*iso_run->ppcls[j] == R || *iso_run->ppcls[j] == L || *iso_run->ppcls[j] == AL)
+                if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == L || *iso_run->item[j].pcls == AL)
                 {
-                    if (*iso_run->ppcls[j] == AL)
-                        *iso_run->ppcls[i] = AN;
+                    if (*iso_run->item[j].pcls == AL)
+                        *iso_run->item[i].pcls = AN;
                     break;
                 }
                 j = iso_previousValidChar(iso_run, j);
@@ -556,53 +568,53 @@ static void resolveWeak(IsolatedRun * iso_run)
     /* W3 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == AL)
-            *iso_run->ppcls[i] = R;
+        if (*iso_run->item[i].pcls == AL)
+            *iso_run->item[i].pcls = R;
     }
 
     /* W4 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == ES)
+        if (*iso_run->item[i].pcls == ES)
         {
             int b = iso_previousValidChar(iso_run, i);
             int f = iso_nextValidChar(iso_run, i);
 
-            if (b > -1 && f > -1 && *iso_run->ppcls[b] == EN && *iso_run->ppcls[f] == EN)
-                *iso_run->ppcls[i] = EN;
+            if (b > -1 && f > -1 && *iso_run->item[b].pcls == EN && *iso_run->item[f].pcls == EN)
+                *iso_run->item[i].pcls = EN;
         }
-        else if (*iso_run->ppcls[i] == CS)
+        else if (*iso_run->item[i].pcls == CS)
         {
             int b = iso_previousValidChar(iso_run, i);
             int f = iso_nextValidChar(iso_run, i);
 
-            if (b > -1 && f > -1 && *iso_run->ppcls[b] == EN && *iso_run->ppcls[f] == EN)
-                *iso_run->ppcls[i] = EN;
-            else if (b > -1 && f > -1 && *iso_run->ppcls[b] == AN && *iso_run->ppcls[f] == AN)
-                *iso_run->ppcls[i] = AN;
+            if (b > -1 && f > -1 && *iso_run->item[b].pcls == EN && *iso_run->item[f].pcls == EN)
+                *iso_run->item[i].pcls = EN;
+            else if (b > -1 && f > -1 && *iso_run->item[b].pcls == AN && *iso_run->item[f].pcls == AN)
+                *iso_run->item[i].pcls = AN;
         }
     }
 
     /* W5 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == ET)
+        if (*iso_run->item[i].pcls == ET)
         {
             int j;
             for (j = i-1 ; j > -1; j--)
             {
-                if (*iso_run->ppcls[j] == BN) continue;
-                if (*iso_run->ppcls[j] == ET) continue;
-                else if (*iso_run->ppcls[j] == EN) *iso_run->ppcls[i] = EN;
+                if (*iso_run->item[j].pcls == BN) continue;
+                if (*iso_run->item[j].pcls == ET) continue;
+                else if (*iso_run->item[j].pcls == EN) *iso_run->item[i].pcls = EN;
                 else break;
             }
-            if (*iso_run->ppcls[i] == ET)
+            if (*iso_run->item[i].pcls == ET)
             {
                 for (j = i+1; j < iso_run->length; j++)
                 {
-                    if (*iso_run->ppcls[j] == BN) continue;
-                    if (*iso_run->ppcls[j] == ET) continue;
-                    else if (*iso_run->ppcls[j] == EN) *iso_run->ppcls[i] = EN;
+                    if (*iso_run->item[j].pcls == BN) continue;
+                    if (*iso_run->item[j].pcls == ET) continue;
+                    else if (*iso_run->item[j].pcls == EN) *iso_run->item[i].pcls = EN;
                     else break;
                 }
             }
@@ -612,37 +624,117 @@ static void resolveWeak(IsolatedRun * iso_run)
     /* W6 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == ET || *iso_run->ppcls[i] == ES || *iso_run->ppcls[i] == CS || *iso_run->ppcls[i] == ON)
+        if (*iso_run->item[i].pcls == ET || *iso_run->item[i].pcls == ES || *iso_run->item[i].pcls == CS || *iso_run->item[i].pcls == ON)
         {
             int b = i-1;
             int f = i+1;
-            if (b > -1 && *iso_run->ppcls[b] == BN)
-                *iso_run->ppcls[b] = ON;
-            if (f < iso_run->length && *iso_run->ppcls[f] == BN)
-                *iso_run->ppcls[f] = ON;
+            if (b > -1 && *iso_run->item[b].pcls == BN)
+                *iso_run->item[b].pcls = ON;
+            if (f < iso_run->length && *iso_run->item[f].pcls == BN)
+                *iso_run->item[f].pcls = ON;
 
-            *iso_run->ppcls[i] = ON;
+            *iso_run->item[i].pcls = ON;
         }
     }
 
     /* W7 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == EN)
+        if (*iso_run->item[i].pcls == EN)
         {
             int j;
             for (j = iso_previousValidChar(iso_run, i); j > -1; j = iso_previousValidChar(iso_run, j))
-                if (*iso_run->ppcls[j] == R || *iso_run->ppcls[j] == L)
+                if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == L)
                 {
-                    if (*iso_run->ppcls[j] == L)
-                        *iso_run->ppcls[i] = L;
+                    if (*iso_run->item[j].pcls == L)
+                        *iso_run->item[i].pcls = L;
                     break;
                 }
             if (iso_run->sos == L &&  j == -1)
-                *iso_run->ppcls[i] = L;
+                *iso_run->item[i].pcls = L;
         }
     }
 }
+
+typedef struct tagBracketPair
+{
+    int start;
+    int end;
+} BracketPair;
+
+static int compr(const void *a, const void* b)
+{
+    return ((BracketPair*)a)->start - ((BracketPair*)b)->start;
+}
+
+static BracketPair *computeBracketPairs(IsolatedRun *iso_run)
+{
+    WCHAR *open_stack;
+    int *stack_index;
+    int stack_top = iso_run->length;
+    BracketPair *out = NULL;
+    int pair_count = 0;
+    int i;
+
+    open_stack = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * iso_run->length);
+    stack_index = HeapAlloc(GetProcessHeap(), 0, sizeof(int) * iso_run->length);
+
+    for (i = 0; i < iso_run->length; i++)
+    {
+        unsigned short ubv = get_table_entry(bidi_bracket_table, iso_run->item[i].ch);
+        if (ubv)
+        {
+            if (!out)
+            {
+                out = HeapAlloc(GetProcessHeap(),0,sizeof(BracketPair));
+                out[0].start = -1;
+            }
+
+            if ((ubv >> 8) == 0)
+            {
+                stack_top --;
+                open_stack[stack_top] = iso_run->item[i].ch + (signed char)(ubv & 0xff);
+                /* deal with canonical equivalent U+2329/232A and U+3008/3009 */
+                if (open_stack[stack_top] == 0x232A)
+                    open_stack[stack_top] = 0x3009;
+                stack_index[stack_top] = i;
+            }
+            else if ((ubv >> 8) == 1)
+            {
+                int j;
+                if (stack_top == iso_run->length) continue;
+                for (j = stack_top; j < iso_run->length; j++)
+                {
+                    WCHAR c = iso_run->item[i].ch;
+                    if (c == 0x232A) c = 0x3009;
+                    if (c == open_stack[j])
+                    {
+                        out[pair_count].start = stack_index[j];
+                        out[pair_count].end = i;
+                        pair_count++;
+                        out = HeapReAlloc(GetProcessHeap(), 0, out, sizeof(BracketPair) * (pair_count+1));
+                        out[pair_count].start = -1;
+                        stack_top = j+1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (pair_count == 0)
+    {
+        HeapFree(GetProcessHeap(),0,out);
+        out = NULL;
+    }
+    else if (pair_count > 1)
+        qsort(out, pair_count, sizeof(BracketPair), compr);
+
+    HeapFree(GetProcessHeap(), 0, open_stack);
+    HeapFree(GetProcessHeap(), 0, stack_index);
+    return out;
+}
+
+#define N0_TYPE(a) ((a == AN || a == EN)?R:a)
 
 /*------------------------------------------------------------------------
     Function: resolveNeutrals
@@ -665,31 +757,87 @@ static void resolveWeak(IsolatedRun * iso_run)
 static void resolveNeutrals(IsolatedRun *iso_run)
 {
     int i;
+    BracketPair *pairs = NULL;
 
     /* Translate isolates into NI */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] >= LRI)
-            *iso_run->ppcls[i] = NI;
+        if (*iso_run->item[i].pcls >= LRI)
+            *iso_run->item[i].pcls = NI;
 
-        switch(*iso_run->ppcls[i])
+        switch(*iso_run->item[i].pcls)
         {
             case B:
             case S:
-            case WS: *iso_run->ppcls[i] = NI;
+            case WS: *iso_run->item[i].pcls = NI;
         }
 
-        ASSERT(*iso_run->ppcls[i] < 5 || *iso_run->ppcls[i] == BN); /* "Only NI, L, R,  AN, EN and BN are allowed" */
+        ASSERT(*iso_run->item[i].pcls < 5 || *iso_run->item[i].pcls == BN); /* "Only NI, L, R,  AN, EN and BN are allowed" */
     }
 
     /* N0: Skipping bracketed pairs for now */
+    pairs = computeBracketPairs(iso_run);
+    if (pairs)
+    {
+        BracketPair *p = &pairs[0];
+        int i = 0;
+        while (p->start >= 0)
+        {
+            int j;
+            int e = EmbeddingDirection(iso_run->e);
+            int o = EmbeddingDirection(iso_run->e+1);
+            BOOL flag_o = FALSE;
+            TRACE("Bracket Pair [%i - %i]\n",p->start, p->end);
+
+            /* N0.b */
+            for (j = p->start+1; j < p->end; j++)
+            {
+                if (N0_TYPE(*iso_run->item[j].pcls) == e)
+                {
+                    *iso_run->item[p->start].pcls = e;
+                    *iso_run->item[p->end].pcls = e;
+                    break;
+                }
+                else if (N0_TYPE(*iso_run->item[j].pcls) == o)
+                    flag_o = TRUE;
+            }
+            /* N0.c */
+            if (j == p->end && flag_o)
+            {
+                for (j = p->start; j >= 0; j--)
+                {
+                    if (N0_TYPE(*iso_run->item[j].pcls) == o)
+                    {
+                        *iso_run->item[p->start].pcls = o;
+                        *iso_run->item[p->end].pcls = o;
+                        break;
+                    }
+                    else if (N0_TYPE(*iso_run->item[j].pcls) == e)
+                    {
+                        *iso_run->item[p->start].pcls = e;
+                        *iso_run->item[p->end].pcls = e;
+                        break;
+                    }
+                }
+                if ( j < 0 )
+                {
+                    *iso_run->item[p->start].pcls = iso_run->sos;
+                    *iso_run->item[p->end].pcls = iso_run->sos;
+                }
+            }
+
+            i++;
+            p = &pairs[i];
+        }
+        HeapFree(GetProcessHeap(),0,pairs);
+    }
 
     /* N1 */
     for (i = 0; i < iso_run->length; i++)
     {
         WORD l,r;
 
-        if (*iso_run->ppcls[i] == NI)
+        if (*iso_run->item[i].pcls == NI)
         {
             int j;
             int b = iso_previousValidChar(iso_run, i);
@@ -701,24 +849,24 @@ static void resolveNeutrals(IsolatedRun *iso_run)
             }
             else
             {
-                if (*iso_run->ppcls[b] == R || *iso_run->ppcls[b] == AN || *iso_run->ppcls[b] == EN)
+                if (*iso_run->item[b].pcls == R || *iso_run->item[b].pcls == AN || *iso_run->item[b].pcls == EN)
                     l = R;
-                else if (*iso_run->ppcls[b] == L)
+                else if (*iso_run->item[b].pcls == L)
                     l = L;
                 else /* No string type */
                     continue;
             }
             j = iso_nextValidChar(iso_run, i);
-            while (j > -1 && *iso_run->ppcls[j] == NI) j = iso_nextValidChar(iso_run, j);
+            while (j > -1 && *iso_run->item[j].pcls == NI) j = iso_nextValidChar(iso_run, j);
 
             if (j == -1)
             {
                 r = iso_run->eos;
                 j = iso_run->length;
             }
-            else if (*iso_run->ppcls[j] == R || *iso_run->ppcls[j] == AN || *iso_run->ppcls[j] == EN)
+            else if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == AN || *iso_run->item[j].pcls == EN)
                 r = R;
-            else if (*iso_run->ppcls[j] == L)
+            else if (*iso_run->item[j].pcls == L)
                 r = L;
             else /* No string type */
                 continue;
@@ -726,7 +874,7 @@ static void resolveNeutrals(IsolatedRun *iso_run)
             if (r == l)
             {
                 for (b = i; b < j && b < iso_run->length; b++)
-                    *iso_run->ppcls[b] = r;
+                    *iso_run->item[b].pcls = r;
             }
         }
     }
@@ -734,15 +882,15 @@ static void resolveNeutrals(IsolatedRun *iso_run)
     /* N2 */
     for (i = 0; i < iso_run->length; i++)
     {
-        if (*iso_run->ppcls[i] == NI)
+        if (*iso_run->item[i].pcls == NI)
         {
             int b = i-1;
             int f = i+1;
-            *iso_run->ppcls[i] = EmbeddingDirection(iso_run->e);
-            if (b > -1 && *iso_run->ppcls[b] == BN)
-                *iso_run->ppcls[b] = EmbeddingDirection(iso_run->e);
-            if (f < iso_run->length && *iso_run->ppcls[f] == BN)
-                *iso_run->ppcls[f] = EmbeddingDirection(iso_run->e);
+            *iso_run->item[i].pcls = EmbeddingDirection(iso_run->e);
+            if (b > -1 && *iso_run->item[b].pcls == BN)
+                *iso_run->item[b].pcls = EmbeddingDirection(iso_run->e);
+            if (f < iso_run->length && *iso_run->item[f].pcls == BN)
+                *iso_run->item[f].pcls = EmbeddingDirection(iso_run->e);
         }
     }
 }
@@ -816,7 +964,7 @@ static void resolveResolved(unsigned baselevel, const WORD * pcls, WORD *plevel,
     }
 }
 
-static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel, int uCount, struct list *set)
+static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel, LPCWSTR lpString, int uCount, struct list *set)
 {
     int run_start, run_end, i;
     int run_count = 0;
@@ -851,7 +999,7 @@ static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel
         {
             int type_fence, real_end;
             int j;
-            current_isolated = HeapAlloc(GetProcessHeap(), 0, sizeof(IsolatedRun) + sizeof(WORD*)*uCount);
+            current_isolated = HeapAlloc(GetProcessHeap(), 0, sizeof(IsolatedRun) + sizeof(RunChar)*uCount);
             if (!current_isolated) break;
 
             run_start = runs[k].start;
@@ -859,7 +1007,10 @@ static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel
             current_isolated->length = (runs[k].end - runs[k].start)+1;
 
             for (j = 0; j < current_isolated->length;  j++)
-                current_isolated->ppcls[j] = &pcls[runs[k].start+j];
+            {
+                current_isolated->item[j].pcls = &pcls[runs[k].start+j];
+                current_isolated->item[j].ch = lpString[runs[k].start+j];
+            }
 
             run_end = runs[k].end;
 
@@ -886,7 +1037,10 @@ search:
 
                     current_isolated->length += (runs[j].end - runs[j].start)+1;
                     for (m = 0; l < current_isolated->length; l++, m++)
-                        current_isolated->ppcls[l] = &pcls[runs[j].start+m];
+                    {
+                        current_isolated->item[l].pcls = &pcls[runs[j].start+m];
+                        current_isolated->item[l].ch = lpString[runs[j].start+m];
+                    }
 
                     TRACE("[%i -- %i]",runs[j].start, runs[j].end);
 
@@ -979,7 +1133,7 @@ BOOL BIDI_DetermineLevels(
     if (TRACE_ON(bidi)) dump_types("After Explicit", chartype, 0, uCount);
 
     /* X10/BD13: Computer Isolating runs */
-    computeIsolatingRunsSet(baselevel, chartype, lpOutLevels, uCount, &IsolatingRuns);
+    computeIsolatingRunsSet(baselevel, chartype, lpOutLevels, lpString, uCount, &IsolatingRuns);
 
     LIST_FOR_EACH_ENTRY_SAFE(iso_run, next, &IsolatingRuns, IsolatedRun, entry)
     {

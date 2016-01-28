@@ -117,7 +117,7 @@ static BOOL find_node_end(stream_t *stream, strbuf_t *buf)
         if(buf->len == 0)
             break;
         p = &buf->buf[b];
-        while((p = memchr(p+1, '"', buf->len-(p-buf->buf))) != NULL)
+        while((p = memchr(p+1, '"', buf->len-(p+1-buf->buf))) != NULL)
             tag_count++;
         b = buf->len;
         if(tag_count % 2 != 0)

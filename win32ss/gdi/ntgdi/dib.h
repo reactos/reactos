@@ -26,4 +26,11 @@ GreGetDIBitsInternal(
     UINT MaxBits,
     UINT MaxInfo);
 
+HBITMAP
+NTAPI
+GreCreateDIBitmapFromPackedDIB(
+    _In_reads_(cjPackedDIB )PVOID pvPackedDIB,
+    _In_ UINT cjPackedDIB,
+    _In_ ULONG uUsage);
+
 #define DIB_PAL_BRUSHHACK 3

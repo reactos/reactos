@@ -25,33 +25,26 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 /* Czech strings in CP1250 */
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Soubor" {
-  MENUITEM "&Otev¯Ìt", MNID_FILE_OPEN
+  MENUITEM "&Otev≈ô√≠t", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Tisk", MNID_FILE_PRINT
-  MENUITEM "Na&stavenÌ tisku...", MNID_FILE_SETUP
+  MENUITEM "Na&staven√≠ tisku...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Konec", MNID_FILE_EXIT
  }
- POPUP "⁄prav&y" {
-   MENUITEM "&KopÌrovat...", MNID_EDIT_COPYDLG
+ POPUP "√öprav&y" {
+   MENUITEM "&Kop√≠rovat...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "P&oznamenat si...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Z·loûka" {
-   MENUITEM "P¯i&dat...", MNID_BKMK_DEFINE
+ POPUP "&Z√°lo≈æka" {
+   MENUITEM "P≈ôi&dat...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Help always visible"
-   BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
-  END
+  MENUITEM "V≈ædy na &vrchu", MNID_HELP_HELPTOP
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -59,30 +52,59 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&N·povÏda" {
-   MENUITEM "N·p&ovÏda k n·povÏdÏ", MNID_HELP_HELPON
-   MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
+ POPUP "&N√°povƒõda" {
+   MENUITEM "N√°p&ovƒõda k n√°povƒõdƒõ", MNID_HELP_HELPON
    MENUITEM "&Informace...", MNID_HELP_ABOUT
  }
 }
 
-/* Strings */
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copy",                MNID_CTXT_COPY
+		MENUITEM "Print...",            MNID_CTXT_PRINT
+		POPUP    "Fonts"
+		BEGIN
+			MENUITEM "Small",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Large",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
 STRINGTABLE
 {
-STID_WINE_HELP, 	"N·povÏda Wine"
+STID_WINE_HELP, 	"N√°povƒõda Wine"
 STID_WHERROR, 		"CHYBA"
-STID_WARNING,  		"VAROV¡NÕ"
+STID_WARNING,  		"VAROV√ÅN√ç"
 STID_INFO,  		"Informace"
-STID_NOT_IMPLEMENTED, 	"NenÌ implementov·no"
-STID_HLPFILE_ERROR_s, 	"Nelze p¯eËÌst soubor n·povÏdy `%s'"
+STID_NOT_IMPLEMENTED, 	"Nen√≠ implementov√°no"
+STID_HLPFILE_ERROR_s, 	"Nelze p≈ôeƒç√≠st soubor n√°povƒõdy `%s'"
 STID_INDEX, 		"&Obsah"
 STID_CONTENTS,		"Summary"
-STID_BACK, 		"&ZpÏt"
-STID_ALL_FILES, 	"Vöechny soubory (*.*)"
-STID_HELP_FILES_HLP, 	"Soubory n·povÏdy (*.hlp)"
+STID_BACK, 		"&Zpƒõt"
+STID_ALL_FILES, 	"V≈°echny soubory (*.*)"
+STID_HELP_FILES_HLP, 	"Soubory n√°povƒõdy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_PSH_INDEX,		"Help topics: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Search"
+{
+    LTEXT  "Not yet implemented", -1, 10, 10, 180, 150
 }

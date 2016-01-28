@@ -441,4 +441,19 @@ ReadRegistryEntries(
 	IN PUNICODE_STRING RegistryPath,
 	OUT PI8042_SETTINGS Settings);
 
+/* hwhacks.c */
+
+VOID
+NTAPI
+i8042InitializeHwHacks(
+    VOID);
+
+enum _FLAGS
+{
+    FL_NOLOOP = 0x01,
+    FL_INITHACK = 0x02,
+};
+
+extern ULONG i8042HwFlags;
+
 #endif /* _I8042PRT_PCH_ */

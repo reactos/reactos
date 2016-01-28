@@ -170,15 +170,18 @@ IrpStub(
 	IN PIRP Irp)
 {
 	NTSTATUS Status = STATUS_NOT_SUPPORTED;
+	PPORT_DEVICE_EXTENSION DeviceExtension;
 
-	if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
+	DeviceExtension = DeviceObject->DeviceExtension;
+	if (!DeviceExtension->Common.IsClassDO)
 	{
 		/* Forward some IRPs to lower device */
 		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
 		{
-			case IRP_MJ_PNP:
-			case IRP_MJ_INTERNAL_DEVICE_CONTROL:
-				return ForwardIrpAndForget(DeviceObject, Irp);
+			case IRP_MJ_POWER:
+				PoStartNextPowerIrp(Irp);
+				IoSkipCurrentIrpStackLocation(Irp);
+				return PoCallDriver(DeviceExtension->LowerDevice, Irp);
 			default:
 			{
 				ERR_(CLASS_NAME, "Port DO stub for major function 0x%lx\n",

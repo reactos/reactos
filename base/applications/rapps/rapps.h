@@ -20,12 +20,18 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <strsafe.h>
+#include <ndk/rtlfuncs.h>
 
 #include <rappsmsg.h>
 
 #include "resource.h"
 
-#define APPLICATION_DATEBASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
+#ifdef USE_CERT_PINNING
+  #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
+  #define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#endif
+
+#define APPLICATION_DATABASE_URL L"https://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
@@ -73,14 +79,24 @@ typedef struct
     WCHAR szName[MAX_PATH];
     WCHAR szRegName[MAX_PATH];
     WCHAR szVersion[MAX_PATH];
-    WCHAR szLicence[MAX_PATH];
+    WCHAR szLicense[MAX_PATH];
     WCHAR szDesc[MAX_PATH];
     WCHAR szSize[MAX_PATH];
     WCHAR szUrlSite[MAX_PATH];
     WCHAR szUrlDownload[MAX_PATH];
     WCHAR szCDPath[MAX_PATH];
 
+    /* caching mechanism related entries */
+    WCHAR cFileName[MAX_PATH];
+    FILETIME ftCacheStamp;
+    LIST_ENTRY List;
+
+    /* optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form) */
+    WCHAR szSHA1[40 + 1];
+
 } APPLICATION_INFO, *PAPPLICATION_INFO;
+
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
 
 typedef struct
 {
@@ -101,8 +117,12 @@ typedef struct
     BOOL Maximized;
     INT Left;
     INT Top;
-    INT Right;
-    INT Bottom;
+    INT Width;
+    INT Height;
+    /* Proxy settings */
+    INT Proxy;
+    WCHAR szProxyServer[MAX_PATH];
+    WCHAR szNoProxyFor[MAX_PATH];
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
@@ -111,6 +131,7 @@ typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info);
 BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
 BOOL ShowAvailableAppInfo(INT Index);
 BOOL UpdateAppsDB(VOID);
+VOID FreeCachedAvailableEntries(VOID);
 
 /* installdlg.c */
 BOOL InstallApplication(INT Index);
@@ -161,9 +182,8 @@ VOID InitLogs(VOID);
 VOID FreeLogs(VOID);
 BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 
-/* parser.c */
-INT ParserGetString(LPCWSTR section, LPCWSTR entry, LPWSTR buffer, UINT len, LPCWSTR filename);
-UINT ParserGetInt(LPCWSTR section, LPCWSTR entry, LPCWSTR filename);
+UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
+UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
 /* richedit.c */
 extern HWND hRichEdit;

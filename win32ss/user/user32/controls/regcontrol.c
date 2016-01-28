@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
  * PURPOSE:          Built-in control registration
- * FILE:             dll/win32/user32/controls/regcontrol.c
+ * FILE:             win32ss/user/user32/controls/regcontrol.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:            Adapted from Wine
@@ -101,6 +101,12 @@ BOOL WINAPI RegisterSystemControls(VOID)
            RegisterDefaultClasses |= ICLASS_TO_MASK(g_SysClasses[i].ClsId);
     }
 
+    if ( //gpsi->dwSRVIFlags & SRVINFO_IMM32 && Not supported yet, need NlsMbCodePageTag working in Win32k.
+        !(RegisterDefaultClasses & ICLASS_TO_MASK(ICLS_IME))) // So, work like XP.
+    {
+       RegisterIMEClass();
+    }
+
     return TRUE;
 }
 
@@ -170,8 +176,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnMDIClientWndProc      = MDIClientWndProcW;
   pfnClientA.pfnStaticWndProc         = StaticWndProcA;
   pfnClientW.pfnStaticWndProc         = StaticWndProcW;
-  pfnClientA.pfnImeWndProc            = DefWindowProcA;
-  pfnClientW.pfnImeWndProc            = DefWindowProcW;
+  pfnClientA.pfnImeWndProc            = ImeWndProcA;
+  pfnClientW.pfnImeWndProc            = ImeWndProcW;
   pfnClientA.pfnGhostWndProc          = DefWindowProcA;
   pfnClientW.pfnGhostWndProc          = DefWindowProcW;
   pfnClientA.pfnHkINLPCWPSTRUCT       = DefWindowProcA;
@@ -195,7 +201,7 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientWorker.pfnListBoxWndProc   = ListBoxWndProc_common;
   pfnClientWorker.pfnMDIClientWndProc = MDIClientWndProc_common;
   pfnClientWorker.pfnStaticWndProc    = StaticWndProc_common;
-  pfnClientWorker.pfnImeWndProc       = User32DefWindowProc;
+  pfnClientWorker.pfnImeWndProc       = ImeWndProc_common;
   pfnClientWorker.pfnGhostWndProc     = User32DefWindowProc;
   pfnClientWorker.pfnCtfHookProc      = User32DefWindowProc;
 

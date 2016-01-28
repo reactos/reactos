@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/dma.c
+ * FILE:            hal/halx86/generic/dma.c
  * PURPOSE:         DMA functions
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Filip Navara (navaraf@reactos.com)
@@ -77,6 +77,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitDma)
+#endif
+
 #define MAX_SG_ELEMENTS 0x10
 
 #ifndef _MINIHAL_
@@ -129,8 +133,8 @@ static DMA_OPERATIONS HalpDmaOperations = {
 /* FUNCTIONS *****************************************************************/
 
 #ifndef _MINIHAL_
+INIT_SECTION
 VOID
-INIT_FUNCTION
 HalpInitDma(VOID)
 {
     /*
@@ -142,14 +146,18 @@ HalpInitDma(VOID)
     HalpDmaOperations.FreeMapRegisters = (PFREE_MAP_REGISTERS)IoFreeMapRegisters;
     HalpDmaOperations.MapTransfer = (PMAP_TRANSFER)IoMapTransfer;
 
-    /*
-     * Check if Extended DMA is available. We're just going to do a random
-     * read and write.
-     */
-    WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
-    if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
+    if (HalpBusType == MACHINE_TYPE_EISA)
     {
-        HalpEisaDma = TRUE;
+        /*
+        * Check if Extended DMA is available. We're just going to do a random
+        * read and write.
+        */
+        WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
+        if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
+        {
+            DPRINT1("Machine supports EISA DMA. Bus type: %lu\n", HalpBusType);
+            HalpEisaDma = TRUE;
+        }
     }
 
     /*

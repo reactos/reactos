@@ -4,8 +4,7 @@ set_cpp()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/lib/drivers/libusb)
+include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/libusb)
 
 list(APPEND SOURCE
     usbuhci.cpp
@@ -19,12 +18,7 @@ add_library(usbuhci SHARED
     guid.cpp
     usbuhci.rc)
 
-target_link_libraries(usbuhci
-    uuid
-    libusb
-    libcntpr
-    ${PSEH_LIB})
-
+target_link_libraries(usbuhci uuid libusb libcntpr ${PSEH_LIB})
 set_module_type(usbuhci kernelmodedriver)
 add_importlibs(usbuhci ntoskrnl hal usbd)
 add_pch(usbuhci usbuhci.h SOURCE)

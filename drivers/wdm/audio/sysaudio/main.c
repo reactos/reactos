@@ -131,17 +131,17 @@ SysAudio_Pnp(
 
 NTSTATUS
 NTAPI
-SysAudio_InstallDevice(
-    IN  PDRIVER_OBJECT  DriverObject)
+SysAudio_AddDevice(
+    IN  PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
     NTSTATUS Status;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\sysaudio");
     UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\sysaudio");
-    PDEVICE_OBJECT DeviceObject;
+	PDEVICE_OBJECT DeviceObject, NextDeviceObject;
     SYSAUDIODEVEXT *DeviceExtension;
 
-
-    DPRINT("SysAudio_InstallDevice called\n");
+    DPRINT("SysAudio_AddDevice called\n");
 
     /* Create the device */
     Status = IoCreateDevice(DriverObject,
@@ -160,7 +160,7 @@ SysAudio_InstallDevice(
     }
 
     /* Register device interfaces */
-    Status = SysAudioRegisterDeviceInterfaces(DeviceObject);
+    Status = SysAudioRegisterDeviceInterfaces(PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
         /* Failed to register
@@ -215,6 +215,10 @@ SysAudio_InstallDevice(
      /* clear initializing flag */
      DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
 
+     /* atttach to device stack */
+     NextDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+     KsSetDevicePnpAndBaseObject(DeviceExtension->KsDeviceHeader, NextDeviceObject, DeviceObject);
+
      /* register shutdown notfication */
      IoRegisterShutdownNotification(DeviceObject);
 
@@ -259,7 +263,8 @@ DriverEntry(
     /* Sysaudio needs to do work on pnp, so handle it */
     DriverObject->MajorFunction[IRP_MJ_PNP] = SysAudio_Pnp;
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = SysAudio_Shutdown;
+    DriverObject->DriverExtension->AddDevice = SysAudio_AddDevice;
 
-    /* Call our initialization function */
-    return SysAudio_InstallDevice(DriverObject);
+    /* done */
+    return STATUS_SUCCESS;
 }

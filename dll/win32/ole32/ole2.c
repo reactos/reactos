@@ -146,7 +146,7 @@ DWORD WINAPI OleBuildVersion(void)
 /***********************************************************************
  *           OleInitialize       (OLE32.@)
  */
-HRESULT WINAPI OleInitialize(LPVOID reserved)
+HRESULT WINAPI DECLSPEC_HOTPATCH OleInitialize(LPVOID reserved)
 {
   HRESULT hr;
 
@@ -205,7 +205,7 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 /******************************************************************************
  *		OleUninitialize	[OLE32.@]
  */
-void WINAPI OleUninitialize(void)
+void WINAPI DECLSPEC_HOTPATCH OleUninitialize(void)
 {
   TRACE("()\n");
 
@@ -1210,7 +1210,7 @@ HRESULT WINAPI OleSetContainedObject(
  *  Success: S_OK.
  *  Failure: Any HRESULT code.
  */
-HRESULT WINAPI OleRun(LPUNKNOWN pUnknown)
+HRESULT WINAPI DECLSPEC_HOTPATCH OleRun(LPUNKNOWN pUnknown)
 {
     IRunnableObject *runable;
     HRESULT hres;
@@ -1253,6 +1253,8 @@ HRESULT WINAPI OleLoad(
    * Get the class ID for the object.
    */
   hres = IStorage_Stat(pStg, &storageInfo, STATFLAG_NONAME);
+  if (FAILED(hres))
+    return hres;
 
   /*
    * Now, try and create the handler for the object
@@ -2179,7 +2181,9 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:
     {
-      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
+      TrackerWindowInfo *trackerInfo = (TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0);
+      if (trackerInfo->trackingDone) break;
+      OLEDD_TrackStateChange(trackerInfo);
       break;
     }
     case WM_DESTROY:
@@ -2379,11 +2383,12 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 	 */
         case DRAGDROP_S_DROP:
           if (*trackerInfo->pdwEffect != DROPEFFECT_NONE)
-            trackerInfo->returnValue =  IDropTarget_Drop(trackerInfo->curDragTarget,
-                                                         trackerInfo->dataObject,
-                                                         trackerInfo->dwKeyState,
-                                                         trackerInfo->curMousePos,
-                                                         trackerInfo->pdwEffect);
+          {
+            hr = IDropTarget_Drop(trackerInfo->curDragTarget, trackerInfo->dataObject,
+                    trackerInfo->dwKeyState, trackerInfo->curMousePos, trackerInfo->pdwEffect);
+            if (FAILED(hr))
+              trackerInfo->returnValue = hr;
+          }
           else
             IDropTarget_DragLeave(trackerInfo->curDragTarget);
           break;
@@ -2422,6 +2427,9 @@ static DWORD OLEDD_GetButtonState(void)
 
   if ( (keyboardState[VK_CONTROL] & 0x80) !=0)
     keyMask |= MK_CONTROL;
+
+  if ( (keyboardState[VK_MENU] & 0x80) !=0)
+    keyMask |= MK_ALT;
 
   if ( (keyboardState[VK_LBUTTON] & 0x80) !=0)
     keyMask |= MK_LBUTTON;
@@ -2843,6 +2851,8 @@ static inline HRESULT PROPVARIANT_ValidateType(VARTYPE vt)
     case VT_LPWSTR:
     case VT_FILETIME:
     case VT_BLOB:
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STORAGE:
     case VT_STREAMED_OBJECT:
@@ -2919,6 +2929,8 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
     case VT_UINT:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:
@@ -3004,7 +3016,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
 
     hr = PROPVARIANT_ValidateType(pvarSrc->vt);
     if (FAILED(hr))
-        return hr;
+        return DISP_E_BADVARTYPE;
 
     /* this will deal with most cases */
     *pvarDest = *pvarSrc;
@@ -3032,6 +3044,8 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
     case VT_DATE:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:

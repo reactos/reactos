@@ -600,16 +600,6 @@ SymSrvStoreSupplementW(HANDLE hProcess,
     return NULL;
 }
 
-DWORD WINAPI
-UnDecorateSymbolNameW(PCWSTR DecoratedName,
-                      PWSTR pszUnDecoratedName,
-                      DWORD dwUndecoratedLength,
-                      DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 HANDLE
 WINAPI
 FindDebugInfoFileExW(

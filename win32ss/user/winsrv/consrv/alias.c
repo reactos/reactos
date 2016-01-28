@@ -454,7 +454,7 @@ CSR_API(SrvAddConsoleAlias)
     PALIAS_ENTRY Entry;
     PVOID lpTarget;
 
-    DPRINT1("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
+    DPRINT("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -545,7 +545,7 @@ CSR_API(SrvGetConsoleAlias)
     UINT Length;
     PVOID lpTarget;
 
-    DPRINT1("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
+    DPRINT("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -635,7 +635,7 @@ CSR_API(SrvGetConsoleAliases)
     ULONG BytesWritten = 0;
     PALIAS_HEADER Header;
 
-    DPRINT1("SrvGetConsoleAliases entered ApiMessage %p\n", ApiMessage);
+    DPRINT("SrvGetConsoleAliases entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID)&GetAllAliasesRequest->ExeName,
@@ -740,7 +740,7 @@ CSR_API(SrvGetConsoleAliasesLength)
     PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
 
-    DPRINT1("SrvGetConsoleAliasesLength entered ApiMessage %p\n", ApiMessage);
+    DPRINT("SrvGetConsoleAliasesLength entered ApiMessage %p\n", ApiMessage);
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&GetAllAliasesLengthRequest->ExeName,
@@ -781,7 +781,7 @@ CSR_API(SrvGetConsoleAliasExes)
     PCONSRV_CONSOLE Console;
     UINT BytesWritten = 0;
 
-    DPRINT1("SrvGetConsoleAliasExes entered\n");
+    DPRINT("SrvGetConsoleAliasExes entered\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID*)&GetAliasesExesRequest->ExeNames,
@@ -867,7 +867,7 @@ CSR_API(SrvGetConsoleAliasExesLength)
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
     PCONSRV_CONSOLE Console;
 
-    DPRINT1("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
+    DPRINT("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               &Console, TRUE);

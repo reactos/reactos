@@ -104,12 +104,13 @@ SortRects(PRECT pRect, INT nCount)
  */
 BOOL
 FASTCALL
-DeleteRegion( HRGN hRgn )
+DeleteRegion(
+    _In_ HRGN hrgn)
 {
 #if 0
     PRGN_ATTR Rgn_Attr;
 
-    if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
+    if ((GdiGetHandleUserData(hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
             ( Rgn_Attr != NULL ))
     {
         PGDIBSOBJECT pgO;
@@ -117,29 +118,32 @@ DeleteRegion( HRGN hRgn )
         pgO = GdiAllocBatchCommand(NULL, GdiBCDelRgn);
         if (pgO)
         {
-            pgO->hgdiobj = (HGDIOBJ)hRgn;
+            pgO->hgdiobj = hrgn;
             return TRUE;
         }
     }
 #endif
-    return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
+    return NtGdiDeleteObjectApp(hrgn);
 }
 
 INT
 FASTCALL
-MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
+MirrorRgnByWidth(
+    _In_ HRGN hrgn,
+    _In_ INT Width,
+    _In_ HRGN *phrgn)
 {
     INT cRgnDSize, Ret = 0;
     PRGNDATA pRgnData;
 
-    cRgnDSize = NtGdiGetRegionData(hRgn, 0, NULL);
+    cRgnDSize = NtGdiGetRegionData(hrgn, 0, NULL);
 
     if (cRgnDSize)
     {
         pRgnData = LocalAlloc(LMEM_FIXED, cRgnDSize * sizeof(LONG));
         if (pRgnData)
         {
-            if ( GetRegionData(hRgn, cRgnDSize, pRgnData) )
+            if ( GetRegionData(hrgn, cRgnDSize, pRgnData) )
             {
                 HRGN hRgnex;
                 UINT i;
@@ -160,10 +164,10 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
                 hRgnex = ExtCreateRegion(NULL, cRgnDSize , pRgnData);
                 if (hRgnex)
                 {
-                    if (phRgn) phRgn = (HRGN *)hRgnex;
+                    if (phrgn) phrgn = (HRGN *)hRgnex;
                     else
                     {
-                        CombineRgn(hRgn, hRgnex, 0, RGN_COPY);
+                        CombineRgn(hrgn, hRgnex, 0, RGN_COPY);
                         DeleteObject(hRgnex);
                     }
                     Ret = 1;
@@ -177,225 +181,378 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
 
 INT
 WINAPI
-MirrorRgnDC(HDC hdc, HRGN hRgn, HRGN *phRgn)
+MirrorRgnDC(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HRGN *phrn)
 {
     if (!GdiIsHandleValid((HGDIOBJ) hdc) ||
-            (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return 0;
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC))
+        return 0;
 
-    return MirrorRgnByWidth(hRgn, NtGdiGetDeviceWidth(hdc), phRgn);
+    return MirrorRgnByWidth(hrgn, NtGdiGetDeviceWidth(hdc), phrn);
 }
 
 /* FUNCTIONS *****************************************************************/
+
+FORCEINLINE
+ULONG
+IntSetNullRgn(
+    _Inout_ PRGN_ATTR prgnattr)
+{
+    prgnattr->iComplexity = NULLREGION;
+    prgnattr->AttrFlags |= ATTR_RGN_DIRTY;
+    return NULLREGION;
+}
+
+FORCEINLINE
+ULONG
+IntSetRectRgn(
+    _Inout_ PRGN_ATTR prgnattr,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
+{
+    ASSERT(xLeft <= xRight);
+    ASSERT(yTop <= yBottom);
+
+    if ((xLeft == xRight) || (yTop == yBottom))
+        return IntSetNullRgn(prgnattr);
+
+    prgnattr->iComplexity = SIMPLEREGION;
+    prgnattr->Rect.left = xLeft;
+    prgnattr->Rect.top = yTop;
+    prgnattr->Rect.right = xRight;
+    prgnattr->Rect.bottom = yBottom;
+    prgnattr->AttrFlags |= ATTR_RGN_DIRTY;
+    return SIMPLEREGION;
+}
 
 /*
  * @implemented
  */
 INT
 WINAPI
-CombineRgn(HRGN  hDest,
-           HRGN  hSrc1,
-           HRGN  hSrc2,
-           INT  CombineMode)
+CombineRgn(
+    _In_ HRGN hrgnDest,
+    _In_ HRGN hrgnSrc1,
+    _In_ HRGN hrgnSrc2,
+    _In_ INT  iCombineMode)
 {
-    PRGN_ATTR pRgn_Attr_Dest = NULL;
-    PRGN_ATTR pRgn_Attr_Src1 = NULL;
-    PRGN_ATTR pRgn_Attr_Src2 = NULL;
-    INT Complexity;
-    BOOL Ret;
+    PRGN_ATTR prngattrDest = NULL;
+    PRGN_ATTR prngattrSrc1 = NULL;
+    PRGN_ATTR prngattrSrc2 = NULL;
+    RECT rcTemp;
 
-// HACK
-    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+    /* Get the region attribute for dest and source 1 */
+    prngattrDest = GdiGetRgnAttr(hrgnDest);
+    prngattrSrc1 = GdiGetRgnAttr(hrgnSrc1);
 
-    Ret = GdiGetHandleUserData((HGDIOBJ) hDest, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Dest);
-    Ret = GdiGetHandleUserData((HGDIOBJ) hSrc1, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src1);
-
-    if ( !Ret ||
-            !pRgn_Attr_Dest ||
-            !pRgn_Attr_Src1 ||
-            pRgn_Attr_Src1->Flags > SIMPLEREGION )
-        return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-
-    /* Handle COPY and use only src1. */
-    if ( CombineMode == RGN_COPY )
+    /* If that failed or if the source 1 region is complex, go to win32k */
+    if ((prngattrDest == NULL) || (prngattrSrc1 == NULL) ||
+        (prngattrSrc1->iComplexity > SIMPLEREGION))
     {
-        switch (pRgn_Attr_Src1->Flags)
-        {
-        case NULLREGION:
-            Ret = SetRectRgn( hDest, 0, 0, 0, 0);
-            if (Ret)
-                return NULLREGION;
-            goto ERROR_Exit;
-
-        case SIMPLEREGION:
-            Ret = SetRectRgn( hDest,
-                              pRgn_Attr_Src1->Rect.left,
-                              pRgn_Attr_Src1->Rect.top,
-                              pRgn_Attr_Src1->Rect.right,
-                              pRgn_Attr_Src1->Rect.bottom );
-            if (Ret)
-                return SIMPLEREGION;
-            goto ERROR_Exit;
-
-        case COMPLEXREGION:
-        default:
-            return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-        }
+        return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
     }
 
-    Ret = GdiGetHandleUserData((HGDIOBJ) hSrc2, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src2);
-    if ( !Ret ||
-            !pRgn_Attr_Src2 ||
-            pRgn_Attr_Src2->Flags > SIMPLEREGION )
-        return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-
-    /* All but AND. */
-    if ( CombineMode != RGN_AND)
+    /* Handle RGN_COPY first, it needs only hrgnSrc1 */
+    if (iCombineMode == RGN_COPY)
     {
-        if ( CombineMode <= RGN_AND)
+        /* Check if the source region is a NULLREGION */
+        if (prngattrSrc1->iComplexity == NULLREGION)
         {
-            /*
-               There might be some type of junk in the call, so go K.
-               If this becomes a problem, need to setup parameter check at the top.
-             */
-            DPRINT1("Might be junk! CombineMode %d\n",CombineMode);
-            return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+            /* The dest region is a NULLREGION, too */
+            return IntSetNullRgn(prngattrDest);
         }
 
-        if ( CombineMode > RGN_XOR) /* Handle DIFF. */
+        /* We already know that the source region cannot be complex, so
+           create a rect region from the bounds of the source rect */
+        return IntSetRectRgn(prngattrDest,
+                             prngattrSrc1->Rect.left,
+                             prngattrSrc1->Rect.top,
+                             prngattrSrc1->Rect.right,
+                             prngattrSrc1->Rect.bottom);
+    }
+
+    /* For all other operations we need hrgnSrc2 */
+    prngattrSrc2 = GdiGetRgnAttr(hrgnSrc2);
+
+    /* If we got no attribute or the region is complex, go to win32k */
+    if ((prngattrSrc2 == NULL) || (prngattrSrc2->iComplexity > SIMPLEREGION))
+    {
+        return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+    }
+
+    /* Handle RGN_AND */
+    if (iCombineMode == RGN_AND)
+    {
+        /* Check if either of the regions is a NULLREGION */
+        if ((prngattrSrc1->iComplexity == NULLREGION) ||
+            (prngattrSrc2->iComplexity == NULLREGION))
         {
-            if ( CombineMode != RGN_DIFF)
+            /* Result is also a NULLREGION */
+            return IntSetNullRgn(prngattrDest);
+        }
+
+        /* Get the intersection of the 2 rects */
+        if (!IntersectRect(&rcTemp, &prngattrSrc1->Rect, &prngattrSrc2->Rect))
+        {
+            /* The rects do not intersect, result is a NULLREGION */
+            return IntSetNullRgn(prngattrDest);
+        }
+
+        /* Use the intersection of the rects */
+        return IntSetRectRgn(prngattrDest,
+                             rcTemp.left,
+                             rcTemp.top,
+                             rcTemp.right,
+                             rcTemp.bottom);
+    }
+
+    /* Handle RGN_DIFF */
+    if (iCombineMode == RGN_DIFF)
+    {
+        /* Check if source 1 is a NULLREGION */
+        if (prngattrSrc1->iComplexity == NULLREGION)
+        {
+            /* The result is a NULLREGION as well */
+            return IntSetNullRgn(prngattrDest);
+        }
+
+        /* Get the intersection of the 2 rects */
+        if ((prngattrSrc2->iComplexity == NULLREGION) ||
+            !IntersectRect(&rcTemp, &prngattrSrc1->Rect, &prngattrSrc2->Rect))
+        {
+            /* The rects do not intersect, dest equals source 1 */
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc1->Rect.left,
+                                 prngattrSrc1->Rect.top,
+                                 prngattrSrc1->Rect.right,
+                                 prngattrSrc1->Rect.bottom);
+        }
+
+        /* We need to check is whether we can subtract the rects. For that
+           we call SubtractRect, which will give us the bounding box of the
+           subtraction. The function returns FALSE if the resulting rect is
+           empty */
+        if (!SubtractRect(&rcTemp, &prngattrSrc1->Rect, &rcTemp))
+        {
+            /* The result is a NULLREGION */
+            return IntSetNullRgn(prngattrDest);
+        }
+
+        /* Now check if the result of SubtractRect matches the source 1 rect.
+           Since we already know that the rects intersect, the result can
+           only match the source 1 rect, if it could not be "cut" on either
+           side, but the overlapping was on a corner, so the new bounding box
+           equals the previous rect */
+        if (!EqualRect(&rcTemp, &prngattrSrc1->Rect))
+        {
+            /* We got a properly subtracted rect, so use it. */
+            return IntSetRectRgn(prngattrDest,
+                                 rcTemp.left,
+                                 rcTemp.top,
+                                 rcTemp.right,
+                                 rcTemp.bottom);
+        }
+
+        /* The result would be a complex region, go to win32k */
+        return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+    }
+
+    /* Handle OR and XOR */
+    if ((iCombineMode == RGN_OR) || (iCombineMode == RGN_XOR))
+    {
+        /* Check if source 1 is a NULLREGION */
+        if (prngattrSrc1->iComplexity == NULLREGION)
+        {
+            /* Check if source 2 is also a NULLREGION */
+            if (prngattrSrc2->iComplexity == NULLREGION)
             {
-                /* Filter check! Well, must be junk?, so go K. */
-                DPRINT1("RGN_COPY was handled! CombineMode %d\n",CombineMode);
-                return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-            }
-            /* Now handle DIFF. */
-            if ( pRgn_Attr_Src1->Flags == NULLREGION )
-            {
-                if (SetRectRgn( hDest, 0, 0, 0, 0))
-                    return NULLREGION;
-                goto ERROR_Exit;
+                /* Both are NULLREGIONs, result is also a NULLREGION */
+                return IntSetNullRgn(prngattrDest);
             }
 
-            if ( pRgn_Attr_Src2->Flags != NULLREGION )
-            {
-                Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
+            /* The result is equal to source 2 */
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc2->Rect.left,
+                                 prngattrSrc2->Rect.top,
+                                 prngattrSrc2->Rect.right,
+                                 prngattrSrc2->Rect.bottom );
+        }
 
-                if ( Complexity != DIFF_RGN )
+        /* Check if only source 2 is a NULLREGION */
+        if (prngattrSrc2->iComplexity == NULLREGION)
+        {
+            /* The result is equal to source 1 */
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc1->Rect.left,
+                                 prngattrSrc1->Rect.top,
+                                 prngattrSrc1->Rect.right,
+                                 prngattrSrc1->Rect.bottom);
+        }
+
+        /* Do the rects have the same x extent */
+        if ((prngattrSrc1->Rect.left == prngattrSrc2->Rect.left) &&
+            (prngattrSrc1->Rect.right == prngattrSrc2->Rect.right))
+        {
+            /* Do the rects also have the same y extent */
+            if ((prngattrSrc1->Rect.top == prngattrSrc2->Rect.top) &&
+                (prngattrSrc1->Rect.bottom == prngattrSrc2->Rect.bottom))
+            {
+                /* Rects are equal, if this is RGN_OR, the result is source 1 */
+                if (iCombineMode == RGN_OR)
                 {
-                    if ( Complexity != INVERTED_RGN)
-                        /* If same or overlapping and norm just go K. */
-                        return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+                    /* The result is equal to source 1 */
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc1->Rect.left,
+                                         prngattrSrc1->Rect.top,
+                                         prngattrSrc1->Rect.right,
+                                         prngattrSrc1->Rect.bottom );
+                }
+                else
+                {
+                    /* XORing with itself yields an empty region */
+                    return IntSetNullRgn(prngattrDest);
+                }
+            }
 
-                    if (SetRectRgn( hDest, 0, 0, 0, 0))
-                        return NULLREGION;
-                    goto ERROR_Exit;
+            /* Check if the rects are disjoint */
+            if ((prngattrSrc2->Rect.bottom < prngattrSrc1->Rect.top) ||
+                (prngattrSrc2->Rect.top > prngattrSrc1->Rect.bottom))
+            {
+                /* The result would be a complex region, go to win32k */
+                return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+            }
+
+            /* Check if this is OR */
+            if (iCombineMode == RGN_OR)
+            {
+                /* Use the maximum extent of both rects combined */
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     min(prngattrSrc1->Rect.top, prngattrSrc2->Rect.top),
+                                     prngattrSrc1->Rect.right,
+                                     max(prngattrSrc1->Rect.bottom, prngattrSrc2->Rect.bottom));
+            }
+
+            /* Check if the rects are adjacent */
+            if (prngattrSrc2->Rect.bottom == prngattrSrc1->Rect.top)
+            {
+                /* The result is the combined rects */
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc2->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
+            }
+            else if (prngattrSrc2->Rect.top == prngattrSrc1->Rect.bottom)
+            {
+                /* The result is the combined rects */
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc2->Rect.bottom );
+            }
+
+            /* When we are here, this is RGN_XOR and the rects overlap */
+            return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+        }
+
+        /* Do the rects have the same y extent */
+        if ((prngattrSrc1->Rect.top == prngattrSrc2->Rect.top) &&
+            (prngattrSrc1->Rect.bottom == prngattrSrc2->Rect.bottom))
+        {
+            /* Check if the rects are disjoint */
+            if ((prngattrSrc2->Rect.right < prngattrSrc1->Rect.left) ||
+                (prngattrSrc2->Rect.left > prngattrSrc1->Rect.right))
+            {
+                /* The result would be a complex region, go to win32k */
+                return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+            }
+
+            /* Check if this is OR */
+            if (iCombineMode == RGN_OR)
+            {
+                /* Use the maximum extent of both rects combined */
+                return IntSetRectRgn(prngattrDest,
+                                     min(prngattrSrc1->Rect.left, prngattrSrc2->Rect.left),
+                                     prngattrSrc1->Rect.top,
+                                     max(prngattrSrc1->Rect.right, prngattrSrc2->Rect.right),
+                                     prngattrSrc1->Rect.bottom);
+            }
+
+            /* Check if the rects are adjacent */
+            if (prngattrSrc2->Rect.right == prngattrSrc1->Rect.left)
+            {
+                /* The result is the combined rects */
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc2->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
+            }
+            else if (prngattrSrc2->Rect.left == prngattrSrc1->Rect.right)
+            {
+                /* The result is the combined rects */
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc2->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
+            }
+
+            /* When we are here, this is RGN_XOR and the rects overlap */
+            return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
+        }
+
+        /* Last case: RGN_OR and one rect is completely within the other */
+        if (iCombineMode == RGN_OR)
+        {
+            /* Check if rect 1 can contain rect 2 */
+            if (prngattrSrc1->Rect.left <= prngattrSrc2->Rect.left)
+            {
+                /* rect 1 might be the outer one, check of that is true */
+                if ((prngattrSrc1->Rect.right >= prngattrSrc2->Rect.right) &&
+                    (prngattrSrc1->Rect.top <= prngattrSrc2->Rect.top) &&
+                    (prngattrSrc1->Rect.bottom >= prngattrSrc2->Rect.bottom))
+                {
+                    /* Rect 1 contains rect 2, use it */
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc1->Rect.left,
+                                         prngattrSrc1->Rect.top,
+                                         prngattrSrc1->Rect.right,
+                                         prngattrSrc1->Rect.bottom );
+                }
+            }
+            else
+            {
+                /* rect 2 might be the outer one, check of that is true */
+                if ((prngattrSrc2->Rect.right >= prngattrSrc1->Rect.right) &&
+                    (prngattrSrc2->Rect.top <= prngattrSrc1->Rect.top) &&
+                    (prngattrSrc2->Rect.bottom >= prngattrSrc1->Rect.bottom))
+                {
+                    /* Rect 2 contains rect 1, use it */
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc2->Rect.left,
+                                         prngattrSrc2->Rect.top,
+                                         prngattrSrc2->Rect.right,
+                                         prngattrSrc2->Rect.bottom );
                 }
             }
         }
-        else /* Handle OR or XOR. */
-        {
-            if ( pRgn_Attr_Src1->Flags == NULLREGION )
-            {
-                if ( pRgn_Attr_Src2->Flags != NULLREGION )
-                {
-                    /* Src1 null and not NULL, set from src2. */
-                    Ret = SetRectRgn( hDest,
-                                      pRgn_Attr_Src2->Rect.left,
-                                      pRgn_Attr_Src2->Rect.top,
-                                      pRgn_Attr_Src2->Rect.right,
-                                      pRgn_Attr_Src2->Rect.bottom );
-                    if (Ret)
-                        return SIMPLEREGION;
-                    goto ERROR_Exit;
-                }
-                /* Both are NULL. */
-                if (SetRectRgn( hDest, 0, 0, 0, 0))
-                    return NULLREGION;
-                goto ERROR_Exit;
-            }
-            /* Src1 is not NULL. */
-            if ( pRgn_Attr_Src2->Flags != NULLREGION )
-            {
-                if ( CombineMode != RGN_OR ) /* Filter XOR, so go K. */
-                    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
 
-                Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
-                /* If inverted use Src2. */
-                if ( Complexity == INVERTED_RGN)
-                {
-                    Ret = SetRectRgn( hDest,
-                                      pRgn_Attr_Src2->Rect.left,
-                                      pRgn_Attr_Src2->Rect.top,
-                                      pRgn_Attr_Src2->Rect.right,
-                                      pRgn_Attr_Src2->Rect.bottom );
-                    if (Ret)
-                        return SIMPLEREGION;
-                    goto ERROR_Exit;
-                }
-                /* Not NULL or overlapping or differentiated, go to K. */
-                if ( Complexity != SAME_RGN)
-                    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-                /* If same, just fall through. */
-            }
-        }
-        Ret = SetRectRgn( hDest,
-                          pRgn_Attr_Src1->Rect.left,
-                          pRgn_Attr_Src1->Rect.top,
-                          pRgn_Attr_Src1->Rect.right,
-                          pRgn_Attr_Src1->Rect.bottom );
-        if (Ret)
-            return SIMPLEREGION;
-        goto ERROR_Exit;
+        /* We couldn't handle the operation, go to win32k */
+        return NtGdiCombineRgn(hrgnDest, hrgnSrc1, hrgnSrc2, iCombineMode);
     }
 
-    /* Handle AND.  */
-    if ( pRgn_Attr_Src1->Flags != NULLREGION &&
-            pRgn_Attr_Src2->Flags != NULLREGION )
-    {
-        Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
-
-        if ( Complexity == DIFF_RGN ) /* Differentiated in anyway just NULL rgn. */
-        {
-            if (SetRectRgn( hDest, 0, 0, 0, 0))
-                return NULLREGION;
-            goto ERROR_Exit;
-        }
-
-        if ( Complexity != INVERTED_RGN) /* Not inverted and overlapping. */
-        {
-            if ( Complexity != SAME_RGN) /* Must be norm and overlapping. */
-                return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-            /* Merge from src2.  */
-            Ret = SetRectRgn( hDest,
-                              pRgn_Attr_Src2->Rect.left,
-                              pRgn_Attr_Src2->Rect.top,
-                              pRgn_Attr_Src2->Rect.right,
-                              pRgn_Attr_Src2->Rect.bottom );
-            if (Ret)
-                return SIMPLEREGION;
-            goto ERROR_Exit;
-        }
-        /* Inverted so merge from src1. */
-        Ret = SetRectRgn( hDest,
-                          pRgn_Attr_Src1->Rect.left,
-                          pRgn_Attr_Src1->Rect.top,
-                          pRgn_Attr_Src1->Rect.right,
-                          pRgn_Attr_Src1->Rect.bottom );
-        if (Ret)
-            return SIMPLEREGION;
-        goto ERROR_Exit;
-    }
-
-    /* It's all NULL! */
-    if (SetRectRgn( hDest, 0, 0, 0, 0))
-        return NULLREGION;
-
-ERROR_Exit:
-    /* Even on error the flag is set dirty and force server side to redraw. */
-    pRgn_Attr_Dest->AttrFlags |= ATTR_RGN_DIRTY;
+    DPRINT1("Invalid iCombineMode %d\n", iCombineMode);
+    SetLastError(ERROR_INVALID_PARAMETER);
     return ERROR;
 }
+
 
 /*
  * @implemented
@@ -491,13 +648,13 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
 
     if (( x1 == x2) || (y1 == y2))
     {
-        pRgn_Attr->Flags = NULLREGION;
+        pRgn_Attr->iComplexity = NULLREGION;
         pRgn_Attr->Rect.left = pRgn_Attr->Rect.top =
                                    pRgn_Attr->Rect.right = pRgn_Attr->Rect.bottom = 0;
     }
     else
     {
-        pRgn_Attr->Flags = SIMPLEREGION;
+        pRgn_Attr->iComplexity = SIMPLEREGION;
         pRgn_Attr->Rect.left   = x1;
         pRgn_Attr->Rect.top    = y1;
         pRgn_Attr->Rect.right  = x2;
@@ -528,28 +685,15 @@ CreateRectRgnIndirect(
  */
 INT
 WINAPI
-ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
+ExcludeClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom))
-                    return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
+    HANDLE_METADC(INT, ExcludeClipRect, ERROR, hdc, xLeft, yTop, xRight, yBottom);
+
     return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
 }
 
@@ -582,31 +726,16 @@ ExtCreateRegion(
  */
 INT
 WINAPI
-ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
+ExtSelectClipRgn(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ INT iMode)
 {
     INT Ret;
     HRGN NewRgn = NULL;
 
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_ExtSelectClipRgn( hdc, );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExtSelectClipRgn( hdc, ))
-                    return NtGdiExtSelectClipRgn(hdc, );
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
+    HANDLE_METADC(INT, ExtSelectClipRgn, 0, hdc, hrgn, iMode);
+
 #if 0
     if ( hrgn )
     {
@@ -642,7 +771,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
                     !(pEntry->Flags & GDI_ENTRY_VALIDATE_VIS) )
             {
                 if (!hrgn ||
-                        (hrgn && pRgn_Attr && pRgn_Attr->Flags <= SIMPLEREGION) )
+                        (hrgn && pRgn_Attr && pRgn_Attr->iComplexity <= SIMPLEREGION) )
                 {
                     if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSEXTSELCLPRGN)) <= GDIBATCHBUFSIZE)
                     {
@@ -655,7 +784,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
 
                         if ( hrgn && pRgn_Attr )
                         {
-                            Ret = pRgn_Attr->Flags;
+                            Ret = pRgn_Attr->iComplexity;
 
                             if ( pDc_Attr->VisRectRegion.Rect.left   >= pRgn_Attr->Rect.right  ||
                                     pDc_Attr->VisRectRegion.Rect.top    >= pRgn_Attr->Rect.bottom ||
@@ -708,7 +837,7 @@ GetClipRgn(
     {
         /* Last error code differs from what NtGdiGetRandomRgn returns */
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        return -1;
     }
 
     Ret = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
@@ -763,7 +892,7 @@ GetRgnBox(HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
     return NtGdiGetRgnBox(hrgn, prcOut);
 
-    if (Rgn_Attr->Flags == NULLREGION)
+    if (Rgn_Attr->iComplexity == NULLREGION)
     {
         prcOut->left   = 0;
         prcOut->top    = 0;
@@ -772,12 +901,12 @@ GetRgnBox(HRGN hrgn,
     }
     else
     {
-        if (Rgn_Attr->Flags != SIMPLEREGION)
+        if (Rgn_Attr->iComplexity != SIMPLEREGION)
             return NtGdiGetRgnBox(hrgn, prcOut);
         /* WARNING! prcOut is never checked newbies! */
         RtlCopyMemory( prcOut, &Rgn_Attr->Rect, sizeof(RECT));
     }
-    return Rgn_Attr->Flags;
+    return Rgn_Attr->iComplexity;
 }
 
 /*
@@ -785,33 +914,15 @@ GetRgnBox(HRGN hrgn,
  */
 INT
 WINAPI
-IntersectClipRect(HDC hdc,
-                  int nLeftRect,
-                  int nTopRect,
-                  int nRightRect,
-                  int nBottomRect)
+IntersectClipRect(
+    _In_ HDC hdc,
+    _In_ INT nLeft,
+    _In_ INT nTop,
+    _In_ INT nRight,
+    _In_ INT nBottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect))
-                    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
-    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+    HANDLE_METADC(INT, IntersectClipRect, ERROR, hdc, nLeft, nTop, nRight, nBottom);
+    return NtGdiIntersectClipRect(hdc, nLeft, nTop, nRight, nBottom);
 }
 
 /*
@@ -831,31 +942,13 @@ MirrorRgn(HWND hwnd, HRGN hrgn)
  */
 INT
 WINAPI
-OffsetClipRgn(HDC hdc,
-              int nXOffset,
-              int nYOffset)
+OffsetClipRgn(
+    HDC hdc,
+    INT nXOffset,
+    INT nYOffset)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return ERROR;
-            }
-            if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
-                return ERROR;
-            return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
-        }
-    }
-#endif
-    return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+    HANDLE_METADC(INT, OffsetClipRgn, ERROR, hdc, nXOffset, nYOffset);
+    return NtGdiOffsetClipRgn(hdc, nXOffset, nYOffset);
 }
 
 /*
@@ -875,10 +968,10 @@ OffsetRgn( HRGN hrgn,
 //  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
-        return pRgn_Attr->Flags;
+    if ( pRgn_Attr->iComplexity == NULLREGION)
+        return pRgn_Attr->iComplexity;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
     nLeftRect   = pRgn_Attr->Rect.left;
@@ -911,7 +1004,7 @@ OffsetRgn( HRGN hrgn,
             pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
         }
     }
-    return pRgn_Attr->Flags;
+    return pRgn_Attr->iComplexity;
 }
 
 /*
@@ -929,10 +1022,10 @@ PtInRegion(IN HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiPtInRegion(hrgn,x,y);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
+    if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiPtInRegion(hrgn,x,y);
 
     return INRECT( pRgn_Attr->Rect, x, y);
@@ -953,10 +1046,10 @@ RectInRegion(HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
+    if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
     /* swap the coordinates to make right >= left and bottom >= top */
@@ -991,11 +1084,11 @@ RectInRegion(HRGN hrgn,
 /*
  * @implemented
  */
-int WINAPI
+int
+WINAPI
 SelectClipRgn(
-    HDC     hdc,
-    HRGN    hrgn
-)
+    _In_ HDC hdc,
+    _In_ HRGN hrgn)
 {
     return ExtSelectClipRgn(hdc, hrgn, RGN_COPY);
 }
@@ -1005,44 +1098,54 @@ SelectClipRgn(
  */
 BOOL
 WINAPI
-SetRectRgn(HRGN hrgn,
-           int nLeftRect,
-           int nTopRect,
-           int nRightRect,
-           int nBottomRect)
+SetRectRgn(
+    _In_ HRGN hrgn,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    PRGN_ATTR Rgn_Attr;
+    PRGN_ATTR prngattr;
 
-    //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
-    return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-
-    if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
+    /* Try to get the region attribute */
+    prngattr = GdiGetRgnAttr(hrgn);
+    if (prngattr == NULL)
     {
-        Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
-        Rgn_Attr->Flags = NULLREGION;
-        Rgn_Attr->Rect.left = Rgn_Attr->Rect.top =
-                                  Rgn_Attr->Rect.right = Rgn_Attr->Rect.bottom = 0;
+        return NtGdiSetRectRgn(hrgn, xLeft, yTop, xRight, yBottom);
+    }
+
+    /* check for NULL region */
+    if ((xLeft == xRight) || (yTop == yBottom))
+    {
+        IntSetNullRgn(prngattr);
         return TRUE;
     }
 
-    Rgn_Attr->Rect.left   = nLeftRect;
-    Rgn_Attr->Rect.top    = nTopRect;
-    Rgn_Attr->Rect.right  = nRightRect;
-    Rgn_Attr->Rect.bottom = nBottomRect;
-
-    if(nLeftRect > nRightRect)
+    if (xLeft > xRight)
     {
-        Rgn_Attr->Rect.left   = nRightRect;
-        Rgn_Attr->Rect.right  = nLeftRect;
+        prngattr->Rect.left   = xRight;
+        prngattr->Rect.right  = xLeft;
     }
-    if(nTopRect > nBottomRect)
+    else
     {
-        Rgn_Attr->Rect.top    = nBottomRect;
-        Rgn_Attr->Rect.bottom = nTopRect;
+        prngattr->Rect.left   = xLeft;
+        prngattr->Rect.right  = xRight;
     }
 
-    Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
-    Rgn_Attr->Flags = SIMPLEREGION;
+    if (yTop > yBottom)
+    {
+        prngattr->Rect.top    = yBottom;
+        prngattr->Rect.bottom = yTop;
+    }
+    else
+    {
+        prngattr->Rect.top    = yTop;
+        prngattr->Rect.bottom = yBottom;
+    }
+
+    prngattr->AttrFlags |= ATTR_RGN_DIRTY ;
+    prngattr->iComplexity = SIMPLEREGION;
+
     return TRUE;
 }
 
@@ -1051,7 +1154,7 @@ SetRectRgn(HRGN hrgn,
  */
 int
 WINAPI
-SetMetaRgn( HDC hDC )
+SetMetaRgn(HDC hDC)
 {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
         return NtGdiSetMetaRgn(hDC);

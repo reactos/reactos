@@ -8,17 +8,17 @@ BEGIN
     IDS_PASTE "Вставить"
     IDS_SELECTALL "Выделить все"
     IDS_SCROLL "Прокрутить"
-    IDS_FIND "Искать..."
+    IDS_FIND "Найти..."
     IDS_DEFAULTS "Умолчания"
     IDS_PROPERTIES "Свойства"
 /*
     IDS_SCROLLHERE "Scroll here"
     IDS_SCROLLTOP "Scroll top"
-    IDS_SCROLLBOTTOM "Прокрутить вниз"
-    IDS_SCROLLPAGE_UP "Вверх страницы"
-    IDS_SCROLLPAGE_DOWN "Вниз страницы"
-    IDS_SCROLLUP "Прокрутить вверх"
+    IDS_SCROLLBOTTOM "Scroll bottom"
+    IDS_SCROLLPAGE_UP "Page up"
+    IDS_SCROLLPAGE_DOWN "Page down"
+    IDS_SCROLLUP "Scroll up"
     IDS_SCROLLDOWN "Scroll down"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "ReactOS Консоль"
 END

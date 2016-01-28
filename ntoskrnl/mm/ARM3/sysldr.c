@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GCC's incompetence strikes again */
 __inline
@@ -99,6 +99,8 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     PMMPTE PointerPte, LastPte;
     PVOID DriverBase;
     MMPTE TempPte;
+    KIRQL OldIrql;
+    PFN_NUMBER PageFrameIndex;
     PAGED_CODE();
 
     /* Detect session load */
@@ -173,30 +175,45 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     *ImageBase = DriverBase;
     DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
 
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Some debug stuff */
+    MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
+#if MI_TRACE_PFNS
+    if (FileName->Buffer)
+    {
+        PWCHAR pos = NULL;
+        ULONG len = 0;
+        pos = wcsrchr(FileName->Buffer, '\\');
+        len = wcslen(pos) * sizeof(WCHAR);
+        if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
+    }
+#endif
+
     /* Loop the new driver PTEs */
     TempPte = ValidKernelPte;
     while (PointerPte < LastPte)
     {
-        /* Allocate a page */
-        MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
-#if MI_TRACE_PFNS
-        PWCHAR pos = NULL;
-        ULONG len = 0;
-        if (FileName->Buffer)
-        {
-            pos = wcsrchr(FileName->Buffer, '\\');
-            len = wcslen(pos) * sizeof(WCHAR);
-            if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
-        }
-#endif
-        TempPte.u.Hard.PageFrameNumber = MiAllocatePfn(PointerPte, MM_EXECUTE);
+        /* Make sure the PTE is not valid for whatever reason */
+        ASSERT(PointerPte->u.Hard.Valid == 0);
 
-        /* Write it */
+        /* Grab a page */
+        PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
+
+        /* Initialize its PFN entry */
+        MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
+
+        /* Write the PTE */
+        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
         /* Move on */
         PointerPte++;
     }
+
+    /* Release the PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
     /* Copy the image */
     RtlCopyMemory(DriverBase, Base, PteCount << PAGE_SHIFT);
@@ -428,9 +445,9 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
                 MiDereferenceImports(CurrentImports);
 
                 /* Check if we had valid imports */
-                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) ||
-                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) ||
-                    !((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) &&
+                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) &&
+                    !((ULONG_PTR)CurrentImports & MM_SYSLDR_SINGLE_ENTRY))
                 {
                     /* Free them */
                     ExFreePoolWithTag(CurrentImports, TAG_LDR_IMPORTS);

@@ -572,9 +572,9 @@ VfatRead(
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
         IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
         DPRINT("Read from page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart);
         Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-        VfatFreeIrpContext(IrpContext);
         return Status;
     }
 
@@ -599,6 +599,13 @@ VfatRead(
        goto ByeBye;
     }
 
+    if (Length == 0)
+    {
+        IrpContext->Irp->IoStatus.Information = 0;
+        Status = STATUS_SUCCESS;
+        goto ByeBye;
+    }
+
     if (ByteOffset.QuadPart >= Fcb->RFCB.FileSize.QuadPart)
     {
        IrpContext->Irp->IoStatus.Information = 0;
@@ -615,13 +622,6 @@ VfatRead(
             Status = STATUS_INVALID_PARAMETER;
             goto ByeBye;
         }
-    }
-
-    if (Length == 0)
-    {
-        IrpContext->Irp->IoStatus.Information = 0;
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
     }
 
     if (Fcb->Flags & FCB_IS_VOLUME)
@@ -655,10 +655,10 @@ VfatRead(
         }
     }
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp);
-    if (!Buffer)
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
+    Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
+    if (!NT_SUCCESS(Status))
     {
-        Status = STATUS_INVALID_USER_BUFFER;
         goto ByeBye;
     }
 
@@ -716,12 +716,6 @@ VfatRead(
             Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
         }
 
-        Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
-        if (!NT_SUCCESS(Status))
-        {
-            goto ByeBye;
-        }
-
         Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
         if (NT_SUCCESS(Status))
         {
@@ -740,13 +734,7 @@ ByeBye:
         Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
         if (NT_SUCCESS(Status))
         {
-            Status = VfatQueueRequest(IrpContext);
-        }
-        else
-        {
-            IrpContext->Irp->IoStatus.Status = Status;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
+            Status = VfatMarkIrpContextForQueue(IrpContext);
         }
     }
     else
@@ -760,9 +748,8 @@ ByeBye:
                 ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
         }
 
-        IoCompleteRequest(IrpContext->Irp,
-                          (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-        VfatFreeIrpContext(IrpContext);
+        if (NT_SUCCESS(Status))
+            IrpContext->PriorityBoost = IO_DISK_INCREMENT;
     }
     DPRINT("%x\n", Status);
     return Status;
@@ -805,9 +792,9 @@ VfatWrite(
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
         IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+        IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
         DPRINT("Write to page file, disk offset %I64x\n", IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart);
         Status = IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
-        VfatFreeIrpContext(IrpContext);
         return Status;
     }
 
@@ -894,7 +881,7 @@ VfatWrite(
     if (Fcb->Flags & FCB_IS_PAGE_FILE)
     {
         if (!ExAcquireResourceSharedLite(Resource,
-                                         (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                         BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             Resource = NULL;
             Status = STATUS_PENDING;
@@ -904,7 +891,7 @@ VfatWrite(
     else
     {
         if (!ExAcquireResourceExclusiveLite(Resource,
-                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
             Resource = NULL;
             Status = STATUS_PENDING;
@@ -933,13 +920,13 @@ VfatWrite(
 
     OldFileSize = Fcb->RFCB.FileSize;
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp);
-    if (!Buffer)
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
+    Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
+    if (!NT_SUCCESS(Status))
     {
         Status = STATUS_INVALID_USER_BUFFER;
         goto ByeBye;
     }
-
 
     if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) &&
         !(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
@@ -1006,12 +993,6 @@ VfatWrite(
             CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
         }
 
-        Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
-        if (!NT_SUCCESS(Status))
-        {
-            goto ByeBye;
-        }
-
         Status = VfatWriteFileData(IrpContext, Length, ByteOffset);
         if (NT_SUCCESS(Status))
         {
@@ -1074,13 +1055,7 @@ ByeBye:
         Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoReadAccess);
         if (NT_SUCCESS(Status))
         {
-            Status = VfatQueueRequest(IrpContext);
-        }
-        else
-        {
-            IrpContext->Irp->IoStatus.Status = Status;
-            IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-            VfatFreeIrpContext(IrpContext);
+            Status = VfatMarkIrpContextForQueue(IrpContext);
         }
     }
     else
@@ -1093,9 +1068,8 @@ ByeBye:
                 ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
         }
 
-        IoCompleteRequest(IrpContext->Irp,
-                          (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
-        VfatFreeIrpContext(IrpContext);
+        if (NT_SUCCESS(Status))
+            IrpContext->PriorityBoost = IO_DISK_INCREMENT;
     }
     DPRINT("%x\n", Status);
     return Status;

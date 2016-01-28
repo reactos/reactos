@@ -6,6 +6,7 @@
 #define IDS_HIGHCOLOR15 15
 #define IDS_HIGHCOLOR16 16
 #define IDS_HIGHCOLOR24 24
+#define IDS_HIGHCOLOR32 32
 
 #define IDD_CONNECTDIALOG            101
 #define IDD_GENERAL                  105

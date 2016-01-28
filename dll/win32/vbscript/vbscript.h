@@ -159,7 +159,8 @@ HRESULT create_vbdisp(const class_desc_t*,vbdisp_t**) DECLSPEC_HIDDEN;
 HRESULT disp_get_id(IDispatch*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*) DECLSPEC_HIDDEN;
 HRESULT vbdisp_get_id(vbdisp_t*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*) DECLSPEC_HIDDEN;
 HRESULT disp_call(script_ctx_t*,IDispatch*,DISPID,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
-HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,DISPPARAMS*) DECLSPEC_HIDDEN;
+HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,WORD,DISPPARAMS*) DECLSPEC_HIDDEN;
+HRESULT get_disp_value(script_ctx_t*,IDispatch*,VARIANT*) DECLSPEC_HIDDEN;
 void collect_objects(script_ctx_t*) DECLSPEC_HIDDEN;
 HRESULT create_procedure_disp(script_ctx_t*,vbscode_t*,IDispatch**) DECLSPEC_HIDDEN;
 HRESULT create_script_disp(script_ctx_t*,ScriptDisp**) DECLSPEC_HIDDEN;
@@ -245,6 +246,7 @@ typedef enum {
     X(empty,          1, 0,           0)          \
     X(enumnext,       0, ARG_ADDR,    ARG_BSTR)   \
     X(equal,          1, 0,           0)          \
+    X(hres,           1, ARG_UINT,    0)          \
     X(errmode,        1, ARG_INT,     0)          \
     X(eqv,            1, 0,           0)          \
     X(exp,            1, 0,           0)          \
@@ -417,6 +419,7 @@ HRESULT map_hres(HRESULT) DECLSPEC_HIDDEN;
 #define VBSE_PERMISSION_DENIED             70
 #define VBSE_PATH_FILE_ACCESS              75
 #define VBSE_PATH_NOT_FOUND                76
+#define VBSE_ILLEGAL_NULL_USE              94
 #define VBSE_OLE_NOT_SUPPORTED            430
 #define VBSE_OLE_NO_PROP_OR_METHOD        438
 #define VBSE_ACTION_NOT_SUPPORTED         445
@@ -435,8 +438,6 @@ HRESULT map_hres(HRESULT) DECLSPEC_HIDDEN;
 
 HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI VBScriptRegExpFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-
-const char *debugstr_variant(const VARIANT*) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc(size_t len)
 {
@@ -473,6 +474,10 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
 
     return ret;
 }
+
+#define VBSCRIPT_BUILD_VERSION 16978
+#define VBSCRIPT_MAJOR_VERSION 5
+#define VBSCRIPT_MINOR_VERSION 8
 
 #include "parse.h"
 #include "regexp.h"

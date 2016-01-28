@@ -617,7 +617,7 @@ static unsigned dwarf2_map_register(int regno)
         FIXME("What the heck map reg 0x%x\n",regno);
         return 0;
     }
-    return dbghelp_current_cpu->map_dwarf_register(regno);
+    return dbghelp_current_cpu->map_dwarf_register(regno, FALSE);
 }
 
 static enum location_error
@@ -1305,6 +1305,31 @@ static struct symt* dwarf2_parse_volatile_type(dwarf2_parse_context_t* ctx,
     return ref_type;
 }
 
+static struct symt* dwarf2_parse_unspecified_type(dwarf2_parse_context_t* ctx,
+                                           dwarf2_debug_info_t* di)
+{
+    struct attribute name;
+    struct attribute size;
+    struct symt_basic *basic;
+
+    TRACE("%s, for %s\n", dwarf2_debug_ctx(ctx), dwarf2_debug_di(di));
+
+    if (di->symt) return di->symt;
+
+    if (!dwarf2_find_attribute(ctx, di, DW_AT_name, &name))
+        name.u.string = "void";
+    size.u.uvalue = sizeof(void *);
+
+    basic = symt_new_basic(ctx->module, btVoid, name.u.string, size.u.uvalue);
+    di->symt = &basic->symt;
+
+    if (!ctx->symt_cache[sc_void])
+        ctx->symt_cache[sc_void] = di->symt;
+
+    if (dwarf2_get_di_children(ctx, di)) FIXME("Unsupported children\n");
+    return di->symt;
+}
+
 static struct symt* dwarf2_parse_reference_type(dwarf2_parse_context_t* ctx,
                                                 dwarf2_debug_info_t* di)
 {
@@ -1421,6 +1446,9 @@ static struct symt* dwarf2_parse_udt_type(dwarf2_parse_context_t* ctx,
         case DW_TAG_subprogram:
             dwarf2_parse_subprogram(ctx, child);
             break;
+        case DW_TAG_const_type:
+            dwarf2_parse_const_type(ctx, child);
+            break;
         case DW_TAG_structure_type:
         case DW_TAG_class_type:
         case DW_TAG_union_type:
@@ -1432,6 +1460,8 @@ static struct symt* dwarf2_parse_udt_type(dwarf2_parse_context_t* ctx,
         case DW_TAG_variable:
         case DW_TAG_imported_declaration:
         case DW_TAG_ptr_to_member_type:
+        case DW_TAG_GNU_template_parameter_pack:
+        case DW_TAG_GNU_formal_parameter_pack:
             /* FIXME: some C++ related stuff */
             break;
         default:
@@ -1781,6 +1811,9 @@ static void dwarf2_parse_subprogram_block(dwarf2_subprogram_t* subpgm,
         case DW_TAG_subroutine_type:
             dwarf2_parse_subroutine_type(subpgm->ctx, di);
             break;
+        case DW_TAG_const_type:
+            dwarf2_parse_const_type(subpgm->ctx, di);
+            break;
         case DW_TAG_lexical_block:
             dwarf2_parse_subprogram_block(subpgm, block, child);
             break;
@@ -1915,6 +1948,9 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
         case DW_TAG_pointer_type:
             dwarf2_parse_pointer_type(subpgm.ctx, di);
             break;
+        case DW_TAG_const_type:
+            dwarf2_parse_const_type(subpgm.ctx, di);
+            break;
         case DW_TAG_subprogram:
             /* FIXME: likely a declaration (to be checked)
              * skip it for now
@@ -1934,6 +1970,8 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
         case DW_TAG_template_type_param:
         case DW_TAG_template_value_param:
         case DW_TAG_GNU_call_site:
+        case DW_TAG_GNU_template_parameter_pack:
+        case DW_TAG_GNU_formal_parameter_pack:
             /* FIXME: no support in dbghelp's internals so far */
             break;
         default:
@@ -2046,6 +2084,9 @@ static void dwarf2_load_one_entry(dwarf2_parse_context_t* ctx,
         break;
     case DW_TAG_volatile_type:
         dwarf2_parse_volatile_type(ctx, di);
+        break;
+    case DW_TAG_unspecified_type:
+        dwarf2_parse_unspecified_type(ctx, di);
         break;
     case DW_TAG_reference_type:
         dwarf2_parse_reference_type(ctx, di);
@@ -2381,7 +2422,7 @@ static BOOL dwarf2_parse_compilation_unit(const dwarf2_section_t* sections,
         }
         if (dwarf2_find_attribute(&ctx, di, DW_AT_stmt_list, &stmt_list))
         {
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && defined(__clang__)
             unsigned long stmt_list_val = stmt_list.u.uvalue;
             if (stmt_list_val > module->module.BaseOfImage)
             {
@@ -2574,7 +2615,7 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
 
     /* parse the CIE first */
     version = dwarf2_parse_byte(ctx);
-    if (version != 1)
+    if (version != 1 && version != 3)
     {
         FIXME("unknown CIE version %u at %p\n", version, ctx->data - 1);
         return FALSE;
@@ -2584,7 +2625,10 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
 
     info->code_align = dwarf2_leb128_as_unsigned(ctx);
     info->data_align = dwarf2_leb128_as_signed(ctx);
-    info->retaddr_reg = dwarf2_parse_byte(ctx);
+    if (version == 1)
+        info->retaddr_reg = dwarf2_parse_byte(ctx);
+    else
+        info->retaddr_reg = dwarf2_leb128_as_unsigned(ctx);
     info->state.cfa_rule = RULE_CFA_OFFSET;
 
     end = NULL;
@@ -2726,7 +2770,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
                 if (!valid_reg(reg)) break;
                 TRACE("%lx: DW_CFA_offset %s, %ld\n",
                       info->ip,
-                      dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
+                      dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)),
                       offset);
                 info->state.regs[reg]  = offset;
                 info->state.rules[reg] = RULE_CFA_OFFSET;
@@ -2738,7 +2782,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
                 if (!valid_reg(reg)) break;
                 TRACE("%lx: DW_CFA_restore %s\n",
                       info->ip,
-                      dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)));
+                      dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)));
                 info->state.rules[reg] = RULE_UNSET;
                 break;
             }
@@ -2785,7 +2829,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_offset_extended %s, %ld\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)),
                   offset);
             info->state.regs[reg]  = offset;
             info->state.rules[reg] = RULE_CFA_OFFSET;
@@ -2797,7 +2841,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_restore_extended %s\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)));
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)));
             info->state.rules[reg] = RULE_UNSET;
             break;
         }
@@ -2807,7 +2851,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_undefined %s\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)));
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)));
             info->state.rules[reg] = RULE_UNDEFINED;
             break;
         }
@@ -2817,7 +2861,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_same_value %s\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)));
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)));
             info->state.regs[reg]  = reg;
             info->state.rules[reg] = RULE_SAME;
             break;
@@ -2829,8 +2873,8 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg) || !valid_reg(reg2)) break;
             TRACE("%lx: DW_CFA_register %s == %s\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg2)));
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)),
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg2, TRUE)));
             info->state.regs[reg]  = reg2;
             info->state.rules[reg] = RULE_OTHER_REG;
             break;
@@ -2858,7 +2902,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_def_cfa %s, %ld\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)),
                   offset);
             info->state.cfa_reg    = reg;
             info->state.cfa_offset = offset;
@@ -2871,7 +2915,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_def_cfa_register %s\n",
                   info->ip,
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)));
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)));
             info->state.cfa_reg  = reg;
             info->state.cfa_rule = RULE_CFA_OFFSET;
             break;
@@ -2905,7 +2949,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             if (!valid_reg(reg)) break;
             TRACE("%lx: DW_CFA_%sexpression %s %lx-%lx\n",
                   info->ip, (op == DW_CFA_expression) ? "" : "val_",
-                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
+                  dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg, TRUE)),
                   expr, expr + len);
             info->state.regs[reg]  = expr;
             info->state.rules[reg] = (op == DW_CFA_expression) ? RULE_EXPRESSION : RULE_VAL_EXPRESSION;
@@ -2930,7 +2974,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
 /* retrieve a context register from its dwarf number */
 static ULONG_PTR get_context_reg(CONTEXT *context, ULONG_PTR dw_reg)
 {
-    unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg), sz;
+    unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg, TRUE), sz;
     ULONG_PTR* ptr = dbghelp_current_cpu->fetch_context_reg(context, regno, &sz);
 
     if (sz != sizeof(ULONG_PTR))
@@ -2945,7 +2989,7 @@ static ULONG_PTR get_context_reg(CONTEXT *context, ULONG_PTR dw_reg)
 static void set_context_reg(struct cpu_stack_walk* csw, CONTEXT *context, ULONG_PTR dw_reg,
                             ULONG_PTR val, BOOL isdebuggee)
 {
-    unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg), sz;
+    unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg, TRUE), sz;
     ULONG_PTR* ptr = dbghelp_current_cpu->fetch_context_reg(context, regno, &sz);
 
     if (isdebuggee)
@@ -2978,8 +3022,8 @@ static void set_context_reg(struct cpu_stack_walk* csw, CONTEXT *context, ULONG_
 /* copy a register from one context to another using dwarf number */
 static void copy_context_reg(CONTEXT *dstcontext, ULONG_PTR dwregdst, CONTEXT* srccontext, ULONG_PTR dwregsrc)
 {
-    unsigned regdstno = dbghelp_current_cpu->map_dwarf_register(dwregdst), szdst;
-    unsigned regsrcno = dbghelp_current_cpu->map_dwarf_register(dwregsrc), szsrc;
+    unsigned regdstno = dbghelp_current_cpu->map_dwarf_register(dwregdst, TRUE), szdst;
+    unsigned regsrcno = dbghelp_current_cpu->map_dwarf_register(dwregsrc, TRUE), szsrc;
     ULONG_PTR* ptrdst = dbghelp_current_cpu->fetch_context_reg(dstcontext, regdstno, &szdst);
     ULONG_PTR* ptrsrc = dbghelp_current_cpu->fetch_context_reg(srccontext, regsrcno, &szsrc);
 
@@ -3200,7 +3244,7 @@ BOOL dwarf2_virtual_unwind(struct cpu_stack_walk* csw, ULONG_PTR ip, CONTEXT* co
 
     TRACE("function %lx/%lx code_align %lu data_align %ld retaddr %s\n",
           ip, info.ip, info.code_align, info.data_align,
-          dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(info.retaddr_reg)));
+          dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(info.retaddr_reg, TRUE)));
 
     /* if at very beginning of function, return and use default unwinder */
     if (ip == info.ip) return FALSE;
@@ -3216,6 +3260,10 @@ BOOL dwarf2_virtual_unwind(struct cpu_stack_walk* csw, ULONG_PTR ip, CONTEXT* co
     if (end) fde_ctx.data = end;
 
     execute_cfa_instructions(&fde_ctx, ip, &info);
+
+    /* if there is no information about retaddr, use default unwinder */
+    if (info.state.rules[info.retaddr_reg] == RULE_UNSET) return FALSE;
+
     apply_frame_state(pair.effective, csw, context, &info.state, cfa);
 
     return TRUE;

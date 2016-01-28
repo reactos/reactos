@@ -90,6 +90,10 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         client/amd64/fiber.S
         client/amd64/thread.S)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE
+        client/arm/fiber.S
+        client/arm/thread.S)
 endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
@@ -99,14 +103,13 @@ add_library(kernel32 SHARED
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
-set_module_type(kernel32 win32dll HOTPATCHABLE ENTRYPOINT DllMain 12)
+set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
-
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)

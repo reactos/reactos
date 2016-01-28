@@ -1,6 +1,6 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/win32/input/changekeyseq.c
+ * FILE:            dll/cpl/input/changekeyseq.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  * UPDATE HISTORY:

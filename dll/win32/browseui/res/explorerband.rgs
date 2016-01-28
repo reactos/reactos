@@ -1,0 +1,13 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {EFA24E64-B078-11D0-89E4-00C04FC9E26E} = s 'Explorer TreeView Band'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

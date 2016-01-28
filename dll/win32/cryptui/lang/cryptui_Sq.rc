@@ -105,22 +105,16 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Emer Miqesor"
     IDS_ALLOWED_PURPOSE_ALL "<Te gjith>"
     IDS_ALLOWED_PURPOSE_NONE "<Asnje>"
-    IDS_WARN_REMOVE_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këtë certifikatë, ose të nënshkruajë mesazhe me të.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këto certifikata, ose të nënshkruajë mesazhe me ta.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këtë certifikatë, ose të nënshkruajë mesazhe me të.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këto certifikata, ose të nënshkruajë mesazhe me ta.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_ADDRESSBOOK "Ju nuk do të jenë më në gjendje të encrypt mesazhe me këtë certifikatë, ose të verifikojë mesazhe të nënshkruara me të.\n\Jeni te sigurte qe doni te hiqni këtë certifikatë?"
     IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Ju do të jenë më në gjendje të encrypt mesazhe me këtë certifikatë, ose të verifikojë mesazhe të nënshkruara me të.\n\Jeni te sigurte qe doni te hiqni këto certifikata?"
-    IDS_WARN_REMOVE_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_ROOT "Certifikatat e lëshuara nga ky autoritet certifikues rrënjë, ose çdo autoritet certifikimit të lëshuara, më nuk do të besohet.\n\Jeni te sigurte qe doni te hiqni certifikatën root te besuar?"
     IDS_WARN_REMOVE_PLURAL_ROOT "Certifikatat e lëshuara nga ky autoritet certifikues rrënjë, ose çdo autoritet certifikimit të lëshuara, më nuk do të besohet.\n\Jeni te sigurte qe doni te hiqni certifikatën root te besuar?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_DEFAULT "Jeni te sigurte qe doni te hiqni këtë certifikatë?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Jeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_CERT_MGR "Çertifikata"
@@ -180,9 +174,9 @@ Jeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Shenim: Çelësi privat për këtë certifikatë nuk është eksportueshme."
 }
 
-IDD_GENERAL DIALOG 0, 0, 255, 236
+IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Përgjithshëm"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Statik", WS_BORDER|SS_WHITERECT, 6,10,241,200
@@ -196,9 +190,9 @@ BEGIN
   PUSHBUTTON "Deklarate Leshuesit", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
-IDD_DETAIL DIALOG 0, 0, 255, 236
+IDD_DETAIL DIALOGEX 0, 0, 255, 236
 CAPTION "Detaje"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Shfaq:", -1, 6,12,40,14
@@ -210,9 +204,9 @@ BEGIN
   PUSHBUTTON "Kopjo Dokumentin...", IDC_EXPORT,152,216,95,14
 END
 
-IDD_HIERARCHY DIALOG 0, 0, 255, 236
+IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
 CAPTION "Rruga Çertifikimit"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Rruga Çertifikimit", -1,6,10,245,165, BS_GROUPBOX
@@ -224,9 +218,9 @@ BEGIN
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
-IDD_USERNOTICE DIALOG 0, 0, 255, 256
+IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
 CAPTION "Mohim"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
@@ -235,9 +229,9 @@ BEGIN
   PUSHBUTTON "Më Shum &Info", IDC_CPS,162,216,85,14
 END
 
-IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
+IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Përgjithshëm"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Emer Miqesor:", -1, 6,14,60,14
@@ -257,8 +251,9 @@ BEGIN
   PUSHBUTTON "Shto Arsyet...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
-IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
+IDD_ADD_CERT_PURPOSE DIALOGEX 0,0,200,68
 CAPTION "Shto Arsyet"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Shto identifikues objekt (oid) me qëllim certifikatës ju dëshironi të shtoni:",
@@ -268,8 +263,9 @@ BEGIN
   PUSHBUTTON "Anulo", IDCANCEL, 100,48,60,14
 END
 
-IDD_SELECT_STORE DIALOG 0,0,200,136
+IDD_SELECT_STORE DIALOGEX 0,0,200,136
 CAPTION "Përzgjedh Dyqanin e Çertifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Zgjidhni dyqanin e certifikatave që dëshironi të përdorni:", IDC_STORE_TEXT, 6,6,190,28
@@ -280,21 +276,21 @@ BEGIN
   PUSHBUTTON "Anulo", IDCANCEL, 144,118,50,14
 END
 
-IDD_IMPORT_WELCOME DIALOG 0,0,317,143
+IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Importimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Importues te Certifikatave", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\
-\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\
-\n\
+  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
+Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
 Për të vazhduar, klikoni Tjetër.",
     -1, 115,40,195,120
 END
 
-IDD_IMPORT_FILE DIALOG 0,0,317,178
+IDD_IMPORT_FILE DIALOGEX 0,0,317,178
 CAPTION "Magjistrari Importimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Emri Dokumentit:", -1, 21,1,195,10
@@ -302,16 +298,17 @@ BEGIN
   PUSHBUTTON "Shfleto...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Shenim:  Formati i mëposhtme mund të përmbajë më shumë se një certifikatë, certifikatë listë revokimi ose certifikatën listën e besimit:",
     -1, 21,30,265,16
-  LTEXT "Mesazh kriptografike Sintaksa Standard/PKCS #7 Messages (.p7b)",
+  LTEXT "Mesazh kriptografike Sintaksa Standard/PKCS #7 Messages (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Shkëmbim Informacione Personale/PKCS #12 (.pfx, .p12)",
+  LTEXT "Shkëmbim Informacione Personale/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft Serialized Certificate Store (.sst)",
+  LTEXT "Microsoft Serialized Certificate Store (*.sst)",
     -1, 31,83,265,10
 END
 
-IDD_IMPORT_STORE DIALOG 0,0,317,143
+IDD_IMPORT_STORE DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Importimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine mund të zgjedh automatikisht dyqanin e certifikatës, ose ju mund të specifikoni një vend për certifikatat.",
@@ -324,8 +321,9 @@ BEGIN
   PUSHBUTTON "Shfleto...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG 0,0,317,178
+IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Magjistrari Importimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Plotësimi Magjistarit per Importin e Certifikatave", IDC_IMPORT_TITLE,
@@ -339,8 +337,9 @@ BEGIN
     115,67,174,100
 END
 
-IDD_CERT_MGR DIALOG 0,0,335,270
+IDD_CERT_MGR DIALOGEX 0,0,335,270
 CAPTION "Çertifikata"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Arsyeja e Qëllimit:", -1, 7,9,100,12
@@ -357,8 +356,9 @@ BEGIN
   PUSHBUTTON "Mbyll", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
-IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
+IDD_CERT_MGR_ADVANCED DIALOGEX 0,0,248,176
 CAPTION "Opsione Përparuara"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Aryeja Çertifikimit", -1, 7,7,234,141, BS_GROUPBOX
@@ -372,21 +372,21 @@ BEGIN
   PUSHBUTTON "Anulo", IDCANCEL, 190,155,51,14
 END
 
-IDD_EXPORT_WELCOME DIALOG 0,0,317,143
+IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Eksportues te Certifikatave", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne eksmportimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\
-\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\
-\n\
+  LTEXT "Ky magjistar ju ndihmon ne eksmportimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
+Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
 Për të vazhduar, klikoni Tjetër.",
     -1, 115,40,195,120
 END
 
-IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
+IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Nëse ju vendosni për të eksportuar çelësin privat, do ju kerkohet fjalëkalimi për të mbrojtur/kyç privattish në një faqe të mëvonshme.", -1, 21,1,195,25
@@ -398,8 +398,9 @@ BEGIN
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
-IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
+IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Password:", -1, 21,1,195,10
@@ -408,20 +409,21 @@ BEGIN
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
-IDD_EXPORT_FORMAT DIALOG 0,0,317,143
+IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Zgjidhni formatin që dëshironi të përdorni:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-encoded X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Mesazh kriptografike Sintaksa Standard/PKCS #7 Message (.p7b)",
+  AUTORADIOBUTTON "Mesazh kriptografike Sintaksa Standard/PKCS #7 Message (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "Përfshirja e të gjitha certifikatat në rrugën e certifikimit nëse është e mundur",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "Shkëmbim Informacione Personale/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "Shkëmbim Informacione Personale/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Përfshirja e të gjitha certifikatat në rrugën e certifikimit nëse është e mundur",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -431,8 +433,9 @@ BEGIN
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
-IDD_EXPORT_FILE DIALOG 0,0,317,143
+IDD_EXPORT_FILE DIALOGEX 0,0,317,143
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Emri Dokumentit:", -1, 21,1,195,10
@@ -440,8 +443,9 @@ BEGIN
   PUSHBUTTON "Shfleto...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG 0,0,317,178
+IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Magjistrari Eksportimit Çetifikatave"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Plotësimi Magjistarit per Eksportin e Certifikatave", IDC_EXPORT_TITLE,

@@ -113,7 +113,7 @@ static const char *debugstr_nodetype(XmlNodeType nodetype)
     return type_names[nodetype];
 }
 
-static const char *debugstr_prop(XmlReaderProperty prop)
+static const char *debugstr_reader_prop(XmlReaderProperty prop)
 {
     static const char * const prop_names[] =
     {
@@ -144,6 +144,21 @@ static const struct xml_encoding_data xml_encoding_map[] = {
     { utf16W, XmlEncoding_UTF16, ~0 },
     { utf8W,  XmlEncoding_UTF8,  CP_UTF8 }
 };
+
+const WCHAR *get_encoding_name(xml_encoding encoding)
+{
+    return xml_encoding_map[encoding].name;
+}
+
+xml_encoding get_encoding_from_codepage(UINT codepage)
+{
+    int i;
+    for (i = 0; i < sizeof(xml_encoding_map)/sizeof(xml_encoding_map[0]); i++)
+    {
+        if (xml_encoding_map[i].cp == codepage) return xml_encoding_map[i].enc;
+    }
+    return XmlEncoding_Unknown;
+}
 
 typedef struct
 {
@@ -246,14 +261,6 @@ static inline xmlreader *impl_from_IXmlReader(IXmlReader *iface)
 static inline xmlreaderinput *impl_from_IXmlReaderInput(IXmlReaderInput *iface)
 {
     return CONTAINING_RECORD(iface, xmlreaderinput, IXmlReaderInput_iface);
-}
-
-static inline void *m_realloc(IMalloc *imalloc, void *mem, size_t len)
-{
-    if (imalloc)
-        return IMalloc_Realloc(imalloc, mem, len);
-    else
-        return heap_realloc(mem, len);
 }
 
 /* reader memory allocation functions */
@@ -363,12 +370,6 @@ static void reader_free_strvalued(xmlreader *reader, strval *v)
         reader_free(reader, v->str);
         *v = strval_empty;
     }
-}
-
-/* returns length in WCHARs from 'start' to current buffer offset */
-static inline UINT reader_get_len(const xmlreader *reader, UINT start)
-{
-    return reader->input->buffer->utf16.cur - start;
 }
 
 static inline void reader_init_strvalue(UINT start, UINT len, strval *v)
@@ -544,7 +545,7 @@ static void free_encoded_buffer(xmlreaderinput *input, encoded_buffer *buffer)
     readerinput_free(input, buffer->data);
 }
 
-static HRESULT get_code_page(xml_encoding encoding, UINT *cp)
+HRESULT get_code_page(xml_encoding encoding, UINT *cp)
 {
     if (encoding == XmlEncoding_Unknown)
     {
@@ -632,7 +633,7 @@ static void readerinput_release_stream(xmlreaderinput *readerinput)
 
 /* Queries already stored interface for IStream/ISequentialStream.
    Interface supplied on creation will be overwritten */
-static HRESULT readerinput_query_for_stream(xmlreaderinput *readerinput)
+static inline HRESULT readerinput_query_for_stream(xmlreaderinput *readerinput)
 {
     HRESULT hr;
 
@@ -899,8 +900,20 @@ static inline WCHAR *reader_get_ptr(xmlreader *reader)
 
 static int reader_cmp(xmlreader *reader, const WCHAR *str)
 {
+    int i=0;
     const WCHAR *ptr = reader_get_ptr(reader);
-    return strncmpW(str, ptr, strlenW(str));
+    while (str[i])
+    {
+        if (!ptr[i])
+        {
+            reader_more(reader);
+            ptr = reader_get_ptr(reader);
+        }
+        if (str[i] != ptr[i])
+            return ptr[i] - str[i];
+        i++;
+    }
+    return 0;
 }
 
 /* moves cursor n WCHARs forward */
@@ -2507,7 +2520,7 @@ static HRESULT WINAPI xmlreader_SetInput(IXmlReader* iface, IUnknown *input)
     {
         /* create IXmlReaderInput basing on supplied interface */
         hr = CreateXmlReaderInputWithEncodingName(input,
-                                         NULL, NULL, FALSE, NULL, &readerinput);
+                                         This->imalloc, NULL, FALSE, NULL, &readerinput);
         if (hr != S_OK) return hr;
         This->input = impl_from_IXmlReaderInput(readerinput);
     }
@@ -2527,7 +2540,7 @@ static HRESULT WINAPI xmlreader_GetProperty(IXmlReader* iface, UINT property, LO
 {
     xmlreader *This = impl_from_IXmlReader(iface);
 
-    TRACE("(%p)->(%s %p)\n", This, debugstr_prop(property), value);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_reader_prop(property), value);
 
     if (!value) return E_INVALIDARG;
 
@@ -2551,7 +2564,7 @@ static HRESULT WINAPI xmlreader_SetProperty(IXmlReader* iface, UINT property, LO
 {
     xmlreader *This = impl_from_IXmlReader(iface);
 
-    TRACE("(%p)->(%s %lu)\n", This, debugstr_prop(property), value);
+    TRACE("(%p)->(%s %lu)\n", This, debugstr_reader_prop(property), value);
 
     switch (property)
     {
@@ -2670,7 +2683,7 @@ static HRESULT WINAPI xmlreader_GetQualifiedName(IXmlReader* iface, LPCWSTR *nam
 
     TRACE("(%p)->(%p %p)\n", This, name, len);
     *name = This->strvalues[StringValue_QualifiedName].str;
-    *len  = This->strvalues[StringValue_QualifiedName].len;
+    if (len) *len  = This->strvalues[StringValue_QualifiedName].len;
     return S_OK;
 }
 
@@ -2832,7 +2845,7 @@ static HRESULT WINAPI xmlreader_GetDepth(IXmlReader* iface, UINT *depth)
 static BOOL WINAPI xmlreader_IsEOF(IXmlReader* iface)
 {
     FIXME("(%p): stub\n", iface);
-    return E_NOTIMPL;
+    return FALSE;
 }
 
 static const struct IXmlReaderVtbl xmlreader_vtbl =

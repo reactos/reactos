@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -258,6 +258,14 @@ MmQuerySystemSize(VOID)
 {
     /* Return the low, medium or high memory system type */
     return MmSystemSize;
+}
+
+NTSTATUS
+NTAPI
+MmCreateMirror(VOID)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;    
 }
 
 /* EOF */

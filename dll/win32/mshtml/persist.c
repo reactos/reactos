@@ -103,8 +103,12 @@ void set_current_mon(HTMLOuterWindow *This, IMoniker *mon, DWORD flags)
     HRESULT hres;
 
     if(This->mon) {
-        if(This->doc_obj && !(flags & (BINDING_REPLACE|BINDING_REFRESH)))
-            notify_travellog_update(This->doc_obj);
+        if(This->doc_obj && !(flags & (BINDING_REPLACE|BINDING_REFRESH))) {
+            if(This == This->doc_obj->basedoc.window)
+                notify_travellog_update(This->doc_obj);
+            else
+                TRACE("Skipping travellog update for frame navigation.\n");
+        }
         IMoniker_Release(This->mon);
         This->mon = NULL;
     }
@@ -371,7 +375,7 @@ HRESULT set_moniker(HTMLOuterWindow *window, IMoniker *mon, IUri *nav_uri, IBind
             remove_target_tasks(window->base.inner_window->task_magic);
         abort_window_bindings(window->base.inner_window);
 
-        hres = load_nsuri(window, nsuri, bscallback, LOAD_FLAGS_BYPASS_CACHE);
+        hres = load_nsuri(window, nsuri, NULL, bscallback, LOAD_FLAGS_BYPASS_CACHE);
         nsISupports_Release((nsISupports*)nsuri); /* FIXME */
         if(SUCCEEDED(hres)) {
             hres = create_pending_window(window, bscallback);

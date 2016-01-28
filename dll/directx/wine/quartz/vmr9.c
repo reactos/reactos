@@ -24,7 +24,6 @@
 
 #include <d3d9.h>
 #include <vmr9.h>
-#include <strmif.h>
 
 struct quartz_vmr
 {
@@ -457,14 +456,12 @@ static HRESULT WINAPI VMR9_ShouldDrawSampleNow(BaseRenderer *This, IMediaSample 
 static HRESULT WINAPI VMR9_CompleteConnect(BaseRenderer *This, IPin *pReceivePin)
 {
     struct quartz_vmr *pVMR9 = (struct quartz_vmr*)This;
-    HRESULT hr = S_OK;
+    HRESULT hr;
 
     TRACE("(%p)\n", This);
 
-    if (!pVMR9->mode && SUCCEEDED(hr))
-        hr = IVMRFilterConfig9_SetRenderingMode(&pVMR9->IVMRFilterConfig9_iface, VMR9Mode_Windowed);
-
-    if (SUCCEEDED(hr))
+    if (pVMR9->mode ||
+            SUCCEEDED(hr = IVMRFilterConfig9_SetRenderingMode(&pVMR9->IVMRFilterConfig9_iface, VMR9Mode_Windowed)))
         hr = VMR9_maybe_init(pVMR9, FALSE);
 
     return hr;
@@ -3070,6 +3067,7 @@ static HRESULT VMR9DefaultAllocatorPresenterImpl_create(struct quartz_vmr *paren
         D3DDISPLAYMODE mode;
 
         hr = IDirect3D9_EnumAdapterModes(This->d3d9_ptr, i++, D3DFMT_X8R8G8B8, 0, &mode);
+	if (hr == D3DERR_INVALIDCALL) break; /* out of adapters */
     } while (FAILED(hr));
     if (FAILED(hr))
         ERR("HR: %08x\n", hr);
@@ -3096,6 +3094,6 @@ static HRESULT VMR9DefaultAllocatorPresenterImpl_create(struct quartz_vmr *paren
     This->SurfaceAllocatorNotify = NULL;
     This->reset = FALSE;
 
-    *ppv = This;
+    *ppv = &This->IVMRImagePresenter9_iface;
     return S_OK;
 }

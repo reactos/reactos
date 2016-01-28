@@ -43,6 +43,7 @@
 #include <ntstatus.h>
 #include <kernelspecs.h>
 #include <ntiologc.h>
+#include <suppress.h>
 
 #ifndef GUID_DEFINED
 #include <guiddef.h>
@@ -74,6 +75,10 @@ __drv_Mode_impl(WDM_INCLUDED)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+$define(UCHAR=UCHAR)
+$define(ULONG=ULONG)
+$define(USHORT=USHORT)
 
 #if !defined(_NTHALDLL_) && !defined(_BLDR_)
 #define NTHALAPI DECLSPEC_IMPORT

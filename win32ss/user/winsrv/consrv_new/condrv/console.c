@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Driver DLL
- * FILE:            win32ss/user/winsrv/consrv/condrv/console.c
+ * FILE:            win32ss/user/winsrv/consrv_new/condrv/console.c
  * PURPOSE:         Console Management Functions
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/armllb/hw/omap3-zoom2/hwsynkpd.c
+ * FILE:            boot/armllb/hw/omap3-zoom2/hwtwl40x.c
  * PURPOSE:         LLB Synpatics Keypad Support for OMAP3 ZOOM 2
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

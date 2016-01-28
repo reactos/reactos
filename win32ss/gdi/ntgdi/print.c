@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/print.c
+ * FILE:            win32ss/gdi/ntgdi/print.c
  * PURPOSE:         Print functions
  * PROGRAMMER:
  */
@@ -85,15 +85,19 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   SURFACE *psurf = dc->dclevel.pSurface;
+   SURFACE *psurf;
    INT Result;
 
-   if (!dc->ppdev->DriverFunctions.Escape || !psurf)
+   if ((dc->ppdev->DriverFunctions.Escape == NULL) ||
+       (dc->dclevel.pSurface == NULL))
    {
       Result = 0;
    }
    else
    {
+      DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
+      psurf = dc->dclevel.pSurface;
+
       Result = dc->ppdev->DriverFunctions.Escape(
          &psurf->SurfObj,
          Escape,
@@ -101,6 +105,8 @@ IntGdiExtEscape(
          (PVOID)InData,
          OutSize,
          (PVOID)OutData );
+
+      DC_vFinishBlit(dc, NULL);
    }
 
    return Result;

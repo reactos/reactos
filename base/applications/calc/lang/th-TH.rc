@@ -330,8 +330,8 @@ BEGIN
     END
     POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC
         MENUITEM "ความเปลี่ยนแปลง", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "ฐานสิบหก\tF5", IDM_VIEW_HEX, CHECKED
@@ -362,8 +362,8 @@ BEGIN
     END
     POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC
         MENUITEM "ความเปลี่ยนแปลง", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "ฐานสิบหก\tF5", IDM_VIEW_HEX, CHECKED
@@ -395,8 +395,8 @@ BEGIN
     END
     POPUP "&มุมมอง"
     BEGIN
-        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "แบบมาตรฐาน", IDM_VIEW_STANDARD
+        MENUITEM "แบบวิทยาศาสตร์", IDM_VIEW_SCIENTIFIC
         MENUITEM "ความเปลี่ยนแปลง", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "แสดงหลักตัวเลข", IDM_VIEW_GROUP, CHECKED

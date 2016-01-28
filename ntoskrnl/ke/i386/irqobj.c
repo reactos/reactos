@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/irq.c
+ * FILE:            ntoskrnl/ke/i386/irqobj.c
  * PURPOSE:         Manages the Kernel's IRQ support for external drivers,
  *                  for the purposes of connecting, disconnecting and setting
  *                  up ISRs for drivers. The backend behind the Io* Interrupt
@@ -143,36 +143,38 @@ KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
         _disable();
         HalEndSystemInterrupt(OldIrql, TrapFrame);
     }
-    
+
     /* Now exit the trap */
     KiEoiHelper(TrapFrame);
 }
 
+DECLSPEC_NORETURN
 VOID
+__cdecl
 KiUnexpectedInterrupt(VOID)
 {
     /* Crash the machine */
     KeBugCheck(TRAP_CAUSE_UNKNOWN);
 }
-    
+
 VOID
 FASTCALL
 KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL OldIrql;
-    
+
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
-    
+
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
-    
+
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->ErrCode, &OldIrql))
     {
         /* Warn user */
         DPRINT1("\n\x7\x7!!! Unexpected Interrupt 0x%02lx !!!\n", TrapFrame->ErrCode);
-        
+
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, FALSE);
     }
@@ -194,12 +196,12 @@ VOID
 FASTCALL
 KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
                     IN PKINTERRUPT Interrupt)
-{       
+{
     KIRQL OldIrql;
 
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
-    
+
     /* Begin the interrupt, making sure it's not spurious */
     if (HalBeginSystemInterrupt(Interrupt->SynchronizeIrql,
                                 Interrupt->Vector,
@@ -207,13 +209,13 @@ KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
     {
         /* Acquire interrupt lock */
         KxAcquireSpinLock(Interrupt->ActualLock);
-        
+
         /* Call the ISR */
         Interrupt->ServiceRoutine(Interrupt, Interrupt->ServiceContext);
-        
+
         /* Release interrupt lock */
         KxReleaseSpinLock(Interrupt->ActualLock);
-        
+
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, FALSE);
     }
@@ -252,7 +254,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                 /* Raise to higher IRQL */
                 OldInterruptIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
             }
-        
+
             /* Acquire interrupt lock */
             KxAcquireSpinLock(Interrupt->ActualLock);
 
@@ -262,7 +264,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
 
             /* Release interrupt lock */
             KxReleaseSpinLock(Interrupt->ActualLock);
-        
+
             /* Check if this interrupt's IRQL is higher than the current one */
             if (Interrupt->SynchronizeIrql > Interrupt->Irql)
             {
@@ -270,23 +272,23 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                 ASSERT(OldInterruptIrql == Interrupt->Irql);
                 KfLowerIrql(OldInterruptIrql);
             }
-        
+
             /* Check if the interrupt got handled and it's level */
             if ((Handled) && (Interrupt->Mode == LevelSensitive)) break;
-            
+
             /* What's next? */
             NextEntry = NextEntry->Flink;
-                
+
             /* Is this the last one? */
             if (NextEntry == ListHead)
             {
                 /* Level should not have gotten here */
                 if (Interrupt->Mode == LevelSensitive) break;
-                
+
                 /* As for edge, we can only exit once nobody can handle the interrupt */
                 if (!Handled) break;
             }
-            
+
             /* Get the interrupt object for the next pass */
             Interrupt = CONTAINING_RECORD(NextEntry, KINTERRUPT, InterruptListEntry);
         }
@@ -447,8 +449,14 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             /* The vector is shared and the interrupts are compatible */
             Interrupt->Connected = Connected = TRUE;
 
-            /* FIXME */
-            // ASSERT(Irql <= SYNCH_LEVEL);
+            /*
+             * Verify the IRQL for chained connect,
+             */
+#if defined(CONFIG_SMP)
+            ASSERT(Irql <= SYNCH_LEVEL);
+#else
+            ASSERT(Irql <= (IPI_LEVEL - 2));
+#endif
 
             /* Check if this is the first chain */
             if (Dispatch.Type != ChainConnect)
@@ -516,7 +524,11 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
         if (Dispatch.Type == ChainConnect)
         {
             /* Check if the top-level interrupt is being removed */
+#if defined(CONFIG_SMP)
             ASSERT(Irql <= SYNCH_LEVEL);
+#else
+            ASSERT(Irql <= (IPI_LEVEL - 2));
+#endif
             if (Interrupt == Dispatch.Interrupt)
             {
                 /* Get the next one */
@@ -575,22 +587,23 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
 {
     BOOLEAN Success;
     KIRQL OldIrql;
-    
+
     /* Raise IRQL */
-    OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
-    
+    KeRaiseIrql(Interrupt->SynchronizeIrql,
+                &OldIrql);
+
     /* Acquire interrupt spinlock */
     KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
-    
+
     /* Call the routine */
     Success = SynchronizeRoutine(SynchronizeContext);
-    
+
     /* Release lock */
     KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
-    
+
     /* Lower IRQL */
-    KfLowerIrql(OldIrql);
-    
+    KeLowerIrql(OldIrql);
+
     /* Return status */
     return Success;
 }

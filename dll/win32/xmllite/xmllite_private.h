@@ -63,6 +63,14 @@ static inline void *m_alloc(IMalloc *imalloc, size_t len)
         return heap_alloc(len);
 }
 
+static inline void *m_realloc(IMalloc *imalloc, void *mem, size_t len)
+{
+    if (imalloc)
+        return IMalloc_Realloc(imalloc, mem, len);
+    else
+        return heap_realloc(mem, len);
+}
+
 static inline void m_free(IMalloc *imalloc, void *mem)
 {
     if (imalloc)
@@ -78,6 +86,9 @@ typedef enum
     XmlEncoding_Unknown
 } xml_encoding;
 
-xml_encoding parse_encoding_name(const WCHAR *name, int len) DECLSPEC_HIDDEN;
+xml_encoding parse_encoding_name(const WCHAR*,int) DECLSPEC_HIDDEN;
+HRESULT get_code_page(xml_encoding,UINT*) DECLSPEC_HIDDEN;
+const WCHAR *get_encoding_name(xml_encoding) DECLSPEC_HIDDEN;
+xml_encoding get_encoding_from_codepage(UINT) DECLSPEC_HIDDEN;
 
 #endif /* __XMLLITE_PRIVATE__ */

@@ -1,3 +1,117 @@
+Changes from 2.34 to 2.35
+
+* Sans, SansMono, Serif: added U+0E3F, U+A7F8-U+A7F9 (by Gee Fung Sit 薛至峰)
+* Sans, SansMono, Serif: moved inverted marks U+00A1, U+00BF, U+2E18 to x-height
+  and added 'case' feature using original glyphs+hints (by Gee Fung Sit 薛至峰)
+* Sans, SansMono, Serif: fixed glyph heights in Box Drawing block (by Gee Fung
+  Sit 薛至峰)
+* SansMono, Serif: adjusted U+016E to prevent cut-off (by Gee Fung Sit 薛至峰)
+* Sans: added U+269E-U+269F (by Lars Næsbye Christensen)
+* Sans: added U+06C7-U+06C8, U+06CB, U+06D0 and their presentation forms
+  U+FBD7-U+FBD8, U+FBDB-U+FBDC, U+FBDE-U+FBDF, U+FBE4-U+FBE7 (by MihailJP)
+* Sans: added isolated, initial and stretched forms in the Arabic Mathematical
+  Alphabetic Symbols block, U+1EE00 et seq. (by Gee Fung Sit 薛至峰)
+* Sans: restored GSUB tables for Hebrew (by Gee Fung Sit 薛至峰)
+* Sans: fixed U+1D301-U+1D303 (bug 73532) (by Gee Fung Sit 薛至峰)
+* Sans: fixed instructions for U+0394, U+039B in Bold (bug 16442) (by Gee Fung
+  Sit 薛至峰)
+* Sans: minor improvements/fixes to U+07D4, U+203D, U+20A6, U+20BA, U+2E18,
+  U+A782-U+A783 (by Gee Fung Sit 薛至峰)
+* Sans: moved U+2E1F to correct code point, was off by one (by Gee Fung Sit
+  薛至峰)
+* SansExtraLight: added U+0184-U+0185, U+019B, U+01B7-U+01B9, U+01EE-U+01EF,
+  U+0292, U+0298, U+0E3F, U+04E0-U+04E1, U+0516-U+0519 (by Gee Fung Sit 薛至峰)
+* SansMono: added U+203F, U+2150-U+2151, U+2189, U+220E, U+2210, U+2223,
+  U+228D-U+228E, U+2293-U+2294, U+22B2-U+22B5, U+22B8, U+22C2-U+22C3,
+  U+22CE-U+22D1, U+27DC, U+27EA-U+27EB, U+27F5-U+27F7, U+2987-U+2988,
+  U+2997-U+2998, U+2A00 (by Gee Fung Sit 薛至峰)
+* SansMono: minor improvements/fixes to U+018C and U+018D, U+026F-U+0270 (by
+  Gee Fung Sit 薛至峰)
+* SansMono: fixed glyph heights in Block Elements block (bug 14316) (by Gee
+  Fung Sit 薛至峰)
+* Serif: replaced inverted breve on U+0202, U+0206, U+020A, U+020E, U+0212,
+  U+0216 with its case form to prevent cut-off (by Gee Fung Sit 薛至峰)
+* Serif: redesigned/redrawn U+01E5, U+025E, U+0262, U+0277-U+0278,
+  U+029A-U+029B (by Gee Fung Sit 薛至峰)
+* Serif: minor improvements/fixes to U+00DF, U+017B, U+01E4, U+0265,
+  U+026F-U+0270, U+0280-U+0281, U+0294-U+0297, U+029F, U+02A1-U+02A2, U+03FB,
+  U+1D0C, U+20A6, U+20B8, U+A731 (by Gee Fung Sit 薛至峰)
+* Serif: added stylistic alternatives for U+0110-U+0111, U+01E4-U+01E5 (by Gee
+  Fung Sit 薛至峰)
+* Serif: added or adjusted anchors for U+0294, U+0256, U+041D (by Denis
+  Jacquerye)
+* Sans, Serif: added OpenType MATH table (by Frédéric Wang)
+* Sans, Serif: added displaystyle math operators (by Frédéric Wang)
+* Serif: added italic mathematical alphanumeric characterd (by Frédéric Wang)
+* Serif: added construction for stretchy radical symbol (by Frédéric Wang)
+* Serif: added stylistic ssty variants for prime symbols
+* Sans, Serif: fixed incorrect glyph for U+22C4 (by Gee Fung Sit 薛至峰)
+* SansMono: added U+22C4 (by Gee Fung Sit 薛至峰)
+* SansMono: added to U+2336, U+233F-U+2340, U+2345-U+2346, U+234A,
+  U+234E-U+234F, U+2351, U+2355-U+2356, U+235D, U+2361-U+2362, U+2366-U+2367,
+  U+236A, U+2371-U+2372 (by Sami Tarazi)
+* Serif: added U+20BA (by Gee Fung Sit 薛至峰)
+* Sans, Serif: added U+20BD (by Gee Fung Sit 薛至峰) 
+
+Changes from 2.33 to 2.34
+
+* Sans, SansMono, Serif: unlinked references of U+2596 for bug 50848
+  (by Denis Jacquerye)
+* Sans, SansMono, Serif: added U+A7AA (by Denis Jacquerye)
+* Sans, SansMono, Serif: added U+2A6A, U+2A6B, U+2E1F based on U+223B
+  (by Denis Jacquerye)
+* Sans, Serif: removed superfluous ligature definitions for ffl und ffi
+  (bug 55363) (by Gee Fung Sit 薛至峰)
+* Sans, Serif: swapped glyphs for U+25D2 and U+25D3 (bug 55197)
+  (by Gee Fung Sit 薛至峰)
+* Sans, Serif: added U+A740, U+A741 (by Denis Jacquerye)
+* Sans: added U+20BA Turkish Lira sign (by Denis Jacquerye)
+* Sans: replaced Georgian Asomtavruli U+10A0-U+10C5 and Mkhedruli U+10D0-U+10FC
+   with new version (by Besarion Gugushvili)
+* Sans: added Georgian Nuskhuri U+2D00-U+U+2D25 (by Besarion Gugushvili)
+* Sans: added Private Use Area glyphs for Georgian U+F400-U+F441
+  (by Besarion Gugushvili)
+* Sans: tweaked U+0250, U+0254 (by Denis Jacquerye)
+* Sans: adjusted hinting of U+032C-U+032D, avoiding problem on some platforms
+  (by Denis Jacquerye)
+* Sans: added U+A7A0-U+A7A9, pre-1921 Latvian letters with oblique stroke
+  (by Denis Jacquerye)
+* Sans: added anchors to U+2C6D (by Denis Jacquerye)
+* Sans: added cedilla anchor to some Latin characters (by Denis Jacquerye)
+* Sans: added ogonek anchor to A, E, O, U, Y (by Denis Jacquerye)
+* Sans: adjusted ogonek reference in U+0172, U+01EA, U+01EB
+  (by Denis Jacquerye)
+* Sans: added anchors to U+0104, U+0105 (by Denis Jacquerye)
+* Sans: added U+1F600, U+1F611, U+1F615, U+1F617, U+1F619, U+1F61B, U+1F61F, 
+  U+1F626-U+1F627, U+1F62E-U+1F62F, U+1F634 (by Gee Fung Sit 薛至峰)
+* Sans: replaced U+27A1 with mirror image of U+2B05 for consistency
+  (by Gee Fung Sit 薛至峰)
+* Sans: copied hints from U+14A3, U+14A7 to U+2142-U+2143
+  (by Gee Fung Sit 薛至峰)
+* Sans: added Lisu block (by Gee Fung Sit 薛至峰)
+* Sans: typographical improvements to U+0166-U+0167, U+02A6, U+02AA
+  (by Gee Fung Sit 薛至峰)
+* Sans: slightly change hinting of "2" to fix bug 37395 (by Ben Laenen)
+* Sans: fixed U+1444 which had wrong top dot that shouldn't be there
+  (by Denis Jacquerye)
+* Sans: added anchors for diacritics to U+01B7, U+01B8, U+01B9, U+0292
+  (by Denis Jacquerye)
+* Sans: added U+01B7, U+01B8 to context for case diacritics above
+* SansMono: fixed U+0574 (by Ruben Hakobian)
+* SansMono: added U+2016, U+27C2 (by Yoshiki Ohshima)
+* SansMono: added U+02CE, U+02CF (by Denis Jacquerye)
+* SansMono: added U+2148, U+27E6-U+27E7, U+2B05-U+2B0D, U+1D55A
+  (by Gee Fung Sit 薛至峰)
+* Serif: added U+02BA, U+02C2-U+02C5, U+02CA-U+02CB, U+02D7, U+02F3, U+02F7,
+  U+046C-U+046D, U+0476-U+0477, U+1D7C-U+1D7F, U+20B8, U+2132, U+214E, U+2C7B
+  to Serif (by Gee Fung Sit 薛至峰)
+* Serif: typographic improvements to U+0194, U+01B1, U+0263, U+028A, U+02A6,
+  U+02A8, U+02AA, U+02E0, U+03DC, U+1D3B, U+1D7B (by Gee Fung Sit 薛至峰)
+* Serif: added small cap versions of q, x (in italic styles), delta, theta, xi,
+  sigma, phi, omega, not wired in yet (by Gee Fung Sit 薛至峰)
+* Serif: added anchors to U+0234-U+0236 (by Gee Fung Sit 薛至峰)
+* Serif: added U+02EC, U+02EF, U+02F0, U+0360 (by Denis Jacquerye)
+
 Changes from 2.32 to 2.33
 
 * added Old Italic block to Sans (by MaEr) 
@@ -1312,4 +1426,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 2471 2011-02-27 14:25:15Z ben_laenen $
+$Id: NEWS 2594 2015-05-17 07:54:48Z ben_laenen $

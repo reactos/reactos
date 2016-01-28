@@ -19,21 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "cryptres.h"
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERT_POLICY           "Certifikat Politik"
-    IDS_POLICY_ID             "Politik Identifikation:"
+    IDS_CERT_POLICY "Certifikat Politik"
+    IDS_POLICY_ID "Politik Identifikation:"
     IDS_POLICY_QUALIFIER_INFO "Politik Kvalifikations Info"
-    IDS_POLICY_QUALIFIER_ID   "Politik Kvalifikations Id="
-    IDS_CPS                   "CPS" /* Certification Practice Statement */
-    IDS_USER_NOTICE           "Bruger Meddelelse"
-    IDS_QUALIFIER             "Kvalifikation"
-    IDS_NOTICE_REF            "Meddelelses Reference"
-    IDS_ORGANIZATION          "Organisation="
-    IDS_NOTICE_NUM            "Meddelelses Nummer="
-    IDS_NOTICE_TEXT           "Meddelelses Tekst="
+    IDS_POLICY_QUALIFIER_ID "Politik Kvalifikations Id="
+    IDS_CPS "CPS" /* Certification Practice Statement */
+    IDS_USER_NOTICE "Bruger Meddelelse"
+    IDS_QUALIFIER "Kvalifikation"
+    IDS_NOTICE_REF "Meddelelses Reference"
+    IDS_ORGANIZATION "Organisation="
+    IDS_NOTICE_NUM "Meddelelses Nummer="
+    IDS_NOTICE_TEXT "Meddelelses Tekst="
 }

@@ -505,16 +505,20 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     if (!Expanded)
     {
         DPRINT("Error allocating memory for boot driver name!\n");
+        RtlFreeUnicodeString(&NtPathName);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     ExpandedLen = NtPathName.Length / sizeof(WCHAR);
     wcsncpy(Expanded, NtPathName.Buffer, ExpandedLen);
     Expanded[ExpandedLen] = UNICODE_NULL;
+    RtlFreeUnicodeString(&NtPathName);
 
     if (ServiceNameLen > ExpandedLen &&
         !_wcsnicmp(Expanded, CanonName, ExpandedLen))
     {
+        HeapFree(GetProcessHeap(), 0, Expanded);
+
         /* Only \SystemRoot\ is missing */
         *RelativeName = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
@@ -522,16 +526,17 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         if (*RelativeName == NULL)
         {
             DPRINT("Error allocating memory for boot driver name!\n");
-            HeapFree(GetProcessHeap(), 0, Expanded);
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
         wcscpy(*RelativeName, L"\\SystemRoot\\");
         wcscat(*RelativeName, CanonName + ExpandedLen);
 
-        RtlFreeUnicodeString(&NtPathName);
         return ERROR_SUCCESS;
     }
+
+    /* No longer need this */
+    HeapFree(GetProcessHeap(), 0, Expanded);
 
     /* The most complex case starts here */
     RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot");
@@ -543,24 +548,20 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     /* Open this symlink */
     Status = NtOpenSymbolicLinkObject(&SymbolicLinkHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
-
     if (NT_SUCCESS(Status))
     {
-        LinkTarget.Length = 0;
-        LinkTarget.MaximumLength = 0;
-
         DPRINT("Opened symbolic link object\n");
 
+        RtlInitEmptyUnicodeString(&LinkTarget, NULL, 0);
         Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
         if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
         {
             /* Check if required buffer size is sane */
-            if (BufferSize > 0xFFFD)
+            if (BufferSize > UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL))
             {
                 DPRINT("Too large buffer required\n");
 
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
+                NtClose(SymbolicLinkHandle);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
@@ -573,13 +574,13 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             if (!LinkTarget.Buffer)
             {
                 DPRINT("Unable to alloc buffer\n");
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
+                NtClose(SymbolicLinkHandle);
                 return ERROR_NOT_ENOUGH_MEMORY;
             }
 
             /* Do a real query now */
             Status = NtQuerySymbolicLinkObject(SymbolicLinkHandle, &LinkTarget, &BufferSize);
+            NtClose(SymbolicLinkHandle);
             if (NT_SUCCESS(Status))
             {
                 DPRINT("LinkTarget: %wZ\n", &LinkTarget);
@@ -595,9 +596,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                     if (*RelativeName == NULL)
                     {
                         DPRINT("Unable to alloc buffer\n");
-                        if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                        HeapFree(GetProcessHeap(), 0, Expanded);
-                        RtlFreeUnicodeString(&NtPathName);
                         return ERROR_NOT_ENOUGH_MEMORY;
                     }
 
@@ -606,37 +604,24 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                     wcscpy(*RelativeName, L"\\SystemRoot\\");
                     wcscat(*RelativeName, CanonName+ExpandedLen+1);
 
-                    /* Cleanup */
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    HeapFree(GetProcessHeap(), 0, Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
-
                     /* Return success */
                     return ERROR_SUCCESS;
                 }
                 else
                 {
-                    if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                    HeapFree(GetProcessHeap(), 0, Expanded);
-                    RtlFreeUnicodeString(&NtPathName);
                     return ERROR_INVALID_PARAMETER;
                 }
             }
             else
             {
                 DPRINT("Error, Status = %08X\n", Status);
-                if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-                HeapFree(GetProcessHeap(), 0, Expanded);
-                RtlFreeUnicodeString(&NtPathName);
                 return ERROR_INVALID_PARAMETER;
             }
         }
         else
         {
             DPRINT("Error, Status = %08X\n", Status);
-            if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
-            HeapFree(GetProcessHeap(), 0, Expanded);
-            RtlFreeUnicodeString(&NtPathName);
+            NtClose(SymbolicLinkHandle);
             return ERROR_INVALID_PARAMETER;
         }
     }
@@ -644,7 +629,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     {
         /* Failure */
         DPRINT("Error, Status = %08X\n", Status);
-        HeapFree(GetProcessHeap(), 0, Expanded);
         return ERROR_INVALID_PARAMETER;
     }
 }
@@ -1085,6 +1069,9 @@ DWORD RControlService(
     DWORD dwControlsAccepted;
     DWORD dwCurrentState;
     HKEY hServicesKey = NULL;
+    LPCWSTR lpLogStrings[2];
+    WCHAR szLogBuffer[80];
+    UINT uID;
 
     DPRINT("RControlService() called\n");
 
@@ -1240,6 +1227,40 @@ DWORD RControlService(
         RtlCopyMemory(lpServiceStatus,
                       &lpService->Status,
                       sizeof(SERVICE_STATUS));
+    }
+
+    if (dwError == ERROR_SUCCESS)
+    {
+            if (dwControl == SERVICE_CONTROL_STOP ||
+                dwControl == SERVICE_CONTROL_PAUSE ||
+                dwControl == SERVICE_CONTROL_CONTINUE)
+            {
+                /* Log a sucessful send control */
+
+                switch (dwControl)
+                {
+                    case SERVICE_CONTROL_STOP:
+                        uID = IDS_SERVICE_STOP;
+                        break;
+
+                    case SERVICE_CONTROL_PAUSE:
+                        uID = IDS_SERVICE_PAUSE;
+                        break;
+
+                    case SERVICE_CONTROL_CONTINUE:
+                        uID = IDS_SERVICE_RESUME;
+                        break;
+                }
+                LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+
+                lpLogStrings[0] = lpService->lpDisplayName;
+                lpLogStrings[1] = szLogBuffer;
+
+                ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
+                            EVENTLOG_INFORMATION_TYPE,
+                            2,
+                            lpLogStrings);
+            }
     }
 
     return dwError;
@@ -1618,8 +1639,9 @@ DWORD RSetServiceStatus(
     PSERVICE lpService;
     DWORD dwPreviousState;
     DWORD dwPreviousType;
-    LPCWSTR lpErrorStrings[2];
-    WCHAR szErrorBuffer[32];
+    LPCWSTR lpLogStrings[2];
+    WCHAR szLogBuffer[80];
+    UINT uID;
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
@@ -1691,20 +1713,49 @@ DWORD RSetServiceStatus(
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    /* Log a failed service stop */
     if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
-        (dwPreviousState != SERVICE_STOPPED))
+        (dwPreviousState != SERVICE_STOPPED) &&
+        (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
     {
-        if (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS)
-        {
-            swprintf(szErrorBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
-            lpErrorStrings[0] = lpService->lpDisplayName;
-            lpErrorStrings[1] = szErrorBuffer;
+        /* Log a failed service stop */
+        swprintf(szLogBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
 
-            ScmLogError(EVENT_SERVICE_EXIT_FAILED,
-                        2,
-                        lpErrorStrings);
+        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
+                    EVENTLOG_ERROR_TYPE,
+                    2,
+                    lpLogStrings);
+    }
+    else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
+             (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
+              lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
+              lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
+    {
+        /* Log a successful service status change */
+        switch(lpServiceStatus->dwCurrentState)
+        {
+            case SERVICE_STOPPED:
+                uID = IDS_SERVICE_STOPPED;
+                break;
+
+            case SERVICE_RUNNING:
+                uID = IDS_SERVICE_RUNNING;
+                break;
+
+            case SERVICE_PAUSED:
+                uID = IDS_SERVICE_PAUSED;
+                break;
         }
+
+        LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    2,
+                    lpLogStrings);
     }
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
@@ -1842,6 +1893,7 @@ DWORD RChangeServiceConfigW(
             goto done;
         }
 
+        wcscpy(lpDisplayNameW, lpDisplayName);
         if (lpService->lpDisplayName != lpService->lpServiceName)
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
 
@@ -4749,14 +4801,14 @@ DWORD RChangeServiceConfig2A(
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescriptionW;
-        //LPSERVICE_DESCRIPTIONA lpServiceDescriptionA;
+        LPSERVICE_DESCRIPTIONA lpServiceDescriptionA;
 
-        //lpServiceDescriptionA = Info.psd;
+        lpServiceDescriptionA = Info.psd;
 
-        ///if (lpServiceDescriptionA &&
-        ///lpServiceDescriptionA->lpDescription)
-        ///{
-            dwLength = (DWORD)((strlen(Info.lpDescription) + 1) * sizeof(WCHAR));
+        if (lpServiceDescriptionA &&
+            lpServiceDescriptionA->lpDescription)
+        {
+            dwLength = (DWORD)((strlen(lpServiceDescriptionA->lpDescription) + 1) * sizeof(WCHAR));
 
             lpServiceDescriptionW = HeapAlloc(GetProcessHeap(),
                                               HEAP_ZERO_MEMORY,
@@ -4770,14 +4822,14 @@ DWORD RChangeServiceConfig2A(
 
             MultiByteToWideChar(CP_ACP,
                                 0,
-                                Info.lpDescription,
+                                lpServiceDescriptionA->lpDescription,
                                 -1,
                                 lpServiceDescriptionW->lpDescription,
                                 dwLength);
 
             ptr = lpServiceDescriptionW;
             InfoW.psd = lpServiceDescriptionW;
-        ///}
+        }
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
@@ -5829,7 +5881,8 @@ DWORD REnumServicesStatusExA(
         if (!pszGroupNameW)
         {
              DPRINT("Failed to allocate buffer!\n");
-             return ERROR_NOT_ENOUGH_MEMORY;
+             dwError = ERROR_NOT_ENOUGH_MEMORY;
+             goto Done;
         }
 
         MultiByteToWideChar(CP_ACP,
@@ -5846,7 +5899,8 @@ DWORD REnumServicesStatusExA(
         if (!lpStatusPtrW)
         {
             DPRINT("Failed to allocate buffer!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto Done;
         }
     }
 

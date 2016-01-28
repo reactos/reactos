@@ -24,7 +24,7 @@ KGUARDED_MUTEX PspActiveProcessMutex;
 
 LARGE_INTEGER ShortPsLockDelay;
 
-ULONG PsRawPrioritySeparation = 0;
+ULONG PsRawPrioritySeparation;
 ULONG PsPrioritySeparation;
 CHAR PspForegroundQuantum[3];
 
@@ -255,10 +255,15 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
         /* Use a variable table */
         QuantumTable = PspVariableQuantums;
     }
-    else
+    else if (PspQuantumTypeFromMask(PrioritySeparation) == PSP_FIXED_QUANTUMS)
     {
         /* Use fixed table */
         QuantumTable = PspFixedQuantums;
+    }
+    else
+    {
+        /* Use default for the type of system we're on */
+        QuantumTable = MmIsThisAnNtAsSystem() ? PspFixedQuantums : PspVariableQuantums;
     }
 
     /* Now check if we should use long or short */
@@ -266,6 +271,16 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
     {
         /* Use long quantums */
         QuantumTable += 3;
+    }
+    else if (PspQuantumLengthFromMask(PrioritySeparation) == PSP_SHORT_QUANTUMS)
+    {
+        /* Keep existing table */
+        NOTHING;
+    }
+    else
+    {
+        /* Use default for the type of system we're on */
+        QuantumTable += MmIsThisAnNtAsSystem() ? 3 : 0;
     }
 
     /* Check if we're using long fixed quantums */
@@ -292,12 +307,10 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
         Process = PsGetNextProcess(Process);
         while (Process)
         {
-            /*
-             * Use the priority separation, unless the process has
-             * low memory priority
-             */
-            i = (Process->Vm.Flags.MemoryPriority == 1) ?
-                0: PsPrioritySeparation;
+            /* Use the priority separation if this is a foreground process */
+            i = (Process->Vm.Flags.MemoryPriority ==
+                 MEMORY_PRIORITY_BACKGROUND) ?
+                 0: PsPrioritySeparation;
 
             /* Make sure that the process isn't idle */
             if (Process->PriorityClass != PROCESS_PRIORITY_CLASS_IDLE)
@@ -306,8 +319,7 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
                 if ((Process->Job) && (PspUseJobSchedulingClasses))
                 {
                     /* Use job quantum */
-                    Quantum = PspJobSchedulingClasses[Process->Job->
-                                                      SchedulingClass];
+                    Quantum = PspJobSchedulingClasses[Process->Job->SchedulingClass];
                 }
                 else
                 {
@@ -702,7 +714,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* FIXME: We need to insert this process */
         DPRINT1("Jobs not yet supported\n");
-        ASSERT(FALSE);
     }
 
     /* Create PEB only for User-Mode Processes */
@@ -1471,7 +1482,9 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
-            Attributes = ObjectAttributes->Attributes;
+
+            /* Validate user attributes */
+            Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1484,7 +1497,9 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     {
         /* Otherwise just get the data directly */
         HasObjectName = (ObjectAttributes->ObjectName != NULL);
-        Attributes = ObjectAttributes->Attributes;
+
+        /* Still have to sanitize attributes */
+        Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
     }
 
     /* Can't pass both, fail */

@@ -261,9 +261,14 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
   return NERR_DCNotFound; /* say we can't find a domain controller */  
 }
 
-
-NET_API_STATUS WINAPI NetUseAdd(LMSTR servername, DWORD level, LPBYTE bufptr, LPDWORD parm_err)
+/************************************************************
+ *                NetEnumerateTrustedDomains  (NETAPI32.@)
+ *
+ * On success, *DomainNames is a multi-sz allocated using NetApiBufferAllocate
+ */
+NTSTATUS WINAPI
+NetEnumerateTrustedDomains(LPWSTR ServerName, LPWSTR *DomainNames)
 {
-    FIXME("%s %d %p %p stub\n", debugstr_w(servername), level, bufptr, parm_err);
-    return NERR_Success;
+    FIXME("(%s, %p) stub!\n", debugstr_w(ServerName), DomainNames);
+    return STATUS_NOT_IMPLEMENTED;
 }

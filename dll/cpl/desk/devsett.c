@@ -74,7 +74,7 @@ pCDevSettings_FreeString(PWCHAR *psz)
 static PWSTR
 pCDevSettings_AllocAndCopyString(const TCHAR *pszSrc)
 {
-    INT c;
+    SIZE_T c;
     PWSTR str;
 
     c = _tcslen(pszSrc) + 1;
@@ -556,7 +556,7 @@ CDevSettings_GetData(IDataObject* iface,
     PCWSTR pszRet = NULL;
     PWSTR pszBuf;
     PCDevSettings This = impl_from_IDataObject(iface);
-    
+
     ZeroMemory(pmedium,
                sizeof(STGMEDIUM));
 

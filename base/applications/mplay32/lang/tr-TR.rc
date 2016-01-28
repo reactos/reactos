@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,17 +6,17 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Aç...\tCtrl+O", IDM_OPEN_FILE
-        MENUITEM "&Kapat\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM "&Aç...\tDenetim+O", IDM_OPEN_FILE
+        MENUITEM "&Kapat\tDenetim+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
     POPUP "&Oynat"
     BEGIN
-        MENUITEM "&Oynat ya da Duraklat\tCtrl+P", IDC_PLAY
-        MENUITEM "&Durdur\tCtrl+S", IDC_STOP
+        MENUITEM "&Oynat ya da Duraklat\tDenetim+P", IDC_PLAY
+        MENUITEM "&Durdur\tDenetim+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "&Yinele\tCtrl+T", IDM_REPEAT
+        MENUITEM "&Yinele\tDenetim+T", IDM_REPEAT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -24,6 +24,7 @@ BEGIN
     END
     POPUP "&Aygıt"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Husûsiyetler", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Ses Düzeyi Denetimi", IDM_VOLUMECTL
@@ -45,7 +46,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Desteklenen Kütükler (*.wav, *.cda, *.mid, *.midi, *.avi)\0*.wav;*.cda;*.mid;*.midi;*.avi\0"
+    IDS_MODE_UNKNOWN "Bilinmiyor"
+    IDS_MODE_OPEN "Açık"
+    IDS_MODE_STOP "Durduruldu"
+    IDS_MODE_PLAY "Çalıyor"
+    IDS_MODE_PAUSE "Duraklatıldı"
+    IDS_MODE_RECORD "Kaydediliyor"
+    IDS_MODE_SEEK "Sarıyor"
+    IDS_MODE_NOT_READY "Anık değil"
+    IDS_ALL_TYPES_FILTER "Desteklenen Kütükler"
     IDS_TOOLTIP_PLAY "Çal"
     IDS_TOOLTIP_STOP "Durdur"
     IDS_TOOLTIP_EJECT "Çıkart"
@@ -53,8 +62,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
+    IDS_TOOLTIP_PAUSE "Duraklat"
     IDS_APPTITLE "Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
     IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
-    IDS_UNKNOWNFILEEXT "Verilen kütük türünden aygıt türü belirlenemiyor."
 END

@@ -14,16 +14,17 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_USERPROF ICON "resources/devmgr.ico"
-IDI_HARDPROF ICON "resources/devmgr.ico"
-IDI_DEVMGR ICON "resources/devmgr.ico"
+IDI_HARDPROF ICON "resources/hwprofile.ico"
+IDI_DEVMGR ICON "resources/dev.ico"
 IDI_UP ICON "resources/up.ico"
 IDI_DOWN ICON "resources/down.ico"
+IDI_ADDHW ICON "resources/addhw.ico"
 IDB_ROSBMP BITMAP "resources/rosbitmap.bmp"
 IDB_ROSMASK BITMAP "resources/rosbitmap_mask.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -99,4 +100,7 @@ RC_LICENSE RTDATA "resources/gpl.txt"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

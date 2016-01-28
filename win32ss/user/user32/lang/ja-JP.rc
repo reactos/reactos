@@ -65,6 +65,7 @@ BEGIN
     IDS_IGNORE "無視(&I)"
     IDS_YES "はい(&Y)"
     IDS_NO "いいえ(&N)"
+    IDS_CLOSE "閉じる(&C)"
     IDS_HELP "ヘルプ"
     IDS_TRYAGAIN "再試行する(&T)"
     IDS_CONTINUE "続ける(&C)"

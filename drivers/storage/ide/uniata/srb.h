@@ -14,6 +14,8 @@
 #ifndef _NTSRB_
 #define _NTSRB_
 
+#pragma pack(push, 8)
+
 // Define SCSI maximum configuration parameters.
 
 #define SCSI_MAXIMUM_LOGICAL_UNITS 8
@@ -970,5 +972,7 @@ ScsiDebugPrint(
 // end_ntminitape
 
 #endif //USER_MODE
+
+#pragma pack(pop)
 
 #endif //

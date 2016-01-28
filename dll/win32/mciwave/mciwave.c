@@ -446,7 +446,7 @@ static DWORD create_tmp_file(HMMIO* hFile, LPWSTR* pszTmpFileName)
 
     TRACE("%s!\n", debugstr_w(*pszTmpFileName));
 
-    if (*pszTmpFileName && (strlenW(*pszTmpFileName) > 0)) {
+    if (*pszTmpFileName && (*pszTmpFileName)[0]) {
 
         *hFile = mmioOpenW(*pszTmpFileName, NULL,
                            MMIO_ALLOCBUF | MMIO_READWRITE | MMIO_CREATE);
@@ -472,7 +472,7 @@ static LRESULT WAVE_mciOpenFile(WINE_MCIWAVE* wmw, LPCWSTR filename)
     HeapFree(GetProcessHeap(), 0, wmw->lpFileName);
     wmw->lpFileName = fn;
 
-    if (strlenW(filename) > 0) {
+    if (filename[0]) {
         /* FIXME : what should be done if wmw->hFile is already != 0, or the driver is playin' */
         TRACE("MCI_OPEN_ELEMENT %s!\n", debugstr_w(filename));
 
@@ -535,7 +535,7 @@ static LRESULT WAVE_mciOpen(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_OPEN_P
 
     wmw->nUseCount++;
 
-    wmw->wInput = wmw->wOutput = (WORD)WAVE_MAPPER;
+    wmw->wInput = wmw->wOutput = WAVE_MAPPER;
     wmw->fInput = FALSE;
     wmw->hWave = 0;
     wmw->dwStatus = MCI_MODE_NOT_READY;
@@ -1120,7 +1120,7 @@ static DWORD WAVE_mciRecord(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt
 
     TRACE("Recording (normalized) from byte=%u for %u bytes\n", wmw->dwPosition, end - wmw->dwPosition);
 
-    dwRet = waveInStart(wmw->hWave);
+    waveInStart(wmw->hWave);
 
     if (hEvent) SetEvent(hEvent);
 
@@ -1371,13 +1371,13 @@ static DWORD WAVE_mciSet(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_SET_PARMS
 	TRACE("MCI_WAVE_SET_ANYINPUT\n");
 	if (wmw->wInput != (WORD)lpParms->wInput)
 	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
-	wmw->wInput = (WORD)WAVE_MAPPER;
+	wmw->wInput = WAVE_MAPPER;
     }
     if (dwFlags & MCI_WAVE_SET_ANYOUTPUT) {
 	TRACE("MCI_WAVE_SET_ANYOUTPUT\n");
 	if (wmw->wOutput != (WORD)lpParms->wOutput)
 	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
-	wmw->wOutput = (WORD)WAVE_MAPPER;
+	wmw->wOutput = WAVE_MAPPER;
     }
     /* Set wave format parameters is refused after Open or Record.*/
     if (dwFlags & MCI_WAVE_SET_FORMATTAG) {

@@ -344,7 +344,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     if (FAILED(hr)) goto done;
 
     /* Call a function if necessary through the IDispatch interface */
-    if (function != NULL && strlenW(function) > 0) {
+    if (function && function[0]) {
         TRACE("Calling function %s\n", debugstr_w(function));
 
         hr = IActiveScript_GetScriptDispatch(pActiveScript, NULL, &pDispatch);

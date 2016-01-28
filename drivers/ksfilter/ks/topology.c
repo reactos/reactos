@@ -220,10 +220,10 @@ KsTopologyPropertyHandler(
             }
 
             /* copy result buffer */
-            RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
+            RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer, &KeyInfo->Data, KeyInfo->DataLength);
 
             /* zero terminate it */
-            ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
+            ((LPWSTR)Irp->AssociatedIrp.SystemBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
 
             /* free key info */
             FreeItem(KeyInfo);
@@ -234,7 +234,7 @@ KsTopologyPropertyHandler(
            Status = STATUS_NOT_FOUND;
     }
 
-
+    Irp->IoStatus.Status = Status;
     return Status;
 }
 

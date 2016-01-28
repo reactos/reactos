@@ -20,6 +20,22 @@
 #ifndef __TODO_MSTSC_H
 #define __TODO_MSTSC_H
 
+#define RDP_INFO_MOUSE                0x00000001
+#define RDP_INFO_DISABLECTRLALTDEL    0x00000002
+#define RDP_INFO_AUTOLOGON            0x00000008
+#define RDP_INFO_UNICODE              0x00000010
+#define RDP_INFO_MAXIMIZESHELL        0x00000020
+#define RDP_INFO_COMPRESSION          0x00000080 /* mppc compression with 8kB histroy buffer */
+#define RDP_INFO_ENABLEWINDOWSKEY     0x00000100
+#define RDP_INFO_COMPRESSION2         0x00000200 /* rdp5 mppc compression with 64kB history buffer */
+#define RDP_INFO_REMOTE_CONSOLE_AUDIO 0x00002000
+#define RDP_INFO_PASSWORD_IS_SC_PIN   0x00040000
+ 
+#define RDP5_DISABLE_NOTHING          0x00
+#define RDP5_NO_WALLPAPER             0x01
+
+#define RDP_LOGON_NORMAL (RDP_INFO_MOUSE | RDP_INFO_DISABLECTRLALTDEL | RDP_INFO_UNICODE | RDP_INFO_MAXIMIZESHELL)
+
 #define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
 
 #define MAXKEY 256

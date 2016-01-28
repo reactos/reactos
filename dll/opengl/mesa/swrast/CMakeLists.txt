@@ -28,11 +28,11 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(mesa_swrast STATIC ${SOURCE})
+add_dependencies(mesa_swrast xdk)
 add_pch(mesa_swrast precomp.h SOURCE)
-if(NOT MSVC)
-    allow_warnings(mesa_swrast)
-endif()
 
-if(NOT MSVC)
+if(MSVC)
+    replace_compile_flags("/we4189" " ")
+else()
     add_target_compile_flags(mesa_swrast "-Wno-unused-variable")
 endif()

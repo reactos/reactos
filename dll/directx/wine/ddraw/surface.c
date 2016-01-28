@@ -76,6 +76,8 @@ HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface, const RE
         ERR("Failed to get surface DC, hr %#x.\n", hr);
         return hr;
     }
+    if (surface->palette)
+        wined3d_palette_apply_to_dc(surface->palette->wineD3DPalette, surface_dc);
 
     if (!(screen_dc = GetDC(NULL)))
     {
@@ -204,7 +206,7 @@ static HRESULT WINAPI ddraw_surface7_QueryInterface(IDirectDrawSurface7 *iface, 
             {
                 HRESULT hr;
 
-                if (FAILED(hr = d3d_device_create(This->ddraw, This, (IUnknown *)&This->IDirectDrawSurface_iface,
+                if (FAILED(hr = d3d_device_create(This->ddraw, riid, This, (IUnknown *)&This->IDirectDrawSurface_iface,
                         1, &This->device1, (IUnknown *)&This->IDirectDrawSurface_iface)))
                 {
                     This->device1 = NULL;
@@ -770,7 +772,6 @@ static HRESULT WINAPI ddraw_surface7_GetAttachedSurface(IDirectDrawSurface7 *ifa
              */
 
             TRACE("(%p): Returning surface %p\n", This, surf);
-            TRACE("(%p): mipmapcount=%d\n", This, surf->mipmap_level);
             *Surface = &surf->IDirectDrawSurface7_iface;
             ddraw_surface7_AddRef(*Surface);
             wined3d_mutex_unlock();
@@ -947,6 +948,7 @@ static HRESULT WINAPI ddraw_surface1_GetAttachedSurface(IDirectDrawSurface *ifac
 static HRESULT surface_lock(struct ddraw_surface *This,
         RECT *Rect, DDSURFACEDESC2 *DDSD, DWORD Flags, HANDLE h)
 {
+    struct wined3d_box box;
     struct wined3d_map_desc map_desc;
     HRESULT hr = DD_OK;
 
@@ -978,12 +980,18 @@ static HRESULT surface_lock(struct ddraw_surface *This,
             wined3d_mutex_unlock();
             return DDERR_INVALIDPARAMS;
         }
+        box.left = Rect->left;
+        box.top = Rect->top;
+        box.right = Rect->right;
+        box.bottom = Rect->bottom;
+        box.front = 0;
+        box.back = 1;
     }
 
     if (This->surface_desc.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
         hr = ddraw_surface_update_frontbuffer(This, Rect, TRUE);
     if (SUCCEEDED(hr))
-        hr = wined3d_surface_map(This->wined3d_surface, &map_desc, Rect, Flags);
+        hr = wined3d_surface_map(This->wined3d_surface, &map_desc, Rect ? &box : NULL, Flags);
     if (FAILED(hr))
     {
         wined3d_mutex_unlock();
@@ -1148,7 +1156,7 @@ static HRESULT WINAPI ddraw_surface1_Lock(IDirectDrawSurface *iface, RECT *rect,
  *  For more details, see IWineD3DSurface::UnlockRect
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_Unlock(IDirectDrawSurface7 *iface, RECT *pRect)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Unlock(IDirectDrawSurface7 *iface, RECT *pRect)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
     HRESULT hr;
@@ -1164,7 +1172,7 @@ static HRESULT WINAPI ddraw_surface7_Unlock(IDirectDrawSurface7 *iface, RECT *pR
     return hr;
 }
 
-static HRESULT WINAPI ddraw_surface4_Unlock(IDirectDrawSurface4 *iface, RECT *pRect)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface4_Unlock(IDirectDrawSurface4 *iface, RECT *pRect)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface4(iface);
 
@@ -1173,7 +1181,7 @@ static HRESULT WINAPI ddraw_surface4_Unlock(IDirectDrawSurface4 *iface, RECT *pR
     return ddraw_surface7_Unlock(&surface->IDirectDrawSurface7_iface, pRect);
 }
 
-static HRESULT WINAPI ddraw_surface3_Unlock(IDirectDrawSurface3 *iface, void *data)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface3_Unlock(IDirectDrawSurface3 *iface, void *data)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface3(iface);
 
@@ -1183,7 +1191,7 @@ static HRESULT WINAPI ddraw_surface3_Unlock(IDirectDrawSurface3 *iface, void *da
     return ddraw_surface7_Unlock(&surface->IDirectDrawSurface7_iface, NULL);
 }
 
-static HRESULT WINAPI ddraw_surface2_Unlock(IDirectDrawSurface2 *iface, void *data)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface2_Unlock(IDirectDrawSurface2 *iface, void *data)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface2(iface);
 
@@ -1193,7 +1201,7 @@ static HRESULT WINAPI ddraw_surface2_Unlock(IDirectDrawSurface2 *iface, void *da
     return ddraw_surface7_Unlock(&surface->IDirectDrawSurface7_iface, NULL);
 }
 
-static HRESULT WINAPI ddraw_surface1_Unlock(IDirectDrawSurface *iface, void *data)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_Unlock(IDirectDrawSurface *iface, void *data)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface(iface);
 
@@ -1203,7 +1211,8 @@ static HRESULT WINAPI ddraw_surface1_Unlock(IDirectDrawSurface *iface, void *dat
     return ddraw_surface7_Unlock(&surface->IDirectDrawSurface7_iface, NULL);
 }
 
-static HRESULT WINAPI ddraw_surface7_Flip(IDirectDrawSurface7 *iface, IDirectDrawSurface7 *src, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Flip(IDirectDrawSurface7 *iface,
+        IDirectDrawSurface7 *src, DWORD flags)
 {
     struct ddraw_surface *dst_impl = impl_from_IDirectDrawSurface7(iface);
     struct ddraw_surface *src_impl = unsafe_impl_from_IDirectDrawSurface7(src);
@@ -1325,7 +1334,8 @@ static HRESULT WINAPI ddraw_surface7_Flip(IDirectDrawSurface7 *iface, IDirectDra
     return hr;
 }
 
-static HRESULT WINAPI ddraw_surface4_Flip(IDirectDrawSurface4 *iface, IDirectDrawSurface4 *dst, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface4_Flip(IDirectDrawSurface4 *iface,
+        IDirectDrawSurface4 *dst, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface4(iface);
     struct ddraw_surface *dst_impl = unsafe_impl_from_IDirectDrawSurface4(dst);
@@ -1336,7 +1346,8 @@ static HRESULT WINAPI ddraw_surface4_Flip(IDirectDrawSurface4 *iface, IDirectDra
             dst_impl ? &dst_impl->IDirectDrawSurface7_iface : NULL, flags);
 }
 
-static HRESULT WINAPI ddraw_surface3_Flip(IDirectDrawSurface3 *iface, IDirectDrawSurface3 *dst, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface3_Flip(IDirectDrawSurface3 *iface,
+        IDirectDrawSurface3 *dst, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface3(iface);
     struct ddraw_surface *dst_impl = unsafe_impl_from_IDirectDrawSurface3(dst);
@@ -1347,7 +1358,8 @@ static HRESULT WINAPI ddraw_surface3_Flip(IDirectDrawSurface3 *iface, IDirectDra
             dst_impl ? &dst_impl->IDirectDrawSurface7_iface : NULL, flags);
 }
 
-static HRESULT WINAPI ddraw_surface2_Flip(IDirectDrawSurface2 *iface, IDirectDrawSurface2 *dst, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface2_Flip(IDirectDrawSurface2 *iface,
+        IDirectDrawSurface2 *dst, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface2(iface);
     struct ddraw_surface *dst_impl = unsafe_impl_from_IDirectDrawSurface2(dst);
@@ -1358,7 +1370,8 @@ static HRESULT WINAPI ddraw_surface2_Flip(IDirectDrawSurface2 *iface, IDirectDra
             dst_impl ? &dst_impl->IDirectDrawSurface7_iface : NULL, flags);
 }
 
-static HRESULT WINAPI ddraw_surface1_Flip(IDirectDrawSurface *iface, IDirectDrawSurface *dst, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_Flip(IDirectDrawSurface *iface,
+        IDirectDrawSurface *dst, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface(iface);
     struct ddraw_surface *dst_impl = unsafe_impl_from_IDirectDrawSurface(dst);
@@ -1507,12 +1520,13 @@ static HRESULT ddraw_surface_blt_clipped(struct ddraw_surface *dst_surface, cons
  *  See IWineD3DSurface::Blt for more details
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_Blt(IDirectDrawSurface7 *iface, RECT *DestRect,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_Blt(IDirectDrawSurface7 *iface, RECT *DestRect,
         IDirectDrawSurface7 *SrcSurface, RECT *SrcRect, DWORD Flags, DDBLTFX *DDBltFx)
 {
     struct ddraw_surface *dst_surface = impl_from_IDirectDrawSurface7(iface);
     struct ddraw_surface *src_surface = unsafe_impl_from_IDirectDrawSurface7(SrcSurface);
     HRESULT hr = DD_OK;
+    DDBLTFX rop_fx;
 
     TRACE("iface %p, dst_rect %s, src_surface %p, src_rect %s, flags %#x, fx %p.\n",
             iface, wine_dbgstr_rect(DestRect), SrcSurface, wine_dbgstr_rect(SrcRect), Flags, DDBltFx);
@@ -1531,6 +1545,83 @@ static HRESULT WINAPI ddraw_surface7_Blt(IDirectDrawSurface7 *iface, RECT *DestR
     }
 
     wined3d_mutex_lock();
+
+    if (Flags & (DDBLT_COLORFILL | DDBLT_DEPTHFILL))
+    {
+        if (Flags & DDBLT_ROP)
+        {
+            wined3d_mutex_unlock();
+            WARN("DDBLT_ROP used with DDBLT_COLORFILL or DDBLT_DEPTHFILL, returning DDERR_INVALIDPARAMS.\n");
+            return DDERR_INVALIDPARAMS;
+        }
+        if (src_surface)
+        {
+            wined3d_mutex_unlock();
+            WARN("Depth or colorfill is not compatible with source surfaces, returning DDERR_INVALIDPARAMS\n");
+            return DDERR_INVALIDPARAMS;
+        }
+        if (!DDBltFx)
+        {
+            wined3d_mutex_unlock();
+            WARN("Depth or colorfill used with DDBltFx = NULL, returning DDERR_INVALIDPARAMS.\n");
+            return DDERR_INVALIDPARAMS;
+        }
+
+        if ((Flags & (DDBLT_COLORFILL | DDBLT_DEPTHFILL)) == (DDBLT_COLORFILL | DDBLT_DEPTHFILL))
+            Flags &= ~DDBLT_DEPTHFILL;
+
+        if ((dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) && (Flags & DDBLT_COLORFILL))
+        {
+            wined3d_mutex_unlock();
+            WARN("DDBLT_COLORFILL used on a depth buffer, returning DDERR_INVALIDPARAMS.\n");
+            return DDERR_INVALIDPARAMS;
+        }
+        if (!(dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) && (Flags & DDBLT_DEPTHFILL))
+        {
+            wined3d_mutex_unlock();
+            WARN("DDBLT_DEPTHFILL used on a color buffer, returning DDERR_INVALIDPARAMS.\n");
+            return DDERR_INVALIDPARAMS;
+        }
+    }
+
+    if (Flags & DDBLT_ROP)
+    {
+        if (!DDBltFx)
+        {
+            wined3d_mutex_unlock();
+            WARN("DDBLT_ROP used with DDBltFx = NULL, returning DDERR_INVALIDPARAMS.\n");
+            return DDERR_INVALIDPARAMS;
+        }
+
+        Flags &= ~DDBLT_ROP;
+        switch (DDBltFx->dwROP)
+        {
+            case SRCCOPY:
+                break;
+
+            case WHITENESS:
+            case BLACKNESS:
+                rop_fx = *DDBltFx;
+
+                if (DDBltFx->dwROP == WHITENESS)
+                    rop_fx.u5.dwFillColor = 0xffffffff;
+                else
+                    rop_fx.u5.dwFillColor = 0;
+
+                if (dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+                    Flags |= DDBLT_DEPTHFILL;
+                else
+                    Flags |= DDBLT_COLORFILL;
+
+                DDBltFx = &rop_fx;
+                break;
+
+            default:
+                wined3d_mutex_unlock();
+                WARN("Unsupported ROP %#x used, returning DDERR_NORASTEROPHW.\n", DDBltFx->dwROP);
+                return DDERR_NORASTEROPHW;
+        }
+    }
 
     if (Flags & DDBLT_KEYSRC && (!src_surface || !(src_surface->surface_desc.dwFlags & DDSD_CKSRCBLT)))
     {
@@ -1555,7 +1646,7 @@ static HRESULT WINAPI ddraw_surface7_Blt(IDirectDrawSurface7 *iface, RECT *DestR
     }
 }
 
-static HRESULT WINAPI ddraw_surface4_Blt(IDirectDrawSurface4 *iface, RECT *dst_rect,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface4_Blt(IDirectDrawSurface4 *iface, RECT *dst_rect,
         IDirectDrawSurface4 *src_surface, RECT *src_rect, DWORD flags, DDBLTFX *fx)
 {
     struct ddraw_surface *dst = impl_from_IDirectDrawSurface4(iface);
@@ -1568,7 +1659,7 @@ static HRESULT WINAPI ddraw_surface4_Blt(IDirectDrawSurface4 *iface, RECT *dst_r
             src ? &src->IDirectDrawSurface7_iface : NULL, src_rect, flags, fx);
 }
 
-static HRESULT WINAPI ddraw_surface3_Blt(IDirectDrawSurface3 *iface, RECT *dst_rect,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface3_Blt(IDirectDrawSurface3 *iface, RECT *dst_rect,
         IDirectDrawSurface3 *src_surface, RECT *src_rect, DWORD flags, DDBLTFX *fx)
 {
     struct ddraw_surface *dst = impl_from_IDirectDrawSurface3(iface);
@@ -1581,7 +1672,7 @@ static HRESULT WINAPI ddraw_surface3_Blt(IDirectDrawSurface3 *iface, RECT *dst_r
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags, fx);
 }
 
-static HRESULT WINAPI ddraw_surface2_Blt(IDirectDrawSurface2 *iface, RECT *dst_rect,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface2_Blt(IDirectDrawSurface2 *iface, RECT *dst_rect,
         IDirectDrawSurface2 *src_surface, RECT *src_rect, DWORD flags, DDBLTFX *fx)
 {
     struct ddraw_surface *dst = impl_from_IDirectDrawSurface2(iface);
@@ -1594,7 +1685,7 @@ static HRESULT WINAPI ddraw_surface2_Blt(IDirectDrawSurface2 *iface, RECT *dst_r
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags, fx);
 }
 
-static HRESULT WINAPI ddraw_surface1_Blt(IDirectDrawSurface *iface, RECT *dst_rect,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_Blt(IDirectDrawSurface *iface, RECT *dst_rect,
         IDirectDrawSurface *src_surface, RECT *src_rect, DWORD flags, DDBLTFX *fx)
 {
     struct ddraw_surface *dst = impl_from_IDirectDrawSurface(iface);
@@ -2555,7 +2646,7 @@ static HRESULT WINAPI ddraw_surface2_PageUnlock(IDirectDrawSurface2 *iface, DWOR
  *  DDERR_UNSUPPORTED
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_BltBatch(IDirectDrawSurface7 *iface, DDBLTBATCH *Batch, DWORD Count, DWORD Flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_BltBatch(IDirectDrawSurface7 *iface, DDBLTBATCH *Batch, DWORD Count, DWORD Flags)
 {
     TRACE("iface %p, batch %p, count %u, flags %#x.\n", iface, Batch, Count, Flags);
 
@@ -2563,7 +2654,7 @@ static HRESULT WINAPI ddraw_surface7_BltBatch(IDirectDrawSurface7 *iface, DDBLTB
     return DDERR_UNSUPPORTED;
 }
 
-static HRESULT WINAPI ddraw_surface4_BltBatch(IDirectDrawSurface4 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface4_BltBatch(IDirectDrawSurface4 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface4(iface);
 
@@ -2572,7 +2663,7 @@ static HRESULT WINAPI ddraw_surface4_BltBatch(IDirectDrawSurface4 *iface, DDBLTB
     return ddraw_surface7_BltBatch(&surface->IDirectDrawSurface7_iface, batch, count, flags);
 }
 
-static HRESULT WINAPI ddraw_surface3_BltBatch(IDirectDrawSurface3 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface3_BltBatch(IDirectDrawSurface3 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface3(iface);
 
@@ -2581,7 +2672,7 @@ static HRESULT WINAPI ddraw_surface3_BltBatch(IDirectDrawSurface3 *iface, DDBLTB
     return ddraw_surface7_BltBatch(&surface->IDirectDrawSurface7_iface, batch, count, flags);
 }
 
-static HRESULT WINAPI ddraw_surface2_BltBatch(IDirectDrawSurface2 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface2_BltBatch(IDirectDrawSurface2 *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface2(iface);
 
@@ -2590,7 +2681,7 @@ static HRESULT WINAPI ddraw_surface2_BltBatch(IDirectDrawSurface2 *iface, DDBLTB
     return ddraw_surface7_BltBatch(&surface->IDirectDrawSurface7_iface, batch, count, flags);
 }
 
-static HRESULT WINAPI ddraw_surface1_BltBatch(IDirectDrawSurface *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_BltBatch(IDirectDrawSurface *iface, DDBLTBATCH *batch, DWORD count, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface(iface);
 
@@ -2855,18 +2946,16 @@ static HRESULT WINAPI ddraw_surface1_EnumOverlayZOrders(IDirectDrawSurface *ifac
  *****************************************************************************/
 static HRESULT WINAPI ddraw_surface7_GetBltStatus(IDirectDrawSurface7 *iface, DWORD Flags)
 {
-    struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-    HRESULT hr;
-
     TRACE("iface %p, flags %#x.\n", iface, Flags);
 
-    wined3d_mutex_lock();
-    hr = wined3d_surface_get_blt_status(surface->wined3d_surface, Flags);
-    wined3d_mutex_unlock();
-    switch(hr)
+    switch (Flags)
     {
-        case WINED3DERR_INVALIDCALL:        return DDERR_INVALIDPARAMS;
-        default:                            return hr;
+        case WINEDDGBS_CANBLT:
+        case WINEDDGBS_ISBLTDONE:
+            return DD_OK;
+
+        default:
+            return DDERR_INVALIDPARAMS;
     }
 }
 
@@ -3029,19 +3118,18 @@ static HRESULT WINAPI ddraw_surface1_GetColorKey(IDirectDrawSurface *iface, DWOR
  *****************************************************************************/
 static HRESULT WINAPI ddraw_surface7_GetFlipStatus(IDirectDrawSurface7 *iface, DWORD Flags)
 {
-    struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-    HRESULT hr;
-
     TRACE("iface %p, flags %#x.\n", iface, Flags);
 
-    wined3d_mutex_lock();
-    hr = wined3d_surface_get_flip_status(surface->wined3d_surface, Flags);
-    wined3d_mutex_unlock();
+    /* XXX: DDERR_INVALIDSURFACETYPE */
 
-    switch(hr)
+    switch (Flags)
     {
-        case WINED3DERR_INVALIDCALL:        return DDERR_INVALIDPARAMS;
-        default:                            return hr;
+        case WINEDDGFS_CANFLIP:
+        case WINEDDGFS_ISFLIPDONE:
+            return DD_OK;
+
+        default:
+            return DDERR_INVALIDPARAMS;
     }
 }
 
@@ -3881,34 +3969,9 @@ static HRESULT WINAPI ddraw_surface2_GetDDInterface(IDirectDrawSurface2 *iface, 
     return ddraw_surface7_GetDDInterface(&surface->IDirectDrawSurface7_iface, ddraw);
 }
 
-/* This seems also windows implementation specific - I don't think WineD3D needs this */
 static HRESULT WINAPI ddraw_surface7_ChangeUniquenessValue(IDirectDrawSurface7 *iface)
 {
-    struct ddraw_surface *This = impl_from_IDirectDrawSurface7(iface);
-    volatile struct ddraw_surface* vThis = This;
-
     TRACE("iface %p.\n", iface);
-
-    wined3d_mutex_lock();
-    /* A uniqueness value of 0 is apparently special.
-     * This needs to be checked.
-     * TODO: Write tests for this code and check if the volatile, interlocked stuff is really needed
-     */
-    while (1) {
-        DWORD old_uniqueness_value = vThis->uniqueness_value;
-        DWORD new_uniqueness_value = old_uniqueness_value+1;
-
-        if (old_uniqueness_value == 0) break;
-        if (new_uniqueness_value == 0) new_uniqueness_value = 1;
-
-        if (InterlockedCompareExchange((LONG*)&vThis->uniqueness_value,
-                                      old_uniqueness_value,
-                                      new_uniqueness_value)
-            == old_uniqueness_value)
-            break;
-    }
-
-    wined3d_mutex_unlock();
 
     return DD_OK;
 }
@@ -3924,13 +3987,9 @@ static HRESULT WINAPI ddraw_surface4_ChangeUniquenessValue(IDirectDrawSurface4 *
 
 static HRESULT WINAPI ddraw_surface7_GetUniquenessValue(IDirectDrawSurface7 *iface, DWORD *pValue)
 {
-    struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-
     TRACE("iface %p, value %p.\n", iface, pValue);
 
-    wined3d_mutex_lock();
-    *pValue = surface->uniqueness_value;
-    wined3d_mutex_unlock();
+    *pValue = 0;
 
     return DD_OK;
 }
@@ -4037,7 +4096,7 @@ static HRESULT WINAPI ddraw_surface7_GetLOD(IDirectDrawSurface7 *iface, DWORD *M
  *  For more details, see IWineD3DSurface::BltFast
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_BltFast(IDirectDrawSurface7 *iface, DWORD dstx, DWORD dsty,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface7_BltFast(IDirectDrawSurface7 *iface, DWORD dstx, DWORD dsty,
         IDirectDrawSurface7 *Source, RECT *rsrc, DWORD trans)
 {
     struct ddraw_surface *This = impl_from_IDirectDrawSurface7(iface);
@@ -4109,7 +4168,7 @@ static HRESULT WINAPI ddraw_surface7_BltFast(IDirectDrawSurface7 *iface, DWORD d
     }
 }
 
-static HRESULT WINAPI ddraw_surface4_BltFast(IDirectDrawSurface4 *iface, DWORD dst_x, DWORD dst_y,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface4_BltFast(IDirectDrawSurface4 *iface, DWORD dst_x, DWORD dst_y,
         IDirectDrawSurface4 *src_surface, RECT *src_rect, DWORD flags)
 {
     struct ddraw_surface *dst_impl = impl_from_IDirectDrawSurface4(iface);
@@ -4122,7 +4181,7 @@ static HRESULT WINAPI ddraw_surface4_BltFast(IDirectDrawSurface4 *iface, DWORD d
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags);
 }
 
-static HRESULT WINAPI ddraw_surface3_BltFast(IDirectDrawSurface3 *iface, DWORD dst_x, DWORD dst_y,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface3_BltFast(IDirectDrawSurface3 *iface, DWORD dst_x, DWORD dst_y,
         IDirectDrawSurface3 *src_surface, RECT *src_rect, DWORD flags)
 {
     struct ddraw_surface *dst_impl = impl_from_IDirectDrawSurface3(iface);
@@ -4135,7 +4194,7 @@ static HRESULT WINAPI ddraw_surface3_BltFast(IDirectDrawSurface3 *iface, DWORD d
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags);
 }
 
-static HRESULT WINAPI ddraw_surface2_BltFast(IDirectDrawSurface2 *iface, DWORD dst_x, DWORD dst_y,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface2_BltFast(IDirectDrawSurface2 *iface, DWORD dst_x, DWORD dst_y,
         IDirectDrawSurface2 *src_surface, RECT *src_rect, DWORD flags)
 {
     struct ddraw_surface *dst_impl = impl_from_IDirectDrawSurface2(iface);
@@ -4148,7 +4207,7 @@ static HRESULT WINAPI ddraw_surface2_BltFast(IDirectDrawSurface2 *iface, DWORD d
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags);
 }
 
-static HRESULT WINAPI ddraw_surface1_BltFast(IDirectDrawSurface *iface, DWORD dst_x, DWORD dst_y,
+static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_BltFast(IDirectDrawSurface *iface, DWORD dst_x, DWORD dst_y,
         IDirectDrawSurface *src_surface, RECT *src_rect, DWORD flags)
 {
     struct ddraw_surface *dst_impl = impl_from_IDirectDrawSurface(iface);
@@ -4461,7 +4520,7 @@ static HRESULT WINAPI ddraw_surface7_SetSurfaceDesc(IDirectDrawSurface7 *iface, 
         format_id = wined3dformat_from_ddrawformat(&This->surface_desc.u4.ddpfPixelFormat);
     }
 
-    if (FAILED(hr = wined3d_surface_update_desc(This->wined3d_surface, width, height,
+    if (FAILED(hr = wined3d_texture_update_desc(This->wined3d_texture, width, height,
             format_id, WINED3D_MULTISAMPLE_NONE, 0, DDSD->lpSurface, pitch)))
     {
         WARN("Failed to update surface desc, hr %#x.\n", hr);
@@ -4580,15 +4639,21 @@ static HRESULT ddraw_surface_set_color_key(struct ddraw_surface *surface, DWORD 
     DDCOLORKEY fixed_color_key;
     HRESULT hr = WINED3D_OK;
 
+    if (flags & DDCKEY_COLORSPACE)
+    {
+        if (color_key && color_key->dwColorSpaceLowValue != color_key->dwColorSpaceHighValue)
+        {
+            WARN("Range color keys are not supported, returning DDERR_NOCOLORKEYHW.\n");
+            return DDERR_NOCOLORKEYHW;
+        }
+        flags &= ~DDCKEY_COLORSPACE;
+    }
+
     wined3d_mutex_lock();
 
     if (color_key)
     {
-        fixed_color_key = *color_key;
-        /* Handle case where dwColorSpaceHighValue < dwColorSpaceLowValue */
-        if (fixed_color_key.dwColorSpaceHighValue < fixed_color_key.dwColorSpaceLowValue)
-            fixed_color_key.dwColorSpaceHighValue = fixed_color_key.dwColorSpaceLowValue;
-
+        fixed_color_key.dwColorSpaceLowValue = fixed_color_key.dwColorSpaceHighValue = color_key->dwColorSpaceLowValue;
         switch (flags & ~DDCKEY_COLORSPACE)
         {
             case DDCKEY_DESTBLT:
@@ -4992,6 +5057,46 @@ static struct ddraw_surface *get_sub_mimaplevel(struct ddraw_surface *surface)
     return impl_from_IDirectDrawSurface7(next_level);
 }
 
+static BOOL compare_format(DDPIXELFORMAT *format1, DDPIXELFORMAT *format2)
+{
+    if ((format1->dwFlags & (DDPF_RGB|DDPF_YUV|DDPF_FOURCC)) !=
+        (format2->dwFlags & (DDPF_RGB|DDPF_YUV|DDPF_FOURCC)))
+        return FALSE;
+
+    if (format1->dwFlags & (DDPF_RGB|DDPF_YUV))
+    {
+        if (!(format1->dwFlags & DDPF_ALPHA))
+        {
+            /* The RGB and YUV bits are stored in the same fields */
+            if (format1->u1.dwRGBBitCount != format2->u1.dwRGBBitCount)
+                return FALSE;
+
+            if (format1->u2.dwRBitMask != format2->u2.dwRBitMask)
+                return FALSE;
+
+            if (format1->u3.dwGBitMask != format2->u3.dwGBitMask)
+                return FALSE;
+
+            if (format1->u4.dwBBitMask != format2->u4.dwBBitMask)
+                return FALSE;
+        }
+
+        if (format1->dwFlags & (DDPF_ALPHAPIXELS | DDPF_ALPHA))
+        {
+            if (format1->u5.dwRGBAlphaBitMask != format2->u5.dwRGBAlphaBitMask)
+                return FALSE;
+        }
+    }
+
+    if (format1->dwFlags & DDPF_FOURCC)
+    {
+        if (format1->dwFourCC != format2->dwFourCC)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 /*****************************************************************************
  * IDirect3DTexture2::Load
  *
@@ -5025,91 +5130,56 @@ static HRESULT WINAPI d3d_texture2_Load(IDirect3DTexture2 *iface, IDirect3DTextu
 
     wined3d_mutex_lock();
 
-    if (((src_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_MIPMAP)
-            != (dst_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_MIPMAP))
-            || (src_surface->surface_desc.u2.dwMipMapCount != dst_surface->surface_desc.u2.dwMipMapCount))
-    {
-        ERR("Trying to load surfaces with different mip-map counts.\n");
-    }
-
     for (;;)
     {
-        struct ddraw_palette *dst_pal, *src_pal;
-        DDSURFACEDESC *src_desc, *dst_desc;
+        DDSURFACEDESC *src_desc = (DDSURFACEDESC *)&src_surface->surface_desc;
 
-        TRACE("Copying surface %p to surface %p (mipmap level %d).\n",
-                src_surface, dst_surface, src_surface->mipmap_level);
+        TRACE("Copying surface %p to surface %p.\n", src_surface, dst_surface);
 
-        /* Suppress the ALLOCONLOAD flag */
-        dst_surface->surface_desc.ddsCaps.dwCaps &= ~DDSCAPS_ALLOCONLOAD;
-
-        /* Get the palettes */
-        dst_pal = dst_surface->palette;
-        src_pal = src_surface->palette;
-
-        if (src_pal)
+        if (compare_format(&src_surface->surface_desc.u4.ddpfPixelFormat,
+                           &dst_surface->surface_desc.u4.ddpfPixelFormat))
         {
-            PALETTEENTRY palent[256];
+            struct ddraw_palette *dst_pal, *src_pal;
 
-            if (!dst_pal)
+            /* Get the palettes */
+            dst_pal = dst_surface->palette;
+            src_pal = src_surface->palette;
+
+            if (src_pal)
             {
-                wined3d_mutex_unlock();
-                return DDERR_NOPALETTEATTACHED;
+                PALETTEENTRY palent[256];
+
+                if (!dst_pal)
+                {
+                    wined3d_mutex_unlock();
+                    return DDERR_NOPALETTEATTACHED;
+                }
+                IDirectDrawPalette_GetEntries(&src_pal->IDirectDrawPalette_iface, 0, 0, 256, palent);
+                IDirectDrawPalette_SetEntries(&dst_pal->IDirectDrawPalette_iface, 0, 0, 256, palent);
             }
-            IDirectDrawPalette_GetEntries(&src_pal->IDirectDrawPalette_iface, 0, 0, 256, palent);
-            IDirectDrawPalette_SetEntries(&dst_pal->IDirectDrawPalette_iface, 0, 0, 256, palent);
-        }
 
-        /* Copy one surface on the other */
-        dst_desc = (DDSURFACEDESC *)&(dst_surface->surface_desc);
-        src_desc = (DDSURFACEDESC *)&(src_surface->surface_desc);
-
-        if ((src_desc->dwWidth != dst_desc->dwWidth) || (src_desc->dwHeight != dst_desc->dwHeight))
-        {
-            /* Should also check for same pixel format, u1.lPitch, ... */
-            ERR("Error in surface sizes.\n");
-            wined3d_mutex_unlock();
-            return D3DERR_TEXTURE_LOAD_FAILED;
-        }
-        else
-        {
-            struct wined3d_map_desc src_map_desc, dst_map_desc;
-
-            /* Copy the src blit color key if the source has one, don't erase
-             * the destination's ckey if the source has none */
             if (src_desc->dwFlags & DDSD_CKSRCBLT)
             {
                 IDirectDrawSurface7_SetColorKey(&dst_surface->IDirectDrawSurface7_iface,
                         DDCKEY_SRCBLT, &src_desc->ddckCKSrcBlt);
             }
+        }
+        else
+        {
+            if (src_desc->dwFlags & DDSD_CKSRCBLT)
+                return E_FAIL;
+        }
 
-            /* Copy the main memory texture into the surface that corresponds
-             * to the OpenGL texture object. */
+        /* Suppress the ALLOCONLOAD flag */
+        dst_surface->surface_desc.ddsCaps.dwCaps &= ~DDSCAPS_ALLOCONLOAD;
 
-            hr = wined3d_surface_map(src_surface->wined3d_surface, &src_map_desc, NULL, 0);
-            if (FAILED(hr))
-            {
-                ERR("Failed to lock source surface, hr %#x.\n", hr);
-                wined3d_mutex_unlock();
-                return D3DERR_TEXTURE_LOAD_FAILED;
-            }
-
-            hr = wined3d_surface_map(dst_surface->wined3d_surface, &dst_map_desc, NULL, 0);
-            if (FAILED(hr))
-            {
-                ERR("Failed to lock destination surface, hr %#x.\n", hr);
-                wined3d_surface_unmap(src_surface->wined3d_surface);
-                wined3d_mutex_unlock();
-                return D3DERR_TEXTURE_LOAD_FAILED;
-            }
-
-            if (dst_surface->surface_desc.u4.ddpfPixelFormat.dwFlags & DDPF_FOURCC)
-                memcpy(dst_map_desc.data, src_map_desc.data, src_surface->surface_desc.u1.dwLinearSize);
-            else
-                memcpy(dst_map_desc.data, src_map_desc.data, src_map_desc.row_pitch * src_desc->dwHeight);
-
-            wined3d_surface_unmap(src_surface->wined3d_surface);
-            wined3d_surface_unmap(dst_surface->wined3d_surface);
+        hr = wined3d_surface_blt(dst_surface->wined3d_surface, NULL, src_surface->wined3d_surface,
+                                 NULL, 0, NULL, WINED3D_TEXF_LINEAR);
+        if (FAILED(hr))
+        {
+            ERR("Failed to blit surface, hr %#x.\n", hr);
+            wined3d_mutex_unlock();
+            return hr;
         }
 
         if (src_surface->surface_desc.ddsCaps.dwCaps & DDSCAPS_MIPMAP)
@@ -5122,12 +5192,11 @@ static HRESULT WINAPI d3d_texture2_Load(IDirect3DTexture2 *iface, IDirect3DTextu
         else
             dst_surface = NULL;
 
+        if (src_surface && !dst_surface)
+            return DDERR_NOTFOUND;
+
         if (!src_surface || !dst_surface)
-        {
-            if (src_surface != dst_surface)
-                ERR("Loading surface with different mipmap structure.\n");
             break;
-        }
     }
 
     wined3d_mutex_unlock();
@@ -5357,7 +5426,7 @@ static const struct IDirectDrawSurface2Vtbl ddraw_surface2_vtbl =
     ddraw_surface2_PageUnlock,
 };
 
-static const struct IDirectDrawSurfaceVtbl ddraw_surface1_vtbl =
+static struct IDirectDrawSurfaceVtbl ddraw_surface1_vtbl =
 {
     /* IUnknown */
     ddraw_surface1_QueryInterface,
@@ -5559,6 +5628,9 @@ static void STDMETHODCALLTYPE ddraw_surface_wined3d_object_destroyed(void *paren
     /* Reduce the ddraw surface count. */
     list_remove(&surface->surface_list_entry);
 
+    if (surface->clipper)
+        IDirectDrawClipper_Release(&surface->clipper->IDirectDrawClipper_iface);
+
     if (surface == surface->ddraw->primary)
         surface->ddraw->primary = NULL;
 
@@ -5600,6 +5672,7 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
     DDSURFACEDESC2 *desc, *mip_desc;
     struct ddraw_texture *texture;
     UINT layers, levels, i, j;
+    unsigned int pitch = 0;
     HRESULT hr;
 
     TRACE("ddraw %p, surface_desc %p, surface %p, outer_unknown %p, version %u.\n",
@@ -5811,14 +5884,7 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
             {
                 /* Undocumented feature: Create sublevels until either the
                  * width or the height is 1. */
-                DWORD min = desc->dwWidth < desc->dwHeight ? desc->dwWidth : desc->dwHeight;
-
-                desc->u2.dwMipMapCount = 0;
-                while (min)
-                {
-                    ++desc->u2.dwMipMapCount;
-                    min >>= 1;
-                }
+                desc->u2.dwMipMapCount = wined3d_log2i(min(desc->dwWidth, desc->dwHeight)) + 1;
             }
         }
         else
@@ -5877,7 +5943,24 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
 
     if (desc->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY)
     {
-        wined3d_desc.pool = WINED3D_POOL_SYSTEM_MEM;
+        /*
+         * The ddraw RGB device allows to use system memory surfaces as rendering target.
+         * This does not cause problems because the RGB device does software rasterization
+         * though it will fail with hardware accelerated ddraw. In order to be partially
+         * compatible with games requesting explicitly the RGB device, we ignore the
+         * specified location and try to create rendering targets in video memory if
+         * possible.
+         */
+        if ((desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE) &&
+            SUCCEEDED(hr = wined3d_check_device_format(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
+                        WINED3D_DEVICE_TYPE_HAL, mode.format_id, WINED3DUSAGE_RENDERTARGET,
+                        WINED3D_RTYPE_SURFACE, wined3d_desc.format)))
+        {
+            FIXME("Application wants to create rendering target in system memory, using video memory instead\n");
+            wined3d_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        }
+        else
+            wined3d_desc.pool = WINED3D_POOL_SYSTEM_MEM;
     }
     else
     {
@@ -5938,6 +6021,15 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
                 HeapFree(GetProcessHeap(), 0, texture);
                 return DDERR_INVALIDPARAMS;
             }
+
+            if ((desc->dwFlags & DDSD_LINEARSIZE)
+                    && desc->u1.dwLinearSize < wined3d_calculate_format_pitch(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
+                            wined3d_desc.format, wined3d_desc.width) * ((desc->dwHeight + 3) / 4))
+            {
+                WARN("Invalid linear size %u specified.\n", desc->u1.dwLinearSize);
+                HeapFree(GetProcessHeap(), 0, texture);
+                return DDERR_INVALIDPARAMS;
+            }
         }
         else
         {
@@ -5947,7 +6039,31 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
                 HeapFree(GetProcessHeap(), 0, texture);
                 return DDERR_INVALIDPARAMS;
             }
+
+            if (desc->u1.lPitch < wined3d_calculate_format_pitch(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
+                    wined3d_desc.format, wined3d_desc.width) || desc->u1.lPitch & 3)
+            {
+                WARN("Invalid pitch %u specified.\n", desc->u1.lPitch);
+                HeapFree(GetProcessHeap(), 0, texture);
+                return DDERR_INVALIDPARAMS;
+            }
+
+            pitch = desc->u1.lPitch;
         }
+    }
+
+    if (((desc->dwFlags & DDSD_CKDESTOVERLAY)
+            && desc->u3.ddckCKDestOverlay.dwColorSpaceLowValue != desc->u3.ddckCKDestOverlay.dwColorSpaceHighValue)
+            || ((desc->dwFlags & DDSD_CKDESTBLT)
+            && desc->ddckCKDestBlt.dwColorSpaceLowValue != desc->ddckCKDestBlt.dwColorSpaceHighValue)
+            || ((desc->dwFlags & DDSD_CKSRCOVERLAY)
+            && desc->ddckCKSrcOverlay.dwColorSpaceLowValue != desc->ddckCKSrcOverlay.dwColorSpaceHighValue)
+            || ((desc->dwFlags & DDSD_CKSRCBLT)
+            && desc->ddckCKSrcBlt.dwColorSpaceLowValue != desc->ddckCKSrcBlt.dwColorSpaceHighValue))
+    {
+        WARN("Range color keys not supported, returning DDERR_NOCOLORKEYHW.\n");
+        HeapFree(GetProcessHeap(), 0, texture);
+        return DDERR_NOCOLORKEYHW;
     }
 
     if (desc->ddsCaps.dwCaps & (DDSCAPS_OVERLAY))
@@ -5974,7 +6090,7 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
      * Commandos: Behind Enemy Lines is another. We set
      * WINED3D_SURFACE_PIN_SYSMEM because of this. */
     if (FAILED(hr = wined3d_texture_create(ddraw->wined3d_device, &wined3d_desc, levels,
-            WINED3D_SURFACE_PIN_SYSMEM, texture, &ddraw_texture_wined3d_parent_ops, &wined3d_texture)))
+            WINED3D_SURFACE_PIN_SYSMEM, NULL, texture, &ddraw_texture_wined3d_parent_ops, &wined3d_texture)))
     {
         WARN("Failed to create wined3d texture, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, texture);
@@ -6051,6 +6167,14 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
         }
     }
 
+    if ((desc->dwFlags & DDSD_LPSURFACE) && FAILED(hr = wined3d_texture_update_desc(wined3d_texture,
+            wined3d_desc.width, wined3d_desc.height, wined3d_desc.format,
+            WINED3D_MULTISAMPLE_NONE, 0, desc->lpSurface, pitch)))
+    {
+        ERR("Failed to set surface memory, hr %#x.\n", hr);
+        goto fail;
+    }
+
     if (desc->dwFlags & DDSD_BACKBUFFERCOUNT)
     {
         unsigned int count = desc->u5.dwBackBufferCount;
@@ -6078,7 +6202,7 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
             desc->u5.dwBackBufferCount = 0;
 
             if (FAILED(hr = wined3d_texture_create(ddraw->wined3d_device, &wined3d_desc, 1,
-                    WINED3D_SURFACE_PIN_SYSMEM, texture, &ddraw_texture_wined3d_parent_ops, &wined3d_texture)))
+                    WINED3D_SURFACE_PIN_SYSMEM, NULL, texture, &ddraw_texture_wined3d_parent_ops, &wined3d_texture)))
             {
                 HeapFree(GetProcessHeap(), 0, texture);
                 hr = hr_ddraw_from_wined3d(hr);
@@ -6126,13 +6250,12 @@ fail:
     return hr;
 }
 
-HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, struct ddraw_texture *texture,
+void ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, struct ddraw_texture *texture,
         struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops)
 {
     DDSURFACEDESC2 *desc = &surface->surface_desc;
     struct wined3d_resource_desc wined3d_desc;
     unsigned int version = texture->version;
-    HRESULT hr;
 
     surface->IDirectDrawSurface7_iface.lpVtbl = &ddraw_surface7_vtbl;
     surface->IDirectDrawSurface4_iface.lpVtbl = &ddraw_surface4_vtbl;
@@ -6171,60 +6294,18 @@ HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, s
     if (format_is_compressed(&desc->u4.ddpfPixelFormat))
     {
         if (desc->dwFlags & DDSD_LPSURFACE)
-        {
-            if ((desc->dwFlags & DDSD_LINEARSIZE)
-                    && desc->u1.dwLinearSize < wined3d_surface_get_pitch(wined3d_surface) * ((desc->dwHeight + 3) / 4))
-            {
-                WARN("Invalid linear size %u specified.\n", desc->u1.dwLinearSize);
-                return DDERR_INVALIDPARAMS;
-            }
-
-            if (FAILED(hr = wined3d_surface_update_desc(wined3d_surface, wined3d_desc.width,
-                    wined3d_desc.height, wined3d_desc.format, WINED3D_MULTISAMPLE_NONE, 0,
-                    desc->lpSurface, 0)))
-            {
-                ERR("Failed to set surface memory, hr %#x.\n", hr);
-                return hr;
-            }
-
-            desc->dwFlags |= DDSD_LINEARSIZE;
-            desc->dwFlags &= ~(DDSD_LPSURFACE | DDSD_PITCH);
             desc->u1.dwLinearSize = ~0u;
-        }
         else
-        {
-            desc->dwFlags |= DDSD_LINEARSIZE;
-            desc->dwFlags &= ~DDSD_PITCH;
             desc->u1.dwLinearSize = wined3d_surface_get_pitch(wined3d_surface) * ((desc->dwHeight + 3) / 4);
-        }
+        desc->dwFlags |= DDSD_LINEARSIZE;
+        desc->dwFlags &= ~(DDSD_LPSURFACE | DDSD_PITCH);
     }
     else
     {
-        if (desc->dwFlags & DDSD_LPSURFACE)
-        {
-            if (desc->u1.lPitch < wined3d_calculate_format_pitch(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
-                    wined3d_desc.format, wined3d_desc.width) || desc->u1.lPitch & 3)
-            {
-                WARN("Invalid pitch %u specified.\n", desc->u1.lPitch);
-                return DDERR_INVALIDPARAMS;
-            }
-
-            if (FAILED(hr = wined3d_surface_update_desc(wined3d_surface, wined3d_desc.width,
-                    wined3d_desc.height, wined3d_desc.format, WINED3D_MULTISAMPLE_NONE, 0,
-                    desc->lpSurface, desc->u1.lPitch)))
-            {
-                ERR("Failed to set surface memory, hr %#x.\n", hr);
-                return hr;
-            }
-
-            desc->dwFlags &= ~(DDSD_LPSURFACE | DDSD_LINEARSIZE);
-        }
-        else
-        {
-            desc->dwFlags |= DDSD_PITCH;
-            desc->dwFlags &= ~DDSD_LINEARSIZE;
+        if (!(desc->dwFlags & DDSD_LPSURFACE))
             desc->u1.lPitch = wined3d_surface_get_pitch(wined3d_surface);
-        }
+        desc->dwFlags |= DDSD_PITCH;
+        desc->dwFlags &= ~(DDSD_LPSURFACE | DDSD_LINEARSIZE);
     }
     desc->lpSurface = NULL;
 
@@ -6233,8 +6314,6 @@ HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, s
     *parent_ops = &ddraw_surface_wined3d_parent_ops;
 
     wined3d_private_store_init(&surface->private_store);
-
-    return DD_OK;
 }
 
 static void STDMETHODCALLTYPE view_wined3d_object_destroyed(void *parent)

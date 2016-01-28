@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            user/user32/windows/prop.c
+ * FILE:            win32ss/user/user32/windows/prop.c
  * PURPOSE:         Window Property
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -29,22 +29,19 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
 #define ATOM_BUFFER_SIZE 256
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
 HANDLE
 FASTCALL
-IntGetProp(HWND hWnd, ATOM Atom)
+IntGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp)
 {
   PLIST_ENTRY ListEntry, temp;
   PPROPERTY Property;
   PWND pWnd;
   int i;
+  WORD SystemFlag = SystemProp ? PROPERTY_FLAG_SYSTEM : 0;
 
   pWnd = ValidateHwnd(hWnd);
   if (!pWnd) return NULL;
@@ -53,7 +50,8 @@ IntGetProp(HWND hWnd, ATOM Atom)
   for (i = 0; i < pWnd->PropListItems; i++ )
   {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (Property->Atom == Atom)
+      if (Property->Atom == Atom &&
+          (Property->fs & PROPERTY_FLAG_SYSTEM) == SystemFlag)
       {
          return(Property);
       }
@@ -65,10 +63,10 @@ IntGetProp(HWND hWnd, ATOM Atom)
 
 HANDLE
 FASTCALL
-UserGetProp(HWND hWnd, ATOM Atom)
+UserGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp)
 {
   PPROPERTY Prop;
-  Prop = IntGetProp(hWnd, Atom);
+  Prop = IntGetProp(hWnd, Atom, SystemProp);
   return Prop ? Prop->Data : NULL;
 }
 
@@ -387,7 +385,7 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
   {
      Atom = LOWORD((DWORD_PTR)lpString);
   }
-  Prop = IntGetProp(hWnd, Atom);
+  Prop = IntGetProp(hWnd, Atom, FALSE);
   if (Prop != NULL) Data = Prop->Data;
   return Data;
 }

@@ -628,7 +628,7 @@ int __cdecl _isleadbyte_l(int c, _locale_t locale)
 /*
  * @implemented
  */
-int isalpha(int c)
+int __cdecl isalpha(int c)
 {
    return(_isctype(c, _ALPHA));
 }
@@ -636,7 +636,7 @@ int isalpha(int c)
 /*
  * @implemented
  */
-int isalnum(int c)
+int __cdecl isalnum(int c)
 {
    return(_isctype(c, _ALPHA | _DIGIT));
 }
@@ -644,7 +644,7 @@ int isalnum(int c)
 /*
  * @implemented
  */
-int iswalnum(wint_t c)
+int __cdecl iswalnum(wint_t c)
 {
     return iswctype(c, _ALPHA | _DIGIT);
 }
@@ -652,7 +652,7 @@ int iswalnum(wint_t c)
 /*
  * @implemented
  */
-int __isascii(int c)
+int __cdecl __isascii(int c)
 {
    return ((unsigned char)c <= 0x7f);
 }
@@ -660,7 +660,7 @@ int __isascii(int c)
 /*
  * @implemented
  */
-int iswascii(wint_t c)
+int __cdecl iswascii(wint_t c)
 {
     return __isascii(c);
 }
@@ -668,7 +668,7 @@ int iswascii(wint_t c)
 /*
  * @implemented
  */
-int iscntrl(int c)
+int __cdecl iscntrl(int c)
 {
    return(_isctype(c, _CONTROL));
 }
@@ -676,7 +676,7 @@ int iscntrl(int c)
 /*
  * @implemented
  */
-int __iscsym(int c)
+int __cdecl __iscsym(int c)
 {
    return (c < 127 && (isalnum(c) || (c == '_')));
 }
@@ -684,7 +684,7 @@ int __iscsym(int c)
 /*
  * @implemented
  */
-int __iscsymf(int c)
+int __cdecl __iscsymf(int c)
 {
    return (c < 127 && (isalpha(c) || (c == '_')));
 }
@@ -692,7 +692,7 @@ int __iscsymf(int c)
 /*
  * @implemented
  */
-int isdigit(int c)
+int __cdecl isdigit(int c)
 {
    return(_isctype(c, _DIGIT));
 }
@@ -700,7 +700,7 @@ int isdigit(int c)
 /*
  * @implemented
  */
-int isgraph(int c)
+int __cdecl isgraph(int c)
 {
    return (_isctype (c, _PUNCT | _ALPHA | _DIGIT));
 }
@@ -708,7 +708,7 @@ int isgraph(int c)
 /*
  * @implemented
  */
-int islower(int c)
+int __cdecl islower(int c)
 {
    return (_isctype (c, _LOWER));
 }
@@ -716,7 +716,7 @@ int islower(int c)
 /*
  * @implemented
  */
-int isprint(int c)
+int __cdecl isprint(int c)
 {
    return (_isctype (c, _BLANK | _PUNCT | _ALPHA | _DIGIT));
 }
@@ -724,7 +724,7 @@ int isprint(int c)
 /*
  * @implemented
  */
-int ispunct(int c)
+int __cdecl ispunct(int c)
 {
    return (_isctype (c, _PUNCT));
 }
@@ -732,7 +732,7 @@ int ispunct(int c)
 /*
  * @implemented
  */
-int isspace(int c)
+int __cdecl isspace(int c)
 {
    return (_isctype (c, _SPACE));
 }
@@ -740,7 +740,7 @@ int isspace(int c)
 /*
  * @implemented
  */
-int isupper(int c)
+int __cdecl isupper(int c)
 {
    return (_isctype (c, _UPPER));
 }
@@ -748,7 +748,7 @@ int isupper(int c)
 /*
  * @implemented
  */
-int isxdigit(int c)
+int __cdecl isxdigit(int c)
 {
    return (_isctype (c, _HEX));
 }
@@ -757,7 +757,7 @@ int isxdigit(int c)
 /*
  * @implemented
  */
-int iswalpha(wint_t c)
+int __cdecl iswalpha(wint_t c)
 {
    return (iswctype (c, _ALPHA));
 }
@@ -765,7 +765,7 @@ int iswalpha(wint_t c)
 /*
  * @implemented
  */
-int iswcntrl(wint_t c)
+int __cdecl iswcntrl(wint_t c)
 {
     return iswctype(c, _CONTROL);
 }
@@ -773,7 +773,7 @@ int iswcntrl(wint_t c)
 /*
  * @implemented
  */
-int iswdigit(wint_t c)
+int __cdecl iswdigit(wint_t c)
 {
    return (iswctype (c, _DIGIT));
 }
@@ -781,7 +781,7 @@ int iswdigit(wint_t c)
 /*
  * @implemented
  */
-int iswgraph(wint_t c)
+int __cdecl iswgraph(wint_t c)
 {
   return iswctype(c,_PUNCT | _ALPHA | _DIGIT);
 }
@@ -789,7 +789,7 @@ int iswgraph(wint_t c)
 /*
  * @implemented
  */
-int iswprint(wint_t c)
+int __cdecl iswprint(wint_t c)
 {
   return iswctype((unsigned short)c,_BLANK | _PUNCT | _ALPHA | _DIGIT);
 }
@@ -798,7 +798,7 @@ int iswprint(wint_t c)
 /*
  * @implemented
  */
-int iswpunct(wint_t c)
+int __cdecl iswpunct(wint_t c)
 {
     return iswctype(c, _PUNCT);
 }
@@ -806,7 +806,7 @@ int iswpunct(wint_t c)
 /*
  * @implemented
  */
-int iswlower(wint_t c)
+int __cdecl iswlower(wint_t c)
 {
    return (iswctype (c, _LOWER));
 }
@@ -814,7 +814,7 @@ int iswlower(wint_t c)
 /*
  * @implemented
  */
-int iswupper(wint_t c)
+int __cdecl iswupper(wint_t c)
 {
     return iswctype(c, _UPPER);
 }
@@ -823,7 +823,7 @@ int iswupper(wint_t c)
 /*
  * @implemented
  */
-int iswspace(wint_t c)
+int __cdecl iswspace(wint_t c)
 {
    return (iswctype (c, _SPACE));
 }
@@ -831,7 +831,7 @@ int iswspace(wint_t c)
 /*
  * @implemented
  */
-int iswxdigit(wint_t c)
+int __cdecl iswxdigit(wint_t c)
 {
    return (iswctype (c, _HEX));
 }
@@ -840,7 +840,7 @@ int iswxdigit(wint_t c)
 /*
  * @implemented
  */
-int __toascii(int c)
+int __cdecl __toascii(int c)
 {
    return((unsigned int)(c) & 0x7f);
 }
@@ -848,7 +848,7 @@ int __toascii(int c)
 /*
  * @implemented
  */
-int _tolower(int c)
+int __cdecl _tolower(int c)
 {
    if (_isctype (c, _UPPER))
        return (c - upalpha);
@@ -858,7 +858,7 @@ int _tolower(int c)
 /*
  * @implemented
  */
-int _toupper(int c)
+int __cdecl _toupper(int c)
 {
    if (_isctype (c, _LOWER))
       return (c + upalpha);
@@ -868,7 +868,7 @@ int _toupper(int c)
 /*
  * @implemented
  */
-int tolower(int c)
+int __cdecl tolower(int c)
 {
    if (_isctype (c, _UPPER))
        return (c - upalpha);
@@ -878,7 +878,7 @@ int tolower(int c)
 /*
  * @implemented
  */
-int toupper(int c)
+int __cdecl toupper(int c)
 {
    if (_isctype (c, _LOWER))
       return (c + upalpha);
@@ -888,7 +888,7 @@ int toupper(int c)
 /*
  * @implemented
  */
-wint_t towlower(wint_t c)
+wint_t __cdecl towlower(wint_t c)
 {
    if (iswctype (c, _UPPER))
        return (c - upalpha);
@@ -898,7 +898,7 @@ wint_t towlower(wint_t c)
 /*
  * @implemented
  */
-wint_t towupper(wint_t c)
+wint_t __cdecl towupper(wint_t c)
 {
    if (iswctype (c, _LOWER))
       return (c + upalpha);

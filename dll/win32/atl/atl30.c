@@ -508,6 +508,7 @@ static const IClassFactoryVtbl IRegistrarCFVtbl = {
 
 static IClassFactory RegistrarCF = { &IRegistrarCFVtbl };
 
+#ifdef __REACTOS__
 static HRESULT do_register_dll_server(IRegistrar *pRegistrar, LPCOLESTR wszDll,
                                       LPCOLESTR wszId, BOOL do_register,
                                       const struct _ATL_REGMAP_ENTRY* pMapEntries)
@@ -554,7 +555,7 @@ static HRESULT do_register_server(BOOL do_register)
     StringFromGUID2(&CLSID_Registrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
     return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
 }
-
+#endif
 
 /**************************************************************
  * DllGetClassObject (ATL.2)
@@ -575,8 +576,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID riid, LPVOID *ppvObject)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+#ifdef __REACTOS__
     /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
     return do_register_server(TRUE);
+#else
+    return __wine_register_resources( atl_instance );
+#endif
 }
 
 /***********************************************************************
@@ -584,7 +589,11 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
+#ifdef __REACTOS__
     return do_register_server(FALSE);
+#else
+    return __wine_unregister_resources( atl_instance );
+#endif
 }
 
 /***********************************************************************

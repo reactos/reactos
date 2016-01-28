@@ -243,7 +243,7 @@ DWORD WINAPI RasEnumAutodialAddressesW(LPWSTR *a, LPDWORD b, LPDWORD c)
 /**************************************************************************
  *                 RasEnumDevicesA		[RASAPI32.19]
  *
- * Just return a virtual modem too see what other APIs programs will
+ * Just return a virtual modem to see what other APIs programs will
  * call with it.
  */
 DWORD WINAPI RasEnumDevicesA(LPRASDEVINFOA lpRasDevinfo, LPDWORD lpcb, LPDWORD lpcDevices)
@@ -255,6 +255,8 @@ DWORD WINAPI RasEnumDevicesA(LPRASDEVINFOA lpRasDevinfo, LPDWORD lpcb, LPDWORD l
 
 	if(lpRasDevinfo && lpRasDevinfo->dwSize != sizeof(RASDEVINFOA))
 		return ERROR_INVALID_SIZE;
+
+	*lpcDevices = 1;
 
 	if (!lpRasDevinfo || (*lpcb < sizeof(RASDEVINFOA))) {
 		*lpcb = sizeof(RASDEVINFOA);

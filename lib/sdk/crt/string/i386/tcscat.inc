@@ -5,7 +5,8 @@
 PUBLIC _tcscat
 .code
 
-_tcscat:
+FUNC _tcscat
+    FPO 0, 2, 2, 2, 0, FRAME_FPO
     push esi
     push edi
     mov edi, [esp + 12]
@@ -28,6 +29,7 @@ _tcscat:
     pop edi
     pop esi
     ret
+ENDFUNC
 
 END
 /* EOF */

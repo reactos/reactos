@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntddk.h>
+#include <wdm.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -183,7 +183,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch;
 
     /* Allocate the fast I/O dispatch table */
-    FastIoDispatch = ExAllocatePool(NonPagedPool, sizeof(FAST_IO_DISPATCH));
+    FastIoDispatch = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(FAST_IO_DISPATCH),
+                                           'llun');
     if (!FastIoDispatch)
     {
         /* Failed, cleanup */

@@ -2,20 +2,20 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Презапис на файловете..."
+CAPTION "РџСЂРµР·Р°РїРёСЃ РЅР° С„Р°Р№Р»РѕРІРµС‚Рµ..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Отказ", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Източник:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "РР·С‚РѕС‡РЅРёРє:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Цел:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Р¦РµР»:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Трябва да презапуснете компютъра, за да приключено слагането. Искате ли да го направите?"
-    IDS_QUERY_REBOOT_CAPTION "Презапускане"
-    IDS_INF_FILE "Сведения за настройката"
+    IDS_QUERY_REBOOT_TEXT "РўСЂСЏР±РІР° РґР° РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР°, Р·Р° РґР° РїСЂРёРєР»СЋС‡РµРЅРѕ СЃР»Р°РіР°РЅРµС‚Рѕ. РСЃРєР°С‚Рµ Р»Рё РґР° РіРѕ РЅР°РїСЂР°РІРёС‚Рµ?"
+    IDS_QUERY_REBOOT_CAPTION "РџСЂРµР·Р°РїСѓСЃРєР°РЅРµ"
+    IDS_INF_FILE "РЎРІРµРґРµРЅРёСЏ Р·Р° РЅР°СЃС‚СЂРѕР№РєР°С‚Р°"
 END

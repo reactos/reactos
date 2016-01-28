@@ -1,7 +1,7 @@
 ;
-; normal DOS boot sector
+; Normal DOS boot sector
 ;
-; Ported to nasm from FreeDOS fdisk 1.2.0 by:
+; Ported to NASM from FreeDOS fdisk 1.2.0 by:
 ; Casper Hornstrup (chorns@users.sourceforge.net)
 ;
 
@@ -53,7 +53,7 @@ test_next_for_active:
 
 ;*****************************************************************				
                 call print
-                db 'no active partition found',0
+                db 'No active partition found',0
 				
 WAIT_FOR_REBOOT:
                 jmp $
@@ -62,14 +62,14 @@ WAIT_FOR_REBOOT:
 ;*****************************************************************
 trouble_reading_drive:
                 call print
-                db 'read error while reading drive',0
+                db 'Read error while reading drive',0
                 jmp WAIT_FOR_REBOOT
 
 ;*****************************************************************
 
 invalid_partition_code:
                 call print
-                db 'partition signature != 55AA',0
+                db 'Partition signature != 55AA',0
 			
                 jmp WAIT_FOR_REBOOT
 
@@ -78,7 +78,7 @@ invalid_partition_code:
 
 active_partition_found:
 ;				call print
-;				db 'loading active partition',0
+;				db 'Loading active partition',0
 
                 call read_boot_sector                    
 				

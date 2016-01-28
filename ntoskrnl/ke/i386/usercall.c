@@ -179,7 +179,6 @@ KeUserModeCallback(IN ULONG RoutineIndex,
         {
             /* Only restore the exception list if we didn't crash in ring 3 */
             Teb->NtTib.ExceptionList = ExceptionList;
-            CallbackStatus = STATUS_SUCCESS;
         }
         else
         {

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS UserMode PnP
- * FILE:            ntoskrnl/rtl/libsupp.c
+ * FILE:            include/reactos/libs/umpnpmgr/sysguid.h
  * PURPOSE:         GUIDs shared between umpnpmgr and the Kernel PnP Manager
  * PROGRAMMERS:     Eric Kohl
  */

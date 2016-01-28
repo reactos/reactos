@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #undef ExAllocatePoolWithQuota
 #undef ExAllocatePoolWithQuotaTag
@@ -464,7 +464,7 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 ExpSeedHotTags(VOID)
 {
     ULONG i, Key, Hash, Index;
@@ -794,7 +794,7 @@ ExpInsertPoolTracker(IN ULONG Key,
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
                            IN POOL_TYPE PoolType,
                            IN ULONG PoolIndex,
@@ -845,7 +845,7 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
 
 VOID
 NTAPI
-INIT_FUNCTION
+INIT_SECTION
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
@@ -932,13 +932,18 @@ InitializePool(IN POOL_TYPE PoolType,
         }
 
         //
-        // Finally, add one entry, compute the hash, and zero the table
+        // Add one entry, compute the hash, and zero the table
         //
         PoolTrackTableSize++;
         PoolTrackTableMask = PoolTrackTableSize - 2;
 
         RtlZeroMemory(PoolTrackTable,
                       PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
+
+        //
+        // Finally, add the most used tags to speed up those allocations
+        //
+        ExpSeedHotTags();
 
         //
         // We now do the exact same thing with the tracker table for big pages
@@ -1627,6 +1632,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             {
                 ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
             }
+
+            return NULL;
         }
 
         //
@@ -2041,10 +2048,25 @@ NTAPI
 ExAllocatePool(POOL_TYPE PoolType,
                SIZE_T NumberOfBytes)
 {
-    //
-    // Use a default tag of "None"
-    //
-    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_NONE);
+    ULONG Tag = TAG_NONE;
+#if 0 && DBG
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    /* Use the first four letters of the driver name, or "None" if unavailable */
+    LdrEntry = KeGetCurrentIrql() <= APC_LEVEL
+                ? MiLookupDataTableEntry(_ReturnAddress())
+                : NULL;
+    if (LdrEntry)
+    {
+        ULONG i;
+        Tag = 0;
+        for (i = 0; i < min(4, LdrEntry->BaseDllName.Length / sizeof(WCHAR)); i++)
+            Tag = Tag >> 8 | (LdrEntry->BaseDllName.Buffer[i] & 0xff) << 24;
+        for (; i < 4; i++)
+            Tag = Tag >> 8 | ' ' << 24;
+    }
+#endif
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
 /*
@@ -2508,7 +2530,7 @@ ExAllocatePoolWithQuota(IN POOL_TYPE PoolType,
     //
     // Allocate the pool
     //
-    return ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, 'enoN');
+    return ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE);
 }
 
 /*
@@ -2647,7 +2669,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     return Buffer;
 }
 
-#if DBG && KDBG
+#if DBG && defined(KDBG)
 
 BOOLEAN
 ExpKdbgExtPool(

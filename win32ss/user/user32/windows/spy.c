@@ -1122,6 +1122,8 @@ static const char * const CCMMessageTypeNames[SPY_MAX_CCMMSGNUM + 1] =
 };
 
 #define SPY_MAX_WINEMSGNUM   9
+
+#ifndef __REACTOS__
 static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
 {
     "WM_WINE_DESTROYWINDOW",
@@ -1134,6 +1136,7 @@ static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
     "WM_WINE_KEYBOARD_LL_HOOK",
     "WM_WINE_MOUSE_LL_HOOK",
 };
+#endif
 
 /* Virtual key names */
 #define SPY_MAX_VKKEYSNUM 255
@@ -1552,8 +1555,9 @@ static const USER_MSG toolbar_array[] = {
           USM(TB_MAPACCELERATORW       ,0),
           USM(TB_GETSTRINGW            ,0),
           USM(TB_GETSTRINGA            ,0),
-          USM(TB_UNKWN45D              ,8),
+          USM(TB_SETBOUNDINGSIZE       ,8),
           USM(TB_SETHOTITEM2           ,0),
+          USM(TB_HASACCELERATOR        ,0),
           USM(TB_SETLISTGAP            ,0),
           USM(TB_GETIMAGELISTCOUNT     ,0),
           USM(TB_GETIDEALSIZE          ,8),
@@ -2096,7 +2100,7 @@ const char *SPY_GetClassLongOffsetName( INT offset )
 {
     INT index;
     if (offset < 0 && offset % 2 == 0 && ((index = -(offset + 8) / 2) <
-        sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames)))
+	sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames)))
     {
         return ClassLongOffsetNames[index];
     }
@@ -2513,10 +2517,10 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
                     TRACE("NMHDR hwndFrom=%p idFrom=0x%08lx code=0x%08x\n",
                           pnmh->hwndFrom, pnmh->idFrom, pnmh->code);
             }
+            break;
         default:
             if (sp_e->data_len > 0)
                 SPY_DumpMem ("MSG lParam", (UINT *)sp_e->lParam, sp_e->data_len);
-            break;
         }
 
 }

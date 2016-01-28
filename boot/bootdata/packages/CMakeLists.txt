@@ -28,8 +28,7 @@ add_custom_command(
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn
-)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn)
 
 add_custom_target(
     reactos_cab_inf
@@ -41,4 +40,3 @@ add_cd_file(
     FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
     DESTINATION reactos
     NO_CAB FOR bootcd regtest)
-

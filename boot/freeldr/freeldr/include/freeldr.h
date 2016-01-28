@@ -29,7 +29,7 @@
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
-/* public headers */
+/* Public headers */
 #ifdef __REACTOS__
 #define NTOSAPI
 #define printf TuiPrintf
@@ -54,58 +54,59 @@
 #include <ntsup.h>
 #endif
 
-/* internal headers */
-#include <arcemul.h>
+/* Internal headers */
+// #include <arcemul.h>
+#include <arcname.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>
 #include <comm.h>
 #include <disk.h>
 #include <fs.h>
+#include <hal.h>
 #include <inffile.h>
 #include <inifile.h>
 #include <keycodes.h>
 #include <linux.h>
+#include <custom.h>
+#include <miscboot.h>
 #include <machine.h>
 #include <mm.h>
 #include <multiboot.h>
 #include <options.h>
 #include <oslist.h>
 #include <ramdisk.h>
-#include <reactos.h>
-#include <registry.h>
 #include <ui.h>
 #include <ver.h>
 #include <video.h>
 #include <winldr.h>
 
-/* file system headers */
+/* File system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>
 #include <fs/pxe.h>
 
-/* ui support */
+/* UI support */
 #include <ui/gui.h>
 #include <ui/minitui.h>
 #include <ui/noui.h>
 #include <ui/tui.h>
 
-/* arch specific includes */
+/* Arch specific includes */
+#include <arch/archwsup.h>
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/hardware.h>
 #include <arch/pc/pcbios.h>
 #include <arch/pc/machpc.h>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pxe.h>
-#include <arch/i386/custom.h>
 #include <arch/i386/drivemap.h>
 #endif
 #if defined(_M_IX86)
 #include <arch/i386/i386.h>
 #include <arch/i386/machxbox.h>
-#include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
 #elif defined(_M_AMD64)
 #include <arch/amd64/amd64.h>
@@ -118,8 +119,9 @@
 #include <arch/mips/arcbios.h>
 #endif
 
-VOID BootMain(LPSTR CmdLine);
+VOID __cdecl BootMain(IN PCCH CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
 VOID RunLoader(VOID);
+VOID FrLdrCheckCpuCompatiblity(VOID);
 
 #endif  /* __FREELDR_H */

@@ -27,6 +27,7 @@ BEGIN
     END
     POPUP "&Zařízení"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Vlastnosti", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "Ovládání &hlasitosti", IDM_VOLUMECTL
@@ -48,7 +49,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Všechny podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
+    IDS_ALL_TYPES_FILTER "Všechny podporované"
     IDS_TOOLTIP_PLAY "Přehrát"
     IDS_TOOLTIP_STOP "Zastavit"
     IDS_TOOLTIP_EJECT "Vysunout"
@@ -56,8 +65,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Posunout zpět"
     IDS_TOOLTIP_SEEKFORW "Posunout vpřed"
     IDS_TOOLTIP_FORWARD "Přeskočit vpřed"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Přehrávač multimédií"
     IDS_PLAY "Přehrát"
     IDS_DEFAULTMCIERRMSG "Pro tuto chybu není dostupný žádný popis."
-    IDS_UNKNOWNFILEEXT "Nelze určit typ zařízení z dané přípony souboru."
 END

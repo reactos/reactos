@@ -1,3 +1,6 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_MSCONFIG_DIALOG DIALOGEX 0, 0, 378, 220
@@ -30,15 +33,15 @@ BEGIN
     CONTROL "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD |
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
-    PUSHBUTTON "Mover &Arriba", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
-    PUSHBUTTON "Mover A&bajo", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
+    PUSHBUTTON "&Subir", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
+    PUSHBUTTON "Ba&jar", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
     PUSHBUTTON "&Permitir", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
     PUSHBUTTON "&Bloquear", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
     PUSHBUTTON "&Buscar", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON "&Nuevo", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON "Edi&ción", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
-    PUSHBUTTON "Permi&tir Todo", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
-    PUSHBUTTON "Blo&quear Todo", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
+    PUSHBUTTON "Permi&tir todo", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
+    PUSHBUTTON "Blo&quear todo", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX 0, 0, 362, 175
@@ -65,13 +68,13 @@ IDD_GENERAL_PAGE DIALOGEX 0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Selección de Inicio ", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "Inicio &Normal - cargar todos los controladores de unidades y servicios", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
-    CONTROL "Inicio de &Diagnostico - cargar sólo los controladores y servicios básicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
-    CONTROL "Inicio S&electivo", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    GROUPBOX "Selección de inicio ", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
+    CONTROL "Inicio &normal - Cargar todos los controladores de unidades y servicios", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "Inicio de &diagnóstico - Cargar sólo los controladores y servicios básicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "Inicio s&electivo", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
     AUTOCHECKBOX "P&rocesar archivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
-    AUTOCHECKBOX "&Cargar Servicios del Sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
-    AUTOCHECKBOX "C&argar elementos de Inicio", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
+    AUTOCHECKBOX "&Cargar servicios del sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "C&argar elementos de inicio", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175
@@ -80,18 +83,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP |
             LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
-    PUSHBUTTON "&Verificar las rutas de Arranque", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 110, 12
-    PUSHBUTTON "&Configurar por Defecto", IDC_BTN_SET_DEFAULT_BOOT, 130, 65, 80, 12
-    PUSHBUTTON "Mover &Arriba", IDC_BTN_MOVE_UP_BOOT_OPTION, 220, 65, 60, 12
-    PUSHBUTTON "Mover A&bajo", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 290, 65, 60, 12
-    GROUPBOX "Opciones de Arranque ", -1, 10, 80, 250, 90, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "&Verificar las rutas de arranque", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 110, 12
+    PUSHBUTTON "&Configurar por defecto", IDC_BTN_SET_DEFAULT_BOOT, 130, 65, 80, 12
+    PUSHBUTTON "&Subir", IDC_BTN_MOVE_UP_BOOT_OPTION, 220, 65, 60, 12
+    PUSHBUTTON "&Bajar", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 290, 65, 60, 12
+    GROUPBOX "Opciones de arranque", -1, 10, 80, 250, 90, 0, WS_EX_TRANSPARENT
     CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
     CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
     CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
     CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
     CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-    PUSHBUTTON "Opciones A&vazadas...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 80, 12
-    LTEXT "&Tiempo Máx:", -1, 280, 86, 30, 16
+    PUSHBUTTON "Opciones a&vanzadas...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 80, 12
+    LTEXT "&Tiempo máx:", -1, 280, 86, 30, 16
     EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
     LTEXT "seg.", -1, 340, 91, 15, 10
 END
@@ -123,7 +126,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "Programa de configuración del Sistema"
+    IDS_MSCONFIG "Utilidad de configuración del sistema"
     IDS_TAB_GENERAL "General"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"
@@ -135,8 +138,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SERVICES_COLUMN_SERVICE "Servicio"
-    IDS_SERVICES_COLUMN_REQ "Requirido"
-    IDS_SERVICES_COLUMN_VENDOR "Vendedor"
+    IDS_SERVICES_COLUMN_REQ "Necesario"
+    IDS_SERVICES_COLUMN_VENDOR "Fabricante"
     IDS_SERVICES_COLUMN_STATUS "Estado"
 END
 
@@ -151,7 +154,7 @@ BEGIN
     IDS_TOOLS_INFO_DESCR "Muestra información de la versión."
     IDS_TOOLS_INFO_CMD "winver.exe"
     IDS_TOOLS_REGEDIT_NAME "Editor del Registro"
-    IDS_TOOLS_REGEDIT_DESCR "Abre el Editor del Registro."
+    IDS_TOOLS_REGEDIT_DESCR "Abre el editor del Registro."
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "Propiedades del sistema"
     IDS_TOOLS_SYSDM_DESCR "Muestra información acerca de este equipo."

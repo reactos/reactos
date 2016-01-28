@@ -1,11 +1,10 @@
 
 add_definitions(-DLE)
+spec2def(ws2_32_new.dll ws2_32.spec)
 
 include_directories(
     inc
     ${REACTOS_SOURCE_DIR}/include/reactos/winsock)
-
-spec2def(ws2_32_new.dll ws2_32.spec)
 
 list(APPEND SOURCE
     src/addrconv.c
@@ -52,7 +51,7 @@ add_library(ws2_32_new SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def)
 
 set_module_type(ws2_32_new win32dll)
-add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
+target_link_libraries(ws2_32_new ${PSEH_LIB})
+add_importlibs(ws2_32_new user32 advapi32 ws2help msvcrt kernel32 ntdll)
 add_pch(ws2_32_new inc/ws2_32.h SOURCE)
-target_link_libraries(ws2_32_new wine)
 add_cd_file(TARGET ws2_32_new DESTINATION reactos/system32 FOR all)

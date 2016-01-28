@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/ke_x.h
+* FILE:            ntoskrnl/include/internal/ke_x.h
 * PURPOSE:         Internal Inlined Functions for the Kernel
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
@@ -383,7 +383,7 @@ KiRescheduleThread(IN BOOLEAN NewThread,
                    IN ULONG Cpu)
 {
     /* Check if a new thread needs to be scheduled on a different CPU */
-    if ((NewThread) && !(KeGetPcr()->Number == Cpu))
+    if ((NewThread) && !(KeGetCurrentPrcb()->Number == Cpu))
     {
         /* Send an IPI to request delivery */
         KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
@@ -514,7 +514,7 @@ KiTryThreadLock(IN PKTHREAD Thread)
     Value = InterlockedExchange((PLONG)&Thread->ThreadLock, Value);
 
     /* Return the lock state */
-    return (Value == TRUE);
+    return (Value == 1);
 }
 
 FORCEINLINE
@@ -534,7 +534,7 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
     if (NeedApc)
     {
         /* Check if it's on another CPU */
-        if (KeGetPcr()->Number != Processor)
+        if (KeGetCurrentPrcb()->Number != Processor)
         {
             /* Send an IPI to request delivery */
             KiIpiSend(AFFINITY_MASK(Processor), IPI_APC);
@@ -1660,3 +1660,24 @@ KiReleaseNmiListLock(IN KIRQL OldIrql)
 {
     KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
 }
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+FORCEINLINE
+VOID
+KiCpuId(
+    PCPU_INFO CpuInfo,
+    ULONG Function)
+{
+    __cpuid((INT*)CpuInfo->AsUINT32, Function);
+}
+
+FORCEINLINE
+VOID
+KiCpuIdEx(
+    PCPU_INFO CpuInfo,
+    ULONG Function,
+    ULONG SubFunction)
+{
+    __cpuidex((INT*)CpuInfo->AsUINT32, Function, SubFunction);
+}
+#endif /* _M_IX86 || _M_AMD64 */

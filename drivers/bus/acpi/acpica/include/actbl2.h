@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights. You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code. No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision. In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change. Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee. Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution. In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government. In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACTBL2_H__
 #define __ACTBL2_H__
@@ -124,8 +52,8 @@
  * These tables are not consumed directly by the ACPICA subsystem, but are
  * included here to support device drivers and the AML disassembler.
  *
- * The tables in this file are defined by third-party specifications, and are
- * not defined directly by the ACPI specification itself.
+ * Generally, the tables in this file are defined by third-party specifications,
+ * and are not defined directly by the ACPI specification itself.
  *
  ******************************************************************************/
 
@@ -143,14 +71,18 @@
 #define ACPI_SIG_DMAR           "DMAR"      /* DMA Remapping table */
 #define ACPI_SIG_HPET           "HPET"      /* High Precision Event Timer table */
 #define ACPI_SIG_IBFT           "IBFT"      /* iSCSI Boot Firmware Table */
+#define ACPI_SIG_IORT           "IORT"      /* IO Remapping Table */
 #define ACPI_SIG_IVRS           "IVRS"      /* I/O Virtualization Reporting Structure */
+#define ACPI_SIG_LPIT           "LPIT"      /* Low Power Idle Table */
 #define ACPI_SIG_MCFG           "MCFG"      /* PCI Memory Mapped Configuration table */
 #define ACPI_SIG_MCHI           "MCHI"      /* Management Controller Host Interface table */
+#define ACPI_SIG_MSDM           "MSDM"      /* Microsoft Data Management Table */
 #define ACPI_SIG_MTMR           "MTMR"      /* MID Timer table */
 #define ACPI_SIG_SLIC           "SLIC"      /* Software Licensing Description Table */
 #define ACPI_SIG_SPCR           "SPCR"      /* Serial Port Console Redirection table */
 #define ACPI_SIG_SPMI           "SPMI"      /* Server Platform Management Interface table */
 #define ACPI_SIG_TCPA           "TCPA"      /* Trusted Computing Platform Alliance table */
+#define ACPI_SIG_TPM2           "TPM2"      /* Trusted Platform Module 2.0 H/W interface table */
 #define ACPI_SIG_UEFI           "UEFI"      /* Uefi Boot Optimization Table */
 #define ACPI_SIG_VRTC           "VRTC"      /* Virtual Real Time Clock Table */
 #define ACPI_SIG_WAET           "WAET"      /* Windows ACPI Emulated devices Table */
@@ -521,7 +453,7 @@ typedef struct acpi_table_dbgp
  *        Version 1
  *
  * Conforms to "Intel Virtualization Technology for Directed I/O",
- * Version 1.2, Sept. 2008
+ * Version 2.2, Sept. 2013
  *
  ******************************************************************************/
 
@@ -554,9 +486,10 @@ enum AcpiDmarType
 {
     ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
     ACPI_DMAR_TYPE_RESERVED_MEMORY      = 1,
-    ACPI_DMAR_TYPE_ATSR                 = 2,
-    ACPI_DMAR_HARDWARE_AFFINITY         = 3,
-    ACPI_DMAR_TYPE_RESERVED             = 4     /* 4 and greater are reserved */
+    ACPI_DMAR_TYPE_ROOT_ATS             = 2,
+    ACPI_DMAR_TYPE_HARDWARE_AFFINITY    = 3,
+    ACPI_DMAR_TYPE_NAMESPACE            = 4,
+    ACPI_DMAR_TYPE_RESERVED             = 5     /* 5 and greater are reserved */
 };
 
 
@@ -572,7 +505,7 @@ typedef struct acpi_dmar_device_scope
 
 } ACPI_DMAR_DEVICE_SCOPE;
 
-/* Values for EntryType in ACPI_DMAR_DEVICE_SCOPE */
+/* Values for EntryType in ACPI_DMAR_DEVICE_SCOPE - device types */
 
 enum AcpiDmarScopeType
 {
@@ -581,7 +514,8 @@ enum AcpiDmarScopeType
     ACPI_DMAR_SCOPE_TYPE_BRIDGE         = 2,
     ACPI_DMAR_SCOPE_TYPE_IOAPIC         = 3,
     ACPI_DMAR_SCOPE_TYPE_HPET           = 4,
-    ACPI_DMAR_SCOPE_TYPE_RESERVED       = 5     /* 5 and greater are reserved */
+    ACPI_DMAR_SCOPE_TYPE_NAMESPACE      = 5,
+    ACPI_DMAR_SCOPE_TYPE_RESERVED       = 6     /* 6 and greater are reserved */
 };
 
 typedef struct acpi_dmar_pci_path
@@ -593,7 +527,7 @@ typedef struct acpi_dmar_pci_path
 
 
 /*
- * DMAR Sub-tables, correspond to Type in ACPI_DMAR_HEADER
+ * DMAR Subtables, correspond to Type in ACPI_DMAR_HEADER
  */
 
 /* 0: Hardware Unit Definition */
@@ -656,6 +590,18 @@ typedef struct acpi_dmar_rhsa
     UINT32                  ProximityDomain;
 
 } ACPI_DMAR_RHSA;
+
+
+/* 4: ACPI Namespace Device Declaration Structure */
+
+typedef struct acpi_dmar_andd
+{
+    ACPI_DMAR_HEADER        Header;
+    UINT8                   Reserved[3];
+    UINT8                   DeviceNumber;
+    char                    DeviceName[1];
+
+} ACPI_DMAR_ANDD;
 
 
 /*******************************************************************************
@@ -804,6 +750,156 @@ typedef struct acpi_ibft_target
     UINT16                  ReverseChapSecretOffset;
 
 } ACPI_IBFT_TARGET;
+
+
+/*******************************************************************************
+ *
+ * IORT - IO Remapping Table
+ *
+ * Conforms to "IO Remapping Table System Software on ARM Platforms",
+ * Document number: ARM DEN 0049A, 2015
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_iort
+{
+    ACPI_TABLE_HEADER       Header;
+    UINT32                  NodeCount;
+    UINT32                  NodeOffset;
+    UINT32                  Reserved;
+
+} ACPI_TABLE_IORT;
+
+
+/*
+ * IORT subtables
+ */
+typedef struct acpi_iort_node
+{
+    UINT8                   Type;
+    UINT16                  Length;
+    UINT8                   Revision;
+    UINT32                  Reserved;
+    UINT32                  MappingCount;
+    UINT32                  MappingOffset;
+    char                    NodeData[1];
+
+} ACPI_IORT_NODE;
+
+/* Values for subtable Type above */
+
+enum AcpiIortNodeType
+{
+    ACPI_IORT_NODE_ITS_GROUP            = 0x00,
+    ACPI_IORT_NODE_NAMED_COMPONENT      = 0x01,
+    ACPI_IORT_NODE_PCI_ROOT_COMPLEX     = 0x02,
+    ACPI_IORT_NODE_SMMU                 = 0x03
+};
+
+
+typedef struct acpi_iort_id_mapping
+{
+    UINT32                  InputBase;          /* Lowest value in input range */
+    UINT32                  IdCount;            /* Number of IDs */
+    UINT32                  OutputBase;         /* Lowest value in output range */
+    UINT32                  OutputReference;    /* A reference to the output node */
+    UINT32                  Flags;
+
+} ACPI_IORT_ID_MAPPING;
+
+/* Masks for Flags field above for IORT subtable */
+
+#define ACPI_IORT_ID_SINGLE_MAPPING (1)
+
+
+typedef struct acpi_iort_memory_access
+{
+    UINT32                  CacheCoherency;
+    UINT8                   Hints;
+    UINT16                  Reserved;
+    UINT8                   MemoryFlags;
+
+} ACPI_IORT_MEMORY_ACCESS;
+
+/* Values for CacheCoherency field above */
+
+#define ACPI_IORT_NODE_COHERENT         0x00000001  /* The device node is fully coherent */
+#define ACPI_IORT_NODE_NOT_COHERENT     0x00000000  /* The device node is not coherent */
+
+/* Masks for Hints field above */
+
+#define ACPI_IORT_HT_TRANSIENT          (1)
+#define ACPI_IORT_HT_WRITE              (1<<1)
+#define ACPI_IORT_HT_READ               (1<<2)
+#define ACPI_IORT_HT_OVERRIDE           (1<<3)
+
+/* Masks for MemoryFlags field above */
+
+#define ACPI_IORT_MF_COHERENCY          (1)
+#define ACPI_IORT_MF_ATTRIBUTES         (1<<1)
+
+
+/*
+ * IORT node specific subtables
+ */
+typedef struct acpi_iort_its_group
+{
+    UINT32                  ItsCount;
+    UINT32                  Identifiers[1];         /* GIC ITS identifier arrary */
+
+} ACPI_IORT_ITS_GROUP;
+
+
+typedef struct acpi_iort_named_component
+{
+    UINT32                  NodeFlags;
+    UINT64                  MemoryProperties;       /* Memory access properties */
+    UINT8                   MemoryAddressLimit;     /* Memory address size limit */
+    char                    DeviceName[1];          /* Path of namespace object */
+
+} ACPI_IORT_NAMED_COMPONENT;
+
+
+typedef struct acpi_iort_root_complex
+{
+    UINT64                  MemoryProperties;       /* Memory access properties */
+    UINT32                  AtsAttribute;
+    UINT32                  PciSegmentNumber;
+
+} ACPI_IORT_ROOT_COMPLEX;
+
+/* Values for AtsAttribute field above */
+
+#define ACPI_IORT_ATS_SUPPORTED         0x00000001  /* The root complex supports ATS */
+#define ACPI_IORT_ATS_UNSUPPORTED       0x00000000  /* The root complex doesn't support ATS */
+
+
+typedef struct acpi_iort_smmu
+{
+    UINT64                  BaseAddress;            /* SMMU base address */
+    UINT64                  Span;                   /* Length of memory range */
+    UINT32                  Model;
+    UINT32                  Flags;
+    UINT32                  GlobalInterruptOffset;
+    UINT32                  ContextInterruptCount;
+    UINT32                  ContextInterruptOffset;
+    UINT32                  PmuInterruptCount;
+    UINT32                  PmuInterruptOffset;
+    UINT64                  Interrupts[1];          /* Interrupt array */
+
+} ACPI_IORT_SMMU;
+
+/* Values for Model field above */
+
+#define ACPI_IORT_SMMU_V1               0x00000000  /* Generic SMMUv1 */
+#define ACPI_IORT_SMMU_V2               0x00000001  /* Generic SMMUv2 */
+#define ACPI_IORT_SMMU_CORELINK_MMU400  0x00000002  /* ARM Corelink MMU-400 */
+#define ACPI_IORT_SMMU_CORELINK_MMU500  0x00000003  /* ARM Corelink MMU-500 */
+
+/* Masks for Flags field above */
+
+#define ACPI_IORT_SMMU_DVM_SUPPORTED    (1)
+#define ACPI_IORT_SMMU_COHERENT_WALK    (1<<1)
 
 
 /*******************************************************************************
@@ -1006,7 +1102,65 @@ typedef struct acpi_ivrs_memory
 
 /*******************************************************************************
  *
- * MCFG - PCI Memory Mapped Configuration table and sub-table
+ * LPIT - Low Power Idle Table
+ *
+ * Conforms to "ACPI Low Power Idle Table (LPIT)" July 2014.
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_lpit
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_LPIT;
+
+
+/* LPIT subtable header */
+
+typedef struct acpi_lpit_header
+{
+    UINT32                  Type;               /* Subtable type */
+    UINT32                  Length;             /* Subtable length */
+    UINT16                  UniqueId;
+    UINT16                  Reserved;
+    UINT32                  Flags;
+
+} ACPI_LPIT_HEADER;
+
+/* Values for subtable Type above */
+
+enum AcpiLpitType
+{
+    ACPI_LPIT_TYPE_NATIVE_CSTATE    = 0x00,
+    ACPI_LPIT_TYPE_RESERVED         = 0x01      /* 1 and above are reserved */
+};
+
+/* Masks for Flags field above  */
+
+#define ACPI_LPIT_STATE_DISABLED    (1)
+#define ACPI_LPIT_NO_COUNTER        (1<<1)
+
+/*
+ * LPIT subtables, correspond to Type in ACPI_LPIT_HEADER
+ */
+
+/* 0x00: Native C-state instruction based LPI structure */
+
+typedef struct acpi_lpit_native
+{
+    ACPI_LPIT_HEADER        Header;
+    ACPI_GENERIC_ADDRESS    EntryTrigger;
+    UINT32                  Residency;
+    UINT32                  Latency;
+    ACPI_GENERIC_ADDRESS    ResidencyCounter;
+    UINT64                  CounterFrequency;
+
+} ACPI_LPIT_NATIVE;
+
+
+/*******************************************************************************
+ *
+ * MCFG - PCI Memory Mapped Configuration table and subtable
  *        Version 1
  *
  * Conforms to "PCI Firmware Specification", Revision 3.0, June 20, 2005
@@ -1065,6 +1219,24 @@ typedef struct acpi_table_mchi
 
 /*******************************************************************************
  *
+ * MSDM - Microsoft Data Management table
+ *
+ * Conforms to "Microsoft Software Licensing Tables (SLIC and MSDM)",
+ * November 29, 2011. Copyright 2011 Microsoft
+ *
+ ******************************************************************************/
+
+/* Basic MSDM table is only the common ACPI header */
+
+typedef struct acpi_table_msdm
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_MSDM;
+
+
+/*******************************************************************************
+ *
  * MTMR - MID Timer Table
  *        Version 1
  *
@@ -1094,10 +1266,9 @@ typedef struct acpi_mtmr_entry
 /*******************************************************************************
  *
  * SLIC - Software Licensing Description Table
- *        Version 1
  *
- * Conforms to "OEM Activation 2.0 for Windows Vista Operating Systems",
- * Copyright 2006
+ * Conforms to "Microsoft Software Licensing Tables (SLIC and MSDM)",
+ * November 29, 2011. Copyright 2011 Microsoft
  *
  ******************************************************************************/
 
@@ -1108,62 +1279,6 @@ typedef struct acpi_table_slic
     ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
 
 } ACPI_TABLE_SLIC;
-
-
-/* Common SLIC subtable header */
-
-typedef struct acpi_slic_header
-{
-    UINT32                  Type;
-    UINT32                  Length;
-
-} ACPI_SLIC_HEADER;
-
-/* Values for Type field above */
-
-enum AcpiSlicType
-{
-    ACPI_SLIC_TYPE_PUBLIC_KEY           = 0,
-    ACPI_SLIC_TYPE_WINDOWS_MARKER       = 1,
-    ACPI_SLIC_TYPE_RESERVED             = 2    /* 2 and greater are reserved */
-};
-
-
-/*
- * SLIC Sub-tables, correspond to Type in ACPI_SLIC_HEADER
- */
-
-/* 0: Public Key Structure */
-
-typedef struct acpi_slic_key
-{
-    ACPI_SLIC_HEADER        Header;
-    UINT8                   KeyType;
-    UINT8                   Version;
-    UINT16                  Reserved;
-    UINT32                  Algorithm;
-    char                    Magic[4];
-    UINT32                  BitLength;
-    UINT32                  Exponent;
-    UINT8                   Modulus[128];
-
-} ACPI_SLIC_KEY;
-
-
-/* 1: Windows Marker Structure */
-
-typedef struct acpi_slic_marker
-{
-    ACPI_SLIC_HEADER        Header;
-    UINT32                  Version;
-    char                    OemId[ACPI_OEM_ID_SIZE];            /* ASCII OEM identification */
-    char                    OemTableId[ACPI_OEM_TABLE_ID_SIZE]; /* ASCII OEM table identification */
-    char                    WindowsFlag[8];
-    UINT32                  SlicVersion;
-    UINT8                   Reserved[16];
-    UINT8                   Signature[128];
-
-} ACPI_SLIC_MARKER;
 
 
 /*******************************************************************************
@@ -1254,21 +1369,103 @@ enum AcpiSpmiInterfaceTypes
 /*******************************************************************************
  *
  * TCPA - Trusted Computing Platform Alliance table
- *        Version 1
+ *        Version 2
  *
- * Conforms to "TCG PC Specific Implementation Specification",
- * Version 1.1, August 18, 2003
+ * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
+ * December 19, 2014
+ *
+ * NOTE: There are two versions of the table with the same signature --
+ * the client version and the server version. The common PlatformClass
+ * field is used to differentiate the two types of tables.
  *
  ******************************************************************************/
 
-typedef struct acpi_table_tcpa
+typedef struct acpi_table_tcpa_hdr
 {
     ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
-    UINT16                  Reserved;
-    UINT32                  MaxLogLength;       /* Maximum length for the event log area */
+    UINT16                  PlatformClass;
+
+} ACPI_TABLE_TCPA_HDR;
+
+/*
+ * Values for PlatformClass above.
+ * This is how the client and server subtables are differentiated
+ */
+#define ACPI_TCPA_CLIENT_TABLE          0
+#define ACPI_TCPA_SERVER_TABLE          1
+
+
+typedef struct acpi_table_tcpa_client
+{
+    UINT32                  MinimumLogLength;   /* Minimum length for the event log area */
     UINT64                  LogAddress;         /* Address of the event log area */
 
-} ACPI_TABLE_TCPA;
+} ACPI_TABLE_TCPA_CLIENT;
+
+typedef struct acpi_table_tcpa_server
+{
+    UINT16                  Reserved;
+    UINT64                  MinimumLogLength;   /* Minimum length for the event log area */
+    UINT64                  LogAddress;         /* Address of the event log area */
+    UINT16                  SpecRevision;
+    UINT8                   DeviceFlags;
+    UINT8                   InterruptFlags;
+    UINT8                   GpeNumber;
+    UINT8                   Reserved2[3];
+    UINT32                  GlobalInterrupt;
+    ACPI_GENERIC_ADDRESS    Address;
+    UINT32                  Reserved3;
+    ACPI_GENERIC_ADDRESS    ConfigAddress;
+    UINT8                   Group;
+    UINT8                   Bus;                /* PCI Bus/Segment/Function numbers */
+    UINT8                   Device;
+    UINT8                   Function;
+
+} ACPI_TABLE_TCPA_SERVER;
+
+/* Values for DeviceFlags above */
+
+#define ACPI_TCPA_PCI_DEVICE            (1)
+#define ACPI_TCPA_BUS_PNP               (1<<1)
+#define ACPI_TCPA_ADDRESS_VALID         (1<<2)
+
+/* Values for InterruptFlags above */
+
+#define ACPI_TCPA_INTERRUPT_MODE        (1)
+#define ACPI_TCPA_INTERRUPT_POLARITY    (1<<1)
+#define ACPI_TCPA_SCI_VIA_GPE           (1<<2)
+#define ACPI_TCPA_GLOBAL_INTERRUPT      (1<<3)
+
+
+/*******************************************************************************
+ *
+ * TPM2 - Trusted Platform Module (TPM) 2.0 Hardware Interface Table
+ *        Version 4
+ *
+ * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
+ * December 19, 2014
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_tpm2
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT16                  PlatformClass;
+    UINT16                  Reserved;
+    UINT64                  ControlAddress;
+    UINT32                  StartMethod;
+
+    /* Platform-specific data follows */
+
+} ACPI_TABLE_TPM2;
+
+/* Values for StartMethod above */
+
+#define ACPI_TPM2_NOT_ALLOWED                       0
+#define ACPI_TPM2_START_METHOD                      2
+#define ACPI_TPM2_MEMORY_MAPPED                     6
+#define ACPI_TPM2_COMMAND_BUFFER                    7
+#define ACPI_TPM2_COMMAND_BUFFER_WITH_START_METHOD  8
 
 
 /*******************************************************************************

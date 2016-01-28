@@ -28,7 +28,6 @@ static const REFERENCE_TIME DSoundRenderer_Max_Fill = 150 * 10000;
 static const IBaseFilterVtbl DSoundRender_Vtbl;
 static const IBasicAudioVtbl IBasicAudio_Vtbl;
 static const IReferenceClockVtbl IReferenceClock_Vtbl;
-static const IMediaSeekingVtbl IMediaSeeking_Vtbl;
 static const IAMDirectSoundVtbl IAMDirectSound_Vtbl;
 static const IAMFilterMiscFlagsVtbl IAMFilterMiscFlags_Vtbl;
 
@@ -225,7 +224,7 @@ end:
 
 static HRESULT DSoundRender_HandleEndOfStream(DSoundRenderImpl *This)
 {
-    while (1)
+    while (This->renderer.filter.state == State_Running)
     {
         DWORD pos1, pos2;
         DSoundRender_UpdatePositions(This, &pos1, &pos2);
@@ -236,8 +235,8 @@ static HRESULT DSoundRender_HandleEndOfStream(DSoundRenderImpl *This)
         LeaveCriticalSection(&This->renderer.filter.csFilter);
         LeaveCriticalSection(&This->renderer.csRenderLock);
         WaitForSingleObject(This->blocked, 10);
-        EnterCriticalSection(&This->renderer.filter.csFilter);
         EnterCriticalSection(&This->renderer.csRenderLock);
+        EnterCriticalSection(&This->renderer.filter.csFilter);
         This->in_loop = 0;
     }
 
@@ -899,7 +898,7 @@ static LONG cookie_counter = 1;
 
 static DWORD WINAPI DSoundAdviseThread(LPVOID lpParam) {
     DSoundRenderImpl *This = lpParam;
-    struct dsoundrender_timer head = {0};
+    struct dsoundrender_timer head = {NULL};
     MSG msg;
 
     TRACE("(%p): Main Loop\n", This);

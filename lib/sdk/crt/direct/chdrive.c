@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/chdrive.c
+ * FILE:        lib/sdk/crt/direct/chdrive.c
  * PURPOSE:     Change the current drive.
  * PROGRAMER:   WINE
  * UPDATE HISTORY:

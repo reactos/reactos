@@ -19,7 +19,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* Reactos modifications */
+/* ReactOS modifications */
 #include <asm.inc>
 
 #define ALIGNARG(log2) log2

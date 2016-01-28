@@ -80,7 +80,7 @@ static BOOL start_rpcss(void)
     lstrcatW( cmd, rpcss );
 
     Wow64DisableWow64FsRedirection( &redir );
-    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi );
     Wow64RevertWow64FsRedirection( redir );
 
     if (rslt)

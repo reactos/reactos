@@ -51,7 +51,7 @@ ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN OUT PCONSOLE Console,
+                                 IN PCONSOLE Console,
                                  IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size);
 VOID
@@ -60,11 +60,14 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
 NTSTATUS
 TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                           IN OUT PCONSOLE Console,
+                           IN PCONSOLE Console,
+                           IN HANDLE ProcessHandle,
                            IN PTEXTMODE_BUFFER_INFO TextModeInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PTEXTMODE_SCREEN_BUFFER NewBuffer = NULL;
+
+    UNREFERENCED_PARAMETER(ProcessHandle);
 
     if (Console == NULL || Buffer == NULL || TextModeInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -159,20 +162,14 @@ ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
                        IN PCOORD Start,
                        IN UINT Length)
 {
-    if (Buff->ScreenBufferSize.X <= Start->X + Length)
+    if ((UINT)Buff->ScreenBufferSize.X <= Start->X + Length)
     {
-        UpdateRect->Left = 0;
-    }
-    else
-    {
-        UpdateRect->Left = Start->X;
-    }
-    if (Buff->ScreenBufferSize.X <= Start->X + Length)
-    {
+        UpdateRect->Left  = 0;
         UpdateRect->Right = Buff->ScreenBufferSize.X - 1;
     }
     else
     {
+        UpdateRect->Left  = Start->X;
         UpdateRect->Right = Start->X + Length - 1;
     }
     UpdateRect->Top = Start->Y;
@@ -294,7 +291,7 @@ ConioResizeBuffer(PCONSOLE Console,
     Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size.X * Size.Y * sizeof(CHAR_INFO));
     if (!Buffer) return STATUS_NO_MEMORY;
 
-    DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
+    DPRINT("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
     OldBuffer = ScreenBuffer->Buffer;
 
     for (CurrentY = 0; CurrentY < ScreenBuffer->ScreenBufferSize.Y && CurrentY < Size.Y; CurrentY++)
@@ -388,7 +385,7 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
                                    IN USHORT NewScreenAttrib,
                                    IN USHORT NewPopupAttrib)
 {
-    DWORD X, Y, Length;
+    ULONG X, Y, Length;
     PCHAR_INFO Ptr;
 
     COORD  TopLeft = {0};
@@ -491,7 +488,8 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure ReadRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedReadRegion, &ScreenBuffer, &CapturedReadRegion))
     {
         /*
@@ -554,7 +552,8 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -594,14 +593,15 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
 /*
  * NOTE: This function is strongly inspired by ConDrvWriteConsoleOutput...
+ * FIXME: This function MUST be moved into consrv/conoutput.c because only
+ * consrv knows how to manipulate VDM screenbuffers.
  */
 NTSTATUS NTAPI
 ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
                             IN PTEXTMODE_SCREEN_BUFFER Buffer,
                             IN PCHAR_CELL CharInfo/*Buffer*/,
                             IN COORD CharInfoSize,
-                            IN OUT PSMALL_RECT WriteRegion,
-                            IN BOOLEAN DrawRegion)
+                            IN PSMALL_RECT WriteRegion)
 {
     SHORT X, Y;
     SMALL_RECT ScreenBuffer;
@@ -621,7 +621,8 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -646,10 +647,6 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
             ++CurCharInfo;
         }
     }
-
-    if (DrawRegion) TermDrawRegion(Console, &CapturedWriteRegion);
-
-    *WriteRegion = CapturedWriteRegion;
 
     return STATUS_SUCCESS;
 }
@@ -793,7 +790,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
      * if we are going to overflow...
      */
     // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work
-    for (i = 0; i < min(NumCodesToRead, Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y); ++i)
+    for (i = 0; i < min(NumCodesToRead, (ULONG)Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y); ++i)
     {
         // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work either
         Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
@@ -852,7 +849,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID WriteBuffer = NULL;
     PWCHAR tmpString = NULL;
-    DWORD X, Y, Length; // , Written = 0;
+    ULONG X, Y, Length; // , Written = 0;
     ULONG CodeSize;
     PCHAR_INFO Ptr;
 
@@ -986,7 +983,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL)
 {
-    DWORD X, Y, Length; // , Written = 0;
+    ULONG X, Y, Length; // , Written = 0;
     PCHAR_INFO Ptr;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL)
@@ -1154,7 +1151,8 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
 
     /* Make sure the source rectangle is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, ScrollRectangle))
     {
         return STATUS_SUCCESS;

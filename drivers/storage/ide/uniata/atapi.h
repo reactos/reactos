@@ -437,6 +437,7 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_DRIVE_2                  0x10
 #define IDE_DRIVE_SELECT_1           (IDE_DRIVE_SELECT | IDE_DRIVE_1)
 #define IDE_DRIVE_SELECT_2           (IDE_DRIVE_SELECT | IDE_DRIVE_2)
+#define IDE_DRIVE_MASK               (IDE_DRIVE_SELECT_1 | IDE_DRIVE_SELECT_2)
 
 #define IDE_USE_LBA                  0x40
 
@@ -1483,6 +1484,23 @@ VOID
 NTAPI
 UniataInitSyncBaseIO(
     IN struct _HW_CHANNEL* chan
+    );
+
+VOID
+UniataInitIoRes(
+    IN struct _HW_CHANNEL* chan,
+    IN ULONG idx,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
+    );
+
+VOID
+UniataInitIoResEx(
+    IN struct _IORES* IoRes,
+    IN ULONG addr,
+    IN BOOLEAN MemIo,
+    IN BOOLEAN Proc
     );
 
 UCHAR

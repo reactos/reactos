@@ -3,7 +3,7 @@
  * FILE:    dll/win32/syssetup/lang/ro-RO.rc
  * PURPOSE: Romanian Language File for system setup
  * TRANSLATORS:
- *          Petre Dumitriu
+ *          Petru Dimitriu (petrimetri at gmail dot com)
  *          Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
@@ -125,7 +125,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Așteptați…"
-FONT 8, "MS Shell Dlg 2", 400, 0, 1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
@@ -135,13 +135,13 @@ BEGIN
     IDS_ACKTITLE "Conștientizări"
     IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
-    IDS_OWNERSUBTITLE "Asistentul va folosi câteva informații pentru a personaliza ReactOS."
+    IDS_OWNERSUBTITLE "Prelevare informații pentru a personaliza sistemul de operare"
     IDS_COMPUTERTITLE "Nume calculator și parolă de administrator"
-    IDS_COMPUTERSUBTITLE "Pentru calculator sunt necesare un nume și o parolă de administrator."
+    IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru utilizatorul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
-    IDS_LOCALESUBTITLE "Particularizarea ReactOS pentru anumite regiuni sau limbi."
+    IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
     IDS_DATETIMETITLE "Dată și oră"
-    IDS_DATETIMESUBTITLE "Stabiliți data și ora corectă pentru calculator."
+    IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
     IDS_PROCESSTITLE "Înregistrare componente"
     IDS_PROCESSSUBTITLE "Așteptați…"
 END
@@ -164,6 +164,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Owner"
 END
 
 STRINGTABLE

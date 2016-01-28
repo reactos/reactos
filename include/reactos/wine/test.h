@@ -205,6 +205,14 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 # define __winetest_va_end(list) va_end(list)
 #endif
 
+/* Define WINETEST_MSVC_IDE_FORMATTING to alter the output format winetest will use for file/line numbers.
+   This alternate format makes the file/line numbers clickable in visual studio, to directly jump to them. */
+#if defined(WINETEST_MSVC_IDE_FORMATTING)
+# define __winetest_file_line_prefix "%s(%d)"
+#else
+# define __winetest_file_line_prefix "%s:%d"
+#endif
+
 struct test
 {
     const char *name;
@@ -294,6 +302,9 @@ static void exit_process( int code )
 void winetest_set_location( const char* file, int line )
 {
     tls_data* data=get_tls_data();
+#if defined(WINETEST_MSVC_IDE_FORMATTING)
+    data->current_file = file;
+#else
     data->current_file=strrchr(file,'/');
     if (data->current_file==NULL)
         data->current_file=strrchr(file,'\\');
@@ -301,12 +312,17 @@ void winetest_set_location( const char* file, int line )
         data->current_file=file;
     else
         data->current_file++;
+#endif
     data->current_line=line;
 }
 
 int broken( int condition )
 {
-    return (strcmp(winetest_platform, "windows") == 0) && condition;
+    return ((strcmp(winetest_platform, "windows") == 0)
+#ifndef USE_WINE_TODOS
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    ) && condition;
 }
 
 /*
@@ -327,7 +343,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (condition)
         {
-            fprintf( stdout, "%s:%d: Test succeeded inside todo block: ",
+            fprintf( stdout, __winetest_file_line_prefix ": Test succeeded inside todo block: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
             InterlockedIncrement(&todo_failures);
@@ -338,7 +354,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             /* show todos even if traces are disabled*/
             /*if (winetest_debug > 0)*/
             {
-                fprintf( stdout, "%s:%d: Test marked todo: ",
+                fprintf( stdout, __winetest_file_line_prefix ": Test marked todo: ",
                          data->current_file, data->current_line );
                 vfprintf(stdout, msg, args);
             }
@@ -350,7 +366,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (!condition)
         {
-            fprintf( stdout, "%s:%d: Test failed: ",
+            fprintf( stdout, __winetest_file_line_prefix ": Test failed: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
             InterlockedIncrement(&failures);
@@ -359,7 +375,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
         else
         {
             if (report_success)
-                fprintf( stdout, "%s:%d: Test succeeded\n",
+                fprintf( stdout, __winetest_file_line_prefix ": Test succeeded\n",
                          data->current_file, data->current_line);
             InterlockedIncrement(&successes);
             return 1;
@@ -383,7 +399,7 @@ void __winetest_cdecl winetest_trace( const char *msg, ... )
 
     if (winetest_debug > 0)
     {
-        fprintf( stdout, "%s:%d: ", data->current_file, data->current_line );
+        fprintf( stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line );
         __winetest_va_start(valist, msg);
         vfprintf(stdout, msg, valist);
         __winetest_va_end(valist);
@@ -394,7 +410,7 @@ void winetest_vskip( const char *msg, __winetest_va_list args )
 {
     tls_data* data=get_tls_data();
 
-    fprintf( stdout, "%s:%d: Tests skipped: ", data->current_file, data->current_line );
+    fprintf( stdout, __winetest_file_line_prefix ": Tests skipped: ", data->current_file, data->current_line );
     vfprintf(stdout, msg, args);
     skipped++;
 }
@@ -411,7 +427,11 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
 {
     __winetest_va_list valist;
     __winetest_va_start(valist, msg);
-    if ((strcmp(winetest_platform, "windows") == 0) || (strcmp(winetest_platform, "reactos") == 0))
+    if ((strcmp(winetest_platform, "windows") == 0)
+#ifndef USE_WINE_TODOS
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    )
         winetest_vskip(msg, valist);
     else
         winetest_vok(0, msg, valist);
@@ -473,13 +493,13 @@ void winetest_wait_child_process( HANDLE process )
     {
         if (exit_code > 255)
         {
-            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, exit_code );
+            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned)exit_code );
             InterlockedIncrement( &failures );
         }
         else
         {
             fprintf( stdout, "%s: %u failures in child process\n",
-                     current_test->name, exit_code );
+                     current_test->name, (unsigned)exit_code );
             while (exit_code-- > 0)
                 InterlockedIncrement(&failures);
         }
@@ -609,11 +629,11 @@ static int run_test( const char *name )
     /* show test results even if traces are disabled */
     /*if (winetest_debug)*/
     {
-        fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, successes + failures + todo_successes + todo_failures,
-                 todo_successes, failures + todo_failures,
+        fprintf( stdout, "\n%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
+                 test->name, (int)(successes + failures + todo_successes + todo_failures),
+                 (int)todo_successes, (int)(failures + todo_failures),
                  (failures + todo_failures != 1) ? "failures" : "failure",
-                 skipped );
+                 (int)skipped );
     }
     status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
     return status;

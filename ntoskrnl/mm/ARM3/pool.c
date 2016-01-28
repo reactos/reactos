@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -507,7 +507,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // We can only support this much then
                 //
-                PointerPde = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool);
+                PointerPde = MiPteToPde(MmPagedPoolInfo.LastPteForPagedPool);
                 PageTableCount = (PFN_COUNT)(PointerPde + 1 -
                                  MmPagedPoolInfo.NextPdeForPagedPoolExpansion);
                 ASSERT(PageTableCount < i);
@@ -1277,7 +1277,8 @@ NTSTATUS
 NTAPI
 MiInitializeSessionPool(VOID)
 {
-    PMMPTE PointerPde, PointerPte, LastPte, LastPde;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde, LastPde;
     PFN_NUMBER PageFrameIndex, PdeCount;
     PPOOL_DESCRIPTOR PoolDescriptor;
     PMM_SESSION_SPACE SessionGlobal;
@@ -1352,7 +1353,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track allocations */
     PagedPoolInfo->PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
                                                                   BitmapSize,
-                                                                  '  mM');
+                                                                  TAG_MM);
     ASSERT(PagedPoolInfo->PagedPoolAllocationMap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->PagedPoolAllocationMap,
                         (PULONG)(PagedPoolInfo->PagedPoolAllocationMap + 1),
@@ -1365,7 +1366,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track free space */
     PagedPoolInfo->EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
                                                                 BitmapSize,
-                                                                '  mM');
+                                                                TAG_MM);
     ASSERT(PagedPoolInfo->EndOfPagedPoolBitmap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->EndOfPagedPoolBitmap,
                         (PULONG)(PagedPoolInfo->EndOfPagedPoolBitmap + 1),

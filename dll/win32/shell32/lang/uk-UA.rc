@@ -41,6 +41,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -139,7 +156,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Виконати"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON IDI_SHELL_RUN, IDC_STATIC, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Введіть ім'я програми, теки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
     LTEXT "&Відкрити:", 12305, 3, 39, 32, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
@@ -177,14 +194,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Додаткові властивості"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Виберіть потрібні властивості для цього ярлика.", -1, 5, 30, 210, 10
     CHECKBOX "Запускати з іншими обліковими даними", 14000, 25, 50, 150, 10
     LTEXT "Цей параметр дозволяє використовувати цей ярлик від імені іншого користувача або продовжувати роботу від свого імені, що захищає комп'ютер й дані від несанкціонованих дій програми.", -1, 50, 60, 175, 40
-    CHECKBOX "Запускати в окремій області пам'яті", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Запускати в окремій області пам'яті", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Скасувати", 2, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -311,12 +329,15 @@ CAPTION "Сервіс"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Перевірка диску", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Перевірка тому на наявність помилок.", -1, 40, 25, 160, 20
     PUSHBUTTON "Виконати перевірку...", 14000, 125, 45, 100, 15, WS_TABSTOP
     GROUPBOX "Дефрагментація диску", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Дефрагментація файлів на цьому томі", -1, 40, 85, 160, 20
     PUSHBUTTON "Виконати дефрагментацію...", 14001, 125, 105, 100, 15, WS_TABSTOP
     GROUPBOX "Архівація", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Резервне копіювання файлів на цьому томі.", -1, 40, 150, 160, 20
     PUSHBUTTON "Виконати архівацію...", 14002, 125, 170, 100, 15, WS_TABSTOP
 END
@@ -369,23 +390,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Виберіть програму, за допомогою якої слід відкрити цей файл.", -1, 44, 12, 234, 10
-    LTEXT "Файл:    ", 14001, 44, 25, 188, 10
+    LTEXT "Файл:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Програми", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Завжд&и використовувати цю програму для файлів цього типу", 14003, 20, 193, 225, 10
     PUSHBUTTON "О&гляд...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Копіювання..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Скасувати", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "Файл", 14001,  8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -436,7 +447,7 @@ BEGIN
     PUSHBUTTON "В&идалити", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Подробиці для розширення '%s'", 14003, 7, 130, 249, 70
     LTEXT "Відкривати у:", -1, 12, 140, 48, 10
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Додаток", 14005, 100, 140, 40, 10
     PUSHBUTTON "&Змінити...", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 40
@@ -578,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Використовувати стискання", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Перевірка диску"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Почати", IDOK, 53, 100, 60, 14
-    GROUPBOX "Опції перевірки диску", -1, 7, 6, 179, 50
-    PUSHBUTTON "Скасувати", IDCANCEL, 118, 100, 60, 14
+    DEFPUSHBUTTON "Почати", IDOK, 63, 95, 60, 14
+    GROUPBOX "Опції перевірки диску", -1, 7, 6, 179, 40
+    PUSHBUTTON "Скасувати", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Виправити помилки файлової системи", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "&Спробувати відновити погані сектори", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -604,6 +615,20 @@ BEGIN
     LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 167, 181, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -655,7 +680,7 @@ BEGIN
     IDS_RESTORE "Відновити"
     IDS_FORMATDRIVE "Форматувати..."
     IDS_RENAME "Перейменувати"
-    IDS_INSERT "Вставити"
+    IDS_PASTE "Вставити"
 
     IDS_CREATEFOLDER_DENIED "Не вдалося створити нову папку: Відмова у доступі."
     IDS_CREATEFOLDER_CAPTION "Помилка при створенні нової папки"
@@ -671,6 +696,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Ця папка вже містить файл з ім'ям '%1'.\n\nБажаєте замінити його?"
     IDS_OVERWRITEFILE_CAPTION "Підтвердження Перезапису Файлу"
     IDS_OVERWRITEFOLDER_TEXT "Ця папка вже містить папку з ім'ям '%1'.\n\nЯкщо файли в папці призначення мають ті ж імена, що файли у вибраній папці,\nвони будуть замінені. Ви все ще бажаєте перемістити або\nскопіювати папку?"
+
+    IDS_FILEOOP_COPYING "Copying..."
+    IDS_FILEOOP_MOVING "Moving..."
+    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Перезавантажити"
@@ -719,8 +751,11 @@ BEGIN
     IDS_NEWFOLDER "Нова папка"
 
     IDS_DRIVE_FIXED "Локальний диск"
-    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_CDROM "CD Drive"
     IDS_DRIVE_NETWORK "Мережний диск"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Відкрити за допомогою"
@@ -740,11 +775,11 @@ BEGIN
     IDS_PICK_ICON_TITLE "Вибрати значок"
     IDS_PICK_ICON_FILTER "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Всі Файли (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Виконувані файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
+
     IDS_DIRECTORY "Папка"
-    IDS_VIRTUAL_DRIVER "Драйвер віртуального пристрою"
     IDS_BAT_FILE "Пакетний файл ReactOS"
     IDS_CMD_FILE "Командний скрипт ReactOS"
-    IDS_COM_FILE "Додаток Dos"
+    IDS_COM_FILE "Додаток DOS"
     IDS_CPL_FILE "Елемент панелі керування"
     IDS_CUR_FILE "Курсор"
     IDS_DLL_FILE "Розширення додатку"
@@ -752,14 +787,19 @@ BEGIN
     IDS_EXE_FILE "Додаток"
     IDS_FON_FILE "Файл шрифту"
     IDS_TTF_FILE "Файл шрифту TrueType"
+    IDS_OTF_FILE "Файл шрифту OpenType"
     IDS_HLP_FILE "Файл довідки"
+    IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Файл налаштувань"
     IDS_LNK_FILE "Ярлик"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Системний файл"
+    IDS_VXD_FILE "Драйвер віртуального пристрою"
 
     IDS_OPEN_VERB "Відкрити"
     IDS_EXPLORE_VERB "Відкрити в дереві"
-    IDS_RUNAS_VERB "Запустити як "
+    IDS_RUNAS_VERB "Запустити як..."
     IDS_EDIT_VERB "Змінити"
     IDS_FIND_VERB "Пошук"
     IDS_PRINT_VERB "Друк"
@@ -781,4 +821,8 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

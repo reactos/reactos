@@ -34,6 +34,8 @@
 #define IDS_SEMICOLON                       0x03EC
 #define IDS_LBRACKET                        0x03ED
 #define IDS_RBRACKET                        0x03EE
+#define IDS_EXPECTED_IDENTIFIER             0x03f2
+#define IDS_EXPECTED_ASSIGN                 0x03f3
 #define IDS_INVALID_CHAR                    0x03F6
 #define IDS_UNTERMINATED_STR                0x03F7
 #define IDS_MISPLACED_RETURN                0x03FA
@@ -41,7 +43,9 @@
 #define IDS_INVALID_CONTINUE                0x03FC
 #define IDS_LABEL_REDEFINED                 0x0401
 #define IDS_LABEL_NOT_FOUND                 0x0402
+#define IDS_EXPECTED_CCEND                  0x0405
 #define IDS_DISABLED_CC                     0x0406
+#define IDS_EXPECTED_AT                     0x0408
 #define IDS_NOT_FUNC                        0x138A
 #define IDS_NOT_DATE                        0x138E
 #define IDS_NOT_NUM                         0x1389

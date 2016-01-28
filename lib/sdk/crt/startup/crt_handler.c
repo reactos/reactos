@@ -40,7 +40,7 @@ PIMAGE_SECTION_HEADER _FindPESectionExec (size_t);
 PBYTE _GetPEImageBase (void);
 
 int __mingw_init_ehandler (void);
-extern void _fpreset (void);
+extern void __cdecl _fpreset (void);
 
 #if defined(_WIN64) && !defined(_MSC_VER)
 EXCEPTION_DISPOSITION __mingw_SEH_error_handler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
@@ -90,7 +90,7 @@ __mingw_init_ehandler (void)
   return 1;
 }
 
-extern void _fpreset (void);
+extern void __cdecl _fpreset (void);
 
 EXCEPTION_DISPOSITION
 __mingw_SEH_error_handler (struct _EXCEPTION_RECORD* ExceptionRecord,

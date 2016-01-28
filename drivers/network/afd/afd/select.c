@@ -344,21 +344,25 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
     }
 
-    Status = ObReferenceObjectByHandle(EnumReq->Event,
-                                       EVENT_ALL_ACCESS,
-                                       *ExEventObjectType,
-                                       UserMode,
-                                       (PVOID *)&UserEvent,
-                                       NULL);
-    if (!NT_SUCCESS(Status))
+    /* An event may optionally be provided for us to clear */
+    if (EnumReq->Event != NULL)
     {
-        AFD_DbgPrint(MIN_TRACE,("Unable to reference event %x\n", Status));
-        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
-    }
+        Status = ObReferenceObjectByHandle(EnumReq->Event,
+                                           EVENT_ALL_ACCESS,
+                                           *ExEventObjectType,
+                                           UserMode,
+                                           (PVOID *)&UserEvent,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            AFD_DbgPrint(MIN_TRACE,("Unable to reference event %x\n", Status));
+            return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+        }
 
-    /* Clear the event */
-    KeClearEvent(UserEvent);
-    ObDereferenceObject(UserEvent);
+        /* Clear the event */
+        KeClearEvent(UserEvent);
+        ObDereferenceObject(UserEvent);
+    }
 
     /* Copy the poll state, masking out disabled events */
     EnumReq->PollEvents = (FCB->PollState & ~FCB->EventSelectDisabled);

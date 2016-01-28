@@ -585,6 +585,13 @@ extern "C" {
 #define CONDITION_VARIABLE_LOCKMODE_SHARED  RTL_CONDITION_VARIABLE_LOCKMODE_SHARED
 #endif
 
+#define INIT_ONCE_STATIC_INIT RTL_RUN_ONCE_INIT
+
+#if (_WIN32_WINNT >= 0x0600)
+#define PROCESS_DEP_ENABLE 0x00000001
+#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x00000002
+#endif
+
 #ifndef RC_INVOKED
 
 #ifndef _FILETIME_
@@ -981,6 +988,88 @@ typedef struct _FILE_ID_BOTH_DIR_INFO {
     WCHAR         FileName[1];
 } FILE_ID_BOTH_DIR_INFO, *PFILE_ID_BOTH_DIR_INFO;
 
+typedef struct _FILE_BASIC_INFO {
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    DWORD FileAttributes;
+} FILE_BASIC_INFO, *PFILE_BASIC_INFO;
+
+typedef struct _FILE_STANDARD_INFO {
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    DWORD NumberOfLinks;
+    BOOLEAN DeletePending;
+    BOOLEAN Directory;
+} FILE_STANDARD_INFO, *PFILE_STANDARD_INFO;
+
+typedef struct _FILE_NAME_INFO {
+    DWORD FileNameLength;
+    WCHAR FileName[1];
+} FILE_NAME_INFO, *PFILE_NAME_INFO;
+
+typedef enum _PRIORITY_HINT {
+    IoPriorityHintVeryLow,
+    IoPriorityHintLow,
+    IoPriorityHintNormal,
+    MaximumIoPriorityHintType
+} PRIORITY_HINT;
+
+typedef struct _FILE_IO_PRIORITY_HINT_INFO {
+    PRIORITY_HINT PriorityHint;
+} FILE_IO_PRIORITY_HINT_INFO;
+
+typedef struct _FILE_ALLOCATION_INFO {
+    LARGE_INTEGER AllocationSize;
+} FILE_ALLOCATION_INFO, *PFILE_ALLOCATION_INFO;
+
+typedef struct _FILE_DISPOSITION_INFO {
+    BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFO, *PFILE_DISPOSITION_INFO;
+
+typedef struct _FILE_END_OF_FILE_INFO {
+    LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFO, *PFILE_END_OF_FILE_INFO;
+
+typedef struct _FILE_RENAME_INFO {
+    BOOLEAN ReplaceIfExists;
+    HANDLE RootDirectory;
+    DWORD FileNameLength;
+    WCHAR FileName[1];
+} FILE_RENAME_INFO, *PFILE_RENAME_INFO;
+
+typedef struct _FILE_ATTRIBUTE_TAG_INFO {
+    DWORD FileAttributes;
+    DWORD ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFO, *PFILE_ATTRIBUTE_TAG_INFO;
+
+typedef struct _FILE_COMPRESSION_INFO {
+    LARGE_INTEGER CompressedFileSize;
+    WORD CompressionFormat;
+    UCHAR CompressionUnitShift;
+    UCHAR ChunkShift;
+    UCHAR ClusterShift;
+    UCHAR Reserved[3];
+} FILE_COMPRESSION_INFO, *PFILE_COMPRESSION_INFO;
+
+typedef struct _FILE_REMOTE_PROTOCOL_INFO {
+    USHORT StructureVersion;
+    USHORT StructureSize;
+    ULONG Protocol;
+    USHORT ProtocolMajorVersion;
+    USHORT ProtocolMinorVersion;
+    USHORT ProtocolRevision;
+    USHORT Reserved;
+    ULONG Flags;
+    struct {
+        ULONG Reserved[8];
+    } GenericReserved;
+    struct {
+        ULONG Reserved[16];
+    } ProtocolSpecificReserved;
+} FILE_REMOTE_PROTOCOL_INFO, *PFILE_REMOTE_PROTOCOL_INFO;
+
 #endif
 
 typedef enum _FINDEX_INFO_LEVELS {
@@ -1048,6 +1137,18 @@ typedef struct _SYSTEM_POWER_STATUS {
 	DWORD BatteryLifeTime;
 	DWORD BatteryFullLifeTime;
 } SYSTEM_POWER_STATUS,*LPSYSTEM_POWER_STATUS;
+
+typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
+  LONG Bias;
+  WCHAR StandardName[32];
+  SYSTEMTIME StandardDate;
+  LONG StandardBias;
+  WCHAR DaylightName[32];
+  SYSTEMTIME DaylightDate;
+  LONG DaylightBias;
+  WCHAR TimeZoneKeyName[128];
+  BOOLEAN DynamicDaylightTimeDisabled;
+} DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 
 typedef struct _TIME_ZONE_INFORMATION {
 	LONG Bias;
@@ -1276,6 +1377,12 @@ typedef DWORD (WINAPI *APPLICATION_RECOVERY_CALLBACK)(PVOID);
 #else
 #define MAKEINTATOM(i) (LPTSTR)((ULONG_PTR)((WORD)(i)))
 #endif
+
+typedef DWORD
+(WINAPI *PFE_IMPORT_FUNC)(
+  _Out_writes_bytes_to_(*ulLength, *ulLength) PBYTE pbData,
+  _In_opt_ PVOID pvCallbackContext,
+  _Inout_ PULONG ulLength);
 
 /* Functions */
 #ifndef UNDER_CE
@@ -1924,6 +2031,16 @@ BOOL WINAPI GetFileBandwidthReservation(_In_ HANDLE, _Out_ LPDWORD, _Out_ LPDWOR
 #endif
 BOOL WINAPI GetFileInformationByHandle(HANDLE,LPBY_HANDLE_FILE_INFORMATION);
 
+#if (_WIN32_WINNT >= 0x0600)
+BOOL
+WINAPI
+GetFileInformationByHandleEx(
+  _In_ HANDLE hFile,
+  _In_ FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
+  _Out_writes_bytes_(dwBufferSize) LPVOID lpFileInformation,
+  _In_ DWORD dwBufferSize);
+#endif
+
 BOOL
 WINAPI
 GetFileSecurityA(
@@ -2165,7 +2282,7 @@ PDWORD WINAPI GetSidSubAuthority(PSID,DWORD);
 PUCHAR WINAPI GetSidSubAuthorityCount(PSID);
 VOID WINAPI GetStartupInfoA(_Out_ LPSTARTUPINFOA);
 VOID WINAPI GetStartupInfoW(LPSTARTUPINFOW);
-HANDLE WINAPI GetStdHandle(DWORD);
+HANDLE WINAPI GetStdHandle(_In_ DWORD);
 UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
@@ -2390,143 +2507,6 @@ BOOL WINAPI InitializeSid (PSID,PSID_IDENTIFIER_AUTHORITY,BYTE);
 #if (_WIN32_WINNT >= 0x0600)
 VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #endif
-#ifndef __INTERLOCKED_DECLARED
-#define __INTERLOCKED_DECLARED
-
-#if defined (_M_AMD64) || defined (_M_IA64)
-
-#define InterlockedAnd _InterlockedAnd
-#define InterlockedOr _InterlockedOr
-#define InterlockedXor _InterlockedXor
-#define InterlockedIncrement _InterlockedIncrement
-#define InterlockedIncrementAcquire InterlockedIncrement
-#define InterlockedIncrementRelease InterlockedIncrement
-#define InterlockedDecrement _InterlockedDecrement
-#define InterlockedDecrementAcquire InterlockedDecrement
-#define InterlockedDecrementRelease InterlockedDecrement
-#define InterlockedExchange _InterlockedExchange
-#define InterlockedExchangeAdd _InterlockedExchangeAdd
-#define InterlockedCompareExchange _InterlockedCompareExchange
-#define InterlockedCompareExchangeAcquire InterlockedCompareExchange
-#define InterlockedCompareExchangeRelease InterlockedCompareExchange
-#define InterlockedExchangePointer _InterlockedExchangePointer
-#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
-#define InterlockedCompareExchangePointerAcquire _InterlockedCompareExchangePointer
-#define InterlockedCompareExchangePointerRelease _InterlockedCompareExchangePointer
-#define InterlockedAnd64 _InterlockedAnd64
-#define InterlockedOr64 _InterlockedOr64
-#define InterlockedXor64 _InterlockedXor64
-#define InterlockedIncrement64 _InterlockedIncrement64
-#define InterlockedDecrement64 _InterlockedDecrement64
-#define InterlockedExchange64 _InterlockedExchange64
-#define InterlockedExchangeAdd64 _InterlockedExchangeAdd64
-#define InterlockedCompareExchange64 _InterlockedCompareExchange64
-#define InterlockedCompareExchangeAcquire64 InterlockedCompareExchange64
-#define InterlockedCompareExchangeRelease64 InterlockedCompareExchange64
-
-#else // !(defined (_M_AMD64) || defined (_M_IA64))
-
-LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
-LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
-LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
-WINBASEAPI LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
-WINBASEAPI LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
-#if defined(_WIN64)
- /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
- #define InterlockedExchangePointer(t,v) \
-    (PVOID)_InterlockedExchange64((LONGLONG*)(t),(LONGLONG)(v))
- /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
- #define InterlockedCompareExchangePointer(d,e,c) \
-    (PVOID)_InterlockedCompareExchange64((LONGLONG*)(d),(LONGLONG)(e),(LONGLONG)(c))
-#else
- /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
- #define InterlockedExchangePointer(t,v) \
-    (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
- /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
- #define InterlockedCompareExchangePointer(d,e,c) \
-    (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
-#endif
-LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);
-#if (_WIN32_WINNT >= 0x0501)
-PSLIST_ENTRY WINAPI InterlockedFlushSList(PSLIST_HEADER);
-#endif
-WINBASEAPI LONG WINAPI InterlockedIncrement(IN OUT LONG volatile *);
-#if (_WIN32_WINNT >= 0x0501)
-PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
-PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
-#endif
-#define InterlockedCompareExchangePointerAcquire InterlockedCompareExchangePointer
-#define InterlockedCompareExchangePointerRelease InterlockedCompareExchangePointer
-
-#endif // !(defined (_M_AMD64) || defined (_M_IA64))
-
-#if defined(_SLIST_HEADER_) && !defined(_NTOSP_)
-
-WINBASEAPI
-VOID
-WINAPI
-InitializeSListHead (
-  IN OUT PSLIST_HEADER ListHead);
-#endif
-
-USHORT WINAPI QueryDepthSList(PSLIST_HEADER);
-
-#ifdef _MSC_VER
-
-//
-// Intrinsics are a mess -- *sigh*
-//
-long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
-#pragma intrinsic(_InterlockedCompareExchange)
-#endif
-
-#if !defined(InterlockedAnd)
-#define InterlockedAnd InterlockedAnd_Inline
-FORCEINLINE
-LONG
-InterlockedAnd_Inline(IN OUT volatile LONG *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((volatile long *)Target,
-                                        i & Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
-
-#if !defined(InterlockedOr)
-#define InterlockedOr InterlockedOr_Inline
-FORCEINLINE
-LONG
-InterlockedOr_Inline(IN OUT volatile LONG *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((volatile long *)Target,
-                                        i | Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
-
-#endif /* __INTERLOCKED_DECLARED */
 
 BOOL WINAPI IsBadCodePtr(_In_opt_ FARPROC);
 BOOL WINAPI IsBadHugeReadPtr(_In_opt_ CONST VOID*, _In_ UINT_PTR);
@@ -2718,6 +2698,8 @@ BOOL WINAPI MoveFileA(_In_ LPCSTR, _In_ LPCSTR);
 BOOL WINAPI MoveFileW(_In_ LPCWSTR, _In_ LPCWSTR);
 BOOL WINAPI MoveFileExA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD);
 BOOL WINAPI MoveFileExW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
 int WINAPI MulDiv(_In_ int, _In_ int, _In_ int);
 BOOL WINAPI NotifyChangeEventLog(_In_ HANDLE, _In_ HANDLE);
 BOOL WINAPI ObjectCloseAuditAlarmA(_In_ LPCSTR, _In_ PVOID, _In_ BOOL);
@@ -2800,6 +2782,15 @@ DWORD WINAPI QueueUserAPC(PAPCFUNC,HANDLE,ULONG_PTR);
 BOOL WINAPI QueueUserWorkItem(LPTHREAD_START_ROUTINE,PVOID,ULONG);
 #endif
 void WINAPI RaiseException(DWORD,DWORD,DWORD,const ULONG_PTR*);
+
+BOOL
+WINAPI
+QueryInformationJobObject(
+  _In_opt_ HANDLE hJob,
+  _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+  _Out_writes_bytes_to_(cbJobObjectInformationLength, *lpReturnLength) LPVOID lpJobObjectInformation,
+  _In_ DWORD cbJobObjectInformationLength,
+  _Out_opt_ LPDWORD lpReturnLength);
 
 BOOL
 WINAPI
@@ -3007,6 +2998,15 @@ SetFirmwareEnvironmentVariableW(
 
 UINT WINAPI SetHandleCount(UINT);
 BOOL WINAPI SetHandleInformation(HANDLE,DWORD,DWORD);
+
+BOOL
+WINAPI
+SetInformationJobObject(
+  _In_ HANDLE hJob,
+  _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+  _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
+  _In_ DWORD cbJobObjectInformationLength);
+
 BOOL WINAPI SetKernelObjectSecurity(HANDLE,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
 void WINAPI SetLastError(DWORD);
 void WINAPI SetLastErrorEx(DWORD,DWORD);
@@ -3028,7 +3028,7 @@ BOOL WINAPI SetSecurityDescriptorGroup(PSECURITY_DESCRIPTOR,PSID,BOOL);
 BOOL WINAPI SetSecurityDescriptorOwner(PSECURITY_DESCRIPTOR,PSID,BOOL);
 DWORD WINAPI SetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR,PUCHAR);
 BOOL WINAPI SetSecurityDescriptorSacl(PSECURITY_DESCRIPTOR,BOOL,PACL,BOOL);
-BOOL WINAPI SetStdHandle(DWORD,HANDLE);
+BOOL WINAPI SetStdHandle(_In_ DWORD, _In_ HANDLE);
 #define SetSwapAreaSize(w) (w)
 BOOL WINAPI SetSystemPowerState(_In_ BOOL, _In_ BOOL);
 BOOL WINAPI SetSystemTime(const SYSTEMTIME*);
@@ -3142,6 +3142,7 @@ BOOL WINAPI WinLoadTrustProvider(GUID*);
 BOOL WINAPI Wow64DisableWow64FsRedirection(PVOID*);
 BOOLEAN WINAPI Wow64EnableWow64FsRedirection(_In_ BOOLEAN);
 BOOL WINAPI Wow64RevertWow64FsRedirection(PVOID);
+DWORD WINAPI WriteEncryptedFileRaw(_In_ PFE_IMPORT_FUNC, _In_opt_ PVOID, _In_ PVOID);
 BOOL WINAPI WriteFile(HANDLE,LPCVOID,DWORD,LPDWORD,LPOVERLAPPED);
 BOOL WINAPI WriteFileEx(HANDLE,LPCVOID,DWORD,LPOVERLAPPED,LPOVERLAPPED_COMPLETION_ROUTINE);
 BOOL WINAPI WriteFileGather(HANDLE,FILE_SEGMENT_ELEMENT*,DWORD,LPDWORD,LPOVERLAPPED);
@@ -3371,6 +3372,7 @@ typedef PCACTCTXW PCACTCTX;
 #define lstrlen lstrlenW
 #define MoveFile MoveFileW
 #define MoveFileEx MoveFileExW
+#define MoveFileWithProgress MoveFileWithProgressW
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmW
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmW
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmW
@@ -3578,6 +3580,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define lstrlen lstrlenA
 #define MoveFile MoveFileA
 #define MoveFileEx MoveFileExA
+#define MoveFileWithProgress MoveFileWithProgressA
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmA
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmA
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmA
@@ -3760,6 +3763,21 @@ CopyFile2(
   _In_opt_ COPYFILE2_EXTENDED_PARAMETERS *pExtendedParameters);
 
 #endif /* _WIN32_WINNT >= 0x0601 */
+
+WINBASEAPI
+BOOL
+WINAPI
+InitOnceExecuteOnce(
+  _Inout_ PINIT_ONCE InitOnce,
+  _In_ __callback PINIT_ONCE_FN InitFn,
+  _Inout_opt_ PVOID Parameter,
+  _Outptr_opt_result_maybenull_ LPVOID *Context);
+
+WINBASEAPI
+VOID
+WINAPI
+InitializeSListHead(
+    _Out_ PSLIST_HEADER ListHead);
 
 #ifdef _MSC_VER
 #pragma warning(pop)

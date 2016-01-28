@@ -10,7 +10,6 @@ set(NTKRNLMP_SOURCE ${SOURCE})
 set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
-
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
 add_executable(ntoskrnl
@@ -29,20 +28,22 @@ set_subsystem(ntoskrnl native)
 
 if(MSVC)
     set_image_base(ntoskrnl 0x00400000)
+    add_target_link_flags(ntoskrnl "/SECTION:.rsrc,!DP") #Accessed from bugcheck code
 else()
-    set_image_base(ntoskrnl 0x00800000)
+    if(GDB)
+        set_image_base(ntoskrnl 0x00800000)
+    else()
+        set_image_base(ntoskrnl 0x80800000)
+    endif()
 endif()
 
-target_link_libraries(ntoskrnl
-    cportlib
-    csq
-    ${PSEH_LIB}
-    cmlib
-    rtl
-    ${ROSSYM_LIB}
-    libcntpr
-    wdmguid
-    ioevent)
+target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} cmlib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
+
+if(STACK_PROTECTOR)
+    target_link_libraries(ntoskrnl gcc_ssp)
+elseif(RUNTIME_CHECKS)
+    target_link_libraries(ntoskrnl runtmchk)
+endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTOSKRNL_SOURCE)

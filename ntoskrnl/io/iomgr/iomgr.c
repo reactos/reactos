@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/io/iomgr.c
+ * FILE:            ntoskrnl/io/iomgr/iomgr.c
  * PURPOSE:         I/O Manager Initialization and Misc Utility Functions
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
@@ -25,12 +25,16 @@ IopTimerDispatch(
     IN PVOID SystemArgument2
 );
 
+BOOLEAN
+NTAPI
+WmiInitialize(
+    VOID);
+
 /* DATA ********************************************************************/
 
 POBJECT_TYPE IoDeviceObjectType = NULL;
 POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
-extern UNICODE_STRING NtSystemRoot;
 BOOLEAN IoCountOperations = TRUE;
 ULONG IoReadOperationCount = 0;
 LARGE_INTEGER IoReadTransferCount = {{0, 0}};
@@ -54,6 +58,7 @@ extern KSPIN_LOCK ShutdownListLock;
 extern POBJECT_TYPE IoAdapterObjectType;
 extern ERESOURCE IopDatabaseResource;
 ERESOURCE IopSecurityResource;
+extern ERESOURCE IopDriverLoadResource;
 extern KGUARDED_MUTEX PnpNotifyListLock;
 extern LIST_ENTRY IopDiskFileSystemQueueHead;
 extern LIST_ENTRY IopCdRomFileSystemQueueHead;
@@ -272,7 +277,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
     ObjectTypeInitializer.DeleteProcedure = IopDeleteDevice;
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
-    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
     ObjectTypeInitializer.CaseInsensitive = TRUE;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,
                                        &ObjectTypeInitializer,
@@ -311,7 +316,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.GenericMapping = IopFileMapping;
     ObjectTypeInitializer.CloseProcedure = IopCloseFile;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
-    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
     ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
@@ -327,7 +332,7 @@ IopCreateObjectTypes(VOID)
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-IopCreateRootDirectories()
+IopCreateRootDirectories(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DirName;
@@ -476,8 +481,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopInitLookasideLists();
 
     /* Initialize all locks and lists */
-    ExInitializeResource(&IopDatabaseResource);
-    ExInitializeResource(&IopSecurityResource);
+    ExInitializeResourceLite(&IopDatabaseResource);
+    ExInitializeResourceLite(&IopSecurityResource);
+    ExInitializeResourceLite(&IopDriverLoadResource);
     KeInitializeGuardedMutex(&PnpNotifyListLock);
     InitializeListHead(&IopDiskFileSystemQueueHead);
     InitializeListHead(&IopCdRomFileSystemQueueHead);
@@ -524,6 +530,12 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
+
+    /* Initialize SHIM engine */
+    ApphelpCacheInitialize();
+
+    /* Initialize WMI */
+    WmiInitialize();
 
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();

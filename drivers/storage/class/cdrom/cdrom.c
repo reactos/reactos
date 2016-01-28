@@ -2139,7 +2139,6 @@ ScsiCdRomStartIo(
                     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
                     ExFreePool(senseBuffer);
                     ExFreePool(srb);
-                    IoFreeIrp(irp2);
                     IoStartNextPacket(DeviceObject, FALSE);
                     DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
                     return;
@@ -2181,6 +2180,10 @@ ScsiCdRomStartIo(
             return;
         }
 
+        case IOCTL_DISK_GET_LENGTH_INFO:
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+        case IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX:
         case IOCTL_CDROM_GET_DRIVE_GEOMETRY: {
 
             //
@@ -2764,6 +2767,9 @@ ScsiCdRomStartIo(
             //
 
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            ExFreePool(senseBuffer);
+            ExFreePool(srb);
+            IoFreeIrp(irp2);
             return;
 
         } // end switch()
@@ -2953,6 +2959,17 @@ CdRomDeviceControlCompletion(
                 (realIrpStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL)) &&
                 (realIrpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_CDROM_CHECK_VERIFY)) {
 
+                ExFreePool(srb->SenseInfoBuffer);
+                if (srb->DataBuffer) {
+                    ExFreePool(srb->DataBuffer);
+                }
+                ExFreePool(srb);
+                if (Irp->MdlAddress) {
+                    IoFreeMdl(Irp->MdlAddress);
+                }
+
+                IoFreeIrp(Irp);
+
                 //
                 // Update the geometry information, as the media could have changed.
                 // The completion routine for this will complete the real irp and start
@@ -3024,6 +3041,264 @@ CdRomDeviceControlCompletion(
 
         switch (realIrpStack->Parameters.DeviceIoControl.IoControlCode) {
 
+        case IOCTL_DISK_GET_LENGTH_INFO: {
+
+            PREAD_CAPACITY_DATA readCapacityBuffer = srb->DataBuffer;
+            ULONG               lastSector;
+            ULONG               bps;
+            ULONG               lastBit;
+            ULONG               tmp;
+
+            //
+            // Swizzle bytes from Read Capacity and translate into
+            // the necessary geometry information in the device extension.
+            //
+
+            tmp = readCapacityBuffer->BytesPerBlock;
+            ((PFOUR_BYTE)&bps)->Byte0 = ((PFOUR_BYTE)&tmp)->Byte3;
+            ((PFOUR_BYTE)&bps)->Byte1 = ((PFOUR_BYTE)&tmp)->Byte2;
+            ((PFOUR_BYTE)&bps)->Byte2 = ((PFOUR_BYTE)&tmp)->Byte1;
+            ((PFOUR_BYTE)&bps)->Byte3 = ((PFOUR_BYTE)&tmp)->Byte0;
+
+            //
+            // Insure that bps is a power of 2.
+            // This corrects a problem with the HP 4020i CDR where it
+            // returns an incorrect number for bytes per sector.
+            //
+
+            if (!bps) {
+                bps = 2048;
+            } else {
+                lastBit = (ULONG) -1;
+                while (bps) {
+                    lastBit++;
+                    bps = bps >> 1;
+                }
+
+                bps = 1 << lastBit;
+            }
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector = bps;
+
+            DebugPrint((2,
+                        "CdRomDeviceControlCompletion: Calculated bps %#x\n",
+                        deviceExtension->DiskGeometry->Geometry.BytesPerSector));
+
+            //
+            // Copy last sector in reverse byte order.
+            //
+
+            tmp = readCapacityBuffer->LogicalBlockAddress;
+            ((PFOUR_BYTE)&lastSector)->Byte0 = ((PFOUR_BYTE)&tmp)->Byte3;
+            ((PFOUR_BYTE)&lastSector)->Byte1 = ((PFOUR_BYTE)&tmp)->Byte2;
+            ((PFOUR_BYTE)&lastSector)->Byte2 = ((PFOUR_BYTE)&tmp)->Byte1;
+            ((PFOUR_BYTE)&lastSector)->Byte3 = ((PFOUR_BYTE)&tmp)->Byte0;
+
+            //
+            // Calculate sector to byte shift.
+            //
+
+            WHICH_BIT(bps, deviceExtension->SectorShift);
+
+            DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Sector size is %d\n",
+                deviceExtension->DiskGeometry->Geometry.BytesPerSector));
+
+            DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Number of Sectors is %d\n",
+                lastSector + 1));
+
+            //
+            // Calculate media capacity in bytes.
+            //
+
+            deviceExtension->PartitionLength.QuadPart = (LONGLONG)(lastSector + 1);
+
+            //
+            // Calculate number of cylinders.
+            //
+
+            deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+
+            deviceExtension->PartitionLength.QuadPart =
+                (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
+
+            if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
+
+                //
+                // This device supports removable media.
+                //
+
+                deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
+
+            } else {
+
+                //
+                // Assume media type is fixed disk.
+                //
+
+                deviceExtension->DiskGeometry->Geometry.MediaType = FixedMedia;
+            }
+
+            //
+            // Assume sectors per track are 32;
+            //
+
+            deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
+
+            //
+            // Assume tracks per cylinder (number of heads) is 64.
+            //
+
+            deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
+
+            //
+            // Copy the device extension's geometry info into the user buffer.
+            //
+
+            RtlMoveMemory(realIrp->AssociatedIrp.SystemBuffer,
+                          &deviceExtension->PartitionLength,
+                          sizeof(GET_LENGTH_INFORMATION));
+
+            //
+            // update information field.
+            //
+
+            realIrp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+            break;
+        }
+
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
+        case IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX: {
+
+            PREAD_CAPACITY_DATA readCapacityBuffer = srb->DataBuffer;
+            ULONG               lastSector;
+            ULONG               bps;
+            ULONG               lastBit;
+            ULONG               tmp;
+            PDISK_GEOMETRY_EX   geometryEx;
+
+            //
+            // Swizzle bytes from Read Capacity and translate into
+            // the necessary geometry information in the device extension.
+            //
+
+            tmp = readCapacityBuffer->BytesPerBlock;
+            ((PFOUR_BYTE)&bps)->Byte0 = ((PFOUR_BYTE)&tmp)->Byte3;
+            ((PFOUR_BYTE)&bps)->Byte1 = ((PFOUR_BYTE)&tmp)->Byte2;
+            ((PFOUR_BYTE)&bps)->Byte2 = ((PFOUR_BYTE)&tmp)->Byte1;
+            ((PFOUR_BYTE)&bps)->Byte3 = ((PFOUR_BYTE)&tmp)->Byte0;
+
+            //
+            // Insure that bps is a power of 2.
+            // This corrects a problem with the HP 4020i CDR where it
+            // returns an incorrect number for bytes per sector.
+            //
+
+            if (!bps) {
+                bps = 2048;
+            } else {
+                lastBit = (ULONG) -1;
+                while (bps) {
+                    lastBit++;
+                    bps = bps >> 1;
+                }
+
+                bps = 1 << lastBit;
+            }
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector = bps;
+
+            DebugPrint((2,
+                        "CdRomDeviceControlCompletion: Calculated bps %#x\n",
+                        deviceExtension->DiskGeometry->Geometry.BytesPerSector));
+
+            //
+            // Copy last sector in reverse byte order.
+            //
+
+            tmp = readCapacityBuffer->LogicalBlockAddress;
+            ((PFOUR_BYTE)&lastSector)->Byte0 = ((PFOUR_BYTE)&tmp)->Byte3;
+            ((PFOUR_BYTE)&lastSector)->Byte1 = ((PFOUR_BYTE)&tmp)->Byte2;
+            ((PFOUR_BYTE)&lastSector)->Byte2 = ((PFOUR_BYTE)&tmp)->Byte1;
+            ((PFOUR_BYTE)&lastSector)->Byte3 = ((PFOUR_BYTE)&tmp)->Byte0;
+
+            //
+            // Calculate sector to byte shift.
+            //
+
+            WHICH_BIT(bps, deviceExtension->SectorShift);
+
+            DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Sector size is %d\n",
+                deviceExtension->DiskGeometry->Geometry.BytesPerSector));
+
+            DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Number of Sectors is %d\n",
+                lastSector + 1));
+
+            //
+            // Calculate media capacity in bytes.
+            //
+
+            deviceExtension->PartitionLength.QuadPart = (LONGLONG)(lastSector + 1);
+
+            //
+            // Calculate number of cylinders.
+            //
+
+            deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+
+            deviceExtension->PartitionLength.QuadPart =
+                (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
+
+            if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
+
+                //
+                // This device supports removable media.
+                //
+
+                deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
+
+            } else {
+
+                //
+                // Assume media type is fixed disk.
+                //
+
+                deviceExtension->DiskGeometry->Geometry.MediaType = FixedMedia;
+            }
+
+            //
+            // Assume sectors per track are 32;
+            //
+
+            deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
+
+            //
+            // Assume tracks per cylinder (number of heads) is 64.
+            //
+
+            deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
+
+            //
+            // Copy the device extension's geometry info into the user buffer.
+            //
+
+            geometryEx = realIrp->AssociatedIrp.SystemBuffer;
+            RtlMoveMemory(&geometryEx->Geometry,
+                          &deviceExtension->DiskGeometry->Geometry,
+                          sizeof(DISK_GEOMETRY));
+
+            //
+            // Copy the extended information
+            //
+
+            geometryEx->DiskSize = deviceExtension->PartitionLength;
+
+            //
+            // update information field.
+            //
+
+            realIrp->IoStatus.Information = FIELD_OFFSET(DISK_GEOMETRY_EX, Data);;
+            break;
+        }
+
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY:
         case IOCTL_CDROM_GET_DRIVE_GEOMETRY: {
 
             PREAD_CAPACITY_DATA readCapacityBuffer = srb->DataBuffer;
@@ -3931,10 +4206,7 @@ CdRomSwitchModeCompletion(
                 IoCompleteRequest(realIrp, IO_DISK_INCREMENT);
 
                 ExFreePool(srb->SenseInfoBuffer);
-                ExFreePool(srb->DataBuffer);
                 ExFreePool(srb);
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
 
                 IoStartNextPacket(DeviceObject, FALSE);
 
@@ -4455,12 +4727,48 @@ RetryControl:
         return STATUS_PENDING;
     }
 
+    case IOCTL_DISK_GET_DRIVE_GEOMETRY:
     case IOCTL_CDROM_GET_DRIVE_GEOMETRY: {
 
         DebugPrint((2,"CdRomDeviceControl: Get drive geometry\n"));
 
         if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
             sizeof( DISK_GEOMETRY ) ) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+            break;
+        }
+
+        IoMarkIrpPending(Irp);
+        IoStartPacket(DeviceObject,Irp, NULL,NULL);
+
+        return STATUS_PENDING;
+    }
+
+    case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
+    case IOCTL_CDROM_GET_DRIVE_GEOMETRY_EX: {
+
+        DebugPrint((2,"CdRomDeviceControl: Get drive geometry ex\n"));
+
+        if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof( DISK_GEOMETRY_EX ) ) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+            break;
+        }
+
+        IoMarkIrpPending(Irp);
+        IoStartPacket(DeviceObject,Irp, NULL,NULL);
+
+        return STATUS_PENDING;
+    }
+
+    case IOCTL_DISK_GET_LENGTH_INFO: {
+
+        DebugPrint((2,"CdRomDeviceControl: Get length info\n"));
+
+        if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof( GET_LENGTH_INFORMATION ) ) {
 
             status = STATUS_INFO_LENGTH_MISMATCH;
             break;

@@ -1,6 +1,5 @@
 
 spec2def(aclui.dll aclui.spec)
-
 add_definitions(-DSUPPORT_UXTHEME)
 
 list(APPEND SOURCE

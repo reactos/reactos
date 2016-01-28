@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/handle.c
+ * FILE:            win32ss/user/winsrv/consrv_new/handle.c
  * PURPOSE:         Console I/O Handles functions
  * PROGRAMMERS:     David Welch
  *                  Jeffrey Morlan
@@ -700,7 +700,7 @@ CSR_API(SrvOpenConsole)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -752,7 +752,7 @@ CSR_API(SrvCloseHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -775,7 +775,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -810,7 +810,7 @@ CSR_API(SrvDuplicateHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 

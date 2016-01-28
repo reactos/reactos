@@ -357,8 +357,6 @@ BOOL WINAPI GetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
     ret = get_tag_data( profile, type, offset, buffer, size );
     *ref = cmsTagLinkedTo( profile->cmsprofile, type ) != 0;
     release_profile( profile );
-    return ret;
-
 #endif /* HAVE_LCMS2 */
     return ret;
 }
@@ -653,7 +651,7 @@ BOOL WINAPI GetStandardColorSpaceProfileW( PCWSTR machine, DWORD id, PWSTR profi
             lstrcatW( rgbprofile, rgbprofilefile );
             len = lstrlenW( rgbprofile ) * sizeof(WCHAR);
 
-            if (*size < len || !profile)
+            if (*size < len)
             {
                 *size = len;
                 SetLastError( ERROR_MORE_DATA );
@@ -1156,7 +1154,7 @@ BOOL WINAPI IsColorProfileTagPresent( HPROFILE handle, TAGTYPE type, PBOOL prese
         release_profile( profile );
         return FALSE;
     }
-    *present = cmsIsTag( profile->cmsprofile, type );
+    *present = (cmsIsTag( profile->cmsprofile, type ) != 0);
     release_profile( profile );
     ret = TRUE;
 
@@ -1235,8 +1233,6 @@ BOOL WINAPI SetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
     }
     ret = set_tag_data( profile, type, offset, buffer, size );
     release_profile( profile );
-    return ret;
-
 #endif /* HAVE_LCMS2 */
     return ret;
 }
@@ -1412,7 +1408,11 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
         if (!(data = HeapAlloc( GetProcessHeap(), 0, profile->cbDataSize ))) return NULL;
         memcpy( data, profile->pProfileData, profile->cbDataSize );
 
-        cmsprofile = cmsOpenProfileFromMem( data, profile->cbDataSize );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, profile->cbDataSize )))
+        {
+            HeapFree( GetProcessHeap(), 0, data );
+            return FALSE;
+        }
         size = profile->cbDataSize;
     }
     else if (profile->dwType == PROFILE_FILENAME)
@@ -1470,7 +1470,12 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
             HeapFree( GetProcessHeap(), 0, data );
             return NULL;
         }
-        cmsprofile = cmsOpenProfileFromMem( data, size );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, size )))
+        {
+            CloseHandle( handle );
+            HeapFree( GetProcessHeap(), 0, data );
+            return NULL;
+        }
     }
     else
     {

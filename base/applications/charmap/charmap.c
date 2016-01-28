@@ -12,6 +12,8 @@
 #include <commctrl.h>
 #include <richedit.h>
 
+#define REMOVE_ADVANCED
+
 #define ID_ABOUT    0x1
 
 HINSTANCE hInstance;
@@ -33,6 +35,9 @@ EnumFontNames(ENUMLOGFONTEXW *lpelfe,
 {
     HWND hwndCombo = (HWND)lParam;
     LPWSTR pszName  = lpelfe->elfLogFont.lfFaceName;
+
+    /* Skip rotated font */
+    if(pszName[0] == L'@') return 1;
 
     /* make sure font doesn't already exist in our list */
     if(SendMessageW(hwndCombo,
@@ -234,7 +239,7 @@ AddCharToSelection(HWND hDlg, WCHAR ch)
     SendMessage(hText, WM_CHAR, (WPARAM)ch, 0);
 }
 
-
+#ifndef REMOVE_ADVANCED
 static
 void
 UpdateSettings(HWND hDlg)
@@ -242,20 +247,24 @@ UpdateSettings(HWND hDlg)
     if (hDlg == hCharmapDlg)
     {
         Settings.IsAdvancedView =
-        SendDlgItemMessage(hDlg, IDC_CHECK_ADVANCED, BM_GETCHECK, 0, 0);
+            SendDlgItemMessage(hDlg, IDC_CHECK_ADVANCED, BM_GETCHECK, 0, 0);
+
     }
 
     if (hDlg == hAdvancedDlg)
     {
     }
 }
+#endif
 
 static
 void
 ChangeView(HWND hWnd)
 {
     RECT rcCharmap;
+#ifndef REMOVE_ADVANCED
     RECT rcAdvanced;
+#endif
     RECT rcPanelExt;
     RECT rcPanelInt;
     RECT rcStatus;
@@ -265,7 +274,9 @@ ChangeView(HWND hWnd)
     UINT DeskTopWidth, DeskTopHeight;
 
     GetClientRect(hCharmapDlg, &rcCharmap);
+#ifndef REMOVE_ADVANCED
     GetClientRect(hAdvancedDlg, &rcAdvanced);
+#endif
     GetWindowRect(hWnd, &rcPanelExt);
     GetClientRect(hWnd, &rcPanelInt);
     GetClientRect(hStatusWnd, &rcStatus);
@@ -277,19 +288,19 @@ ChangeView(HWND hWnd)
     DeY = (rcPanelExt.bottom - rcPanelExt.top) - rcPanelInt.bottom;
 
     MoveWindow(hCharmapDlg, 0, 0, rcCharmap.right, rcCharmap.bottom, FALSE);
+#ifndef REMOVE_ADVANCED
     MoveWindow(hAdvancedDlg, 0, rcCharmap.bottom, rcAdvanced.right, rcAdvanced.bottom, FALSE);
-
     ShowWindow(hAdvancedDlg, (Settings.IsAdvancedView) ? SW_SHOW : SW_HIDE);
-
+#endif
     xPos = rcPanelExt.left;
     yPos = rcPanelExt.top;
 
     Width = DeX + rcCharmap.right;
     Height = DeY + rcCharmap.bottom + rcStatus.bottom;
-
+#ifndef REMOVE_ADVANCED
     if (Settings.IsAdvancedView)
         Height += rcAdvanced.bottom;
-
+#endif
     if ((xPos + Width) > DeskTopWidth)
         xPos += DeskTopWidth - (xPos + Width);
 
@@ -315,17 +326,23 @@ CharMapDlgProc(HWND hDlg,
         case WM_INITDIALOG:
         {
             DWORD evMask;
+#ifdef REMOVE_ADVANCED
+            HWND hAdv;
+#endif
 
             FillFontStyleComboList(GetDlgItem(hDlg,
                                               IDC_FONTCOMBO));
 
             ChangeMapFont(hDlg);
 
-            // Configure Richedi control for sending notification changes.
+            // Configure Richedit control for sending notification changes.
             evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
             evMask |= ENM_CHANGE;
             SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_SETEVENTMASK, 0, (LPARAM)evMask);
-
+#ifdef REMOVE_ADVANCED
+            hAdv = GetDlgItem(hDlg, IDC_CHECK_ADVANCED);
+            ShowWindow(hAdv, SW_HIDE);
+#endif
             return TRUE;
         }
 
@@ -367,11 +384,12 @@ CharMapDlgProc(HWND hDlg,
                 case IDC_COPY:
                     CopyCharacters(hDlg);
                     break;
-
+#ifndef REMOVE_ADVANCED
                 case IDC_CHECK_ADVANCED:
                     UpdateSettings(hDlg);
                     ChangeView(GetParent(hDlg));
                     break;
+#endif
             }
         }
         break;
@@ -382,7 +400,7 @@ CharMapDlgProc(HWND hDlg,
 
     return FALSE;
 }
-
+#ifndef REMOVE_ADVANCED
 static
 INT_PTR
 CALLBACK
@@ -402,7 +420,7 @@ AdvancedDlgProc(HWND hDlg,
 
     return FALSE;
 }
-
+#endif
 static int
 OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -413,12 +431,12 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                MAKEINTRESOURCE(IDD_CHARMAP),
                                hWnd,
                                CharMapDlgProc);
-
+#ifndef REMOVE_ADVANCED
     hAdvancedDlg = CreateDialog(hInstance,
-                               MAKEINTRESOURCE(IDD_ADVANCED),
-                               hWnd,
-                               AdvancedDlgProc);
-
+                                MAKEINTRESOURCE(IDD_ADVANCED),
+                                hWnd,
+                                AdvancedDlgProc);
+#endif
     hStatusWnd = CreateWindow(STATUSCLASSNAME,
                               NULL,
                               WS_CHILD | WS_VISIBLE,

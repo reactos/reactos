@@ -25,6 +25,6 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine MS-RLE ºñµð¿À ÄÚµ¦"
-	IDS_ABOUT       "Wine MS-RLE ºñµð¿À ÄÚµ¦\nCopyright 2002 by Michael Gunnewig"
+	IDS_DESCRIPTION	"Wine MS-RLE ë¹„ë””ì˜¤ ì½”ë±"
+	IDS_ABOUT       "Wine MS-RLE ë¹„ë””ì˜¤ ì½”ë±\nCopyright 2002 by Michael Gunnewig"
 }

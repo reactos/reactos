@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/po.h
+* FILE:            ntoskrnl/include/internal/po.h
 * PURPOSE:         Internal header for the Power Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

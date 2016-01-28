@@ -1,5 +1,5 @@
 /*
- * PROJECT:   registry manipulation library
+ * PROJECT:   Registry manipulation library
  * LICENSE:   GPL - See COPYING in the top level directory
  * COPYRIGHT: Copyright 2005 Filip Navara <navaraf@reactos.org>
  *            Copyright 2001 - 2005 Eric Kohl
@@ -7,46 +7,48 @@
 
 #pragma once
 
-#define  REG_INIT_BLOCK_LIST_SIZE      32
-#define  REG_INIT_HASH_TABLE_SIZE      3
-#define  REG_EXTEND_HASH_TABLE_SIZE    4
-#define  REG_VALUE_LIST_CELL_MULTIPLE  4
-#define  REG_DATA_SIZE_MASK            0x7FFFFFFF
-#define  REG_DATA_IN_OFFSET            0x80000000
-
 //
 // Key Types
 //
-#define CM_KEY_INDEX_ROOT                               0x6972
-#define CM_KEY_INDEX_LEAF                               0x696c
-#define CM_KEY_FAST_LEAF                                0x666c
-#define CM_KEY_HASH_LEAF                                0x686c
+#define CM_KEY_INDEX_ROOT               0x6972  // "ri"
+#define CM_KEY_INDEX_LEAF               0x696C  // "li"
+#define CM_KEY_FAST_LEAF                0x666C  // "lf"
+#define CM_KEY_HASH_LEAF                0x686C  // "lh"
 
 //
 // Key Signatures
 //
-#define CM_KEY_NODE_SIGNATURE                           0x6B6E
-#define CM_LINK_NODE_SIGNATURE                          0x6B6C
-#define CM_KEY_VALUE_SIGNATURE                          0x6B76
+#define CM_KEY_NODE_SIGNATURE           0x6B6E  // "nk"
+#define CM_LINK_NODE_SIGNATURE          0x6B6C  // "lk"
+#define CM_KEY_SECURITY_SIGNATURE       0x6B73  // "sk"
+#define CM_KEY_VALUE_SIGNATURE          0x6B76  // "vk"
+#define CM_BIG_DATA_SIGNATURE           0x6264  // "db"
 
 //
 // CM_KEY_NODE Flags
 //
-#define KEY_IS_VOLATILE                                 0x01
-#define KEY_HIVE_EXIT                                   0x02
-#define KEY_HIVE_ENTRY                                  0x04
-#define KEY_NO_DELETE                                   0x08
-#define KEY_SYM_LINK                                    0x10
-#define KEY_COMP_NAME                                   0x20
-#define KEY_PREFEF_HANDLE                               0x40
-#define KEY_VIRT_MIRRORED                               0x80
-#define KEY_VIRT_TARGET                                 0x100
-#define KEY_VIRTUAL_STORE                               0x200
+#define KEY_IS_VOLATILE                 0x0001
+#define KEY_HIVE_EXIT                   0x0002
+#define KEY_HIVE_ENTRY                  0x0004
+#define KEY_NO_DELETE                   0x0008
+#define KEY_SYM_LINK                    0x0010
+#define KEY_COMP_NAME                   0x0020
+#define KEY_PREFEF_HANDLE               0x0040
+#define KEY_VIRT_MIRRORED               0x0080
+#define KEY_VIRT_TARGET                 0x0100
+#define KEY_VIRTUAL_STORE               0x0200
 
 //
 // CM_KEY_VALUE Flags
 //
-#define VALUE_COMP_NAME                                 0x0001
+#define VALUE_COMP_NAME                 0x0001
+
+//
+// CM_KEY_VALUE Types
+//
+#define CM_KEY_VALUE_SMALL              0x4
+#define CM_KEY_VALUE_BIG                0x3FD8
+#define CM_KEY_VALUE_SPECIAL_SIZE       0x80000000
 
 #include <pshpack1.h>
 
@@ -65,7 +67,7 @@ typedef struct _CM_VIEW_OF_FILE
 } CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
 
 //
-// Children of Key Notes
+// Children of Key Nodes
 //
 typedef struct _CHILD_LIST
 {
@@ -115,14 +117,6 @@ typedef struct _CM_KEY_NODE
 } CM_KEY_NODE, *PCM_KEY_NODE;
 
 //
-// Value List
-//
-typedef struct _VALUE_LIST_CELL
-{
-    HCELL_INDEX ValueOffset[ANYSIZE_ARRAY];
-} VALUE_LIST_CELL, *PVALUE_LIST_CELL;
-
-//
 // Value Key
 //
 typedef struct _CM_KEY_VALUE
@@ -133,7 +127,7 @@ typedef struct _CM_KEY_VALUE
     HCELL_INDEX Data;
     ULONG Type;
     USHORT Flags;
-    USHORT Unused1;
+    USHORT Spare;
     WCHAR Name[ANYSIZE_ARRAY];
 } CM_KEY_VALUE, *PCM_KEY_VALUE;
 
@@ -148,9 +142,18 @@ typedef struct _CM_KEY_SECURITY
     HCELL_INDEX Blink;
     ULONG ReferenceCount;
     ULONG DescriptorLength;
-    //SECURITY_DESCRIPTOR_RELATIVE Descriptor;
-    UCHAR Data[ANYSIZE_ARRAY];
+    SECURITY_DESCRIPTOR_RELATIVE Descriptor;
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
+
+//
+// Big Value Key
+//
+typedef struct _CM_BIG_DATA
+{
+    USHORT Signature;
+    USHORT Count;
+    HCELL_INDEX List;
+} CM_BIG_DATA, *PCM_BIG_DATA;
 
 #include <poppack.h>
 
@@ -198,6 +201,7 @@ typedef struct _CELL_DATA
         CM_KEY_VALUE KeyValue;
         CM_KEY_SECURITY KeySecurity;
         CM_KEY_INDEX KeyIndex;
+        CM_BIG_DATA ValueData;
         HCELL_INDEX KeyList[ANYSIZE_ARRAY];
         WCHAR KeyString[ANYSIZE_ARRAY];
     } u;

@@ -1,0 +1,55 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Ogiltigt antal parametrar - Använd xcopy /? för hjälp\n"
+    STRING_INVPARM,  "Ogiltig parameter '%1' -  Använd xcopy /? för hjälp\n"
+    STRING_PAUSE,    "Tryck <enter> för att börja kopiera\n"
+    STRING_SIMCOPY,  "%1!d! fil(er) skulle kopieras\n"
+    STRING_COPY,     "%1!d! fil(er) kopierade\n"
+    STRING_QISDIR,   "Är '%1' ett filnamn eller en katalog\npå målet?\n(F - Fil, K - Katalog)\n"
+    STRING_SRCPROMPT,"%1? (Ja|Nej)\n"
+    STRING_OVERWRITE,"Skriv över %1? (Ja|Nej|Alla)\n"
+    STRING_COPYFAIL, "Kunde inte kopiera '%1' till '%2'; misslyckades med r/c %3!d!\n"
+    STRING_OPENFAIL, "Kunde inte öppna '%1'\n"
+    STRING_READFAIL, "Kunde inte läsa '%1'\n"
+    STRING_YES_CHAR, "J"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "K"
+
+    STRING_HELP,
+"XCOPY - Kopierar källfiler eller katalogträd till ett mål\n\
+\n\
+Syntax:\n\
+XCOPY källa [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Där:\n\
+\n\
+[/I]  Antag att målet är en katalog om målet inte existerar och\n\
+      två eller fler filer kopieras\n\
+[/S]  Kopiera kataloger och underkataloger\n\
+[/E]  Kopiera kataloger och underkataloger, inklusive tomma sådana\n\
+[/Q]  Tyst läge: Lista inte filnamn under kopiering\n\
+[/F]  Visa fulla käll- och målnamn under kopiering\n\
+[/L]  Simulerar operationen och visar namn som skulle kopieras\n\
+[/W]  Frågar innan kopieringen påbörjas\n\
+[/T]  Skapar tom katalogstruktur men kopierar inga filer\n\
+[/Y]  Fråga inte när filer skrivs över\n\
+[/-Y] Fråga innan filer skrivs över\n\
+[/P]  Fråga för varje källfil som kopieras.\n\
+[/N]  Kopiera som korta filnamn\n\
+[/U]  Kopiera enbart filer som redan existerar i destinationskatalogen\n\
+[/R]  Skriv över skrivskyddade filer\n\
+[/H]  Inkludera gömda filer och systemfiler i kopian\n\
+[/C]  Fortsätt även om ett fel uppstår under kopieringen\n\
+[/A]  Kopiera enbart filer markerade som arkiv\n\
+[/M]  Kopiera enbart filer markerade som arkiv, ta bort\n\
+      markeringen\n\
+[/D | /D:m-d-y] Kopiera nya filer eller de ändrade efter angivet datum.\n\
+\t\tOm inget datum angivits utförs endast kopiering om målet är\n\
+\t\täldre än källan\n\n"
+
+}

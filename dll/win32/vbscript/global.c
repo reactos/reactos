@@ -19,6 +19,7 @@
 #include "vbscript.h"
 
 #include <math.h>
+#include <wingdi.h>
 #include <mshtmhst.h>
 
 #define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
@@ -85,6 +86,15 @@ static HRESULT return_bstr(VARIANT *res, BSTR str)
     return S_OK;
 }
 
+static HRESULT return_bool(VARIANT *res, BOOL val)
+{
+    if(res) {
+        V_VT(res) = VT_BOOL;
+        V_BOOL(res) = val ? VARIANT_TRUE : VARIANT_FALSE;
+    }
+    return S_OK;
+}
+
 static HRESULT return_short(VARIANT *res, short val)
 {
     if(res) {
@@ -97,22 +107,9 @@ static HRESULT return_short(VARIANT *res, short val)
 
 static HRESULT return_int(VARIANT *res, int val)
 {
-    if((short)val == val)
-        return return_short(res, val);
-
     if(res) {
         V_VT(res) = VT_I4;
         V_I4(res) = val;
-    }
-
-    return S_OK;
-}
-
-static HRESULT return_bool(VARIANT *res, int val)
-{
-    if(res) {
-        V_VT(res) = VT_BOOL;
-        V_BOOL(res) = val != 0 ? VARIANT_TRUE : VARIANT_FALSE;
     }
 
     return S_OK;
@@ -123,6 +120,16 @@ static inline HRESULT return_double(VARIANT *res, double val)
     if(res) {
         V_VT(res) = VT_R8;
         V_R8(res) = val;
+    }
+
+    return S_OK;
+}
+
+static inline HRESULT return_float(VARIANT *res, float val)
+{
+    if(res) {
+        V_VT(res) = VT_R4;
+        V_R4(res) = val;
     }
 
     return S_OK;
@@ -146,75 +153,29 @@ static inline HRESULT return_date(VARIANT *res, double date)
 
 HRESULT to_int(VARIANT *v, int *ret)
 {
-    if(V_VT(v) == (VT_BYREF|VT_VARIANT))
-        v = V_VARIANTREF(v);
+    VARIANT r;
+    HRESULT hres;
 
-    switch(V_VT(v)) {
-    case VT_I2:
-        *ret = V_I2(v);
-        break;
-    case VT_I4:
-        *ret = V_I4(v);
-        break;
-    case VT_R8: {
-        double n = floor(V_R8(v)+0.5);
-        INT32 i;
+    V_VT(&r) = VT_EMPTY;
+    hres = VariantChangeType(&r, v, 0, VT_I4);
+    if(FAILED(hres))
+        return hres;
 
-        if(!is_int32(n)) {
-            FIXME("%lf is out of int range\n", n);
-            return E_FAIL;
-        }
-
-        /* Round half to even */
-        i = n;
-        if(i%2 && n-V_R8(v) == 0.5)
-            i--;
-
-        *ret = i;
-        break;
-    }
-    case VT_BOOL:
-        *ret = V_BOOL(v) ? -1 : 0;
-        break;
-    default:
-        FIXME("not supported %s\n", debugstr_variant(v));
-        return E_NOTIMPL;
-    }
-
+    *ret = V_I4(&r);
     return S_OK;
 }
 
 static HRESULT to_double(VARIANT *v, double *ret)
 {
-    switch(V_VT(v)) {
-    case VT_I2:
-        *ret = V_I2(v);
-        break;
-    case VT_I4:
-        *ret = V_I4(v);
-        break;
-    case VT_R4:
-        *ret = V_R4(v);
-        break;
-    case VT_R8:
-        *ret = V_R8(v);
-        break;
-    case VT_BSTR: {
-        VARIANT dst;
-        HRESULT hres;
+    VARIANT dst;
+    HRESULT hres;
 
-        V_VT(&dst) = VT_EMPTY;
-        hres = VariantChangeType(&dst, v, VARIANT_LOCALBOOL, VT_R8);
-        if(FAILED(hres))
-            return hres;
-        *ret = V_R8(&dst);
-        break;
-    }
-    default:
-        FIXME("arg %s not supported\n", debugstr_variant(v));
-        return E_NOTIMPL;
-    }
+    V_VT(&dst) = VT_EMPTY;
+    hres = VariantChangeType(&dst, v, 0, VT_R8);
+    if(FAILED(hres))
+        return hres;
 
+    *ret = V_R8(&dst);
     return S_OK;
 }
 
@@ -243,11 +204,12 @@ static HRESULT set_object_site(script_ctx_t *ctx, IUnknown *obj)
         return S_OK;
 
     ax_site = create_ax_site(ctx);
-    if(ax_site)
+    if(ax_site) {
         hres = IObjectWithSite_SetSite(obj_site, ax_site);
+        IUnknown_Release(ax_site);
+    }
     else
         hres = E_OUTOFMEMORY;
-    IUnknown_Release(ax_site);
     IObjectWithSite_Release(obj_site);
     return hres;
 }
@@ -323,14 +285,15 @@ static IUnknown *create_object(script_ctx_t *ctx, const WCHAR *progid)
     return obj;
 }
 
-static HRESULT show_msgbox(script_ctx_t *ctx, BSTR prompt, VARIANT *res)
+static HRESULT show_msgbox(script_ctx_t *ctx, BSTR prompt, unsigned type, BSTR orig_title, VARIANT *res)
 {
     SCRIPTUICHANDLING uic_handling = SCRIPTUICHANDLING_ALLOW;
     IActiveScriptSiteUIControl *ui_control;
     IActiveScriptSiteWindow *acts_window;
+    WCHAR *title_buf = NULL;
     const WCHAR *title;
     HWND hwnd = NULL;
-    int ret;
+    int ret = 0;
     HRESULT hres;
 
     hres = IActiveScriptSite_QueryInterface(ctx->site, &IID_IActiveScriptSiteUIControl, (void**)&ui_control);
@@ -351,23 +314,43 @@ static HRESULT show_msgbox(script_ctx_t *ctx, BSTR prompt, VARIANT *res)
         return E_FAIL;
     }
 
-    title = (ctx->safeopt & INTERFACE_USES_SECURITY_MANAGER) ? vbscriptW : emptyW;
-
     hres = IActiveScriptSite_QueryInterface(ctx->site, &IID_IActiveScriptSiteWindow, (void**)&acts_window);
     if(FAILED(hres)) {
         FIXME("No IActiveScriptSiteWindow\n");
         return hres;
     }
 
+    if(ctx->safeopt & INTERFACE_USES_SECURITY_MANAGER) {
+        if(orig_title && *orig_title) {
+            WCHAR *ptr;
+
+            title = title_buf = heap_alloc(sizeof(vbscriptW) + (strlenW(orig_title)+2)*sizeof(WCHAR));
+            if(!title)
+                return E_OUTOFMEMORY;
+
+            memcpy(title_buf, vbscriptW, sizeof(vbscriptW));
+            ptr = title_buf + sizeof(vbscriptW)/sizeof(WCHAR)-1;
+
+            *ptr++ = ':';
+            *ptr++ = ' ';
+            strcpyW(ptr, orig_title);
+        }else {
+            title = vbscriptW;
+        }
+    }else {
+        title = orig_title ? orig_title : emptyW;
+    }
+
     hres = IActiveScriptSiteWindow_GetWindow(acts_window, &hwnd);
     if(SUCCEEDED(hres)) {
         hres = IActiveScriptSiteWindow_EnableModeless(acts_window, FALSE);
         if(SUCCEEDED(hres)) {
-            ret = MessageBoxW(hwnd, prompt, title, MB_OK);
+            ret = MessageBoxW(hwnd, prompt, title, type);
             hres = IActiveScriptSiteWindow_EnableModeless(acts_window, TRUE);
         }
     }
 
+    heap_free(title_buf);
     IActiveScriptSiteWindow_Release(acts_window);
     if(FAILED(hres)) {
         FIXME("failed: %08x\n", hres);
@@ -379,64 +362,109 @@ static HRESULT show_msgbox(script_ctx_t *ctx, BSTR prompt, VARIANT *res)
 
 static HRESULT Global_CCur(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Global_CInt(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
-{
-    int val;
+    VARIANT v;
     HRESULT hres;
 
     TRACE("%s\n", debugstr_variant(arg));
 
     assert(args_cnt == 1);
 
-    hres = to_int(arg, &val);
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, 0, VT_CY);
     if(FAILED(hres))
         return hres;
 
-    return return_int(res, val);
+    if(!res) {
+        VariantClear(&v);
+        return DISP_E_BADVARTYPE;
+    }
+
+    *res = v;
+    return S_OK;
 }
 
-static HRESULT Global_CLng(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
+static HRESULT Global_CInt(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
-}
+    VARIANT v;
+    HRESULT hres;
 
-static HRESULT Global_CBool(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
-{
-    int val;
     TRACE("%s\n", debugstr_variant(arg));
 
     assert(args_cnt == 1);
 
-    switch(V_VT(arg)) {
-    case VT_I2:
-        val = V_I2(arg);
-        break;
-    case VT_I4:
-        val = V_I4(arg);
-        break;
-    case VT_R4:
-	val = V_R4(arg) > 0.0 || V_R4(arg) < 0.0;
-        break;
-    case VT_R8:
-        val = V_R8(arg) > 0.0 || V_R8(arg) < 0.0;
-        break;
-    default:
-        ERR("Not a numeric value: %s\n", debugstr_variant(arg));
-        return E_FAIL;
-    }
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, 0, VT_I2);
+    if(FAILED(hres))
+        return hres;
 
-    return return_bool(res, val);
+    if(!res)
+        return DISP_E_BADVARTYPE;
+    else {
+        *res = v;
+        return S_OK;
+    }
+}
+
+static HRESULT Global_CLng(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
+{
+    int i;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = to_int(arg, &i);
+    if(FAILED(hres))
+        return hres;
+    if(!res)
+        return DISP_E_BADVARTYPE;
+
+    return return_int(res, i);
+}
+
+static HRESULT Global_CBool(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
+{
+    VARIANT v;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, VARIANT_LOCALBOOL, VT_BOOL);
+    if(FAILED(hres))
+        return hres;
+
+    if(res)
+        *res = v;
+    else
+        VariantClear(&v);
+    return S_OK;
 }
 
 static HRESULT Global_CByte(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, VARIANT_LOCALBOOL, VT_UI1);
+    if(FAILED(hres))
+        return hres;
+
+    if(!res) {
+        VariantClear(&v);
+        return DISP_E_BADVARTYPE;
+    }
+
+    *res = v;
+    return S_OK;
 }
 
 static HRESULT Global_CDate(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -447,14 +475,45 @@ static HRESULT Global_CDate(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VAR
 
 static HRESULT Global_CDbl(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, 0, VT_R8);
+    if(FAILED(hres))
+        return hres;
+
+    if(!res)
+        return DISP_E_BADVARTYPE;
+    else {
+        *res = v;
+        return S_OK;
+    }
 }
 
 static HRESULT Global_CSng(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = VariantChangeType(&v, arg, 0, VT_R4);
+    if(FAILED(hres))
+        return hres;
+
+    if(!res)
+        return DISP_E_BADVARTYPE;
+
+   *res = v;
+   return S_OK;
 }
 
 static HRESULT Global_CStr(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -480,6 +539,8 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 {
     WCHAR buf[17], *ptr;
     DWORD n;
+    HRESULT hres;
+    int ret;
 
     TRACE("%s\n", debugstr_variant(arg));
 
@@ -487,19 +548,16 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
     case VT_I2:
         n = (WORD)V_I2(arg);
         break;
-    case VT_I4:
-        n = V_I4(arg);
-        break;
-    case VT_EMPTY:
-        n = 0;
-        break;
     case VT_NULL:
         if(res)
             V_VT(res) = VT_NULL;
         return S_OK;
     default:
-        FIXME("unsupported type %s\n", debugstr_variant(arg));
-        return E_NOTIMPL;
+        hres = to_int(arg, &ret);
+        if(FAILED(hres))
+            return hres;
+        else
+            n = ret;
     }
 
     buf[16] = 0;
@@ -520,14 +578,57 @@ static HRESULT Global_Hex(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 
 static HRESULT Global_Oct(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    WCHAR buf[23], *ptr;
+    DWORD n;
+    int ret;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    switch(V_VT(arg)) {
+    case VT_I2:
+        n = (WORD)V_I2(arg);
+        break;
+    case VT_NULL:
+        if(res)
+            V_VT(res) = VT_NULL;
+        return S_OK;
+    default:
+        hres = to_int(arg, &ret);
+        if(FAILED(hres))
+            return hres;
+        else
+            n = ret;
+    }
+
+    buf[22] = 0;
+    ptr = buf + 21;
+
+    if(n) {
+        do {
+            *ptr-- = '0' + (n & 0x7);
+            n >>= 3;
+        }while(n);
+        ptr++;
+    }else {
+        *ptr = '0';
+    }
+
+    return return_string(res, ptr);
 }
 
 static HRESULT Global_VarType(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    if(V_VT(arg) & ~VT_TYPEMASK) {
+        FIXME("not supported %s\n", debugstr_variant(arg));
+        return E_NOTIMPL;
+    }
+
+    return return_short(res, V_VT(arg));
 }
 
 static HRESULT Global_IsDate(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -564,8 +665,16 @@ static HRESULT Global_IsNull(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VA
 
 static HRESULT Global_IsNumeric(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = to_double(arg, &d);
+
+    return return_bool(res, SUCCEEDED(hres));
 }
 
 static HRESULT Global_IsArray(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -587,46 +696,94 @@ static HRESULT Global_IsObject(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, 
     return S_OK;
 }
 
-static HRESULT Global_Ant(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
+static HRESULT Global_Atn(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    return return_double(res, atan(d));
 }
 
 static HRESULT Global_Cos(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    return return_double(res, cos(d));
 }
 
 static HRESULT Global_Sin(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    return return_double(res, sin(d));
 }
 
 static HRESULT Global_Tan(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    return return_double(res, tan(d));
 }
 
 static HRESULT Global_Exp(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    return return_double(res, exp(d));
 }
 
 static HRESULT Global_Log(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    if(d <= 0)
+        return MAKE_VBSERROR(VBSE_ILLEGAL_FUNC_CALL);
+    else
+        return return_double(res, log(d));
 }
 
 static HRESULT Global_Sqr(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    double d;
+
+    hres = to_double(arg, &d);
+    if(FAILED(hres))
+        return hres;
+
+    if(d < 0)
+        return MAKE_VBSERROR(VBSE_ILLEGAL_FUNC_CALL);
+    else
+        return return_double(res, sqrt(d));
 }
 
 static HRESULT Global_Randomize(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -643,8 +800,13 @@ static HRESULT Global_Rnd(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 
 static HRESULT Global_Timer(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    SYSTEMTIME lt;
+    double sec;
+
+    GetLocalTime(&lt);
+    sec = lt.wHour * 3600 + lt.wMinute * 60 + lt.wSecond + lt.wMilliseconds / 1000.0;
+    return return_float(res, sec);
+
 }
 
 static HRESULT Global_LBound(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -661,8 +823,24 @@ static HRESULT Global_UBound(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VA
 
 static HRESULT Global_RGB(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    int i, color[3];
+
+    TRACE("%s %s %s\n", debugstr_variant(arg), debugstr_variant(arg + 1), debugstr_variant(arg + 2));
+
+    assert(args_cnt == 3);
+
+    for(i = 0; i < 3; i++) {
+        hres = to_int(arg + i, color + i);
+        if(FAILED(hres))
+            return hres;
+        if(color[i] > 255)
+            color[i] = 255;
+        if(color[i] < 0)
+            return MAKE_VBSERROR(VBSE_ILLEGAL_FUNC_CALL);
+    }
+
+    return return_int(res, RGB(color[0], color[1], color[2]));
 }
 
 static HRESULT Global_Len(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1123,9 +1301,15 @@ static HRESULT Global_Asc(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
     return E_NOTIMPL;
 }
 
+/* The function supports only single-byte and double-byte character sets. It
+ * ignores language specified by IActiveScriptSite::GetLCID. The argument needs
+ * to be in range of short or unsigned short. */
 static HRESULT Global_Chr(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    int c;
+    int cp, c, len = 0;
+    CPINFO cpi;
+    WCHAR ch;
+    char buf[2];
     HRESULT hres;
 
     TRACE("%s\n", debugstr_variant(arg));
@@ -1134,14 +1318,26 @@ static HRESULT Global_Chr(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
     if(FAILED(hres))
         return hres;
 
-    if(c < 0 || c >= 0x100) {
-        FIXME("invalid arg\n");
+    cp = GetACP();
+    if(!GetCPInfo(cp, &cpi))
+        cpi.MaxCharSize = 1;
+
+    if((c!=(short)c && c!=(unsigned short)c) ||
+            (unsigned short)c>=(cpi.MaxCharSize>1 ? 0x10000 : 0x100)) {
+        WARN("invalid arg %d\n", c);
+        return MAKE_VBSERROR(VBSE_ILLEGAL_FUNC_CALL);
+    }
+
+    if(c>>8)
+        buf[len++] = c>>8;
+    if(!len || IsDBCSLeadByteEx(cp, buf[0]))
+        buf[len++] = c;
+    if(!MultiByteToWideChar(CP_ACP, 0, buf, len, &ch, 1)) {
+        WARN("invalid arg %d, cp %d\n", c, cp);
         return E_FAIL;
     }
 
     if(res) {
-        WCHAR ch = c;
-
         V_VT(res) = VT_BSTR;
         V_BSTR(res) = SysAllocStringLen(&ch, 1);
         if(!V_BSTR(res))
@@ -1164,26 +1360,86 @@ static HRESULT Global_ChrW(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARI
 
 static HRESULT Global_Abs(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    VARIANT dst;
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = VarAbs(arg, &dst);
+    if(FAILED(hres))
+        return hres;
+
+    if (res)
+        *res = dst;
+    else
+        VariantClear(&dst);
+
+    return S_OK;
 }
 
 static HRESULT Global_Fix(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    VARIANT dst;
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = VarFix(arg, &dst);
+    if(FAILED(hres))
+        return hres;
+
+    if (res)
+        *res = dst;
+    else
+        VariantClear(&dst);
+
+    return S_OK;
 }
 
 static HRESULT Global_Int(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    VARIANT dst;
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = VarInt(arg, &dst);
+    if(FAILED(hres))
+        return hres;
+
+    if (res)
+        *res = dst;
+    else
+        VariantClear(&dst);
+
+    return S_OK;
 }
 
 static HRESULT Global_Sgn(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    double v;
+    short val;
+    HRESULT hres;
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    if(V_VT(arg) == VT_NULL)
+        return MAKE_VBSERROR(VBSE_ILLEGAL_NULL_USE);
+
+    hres = to_double(arg, &v);
+    if (FAILED(hres))
+        return hres;
+
+    val = v == 0 ? 0 : (v > 0 ? 1 : -1);
+    return return_short(res, val);
 }
 
 static HRESULT Global_Now(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1200,14 +1456,38 @@ static HRESULT Global_Now(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIA
 
 static HRESULT Global_Date(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    SYSTEMTIME lt;
+    UDATE ud;
+    DATE date;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    GetLocalTime(&lt);
+    ud.st = lt;
+    ud.wDayOfYear = 0;
+    hres = VarDateFromUdateEx(&ud, 0, VAR_DATEVALUEONLY, &date);
+    if(FAILED(hres))
+        return hres;
+    return return_date(res, date);
 }
 
 static HRESULT Global_Time(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    SYSTEMTIME lt;
+    UDATE ud;
+    DATE time;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    GetLocalTime(&lt);
+    ud.st = lt;
+    ud.wDayOfYear = 0;
+    hres = VarDateFromUdateEx(&ud, 0, VAR_TIMEVALUEONLY, &time);
+    if(FAILED(hres))
+        return hres;
+    return return_date(res, time);
 }
 
 static HRESULT Global_Day(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1284,22 +1564,34 @@ static HRESULT Global_InputBox(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, 
 
 static HRESULT Global_MsgBox(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
 {
-    BSTR prompt;
+    BSTR prompt, title = NULL;
+    int type = MB_OK;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(args_cnt != 1) {
-        FIXME("unsupported arg_cnt %d\n", args_cnt);
-        return E_NOTIMPL;
-    }
+    assert(1 <= args_cnt && args_cnt <= 5);
 
     hres = to_string(args, &prompt);
     if(FAILED(hres))
         return hres;
 
-    hres = show_msgbox(This->desc->ctx, prompt, res);
+    if(args_cnt > 1)
+        hres = to_int(args+1, &type);
+
+    if(SUCCEEDED(hres) && args_cnt > 2)
+        hres = to_string(args+2, &title);
+
+    if(SUCCEEDED(hres) && args_cnt > 3) {
+        FIXME("unsupported arg_cnt %d\n", args_cnt);
+        hres = E_NOTIMPL;
+    }
+
+    if(SUCCEEDED(hres))
+        hres = show_msgbox(This->desc->ctx, prompt, type, title, res);
+
     SysFreeString(prompt);
+    SysFreeString(title);
     return hres;
 }
 
@@ -1408,8 +1700,52 @@ static HRESULT Global_DatePart(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, 
 
 static HRESULT Global_TypeName(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    static const WCHAR ByteW[]     = {'B', 'y', 't', 'e', 0};
+    static const WCHAR IntegerW[]  = {'I', 'n', 't', 'e', 'g', 'e', 'r', 0};
+    static const WCHAR LongW[]     = {'L', 'o', 'n', 'g', 0};
+    static const WCHAR SingleW[]   = {'S', 'i', 'n', 'g', 'l', 'e', 0};
+    static const WCHAR DoubleW[]   = {'D', 'o', 'u', 'b', 'l', 'e', 0};
+    static const WCHAR CurrencyW[] = {'C', 'u', 'r', 'r', 'e', 'n', 'c', 'y', 0};
+    static const WCHAR DecimalW[]  = {'D', 'e', 'c', 'i', 'm', 'a', 'l', 0};
+    static const WCHAR DateW[]     = {'D', 'a', 't', 'e', 0};
+    static const WCHAR StringW[]   = {'S', 't', 'r', 'i', 'n', 'g', 0};
+    static const WCHAR BooleanW[]  = {'B', 'o', 'o', 'l', 'e', 'a', 'n', 0};
+    static const WCHAR EmptyW[]    = {'E', 'm', 'p', 't', 'y', 0};
+    static const WCHAR NullW[]     = {'N', 'u', 'l', 'l', 0};
+
+    TRACE("(%s)\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    switch(V_VT(arg)) {
+        case VT_UI1:
+            return return_string(res, ByteW);
+        case VT_I2:
+            return return_string(res, IntegerW);
+        case VT_I4:
+            return return_string(res, LongW);
+        case VT_R4:
+            return return_string(res, SingleW);
+        case VT_R8:
+            return return_string(res, DoubleW);
+        case VT_CY:
+            return return_string(res, CurrencyW);
+        case VT_DECIMAL:
+            return return_string(res, DecimalW);
+        case VT_DATE:
+            return return_string(res, DateW);
+        case VT_BSTR:
+            return return_string(res, StringW);
+        case VT_BOOL:
+            return return_string(res, BooleanW);
+        case VT_EMPTY:
+            return return_string(res, EmptyW);
+        case VT_NULL:
+            return return_string(res, NullW);
+        default:
+            FIXME("arg %s not supported\n", debugstr_variant(arg));
+            return E_NOTIMPL;
+        }
 }
 
 static HRESULT Global_Array(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1471,10 +1807,64 @@ static HRESULT Global_StrReverse(vbdisp_t *This, VARIANT *arg, unsigned args_cnt
     return return_bstr(res, ret);
 }
 
-static HRESULT Global_InStrRev(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
+static HRESULT Global_InStrRev(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    int start, ret = 0;
+    BSTR str1, str2;
+    HRESULT hres;
+
+    TRACE("%s %s arg_cnt=%u\n", debugstr_variant(args), debugstr_variant(args+1), args_cnt);
+
+    if(args_cnt > 3) {
+        FIXME("Unsupported args\n");
+        return E_NOTIMPL;
+    }
+
+    assert(2 <= args_cnt && args_cnt <= 4);
+
+    if(V_VT(args) == VT_NULL || V_VT(args+1) == VT_NULL || (args_cnt > 2 && V_VT(args+2) == VT_NULL))
+        return MAKE_VBSERROR(VBSE_ILLEGAL_NULL_USE);
+
+    hres = to_string(args, &str1);
+    if(FAILED(hres))
+        return hres;
+
+    hres = to_string(args+1, &str2);
+    if(SUCCEEDED(hres)) {
+        if(args_cnt > 2) {
+            hres = to_int(args+2, &start);
+            if(SUCCEEDED(hres) && start <= 0) {
+                FIXME("Unsupported start %d\n", start);
+                hres = E_NOTIMPL;
+            }
+        }else {
+            start = SysStringLen(str1);
+        }
+    } else {
+        str2 = NULL;
+    }
+
+    if(SUCCEEDED(hres)) {
+        const WCHAR *ptr;
+        size_t len;
+
+        len = SysStringLen(str2);
+        if(start >= len && start <= SysStringLen(str1)) {
+            for(ptr = str1+start-SysStringLen(str2); ptr >= str1; ptr--) {
+                if(!memcmp(ptr, str2, len*sizeof(WCHAR))) {
+                    ret = ptr-str1+1;
+                    break;
+                }
+            }
+        }
+    }
+
+    SysFreeString(str1);
+    SysFreeString(str2);
+    if(FAILED(hres))
+        return hres;
+
+    return return_int(res, ret);
 }
 
 static HRESULT Global_LoadPicture(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1485,26 +1875,38 @@ static HRESULT Global_LoadPicture(vbdisp_t *This, VARIANT *arg, unsigned args_cn
 
 static HRESULT Global_ScriptEngine(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 0);
+
+    return return_string(res, vbscriptW);
 }
 
 static HRESULT Global_ScriptEngineMajorVersion(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 0);
+
+    return return_int(res, VBSCRIPT_MAJOR_VERSION);
 }
 
 static HRESULT Global_ScriptEngineMinorVersion(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 0);
+
+    return return_int(res, VBSCRIPT_MINOR_VERSION);
 }
 
 static HRESULT Global_ScriptEngineBuildVersion(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 0);
+
+    return return_int(res, VBSCRIPT_BUILD_VERSION);
 }
 
 static HRESULT Global_FormatNumber(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -1765,7 +2167,7 @@ static const builtin_prop_t global_props[] = {
     {DISPID_GLOBAL_ISNUMERIC,                 Global_IsNumeric, 0, 1},
     {DISPID_GLOBAL_ISARRAY,                   Global_IsArray, 0, 1},
     {DISPID_GLOBAL_ISOBJECT,                  Global_IsObject, 0, 1},
-    {DISPID_GLOBAL_ATN,                       Global_Ant, 0, 1},
+    {DISPID_GLOBAL_ATN,                       Global_Atn, 0, 1},
     {DISPID_GLOBAL_COS,                       Global_Cos, 0, 1},
     {DISPID_GLOBAL_SIN,                       Global_Sin, 0, 1},
     {DISPID_GLOBAL_TAN,                       Global_Tan, 0, 1},

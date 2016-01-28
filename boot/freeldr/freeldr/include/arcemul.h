@@ -16,24 +16,3 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
-/* component.c */
-CONFIGURATION_COMPONENT* ArcGetChild(CONFIGURATION_COMPONENT *Current);
-CONFIGURATION_COMPONENT* ArcGetParent(CONFIGURATION_COMPONENT *Current);
-CONFIGURATION_COMPONENT* ArcGetPeer(CONFIGURATION_COMPONENT *Current);
-CONFIGURATION_COMPONENT* 
-ArcAddChild(
-    CONFIGURATION_COMPONENT *Current,
-    CONFIGURATION_COMPONENT *Template,
-    VOID *ConfigurationData);
-LONG
-ArcDeleteComponent(
-    CONFIGURATION_COMPONENT *ComponentToDelete);
-LONG
-ArcGetConfigurationData(
-    VOID* ConfigurationData,
-    CONFIGURATION_COMPONENT* Component);
-
-/* time.c */
-TIMEINFO* ArcGetTime(VOID);
-ULONG ArcGetRelativeTime(VOID);

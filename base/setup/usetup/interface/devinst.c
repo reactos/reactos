@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/interface/devinst.c
+ * FILE:            base/setup/usetup/interface/devinst.c
  * PURPOSE:         Device installation
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */

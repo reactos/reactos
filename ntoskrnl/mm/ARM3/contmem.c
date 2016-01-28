@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -205,6 +205,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
     //
     // And if we get here, it means no suitable physical memory runs were found
     //
+    KeLeaveGuardedRegion();
     return 0;
 }
 

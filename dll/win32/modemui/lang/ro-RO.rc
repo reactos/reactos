@@ -1,4 +1,4 @@
-/* 2011.12.07 - Fulea Ștefan: minor changes */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -28,10 +28,10 @@ BEGIN
     EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
     CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
     LTEXT "secunde", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
-    GROUPBOX "&Selecție țară/regiune", 1012, 6, 80, 225, 75
+    GROUPBOX "Sele&cție țară/regiune", 1012, 6, 80, 225, 75
     COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Opțiuni avansate port…", 1100, 107, 170, 125, 14
-    DEFPUSHBUTTON "Schimbare opțiuni implicite…", 3, 107, 188, 125, 14
+    DEFPUSHBUTTON "Schimbare opțiuni i&mplicite…", 3, 107, 188, 125, 14
 END
 
 IDD_GENERAL DIALOGEX 0, 0, 238, 210
@@ -89,7 +89,7 @@ BEGIN
     AUTOCHECKBOX "&Acest telefon are servicii de Sunete distinctive.", 1069, 19, 7, 177, 10
     CTEXT "Șablon de sunet", -1, 20, 21, 74, 8
     CTEXT "Tipul de apel", -1, 96, 21, 65, 8
-    LTEXT "Sunet &simplu:", 1088, 20, 37, 53, 8
+    LTEXT "Sunet si&mplu:", 1088, 20, 37, 53, 8
     COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Sunet &dublu:", 1089, 20, 57, 53, 8
     COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -169,7 +169,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "ISDN"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Schimbare &tip", -1, 11, 6, 217, 39
+    GROUPBOX "S&chimbare tip", -1, 11, 6, 217, 39
     COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "P&rimul număr:", -1, 11, 50, 217, 50
     EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER

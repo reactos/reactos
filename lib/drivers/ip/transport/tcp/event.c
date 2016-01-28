@@ -16,20 +16,6 @@
 
 #include "rosip.h"
 
-static const char * const tcp_state_str[] = {
-  "CLOSED",      
-  "LISTEN",      
-  "SYN_SENT",    
-  "SYN_RCVD",    
-  "ESTABLISHED", 
-  "FIN_WAIT_1",  
-  "FIN_WAIT_2",  
-  "CLOSE_WAIT",  
-  "CLOSING",     
-  "LAST_ACK",    
-  "TIME_WAIT"   
-};
-
 extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 
 static
@@ -365,7 +351,7 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
 }
 
 VOID
-TCPSendEventHandler(void *arg, u16_t space)
+TCPSendEventHandler(void *arg, const u16_t space)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;
@@ -485,7 +471,7 @@ TCPRecvEventHandler(void *arg)
 }
 
 VOID
-TCPConnectEventHandler(void *arg, err_t err)
+TCPConnectEventHandler(void *arg, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg;
     PTDI_BUCKET Bucket;

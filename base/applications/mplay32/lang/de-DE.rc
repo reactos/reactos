@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "&Gerät"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Eigenschaften", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Lautstärkeregelung", IDM_VOLUMECTL
@@ -43,7 +44,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Alle unterstützten (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_MODE_UNKNOWN "Unbekannt"
+    IDS_MODE_OPEN "Geöffnet"
+    IDS_MODE_STOP "Angehalten"
+    IDS_MODE_PLAY "Wiedergabe"
+    IDS_MODE_PAUSE "Pause"
+    IDS_MODE_RECORD "Aufnehmen"
+    IDS_MODE_SEEK "Spulen"
+    IDS_MODE_NOT_READY "Nicht bereit"
+    IDS_ALL_TYPES_FILTER "Alle unterstützten"
     IDS_TOOLTIP_PLAY "Wiedergabe"
     IDS_TOOLTIP_STOP "Stopp"
     IDS_TOOLTIP_EJECT "Auswerfen"
@@ -51,8 +60,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Schneller Rücklauf"
     IDS_TOOLTIP_SEEKFORW "Schneller Vorlauf"
     IDS_TOOLTIP_FORWARD "Weiter"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Abspielen"
     IDS_DEFAULTMCIERRMSG "Für diesen Fehler steht keine Beschreibung zur Verfügung."
-    IDS_UNKNOWNFILEEXT "Kann keinen Gerätetyp aus der angegebenen Dateinamenerweiterung ermitteln."
 END

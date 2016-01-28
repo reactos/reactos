@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/ps.h
+ * FILE:            ntoskrnl/include/internal/ps.h
  * PURPOSE:         Internal header for the Process Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -303,7 +303,7 @@ PspDestroyQuotaBlock(
 NTSTATUS
 NTAPI
 PspSetQuotaLimits(
-    _In_ HANDLE ProcessHandle,
+    _In_ PEPROCESS Process,
     _In_ ULONG Unused,
     _In_ PVOID QuotaLimits,
     _In_ ULONG QuotaLimitsLength,
@@ -313,13 +313,13 @@ PspSetQuotaLimits(
 //
 // VDM and LDT Support
 //
-NTSTATUS
+VOID
 NTAPI
 PspDeleteLdt(
     IN PEPROCESS Process
 );
 
-NTSTATUS
+VOID
 NTAPI
 PspDeleteVdmObjects(
     IN PEPROCESS Process
@@ -413,6 +413,17 @@ NTAPI
 PspIsProcessExiting(IN PEPROCESS Process);
 
 //
+// Apphelp functions
+//
+NTSTATUS
+NTAPI
+ApphelpCacheInitialize(VOID);
+
+VOID
+NTAPI
+ApphelpCacheShutdown(VOID);
+
+//
 // Global data inside the Process Manager
 //
 extern ULONG PspTraceLevel;
@@ -440,6 +451,7 @@ extern PVOID PspSystemDllBase;
 extern BOOLEAN PspUseJobSchedulingClasses;
 extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
 extern ULONG PsRawPrioritySeparation;
+extern ULONG PsPrioritySeparation;
 extern POBJECT_TYPE _PsThreadType, _PsProcessType;
 extern PTOKEN PspBootAccessToken;
 extern GENERIC_MAPPING PspJobMapping;

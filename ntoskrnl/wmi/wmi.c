@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/wmi.c
+ * FILE:            ntoskrnl/wmi/wmi.c
  * PURPOSE:         I/O Windows Management Instrumentation (WMI) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -9,10 +9,56 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define INITGUID
+#include <wmiguid.h>
+#include <wmidata.h>
+#include <wmistr.h>
+
+#include "wmip.h"
+
 #define NDEBUG
 #include <debug.h>
 
+typedef PVOID PWMI_LOGGER_INFORMATION; // FIXME
+
+typedef enum _WMI_CLOCK_TYPE
+{
+    WMICT_DEFAULT,
+    WMICT_SYSTEMTIME,
+    WMICT_PERFCOUNTER,
+    WMICT_PROCESS,
+    WMICT_THREAD,
+    WMICT_CPUCYCLE
+} WMI_CLOCK_TYPE;
+
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+WmiInitialize(
+    VOID)
+{
+    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\WMIxWDM");
+    NTSTATUS Status;
+
+    /* Initialize the GUID object type */
+    Status = WmipInitializeGuidObjectType();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WmipInitializeGuidObjectType() failed: 0x%lx\n", Status);
+        return FALSE;
+    }
+
+    /* Create the WMI driver */
+    Status = IoCreateDriver(&DriverName, WmipDriverEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create WMI driver: 0x%lx\n", Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * @unimplemented
@@ -77,12 +123,28 @@ IoWMIWriteEvent(IN PVOID WnodeEventItem)
  */
 NTSTATUS
 NTAPI
-IoWMIOpenBlock(IN GUID *DataBlockGuid,
-               IN ULONG DesiredAccess,
-               OUT PVOID *DataBlockObject)
+IoWMIOpenBlock(
+    _In_ LPCGUID DataBlockGuid,
+    _In_ ULONG DesiredAccess,
+    _Out_ PVOID *DataBlockObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    HANDLE GuidObjectHandle;
+    NTSTATUS Status;
+
+    /* Open the GIOD object */
+    Status = WmipOpenGuidObject(DataBlockGuid,
+                                DesiredAccess,
+                                KernelMode,
+                                &GuidObjectHandle,
+                                DataBlockObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WmipOpenGuidObject failed: 0x%lx\n", Status);
+        return Status;
+    }
+
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -90,12 +152,39 @@ IoWMIOpenBlock(IN GUID *DataBlockGuid,
  */
 NTSTATUS
 NTAPI
-IoWMIQueryAllData(IN PVOID DataBlockObject,
-                  IN OUT ULONG *InOutBufferSize,
-                  OUT PVOID OutBuffer)
+IoWMIQueryAllData(
+    IN PVOID DataBlockObject,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PWMIP_GUID_OBJECT GuidObject;
+    NTSTATUS Status;
+
+
+    Status = ObReferenceObjectByPointer(DataBlockObject,
+                                        WMIGUID_QUERY,
+                                        WmipGuidObjectType,
+                                        KernelMode);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    GuidObject = DataBlockObject;
+
+    /* Huge HACK! */
+    if (IsEqualGUID(&GuidObject->Guid, &MSSmBios_RawSMBiosTables_GUID))
+    {
+        Status = WmipQueryRawSMBiosTables(InOutBufferSize, OutBuffer);
+    }
+    else
+    {
+        Status = STATUS_NOT_SUPPORTED;
+    }
+
+    ObDereferenceObject(DataBlockObject);
+
+    return Status;
 }
 
 /*
@@ -267,6 +356,63 @@ WmiTraceMessageVa(IN TRACEHANDLE LoggerHandle,
                   IN LPGUID MessageGuid,
                   IN USHORT MessageNumber,
                   IN va_list MessageArgList)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiFlushTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+LONG64
+FASTCALL
+WmiGetClock(IN WMI_CLOCK_TYPE ClockType,
+            IN PVOID Context)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiQueryTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiStartTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+    
+NTSTATUS
+NTAPI
+WmiStopTrace(IN PWMI_LOGGER_INFORMATION LoggerInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+FASTCALL
+WmiTraceFastEvent(IN PWNODE_HEADER Wnode)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+WmiUpdateTrace(IN OUT PWMI_LOGGER_INFORMATION LoggerInfo)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

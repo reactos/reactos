@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/keytrans.c
+ * FILE:            base/setup/usetup/native/utils/keytrans.c
  * PURPOSE:         Console support functions: keyboard translation
  * PROGRAMMER:      Tinus
  *

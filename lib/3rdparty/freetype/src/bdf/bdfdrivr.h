@@ -43,7 +43,7 @@ FT_BEGIN_HEADER
 
   typedef struct  BDF_encoding_el_
   {
-    FT_ULong   enc;
+    FT_Long    enc;
     FT_UShort  glyph;
 
   } BDF_encoding_el;

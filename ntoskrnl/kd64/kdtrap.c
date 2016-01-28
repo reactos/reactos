@@ -58,13 +58,14 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
 {
     BOOLEAN Enable, Handled;
     PKPRCB Prcb;
-    NTSTATUS ExceptionCode = ExceptionRecord->ExceptionCode;
+    NTSTATUS ExceptionCode;
 
     /*
      * Determine whether to pass the exception to the debugger.
      * First, check if this is a "debug exception", meaning breakpoint
      * (including debug service), single step and assertion failure exceptions.
      */
+    ExceptionCode = ExceptionRecord->ExceptionCode;
     if ((ExceptionCode == STATUS_BREAKPOINT) ||
         (ExceptionCode == STATUS_SINGLE_STEP) ||
         (ExceptionCode == STATUS_ASSERTION_FAILURE))
@@ -92,8 +93,8 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     else if (SecondChanceException == FALSE)
     {
         /*
-         * This isn't a debug exception and the stop-on-exception flag isn't
-         * set, so don't bother
+         * This isn't a debug exception and the stop-on-exception flag isn't set,
+         * so don't bother handling it
          */
         return FALSE;
     }
@@ -107,7 +108,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
      */
     Prcb = KeGetCurrentPrcb();
     KiSaveProcessorControlState(&Prcb->ProcessorState);
-    RtlCopyMemory(&Prcb->ProcessorState.ContextFrame,
+    KdpMoveMemory(&Prcb->ProcessorState.ContextFrame,
                   ContextRecord,
                   sizeof(CONTEXT));
 
@@ -118,7 +119,7 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
                                             SecondChanceException);
 
     /* Now restore the processor state, manually again. */
-    RtlCopyMemory(ContextRecord,
+    KdpMoveMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
@@ -138,7 +139,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         IN KPROCESSOR_MODE PreviousMode,
         IN BOOLEAN SecondChanceException)
 {
-    BOOLEAN Unload = FALSE;
+    BOOLEAN Unload;
     ULONG_PTR ProgramCounter;
     BOOLEAN Handled;
     NTSTATUS ReturnStatus;
@@ -156,6 +157,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         ProgramCounter = KeGetContextPc(ContextRecord);
 
         /* Check what kind of operation was requested from us */
+        Unload = FALSE;
         switch (ExceptionRecord->ExceptionInformation[0])
         {
             /* DbgPrint */
@@ -164,27 +166,24 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                 /* Call the worker routine */
                 ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(ContextRecord),
                                         (ULONG)KdpGetParameterFour(ContextRecord),
-                                        (LPSTR)ExceptionRecord->
-                                        ExceptionInformation[1],
-                                        (USHORT)ExceptionRecord->
-                                        ExceptionInformation[2],
+                                        (LPSTR)ExceptionRecord->ExceptionInformation[1],
+                                        (USHORT)ExceptionRecord->ExceptionInformation[2],
                                         PreviousMode,
                                         TrapFrame,
                                         ExceptionFrame,
                                         &Handled);
 
                 /* Update the return value for the caller */
-                KeSetContextReturnRegister(ContextRecord, ReturnStatus);
+                KeSetContextReturnRegister(ContextRecord,
+                                           ReturnStatus);
                 break;
 
             /* DbgPrompt */
             case BREAKPOINT_PROMPT:
 
                 /* Call the worker routine */
-                ReturnLength = KdpPrompt((LPSTR)ExceptionRecord->
-                                         ExceptionInformation[1],
-                                         (USHORT)ExceptionRecord->
-                                         ExceptionInformation[2],
+                ReturnLength = KdpPrompt((LPSTR)ExceptionRecord->ExceptionInformation[1],
+                                         (USHORT)ExceptionRecord->ExceptionInformation[2],
                                          (LPSTR)KdpGetParameterThree(ContextRecord),
                                          (USHORT)KdpGetParameterFour(ContextRecord),
                                          PreviousMode,
@@ -276,9 +275,10 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
         IN KPROCESSOR_MODE PreviousMode,
         IN BOOLEAN SecondChanceException)
 {
-    ULONG_PTR ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
+    ULONG_PTR ExceptionCommand;
 
     /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
+    ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
         (ExceptionRecord->NumberParameters > 0) &&
         ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window timers messages
- * FILE:             subsystems/win32/win32k/ntuser/timer.c
+ * FILE:             win32ss/user/ntuser/timer.c
  * PROGRAMER:        Gunnar
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Michael Martin (michael.martin@reactos.org)
@@ -315,12 +315,12 @@ SystemTimerProc(HWND hwnd,
           if ( pDesk->dwDTFlags & DF_TME_HOVER &&
                pWnd == pDesk->spwndTrack )
           {
-             Point = pWnd->head.pti->MessageQueue->MouseMoveMsg.pt;
+             Point = gpsi->ptCursor;
              if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {
-                   wParam = UserGetMouseButtonsState();
+                   wParam = MsqGetDownKeyState(pWnd->head.pti->MessageQueue);
                    Msg = WM_MOUSEHOVER;
 
                    if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
@@ -344,6 +344,17 @@ SystemTimerProc(HWND hwnd,
           }
        }
        return; // Not this window so just return.
+
+     case ID_EVENT_SYSTIMER_FLASHWIN:
+       {
+          FLASHWINFO fwi =
+            {sizeof(FLASHWINFO),
+             UserHMGetHandle(pWnd),
+             FLASHW_SYSTIMER,0,0};
+
+          IntFlashWindowEx(pWnd, &fwi);
+       }
+       return;
 
      default:
        ERR("System Timer Proc invalid id %u!\n", idEvent);
@@ -405,7 +416,7 @@ PostTimerMessages(PWND Window)
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
 
-           MsqPostMessage(pti, &Msg, FALSE, (QS_POSTMESSAGE|QS_ALLPOSTMESSAGE), 0);
+           MsqPostMessage(pti, &Msg, FALSE, (QS_POSTMESSAGE|QS_ALLPOSTMESSAGE), 0, 0);
            pTmr->flags &= ~TMRF_READY;
            ClearMsgBitsMask(pti, QS_TIMER);
            Hit = TRUE;
@@ -560,7 +571,7 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   TRACE("IntKillTimer Window %p id %p systemtimer %s\n",
+   TRACE("IntKillTimer Window %p id %uI systemtimer %s\n",
          Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
    TimerEnterExclusive();
@@ -591,7 +602,7 @@ InitTimerImpl(VOID)
 
    ExInitializeFastMutex(Mutex);
 
-   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
+   BitmapBytes = ALIGN_UP_BY(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {
@@ -685,8 +696,6 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserValidateTimerCallback(
-    HWND hWnd,
-    WPARAM wParam,
     LPARAM lParam)
 {
   BOOL Ret = FALSE;

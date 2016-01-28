@@ -152,10 +152,9 @@ static HRESULT AVIFILE_RemoveStream(IAVIEditStreamImpl* const This, DWORD nr)
   /* remove part nr */
   IAVIStream_Release(This->pStreams[nr].pStream);
   This->nStreams--;
-  if (This->nStreams - nr > 0) {
-    memmove(This->pStreams + nr, This->pStreams + nr + 1,
-            (This->nStreams - nr) * sizeof(EditStreamTable));
-  }
+  if (nr < This->nStreams)
+    memmove(&This->pStreams[nr], &This->pStreams[nr + 1],
+            (This->nStreams - nr) * sizeof(This->pStreams[0]));
   This->pStreams[This->nStreams].pStream  = NULL;
   This->pStreams[This->nStreams].dwStart  = 0;
   This->pStreams[This->nStreams].dwLength = 0;

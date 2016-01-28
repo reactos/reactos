@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/stdlib/itoa.c
+ * FILE:        lib/sdk/crt/string/witoa.c
  * PURPOSE:     converts a integer to ascii
  * PROGRAMER:
  * UPDATE HISTORY:

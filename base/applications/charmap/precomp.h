@@ -7,9 +7,12 @@
 #include <winuser.h>
 #include <wingdi.h>
 
+
 #include "resource.h"
 
 #define SIZEOF(_v)  (sizeof(_v) / sizeof(*_v))
+
+#define MAX_GLYPHS  65536
 
 #define XCELLS 20
 #define YCELLS 10
@@ -44,6 +47,11 @@ typedef struct _MAP
     HFONT hFont;
     LOGFONTW CurrentFont;
     INT iYStart;
+    INT NumRows;
+
+    USHORT ValidGlyphs[MAX_GLYPHS];
+    USHORT NumValidGlyphs;
+
 } MAP, *PMAP;
 
 typedef struct {

@@ -2361,9 +2361,11 @@ KspCreatePin(
 
          if (IsEqualGUIDAligned(&Descriptor->PinDescriptor.DataRanges[Index]->SubFormat, &KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT))
          {
+#if !defined(NDEBUG)
              PKS_DATARANGE_BDA_TRANSPORT Transport = (PKS_DATARANGE_BDA_TRANSPORT)&Descriptor->PinDescriptor.DataRanges[Index];
              DPRINT("KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT AvgTimePerFrame %I64u ulcbPhyiscalFrame %lu ulcbPhyiscalFrameAlignment %lu ulcbPhyiscalPacket %lu\n", Transport->BdaTransportInfo.AvgTimePerFrame, Transport->BdaTransportInfo.ulcbPhyiscalFrame,
                     Transport->BdaTransportInfo.ulcbPhyiscalFrameAlignment, Transport->BdaTransportInfo.ulcbPhyiscalPacket);
+#endif
          }
     }
     if (!FrameSize)

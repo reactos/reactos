@@ -11,7 +11,7 @@ extern "C" {
 #define SECURITYMSG_FAILURE       2
 #define SECURITYMSG_ERROR         3
 
-typedef DWORD HPORT;
+typedef HANDLE HPORT;
 
 typedef struct _SECURITY_MESSAGE
 {

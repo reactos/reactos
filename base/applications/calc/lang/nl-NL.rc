@@ -330,8 +330,8 @@ BEGIN
     END
     POPUP "Beeld"
     BEGIN
-        MENUITEM "Standaard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standaard", IDM_VIEW_STANDARD
+        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC
         MENUITEM "Converteren", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
@@ -362,8 +362,8 @@ BEGIN
     END
     POPUP "Beeld"
     BEGIN
-        MENUITEM "Standaard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standaard", IDM_VIEW_STANDARD
+        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC
         MENUITEM "Converteren", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
@@ -395,8 +395,8 @@ BEGIN
     END
     POPUP "View"
     BEGIN
-        MENUITEM "Standaard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standaard", IDM_VIEW_STANDARD
+        MENUITEM "Wetenschappelijk", IDM_VIEW_SCIENTIFIC
         MENUITEM "Converteren", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Cijfergroeperingen", IDM_VIEW_GROUP, CHECKED

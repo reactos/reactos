@@ -42,6 +42,21 @@ HKCR
             NumMethods = s 43
             ProxyStubClsid32 = s '{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}'
         }
+        '{443C8934-90FF-48ED-BCDE-26F5C7450042}' = s 'IBackgroundCopyJob3'
+        {
+            NumMethods = s 47
+            ProxyStubClsid32 = s '{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}'
+        }
+        '{83E81B93-0873-474D-8A8C-F2018B1A939C}' = s 'IBackgroundCopyFile2'
+        {
+            NumMethods = s 8
+            ProxyStubClsid32 = s '{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}'
+        }
+        '{F1BD1079-9F01-4BDC-8036-F09B70095066}' = s 'IBackgroundCopyJobHttpOptions'
+        {
+            NumMethods = s 11
+            ProxyStubClsid32 = s '{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}'
+        }
         '{659CDEAC-489E-11D9-A9CD-000D56965251}' = s 'IBackgroundCopyCallback2'
         {
             NumMethods = s 7

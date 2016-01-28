@@ -96,14 +96,14 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
  * function returns an ARC error code. The directory is specified
  * by its starting sector and length.
  */
-static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG DirectoryLength,
+static ARC_STATUS IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG DirectoryLength,
     PVOID* pDirectoryBuffer)
 {
     PVOID DirectoryBuffer;
     ULONG SectorCount;
     LARGE_INTEGER Position;
     ULONG Count;
-    ULONG ret;
+    ARC_STATUS Status;
 
     TRACE("IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength);
 
@@ -123,14 +123,14 @@ static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG
     //
     Position.HighPart = 0;
     Position.LowPart = DirectoryStartSector * SECTORSIZE;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
     {
         FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
-        return ret;
+        return Status;
     }
-    ret = ArcRead(DeviceId, DirectoryBuffer, SectorCount * SECTORSIZE, &Count);
-    if (ret != ESUCCESS || Count != SectorCount * SECTORSIZE)
+    Status = ArcRead(DeviceId, DirectoryBuffer, SectorCount * SECTORSIZE, &Count);
+    if (Status != ESUCCESS || Count != SectorCount * SECTORSIZE)
     {
         FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
         return EIO;
@@ -147,7 +147,7 @@ static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG
  * specified filename and fills in an ISO_FILE_INFO structure
  * with info describing the file, etc. returns ARC error code
  */
-static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
+static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
 {
     UCHAR Buffer[SECTORSIZE];
     PPVD Pvd = (PPVD)Buffer;
@@ -160,7 +160,7 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
     ISO_FILE_INFO    IsoFileInfo;
     LARGE_INTEGER Position;
     ULONG Count;
-    LONG ret;
+    ARC_STATUS Status;
 
     TRACE("IsoLookupFile() FileName = %s\n", FileName);
 
@@ -172,11 +172,11 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
     //
     Position.HighPart = 0;
     Position.LowPart = 16 * SECTORSIZE;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
-        return ret;
-    ret = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
-    if (ret != ESUCCESS || Count < sizeof(PVD))
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
+        return Status;
+    Status = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
+    if (Status != ESUCCESS || Count < sizeof(PVD))
         return EIO;
 
     DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
@@ -208,9 +208,9 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
         //
         // Buffer the directory contents
         //
-        ret = IsoBufferDirectory(DeviceId, DirectorySector, DirectoryLength, &DirectoryBuffer);
-        if (ret != ESUCCESS)
-            return ret;
+        Status = IsoBufferDirectory(DeviceId, DirectorySector, DirectoryLength, &DirectoryBuffer);
+        if (Status != ESUCCESS)
+            return Status;
 
         //
         // Search for file name in directory
@@ -240,7 +240,7 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
     return ESUCCESS;
 }
 
-LONG IsoClose(ULONG FileId)
+ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -249,7 +249,7 @@ LONG IsoClose(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -263,12 +263,12 @@ LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     ISO_FILE_INFO TempFileInfo;
     PISO_FILE_INFO FileHandle;
     ULONG DeviceId;
-    LONG ret;
+    ARC_STATUS Status;
 
     if (OpenMode != OpenReadOnly)
         return EACCES;
@@ -278,8 +278,8 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     TRACE("IsoOpen() FileName = %s\n", Path);
 
     RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
-    ret = IsoLookupFile(Path, DeviceId, &TempFileInfo);
-    if (ret != ESUCCESS)
+    Status = IsoLookupFile(Path, DeviceId, &TempFileInfo);
+    if (Status != ESUCCESS)
         return ENOENT;
 
     FileHandle = FrLdrTempAlloc(sizeof(ISO_FILE_INFO), TAG_ISO_FILE);
@@ -292,7 +292,7 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     UCHAR SectorBuffer[SECTORSIZE];
@@ -304,7 +304,7 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     ULONG        LengthInSector;
     ULONG        NumberOfSectors;
     ULONG BytesRead;
-    LONG ret;
+    ARC_STATUS Status;
 
     TRACE("IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
 
@@ -378,13 +378,13 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         //
         Position.HighPart = 0;
         Position.LowPart = SectorNumber * SECTORSIZE;
-        ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
         {
-            return ret;
+            return Status;
         }
-        ret = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
-        if (ret != ESUCCESS || BytesRead != SECTORSIZE)
+        Status = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
+        if (Status != ESUCCESS || BytesRead != SECTORSIZE)
         {
             return EIO;
         }
@@ -412,13 +412,13 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         //
         Position.HighPart = 0;
         Position.LowPart = SectorNumber * SECTORSIZE;
-        ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
         {
-            return ret;
+            return Status;
         }
-        ret = ArcRead(DeviceId, Buffer, NumberOfSectors * SECTORSIZE, &BytesRead);
-        if (ret != ESUCCESS || BytesRead != NumberOfSectors * SECTORSIZE)
+        Status = ArcRead(DeviceId, Buffer, NumberOfSectors * SECTORSIZE, &BytesRead);
+        if (Status != ESUCCESS || BytesRead != NumberOfSectors * SECTORSIZE)
         {
             return EIO;
         }
@@ -441,13 +441,13 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         //
         Position.HighPart = 0;
         Position.LowPart = SectorNumber * SECTORSIZE;
-        ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
         {
-            return ret;
+            return Status;
         }
-        ret = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
-        if (ret != ESUCCESS || BytesRead != SECTORSIZE)
+        Status = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
+        if (Status != ESUCCESS || BytesRead != SECTORSIZE)
         {
             return EIO;
         }
@@ -461,7 +461,7 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
-LONG IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -494,18 +494,18 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     PPVD Pvd = (PPVD)Buffer;
     LARGE_INTEGER Position;
     ULONG Count;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Read The Primary Volume Descriptor
     //
     Position.HighPart = 0;
     Position.LowPart = 16 * SECTORSIZE;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
         return NULL;
-    ret = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
-    if (ret != ESUCCESS || Count < sizeof(PVD))
+    Status = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
+    if (Status != ESUCCESS || Count < sizeof(PVD))
         return NULL;
 
     //

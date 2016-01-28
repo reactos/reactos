@@ -28,6 +28,8 @@
 
 #include "dinput_private.h"
 
+#include <stdio.h>
+
 #include "joystick_private.h"
 
 static inline JoystickGenericImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
@@ -398,17 +400,38 @@ HRESULT WINAPI JoystickAGenericImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface, REF
     return JoystickWGenericImpl_SetProperty(IDirectInputDevice8W_from_impl(This), rguid, ph);
 }
 
+#define DEBUG_TYPE(x) case (x): str = #x; break
 void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
 {
+    int type = GET_DIDEVICE_TYPE(lpDIDevCaps->dwDevType);
+    const char *str;
     TRACE("dwSize: %d\n", lpDIDevCaps->dwSize);
     TRACE("dwFlags: %08x\n", lpDIDevCaps->dwFlags);
-    TRACE("dwDevType: %08x %s\n", lpDIDevCaps->dwDevType,
-          lpDIDevCaps->dwDevType == DIDEVTYPE_DEVICE ? "DIDEVTYPE_DEVICE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_DEVICE ? "DIDEVTYPE_DEVICE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_MOUSE ? "DIDEVTYPE_MOUSE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_KEYBOARD ? "DIDEVTYPE_KEYBOARD" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_JOYSTICK ? "DIDEVTYPE_JOYSTICK" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_HID ? "DIDEVTYPE_HID" : "UNKNOWN");
+    switch(type)
+    {
+        /* Direct X <= 7 definitions */
+        DEBUG_TYPE(DIDEVTYPE_DEVICE);
+        DEBUG_TYPE(DIDEVTYPE_MOUSE);
+        DEBUG_TYPE(DIDEVTYPE_KEYBOARD);
+        DEBUG_TYPE(DIDEVTYPE_JOYSTICK);
+        DEBUG_TYPE(DIDEVTYPE_HID);
+        /* Direct X >= 8 definitions */
+        DEBUG_TYPE(DI8DEVTYPE_DEVICE);
+        DEBUG_TYPE(DI8DEVTYPE_MOUSE);
+        DEBUG_TYPE(DI8DEVTYPE_KEYBOARD);
+        DEBUG_TYPE(DI8DEVTYPE_JOYSTICK);
+        DEBUG_TYPE(DI8DEVTYPE_GAMEPAD);
+        DEBUG_TYPE(DI8DEVTYPE_DRIVING);
+        DEBUG_TYPE(DI8DEVTYPE_FLIGHT);
+        DEBUG_TYPE(DI8DEVTYPE_1STPERSON);
+        DEBUG_TYPE(DI8DEVTYPE_DEVICECTRL);
+        DEBUG_TYPE(DI8DEVTYPE_SCREENPOINTER);
+        DEBUG_TYPE(DI8DEVTYPE_REMOTE);
+        DEBUG_TYPE(DI8DEVTYPE_SUPPLEMENTAL);
+        default: str = "UNKNOWN";
+    }
+
+    TRACE("dwDevType: %08x %s\n", lpDIDevCaps->dwDevType, str);
     TRACE("dwAxes: %d\n", lpDIDevCaps->dwAxes);
     TRACE("dwButtons: %d\n", lpDIDevCaps->dwButtons);
     TRACE("dwPOVs: %d\n", lpDIDevCaps->dwPOVs);
@@ -420,6 +443,7 @@ void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
         TRACE("dwFFDriverVersion: %d\n", lpDIDevCaps->dwFFDriverVersion);
     }
 }
+#undef DEBUG_TYPE
 
 HRESULT WINAPI JoystickWGenericImpl_GetCapabilities(LPDIRECTINPUTDEVICE8W iface, LPDIDEVCAPS lpDIDevCaps)
 {
@@ -584,6 +608,8 @@ HRESULT WINAPI JoystickAGenericImpl_GetDeviceInfo(
     LPDIDEVICEINSTANCEA pdidi)
 {
     JoystickGenericImpl *This = impl_from_IDirectInputDevice8A(iface);
+    DIPROPDWORD pd;
+    DWORD index = 0;
 
     TRACE("(%p,%p)\n", iface, pdidi);
 
@@ -598,12 +624,20 @@ HRESULT WINAPI JoystickAGenericImpl_GetDeviceInfo(
         return DIERR_INVALIDPARAM;
     }
 
+    /* Try to get joystick index */
+    pd.diph.dwSize = sizeof(pd);
+    pd.diph.dwHeaderSize = sizeof(pd.diph);
+    pd.diph.dwObj = 0;
+    pd.diph.dwHow = DIPH_DEVICE;
+    if (SUCCEEDED(IDirectInputDevice2_GetProperty(iface, DIPROP_JOYSTICKID, &pd.diph)))
+        index = pd.dwData;
+
     /* Return joystick */
     pdidi->guidInstance = This->guidInstance;
     pdidi->guidProduct = This->guidProduct;
     /* we only support traditional joysticks for now */
     pdidi->dwDevType = This->devcaps.dwDevType;
-    strcpy(pdidi->tszInstanceName, "Joystick");
+    snprintf(pdidi->tszInstanceName, MAX_PATH, "Joystick %d", index);
     strcpy(pdidi->tszProductName, This->name);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3A)) {
         pdidi->guidFFDriver = GUID_NULL;
@@ -622,6 +656,9 @@ HRESULT WINAPI JoystickWGenericImpl_GetDeviceInfo(
     LPDIDEVICEINSTANCEW pdidi)
 {
     JoystickGenericImpl *This = impl_from_IDirectInputDevice8W(iface);
+    CHAR buffer[MAX_PATH];
+    DIPROPDWORD pd;
+    DWORD index = 0;
 
     TRACE("(%p,%p)\n", iface, pdidi);
 
@@ -631,12 +668,21 @@ HRESULT WINAPI JoystickWGenericImpl_GetDeviceInfo(
         return DIERR_INVALIDPARAM;
     }
 
+    /* Try to get joystick index */
+    pd.diph.dwSize = sizeof(pd);
+    pd.diph.dwHeaderSize = sizeof(pd.diph);
+    pd.diph.dwObj = 0;
+    pd.diph.dwHow = DIPH_DEVICE;
+    if (SUCCEEDED(IDirectInputDevice2_GetProperty(iface, DIPROP_JOYSTICKID, &pd.diph)))
+        index = pd.dwData;
+
     /* Return joystick */
     pdidi->guidInstance = This->guidInstance;
     pdidi->guidProduct = This->guidProduct;
     /* we only support traditional joysticks for now */
     pdidi->dwDevType = This->devcaps.dwDevType;
-    MultiByteToWideChar(CP_ACP, 0, "Joystick", -1, pdidi->tszInstanceName, MAX_PATH);
+    snprintf(buffer, sizeof(buffer), "Joystick %d", index);
+    MultiByteToWideChar(CP_ACP, 0, buffer, -1, pdidi->tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, This->name, -1, pdidi->tszProductName, MAX_PATH);
     if (pdidi->dwSize > sizeof(DIDEVICEINSTANCE_DX3W)) {
         pdidi->guidFFDriver = GUID_NULL;
@@ -718,7 +764,7 @@ HRESULT WINAPI JoystickWGenericImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W iface,
         DWORD type = 0x000000ff & (lpdiaf->rgoAction[i].dwSemantic >> 8);
         DWORD genre = 0xff000000 & lpdiaf->rgoAction[i].dwSemantic;
 
-        /* Don't touch an user configured action */
+        /* Don't touch a user configured action */
         if (lpdiaf->rgoAction[i].dwHow == DIAH_USERCONFIG) continue;
 
         /* Only consider actions of the right genre */
@@ -728,7 +774,7 @@ HRESULT WINAPI JoystickWGenericImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W iface,
         {
             if (type & object_types[j])
             {
-                /* Assure that the object exists */
+                /* Ensure that the object exists */
                 LPDIOBJECTDATAFORMAT odf = dataformat_to_odf_by_type(This->base.data_format.wine_df, inst, object_types[j]);
 
                 if (odf != NULL)

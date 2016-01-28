@@ -1,4 +1,4 @@
-/* TRANSLATOR : M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR : M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.: 10-02-2008
  * LAST CHANGE: 07-05-2008
  */
@@ -7,20 +7,20 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "KopÌruj˙ sa s˙bory ..."
+CAPTION "Kop√≠ruj√∫ sa s√∫bory ..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Zruöiù", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Zdroj:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Cieæ:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Cieƒæ:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Pre dokonËenie inötal·cie je potrebnÈ reötartovaù poËÌtaË. Chcete pokraËovaù?"
-    IDS_QUERY_REBOOT_CAPTION "Reötartovaù"
-    IDS_INF_FILE "Inform·cie o inötal·cii"
+    IDS_QUERY_REBOOT_TEXT "Pre dokonƒçenie in≈°tal√°cie je potrebn√© re≈°tartova≈• poƒç√≠taƒç. Chcete pokraƒçova≈•?"
+    IDS_QUERY_REBOOT_CAPTION "Re≈°tartova≈•"
+    IDS_INF_FILE "Inform√°cie o in≈°tal√°cii"
 END

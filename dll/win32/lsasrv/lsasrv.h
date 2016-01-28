@@ -23,13 +23,17 @@
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
 #include <ntsam.h>
 #include <ntlsa.h>
 #include <sddl.h>
+
+#include <srmp.h>
 
 #include <lsass.h>
 #include <lsa_s.h>
@@ -163,6 +167,10 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
 NTSTATUS
 LsapDeleteObjectAttribute(PLSA_DB_OBJECT DbObject,
                           LPWSTR AttributeName);
+
+/* dssetup.c */
+VOID
+DsSetupInit(VOID);
 
 /* lookup.c */
 NTSTATUS
@@ -301,6 +309,13 @@ LsarpLookupPrivilegeName(PLUID Value,
                          PRPC_UNICODE_STRING *Name);
 
 NTSTATUS
+LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
+                                USHORT ClientLanguage,
+                                USHORT ClientSystemDefaultLanguage,
+                                PRPC_UNICODE_STRING *DisplayName,
+                                USHORT *LanguageReturned);
+
+NTSTATUS
 LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
                           PLUID Value);
 
@@ -400,7 +415,51 @@ NTAPI
 LsapDeleteLogonSession(IN PLUID LogonId);
 
 NTSTATUS
+NTAPI
+LsapAddCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue,
+    _In_ PLSA_STRING Credential);
+
+NTSTATUS
+NTAPI
+LsapGetCredentials(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _Inout_ PULONG QueryContext,
+    _In_ BOOLEAN RetrieveAllCredentials,
+    _Inout_ PLSA_STRING PrimaryKeyValue,
+    _Out_ PULONG PrimaryKeyLength,
+    _Out_ PLSA_STRING Credentials);
+
+NTSTATUS
+NTAPI
+LsapDeleteCredential(
+    _In_ PLUID LogonId,
+    _In_ ULONG AuthenticationPackage,
+    _In_ PLSA_STRING PrimaryKeyValue);
+
+NTSTATUS
 LsapSetLogonSessionData(IN PLUID LogonId);
+
+NTSTATUS
+LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);
+
+NTSTATUS
+LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg);
+
+/* srm.c */
+NTSTATUS
+LsapRmInitializeServer(VOID);
+
+NTSTATUS
+LsapRmCreateLogonSession(
+    PLUID LogonId);
+
+NTSTATUS
+LsapRmDeleteLogonSession(
+    PLUID LogonId);
 
 /* utils.c */
 INT

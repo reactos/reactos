@@ -81,7 +81,7 @@ typedef enum
     eConnTypeOtherAnalog,
     eConnTypeMultichannelAnalogDIN,
     eConnTypeXlrProfessional,
-    eConnTypeRj11Modem,
+    eConnTypeRJ11Modem,
     eConnTypeCombination
 } EPcxConnectionType;
 
@@ -350,7 +350,7 @@ interface IAudioOutputSelector : IUnknown
 [
     pointer_default(unique),
     nonextensible,
-    uuid(bb515f69-94a7-429e-8b9c-271b3f11a3ab),
+    uuid(df45aeea-b74a-4b6b-afad-2366b6aa012e),
     local,
     object
 ]
@@ -404,7 +404,7 @@ interface IAudioTreble : IPerChannelDbLevel
 [
     pointer_default(unique),
     nonextensible,
-    uuid(bb515f69-94a7-429e-8b9c-271b3f11a3ab),
+    uuid(85401fd4-6de4-4b9d-9869-2d6753a82f3c),
     local,
     object
 ]
@@ -722,6 +722,7 @@ interface IDeviceTopology : IUnknown
 }
 
 [
+    uuid(51b9a01d-8181-4363-b59c-e678f476dd0e),
     version(1.0)
 ]
 library DevTopologyLib

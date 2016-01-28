@@ -57,9 +57,9 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
         CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
     fObjects[fObjectCount].punk = punk;
     punk->AddRef();
-    if (FAILED(punk->QueryInterface(IID_IEnumString, reinterpret_cast<void **>(&fObjects[fObjectCount].pEnum))))
+    if (FAILED_UNEXPECTEDLY(punk->QueryInterface(IID_PPV_ARG(IEnumString, &fObjects[fObjectCount].pEnum))))
         fObjects[fObjectCount].pEnum = NULL;
-    if (FAILED(punk->QueryInterface(IID_IACList, reinterpret_cast<void **>(&fObjects[fObjectCount].pACL))))
+    if (FAILED_UNEXPECTEDLY(punk->QueryInterface(IID_PPV_ARG(IACList, &fObjects[fObjectCount].pACL))))
         fObjects[fObjectCount].pACL = NULL;
     fObjectCount++;
     return S_OK;

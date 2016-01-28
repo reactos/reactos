@@ -2,7 +2,7 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Bitmap functions
- * FILE:             subsys/win32k/objects/bitmaps.c
+ * FILE:             win32ss/gdi/ntgdi/bitmaps.c
  * PROGRAMER:        Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
@@ -11,16 +11,50 @@
 #define NDEBUG
 #include <debug.h>
 
-void
+BOOL
+NTAPI
+GreSetBitmapOwner(
+    _In_ HBITMAP hbmp,
+    _In_ ULONG ulOwner)
+{
+    /* Check if we have the correct object type */
+    if (GDI_HANDLE_GET_TYPE(hbmp) != GDILoObjType_LO_BITMAP_TYPE)
+    {
+        DPRINT1("Incorrect type for hbmp: %p\n", hbmp);
+        return FALSE;
+    }
+
+    /// FIXME: this is a hack and doesn't handle a race condition properly.
+    /// It needs to be done in GDIOBJ_vSetObjectOwner atomically.
+
+    /* Check if we set public or none */
+    if ((ulOwner == GDI_OBJ_HMGR_PUBLIC) ||
+        (ulOwner == GDI_OBJ_HMGR_NONE))
+    {
+        /* Only allow this for owned objects */
+        if (GreGetObjectOwner(hbmp) != GDI_OBJ_HMGR_POWNED)
+        {
+            DPRINT1("Cannot change owner for non-powned hbmp\n");
+            return FALSE;
+        }
+    }
+
+    return GreSetObjectOwner(hbmp, ulOwner);
+}
+
+BOOL
 NTAPI
 UnsafeSetBitmapBits(
-    PSURFACE psurf,
-    IN ULONG cjBits,
-    IN PVOID pvBits)
+    _Inout_ PSURFACE psurf,
+    _In_ ULONG cjBits,
+    _In_ const VOID *pvBits)
 {
-    PUCHAR pjDst, pjSrc;
+    PUCHAR pjDst;
+    const UCHAR *pjSrc;
     LONG lDeltaDst, lDeltaSrc;
     ULONG nWidth, nHeight, cBitsPixel;
+    NT_ASSERT(psurf->flags & API_BITMAP);
+    NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
     nHeight = psurf->SurfObj.sizlBitmap.cy;
@@ -31,6 +65,11 @@ UnsafeSetBitmapBits(
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
+    NT_ASSERT(lDeltaSrc <= abs(lDeltaDst));
+
+    /* Make sure the buffer is large enough*/
+    if (cjBits < (lDeltaSrc * nHeight))
+        return FALSE;
 
     while (nHeight--)
     {
@@ -40,6 +79,7 @@ UnsafeSetBitmapBits(
         pjDst += lDeltaDst;
     }
 
+    return TRUE;
 }
 
 HBITMAP
@@ -76,6 +116,7 @@ GreCreateBitmapEx(
                                  iFormat,
                                  fjBitmap,
                                  cjWidthBytes,
+                                 pvCompressedBits ? 0 : cjSizeImage,
                                  pvBits);
     if (!psurf)
     {
@@ -94,7 +135,7 @@ GreCreateBitmapEx(
         lDelta = WIDTH_BYTES_ALIGN32(nWidth, gajBitsPerFormat[iFormat]);
 
         pvBits = psurf->SurfObj.pvBits;
-        DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
+        DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat, cjSizeImage);
     }
 
     /* Get the handle for the bitmap */
@@ -171,6 +212,7 @@ NtGdiCreateBitmap(
                                  iFormat,
                                  0,
                                  0,
+                                 0,
                                  NULL);
     if (!psurf)
     {
@@ -188,7 +230,7 @@ NtGdiCreateBitmap(
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, (SIZE_T)cjSize, 1);
-            UnsafeSetBitmapBits(psurf, 0, pUnsafeBits);
+            UnsafeSetBitmapBits(psurf, cjSize, pUnsafeBits);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -217,7 +259,9 @@ HBITMAP FASTCALL
 IntCreateCompatibleBitmap(
     PDC Dc,
     INT Width,
-    INT Height)
+    INT Height,
+    UINT Planes,
+    UINT Bpp)
 {
     HBITMAP Bmp = NULL;
     PPALETTE ppal;
@@ -234,9 +278,15 @@ IntCreateCompatibleBitmap(
 
         Bmp = GreCreateBitmap(abs(Width),
                               abs(Height),
-                              1,
-                              Dc->ppdev->gdiinfo.cBitsPixel,
+                              Planes ? Planes : 1,
+                              Bpp ? Bpp : Dc->ppdev->gdiinfo.cBitsPixel,
                               NULL);
+        if (Bmp == NULL)
+        {
+            DPRINT1("Failed to allocate a bitmap!\n");
+            return NULL;
+        }
+
         psurf = SURFACE_ShareLockSurface(Bmp);
         ASSERT(psurf);
 
@@ -249,6 +299,7 @@ IntCreateCompatibleBitmap(
         /* Set flags */
         psurf->flags = API_BITMAP;
         psurf->hdc = NULL; // FIXME:
+        psurf->SurfObj.hdev = (HDEV)Dc->ppdev;
         SURFACE_ShareUnlockSurface(psurf);
     }
     else
@@ -265,8 +316,8 @@ IntCreateCompatibleBitmap(
 
             Bmp = GreCreateBitmap(abs(Width),
                           abs(Height),
-                          1,
-                          dibs.dsBm.bmBitsPixel,
+                          Planes ? Planes : 1,
+                          Bpp ? Bpp : dibs.dsBm.bmBitsPixel,
                           NULL);
             psurfBmp = SURFACE_ShareLockSurface(Bmp);
             ASSERT(psurfBmp);
@@ -277,6 +328,7 @@ IntCreateCompatibleBitmap(
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // FIXME:
+            psurf->SurfObj.hdev = (HDEV)Dc->ppdev;
             SURFACE_ShareUnlockSurface(psurfBmp);
         }
         else if (Count == sizeof(DIBSECTION))
@@ -289,8 +341,8 @@ IntCreateCompatibleBitmap(
             bi->bmiHeader.biSize          = sizeof(bi->bmiHeader);
             bi->bmiHeader.biWidth         = Width;
             bi->bmiHeader.biHeight        = Height;
-            bi->bmiHeader.biPlanes        = dibs.dsBmih.biPlanes;
-            bi->bmiHeader.biBitCount      = dibs.dsBmih.biBitCount;
+            bi->bmiHeader.biPlanes        = Planes ? Planes : dibs.dsBmih.biPlanes;
+            bi->bmiHeader.biBitCount      = Bpp ? Bpp : dibs.dsBmih.biBitCount;
             bi->bmiHeader.biCompression   = dibs.dsBmih.biCompression;
             bi->bmiHeader.biSizeImage     = 0;
             bi->bmiHeader.biXPelsPerMeter = dibs.dsBmih.biXPelsPerMeter;
@@ -371,7 +423,7 @@ NtGdiCreateCompatibleBitmap(
         return NULL;
     }
 
-    Bmp = IntCreateCompatibleBitmap(Dc, Width, Height);
+    Bmp = IntCreateCompatibleBitmap(Dc, Width, Height, 0, 0);
 
     DC_UnlockDc(Dc);
     return Bmp;
@@ -519,6 +571,11 @@ NtGdiSetBitmapBits(
         return 0;
     }
 
+    if (GDI_HANDLE_IS_STOCKOBJ(hBitmap))
+    {
+        return 0;
+    }
+
     psurf = SURFACE_ShareLockSurface(hBitmap);
     if (psurf == NULL)
     {
@@ -526,11 +583,21 @@ NtGdiSetBitmapBits(
         return 0;
     }
 
+    if (((psurf->flags & API_BITMAP) == 0) ||
+        (psurf->SurfObj.iBitmapFormat > BMF_32BPP))
+    {
+        DPRINT1("Invalid bitmap: iBitmapFormat = %lu, flags = 0x%lx\n",
+                psurf->SurfObj.iBitmapFormat,
+                psurf->flags);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        SURFACE_ShareUnlockSurface(psurf);
+        return 0;
+    }
+
     _SEH2_TRY
     {
-        ProbeForRead(pUnsafeBits, Bytes, 1);
-        UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
-        ret = 1;
+        ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD));
+        ret = UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

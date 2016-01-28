@@ -22,17 +22,21 @@
 
 VOID WineLicense(HWND Wnd)
 {
-  /* FIXME: should load strings from resources */
-  LICENSE *License = &WineLicense_En;
-  MessageBoxA(Wnd, License->License, License->LicenseCaption,
-             MB_ICONINFORMATION | MB_OK);
+    /* FIXME: should load strings from resources */
+    LICENSE *License = &WineLicense_En;
+    MessageBoxA(Wnd,
+                License->License,
+                License->LicenseCaption,
+                MB_ICONINFORMATION | MB_OK);
 }
 
 
 VOID WineWarranty(HWND Wnd)
 {
-  /* FIXME: should load strings from resources */
-  LICENSE *License = &WineLicense_En;
-  MessageBoxA(Wnd, License->Warranty, License->WarrantyCaption,
-             MB_ICONEXCLAMATION | MB_OK);
+    /* FIXME: should load strings from resources */
+    LICENSE *License = &WineLicense_En;
+    MessageBoxA(Wnd,
+                License->Warranty,
+                License->WarrantyCaption,
+                MB_ICONEXCLAMATION | MB_OK);
 }

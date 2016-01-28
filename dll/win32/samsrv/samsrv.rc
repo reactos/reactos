@@ -28,6 +28,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
@@ -43,3 +49,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
+

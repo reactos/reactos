@@ -58,7 +58,7 @@ IntInitializeVideoAddressSpace(VOID)
     /* Open the physical memory section */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PhysMemName,
-                               0,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenSection(&PhysMemHandle,
@@ -134,6 +134,15 @@ IntInitializeVideoAddressSpace(VOID)
 
     /* Return success */
     return STATUS_SUCCESS;
+}
+#else
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID)
+{
+    UNIMPLEMENTED;
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 #endif
 

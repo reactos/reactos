@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Support for physical devices
- * FILE:             subsystems/win32/win32k/eng/pdevobj.c
+ * FILE:             win32ss/gdi/eng/pdevobj.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -18,7 +18,7 @@ static HSEMAPHORE ghsemPDEV;
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitPDEVImpl()
+InitPDEVImpl(VOID)
 {
     ghsemPDEV = EngCreateSemaphore();
     if (!ghsemPDEV) return STATUS_INSUFFICIENT_RESOURCES;
@@ -50,7 +50,7 @@ DbgLookupDHPDEV(DHPDEV dhpdev)
 #endif
 
 PPDEVOBJ
-PDEVOBJ_AllocPDEV()
+PDEVOBJ_AllocPDEV(VOID)
 {
     PPDEVOBJ ppdev;
 
@@ -60,9 +60,25 @@ PDEVOBJ_AllocPDEV()
 
     RtlZeroMemory(ppdev, sizeof(PDEVOBJ));
 
+    ppdev->hsemDevLock = EngCreateSemaphore();
+    if (ppdev->hsemDevLock == NULL)
+    {
+        ExFreePoolWithTag(ppdev, GDITAG_PDEV);
+        return NULL;
+    }
+
     ppdev->cPdevRefs = 1;
 
     return ppdev;
+}
+
+static
+VOID
+PDEVOBJ_vDeletePDEV(
+    PPDEVOBJ ppdev)
+{
+    EngDeleteSemaphore(ppdev->hsemDevLock);
+    ExFreePoolWithTag(ppdev, GDITAG_PDEV);
 }
 
 VOID
@@ -81,7 +97,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
     if (ppdev->cPdevRefs == 0)
     {
         /* Do we have a surface? */
-        if(ppdev->pSurface)
+        if (ppdev->pSurface)
         {
             /* Release the surface and let the driver free it */
             SURFACE_ShareUnlockSurface(ppdev->pSurface);
@@ -124,7 +140,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
             gppdevPrimary = NULL;
 
         /* Free it */
-        ExFreePoolWithTag(ppdev, GDITAG_PDEV );
+        PDEVOBJ_vDeletePDEV(ppdev);
     }
 
     /* Unlock loader */
@@ -212,20 +228,24 @@ PDEVOBJ_pSurface(
 {
     HSURF hsurf;
 
-    /* Check if we already have a surface */
-    if (ppdev->pSurface)
-    {
-        /* Increment reference count */
-        GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
-    }
-    else
+    /* Check if there is no surface for this PDEV yet */
+    if (ppdev->pSurface == NULL)
     {
         /* Call the drivers DrvEnableSurface */
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        if (hsurf== NULL)
+        {
+            DPRINT1("Failed to create PDEV surface!");
+            return NULL;
+        }
 
-        /* Lock the surface */
+        /* Get a reference to the surface */
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
+        NT_ASSERT(ppdev->pSurface != NULL);
     }
+
+    /* Increment reference count */
+    GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
     DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
@@ -319,7 +339,7 @@ EngpCreatePDEV(
         DPRINT1("Could not load display driver '%ls', '%ls'\n",
                 pGraphicsDevice->pDiplayDrivers,
                 pdm->dmDeviceName);
-        ExFreePoolWithTag(ppdev, GDITAG_PDEV);
+        PDEVOBJ_vRelease(ppdev);
         return NULL;
     }
 
@@ -332,7 +352,6 @@ EngpCreatePDEV(
         ppdev->pfnMovePointer = EngMovePointer;
 
     ppdev->pGraphicsDevice = pGraphicsDevice;
-    ppdev->hsemDevLock = EngCreateSemaphore();
     // Should we change the ative mode of pGraphicsDevice ?
     ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
 
@@ -471,7 +490,7 @@ PDEVOBJ_bSwitchMode(
     pSurface = PDEVOBJ_pSurface(ppdevTmp);
     if (!pSurface)
     {
-        DPRINT1("DrvEnableSurface failed\n");
+        DPRINT1("PDEVOBJ_pSurface failed\n");
         goto leave;
     }
 

@@ -251,6 +251,8 @@ void __cdecl ept_map(handle_t h,
     }
 
     LeaveCriticalSection(&csEpm);
+
+    I_RpcFree(protseq);
 }
 
 void __cdecl ept_lookup_handle_free(handle_t h,

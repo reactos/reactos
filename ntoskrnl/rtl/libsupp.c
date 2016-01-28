@@ -14,6 +14,7 @@
 #include <debug.h>
 
 #define TAG_ATMT 'TotA' /* Atom table */
+#define TAG_RTHL 'LHtR' /* Heap Lock */
 
 extern ULONG NtGlobalFlag;
 
@@ -91,7 +92,7 @@ RtlpClearInDbgPrint(VOID)
 
 KPROCESSOR_MODE
 NTAPI
-RtlpGetMode()
+RtlpGetMode(VOID)
 {
    return KernelMode;
 }
@@ -159,7 +160,7 @@ NTAPI
 RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     ExDeleteResourceLite(&Lock->Resource);
-    ExFreePool(Lock);
+    ExFreePoolWithTag(Lock, TAG_RTHL);
 
     return STATUS_SUCCESS;
 }
@@ -178,11 +179,31 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    BOOLEAN Success;
+    KeEnterCriticalRegion();
+
+    if (Exclusive)
+        Success = ExAcquireResourceExclusiveLite(&Lock->Resource, FALSE);
+    else
+        Success = ExAcquireResourceSharedLite(&Lock->Resource, FALSE);
+
+    if (!Success)
+        KeLeaveCriticalRegion();
+
+    return Success;
+}
+
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-    PHEAP_LOCK HeapLock = ExAllocatePool(NonPagedPool, sizeof(HEAP_LOCK));
+    PHEAP_LOCK HeapLock = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(HEAP_LOCK),
+                                                TAG_RTHL);
     if (HeapLock == NULL)
         return STATUS_NO_MEMORY;
 
@@ -485,7 +506,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
 #endif
 
-#ifdef _AMD64_
+#if defined(_M_AMD64) || defined(_M_ARM)
 VOID
 NTAPI
 RtlpGetStackLimits(
@@ -562,8 +583,9 @@ RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE
 RtlpAllocAtomTable(ULONG Size)
 {
-   PRTL_ATOM_TABLE Table = ExAllocatePool(NonPagedPool,
-                                          Size);
+   PRTL_ATOM_TABLE Table = ExAllocatePoolWithTag(NonPagedPool,
+                                                 Size,
+                                                 TAG_ATMT);
    if (Table != NULL)
    {
       RtlZeroMemory(Table,
@@ -576,7 +598,7 @@ RtlpAllocAtomTable(ULONG Size)
 VOID
 RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   ExFreePool(AtomTable);
+   ExFreePoolWithTag(AtomTable, TAG_ATMT);
 }
 
 PRTL_ATOM_TABLE_ENTRY
@@ -742,12 +764,20 @@ RtlpSafeCopyMemory(
 
 BOOLEAN
 NTAPI
-RtlCallVectoredExceptionHandlers(
-    _In_ PEXCEPTION_RECORD ExceptionRecord,
-    _In_ PCONTEXT Context)
+RtlCallVectoredExceptionHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                 _In_ PCONTEXT Context)
 {
     /* In the kernel we don't have vectored exception handlers */
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                _In_ PCONTEXT Context)
+{
+    /* No vectored continue handlers either in kernel mode */
+    return;
 }
 
 /* EOF */

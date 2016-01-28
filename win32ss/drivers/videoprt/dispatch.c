@@ -588,31 +588,28 @@ IntVideoPortPnPStartDevice(
                       ResourceListSize);
 
         /* Get the interrupt level/vector - needed by HwFindAdapter sometimes */
-        for (FullList = AllocatedResources->List;
-             FullList < AllocatedResources->List + AllocatedResources->Count;
-             FullList++)
-        {
-            INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
-                  FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+        FullList = AllocatedResources->List;
+        ASSERT(AllocatedResources->Count == 1);
+        INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
+              FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
 
-            /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
-            ASSERT(FullList->InterfaceType == PCIBus);
-            ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
-            ASSERT(1 == FullList->PartialResourceList.Version);
-            ASSERT(1 == FullList->PartialResourceList.Revision);
-            for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
-                 Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
-                 Descriptor++)
+        /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
+        ASSERT(FullList->InterfaceType == PCIBus);
+        ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+        ASSERT(1 == FullList->PartialResourceList.Version);
+        ASSERT(1 == FullList->PartialResourceList.Revision);
+        for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+             Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
+             Descriptor++)
+        {
+            if (Descriptor->Type == CmResourceTypeInterrupt)
             {
-                if (Descriptor->Type == CmResourceTypeInterrupt)
-                {
-                    DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
-                    DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
-                    if (Descriptor->ShareDisposition == CmResourceShareShared)
-                        DeviceExtension->InterruptShared = TRUE;
-                    else
-                        DeviceExtension->InterruptShared = FALSE;
-                }
+                DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
+                DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+                if (Descriptor->ShareDisposition == CmResourceShareShared)
+                    DeviceExtension->InterruptShared = TRUE;
+                else
+                    DeviceExtension->InterruptShared = FALSE;
             }
         }
     }
@@ -834,7 +831,32 @@ IntVideoPortDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status = Irp->IoStatus.Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->Common.Fdo)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    }
+    else
+    {
+        switch (IrpSp->MinorFunction)
+        {
+            case IRP_MN_QUERY_POWER:
+            case IRP_MN_SET_POWER:
+                Status = STATUS_SUCCESS;
+                break;
+        }
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 NTSTATUS
@@ -843,7 +865,20 @@ IntVideoPortDispatchSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->Common.Fdo)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 VOID

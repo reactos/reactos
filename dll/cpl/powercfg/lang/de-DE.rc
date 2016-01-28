@@ -8,11 +8,11 @@ CAPTION "Energieschemata"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 45, 13, 194, 36
+    LTEXT "WÃ¤hlen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewÃ¤hlte Schema modifizieren.", -1, 45, 13, 194, 36
     GROUPBOX "&Energieschemata", -1, 7, 57, 240, 46
     COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
-    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
+    PUSHBUTTON "&LÃ¶schen", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
     GROUPBOX "Unbekannt", IDC_GRPDETAIL, 7, 108, 240, 105
     LTEXT "Bei:", IDC_SAT, 15, 120, 60, 10
     LTEXT "Netzbetrieb", IDC_SAC, 100, 120, 45, 15
@@ -39,7 +39,7 @@ CAPTION "Alarme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarm bei niedrigem Batteriestand", -1, 10, 15, 235, 95
-    CONTROL "Alarm bei folgendem &Energiestand auslösen:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
+    CONTROL "Alarm bei folgendem &Energiestand auslÃ¶sen:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
     LTEXT "Unbekannt", IDC_ALARMVALUE1, 200, 25, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -49,10 +49,10 @@ BEGIN
     LTEXT "Unbekannt", IDC_ALARMMSG1, 155, 70, 95, 10
     LTEXT "Aktion:", -1, 95, 80, 45, 10
     LTEXT "Unbekannt", IDC_ALARMAKTION1, 155, 80, 95, 10
-    LTEXT "Ausführen:", -1, 95, 90, 50, 10
+    LTEXT "AusfÃ¼hren:", -1, 95, 90, 50, 10
     LTEXT "Unbekannt", IDC_ALARMPROG1, 155, 90, 40, 10
     GROUPBOX "Alarm bei kritischem Batteriestand", -1, 10, 115, 235, 95
-    CONTROL "Alarm bei folgendem &Energiestand auslösen:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
+    CONTROL "Alarm bei folgendem &Energiestand auslÃ¶sen:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
     LTEXT "Unbekannt", IDC_ALARMVALUE2, 200, 125, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
@@ -62,7 +62,7 @@ BEGIN
     LTEXT "Unbekannt", IDC_ALARMMSG2, 155, 170, 95, 10
     LTEXT "Aktion:", -1, 95, 180, 45, 10
     LTEXT "Unbekannt", IDC_ALARMAKTION2, 155, 180, 95, 10
-    LTEXT "Ausführen:", -1, 95, 190, 50, 10
+    LTEXT "AusfÃ¼hren:", -1, 95, 190, 50, 10
     LTEXT "Unbekannt", IDC_ALARMPROG2, 155, 190, 40, 10
 END
 
@@ -72,17 +72,17 @@ CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
-    LTEXT "Wählen Sie die Energiesparoptionen aus, die Sie verwenden möchten.", -1, 30, 5, 205, 20
+    LTEXT "WÃ¤hlen Sie die Energiesparoptionen aus, die Sie verwenden mÃ¶chten.", -1, 30, 5, 205, 20
     GROUPBOX "Optionen", -1, 5, 35, 240, 55
     CONTROL "&Symbol in der Taskleiste anzeigen", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 45, 200, 10
     CONTROL "&Kennwort beim Reaktivieren aus dem Standbymodus anfordern", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 55, 220, 10
     CONTROL "&Helligkeit der Anzeige beim Batteriebetrieb verringern", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 65, 200, 10
-    GROUPBOX "Netzschaltervorgänge", -1, 5, 100, 240, 105
-    LTEXT "Beim Schließen des &Laptops:", IDC_SLIDCLOSE, 10, 110, 210, 10
+    GROUPBOX "NetzschaltervorgÃ¤nge", -1, 5, 100, 240, 105
+    LTEXT "Beim SchlieÃŸen des &Laptops:", IDC_SLIDCLOSE, 10, 110, 210, 10
     COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Beim Drücken des &Netzschalters am Computer:", IDC_SPOWERBUTTON, 10, 135, 210, 10
+    LTEXT "Beim DrÃ¼cken des &Netzschalters am Computer:", IDC_SPOWERBUTTON, 10, 135, 210, 10
     COMBOBOX IDC_POWERBUTTON, 10, 150, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Beim Drücken des Schalters für den &Ruhezustand am Computer:", IDC_SSLEEPBUTTON, 10, 165, 210, 10
+    LTEXT "Beim DrÃ¼cken des Schalters fÃ¼r den &Ruhezustand am Computer:", IDC_SSLEEPBUTTON, 10, 165, 210, 10
     COMBOBOX IDC_SLEEPBUTTON, 10, 180, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -92,13 +92,13 @@ CAPTION "Ruhezustand"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
-    LTEXT "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurück.", -1, 35, 5, 195, 35
+    LTEXT "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurÃ¼ck.", -1, 35, 5, 195, 35
     GROUPBOX "Ruhezustand", -1, 5, 45, 240, 25
     CONTROL "&Ruhezustand aktivieren", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 55, 210, 10
-    GROUPBOX "Speicherplatz für den Ruhezustand", -1, 5, 80, 240, 60
+    GROUPBOX "Speicherplatz fÃ¼r den Ruhezustand", -1, 5, 80, 240, 60
     LTEXT "Freier Speicherplatz:", -1, 10, 90, 100, 10
     LTEXT "Unbekannt", IDC_FREESPACE, 120, 90, 70, 10
-    LTEXT "Für Ruhezustand benötigt:", -1, 10, 100, 115, 10
+    LTEXT "FÃ¼r Ruhezustand benÃ¶tigt:", -1, 10, 100, 115, 10
     LTEXT "Unbekannt", IDC_SPACEFORHIBERNATEFILE, 120, 100, 55, 10
     LTEXT "Geben Sie Speicherplatz frei, bevor Sie den Computer in den Ruhezustand versetzen.", IDC_TOLESSFREESPACE, 10, 115, 220, 20
 END
@@ -106,12 +106,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Energieoptionen"
-    IDS_CPLDESCRIPTION_1 "Konfiguriert die Energiespareinstellungen für den Computer."
+    IDS_CPLDESCRIPTION_1 "Konfiguriert die Energiespareinstellungen fÃ¼r den Computer."
     IDS_PROCENT "%i%%"
     IDS_SOUND "Klang"
     IDS_TEXT "Text"
-    IDS_CONFIG1 "Einstellungen für Energieschema %s."
-    IDS_CONFIG2 "Erweiterte Einstellungen für %s."
+    IDS_CONFIG1 "Einstellungen fÃ¼r Energieschema %s."
+    IDS_CONFIG2 "Erweiterte Einstellungen fÃ¼r %s."
     IDS_SIZEBYTS "%i Bytes"
     IDS_SIZEMB "%i MB"
     IDS_NOACTION "Nichts unternehmen"
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "Nach 4 Stunden"
     IDS_TIMEOUT15 "Nach 5 Stunden"
     IDS_TIMEOUT16 "Nie"
-    IDS_DEL_SCHEME "Sind Sie sich sicher, dass Sie das Energieschema löschen wollen?"
-    IDS_DEL_SCHEME_TITLE "Schema löschen"
+    IDS_DEL_SCHEME "Sind Sie sich sicher, dass Sie das Energieschema lÃ¶schen wollen?"
+    IDS_DEL_SCHEME_TITLE "Schema lÃ¶schen"
 END

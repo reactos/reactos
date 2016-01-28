@@ -154,7 +154,7 @@ FdoEnumerateDevices(
             Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
             if (!NT_SUCCESS(Status))
             {
-                Device = (PPCI_DEVICE)ExAllocatePoolWithTag(NonPagedPool, sizeof(PCI_DEVICE),TAG_PCI);
+                Device = ExAllocatePoolWithTag(NonPagedPool, sizeof(PCI_DEVICE), TAG_PCI);
                 if (!Device)
                 {
                     /* FIXME: Cleanup resources for already discovered devices */
@@ -232,11 +232,12 @@ FdoQueryBusRelations(
     {
         /* FIXME: Another bus driver has already created a DEVICE_RELATIONS
                   structure so we must merge this structure with our own */
+        DPRINT1("FIXME: leaking old bus relations\n");
     }
 
     Size = sizeof(DEVICE_RELATIONS) +
            sizeof(Relations->Objects) * (DeviceExtension->DeviceListCount - 1);
-    Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+    Relations = ExAllocatePoolWithTag(PagedPool, Size, TAG_PCI);
     if (!Relations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -369,7 +370,7 @@ FdoQueryBusRelations(
             RtlFreeUnicodeString(&PdoDeviceExtension->DeviceLocation);
         }
 
-        ExFreePool(Relations);
+        ExFreePoolWithTag(Relations, TAG_PCI);
         return ErrorStatus;
     }
 
@@ -452,33 +453,6 @@ FdoStartDevice(
   Irp->IoStatus.Information = 0;
 
   return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS
-FdoSetPower(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    PIO_STACK_LOCATION IrpSp)
-{
-    NTSTATUS Status;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-
-    DPRINT("Called\n");
-
-    if (IrpSp->Parameters.Power.Type == DevicePowerState)
-    {
-        /* FIXME: Set device power state for the device */
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else
-    {
-        Status = STATUS_UNSUCCESSFUL;
-    }
-
-    return Status;
 }
 
 
@@ -615,30 +589,16 @@ FdoPowerControl(
  *     Status
  */
 {
-    PIO_STACK_LOCATION IrpSp;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
     DPRINT("Called\n");
 
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-    switch (IrpSp->MinorFunction)
-    {
-        case IRP_MN_SET_POWER:
-            Status = FdoSetPower(DeviceObject, Irp, IrpSp);
-            break;
-
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-    }
-
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = PoCallDriver(DeviceExtension->Ldo, Irp);
 
     DPRINT("Leaving. Status 0x%X\n", Status);
 

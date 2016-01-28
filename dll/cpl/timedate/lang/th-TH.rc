@@ -2,16 +2,16 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "«—π∑’Ë && ‡«≈“"
+CAPTION "‡∏ß‡∏±‡∏ô‡∏ó‡∏µ‡πà && ‡πÄ‡∏ß‡∏•‡∏≤"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&«—π∑’Ë", -1, 4, 2, 122, 125
+    GROUPBOX "&‡∏ß‡∏±‡∏ô‡∏ó‡∏µ‡πà", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT, 65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 120, 17, 50, 12
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&‡«≈“", -1, 132, 2, 113, 125
+    GROUPBOX "&‡πÄ‡∏ß‡∏•‡∏≤", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 144, 105, 90, 12
     LTEXT "", IDC_TIMEZONE, 6, 132, 242, 11
     CONTROL "", IDC_CLOCKWND, "ClockWndClass", WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
@@ -19,39 +19,39 @@ END
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "‡¢µ‡«≈“"
+CAPTION "‡πÄ‡∏Ç‡∏ï‡πÄ‡∏ß‡∏•‡∏≤"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "°”≈—ß∑”°“√ª√—∫π“Ã‘°“Õ—µ‚π¡—µ‘„π‡«≈“ &°≈“ß«—π",
+    AUTOCHECKBOX "‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏ó‡∏≥‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏±‡∏ö‡∏ô‡∏≤‡∏¨‡∏¥‡∏Å‡∏≤‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥‡πÉ‡∏ô‡πÄ‡∏ß‡∏•‡∏≤ &‡∏Å‡∏•‡∏≤‡∏á‡∏ß‡∏±‡∏ô",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "‡«≈“¢ÕßÕ‘π‡∑Õ√Ï‡πÁµ"
+CAPTION "‡πÄ‡∏ß‡∏•‡∏≤‡∏Ç‡∏≠‡∏á‡∏≠‡∏¥‡∏ô‡πÄ‡∏ó‡∏≠‡∏£‡πå‡πÄ‡∏ô‡πá‡∏ï"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "°”≈—ßª√—∫‡∑’¬∫‡«≈“Õ—µ‚π¡—µ‘°—∫‡§√◊ËÕß·¡Ë¢Ë“¬Õ‘π‡∑Õ√Ï‡πÁµ",
+    AUTOCHECKBOX "‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥‡∏Å‡∏±‡∏ö‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡πÅ‡∏°‡πà‡∏Ç‡πà‡∏≤‡∏¢‡∏≠‡∏¥‡∏ô‡πÄ‡∏ó‡∏≠‡∏£‡πå‡πÄ‡∏ô‡πá‡∏ï",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT "‡§√◊ËÕß·¡Ë¢Ë“¬:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "ª√—∫ª√ÿß„πµÕππ’È", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT "‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡πÅ‡∏°‡πà‡∏Ç‡πà‡∏≤‡∏¢:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON "‡∏õ‡∏£‡∏±‡∏ö‡∏õ‡∏£‡∏∏‡∏á‡πÉ‡∏ô‡∏ï‡∏≠‡∏ô‡∏ô‡∏µ‡πâ", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "°“√ª√—∫‡∑’¬∫‡«≈“®– “¡“√∂∑”‰¥È‡¡◊ËÕ§Õ¡æ‘«‡µÕ√Ï¢Õß§ÿ≥‰¥È‡™◊ËÕ¡µËÕ°—∫Õ‘π‡∑Õ√Ï‡πÁµ", -1, 12, 114, 225, 25
+    LTEXT "‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤‡∏à‡∏∞‡∏™‡∏≤‡∏°‡∏≤‡∏£‡∏ñ‡∏ó‡∏≥‡πÑ‡∏î‡πâ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏Ñ‡∏≠‡∏°‡∏û‡∏¥‡∏ß‡πÄ‡∏ï‡∏≠‡∏£‡πå‡∏Ç‡∏≠‡∏á‡∏Ñ‡∏∏‡∏ì‡πÑ‡∏î‡πâ‡πÄ‡∏ä‡∏∑‡πà‡∏≠‡∏°‡∏ï‡πà‡∏≠‡∏Å‡∏±‡∏ö‡∏≠‡∏¥‡∏ô‡πÄ‡∏ó‡∏≠‡∏£‡πå‡πÄ‡∏ô‡πá‡∏ï", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "«—π∑’Ë/‡«≈“"
-    IDS_CPLDESCRIPTION "‡ª≈’Ë¬π¢ÈÕ¡Ÿ≈¢Õß«—π∑’Ë, ‡«≈“ ·≈–‡¢µ‡«≈“"
-    IDS_TIMEZONETEXT "‡¢µ‡«≈“„πª—®®ÿ∫—π: %s"
-    IDS_TIMEZONEINVALID "¬°‡≈‘°°“√ª√—∫‡∑’¬∫‡«≈“"
-    IDS_TIMEZONEUNKNOWN "‰¡Ë∑√“∫§Ë“"
-    IDS_INETTIMESUCSYNC "‡«≈“‰¥È√—∫°“√ª√—∫‡∑’¬∫‡«≈“ ”‡√Á®·≈È«¿“¬„π %s ¢Õß %s „π %s"
-    IDS_INETTIMENEXTSYNC "°“√ª√—∫‡∑’¬∫µËÕ‰ª: %s „π %s"
-    IDS_INETTIMESYNCING "‚ª√¥√Õ ReactOS °”≈—ßª√—∫‡∑’¬∫‡«≈“¿“¬„π %s"
-    IDS_INETTIMEERROR "‡°‘¥°“√º‘¥æ≈“¥„π¢≥–∑’Ë ReactOS °”≈—ßª√—∫‡∑’¬∫‡«≈“¿“¬„π %s"
+    IDS_CPLNAME "‡∏ß‡∏±‡∏ô‡∏ó‡∏µ‡πà/‡πÄ‡∏ß‡∏•‡∏≤"
+    IDS_CPLDESCRIPTION "‡πÄ‡∏õ‡∏•‡∏µ‡πà‡∏¢‡∏ô‡∏Ç‡πâ‡∏≠‡∏°‡∏π‡∏•‡∏Ç‡∏≠‡∏á‡∏ß‡∏±‡∏ô‡∏ó‡∏µ‡πà, ‡πÄ‡∏ß‡∏•‡∏≤ ‡πÅ‡∏•‡∏∞‡πÄ‡∏Ç‡∏ï‡πÄ‡∏ß‡∏•‡∏≤"
+    IDS_TIMEZONETEXT "‡πÄ‡∏Ç‡∏ï‡πÄ‡∏ß‡∏•‡∏≤‡πÉ‡∏ô‡∏õ‡∏±‡∏à‡∏à‡∏∏‡∏ö‡∏±‡∏ô: %s"
+    IDS_TIMEZONEINVALID "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤"
+    IDS_TIMEZONEUNKNOWN "‡πÑ‡∏°‡πà‡∏ó‡∏£‡∏≤‡∏ö‡∏Ñ‡πà‡∏≤"
+    IDS_INETTIMESUCSYNC "‡πÄ‡∏ß‡∏•‡∏≤‡πÑ‡∏î‡πâ‡∏£‡∏±‡∏ö‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤‡∏™‡∏≥‡πÄ‡∏£‡πá‡∏à‡πÅ‡∏•‡πâ‡∏ß‡∏†‡∏≤‡∏¢‡πÉ‡∏ô %s ‡∏Ç‡∏≠‡∏á %s ‡πÉ‡∏ô %s"
+    IDS_INETTIMENEXTSYNC "‡∏Å‡∏≤‡∏£‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡∏ï‡πà‡∏≠‡πÑ‡∏õ: %s ‡πÉ‡∏ô %s"
+    IDS_INETTIMESYNCING "‡πÇ‡∏õ‡∏£‡∏î‡∏£‡∏≠ ReactOS ‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤‡∏†‡∏≤‡∏¢‡πÉ‡∏ô %s"
+    IDS_INETTIMEERROR "‡πÄ‡∏Å‡∏¥‡∏î‡∏Å‡∏≤‡∏£‡∏ú‡∏¥‡∏î‡∏û‡∏•‡∏≤‡∏î‡πÉ‡∏ô‡∏Ç‡∏ì‡∏∞‡∏ó‡∏µ‡πà ReactOS ‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏õ‡∏£‡∏±‡∏ö‡πÄ‡∏ó‡∏µ‡∏¢‡∏ö‡πÄ‡∏ß‡∏•‡∏≤‡∏†‡∏≤‡∏¢‡πÉ‡∏ô %s"
 END

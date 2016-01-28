@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           GDI Palette Functions
- * FILE:              subsystems/win32/win32k/objects/palette.c
+ * FILE:              win32ss/gdi/ntgdi/palette.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  */
@@ -60,7 +60,7 @@ unsigned short GetNumberOfBits(unsigned int dwMask)
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitPaletteImpl()
+InitPaletteImpl(VOID)
 {
     // Create default palette (20 system colors)
     gppalDefault = PALETTE_AllocPalWithHandle(PAL_INDEXED,
@@ -673,6 +673,7 @@ NtGdiGetNearestColor(
         return CLR_INVALID;
     }
 
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     if(dc->dclevel.pSurface == NULL)
         ppal = gppalMono;
     else
@@ -731,7 +732,7 @@ IntGdiRealizePalette(HDC hDC)
     PALETTE *ppalSurf, *ppalDC;
 
     pdc = DC_LockDc(hDC);
-    if(!pdc)
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
@@ -742,16 +743,17 @@ IntGdiRealizePalette(HDC hDC)
         goto cleanup;
     }
 
-	if(pdc->dctype == DCTYPE_DIRECT)
-	{
-		UNIMPLEMENTED;
-		goto cleanup;
-	}
+    if (pdc->dctype == DCTYPE_DIRECT)
+    {
+        UNIMPLEMENTED;
+        goto cleanup;
+    }
 
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
 
-    if(!(ppalSurf->flFlags & PAL_INDEXED))
+    if (!(ppalSurf->flFlags & PAL_INDEXED))
     {
         // FIXME: Set error?
         goto cleanup;
@@ -762,7 +764,7 @@ IntGdiRealizePalette(HDC hDC)
     // FIXME: Should we resize ppalSurf if it's too small?
     realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
-    for(i=0; i<realize; i++)
+    for (i=0; i<realize; i++)
     {
         InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
     }
@@ -784,9 +786,6 @@ IntAnimatePalette(HPALETTE hPal,
     {
         PPALETTE palPtr;
         UINT pal_entries;
-        HDC hDC;
-        PDC dc;
-        PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
         palPtr = PALETTE_ShareLockPalette(hPal);
@@ -814,6 +813,16 @@ IntAnimatePalette(HPALETTE hPal,
 
         PALETTE_ShareUnlockPalette(palPtr);
 
+#if 0
+/* FIXME: This is completely broken! We cannot call UserGetDesktopWindow
+   without first acquiring the USER lock. But the whole process here is
+   screwed anyway. Instead of messing with the desktop DC, we need to
+   check, whether the palette is associated with a PDEV and whether that
+   PDEV supports palette operations. Then we need to call pfnDrvSetPalette.
+   But since IntGdiRealizePalette() is not even implemented for direct DCs,
+   we can as well just do nothing, that will at least not ASSERT!
+   I leave the whole thing here, to scare people away, who want to "fix" it. */
+
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
         hDC =  UserGetWindowDC(Wnd);
@@ -829,6 +838,7 @@ IntAnimatePalette(HPALETTE hPal,
                 DC_UnlockDc(dc);
         }
         UserReleaseDC(Wnd,hDC, FALSE);
+#endif // 0
     }
     return ret;
 }
@@ -993,14 +1003,15 @@ GreGetSetColorTable(
         return 0;
     }
 
-    /* Get the surace from the DC */
+    /* Get the surface from the DC */
     psurf = pdc->dclevel.pSurface;
 
     /* Check if we have the default surface */
     if (psurf == NULL)
     {
         /* Use a mono palette */
-        if(!bSet) ppal = gppalMono;
+        if (!bSet)
+            ppal = gppalMono;
     }
     else if (psurf->SurfObj.iType == STYPE_BITMAP)
     {
@@ -1052,39 +1063,38 @@ GreGetSetColorTable(
     return iResult;
 }
 
-W32KAPI
+__kernel_entry
 LONG
 APIENTRY
 NtGdiDoPalette(
-    IN HGDIOBJ hObj,
-    IN WORD iStart,
-    IN WORD cEntries,
-    IN LPVOID pUnsafeEntries,
-    IN DWORD iFunc,
-    IN BOOL bInbound)
+    _In_ HGDIOBJ hObj,
+    _In_ WORD iStart,
+    _In_ WORD cEntries,
+    _When_(bInbound!=0, _In_reads_bytes_(cEntries*sizeof(PALETTEENTRY)))
+    _When_(bInbound==0, _Out_writes_bytes_(cEntries*sizeof(PALETTEENTRY))) LPVOID pUnsafeEntries,
+    _In_ DWORD iFunc,
+    _In_ BOOL bInbound)
 {
 	LONG ret;
 	LPVOID pEntries = NULL;
-
-	/* FIXME: Handle bInbound correctly */
-
-	if (bInbound &&
-	    (pUnsafeEntries == NULL || cEntries == 0))
-	{
-		return 0;
-	}
+	SIZE_T cjSize;
 
 	if (pUnsafeEntries)
 	{
-		pEntries = ExAllocatePoolWithTag(PagedPool, cEntries * sizeof(PALETTEENTRY), TAG_PALETTE);
+		if (cEntries == 0)
+			return 0;
+
+		cjSize = cEntries * sizeof(PALETTEENTRY);
+		pEntries = ExAllocatePoolWithTag(PagedPool, cjSize, TAG_PALETTE);
 		if (!pEntries)
 			return 0;
+
 		if (bInbound)
 		{
 			_SEH2_TRY
 			{
-				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pEntries, pUnsafeEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForRead(pUnsafeEntries, cjSize, 1);
+				memcpy(pEntries, pUnsafeEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
@@ -1096,7 +1106,7 @@ NtGdiDoPalette(
 		else
 		{
 		    /* Zero it out, so we don't accidentally leak kernel data */
-		    RtlZeroMemory(pEntries, cEntries * sizeof(PALETTEENTRY));
+		    RtlZeroMemory(pEntries, cjSize);
 		}
 	}
 
@@ -1134,12 +1144,13 @@ NtGdiDoPalette(
 
 	if (pEntries)
 	{
-		if (!bInbound)
+		if (!bInbound && (ret > 0))
 		{
+			cjSize = min(cEntries, ret) * sizeof(PALETTEENTRY);
 			_SEH2_TRY
 			{
-				ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pUnsafeEntries, pEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForWrite(pUnsafeEntries, cjSize, 1);
+				memcpy(pUnsafeEntries, pEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{

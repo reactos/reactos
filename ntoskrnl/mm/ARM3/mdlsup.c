@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -270,6 +270,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
         //
         Pfn1->u3.e1.StartOfAllocation = 0;
         Pfn1->u3.e1.EndOfAllocation = 0;
+        Pfn1->u3.e1.PageLocation = StandbyPageList;
         Pfn1->u2.ShareCount = 0;
 
         //

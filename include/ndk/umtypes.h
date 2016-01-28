@@ -129,7 +129,7 @@ typedef LONG KPRIORITY;
 //
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H) && !defined(_NTSECAPI_)
 
-#ifndef __BCRYPT_H__
+#if !defined(__BCRYPT_H__) && !defined(__WINE_BCRYPT_H)
 typedef _Return_type_success_(return >= 0) long NTSTATUS, *PNTSTATUS;
 #endif
 

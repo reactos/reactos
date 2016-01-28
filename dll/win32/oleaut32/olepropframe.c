@@ -201,6 +201,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
     if(property_sheet_dialog_data) {
         if(property_sheet_dialog_data[1] == 0xffff) {
             ERR("Expected DLGTEMPLATE structure\n");
+            FreeLibrary(hcomctl);
             return E_OUTOFMEMORY;
         }
 

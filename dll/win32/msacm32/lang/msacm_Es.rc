@@ -1,7 +1,7 @@
 /*
  * Spanish resource file for MS ACM
  *
- * Copyright 2004 José Manuel Ferrer Ortiz
+ * Copyright 2004 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,32 +20,32 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 100
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selección de sonido"
+DLG_ACMFORMATCHOOSE_ID DIALOGEX  10, 20, 225, 118
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "SelecciÃ³n de sonido"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
     LTEXT           "&Nombre:", -1, 5, 5, 115, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Guardar como...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
-    PUSHBUTTON      "&Eliminar", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
+    PUSHBUTTON      "&Guardar como...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "&Eliminar", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
 
-    LTEXT           "&Formato:", -1, 5, 41, 44, 8, NOT WS_GROUP
+    LTEXT           "&Formato:", -1, 5, 56, 44, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 54, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "A&tributos:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "A&tributos:", -1, 5, 76, 44, 8, NOT WS_GROUP
 
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 74, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    DEFPUSHBUTTON   "Aceptar", IDOK, 48, 80, 40, 14
-    PUSHBUTTON      "Cancelar", IDCANCEL, 92, 80, 40, 14
-    PUSHBUTTON      "&Ayuda", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14
+    PUSHBUTTON      "&Ayuda", IDD_ACMFORMATCHOOSE_BTN_HELP, 5, 100, 50, 14
+    DEFPUSHBUTTON   "Aceptar", IDOK, 115, 100, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 170, 100, 50, 14
 
 END

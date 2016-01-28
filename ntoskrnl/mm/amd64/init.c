@@ -14,11 +14,15 @@
 //#define NDEBUG
 #include <debug.h>
 
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #ifdef _WINKD_
 extern PMMPTE MmDebugPte;
 #endif
+
+/* Helper macros */
+#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
+#define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
 /* GLOBALS *****************************************************************/
 
@@ -58,7 +62,7 @@ BOOLEAN MiPfnsInitialized = FALSE;
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializeSessionSpaceLayout()
+MiInitializeSessionSpaceLayout(VOID)
 {
     MmSessionSize = MI_SESSION_SIZE;
     MmSessionViewSize = MI_SESSION_VIEW_SIZE;
@@ -181,7 +185,7 @@ MiMapPTEs(
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializePageTable()
+MiInitializePageTable(VOID)
 {
     ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *PointerPxe;
@@ -363,7 +367,7 @@ MiBuildNonPagedPool(VOID)
 VOID
 NTAPI
 INIT_FUNCTION
-MiBuildSystemPteSpace()
+MiBuildSystemPteSpace(VOID)
 {
     PMMPTE PointerPte;
 

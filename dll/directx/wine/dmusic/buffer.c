@@ -55,8 +55,6 @@ static ULONG WINAPI IDirectMusicBufferImpl_AddRef(LPDIRECTMUSICBUFFER iface)
 
     TRACE("(%p)->(): new ref = %u\n", iface, ref);
 
-    DMUSIC_LockModule();
-
     return ref;
 }
 
@@ -70,9 +68,8 @@ static ULONG WINAPI IDirectMusicBufferImpl_Release(LPDIRECTMUSICBUFFER iface)
     if (!ref) {
         HeapFree(GetProcessHeap(), 0, This->data);
         HeapFree(GetProcessHeap(), 0, This);
+        DMUSIC_UnlockModule();
     }
-
-    DMUSIC_UnlockModule();
 
     return ref;
 }
@@ -277,7 +274,6 @@ static const IDirectMusicBufferVtbl DirectMusicBuffer_Vtbl = {
 HRESULT DMUSIC_CreateDirectMusicBufferImpl(LPDMUS_BUFFERDESC desc, LPVOID* ret_iface)
 {
     IDirectMusicBufferImpl* dmbuffer;
-    HRESULT hr;
 
     TRACE("(%p, %p)\n", desc, ret_iface);
 
@@ -288,7 +284,7 @@ HRESULT DMUSIC_CreateDirectMusicBufferImpl(LPDMUS_BUFFERDESC desc, LPVOID* ret_i
         return E_OUTOFMEMORY;
 
     dmbuffer->IDirectMusicBuffer_iface.lpVtbl = &DirectMusicBuffer_Vtbl;
-    dmbuffer->ref = 0; /* Will be inited by QueryInterface */
+    dmbuffer->ref = 1;
 
     if (IsEqualGUID(&desc->guidBufferFormat, &GUID_NULL))
         dmbuffer->format = KSDATAFORMAT_SUBTYPE_MIDI;
@@ -302,12 +298,8 @@ HRESULT DMUSIC_CreateDirectMusicBufferImpl(LPDMUS_BUFFERDESC desc, LPVOID* ret_i
         return E_OUTOFMEMORY;
     }
 
-    hr = IDirectMusicBufferImpl_QueryInterface((LPDIRECTMUSICBUFFER)dmbuffer, &IID_IDirectMusicBuffer, ret_iface);
-    if (FAILED(hr))
-    {
-        HeapFree(GetProcessHeap(), 0, dmbuffer->data);
-        HeapFree(GetProcessHeap(), 0, dmbuffer);
-    }
+    DMUSIC_LockModule();
+    *ret_iface = &dmbuffer->IDirectMusicBuffer_iface;
 
-    return hr;
+    return S_OK;
 }

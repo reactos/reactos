@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <mmebuddy_debug.h>
 
 extern HANDLE KernelHandle;
 

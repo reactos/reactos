@@ -24,7 +24,7 @@ STRINGTABLE
 {
   IDS_TRUE  "Verdadero"
   IDS_FALSE "Falso"
-  IDS_YES   "Sí"
+  IDS_YES   "SÃ­"
   IDS_NO    "No"
   IDS_ON    "Activado"
   IDS_OFF   "Desactivado"

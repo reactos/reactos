@@ -1023,7 +1023,7 @@ static HRESULT PropertyStorage_ReadDictionary(PropertyStorage_impl *This,
 #define __thiscall_wrapper __cdecl
 #endif
 
-static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *userdata, ULONG size)
+static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *this, ULONG size)
 {
     return CoTaskMemAlloc(size);
 }
@@ -1032,7 +1032,7 @@ static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *userdata, ULONG si
  * end of the buffer.
  */
 static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
-    UINT codepage, void* (__thiscall_wrapper *allocate)(void *userdata, ULONG size), void *allocate_data)
+    UINT codepage, void* (__thiscall_wrapper *allocate)(void *this, ULONG size), void *allocate_data)
 {
     HRESULT hr = S_OK;
 

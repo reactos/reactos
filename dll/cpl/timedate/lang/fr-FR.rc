@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Ajuster automatiquement l'heure lors du &passage à l'heure d'été",
+    AUTOCHECKBOX "Ajuster automatiquement l'heure lors du &passage Ã  l'heure d'Ã©tÃ©",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -37,10 +37,10 @@ BEGIN
     AUTOCHECKBOX "Synchroniser automatiquement avec un serveur d'heure Internet",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Serveur:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Mettre à jour maintenant", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "Mettre Ã  jour maintenant", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "La synchronisation ne peut se faire que si votre ordinateur est connecté à Internet.", -1, 12, 114, 225, 25
+    LTEXT "La synchronisation ne peut se faire que si votre ordinateur est connectÃ© Ã  Internet.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
@@ -50,8 +50,8 @@ BEGIN
     IDS_TIMEZONETEXT "Fuseau horaire actuel : %s"
     IDS_TIMEZONEINVALID "Invalide"
     IDS_TIMEZONEUNKNOWN "Inconnu"
-    IDS_INETTIMESUCSYNC "L'heure a été synchronisée avec %s le %s à %s"
-    IDS_INETTIMENEXTSYNC "Prochaine synchronisation: %s à %s"
+    IDS_INETTIMESUCSYNC "L'heure a Ã©tÃ© synchronisÃ©e avec %s le %s Ã  %s"
+    IDS_INETTIMENEXTSYNC "Prochaine synchronisation: %s Ã  %s"
     IDS_INETTIMESYNCING "Veuillez patienter pendant que ReactOS synchronise l'heure avec %s"
     IDS_INETTIMEERROR "Une erreur a eu lieu pendant que ReactOS synchronisait avec %s"
 END

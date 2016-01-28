@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/stockobj.c
+ * FILE:            win32ss/gdi/ntgdi/stockobj.c
  * PURPOSE:         Stock objects functions
  * PROGRAMMER:
  */
@@ -114,11 +114,12 @@ IntCreateStockPen(DWORD dwPenStyle,
 
     if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
 
-    pbrushPen->ptPenWidth.x = abs(dwWidth);
-    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->iHatch = 0;
+    pbrushPen->lWidth = abs(dwWidth);
+    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
-    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->iBrushStyle = ulBrushStyle;
     pbrushPen->hbmClient = (HANDLE)NULL;
     pbrushPen->dwStyleCount = 0;
     pbrushPen->pStyle = 0;

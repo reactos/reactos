@@ -47,20 +47,22 @@ struct queue_timer
     DWORD period;
     ULONG flags;
     ULONGLONG expire;
-    BOOL destroy;      /* timer should be deleted; once set, never unset */
-    HANDLE event;      /* removal event */
+    BOOL destroy;               /* timer should be deleted; once set, never unset */
+    HANDLE event;               /* removal event */
 };
 
 struct timer_queue
 {
+    DWORD magic;
     RTL_CRITICAL_SECTION cs;
-    struct list timers;          /* sorted by expiration time */
-    BOOL quit;         /* queue should be deleted; once set, never unset */
+    struct list timers;         /* sorted by expiration time */
+    BOOL quit;                  /* queue should be deleted; once set, never unset */
     HANDLE event;
     HANDLE thread;
 };
 
 #define EXPIRE_NEVER (~(ULONGLONG) 0)
+#define TIMER_QUEUE_MAGIC  0x516d6954   /* TimQ */
 
 static void queue_remove_timer(struct queue_timer *t)
 {
@@ -77,7 +79,7 @@ static void queue_remove_timer(struct queue_timer *t)
         NtSetEvent(t->event, NULL);
     RtlFreeHeap(RtlGetProcessHeap(), 0, t);
 
-    if (q->quit && list_count(&q->timers) == 0)
+    if (q->quit && list_empty(&q->timers))
         NtSetEvent(q->event, NULL);
 }
 
@@ -95,19 +97,18 @@ static void timer_cleanup_callback(struct queue_timer *t)
     RtlLeaveCriticalSection(&q->cs);
 }
 
-static DWORD WINAPI timer_callback_wrapper(LPVOID p)
+static VOID WINAPI timer_callback_wrapper(LPVOID p)
 {
     struct queue_timer *t = p;
     t->callback(t->param, TRUE);
     timer_cleanup_callback(t);
-    return 0;
 }
 
 static inline ULONGLONG queue_current_time(void)
 {
-    LARGE_INTEGER now;
-    NtQuerySystemTime(&now);
-    return now.QuadPart / 10000;
+    LARGE_INTEGER now, freq;
+    NtQueryPerformanceCounter(&now, &freq);
+    return now.QuadPart * 1000 / freq.QuadPart;
 }
 
 static void queue_add_timer(struct queue_timer *t, ULONGLONG time,
@@ -151,13 +152,21 @@ static void queue_timer_expire(struct timer_queue *q)
     RtlEnterCriticalSection(&q->cs);
     if (list_head(&q->timers))
     {
+        ULONGLONG now, next;
         t = LIST_ENTRY(list_head(&q->timers), struct queue_timer, entry);
-        if (!t->destroy && t->expire <= queue_current_time())
+        if (!t->destroy && t->expire <= ((now = queue_current_time())))
         {
             ++t->runcount;
-            queue_move_timer(
-                t, t->period ? queue_current_time() + t->period : EXPIRE_NEVER,
-                FALSE);
+            if (t->period)
+            {
+                next = t->expire + t->period;
+                /* avoid trigger cascade if overloaded / hibernated */
+                if (next < now)
+                    next = now + t->period;
+            }
+            else
+                next = EXPIRE_NEVER;
+            queue_move_timer(t, next, FALSE);
         }
         else
             t = NULL;
@@ -174,7 +183,7 @@ static void queue_timer_expire(struct timer_queue *q)
                 = (t->flags
                    & (WT_EXECUTEINIOTHREAD | WT_EXECUTEINPERSISTENTTHREAD
                       | WT_EXECUTELONGFUNCTION | WT_TRANSFER_IMPERSONATION));
-            NTSTATUS status = RtlQueueWorkItem((WORKERCALLBACKFUNC)timer_callback_wrapper, t, flags);
+            NTSTATUS status = RtlQueueWorkItem(timer_callback_wrapper, t, flags);
             if (status != STATUS_SUCCESS)
                 timer_cleanup_callback(t);
         }
@@ -203,7 +212,7 @@ static ULONG queue_get_timeout(struct timer_queue *q)
     return timeout;
 }
 
-static void WINAPI timer_queue_thread_proc(LPVOID p)
+static DWORD WINAPI timer_queue_thread_proc(LPVOID p)
 {
     struct timer_queue *q = p;
     ULONG timeout_ms;
@@ -225,7 +234,7 @@ static void WINAPI timer_queue_thread_proc(LPVOID p)
                timer got put at the head of the list so we need to adjust
                our timeout.  */
             RtlEnterCriticalSection(&q->cs);
-            if (q->quit && list_count(&q->timers) == 0)
+            if (q->quit && list_empty(&q->timers))
                 done = TRUE;
             RtlLeaveCriticalSection(&q->cs);
         }
@@ -240,8 +249,10 @@ static void WINAPI timer_queue_thread_proc(LPVOID p)
 
     NtClose(q->event);
     RtlDeleteCriticalSection(&q->cs);
+    q->magic = 0;
     RtlFreeHeap(RtlGetProcessHeap(), 0, q);
     RtlpExitThreadFunc(STATUS_SUCCESS);
+    return 0;
 }
 
 static void queue_destroy_timer(struct queue_timer *t)
@@ -281,13 +292,14 @@ NTSTATUS WINAPI RtlCreateTimerQueue(PHANDLE NewTimerQueue)
     RtlInitializeCriticalSection(&q->cs);
     list_init(&q->timers);
     q->quit = FALSE;
-    status = NtCreateEvent(&q->event, EVENT_ALL_ACCESS, NULL, FALSE, FALSE);
+    q->magic = TIMER_QUEUE_MAGIC;
+    status = NtCreateEvent(&q->event, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE);
     if (status != STATUS_SUCCESS)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, q);
         return status;
     }
-    status = RtlpStartThreadFunc((PVOID)timer_queue_thread_proc, q, &q->thread);
+    status = RtlpStartThreadFunc(timer_queue_thread_proc, q, &q->thread);
     if (status != STATUS_SUCCESS)
     {
         NtClose(q->event);
@@ -323,7 +335,7 @@ NTSTATUS WINAPI RtlDeleteTimerQueueEx(HANDLE TimerQueue, HANDLE CompletionEvent)
     HANDLE thread;
     NTSTATUS status;
 
-    if (!q)
+    if (!q || q->magic != TIMER_QUEUE_MAGIC)
         return STATUS_INVALID_HANDLE;
 
     thread = q->thread;
@@ -360,10 +372,10 @@ NTSTATUS WINAPI RtlDeleteTimerQueueEx(HANDLE TimerQueue, HANDLE CompletionEvent)
     return status;
 }
 
-static struct timer_queue *default_timer_queue;
-
 static struct timer_queue *get_timer_queue(HANDLE TimerQueue)
 {
+    static struct timer_queue *default_timer_queue;
+
     if (TimerQueue)
         return TimerQueue;
     else
@@ -378,7 +390,7 @@ static struct timer_queue *get_timer_queue(HANDLE TimerQueue)
                     (void **) &default_timer_queue, q, NULL);
                 if (p)
                     /* Got beat to the punch.  */
-                    RtlDeleteTimerQueueEx(p, NULL);
+                    RtlDeleteTimerQueueEx(q, NULL);
             }
         }
         return default_timer_queue;
@@ -401,7 +413,7 @@ static struct timer_queue *get_timer_queue(HANDLE TimerQueue)
  *                 after the first callback.  If zero, the timer will only
  *                 fire once.  It still needs to be deleted with
  *                 RtlDeleteTimer.
- * Flags       [I] Flags controling the execution of the callback.  In
+ * Flags       [I] Flags controlling the execution of the callback.  In
  *                 addition to the WT_* thread pool flags (see
  *                 RtlQueueWorkItem), WT_EXECUTEINTIMERTHREAD and
  *                 WT_EXECUTEONLYONCE are supported.
@@ -418,8 +430,9 @@ NTSTATUS WINAPI RtlCreateTimer(HANDLE TimerQueue, PHANDLE NewTimer,
     NTSTATUS status;
     struct queue_timer *t;
     struct timer_queue *q = get_timer_queue(TimerQueue);
-    if (!q)
-        return STATUS_NO_MEMORY;
+
+    if (!q) return STATUS_NO_MEMORY;
+    if (q->magic != TIMER_QUEUE_MAGIC) return STATUS_INVALID_HANDLE;
 
     t = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof *t);
     if (!t)
@@ -516,7 +529,11 @@ NTSTATUS WINAPI RtlDeleteTimer(HANDLE TimerQueue, HANDLE Timer,
         return STATUS_INVALID_PARAMETER_1;
     q = t->q;
     if (CompletionEvent == INVALID_HANDLE_VALUE)
-        status = NtCreateEvent(&event, EVENT_ALL_ACCESS, NULL, FALSE, FALSE);
+    {
+        status = NtCreateEvent(&event, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE);
+        if (status == STATUS_SUCCESS)
+            status = STATUS_PENDING;
+    }
     else if (CompletionEvent)
         event = CompletionEvent;
 
@@ -530,7 +547,10 @@ NTSTATUS WINAPI RtlDeleteTimer(HANDLE TimerQueue, HANDLE Timer,
     if (CompletionEvent == INVALID_HANDLE_VALUE && event)
     {
         if (status == STATUS_PENDING)
+        {
             NtWaitForSingleObject(event, FALSE, NULL);
+            status = STATUS_SUCCESS;
+        }
         NtClose(event);
     }
 

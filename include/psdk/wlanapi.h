@@ -10,6 +10,9 @@ extern "C" {
 #endif
 
 /* Defines */
+#define WLAN_API_VERSION_1_0 0x00000001
+#define WLAN_API_VERSION_2_0 0x00000002
+
 #define WLAN_MAX_PHY_INDEX 64
 #define WLAN_MAX_NAME_LENGTH 256
 
@@ -24,7 +27,7 @@ typedef enum _WLAN_OPCODE_VALUE_TYPE {
     wlan_opcode_value_type_set_by_group_policy,
     wlan_opcode_value_type_set_by_user,
     wlan_opcode_value_type_invalid
-} WLAN_OPCODE_VALUE_TYPE;
+} WLAN_OPCODE_VALUE_TYPE; /* HACK: WIDL is broken    , *PWLAN_OPCODE_VALUE_TYPE; */
 
 typedef enum _WLAN_SECURABLE_OBJECT {
     wlan_secure_permit_list = 0,
@@ -51,6 +54,48 @@ typedef enum _WLAN_CONNECTION_MODE {
     wlan_connection_mode_auto,
     wlan_connection_mode_invalid
 } WLAN_CONNECTION_MODE, *PWLAN_CONNECTION_MODE;
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_IHV_CONTROL_TYPE {
+#else
+typedef enum _WLAN_IHV_CONTROL_TYPE {
+#endif
+    wlan_ihv_control_type_service,
+    wlan_ihv_control_type_driver
+} WLAN_IHV_CONTROL_TYPE;  /* HACK , *PWLAN_IHV_CONTROL_TYPE; */
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_INTF_OPCODE {
+#else
+typedef enum _WLAN_INTF_OPCODE {
+#endif
+    wlan_intf_opcode_autoconf_start                              = 0x000000000,
+    wlan_intf_opcode_autoconf_enabled,
+    wlan_intf_opcode_background_scan_enabled,
+    wlan_intf_opcode_media_streaming_mode,
+    wlan_intf_opcode_radio_state,
+    wlan_intf_opcode_bss_type,
+    wlan_intf_opcode_interface_state,
+    wlan_intf_opcode_current_connection,
+    wlan_intf_opcode_channel_number,
+    wlan_intf_opcode_supported_infrastructure_auth_cipher_pairs,
+    wlan_intf_opcode_supported_adhoc_auth_cipher_pairs,
+    wlan_intf_opcode_supported_country_or_region_string_list,
+    wlan_intf_opcode_current_operation_mode,
+    wlan_intf_opcode_supported_safe_mode,
+    wlan_intf_opcode_certified_safe_mode,
+    wlan_intf_opcode_hosted_network_capable,
+    wlan_intf_opcode_management_frame_protection_capable,
+    wlan_intf_opcode_autoconf_end                                = 0x0fffffff,
+    wlan_intf_opcode_msm_start                                   = 0x10000100,
+    wlan_intf_opcode_statistics,
+    wlan_intf_opcode_rssi,
+    wlan_intf_opcode_msm_end                                     = 0x1fffffff,
+    wlan_intf_opcode_security_start                              = 0x20010000,
+    wlan_intf_opcode_security_end                                = 0x2fffffff,
+    wlan_intf_opcode_ihv_start                                   = 0x30000000,
+    wlan_intf_opcode_ihv_end                                     = 0x3fffffff
+} WLAN_INTF_OPCODE; /* HACK: WIDL is broken    , *PWLAN_INTF_OPCODE; */
 
 #if defined(__midl) || defined(__WIDL__)
 typedef [v1_enum] enum _WLAN_INTERFACE_STATE {
@@ -184,14 +229,34 @@ typedef struct _WLAN_CONNECTION_PARAMETERS {
 
 typedef L2_NOTIFICATION_DATA WLAN_NOTIFICATION_DATA, *PWLAN_NOTIFICATION_DATA;
 
+typedef void (__stdcall *WLAN_NOTIFICATION_CALLBACK) (PWLAN_NOTIFICATION_DATA, PVOID);
+
 /* Functions */
 #if !defined(__midl) && !defined(__WIDL__)
 PVOID WINAPI WlanAllocateMemory(DWORD dwSize);
 VOID WINAPI WlanFreeMemory(PVOID pMemory);
 DWORD WINAPI WlanOpenHandle(IN DWORD dwClientVersion, PVOID pReserved, OUT DWORD *pdwNegotiatedVersion, OUT HANDLE *phClientHandle);
 DWORD WINAPI WlanCloseHandle(IN HANDLE hClientHandle, PVOID pReserved);
+DWORD WINAPI WlanConnect(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN const PWLAN_CONNECTION_PARAMETERS pConnectionParameters, PVOID pReserved);
+DWORD WINAPI WlanDisconnect(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, PVOID pReserved);
 DWORD WINAPI WlanEnumInterfaces(IN HANDLE hClientHandle, PVOID pReserved, OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
-DWORD WINAPI WlanScan(IN HANDLE hClientHandle, IN GUID *pInterfaceGuid, IN PDOT11_SSID pDot11Ssid, IN PWLAN_RAW_DATA pIeData, PVOID pReserved);
+DWORD WINAPI WlanGetAvailableNetworkList(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN DWORD dwFlags, PVOID pReserved, OUT PWLAN_AVAILABLE_NETWORK_LIST *ppAvailableNetworkList);
+DWORD WINAPI WlanGetInterfaceCapability(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, PVOID pReserved, OUT PWLAN_INTERFACE_CAPABILITY *ppCapability);
+DWORD WINAPI WlanDeleteProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved);
+DWORD WINAPI WlanGetProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved, OUT LPWSTR *pstrProfileXml, DWORD *pdwFlags, PDWORD pdwGrantedAccess);
+DWORD WINAPI WlanGetProfileCustomUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved, OUT DWORD *pdwDataSize, OUT PBYTE *ppData);
+DWORD WINAPI WlanGetProfileList(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, PVOID pReserved, OUT PWLAN_PROFILE_INFO_LIST *ppProfileList);
+DWORD WINAPI WlanIhvControl(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN WLAN_IHV_CONTROL_TYPE Type, IN DWORD dwInBufferSize, IN PVOID pInBuffer, IN DWORD dwOutBufferSize, PVOID pOutBuffer, OUT PDWORD pdwBytesReturned);
+DWORD WINAPI WlanQueryInterface(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN WLAN_INTF_OPCODE OpCode, PVOID pReserved, OUT PDWORD pdwDataSize, OUT PVOID *ppData, WLAN_OPCODE_VALUE_TYPE *pWlanOpcodeValueType);
+DWORD WINAPI WlanReasonCodeToString(IN DWORD dwReasonCode, IN DWORD dwBufferSize, IN PWCHAR pStringBuffer, PVOID pReserved);
+DWORD WINAPI WlanRegisterNotification(IN HANDLE hClientHandle,IN DWORD dwNotifSource, IN BOOL bIgnoreDuplicate, WLAN_NOTIFICATION_CALLBACK funcCallback, PVOID pCallbackContext, PVOID pReserved, PDWORD pdwPrevNotifSource);
+DWORD WINAPI WlanRenameProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strOldProfileName, IN LPCWSTR strNewProfileName, PVOID pReserved);
+DWORD WINAPI WlanSetProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN DWORD dwFlags, IN LPCWSTR strProfileXml, LPCWSTR strAllUserProfileSecurity, IN BOOL bOverwrite, PVOID pReserved, OUT DWORD *pdwReasonCode);
+DWORD WINAPI WlanSetProfileCustomUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, IN DWORD dwDataSize, IN const PBYTE pData, PVOID pReserved);
+DWORD WINAPI WlanSetProfileEapUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, IN EAP_METHOD_TYPE eapType, IN DWORD dwFlags, IN DWORD dwEapUserDataSize, IN const LPBYTE pbEapUserData, PVOID pReserved);
+DWORD WINAPI WlanSetProfileList(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, DWORD dwItems, IN LPCWSTR *strProfileNames, PVOID pReserved);
+DWORD WINAPI WlanSetSecuritySettings(IN HANDLE hClientHandle, IN WLAN_SECURABLE_OBJECT SecurableObject, IN LPCWSTR strModifiedSDDL);
+DWORD WINAPI WlanScan(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN PDOT11_SSID pDot11Ssid, IN PWLAN_RAW_DATA pIeData, PVOID pReserved);
 #endif
 
 #ifdef __cplusplus

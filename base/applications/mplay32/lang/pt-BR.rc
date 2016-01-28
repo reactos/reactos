@@ -24,6 +24,7 @@ BEGIN
     END
     POPUP "&Device"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Properties", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Volume Control", IDM_VOLUMECTL
@@ -45,7 +46,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Todos os formatos (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
+    IDS_ALL_TYPES_FILTER "Todos os formatos"
     IDS_TOOLTIP_PLAY "Executar"
     IDS_TOOLTIP_STOP "Pausar"
     IDS_TOOLTIP_EJECT "Ejetar"
@@ -53,8 +62,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Procurar Anterior"
     IDS_TOOLTIP_SEEKFORW "Procurar Próximo"
     IDS_TOOLTIP_FORWARD "Pular Próxima"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Executar"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

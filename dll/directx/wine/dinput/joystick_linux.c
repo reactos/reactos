@@ -87,10 +87,7 @@ static inline JoystickImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W 
     return CONTAINING_RECORD(CONTAINING_RECORD(CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8W_iface),
            JoystickGenericImpl, base), JoystickImpl, generic);
 }
-static inline IDirectInputDevice8A *IDirectInputDevice8A_from_impl(JoystickImpl *This)
-{
-    return &This->generic.base.IDirectInputDevice8A_iface;
-}
+
 static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(JoystickImpl *This)
 {
     return &This->generic.base.IDirectInputDevice8W_iface;
@@ -149,6 +146,9 @@ static INT find_joystick_devices(void)
             WARN("ioctl(%s,JSIOCGAXES) failed: %s, defauting to 2\n", joydev.device, strerror(errno));
             joydev.axis_count = 2;
         }
+#else
+        WARN("reading number of joystick axes unsupported in this platform, defaulting to 2\n");
+        joydev.axis_count = 2;
 #endif
 #ifdef JSIOCGBUTTONS
         if (ioctl(fd, JSIOCGBUTTONS, &joydev.button_count) < 0)
@@ -156,6 +156,9 @@ static INT find_joystick_devices(void)
             WARN("ioctl(%s,JSIOCGBUTTONS) failed: %s, defauting to 2\n", joydev.device, strerror(errno));
             joydev.button_count = 2;
         }
+#else
+        WARN("reading number of joystick buttons unsupported in this platform, defaulting to 2\n");
+        joydev.button_count = 2;
 #endif
 
         if (ioctl(fd, JSIOCGAXMAP, axes_map) < 0)
@@ -200,6 +203,52 @@ static INT find_joystick_devices(void)
     return joystick_devices_count;
 }
 
+static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+{
+    DWORD dwSize = lpddi->dwSize;
+
+    TRACE("%d %p\n", dwSize, lpddi);
+    memset(lpddi, 0, dwSize);
+
+    /* Return joystick */
+    lpddi->dwSize = dwSize;
+    lpddi->guidInstance = DInput_Wine_Joystick_GUID;
+    lpddi->guidInstance.Data3 = id;
+    lpddi->guidProduct = DInput_Wine_Joystick_GUID;
+    /* we only support traditional joysticks for now */
+    if (version >= 0x0800)
+        lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
+    else
+        lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+    strcpy(lpddi->tszInstanceName, joystick_devices[id].name);
+    strcpy(lpddi->tszProductName,  joystick_devices[id].name);
+
+    lpddi->guidFFDriver = GUID_NULL;
+}
+
+static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
+{
+    DWORD dwSize = lpddi->dwSize;
+
+    TRACE("%d %p\n", dwSize, lpddi);
+    memset(lpddi, 0, dwSize);
+
+    /* Return joystick */
+    lpddi->dwSize = dwSize;
+    lpddi->guidInstance = DInput_Wine_Joystick_GUID;
+    lpddi->guidInstance.Data3 = id;
+    lpddi->guidProduct = DInput_Wine_Joystick_GUID;
+    /* we only support traditional joysticks for now */
+    if (version >= 0x0800)
+        lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
+    else
+        lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+
+    MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszInstanceName, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszProductName, MAX_PATH);
+    lpddi->guidFFDriver = GUID_NULL;
+}
+
 static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
     int fd = -1;
@@ -220,21 +269,7 @@ static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
             WARN("open(%s, O_RDONLY) failed: %s\n", joystick_devices[id].name, strerror(errno));
             return S_FALSE;
         }
-
-        /* Return joystick */
-        lpddi->guidInstance = DInput_Wine_Joystick_GUID;
-        lpddi->guidInstance.Data3 = id;
-        lpddi->guidProduct = DInput_Wine_Joystick_GUID;
-        /* we only support traditional joysticks for now */
-        if (version >= 0x0800)
-            lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-        else
-            lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
-
-        strcpy(lpddi->tszInstanceName, joystick_devices[id].name);
-        strcpy(lpddi->tszProductName,  joystick_devices[id].name);
-
-        lpddi->guidFFDriver = GUID_NULL;
+        fill_joystick_dideviceinstanceA( lpddi, version, id );
         close(fd);
         TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, lpddi->tszProductName);
         return S_OK;
@@ -263,20 +298,7 @@ static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
             WARN("open(%s,O_RDONLY) failed: %s\n", joystick_devices[id].device, strerror(errno));
             return S_FALSE;
         }
-
-        /* Return joystick */
-        lpddi->guidInstance = DInput_Wine_Joystick_GUID;
-        lpddi->guidInstance.Data3 = id;
-        lpddi->guidProduct = DInput_Wine_Joystick_GUID;
-        /* we only support traditional joysticks for now */
-        if (version >= 0x0800)
-            lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-        else
-            lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
-
-        MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszInstanceName, MAX_PATH);
-        MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszProductName, MAX_PATH);
-        lpddi->guidFFDriver = GUID_NULL;
+        fill_joystick_dideviceinstanceW( lpddi, version, id );
         close(fd);
         TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, joystick_devices[id].name);
         return S_OK;
@@ -568,6 +590,41 @@ static HRESULT WINAPI JoystickLinuxAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface
 }
 
 /******************************************************************************
+  *     GetDeviceInfo : get information about a device's identity
+  */
+static HRESULT WINAPI JoystickLinuxAImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8A iface, LPDIDEVICEINSTANCEA ddi)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8A(iface);
+
+    TRACE("(%p) %p\n", This, ddi);
+
+    if (ddi == NULL) return E_POINTER;
+    if ((ddi->dwSize != sizeof(DIDEVICEINSTANCE_DX3A)) &&
+        (ddi->dwSize != sizeof(DIDEVICEINSTANCEA)))
+        return DIERR_INVALIDPARAM;
+
+    fill_joystick_dideviceinstanceA( ddi, This->generic.base.dinput->dwVersion,
+                                     get_joystick_index(&This->generic.base.guid) );
+    return DI_OK;
+}
+
+static HRESULT WINAPI JoystickLinuxWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface, LPDIDEVICEINSTANCEW ddi)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8W(iface);
+
+    TRACE("(%p) %p\n", This, ddi);
+
+    if (ddi == NULL) return E_POINTER;
+    if ((ddi->dwSize != sizeof(DIDEVICEINSTANCE_DX3W)) &&
+        (ddi->dwSize != sizeof(DIDEVICEINSTANCEW)))
+        return DIERR_INVALIDPARAM;
+
+    fill_joystick_dideviceinstanceW( ddi, This->generic.base.dinput->dwVersion,
+                                     get_joystick_index(&This->generic.base.guid) );
+    return DI_OK;
+}
+
+/******************************************************************************
   *     Unacquire : frees the joystick
   */
 static HRESULT WINAPI JoystickLinuxWImpl_Unacquire(LPDIRECTINPUTDEVICE8W iface)
@@ -690,7 +747,7 @@ static const IDirectInputDevice8AVtbl JoystickAvt =
 	IDirectInputDevice2AImpl_SetEventNotification,
 	IDirectInputDevice2AImpl_SetCooperativeLevel,
 	JoystickAGenericImpl_GetObjectInfo,
-	JoystickAGenericImpl_GetDeviceInfo,
+	JoystickLinuxAImpl_GetDeviceInfo,
 	IDirectInputDevice2AImpl_RunControlPanel,
 	IDirectInputDevice2AImpl_Initialize,
 	IDirectInputDevice2AImpl_CreateEffect,
@@ -726,7 +783,7 @@ static const IDirectInputDevice8WVtbl JoystickWvt =
     IDirectInputDevice2WImpl_SetEventNotification,
     IDirectInputDevice2WImpl_SetCooperativeLevel,
     JoystickWGenericImpl_GetObjectInfo,
-    JoystickWGenericImpl_GetDeviceInfo,
+    JoystickLinuxWImpl_GetDeviceInfo,
     IDirectInputDevice2WImpl_RunControlPanel,
     IDirectInputDevice2WImpl_Initialize,
     IDirectInputDevice2WImpl_CreateEffect,

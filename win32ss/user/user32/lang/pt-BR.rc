@@ -67,6 +67,7 @@ BEGIN
     IDS_IGNORE "&Ignorar"
     IDS_YES "&Sim"
     IDS_NO "&Não"
+    IDS_CLOSE "&Fechar"
     IDS_HELP "Ajuda"
     IDS_TRYAGAIN "&Tentar Novamente"
     IDS_CONTINUE "&Continuar"

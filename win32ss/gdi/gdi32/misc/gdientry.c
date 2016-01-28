@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
  * PURPOSE:          GDI DirectX inteface
- * FILE:             lib/gdi32/misc/gdientry.c
+ * FILE:             win32ss/gdi/gdi32/misc/gdientry.c
  * PROGRAMERS:       Alex Ionescu (alex@relsoft.net)
  *                   Magnus Olsen (magnus@greatlord.com)
  */
@@ -1837,7 +1837,7 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
     {
         /* Free it */
         Return = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD);
-        if (Return == TRUE)
+        if (Return)
         {
             pDirectDrawGlobal->hDD = 0;
         }
@@ -1852,7 +1852,7 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
         {
             /* Delete the object */
             Return = NtGdiDdDeleteDirectDrawObject(ghDirectDraw);
-            if (Return == TRUE)
+            if (Return)
             {
                 ghDirectDraw = 0;
             }
@@ -2028,7 +2028,7 @@ DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
  */
 ULONG
 WINAPI
-DdQueryDisplaySettingsUniqueness()
+DdQueryDisplaySettingsUniqueness(VOID)
 {
     return GdiSharedHandleTable->flDeviceUniq;
 }

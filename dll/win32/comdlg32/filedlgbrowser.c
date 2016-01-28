@@ -919,7 +919,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
         return S_OK;
 
     /* Check if there is a mask to apply if not */
-    if(!fodInfos->ShellInfos.lpstrCurrentFilter || !lstrlenW(fodInfos->ShellInfos.lpstrCurrentFilter))
+    if(!fodInfos->ShellInfos.lpstrCurrentFilter || !fodInfos->ShellInfos.lpstrCurrentFilter[0])
         return S_OK;
 
     if (SUCCEEDED(IShellFolder_GetDisplayNameOf(fodInfos->Shell.FOIShellFolder, pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, &str)))

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsystems/win32/win32k/ntddraw/eng.c
+ * FILE:             win32ss/reactx/ntddraw/eng.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
@@ -59,11 +59,16 @@ VidMemFree(LPVMEMHEAP pvmh,
 /************************************************************************/
 /* EngAllocPrivateUserMem                                               */
 /************************************************************************/
+_Must_inspect_result_
+_Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(PrivateUserMem)
+ENGAPI
 PVOID
 APIENTRY
-EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
-                       SIZE_T  cj,
-                       ULONG  tag)
+EngAllocPrivateUserMem(
+    _In_ PDD_SURFACE_LOCAL psl,
+    _In_ SIZE_T cjMemSize,
+    _In_ ULONG ulTag)
 {
     PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = (PGD_ENGALLOCPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DxDdAllocPrivateUserMem].pfn;
 
@@ -74,7 +79,7 @@ EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
     }
 
     DPRINT1("Calling dxg.sys pfnEngAllocPrivateUserMem\n");
-    return pfnEngAllocPrivateUserMem(psl, cj, tag);
+    return pfnEngAllocPrivateUserMem(psl, cjMemSize, ulTag);
 }
 
 /************************************************************************/
@@ -122,7 +127,7 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * This function is no longer used in Windows NT 2000/XP/2003
 *
 *--*/
-DWORD
+HRESULT
 APIENTRY
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,

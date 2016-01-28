@@ -8,6 +8,7 @@
 #define IDI_JOY_ICON        4361
 #define IDI_CAMERA_ICON     4364
 #define IDI_SHUTDOWN_ICON   3009
+#define IDI_NO_HW           4390
 #define IDI_MUTED_ICON      4393
 #define IDI_MICROPHONE_ICON 4378
 

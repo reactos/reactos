@@ -18,6 +18,7 @@ list(APPEND SOURCE
     controls/static.c
     misc/dde.c
     misc/ddeclient.c
+    misc/ddemisc.c
     misc/ddeserver.c
     misc/desktop.c
     misc/display.c
@@ -25,6 +26,7 @@ list(APPEND SOURCE
     misc/exit.c
     misc/exticon.c
     misc/imm.c
+    misc/logon.c
     misc/misc.c
     misc/object.c
     misc/resources.c
@@ -38,7 +40,7 @@ list(APPEND SOURCE
     windows/caret.c
     windows/class.c
     windows/clipboard.c
-#   windows/cursoricon.c
+    windows/cursoricon.c
     windows/dc.c
     windows/defwnd.c
     windows/dialog.c
@@ -58,21 +60,16 @@ list(APPEND SOURCE
     windows/text.c
     windows/window.c
     windows/winpos.c
+    ${REACTOS_SOURCE_DIR}/win32ss/user/rtl/text.c
     ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
-
-if(USE_NEW_CURSORICON)
-    list(APPEND SOURCE windows/cursoricon_new.c)
-else()
-    list(APPEND SOURCE windows/cursoricon.c)
-endif()
 
 add_library(user32 SHARED
     ${SOURCE}
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
-set_module_type(user32 win32dll ENTRYPOINT DllMain 12 UNICODE HOTPATCHABLE)
+set_module_type(user32 win32dll ENTRYPOINT DllMain 12 UNICODE)
 target_link_libraries(user32 user32_wsprintf wine win32ksys ${PSEH_LIB})
 
 if(MSVC)

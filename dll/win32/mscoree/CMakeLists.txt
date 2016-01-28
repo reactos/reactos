@@ -1,10 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(mscoree.dll mscoree.spec)
 
 list(APPEND SOURCE

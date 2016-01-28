@@ -179,7 +179,7 @@ typedef struct
 
 /* List of all containers available */
 static struct list UrlContainers = LIST_INIT(UrlContainers);
-// ReactOS r54992
+/* ReactOS r54992 */
 BOOL bDefaultContainersAdded = FALSE;
 
 static inline char *heap_strdupWtoUTF8(LPCWSTR str)
@@ -731,7 +731,7 @@ static void cache_containers_init(void)
     static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
     static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
     static const WCHAR CookieSuffix[] = {0};
-    // ReactOS r50916
+    /* ReactOS r50916 */
     static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
@@ -747,10 +747,10 @@ static void cache_containers_init(void)
     };
     DWORD i;
 
-    // ReactOS r50916
+    /* ReactOS r50916 */
     if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
-        TRACE("Environment variable 'USERPROFILE' does not exist!\n");
+        ERR("Environment variable 'USERPROFILE' does not exist!\n");
         return;
     }
 
@@ -804,6 +804,10 @@ static void cache_containers_init(void)
         cache_containers_add(DefaultContainerData[i].cache_prefix, wszCachePath,
                 DefaultContainerData[i].default_entry_type, wszMutexName);
     }
+
+#ifdef __REACTOS__
+    bDefaultContainersAdded = TRUE;
+#endif
 }
 
 static void cache_containers_free(void)
@@ -823,9 +827,11 @@ static DWORD cache_containers_find(const char *url, cache_container **ret)
     if(!url)
         return ERROR_INVALID_PARAMETER;
 
-    // ReactOS r54992
+#ifdef __REACTOS__
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
+#endif
 
     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
     {
@@ -853,9 +859,11 @@ static BOOL cache_containers_enum(char *search_pattern, DWORD index, cache_conta
     if (search_pattern && index > 0)
         return FALSE;
 
-    // ReactOS r54992
+#ifdef __REACTOS__
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
+#endif
 
     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
     {
@@ -975,7 +983,8 @@ static BOOL urlcache_create_file_pathW(
     LPCSTR szLocalFileName,
     BYTE Directory,
     LPWSTR wszPath,
-    LPLONG lpBufferSize)
+    LPLONG lpBufferSize,
+    BOOL trunc_name)
 {
     LONG nRequired;
     int path_len = strlenW(pContainer->path);
@@ -989,6 +998,8 @@ static BOOL urlcache_create_file_pathW(
     nRequired = (path_len + file_name_len) * sizeof(WCHAR);
     if(Directory != CACHE_CONTAINER_NO_SUBDIR)
         nRequired += (DIR_LENGTH + 1) * sizeof(WCHAR);
+    if (trunc_name && nRequired >= *lpBufferSize)
+        nRequired = *lpBufferSize;
     if (nRequired <= *lpBufferSize)
     {
         int dir_len;
@@ -1004,7 +1015,9 @@ static BOOL urlcache_create_file_pathW(
         {
             dir_len = 0;
         }
-        MultiByteToWideChar(CP_ACP, 0, szLocalFileName, -1, wszPath + dir_len + path_len, file_name_len);
+        MultiByteToWideChar(CP_ACP, 0, szLocalFileName, -1, wszPath + dir_len + path_len,
+                *lpBufferSize/sizeof(WCHAR)-dir_len-path_len);
+        wszPath[*lpBufferSize/sizeof(WCHAR)-1] = 0;
         *lpBufferSize = nRequired;
         return TRUE;
     }
@@ -1093,7 +1106,7 @@ static DWORD urlcache_delete_file(const cache_container *container,
 
     if(!urlcache_create_file_pathW(container, header,
                 (LPCSTR)url_entry+url_entry->local_name_off,
-                url_entry->cache_dir, path, &path_size))
+                url_entry->cache_dir, path, &path_size, FALSE))
         goto succ;
 
     if(!GetFileAttributesExW(path, GetFileExInfoStandard, &attr))
@@ -1205,7 +1218,6 @@ static void dos_date_time_to_file_time(WORD fatdate, WORD fattime,
 
 static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_len)
 {
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     URL_COMPONENTSA uc;
     DWORD len, part_len;
     WCHAR *host_name;
@@ -1217,10 +1229,8 @@ static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_
         uc.nScheme = INTERNET_SCHEME_UNKNOWN;
 
     if(uc.nScheme!=INTERNET_SCHEME_HTTP && uc.nScheme!=INTERNET_SCHEME_HTTPS)
-#endif
         return MultiByteToWideChar(CP_UTF8, 0, url, -1, decoded_url, decoded_len);
 
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     if(!decoded_url)
         decoded_len = 0;
 
@@ -1257,7 +1267,6 @@ static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_
     len += part_len;
 
     return len;
-#endif /* !__REACTOS__ */
 }
 
 /***********************************************************************
@@ -1295,9 +1304,6 @@ static DWORD urlcache_copy_entry(cache_container *container, const urlcache_head
         dos_date_time_to_file_time(url_entry->sync_date, url_entry->sync_time, &entry_info->LastSyncTime);
     }
 
-    if(size%4 && size<*info_size)
-        ZeroMemory((LPBYTE)entry_info+size, 4-size%4);
-    size = DWORD_ALIGN(size);
     if(unicode)
         url_len = urlcache_decode_url((const char*)url_entry+url_entry->url_off, NULL, 0);
     else
@@ -1323,8 +1329,10 @@ static DWORD urlcache_copy_entry(cache_container *container, const urlcache_head
         LPSTR file_name;
         file_name = (LPSTR)entry_info+size;
         file_name_size = *info_size-size;
-        if((unicode && urlcache_create_file_pathW(container, header, (LPCSTR)url_entry+url_entry->local_name_off, url_entry->cache_dir, (LPWSTR)file_name, &file_name_size)) ||
-            (!unicode && urlcache_create_file_pathA(container, header, (LPCSTR)url_entry+url_entry->local_name_off, url_entry->cache_dir, file_name, &file_name_size))) {
+        if((unicode && urlcache_create_file_pathW(container, header, (LPCSTR)url_entry+url_entry->local_name_off,
+                        url_entry->cache_dir, (LPWSTR)file_name, &file_name_size, FALSE)) ||
+            (!unicode && urlcache_create_file_pathA(container, header, (LPCSTR)url_entry+url_entry->local_name_off,
+                        url_entry->cache_dir, file_name, &file_name_size))) {
             entry_info->lpszLocalFileName = file_name;
         }
         size += file_name_size;
@@ -1477,7 +1485,7 @@ static DWORD urlcache_hash_key(LPCSTR lpszKey)
     for (i = 0; i < sizeof(key) / sizeof(key[0]); i++)
         key[i] = lookupTable[(*lpszKey + i) & 0xFF];
 
-    for (lpszKey++; *lpszKey && ((lpszKey[0] != '/') || (lpszKey[1] != 0)); lpszKey++)
+    for (lpszKey++; *lpszKey; lpszKey++)
     {
         for (i = 0; i < sizeof(key) / sizeof(key[0]); i++)
             key[i] = lookupTable[*lpszKey ^ key[i]];
@@ -1873,7 +1881,6 @@ BOOL WINAPI GetUrlCacheEntryInfoA(LPCSTR lpszUrlName,
 
 static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_len)
 {
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     URL_COMPONENTSW uc;
     DWORD len, part_len;
     WCHAR *punycode;
@@ -1887,10 +1894,8 @@ static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_
         uc.nScheme = INTERNET_SCHEME_UNKNOWN;
 
     if(uc.nScheme!=INTERNET_SCHEME_HTTP && uc.nScheme!=INTERNET_SCHEME_HTTPS)
-#endif
         return WideCharToMultiByte(CP_UTF8, 0, url, -1, encoded_url, encoded_len, NULL, NULL);
 
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     len = WideCharToMultiByte(CP_UTF8, 0, url, uc.lpszHostName-url,
             encoded_url, encoded_len, NULL, NULL);
     if(!len)
@@ -1931,7 +1936,6 @@ static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_
 
     TRACE("got (%d)%s\n", len, debugstr_a(encoded_url));
     return len;
-#endif /* !__REACTOS__ */
 }
 
 static BOOL urlcache_encode_url_alloc(const WCHAR *url, char **encoded_url)
@@ -2620,7 +2624,7 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
     char file_name[MAX_PATH];
     WCHAR extW[MAX_PATH];
     BYTE cache_dir;
-    LONG full_path_len;
+    LONG full_path_len, ext_len = 0;
     BOOL generate_name = FALSE;
     DWORD error;
     HANDLE file;
@@ -2651,6 +2655,8 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
                 p--;
         }
 
+        if(e-p >= MAX_PATH)
+            e = p+MAX_PATH-1;
         memcpy(file_name, p, e-p);
         file_name[e-p] = 0;
 
@@ -2690,7 +2696,7 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
         cache_dir = CACHE_CONTAINER_NO_SUBDIR;
 
     full_path_len = MAX_PATH * sizeof(WCHAR);
-    if(!urlcache_create_file_pathW(container, header, file_name, cache_dir, full_path, &full_path_len)) {
+    if(!urlcache_create_file_pathW(container, header, file_name, cache_dir, full_path, &full_path_len, TRUE)) {
         WARN("Failed to get full path for filename %s, needed %u bytes.\n",
                 debugstr_a(file_name), full_path_len);
         cache_container_unlock_index(container, header);
@@ -2704,7 +2710,7 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
         WCHAR *p;
 
         extW[0] = '.';
-        MultiByteToWideChar(CP_ACP, 0, ext, -1, extW+1, MAX_PATH-1);
+        ext_len = MultiByteToWideChar(CP_ACP, 0, ext, -1, extW+1, MAX_PATH-1);
 
         for(p=extW; *p; p++) {
             switch(*p) {
@@ -2722,6 +2728,10 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
         extW[0] = '\0';
     }
 
+    if(!generate_name && full_path_len+5+ext_len>=MAX_PATH) { /* strlen("[255]") = 5 */
+        full_path_len = MAX_PATH-5-ext_len-1;
+    }
+
     for(i=0; i<255 && !generate_name; i++) {
         static const WCHAR format[] = {'[','%','u',']','%','s',0};
 
@@ -2734,6 +2744,9 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
             return TRUE;
         }
     }
+
+    if(full_path_len+8+ext_len >= MAX_PATH)
+        full_path_len = MAX_PATH-8-ext_len-1;
 
     /* Try to generate random name */
     GetSystemTimeAsFileTime(&ft);
@@ -4009,7 +4022,9 @@ BOOL init_urlcache(void)
         return FALSE;
     }
 
+#ifndef __REACTOS__
     cache_containers_init();
+#endif
     return TRUE;
 }
 

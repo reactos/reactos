@@ -18,11 +18,13 @@
 
 NTSTATUS
 TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                           IN OUT PCONSOLE Console,
+                           IN PCONSOLE Console,
+                           IN HANDLE ProcessHandle,
                            IN PTEXTMODE_BUFFER_INFO TextModeInfo);
 NTSTATUS
 GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                           IN OUT PCONSOLE Console,
+                           IN PCONSOLE Console,
+                           IN HANDLE ProcessHandle,
                            IN PGRAPHICS_BUFFER_INFO GraphicsInfo);
 
 VOID
@@ -33,7 +35,7 @@ GRAPHICS_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN OUT PCONSOLE Console,
+                                 IN PCONSOLE Console,
                                  IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size)
 {
@@ -62,8 +64,6 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     }
     else if (Buffer->Header.Type == SCREEN_BUFFER)
     {
-        // TODO: Free Buffer->Data
-
         /* Free the palette handle */
         if (Buffer->PaletteHandle != NULL) DeleteObject(Buffer->PaletteHandle);
 
@@ -77,7 +77,8 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 // ConDrvCreateConsoleScreenBuffer
 NTSTATUS
 ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                         IN OUT PCONSOLE Console,
+                         IN PCONSOLE Console,
+                         IN HANDLE ProcessHandle OPTIONAL,
                          IN ULONG BufferType,
                          IN PVOID ScreenBufferInfo)
 {
@@ -89,14 +90,18 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Use the current process if ProcessHandle is NULL */
+    if (ProcessHandle == NULL)
+        ProcessHandle = NtCurrentProcess();
+
     if (BufferType == CONSOLE_TEXTMODE_BUFFER)
     {
-        Status = TEXTMODE_BUFFER_Initialize(Buffer, Console,
+        Status = TEXTMODE_BUFFER_Initialize(Buffer, Console, ProcessHandle,
                                             (PTEXTMODE_BUFFER_INFO)ScreenBufferInfo);
     }
     else if (BufferType == CONSOLE_GRAPHICS_BUFFER)
     {
-        Status = GRAPHICS_BUFFER_Initialize(Buffer, Console,
+        Status = GRAPHICS_BUFFER_Initialize(Buffer, Console, ProcessHandle,
                                             (PGRAPHICS_BUFFER_INFO)ScreenBufferInfo);
     }
     else
@@ -152,20 +157,6 @@ ConDrvDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
 
-VOID
-ConioDrawConsole(PCONSOLE Console)
-{
-    SMALL_RECT Region;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
-
-    if (ActiveBuffer)
-    {
-        ConioInitRect(&Region, 0, 0,
-                      ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
-        TermDrawRegion(Console, &Region);
-    }
-}
-
 static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
@@ -208,13 +199,6 @@ ConDrvGetActiveScreenBuffer(IN PCONSOLE Console)
 /* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
-ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
-                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                            IN PCHAR_CELL CharInfo/*Buffer*/,
-                            IN COORD CharInfoSize,
-                            IN OUT PSMALL_RECT WriteRegion,
-                            IN BOOLEAN DrawRegion);
-NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region)
@@ -224,19 +208,6 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
-
-    /* In text-mode only, draw the VDM buffer if present */
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
-
-        /*Status =*/ ConDrvWriteConsoleOutputVDM(Buffer->Header.Console,
-                                                 TextBuffer,
-                                                 Console->VDMBuffer,
-                                                 Console->VDMBufferSize,
-                                                 Region,
-                                                 FALSE);
-    }
 
     /* If the output buffer is the current one, redraw the correct portion of the screen */
     if (Buffer == Console->ActiveBuffer) TermDrawRegion(Console, Region);

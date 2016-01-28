@@ -25,85 +25,11 @@
  *              Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <tchar.h>
-#include <setupapi.h>
-#include <devguid.h>
-#include <wine/unicode.h>
-
+#include "reactos.h"
 #include "resource.h"
 
 /* GLOBALS ******************************************************************/
 
-HFONT hTitleFont;
-
-typedef struct _LANG
-{
-    TCHAR LangId[9];
-    TCHAR LangName[128];
-} LANG, *PLANG;
-
-typedef struct _KBLAYOUT
-{
-    TCHAR LayoutId[9];
-    TCHAR LayoutName[128];
-    TCHAR DllName[128];
-} KBLAYOUT, *PKBLAYOUT;
-
-
-// generic entries with simple 1:1 mapping
-typedef struct _GENENTRY
-{
-    TCHAR Id[24];
-    TCHAR Value[128];
-} GENENTRY, *PGENENTRY;
-
-struct
-{
-    // Settings
-    LONG DestDiskNumber; // physical disk
-    LONG DestPartNumber; // partition on disk
-    LONG DestPartSize; // if partition doesn't exist, size of partition
-    LONG FSType; // file system type on partition 
-    LONG MBRInstallType; // install bootloader
-    LONG FormatPart; // type of format the partition
-    LONG SelectedLangId; // selected language (table index)
-    LONG SelectedKBLayout; // selected keyboard layout (table index)
-    TCHAR InstallDir[MAX_PATH]; // installation directory on hdd
-    LONG SelectedComputer; // selected computer type (table index)
-    LONG SelectedDisplay; // selected display type (table index)
-    LONG SelectedKeyboard; // selected keyboard type (table index)
-    BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
-    // txtsetup.sif data
-    LONG DefaultLang; // default language (table index)
-    PLANG pLanguages;
-    LONG LangCount;
-    LONG DefaultKBLayout; // default keyboard layout (table index)
-    PKBLAYOUT pKbLayouts;
-    LONG KbLayoutCount;
-    PGENENTRY pComputers;
-    LONG CompCount;
-    PGENENTRY pDisplays;
-    LONG DispCount;
-    PGENENTRY pKeyboards;
-    LONG KeybCount;
-} SetupData;
-
-typedef struct _IMGINFO
-{
-    HBITMAP hBitmap;
-    INT cxSource;
-    INT cySource;
-} IMGINFO, *PIMGINFO;
-
-TCHAR abort_msg[512], abort_title[64];
-HINSTANCE hInstance;
-BOOL isUnattend;
 
 LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context);
 
@@ -157,233 +83,44 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
-static VOID
-InitImageInfo(PIMGINFO ImgInfo)
-{
-    BITMAP bitmap;
-
-    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
-
-    ImgInfo->hBitmap = LoadImage(hInstance,
-                                 MAKEINTRESOURCE(IDB_ROSLOGO),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
-
-    if (ImgInfo->hBitmap != NULL)
-    {
-        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
-
-        ImgInfo->cxSource = bitmap.bmWidth;
-        ImgInfo->cySource = bitmap.bmHeight;
-    }
-}
-
 static INT_PTR CALLBACK
 StartDlgProc(HWND hwndDlg,
              UINT uMsg,
              WPARAM wParam,
              LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Center the wizard window */
-            CenterWindow (hwndControl);
+            CenterWindow(GetParent(hwndDlg));
 
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Hide and disable the 'Cancel' button at the moment,
-             * we use this button to cancel the setup process
-             * like F3 in usetup
-             */
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow (hwndControl, SW_HIDE);
-            EnableWindow (hwndControl, FALSE);
-            
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
                                IDC_STARTTITLE,
                                WM_SETFONT,
-                               (WPARAM)hTitleFont,
+                               (WPARAM)pSetupData->hTitleFont,
                                (LPARAM)TRUE);
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
+            {
                 case PSN_SETACTIVE:
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
-                break;
-                default:
-                break;
-            }
-        }
-        break;
-
-        default:
-            break;
-
-    }
-
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
-LangSelDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
-{
-    PIMGINFO pImgInfo;
-    LONG i;
-    LRESULT tindex;
-    HWND hList;
-
-    pImgInfo = (PIMGINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
-
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-            
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow (hwndControl, SW_SHOW);
-            EnableWindow (hwndControl, TRUE);
-
-            pImgInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMGINFO));
-            if (pImgInfo == NULL)
-            {
-                EndDialog(hwndDlg, 0);
-                return FALSE;
-            }
-
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pImgInfo);
-
-            InitImageInfo(pImgInfo);
-
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-
-            hList = GetDlgItem(hwndDlg, IDC_LANGUAGES);
-
-            for (i=0; i < SetupData.LangCount; i++)
-            {
-                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM) SetupData.pLanguages[i].LangName);
-                SendMessage(hList, CB_SETITEMDATA, tindex, i);
-                if (SetupData.DefaultLang == i)
-                SendMessage(hList, CB_SETCURSEL, (WPARAM) tindex,(LPARAM) 0);
-            }
-
-            hList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT);
-
-            for (i=0; i < SetupData.KbLayoutCount; i++)
-            {
-                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM)SetupData.pKbLayouts[i].LayoutName);
-                SendMessage(hList, CB_SETITEMDATA, tindex, i);
-                if (SetupData.DefaultKBLayout == i)
-                SendMessage(hList,CB_SETCURSEL,(WPARAM)tindex,(LPARAM)0);
-            }
-        }
-        break;
-
-        case WM_DRAWITEM:
-        {
-            LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-
-            if (lpDrawItem->CtlID == IDB_ROSLOGO)
-            {
-                HDC hdcMem;
-                LONG left;
-
-                /* position image in centre of dialog */
-                left = (lpDrawItem->rcItem.right - pImgInfo->cxSource) / 2;
-
-                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
-                if (hdcMem != NULL)
-                {
-                    SelectObject(hdcMem, pImgInfo->hBitmap);
-                    BitBlt(lpDrawItem->hDC,
-                           left,
-                           lpDrawItem->rcItem.top,
-                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-                           hdcMem,
-                           0,
-                           0,
-                           SRCCOPY);
-                    DeleteDC(hdcMem);
-                }
-            }
-            return TRUE;
-        }
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            switch (lpnm->code)
-            {        
-                case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
                     break;
-
-                case PSN_QUERYCANCEL:
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
-                                     MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
-                    return TRUE;
-
-                case PSN_WIZNEXT: // set the selected data
-                {
-                    hList =GetDlgItem(hwndDlg, IDC_LANGUAGES); 
-                    tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
-
-                    if (tindex != CB_ERR)
-                    {
-                        WORD LangID;
-                        SetupData.SelectedLangId = SendMessage(hList, CB_GETITEMDATA, (WPARAM) tindex, (LPARAM) 0);
-                        LangID = _tcstol(SetupData.pLanguages[SetupData.SelectedLangId].LangId, NULL, 16);
-                        SetThreadLocale(MAKELCID(LangID, SORT_DEFAULT));
-                        // FIXME: need to reload all resource to force
-                        // the new language setting
-                    }
-
-                    hList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT); 
-                    tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
-                    if (tindex != CB_ERR)
-                    {
-                        SetupData.SelectedKBLayout = SendMessage(hList, CB_GETITEMDATA, (WPARAM) tindex, (LPARAM) 0);
-                    }
-                    return TRUE;
-                }
 
                 default:
                     break;
@@ -395,6 +132,7 @@ LangSelDlgProc(HWND hwndDlg,
             break;
 
     }
+
     return FALSE;
 }
 
@@ -404,53 +142,50 @@ TypeDlgProc(HWND hwndDlg,
             WPARAM wParam,
             LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
+            /* Check the 'install' radio button */
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
-            
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-        }
-        break;
+
+            /* Disable the 'update' radio button and text */
+            EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATETEXT), FALSE);
+            break;
 
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
+            {
                 case PSN_SETACTIVE:
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
-                break;
+                    break;
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
                                      DWL_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
+                                                pSetupData->szAbortMessage,
+                                                pSetupData->szAbortTitle,
+                                                MB_YESNO | MB_ICONQUESTION) != IDYES);
                     return TRUE;
 
                 case PSN_WIZNEXT: // set the selected data
-                    SetupData.RepairUpdateFlag = !(SendMessage(GetDlgItem(hwndDlg, IDC_INSTALL),
-                                                               BM_GETCHECK,
-                                                               (WPARAM) 0,
-                                                               (LPARAM) 0) == BST_CHECKED);
+                    pSetupData->RepairUpdateFlag = !(SendMessage(GetDlgItem(hwndDlg, IDC_INSTALL),
+                                                                 BM_GETCHECK,
+                                                                 (WPARAM) 0,
+                                                                 (LPARAM) 0) == BST_CHECKED);
                     return TRUE;
 
                 default:
@@ -472,64 +207,55 @@ DeviceDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
     LONG i;
     LRESULT tindex;
     HWND hList;
 
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
 
-            for (i=0; i < SetupData.CompCount; i++)
+            for (i=0; i < pSetupData->CompCount; i++)
             {
-                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM) SetupData.pComputers[i].Value);
+                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM) pSetupData->pComputers[i].Value);
                 SendMessage(hList, CB_SETITEMDATA, tindex, i);
             }
             SendMessage(hList, CB_SETCURSEL, 0, 0); // set first as default
 
             hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
 
-            for (i=0; i < SetupData.DispCount; i++)
+            for (i=0; i < pSetupData->DispCount; i++)
             {
-                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM) SetupData.pDisplays[i].Value);
+                tindex = SendMessage(hList, CB_ADDSTRING, (WPARAM) 0, (LPARAM) pSetupData->pDisplays[i].Value);
                 SendMessage(hList, CB_SETITEMDATA, tindex, i);
             }
             SendMessage(hList, CB_SETCURSEL, 0, 0); // set first as default
 
             hList = GetDlgItem(hwndDlg, IDC_KEYBOARD);
 
-            for (i=0; i < SetupData.KeybCount; i++)
+            for (i=0; i < pSetupData->KeybCount; i++)
             {
-                tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pKeyboards[i].Value);
+                tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)pSetupData->pKeyboards[i].Value);
                 SendMessage(hList,CB_SETITEMDATA,tindex,i);
             }
             SendMessage(hList,CB_SETCURSEL,0,0); // set first as default
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
+            {
                 case PSN_SETACTIVE:
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
                     break;
@@ -538,8 +264,8 @@ DeviceDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWL_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
+                                                pSetupData->szAbortMessage,
+                                                pSetupData->szAbortTitle,
                                              MB_YESNO | MB_ICONQUESTION) != IDYES);
                     return TRUE;
 
@@ -550,7 +276,7 @@ DeviceDlgProc(HWND hwndDlg,
                     tindex = SendMessage(hList, CB_GETCURSEL, (WPARAM) 0, (LPARAM) 0);
                     if (tindex != CB_ERR)
                     {
-                        SetupData.SelectedComputer = SendMessage(hList,
+                        pSetupData->SelectedComputer = SendMessage(hList,
                                                                  CB_GETITEMDATA,
                                                                  (WPARAM) tindex,
                                                                  (LPARAM) 0);
@@ -561,7 +287,7 @@ DeviceDlgProc(HWND hwndDlg,
                     tindex = SendMessage(hList, CB_GETCURSEL, (WPARAM) 0, (LPARAM) 0);
                     if (tindex != CB_ERR)
                     {
-                        SetupData.SelectedDisplay = SendMessage(hList,
+                        pSetupData->SelectedDisplay = SendMessage(hList,
                                                                 CB_GETITEMDATA,
                                                                 (WPARAM) tindex,
                                                                 (LPARAM) 0);
@@ -572,7 +298,7 @@ DeviceDlgProc(HWND hwndDlg,
                     tindex = SendMessage(hList, CB_GETCURSEL, (WPARAM) 0, (LPARAM) 0);
                     if (tindex != CB_ERR)
                     {
-                        SetupData.SelectedKeyboard = SendMessage(hList,
+                        pSetupData->SelectedKeyboard = SendMessage(hList,
                                                                  CB_GETITEMDATA,
                                                                  (WPARAM) tindex,
                                                                  (LPARAM) 0);
@@ -594,234 +320,30 @@ DeviceDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
-MoreOptDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
-            SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
-                        WM_SETTEXT,
-                        (WPARAM) 0,
-                        (LPARAM) SetupData.InstallDir);
-        }
-        break;
-
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-                {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
-                                WM_GETTEXT,
-                                (WPARAM) sizeof(SetupData.InstallDir) / sizeof(TCHAR),
-                                (LPARAM) SetupData.InstallDir);
-                    
-                    EndDialog(hwndDlg, IDOK);
-                    return TRUE;
-                }
-
-                case IDCANCEL:
-                {
-                    EndDialog(hwndDlg, IDCANCEL);
-                    return TRUE;
-                }
-            }
-        }
-    }
-
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
-PartitionDlgProc(HWND hwndDlg,
-                 UINT uMsg,
-                 WPARAM wParam,
-                 LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            break;
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-                    EndDialog(hwndDlg, IDOK);
-                    return TRUE;
-                case IDCANCEL:
-                    EndDialog(hwndDlg, IDCANCEL);
-                    return TRUE;
-            }
-        }
-    }
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
-DriveDlgProc(HWND hwndDlg,
-             UINT uMsg,
-             WPARAM wParam,
-             LPARAM lParam)
-{
-#if 1
-    HDEVINFO h;
-    HWND hList;
-    SP_DEVINFO_DATA DevInfoData;
-    DWORD i;
-#endif
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-#if 1
-            h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT);
-            if (h != INVALID_HANDLE_VALUE)
-            {
-                hList =GetDlgItem(hwndDlg, IDC_PARTITION); 
-                DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-                for (i=0; SetupDiEnumDeviceInfo(h, i, &DevInfoData); i++)
-                {
-                    DWORD DataT;
-                    LPTSTR buffer = NULL;
-                    DWORD buffersize = 0;
-
-                    while (!SetupDiGetDeviceRegistryProperty(h,
-                                                             &DevInfoData,
-                                                             SPDRP_DEVICEDESC,
-                                                             &DataT,
-                                                             (PBYTE)buffer,
-                                                             buffersize,
-                                                             &buffersize))
-                    {
-                        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-                        {
-                            if (buffer) LocalFree(buffer);
-                            buffer = LocalAlloc(LPTR, buffersize * 2);
-                        }
-                        else
-                            break;
-                    }
-                    if (buffer)
-                    {
-                        SendMessage(hList, LB_ADDSTRING, (WPARAM) 0, (LPARAM) buffer);
-                        LocalFree(buffer);
-                    }
-                }
-                SetupDiDestroyDeviceInfoList(h);
-            }
-#endif
-        }
-        break;
-
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case IDC_PARTMOREOPTS:
-                    DialogBox(hInstance,
-                              MAKEINTRESOURCE(IDD_BOOTOPTIONS),
-                              hwndDlg,
-                              (DLGPROC) MoreOptDlgProc);
-                    break;
-                case IDC_PARTCREATE:
-                    DialogBox(hInstance,
-                              MAKEINTRESOURCE(IDD_PARTITION),
-                              hwndDlg,
-                              (DLGPROC) PartitionDlgProc);
-                    break;
-                case IDC_PARTDELETE:
-                    break;
-            }
-            break;
-        }
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            switch (lpnm->code)
-            {        
-                case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
-                    break;
-
-                case PSN_QUERYCANCEL:
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
-                                     MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
-                    return TRUE;
-
-                default:
-                    break;
-            }
-        }
-        break;
-
-        default:
-            break;
-
-    }
-
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
 SummaryDlgProc(HWND hwndDlg,
                UINT uMsg,
                WPARAM wParam,
                LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-        }
-        break;
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            break;
 
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
+            {
                 case PSN_SETACTIVE: 
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
                     break;
@@ -830,9 +352,9 @@ SummaryDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWL_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
+                                                pSetupData->szAbortMessage,
+                                                pSetupData->szAbortTitle,
+                                                MB_YESNO | MB_ICONQUESTION) != IDYES);
                     return TRUE;
                 default:
                     break;
@@ -853,34 +375,26 @@ ProcessDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            /* Set title font */
-            /*SendDlgItemMessage(hwndDlg,
-                                 IDC_STARTTITLE,
-                                 WM_SETFONT,
-                                 (WPARAM)hTitleFont,
-                                 (LPARAM)TRUE);*/
-        }
-        break;
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            break;
 
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
-                case PSN_SETACTIVE: 
+            {
+                case PSN_SETACTIVE:
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                    // disable all buttons during installation process
                    // PropSheet_SetWizButtons(GetParent(hwndDlg), 0 );
@@ -889,9 +403,9 @@ ProcessDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWL_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
+                                                pSetupData->szAbortMessage,
+                                                pSetupData->szAbortTitle,
+                                                MB_YESNO | MB_ICONQUESTION) != IDYES);
                     return TRUE;
                 default:
                    break;
@@ -913,21 +427,17 @@ RestartDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+    PSETUPDATA pSetupData;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            HWND hwndControl;
-            DWORD dwStyle;
-
-            hwndControl = GetParent(hwndDlg);
-
-            dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
-            SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
-        
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow(hwndControl, SW_HIDE);
-            EnableWindow(hwndControl, FALSE);
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
@@ -935,8 +445,7 @@ RestartDlgProc(HWND hwndDlg,
                                  WM_SETFONT,
                                  (WPARAM)hTitleFont,
                                  (LPARAM)TRUE);*/
-        }
-        break;
+            break;
 
         case WM_TIMER:
         {
@@ -965,15 +474,13 @@ RestartDlgProc(HWND hwndDlg,
             LPNMHDR lpnm = (LPNMHDR)lParam;
 
             switch (lpnm->code)
-            {        
+            {
                 case PSN_SETACTIVE: // Only "Finish" for closing the App
-                {
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 300));
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                     SetTimer(hwndDlg, 1, 50, NULL);
-                }
-                break;
+                    break;
 
                 default:
                     break;
@@ -989,7 +496,8 @@ RestartDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
-void LoadSetupData()
+BOOL LoadSetupData(
+    PSETUPDATA pSetupData)
 {
     WCHAR szPath[MAX_PATH];
     TCHAR tmp[10];
@@ -1007,115 +515,126 @@ void LoadSetupData()
 
     wcscat(szPath, L"\\txtsetup.sif");
     hTxtsetupSif = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
-    if (hTxtsetupSif != INVALID_HANDLE_VALUE)
+    if (hTxtsetupSif == INVALID_HANDLE_VALUE)
     {
-        // get language list
-        SetupData.LangCount = SetupGetLineCount(hTxtsetupSif, _T("Language"));
-        if (SetupData.LangCount > 0)
-        {
-            SetupData.pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * SetupData.LangCount);
-            if (SetupData.pLanguages != NULL)
-            {
-                Count = 0;
-                if (SetupFindFirstLine(hTxtsetupSif, _T("Language"), NULL, &InfContext))
-                {
-                    do
-                    {
-                        SetupGetStringField(&InfContext,
-                                            0,
-                                            SetupData.pLanguages[Count].LangId,
-                                            sizeof(SetupData.pLanguages[Count].LangId) / sizeof(TCHAR),
-                                            &LineLength);
+        TCHAR message[512], caption[64];
 
-                        SetupGetStringField(&InfContext,
-                                            1,
-                                            SetupData.pLanguages[Count].LangName,
-                                            sizeof(SetupData.pLanguages[Count].LangName) / sizeof(TCHAR),
-                                            &LineLength);
-                        ++Count;
-                    }
-                    while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
-                }
-            }
-        }
+        // txtsetup.sif cannot be found
+        LoadString(pSetupData->hInstance, IDS_NO_TXTSETUP_SIF, message, sizeof(message)/sizeof(TCHAR));
+        LoadString(pSetupData->hInstance, IDS_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
 
-        // get keyboard layout list
-        SetupData.KbLayoutCount = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
-        if (SetupData.KbLayoutCount > 0)
-        {
-            SetupData.pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * SetupData.KbLayoutCount);
-            if (SetupData.pKbLayouts != NULL)
-            {
-                Count = 0;
-                if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"), NULL, &InfContext))
-                {
-                    do
-                    {
-                        SetupGetStringField(&InfContext,
-                                            0,
-                                            SetupData.pKbLayouts[Count].LayoutId,
-                                            sizeof(SetupData.pKbLayouts[Count].LayoutId) / sizeof(TCHAR),
-                                            &LineLength);
-
-                        SetupGetStringField(&InfContext,
-                                            1,
-                                            SetupData.pKbLayouts[Count].LayoutName,
-                                            sizeof(SetupData.pKbLayouts[Count].LayoutName) / sizeof(TCHAR),
-                                            &LineLength);
-                        ++Count;
-                    }
-                    while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.KbLayoutCount);
-                }
-            }
-        }
-
-        // get default for keyboard and language
-        SetupData.DefaultKBLayout = -1;
-        SetupData.DefaultLang = -1;
-
-        // TODO: get defaults from underlaying running system
-        if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLayout"), &InfContext))
-        {
-            SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
-            for (Count = 0; Count < SetupData.KbLayoutCount; Count++)
-                if (_tcscmp(tmp, SetupData.pKbLayouts[Count].LayoutId) == 0)
-                {
-                    SetupData.DefaultKBLayout = Count;
-                    break;
-                }
-        }
-
-        if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLanguage"), &InfContext))
-        {
-            SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
-            for (Count = 0; Count < SetupData.LangCount; Count++)
-                if (_tcscmp(tmp, SetupData.pLanguages[Count].LangId) == 0)
-                {
-                    SetupData.DefaultLang = Count;
-                    break;
-                }
-        }
-
-        // get computers list
-        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&SetupData.pComputers,&InfContext);
-
-        // get display list
-        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&SetupData.pDisplays,&InfContext);
-
-        // get keyboard list
-        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
-
-        // get install directory
-        if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
-        {
-            SetupGetStringField(&InfContext,
-                                1,
-                                SetupData.InstallDir,
-                                sizeof(SetupData.InstallDir) / sizeof(TCHAR),
-                                &LineLength);
-        }
-        SetupCloseInfFile(hTxtsetupSif);
+        MessageBox(NULL, message, caption, MB_OK | MB_ICONERROR);
+        return FALSE;
     }
+
+    // get language list
+    pSetupData->LangCount = SetupGetLineCount(hTxtsetupSif, _T("Language"));
+    if (pSetupData->LangCount > 0)
+    {
+        pSetupData->pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * pSetupData->LangCount);
+        if (pSetupData->pLanguages != NULL)
+        {
+            Count = 0;
+            if (SetupFindFirstLine(hTxtsetupSif, _T("Language"), NULL, &InfContext))
+            {
+                do
+                {
+                    SetupGetStringField(&InfContext,
+                                        0,
+                                        pSetupData->pLanguages[Count].LangId,
+                                        sizeof(pSetupData->pLanguages[Count].LangId) / sizeof(TCHAR),
+                                        &LineLength);
+
+                    SetupGetStringField(&InfContext,
+                                        1,
+                                        pSetupData->pLanguages[Count].LangName,
+                                        sizeof(pSetupData->pLanguages[Count].LangName) / sizeof(TCHAR),
+                                        &LineLength);
+                    ++Count;
+                }
+                while (SetupFindNextLine(&InfContext, &InfContext) && Count < pSetupData->LangCount);
+            }
+        }
+    }
+
+    // get keyboard layout list
+    pSetupData->KbLayoutCount = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
+    if (pSetupData->KbLayoutCount > 0)
+    {
+        pSetupData->pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * pSetupData->KbLayoutCount);
+        if (pSetupData->pKbLayouts != NULL)
+        {
+            Count = 0;
+            if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"), NULL, &InfContext))
+            {
+                do
+                {
+                    SetupGetStringField(&InfContext,
+                                        0,
+                                        pSetupData->pKbLayouts[Count].LayoutId,
+                                        sizeof(pSetupData->pKbLayouts[Count].LayoutId) / sizeof(TCHAR),
+                                        &LineLength);
+
+                    SetupGetStringField(&InfContext,
+                                        1,
+                                        pSetupData->pKbLayouts[Count].LayoutName,
+                                        sizeof(pSetupData->pKbLayouts[Count].LayoutName) / sizeof(TCHAR),
+                                        &LineLength);
+                    ++Count;
+                }
+                while (SetupFindNextLine(&InfContext, &InfContext) && Count < pSetupData->KbLayoutCount);
+            }
+        }
+    }
+
+    // get default for keyboard and language
+    pSetupData->DefaultKBLayout = -1;
+    pSetupData->DefaultLang = -1;
+
+    // TODO: get defaults from underlaying running system
+    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLayout"), &InfContext))
+    {
+        SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+        for (Count = 0; Count < pSetupData->KbLayoutCount; Count++)
+            if (_tcscmp(tmp, pSetupData->pKbLayouts[Count].LayoutId) == 0)
+            {
+                pSetupData->DefaultKBLayout = Count;
+                break;
+            }
+    }
+
+    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLanguage"), &InfContext))
+    {
+        SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+        for (Count = 0; Count < pSetupData->LangCount; Count++)
+            if (_tcscmp(tmp, pSetupData->pLanguages[Count].LangId) == 0)
+            {
+                pSetupData->DefaultLang = Count;
+                break;
+            }
+    }
+
+    // get computers list
+    pSetupData->CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&pSetupData->pComputers,&InfContext);
+
+    // get display list
+    pSetupData->DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&pSetupData->pDisplays,&InfContext);
+
+    // get keyboard list
+    pSetupData->KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&pSetupData->pKeyboards,&InfContext);
+
+    // get install directory
+    if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
+    {
+        SetupGetStringField(&InfContext,
+                            1,
+                            pSetupData->InstallDir,
+                            sizeof(pSetupData->InstallDir) / sizeof(TCHAR),
+                            &LineLength);
+    }
+    SetupCloseInfFile(hTxtsetupSif);
+
+    return TRUE;
 }
 
 LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
@@ -1150,12 +669,12 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
                 while (SetupFindNextLine(context, context) && Count < TotalCount);
             }
         }
-	else return 0;
+        else return 0;
     }
     return TotalCount;
 }
 
-BOOL isUnattendSetup()
+BOOL isUnattendSetup(VOID)
 {
     WCHAR szPath[MAX_PATH];
     WCHAR *ch;
@@ -1194,44 +713,90 @@ BOOL isUnattendSetup()
     return result;
 }
 
+#if 0
+static
+VOID
+EnableShutdownPrivilege(VOID)
+{
+    HANDLE hToken = NULL;
+    TOKEN_PRIVILEGES Privileges;
+
+    /* Get shutdown privilege */
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+//        FatalError("OpenProcessToken() failed!");
+        return;
+    }
+
+    if (!LookupPrivilegeValue(NULL,
+                              SE_SHUTDOWN_NAME,
+                              &Privileges.Privileges[0].Luid))
+    {
+//        FatalError("LookupPrivilegeValue() failed!");
+       goto done;
+    }
+
+    Privileges.PrivilegeCount = 1;
+    Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (AdjustTokenPrivileges(hToken,
+                              FALSE,
+                              &Privileges,
+                              0,
+                              (PTOKEN_PRIVILEGES)NULL,
+                              NULL) == 0)
+    {
+//        FatalError("AdjustTokenPrivileges() failed!");
+       goto done;
+    }
+
+done:
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    return;
+}
+#endif
+
 int WINAPI
 _tWinMain(HINSTANCE hInst,
           HINSTANCE hPrevInstance,
           LPTSTR lpszCmdLine,
           int nCmdShow)
 {
+    PSETUPDATA pSetupData = NULL;
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE ahpsp[8];
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
-    hInstance = hInst;
-    isUnattend = isUnattendSetup();
 
-    LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
-    LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
-    if (!isUnattend)
+    pSetupData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SETUPDATA));
+    if (pSetupData == NULL)
     {
+        return 1;
+    }
 
-        LoadSetupData();
+    pSetupData->hInstance = hInst;
+    pSetupData->bUnattend = isUnattendSetup();
+
+    LoadString(hInst,IDS_ABORTSETUP, pSetupData->szAbortMessage, sizeof(pSetupData->szAbortMessage)/sizeof(TCHAR));
+    LoadString(hInst,IDS_ABORTSETUP2, pSetupData->szAbortTitle, sizeof(pSetupData->szAbortTitle)/sizeof(TCHAR));
+
+    /* Create title font */
+    pSetupData->hTitleFont = CreateTitleFont();
+
+    if (!pSetupData->bUnattend)
+    {
+        if (!LoadSetupData(pSetupData))
+            return 0;
 
         /* Create the Start page, until setup is working */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
         psp.hInstance = hInst;
-        psp.lParam = 0;
+        psp.lParam = (LPARAM)pSetupData;
         psp.pfnDlgProc = StartDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_STARTPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-        /* Create language selection page */
-        psp.dwSize = sizeof(PROPSHEETPAGE);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LANGTITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LANGSUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = 0;
-        psp.pfnDlgProc = LangSelDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCE(IDD_LANGSELPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
         /* Create install type selection page */
@@ -1240,7 +805,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_TYPETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_TYPESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = 0;
+        psp.lParam = (LPARAM)pSetupData;
         psp.pfnDlgProc = TypeDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_TYPEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -1251,7 +816,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DEVICETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DEVICESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = 0;
+        psp.lParam = (LPARAM)pSetupData;
         psp.pfnDlgProc = DeviceDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DEVICEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -1262,7 +827,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DRIVETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DRIVESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = 0;
+        psp.lParam = (LPARAM)pSetupData;
         psp.pfnDlgProc = DriveDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DRIVEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -1273,7 +838,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SUMMARYTITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUMMARYSUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = 0;
+        psp.lParam = (LPARAM)pSetupData;
         psp.pfnDlgProc = SummaryDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_SUMMARYPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -1285,18 +850,16 @@ _tWinMain(HINSTANCE hInst,
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
     psp.hInstance = hInst;
-    psp.lParam = 0;
+    psp.lParam = (LPARAM)pSetupData;
     psp.pfnDlgProc = ProcessDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create finish to reboot page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
-    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_RESTARTTITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_RESTARTSUBTITLE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hInst;
-    psp.lParam = 0;
+    psp.lParam = (LPARAM)pSetupData;
     psp.pfnDlgProc = RestartDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -1312,13 +875,19 @@ _tWinMain(HINSTANCE hInst,
     psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
     psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
-    /* Create title font */
-    hTitleFont = CreateTitleFont();
-
     /* Display the wizard */
     PropertySheet(&psh);
 
-    DeleteObject(hTitleFont);
+    if (pSetupData->hTitleFont)
+        DeleteObject(pSetupData->hTitleFont);
+
+    if (pSetupData != NULL)
+        HeapFree(GetProcessHeap(), 0, pSetupData);
+
+#if 0
+    EnableShutdownPrivilege();
+    ExitWindowsEx(EWX_REBOOT, 0);
+#endif
 
     return 0;
 }

@@ -1,10 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/include/amd64/asmmacro.S
- * PURPOSE:         ASM macros for for GAS and MASM/ML64
+ * FILE:            include/asm/asm.inc
+ * PURPOSE:         ASM macros for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
+
+#ifndef __ASM_INC__
+#define __ASM_INC__
 
 #ifdef _USE_ML
 
@@ -18,10 +21,13 @@ OPTION DOTNAME
 ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 #endif
 
-/* Hex numbers need to be in 01ABh format */
+/* Explicit radix in MASM syntax  */
+#define BIN(x) x##y
+#define OCT(x) x##q
+#define DEC(x) x##t
 #define HEX(x) 0##x##h
 
-/* Macro values need to be marked */
+/* Macro values need not be marked */
 #define VAL(x) x
 
 /* MASM/ML doesn't want explicit [rip] addressing */
@@ -46,6 +52,11 @@ ENDM
     %__current_function_name ENDP
 ENDM
 #define ENDFUNC .ENDP
+
+/* Global labels need an extra colon */
+GLOBAL_LABEL MACRO label
+    %label::
+ENDM
 
 /* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
    and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
@@ -138,8 +149,12 @@ ENDM
     ENDM
 ENDM
 
-.space MACRO count
-    DB 0 DUP (count)
+.skip MACRO size, fill:=<0>
+    DB size DUP (fill)
+ENDM
+
+.space MACRO size, fill:=<0>
+    .skip size, fill
 ENDM
 
 ljmp MACRO segment, offset
@@ -186,8 +201,11 @@ ENDM
 
 .altmacro
 
-/* Hex numbers need to be in 0x1AB format */
-#define HEX(y) 0x##y
+/* Explicit radix in GAS syntax */
+#define BIN(x) 0b##x
+#define OCT(x) 0##x
+#define DEC(x) x
+#define HEX(x) 0x##x
 
 /* Macro values need to be marked */
 #define VAL(x) \x
@@ -219,6 +237,11 @@ ENDM
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
     .global \symbol
+.endm
+
+/* No special marking of global labels */
+.macro GLOBAL_LABEL label
+    \label:
 .endm
 
 /* Dummy ASSUME */
@@ -308,15 +331,14 @@ code = 1
 
 .macro absolute address
     __absolute__address__ = \address
-ENDM
+.endm
 
 .macro resb name, size
     \name = __absolute__address__
     __absolute__address__ = __absolute__address__ + \size
-ENDM
+.endm
 
 .macro UNIMPLEMENTED2 file, line, func
-
     jmp 3f
 1:  .asciz "\func"
 2:  .asciz \file
@@ -350,3 +372,5 @@ ENDM
 #define FRAME_TRAP 1
 #define FRAME_TSS 2
 #define FRAME_NONFPO 3
+
+#endif /* __ASM_INC__ */

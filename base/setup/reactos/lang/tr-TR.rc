@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,77 +12,63 @@ BEGIN
     LTEXT "Kur'dan çıkmak için İptal'e tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_LANGSELPAGE DIALOGEX 0, 0, 317, 193
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL "Kurulum Dili:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
-    CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL "Düğme Takımı Giriş Yöntemi:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
-    CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
-    LTEXT "Kurulum türünü seçmek için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 297, 10
+    AUTORADIOBUTTON "ReactOS'u Yükleme", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "Kurulu ReactOS'u Onarma ya da Yükseltme", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
 END
 
-IDD_TYPEPAGE DIALOGEX 0, 0, 317, 193
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Kurulum Türü", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    CONTROL "ReactOS'u Yükleme", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL "Kurulu ReactOS'u Onarma ya da Yükseltme", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 20, 30, 277, 10
-    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 297, 10
-END
-
-IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 193
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "Aygıt Ayarları", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Bilgisayar:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
     LTEXT "Görüntü:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
     LTEXT "Düğme Takımı:", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
-    LTEXT "Kurulum aygıtını kurmak için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
+    LTEXT "Kurulum aygıtını kurmak için İleri'ye tıklayınız.", IDC_STATIC, 7, 128, 297, 8
 END
 
-IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 193
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS Kurulumu İçin Bölümlendirme", IDC_STATIC, "Button", BS_GROUPBOX, 10, 1, 298, 176
-    LISTBOX IDC_PARTITION, 20, 12, 278, 142, LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 20, 155, 50, 15
-    PUSHBUTTON "&Sil", IDC_PARTDELETE, 76, 155, 50, 15
-    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 162, 155, 50, 15, WS_DISABLED
-    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 218, 155, 80, 15
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 15
     LTEXT "Kurulum özetini gözden geçirmek için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 145, 90
-STYLE WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Bölüm Oluştur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
     CONTROL "Bölüm Oluşturma ve Biçimlendirme", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
     LTEXT "Büyüklük:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 52, 23, 53, 13, WS_VISIBLE | WS_TABSTOP
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Kütük Dizgesi:", IDC_STATIC, 13, 46, 35, 9
-    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 52, 42, 79, 50
+    LTEXT "Kütük Dizgesi:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
     PUSHBUTTON "Tamam", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
-STYLE WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Gelişmiş Bölümlendirme Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -96,7 +82,7 @@ BEGIN
     PUSHBUTTON "İptal", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
 END
 
-IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
@@ -105,7 +91,7 @@ BEGIN
     LTEXT "Kurulumu işlemini başlatmak için İleri'ye tıklayınız.", IDC_STATIC, 10, 180, 277, 20
 END
 
-IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
@@ -130,8 +116,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE "Dil Seçimi"
-    IDS_LANGSUBTITLE "Kurulum ve son dizge dilini seçiniz."
     IDS_TYPETITLE "ReactOS Kur'a Hoş Geldiniz"
     IDS_TYPESUBTITLE "Kurulum türünü seçiniz."
     IDS_DEVICETITLE "Ana Aygıtların Kurulumu"
@@ -146,4 +130,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için dizelgelenen kurulum seçenekleri."
     IDS_ABORTSETUP "ReactOS bilgisayarınıza tümüyle kurulmadı. Eğer şimdi Kur'dan çıkarsanız, ReactOS'u kurmak için Kur'u yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
+    IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKur sürdüremiyor."
+    IDS_CAPTION "ReactOS Kur"
 END

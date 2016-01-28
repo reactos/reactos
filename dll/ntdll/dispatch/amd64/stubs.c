@@ -44,7 +44,7 @@ KiUserApcDispatcher(IN PVOID NormalRoutine,
 
 VOID
 NTAPI
-KiRaiseUserExceptionDispatcher()
+KiRaiseUserExceptionDispatcher(VOID)
 {
     UNIMPLEMENTED;
     return;
@@ -52,7 +52,7 @@ KiRaiseUserExceptionDispatcher()
 
 VOID
 NTAPI
-KiUserCallbackDispatcher()
+KiUserCallbackDispatcher(VOID)
 {
     UNIMPLEMENTED;
     return;
@@ -60,7 +60,7 @@ KiUserCallbackDispatcher()
 
 VOID
 NTAPI
-KiUserExceptionDispatcher()
+KiUserExceptionDispatcher(VOID)
 {
     UNIMPLEMENTED;
     return;

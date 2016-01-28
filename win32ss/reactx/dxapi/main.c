@@ -3,7 +3,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             drivers/directx/dxg/main.c
+ * FILE:             win32ss/reactx/dxapi/main.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       15/10-2007   Magnus Olsen
@@ -41,7 +41,7 @@ DriverEntry(IN PVOID Context1,
 *--*/
 ULONG
 NTAPI
-DxApiGetVersion()
+DxApiGetVersion(VOID)
 {
     /* MSDN say this always return Direct Sound version 4.02 */
     return 0x402;

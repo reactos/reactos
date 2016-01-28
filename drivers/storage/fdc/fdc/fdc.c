@@ -77,7 +77,7 @@ VOID
 NTAPI
 FdcDriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
-    DPRINT1("FdcDriverUnload()\n");
+    DPRINT("FdcDriverUnload()\n");
 }
 
 
@@ -143,8 +143,34 @@ NTAPI
 FdcPower(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status = Irp->IoStatus.Status;
+    PFDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
     DPRINT("FdcPower()\n");
-    return STATUS_UNSUCCESSFUL;
+
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->Common.IsFDO)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->LowerDevice, Irp);
+    }
+    else
+    {
+        switch (IrpSp->MinorFunction)
+        {
+            case IRP_MN_QUERY_POWER:
+            case IRP_MN_SET_POWER:
+                Status = STATUS_SUCCESS;
+                break;
+        }
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 

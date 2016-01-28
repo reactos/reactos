@@ -115,16 +115,16 @@ uIntf *v                /* working area: values in order of bit length */
   uInt f;                       /* i repeats in table every f entries */
   int g;                        /* maximum code length */
   int h;                        /* table level */
-  register uInt i;              /* counter, current code */
-  register uInt j;              /* counter */
-  register int k;               /* number of bits in current code */
+  uInt i;                       /* counter, current code */
+  uInt j;                       /* counter */
+  int k;                        /* number of bits in current code */
   int l;                        /* bits per table (returned in m) */
   uInt mask;                    /* (1 << w) - 1, to avoid cc -O bug on HP */
-  register uIntf *p;            /* pointer into c[], b[], or v[] */
+  uIntf *p;                     /* pointer into c[], b[], or v[] */
   inflate_huft *q;              /* points to current table */
   struct inflate_huft_s r;      /* table entry for structure assignment */
   inflate_huft *u[BMAX];        /* table stack */
-  register int w;               /* bits before this table == (l * h) */
+  int w;                        /* bits before this table == (l * h) */
   uInt x[BMAX+1];               /* bit offsets, then code stack */
   uIntf *xp;                    /* pointer into x */
   int y;                        /* number of dummy codes added */

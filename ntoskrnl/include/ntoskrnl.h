@@ -50,6 +50,7 @@
 #include <ndk/ldrfuncs.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
+#include <ndk/muptypes.h>
 #include <ndk/obfuncs.h>
 #include <ndk/pofuncs.h>
 #include <ndk/psfuncs.h>
@@ -87,12 +88,26 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-//
-// Define the internal versions of external and public global data
-//
-#define KeNumberProcessors              _KeNumberProcessors
-extern UCHAR _KeNumberProcessors;
+/* SRM header */
+#include <srmp.h>
+
 #define ExRaiseStatus RtlRaiseStatus
+
+//
+// NT_ASSERT Best Assert
+//
+#if defined(_MSC_VER)
+#undef ASSERT
+#define ASSERT NT_ASSERT
+#endif
+
+
+//
+// Switch for enabling global page support
+//
+
+//#define _GLOBAL_PAGES_ARE_AWESOME_
+
 
 /* Internal Headers */
 #include "internal/ntoskrnl.h"

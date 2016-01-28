@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2009, 2011-2013 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -37,17 +37,6 @@ FT_BEGIN_HEADER
   /*    A handle to a TrueType driver object.                              */
   /*                                                                       */
   typedef struct TT_DriverRec_*  TT_Driver;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    TT_Instance                                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to a TrueType size object.                                */
-  /*                                                                       */
-  typedef struct TT_SizeRec_*  TT_Size;
 
 
   /*************************************************************************/
@@ -95,8 +84,8 @@ FT_BEGIN_HEADER
     FT_F26Dot6     control_value_cutin;
     FT_F26Dot6     single_width_cutin;
     FT_F26Dot6     single_width_value;
-    FT_Short       delta_base;
-    FT_Short       delta_shift;
+    FT_UShort      delta_base;
+    FT_UShort      delta_shift;
 
     FT_Byte        instruct_control;
     /* According to Greg Hitchcock from Microsoft, the `scan_control'     */
@@ -160,7 +149,7 @@ FT_BEGIN_HEADER
   typedef struct  TT_CodeRange_
   {
     FT_Byte*  base;
-    FT_ULong  size;
+    FT_Long   size;
 
   } TT_CodeRange;
 
@@ -324,17 +313,12 @@ FT_BEGIN_HEADER
 
     TT_GlyphZoneRec    twilight;     /* The instance's twilight zone    */
 
-    /* debugging variables */
-
-    /* When using the debugger, we must keep the */
-    /* execution context tied to the instance    */
-    /* object rather than asking it on demand.   */
-
-    FT_Bool            debug;
     TT_ExecContext     context;
 
-    FT_Bool            bytecode_ready;
-    FT_Bool            cvt_ready;
+    /* if negative, `fpgm' (resp. `prep'), wasn't executed yet; */
+    /* otherwise it is the returned error code                  */
+    FT_Error           bytecode_ready;
+    FT_Error           cvt_ready;
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
@@ -349,7 +333,6 @@ FT_BEGIN_HEADER
   {
     FT_DriverRec  root;
 
-    TT_ExecContext   context;  /* execution context        */
     TT_GlyphZoneRec  zone;     /* glyph loader points zone */
 
     FT_UInt  interpreter_version;

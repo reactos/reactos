@@ -4,24 +4,24 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_SLAYERSHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Compatibilit‡"
+CAPTION "Compatibilit√†"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Se ci sono problemi ad eseguire questo programma in ReactOS potete scegliere un sistema operativo da segnalare all'applicazione.", -1, 7, 7, 210, 31
-    GROUPBOX "Modalit‡ compatibile", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Esegui questo programma in modalit‡ compatibile per:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    GROUPBOX "Modalit√† compatibile", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Esegui questo programma in modalit√† compatibile per:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Impostazioni del monitor", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
     CHECKBOX "Esegui con 256 colori", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Esegui con schermo a risoluzione 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Disabilita gli schemi di visualizzazione", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "Modifica la modalit‡ compatibile...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "Ulteriori informazioni sulla <A>compatibilit‡ dei programmi</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    PUSHBUTTON "Modifica la modalit√† compatibile...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    /* CONTROL "Ulteriori informazioni sulla <A>compatibilit√† dei programmi</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Modifica la modalit‡ compatibile"
+CAPTION "Modifica la modalit√† compatibile"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX IDC_COMPATIBILITYMODE, 9, 6, 148, 108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
@@ -35,5 +35,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Estensione dell'ambiente per la compatibilit‡ delle applicazioni"
+    IDS_DESCRIPTION "Estensione dell'ambiente per la compatibilit√† delle applicazioni"
 END

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/wprintf.c
+ * FILE:            lib/sdk/crt/printf/wprintf_s.c
  * PURPOSE:         Implementation of wprintf
  * PROGRAMMER:      Samuel Serapión
  */

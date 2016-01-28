@@ -1,7 +1,7 @@
 /* 
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/process/system.c
+ * FILE:        lib/sdk/crt/process/_system.c
  * PURPOSE:     Excutes a shell command
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

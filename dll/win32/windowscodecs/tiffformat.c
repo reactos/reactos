@@ -210,7 +210,7 @@ typedef struct {
     IWICBitmapDecoder IWICBitmapDecoder_iface;
     LONG ref;
     IStream *stream;
-    CRITICAL_SECTION lock; /* Must be held when tiff is used or initiailzed is set */
+    CRITICAL_SECTION lock; /* Must be held when tiff is used or initialized is set */
     TIFF *tiff;
     BOOL initialized;
 } TiffDecoder;
@@ -219,7 +219,7 @@ typedef struct {
     const WICPixelFormatGUID *format;
     int bps;
     int samples;
-    int bpp;
+    int bpp, source_bpp;
     int planar;
     int indexed;
     int reverse_bgr;
@@ -309,23 +309,63 @@ static HRESULT tiff_get_decode_info(TIFF *tiff, tiff_decode_info *decode_info)
         decode_info->invert_grayscale = 1;
         /* fall through */
     case 1: /* BlackIsZero */
-        if (samples != 1)
+        if (samples == 2)
         {
-            FIXME("unhandled grayscale sample count %u\n", samples);
+            ret = pTIFFGetField(tiff, TIFFTAG_EXTRASAMPLES, &extra_sample_count, &extra_samples);
+            if (!ret)
+            {
+                extra_sample_count = 1;
+                extra_sample = 0;
+                extra_samples = &extra_sample;
+            }
+        }
+        else if (samples != 1)
+        {
+            FIXME("unhandled %dbpp sample count %u\n", bps, samples);
             return E_FAIL;
         }
 
-        decode_info->bpp = bps;
+        decode_info->bpp = bps * samples;
+        decode_info->source_bpp = decode_info->bpp;
         switch (bps)
         {
         case 1:
+            if (samples != 1)
+            {
+                FIXME("unhandled 1bpp sample count %u\n", samples);
+                return E_FAIL;
+            }
             decode_info->format = &GUID_WICPixelFormatBlackWhite;
             break;
         case 4:
+            if (samples != 1)
+            {
+                FIXME("unhandled 4bpp grayscale sample count %u\n", samples);
+                return E_FAIL;
+            }
             decode_info->format = &GUID_WICPixelFormat4bppGray;
             break;
         case 8:
-            decode_info->format = &GUID_WICPixelFormat8bppGray;
+            if (samples == 1)
+                decode_info->format = &GUID_WICPixelFormat8bppGray;
+            else
+            {
+                decode_info->bpp = 32;
+
+                switch(extra_samples[0])
+                {
+                case 1: /* Associated (pre-multiplied) alpha data */
+                    decode_info->format = &GUID_WICPixelFormat32bppPBGRA;
+                    break;
+                case 0: /* Unspecified data */
+                case 2: /* Unassociated alpha data */
+                    decode_info->format = &GUID_WICPixelFormat32bppBGRA;
+                    break;
+                default:
+                    FIXME("unhandled extra sample type %u\n", extra_samples[0]);
+                    return E_FAIL;
+                }
+            }
             break;
         default:
             FIXME("unhandled greyscale bit count %u\n", bps);
@@ -926,6 +966,22 @@ static HRESULT TiffFrameDecode_ReadTile(TiffFrameDecode *This, UINT tile_x, UINT
             hr = E_FAIL;
     }
 
+    /* 8bpp grayscale with extra alpha */
+    if (hr == S_OK && This->decode_info.source_bpp == 16 && This->decode_info.samples == 2 && This->decode_info.bpp == 32)
+    {
+        BYTE *src;
+        DWORD *dst, count = This->decode_info.tile_width * This->decode_info.tile_height;
+
+        src = This->cached_tile + This->decode_info.tile_width * This->decode_info.tile_height * 2 - 2;
+        dst = (DWORD *)(This->cached_tile + This->decode_info.tile_size - 4);
+
+        while (count--)
+        {
+            *dst-- = src[0] | (src[0] << 8) | (src[0] << 16) | (src[1] << 24);
+            src -= 2;
+        }
+    }
+
     if (hr == S_OK && This->decode_info.reverse_bgr)
     {
         if (This->decode_info.bps == 8)
@@ -1206,8 +1262,7 @@ static HRESULT create_metadata_reader(TiffFrameDecode *This, IWICMetadataReader 
 
     /* FIXME: Use IWICComponentFactory_CreateMetadataReader once it's implemented */
 
-    hr = CoCreateInstance(&CLSID_WICIfdMetadataReader, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IWICMetadataReader, (void **)&metadata_reader);
+    hr = IfdMetadataReader_CreateInstance(&IID_IWICMetadataReader, (void **)&metadata_reader);
     if (FAILED(hr)) return hr;
 
     hr = IWICMetadataReader_QueryInterface(metadata_reader, &IID_IWICPersistStream, (void **)&persist);
@@ -1636,73 +1691,23 @@ static HRESULT WINAPI TiffFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 {
     TiffFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
-    UINT stride;
-    BYTE *pixeldata;
 
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->initialized || !This->width || !This->height)
+    if (!This->initialized)
         return WINCODEC_ERR_WRONGSTATE;
 
-    if (!This->format)
-    {
-        hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &guid);
-        if (FAILED(hr)) return hr;
-    }
-
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr)) return hr;
-    if (memcmp(&guid, This->format->guid, sizeof(GUID)) != 0)
-    {
-        /* FIXME: should use WICConvertBitmapSource to convert */
-        ERR("format %s unsupported\n", debugstr_guid(&guid));
-        return E_FAIL;
-    }
-
-    if (This->xres == 0.0 || This->yres == 0.0)
-    {
-        double xres, yres;
-        hr = IWICBitmapSource_GetResolution(pIBitmapSource, &xres, &yres);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
-        if (FAILED(hr)) return hr;
-    }
-
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr)) return hr;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->width) return E_INVALIDARG;
-
-    stride = (This->format->bpp * This->width + 7)/8;
-
-    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata) return E_OUTOFMEMORY;
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
-        stride*prc->Height, pixeldata);
+    hr = configure_write_source(iface, pIBitmapSource, prc,
+        This->format ? This->format->guid : NULL, This->width, This->height,
+        This->xres, This->yres);
 
     if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
-            stride*prc->Height, pixeldata);
+        hr = write_source(iface, pIBitmapSource, prc,
+            This->format->guid, This->format->bpp, This->width, This->height);
     }
 
-    HeapFree(GetProcessHeap(), 0, pixeldata);
-
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI TiffFrameEncode_Commit(IWICBitmapFrameEncode *iface)

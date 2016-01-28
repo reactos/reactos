@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/path.c
+ * FILE:            win32ss/gdi/ntgdi/path.c
  * PURPOSE:         Graphics paths (BeginPath, EndPath etc.)
  * PROGRAMMER:      Copyright 1997, 1998 Martin Boehme
  *                            1999 Huw D M Davies
@@ -1252,6 +1252,7 @@ PATH_PathToRegion(
 
     if (numStrokes == 0)
     {
+        DPRINT1("numStrokes is 0\n");
         return FALSE;
     }
 
@@ -1259,6 +1260,7 @@ PATH_PathToRegion(
     pNumPointsInStroke = ExAllocatePoolWithTag(PagedPool, sizeof(ULONG) * numStrokes, TAG_PATH);
     if (!pNumPointsInStroke)
     {
+        DPRINT1("Failed to allocate %lu strokes\n", numStrokes);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -1280,11 +1282,15 @@ PATH_PathToRegion(
     }
 
     /* Fill the region with the strokes */
-    Ret = IntSetPolyPolygonRgn(pPath->pPoints,
-                               pNumPointsInStroke,
-                               numStrokes,
-                               nPolyFillMode,
-                               Rgn);
+    Ret = REGION_SetPolyPolygonRgn(Rgn,
+                                   pPath->pPoints,
+                                   pNumPointsInStroke,
+                                   numStrokes,
+                                   nPolyFillMode);
+    if (!Ret)
+    {
+        DPRINT1("REGION_SetPolyPolygonRgn failed\n");
+    }
 
     /* Free memory for number-of-points-in-stroke array */
     ExFreePoolWithTag(pNumPointsInStroke, TAG_PATH);
@@ -1638,6 +1644,7 @@ PATH_StrokePath(
                         if (!Realloc)
                         {
                             DPRINT1("Can't allocate pool!\n");
+                            ExFreePoolWithTag(pBzrPts, TAG_BEZIER);
                             goto end;
                         }
 
@@ -1736,6 +1743,13 @@ PATH_WidenPath(DC *dc)
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
+    if (elp == NULL)
+    {
+        PATH_UnlockPath(pPath);
+        EngSetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
     GreGetObject(pdcattr->hpen, size, elp);
 
     obj_type = GDI_HANDLE_GET_TYPE(pdcattr->hpen);
@@ -2690,6 +2704,7 @@ NtGdiPathToRegion(HDC  hDC)
     pDc = DC_LockDc(hDC);
     if (!pDc)
     {
+        DPRINT1("Failed to lock DC %p\n", hDC);
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
@@ -2699,6 +2714,7 @@ NtGdiPathToRegion(HDC  hDC)
     pPath = PATH_LockPath(pDc->dclevel.hPath);
     if (!pPath)
     {
+        DPRINT1("Failed to lock DC path %p\n", pDc->dclevel.hPath);
         DC_UnlockDc(pDc);
         return NULL;
     }
@@ -2706,6 +2722,7 @@ NtGdiPathToRegion(HDC  hDC)
     if (pPath->state != PATH_Closed)
     {
         // FIXME: Check that setlasterror is being called correctly
+        DPRINT1("Path is not closed!\n");
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     }
     else
@@ -2714,6 +2731,7 @@ NtGdiPathToRegion(HDC  hDC)
         Rgn = REGION_AllocUserRgnWithHandle(1);
         if (!Rgn)
         {
+            DPRINT1("Failed to allocate a region\n");
             PATH_UnlockPath(pPath);
             DC_UnlockDc(pDc);
             return NULL;
@@ -2723,10 +2741,11 @@ NtGdiPathToRegion(HDC  hDC)
         if (PATH_PathToRegion(pPath, pdcattr->jFillMode, Rgn))
         {
             PATH_EmptyPath(pPath);
-            RGNOBJAPI_Unlock(Rgn);
+            REGION_UnlockRgn(Rgn);
         }
         else
         {
+            DPRINT1("PATH_PathToRegion failed\n");
             REGION_Delete(Rgn);
             hrgnRval = NULL;
         }

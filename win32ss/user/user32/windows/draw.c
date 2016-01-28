@@ -979,6 +979,14 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     TCHAR Symbol;
     switch(uFlags & 0xff)
     {
+        case DFCS_MENUARROWUP:
+            Symbol = '5';
+            break;
+
+        case DFCS_MENUARROWDOWN:
+            Symbol = '6';
+            break;
+
         case DFCS_MENUARROW:
             Symbol = '8';
             break;
@@ -1011,16 +1019,20 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = CreateFontIndirect(&lf);
     /* save font */
     hOldFont = SelectObject(dc, hFont);
-    // FIXME selecting color doesn't work
-#if 0
-    if(uFlags & DFCS_INACTIVE)
+
+    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||  
+        (uFlags & 0xff) == DFCS_MENUARROWDOWN ) 
     {
-        /* draw shadow */
-        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-        TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
-    }
-    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+#if 0
+       if (uFlags & DFCS_INACTIVE)
+       {
+           /* draw shadow */
+           SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+           TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
+       }
 #endif
+       SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+    }
     /* draw selected symbol */
     TextOut(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
@@ -1271,6 +1283,10 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
                 break;
 
             case DST_COMPLEX: /* cx and cy must be set in this mode */
+                return FALSE;
+
+            default:
+                ERR("Invalid opcode: %u\n", opcode);
                 return FALSE;
         }
 
@@ -1552,7 +1568,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
         /* Handle system colors */
         if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
             hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
-        
+
         prevhbr = SelectObject(hDC, hbr);
         if (prevhbr == NULL)
             return (INT)FALSE;

@@ -30,7 +30,6 @@ list(APPEND SOURCE
     layer3.c
     libmpg123.c
     ntom.c
-    optimize.c
     parse.c
     readers.c
     stringbuf.c
@@ -41,7 +40,7 @@ list(APPEND SOURCE
     tabinit.c
     precomp.h)
 
-add_library(libmpg123 ${SOURCE})
+add_library(libmpg123 ${SOURCE} optimize.c)
 add_dependencies(libmpg123 psdk)
 add_pch(libmpg123 precomp.h SOURCE)
 

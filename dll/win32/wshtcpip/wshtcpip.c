@@ -156,12 +156,18 @@ WSHGetSockaddrType(
     return NO_ERROR;
 }
 
-UINT
-GetAddressOption(INT Level, INT OptionName)
+static
+void
+GetTdiTypeId(
+    _In_ INT Level,
+    _In_ INT OptionName,
+    _Out_ PULONG TdiType,
+    _Out_ PULONG TdiId)
 {
     switch (Level)
     {
        case SOL_SOCKET:
+          *TdiType = INFO_TYPE_ADDRESS_OBJECT;
           switch (OptionName)
           {
              case SO_KEEPALIVE:
@@ -174,21 +180,26 @@ GetAddressOption(INT Level, INT OptionName)
           break;
 
        case IPPROTO_IP:
+          *TdiType = INFO_TYPE_ADDRESS_OBJECT;
           switch (OptionName)
           {
              case IP_TTL:
-                return AO_OPTION_TTL;
+                *TdiId = AO_OPTION_TTL;
+                return;
 
              case IP_DONTFRAGMENT:
-                return AO_OPTION_IP_DONTFRAGMENT;
+                 *TdiId = AO_OPTION_IP_DONTFRAGMENT;
+                 return;
 
 #if 0
              case IP_RECEIVE_BROADCAST:
-                return AO_OPTION_BROADCAST;
+                 *TdiId = AO_OPTION_BROADCAST;
+                 return;
 #endif
 
              case IP_HDRINCL:
-                return AO_OPTION_IP_HDRINCL;
+                 *TdiId = AO_OPTION_IP_HDRINCL;
+                 return;
 
              default:
                 break;
@@ -196,12 +207,12 @@ GetAddressOption(INT Level, INT OptionName)
           break;
 
        case IPPROTO_TCP:
+          *TdiType = INFO_TYPE_CONNECTION;
           switch (OptionName)
           {
              case TCP_NODELAY:
-                 /* FIXME: Return proper option */
-                 ASSERT(FALSE);
-                 break;
+                 *TdiId = TCP_SOCKET_NODELAY;
+                 return;
              default:
                  break;
           }
@@ -211,7 +222,8 @@ GetAddressOption(INT Level, INT OptionName)
     }
 
     DPRINT1("Unknown level/option name: %d %d\n", Level, OptionName);
-    return 0;
+    *TdiType = 0;
+    *TdiId = 0;
 }
 
 INT
@@ -379,7 +391,7 @@ SendRequest(
     HANDLE TcpCC;
     DWORD BytesReturned;
 
-    if (openTcpFile(&TcpCC) != STATUS_SUCCESS)
+    if (openTcpFile(&TcpCC, FILE_READ_DATA | FILE_WRITE_DATA) != STATUS_SUCCESS)
         return WSAEINVAL;
 
     Status = DeviceIoControl(TcpCC,
@@ -437,7 +449,7 @@ WSHNotify(
 
         case WSH_NOTIFY_BIND:
             DPRINT("WSHNotify: WSH_NOTIFY_BIND\n");
-            Status = openTcpFile(&TcpCC);
+            Status = openTcpFile(&TcpCC, FILE_READ_DATA);
             if (Status != STATUS_SUCCESS)
                 return WSAEINVAL;
 
@@ -642,7 +654,7 @@ WSHSetSocketInformation(
     IN  INT OptionLength)
 {
     PSOCKET_CONTEXT Context = HelperDllSocketContext;
-    UINT RealOptionName;
+    ULONG TdiType, TdiId;
     INT Status;
     PTCP_REQUEST_SET_INFORMATION_EX Info;
     PQUEUED_REQUEST Queued, NextQueued;
@@ -697,9 +709,11 @@ WSHSetSocketInformation(
             switch (OptionName)
             {
                 case TCP_NODELAY:
-                    /* FIXME -- Send this to TCPIP */
-                    DPRINT1("Set: TCP_NODELAY not yet supported\n");
-                    return 0;
+                    if (OptionLength < sizeof(CHAR))
+                    {
+                        return WSAEFAULT;
+                    }
+                    break;
 
                 default:
                     /* Invalid option */
@@ -714,8 +728,8 @@ WSHSetSocketInformation(
     }
 
     /* If we get here, GetAddressOption must return something valid */
-    RealOptionName = GetAddressOption(Level, OptionName);
-    ASSERT(RealOptionName != 0);
+    GetTdiTypeId(Level, OptionName, &TdiType, &TdiId);
+    ASSERT((TdiId != 0) && (TdiType != 0));
 
     Info = HeapAlloc(GetProcessHeap(), 0, sizeof(*Info) + OptionLength);
     if (!Info)
@@ -724,8 +738,8 @@ WSHSetSocketInformation(
     Info->ID.toi_entity.tei_entity = Context->AddrFileEntityType;
     Info->ID.toi_entity.tei_instance = Context->AddrFileInstance;
     Info->ID.toi_class = INFO_CLASS_PROTOCOL;
-    Info->ID.toi_type = INFO_TYPE_ADDRESS_OBJECT;
-    Info->ID.toi_id = RealOptionName;
+    Info->ID.toi_type = TdiType;
+    Info->ID.toi_id = TdiId;
     Info->BufferSize = OptionLength;
     memcpy(Info->Buffer, OptionValue, OptionLength);
 

@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
- * FILE:             subsystems/win32/win32k/ntuser/caret.c
+ * FILE:             win32ss/user/ntuser/caret.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 
@@ -16,6 +16,123 @@ DBG_DEFAULT_CHANNEL(UserCaret);
 
 /* FUNCTIONS *****************************************************************/
 
+VOID FASTCALL
+co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
+{
+    HDC hdc, hdcMem;
+    HBITMAP hbmOld;
+    BOOL bDone = FALSE;
+
+    if (pWnd == NULL)
+    {
+       TRACE("Null Window!\n");
+       return;
+    }
+
+    hdc = UserGetDCEx(pWnd, 0, DCX_USESTYLE | DCX_WINDOW);
+    if (!hdc)
+    {
+        ERR("GetDC failed\n");
+        return;
+    }
+
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiSaveDC(hdc);
+    }
+
+    if (CaretInfo->Bitmap)
+    {
+        if (!NtGdiGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
+        {
+            ERR("Failed to get bitmap dimensions\n");
+            return;
+        }
+
+        hdcMem = NtGdiCreateCompatibleDC(hdc);
+        if (hdcMem)
+        {
+            hbmOld = NtGdiSelectBitmap(hdcMem, CaretInfo->Bitmap);
+            bDone = NtGdiBitBlt(hdc,
+                                CaretInfo->Pos.x,
+                                CaretInfo->Pos.y,
+                                CaretInfo->Size.cx,
+                                CaretInfo->Size.cy,
+                                hdcMem,
+                                0,
+                                0,
+                                SRCINVERT,
+                                0,
+                                0);
+            NtGdiSelectBitmap(hdcMem, hbmOld);
+            GreDeleteObject(hdcMem);
+        }
+    }
+
+    if (!bDone)
+    {
+        NtGdiPatBlt(hdc,
+                    CaretInfo->Pos.x,
+                    CaretInfo->Pos.y,
+                    CaretInfo->Size.cx,
+                    CaretInfo->Size.cy,
+                    DSTINVERT);
+    }
+
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiRestoreDC(hdc, -1);
+    }
+
+    UserReleaseDC(pWnd, hdc, FALSE);
+}
+
+VOID
+CALLBACK
+CaretSystemTimerProc(HWND hwnd,
+                     UINT uMsg,
+                     UINT_PTR idEvent,
+                     DWORD dwTime)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+   PWND pWnd;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+
+   if (ThreadQueue->CaretInfo.hWnd != hwnd)
+   {
+      TRACE("Not the same caret window!\n");
+      return;
+   }
+
+   if (hwnd)
+   {
+      pWnd = UserGetWindowObject(hwnd);
+      if (!pWnd)
+      {
+         ERR("Caret System Timer Proc has invalid window handle! %p Id: %u\n", hwnd, idEvent);
+         return;
+      }
+   }
+   else
+   {
+      TRACE( "Windowless Caret Timer Running!\n" );
+      return;
+   }
+
+   switch (idEvent)
+   {
+      case IDCARETTIMER:
+      {
+         ThreadQueue->CaretInfo.Showing = (ThreadQueue->CaretInfo.Showing ? 0 : 1);
+         co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
+      }
+   }
+   return;
+}
+
 static
 BOOL FASTCALL
 co_IntHideCaret(PTHRDCARETINFO CaretInfo)
@@ -24,8 +141,9 @@ co_IntHideCaret(PTHRDCARETINFO CaretInfo)
    if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
    {
       pWnd = UserGetWindowObject(CaretInfo->hWnd);
-      co_IntSendMessage(CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       CaretInfo->Showing = 0;
+
+      co_IntDrawCaret(pWnd, CaretInfo);
       IntNotifyWinEvent(EVENT_OBJECT_HIDE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       return TRUE;
    }
@@ -37,18 +155,18 @@ co_IntDestroyCaret(PTHREADINFO Win32Thread)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWND pWnd;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)Win32Thread->MessageQueue;
+   ThreadQueue = Win32Thread->MessageQueue;
 
-   if(!ThreadQueue || !ThreadQueue->CaretInfo)
+   if (!ThreadQueue)
       return FALSE;
 
-   pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
-   co_IntHideCaret(ThreadQueue->CaretInfo);
-   ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
-   ThreadQueue->CaretInfo->hWnd = (HWND)0;
-   ThreadQueue->CaretInfo->Size.cx = ThreadQueue->CaretInfo->Size.cy = 0;
-   ThreadQueue->CaretInfo->Showing = 0;
-   ThreadQueue->CaretInfo->Visible = 0;
+   pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
+   co_IntHideCaret(&ThreadQueue->CaretInfo);
+   ThreadQueue->CaretInfo.Bitmap = (HBITMAP)0;
+   ThreadQueue->CaretInfo.hWnd = (HWND)0;
+   ThreadQueue->CaretInfo.Size.cx = ThreadQueue->CaretInfo.Size.cy = 0;
+   ThreadQueue->CaretInfo.Showing = 0;
+   ThreadQueue->CaretInfo.Visible = 0;
    if (pWnd)
    {
       IntNotifyWinEvent(EVENT_OBJECT_DESTROY, pWnd, OBJID_CARET, CHILDID_SELF, 0);
@@ -83,17 +201,18 @@ co_IntSetCaretPos(int X, int Y)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd)
+   if(ThreadQueue->CaretInfo.hWnd)
    {
-      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
-      if(ThreadQueue->CaretInfo->Pos.x != X || ThreadQueue->CaretInfo->Pos.y != Y)
+      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo.hWnd);
+      if(ThreadQueue->CaretInfo.Pos.x != X || ThreadQueue->CaretInfo.Pos.y != Y)
       {
-         co_IntHideCaret(ThreadQueue->CaretInfo);
-         ThreadQueue->CaretInfo->Showing = 0;
-         ThreadQueue->CaretInfo->Pos.x = X;
-         ThreadQueue->CaretInfo->Pos.y = Y;
-         co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-         IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, NULL, TMRF_SYSTEM);
+         co_IntHideCaret(&ThreadQueue->CaretInfo);
+         ThreadQueue->CaretInfo.Showing = 1;
+         ThreadQueue->CaretInfo.Pos.x = X;
+         ThreadQueue->CaretInfo.Pos.y = Y;
+         co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
+
+         IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       }
       return TRUE;
@@ -101,47 +220,6 @@ co_IntSetCaretPos(int X, int Y)
 
    return FALSE;
 }
-
-BOOL FASTCALL
-IntSwitchCaretShowing(PVOID Info)
-{
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-
-   if(ThreadQueue->CaretInfo->hWnd)
-   {
-      ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
-      MmCopyToCaller(Info, ThreadQueue->CaretInfo, sizeof(THRDCARETINFO));
-      return TRUE;
-   }
-
-   return FALSE;
-}
-
-#if 0 // Unused
-static
-VOID FASTCALL
-co_IntDrawCaret(HWND hWnd)
-{
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-
-   if(ThreadQueue->CaretInfo->hWnd && ThreadQueue->CaretInfo->Visible &&
-         ThreadQueue->CaretInfo->Showing)
-   {
-      co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-      ThreadQueue->CaretInfo->Showing = 1;
-   }
-}
-#endif
-
-
 
 BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 {
@@ -159,25 +237,24 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   if(ThreadQueue->CaretInfo->Visible)
+   if(ThreadQueue->CaretInfo.Visible)
    {
-      PWND pwnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
+      PWND pwnd = UserGetWindowObject(ThreadQueue->CaretInfo.hWnd);
       IntKillTimer(pwnd, IDCARETTIMER, TRUE);
 
-      co_IntHideCaret(ThreadQueue->CaretInfo);
-      ThreadQueue->CaretInfo->Visible = 0;
-      ThreadQueue->CaretInfo->Showing = 0;
+      co_IntHideCaret(&ThreadQueue->CaretInfo);
+      ThreadQueue->CaretInfo.Visible = 0;
+      ThreadQueue->CaretInfo.Showing = 0;
    }
 
    return TRUE;
 }
-
 
 BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 {
@@ -196,26 +273,24 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   if (!ThreadQueue->CaretInfo->Visible)
+   if (!ThreadQueue->CaretInfo.Visible)
    {
-      ThreadQueue->CaretInfo->Visible = 1;
-      pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
-      if (!ThreadQueue->CaretInfo->Showing && pWnd)
+      ThreadQueue->CaretInfo.Visible = 1;
+      pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
+      if (!ThreadQueue->CaretInfo.Showing && pWnd)
       {
-         co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
          IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);
       }
-      IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, NULL, TMRF_SYSTEM);
+      IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
    }
    return TRUE;
 }
-
 
 /* SYSCALLS *****************************************************************/
 
@@ -249,17 +324,17 @@ NtUserCreateCaret(
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if (ThreadQueue->CaretInfo->Visible)
+   if (ThreadQueue->CaretInfo.Visible)
    {
       IntKillTimer(Window, IDCARETTIMER, TRUE);
-      co_IntHideCaret(ThreadQueue->CaretInfo);
+      co_IntHideCaret(&ThreadQueue->CaretInfo);
    }
 
-   ThreadQueue->CaretInfo->hWnd = hWnd;
+   ThreadQueue->CaretInfo.hWnd = hWnd;
    if(hBitmap)
    {
-      ThreadQueue->CaretInfo->Bitmap = hBitmap;
-      ThreadQueue->CaretInfo->Size.cx = ThreadQueue->CaretInfo->Size.cy = 0;
+      ThreadQueue->CaretInfo.Bitmap = hBitmap;
+      ThreadQueue->CaretInfo.Size.cx = ThreadQueue->CaretInfo.Size.cy = 0;
    }
    else
    {
@@ -271,13 +346,17 @@ NtUserCreateCaret(
       {
           nHeight = UserGetSystemMetrics(SM_CYBORDER);
       }
-      ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
-      ThreadQueue->CaretInfo->Size.cx = nWidth;
-      ThreadQueue->CaretInfo->Size.cy = nHeight;
+      ThreadQueue->CaretInfo.Bitmap = (HBITMAP)0;
+      ThreadQueue->CaretInfo.Size.cx = nWidth;
+      ThreadQueue->CaretInfo.Size.cy = nHeight;
    }
-   ThreadQueue->CaretInfo->Visible = 0;
-   ThreadQueue->CaretInfo->Showing = 0;
+   ThreadQueue->CaretInfo.Visible = 0;
+   ThreadQueue->CaretInfo.Showing = 0;
+
+   IntSetTimer( Window, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM );
+
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_CARET, CHILDID_SELF, 0);
+
    RETURN(TRUE);
 
 CLEANUP:
@@ -317,7 +396,7 @@ NtUserGetCaretPos(
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   Status = MmCopyToCaller(lpPoint, &(ThreadQueue->CaretInfo->Pos), sizeof(POINT));
+   Status = MmCopyToCaller(lpPoint, &ThreadQueue->CaretInfo.Pos, sizeof(POINT));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);

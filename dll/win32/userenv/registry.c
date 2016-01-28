@@ -89,6 +89,9 @@ CopyKey(HKEY hDstKey,
         return FALSE;
     }
 
+    dwMaxSubKeyNameLength++;
+    dwMaxValueNameLength++;
+
     DPRINT("dwSubKeys %lu\n", dwSubKeys);
     DPRINT("dwMaxSubKeyNameLength %lu\n", dwMaxSubKeyNameLength);
     DPRINT("dwValues %lu\n", dwValues);

@@ -8,7 +8,8 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2005-2007, 2009, 2011 by David Turner.                       */
+/*  Copyright 2005-2015 by                                                 */
+/*  David Turner.                                                          */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -54,7 +55,7 @@
   ft_lzwstate_get_code( FT_LzwState  state )
   {
     FT_UInt   num_bits = state->num_bits;
-    FT_Int    offset   = state->buf_offset;
+    FT_UInt   offset   = state->buf_offset;
     FT_Byte*  p;
     FT_Int    result;
 

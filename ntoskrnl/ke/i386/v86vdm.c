@@ -691,7 +691,7 @@ Ke386CallBios(IN ULONG Int,
     Context->ContextFlags = CONTEXT_FULL;
 
     /* Free VDM objects */
-    ExFreePool(PsGetCurrentProcess()->VdmObjects);
+    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, '  eK');
     PsGetCurrentProcess()->VdmObjects = NULL;
 
     /* Return status */

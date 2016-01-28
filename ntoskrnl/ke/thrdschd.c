@@ -172,6 +172,14 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
                 /* Calculate the new priority after the increment */
                 OldPriority = Thread->BasePriority + Thread->AdjustIncrement;
 
+                /* Check if this is a foreground process */
+                if (CONTAINING_RECORD(Thread->ApcState.Process, EPROCESS, Pcb)->
+                    Vm.Flags.MemoryPriority == MEMORY_PRIORITY_FOREGROUND)
+                {
+                    /* Apply the foreground boost */
+                    OldPriority += PsPrioritySeparation;
+                }
+
                 /* Check if this new priority is higher */
                 if (OldPriority > Thread->Priority)
                 {
@@ -696,8 +704,10 @@ KiSetAffinityThread(IN PKTHREAD Thread,
     /* Check if system affinity is disabled */
     if (!Thread->SystemAffinityActive)
     {
+#ifdef CONFIG_SMP
         /* FIXME: TODO */
         DPRINT1("Affinity support disabled!\n");
+#endif
     }
 
     /* Return the old affinity */
@@ -723,7 +733,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 #elif _M_AMD64
 #define KiGetCurrentReadySummary() __readgsdword(FIELD_OFFSET(KIPCR, Prcb.ReadySummary))
 #else
-#error Implement me!
+#define KiGetCurrentReadySummary() KeGetCurrentPrcb()->ReadySummary
 #endif
 
 /*

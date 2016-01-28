@@ -1536,7 +1536,7 @@ VideoPortLockBuffer(
 VPAPI
 VOID
 NTAPI
-VideoPortUnLockBuffer(
+VideoPortUnlockBuffer(
   IN PVOID HwDeviceExtension,
   IN PVOID Mdl);
 

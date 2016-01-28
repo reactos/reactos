@@ -41,10 +41,10 @@ enum _R3_ROPCODES
 
 #define ROP4_FROM_INDEX(index) ((index) | ((index) << 8))
 
-#define ROP4_USES_SOURCE(Rop4)  (((((Rop4) & 0xCC00) >> 2) != ((Rop4) & 0x3300)) || ((((Rop4) & 0xCC) >> 2) != ((Rop4) & 0x33)))
-#define ROP4_USES_MASK(Rop4)    (((Rop4) & 0xFF00) != (((Rop4) & 0xff) << 8))
-#define ROP4_USES_DEST(Rop4)    (((((Rop4) & 0xAA) >> 1) != ((Rop4) & 0x55)) || ((((Rop4) & 0xAA00) >> 1) != ((Rop4) & 0x5500)))
-#define ROP4_USES_PATTERN(Rop4) (((((Rop4) & 0xF0) >> 4) != ((Rop4) & 0x0F)) || ((((Rop4) & 0xF000) >> 4) != ((Rop4) & 0x0F00)))
+#define ROP4_USES_DEST(Rop4)    ((((Rop4) & 0xAAAA) >> 1) != ((Rop4) & 0x5555))
+#define ROP4_USES_SOURCE(Rop4)  ((((Rop4) & 0xCCCC) >> 2) != ((Rop4) & 0x3333))
+#define ROP4_USES_PATTERN(Rop4) ((((Rop4) & 0xF0F0) >> 4) != ((Rop4) & 0x0F0F))
+#define ROP4_USES_MASK(Rop4)    ((((Rop4) & 0xFF00) >> 8) != ((Rop4) & 0x00ff))
 
 #define IS_VALID_ROP4(rop) (((rop) & 0xFFFF0000) == 0)
 
@@ -53,6 +53,7 @@ enum _R3_ROPCODES
 
 #define ROP4_NOOP (R3_OPINDEX_NOOP | (R3_OPINDEX_NOOP << 8))
 #define ROP4_MASK (R3_OPINDEX_SRCCOPY | (R3_OPINDEX_NOOP << 8))
+#define ROP4_MASKPAINT (R3_OPINDEX_PATCOPY | (R3_OPINDEX_NOOP << 8))
 
 /* Definitions of IntEngXxx functions */
 
@@ -137,25 +138,14 @@ IntEngTransparentBlt(SURFOBJ *Dest,
                      ULONG iTransColor,
                      ULONG Reserved);
 
-BOOL APIENTRY
-IntEngPaint(IN SURFOBJ *Surface,
-            IN CLIPOBJ *ClipRegion,
-            IN BRUSHOBJ *Brush,
-            IN POINTL *BrushOrigin,
-            IN MIX Mix);
-
-ULONG APIENTRY
-IntEngSetPointerShape(
-   IN SURFOBJ *pso,
-   IN SURFOBJ *psoMask,
-   IN SURFOBJ *psoColor,
-   IN XLATEOBJ *pxlo,
-   IN LONG xHot,
-   IN LONG yHot,
-   IN LONG x,
-   IN LONG y,
-   IN RECTL *prcl,
-   IN FLONG fl);
+BOOL
+APIENTRY
+IntEngPaint(
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ __in_data_source(USER_MODE) MIX mix);
 
 BOOL
 APIENTRY

@@ -3,8 +3,6 @@
  * Copyright (c) 2002-2004 Christian Costa
  * Copyright (c) 2006      Stefan Dösinger
  *
- * This file contains the implementation of IDirect3DExecuteBuffer.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -144,9 +142,10 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                     buffer->indices[(i * 3) + 2] = ci->u3.v3;
                     instr += size;
                 }
-                IDirect3DDevice7_DrawIndexedPrimitive(&device->IDirect3DDevice7_iface,
-                        D3DPT_TRIANGLELIST, D3DFVF_TLVERTEX, tl_vx, buffer->nb_vertices,
-                        buffer->indices, count * 3, 0);
+                if (count)
+                    IDirect3DDevice7_DrawIndexedPrimitive(&device->IDirect3DDevice7_iface,
+                            D3DPT_TRIANGLELIST, D3DFVF_TLVERTEX, tl_vx, buffer->nb_vertices,
+                            buffer->indices, count * 3, 0);
 	    } break;
 
 	    case D3DOP_MATRIXLOAD:

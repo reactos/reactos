@@ -69,9 +69,9 @@ library QuartzTypeLib
     interface IBasicAudio : IDispatch
     {
         [propput] HRESULT Volume( [in] LONG lVolume );
-        [propget] HRESULT Volume( [out] LONG *plVolume );
+        [propget] HRESULT Volume( [out, retval] LONG *plVolume );
         [propput] HRESULT Balance( [in] LONG lBalance );
-        [propget] HRESULT Balance( [out] LONG *plBalance );
+        [propget] HRESULT Balance( [out, retval] LONG *plBalance );
     }
 
 
@@ -86,34 +86,34 @@ library QuartzTypeLib
     interface IVideoWindow : IDispatch
     {
         [propput] HRESULT Caption( [in] BSTR strCaption );
-        [propget] HRESULT Caption( [out] BSTR *strCaption );
+        [propget] HRESULT Caption( [out, retval] BSTR *strCaption );
         [propput] HRESULT WindowStyle( [in] LONG WindowStyle );
-        [propget] HRESULT WindowStyle( [out] LONG *WindowStyle );
+        [propget] HRESULT WindowStyle( [out, retval] LONG *WindowStyle );
         [propput] HRESULT WindowStyleEx( [in] LONG WindowStyleEx );
-        [propget] HRESULT WindowStyleEx( [out] LONG *WindowStyleEx );
+        [propget] HRESULT WindowStyleEx( [out, retval] LONG *WindowStyleEx );
         [propput] HRESULT AutoShow( [in] LONG AutoShow );
-        [propget] HRESULT AutoShow( [out] LONG *AutoShow );
+        [propget] HRESULT AutoShow( [out, retval] LONG *AutoShow );
         [propput] HRESULT WindowState( [in] LONG WindowState );
-        [propget] HRESULT WindowState( [out] LONG *WindowState );
+        [propget] HRESULT WindowState( [out, retval] LONG *WindowState );
         [propput] HRESULT BackgroundPalette( [in] LONG BackgroundPalette );
-        [propget] HRESULT BackgroundPalette( [out] LONG *pBackgroundPalette );
+        [propget] HRESULT BackgroundPalette( [out, retval] LONG *pBackgroundPalette );
         [propput] HRESULT Visible( [in] LONG Visible );
-        [propget] HRESULT Visible( [out] LONG *pVisible );
+        [propget] HRESULT Visible( [out, retval] LONG *pVisible );
         [propput] HRESULT Left( [in] LONG Left );
-        [propget] HRESULT Left( [out] LONG *pLeft );
+        [propget] HRESULT Left( [out, retval] LONG *pLeft );
         [propput] HRESULT Width( [in] LONG Width );
-        [propget] HRESULT Width( [out] LONG *pWidth );
+        [propget] HRESULT Width( [out, retval] LONG *pWidth );
         [propput] HRESULT Top( [in] LONG Top );
-        [propget] HRESULT Top( [out] LONG *pTop );
+        [propget] HRESULT Top( [out, retval] LONG *pTop );
         [propput] HRESULT Height( [in] LONG Height );
-        [propget] HRESULT Height( [out] LONG *pHeight );
+        [propget] HRESULT Height( [out, retval] LONG *pHeight );
         [propput] HRESULT Owner( [in] OAHWND Owner );
-        [propget] HRESULT Owner( [out] OAHWND *Owner );
+        [propget] HRESULT Owner( [out, retval] OAHWND *Owner );
         [propput] HRESULT MessageDrain( [in] OAHWND Drain );
-        [propget] HRESULT MessageDrain( [out] OAHWND *Drain );
-        [propget] HRESULT BorderColor( [out] LONG *Color );
+        [propget] HRESULT MessageDrain( [out, retval] OAHWND *Drain );
+        [propget] HRESULT BorderColor( [out, retval] LONG *Color );
         [propput] HRESULT BorderColor( [in] LONG Color );
-        [propget] HRESULT FullScreenMode( [out] LONG *FullScreenMode );
+        [propget] HRESULT FullScreenMode( [out, retval] LONG *FullScreenMode );
         [propput] HRESULT FullScreenMode( [in] LONG FullScreenMode );
         HRESULT SetWindowForeground( [in] LONG Focus );
         HRESULT NotifyOwnerMessage( [in] OAHWND hwnd, [in] LONG uMsg, [in] LONG_PTR wParam, [in] LONG_PTR lParam );
@@ -137,27 +137,27 @@ library QuartzTypeLib
     ]
     interface IBasicVideo : IDispatch
     {
-        [propget] HRESULT AvgTimePerFrame( [out] REFTIME *pAvgTimePerFrame );
-        [propget] HRESULT BitRate( [out] LONG *pBitRate );
-        [propget] HRESULT BitErrorRate( [out] LONG *pBitErrorRate );
-        [propget] HRESULT VideoWidth( [out] LONG *pVideoWidth );
-        [propget] HRESULT VideoHeight( [out] LONG *pVideoHeight );
+        [propget] HRESULT AvgTimePerFrame( [out, retval] REFTIME *pAvgTimePerFrame );
+        [propget] HRESULT BitRate( [out, retval] LONG *pBitRate );
+        [propget] HRESULT BitErrorRate( [out, retval] LONG *pBitErrorRate );
+        [propget] HRESULT VideoWidth( [out, retval] LONG *pVideoWidth );
+        [propget] HRESULT VideoHeight( [out, retval] LONG *pVideoHeight );
         [propput] HRESULT SourceLeft( [in] LONG SourceLeft );
-        [propget] HRESULT SourceLeft( [out] LONG *pSourceLeft );
+        [propget] HRESULT SourceLeft( [out, retval] LONG *pSourceLeft );
         [propput] HRESULT SourceWidth( [in] LONG SourceWidth );
-        [propget] HRESULT SourceWidth( [out] LONG *pSourceWidth );
+        [propget] HRESULT SourceWidth( [out, retval] LONG *pSourceWidth );
         [propput] HRESULT SourceTop( [in] LONG SourceTop );
-        [propget] HRESULT SourceTop( [out] LONG *pSourceTop );
+        [propget] HRESULT SourceTop( [out, retval] LONG *pSourceTop );
         [propput] HRESULT SourceHeight( [in] LONG SourceHeight );
-        [propget] HRESULT SourceHeight( [out] LONG *pSourceHeight );
+        [propget] HRESULT SourceHeight( [out, retval] LONG *pSourceHeight );
         [propput] HRESULT DestinationLeft( [in] LONG DestinationLeft );
-        [propget] HRESULT DestinationLeft( [out] LONG *pDestinationLeft );
+        [propget] HRESULT DestinationLeft( [out, retval] LONG *pDestinationLeft );
         [propput] HRESULT DestinationWidth( [in] LONG DestinationWidth );
-        [propget] HRESULT DestinationWidth( [out] LONG *pDestinationWidth );
+        [propget] HRESULT DestinationWidth( [out, retval] LONG *pDestinationWidth );
         [propput] HRESULT DestinationTop( [in] LONG DestinationTop );
-        [propget] HRESULT DestinationTop( [out] LONG *pDestinationTop );
+        [propget] HRESULT DestinationTop( [out, retval] LONG *pDestinationTop );
         [propput] HRESULT DestinationHeight( [in] LONG DestinationHeight );
-        [propget] HRESULT DestinationHeight( [out] LONG *pDestinationHeight );
+        [propget] HRESULT DestinationHeight( [out, retval] LONG *pDestinationHeight );
         HRESULT SetSourcePosition( [in] LONG Left, [in] LONG Top, [in] LONG Width, [in] LONG Height );
         HRESULT GetSourcePosition( [out] LONG *pLeft, [out] LONG *pTop, [out] LONG *pWidth, [out] LONG *pHeight );
         HRESULT SetDefaultSourcePosition();

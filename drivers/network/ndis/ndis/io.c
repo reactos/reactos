@@ -71,7 +71,7 @@ BOOLEAN NTAPI ServiceRoutine(
   NDIS_DbgPrint(MAX_TRACE, ("MiniportInitialize executing: %s\n", (Initializing ? "yes" : "no")));
 
   /* MiniportISR is always called for interrupts during MiniportInitialize */
-  if ((Initializing) || (NdisInterrupt->IsrRequested)) {
+  if ((Initializing) || (NdisInterrupt->IsrRequested) || (NdisInterrupt->SharedInterrupt)) {
       NDIS_DbgPrint(MAX_TRACE, ("Calling MiniportISR\n"));
       (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
           &InterruptRecognized,
@@ -86,8 +86,9 @@ BOOLEAN NTAPI ServiceRoutine(
        InterruptRecognized = TRUE;
   }
 
-  /* MiniportHandleInterrupt is never called for an interrupt during MiniportInitialize */
-  if ((QueueMiniportHandleInterrupt) && (!Initializing))
+  /* TODO: Figure out if we should call this or not if Initializing is true. It appears
+   * that calling it fixes some NICs, but documentation is contradictory on it.  */
+  if (QueueMiniportHandleInterrupt)
   {
       NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
       KeInsertQueueDpc(&NdisInterrupt->InterruptDpc, NULL, NULL);

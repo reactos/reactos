@@ -8,6 +8,7 @@
 #define IDI_USERPROF  53
 #define IDI_UP        2500
 #define IDI_DOWN      2501
+#define IDI_ADDHW     2502
 
 #define IDB_ROSBMP 55
 #define IDB_ROSMASK 56
@@ -41,6 +42,12 @@
 #define IDS_PAGEFILE_NONE    82
 #define IDS_PAGEFILE_SYSTEM  83
 #define IDS_INFOREBOOT       84
+
+#define IDS_HWPROFILE_CONFIRM_DELETE_TITLE 85
+#define IDS_HWPROFILE_CONFIRM_DELETE       86
+#define IDS_HWPROFILE_ALREADY_IN_USE       87
+#define IDS_HWPROFILE_PROFILE              88
+#define IDS_HWPROFILE_WARNING              89
 
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
@@ -146,20 +153,31 @@
 #define IDC_HRDPROFEDIT      1111
 #define IDC_HRDPROFUPDWN     1112
 
+/* Hardware profile */
+#define IDD_HARDWAREPROFILE  1200
+#define IDC_HWPPROP_PROFILE  1201
+#define IDC_HWPPROP_DOCKID   1202
+#define IDC_HWPPROP_SERIAL   1203
+#define IDC_HWPPROP_PORTABLE 1204
+#define IDC_HWPPROP_UNKNOWN  1205
+#define IDC_HWPPROP_DOCKED   1206
+#define IDC_HWPPROP_UNDOCKED 1207
+#define IDC_HWPPROP_INCLUDE  1208
+
 /* Copy profile */
-#define IDD_COPYPROFILE     1200
-#define IDC_COPYPROFILEFROM 1201
-#define IDC_COPYPROFILETO   1202
+#define IDD_COPYPROFILE      1300
+#define IDC_COPYPROFILEFROM  1301
+#define IDC_COPYPROFILETO    1302
 
 /* Rename profile */
-#define IDD_RENAMEPROFILE   1300
-#define IDC_RENPROFEDITFROM 1301
-#define IDC_RENPROFEDITTO   1302
+#define IDD_RENAMEPROFILE    1400
+#define IDC_RENPROFEDITFROM  1401
+#define IDC_RENPROFEDITTO    1402
 
 /* Licence */
-#define IDD_LICENCE     1500
-#define IDC_LICENCEEDIT 1501
-#define RC_LICENSE      1502
-#define RTDATA          1503
+#define IDD_LICENCE          1500
+#define IDC_LICENCEEDIT      1501
+#define RC_LICENSE           1502
+#define RTDATA               1503
 
 #define IDS_DEVS 2000

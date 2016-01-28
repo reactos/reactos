@@ -10,6 +10,7 @@ endif()
 list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsargs.c
     acpica/dispatcher/dscontrol.c
+    acpica/dispatcher/dsdebug.c
     acpica/dispatcher/dsfield.c
     acpica/dispatcher/dsinit.c
     acpica/dispatcher/dsmethod.c
@@ -60,6 +61,7 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exstoren.c
     acpica/executer/exstorob.c
     acpica/executer/exsystem.c
+    acpica/executer/extrace.c
     acpica/executer/exutils.c
     acpica/hardware/hwacpi.c
     acpica/hardware/hwesleep.c
@@ -133,24 +135,29 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utcache.c
     acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
-    acpica/utilities/utdebug.c
+    # acpica/utilities/utdebug.c
     acpica/utilities/utdecode.c
     acpica/utilities/utdelete.c
     acpica/utilities/uterror.c
     acpica/utilities/uteval.c
+    # acpica/utilities/utfileio.c
+    acpica/utilities/uthex.c
     acpica/utilities/utids.c
     acpica/utilities/utinit.c
     acpica/utilities/utlock.c
     acpica/utilities/utmath.c
     acpica/utilities/utmisc.c
     acpica/utilities/utmutex.c
+    acpica/utilities/utnonansi.c
     acpica/utilities/utobject.c
     acpica/utilities/utosi.c
     acpica/utilities/utownerid.c
     acpica/utilities/utpredef.c
+    # acpica/utilities/utprint.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c
+    # acpica/utilities/utuuid.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c
     acpica/utilities/utxferror.c
@@ -165,7 +172,7 @@ add_library(acpica
 
 add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
-add_dependencies(acpica bugcodes)
+add_dependencies(acpica bugcodes xdk)
 
 list(APPEND ACPI_SOURCE
     busmgr/bus.c

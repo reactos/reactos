@@ -937,6 +937,7 @@ xmlSwitchEncoding(xmlParserCtxtPtr ctxt, xmlCharEncoding enc)
 {
     xmlCharEncodingHandlerPtr handler;
     int len = -1;
+    int ret;
 
     if (ctxt == NULL) return(-1);
     switch (enc) {
@@ -1097,7 +1098,15 @@ xmlSwitchEncoding(xmlParserCtxtPtr ctxt, xmlCharEncoding enc)
     if (handler == NULL)
 	return(-1);
     ctxt->charset = XML_CHAR_ENCODING_UTF8;
-    return(xmlSwitchToEncodingInt(ctxt, handler, len));
+    ret = xmlSwitchToEncodingInt(ctxt, handler, len);
+    if ((ret < 0) || (ctxt->errNo == XML_I18N_CONV_FAILED)) {
+        /*
+	 * on encoding conversion errors, stop the parser
+	 */
+        xmlStopParser(ctxt);
+	ctxt->errNo = XML_I18N_CONV_FAILED;
+    }
+    return(ret);
 }
 
 /**
@@ -1450,6 +1459,8 @@ xmlNewEntityInputStream(xmlParserCtxtPtr ctxt, xmlEntityPtr entity) {
     if (entity->URI != NULL)
 	input->filename = (char *) xmlStrdup((xmlChar *) entity->URI);
     input->base = entity->content;
+    if (entity->length == 0)
+        entity->length = xmlStrlen(entity->content);
     input->cur = entity->content;
     input->length = entity->length;
     input->end = &entity->content[input->length];
@@ -1691,12 +1702,20 @@ xmlInitParserCtxt(xmlParserCtxtPtr ctxt)
     ctxt->nsWellFormed = 1;
     ctxt->valid = 1;
     ctxt->loadsubset = xmlLoadExtDtdDefaultValue;
+    if (ctxt->loadsubset) {
+        ctxt->options |= XML_PARSE_DTDLOAD;
+    }
     ctxt->validate = xmlDoValidityCheckingDefaultValue;
     ctxt->pedantic = xmlPedanticParserDefaultValue;
+    if (ctxt->pedantic) {
+        ctxt->options |= XML_PARSE_PEDANTIC;
+    }
     ctxt->linenumbers = xmlLineNumbersDefaultValue;
     ctxt->keepBlanks = xmlKeepBlanksDefaultValue;
-    if (ctxt->keepBlanks == 0)
+    if (ctxt->keepBlanks == 0) {
 	ctxt->sax->ignorableWhitespace = xmlSAX2IgnorableWhitespace;
+	ctxt->options |= XML_PARSE_NOBLANKS;
+    }
 
     ctxt->vctxt.finishDtd = XML_CTXT_FINISH_DTD_0;
     ctxt->vctxt.userData = ctxt;
@@ -1708,8 +1727,12 @@ xmlInitParserCtxt(xmlParserCtxtPtr ctxt)
 	else
 	    ctxt->vctxt.warning = xmlParserValidityWarning;
 	ctxt->vctxt.nodeMax = 0;
+        ctxt->options |= XML_PARSE_DTDVALID;
     }
     ctxt->replaceEntities = xmlSubstituteEntitiesDefaultValue;
+    if (ctxt->replaceEntities) {
+        ctxt->options |= XML_PARSE_NOENT;
+    }
     ctxt->record_info = 0;
     ctxt->nbChars = 0;
     ctxt->checkIndex = 0;
@@ -1990,7 +2013,8 @@ xmlParserAddNodeInfo(xmlParserCtxtPtr ctxt,
 
     /* Otherwise, we need to add new node to buffer */
     else {
-        if (ctxt->node_seq.length + 1 > ctxt->node_seq.maximum) {
+        if ((ctxt->node_seq.length + 1 > ctxt->node_seq.maximum) ||
+	    (ctxt->node_seq.buffer == NULL)) {
             xmlParserNodeInfo *tmp_buffer;
             unsigned int byte_size;
 

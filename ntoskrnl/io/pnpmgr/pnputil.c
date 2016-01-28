@@ -22,7 +22,7 @@ PnpFreeUnicodeStringList(IN PUNICODE_STRING UnicodeStringList,
                          IN ULONG StringCount)
 {
     ULONG i;
-    
+
     /* Go through the list */
     if (UnicodeStringList)
     {
@@ -36,7 +36,7 @@ PnpFreeUnicodeStringList(IN PUNICODE_STRING UnicodeStringList,
                 ExFreePool(UnicodeStringList[i].Buffer);
             }
         }
-        
+
         /* Free the whole list */
         ExFreePool(UnicodeStringList);
     }
@@ -52,15 +52,15 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
     ULONG i = 0;
     SIZE_T n;
     ULONG Count = 0;
-    
+
     /* Validate the key information */
     if (KeyValueInformation->Type != REG_MULTI_SZ) return STATUS_INVALID_PARAMETER;
-    
+
     /* Set the pointers */
     p = (PWCHAR)((ULONG_PTR)KeyValueInformation +
                  KeyValueInformation->DataOffset);
     pp = (PWCHAR)((ULONG_PTR)p + KeyValueInformation->DataLength);
-    
+
     /* Loop the data */
     while (p != pp)
     {
@@ -69,28 +69,28 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
         {
             /* Add to our string count */
             Count++;
-            
+
             /* Check for a double-NULL, which means we're done */
             if (((p + 1) == pp) || !(*(p + 1))) break;
         }
-    
+
         /* Go to the next character */
         p++;
     }
 
     /* If we looped the whole list over, we missed increment a string, do it */
     if (p == pp) Count++;
-    
+
     /* Allocate the list now that we know how big it is */
     *UnicodeStringList = ExAllocatePoolWithTag(PagedPool,
                                                sizeof(UNICODE_STRING) * Count,
                                                'sUpP');
     if (!(*UnicodeStringList)) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     /* Set pointers for second loop */
     ps = p = (PWCHAR)((ULONG_PTR)KeyValueInformation +
                      KeyValueInformation->DataOffset);
-    
+
     /* Loop again, to do the copy this time */
     while (p != pp)
     {
@@ -99,7 +99,7 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
         {
             /* Check how long this string is */
             n = (ULONG_PTR)p - (ULONG_PTR)ps + sizeof(UNICODE_NULL);
-            
+
             /* Allocate the buffer */
             (*UnicodeStringList)[i].Buffer = ExAllocatePoolWithTag(PagedPool,
                                                                    n,
@@ -110,34 +110,34 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
                 PnpFreeUnicodeStringList(*UnicodeStringList, i);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-            
+
             /* Copy the string into the buffer */
             RtlCopyMemory((*UnicodeStringList)[i].Buffer, ps, n);
-            
+
             /* Set the lengths */
             (*UnicodeStringList)[i].MaximumLength = (USHORT)n;
             (*UnicodeStringList)[i].Length = (USHORT)(n - sizeof(UNICODE_NULL));
-            
+
             /* One more entry done */
             i++;
-            
+
             /* Check for a double-NULL, which means we're done */
             if (((p + 1) == pp) || !(*(p + 1))) break;
 
             /* New string */
             ps = p + 1;
         }
-        
+
         /* New string */
         p++;
     }
-    
+
     /* Check if we've reached the last string */
     if (p == pp)
     {
         /* Calculate the string length */
         n = (ULONG_PTR)p - (ULONG_PTR)ps;
-        
+
         /* Allocate the buffer for it */
         (*UnicodeStringList)[i].Buffer = ExAllocatePoolWithTag(PagedPool,
                                                                n +
@@ -149,18 +149,18 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
             PnpFreeUnicodeStringList(*UnicodeStringList, i);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-        
+
         /* Make sure there's an actual string here */
         if (n) RtlCopyMemory((*UnicodeStringList)[i].Buffer, ps, n);
 
         /* Null-terminate the string ourselves */
         (*UnicodeStringList)[i].Buffer[n / sizeof(WCHAR)] = UNICODE_NULL;
-        
+
         /* Set the lengths */
         (*UnicodeStringList)[i].Length = (USHORT)n;
         (*UnicodeStringList)[i].MaximumLength = (USHORT)(n + sizeof(UNICODE_NULL));
     }
-    
+
     /* And we're done */
     *UnicodeStringCount = Count;
     return STATUS_SUCCESS;
@@ -173,11 +173,11 @@ PnpRegSzToString(IN PWCHAR RegSzData,
                  OUT PUSHORT StringLength OPTIONAL)
 {
     PWCHAR p, pp;
-    
+
     /* Find the end */
     pp = RegSzData + RegSzLength;
     for (p = RegSzData; p < pp; p++) if (!*p) break;
-    
+
     /* Return it */
     if (StringLength) *StringLength = (USHORT)(p - RegSzData) * sizeof(WCHAR);
     return TRUE;

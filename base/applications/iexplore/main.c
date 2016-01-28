@@ -53,7 +53,11 @@ static BOOL check_native_ie(void)
     static const WCHAR wineW[] = {'W','i','n','e',0};
     static const WCHAR file_desc_strW[] =
         {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
+#ifndef __REACTOS__
          '\\','0','4','0','9','0','4','e','4',
+#else
+         '\\','0','4','0','9','0','4','b','0',
+#endif
          '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0};
 
     size = GetFileVersionInfoSizeW(browseui_dllW, &handle);

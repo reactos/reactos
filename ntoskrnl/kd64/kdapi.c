@@ -15,6 +15,32 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+KdpMoveMemory(IN PVOID Destination,
+              IN PVOID Source,
+              IN SIZE_T Length)
+{
+    PCHAR DestinationBytes, SourceBytes;
+
+    /* Copy the buffers 1 byte at a time */
+    DestinationBytes = Destination;
+    SourceBytes = Source;
+    while (Length--) *DestinationBytes++ = *SourceBytes++;
+}
+
+VOID
+NTAPI
+KdpZeroMemory(IN PVOID Destination,
+              IN SIZE_T Length)
+{
+    PCHAR DestinationBytes;
+
+    /* Zero the buffer 1 byte at a time */
+    DestinationBytes = Destination;
+    while (Length--) *DestinationBytes++ = 0;
+}
+
 NTSTATUS
 NTAPI
 KdpCopyMemoryChunks(IN ULONG64 Address,
@@ -83,6 +109,11 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         Buffer = (PVOID)((ULONG_PTR)Buffer + CopyChunk);
         RemainingLength = RemainingLength - CopyChunk;
     }
+
+    /*
+     * We may have modified executable code, flush the instruction cache
+     */
+     KeSweepICache((PVOID)Address, TotalSize);
 
     /*
      * Return the size we managed to copy
@@ -310,6 +341,28 @@ KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
+KdpWriteCustomBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
+                         IN PSTRING Data,
+                         IN PCONTEXT Context)
+{
+    //PDBGKD_WRITE_CUSTOM_BREAKPOINT = &State->u.WriteCustomBreakpoint;
+    STRING Header;
+
+    /* Not supported */
+    KdpDprintf("Custom Breakpoint Write is unimplemented\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
 DumpTraceData(IN PSTRING TraceData)
 {
     /* Update the buffer */
@@ -341,7 +394,7 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
     /* Zero out the entire Control Report */
-    RtlZeroMemory(&WaitStateChange->AnyControlReport,
+    KdpZeroMemory(&WaitStateChange->AnyControlReport,
                   sizeof(DBGKD_ANY_CONTROL_REPORT));
 
     /* Now copy the instruction stream and set the count */
@@ -375,7 +428,9 @@ NTAPI
 KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
 {
     /* Copy the version block */
-    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
+    KdpMoveMemory(Version,
+                  &KdVersionBlock,
+                  sizeof(DBGKD_GET_VERSION64));
 }
 
 VOID
@@ -684,7 +739,9 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy it over to the debugger */
-        RtlCopyMemory(Data->Buffer, TargetContext, sizeof(CONTEXT));
+        KdpMoveMemory(Data->Buffer,
+                      TargetContext,
+                      sizeof(CONTEXT));
         Data->Length = sizeof(CONTEXT);
 
         /* Let the debugger set the context now */
@@ -721,7 +778,8 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == sizeof(CONTEXT));
 
     /* Make sure that this is a valid request */
-    if ((State->Processor < KeNumberProcessors) && (KdpContextSent == TRUE))
+    if ((State->Processor < KeNumberProcessors) &&
+        (KdpContextSent))
     {
         /* Check if the request is for this CPU */
         if (State->Processor == KeGetCurrentPrcb()->Number)
@@ -737,7 +795,9 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         }
 
         /* Copy the new context to it */
-        RtlCopyMemory(TargetContext, Data->Buffer, sizeof(CONTEXT));
+        KdpMoveMemory(TargetContext,
+                      Data->Buffer,
+                      sizeof(CONTEXT));
 
         /* Finish up */
         State->ReturnStatus = STATUS_SUCCESS;
@@ -745,6 +805,130 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     else
     {
         /* Invalid request */
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpGetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_CONTEXT_EX ContextEx;
+    PCONTEXT TargetContext;
+    ASSERT(Data->Length == 0);
+
+    /* Get our struct */
+    ContextEx = &State->u.ContextEx;
+
+    /* Set up the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Make sure that this is a valid request */
+    if ((State->Processor < KeNumberProcessors) &&
+        (ContextEx->Offset + ContextEx->ByteCount) <= sizeof(CONTEXT))
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            TargetContext = Context;
+        }
+        else
+        {
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
+        }
+
+        /* Copy what is requested */
+        KdpMoveMemory(Data->Buffer,
+                      (PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
+                      ContextEx->ByteCount);
+
+        /* KD copies all */
+        Data->Length = ContextEx->BytesCopied = ContextEx->ByteCount;
+
+        /* Let the debugger set the context now */
+        KdpContextSent = TRUE;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        ContextEx->BytesCopied = 0;
+        State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpSetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
+                IN PSTRING Data,
+                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_CONTEXT_EX ContextEx;
+    PCONTEXT TargetContext;
+
+    /* Get our struct */
+    ContextEx = &State->u.ContextEx;
+    ASSERT(Data->Length == ContextEx->ByteCount);
+
+    /* Set up the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Make sure that this is a valid request */
+    if ((State->Processor < KeNumberProcessors) &&
+        ((ContextEx->Offset + ContextEx->ByteCount) <= sizeof(CONTEXT)) &&
+        (KdpContextSent))
+    {
+        /* Check if the request is for this CPU */
+        if (State->Processor == KeGetCurrentPrcb()->Number)
+        {
+            /* We're just copying our own context */
+            TargetContext = Context;
+        }
+        else
+        {
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
+        }
+
+        /* Copy what is requested */
+        KdpMoveMemory((PVOID)((ULONG_PTR)TargetContext + ContextEx->Offset),
+                      Data->Buffer,
+                      ContextEx->ByteCount);
+
+        /* KD copies all */
+        ContextEx->BytesCopied = ContextEx->ByteCount;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid request */
+        ContextEx->BytesCopied = 0;
         State->ReturnStatus = STATUS_UNSUCCESSFUL;
     }
 
@@ -1354,24 +1538,31 @@ SendPacket:
                 KdpNotSupported(&ManipulateState);
                 break;
 
-            case 0x315f: // This one is unknown, but used by WinDbg, keep silent!
+            case DbgKdWriteCustomBreakpointApi:
 
-                /* Setup an empty message, with failure */
-                Data.Length = 0;
-                ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
-
-                /* Send it */
-                KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
-                             &Header,
-                             &Data,
-                             &KdpContext);
+                /* Write the customized breakpoint */
+                KdpWriteCustomBreakpoint(&ManipulateState, &Data, Context);
                 break;
 
-            /* Unsupported Message */
+            case DbgKdGetContextExApi:
+            
+                /* Extended Context Get */
+                KdpGetContextEx(&ManipulateState, &Data, Context);
+                break;
+
+            case DbgKdSetContextExApi:
+
+                /* Extended Context Set */
+                KdpSetContextEx(&ManipulateState, &Data, Context);
+                break;
+
+            /* Unsupported Messages */
             default:
 
+                /* Send warning */
+                KdpDprintf("Received Unrecognized API 0x%lx\n", ManipulateState.ApiNumber);
+
                 /* Setup an empty message, with failure */
-                KdpDprintf("Received Unhandled API %lx\n", ManipulateState.ApiNumber);
                 Data.Length = 0;
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 
@@ -1480,7 +1671,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Clear the command string structure */
-        RtlZeroMemory(&WaitStateChange.u.CommandString,
+        KdpZeroMemory(&WaitStateChange.u.CommandString,
                       sizeof(DBGKD_COMMAND_STRING));
 
         /* Normalize name string to max */
@@ -1550,15 +1741,22 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Build the architecture common parts of the message */
         KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
 
-        /* Copy the Exception Record and set First Chance flag */
 #if !defined(_WIN64)
+
+        /* Convert it and copy it over */
         ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
                               &WaitStateChange.u.Exception.ExceptionRecord);
+
 #else
-        RtlCopyMemory(&WaitStateChange.u.Exception.ExceptionRecord,
+
+        /* Just copy it directly, no need to convert */
+        KdpMoveMemory(&WaitStateChange.u.Exception.ExceptionRecord,
                       ExceptionRecord,
                       sizeof(EXCEPTION_RECORD));
+
 #endif
+
+        /* Set the First Chance flag */
         WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
 
         /* Now finish creating the structure */

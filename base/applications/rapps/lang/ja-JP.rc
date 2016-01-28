@@ -10,19 +10,19 @@ BEGIN
     END
     POPUP "プログラム(&P)"
     BEGIN
-        MENUITEM "インストール(&I)", ID_INSTALL
-        MENUITEM "アンインストール(&U)", ID_UNINSTALL
+        MENUITEM "インストール(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "アップデート データベース(&T)\tCtrl+F5", ID_RESETDB
     END
     POPUP "ヘルプ"
     BEGIN
-        MENUITEM "ヘルプ", ID_HELP, GRAYED
+        MENUITEM "ヘルプ\tF1", ID_HELP, GRAYED
         MENUITEM "バージョン情報", ID_ABOUT
     END
 END
@@ -40,19 +40,19 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "インストール(&I)", ID_INSTALL
-        MENUITEM "アンインストール(&U)", ID_UNINSTALL
+        MENUITEM "インストール(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "アップデート データベース(&T)\tCtrl+F5", ID_RESETDB
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 144
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "設定"
 FONT 9, "MS UI Gothic"
@@ -66,9 +66,16 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選択(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "インストール後にプログラムのインストーラを削除する(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    PUSHBUTTON "デフォルト", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-    PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-    PUSHBUTTON "キャンセル", IDCANCEL, 181, 124, 60, 14
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "デフォルト", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -83,14 +90,14 @@ BEGIN
     PUSHBUTTON "キャンセル", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 76
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
 CAPTION "ダウンロード..."
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON "キャンセル", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "キャンセル", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
@@ -147,7 +154,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION   "\n概要: "
     IDS_AINFO_SIZE          "\nサイズ: "
     IDS_AINFO_URLSITE       "\nホームページ: "
-    IDS_AINFO_LICENCE       "\nライセンス: "
+    IDS_AINFO_LICENSE       "\nライセンス: "
 END
 
 STRINGTABLE
@@ -188,5 +195,9 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
     IDS_INFORMATION "情報"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"
+    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
+    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
+    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
 END

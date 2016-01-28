@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -263,6 +263,15 @@ MmUnmapVideoDisplay(IN PVOID BaseAddress,
     // Call the real function
     //
     MmUnmapIoSpace(BaseAddress, NumberOfBytes);
+}
+
+LOGICAL
+NTAPI
+MmIsIoSpaceActive(IN PHYSICAL_ADDRESS StartAddress,
+                  IN SIZE_T NumberOfBytes)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

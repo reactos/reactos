@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           RLE compression
- * FILE:              subsystems/win32k/eng/rlecomp.c
+ * FILE:              win32ss/gdi/eng/rlecomp.c
  * PROGRAMER:         Jason Filby
  */
 
@@ -18,14 +18,14 @@ enum Rle_EscapeCodes
     RLE_DELTA = 2  /* Delta */
 };
 
-VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format)
+VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format, ULONG cjSizeImage)
 {
     INT x = 0;
     INT y = Size.cy - 1;
     INT c;
     INT length;
     INT width;
-    INT height = Size.cy - 1;
+    INT height = y;
     BYTE *begin = CompressedBits;
     BYTE *bits = CompressedBits;
     BYTE *temp;
@@ -40,7 +40,7 @@ VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, 
 
     _SEH2_TRY
     {
-        while (y >= 0)
+        while (y >= 0 && (bits - begin) <= cjSizeImage)
         {
             length = (*bits++) >> shift;
             if (length)

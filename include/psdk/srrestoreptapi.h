@@ -39,6 +39,8 @@ extern "C" {
 
 /* Types */
 
+#pragma pack(push, 1)
+
 typedef struct _RESTOREPTINFOA {
   DWORD  dwEventType;
   DWORD  dwRestorePtType;
@@ -47,10 +49,10 @@ typedef struct _RESTOREPTINFOA {
 } RESTOREPOINTINFOA, *PRESTOREPOINTINFOA;
 
 typedef struct _RESTOREPTINFOW {
-    DWORD  dwEventType;       
-    DWORD  dwRestorePtType;   
-    INT64  llSequenceNumber;  
-    WCHAR  szDescription[MAX_DESC_W]; 
+    DWORD  dwEventType;
+    DWORD  dwRestorePtType;
+    INT64  llSequenceNumber;
+    WCHAR  szDescription[MAX_DESC_W];
 } RESTOREPOINTINFOW, *PRESTOREPOINTINFOW;
 
 typedef struct _SMGRSTATUS {
@@ -58,12 +60,14 @@ typedef struct _SMGRSTATUS {
     INT64  llSequenceNumber;
 } STATEMGRSTATUS, *PSTATEMGRSTATUS;
 
+#pragma pack(pop)
+
 /* Functions */
 
 BOOL WINAPI SRSetRestorePointA(PRESTOREPOINTINFOA, PSTATEMGRSTATUS);
 BOOL WINAPI SRSetRestorePointW(PRESTOREPOINTINFOW, PSTATEMGRSTATUS);
 DWORD WINAPI SRRemoveRestorePoint(DWORD);
-                  
+
 #ifdef __cplusplus
 }
 #endif

@@ -24,19 +24,8 @@
 
 #include "internet.h"
 
-#ifndef HAVE_GETADDRINFO
-
-/* critical section to protect non-reentrant gethostbyname() */
-static CRITICAL_SECTION cs_gethostbyname;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &cs_gethostbyname,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": cs_gethostbyname") }
-};
-static CRITICAL_SECTION cs_gethostbyname = { &critsect_debug, -1, 0, 0, 0, 0 };
-
-#endif
+// ReactOS
+#include "inet_ntop.c"
 
 #define TIME_STRING_LEN  30
 
@@ -124,62 +113,36 @@ time_t ConvertTimeString(LPCWSTR asctime)
 }
 
 
-BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
-	struct sockaddr *psa, socklen_t *sa_len)
+BOOL GetAddress(const WCHAR *name, INTERNET_PORT port, struct sockaddr *psa, int *sa_len, char *addr_str)
 {
-    WCHAR *found;
-    char *name;
-    int len, sz;
-#ifdef HAVE_GETADDRINFO
-    struct addrinfo *res, hints;
+    ADDRINFOW *res, hints;
+    void *addr = NULL;
     int ret;
-#else
-    struct hostent *phe;
-    struct sockaddr_in *sin = (struct sockaddr_in *)psa;
-#endif
 
-    TRACE("%s\n", debugstr_w(lpszServerName));
+    TRACE("%s\n", debugstr_w(name));
 
-    /* Validate server name first
-     * Check if there is something like
-     * pinger.macromedia.com:80
-     * if yes, eliminate the :80....
-     */
-    found = strchrW(lpszServerName, ':');
-    if (found)
-        len = found - lpszServerName;
-    else
-        len = strlenW(lpszServerName);
-
-    sz = WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, NULL, 0, NULL, NULL );
-    if (!(name = heap_alloc(sz + 1))) return FALSE;
-    WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, name, sz, NULL, NULL );
-    name[sz] = 0;
-
-#ifdef HAVE_GETADDRINFO
-    memset( &hints, 0, sizeof(struct addrinfo) );
+    memset( &hints, 0, sizeof(hints) );
     /* Prefer IPv4 to IPv6 addresses, since some servers do not listen on
      * their IPv6 addresses even though they have IPv6 addresses in the DNS.
      */
     hints.ai_family = AF_INET;
 
-    ret = getaddrinfo( name, NULL, &hints, &res );
+    ret = GetAddrInfoW(name, NULL, &hints, &res);
     if (ret != 0)
     {
-        TRACE("failed to get IPv4 address of %s (%s), retrying with IPv6\n", debugstr_w(lpszServerName), gai_strerror(ret));
+        TRACE("failed to get IPv4 address of %s, retrying with IPv6\n", debugstr_w(name));
         hints.ai_family = AF_INET6;
-        ret = getaddrinfo( name, NULL, &hints, &res );
+        ret = GetAddrInfoW(name, NULL, &hints, &res);
     }
-    heap_free( name );
     if (ret != 0)
     {
-        TRACE("failed to get address of %s (%s)\n", debugstr_w(lpszServerName), gai_strerror(ret));
+        TRACE("failed to get address of %s\n", debugstr_w(name));
         return FALSE;
     }
     if (*sa_len < res->ai_addrlen)
     {
         WARN("address too small\n");
-        freeaddrinfo( res );
+        FreeAddrInfoW(res);
         return FALSE;
     }
     *sa_len = res->ai_addrlen;
@@ -188,39 +151,18 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     switch (res->ai_family)
     {
     case AF_INET:
-        ((struct sockaddr_in *)psa)->sin_port = htons(nServerPort);
+        addr = &((struct sockaddr_in *)psa)->sin_addr;
+        ((struct sockaddr_in *)psa)->sin_port = htons(port);
         break;
     case AF_INET6:
-        ((struct sockaddr_in6 *)psa)->sin6_port = htons(nServerPort);
+        addr = &((struct sockaddr_in6 *)psa)->sin6_addr;
+        ((struct sockaddr_in6 *)psa)->sin6_port = htons(port);
         break;
     }
 
-    freeaddrinfo( res );
-#else
-    EnterCriticalSection( &cs_gethostbyname );
-    phe = gethostbyname(name);
-    heap_free( name );
-
-    if (NULL == phe)
-    {
-        TRACE("failed to get address of %s (%d)\n", debugstr_w(lpszServerName), h_errno);
-        LeaveCriticalSection( &cs_gethostbyname );
-        return FALSE;
-    }
-    if (*sa_len < sizeof(struct sockaddr_in))
-    {
-        WARN("address too small\n");
-        LeaveCriticalSection( &cs_gethostbyname );
-        return FALSE;
-    }
-    *sa_len = sizeof(struct sockaddr_in);
-    memset(sin,0,sizeof(struct sockaddr_in));
-    memcpy((char *)&sin->sin_addr, phe->h_addr, phe->h_length);
-    sin->sin_family = phe->h_addrtype;
-    sin->sin_port = htons(nServerPort);
-
-    LeaveCriticalSection( &cs_gethostbyname );
-#endif
+    if(addr_str)
+        inet_ntop(res->ai_family, addr, addr_str, INET6_ADDRSTRLEN);
+    FreeAddrInfoW(res);
     return TRUE;
 }
 

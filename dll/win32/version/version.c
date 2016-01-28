@@ -607,10 +607,33 @@ typedef struct
  */
 DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
 {
+    return GetFileVersionInfoSizeExW( 0, filename, handle );
+}
+
+/***********************************************************************
+ *           GetFileVersionInfoSizeA         [VERSION.@]
+ */
+DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
+{
+    return GetFileVersionInfoSizeExA( 0, filename, handle );
+}
+
+/******************************************************************************
+ *           GetFileVersionInfoSizeExW       [VERSION.@]
+ */
+DWORD WINAPI GetFileVersionInfoSizeExW( DWORD flags, LPCWSTR filename, LPDWORD handle )
+{
     DWORD len, offset, magic = 1;
     HFILE lzfd;
     HMODULE hModule;
     OFSTRUCT ofs;
+
+    if (flags)
+    {
+        FIXME("stub: %x %s %p\n", flags, wine_dbgstr_w(filename), handle);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return 0;
+    }
 
     TRACE("(%s,%p)\n", debugstr_w(filename), handle );
 
@@ -636,7 +659,7 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
     if ((magic == 1) && (hModule = LoadLibraryExW( filename, 0, LOAD_LIBRARY_AS_DATAFILE )))
     {
         HRSRC hRsrc = FindResourceW( hModule, MAKEINTRESOURCEW(VS_VERSION_INFO),
-                                     MAKEINTRESOURCEW(VS_FILE_INFO) );
+                                     (LPWSTR)VS_FILE_INFO );
         if (hRsrc)
         {
             magic = IMAGE_NT_SIGNATURE;
@@ -676,10 +699,10 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
     }
 }
 
-/***********************************************************************
- *           GetFileVersionInfoSizeA         [VERSION.@]
+/******************************************************************************
+ *           GetFileVersionInfoSizeExA       [VERSION.@]
  */
-DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
+DWORD WINAPI GetFileVersionInfoSizeExA( DWORD flags, LPCSTR filename, LPDWORD handle )
 {
     UNICODE_STRING filenameW;
     DWORD retval;
@@ -691,7 +714,7 @@ DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
     else
         filenameW.Buffer = NULL;
 
-    retval = GetFileVersionInfoSizeW(filenameW.Buffer, handle);
+    retval = GetFileVersionInfoSizeExW(0, filenameW.Buffer, handle);
 
     RtlFreeUnicodeString(&filenameW);
 
@@ -699,10 +722,9 @@ DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
 }
 
 /***********************************************************************
- *           GetFileVersionInfoW             [VERSION.@]
+ *           GetFileVersionInfoExW           [VERSION.@]
  */
-BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
-                                    DWORD datasize, LPVOID data )
+BOOL WINAPI GetFileVersionInfoExW( DWORD flags, LPCWSTR filename, DWORD handle, DWORD datasize, LPVOID data )
 {
     static const char signature[4] = "FE2X";
     DWORD len, offset, magic = 1;
@@ -710,6 +732,13 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
     OFSTRUCT ofs;
     HMODULE hModule;
     VS_VERSION_INFO_STRUCT32* vvis = data;
+
+    if (flags)
+    {
+        FIXME("stub: %x %s %u %u %p\n", flags, wine_dbgstr_w(filename), handle, datasize, data);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return 0;
+    }
 
     TRACE("(%s,%d,size=%d,data=%p)\n",
                 debugstr_w(filename), handle, datasize, data );
@@ -733,7 +762,7 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
     if ((magic == 1) && (hModule = LoadLibraryExW( filename, 0, LOAD_LIBRARY_AS_DATAFILE )))
     {
         HRSRC hRsrc = FindResourceW( hModule, MAKEINTRESOURCEW(VS_VERSION_INFO),
-                                     MAKEINTRESOURCEW(VS_FILE_INFO) );
+                                     (LPWSTR)VS_FILE_INFO );
         if (hRsrc)
         {
             HGLOBAL hMem = LoadResource( hModule, hRsrc );
@@ -774,10 +803,9 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
 }
 
 /***********************************************************************
- *           GetFileVersionInfoA             [VERSION.@]
+ *           GetFileVersionInfoExA           [VERSION.@]
  */
-BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle,
-                                    DWORD datasize, LPVOID data )
+BOOL WINAPI GetFileVersionInfoExA( DWORD flags, LPCSTR filename, DWORD handle, DWORD datasize, LPVOID data )
 {
     UNICODE_STRING filenameW;
     BOOL retval;
@@ -790,11 +818,27 @@ BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle,
     else
         filenameW.Buffer = NULL;
 
-    retval = GetFileVersionInfoW(filenameW.Buffer, handle, datasize, data);
+    retval = GetFileVersionInfoExW(flags, filenameW.Buffer, handle, datasize, data);
 
     RtlFreeUnicodeString(&filenameW);
 
     return retval;
+}
+
+/***********************************************************************
+ *           GetFileVersionInfoW             [VERSION.@]
+ */
+BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle, DWORD datasize, LPVOID data )
+{
+    return GetFileVersionInfoExW(0, filename, handle, datasize, data);
+}
+
+/***********************************************************************
+ *           GetFileVersionInfoA             [VERSION.@]
+ */
+BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle, DWORD datasize, LPVOID data )
+{
+    return GetFileVersionInfoExA(0, filename, handle, datasize, data);
 }
 
 /***********************************************************************
@@ -976,7 +1020,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
             len = WideCharToMultiByte(CP_ACP, 0, *lplpBuffer, -1,
                                       lpBufferA + pos, info->wLength - pos, NULL, NULL);
             *lplpBuffer = lpBufferA + pos;
-            *puLen = len;
+            if (puLen) *puLen = len;
         }
         return ret;
     }
@@ -1036,7 +1080,7 @@ BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
             len = MultiByteToWideChar(CP_ACP, 0, *lplpBuffer, -1,
                                       lpBufferW + pos, max/sizeof(WCHAR) - pos );
             *lplpBuffer = lpBufferW + pos;
-            *puLen = len;
+            if (puLen) *puLen = len;
         }
         return ret;
     }
@@ -1328,7 +1372,7 @@ _fetch_versioninfo(LPSTR fn,VS_FIXEDFILEINFO **vffi) {
     alloclen = 1000;
     buf=HeapAlloc(GetProcessHeap(), 0, alloclen);
     if(buf == NULL) {
-        WARN("Memory exausted while fetching version info!\n");
+        WARN("Memory exhausted while fetching version info!\n");
         return NULL;
     }
     while (1) {
@@ -1342,7 +1386,7 @@ _fetch_versioninfo(LPSTR fn,VS_FIXEDFILEINFO **vffi) {
 	    HeapFree(GetProcessHeap(), 0, buf);
 	    buf = HeapAlloc(GetProcessHeap(), 0, alloclen);
             if(buf == NULL) {
-               WARN("Memory exausted while fetching version info!\n");
+               WARN("Memory exhausted while fetching version info!\n");
                return NULL;
             }
 	} else {

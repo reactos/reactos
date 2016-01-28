@@ -35,19 +35,48 @@ typedef enum _USERSRV_API_NUMBER
     UserpMaxApiNumber
 } USERSRV_API_NUMBER, *PUSERSRV_API_NUMBER;
 
+/* The USERCONNECT structure is defined in win32ss/include/ntuser.h */
+#define _USERSRV_API_CONNECTINFO    _USERCONNECT
+#define  USERSRV_API_CONNECTINFO     USERCONNECT
+#define PUSERSRV_API_CONNECTINFO    PUSERCONNECT
 
-typedef struct
+#if defined(_M_IX86)
+C_ASSERT(sizeof(USERSRV_API_CONNECTINFO) == 0x124);
+#endif
+
+
+typedef struct _USER_EXIT_REACTOS
 {
-    UINT Flags;
-    DWORD Reserved;
+    DWORD LastError;
+    UINT  Flags;
+    BOOL  Success;
 } USER_EXIT_REACTOS, *PUSER_EXIT_REACTOS;
 
-typedef struct
+typedef struct _USER_END_TASK
+{
+    DWORD LastError;
+    HWND  WndHandle;
+    BOOL  Force;
+    BOOL  Success;
+} USER_END_TASK, *PUSER_END_TASK;
+
+typedef struct _USER_LOGON
+{
+    BOOL IsLogon;
+} USER_LOGON, *PUSER_LOGON;
+
+typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
+{
+    ULONG_PTR ThreadId;
+    HANDLE ConsoleDesktop;
+} USER_GET_THREAD_CONSOLE_DESKTOP, *PUSER_GET_THREAD_CONSOLE_DESKTOP;
+
+typedef struct _USER_REGISTER_SERVICES_PROCESS
 {
     ULONG_PTR ProcessId;
 } USER_REGISTER_SERVICES_PROCESS, *PUSER_REGISTER_SERVICES_PROCESS;
 
-typedef struct
+typedef struct _USER_REGISTER_LOGON_PROCESS
 {
     ULONG_PTR ProcessId;
     BOOL Register;
@@ -64,7 +93,10 @@ typedef struct _USER_API_MESSAGE
     ULONG Reserved;
     union
     {
-        USER_EXIT_REACTOS ExitReactosRequest;
+        USER_EXIT_REACTOS ExitReactOSRequest;
+        USER_END_TASK EndTaskRequest;
+        USER_LOGON LogonRequest;
+        USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
     } Data;

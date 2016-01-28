@@ -4,7 +4,7 @@
  * Copyright 1996 Ulrich Schmid
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2004 Piotr Caban
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,105 +23,86 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Plik" {
-  MENUITEM "&OtwÛrz", MNID_FILE_OPEN
+  MENUITEM "&Otw√≥rz", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Drukuj", MNID_FILE_PRINT
   MENUITEM "&Ustawienia drukarki...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Wyjúcie", MNID_FILE_EXIT
+  MENUITEM "&Wyj≈õcie", MNID_FILE_EXIT
  }
  POPUP "&Edycja" {
    MENUITEM "&Kopiuj...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Skomentuj...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Zak≥adka" {
+ POPUP "&Zak≈Çadka" {
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Pomoc zawsze widoczna"
-   BEGIN
-     MENUITEM "Domyúlnie",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Widoczna",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Niewidoczna",	MNID_OPTS_HELP_NONVISIBLE
-  END
+ POPUP "&Opcje" {
+  MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
   MENUITEM "Historia",		MNID_OPTS_HISTORY
   POPUP    "Czcionki"
   BEGIN
-    MENUITEM "Ma≥e",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Ma≈Çe",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Normalne",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Duøe",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Du≈ºe",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Uøyj kolorÛw systemowych",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
-   MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&O programie...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Adnotacja...",          MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiuj",                MNID_CTXT_COPY
+		MENUITEM "Drukuj...",             MNID_CTXT_PRINT
+		POPUP    "Czcionka"
+		BEGIN
+			MENUITEM "Ma≈Ça",          MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Du≈ºa",          MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Wine - Pomoc"
+STID_WHERROR, 		"B≈ÅƒÑD"
+STID_WARNING,  		"OSTRZE≈ªENIE"
+STID_INFO,  		"Informacja"
+STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
+STID_HLPFILE_ERROR_s, 	"B≈ÇƒÖd w trakcie odczytu pliku pomocy `%s'"
+STID_INDEX, 		"&Zawarto≈õƒá"
+STID_CONTENTS,		"&Szukaj"
+STID_BACK, 		"&Wstecz"
+STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
+STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaƒá tego pliku samodzielnie?"
+STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wy≈õwietlenie pomocy nie jest mo≈ºliwe"
+STID_PSH_INDEX,		"Tematy pomocy: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Indeks"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Szukaj"
 {
     LTEXT  "Nie zaimplementowane", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Wine - Pomoc"
-STID_WHERROR, 		"B£•D"
-STID_WARNING,  		"OSTRZEØENIE"
-STID_INFO,  		"Informacja"
-STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
-STID_HLPFILE_ERROR_s, 	"B≥πd w trakcie odczytu pliku pomocy `%s'"
-STID_INDEX, 		"&ZawartoúÊ"
-STID_CONTENTS, 		"&Szukaj"
-STID_BACK, 		"&Wstecz"
-STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
-STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaÊ tego pliku samodzielnie?"
-STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wyúwietlenie pomocy nie jest moøliwe"
-STID_PSH_INDEX,		"Tematy pomocy: "
-}
-
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Adnotacja...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopiuj",                MNID_CTXT_COPY
-		MENUITEM "Drukuj...",            MNID_CTXT_PRINT
-		POPUP    "Czcionka"
-		BEGIN
-			MENUITEM "Ma≥a",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Duøa",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Pomoc zawsze widoczna"
-		BEGIN
-			MENUITEM "Domyúlnie",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Widoczna",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Niewidoczna", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Uøyj kolorÛw systemowych",   MNID_CTXT_SYSTEM_COLORS
-	END
-END

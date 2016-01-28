@@ -400,3 +400,43 @@ ThemeHooksRemove()
 
     return ret;
 }
+
+INT WINAPI ClassicSystemParametersInfoW(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
+{
+    if (gbThemeHooksActive)
+    {
+        return user32ApiHook.SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+    }
+
+    return SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+}
+
+INT WINAPI ClassicSystemParametersInfoA(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
+{
+    if (gbThemeHooksActive)
+    {
+        return user32ApiHook.SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
+    }
+
+    return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
+}
+
+INT WINAPI ClassicGetSystemMetrics(int nIndex)
+{
+    if (gbThemeHooksActive)
+    {
+        return user32ApiHook.GetSystemMetrics(nIndex);
+    }
+
+    return GetSystemMetrics(nIndex);
+}
+
+BOOL WINAPI ClassicAdjustWindowRectEx(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
+{
+    if (gbThemeHooksActive)
+    {
+        return user32ApiHook.AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
+    }
+
+    return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
+}

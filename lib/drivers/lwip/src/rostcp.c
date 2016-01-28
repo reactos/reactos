@@ -829,3 +829,14 @@ LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr * const ipaddr, u16_t * const por
 
     return ERR_OK;
 }
+
+void
+LibTCPSetNoDelay(
+    PTCP_PCB pcb,
+    BOOLEAN Set)
+{
+    if (Set)
+        pcb->flags |= TF_NODELAY;
+    else
+        pcb->flags &= ~TF_NODELAY;
+}

@@ -226,6 +226,8 @@ HRESULT WINAPI CreatePosPassThru(IUnknown* pUnkOuter, BOOL bRenderer, IPin *pPin
     ISeekingPassThru *passthru;
 
     hr = CoCreateInstance(&CLSID_SeekingPassThru, pUnkOuter, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void**)ppPassThru);
+    if (FAILED(hr))
+        return hr;
 
     IUnknown_QueryInterface(*ppPassThru, &IID_ISeekingPassThru, (void**)&passthru);
     hr = ISeekingPassThru_Init(passthru, bRenderer, pPin);
@@ -514,9 +516,11 @@ static HRESULT WINAPI MediaSeekingPassThru_GetPositions(IMediaSeeking * iface, L
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_GetPositions(seek, pCurrent, pStop);
         IMediaSeeking_Release(seek);
+    } else if (hr == VFW_E_NOT_CONNECTED) {
+        *pCurrent = 0;
+        *pStop = 0;
+        hr = S_OK;
     }
-    else
-        return E_NOTIMPL;
     return hr;
 }
 

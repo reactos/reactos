@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/close.c
+ * FILE:             drivers/filesystems/fastfat/close.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  */
@@ -41,46 +41,30 @@ VfatCloseFile(
 
     if (pFcb->Flags & FCB_IS_VOLUME)
     {
-        DPRINT1("Volume\n");
-        pFcb->RefCount--;
+        DPRINT("Volume\n");
         FileObject->FsContext2 = NULL;
     }
     else
     {
-        if (FileObject->DeletePending)
-        {
-            if (pFcb->Flags & FCB_DELETE_PENDING)
-            {
-                VfatDelEntry(DeviceExt, pFcb);
-
-                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                            &(DeviceExt->NotifyList),
-                                            (PSTRING)&pFcb->PathNameU,
-                                            pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                            NULL,
-                                            NULL,
-                                            ((*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
-                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                            FILE_ACTION_REMOVED,
-                                            NULL);
-            }
-            else
-            {
-                Status = STATUS_DELETE_PENDING;
-            }
-        }
-
         vfatReleaseFCB(DeviceExt, pFcb);
     }
 
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
+    DeviceExt->OpenHandleCount--;
 
     if (pCcb)
     {
         vfatDestroyCCB(pCcb);
     }
+
+#ifdef ENABLE_SWAPOUT
+    if (DeviceExt->OpenHandleCount == 0)
+    {
+        VfatCheckForDismount(DeviceExt, FALSE);
+    }
+#endif
 
     return Status;
 }
@@ -99,28 +83,24 @@ VfatClose(
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
         DPRINT("Closing file system\n");
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 #if 0
     /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose
        in CmLazyCloseThreadMain if VfatClose is execute asynchronous in a worker thread. */
-    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
 #else
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE))
 #endif
     {
-        return VfatQueueRequest(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     Status = VfatCloseFile(IrpContext->DeviceExt, IrpContext->FileObject);
     ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
 
-ByeBye:
-    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
-    VfatFreeIrpContext(IrpContext);
 
     return Status;
 }

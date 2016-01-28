@@ -108,6 +108,8 @@ SepCompareTokens(IN PTOKEN FirstToken,
         }
 
         /* FIXME: Check if every privilege that is present in either token is also present in the other one */
+        DPRINT1("FIXME: Pretending tokens are equal!\n");
+        IsEqual = TRUE;
     }
 
     *Equal = IsEqual;
@@ -121,7 +123,7 @@ SepUpdateSinglePrivilegeFlagToken(
     _In_ ULONG Index)
 {
     ULONG TokenFlag;
-    NT_ASSERT(Index < Token->PrivilegeCount);
+    ASSERT(Index < Token->PrivilegeCount);
 
     /* The high part of all values we are interested in is 0 */
     if (Token->Privileges[Index].Luid.HighPart != 0)
@@ -187,7 +189,7 @@ SepRemovePrivilegeToken(
     _In_ ULONG Index)
 {
     ULONG MoveCount;
-    NT_ASSERT(Index < Token->PrivilegeCount);
+    ASSERT(Index < Token->PrivilegeCount);
 
     /* Calculate the number of trailing privileges */
     MoveCount = Token->PrivilegeCount - Index - 1;
@@ -231,7 +233,39 @@ SeExchangePrimaryToken(PEPROCESS Process,
     PAGED_CODE();
 
     if (NewToken->TokenType != TokenPrimary) return(STATUS_BAD_TOKEN_TYPE);
-    if (NewToken->TokenInUse) return(STATUS_TOKEN_ALREADY_IN_USE);
+    if (NewToken->TokenInUse)
+    {
+        BOOLEAN IsEqual;
+        NTSTATUS Status;
+
+        /* Maybe we're trying to set the same token */
+        OldToken = PsReferencePrimaryToken(Process);
+        if (OldToken == NewToken)
+        {
+            /* So it's a nop. */
+            *OldTokenP = OldToken;
+            return STATUS_SUCCESS;
+        }
+
+        Status = SepCompareTokens(OldToken, NewToken, &IsEqual);
+        if (!NT_SUCCESS(Status))
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return Status;
+        }
+
+        if (!IsEqual)
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return STATUS_TOKEN_ALREADY_IN_USE;
+        }
+        /* Silently return STATUS_SUCCESS but do not set the new token,
+         * as it's already in use elsewhere. */
+        *OldTokenP = OldToken;
+        return STATUS_SUCCESS;
+    }
 
     /* Mark new token in use */
     NewToken->TokenInUse = 1;
@@ -260,6 +294,9 @@ SeDeassignPrimaryToken(PEPROCESS Process)
 
     /* Mark the Old Token as free */
     OldToken->TokenInUse = 0;
+
+    /* Dereference the Token */
+    ObDereferenceObject(OldToken);
 }
 
 static ULONG
@@ -359,25 +396,14 @@ SepDuplicateToken(PTOKEN Token,
     /* Zero out the buffer */
     RtlZeroMemory(AccessToken, sizeof(TOKEN));
 
-    Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(AccessToken);
-        return Status;
-    }
-
-    Status = ZwAllocateLocallyUniqueId(&AccessToken->ModifiedId);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(AccessToken);
-        return Status;
-    }
+    ExAllocateLocallyUniqueId(&AccessToken->TokenId);
 
     AccessToken->TokenLock = &SepTokenLock;
 
     AccessToken->TokenType  = TokenType;
     AccessToken->ImpersonationLevel = Level;
     RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    RtlCopyLuid(&AccessToken->ModifiedId, &Token->ModifiedId);
 
     AccessToken->TokenSource.SourceIdentifier.LowPart = Token->TokenSource.SourceIdentifier.LowPart;
     AccessToken->TokenSource.SourceIdentifier.HighPart = Token->TokenSource.SourceIdentifier.HighPart;
@@ -456,6 +482,9 @@ SepDuplicateToken(PTOKEN Token,
     }
 
     *NewAccessToken = AccessToken;
+
+    /* Reference the logon session */
+    SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
 
 done:
     if (!NT_SUCCESS(Status))
@@ -537,13 +566,13 @@ SeIsTokenChild(IN PTOKEN Token,
     ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
 
     /* Get the ID */
-    ProcessLuid = ProcessToken->TokenId;
+    ProcessLuid = ProcessToken->AuthenticationId;
 
     /* Dereference the token */
     ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
 
     /* Get our LUID */
-    CallerLuid = Token->TokenId;
+    CallerLuid = Token->AuthenticationId;
 
     /* Compare the LUIDs */
     if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
@@ -585,6 +614,11 @@ NTAPI
 SepDeleteToken(PVOID ObjectBody)
 {
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
+
+    DPRINT("SepDeleteToken()\n");
+
+    /* Dereference the logon session */
+    SepRmDereferenceLogonSession(&AccessToken->AuthenticationId);
 
     if (AccessToken->UserAndGroups)
         ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
@@ -676,6 +710,8 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     NTSTATUS Status;
     ULONG TokenFlags = 0;
 
+    PAGED_CODE();
+
     /* Loop all groups */
     for (i = 0; i < GroupCount; i++)
     {
@@ -694,13 +730,8 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         }
     }
 
-    Status = ZwAllocateLocallyUniqueId(&TokenId);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = ZwAllocateLocallyUniqueId(&ModifiedId);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    ExAllocateLocallyUniqueId(&TokenId);
+    ExAllocateLocallyUniqueId(&ModifiedId);
 
     Status = ObCreateObject(PreviousMode,
                             SeTokenObjectType,
@@ -867,6 +898,9 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         /* Return pointer instead of handle */
         *TokenHandle = (HANDLE)AccessToken;
     }
+
+    /* Reference the logon session */
+    SepRmReferenceLogonSession(AuthenticationId);
 
 done:
     if (!NT_SUCCESS(Status))
@@ -1048,8 +1082,47 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
                         IN TOKEN_INFORMATION_CLASS TokenInformationClass,
                         OUT PVOID *TokenInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PSECURITY_IMPERSONATION_LEVEL SeImpersonationLvl;
+    PAGED_CODE();
+
+    if (TokenInformationClass >= MaxTokenInfoClass)
+    {
+        DPRINT1("SeQueryInformationToken(%d) invalid information class\n", TokenInformationClass);
+        return STATUS_INVALID_INFO_CLASS;
+    }
+    
+    switch (TokenInformationClass)
+    {
+        case TokenImpersonationLevel:
+            /* It is mandatory to have an impersonation token */
+            if (((PTOKEN)Token)->TokenType != TokenImpersonation)
+            {
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+            }
+
+            /* Allocate the output buffer */
+            SeImpersonationLvl = ExAllocatePoolWithTag(PagedPool, sizeof(SECURITY_IMPERSONATION_LEVEL), TAG_SE);
+            if (SeImpersonationLvl == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            /* Set impersonation level and return the structure */
+            *SeImpersonationLvl = ((PTOKEN)Token)->ImpersonationLevel;
+            *TokenInformation = SeImpersonationLvl;
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            UNIMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+    return Status;
 }
 
 /*
@@ -1719,7 +1792,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 NTSTATUS NTAPI
 NtSetInformationToken(IN HANDLE TokenHandle,
                       IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-                      OUT PVOID TokenInformation,
+                      IN PVOID TokenInformation,
                       IN ULONG TokenInformationLength)
 {
     PTOKEN Token;
@@ -1875,8 +1948,20 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                                 ExFreePoolWithTag(Token->DefaultDacl, TAG_TOKEN_ACL);
                             }
 
-                            /* Set the new dacl */
-                            Token->DefaultDacl = CapturedAcl;
+                            Token->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
+                                                                       CapturedAcl->AclSize,
+                                                                       TAG_TOKEN_ACL);
+                            if (!Token->DefaultDacl)
+                            {
+                                ExFreePoolWithTag(CapturedAcl, TAG_ACL);
+                                Status = STATUS_NO_MEMORY;
+                            }
+                            else
+                            {
+                                /* Set the new dacl */
+                                RtlCopyMemory(Token->DefaultDacl, CapturedAcl, CapturedAcl->AclSize);
+                                ExFreePoolWithTag(CapturedAcl, TAG_ACL);
+                            }
                         }
                     }
                     else
@@ -2783,6 +2868,10 @@ NtCreateToken(
                                NonPagedPool,
                                FALSE,
                                &CapturedDefaultDacl);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
     }
 
     /* Call the internal function */
@@ -2873,10 +2962,12 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         _SEH2_END;
     }
 
+    /* Validate object attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, PreviousMode);
+
     /*
      * At first open the thread token for information access and verify
-     * that the token associated with thread is valid.
-     */
+     * that the token associated with thread is valid.     */
 
     Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
                                        PsThreadType, PreviousMode, (PVOID*)&Thread,
@@ -2974,6 +3065,8 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     if (NewToken) ObDereferenceObject(NewToken);
 
     if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
+
+    ObDereferenceObject(Thread);
 
     if (NT_SUCCESS(Status))
     {

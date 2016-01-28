@@ -439,6 +439,20 @@ typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
 	WCHAR	FileSystemName[1];
 } FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
 
+/*FileFsControlInformation = 6 */
+/*
+ unknown
+ */
+
+/*FileFsFullSizeInformation = 7 */
+typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
+	LARGE_INTEGER	TotalAllocationUnits;
+	LARGE_INTEGER	CallerAvailableAllocationUnits;
+	LARGE_INTEGER	ActualAvailableAllocationUnits;
+	ULONG		SectorsPerAllocationUnit;
+	ULONG		BytesPerSector;
+} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
+
 typedef struct _FILE_PIPE_WAIT_FOR_BUFFER {
     LARGE_INTEGER   Timeout;
     ULONG           NameLength;

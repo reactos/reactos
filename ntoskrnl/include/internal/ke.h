@@ -54,12 +54,6 @@ typedef struct _KI_SAMPLE_MAP
     ULONG MHz;
 } KI_SAMPLE_MAP, *PKI_SAMPLE_MAP;
 
-typedef struct _KTIMER_TABLE_ENTRY
-{
-    LIST_ENTRY Entry;
-    ULARGE_INTEGER Time;
-} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
-
 #define MAX_TIMER_DPCS                      16
 
 typedef struct _DPC_QUEUE_ENTRY
@@ -84,6 +78,7 @@ typedef PCHAR
     IN ULONG Length
 );
 
+extern KAFFINITY KeActiveProcessors;
 extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
 extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
@@ -159,100 +154,7 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
-#ifdef _M_ARM // FIXME: remove this once our headers are cleaned up
-//
-// A system call ID is formatted as such:
-// .________________________________________________________________.
-// | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-// |--------------|-------------------------------------------------|
-// | TABLE NUMBER |                  TABLE OFFSET                   |
-// \----------------------------------------------------------------/
-//
-//
-// The table number is then used as an index into the service descriptor table.
-#define TABLE_NUMBER_BITS 3
-#define TABLE_OFFSET_BITS 12
-
-//
-// There are 2 tables (kernel and shadow, used by Win32K)
-//
-#define NUMBER_SERVICE_TABLES 2
-#define NTOS_SERVICE_INDEX   0
-#define WIN32K_SERVICE_INDEX 1
-
-//
-// NB. From assembly code, the table number must be computed as an offset into
-//     the service descriptor table.
-//
-//     Each entry into the table is 16 bytes long on 32-bit architectures, and
-//     32 bytes long on 64-bit architectures.
-//
-//     Thus, Table Number 1 is offset 16 (0x10) on x86, and offset 32 (0x20) on
-//     x64.
-//
-#ifdef _WIN64
-#define BITS_PER_ENTRY 5 // (1 << 5) = 32 bytes
-#else
-#define BITS_PER_ENTRY 4 // (1 << 4) = 16 bytes
-#endif
-
-//
-// We want the table number, but leave some extra bits to we can have the offset
-// into the descriptor table.
-//
-#define SERVICE_TABLE_SHIFT (12 - BITS_PER_ENTRY)
-
-//
-// Now the table number (as an offset) is corrupted with part of the table offset
-// This mask will remove the extra unwanted bits, and give us the offset into the
-// descriptor table proper.
-//
-#define SERVICE_TABLE_MASK  (((1 << TABLE_NUMBER_BITS) - 1) << BITS_PER_ENTRY)
-
-//
-// To get the table offset (ie: the service call number), just keep the 12 bits
-//
-#define SERVICE_NUMBER_MASK ((1 << TABLE_OFFSET_BITS) - 1)
-
-//
-// We'll often need to check if this is a graphics call. This is done by comparing
-// the table number offset with the known Win32K table number offset.
-// This is usually index 1, so table number offset 0x10 (x86) or 0x20 (x64)
-//
-#define SERVICE_TABLE_TEST  (WIN32K_SERVICE_INDEX << BITS_PER_ENTRY)
-
-#endif
-
-#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
-#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
-#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
-#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
-#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
-
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
-
-VOID
-NTAPI
-CPUID(
-    IN ULONG InfoType,
-    OUT PULONG CpuInfoEax,
-    OUT PULONG CpuInfoEbx,
-    OUT PULONG CpuInfoEcx,
-    OUT PULONG CpuInfoEdx
-);
-
-LONGLONG
-FASTCALL
-RDMSR(
-    IN ULONG Register
-);
-
-VOID
-NTAPI
-WRMSR(
-    IN ULONG Register,
-    IN LONGLONG Value
-);
 
 /* Finds a new thread to run */
 LONG_PTR
@@ -498,21 +400,8 @@ KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
 VOID
 NTAPI
 KeSetIntervalProfile(
-    KPROFILE_SOURCE ProfileSource,
-    ULONG Interval
-);
-
-VOID
-NTAPI
-KeProfileInterrupt(
-    PKTRAP_FRAME TrapFrame
-);
-
-VOID
-NTAPI
-KeProfileInterruptWithSource(
-    IN PKTRAP_FRAME TrapFrame,
-    IN KPROFILE_SOURCE Source
+    ULONG Interval,
+    KPROFILE_SOURCE ProfileSource
 );
 
 VOID

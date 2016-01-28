@@ -147,7 +147,7 @@ DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
     STRING_DIR_HELP1 "DIR [δίσκος:][μονοπάτι][αρχείο] [/A[[:]χαρακτηριστικά]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [δίσκος:][μονοπάτι][αρχείο]\n\
               Καθορίζει μονάδα δίσκου, κατάλογο ή/και αρχεία που θα παρατεθούν σε λίστα.\n\n\
   /A          Εμφανίζει αρχεία με τα καθορισμένα χαρακτηριστικά..\n\
@@ -166,6 +166,7 @@ DELAY [/m]n\n\n\
                      G  Πρώτα οι κατάλογοι ομάδων    -  Πρόθεμα για αντιστροφή της σειράς\n\
   /P          Σταματάει όταν οι πληροφορίες γεμίσουν μία οθόνη.\n\
   /Q          Εμφάνιση του ιδιοκτήτη του αρχείου.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Εμφανίζει τα αρχεία στον καθορισμένο κατάλογο και σε όλους τους υποκαταλόγους.\n\
   /T          Ελέγχει ποιο πεδίο χρόνου θα εμφανιστεί ή θα χρησιμοποιηθεί για την ταξινόμηση\n\
   πεδίο χρόνου   C  Δημιουργία\n\
@@ -500,7 +501,6 @@ title         new title\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Σφάλμα]\n"
     STRING_REN_ERROR1 "MoveFile() failed. Error: %lu\n"
-    STRING_START_ERROR1 "No batch support at the moment!"
     STRING_TIME_ERROR1 "Μη έγκυρη ώρα."
     STRING_TYPE_ERROR1 "Μη έγκυρη επιλογή '/%s'\n"
     STRING_WINDOW_ERROR1 "το παράθυρο δε βρέθηκε"
@@ -525,9 +525,11 @@ title         new title\n"
     STRING_REPLACE_ERROR5 "Δεν επιτρέπεται η πρόσβαση - %s\n"
     STRING_REPLACE_ERROR6 "Δε βρέθηκαν αρχεία - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
-    STRING_VERSION_RUNVER " running on %s"
+    STRING_VERSION_RUNNING_ON "Running on: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(s) copied\n"
     STRING_DELETE_WIPE "wiped"
     STRING_FOR_ERROR "bad variable specification."

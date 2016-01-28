@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/gdipool.c
+ * FILE:            win32ss/gdi/ntgdi/gdipool.c
  * PURPOSE:         Static size allocator for user mode object attributes
  * PROGRAMMERS:     Timo Kreuzer
  */

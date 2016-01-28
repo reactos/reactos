@@ -122,6 +122,6 @@ KeFindConfigurationNextEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
         Child = Child->Child;
     }
 
-    /* If we got here, nothign was found */
+    /* If we got here, nothing was found */
     return NULL;
 }

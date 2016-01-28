@@ -666,8 +666,8 @@ static HANDLE create_mru_list(LPWINEMRULIST mp)
     /* get values from key 'MRUList' */
     if (newkey) {
 	datasize = (mp->extview.uMax + 1) * sizeof(WCHAR);
-	if((err=RegQueryValueExW( newkey, strMRUList, 0, &type,
-				  (LPBYTE)mp->realMRU, &datasize))) {
+	if (RegQueryValueExW( newkey, strMRUList, 0, &type,
+				  (LPBYTE)mp->realMRU, &datasize)) {
 	    /* not present - set size to 1 (will become 0 later) */
 	    datasize = 1;
 	    *mp->realMRU = 0;

@@ -2,20 +2,20 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "°“√§—¥≈Õ°·øÈ¡..."
+CAPTION "‡∏Å‡∏≤‡∏£‡∏Ñ‡∏±‡∏î‡∏•‡∏≠‡∏Å‡πÅ‡∏ü‡πâ‡∏°..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "¬°‡≈‘°", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "·À≈Ëß:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "‡πÅ‡∏´‡∏•‡πà‡∏á:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "ª≈“¬∑“ß:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "‡∏õ‡∏•‡∏≤‡∏¢‡∏ó‡∏≤‡∏á:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "‡¡◊ËÕ‡ √Á® ‘Èπ°“√µ‘¥µ—Èß·≈È« §Õ¡æ‘«‡µÕ√Ï¢Õß§ÿ≥®”‡ªÁπµÈÕß‡ª‘¥‡§√◊ËÕß„À¡Ë/n/n §ÿ≥µÈÕß°“√‡ª‘¥‡§√◊ËÕß„À¡Ë‡¥’Î¬«π’È‡≈¬À√◊Õ‰¡Ë?"
-    IDS_QUERY_REBOOT_CAPTION "‡ª‘¥‡§√◊ËÕß„À¡ËÕ—µ‚π¡—µ‘"
+    IDS_QUERY_REBOOT_TEXT "‡πÄ‡∏°‡∏∑‡πà‡∏≠‡πÄ‡∏™‡∏£‡πá‡∏à‡∏™‡∏¥‡πâ‡∏ô‡∏Å‡∏≤‡∏£‡∏ï‡∏¥‡∏î‡∏ï‡∏±‡πâ‡∏á‡πÅ‡∏•‡πâ‡∏ß ‡∏Ñ‡∏≠‡∏°‡∏û‡∏¥‡∏ß‡πÄ‡∏ï‡∏≠‡∏£‡πå‡∏Ç‡∏≠‡∏á‡∏Ñ‡∏∏‡∏ì‡∏à‡∏≥‡πÄ‡∏õ‡πá‡∏ô‡∏ï‡πâ‡∏≠‡∏á‡πÄ‡∏õ‡∏¥‡∏î‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà/n/n ‡∏Ñ‡∏∏‡∏ì‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡πÄ‡∏õ‡∏¥‡∏î‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà‡πÄ‡∏î‡∏µ‡πã‡∏¢‡∏ß‡∏ô‡∏µ‡πâ‡πÄ‡∏•‡∏¢‡∏´‡∏£‡∏∑‡∏≠‡πÑ‡∏°‡πà?"
+    IDS_QUERY_REBOOT_CAPTION "‡πÄ‡∏õ‡∏¥‡∏î‡πÄ‡∏Ñ‡∏£‡∏∑‡πà‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥"
     IDS_INF_FILE "Setup Information"
 END

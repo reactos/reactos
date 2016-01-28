@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,49 +36,49 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Wstecz",                        IDM_GOBACKWARD
         MENUITEM "&Dalej",                         IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Z&apisz t≥o jako...",            IDM_SAVEBACKGROUND
-        MENUITEM "&Ustaw jako t≥o",                IDM_SETWALLPAPER
-        MENUITEM "Kop&iuj t≥o",                    IDM_COPYBACKGROUND
+        MENUITEM "Z&apisz t≈Ço jako...",            IDM_SAVEBACKGROUND
+        MENUITEM "&Ustaw jako t≈Ço",                IDM_SETWALLPAPER
+        MENUITEM "Kop&iuj t≈Ço",                    IDM_COPYBACKGROUND
         MENUITEM "Ustaw jako &element pulpitu...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Zaznacz wszystko",              IDM_SELECTALL
         MENUITEM "Wkl&ej",                         IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "UtwÛrz &skrÛt",                  IDM_CREATESHORTCUT
+        MENUITEM "Utw√≥rz &skr√≥t",                  IDM_CREATESHORTCUT
         MENUITEM "Dodaj do ulu&bionych",           IDM_ADDFAVORITES
-        MENUITEM "&Pokaø ürÛd≥o",                  IDM_VIEWSOURCE
+        MENUITEM "&Poka≈º ≈∫r√≥d≈Ço",                  IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "&Kodowanie",                     IDM_LANGUAGE
         MENUITEM SEPARATOR
         MENUITEM "D&rukuj",                        IDM_PRINT
-        MENUITEM "&Odúwieø",                       _IDM_REFRESH
+        MENUITEM "&Od≈õwie≈º",                       _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "W≥aú&ciwoúci",                   IDM_PROPERTIES
+        MENUITEM "W≈Ça≈õ&ciwo≈õci",                   IDM_PROPERTIES
     }
 
     POPUP "" /* Image */
     {
-        MENUITEM "&OtwÛrz ≥πcze",                     IDM_FOLLOWLINKC
-        MENUITEM "OtwÛrz ≥πcze w &nowym oknie",       IDM_FOLLOWLINKN
+        MENUITEM "&Otw√≥rz ≈ÇƒÖcze",                     IDM_FOLLOWLINKC
+        MENUITEM "Otw√≥rz ≈ÇƒÖcze w &nowym oknie",       IDM_FOLLOWLINKN
         MENUITEM "&Zapisz element doecelowy jako...", IDM_SAVETARGET
         MENUITEM "&Drukuj element docelowy",          IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "&Pokaø obraz",                      IDM_SHOWPICTURE
+        MENUITEM "&Poka≈º obraz",                      IDM_SHOWPICTURE
         MENUITEM "&Zapisz obraz jako...",             IDM_SAVEPICTURE
-        MENUITEM "&Wyúlij obraz pocztπ e-mail...",    IDM_MP_EMAILPICTURE
+        MENUITEM "&Wy≈õlij obraz pocztƒÖ e-mail...",    IDM_MP_EMAILPICTURE
         MENUITEM "D&rukuj obraz...",                  IDM_MP_PRINTPICTURE
-        MENUITEM "Przejdü do &Moich obrazÛw",         IDM_MP_MYPICS
-        MENUITEM "&Ustaw jako t≥o",                   IDM_SETWALLPAPER
+        MENUITEM "Przejd≈∫ do &Moich obraz√≥w",         IDM_MP_MYPICS
+        MENUITEM "&Ustaw jako t≈Ço",                   IDM_SETWALLPAPER
         MENUITEM "Ustaw jako &element pulpitu...",    IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "Wyt&nij",                           IDM_CUT
         MENUITEM "&Kopiuj",                           IDM_COPY
-        MENUITEM "Kopiuj &skrÛt",                     IDM_COPYSHORTCUT
+        MENUITEM "Kopiuj &skr√≥t",                     IDM_COPYSHORTCUT
         MENUITEM "Wkl&ej",                            IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych...",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "W≥aú&ciwoúci",                      IDM_PROPERTIES
+        MENUITEM "W≈Ça≈õ&ciwo≈õci",                      IDM_PROPERTIES
     }
 
     POPUP "" /* Control */
@@ -88,7 +88,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Wyt&nij",           IDM_CUT
         MENUITEM "&Kopiuj",           IDM_COPY
         MENUITEM "Wkl&ej",            IDM_PASTE
-        MENUITEM "&UsuÒ",             IDM_DELETE
+        MENUITEM "&Usu≈Ñ",             IDM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Zaznacz wszystko", IDM_SELECTALL
     }
@@ -97,14 +97,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         POPUP "&Zaznacz"
         {
-            MENUITEM "&KomÛrka",         IDM_CELLSELECT
+            MENUITEM "&Kom√≥rka",         IDM_CELLSELECT
             MENUITEM "&Wiersz",          IDM_ROWSELECT
             MENUITEM "K&olumna",         IDM_COLUMNSELECT
             MENUITEM "&Tabela",          IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM "W≥aúciwoúci &komÛrki", IDM_CELLPROPERTIES
-        MENUITEM "W≥aúciwoúci &tabeli",  IDM_TABLEPROPERTIES
+        MENUITEM "W≈Ça≈õciwo≈õci &kom√≥rki", IDM_CELLPROPERTIES
+        MENUITEM "W≈Ça≈õciwo≈õci &tabeli",  IDM_TABLEPROPERTIES
     }
 
     POPUP "" /* 1DSite Select */
@@ -119,19 +119,19 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Anchor */
     {
-        MENUITEM "&OtwÛrz",                          IDM_FOLLOWLINKC
-        MENUITEM "OtwÛrz w &nowym oknie",            IDM_FOLLOWLINKN
+        MENUITEM "&Otw√≥rz",                          IDM_FOLLOWLINKC
+        MENUITEM "Otw√≥rz w &nowym oknie",            IDM_FOLLOWLINKN
         MENUITEM "&Zapisz element docelowy jako...", IDM_SAVETARGET
         MENUITEM "&Drukuj element docelowy",         IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Wyt&nij",                          IDM_CUT
         MENUITEM "&Kopiuj",                          IDM_COPY
-        MENUITEM "Kopiuj &skrÛt",                    IDM_COPYSHORTCUT
+        MENUITEM "Kopiuj &skr√≥t",                    IDM_COPYSHORTCUT
         MENUITEM "Wkl&ej",                           IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych...",          IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "W≥aú&ciwoúci",                     IDM_PROPERTIES
+        MENUITEM "W≈Ça≈õ&ciwo≈õci",                     IDM_PROPERTIES
     }
 
     POPUP "" /* Context Unknown */
@@ -141,99 +141,99 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "&OtwÛrz ≥πcze",                     IDM_FOLLOWLINKC
-        MENUITEM "OtwÛrz ≥πcze w &nowym oknie",       IDM_FOLLOWLINKN
+        MENUITEM "&Otw√≥rz ≈ÇƒÖcze",                     IDM_FOLLOWLINKC
+        MENUITEM "Otw√≥rz ≈ÇƒÖcze w &nowym oknie",       IDM_FOLLOWLINKN
         MENUITEM "&Zapisz element docelowy jako...",  IDM_SAVETARGET
         MENUITEM "&Drukuj element docelowy",          IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "&Pokaø obraz",                      IDM_SHOWPICTURE
+        MENUITEM "&Poka≈º obraz",                      IDM_SHOWPICTURE
         MENUITEM "Zapisz &wideo jako...",             IDM_SAVEPICTURE
-        MENUITEM "&Ustaw jako t≥o",                   IDM_SETWALLPAPER
+        MENUITEM "&Ustaw jako t≈Ço",                   IDM_SETWALLPAPER
         MENUITEM "Ustaw jako &element pulpitu......", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "Wyt&nij",                           IDM_CUT
         MENUITEM "&Kopiuj",                           IDM_COPY
-        MENUITEM "Kopiuj &skrÛt",                     IDM_COPYSHORTCUT
+        MENUITEM "Kopiuj &skr√≥t",                     IDM_COPYSHORTCUT
         MENUITEM "Wkl&ej",                            IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych",              IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "Odtwarzaj",                         IDM_DYNSRCPLAY
         MENUITEM "Zatrzymaj",                         IDM_DYNSRCSTOP
-        MENUITEM "W≥aú&ciwoúci",                      IDM_PROPERTIES
+        MENUITEM "W≈Ça≈õ&ciwo≈õci",                      IDM_PROPERTIES
     }
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "&OtwÛrz ≥πcze",                     IDM_FOLLOWLINKC
-        MENUITEM "OtwÛrz ≥πcze w &nowym oknie",       IDM_FOLLOWLINKN
+        MENUITEM "&Otw√≥rz ≈ÇƒÖcze",                     IDM_FOLLOWLINKC
+        MENUITEM "Otw√≥rz ≈ÇƒÖcze w &nowym oknie",       IDM_FOLLOWLINKN
         MENUITEM "&Zapisz element doecelowy jako...", IDM_SAVETARGET
         MENUITEM "&Drukuj element docelowy",          IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "&Pokaø obraz",                      IDM_SHOWPICTURE
+        MENUITEM "&Poka≈º obraz",                      IDM_SHOWPICTURE
         MENUITEM "&Zapisz obraz jako...",             IDM_SAVEPICTURE
-        MENUITEM "&Ustaw jako t≥o",                   IDM_SETWALLPAPER
+        MENUITEM "&Ustaw jako t≈Ço",                   IDM_SETWALLPAPER
         MENUITEM "Ustaw jako &element pulpitu......", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "Wyt&nij",                           IDM_CUT
         MENUITEM "&Kopiuj",                           IDM_COPY
-        MENUITEM "Kopiuj &skrÛt",                     IDM_COPYSHORTCUT
+        MENUITEM "Kopiuj &skr√≥t",                     IDM_COPYSHORTCUT
         MENUITEM "Wkl&ej",                            IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych...",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "Odtwarzaj",                         IDM_IMGARTPLAY
         MENUITEM "Zatrzymaj",                         IDM_IMGARTSTOP
-        MENUITEM "PrzewiÒ",                           IDM_IMGARTREWIND
+        MENUITEM "Przewi≈Ñ",                           IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM "W≥aú&ciwoúci",                      IDM_PROPERTIES
+        MENUITEM "W≈Ça≈õ&ciwo≈õci",                      IDM_PROPERTIES
     }
 
     POPUP "" /* Debug */
     {
-        MENUITEM "Znaczniki úledzenia",        IDM_TRACETAGS
-        MENUITEM "Niepowodzenia zasobÛw",      IDM_RESOURCEFAILURES
-        MENUITEM "ZrzuÊ informacjÍ úledzenia", IDM_DUMPTRACKINGINFO
+        MENUITEM "Znaczniki ≈õledzenia",        IDM_TRACETAGS
+        MENUITEM "Niepowodzenia zasob√≥w",      IDM_RESOURCEFAILURES
+        MENUITEM "Zrzuƒá informacjƒô ≈õledzenia", IDM_DUMPTRACKINGINFO
         MENUITEM "Przerwa debugowania",        IDM_DEBUGBREAK
         MENUITEM "Widok debugowania",          IDM_DEBUGVIEW
-        MENUITEM "ZrzuÊ drzewa",               IDM_DUMPTREE
-        MENUITEM "ZrzuÊ linie",                IDM_DUMPLINES
-        MENUITEM "ZrzuÊ DisplayTree",          IDM_DUMPDISPLAYTREE
-        MENUITEM "ZrzuÊ FormatCaches",         IDM_DUMPFORMATCACHES
-        MENUITEM "ZrzuÊ LayoutRects",          IDM_DUMPLAYOUTRECTS
-        MENUITEM "Monitor pamiÍci",            IDM_MEMORYMONITOR
-        MENUITEM "Mierniki wydajnoúci",        IDM_PERFORMANCEMETERS
+        MENUITEM "Zrzuƒá drzewa",               IDM_DUMPTREE
+        MENUITEM "Zrzuƒá linie",                IDM_DUMPLINES
+        MENUITEM "Zrzuƒá DisplayTree",          IDM_DUMPDISPLAYTREE
+        MENUITEM "Zrzuƒá FormatCaches",         IDM_DUMPFORMATCACHES
+        MENUITEM "Zrzuƒá LayoutRects",          IDM_DUMPLAYOUTRECTS
+        MENUITEM "Monitor pamiƒôci",            IDM_MEMORYMONITOR
+        MENUITEM "Mierniki wydajno≈õci",        IDM_PERFORMANCEMETERS
         MENUITEM "Zapisz HTML",                IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "Widok &przeglπdania",        IDM_BROWSEMODE
+        MENUITEM "Widok &przeglƒÖdania",        IDM_BROWSEMODE
         MENUITEM "Widok &edycji",              IDM_EDITMODE
     }
 
     POPUP "" /* Vertical Scrollbar */
     {
-        MENUITEM "PrzewiÒ tutaj",  IDM_SCROLL_HERE
+        MENUITEM "Przewi≈Ñ tutaj",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "GÛra",           IDM_SCROLL_TOP
-        MENUITEM "DÛ≥",            IDM_SCROLL_BOTTOM
+        MENUITEM "G√≥ra",           IDM_SCROLL_TOP
+        MENUITEM "D√≥≈Ç",            IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
-        MENUITEM "Strona w gÛrÍ",  IDM_SCROLL_PAGEUP
-        MENUITEM "Strona w dÛ≥",   IDM_SCROLL_PAGEDOWN
+        MENUITEM "Strona w g√≥rƒô",  IDM_SCROLL_PAGEUP
+        MENUITEM "Strona w d√≥≈Ç",   IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
-        MENUITEM "PrzewiÒ w gÛrÍ", IDM_SCROLL_UP
-        MENUITEM "PrzewiÒ w dÛ≥",  IDM_SCROLL_DOWN
+        MENUITEM "Przewi≈Ñ w g√≥rƒô", IDM_SCROLL_UP
+        MENUITEM "Przewi≈Ñ w d√≥≈Ç",  IDM_SCROLL_DOWN
     }
 
     POPUP "" /* Horizontal Scrollbar */
     {
-        MENUITEM "PrzewiÒ tutaj",   IDM_SCROLL_HERE
+        MENUITEM "Przewi≈Ñ tutaj",   IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Lewa krawÍdü",    IDM_SCROLL_LEFTEDGE
-        MENUITEM "Prawa krawÍdü",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM "Lewa krawƒôd≈∫",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "Prawa krawƒôd≈∫",   IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
         MENUITEM "Strona w lewo",   IDM_SCROLL_PAGELEFT
         MENUITEM "Strona w prawo",  IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
-        MENUITEM "PrzewiÒ w lewo",  IDM_SCROLL_LEFT
-        MENUITEM "PrzewiÒ w prawo", IDM_SCROLL_RIGHT
+        MENUITEM "Przewi≈Ñ w lewo",  IDM_SCROLL_LEFT
+        MENUITEM "Przewi≈Ñ w prawo", IDM_SCROLL_RIGHT
     }
 }

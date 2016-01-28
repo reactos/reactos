@@ -1,7 +1,7 @@
 /*
  * Copyright 2003 Mike McCormack for CodeWeavers
  * Copyright 2008 Michael Stefaniuc
- *           2011 Fulea Ștefan
+ *           2011 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,46 +18,67 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-
 #pragma code_page(65001)
 
-IDD_PROXYDLG DIALOG 36, 24, 250, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+  IDS_LANCONNECTION "Conexiune de rețea locală"
+  IDS_CERT_CA_INVALID   "Certificatul este emis de o parte necunoscută sau nesigură."
+  IDS_CERT_DATE_INVALID "Data din certificat nu este validă."
+  IDS_CERT_CN_INVALID   "Numele din certificat nu corespunde cu cel al sitului."
+  IDS_CERT_ERRORS       "Există cel puțin o problemă nespecificată de securitate cu acest certificat."
+}
+
+IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Introducere parolă de rețea"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Introduceți numele de utilizator și parola:", -1, 40, 6, 150, 15
- LTEXT "Mandatar", -1, 40, 26, 50, 10
- LTEXT "Domeniu", -1, 40, 46, 50, 10
- LTEXT "Utilizator", -1, 40, 66, 50, 10
- LTEXT "Parolă", -1, 40, 86, 50, 10
- LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
- LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
- EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ LTEXT "Introduceți numele de utilizator și parola:", -1, 6, 6, 210, 15
+ LTEXT "Mandatar", -1, 6, 26, 50, 18
+ LTEXT "Domeniu", -1, 6, 46, 50, 18
+ LTEXT "Utilizator", -1, 6, 66, 50, 18
+ LTEXT "Parolă", -1, 6, 86, 50, 18
+ LTEXT "", IDC_PROXY, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
  CHECKBOX "&Păstrează această parolă (nerecomandat)", IDC_SAVEPASSWORD,
-           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Con&firmă", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "A&nulează", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Con&firmă", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "A&nulează", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-IDD_AUTHDLG DIALOG 36, 24, 250, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Autentificare necesară"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Introduceți numele de utilizator și parola:", -1, 40, 6, 150, 15
- LTEXT "Server", -1, 40, 26, 50, 10
- LTEXT "Domeniu", -1, 40, 46, 50, 10
- LTEXT "Utilizator", -1, 40, 66, 50, 10
- LTEXT "Parolă", -1, 40, 86, 50, 10
- LTEXT "", IDC_SERVER, 80, 26, 150, 14, 0
- LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
- EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ LTEXT "Introduceți numele de utilizator și parola:", -1, 6, 6, 210, 15
+ LTEXT "Server", -1, 6, 26, 50, 18
+ LTEXT "Domeniu", -1, 6, 46, 50, 18
+ LTEXT "Utilizator", -1, 6, 66, 50, 18
+ LTEXT "Parolă", -1, 6, 86, 50, 18
+ LTEXT "", IDC_SERVER, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
  CHECKBOX "&Păstreată această parolă (nerecomandat)", IDC_SAVEPASSWORD,
-           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Con&firmă", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "A&nulează", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Con&firmă", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "A&nulează", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Avertisment de securitate"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Există o problemă cu certificatul acestui sit.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Doriți totuși să continuați?", -1, 40, 46, 200, 20
+ PUSHBUTTON "D&a", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "N&u", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

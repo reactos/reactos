@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/ns.c
+ * FILE:        dll/win32/ws2_32/misc/ns.c
  * PURPOSE:     Namespace APIs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -1496,7 +1496,7 @@ inet_addr(IN  CONST CHAR FAR* cp)
 
     p = (PCHAR)cp;
 
-    if (!p || !WSAINITIALIZED)
+    if (!p)
     {
         WSASetLastError(WSAEFAULT);
         return INADDR_NONE;

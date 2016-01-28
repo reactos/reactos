@@ -241,6 +241,9 @@ static HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iState
 
     imagenum = max (min (imagecount, iStateId), 1) - 1;
     GetObjectW(*hBmp, sizeof(bmp), &bmp);
+
+    if(imagecount < 1) imagecount = 1;
+
     if(imagelayout == IL_VERTICAL) {
         int height = bmp.bmHeight/imagecount;
         bmpRect->left = 0;
@@ -274,22 +277,33 @@ static inline BOOL UXTHEME_StretchBlt(HDC hdcDst, int nXOriginDst, int nYOriginD
       255,         /* SourceConstantAlpha */
       AC_SRC_ALPHA /* AlphaFormat */
     };
+
+    BOOL ret = TRUE;
+    int old_stretch_mode;
+    POINT old_brush_org;
+
+    old_stretch_mode = SetStretchBltMode(hdcDst, HALFTONE);
+    SetBrushOrgEx(hdcDst, nXOriginDst, nYOriginDst, &old_brush_org);
+
     if (transparent == ALPHABLEND_BINARY) {
         /* Ensure we don't pass any negative values to TransparentBlt */
-        return TransparentBlt(hdcDst, nXOriginDst, nYOriginDst, abs(nWidthDst), abs(nHeightDst),
+        ret = TransparentBlt(hdcDst, nXOriginDst, nYOriginDst, abs(nWidthDst), abs(nHeightDst),
                               hdcSrc, nXOriginSrc, nYOriginSrc, abs(nWidthSrc), abs(nHeightSrc),
                               transcolor);
-    }
-    if ((transparent == ALPHABLEND_NONE) ||
+    } else if ((transparent == ALPHABLEND_NONE) ||
         !AlphaBlend(hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
                     hdcSrc, nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
                     blendFunc))
     {
-        return StretchBlt(hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+        ret = StretchBlt(hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
                           hdcSrc, nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
                           SRCCOPY);
     }
-    return TRUE;
+
+    SetBrushOrgEx(hdcDst, old_brush_org.x, old_brush_org.y, NULL);
+    SetStretchBltMode(hdcDst, old_stretch_mode);
+
+    return ret;
 }
 
 /***********************************************************************
@@ -449,7 +463,7 @@ static HRESULT UXTHEME_DrawImageGlyph(HTHEME hTheme, HDC hdc, int iPartId,
     HDC hdcSrc = NULL;
     HGDIOBJ oldSrc = NULL;
     RECT rcSrc;
-    INT transparent = FALSE;
+    INT transparent = 0;
     COLORREF transparentcolor;
     int valign = VA_CENTER;
     int halign = HA_CENTER;
@@ -633,9 +647,9 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
                                     const DTBGOPTS *pOptions)
 {
     HRESULT hr = S_OK;
-    HBITMAP bmpSrc;
+    HBITMAP bmpSrc, bmpSrcResized = NULL;
     HGDIOBJ oldSrc;
-    HDC hdcSrc;
+    HDC hdcSrc, hdcOrigSrc = NULL;
     RECT rcSrc;
     RECT rcDst;
     POINT dstSize;
@@ -698,6 +712,38 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
         dstSize.y = abs(dstSize.y);
 
         GetThemeMargins(hTheme, hdc, iPartId, iStateId, TMT_SIZINGMARGINS, NULL, &sm);
+
+        /* Resize source image if destination smaller than margins */
+#ifndef __REACTOS__
+        /* Revert Wine Commit 2b650fa as it breaks themed Explorer Toolbar Separators
+           FIXME: Revisit this when the bug is fixed. CORE-9636 and Wine Bug #38538 */
+        if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y || sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+            if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y) {
+                sm.cyTopHeight = MulDiv(sm.cyTopHeight, dstSize.y, srcSize.y);
+                sm.cyBottomHeight = dstSize.y - sm.cyTopHeight;
+                srcSize.y = dstSize.y;
+            }
+
+            if (sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+                sm.cxLeftWidth = MulDiv(sm.cxLeftWidth, dstSize.x, srcSize.x);
+                sm.cxRightWidth = dstSize.x - sm.cxLeftWidth;
+                srcSize.x = dstSize.x;
+            }
+
+            hdcOrigSrc = hdcSrc;
+            hdcSrc = CreateCompatibleDC(NULL);
+            bmpSrcResized = CreateBitmap(srcSize.x, srcSize.y, 1, 32, NULL);
+            SelectObject(hdcSrc, bmpSrcResized);
+
+            UXTHEME_StretchBlt(hdcSrc, 0, 0, srcSize.x, srcSize.y, hdcOrigSrc, rcSrc.left, rcSrc.top,
+                               rcSrc.right - rcSrc.left, rcSrc.bottom - rcSrc.top, transparent, transparentcolor);
+
+            rcSrc.left = 0;
+            rcSrc.top = 0;
+            rcSrc.right = srcSize.x;
+            rcSrc.bottom = srcSize.y;
+        }
+#endif
 
         hdcDst = hdc;
         OffsetViewportOrgEx(hdcDst, rcDst.left, rcDst.top, &org);
@@ -803,6 +849,8 @@ draw_error:
     }
     SelectObject(hdcSrc, oldSrc);
     DeleteDC(hdcSrc);
+    if (bmpSrcResized) DeleteObject(bmpSrcResized);
+    if (hdcOrigSrc) DeleteDC(hdcOrigSrc);
     CopyRect(pRect, &rcDst);
     return hr;
 }
@@ -2043,6 +2091,9 @@ BOOL WINAPI IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId,
 
     GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_BGTYPE, &bgtype);
 
+#ifdef __REACTOS__
+    if (bgtype == BT_NONE) return TRUE;
+#endif
     if (bgtype != BT_IMAGEFILE) return FALSE;
 
     if(FAILED (UXTHEME_LoadImage (hTheme, 0, iPartId, iStateId, &rect, FALSE, 

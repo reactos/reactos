@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Kernel Library
- * FILE:            lib/kernel32/file/npipe.c
+ * FILE:            dll/win32/kernel32/client/file/npipe.c
  * PURPOSE:         Named Pipe Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  Ariadne ( ariadne@xs4all.nl)

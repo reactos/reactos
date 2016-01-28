@@ -27,7 +27,10 @@ cpp_quote("#undef CopyFile")
 cpp_quote("#undef DeleteFile")
 cpp_quote("#undef MoveFile")
 cpp_quote("#endif")
-cpp_quote("#define CTL_E_ENDOFFILE STD_CTL_SCODE(62)") /* this is not defined in public headers */
+/* this is not defined in public headers */
+cpp_quote("#define CTL_E_ENDOFFILE STD_CTL_SCODE(62)")
+cpp_quote("#define CTL_E_KEY_ALREADY_EXISTS STD_CTL_SCODE(457)")
+cpp_quote("#define CTL_E_ELEMENT_NOT_FOUND STD_CTL_SCODE(32811)")
 
 [
   uuid(420B2830-E718-11CF-893D-00A0C9054228),

@@ -42,7 +42,7 @@ typedef struct tagInputProcessorProfilesSink {
 typedef struct tagInputProcessorProfiles {
     ITfInputProcessorProfiles ITfInputProcessorProfiles_iface;
     ITfSource ITfSource_iface;
-    /* const ITfInputProcessorProfileMgrVtbl *InputProcessorProfileMgrVtbl; */
+    ITfInputProcessorProfileMgr ITfInputProcessorProfileMgr_iface;
     /* const ITfInputProcessorProfilesExVtbl *InputProcessorProfilesExVtbl; */
     /* const ITfInputProcessorProfileSubstituteLayoutVtbl *InputProcessorProfileSubstituteLayoutVtbl; */
     LONG refCount;
@@ -75,8 +75,106 @@ typedef struct tagEnumTfLanguageProfiles {
     ITfCategoryMgr *catmgr;
 } EnumTfLanguageProfiles;
 
+typedef struct {
+    IEnumTfInputProcessorProfiles IEnumTfInputProcessorProfiles_iface;
+    LONG ref;
+} EnumTfInputProcessorProfiles;
+
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
 static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut);
+
+static inline EnumTfInputProcessorProfiles *impl_from_IEnumTfInputProcessorProfiles(IEnumTfInputProcessorProfiles *iface)
+{
+    return CONTAINING_RECORD(iface, EnumTfInputProcessorProfiles, IEnumTfInputProcessorProfiles_iface);
+}
+
+static HRESULT WINAPI EnumTfInputProcessorProfiles_QueryInterface(IEnumTfInputProcessorProfiles *iface,
+        REFIID riid, void **ppv)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+
+    if(IsEqualGUID(riid, &IID_IUnknown)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = &This->IEnumTfInputProcessorProfiles_iface;
+    }else if(IsEqualGUID(riid, &IID_IEnumTfInputProcessorProfiles)) {
+        TRACE("(%p)->(IID_IEnumTfInputProcessorProfiles %p)\n", This, ppv);
+        *ppv = &This->IEnumTfInputProcessorProfiles_iface;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI EnumTfInputProcessorProfiles_AddRef(IEnumTfInputProcessorProfiles *iface)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI EnumTfInputProcessorProfiles_Release(IEnumTfInputProcessorProfiles *iface)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        HeapFree(GetProcessHeap(), 0, This);
+
+    return ref;
+}
+
+static HRESULT WINAPI EnumTfInputProcessorProfiles_Clone(IEnumTfInputProcessorProfiles *iface,
+        IEnumTfInputProcessorProfiles **ret)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+    FIXME("(%p)->(%p)\n", This, ret);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumTfInputProcessorProfiles_Next(IEnumTfInputProcessorProfiles *iface, ULONG count,
+        TF_INPUTPROCESSORPROFILE *profile, ULONG *fetch)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+
+    FIXME("(%p)->(%u %p %p)\n", This, count, profile, fetch);
+
+    if(fetch)
+        *fetch = 0;
+    return S_FALSE;
+}
+
+static HRESULT WINAPI EnumTfInputProcessorProfiles_Reset(IEnumTfInputProcessorProfiles *iface)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumTfInputProcessorProfiles_Skip(IEnumTfInputProcessorProfiles *iface, ULONG count)
+{
+    EnumTfInputProcessorProfiles *This = impl_from_IEnumTfInputProcessorProfiles(iface);
+    FIXME("(%p)->(%u)\n", This, count);
+    return E_NOTIMPL;
+}
+
+static const IEnumTfInputProcessorProfilesVtbl EnumTfInputProcessorProfilesVtbl = {
+    EnumTfInputProcessorProfiles_QueryInterface,
+    EnumTfInputProcessorProfiles_AddRef,
+    EnumTfInputProcessorProfiles_Release,
+    EnumTfInputProcessorProfiles_Clone,
+    EnumTfInputProcessorProfiles_Next,
+    EnumTfInputProcessorProfiles_Reset,
+    EnumTfInputProcessorProfiles_Skip
+};
 
 static inline InputProcessorProfiles *impl_from_ITfInputProcessorProfiles(ITfInputProcessorProfiles *iface)
 {
@@ -149,28 +247,31 @@ static void add_userkey( REFCLSID rclsid, LANGID langid,
         RegCloseKey(key);
 }
 
-static HRESULT WINAPI InputProcessorProfiles_QueryInterface(ITfInputProcessorProfiles *iface, REFIID iid, LPVOID *ppvOut)
+static HRESULT WINAPI InputProcessorProfiles_QueryInterface(ITfInputProcessorProfiles *iface, REFIID iid, void **ppv)
 {
     InputProcessorProfiles *This = impl_from_ITfInputProcessorProfiles(iface);
-    *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfInputProcessorProfiles))
     {
-        *ppvOut = &This->ITfInputProcessorProfiles_iface;
+        *ppv = &This->ITfInputProcessorProfiles_iface;
+    }
+    else if (IsEqualIID(iid, &IID_ITfInputProcessorProfileMgr))
+    {
+        *ppv = &This->ITfInputProcessorProfileMgr_iface;
     }
     else if (IsEqualIID(iid, &IID_ITfSource))
     {
-        *ppvOut = &This->ITfSource_iface;
+        *ppv = &This->ITfSource_iface;
     }
-
-    if (*ppvOut)
+    else
     {
-        ITfInputProcessorProfiles_AddRef(iface);
-        return S_OK;
+        *ppv = NULL;
+        WARN("unsupported interface: %s\n", debugstr_guid(iid));
+        return E_NOINTERFACE;
     }
 
-    WARN("unsupported interface: %s\n", debugstr_guid(iid));
-    return E_NOINTERFACE;
+    ITfInputProcessorProfiles_AddRef(iface);
+    return S_OK;
 }
 
 static ULONG WINAPI InputProcessorProfiles_AddRef(ITfInputProcessorProfiles *iface)
@@ -227,8 +328,8 @@ static HRESULT WINAPI InputProcessorProfiles_Unregister(
     StringFromGUID2(rclsid, buf, 39);
     sprintfW(fullkey,szwTipfmt,szwSystemTIPKey,buf);
 
-    SHDeleteKeyW(HKEY_LOCAL_MACHINE, fullkey);
-    SHDeleteKeyW(HKEY_CURRENT_USER, fullkey);
+    RegDeleteTreeW(HKEY_LOCAL_MACHINE, fullkey);
+    RegDeleteTreeW(HKEY_CURRENT_USER, fullkey);
 
     return S_OK;
 }
@@ -426,10 +527,9 @@ static HRESULT WINAPI InputProcessorProfiles_ActivateLanguageProfile(
     LanguageProfile.clsid = *rclsid;
     LanguageProfile.langid = langid;
     LanguageProfile.guidProfile = *guidProfiles;
+    LanguageProfile.fActive = TRUE;
 
-    hr = add_active_textservice(&LanguageProfile);
-
-    return hr;
+    return add_active_textservice(&LanguageProfile);
 }
 
 static HRESULT WINAPI InputProcessorProfiles_GetActiveLanguageProfile(
@@ -663,6 +763,125 @@ static const ITfInputProcessorProfilesVtbl InputProcessorProfilesVtbl =
     InputProcessorProfiles_SubstituteKeyboardLayout
 };
 
+static inline InputProcessorProfiles *impl_from_ITfInputProcessorProfileMgr(ITfInputProcessorProfileMgr *iface)
+{
+    return CONTAINING_RECORD(iface, InputProcessorProfiles, ITfInputProcessorProfileMgr_iface);
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_QueryInterface(ITfInputProcessorProfileMgr *iface, REFIID riid, void **ppv)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    return ITfInputProcessorProfiles_QueryInterface(&This->ITfInputProcessorProfiles_iface, riid, ppv);
+}
+
+static ULONG WINAPI InputProcessorProfileMgr_AddRef(ITfInputProcessorProfileMgr *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    return ITfInputProcessorProfiles_AddRef(&This->ITfInputProcessorProfiles_iface);
+}
+
+static ULONG WINAPI InputProcessorProfileMgr_Release(ITfInputProcessorProfileMgr *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    return ITfInputProcessorProfiles_Release(&This->ITfInputProcessorProfiles_iface);
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_ActivateProfile(ITfInputProcessorProfileMgr *iface, DWORD dwProfileType,
+        LANGID langid, REFCLSID clsid, REFGUID guidProfile, HKL hkl, DWORD dwFlags)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%d %x %s %s %p %x)\n", This, dwProfileType, langid, debugstr_guid(clsid),
+          debugstr_guid(guidProfile), hkl, dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_DeactivateProfile(ITfInputProcessorProfileMgr *iface, DWORD dwProfileType,
+        LANGID langid, REFCLSID clsid, REFGUID guidProfile, HKL hkl, DWORD dwFlags)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%d %x %s %s %p %x)\n", This, dwProfileType, langid, debugstr_guid(clsid),
+          debugstr_guid(guidProfile), hkl, dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_GetProfile(ITfInputProcessorProfileMgr *iface, DWORD dwProfileType,
+        LANGID langid, REFCLSID clsid, REFGUID guidProfile, HKL hkl, TF_INPUTPROCESSORPROFILE *pProfile)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%d %x %s %s %p %p)\n", This, dwProfileType, langid, debugstr_guid(clsid),
+          debugstr_guid(guidProfile), hkl, pProfile);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_EnumProfiles(ITfInputProcessorProfileMgr *iface, LANGID langid,
+        IEnumTfInputProcessorProfiles **ppEnum)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    EnumTfInputProcessorProfiles *enum_profiles;
+
+    TRACE("(%p)->(%x %p)\n", This, langid, ppEnum);
+
+    enum_profiles = HeapAlloc(GetProcessHeap(), 0, sizeof(*enum_profiles));
+    if(!enum_profiles)
+        return E_OUTOFMEMORY;
+
+    enum_profiles->IEnumTfInputProcessorProfiles_iface.lpVtbl = &EnumTfInputProcessorProfilesVtbl;
+    enum_profiles->ref = 1;
+
+    *ppEnum = &enum_profiles->IEnumTfInputProcessorProfiles_iface;
+    return S_OK;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_ReleaseInputProcessor(ITfInputProcessorProfileMgr *iface, REFCLSID rclsid,
+        DWORD dwFlags)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%s %x)\n", This, debugstr_guid(rclsid), dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_RegisterProfile(ITfInputProcessorProfileMgr *iface, REFCLSID rclsid,
+        LANGID langid, REFGUID guidProfile, const WCHAR *pchDesc, ULONG cchDesc, const WCHAR *pchIconFile,
+        ULONG cchFile, ULONG uIconIndex, HKL hklsubstitute, DWORD dwPreferredLayout, BOOL bEnabledByDefault,
+        DWORD dwFlags)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%s %x %s %s %d %s %u %u %p %x %x %x)\n", This, debugstr_guid(rclsid), langid, debugstr_guid(guidProfile),
+          debugstr_w(pchDesc), cchDesc, debugstr_w(pchIconFile), cchFile, uIconIndex, hklsubstitute, dwPreferredLayout,
+          bEnabledByDefault, dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_UnregisterProfile(ITfInputProcessorProfileMgr *iface, REFCLSID rclsid,
+        LANGID langid, REFGUID guidProfile, DWORD dwFlags)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%s %x %s %x)\n", This, debugstr_guid(rclsid), langid, debugstr_guid(guidProfile), dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InputProcessorProfileMgr_GetActiveProfile(ITfInputProcessorProfileMgr *iface, REFGUID catid,
+        TF_INPUTPROCESSORPROFILE *pProfile)
+{
+    InputProcessorProfiles *This = impl_from_ITfInputProcessorProfileMgr(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_guid(catid), pProfile);
+    return E_NOTIMPL;
+}
+
+static const ITfInputProcessorProfileMgrVtbl InputProcessorProfileMgrVtbl = {
+    InputProcessorProfileMgr_QueryInterface,
+    InputProcessorProfileMgr_AddRef,
+    InputProcessorProfileMgr_Release,
+    InputProcessorProfileMgr_ActivateProfile,
+    InputProcessorProfileMgr_DeactivateProfile,
+    InputProcessorProfileMgr_GetProfile,
+    InputProcessorProfileMgr_EnumProfiles,
+    InputProcessorProfileMgr_ReleaseInputProcessor,
+    InputProcessorProfileMgr_RegisterProfile,
+    InputProcessorProfileMgr_UnregisterProfile,
+    InputProcessorProfileMgr_GetActiveProfile
+};
+
 /*****************************************************
  * ITfSource functions
  *****************************************************/
@@ -760,6 +979,7 @@ HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut
 
     This->ITfInputProcessorProfiles_iface.lpVtbl= &InputProcessorProfilesVtbl;
     This->ITfSource_iface.lpVtbl = &InputProcessorProfilesSourceVtbl;
+    This->ITfInputProcessorProfileMgr_iface.lpVtbl = &InputProcessorProfileMgrVtbl;
     This->refCount = 1;
     This->currentLanguage = GetUserDefaultLCID();
 

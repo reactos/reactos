@@ -174,11 +174,11 @@ InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
     pContext->hTabCtrl = hTabCtrlWnd;
 
     /* create the dialogs */
-    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), pContext->hMainDialog, SystemPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[0]);
-    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), pContext->hMainDialog, MusicPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[1]);
-    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), pContext->hMainDialog, InputPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[2]);
-    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), pContext->hMainDialog, NetworkPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[3]);
-    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), pContext->hMainDialog, HelpPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[4]);
+    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), pContext->hTabCtrl, SystemPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[0]);
+    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), pContext->hTabCtrl, MusicPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[1]);
+    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), pContext->hTabCtrl, InputPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[2]);
+    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), pContext->hTabCtrl, NetworkPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[3]);
+    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), pContext->hTabCtrl, HelpPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[4]);
 
     /* insert tab ctrl items */
     InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
@@ -311,7 +311,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
  
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL,  DxDiagWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, DxDiagWndProc);
   
     return 0;
 }

@@ -110,8 +110,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         (ProcessHandle != NtCurrentProcess()))
     {
         /*
-         * Retreiving the process cookie is only allowed for the calling process
-         * itself! XP only allowes NtCurrentProcess() as process handles even if
+         * Retrieving the process cookie is only allowed for the calling process
+         * itself! XP only allows NtCurrentProcess() as process handles even if
          * a real handle actually represents the current process.
          */
         return STATUS_INVALID_PARAMETER;
@@ -960,6 +960,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             Length = sizeof(ULONG_PTR);
             if (ProcessInformationLength != Length)
             {
+                Length = 0;
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
@@ -1528,6 +1529,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Validate the number */
             if ((BasePriority > HIGH_PRIORITY) || (BasePriority <= LOW_PRIORITY))
             {
+                ObDereferenceObject(Process);
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1918,11 +1920,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessQuotaLimits:
 
-            return PspSetQuotaLimits(ProcessHandle,
+            Status = PspSetQuotaLimits(Process,
                                      1,
                                      ProcessInformation,
                                      ProcessInformationLength,
                                      PreviousMode);
+            break;
 
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halamd64/generic/tsc.c
+ * FILE:            hal/halx86/apic/tsc.c
  * PURPOSE:         HAL Routines for TSC handling
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -53,7 +53,7 @@ DoLinearRegression(
 
 VOID
 NTAPI
-HalpInitializeTsc()
+HalpInitializeTsc(VOID)
 {
     ULONG_PTR Flags;
     KIDTENTRY OldIdtEntry, *IdtPointer;

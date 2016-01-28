@@ -41,7 +41,7 @@ GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
     if(!imageattr)
         return InvalidParameter;
 
-    *imageattr = GdipAlloc(sizeof(GpImageAttributes));
+    *imageattr = heap_alloc_zero(sizeof(GpImageAttributes));
     if(!*imageattr)    return OutOfMemory;
 
     (*imageattr)->wrap = WrapModeClamp;
@@ -61,9 +61,9 @@ GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes *imageattr)
         return InvalidParameter;
 
     for (i=0; i<ColorAdjustTypeCount; i++)
-        GdipFree(imageattr->colorremaptables[i].colormap);
+        heap_free(imageattr->colorremaptables[i].colormap);
 
-    GdipFree(imageattr);
+    heap_free(imageattr);
 
     return Ok;
 }
@@ -213,21 +213,21 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
         if(!map || !mapSize)
 	    return InvalidParameter;
 
-        new_map = GdipAlloc(sizeof(*map) * mapSize);
+        new_map = heap_alloc_zero(sizeof(*map) * mapSize);
 
         if (!new_map)
             return OutOfMemory;
 
         memcpy(new_map, map, sizeof(*map) * mapSize);
 
-        GdipFree(imageAttr->colorremaptables[type].colormap);
+        heap_free(imageAttr->colorremaptables[type].colormap);
 
         imageAttr->colorremaptables[type].mapsize = mapSize;
         imageAttr->colorremaptables[type].colormap = new_map;
     }
     else
     {
-        GdipFree(imageAttr->colorremaptables[type].colormap);
+        heap_free(imageAttr->colorremaptables[type].colormap);
         imageAttr->colorremaptables[type].colormap = NULL;
     }
 
@@ -270,11 +270,10 @@ GpStatus WINGDIPAPI GdipResetImageAttributes(GpImageAttributes *imageAttr,
     if(!imageAttr || type >= ColorAdjustTypeCount)
         return InvalidParameter;
 
-    memset(&imageAttr->colorkeys[type], 0, sizeof(imageAttr->colorkeys[type]));
     memset(&imageAttr->colormatrices[type], 0, sizeof(imageAttr->colormatrices[type]));
-    memset(&imageAttr->colorremaptables[type], 0, sizeof(imageAttr->colorremaptables[type]));
-    memset(&imageAttr->gamma_enabled[type], 0, sizeof(imageAttr->gamma_enabled[type]));
-    memset(&imageAttr->gamma[type], 0, sizeof(imageAttr->gamma[type]));
+    GdipSetImageAttributesColorKeys(imageAttr, type, FALSE, 0, 0);
+    GdipSetImageAttributesRemapTable(imageAttr, type, FALSE, 0, NULL);
+    GdipSetImageAttributesGamma(imageAttr, type, FALSE, 0.0);
 
     return Ok;
 }

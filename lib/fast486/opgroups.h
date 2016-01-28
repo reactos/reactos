@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * opgroups.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,12 +42,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6);
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7);
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFE);
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF);
-FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00);
-FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01);
-FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FB9);
-FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA);
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F01);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0FB9);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0FBA);
 
 #endif // _OPGROUPS_H_
 
 /* EOF */
-

@@ -1,0 +1,59 @@
+HKCR
+{
+  NTObjShEx.RegFolder.1 = s 'Registry Folder Class'
+  {
+    CLSID = s '{1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}'
+  }
+  NTObjShEx.RegFolder = s 'Registry Folder Class'
+  {
+    CLSID = s '{1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}'
+    CurVer = s 'NTObjShEx.RegFolder.1'
+  }
+  NoRemove CLSID
+  {
+    ForceRemove {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6} = s 'System Registry Namespace Extension'
+    {
+      ProgID = s 'NTObjShEx.RegFolder.1'
+      VersionIndependentProgID = s 'NTObjShEx.RegFolder'
+      InprocServer32 = s '%MODULE%'
+      {
+        val ThreadingModel = s 'Both'
+      }
+      val InfoTip = s 'Allows browsing of the System Registry'
+      val LocalizedString = s '@%MODULE%,-102'
+      DefaultIcon = s '%MODULE%,-7'
+      ShellFolder
+      {
+        val Attributes = d '0xA8000000'
+        val BrowserFlags = d '0x22'
+      }
+    }
+  }
+}
+HKLM
+{
+  NoRemove Software
+  {
+    NoRemove Microsoft
+    {
+      NoRemove Windows
+      {
+        NoRemove CurrentVersion
+        {
+          NoRemove Explorer
+          {
+            NoRemove MyComputer
+            {
+              NoRemove NameSpace
+              {
+                ForceRemove {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6} = s 'System Registry'
+                {
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

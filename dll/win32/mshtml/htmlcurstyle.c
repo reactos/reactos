@@ -55,34 +55,28 @@ static HRESULT WINAPI HTMLCurrentStyle_QueryInterface(IHTMLCurrentStyle *iface, 
 {
     HTMLCurrentStyle *This = impl_from_IHTMLCurrentStyle(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLCurrentStyle_iface;
     }else if(IsEqualGUID(&IID_IHTMLCurrentStyle, riid)) {
-        TRACE("(%p)->(IID_IHTMLCurrentStyle %p)\n", This, ppv);
         *ppv = &This->IHTMLCurrentStyle_iface;
     }else if(IsEqualGUID(&IID_IHTMLCurrentStyle2, riid)) {
-        TRACE("(%p)->(IID_IHTMLCurrentStyle2 %p)\n", This, ppv);
         *ppv = &This->IHTMLCurrentStyle2_iface;
     }else if(IsEqualGUID(&IID_IHTMLCurrentStyle3, riid)) {
-        TRACE("(%p)->(IID_IHTMLCurrentStyle3 %p)\n", This, ppv);
         *ppv = &This->IHTMLCurrentStyle3_iface;
     }else if(IsEqualGUID(&IID_IHTMLCurrentStyle4, riid)) {
-        TRACE("(%p)->(IID_IHTMLCurrentStyle4 %p)\n", This, ppv);
         *ppv = &This->IHTMLCurrentStyle4_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("unsupported %s\n", debugstr_mshtml_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("unsupported %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLCurrentStyle_AddRef(IHTMLCurrentStyle *iface)
@@ -785,8 +779,8 @@ static HRESULT WINAPI HTMLCurrentStyle_get_overflowY(IHTMLCurrentStyle *iface, B
 static HRESULT WINAPI HTMLCurrentStyle_get_textTransform(IHTMLCurrentStyle *iface, BSTR *p)
 {
     HTMLCurrentStyle *This = impl_from_IHTMLCurrentStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+    return get_nsstyle_attr(This->nsstyle, STYLEID_TEXT_TRANSFORM, p, 0);
 }
 
 static const IHTMLCurrentStyleVtbl HTMLCurrentStyleVtbl = {
@@ -1183,8 +1177,10 @@ static HRESULT WINAPI HTMLCurrentStyle3_get_wordSpacing(IHTMLCurrentStyle3 *ifac
 static HRESULT WINAPI HTMLCurrentStyle3_get_whiteSpace(IHTMLCurrentStyle3 *iface, BSTR *p)
 {
     HTMLCurrentStyle *This = impl_from_IHTMLCurrentStyle3(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr(This->nsstyle, STYLEID_WHITE_SPACE, p, 0);
 }
 
 static const IHTMLCurrentStyle3Vtbl HTMLCurrentStyle3Vtbl = {
@@ -1330,8 +1326,14 @@ HRESULT HTMLCurrentStyle_Create(HTMLElement *elem, IHTMLCurrentStyle **p)
     nsAString_Init(&nsempty_str, NULL);
     nsres = nsIDOMWindow_GetComputedStyle(nsview, (nsIDOMElement*)elem->nselem, &nsempty_str, &nsstyle);
     nsAString_Finish(&nsempty_str);
+    nsIDOMWindow_Release(nsview);
     if(NS_FAILED(nsres)) {
         ERR("GetComputedStyle failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    if(!nsstyle) {
+        ERR("GetComputedStyle returned NULL nsstyle\n");
         return E_FAIL;
     }
 

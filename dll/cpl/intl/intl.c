@@ -60,8 +60,24 @@ PrintErrorMsgBox(UINT msg)
     MessageBox(NULL, szErrorText, szErrorCaption, MB_OK | MB_ICONERROR);
 }
 
+VOID
+ResourceMessageBox(
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId)
+{
+    WCHAR szErrorText[BUFFERSIZE];
+    WCHAR szErrorCaption[BUFFERSIZE];
+
+    LoadStringW(hApplet, uMessageId, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+    LoadStringW(hApplet, uCaptionId, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
+
+    MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
+}
+
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -69,31 +85,32 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
     psp->hInstance = hApplet;
     psp->pszTemplate = MAKEINTRESOURCE(idDlg);
     psp->pfnDlgProc = DlgProc;
+    psp->lParam = lParam;
 }
 
 BOOL
 OpenSetupInf(VOID)
 {
-    LPTSTR lpCmdLine;
-    LPTSTR lpSwitch;
+    PWSTR lpCmdLine;
+    PWSTR lpSwitch;
     size_t len;
 
-    lpCmdLine = GetCommandLine();
+    lpCmdLine = GetCommandLineW();
 
-    lpSwitch = _tcsstr(lpCmdLine, _T("/f:\""));
+    lpSwitch = wcsstr(lpCmdLine, L"/f:\"");
     if (!lpSwitch)
         return FALSE;
 
-    len = _tcslen(lpSwitch);
-    if (len < 5 || lpSwitch[len-1] != _T('\"'))
+    len = wcslen(lpSwitch);
+    if (len < 5 || lpSwitch[len-1] != L'\"')
     {
         DPRINT1("Invalid switch: %ls\n", lpSwitch);
         return FALSE;
     }
 
-    lpSwitch[len-1] = _T('\0');
+    lpSwitch[len-1] = L'\0';
 
-    hSetupInf = SetupOpenInfFile(&lpSwitch[4], NULL, INF_STYLE_OLDNT, NULL);
+    hSetupInf = SetupOpenInfFileW(&lpSwitch[4], NULL, INF_STYLE_OLDNT, NULL);
     if (hSetupInf == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to open INF file: %ls\n", &lpSwitch[4]);
@@ -107,27 +124,27 @@ VOID
 ParseSetupInf(VOID)
 {
     INFCONTEXT InfContext;
-    TCHAR szBuffer[30];
+    WCHAR szBuffer[30];
 
-    if (!SetupFindFirstLine(hSetupInf,
-                            _T("Unattend"),
-                            _T("LocaleID"),
-                            &InfContext))
+    if (!SetupFindFirstLineW(hSetupInf,
+                             L"Unattend",
+                             L"LocaleID",
+                             &InfContext))
     {
         SetupCloseInfFile(hSetupInf);
         DPRINT1("SetupFindFirstLine failed\n");
         return;
     }
 
-    if (!SetupGetStringField(&InfContext, 1, szBuffer,
-                             sizeof(szBuffer) / sizeof(TCHAR), NULL))
+    if (!SetupGetStringFieldW(&InfContext, 1, szBuffer,
+                              sizeof(szBuffer) / sizeof(WCHAR), NULL))
     {
         SetupCloseInfFile(hSetupInf);
         DPRINT1("SetupGetStringField failed\n");
         return;
     }
 
-    UnattendLCID = _tcstoul(szBuffer, NULL, 16);
+    UnattendLCID = wcstoul(szBuffer, NULL, 16);
     IsUnattendedSetupEnabled = 1;
     SetupCloseInfFile(hSetupInf);
 }
@@ -135,33 +152,53 @@ ParseSetupInf(VOID)
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
+    TCHAR Caption[BUFFERSIZE];
     PROPSHEETPAGE psp[3];
     PROPSHEETHEADER psh;
-    TCHAR Caption[BUFFERSIZE];
+    PGLOBALDATA pGlobalData;
+    LONG ret;
 
     if (OpenSetupInf())
     {
         ParseSetupInf();
     }
 
+    pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBALDATA));
+    if (pGlobalData == NULL)
+        return FALSE;
+
+    pGlobalData->SystemLCID = GetSystemDefaultLCID();
+    pGlobalData->bIsUserAdmin = IsUserAdmin();
+
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
     psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nPages = 0; //sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc);
-    InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc);
-    InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc);
+    InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc, (LPARAM)pGlobalData);
+    psh.nPages++;
+    InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc, (LPARAM)pGlobalData);
+    psh.nPages++;
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    if (pGlobalData->bIsUserAdmin)
+    {
+        InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc, (LPARAM)pGlobalData);
+        psh.nPages++;
+    }
+
+    ret = (LONG)(PropertySheet(&psh) != -1);
+
+    HeapFree(GetProcessHeap(), 0, pGlobalData);
+
+    return ret;
 }
 
 

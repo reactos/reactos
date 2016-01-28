@@ -100,7 +100,7 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
     case_clausule_t *case_clausule;
     unsigned uint;
     LONG lng;
-    BOOL bool;
+    BOOL boolean;
     double dbl;
 }
 
@@ -128,8 +128,8 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 %type <expression> NotExpression UnaryExpression AndExpression OrExpression XorExpression EqvExpression
 %type <expression> ConstExpression NumericLiteralExpression
 %type <member> MemberExpression
-%type <expression> Arguments_opt ArgumentList_opt Step_opt ExpressionList
-%type <bool> OptionExplicit_opt DoType
+%type <expression> Arguments_opt ArgumentList ArgumentList_opt Step_opt ExpressionList
+%type <boolean> OptionExplicit_opt DoType
 %type <arg_decl> ArgumentsDecl_opt ArgumentDeclList ArgumentDecl
 %type <func_decl> FunctionDecl PropertyDecl
 %type <elseif> ElseIfs_opt ElseIfs ElseIf
@@ -246,10 +246,10 @@ Step_opt
 
 IfStatement
     : tIF Expression tTHEN tNL StatementsNl_opt ElseIfs_opt Else_opt tEND tIF
-                                            { $$ = new_if_statement(ctx, $2, $5, $6, $7); CHECK_ERROR; }
-    | tIF Expression tTHEN Statement        { $$ = new_if_statement(ctx, $2, $4, NULL, NULL); CHECK_ERROR; }
+                                               { $$ = new_if_statement(ctx, $2, $5, $6, $7); CHECK_ERROR; }
+    | tIF Expression tTHEN Statement EndIf_opt { $$ = new_if_statement(ctx, $2, $4, NULL, NULL); CHECK_ERROR; }
     | tIF Expression tTHEN Statement tELSE Statement EndIf_opt
-                                            { $$ = new_if_statement(ctx, $2, $4, NULL, $6); CHECK_ERROR; }
+                                               { $$ = new_if_statement(ctx, $2, $4, NULL, $6); CHECK_ERROR; }
 
 EndIf_opt
     : /* empty */
@@ -279,11 +279,16 @@ CaseClausules
 
 Arguments_opt
     : EmptyBrackets_opt             { $$ = NULL; }
-    | '(' ExpressionList ')'        { $$ = $2; }
+    | '(' ArgumentList ')'          { $$ = $2; }
 
 ArgumentList_opt
     : EmptyBrackets_opt             { $$ = NULL; }
-    | ExpressionList                { $$ = $1; }
+    | ArgumentList                  { $$ = $1; }
+
+ArgumentList
+    : Expression                    { $$ = $1; }
+    | Expression ',' ArgumentList   { $1->next = $3; $$ = $1; }
+    | ',' ArgumentList              { $$ = new_expression(ctx, EXPR_NOARG, 0); CHECK_ERROR; $$->next = $2; }
 
 EmptyBrackets_opt
     : /* empty */
@@ -403,8 +408,8 @@ ClassBody
     | PropertyDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
 
 PropertyDecl
-    : Storage_opt tPROPERTY tGET tIdentifier EmptyBrackets_opt tNL StatementsNl_opt tEND tPROPERTY
-                                    { $$ = new_function_decl(ctx, $4, FUNC_PROPGET, $1, NULL, $7); CHECK_ERROR; }
+    : Storage_opt tPROPERTY tGET tIdentifier ArgumentsDecl_opt tNL StatementsNl_opt tEND tPROPERTY
+                                    { $$ = new_function_decl(ctx, $4, FUNC_PROPGET, $1, $5, $7); CHECK_ERROR; }
     | Storage_opt tPROPERTY tLET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY
                                     { $$ = new_function_decl(ctx, $4, FUNC_PROPLET, $1, $6, $9); CHECK_ERROR; }
     | Storage_opt tPROPERTY tSET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY

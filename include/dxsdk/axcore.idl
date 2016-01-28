@@ -488,6 +488,7 @@ cpp_quote("#define AM_GBF_PREVFRAMESKIPPED 1")
 cpp_quote("#define AM_GBF_NOTASYNCPOINT 2")
 
 cpp_quote("#define AM_GBF_NOWAIT 4")
+cpp_quote("#define AM_GBF_NODDSURFACELOCK 8")
 
 [
 object,
@@ -668,3 +669,42 @@ enum tagAM_MEDIAEVENT_FLAGS
 {
     AM_MEDIAEVENT_NONOTIFY = 0x01
 };
+
+enum _AMSTREAMSELECTINFOFLAGS
+{
+    AMSTREAMSELECTINFO_ENABLED      = 0x1,
+    AMSTREAMSELECTINFO_EXCLUSIVE    = 0x2
+};
+
+enum _AMSTREAMSELECTENABLEFLAGS
+{
+    AMSTREAMSELECTENABLE_ENABLE     = 0x1,
+    AMSTREAMSELECTENABLE_ENABLEALL  = 0x2
+};
+
+[
+object,
+uuid(c1960960-17f5-11d1-abe1-00a0c905f375),
+pointer_default(unique)
+]
+interface IAMStreamSelect : IUnknown
+{
+    HRESULT Count(
+        [out] DWORD *streams);
+
+    HRESULT Info(
+        [in] long index,
+        [out] AM_MEDIA_TYPE **media_type,
+        [out] DWORD *flags,
+        [out] LCID *lcid,
+        [out] DWORD *group,
+        [out] WCHAR **name,
+        [out] IUnknown **object,
+        [out] IUnknown **unknown);
+
+    HRESULT Enable(
+        [in] long index,
+        [in] DWORD flags);
+}
+
+typedef IAMStreamSelect *PAMSTREAMSELECT;

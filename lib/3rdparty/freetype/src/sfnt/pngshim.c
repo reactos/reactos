@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013 by Google, Inc.                                         */
+/*  Copyright 2013-2015 by                                                 */
+/*  Google, Inc.                                                           */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,11 +37,11 @@
   /* This code is freely based on cairo-png.c.  There's so many ways */
   /* to call libpng, and the way cairo does it is defacto standard.  */
 
-  static int
-  multiply_alpha( int  alpha,
-                  int  color )
+  static unsigned int
+  multiply_alpha( unsigned int  alpha,
+                  unsigned int  color )
   {
-    int  temp = ( alpha * color ) + 0x80;
+    unsigned int  temp = alpha * color + 0x80;
 
 
     return ( temp + ( temp >> 8 ) ) >> 8;
@@ -81,10 +82,10 @@
           blue  = multiply_alpha( alpha, blue  );
         }
 
-        base[0] = blue;
-        base[1] = green;
-        base[2] = red;
-        base[3] = alpha;
+        base[0] = (unsigned char)blue;
+        base[1] = (unsigned char)green;
+        base[2] = (unsigned char)red;
+        base[3] = (unsigned char)alpha;
       }
     }
   }
@@ -109,9 +110,9 @@
       unsigned int    blue  = base[2];
 
 
-      base[0] = blue;
-      base[1] = green;
-      base[2] = red;
+      base[0] = (unsigned char)blue;
+      base[1] = (unsigned char)green;
+      base[2] = (unsigned char)red;
       base[3] = 0xFF;
     }
   }
@@ -129,7 +130,7 @@
 
     *error = FT_THROW( Out_Of_Memory );
 #ifdef PNG_SETJMP_SUPPORTED
-    longjmp( png_jmpbuf( png ), 1 );
+    ft_longjmp( png_jmpbuf( png ), 1 );
 #endif
     /* if we get here, then we have no choice but to abort ... */
   }
@@ -205,11 +206,11 @@
       goto Exit;
     }
 
-    if ( !populate_map_and_metrics                   &&
-         ( x_offset + metrics->width  > map->width ||
-           y_offset + metrics->height > map->rows  ||
-           pix_bits != 32                          ||
-           map->pixel_mode != FT_PIXEL_MODE_BGRA   ) )
+    if ( !populate_map_and_metrics                            &&
+         ( (FT_UInt)x_offset + metrics->width  > map->width ||
+           (FT_UInt)y_offset + metrics->height > map->rows  ||
+           pix_bits != 32                                   ||
+           map->pixel_mode != FT_PIXEL_MODE_BGRA            ) )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;
@@ -257,19 +258,27 @@
 
     if ( populate_map_and_metrics )
     {
-      FT_Long  size;
+      FT_ULong  size;
 
 
-      metrics->width  = (FT_Int)imgWidth;
-      metrics->height = (FT_Int)imgHeight;
+      metrics->width  = (FT_UShort)imgWidth;
+      metrics->height = (FT_UShort)imgHeight;
 
       map->width      = metrics->width;
       map->rows       = metrics->height;
       map->pixel_mode = FT_PIXEL_MODE_BGRA;
-      map->pitch      = map->width * 4;
+      map->pitch      = (int)( map->width * 4 );
       map->num_grays  = 256;
 
-      size = map->rows * map->pitch;
+      /* reject too large bitmaps similarly to the rasterizer */
+      if ( map->rows > 0x7FFF || map->width > 0x7FFF )
+      {
+        error = FT_THROW( Array_Too_Large );
+        goto DestroyExit;
+      }
+
+      /* this doesn't overflow: 0x7FFF * 0x7FFF * 4 < 2^32 */
+      size = map->rows * (FT_ULong)map->pitch;
 
       error = ft_glyphslot_alloc_bitmap( slot, size );
       if ( error )

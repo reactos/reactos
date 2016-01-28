@@ -1,4 +1,4 @@
-/* TRANSLATOR : M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR : M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.: 02-02-2008
  * LAST CHANGE: 14-06-2009
  */
@@ -7,32 +7,32 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "R˝chlosù"
+CAPTION "R√Ωchlos≈•"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Opakovanie znakov", -1, 5, 5, 230, 130
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-    LTEXT "Oneskorenie pre&d opakovanÌm:", -1, 40, 15, 50, 10
-    LTEXT "dlhÈ", -1, 40, 30, 20, 10
-    LTEXT "kr·tke", -1, 200, 30, 20, 10
+    LTEXT "Oneskorenie pre&d opakovan√≠m:", -1, 40, 15, 50, 10
+    LTEXT "dlh√©", -1, 40, 30, 20, 10
+    LTEXT "kr√°tke", -1, 200, 30, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-    LTEXT "&R˝chlosù opakovania:", -1, 40, 70, 50, 10
-    LTEXT "mal·", -1, 40, 85, 20, 10 // pomaly
-    LTEXT "veæk·", -1, 200, 85, 20, 10 // r˝chlo
+    LTEXT "&R√Ωchlos≈• opakovania:", -1, 40, 70, 50, 10
+    LTEXT "mal√°", -1, 40, 85, 20, 10 // pomaly
+    LTEXT "veƒæk√°", -1, 200, 85, 20, 10 // r√Ωchlo
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "Kliknite sem a podrûte kl·ves k o&testovaniu r˝chlosti opakovania:", -1, 15, 105, 150, 10
+    LTEXT "Kliknite sem a podr≈æte kl√°ves k o&testovaniu r√Ωchlosti opakovania:", -1, 15, 105, 150, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "&Blikanie kurzora:", -1, 5, 145, 230, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-    LTEXT "ûiadne", -1, 40, 165, 30, 10
-    LTEXT "r˝chle", -1, 200, 165, 30, 10
+    LTEXT "≈æiadne", -1, 40, 165, 30, 10
+    LTEXT "r√Ωchle", -1, 200, 165, 30, 10
     CONTROL "", IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "HardvÈr"
+CAPTION "Hardv√©r"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -46,7 +46,7 @@ BEGIN
     LTEXT "Long", -1, 157, 35, 27, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
     PUSHBUTTON "&OK", IDOK, 110, 59, 60, 14
-    PUSHBUTTON "&Zruöiù", IDCANCEL, 175, 75, 50, 15
+    PUSHBUTTON "&Zru≈°i≈•", IDCANCEL, 175, 75, 50, 15
     LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked", -1, 37, 5, 200, 27
     ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
@@ -91,13 +91,13 @@ END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Uloûenie schÈmy"
+CAPTION "Ulo≈æenie sch√©my"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uloûiù t˙to schÈmu ukazovateæov ako:", -1, 5, 5, 100, 10
+    LTEXT "Ulo≈æi≈• t√∫to sch√©mu ukazovateƒæov ako:", -1, 5, 5, 100, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&OK", IDOK, 63, 35, 60, 14
-    PUSHBUTTON "&Zruöiù", IDCANCEL, 115, 45, 50, 15
+    PUSHBUTTON "&Zru≈°i≈•", IDCANCEL, 115, 45, 50, 15
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
@@ -145,32 +145,32 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Myö"
-    IDS_CPLDESCRIPTION_1 "PrispÙsobÌ nastavenia myöi."
-    IDS_CPLNAME_2 "Kl·vesnica"
-    IDS_CPLDESCRIPTION_2 "PrispÙsobÌ nastavenia kl·vesnice."
-    IDS_ARROW "Norm·lny v˝ber"
-    IDS_HELP "V˝ber PomocnÌka"
-    IDS_APPSTARTING "Pracuje sa v pozadÌ"
-    IDS_WAIT "Zanepr·zdnen˝"
-    IDS_CROSSHAIR "Presn˝ v˝ber"
-    IDS_IBEAM "V˝ber textu"
+    IDS_CPLNAME_1 "My≈°"
+    IDS_CPLDESCRIPTION_1 "Prisp√¥sob√≠ nastavenia my≈°i."
+    IDS_CPLNAME_2 "Kl√°vesnica"
+    IDS_CPLDESCRIPTION_2 "Prisp√¥sob√≠ nastavenia kl√°vesnice."
+    IDS_ARROW "Norm√°lny v√Ωber"
+    IDS_HELP "V√Ωber Pomocn√≠ka"
+    IDS_APPSTARTING "Pracuje sa v pozad√≠"
+    IDS_WAIT "Zanepr√°zdnen√Ω"
+    IDS_CROSSHAIR "Presn√Ω v√Ωber"
+    IDS_IBEAM "V√Ωber textu"
     IDS_NWPEN "Rukopis"
-    IDS_NO "Nie je k dispozÌcii"
-    IDS_SIZENS "Zvisl· zmena veækosti"
-    IDS_SIZEWE "Vodorovn· zmena veækosti"
-    IDS_SIZENWSE "UhloprieËna zmena veækosti 1"
-    IDS_SIZENESW "UhloprieËna zmena veækosti 2"
-    IDS_SIZEALL "Premiestniù"
-    IDS_UPARROW "AlternatÌvny v˝ber"
-    IDS_HAND "V˝ber prepojenia"
+    IDS_NO "Nie je k dispoz√≠cii"
+    IDS_SIZENS "Zvisl√° zmena veƒækosti"
+    IDS_SIZEWE "Vodorovn√° zmena veƒækosti"
+    IDS_SIZENWSE "Uhloprieƒçna zmena veƒækosti 1"
+    IDS_SIZENESW "Uhloprieƒçna zmena veƒækosti 2"
+    IDS_SIZEALL "Premiestni≈•"
+    IDS_UPARROW "Alternat√≠vny v√Ωber"
+    IDS_HAND "V√Ωber prepojenia"
     IDS_NONE "(Nie je)"
-    IDS_SYSTEM_SCHEME "(systÈmov· schÈma)"
-    IDS_BROWSE_FILTER "Ukazovatele myöi (*.ani, *.cur)\0*.ani;*.cur\0AnimovanÈ ukazovatele (*.ani)\0*.ani\0StatickÈ ukazovatele (*.cur)\0*.cur\0Vöetky s˙bory\0*.*\0\0"
-    IDS_BROWSE_TITLE "Prehæad·vaù"
-    IDS_REMOVE_TITLE "Potvrdiù odstr·nenie schÈmy ukazovateæov"
+    IDS_SYSTEM_SCHEME "(syst√©mov√° sch√©ma)"
+    IDS_BROWSE_FILTER "Ukazovatele my≈°i (*.ani, *.cur)\0*.ani;*.cur\0Animovan√© ukazovatele (*.ani)\0*.ani\0Statick√© ukazovatele (*.cur)\0*.cur\0V≈°etky s√∫bory\0*.*\0\0"
+    IDS_BROWSE_TITLE "Prehƒæad√°va≈•"
+    IDS_REMOVE_TITLE "Potvrdi≈• odstr√°nenie sch√©my ukazovateƒæov"
     IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-    IDS_OVERWRITE_TITLE "Potvrdiù prepÌsanie schÈmy ukazovateæov"
+    IDS_OVERWRITE_TITLE "Potvrdi≈• prep√≠sanie sch√©my ukazovateƒæov"
     IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
-    IDS_ANIMATE_CURSOR "Animovan˝ ukazovateæ"
+    IDS_ANIMATE_CURSOR "Animovan√Ω ukazovateƒæ"
 END

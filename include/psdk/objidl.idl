@@ -2441,6 +2441,16 @@ interface IGlobalOptions : IUnknown
     HRESULT Query([in] GLOBALOPT_PROPERTIES property, [out ] ULONG_PTR *value);
 }
 
+[
+    object,
+    pointer_default(unique),
+    uuid(947990de-cc28-11d2-a0f7-00805f858fb1)
+]
+interface IDummyHICONIncluder : IUnknown
+{
+    HRESULT Dummy([in] HICON hIcon, [in] HDC hdc);
+}
+
 cpp_quote("#ifdef USE_COM_CONTEXT_DEF")
 
 typedef DWORD CPFLAGS;

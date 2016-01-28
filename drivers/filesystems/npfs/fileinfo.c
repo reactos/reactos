@@ -27,13 +27,13 @@ NpSetBasicInfo(IN PNP_CCB Ccb,
 NTSTATUS
 NTAPI
 NpSetPipeInfo(IN PNP_FCB Fcb,
-              IN PNP_CCB Ccb, 
+              IN PNP_CCB Ccb,
               IN PFILE_PIPE_INFORMATION Buffer,
-              IN ULONG NamedPipeEnd, 
+              IN ULONG NamedPipeEnd,
               IN PLIST_ENTRY List)
 {
     NTSTATUS Status;
-    PNP_DATA_QUEUE ReadQueue, WriteQueue; 
+    PNP_DATA_QUEUE ReadQueue, WriteQueue;
     PAGED_CODE();
 
     if (Buffer->ReadMode == FILE_PIPE_MESSAGE_MODE && Fcb->NamedPipeType == FILE_PIPE_BYTE_STREAM_TYPE)
@@ -58,7 +58,7 @@ NpSetPipeInfo(IN PNP_FCB Fcb,
 
     if (Buffer->CompletionMode != FILE_PIPE_COMPLETE_OPERATION ||
         Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION ||
-        (ReadQueue->QueueState == ReadEntries &&
+        (ReadQueue->QueueState != ReadEntries &&
         WriteQueue->QueueState != WriteEntries))
     {
         Ccb->ReadMode[NamedPipeEnd] = Buffer->ReadMode & 0xFF;
@@ -103,7 +103,7 @@ NpCommonSetInformation(IN PDEVICE_OBJECT DeviceObject,
     Buffer = Irp->AssociatedIrp.SystemBuffer;
 
     if (InfoClass == FileBasicInformation) return NpSetBasicInfo(Ccb, Buffer);
-    
+
     if (InfoClass != FilePipeInformation) return STATUS_INVALID_PARAMETER;
 
     return NpSetPipeInfo(Fcb, Ccb, Buffer, NamedPipeEnd, List);

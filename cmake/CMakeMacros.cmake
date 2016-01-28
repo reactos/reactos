@@ -72,6 +72,8 @@ macro(set_cpp)
         if(MSVC)
             add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++)
             include_directories(${REACTOS_SOURCE_DIR}/include/c++/stlport)
+        else()
+            replace_compile_flags("-nostdinc" " ")
         endif()
     endif()
 
@@ -169,7 +171,7 @@ macro(dir_to_num dir var)
         set(${var} 6)
     elseif(${dir} STREQUAL reactos/bin)
         set(${var} 7)
-    elseif(${dir} STREQUAL reactos/bin/data)
+    elseif(${dir} STREQUAL reactos/bin/testdata)
         set(${var} 8)
     elseif(${dir} STREQUAL reactos/media)
         set(${var} 9)
@@ -265,7 +267,7 @@ macro(dir_to_num dir var)
 endmacro()
 
 function(add_cd_file)
-    cmake_parse_arguments(_CD "NO_CAB" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -286,8 +288,10 @@ function(add_cd_file)
     endif()
 
     #do we add it to all CDs?
-    if(_CD_FOR STREQUAL all)
-        set(_CD_FOR "bootcd;livecd;regtest")
+    list(FIND _CD_FOR all __cd)
+    if(NOT __cd EQUAL -1)
+        list(REMOVE_AT _CD_FOR __cd)
+        list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
     #do we add it to bootcd?
@@ -304,10 +308,14 @@ function(add_cd_file)
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                #add it also into the hybridcd if not specified otherwise
+                if(NOT _CD_NOT_IN_HYBRIDCD)
+                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                endif()
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcd ${_CD_TARGET} converted_hives)
+                add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
             #add it in reactos.cab
@@ -329,7 +337,7 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         #manage dependency
         if(_CD_TARGET)
-            add_dependencies(livecd ${_CD_TARGET} converted_hives)
+            add_dependencies(livecd ${_CD_TARGET} registry_inf)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
@@ -339,8 +347,26 @@ function(add_cd_file)
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            #add it also into the hybridcd if not specified otherwise
+            if(NOT _CD_NOT_IN_HYBRIDCD)
+                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
+            endif()
         endforeach()
     endif() #end livecd
+
+    #do we need also to add it to hybridcd?
+    list(FIND _CD_FOR hybridcd __cd)
+    if(NOT __cd EQUAL -1)
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                #rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+        endforeach()
+    endif() #end hybridcd
 
     #do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
@@ -359,7 +385,7 @@ function(add_cd_file)
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcdregtest ${_CD_TARGET} converted_hives)
+                add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
             endif()
         else()
             #add it in reactos.cab
@@ -397,6 +423,11 @@ function(create_iso_lists)
         DESTINATION reactos
         NO_CAB FOR bootcd regtest)
 
+    add_cd_file(
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
+        DESTINATION livecd
+        FOR hybridcd)
+
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
@@ -405,6 +436,11 @@ function(create_iso_lists)
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.lst "${_filelist}")
+    unset(_filelist)
+
+    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.lst "${_filelist}")
     unset(_filelist)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
@@ -469,30 +505,24 @@ elseif(USE_FOLDER_STRUCTURE)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    macro(to_win_path _cmake_path _native_path)
-        string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
-    endmacro()
-
-    # yeah the parameter mess sucks, but thats what works...
-    function(concatenate_files _file1 _target2 _output)
-        get_target_property(_file2 ${_target2} LOCATION)
-        to_win_path("${_file1}" _real_file1)
-        to_win_path("${_file2}" _real_file2)
-        to_win_path("${_output}" _real_output)
+    function(concatenate_files _output _file1)
+        file(TO_NATIVE_PATH "${_output}" _real_output)
+        file(TO_NATIVE_PATH "${_file1}" _file_list)
+        foreach(_file ${ARGN})
+            file(TO_NATIVE_PATH "${_file}" _real_file)
+            set(_file_list "${_file_list} + ${_real_file}")
+        endforeach()
         add_custom_command(
             OUTPUT ${_output}
-            COMMAND cmd.exe /C "copy /Y /B ${_real_file1} + ${_real_file2} ${_real_output} > nul"
-            DEPENDS ${_file1}
-            DEPENDS ${_target2})
+            COMMAND cmd.exe /C "copy /Y /B ${_file_list} ${_real_output} > nul"
+            DEPENDS ${_file1} ${ARGN})
     endfunction()
 else()
-    macro(concatenate_files _file1 _target2 _output)
-        get_target_property(_file2 ${_target2} LOCATION)
+    macro(concatenate_files _output)
         add_custom_command(
             OUTPUT ${_output}
-            COMMAND cat ${_file1} ${_file2} > ${_output}
-            DEPENDS ${_file1}
-            DEPENDS ${_target2})
+            COMMAND cat ${ARGN} > ${_output}
+            DEPENDS ${ARGN})
     endmacro()
 endif()
 
@@ -510,32 +540,26 @@ function(add_importlibs _module)
 endfunction()
 
 function(set_module_type MODULE TYPE)
-    cmake_parse_arguments(__module "UNICODE;HOTPATCHABLE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
+    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
     if(__module_UNPARSED_ARGUMENTS)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
+    # Add the module to the module group list, if it is defined
+    if(DEFINED CURRENT_MODULE_GROUP)
+        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
+    endif()
+
     # Set subsystem. Also take this as an occasion
     # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
+            OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
         set(__subsystem native)
     elseif(${TYPE} STREQUAL win32cui)
         set(__subsystem console)
     elseif(${TYPE} STREQUAL win32gui)
         set(__subsystem windows)
-    elseif(${TYPE} STREQUAL kbdlayout)
-        set_entrypoint(${MODULE} 0)
-        set_image_base(${MODULE} 0x5FFF0000)
-        set_subsystem(${MODULE} native)
-        if (MSVC)
-            # Merge the .text and .rdata section into the .data section
-            add_target_link_flags(${MODULE} "/ignore:4254 /SECTION:.data,ER /MERGE:.text=.data /MERGE:.rdata=.data /MERGE:.bss=.data /MERGE:.edata=.data")
-        else()
-            # Use a custom linker script
-            add_target_link_flags(${MODULE} "-Wl,-T,${CMAKE_SOURCE_DIR}/kbdlayout.lds")
-            add_dependencies(${MODULE} "${CMAKE_SOURCE_DIR}/kbdlayout.lds")
-        endif()
     elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
@@ -548,17 +572,6 @@ function(set_module_type MODULE TYPE)
     #set unicode definitions
     if(__module_UNICODE)
         add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
-    endif()
-
-    # Handle hotpatchable images.
-    # GCC has this as a function attribute so we're handling it using DECLSPEC_HOTPATCH
-    if(__module_HOTPATCHABLE AND MSVC AND (NOT ARCH STREQUAL "arm"))
-        set_property(TARGET ${MODULE} APPEND_STRING PROPERTY COMPILE_FLAGS " /hotpatch")
-        if(ARCH STREQUAL "i386")
-            set_property(TARGET ${MODULE} APPEND_STRING PROPERTY LINK_FLAGS " /FUNCTIONPADMIN:5")
-        elseif(ARCH STREQUAL "amd64")
-            set_property(TARGET ${MODULE} APPEND_STRING PROPERTY LINK_FLAGS " /FUNCTIONPADMIN:6")
-        endif()
     endif()
 
     # set entry point
@@ -610,21 +623,23 @@ function(set_module_type MODULE TYPE)
 
     #set base address
     if(__module_IMAGEBASE)
-        set_image_base(${MODULE} __module_IMAGEBASE)
+        set_image_base(${MODULE} ${__module_IMAGEBASE})
     elseif(${TYPE} STREQUAL win32dll)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
         else()
             message(STATUS "${MODULE} has no base address")
         endif()
-    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
         set_image_base(${MODULE} 0x00010000)
     endif()
 
     # Now do some stuff which is specific to each type
-    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
-        add_dependencies(${MODULE} bugcodes)
-        set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
+        add_dependencies(${MODULE} bugcodes xdk)
+        if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+            set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+        endif()
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
@@ -639,9 +654,25 @@ function(set_module_type MODULE TYPE)
     set_module_type_toolchain(${MODULE} ${TYPE})
 endfunction()
 
+function(start_module_group __name)
+    if(DEFINED CURRENT_MODULE_GROUP)
+        message(FATAL_ERROR "CURRENT_MODULE_GROUP is already set ('${CURRENT_MODULE_GROUP}')")
+    endif()
+    set(CURRENT_MODULE_GROUP ${__name} PARENT_SCOPE)
+endfunction()
+
+function(end_module_group)
+    get_property(__modulelist GLOBAL PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST)
+    add_custom_target(${CURRENT_MODULE_GROUP})
+    foreach(__module ${__modulelist})
+        add_dependencies(${CURRENT_MODULE_GROUP} ${__module})
+    endforeach()
+    set(CURRENT_MODULE_GROUP PARENT_SCOPE)
+endfunction()
+
 function(preprocess_file __in __out)
     set(__arg ${__in})
-    foreach(__def in ${ARGN})
+    foreach(__def ${ARGN})
         list(APPEND __arg -D${__def})
     endforeach()
     if(MSVC)
@@ -681,8 +712,100 @@ else()
     endfunction()
 endif()
 
+function(add_registry_inf)
+    # Add to the inf files list
+    foreach(_file ${ARGN})
+        set(_source_file "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
+        set_property(GLOBAL APPEND PROPERTY REGISTRY_INF_LIST ${_source_file})
+    endforeach()
+endfunction()
+
+function(create_registry_hives)
+
+    # Shortcut to the registry.inf file
+    set(_registry_inf "${CMAKE_BINARY_DIR}/boot/bootdata/registry.inf")
+
+    # Get the list of inf files
+    get_property(_inf_files GLOBAL PROPERTY REGISTRY_INF_LIST)
+
+    # Convert files to utf16le
+    foreach(_file ${_inf_files})
+        get_filename_component(_file_name ${_file} NAME_WE)
+        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
+        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        add_custom_command(OUTPUT ${_converted_file}
+                           COMMAND native-utf16le ${_file} ${_converted_file}
+                           DEPENDS native-utf16le ${_file})
+        list(APPEND _converted_files ${_converted_file})
+    endforeach()
+
+    # Concatenate all registry files to registry.inf
+    concatenate_files(${_registry_inf} ${_converted_files})
+
+    # Add registry.inf to bootcd
+    add_custom_target(registry_inf DEPENDS ${_registry_inf})
+    add_cd_file(TARGET registry_inf
+                FILE ${_registry_inf}
+                DESTINATION reactos
+                NO_CAB
+                FOR bootcd regtest)
+
+    # livecd hives
+    list(APPEND _livecd_inf_files
+        ${_registry_inf}
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
+
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+        COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/ ${_livecd_inf_files}
+        DEPENDS native-mkhive ${_livecd_inf_files})
+
+    add_custom_target(livecd_hives
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system)
+
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+        TARGET livecd_hives
+        DESTINATION reactos/system32/config
+        FOR livecd)
+
+    # BCD Hive
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+        COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/ ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
+        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivebcd.inf)
+
+    add_custom_target(bcd_hive
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
+
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+        TARGET bcd_hive
+        DESTINATION efi/boot
+        NO_CAB
+        FOR bootcd regtest livecd)
+
+endfunction()
+
 if(KDBG)
     set(ROSSYM_LIB "rossym")
 else()
     set(ROSSYM_LIB "")
 endif()
+
+function(add_rc_deps _target_rc)
+    set_source_files_properties(${_target_rc} PROPERTIES OBJECT_DEPENDS "${ARGN}")
+endfunction()

@@ -38,6 +38,8 @@ HWND hMainWnd;                   /* Main Window */
 HWND hStatusWnd;                 /* Status Bar Window */
 HWND hTabWnd;                    /* Tab Control Window */
 
+HMENU hWindowMenu = NULL;
+
 int  nMinimumWidth;              /* Minimum width of the dialog (OnSize()'s cx) */
 int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy) */
 
@@ -45,6 +47,7 @@ int  nOldWidth;                  /* Holds the previous client area width */
 int  nOldHeight;                 /* Holds the previous client area height */
 
 BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
+BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
 
@@ -152,15 +155,17 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
      */
 
     /* Get a token for this process.  */
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    {
         /* Get the LUID for the debug privilege.  */
-        LookupPrivilegeValueW(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid);
+        if (LookupPrivilegeValueW(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid))
+        {
+            tkp.PrivilegeCount = 1;  /* one privilege to set */
+            tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-        tkp.PrivilegeCount = 1;  /* one privilege to set */
-        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-        /* Get the debug privilege for this process. */
-        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+            /* Get the debug privilege for this process. */
+            AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+        }
         CloseHandle(hToken);
     }
 
@@ -168,7 +173,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     LoadSettings();
 
     /* Initialize perf data */
-    if (!PerfDataInitialize()) {
+    if (!PerfDataInitialize())
+    {
         return -1;
     }
 
@@ -184,6 +190,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     SaveSettings();
     PerfDataUninitialize();
     CloseHandle(hMutex);
+    if (hWindowMenu)
+        DestroyMenu(hWindowMenu);
     return 0;
 }
 
@@ -404,10 +412,20 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         pnmh = (LPNMHDR)lParam;
         if ((pnmh->hwndFrom == hTabWnd) &&
-            (pnmh->idFrom == IDC_TAB) &&
-            (pnmh->code == TCN_SELCHANGE))
+            (pnmh->idFrom == IDC_TAB))
         {
-            TaskManager_OnTabWndSelChange();
+            switch (pnmh->code)
+            {
+                case TCN_SELCHANGE:
+                    TaskManager_OnTabWndSelChange();
+                    break;
+                case TCN_KEYDOWN:
+                    bWasKeyboardInput = TRUE;
+                    break;
+                case NM_CLICK:
+                    bWasKeyboardInput = FALSE;
+                break;
+            }
         }
         break;
 #if 0
@@ -473,6 +491,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManagerSettings.Maximized = TRUE;
         else
             TaskManagerSettings.Maximized = FALSE;
+        /* Get rid of the allocated command line cache, if any */
+        PerfDataDeallocCommandLineCache();
+        if (hWindowMenu)
+            DestroyMenu(hWindowMenu);
         return DefWindowProcW(hDlg, message, wParam, lParam);
 
     case WM_TIMER:
@@ -557,13 +579,17 @@ BOOL OnCreate(HWND hWnd)
     HMENU   hMenu;
     HMENU   hEditMenu;
     HMENU   hViewMenu;
+    HMENU   hShutMenu;
     HMENU   hUpdateSpeedMenu;
     HMENU   hCPUHistoryMenu;
     int     nActivePage;
     int     nParts[3];
     RECT    rc;
     WCHAR   szTemp[256];
+    WCHAR   szLogOffItem[MAX_PATH];
+    LPWSTR  lpUserName;
     TCITEM  item;
+    DWORD   len = 0;
 
     SendMessageW(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER)));
 
@@ -646,8 +672,9 @@ BOOL OnCreate(HWND hWnd)
     hMenu = GetMenu(hWnd);
     hEditMenu = GetSubMenu(hMenu, 1);
     hViewMenu = GetSubMenu(hMenu, 2);
+    hShutMenu = GetSubMenu(hMenu, 4);
     hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
-    hCPUHistoryMenu = GetSubMenu(hViewMenu, 7);
+    hCPUHistoryMenu  = GetSubMenu(hViewMenu, 7);
 
     /* Check or uncheck the always on top menu item */
     if (TaskManagerSettings.AlwaysOnTop) {
@@ -696,6 +723,35 @@ BOOL OnCreate(HWND hWnd)
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 1);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 2);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, nActivePage);
+
+    /* Set the username in the "Log Off %s" item of the Shutdown menu */
+
+    /* 1- Get the menu item text and store it temporarily */
+    GetMenuStringW(hShutMenu, ID_SHUTDOWN_LOGOFF, szTemp, 256, MF_BYCOMMAND);
+
+    /* 2- Retrieve the username length first, then allocate a buffer for it and call it again */
+    if (!GetUserNameW(NULL, &len) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        lpUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (lpUserName && GetUserNameW(lpUserName, &len))
+        {
+            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, lpUserName);
+            szLogOffItem[sizeof(szLogOffItem)/sizeof(szLogOffItem[0]) - 1] = UNICODE_NULL;
+        }
+        else
+        {
+            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+        }
+
+        if (lpUserName) HeapFree(GetProcessHeap(), 0, lpUserName);
+    }
+    else
+    {
+        _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+    }
+
+    /* 3- Set the menu item text to its formatted counterpart */
+    ModifyMenuW(hShutMenu, ID_SHUTDOWN_LOGOFF, MF_BYCOMMAND | MF_STRING, ID_SHUTDOWN_LOGOFF, szLogOffItem);
 
     /* Setup update speed */
     SetUpdateSpeed(hWnd);
@@ -896,24 +952,18 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
 {
     RECT   rc;
     int    nParts[3];
-    WCHAR  text[260];
-    WCHAR  szCpuUsage[256], szProcesses[256];
-
-    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
-    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     bInMenuLoop = FALSE;
+
     /* Update the status bar pane sizes */
     GetClientRect(hWnd, &rc);
     nParts[0] = STATUS_SIZE1;
     nParts[1] = STATUS_SIZE2;
     nParts[2] = rc.right;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
-    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)L"");
-    wsprintfW(text, szCpuUsage, PerfDataGetProcessorUsage());
-    SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
-    wsprintfW(text, szProcesses, PerfDataGetProcessCount());
-    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
+
+    /* trigger update of status bar columns and performance page asynchronously */
+    RefreshPerformancePage();
 }
 
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
@@ -971,6 +1021,8 @@ void TaskManager_OnTabWndSelChange(void)
         RemoveMenu(hViewMenu, i, MF_BYPOSITION);
     }
     RemoveMenu(hOptionsMenu, 3, MF_BYPOSITION);
+    if (hWindowMenu)
+        DestroyMenu(hWindowMenu);
     switch (TaskManagerSettings.ActiveTabPage) {
     case 0:
         ShowWindow(hApplicationPage, SW_SHOW);
@@ -988,10 +1040,10 @@ void TaskManager_OnTabWndSelChange(void)
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
 
         if (GetMenuItemCount(hMenu) <= 5) {
-            hSubMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
+            hWindowMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
 
             LoadStringW(hInst, IDS_MENU_WINDOWS, szTemp, 256);
-            InsertMenuW(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+            InsertMenuW(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT_PTR) hWindowMenu, szTemp);
 
             DrawMenuBar(hMainWnd);
         }
@@ -1000,7 +1052,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the application list control focus
          */
-        SetFocus(hApplicationPageListCtrl);
+        if (!bWasKeyboardInput)
+            SetFocus(hApplicationPageListCtrl);
         break;
 
     case 1:
@@ -1025,7 +1078,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the process list control focus
          */
-        SetFocus(hProcessPageListCtrl);
+        if (!bWasKeyboardInput)
+            SetFocus(hProcessPageListCtrl);
         break;
 
     case 2:
@@ -1071,7 +1125,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the tab control focus
          */
-        SetFocus(hTabWnd);
+        if (!bWasKeyboardInput)
+            SetFocus(hTabWnd);
         break;
     }
 }
@@ -1097,7 +1152,7 @@ LPWSTR GetLastErrorText(LPWSTR lpszBuf, DWORD dwSize)
     DWORD  dwRet;
     LPWSTR lpszTemp = NULL;
 
-    dwRet = FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ARGUMENT_ARRAY,
+    dwRet = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY,
                            NULL,
                            GetLastError(),
                            LANG_NEUTRAL,

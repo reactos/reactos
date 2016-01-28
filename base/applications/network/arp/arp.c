@@ -20,7 +20,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS arp utility
- * FILE:        apps/utils/net/arp/arp.c
+ * FILE:        base/applications/network/arp/arp.c
  * PURPOSE:     view and manipulate the ARP cache
  * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
  * REVISIONS:
@@ -38,9 +38,6 @@
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
-
-#define UNICODE
-#define _UNICODE
 
 /*
  * Globals

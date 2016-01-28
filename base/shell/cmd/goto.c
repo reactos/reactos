@@ -85,7 +85,7 @@ INT cmd_goto (LPTSTR param)
         /* Strip out any trailing spaces or control chars */
         tmp = textline + _tcslen (textline) - 1;
 
-        while (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':')))
+        while (tmp > textline && (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':'))))
             tmp--;
         *(tmp + 1) = _T('\0');
 

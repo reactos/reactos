@@ -83,18 +83,18 @@ static const USHORT ignored_copy_features =
         FADF_CREATEVECTOR;
 
 /* Allocate memory */
-static inline LPVOID SAFEARRAY_Malloc(ULONG ulSize)
+static inline void* SAFEARRAY_Malloc(ULONG size)
 {
-  /* FIXME: Memory should be allocated and freed using a per-thread IMalloc
-   *        instance returned from CoGetMalloc().
-   */
-  return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ulSize);
+  void *ret = CoTaskMemAlloc(size);
+  if (ret)
+    memset(ret, 0, size);
+  return ret;
 }
 
 /* Free memory */
-static inline BOOL SAFEARRAY_Free(LPVOID lpData)
+static inline void SAFEARRAY_Free(void *ptr)
 {
-  return HeapFree(GetProcessHeap(), 0, lpData);
+  CoTaskMemFree(ptr);
 }
 
 /* Get the size of a supported VT type (0 means unsupported) */
@@ -760,8 +760,7 @@ HRESULT WINAPI SafeArrayDestroyDescriptor(SAFEARRAY *psa)
         !(psa->fFeatures & FADF_DATADELETED))
         SAFEARRAY_DestroyData(psa, 0); /* Data not previously deleted */
 
-    if (!SAFEARRAY_Free(lpv))
-      return E_UNEXPECTED;
+    SAFEARRAY_Free(lpv);
   }
   return S_OK;
 }
@@ -1271,8 +1270,7 @@ HRESULT WINAPI SafeArrayDestroyData(SAFEARRAY *psa)
     /* If this is not a vector, free the data memory block */
     if (!(psa->fFeatures & FADF_CREATEVECTOR))
     {
-      if (!SAFEARRAY_Free(psa->pvData))
-        return E_UNEXPECTED;
+      SAFEARRAY_Free(psa->pvData);
       psa->pvData = NULL;
     }
     else

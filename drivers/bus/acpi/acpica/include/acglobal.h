@@ -4,265 +4,65 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights. You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code. No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision. In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change. Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee. Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution. In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government. In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACGLOBAL_H__
 #define __ACGLOBAL_H__
 
 
-/*
- * Ensure that the globals are actually defined and initialized only once.
- *
- * The use of these macros allows a single list of globals (here) in order
- * to simplify maintenance of the code.
- */
-#ifdef DEFINE_ACPI_GLOBALS
-#define ACPI_GLOBAL(type,name) \
-    extern type name; \
-    type name
-
-#define ACPI_INIT_GLOBAL(type,name,value) \
-    type name=value
-
-#else
-#define ACPI_GLOBAL(type,name) \
-    extern type name
-
-#define ACPI_INIT_GLOBAL(type,name,value) \
-    extern type name
-#endif
-
-
-#ifdef DEFINE_ACPI_GLOBALS
-
-/* Public globals, available from outside ACPICA subsystem */
-
 /*****************************************************************************
  *
- * Runtime configuration (static defaults that can be overriden at runtime)
+ * Globals related to the ACPI tables
  *
  ****************************************************************************/
 
-/*
- * Enable "slack" in the AML interpreter?  Default is FALSE, and the
- * interpreter strictly follows the ACPI specification. Setting to TRUE
- * allows the interpreter to ignore certain errors and/or bad AML constructs.
- *
- * Currently, these features are enabled by this flag:
- *
- * 1) Allow "implicit return" of last value in a control method
- * 2) Allow access beyond the end of an operation region
- * 3) Allow access to uninitialized locals/args (auto-init to integer 0)
- * 4) Allow ANY object type to be a source operand for the Store() operator
- * 5) Allow unresolved references (invalid target name) in package objects
- * 6) Enable warning messages for behavior that is not ACPI spec compliant
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_EnableInterpreterSlack, FALSE);
+/* Master list of all ACPI tables that were found in the RSDT/XSDT */
 
-/*
- * Automatically serialize all methods that create named objects? Default
- * is TRUE, meaning that all NonSerialized methods are scanned once at
- * table load time to determine those that create named objects. Methods
- * that create named objects are marked Serialized in order to prevent
- * possible run-time problems if they are entered by more than one thread.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_AutoSerializeMethods, TRUE);
-
-/*
- * Create the predefined _OSI method in the namespace? Default is TRUE
- * because ACPICA is fully compatible with other ACPI implementations.
- * Changing this will revert ACPICA (and machine ASL) to pre-OSI behavior.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_CreateOsiMethod, TRUE);
-
-/*
- * Optionally use default values for the ACPI register widths. Set this to
- * TRUE to use the defaults, if an FADT contains incorrect widths/lengths.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_UseDefaultRegisterWidths, TRUE);
-
-/*
- * Optionally enable output from the AML Debug Object.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_EnableAmlDebugObject, FALSE);
-
-/*
- * Optionally copy the entire DSDT to local memory (instead of simply
- * mapping it.) There are some BIOSs that corrupt or replace the original
- * DSDT, creating the need for this option. Default is FALSE, do not copy
- * the DSDT.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_CopyDsdtLocally, FALSE);
-
-/*
- * Optionally ignore an XSDT if present and use the RSDT instead.
- * Although the ACPI specification requires that an XSDT be used instead
- * of the RSDT, the XSDT has been found to be corrupt or ill-formed on
- * some machines. Default behavior is to use the XSDT if present.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_DoNotUseXsdt, FALSE);
-
-/*
- * Optionally use 32-bit FADT addresses if and when there is a conflict
- * (address mismatch) between the 32-bit and 64-bit versions of the
- * address. Although ACPICA adheres to the ACPI specification which
- * requires the use of the corresponding 64-bit address if it is non-zero,
- * some machines have been found to have a corrupted non-zero 64-bit
- * address. Default is FALSE, do not favor the 32-bit addresses.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_Use32BitFadtAddresses, FALSE);
-
-/*
- * Optionally truncate I/O addresses to 16 bits. Provides compatibility
- * with other ACPI implementations. NOTE: During ACPICA initialization,
- * this value is set to TRUE if any Windows OSI strings have been
- * requested by the BIOS.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_TruncateIoAddresses, FALSE);
-
-/*
- * Disable runtime checking and repair of values returned by control methods.
- * Use only if the repair is causing a problem on a particular machine.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_DisableAutoRepair, FALSE);
-
-/*
- * Optionally do not install any SSDTs from the RSDT/XSDT during initialization.
- * This can be useful for debugging ACPI problems on some machines.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_DisableSsdtTableInstall, FALSE);
-
-/*
- * We keep track of the latest version of Windows that has been requested by
- * the BIOS.
- */
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_OsiData, 0);
-
-#endif /* DEFINE_ACPI_GLOBALS */
-
-
-/*****************************************************************************
- *
- * ACPI Table globals
- *
- ****************************************************************************/
-
-/*
- * Master list of all ACPI tables that were found in the RSDT/XSDT.
- */
 ACPI_GLOBAL (ACPI_TABLE_LIST,           AcpiGbl_RootTableList);
 
 /* DSDT information. Used to check for DSDT corruption */
 
 ACPI_GLOBAL (ACPI_TABLE_HEADER *,       AcpiGbl_DSDT);
 ACPI_GLOBAL (ACPI_TABLE_HEADER,         AcpiGbl_OriginalDsdtHeader);
+ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_DsdtIndex, ACPI_INVALID_TABLE_INDEX);
+ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_FacsIndex, ACPI_INVALID_TABLE_INDEX);
+ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_XFacsIndex, ACPI_INVALID_TABLE_INDEX);
+ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_FadtIndex, ACPI_INVALID_TABLE_INDEX);
 
 #if (!ACPI_REDUCED_HARDWARE)
 ACPI_GLOBAL (ACPI_TABLE_FACS *,         AcpiGbl_FACS);
@@ -285,6 +85,8 @@ ACPI_GLOBAL (ACPI_GENERIC_ADDRESS,      AcpiGbl_XPm1bEnable);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerBitWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerByteWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerNybbleWidth);
+
+ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_GroupModuleLevelCode, FALSE);
 
 
 /*****************************************************************************
@@ -348,6 +150,7 @@ ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_OperandCache);
 
 ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_StartupFlags, 0);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_Shutdown, TRUE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_EarlyInitialization, TRUE);
 
 /* Global handlers */
 
@@ -356,7 +159,6 @@ ACPI_GLOBAL (ACPI_EXCEPTION_HANDLER,    AcpiGbl_ExceptionHandler);
 ACPI_GLOBAL (ACPI_INIT_HANDLER,         AcpiGbl_InitHandler);
 ACPI_GLOBAL (ACPI_TABLE_HANDLER,        AcpiGbl_TableHandler);
 ACPI_GLOBAL (void *,                    AcpiGbl_TableHandlerContext);
-ACPI_GLOBAL (ACPI_WALK_STATE *,         AcpiGbl_BreakpointWalk);
 ACPI_GLOBAL (ACPI_INTERFACE_HANDLER,    AcpiGbl_InterfaceHandler);
 ACPI_GLOBAL (ACPI_SCI_HANDLER_INFO *,   AcpiGbl_SciHandlerList);
 
@@ -368,12 +170,11 @@ ACPI_GLOBAL (UINT8,                     AcpiGbl_NextOwnerIdOffset);
 
 /* Initialization sequencing */
 
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_RegMethodsExecuted);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_RegMethodsEnabled, FALSE);
 
 /* Misc */
 
 ACPI_GLOBAL (UINT32,                    AcpiGbl_OriginalMode);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_RsdpOriginalLocation);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NsLookupCount);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_PsFindCount);
 ACPI_GLOBAL (UINT16,                    AcpiGbl_Pm1EnableRegisterSave);
@@ -444,6 +245,10 @@ ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_NestingLevel, 0);
 
 ACPI_GLOBAL (ACPI_THREAD_STATE *,       AcpiGbl_CurrentWalkList);
 
+/* Maximum number of While() loop iterations before forced abort */
+
+ACPI_GLOBAL (UINT16,                    AcpiGbl_MaxLoopIterations);
+
 /* Control method single step flag */
 
 ACPI_GLOBAL (UINT8,                     AcpiGbl_CmSingleStep);
@@ -497,8 +302,6 @@ ACPI_GLOBAL (UINT32,                    AcpiFixedEventCount[ACPI_NUM_FIXED_EVENT
 
 ACPI_GLOBAL (UINT32,                    AcpiGbl_OriginalDbgLevel);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_OriginalDbgLayer);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_TraceDbgLevel);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_TraceDbgLayer);
 
 
 /*****************************************************************************
@@ -507,7 +310,7 @@ ACPI_GLOBAL (UINT32,                    AcpiGbl_TraceDbgLayer);
  *
  ****************************************************************************/
 
-ACPI_GLOBAL (UINT8,                     AcpiGbl_DbOutputFlags);
+ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_DbOutputFlags, ACPI_DB_CONSOLE_OUTPUT);
 
 #ifdef ACPI_DISASSEMBLER
 
@@ -515,9 +318,12 @@ ACPI_GLOBAL (UINT8,                     AcpiGbl_DbOutputFlags);
 
 ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_NoResourceDisassembly, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_IgnoreNoopOperator, FALSE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_CstyleDisassembly, TRUE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_ForceAmlDisassembly, FALSE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmOpt_Verbose, TRUE);
 
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_disasm);
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_verbose);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Disasm);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Listing);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_NumExternalMethods);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_ResolvedExternalMethods);
 ACPI_GLOBAL (ACPI_EXTERNAL_LIST *,      AcpiGbl_ExternalList);
@@ -526,13 +332,11 @@ ACPI_GLOBAL (ACPI_EXTERNAL_FILE *,      AcpiGbl_ExternalFileList);
 
 #ifdef ACPI_DEBUGGER
 
-ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DbTerminateThreads, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_AbortMethod, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_MethodExecuting, FALSE);
+ACPI_INIT_GLOBAL (ACPI_THREAD_ID,       AcpiGbl_DbThreadId, ACPI_INVALID_THREAD_ID);
 
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_tables);
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_stats);
-ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_ini_methods);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoIniMethods);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoRegionSupport);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOutputToFile);
 ACPI_GLOBAL (char *,                    AcpiGbl_DbBuffer);
@@ -540,6 +344,8 @@ ACPI_GLOBAL (char *,                    AcpiGbl_DbFilename);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_DbDebugLevel);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_DbConsoleDebugLevel);
 ACPI_GLOBAL (ACPI_NAMESPACE_NODE *,     AcpiGbl_DbScopeNode);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbTerminateLoop);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbThreadsTerminated);
 
 ACPI_GLOBAL (char *,                    AcpiGbl_DbArgs[ACPI_DEBUGGER_MAX_ARGS]);
 ACPI_GLOBAL (ACPI_OBJECT_TYPE,          AcpiGbl_DbArgTypes[ACPI_DEBUGGER_MAX_ARGS]);
@@ -554,17 +360,15 @@ ACPI_GLOBAL (char,                      AcpiGbl_DbDebugFilename[ACPI_DB_LINE_BUF
 /*
  * Statistic globals
  */
-ACPI_GLOBAL (UINT16,                    AcpiGbl_ObjTypeCount[ACPI_TYPE_NS_NODE_MAX+1]);
-ACPI_GLOBAL (UINT16,                    AcpiGbl_NodeTypeCount[ACPI_TYPE_NS_NODE_MAX+1]);
+ACPI_GLOBAL (UINT16,                    AcpiGbl_ObjTypeCount[ACPI_TOTAL_TYPES]);
+ACPI_GLOBAL (UINT16,                    AcpiGbl_NodeTypeCount[ACPI_TOTAL_TYPES]);
 ACPI_GLOBAL (UINT16,                    AcpiGbl_ObjTypeCountMisc);
 ACPI_GLOBAL (UINT16,                    AcpiGbl_NodeTypeCountMisc);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumNodes);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumObjects);
 
-ACPI_GLOBAL (UINT32,                    AcpiGbl_SizeOfParseTree);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_SizeOfMethodTrees);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_SizeOfNodeEntries);
-ACPI_GLOBAL (UINT32,                    AcpiGbl_SizeOfAcpiObjects);
+ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandReady);
+ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandComplete);
 
 #endif /* ACPI_DEBUGGER */
 
@@ -578,6 +382,12 @@ ACPI_GLOBAL (UINT32,                    AcpiGbl_SizeOfAcpiObjects);
 #ifdef ACPI_APPLICATION
 
 ACPI_INIT_GLOBAL (ACPI_FILE,            AcpiGbl_DebugFile, NULL);
+ACPI_INIT_GLOBAL (ACPI_FILE,            AcpiGbl_OutputFile, NULL);
+
+/* Print buffer */
+
+ACPI_GLOBAL (ACPI_SPINLOCK,             AcpiGbl_PrintLock);     /* For print buffer */
+ACPI_GLOBAL (char,                      AcpiGbl_PrintBuffer[1024]);
 
 #endif /* ACPI_APPLICATION */
 

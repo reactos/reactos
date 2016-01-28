@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            halx86/generic/bios.c
+ * FILE:            hal/halx86/generic/bios.c
  * PURPOSE:         BIOS Access Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)
@@ -14,7 +14,7 @@
 #include <debug.h>
 #include <setjmp.h>
 
-void HalpTrap0D();
+void __cdecl HalpTrap0D();
 
 /* GLOBALS ********************************************************************/
 
@@ -60,9 +60,14 @@ BOOLEAN
 FASTCALL
 HalpOpcodeInvalid(IN PHAL_BIOS_FRAME BiosFrame)
 {
+    PUCHAR Inst = (PUCHAR)(BiosFrame->CsBase + BiosFrame->Eip);
+
     /* Print error message */
-    DPRINT1("HAL: An invalid V86 opcode was encountered at address %x:%x\n",
-            BiosFrame->SegCs, BiosFrame->Eip);
+    DPRINT1("HAL: An invalid V86 opcode was encountered at address %X:%X\n",
+            "Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+            BiosFrame->SegCs, BiosFrame->Eip,
+            Inst[0], Inst[1], Inst[2], Inst[3], Inst[4],
+            Inst[5], Inst[6], Inst[7], Inst[8], Inst[9]);
 
     /* Break */
     DbgBreakPoint();
@@ -223,7 +228,7 @@ HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 DECLSPEC_NORETURN
-HalpTrap06()
+HalpTrap06(VOID)
 {
     /* Restore ES/DS to known good values first */
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
@@ -242,7 +247,7 @@ HalpTrap06()
 
 VOID
 NTAPI
-HalpBiosCall()
+HalpBiosCall(VOID)
 {
     /* Must be volatile so it doesn't get optimized away! */
     volatile KTRAP_FRAME V86TrapFrame;

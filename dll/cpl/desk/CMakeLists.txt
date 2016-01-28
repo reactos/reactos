@@ -23,28 +23,17 @@ list(APPEND SOURCE
     muireg.c
     desk.h)
 
+file(GLOB desk_rc_deps resources/*.*)
+add_rc_deps(desk.rc ${desk_rc_deps})
+
 add_library(desk SHARED
     ${SOURCE}
+    guid.c
     desk.rc
     ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 
 set_module_type(desk cpl UNICODE)
 target_link_libraries(desk uuid)
-
-add_importlibs(desk
-    msvcrt
-    user32
-    advapi32
-    gdi32
-    comctl32
-    comdlg32
-    ole32
-    setupapi
-    shell32
-    shlwapi
-    uxtheme
-    kernel32
-    ntdll)
-
+add_importlibs(desk user32 advapi32 gdi32 comctl32 comdlg32 ole32 setupapi shell32 shlwapi uxtheme gdiplus msvcrt kernel32 ntdll)
 add_pch(desk desk.h SOURCE)
 add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

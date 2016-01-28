@@ -16,10 +16,6 @@
 
 #include <builddir.h>
 
-#if !defined(__RELFILE__)
-#define __RELFILE__ __FILE__
-#endif
-
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
@@ -94,7 +90,6 @@ RtlAssert(
 #define __NOTICE(level, fmt, ...)   DbgPrint(#level ":  %s at %s:%d " fmt, __FUNCTION__, __RELFILE__, __LINE__, ##__VA_ARGS__)
 
 /* Print stuff only on Debug Builds*/
-#define DPFLTR_DEFAULT_ID -1
 #if DBG
 
     /* These are always printed */
@@ -113,7 +108,11 @@ RtlAssert(
 
     #else
 
+#if defined(_MSC_VER)
+        #define DPRINT   __noop
+#else
         #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif
 
     #endif
 
@@ -132,6 +131,22 @@ RtlAssert(
 #else /* not DBG */
 
     /* On non-debug builds, we never show these */
+#if defined(_MSC_VER)
+    #define DPRINT1   __noop
+    #define DPRINT    __noop
+
+    #define UNIMPLEMENTED
+
+    #define ERR_      __noop
+    #define WARN_     __noop
+    #define TRACE_    __noop
+    #define INFO_     __noop
+
+    #define ERR__     __noop
+    #define WARN__    __noop
+    #define TRACE__   __noop
+    #define INFO__    __noop
+#else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
@@ -146,6 +161,7 @@ RtlAssert(
     #define WARN__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif /* _MSC_VER */
 
 #endif /* not DBG */
 

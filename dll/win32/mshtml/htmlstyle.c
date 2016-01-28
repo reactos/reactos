@@ -20,6 +20,8 @@
 
 static const WCHAR attrBackground[] =
     {'b','a','c','k','g','r','o','u','n','d',0};
+static const WCHAR attrBackgroundAttachment[] =
+    {'b','a','c','k','g','r','o','u','n','d','-','a','t','t','a','c','h','m','e','n','t',0};
 static const WCHAR attrBackgroundColor[] =
     {'b','a','c','k','g','r','o','u','n','d','-','c','o','l','o','r',0};
 static const WCHAR attrBackgroundImage[] =
@@ -91,6 +93,8 @@ static const WCHAR attrDisplay[] =
     {'d','i','s','p','l','a','y',0};
 static const WCHAR attrFilter[] =
     {'f','i','l','e','t','e','r',0};
+static const WCHAR attrFloat[] =
+    {'f','l','o','a','t',0};
 static const WCHAR attrFontFamily[] =
     {'f','o','n','t','-','f','a','m','i','l','y',0};
 static const WCHAR attrFontSize[] =
@@ -109,8 +113,12 @@ static const WCHAR attrLetterSpacing[] =
     {'l','e','t','t','e','r','-','s','p','a','c','i','n','g',0};
 static const WCHAR attrLineHeight[] =
     {'l','i','n','e','-','h','e','i','g','h','t',0};
+static const WCHAR attrListStyle[] =
+    {'l','i','s','t','-','s','t','y','l','e',0};
 static const WCHAR attrListStyleType[] =
     {'l','i','s','t','-','s','t','y','l','e','-','t','y','p','e',0};
+static const WCHAR attrListStylePosition[] =
+    {'l','i','s','t','-','s','t','y','l','e','-','p','o','s','i','t','i','o','n',0};
 static const WCHAR attrMargin[] =
     {'m','a','r','g','i','n',0};
 static const WCHAR attrMarginBottom[] =
@@ -121,8 +129,14 @@ static const WCHAR attrMarginRight[] =
     {'m','a','r','g','i','n','-','r','i','g','h','t',0};
 static const WCHAR attrMarginTop[] =
     {'m','a','r','g','i','n','-','t','o','p',0};
+static const WCHAR attrMaxHeight[] =
+    {'m','a','x','-','h','e','i','g','h','t',0};
+static const WCHAR attrMaxWidth[] =
+    {'m','a','x','-','w','i','d','t','h',0};
 static const WCHAR attrMinHeight[] =
     {'m','i','n','-','h','e','i','g','h','t',0};
+static const WCHAR attrMinWidth[] =
+    {'m','i','n','-','w','i','d','t','h',0};
 static const WCHAR attrOutline[] =
     {'o','u','t','l','i','n','e',0};
 static const WCHAR attrOverflow[] =
@@ -149,12 +163,16 @@ static const WCHAR attrPosition[] =
     {'p','o','s','i','t','i','o','n',0};
 static const WCHAR attrRight[] =
     {'r','i','g','h','t',0};
+static const WCHAR attrTableLayout[] =
+    {'t','a','b','l','e','-','l','a','y','o','u','t',0};
 static const WCHAR attrTextAlign[] =
     {'t','e','x','t','-','a','l','i','g','n',0};
 static const WCHAR attrTextDecoration[] =
     {'t','e','x','t','-','d','e','c','o','r','a','t','i','o','n',0};
 static const WCHAR attrTextIndent[] =
     {'t','e','x','t','-','i','n','d','e','n','t',0};
+static const WCHAR attrTextTransform[] =
+    {'t','e','x','t','-','t','r','a','n','s','f','o','r','m',0};
 static const WCHAR attrTop[] =
     {'t','o','p',0};
 static const WCHAR attrVerticalAlign[] =
@@ -182,6 +200,7 @@ typedef struct {
 
 static const style_tbl_entry_t style_tbl[] = {
     {attrBackground,           DISPID_IHTMLSTYLE_BACKGROUND},
+    {attrBackgroundAttachment, DISPID_IHTMLSTYLE_BACKGROUNDATTACHMENT},
     {attrBackgroundColor,      DISPID_IHTMLSTYLE_BACKGROUNDCOLOR},
     {attrBackgroundImage,      DISPID_IHTMLSTYLE_BACKGROUNDIMAGE},
     {attrBackgroundPosition,   DISPID_IHTMLSTYLE_BACKGROUNDPOSITION},
@@ -217,6 +236,7 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrDirection,            DISPID_IHTMLSTYLE2_DIRECTION},
     {attrDisplay,              DISPID_IHTMLSTYLE_DISPLAY},
     {attrFilter,               DISPID_IHTMLSTYLE_FILTER},
+    {attrFloat,                DISPID_IHTMLSTYLE_STYLEFLOAT},
     {attrFontFamily,           DISPID_IHTMLSTYLE_FONTFAMILY},
     {attrFontSize,             DISPID_IHTMLSTYLE_FONTSIZE},
     {attrFontStyle,            DISPID_IHTMLSTYLE_FONTSTYLE},
@@ -226,13 +246,18 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrLeft,                 DISPID_IHTMLSTYLE_LEFT},
     {attrLetterSpacing,        DISPID_IHTMLSTYLE_LETTERSPACING},
     {attrLineHeight,           DISPID_IHTMLSTYLE_LINEHEIGHT},
+    {attrListStyle,            DISPID_IHTMLSTYLE_LISTSTYLE},
+    {attrListStylePosition,    DISPID_IHTMLSTYLE_LISTSTYLEPOSITION},
     {attrListStyleType,        DISPID_IHTMLSTYLE_LISTSTYLETYPE},
     {attrMargin,               DISPID_IHTMLSTYLE_MARGIN},
     {attrMarginBottom,         DISPID_IHTMLSTYLE_MARGINBOTTOM},
     {attrMarginLeft,           DISPID_IHTMLSTYLE_MARGINLEFT},
     {attrMarginRight,          DISPID_IHTMLSTYLE_MARGINRIGHT},
     {attrMarginTop,            DISPID_IHTMLSTYLE_MARGINTOP},
+    {attrMaxHeight,            DISPID_IHTMLSTYLE5_MAXHEIGHT},
+    {attrMaxWidth,             DISPID_IHTMLSTYLE5_MAXWIDTH},
     {attrMinHeight,            DISPID_IHTMLSTYLE4_MINHEIGHT},
+    {attrMinWidth,             DISPID_IHTMLSTYLE5_MINWIDTH},
     {attrOutline,              DISPID_IHTMLSTYLE6_OUTLINE},
     {attrOverflow,             DISPID_IHTMLSTYLE_OVERFLOW},
     {attrOverflowX,            DISPID_IHTMLSTYLE2_OVERFLOWX},
@@ -246,9 +271,11 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrPageBreakBefore,      DISPID_IHTMLSTYLE_PAGEBREAKBEFORE},
     {attrPosition,             DISPID_IHTMLSTYLE2_POSITION},
     {attrRight,                DISPID_IHTMLSTYLE2_RIGHT},
+    {attrTableLayout,          DISPID_IHTMLSTYLE2_TABLELAYOUT},
     {attrTextAlign,            DISPID_IHTMLSTYLE_TEXTALIGN},
     {attrTextDecoration,       DISPID_IHTMLSTYLE_TEXTDECORATION},
     {attrTextIndent,           DISPID_IHTMLSTYLE_TEXTINDENT},
+    {attrTextTransform,        DISPID_IHTMLSTYLE_TEXTTRANSFORM},
     {attrTop,                  DISPID_IHTMLSTYLE_TOP},
     {attrVerticalAlign,        DISPID_IHTMLSTYLE_VERTICALALIGN},
     {attrVisibility,           DISPID_IHTMLSTYLE_VISIBILITY},
@@ -258,6 +285,8 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrWordWrap,             DISPID_IHTMLSTYLE3_WORDWRAP},
     {attrZIndex,               DISPID_IHTMLSTYLE_ZINDEX}
 };
+
+C_ASSERT(sizeof(style_tbl)/sizeof(*style_tbl) == STYLEID_MAX_VALUE);
 
 static const WCHAR valLineThrough[] =
     {'l','i','n','e','-','t','h','r','o','u','g','h',0};
@@ -359,7 +388,7 @@ HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, cons
     if(value) {
         if(flags & ATTR_FIX_PX)
             val = fix_px_value(value);
-        if(flags & ATTR_FIX_URL)
+        else if(flags & ATTR_FIX_URL)
             val = fix_url_value(value);
     }
 
@@ -649,6 +678,9 @@ static HRESULT get_nsstyle_pixel_val(HTMLStyle *This, styleid_t sid, LONG *p)
     nsAString str_value;
     HRESULT hres;
 
+    if(!p)
+        return E_POINTER;
+
     nsAString_Init(&str_value, NULL);
 
     hres = get_nsstyle_attr_nsval(This->nsstyle, sid, &str_value);
@@ -713,40 +745,32 @@ static HRESULT WINAPI HTMLStyle_QueryInterface(IHTMLStyle *iface, REFIID riid, v
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle2, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle2 %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle2_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle3, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle3 %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle3_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle4, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle4 %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle4_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle5, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle5 %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle5_iface;
     }else if(IsEqualGUID(&IID_IHTMLStyle6, riid)) {
-        TRACE("(%p)->(IID_IHTMLStyle6 %p)\n", This, ppv);
         *ppv = &This->IHTMLStyle6_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("unsupported iface %s\n", debugstr_mshtml_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("unsupported %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLStyle_AddRef(IHTMLStyle *iface)
@@ -899,19 +923,13 @@ static HRESULT WINAPI HTMLStyle_put_fontWeight(IHTMLStyle *iface, BSTR v)
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     /* fontWeight can only be one of the following */
-    if(!v || strcmpiW(szNormal, v) == 0    || strcmpiW(styleBold, v) == 0    ||
-             strcmpiW(styleBolder, v) == 0 || strcmpiW(styleLighter, v) == 0 ||
-             strcmpiW(style100, v) == 0    || strcmpiW(style200, v) == 0     ||
-             strcmpiW(style300, v) == 0    || strcmpiW(style400, v) == 0     ||
-             strcmpiW(style500, v) == 0    || strcmpiW(style600, v) == 0     ||
-             strcmpiW(style700, v) == 0    || strcmpiW(style800, v) == 0     ||
-             strcmpiW(style900, v) == 0
-             )
-    {
-        return set_nsstyle_attr(This->nsstyle, STYLEID_FONT_WEIGHT, v, 0);
-    }
+    if(v && *v && strcmpiW(szNormal, v) && strcmpiW(styleBold, v) &&  strcmpiW(styleBolder, v)
+            && strcmpiW(styleLighter, v) && strcmpiW(style100, v) && strcmpiW(style200, v)
+            && strcmpiW(style300, v) && strcmpiW(style400, v) && strcmpiW(style500, v) && strcmpiW(style600, v)
+            && strcmpiW(style700, v) && strcmpiW(style800, v) && strcmpiW(style900, v))
+        return E_INVALIDARG;
 
-    return E_INVALIDARG;
+    return set_nsstyle_attr(This->nsstyle, STYLEID_FONT_WEIGHT, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_fontWeight(IHTMLStyle *iface, BSTR *p)
@@ -1059,15 +1077,19 @@ static HRESULT WINAPI HTMLStyle_get_backgroundRepeat(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_backgroundAttachment(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_BACKGROUND_ATTACHMENT, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_backgroundAttachment(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_BACKGROUND_ATTACHMENT, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_backgroundPosition(IHTMLStyle *iface, BSTR v)
@@ -1441,15 +1463,19 @@ static HRESULT WINAPI HTMLStyle_get_verticalAlign(IHTMLStyle *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle_put_textTransform(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_TEXT_TRANSFORM, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_textTransform(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_TEXT_TRANSFORM, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_textAlign(IHTMLStyle *iface, BSTR v)
@@ -1473,29 +1499,37 @@ static HRESULT WINAPI HTMLStyle_get_textAlign(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_textIndent(IHTMLStyle *iface, VARIANT v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_nsstyle_attr_var(This->nsstyle, STYLEID_TEXT_INDENT, &v, ATTR_FIX_PX);
 }
 
 static HRESULT WINAPI HTMLStyle_get_textIndent(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_TEXT_INDENT, p, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_put_lineHeight(IHTMLStyle *iface, VARIANT v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_nsstyle_attr_var(This->nsstyle, STYLEID_LINE_HEIGHT, &v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_lineHeight(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_LINE_HEIGHT, p, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_put_marginTop(IHTMLStyle *iface, VARIANT v)
@@ -2086,15 +2120,19 @@ static HRESULT WINAPI HTMLStyle_get_height(IHTMLStyle *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle_put_styleFloat(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_FLOAT, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_styleFloat(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_FLOAT, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_clear(IHTMLStyle *iface, BSTR v)
@@ -2172,15 +2210,19 @@ static HRESULT WINAPI HTMLStyle_get_listStyleType(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_listStylePosition(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_LISTSTYLEPOSITION, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_listStylePosition(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_LISTSTYLEPOSITION, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_listStyleImage(IHTMLStyle *iface, BSTR v)
@@ -2200,15 +2242,19 @@ static HRESULT WINAPI HTMLStyle_get_listStyleImage(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_listStyle(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_LIST_STYLE, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_listStyle(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_LIST_STYLE, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_whiteSpace(IHTMLStyle *iface, BSTR v)
@@ -2406,15 +2452,19 @@ static HRESULT WINAPI HTMLStyle_get_cssText(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_pixelTop(IHTMLStyle *iface, LONG v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%d)\n", This, v);
+
+    return set_style_pxattr(This->nsstyle, STYLEID_TOP, v);
 }
 
 static HRESULT WINAPI HTMLStyle_get_pixelTop(IHTMLStyle *iface, LONG *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_pixel_val(This, STYLEID_TOP, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_pixelLeft(IHTMLStyle *iface, LONG v)
@@ -2447,22 +2497,28 @@ static HRESULT WINAPI HTMLStyle_put_pixelWidth(IHTMLStyle *iface, LONG v)
 static HRESULT WINAPI HTMLStyle_get_pixelWidth(IHTMLStyle *iface, LONG *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_pixel_val(This, STYLEID_WIDTH, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_pixelHeight(IHTMLStyle *iface, LONG v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%d)\n", This, v);
+
+    return set_style_pxattr(This->nsstyle, STYLEID_HEIGHT, v);
 }
 
 static HRESULT WINAPI HTMLStyle_get_pixelHeight(IHTMLStyle *iface, LONG *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_pixel_val(This, STYLEID_HEIGHT, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_posTop(IHTMLStyle *iface, float v)
@@ -2845,7 +2901,7 @@ static HRESULT WINAPI HTMLStyle_removeAttribute(IHTMLStyle *iface, BSTR strAttri
         }
 
         if(i == sizeof(style_tbl)/sizeof(*style_tbl))
-            return remove_prop(&This->dispex, strAttributeName, pfSuccess);
+            return remove_attribute(&This->dispex, dispid, pfSuccess);
         style_entry = style_tbl+i;
     }
 
@@ -3090,12 +3146,12 @@ static const dispex_static_data_vtbl_t HTMLStyle_dispex_vtbl = {
 };
 
 static const tid_t HTMLStyle_iface_tids[] = {
-    IHTMLStyle_tid,
-    IHTMLStyle2_tid,
-    IHTMLStyle3_tid,
-    IHTMLStyle4_tid,
-    IHTMLStyle5_tid,
     IHTMLStyle6_tid,
+    IHTMLStyle5_tid,
+    IHTMLStyle4_tid,
+    IHTMLStyle3_tid,
+    IHTMLStyle2_tid,
+    IHTMLStyle_tid,
     0
 };
 static dispex_static_data_t HTMLStyle_dispex = {

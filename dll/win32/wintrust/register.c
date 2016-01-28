@@ -896,6 +896,7 @@ static BOOL WINTRUST_SIPPAddProvider(GUID* Subject, WCHAR* MagicNumber)
     NewProv.pwszVerifyFuncName     = CryptSIPVerifyIndirectData;
     NewProv.pwszRemoveFuncName     = CryptSIPRemoveSignedDataMsg;
     NewProv.pwszIsFunctionNameFmt2 = NULL;
+    NewProv.pwszGetCapFuncName     = NULL;
 
     Ret = CryptSIPAddProvider(&NewProv);
 
@@ -944,6 +945,8 @@ HRESULT WINAPI DllRegisterServer(void)
     HRESULT CryptRegisterRes = S_OK;
     HRESULT TrustProviderRes = S_OK;
     HRESULT SIPAddProviderRes = S_OK;
+    HCRYPTPROV crypt_provider;
+    BOOL ret;
 
     TRACE("\n");
 
@@ -1060,6 +1063,11 @@ add_trust_providers:
      * (The ERROR_INVALID_PARAMETER for Wine it totally valid as we (and native) do register
      * a trust provider without a diagnostic policy).
      */
+
+    /* Create a dummy context to force creation of the MachineGuid registry key. */
+    ret = CryptAcquireContextW(&crypt_provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (ret) CryptReleaseContext(crypt_provider, 0);
+    else ERR("Failed to acquire cryptographic context: %u\n", GetLastError());
 
     /* If CryptRegisterRes is not S_OK it will always overrule the return value. */
     if (CryptRegisterRes != S_OK)

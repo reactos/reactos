@@ -1,4 +1,4 @@
-/* Spanish language file by Javier Remacha <2007-2008> */
+/* Spanish language file by Javier Remacha <2007-2008> and Ismael Ferreras Morezuelas <2014-11-07>  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -7,21 +7,21 @@ BEGIN
     POPUP "&Opciones"
     BEGIN
         MENUITEM "P&ropiedades", IDC_PROPERTIES
-        MENUITEM "&Controles Avanzados", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Controles avanzados", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "&Salir", IDC_EXIT
     END
     POPUP "Ay&uda"
     BEGIN
-        MENUITEM "&Temas de Ayuda", IDC_HELP_TOPICS
+        MENUITEM "&Temas de ayuda", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca de Control de Volumen", IDC_ABOUT
+        MENUITEM "&Acerca de Control de volumen", IDC_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SNDVOL32 "Control de Volumen"
+    IDS_SNDVOL32 "Control de volumen"
     IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento! \n\
 La aplicación se cerrará ahora."
 END
@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON "&Grabación", IDC_RECORDING, 13, 61, 47, 8, BS_AUTORADIOBUTTON
     PUSHBUTTON "&Otros:", IDC_OTHER, 13, 80, 42, 8, BS_AUTORADIOBUTTON | WS_DISABLED
     COMBOBOX IDC_LINE, 55, 80, 155, 50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    LTEXT "Mostrar los controles de volumen siguientes:", IDC_LABELCONTROLS, 7, 109, 162, 8
+    LTEXT "Mostrar los siguientes controles de volumen:", IDC_LABELCONTROLS, 7, 109, 162, 8
     CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
     PUSHBUTTON "Aceptar", IDOK, 114, 226, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 168, 226, 50, 14
@@ -48,12 +48,12 @@ IDD_VOLUME_CTRL DIALOG 0, 0, 90, 150
 STYLE WS_POPUP | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Master", IDC_LINE_NAME, 4, 7, 100, 15
+    LTEXT "Principal", IDC_LINE_NAME, 4, 7, 100, 15
     CONTROL "", -1, "static", SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE, 4, 30, 82, 1
     LTEXT "Balance", -1, 4, 35, 80, 42
     LTEXT "Volumen", -1, 4, 100, 77, 108
     CONTROL "", IDC_LINE_SLIDER_HORZ, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | TBS_BOTH | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 25, 55, 85, 30
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 115, 30, 70
-    CHECKBOX "&Silencio", IDC_LINE_SWITCH, 4, 190, 90, 12, BS_AUTOCHECKBOX
+    CHECKBOX "&Silenciar", IDC_LINE_SWITCH, 4, 190, 90, 12, BS_AUTOCHECKBOX
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 130, 7, 1, 200
 END

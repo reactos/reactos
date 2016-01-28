@@ -1,0 +1,17 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "此命令的語法是:\n\nREG [ ADD | DELETE | QUERY ]\nREG 命令 /?\n"
+    STRING_ADD_USAGE, "REG ADD 金鑰名稱 [/v 值名稱 | /ve] [/t 類型] [/s 分隔符] [/d 資料] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE 金鑰名稱 [/v 值名稱 | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY 金鑰名稱 [/v 值名稱 | /ve] [/s]\n"
+    STRING_SUCCESS, "操作已成功完成\n"
+    STRING_INVALID_KEY, "錯誤: 無效的金鑰名稱\n"
+    STRING_INVALID_CMDLINE, "錯誤: 無效的命令列參數\n"
+    STRING_NO_REMOTE, "錯誤: 無法訪問遠端計算機\n"
+    STRING_CANNOT_FIND, "錯誤: 系統是無法找到指定的註冊表項或值\n"
+    STRING_UNSUPPORTED_TYPE, "錯誤: 不支援的類型\n"
+}

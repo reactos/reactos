@@ -12,6 +12,6 @@
 @ stdcall SRSetRestorePointW (ptr ptr)
 @ stdcall SfcGetNextProtectedFile (ptr ptr) sfc_os.SfcGetNextProtectedFile
 @ stdcall SfcIsFileProtected (ptr wstr) sfc_os.SfcIsFileProtected
-@ stub SfcWLEventLogoff
-@ stub SfcWLEventLogon
+@ stdcall SfcWLEventLogoff (ptr) sfc_os.SfcWLEventLogoff
+@ stdcall SfcWLEventLogon (ptr) sfc_os.SfcWLEventLogon
 @ stdcall SfpVerifyFile (str str long)

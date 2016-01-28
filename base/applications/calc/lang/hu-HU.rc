@@ -338,8 +338,8 @@ BEGIN
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Szokásos", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Szokásos", IDM_VIEW_STANDARD
+        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC
         MENUITEM "Át&váltás", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexadecimális\tF5", IDM_VIEW_HEX, CHECKED
@@ -370,8 +370,8 @@ BEGIN
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Szokásos", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Szokásos", IDM_VIEW_STANDARD
+        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC
         MENUITEM "Át&váltás", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexadecimális\tF5", IDM_VIEW_HEX, CHECKED
@@ -403,8 +403,8 @@ BEGIN
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Szokásos", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Szokásos", IDM_VIEW_STANDARD
+        MENUITEM "&Tudományos", IDM_VIEW_SCIENTIFIC
         MENUITEM "Át&váltás", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Számjegyek &csoportosítása", IDM_VIEW_GROUP, CHECKED

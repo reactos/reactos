@@ -179,13 +179,6 @@ ME_DisplayItem *ME_MakeDI(ME_DIType type)
   ZeroMemory(item, sizeof(ME_DisplayItem));
   item->type = type;
   item->prev = item->next = NULL;
-  if (type == diParagraph)
-  {
-    item->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
-    ME_SetDefaultParaFormat(item->member.para.pFmt);
-    item->member.para.nFlags = MEPF_REWRAP;
-  }
-    
   return item;
 }
 

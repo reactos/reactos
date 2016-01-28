@@ -10,12 +10,12 @@ CAPTION "Toetsenbord"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Plaktoetsen", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "U kunt Plaktoetsen gebruiken als u Shift, Ctrl of Alt wilt gebruiken, en op slechts één toets tegelijkertijd wilt of kunt drukken.",
+    LTEXT "U kunt Plaktoetsen gebruiken als u Shift, Ctrl of Alt wilt gebruiken, en op slechts Ã©Ã©n toets tegelijkertijd wilt of kunt drukken.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Plaktoetsen Gebruiken", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Instellingen...", IDC_STICKY_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "Filtertoetsen", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat Reactos korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
+    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat ReactOS korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Filtertoetsen gebruiken", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Inst&ellingen...", IDC_FILTER_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -34,7 +34,7 @@ CAPTION "Geluid"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Geluidswaarschuwingen", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat Reactos een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
+    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat ReactOS een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Geluidswaarschuwingen gebruiken", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Use the following warning:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -52,7 +52,7 @@ CAPTION "Weergave"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Hoog Contrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "U kunt deze optie gebruiken als u wilt dat Reactos kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
+    LTEXT "U kunt deze optie gebruiken als u wilt dat ReactOS kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Hoog contrast gebruiken", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "I&nstellingen...", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
@@ -99,10 +99,10 @@ BEGIN
                  PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), 14
     AUTOCHECKBOX "&Geluid laten horen als een functie wordt in- of uitgeschakeld", IDC_NOTIFICATION_SOUND,
                  PROPSHEETPADDING(2), LABELLINE(10) - 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), 14
-    GROUPBOX "Seriële toetsenapparaten", -1, PROPSHEETPADDING(1), LABELLINE(13) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(5)
-    LTEXT "Met seriële toetsenapparaten kunnen toetsenbord- en muisfuncties op alternatieve manieren worden gebruikt.",
+    GROUPBOX "SeriÃ«le toetsenapparaten", -1, PROPSHEETPADDING(1), LABELLINE(13) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(5)
+    LTEXT "Met seriÃ«le toetsenapparaten kunnen toetsenbord- en muisfuncties op alternatieve manieren worden gebruikt.",
           -1, PROPSHEETPADDING(2), LABELLINE(14) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(2)
-    AUTOCHECKBOX "&Seriële toetsenapparaten gebruiken", IDC_SERIAL_BOX, PROPSHEETPADDING(2), LABELLINE(16) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
+    AUTOCHECKBOX "&SeriÃ«le toetsenapparaten gebruiken", IDC_SERIAL_BOX, PROPSHEETPADDING(2), LABELLINE(16) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "I&nstellingen", IDC_SERIAL_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(16) - 4, PROPSHEETPADDING(15), 14
     GROUPBOX "Beheeropties", -1, PROPSHEETPADDING(1), LABELLINE(19) - 4, PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(5)
     AUTOCHECKBOX "&Alle instellingen op bureaublad bij aanmelden toepassen.", IDC_ADMIN_LOGON_BOX,
@@ -266,13 +266,13 @@ END
 
 IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, PROPSHEETWIDTH_NL, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Instellingen voor seriële toetsen"
+CAPTION "Instellingen voor seriÃ«le toetsen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Seriële toetsen", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(10)
+    GROUPBOX "SeriÃ«le toetsen", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(10)
     LTEXT "Selecteer de poort waarop u een alternatief invoerapparaat wilt\naansluiten.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(2)
-    LTEXT "&Seriële poort:", -1, PROPSHEETPADDING(2), LABELLINE(3) + 5, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(2)
+    LTEXT "&SeriÃ«le poort:", -1, PROPSHEETPADDING(2), LABELLINE(3) + 5, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(2)
     COMBOBOX IDC_SERIAL_PORT_COMBO, PROPSHEETPADDING(2), LABELLINE(4) + 7, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(6),
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     LTEXT "&Baud rate:", -1, PROPSHEETPADDING(2), LABELLINE(7), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(2)

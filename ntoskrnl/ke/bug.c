@@ -28,8 +28,10 @@ ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
-PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+
+PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
+#define TAG_KNMI 'IMNK'
 
 /* Bugzilla Reporting */
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
@@ -67,7 +69,7 @@ KiPcToFileHeader(IN PVOID Pc,
             i++;
 
             /* Check if this is a kernel entry and we only want drivers */
-            if ((i <= 2) && (DriversOnly == TRUE))
+            if ((i <= 2) && (DriversOnly != FALSE))
             {
                 /* Skip it */
                 NextEntry = NextEntry->Flink;
@@ -975,15 +977,31 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                                               FALSE,
                                               &IsSystem);
             }
+            else
+            {
+                /* Can't blame a driver, assume system */
+                IsSystem = TRUE;
+            }
 
-            /*
-             * Now we should check if this happened in:
-             * 1) Special Pool 2) Free Special Pool 3) Session Pool
-             * and update the bugcheck code appropriately.
-             */
+            /* FIXME: Check for session pool in addition to special pool */
 
-            /* Check if we didn't have a driver base */
-            if (!DriverBase)
+            /* Special pool has its own bug check codes */
+            if (MmIsSpecialPoolAddress((PVOID)BugCheckParameter1))
+            {
+                if (MmIsSpecialPoolAddressFree((PVOID)BugCheckParameter1))
+                {
+                    KiBugCheckData[0] = IsSystem
+                        ? PAGE_FAULT_IN_FREED_SPECIAL_POOL
+                        : DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL;
+                }
+                else
+                {
+                    KiBugCheckData[0] = IsSystem
+                        ? PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+                        : DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION;
+                }
+            }
+            else if (!DriverBase)
             {
                 /* Find the driver that unloaded at this address */
                 KiBugCheckDriver = NULL; // FIXME: ROS can't locate
@@ -1358,9 +1376,7 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Allocate NMI callback data */
-    NmiData = ExAllocatePoolWithTag(NonPagedPool,
-                                    sizeof(KNMI_HANDLER_CALLBACK),
-                                    'IMNK');
+    NmiData = ExAllocatePoolWithTag(NonPagedPool, sizeof(*NmiData), TAG_KNMI);
     if (!NmiData) return NULL;
 
     /* Fill in the information */
@@ -1386,10 +1402,43 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
  */
 NTSTATUS
 NTAPI
-KeDeregisterNmiCallback(PVOID Handle)
+KeDeregisterNmiCallback(IN PVOID Handle)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    KIRQL OldIrql;
+    PKNMI_HANDLER_CALLBACK NmiData;
+    PKNMI_HANDLER_CALLBACK* Previous;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Find in the list the NMI callback corresponding to the handle */
+    KiAcquireNmiListLock(&OldIrql);
+    Previous = &KiNmiCallbackListHead;
+    NmiData = *Previous;
+    while (NmiData)
+    {
+        if (NmiData->Handle == Handle)
+        {
+            /* The handle is the pointer to the callback itself */
+            ASSERT(Handle == NmiData);
+
+            /* Found it, remove from the list */
+            *Previous = NmiData->Next;
+            break;
+        }
+
+        /* Not found; try again */
+        Previous = &NmiData->Next;
+        NmiData = *Previous;
+    }
+    KiReleaseNmiListLock(OldIrql);
+
+    /* If we have found the entry, free it */
+    if (NmiData)
+    {
+        ExFreePoolWithTag(NmiData, TAG_KNMI);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_INVALID_HANDLE;
 }
 
 /*

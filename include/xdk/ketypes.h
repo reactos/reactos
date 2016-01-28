@@ -118,24 +118,38 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;;
 
 /* Processor features */
-#define PF_FLOATING_POINT_PRECISION_ERRATA  0
-#define PF_FLOATING_POINT_EMULATED          1
-#define PF_COMPARE_EXCHANGE_DOUBLE          2
-#define PF_MMX_INSTRUCTIONS_AVAILABLE       3
-#define PF_PPC_MOVEMEM_64BIT_OK             4
-#define PF_ALPHA_BYTE_INSTRUCTIONS          5
-#define PF_XMMI_INSTRUCTIONS_AVAILABLE      6
-#define PF_3DNOW_INSTRUCTIONS_AVAILABLE     7
-#define PF_RDTSC_INSTRUCTION_AVAILABLE      8
-#define PF_PAE_ENABLED                      9
-#define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10
-#define PF_SSE_DAZ_MODE_AVAILABLE          11
-#define PF_NX_ENABLED                      12
-#define PF_SSE3_INSTRUCTIONS_AVAILABLE     13
-#define PF_COMPARE_EXCHANGE128             14
-#define PF_COMPARE64_EXCHANGE128           15
-#define PF_CHANNELS_ENABLED                16
-#define PF_XSAVE_ENABLED                   17
+#define PF_FLOATING_POINT_PRECISION_ERRATA       0
+#define PF_FLOATING_POINT_EMULATED               1
+#define PF_COMPARE_EXCHANGE_DOUBLE               2
+#define PF_MMX_INSTRUCTIONS_AVAILABLE            3
+#define PF_PPC_MOVEMEM_64BIT_OK                  4
+#define PF_ALPHA_BYTE_INSTRUCTIONS               5
+#define PF_XMMI_INSTRUCTIONS_AVAILABLE           6
+#define PF_3DNOW_INSTRUCTIONS_AVAILABLE          7
+#define PF_RDTSC_INSTRUCTION_AVAILABLE           8
+#define PF_PAE_ENABLED                           9
+#define PF_XMMI64_INSTRUCTIONS_AVAILABLE        10
+#define PF_SSE_DAZ_MODE_AVAILABLE               11
+#define PF_NX_ENABLED                           12
+#define PF_SSE3_INSTRUCTIONS_AVAILABLE          13
+#define PF_COMPARE_EXCHANGE128                  14
+#define PF_COMPARE64_EXCHANGE128                15
+#define PF_CHANNELS_ENABLED                     16
+#define PF_XSAVE_ENABLED                        17
+#define PF_ARM_VFP_32_REGISTERS_AVAILABLE       18
+#define PF_ARM_NEON_INSTRUCTIONS_AVAILABLE      19
+#define PF_SECOND_LEVEL_ADDRESS_TRANSLATION     20
+#define PF_VIRT_FIRMWARE_ENABLED                21
+#define PF_RDWRFSGSBASE_AVAILABLE               22
+#define PF_FASTFAIL_AVAILABLE                   23
+#define PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE     24
+#define PF_ARM_64BIT_LOADSTORE_ATOMIC           25
+#define PF_ARM_EXTERNAL_CACHE_AVAILABLE         26
+#define PF_ARM_FMAC_INSTRUCTIONS_AVAILABLE      27
+#define PF_RDRAND_INSTRUCTION_AVAILABLE         28
+#define PF_ARM_V8_INSTRUCTIONS_AVAILABLE        29
+#define PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE 30
+#define PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE  31
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
@@ -476,6 +490,7 @@ typedef enum _KD_OPTION {
   KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
 
+#ifdef _NTSYSTEM_
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
   IN PVOID NormalContext OPTIONAL,
@@ -493,6 +508,7 @@ typedef VOID
   IN OUT PVOID *NormalContext OPTIONAL,
   IN OUT PVOID *SystemArgument1 OPTIONAL,
   IN OUT PVOID *SystemArgument2 OPTIONAL);
+#endif
 
 typedef struct _KAPC {
   UCHAR Type;
@@ -502,9 +518,13 @@ typedef struct _KAPC {
   ULONG SpareLong0;
   struct _KTHREAD *Thread;
   LIST_ENTRY ApcListEntry;
+#ifdef _NTSYSTEM_
   PKKERNEL_ROUTINE KernelRoutine;
   PKRUNDOWN_ROUTINE RundownRoutine;
   PKNORMAL_ROUTINE NormalRoutine;
+#else
+  PVOID Reserved[3];
+#endif
   PVOID NormalContext;
   PVOID SystemArgument1;
   PVOID SystemArgument2;
@@ -993,6 +1013,12 @@ extern PCCHAR KeNumberProcessors;
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Next;
+  PEXCEPTION_ROUTINE Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+
 typedef struct _NT_TIB {
   struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
   PVOID StackBase;
@@ -1071,10 +1097,10 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
 
-#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
-#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1LL << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1LL << (XSTATE_LEGACY_SSE))
 #define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
-#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+#define XSTATE_MASK_GSSE                    (1LL << (XSTATE_GSSE))
 
 #define MAXIMUM_XSTATE_FEATURES             64
 

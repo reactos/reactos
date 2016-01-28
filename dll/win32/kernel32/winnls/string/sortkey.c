@@ -225,6 +225,8 @@ static inline int compare_unicode_weights(int flags, const WCHAR *str1, int len1
         len1--;
         len2--;
     }
+    if (len1 && !*str1) len1--;
+    if (len2 && !*str2) len2--;
     return len1 - len2;
 }
 
@@ -274,6 +276,8 @@ static inline int compare_diacritic_weights(int flags, const WCHAR *str1, int le
         len1--;
         len2--;
     }
+    if (len1 && !*str1) len1--;
+    if (len2 && !*str2) len2--;
     return len1 - len2;
 }
 
@@ -323,22 +327,15 @@ static inline int compare_case_weights(int flags, const WCHAR *str1, int len1,
         len1--;
         len2--;
     }
+    if (len1 && !*str1) len1--;
+    if (len2 && !*str2) len2--;
     return len1 - len2;
-}
-
-static inline int real_length(const WCHAR *str, int len)
-{
-    while (len && !str[len - 1]) len--;
-    return len;
 }
 
 int wine_compare_string(int flags, const WCHAR *str1, int len1,
                         const WCHAR *str2, int len2)
 {
     int ret;
-
-    len1 = real_length(str1, len1);
-    len2 = real_length(str2, len2);
 
     ret = compare_unicode_weights(flags, str1, len1, str2, len2);
     if (!ret)

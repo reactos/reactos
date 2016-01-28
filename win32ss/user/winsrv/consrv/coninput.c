@@ -302,10 +302,10 @@ Quit:
 NTSTATUS NTAPI
 ConDrvReadConsole(IN PCONSOLE Console,
                   IN PCONSOLE_INPUT_BUFFER InputBuffer,
-                  /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
                   IN BOOLEAN Unicode,
                   OUT PVOID Buffer,
                   IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                  IN PVOID Parameter OPTIONAL,
                   IN ULONG NumCharsToRead,
                   OUT PULONG NumCharsRead OPTIONAL);
 static NTSTATUS
@@ -324,7 +324,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
     ULONG NrCharactersRead = 0;
     ULONG CharSize = (ReadConsoleRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    /* Compute the executable name, if needed */
+    /* Retrieve the executable name, if needed */
     if (ReadConsoleRequest->InitialNumBytes == 0 &&
         ReadConsoleRequest->ExeLength <= sizeof(ReadConsoleRequest->StaticBuffer))
     {
@@ -363,16 +363,16 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
         Buffer = ReadConsoleRequest->Buffer;
     }
 
-    DPRINT1("Calling ConDrvReadConsole(%wZ)\n", &ExeName);
+    DPRINT("Calling ConDrvReadConsole(%wZ)\n", &ExeName);
     Status = ConDrvReadConsole(InputBuffer->Header.Console,
                                InputBuffer,
-                               &ExeName,
                                ReadConsoleRequest->Unicode,
                                Buffer,
                                &ReadControl,
+                               &ExeName,
                                ReadConsoleRequest->NumBytes / CharSize, // NrCharactersToRead
                                &NrCharactersRead);
-    DPRINT1("ConDrvReadConsole returned (%d ; Status = 0x%08x)\n",
+    DPRINT("ConDrvReadConsole returned (%d ; Status = 0x%08x)\n",
            NrCharactersRead, Status);
 
     // ReadConsoleRequest->ControlKeyState = ReadControl.dwControlKeyState;

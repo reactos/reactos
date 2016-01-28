@@ -65,7 +65,6 @@ extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
 extern SHORT  maxx;
 extern SHORT  maxy;
-extern OSVERSIONINFO osvi;
 extern BOOL bUnicodeOutput;
 
 
@@ -472,7 +471,8 @@ INT cmd_type (LPTSTR);
 
 
 /* Prototypes for VER.C */
-VOID ShortVersion (VOID);
+VOID InitOSVersion(VOID);
+VOID PrintOSVersion(VOID);
 INT  cmd_ver (LPTSTR);
 
 

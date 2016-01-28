@@ -31,6 +31,11 @@ Revision History:
 
 --*/
 
+#ifndef __IDE_BUSMASTER_DEVICES_H__
+#define __IDE_BUSMASTER_DEVICES_H__
+
+#pragma pack(push, 8)
+
 #define IDE_MAX_CHAN          16
 #define IDE_DEFAULT_MAX_CHAN  2
 // Thanks to SATA Port Multipliers:
@@ -46,9 +51,6 @@ Revision History:
 
 //#define UniataGetPioTiming(LunExt)      ((LunExt->TransferMode <= ATA_PIO0) ? PIO0_TIMING : 0)
 #define UniataGetPioTiming(LunExt)      0 //ktp
-
-#ifndef __IDE_BUSMASTER_DEVICES_H__
-#define __IDE_BUSMASTER_DEVICES_H__
 
 /*#ifdef USER_MODE
 #define PVEN_STR    PCSTR
@@ -696,6 +698,11 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define VIAPRQ		0x8000
 #define VIASATA         0x10000
 
+#define CYRIX_OLD       0
+#define CYRIX_3x        1
+#define CYRIX_NEW       2
+#define CYRIX_35        3
+
 #define ITE_33          0
 #define ITE_133         1
 #define ITE_133_NEW     2
@@ -734,6 +741,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 7411, 1022, 0x00, ATA_UDMA5, "AMD 766"          , 0 | AMDBUG                      ),
     PCI_DEV_HW_SPEC_BM( 7441, 1022, 0x00, ATA_UDMA5, "AMD 768"          , 0                               ),
     PCI_DEV_HW_SPEC_BM( 7469, 1022, 0x00, ATA_UDMA6, "AMD 8111"         , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 208F, 1022, 0x00, ATA_UDMA4, "AMD CS5535"       , CYRIX_35                        ),
     PCI_DEV_HW_SPEC_BM( 209a, 1022, 0x00, ATA_UDMA5, "AMD CS5536"       , 0                               ),
 
     PCI_DEV_HW_SPEC_BM( 4349, 1002, 0x00, ATA_UDMA5, "ATI IXP200"       , 0                                       ),
@@ -1041,6 +1049,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 0d8f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 AB", UNIATA_SATA | UNIATA_AHCI  ),
 
     PCI_DEV_HW_SPEC_BM( 0502, 100b, 0x00, ATA_UDMA2, "National Geode SC1100", 0                                   ),
+    PCI_DEV_HW_SPEC_BM( 002d, 100b, 0x00, ATA_UDMA4, "National Geode CS5535", CYRIX_35                            ),
 
     PCI_DEV_HW_SPEC_BM( 4d33, 105a, 0x00, ATA_UDMA2, "Promise PDC20246" , PROLD | 0x00                            ),
     PCI_DEV_HW_SPEC_BM( 4d38, 105a, 0x00, ATA_UDMA4, "Promise PDC20262" , PRNEW | 0x00                            ),
@@ -1204,7 +1213,9 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 */
     PCI_DEV_HW_SPEC_BM( 0001, 16ca, 0x00, ATA_WDMA2, "Cenatek Rocket Drive",0                                     ),
 
-    PCI_DEV_HW_SPEC_BM( 0102, 1078, 0x00, ATA_UDMA2, "Cyrix 5530"       , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 0000, 1078, 0x00, ATA_WDMA2, "Cyrix 5510"       , CYRIX_OLD                               ),
+    PCI_DEV_HW_SPEC_BM( 0002, 1078, 0x00, ATA_WDMA2, "Cyrix 5520"       , CYRIX_OLD                               ),
+    PCI_DEV_HW_SPEC_BM( 0102, 1078, 0x00, ATA_UDMA2, "Cyrix 5530"       , CYRIX_3x                                ),
 
     PCI_DEV_HW_SPEC_BM( 1000, 1042, 0x00, ATA_PIO4,  "RZ 100x"          , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 1001, 1042, 0x00, ATA_PIO4,  "RZ 100x"          , 0                                       ),
@@ -1265,5 +1276,7 @@ Ata_is_dev_listed(
      (pciData)->ProgIf == PCI_DEV_PROGIF_AHCI_1_0 && \
      ((pciData)->u.type0.BaseAddresses[5] & ~0x7))
 
+
+#pragma pack(pop)
 
 #endif //__IDE_BUSMASTER_H__

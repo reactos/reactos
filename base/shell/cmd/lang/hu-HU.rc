@@ -136,7 +136,7 @@ DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
     STRING_DIR_HELP1 "DIR [meghajtó:][elérési_út][állománynév] [/A[[:]attribútumok]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]rendezési_feltétel]] [/P] [/Q] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
+  [/O[[:]rendezési_feltétel]] [/P] [/Q] [/R] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
   [meghajtó:][elérési_út][állományname]\n\
               Az adott hely állományait és mappáit jeleníti meg.\n\n\
   /A          A megadott attribútumu állományokat jeleníti csak meg.\n\
@@ -154,6 +154,7 @@ DELAY [/m]n\n\n\
                G  Mappák legelõl                      -  ""Nem"" prefixel fordított rendezés\n\
   /P          Csak egy képernyõnyi adat megjelenítése egyszerre.\n\
   /Q          Állomány tulajdonsosának megjelenítése.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Almappák tartalmát is megjeleníti.\n\
   /T          Controls which time field displayed or used for sorting\n\
   timefield   C  Létrehozás\n\
@@ -480,7 +481,6 @@ title         new title\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[HIBA]\n"
     STRING_REN_ERROR1 "MoveÁllomány() sikertelen. Hiba: %lu\n"
-    STRING_START_ERROR1 "Nincs batch támogatás jelenleg!"
     STRING_TIME_ERROR1 "Érvénytelen idõ."
     STRING_TYPE_ERROR1 "Érvénytelen beállítás '/%s'\n"
     STRING_WINDOW_ERROR1 "Az ablak nem található"
@@ -505,9 +505,11 @@ title         new title\n"
     STRING_REPLACE_ERROR5 "Access denied - %s\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Parancssor értelmezõ\nVersion %s %s"
-    STRING_VERSION_RUNVER " running on %s"
+    STRING_VERSION_RUNNING_ON "Running on: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d állomány másolva\n"
     STRING_DELETE_WIPE "wiped"
     STRING_FOR_ERROR "Hibás változó."

@@ -40,6 +40,9 @@
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
@@ -63,6 +66,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

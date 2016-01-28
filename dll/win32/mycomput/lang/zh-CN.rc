@@ -1,0 +1,8 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_MANAGE "管理"
+END

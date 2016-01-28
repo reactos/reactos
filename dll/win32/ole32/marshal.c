@@ -106,9 +106,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     struct stub_manager *manager;
     struct ifstub       *ifstub;
     BOOL                 tablemarshal;
-    IRpcStubBuffer      *stub = NULL;
     HRESULT              hr;
-    IUnknown            *iobject = NULL; /* object of type riid */
 
     hr = apartment_getoxid(apt, &stdobjref->oxid);
     if (hr != S_OK)
@@ -118,78 +116,57 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     if (hr != S_OK)
         return hr;
 
-    hr = IUnknown_QueryInterface(object, riid, (void **)&iobject);
-    if (hr != S_OK)
-    {
-        ERR("object doesn't expose interface %s, failing with error 0x%08x\n",
-            debugstr_guid(riid), hr);
-        return E_NOINTERFACE;
-    }
-  
-    /* IUnknown doesn't require a stub buffer, because it never goes out on
-     * the wire */
-    if (!IsEqualIID(riid, &IID_IUnknown))
-    {
-        IPSFactoryBuffer *psfb;
-
-        hr = get_facbuf_for_iid(riid, &psfb);
-        if (hr != S_OK)
-        {
-            ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
-            IUnknown_Release(iobject);
-            return hr;
-        }
-    
-        hr = IPSFactoryBuffer_CreateStub(psfb, riid, iobject, &stub);
-        IPSFactoryBuffer_Release(psfb);
-        if (hr != S_OK)
-        {
-            ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s with error 0x%08x\n",
-                debugstr_guid(riid), hr);
-            IUnknown_Release(iobject);
-            return hr;
-        }
-    }
+    if (!(manager = get_stub_manager_from_object(apt, object, TRUE)))
+        return E_OUTOFMEMORY;
 
     stdobjref->flags = SORF_NULL;
     if (mshlflags & MSHLFLAGS_TABLEWEAK)
         stdobjref->flags |= SORFP_TABLEWEAK;
     if (mshlflags & MSHLFLAGS_NOPING)
         stdobjref->flags |= SORF_NOPING;
-
-    if ((manager = get_stub_manager_from_object(apt, object)))
-        TRACE("registering new ifstub on pre-existing manager\n");
-    else
-    {
-        TRACE("constructing new stub manager\n");
-
-        manager = new_stub_manager(apt, object);
-        if (!manager)
-        {
-            if (stub) IRpcStubBuffer_Release(stub);
-            IUnknown_Release(iobject);
-            return E_OUTOFMEMORY;
-        }
-    }
     stdobjref->oid = manager->oid;
 
     tablemarshal = ((mshlflags & MSHLFLAGS_TABLESTRONG) || (mshlflags & MSHLFLAGS_TABLEWEAK));
 
     /* make sure ifstub that we are creating is unique */
     ifstub = stub_manager_find_ifstub(manager, riid, mshlflags);
-    if (!ifstub)
-        ifstub = stub_manager_new_ifstub(manager, stub, iobject, riid, dest_context, dest_context_data, mshlflags);
+    if (!ifstub) {
+        IRpcStubBuffer *stub = NULL;
 
-    if (stub) IRpcStubBuffer_Release(stub);
-    IUnknown_Release(iobject);
+        /* IUnknown doesn't require a stub buffer, because it never goes out on
+         * the wire */
+        if (!IsEqualIID(riid, &IID_IUnknown))
+        {
+            IPSFactoryBuffer *psfb;
 
-    if (!ifstub)
-    {
-        stub_manager_int_release(manager);
-        /* destroy the stub manager if it has no ifstubs by releasing
-         * zero external references */
-        stub_manager_ext_release(manager, 0, FALSE, TRUE);
-        return E_OUTOFMEMORY;
+            hr = get_facbuf_for_iid(riid, &psfb);
+            if (hr == S_OK) {
+                hr = IPSFactoryBuffer_CreateStub(psfb, riid, manager->object, &stub);
+                IPSFactoryBuffer_Release(psfb);
+                if (hr != S_OK)
+                    ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s with error 0x%08x\n",
+                        debugstr_guid(riid), hr);
+            }else {
+                ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
+                hr = E_NOINTERFACE;
+            }
+
+        }
+
+        if (hr == S_OK) {
+            ifstub = stub_manager_new_ifstub(manager, stub, riid, dest_context, dest_context_data, mshlflags);
+            if (!ifstub)
+                hr = E_OUTOFMEMORY;
+        }
+        if (stub) IRpcStubBuffer_Release(stub);
+
+        if (hr != S_OK) {
+            stub_manager_int_release(manager);
+            /* destroy the stub manager if it has no ifstubs by releasing
+             * zero external references */
+            stub_manager_ext_release(manager, 0, FALSE, TRUE);
+            return hr;
+        }
     }
 
     if (!tablemarshal)
@@ -789,11 +766,12 @@ static HRESULT proxy_manager_construct(
 
 static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX dest_context, void *dest_context_data)
 {
-    MSHCTX old_dest_context = This->dest_context;
+    MSHCTX old_dest_context;
     MSHCTX new_dest_context;
 
     do
     {
+        old_dest_context = This->dest_context;
         new_dest_context = old_dest_context;
         /* "stronger" values overwrite "weaker" values. stronger values are
          * ones that disable more optimisations */
@@ -837,7 +815,7 @@ static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX 
 
         if (old_dest_context == new_dest_context) break;
 
-        old_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
+        new_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
     } while (new_dest_context != old_dest_context);
 
     if (dest_context_data)
@@ -1028,8 +1006,11 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         IRemUnknown_AddRef(*remunk);
     }
     else if (!This->parent)
+    {
         /* disconnected - we can't create IRemUnknown */
+        *remunk = NULL;
         hr = S_FALSE;
+    }
     else
     {
         STDOBJREF stdobjref;
@@ -1713,7 +1694,7 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     OBJREF objref;
     LPMARSHAL pMarshal;
 
-    TRACE("(%p, %s, %p, %x, %p,", pStream, debugstr_guid(riid), pUnk,
+    TRACE("(%p, %s, %p, %x, %p, ", pStream, debugstr_guid(riid), pUnk,
         dwDestContext, pvDestContext);
     dump_MSHLFLAGS(mshlFlags);
     TRACE(")\n");

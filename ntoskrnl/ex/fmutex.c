@@ -31,7 +31,7 @@ FASTCALL
 ExEnterCriticalRegionAndAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
 {
     /* Call the inline */
-	_ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FastMutex);
+    _ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FastMutex);
 }
 
 /*
@@ -42,7 +42,7 @@ FASTCALL
 ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(IN OUT PFAST_MUTEX FastMutex)
 {
     /* Call the inline */
-	_ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FastMutex);
+    _ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FastMutex);
 }
 
 /*

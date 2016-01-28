@@ -260,7 +260,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     WORD stream = 0;
     int offset = 0;
 
-    TRACE("d3d8_elements %p, wined3d_elements %p\n", d3d8_elements, wined3d_elements);
+    TRACE("d3d8_elements %p, d3d8_elements_size %p, wined3d_elements %p\n", d3d8_elements, d3d8_elements_size, wined3d_elements);
 
     /* 128 should be enough for anyone... */
     *wined3d_elements = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 128 * sizeof(**wined3d_elements));
@@ -272,7 +272,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
         {
             stream = ((*token & D3DVSD_STREAMNUMBERMASK) >> D3DVSD_STREAMNUMBERSHIFT);
             offset = 0;
-        } else if (token_type == D3DVSD_TOKEN_STREAMDATA && !(token_type & 0x10000000)) {
+        } else if (token_type == D3DVSD_TOKEN_STREAMDATA && !(*token & D3DVSD_DATALOADTYPEMASK)) {
             DWORD type = ((*token & D3DVSD_DATATYPEMASK) >> D3DVSD_DATATYPESHIFT);
             DWORD reg  = ((*token & D3DVSD_VERTEXREGMASK) >> D3DVSD_VERTEXREGSHIFT);
 
@@ -283,12 +283,14 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
             element->input_slot = stream;
             element->offset = offset;
             element->output_slot = reg;
+            element->input_slot_class = WINED3D_INPUT_PER_VERTEX_DATA;
+            element->instance_data_step_rate = 0;
             element->method = WINED3D_DECL_METHOD_DEFAULT;
             element->usage = wined3d_usage_lookup[reg].usage;
             element->usage_idx = wined3d_usage_lookup[reg].usage_idx;
 
             offset += wined3d_type_sizes[type];
-        } else if (token_type == D3DVSD_TOKEN_STREAMDATA && (token_type & 0x10000000)) {
+        } else if (token_type == D3DVSD_TOKEN_STREAMDATA && (*token & D3DVSD_DATALOADTYPEMASK)) {
             TRACE(" 0x%08x SKIP(%u)\n", token_type, ((token_type & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT));
             offset += sizeof(DWORD) * ((token_type & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT);
         }

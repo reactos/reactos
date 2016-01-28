@@ -40,7 +40,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 		                           (wchar_t*)((size_t)wcstr),
 		                           Length * sizeof(WCHAR));
 
-		return (size_t)Size;
+		return (size_t)(Size / sizeof(char));
 	}
 
 	Status = RtlUnicodeToMultiByteN (mbstr,
@@ -51,7 +51,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 	if (!NT_SUCCESS(Status))
 		return -1;
 
-	return (size_t)Size;
+	return (size_t)(Size / sizeof(char));
 }
 
 /* EOF */

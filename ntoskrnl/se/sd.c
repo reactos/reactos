@@ -281,8 +281,9 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
             {
                 if (*Present)
                 {
-                    CapturedQos = ExAllocatePool(PoolType,
-                                                 sizeof(SECURITY_QUALITY_OF_SERVICE));
+                    CapturedQos = ExAllocatePoolWithTag(PoolType,
+                                                        sizeof(SECURITY_QUALITY_OF_SERVICE),
+                                                        TAG_QOS);
                     if (CapturedQos != NULL)
                     {
                         RtlCopyMemory(CapturedQos,
@@ -312,8 +313,9 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                         if (((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
                             sizeof(SECURITY_QUALITY_OF_SERVICE))
                         {
-                            CapturedQos = ExAllocatePool(PoolType,
-                                                         sizeof(SECURITY_QUALITY_OF_SERVICE));
+                            CapturedQos = ExAllocatePoolWithTag(PoolType,
+                                                                sizeof(SECURITY_QUALITY_OF_SERVICE),
+                                                                TAG_QOS);
                             if (CapturedQos != NULL)
                             {
                                 RtlCopyMemory(CapturedQos,
@@ -371,7 +373,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
     if (CapturedSecurityQualityOfService != NULL &&
         (AccessMode != KernelMode || CaptureIfKernel))
     {
-        ExFreePool(CapturedSecurityQualityOfService);
+        ExFreePoolWithTag(CapturedSecurityQualityOfService, TAG_QOS);
     }
 }
 
@@ -615,11 +617,14 @@ SeCaptureSecurityDescriptor(
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
-                              IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-                              IN OUT PULONG Length,
-                              IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeQuerySecurityDescriptorInfo(
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _Out_writes_bytes_(*Length) PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_ PULONG Length,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR ObjectSd;
     PISECURITY_DESCRIPTOR_RELATIVE RelSD;
@@ -631,9 +636,11 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
     ULONG GroupLength = 0;
     ULONG DaclLength = 0;
     ULONG SaclLength = 0;
-    ULONG Control = 0;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG_PTR Current;
     ULONG SdLength;
+
+    PAGED_CODE();
 
     RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
@@ -706,7 +713,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
     /* Build the new security descrtiptor */
     RtlCreateSecurityDescriptorRelative(RelSD,
                                         SECURITY_DESCRIPTOR_REVISION);
-    RelSD->Control = (USHORT)Control;
+    RelSD->Control = Control;
 
     Current = (ULONG_PTR)(RelSD + 1);
 
@@ -781,29 +788,59 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
-                            IN PSECURITY_INFORMATION _SecurityInformation,
-                            IN PSECURITY_DESCRIPTOR _SecurityDescriptor,
-                            IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-                            IN POOL_TYPE PoolType,
-                            IN PGENERIC_MAPPING GenericMapping)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfo(
+    _In_opt_ PVOID Object,
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
+{
+    PAGED_CODE();
+
+    return SeSetSecurityDescriptorInfoEx(Object,
+                                         SecurityInformation,
+                                         SecurityDescriptor,
+                                         ObjectsSecurityDescriptor,
+                                         0,
+                                         PoolType,
+                                         GenericMapping);
+}
+
+/*
+ * @implemented
+ */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfoEx(
+    _In_opt_ PVOID Object,
+    _In_ PSECURITY_INFORMATION _SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    _In_ ULONG AutoInheritFlags,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PISECURITY_DESCRIPTOR_RELATIVE ObjectSd;
     PISECURITY_DESCRIPTOR_RELATIVE NewSd;
     PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
-    PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
-    PSID Owner = 0;
-    PSID Group = 0;
-    PACL Dacl = 0;
-    PACL Sacl = 0;
-    ULONG OwnerLength = 0;
-    ULONG GroupLength = 0;
-    ULONG DaclLength = 0;
-    ULONG SaclLength = 0;
-    ULONG Control = 0;
+    PSID Owner;
+    PSID Group;
+    PACL Dacl;
+    PACL Sacl;
+    ULONG OwnerLength;
+    ULONG GroupLength;
+    ULONG DaclLength;
+    ULONG SaclLength;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG Current;
     SECURITY_INFORMATION SecurityInformation;
+
+    PAGED_CODE();
 
     ObjectSd = *ObjectsSecurityDescriptor;
 
@@ -818,116 +855,64 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
     /* Get owner and owner size */
     if (SecurityInformation & OWNER_SECURITY_INFORMATION)
     {
-        if (SecurityDescriptor->Owner != NULL)
-        {
-            if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
-                Owner = (PSID)((ULONG_PTR)RelSD->Owner +
-                               (ULONG_PTR)SecurityDescriptor);
-            else
-                Owner = (PSID)SecurityDescriptor->Owner;
-            OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-        }
-
+        Owner = SepGetOwnerFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & SE_OWNER_DEFAULTED);
     }
     else
     {
-        if (ObjectSd->Owner)
-        {
-            Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
-            OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-        }
-
+        Owner = SepGetOwnerFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
     }
+    OwnerLength = Owner ? RtlLengthSid(Owner) : 0;
+    ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Get group and group size */
     if (SecurityInformation & GROUP_SECURITY_INFORMATION)
     {
-        if (SecurityDescriptor->Group != NULL)
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
-                               (ULONG_PTR)SecurityDescriptor);
-            else
-                Group = (PSID)SecurityDescriptor->Group;
-            GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-        }
-
+        Group = SepGetGroupFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & SE_GROUP_DEFAULTED);
     }
     else
     {
-        if (ObjectSd->Group)
-        {
-            Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
-            GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-        }
-
+        Group = SepGetGroupFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
     }
+    GroupLength = Group ? RtlLengthSid(Group) : 0;
+    ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Get DACL and DACL size */
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
-        if ((SecurityDescriptor->Control & SE_DACL_PRESENT) &&
-            (SecurityDescriptor->Dacl != NULL))
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
-                              (ULONG_PTR)SecurityDescriptor);
-            else
-                Dacl = (PACL)SecurityDescriptor->Dacl;
-
-            DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-        }
-
+        Dacl = SepGetDaclFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
     }
     else
     {
-        if ((ObjectSd->Control & SE_DACL_PRESENT) && (ObjectSd->Dacl))
-        {
-            Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
-            DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-        }
-
+        Dacl = SepGetDaclFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
     }
+    DaclLength = Dacl ? ROUND_UP((ULONG)Dacl->AclSize, 4) : 0;
 
     /* Get SACL and SACL size */
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
-        if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
-            (SecurityDescriptor->Sacl != NULL))
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
-                              (ULONG_PTR)SecurityDescriptor);
-            else
-                Sacl = (PACL)SecurityDescriptor->Sacl;
-            SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-        }
-
+        Sacl = SepGetSaclFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
     }
     else
     {
-        if ((ObjectSd->Control & SE_SACL_PRESENT) && (ObjectSd->Sacl))
-        {
-            Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
-            SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-        }
-
+        Sacl = SepGetSaclFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
     }
+    SaclLength = Sacl ? ROUND_UP((ULONG)Sacl->AclSize, 4) : 0;
 
-    NewSd = ExAllocatePool(NonPagedPool,
-                           sizeof(SECURITY_DESCRIPTOR_RELATIVE) + OwnerLength + GroupLength +
-                           DaclLength + SaclLength);
+    NewSd = ExAllocatePoolWithTag(NonPagedPool,
+                                  sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
+                                  OwnerLength + GroupLength +
+                                  DaclLength + SaclLength,
+                                  TAG_SD);
     if (NewSd == NULL)
     {
-        ObDereferenceObject(Object);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -935,7 +920,7 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
                                 SECURITY_DESCRIPTOR_REVISION1);
 
     /* We always build a self-relative descriptor */
-    NewSd->Control = (USHORT)Control | SE_SELF_RELATIVE;
+    NewSd->Control = Control | SE_SELF_RELATIVE;
 
     Current = sizeof(SECURITY_DESCRIPTOR);
 
@@ -969,29 +954,6 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
 
     *ObjectsSecurityDescriptor = NewSd;
     return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
-                              IN PSECURITY_INFORMATION SecurityInformation,
-                              IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-                              IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-                              IN ULONG AutoInheritFlags,
-                              IN POOL_TYPE PoolType,
-                              IN PGENERIC_MAPPING GenericMapping)
-{
-    PISECURITY_DESCRIPTOR ObjectSd = *ObjectsSecurityDescriptor;
-
-    /* The object does not have a security descriptor. */
-    if (!ObjectSd)
-        return STATUS_NO_SECURITY_ON_OBJECT;
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1028,7 +990,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
     SdLength = sizeof(SECURITY_DESCRIPTOR);
 
     /* Check Owner SID */
-    if (SecurityDescriptor->Owner)
+    if (!SecurityDescriptor->Owner)
     {
         DPRINT1("No Owner SID\n");
         return FALSE;
@@ -1134,8 +1096,11 @@ SeValidSecurityDescriptor(IN ULONG Length,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeDeassignSecurity(
+    _Inout_ PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PAGED_CODE();
 
@@ -1148,55 +1113,60 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
     return STATUS_SUCCESS;
 }
 
-
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-                   IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-                   OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-                   IN GUID *ObjectType OPTIONAL,
-                   IN BOOLEAN IsDirectoryObject,
-                   IN ULONG AutoInheritFlags,
-                   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                   IN PGENERIC_MAPPING GenericMapping,
-                   IN POOL_TYPE PoolType)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
-                 PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
-                 PSECURITY_DESCRIPTOR *NewDescriptor,
-                 BOOLEAN IsDirectoryObject,
-                 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                 PGENERIC_MAPPING GenericMapping,
-                 POOL_TYPE PoolType)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeAssignSecurityEx(
+    _In_opt_ PSECURITY_DESCRIPTOR _ParentDescriptor,
+    _In_opt_ PSECURITY_DESCRIPTOR _ExplicitDescriptor,
+    _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+    _In_opt_ GUID *ObjectType,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ ULONG AutoInheritFlags,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ POOL_TYPE PoolType)
 {
     PISECURITY_DESCRIPTOR ParentDescriptor = _ParentDescriptor;
     PISECURITY_DESCRIPTOR ExplicitDescriptor = _ExplicitDescriptor;
     PISECURITY_DESCRIPTOR_RELATIVE Descriptor;
     PTOKEN Token;
-    ULONG OwnerLength = 0;
-    ULONG GroupLength = 0;
-    ULONG DaclLength = 0;
-    ULONG SaclLength = 0;
-    ULONG Length = 0;
-    ULONG Control = 0;
+    ULONG OwnerLength;
+    ULONG GroupLength;
+    ULONG DaclLength;
+    ULONG SaclLength;
+    ULONG Length;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG Current;
     PSID Owner = NULL;
     PSID Group = NULL;
+    PACL ExplicitAcl;
+    BOOLEAN ExplicitPresent;
+    BOOLEAN ExplicitDefaulted;
+    PACL ParentAcl;
     PACL Dacl = NULL;
     PACL Sacl = NULL;
+    BOOLEAN DaclIsInherited;
+    BOOLEAN SaclIsInherited;
+    BOOLEAN DaclPresent;
+    BOOLEAN SaclPresent;
+    NTSTATUS Status;
+
+    DBG_UNREFERENCED_PARAMETER(ObjectType);
+    DBG_UNREFERENCED_PARAMETER(AutoInheritFlags);
+    UNREFERENCED_PARAMETER(PoolType);
 
     PAGED_CODE();
+
+    *NewDescriptor = NULL;
+
+    if (!ARGUMENT_PRESENT(SubjectContext))
+    {
+        return STATUS_NO_TOKEN;
+    }
 
     /* Lock subject context */
     SeLockSubjectContext(SubjectContext);
@@ -1216,101 +1186,139 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
         DPRINT("Use explicit owner sid!\n");
         Owner = SepGetOwnerFromDescriptor(ExplicitDescriptor);
     }
-
     if (!Owner)
     {
-        if (Token != NULL)
+        if (AutoInheritFlags & 0x20 /* FIXME: SEF_DEFAULT_OWNER_FROM_PARENT */)
+        {
+            DPRINT("Use parent owner sid!\n");
+            if (!ARGUMENT_PRESENT(ParentDescriptor))
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_OWNER;
+            }
+
+            Owner = SepGetOwnerFromDescriptor(ParentDescriptor);
+            if (!Owner)
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_OWNER;
+            }
+        }
+        else
         {
             DPRINT("Use token owner sid!\n");
             Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
         }
-        else
-        {
-            DPRINT("Use default owner sid!\n");
-            Owner = SeLocalSystemSid;
-        }
-
-        Control |= SE_OWNER_DEFAULTED;
     }
-
-    OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+    OwnerLength = RtlLengthSid(Owner);
+    ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Inherit the Group SID */
     if (ExplicitDescriptor != NULL)
     {
         Group = SepGetGroupFromDescriptor(ExplicitDescriptor);
     }
-
     if (!Group)
     {
-        if (Token != NULL)
+        if (AutoInheritFlags & 0x40 /* FIXME: SEF_DEFAULT_GROUP_FROM_PARENT */)
+        {
+            DPRINT("Use parent group sid!\n");
+            if (!ARGUMENT_PRESENT(ParentDescriptor))
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_PRIMARY_GROUP;
+            }
+
+            Group = SepGetGroupFromDescriptor(ParentDescriptor);
+            if (!Group)
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_PRIMARY_GROUP;
+            }
+        }
+        else
         {
             DPRINT("Use token group sid!\n");
             Group = Token->PrimaryGroup;
         }
-        else
-        {
-            DPRINT("Use default group sid!\n");
-            Group = SeLocalSystemSid;
-        }
-
-        Control |= SE_GROUP_DEFAULTED;
     }
-
-    GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+    if (!Group)
+    {
+        SeUnlockSubjectContext(SubjectContext);
+        return STATUS_INVALID_PRIMARY_GROUP;
+    }
+    GroupLength = RtlLengthSid(Group);
+    ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Inherit the DACL */
+    DaclLength = 0;
+    ExplicitAcl = NULL;
+    ExplicitPresent = FALSE;
+    ExplicitDefaulted = FALSE;
     if (ExplicitDescriptor != NULL &&
-        (ExplicitDescriptor->Control & SE_DACL_PRESENT) &&
-        !(ExplicitDescriptor->Control & SE_DACL_DEFAULTED))
+        (ExplicitDescriptor->Control & SE_DACL_PRESENT))
     {
-        DPRINT("Use explicit DACL!\n");
-        Dacl = SepGetDaclFromDescriptor(ExplicitDescriptor);
+        ExplicitAcl = SepGetDaclFromDescriptor(ExplicitDescriptor);
+        ExplicitPresent = TRUE;
+        if (ExplicitDescriptor->Control & SE_DACL_DEFAULTED)
+            ExplicitDefaulted = TRUE;
+    }
+    ParentAcl = NULL;
+    if (ParentDescriptor != NULL &&
+        (ParentDescriptor->Control & SE_DACL_PRESENT))
+    {
+        ParentAcl = SepGetDaclFromDescriptor(ParentDescriptor);
+    }
+    Dacl = SepSelectAcl(ExplicitAcl,
+                        ExplicitPresent,
+                        ExplicitDefaulted,
+                        ParentAcl,
+                        Token->DefaultDacl,
+                        &DaclLength,
+                        Owner,
+                        Group,
+                        &DaclPresent,
+                        &DaclIsInherited,
+                        IsDirectoryObject,
+                        GenericMapping);
+    if (DaclPresent)
         Control |= SE_DACL_PRESENT;
-    }
-    else if (ParentDescriptor != NULL &&
-             (ParentDescriptor->Control & SE_DACL_PRESENT))
-    {
-        DPRINT("Use parent DACL!\n");
-        /* FIXME: Inherit */
-        Dacl = SepGetDaclFromDescriptor(ParentDescriptor);
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
-    }
-    else if (Token != NULL && Token->DefaultDacl != NULL)
-    {
-        DPRINT("Use token default DACL!\n");
-        /* FIXME: Inherit */
-        Dacl = Token->DefaultDacl;
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
-    }
-    else
-    {
-        DPRINT("Use NULL DACL!\n");
-        Dacl = NULL;
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
-    }
-
-    DaclLength = (Dacl != NULL) ? ROUND_UP(Dacl->AclSize, 4) : 0;
+    ASSERT(DaclLength % sizeof(ULONG) == 0);
 
     /* Inherit the SACL */
+    SaclLength = 0;
+    ExplicitAcl = NULL;
+    ExplicitPresent = FALSE;
+    ExplicitDefaulted = FALSE;
     if (ExplicitDescriptor != NULL &&
-        (ExplicitDescriptor->Control & SE_SACL_PRESENT) &&
-        !(ExplicitDescriptor->Control & SE_SACL_DEFAULTED))
+        (ExplicitDescriptor->Control & SE_SACL_PRESENT))
     {
-        DPRINT("Use explicit SACL!\n");
-        Sacl = SepGetSaclFromDescriptor(ExplicitDescriptor);
+        ExplicitAcl = SepGetSaclFromDescriptor(ExplicitDescriptor);
+        ExplicitPresent = TRUE;
+        if (ExplicitDescriptor->Control & SE_SACL_DEFAULTED)
+            ExplicitDefaulted = TRUE;
+    }
+    ParentAcl = NULL;
+    if (ParentDescriptor != NULL &&
+        (ParentDescriptor->Control & SE_SACL_PRESENT))
+    {
+        ParentAcl = SepGetSaclFromDescriptor(ParentDescriptor);
+    }
+    Sacl = SepSelectAcl(ExplicitAcl,
+                        ExplicitPresent,
+                        ExplicitDefaulted,
+                        ParentAcl,
+                        NULL,
+                        &SaclLength,
+                        Owner,
+                        Group,
+                        &SaclPresent,
+                        &SaclIsInherited,
+                        IsDirectoryObject,
+                        GenericMapping);
+    if (SaclPresent)
         Control |= SE_SACL_PRESENT;
-    }
-    else if (ParentDescriptor != NULL &&
-             (ParentDescriptor->Control & SE_SACL_PRESENT))
-    {
-        DPRINT("Use parent SACL!\n");
-        /* FIXME: Inherit */
-        Sacl = SepGetSaclFromDescriptor(ParentDescriptor);
-        Control |= (SE_SACL_PRESENT | SE_SACL_DEFAULTED);
-    }
-
-    SaclLength = (Sacl != NULL) ? ROUND_UP(Sacl->AclSize, 4) : 0;
+    ASSERT(SaclLength % sizeof(ULONG) == 0);
 
     /* Allocate and initialize the new security descriptor */
     Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
@@ -1327,27 +1335,43 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
     if (Descriptor == NULL)
     {
         DPRINT1("ExAlloctePool() failed\n");
-        /* FIXME: Unlock subject context */
+        SeUnlockSubjectContext(SubjectContext);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     RtlZeroMemory(Descriptor, Length);
     RtlCreateSecurityDescriptor(Descriptor, SECURITY_DESCRIPTOR_REVISION);
 
-    Descriptor->Control = (USHORT)Control | SE_SELF_RELATIVE;
+    Descriptor->Control = Control | SE_SELF_RELATIVE;
 
     Current = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
 
     if (SaclLength != 0)
     {
-        RtlCopyMemory((PUCHAR)Descriptor + Current, Sacl, SaclLength);
+        Status = SepPropagateAcl((PACL)((PUCHAR)Descriptor + Current),
+                                 &SaclLength,
+                                 Sacl,
+                                 Owner,
+                                 Group,
+                                 SaclIsInherited,
+                                 IsDirectoryObject,
+                                 GenericMapping);
+        ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Sacl = Current;
         Current += SaclLength;
     }
 
     if (DaclLength != 0)
     {
-        RtlCopyMemory((PUCHAR)Descriptor + Current, Dacl, DaclLength);
+        Status = SepPropagateAcl((PACL)((PUCHAR)Descriptor + Current),
+                                 &DaclLength,
+                                 Dacl,
+                                 Owner,
+                                 Group,
+                                 DaclIsInherited,
+                                 IsDirectoryObject,
+                                 GenericMapping);
+        ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Dacl = Current;
         Current += DaclLength;
     }
@@ -1375,10 +1399,38 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
 
     *NewDescriptor = Descriptor;
 
-    DPRINT("Descrptor %p\n", Descriptor);
+    DPRINT("Descriptor %p\n", Descriptor);
     ASSERT(RtlLengthSecurityDescriptor(Descriptor));
 
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeAssignSecurity(
+    _In_opt_ PSECURITY_DESCRIPTOR ParentDescriptor,
+    _In_opt_ PSECURITY_DESCRIPTOR ExplicitDescriptor,
+    _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ POOL_TYPE PoolType)
+{
+    PAGED_CODE();
+
+    return SeAssignSecurityEx(ParentDescriptor,
+                              ExplicitDescriptor,
+                              NewDescriptor,
+                              NULL,
+                              IsDirectoryObject,
+                              0,
+                              SubjectContext,
+                              GenericMapping,
+                              PoolType);
 }
 
 /* EOF */

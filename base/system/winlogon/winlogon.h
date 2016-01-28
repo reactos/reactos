@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
- * FILE:            subsys/system/winlogon/winlogon.h
+ * FILE:            base/system/winlogon/winlogon.h
  * PURPOSE:         Winlogon
  * PROGRAMMER:
  */
@@ -46,7 +46,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
-#include "setup.h"
 #include "resource.h"
 
 typedef BOOL (WINAPI * PFWLXNEGOTIATE)  (DWORD, DWORD *);
@@ -240,6 +239,23 @@ typedef struct _WLSESSION
     WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
+typedef enum _NOTIFICATION_TYPE
+{
+    LogonHandler,
+    LogoffHandler,
+    LockHandler,
+    UnlockHandler,
+    StartupHandler,
+    ShutdownHandler,
+    StartScreenSaverHandler,
+    StopScreenSaverHandler,
+    DisconnectHandler,
+    ReconnectHandler,
+    StartShellHandler,
+    PostShellHandler,
+    LastHandler
+} NOTIFICATION_TYPE, *PNOTIFICATION_TYPE;
+
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
@@ -259,6 +275,22 @@ extern PWLSESSION WLSession;
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session);
 
+/* notifiy.c */
+BOOL
+InitNotifications(VOID);
+
+VOID
+CleanupNotifications(VOID);
+
+VOID
+CallNotificationDlls(
+    PWLSESSION pSession,
+    NOTIFICATION_TYPE Type);
+
+/* rpcserver.c */
+BOOL
+StartRpcServer(VOID);
+
 /* sas.c */
 BOOL
 SetDefaultLanguage(IN BOOL UserProfile);
@@ -273,8 +305,14 @@ InitializeScreenSaver(IN OUT PWLSESSION Session);
 VOID
 StartScreenSaver(IN PWLSESSION Session);
 
-/* winlogon.c */
+/* setup.c */
+DWORD
+GetSetupType(VOID);
 
+BOOL
+RunSetup(VOID);
+
+/* winlogon.c */
 BOOL
 PlaySoundRoutine(IN LPCWSTR FileName,
                  IN UINT Logon,

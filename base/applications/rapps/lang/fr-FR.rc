@@ -6,23 +6,23 @@ BEGIN
     BEGIN
         MENUITEM "&Configuration", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "S&ortir", ID_EXIT
+        MENUITEM "&Quitter", ID_EXIT
     END
     POPUP "&Programmes"
     BEGIN
-        MENUITEM "&Installer", ID_INSTALL
-        MENUITEM "&Désinstaller", ID_UNINSTALL
+        MENUITEM "&Installer\tCtrl+Entrée", ID_INSTALL
+        MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Supprimer du registre", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Rafraîchir", ID_REFRESH
+        MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Me&ttre à jour la base", ID_RESETDB
+        MENUITEM "Me&ttre à jour la base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aide"
     BEGIN
-        MENUITEM "Aide", ID_HELP, GRAYED
+        MENUITEM "Aide\tF1", ID_HELP, GRAYED
         MENUITEM "À propos", ID_ABOUT
     END
 END
@@ -40,35 +40,42 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Installer", ID_INSTALL
-        MENUITEM "&Désinstaller", ID_UNINSTALL
+        MENUITEM "&Installer\tCtrl+Entrée", ID_INSTALL
+        MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Supprimer du registre", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Rafraîchir", ID_REFRESH
+        MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Me&ttre à jour la base", ID_RESETDB
+        MENUITEM "Me&ttre à jour la base\tCtrl+F5", ID_RESETDB
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 144
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Général", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Enregistrer la position de la fenêtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarage", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Journal de l'installation de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarrage", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Journal de l'installation et de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Téléchargement", -1, 4, 65, 240, 51
-    LTEXT "Fichier des téléchargements :", -1, 16, 75, 100, 9
+    LTEXT "Dossier des téléchargements :", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Sélectionner", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Supprimer l'installateur du programme après l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-    PUSHBUTTON "Accepter", IDOK, 116, 124, 60, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 181, 124, 60, 14
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "Paramètres du proxy système", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (Pas de proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Pas de proxy pour", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "Accepter", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -83,14 +90,14 @@ BEGIN
     PUSHBUTTON "Annuler", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 76
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Télécharger..."
+CAPTION "Téléchargement..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
-    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON "Annuler", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Annuler", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
@@ -122,15 +129,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "\nVersion: "
-    IDS_INFO_DESCRIPTION "\nDescription: "
+    IDS_INFO_VERSION "\nVersion : "
+    IDS_INFO_DESCRIPTION "\nDescription : "
     IDS_INFO_PUBLISHER "\nAuteur : "
     IDS_INFO_HELPLINK "\nLien d'aide : "
     IDS_INFO_HELPPHONE "\nTéléphone d'aide : "
     IDS_INFO_README "\nLisez-moi : "
     IDS_INFO_REGOWNER "\nUtilisateur enregistré : "
     IDS_INFO_PRODUCTID "\nID du produit : "
-    IDS_INFO_CONTACT "\nContact: "
+    IDS_INFO_CONTACT "\nContact : "
     IDS_INFO_UPDATEINFO "\nInformation de mise à jour : "
     IDS_INFO_INFOABOUT "\nInformation à propos : "
     IDS_INFO_COMMENTS "\nCommentaires : "
@@ -143,11 +150,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION "\nVersion: "
-    IDS_AINFO_DESCRIPTION "\nDescription: "
+    IDS_AINFO_VERSION "\nVersion : "
+    IDS_AINFO_DESCRIPTION "\nDescription : "
     IDS_AINFO_SIZE "\nTaille : "
     IDS_AINFO_URLSITE "\nSite internet : "
-    IDS_AINFO_LICENCE "\nLicence: "
+    IDS_AINFO_LICENSE "\nLicence : "
 END
 
 STRINGTABLE
@@ -177,7 +184,7 @@ BEGIN
     IDS_UNINSTALL "Désinstaller"
     IDS_MODIFY "Modifier"
     IDS_APPS_COUNT "Nombre d'applications : %d"
-    IDS_WELCOME_TITLE "Bienvenue à ReactOS Applications Manager!\n\n"
+    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !\n\n"
     IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Installé"
@@ -186,7 +193,11 @@ BEGIN
     IDS_APPLICATIONS "Applications"
     IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel les programmes seront téléchargés :"
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
-    IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"
+    IDS_APP_REG_REMOVE "Êtes-vous sûr de vouloir supprimer du registre les données du programme installé ?"
     IDS_INFORMATION "Information"
-    IDS_UNABLE_TO_REMOVE "Impossible de supprimer les données du programme du registre !"
+    IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"
+    IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
+    IDS_CERT_DOES_NOT_MATCH "La vérification du certificat SSL a échoué."
+    IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet..."
+    IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
 END

@@ -47,6 +47,7 @@
 #include <richole.h>
 #include <imm.h>
 #include <textserv.h>
+#include <tom.h>
 #include <usp10.h>
 
 #include <wine/debug.h>
@@ -103,9 +104,10 @@ static inline const char *debugstr_run( const ME_Run *run )
 /* style.c */
 ME_Style *ME_MakeStyle(CHARFORMAT2W *style) DECLSPEC_HIDDEN;
 void ME_AddRefStyle(ME_Style *item) DECLSPEC_HIDDEN;
+void ME_DestroyStyle(ME_Style *item) DECLSPEC_HIDDEN;
 void ME_ReleaseStyle(ME_Style *item) DECLSPEC_HIDDEN;
 ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor) DECLSPEC_HIDDEN;
-ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style) DECLSPEC_HIDDEN;
+ME_Style *ME_ApplyStyle(ME_TextEditor *ed, ME_Style *sSrc, CHARFORMAT2W *style) DECLSPEC_HIDDEN;
 HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s) DECLSPEC_HIDDEN;
 void ME_UnselectStyleFont(ME_Context *c, ME_Style *s, HFONT hOldFont) DECLSPEC_HIDDEN;
 void ME_InitCharFormat2W(CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
@@ -200,6 +202,7 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod) DECLSPEC_
 /* caret.c */
 void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
 int ME_SetSelection(ME_TextEditor *editor, int from, int to) DECLSPEC_HIDDEN;
+BOOL ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs) DECLSPEC_HIDDEN;
 void ME_HideCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
 void ME_ShowCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
 void ME_MoveCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
@@ -246,7 +249,7 @@ void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]) DECLSPEC_HID
 BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 void ME_MarkAllForWrapping(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_SetDefaultParaFormat(PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
+void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 
 /* paint.c */
 void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate) DECLSPEC_HIDDEN;
@@ -274,25 +277,28 @@ void ME_UpdateScrollBar(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 int ME_GetParaBorderWidth(const ME_Context *c, int flags) DECLSPEC_HIDDEN;
 
 /* richole.c */
-LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *) DECLSPEC_HIDDEN;
+LRESULT CreateIRichEditOle(IUnknown *outer_unk, ME_TextEditor *editor, LPVOID *ppvObj) DECLSPEC_HIDDEN;
 void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run* run, ME_Paragraph *para, BOOL selected) DECLSPEC_HIDDEN;
 void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize) DECLSPEC_HIDDEN;
 void ME_CopyReObject(REOBJECT* dst, const REOBJECT* src) DECLSPEC_HIDDEN;
 void ME_DeleteReObject(REOBJECT* reo) DECLSPEC_HIDDEN;
+void ME_GetITextDocumentInterface(IRichEditOle *iface, LPVOID *ppvObj) DECLSPEC_HIDDEN;
 
 /* editor.c */
-ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;
+ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10, DWORD csStyle) DECLSPEC_HIDDEN;
+void ME_DestroyEditor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
                          LPARAM lParam, BOOL unicode, HRESULT* phresult) DECLSPEC_HIDDEN;
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode) DECLSPEC_HIDDEN;
 int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
-                const ME_Cursor *start, int srcChars, BOOL bCRLF) DECLSPEC_HIDDEN;
+                const ME_Cursor *start, int srcChars, BOOL bCRLF, BOOL bEOP) DECLSPEC_HIDDEN;
 void ME_RTFCharAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_RTFParAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_RTFTblAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_RTFSpecialCharHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_StreamInFill(ME_InStream *stream) DECLSPEC_HIDDEN;
 extern BOOL me_debug DECLSPEC_HIDDEN;
+void ME_ReplaceSel(ME_TextEditor *editor, BOOL can_undo, const WCHAR *str, int len) DECLSPEC_HIDDEN;
 
 /* table.c */
 BOOL ME_IsInTable(ME_DisplayItem *pItem) DECLSPEC_HIDDEN;
@@ -380,5 +386,7 @@ LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream) 
 
 /* clipboard.c */
 HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj) DECLSPEC_HIDDEN;
+
+void release_typelib(void) DECLSPEC_HIDDEN;
 
 #endif /* _RICHED20_EDITOR_H */

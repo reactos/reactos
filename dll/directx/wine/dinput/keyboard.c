@@ -319,6 +319,8 @@ static HRESULT WINAPI SysKeyboardWImpl_GetDeviceState(LPDIRECTINPUTDEVICE8W ifac
     if (len != This->base.data_format.user_df->dwDataSize )
         return DIERR_INVALIDPARAM;
 
+    check_dinput_events();
+
     EnterCriticalSection(&This->base.crit);
 
     if (TRACE_ON(dinput)) {
@@ -511,6 +513,29 @@ static HRESULT WINAPI SysKeyboardAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
     return SysKeyboardWImpl_GetProperty(IDirectInputDevice8W_from_impl(This), rguid, pdiph);
 }
 
+static HRESULT WINAPI SysKeyboardWImpl_Acquire(LPDIRECTINPUTDEVICE8W iface)
+{
+    SysKeyboardImpl *This = impl_from_IDirectInputDevice8W(iface);
+    HRESULT res;
+
+    TRACE("(%p)\n", This);
+
+    res = IDirectInputDevice2WImpl_Acquire(iface);
+    if (res == DI_OK)
+    {
+        TRACE("clearing keystate\n");
+        memset(This->DInputKeyState, 0, sizeof(This->DInputKeyState));
+    }
+
+    return res;
+}
+
+static HRESULT WINAPI SysKeyboardAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
+{
+    SysKeyboardImpl *This = impl_from_IDirectInputDevice8A(iface);
+    return SysKeyboardWImpl_Acquire(IDirectInputDevice8W_from_impl(This));
+}
+
 static HRESULT WINAPI SysKeyboardWImpl_BuildActionMap(LPDIRECTINPUTDEVICE8W iface,
                                                       LPDIACTIONFORMATW lpdiaf,
                                                       LPCWSTR lpszUserName,
@@ -599,7 +624,7 @@ static const IDirectInputDevice8AVtbl SysKeyboardAvt =
     IDirectInputDevice2AImpl_EnumObjects,
     SysKeyboardAImpl_GetProperty,
     IDirectInputDevice2AImpl_SetProperty,
-    IDirectInputDevice2AImpl_Acquire,
+    SysKeyboardAImpl_Acquire,
     IDirectInputDevice2AImpl_Unacquire,
     SysKeyboardAImpl_GetDeviceState,
     IDirectInputDevice2AImpl_GetDeviceData,
@@ -635,7 +660,7 @@ static const IDirectInputDevice8WVtbl SysKeyboardWvt =
     IDirectInputDevice2WImpl_EnumObjects,
     SysKeyboardWImpl_GetProperty,
     IDirectInputDevice2WImpl_SetProperty,
-    IDirectInputDevice2WImpl_Acquire,
+    SysKeyboardWImpl_Acquire,
     IDirectInputDevice2WImpl_Unacquire,
     SysKeyboardWImpl_GetDeviceState,
     IDirectInputDevice2WImpl_GetDeviceData,

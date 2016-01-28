@@ -24,7 +24,7 @@ typedef struct
 {
     IEnumBackgroundCopyJobs IEnumBackgroundCopyJobs_iface;
     LONG ref;
-    IBackgroundCopyJob **jobs;
+    IBackgroundCopyJob3 **jobs;
     ULONG numJobs;
     ULONG indexJobs;
 } EnumBackgroundCopyJobsImpl;
@@ -72,7 +72,7 @@ static ULONG WINAPI EnumBackgroundCopyJobs_Release(IEnumBackgroundCopyJobs *ifac
 
     if (ref == 0) {
         for(i = 0; i < This->numJobs; i++)
-            IBackgroundCopyJob_Release(This->jobs[i]);
+            IBackgroundCopyJob3_Release(This->jobs[i]);
         HeapFree(GetProcessHeap(), 0, This->jobs);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -86,7 +86,7 @@ static HRESULT WINAPI EnumBackgroundCopyJobs_Next(IEnumBackgroundCopyJobs *iface
     EnumBackgroundCopyJobsImpl *This = impl_from_IEnumBackgroundCopyJobs(iface);
     ULONG fetched;
     ULONG i;
-    IBackgroundCopyJob *job;
+    IBackgroundCopyJob3 *job;
 
     TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
 
@@ -109,8 +109,8 @@ static HRESULT WINAPI EnumBackgroundCopyJobs_Next(IEnumBackgroundCopyJobs *iface
     for (i = 0; i < fetched; ++i)
     {
         job = This->jobs[This->indexJobs++];
-        IBackgroundCopyJob_AddRef(job);
-        rgelt[i] = job;
+        IBackgroundCopyJob3_AddRef(job);
+        rgelt[i] = (IBackgroundCopyJob *)job;
     }
 
     return fetched == celt ? S_OK : S_FALSE;
@@ -210,9 +210,8 @@ HRESULT enum_copy_job_create(BackgroundCopyManagerImpl *qmgr, IEnumBackgroundCop
     i = 0;
     LIST_FOR_EACH_ENTRY(job, &qmgr->jobs, BackgroundCopyJobImpl, entryFromQmgr)
     {
-        IBackgroundCopyJob *job_iface = (IBackgroundCopyJob*)&job->IBackgroundCopyJob2_iface;
-        IBackgroundCopyJob_AddRef(job_iface);
-        This->jobs[i++] = job_iface;
+        IBackgroundCopyJob3_AddRef(&job->IBackgroundCopyJob3_iface);
+        This->jobs[i++] = &job->IBackgroundCopyJob3_iface;
     }
     LeaveCriticalSection(&qmgr->cs);
 

@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -42,7 +42,7 @@ MMPTE MmDecommittedPte = {{MM_DECOMMIT << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializeSessionSpaceLayout()
+MiInitializeSessionSpaceLayout(VOID)
 {
     //
     // Set the size of session view, pool, and image
@@ -249,15 +249,18 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPFN Pfn1;
     ULONG Flags;
 
+#if defined(_GLOBAL_PAGES_ARE_AWESOME_)
+
     /* Check for global bit */
-#if 0
     if (KeFeatureBits & KF_GLOBAL_PAGE)
     {
         /* Set it on the template PTE and PDE */
         ValidKernelPte.u.Hard.Global = TRUE;
         ValidKernelPde.u.Hard.Global = TRUE;
     }
+
 #endif
+
     /* Now templates are ready */
     TempPte = ValidKernelPte;
     TempPde = ValidKernelPde;
@@ -489,8 +492,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveAnyPage(0);
+    TempPde = ValidKernelPdeLocal;
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
-    TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     MI_WRITE_VALID_PTE(StartPde, TempPde);
 
     /* Flush the TLB */
@@ -539,6 +542,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     MI_SET_PROCESS2("Kernel WS List");
     PageFrameIndex = MiRemoveAnyPage(0);
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
 
     /* Map the working set list */

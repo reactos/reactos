@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for saving and restoring dc states
- * FILE:              subsystems/win32/win32k/objects/dcstate.c
+ * FILE:              win32ss/gdi/ntgdi/dcstate.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -28,8 +28,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 
     /* Copy DC level */
     pdcDst->dclevel.pColorSpace     = pdcSrc->dclevel.pColorSpace;
-    pdcDst->dclevel.lSaveDepth      = pdcSrc->dclevel.lSaveDepth;
-    pdcDst->dclevel.hdcSave         = pdcSrc->dclevel.hdcSave;
     pdcDst->dclevel.laPath          = pdcSrc->dclevel.laPath;
     pdcDst->dclevel.ca              = pdcSrc->dclevel.ca;
     pdcDst->dclevel.mxWorldToDevice = pdcSrc->dclevel.mxWorldToDevice;
@@ -105,18 +103,20 @@ IntGdiCleanDC(HDC hDC)
     return TRUE;
 }
 
-
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiResetDC(
-    IN HDC hdc,
-    IN LPDEVMODEW pdm,
-    OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2,
-    OUT VOID *ppUMdhpdev)
+    _In_ HDC hdc,
+    _In_ LPDEVMODEW pdm,
+    _Out_ PBOOL pbBanding,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)ppUMdhpdev, _Out_) PVOID ppUMdhpdev)
 {
+    /* According to a comment in Windows SDK the size of the buffer for
+       pdm is (pdm->dmSize + pdm->dmDriverExtra) */
     UNIMPLEMENTED;
-    return 0;
+    return FALSE;
 }
 
 
@@ -129,7 +129,7 @@ DC_vRestoreDC(
     HDC hdcSave;
     PDC pdcSave;
 
-    ASSERT(iSaveLevel > 0);
+    NT_ASSERT(iSaveLevel > 0);
     DPRINT("DC_vRestoreDC(%p, %ld)\n", pdc->BaseObject.hHmgr, iSaveLevel);
 
     /* Loop the save levels */
@@ -144,6 +144,7 @@ DC_vRestoreDC(
             /* Could not get ownership. That's bad! */
             DPRINT1("Could not get ownership of saved DC (%p) for hdc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -154,6 +155,7 @@ DC_vRestoreDC(
             /* WTF? Internal error! */
             DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -262,7 +264,7 @@ NtGdiSaveDC(
     }
 
     /* Allocate a new dc */
-    pdcSave = DC_AllocDcWithHandle();
+    pdcSave = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (pdcSave == NULL)
     {
         DPRINT("Could not allocate a new DC\n");
@@ -298,6 +300,7 @@ NtGdiSaveDC(
     if (pdcSave->dclevel.hPath) pdcSave->dclevel.flPath |= DCPATH_SAVE;
 
     /* Set new dc as save dc */
+    pdcSave->dclevel.hdcSave = pdc->dclevel.hdcSave;
     pdc->dclevel.hdcSave = hdcSave;
 
     /* Increase save depth, return old value */

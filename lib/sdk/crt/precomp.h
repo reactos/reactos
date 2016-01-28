@@ -36,6 +36,14 @@
 #include <winuser.h>
 #include <ndk/rtlfuncs.h>
 
+// Our headers are pretty messed up
+#undef CDECL
+#if defined(_M_IX86)
+#define CDECL __cdecl
+#else
+#define CDECL
+#endif
+
 #if !defined(_MSC_VER)
   #include <stdint.h>
 #endif

@@ -29,9 +29,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
-static const WCHAR szServerNameClass[] = {'D','d','e','S','e','r','v','e','r','N','a','m','e',0};
-const char WDML_szServerConvClassA[] = "DdeServerConvA";
-const WCHAR WDML_szServerConvClassW[] = {'D','d','e','S','e','r','v','e','r','C','o','n','v','W',0};
+static const WCHAR szServerNameClass[] = L"DDEMLMom";
+const char WDML_szServerConvClassA[] = "DDEMLAnsiServer";
+const WCHAR WDML_szServerConvClassW[] = L"DDEMLUnicodeServer";
 
 static LRESULT CALLBACK WDML_ServerNameProc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
@@ -50,12 +50,12 @@ static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
  */
 BOOL WINAPI DdePostAdvise(DWORD idInst, HSZ hszTopic, HSZ hszItem)
 {
-    WDML_INSTANCE*	pInstance = NULL;
-    WDML_LINK*		pLink = NULL;
-    HDDEDATA		hDdeData = 0;
-    HGLOBAL             hItemData = 0;
-    WDML_CONV*		pConv = NULL;
-    ATOM		atom = 0;
+    WDML_INSTANCE*	pInstance;
+    WDML_LINK*		pLink;
+    HDDEDATA		hDdeData;
+    HGLOBAL		hItemData;
+    WDML_CONV*		pConv;
+    ATOM		atom;
     UINT		count;
 
     TRACE("(%d,%p,%p)\n", idInst, hszTopic, hszItem);
@@ -368,7 +368,7 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 {
     HWND		hwndClient;
     HSZ			hszApp, hszTop;
-    HDDEDATA		hDdeData = 0;
+    HDDEDATA		hDdeData;
     WDML_INSTANCE*	pInstance;
     UINT_PTR		uiLo, uiHi;
 
@@ -380,12 +380,12 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 	   LOWORD(lParam) -- application atom
 	   HIWORD(lParam) -- topic atom */
 
-	ERR("WM_DDE_INITIATE message received!\n");
+	TRACE("WM_DDE_INITIATE message received!\n");
 	hwndClient = (HWND)wParam;
 
 	pInstance = WDML_GetInstanceFromWnd(hwndServer);
 	if (!pInstance) return 0;
-	ERR("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
+	TRACE("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
 
 	/* don't free DDEParams, since this is a broadcast */
 	UnpackDDElParam(WM_DDE_INITIATE, lParam, &uiLo, &uiHi);

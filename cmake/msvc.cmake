@@ -2,6 +2,11 @@
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # no optimization
+    add_compile_flags("/Ob0 /Od")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_flags("/Ox /Ob2 /Ot /Oy /GT /GF")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /OPT:REF /OPT:ICF")
 elseif(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -33,13 +38,22 @@ if(MSVC_VERSION GREATER 1799 AND NOT MSVC_IDE)
     add_compile_flags("/FS")
 endif ()
 
+# VS14+ tries to use thread-safe initialization
+if(MSVC_VERSION GREATER 1899)
+    add_compile_flags("/Zc:threadSafeInit-")
+endif ()
+
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
-# - TODO: C4018: signed/unsigned mismatch
 # - C4244: implicit integer truncation
 # - C4290: C++ exception specification ignored
-#add_compile_flags("/wd4018 /wd4244 /wd4290")
-add_compile_flags("/wd4290 /wd4244")
+# - C4800: forcing value to bool 'true' or 'false' (performance warning)
+# - C4200: nonstandard extension used : zero-sized array in struct/union
+# - C4214: nonstandard extension used : bit field types other than int
+add_compile_flags("/wd4244 /wd4290 /wd4800 /wd4200 /wd4214")
+
+# FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
+add_compile_flags("/wd4018")
 
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
@@ -57,7 +71,14 @@ add_compile_flags("/wd4290 /wd4244")
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
 # - C4603: macro is not defined or definition is different after precompiled header use
-add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603")
+# - C4716: function must return a value
+add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603 /we4716")
+
+# - C4189: local variable initialized but not referenced
+# Not in Release mode and not with MSVC 2010
+if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT MSVC_VERSION LESS 1700))
+    add_compile_flags("/we4189")
+endif()
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
@@ -69,22 +90,35 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(NOT (_PREFAST_ OR _VS_ANALYZE_))
         add_compile_flags("/Zi")
     endif()
-    add_compile_flags("/Ob0 /Od")
 #elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_flags("/Ob2 /D NDEBUG")
+    add_definitions("/D NDEBUG")
 endif()
 
-if(MSVC_IDE)
-    add_compile_flags("/MP")
-    if(NOT DEFINED USE_FOLDER_STRUCTURE)
-        set(USE_FOLDER_STRUCTURE FALSE)
-    endif()
+# Hotpatchable images
+if(ARCH STREQUAL "i386")
+    add_compile_flags("/hotpatch")
+    set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
+elseif(ARCH STREQUAL "amd64")
+    set(_hotpatch_link_flag "/FUNCTIONPADMIN:6")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+if(MSVC_IDE AND (NOT DEFINED USE_FOLDER_STRUCTURE))
+    set(USE_FOLDER_STRUCTURE TRUE)
+endif()
+
+if(NOT DEFINED RUNTIME_CHECKS)
+    set(RUNTIME_CHECKS FALSE)
+endif()
+
+if(RUNTIME_CHECKS)
+    add_definitions(-D__RUNTIME_CHECKS__)
+    add_compile_flags("/RTC1")
+endif()
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE /IGNORE:4104 ${_hotpatch_link_flag}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag}")
 
 if(CMAKE_DISABLE_NINJA_DEPSLOG)
     set(cl_includes_flag "")
@@ -197,10 +231,13 @@ function(set_entrypoint _module _entrypoint)
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
+    string(TOUPPER ${SUBSYSTEM} _subsystem)
     if(ARCH STREQUAL "amd64")
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.02")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.02")
+    elseif(ARCH STREQUAL "arm")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},6.02")
     else()
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.01")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${_subsystem},5.01")
     endif()
 endfunction()
 
@@ -220,10 +257,16 @@ function(set_module_type_toolchain MODULE TYPE)
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
-        add_target_link_flags(${MODULE} "/DRIVER")
+        # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
+        add_target_link_flags(${MODULE} "/DRIVER /IGNORE:4078")
     elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM /IGNORE:4078")
     endif()
+
+    if(RUNTIME_CHECKS)
+        target_link_libraries(${MODULE} runtmchk)
+    endif()
+
 endfunction()
 
 # Define those for having real libraries
@@ -283,7 +326,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     else()
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
-        add_dependencies(${_libname} ${_def_file})
         # set correct "link rule"
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
     endif()
@@ -302,14 +344,8 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 function(spec2def _dllname _spec_file)
-    # Do we also want to add importlib targets?
-    if(${ARGC} GREATER 2)
-        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
-            set(__add_importlib TRUE)
-        else()
-            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
-        endif()
-    endif()
+
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS" "" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -325,8 +361,11 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(__add_importlib)
+    if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        if(__spec2def_NO_PRIVATE_WARNINGS)
+            add_target_property(lib${_file} STATIC_LIBRARY_FLAGS "/ignore:4104")
+        endif()
     endif()
 endfunction()
 
@@ -354,7 +393,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 
     add_custom_command(
         OUTPUT ${_temp_file}
-        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
+        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /I${REACTOS_SOURCE_DIR}/boot/freeldr /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
     if(ARCH STREQUAL "arm")

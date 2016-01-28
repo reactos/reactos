@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/apic.c
+ * FILE:            hal/halx86/apic/rtctimer.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:
@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitializeClock)
+#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -61,10 +64,9 @@ RtcSetClockRate(UCHAR ClockRate)
     HalpReleaseCmosSpinLock();
 }
 
-
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
     ULONG_PTR EFlags;

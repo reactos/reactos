@@ -2348,6 +2348,10 @@ PcRegisterAdapterPowerManagement(
   IN PVOID pvContext1);
 
 PORTCLASSAPI NTSTATUS NTAPI
+PcUnregisterAdapterPowerManagement(
+  IN PDEVICE_OBJECT DeviceObject);
+
+PORTCLASSAPI NTSTATUS NTAPI
 PcRequestNewPowerState(
   IN PDEVICE_OBJECT pDeviceObject,
   IN DEVICE_POWER_STATE RequestedNewState);

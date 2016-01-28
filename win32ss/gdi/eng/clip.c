@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Clipping Functions
- * FILE:              subsystems/win32/win32k/eng/clip.c
+ * FILE:              win32ss/gdi/eng/clip.c
  * PROGRAMER:         Jason Filby
  */
 
@@ -241,10 +241,10 @@ APIENTRY
 EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
-    TRACE("Deleting %p.\n");
-    IntEngFreeClipResources(Clip);
-    EngFreeMem(Clip);
+    XCLIPOBJ* pxco = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    TRACE("Deleting %p.\n", pco);
+    IntEngFreeClipResources(pxco);
+    EngFreeMem(pxco);
 }
 
 /*

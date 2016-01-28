@@ -2,7 +2,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
- *  FILE:             subsystems/win32/win32k/ntuser/winsta.c
+ *  FILE:             win32ss/user/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *  TODO:             The process window station is created on
  *                    the first USER32/GDI32 call not related
@@ -45,7 +45,7 @@ InitWindowStationImpl(VOID)
 
 NTSTATUS
 NTAPI
-UserCreateWinstaDirectory()
+UserCreateWinstaDirectory(VOID)
 {
     PPEB Peb;
     NTSTATUS Status;
@@ -104,6 +104,8 @@ IntWinStaObjectDelete(
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)DeleteParameters->Object;
 
    TRACE("Deleting window station (0x%p)\n", WinSta);
+
+   WinSta->Flags |= WSS_DYING;
 
    UserEmptyClipboardData(WinSta);
 
@@ -214,7 +216,8 @@ IntValidateWindowStationHandle(
    HWINSTA WindowStation,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PWINSTATION_OBJECT *Object)
+   PWINSTATION_OBJECT *Object,
+   POBJECT_HANDLE_INFORMATION pObjectHandleInfo)
 {
    NTSTATUS Status;
 
@@ -231,7 +234,7 @@ IntValidateWindowStationHandle(
                ExWindowStationObjectType,
                AccessMode,
                (PVOID*)Object,
-               NULL);
+               pObjectHandleInfo);
 
    if (!NT_SUCCESS(Status))
       SetLastNtError(Status);
@@ -291,6 +294,12 @@ co_IntInitializeDesktopGraphics(VOID)
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
 
+   /* Setup the icons */
+   co_IntSetWndIcons();
+
+   /* Setup Menu */
+   MenuInit();
+
    /* Show the desktop */
    pdesk = IntGetActiveDesktop();
    ASSERT(pdesk);
@@ -317,6 +326,29 @@ IntGetScreenDC(VOID)
 {
    return ScreenDeviceContext;
 }
+
+BOOL FASTCALL
+CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
+{
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+   if ( gpidLogon != PsGetCurrentProcessId() )
+   {
+      if (!(ppi->W32PF_flags & W32PF_IOWINSTA))
+      {
+         ERR("Requires Interactive Window Station\n");
+         EngSetLastError(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+         return FALSE;
+      }
+      if (!RtlAreAllAccessesGranted(ppi->amwinsta, DesiredAccess))
+      {
+         ERR("Access Denied\n");
+         EngSetLastError(ERROR_ACCESS_DENIED);
+         return FALSE;
+      }
+   }
+   return TRUE;
+}
+
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -458,10 +490,16 @@ NtUserCreateWindowStation(
 
    if (InputWindowStation == NULL)
    {
-       TRACE("Initializeing input window station\n");
+      ERR("Initializing input window station\n");
       InputWindowStation = WindowStationObject;
 
+      WindowStationObject->Flags &= ~WSS_NOIO;
+
       InitCursorImpl();
+   }
+   else
+   {
+      WindowStationObject->Flags |= WSS_NOIO;
    }
 
    TRACE("NtUserCreateWindowStation created object %p with name %wZ handle %p\n",
@@ -561,9 +599,10 @@ NtUserCloseWindowStation(
 
    Status = IntValidateWindowStationHandle(
                hWinSta,
-               KernelMode,
+               UserMode,
                0,
-               &Object);
+               &Object,
+               0);
 
    if (!NT_SUCCESS(Status))
    {
@@ -633,7 +672,7 @@ NtUserGetObjectInformation(
    DWORD nLength,
    PDWORD nLengthNeeded)
 {
-   PWINSTATION_OBJECT WinStaObject = NULL;
+   PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject = NULL;
    NTSTATUS Status;
    PVOID pvData = NULL;
@@ -666,6 +705,7 @@ NtUserGetObjectInformation(
    {
       /* try desktop */
       TRACE("Trying to open desktop %p\n", hObject);
+      WinStaObject = NULL;
       Status = IntValidateDesktopHandle(
                   hObject,
                   UserMode,
@@ -852,6 +892,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     PPROCESSINFO ppi;
     NTSTATUS Status;
     HWINSTA hwinstaOld;
+    OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     PWINSTATION_OBJECT NewWinSta = NULL, OldWinSta;
 
     ppi = PsGetCurrentProcessWin32Process();
@@ -860,9 +901,10 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     if(hWindowStation !=NULL)
     {
         Status = IntValidateWindowStationHandle( hWindowStation,
-                                                 KernelMode,
+                                                 UserMode,
                                                  0,
-                                                 &NewWinSta);
+                                                 &NewWinSta,
+                                                 &ObjectHandleInfo);
        if (!NT_SUCCESS(Status))
        {
           TRACE("Validation of window station handle (%p) failed\n",
@@ -895,7 +937,26 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
 
    ppi->prpwinsta = NewWinSta;
    ppi->hwinsta = hWindowStation;
+   ppi->amwinsta = hWindowStation != NULL ? ObjectHandleInfo.GrantedAccess : 0;
+   TRACE("WS : Granted Access 0x%08lx\n",ppi->amwinsta);
 
+   if (RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_READSCREEN))
+   {
+      ppi->W32PF_flags |= W32PF_READSCREENACCESSGRANTED;
+   }
+   else
+   {
+      ppi->W32PF_flags &= ~W32PF_READSCREENACCESSGRANTED;
+   }
+
+   if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO) )
+   {
+      ppi->W32PF_flags |= W32PF_IOWINSTA;
+   }
+   else // Might be closed if the handle is null.
+   {
+      ppi->W32PF_flags &= ~W32PF_IOWINSTA;
+   }
    return TRUE;
 }
 
@@ -947,7 +1008,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    TRACE("About to set process window station with handle (%p)\n",
          hWindowStation);
 
-   if(PsGetCurrentProcessWin32Process() != LogonProcess)
+   if (gpidLogon != PsGetCurrentProcessId())
    {
       ERR("Unauthorized process attempted to lock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
@@ -956,9 +1017,10 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
 
    Status = IntValidateWindowStationHandle(
                hWindowStation,
-               KernelMode,
+               UserMode,
                0,
-               &Object);
+               &Object,
+               0);
    if (!NT_SUCCESS(Status))
    {
       TRACE("Validation of window station handle (%p) failed\n",
@@ -992,7 +1054,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    TRACE("About to set process window station with handle (%p)\n",
          hWindowStation);
 
-   if(PsGetCurrentProcessWin32Process() != LogonProcess)
+   if (gpidLogon != PsGetCurrentProcessId())
    {
       ERR("Unauthorized process attempted to unlock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
@@ -1001,9 +1063,10 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
 
    Status = IntValidateWindowStationHandle(
                hWindowStation,
-               KernelMode,
+               UserMode,
                0,
-               &Object);
+               &Object,
+               0);
    if (!NT_SUCCESS(Status))
    {
       TRACE("Validation of window station handle (%p) failed\n",
@@ -1040,7 +1103,7 @@ BuildWindowStationNameList(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &gustrWindowStationsDir,
-      OBJ_CASE_INSENSITIVE,
+      OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
       NULL,
       NULL);
 
@@ -1074,17 +1137,18 @@ BuildWindowStationNameList(
       /* Need a larger buffer, check how large exactly */
       Status = ZwQueryDirectoryObject(DirectoryHandle, NULL, 0, FALSE, TRUE, &Context,
                                       &ReturnLength);
-      if (STATUS_BUFFER_TOO_SMALL == Status)
+      if (!NT_SUCCESS(Status))
       {
-         ObDereferenceObject(DirectoryHandle);
-         return STATUS_NO_MEMORY;
+         ERR("ZwQueryDirectoryObject failed\n");
+         ZwClose(DirectoryHandle);
+         return Status;
       }
 
       BufferSize = ReturnLength;
       Buffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_WINSTA);
       if (NULL == Buffer)
       {
-         ObDereferenceObject(DirectoryHandle);
+         ZwClose(DirectoryHandle);
          return STATUS_NO_MEMORY;
       }
 
@@ -1098,7 +1162,7 @@ BuildWindowStationNameList(
       {
          /* Something went wrong, maybe someone added a directory entry? Just give up. */
          ExFreePoolWithTag(Buffer, TAG_WINSTA);
-         ObDereferenceObject(DirectoryHandle);
+         ZwClose(DirectoryHandle);
          return NT_SUCCESS(Status) ? STATUS_INTERNAL_ERROR : Status;
       }
    }
@@ -1210,9 +1274,10 @@ BuildDesktopNameList(
    UNICODE_STRING DesktopName;
 
    Status = IntValidateWindowStationHandle(hWindowStation,
-                                           KernelMode,
+                                           UserMode,
                                            0,
-                                           &WindowStation);
+                                           &WindowStation,
+                                           0);
    if (! NT_SUCCESS(Status))
    {
       return Status;
@@ -1307,12 +1372,12 @@ BuildDesktopNameList(
  *       Size of buffer passed by caller.
  *
  *    lpBuffer
- *       Buffer passed by caller. If the function succedes, the buffer is
+ *       Buffer passed by caller. If the function succeeds, the buffer is
  *       filled with window station/desktop count (in first DWORD) and
  *       NULL-terminated window station/desktop names.
  *
  *    pRequiredSize
- *       If the function suceedes, this is the number of bytes copied.
+ *       If the function succeeds, this is the number of bytes copied.
  *       Otherwise it's size of buffer needed for function to succeed.
  *
  * Status
@@ -1338,12 +1403,12 @@ NtUserBuildNameList(
 BOOL APIENTRY
 NtUserSetLogonNotifyWindow(HWND hWnd)
 {
-    if(LogonProcess != PsGetCurrentProcessWin32Process())
+    if (gpidLogon != PsGetCurrentProcessId())
     {
         return FALSE;
     }
 
-    if(!IntIsWindow(hWnd))
+    if (!IntIsWindow(hWnd))
     {
         return FALSE;
     }
@@ -1375,5 +1440,76 @@ NtUserLockWorkStation(VOID)
 
    return ret;
 }
+
+BOOL APIENTRY
+NtUserSetWindowStationUser(
+   HWINSTA hWindowStation,
+   PLUID pluid,
+   PSID psid,
+   DWORD size)
+{
+   NTSTATUS Status;
+   PWINSTATION_OBJECT WindowStation = NULL;
+   BOOL Ret = FALSE;
+
+   UserEnterExclusive();
+
+   if (gpidLogon != PsGetCurrentProcessId())
+   {
+       EngSetLastError(ERROR_ACCESS_DENIED);
+       goto Leave;
+   }
+
+   Status = IntValidateWindowStationHandle(hWindowStation,
+                                           UserMode,
+                                           0,
+                                           &WindowStation,
+                                           0);
+   if (!NT_SUCCESS(Status))
+   {
+      goto Leave;
+   }
+
+   if (WindowStation->psidUser)
+   {
+      ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
+   }
+
+   WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
+   if (WindowStation->psidUser == NULL)
+   {
+      EngSetLastError(ERROR_OUTOFMEMORY);
+      goto Leave;
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead( psid, size, 1);
+      ProbeForRead( pluid, sizeof(LUID), 1);
+
+      RtlCopyMemory(WindowStation->psidUser, psid, size);
+      WindowStation->luidUser = *pluid;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
+      WindowStation->psidUser = 0;
+      goto Leave;
+   }
+
+   Ret = TRUE;
+
+Leave:
+   if (WindowStation) ObDereferenceObject(WindowStation);
+   UserLeave();
+   return Ret;
+}
+
 
 /* EOF */

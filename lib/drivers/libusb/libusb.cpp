@@ -30,7 +30,7 @@ USBLIB_AddDevice(
     NTSTATUS Status;
     PHCDCONTROLLER HcdController;
 
-    DPRINT1("USBLIB_AddDevice\n");
+    DPRINT("USBLIB_AddDevice\n");
 
     /* first create the controller object */
     Status = CreateHCDController(&HcdController);
@@ -67,7 +67,7 @@ extern
 NTSTATUS
 NTAPI
 USBLIB_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION DeviceExtension;

@@ -1,0 +1,66 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "打开...(&O)", CMD_OPEN
+        MENUITEM "另存为...(&A)", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)", CMD_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "删除(&D)\tDel", CMD_DELETE
+    END
+    POPUP "显示(&D)"
+    BEGIN
+        MENUITEM "自动(&A)", CMD_AUTOMATIC
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "帮助主题(&H)", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "关于(&A)", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "剪贴板"
+    STRING_DELETE_MSG "清除剪贴板的内容吗?"
+    STRING_DELETE_TITLE "清除剪贴板"
+    STRING_FORMAT_NT "ReactOS 的剪贴板文件 (*.clp)"
+    STRING_FORMAT_GEN "剪贴板文件 (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "未知的格式"
+    STRING_CF_TEXT "文本"
+    STRING_CF_BITMAP "位图"
+    STRING_CF_OEMTEXT "OEM 文本"
+    STRING_CF_UNICODETEXT "Unicode 文本"
+    STRING_CF_DIB "DIB 位图"
+    STRING_CF_LOCALE "本地日期"
+    STRING_CF_ENHMETAFILE "增强型图元文件"
+    STRING_CF_METAFILEPICT "图元文件"
+    STRING_CF_PALETTE "调色板"
+    STRING_CF_DIBV5 "DIB 位图 (第 5 版)"
+    STRING_CF_SYLK "符号链接格式"
+    STRING_CF_DIF "数据交换格式"
+    STRING_CF_HDROP "删除数据"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "剪贴板中包含格式，不能显示的数据。"
+    ERROR_INVALID_FILE_FORMAT "所选的文件不是一个有效的剪贴板文件。"
+END

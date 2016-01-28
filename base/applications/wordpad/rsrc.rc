@@ -22,9 +22,9 @@
 
 #include "wordpad.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad\0"
-#define REACTOS_STR_INTERNAL_NAME     "wordpad\0"
-#define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad"
+#define REACTOS_STR_INTERNAL_NAME     "wordpad"
+#define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe"
 
 #include <reactos/version.rc>
 
@@ -32,11 +32,11 @@ MAINACCELTABLE ACCELERATORS
 BEGIN
     "1",          ID_BACK_1,          VIRTKEY, CONTROL
     "2",          ID_BACK_2,          VIRTKEY, CONTROL
+    VK_F3,        ID_FIND_NEXT,       VIRTKEY
     "L",          ID_ALIGN_LEFT,      VIRTKEY, CONTROL
     "E",          ID_ALIGN_CENTER,    VIRTKEY, CONTROL
     "R",          ID_ALIGN_RIGHT,     VIRTKEY, CONTROL
     "F",          ID_FIND,            VIRTKEY, CONTROL
-    VK_F3,        ID_FIND_NEXT,       VIRTKEY
     "H",          ID_REPLACE,         VIRTKEY, CONTROL
     "A",          ID_EDIT_SELECTALL,  VIRTKEY, CONTROL
     "X",          ID_EDIT_CUT,        VIRTKEY, CONTROL
@@ -61,76 +61,87 @@ IDB_FORMATBAR BITMAP "res/formatbar.bmp"
 /* @makedep: wordpad.ico */
 IDI_WORDPAD ICON "res/wordpad.ico"
 
+/* @makedep: document.ico */
+IDI_RTFDOC ICON "res/document.ico"
+
 /* @makedep: zoom.cur */
 IDC_ZOOM CURSOR "res/zoom.cur"
 
 #include <reactos/manifest_exe.rc>
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/En.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "lang/Hu.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/Ko.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/Pl.rc"
-#endif
-
 /* UTF-8 */
 #ifdef LANGUAGE_DA_DK
-    #include "lang/Da.rc"
+    #include "lang/da-DK.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "lang/De.rc"
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "lang/Fr.rc"
+    #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "lang/He.rc"
+    #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "lang/It.rc"
+    #include "lang/it-IT.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "lang/Ja.rc"
+    #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "lang/Lt.rc"
+    #include "lang/lt-LT.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "lang/Nl.rc"
+    #include "lang/nl-NL.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "lang/No.rc"
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "lang/Pt.rc"
+    #include "lang/pt-PT.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "lang/Ro.rc"
+    #include "lang/ro-RO.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "lang/Ru.rc"
+    #include "lang/ru-RU.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "lang/Si.rc"
+    #include "lang/sl-SI.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
-    #include "lang/Sq.rc"
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
-    #include "lang/Sv.rc"
+    #include "lang/sv-SE.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
-    #include "lang/Tr.rc"
+    #include "lang/tr-TR.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "lang/Uk.rc"
+    #include "lang/uk-UA.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "lang/Zh.rc"
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

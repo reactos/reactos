@@ -14,10 +14,10 @@ extern HINSTANCE __mingw_winmain_hInstance;
 extern LPWSTR __mingw_winmain_lpCmdLine;
 extern DWORD __mingw_winmain_nShowCmd;
 
-int wmain (int, wchar_t **, wchar_t **);
+int __cdecl wmain (int, wchar_t **, wchar_t **);
 
 /*ARGSUSED*/
-int wmain (int        __UNUSED_PARAM(flags),
+int __cdecl wmain (int        __UNUSED_PARAM(flags),
 	   wchar_t ** __UNUSED_PARAM(cmdline),
 	   wchar_t ** __UNUSED_PARAM(inst))
 {

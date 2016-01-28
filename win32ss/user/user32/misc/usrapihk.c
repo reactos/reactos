@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/misc/usrapihk.c
+ * FILE:            win32ss/user/user32/misc/usrapihk.c
  * PURPOSE:         User32.dll User32 Api Hook interface and support functions
  * PROGRAMMER:
  *
@@ -28,12 +28,13 @@ INT WINAPI RealSetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 BOOL WINAPI RealSystemParametersInfoA(UINT,UINT,PVOID,UINT);
 BOOL WINAPI RealSystemParametersInfoW(UINT,UINT,PVOID,UINT);
 DWORD WINAPI GetRealWindowOwner(HWND);
+LRESULT WINAPI RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags);
 
 /* GLOBALS *******************************************************************/
 
 DWORD gcLoadUserApiHook = 0;
 LONG gcCallUserApiHook = 0;
-DWORD gfUserApiHook;
+DWORD gfUserApiHook = 0;
 HINSTANCE ghmodUserApiHook = NULL;
 USERAPIHOOKPROC gpfnInitUserApi;
 RTL_CRITICAL_SECTION gcsUserApiHook;
@@ -154,7 +155,7 @@ ResetUserApiHook(PUSERAPIHOOK puah)
   puah->SystemParametersInfoW = (FARPROC)RealSystemParametersInfoW;
   puah->ForceResetUserApiHook = (FARPROC)ForceResetUserApiHook;
   puah->DrawFrameControl = (FARPROC)RealDrawFrameControl;
-  puah->DrawCaption = (FARPROC)NtUserDrawCaption;
+  puah->DrawCaption = (FARPROC)RealUserDrawCaption;
   puah->MDIRedrawFrame = (FARPROC)RealMDIRedrawFrame;
   puah->GetRealWindowOwner = (FARPROC)GetRealWindowOwner;
 }

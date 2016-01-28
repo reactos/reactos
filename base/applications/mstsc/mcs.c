@@ -1,11 +1,12 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - Multipoint Communications Service
-   Copyright (C) Matthew Chapman 1999-2005
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008
+   Copyright 2005-2011 Peter Astrand <astrand@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -13,9 +14,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
@@ -24,70 +24,6 @@ uint16 g_mcs_userid;
 extern VCHANNEL g_channels[];
 extern unsigned int g_num_channels;
 
-/* Parse an ASN.1 BER header */
-static BOOL
-ber_parse_header(STREAM s, int tagval, int *length)
-{
-	int tag, len;
-
-	if (tagval > 0xff)
-	{
-		in_uint16_be(s, tag);
-	}
-	else
-	{
-	in_uint8(s, tag)}
-
-	if (tag != tagval)
-	{
-		error("expected tag %d, got %d\n", tagval, tag);
-		return False;
-	}
-
-	in_uint8(s, len);
-
-	if (len & 0x80)
-	{
-		len &= ~0x80;
-		*length = 0;
-		while (len--)
-			next_be(s, *length);
-	}
-	else
-		*length = len;
-
-	return s_check(s);
-}
-
-/* Output an ASN.1 BER header */
-static void
-ber_out_header(STREAM s, int tagval, int length)
-{
-	if (tagval > 0xff)
-	{
-		out_uint16_be(s, tagval);
-	}
-	else
-	{
-		out_uint8(s, tagval);
-	}
-
-	if (length >= 0x80)
-	{
-		out_uint8(s, 0x82);
-		out_uint16_be(s, length);
-	}
-	else
-		out_uint8(s, length);
-}
-
-/* Output an ASN.1 BER integer */
-static void
-ber_out_integer(STREAM s, int value)
-{
-	ber_out_header(s, BER_TAG_INTEGER, 2);
-	out_uint16_be(s, value);
-}
 
 /* Output a DOMAIN_PARAMS structure (ASN.1 BER) */
 static void
@@ -105,7 +41,7 @@ mcs_out_domain_params(STREAM s, int max_channels, int max_users, int max_tokens,
 }
 
 /* Parse a DOMAIN_PARAMS structure (ASN.1 BER) */
-static BOOL
+static RD_BOOL
 mcs_parse_domain_params(STREAM s)
 {
 	int length;
@@ -147,7 +83,7 @@ mcs_send_connect_initial(STREAM mcs_data)
 }
 
 /* Expect a MCS_CONNECT_RESPONSE message (ASN.1 BER) */
-static BOOL
+static RD_BOOL
 mcs_recv_connect_response(STREAM mcs_data)
 {
 	uint8 result;
@@ -221,7 +157,7 @@ mcs_send_aurq(void)
 }
 
 /* Expect a AUcf message (ASN.1 PER) */
-static BOOL
+static RD_BOOL
 mcs_recv_aucf(uint16 * mcs_userid)
 {
 	uint8 opcode, result;
@@ -270,7 +206,7 @@ mcs_send_cjrq(uint16 chanid)
 }
 
 /* Expect a CJcf message (ASN.1 PER) */
-static BOOL
+static RD_BOOL
 mcs_recv_cjcf(void)
 {
 	uint8 opcode, result;
@@ -371,55 +307,17 @@ mcs_recv(uint16 * channel, uint8 * rdpver)
 	return s;
 }
 
-/* Establish a connection up to the MCS layer */
-BOOL
-mcs_connect(char *server, STREAM mcs_data, char *username)
+RD_BOOL
+mcs_connect_start(char *server, char *username, char *domain, char *password,
+		  RD_BOOL reconnect, uint32 * selected_protocol)
 {
-	unsigned int i;
-
-	if (!iso_connect(server, username))
-		return False;
-
-	mcs_send_connect_initial(mcs_data);
-	if (!mcs_recv_connect_response(mcs_data))
-		goto error;
-
-	mcs_send_edrq();
-
-	mcs_send_aurq();
-	if (!mcs_recv_aucf(&g_mcs_userid))
-		goto error;
-
-	mcs_send_cjrq((uint16) (g_mcs_userid + MCS_USERCHANNEL_BASE));
-
-	if (!mcs_recv_cjcf())
-		goto error;
-
-	mcs_send_cjrq(MCS_GLOBAL_CHANNEL);
-	if (!mcs_recv_cjcf())
-		goto error;
-
-	for (i = 0; i < g_num_channels; i++)
-	{
-		mcs_send_cjrq(g_channels[i].mcs_id);
-		if (!mcs_recv_cjcf())
-			goto error;
-	}
-	return True;
-
-      error:
-	iso_disconnect();
-	return False;
+	return iso_connect(server, username, domain, password, reconnect, selected_protocol);
 }
 
-/* Establish a connection up to the MCS layer */
-BOOL
-mcs_reconnect(char *server, STREAM mcs_data)
+RD_BOOL
+mcs_connect_finalize(STREAM mcs_data)
 {
 	unsigned int i;
-
-	if (!iso_reconnect(server))
-		return False;
 
 	mcs_send_connect_initial(mcs_data);
 	if (!mcs_recv_connect_response(mcs_data))
@@ -431,7 +329,7 @@ mcs_reconnect(char *server, STREAM mcs_data)
 	if (!mcs_recv_aucf(&g_mcs_userid))
 		goto error;
 
-	mcs_send_cjrq((uint16) (g_mcs_userid + MCS_USERCHANNEL_BASE));
+	mcs_send_cjrq(g_mcs_userid + MCS_USERCHANNEL_BASE);
 
 	if (!mcs_recv_cjcf())
 		goto error;

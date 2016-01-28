@@ -17,7 +17,7 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/section/fault.c
+ * FILE:            ntoskrnl/cache/section/swapout.c
  * PURPOSE:         Consolidate fault handlers for sections
  *
  * PROGRAMMERS:     Arty
@@ -289,7 +289,8 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     PMM_SECTION_SEGMENT Segment;
     PVOID PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
-    TotalOffset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
+    TotalOffset.QuadPart = (ULONG_PTR)PAddress -
+                           MA_GetStartingAddress(MemoryArea) +
                            MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
     Segment = MemoryArea->Data.SectionData.Segment;
@@ -309,7 +310,7 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     }
 
     MmDeleteRmap(Required->Page[0], Process, Address);
-    MmDeleteVirtualMapping(Process, Address, FALSE, Dirty, &OurPage);
+    MmDeleteVirtualMapping(Process, Address, Dirty, &OurPage);
     ASSERT(OurPage == Required->Page[0]);
 
     /* Note: this releases the reference held by this address space only. */
@@ -456,8 +457,8 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
             DPRINTC("Type %x (%p -> %p)\n",
                     MemoryArea->Type,
-                    MemoryArea->StartingAddress,
-                    MemoryArea->EndingAddress);
+                    MA_GetStartingAddress(MemoryArea),
+                    MA_GetEndingAddress(MemoryArea));
 
             Resources.DoAcquisition = NULL;
             Resources.Page[0] = Page;

@@ -18,21 +18,6 @@
 extern "C" {
 #endif
 
-#ifndef _CRTIMP
-#define _CRTIMP __declspec(dllimport)
-#endif
-
-#ifndef _WCHAR_T_DEFINED
-  typedef unsigned short wchar_t;
-#define _WCHAR_T_DEFINED
-#endif
-
-#ifndef _WCTYPE_T_DEFINED
-  typedef unsigned short wint_t;
-  typedef unsigned short wctype_t;
-#define _WCTYPE_T_DEFINED
-#endif
-
 #ifndef WEOF
 #define WEOF (wint_t)(0xFFFF)
 #endif

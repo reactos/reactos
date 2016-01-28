@@ -151,6 +151,8 @@ userlist(int argc, char **argv)
 		/* Tell the user that we couldn't find a usable */
 		/* WinSock DLL.                                  */
 		fprintf(stderr, "WSAStartup failed\n");
+		free(nargv);
+		free(used);
 		return;
 	}
 

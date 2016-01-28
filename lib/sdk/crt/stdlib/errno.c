@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/errno.c
+ * FILE:        lib/sdk/crt/stdlib/errno.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  *
@@ -16,7 +16,7 @@ static _invalid_parameter_handler invalid_parameter_handler = NULL;
 /*********************************************************************
  *		_errno (MSVCRT.@)
  */
-int CDECL *_errno(void)
+int* CDECL _errno(void)
 {
     return &(msvcrt_get_thread_data()->thread_errno);
 }
@@ -141,7 +141,9 @@ void __cdecl _invalid_parameter(const wchar_t *expr, const wchar_t *func,
     else
     {
         ERR( "%s:%u %s: %s %lx\n", debugstr_w(file), line, debugstr_w(func), debugstr_w(expr), arg );
+#if _MSVCR_VER > 0 // FIXME: possible improvement: use a global variable in the DLL
         RaiseException( STATUS_INVALID_CRUNTIME_PARAMETER, EXCEPTION_NONCONTINUABLE, 0, NULL );
+#endif
     }
 }
 

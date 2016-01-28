@@ -32,9 +32,12 @@
 #include <windef.h>
 #include <winbase.h>
 #include <objbase.h>
+#include <oleauto.h>
 #include <wbemdisp.h>
 
 #include <wine/debug.h>
+#include <wine/unicode.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(wbemdisp);
 
 HRESULT SWbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;

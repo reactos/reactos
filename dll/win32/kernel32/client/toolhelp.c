@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/toolhelp.c
+ * FILE:            dll/win32/kernel32/client/toolhelp.c
  * PURPOSE:         Toolhelp functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Robert Dickenson (robd@mok.lvcm.com)

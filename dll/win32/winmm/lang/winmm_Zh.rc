@@ -1,0 +1,239 @@
+/*
+ * Simplified and Traditional Chinese Resources for winmm
+ * Copyright 2016 Henry Tang Ih
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"指定的命令被执行了。"
+MMSYSERR_ERROR, 		"未定义的外部错误。"
+MMSYSERR_BADDEVICEID, 		"设备 ID 使用的已是超出范围为您的系统。"
+MMSYSERR_NOTENABLED, 		"不启用驱动程序。"
+MMSYSERR_ALLOCATED, 		"指定的设备已在使用。等待，直到它是免费的然后再试。"
+MMSYSERR_INVALHANDLE, 		"指定的设备句柄无效。"
+MMSYSERR_NODRIVER, 		"没有在您的系统上安装的驱动程序!\n"
+MMSYSERR_NOMEM, 		"没有足够的内存完成此任务。退出一个或多个应用程序以增加可用内存，然后再试一次。"
+MMSYSERR_NOTSUPPORTED, 		"不支持此功能。使用能力功能来确定哪些功能和消息驱动程序支持。"
+MMSYSERR_BADERRNUM, 		"没有定义在系统中指定的错误号。"
+MMSYSERR_INVALFLAG, 		"给系统函数传递了无效的标志。"
+MMSYSERR_INVALPARAM, 		"无效的参数被传递给系统函数。"
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"以指定的格式不受支持或无法进行转换。使用能力功能来确定所支持的格式"
+WAVERR_STILLPLAYING, 		"还播放媒体数据时，无法执行此操作。重置该设备，或等到完成数据玩。"
+WAVERR_UNPREPARED, 		"没有准备的波标题。使用准备功能来准备标题，然后再试。"
+WAVERR_SYNC, 			"无法打开设备没有使用 WAVE_ALLOWSYNC 标志。请使用该标志，然后再试。"
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"MIDI 标题未准备。使用准备功能来准备标题，然后再试。"
+MIDIERR_STILLPLAYING, 		"还播放媒体数据时，无法执行此操作。重置该设备，或等到完成数据玩。"
+MIDIERR_NOMAP, 			"找不到一个 MIDI 映射。可能有问题的驱动程序或 MIDIMAP.CFG 文件可能已损坏或丢失。"
+MIDIERR_NOTREADY, 		"端口正在传输数据到设备。等待，直到数据传送完毕，然后再试。"
+MIDIERR_NODEVICE, 		"当前的 MIDI 映射器安装是指没有安装在系统的 MIDI 设备。使用 MIDI 映射器来编辑的设置。"
+MIDIERR_INVALIDSETUP, 		"当前的 MIDI 设置已损坏。复制原始的 MIDIMAP.CFG 文件到电脑系统的目录，然后再试。"
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"无效的 MCI 设备 ID。使用时打开 MCI 设备返回的 ID。"
+MCIERR_UNRECOGNIZED_KEYWORD, 	"驱动程序无法识别指定的命令参数。"
+MCIERR_UNRECOGNIZED_COMMAND,	"驱动程序无法识别指定的命令。"
+MCIERR_HARDWARE, 		"还有一个问题与您的媒体设备。请确保它正常工作，或与设备制造商联系。"
+MCIERR_INVALID_DEVICE_NAME, 	"指定的设备未打开，或不被 MCI 识别。"
+MCIERR_OUT_OF_MEMORY, 		"没有足够的内存完成此任务。\n退出一个或多个应用程序以增加可用内存，然后再试一次。"
+MCIERR_DEVICE_OPEN, 		"设备名称是已被该应用程序用作别名。使用唯一的别名。"
+MCIERR_CANNOT_LOAD_DRIVER, 	"在加载指定的设备驱动程序是检测不到的问题。"
+MCIERR_MISSING_COMMAND_STRING, 	"未不指定任何命令。"
+MCIERR_PARAM_OVERFLOW, 		"输出字符串是太大，无法容纳返回的缓冲区。增加缓冲区的大小。"
+MCIERR_MISSING_STRING_ARGUMENT, "指定的命令需要一个字符串参数。请提供一个。"
+MCIERR_BAD_INTEGER, 		"指定的整数对此命令无效。"
+MCIERR_PARSER_INTERNAL, 	"设备驱动程序返回一个无效的返回类型。请与设备制造商联系，获得新的驱动程序。"
+MCIERR_DRIVER_INTERNAL, 	"有是有问题的设备驱动程序。请与设备制造商联系，获得新的驱动程序。"
+MCIERR_MISSING_PARAMETER, 	"指定的命令需要一个参数。请提供一个。"
+MCIERR_UNSUPPORTED_FUNCTION, 	"您正使用的 MCI 设备不支持指定的命令。"
+MCIERR_FILE_NOT_FOUND, 		"找不到指定的文件。请确认路径和文件名正确。"
+MCIERR_DEVICE_NOT_READY, 	"设备驱动程序未准备好。"
+MCIERR_INTERNAL, 		"在初始化 MCI 的时候出现了问题。请尝试重新启动 ReactOS。"
+MCIERR_DRIVER, 			"有是有问题的设备驱动程序。驱动程序已关闭。无法访问错误。"
+MCIERR_CANNOT_USE_ALL, 		"不能使用 'all' 作为设备的名称与指定的命令。"
+MCIERR_MULTIPLE, 		"错误发生在多个设备。指定每个命令和设备分开，以确定哪个设备导致错误"
+MCIERR_EXTENSION_NOT_FOUND, 	"不能确定从给定的文件扩展名的设备类型。"
+MCIERR_OUTOFRANGE, 		"指定的参数是不指定命令的范围。"
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"指定的参数不能一起使用。"
+MCIERR_FILE_NOT_SAVED, 		"无法保存指定的文件。请确保您有足够的磁盘空间，或仍连接到网络。"
+MCIERR_DEVICE_TYPE_REQUIRED, 	"找不到指定的设备。请确保它安装或设备名称的拼写正确。"
+MCIERR_DEVICE_LOCKED, 		"现在正在关闭指定的设备。等待几秒钟，然后再试。"
+MCIERR_DUPLICATE_ALIAS, 	"指定的别名已被使用在此应用程序。使用唯一的别名。"
+MCIERR_BAD_CONSTANT, 		"指定的参数对此命令无效。"
+MCIERR_MUST_USE_SHAREABLE, 	"设备驱动程序已在使用。若要共享它，使用每个 '打开' 命令 '可共享' 参数。"
+MCIERR_MISSING_DEVICE_NAME, 	"指定的命令需要别名、 文件、 驱动程序或设备名称。请提供一个。"
+MCIERR_BAD_TIME_FORMAT, 	"时间格式为指定的值是无效的。请参阅 MCI 文档为有效格式。"
+MCIERR_NO_CLOSING_QUOTE, 	"右双引号是从参数值丢失。请提供一个。"
+MCIERR_DUPLICATE_FLAGS, 	"参数或值被指定了两次。只需指定一次。"
+MCIERR_INVALID_FILE, 		"指定的文件不在指定的 MCI 设备上播放。该文件可能已损坏，或不在正确的格式。"
+MCIERR_NULL_PARAMETER_BLOCK, 	"向 MCI 传送了一个空的参数块。"
+MCIERR_UNNAMED_RESOURCE, 	"无法保存未命名的文件。提供一个文件名。"
+MCIERR_NEW_REQUIRES_ALIAS, 	"使用 '新' 的参数时，必须指定一个别名。"
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"不能自动打开的设备使用通知的标志。"
+MCIERR_NO_ELEMENT_ALLOWED, 	"不能使用指定的设备文件名。"
+MCIERR_NONAPPLICABLE_FUNCTION, 	"能执行的命令中指定的顺序。正确的命令序列，然后再试。"
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"无法执行指定的命令自动打开的设备上。等待，直到关闭设备，然后再试。"
+MCIERR_FILENAME_REQUIRED, 	"文件名无效。请确保文件名长度不超过 8 个字符后, 跟句点和扩展名。"
+MCIERR_EXTRA_CHARACTERS, 	"不能指定额外的字符后的字符串括在引号中。"
+MCIERR_DEVICE_NOT_INSTALLED, 	"在系统上没有安装指定的设备。使用控制面板中的驱动程序选项来安装设备。"
+MCIERR_GET_CD, 			"无法访问指定的文件或 MCI 设备。尝试更改目录或重新启动您的计算机。"
+MCIERR_SET_CD, 			"无法访问指定的文件或 MCI 设备，因为应用程序无法更改目录。"
+MCIERR_SET_DRIVE, 		"无法访问指定的文件或 MCI 设备，因为应用程序不能更改驱动器。"
+MCIERR_DEVICE_LENGTH, 		"指定的设备或驱动程序的名称，是少于 79 个字符。"
+MCIERR_DEVICE_ORD_LENGTH, 	"指定是少于 69 个字符的设备或驱动程序的名称。"
+MCIERR_NO_INTEGER, 		"指定的命令需要一个整数参数。请提供一个。"
+MCIERR_WAVE_OUTPUTSINUSE, 	"所有可以播放当前格式文件的波形设备正在使用中。等待，直到波形设备是免费的然后再试。"
+MCIERR_WAVE_SETOUTPUTINUSE, 	"不能设置为播放当前的波形设备，回来，因为它是在使用中。等待，直到该设备是免费的然后再试。"
+MCIERR_WAVE_INPUTSINUSE, 	"所有可以记录当前格式文件的波形设备正在使用。等待，直到波形设备是免费的然后再试。"
+MCIERR_WAVE_SETINPUTINUSE, 	"不能设置为录制，因为它是在使用当前的波形设备。等待，直到该设备是免费的然后再试。"
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"可以使用任何兼容的波形回放设备。"
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"可以使用任何兼容的波形记录设备。"
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"安装没有可以播放当前格式文件的波形设备。使用驱动程序选项来安装波形设备。"
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"你正在试图用来播放设备无法识别当前的文件格式。"
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"安装是没有可以记录当前格式文件的波形设备。使用驱动程序选项来安装波形设备。"
+MCIERR_WAVE_SETINPUTUNSUITABLE, "你试图用来记录从该设备无法识别当前的文件格式。"
+MCIERR_NO_WINDOW, 		"那里是没有显示窗口。"
+MCIERR_CREATEWINDOW, 		"无法创建或使用窗口。"
+MCIERR_FILE_READ, 		"无法读取指定的文件。请确保该文件仍然存在，或检查磁盘或网络连接。"
+MCIERR_FILE_WRITE, 		"无法写入指定的文件。请确保您有足够的磁盘空间，或仍连接到网络。"
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"'Song Pointer' 和 SMPTE 时间格式是互斥的。您不能使用他们在一起。"
+MCIERR_SEQ_NOMIDIPRESENT, 	"系统有没有安装的 MIDI 设备。使用控制面板中的驱动程序选项来安装 MIDI 驱动程序。"
+MCIERR_SEQ_PORT_INUSE, 		"指定的 MIDI 端口已被使用。等待，直到它是免费的;再试一次。"
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"当前的 MIDI 映射器安装是指没有安装在系统的 MIDI 设备。使用 MIDI 映射器选项从控制面板来编辑的设置。"
+MCIERR_SEQ_PORT_MISCERROR, 	"用指定的端口时出错。"
+MCIERR_SEQ_PORT_NONEXISTENT, 	"在系统上没有安装指定的 MIDI 设备。使用控制面板中的驱动程序选项来安装一个 MIDI 设备。"
+MCIERR_SEQ_PORTUNSPECIFIED, 	"系统没有指定当前 MIDI 端口。"
+MCIERR_SEQ_TIMER, 		"所有多媒体定时器正在被其他应用程序使用。退出这些应用程序;然后，再试一次。"
+
+END
+
+STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"指定的命令被執行了。"
+MMSYSERR_ERROR, 		"未定義的外部錯誤。 "
+MMSYSERR_BADDEVICEID, 		"裝置識別碼使用的已是超出範圍為您的系統。"
+MMSYSERR_NOTENABLED, 		"不啟用驅動程式。"
+MMSYSERR_ALLOCATED, 		"指定的設備已在使用。等待，直到它是免費的然後再試。 "
+MMSYSERR_INVALHANDLE, 		"指定的設備控制碼無效。"
+MMSYSERR_NODRIVER, 		"沒有在您的系統上安裝的驅動程式!\n"
+MMSYSERR_NOMEM, 		"沒有足夠的記憶體完成此任務。 退出一個或多個應用程式以增加可用記憶體，然後再試一次。"
+MMSYSERR_NOTSUPPORTED, 		"不支援此功能。 使用能力功能來確定哪些功能和消息驅動程式支援。"
+MMSYSERR_BADERRNUM, 		"沒有定義在系統中指定的錯誤號。"
+MMSYSERR_INVALFLAG, 		"給系統函數傳遞了不正確標誌。"
+MMSYSERR_INVALPARAM, 		"不正確參數被傳遞給系統函數。"
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"以指定的格式不受支援或無法進行轉換。 使用能力功能來確定所支援的格式"
+WAVERR_STILLPLAYING, 		"還播放媒體資料時，無法執行此操作。 重置該設備，或等到完成資料玩。"
+WAVERR_UNPREPARED, 		"沒有準備的波標題。使用準備功能來準備標題，然後再試。 "
+WAVERR_SYNC, 			"無法打開設備沒有使用 WAVE_ALLOWSYNC 標誌。 請使用該標誌，然後再試。"
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"MIDI 標題未準備。 使用準備功能來準備標題，然後再試。"
+MIDIERR_STILLPLAYING, 		"還播放媒體資料時，無法執行此操作。 重置該設備，或等到完成資料玩。"
+MIDIERR_NOMAP, 			"找不到一個 MIDI 映射。 可能有問題的驅動程式或 MIDIMAP. CFG 檔可能已損壞或丟失。"
+MIDIERR_NOTREADY, 		"埠正在傳輸資料到設備。 等待，直到資料傳送完畢，然後再試。"
+MIDIERR_NODEVICE, 		"當前的 MIDI 映射器安裝是指沒有安裝在系統的 MIDI 設備。 使用 MIDI 映射器來編輯的設置。"
+MIDIERR_INVALIDSETUP, 		"當前的 MIDI 設置已損壞。 複製原始的 MIDIMAP. CFG 檔到電腦系統的目錄，然後再試。"
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"不正確 MCI 裝置識別碼。 使用時打開 MCI 設備返回的 ID。"
+MCIERR_UNRECOGNIZED_KEYWORD, 	"驅動程式無法識別指定的命令參數。 "
+MCIERR_UNRECOGNIZED_COMMAND,	"驅動程式無法識別指定的命令。"
+MCIERR_HARDWARE, 		"還有一個問題與您的媒體設備。請確保它正常工作，或與設備製造商聯繫。"
+MCIERR_INVALID_DEVICE_NAME, 	"指定的設備未打開，或不被 MCI 識別。"
+MCIERR_OUT_OF_MEMORY, 		"沒有足夠的記憶體完成此任務。\n退出一個或多個應用程式以增加可用記憶體，然後再試一次。"
+MCIERR_DEVICE_OPEN, 		"設備名稱是已被該應用程式用作別名。使用唯一的別名。"
+MCIERR_CANNOT_LOAD_DRIVER, 	"在載入指定的裝置驅動程式是檢測不到的問題。"
+MCIERR_MISSING_COMMAND_STRING, 	"未不指定任何命令。"
+MCIERR_PARAM_OVERFLOW, 		"輸出字串是太大，無法容納返回的緩衝區。增加緩衝區的大小。"
+MCIERR_MISSING_STRING_ARGUMENT, "指定的命令需要一個字串參數。 請提供一個。"
+MCIERR_BAD_INTEGER, 		"指定的整數對此命令無效。"
+MCIERR_PARSER_INTERNAL, 	"裝置驅動程式返回一個不正確返回類型。 請與設備製造商聯繫，獲得新的驅動程式。"
+MCIERR_DRIVER_INTERNAL, 	"有是有問題的裝置驅動程式。 請與設備製造商聯繫，獲得新的驅動程式。"
+MCIERR_MISSING_PARAMETER, 	"指定的命令需要一個參數。請提供一個。"
+MCIERR_UNSUPPORTED_FUNCTION, 	"您正使用的 MCI 設備不支援指定的命令。"
+MCIERR_FILE_NOT_FOUND, 		"找不到指定的檔。 請確認路徑和檔案名正確。"
+MCIERR_DEVICE_NOT_READY, 	"裝置驅動程式未準備好。"
+MCIERR_INTERNAL, 		"在初始化 MCI 的時候出現了問題。 請嘗試重新開機 ReactOS。"
+MCIERR_DRIVER, 			"有是有問題的裝置驅動程式。驅動程式已關閉。無法訪問錯誤。"
+MCIERR_CANNOT_USE_ALL, 		"不能使用 'all' 作為設備的名稱與指定的命令。"
+MCIERR_MULTIPLE, 		"錯誤發生在多個設備。指定每個命令和設備分開，以確定哪個設備導致錯誤"
+MCIERR_EXTENSION_NOT_FOUND, 	"不能確定從給定的檔副檔名的裝置類型。"
+MCIERR_OUTOFRANGE, 		"指定的參數是不指定命令的範圍。"
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"指定的參數不能一起使用。"
+MCIERR_FILE_NOT_SAVED, 		"無法保存指定的檔。請確保您有足夠的磁碟空間，或仍連接到網路。"
+MCIERR_DEVICE_TYPE_REQUIRED, 	"找不到指定的設備。請確保它安裝或設備名稱的拼寫正確。"
+MCIERR_DEVICE_LOCKED, 		"現在正在關閉指定的設備。等待幾秒鐘，然後再試。"
+MCIERR_DUPLICATE_ALIAS, 	"指定的別名已被使用在此應用程式。使用唯一的別名。"
+MCIERR_BAD_CONSTANT, 		"指定的参数对此命令无效。"
+MCIERR_MUST_USE_SHAREABLE, 	"设备驱动程序已在使用。若要共享它，使用每个 '打开' 命令 '可共享' 参数。"
+MCIERR_MISSING_DEVICE_NAME, 	"指定的命令需要别名、 文件、 驱动程序或设备名称。请提供一个。"
+MCIERR_BAD_TIME_FORMAT, 	"时间格式为指定的值是无效的。请参阅 MCI 文档为有效格式。"
+MCIERR_NO_CLOSING_QUOTE, 	"右双引号是从参数值丢失。请提供一个。"
+MCIERR_DUPLICATE_FLAGS, 	"参数或值被指定了两次。只需指定一次。"
+MCIERR_INVALID_FILE, 		"指定的文件不在指定的 MCI 设备上播放。该文件可能已损坏，或不在正确的格式。"
+MCIERR_NULL_PARAMETER_BLOCK, 	"向 MCI 传送了一个空的参数块。"
+MCIERR_UNNAMED_RESOURCE, 	"无法保存未命名的文件。提供一个文件名。"
+MCIERR_NEW_REQUIRES_ALIAS, 	"使用 '新' 的参数时，必须指定一个别名。"
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"不能自动打开的设备使用通知的标志。"
+MCIERR_NO_ELEMENT_ALLOWED, 	"不能使用指定的设备文件名。"
+MCIERR_NONAPPLICABLE_FUNCTION, 	"能执行的命令中指定的顺序。正确的命令序列，然后再试。"
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"无法执行指定的命令自动打开的设备上。等待，直到关闭设备，然后再试。"
+MCIERR_FILENAME_REQUIRED, 	"文件名无效。请确保文件名长度不超过 8 个字符后, 跟句点和扩展名。"
+MCIERR_EXTRA_CHARACTERS, 	"不能指定额外的字符后的字符串括在引号中。"
+MCIERR_DEVICE_NOT_INSTALLED, 	"在系统上没有安装指定的设备。使用控制面板中的驱动程序选项来安装设备。"
+MCIERR_GET_CD, 			"无法访问指定的文件或 MCI 设备。尝试更改目录或重新启动您的计算机。"
+MCIERR_SET_CD, 			"无法访问指定的文件或 MCI 设备，因为应用程序无法更改目录。"
+MCIERR_SET_DRIVE, 		"无法访问指定的文件或 MCI 设备，因为应用程序不能更改驱动器。"
+MCIERR_DEVICE_LENGTH, 		"指定的设备或驱动程序的名称，是少于 79 个字符。"
+MCIERR_DEVICE_ORD_LENGTH, 	"指定是少于 69 个字符的设备或驱动程序的名称。"
+MCIERR_NO_INTEGER, 		"指定的命令需要一个整数参数。请提供一个。"
+MCIERR_WAVE_OUTPUTSINUSE, 	"所有可以播放当前格式文件的波形设备正在使用中。等待，直到波形设备是免费的然后再试。"
+MCIERR_WAVE_SETOUTPUTINUSE, 	"不能设置为播放当前的波形设备，回来，因为它是在使用中。等待，直到该设备是免费的然后再试。"
+MCIERR_WAVE_INPUTSINUSE, 	"所有可以记录当前格式文件的波形设备正在使用。等待，直到波形设备是免费的然后再试。"
+MCIERR_WAVE_SETINPUTINUSE, 	"不能设置为录制，因为它是在使用当前的波形设备。等待，直到该设备是免费的然后再试。"
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"可以使用任何兼容的波形回放设备。"
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"可以使用任何兼容的波形记录设备。"
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"安装没有可以播放当前格式文件的波形设备。使用驱动程序选项来安装波形设备。"
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"你正在试图用来播放设备无法识别当前的文件格式。"
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"安装是没有可以记录当前格式文件的波形设备。使用驱动程序选项来安装波形设备。"
+MCIERR_WAVE_SETINPUTUNSUITABLE, "你试图用来记录从该设备无法识别当前的文件格式。"
+MCIERR_NO_WINDOW, 		"那里是没有显示窗口。"
+MCIERR_CREATEWINDOW, 		"无法创建或使用窗口。"
+MCIERR_FILE_READ, 		"无法读取指定的文件。请确保该文件仍然存在，或检查磁盘或网络连接。"
+MCIERR_FILE_WRITE, 		"无法写入指定的文件。请确保您有足够的磁盘空间，或仍连接到网络。"
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"'Song Pointer' 和 SMPTE 时间格式是互斥的。您不能使用他们在一起。"
+MCIERR_SEQ_NOMIDIPRESENT, 	"系统有没有安装的 MIDI 设备。使用控制面板中的驱动程序选项来安装 MIDI 驱动程序。"
+MCIERR_SEQ_PORT_INUSE, 		"指定的 MIDI 端口已被使用。等待，直到它是免费的;再试一次。"
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"当前的 MIDI 映射器安装是指没有安装在系统的 MIDI 设备。使用 MIDI 映射器选项从控制面板来编辑的设置。"
+MCIERR_SEQ_PORT_MISCERROR, 	"用指定的端口时出错。"
+MCIERR_SEQ_PORT_NONEXISTENT, 	"在系统上没有安装指定的 MIDI 设备。使用控制面板中的驱动程序选项来安装一个 MIDI 设备。"
+MCIERR_SEQ_PORTUNSPECIFIED, 	"系统没有指定当前 MIDI 端口。"
+MCIERR_SEQ_TIMER, 		"所有多媒体定时器正在被其他应用程序使用。退出这些应用程序;然后，再试一次。"
+
+END

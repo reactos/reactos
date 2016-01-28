@@ -50,7 +50,7 @@ VdmSwapContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Make sure that we're at APC_LEVEL and that this is a valid frame */
     ASSERT(KeGetCurrentIrql() == APC_LEVEL);
-    //ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
 
     /* Check if this is a V86 frame */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK)

@@ -2,7 +2,12 @@
 
 FORCEINLINE
 VOID
-RECTL_vSetRect(RECTL *prcl, LONG left, LONG top, LONG right, LONG bottom)
+RECTL_vSetRect(
+    _Out_ RECTL *prcl,
+    _In_ LONG left,
+    _In_ LONG top,
+    _In_ LONG right,
+    _In_ LONG bottom)
 {
     prcl->left = left;
     prcl->top = top;
@@ -12,7 +17,8 @@ RECTL_vSetRect(RECTL *prcl, LONG left, LONG top, LONG right, LONG bottom)
 
 FORCEINLINE
 VOID
-RECTL_vSetEmptyRect(RECTL *prcl)
+RECTL_vSetEmptyRect(
+    _Out_ RECTL *prcl)
 {
     prcl->left = 0;
     prcl->top = 0;
@@ -22,7 +28,10 @@ RECTL_vSetEmptyRect(RECTL *prcl)
 
 FORCEINLINE
 VOID
-RECTL_vOffsetRect(RECTL *prcl, INT cx, INT cy)
+RECTL_vOffsetRect(
+    _Inout_ RECTL *prcl,
+    _In_ INT cx,
+    _In_ INT cy)
 {
     prcl->left += cx;
     prcl->right += cx;
@@ -32,14 +41,18 @@ RECTL_vOffsetRect(RECTL *prcl, INT cx, INT cy)
 
 FORCEINLINE
 BOOL
-RECTL_bIsEmptyRect(const RECTL *prcl)
+RECTL_bIsEmptyRect(
+    _In_ const RECTL *prcl)
 {
     return (prcl->left >= prcl->right || prcl->top >= prcl->bottom);
 }
 
 FORCEINLINE
 BOOL
-RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
+RECTL_bPointInRect(
+    _In_ const RECTL *prcl,
+    _In_ INT x,
+    _In_ INT y)
 {
     return (x >= prcl->left && x < prcl->right &&
             y >= prcl->top  && y < prcl->bottom);
@@ -47,7 +60,8 @@ RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
 
 FORCEINLINE
 BOOL
-RECTL_bIsWellOrdered(const RECTL *prcl)
+RECTL_bIsWellOrdered(
+    _In_ const RECTL *prcl)
 {
     return ((prcl->left <= prcl->right) &&
             (prcl->top  <= prcl->bottom));
@@ -55,16 +69,26 @@ RECTL_bIsWellOrdered(const RECTL *prcl)
 
 BOOL
 FASTCALL
-RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2);
+RECTL_bUnionRect(
+    _Out_ RECTL *prclDst,
+    _In_ const RECTL *prcl1,
+    _In_ const RECTL *prcl2);
 
 BOOL
 FASTCALL
-RECTL_bIntersectRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2);
+RECTL_bIntersectRect(
+    _Out_ RECTL* prclDst,
+    _In_ const RECTL* prcl1,
+    _In_ const RECTL* prcl2);
 
 VOID
 FASTCALL
-RECTL_vMakeWellOrdered(RECTL *prcl);
+RECTL_vMakeWellOrdered(
+    _Inout_ RECTL *prcl);
 
 VOID
 FASTCALL
-RECTL_vInflateRect(RECTL *rect, INT dx, INT dy);
+RECTL_vInflateRect(
+    _Inout_ RECTL *rect,
+    _In_ INT dx,
+    _In_ INT dy);

@@ -3,6 +3,41 @@
  ******************************************************************************/
 
 $if (_WDMDDK_)
+#define FAST_FAIL_LEGACY_GS_VIOLATION           0
+#define FAST_FAIL_VTGUARD_CHECK_FAILURE         1
+#define FAST_FAIL_STACK_COOKIE_CHECK_FAILURE    2
+#define FAST_FAIL_CORRUPT_LIST_ENTRY            3
+#define FAST_FAIL_INCORRECT_STACK               4
+#define FAST_FAIL_INVALID_ARG                   5
+#define FAST_FAIL_GS_COOKIE_INIT                6
+#define FAST_FAIL_FATAL_APP_EXIT                7
+#define FAST_FAIL_RANGE_CHECK_FAILURE           8
+#define FAST_FAIL_UNSAFE_REGISTRY_ACCESS        9
+#define FAST_FAIL_GUARD_ICALL_CHECK_FAILURE     10
+#define FAST_FAIL_GUARD_WRITE_CHECK_FAILURE     11
+#define FAST_FAIL_INVALID_FIBER_SWITCH          12
+#define FAST_FAIL_INVALID_SET_OF_CONTEXT        13
+#define FAST_FAIL_INVALID_REFERENCE_COUNT       14
+#define FAST_FAIL_INVALID_JUMP_BUFFER           18
+#define FAST_FAIL_MRDATA_MODIFIED               19
+#define FAST_FAIL_INVALID_FAST_FAIL_CODE        0xFFFFFFFF
+
+DECLSPEC_NORETURN
+FORCEINLINE
+VOID
+RtlFailFast(
+  _In_ ULONG Code)
+{
+  __fastfail(Code);
+}
+
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && (defined(_M_CEE_PURE) || defined(_M_CEE_SAFE))
+#define NO_KERNEL_LIST_ENTRY_CHECKS
+#endif
+
+#if !defined(EXTRA_KERNEL_LIST_ENTRY_CHECKS) && defined(__REACTOS__)
+#define EXTRA_KERNEL_LIST_ENTRY_CHECKS
+#endif
 
 #if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
 
@@ -27,6 +62,46 @@ IsListEmpty(
 
 FORCEINLINE
 BOOLEAN
+RemoveEntryListUnsafe(
+  _In_ PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (BOOLEAN)(OldFlink == OldBlink);
+}
+
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+FORCEINLINE
+VOID
+FatalListEntryError(
+  _In_ PVOID P1,
+  _In_ PVOID P2,
+  _In_ PVOID P3)
+{
+  UNREFERENCED_PARAMETER(P1);
+  UNREFERENCED_PARAMETER(P2);
+  UNREFERENCED_PARAMETER(P3);
+
+  RtlFailFast(FAST_FAIL_CORRUPT_LIST_ENTRY);
+}
+
+FORCEINLINE
+VOID
+RtlpCheckListEntry(
+  _In_ PLIST_ENTRY Entry)
+{
+  if (Entry->Flink->Blink != Entry || Entry->Blink->Flink != Entry)
+    FatalListEntryError(Entry->Blink, Entry, Entry->Flink);
+}
+#endif
+
+FORCEINLINE
+BOOLEAN
 RemoveEntryList(
   _In_ PLIST_ENTRY Entry)
 {
@@ -35,6 +110,14 @@ RemoveEntryList(
 
   OldFlink = Entry->Flink;
   OldBlink = Entry->Blink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (OldFlink == Entry || OldBlink == Entry)
+    FatalListEntryError(OldBlink, Entry, OldFlink);
+#endif
+  if (OldFlink->Blink != Entry || OldBlink->Flink != Entry)
+    FatalListEntryError(OldBlink, Entry, OldFlink);
+#endif
   OldFlink->Blink = OldBlink;
   OldBlink->Flink = OldFlink;
   return (BOOLEAN)(OldFlink == OldBlink);
@@ -48,8 +131,19 @@ RemoveHeadList(
   PLIST_ENTRY Flink;
   PLIST_ENTRY Entry;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (ListHead->Flink == ListHead || ListHead->Blink == ListHead)
+    FatalListEntryError(ListHead->Blink, ListHead, ListHead->Flink);
+#endif
+#endif
   Entry = ListHead->Flink;
   Flink = Entry->Flink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (Entry->Blink != ListHead || Flink->Blink != Entry)
+    FatalListEntryError(ListHead, Entry, Flink);
+#endif
   ListHead->Flink = Flink;
   Flink->Blink = ListHead;
   return Entry;
@@ -63,8 +157,19 @@ RemoveTailList(
   PLIST_ENTRY Blink;
   PLIST_ENTRY Entry;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (ListHead->Flink == ListHead || ListHead->Blink == ListHead)
+    FatalListEntryError(ListHead->Blink, ListHead, ListHead->Flink);
+#endif
+#endif
   Entry = ListHead->Blink;
   Blink = Entry->Blink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (Blink->Flink != Entry || Entry->Flink != ListHead)
+    FatalListEntryError(Blink, Entry, ListHead);
+#endif
   ListHead->Blink = Blink;
   Blink->Flink = ListHead;
   return Entry;
@@ -77,9 +182,16 @@ InsertTailList(
   _Inout_ __drv_aliasesMem PLIST_ENTRY Entry)
 {
   PLIST_ENTRY OldBlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   OldBlink = ListHead->Blink;
   Entry->Flink = ListHead;
   Entry->Blink = OldBlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (OldBlink->Flink != ListHead)
+    FatalListEntryError(OldBlink->Blink, OldBlink, ListHead);
+#endif
   OldBlink->Flink = Entry;
   ListHead->Blink = Entry;
 }
@@ -91,9 +203,16 @@ InsertHeadList(
   _Inout_ __drv_aliasesMem PLIST_ENTRY Entry)
 {
   PLIST_ENTRY OldFlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   OldFlink = ListHead->Flink;
   Entry->Flink = OldFlink;
   Entry->Blink = ListHead;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (OldFlink->Blink != ListHead)
+    FatalListEntryError(ListHead, OldFlink, OldFlink->Flink);
+#endif
   OldFlink->Blink = Entry;
   ListHead->Flink = Entry;
 }
@@ -106,6 +225,10 @@ AppendTailList(
 {
   PLIST_ENTRY ListEnd = ListHead->Blink;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  RtlpCheckListEntry(ListHead);
+  RtlpCheckListEntry(ListToAppend);
+#endif
   ListHead->Blink->Flink = ListToAppend;
   ListHead->Blink = ListToAppend->Blink;
   ListToAppend->Blink->Flink = ListHead;
@@ -3061,15 +3184,9 @@ RtlCheckBit(
 #endif /* !defined(MIDL_PASS) */
 
 /* Byte Swap Functions */
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037 || defined(__GNUC__))) || \
-    ((defined(_M_AMD64) || defined(_M_IA64)) \
-        && (_MSC_FULL_VER > 13009175 || defined(__GNUC__)))
-
 #define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
-
-#endif
 
 #if DBG
 
@@ -3113,9 +3230,15 @@ RtlCheckBit(
 # define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
 #else
 # define __assert_annotationA(msg) \
-    DbgPrint("Assertion %s(%d): %s", __FILE__, __LINE__, msg)
+    DbgPrint("Assertion failed at %s(%d): %s\n", __FILE__, __LINE__, msg)
 # define __assert_annotationW(msg) \
-    DbgPrint("Assertion %s(%d): %S", __FILE__, __LINE__, msg)
+    DbgPrint("Assertion failed at %s(%d): %S\n", __FILE__, __LINE__, msg)
+#endif
+
+#ifdef _PREFAST_
+#define __analysis_unreachable() __assume(0)
+#else
+#define __analysis_unreachable() ((void)0)
 #endif
 
 #define NT_VERIFY(exp) \
@@ -3137,17 +3260,17 @@ RtlCheckBit(
 #define NT_ASSERT(exp) \
    ((VOID)((!(exp)) ? \
       (__assert_annotationA(#exp), \
-       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+       DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #define NT_ASSERTMSG(msg, exp) \
    ((VOID)((!(exp)) ? \
       (__assert_annotationA(msg), \
-      DbgRaiseAssertionFailure(), FALSE) : TRUE))
+      DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #define NT_ASSERTMSGW(msg, exp) \
     ((VOID)((!(exp)) ? \
         (__assert_annotationW(msg), \
-         DbgRaiseAssertionFailure(), FALSE) : TRUE))
+         DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #else /* !DBG */
 
@@ -3178,77 +3301,77 @@ RtlCheckBit(
 
 #if !defined(_WINBASE_)
 
-#if defined(_WIN64) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_))
+#if defined(_WIN64) && !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || !defined(_NTOSP_))
 
 NTKERNELAPI
 VOID
 InitializeSListHead(
   _Out_ PSLIST_HEADER SListHead);
 
-#else
+#else /* defined(_WIN64) &&  ... */
+
+/* HACK */
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseStatus(
+  _In_ NTSTATUS Status);
 
 FORCEINLINE
 VOID
 InitializeSListHead(
   _Out_ PSLIST_HEADER SListHead)
 {
-#if defined(_IA64_)
-  ULONG64 FeatureBits;
-#endif
-
 #if defined(_WIN64)
-  if (((ULONG_PTR)SListHead & 0xf) != 0) {
-    RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
-  }
-#endif
-  RtlZeroMemory(SListHead, sizeof(SLIST_HEADER));
+    if (((ULONG_PTR)SListHead & 0xf) != 0) {
+        ExRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
+    }
 #if defined(_IA64_)
-  FeatureBits = __getReg(CV_IA64_CPUID4);
-  if ((FeatureBits & KF_16BYTE_INSTR) != 0) {
-    SListHead->Header16.HeaderType = 1;
-    SListHead->Header16.Init = 1;
-  }
-#endif
+    SListHead->Region = (ULONG_PTR)SListHead & VRN_MASK;
+#else
+    SListHead->Region = 0;
+#endif /* _IA64_ */
+#endif /* _WIN64 */
+    SListHead->Alignment = 0;
 }
 
-#endif
+#endif /* defined(_WIN64) &&  ... */
 
-#if defined(_WIN64)
-
-#define InterlockedPopEntrySList(Head) \
-    ExpInterlockedPopEntrySList(Head)
-
-#define InterlockedPushEntrySList(Head, Entry) \
-    ExpInterlockedPushEntrySList(Head, Entry)
-
-#define InterlockedFlushSList(Head) \
-    ExpInterlockedFlushSList(Head)
-
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
-
-#else /* !defined(_WIN64) */
-
-NTKERNELAPI
-PSLIST_ENTRY
-FASTCALL
-InterlockedPopEntrySList(
-  _Inout_ PSLIST_HEADER ListHead);
+#ifdef _X86_
 
 NTKERNELAPI
 PSLIST_ENTRY
 FASTCALL
 InterlockedPushEntrySList(
-  _Inout_ PSLIST_HEADER ListHead,
-  _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry);
+  _Inout_ PSLIST_HEADER SListHead,
+  _Inout_ __drv_aliasesMem PSLIST_ENTRY SListEntry);
 
-#define InterlockedFlushSList(ListHead) \
-    ExInterlockedFlushSList(ListHead)
+NTKERNELAPI
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(
+  _Inout_ PSLIST_HEADER SListHead);
 
-#define QueryDepthSList(Head) \
-    ExQueryDepthSList(Head)
+#define InterlockedFlushSList(SListHead) \
+    ExInterlockedFlushSList(SListHead)
 
-#endif /* !defined(_WIN64) */
+#else /* !_X86_ */
+
+#define InterlockedPushEntrySList(SListHead, SListEntry) \
+    ExpInterlockedPushEntrySList(SListHead, SListEntry)
+
+#define InterlockedPopEntrySList(SListHead) \
+    ExpInterlockedPopEntrySList(SListHead)
+
+#define InterlockedFlushSList(SListHead) \
+    ExpInterlockedFlushSList(SListHead)
+
+#endif /* _X86_ */
+
+#define QueryDepthSList(SListHead) \
+    ExQueryDepthSList(SListHead)
 
 #endif /* !defined(_WINBASE_) */
 

@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "애칭"
     IDS_ALLOWED_PURPOSE_ALL "<모두>"
     IDS_ALLOWED_PURPOSE_NONE "<없음>"
-    IDS_WARN_REMOVE_MY "당신은 더 이상 이 인증서를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_PLURAL_MY "당신은 더 이상 이 인증서다들를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서들를 제거하기를 원합니까??"
-    IDS_WARN_REMOVE_ADDRESSBOOK "당신은 더 이상 이 인증서를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "당신은 더 이상 이 인증서들를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서들를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_CA "이 인증 기관이 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_PLURAL_CA "이 인증 기관이 발급한 인증서들를 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서들를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 신뢰된 루트인증서를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 신뢰된 루트인증서들를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "이 발행자에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서를 제거하기를 원합니까?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "이 발행자들에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n\
-당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_MY "당신은 더 이상 이 인증서를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_MY "당신은 더 이상 이 인증서다들를 이용해서 메세지를 해독하거나,아니면 서명을 할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까??"
+    IDS_WARN_REMOVE_ADDRESSBOOK "당신은 더 이상 이 인증서를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "당신은 더 이상 이 인증서들를 이용해서 메세지를 암호하거나,아니면 서명된 것을 검증할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_CA "이 인증 기관이 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_CA "이 인증 기관이 발급한 인증서들를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 신뢰된 루트인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "이 루트인증 기관이나 다른 어떤 인증기관에에서 발급한 인증서를 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 신뢰된 루트인증서들를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "이 발행자에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서를 제거하기를 원합니까?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "이 발행자들에 의해 서명된 소프트웨어는 더 이상 신뢰할 수 없을 것입니다.\n당신은 정말로 이 인증서들를 제거하기를 원합니까?"
     IDS_WARN_REMOVE_DEFAULT "이 인증거를 제거하기를 원합니까?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "이 인증서를 제거하기를 원합니까?"
     IDS_CERT_MGR "인증서"
     IDS_FRIENDLY_NAME_NONE "<없음>"
     IDS_PURPOSE_SERVER_AUTH "원격 컴퓨터의 동일성 보증"
     IDS_PURPOSE_CLIENT_AUTH "당신의 신원을 원격컴퓨터로 인증"
-    IDS_PURPOSE_CODE_SIGNING "소프트웨어 발행자로부터 온 소프트웨어 보증\n\
-발행된 후의 소프트웨어를 개조로부터 보호"
+    IDS_PURPOSE_CODE_SIGNING "소프트웨어 발행자로부터 온 소프트웨어 보증\n발행된 후의 소프트웨어를 개조로부터 보호"
     IDS_PURPOSE_EMAIL_PROTECTION "전자우편 메시지 보호"
     IDS_PURPOSE_IPSEC "인터넷을 통한 보안 통신 허용"
     IDS_PURPOSE_TIMESTAMP_SIGNING "현재 시간에 따른 서명 허용"
@@ -184,10 +173,10 @@ STRINGTABLE
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "주의: 이 인증서를 위한 개인 키를 내보낼 수 없습니다."
 }
 
-IDD_GENERAL DIALOG 0, 0, 255, 236
+IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "일반"
-STYLE WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
   CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W", ES_READONLY|WS_DISABLED,8,11,26,26
@@ -200,10 +189,10 @@ BEGIN
   PUSHBUTTON "발행자 설명(&S)", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
-IDD_DETAIL DIALOG 0, 0, 255, 236
+IDD_DETAIL DIALOGEX 0, 0, 255, 236
 CAPTION "세부사항"
-STYLE WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "표시(&S):", -1, 6,12,40,14
   COMBOBOX IDC_DETAIL_SELECT, 48,10,100,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
@@ -214,10 +203,10 @@ BEGIN
   PUSHBUTTON "파일로 복사(&C)...", IDC_EXPORT,152,216,95,14
 END
 
-IDD_HIERARCHY DIALOG 0, 0, 255, 236
+IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
 CAPTION "인증서 경로"
-STYLE WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   GROUPBOX "인증서 경로", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
@@ -228,10 +217,10 @@ BEGIN
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
-IDD_USERNOTICE DIALOG 0, 0, 255, 256
+IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
 CAPTION "거부"
-STYLE WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
@@ -239,10 +228,10 @@ BEGIN
   PUSHBUTTON "추가 정보(&I)", IDC_CPS,162,216,85,14
 END
 
-IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
+IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "일반"
-STYLE WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "애칭(&F):", -1, 6,14,60,14
   EDITTEXT IDC_FRIENDLY_NAME, 70,12,181,14, ES_AUTOHSCROLL|WS_TABSTOP
@@ -261,9 +250,10 @@ BEGIN
   PUSHBUTTON "용도 추가(&)...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
-IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
+IDD_ADD_CERT_PURPOSE DIALOGEX 0,0,200,68
 CAPTION "용도 추가"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "추가하고자 하는 인증서 용도의 객체 식별자(OID) 추가:",
     -1, 6,6,190,28
@@ -272,9 +262,10 @@ BEGIN
   PUSHBUTTON "취소", IDCANCEL, 100,48,60,14
 END
 
-IDD_SELECT_STORE DIALOG 0,0,200,136
+IDD_SELECT_STORE DIALOGEX 0,0,200,136
 CAPTION "인증서 저장소 선택"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "사용하고자 하는 인증서 저장소를 선택하십시오:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
@@ -284,39 +275,40 @@ BEGIN
   PUSHBUTTON "취소", IDCANCEL, 144,118,50,14
 END
 
-IDD_IMPORT_WELCOME DIALOG 0,0,317,143
+IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "인증서 가져오기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "인증서 가져오기 마법사에 온 것을 환영합니다", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "이 마법사는 당신이 인증서,인증서 폐기 목록을 가져오는 데 도움을 주고,파일에서 인증서 신뢰 목록을 인증서 저장소으로 가져오는 데도 도움을 줍니다.\n\
-\n\
-이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다. 또한  메세지에 사인하고 인증하는 데도 사용됩니다.인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의저장소입니다.\n\
-\n\
+  LTEXT "이 마법사는 당신이 인증서,인증서 폐기 목록을 가져오는 데 도움을 주고,파일에서 인증서 신뢰 목록을 인증서 저장소으로 가져오는 데도 도움을 줍니다.\n\n\
+이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다. 또한  메세지에 사인하고 인증하는 데도 사용됩니다.인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의저장소입니다.\n\n\
 계속하려면,다음을 클릭하십시오.",
     -1, 115,40,195,120
 END
 
-IDD_IMPORT_FILE DIALOG 0,0,317,178
+IDD_IMPORT_FILE DIALOGEX 0,0,317,178
 CAPTION "인증서 가져오기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "파일 이름(&F):", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "찾기(&R)...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "주의:  이 파일 형식은 아마도 하나 이상의 인증서,인증서 파기 목록,인증서 신뢰 목록을 가지고 있을 수 있습니다:",
     -1, 21,30,265,16
-  LTEXT "암호화 메세지 문법 표준/PKCS #7 메시지 (.p7b)",
+  LTEXT "암호화 메세지 문법 표준/PKCS #7 메시지 (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "개인 정보 교환/PKCS #12 (.pfx, .p12)",
+  LTEXT "개인 정보 교환/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft 연속 인증서 보관소 (.sst)",
+  LTEXT "Microsoft 연속 인증서 보관소 (*.sst)",
     -1, 31,83,265,10
 END
 
-IDD_IMPORT_STORE DIALOG 0,0,317,143
+IDD_IMPORT_STORE DIALOGEX 0,0,317,143
 CAPTION "인증서 가져오기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine이 자동으로 인증서 저장소를 선택하거나, 아니면 직접 저장할 곳을 선택할 수 있습니다.",
     -1, 21,1,220,25
@@ -328,9 +320,10 @@ BEGIN
   PUSHBUTTON "찾기(&R)...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG 0,0,317,178
+IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "인증서 가져오기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "인증서 가져오기 마법사 마치는 중", IDC_IMPORT_TITLE,
     115,1,195,40
@@ -343,9 +336,10 @@ BEGIN
     115,67,174,100
 END
 
-IDD_CERT_MGR DIALOG 0,0,335,270
+IDD_CERT_MGR DIALOGEX 0,0,335,270
 CAPTION "인증서"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "지정된 용도(&N):", -1, 7,9,100,12
   COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
@@ -361,9 +355,10 @@ BEGIN
   PUSHBUTTON "닫기(&C)", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
-IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
+IDD_CERT_MGR_ADVANCED DIALOGEX 0,0,248,176
 CAPTION "추가 옵션"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   GROUPBOX "인증서 용도", -1, 7,7,234,141, BS_GROUPBOX
   LTEXT "추가 용도가 선택되었을 때 나타나는 하나나 다수의 용도 선택.",
@@ -376,22 +371,22 @@ BEGIN
   PUSHBUTTON "취소", IDCANCEL, 190,155,51,14
 END
 
-IDD_EXPORT_WELCOME DIALOG 0,0,317,143
+IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "인증서 내보내기 마법사에 오신 것을 환영합니다", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "이 마법사는 당신이 인증서,인증서 폐기 목록을 내보오는 데 도움을 주고,인증서 신뢰 목록을 인증서 저장소의 인증서 신뢰 목록을 파일로 내보내는 데도 도움을 줍니다.\n\
-\n\
-이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다. 또한  메세지에 사인하고 인증하는 데도 사용됩니다.인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의저장소입니다.\n\
-\n\
+  LTEXT "이 마법사는 당신이 인증서,인증서 폐기 목록을 내보오는 데 도움을 주고,인증서 신뢰 목록을 인증서 저장소의 인증서 신뢰 목록을 파일로 내보내는 데도 도움을 줍니다.\n\n\
+이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다. 또한  메세지에 사인하고 인증하는 데도 사용됩니다.인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의저장소입니다.\n\n\
 계속 하려면, 다음을 클릭하십시오.",
     -1, 115,40,195,120
 END
 
-IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
+IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "당신이  개인 키를 내보내기를 선택하면, 당신은 다음 페이지에서 개인 키를 보호할 암호를 입력하게 될 것입니다.", -1, 21,1,195,25
   LTEXT "개인 키를 내보내기를 원합니까?", -1, 21,27,195,10
@@ -402,9 +397,10 @@ BEGIN
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
-IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
+IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "암호(&P):", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
@@ -412,20 +408,21 @@ BEGIN
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
-IDD_EXPORT_FORMAT DIALOG 0,0,317,143
+IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "사용할 파일 형식 선택:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-암호화된 X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-암호화된 X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-암호화된 X.509 (.cer):",
+  AUTORADIOBUTTON "Ba&se64-암호화된 X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "암호 메시지 문법 표준/PKCS #7 메시지(&C) (.p7b)",
+  AUTORADIOBUTTON "암호 메시지 문법 표준/PKCS #7 메시지(&C) (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&I)",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "개인 정보 교환(&P)/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "개인 정보 교환(&P)/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&U)",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -435,18 +432,20 @@ BEGIN
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
-IDD_EXPORT_FILE DIALOG 0,0,317,143
+IDD_EXPORT_FILE DIALOGEX 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "파일 이름(&F):", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "찾기(&R)...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG 0,0,317,178
+IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "인증서 내보내기 마법사"
-FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
+FONT 9, "MS Shell Dlg"
 BEGIN
   LTEXT "인증서 내보내기 마법서 완료하는 중", IDC_EXPORT_TITLE,
     115,1,195,40

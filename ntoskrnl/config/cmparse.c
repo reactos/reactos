@@ -24,6 +24,8 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 {
     BOOLEAN NameValid = TRUE;
 
+    ASSERT(RemainingName->Length % sizeof(WCHAR) == 0);
+
     /* Check if there's nothing left in the name */
     if (!(RemainingName->Buffer) ||
         (!RemainingName->Length) ||
@@ -37,7 +39,8 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     }
 
     /* Check if we have a path separator */
-    if (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR)
+    while ((RemainingName->Length) &&
+           (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Skip it */
         RemainingName->Buffer++;
@@ -47,15 +50,9 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 
     /* Start loop at where the current buffer is */
     NextName->Buffer = RemainingName->Buffer;
-    while (TRUE)
+    while ((RemainingName->Length) &&
+           (*RemainingName->Buffer != OBJ_NAME_PATH_SEPARATOR))
     {
-        /* Break out if we ran out or hit a path separator */
-        if (!(RemainingName->Length) ||
-            (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
-        {
-            break;
-        }
-
         /* Move to the next character */
         RemainingName->Buffer++;
         RemainingName->Length -= sizeof(WCHAR);
@@ -222,13 +219,12 @@ CmpDoCreateChild(IN PHHIVE Hive,
     PCM_KEY_NODE KeyNode;
     PCELL_DATA CellData;
     ULONG StorageType;
-    LARGE_INTEGER SystemTime;
     PCM_KEY_CONTROL_BLOCK Kcb;
     PSECURITY_DESCRIPTOR NewDescriptor;
 
     /* Get the storage type */
     StorageType = Stable;
-    if (Flags & REG_OPTION_VOLATILE) StorageType = Volatile;
+    if (ParseContext->CreateOptions & REG_OPTION_VOLATILE) StorageType = Volatile;
 
     /* Allocate the child */
     *KeyCell = HvAllocateCell(Hive,
@@ -314,9 +310,8 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Fill out the key node */
     KeyNode->Signature = CM_KEY_NODE_SIGNATURE;
-    KeyNode->Flags = Flags &~ REG_OPTION_CREATE_LINK;
-    KeQuerySystemTime(&SystemTime);
-    KeyNode->LastWriteTime = SystemTime;
+    KeyNode->Flags = Flags;
+    KeQuerySystemTime(&KeyNode->LastWriteTime);
     KeyNode->Spare = 0;
     KeyNode->Parent = ParentCell;
     KeyNode->SubKeyCounts[Stable] = 0;
@@ -380,6 +375,9 @@ CmpDoCreateChild(IN PHHIVE Hive,
                                    CmpKeyObjectType->TypeInfo.PoolType,
                                    &CmpKeyObjectType->TypeInfo.GenericMapping);
     }
+
+    /* Now that the security descriptor is copied in the hive, we can free the original */
+    SeDeassignSecurity(&NewDescriptor);
 
 Quickie:
     /* Check if we got here because of failure */
@@ -477,7 +475,7 @@ CmpDoCreate(IN PHHIVE Hive,
                               AccessMode,
                               ParseContext,
                               ParentKcb,
-                              ParseContext->CreateOptions, // WRONG!
+                              0,
                               &KeyCell,
                               Object);
     if (NT_SUCCESS(Status))
@@ -519,7 +517,7 @@ CmpDoCreate(IN PHHIVE Hive,
             KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen = Name->Length;
         }
 
-        /* Check if we need toupdate class length maximum */
+        /* Check if we need to update class length maximum */
         if (KeyNode->MaxClassLen < ParseContext->Class.Length)
         {
             /* Update it */
@@ -718,7 +716,6 @@ CmpDoOpen(IN PHHIVE Hive,
     return Status;
 }
 
-/* Remove calls to CmCreateRootNode once this is used! */
 NTSTATUS
 NTAPI
 CmpCreateLinkNode(IN PHHIVE Hive,
@@ -929,7 +926,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen = Name.Length;
         }
 
-        /* Check if we need toupdate class length maximum */
+        /* Check if we need to update class length maximum */
         if (KeyNode->MaxClassLen < Context->Class.Length)
         {
             /* Update it */
@@ -1268,6 +1265,11 @@ CmpParseKey(IN PVOID ParseObject,
                                                        ParseContext,
                                                        ParentKcb,
                                                        Object);
+                        }
+                        else if (Hive == &CmiVolatileHive->Hive && CmpNoVolatileCreates)
+                        {
+                            /* Creating keys in the master hive is not allowed */
+                            Status = STATUS_INVALID_PARAMETER;
                         }
                         else
                         {

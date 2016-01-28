@@ -439,7 +439,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
         KeReleaseGuardedMutex(&LpcpLock);
     }
 
-    /* Check if this is a connection port with a server process*/
+    /* Check if this is a connection port with a server process */
     if (((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CONNECTION_PORT) &&
         (ConnectionPort->ServerProcess))
     {

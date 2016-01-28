@@ -165,42 +165,12 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         8,
         13,
-        "- Inçtal tor nepracuje s viac ako 1 prim rnou oblasœou na 1 disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Inçtal tor nevie odstr niœ prim rnu oblasœ z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  pokia– existuj£ rozç¡ren‚ oblasti na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Inçtal tor nevie odstr niœ prv£ rozç¡ren£ oblasœ z disku,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  pokia– existuj£ in‚ rozç¡ren‚ oblasti na disku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Inçtal tor podporuje iba s£borovì syst‚m FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrola s£borov‚ho syst‚mu zatia– nie je implementovan .",
         TEXT_STYLE_NORMAL
     },
@@ -510,6 +480,7 @@ static MUI_ENTRY skSKRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY skSKComputerPageEntries[] =
 {
     {
@@ -840,6 +811,12 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  StlaŸte D pre vymazanie existuj£cej oblasti.",
         TEXT_STYLE_NORMAL
     },
@@ -847,6 +824,100 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
         0,
         0,
         "PoŸkajte, pros¡m ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY skSKConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1505,8 +1576,16 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Na zvolenej part¡cii nie je dostatok vo–n‚ho miesta.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
         NULL
     },
@@ -1524,24 +1603,17 @@ MUI_ERROR skSKErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE skSKPages[] =
 {
@@ -1584,6 +1656,10 @@ MUI_PAGE skSKPages[] =
     {
         SELECT_PARTITION_PAGE,
         skSKSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        skSKConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1673,12 +1749,16 @@ MUI_STRING skSKStrings[] =
     "T to oblasœ sa bude form tovaœ ako Ôalçia."},
     {STRING_NONFORMATTEDPART,
     "Zvolili ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
     {STRING_CHECKINGPART,
     "Inçtal tor teraz skontroluje vybran£ oblasœ."},
     {STRING_QUITCONTINUE,
-    "F3= SkonŸiœ  ENTER = PokraŸovaœ"},
+    "F3 = SkonŸiœ  ENTER = PokraŸovaœ"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reçtart poŸ¡taŸa"},
     {STRING_TXTSETUPFAILED,
@@ -1736,7 +1816,7 @@ MUI_STRING skSKStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %styp %-3u%s                       %6lu %s"},
+    "%c%c %c %styp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,

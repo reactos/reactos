@@ -34,9 +34,10 @@
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 
 NTSTATUS ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                           IN OUT PCONSOLE Console,
-                                           IN ULONG BufferType,
-                                           IN PVOID ScreenBufferInfo);
+                                  IN PCONSOLE Console,
+                                  IN HANDLE ProcessHandle OPTIONAL,
+                                  IN ULONG BufferType,
+                                  IN PVOID ScreenBufferInfo);
 VOID NTAPI ConDrvDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 // VOID ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 

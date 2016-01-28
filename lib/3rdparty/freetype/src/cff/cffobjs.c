@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -226,8 +226,8 @@
       CFF_Font      font     = (CFF_Font)face->extra.data;
       CFF_Internal  internal = (CFF_Internal)size->internal;
 
-      FT_ULong  top_upm  = font->top_font.font_dict.units_per_em;
-      FT_UInt   i;
+      FT_Long  top_upm  = (FT_Long)font->top_font.font_dict.units_per_em;
+      FT_UInt  i;
 
 
       funcs->set_scale( internal->topfont,
@@ -237,7 +237,7 @@
       for ( i = font->num_subfonts; i > 0; i-- )
       {
         CFF_SubFont  sub     = font->subfonts[i - 1];
-        FT_ULong     sub_upm = sub->font_dict.units_per_em;
+        FT_Long      sub_upm = (FT_Long)sub->font_dict.units_per_em;
         FT_Pos       x_scale, y_scale;
 
 
@@ -298,8 +298,8 @@
       CFF_Font      font     = (CFF_Font)cffface->extra.data;
       CFF_Internal  internal = (CFF_Internal)size->internal;
 
-      FT_ULong  top_upm  = font->top_font.font_dict.units_per_em;
-      FT_UInt   i;
+      FT_Long  top_upm  = (FT_Long)font->top_font.font_dict.units_per_em;
+      FT_UInt  i;
 
 
       funcs->set_scale( internal->topfont,
@@ -309,7 +309,7 @@
       for ( i = font->num_subfonts; i > 0; i-- )
       {
         CFF_SubFont  sub     = font->subfonts[i - 1];
-        FT_ULong     sub_upm = sub->font_dict.units_per_em;
+        FT_Long      sub_upm = (FT_Long)sub->font_dict.units_per_em;
         FT_Pos       x_scale, y_scale;
 
 
@@ -342,7 +342,7 @@
   FT_LOCAL_DEF( void )
   cff_slot_done( FT_GlyphSlot  slot )
   {
-    slot->internal->glyph_hints = 0;
+    slot->internal->glyph_hints = NULL;
   }
 
 
@@ -583,16 +583,21 @@
       if ( error )
         goto Exit;
 
+      /* if we are performing a simple font format check, exit immediately */
+      /* (this is here for pure CFF)                                       */
+      if ( face_index < 0 )
+        return FT_Err_Ok;
+
       cff->pshinter = pshinter;
       cff->psnames  = psnames;
 
-      cffface->face_index = face_index;
+      cffface->face_index = face_index & 0xFFFF;
 
       /* Complement the root flags with some interesting information. */
       /* Note that this is only necessary for pure CFF and CEF fonts; */
       /* SFNT based fonts use the `name' table instead.               */
 
-      cffface->num_glyphs = cff->num_glyphs;
+      cffface->num_glyphs = (FT_Long)cff->num_glyphs;
 
       dict = &cff->top_font.font_dict;
 
@@ -629,7 +634,7 @@
       if ( !dict->has_font_matrix )
         dict->units_per_em = pure_cff ? 1000 : face->root.units_per_EM;
 
-      /* Normalize the font matrix so that `matrix->xx' is 1; the */
+      /* Normalize the font matrix so that `matrix->yy' is 1; the */
       /* scaling is done with `units_per_em' then (at this point, */
       /* it already contains the scaling factor, but without      */
       /* normalization of the matrix).                            */
@@ -646,7 +651,7 @@
 
         if ( temp != 0x10000L )
         {
-          *upm = FT_DivFix( *upm, temp );
+          *upm = (FT_ULong)FT_DivFix( (FT_Long)*upm, temp );
 
           matrix->xx = FT_DivFix( matrix->xx, temp );
           matrix->yx = FT_DivFix( matrix->yx, temp );
@@ -682,7 +687,8 @@
           if ( top->has_font_matrix )
           {
             if ( top->units_per_em > 1 && sub->units_per_em > 1 )
-              scaling = FT_MIN( top->units_per_em, sub->units_per_em );
+              scaling = (FT_Long)FT_MIN( top->units_per_em,
+                                         sub->units_per_em );
             else
               scaling = 1;
 
@@ -693,9 +699,10 @@
                                         &top->font_matrix,
                                         scaling );
 
-            sub->units_per_em = FT_MulDiv( sub->units_per_em,
-                                           top->units_per_em,
-                                           scaling );
+            sub->units_per_em = (FT_ULong)
+                                  FT_MulDiv( (FT_Long)sub->units_per_em,
+                                             (FT_Long)top->units_per_em,
+                                             scaling );
           }
         }
         else
@@ -713,7 +720,7 @@
 
         if ( temp != 0x10000L )
         {
-          *upm = FT_DivFix( *upm, temp );
+          *upm = (FT_ULong)FT_DivFix( (FT_Long)*upm, temp );
 
           matrix->xx = FT_DivFix( matrix->xx, temp );
           matrix->yx = FT_DivFix( matrix->yx, temp );
@@ -733,13 +740,13 @@
 
 
         /* set up num_faces */
-        cffface->num_faces = cff->num_faces;
+        cffface->num_faces = (FT_Long)cff->num_faces;
 
         /* compute number of glyphs */
         if ( dict->cid_registry != 0xFFFFU )
-          cffface->num_glyphs = cff->charset.max_cid + 1;
+          cffface->num_glyphs = (FT_Long)( cff->charset.max_cid + 1 );
         else
-          cffface->num_glyphs = cff->charstrings_index.count;
+          cffface->num_glyphs = (FT_Long)cff->charstrings_index.count;
 
         /* set global bbox, as well as EM size */
         cffface->bbox.xMin =   dict->font_bbox.xMin            >> 16;
@@ -763,7 +770,9 @@
           (FT_Short)( dict->underline_thickness >> 16 );
 
         /* retrieve font family & style name */
-        cffface->family_name = cff_index_get_name( cff, face_index );
+        cffface->family_name = cff_index_get_name(
+                                 cff,
+                                 (FT_UInt)( face_index & 0xFFFF ) );
         if ( cffface->family_name )
         {
           char*  full   = cff_index_get_sid_string( cff,
@@ -943,16 +952,6 @@
         if ( pure_cff && cff->top_font.font_dict.cid_registry != 0xFFFFU )
           goto Exit;
 
-#ifdef FT_MAX_CHARMAP_CACHEABLE
-        if ( nn + 1 > FT_MAX_CHARMAP_CACHEABLE )
-        {
-          FT_ERROR(( "cff_face_init: no Unicode cmap is found, "
-                     "and too many subtables (%d) to add synthesized cmap\n",
-                     nn ));
-          goto Exit;
-        }
-#endif
-
         /* we didn't find a Unicode charmap -- synthesize one */
         cmaprec.face        = cffface;
         cmaprec.platform_id = TT_PLATFORM_MICROSOFT;
@@ -973,15 +972,6 @@
           cffface->charmap = cffface->charmaps[nn];
 
       Skip_Unicode:
-#ifdef FT_MAX_CHARMAP_CACHEABLE
-        if ( nn > FT_MAX_CHARMAP_CACHEABLE )
-        {
-          FT_ERROR(( "cff_face_init: Unicode cmap is found, "
-                     "but too many preceding subtables (%d) to access\n",
-                     nn - 1 ));
-          goto Exit;
-        }
-#endif
         if ( encoding->count > 0 )
         {
           FT_CMap_Class  clazz;
@@ -1055,22 +1045,23 @@
     CFF_Driver  driver = (CFF_Driver)module;
 
 
-    /* set default property values, cf `ftcffdrv.h' */
+    /* set default property values, cf. `ftcffdrv.h' */
 #ifdef CFF_CONFIG_OPTION_OLD_ENGINE
-    driver->hinting_engine    = FT_CFF_HINTING_FREETYPE;
+    driver->hinting_engine = FT_CFF_HINTING_FREETYPE;
 #else
-    driver->hinting_engine    = FT_CFF_HINTING_ADOBE;
+    driver->hinting_engine = FT_CFF_HINTING_ADOBE;
 #endif
-    driver->no_stem_darkening = FALSE;
 
-    driver->darken_params[0] =  500;
-    driver->darken_params[1] =  400;
-    driver->darken_params[2] = 1000;
-    driver->darken_params[3] =  275;
-    driver->darken_params[4] = 1667;
-    driver->darken_params[5] =  275;
-    driver->darken_params[6] = 2333;
-    driver->darken_params[7] =    0;
+    driver->no_stem_darkening = TRUE;
+
+    driver->darken_params[0] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1;
+    driver->darken_params[1] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1;
+    driver->darken_params[2] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2;
+    driver->darken_params[3] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2;
+    driver->darken_params[4] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3;
+    driver->darken_params[5] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3;
+    driver->darken_params[6] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4;
+    driver->darken_params[7] = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4;
 
     return FT_Err_Ok;
   }

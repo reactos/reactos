@@ -1,5 +1,6 @@
 
 include_directories(../inc)
+spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DCLASS_GLOBAL_BREAK_ON_LOST_IRPS=0
@@ -8,8 +9,6 @@ add_definitions(
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT=0
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
-
-spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     autorun.c
@@ -34,16 +33,8 @@ add_library(classpnp SHARED
     class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
-if(ARCH STREQUAL "i386")
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    if(NOT MSVC)
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=switch")
-    endif()
-endif()
-
 add_pch(classpnp classp.h SOURCE)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)
-
 add_cd_file(TARGET classpnp DESTINATION reactos/system32/drivers NO_CAB FOR all)

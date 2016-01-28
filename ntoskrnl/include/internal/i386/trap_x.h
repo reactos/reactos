@@ -1,19 +1,20 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/include/i386/trap_x.h
+ * FILE:            ntoskrnl/include/internal/i386/trap_x.h
  * PURPOSE:         Internal Inlined Functions for the Trap Handling Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 #pragma once
 
-#define TRAP_DEBUG 0
-
-#define UNREACHABLE __assume(0)
-
-#if _MSC_VER
-#define __builtin_expect(a,b) (a)
+#if defined(_MSC_VER)
+#define UNREACHABLE   __assume(0)
+#define               __builtin_expect(a,b) (a)
+#elif defined(__GNUC__)
+#define UNREACHABLE   __builtin_unreachable()
+#else
+#error
 #endif
 
 //
@@ -72,9 +73,9 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DbgPrint("V86Gs: %x\n", TrapFrame->V86Gs);
 }
 
-#if TRAP_DEBUG
-VOID
+#if DBG
 FORCEINLINE
+VOID
 KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
 {
     /* Set the debug information */
@@ -152,6 +153,8 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         __debugbreak();
     }
 
+    /* FIXME: KDBG messes around with these improperly */
+#if !defined(KDBG)
     /* Check DR values */
     if (KiUserTrap(TrapFrame))
     {
@@ -174,8 +177,9 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         CheckDr(1, Prcb->ProcessorState.SpecialRegisters.KernelDr1);
         CheckDr(2, Prcb->ProcessorState.SpecialRegisters.KernelDr2);
         CheckDr(3, Prcb->ProcessorState.SpecialRegisters.KernelDr3);
-        //CheckDr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7);
+        // CheckDr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7); // Disabled, see CORE-10165 for more details.
     }
+#endif
 
     StopChecking = FALSE;
 }
@@ -237,7 +241,6 @@ DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegments(IN PKTRAP_FRAME TrapFrame
 DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegmentsRet8(IN PKTRAP_FRAME TrapFrame);
 
 typedef
-ATTRIB_NORETURN
 VOID
 (FASTCALL *PFAST_SYSTEM_CALL_EXIT)(
     IN PKTRAP_FRAME TrapFrame

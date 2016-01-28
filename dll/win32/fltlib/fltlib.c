@@ -79,13 +79,22 @@ HRESULT WINAPI FilterFindClose(HANDLE handle)
 }
 
 /**********************************************************************
+ *      FilterLoad              (FLTLIB.@)
+ */
+HRESULT WINAPI FilterLoad(LPCWSTR filtername)
+{
+    FIXME("(%s) stub\n", debugstr_w(filtername));
+    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+}
+
+/**********************************************************************
  *      FilterUnload            (FLTLIB.@)
  */
-HRESULT WINAPI FilterUnload(LPCWSTR lpFilterName)
+HRESULT WINAPI FilterUnload(LPCWSTR filtername)
 {
-    FIXME("(%s) stub\n", debugstr_w(lpFilterName));
+    FIXME("(%s) stub\n", debugstr_w(filtername));
 
-    if (!lpFilterName)
+    if (!filtername)
         return HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER);
 
     return S_OK;

@@ -24,7 +24,7 @@ typedef struct
 {
     IEnumBackgroundCopyFiles IEnumBackgroundCopyFiles_iface;
     LONG ref;
-    IBackgroundCopyFile **files;
+    IBackgroundCopyFile2 **files;
     ULONG numFiles;
     ULONG indexFiles;
 } EnumBackgroundCopyFilesImpl;
@@ -72,7 +72,7 @@ static ULONG WINAPI EnumBackgroundCopyFiles_Release(IEnumBackgroundCopyFiles *if
     if (ref == 0)
     {
         for(i = 0; i < This->numFiles; i++)
-            IBackgroundCopyFile_Release(This->files[i]);
+            IBackgroundCopyFile2_Release(This->files[i]);
         HeapFree(GetProcessHeap(), 0, This->files);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -87,7 +87,7 @@ static HRESULT WINAPI EnumBackgroundCopyFiles_Next(IEnumBackgroundCopyFiles *ifa
     EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
     ULONG fetched;
     ULONG i;
-    IBackgroundCopyFile *file;
+    IBackgroundCopyFile2 *file;
 
     TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
 
@@ -113,8 +113,8 @@ static HRESULT WINAPI EnumBackgroundCopyFiles_Next(IEnumBackgroundCopyFiles *ifa
     for (i = 0; i < fetched; i++)
     {
         file = This->files[This->indexFiles++];
-        IBackgroundCopyFile_AddRef(file);
-        rgelt[i] = file;
+        IBackgroundCopyFile2_AddRef(file);
+        rgelt[i] = (IBackgroundCopyFile *)file;
     }
 
     return fetched == celt ? S_OK : S_FALSE;
@@ -212,8 +212,8 @@ HRESULT EnumBackgroundCopyFilesConstructor(BackgroundCopyJobImpl *job, IEnumBack
     i = 0;
     LIST_FOR_EACH_ENTRY(file, &job->files, BackgroundCopyFileImpl, entryFromJob)
     {
-        IBackgroundCopyFile_AddRef(&file->IBackgroundCopyFile_iface);
-        This->files[i] = &file->IBackgroundCopyFile_iface;
+        IBackgroundCopyFile2_AddRef(&file->IBackgroundCopyFile2_iface);
+        This->files[i] = &file->IBackgroundCopyFile2_iface;
         ++i;
     }
     LeaveCriticalSection(&job->cs);

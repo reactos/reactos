@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/device.c
+ * FILE:            ntoskrnl/io/iomgr/device.c
  * PURPOSE:         Device Object Management, including Notifications and Queues.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
@@ -333,6 +333,10 @@ IopEditDeviceList(IN PDRIVER_OBJECT DriverObject,
                   IN IOP_DEVICE_LIST_OPERATION Type)
 {
     PDEVICE_OBJECT Previous;
+    KIRQL OldIrql;
+
+    /* Lock the Device list while we edit it */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
 
     /* Check the type of operation */
     if (Type == IopRemove)
@@ -353,7 +357,12 @@ IopEditDeviceList(IN PDRIVER_OBJECT DriverObject,
                 /* Not this one, keep moving */
                 if (!Previous->NextDevice)
                 {
-                    DPRINT1("Failed to remove PDO %p on driver %wZ (not found)\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
+                    DPRINT1("Failed to remove PDO %p on driver %wZ (not found)\n",
+                            DeviceObject,
+                            &DeviceObject->DriverObject->DriverName);
+
+                    ASSERT(FALSE);
+                    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
                     return;
                 }
                 Previous = Previous->NextDevice;
@@ -369,6 +378,9 @@ IopEditDeviceList(IN PDRIVER_OBJECT DriverObject,
         DeviceObject->NextDevice = DriverObject->DeviceObject;
         DriverObject->DeviceObject = DeviceObject;
     }
+
+    /* Release the device list lock */
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
 }
 
 VOID
@@ -396,8 +408,8 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)
         {
-            /* Free it */
-            ExFreePoolWithTag(DeviceObject->SecurityDescriptor, TAG_SD);
+            /* Dereference it */
+            ObDereferenceSecurityDescriptor(DeviceObject->SecurityDescriptor, 1);
         }
 
         /* Remove the device from the list */
@@ -846,14 +858,14 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         /* Initialize the name */
         RtlInitUnicodeString(&AutoName, AutoNameBuffer);
         DeviceName = &AutoName;
-   }
+    }
 
     /* Initialize the Object Attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                DeviceName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
-                               NULL);
+                               SePublicOpenUnrestrictedSd);
 
     /* Honor exclusive flag */
     if (Exclusive) ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
@@ -1088,6 +1100,10 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
 {
     ULONG ActualDevices = 1;
     PDEVICE_OBJECT CurrentDevice = DriverObject->DeviceObject;
+    KIRQL OldIrql;
+
+    /* Lock the Device list while we enumerate it */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
 
     /* Find out how many devices we'll enumerate */
     while ((CurrentDevice = CurrentDevice->NextDevice)) ActualDevices++;
@@ -1099,13 +1115,14 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
     *ActualNumberDeviceObjects = ActualDevices;
 
     /* Check if we can support so many */
-    if ((ActualDevices * 4) > DeviceObjectListSize)
+    if ((ActualDevices * sizeof(PDEVICE_OBJECT)) > DeviceObjectListSize)
     {
         /* Fail because the buffer was too small */
+        KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    /* Check if the caller only wanted the size */
+    /* Check if the caller wanted the device list */
     if (DeviceObjectList)
     {
         /* Loop through all the devices */
@@ -1123,6 +1140,9 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
             DeviceObjectList++;
         }
     }
+
+    /* Release the device list lock */
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
 
     /* Return the status */
     return STATUS_SUCCESS;

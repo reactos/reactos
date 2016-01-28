@@ -206,12 +206,12 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Общо", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 27, 8
     LTEXT "Налична", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 60, 8
-    LTEXT "Системен склад", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 65, 8
+    LTEXT "Системен склад", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 60, 8
     EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 185, 149, 48, 8, ES_RIGHT | ES_READONLY |
+    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 190, 149, 43, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Общо", IDS_KERNEL_MEMORY_TOTAL, 137, 174, 27, 8
     LTEXT "Странирана", IDS_KERNEL_MEMORY_PAGED, 137, 184, 50, 8
@@ -312,9 +312,10 @@ BEGIN
     CONTROL "Брой &нишки", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 94, 115, 10
     CONTROL "GDI Objects", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 105, 115, 10
     CONTROL "В/И писанета", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 116, 115, 10
-    CONTROL "В/И байтове за писане", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 127, 65, 10
+    CONTROL "В/И байтове за писане", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 127, 115, 10
     CONTROL "Други В/И", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 138, 115, 10
     CONTROL "Други В/И байтове", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 149, 115, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 160, 115, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "В/И прочетени байтове"
     IDS_TAB_IOWRITESBYTES "В/И записани байтове"
     IDS_TAB_IOOTHERBYTES "В/И други байтове"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Избор на стълбове..."
     IDS_MENU_16BITTASK "&Показване на 16битови задачи"
     IDS_MENU_WINDOWS "&Прозорци"
@@ -430,10 +432,11 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Предупреждение на задачния управител"
     IDS_MSG_WARNINGTERMINATING "ВНИМАНИЕ: Прекратяването на действие може да доведе до нежелани\nпоследствия, включително до загуба на данни и неусточйивост на системата.\nДействието няма да има възможност да запише състоянието и\nданните си, преди да приключи. Сигурен ли сте, че искате да\nпрекратите действието?"
     IDS_MSG_UNABLETERMINATEPRO "Невъзможно прекратяване на действие"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Невъзможно намаляване на първенство"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
     IDS_MSG_TRAYICONCPUUSAGE "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE "Заета памет: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Заета памет: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES "Действия: %d"
     IDS_NOT_RESPONDING "Не отговаря"

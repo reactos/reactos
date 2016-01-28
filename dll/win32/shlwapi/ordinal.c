@@ -52,13 +52,24 @@ BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 */
 
 /*************************************************************************
- * SHLWAPI_DupSharedHandle
+ * @   [SHLWAPI.11]
  *
- * Internal implementation of SHLWAPI_11.
+ * Copy a sharable memory handle from one process to another.
+ *
+ * PARAMS
+ * hShared     [I] Shared memory handle to duplicate
+ * dwSrcProcId [I] ID of the process owning hShared
+ * dwDstProcId [I] ID of the process wanting the duplicated handle
+ * dwAccess    [I] Desired DuplicateHandle() access
+ * dwOptions   [I] Desired DuplicateHandle() options
+ *
+ * RETURNS
+ * Success: A handle suitable for use by the dwDstProcId process.
+ * Failure: A NULL handle.
+ *
  */
-static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
-                                      DWORD dwSrcProcId, DWORD dwAccess,
-                                      DWORD dwOptions)
+HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwSrcProcId, DWORD dwDstProcId,
+                          DWORD dwAccess, DWORD dwOptions)
 {
   HANDLE hDst, hSrc;
   DWORD dwMyProcId = GetCurrentProcessId();
@@ -84,7 +95,7 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
     if (hSrc)
     {
       /* Make handle available to dest process */
-      if (!DuplicateHandle(hDst, hShared, hSrc, &hRet,
+      if (!DuplicateHandle(hSrc, hShared, hDst, &hRet,
                            dwAccess, 0, dwOptions | DUPLICATE_SAME_ACCESS))
         hRet = NULL;
 
@@ -148,9 +159,8 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 
     /* Release view. All further views mapped will be opaque */
     UnmapViewOfFile(pMapped);
-    hRet = SHLWAPI_DupSharedHandle(hMap, dwProcId,
-                                   GetCurrentProcessId(), FILE_MAP_ALL_ACCESS,
-                                   DUPLICATE_SAME_ACCESS);
+    hRet = SHMapHandle(hMap, GetCurrentProcessId(), dwProcId,
+                       FILE_MAP_ALL_ACCESS, DUPLICATE_SAME_ACCESS);
   }
 
   CloseHandle(hMap);
@@ -179,8 +189,8 @@ PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
   TRACE("(%p %d)\n", hShared, dwProcId);
 
   /* Get handle to shared memory for current process */
-  hDup = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                 FILE_MAP_ALL_ACCESS, 0);
+  hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
+
   /* Get View */
   pMapped = MapViewOfFile(hDup, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
   CloseHandle(hDup);
@@ -230,37 +240,10 @@ BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
   TRACE("(%p %d)\n", hShared, dwProcId);
 
   /* Get a copy of the handle for our process, closing the source handle */
-  hClose = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                   FILE_MAP_ALL_ACCESS,DUPLICATE_CLOSE_SOURCE);
+  hClose = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(),
+                       FILE_MAP_ALL_ACCESS,DUPLICATE_CLOSE_SOURCE);
   /* Close local copy */
   return CloseHandle(hClose);
-}
-
-/*************************************************************************
- * @   [SHLWAPI.11]
- *
- * Copy a sharable memory handle from one process to another.
- *
- * PARAMS
- * hShared     [I] Shared memory handle to duplicate
- * dwDstProcId [I] ID of the process wanting the duplicated handle
- * dwSrcProcId [I] ID of the process owning hShared
- * dwAccess    [I] Desired DuplicateHandle() access
- * dwOptions   [I] Desired DuplicateHandle() options
- *
- * RETURNS
- * Success: A handle suitable for use by the dwDstProcId process.
- * Failure: A NULL handle.
- *
- */
-HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwDstProcId, DWORD dwSrcProcId,
-                          DWORD dwAccess, DWORD dwOptions)
-{
-  HANDLE hRet;
-
-  hRet = SHLWAPI_DupSharedHandle(hShared, dwDstProcId, dwSrcProcId,
-                                 dwAccess, dwOptions);
-  return hRet;
 }
 
 /*************************************************************************
@@ -448,7 +431,7 @@ exit:
  *  Success: S_OK.   langbuf is set to the language string found.
  *  Failure: E_FAIL, If any arguments are invalid, error occurred, or Explorer
  *           does not contain the setting.
- *           HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), If the buffer is not big enough
+ *           E_NOT_SUFFICIENT_BUFFER, If the buffer is not big enough
  */
 HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 {
@@ -501,7 +484,7 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
     }
 
     *buflen = 0;
-    return __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+    return E_NOT_SUFFICIENT_BUFFER;
 }
 
 /*************************************************************************
@@ -1381,7 +1364,7 @@ HRESULT WINAPI IUnknown_SetSite(
  *
  * PARAMS
  *  lpUnknown [I] Object supporting the IPersist interface
- *  lpClassId [O] Destination for Class Id
+ *  clsid     [O] Destination for Class Id
  *
  * RETURNS
  *  Success: S_OK. lpClassId contains the Class Id requested.
@@ -1389,23 +1372,30 @@ HRESULT WINAPI IUnknown_SetSite(
  *           E_NOINTERFACE If lpUnknown does not support IPersist,
  *           Or an HRESULT error code.
  */
-HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID* lpClassId)
+HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *clsid)
 {
-  IPersist* lpPersist;
-  HRESULT hRet = E_FAIL;
+    IPersist *persist;
+    HRESULT hr;
 
-  TRACE("(%p,%s)\n", lpUnknown, debugstr_guid(lpClassId));
+    TRACE("(%p, %p)\n", lpUnknown, clsid);
 
-  if (lpUnknown)
-  {
-    hRet = IUnknown_QueryInterface(lpUnknown,&IID_IPersist,(void**)&lpPersist);
-    if (SUCCEEDED(hRet))
+    if (!lpUnknown)
     {
-      IPersist_GetClassID(lpPersist, lpClassId);
-      IPersist_Release(lpPersist);
+        memset(clsid, 0, sizeof(*clsid));
+        return E_FAIL;
     }
-  }
-  return hRet;
+
+    hr = IUnknown_QueryInterface(lpUnknown, &IID_IPersist, (void**)&persist);
+    if (hr != S_OK)
+    {
+        hr = IUnknown_QueryInterface(lpUnknown, &IID_IPersistFolder, (void**)&persist);
+        if (hr != S_OK)
+            return hr;
+    }
+
+    hr = IPersist_GetClassID(persist, clsid);
+    IPersist_Release(persist);
+    return hr;
 }
 
 /*************************************************************************
@@ -5049,11 +5039,8 @@ INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
         {
             if ((fmt_flags & FDTF_LONGDATE) && (ret < size + 2))
             {
-                if (ret < size + 2)
-                {
-                   lstrcatW(&buf[ret-1], sep1);
-                   ret += 2;
-                }
+                lstrcatW(&buf[ret-1], sep1);
+                ret += 2;
             }
             else
             {
@@ -5180,9 +5167,9 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
  *  pValue: address to receive the property value as a 32-bit signed integer
  *
  * RETURNS
- *  0 for Success
+ *  HRESULT codes
  */
-BOOL WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
+HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
 {
     VARIANT var;
     HRESULT hr;

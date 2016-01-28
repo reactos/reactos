@@ -125,6 +125,8 @@ BOOLEAN    DiskIsDriveRemovable(UCHAR DriveNumber);
 VOID    DiskStopFloppyMotor(VOID);    // Implemented in i386disk.c
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+extern PVOID DiskReadBuffer;
+extern SIZE_T DiskReadBufferSize;
 
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 

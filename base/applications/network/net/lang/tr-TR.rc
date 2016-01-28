@@ -1,0 +1,125 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_ACCOUNTS_SYNTAX "Kullanım:\nNET ACCOUNTS [/FORCELOGOFF:{Dakîka|NO}] [/MINPWLEN:Uzunluk]\n\
+             [/MAXPWAGE:{Gün|UNLIMITED}] [/MINPWAGE:Gün]\n\
+             [/UNIQUEPW:Sayı] [/DOMAIN]\n"
+    IDS_ACCOUNTS_HELP "ACCOUNTS\n..."
+    IDS_COMPUTER_SYNTAX "Kullanım:\nNET COMPUTER ..."
+    IDS_COMPUTER_HELP "COMPUTER\n..."
+    IDS_CONFIG_SYNTAX "Kullanım:\nNET CONFIG ..."
+    IDS_CONFIG_HELP "CONFIG\n..."
+    IDS_CONTINUE_SYNTAX "Kullanım:\nNET CONTINUE <Hizmet Adı>"
+    IDS_CONTINUE_HELP "CONTINUE\n..."
+    IDS_FILE_SYNTAX "Kullanım:\nNET FILE ..."
+    IDS_FILE_HELP "FILE\n..."
+    IDS_GROUP_SYNTAX "Kullanım:\nNET GROUP ..."
+    IDS_GROUP_HELP "GROUP\n..."
+    IDS_HELPMSG_SYNTAX "Kullanım:\nNET HELPMSG <Yanlışlık Kodu>"
+    IDS_HELPMSG_HELP "HELPMSG\n..."
+    IDS_LOCALGROUP_SYNTAX "Kullanım:\nNET LOCALGROUP [takım adı [/COMMENT:""metin""]] [/DOMAIN]\n\
+               takım adı {/ADD [/COMMENT:""metin""] | /DELETE} [/DOMAIN]\n\
+               takım adı ad [...] {/ADD | /DELETE} [/DOMAIN]"
+    IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
+    IDS_NAME_SYNTAX "Kullanım:\nNET NAME ..."
+    IDS_NAME_HELP "NAME\n..."
+    IDS_PRINT_SYNTAX  "Kullanım:\nNET PRINT ..."
+    IDS_PRINT_HELP "PRINT\n..."
+    IDS_PAUSE_SYNTAX "Kullanım:\nNET PAUSE <Hizmet Adı>"
+    IDS_PAUSE_HELP "PAUSE\n..."
+    IDS_SEND_SYNTAX "Kullanım:\nNET SEND ..."
+    IDS_SEND_HELP "SEND\n..."
+    IDS_SESSION_SYNTAX "Kullanım:\nNET SESSION ..."
+    IDS_SESSION_HELP "SESSION\n..."
+    IDS_SHARE_SYNTAX "Kullanım:\nNET SHARE ..."
+    IDS_SHARE_HELP "SHARE\n..."
+    IDS_START_SYNTAX "Kullanım:\nNET START <Hizmet Adı>"
+    IDS_START_HELP "START\n..."
+    IDS_STATISTICS_SYNTAX "Kullanım:\nNET STATISTICS ..."
+    IDS_STATISTICS_HELP "STATISTICS\n..."
+    IDS_STOP_SYNTAX "Kullanım:\nNET STOP <Hizmet Adı>"
+    IDS_STOP_HELP "STOP\n..."
+    IDS_TIME_SYNTAX "Kullanım:\nNET TIME ..."
+    IDS_TIME_HELP "TIME\n..."
+    IDS_USE_SYNTAX "Kullanım:\nNET USE ..."
+    IDS_USE_HELP "USE\n..."
+    IDS_USER_SYNTAX "Kullanım:\nNET USER [kullanıcı adı [şifre | *] [seçenekler]] [/DOMAIN]\n\
+         kullanıcı adı {şifre | *} /ADD [seçenekler] [/DOMAIN]\n\
+         kullanıcı adı [/DELETE] [/DOMAIN]"
+    IDS_USER_HELP "USER\n..."
+    IDS_VIEW_SYNTAX "Kullanım:\nNET VIEW ..."
+    IDS_VIEW_HELP "VIEW\n..."
+    IDS_HELP_SYNTAX "Kullanım:\nNET HELP <Komut>\n   - ya da -\nNET <Komut> /HELP\n\n\
+   Aşağıdaki komutlar kullanılabilir:\n\n\
+   NET ACCOUNTS             NET HELP                 NET SHARE\n\
+   NET COMPUTER             NET HELPMSG              NET START\n\
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
+   NET CONFIG SERVER        NET NAME                 NET STOP\n\
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
+   NET CONTINUE             NET PRINT                NET USE\n\
+   NET FILE                 NET SEND                 NET USER\n\
+   NET GROUP                NET SESSION              NET VIEW\n\n\
+   ..."
+    IDS_NET_SYNTAX "Kullanım:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
+      SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+
+    IDS_ACCOUNTS_FORCE_LOGOFF "Sonra oturum kapatmaya zorla"
+    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu sâniye"
+    IDS_ACCOUNTS_MIN_PW_AGE "En az şifre yaşı (gün)"
+    IDS_ACCOUNTS_MAX_PW_AGE "En çok şifre yaşı (gün)"
+    IDS_ACCOUNTS_MIN_PW_LENGTH "En az şifre uzunluğu"
+    IDS_ACCOUNTS_PW_HIST_LENGTH "Şifre geçmişi uzunluğu"
+    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Kilitleme başlangıcı"
+    IDS_ACCOUNTS_LOCKOUT_DURATION "Kilitleme süresi (dakîka)"
+    IDS_ACCOUNTS_LOCKOUT_WINDOW "Kilitleme gözlem penceresi (dakîka)"
+    IDS_ACCOUNTS_COMPUTER_ROLE "Bilgisayar görevi"
+    IDS_ACCOUNTS_PRIMARY_SERVER "Birinci sunucu"
+    IDS_ACCOUNTS_BACKUP_SERVER "Yedekleme sunucusu"
+    IDS_ACCOUNTS_STANDALONE_SERVER "Bağımsız sunucu"
+    IDS_ACCOUNTS_WORKSTATION "İş istasyonu"
+
+    IDS_LOCALGROUP_ALIASES "\\\\%s için başka adlar"
+    IDS_LOCALGROUP_ALIAS_NAME "Başka ad"
+    IDS_LOCALGROUP_COMMENT "Açıklama"
+    IDS_LOCALGROUP_MEMBERS "Üyeler"
+
+    IDS_USER_ACCOUNTS "\\\\%s için kullanıcı hesapları"
+    IDS_USER_NAME "Kullanıcı adı"
+    IDS_USER_FULL_NAME "Tüm ad"
+    IDS_USER_COMMENT "Açıklama"
+    IDS_USER_USER_COMMENT "Kullanıcı açıklaması"
+    IDS_USER_COUNTRY_CODE "Ülke kodu"
+    IDS_USER_ACCOUNT_ACTIVE "Hesap etkin"
+    IDS_USER_ACCOUNT_EXPIRES "Hesap süresi bitimi"
+    IDS_USER_PW_LAST_SET "Şifre son ayarlama"
+    IDS_USER_PW_EXPIRES "Şifre süresi bitimi"
+    IDS_USER_PW_CHANGEABLE "Şifre değiştirilebilir"
+    IDS_USER_PW_REQUIRED "Şifre gerekli"
+    IDS_USER_CHANGE_PW "Kullanıcı şifre değiştirebilir"
+    IDS_USER_WORKSTATIONS "İzin verilen iş istsyonları"
+    IDS_USER_LOGON_SCRIPT "Oturum açma betiği"
+    IDS_USER_PROFILE "Kullanıcı profili"
+    IDS_USER_HOME_DIR "Ev dizini"
+    IDS_USER_LAST_LOGON "Son oturum açma"
+    IDS_USER_LOGON_HOURS "İzin verilen oturum açma saatleri"
+    IDS_USER_LOCAL_GROUPS "Yerli takım üyelikleri"
+    IDS_USER_GLOBAL_GROUPS "Umûmî takım üyelikleri"
+
+    IDS_USER_ENTER_PASSWORD1 "Bu kullanıcı için yeni bir şifre giriniz: "
+    IDS_USER_ENTER_PASSWORD2 "Şifreyi yeniden giriniz: "
+    IDS_USER_NO_PASSWORD_MATCH "Şifreler uyuşmuyor!"
+
+    IDS_GENERIC_YES "Evet"
+    IDS_GENERIC_NO "Hayır"
+    IDS_GENERIC_NEVER "Hiçbir Zaman"
+    IDS_GENERIC_NONE "Yok"
+    IDS_GENERIC_ALL "Tümü"
+    IDS_GENERIC_LOCKED "Kilitli"
+
+    IDS_ERROR_OPTION_NOT_SUPPORTED "%s seçeneği daha desteklenmiyor.\n"
+    IDS_ERROR_INVALID_OPTION_VALUE "%s seçeneği için geçersiz bir değer girdiniz.\n"
+END

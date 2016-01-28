@@ -1088,70 +1088,20 @@ static HRESULT WINAPI JpegEncoder_Frame_WriteSource(IWICBitmapFrameEncode *iface
 {
     JpegEncoder *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
-    UINT stride;
-    BYTE *pixeldata;
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->frame_initialized || !This->width || !This->height)
+    if (!This->frame_initialized)
         return WINCODEC_ERR_WRONGSTATE;
 
-    if (!This->format)
-    {
-        hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &guid);
-        if (FAILED(hr)) return hr;
-    }
-
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr)) return hr;
-    if (memcmp(&guid, This->format->guid, sizeof(GUID)) != 0)
-    {
-        /* FIXME: should use WICConvertBitmapSource to convert */
-        ERR("format %s unsupported\n", debugstr_guid(&guid));
-        return E_FAIL;
-    }
-
-    if (This->xres == 0.0 || This->yres == 0.0)
-    {
-        double xres, yres;
-        hr = IWICBitmapSource_GetResolution(pIBitmapSource, &xres, &yres);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
-        if (FAILED(hr)) return hr;
-    }
-
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr)) return hr;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->width) return E_INVALIDARG;
-
-    stride = (This->format->bpp * This->width + 7)/8;
-
-    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata) return E_OUTOFMEMORY;
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
-        stride*prc->Height, pixeldata);
+    hr = configure_write_source(iface, pIBitmapSource, prc,
+        This->format ? This->format->guid : NULL, This->width, This->height,
+        This->xres, This->yres);
 
     if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
-            stride*prc->Height, pixeldata);
+        hr = write_source(iface, pIBitmapSource, prc,
+            This->format->guid, This->format->bpp, This->width, This->height);
     }
-
-    HeapFree(GetProcessHeap(), 0, pixeldata);
 
     return hr;
 }

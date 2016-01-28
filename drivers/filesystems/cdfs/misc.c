@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/misc.c
+ * FILE:             drivers/filesystems/cdfs/misc.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Eric Kohl
  * UPDATE HISTORY:
@@ -33,6 +33,78 @@
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
+/*
+ * FUNCTION: Used with IRP to set them to TopLevelIrp field
+ * ARGUMENTS:
+ *           Irp = The IRP to set
+ * RETURNS: TRUE if top level was null, else FALSE
+ */
+BOOLEAN
+CdfsIsIrpTopLevel(
+    PIRP Irp)
+{
+    BOOLEAN ReturnCode = FALSE;
+
+    DPRINT("CdfsIsIrpTopLevel()\n");
+
+    if (IoGetTopLevelIrp() == NULL)
+    {
+        IoSetTopLevelIrp(Irp);
+        ReturnCode = TRUE;
+    }
+
+    return ReturnCode;
+}
+
+
+/*
+ * FUNCTION: Allocate and fill a CDFS_IRP_CONTEXT struct in order to use it for IRP
+ * ARGUMENTS:
+ *           DeviceObject = Used to fill in struct 
+ *           Irp = The IRP that need IRP_CONTEXT struct
+ * RETURNS: NULL or PCDFS_IRP_CONTEXT
+ */
+PCDFS_IRP_CONTEXT
+CdfsAllocateIrpContext(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PCDFS_IRP_CONTEXT IrpContext;
+
+    DPRINT("CdfsAllocateIrpContext()\n");
+
+    IrpContext = (PCDFS_IRP_CONTEXT)ExAllocateFromNPagedLookasideList(&CdfsGlobalData->IrpContextLookasideList);
+    if (IrpContext == NULL)
+        return NULL;
+
+    RtlZeroMemory(IrpContext, sizeof(CDFS_IRP_CONTEXT));
+
+//    IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
+//    IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
+    IrpContext->Irp = Irp;
+    IrpContext->DeviceObject = DeviceObject;
+    IrpContext->Stack = IoGetCurrentIrpStackLocation(Irp);
+    IrpContext->MajorFunction = IrpContext->Stack->MajorFunction;
+    IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
+    IrpContext->FileObject = IrpContext->Stack->FileObject;
+    IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+    IrpContext->PriorityBoost = IO_NO_INCREMENT;
+    IrpContext->Flags = IRPCONTEXT_COMPLETE;
+
+    if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+        IrpContext->MajorFunction == IRP_MJ_SHUTDOWN ||
+        (IrpContext->MajorFunction != IRP_MJ_CLEANUP &&
+         IrpContext->MajorFunction != IRP_MJ_CLOSE &&
+         IoIsOperationSynchronous(Irp)))
+    {
+        IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+    }
+
+    return IrpContext;
+}
+
 
 VOID
 CdfsSwapString(PWCHAR Out,
@@ -108,6 +180,7 @@ CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
         return FALSE;
     }
 
+    ASSERT(FileName.Length >= sizeof(WCHAR));
     for (i = 0; i < FileName.Length / sizeof(WCHAR) ; i++)
     {
         /* Don't allow spaces in FileName */
@@ -122,16 +195,58 @@ CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
     }
 
     /* Finally, convert the string to call the FsRtl function */
-    DbcsName.MaximumLength = 12;
-    DbcsName.Buffer = DbcsNameBuffer;
+    RtlInitEmptyAnsiString(&DbcsName, DbcsNameBuffer, sizeof(DbcsNameBuffer));
     if (!NT_SUCCESS(RtlUnicodeStringToCountedOemString(&DbcsName,
                                                        &FileName,
-                                                       FALSE )))
+                                                       FALSE)))
     {
 
         return FALSE;
     }
     return FsRtlIsFatDbcsLegal(DbcsName, FALSE, FALSE, FALSE);
+}
+
+BOOLEAN
+CdfsIsRecordValid(IN PDEVICE_EXTENSION DeviceExt,
+                  IN PDIR_RECORD Record)
+{
+    if (Record->RecordLength < Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId))
+    {
+        DPRINT1("Found corrupted entry! %u - %u\n", Record->RecordLength, Record->FileIdLength + FIELD_OFFSET(DIR_RECORD, FileId));
+        return FALSE;
+    }
+
+    if (Record->FileIdLength == 0)
+    {
+        DPRINT1("Found corrupted entry (null size)!\n");
+        return FALSE;
+    }
+
+    if (DeviceExt->CdInfo.JolietLevel == 0)
+    {
+        if (Record->FileId[0] == ANSI_NULL && Record->FileIdLength != 1)
+        {
+            DPRINT1("Found corrupted entry!\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Record->FileIdLength & 1 && Record->FileIdLength != 1)
+        {
+            DPRINT1("Found corrupted entry! %u\n", Record->FileIdLength);
+            return FALSE;
+        }
+
+        if (Record->FileIdLength == 1 && Record->FileId[0] != 0 &&  Record->FileId[0] != 1)
+        {
+            DPRINT1("Found corrupted entry! %c\n", Record->FileId[0]);
+            DPRINT1("%wc\n", ((PWSTR)Record->FileId)[0]);
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 VOID
@@ -159,10 +274,7 @@ CdfsShortNameCacheGet
         if (ShortNameEntry->StreamOffset.QuadPart == StreamOffset->QuadPart)
         {
             /* Cache hit */
-            RtlCopyMemory
-                (ShortName->Buffer, ShortNameEntry->Name.Buffer, 
-                ShortNameEntry->Name.Length);
-            ShortName->Length = ShortNameEntry->Name.Length;
+            RtlCopyUnicodeString(ShortName, &ShortNameEntry->Name);
             ExReleaseResourceLite(&DirectoryFcb->NameListResource);
             DPRINT("Yield short name %wZ from cache\n", ShortName);
             return;
@@ -205,7 +317,9 @@ CdfsShortNameCacheGet
     }
 
     /* We've scanned over all entries and now have a unique one.  Cache it. */
-    ShortNameEntry = ExAllocatePoolWithTag(PagedPool, sizeof(CDFS_SHORT_NAME), TAG_FCB);
+    ShortNameEntry = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(CDFS_SHORT_NAME),
+                                           CDFS_SHORT_NAME_TAG);
     if (!ShortNameEntry) 
     {
         /* We couldn't cache it, but we can return it.  We run the risk of
@@ -216,17 +330,51 @@ CdfsShortNameCacheGet
     }
 
     ShortNameEntry->StreamOffset = *StreamOffset;
-    ShortNameEntry->Name.Buffer = ShortNameEntry->NameBuffer;
-    ShortNameEntry->Name.Length = ShortName->Length;
-    ShortNameEntry->Name.MaximumLength = sizeof(ShortNameEntry->NameBuffer);
-    RtlCopyMemory
-        (ShortNameEntry->NameBuffer, 
-        ShortName->Buffer, 
-        ShortName->Length);
+    RtlInitEmptyUnicodeString(&ShortNameEntry->Name,
+                              ShortNameEntry->NameBuffer,
+                              sizeof(ShortNameEntry->NameBuffer));
+    RtlCopyUnicodeString(&ShortNameEntry->Name, ShortName);
     InsertTailList(&DirectoryFcb->ShortNameList, &ShortNameEntry->Entry);
     ExReleaseResourceLite(&DirectoryFcb->NameListResource);
 
     DPRINT("Returning short name %wZ for long name %wZ\n", ShortName, LongName);
+}
+
+VOID
+CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
+                    PDIR_RECORD Record,
+                    PWSTR Name)
+                    /*
+                    * FUNCTION: Retrieves the file name from a directory record.
+                    */
+{
+    if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
+    {
+        wcscpy(Name, L".");
+    }
+    else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
+    {
+        wcscpy(Name, L"..");
+    }
+    else
+    {
+        if (DeviceExt->CdInfo.JolietLevel == 0)
+        {
+            ULONG i;
+
+            for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
+                Name[i] = (WCHAR)Record->FileId[i];
+            Name[i] = 0;
+        }
+        else
+        {
+            CdfsSwapString(Name,
+                Record->FileId,
+                Record->FileIdLength);
+        }
+    }
+
+    DPRINT("Name '%S'\n", Name);
 }
 
 /* EOF */

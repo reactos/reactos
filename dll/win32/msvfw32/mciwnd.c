@@ -79,7 +79,7 @@ BOOL VFWAPIV MCIWndRegisterClass(void)
     wc.cbWndExtra = sizeof(MCIWndInfo*);
     wc.hInstance = MSVFW32_hModule;
     wc.hIcon = 0;
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
+    wc.hCursor = LoadCursorW(0, (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = mciWndClassW;
@@ -1063,27 +1063,33 @@ end_of_mci_open:
 
     case MCIWNDM_GETDEVICEA:
         {
+            int len = 0;
+            char *str = (char *)lParam;
             MCI_SYSINFO_PARMSA mci_sysinfo;
 
-            mci_sysinfo.lpstrReturn = (LPSTR)lParam;
+            mci_sysinfo.lpstrReturn = str;
             mci_sysinfo.dwRetSize = wParam;
             mwi->lasterror = mciSendCommandA(mwi->mci, MCI_SYSINFO,
                                              MCI_SYSINFO_INSTALLNAME,
                                              (DWORD_PTR)&mci_sysinfo);
-            TRACE("MCIWNDM_GETDEVICEA: %s\n", debugstr_an((LPSTR)lParam, wParam));
+            while(len < wParam && str[len]) len++;
+            TRACE("MCIWNDM_GETDEVICEA: %s\n", debugstr_an(str, len));
             return 0;
         }
 
     case MCIWNDM_GETDEVICEW:
         {
+            int len = 0;
+            WCHAR *str = (WCHAR *)lParam;
             MCI_SYSINFO_PARMSW mci_sysinfo;
 
-            mci_sysinfo.lpstrReturn = (LPWSTR)lParam;
+            mci_sysinfo.lpstrReturn = str;
             mci_sysinfo.dwRetSize = wParam;
             mwi->lasterror = mciSendCommandW(mwi->mci, MCI_SYSINFO,
                                              MCI_SYSINFO_INSTALLNAME,
                                              (DWORD_PTR)&mci_sysinfo);
-            TRACE("MCIWNDM_GETDEVICEW: %s\n", debugstr_wn((LPWSTR)lParam, wParam));
+            while(len < wParam && str[len]) len++;
+            TRACE("MCIWNDM_GETDEVICEW: %s\n", debugstr_wn(str, len));
             return 0;
         }
 

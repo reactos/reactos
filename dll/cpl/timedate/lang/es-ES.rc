@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Cam&biar la hora autom·ticamente seg˙n el horario de verano",
+    AUTOCHECKBOX "Cam&biar la hora autom√°ticamente seg√∫n el horario de verano",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -34,24 +34,24 @@ CAPTION "Hora de Internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Sincronizar autom·ticamente con un servidor horario de Internet",
+    AUTOCHECKBOX "Sincronizar autom√°ticamente con un servidor horario de Internet",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Servidor:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 58, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "La sincronizaciÛn sÛlo se puede realizar cuando su equipo estÈ conectado a Internet.", -1, 12, 114, 225, 25
+    LTEXT "La sincronizaci√≥n s√≥lo se puede realizar cuando su equipo est√© conectado a Internet.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Fecha y hora"
-    IDS_CPLDESCRIPTION "Establecer la informaciÛn de fecha, hora y la zona horaria de su equipo."
+    IDS_CPLDESCRIPTION "Establecer la informaci√≥n de fecha, hora y la zona horaria de su equipo."
     IDS_TIMEZONETEXT "Zona horaria actual: %s"
     IDS_TIMEZONEINVALID "Invalido"
     IDS_TIMEZONEUNKNOWN "Desconocido"
     IDS_INETTIMESUCSYNC "La hora ha sido sincronizada satisfactoriamente con %s el %s a las %s"
-    IDS_INETTIMENEXTSYNC "PrÛxima sincronizaciÛn: %s a las %s"
+    IDS_INETTIMENEXTSYNC "Pr√≥xima sincronizaci√≥n: %s a las %s"
     IDS_INETTIMESYNCING "Por favor espere mientras ReactOS sincroniza la hora con %s"
     IDS_INETTIMEERROR "Ha ocurrido un error mientras ReactOS se sincronizaba con %s"
 END

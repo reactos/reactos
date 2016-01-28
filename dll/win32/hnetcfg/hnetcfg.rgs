@@ -15,6 +15,11 @@ HKCR
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
             ProgId = s 'HNetCfg.FwAuthorizedApplication'
         }
+        '{0CA545C6-37AD-4A6C-BF92-9F7610067EF5}' = s 'HNetCfg.FwOpenPort'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'HNetCfg.FwOpenPort'
+        }
     }
     'HNetCfg.FwMgr' = s 'HNetCfg.FwMgr'
     {
@@ -23,5 +28,9 @@ HKCR
     'HNetCfg.FwAuthorizedApplication' = s 'HNetCfg.FwAuthorizedApplication'
     {
         CLSID = s '{EC9846B3-2762-4A6B-A214-6ACB603462D2}'
+    }
+    'HNetCfg.FwOpenPort' = s 'HNetCfg.FwOpenPort'
+    {
+        CLSID = s '{0CA545C6-37AD-4A6C-BF92-9F7610067EF5}'
     }
 }

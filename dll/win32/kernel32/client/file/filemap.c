@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/mem/section.c
+ * FILE:            dll/win32/kernel32/client/file/filemap.c
  * PURPOSE:         Handles virtual memory APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

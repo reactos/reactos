@@ -1,5 +1,9 @@
 #pragma once
 
+/* Maximum extend of coordinate space */
+#define MIN_COORD (INT_MIN / 16)
+#define MAX_COORD (INT_MAX / 16)
+
 #define IntLPtoDP(pdc, ppt, count) DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define CoordLPtoDP(pdc, ppt) DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define IntDPtoLP(pdc, ppt, count) DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
@@ -152,3 +156,7 @@ VOID FASTCALL IntMirrorWindowOrg(PDC);
 int APIENTRY IntGdiSetMapMode(PDC, int);
 BOOL FASTCALL GreLPtoDP(HDC, LPPOINT, INT);
 BOOL FASTCALL GreDPtoLP(HDC, LPPOINT, INT);
+BOOL APIENTRY GreGetDCPoint(HDC,UINT,PPOINTL);
+BOOL WINAPI GreGetWindowExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
+BOOL WINAPI GreGetViewportExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
+BOOL FASTCALL GreSetViewportOrgEx(HDC,int,int,LPPOINT);

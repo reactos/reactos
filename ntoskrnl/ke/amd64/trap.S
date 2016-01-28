@@ -22,6 +22,11 @@ EXTERN KiXmmExceptionHandler:PROC
 EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
 
+#ifdef _WINKD_
+EXTERN KdSetOwedBreakpoints:PROC
+#endif
+
+
 /* GLOBALS *******************************************************************/
 
 .data
@@ -204,7 +209,7 @@ FUNC InternalDispatchException
 
     add rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
     ret
-ENDFUNC InternalDispatchException
+ENDFUNC
 
 
 /* CPU EXCEPTION HANDLERS ****************************************************/
@@ -222,7 +227,7 @@ FUNC KiDivideErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiDivideErrorFault
+ENDFUNC
 
 
 PUBLIC KiDebugTrapOrFault
@@ -245,7 +250,7 @@ KiDebugTrapOrFaultKMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiDebugTrapOrFault
+ENDFUNC
 
 
 PUBLIC KiNmiInterrupt
@@ -258,7 +263,7 @@ FUNC KiNmiInterrupt
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiNmiInterrupt
+ENDFUNC
 
 
 PUBLIC KiBreakpointTrap
@@ -279,7 +284,7 @@ KiBreakpointTrapKMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiBreakpointTrap
+ENDFUNC
 
 
 PUBLIC KiOverflowTrap
@@ -295,7 +300,7 @@ FUNC KiOverflowTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiOverflowTrap
+ENDFUNC
 
 
 PUBLIC KiBoundFault
@@ -319,7 +324,7 @@ KiBoundFaultUserMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiBoundFault
+ENDFUNC
 
 
 PUBLIC KiInvalidOpcodeFault
@@ -350,7 +355,7 @@ KiInvalidOpcodeKernel:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiInvalidOpcodeFault
+ENDFUNC
 
 
 PUBLIC KiNpxNotAvailableFault
@@ -372,7 +377,7 @@ FUNC KiNpxNotAvailableFault
 KiNpxNotAvailableFaultExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiNpxNotAvailableFault
+ENDFUNC
 
 
 PUBLIC KiDoubleFaultAbort
@@ -388,7 +393,7 @@ FUNC KiDoubleFaultAbort
     /* Bugcheck */
     Fatal 8 // EXCEPTION_DOUBLE_FAULT
     jmp $
-ENDFUNC KiDoubleFaultAbort
+ENDFUNC
 
 
 PUBLIC KiNpxSegmentOverrunAbort
@@ -400,7 +405,7 @@ FUNC KiNpxSegmentOverrunAbort
     Fatal EXCEPTION_NPX_OVERRUN
 
     jmp $
-ENDFUNC KiNpxSegmentOverrunAbort
+ENDFUNC
 
 
 PUBLIC KiInvalidTssFault
@@ -411,7 +416,7 @@ FUNC KiInvalidTssFault
     /* Bugcheck */
     Fatal EXCEPTION_INVALID_TSS
     jmp $
-ENDFUNC KiInvalidTssFault
+ENDFUNC
 
 
 PUBLIC KiSegmentNotPresentFault
@@ -422,7 +427,7 @@ FUNC KiSegmentNotPresentFault
     /* Bugcheck */
     Fatal EXCEPTION_SEGMENT_NOT_PRESENT
     jmp $
-ENDFUNC KiSegmentNotPresentFault
+ENDFUNC
 
 
 PUBLIC KiStackFault
@@ -433,7 +438,7 @@ FUNC KiStackFault
     /* Bugcheck */
     Fatal EXCEPTION_STACK_FAULT
     jmp $
-ENDFUNC KiStackFault
+ENDFUNC
 
 
 PUBLIC KiGeneralProtectionFault
@@ -472,7 +477,7 @@ KiGpfExit:
     /* Return */
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiGeneralProtectionFault
+ENDFUNC
 
 
 PUBLIC KiPageFault
@@ -508,7 +513,18 @@ FUNC KiPageFault
 
     /* Check for success */
     test eax, eax
+#ifndef _WINKD_
     jge PageFaultReturn
+#else
+    jl PageFaultError
+
+    /* Check whether the kernel debugger has owed breakpoints to be inserted */
+    call KdSetOwedBreakpoints
+    /* We succeeded, return */
+    jmp PageFaultReturn
+
+PageFaultError:
+#endif
 
     /* Disable interrupts again for the debugger */
     cli
@@ -527,7 +543,6 @@ FUNC KiPageFault
     je SpecialCode
 
 InPageException:
-
     /* Dispatch in-page exception */
     mov r11d, eax // Param3 = Status
     mov eax, STATUS_IN_PAGE_ERROR // ExceptionCode
@@ -560,7 +575,7 @@ FUNC KiFloatingErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiFloatingErrorFault
+ENDFUNC
 
 
 PUBLIC KiAlignmentFault
@@ -571,7 +586,7 @@ FUNC KiAlignmentFault
     /* Bugcheck */
     Fatal EXCEPTION_ALIGNMENT_CHECK
     jmp $
-ENDFUNC KiAlignmentFault
+ENDFUNC
 
 
 PUBLIC KiMcheckAbort
@@ -582,7 +597,7 @@ FUNC KiMcheckAbort
     /* Bugcheck */
     Fatal HEX(12)
     jmp $
-ENDFUNC KiMcheckAbort
+ENDFUNC
 
 
 PUBLIC KiXmmException
@@ -604,7 +619,7 @@ FUNC KiXmmException
 KiXmmExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiXmmException
+ENDFUNC
 
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
@@ -622,7 +637,7 @@ FUNC KiRaiseAssertion
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiRaiseAssertion
+ENDFUNC
 
 
 PUBLIC KiDebugServiceTrap
@@ -640,7 +655,7 @@ FUNC KiDebugServiceTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiDebugServiceTrap
+ENDFUNC
 
 
 PUBLIC KiApcInterrupt
@@ -746,7 +761,7 @@ FUNC KiUnexpectedInterrupt
 #endif
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC KiUnexpectedInterrupt
+ENDFUNC
 
 PUBLIC KiInterruptDispatch
 FUNC KiInterruptDispatch

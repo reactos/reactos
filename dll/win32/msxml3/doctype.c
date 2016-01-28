@@ -134,8 +134,8 @@ static HRESULT WINAPI domdoctype_get_nodeName(
     BSTR* p )
 {
     domdoctype *This = impl_from_IXMLDOMDocumentType( iface );
-    FIXME("(%p)->(%p): stub\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+    return node_get_nodeName(&This->node, p);
 }
 
 static HRESULT WINAPI domdoctype_get_nodeValue(
@@ -468,8 +468,8 @@ static HRESULT WINAPI domdoctype_get_name(
     BSTR *p)
 {
     domdoctype *This = impl_from_IXMLDOMDocumentType( iface );
-    FIXME("(%p)->(%p): stub\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+    return node_get_nodeName(&This->node, p);
 }
 
 static HRESULT WINAPI domdoctype_get_entities(

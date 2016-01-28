@@ -29,6 +29,9 @@ END
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -77,9 +80,15 @@ END
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Bootsector for ISO file system
  * PURPOSE:         Normal DOS boot sector
- *                  Ported to nasm from FreeDOS fdisk 1.2.0 by:
+ *                  Ported to NASM from FreeDOS fdisk 1.2.0 by:
  * PROGRAMMERS:     Casper Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -58,7 +58,7 @@ test_next_for_active:
 
 /*****************************************************************/
     call print
-    .asciz "no active partition found"
+    .asciz "No active partition found"
 
 WAIT_FOR_REBOOT:
     jmp WAIT_FOR_REBOOT
@@ -67,22 +67,22 @@ WAIT_FOR_REBOOT:
 /*****************************************************************/
 trouble_reading_drive:
     call print
-    .asciz "read error while reading drive"
+    .asciz "Read error while reading drive"
     jmp WAIT_FOR_REBOOT
 
 /*****************************************************************/
 
 invalid_partition_code:
     call print
-    .asciz "partition signature != 55AA"
+    .asciz "Partition signature != 55AA"
 
     jmp WAIT_FOR_REBOOT
 
 /*****************************************************************/
 
 active_partition_found:
-//	call print
-//	.asciz "loading active partition"
+//  call print
+//  .asciz "Loading active partition"
 
     call read_boot_sector
 
@@ -135,16 +135,16 @@ _bios_LBA_high:
 
 LBABios:
     // copy start address of partition to DAP
-	mov ax, [di + 8]
-	mov word ptr ds:[_bios_LBA_low], ax
-	mov ax,[di + 8 + 2]
-	mov word ptr ds:[_bios_LBA_high], ax
+    mov ax, [di + 8]
+    mov word ptr ds:[_bios_LBA_low], ax
+    mov ax,[di + 8 + 2]
+    mov word ptr ds:[_bios_LBA_high], ax
 
     mov ax, HEX(4200)    //  regs.a.x = LBA_READ;
     mov si, offset _bios_LBA_address_packet // regs.si = FP_OFF(&dap);
 
-	int HEX(13)
-	ret
+    int HEX(13)
+    ret
 
 /*****************************************************************
  * read disk, using standard BIOS
@@ -153,15 +153,15 @@ StandardBios:
     mov ax, HEX(0204)               //  regs.a.x = 0x0201;
     mov bx, HEX(7c00)               //  regs.b.x = FP_OFF(buffer);
 
-	/* regs.c.x =
+    /* regs.c.x =
        ((chs.Cylinder & 0xff) << 8) + ((chs.Cylinder & 0x300) >> 2) +
         ; chs.Sector;
          that was easy ;-) */
-	mov cx, word ptr ds:[di + 2]
+    mov cx, word ptr ds:[di + 2]
     mov dh, byte ptr ds:[di + 1]    //  regs.d.b.h = chs.Head;
                                     //  regs.es = FP_SEG(buffer);
-	int HEX(13)
-	ret
+    int HEX(13)
+    ret
 
 /****** PRINT
  * prints text after call to this function.

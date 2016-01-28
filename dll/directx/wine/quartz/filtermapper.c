@@ -348,7 +348,7 @@ static HRESULT FM2_WriteFriendlyName(IPropertyBag * pPropBag, LPCWSTR szName)
     BSTR value;
 
     V_VT(&var) = VT_BSTR;
-    V_UNION(&var, bstrVal) = value = SysAllocString(szName);
+    V_BSTR(&var) = value = SysAllocString(szName);
 
     ret = IPropertyBag_Write(pPropBag, wszFriendlyName, &var);
     SysFreeString(value);
@@ -367,7 +367,7 @@ static HRESULT FM2_WriteClsid(IPropertyBag * pPropBag, REFCLSID clsid)
     if (SUCCEEDED(hr))
     {
         V_VT(&var) = VT_BSTR;
-        V_UNION(&var, bstrVal) = wszClsid;
+        V_BSTR(&var) = wszClsid;
         hr = IPropertyBag_Write(pPropBag, wszClsidName, &var);
     }
     CoTaskMemFree(wszClsid);
@@ -779,7 +779,7 @@ static HRESULT WINAPI FilterMapper3_RegisterFilter(
             }
 
             V_VT(&var) = VT_ARRAY | VT_UI1;
-            V_UNION(&var, parray) = psa;
+            V_ARRAY(&var) = psa;
 
             if (SUCCEEDED(hr))
                 hr = IPropertyBag_Write(pPropBag, wszFilterDataName, &var);
@@ -928,7 +928,7 @@ static HRESULT WINAPI FilterMapper3_EnumMatchingFilters(
         if (SUCCEEDED(hrSub))
             hrSub = IPropertyBag_Read(pPropBagCat, wszMeritName, &var, NULL);
 
-        if (SUCCEEDED(hrSub) && (V_UNION(&var, ulVal) >= dwMerit))
+        if (SUCCEEDED(hrSub) && (V_UI4(&var) >= dwMerit))
         {
             CLSID clsidCat;
             IEnumMoniker * pEnum;
@@ -941,14 +941,14 @@ static HRESULT WINAPI FilterMapper3_EnumMatchingFilters(
                 VARIANT temp;
                 V_VT(&temp) = VT_EMPTY;
                 IPropertyBag_Read(pPropBagCat, wszFriendlyName, &temp, NULL);
-                TRACE("Considering category %s\n", debugstr_w(V_UNION(&temp, bstrVal)));
+                TRACE("Considering category %s\n", debugstr_w(V_BSTR(&temp)));
                 VariantClear(&temp);
             }
 
             hrSub = IPropertyBag_Read(pPropBagCat, wszClsidName, &var, NULL);
 
             if (SUCCEEDED(hrSub))
-                hrSub = CLSIDFromString(V_UNION(&var, bstrVal), &clsidCat);
+                hrSub = CLSIDFromString(V_BSTR(&var), &clsidCat);
 
             if (SUCCEEDED(hrSub))
                 hrSub = ICreateDevEnum_CreateClassEnumerator(pCreateDevEnum, &clsidCat, &pEnum, 0);
@@ -975,7 +975,7 @@ static HRESULT WINAPI FilterMapper3_EnumMatchingFilters(
                         VARIANT temp;
                         V_VT(&temp) = VT_EMPTY;
                         IPropertyBag_Read(pPropBag, wszFriendlyName, &temp, NULL);
-                        TRACE("Considering filter %s\n", debugstr_w(V_UNION(&temp, bstrVal)));
+                        TRACE("Considering filter %s\n", debugstr_w(V_BSTR(&temp)));
                         VariantClear(&temp);
                     }
 
@@ -985,13 +985,13 @@ static HRESULT WINAPI FilterMapper3_EnumMatchingFilters(
                     }
 
                     if (SUCCEEDED(hrSub))
-                        hrSub = SafeArrayAccessData(V_UNION(&var, parray), (LPVOID*)&pData);
+                        hrSub = SafeArrayAccessData(V_ARRAY(&var), (LPVOID*)&pData);
 
                     if (SUCCEEDED(hrSub))
                         hrSub = FM2_ReadFilterData(pData, &rf2);
 
                     if (pData)
-                        SafeArrayUnaccessData(V_UNION(&var, parray));
+                        SafeArrayUnaccessData(V_ARRAY(&var));
 
                     VariantClear(&var);
 
@@ -1165,7 +1165,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
 
     if (FAILED(hr))
         return hr;
-
+    
     while(IEnumMoniker_Next(ppEnumMoniker, 1, &IMon, &nb) == S_OK)
     {
         IMoniker_Release(IMon);
@@ -1185,7 +1185,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
         return E_OUTOFMEMORY;
     }
     ZeroMemory(regfilters, nb_mon * sizeof(REGFILTER)); /* will prevent bad free of Name in case of error. */
-
+    
     IEnumMoniker_Reset(ppEnumMoniker);
     while(IEnumMoniker_Next(ppEnumMoniker, 1, &IMon, &nb) == S_OK)
     {
@@ -1203,7 +1203,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
             hrSub = IPropertyBag_Read(pPropBagCat, wszClsidName, &var, NULL);
 
         if (SUCCEEDED(hrSub))
-            hrSub = CLSIDFromString(V_UNION(&var, bstrVal), &clsid);
+            hrSub = CLSIDFromString(V_BSTR(&var), &clsid);
 
         VariantClear(&var);
 
@@ -1212,14 +1212,14 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
 
         if (SUCCEEDED(hrSub))
         {
-            len = (strlenW(V_UNION(&var, bstrVal))+1) * sizeof(WCHAR);
+            len = (strlenW(V_BSTR(&var))+1) * sizeof(WCHAR);
             if (!(regfilters[idx].Name = CoTaskMemAlloc(len*2)))
                 hr = E_OUTOFMEMORY;
         }
 
         if (SUCCEEDED(hrSub) && regfilters[idx].Name)
         {
-            memcpy(regfilters[idx].Name, V_UNION(&var, bstrVal), len);
+            memcpy(regfilters[idx].Name, V_BSTR(&var), len);
             regfilters[idx].Clsid = clsid;
             idx++;
         }
@@ -1239,7 +1239,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
         CoTaskMemFree(regfilters[idx].Name);
     CoTaskMemFree(regfilters);
     IEnumMoniker_Release(ppEnumMoniker);
-
+    
     return hr;
 }
 
@@ -1260,7 +1260,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         strcpyW(wszKeyName, wszFilterSlash);
         strcatW(wszKeyName, wszClsid);
-
+    
         lRet = RegCreateKeyExW(HKEY_CLASSES_ROOT, wszKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
     }
@@ -1276,7 +1276,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         strcpyW(wszKeyName, wszClsidSlash);
         strcatW(wszKeyName, wszClsid);
-
+    
         lRet = RegCreateKeyExW(HKEY_CLASSES_ROOT, wszKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
     }
@@ -1287,7 +1287,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
         hr = HRESULT_FROM_WIN32(lRet);
         RegCloseKey(hKey);
     }
-
+    
     CoTaskMemFree(wszClsid);
 
     return hr;
@@ -1347,7 +1347,7 @@ static HRESULT WINAPI FilterMapper_RegisterPin(
         strcpyW(wszPinsKeyName, wszPins);
         strcatW(wszPinsKeyName, wszSlash);
         strcatW(wszPinsKeyName, szName);
-
+    
         lRet = RegCreateKeyExW(hKey, wszPinsKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hPinsKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
         CoTaskMemFree(wszPinsKeyName);
@@ -1514,7 +1514,7 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
         if (lRet != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(lRet);
 
-        lRet = SHDeleteKeyW(hKey, wszPins);
+        lRet = RegDeleteTreeW(hKey, wszPins);
         if (lRet != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(lRet);
 
@@ -1573,7 +1573,7 @@ static HRESULT WINAPI FilterMapper_UnregisterPin(IFilterMapper * iface, CLSID Fi
         strcatW(wszPinNameKey, wszSlash);
         strcatW(wszPinNameKey, Name);
 
-        lRet = SHDeleteKeyW(hKey, wszPinNameKey);
+        lRet = RegDeleteTreeW(hKey, wszPinNameKey);
         hr = HRESULT_FROM_WIN32(lRet);
         CoTaskMemFree(wszPinNameKey);
     }

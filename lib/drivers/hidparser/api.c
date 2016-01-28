@@ -184,7 +184,7 @@ HidParser_GetReportItemTypeCountFromReportType(
         //
         // check item type
         //
-        if (Report->Items[Index].HasData && bData == TRUE)
+        if (Report->Items[Index].HasData && bData)
         {
             //
             // found data item

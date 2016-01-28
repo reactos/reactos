@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "&Justera klockan automatiskt för sommar- och vintertid",
+    AUTOCHECKBOX "&Justera klockan automatiskt fÃ¶r sommar- och vintertid",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -48,10 +48,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Datum/Tid"
-    IDS_CPLDESCRIPTION "Ändrar information om datum, tid och tidszon."
+    IDS_CPLDESCRIPTION "Ã„ndrar information om datum, tid och tidszon."
     IDS_TIMEZONETEXT "Aktuell tidszon: %s"
     IDS_TIMEZONEINVALID "Felaktig"
-    IDS_TIMEZONEUNKNOWN "Okänd"
+    IDS_TIMEZONEUNKNOWN "OkÃ¤nd"
     IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
     IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS GUI/console setup
- * FILE:            subsys/system/setup/setup.c
+ * FILE:            base/setup/setup/setup.c
  * PURPOSE:         Second stage setup
  * PROGRAMMER:      Eric Kohl
  */

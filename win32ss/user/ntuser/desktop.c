@@ -11,6 +11,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDesktop);
 
+#include <reactos/buildno.h>
+
 static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta);
 
@@ -24,6 +26,10 @@ static VOID
 IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
+
+/* These can be changed via csrss startup, these are defaults */
+DWORD gdwDesktopSectionSize = 512;
+DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
 
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
@@ -237,23 +243,27 @@ InitDesktopImpl(VOID)
 
 static int GetSystemVersionString(LPWSTR buffer)
 {
-   RTL_OSVERSIONINFOEXW versionInfo;
-   int len;
+    int len;
+#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca).
+    RTL_OSVERSIONINFOEXW versionInfo;
 
-   versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+    versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
 
-   if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-      return 0;
+    if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
+        return 0;
 
-   if (versionInfo.dwMajorVersion <= 4)
-      len = swprintf(buffer,
-                     L"ReactOS Version %lu.%lu %s Build %lu",
-                     versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
-   else
-      len = swprintf(buffer,
-                     L"ReactOS %s (Build %lu)",
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+    if (versionInfo.dwMajorVersion <= 4)
+        len = swprintf(buffer,
+                       L"ReactOS Version %lu.%lu %s Build %lu",
+                       versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+    else
+        len = swprintf(buffer,
+                       L"ReactOS %s (Build %lu)",
+                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+#else
+    len = swprintf(buffer, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+#endif
 
    return len;
 }
@@ -469,7 +479,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
    }
    else
    {
-       ERR("Got handle: %p\n", Ret);
+       TRACE("Got handle: %p\n", Ret);
    }
 
    return Ret;
@@ -511,8 +521,8 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    if(Old != NULL)
    {
       (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
-      IntDereferenceMessageQueue(Old);
       gpqForegroundPrev = Old;
+      IntDereferenceMessageQueue(Old);
    }
    // Only one Q can have active foreground even when there are more than one desktop.
    if (NewQueue)
@@ -654,6 +664,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
       case WM_SYSCOLORCHANGE:
          co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
          return TRUE;
+
       case WM_SETCURSOR:
       {
           PCURICON_OBJECT pcurOld, pcurNew;
@@ -662,9 +673,12 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
               return TRUE;
           }
+
+          pcurNew->CURSORF_flags |= CURSORF_CURRENT;
           pcurOld = UserSetCursor(pcurNew, FALSE);
           if (pcurOld)
           {
+               pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
                UserDereferenceObject(pcurOld);
           }
           return TRUE;
@@ -678,8 +692,11 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
               HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
               IntSetThreadDesktop(hdesk, FALSE);
           }
+          break;
       }
-
+      default:
+          TRACE("DWP calling IDWP Msg %d\n",Msg);
+          //*lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
    }
    return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
@@ -698,12 +715,15 @@ UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT
     case WM_DESTROY:
         pwnd->fnid |= FNID_DESTROY;
         break;
+    default:
+        ERR("UMWP calling IDWP\n");
+        *lResult = IntDefWindowProc(pwnd, Msg, wParam, lParam, FALSE);
     }
 
     return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
 
-VOID NTAPI DesktopThreadMain()
+VOID NTAPI DesktopThreadMain(VOID)
 {
     BOOL Ret;
     MSG Msg;
@@ -716,7 +736,7 @@ VOID NTAPI DesktopThreadMain()
        classes will be allocated from the shared heap */
     UserRegisterSystemClasses();
 
-    while(TRUE)
+    while (TRUE)
     {
         Ret = co_IntGetPeekMessage(&Msg, 0, 0, 0, PM_REMOVE, TRUE);
         if (Ret)
@@ -749,7 +769,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 }
 
 VOID APIENTRY
-UserRedrawDesktop()
+UserRedrawDesktop(VOID)
 {
     PWND Window = NULL;
     PREGION Rgn;
@@ -806,12 +826,17 @@ HWND* FASTCALL
 UserBuildShellHookHwndList(PDESKTOP Desktop)
 {
    ULONG entries=0;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
    HWND* list;
 
-   /* FIXME: If we save nb elements in desktop, we dont have to loop to find nb entries */
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   /* FIXME: If we save nb elements in desktop, we don't have to loop to find nb entries */
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
+   {
+      ListEntry = ListEntry->Flink;
       entries++;
+   }
 
    if (!entries) return NULL;
 
@@ -820,8 +845,13 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
    {
       HWND* cursor = list;
 
-      LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+      ListEntry = Desktop->ShellHookWindows.Flink;
+      while (ListEntry != &Desktop->ShellHookWindows)
+      {
+         Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+         ListEntry = ListEntry->Flink;
          *cursor++ = Current->hWnd;
+      }
 
       *cursor = NULL; /* Nullterm list */
    }
@@ -930,10 +960,14 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PDESKTOP Desktop = pti->rpdesk;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
 
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
    {
+      Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+      ListEntry = ListEntry->Flink;
       if (Current->hWnd == hWnd)
       {
          RemoveEntryList(&Current->ListEntry);
@@ -967,34 +1001,33 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 BOOL FASTCALL
 IntPaintDesktop(HDC hDC)
 {
-   RECTL Rect;
-   HBRUSH DesktopBrush, PreviousBrush;
-   HWND hWndDesktop;
-   BOOL doPatBlt = TRUE;
-   PWND WndDesktop;
-   static WCHAR s_wszSafeMode[] = L"Safe Mode";
-   int len;
-   COLORREF color_old;
-   UINT align_old;
-   int mode_old;
+    RECTL Rect;
+    HBRUSH DesktopBrush, PreviousBrush;
+    HWND hWndDesktop;
+    BOOL doPatBlt = TRUE;
+    PWND WndDesktop;
+    static WCHAR s_wszSafeMode[] = L"Safe Mode";
+    int len;
+    COLORREF color_old;
+    UINT align_old;
+    int mode_old;
 
-   GdiGetClipBox(hDC, &Rect);
+    if (GdiGetClipBox(hDC, &Rect) == ERROR)
+        return FALSE;
 
-   hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
+    hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
 
-   WndDesktop = UserGetWindowObject(hWndDesktop); // rpdesk->pDeskInfo->spwnd;
-   if (!WndDesktop)
-   {
-      return FALSE;
-   }
+    WndDesktop = UserGetWindowObject(hWndDesktop); // rpdesk->pDeskInfo->spwnd;
+    if (!WndDesktop)
+        return FALSE;
 
     if (!UserGetSystemMetrics(SM_CLEANBOOT))
     {
         DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
         /*
-        * Paint desktop background
-        */
+         * Paint desktop background
+         */
         if (gspv.hbmWallpaper != NULL)
         {
             SIZE sz;
@@ -1053,7 +1086,6 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cyWallpaper,
                                         SRCCOPY,
                                         0);
-
                 }
                 else if (gspv.WallpaperMode == wmTile)
                 {
@@ -1100,43 +1132,43 @@ IntPaintDesktop(HDC hDC)
         /* Black desktop background in Safe Mode */
         DesktopBrush = StockObjects[BLACK_BRUSH];
     }
-    /* Back ground is set to none, clear the screen */
+    /* Background is set to none, clear the screen */
     if (doPatBlt)
     {
-      PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
-      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-      NtGdiSelectBrush(hDC, PreviousBrush);
+        PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+        NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+        NtGdiSelectBrush(hDC, PreviousBrush);
     }
 
-   /*
-    * Display system version on the desktop background
-    */
+    /*
+     * Display system version on the desktop background
+     */
 
-   if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
-   {
-      static WCHAR s_wszVersion[256] = {0};
-      RECTL rect;
+    if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
+    {
+        static WCHAR s_wszVersion[256] = {0};
+        RECTL rect;
 
-      if (*s_wszVersion)
-      {
-         len = wcslen(s_wszVersion);
-      }
-      else
-      {
-         len = GetSystemVersionString(s_wszVersion);
-      }
+        if (*s_wszVersion)
+        {
+            len = wcslen(s_wszVersion);
+        }
+        else
+        {
+            len = GetSystemVersionString(s_wszVersion);
+        }
 
-      if (len)
-      {
-         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
-         {
-            rect.right = UserGetSystemMetrics(SM_CXSCREEN);
-            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-         }
+        if (len)
+        {
+            if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+            {
+                rect.right = UserGetSystemMetrics(SM_CXSCREEN);
+                rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+            }
 
-         color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
-         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-         mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
+            color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+            align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+            mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
 
             if(!UserGetSystemMetrics(SM_CLEANBOOT))
             {
@@ -1162,19 +1194,19 @@ IntPaintDesktop(HDC hDC)
                 GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
             }
 
-         IntGdiSetBkMode(hDC, mode_old);
-         IntGdiSetTextAlign(hDC, align_old);
-         IntGdiSetTextColor(hDC, color_old);
-      }
-   }
-   return TRUE;
+            IntGdiSetBkMode(hDC, mode_old);
+            IntGdiSetTextAlign(hDC, align_old);
+            IntGdiSetTextColor(hDC, color_old);
+        }
+    }
+    return TRUE;
 }
 
 static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta)
 {
     PVOID DesktopHeapSystemBase = NULL;
-    ULONG_PTR HeapSize = 400 * 1024;
+    ULONG_PTR HeapSize = gdwDesktopSectionSize * 1024;
     SIZE_T DesktopInfoSize;
     ULONG i;
 
@@ -1271,7 +1303,7 @@ NtUserCreateDesktop(
    PDESKTOP pdesk = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    HDESK hdesk;
-   BOOLEAN Context;
+   BOOLEAN Context = FALSE;
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;
@@ -1627,6 +1659,103 @@ NtUserPaintDesktop(HDC hDC)
 }
 
 /*
+ * NtUserResolveDesktop
+ *
+ * The NtUserResolveDesktop function retrieves handles to the desktop and
+ * the window station specified by the desktop path string.
+ *
+ * Parameters
+ *    ProcessHandle
+ *       Handle to a user process.
+ *
+ *    DesktopPath
+ *       The desktop path string.
+ *
+ * Return Value
+ *    Handle to the desktop (direct return value) and
+ *    handle to the associated window station (by pointer).
+ *    NULL in case of failure.
+ *
+ * Remarks
+ *    Callable by CSRSS only.
+ *
+ * Status
+ *    @implemented
+ */
+
+HDESK
+APIENTRY
+NtUserResolveDesktop(
+    IN HANDLE ProcessHandle,
+    IN PUNICODE_STRING DesktopPath,
+    DWORD dwUnknown,
+    OUT HWINSTA* phWinSta)
+{
+    NTSTATUS Status;
+    PEPROCESS Process = NULL;
+    HWINSTA hWinSta = NULL;
+    HDESK hDesktop  = NULL;
+
+    /* Allow only the Console Server to perform this operation (via CSRSS) */
+    if (PsGetCurrentProcess() != gpepCSRSS)
+        return NULL;
+
+    /* Get the process object the user handle was referencing */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       *PsProcessType,
+                                       UserMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    // UserEnterShared();
+
+    _SEH2_TRY
+    {
+        UNICODE_STRING CapturedDesktopPath;
+
+        /* Capture the user desktop path string */
+        Status = IntSafeCopyUnicodeStringTerminateNULL(&CapturedDesktopPath,
+                                                       DesktopPath);
+        if (!NT_SUCCESS(Status)) _SEH2_YIELD(goto Quit);
+
+        /* Call the internal function */
+        Status = IntParseDesktopPath(Process,
+                                     &CapturedDesktopPath,
+                                     &hWinSta,
+                                     &hDesktop);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("IntParseDesktopPath failed, Status = 0x%08lx\n", Status);
+            hWinSta  = NULL;
+            hDesktop = NULL;
+        }
+
+        /* Return the window station handle */
+        *phWinSta = hWinSta;
+
+        /* Free the captured string */
+        if (CapturedDesktopPath.Buffer)
+            ExFreePoolWithTag(CapturedDesktopPath.Buffer, TAG_STRING);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+Quit:
+    // UserLeave();
+
+    /* Dereference the process object */
+    ObDereferenceObject(Process);
+
+    /* Return the desktop handle */
+    return hDesktop;
+}
+
+/*
  * NtUserSwitchDesktop
  *
  * Sets the current input (interactive) desktop.
@@ -1677,7 +1806,7 @@ NtUserSwitchDesktop(HDESK hdesk)
     * is the logon application itself
     */
    if((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
-      LogonProcess != PsGetCurrentProcessWin32Process())
+      gpidLogon != PsGetCurrentProcessId())
    {
       ObDereferenceObject(pdesk);
       ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
@@ -1825,9 +1954,13 @@ IntUnmapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntUnmapDesktopView called for desktop object %p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
-    /* Unmap if we're the last thread using the desktop */
+    /*
+     * Unmap if we're the last thread using the desktop.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1868,9 +2001,13 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntMapDesktopView called for desktop object 0x%p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
-    /* Find out if another thread already mapped the desktop heap */
+    /*
+     * Find out if another thread already mapped the desktop heap.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1905,7 +2042,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("ppi 0x%p mapped heap of desktop 0x%p\n", ppi, pdesk);
 
     /* Add the mapping */
-    HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
+    HeapMapping = UserHeapAlloc(sizeof(*HeapMapping));
     if (HeapMapping == NULL)
     {
         MmUnmapViewOfSection(PsGetCurrentProcess(), UserBase);

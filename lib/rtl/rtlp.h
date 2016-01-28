@@ -34,6 +34,8 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
+extern PVOID MmHighestUserAddress;
+
 NTSTATUS
 NTAPI
 RtlpSafeCopyMemory(
@@ -61,6 +63,13 @@ RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
 BOOLEAN
 NTAPI
 RtlCallVectoredExceptionHandlers(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
+);
+
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(
     IN PEXCEPTION_RECORD ExceptionRecord,
     IN PCONTEXT Context
 );
@@ -102,6 +111,10 @@ RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock);
 NTSTATUS
 NTAPI
 RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive);
+
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive);
 
 NTSTATUS
 NTAPI

@@ -5,9 +5,9 @@
 
 #ifndef __ASM__
 
-void TscCalibrationISR(void);
+void __cdecl TscCalibrationISR(void);
 extern LARGE_INTEGER HalpCpuClockFrequency;
-VOID NTAPI HalpInitializeTsc();
+VOID NTAPI HalpInitializeTsc(void);
 
 #ifdef _M_AMD64
 #define KiGetIdtEntry(Pcr, Vector) &((Pcr)->IdtBase[Vector])

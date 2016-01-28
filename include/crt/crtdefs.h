@@ -228,6 +228,10 @@
 #define _CRT_OBSOLETE(_NewItem)
 #endif
 
+#ifndef _CRT_JIT_INTRINSIC
+#define _CRT_JIT_INTRINSIC
+#endif
+
 
 /** Constants ****************************************************************/
 
@@ -316,7 +320,7 @@ extern "C" {
 
 #ifndef _WCHAR_T_DEFINED
 #define _WCHAR_T_DEFINED
-#ifndef __cplusplus
+#if defined(_MSC_VER) || !defined(__cplusplus)
   typedef unsigned short wchar_t;
 #endif
 #endif

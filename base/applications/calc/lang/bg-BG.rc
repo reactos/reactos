@@ -336,8 +336,8 @@ BEGIN
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Обикновен", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Обикновен", IDM_VIEW_STANDARD
+        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
         MENUITEM "Преобразуване", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Шестнaдесетичен\tF5", IDM_VIEW_HEX, CHECKED
@@ -368,8 +368,8 @@ BEGIN
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Стандартно", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Стандартно", IDM_VIEW_STANDARD
+        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
         MENUITEM "Преобразуване", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Шестнaдесетичен\tF5", IDM_VIEW_HEX, CHECKED
@@ -401,8 +401,8 @@ BEGIN
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Стандартно", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Стандартно", IDM_VIEW_STANDARD
+        MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
         MENUITEM "Преобразуване", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED

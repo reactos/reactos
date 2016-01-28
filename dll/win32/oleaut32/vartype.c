@@ -2938,28 +2938,28 @@ HRESULT WINAPI VarR4FromUI4(ULONG ulIn, float *pFltOut)
 HRESULT WINAPI VarR4FromDec(DECIMAL* pDecIn, float *pFltOut)
 {
   BYTE scale = DEC_SCALE(pDecIn);
-  int divisor = 1;
+  double divisor = 1.0;
   double highPart;
 
   if (scale > DEC_MAX_SCALE || DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
   while (scale--)
-    divisor *= 10;
+    divisor *= 10.0;
 
   if (DEC_SIGN(pDecIn))
     divisor = -divisor;
 
   if (DEC_HI32(pDecIn))
   {
-    highPart = (double)DEC_HI32(pDecIn) / (double)divisor;
+    highPart = (double)DEC_HI32(pDecIn) / divisor;
     highPart *= 4294967296.0F;
     highPart *= 4294967296.0F;
   }
   else
     highPart = 0.0;
 
-  *pFltOut = (double)DEC_LO64(pDecIn) / (double)divisor + highPart;
+  *pFltOut = (double)DEC_LO64(pDecIn) / divisor + highPart;
   return S_OK;
 }
 
@@ -4138,8 +4138,6 @@ HRESULT WINAPI VarDecFromI4(LONG lIn, DECIMAL* pDecOut)
   return S_OK;
 }
 
-#define LOCALE_EN_US		(MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT))
-
 /* internal representation of the value stored in a DECIMAL. The bytes are
    stored from LSB at index 0 to MSB at index 11
  */
@@ -4154,6 +4152,8 @@ static HRESULT VARIANT_DI_FromR4(float source, VARIANT_DI * dest);
 static HRESULT VARIANT_DI_FromR8(double source, VARIANT_DI * dest);
 static void VARIANT_DIFromDec(const DECIMAL * from, VARIANT_DI * to);
 static void VARIANT_DecFromDI(const VARIANT_DI * from, DECIMAL * to);
+static unsigned char VARIANT_int_divbychar(DWORD * p, unsigned int n, unsigned char divisor);
+static BOOL VARIANT_int_iszero(const DWORD * p, unsigned int n);
 
 /************************************************************************
  * VarDecFromR4 (OLEAUT32.193)
@@ -4429,12 +4429,13 @@ HRESULT WINAPI VarDecFromUI8(ULONG64 ullIn, DECIMAL* pDecOut)
 /* Make two DECIMALS the same scale; used by math functions below */
 static HRESULT VARIANT_DecScale(const DECIMAL** ppDecLeft,
                                 const DECIMAL** ppDecRight,
-                                DECIMAL* pDecOut)
+                                DECIMAL pDecOut[2])
 {
   static DECIMAL scaleFactor;
+  unsigned char remainder;
   DECIMAL decTemp;
+  VARIANT_DI di;
   int scaleAmount, i;
-  HRESULT hRet = S_OK;
 
   if (DEC_SIGN(*ppDecLeft) & ~DECIMAL_NEG || DEC_SIGN(*ppDecRight) & ~DECIMAL_NEG)
     return E_INVALIDARG;
@@ -4449,27 +4450,62 @@ static HRESULT VARIANT_DecScale(const DECIMAL** ppDecLeft,
   if (scaleAmount > 0)
   {
     decTemp = *(*ppDecRight); /* Left is bigger - scale the right hand side */
-    *ppDecRight = pDecOut;
+    *ppDecRight = &pDecOut[0];
   }
   else
   {
     decTemp = *(*ppDecLeft); /* Right is bigger - scale the left hand side */
-    *ppDecLeft = pDecOut;
-    i = scaleAmount = -scaleAmount;
+    *ppDecLeft  = &pDecOut[0];
+    i = -scaleAmount;
   }
 
-  if (DEC_SCALE(&decTemp) + scaleAmount > DEC_MAX_SCALE)
-    return DISP_E_OVERFLOW; /* Can't scale up */
-
-  /* Multiply up the value to be scaled by the correct amount */
-  while (SUCCEEDED(hRet) && i--)
+  /* Multiply up the value to be scaled by the correct amount (if possible) */
+  while (i > 0 && SUCCEEDED(VarDecMul(&decTemp, &scaleFactor, &pDecOut[0])))
   {
-    /* Note we are multiplying by a value with a scale of 0, so we don't recurse */
-    hRet = VarDecMul(&decTemp, &scaleFactor, pDecOut);
-    decTemp = *pDecOut;
+    decTemp = pDecOut[0];
+    i--;
   }
-  DEC_SCALE(pDecOut) += scaleAmount; /* Set the new scale */
-  return hRet;
+
+  if (!i)
+  {
+    DEC_SCALE(&pDecOut[0]) += (scaleAmount > 0) ? scaleAmount : (-scaleAmount);
+    return S_OK; /* Same scale */
+  }
+
+  /* Scaling further not possible, reduce accuracy of other argument */
+  pDecOut[0] = decTemp;
+  if (scaleAmount > 0)
+  {
+    DEC_SCALE(&pDecOut[0]) += scaleAmount - i;
+    VARIANT_DIFromDec(*ppDecLeft, &di);
+    *ppDecLeft = &pDecOut[1];
+  }
+  else
+  {
+    DEC_SCALE(&pDecOut[0]) += (-scaleAmount) - i;
+    VARIANT_DIFromDec(*ppDecRight, &di);
+    *ppDecRight = &pDecOut[1];
+  }
+
+  di.scale -= i;
+  remainder = 0;
+  while (i-- > 0 && !VARIANT_int_iszero(di.bitsnum, sizeof(di.bitsnum)/sizeof(DWORD)))
+  {
+    remainder = VARIANT_int_divbychar(di.bitsnum, sizeof(di.bitsnum)/sizeof(DWORD), 10);
+    if (remainder > 0) WARN("losing significant digits (remainder %u)...\n", remainder);
+  }
+
+  /* round up the result - native oleaut32 does this */
+  if (remainder >= 5) {
+      for (remainder = 1, i = 0; i < sizeof(di.bitsnum)/sizeof(DWORD) && remainder; i++) {
+          ULONGLONG digit = di.bitsnum[i] + 1;
+          remainder = (digit > 0xFFFFFFFF) ? 1 : 0;
+          di.bitsnum[i] = digit & 0xFFFFFFFF;
+      }
+  }
+
+  VARIANT_DecFromDI(&di, &pDecOut[1]);
+  return S_OK;
 }
 
 /* Add two unsigned 32 bit values with overflow */
@@ -4544,9 +4580,9 @@ static inline int VARIANT_DecCmp(const DECIMAL *pDecLeft, const DECIMAL *pDecRig
 HRESULT WINAPI VarDecAdd(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECIMAL* pDecOut)
 {
   HRESULT hRet;
-  DECIMAL scaled;
+  DECIMAL scaled[2];
 
-  hRet = VARIANT_DecScale(&pDecLeft, &pDecRight, &scaled);
+  hRet = VARIANT_DecScale(&pDecLeft, &pDecRight, scaled);
 
   if (SUCCEEDED(hRet))
   {

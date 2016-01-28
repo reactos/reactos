@@ -24,10 +24,6 @@
 
 #include "d3dx9_36_private.h"
 
-#ifdef _MSC_VER
-#define copysignf(x, y) ((x) < 0.0f ? -fabsf(y) : fabsf(y))
-#endif
-
 struct ID3DXMatrixStackImpl
 {
   ID3DXMatrixStack ID3DXMatrixStack_iface;

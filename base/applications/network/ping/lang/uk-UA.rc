@@ -33,6 +33,7 @@ BEGIN
     IDS_BAD_OPTION_FORMAT "Невірний формат опції %1.\n\0"
     IDS_BAD_OPTION "Погана опція %1.\n\0"
     IDS_BAD_VALUE_OPTION_L "Неправильне значення для опції -l, допустимий діапазон від 0 до %1!d!.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Неправильне значення для опції -n, допустимий діапазон від 1 до %1!u!.\n\0"
     IDS_REPLY_FROM "Відповідь від %1: байтів=%2!d! час%3%4 TTL=%5!d!\n\0"
     IDS_DEST_UNREACHABLE "Хост недоступний.\n\0"
     IDS_COULD_NOT_TRANSMIT "Не вдалося передати дані (%1!d!).\n\0"

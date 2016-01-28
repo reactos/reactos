@@ -25,34 +25,64 @@ STRINGTABLE
 BEGIN
     IDS_CONTENTS     "&Tartalom"
     IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&KeresÈs"
+    IDS_SEARCH       "&Keres√©s"
     IDS_FAVORITES    "Kedven&cek"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "MegjelenÌtÈs"
-    IDTB_CONTRACT    "ElrejtÈs"
-    IDTB_STOP        "Meg·llÌt·s"
-    IDTB_REFRESH     "FrissÌtÈs"
+    IDTB_EXPAND      "Megjelen√≠t√©s"
+    IDTB_CONTRACT    "Elrejt√©s"
+    IDTB_STOP        "Meg√°ll√≠t√°s"
+    IDTB_REFRESH     "Friss√≠t√©s"
     IDTB_BACK        "Vissza"
-    IDTB_HOME        "Kezdılap"
+    IDTB_HOME        "Kezd≈ëlap"
     IDTB_SYNC        "Szink."
-    IDTB_PRINT       "Nyomtat·s"
-    IDTB_OPTIONS     "OpciÛk"
-    IDTB_FORWARD     "Elıre"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Testreszab·s"
-    IDTB_ZOOM        "Zoom"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+    IDTB_PRINT       "Nyomtat√°s"
+    IDTB_OPTIONS     "Opci√≥k"
+    IDTB_FORWARD     "El≈ëre"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}

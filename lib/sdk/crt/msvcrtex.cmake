@@ -64,6 +64,27 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_asm.s
         except/amd64/chkstk_ms.s)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND MSVCRTEX_SOURCE
+        math/arm/__rt_sdiv.c
+        math/arm/__rt_sdiv64_worker.c
+        math/arm/__rt_udiv.c
+        math/arm/__rt_udiv64_worker.c
+    )
+    list(APPEND MSVCRTEX_ASM_SOURCE
+        except/arm/chkstk_asm.s
+        math/arm/__dtoi64.s
+        math/arm/__dtou64.s
+        math/arm/__i64tod.s
+        math/arm/__i64tos.s
+        math/arm/__stoi64.s
+        math/arm/__stou64.s
+        math/arm/__u64tod.s
+        math/arm/__u64tos.s
+        math/arm/__rt_sdiv64.s
+        math/arm/__rt_srsh.s
+        math/arm/__rt_udiv64.s
+    )
 endif()
 
 if(MSVC)
@@ -83,6 +104,10 @@ set_source_files_properties(startup/crtexe.c
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
+endif()
+
+if(STACK_PROTECTOR)
+    target_link_libraries(msvcrtex gcc_ssp)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

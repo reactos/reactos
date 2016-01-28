@@ -18,4 +18,5 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(mesa_tnl STATIC ${SOURCE})
+add_dependencies(mesa_tnl xdk)
 add_pch(mesa_tnl precomp.h SOURCE)

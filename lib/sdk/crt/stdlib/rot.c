@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/stdlib/rot.c
+ * FILE:        lib/sdk/crt/stdlib/rot.c
  * PURPOSE:     Performs a bitwise rotation
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

@@ -22,7 +22,10 @@
 #include <ole2.h>
 #include <commctrl.h>
 #include <prsht.h>
+
+#ifndef INITGUID
 #include <shlguid.h>
+#endif
 
 #ifdef WINE_NO_UNICODE_MACROS
 #undef GetObject
@@ -249,6 +252,8 @@ int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
 int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
 BOOL         WINAPI IsUserAnAdmin(void);
 
+#define KF_FLAG_DEFAULT_PATH        0x00000400
+
 #define SHFMT_ERROR     0xFFFFFFFFL  /* Error on last format, drive may be formattable */
 #define SHFMT_CANCEL    0xFFFFFFFEL  /* Last format was cancelled */
 #define SHFMT_NOFORMAT  0xFFFFFFFDL  /* Drive is not formattable */
@@ -466,6 +471,8 @@ typedef struct
 #define FCIDM_SHVIEW_INSERT     0x701A
 #define FCIDM_SHVIEW_UNDO       0x701B
 #define FCIDM_SHVIEW_INSERTLINK 0x701C
+#define FCIDM_SHVIEW_COPYTO     0x701E
+#define FCIDM_SHVIEW_MOVETO     0x701F
 #define FCIDM_SHVIEW_SELECTALL  0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
@@ -750,7 +757,7 @@ DECLARE_INTERFACE_(IShellFolderView, IUnknown)
     STDMETHOD(RefreshObject) (THIS_ _In_ PITEMID_CHILD pidl, _Out_ UINT *puItem) PURE;
     STDMETHOD(SetRedraw) (THIS_ BOOL bRedraw) PURE;
     STDMETHOD(GetSelectedCount) (THIS_ _Out_ UINT *puSelected) PURE;
-    STDMETHOD(GetSelectedObjects) (THIS_ _Outptr_result_buffer_(*puItems) PCITEMID_CHILD **pppidl, _Out_ UINT *puItems) PURE;
+    STDMETHOD(GetSelectedObjects) (THIS_ _Outptr_result_buffer_(*puItems) PCUITEMID_CHILD **pppidl, _Out_ UINT *puItems) PURE;
     STDMETHOD(IsDropOnSource) (THIS_ _In_opt_ IDropTarget *pDropTarget) PURE;
     STDMETHOD(GetDragPoint) (THIS_ _Out_ POINT *ppt) PURE;
     STDMETHOD(GetDropPoint) (THIS_ _Out_ POINT *ppt) PURE;
@@ -961,6 +968,7 @@ typedef struct tagBROWSEINFOW {
 #define BIF_BROWSEFORCOMPUTER  0x1000
 #define BIF_BROWSEFORPRINTER   0x2000
 #define BIF_BROWSEINCLUDEFILES 0x4000
+#define BIF_SHAREABLE          0x8000
 
 /* message from browser */
 #define BFFM_INITIALIZED        1
@@ -2132,10 +2140,10 @@ typedef struct
 {
   HWND hwnd;
   IContextMenuCB *pcmcb;
-  LPCITEMIDLIST pidlFolder;
+  PCIDLIST_ABSOLUTE pidlFolder;
   IShellFolder *psf;
   UINT cidl;
-  LPCITEMIDLIST* apidl;
+  PCUITEMID_CHILD_ARRAY apidl;
   IUnknown *punkAssociationInfo;
   UINT cKeys;
   const HKEY *aKeys;
@@ -2160,10 +2168,10 @@ typedef HRESULT
 HRESULT
 WINAPI
 CDefFolderMenu_Create2(
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCIDLIST_ABSOLUTE,
   _In_opt_ HWND,
   UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST*,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY,
   _In_opt_ IShellFolder*,
   _In_opt_ LPFNDFMCALLBACK,
   UINT nKeys,
@@ -2183,9 +2191,9 @@ SHCreateDefaultExtractIcon(
  */
 
 HRESULT WINAPI SHCreateDataObject(
-  _In_opt_ LPCITEMIDLIST pidlFolder,
+  _In_opt_ PCIDLIST_ABSOLUTE pidlFolder,
   _In_ UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST* apidl,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY apidl,
   _In_opt_ IDataObject *pdtInner,
   _In_ REFIID riid,
   _Outptr_ void **ppv);
@@ -2195,9 +2203,9 @@ HRESULT WINAPI SHCreateDataObject(
  */
 
 HRESULT WINAPI CIDLData_CreateFromIDArray(
-  _In_ LPCITEMIDLIST pidlFolder,
+  _In_ PCIDLIST_ABSOLUTE pidlFolder,
   _In_ UINT cidl,
-  _In_reads_opt_(cidl) LPCITEMIDLIST* apidl,
+  _In_reads_opt_(cidl) PCUIDLIST_RELATIVE_ARRAY apidl,
   _Outptr_ IDataObject **ppdtobj);
 
 /****************************************************************************
@@ -2306,39 +2314,6 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
 #define IDockingWindowSite_GetBorderDW(p,a,b)            (p)->lpVtbl->GetBorderDW(p,a,b)
 #define IDockingWindowSite_RequestBorderSpaceDW(p,a,b)   (p)->lpVtbl->RequestBorderSpaceDW(p,a,b)
 #define IDockingWindowSite_SetBorderSpaceDW(p,a,b)       (p)->lpVtbl->SetBorderSpaceDW(p,a,b)
-#endif
-
-/*****************************************************************************
- * IShellTaskScheduler interface
- */
-#define REFTASKOWNERID REFGUID
-
-#define INTERFACE IShellTaskScheduler
-DECLARE_INTERFACE_(IShellTaskScheduler, IUnknown)
-{
-    // *** IUnknown methods ***
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
-    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG, Release)(THIS) PURE;
-
-    // *** IShellTaskScheduler methods ***
-    STDMETHOD(AddTask)(THIS_ IRunnableTask *pTask, REFTASKOWNERID rtoid, DWORD_PTR lParam, DWORD dwPriority) PURE;
-    STDMETHOD(RemoveTasks)(THIS_ REFTASKOWNERID rtoid, DWORD_PTR lParam, BOOL fWaitIfRunning) PURE;
-    STDMETHOD_(UINT, CountTasks)(THIS_ REFTASKOWNERID rtoid) PURE;
-    STDMETHOD(Status)(THIS_ DWORD dwReleaseStatus, DWORD dwThreadTimeout) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IShellTaskScheduler_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IShellTaskScheduler_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IShellTaskScheduler_Release(p)             (p)->lpVtbl->Release(p)
-/*** IShellTaskScheduler methods ***/
-#define IShellTaskScheduler_AddTask(p,a,b,c,d)     (p)->lpVtbl->AddTask(p,a,b,c,d)
-#define IShellTaskScheduler_RemoveTasks(p,a,b,c)   (p)->lpVtbl->RemoveTasks(p,a,b,c)
-#define IShellTaskScheduler_CountTasks(p,a)        (p)->lpVtbl->CountTasks(p,a)
-#define IShellTaskScheduler_Status(p,a,b)          (p)->lpVtbl->Status(p,a,b)
 #endif
 
 typedef void (CALLBACK *PFNASYNCICONTASKBALLBACK)(LPCITEMIDLIST pidl, LPVOID pvData, LPVOID pvHint, INT iIconIndex, INT iOpenIconIndex);

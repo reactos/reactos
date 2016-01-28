@@ -24,36 +24,66 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Spis tre�ci"
+    IDS_CONTENTS     "&Spis treści"
     IDS_INDEX        "&Indeks"
     IDS_SEARCH       "&Wyszukaj"
     IDS_FAVORITES    "&Ulubione"
+
+    IDS_HIDETABS     "Ukryj &zakładki"
+    IDS_SHOWTABS     "Pokaż z&akładki"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Poka�"
+    IDTB_EXPAND      "Pokaż"
     IDTB_CONTRACT    "Ukryj"
     IDTB_STOP        "Zatrzymaj"
-    IDTB_REFRESH     "Od�wie�"
+    IDTB_REFRESH     "Odśwież"
     IDTB_BACK        "Wstecz"
     IDTB_HOME        "Start"
     IDTB_SYNC        "Synchronizuj"
     IDTB_PRINT       "Drukuj"
     IDTB_OPTIONS     "Opcje"
     IDTB_FORWARD     "Dalej"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Skok1"
-    IDTB_JUMP2       "Skok2"
-    IDTB_CUSTOMIZE   "Dostosuj"
-    IDTB_ZOOM        "Powi�ksz"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ynchronizuj", IDTB_SYNC
+        MENUITEM "&Wstecz", IDTB_BACK
+        MENUITEM "&Naprzód", IDTB_FORWARD
+        MENUITEM "&Strona domowa", IDTB_HOME
+        MENUITEM "&Zatrzymaj", IDTB_STOP
+        MENUITEM "&Odśwież", IDTB_REFRESH
+        MENUITEM "&Drukuj...", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Wstecz", IDTB_BACK
+        MENUITEM "&Naprzód", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Zaznacz wszystko", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Pokaż źródło", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Drukuj...", IDTB_PRINT
+        MENUITEM "&Odśwież", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Właś&ciwości", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Wy&tnij", MIID_CUT
+        MENUITEM "&Kopiuj", MIID_COPY
+        MENUITEM "Wklej", MIID_PASTE
+        MENUITEM "&Zaznacz wszystko", MIID_SELECTALL
+        MENUITEM "&Drukuj", IDTB_PRINT
+    }
+}

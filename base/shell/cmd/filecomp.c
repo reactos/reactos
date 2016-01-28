@@ -203,7 +203,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
     HANDLE hFile;
     BOOL  found_dot = FALSE;
     INT   curplace = 0;
-    INT   start;
     INT   count;
     TCHAR path[MAX_PATH];
     TCHAR fname[MAX_PATH];
@@ -232,10 +231,8 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
     if (str[count] == _T(' '))
         count++;
 
-    start = count;
-
     if (str[count] == _T('"'))
-        count++;    /* don't increment start */
+        count++;
 
     /* extract directory from word */
     _tcscpy (directory, &str[count]);
@@ -556,7 +553,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
     /* Used to find and assemble the string that is returned */
     TCHAR szBaseWord[MAX_PATH];
     TCHAR szPrefix[MAX_PATH];
-    TCHAR szOrginal[MAX_PATH];
+    TCHAR szOriginal[MAX_PATH];
     TCHAR szSearchPath[MAX_PATH];
     /* Save the strings used last time, so if they hit tab again */
     static TCHAR LastReturned[MAX_PATH];
@@ -586,9 +583,9 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
     if (!_tcsnicmp (line, _T("rd "), 3) || !_tcsnicmp (line, _T("cd "), 3))
         ShowAll = FALSE;
 
-    /* Copy the string, str can be edited and orginal should not be */
+    /* Copy the string, str can be edited and original should not be */
     _tcscpy(str,strIN);
-    _tcscpy(szOrginal,strIN);
+    _tcscpy(szOriginal,strIN);
 
     /* Look to see if the cusor is not at the end of the string */
     if ((cusor + 1) < _tcslen(str))
@@ -656,8 +653,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
     hFile = FindFirstFile (szSearchPath, &file);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        /* Assemble the orginal string and return */
-        _tcscpy(strOut,szOrginal);
+        /* Assemble the original string and return */
+        _tcscpy(strOut,szOriginal);
         return;
     }
 
@@ -685,8 +682,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
         {
             /* Don't leak old buffer */
             cmd_free(oldFileList);
-            /* Assemble the orginal string and return */
-            _tcscpy(strOut,szOrginal);
+            /* Assemble the original string and return */
+            _tcscpy(strOut,szOriginal);
             FindClose(hFile);
             ConOutFormatMessage (GetLastError());
             return;
@@ -698,11 +695,10 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
     FindClose(hFile);
 
-    /* Check the size of the list to see if we
-       found any matches */
+    /* Check the size of the list to see if we found any matches */
     if (FileListSize == 0)
     {
-        _tcscpy(strOut,szOrginal);
+        _tcscpy(strOut,szOriginal);
         if (FileList != NULL)
             cmd_free(FileList);
         return;
@@ -712,7 +708,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
     qsort(FileList,FileListSize,sizeof(FileName), compare);
 
     /* Find the next/previous */
-    if (!_tcscmp(szOrginal,LastReturned))
+    if (_tcslen(szOriginal) && !_tcscmp(szOriginal,LastReturned))
     {
         if (bNext)
         {
@@ -734,8 +730,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
         Sel = 0;
     }
 
-    /* nothing found that matched last time
-       so return the first thing in the list */
+    /* nothing found that matched last time so return the first thing in the list */
     strOut[0] = _T('\0');
 
     /* Special character in the name */
@@ -792,7 +787,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
         }
     }
 
-    if (szPrefix[_tcslen(szPrefix) - 1] == _T('\"') || NeededQuote)
+    if (NeededQuote || (_tcslen(szPrefix) && szPrefix[_tcslen(szPrefix) - 1] == _T('\"')))
         _tcscat(strOut,_T("\""));
 
     _tcscpy(LastReturned,strOut);

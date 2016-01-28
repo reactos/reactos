@@ -1,0 +1,200 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Параметры", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Выход", ID_EXIT
+    END
+    POPUP "&Программы"
+    BEGIN
+        MENUITEM "У&становить\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Удалить\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Изменить", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "У&далить из реестра", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Обновить &базу данных\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Справка"
+    BEGIN
+        MENUITEM "Содержание\tF1", ID_HELP, GRAYED
+        MENUITEM "О программе", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Открыть ссылку в браузере", ID_OPEN_LINK
+        MENUITEM "&Копировать ссылку в буфер", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Установить\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Удалить\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Изменить", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "У&далить из реестра", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Обновить &базу данных\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметры"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Общие", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Сохранять положение окна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Обновлять список доступных программ при запуске", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Вести лог установки/удаления программ", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Загрузка", -1, 4, 65, 240, 51
+    LTEXT "Папка для загрузок:", -1, 16, 75, 77, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "В&ыбрать", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Удалять инсталляторы программ после установки", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Установка программы"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Установить с диска", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Скачать и установить", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Загрузка..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Отмена", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "О программе"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Менеджер приложений ReactOS\nАвторские права (C) 2009\nДмитрий Чапышев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Закрыть", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Установить"
+    IDS_TOOLTIP_UNINSTALL "Удалить"
+    IDS_TOOLTIP_MODIFY "Изменить"
+    IDS_TOOLTIP_SETTINGS "Параметры"
+    IDS_TOOLTIP_REFRESH "Обновить"
+    IDS_TOOLTIP_EXIT "Выход"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Название"
+    IDS_APP_INST_VERSION "Версия"
+    IDS_APP_DESCRIPTION "Описание"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nВерсия: "
+    IDS_INFO_DESCRIPTION "\nОписание: "
+    IDS_INFO_PUBLISHER "\nИздатель: "
+    IDS_INFO_HELPLINK "\nСсылка поддержки: "
+    IDS_INFO_HELPPHONE "\nТелефон поддержки: "
+    IDS_INFO_README "\nФайл ""Readme"": "
+    IDS_INFO_REGOWNER "\nЗарегистрированный владелец: "
+    IDS_INFO_PRODUCTID "\nКод продукта: "
+    IDS_INFO_CONTACT "\nКонтакт: "
+    IDS_INFO_UPDATEINFO "\nИнформация об обновлениях: "
+    IDS_INFO_INFOABOUT "\nИнформация о программе: "
+    IDS_INFO_COMMENTS "\nКомментарии: "
+    IDS_INFO_INSTLOCATION "\nУстановлено в: "
+    IDS_INFO_INSTALLSRC "\nИсточник установки: "
+    IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
+    IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
+    IDS_INFO_INSTALLDATE "\nДата установки: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nВерсия: "
+    IDS_AINFO_DESCRIPTION "\nОписание: "
+    IDS_AINFO_SIZE "\nРазмер: "
+    IDS_AINFO_URLSITE "\nДомашняя страница: "
+    IDS_AINFO_LICENSE "\nЛицензия: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Аудио"
+    IDS_CAT_DEVEL "Разработка"
+    IDS_CAT_DRIVERS "Драйверы"
+    IDS_CAT_EDU "Образование"
+    IDS_CAT_ENGINEER "Инженерные"
+    IDS_CAT_FINANCE "Финансы"
+    IDS_CAT_GAMES "Игры и развлечения"
+    IDS_CAT_GRAPHICS "Графика"
+    IDS_CAT_INTERNET "Интернет и сеть"
+    IDS_CAT_LIBS "Библиотеки"
+    IDS_CAT_OFFICE "Офис"
+    IDS_CAT_OTHER "Разное"
+    IDS_CAT_SCIENCE "Наука"
+    IDS_CAT_TOOLS "Инструменты"
+    IDS_CAT_VIDEO "Видео"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Менеджер приложений ReactOS"
+    IDS_SEARCH_TEXT "Поиск..."
+    IDS_INSTALL "Установить"
+    IDS_UNINSTALL "Удалить"
+    IDS_MODIFY "Изменить"
+    IDS_APPS_COUNT "Количество: %d"
+    IDS_WELCOME_TITLE "Добро пожаловать в ""Менеджер приложений ReactOS""!\n\n"
+    IDS_WELCOME_TEXT "Выберите категорию слева и приложение для установки или удаления.\nСайт ReactOS: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Установленные"
+    IDS_AVAILABLEFORINST "Доступно для установки"
+    IDS_UPDATES "Обновления"
+    IDS_APPLICATIONS "Приложения"
+    IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
+    IDS_CHOOSE_FOLDER_ERROR "Вы указали несуществующую папку!"
+    IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
+    IDS_INFORMATION "Информация"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
+END

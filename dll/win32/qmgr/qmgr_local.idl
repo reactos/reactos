@@ -22,4 +22,6 @@
 
 #define DO_NO_IMPORTS
 #include "bits1_5.idl"
+#include "bits2_0.idl"
+#include "bits2_5.idl"
 #include "bits3_0.idl"

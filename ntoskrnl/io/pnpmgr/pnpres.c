@@ -73,7 +73,7 @@ IopFindMemoryResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   LONGLONG Start;
+   ULONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
@@ -82,16 +82,16 @@ IopFindMemoryResource(
    /* HACK */
    if (IoDesc->u.Memory.Alignment == 0) IoDesc->u.Memory.Alignment = 1;
 
-   for (Start = IoDesc->u.Memory.MinimumAddress.QuadPart;
-        Start <= IoDesc->u.Memory.MaximumAddress.QuadPart - IoDesc->u.Memory.Length + 1;
+   for (Start = (ULONGLONG)IoDesc->u.Memory.MinimumAddress.QuadPart;
+        Start <= (ULONGLONG)IoDesc->u.Memory.MaximumAddress.QuadPart - IoDesc->u.Memory.Length + 1;
         Start += IoDesc->u.Memory.Alignment)
    {
         CmDesc->u.Memory.Length = IoDesc->u.Memory.Length;
-        CmDesc->u.Memory.Start.QuadPart = Start;
+        CmDesc->u.Memory.Start.QuadPart = (LONGLONG)Start;
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Memory.Start.QuadPart +
+            Start += (ULONGLONG)ConflictingDesc.u.Memory.Start.QuadPart +
                      ConflictingDesc.u.Memory.Length;
         }
         else
@@ -110,33 +110,34 @@ IopFindPortResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   LONGLONG Start;
+   ULONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypePort);
-    
+
    /* HACK */
    if (IoDesc->u.Port.Alignment == 0) IoDesc->u.Port.Alignment = 1;
 
-   for (Start = IoDesc->u.Port.MinimumAddress.QuadPart;
-        Start <= IoDesc->u.Port.MaximumAddress.QuadPart - IoDesc->u.Port.Length + 1;
+   for (Start = (ULONGLONG)IoDesc->u.Port.MinimumAddress.QuadPart;
+       Start <= (ULONGLONG)IoDesc->u.Port.MaximumAddress.QuadPart - IoDesc->u.Port.Length + 1;
         Start += IoDesc->u.Port.Alignment)
    {
         CmDesc->u.Port.Length = IoDesc->u.Port.Length;
-        CmDesc->u.Port.Start.QuadPart = Start;
+        CmDesc->u.Port.Start.QuadPart = (LONGLONG)Start;
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Port.Start.QuadPart + ConflictingDesc.u.Port.Length;
+            Start += (ULONGLONG)ConflictingDesc.u.Port.Start.QuadPart + ConflictingDesc.u.Port.Length;
         }
         else
         {
-            DPRINT1("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
+            DPRINT("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
             return TRUE;
         }
    }
 
+   DPRINT1("IopFindPortResource failed!\n");
    return FALSE;
 }
 
@@ -251,7 +252,7 @@ IopFixupResourceListWithRequirements(
             PCM_PARTIAL_RESOURCE_LIST PartialList = (*ResourceList) ? &(*ResourceList)->List[0].PartialResourceList : NULL;
             PIO_RESOURCE_DESCRIPTOR IoDesc = &ResList->Descriptors[ii];
             BOOLEAN Matched = FALSE;
-            
+
             /* Skip alternates if we don't need one */
             if (!AlternateRequired && (IoDesc->Option & IO_RESOURCE_ALTERNATIVE))
             {
@@ -299,8 +300,8 @@ IopFixupResourceListWithRequirements(
                     case CmResourceTypePort:
                         /* Make sure the length matches and it satisfies our address range */
                         if (CmDesc->u.Memory.Length == IoDesc->u.Memory.Length &&
-                            CmDesc->u.Memory.Start.QuadPart >= IoDesc->u.Memory.MinimumAddress.QuadPart &&
-                            CmDesc->u.Memory.Start.QuadPart + CmDesc->u.Memory.Length - 1 <= IoDesc->u.Memory.MaximumAddress.QuadPart)
+                            (ULONGLONG)CmDesc->u.Memory.Start.QuadPart >= (ULONGLONG)IoDesc->u.Memory.MinimumAddress.QuadPart &&
+                            (ULONGLONG)CmDesc->u.Memory.Start.QuadPart + CmDesc->u.Memory.Length - 1 <= (ULONGLONG)IoDesc->u.Memory.MaximumAddress.QuadPart)
                         {
                             /* Found it */
                             Matched = TRUE;
@@ -386,7 +387,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypePort:
                         /* Find an available port range */
                         if (!IopFindPortResource(IoDesc, &NewDesc))
@@ -398,7 +399,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeMemory:
                         /* Find an available memory range */
                         if (!IopFindMemoryResource(IoDesc, &NewDesc))
@@ -410,7 +411,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeBusNumber:
                         /* Find an available bus address range */
                         if (!IopFindBusNumberResource(IoDesc, &NewDesc))
@@ -422,7 +423,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeDma:
                         /* Find an available DMA channel */
                         if (!IopFindDmaResource(IoDesc, &NewDesc))
@@ -433,7 +434,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     default:
                         DPRINT1("Unsupported resource type: %x\n", IoDesc->Type);
                         FoundResource = FALSE;
@@ -563,11 +564,11 @@ IopCheckResourceDescriptor(
          switch (ResDesc->Type)
          {
              case CmResourceTypeMemory:
-                 if ((ResDesc->u.Memory.Start.QuadPart < ResDesc2->u.Memory.Start.QuadPart &&
-                      ResDesc->u.Memory.Start.QuadPart + ResDesc->u.Memory.Length >
-                      ResDesc2->u.Memory.Start.QuadPart) || (ResDesc2->u.Memory.Start.QuadPart <
-                      ResDesc->u.Memory.Start.QuadPart && ResDesc2->u.Memory.Start.QuadPart +
-                      ResDesc2->u.Memory.Length > ResDesc->u.Memory.Start.QuadPart))
+                 if (((ULONGLONG)ResDesc->u.Memory.Start.QuadPart < (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart &&
+                      (ULONGLONG)ResDesc->u.Memory.Start.QuadPart + ResDesc->u.Memory.Length >
+                      (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Memory.Start.QuadPart <
+                      (ULONGLONG)ResDesc->u.Memory.Start.QuadPart && (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart +
+                      ResDesc2->u.Memory.Length > (ULONGLONG)ResDesc->u.Memory.Start.QuadPart))
                  {
                       if (!Silent)
                       {
@@ -584,11 +585,11 @@ IopCheckResourceDescriptor(
                  break;
 
              case CmResourceTypePort:
-                 if ((ResDesc->u.Port.Start.QuadPart < ResDesc2->u.Port.Start.QuadPart &&
-                      ResDesc->u.Port.Start.QuadPart + ResDesc->u.Port.Length >
-                      ResDesc2->u.Port.Start.QuadPart) || (ResDesc2->u.Port.Start.QuadPart <
-                      ResDesc->u.Port.Start.QuadPart && ResDesc2->u.Port.Start.QuadPart +
-                      ResDesc2->u.Port.Length > ResDesc->u.Port.Start.QuadPart))
+                 if (((ULONGLONG)ResDesc->u.Port.Start.QuadPart < (ULONGLONG)ResDesc2->u.Port.Start.QuadPart &&
+                      (ULONGLONG)ResDesc->u.Port.Start.QuadPart + ResDesc->u.Port.Length >
+                      (ULONGLONG)ResDesc2->u.Port.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Port.Start.QuadPart <
+                      (ULONGLONG)ResDesc->u.Port.Start.QuadPart && (ULONGLONG)ResDesc2->u.Port.Start.QuadPart +
+                      ResDesc2->u.Port.Length > (ULONGLONG)ResDesc->u.Port.Start.QuadPart))
                  {
                       if (!Silent)
                       {
@@ -698,7 +699,7 @@ IopUpdateControlKeyWithResources(IN PDEVICE_NODE DeviceNode)
    /* Create/Open the Control key */
    InitializeObjectAttributes(&ObjectAttributes,
                               &Control,
-                              OBJ_CASE_INSENSITIVE,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceKey,
                               NULL);
    Status = ZwCreateKey(&ControlKey,
@@ -771,8 +772,8 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                 0,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
+                 NULL,
                  NULL);
   Status = ZwCreateKey(&ResourceMapKey,
                KEY_ALL_ACCESS,
@@ -787,7 +788,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   RtlInitUnicodeString(&KeyName, Level1Key);
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
                  ResourceMapKey,
                  NULL);
   Status = ZwCreateKey(&PnpMgrLevel1,
@@ -804,7 +805,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   RtlInitUnicodeString(&KeyName, Level2Key);
   InitializeObjectAttributes(&ObjectAttributes,
                  &KeyName,
-                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
                  PnpMgrLevel1,
                  NULL);
   Status = ZwCreateKey(&PnpMgrLevel2,
@@ -825,7 +826,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       ULONG OldLength = 0;
 
       ASSERT(DeviceNode->ResourceListTranslated);
-      
+
       RtlInitUnicodeString(&TranslatedSuffix, L".Translated");
       RtlInitUnicodeString(&RawSuffix, L".Raw");
 
@@ -837,17 +838,17 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
           ASSERT(OldLength);
-          
+
           NameU.Buffer = ExAllocatePool(PagedPool, OldLength + TranslatedSuffix.Length);
           if (!NameU.Buffer)
           {
               ZwClose(PnpMgrLevel2);
               return STATUS_INSUFFICIENT_RESOURCES;
           }
-          
+
           NameU.Length = 0;
           NameU.MaximumLength = (USHORT)OldLength + TranslatedSuffix.Length;
-          
+
           Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                        DevicePropertyPhysicalDeviceObjectName,
                                        NameU.MaximumLength,
@@ -871,7 +872,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           /* This should never happen */
           ASSERT(FALSE);
       }
-      
+
       NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
@@ -972,12 +973,12 @@ IopTranslateDeviceResources(
                   DPRINT1("Failed to translate port resource (Start: 0x%I64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
-                
+
                if (AddressSpace == 0)
                {
                    DPRINT1("Guessed incorrect address space: 1 -> 0\n");
 
-                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are 
+                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are
                     * invalid for this state but I'm not 100% sure */
                    DescriptorRaw->Flags =
                    DescriptorTranslated->Flags = CM_RESOURCE_PORT_MEMORY;
@@ -993,7 +994,7 @@ IopTranslateDeviceResources(
                   DescriptorRaw->u.Interrupt.Vector,
                   (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
                   &DescriptorTranslated->u.Interrupt.Affinity);
-                
+
                if (!DescriptorTranslated->u.Interrupt.Vector)
                {
                    Status = STATUS_UNSUCCESSFUL;
@@ -1203,7 +1204,7 @@ IopDetectResourceConflict(
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING KeyName;
-   HANDLE ResourceMapKey = INVALID_HANDLE_VALUE, ChildKey2 = INVALID_HANDLE_VALUE, ChildKey3 = INVALID_HANDLE_VALUE;
+   HANDLE ResourceMapKey = NULL, ChildKey2 = NULL, ChildKey3 = NULL;
    ULONG KeyInformationLength, RequiredLength, KeyValueInformationLength, KeyNameInformationLength;
    PKEY_BASIC_INFORMATION KeyInformation;
    PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
@@ -1212,7 +1213,11 @@ IopDetectResourceConflict(
    NTSTATUS Status;
 
    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, 0, NULL);
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                              NULL,
+                              NULL);
    Status = ZwOpenKey(&ResourceMapKey, KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, &ObjectAttributes);
    if (!NT_SUCCESS(Status))
    {
@@ -1233,7 +1238,9 @@ IopDetectResourceConflict(
       else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
           KeyInformationLength = RequiredLength;
-          KeyInformation = ExAllocatePool(PagedPool, KeyInformationLength);
+          KeyInformation = ExAllocatePoolWithTag(PagedPool,
+                                                 KeyInformationLength,
+                                                 TAG_IO);
           if (!KeyInformation)
           {
               Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1251,17 +1258,22 @@ IopDetectResourceConflict(
          goto cleanup;
       ChildKeyIndex1++;
       if (!NT_SUCCESS(Status))
+      {
+          ExFreePoolWithTag(KeyInformation, TAG_IO);
           goto cleanup;
+      }
 
       KeyName.Buffer = KeyInformation->Name;
       KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
       InitializeObjectAttributes(&ObjectAttributes,
                                  &KeyName,
-                                 OBJ_CASE_INSENSITIVE,
+                                 OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                  ResourceMapKey,
                                  NULL);
-      Status = ZwOpenKey(&ChildKey2, KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, &ObjectAttributes);
-      ExFreePool(KeyInformation);
+      Status = ZwOpenKey(&ChildKey2,
+                         KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                         &ObjectAttributes);
+      ExFreePoolWithTag(KeyInformation, TAG_IO);
       if (!NT_SUCCESS(Status))
           goto cleanup;
 
@@ -1278,7 +1290,9 @@ IopDetectResourceConflict(
           else if (Status == STATUS_BUFFER_TOO_SMALL)
           {
               KeyInformationLength = RequiredLength;
-              KeyInformation = ExAllocatePool(PagedPool, KeyInformationLength);
+              KeyInformation = ExAllocatePoolWithTag(PagedPool,
+                                                     KeyInformationLength,
+                                                     TAG_IO);
               if (!KeyInformation)
               {
                   Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1296,17 +1310,20 @@ IopDetectResourceConflict(
               goto cleanup;
           ChildKeyIndex2++;
           if (!NT_SUCCESS(Status))
+          {
+              ExFreePoolWithTag(KeyInformation, TAG_IO);
               goto cleanup;
+          }
 
           KeyName.Buffer = KeyInformation->Name;
           KeyName.MaximumLength = KeyName.Length = (USHORT)KeyInformation->NameLength;
           InitializeObjectAttributes(&ObjectAttributes,
                                      &KeyName,
-                                     OBJ_CASE_INSENSITIVE,
+                                     OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                      ChildKey2,
                                      NULL);
           Status = ZwOpenKey(&ChildKey3, KEY_QUERY_VALUE, &ObjectAttributes);
-          ExFreePool(KeyInformation);
+          ExFreePoolWithTag(KeyInformation, TAG_IO);
           if (!NT_SUCCESS(Status))
               goto cleanup;
 
@@ -1323,7 +1340,9 @@ IopDetectResourceConflict(
               else if (Status == STATUS_BUFFER_TOO_SMALL)
               {
                   KeyValueInformationLength = RequiredLength;
-                  KeyValueInformation = ExAllocatePool(PagedPool, KeyValueInformationLength);
+                  KeyValueInformation = ExAllocatePoolWithTag(PagedPool,
+                                                              KeyValueInformationLength,
+                                                              TAG_IO);
                   if (!KeyValueInformation)
                   {
                       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1340,7 +1359,10 @@ IopDetectResourceConflict(
               else
                   goto cleanup;
               if (!NT_SUCCESS(Status))
+              {
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   goto cleanup;
+              }
 
               Status = ZwEnumerateValueKey(ChildKey3,
                                            ChildKeyIndex3,
@@ -1351,7 +1373,9 @@ IopDetectResourceConflict(
               if (Status == STATUS_BUFFER_TOO_SMALL)
               {
                   KeyNameInformationLength = RequiredLength;
-                  KeyNameInformation = ExAllocatePool(PagedPool, KeyNameInformationLength + sizeof(WCHAR));
+                  KeyNameInformation = ExAllocatePoolWithTag(PagedPool,
+                                                             KeyNameInformationLength + sizeof(WCHAR),
+                                                             TAG_IO);
                   if (!KeyNameInformation)
                   {
                       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1367,45 +1391,47 @@ IopDetectResourceConflict(
               }
               else
                   goto cleanup;
-
               ChildKeyIndex3++;
-
               if (!NT_SUCCESS(Status))
+              {
+                  ExFreePoolWithTag(KeyNameInformation, TAG_IO);
                   goto cleanup;
+              }
 
               KeyNameInformation->Name[KeyNameInformation->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
               /* Skip translated entries */
               if (wcsstr(KeyNameInformation->Name, L".Translated"))
               {
-                  ExFreePool(KeyNameInformation);
+                  ExFreePoolWithTag(KeyNameInformation, TAG_IO);
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   continue;
               }
 
-              ExFreePool(KeyNameInformation);
+              ExFreePoolWithTag(KeyNameInformation, TAG_IO);
 
               if (IopCheckForResourceConflict(ResourceList,
                                               (PCM_RESOURCE_LIST)KeyValueInformation->Data,
                                               Silent,
                                               ConflictingDescriptor))
               {
-                  ExFreePool(KeyValueInformation);
+                  ExFreePoolWithTag(KeyValueInformation, TAG_IO);
                   Status = STATUS_CONFLICTING_ADDRESSES;
                   goto cleanup;
               }
 
-              ExFreePool(KeyValueInformation);
+              ExFreePoolWithTag(KeyValueInformation, TAG_IO);
           }
       }
    }
 
 cleanup:
-   if (ResourceMapKey != INVALID_HANDLE_VALUE)
-       ZwClose(ResourceMapKey);
-   if (ChildKey2 != INVALID_HANDLE_VALUE)
-       ZwClose(ChildKey2);
-   if (ChildKey3 != INVALID_HANDLE_VALUE)
-       ZwClose(ChildKey3);
+   if (ResourceMapKey != NULL)
+       ObCloseHandle(ResourceMapKey, KernelMode);
+   if (ChildKey2 != NULL)
+       ObCloseHandle(ChildKey2, KernelMode);
+   if (ChildKey3 != NULL)
+       ObCloseHandle(ChildKey3, KernelMode);
 
    if (Status == STATUS_NO_MORE_ENTRIES)
        Status = STATUS_SUCCESS;

@@ -140,7 +140,7 @@
 @ stub NetDfsSetSecurity
 @ stub NetDfsSetStdContainerSecurity
 @ stub NetEnumerateComputerNames
-@ stub NetEnumerateTrustedDomains
+@ stdcall NetEnumerateTrustedDomains(wstr ptr)
 @ stub NetErrorLogClear
 @ stub NetErrorLogRead
 @ stub NetErrorLogWrite
@@ -183,7 +183,7 @@
 @ stdcall NetQueryDisplayInformation(wstr long long long long ptr ptr)
 @ stub NetRegisterDomainNameChangeNotification
 @ stub NetRemoteComputerSupports
-@ stub NetRemoteTOD
+@ stdcall NetRemoteTOD(wstr ptr)
 @ stub NetRemoveAlternateComputerName
 @ stub NetRenameMachineInDomain
 @ stub NetReplExportDirAdd
@@ -204,7 +204,7 @@
 @ stdcall NetScheduleJobAdd(wstr ptr ptr)
 @ stdcall NetScheduleJobDel(wstr long long)
 @ stdcall NetScheduleJobEnum(wstr ptr long ptr ptr ptr)
-@ stub NetScheduleJobGetInfo
+@ stdcall NetScheduleJobGetInfo(wstr long ptr)
 @ stub NetServerComputerNameAdd
 @ stub NetServerComputerNameDel
 @ stdcall NetServerDiskEnum(wstr long ptr long ptr ptr ptr)
@@ -236,7 +236,7 @@
 @ stub NetUnjoinDomain
 @ stub NetUnregisterDomainNameChangeNotification
 @ stdcall NetUseAdd(wstr long ptr ptr)
-@ stub NetUseDel
+@ stdcall NetUseDel(wstr wstr long)
 @ stdcall NetUseEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetUseGetInfo(ptr ptr long ptr)
 @ stdcall NetUserAdd(wstr long ptr ptr)
@@ -254,13 +254,13 @@
 @ stub NetValidatePasswordPolicy
 @ stub NetValidatePasswordPolicyFree
 @ stdcall NetWkstaGetInfo(wstr long ptr)
-@ stub NetWkstaSetInfo
-@ stub NetWkstaTransportAdd
-@ stub NetWkstaTransportDel
-@ stdcall NetWkstaTransportEnum (wstr long ptr long ptr ptr ptr)
+@ stdcall NetWkstaSetInfo(wstr long ptr ptr)
+@ stdcall NetWkstaTransportAdd(wstr long ptr ptr)
+@ stdcall NetWkstaTransportDel(wstr wstr long)
+@ stdcall NetWkstaTransportEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserGetInfo(wstr long ptr)
-@ stub NetWkstaUserSetInfo
+@ stdcall NetWkstaUserSetInfo(wstr long ptr ptr)
 @ stdcall NetapipBufferAllocate(long ptr) NetApiBufferAllocate
 @ stdcall Netbios(ptr)
 @ stub NetpAccessCheck

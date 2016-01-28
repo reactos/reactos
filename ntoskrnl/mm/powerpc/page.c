@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/i386/page.c
+ * FILE:            ntoskrnl/mm/powerpc/page.c
  * PURPOSE:         Low level memory managment manipulation
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
@@ -72,15 +72,6 @@ VOID
 MiFlushTlb(PULONG Pt, PVOID Address)
 {
     __asm__("tlbi %0" : "=r" (Address));
-}
-
-
-
-PULONG
-MmGetPageDirectory(VOID)
-{
-   unsigned int page_dir=0;
-   return((PULONG)page_dir);
 }
 
 static ULONG
@@ -170,7 +161,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
                        BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -179,16 +170,11 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     ppc_map_info_t info = { 0 };
 
     DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
-           Process, Address, FreePage, WasDirty, Page);
+           Process, Address, WasDirty, Page);
 
     info.proc = Process ? (int)Process->UniqueProcessId : 0;
     info.addr = (vaddr_t)Address;
     MmuInqPage(&info, 1);
-
-    if (FreePage && info.phys)
-    {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, info.phys >> PAGE_SHIFT);
-    }
 
     /*
      * Return some information to the caller
@@ -457,37 +443,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    InterlockedExchange((PLONG)Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
    MiFlushTlb(Pt, Address);
 #endif
-}
-
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(PFN_NUMBER Page)
-{
-    PVOID Address;
-    ppc_map_info_t info = { 0 };
-
-    Address = (PVOID)((ULONG_PTR)HYPERSPACE * PAGE_SIZE);
-    info.proc = 0;
-    info.addr = (vaddr_t)Address;
-    info.flags = MMU_KRW;
-    MmuMapPage(&info, 1);
-
-    return Address;
-}
-
-PFN_NUMBER
-NTAPI
-MmDeleteHyperspaceMapping(PVOID Address)
-{
-    ppc_map_info_t info = { 0 };
-    ASSERT (IS_HYPERSPACE(Address));
-
-    info.proc = 0;
-    info.addr = (vaddr_t)Address;
-
-    MmuUnmapPage(&info, 1);
-
-    return (PFN_NUMBER)info.phys;
 }
 
 VOID

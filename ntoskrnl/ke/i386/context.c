@@ -24,7 +24,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 #ifdef CONFIG_SMP
     LONG SetMember;
-    
+
     /* Update active processor mask */
     SetMember = (LONG)Pcr->SetMember;
     InterlockedXor((PLONG)&NewProcess->ActiveProcessors, SetMember);
@@ -38,13 +38,13 @@ KiSwapProcess(IN PKPROCESS NewProcess,
         UNIMPLEMENTED_DBGBREAK();
         return;
     }
-    
+
     /* Update CR3 */
     __writecr3(NewProcess->DirectoryTableBase[0]);
-    
+
     /* Clear GS */
     Ke386SetGs(0);
-    
+
     /* Update IOPM offset */
     Pcr->TSS->IoMapBase = NewProcess->IopmOffset;
 }

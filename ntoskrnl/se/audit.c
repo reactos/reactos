@@ -644,7 +644,7 @@ SepAccessCheckAndAuditAlarm(
     _SEH2_TRY
     {
         /* Loop all result entries (only 1 when no list was requested) */
-        NT_ASSERT(UseResultList || (ResultListLength == 1));
+        ASSERT(UseResultList || (ResultListLength == 1));
         for (i = 0; i < ResultListLength; i++)
         {
             AccessStatusList[i] = SafeAccessStatusList[i];
@@ -1113,7 +1113,7 @@ NtOpenObjectAuditAlarm(
             /* Allocate a temp buffer */
             CapturedPrivilegeSet = ExAllocatePoolWithTag(PagedPool,
                                                          PrivilegeSetSize,
-                                                         'rPeS');
+                                                         TAG_PRIVILEGE_SET);
             if (CapturedPrivilegeSet == NULL)
             {
                 DPRINT1("Failed to allocate %u bytes\n", PrivilegeSetSize);
@@ -1215,7 +1215,7 @@ Cleanup:
         SeReleaseSecurityDescriptor(CapturedSecurityDescriptor, UserMode, FALSE);
 
     if (CapturedPrivilegeSet != NULL)
-        ExFreePoolWithTag(CapturedPrivilegeSet, 'rPeS');
+        ExFreePoolWithTag(CapturedPrivilegeSet, TAG_PRIVILEGE_SET);
 
     /* Release the security subject context */
     SeReleaseSubjectContext(&SubjectContext);
@@ -1336,7 +1336,7 @@ NtPrivilegedServiceAuditAlarm(
         /* Allocate a temp buffer */
         CapturedPrivileges = ExAllocatePoolWithTag(PagedPool,
                                                    PrivilegesSize,
-                                                   'rPeS');
+                                                   TAG_PRIVILEGE_SET);
         if (CapturedPrivileges == NULL)
         {
             DPRINT1("Failed to allocate %u bytes\n", PrivilegesSize);
@@ -1375,7 +1375,7 @@ Cleanup:
         ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
 
     if (CapturedPrivileges != NULL)
-        ExFreePoolWithTag(CapturedPrivileges, 'rPeS');
+        ExFreePoolWithTag(CapturedPrivileges, TAG_PRIVILEGE_SET);
 
     /* Release the security subject context */
     SeReleaseSubjectContext(&SubjectContext);

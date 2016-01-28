@@ -29,6 +29,9 @@
 /* formerly located in fs/notify.c */
 #define FSRTL_NOTIFY_TAG 'ITON'
 
+/* formerly located in fsrtl/unc.c */
+#define TAG_UNC 'nuSF'
+
 /* formerly located in io/device.c */
 #define TAG_DEVICE_EXTENSION   'TXED'
 #define TAG_SHUTDOWN_ENTRY    'TUHS'
@@ -47,6 +50,7 @@
 #define TAG_FILE_SYSTEM       'SYSF'
 #define TAG_FS_CHANGE_NOTIFY  'NCSF'
 #define IFS_POOL_TAG          'trSF'
+#define TAG_FS_NOTIFICATIONS  'NrSF'
 
 /* formerly located in io/iocomp.c */
 #define IOC_TAG   'TCOI'
@@ -72,7 +76,7 @@
 #define TAG_IOWI 'IWOI'
 
 /* formerly located in io/irp.c */
-#define TAG_IRP      ' PRI'
+#define TAG_IRP      ' prI'
 #define TAG_SYS_BUF  'BSYS'
 
 /* formerly located in io/irq.c */
@@ -80,6 +84,9 @@
 
 /* formerly located in io/mdl.c */
 #define TAG_MDL    ' LDM'
+
+/* formerly located in io/pnpmgr.c */
+#define TAG_IO_DEVNODE 'donD'
 
 /* formerly located in io/pnpnotify.c */
 #define TAG_PNP_NOTIFY  'NPnP'
@@ -161,16 +168,14 @@
 /* formerly located in rtl/handle.c */
 #define TAG_HDTB  'BTDH'
 
-/* formerly located in se/acl.c */
-#define TAG_ACL    'cAeS'
-
-/* formerly located in se/sid.c */
-#define TAG_SID    'iSeS'
-
-/* formerly located in se/sd.c */
-#define TAG_SD     'dSeS'
-
-/* formerly located in se/token.c */
+/* Security Manager Tags */
+#define TAG_SE                '  eS'
+#define TAG_ACL               'cAeS'
+#define TAG_SID               'iSeS'
+#define TAG_SD                'dSeS'
+#define TAG_QOS               'sQeS'
+#define TAG_LUID              'uLeS'
+#define TAG_PRIVILEGE_SET     'rPeS'
 #define TAG_TOKEN_USERS       'uKOT'
 #define TAG_TOKEN_PRIVILAGES  'pKOT'
 #define TAG_TOKEN_ACL         'kDOT'

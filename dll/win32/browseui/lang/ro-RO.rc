@@ -8,12 +8,12 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "Butoane &standard", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
-        MENUITEM "Bara de &adresă", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
-        MENUITEM "Butoane a&drese", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "Butoane st&andard", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Bara de a&dresă", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "Butoane ad&rese", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Fixează panourile de instrumente", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
-        MENUITEM "Parti&cularizare…", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Particularizare…", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Etichete de text", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
         MENUITEM "Butonul de &navigare", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
@@ -32,17 +32,17 @@ BEGIN
     END
     POPUP "&Afișare", FCIDM_MENU_VIEW
     BEGIN
-        POPUP "Ins&trumente", IDM_VIEW_TOOLBARS
+        POPUP "Instru&mente", IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Bară de &stare", IDM_VIEW_STATUSBAR
+        MENUITEM "Bară de st&are", IDM_VIEW_STATUSBAR
         POPUP "Bară de &explorare", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Căutare\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Favorite\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Istoric\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "Ist&oric\tCtrl+H", IDM_EXPLORERBAR_HISTORY
             MENUITEM "&Dosare", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
@@ -53,36 +53,60 @@ BEGIN
             MENUITEM "În&ainte\tAlt+Right Arrow", IDM_GOTO_FORWARD
             MENUITEM "Un nivel în s&us", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Pagină &inițială\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "Pagină i&nițială\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
-        MENUITEM "Î&mprospătare", IDM_VIEW_REFRESH
+        MENUITEM "Împ&rospătare", IDM_VIEW_REFRESH
     END
     POPUP "Fa&vorite", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Adăugare la favorite…", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Organizare favorite…", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Adăugare la „Favorite”…", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizare „Favorite”…", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(gol)", IDM_FAVORITES_EMPTY
     END
-    POPUP "Ins&trumente", FCIDM_MENU_TOOLS
+    POPUP "Instru&mente", FCIDM_MENU_TOOLS
     BEGIN
         MENUITEM "Creare unitate de &rețea…", IDM_TOOLS_MAPNETWORKDRIVE
         MENUITEM "&Debranșare unitate de rețea…", IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Sincronizare…", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "Sincroni&zare…", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Opțiuni de dosar…", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&?", FCIDM_MENU_HELP
+    POPUP "Aj&utor", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Este această copie a ReactOS &legală?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&Este această copie a ReactOS legală?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Despre…", IDM_HELP_ABOUT
     END
 END
 
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "Bare de i&nstrumente", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Birou", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Lansări rapide", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "Bară &nouă…", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
+
 /* Dialogs */
 
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "A&nulează", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
+
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT "Opțiuni de te&xt:", -1, 4, 2, 48, 15
@@ -103,6 +127,8 @@ BEGIN
     "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
     VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
     VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
     "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
     "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
     "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
@@ -113,7 +139,13 @@ END
 
 STRINGTABLE
 BEGIN
-    800 "Conține comenzile de selecțiie."
+    IDS_CANCELLING "Anulare…"
+    IDS_REMAINING  "Rămas"
+END
+
+STRINGTABLE
+BEGIN
+    800 "Conține comenzile de selecție."
 END
 
 STRINGTABLE
@@ -139,7 +171,7 @@ END
 STRINGTABLE
 BEGIN
     9025 "Închide fereastra."
-    9026 "Deplasează în sus cu un nivel."
+    9026 "Un nivel în sus."
 END
 
 STRINGTABLE
@@ -164,8 +196,8 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "Deschide dosarul Favorite."
-    9363 "Adaugă pagina curentă în lista Favorite."
+    9362 "Deschide dosarul „Favorite”."
+    9363 "Adaugă pagina curentă în lista „Favorite”."
 END
 
 STRINGTABLE
@@ -185,12 +217,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9552 "Afișează sau ascunde panoul Explorare."
-    9553 "Afișează panoul Căutare."
-    9554 "Afișează panoul Favorite."
-    9555 "Afișează panoul Istoric."
-    9557 "Afișează panoul Dosare."
-    9559 "Afișează panoul Media."
+    9552 "Afișează sau ascunde panoul „Explorare”."
+    9553 "Afișează panoul „Căutare”."
+    9554 "Afișează panoul „Favorite”."
+    9555 "Afișează panoul „Istoric”."
+    9557 "Afișează panoul „Dosare”."
+    9559 "Afișează panoul „Media”."
 END
 
 STRINGTABLE
@@ -225,7 +257,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT "&Istoric\tCtrl+H"
+    IDS_HISTORYTEXT "Ist&oric\tCtrl+H"
 END
 
 STRINGTABLE
@@ -235,6 +267,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Înapoi"
-    IDS_FORWARD "Înainte"
+    IDS_BACK "Înapoi la %s"
+    IDS_FORWARD "Înainte la %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Dosare|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de dosar||"
 END

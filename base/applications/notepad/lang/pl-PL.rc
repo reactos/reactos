@@ -23,13 +23,12 @@ BEGIN
     POPUP "&Plik"
     BEGIN
         MENUITEM "&Nowy\tCtrl+N", CMD_NEW
-        MENUITEM "&Otwórz\tCtrl+O", CMD_OPEN
-        MENUITEM "&Zapisz\tCtrl+S", CMD_SAVE
+        MENUITEM "&Otwórz...\tCtrl+O", CMD_OPEN
+        MENUITEM "Zapi&sz\tCtrl+S", CMD_SAVE
         MENUITEM "Z&apisz jako...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Ustawienia strony...", CMD_PAGE_SETUP
-        MENUITEM "&Drukuj\tCtrl+P", CMD_PRINT
-        MENUITEM "Ustawienia &drukarki...", CMD_PRINTER_SETUP
+        MENUITEM "&Drukuj...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Zakoń&cz", CMD_EXIT
     END
@@ -44,54 +43,65 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Znajdź\tCtrl+F", CMD_SEARCH
         MENUITEM "Z&najdź następny\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Zamień\tCtrl+H", CMD_REPLACE
-        MENUITEM "Idź do...\tCtrl+G", CMD_GOTO
+        MENUITEM "Za&mień...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Przejdź d&o...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Zaznacz w&szystko\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "Godzina/&Data\tF5", CMD_TIME_DATE
+        MENUITEM "Godzina/&data\tF5", CMD_TIME_DATE
     END
-    POPUP "F&ormat"
+    POPUP "For&mat"
     BEGIN
         MENUITEM "&Zawijanie wierszy", CMD_WRAP
-        MENUITEM "Czci&onka...", CMD_FONT
+        MENUITEM "&Czcionka...", CMD_FONT
     END
-    POPUP "P&odgląd"
+    POPUP "&Widok"
     BEGIN
-        MENUITEM "Pasek &stanu", CMD_STATUSBAR
+        MENUITEM "&Pasek stanu", CMD_STATUSBAR
     END
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "&Tematy pomocy", CMD_HELP_CONTENTS
-        MENUITEM "&Szukaj...", CMD_HELP_SEARCH
-        MENUITEM "Pomo&c", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Notatnik - informacje", CMD_ABOUT
-        MENUITEM "&ReactOS - informacje", CMD_ABOUT_WINE
+        MENUITEM "&ReactOS - informacje", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
 /* Dialog 'Page setup' */
-DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Ustawienia strony"
+CAPTION "Page Setup"
 BEGIN
-    LTEXT "&Nagłówek:", 0x140, 10, 07, 40, 15
-    EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
-    LTEXT "&Stopka:", 0x142, 10, 24, 40, 15
-    EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
-    GROUPBOX "&Marginesy:", 0x144, 10, 43, 160, 45
-    LTEXT "&Lewy:", 0x145, 20, 55, 30, 10, WS_CHILD
-    EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "&Górny:", 0x148, 20, 73, 30, 10, WS_CHILD
-    EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/ 0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "P&rawy:", 0x14B, 100, 55, 30, 10, WS_CHILD
-    EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/ 0x14D, 130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "&Dolny:", 0x14E, 100, 73, 30, 10, WS_CHILD
-    EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150, 130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 180, 3, 40, 15, WS_TABSTOP
-    PUSHBUTTON "Anuluj", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
-    PUSHBUTTON "Pomo&c", IDHELP, 180, 39, 40, 15, WS_TABSTOP
+    GROUPBOX "Podgląd", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "Papier", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Orientacja", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Pomoc", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "Anuluj", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -123,7 +133,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Notatnik ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Notatnik ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL "Notatnik ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "Zamknij", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
@@ -165,4 +175,7 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linia %d, kolumna %d"
+    STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
+
+    STRING_TEXT_DOCUMENT "Text Document"
 END

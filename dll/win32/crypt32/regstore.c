@@ -509,12 +509,12 @@ WINECRYPT_CERTSTORE *CRYPT_RegOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
 
     if (dwFlags & CERT_STORE_DELETE_FLAG)
     {
-        DWORD rc = SHDeleteKeyW((HKEY)pvPara, CertsW);
+        DWORD rc = RegDeleteTreeW((HKEY)pvPara, CertsW);
 
         if (rc == ERROR_SUCCESS || rc == ERROR_NO_MORE_ITEMS)
-            rc = SHDeleteKeyW((HKEY)pvPara, CRLsW);
+            rc = RegDeleteTreeW((HKEY)pvPara, CRLsW);
         if (rc == ERROR_SUCCESS || rc == ERROR_NO_MORE_ITEMS)
-            rc = SHDeleteKeyW((HKEY)pvPara, CTLsW);
+            rc = RegDeleteTreeW((HKEY)pvPara, CTLsW);
         if (rc == ERROR_NO_MORE_ITEMS)
             rc = ERROR_SUCCESS;
         SetLastError(rc);

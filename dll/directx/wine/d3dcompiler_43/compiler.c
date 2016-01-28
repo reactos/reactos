@@ -140,11 +140,12 @@ static void wpp_warning(const char *file, int line, int col, const char *_near,
 static char *wpp_lookup_mem(const char *filename, int type, const char *parent_name,
                             char **include_path, int include_path_count)
 {
-    /* Here we return always ok. We will maybe fail on the next wpp_open_mem */
+    /* We don't check for file existence here. We will potentially fail on
+     * the following wpp_open_mem(). */
     char *path;
     int i;
 
-    TRACE("Looking for include %s.\n", debugstr_a(filename));
+    TRACE("Looking for include %s, parent %s.\n", debugstr_a(filename), debugstr_a(parent_name));
 
     parent_include = NULL;
     if (strcmp(parent_name, initial_filename))
@@ -686,16 +687,23 @@ static HRESULT compile_shader(const char *preproc_shader, const char *target, co
     return S_OK;
 }
 
-HRESULT WINAPI D3DCompile(const void *data, SIZE_T data_size, const char *filename,
+HRESULT WINAPI D3DCompile2(const void *data, SIZE_T data_size, const char *filename,
         const D3D_SHADER_MACRO *defines, ID3DInclude *include, const char *entrypoint,
-        const char *target, UINT sflags, UINT eflags, ID3DBlob **shader, ID3DBlob **error_messages)
+        const char *target, UINT sflags, UINT eflags, UINT secondary_flags,
+        const void *secondary_data, SIZE_T secondary_data_size, ID3DBlob **shader,
+        ID3DBlob **error_messages)
 {
     HRESULT hr;
 
     TRACE("data %p, data_size %lu, filename %s, defines %p, include %p, entrypoint %s,\n"
-            "target %s, sflags %#x, eflags %#x, shader %p, error_messages %p\n",
+            "target %s, sflags %#x, eflags %#x, secondary_flags %#x, secondary_data %p,\n"
+            "secondary_data_size %lu, shader %p, error_messages %p\n",
             data, data_size, debugstr_a(filename), defines, include, debugstr_a(entrypoint),
-            debugstr_a(target), sflags, eflags, shader, error_messages);
+            debugstr_a(target), sflags, eflags, secondary_flags, secondary_data,
+            secondary_data_size, shader, error_messages);
+
+    if (secondary_data)
+        FIXME("secondary data not implemented yet\n");
 
     if (shader) *shader = NULL;
     if (error_messages) *error_messages = NULL;
@@ -709,6 +717,19 @@ HRESULT WINAPI D3DCompile(const void *data, SIZE_T data_size, const char *filena
     HeapFree(GetProcessHeap(), 0, wpp_output);
     LeaveCriticalSection(&wpp_mutex);
     return hr;
+}
+
+HRESULT WINAPI D3DCompile(const void *data, SIZE_T data_size, const char *filename,
+        const D3D_SHADER_MACRO *defines, ID3DInclude *include, const char *entrypoint,
+        const char *target, UINT sflags, UINT eflags, ID3DBlob **shader, ID3DBlob **error_messages)
+{
+    TRACE("data %p, data_size %lu, filename %s, defines %p, include %p, entrypoint %s,\n"
+            "target %s, sflags %#x, eflags %#x, shader %p, error_messages %p\n",
+            data, data_size, debugstr_a(filename), defines, include, debugstr_a(entrypoint),
+            debugstr_a(target), sflags, eflags, shader, error_messages);
+
+    return D3DCompile2(data, data_size, filename, defines, include, entrypoint, target, sflags,
+            eflags, 0, NULL, 0, shader, error_messages);
 }
 
 HRESULT WINAPI D3DPreprocess(const void *data, SIZE_T size, const char *filename,
@@ -755,5 +776,14 @@ HRESULT WINAPI D3DDisassemble(const void *data, SIZE_T size, UINT flags, const c
 {
     FIXME("data %p, size %lu, flags %#x, comments %p, disassembly %p stub!\n",
             data, size, flags, comments, disassembly);
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI D3DCompileFromFile(const WCHAR *filename, const D3D_SHADER_MACRO *defines, ID3DInclude *includes,
+        const char *entrypoint, const char *target, UINT flags1, UINT flags2, ID3DBlob **code, ID3DBlob **errors)
+{
+    FIXME("filename %s, defines %p, includes %p, entrypoint %s, target %s, flags1 %x, flags2 %x, code %p, errors %p\n",
+            debugstr_w(filename), defines, includes, debugstr_a(entrypoint), debugstr_a(target), flags1, flags2, code, errors);
+
     return E_NOTIMPL;
 }

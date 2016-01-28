@@ -4,7 +4,7 @@
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
  * Copyright 2008 Michael Stefaniuc
- *           2012 Fulea Ștefan
+ *           2012 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ Doriți să îl suprascrieți?"
                           / : < > |"
     IDS_PATHNOTEXISTING         "Calea nu există"
     IDS_FILENOTEXISTING         "Fișierul nu există"
+    IDS_INVALID_FOLDERNAME  "Selecția nu conține un dosar"
 }
 
 STRINGTABLE
@@ -65,8 +66,8 @@ Introduceți un număr între 1 și %d."
     PD32_CANT_FIND_PRINTER  "Nu se poate găsi imprimanta."
     PD32_OUT_OF_MEMORY      "Memorie insuficientă."
     PD32_GENERIC_ERROR      "S-a produs o eroare."
-    PD32_DRIVER_UNKNOWN     "Modulul pilot de imprimantă este necunoscut."
-    PD32_NO_DEVICES         "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei ca spre exemplu accesarea opțiunilor de pagină sau imprimarea unui document. Instalați o imprimantă apoi reîncercați."
+    PD32_DRIVER_UNKNOWN     "Modulul-pilot de imprimantă este necunoscut."
+    PD32_NO_DEVICES         "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei (cum ar fi accesarea opțiunilor de pagină sau imprimarea unui document). Instalați o imprimantă apoi reîncercați."
 
     PD32_DEFAULT_PRINTER                  "Imprimantă implicită; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d documente sunt în coadă"
@@ -134,10 +135,11 @@ STRINGTABLE
 {
     IDS_FONT_SIZE   "Alegeți o mărime de font între %d și %d puncte."
     IDS_SAVE_BUTTON "&Păstrează"
-    IDS_SAVE_IN     "Pă&strează în:"
+    IDS_SAVE_IN     "Păst&rează în:"
     IDS_SAVE        "Păstrare"
     IDS_SAVE_AS     "Păstrare în:"
     IDS_OPEN_FILE   "Deschidere fișier"
+    IDS_SELECT_FOLDER "Selecează dosar"
 }
 
 /*
@@ -145,7 +147,7 @@ STRINGTABLE
  */
 
 OPEN_FILE DIALOG 36, 24, 275, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Deschidere fișier"
 FONT 8, "MS Shell Dlg"
 {
@@ -155,7 +157,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT          "Dos&ar:",          -1, 110, 6, 92, 9
  LTEXT          "",                 stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX                            lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT          "&Tip de fișier:",  stc2, 6, 104, 90, 9
+ LTEXT          "Tip de &fișier:",  stc2, 6, 104, 90, 9
  COMBOBOX                           cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT          "Dis&curi:",        stc4, 110, 104, 92, 9
  COMBOBOX                           cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -167,7 +169,7 @@ FONT 8, "MS Shell Dlg"
 
 
 SAVE_FILE DIALOG 36, 24, 275, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Păstrare fișier"
 FONT 8, "MS Shell Dlg"
 {
@@ -177,7 +179,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT          "Dos&ar:",          -1, 110, 6, 92, 9
  LTEXT          "",                 stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX                            lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT          "&Tip de fișier:",  stc2, 6, 104, 90, 9
+ LTEXT          "Tip de &fișier:",  stc2, 6, 104, 90, 9
  COMBOBOX                           cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT          "Dis&curi:",        stc4, 110, 104, 92, 9
  COMBOBOX                           cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -189,30 +191,30 @@ FONT 8, "MS Shell Dlg"
 
 
 PRINT DIALOG 36, 24, 264, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Imprimare"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT          "Imprimantă:",             stc1, 6, 6, 40, 9
  LTEXT          "",                        stc2, 60, 6, 150, 9
  GROUPBOX       "Volumul de imprimare",    grp1, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON    "&Tot",                    rad1, 16, 45, 60, 12
- RADIOBUTTON    "&Selecția",               rad2, 16, 60, 60, 12
+ RADIOBUTTON    "T&ot",                    rad1, 16, 45, 60, 12
+ RADIOBUTTON    "S&elecția",               rad2, 16, 60, 60, 12
  RADIOBUTTON    "&Paginile",               rad3, 16, 75, 60, 12
- DEFPUSHBUTTON  "&Imprimă",                IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON  "I&mprimă",                IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON     "A&nulează",               IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON     "&Opțiuni…",               psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON     "Opți&uni…",               psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT          "&De la:",                 stc3, 60, 80, 30, 9
  LTEXT          "&La:",                    stc4, 120, 80, 30, 9
  LTEXT          "&Calitatea imprimării:",  stc5, 6, 100, 76, 9
  COMBOBOX                                  cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX       "Tipă&rește în fișier",    chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX       "Co&mprimat",              chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX       "Imp&rimă în fișier",      chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX       "Comprim&at",              chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG 36, 24, 264, 134
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opțiuni de imprimare"
 FONT 8, "MS Shell Dlg"
 {
@@ -238,17 +240,17 @@ FONT 8, "MS Shell Dlg"
 
 
 CHOOSE_FONT DIALOG  13, 54, 274, 147
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Font"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "F&ont:",       stc1 ,6,3,90,9
+    LTEXT           "N&ume font:",       stc1 ,6,3,90,9
     COMBOBOX                        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Stil font:",  stc2 ,108,3,60,9
+    LTEXT           "Stil f&ont:",  stc2 ,108,3,60,9
     COMBOBOX                        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "Mă&rime:",     stc3,179,3,32,9
+    LTEXT           "&Dimensiune:", stc3,179,3,32,9
     COMBOBOX                        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "Con&firmă",    IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
@@ -256,21 +258,21 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Aplică",      psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Manual…",     pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Efecte",       grp1,6,72,84,36,WS_GROUP
-    CHECKBOX        "&Tăiat",       chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX        "S&ubliniat",   chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    CHECKBOX        "T&rasat",      chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX        "Su&bliniat",   chx2, 10,94,78,10, BS_AUTOCHECKBOX
     LTEXT           "&Culoare:",    stc4 ,6,114,80,9
     COMBOBOX                        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                                     CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Mostră",       grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",     stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt:",     stc7 ,98,114,40,9
+    LTEXT           "Sist&em de scriere:", stc7 ,98,114,40,9
     COMBOBOX                        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
                                     CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
 
 CHOOSE_COLOR DIALOG 36, 24, 320, 185
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Culoare"
 FONT 8, "MS Shell Dlg"
 {
@@ -281,13 +283,13 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT                                  706, 295,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  RTEXT          "&Verde:",                 727/*1095*/,262,140,30,10
  EDITTEXT                                  707, 295,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "&Albastru:",              728 /*1096*/,262,154,30,10
+ RTEXT          "Al&bastru:",              728 /*1096*/,262,154,30,10
  EDITTEXT                                  708, 295,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  RTEXT          "N&uanță:",                723 /*1091*/,194,126,40,10
  EDITTEXT                                  703, 236,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "Sa&turație:",             724 /*1092*/,194,140,40,10
+ RTEXT          "S&aturație:",             724 /*1092*/,194,140,40,10
  EDITTEXT                                  704, 236,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "&Strălucire:",            725 /*1093*/,194,154,40,10
+ RTEXT          "St&rălucire:",            725 /*1093*/,194,154,40,10
  EDITTEXT                                  705, 236,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL        "",                        720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL        "",                        721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -304,7 +306,7 @@ FONT 8, "MS Shell Dlg"
 
 
 FINDDLGORD DIALOG 36, 24, 236, 62
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Căutare"
 FONT 8, "MS Shell Dlg"
 {
@@ -323,7 +325,7 @@ FONT 8, "MS Shell Dlg"
 
 
 REPLACEDLGORD DIALOG 36, 24, 276, 94
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Înlocuire"
 FONT 8, "MS Shell Dlg"
 {
@@ -343,8 +345,8 @@ FONT 8, "MS Shell Dlg"
 
 
 PRINT32 DIALOG  32, 32, 288, 186
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
-      DS_CONTEXTHELP | DS_3DLOOK
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
 CAPTION "Imprimare"
 FONT 8, "MS Shell Dlg"
 {
@@ -353,8 +355,8 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Manual…",              pshHelp,  50, 161, 50,14, WS_GROUP
 
     GROUPBOX        "Imprimantă",            grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "&Imprimă în fișier",    chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "&Opțiuni…",             psh2, 212, 17,  60,14, WS_GROUP
+    CONTROL         "Imp&rimă în fișier",    chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "Opți&uni…",             psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "N&ume:",                stc6,  16, 20,  36,8
     COMBOBOX                                 cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stare:",                stc8,  16, 36,  47,10, SS_NOPREFIX
@@ -373,9 +375,9 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                                 edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Volumul de imprimare",  grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Tot",                  rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "T&ot",                  rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
     CONTROL         "&Paginile",             rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Selecția",             rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    CONTROL         "S&elecția",             rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                                 edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                                 edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&De la:",               stc2,  52,124,  20,8
@@ -383,7 +385,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 CAPTION "Opțiuni de imprimare"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -407,7 +409,7 @@ BEGIN
     GROUPBOX        "Hârtie",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "&Mărime:",        stc2,  16,108,  36, 8
     COMBOBOX                           cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Sursă:",         stc3,  16,128,  36, 8
+    LTEXT           "S&ursă:",         stc3,  16,128,  36, 8
     COMBOBOX                           cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "Orientare",       grp1, 180, 92, 100,56, WS_GROUP
@@ -417,7 +419,7 @@ BEGIN
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Formare pagină"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -425,15 +427,15 @@ BEGIN
   CONTROL          "",              rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL          "",              rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX         "Hârtie",        grp2, 8, 96, 224, 56, BS_GROUPBOX
-  LTEXT            "&Mărime:",      stc2, 16, 112, 36, 8
+  LTEXT            "Mărim&e:",      stc2, 16, 112, 36, 8
   COMBOBOX                          cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   LTEXT            "Se&rtar:",      stc3, 16, 132, 36, 8
   COMBOBOX                          cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX         "Orientare",     grp1, 8, 156, 64, 56, BS_GROUPBOX
   AUTORADIOBUTTON  "&Portret",      rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON  "P&eisaj",       rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON  "&Peisaj",       rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX         "Margini",       grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT            "&Stânga:",      stc15, 88, 172, 30, 8
+  LTEXT            "Stâng&a:",      stc15, 88, 172, 30, 8
   EDITTEXT                          edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT            "&Dreapta:",     stc16, 159, 172, 30, 8
   EDITTEXT                          edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
@@ -443,11 +445,11 @@ BEGIN
   EDITTEXT                          edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON    "Con&firmă",     IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON       "A&nulează",     IDCANCEL, 126, 220, 50, 14
-  PUSHBUTTON       "&Imprimantă…",  psh3, 182, 220, 50, 14
+  PUSHBUTTON       "I&mprimantă…",  psh3, 182, 220, 50, 14
 END
 
 NEWFILEOPENORD DIALOG 0, 0, 280, 164
-STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
 CAPTION "Deschidere fișier"
 FONT 8, "MS Shell Dlg"
 {
@@ -461,7 +463,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                           IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
     CONTROL     "",                    cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
 
-    LTEXT       "&Tip de fișier:",     IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    LTEXT       "Tip de &fișier:",     IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX                           IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL     "Nem&odificabil",      IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
@@ -472,15 +474,15 @@ FONT 8, "MS Shell Dlg"
 }
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
-STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
       WS_THICKFRAME
 CAPTION "Deschide"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "Nume &fișier:",   IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    LTEXT           "N&ume fișier:",   IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
     EDITTEXT                           IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
-    LTEXT           "&Tip de fișier:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    LTEXT           "Tip de &fișier:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
     COMBOBOX                           IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
                                        CBS_HASSTRINGS | CBS_DROPDOWNLIST
 

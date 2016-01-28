@@ -267,6 +267,19 @@ KeFlushProcessTb(VOID)
 }
 
 FORCEINLINE
+VOID
+KeSweepICache(IN PVOID BaseAddress,
+              IN SIZE_T FlushSize)
+{
+    //
+    // Always sweep the whole cache
+    //
+    UNREFERENCED_PARAMETER(BaseAddress);
+    UNREFERENCED_PARAMETER(FlushSize);
+    __wbinvd();
+}
+
+FORCEINLINE
 PRKTHREAD
 KeGetCurrentThread(VOID)
 {
@@ -504,12 +517,19 @@ VOID
 NTAPI
 KiDispatchExceptionFromTrapFrame(
     IN NTSTATUS Code,
+    IN ULONG Flags,
     IN ULONG_PTR Address,
     IN ULONG ParameterCount,
     IN ULONG_PTR Parameter1,
     IN ULONG_PTR Parameter2,
     IN ULONG_PTR Parameter3,
     IN PKTRAP_FRAME TrapFrame
+);
+
+NTSTATUS
+NTAPI
+KiConvertToGuiThread(
+    VOID
 );
 
 //
@@ -528,7 +548,6 @@ extern ULONG KeI386FxsrPresent;
 extern ULONG KiMXCsrMask;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
-extern ULONG Ke386CacheAlignment;
 extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
@@ -540,7 +559,6 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID NTAPI ExpInterlockedPopEntrySListResume(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
-extern VOID __cdecl FrRestore(VOID);
 extern CHAR KiSystemCallExitBranch[];
 extern CHAR KiSystemCallExit[];
 extern CHAR KiSystemCallExit2[];
@@ -623,7 +641,7 @@ KiDispatchException0Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 0, 0, 0, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 0, 0, 0, 0, TrapFrame);
 }
 
 //
@@ -638,7 +656,7 @@ KiDispatchException1Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 1, P1, 0, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 1, P1, 0, 0, TrapFrame);
 }
 
 //
@@ -654,7 +672,7 @@ KiDispatchException2Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 2, P1, P2, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 2, P1, P2, 0, TrapFrame);
 }
 
 //
@@ -763,55 +781,6 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
         }
     }
 }
-
-//
-// Converts a base thread to a GUI thread
-//
-#ifdef __GNUC__
-FORCEINLINE
-NTSTATUS
-KiConvertToGuiThread(VOID)
-{
-    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
-    NTSTATUS Result;
-    PVOID StackFrame;
-
-    /*
-     * Converting to a GUI thread safely updates ESP in-place as well as the
-     * current Thread->TrapFrame and EBP when KeSwitchKernelStack is called.
-     *
-     * However, PsConvertToGuiThread "helpfully" restores EBP to the original
-     * caller's value, since it is considered a nonvolatile register. As such,
-     * as soon as we're back after the conversion and we try to store the result
-     * which will probably be in some stack variable (EBP-based), we'll crash as
-     * we are touching the de-allocated non-expanded stack.
-     *
-     * Thus we need a way to update our EBP before EBP is touched, and the only
-     * way to guarantee this is to do the call itself in assembly, use the EAX
-     * register to store the result, fixup EBP, and then let the C code continue
-     * on its merry way.
-     *
-     */
-    __asm__ __volatile__
-    (
-        "movl %%ebp, %1\n\t"
-        "subl %%esp, %1\n\t"
-        "call _PsConvertToGuiThread@0\n\t"
-        "addl %%esp, %1\n\t"
-        "movl %1, %%ebp"
-        : "=a"(Result), "=r"(StackFrame)
-        : "p"(PsConvertToGuiThread)
-        : "%esp", "%ecx", "%edx", "memory"
-    );
-    return Result;
-}
-#elif defined(_MSC_VER)
-NTSTATUS
-NTAPI
-KiConvertToGuiThread(VOID);
-#else
-#error Unknown Compiler
-#endif
 
 //
 // Switches from boot loader to initial kernel stack

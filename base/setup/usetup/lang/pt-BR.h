@@ -157,49 +157,19 @@ static MUI_ENTRY ptBRIntroPageEntries[] =
     },
     {
         8,
-        13,
-        "- O instalador n∆o suporta mais de uma partiá∆o prim†ria por disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- O instalador n∆o pode excluir uma partiá∆o prim†ria de um disco",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  se houverem partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- O instalador n∆o pode remover a primeira partiá∆o estendida de um",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  disco se existirem outras partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
+        12,
         "- O instalador suporta somente o sistema de arquivos FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        13,
         "- O verificador de integridade de sistema de arquivos ainda n∆o est†",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "  implementado.",
         TEXT_STYLE_NORMAL
     },
@@ -503,6 +473,7 @@ static MUI_ENTRY ptBRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ptBRComputerPageEntries[] =
 {
     {
@@ -851,6 +822,12 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Para excluir a partiá∆o selecionada, pressione D.",
         TEXT_STYLE_NORMAL
     },
@@ -858,6 +835,100 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
         0,
         0,
         "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptBRConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaá∆o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1531,8 +1602,16 @@ MUI_ERROR ptBRErrorEntries[] =
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "N∆o h† espaáo suficiente na partiá∆o selecionada.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
     },
@@ -1550,17 +1629,11 @@ MUI_ERROR ptBRErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1609,6 +1682,10 @@ MUI_PAGE ptBRPages[] =
     {
         SELECT_PARTITION_PAGE,
         ptBRSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        ptBRConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1698,6 +1775,10 @@ MUI_STRING ptBRStrings[] =
     "Esta partiá∆o ser† formatada logo em seguida."},
     {STRING_NONFORMATTEDPART,
     "Vocà solicitou instalar o ReactOS em uma partiá∆o nova ou sem formato."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na partiá∆o"},
     {STRING_CHECKINGPART,
@@ -1761,7 +1842,7 @@ MUI_STRING ptBRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipo %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %S"},
     {STRING_HDDINFOUNK6,

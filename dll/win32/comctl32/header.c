@@ -319,12 +319,16 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
     INT  oldBkMode;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
     NMCUSTOMDRAW nmcd;
+    int state = 0;
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, (infoPtr->nNotifyFormat == NFR_UNICODE));
 
     r = phdi->rect;
     if (r.right - r.left == 0)
 	return phdi->rect.right;
+
+    if (theme)
+        state = (phdi->bDown) ? HIS_PRESSED : (bHotTrack ? HIS_HOT : HIS_NORMAL);
 
     /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
     SetTextColor(hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
@@ -378,10 +382,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
         if (ret) return phdi->rect.right;
     }
     else
-    {
-        HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
         HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
-    }
 
     if (phdi->bDown) {
         r.left += 2;
@@ -399,7 +400,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	BITMAP bmp;
 
         HEADER_PrepareCallbackItems(infoPtr, iItem, HDI_TEXT|HDI_IMAGE);
-	cw = tw = iw = bw = 0;
+        cw = iw = bw = 0;
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 
@@ -407,8 +408,14 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    RECT textRect;
 
             SetRectEmpty(&textRect);
-	    DrawTextW (hdc, phdi->pszText, -1,
-	               &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+
+	    if (theme) {
+		GetThemeTextExtent(theme, hdc, HP_HEADERITEM, state, phdi->pszText, -1,
+		    DT_LEFT|DT_VCENTER|DT_SINGLELINE, NULL, &textRect);
+	    } else {
+		DrawTextW (hdc, phdi->pszText, -1,
+			&textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+	    }
 	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
 	}
 
@@ -501,8 +508,14 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    oldBkMode = SetBkMode(hdc, TRANSPARENT);
 	    r.left  = tx;
 	    r.right = tx + tw;
-	    DrawTextW (hdc, phdi->pszText, -1,
-	               &r, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
+	    if (theme) {
+		DrawThemeText(theme, hdc, HP_HEADERITEM, state, phdi->pszText,
+			    -1, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE,
+			    0, &r);
+	    } else {
+		DrawTextW (hdc, phdi->pszText, -1,
+			&r, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
+	    }
 	    if (oldBkMode != TRANSPARENT)
 	        SetBkMode(hdc, oldBkMode);
         }

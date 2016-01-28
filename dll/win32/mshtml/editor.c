@@ -43,7 +43,6 @@
 #define NSCMD_OL           "cmd_ol"
 #define NSCMD_OUTDENT      "cmd_outdent"
 #define NSCMD_PASTE        "cmd_paste"
-#define NSCMD_SELECTALL           "cmd_selectAll"
 #define NSCMD_SELECTBEGINLINE     "cmd_selectBeginLine"
 #define NSCMD_SELECTBOTTOM        "cmd_selectBottom"
 #define NSCMD_SELECTCHARNEXT      "cmd_selectCharNext"
@@ -246,7 +245,7 @@ static void remove_child_attr(nsIDOMElement *elem, LPCWSTR tag, nsAString *attr_
 static void get_font_size(HTMLDocument *This, WCHAR *ret)
 {
     nsISelection *nsselection = get_ns_selection(This);
-    nsIDOMElement *elem = NULL;
+    nsIDOMHTMLElement *elem = NULL;
     nsIDOMNode *node = NULL, *tmp_node;
     nsAString tag_str;
     LPCWSTR tag;
@@ -267,36 +266,29 @@ static void get_font_size(HTMLDocument *This, WCHAR *ret)
             break;
 
         if(node_type == ELEMENT_NODE) {
-            nsIDOMNode_QueryInterface(node, &IID_nsIDOMElement, (void**)&elem);
+            nsIDOMNode_QueryInterface(node, &IID_nsIDOMHTMLElement, (void**)&elem);
 
             nsAString_Init(&tag_str, NULL);
-            nsIDOMElement_GetTagName(elem, &tag_str);
+            nsIDOMHTMLElement_GetTagName(elem, &tag_str);
             nsAString_GetData(&tag_str, &tag);
 
             if(!strcmpiW(tag, fontW)) {
-                nsAString size_str, val_str;
-                LPCWSTR val;
+                nsAString val_str;
+                const PRUnichar *val;
 
                 TRACE("found font tag %p\n", elem);
 
-                nsAString_InitDepend(&size_str, sizeW);
-                nsAString_Init(&val_str, NULL);
-
-                nsIDOMElement_GetAttribute(elem, &size_str, &val_str);
-                nsAString_GetData(&val_str, &val);
-
+                get_elem_attr_value(elem, sizeW, &val_str, &val);
                 if(*val) {
                     TRACE("found size %s\n", debugstr_w(val));
                     strcpyW(ret, val);
                 }
 
-                nsAString_Finish(&size_str);
                 nsAString_Finish(&val_str);
             }
 
             nsAString_Finish(&tag_str);
-
-            nsIDOMElement_Release(elem);
+            nsIDOMHTMLElement_Release(elem);
         }
 
         if(*ret)
@@ -639,20 +631,6 @@ static HRESULT exec_font(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARI
 
     FIXME("(%p)->(%p %p)\n", This, in, out);
     return E_NOTIMPL;
-}
-
-static HRESULT exec_selectall(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)
-{
-    TRACE("(%p)\n", This);
-
-    if(in || out)
-        FIXME("unsupported args\n");
-
-    if(This->doc_obj->nscontainer)
-        do_ns_command(This, NSCMD_SELECTALL, NULL);
-
-    update_doc(This, UPDATE_UI);
-    return S_OK;
 }
 
 static HRESULT exec_bold(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)
@@ -1160,13 +1138,14 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
 
     /* create an element with text of URL */
     if (insert_link_at_caret) {
-        nsIDOMNode *text_node, *unused_node;
+        nsIDOMNode *unused_node;
+        nsIDOMText *text_node;
 
-        nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, (nsIDOMText **)&text_node);
+        nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, &text_node);
 
         /* wrap the <a> tags around the text element */
-        nsIDOMHTMLElement_AppendChild(anchor_elem, text_node, &unused_node);
-        nsIDOMNode_Release(text_node);
+        nsIDOMHTMLElement_AppendChild(anchor_elem, (nsIDOMNode*)text_node, &unused_node);
+        nsIDOMText_Release(text_node);
         nsIDOMNode_Release(unused_node);
     }
 
@@ -1197,19 +1176,10 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     return hres;
 }
 
-static HRESULT query_selall_status(HTMLDocument *This, OLECMD *cmd)
-{
-    TRACE("(%p)->(%p)\n", This, cmd);
-
-    cmd->cmdf = OLECMDF_SUPPORTED|OLECMDF_ENABLED;
-    return S_OK;
-}
-
 const cmdtable_t editmode_cmds[] = {
     {IDM_DELETE,          query_edit_status,    exec_delete},
     {IDM_FONTNAME,        query_edit_status,    exec_fontname},
     {IDM_FONTSIZE,        query_edit_status,    exec_fontsize},
-    {IDM_SELECTALL,       query_selall_status , exec_selectall},
     {IDM_FORECOLOR,       query_edit_status,    exec_forecolor},
     {IDM_BOLD,            query_edit_status,    exec_bold},
     {IDM_ITALIC,          query_edit_status,    exec_italic},

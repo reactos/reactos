@@ -9,21 +9,28 @@
 
 #include "winnls/locale_rc.rc"
 
+/* FIXME */
+#define NLSRC_OFFSET 5000
+
 /* UTF-8 */
 #pragma code_page(65001)
-
+#ifdef LANGUAGE_CS_CZ
+    #include "winnls/lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "winnls/lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "winnls/lang/en-US.rc"
 #endif
-#pragma code_page(65001)
 #ifdef LANGUAGE_ES_ES
     #include "winnls/lang/es-ES.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "winnls/lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "winnls/lang/it-IT.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "winnls/lang/ro-RO.rc"
@@ -36,4 +43,7 @@
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "winnls/lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "winnls/lang/zh-CN.rc"
 #endif

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/irql.c
+ * FILE:            hal/halppc/generic/irql.c
  * PURPOSE:         Implements IRQLs
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  */

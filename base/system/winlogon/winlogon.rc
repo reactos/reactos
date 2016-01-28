@@ -12,6 +12,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_WINLOGON ICON "res/winlogon.ico"
 
+#include <reactos/manifest_exe.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -54,6 +56,9 @@ IDI_WINLOGON ICON "res/winlogon.ico"
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
@@ -89,4 +94,7 @@ IDI_WINLOGON ICON "res/winlogon.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

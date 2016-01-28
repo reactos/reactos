@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -53,8 +53,8 @@ BEGIN
     LTEXT "&Kullanmak istediğiniz Evrenlik Kodlu olmayan izlencelerin dil sürümünü karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
     GROUPBOX "Kod Sayfası Dönüştürme Çizelgesi", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Ön Tanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 30
-    CHECKBOX "&Tüm Ayarları Şimdiki Kullanıcı Hesâbına Ön Tanımlılara Uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Ön Tanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 32
+    CHECKBOX "&Tüm Ayarları Şimdiki Kullanıcı Hesâbına Ön Tanımlılara Uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -192,6 +192,14 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Bölgelik Ayarlar"
     IDS_CPLDESCRIPTION "Dilleri ve sayı, para birimi, saat ve târih biçimlerini seçer."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Ön Tanımlı Ayarları Değiştir"
+    IDS_APPLY_DEFAULT_TEXT "Ayarlar ön tanımlı kullanıcı hesâbına uygulanacaktır.\n\n\
+Bu değişiklikler oturum açma görüntülüğüne ve yeni kullanıcı hesaplarına uygulanır.\n\
+Değişikliklerin birtakım dizge hizmetlerine uygulanması için bilgisayar yeniden başlatılmalıdır."
 END
 
 STRINGTABLE

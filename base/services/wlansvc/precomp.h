@@ -12,4 +12,13 @@
 #include <winsvc.h>
 #include <wlansvc_s.h>
 
+#include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
+
+typedef struct _WLANSVCHANDLE
+{
+    LIST_ENTRY WlanSvcHandleListEntry;
+    DWORD      dwClientVersion;
+} WLANSVCHANDLE, *PWLANSVCHANDLE;
+
 #endif /* _WLANSVC_PCH_ */

@@ -54,6 +54,7 @@ static const WCHAR EVENTLOG_BASE_KEY[]       = L"SYSTEM\\CurrentControlSet\\Serv
 #define EVENT_PARAMETER_MESSAGE_FILE    L"ParameterMessageFile"
 
 #define MAX_LOADSTRING 255
+#define ENTRY_SIZE 2056
 
 /* Globals */
 HINSTANCE hInst;                            /* current instance */
@@ -116,7 +117,7 @@ wWinMain(HINSTANCE hInstance,
         return FALSE;
     }
 
-    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_EVENTVWR));
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_EVENTVWR));
 
     /* Main message loop: */
     while (GetMessageW(&msg, NULL, 0, 0))
@@ -520,7 +521,7 @@ BOOL
 QueryEventMessages(LPWSTR lpMachineName,
                    LPWSTR lpLogName)
 {
-    HWND hwndDlg;
+    HWND hwndDlg = NULL;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
@@ -575,13 +576,13 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     if (dwTotalRecords > 0)
     {
-        EnableMenuItem(hMainMenu, ID_CLEAR_EVENTS, MF_BYCOMMAND | MF_ENABLED);
-        EnableMenuItem(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_ENABLED);
     }
     else
     {
-        EnableMenuItem(hMainMenu, ID_CLEAR_EVENTS, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_GRAYED);
     }
 
     g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(PVOID));
@@ -599,7 +600,7 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     while (dwCurrentRecord < dwTotalRecords)
     {
-        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD) * dwTotalRecords);
+        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD));
         g_RecordPtrs[dwCurrentRecord] = pevlr;
 
         bResult = ReadEventLog(hEventLog,  // Event log handle
@@ -646,7 +647,7 @@ QueryEventMessages(LPWSTR lpMachineName,
             GetEventUserName(pevlr, szUsername);
 
             GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, MAX_PATH);
-            GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, szLocalTime, MAX_PATH);
+            GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, MAX_PATH);
 
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(lpLogName, lpSourceName, pevlr, szCategory);
@@ -713,7 +714,8 @@ QueryEventMessages(LPWSTR lpMachineName,
     }
 
     // All events loaded
-    EndDialog(hwndDlg, 0);
+    if(hwndDlg)
+        EndDialog(hwndDlg, 0);
 
     StringCchPrintfExW(szWindowTitle,
                        sizeof(szWindowTitle) / sizeof(WCHAR),
@@ -722,7 +724,7 @@ QueryEventMessages(LPWSTR lpMachineName,
                        0,
                        szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
     /* lpComputerName can be NULL here if no records was read */
-    dwMaxLength = cchRemaining;
+    dwMaxLength = (DWORD)cchRemaining;
     if (!lpComputerName)
         GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
     else
@@ -798,7 +800,6 @@ ClearEvents(VOID)
         case IDCANCEL:
         {
             return FALSE;
-            break;
         }
 
         case IDNO:
@@ -851,7 +852,6 @@ MyRegisterClass(HINSTANCE hInstance)
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
-
     wcex.style = 0;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
@@ -860,9 +860,14 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EVENTVWR));
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCE(IDC_EVENTVWR);
+    wcex.lpszMenuName = MAKEINTRESOURCE(IDM_EVENTVWR);
     wcex.lpszClassName = szWindowClass;
-    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hIconSm = (HICON)LoadImage(hInstance,
+                                    MAKEINTRESOURCE(IDI_EVENTVWR),
+                                    IMAGE_ICON,
+                                    16,
+                                    16,
+                                    LR_SHARED);
 
     return RegisterClassExW(&wcex);
 }
@@ -876,7 +881,7 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
     WCHAR *KeyPath;
     WCHAR szModuleName[MAX_PATH];
     DWORD cbData;
-    DWORD cbKeyPath;
+    SIZE_T cbKeyPath;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -912,7 +917,7 @@ GetDisplayNameID(IN LPCWSTR lpLogName)
     WCHAR *KeyPath;
     DWORD dwMessageID = 0;
     DWORD cbData;
-    DWORD cbKeyPath;
+    SIZE_T cbKeyPath;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -1002,11 +1007,11 @@ BuildLogList(void)
 
                 if (lpDisplayName)
                 {
-                    InsertMenuW(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
+                    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
                 }
                 else
                 {
-                    InsertMenuW(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
+                    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
                 }
 
                 LocalFree(lpDisplayName);
@@ -1014,7 +1019,7 @@ BuildLogList(void)
         }
     }
 
-    InsertMenuW(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
+    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
 
     RegCloseKey(hKey);
 
@@ -1107,7 +1112,7 @@ InitInstance(HINSTANCE hInstance,
     // Create the ImageList
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                               GetSystemMetrics(SM_CYSMICON),
-                              ILC_MASK,
+                              ILC_COLOR32,
                               1,
                               1);
 
@@ -1244,7 +1249,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (lpnmitem->iItem != -1)
                         {
                             DialogBox(hInst,
-                                      MAKEINTRESOURCE(IDD_EVENTDETAILDIALOG),
+                                      MAKEINTRESOURCE(IDD_EVENTPROPERTIES),
                                       hWnd,
                                       EventDetails);
                         }
@@ -1270,11 +1275,11 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             switch (LOWORD(wParam))
             {
-                case ID_SAVE_PROTOCOL:
+                case IDM_SAVE_PROTOCOL:
                     SaveProtocol();
                     break;
 
-                case ID_CLEAR_EVENTS:
+                case IDM_CLEAR_EVENTS:
                     if (ClearEvents())
                     {
                         Refresh();
@@ -1306,22 +1311,21 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_SIZE:
-            {
-                // Gets the window rectangle
-                GetClientRect(hWnd, &rect);
+            // Gets the window rectangle
+            GetClientRect(hWnd, &rect);
 
-                // Relocate the listview
-                MoveWindow(hwndListView,
-                           0,
-                           0,
-                           rect.right,
-                           rect.bottom - 20,
-                           1);
+            // Relocate the listview
+            MoveWindow(hwndListView,
+                       0,
+                       0,
+                       rect.right,
+                       rect.bottom - 20,
+                       1);
 
-                // Resize the statusbar;
-                SendMessage(hwndStatus, message, wParam, lParam);
-            }
+            // Resize the statusbar;
+            SendMessage(hwndStatus, message, wParam, lParam);
             break;
+
         case WM_DESTROY:
             FreeRecords();
             FreeLogList();
@@ -1438,6 +1442,55 @@ DisplayEvent(HWND hDlg)
     }
 }
 
+VOID
+CopyEventEntry(HWND hWnd)
+{
+    WCHAR output[4130], tmpHeader[512];
+    WCHAR szEventType[MAX_PATH];
+    WCHAR szSource[MAX_PATH];
+    WCHAR szCategory[MAX_PATH];
+    WCHAR szEventID[MAX_PATH];
+    WCHAR szDate[MAX_PATH];
+    WCHAR szTime[MAX_PATH];
+    WCHAR szUser[MAX_PATH];
+    WCHAR szComputer[MAX_PATH];
+    WCHAR evtDesc[ENTRY_SIZE];
+    HGLOBAL hMem;
+
+    if (!OpenClipboard(hWnd))
+        return;
+
+    /* First, empty the clipboard before we begin to use it */
+    EmptyClipboard();
+
+    /* Get the formatted text needed to place the content into */
+    LoadStringW(hInst, IDS_COPY, tmpHeader, sizeof(tmpHeader) / sizeof(WCHAR));
+
+    /* Grabs all the information and get it ready for the clipboard */
+    GetDlgItemText(hWnd, IDC_EVENTTYPESTATIC, szEventType, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTSOURCESTATIC, szSource, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTIDSTATIC, szEventID, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTDATESTATIC, szDate, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTTIMESTATIC, szTime, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTUSERSTATIC, szUser, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ENTRY_SIZE);
+
+    /* Consolidate the information into on big piece */
+    wsprintfW(output, tmpHeader, szEventType, szSource, szCategory, szEventID, szDate, szTime, szUser, szComputer, evtDesc);
+
+    /* Sort out the memory needed to write to the clipboard */
+    hMem = GlobalAlloc(GMEM_MOVEABLE, ENTRY_SIZE);
+    memcpy(GlobalLock(hMem), output, ENTRY_SIZE);
+    GlobalUnlock(hMem);
+
+    /* Write the final content to the clipboard */
+    SetClipboardData(CF_UNICODETEXT, hMem);
+
+    /* Close the clipboard once we're done with it */
+    CloseClipboard();
+}
 
 static
 INT_PTR CALLBACK
@@ -1458,6 +1511,18 @@ StatusMessageWindowProc(IN HWND hwndDlg,
     return FALSE;
 }
 
+static
+VOID
+InitDetailsDlg(HWND hDlg)
+{
+    HANDLE nextIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_NEXT), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    HANDLE prevIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_PREV), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    HANDLE copyIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_COPY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+
+    SendMessage(GetDlgItem(hDlg, IDC_NEXT), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)nextIcon);
+    SendMessage(GetDlgItem(hDlg, IDC_PREVIOUS), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)prevIcon);
+    SendMessage(GetDlgItem(hDlg, IDC_COPY), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)copyIcon);
+}
 
 // Message handler for event details box.
 INT_PTR CALLBACK
@@ -1468,6 +1533,8 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_INITDIALOG:
+            InitDetailsDlg(hDlg);
+
             // Show event info on dialog box
             DisplayEvent(hDlg);
             return (INT_PTR)TRUE;
@@ -1480,18 +1547,22 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     EndDialog(hDlg, LOWORD(wParam));
                     return (INT_PTR)TRUE;
 
-                case IDPREVIOUS:
+                case IDC_PREVIOUS:
                     SendMessage(hwndListView, WM_KEYDOWN, VK_UP, 0);
 
                     // Show event info on dialog box
                     DisplayEvent(hDlg);
                     return (INT_PTR)TRUE;
 
-                case IDNEXT:
+                case IDC_NEXT:
                     SendMessage(hwndListView, WM_KEYDOWN, VK_DOWN, 0);
 
                     // Show event info on dialog box
                     DisplayEvent(hDlg);
+                    return (INT_PTR)TRUE;
+
+                case IDC_COPY:
+                    CopyEventEntry(hDlg);
                     return (INT_PTR)TRUE;
 
                 case IDC_BYTESRADIO:

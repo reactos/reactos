@@ -1,7 +1,7 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            freeldr/amd64/wlmemory.c
+ * FILE:            boot/freeldr/freeldr/arch/amd64/winldr.c
  * PURPOSE:         Memory related routines
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -14,8 +14,6 @@
 #include <debug.h>
 
 //extern ULONG LoaderPagesSpanned;
-
-#define HYPER_SPACE_ENTRY       0x1EE
 
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
@@ -31,7 +29,7 @@ ULONG_PTR TssBasePage;
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
-MempAllocatePageTables()
+MempAllocatePageTables(VOID)
 {
     TRACE(">>> MempAllocatePageTables\n");
 
@@ -205,7 +203,7 @@ MempUnmapPage(PFN_NUMBER Page)
 }
 
 VOID
-WinLdrpMapApic()
+WinLdrpMapApic(VOID)
 {
     BOOLEAN LocalAPIC;
     LARGE_INTEGER MsrValue;
@@ -237,7 +235,7 @@ WinLdrpMapApic()
 }
 
 BOOLEAN
-WinLdrMapSpecialPages()
+WinLdrMapSpecialPages(VOID)
 {
     PHARDWARE_PTE PpeBase, PdeBase;
 
@@ -346,7 +344,7 @@ WinLdrSetProcessorContext(void)
     /* Disable Interrupts */
     _disable();
 
-    /* Re-initalize EFLAGS */
+    /* Re-initialize EFLAGS */
     __writeeflags(0);
 
     /* Set the new PML4 */
@@ -384,7 +382,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     PcrBasePage = Pcr >> MM_PAGE_SHIFT;
     if (Pcr == 0)
     {
-        UiMessageBox("Can't allocate PCR\n");
+        UiMessageBox("Can't allocate PCR.");
         return;
     }
     RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
@@ -400,7 +398,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
     if (GdtIdt == NULL)
     {
-        UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+        UiMessageBox("Can't allocate pages for GDT+IDT!");
         return;
     }
 
@@ -420,7 +418,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 
 VOID
-MempDump()
+MempDump(VOID)
 {
 }
 

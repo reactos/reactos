@@ -673,11 +673,11 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     /* Canonicalize the base input prior to looking for the scheme */
     myflags = dwFlags & (URL_DONT_SIMPLIFY | URL_UNESCAPE);
     len = INTERNET_MAX_URL_LENGTH;
-    ret = UrlCanonicalizeW(pszBase, mbase, &len, myflags);
+    UrlCanonicalizeW(pszBase, mbase, &len, myflags);
 
     /* Canonicalize the relative input prior to looking for the scheme */
     len = INTERNET_MAX_URL_LENGTH;
-    ret = UrlCanonicalizeW(pszRelative, mrelative, &len, myflags);
+    UrlCanonicalizeW(pszRelative, mrelative, &len, myflags);
 
     /* See if the base has a scheme */
     res1 = ParseURLW(mbase, &base);
@@ -899,7 +899,10 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
         if (*work++ != '/')
             *(work++) = '/';
-	strcpyW(work, relative.pszSuffix);
+        if (relative.pszSuffix[0] == '.' && relative.pszSuffix[1] == 0)
+            *work = 0;
+        else
+            strcpyW(work, relative.pszSuffix);
 	break;
 
     default:

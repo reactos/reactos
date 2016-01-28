@@ -8,11 +8,10 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2010, 2012, 2013 by                                          */
+/*  Copyright 2010-2015 by                                                 */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
-/*  Based on src/gzip/ftgzip.c, Copyright 2002 - 2010 by                   */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*  based on `src/gzip/ftgzip.c'                                           */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -71,7 +70,7 @@
                   int        items,
                   int        size )
   {
-    FT_ULong    sz = (FT_ULong)size * items;
+    FT_ULong    sz = (FT_ULong)size * (FT_ULong)items;
     FT_Error    error;
     FT_Pointer  p  = NULL;
 
@@ -131,7 +130,7 @@
     /* head[0] && head[1] are the magic numbers;    */
     /* head[2] is the version, and head[3] the blocksize */
     if ( head[0] != 0x42  ||
-         head[1] != 0x5a  ||
+         head[1] != 0x5A  ||
          head[2] != 0x68  )  /* only support bzip2 (huffman) */
     {
       error = FT_THROW( Invalid_File_Format );
@@ -255,7 +254,10 @@
       size = stream->read( stream, stream->pos, zip->input,
                            FT_BZIP2_BUFFER_SIZE );
       if ( size == 0 )
+      {
+        zip->limit = zip->cursor;
         return FT_THROW( Invalid_Stream_Operation );
+      }
     }
     else
     {
@@ -264,7 +266,10 @@
         size = FT_BZIP2_BUFFER_SIZE;
 
       if ( size == 0 )
+      {
+        zip->limit = zip->cursor;
         return FT_THROW( Invalid_Stream_Operation );
+      }
 
       FT_MEM_COPY( zip->input, stream->base + stream->pos, size );
     }
@@ -311,7 +316,8 @@
       }
       else if ( err != BZ_OK )
       {
-        error = FT_THROW( Invalid_Stream_Operation );
+        zip->limit = zip->cursor;
+        error      = FT_THROW( Invalid_Stream_Operation );
         break;
       }
     }
@@ -438,16 +444,16 @@
   }
 
 
-  static FT_ULong
-  ft_bzip2_stream_io( FT_Stream  stream,
-                      FT_ULong   pos,
-                      FT_Byte*   buffer,
-                      FT_ULong   count )
+  static unsigned long
+  ft_bzip2_stream_io( FT_Stream       stream,
+                      unsigned long   offset,
+                      unsigned char*  buffer,
+                      unsigned long   count )
   {
     FT_BZip2File  zip = (FT_BZip2File)stream->descriptor.pointer;
 
 
-    return ft_bzip2_file_io( zip, pos, buffer, count );
+    return ft_bzip2_file_io( zip, offset, buffer, count );
   }
 
 
@@ -456,9 +462,17 @@
                        FT_Stream  source )
   {
     FT_Error      error;
-    FT_Memory     memory = source->memory;
+    FT_Memory     memory;
     FT_BZip2File  zip = NULL;
 
+
+    if ( !stream || !source )
+    {
+      error = FT_THROW( Invalid_Stream_Handle );
+      goto Exit;
+    }
+
+    memory = source->memory;
 
     /*
      *  check the header right now; this prevents allocating unnecessary

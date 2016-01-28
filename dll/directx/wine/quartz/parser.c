@@ -133,11 +133,11 @@ HRESULT WINAPI Parser_QueryInterface(IBaseFilter * iface, REFIID riid, LPVOID * 
       || IsEqualIID(riid, &IID_IPersist)
       || IsEqualIID(riid, &IID_IMediaFilter)
       || IsEqualIID(riid, &IID_IBaseFilter) )
-        *ppv = This;
+        *ppv = &This->filter.IBaseFilter_iface;
 
     if (*ppv)
     {
-        IUnknown_AddRef((IUnknown *)(*ppv));
+        IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
     }
 
@@ -156,6 +156,7 @@ void Parser_Destroy(ParserImpl *This)
 {
     IPin *connected = NULL;
     ULONG pinref;
+    HRESULT hr;
 
     assert(!This->filter.refCount);
     PullPin_WaitForStateChange(This->pInputPin, INFINITE);
@@ -164,9 +165,11 @@ void Parser_Destroy(ParserImpl *This)
     IPin_ConnectedTo(&This->pInputPin->pin.IPin_iface, &connected);
     if (connected)
     {
-        assert(IPin_Disconnect(connected) == S_OK);
+        hr = IPin_Disconnect(connected);
+        assert(hr == S_OK);
         IPin_Release(connected);
-        assert(IPin_Disconnect(&This->pInputPin->pin.IPin_iface) == S_OK);
+        hr = IPin_Disconnect(&This->pInputPin->pin.IPin_iface);
+        assert(hr == S_OK);
     }
     pinref = IPin_Release(&This->pInputPin->pin.IPin_iface);
     if (pinref)
@@ -504,21 +507,21 @@ static HRESULT WINAPI Parser_Seeking_QueryInterface(IMediaSeeking * iface, REFII
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_QueryInterface((IUnknown *)This, riid, ppv);
+    return IBaseFilter_QueryInterface(&This->filter.IBaseFilter_iface, riid, ppv);
 }
 
 static ULONG WINAPI Parser_Seeking_AddRef(IMediaSeeking * iface)
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_AddRef((IUnknown *)This);
+    return IBaseFilter_AddRef(&This->filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI Parser_Seeking_Release(IMediaSeeking * iface)
 {
     ParserImpl *This = impl_from_IMediaSeeking(iface);
 
-    return IUnknown_Release((IUnknown *)This);
+    return IBaseFilter_Release(&This->filter.IBaseFilter_iface);
 }
 
 static const IMediaSeekingVtbl Parser_Seeking_Vtbl =

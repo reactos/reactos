@@ -20,13 +20,14 @@
  */
 
 #include <freeldr.h>
+#include "registry.h"
 
 #include <ndk/ldrtypes.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-//FIXME: Do a better way to retrieve Arc disk information
+//FIXME: Find a better way to retrieve ARC disk information
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 
@@ -234,7 +235,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     CHAR DriverPath[1024];
     CHAR DllName[1024];
     PCHAR DriverNamePos;
-    BOOLEAN Status;
+    BOOLEAN Success;
     PVOID DriverBase = NULL;
 
     // Separate the path to file name and directory path
@@ -258,8 +259,8 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     TRACE("DriverPath: %s, DllName: %s, LPB\n", DriverPath, DllName);
 
     // Check if driver is already loaded
-    Status = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
-    if (Status)
+    Success = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
+    if (Success)
     {
         // We've got the pointer to its DTE, just return success
         return TRUE;
@@ -267,13 +268,13 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // It's not loaded, we have to load it
     _snprintf(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
-    Status = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
-    if (!Status)
+    Success = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
+    if (!Success)
         return FALSE;
 
     // Allocate a DTE for it
-    Status = WinLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
-    if (!Status)
+    Success = WinLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
+    if (!Success)
     {
         ERR("WinLdrAllocateDataTableEntry() failed\n");
         return FALSE;
@@ -284,8 +285,8 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // Look for any dependencies it may have, and load them too
     sprintf(FullPath,"%s%s", BootPath, DriverPath);
-    Status = WinLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
-    if (!Status)
+    Success = WinLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
+    if (!Success)
     {
         ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
         return FALSE;
@@ -300,7 +301,8 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 {
     PLIST_ENTRY NextBd;
     PBOOT_DRIVER_LIST_ENTRY BootDriver;
-    BOOLEAN Status;
+    BOOLEAN Success;
+    BOOLEAN ret = TRUE;
 
     // Walk through the boot drivers list
     NextBd = LoaderBlock->BootDriverListHead.Flink;
@@ -315,30 +317,34 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // Paths are relative (FIXME: Are they always relative?)
 
         // Load it
-        Status = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
-                                        BootPath,
-                                        &BootDriver->FilePath,
-                                        0,
-                                        &BootDriver->LdrEntry);
+        Success = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
+                                         BootPath,
+                                         &BootDriver->FilePath,
+                                         0,
+                                         &BootDriver->LdrEntry);
 
-        // If loading failed - cry loudly
-        //FIXME: Maybe remove it from the list and try to continue?
-        if (!Status)
+        if (Success)
         {
-            ERR("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
-            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
-            return FALSE;
+            // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
+            BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
+            BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
+            BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
         }
+        else
+        {
+            // Loading failed - cry loudly
+            ERR("Can't load boot driver '%wZ'!\n", &BootDriver->FilePath);
+            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
+            ret = FALSE;
 
-        // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
-        BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
-        BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
-        BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
+            // Remove it from the list and try to continue
+            RemoveEntryList(NextBd);
+        }
 
         NextBd = BootDriver->Link.Flink;
     }
 
-    return TRUE;
+    return ret;
 }
 
 PVOID
@@ -350,7 +356,7 @@ WinLdrLoadModule(PCSTR ModuleName,
     PVOID PhysicalBase;
     FILEINFORMATION FileInfo;
     ULONG FileSize;
-    ULONG Status;
+    ARC_STATUS Status;
     ULONG BytesRead;
 
     //CHAR ProgressString[256];
@@ -402,10 +408,10 @@ WinLdrLoadModule(PCSTR ModuleName,
 }
 
 USHORT
-WinLdrDetectVersion()
+WinLdrDetectVersion(VOID)
 {
     LONG rc;
-    FRLDRHKEY hKey;
+    HKEY hKey;
 
     rc = RegOpenKey(
         NULL,
@@ -432,7 +438,7 @@ LoadModule(
     BOOLEAN IsKdTransportDll,
     ULONG Percentage)
 {
-    BOOLEAN Status;
+    BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
     PVOID BaseAdress = NULL;
@@ -445,8 +451,8 @@ LoadModule(
     strcat(FullFileName, "SYSTEM32\\");
     strcat(FullFileName, File);
 
-    Status = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
-    if (!Status)
+    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
+    if (!Success)
     {
         TRACE("Loading %s failed\n", File);
         return FALSE;
@@ -460,13 +466,13 @@ LoadModule(
      * the Kernel Debugger Transport DLL, to make the
      * PE loader happy.
      */
-    Status = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
-                                          (IsKdTransportDll ? "KDCOM.DLL" : File),
-                                          FullFileName,
-                                          BaseAdress,
-                                          Dte);
+    Success = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+                                           (IsKdTransportDll ? "KDCOM.DLL" : File),
+                                           FullFileName,
+                                           BaseAdress,
+                                           Dte);
 
-    return Status;
+    return Success;
 }
 
 static
@@ -477,7 +483,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN LPCSTR BootPath,
                 IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
 {
-    BOOLEAN Status;
+    BOOLEAN Success;
     CHAR DirPath[MAX_PATH];
     CHAR KdTransportDllName[MAX_PATH];
     PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
@@ -578,14 +584,14 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     strcpy(DirPath, BootPath);
     strcat(DirPath, "system32\\");
-    Status  = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
-    Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
+    Success  = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
+    Success &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
     if (KdComDTE)
     {
-        Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
+        Success &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
     }
 
-    return Status;
+    return Success;
 }
 
 VOID
@@ -600,16 +606,15 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     CHAR  FileName[MAX_PATH];
     CHAR  BootOptions[256];
     PCHAR File;
-    BOOLEAN Status;
+    BOOLEAN Success;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
 
-    // Get OS setting value
+    /* Get OS setting value */
     SettingsValue[0] = ANSI_NULL;
     IniOpenSection("Operating Systems", &SectionId);
     IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
 
-    // Open the operating system section
-    // specified in the .ini file
+    /* Open the operating system section specified in the .ini file */
     HasSection = IniOpenSection(SectionName, &SectionId);
 
     UiDrawBackdrop();
@@ -622,16 +627,30 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         strcpy(BootPath, SectionName);
     }
 
-    /* Special case for LiveCD */
-    if (!_strnicmp(BootPath, "LiveCD", strlen("LiveCD")))
+    /*
+     * Check whether BootPath is a full path
+     * and if not, create a full boot path.
+     *
+     * See FsOpenFile for the technique used.
+     */
+    if (strrchr(BootPath, ')') == NULL)
     {
-        strcpy(FileName, BootPath + strlen("LiveCD"));
+        /* Temporarily save the boot path */
+        strcpy(FileName, BootPath);
+
+        /* This is not a full path. Use the current (i.e. boot) device. */
         MachDiskGetBootPath(BootPath, sizeof(BootPath));
+
+        /* Append a path separator if needed */
+        if (FileName[0] != '\\' && FileName[0] != '/')
+            strcat(BootPath, "\\");
+
+        /* Append the remaining path */
         strcat(BootPath, FileName);
     }
 
-    /* Append a backslash */
-    if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
+    /* Append a backslash if needed */
+    if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
         strcat(BootPath, "\\");
 
     /* Read booting options */
@@ -661,7 +680,11 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         *strstr(FileName, " ") = ANSI_NULL;
 
         /* Load the ramdisk */
-        RamDiskLoadVirtualFile(FileName);
+        if (!RamDiskLoadVirtualFile(FileName))
+        {
+            UiMessageBox("Failed to load RAM disk file %s", FileName);
+            return;
+        }
     }
 
     /* Let user know we started loading */
@@ -675,19 +698,19 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     /* Load Hive */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
-    Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
-    TRACE("SYSTEM hive %s\n", (Status ? "loaded" : "not loaded"));
+    Success = WinLdrInitSystemHive(LoaderBlock, BootPath);
+    TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
 
     /* Load NLS data, OEM font, and prepare boot drivers list */
-    Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
-    TRACE("SYSTEM hive %s\n", (Status ? "scanned" : "not scanned"));
+    Success = WinLdrScanSystemHive(LoaderBlock, BootPath);
+    TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
 
     /* Finish loading */
     LoadAndBootWindowsCommon(OperatingSystemVersion,
                              LoaderBlock,
                              BootOptions,
                              BootPath,
-                             0);
+                             FALSE);
 }
 
 VOID
@@ -699,7 +722,7 @@ LoadAndBootWindowsCommon(
     BOOLEAN Setup)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlockVA;
-    BOOLEAN Status;
+    BOOLEAN Success;
     PLDR_DATA_TABLE_ENTRY KernelDTE;
     KERNEL_ENTRY_POINT KiSystemStartup;
     LPCSTR SystemRoot;
@@ -720,12 +743,12 @@ LoadAndBootWindowsCommon(
         OperatingSystemVersion = WinLdrDetectVersion();
 
     /* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
-    Status = LoadWindowsCore(OperatingSystemVersion,
-                             LoaderBlock,
-                             BootOptions,
-                             BootPath,
-                             &KernelDTE);
-    if (!Status)
+    Success = LoadWindowsCore(OperatingSystemVersion,
+                              LoaderBlock,
+                              BootOptions,
+                              BootPath,
+                              &KernelDTE);
+    if (!Success)
     {
         UiMessageBox("Error loading NTOS core.");
         return;
@@ -734,8 +757,8 @@ LoadAndBootWindowsCommon(
     /* Load boot drivers */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
-    Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
-    TRACE("Boot drivers loaded with status %d\n", Status);
+    Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
+    TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
 
     /* Initialize Phase 1 - no drivers loading anymore */
     WinLdrInitializePhase1(LoaderBlock,
@@ -780,13 +803,6 @@ LoadAndBootWindowsCommon(
 #ifndef _M_AMD64
     WinLdrpDumpArcDisks(LoaderBlockVA);
 #endif
-
-    //FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
-    //while (1) {};
-    /*asm(".intel_syntax noprefix\n");
-        asm("test1:\n");
-        asm("jmp test1\n");
-    asm(".att_syntax\n");*/
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);

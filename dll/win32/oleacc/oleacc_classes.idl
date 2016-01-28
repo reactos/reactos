@@ -17,5 +17,13 @@
  */
 
 #pragma makedep regtypelib
+#pragma makedep proxy
+#pragma makedep register
 
 #include "oleacc.idl"
+
+[
+    threading(both),
+    uuid(03022430-abc4-11d0-bde2-00aa001a1953)  /* IAccessibleHandler */
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }

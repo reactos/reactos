@@ -337,8 +337,8 @@ BEGIN
     END
     POPUP "Zobraziť"
     BEGIN
-        MENUITEM "Štandardná", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Štandardná", IDM_VIEW_STANDARD
+        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC
         MENUITEM "Prevody", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Šestnástková\tF5", IDM_VIEW_HEX, CHECKED
@@ -369,8 +369,8 @@ BEGIN
     END
     POPUP "Zobraziť"
     BEGIN
-        MENUITEM "Štandardná", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Štandardná", IDM_VIEW_STANDARD
+        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC
         MENUITEM "Prevody", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Šestnástková\tF5", IDM_VIEW_HEX, CHECKED
@@ -402,8 +402,8 @@ BEGIN
     END
     POPUP "Zobraziť"
     BEGIN
-        MENUITEM "Štandardná", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Štandardná", IDM_VIEW_STANDARD
+        MENUITEM "Vedecká", IDM_VIEW_SCIENTIFIC
         MENUITEM "Prevody", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Zoskupovať číslice", IDM_VIEW_GROUP, CHECKED

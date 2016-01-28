@@ -1,3 +1,4 @@
+
 list(APPEND FONT_FILES
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
@@ -42,6 +43,10 @@ list(APPEND FONT_FILES
     LiberationSans-BoldItalic.ttf
     LiberationSans-Italic.ttf
     LiberationSans-Regular.ttf
+    LiberationSansNarrow-Bold.ttf
+    LiberationSansNarrow-BoldItalic.ttf
+    LiberationSansNarrow-Italic.ttf
+    LiberationSansNarrow-Regular.ttf
     LiberationSerif-Bold.ttf
     LiberationSerif-BoldItalic.ttf
     LiberationSerif-Italic.ttf
@@ -76,8 +81,7 @@ list(APPEND FONT_FILES
     UbuntuMono-RI.ttf
     Ubuntu-R.ttf
     Ubuntu-RI.ttf
-    UniVGA16.ttf
-)
+    UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)

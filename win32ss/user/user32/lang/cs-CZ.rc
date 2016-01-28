@@ -70,6 +70,7 @@ BEGIN
     IDS_IGNORE "&Ignorovat"
     IDS_YES "&Ano"
     IDS_NO "&Ne"
+    IDS_CLOSE "&Zavřít"
     IDS_HELP "Nápověda"
     IDS_TRYAGAIN "Z&kusit znovu"
     IDS_CONTINUE "P&okračovat"

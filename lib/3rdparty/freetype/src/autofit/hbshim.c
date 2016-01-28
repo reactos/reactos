@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    HarfBuzz interface for accessing OpenType features (body).           */
 /*                                                                         */
-/*  Copyright 2013, 2014 by                                                */
+/*  Copyright 2013-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -98,7 +98,7 @@
   FT_Error
   af_get_coverage( AF_FaceGlobals  globals,
                    AF_StyleClass   style_class,
-                   FT_Byte*        gstyles )
+                   FT_UShort*      gstyles )
   {
     hb_face_t*  face;
 
@@ -187,7 +187,7 @@
     count = 0;
 #endif
 
-    for ( idx = -1; hb_set_next( gsub_lookups, &idx ); )
+    for ( idx = HB_SET_VALUE_INVALID; hb_set_next( gsub_lookups, &idx ); )
     {
 #ifdef FT_DEBUG_LEVEL_TRACE
       FT_TRACE4(( " %d", idx ));
@@ -218,7 +218,7 @@
     count = 0;
 #endif
 
-    for ( idx = -1; hb_set_next( gpos_lookups, &idx ); )
+    for ( idx = HB_SET_VALUE_INVALID; hb_set_next( gpos_lookups, &idx ); )
     {
 #ifdef FT_DEBUG_LEVEL_TRACE
       FT_TRACE4(( " %d", idx ));
@@ -247,6 +247,7 @@
      * (this is, not a single character is covered), we skip this coverage.
      *
      */
+    if ( style_class->coverage != AF_COVERAGE_DEFAULT )
     {
       AF_Blue_Stringset         bss = style_class->blue_stringset;
       const AF_Blue_StringRec*  bs  = &af_blue_stringsets[bss];
@@ -266,7 +267,8 @@
 
           GET_UTF8_CHAR( ch, p );
 
-          for ( idx = -1; hb_set_next( gsub_lookups, &idx ); )
+          for ( idx = HB_SET_VALUE_INVALID; hb_set_next( gsub_lookups,
+                                                         &idx ); )
           {
             hb_codepoint_t  gidx = FT_Get_Char_Index( globals->face, ch );
 
@@ -328,15 +330,22 @@
      * out whether a glyph gets shifted vertically, but this is something I
      * would like to avoid if not really necessary.
      *
+     * Note that we don't follow this logic for the default coverage.
+     * Complex scripts like Devanagari have mandatory GPOS features to
+     * position many glyph elements, using mark-to-base or mark-to-ligature
+     * tables; the number of glyphs missed due to condition (b) would be far
+     * too large.
+     *
      */
-    hb_set_subtract( gsub_glyphs, gpos_glyphs );
+    if ( style_class->coverage != AF_COVERAGE_DEFAULT )
+      hb_set_subtract( gsub_glyphs, gpos_glyphs );
 
 #ifdef FT_DEBUG_LEVEL_TRACE
     FT_TRACE4(( "  glyphs without GPOS data (`*' means already assigned)" ));
     count = 0;
 #endif
 
-    for ( idx = -1; hb_set_next( gsub_glyphs, &idx ); )
+    for ( idx = HB_SET_VALUE_INVALID; hb_set_next( gsub_glyphs, &idx ); )
     {
 #ifdef FT_DEBUG_LEVEL_TRACE
       if ( !( count % 10 ) )
@@ -347,8 +356,14 @@
       count++;
 #endif
 
+      /* glyph indices returned by `hb_ot_layout_lookup_collect_glyphs' */
+      /* can be arbitrary: some fonts use fake indices for processing   */
+      /* internal to GSUB or GPOS, which is fully valid                 */
+      if ( idx >= (hb_codepoint_t)globals->glyph_count )
+        continue;
+
       if ( gstyles[idx] == AF_STYLE_UNASSIGNED )
-        gstyles[idx] = (FT_Byte)style_class->style;
+        gstyles[idx] = (FT_UShort)style_class->style;
 #ifdef FT_DEBUG_LEVEL_TRACE
       else
         FT_TRACE4(( "*" ));
@@ -427,7 +442,7 @@
 
     if ( feature )
     {
-      FT_UInt  upem = metrics->globals->face->units_per_EM;
+      FT_Int  upem = (FT_Int)metrics->globals->face->units_per_EM;
 
       hb_font_t*    font = metrics->globals->hb_font;
       hb_buffer_t*  buf  = hb_buffer_create();
@@ -494,7 +509,7 @@
   FT_Error
   af_get_coverage( AF_FaceGlobals  globals,
                    AF_StyleClass   style_class,
-                   FT_Byte*        gstyles )
+                   FT_UShort*      gstyles )
   {
     FT_UNUSED( globals );
     FT_UNUSED( style_class );

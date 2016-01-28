@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS BDA Proxy
- * FILE:            dll/directx/msvidctl/tuningspace.cpp
+ * FILE:            dll/directx/msvidctl/tunerequest.cpp
  * PURPOSE:         ITuningRequest interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

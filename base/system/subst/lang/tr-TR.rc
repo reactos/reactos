@@ -1,0 +1,19 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Değişken sayısı yanlış - %s\n"
+    IDS_INVALID_PARAMETER "Değişken sayısı yanlış - %s\n"
+    IDS_INVALID_PARAMETER2 "Geçersiz değişken - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Sürücü önceden SUBST edilmiş.\n"
+    IDS_FAILED_WITH_ERRORCODE "Yanlışlık kodu ile başarısız oldu 0x%x: %s\n"
+    IDS_USAGE "Bir sürücü harfiyle bir yolu ilişkilendirir.\n\n\
+SUBST [sürücü1: [sürücü2:]yol]\n\
+SUBST sürücü1: /D\n\n\
+  sürücü:        Bir yol atamak için istediğiniz bir farazî sürücüyü belirtir.\n\
+  [sürücü2:]yol  Bir farazî sürücüye atamak için istediğiniz bir fizîkî sürücüyü ve yolu belirtir.\n\
+  /D             Bir yerine koyulmuş (farazî) sürücüyü siler.\n\n\
+Şimdiki farazî sürücülerin bir dizelgesini görüntülemek için değişkensiz olarak SUBST yazınız.\n"
+END

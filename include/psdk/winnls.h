@@ -499,6 +499,9 @@ typedef DWORD LGRPID;
 typedef DWORD GEOID;
 typedef DWORD GEOTYPE;
 typedef DWORD GEOCLASS;
+typedef BOOL (CALLBACK *CALINFO_ENUMPROCEXEX)(LPWSTR, CALID, LPWSTR, LPARAM);
+typedef BOOL (CALLBACK *DATEFMT_ENUMPROCEXEX)(LPWSTR, CALID, LPARAM);
+typedef BOOL (CALLBACK *TIMEFMT_ENUMPROCEX)(LPWSTR, LPARAM);
 typedef BOOL (CALLBACK *CALINFO_ENUMPROCA)(LPSTR);
 typedef BOOL (CALLBACK *CALINFO_ENUMPROCW)(LPWSTR);
 typedef BOOL (CALLBACK *CALINFO_ENUMPROCEXA)(LPSTR, CALID);
@@ -546,7 +549,10 @@ enum SYSGEOTYPE
     GEO_TIMEZONES,
     GEO_OFFICIALLANGUAGES,
     GEO_ISO_UN_NUMBER,
-    GEO_PARENT
+    GEO_PARENT,
+    GEO_DIALINGCODE,
+    GEO_CURRENCYCODE,
+    GEO_CURRENCYSYMBOL
 };
 
 typedef struct _cpinfo {
@@ -846,6 +852,29 @@ int WINAPI GetTimeFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 LANGID WINAPI GetUserDefaultLangID(void);
 LCID WINAPI GetUserDefaultLCID(void);
 GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
+
+#if (WINVER >= 0x0600)
+
+int
+WINAPI
+IdnToAscii(
+  _In_ DWORD dwFlags,
+  _In_reads_(cchUnicodeChar) LPCWSTR lpUnicodeCharStr,
+  _In_ int cchUnicodeChar,
+  _Out_writes_opt_(cchASCIIChar) LPWSTR lpASCIICharStr,
+  _In_ int cchASCIIChar);
+
+int
+WINAPI
+IdnToUnicode(
+  _In_ DWORD dwFlags,
+  _In_reads_(cchASCIIChar) LPCWSTR lpASCIICharStr,
+  _In_ int cchASCIIChar,
+  _Out_writes_opt_(cchUnicodeChar) LPWSTR lpUnicodeCharStr,
+  _In_ int cchUnicodeChar);
+
+#endif /* WINVER >= 0x0600 */
+
 BOOL WINAPI IsDBCSLeadByte(_In_ BYTE);
 BOOL WINAPI IsDBCSLeadByteEx(_In_ UINT, _In_ BYTE);
 

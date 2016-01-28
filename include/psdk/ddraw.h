@@ -13,7 +13,10 @@
 #endif
 
 #define _FACDD        0x876
+
+#ifndef MAKE_DDHRESULT
 #define MAKE_DDHRESULT(c) MAKE_HRESULT(1,_FACDD,c)
+#endif
 
 #ifndef DIRECTDRAW_VERSION
   #define DIRECTDRAW_VERSION 0x0700

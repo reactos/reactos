@@ -5,16 +5,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompaktibilitet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Hvis du har problemer med å kjøre programmer i ReactOS, velg et operativsystem ReactOS skulle fungere for programmet.", -1, 7, 7, 210, 31
+    LTEXT "Hvis du har problemer med Ã¥ kjÃ¸re programmer i ReactOS, velg et operativsystem ReactOS skulle fungere for programmet.", -1, 7, 7, 210, 31
     GROUPBOX "Kompaktibilitetsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Kjør dette programmet i kompaktibilitetsmodus for:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "KjÃ¸r dette programmet i kompaktibilitetsmodus for:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Skjerminnstillinger", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
-    CHECKBOX "Kjør i 256 farger", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Kjør med skjermoppløsning på 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "KjÃ¸r i 256 farger", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "KjÃ¸r med skjermopplÃ¸sning pÃ¥ 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Deaktiver visuelle temaer", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "E&dit compatibility modes...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "Lær mere om <A>program kompaktibilitet</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    /* CONTROL "LÃ¦r mere om <A>program kompaktibilitet</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139

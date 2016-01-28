@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -24,40 +24,17 @@ SLIST_HEADER MmDeadStackSListHead;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
-NTAPI
-MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
-{
-    NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
-    PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
-
-    Status = MmCreateMemoryArea(&Process->Vm,
-                                MEMORY_AREA_OWNED_BY_ARM3,
-                                &AllocatedBase,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MemoryArea,
-                                TRUE,
-                                0,
-                                PAGE_SIZE);
-    ASSERT(NT_SUCCESS(Status));
-}
-
 NTSTATUS
 NTAPI
 MiCreatePebOrTeb(IN PEPROCESS Process,
                  IN ULONG Size,
-                 OUT PULONG_PTR Base)
+                 OUT PULONG_PTR BaseAddress)
 {
-    PETHREAD Thread = PsGetCurrentThread();
     PMMVAD_LONG Vad;
     NTSTATUS Status;
-    ULONG RandomCoeff;
-    ULONG_PTR StartAddress, EndAddress;
+    ULONG_PTR HighestAddress, RandomBase;
+    ULONG AlignedSize;
     LARGE_INTEGER CurrentTime;
-    TABLE_SEARCH_RESULT Result = TableFoundNode;
-    PMMADDRESS_NODE Parent;
 
     /* Allocate a VAD */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
@@ -70,6 +47,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u.VadFlags.PrivateMemory = TRUE;
     Vad->u.VadFlags.Protection = MM_READWRITE;
     Vad->u.VadFlags.NoChange = TRUE;
+    Vad->u1.Parent = NULL;
 
     /* Setup the secondary flags to make it a secured, writable, long VAD */
     Vad->u2.LongFlags2 = 0;
@@ -77,85 +55,51 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u2.VadFlags2.LongVad = TRUE;
     Vad->u2.VadFlags2.ReadOnly = FALSE;
 
-    /* Lock the process address space */
-    KeAcquireGuardedMutex(&Process->AddressCreationLock);
-
-    /* Check if this is a PEB creation */
-    if (Size == sizeof(PEB))
-    {
-        /* Start at the highest valid address */
-        StartAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
-
-        /* Select the random coefficient */
-        KeQueryTickCount(&CurrentTime);
-        CurrentTime.LowPart &= ((64 * _1KB) >> PAGE_SHIFT) - 1;
-        if (CurrentTime.LowPart <= 1) CurrentTime.LowPart = 2;
-        RandomCoeff = CurrentTime.LowPart << PAGE_SHIFT;
-
-        /* Select the highest valid address minus the random coefficient */
-        StartAddress -= RandomCoeff;
-        EndAddress = StartAddress + ROUND_TO_PAGES(Size) - 1;
-
-        /* Try to find something below the random upper margin */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 EndAddress,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 Base,
-                                                 &Parent);
-    }
-
-    /* Check for success. TableFoundNode means nothing free. */
-    if (Result == TableFoundNode)
-    {
-        /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 Base,
-                                                 &Parent);
-        /* Bail out, if still nothing free was found */
-        if (Result == TableFoundNode)
-        {
-            ExFreePoolWithTag(Vad, 'ldaV');
-            return STATUS_NO_MEMORY;
-        }
-    }
-
-    /* Validate that it came from the VAD ranges */
-    ASSERT(*Base >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
-
-    /* Build the rest of the VAD now */
-    Vad->StartingVpn = (*Base) >> PAGE_SHIFT;
-    Vad->EndingVpn = ((*Base) + Size - 1) >> PAGE_SHIFT;
-    Vad->u3.Secured.StartVpn = *Base;
-    Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
-    Vad->u1.Parent = NULL;
-
-    /* FIXME: Should setup VAD bitmap */
-    Status = STATUS_SUCCESS;
-
-    /* Pretend as if we own the working set */
-    MiLockProcessWorkingSetUnsafe(Process, Thread);
-
-    /* Insert the VAD */
-    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
-    Process->VadRoot.NodeHint = Vad;
     Vad->ControlArea = NULL; // For Memory-Area hack
     Vad->FirstPrototypePte = NULL;
-    DPRINT("VAD: %p\n", Vad);
-    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
-    /* Release the working set */
-    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+    /* Check if this is a PEB creation */
+    ASSERT(sizeof(TEB) != sizeof(PEB));
+    if (Size == sizeof(PEB))
+    {
+        /* Create a random value to select one page in a 64k region */
+        KeQueryTickCount(&CurrentTime);
+        CurrentTime.LowPart &= (_64K / PAGE_SIZE) - 1;
 
-    /* Release the address space lock */
-    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+        /* Calculate a random base address */
+        RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
+        RandomBase -= CurrentTime.LowPart << PAGE_SHIFT;
 
-    /* Return the status */
-    return Status;
+        /* Make sure the base address is not too high */
+        AlignedSize = ROUND_TO_PAGES(Size);
+        if ((RandomBase + AlignedSize) > (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1)
+        {
+            RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1 - AlignedSize;
+        }
+
+        /* Calculate the highest allowed address */
+        HighestAddress = RandomBase + AlignedSize - 1;
+    }
+    else
+    {
+        HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+    }
+
+    *BaseAddress = 0;
+    Status = MiInsertVadEx((PMMVAD)Vad,
+                           BaseAddress,
+                           BYTES_TO_PAGES(Size),
+                           HighestAddress,
+                           PAGE_SIZE,
+                           MEM_TOP_DOWN);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Vad, 'ldaV');
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -256,7 +200,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
     // Calculate pages used
     //
     StackPages = BYTES_TO_PAGES(GuiStack ?
-                                KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+                                MmLargeStackSize : KERNEL_STACK_SIZE);
 
     /* Acquire the PFN lock */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -331,9 +275,8 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         // We'll allocate 64KB stack, but only commit 12K
         //
-        StackPtes = BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE);
+        StackPtes = BYTES_TO_PAGES(MmLargeStackSize);
         StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
-
     }
     else
     {
@@ -374,7 +317,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     // Select the right PTE address where we actually start committing pages
     //
     PointerPte = StackPte;
-    if (GuiStack) PointerPte += BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE -
+    if (GuiStack) PointerPte += BYTES_TO_PAGES(MmLargeStackSize -
                                                KERNEL_LARGE_STACK_COMMIT);
 
 
@@ -439,7 +382,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Make sure the stack did not overflow
     //
     ASSERT(((ULONG_PTR)Thread->StackBase - (ULONG_PTR)Thread->StackLimit) <=
-           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
+           (MmLargeStackSize + PAGE_SIZE));
 
     //
     // Get the current stack limit
@@ -457,7 +400,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Now make sure you're not going past the reserved space
     //
     LastPte = MiAddressToPte((PVOID)((ULONG_PTR)Thread->StackBase -
-                                     KERNEL_LARGE_STACK_SIZE));
+                                     MmLargeStackSize));
     if (NewLimitPte < LastPte)
     {
         //
@@ -1155,9 +1098,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Release PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverSharedUserPage(Process);
-
     /* Check if there's a Section Object */
     if (SectionObject)
     {
@@ -1259,7 +1199,6 @@ INIT_FUNCTION
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
     /* Lock the VAD, ARM3-owned ranges away */
-    MiRosTakeOverSharedUserPage(Process);
     return STATUS_SUCCESS;
 }
 
@@ -1368,10 +1307,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     HyperTable = MiPteToAddress(PointerPte);
 
     /* Now write the PTE/PDE entry for the working set list index itself */
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = WsListIndex;
-    /* Hyperspace is local */
-    MI_MAKE_LOCAL_PAGE(&TempPte);
     PdeOffset = MiAddressToPteOffset(MmWorkingSetList);
     HyperTable[PdeOffset] = TempPte;
 
@@ -1383,7 +1320,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     Pfn1->PteAddress = (PMMPTE)PDE_BASE;
 
     /* Insert us into the Mm process list */
+    OldIrql = MiAcquireExpansionLock();
     InsertTailList(&MmProcessList, &Process->MmProcessLinks);
+    MiReleaseExpansionLock(OldIrql);
 
     /* Get a PTE to map the page directory */
     PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
@@ -1409,7 +1348,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                   PAGE_SIZE - PdeOffset * sizeof(MMPTE));
 
     /* Now write the PTE/PDE entry for hyperspace itself */
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = HyperIndex;
     PdeOffset = MiGetPdeOffset(HYPER_SPACE);
     SystemTable[PdeOffset] = TempPte;
@@ -1461,6 +1400,14 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Grab the current VAD */
         Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
 
+        /* Check for old-style memory areas */
+        if (Vad->u.VadFlags.Spare == 1)
+        {
+            /* Let RosMm handle this */
+            MiRosCleanupMemoryArea(Process, Vad);
+            continue;
+        }
+
         /* Lock the working set */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
 
@@ -1488,7 +1435,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
             MiUnlockProcessWorkingSetUnsafe(Process, Thread);
         }
 
-        /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
+         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
         if (Vad->u.VadFlags.Spare == 1)
         {
             /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */

@@ -12,13 +12,13 @@
 
 #define MAX_KEY_LENGTH 256
 
-#define VALUE_GDI                  L"gdi"
-#define VALUE_ENABLED              L"enabled"
-#define VALUE_DISABLED             L"disabled"
-#define VALUE_NONE                 L"none"
-#define VALUE_BACKBUFFER           L"backbuffer"
-#define VALUE_FBO                  L"fbo"
-#define VALUE_DEFAULT              L"default"
+#define VALUE_GDI                  L"GDI"
+#define VALUE_ENABLED              L"Enabled"
+#define VALUE_DISABLED             L"Disabled"
+#define VALUE_NONE                 L"None"
+#define VALUE_BACKBUFFER           L"Backbuffer"
+#define VALUE_FBO                  L"FBO"
+#define VALUE_DEFAULT              L"Default"
 
 #define KEY_WINE                  L"Software\\Wine\\Direct3D"
 

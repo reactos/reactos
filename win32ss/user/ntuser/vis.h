@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Visibility computations interface definition
- * FILE:             include/win32k/vis.h
+ * FILE:             win32ss/user/ntuser/vis.h
  * PROGRAMMER:       Ge van Geldorp (ge@gse.nl)
  *
  */

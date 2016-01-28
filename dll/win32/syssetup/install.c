@@ -30,6 +30,7 @@
 
 #include <tchar.h>
 #include <wincon.h>
+#include <winnls.h>
 #include <winsvc.h>
 #include <userenv.h>
 #include <shlobj.h>
@@ -42,6 +43,9 @@
 
 DWORD WINAPI
 CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
+
+DWORD WINAPI
+SetupStartService(LPCWSTR lpServiceName, BOOL bWait);
 
 /* GLOBALS ******************************************************************/
 
@@ -60,7 +64,7 @@ FatalError(char *pszFmt,...)
     vsprintf(szBuffer, pszFmt, ap);
     va_end(ap);
 
-    LogItem(SYSSETUP_SEVERITY_FATAL_ERROR, L"Failed");
+    LogItem(NULL, L"Failed");
 
     strcat(szBuffer, "\nRebooting now!");
     MessageBoxA(NULL,
@@ -241,7 +245,6 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
     WCHAR szFolder[MAX_PATH];
     WCHAR szFolderSection[MAX_PATH];
     INT csidl;
-    LPWSTR p;
 
     CoInitialize(NULL);
 
@@ -262,19 +265,8 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
         if (!SetupGetStringFieldW(&Context, 2, szFolder, MAX_PATH, NULL))
             continue;
 
-        if (!SHGetSpecialFolderPathW(0, szPath, csidl, TRUE))
+        if (FAILED(SHGetFolderPathAndSubDirW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szFolder, szPath)))
             continue;
-
-        p = PathAddBackslash(szPath);
-        _tcscpy(p, szFolder);
-
-        if (!CreateDirectory(szPath, NULL))
-        {
-            if (GetLastError() != ERROR_ALREADY_EXISTS) 
-            {
-                continue;
-            }
-        }
 
         CreateShortcutsFromSection(hinf, szFolderSection, szPath);
 
@@ -487,7 +479,7 @@ RegisterTypeLibraries (HINF hinf, LPCWSTR szSection)
         hret = SHGetFolderPathW(NULL, csidl, NULL, 0, szPath);
         if (FAILED(hret))
         {
-            FatalError("SHGetSpecialFolderPathW failed hret=0x%d\n", hret);
+            FatalError("SHGetFolderPathW failed hret=0x%lx\n", hret);
             continue;
         }
 
@@ -763,6 +755,71 @@ error:
     return FALSE;
 }
 
+/* Install a section of a .inf file
+ * Returns TRUE if success, FALSE if failure. Error code can
+ * be retrieved with GetLastError()
+ */
+static
+BOOL
+InstallInfSection(
+    IN HWND hWnd,
+    IN LPCWSTR InfFile,
+    IN LPCWSTR InfSection OPTIONAL,
+    IN LPCWSTR InfService OPTIONAL)
+{
+    WCHAR Buffer[MAX_PATH];
+    HINF hInf = INVALID_HANDLE_VALUE;
+    UINT BufferSize;
+    PVOID Context = NULL;
+    BOOL ret = FALSE;
+
+    /* Get Windows directory */
+    BufferSize = MAX_PATH - 5 - wcslen(InfFile);
+    if (GetWindowsDirectoryW(Buffer, BufferSize) > BufferSize)
+    {
+        /* Function failed */
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
+    }
+    /* We have enough space to add some information in the buffer */
+    if (Buffer[wcslen(Buffer) - 1] != '\\')
+        wcscat(Buffer, L"\\");
+    wcscat(Buffer, L"Inf\\");
+    wcscat(Buffer, InfFile);
+
+    /* Install specified section */
+    hInf = SetupOpenInfFileW(Buffer, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    Context = SetupInitDefaultQueueCallback(hWnd);
+    if (Context == NULL)
+        goto cleanup;
+
+    ret = TRUE;
+    if (ret && InfSection)
+    {
+        ret = SetupInstallFromInfSectionW(
+            hWnd, hInf,
+            InfSection, SPINST_ALL,
+            NULL, NULL, SP_COPY_NEWER,
+            SetupDefaultQueueCallbackW, Context,
+            NULL, NULL);
+    }
+    if (ret && InfService)
+    {
+        ret = SetupInstallServicesFromInfSectionW(
+            hInf, InfService, 0);
+    }
+
+cleanup:
+    if (Context)
+        SetupTermDefaultQueueCallback(Context);
+    if (hInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hInf);
+    return ret;
+}
+
 DWORD WINAPI
 InstallLiveCD(IN HINSTANCE hInstance)
 {
@@ -770,9 +827,24 @@ InstallLiveCD(IN HINSTANCE hInstance)
     PROCESS_INFORMATION ProcessInformation;
     BOOL bRes;
 
+    /* Hack: Install TCP/IP protocol driver */
+    bRes = InstallInfSection(NULL,
+                            L"nettcpip.inf",
+                            L"MS_TCPIP.PrimaryInstall",
+                            L"MS_TCPIP.PrimaryInstall.Services");
+    if (!bRes && GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+        DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
+    }
+    else
+    {
+        /* Start the TCP/IP protocol driver */
+        SetupStartService(L"Tcpip", FALSE);
+    }
+
     if (!CommonInstall())
         goto error;
-    
+
     /* Register components */
     _SEH2_TRY
     {
@@ -791,7 +863,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
         DPRINT1("Catching exception\n");
     }
     _SEH2_END;
-    
+
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
@@ -855,7 +927,165 @@ SetSetupType(DWORD dwSetupType)
     return TRUE;
 }
 
-DWORD WINAPI
+static DWORD CALLBACK
+HotkeyThread(LPVOID Parameter)
+{
+    ATOM hotkey;
+    MSG msg;
+
+    DPRINT("HotkeyThread start\n");
+
+    hotkey = GlobalAddAtomW(L"Setup Shift+F10 Hotkey");
+
+    if (!RegisterHotKey(NULL, hotkey, MOD_SHIFT, VK_F10))
+        DPRINT1("RegisterHotKey failed with %lu\n", GetLastError());
+
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        if (msg.hwnd == NULL && msg.message == WM_HOTKEY && msg.wParam == hotkey)
+        {
+            STARTUPINFOW si = { sizeof(si) };
+            PROCESS_INFORMATION pi;
+
+            if (CreateProcessW(L"cmd.exe",
+                               NULL,
+                               NULL,
+                               NULL,
+                               FALSE,
+                               CREATE_NEW_CONSOLE,
+                               NULL,
+                               NULL,
+                               &si,
+                               &pi))
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
+            else
+            {
+                DPRINT1("Failed to launch command prompt: %lu\n", GetLastError());
+            }
+        }
+    }
+
+    UnregisterHotKey(NULL, hotkey);
+    GlobalDeleteAtom(hotkey);
+
+    DPRINT("HotkeyThread terminate\n");
+    return 0;
+}
+
+
+static
+VOID
+InitializeDefaultUserLocale(VOID)
+{
+    WCHAR szBuffer[80];
+    PWSTR ptr;
+    HKEY hLocaleKey;
+    DWORD ret;
+    DWORD dwSize;
+    LCID lcid;
+    INT i;
+
+    struct {LCTYPE LCType; PWSTR pValue;} LocaleData[] = {
+        /* Number */
+        {LOCALE_SDECIMAL, L"sDecimal"},
+        {LOCALE_STHOUSAND, L"sThousand"},
+        {LOCALE_SNEGATIVESIGN, L"sNegativeSign"},
+        {LOCALE_SPOSITIVESIGN, L"sPositiveSign"},
+        {LOCALE_SGROUPING, L"sGrouping"},
+        {LOCALE_SLIST, L"sList"},
+        {LOCALE_SNATIVEDIGITS, L"sNativeDigits"},
+        {LOCALE_INEGNUMBER, L"iNegNumber"},
+        {LOCALE_IDIGITS, L"iDigits"},
+        {LOCALE_ILZERO, L"iLZero"},
+        {LOCALE_IMEASURE, L"iMeasure"},
+        {LOCALE_IDIGITSUBSTITUTION, L"NumShape"},
+
+        /* Currency */
+        {LOCALE_SCURRENCY, L"sCurrency"},
+        {LOCALE_SMONDECIMALSEP, L"sMonDecimalSep"},
+        {LOCALE_SMONTHOUSANDSEP, L"sMonThousandSep"},
+        {LOCALE_SMONGROUPING, L"sMonGrouping"},
+        {LOCALE_ICURRENCY, L"iCurrency"},
+        {LOCALE_INEGCURR, L"iNegCurr"},
+        {LOCALE_ICURRDIGITS, L"iCurrDigits"},
+
+        /* Time */
+        {LOCALE_STIMEFORMAT, L"sTimeFormat"},
+        {LOCALE_STIME, L"sTime"},
+        {LOCALE_S1159, L"s1159"},
+        {LOCALE_S2359, L"s2359"},
+        {LOCALE_ITIME, L"iTime"},
+        {LOCALE_ITIMEMARKPOSN, L"iTimePrefix"},
+        {LOCALE_ITLZERO, L"iTLZero"},
+
+        /* Date */
+        {LOCALE_SLONGDATE, L"sLongDate"},
+        {LOCALE_SSHORTDATE, L"sShortDate"},
+        {LOCALE_SDATE, L"sDate"},
+        {LOCALE_IFIRSTDAYOFWEEK, L"iFirstDayOfWeek"},
+        {LOCALE_IFIRSTWEEKOFYEAR, L"iFirstWeekOfYear"},
+        {LOCALE_IDATE, L"iDate"},
+        {LOCALE_ICALENDARTYPE, L"iCalendarType"},
+
+        /* Misc */
+        {LOCALE_SCOUNTRY, L"sCountry"},
+        {LOCALE_SLANGUAGE, L"sLanguage"},
+        {LOCALE_ICOUNTRY, L"iCountry"},
+        {0, NULL}};
+
+    ret = RegOpenKeyExW(HKEY_USERS,
+                        L".DEFAULT\\Control Panel\\International",
+                        0,
+                        KEY_READ | KEY_WRITE,
+                        &hLocaleKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    dwSize = 9 * sizeof(WCHAR);
+    ret = RegQueryValueExW(hLocaleKey,
+                           L"Locale",
+                           NULL,
+                           NULL,
+                           (PBYTE)szBuffer,
+                           &dwSize);
+    if (ret != ERROR_SUCCESS)
+        goto done;
+
+    lcid = (LCID)wcstoul(szBuffer, &ptr, 16);
+    if (lcid == 0)
+        goto done;
+
+    i = 0;
+    while (LocaleData[i].pValue != NULL)
+    {
+        if (GetLocaleInfo(lcid,
+                          LocaleData[i].LCType | LOCALE_NOUSEROVERRIDE,
+                          szBuffer,
+                          sizeof(szBuffer) / sizeof(WCHAR)))
+        {
+            RegSetValueExW(hLocaleKey,
+                           LocaleData[i].pValue,
+                           0,
+                           REG_SZ,
+                           (PBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+        }
+
+        i++;
+    }
+
+done:
+    RegCloseKey(hLocaleKey);
+}
+
+
+DWORD
+WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
     TCHAR szBuffer[MAX_PATH];
@@ -863,9 +1093,11 @@ InstallReactOS(HINSTANCE hInstance)
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
     HINF hShortcutsInf;
+    HANDLE hHotkeyThread;
+    BOOL ret;
 
     InitializeSetupActionLog(FALSE);
-    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
+    LogItem(NULL, L"Installing ReactOS");
 
     if (!InitializeProfiles())
     {
@@ -875,6 +1107,8 @@ InstallReactOS(HINSTANCE hInstance)
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
+
+    InitializeDefaultUserLocale();
 
     if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
     {
@@ -906,6 +1140,24 @@ InstallReactOS(HINSTANCE hInstance)
         CreateDirectory(szBuffer, NULL);
     }
 
+    hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
+
+    /* Hack: Install TCP/IP protocol driver */
+    ret = InstallInfSection(NULL,
+                            L"nettcpip.inf",
+                            L"MS_TCPIP.PrimaryInstall",
+                            L"MS_TCPIP.PrimaryInstall.Services");
+    if (!ret && GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+        DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
+    }
+    else
+    {
+        /* Start the TCP/IP protocol driver */
+        SetupStartService(L"Tcpip", FALSE);
+    }
+
+
     if (!CommonInstall())
         return 0;
 
@@ -919,7 +1171,7 @@ InstallReactOS(HINSTANCE hInstance)
                                       NULL,
                                       INF_STYLE_WIN4,
                                       NULL);
-    if (hShortcutsInf == INVALID_HANDLE_VALUE) 
+    if (hShortcutsInf == INVALID_HANDLE_VALUE)
     {
         FatalError("Failed to open shortcuts.inf");
         return 0;
@@ -933,45 +1185,16 @@ InstallReactOS(HINSTANCE hInstance)
 
     SetupCloseInfFile(hShortcutsInf);
 
-    /* ROS HACK, as long as NtUnloadKey is not implemented */
-    {
-        NTSTATUS Status = NtUnloadKey(NULL);
-        if (Status == STATUS_NOT_IMPLEMENTED)
-        {
-            /* Create the Administrator profile */
-            PROFILEINFOW ProfileInfo;
-            HANDLE hToken;
-            BOOL ret;
-
-            ret = LogonUserW(AdminInfo.Name,
-                             AdminInfo.Domain,
-                             AdminInfo.Password,
-                             LOGON32_LOGON_INTERACTIVE,
-                             LOGON32_PROVIDER_DEFAULT,
-                             &hToken);
-            if (!ret)
-            {
-                FatalError("LogonUserW() failed!");
-                return 0;
-            }
-            ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-            ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-            ProfileInfo.lpUserName = L"Administrator";
-            ProfileInfo.dwFlags = PI_NOUI;
-            LoadUserProfileW(hToken, &ProfileInfo);
-            CloseHandle(hToken);
-        }
-        else
-        {
-            DPRINT1("ROS HACK not needed anymore. Please remove it\n");
-        }
-    }
-    /* END OF ROS HACK */
-
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 
-    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
+    if (hHotkeyThread)
+    {
+        PostThreadMessage(GetThreadId(hHotkeyThread), WM_QUIT, 0, 0);
+        CloseHandle(hHotkeyThread);
+    }
+
+    LogItem(NULL, L"Installing ReactOS done");
     TerminateSetupActionLog();
 
     if (AdminInfo.Name != NULL)
@@ -1050,4 +1273,49 @@ DWORD WINAPI
 SetupChangeLocale(HWND hWnd, LCID Lcid)
 {
     return SetupChangeLocaleEx(hWnd, Lcid, NULL, 0, 0, 0);
+}
+
+
+DWORD
+WINAPI
+SetupStartService(
+    LPCWSTR lpServiceName,
+    BOOL bWait)
+{
+    SC_HANDLE hManager = NULL;
+    SC_HANDLE hService = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+
+    hManager = OpenSCManagerW(NULL,
+                              NULL,
+                              SC_MANAGER_ALL_ACCESS);
+    if (hManager == NULL)
+    {
+        dwError = GetLastError();
+        goto done;
+    }
+
+    hService = OpenServiceW(hManager,
+                            lpServiceName,
+                            SERVICE_START);
+    if (hService == NULL)
+    {
+        dwError = GetLastError();
+        goto done;
+    }
+
+    if (!StartService(hService, 0, NULL))
+    {
+        dwError = GetLastError();
+        goto done;
+    }
+
+done:
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+
+    if (hManager != NULL)
+        CloseServiceHandle(hManager);
+
+    return dwError;
 }

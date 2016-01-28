@@ -160,6 +160,10 @@ InitListViewColumns(PINPUT_DIALOG_CONTEXT pContext)
 
     pContext->hDevList = GetDlgItem(pContext->hwndDlg, IDC_LIST_DEVICE);
 
+    /* Highlights the entire row instead of just the selected item in the first column.
+       This increases readability on the selected item in the list. */
+    SendMessage(pContext->hDevList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
+
     ZeroMemory(&lvcolumn, sizeof(LVCOLUMNW));
     lvcolumn.pszText = szText;
     lvcolumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH;

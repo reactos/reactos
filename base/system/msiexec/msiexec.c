@@ -418,11 +418,12 @@ static int chomp( WCHAR *str )
 {
 	enum chomp_state state = cs_token;
 	WCHAR *p, *out;
-	int count = 1, ignore;
+        int count = 1;
+        BOOL ignore;
 
 	for( p = str, out = str; *p; p++ )
 	{
-		ignore = 1;
+                ignore = TRUE;
 		switch( state )
 		{
 		case cs_whitespace:
@@ -436,7 +437,7 @@ static int chomp( WCHAR *str )
 				break;
 			default:
 				count++;
-				ignore = 0;
+                                ignore = FALSE;
 				state = cs_token;
 			}
 			break;
@@ -452,7 +453,7 @@ static int chomp( WCHAR *str )
 				*out++ = 0;
 				break;
 			default:
-				ignore = 0;
+                                ignore = FALSE;
 			}
 			break;
 
@@ -463,7 +464,7 @@ static int chomp( WCHAR *str )
 				state = cs_token;
 				break;
 			default:
-				ignore = 0;
+                                ignore = FALSE;
 			}
 			break;
 		}
@@ -626,6 +627,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			PackageName = argvW[i];
 			StringListAppend(&property_list, ActionAdmin);
+			WINE_FIXME("Administrative installs are not currently supported\n");
 		}
 		else if(msi_option_prefix(argvW[i], "f"))
 		{
@@ -864,7 +866,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				ExitProcess(1);
 			}
 		}
-		else if(msi_option_equal(argvW[i], "p"))
+		else if(msi_option_equal(argvW[i], "p") || msi_option_equal(argvW[i], "update"))
 		{
 			FunctionPatch = TRUE;
 			i++;
@@ -880,10 +882,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE;
 			}
-			else if(msi_strequal(argvW[i]+2, "b"))
-			{
-				InstallUILevel = INSTALLUILEVEL_BASIC;
-			}
 			else if(msi_strequal(argvW[i]+2, "r"))
 			{
 				InstallUILevel = INSTALLUILEVEL_REDUCED;
@@ -896,23 +894,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(msi_strequal(argvW[i]+2, "b+"))
+			else if(msi_strprefix(argvW[i]+2, "b"))
 			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
-			}
-			else if(msi_strequal(argvW[i]+2, "b-"))
-			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY;
-			}
-			else if(msi_strequal(argvW[i]+2, "b+!"))
-			{
-				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
-				WINE_FIXME("Unknown modifier: !\n");
-			}
-			else if(msi_strequal(argvW[i]+2, "b!"))
-			{
-				InstallUILevel = INSTALLUILEVEL_BASIC;
-				WINE_FIXME("Unknown modifier: !\n");
+                const WCHAR *ptr = argvW[i] + 3;
+
+                InstallUILevel = INSTALLUILEVEL_BASIC;
+
+                while (*ptr)
+                {
+                    if (msi_strprefix(ptr, "+"))
+                        InstallUILevel |= INSTALLUILEVEL_ENDDIALOG;
+                    if (msi_strprefix(ptr, "-"))
+                        InstallUILevel |= INSTALLUILEVEL_PROGRESSONLY;
+                    if (msi_strprefix(ptr, "!"))
+                    {
+                        WINE_FIXME("Unhandled modifier: !\n");
+                        InstallUILevel |= INSTALLUILEVEL_HIDECANCEL;
+                    }
+                    ptr++;
+                }
 			}
 			else
 			{
@@ -920,6 +920,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					 wine_dbgstr_w(argvW[i]+2));
 			}
 		}
+                else if(msi_option_equal(argvW[i], "passive"))
+                {
+                    static const WCHAR rebootpromptW[] =
+                        {'R','E','B','O','O','T','P','R','O','M','P','T','=','"','S','"',0};
+
+                    InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY|INSTALLUILEVEL_HIDECANCEL;
+                    StringListAppend(&property_list, rebootpromptW);
+                }
 		else if(msi_option_equal(argvW[i], "y"))
 		{
 			FunctionDllRegisterServer = TRUE;

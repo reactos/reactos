@@ -25,11 +25,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
 typedef struct _INFO2_HEADER
 {
-	DWORD dwVersion;
-	DWORD dwNumberOfEntries; /* unused */
-	DWORD dwHighestRecordUniqueId; /* unused */
-	DWORD dwRecordSize;
-	DWORD dwTotalLogicalSize;
+    DWORD dwVersion;
+    DWORD dwNumberOfEntries; /* unused */
+    DWORD dwHighestRecordUniqueId; /* unused */
+    DWORD dwRecordSize;
+    DWORD dwTotalLogicalSize;
 } INFO2_HEADER, *PINFO2_HEADER;
 
 #include <poppack.h>

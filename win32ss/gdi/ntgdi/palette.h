@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _MSC_VER
+#pragma warning(disable:4200) // zero-sized array in struct/union
+#endif // _MSC_VER
+
 // Palette mode flags
 enum _PALFLAGS
 {
@@ -44,7 +48,7 @@ typedef struct _PALETTE
     ULONG ulBlueShift;
     HDEV  hPDev;
     PALETTEENTRY apalColors[0];
-} PALETTE;
+} PALETTE, *PPALETTE;
 
 extern PALETTE gpalRGB, gpalBGR, gpalRGB555, gpalRGB565, *gppalMono, *gppalDefault;
 extern PPALETTE appalSurfaceDefault[];

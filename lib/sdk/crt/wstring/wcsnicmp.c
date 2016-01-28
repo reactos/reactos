@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/wstring/wcsnicmp.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-int _wcsnicmp (const wchar_t *cs, const wchar_t *ct, size_t count)
+int CDECL _wcsnicmp (const wchar_t *cs, const wchar_t *ct, size_t count)
 {
 	if (count == 0)
 		return 0;

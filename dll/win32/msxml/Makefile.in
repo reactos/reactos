@@ -1,9 +1,0 @@
-MODULE = msxml.dll
-
-C_SRCS = main.c
-
-IDL_TLB_SRCS = msxml_tlb.idl
-
-RC_SRCS = rsrc.rc
-
-@MAKE_DLL_RULES@

@@ -685,6 +685,7 @@ static BOOL CertContext_SetProperty(cert_t *cert, DWORD dwPropId,
         case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
         case CERT_ENROLLMENT_PROP_ID:
         case CERT_CROSS_CERT_DIST_POINTS_PROP_ID:
+        case CERT_OCSP_RESPONSE_PROP_ID:
         case CERT_RENEWAL_PROP_ID:
         {
             if (pvData)
@@ -975,7 +976,7 @@ static BOOL container_matches_cert(PCCERT_CONTEXT pCert, LPCSTR container,
 {
     CRYPT_KEY_PROV_INFO copy;
     WCHAR containerW[MAX_PATH];
-    BOOL matches = FALSE;
+    BOOL matches;
 
     MultiByteToWideChar(CP_ACP, 0, container, -1,
      containerW, sizeof(containerW) / sizeof(containerW[0]));
@@ -1133,7 +1134,7 @@ static BOOL cert_prov_info_matches_cert(PCCERT_CONTEXT pCert)
 BOOL WINAPI CryptFindCertificateKeyProvInfo(PCCERT_CONTEXT pCert,
  DWORD dwFlags, void *pvReserved)
 {
-    BOOL matches = FALSE;
+    BOOL matches;
 
     TRACE("(%p, %08x, %p)\n", pCert, dwFlags, pvReserved);
 
@@ -1873,6 +1874,12 @@ PCCERT_CONTEXT WINAPI CertGetIssuerCertificateFromStore(HCERTSTORE hCertStore,
         {
             CertFreeCertificateContext(ret);
             ret = NULL;
+        }
+        if (CRYPT_IsCertificateSelfSigned(pSubjectContext))
+        {
+            CertFreeCertificateContext(ret);
+            ret = NULL;
+            SetLastError(CRYPT_E_SELF_SIGNED);
         }
     }
     TRACE("returning %p\n", ret);
@@ -2872,7 +2879,7 @@ static void CRYPT_SetBitInField(struct BitField *field, DWORD bit)
 
 static BOOL CRYPT_IsBitInFieldSet(const struct BitField *field, DWORD bit)
 {
-    BOOL set = FALSE;
+    BOOL set;
     DWORD indexIndex = bit / BITS_PER_DWORD;
 
     assert(field->cIndexes);
@@ -3084,7 +3091,6 @@ static void CertContext_SetKeyProvInfo(PCCERT_CONTEXT context,
                 CryptMemFree(szProvider);
             }
         }
-        size = sizeof(info.dwKeySpec);
         /* in case no CRYPT_KEY_PROV_INFO given,
          *  we always use AT_SIGNATURE key spec
          */

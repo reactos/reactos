@@ -24,7 +24,6 @@ set_module_type(shdocvw win32dll)
 target_link_libraries(shdocvw uuid wine)
 add_delay_importlibs(shdocvw ole32 oleaut32 ieframe)
 add_importlibs(shdocvw shlwapi advapi32 msvcrt kernel32 ntdll)
-# shdocvw_v1.tlb needs stdole2.tlb
 add_dependencies(shdocvw stdole2)
 add_pch(shdocvw shdocvw.h SOURCE)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)

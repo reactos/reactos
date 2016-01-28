@@ -1,0 +1,31 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+[Section]
+Name = MD5summer
+Version = 1.2.0.11
+License = Freeware
+Description = An application which generates and verifies md5 checksums.
+Size = 452kB
+Category = 12
+URLSite = http://www.md5summer.org/
+URLDownload = http://www.md5summer.org/md5v12011.zip
+SHA1 = 3d21df6f587bf187dad9a300b6ae3a2b479e8329
+CDPath = none
+
+[Section.0407]
+Description = Anwendung, welche MD5 Checksummen generiert und verifiziert.
+
+[Section.0418]
+License = Gratuită
+Description = O aplicație care generează și verifică sume de control md5.
+Size = 452 ko
+
+[Section.041f]
+License = Ücretsiz
+Description = MD5 sağlama toplamlarını oluşturan ve doğrulayan bir uygulamadır.
+Size = 452 KB
+
+[Section.0804]
+Description = 生成并验证 md5 校验的应用程序。

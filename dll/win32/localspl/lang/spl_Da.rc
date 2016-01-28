@@ -23,5 +23,5 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_LOCALPORT "Lokal port"
-    IDS_LOCALMONITOR "Lokal overvåger"
+    IDS_LOCALMONITOR "Lokal overvÃ¥ger"
 }

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/ddraw/GetCaps.c
+ * FILE:                 dll/directx/ddraw/Ddraw/GetCaps.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Magnus Olsen
  *

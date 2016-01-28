@@ -29,22 +29,34 @@
 
 #include <debug.h>
 
-#define SAMPLE_NUMBER   _T("123456789")
-#define NO_FLAG         0
+#define SAMPLE_NUMBER   L"123456789"
+
+#define NUM_SHEETS      4
+
+#define MAX_FIELD_DIG_SAMPLES       3
+
 
 HWND hList;
 HWND hLocaleList, hGeoList;
 BOOL bSpain = FALSE;
 
+GROUPINGDATA
+GroupingFormats[MAX_GROUPINGFORMATS] =
+{
+    {0, L"0;0"},
+    {3, L"3;0"},
+    {32, L"3;2;0"}
+};
+
 static BOOL CALLBACK
 LocalesEnumProc(LPTSTR lpLocale)
 {
     LCID lcid;
-    TCHAR lang[255];
+    WCHAR lang[255];
     INT index;
     BOOL bNoShow = FALSE;
 
-    lcid = _tcstoul(lpLocale, NULL, 16);
+    lcid = wcstoul(lpLocale, NULL, 16);
 
     /* Display only languages with installed support */
     if (!IsValidLocale(lcid, LCID_INSTALLED))
@@ -55,7 +67,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     {
         if (bSpain == FALSE)
         {
-            LoadString(hApplet, IDS_SPAIN, lang, 255);
+            LoadStringW(hApplet, IDS_SPAIN, lang, 255);
             bSpain = TRUE;
         }
         else
@@ -65,165 +77,1081 @@ LocalesEnumProc(LPTSTR lpLocale)
     }
     else
     {
-        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(WCHAR));
     }
 
     if (bNoShow == FALSE)
     {
-    index = SendMessage(hList,
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)lang);
+    index = SendMessageW(hList,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)lang);
 
-    SendMessage(hList,
-                CB_SETITEMDATA,
-                index,
-                (LPARAM)lcid);
+    SendMessageW(hList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)lcid);
     }
 
     return TRUE;
 }
 
+
 /* Update all locale samples */
-static VOID
-UpdateLocaleSample(HWND hwndDlg, LCID lcidLocale)
+static
+VOID
+UpdateLocaleSample(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
-    TCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
+    WCHAR OutBuffer[MAX_SAMPLES_STR_SIZE];
+    NUMBERFMT NumberFormat;
+    CURRENCYFMTW CurrencyFormat;
+
+    NumberFormat.NumDigits = pGlobalData->nNumDigits;
+    NumberFormat.LeadingZero = pGlobalData->nNumLeadingZero;
+    NumberFormat.Grouping = GroupingFormats[pGlobalData->nNumGrouping].nInteger;
+    NumberFormat.lpDecimalSep = pGlobalData->szNumDecimalSep;
+    NumberFormat.lpThousandSep = pGlobalData->szNumThousandSep;
+    NumberFormat.NegativeOrder = pGlobalData->nNumNegFormat;
+
+    CurrencyFormat.NumDigits = pGlobalData->nCurrDigits;
+    CurrencyFormat.LeadingZero = pGlobalData->nNumLeadingZero;
+    CurrencyFormat.Grouping = GroupingFormats[pGlobalData->nCurrGrouping].nInteger;
+    CurrencyFormat.lpDecimalSep = pGlobalData->szCurrDecimalSep;
+    CurrencyFormat.lpThousandSep = pGlobalData->szCurrThousandSep;
+    CurrencyFormat.NegativeOrder = pGlobalData->nCurrNegFormat;
+    CurrencyFormat.PositiveOrder = pGlobalData->nCurrPosFormat;
+    CurrencyFormat.lpCurrencySymbol = pGlobalData->szCurrSymbol;
 
     /* Get number format sample */
-    GetNumberFormat(lcidLocale, NO_FLAG, SAMPLE_NUMBER, NULL, OutBuffer,
-                    MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMSAMPLE_EDIT),
-                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetNumberFormatW(pGlobalData->UserLCID, 0, SAMPLE_NUMBER,
+                     &NumberFormat,
+                     OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_NUMSAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get monetary format sample */
-    GetCurrencyFormat(lcidLocale, LOCALE_USE_CP_ACP, SAMPLE_NUMBER, NULL,
-                      OutBuffer, MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_MONEYSAMPLE_EDIT),
-                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetCurrencyFormatW(pGlobalData->UserLCID, 0, SAMPLE_NUMBER,
+                       &CurrencyFormat,
+                       OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_MONEYSAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get time format sample */
-    GetTimeFormat(lcidLocale, NO_FLAG, NULL, NULL, OutBuffer, MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_TIMESAMPLE_EDIT),
-        WM_SETTEXT,
-        0,
-        (LPARAM)OutBuffer);
+    GetTimeFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szTimeFormat,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_TIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    ZeroMemory(OutBuffer, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
 
     /* Get short date format sample */
-    GetDateFormat(lcidLocale, DATE_SHORTDATE, NULL, NULL, OutBuffer,
-        MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT), WM_SETTEXT,
-        0, (LPARAM)OutBuffer);
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szShortDateFormat,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
 
     /* Get long date sample */
-    GetDateFormat(lcidLocale, DATE_LONGDATE, NULL, NULL, OutBuffer,
-        MAX_SAMPLES_STR_SIZE);
-    SendMessage(GetDlgItem(hwndDlg, IDC_FULLTIMESAMPLE_EDIT),
-        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+    GetDateFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szLongDateFormat,
+                   OutBuffer, MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_FULLTIMESAMPLE_EDIT,
+                        WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }
 
 static VOID
 CreateLanguagesList(HWND hwnd)
 {
-    TCHAR langSel[255];
+    WCHAR langSel[255];
 
     hList = hwnd;
     bSpain = FALSE;
-    EnumSystemLocales(LocalesEnumProc, LCID_SUPPORTED);
+    EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(TCHAR));
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
 
-    SendMessage(hList,
-                CB_SELECTSTRING,
-                -1,
-                (LPARAM)langSel);
+    SendMessageW(hList,
+                 CB_SELECTSTRING,
+                 -1,
+                 (LPARAM)langSel);
 }
+
+
+BOOL
+LoadCurrentLocale(
+    PGLOBALDATA pGlobalData)
+{
+    WCHAR szBuffer[16];
+    PWSTR ptr;
+    HKEY hLocaleKey;
+    DWORD ret;
+    DWORD dwSize;
+
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER,
+                        L"Control Panel\\International",
+                        0,
+                        KEY_READ,
+                        &hLocaleKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return FALSE;
+    }
+
+    dwSize = 9 * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"Locale",
+                     NULL,
+                     NULL,
+                     (PBYTE)szBuffer,
+                     &dwSize);
+    pGlobalData->UserLCID = (LCID)wcstoul(szBuffer, &ptr, 16);
+
+    /* Number */
+    dwSize = MAX_NUMDECIMALSEP * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sDecimal",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumDecimalSep,
+                     &dwSize);
+
+    dwSize = MAX_NUMTHOUSANDSEP * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sThousand",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumThousandSep,
+                     &dwSize);
+
+    dwSize = MAX_NUMNEGATIVESIGN * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sNegativeSign",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumNegativeSign,
+                     &dwSize);
+
+    dwSize = MAX_NUMPOSITIVESIGN * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sPositiveSign",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumPositiveSign,
+                     &dwSize);
+
+    dwSize = MAX_NUMLISTSEP * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sList",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumListSep,
+                     &dwSize);
+
+    dwSize = MAX_NUMNATIVEDIGITS * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sNativeDigits",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szNumNativeDigits,
+                     &dwSize);
+
+    pGlobalData->nNumNegFormat = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iNegNumber",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nNumNegFormat = _wtoi(szBuffer);
+
+    pGlobalData->nNumDigits = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iDigits",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nNumDigits = _wtoi(szBuffer);
+
+    pGlobalData->nNumLeadingZero = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iLZero",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nNumLeadingZero = _wtoi(szBuffer);
+
+    pGlobalData->nNumMeasure = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iMeasure",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nNumMeasure = _wtoi(szBuffer);
+
+    pGlobalData->nNumShape = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"NumShape",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nNumShape = _wtoi(szBuffer);
+
+    pGlobalData->nNumGrouping = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"sGrouping",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+    {
+        pGlobalData->nNumGrouping = 0;
+        if (szBuffer[0] == L'3')
+        {
+            if ((szBuffer[1] == L';') &&
+                (szBuffer[2] == L'2'))
+                pGlobalData->nNumGrouping = 2;
+            else
+                pGlobalData->nNumGrouping = 1;
+        }
+    }
+
+    /* Currency */
+    dwSize = MAX_CURRSYMBOL * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sCurrency",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szCurrSymbol,
+                     &dwSize);
+
+    dwSize = MAX_CURRDECIMALSEP * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sMonDecimalSep",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szCurrDecimalSep,
+                     &dwSize);
+
+    dwSize = MAX_CURRTHOUSANDSEP * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sMonThousandSep",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szCurrThousandSep,
+                     &dwSize);
+
+    pGlobalData->nCurrGrouping = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"sMonGrouping",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+    {
+        pGlobalData->nCurrGrouping = 0;
+        if (szBuffer[0] == L'3')
+        {
+            if ((szBuffer[1] == L';') &&
+                (szBuffer[2] == L'2'))
+                pGlobalData->nCurrGrouping = 2;
+            else
+                pGlobalData->nCurrGrouping = 1;
+        }
+    }
+
+    pGlobalData->nCurrPosFormat = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iCurrency",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nCurrPosFormat = _wtoi(szBuffer);
+
+    pGlobalData->nCurrNegFormat = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iNegCurr",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nCurrNegFormat = _wtoi(szBuffer);
+
+    pGlobalData->nCurrDigits = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iCurrDigits",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nCurrDigits = _wtoi(szBuffer);
+
+    /* Time */
+    dwSize = MAX_TIMEFORMAT * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sTimeFormat",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szTimeFormat,
+                     &dwSize);
+
+    dwSize = MAX_TIMESEPARATOR * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sTime",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szTimeSep,
+                     &dwSize);
+
+    dwSize = MAX_TIMEAMSYMBOL * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"s1159",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szTimeAM,
+                     &dwSize);
+
+    dwSize = MAX_TIMEPMSYMBOL * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"s2359",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szTimePM,
+                     &dwSize);
+
+    pGlobalData->nTime = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iTime",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nTime = _wtoi(szBuffer);
+
+    pGlobalData->nTimePrefix = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iTimePrefix",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nTimePrefix = _wtoi(szBuffer);
+
+    pGlobalData->nTimeLeadingZero = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iTLZero",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nTimeLeadingZero = _wtoi(szBuffer);
+
+    /* Date */
+    dwSize = MAX_LONGDATEFORMAT * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sLongDate",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szLongDateFormat,
+                     &dwSize);
+
+    dwSize = MAX_SHORTDATEFORMAT * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sShortDate",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szShortDateFormat,
+                     &dwSize);
+
+    dwSize = MAX_DATESEPARATOR * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sDate",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szDateSep,
+                     &dwSize);
+
+    pGlobalData->nFirstDayOfWeek = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iFirstDayOfWeek",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nFirstDayOfWeek = _wtoi(szBuffer);
+
+    pGlobalData->nFirstWeekOfYear = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iFirstWeekOfYear",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nFirstWeekOfYear = _wtoi(szBuffer);
+
+    pGlobalData->nDate = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iDate",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nDate = _wtoi(szBuffer);
+
+    pGlobalData->nCalendarType = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iCalendarType",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nCalendarType = _wtoi(szBuffer);
+
+    /* Misc */
+    dwSize = MAX_MISCCOUNTRY * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sCountry",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szMiscCountry,
+                     &dwSize);
+
+    dwSize = MAX_MISCLANGUAGE * sizeof(WCHAR);
+    RegQueryValueExW(hLocaleKey,
+                     L"sLanguage",
+                     NULL,
+                     NULL,
+                     (PBYTE)pGlobalData->szMiscLanguage,
+                     &dwSize);
+
+    pGlobalData->nMiscCountry = 0;
+    dwSize = 16 * sizeof(WCHAR);
+    if (RegQueryValueExW(hLocaleKey,
+                         L"iCountry",
+                         NULL,
+                         NULL,
+                         (PBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+        pGlobalData->nMiscCountry = _wtoi(szBuffer);
+
+    RegCloseKey(hLocaleKey);
+
+    return TRUE;
+}
+
+
+VOID
+SetNewLocale(
+    PGLOBALDATA pGlobalData,
+    LCID lcid)
+{
+    WCHAR szBuffer[16];
+
+    pGlobalData->UserLCID = lcid;
+
+    /* Number */
+    GetLocaleInfo(lcid,
+                  LOCALE_SDECIMAL | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumDecimalSep,
+                  MAX_NUMDECIMALSEP);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_STHOUSAND | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumThousandSep,
+                  MAX_NUMTHOUSANDSEP);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SNEGATIVESIGN | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumNegativeSign,
+                  MAX_NUMNEGATIVESIGN);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SPOSITIVESIGN | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumPositiveSign,
+                  MAX_NUMPOSITIVESIGN);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SLIST | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumListSep,
+                  MAX_NUMLISTSEP);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SNATIVEDIGITS | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szNumNativeDigits,
+                  MAX_NUMNATIVEDIGITS);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_INEGNUMBER | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumNegFormat = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IDIGITS | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumDigits = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ILZERO | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumLeadingZero = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IMEASURE | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumMeasure = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IDIGITSUBSTITUTION | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumShape = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SGROUPING | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nNumGrouping = 0;
+    if (szBuffer[0] == L'3')
+    {
+        if ((szBuffer[1] == L';') &&
+            (szBuffer[2] == L'2'))
+            pGlobalData->nNumGrouping = 2;
+        else
+            pGlobalData->nNumGrouping = 1;
+    }
+
+    /* Currency */
+    GetLocaleInfo(lcid,
+                  LOCALE_SCURRENCY | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szCurrSymbol,
+                  MAX_CURRSYMBOL);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SMONDECIMALSEP | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szCurrDecimalSep,
+                  MAX_CURRDECIMALSEP);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SMONTHOUSANDSEP | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szCurrThousandSep,
+                  MAX_CURRTHOUSANDSEP);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SMONGROUPING | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nCurrGrouping = 0;
+    if (szBuffer[0] == L'3')
+    {
+        if ((szBuffer[1] == L';') &&
+            (szBuffer[2] == L'2'))
+            pGlobalData->nCurrGrouping = 2;
+        else
+            pGlobalData->nCurrGrouping = 1;
+    }
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ICURRENCY | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nCurrPosFormat = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_INEGCURR | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nCurrNegFormat = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ICURRDIGITS | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nCurrDigits = _wtoi(szBuffer);
+
+    /* Time */
+    GetLocaleInfo(lcid,
+                  LOCALE_STIMEFORMAT | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szTimeFormat,
+                  MAX_TIMEFORMAT);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_STIME | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szTimeSep,
+                  MAX_TIMESEPARATOR);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_S1159 | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szTimeAM,
+                  MAX_TIMEAMSYMBOL);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_S2359 | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szTimePM,
+                  MAX_TIMEPMSYMBOL);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ITIME | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nTime = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ITIMEMARKPOSN | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nTimePrefix = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ITLZERO | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nTimeLeadingZero = _wtoi(szBuffer);
+
+    /* Date */
+    GetLocaleInfo(lcid,
+                  LOCALE_SLONGDATE | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szLongDateFormat,
+                  MAX_LONGDATEFORMAT);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SSHORTDATE | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szShortDateFormat,
+                  MAX_SHORTDATEFORMAT);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SDATE | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szDateSep,
+                  MAX_DATESEPARATOR);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IFIRSTDAYOFWEEK | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nFirstDayOfWeek = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IFIRSTWEEKOFYEAR | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nFirstWeekOfYear = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_IDATE | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nDate = _wtoi(szBuffer);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ICALENDARTYPE | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nCalendarType = _wtoi(szBuffer);
+
+    /* Misc */
+    GetLocaleInfo(lcid,
+                  LOCALE_SCOUNTRY | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szMiscCountry,
+                  MAX_MISCCOUNTRY);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_SLANGUAGE | LOCALE_NOUSEROVERRIDE,
+                  pGlobalData->szMiscLanguage,
+                  MAX_MISCLANGUAGE);
+
+    GetLocaleInfo(lcid,
+                  LOCALE_ICOUNTRY | LOCALE_NOUSEROVERRIDE,
+                  szBuffer,
+                  sizeof(szBuffer) / sizeof(WCHAR));
+    pGlobalData->nMiscCountry = _wtoi(szBuffer);
+}
+
+
+static
+VOID
+SaveUserLocale(
+    PGLOBALDATA pGlobalData,
+    HKEY hLocaleKey)
+{
+    WCHAR szBuffer[16];
+
+    wsprintf(szBuffer, L"%08lx", (DWORD)pGlobalData->UserLCID);
+    RegSetValueExW(hLocaleKey,
+                   L"Locale",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    /* Number */
+    RegSetValueExW(hLocaleKey,
+                   L"sDecimal",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumDecimalSep,
+                   (wcslen(pGlobalData->szNumDecimalSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sThousand",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumThousandSep,
+                   (wcslen(pGlobalData->szNumThousandSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sNegativeSign",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumNegativeSign,
+                   (wcslen(pGlobalData->szNumNegativeSign) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sPositiveSign",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumPositiveSign,
+                   (wcslen(pGlobalData->szNumPositiveSign) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sGrouping",
+                   0,
+                   REG_SZ,
+                   (PBYTE)GroupingFormats[pGlobalData->nNumGrouping].pszString,
+                   (wcslen(GroupingFormats[pGlobalData->nNumGrouping].pszString) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sList",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumListSep,
+                   (wcslen(pGlobalData->szNumListSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sNativeDigits",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szNumNativeDigits,
+                   (wcslen(pGlobalData->szNumNativeDigits) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nNumNegFormat,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iNegNumber",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nNumDigits,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iDigits",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nNumLeadingZero,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iLZero",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nNumMeasure,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iMeasure",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nNumShape,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"NumShape",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    /* Currency */
+    RegSetValueExW(hLocaleKey,
+                   L"sCurrency",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szCurrSymbol,
+                   (wcslen(pGlobalData->szCurrSymbol) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sMonDecimalSep",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szCurrDecimalSep,
+                   (wcslen(pGlobalData->szCurrDecimalSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sMonThousandSep",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szCurrThousandSep,
+                   (wcslen(pGlobalData->szCurrThousandSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sMonGrouping",
+                   0,
+                   REG_SZ,
+                   (PBYTE)GroupingFormats[pGlobalData->nCurrGrouping].pszString,
+                   (wcslen(GroupingFormats[pGlobalData->nCurrGrouping].pszString) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nCurrPosFormat,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iCurrency",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nCurrNegFormat,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iNegCurr",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nCurrDigits,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iCurrDigits",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    /* Time */
+    RegSetValueExW(hLocaleKey,
+                   L"sTimeFormat",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szTimeFormat,
+                   (wcslen(pGlobalData->szTimeFormat) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sTime",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szTimeSep,
+                   (wcslen(pGlobalData->szTimeSep) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"s1159",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szTimeAM,
+                   (wcslen(pGlobalData->szTimeAM) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"s2359",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szTimePM,
+                   (wcslen(pGlobalData->szTimePM) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nTime,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iTime",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nTimePrefix,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iTimePrefix",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nTimeLeadingZero,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iTLZero",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    /* Date */
+    RegSetValueExW(hLocaleKey,
+                   L"sLongDate",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szLongDateFormat,
+                   (wcslen(pGlobalData->szLongDateFormat) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sShortDate",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szShortDateFormat,
+                   (wcslen(pGlobalData->szShortDateFormat) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sDate",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szDateSep,
+                   (wcslen(pGlobalData->szDateSep) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nFirstDayOfWeek,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iFirstDayOfWeek",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nFirstWeekOfYear,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iFirstWeekOfYear",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nDate,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iDate",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nCalendarType,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iCalendarType",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    /* Misc */
+    RegSetValueExW(hLocaleKey,
+                   L"sCountry",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szMiscCountry,
+                   (wcslen(pGlobalData->szMiscCountry) + 1) * sizeof(WCHAR));
+
+    RegSetValueExW(hLocaleKey,
+                   L"sLanguage",
+                   0,
+                   REG_SZ,
+                   (PBYTE)pGlobalData->szMiscLanguage,
+                   (wcslen(pGlobalData->szMiscLanguage) + 1) * sizeof(WCHAR));
+
+    _itow(pGlobalData->nMiscCountry,
+          szBuffer, DECIMAL_RADIX);
+    RegSetValueExW(hLocaleKey,
+                   L"iCountry",
+                   0,
+                   REG_SZ,
+                   (PBYTE)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+}
+
 
 /* Sets new locale */
 VOID
-SetNewLocale(LCID lcid)
+SaveCurrentLocale(
+    PGLOBALDATA pGlobalData)
 {
-    // HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
-    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
-    // HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409" (type=0)
-
-    // Set locale
-    HKEY localeKey;
-    HKEY langKey;
+    HKEY hLocaleKey;
     DWORD ret;
-    TCHAR value[9];
-    DWORD valuesize;
-    TCHAR ACPPage[9];
-    TCHAR OEMPage[9];
 
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, OEMPage, sizeof(OEMPage)/sizeof(TCHAR));
-    if (ret == 0)
+    if (pGlobalData->bApplyToDefaultUser)
     {
-        PrintErrorMsgBox(IDS_ERROR_OEM_CODE_PAGE);
-        return;
+        ret = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT\\Control Panel\\International",
+                            0,
+                            KEY_WRITE,
+                            &hLocaleKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
+            return;
+        }
+
+        SaveUserLocale(pGlobalData, hLocaleKey);
+
+        /* Flush and close the locale key */
+        RegFlushKey(hLocaleKey);
+        RegCloseKey(hLocaleKey);
     }
 
-    ret = GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, ACPPage, sizeof(ACPPage)/sizeof(TCHAR));
-    if (ret == 0)
-    {
-        PrintErrorMsgBox(IDS_ERROR_ANSI_CODE_PAGE);
-        return;
-    }
-
-    ret = RegOpenKey(HKEY_CURRENT_USER, _T("Control Panel\\International"), &localeKey);
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER,
+                        L"Control Panel\\International",
+                        0,
+                        KEY_WRITE,
+                        &hLocaleKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
         return;
     }
 
-    wsprintf(value, _T("%04X"), (DWORD)lcid);
-    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
+    SaveUserLocale(pGlobalData, hLocaleKey);
 
-    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (LPBYTE)value, valuesize);
-    RegCloseKey(localeKey);
+    /* Flush and close the locale key */
+    RegFlushKey(hLocaleKey);
+    RegCloseKey(hLocaleKey);
 
-    ret = RegOpenKey(HKEY_USERS, _T(".DEFAULT\\Control Panel\\International"), &localeKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
-        return;
-    }
-
-    wsprintf(value, _T("%04X"), (DWORD)lcid);
-    valuesize = (_tcslen(value) + 1) * sizeof(TCHAR);
-
-    RegSetValueEx(localeKey, _T("Locale"), 0, REG_SZ, (BYTE *)value, valuesize);
-    RegCloseKey(localeKey);
-
-    // Set language
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"), &langKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_NLS_KEY_REG);
-        return;
-    }
-
-    RegSetValueEx(langKey, _T("Default"), 0, REG_SZ, (BYTE *)value, valuesize );
-    RegSetValueEx(langKey, _T("InstallLanguage"), 0, REG_SZ, (BYTE *)value, valuesize );
-
-    RegCloseKey(langKey);
-
-
-    /* Set language */
-    ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"), &langKey);
-    if (ret != ERROR_SUCCESS)
-    {
-        PrintErrorMsgBox(IDS_ERROR_NLS_CODE_REG);
-        return;
-    }
-
-    RegSetValueExW(langKey, _T("OEMCP"), 0, REG_SZ, (BYTE *)OEMPage, (_tcslen(OEMPage) +1 ) * sizeof(TCHAR));
-    RegSetValueExW(langKey, _T("ACP"), 0, REG_SZ, (BYTE *)ACPPage, (_tcslen(ACPPage) +1 ) * sizeof(TCHAR));
-
-    RegCloseKey(langKey);
+    /* Set the new locale for the current process */
+    NtSetDefaultLocale(TRUE, pGlobalData->UserLCID);
 }
 
 /* Location enumerate procedure */
@@ -231,30 +1159,32 @@ BOOL
 CALLBACK
 LocationsEnumProc(GEOID gId)
 {
-    TCHAR loc[MAX_STR_SIZE];
+    WCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT);
-    index = (INT)SendMessage(hGeoList,
-                             CB_ADDSTRING,
-                             0,
-                             (LPARAM)loc);
+    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+        return TRUE;
 
-    SendMessage(hGeoList,
-                CB_SETITEMDATA,
-                index,
-                (LPARAM)gId);
+    index = (INT)SendMessageW(hGeoList,
+                              CB_ADDSTRING,
+                              0,
+                              (LPARAM)loc);
+
+    SendMessageW(hGeoList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)gId);
 
     return TRUE;
 }
 
 /* Enumerate all system locations identifiers */
 static
-VOID
+GEOID
 CreateLocationsList(HWND hWnd)
 {
     GEOID userGeoID;
-    TCHAR loc[MAX_STR_SIZE];
+    WCHAR loc[MAX_STR_SIZE];
 
     hGeoList = hWnd;
 
@@ -262,16 +1192,88 @@ CreateLocationsList(HWND hWnd)
 
     /* Select current location */
     userGeoID = GetUserGeoID(GEOCLASS_NATION);
-    GetGeoInfo(userGeoID,
-               GEO_FRIENDLYNAME,
-               loc,
-               MAX_STR_SIZE,
-               LANG_SYSTEM_DEFAULT);
+    GetGeoInfoW(userGeoID,
+                GEO_FRIENDLYNAME,
+                loc,
+                MAX_STR_SIZE,
+                LANG_SYSTEM_DEFAULT);
 
-    SendMessage(hGeoList,
-                CB_SELECTSTRING,
-                (WPARAM) -1,
-                (LPARAM)loc);
+    SendMessageW(hGeoList,
+                 CB_SELECTSTRING,
+                 (WPARAM) -1,
+                 (LPARAM)loc);
+
+    return userGeoID;
+}
+
+VOID
+SaveGeoID(
+    PGLOBALDATA pGlobalData)
+{
+    HKEY hGeoKey;
+    WCHAR value[15];
+    DWORD valuesize;
+    DWORD ret;
+
+    wsprintf(value, L"%lu", (DWORD)pGlobalData->geoid);
+    valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
+
+    if (pGlobalData->bApplyToDefaultUser)
+    {
+        ret = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT\\Control Panel\\International\\Geo",
+                            0,
+                            KEY_WRITE,
+                            &hGeoKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_DEF_INT_KEY_REG);
+            return;
+        }
+
+        ret = RegSetValueExW(hGeoKey,
+                             L"Nation",
+                             0,
+                             REG_SZ,
+                             (PBYTE)value,
+                             valuesize);
+
+        RegFlushKey(hGeoKey);
+        RegCloseKey(hGeoKey);
+
+        if (ret != ERROR_SUCCESS)
+        {
+            PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+            return;
+        }
+    }
+
+    ret = RegOpenKeyExW(HKEY_CURRENT_USER,
+                        L"Control Panel\\International\\Geo",
+                        0,
+                        KEY_WRITE,
+                        &hGeoKey);
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return;
+    }
+
+    ret = RegSetValueExW(hGeoKey,
+                         L"Nation",
+                         0,
+                         REG_SZ,
+                         (PBYTE)value,
+                         valuesize);
+
+    RegFlushKey(hGeoKey);
+    RegCloseKey(hGeoKey);
+
+    if (ret != ERROR_SUCCESS)
+    {
+        PrintErrorMsgBox(IDS_ERROR_INT_KEY_REG);
+        return;
+    }
 }
 
 DWORD
@@ -305,6 +1307,62 @@ VerifyUnattendLCID(HWND hwndDlg)
 }
 
 
+static
+VOID
+InitPropSheetPage(
+    PROPSHEETPAGEW *psp,
+    WORD idDlg,
+    DLGPROC DlgProc,
+    PGLOBALDATA pGlobalData)
+{
+    ZeroMemory(psp, sizeof(PROPSHEETPAGEW));
+    psp->dwSize = sizeof(PROPSHEETPAGEW);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hApplet;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
+    psp->lParam = (LPARAM)pGlobalData;
+}
+
+
+INT_PTR
+APIENTRY
+CustomizeLocalePropertySheet(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    PROPSHEETPAGEW PsPage[NUM_SHEETS + 1];
+    PROPSHEETHEADERW psh;
+    WCHAR Caption[MAX_STR_SIZE];
+
+    LoadStringW(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
+
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK;
+    psh.hwndParent = hwndDlg;
+    psh.hInstance = hApplet;
+    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
+    psh.pszCaption = Caption;
+    psh.nPages = (sizeof(PsPage) / sizeof(PROPSHEETPAGE)) - 1;
+    psh.nStartPage = 0;
+    psh.ppsp = PsPage;
+
+    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, pGlobalData);
+
+    if (IsSortPageNeeded(pGlobalData->UserLCID))
+    {
+        psh.nPages++;
+        InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, pGlobalData);
+    }
+
+    return PropertySheetW(&psh);
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 GeneralPageProc(HWND hwndDlg,
@@ -312,21 +1370,37 @@ GeneralPageProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-    switch(uMsg)
+    PGLOBALDATA pGlobalData;
+
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-            CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
-            UpdateLocaleSample(hwndDlg, LOCALE_USER_DEFAULT);
-            CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
-            if (IsUnattendedSetupEnabled)
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            if (pGlobalData)
             {
-                if (VerifyUnattendLCID(hwndDlg))
+                LoadCurrentLocale(pGlobalData);
+
+                CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+                UpdateLocaleSample(hwndDlg, pGlobalData);
+                pGlobalData->geoid = CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
+                if (IsUnattendedSetupEnabled)
                 {
-                    SetNewLocale(UnattendLCID);
-                    PostQuitMessage(0);
-                } else
-                    DPRINT1("VerifyUnattendLCID failed\n");
-                return TRUE;
+                    if (VerifyUnattendLCID(hwndDlg))
+                    {
+                        SetNewLocale(pGlobalData, UnattendLCID);
+                        SaveCurrentLocale(pGlobalData);
+                        PostQuitMessage(0);
+                    }
+                    else
+                    {
+                        DPRINT1("VerifyUnattendLCID failed\n");
+                    }
+                    return TRUE;
+                }
             }
             break;
 
@@ -353,7 +1427,9 @@ GeneralPageProc(HWND hwndDlg,
                         if (NewLcid == (LCID)CB_ERR)
                             break;
 
-                        UpdateLocaleSample(hwndDlg, NewLcid);
+                        SetNewLocale(pGlobalData, NewLcid);
+                        UpdateLocaleSample(hwndDlg, pGlobalData);
+                        pGlobalData->fUserLocaleChanged = TRUE;
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
@@ -362,29 +1438,36 @@ GeneralPageProc(HWND hwndDlg,
                 case IDC_LOCATION_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
-                    break;
-                case IDC_SETUP_BUTTON:
-                    {
-                        LCID NewLcid;
+                        GEOID NewGeoID;
                         INT iCurSel;
 
-                        iCurSel = SendMessage(hList,
+                        iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
                                               CB_GETCURSEL,
                                               0,
                                               0);
                         if (iCurSel == CB_ERR)
                             break;
 
-                        NewLcid = SendMessage(hList,
-                                              CB_GETITEMDATA,
-                                              iCurSel,
-                                              0);
-                        if (NewLcid == (LCID)CB_ERR)
+                        NewGeoID = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                                               CB_GETITEMDATA,
+                                               iCurSel,
+                                               0);
+                        if (NewGeoID == (GEOID)CB_ERR)
                             break;
 
-                         SetupApplet(GetParent(hwndDlg), NewLcid);
+                        pGlobalData->geoid = NewGeoID;
+                        pGlobalData->fGeoIdChanged = TRUE;
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_SETUP_BUTTON:
+                    if (CustomizeLocalePropertySheet(GetParent(hwndDlg), pGlobalData) > 0)
+                    {
+                        UpdateLocaleSample(hwndDlg, pGlobalData);
+                        pGlobalData->fUserLocaleChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
             }
@@ -397,46 +1480,23 @@ GeneralPageProc(HWND hwndDlg,
                 if (lpnm->code == (UINT)PSN_APPLY)
                 {
                     /* Apply changes */
-                    LCID NewLcid;
-                    GEOID NewGeoID;
-                    INT iCurSel;
-
                     PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
-                    /* Acquire new value */
-                    iCurSel = SendMessage(hList,
-                                          CB_GETCURSEL,
-                                          0,
-                                          0);
-                    if (iCurSel == CB_ERR)
-                        break;
-
-                    NewLcid = SendMessage(hList,
-                                          CB_GETITEMDATA,
-                                          iCurSel,
-                                          0);
-                    if (NewLcid == (LCID)CB_ERR)
-                        break;
-
-                    iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
-                                          CB_GETCURSEL,
-                                          0,
-                                          0);
-                    if (iCurSel == CB_ERR)
-                        break;
-
-                    NewGeoID = SendMessage(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
-                                           CB_GETITEMDATA,
-                                           iCurSel,
-                                           0);
-                    if (NewGeoID == (GEOID)CB_ERR)
-                        break;
-
                     /* Set new locale */
-                    SetNewLocale(NewLcid);
-                    AddNewKbLayoutsByLcid(NewLcid);
-                    SetUserGeoID(NewGeoID);
-                    SetNonUnicodeLang(hwndDlg, NewLcid);
+                    if (pGlobalData->fUserLocaleChanged == TRUE)
+                    {
+                        SaveCurrentLocale(pGlobalData);
+                        pGlobalData->fUserLocaleChanged = FALSE;
+                    }
+
+                    /* Set new GEO ID */
+                    if (pGlobalData->fGeoIdChanged == TRUE)
+                    {
+                        SaveGeoID(pGlobalData);
+                        pGlobalData->fGeoIdChanged = FALSE;
+                    }
+
+                    AddNewKbLayoutsByLcid(pGlobalData->UserLCID);
                 }
             }
             break;

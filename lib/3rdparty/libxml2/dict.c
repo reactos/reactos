@@ -486,7 +486,10 @@ xmlDictComputeFastQKey(const xmlChar *prefix, int plen,
 	value += 30 * (*prefix);
 
     if (len > 10) {
-        value += name[len - (plen + 1 + 1)];
+        int offset = len - (plen + 1 + 1);
+	if (offset < 0)
+	    offset = len - (10 + 1);
+	value += name[offset];
         len = 10;
 	if (plen > 10)
 	    plen = 10;

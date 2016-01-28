@@ -71,12 +71,12 @@ STRINGTABLE
     IDS_IMPORT_FILE_SUBTITLE "Almak istediğiniz kütüğü belirtiniz."
     IDS_IMPORT_STORE_TITLE "Onay Belgesi Deposu"
     IDS_IMPORT_STORE_SUBTITLE "Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir."
-    IDS_IMPORT_FILTER_CERT "X.509 Onay Belgesi (*.cer, *.crt)"
-    IDS_IMPORT_FILTER_PFX "Şahsî Bilgi Değişimi (*.pfx, *.p12)"
+    IDS_IMPORT_FILTER_CERT "X.509 Onay Belgesi (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Şahsî Bilgi Değişimi (*.pfx; *.p12)"
     IDS_IMPORT_FILTER_CRL "Onay Belgesi İptal Dizelgesi (*.crl)"
     IDS_IMPORT_FILTER_CTL "Onay Belgesi Güven Dizelgesi (*.stl)"
     IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Dizilendirilmiş Onay Belgesi Deposu (*.sst)"
-    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 İletileri (*.spc, *.p7b)"
+    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 İletileri (*.spc; *.p7b)"
     IDS_IMPORT_FILTER_ALL "Tüm Kütükler (*.*)"
     IDS_IMPORT_EMPTY_FILE "Lütfen bir kütük seçiniz."
     IDS_IMPORT_BAD_FORMAT "Bu kütük biçimi tanınmış değil. Lütfen başka bir kütük seçiniz."
@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Kolay Adı"
     IDS_ALLOWED_PURPOSE_ALL "<Tümü>"
     IDS_ALLOWED_PURPOSE_NONE "<Yok>"
-    IDS_WARN_REMOVE_MY "Artık bu onay belgesiyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\n\
-Bu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_MY "Artık bu onay belgeleriyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\n\
-Bu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Artık bu onay belgesiyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\n\
-Bu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık bu onay belgeleriyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\n\
-Bu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_CA "Artık bu onay belgesi yetkilisiyle yayımlanan onay belgeleri güvenilen olmayacaktır.\n\
-Bu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_CA "Artık bu onay belgesi yetkilileriyle yayımlanan onay belgeleri güvenilen olmayacaktır.\n\
-Bu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_ROOT "Artık, bu kök onay belgesi yetkilisiyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\n\
-Bu güvenilen kök onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Artık, bu kök onay belgesi yetkilileriyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\n\
-Bu güvenilen kök onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Artık, bu yayımcı eliyle imzâlanan yazılım güvenilen olmayacaktır.\n\
-Bu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Artık, bu yayımcılar eliyle imzâlanan yazılım güvenilen olmayacaktır.\n\
-Bu onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_MY "Artık bu onay belgesiyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_MY "Artık bu onay belgeleriyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Artık bu onay belgesiyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık, bu onay belgeleriyle iletileri şifreleyemeyeceksiniz veyâ onlarla imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_CA "Artık bu onay belgesi yetkilisiyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgesini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_CA "Artık bu onay belgesi yetkilileriyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_ROOT "Artık, bu kök onay belgesi yetkilisiyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\nBu güvenilen kök onay belgesini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Artık, bu kök onay belgesi yetkilileriyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\nBu güvenilen kök onay belgelerini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Artık, bu yayımcı eliyle imzâlanan yazılım güvenilen olmayacaktır.\nBu onay belgesini silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Artık, bu yayımcılar eliyle imzâlanan yazılım güvenilen olmayacaktır.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_DEFAULT "Bu onay belgesini silmek istediğinizden emin misiniz?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Bu onay belgelerini silmek istediğinizden emin misiniz?"
     IDS_CERT_MGR "Onay Belgeleri"
     IDS_FRIENDLY_NAME_NONE "<Yok>"
     IDS_PURPOSE_SERVER_AUTH "Bir uzak bilgisayarın kimliğini sağlar."
     IDS_PURPOSE_CLIENT_AUTH "Bir uzak bilgisayara kimliğinizi tanıtlar."
-    IDS_PURPOSE_CODE_SIGNING "Yazılım yayımcısından gelen yazılımı korur.\n\
-Yazılımı yayımlamadan sonraki değişikliklerden korur."
+    IDS_PURPOSE_CODE_SIGNING "Yazılım yayımcısından gelen yazılımı korur.\nYazılımı yayımlamadan sonraki değişikliklerden korur."
     IDS_PURPOSE_EMAIL_PROTECTION "Posta iletilerini korur."
     IDS_PURPOSE_IPSEC "Umûmî Ağ üzerinden güvenli iletişim sağlar."
     IDS_PURPOSE_TIMESTAMP_SIGNING "Verilerin şimdiki zamanla imzâlanmasına olanak sağlar."
@@ -147,7 +136,7 @@ Yazılımı yayımlamadan sonraki değişikliklerden korur."
     IDS_PURPOSE_KEY_RECOVERY "Anahtar Kurtarma"
     IDS_PURPOSE_DOCUMENT_SIGNING "Belge İmzâlama"
     IDS_PURPOSE_LIFETIME_SIGNING "Yaşam Boyu İmzâlama"
-    IDS_PURPOSE_DRM "Sayılık Hakları"
+    IDS_PURPOSE_DRM "Sayılık Yetkileri"
     IDS_PURPOSE_LICENSES "Anahtar Paketi Ruhsatları"
     IDS_PURPOSE_LICENSE_SERVER "Ruhsat Sunucusu Doğrulaması"
     IDS_PURPOSE_ENROLLMENT_AGENT "Onay Belgesi İstek Yardımcısı"
@@ -184,9 +173,9 @@ Yazılımı yayımlamadan sonraki değişikliklerden korur."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Önemli: Bu onay belgesinin husûsî anahtarı verilebilen değil."
 }
 
-IDD_GENERAL DIALOG 0, 0, 255, 236
+IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Umûmî"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
@@ -200,9 +189,9 @@ BEGIN
   PUSHBUTTON "&Yayımcı Açıklaması", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
-IDD_DETAIL DIALOG 0, 0, 255, 236
+IDD_DETAIL DIALOGEX 0, 0, 255, 236
 CAPTION "Ayrıntılar"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Göster:", -1, 6,12,40,14
@@ -214,9 +203,9 @@ BEGIN
   PUSHBUTTON "&Kütüğe Çoğalt...", IDC_EXPORT,152,216,95,14
 END
 
-IDD_HIERARCHY DIALOG 0, 0, 255, 236
+IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
 CAPTION "Onay Belgesi Yolu"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Onay Belgesi Yolu", -1,6,10,245,165, BS_GROUPBOX
@@ -228,9 +217,9 @@ BEGIN
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
-IDD_USERNOTICE DIALOG 0, 0, 255, 256
+IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
 CAPTION "Geri Çevirme"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
@@ -239,9 +228,9 @@ BEGIN
   PUSHBUTTON "&Daha Çok Bilgi", IDC_CPS,162,216,85,14
 END
 
-IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
+IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Umûmî"
-STYLE WS_VISIBLE
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Kolay Adı:", -1, 6,14,60,14
@@ -261,8 +250,9 @@ BEGIN
   PUSHBUTTON "&Amaç Ekle...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
-IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
+IDD_ADD_CERT_PURPOSE DIALOGEX 0,0,200,68
 CAPTION "Amaç Ekle"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Eklemek istediğiniz onay belgesi amacı için nesne tanımlayıcısını (OID'sini) ekleyiniz:",
@@ -272,8 +262,9 @@ BEGIN
   PUSHBUTTON "İptal", IDCANCEL, 100,48,60,14
 END
 
-IDD_SELECT_STORE DIALOG 0,0,200,136
+IDD_SELECT_STORE DIALOGEX 0,0,200,136
 CAPTION "Onay Belgesi Deposunu Seç"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Kullanmak istediğiniz onay belgesi deposunu seçiniz:", IDC_STORE_TEXT, 6,6,190,28
@@ -284,21 +275,21 @@ BEGIN
   PUSHBUTTON "İptal", IDCANCEL, 144,118,50,14
 END
 
-IDD_IMPORT_WELCOME DIALOG 0,0,317,143
+IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Alma Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Alma Yardımcısı'na Hoşgeldiniz", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir kütükten, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir onay belgesi deposuna vermenize yardım eder.\n\
-\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\
-\n\
+  LTEXT "Bu yardımcı; bir kütükten, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir onay belgesi deposuna vermenize yardım eder.\n\n\
+Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
 Sürdürmek için İleri'ye tıklayınız.",
     -1, 115,40,195,120
 END
 
-IDD_IMPORT_FILE DIALOG 0,0,317,178
+IDD_IMPORT_FILE DIALOGEX 0,0,317,178
 CAPTION "Onay Belgesi Alma Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Kütük Adı:", -1, 21,1,195,10
@@ -306,16 +297,17 @@ BEGIN
   PUSHBUTTON "&Göz At...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Önemli: Aşağıdaki kütük biçimleri, bir onay belgesinden, bir onay belgesi iptal dizelgesinden veyâ bir onay belgesi güven dizelgesinden daha çoğunu içerebilir:",
     -1, 21,30,265,16
-  LTEXT "Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (.p7b)",
+  LTEXT "Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Şahsî Bilgi Değişimi/PKCS #12 (.pfx, .p12)",
+  LTEXT "Şahsî Bilgi Değişimi/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft Dizilendirilmiş Onay Belgesi Deposu (.sst)",
+  LTEXT "Microsoft Dizilendirilmiş Onay Belgesi Deposu (*.sst)",
     -1, 31,83,265,10
 END
 
-IDD_IMPORT_STORE DIALOG 0,0,317,143
+IDD_IMPORT_STORE DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Alma Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "ReactOS, onay belgesi deposunu kendiliğinden seçebilir ya da onay belgeleri için bir konum belirleyebilirsiniz.",
@@ -328,8 +320,9 @@ BEGIN
   PUSHBUTTON "&Göz At...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG 0,0,317,178
+IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Onay Belgesi Alma Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Alma Yardımcısı'nın Bitirilmesi", IDC_IMPORT_TITLE,
@@ -343,8 +336,9 @@ BEGIN
     115,67,174,100
 END
 
-IDD_CERT_MGR DIALOG 0,0,335,270
+IDD_CERT_MGR DIALOGEX 0,0,335,270
 CAPTION "Onay Belgeleri"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Kullanım Amacı:", -1, 7,9,100,12
@@ -361,8 +355,9 @@ BEGIN
   PUSHBUTTON "Kapat", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
-IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
+IDD_CERT_MGR_ADVANCED DIALOGEX 0,0,248,176
 CAPTION "Gelişmiş Seçenekler"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Onay Belgesi Amaçları", -1, 7,7,234,141, BS_GROUPBOX
@@ -376,21 +371,21 @@ BEGIN
   PUSHBUTTON "İptal", IDCANCEL, 190,155,51,14
 END
 
-IDD_EXPORT_WELCOME DIALOG 0,0,317,143
+IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Verme Yardımcısı'na Hoşgeldiniz", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir onay belgesi deposundan, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir kütüğe vermenize yardım eder.\n\
-\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\
-\n\
+  LTEXT "Bu yardımcı; bir onay belgesi deposundan, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir kütüğe vermenize yardım eder.\n\n\
+Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
 Sürdürmek için İleri'ye tıklayınız.",
     -1, 115,40,195,120
 END
 
-IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
+IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Husûsi anahtarı vermeyi seçtiyseniz bir sonraki sayfada husûsî anahtarı korumak için sizden bir şifre istenecektir.", -1, 21,1,195,25
@@ -402,8 +397,9 @@ BEGIN
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
-IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
+IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Şifre:", -1, 21,1,195,10
@@ -412,20 +408,21 @@ BEGIN
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
 END
 
-IDD_EXPORT_FORMAT DIALOG 0,0,317,143
+IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Kullanmak istediğiniz biçimi seçiniz:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER Şifrelenmiş X.509 (.cer)",
+  AUTORADIOBUTTON "&DER Şifrelenmiş X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "&Base64 Şifrelenmiş X.509 (.cer):",
+  AUTORADIOBUTTON "&Base64 Şifrelenmiş X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (.p7b)",
+  AUTORADIOBUTTON "&Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Olasıysa Onay Belgesi Yolunda Tüm Onay Belgelerini Ekle",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Şahsî Bilgi Değişimi/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "&Şahsî Bilgi Değişimi/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "O&lasıysa Onay Belgesi Yolunda Tüm Onay Belgelerini Ekle",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
@@ -435,8 +432,9 @@ BEGIN
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
-IDD_EXPORT_FILE DIALOG 0,0,317,143
+IDD_EXPORT_FILE DIALOGEX 0,0,317,143
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Kütük Adı:", -1, 21,1,195,10
@@ -444,8 +442,9 @@ BEGIN
   PUSHBUTTON "&Göz At...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG 0,0,317,178
+IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
 CAPTION "Onay Belgesi Verme Yardımcısı"
+STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Verme Yardımcısı'nın Bitirilmesi", IDC_EXPORT_TITLE,

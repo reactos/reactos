@@ -179,48 +179,12 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         13,
-        "\x07  Setup kan niet meer dan 1 primaire partitie per vaste schijf aan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "\x07  Setup kan geen primaire partitie van een schijf verwijderen",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  zo lang er nog uitgebreide partities bestaan op deze schijf.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "\x07  Setup kan de eerste uitgebreide partitie van een schijf niet",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  verwijderen zolang er nog andere uitgebreide partities",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
-        "  op deze schijf bestaan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        19,
         "\x07  Setup ondersteunt alleen FAT bestandssystemen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "\x07  Bestandssysteemcontrole is nog niet ge\x8Bmplementeerd.",
         TEXT_STYLE_NORMAL
     },
@@ -536,6 +500,7 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY nlNLComputerPageEntries[] =
 {
     {
@@ -867,6 +832,12 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Druk op D om een bestaande partitie te verwijderen.",
         TEXT_STYLE_NORMAL
     },
@@ -874,6 +845,100 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
         0,
         0,
         "Een ogenblik geduld...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY nlNLConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1539,8 +1604,16 @@ MUI_ERROR nlNLErrorEntries[] =
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Onvoldoende vrije ruimte in de geselecteerde partitie.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Druk op een toets om door te gaan.",
         NULL
     },
@@ -1558,24 +1631,17 @@ MUI_ERROR nlNLErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE nlNLPages[] =
 {
@@ -1618,6 +1684,10 @@ MUI_PAGE nlNLPages[] =
     {
         SELECT_PARTITION_PAGE,
         nlNLSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        nlNLConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1707,6 +1777,10 @@ MUI_STRING nlNLStrings[] =
     "Deze partitie zal vervolgens geformatteerd worden."},
     {STRING_NONFORMATTEDPART,
     "U wilt ReactOS installeren op een nieuwe of ongeformatteerde partitie."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installeert ReactOS op Partitie"},
     {STRING_CHECKINGPART,
@@ -1770,7 +1844,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sType %-3u%s                       %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %S"},
     {STRING_HDDINFOUNK6,

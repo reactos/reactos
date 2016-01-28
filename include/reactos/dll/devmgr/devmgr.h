@@ -1,6 +1,10 @@
 #ifndef __DEVMGR__H
 #define __DEVMGR__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 BOOL
 WINAPI
 DeviceManager_ExecuteA(HWND hWndParent,
@@ -176,6 +180,10 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 #define DeviceManagerPrint DeviceManagerPrintA
 #define DeviceAdvancedProperties DeviceAdvancedPropertiesA
 #define DevicePropertiesEx DevicePropertiesExA
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* __DEVMGR__H */

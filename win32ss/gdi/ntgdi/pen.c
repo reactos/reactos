@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Pen functiona
- * FILE:              subsys/win32k/objects/pen.c
+ * FILE:              win32ss/gdi/ntgdi/pen.c
  * PROGRAMER:
  */
 
@@ -13,9 +13,52 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
+VOID
+PEN_vInit(
+    PPEN ppen)
+{
+    /* Start with kmode brush attribute */
+    ppen->pBrushAttr = &ppen->BrushAttr;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_PEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocExtPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_EXTPEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
 PBRUSH
 FASTCALL
-PEN_ShareLockPen(HGDIOBJ hobj)
+PEN_ShareLockPen(HPEN hobj)
 {
     if ((GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE) &&
         (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE))
@@ -43,11 +86,12 @@ IntGdiExtCreatePen(
 {
     HPEN hPen;
     PBRUSH pbrushPen;
-    static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55, 0};
-    static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0, 0};
-    static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38, 0};
-    static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0, 0};
-    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38, 0};
+    static ULONG aulStyleAlternate[] = { 1, 1 };
+    static ULONG aulStyleDash[] = { 6, 2 };
+    static ULONG aulStyleDot[] = { 1, 1 };
+    static ULONG aulStyleDashDot[] = { 3, 2, 1, 2 };
+    static ULONG aulStyleDashDotDot[] = { 3, 1, 1, 1, 1, 1 };
+    ULONG i;
 
     dwWidth = abs(dwWidth);
 
@@ -77,20 +121,24 @@ IntGdiExtCreatePen(
     if ((bOldStylePen) && (!dwWidth) && ((dwPenStyle & PS_STYLE_MASK) != PS_SOLID))
         dwWidth = 1;
 
-    pbrushPen->ptPenWidth.x = dwWidth;
-    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->lWidth = dwWidth;
+    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
-    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->iBrushStyle = ulBrushStyle;
     // FIXME: Copy the bitmap first ?
     pbrushPen->hbmClient = (HANDLE)ulClientHatch;
-    pbrushPen->dwStyleCount = dwStyleCount;
-    pbrushPen->pStyle = pStyle;
+    pbrushPen->dwStyleCount = 0;
+    pbrushPen->pStyle = NULL;
+    pbrushPen->ulStyleSize = 0;
 
     pbrushPen->flAttrs = bOldStylePen ? BR_IS_OLDSTYLEPEN : BR_IS_PEN;
 
     // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
     if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
+        goto ExitCleanup;
+    // If dwPenStyle is PS_COSMETIC, the brush style must be BS_SOLID.
+    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && (ulBrushStyle != BS_SOLID) )
         goto ExitCleanup;
 
     switch (dwPenStyle & PS_STYLE_MASK)
@@ -104,28 +152,33 @@ IntGdiExtCreatePen(
         break;
 
     case PS_ALTERNATE:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
+        pbrushPen->flAttrs |= BR_IS_SOLID | BR_IS_DEFAULTSTYLE;
+        pbrushPen->pStyle = aulStyleAlternate;
+        pbrushPen->dwStyleCount = _countof(aulStyleAlternate);
         break;
 
     case PS_DOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID | BR_IS_DEFAULTSTYLE;
+        pbrushPen->pStyle = aulStyleDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDot);
         break;
 
     case PS_DASH:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
+        pbrushPen->flAttrs |= BR_IS_SOLID | BR_IS_DEFAULTSTYLE;
+        pbrushPen->pStyle = aulStyleDash;
+        pbrushPen->dwStyleCount = _countof(aulStyleDash);
         break;
 
     case PS_DASHDOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID | BR_IS_DEFAULTSTYLE;
+        pbrushPen->pStyle = aulStyleDashDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDashDot);
         break;
 
     case PS_DASHDOTDOT:
-        pbrushPen->flAttrs |= BR_IS_BITMAP;
-        pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
+        pbrushPen->flAttrs |= BR_IS_SOLID | BR_IS_DEFAULTSTYLE;
+        pbrushPen->pStyle = aulStyleDashDotDot;
+        pbrushPen->dwStyleCount = _countof(aulStyleDashDotDot);
         break;
 
     case PS_INSIDEFRAME:
@@ -133,14 +186,6 @@ IntGdiExtCreatePen(
         break;
 
     case PS_USERSTYLE:
-        if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC)
-        {
-            /* FIXME: PS_USERSTYLE workaround */
-            DPRINT1("PS_COSMETIC | PS_USERSTYLE not handled\n");
-            pbrushPen->flAttrs |= BR_IS_SOLID;
-            break;
-        }
-        else
         {
             UINT i;
             BOOL has_neg = FALSE, all_zero = TRUE;
@@ -157,12 +202,25 @@ IntGdiExtCreatePen(
             }
         }
         /* FIXME: What style here? */
-        pbrushPen->flAttrs |= 0;
+        pbrushPen->flAttrs |= BR_IS_SOLID;
+        pbrushPen->dwStyleCount = dwStyleCount;
+        pbrushPen->pStyle = pStyle;
         break;
 
     default:
         DPRINT1("IntGdiExtCreatePen unknown penstyle %x\n", dwPenStyle);
+        goto ExitCleanup;
     }
+
+    if (pbrushPen->pStyle != NULL)
+    {
+        for (i = 0; i < pbrushPen->dwStyleCount; i++)
+        {
+            pbrushPen->ulStyleSize += pbrushPen->pStyle[i];
+        }
+    }
+
+    NT_ASSERT((pbrushPen->dwStyleCount == 0) || (pbrushPen->pStyle != NULL));
 
     PEN_UnlockPen(pbrushPen);
     return hPen;
@@ -213,7 +271,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
                 pExtLogPen = (PEXTLOGPEN)pBuffer;
                 pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
                 pExtLogPen->elpWidth = 0;
-                pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+                pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
                 pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
                 pExtLogPen->elpHatch = 0;
                 pExtLogPen->elpNumEntries = 0;
@@ -222,7 +280,8 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             else
             {
                 pLogPen = (PLOGPEN)pBuffer;
-                pLogPen->lopnWidth = pbrushPen->ptPenWidth;
+                pLogPen->lopnWidth.x = pbrushPen->lWidth;
+                pLogPen->lopnWidth.y = 0;
                 pLogPen->lopnStyle = pbrushPen->ulPenStyle;
                 pLogPen->lopnColor = pbrushPen->BrushAttr.lbColor;
             }
@@ -230,8 +289,9 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
     }
     else
     {
-        // FIXME: Can we trust in dwStyleCount being <= 16?
-        cbRetCount = sizeof(EXTLOGPEN) - sizeof(DWORD) + pbrushPen->dwStyleCount * sizeof(DWORD);
+        DWORD dwStyleCount = (pbrushPen->flAttrs & BR_IS_DEFAULTSTYLE) ?
+            0 : pbrushPen->dwStyleCount;
+        cbRetCount = sizeof(EXTLOGPEN) - sizeof(DWORD) + dwStyleCount * sizeof(DWORD);
         if (pBuffer)
         {
             ULONG i;
@@ -239,12 +299,12 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             if (cbCount < cbRetCount) return 0;
             pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
-            pExtLogPen->elpWidth = pbrushPen->ptPenWidth.x;
-            pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+            pExtLogPen->elpWidth = pbrushPen->lWidth;
+            pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
             pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
             pExtLogPen->elpHatch = (ULONG_PTR)pbrushPen->hbmClient;
-            pExtLogPen->elpNumEntries = pbrushPen->dwStyleCount;
-            for (i = 0; i < pExtLogPen->elpNumEntries; i++)
+            pExtLogPen->elpNumEntries = dwStyleCount;
+            for (i = 0; i < dwStyleCount; i++)
             {
                 pExtLogPen->elpStyleEntry[i] = pbrushPen->pStyle[i];
             }
@@ -310,6 +370,39 @@ NtGdiExtCreatePen(
         return 0;
     }
 
+    if (((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) &&
+        (ulBrushStyle != BS_SOLID))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (((dwPenStyle & PS_STYLE_MASK) == PS_NULL) ||
+        (ulBrushStyle == BS_NULL))
+    {
+        return StockObjects[NULL_PEN];
+    }
+
+
+    if ((ulBrushStyle == BS_PATTERN) ||
+        (ulBrushStyle == BS_DIBPATTERN) ||
+        (ulBrushStyle == BS_DIBPATTERNPT))
+    {
+        ulColor = 0;
+    }
+    else if ((ulBrushStyle != BS_SOLID) &&
+             (ulBrushStyle != BS_HATCHED))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if ((dwPenStyle & PS_STYLE_MASK) != PS_USERSTYLE)
+    {
+        dwStyleCount = 0;
+        pUnsafeStyle = NULL;
+    }
+
     if (dwStyleCount > 0)
     {
         if (pUnsafeStyle == NULL)
@@ -330,8 +423,8 @@ NtGdiExtCreatePen(
         {
             ProbeForRead(pUnsafeStyle, dwStyleCount * sizeof(DWORD), 1);
             RtlCopyMemory(pSafeStyle,
-            pUnsafeStyle,
-            dwStyleCount * sizeof(DWORD));
+                          pUnsafeStyle,
+                          dwStyleCount * sizeof(DWORD));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

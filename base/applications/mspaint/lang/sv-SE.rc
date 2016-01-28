@@ -9,6 +9,10 @@ BEGIN
         MENUITEM "&Spara\tCtrl+S", IDM_FILESAVE
         MENUITEM "Spara so&m...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Ange som skrivbordsbakgrund (kakelklädd)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Ange som skrivbordsbakgrund (centrerad)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ange som skrivbordsbakgrund (utsträckt)", IDM_FILEASWALLPAPERSTRETCHED
@@ -206,4 +210,5 @@ BEGIN
     IDS_PERCENTAGE "The percentage must be between 1 and 500."
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

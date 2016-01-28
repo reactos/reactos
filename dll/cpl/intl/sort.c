@@ -14,11 +14,11 @@ static HWND hWndSortList = NULL;
 
 
 static BOOL CALLBACK
-SortTestEnumProc(LPTSTR lpLocale)
+SortTestEnumProc(PWSTR lpLocale)
 {
     LCID lcid;
 
-    lcid = _tcstoul(lpLocale, NULL, 16);
+    lcid = wcstoul(lpLocale, NULL, 16);
 
     if ((LANGIDFROMLCID(lcid) == LANGIDFROMLCID(userLcid)) &&
         (SORTIDFROMLCID(lcid) != SORTIDFROMLCID(userLcid)))
@@ -39,7 +39,7 @@ IsSortPageNeeded(LCID lcid)
     userLcid = lcid;
     bSortPage = FALSE;
 
-    EnumSystemLocales(SortTestEnumProc, LCID_ALTERNATE_SORTS);
+    EnumSystemLocalesW(SortTestEnumProc, LCID_ALTERNATE_SORTS);
 
     return bSortPage;
 }
@@ -49,25 +49,25 @@ static BOOL CALLBACK
 SortEnumProc(LPTSTR lpLocale)
 {
     LCID lcid;
-    TCHAR lang[255];
+    WCHAR lang[255];
     INT index;
 
-    lcid = _tcstoul(lpLocale, NULL, 16);
+    lcid = wcstoul(lpLocale, NULL, 16);
 
     if ((LANGIDFROMLCID(lcid) == LANGIDFROMLCID(userLcid)) &&
         (SORTIDFROMLCID(lcid) != SORTIDFROMLCID(userLcid)))
     {
-        GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(WCHAR));
 
-        index = SendMessage(hWndSortList,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)lang);
+        index = SendMessageW(hWndSortList,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-        SendMessage(hWndSortList,
-                    CB_SETITEMDATA,
-                    index,
-                    (LPARAM)lcid);
+        SendMessageW(hWndSortList,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)lcid);
     }
 
     return TRUE;
@@ -76,7 +76,7 @@ SortEnumProc(LPTSTR lpLocale)
 static VOID
 CreateSortList(HWND hwnd, LCID lcid)
 {
-    TCHAR lang[255];
+    WCHAR lang[255];
     INT index;
 
     hWndSortList = hwnd;
@@ -86,60 +86,60 @@ CreateSortList(HWND hwnd, LCID lcid)
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
         /* Add traditional sorting */
-        GetLocaleInfo(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH),
-                      LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH),
+                       LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
-        index = SendMessage(hwnd,
-                            CB_ADDSTRING,
-                            0,
-                           (LPARAM)lang);
+        index = SendMessageW(hwnd,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-        SendMessage(hwnd,
-                    CB_SETITEMDATA,
-                    index,
-                    (LPARAM)MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH));
+        SendMessageW(hwnd,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH));
 
         /* Add modern sorting */
-        GetLocaleInfo(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN),
-                      LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN),
+                       LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
-        index = SendMessage(hwnd,
-                            CB_ADDSTRING,
-                            0,
-                           (LPARAM)lang);
+        index = SendMessageW(hwnd,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-        SendMessage(hwnd,
-                    CB_SETITEMDATA,
-                    index,
-                    (LPARAM)MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN));
+        SendMessageW(hwnd,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN));
     }
     else
     {
         userLcid = lcid;
 
-        GetLocaleInfo(lcid & 0xFFFF, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
+        GetLocaleInfoW(lcid & 0xFFFF, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(WCHAR));
 
-        index = SendMessage(hWndSortList,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)lang);
+        index = SendMessageW(hWndSortList,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-        SendMessage(hWndSortList,
-                    CB_SETITEMDATA,
-                    index,
-                    (LPARAM)lcid & 0xFFFF);
+        SendMessageW(hWndSortList,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)lcid & 0xFFFF);
 
-        EnumSystemLocales(SortEnumProc, LCID_ALTERNATE_SORTS);
+        EnumSystemLocalesW(SortEnumProc, LCID_ALTERNATE_SORTS);
     }
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
+    GetLocaleInfoW(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(WCHAR));
 
-    SendMessage(hwnd,
-                CB_SELECTSTRING,
-                -1,
-                (LPARAM)lang);
+    SendMessageW(hwnd,
+                 CB_SELECTSTRING,
+                 -1,
+                 (LPARAM)lang);
 }
 
 /* Property page dialog callback */
@@ -159,7 +159,7 @@ SortPageProc(HWND hwndDlg,
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), pGlobalData->lcid);
+            CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), pGlobalData->UserLCID);
             break;
 
         case WM_COMMAND:
@@ -168,28 +168,6 @@ SortPageProc(HWND hwndDlg,
                 case IDC_SORTLIST_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        LCID NewLcid;
-                        INT iCurSel;
-
-                        iCurSel = SendDlgItemMessage(hwndDlg,
-                                                     IDC_SORTLIST_COMBO,
-                                                     CB_GETCURSEL,
-                                                     0,
-                                                     0);
-                        if (iCurSel == CB_ERR)
-                            break;
-
-                        NewLcid = SendDlgItemMessage(hwndDlg,
-                                                     IDC_SORTLIST_COMBO,
-                                                     CB_GETITEMDATA,
-                                                     iCurSel,
-                                                     0);
-                        if (NewLcid == (LCID)CB_ERR)
-                            break;
-
-                        /* Save the new LCID */
-                        pGlobalData->lcid = NewLcid;
-
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -199,7 +177,28 @@ SortPageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                /* FIXME: Set locale ID: pGlobalData->lcid */
+                LCID NewLcid;
+                INT iCurSel;
+
+                iCurSel = SendDlgItemMessage(hwndDlg,
+                                             IDC_SORTLIST_COMBO,
+                                             CB_GETCURSEL,
+                                             0,
+                                             0);
+                if (iCurSel == CB_ERR)
+                    break;
+
+                NewLcid = SendDlgItemMessage(hwndDlg,
+                                             IDC_SORTLIST_COMBO,
+                                             CB_GETITEMDATA,
+                                             iCurSel,
+                                             0);
+                if (NewLcid == (LCID)CB_ERR)
+                    break;
+
+                /* Save the new LCID */
+                pGlobalData->UserLCID = NewLcid;
+                pGlobalData->fUserLocaleChanged = TRUE;
             }
             break;
     }

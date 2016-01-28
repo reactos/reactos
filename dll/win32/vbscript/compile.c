@@ -515,6 +515,8 @@ static HRESULT compile_expression(compile_ctx_t *ctx, expression_t *expr)
         return compile_binary_expression(ctx, (binary_expression_t*)expr, OP_nequal);
     case EXPR_NEW:
         return push_instr_str(ctx, OP_new, ((string_expression_t*)expr)->value);
+    case EXPR_NOARG:
+        return push_instr_int(ctx, OP_hres, DISP_E_PARAMNOTFOUND);
     case EXPR_NOT:
         return compile_unary_expression(ctx, (unary_expression_t*)expr, OP_not);
     case EXPR_NOTHING:
@@ -1649,11 +1651,10 @@ static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
             return E_OUTOFMEMORY;
 
         class_desc->props[i].is_public = prop_decl->is_public;
+        class_desc->props[i].is_array = prop_decl->is_array;
 
-        if(prop_decl->is_array) {
-            class_desc->props[i].is_array = TRUE;
+        if(prop_decl->is_array)
             class_desc->array_cnt++;
-        }
     }
 
     if(class_desc->array_cnt) {

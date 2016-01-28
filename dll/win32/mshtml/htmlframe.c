@@ -53,7 +53,7 @@ static ULONG WINAPI HTMLFrameElement3_Release(IHTMLFrameElement3 *iface)
 static HRESULT WINAPI HTMLFrameElement3_GetTypeInfoCount(IHTMLFrameElement3 *iface, UINT *pctinfo)
 {
     HTMLFrameElement *This = impl_from_IHTMLFrameElement3(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.dispex.IDispatchEx_iface,
+    return IDispatchEx_GetTypeInfoCount(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface,
             pctinfo);
 }
 
@@ -61,7 +61,7 @@ static HRESULT WINAPI HTMLFrameElement3_GetTypeInfo(IHTMLFrameElement3 *iface, U
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLFrameElement *This = impl_from_IHTMLFrameElement3(iface);
-    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.dispex.IDispatchEx_iface, iTInfo,
+    return IDispatchEx_GetTypeInfo(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
             lcid, ppTInfo);
 }
 
@@ -69,7 +69,7 @@ static HRESULT WINAPI HTMLFrameElement3_GetIDsOfNames(IHTMLFrameElement3 *iface,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLFrameElement *This = impl_from_IHTMLFrameElement3(iface);
-    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.dispex.IDispatchEx_iface, riid,
+    return IDispatchEx_GetIDsOfNames(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, riid,
             rgszNames, cNames, lcid, rgDispId);
 }
 
@@ -78,7 +78,7 @@ static HRESULT WINAPI HTMLFrameElement3_Invoke(IHTMLFrameElement3 *iface, DISPID
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLFrameElement *This = impl_from_IHTMLFrameElement3(iface);
-    return IDispatchEx_Invoke(&This->framebase.element.node.dispex.IDispatchEx_iface, dispIdMember,
+    return IDispatchEx_Invoke(&This->framebase.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
             riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -253,6 +253,26 @@ static HRESULT HTMLFrameElement_bind_to_tree(HTMLDOMNode *iface)
     return hres;
 }
 
+static void HTMLFrameElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLFrameElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->framebase.nsframe)
+        note_cc_edge((nsISupports*)This->framebase.nsframe, "This->nsframe", cb);
+}
+
+static void HTMLFrameElement_unlink(HTMLDOMNode *iface)
+{
+    HTMLFrameElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->framebase.nsframe) {
+        nsIDOMHTMLFrameElement *nsframe = This->framebase.nsframe;
+
+        This->framebase.nsframe = NULL;
+        nsIDOMHTMLFrameElement_Release(nsframe);
+    }
+}
+
 static const NodeImplVtbl HTMLFrameElementImplVtbl = {
     HTMLFrameElement_QI,
     HTMLFrameElement_destructor,
@@ -268,7 +288,9 @@ static const NodeImplVtbl HTMLFrameElementImplVtbl = {
     HTMLFrameElement_get_readystate,
     HTMLFrameElement_get_dispid,
     HTMLFrameElement_invoke,
-    HTMLFrameElement_bind_to_tree
+    HTMLFrameElement_bind_to_tree,
+    HTMLFrameElement_traverse,
+    HTMLFrameElement_unlink
 };
 
 static const tid_t HTMLFrameElement_iface_tids[] = {

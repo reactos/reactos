@@ -36,18 +36,19 @@
 /*
  * FUNCTION: Closes a file
  */
-static
 NTSTATUS
 NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
               PFILE_OBJECT FileObject)
 {
     PNTFS_CCB Ccb;
+    PNTFS_FCB Fcb;
 
     DPRINT("NtfsCloseFile(DeviceExt %p, FileObject %p)\n",
            DeviceExt,
            FileObject);
 
     Ccb = (PNTFS_CCB)(FileObject->FsContext2);
+    Fcb = (PNTFS_FCB)(FileObject->FsContext);
 
     DPRINT("Ccb %p\n", Ccb);
     if (Ccb == NULL)
@@ -56,13 +57,15 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     FileObject->FsContext2 = NULL;
+    FileObject->FsContext = NULL;
+    FileObject->SectionObjectPointer = NULL;
 
     if (FileObject->FileName.Buffer)
     {
         // This a FO, that was created outside from FSD.
         // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
         // This FO's don't have a FileName.
-        NtfsReleaseFCB(DeviceExt, FileObject->FsContext);
+        NtfsReleaseFCB(DeviceExt, Fcb);
     }
 
     if (Ccb->DirectorySearchPattern)
@@ -76,35 +79,30 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS NTAPI
-NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp)
+NTSTATUS
+NtfsClose(PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExtension;
-    PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
 
     DPRINT("NtfsClose() called\n");
 
+    DeviceObject = IrpContext->DeviceObject;
     if (DeviceObject == NtfsGlobalData->DeviceObject)
     {
         DPRINT("Closing file system\n");
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-    FileObject = Stack->FileObject;
+    FileObject = IrpContext->FileObject;
     DeviceExtension = DeviceObject->DeviceExtension;
 
-    Status = NtfsCloseFile(DeviceExtension,FileObject);
+    Status = NtfsCloseFile(DeviceExtension, FileObject);
 
-ByeBye:
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IrpContext->Irp->IoStatus.Information = 0;
     return Status;
 }
 

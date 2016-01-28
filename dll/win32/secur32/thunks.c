@@ -890,4 +890,3 @@ SECURITY_STATUS SEC_ENTRY thunk_ImportSecurityContextW(
     HeapFree(GetProcessHeap(), 0, package);
     return ret;
 }
-

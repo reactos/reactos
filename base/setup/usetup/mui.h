@@ -69,7 +69,8 @@ VOID
 MUIDisplayError(
     ULONG ErrorNum,
     PINPUT_RECORD Ir,
-    ULONG WaitEvent);
+    ULONG WaitEvent,
+    ...);
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID);
@@ -110,6 +111,8 @@ MUIGetString(
 #define STRING_CREATEPARTITION           7
 #define STRING_PARTFORMAT                8
 #define STRING_NONFORMATTEDPART          9
+#define STRING_NONFORMATTEDSYSTEMPART         62
+#define STRING_NONFORMATTEDOTHERPART          63
 #define STRING_INSTALLONPART             10
 #define STRING_CHECKINGPART              11
 #define STRING_QUITCONTINUE              12

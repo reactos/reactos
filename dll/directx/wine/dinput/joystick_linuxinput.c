@@ -124,10 +124,7 @@ static inline JoystickImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W 
     return CONTAINING_RECORD(CONTAINING_RECORD(CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8W_iface),
            JoystickGenericImpl, base), JoystickImpl, generic);
 }
-static inline IDirectInputDevice8A *IDirectInputDevice8A_from_impl(JoystickImpl *This)
-{
-    return &This->generic.base.IDirectInputDevice8A_iface;
-}
+
 static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(JoystickImpl *This)
 {
     return &This->generic.base.IDirectInputDevice8W_iface;

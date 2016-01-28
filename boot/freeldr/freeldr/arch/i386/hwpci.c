@@ -44,7 +44,7 @@ GetPciIrqRoutingTable(VOID)
             if (Table->TableSize < FIELD_OFFSET(PCI_IRQ_ROUTING_TABLE, Slot) ||
                 Table->TableSize % 16 != 0)
             {
-                ERR("Invalid routing table size (%u) at %p. Continue searching...\n", Table->TableSize, Table);
+                ERR("Invalid routing table size (%u) at 0x%p. Continue searching...\n", Table->TableSize, Table);
                 Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
                 continue;
             }
@@ -58,11 +58,11 @@ GetPciIrqRoutingTable(VOID)
 
             if ((Sum & 0xFF) != 0)
             {
-                ERR("Invalid routing table checksum (%#lx) at %p. Continue searching...\n", Sum & 0xFF, Table);
+                ERR("Invalid routing table checksum (%#lx) at 0x%p. Continue searching...\n", Sum & 0xFF, Table);
             }
             else
             {
-                TRACE("Valid checksum\n");
+                TRACE("Valid checksum (%#lx): found routing table at 0x%p\n", Sum & 0xFF, Table);
                 return Table;
             }
         }

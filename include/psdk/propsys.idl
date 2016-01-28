@@ -802,7 +802,10 @@ cpp_quote("#define PKEYSTR_MAX (GUIDSTRING_MAX + 1 + PKEY_PIDSTR_MAX)")
 cpp_quote("HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY,LPWSTR,UINT);")
 cpp_quote("HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR,PROPERTYKEY*);")
 cpp_quote("HRESULT WINAPI PSGetPropertyDescription(REFPROPERTYKEY,REFIID,void **);")
+cpp_quote("HRESULT WINAPI PSGetPropertyDescriptionListFromString(LPCWSTR,REFIID,void **);")
 cpp_quote("HRESULT WINAPI PSRefreshPropertySchema(void);")
+cpp_quote("HRESULT WINAPI PSRegisterPropertySchema(LPCWSTR);")
+cpp_quote("HRESULT WINAPI PSUnregisterPropertySchema(LPCWSTR);")
 
 /* TODO: Add remainder of the C api here */
 

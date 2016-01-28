@@ -66,6 +66,8 @@
 #define D3D_SDK_VERSION                         32
 #define D3DADAPTER_DEFAULT                      0
 #define D3DENUM_NO_WHQL_LEVEL                   0x00000002L
+#define D3DPRESENT_DONOTWAIT                    1L
+#define D3DPRESENT_LINEAR_CONTENT               2L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
 #define D3DSGR_NO_CALIBRATION                   0x00000000L
 #define D3DSGR_CALIBRATE                        0x00000001L
@@ -496,8 +498,8 @@ __CRT_UUID_DECL(IDirect3DSwapChain9Ex,        0x91886caf, 0x1c3d, 0x4d2e, 0xa0, 
 /*** IDirect3DSwapChain9 methods ***/
 #define IDirect3DSwapChain9Ex_Present(p,a,b,c,d,e)       (p)->lpVtbl->Present(p,a,b,c,d,e)
 #define IDirect3DSwapChain9Ex_GetFrontBufferData(p,a)    (p)->lpVtbl->GetFrontBufferData(p,a)
-#define IDirect3DSwapChain9EX_GetBackBuffer(p,a,b,c)     (p)->lpVtbl->GetBackBuffer(p,a,b,c)
-#define IDirect3DSwapChain9EX_GetRasterStatus(p,a)       (p)->lpVtbl->GetRasterStatus(p,a)
+#define IDirect3DSwapChain9Ex_GetBackBuffer(p,a,b,c)     (p)->lpVtbl->GetBackBuffer(p,a,b,c)
+#define IDirect3DSwapChain9Ex_GetRasterStatus(p,a)       (p)->lpVtbl->GetRasterStatus(p,a)
 #define IDirect3DSwapChain9Ex_GetDisplayMode(p,a)        (p)->lpVtbl->GetDisplayMode(p,a)
 #define IDirect3DSwapChain9Ex_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
 #define IDirect3DSwapChain9Ex_GetPresentParameters(p,a)  (p)->lpVtbl->GetPresentParameters(p,a)

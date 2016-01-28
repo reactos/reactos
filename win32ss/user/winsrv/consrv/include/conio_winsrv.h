@@ -1,8 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            consrv/include/conio_winsrv.h
- * PURPOSE:         Public Console I/O Interface
+ * FILE:            win32ss/user/winsrv/consrv/include/conio_winsrv.h
+ * PURPOSE:         Public Console I/O Interface - Offers wrap-up structures
+ *                  over the console objects exposed by the console driver.
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -46,7 +47,7 @@ struct _WINSRV_CONSOLE;
 #endif
 
 typedef struct _FRONTEND FRONTEND, *PFRONTEND;
-/* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
+
 typedef struct _FRONTEND_VTBL
 {
     // NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
@@ -116,8 +117,8 @@ struct _FRONTEND
     NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
 
     struct _CONSRV_CONSOLE* Console;   /* Console to which the frontend is attached to */
-    PVOID Data;                 /* Private data  */
-    PVOID OldData;              /* Reserved      */
+    PVOID Context;              /* Private context */
+    PVOID Context2;             /* Private context */
 };
 
 /* PauseFlags values (internal only) */
@@ -139,12 +140,15 @@ typedef struct _WINSRV_CONSOLE
     // CRITICAL_SECTION Lock;
     // CONSOLE_STATE State;                    /* State of the console */
 
+    HANDLE InitEvents[MAX_INIT_EVENTS];         /* Initialization events */
+
     FRONTEND FrontEndIFace;                     /* Frontend-specific interface */
 
 /******************************* Process support ******************************/
     LIST_ENTRY ProcessList;         /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
     PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
     BOOLEAN NotifyLastClose;        /* TRUE if the console should send a control event when the console leader process is killed */
+    BOOLEAN HasFocus;               /* TRUE if the console has focus (is in the foreground) */
 
 /******************************* Pausing support ******************************/
     BYTE PauseFlags;
@@ -203,6 +207,12 @@ NTSTATUS NTAPI
 ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
                               IN ULONG ProcessGroupId,
                               IN ULONG CtrlEvent);
+VOID
+ConSrvSetProcessFocus(IN PCSR_PROCESS CsrProcess,
+                      IN BOOLEAN SetForeground);
+NTSTATUS NTAPI
+ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
+                             IN BOOLEAN SetForeground);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg);
@@ -215,9 +225,11 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
+
+/* terminal.c */
+VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
 
 /* EOF */

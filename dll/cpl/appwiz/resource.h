@@ -19,6 +19,7 @@
 
 /* Bitmaps */
 #define IDB_WATERMARK	5001
+#define IDB_SHORTCUT	5002
 
 /* Strings */
 #define IDS_CPLSYSTEMNAME			1001

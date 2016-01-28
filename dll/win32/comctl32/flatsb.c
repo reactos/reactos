@@ -55,7 +55,7 @@ typedef struct
 BOOL WINAPI InitializeFlatSB(HWND hwnd)
 {
     TRACE("[%p]\n", hwnd);
-    return FALSE;
+    return TRUE;
 }
 
 /***********************************************************************

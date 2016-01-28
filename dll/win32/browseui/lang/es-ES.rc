@@ -1,3 +1,5 @@
+/* Spanish translation by ??? and Ismael Ferreras Morezuelas (Swyter) */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* Menus */
@@ -48,7 +50,7 @@ BEGIN
         POPUP "&Ir a", FCIDM_MENU_EXPLORE
         BEGIN
             MENUITEM "&Atrás\tAlt+Flecha izquierda", IDM_GOTO_BACK
-            MENUITEM "A&delante\tAlt+RFlecha derecha", IDM_GOTO_FORWARD
+            MENUITEM "A&delante\tAlt+Flecha derecha", IDM_GOTO_FORWARD
             MENUITEM "&Subir un nivel", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Página principal\tAlt+Inicio", IDM_GOTO_HOMEPAGE
@@ -60,7 +62,7 @@ BEGIN
         MENUITEM "&Añadir a Favoritos...", IDM_FAVORITES_ADDTOFAVORITES
         MENUITEM "&Organizar Favoritos...", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "(Empty)", IDM_FAVORITES_EMPTY
+        MENUITEM "(Vacío)", IDM_FAVORITES_EMPTY
     END
     POPUP "&Herramientas", FCIDM_MENU_TOOLS
     BEGIN
@@ -77,15 +79,39 @@ BEGIN
     END
 END
 
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "&Barras de herramientas", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Escritorio", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Inicio rápido", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "&Nueva barra de herramientas...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
+
 /* Dialogs */
 
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Cancelar", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
+
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Opciones de Te&xto:", -1, 4, 2, 48, 15
+    LTEXT "Opciones de te&xto:", -1, 4, 2, 48, 15
     COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Opciones de Ico&nos:", -1, 4, 20, 48, 15
+    LTEXT "Opciones de ico&nos:", -1, 4, 20, 48, 15
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -101,6 +127,8 @@ BEGIN
     "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
     VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
     VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
     "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
     "Q", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
     "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
@@ -111,27 +139,33 @@ END
 
 STRINGTABLE
 BEGIN
-    800 "Contiene comandos para trabajar con los elementos seleccionados."
+    IDS_CANCELLING "Cancelando..."
+    IDS_REMAINING  "restantes"
 END
 
 STRINGTABLE
 BEGIN
-    864 "Contiene comandos de edición."
+    800 "Contiene órdenes para trabajar con los elementos seleccionados."
 END
 
 STRINGTABLE
 BEGIN
-    928 "Contiene comandos para manipular la vista."
+    864 "Contiene órdenes de edición."
 END
 
 STRINGTABLE
 BEGIN
-    992 "Contiene comandos de herramientas."
+    928 "Contiene órdenes para manipular la vista."
 END
 
 STRINGTABLE
 BEGIN
-    1056 "Contiene comandos para mostrar la Ayuda."
+    992 "Contiene órdenes de herramientas."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Contiene órdenes para mostrar la Ayuda."
 END
 
 STRINGTABLE
@@ -149,15 +183,15 @@ END
 STRINGTABLE
 BEGIN
     9250 "Muestra información sobre el programa, número de versión y copyright."
-    9252 "Muestra información para debugging."
+    9252 "Muestra información de depuración."
 END
 
 STRINGTABLE
 BEGIN
-    9281 "Va a la página previa."
-    9282 "Va a la próxima página."
+    9281 "Ir a la página anterior."
+    9282 "Ir a la página siguiente."
     9283 "Permite cambiar la configuración."
-    9285 "Va a página de inicio."
+    9285 "Ir a página de inicio."
 END
 
 STRINGTABLE
@@ -188,7 +222,7 @@ BEGIN
     9554 "Muestra la barra de favoritos."
     9555 "Muestra la barra de historial."
     9557 "Muestra la barra de carpetas."
-    9559 "Muestra la barra de media."
+    9559 "Muestra la barra de medios."
 END
 
 STRINGTABLE
@@ -233,6 +267,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Atrás"
-    IDS_FORWARD "Adelante"
+    IDS_BACK "Volver a %s"
+    IDS_FORWARD "Ir a %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Atrás|Adelante|Arriba|Búsqueda|Carpetas|Mover a|Copiar a|Borrar|Deshacer|Vistas|Detener|Recargar|Inicio|Montar disco|Desconectar|Favoritos|Historial|Pantalla completa|Propiedades|Cortar|Copiar|Pegar|Opciones de carpeta||"
 END

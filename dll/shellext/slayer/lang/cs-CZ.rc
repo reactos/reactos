@@ -10,25 +10,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilita"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Pokud jsou problÈmy se spouötÏnÌm tohoto programu v systÈmu ReactOS, zvolte operaËnÌ systÈm, kter˝ ReactOS tomuto programu sdÏlÌ.", -1, 7, 7, 210, 31
-    GROUPBOX "Reûim kompatibility", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Spustit tento program v reûimu kompatibility pro:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Pokud jsou probl√©my se spou≈°tƒõn√≠m tohoto programu v syst√©mu ReactOS, zvolte operaƒçn√≠ syst√©m, kter√Ω ReactOS tomuto programu sdƒõl√≠.", -1, 7, 7, 210, 31
+    GROUPBOX "Re≈æim kompatibility", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Spustit tento program v re≈æimu kompatibility pro:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "NastavenÌ zobrazenÌ", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
-    CHECKBOX "Spustit v 256 barv·ch", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Spustit v rozliöenÌ 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Vypnout vizu·lnÌ motivy", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "Up&ravit reûimy kompatibility...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "DalöÌ informace o <A>kompatibilitÏ program˘</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    GROUPBOX "Nastaven√≠ zobrazen√≠", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
+    CHECKBOX "Spustit v 256 barv√°ch", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "Spustit v rozli≈°en√≠ 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "Vypnout vizu√°ln√≠ motivy", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "Up&ravit re≈æimy kompatibility...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    /* CONTROL "Dal≈°√≠ informace o <A>kompatibilitƒõ program≈Ø</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Upravit reûimy kompatibility"
+CAPTION "Upravit re≈æimy kompatibility"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX IDC_COMPATIBILITYMODE, 9, 6, 148, 108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
-    PUSHBUTTON "&P¯idat...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&P≈ôidat...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
     PUSHBUTTON "&Upravit...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
     PUSHBUTTON "S&mazat", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
     PUSHBUTTON "&OK", IDOK, 95, 116, 60, 14

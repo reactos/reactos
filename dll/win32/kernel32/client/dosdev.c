@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/dosdev.c
+ * FILE:            dll/win32/kernel32/client/dosdev.c
  * PURPOSE:         Dos device functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -85,7 +85,6 @@ DefineDosDeviceW(
     BASE_API_MESSAGE ApiMessage;
     PBASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest = &ApiMessage.Data.DefineDosDeviceRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     UNICODE_STRING NtTargetPathU;
     UNICODE_STRING DeviceNameU;
     UNICODE_STRING DeviceUpcaseNameU;
@@ -174,16 +173,16 @@ DefineDosDeviceW(
         DefineDosDeviceRequest->TargetPath.MaximumLength =
             NtTargetPathU.Length;
 
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
-                                     sizeof(BASE_DEFINE_DOS_DEVICE));
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                            CaptureBuffer,
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
+                            sizeof(*DefineDosDeviceRequest));
         CsrFreeCaptureBuffer(CaptureBuffer);
 
-        if (!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(ApiMessage.Status))
         {
-            WARN("CsrClientCallServer() failed (Status %lx)\n", Status);
-            BaseSetLastNTError(Status);
+            WARN("CsrClientCallServer() failed (Status %lx)\n", ApiMessage.Status);
+            BaseSetLastNTError(ApiMessage.Status);
             Result = FALSE;
         }
         else

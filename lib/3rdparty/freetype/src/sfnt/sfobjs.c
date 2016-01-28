@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010-2013 by                                      */
+/*  Copyright 1996-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -120,27 +120,9 @@
                                                    FT_Memory     memory );
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_face_get_name                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Returns a given ENGLISH name record in ASCII.                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face   :: A handle to the source face object.                      */
-  /*                                                                       */
-  /*    nameid :: The name id of the name record to return.                */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    name   :: The address of a string pointer.  NULL if no name is     */
-  /*              present.                                                 */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  static FT_Error
+  /* documentation is in sfnt.h */
+
+  FT_LOCAL_DEF( FT_Error )
   tt_face_get_name( TT_Face      face,
                     FT_UShort    nameid,
                     FT_String**  name )
@@ -348,29 +330,22 @@
   }
 
 
-#define WRITE_BYTE( p, v )     \
-          do                   \
-          {                    \
-            *(p)++ = (v) >> 0; \
-                               \
+#define WRITE_USHORT( p, v )                \
+          do                                \
+          {                                 \
+            *(p)++ = (FT_Byte)( (v) >> 8 ); \
+            *(p)++ = (FT_Byte)( (v) >> 0 ); \
+                                            \
           } while ( 0 )
 
-#define WRITE_USHORT( p, v )   \
-          do                   \
-          {                    \
-            *(p)++ = (v) >> 8; \
-            *(p)++ = (v) >> 0; \
-                               \
-          } while ( 0 )
-
-#define WRITE_ULONG( p, v )     \
-          do                    \
-          {                     \
-            *(p)++ = (v) >> 24; \
-            *(p)++ = (v) >> 16; \
-            *(p)++ = (v) >>  8; \
-            *(p)++ = (v) >>  0; \
-                                \
+#define WRITE_ULONG( p, v )                  \
+          do                                 \
+          {                                  \
+            *(p)++ = (FT_Byte)( (v) >> 24 ); \
+            *(p)++ = (FT_Byte)( (v) >> 16 ); \
+            *(p)++ = (FT_Byte)( (v) >>  8 ); \
+            *(p)++ = (FT_Byte)( (v) >>  0 ); \
+                                             \
           } while ( 0 )
 
 
@@ -383,8 +358,8 @@
     FT_FREE( stream->base );
 
     stream->size  = 0;
-    stream->base  = 0;
-    stream->close = 0;
+    stream->base  = NULL;
+    stream->close = NULL;
   }
 
 
@@ -476,10 +451,14 @@
                                      woff.metaOrigLength != 0 ) ) ||
          ( woff.metaLength != 0 && woff.metaOrigLength == 0 )     ||
          ( woff.privOffset == 0 && woff.privLength != 0 )         )
+    {
+      FT_ERROR(( "woff_font_open: invalid WOFF header\n" ));
       return FT_THROW( Invalid_Table );
+    }
 
-    if ( FT_ALLOC( sfnt, woff.totalSfntSize ) ||
-         FT_NEW( sfnt_stream )                )
+    /* Don't trust `totalSfntSize' before thorough checks. */
+    if ( FT_ALLOC( sfnt, 12 + woff.num_tables * 16UL ) ||
+         FT_NEW( sfnt_stream )                         )
       goto Exit;
 
     sfnt_header = sfnt;
@@ -546,6 +525,8 @@
       if ( table->Tag <= old_tag )
       {
         FT_FRAME_EXIT();
+
+        FT_ERROR(( "woff_font_open: table tags are not sorted\n" ));
         error = FT_THROW( Invalid_Table );
         goto Exit;
       }
@@ -574,10 +555,13 @@
 
 
       if ( table->Offset != woff_offset                         ||
-           table->Offset + table->CompLength > woff.length      ||
-           sfnt_offset + table->OrigLength > woff.totalSfntSize ||
+           table->CompLength > woff.length                      ||
+           table->Offset > woff.length - table->CompLength      ||
+           table->OrigLength > woff.totalSfntSize               ||
+           sfnt_offset > woff.totalSfntSize - table->OrigLength ||
            table->CompLength > table->OrigLength                )
       {
+        FT_ERROR(( "woff_font_open: invalid table offsets\n" ));
         error = FT_THROW( Invalid_Table );
         goto Exit;
       }
@@ -585,8 +569,8 @@
       table->OrigOffset = sfnt_offset;
 
       /* The offsets must be multiples of 4. */
-      woff_offset += ( table->CompLength + 3 ) & ~3;
-      sfnt_offset += ( table->OrigLength + 3 ) & ~3;
+      woff_offset += ( table->CompLength + 3 ) & ~3U;
+      sfnt_offset += ( table->OrigLength + 3 ) & ~3U;
     }
 
     /*
@@ -603,6 +587,8 @@
       if ( woff.metaOffset != woff_offset                  ||
            woff.metaOffset + woff.metaLength > woff.length )
       {
+        FT_ERROR(( "woff_font_open:"
+                   " invalid `metadata' offset or length\n" ));
         error = FT_THROW( Invalid_Table );
         goto Exit;
       }
@@ -614,11 +600,12 @@
     if ( woff.privOffset )
     {
       /* ... if it isn't the last block. */
-      woff_offset = ( woff_offset + 3 ) & ~3;
+      woff_offset = ( woff_offset + 3 ) & ~3U;
 
       if ( woff.privOffset != woff_offset                  ||
            woff.privOffset + woff.privLength > woff.length )
       {
+        FT_ERROR(( "woff_font_open: invalid `private' offset or length\n" ));
         error = FT_THROW( Invalid_Table );
         goto Exit;
       }
@@ -630,9 +617,18 @@
     if ( sfnt_offset != woff.totalSfntSize ||
          woff_offset != woff.length        )
     {
+      FT_ERROR(( "woff_font_open: invalid `sfnt' table structure\n" ));
       error = FT_THROW( Invalid_Table );
       goto Exit;
     }
+
+    /* Now use `totalSfntSize'. */
+    if ( FT_REALLOC( sfnt,
+                     12 + woff.num_tables * 16UL,
+                     woff.totalSfntSize ) )
+      goto Exit;
+
+    sfnt_header = sfnt + 12;
 
     /* Write the tables. */
 
@@ -661,6 +657,8 @@
       }
       else
       {
+#ifdef FT_CONFIG_OPTION_USE_ZLIB
+
         /* Uncompress with zlib. */
         FT_ULong  output_len = table->OrigLength;
 
@@ -672,9 +670,17 @@
           goto Exit;
         if ( output_len != table->OrigLength )
         {
+          FT_ERROR(( "woff_font_open: compressed table length mismatch\n" ));
           error = FT_THROW( Invalid_Table );
           goto Exit;
         }
+
+#else /* !FT_CONFIG_OPTION_USE_ZLIB */
+
+        error = FT_THROW( Unimplemented_Feature );
+        goto Exit;
+
+#endif /* !FT_CONFIG_OPTION_USE_ZLIB */
       }
 
       FT_FRAME_EXIT();
@@ -717,7 +723,6 @@
   }
 
 
-#undef WRITE_BYTE
 #undef WRITE_USHORT
 #undef WRITE_ULONG
 
@@ -836,13 +841,14 @@
   FT_LOCAL_DEF( FT_Error )
   sfnt_init_face( FT_Stream      stream,
                   TT_Face        face,
-                  FT_Int         face_index,
+                  FT_Int         face_instance_index,
                   FT_Int         num_params,
                   FT_Parameter*  params )
   {
-    FT_Error        error;
-    FT_Library      library = face->root.driver->root.library;
-    SFNT_Service    sfnt;
+    FT_Error      error;
+    FT_Library    library = face->root.driver->root.library;
+    SFNT_Service  sfnt;
+    FT_Int        face_index;
 
 
     /* for now, parameters are unused */
@@ -875,21 +881,96 @@
     /* Stream may have changed in sfnt_open_font. */
     stream = face->root.stream;
 
-    FT_TRACE2(( "sfnt_init_face: %08p, %ld\n", face, face_index ));
+    FT_TRACE2(( "sfnt_init_face: %08p, %ld\n", face, face_instance_index ));
 
-    if ( face_index < 0 )
-      face_index = 0;
+    face_index = FT_ABS( face_instance_index ) & 0xFFFF;
 
     if ( face_index >= face->ttc_header.count )
-      return FT_THROW( Invalid_Argument );
+    {
+      if ( face_instance_index >= 0 )
+        return FT_THROW( Invalid_Argument );
+      else
+        face_index = 0;
+    }
 
     if ( FT_STREAM_SEEK( face->ttc_header.offsets[face_index] ) )
       return error;
 
-    /* check that we have a valid TrueType file */
+    /* check whether we have a valid TrueType file */
     error = sfnt->load_font_dir( face, stream );
     if ( error )
       return error;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    {
+      FT_ULong  fvar_len;
+
+      FT_ULong  version;
+      FT_ULong  offset;
+
+      FT_UShort  num_axes;
+      FT_UShort  axis_size;
+      FT_UShort  num_instances;
+      FT_UShort  instance_size;
+
+      FT_Int  instance_index;
+
+
+      instance_index = FT_ABS( face_instance_index ) >> 16;
+
+      /* test whether current face is a GX font with named instances */
+      if ( face->goto_table( face, TTAG_fvar, stream, &fvar_len ) ||
+           fvar_len < 20                                          ||
+           FT_READ_ULONG( version )                               ||
+           FT_READ_USHORT( offset )                               ||
+           FT_STREAM_SKIP( 2 )                                    ||
+           FT_READ_USHORT( num_axes )                             ||
+           FT_READ_USHORT( axis_size )                            ||
+           FT_READ_USHORT( num_instances )                        ||
+           FT_READ_USHORT( instance_size )                        )
+      {
+        version       = 0;
+        offset        = 0;
+        num_axes      = 0;
+        axis_size     = 0;
+        num_instances = 0;
+        instance_size = 0;
+      }
+
+      /* check that the data is bound by the table length; */
+      /* based on similar code in function `TT_Get_MM_Var' */
+      if ( version != 0x00010000UL                    ||
+           axis_size != 20                            ||
+           num_axes > 0x3FFE                          ||
+           instance_size != 4 + 4 * num_axes          ||
+           num_instances > 0x7EFF                     ||
+           offset                          +
+             axis_size * num_axes          +
+             instance_size * num_instances > fvar_len )
+        num_instances = 0;
+
+      /* we support at most 2^15 - 1 instances */
+      if ( num_instances >= ( 1U << 15 ) - 1 )
+      {
+        if ( face_instance_index >= 0 )
+          return FT_THROW( Invalid_Argument );
+        else
+          num_instances = 0;
+      }
+
+      /* instance indices in `face_instance_index' start with index 1, */
+      /* thus `>' and not `>='                                         */
+      if ( instance_index > num_instances )
+      {
+        if ( face_instance_index >= 0 )
+          return FT_THROW( Invalid_Argument );
+        else
+          num_instances = 0;
+      }
+
+      face->root.style_flags = (FT_Long)num_instances << 16;
+    }
+#endif
 
     face->root.num_faces  = face->ttc_header.count;
     face->root.face_index = face_index;
@@ -943,7 +1024,7 @@
   FT_LOCAL_DEF( FT_Error )
   sfnt_load_face( FT_Stream      stream,
                   TT_Face        face,
-                  FT_Int         face_index,
+                  FT_Int         face_instance_index,
                   FT_Int         num_params,
                   FT_Parameter*  params )
   {
@@ -959,7 +1040,7 @@
 
     SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
-    FT_UNUSED( face_index );
+    FT_UNUSED( face_instance_index );
 
 
     /* Check parameters */
@@ -1014,7 +1095,6 @@
      * the 'glyf' outline and advertise it as a bitmap-only font. */
     if ( is_apple_sbix )
       has_outline = FALSE;
-
 
     /* if this font doesn't contain outlines, we try to load */
     /* a `bhed' table                                        */
@@ -1282,7 +1362,7 @@
           flags |= FT_STYLE_FLAG_ITALIC;
       }
 
-      root->style_flags = flags;
+      root->style_flags |= flags;
 
       /*********************************************************************/
       /*                                                                   */
@@ -1429,8 +1509,8 @@
         root->ascender  = face->horizontal.Ascender;
         root->descender = face->horizontal.Descender;
 
-        root->height = (FT_Short)( root->ascender - root->descender +
-                                   face->horizontal.Line_Gap );
+        root->height = root->ascender - root->descender +
+                       face->horizontal.Line_Gap;
 
         if ( !( root->ascender || root->descender ) )
         {
@@ -1441,23 +1521,24 @@
               root->ascender  = face->os2.sTypoAscender;
               root->descender = face->os2.sTypoDescender;
 
-              root->height = (FT_Short)( root->ascender - root->descender +
-                                         face->os2.sTypoLineGap );
+              root->height = root->ascender - root->descender +
+                             face->os2.sTypoLineGap;
             }
             else
             {
               root->ascender  =  (FT_Short)face->os2.usWinAscent;
               root->descender = -(FT_Short)face->os2.usWinDescent;
 
-              root->height = (FT_UShort)( root->ascender - root->descender );
+              root->height = root->ascender - root->descender;
             }
           }
         }
 
-        root->max_advance_width  = face->horizontal.advance_Width_Max;
-        root->max_advance_height = (FT_Short)( face->vertical_info
-                                     ? face->vertical.advance_Height_Max
-                                     : root->height );
+        root->max_advance_width  =
+          (FT_Short)face->horizontal.advance_Width_Max;
+        root->max_advance_height =
+          (FT_Short)( face->vertical_info ? face->vertical.advance_Height_Max
+                                          : root->height );
 
         /* See http://www.microsoft.com/OpenType/OTSpec/post.htm -- */
         /* Adjust underline position from top edge to centre of     */
@@ -1567,7 +1648,7 @@
 
     FT_FREE( face->postscript_name );
 
-    face->sfnt = 0;
+    face->sfnt = NULL;
   }
 
 

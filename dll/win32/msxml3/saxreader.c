@@ -279,8 +279,8 @@ typedef struct
     struct list elements;
 
     BSTR namespaceUri;
-    int attributesSize;
-    int nb_attributes;
+    int attr_alloc_count;
+    int attr_count;
     struct _attributes
     {
         BSTR szLocalname;
@@ -646,7 +646,7 @@ static void format_error_message_from_id(saxlocator *This, HRESULT hr)
     {
         WCHAR msg[1024];
         if(!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
-                    NULL, hr, 0, msg, sizeof(msg), NULL))
+                    NULL, hr, 0, msg, sizeof(msg)/sizeof(msg[0]), NULL))
         {
             FIXME("MSXML errors not yet supported.\n");
             msg[0] = '\0';
@@ -668,12 +668,13 @@ static void format_error_message_from_id(saxlocator *This, HRESULT hr)
 static void update_position(saxlocator *This, BOOL fix_column)
 {
     const xmlChar *p = This->pParserCtxt->input->cur-1;
+    const xmlChar *baseP = This->pParserCtxt->input->base;
 
     This->line = xmlSAX2GetLineNumber(This->pParserCtxt);
     if(fix_column)
     {
         This->column = 1;
-        for(; *p!='\n' && *p!='\r' && p>=This->pParserCtxt->input->base; p--)
+        for(;p>=baseP && *p!='\n' && *p!='\r'; p--)
             This->column++;
     }
     else
@@ -1084,9 +1085,14 @@ static HRESULT WINAPI isaxattributes_getLength(
 {
     saxlocator *This = impl_from_ISAXAttributes( iface );
 
-    *length = This->nb_attributes;
+    *length = This->attr_count;
     TRACE("Length set to %d\n", *length);
     return S_OK;
+}
+
+static inline BOOL is_valid_attr_index(const saxlocator *locator, int index)
+{
+    return index < locator->attr_count && index >= 0;
 }
 
 static HRESULT WINAPI isaxattributes_getURI(
@@ -1098,7 +1104,7 @@ static HRESULT WINAPI isaxattributes_getURI(
     saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%d)\n", This, index);
 
-    if(index >= This->nb_attributes || index < 0) return E_INVALIDARG;
+    if(!is_valid_attr_index(This, index)) return E_INVALIDARG;
     if(!url || !size) return E_POINTER;
 
     *size = SysStringLen(This->attributes[index].szURI);
@@ -1111,36 +1117,36 @@ static HRESULT WINAPI isaxattributes_getURI(
 
 static HRESULT WINAPI isaxattributes_getLocalName(
         ISAXAttributes* iface,
-        int nIndex,
+        int index,
         const WCHAR **pLocalName,
         int *pLocalNameLength)
 {
     saxlocator *This = impl_from_ISAXAttributes( iface );
-    TRACE("(%p)->(%d)\n", This, nIndex);
+    TRACE("(%p)->(%d)\n", This, index);
 
-    if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
+    if(!is_valid_attr_index(This, index)) return E_INVALIDARG;
     if(!pLocalName || !pLocalNameLength) return E_POINTER;
 
-    *pLocalNameLength = SysStringLen(This->attributes[nIndex].szLocalname);
-    *pLocalName = This->attributes[nIndex].szLocalname;
+    *pLocalNameLength = SysStringLen(This->attributes[index].szLocalname);
+    *pLocalName = This->attributes[index].szLocalname;
 
     return S_OK;
 }
 
 static HRESULT WINAPI isaxattributes_getQName(
         ISAXAttributes* iface,
-        int nIndex,
+        int index,
         const WCHAR **pQName,
         int *pQNameLength)
 {
     saxlocator *This = impl_from_ISAXAttributes( iface );
-    TRACE("(%p)->(%d)\n", This, nIndex);
+    TRACE("(%p)->(%d)\n", This, index);
 
-    if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
+    if(!is_valid_attr_index(This, index)) return E_INVALIDARG;
     if(!pQName || !pQNameLength) return E_POINTER;
 
-    *pQNameLength = SysStringLen(This->attributes[nIndex].szQName);
-    *pQName = This->attributes[nIndex].szQName;
+    *pQNameLength = SysStringLen(This->attributes[index].szQName);
+    *pQName = This->attributes[index].szQName;
 
     return S_OK;
 }
@@ -1158,7 +1164,7 @@ static HRESULT WINAPI isaxattributes_getName(
     saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%d)\n", This, index);
 
-    if(index>=This->nb_attributes || index<0) return E_INVALIDARG;
+    if(!is_valid_attr_index(This, index)) return E_INVALIDARG;
     if(!uri || !pUriLength || !localName || !pLocalNameSize
             || !QName || !pQNameLength) return E_POINTER;
 
@@ -1189,7 +1195,7 @@ static HRESULT WINAPI isaxattributes_getIndexFromName(
 
     if(!pUri || !pLocalName || !index) return E_POINTER;
 
-    for(i=0; i<This->nb_attributes; i++)
+    for(i=0; i<This->attr_count; i++)
     {
         if(cUriLength!=SysStringLen(This->attributes[i].szURI)
                 || cocalNameLength!=SysStringLen(This->attributes[i].szLocalname))
@@ -1221,7 +1227,7 @@ static HRESULT WINAPI isaxattributes_getIndexFromQName(
     if(!pQName || !index) return E_POINTER;
     if(!nQNameLength) return E_INVALIDARG;
 
-    for(i=0; i<This->nb_attributes; i++)
+    for(i=0; i<This->attr_count; i++)
     {
         if(nQNameLength!=SysStringLen(This->attributes[i].szQName)) continue;
         if(memcmp(pQName, This->attributes[i].szQName, sizeof(WCHAR)*nQNameLength)) continue;
@@ -1283,7 +1289,7 @@ static HRESULT WINAPI isaxattributes_getValue(
     saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%d)\n", This, index);
 
-    if(index>=This->nb_attributes || index<0) return E_INVALIDARG;
+    if(!is_valid_attr_index(This, index)) return E_INVALIDARG;
     if(!value || !nValue) return E_POINTER;
 
     *nValue = SysStringLen(This->attributes[index].szValue);
@@ -1401,7 +1407,7 @@ static void free_attribute_values(saxlocator *locator)
 {
     int i;
 
-    for (i = 0; i < locator->nb_attributes; i++)
+    for (i = 0; i < locator->attr_count; i++)
     {
         SysFreeString(locator->attributes[i].szLocalname);
         locator->attributes[i].szLocalname = NULL;
@@ -1428,19 +1434,19 @@ static HRESULT SAXAttributes_populate(saxlocator *locator,
     if ((locator->saxreader->features & NamespacePrefixes) == 0)
         nb_namespaces = 0;
 
-    locator->nb_attributes = nb_namespaces + nb_attributes;
-    if(locator->nb_attributes > locator->attributesSize)
+    locator->attr_count = nb_namespaces + nb_attributes;
+    if(locator->attr_count > locator->attr_alloc_count)
     {
-        int new_size = locator->attributesSize * 2;
+        int new_size = locator->attr_count * 2;
         attrs = heap_realloc_zero(locator->attributes, new_size * sizeof(struct _attributes));
         if(!attrs)
         {
             free_attribute_values(locator);
-            locator->nb_attributes = 0;
+            locator->attr_count = 0;
             return E_OUTOFMEMORY;
         }
         locator->attributes = attrs;
-        locator->attributesSize = new_size;
+        locator->attr_alloc_count = new_size;
     }
     else
     {
@@ -1684,7 +1690,7 @@ static void libxmlEndElementNS(
     if (!saxreader_has_handler(This, SAXContentHandler))
     {
         free_attribute_values(This);
-        This->nb_attributes = 0;
+        This->attr_count = 0;
         free_element_entry(element);
         return;
     }
@@ -1706,7 +1712,7 @@ static void libxmlEndElementNS(
                 element->qname, SysStringLen(element->qname));
 
     free_attribute_values(This);
-    This->nb_attributes = 0;
+    This->attr_count = 0;
 
     if (sax_callback_failed(This, hr))
     {
@@ -2304,7 +2310,7 @@ static ULONG WINAPI isaxlocator_Release(
         SysFreeString(This->systemId);
         SysFreeString(This->namespaceUri);
 
-        for(index=0; index<This->attributesSize; index++)
+        for(index = 0; index < This->attr_alloc_count; index++)
         {
             SysFreeString(This->attributes[index].szLocalname);
             SysFreeString(This->attributes[index].szValue);
@@ -2440,9 +2446,9 @@ static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, B
         return E_OUTOFMEMORY;
     }
 
-    locator->attributesSize = 8;
-    locator->nb_attributes = 0;
-    locator->attributes = heap_alloc_zero(sizeof(struct _attributes)*locator->attributesSize);
+    locator->attr_alloc_count = 8;
+    locator->attr_count = 0;
+    locator->attributes = heap_alloc_zero(sizeof(struct _attributes)*locator->attr_alloc_count);
     if(!locator->attributes)
     {
         ISAXXMLReader_Release(&reader->ISAXXMLReader_iface);

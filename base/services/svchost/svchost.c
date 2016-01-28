@@ -1243,6 +1243,7 @@ CallPerInstanceInitFunctions (
 }
 
 VOID
+__cdecl
 wmainCRTStartup (
     VOID
     )

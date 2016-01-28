@@ -162,7 +162,7 @@ void *
 AcpiOsAllocate (ACPI_SIZE size)
 {
     DPRINT("AcpiOsAllocate size %d\n",size);
-    return ExAllocatePoolWithTag(NonPagedPool, size, 'IPCA');
+    return ExAllocatePoolWithTag(NonPagedPool, size, 'ipcA');
 }
 
 void
@@ -170,7 +170,7 @@ AcpiOsFree(void *ptr)
 {
     if (!ptr)
         DPRINT1("Attempt to free null pointer!!!\n");
-    ExFreePoolWithTag(ptr, 'IPCA');
+    ExFreePoolWithTag(ptr, 'ipcA');
 }
 
 BOOLEAN
@@ -281,7 +281,7 @@ AcpiOsCreateMutex(
         return AE_BAD_PARAMETER;
     }
 
-    Mutex = ExAllocatePool(NonPagedPool, sizeof(FAST_MUTEX));
+    Mutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), 'LpcA');
     if (!Mutex) return AE_NO_MEMORY;
 
     ExInitializeFastMutex(Mutex);
@@ -301,7 +301,7 @@ AcpiOsDeleteMutex(
         return;
     }
 
-    ExFreePool(Handle);
+    ExFreePoolWithTag(Handle, 'LpcA');
 }
 
 ACPI_STATUS
@@ -364,7 +364,7 @@ AcpiOsCreateSemaphore(
         return AE_BAD_PARAMETER;
     }
 
-    Sem = ExAllocatePool(NonPagedPool, sizeof(ACPI_SEM));
+    Sem = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_SEM), 'LpcA');
     if (!Sem) return AE_NO_MEMORY;
 
     Sem->CurrentUnits = InitialUnits;
@@ -386,7 +386,7 @@ AcpiOsDeleteSemaphore(
         return AE_BAD_PARAMETER;
     }
 
-    ExFreePool(Handle);
+    ExFreePoolWithTag(Handle, 'LpcA');
 
     return AE_OK;
 }
@@ -473,7 +473,7 @@ AcpiOsCreateLock(
         return AE_BAD_PARAMETER;
     }
 
-    SpinLock = ExAllocatePool(NonPagedPool, sizeof(KSPIN_LOCK));
+    SpinLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(KSPIN_LOCK), 'LpcA');
     if (!SpinLock) return AE_NO_MEMORY;
 
     KeInitializeSpinLock(SpinLock);
@@ -493,7 +493,7 @@ AcpiOsDeleteLock(
         return;
     }
 
-    ExFreePool(Handle);
+    ExFreePoolWithTag(Handle, 'LpcA');
 }
 
 ACPI_CPU_FLAGS
@@ -710,15 +710,15 @@ AcpiOsReadPort (
     switch (Width)
     {
     case 8:
-        *Value = READ_PORT_UCHAR((PUCHAR)Address);
+        *Value = READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)Address);
         break;
 
     case 16:
-        *Value = READ_PORT_USHORT((PUSHORT)Address);
+        *Value = READ_PORT_USHORT((PUSHORT)(ULONG_PTR)Address);
         break;
 
     case 32:
-        *Value = READ_PORT_ULONG((PULONG)Address);
+        *Value = READ_PORT_ULONG((PULONG)(ULONG_PTR)Address);
         break;
 
     default:
@@ -739,15 +739,15 @@ AcpiOsWritePort (
     switch (Width)
     {
     case 8:
-        WRITE_PORT_UCHAR((PUCHAR)Address, Value);
+        WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)Address, Value);
         break;
 
     case 16:
-        WRITE_PORT_USHORT((PUSHORT)Address, Value);
+        WRITE_PORT_USHORT((PUSHORT)(ULONG_PTR)Address, Value);
         break;
 
     case 32:
-        WRITE_PORT_ULONG((PULONG)Address, Value);
+        WRITE_PORT_ULONG((PULONG)(ULONG_PTR)Address, Value);
         break;
 
     default:

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/string/wcstol.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -13,6 +13,7 @@
  * @implemented
  */
 long
+CDECL
 wcstol(const wchar_t *nptr, wchar_t **endptr, int base)
 {
   const wchar_t *s = nptr;

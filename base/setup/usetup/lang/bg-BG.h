@@ -166,42 +166,12 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         8,
         13,
-        "- Настройвачът не може да работи с повече от един дял на диск.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Настройвачът не може да изтриe първичeн дял,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  ако на диска има разширен дял." ,
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Настройвачът не може да изтрие първия разширен дял от диска, ",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  ако на диска има и други разширени дялове.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Настройвачът поддържа само FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Проверката на файловата уредба все още не е готова.",
         TEXT_STYLE_NORMAL
     },
@@ -511,6 +481,7 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY bgBGComputerPageEntries[] =
 {
     {
@@ -841,6 +812,12 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         8,
         19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Натиснете D за изтриване на съществуващ дял.",
         TEXT_STYLE_NORMAL
     },
@@ -849,6 +826,100 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
         0,
         "   Почакайте...",  /* Редът да не се превежда, защото списъкът с дяловете ще се размести */
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bgBGConfirmDeletePartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You asked Setup to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnose programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partiton, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1506,8 +1577,16 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "На избрания дял няма достатъчно свободно пространство.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Натиснете клавиш, за да продължите.",
         NULL
     },
@@ -1525,24 +1604,17 @@ MUI_ERROR bgBGErrorEntries[] =
         "  * Press any key to continue."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
         "\n"
-        "  * Press any key to continue."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
-        "\n"
-        "  * Press any key to continue."
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE bgBGPages[] =
 {
@@ -1585,6 +1657,10 @@ MUI_PAGE bgBGPages[] =
     {
         SELECT_PARTITION_PAGE,
         bgBGSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        bgBGConfirmDeletePartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1674,12 +1750,16 @@ MUI_STRING bgBGStrings[] =
     "Предстои форматиране на дяла."},
     {STRING_NONFORMATTEDPART,
     "Избрали сте да сложите РеактОС на нов или неразпределен дял."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Слагане на РеактОС върху дял"},
     {STRING_CHECKINGPART,
     "Тече проверка на избрания дял."},
     {STRING_QUITCONTINUE,
-    "F3= Изход  ENTER = Продължаване"},
+    "F3 = Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Презапускане на компютъра"},
     {STRING_TXTSETUPFAILED,
@@ -1737,7 +1817,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sвид %-3u%s                       %6lu %s"},
+    "%c%c %c %sвид %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
     {STRING_HDDINFOUNK6,

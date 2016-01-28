@@ -6,40 +6,47 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-    .title "ARM Kernel Entry Point"
-    .include "ntoskrnl/include/internal/arm/kxarm.h"
-    .include "ntoskrnl/include/internal/arm/ksarm.h"
+#include <ksarm.h>
 
     TEXTAREA
+
+    IMPORT KiInitializeSystem
+
     NESTED_ENTRY KiSystemStartup
     PROLOG_END KiSystemStartup
-    
+
     /* Put us in FIQ mode, set IRQ stack */
     b .
     mrs r3, cpsr
-    orr r3, r1, #CPSR_FIQ_MODE
-    msr cpsr, r3
-    ldr sp, [a1, #LpbInterruptStack]
-    
+    orr r3, r1, #CPSRM_FIQ
+    //msr cpsr, r3
+    msr cpsr_fc, r3
+    ldr sp, [a1, #LpbKernelStack]
+
     /* Repeat for IRQ mode */
-    msr cpsr_c, #CPSR_IRQ_MODE
-    ldr sp, [a1, #LpbInterruptStack]
+    mov r3, #CPSRM_INT
+    msr cpsr_c, r3
+    ldr sp, [a1, #LpbKernelStack]
 
     /* Put us in ABORT mode and set the panic stack */
-    msr cpsr_c, #CPSR_ABORT_MODE
-    ldr sp, [a1, #LpbPanicStack]
-    
-    /* Repeat for UND (Undefined) mode */
-    msr cpsr_c, #CPSR_UND_MODE
-    ldr sp, [a1, #LpbPanicStack]
-    
-    /* Put us into SVC (Supervisor) mode and set the kernel stack */
-    msr cpsr_c, #CPSR_SVC_MODE
+    mov r3, #CPSRM_ABT
+    msr cpsr_c, r3
     ldr sp, [a1, #LpbKernelStack]
-    
+
+    /* Repeat for UDF (Undefined) mode */
+    mov r3, #CPSRM_UDF
+    msr cpsr_c, r3
+    ldr sp, [a1, #LpbKernelStack]
+
+    /* Put us into SVC (Supervisor) mode and set the kernel stack */
+    mov r3, #CPSRM_SVC
+    msr cpsr_c, r3
+    ldr sp, [a1, #LpbKernelStack]
+
     /* Go to C code */
     b KiInitializeSystem
-    
-    ENTRY_END KiSystemStartup
 
+    NESTED_END KiSystemStartup
+
+    END
 /* EOF */

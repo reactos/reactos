@@ -7,7 +7,7 @@ BEGIN
     IDS_ABOUT "Kopirett 2000 tilhører Joshua Thielen"
 END
 
-MENU_WINEMINE MENU
+IDM_WINEMINE MENU
 BEGIN
     POPUP "&Innstillinger"
     BEGIN

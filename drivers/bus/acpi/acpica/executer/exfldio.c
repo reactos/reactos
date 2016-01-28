@@ -4,117 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights. You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code. No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision. In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change. Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee. Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution. In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government. In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
-
-
-#define __EXFLDIO_C__
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "acpi.h"
 #include "accommon.h"
@@ -195,7 +120,8 @@ AcpiExSetupRegion (
 
     if (!AcpiIsValidSpaceId (SpaceId))
     {
-        ACPI_ERROR ((AE_INFO, "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
+        ACPI_ERROR ((AE_INFO,
+            "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
         return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
     }
 
@@ -245,8 +171,8 @@ AcpiExSetupRegion (
      * (Region length is specified in bytes)
      */
     if (RgnDesc->Region.Length <
-            (ObjDesc->CommonField.BaseByteOffset + FieldDatumByteOffset +
-            ObjDesc->CommonField.AccessByteWidth))
+        (ObjDesc->CommonField.BaseByteOffset + FieldDatumByteOffset +
+        ObjDesc->CommonField.AccessByteWidth))
     {
         if (AcpiGbl_EnableInterpreterSlack)
         {
@@ -273,7 +199,8 @@ AcpiExSetupRegion (
              * byte, and a field with Dword access specified.
              */
             ACPI_ERROR ((AE_INFO,
-                "Field [%4.4s] access width (%u bytes) too large for region [%4.4s] (length %u)",
+                "Field [%4.4s] access width (%u bytes) "
+                "too large for region [%4.4s] (length %u)",
                 AcpiUtGetNodeName (ObjDesc->CommonField.Node),
                 ObjDesc->CommonField.AccessByteWidth,
                 AcpiUtGetNodeName (RgnDesc->Region.Node),
@@ -285,7 +212,8 @@ AcpiExSetupRegion (
          * exceeds region length, indicate an error
          */
         ACPI_ERROR ((AE_INFO,
-            "Field [%4.4s] Base+Offset+Width %u+%u+%u is beyond end of region [%4.4s] (length %u)",
+            "Field [%4.4s] Base+Offset+Width %u+%u+%u "
+            "is beyond end of region [%4.4s] (length %u)",
             AcpiUtGetNodeName (ObjDesc->CommonField.Node),
             ObjDesc->CommonField.BaseByteOffset,
             FieldDatumByteOffset, ObjDesc->CommonField.AccessByteWidth,
@@ -364,19 +292,19 @@ AcpiExAccessRegion (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_BFIELD,
-        " Region [%s:%X], Width %X, ByteBase %X, Offset %X at %p\n",
+        " Region [%s:%X], Width %X, ByteBase %X, Offset %X at %8.8X%8.8X\n",
         AcpiUtGetRegionName (RgnDesc->Region.SpaceId),
         RgnDesc->Region.SpaceId,
         ObjDesc->CommonField.AccessByteWidth,
         ObjDesc->CommonField.BaseByteOffset,
         FieldDatumByteOffset,
-        ACPI_CAST_PTR (void, (RgnDesc->Region.Address + RegionOffset))));
+        ACPI_FORMAT_UINT64 (RgnDesc->Region.Address + RegionOffset)));
 
     /* Invoke the appropriate AddressSpace/OpRegion handler */
 
     Status = AcpiEvAddressSpaceDispatch (RgnDesc, ObjDesc,
-                Function, RegionOffset,
-                ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth), Value);
+        Function, RegionOffset,
+        ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth), Value);
 
     if (ACPI_FAILURE (Status))
     {
@@ -531,7 +459,7 @@ AcpiExFieldDatumIo (
              * Copy the data from the source buffer.
              * Length is the field width in bytes.
              */
-            ACPI_MEMCPY (Value,
+            memcpy (Value,
                 (ObjDesc->BufferField.BufferObj)->Buffer.Pointer +
                     ObjDesc->BufferField.BaseByteOffset +
                     FieldDatumByteOffset,
@@ -543,7 +471,7 @@ AcpiExFieldDatumIo (
              * Copy the data to the target buffer.
              * Length is the field width in bytes.
              */
-            ACPI_MEMCPY ((ObjDesc->BufferField.BufferObj)->Buffer.Pointer +
+            memcpy ((ObjDesc->BufferField.BufferObj)->Buffer.Pointer +
                 ObjDesc->BufferField.BaseByteOffset +
                 FieldDatumByteOffset,
                 Value, ObjDesc->CommonField.AccessByteWidth);
@@ -587,8 +515,8 @@ AcpiExFieldDatumIo (
          * For simple RegionFields, we just directly access the owning
          * Operation Region.
          */
-        Status = AcpiExAccessRegion (ObjDesc, FieldDatumByteOffset, Value,
-                    ReadWrite);
+        Status = AcpiExAccessRegion (
+            ObjDesc, FieldDatumByteOffset, Value, ReadWrite);
         break;
 
     case ACPI_TYPE_LOCAL_INDEX_FIELD:
@@ -611,8 +539,7 @@ AcpiExFieldDatumIo (
             FieldDatumByteOffset));
 
         Status = AcpiExInsertIntoField (ObjDesc->IndexField.IndexObj,
-                    &FieldDatumByteOffset,
-                    sizeof (FieldDatumByteOffset));
+            &FieldDatumByteOffset, sizeof (FieldDatumByteOffset));
         if (ACPI_FAILURE (Status))
         {
             return_ACPI_STATUS (Status);
@@ -625,8 +552,8 @@ AcpiExFieldDatumIo (
             ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
                 "Read from Data Register\n"));
 
-            Status = AcpiExExtractFromField (ObjDesc->IndexField.DataObj,
-                        Value, sizeof (UINT64));
+            Status = AcpiExExtractFromField (
+                ObjDesc->IndexField.DataObj, Value, sizeof (UINT64));
         }
         else
         {
@@ -636,8 +563,8 @@ AcpiExFieldDatumIo (
                 "Write to Data Register: Value %8.8X%8.8X\n",
                 ACPI_FORMAT_UINT64 (*Value)));
 
-            Status = AcpiExInsertIntoField (ObjDesc->IndexField.DataObj,
-                        Value, sizeof (UINT64));
+            Status = AcpiExInsertIntoField (
+                ObjDesc->IndexField.DataObj, Value, sizeof (UINT64));
         }
         break;
 
@@ -719,14 +646,14 @@ AcpiExWriteWithUpdateRule (
              * ones)  The left shift drops the bits we want to ignore.
              */
             if ((~Mask << (ACPI_MUL_8 (sizeof (Mask)) -
-                           ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth))) != 0)
+                   ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth))) != 0)
             {
                 /*
                  * Read the current contents of the byte/word/dword containing
                  * the field, and merge with the new field value.
                  */
-                Status = AcpiExFieldDatumIo (ObjDesc, FieldDatumByteOffset,
-                            &CurrentValue, ACPI_READ);
+                Status = AcpiExFieldDatumIo (
+                    ObjDesc, FieldDatumByteOffset, &CurrentValue, ACPI_READ);
                 if (ACPI_FAILURE (Status))
                 {
                     return_ACPI_STATUS (Status);
@@ -754,13 +681,15 @@ AcpiExWriteWithUpdateRule (
 
             ACPI_ERROR ((AE_INFO,
                 "Unknown UpdateRule value: 0x%X",
-                (ObjDesc->CommonField.FieldFlags & AML_FIELD_UPDATE_RULE_MASK)));
+                (ObjDesc->CommonField.FieldFlags &
+                    AML_FIELD_UPDATE_RULE_MASK)));
             return_ACPI_STATUS (AE_AML_OPERAND_VALUE);
         }
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
-        "Mask %8.8X%8.8X, DatumOffset %X, Width %X, Value %8.8X%8.8X, MergedValue %8.8X%8.8X\n",
+        "Mask %8.8X%8.8X, DatumOffset %X, Width %X, "
+        "Value %8.8X%8.8X, MergedValue %8.8X%8.8X\n",
         ACPI_FORMAT_UINT64 (Mask),
         FieldDatumByteOffset,
         ObjDesc->CommonField.AccessByteWidth,
@@ -769,8 +698,8 @@ AcpiExWriteWithUpdateRule (
 
     /* Write the merged value */
 
-    Status = AcpiExFieldDatumIo (ObjDesc, FieldDatumByteOffset,
-                &MergedValue, ACPI_WRITE);
+    Status = AcpiExFieldDatumIo (
+        ObjDesc, FieldDatumByteOffset, &MergedValue, ACPI_WRITE);
 
     return_ACPI_STATUS (Status);
 }
@@ -823,7 +752,7 @@ AcpiExExtractFromField (
         return_ACPI_STATUS (AE_BUFFER_OVERFLOW);
     }
 
-    ACPI_MEMSET (Buffer, 0, BufferLength);
+    memset (Buffer, 0, BufferLength);
     AccessBitWidth = ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth);
 
     /* Handle the simple case here */
@@ -840,7 +769,7 @@ AcpiExExtractFromField (
             /* Use RawDatum (UINT64) to handle buffers < 64 bits */
 
             Status = AcpiExFieldDatumIo (ObjDesc, 0, &RawDatum, ACPI_READ);
-            ACPI_MEMCPY (Buffer, &RawDatum, BufferLength);
+            memcpy (Buffer, &RawDatum, BufferLength);
         }
 
         return_ACPI_STATUS (Status);
@@ -881,8 +810,8 @@ AcpiExExtractFromField (
         /* Get next input datum from the field */
 
         FieldOffset += ObjDesc->CommonField.AccessByteWidth;
-        Status = AcpiExFieldDatumIo (ObjDesc, FieldOffset,
-                    &RawDatum, ACPI_READ);
+        Status = AcpiExFieldDatumIo (
+            ObjDesc, FieldOffset, &RawDatum, ACPI_READ);
         if (ACPI_FAILURE (Status))
         {
             return_ACPI_STATUS (Status);
@@ -910,7 +839,7 @@ AcpiExExtractFromField (
 
         /* Write merged datum to target buffer */
 
-        ACPI_MEMCPY (((char *) Buffer) + BufferOffset, &MergedDatum,
+        memcpy (((char *) Buffer) + BufferOffset, &MergedDatum,
             ACPI_MIN(ObjDesc->CommonField.AccessByteWidth,
                 BufferLength - BufferOffset));
 
@@ -928,7 +857,7 @@ AcpiExExtractFromField (
 
     /* Write the last datum to the buffer */
 
-    ACPI_MEMCPY (((char *) Buffer) + BufferOffset, &MergedDatum,
+    memcpy (((char *) Buffer) + BufferOffset, &MergedDatum,
         ACPI_MIN(ObjDesc->CommonField.AccessByteWidth,
             BufferLength - BufferOffset));
 
@@ -979,7 +908,8 @@ AcpiExInsertIntoField (
 
     NewBuffer = NULL;
     RequiredLength = ACPI_ROUND_BITS_UP_TO_BYTES (
-                        ObjDesc->CommonField.BitLength);
+        ObjDesc->CommonField.BitLength);
+
     /*
      * We must have a buffer that is at least as long as the field
      * we are writing to. This is because individual fields are
@@ -1001,7 +931,7 @@ AcpiExInsertIntoField (
          * at Byte zero. All unused (upper) bytes of the
          * buffer will be 0.
          */
-        ACPI_MEMCPY ((char *) NewBuffer, (char *) Buffer, BufferLength);
+        memcpy ((char *) NewBuffer, (char *) Buffer, BufferLength);
         Buffer = NewBuffer;
         BufferLength = RequiredLength;
     }
@@ -1044,7 +974,7 @@ AcpiExInsertIntoField (
 
     /* Get initial Datum from the input buffer */
 
-    ACPI_MEMCPY (&RawDatum, Buffer,
+    memcpy (&RawDatum, Buffer,
         ACPI_MIN(ObjDesc->CommonField.AccessByteWidth,
             BufferLength - BufferOffset));
 
@@ -1057,8 +987,8 @@ AcpiExInsertIntoField (
         /* Write merged datum to the target field */
 
         MergedDatum &= Mask;
-        Status = AcpiExWriteWithUpdateRule (ObjDesc, Mask,
-                    MergedDatum, FieldOffset);
+        Status = AcpiExWriteWithUpdateRule (
+            ObjDesc, Mask, MergedDatum, FieldOffset);
         if (ACPI_FAILURE (Status))
         {
             goto Exit;
@@ -1096,7 +1026,7 @@ AcpiExInsertIntoField (
         /* Get the next input datum from the buffer */
 
         BufferOffset += ObjDesc->CommonField.AccessByteWidth;
-        ACPI_MEMCPY (&RawDatum, ((char *) Buffer) + BufferOffset,
+        memcpy (&RawDatum, ((char *) Buffer) + BufferOffset,
             ACPI_MIN(ObjDesc->CommonField.AccessByteWidth,
                  BufferLength - BufferOffset));
 
@@ -1115,8 +1045,8 @@ AcpiExInsertIntoField (
     /* Write the last datum to the field */
 
     MergedDatum &= Mask;
-    Status = AcpiExWriteWithUpdateRule (ObjDesc,
-                Mask, MergedDatum, FieldOffset);
+    Status = AcpiExWriteWithUpdateRule (
+        ObjDesc, Mask, MergedDatum, FieldOffset);
 
 Exit:
     /* Free temporary buffer if we used one */

@@ -1,4 +1,4 @@
-/* Spanish translation by Samuel Serapi髇 Vega */
+/* Spanish translation by Samuel Serapi贸n Vega */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -7,25 +7,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilidad"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Si tiene problemas ejecutando este programa en ReactOS, seleccione el modo de compatibilidad que coincidad con otro sistema operativo en el que funciona.", -1, 7, 7, 210, 31
-    GROUPBOX "Modo de Compatibilidad", IDC_COMPATGROUP, 7, 41, 210, 49
+    LTEXT "Si tiene problemas ejecutando este programa en ReactOS, seleccione el modo de compatibilidad que coincida con otro sistema operativo en el que funciona.", -1, 7, 7, 210, 31
+    GROUPBOX "Modo de compatibilidad", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Ejecutar este programa en modo de compatibilidad para:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Configuraci髇 de pantalla", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
+    GROUPBOX "Configuraci贸n de pantalla", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
     CHECKBOX "Ejecutar con 256 colores", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Ejecutar con resoluci髇 de pantalla de 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    CHECKBOX "Ejecutar con resoluci贸n de pantalla de 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Deshabilitar temas visuales", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "E&ditar modos de compatibilidad...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "M醩 acerca de <A>compatibilidad de programas</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    /* CONTROL "Saber m谩s acerca de <A>compatibilidad de programas</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Editar Modos de Compatibilidad"
+CAPTION "Editar modos de compatibilidad"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX IDC_COMPATIBILITYMODE, 9, 6, 148, 108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
-    PUSHBUTTON "&A馻dir...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&A帽adir...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
     PUSHBUTTON "&Editar...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
     PUSHBUTTON "&Borrar", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
     PUSHBUTTON "&Aceptar", IDOK, 95, 116, 60, 14
@@ -35,5 +35,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Capa de extenci髇 de compatibilidad para aplicaciones"
+    IDS_DESCRIPTION "Capa de extenci贸n de compatibilidad para aplicaciones"
 END

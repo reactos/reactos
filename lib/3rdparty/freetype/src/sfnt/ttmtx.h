@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Load the metrics tables common to TTF and OTF fonts (specification). */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,7 +40,7 @@ FT_BEGIN_HEADER
                      FT_Bool    vertical );
 
 
-  FT_LOCAL( FT_Error )
+  FT_LOCAL( void )
   tt_face_get_metrics( TT_Face     face,
                        FT_Bool     vertical,
                        FT_UInt     gindex,

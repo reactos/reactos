@@ -1,0 +1,265 @@
+/* Italian resource for Wine WordPad
+ *
+ * Copyright 2010 by Luca Bennati
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/*UTF-8*/
+#pragma code_page(65001)
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+IDM_MAINMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Nuovo...\tCtrl+N",          ID_FILE_NEW
+        MENUITEM "&Apri...\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM "&Salva\tCtrl+S",             ID_FILE_SAVE
+        MENUITEM "Salva &come...",             ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Stampa...\tCtrl+P",         ID_PRINT
+        MENUITEM "An&teprima di stampa...",    ID_PREVIEW
+        MENUITEM "&Impostazioni di stampa...", ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&sci",                      ID_FILE_EXIT
+    END
+    POPUP "&Modifica"
+    BEGIN
+        MENUITEM "&Annulla\tCtrl+Z",            ID_EDIT_UNDO
+        MENUITEM "&Rifai\tCtrl+Y",              ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Taglia\tCtrl+X",             ID_EDIT_CUT
+        MENUITEM "&Copia\tCtrl+C",              ID_EDIT_COPY
+        MENUITEM "&Incolla\tCtrl+V",            ID_EDIT_PASTE
+        MENUITEM "Ca&ncella\tDEL",              ID_EDIT_CLEAR
+        MENUITEM "&Seleziona tutto\tCtrl+A",    ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "T&rova...\tCtrl+F",           ID_FIND
+        MENUITEM "Trova s&uccessivo\tF3",       ID_FIND_NEXT
+        MENUITEM "S&ostituisci...\tCtrl+H",     ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Sola &lettura",               ID_EDIT_READONLY
+        MENUITEM "&Modificato",                 ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "E&xtra"
+        BEGIN
+            MENUITEM "&Informazioni sulla selezione", ID_EDIT_SELECTIONINFO
+            MENUITEM "&Formato del carattere",        ID_EDIT_CHARFORMAT
+            MENUITEM "Formato del &def. char",        ID_EDIT_DEFCHARFORMAT
+            MENUITEM "Formato del &paragrafo",        ID_EDIT_PARAFORMAT
+            MENUITEM "&Ricava il testo",              ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "&Visualizza"
+    BEGIN
+        MENUITEM "Barra degli &strumenti", ID_TOGGLE_TOOLBAR
+        MENUITEM "Barra del &formato",     ID_TOGGLE_FORMATBAR
+        MENUITEM "&Righello",              ID_TOGGLE_RULER
+        MENUITEM "Barra di s&tato",        ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Opzioni...",            ID_VIEWPROPERTIES
+    END
+    POPUP "&Inserisci"
+    BEGIN
+        MENUITEM "&Data e ora...",  ID_DATETIME
+    END
+    POPUP "F&ormato"
+    BEGIN
+        MENUITEM "&Carattere...",                ID_FONTSETTINGS
+        MENUITEM "&Elenco",                      ID_BULLET
+        MENUITEM "&Paragrafo...",                ID_PARAFORMAT
+        MENUITEM "&Tabulazioni...",              ID_TABSTOPS
+        POPUP "Sfon&do"
+        BEGIN
+            MENUITEM "Di &sistema\tCtrl+1",     ID_BACK_1
+            MENUITEM "&Giallo di PostThat\tCtrl+2",    ID_BACK_2
+        END
+    END
+    POPUP "&Aiuto"
+    BEGIN
+        MENUITEM "&Riguardo a Wine Wordpad", ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Taglia",             ID_EDIT_CUT
+        MENUITEM "&Copia",              ID_EDIT_COPY
+        MENUITEM "&Incolla",            ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Elenco",             ID_BULLET
+        MENUITEM "&Paragrafo...",       ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Nero",              ID_COLOR_BLACK
+        MENUITEM "Marrone rossiccio", ID_COLOR_MAROON
+        MENUITEM "Verde",             ID_COLOR_GREEN
+        MENUITEM "Verde oliva",       ID_COLOR_OLIVE
+        MENUITEM "Blu oltremare",     ID_COLOR_NAVY
+        MENUITEM "Porpora",           ID_COLOR_PURPLE
+        MENUITEM "Foglia di Tè",      ID_COLOR_TEAL
+        MENUITEM "Grigio",            ID_COLOR_GRAY
+        MENUITEM "Argento",           ID_COLOR_SILVER
+        MENUITEM "Rosso",             ID_COLOR_RED
+        MENUITEM "Verde cedro",       ID_COLOR_LIME
+        MENUITEM "Giallo",            ID_COLOR_YELLOW
+        MENUITEM "Blu",               ID_COLOR_BLUE
+        MENUITEM "Fucsia",            ID_COLOR_FUCHSIA
+        MENUITEM "Acqua",             ID_COLOR_AQUA
+        MENUITEM "Bianco",            ID_COLOR_WHITE
+        MENUITEM "Automatico",        ID_COLOR_AUTOMATIC
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALL_FILES,              "Tutti i file (*.*)"
+    STRING_TEXT_FILES_TXT,         "File di testo (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "File di testo Unicode (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "Formato rich text (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Documento rich text"
+    STRING_NEWFILE_TXT,            "Documento di testo"
+    STRING_NEWFILE_TXT_UNICODE,    "Documento di testo Unicode"
+    STRING_PRINTER_FILES_PRN,      "File di stampa (*.PRN)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "Sinistra"
+    STRING_ALIGN_RIGHT,           "Destra"
+    STRING_ALIGN_CENTER,          "Centro"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "Opzioni"
+    STRING_VIEWPROPS_TEXT,           "Testo"
+    STRING_VIEWPROPS_RICHTEXT,       "Rich text"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "Stampa"
+    STRING_PREVIEW_NEXTPAGE,         "Prossima pagina"
+    STRING_PREVIEW_PREVPAGE,         "Pagina precedente"
+    STRING_PREVIEW_TWOPAGES,         "Due pagine"
+    STRING_PREVIEW_ONEPAGE,          "Una pagina"
+    STRING_PREVIEW_ZOOMIN,           "Ingrandisci"
+    STRING_PREVIEW_ZOOMOUT,          "Rimpicciolisci"
+    STRING_PREVIEW_CLOSE,            "Chiudi"
+    STRING_PREVIEW_PAGE,             "Pagina"
+    STRING_PREVIEW_PAGES,            "Pagine"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "po"
+    STRING_UNITS_INCH,               "pollici"
+    STRING_UNITS_PT,                 "pt"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "Documento"
+    STRING_PROMPT_SAVE_CHANGES,  "Salva i cambiamenti su '%s'?"
+    STRING_SEARCH_FINISHED,      "Finita la ricerca sul documento."
+    STRING_LOAD_RICHED_FAILED,   "Impossibile caricare la libreria RichEdit."
+    STRING_SAVE_LOSEFORMATTING,  "Hai scelto di salvare nel formato Testo semplice, che causerà la perdita di tutta la formattazione. Sei sicuro?"
+    STRING_INVALID_NUMBER,       "Numero di formato non valido"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "I documenti di storage OLE non sono supportati"
+    STRING_WRITE_FAILED,              "Impossibile salvare il file."
+    STRING_WRITE_ACCESS_DENIED,       "Non hai i diritti di accesso per salvare il file."
+    STRING_OPEN_FAILED,               "Impossibile aprire il file."
+    STRING_OPEN_ACCESS_DENIED,        "Non hai i diritti di accesso per aprire il file."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Stampa non implementata"
+    STRING_MAX_TAB_STOPS,             "Non si possono aggiungere più di 32 punti di fermata delle tabulazioni."
+END
+
+IDD_DATETIME DIALOGEX 30, 20, 130, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Data e ora"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Formati disponibili",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "OK",IDOK,87,12,40,12
+    PUSHBUTTON   "&Annulla",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOGEX 30, 20, 140, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Nuovo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Nuovo tipo di documento",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "OK",IDOK,97,12,40,12
+    PUSHBUTTON   "&Annulla",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Formato del paragrafo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Rientro", -1, 10, 10, 140, 68
+    LTEXT "Sinistra", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "Destra", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "Prima riga", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "Allineamento", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "OK", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "&Annulla", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Tabulazioni"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Punti di fermata delle tabulazioni", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Aggiungi", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Rimuovi", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "OK", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "&Annulla", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Rimuovi &tutti", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOGEX 0, 0, 280, 110
+STYLE DS_SHELLFONT | DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Linea di margine", -1, 5, 10, 145, 85
+    RADIOBUTTON "&Nessuna linea di margine", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "Confina il testo nel &bordo della finestra", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "Confina il testo nel &margine", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "Barre", -1, 155, 10, 115, 85
+    CHECKBOX "Barra degli &strumenti", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "Barra del &formato", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Righello", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "Barra di s&tato", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END

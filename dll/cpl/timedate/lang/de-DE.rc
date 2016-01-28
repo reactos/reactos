@@ -46,12 +46,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Datum/Zeit"
-    IDS_CPLDESCRIPTION "Ändert Uhrzeit, Datum und Zeitzone."
+    IDS_CPLDESCRIPTION "Ã„ndert Uhrzeit, Datum und Zeitzone."
     IDS_TIMEZONETEXT "Aktuelle Zeitzone: %s"
-    IDS_TIMEZONEINVALID "Ungültig"
+    IDS_TIMEZONEINVALID "UngÃ¼ltig"
     IDS_TIMEZONEUNKNOWN "Unbekannt"
     IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am %s um %s synchronisiert."
-    IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s."
-    IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchronisiert."
+    IDS_INETTIMENEXTSYNC "NÃ¤chste Synchronisierung am %s um %s."
+    IDS_INETTIMESYNCING "Bitte warten Sie, wÃ¤hrend ReactOS die Zeit mit %s synchronisiert."
     IDS_INETTIMEERROR "Ein Fehler trat beim Synchronisieren mit %s auf."
 END

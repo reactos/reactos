@@ -11,6 +11,8 @@
 #include "precomp.h"
 
 #include <winreg.h>
+
+#define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/obfuncs.h>
 

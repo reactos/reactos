@@ -133,21 +133,6 @@ static HRESULT unregister_pixelformats(struct regsvr_pixelformat const *list);
  */
 static const WCHAR clsid_keyname[] = {
     'C', 'L', 'S', 'I', 'D', 0 };
-static const WCHAR curver_keyname[] = {
-    'C', 'u', 'r', 'V', 'e', 'r', 0 };
-static const WCHAR ips_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    0 };
-static const WCHAR ips32_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    '3', '2', 0 };
-static const WCHAR progid_keyname[] = {
-    'P', 'r', 'o', 'g', 'I', 'D', 0 };
-static const WCHAR viprogid_keyname[] = {
-    'V', 'e', 'r', 's', 'i', 'o', 'n', 'I', 'n', 'd', 'e', 'p',
-    'e', 'n', 'd', 'e', 'n', 't', 'P', 'r', 'o', 'g', 'I', 'D',
-    0 };
-static const char tmodel_valuename[] = "ThreadingModel";
 static const char author_valuename[] = "Author";
 static const char friendlyname_valuename[] = "FriendlyName";
 static const WCHAR vendor_valuename[] = {'V','e','n','d','o','r',0};
@@ -376,11 +361,11 @@ static HRESULT unregister_decoders(struct regsvr_decoder const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = SHDeleteKeyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = SHDeleteKeyW(instance_key, buf);
+	res = RegDeleteTreeW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -554,11 +539,11 @@ static HRESULT unregister_encoders(struct regsvr_encoder const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = SHDeleteKeyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = SHDeleteKeyW(instance_key, buf);
+	res = RegDeleteTreeW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -711,11 +696,11 @@ static HRESULT unregister_converters(struct regsvr_converter const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = SHDeleteKeyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = SHDeleteKeyW(instance_key, buf);
+	res = RegDeleteTreeW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -921,11 +906,11 @@ static HRESULT unregister_metadatareaders(struct regsvr_metadatareader const *li
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = SHDeleteKeyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = SHDeleteKeyW(instance_key, buf);
+	res = RegDeleteTreeW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -1096,11 +1081,11 @@ static HRESULT unregister_pixelformats(struct regsvr_pixelformat const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
         StringFromGUID2(list->clsid, buf, 39);
 
-        res = SHDeleteKeyW(coclass_key, buf);
+        res = RegDeleteTreeW(coclass_key, buf);
         if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
         if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-        res = SHDeleteKeyW(instance_key, buf);
+        res = RegDeleteTreeW(instance_key, buf);
         if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
         if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -1498,6 +1483,21 @@ static const struct reader_containers pngtext_containers[] = {
     { NULL } /* list terminator */
 };
 
+static const BYTE gAMA[] = "gAMA";
+
+static const struct metadata_pattern pnggama_metadata_pattern[] = {
+    { 4, 4, gAMA, mask_all, 4 },
+    { 0 }
+};
+
+static const struct reader_containers pnggama_containers[] = {
+    {
+        &GUID_ContainerFormatPng,
+        pnggama_metadata_pattern
+    },
+    { NULL } /* list terminator */
+};
+
 static const struct metadata_pattern lsd_metadata_patterns[] = {
     { 0, 6, gif87a_magic, mask_all, 0 },
     { 0, 6, gif89a_magic, mask_all, 0 },
@@ -1592,6 +1592,16 @@ static struct regsvr_metadatareader const metadatareader_list[] = {
         &GUID_MetadataFormatIfd,
         1, 1, 0,
         ifd_containers
+    },
+    {   &CLSID_WICPngGamaMetadataReader,
+        "The Wine Project",
+        "Chunk gAMA Reader",
+        "1.0.0.0",
+        "1.0.0.0",
+        &GUID_VendorMicrosoft,
+        &GUID_MetadataFormatChunkgAMA,
+        0, 0, 0,
+        pnggama_containers
     },
     {   &CLSID_WICPngTextMetadataReader,
         "The Wine Project",
@@ -2011,14 +2021,14 @@ static HRESULT unregister_categories(const struct regsvr_category *list)
     for (; res == ERROR_SUCCESS && list->clsid; list++)
     {
         StringFromGUID2(list->clsid, buf, 39);
-        res = SHDeleteKeyW(instance_key, buf);
+        res = RegDeleteTreeW(instance_key, buf);
     }
 
     RegCloseKey(instance_key);
     RegCloseKey(categories_key);
 
     StringFromGUID2(&CLSID_WICImagingCategories, buf, 39);
-    res = SHDeleteKeyW(coclass_key, buf);
+    res = RegDeleteTreeW(coclass_key, buf);
 
     RegCloseKey(coclass_key);
 

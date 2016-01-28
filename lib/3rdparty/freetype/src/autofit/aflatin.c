@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin writing system (body).        */
 /*                                                                         */
-/*  Copyright 2003-2014 by                                                 */
+/*  Copyright 2003-2015 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,6 +41,10 @@
 #define FT_COMPONENT  trace_aflatin
 
 
+  /* needed for computation of round vs. flat segments */
+#define FLAT_THRESHOLD( x )  ( x / 14 )
+
+
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
@@ -58,7 +62,11 @@
                                 FT_Face          face )
   {
     /* scan the array of segments in each direction */
+#ifdef __REACTOS__
+    AF_GlyphHintsRec *hints = malloc(sizeof(AF_GlyphHintsRec));
+#else
     AF_GlyphHintsRec  hints[1];
+#endif
 
 
     FT_TRACE5(( "\n"
@@ -77,7 +85,11 @@
       FT_ULong            glyph_index;
       FT_Long             y_offset;
       int                 dim;
+#ifdef __REACTOS__
+      AF_LatinMetricsRec *dummy = malloc(sizeof(AF_LatinMetricsRec));
+#else
       AF_LatinMetricsRec  dummy[1];
+#endif
       AF_Scaler           scaler = &dummy->root.scaler;
 
 #ifdef FT_CONFIG_OPTION_PIC
@@ -171,7 +183,15 @@
         if ( error )
           goto Exit;
 
+        /*
+         *  We assume that the glyphs selected for the stem width
+         *  computation are `featureless' enough so that the linking
+         *  algorithm works fine without adjustments of its scoring
+         *  function.
+         */
         af_latin_hints_link_segments( hints,
+                                      0,
+                                      NULL,
                                       (AF_Dimension)dim );
 
         seg   = axhints->segments;
@@ -235,11 +255,19 @@
         }
 #endif
       }
+#ifdef __REACTOS__
+      free(dummy);
+#endif
     }
 
     FT_TRACE5(( "\n" ));
 
     af_glyph_hints_done( hints );
+
+#ifdef __REACTOS__
+    free(hints);
+#endif
+
   }
 
 
@@ -253,8 +281,8 @@
     FT_Pos        flats [AF_BLUE_STRING_MAX_LEN];
     FT_Pos        rounds[AF_BLUE_STRING_MAX_LEN];
 
-    FT_Int        num_flats;
-    FT_Int        num_rounds;
+    FT_UInt       num_flats;
+    FT_UInt       num_rounds;
 
     AF_LatinBlue  blue;
     FT_Error      error;
@@ -265,6 +293,8 @@
 
     AF_Blue_Stringset         bss = sc->blue_stringset;
     const AF_Blue_StringRec*  bs  = &af_blue_stringsets[bss];
+
+    FT_Pos  flat_threshold = FLAT_THRESHOLD( metrics->units_per_em );
 
 
     /* we walk over the blue character strings as specified in the */
@@ -279,6 +309,8 @@
       const char*  p = &af_blue_strings[bs->string];
       FT_Pos*      blue_ref;
       FT_Pos*      blue_shoot;
+      FT_Pos       ascender;
+      FT_Pos       descender;
 
 
 #ifdef FT_DEBUG_LEVEL_TRACE
@@ -295,6 +327,14 @@
           if ( AF_LATIN_IS_TOP_BLUE( bs ) )
           {
             FT_TRACE5(( "top" ));
+            have_flag = 1;
+          }
+
+          if ( AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
+          {
+            if ( have_flag )
+              FT_TRACE5(( ", " ));
+            FT_TRACE5(( "neutral" ));
             have_flag = 1;
           }
 
@@ -322,6 +362,8 @@
 
       num_flats  = 0;
       num_rounds = 0;
+      ascender   = 0;
+      descender  = 0;
 
       while ( *p )
       {
@@ -346,9 +388,10 @@
 
         error   = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
         outline = face->glyph->outline;
-        if ( error || outline.n_points <= 0 )
+        /* reject glyphs that don't produce any rendering */
+        if ( error || outline.n_points <= 2 )
         {
-          FT_TRACE5(( "  U+%04lX contains no outlines\n", ch ));
+          FT_TRACE5(( "  U+%04lX contains no (usable) outlines\n", ch ));
           continue;
         }
 
@@ -382,20 +425,30 @@
             if ( AF_LATIN_IS_TOP_BLUE( bs ) )
             {
               for ( pp = first; pp <= last; pp++ )
+              {
                 if ( best_point < 0 || points[pp].y > best_y )
                 {
                   best_point = pp;
                   best_y     = points[pp].y;
+                  ascender   = FT_MAX( ascender, best_y + y_offset );
                 }
+                else
+                  descender = FT_MIN( descender, points[pp].y + y_offset );
+              }
             }
             else
             {
               for ( pp = first; pp <= last; pp++ )
+              {
                 if ( best_point < 0 || points[pp].y < best_y )
                 {
                   best_point = pp;
                   best_y     = points[pp].y;
+                  descender  = FT_MIN( descender, best_y + y_offset );
                 }
+                else
+                  ascender = FT_MAX( ascender, points[pp].y + y_offset );
+              }
             }
 
             if ( best_point != old_best_point )
@@ -520,6 +573,13 @@
               FT_Int   last;
               FT_Bool  hit;
 
+              /* we intentionally declare these two variables        */
+              /* outside of the loop since various compilers emit    */
+              /* incorrect warning messages otherwise, talking about */
+              /* `possibly uninitialized variables'                  */
+              FT_Int  p_first = 0;            /* make compiler happy */
+              FT_Int  p_last  = 0;
+
               FT_Bool  left2right;
 
 
@@ -552,7 +612,6 @@
               {
                 FT_Bool  l2r;
                 FT_Pos   d;
-                FT_Int   p_first, p_last;
 
 
                 if ( !hit )
@@ -670,16 +729,16 @@
           /* now set the `round' flag depending on the segment's kind: */
           /*                                                           */
           /* - if the horizontal distance between the first and last   */
-          /*   `on' point is larger than upem/8 (value 8 is heuristic) */
+          /*   `on' point is larger than a heuristic threshold         */
           /*   we have a flat segment                                  */
           /* - if either the first or the last point of the segment is */
           /*   an `off' point, the segment is round, otherwise it is   */
           /*   flat                                                    */
           if ( best_on_point_first >= 0                               &&
                best_on_point_last >= 0                                &&
-               (FT_UInt)( FT_ABS( points[best_on_point_last].x -
-                                  points[best_on_point_first].x ) ) >
-                 metrics->units_per_em / 8                            )
+               ( FT_ABS( points[best_on_point_last].x -
+                         points[best_on_point_first].x ) ) >
+                 flat_threshold                                       )
             round = 0;
           else
             round = FT_BOOL(
@@ -687,6 +746,13 @@
                         FT_CURVE_TAG_ON                                   ||
                       FT_CURVE_TAG( outline.tags[best_segment_last]  ) !=
                         FT_CURVE_TAG_ON                                   );
+
+          if ( round && AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
+          {
+            /* only use flat segments for a neutral blue zone */
+            FT_TRACE5(( " (round, skipped)\n" ));
+            continue;
+          }
 
           FT_TRACE5(( " (%s)\n", round ? "round" : "flat" ));
         }
@@ -755,9 +821,14 @@
         }
       }
 
+      blue->ascender  = ascender;
+      blue->descender = descender;
+
       blue->flags = 0;
       if ( AF_LATIN_IS_TOP_BLUE( bs ) )
         blue->flags |= AF_LATIN_BLUE_TOP;
+      if ( AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
+        blue->flags |= AF_LATIN_BLUE_NEUTRAL;
 
       /*
        * The following flag is used later to adjust the y and x scales
@@ -935,18 +1006,52 @@
 #endif
           if ( dim == AF_DIMENSION_VERT )
           {
-            scale = FT_MulDiv( scale, fitted, scaled );
+            FT_Pos    max_height;
+            FT_Pos    dist;
+            FT_Fixed  new_scale;
 
-            FT_TRACE5((
-              "af_latin_metrics_scale_dim:"
-              " x height alignment (style `%s'):\n"
-              "                           "
-              " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
-              "\n",
-              af_style_names[metrics->root.style_class->style],
-              axis->org_scale / 65536.0,
-              scale / 65536.0,
-              ( fitted - scaled ) * 100 / scaled ));
+
+            new_scale = FT_MulDiv( scale, fitted, scaled );
+
+            /* the scaling should not change the result by more than two pixels */
+            max_height = metrics->units_per_em;
+
+            for ( nn = 0; nn < Axis->blue_count; nn++ )
+            {
+              max_height = FT_MAX( max_height, Axis->blues[nn].ascender );
+              max_height = FT_MAX( max_height, -Axis->blues[nn].descender );
+            }
+
+            dist  = FT_ABS( FT_MulFix( max_height, new_scale - scale ) );
+            dist &= ~127;
+
+            if ( dist == 0 )
+            {
+              scale = new_scale;
+
+              FT_TRACE5((
+                "af_latin_metrics_scale_dim:"
+                " x height alignment (style `%s'):\n"
+                "                           "
+                " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
+                "\n",
+                af_style_names[metrics->root.style_class->style],
+                axis->org_scale / 65536.0,
+                scale / 65536.0,
+                ( fitted - scaled ) * 100 / scaled ));
+            }
+#ifdef FT_DEBUG_LEVEL_TRACE
+            else
+            {
+              FT_TRACE5((
+                "af_latin_metrics_scale_dim:"
+                " x height alignment (style `%s'):\n"
+                "                           "
+                " excessive vertical scaling abandoned\n"
+                "\n",
+                af_style_names[metrics->root.style_class->style] ));
+            }
+#endif
           }
         }
       }
@@ -1000,8 +1105,11 @@
 
     if ( dim == AF_DIMENSION_VERT )
     {
-      FT_TRACE5(( "blue zones (style `%s')\n",
-                  af_style_names[metrics->root.style_class->style] ));
+#ifdef FT_DEBUG_LEVEL_TRACE
+      if ( axis->blue_count )
+        FT_TRACE5(( "blue zones (style `%s')\n",
+                    af_style_names[metrics->root.style_class->style] ));
+#endif
 
       /* scale the blue zones */
       for ( nn = 0; nn < axis->blue_count; nn++ )
@@ -1108,6 +1216,22 @@
   }
 
 
+  /* Extract standard_width from writing system/script specific */
+  /* metrics class.                                             */
+
+  FT_LOCAL_DEF( void )
+  af_latin_get_standard_widths( AF_LatinMetrics  metrics,
+                                FT_Pos*          stdHW,
+                                FT_Pos*          stdVW )
+  {
+    if ( stdHW )
+      *stdHW = metrics->axis[AF_DIMENSION_VERT].standard_width;
+
+    if ( stdVW )
+      *stdVW = metrics->axis[AF_DIMENSION_HORZ].standard_width;
+  }
+
+
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
@@ -1123,14 +1247,17 @@
   af_latin_hints_compute_segments( AF_GlyphHints  hints,
                                    AF_Dimension   dim )
   {
-    AF_AxisHints   axis          = &hints->axis[dim];
-    FT_Memory      memory        = hints->memory;
-    FT_Error       error         = FT_Err_Ok;
-    AF_Segment     segment       = NULL;
-    AF_SegmentRec  seg0;
-    AF_Point*      contour       = hints->contours;
-    AF_Point*      contour_limit = contour + hints->num_contours;
-    AF_Direction   major_dir, segment_dir;
+    AF_LatinMetrics  metrics       = (AF_LatinMetrics)hints->metrics;
+    AF_AxisHints     axis          = &hints->axis[dim];
+    FT_Memory        memory        = hints->memory;
+    FT_Error         error         = FT_Err_Ok;
+    AF_Segment       segment       = NULL;
+    AF_SegmentRec    seg0;
+    AF_Point*        contour       = hints->contours;
+    AF_Point*        contour_limit = contour + hints->num_contours;
+    AF_Direction     major_dir, segment_dir;
+
+    FT_Pos  flat_threshold = FLAT_THRESHOLD( metrics->units_per_em );
 
 
     FT_ZERO( &seg0 );
@@ -1171,11 +1298,13 @@
     /* do each contour separately */
     for ( ; contour < contour_limit; contour++ )
     {
-      AF_Point  point   =  contour[0];
-      AF_Point  last    =  point->prev;
-      int       on_edge =  0;
-      FT_Pos    min_pos =  32000;  /* minimum segment pos != min_coord */
-      FT_Pos    max_pos = -32000;  /* maximum segment pos != max_coord */
+      AF_Point  point      =  contour[0];
+      AF_Point  last       =  point->prev;
+      int       on_edge    =  0;
+      FT_Pos    min_pos    =  32000;  /* minimum segment pos != min_coord */
+      FT_Pos    max_pos    = -32000;  /* maximum segment pos != max_coord */
+      FT_Pos    min_on_pos =  32000;
+      FT_Pos    max_on_pos = -32000;
       FT_Bool   passed;
 
 
@@ -1217,6 +1346,16 @@
           if ( u > max_pos )
             max_pos = u;
 
+          /* get minimum and maximum coordinate of on points */
+          if ( !( point->flags & AF_FLAG_CONTROL ) )
+          {
+            v = point->v;
+            if ( v < min_on_pos )
+              min_on_pos = v;
+            if ( v > max_on_pos )
+              max_on_pos = v;
+          }
+
           if ( point->out_dir != segment_dir || point == last )
           {
             /* we are just leaving an edge; record a new segment! */
@@ -1224,9 +1363,10 @@
             segment->pos  = (FT_Short)( ( min_pos + max_pos ) >> 1 );
 
             /* a segment is round if either its first or last point */
-            /* is a control point                                   */
-            if ( ( segment->first->flags | point->flags ) &
-                 AF_FLAG_CONTROL                          )
+            /* is a control point, and the length of the on points  */
+            /* inbetween doesn't exceed a heuristic limit           */
+            if ( ( segment->first->flags | point->flags ) & AF_FLAG_CONTROL &&
+                 ( max_on_pos - min_on_pos ) < flat_threshold               )
               segment->flags |= AF_EDGE_ROUND;
 
             /* compute segment size */
@@ -1262,17 +1402,28 @@
           /* this is the start of a new segment! */
           segment_dir = (AF_Direction)point->out_dir;
 
-          /* clear all segment fields */
           error = af_axis_hints_new_segment( axis, memory, &segment );
           if ( error )
             goto Exit;
 
-          segment[0]        = seg0;
-          segment->dir      = (FT_Char)segment_dir;
+          /* clear all segment fields */
+          segment[0] = seg0;
+
+          segment->dir   = (FT_Char)segment_dir;
+          segment->first = point;
+          segment->last  = point;
+
           min_pos = max_pos = point->u;
-          segment->first    = point;
-          segment->last     = point;
-          on_edge           = 1;
+
+          if ( point->flags & AF_FLAG_CONTROL )
+          {
+            min_on_pos =  32000;
+            max_on_pos = -32000;
+          }
+          else
+            min_on_pos = max_on_pos = point->v;
+
+          on_edge = 1;
         }
 
         point = point->next;
@@ -1295,9 +1446,6 @@
         FT_Pos    first_v = first->v;
         FT_Pos    last_v  = last->v;
 
-
-        if ( first == last )
-          continue;
 
         if ( first_v < last_v )
         {
@@ -1337,31 +1485,44 @@
   }
 
 
-  /* Link segments to form stems and serifs. */
+  /* Link segments to form stems and serifs.  If `width_count' and      */
+  /* `widths' are non-zero, use them to fine-tune the scoring function. */
 
   FT_LOCAL_DEF( void )
   af_latin_hints_link_segments( AF_GlyphHints  hints,
+                                FT_UInt        width_count,
+                                AF_WidthRec*   widths,
                                 AF_Dimension   dim )
   {
     AF_AxisHints  axis          = &hints->axis[dim];
     AF_Segment    segments      = axis->segments;
     AF_Segment    segment_limit = segments + axis->num_segments;
-    FT_Pos        len_threshold, len_score;
+    FT_Pos        len_threshold, len_score, dist_score, max_width;
     AF_Segment    seg1, seg2;
 
 
+    if ( width_count )
+      max_width = widths[width_count - 1].org;
+    else
+      max_width = 0;
+
+    /* a heuristic value to set up a minimum value for overlapping */
     len_threshold = AF_LATIN_CONSTANT( hints->metrics, 8 );
     if ( len_threshold == 0 )
       len_threshold = 1;
 
+    /* a heuristic value to weight lengths */
     len_score = AF_LATIN_CONSTANT( hints->metrics, 6000 );
+
+    /* a heuristic value to weight distances (no call to    */
+    /* AF_LATIN_CONSTANT needed, since we work on multiples */
+    /* of the stem width)                                   */
+    dist_score = 3000;
 
     /* now compare each segment to the others */
     for ( seg1 = segments; seg1 < segment_limit; seg1++ )
     {
-      /* the fake segments are introduced to hint the metrics -- */
-      /* we must never link them to anything                     */
-      if ( seg1->dir != axis->major_dir || seg1->first == seg1->last )
+      if ( seg1->dir != axis->major_dir )
         continue;
 
       /* search for stems having opposite directions, */
@@ -1375,10 +1536,9 @@
         if ( seg1->dir + seg2->dir == 0 && pos2 > pos1 )
         {
           /* compute distance between the two segments */
-          FT_Pos  dist = pos2 - pos1;
-          FT_Pos  min  = seg1->min_coord;
-          FT_Pos  max  = seg1->max_coord;
-          FT_Pos  len, score;
+          FT_Pos  min = seg1->min_coord;
+          FT_Pos  max = seg1->max_coord;
+          FT_Pos  len;
 
 
           if ( min < seg2->min_coord )
@@ -1388,15 +1548,49 @@
             max = seg2->max_coord;
 
           /* compute maximum coordinate difference of the two segments */
+          /* (this is, how much they overlap)                          */
           len = max - min;
           if ( len >= len_threshold )
           {
-            /* small coordinate differences cause a higher score, and     */
-            /* segments with a greater distance cause a higher score also */
-            score = dist + len_score / len;
+            /*
+             *  The score is the sum of two demerits indicating the
+             *  `badness' of a fit, measured along the segments' main axis
+             *  and orthogonal to it, respectively.
+             *
+             *  o The less overlapping along the main axis, the worse it
+             *    is, causing a larger demerit.
+             *
+             *  o The nearer the orthogonal distance to a stem width, the
+             *    better it is, causing a smaller demerit.  For simplicity,
+             *    however, we only increase the demerit for values that
+             *    exceed the largest stem width.
+             */
+
+            FT_Pos  dist = pos2 - pos1;
+
+            FT_Pos  dist_demerit, score;
+
+
+            if ( max_width )
+            {
+              /* distance demerits are based on multiples of `max_width'; */
+              /* we scale by 1024 for getting more precision              */
+              FT_Pos  delta = ( dist << 10 ) / max_width - ( 1 << 10 );
+
+
+              if ( delta > 10000 )
+                dist_demerit = 32000;
+              else if ( delta > 0 )
+                dist_demerit = delta * delta / dist_score;
+              else
+                dist_demerit = 0;
+            }
+            else
+              dist_demerit = dist; /* default if no widths available */
+
+            score = dist_demerit + len_score / len;
 
             /* and we search for the smallest score */
-            /* of the sum of the two values         */
             if ( score < seg1->score )
             {
               seg1->score = score;
@@ -1715,7 +1909,7 @@
         /*      Example: the `c' in cour.pfa at size 13     */
 
         if ( edge->serif && edge->link )
-          edge->serif = 0;
+          edge->serif = NULL;
       }
     }
 
@@ -1728,6 +1922,8 @@
 
   FT_LOCAL_DEF( FT_Error )
   af_latin_hints_detect_features( AF_GlyphHints  hints,
+                                  FT_UInt        width_count,
+                                  AF_WidthRec*   widths,
                                   AF_Dimension   dim )
   {
     FT_Error  error;
@@ -1736,7 +1932,7 @@
     error = af_latin_hints_compute_segments( hints, dim );
     if ( !error )
     {
-      af_latin_hints_link_segments( hints, dim );
+      af_latin_hints_link_segments( hints, width_count, widths, dim );
 
       error = af_latin_hints_compute_edges( hints, dim );
     }
@@ -1747,7 +1943,7 @@
 
   /* Compute all edges which lie within blue zones. */
 
-  FT_LOCAL_DEF( void )
+  static void
   af_latin_hints_compute_blue_edges( AF_GlyphHints    hints,
                                      AF_LatinMetrics  metrics )
   {
@@ -1765,8 +1961,9 @@
     for ( ; edge < edge_limit; edge++ )
     {
       FT_UInt   bb;
-      AF_Width  best_blue = NULL;
-      FT_Pos    best_dist;  /* initial threshold */
+      AF_Width  best_blue            = NULL;
+      FT_Bool   best_blue_is_neutral = 0;
+      FT_Pos    best_dist;                 /* initial threshold */
 
 
       /* compute the initial threshold as a fraction of the EM size */
@@ -1780,24 +1977,26 @@
       for ( bb = 0; bb < latin->blue_count; bb++ )
       {
         AF_LatinBlue  blue = latin->blues + bb;
-        FT_Bool       is_top_blue, is_major_dir;
+        FT_Bool       is_top_blue, is_neutral_blue, is_major_dir;
 
 
         /* skip inactive blue zones (i.e., those that are too large) */
         if ( !( blue->flags & AF_LATIN_BLUE_ACTIVE ) )
           continue;
 
-        /* if it is a top zone, check for right edges -- if it is a bottom */
-        /* zone, check for left edges                                      */
-        /*                                                                 */
-        /* of course, that's for TrueType                                  */
-        is_top_blue  = (FT_Byte)( ( blue->flags & AF_LATIN_BLUE_TOP ) != 0 );
-        is_major_dir = FT_BOOL( edge->dir == axis->major_dir );
+        /* if it is a top zone, check for right edges (against the major */
+        /* direction); if it is a bottom zone, check for left edges (in  */
+        /* the major direction) -- this assumes the TrueType convention  */
+        /* for the orientation of contours                               */
+        is_top_blue =
+          (FT_Byte)( ( blue->flags & AF_LATIN_BLUE_TOP ) != 0 );
+        is_neutral_blue =
+          (FT_Byte)( ( blue->flags & AF_LATIN_BLUE_NEUTRAL ) != 0);
+        is_major_dir =
+          FT_BOOL( edge->dir == axis->major_dir );
 
-        /* if it is a top zone, the edge must be against the major    */
-        /* direction; if it is a bottom zone, it must be in the major */
-        /* direction                                                  */
-        if ( is_top_blue ^ is_major_dir )
+        /* neutral blue zones are handled for both directions */
+        if ( is_top_blue ^ is_major_dir || is_neutral_blue )
         {
           FT_Pos  dist;
 
@@ -1810,15 +2009,19 @@
           dist = FT_MulFix( dist, scale );
           if ( dist < best_dist )
           {
-            best_dist = dist;
-            best_blue = &blue->ref;
+            best_dist            = dist;
+            best_blue            = &blue->ref;
+            best_blue_is_neutral = is_neutral_blue;
           }
 
           /* now compare it to the overshoot position and check whether */
           /* the edge is rounded, and whether the edge is over the      */
           /* reference position of a top zone, or under the reference   */
-          /* position of a bottom zone                                  */
-          if ( edge->flags & AF_EDGE_ROUND && dist != 0 )
+          /* position of a bottom zone (provided we don't have a        */
+          /* neutral blue zone)                                         */
+          if ( edge->flags & AF_EDGE_ROUND &&
+               dist != 0                   &&
+               !is_neutral_blue            )
           {
             FT_Bool  is_under_ref = FT_BOOL( edge->fpos < blue->ref.org );
 
@@ -1832,8 +2035,9 @@
               dist = FT_MulFix( dist, scale );
               if ( dist < best_dist )
               {
-                best_dist = dist;
-                best_blue = &blue->shoot;
+                best_dist            = dist;
+                best_blue            = &blue->shoot;
+                best_blue_is_neutral = is_neutral_blue;
               }
             }
           }
@@ -1841,7 +2045,11 @@
       }
 
       if ( best_blue )
+      {
         edge->blue_edge = best_blue;
+        if ( best_blue_is_neutral )
+          edge->flags |= AF_EDGE_NEUTRAL;
+      }
     }
   }
 
@@ -1905,10 +2113,19 @@
     /*
      *  In `light' hinting mode we disable horizontal hinting completely.
      *  We also do it if the face is italic.
+     *
+     *  However, if warping is enabled (which only works in `light' hinting
+     *  mode), advance widths get adjusted, too.
      */
     if ( mode == FT_RENDER_MODE_LIGHT                      ||
          ( face->style_flags & FT_STYLE_FLAG_ITALIC ) != 0 )
       scaler_flags |= AF_SCALER_FLAG_NO_HORIZONTAL;
+
+#ifdef AF_CONFIG_OPTION_USE_WARPER
+    /* get (global) warper flag */
+    if ( !metrics->root.globals->module->warping )
+      scaler_flags |= AF_SCALER_FLAG_NO_WARPER;
+#endif
 
     hints->scaler_flags = scaler_flags;
     hints->other_flags  = other_flags;
@@ -1930,13 +2147,13 @@
 
   static FT_Pos
   af_latin_snap_width( AF_Width  widths,
-                       FT_Int    count,
+                       FT_UInt   count,
                        FT_Pos    width )
   {
-    int     n;
-    FT_Pos  best      = 64 + 32 + 2;
-    FT_Pos  reference = width;
-    FT_Pos  scaled;
+    FT_UInt  n;
+    FT_Pos   best      = 64 + 32 + 2;
+    FT_Pos   reference = width;
+    FT_Pos   scaled;
 
 
     for ( n = 0; n < count; n++ )
@@ -1981,8 +2198,8 @@
   af_latin_compute_stem_width( AF_GlyphHints  hints,
                                AF_Dimension   dim,
                                FT_Pos         width,
-                               AF_Edge_Flags  base_flags,
-                               AF_Edge_Flags  stem_flags )
+                               FT_UInt        base_flags,
+                               FT_UInt        stem_flags )
   {
     AF_LatinMetrics  metrics  = (AF_LatinMetrics)hints->metrics;
     AF_LatinAxis     axis     = &metrics->axis[dim];
@@ -2149,17 +2366,16 @@
   {
     FT_Pos  dist = stem_edge->opos - base_edge->opos;
 
-    FT_Pos  fitted_width = af_latin_compute_stem_width(
-                             hints, dim, dist,
-                             (AF_Edge_Flags)base_edge->flags,
-                             (AF_Edge_Flags)stem_edge->flags );
+    FT_Pos  fitted_width = af_latin_compute_stem_width( hints, dim, dist,
+                                                        base_edge->flags,
+                                                        stem_edge->flags );
 
 
     stem_edge->pos = base_edge->pos + fitted_width;
 
     FT_TRACE5(( "  LINK: edge %d (opos=%.2f) linked to %.2f,"
                 " dist was %.2f, now %.2f\n",
-                stem_edge-hints->axis[dim].edges, stem_edge->opos / 64.0,
+                stem_edge - hints->axis[dim].edges, stem_edge->opos / 64.0,
                 stem_edge->pos / 64.0, dist / 64.0, fitted_width / 64.0 ));
   }
 
@@ -2191,7 +2407,7 @@
 
   /* The main grid-fitting routine. */
 
-  FT_LOCAL_DEF( void )
+  static void
   af_latin_hint_edges( AF_GlyphHints  hints,
                        AF_Dimension   dim )
   {
@@ -2226,14 +2442,41 @@
         if ( edge->flags & AF_EDGE_DONE )
           continue;
 
-        blue  = edge->blue_edge;
         edge1 = NULL;
         edge2 = edge->link;
 
+        /*
+         *  If a stem contains both a neutral and a non-neutral blue zone,
+         *  skip the neutral one.  Otherwise, outlines with different
+         *  directions might be incorrectly aligned at the same vertical
+         *  position.
+         *
+         *  If we have two neutral blue zones, skip one of them.
+         *
+         */
+        if ( edge->blue_edge && edge2 && edge2->blue_edge )
+        {
+          FT_Byte  neutral  = edge->flags  & AF_EDGE_NEUTRAL;
+          FT_Byte  neutral2 = edge2->flags & AF_EDGE_NEUTRAL;
+
+
+          if ( neutral2 )
+          {
+            edge2->blue_edge = NULL;
+            edge2->flags    &= ~AF_EDGE_NEUTRAL;
+          }
+          else if ( neutral )
+          {
+            edge->blue_edge = NULL;
+            edge->flags    &= ~AF_EDGE_NEUTRAL;
+          }
+        }
+
+        blue = edge->blue_edge;
         if ( blue )
           edge1 = edge;
 
-        /* flip edges if the other stem is aligned to a blue zone */
+        /* flip edges if the other edge is aligned to a blue zone */
         else if ( edge2 && edge2->blue_edge )
         {
           blue  = edge2->blue_edge;
@@ -2300,7 +2543,7 @@
       /* this should not happen, but it's better to be safe */
       if ( edge2->blue_edge )
       {
-        FT_TRACE5(( "  ASSERTION FAILED for edge %d\n", edge2-edges ));
+        FT_TRACE5(( "  ASSERTION FAILED for edge %d\n", edge2 - edges ));
 
         af_latin_align_linked_edge( hints, dim, edge2, edge );
         edge->flags |= AF_EDGE_DONE;
@@ -2320,10 +2563,9 @@
 
 
         org_len = edge2->opos - edge->opos;
-        cur_len = af_latin_compute_stem_width(
-                    hints, dim, org_len,
-                    (AF_Edge_Flags)edge->flags,
-                    (AF_Edge_Flags)edge2->flags );
+        cur_len = af_latin_compute_stem_width( hints, dim, org_len,
+                                               edge->flags,
+                                               edge2->flags );
 
         /* some voodoo to specially round edges for small stem widths; */
         /* the idea is to align the center of a stem, then shifting    */
@@ -2390,10 +2632,9 @@
         org_len    = edge2->opos - edge->opos;
         org_center = org_pos + ( org_len >> 1 );
 
-        cur_len = af_latin_compute_stem_width(
-                    hints, dim, org_len,
-                    (AF_Edge_Flags)edge->flags,
-                    (AF_Edge_Flags)edge2->flags );
+        cur_len = af_latin_compute_stem_width( hints, dim, org_len,
+                                               edge->flags,
+                                               edge2->flags );
 
         if ( edge2->flags & AF_EDGE_DONE )
         {
@@ -2451,10 +2692,9 @@
           org_len    = edge2->opos - edge->opos;
           org_center = org_pos + ( org_len >> 1 );
 
-          cur_len    = af_latin_compute_stem_width(
-                         hints, dim, org_len,
-                         (AF_Edge_Flags)edge->flags,
-                         (AF_Edge_Flags)edge2->flags );
+          cur_len    = af_latin_compute_stem_width( hints, dim, org_len,
+                                                    edge->flags,
+                                                    edge2->flags );
 
           cur_pos1 = FT_PIX_ROUND( org_pos );
           delta1   = cur_pos1 + ( cur_len >> 1 ) - org_center;
@@ -2682,12 +2922,15 @@
   /* Apply the complete hinting algorithm to a latin glyph. */
 
   static FT_Error
-  af_latin_hints_apply( AF_GlyphHints    hints,
+  af_latin_hints_apply( FT_UInt          glyph_index,
+                        AF_GlyphHints    hints,
                         FT_Outline*      outline,
                         AF_LatinMetrics  metrics )
   {
     FT_Error  error;
     int       dim;
+
+    AF_LatinAxis  axis;
 
 
     error = af_glyph_hints_reload( hints, outline );
@@ -2696,24 +2939,35 @@
 
     /* analyze glyph outline */
 #ifdef AF_CONFIG_OPTION_USE_WARPER
-    if ( metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT ||
-         AF_HINTS_DO_HORIZONTAL( hints )                          )
+    if ( ( metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
+           AF_HINTS_DO_WARP( hints )                                ) ||
+         AF_HINTS_DO_HORIZONTAL( hints )                              )
 #else
     if ( AF_HINTS_DO_HORIZONTAL( hints ) )
 #endif
     {
-      error = af_latin_hints_detect_features( hints, AF_DIMENSION_HORZ );
+      axis  = &metrics->axis[AF_DIMENSION_HORZ];
+      error = af_latin_hints_detect_features( hints,
+                                              axis->width_count,
+                                              axis->widths,
+                                              AF_DIMENSION_HORZ );
       if ( error )
         goto Exit;
     }
 
     if ( AF_HINTS_DO_VERTICAL( hints ) )
     {
-      error = af_latin_hints_detect_features( hints, AF_DIMENSION_VERT );
+      axis  = &metrics->axis[AF_DIMENSION_VERT];
+      error = af_latin_hints_detect_features( hints,
+                                              axis->width_count,
+                                              axis->widths,
+                                              AF_DIMENSION_VERT );
       if ( error )
         goto Exit;
 
-      af_latin_hints_compute_blue_edges( hints, metrics );
+      /* apply blue zones to base characters only */
+      if ( !( metrics->root.globals->glyph_styles[glyph_index] & AF_NONBASE ) )
+        af_latin_hints_compute_blue_edges( hints, metrics );
     }
 
     /* grid-fit the outline */
@@ -2721,7 +2975,8 @@
     {
 #ifdef AF_CONFIG_OPTION_USE_WARPER
       if ( dim == AF_DIMENSION_HORZ                                 &&
-           metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT )
+           metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
+           AF_HINTS_DO_WARP( hints )                                )
       {
         AF_WarperRec  warper;
         FT_Fixed      scale;
@@ -2734,7 +2989,7 @@
                                   scale, delta );
         continue;
       }
-#endif
+#endif /* AF_CONFIG_OPTION_USE_WARPER */
 
       if ( ( dim == AF_DIMENSION_HORZ && AF_HINTS_DO_HORIZONTAL( hints ) ) ||
            ( dim == AF_DIMENSION_VERT && AF_HINTS_DO_VERTICAL( hints ) )   )
@@ -2772,6 +3027,7 @@
     (AF_WritingSystem_InitMetricsFunc) af_latin_metrics_init,
     (AF_WritingSystem_ScaleMetricsFunc)af_latin_metrics_scale,
     (AF_WritingSystem_DoneMetricsFunc) NULL,
+    (AF_WritingSystem_GetStdWidthsFunc)af_latin_get_standard_widths,
 
     (AF_WritingSystem_InitHintsFunc)   af_latin_hints_init,
     (AF_WritingSystem_ApplyHintsFunc)  af_latin_hints_apply

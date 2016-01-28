@@ -33,6 +33,8 @@ DEBUG_CHANNEL(nls);
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
+extern DWORD GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize);
+#define NLSRC_OFFSET 5000 /* FIXME */
 
 extern HMODULE kernel32_handle;
 
@@ -54,6 +56,7 @@ static const WCHAR szLangGroupsKeyName[] = {
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
 };
 
+#ifndef __REACTOS__
 /* Charset to codepage map, sorted by name. */
 static const struct charset_entry
 {
@@ -114,7 +117,7 @@ static const struct charset_entry
     { "KOI8U", 21866 },
     { "UTF8", CP_UTF8 }
 };
-
+#endif
 
 struct locale_name
 {
@@ -139,6 +142,7 @@ static LCID lcid_LC_PAPER;
 static LCID lcid_LC_MEASUREMENT;
 static LCID lcid_LC_TELEPHONE;
 
+#ifndef __REACTOS__
 /* Copy Ascii string to Unicode without using codepages */
 static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
 {
@@ -149,7 +153,7 @@ static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
     }
     if (n) *dst = 0;
 }
-
+#endif
 
 /***********************************************************************
  *		get_lcid_codepage
@@ -1251,6 +1255,11 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
         C2_OTHERNEUTRAL        /* LRE, LRO, RLE, RLO, PDF */
     };
 
+    if (!src) /* Abort and return FALSE when src is null */
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
     if (count == -1) count = strlenW(src) + 1;
     switch(type)
     {
@@ -1277,6 +1286,9 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
             if ((c>=0x4E00)&&(c<=0x9FAF)) type3 |= C3_IDEOGRAPH;
             if ((c>=0x0600)&&(c<=0x06FF)) type3 |= C3_KASHIDA;
             if ((c>=0x3000)&&(c<=0x303F)) type3 |= C3_SYMBOL;
+
+            if ((c>=0xD800)&&(c<=0xDBFF)) type3 |= C3_HIGHSURROGATE;
+            if ((c>=0xDC00)&&(c<=0xDFFF)) type3 |= C3_LOWSURROGATE;
 
             if ((c>=0xFF00)&&(c<=0xFF60)) type3 |= C3_FULLWIDTH;
             if ((c>=0xFF00)&&(c<=0xFF20)) type3 |= C3_SYMBOL;
@@ -1386,16 +1398,34 @@ BOOL WINAPI GetStringTypeExA( LCID locale, DWORD type, LPCSTR src, INT count, LP
     return GetStringTypeA(locale, type, src, count, chartype);
 }
 
-
 /*************************************************************************
- *           LCMapStringW    (KERNEL32.@)
+ *           LCMapStringEx   (KERNEL32.@)
  *
- * See LCMapStringA.
+ * Map characters in a locale sensitive string.
+ *
+ * PARAMS
+ *  name     [I] Locale name for the conversion.
+ *  flags    [I] Flags controlling the mapping (LCMAP_ constants from "winnls.h")
+ *  src      [I] String to map
+ *  srclen   [I] Length of src in chars, or -1 if src is NUL terminated
+ *  dst      [O] Destination for mapped string
+ *  dstlen   [I] Length of dst in characters
+ *  version  [I] reserved, must be NULL
+ *  reserved [I] reserved, must be NULL
+ *  lparam   [I] reserved, must be 0
+ *
+ * RETURNS
+ *  Success: The length of the mapped string in dst, including the NUL terminator.
+ *  Failure: 0. Use GetLastError() to determine the cause.
  */
-INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
-                        LPWSTR dst, INT dstlen)
+INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen,
+                         LPNLSVERSIONINFO version, LPVOID reserved, LPARAM lparam)
 {
     LPWSTR dst_ptr;
+
+    if (version) FIXME("unsupported version structure %p\n", version);
+    if (reserved) FIXME("unsupported reserved pointer %p\n", reserved);
+    if (lparam) FIXME("unsupported lparam %lx\n", lparam);
 
     if (!src || !srclen || dstlen < 0)
     {
@@ -1415,8 +1445,6 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
     if (!dstlen) dst = NULL;
 
-    lcid = ConvertDefaultLocale(lcid);
-
     if (flags & LCMAP_SORTKEY)
     {
         INT ret;
@@ -1428,8 +1456,8 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
         if (srclen < 0) srclen = strlenW(src);
 
-        TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
-              lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+        TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
+              debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
 
         ret = wine_get_sortkey(flags, src, srclen, (char *)dst, dstlen);
         if (ret == 0)
@@ -1448,8 +1476,8 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
     if (srclen < 0) srclen = strlenW(src) + 1;
 
-    TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
-          lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+    TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
+          debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
 
     if (!dst) /* return required string length */
     {
@@ -1515,6 +1543,20 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
     }
 
     return dst_ptr - dst;
+}
+
+/*************************************************************************
+ *           LCMapStringW    (KERNEL32.@)
+ *
+ * See LCMapStringA.
+ */
+INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
+                        LPWSTR dst, INT dstlen)
+{
+    TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
+          lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+
+    return LCMapStringEx(NULL, flags, src, srclen, dst, dstlen, NULL, NULL, 0);
 }
 
 /*************************************************************************
@@ -1586,7 +1628,7 @@ INT WINAPI LCMapStringA(LCID lcid, DWORD flags, LPCSTR src, INT srclen,
         goto map_string_exit;
     }
 
-    dstlenW = LCMapStringW(lcid, flags, srcW, srclenW, NULL, 0);
+    dstlenW = LCMapStringEx(NULL, flags, srcW, srclenW, NULL, 0, NULL, NULL, 0);
     if (!dstlenW)
         goto map_string_exit;
 
@@ -1597,7 +1639,7 @@ INT WINAPI LCMapStringA(LCID lcid, DWORD flags, LPCSTR src, INT srclen,
         goto map_string_exit;
     }
 
-    LCMapStringW(lcid, flags, srcW, srclenW, dstW, dstlenW);
+    LCMapStringEx(NULL, flags, srcW, srclenW, dstW, dstlenW, NULL, NULL, 0);
     ret = WideCharToMultiByte(locale_cp, 0, dstW, dstlenW, dst, dstlen, NULL, NULL);
     HeapFree(GetProcessHeap(), 0, dstW);
 
@@ -1717,10 +1759,16 @@ INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
  *
  * See CompareStringA.
  */
-INT WINAPI CompareStringW(LCID lcid, DWORD style,
+INT WINAPI CompareStringW(LCID lcid, DWORD flags,
                           LPCWSTR str1, INT len1, LPCWSTR str2, INT len2)
 {
+    static const DWORD supported_flags = NORM_IGNORECASE|NORM_IGNORENONSPACE|NORM_IGNORESYMBOLS|SORT_STRINGSORT
+                                        |NORM_IGNOREKANATYPE|NORM_IGNOREWIDTH|LOCALE_USE_CP_ACP
+                                        |NORM_LINGUISTIC_CASING|LINGUISTIC_IGNORECASE|0x10000000;
+    static DWORD semistub_flags = NORM_LINGUISTIC_CASING|LINGUISTIC_IGNORECASE|0x10000000;
+    /* 0x10000000 is related to diacritics in Arabic, Japanese, and Hebrew */
     INT ret;
+
 
     if (!str1 || !str2)
     {
@@ -1728,21 +1776,22 @@ INT WINAPI CompareStringW(LCID lcid, DWORD style,
         return 0;
     }
 
-    if( style & ~(NORM_IGNORECASE|NORM_IGNORENONSPACE|NORM_IGNORESYMBOLS|
-        SORT_STRINGSORT|NORM_IGNOREKANATYPE|NORM_IGNOREWIDTH|LOCALE_USE_CP_ACP|0x10000000) )
+    if (flags & ~supported_flags)
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
     }
 
-    /* this style is related to diacritics in Arabic, Japanese, and Hebrew */
-    if (style & 0x10000000)
-        WARN("Ignoring unknown style 0x10000000\n");
+    if (flags & semistub_flags)
+    {
+        FIXME("semi-stub behavior for flag(s) 0x%x\n", flags & semistub_flags);
+        semistub_flags &= ~flags;
+    }
 
     if (len1 < 0) len1 = strlenW(str1);
     if (len2 < 0) len2 = strlenW(str2);
 
-    ret = wine_compare_string(style, str1, len1, str2, len2);
+    ret = wine_compare_string(flags, str1, len1, str2, len2);
 
     if (ret) /* need to translate result */
         return (ret < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
@@ -1756,7 +1805,7 @@ INT WINAPI CompareStringW(LCID lcid, DWORD style,
  *
  * PARAMS
  *  lcid  [I] LCID for the comparison
- *  style [I] Flags for the comparison (NORM_ constants from "winnls.h").
+ *  flags [I] Flags for the comparison (NORM_ constants from "winnls.h").
  *  str1  [I] First string to compare
  *  len1  [I] Length of str1, or -1 if str1 is NUL terminated
  *  str2  [I] Second string to compare
@@ -1855,29 +1904,6 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     return hkey;
 }
 
-static BOOL NLS_RegEnumSubKey(HANDLE hKey, UINT ulIndex, LPWSTR szKeyName,
-                              ULONG keyNameSize)
-{
-    BYTE buffer[80];
-    KEY_BASIC_INFORMATION *info = (KEY_BASIC_INFORMATION *)buffer;
-    DWORD dwLen;
-
-    if (NtEnumerateKey( hKey, ulIndex, KeyBasicInformation, buffer,
-                        sizeof(buffer), &dwLen) != STATUS_SUCCESS ||
-        info->NameLength > keyNameSize)
-    {
-        return FALSE;
-    }
-
-    TRACE("info->Name %s info->NameLength %d\n", debugstr_w(info->Name), info->NameLength);
-
-    memcpy( szKeyName, info->Name, info->NameLength);
-    szKeyName[info->NameLength / sizeof(WCHAR)] = '\0';
-
-    TRACE("returning %s\n", debugstr_w(szKeyName));
-    return TRUE;
-}
-
 static BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
                              LPWSTR szValueName, ULONG valueNameSize,
                              LPWSTR szValueData, ULONG valueDataSize)
@@ -1966,18 +1992,6 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
     }
     return bRet;
 }
-
-/* Registry keys for NLS related information */
-
-static const WCHAR szCountryListName[] = {
-	'\\','R','e','g','i','s','t','r','y','\\',
-    'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'T','e','l','e','p','h','o','n','y','\\',
-    'C','o','u','n','t','r','y',' ','L','i','s','t','\0'
-};
-
 
 /* Callback function ptrs for EnumSystemLanguageGroupsA/W */
 typedef struct
@@ -2272,6 +2286,323 @@ static BOOL NLS_EnumLanguageGroupLocales(ENUMLANGUAGEGROUPLOCALE_CALLBACKS *lpPr
     return TRUE;
 }
 
+enum locationkind {
+    LOCATION_NATION = 0,
+    LOCATION_REGION,
+    LOCATION_BOTH
+};
+
+struct geoinfo_t {
+    GEOID id;
+    WCHAR iso2W[3];
+    WCHAR iso3W[4];
+    GEOID parent;
+    INT   uncode;
+    enum locationkind kind;
+};
+
+static const struct geoinfo_t geoinfodata[] = {
+    { 2, {'A','G',0}, {'A','T','G',0}, 10039880,  28 }, /* Antigua and Barbuda */
+    { 3, {'A','F',0}, {'A','F','G',0}, 47614,   4 }, /* Afghanistan */
+    { 4, {'D','Z',0}, {'D','Z','A',0}, 42487,  12 }, /* Algeria */
+    { 5, {'A','Z',0}, {'A','Z','E',0}, 47611,  31 }, /* Azerbaijan */
+    { 6, {'A','L',0}, {'A','L','B',0}, 47610,   8 }, /* Albania */
+    { 7, {'A','M',0}, {'A','R','M',0}, 47611,  51 }, /* Armenia */
+    { 8, {'A','D',0}, {'A','N','D',0}, 47610,  20 }, /* Andorra */
+    { 9, {'A','O',0}, {'A','G','O',0}, 42484,  24 }, /* Angola */
+    { 10, {'A','S',0}, {'A','S','M',0}, 26286,  16 }, /* American Samoa */
+    { 11, {'A','R',0}, {'A','R','G',0}, 31396,  32 }, /* Argentina */
+    { 12, {'A','U',0}, {'A','U','S',0}, 10210825,  36 }, /* Australia */
+    { 14, {'A','T',0}, {'A','U','T',0}, 10210824,  40 }, /* Austria */
+    { 17, {'B','H',0}, {'B','H','R',0}, 47611,  48 }, /* Bahrain */
+    { 18, {'B','B',0}, {'B','R','B',0}, 10039880,  52 }, /* Barbados */
+    { 19, {'B','W',0}, {'B','W','A',0}, 10039883,  72 }, /* Botswana */
+    { 20, {'B','M',0}, {'B','M','U',0}, 23581,  60 }, /* Bermuda */
+    { 21, {'B','E',0}, {'B','E','L',0}, 10210824,  56 }, /* Belgium */
+    { 22, {'B','S',0}, {'B','H','S',0}, 10039880,  44 }, /* Bahamas, The */
+    { 23, {'B','D',0}, {'B','G','D',0}, 47614,  50 }, /* Bangladesh */
+    { 24, {'B','Z',0}, {'B','L','Z',0}, 27082,  84 }, /* Belize */
+    { 25, {'B','A',0}, {'B','I','H',0}, 47610,  70 }, /* Bosnia and Herzegovina */
+    { 26, {'B','O',0}, {'B','O','L',0}, 31396,  68 }, /* Bolivia */
+    { 27, {'M','M',0}, {'M','M','R',0}, 47599, 104 }, /* Myanmar */
+    { 28, {'B','J',0}, {'B','E','N',0}, 42483, 204 }, /* Benin */
+    { 29, {'B','Y',0}, {'B','L','R',0}, 47609, 112 }, /* Belarus */
+    { 30, {'S','B',0}, {'S','L','B',0}, 20900,  90 }, /* Solomon Islands */
+    { 32, {'B','R',0}, {'B','R','A',0}, 31396,  76 }, /* Brazil */
+    { 34, {'B','T',0}, {'B','T','N',0}, 47614,  64 }, /* Bhutan */
+    { 35, {'B','G',0}, {'B','G','R',0}, 47609, 100 }, /* Bulgaria */
+    { 37, {'B','N',0}, {'B','R','N',0}, 47599,  96 }, /* Brunei */
+    { 38, {'B','I',0}, {'B','D','I',0}, 47603, 108 }, /* Burundi */
+    { 39, {'C','A',0}, {'C','A','N',0}, 23581, 124 }, /* Canada */
+    { 40, {'K','H',0}, {'K','H','M',0}, 47599, 116 }, /* Cambodia */
+    { 41, {'T','D',0}, {'T','C','D',0}, 42484, 148 }, /* Chad */
+    { 42, {'L','K',0}, {'L','K','A',0}, 47614, 144 }, /* Sri Lanka */
+    { 43, {'C','G',0}, {'C','O','G',0}, 42484, 178 }, /* Congo */
+    { 44, {'C','D',0}, {'C','O','D',0}, 42484, 180 }, /* Congo (DRC) */
+    { 45, {'C','N',0}, {'C','H','N',0}, 47600, 156 }, /* China */
+    { 46, {'C','L',0}, {'C','H','L',0}, 31396, 152 }, /* Chile */
+    { 49, {'C','M',0}, {'C','M','R',0}, 42484, 120 }, /* Cameroon */
+    { 50, {'K','M',0}, {'C','O','M',0}, 47603, 174 }, /* Comoros */
+    { 51, {'C','O',0}, {'C','O','L',0}, 31396, 170 }, /* Colombia */
+    { 54, {'C','R',0}, {'C','R','I',0}, 27082, 188 }, /* Costa Rica */
+    { 55, {'C','F',0}, {'C','A','F',0}, 42484, 140 }, /* Central African Republic */
+    { 56, {'C','U',0}, {'C','U','B',0}, 10039880, 192 }, /* Cuba */
+    { 57, {'C','V',0}, {'C','P','V',0}, 42483, 132 }, /* Cape Verde */
+    { 59, {'C','Y',0}, {'C','Y','P',0}, 47611, 196 }, /* Cyprus */
+    { 61, {'D','K',0}, {'D','N','K',0}, 10039882, 208 }, /* Denmark */
+    { 62, {'D','J',0}, {'D','J','I',0}, 47603, 262 }, /* Djibouti */
+    { 63, {'D','M',0}, {'D','M','A',0}, 10039880, 212 }, /* Dominica */
+    { 65, {'D','O',0}, {'D','O','M',0}, 10039880, 214 }, /* Dominican Republic */
+    { 66, {'E','C',0}, {'E','C','U',0}, 31396, 218 }, /* Ecuador */
+    { 67, {'E','G',0}, {'E','G','Y',0}, 42487, 818 }, /* Egypt */
+    { 68, {'I','E',0}, {'I','R','L',0}, 10039882, 372 }, /* Ireland */
+    { 69, {'G','Q',0}, {'G','N','Q',0}, 42484, 226 }, /* Equatorial Guinea */
+    { 70, {'E','E',0}, {'E','S','T',0}, 10039882, 233 }, /* Estonia */
+    { 71, {'E','R',0}, {'E','R','I',0}, 47603, 232 }, /* Eritrea */
+    { 72, {'S','V',0}, {'S','L','V',0}, 27082, 222 }, /* El Salvador */
+    { 73, {'E','T',0}, {'E','T','H',0}, 47603, 231 }, /* Ethiopia */
+    { 75, {'C','Z',0}, {'C','Z','E',0}, 47609, 203 }, /* Czech Republic */
+    { 77, {'F','I',0}, {'F','I','N',0}, 10039882, 246 }, /* Finland */
+    { 78, {'F','J',0}, {'F','J','I',0}, 20900, 242 }, /* Fiji Islands */
+    { 80, {'F','M',0}, {'F','S','M',0}, 21206, 583 }, /* Micronesia */
+    { 81, {'F','O',0}, {'F','R','O',0}, 10039882, 234 }, /* Faroe Islands */
+    { 84, {'F','R',0}, {'F','R','A',0}, 10210824, 250 }, /* France */
+    { 86, {'G','M',0}, {'G','M','B',0}, 42483, 270 }, /* Gambia, The */
+    { 87, {'G','A',0}, {'G','A','B',0}, 42484, 266 }, /* Gabon */
+    { 88, {'G','E',0}, {'G','E','O',0}, 47611, 268 }, /* Georgia */
+    { 89, {'G','H',0}, {'G','H','A',0}, 42483, 288 }, /* Ghana */
+    { 90, {'G','I',0}, {'G','I','B',0}, 47610, 292 }, /* Gibraltar */
+    { 91, {'G','D',0}, {'G','R','D',0}, 10039880, 308 }, /* Grenada */
+    { 93, {'G','L',0}, {'G','R','L',0}, 23581, 304 }, /* Greenland */
+    { 94, {'D','E',0}, {'D','E','U',0}, 10210824, 276 }, /* Germany */
+    { 98, {'G','R',0}, {'G','R','C',0}, 47610, 300 }, /* Greece */
+    { 99, {'G','T',0}, {'G','T','M',0}, 27082, 320 }, /* Guatemala */
+    { 100, {'G','N',0}, {'G','I','N',0}, 42483, 324 }, /* Guinea */
+    { 101, {'G','Y',0}, {'G','U','Y',0}, 31396, 328 }, /* Guyana */
+    { 103, {'H','T',0}, {'H','T','I',0}, 10039880, 332 }, /* Haiti */
+    { 104, {'H','K',0}, {'H','K','G',0}, 47600, 344 }, /* Hong Kong S.A.R. */
+    { 106, {'H','N',0}, {'H','N','D',0}, 27082, 340 }, /* Honduras */
+    { 108, {'H','R',0}, {'H','R','V',0}, 47610, 191 }, /* Croatia */
+    { 109, {'H','U',0}, {'H','U','N',0}, 47609, 348 }, /* Hungary */
+    { 110, {'I','S',0}, {'I','S','L',0}, 10039882, 352 }, /* Iceland */
+    { 111, {'I','D',0}, {'I','D','N',0}, 47599, 360 }, /* Indonesia */
+    { 113, {'I','N',0}, {'I','N','D',0}, 47614, 356 }, /* India */
+    { 114, {'I','O',0}, {'I','O','T',0}, 39070,  86 }, /* British Indian Ocean Territory */
+    { 116, {'I','R',0}, {'I','R','N',0}, 47614, 364 }, /* Iran */
+    { 117, {'I','L',0}, {'I','S','R',0}, 47611, 376 }, /* Israel */
+    { 118, {'I','T',0}, {'I','T','A',0}, 47610, 380 }, /* Italy */
+    { 119, {'C','I',0}, {'C','I','V',0}, 42483, 384 }, /* Côte d'Ivoire */
+    { 121, {'I','Q',0}, {'I','R','Q',0}, 47611, 368 }, /* Iraq */
+    { 122, {'J','P',0}, {'J','P','N',0}, 47600, 392 }, /* Japan */
+    { 124, {'J','M',0}, {'J','A','M',0}, 10039880, 388 }, /* Jamaica */
+    { 125, {'S','J',0}, {'S','J','M',0}, 10039882, 744 }, /* Jan Mayen */
+    { 126, {'J','O',0}, {'J','O','R',0}, 47611, 400 }, /* Jordan */
+    { 127, {'X','X',0}, {'X','X',0}, 161832256 }, /* Johnston Atoll */
+    { 129, {'K','E',0}, {'K','E','N',0}, 47603, 404 }, /* Kenya */
+    { 130, {'K','G',0}, {'K','G','Z',0}, 47590, 417 }, /* Kyrgyzstan */
+    { 131, {'K','P',0}, {'P','R','K',0}, 47600, 408 }, /* North Korea */
+    { 133, {'K','I',0}, {'K','I','R',0}, 21206, 296 }, /* Kiribati */
+    { 134, {'K','R',0}, {'K','O','R',0}, 47600, 410 }, /* Korea */
+    { 136, {'K','W',0}, {'K','W','T',0}, 47611, 414 }, /* Kuwait */
+    { 137, {'K','Z',0}, {'K','A','Z',0}, 47590, 398 }, /* Kazakhstan */
+    { 138, {'L','A',0}, {'L','A','O',0}, 47599, 418 }, /* Laos */
+    { 139, {'L','B',0}, {'L','B','N',0}, 47611, 422 }, /* Lebanon */
+    { 140, {'L','V',0}, {'L','V','A',0}, 10039882, 428 }, /* Latvia */
+    { 141, {'L','T',0}, {'L','T','U',0}, 10039882, 440 }, /* Lithuania */
+    { 142, {'L','R',0}, {'L','B','R',0}, 42483, 430 }, /* Liberia */
+    { 143, {'S','K',0}, {'S','V','K',0}, 47609, 703 }, /* Slovakia */
+    { 145, {'L','I',0}, {'L','I','E',0}, 10210824, 438 }, /* Liechtenstein */
+    { 146, {'L','S',0}, {'L','S','O',0}, 10039883, 426 }, /* Lesotho */
+    { 147, {'L','U',0}, {'L','U','X',0}, 10210824, 442 }, /* Luxembourg */
+    { 148, {'L','Y',0}, {'L','B','Y',0}, 42487, 434 }, /* Libya */
+    { 149, {'M','G',0}, {'M','D','G',0}, 47603, 450 }, /* Madagascar */
+    { 151, {'M','O',0}, {'M','A','C',0}, 47600, 446 }, /* Macao S.A.R. */
+    { 152, {'M','D',0}, {'M','D','A',0}, 47609, 498 }, /* Moldova */
+    { 154, {'M','N',0}, {'M','N','G',0}, 47600, 496 }, /* Mongolia */
+    { 156, {'M','W',0}, {'M','W','I',0}, 47603, 454 }, /* Malawi */
+    { 157, {'M','L',0}, {'M','L','I',0}, 42483, 466 }, /* Mali */
+    { 158, {'M','C',0}, {'M','C','O',0}, 10210824, 492 }, /* Monaco */
+    { 159, {'M','A',0}, {'M','A','R',0}, 42487, 504 }, /* Morocco */
+    { 160, {'M','U',0}, {'M','U','S',0}, 47603, 480 }, /* Mauritius */
+    { 162, {'M','R',0}, {'M','R','T',0}, 42483, 478 }, /* Mauritania */
+    { 163, {'M','T',0}, {'M','L','T',0}, 47610, 470 }, /* Malta */
+    { 164, {'O','M',0}, {'O','M','N',0}, 47611, 512 }, /* Oman */
+    { 165, {'M','V',0}, {'M','D','V',0}, 47614, 462 }, /* Maldives */
+    { 166, {'M','X',0}, {'M','E','X',0}, 27082, 484 }, /* Mexico */
+    { 167, {'M','Y',0}, {'M','Y','S',0}, 47599, 458 }, /* Malaysia */
+    { 168, {'M','Z',0}, {'M','O','Z',0}, 47603, 508 }, /* Mozambique */
+    { 173, {'N','E',0}, {'N','E','R',0}, 42483, 562 }, /* Niger */
+    { 174, {'V','U',0}, {'V','U','T',0}, 20900, 548 }, /* Vanuatu */
+    { 175, {'N','G',0}, {'N','G','A',0}, 42483, 566 }, /* Nigeria */
+    { 176, {'N','L',0}, {'N','L','D',0}, 10210824, 528 }, /* Netherlands */
+    { 177, {'N','O',0}, {'N','O','R',0}, 10039882, 578 }, /* Norway */
+    { 178, {'N','P',0}, {'N','P','L',0}, 47614, 524 }, /* Nepal */
+    { 180, {'N','R',0}, {'N','R','U',0}, 21206, 520 }, /* Nauru */
+    { 181, {'S','R',0}, {'S','U','R',0}, 31396, 740 }, /* Suriname */
+    { 182, {'N','I',0}, {'N','I','C',0}, 27082, 558 }, /* Nicaragua */
+    { 183, {'N','Z',0}, {'N','Z','L',0}, 10210825, 554 }, /* New Zealand */
+    { 184, {'P','S',0}, {'P','S','E',0}, 47611, 275 }, /* Palestinian Authority */
+    { 185, {'P','Y',0}, {'P','R','Y',0}, 31396, 600 }, /* Paraguay */
+    { 187, {'P','E',0}, {'P','E','R',0}, 31396, 604 }, /* Peru */
+    { 190, {'P','K',0}, {'P','A','K',0}, 47614, 586 }, /* Pakistan */
+    { 191, {'P','L',0}, {'P','O','L',0}, 47609, 616 }, /* Poland */
+    { 192, {'P','A',0}, {'P','A','N',0}, 27082, 591 }, /* Panama */
+    { 193, {'P','T',0}, {'P','R','T',0}, 47610, 620 }, /* Portugal */
+    { 194, {'P','G',0}, {'P','N','G',0}, 20900, 598 }, /* Papua New Guinea */
+    { 195, {'P','W',0}, {'P','L','W',0}, 21206, 585 }, /* Palau */
+    { 196, {'G','W',0}, {'G','N','B',0}, 42483, 624 }, /* Guinea-Bissau */
+    { 197, {'Q','A',0}, {'Q','A','T',0}, 47611, 634 }, /* Qatar */
+    { 198, {'R','E',0}, {'R','E','U',0}, 47603, 638 }, /* Reunion */
+    { 199, {'M','H',0}, {'M','H','L',0}, 21206, 584 }, /* Marshall Islands */
+    { 200, {'R','O',0}, {'R','O','U',0}, 47609, 642 }, /* Romania */
+    { 201, {'P','H',0}, {'P','H','L',0}, 47599, 608 }, /* Philippines */
+    { 202, {'P','R',0}, {'P','R','I',0}, 10039880, 630 }, /* Puerto Rico */
+    { 203, {'R','U',0}, {'R','U','S',0}, 47609, 643 }, /* Russia */
+    { 204, {'R','W',0}, {'R','W','A',0}, 47603, 646 }, /* Rwanda */
+    { 205, {'S','A',0}, {'S','A','U',0}, 47611, 682 }, /* Saudi Arabia */
+    { 206, {'P','M',0}, {'S','P','M',0}, 23581, 666 }, /* St. Pierre and Miquelon */
+    { 207, {'K','N',0}, {'K','N','A',0}, 10039880, 659 }, /* St. Kitts and Nevis */
+    { 208, {'S','C',0}, {'S','Y','C',0}, 47603, 690 }, /* Seychelles */
+    { 209, {'Z','A',0}, {'Z','A','F',0}, 10039883, 710 }, /* South Africa */
+    { 210, {'S','N',0}, {'S','E','N',0}, 42483, 686 }, /* Senegal */
+    { 212, {'S','I',0}, {'S','V','N',0}, 47610, 705 }, /* Slovenia */
+    { 213, {'S','L',0}, {'S','L','E',0}, 42483, 694 }, /* Sierra Leone */
+    { 214, {'S','M',0}, {'S','M','R',0}, 47610, 674 }, /* San Marino */
+    { 215, {'S','G',0}, {'S','G','P',0}, 47599, 702 }, /* Singapore */
+    { 216, {'S','O',0}, {'S','O','M',0}, 47603, 706 }, /* Somalia */
+    { 217, {'E','S',0}, {'E','S','P',0}, 47610, 724 }, /* Spain */
+    { 218, {'L','C',0}, {'L','C','A',0}, 10039880, 662 }, /* St. Lucia */
+    { 219, {'S','D',0}, {'S','D','N',0}, 42487, 736 }, /* Sudan */
+    { 220, {'S','J',0}, {'S','J','M',0}, 10039882, 744 }, /* Svalbard */
+    { 221, {'S','E',0}, {'S','W','E',0}, 10039882, 752 }, /* Sweden */
+    { 222, {'S','Y',0}, {'S','Y','R',0}, 47611, 760 }, /* Syria */
+    { 223, {'C','H',0}, {'C','H','E',0}, 10210824, 756 }, /* Switzerland */
+    { 224, {'A','E',0}, {'A','R','E',0}, 47611, 784 }, /* United Arab Emirates */
+    { 225, {'T','T',0}, {'T','T','O',0}, 10039880, 780 }, /* Trinidad and Tobago */
+    { 227, {'T','H',0}, {'T','H','A',0}, 47599, 764 }, /* Thailand */
+    { 228, {'T','J',0}, {'T','J','K',0}, 47590, 762 }, /* Tajikistan */
+    { 231, {'T','O',0}, {'T','O','N',0}, 26286, 776 }, /* Tonga */
+    { 232, {'T','G',0}, {'T','G','O',0}, 42483, 768 }, /* Togo */
+    { 233, {'S','T',0}, {'S','T','P',0}, 42484, 678 }, /* São Tomé and Príncipe */
+    { 234, {'T','N',0}, {'T','U','N',0}, 42487, 788 }, /* Tunisia */
+    { 235, {'T','R',0}, {'T','U','R',0}, 47611, 792 }, /* Turkey */
+    { 236, {'T','V',0}, {'T','U','V',0}, 26286, 798 }, /* Tuvalu */
+    { 237, {'T','W',0}, {'T','W','N',0}, 47600, 158 }, /* Taiwan */
+    { 238, {'T','M',0}, {'T','K','M',0}, 47590, 795 }, /* Turkmenistan */
+    { 239, {'T','Z',0}, {'T','Z','A',0}, 47603, 834 }, /* Tanzania */
+    { 240, {'U','G',0}, {'U','G','A',0}, 47603, 800 }, /* Uganda */
+    { 241, {'U','A',0}, {'U','K','R',0}, 47609, 804 }, /* Ukraine */
+    { 242, {'G','B',0}, {'G','B','R',0}, 10039882, 826 }, /* United Kingdom */
+    { 244, {'U','S',0}, {'U','S','A',0}, 23581, 840 }, /* United States */
+    { 245, {'B','F',0}, {'B','F','A',0}, 42483, 854 }, /* Burkina Faso */
+    { 246, {'U','Y',0}, {'U','R','Y',0}, 31396, 858 }, /* Uruguay */
+    { 247, {'U','Z',0}, {'U','Z','B',0}, 47590, 860 }, /* Uzbekistan */
+    { 248, {'V','C',0}, {'V','C','T',0}, 10039880, 670 }, /* St. Vincent and the Grenadines */
+    { 249, {'V','E',0}, {'V','E','N',0}, 31396, 862 }, /* Bolivarian Republic of Venezuela */
+    { 251, {'V','N',0}, {'V','N','M',0}, 47599, 704 }, /* Vietnam */
+    { 252, {'V','I',0}, {'V','I','R',0}, 10039880, 850 }, /* Virgin Islands */
+    { 253, {'V','A',0}, {'V','A','T',0}, 47610, 336 }, /* Vatican City */
+    { 254, {'N','A',0}, {'N','A','M',0}, 10039883, 516 }, /* Namibia */
+    { 257, {'E','H',0}, {'E','S','H',0}, 42487, 732 }, /* Western Sahara (disputed) */
+    { 258, {'X','X',0}, {'X','X',0}, 161832256 }, /* Wake Island */
+    { 259, {'W','S',0}, {'W','S','M',0}, 26286, 882 }, /* Samoa */
+    { 260, {'S','Z',0}, {'S','W','Z',0}, 10039883, 748 }, /* Swaziland */
+    { 261, {'Y','E',0}, {'Y','E','M',0}, 47611, 887 }, /* Yemen */
+    { 263, {'Z','M',0}, {'Z','M','B',0}, 47603, 894 }, /* Zambia */
+    { 264, {'Z','W',0}, {'Z','W','E',0}, 47603, 716 }, /* Zimbabwe */
+    { 269, {'C','S',0}, {'S','C','G',0}, 47610, 891 }, /* Serbia and Montenegro (Former) */
+    { 270, {'M','E',0}, {'M','N','E',0}, 47610, 499 }, /* Montenegro */
+    { 271, {'R','S',0}, {'S','R','B',0}, 47610, 688 }, /* Serbia */
+    { 273, {'C','W',0}, {'C','U','W',0}, 10039880, 531 }, /* Curaçao */
+    { 276, {'S','S',0}, {'S','S','D',0}, 42487, 728 }, /* South Sudan */
+    { 300, {'A','I',0}, {'A','I','A',0}, 10039880, 660 }, /* Anguilla */
+    { 301, {'A','Q',0}, {'A','T','A',0}, 39070,  10 }, /* Antarctica */
+    { 302, {'A','W',0}, {'A','B','W',0}, 10039880, 533 }, /* Aruba */
+    { 303, {'X','X',0}, {'X','X',0}, 39070 }, /* Ascension Island */
+    { 304, {'X','X',0}, {'X','X',0}, 10210825 }, /* Ashmore and Cartier Islands */
+    { 305, {'X','X',0}, {'X','X',0}, 161832256 }, /* Baker Island */
+    { 306, {'B','V',0}, {'B','V','T',0}, 39070,  74 }, /* Bouvet Island */
+    { 307, {'K','Y',0}, {'C','Y','M',0}, 10039880, 136 }, /* Cayman Islands */
+    { 308, {'X','X',0}, {'X','X',0}, 10210824, 0, LOCATION_BOTH }, /* Channel Islands */
+    { 309, {'C','X',0}, {'C','X','R',0}, 12, 162 }, /* Christmas Island */
+    { 310, {'X','X',0}, {'X','X',0}, 27114 }, /* Clipperton Island */
+    { 311, {'C','C',0}, {'C','C','K',0}, 10210825, 166 }, /* Cocos (Keeling) Islands */
+    { 312, {'C','K',0}, {'C','O','K',0}, 26286, 184 }, /* Cook Islands */
+    { 313, {'X','X',0}, {'X','X',0}, 10210825 }, /* Coral Sea Islands */
+    { 314, {'X','X',0}, {'X','X',0}, 114 }, /* Diego Garcia */
+    { 315, {'F','K',0}, {'F','L','K',0}, 31396, 238 }, /* Falkland Islands (Islas Malvinas) */
+    { 317, {'G','F',0}, {'G','U','F',0}, 31396, 254 }, /* French Guiana */
+    { 318, {'P','F',0}, {'P','Y','F',0}, 26286, 258 }, /* French Polynesia */
+    { 319, {'T','F',0}, {'A','T','F',0}, 39070, 260 }, /* French Southern and Antarctic Lands */
+    { 321, {'G','P',0}, {'G','L','P',0}, 10039880, 312 }, /* Guadeloupe */
+    { 322, {'G','U',0}, {'G','U','M',0}, 21206, 316 }, /* Guam */
+    { 323, {'X','X',0}, {'X','X',0}, 39070 }, /* Guantanamo Bay */
+    { 324, {'G','G',0}, {'G','G','Y',0}, 308, 831 }, /* Guernsey */
+    { 325, {'H','M',0}, {'H','M','D',0}, 39070, 334 }, /* Heard Island and McDonald Islands */
+    { 326, {'X','X',0}, {'X','X',0}, 161832256 }, /* Howland Island */
+    { 327, {'X','X',0}, {'X','X',0}, 161832256 }, /* Jarvis Island */
+    { 328, {'J','E',0}, {'J','E','Y',0}, 308, 832 }, /* Jersey */
+    { 329, {'X','X',0}, {'X','X',0}, 161832256 }, /* Kingman Reef */
+    { 330, {'M','Q',0}, {'M','T','Q',0}, 10039880, 474 }, /* Martinique */
+    { 331, {'Y','T',0}, {'M','Y','T',0}, 47603, 175 }, /* Mayotte */
+    { 332, {'M','S',0}, {'M','S','R',0}, 10039880, 500 }, /* Montserrat */
+    { 333, {'A','N',0}, {'A','N','T',0}, 10039880, 530, LOCATION_BOTH }, /* Netherlands Antilles (Former) */
+    { 334, {'N','C',0}, {'N','C','L',0}, 20900, 540 }, /* New Caledonia */
+    { 335, {'N','U',0}, {'N','I','U',0}, 26286, 570 }, /* Niue */
+    { 336, {'N','F',0}, {'N','F','K',0}, 10210825, 574 }, /* Norfolk Island */
+    { 337, {'M','P',0}, {'M','N','P',0}, 21206, 580 }, /* Northern Mariana Islands */
+    { 338, {'X','X',0}, {'X','X',0}, 161832256 }, /* Palmyra Atoll */
+    { 339, {'P','N',0}, {'P','C','N',0}, 26286, 612 }, /* Pitcairn Islands */
+    { 340, {'X','X',0}, {'X','X',0}, 337 }, /* Rota Island */
+    { 341, {'X','X',0}, {'X','X',0}, 337 }, /* Saipan */
+    { 342, {'G','S',0}, {'S','G','S',0}, 39070, 239 }, /* South Georgia and the South Sandwich Islands */
+    { 343, {'S','H',0}, {'S','H','N',0}, 42483, 654 }, /* St. Helena */
+    { 346, {'X','X',0}, {'X','X',0}, 337 }, /* Tinian Island */
+    { 347, {'T','K',0}, {'T','K','L',0}, 26286, 772 }, /* Tokelau */
+    { 348, {'X','X',0}, {'X','X',0}, 39070 }, /* Tristan da Cunha */
+    { 349, {'T','C',0}, {'T','C','A',0}, 10039880, 796 }, /* Turks and Caicos Islands */
+    { 351, {'V','G',0}, {'V','G','B',0}, 10039880,  92 }, /* Virgin Islands, British */
+    { 352, {'W','F',0}, {'W','L','F',0}, 26286, 876 }, /* Wallis and Futuna */
+    { 742, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* Africa */
+    { 2129, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* Asia */
+    { 10541, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* Europe */
+    { 15126, {'I','M',0}, {'I','M','N',0}, 10039882, 833 }, /* Man, Isle of */
+    { 19618, {'M','K',0}, {'M','K','D',0}, 47610, 807 }, /* Macedonia, Former Yugoslav Republic of */
+    { 20900, {'X','X',0}, {'X','X',0}, 27114, 0, LOCATION_REGION }, /* Melanesia */
+    { 21206, {'X','X',0}, {'X','X',0}, 27114, 0, LOCATION_REGION }, /* Micronesia */
+    { 21242, {'X','X',0}, {'X','X',0}, 161832256 }, /* Midway Islands */
+    { 23581, {'X','X',0}, {'X','X',0}, 10026358, 0, LOCATION_REGION }, /* Northern America */
+    { 26286, {'X','X',0}, {'X','X',0}, 27114, 0, LOCATION_REGION }, /* Polynesia */
+    { 27082, {'X','X',0}, {'X','X',0}, 161832257, 0, LOCATION_REGION }, /* Central America */
+    { 27114, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* Oceania */
+    { 30967, {'S','X',0}, {'S','X','M',0}, 10039880, 534 }, /* Sint Maarten (Dutch part) */
+    { 31396, {'X','X',0}, {'X','X',0}, 161832257, 0, LOCATION_REGION }, /* South America */
+    { 31706, {'M','F',0}, {'M','A','F',0}, 10039880, 663 }, /* Saint Martin (French part) */
+    { 39070, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* World */
+    { 42483, {'X','X',0}, {'X','X',0}, 742, 0, LOCATION_REGION }, /* Western Africa */
+    { 42484, {'X','X',0}, {'X','X',0}, 742, 0, LOCATION_REGION }, /* Middle Africa */
+    { 42487, {'X','X',0}, {'X','X',0}, 742, 0, LOCATION_REGION }, /* Northern Africa */
+    { 47590, {'X','X',0}, {'X','X',0}, 2129, 0, LOCATION_REGION }, /* Central Asia */
+    { 47599, {'X','X',0}, {'X','X',0}, 2129, 0, LOCATION_REGION }, /* South-Eastern Asia */
+    { 47600, {'X','X',0}, {'X','X',0}, 2129, 0, LOCATION_REGION }, /* Eastern Asia */
+    { 47603, {'X','X',0}, {'X','X',0}, 742, 0, LOCATION_REGION }, /* Eastern Africa */
+    { 47609, {'X','X',0}, {'X','X',0}, 10541, 0, LOCATION_REGION }, /* Eastern Europe */
+    { 47610, {'X','X',0}, {'X','X',0}, 10541, 0, LOCATION_REGION }, /* Southern Europe */
+    { 47611, {'X','X',0}, {'X','X',0}, 2129, 0, LOCATION_REGION }, /* Middle East */
+    { 47614, {'X','X',0}, {'X','X',0}, 2129, 0, LOCATION_REGION }, /* Southern Asia */
+    { 7299303, {'T','L',0}, {'T','L','S',0}, 47599, 626 }, /* Democratic Republic of Timor-Leste */
+    { 10026358, {'X','X',0}, {'X','X',0}, 39070, 0, LOCATION_REGION }, /* Americas */
+    { 10028789, {'A','X',0}, {'A','L','A',0}, 10039882, 248 }, /* Åland Islands */
+    { 10039880, {'X','X',0}, {'X','X',0}, 161832257, 0, LOCATION_REGION }, /* Caribbean */
+    { 10039882, {'X','X',0}, {'X','X',0}, 10541, 0, LOCATION_REGION }, /* Northern Europe */
+    { 10039883, {'X','X',0}, {'X','X',0}, 742, 0, LOCATION_REGION }, /* Southern Africa */
+    { 10210824, {'X','X',0}, {'X','X',0}, 10541, 0, LOCATION_REGION }, /* Western Europe */
+    { 10210825, {'X','X',0}, {'X','X',0}, 27114, 0, LOCATION_REGION }, /* Australia and New Zealand */
+    { 161832015, {'B','L',0}, {'B','L','M',0}, 10039880, 652 }, /* Saint Barthélemy */
+    { 161832256, {'U','M',0}, {'U','M','I',0}, 27114, 581 }, /* U.S. Minor Outlying Islands */
+    { 161832257, {'X','X',0}, {'X','X',0}, 10026358, 0, LOCATION_REGION }, /* Latin America and the Caribbean */
+};
+
 /******************************************************************************
  *           EnumLanguageGroupLocalesA    (KERNEL32.@)
  *
@@ -2440,66 +2771,52 @@ EnumSystemCodePagesA (
 
     return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
 }
+
 /******************************************************************************
  *           EnumSystemGeoID    (KERNEL32.@)
  *
  * Call a users function for every location available on the system.
  *
  * PARAMS
- *  geoclass     [I] Type of information desired (SYSGEOTYPE enum from "winnls.h")
- *  reserved     [I] Reserved, set to 0
- *  pGeoEnumProc [I] Callback function to call for each location
+ *  geoclass   [I] Type of information desired (SYSGEOTYPE enum from "winnls.h")
+ *  parent     [I] GEOID for the parent
+ *  enumproc   [I] Callback function to call for each location
  *
  * RETURNS
  *  Success: TRUE.
  *  Failure: FALSE. Use GetLastError() to determine the cause.
  */
-BOOL WINAPI EnumSystemGeoID(GEOCLASS geoclass, GEOID reserved, GEO_ENUMPROC pGeoEnumProc)
+BOOL WINAPI EnumSystemGeoID(GEOCLASS geoclass, GEOID parent, GEO_ENUMPROC enumproc)
 {
-    static const WCHAR szCountryCodeValueName[] = {
-      'C','o','u','n','t','r','y','C','o','d','e','\0'
-    };
-    WCHAR szNumber[10];
-    HANDLE hKey;
-    ULONG ulIndex = 0;
+    INT i;
 
-    TRACE("(0x%08X,0x%08X,%p)\n", geoclass, reserved, pGeoEnumProc);
+    TRACE("(%d, %d, %p)\n", geoclass, parent, enumproc);
 
-    if (geoclass != GEOCLASS_NATION || reserved || !pGeoEnumProc)
-    {
+    if (!enumproc) {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    hKey = NLS_RegOpenKey( 0, szCountryListName );
-
-    while (NLS_RegEnumSubKey( hKey, ulIndex, szNumber, sizeof(szNumber) ))
-    {
-        BOOL bContinue = TRUE;
-        DWORD dwGeoId;
-        HANDLE hSubKey = NLS_RegOpenKey( hKey, szNumber );
-
-        if (hSubKey)
-        {
-            if (NLS_RegGetDword( hSubKey, szCountryCodeValueName, &dwGeoId ))
-            {
-                TRACE("Got geoid %d\n", dwGeoId);
-
-                if (!pGeoEnumProc( dwGeoId ))
-                    bContinue = FALSE;
-            }
-
-            NtClose( hSubKey );
-        }
-
-        if (!bContinue)
-            break;
-
-        ulIndex++;
+    if (geoclass != GEOCLASS_NATION && geoclass != GEOCLASS_REGION) {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
     }
 
-    if (hKey)
-        NtClose( hKey );
+    for (i = 0; i < sizeof(geoinfodata)/sizeof(struct geoinfo_t); i++) {
+        const struct geoinfo_t *ptr = &geoinfodata[i];
+
+        if (geoclass == GEOCLASS_NATION && (ptr->kind == LOCATION_REGION))
+            continue;
+
+        if (geoclass == GEOCLASS_REGION && (ptr->kind == LOCATION_NATION))
+            continue;
+
+        if (parent && ptr->parent != parent)
+            continue;
+
+        if (!enumproc(ptr->id))
+            return TRUE;
+    }
 
     return TRUE;
 }
@@ -2689,146 +3006,160 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
 static int
 NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
 {
-    HANDLE hKey;
-    WCHAR szPath[MAX_PATH];
-    UNICODE_STRING ValueName;
-    KEY_VALUE_PARTIAL_INFORMATION *info;
-    const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    LPWSTR szBuffer;
     DWORD dwSize;
-    NTSTATUS Status;
-    int Ret;
 
-    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%lu", Location);
+    /* FIXME: move *.nls resources out of kernel32 into locale.nls */
+    Location += NLSRC_OFFSET;
+    Location &= 0xFFFF;
 
-    hKey = NLS_RegOpenKey(0, szPath);
-    if (!hKey)
+    if(cchData == 0)
+        return GetLocalisedText(Location, NULL, 0);
+
+    dwSize = cchData * sizeof(WCHAR);
+    szBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+    if (!szBuffer)
     {
-        WARN("NLS_RegOpenKey() failed\n");
-        return 0;
-    }
-
-    dwSize = info_size + cchData * sizeof(WCHAR);
-
-    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
-    {
-        NtClose(hKey);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    RtlInitUnicodeString(&ValueName, L"Name");
-
-    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
-                             (LPBYTE)info, dwSize, &dwSize);
-
-    if (!Status)
+    if(GetLocalisedText(Location, szBuffer, dwSize))
     {
-        Ret = (dwSize - info_size) / sizeof(WCHAR);
-
-        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
-        {
-            if (Ret < cchData || !szFriendlyName) Ret++;
-            else
-            {
-                WARN("ERROR_INSUFFICIENT_BUFFER\n");
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                Ret = 0;
-            }
-        }
-
-        if (Ret && szFriendlyName)
-        {
-            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
-            szFriendlyName[Ret-1] = 0;
-        }
-    }
-    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
-    {
-        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
-    }
-    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        Ret = -1;
-    }
-    else
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        Ret = 0;
+        memcpy(szFriendlyName, szBuffer, dwSize);
+        HeapFree(GetProcessHeap(), 0, szBuffer);
+        return strlenW(szFriendlyName) + 1;
     }
 
-    NtClose(hKey);
-    HeapFree(GetProcessHeap(), 0, info);
-
-    return Ret;
-}
-
-/*
- * @implemented
- */
-INT WINAPI GetGeoInfoW(GEOID GeoId, GEOTYPE GeoType, LPWSTR lpGeoData, 
-                int cchData, LANGID LangId)
-{
-	TRACE("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
-
-    switch (GeoType)
-    {
-        case GEO_FRIENDLYNAME:
-        {
-            return NLS_GetGeoFriendlyName(GeoId, lpGeoData, cchData);
-        }
-        case GEO_TIMEZONES:
-        case GEO_NATION:
-        case GEO_LATITUDE:
-        case GEO_LONGITUDE:
-        case GEO_ISO2:
-        case GEO_ISO3:
-        case GEO_RFC1766:
-        case GEO_LCID:
-        case GEO_OFFICIALNAME:
-        case GEO_OFFICIALLANGUAGES:
-            FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
-            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        break;
-    }
-
+    HeapFree(GetProcessHeap(), 0, szBuffer);
     return 0;
 }
 
-/*
- * @implemented
- */
-INT WINAPI GetGeoInfoA(GEOID GeoId, GEOTYPE GeoType, LPSTR lpGeoData, 
-                int cchData, LANGID LangId)
+static const struct geoinfo_t *get_geoinfo_dataptr(GEOID geoid)
 {
-	WCHAR szBuffer[MAX_PATH];
-    char szBufferA[sizeof(szBuffer)/sizeof(WCHAR)];
-    int Ret;
+    int min, max;
 
-    TRACE("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
+    min = 0;
+    max = sizeof(geoinfodata)/sizeof(struct geoinfo_t)-1;
 
-    switch (GeoType)
-    {
-        case GEO_FRIENDLYNAME:
-        {
-            Ret = NLS_GetGeoFriendlyName(GeoId, szBuffer, cchData);
-            WideCharToMultiByte(CP_ACP, 0, szBuffer, -1, szBufferA, sizeof(szBufferA), 0, 0);
-            strcpy(lpGeoData, szBufferA);
-            return Ret;
-        }
-        case GEO_TIMEZONES:
-        case GEO_NATION:
-        case GEO_LATITUDE:
-        case GEO_LONGITUDE:
-        case GEO_ISO2:
-        case GEO_ISO3:
-        case GEO_RFC1766:
-        case GEO_LCID:
-        case GEO_OFFICIALNAME:
-        case GEO_OFFICIALLANGUAGES:
-            FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
-            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        break;
+    while (min <= max) {
+        const struct geoinfo_t *ptr;
+        int n = (min+max)/2;
+
+        ptr = &geoinfodata[n];
+        if (geoid == ptr->id)
+            /* we don't need empty entry */
+            return *ptr->iso2W ? ptr : NULL;
+
+        if (ptr->id > geoid)
+            max = n-1;
+        else
+            min = n+1;
     }
 
-    return 0;
+    return NULL;
+}
+
+/******************************************************************************
+ *           GetGeoInfoW (KERNEL32.@)
+ */
+INT WINAPI GetGeoInfoW(GEOID geoid, GEOTYPE geotype, LPWSTR data, int data_len, LANGID lang)
+{
+    const struct geoinfo_t *ptr;
+    const WCHAR *str = NULL;
+    WCHAR buffW[12];
+    LONG val = 0;
+    INT len;
+
+    TRACE("%d %d %p %d %d\n", geoid, geotype, data, data_len, lang);
+
+    if (!(ptr = get_geoinfo_dataptr(geoid))) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    switch (geotype) {
+    case GEO_FRIENDLYNAME:
+    {
+        return NLS_GetGeoFriendlyName(geoid, data, data_len);
+    }
+    case GEO_NATION:
+        val = geoid;
+        break;
+    case GEO_ISO_UN_NUMBER:
+        val = ptr->uncode;
+        break;
+    case GEO_PARENT:
+        val = ptr->parent;
+        break;
+    case GEO_ISO2:
+    case GEO_ISO3:
+    {
+        str = geotype == GEO_ISO2 ? ptr->iso2W : ptr->iso3W;
+        break;
+    }
+    case GEO_RFC1766:
+    case GEO_LCID:
+    case GEO_OFFICIALNAME:
+    case GEO_TIMEZONES:
+    case GEO_OFFICIALLANGUAGES:
+    case GEO_LATITUDE:
+    case GEO_LONGITUDE:
+        FIXME("type %d is not supported\n", geotype);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return 0;
+    default:
+        WARN("unrecognized type %d\n", geotype);
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (val) {
+        static const WCHAR fmtW[] = {'%','d',0};
+        sprintfW(buffW, fmtW, val);
+        str = buffW;
+    }
+
+    len = strlenW(str) + 1;
+    if (!data || !data_len)
+        return len;
+
+    memcpy(data, str, min(len, data_len)*sizeof(WCHAR));
+    if (data_len < len)
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return data_len < len ? 0 : len;
+}
+
+/******************************************************************************
+ *           GetGeoInfoA (KERNEL32.@)
+ */
+INT WINAPI GetGeoInfoA(GEOID geoid, GEOTYPE geotype, LPSTR data, int data_len, LANGID lang)
+{
+    WCHAR *buffW;
+    INT len;
+
+    TRACE("%d %d %p %d %d\n", geoid, geotype, data, data_len, lang);
+
+    len = GetGeoInfoW(geoid, geotype, NULL, 0, lang);
+    if (!len)
+        return 0;
+
+    buffW = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    if (!buffW)
+        return 0;
+
+    GetGeoInfoW(geoid, geotype, buffW, len, lang);
+    len = WideCharToMultiByte(CP_ACP, 0, buffW, -1, NULL, 0, NULL, NULL);
+    if (!data || !data_len) {
+        HeapFree(GetProcessHeap(), 0, buffW);
+        return len;
+    }
+
+    len = WideCharToMultiByte(CP_ACP, 0, buffW, -1, data, data_len, NULL, NULL);
+    HeapFree(GetProcessHeap(), 0, buffW);
+
+    if (data_len < len)
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return data_len < len ? 0 : len;
 }

@@ -24,7 +24,10 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
     SHORT StarFound = -1, DosStarFound = -1;
-    PUSHORT BackTracking = NULL, DosBackTracking = NULL;
+    USHORT BackTrackingBuffer[5], DosBackTrackingBuffer[5];
+    PUSHORT BackTracking = BackTrackingBuffer, DosBackTracking = DosBackTrackingBuffer;
+    SHORT BackTrackingSize = RTL_NUMBER_OF(BackTrackingBuffer);
+    SHORT DosBackTrackingSize = RTL_NUMBER_OF(DosBackTrackingBuffer);
     UNICODE_STRING IntExpression;
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, LastDot;
     WCHAR CompareChar;
@@ -128,13 +131,17 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             }
 
             /* Save star position */
-            if (!BackTracking)
+            StarFound++;
+            if (StarFound >= BackTrackingSize)
             {
+                BackTrackingSize = Expression->Length / sizeof(WCHAR);
                 BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                     (Expression->Length / sizeof(WCHAR)) * sizeof(USHORT),
+                                                     BackTrackingSize * sizeof(USHORT),
                                                      'nrSF');
+                RtlCopyMemory(BackTracking, BackTrackingBuffer, sizeof(BackTrackingBuffer));
+
             }
-            BackTracking[++StarFound] = ExpressionPosition++;
+            BackTracking[StarFound] = ExpressionPosition++;
 
             /* If star is at the end, then eat all rest and leave */
             if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
@@ -142,8 +149,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 NamePosition = Name->Length / sizeof(WCHAR);
                 break;
             }
+
             /* Allow null matching */
-            else if (Expression->Buffer[ExpressionPosition] != L'?' &&
+            if (Expression->Buffer[ExpressionPosition] != L'?' &&
                      Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
             {
                 NamePosition++;
@@ -179,10 +187,16 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
              */
             if (MatchingChars != Name->Length || LastDot == (USHORT)-1)
             {
-                if (!DosBackTracking) DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                                              (Expression->Length / sizeof(WCHAR)) * sizeof(USHORT),
-                                                                              'nrSF');
-                DosBackTracking[++DosStarFound] = ExpressionPosition++;
+                DosStarFound++;
+                if (DosStarFound >= DosBackTrackingSize)
+                {
+                    DosBackTrackingSize = Expression->Length / sizeof(WCHAR);
+                    DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                            DosBackTrackingSize * sizeof(USHORT),
+                                                            'nrSF');
+                    RtlCopyMemory(DosBackTracking, DosBackTrackingBuffer, sizeof(DosBackTrackingBuffer));
+                }
+                DosBackTracking[DosStarFound] = ExpressionPosition++;
 
                 /* Not the same char, start exploring */
                 if (Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
@@ -206,7 +220,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 NamePosition++;
             }
             /* Try to explore later on for null matching */
-            else if ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) && 
+            else if ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
                      (Name->Buffer[NamePosition] == Expression->Buffer[ExpressionPosition + 1]))
             {
                 NamePosition++;
@@ -262,11 +276,11 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         }
     }
 
-    if (BackTracking)
+    if (BackTracking != BackTrackingBuffer)
     {
         ExFreePoolWithTag(BackTracking, 'nrSF');
     }
-    if (DosBackTracking)
+    if (DosBackTracking != DosBackTrackingBuffer)
     {
         ExFreePoolWithTag(DosBackTracking, 'nrSF');
     }

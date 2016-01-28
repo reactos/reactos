@@ -2,7 +2,10 @@
 
 #define MAXCURICONHANDLES 4096
 
-#ifdef NEW_CURSORICON
+/* Flags that are allowed to be set through NtUserSetCursorIconData() */
+#define CURSORF_USER_MASK \
+    (CURSORF_FROMRESOURCE | CURSORF_LRSHARED | CURSORF_ACON)
+
 typedef struct _CURICON_OBJECT
 {
     PROCMARKHEAD head;
@@ -31,38 +34,26 @@ typedef struct tagACON
     USHORT atomModName;
     USHORT rt;
     ULONG CURSORF_flags;
-    INT cpcur;
-    INT cicur;
+    UINT cpcur;
+    UINT cicur;
     PCURICON_OBJECT * aspcur;
     DWORD * aicur;
     INT * ajifRate;
-    INT iicur;
+    UINT iicur;
 } ACON, *PACON;
 
 C_ASSERT(FIELD_OFFSET(ACON, cpcur) == FIELD_OFFSET(CURICON_OBJECT, xHotspot));
 
-#else
+BOOLEAN
+IntDestroyCurIconObject(
+    _In_ PVOID Object);
 
-typedef struct tagCURICON_PROCESS
-{
-  LIST_ENTRY ListEntry;
-  PPROCESSINFO Process;
-} CURICON_PROCESS, *PCURICON_PROCESS;
+VOID FASTCALL
+IntCleanupCurIconCache(PPROCESSINFO Win32Process);
 
-typedef struct _CURICON_OBJECT
-{
-  PROCMARKHEAD head;
-  LIST_ENTRY ListEntry;
-  HANDLE Self;
-  LIST_ENTRY ProcessList;
-  HMODULE hModule;
-  HRSRC hRsrc;
-  HRSRC hGroupRsrc;
-  SIZE Size;
-  BYTE Shadow;
-  ICONINFO IconInfo;
-} CURICON_OBJECT, *PCURICON_OBJECT;
-#endif
+VOID
+FreeCurIconObject(
+    _In_ PVOID Object);
 
 typedef struct _CURSORACCELERATION_INFO
 {
@@ -103,6 +94,43 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL ScreenSaverRunning;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
+typedef struct {
+    DWORD type;
+    PCURICON_OBJECT handle;
+} SYSTEMCURICO;
+
+extern SYSTEMCURICO gasysico[];
+extern SYSTEMCURICO gasyscur[];
+
+#define ROIC_SAMPLE 0
+#define ROIC_HAND 1
+#define ROIC_QUES 2
+#define ROIC_BANG 3
+#define ROIC_NOTE 4
+#define ROIC_WINLOGO 5
+
+#define ROCR_ARROW 0
+#define ROCR_IBEAM 1
+#define ROCR_WAIT 2
+#define ROCR_CROSS 3
+#define ROCR_UP 4
+#define ROCR_SIZE 5
+#define ROCR_ICON 6
+#define ROCR_SIZENWSE 7
+#define ROCR_SIZENESW 8
+#define ROCR_SIZEWE 9
+#define ROCR_SIZENS 10
+#define ROCR_SIZEALL 11
+#define ROCR_NO 12
+#define ROCR_HAND 13
+#define ROCR_APPSTARTING 14
+#define ROCR_HELP 15
+
+#define SYSTEMCUR(func) (gasyscur[ROCR_ ## func].handle)
+#define SYSTEMICO(func) (gasysico[ROIC_ ## func].handle)
+
+VOID IntLoadSystenIcons(HICON,DWORD);
+
 BOOL InitCursorImpl(VOID);
 HANDLE IntCreateCurIconHandle(BOOLEAN Anim);
 
@@ -112,9 +140,6 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
-HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
-BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
-BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)

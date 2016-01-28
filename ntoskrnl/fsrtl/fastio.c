@@ -218,7 +218,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
             /* File was accessed */
             FileObject->Flags |= FO_FILE_FAST_IO_READ;
 
-            if (Result == TRUE)
+            if (Result != FALSE)
             {
                 ASSERT((IoStatus->Status == STATUS_END_OF_FILE) ||
                        (((ULONGLONG)FileOffset->QuadPart + IoStatus->Information) <=
@@ -227,7 +227,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
         }
 
         /* Update the current file offset */
-        if (Result == TRUE)
+        if (Result != FALSE)
         {
             FileObject->CurrentByteOffset.QuadPart = FileOffset->QuadPart + IoStatus->Information;
         }
@@ -343,7 +343,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
          * If we append, use the file size as offset.
          * Also, check that we aren't crossing the 4GB boundary.
          */
-        if (FileOffsetAppend == TRUE)
+        if (FileOffsetAppend != FALSE)
         {
             Offset.LowPart = FcbHeader->FileSize.LowPart;
             NewSize.LowPart = FcbHeader->FileSize.LowPart + Length;
@@ -381,7 +381,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
                 /* Then we need to acquire the resource exclusive */
                 ExReleaseResourceLite(FcbHeader->Resource);
                 ExAcquireResourceExclusiveLite(FcbHeader->Resource, TRUE);
-                if (FileOffsetAppend == TRUE)
+                if (FileOffsetAppend != FALSE)
                 {
                     Offset.LowPart = FcbHeader->FileSize.LowPart; // ??
                     NewSize.LowPart = FcbHeader->FileSize.LowPart + Length;
@@ -483,7 +483,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
         PsGetCurrentThread()->TopLevelIrp = 0;
 
         /* Did the operation succeed? */
-        if (Result == TRUE)
+        if (Result != FALSE)
         {
             /* Update the valid file size if necessary */
             if (NewSize.LowPart > FcbHeader->ValidDataLength.LowPart)
@@ -568,7 +568,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
         }
 
         /* Check if we are appending */
-        if (FileOffsetAppend == TRUE)
+        if (FileOffsetAppend != FALSE)
         {
             Offset.QuadPart = FcbHeader->FileSize.QuadPart;
             NewSize.QuadPart = FcbHeader->FileSize.QuadPart + Length;
@@ -1338,7 +1338,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
     }
 
     /* Check if we are appending */
-    if (FileOffsetAppend == TRUE)
+    if (FileOffsetAppend != FALSE)
     {
         Offset.QuadPart = FcbHeader->FileSize.QuadPart;
         NewSize.QuadPart = FcbHeader->FileSize.QuadPart + Length;

@@ -369,7 +369,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
         return STATUS_INVALID_PARAMETER;
     }
 
-    PeekBuffer = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+    PeekBuffer = Irp->AssociatedIrp.SystemBuffer;
     if (NamedPipeEnd != FILE_PIPE_CLIENT_END)
     {
         if (NamedPipeEnd != FILE_PIPE_SERVER_END)
@@ -714,7 +714,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     //Status = NpTranslateAlias(&SourceString);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    Fcb = NpFindPrefix(&SourceString, TRUE, &Prefix);
+    Fcb = NpFindPrefix(&SourceString, 1, &Prefix);
     Fcb = (PNP_FCB)((ULONG_PTR)Fcb & ~1);
 
     NodeTypeCode = Fcb ? Fcb->NodeType : 0;

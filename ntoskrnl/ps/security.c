@@ -371,6 +371,9 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
         _SEH2_END;
     }
 
+    /* Validate object attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, PreviousMode);
+
     /* Open the process token */
     Status = PsOpenTokenOfProcess(ProcessHandle, &Token);
     if (NT_SUCCESS(Status))

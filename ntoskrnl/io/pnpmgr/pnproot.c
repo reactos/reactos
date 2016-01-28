@@ -1234,6 +1234,51 @@ PnpRootPnpControl(
     return Status;
 }
 
+/*
+ * FUNCTION: Handle Power IRPs
+ * ARGUMENTS:
+ *     DeviceObject = Pointer to PDO or FDO
+ *     Irp          = Pointer to IRP that should be handled
+ * RETURNS:
+ *     Status
+ */
+static NTSTATUS NTAPI
+PnpRootPowerControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Status = Irp->IoStatus.Status;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->Common.IsFDO)
+    {
+        ASSERT(!DeviceExtension->Common.IsFDO);
+        PoStartNextPowerIrp(Irp);
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        Status = PoCallDriver(DeviceExtension->Ldo, Irp);
+    }
+    else
+    {
+        switch (IrpSp->MinorFunction)
+        {
+            case IRP_MN_QUERY_POWER:
+            case IRP_MN_SET_POWER:
+                Status = STATUS_SUCCESS;
+                break;
+        }
+        Irp->IoStatus.Status = Status;
+        PoStartNextPowerIrp(Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 PnpRootAddDevice(
@@ -1305,7 +1350,7 @@ PnpRootDriverEntry(
     DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
-    //DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
 
     return STATUS_SUCCESS;
 }

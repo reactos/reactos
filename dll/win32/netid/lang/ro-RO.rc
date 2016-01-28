@@ -19,8 +19,8 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Grup de lucru:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Utilizați asistentul de identificare a rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON  "&ID de rețea…", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT "Utilizați asistentul de identificare al rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 6, 113, 172, 24
+    PUSHBUTTON  "I&D de rețea…", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Pentru a schimba identitatea calculatorului sau a intra într-un domeniu, apăsați „Schimbare”.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "S&chimbare…", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "Notă: Doar administratorii pot schimba identitatea calculatorului.", IDC_STATIC, 6, 179, 300, 9
@@ -36,12 +36,12 @@ BEGIN
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
     LTEXT "Numele complet:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&Mai multe…", 1003, 150, 102, 75, 14
+    PUSHBUTTON "Mai &multe…", 1003, 150, 102, 75, 14
     GROUPBOX "Membru al", 1018, 7, 119, 219, 73
     AUTORADIOBUTTON "&Domeniului:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Grupului de lucru:", 1004, 17, 161, 191, 10
+    AUTORADIOBUTTON "G&rupului de lucru:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "Gă&sește-mi domeniul", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&Găsește-mi domeniul", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "Con&firmă", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "A&nulează", 2, 176, 203, 50, 14

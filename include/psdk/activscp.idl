@@ -118,6 +118,10 @@ cpp_quote("#define SCRIPTSTAT_INSTRUCTION_COUNT    2")
 cpp_quote("#define SCRIPTSTAT_INTSTRUCTION_TIME    3")
 cpp_quote("#define SCRIPTSTAT_TOTAL_TIME           4")
 
+cpp_quote("#define SCRIPT_E_RECORDED  0x86664004")
+cpp_quote("#define SCRIPT_E_REPORTED  0x80020101")
+cpp_quote("#define SCRIPT_E_PROPAGATE 0x80020102")
+
 [
 object,
 uuid(EAE1BA61-A4ED-11cf-8F20-00805F2CD064),

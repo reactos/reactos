@@ -11,7 +11,7 @@ BEGIN
     IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tRuns the given script.\n\
-/T timeout\tTimeout in seconds to prevent diskpart usage overlap.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
 /?\t\tDisplay this help message.\n\n"
     IDS_APP_LICENSE, "Liçensuar mbi GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "Në kompjuter: %s\n\n"
@@ -41,9 +41,35 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "Disk ###  Status\tSize\tFree\tDyn\tGpt\n"
-    IDS_LIST_DISK_LINE "--------  ------\t----\t----\t---\t---\n"
+    IDS_LIST_DISK_HEAD "\n  Disk ###  Status      Size     Free     Dyn  Gpt\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_PARTITION_LINE "%c -------------  ----------------  -------  -------\n"
+    IDS_LIST_PARTITION_FORMAT "  Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
     IDS_LIST_VOLUME_HEAD "Volume ###\tLtr\tLabel\n"
+END
+
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
+    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+END
+
+/* SELECT command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
+    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
+    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
+    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
 END
 
 /* Disk Status */
@@ -62,8 +88,6 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_CURRENT_DSK_STATUS "është disku i përzgjedhur."
-    IDS_MSG_NO_DISK "Nuk ka disk të përzgjedhur.\nJu lutem zgjidhni një disk dhe provoni përsëri."
     IDS_MSG_ARG_SYNTAX_ERROR "Argumente(t) e specifikuara per kete komande nuk jane të vlefshme.\nPër më shume informacione mbi komanden shkruani:"
 END
 
@@ -115,6 +139,7 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Error në hapjen e skriptes: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Error argumenti i procesimit: %s\n"
+    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
 END
 
 /* Active help descriptions */

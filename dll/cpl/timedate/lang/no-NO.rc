@@ -37,10 +37,10 @@ BEGIN
     AUTOCHECKBOX "Automatisk sykroniser klokken med internett tid serveren",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Oppdater nå", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "Oppdater nÃ¥", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "Synkronisering kan bare brukes nå din datamaskin er koblet til internett.", -1, 12, 114, 225, 25
+    LTEXT "Synkronisering kan bare brukes nÃ¥ din datamaskin er koblet til internett.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
@@ -50,7 +50,7 @@ BEGIN
     IDS_TIMEZONETEXT "Gjeldende tidssone: %s"
     IDS_TIMEZONEINVALID "Ugyldig"
     IDS_TIMEZONEUNKNOWN "Ukjent"
-    IDS_INETTIMESUCSYNC "Tiden har blitt velykket synkronisert med %s på %s med %s"
+    IDS_INETTIMESUCSYNC "Tiden har blitt velykket synkronisert med %s pÃ¥ %s med %s"
     IDS_INETTIMENEXTSYNC "Neste synkonisering: %s med %s"
     IDS_INETTIMESYNCING "Vennligst vent mens ReactOS sykroniserer tiden med %s"
     IDS_INETTIMEERROR "En feil har oppstatt mens ReactOS ble sykronisert med %s"

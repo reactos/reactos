@@ -22,10 +22,10 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_TRUE  "Áø½Ç"
-  IDS_FALSE "°ÅÁþ"
-  IDS_YES   "¿¹"
-  IDS_NO    "¾Æ´Ï¿À"
-  IDS_ON    "ÀÛµ¿"
-  IDS_OFF   "ºñÀÛµ¿"
+  IDS_TRUE  "ì§„ì‹¤"
+  IDS_FALSE "ê±°ì§“"
+  IDS_YES   "ì˜ˆ"
+  IDS_NO    "ì•„ë‹ˆì˜¤"
+  IDS_ON    "ìž‘ë™"
+  IDS_OFF   "ë¹„ìž‘ë™"
 }

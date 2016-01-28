@@ -97,9 +97,17 @@ typedef struct _PERF_OBJECT_TYPE {
 	DWORD DefinitionLength;
 	DWORD HeaderLength;
 	DWORD ObjectNameTitleIndex;
+#ifdef _WIN64
+	DWORD ObjectNameTitle;
+#else
 	LPWSTR ObjectNameTitle;
+#endif
 	DWORD ObjectHelpTitleIndex;
+#ifdef _WIN64
+	DWORD ObjectHelpTitle;
+#else
 	LPWSTR ObjectHelpTitle;
+#endif
 	DWORD DetailLevel;
 	DWORD NumCounters;
 	LONG DefaultCounter;
@@ -111,9 +119,17 @@ typedef struct _PERF_OBJECT_TYPE {
 typedef struct _PERF_COUNTER_DEFINITION {
 	DWORD ByteLength;
 	DWORD CounterNameTitleIndex;
+#ifdef _WIN64
+	DWORD CounterNameTitle;
+#else
 	LPWSTR CounterNameTitle;
+#endif
 	DWORD CounterHelpTitleIndex;
+#ifdef _WIN64
+	DWORD CounterHelpTitle;
+#else
 	LPWSTR CounterHelpTitle;
+#endif
 	LONG DefaultScale;
 	DWORD DetailLevel;
 	DWORD CounterType;

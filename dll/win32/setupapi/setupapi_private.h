@@ -41,6 +41,7 @@
 #include <setupapi.h>
 #include <softpub.h>
 #include <mscat.h>
+#include <lzexpand.h>
 #include <shlobj.h>
 #include <wine/unicode.h>
 #define NTOS_MODE_USER
@@ -172,6 +173,10 @@ struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
 
+    /* Device property page provider data */
+    HMODULE hmodDevicePropPageProvider;
+    PVOID pDevicePropPageProvider;
+
     /* Variable size array (contains data for instanceId, UniqueId, DeviceDescription) */
     WCHAR Data[ANYSIZE_ARRAY];
 };
@@ -199,6 +204,10 @@ struct DeviceInfoSet /* HDEVINFO */
 
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
+
+    /* Class property page provider data */
+    HMODULE hmodClassPropPageProvider;
+    PVOID pClassPropPageProvider;
 
     /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
      * or NULL if related to local machine. Points into szData field at the
@@ -253,13 +262,9 @@ inline static WCHAR *strdupAtoW( const char *str )
 
 struct inf_file;
 extern const WCHAR *DIRID_get_string( int dirid );
-extern unsigned int PARSER_string_substA( const struct inf_file *file, const WCHAR *text,
-                                          char *buffer, unsigned int size );
-extern unsigned int PARSER_string_substW( const struct inf_file *file, const WCHAR *text,
-                                          WCHAR *buffer, unsigned int size );
-extern const WCHAR *PARSER_get_inf_filename( HINF hinf );
-extern WCHAR *PARSER_get_src_root( HINF hinf );
-extern WCHAR *PARSER_get_dest_dir( INFCONTEXT *context );
+extern const WCHAR *PARSER_get_inf_filename( HINF hinf ) DECLSPEC_HIDDEN;
+extern WCHAR *PARSER_get_src_root( HINF hinf ) DECLSPEC_HIDDEN;
+extern WCHAR *PARSER_get_dest_dir( INFCONTEXT *context ) DECLSPEC_HIDDEN;
 
 /* support for Ascii queue callback functions */
 

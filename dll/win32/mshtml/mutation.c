@@ -571,12 +571,12 @@ static void NSAPI nsDocumentObserver_EndLoad(nsIDocumentObserver *iface, nsIDocu
 }
 
 static void NSAPI nsDocumentObserver_ContentStatesChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIContent *aContent, nsEventStates *aStateMask)
+        nsIContent *aContent, EventStates aStateMask)
 {
 }
 
 static void NSAPI nsDocumentObserver_DocumentStatesChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsEventStates *aStateMask)
+        EventStates aStateMask)
 {
 }
 
@@ -617,16 +617,16 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
     nsIDOMHTMLIFrameElement *nsiframe;
     nsIDOMHTMLFrameElement *nsframe;
     nsIDOMHTMLScriptElement *nsscript;
+    nsIDOMHTMLElement *nselem;
     nsIDOMComment *nscomment;
-    nsIDOMElement *nselem;
     nsresult nsres;
 
     TRACE("(%p)->(%p %p)\n", This, aDocument, aContent);
 
-    nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMElement, (void**)&nselem);
+    nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLElement, (void**)&nselem);
     if(NS_SUCCEEDED(nsres)) {
         check_event_attr(This, nselem);
-        nsIDOMElement_Release(nselem);
+        nsIDOMHTMLElement_Release(nselem);
     }
 
     nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMComment, (void**)&nscomment);

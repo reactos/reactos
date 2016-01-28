@@ -2,8 +2,6 @@
  * Copyright (c) 1998 / 2002 Lionel ULMER
  * Copyright (c) 2006        Stefan DÖSINGER
  *
- * This file contains the implementation of Direct3DLight.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -78,7 +76,6 @@ void light_deactivate(struct d3d_light *light)
     if (!light->active_viewport || !light->active_viewport->active_device) return;
     device = light->active_viewport->active_device;
 
-    /* If was not active, activate it */
     if (light->light.dwFlags & D3DLIGHT_ACTIVE)
     {
         IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, FALSE);
@@ -161,13 +158,11 @@ static HRESULT WINAPI d3d_light_Initialize(IDirect3DLight *iface, IDirect3D *d3d
     return D3D_OK;
 }
 
-static const float zero_value[] = {
-    0.0, 0.0, 0.0, 0.0
-};
-
 static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
 {
+    static const D3DCOLORVALUE zero_value = {{0.0f}, {0.0f}, {0.0f}, {0.0f}};
     struct d3d_light *light = impl_from_IDirect3DLight(iface);
+    DWORD flags = data->dwSize >= sizeof(D3DLIGHT2) ? ((D3DLIGHT2 *)data)->dwFlags : D3DLIGHT_ACTIVE;
     D3DLIGHT7 *light7 = &light->light7;
 
     TRACE("iface %p, data %p.\n", iface, data);
@@ -175,16 +170,13 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
     if ((!data->dltType) || (data->dltType > D3DLIGHT_PARALLELPOINT))
          return DDERR_INVALIDPARAMS;
 
-    if (data->dltType == D3DLIGHT_PARALLELPOINT)
-        FIXME("D3DLIGHT_PARALLELPOINT not implemented.\n");
-
     /* Translate D3DLIGHT2 structure to D3DLIGHT7. */
     light7->dltType = data->dltType;
     light7->dcvDiffuse = data->dcvColor;
-    if (data->dwSize >= sizeof(D3DLIGHT2) && (((D3DLIGHT2 *)data)->dwFlags & D3DLIGHT_NO_SPECULAR))
-        light7->dcvSpecular = data->dcvColor;
+    if (flags & D3DLIGHT_NO_SPECULAR)
+        light7->dcvSpecular = zero_value;
     else
-        light7->dcvSpecular = *(const D3DCOLORVALUE *)zero_value;
+        light7->dcvSpecular = data->dcvColor;
     light7->dcvAmbient = data->dcvColor;
     light7->dvPosition = data->dvPosition;
     light7->dvDirection = data->dvDirection;
@@ -197,9 +189,14 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
     light7->dvPhi = data->dvPhi;
 
     wined3d_mutex_lock();
-    memcpy(&light->light, data, data->dwSize);
-    if (light->light.dwFlags & D3DLIGHT_ACTIVE)
+    memcpy(&light->light, data, sizeof(*data));
+    if (!(light->light.dwFlags & D3DLIGHT_ACTIVE) && flags & D3DLIGHT_ACTIVE)
+        light_activate(light);
+    else if (light->light.dwFlags & D3DLIGHT_ACTIVE && !(flags & D3DLIGHT_ACTIVE))
+        light_deactivate(light);
+    else if (flags & D3DLIGHT_ACTIVE)
         light_update(light);
+    light->light.dwFlags = flags;
     wined3d_mutex_unlock();
 
     return D3D_OK;

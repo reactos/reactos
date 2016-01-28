@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/handle.h
+ * FILE:        dll/win32/ws2_32/include/handle.h
  * PURPOSE:     Provider handle definitions
  */
 

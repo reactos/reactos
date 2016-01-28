@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/windows/headless.c
+ * FILE:            boot/freeldr/freeldr/windows/headless.c
  * PURPOSE:         Provides support for Windows Emergency Management Services
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -97,7 +97,7 @@ WinLdrPortInitialize(IN ULONG BaudRate,
         }
     }
     else
-    {   
+    {
         /* Pick correct port for address */
         PortAddress = (PUCHAR)0x2F8;
         if (CpDoesPortExist(PortAddress))
@@ -182,17 +182,17 @@ WinLdrInitializeHeadlessPort(VOID)
             {
                 case 2:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2F8;
-                    break;    
-                    
+                    break;
+
                 case 3:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3E8;
-                    break;            
-                    
+                    break;
+
                 case 4:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2E8;
-                    break;                
+                    break;
 
-                default:                
+                default:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3F8;
                     break;
             }
@@ -218,7 +218,7 @@ WinLdrInitializeHeadlessPort(VOID)
     {
         /* Port seems usable, set it up and get the BIOS GUID */
         WinLdrEnableFifo(WinLdrTerminalDeviceId, TRUE);
-        
+
         WinLdrLoadGUID(&LoaderRedirectionInformation.SystemGUID);
 
         /* Calculate delay in us based on the baud, assume 9600 if none given */
@@ -242,34 +242,34 @@ WinLdrInitializeHeadlessPort(VOID)
 VOID
 WinLdrSetupEms(IN PCHAR BootOptions)
 {
-    PCHAR RedirectPort;
+    PCHAR Settings, RedirectPort;
 
     /* Start fresh */
     RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
     LoaderRedirectionInformation.PciDeviceId = PCI_INVALID_VENDORID;
 
     /* Use a direction port if one was given, or use ACPI to detect one instead */
-    RedirectPort = strstr(BootOptions, "/redirect=");
-
-    if (RedirectPort)
+    Settings = strstr(BootOptions, "/redirect=");
+    if (Settings)
     {
-        RedirectPort = strstr(RedirectPort, "com");
+        RedirectPort = strstr(Settings, "com");
         if (RedirectPort)
         {
             RedirectPort += sizeof("com") - 1;
             LoaderRedirectionInformation.PortNumber = atoi(RedirectPort);
-            LoaderRedirectionInformation.TerminalType = 1; //HeadlessSerialPort
+            LoaderRedirectionInformation.TerminalType = 1; // HeadlessSerialPort
         }
         else
         {
-            RedirectPort = strstr(RedirectPort, "usebiossettings");
+            RedirectPort = strstr(Settings, "usebiossettings");
             if (RedirectPort)
             {
                 UiDrawStatusText("ACPI SRT Table Not Supported...");
+                return;
             }
             else
             {
-                LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(RedirectPort, 0, 16);
+                LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Settings, 0, 16);
                 if (LoaderRedirectionInformation.PortAddress)
                 {
                     LoaderRedirectionInformation.PortNumber = 3;
@@ -279,25 +279,25 @@ WinLdrSetupEms(IN PCHAR BootOptions)
     }
 
     /* Use a direction baudrate if one was given */
-    RedirectPort = strstr(BootOptions, "/redirectbaudrate=");
-    if (RedirectPort)
+    Settings = strstr(BootOptions, "/redirectbaudrate=");
+    if (Settings)
     {
-        if (strstr(RedirectPort, "115200"))
+        if (strstr(Settings, "115200"))
         {
             LoaderRedirectionInformation.BaudRate = 115200;
         }
-        else if (strstr(RedirectPort, "57600"))
+        else if (strstr(Settings, "57600"))
         {
             LoaderRedirectionInformation.BaudRate = 57600;
         }
-        else if (strstr(RedirectPort, "19200"))
+        else if (strstr(Settings, "19200"))
         {
             LoaderRedirectionInformation.BaudRate = 19200;
         }
         else
         {
             LoaderRedirectionInformation.BaudRate = 9600;
-        }    
+        }
     }
 
     /* Enable headless support if parameters were found */

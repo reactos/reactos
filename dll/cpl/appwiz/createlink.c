@@ -379,7 +379,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     psh.nPages = nPages;
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
-    psh.pszbmWatermark = MAKEINTRESOURCEW(IDB_WATERMARK);
+    psh.pszbmWatermark = MAKEINTRESOURCEW(IDB_SHORTCUT);
 
     /* Display the wizard */
     PropertySheet(&psh);

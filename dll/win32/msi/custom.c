@@ -189,6 +189,35 @@ static void set_deferred_action_props( MSIPACKAGE *package, const WCHAR *deferre
     msi_set_property( package->db, szProductCode, beg, end - beg );
 }
 
+WCHAR *msi_create_temp_file( MSIDATABASE *db )
+{
+    WCHAR *ret;
+
+    if (!db->tempfolder)
+    {
+        WCHAR tmp[MAX_PATH];
+        UINT len = sizeof(tmp)/sizeof(tmp[0]);
+
+        if (msi_get_property( db, szTempFolder, tmp, &len ) ||
+            GetFileAttributesW( tmp ) != FILE_ATTRIBUTE_DIRECTORY)
+        {
+            GetTempPathW( MAX_PATH, tmp );
+        }
+        if (!(db->tempfolder = strdupW( tmp ))) return NULL;
+    }
+
+    if ((ret = msi_alloc( (strlenW( db->tempfolder ) + 20) * sizeof(WCHAR) )))
+    {
+        if (!GetTempFileNameW( db->tempfolder, szMsi, 0, ret ))
+        {
+            msi_free( ret );
+            return NULL;
+        }
+    }
+
+    return ret;
+}
+
 static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL dll )
 {
     static const WCHAR query[] = {
@@ -196,38 +225,21 @@ static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL 
         '`','B','i' ,'n','a','r','y','`',' ','W','H','E','R','E',' ',
         '`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0};
     MSIRECORD *row;
-    MSIBINARY *binary;
+    MSIBINARY *binary = NULL;
     HANDLE file;
     CHAR buffer[1024];
-    WCHAR fmt[MAX_PATH], tmpfile[MAX_PATH];
-    DWORD sz = MAX_PATH, write;
+    WCHAR *tmpfile;
+    DWORD sz, write;
     UINT r;
 
-    if (msi_get_property(package->db, szTempFolder, fmt, &sz) != ERROR_SUCCESS ||
-        GetFileAttributesW(fmt) == INVALID_FILE_ATTRIBUTES) GetTempPathW(MAX_PATH, fmt);
+    if (!(tmpfile = msi_create_temp_file( package->db ))) return NULL;
 
-    if (!GetTempFileNameW( fmt, szMsi, 0, tmpfile ))
-    {
-        TRACE("unable to create temp file %s (%u)\n", debugstr_w(tmpfile), GetLastError());
-        return NULL;
-    }
+    if (!(row = MSI_QueryGetRecord( package->db, query, source ))) goto error;
+    if (!(binary = msi_alloc_zero( sizeof(MSIBINARY) ))) goto error;
 
-    row = MSI_QueryGetRecord(package->db, query, source);
-    if (!row)
-        return NULL;
+    file = CreateFileW( tmpfile, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+    if (file == INVALID_HANDLE_VALUE) goto error;
 
-    if (!(binary = msi_alloc_zero( sizeof(MSIBINARY) )))
-    {
-        msiobj_release( &row->hdr );
-        return NULL;
-    }
-    file = CreateFileW( tmpfile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-    if (file == INVALID_HANDLE_VALUE)
-    {
-        msiobj_release( &row->hdr );
-        msi_free( binary );
-        return NULL;
-    }
     do
     {
         sz = sizeof(buffer);
@@ -241,13 +253,7 @@ static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL 
     } while (sz == sizeof buffer);
 
     CloseHandle( file );
-    msiobj_release( &row->hdr );
-    if (r != ERROR_SUCCESS)
-    {
-        DeleteFileW( tmpfile );
-        msi_free( binary );
-        return NULL;
-    }
+    if (r != ERROR_SUCCESS) goto error;
 
     /* keep a reference to prevent the dll from being unloaded */
     if (dll && !(binary->module = LoadLibraryW( tmpfile )))
@@ -255,9 +261,18 @@ static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL 
         WARN( "failed to load dll %s (%u)\n", debugstr_w( tmpfile ), GetLastError() );
     }
     binary->source = strdupW( source );
-    binary->tmpfile = strdupW( tmpfile );
+    binary->tmpfile = tmpfile;
     list_add_tail( &package->binaries, &binary->entry );
+
+    msiobj_release( &row->hdr );
     return binary;
+
+error:
+    if (row) msiobj_release( &row->hdr );
+    DeleteFileW( tmpfile );
+    msi_free( tmpfile );
+    msi_free( binary );
+    return NULL;
 }
 
 static MSIBINARY *get_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL dll )
@@ -1443,7 +1458,7 @@ HRESULT create_msi_custom_remote( IUnknown *pOuter, LPVOID *ppObj )
     This->IWineMsiRemoteCustomAction_iface.lpVtbl = &msi_custom_remote_vtbl;
     This->refs = 1;
 
-    *ppObj = This;
+    *ppObj = &This->IWineMsiRemoteCustomAction_iface;
 
     return S_OK;
 }

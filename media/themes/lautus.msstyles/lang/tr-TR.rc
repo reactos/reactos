@@ -1,0 +1,39 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Ater"
+}
+
+STRINGTABLE
+{
+2000, "Lautus Ater"
+}
+
+STRINGTABLE
+{
+3000, "Düzgülü"
+3001, "Büyük Yazı Tipleri"
+3002, "Çok Büyük Yazı Tipleri"
+}
+
+STRINGTABLE
+{
+4000, "Düzgülü"
+4001, "Büyük Yazı Tipleri"
+4002, "Çok Büyük Yazı Tipleri"
+}
+
+STRINGTABLE
+{
+5000, "Lautus"
+5001, "Görmelik Biçim"
+5002, "ReactOS Vakfı"
+5003, "Pisarz, Luna Inspirat tabanlı"
+5004, "GNU/GPL 2.0 altında yayımlanmıştır, 2011"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "ReactOS İçin Görmelik Biçim"
+}

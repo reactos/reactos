@@ -20,7 +20,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
- * FILE:            lib/kernel32/misc/computername.c
+ * FILE:            dll/win32/kernel32/client/compname.c
  * PROGRAMER:       Eric Kohl
  */
 

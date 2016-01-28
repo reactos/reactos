@@ -2376,6 +2376,9 @@ NetUserDel(LPCWSTR servername,
         goto done;
     }
 
+    /* A successful delete invalidates the handle */
+    UserHandle = NULL;
+
 done:
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
@@ -3414,7 +3417,7 @@ NetUserModalsGet(LPCWSTR servername,
             umi0 = (PUSER_MODALS_INFO_0)*bufptr;
 
             umi0->usrmod0_min_passwd_len = PasswordInfo->MinPasswordLength;
-            umi0->usrmod0_max_passwd_age = (ULONG)(PasswordInfo->MaxPasswordAge.QuadPart / 10000000);
+            umi0->usrmod0_max_passwd_age = (ULONG)(-PasswordInfo->MaxPasswordAge.QuadPart / 10000000);
             umi0->usrmod0_min_passwd_age =
                 DeltaTimeToSeconds(PasswordInfo->MinPasswordAge);
             umi0->usrmod0_force_logoff =
@@ -3427,10 +3430,6 @@ NetUserModalsGet(LPCWSTR servername,
 
             switch (ServerRoleInfo->DomainServerRole)
             {
-
-                    umi1->usrmod1_role = UAS_ROLE_STANDALONE;
-                    umi1->usrmod1_role = UAS_ROLE_MEMBER;
-
                 case DomainServerRolePrimary:
                     umi1->usrmod1_role = UAS_ROLE_PRIMARY;
                     break;

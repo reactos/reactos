@@ -20,7 +20,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Internal Objects
- * FILE:              subsystem/win32/win32k/eng/objects.h
+ * FILE:              win32ss/gdi/eng/engobjects.h
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
  *                 21/8/1999: Created
@@ -40,9 +40,14 @@
 ---------------------------------------------------------------------------*/
 
 /* EXtended CLip and Window Region Object */
+#ifdef __cplusplus
+typedef struct _XCLIPOBJ : _WNDOBJ
+{
+#else
 typedef struct _XCLIPOBJ
 {
   WNDOBJ;
+#endif
   PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
   RECTL   rclClipRgn;
   PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */

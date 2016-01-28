@@ -294,6 +294,7 @@ static HRESULT d3dx9_file_data_create(IDirectXFileObject *dxfile_object, ID3DXFi
 {
     struct d3dx9_file_data *object;
     IDirectXFileObject *data_object;
+    unsigned int children_array_size = 0;
     HRESULT ret;
 
     TRACE("dxfile_object %p, ret_iface %p.\n", dxfile_object, ret_iface);
@@ -316,6 +317,7 @@ static HRESULT d3dx9_file_data_create(IDirectXFileObject *dxfile_object, ID3DXFi
         if (SUCCEEDED(ret))
         {
             ret = IDirectXFileDataReference_Resolve(reference, &object->dxfile_data);
+            IUnknown_Release(reference);
             if (FAILED(ret))
             {
                 HeapFree(GetProcessHeap(), 0, object);
@@ -325,7 +327,7 @@ static HRESULT d3dx9_file_data_create(IDirectXFileObject *dxfile_object, ID3DXFi
         }
         else
         {
-            FIXME("Don't known what to do with binary object\n");
+            FIXME("Don't know what to do with binary object\n");
             HeapFree(GetProcessHeap(), 0, object);
             return E_FAIL;
         }
@@ -333,24 +335,47 @@ static HRESULT d3dx9_file_data_create(IDirectXFileObject *dxfile_object, ID3DXFi
 
     while (SUCCEEDED(ret = IDirectXFileData_GetNextObject(object->dxfile_data, &data_object)))
     {
-        if (object->children)
-            object->children = HeapReAlloc(GetProcessHeap(), 0, object->children, sizeof(ID3DXFileData*) * (object->nb_children + 1));
-        else
-            object->children = HeapAlloc(GetProcessHeap(), 0, sizeof(ID3DXFileData*));
-        if (!object->children)
+        if (object->nb_children >= children_array_size)
         {
-            ret = E_OUTOFMEMORY;
-            break;
+            ID3DXFileData **new_children;
+
+            if (object->children)
+            {
+                children_array_size *= 2;
+                new_children = HeapReAlloc(GetProcessHeap(), 0, object->children,
+                        sizeof(*object->children) * children_array_size);
+            }
+            else
+            {
+                children_array_size = 4;
+                new_children = HeapAlloc(GetProcessHeap(), 0, sizeof(*object->children) * children_array_size);
+            }
+            if (!new_children)
+            {
+                ret = E_OUTOFMEMORY;
+                break;
+            }
+            object->children = new_children;
         }
-        if (FAILED(ret = d3dx9_file_data_create(data_object, &object->children[object->nb_children])))
+        ret = d3dx9_file_data_create(data_object, &object->children[object->nb_children]);
+        IUnknown_Release(data_object);
+        if (FAILED(ret))
             break;
         object->nb_children++;
     }
-
     if (ret != DXFILEERR_NOMOREOBJECTS)
     {
         (&object->ID3DXFileData_iface)->lpVtbl->Release(&object->ID3DXFileData_iface);
         return ret;
+    }
+    if (object->children)
+    {
+        ID3DXFileData **new_children;
+
+        new_children = HeapReAlloc(GetProcessHeap(), 0, object->children,
+                sizeof(*object->children) * object->nb_children);
+        if (new_children)
+            object->children = new_children;
     }
 
     TRACE("Found %u children\n", object->nb_children);
@@ -530,6 +555,7 @@ static HRESULT WINAPI d3dx9_file_CreateEnumObject(ID3DXFile *iface, const void *
     DXFILELOADRESOURCE dxfile_resource;
     DXFILELOADMEMORY dxfile_memory;
     IDirectXFileData *data_object;
+    unsigned children_array_size = 0;
     HRESULT ret;
 
     TRACE("iface %p, source %p, options %#x, enum_object %p.\n", iface, source, options, enum_object);
@@ -587,19 +613,43 @@ static HRESULT WINAPI d3dx9_file_CreateEnumObject(ID3DXFile *iface, const void *
     /* Fill enum object with top level data objects */
     while (SUCCEEDED(ret = IDirectXFileEnumObject_GetNextDataObject(dxfile_enum_object, &data_object)))
     {
-        if (object->children)
-            object->children = HeapReAlloc(GetProcessHeap(), 0, object->children, sizeof(*object->children) * (object->nb_children + 1));
-        else
-            object->children = HeapAlloc(GetProcessHeap(), 0, sizeof(*object->children));
-        if (!object->children)
+        if (object->nb_children >= children_array_size)
         {
-            ret = E_OUTOFMEMORY;
-            break;
+            ID3DXFileData **new_children;
+
+            if (object->children)
+            {
+                children_array_size *= 2;
+                new_children = HeapReAlloc(GetProcessHeap(), 0, object->children,
+                        sizeof(*object->children) * children_array_size);
+            }
+            else
+            {
+                children_array_size = 4;
+                new_children = HeapAlloc(GetProcessHeap(), 0, sizeof(*object->children) * children_array_size);
+            }
+            if (!new_children)
+            {
+                ret = E_OUTOFMEMORY;
+                break;
+            }
+            object->children = new_children;
         }
-        if (FAILED(ret = d3dx9_file_data_create((IDirectXFileObject*)data_object,
-                &object->children[object->nb_children])))
+        ret = d3dx9_file_data_create((IDirectXFileObject*)data_object,
+                &object->children[object->nb_children]);
+        IUnknown_Release(data_object);
+        if (FAILED(ret))
             break;
         object->nb_children++;
+    }
+    if (object->children)
+    {
+        ID3DXFileData **new_children;
+
+        new_children = HeapReAlloc(GetProcessHeap(), 0, object->children,
+                sizeof(*object->children) * object->nb_children);
+        if (new_children)
+            object->children = new_children;
     }
 
     IDirectXFileEnumObject_Release(dxfile_enum_object);

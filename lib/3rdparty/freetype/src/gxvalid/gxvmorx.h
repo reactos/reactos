@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common definition for morx table (specification).     */
 /*                                                                         */
-/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
+/*  Copyright 2005-2015 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,27 +39,27 @@
   FT_LOCAL( void )
   gxv_morx_subtable_type0_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid );
+                                    GXV_Validator  gxvalid );
 
   FT_LOCAL( void )
   gxv_morx_subtable_type1_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid );
+                                    GXV_Validator  gxvalid );
 
   FT_LOCAL( void )
   gxv_morx_subtable_type2_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid );
+                                    GXV_Validator  gxvalid );
 
   FT_LOCAL( void )
   gxv_morx_subtable_type4_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid );
+                                    GXV_Validator  gxvalid );
 
   FT_LOCAL( void )
   gxv_morx_subtable_type5_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid );
+                                    GXV_Validator  gxvalid );
 
 
 #endif /* __GXVMORX_H__ */

@@ -297,7 +297,7 @@ _FUNCTION_ {
 		    if (!seendigit) break; /* not a valid number */
                     st = 1;
                     if (!suppress) {
-#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -cur : cur
+#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -(LONGLONG)cur : cur
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
 			else if (l_prefix) _SET_NUMBER_(LONG);
 			else if (h_prefix == 1) _SET_NUMBER_(short int);
@@ -408,10 +408,13 @@ _FUNCTION_ {
                     _internal_handle_float(negative, exp, suppress, d, l_prefix || L_prefix, &ap);
                     st = 1;
 #else
+#ifdef _M_ARM
+                    DbgBreakPoint();
+#else
                     fpcontrol = _control87(0, 0);
                     _control87(MSVCRT__EM_DENORMAL|MSVCRT__EM_INVALID|MSVCRT__EM_ZERODIVIDE
                             |MSVCRT__EM_OVERFLOW|MSVCRT__EM_UNDERFLOW|MSVCRT__EM_INEXACT, 0xffffffff);
-
+#endif
                     negexp = (exp < 0);
                     if(negexp)
                         exp = -exp;
@@ -423,9 +426,11 @@ _FUNCTION_ {
                         expcnt = expcnt*expcnt;
                     }
                     cur = (negexp ? d/cur : d*cur);
-
+#ifdef _M_ARM
+                    DbgBreakPoint();
+#else
                     _control87(fpcontrol, 0xffffffff);
-
+#endif
                     st = 1;
                     if (!suppress) {
                         if (L_prefix) _SET_NUMBER_(double);
@@ -640,7 +645,7 @@ _FUNCTION_ {
 			    if ((*(format - 1)) < *(format + 1))
 				RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
 			    else
-				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));			      
+				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));
 			    format++;
 			} else
 			    RtlSetBits(&bitMask, *format, 1);

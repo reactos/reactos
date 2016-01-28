@@ -18,11 +18,11 @@
 @ stdcall D3DXCompileShaderFromResourceW(ptr wstr ptr ptr str str long ptr ptr ptr) d3dx9_36.D3DXCompileShaderFromResourceW
 @ stdcall D3DXComputeBoundingBox(ptr long long ptr ptr) d3dx9_36.D3DXComputeBoundingBox
 @ stdcall D3DXComputeBoundingSphere(ptr long long ptr ptr) d3dx9_36.D3DXComputeBoundingSphere
-@ stdcall D3DXComputeNormalMap(ptr ptr ptr long long long) d3dx9_36.D3DXComputeNormalMap
+@ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float) d3dx9_36.D3DXComputeNormalMap
 @ stdcall D3DXComputeNormals(ptr ptr) d3dx9_36.D3DXComputeNormals
 @ stdcall D3DXComputeTangent(ptr long long long long ptr) d3dx9_36.D3DXComputeTangent
 @ stdcall D3DXComputeTangentFrame(ptr long) d3dx9_36.D3DXComputeTangentFrame
-@ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr long long long ptr ptr) d3dx9_36.D3DXComputeTangentFrameEx
+@ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr) d3dx9_36.D3DXComputeTangentFrameEx
 @ stdcall D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXConcatenateMeshes
 @ stdcall D3DXConvertMeshSubsetToSingleStrip(ptr long long ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToSingleStrip
 @ stdcall D3DXConvertMeshSubsetToStrips(ptr long long ptr ptr ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToStrips
@@ -43,21 +43,21 @@
 @ stdcall D3DXCreateCubeTextureFromResourceExW(ptr long long long long long long long long long long ptr ptr ptr) d3dx9_36.D3DXCreateCubeTextureFromResourceExW
 @ stdcall D3DXCreateCubeTextureFromResourceW(ptr long ptr ptr) d3dx9_36.D3DXCreateCubeTextureFromResourceW
 @ stdcall D3DXCreateCylinder(ptr long long long long long ptr ptr) d3dx9_36.D3DXCreateCylinder
-@ stdcall D3DXCreateEffect(ptr ptr long ptr ptr long ptr ptr ptr) d3dx9_36.D3DXCreateEffect
+@ stdcall D3DXCreateEffect(ptr ptr long ptr ptr long ptr ptr ptr) D3DXCreateEffect25
 @ stdcall D3DXCreateEffectCompiler(ptr long ptr ptr long ptr ptr) d3dx9_36.D3DXCreateEffectCompiler
 @ stdcall D3DXCreateEffectCompilerFromFileA(str ptr ptr long ptr ptr) d3dx9_36.D3DXCreateEffectCompilerFromFileA
 @ stdcall D3DXCreateEffectCompilerFromFileW(wstr ptr ptr long ptr ptr) d3dx9_36.D3DXCreateEffectCompilerFromFileW
 @ stdcall D3DXCreateEffectCompilerFromResourceA(long str ptr ptr long ptr ptr) d3dx9_36.D3DXCreateEffectCompilerFromResourceA
 @ stdcall D3DXCreateEffectCompilerFromResourceW(long wstr ptr ptr long ptr ptr) d3dx9_36.D3DXCreateEffectCompilerFromResourceW
-@ stdcall D3DXCreateEffectEx(ptr ptr long ptr ptr str long ptr ptr ptr) d3dx9_36.D3DXCreateEffectEx
-@ stdcall D3DXCreateEffectFromFileA(ptr str ptr ptr long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromFileA
-@ stdcall D3DXCreateEffectFromFileExA(ptr str ptr ptr str long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromFileExA
-@ stdcall D3DXCreateEffectFromFileExW(ptr str ptr ptr str long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromFileExW
-@ stdcall D3DXCreateEffectFromFileW(ptr wstr ptr ptr long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromFileW
-@ stdcall D3DXCreateEffectFromResourceA(ptr long str ptr ptr long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromResourceA
-@ stdcall D3DXCreateEffectFromResourceExA(ptr long str ptr ptr str long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromResourceExA
-@ stdcall D3DXCreateEffectFromResourceExW(ptr long str ptr ptr str long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromResourceExW
-@ stdcall D3DXCreateEffectFromResourceW(ptr long wstr ptr ptr long ptr ptr ptr) d3dx9_36.D3DXCreateEffectFromResourceW
+@ stdcall D3DXCreateEffectEx(ptr ptr long ptr ptr str long ptr ptr ptr) D3DXCreateEffectEx25
+@ stdcall D3DXCreateEffectFromFileA(ptr str ptr ptr long ptr ptr ptr) D3DXCreateEffectFromFileA25
+@ stdcall D3DXCreateEffectFromFileExA(ptr str ptr ptr str long ptr ptr ptr) D3DXCreateEffectFromFileExA25
+@ stdcall D3DXCreateEffectFromFileExW(ptr str ptr ptr str long ptr ptr ptr) D3DXCreateEffectFromFileExW25
+@ stdcall D3DXCreateEffectFromFileW(ptr wstr ptr ptr long ptr ptr ptr) D3DXCreateEffectFromFileW25
+@ stdcall D3DXCreateEffectFromResourceA(ptr long str ptr ptr long ptr ptr ptr) D3DXCreateEffectFromResourceA25
+@ stdcall D3DXCreateEffectFromResourceExA(ptr long str ptr ptr str long ptr ptr ptr) D3DXCreateEffectFromResourceExA25
+@ stdcall D3DXCreateEffectFromResourceExW(ptr long str ptr ptr str long ptr ptr ptr) D3DXCreateEffectFromResourceExW25
+@ stdcall D3DXCreateEffectFromResourceW(ptr long wstr ptr ptr long ptr ptr ptr) D3DXCreateEffectFromResourceW25
 @ stdcall D3DXCreateEffectPool(ptr) d3dx9_36.D3DXCreateEffectPool
 @ stdcall D3DXCreateFontA(ptr long long long long long long long long long str ptr) d3dx9_36.D3DXCreateFontA
 @ stdcall D3DXCreateFontIndirectA(ptr ptr ptr) d3dx9_36.D3DXCreateFontIndirectA
@@ -72,7 +72,7 @@
 @ stdcall D3DXCreateNPatchMesh(ptr ptr) d3dx9_36.D3DXCreateNPatchMesh
 @ stdcall D3DXCreatePMeshFromStream(ptr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXCreatePMeshFromStream
 @ stdcall D3DXCreatePatchMesh(ptr long long long ptr ptr ptr) d3dx9_36.D3DXCreatePatchMesh
-@ stdcall D3DXCreatePolygon(ptr long long ptr ptr) d3dx9_36.D3DXCreatePolygon
+@ stdcall D3DXCreatePolygon(ptr float long ptr ptr) d3dx9_36.D3DXCreatePolygon
 @ stdcall D3DXCreatePRTBuffer(long long long ptr) d3dx9_36.D3DXCreatePRTBuffer
 @ stdcall D3DXCreatePRTBufferTex(long long long long ptr) d3dx9_36.D3DXCreatePRTBufferTex
 @ stdcall D3DXCreatePRTCompBuffer(long long long ptr ptr ptr ptr) d3dx9_36.D3DXCreatePRTCompBuffer
@@ -115,8 +115,8 @@
 @ stdcall D3DXCreateVolumeTextureFromResourceW(ptr long ptr ptr) d3dx9_36.D3DXCreateVolumeTextureFromResourceW
 @ stdcall D3DXDebugMute(long) d3dx9_36.D3DXDebugMute
 @ stdcall D3DXDeclaratorFromFVF(long ptr) d3dx9_36.D3DXDeclaratorFromFVF
-@ stdcall D3DXDisassembleEffect(ptr long ptr) d3dx9_36.D3DXDisassembleEffect
-@ stdcall D3DXDisassembleShader(ptr long ptr ptr) d3dx9_36.D3DXDisassembleShader
+@ stdcall D3DXDisassembleEffect(ptr long ptr) D3DXDisassembleEffect25
+@ stdcall D3DXDisassembleShader(ptr long str ptr) d3dx9_36.D3DXDisassembleShader
 @ stdcall D3DXFileCreate(ptr) d3dx9_36.D3DXFileCreate
 @ stdcall D3DXFillCubeTexture(ptr ptr ptr) d3dx9_36.D3DXFillCubeTexture
 @ stdcall D3DXFillCubeTextureTX(ptr ptr) d3dx9_36.D3DXFillCubeTextureTX
@@ -131,7 +131,7 @@
 @ stdcall D3DXFrameAppendChild(ptr ptr) d3dx9_36.D3DXFrameAppendChild
 @ stdcall D3DXFrameCalculateBoundingSphere(ptr ptr ptr) d3dx9_36.D3DXFrameCalculateBoundingSphere
 @ stdcall D3DXFrameDestroy(ptr ptr) d3dx9_36.D3DXFrameDestroy
-@ stdcall D3DXFrameFind(ptr ptr) d3dx9_36.D3DXFrameFind
+@ stdcall D3DXFrameFind(ptr str) d3dx9_36.D3DXFrameFind
 @ stdcall D3DXFrameNumNamedMatrices(ptr) d3dx9_36.D3DXFrameNumNamedMatrices
 @ stdcall D3DXFrameRegisterNamedMatrices(ptr ptr) d3dx9_36.D3DXFrameRegisterNamedMatrices
 @ stdcall D3DXFresnelTerm(float float) d3dx9_36.D3DXFresnelTerm
@@ -280,7 +280,7 @@
 @ stdcall D3DXSimplifyMesh(ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXSimplifyMesh
 @ stdcall D3DXSphereBoundProbe(ptr float ptr ptr) d3dx9_36.D3DXSphereBoundProbe
 @ stdcall D3DXSplitMesh(ptr ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSplitMesh
-@ stdcall D3DXTessellateNPatches(ptr ptr long long ptr ptr) d3dx9_36.D3DXTessellateNPatches
+@ stdcall D3DXTessellateNPatches(ptr ptr float long ptr ptr) d3dx9_36.D3DXTessellateNPatches
 @ stdcall D3DXTessellateRectPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateRectPatch
 @ stdcall D3DXTessellateTriPatch(ptr ptr ptr ptr ptr) d3dx9_36.D3DXTessellateTriPatch
 @ stdcall D3DXTriPatchSize(ptr ptr ptr) d3dx9_36.D3DXTriPatchSize

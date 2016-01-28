@@ -143,7 +143,7 @@ DELAY [/m]n\n\n\
   /m          specifiy than n are milliseconds\n\
               otherwise n are seconds\n"
     STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [drive:][path][filename]\n\
               Specifies drive, directory, and/or files to list.\n\n\
   /A          Displays files with specified attributes.\n\
@@ -162,6 +162,7 @@ DELAY [/m]n\n\n\
                G  Group directories first    -  Prefix to reverse order\n\
   /P          Pauses after each screenful of information.\n\
   /Q          Display the owner of the file.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Displays files in specified directory and all subdirectories.\n\
   /T          Controls which time field displayed or used for sorting\n\
   timefield   C  Creation\n\
@@ -496,7 +497,6 @@ title         new title\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
     STRING_REN_ERROR1 "MoveFile() failed. Error: %lu\n"
-    STRING_START_ERROR1 "No batch support at the moment!"
     STRING_TIME_ERROR1 "Invalid time."
     STRING_TYPE_ERROR1 "Invalid option '/%s'\n"
     STRING_WINDOW_ERROR1 "window not found"
@@ -521,9 +521,11 @@ title         new title\n"
     STRING_REPLACE_ERROR5 "Access denied - %s\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
-    STRING_VERSION_RUNVER " running on %s"
+    STRING_VERSION_RUNNING_ON "Running on: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file(s) copied\n"
     STRING_DELETE_WIPE "wiped"
     STRING_FOR_ERROR "bad variable specification."

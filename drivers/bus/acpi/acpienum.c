@@ -118,7 +118,7 @@ Bus_PlugInDevice (
 		index++;
 		temp[++index] = UNICODE_NULL;
 
-		pdoData->HardwareIDs  = ExAllocatePoolWithTag(NonPagedPool, index*sizeof(WCHAR), 'IPCA');
+		pdoData->HardwareIDs = ExAllocatePoolWithTag(NonPagedPool, index*sizeof(WCHAR), 'DpcA');
 
 
     if (!pdoData->HardwareIDs) {

@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2015 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,8 +35,8 @@
 /* Block size for string operations */
 #define STRING_BLOCK_SIZE 4096
 
-#define GET_SEGMENT_RPL(s)          ((s) & 3)
-#define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8)
+#define GET_SEGMENT_RPL(s)          ((s) & 3u)
+#define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8u)
 #define SEGMENT_TABLE_INDICATOR     (1 << 2)
 #define EXCEPTION_HAS_ERROR_CODE(x) (((x) == 8) || ((x) >= 10 && (x) <= 14))
 
@@ -44,7 +44,7 @@
 if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 {\
     Fast486Exception(State, FAST486_EXCEPTION_UD);\
-    return FALSE;\
+    return;\
 }
 
 #define TOGGLE_OPSIZE(x)\
@@ -69,10 +69,7 @@ if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 #define GET_ADDR_PDE(x) ((x) >> 22)
 #define GET_ADDR_PTE(x) (((x) >> 12) & 0x3FF)
 #define INVALID_TLB_FIELD 0xFFFFFFFF
-
-#ifndef PAGE_SIZE
-#define PAGE_SIZE   4096
-#endif
+#define NUM_TLB_ENTRIES 0x100000
 
 typedef struct _FAST486_MOD_REG_RM
 {
@@ -85,7 +82,14 @@ typedef struct _FAST486_MOD_REG_RM
     };
 } FAST486_MOD_REG_RM, *PFAST486_MOD_REG_RM;
 
-#pragma pack(push, 1)
+typedef enum _FAST486_TASK_SWITCH_TYPE
+{
+    FAST486_TASK_JUMP,
+    FAST486_TASK_CALL,
+    FAST486_TASK_RETURN
+} FAST486_TASK_SWITCH_TYPE, *PFAST486_TASK_SWITCH_TYPE;
+
+#include <pshpack1.h>
 
 typedef union _FAST486_PAGE_DIR
 {
@@ -128,11 +132,12 @@ typedef union _FAST486_PAGE_TABLE
 
 C_ASSERT(sizeof(FAST486_PAGE_DIR) == sizeof(ULONG));
 
-#pragma pack(pop)
+#include <poppack.h>
 
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
+FASTCALL
 Fast486ReadMemory
 (
     PFAST486_STATE State,
@@ -144,6 +149,7 @@ Fast486ReadMemory
 );
 
 BOOLEAN
+FASTCALL
 Fast486WriteMemory
 (
     PFAST486_STATE State,
@@ -154,12 +160,11 @@ Fast486WriteMemory
 );
 
 BOOLEAN
-Fast486InterruptInternal
+FASTCALL
+Fast486PerformInterrupt
 (
     PFAST486_STATE State,
-    USHORT SegmentSelector,
-    ULONG Offset,
-    ULONG GateType
+    UCHAR Number
 );
 
 VOID
@@ -169,6 +174,24 @@ Fast486ExceptionWithErrorCode
     PFAST486_STATE State,
     FAST486_EXCEPTIONS ExceptionCode,
     ULONG ErrorCode
+);
+
+BOOLEAN
+FASTCALL
+Fast486TaskSwitch
+(
+    PFAST486_STATE State,
+    FAST486_TASK_SWITCH_TYPE Type,
+    USHORT Selector
+);
+
+BOOLEAN
+FASTCALL
+Fast486CallGate
+(
+    PFAST486_STATE State,
+    PFAST486_CALL_GATE Gate,
+    BOOLEAN Call
 );
 
 /* INLINED FUNCTIONS **********************************************************/

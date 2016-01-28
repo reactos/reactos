@@ -2,18 +2,12 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Bit blit functions
- * FILE:             subsys/win32k/objects/bitblt.c
+ * FILE:             win32ss/gdi/ntgdi/bitblt.c
  * PROGRAMER:        Unknown
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(GdiBlt);
-
-#define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
-#define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
-
-#define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
-#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
 BOOL APIENTRY
 NtGdiAlphaBlend(
@@ -157,13 +151,13 @@ NtGdiBitBlt(
     HDC hDCSrc,
     INT XSrc,
     INT YSrc,
-    DWORD ROP,
+    DWORD dwRop,
     IN DWORD crBackColor,
     IN FLONG fl)
 {
-    DWORD dwTRop;
 
-    if (ROP & CAPTUREBLT)
+    if (dwRop & CAPTUREBLT)
+    {
        return NtGdiStretchBlt(hDCDest,
                               XDest,
                               YDest,
@@ -174,10 +168,11 @@ NtGdiBitBlt(
                               YSrc,
                               Width,
                               Height,
-                              ROP,
+                              dwRop,
                               crBackColor);
+    }
 
-    dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+    dwRop = dwRop & ~(NOMIRRORBITMAP|CAPTUREBLT);
 
     /* Forward to NtGdiMaskBlt */
     // TODO: What's fl for? LOL not to send this to MaskBit!
@@ -192,7 +187,7 @@ NtGdiBitBlt(
                         NULL,
                         0,
                         0,
-                        dwTRop,
+                        MAKEROP4(dwRop, dwRop),
                         crBackColor);
 }
 
@@ -316,7 +311,7 @@ NtGdiMaskBlt(
     HBITMAP hbmMask,
     INT xMask,
     INT yMask,
-    DWORD dwRop,
+    DWORD dwRop4,
     IN DWORD crBackColor)
 {
     PDC DCDest;
@@ -330,51 +325,44 @@ NtGdiMaskBlt(
     BOOL Status = FALSE;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
-    BOOL UsesSource = ROP_USES_SOURCE(dwRop);
-    BOOL UsesMask;
+    BOOL UsesSource;
+    ROP4 rop4;
 
-    FIXUP_ROP(dwRop);
+    rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
 
-    UsesMask = ROP_USES_MASK(dwRop);
-
-    //DPRINT1("dwRop : 0x%08x\n", dwRop);
+    UsesSource = ROP4_USES_SOURCE(rop4);
     if (!hdcDest || (UsesSource && !hdcSrc))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    /* Take care of mask bitmap */
-    if(hbmMask)
+    /* Check if we need a mask and have a mask bitmap */
+    if (ROP4_USES_MASK(rop4) && (hbmMask != NULL))
     {
+        /* Reference the mask bitmap */
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
-        if(!psurfMask)
+        if (psurfMask == NULL)
         {
             EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
-    }
 
-    if(UsesMask)
-    {
-        if(!psurfMask)
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-        if(gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
+        /* Make sure the mask bitmap is 1 BPP */
+        if (gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             SURFACE_ShareUnlockSurface(psurfMask);
             return FALSE;
         }
     }
-    else if(psurfMask)
+    else
     {
-        WARN("Getting Mask bitmap without needing it?\n");
-        SURFACE_ShareUnlockSurface(psurfMask);
+        /* We use NULL, if we need a mask, the Eng function will take care of
+           that and use the brushobject to get a mask */
         psurfMask = NULL;
     }
+
     MaskPoint.x = xMask;
     MaskPoint.y = yMask;
 
@@ -494,7 +482,7 @@ NtGdiMaskBlt(
                           &MaskPoint,
                           &DCDest->eboFill.BrushObject,
                           &DCDest->dclevel.pbrFill->ptOrigin,
-                          ROP_TO_ROP4(dwRop));
+                          rop4);
 
     if (UsesSource)
         EXLATEOBJ_vCleanup(&exlo);
@@ -529,7 +517,8 @@ NtGdiPlgBlt(
     return FALSE;
 }
 
-BOOL APIENTRY
+BOOL
+NTAPI
 GreStretchBltMask(
     HDC hDCDest,
     INT XOriginDest,
@@ -541,7 +530,7 @@ GreStretchBltMask(
     INT YOriginSrc,
     INT WidthSrc,
     INT HeightSrc,
-    DWORD ROP,
+    DWORD dwRop4,
     IN DWORD dwBackColor,
     HDC hDCMask,
     INT XOriginMask,
@@ -564,10 +553,12 @@ GreStretchBltMask(
     POINTL BrushOrigin;
     BOOL UsesSource;
     BOOL UsesMask;
+    ROP4 rop4;
 
-    FIXUP_ROP(ROP);
-    UsesSource = ROP_USES_SOURCE(ROP);
-    UsesMask = ROP_USES_MASK(ROP);
+    rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
+
+    UsesSource = ROP4_USES_SOURCE(rop4);
+    UsesMask = ROP4_USES_MASK(rop4);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -705,7 +696,7 @@ GreStretchBltMask(
                               BitmapMask ? &MaskPoint : NULL,
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
-                              ROP_TO_ROP4(ROP));
+                              rop4);
     if (UsesSource)
     {
         EXLATEOBJ_vCleanup(&exlo);
@@ -739,10 +730,10 @@ NtGdiStretchBlt(
     INT YOriginSrc,
     INT WidthSrc,
     INT HeightSrc,
-    DWORD ROP,
+    DWORD dwRop3,
     IN DWORD dwBackColor)
 {
-    DWORD dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+    dwRop3 = dwRop3 & ~(NOMIRRORBITMAP|CAPTUREBLT);
 
     return GreStretchBltMask(
                 hDCDest,
@@ -755,7 +746,7 @@ NtGdiStretchBlt(
                 YOriginSrc,
                 WidthSrc,
                 HeightSrc,
-                dwTRop,
+                MAKEROP4(dwRop3 & 0xFF0000, dwRop3),
                 dwBackColor,
                 NULL,
                 0,
@@ -770,7 +761,7 @@ IntPatBlt(
     INT YLeft,
     INT Width,
     INT Height,
-    DWORD dwRop,
+    DWORD dwRop3,
     PEBRUSHOBJ pebo)
 {
     RECTL DestRect;
@@ -782,8 +773,6 @@ IntPatBlt(
     ASSERT(pebo);
     pbrush = pebo->pbrush;
     ASSERT(pbrush);
-
-    FIXUP_ROP(dwRop);
 
     if (pbrush->flAttrs & BR_IS_NULL)
     {
@@ -830,18 +819,17 @@ IntPatBlt(
 
     psurf = pdc->dclevel.pSurface;
 
-    ret = IntEngBitBlt(
-        &psurf->SurfObj,
-        NULL,
-        NULL,
-        &pdc->co.ClipObj,
-        NULL,
-        &DestRect,
-        NULL,
-        NULL,
-        &pebo->BrushObject,
-        &BrushOrigin,
-        ROP_TO_ROP4(dwRop));
+    ret = IntEngBitBlt(&psurf->SurfObj,
+                       NULL,
+                       NULL,
+                       &pdc->co.ClipObj,
+                       NULL,
+                       &DestRect,
+                       NULL,
+                       NULL,
+                       &pebo->BrushObject,
+                       &BrushOrigin,
+                       WIN32_ROP3_TO_ENG_ROP4(dwRop3));
 
     DC_vFinishBlit(pdc, NULL);
 
@@ -919,15 +907,14 @@ NtGdiPatBlt(
     BOOL bResult;
     PDC pdc;
 
-    /* Mask away everything except foreground rop index */
-    dwRop = dwRop & 0x00FF0000;
-    dwRop |= dwRop << 8;
+    /* Convert the ROP3 to a ROP4 */
+    dwRop = MAKEROP4(dwRop & 0xFF0000, dwRop);
 
     /* Check if the rop uses a source */
-    if (ROP_USES_SOURCE(dwRop))
+    if (WIN32_ROP4_USES_SOURCE(dwRop))
     {
         /* This is not possible */
-        return 0;
+        return FALSE;
     }
 
     /* Lock the DC */
@@ -946,7 +933,7 @@ NtGdiPatBlt(
         return TRUE;
     }
 
-    /* Update the fill brush, if neccessary */
+    /* Update the fill brush, if necessary */
     if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(pdc);
 
@@ -1010,6 +997,328 @@ NtGdiPolyPatBlt(
     return Ret;
 }
 
+static
+BOOL
+FASTCALL
+REGION_LPTODP(
+    _In_ PDC pdc,
+    _Inout_ PREGION prgnDest,
+    _In_ PREGION prgnSrc)
+{
+    if (IntGdiCombineRgn(prgnDest, prgnSrc, NULL, RGN_COPY) == ERROR)
+        return FALSE;
+
+    return REGION_bXformRgn(prgnDest, DC_pmxWorldToDevice(pdc));
+}
+
+BOOL
+APIENTRY
+IntGdiBitBltRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn,
+    _In_opt_ BRUSHOBJ *pbo,
+    _In_opt_ POINTL *pptlBrush,
+    _In_ ROP4 rop4)
+{
+    PREGION prgnClip;
+    XCLIPOBJ xcoClip;
+    BOOL bResult;
+    NT_ASSERT((pdc != NULL) && (prgn != NULL));
+
+    /* Check if we have a surface */
+    if (pdc->dclevel.pSurface == NULL)
+    {
+        return TRUE;
+    }
+
+    /* Create an empty clip region */
+    prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (prgnClip == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Transform given region into device coordinates */
+    if (!REGION_LPTODP(pdc, prgnClip, prgn))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    /* Intersect with the system or RAO region (these are (atm) without DC-origin) */
+    if (pdc->prgnRao)
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
+    else
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
+
+    /* Now account for the DC-origin */
+    if (!REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    /* Prepare the DC */
+    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
+
+    /* Initialize a clip object */
+    IntEngInitClipObj(&xcoClip);
+    IntEngUpdateClipRegion(&xcoClip,
+                           prgnClip->rdh.nCount,
+                           prgnClip->Buffer,
+                           &prgnClip->rdh.rcBound);
+
+    /* Call the Eng or Drv function */
+    bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
+                           NULL,
+                           NULL,
+                           &xcoClip.ClipObj,
+                           NULL,
+                           &prgnClip->rdh.rcBound,
+                           NULL,
+                           NULL,
+                           pbo,
+                           pptlBrush,
+                           rop4);
+
+    /* Cleanup */
+    DC_vFinishBlit(pdc, NULL);
+    REGION_Delete(prgnClip);
+    IntEngFreeClipResources(&xcoClip);
+
+    /* Return the result */
+    return bResult;
+}
+
+static
+BOOL
+IntGdiFillRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn,
+    _In_opt_ PBRUSH pbrFill)
+{
+    PREGION prgnClip;
+    XCLIPOBJ xcoClip;
+    EBRUSHOBJ eboFill;
+    BRUSHOBJ *pbo;
+    BOOL bRet;
+    DWORD rop2Fg;
+    MIX mix;
+    NT_ASSERT((pdc != NULL) && (prgn != NULL));
+
+    if (pdc->dclevel.pSurface == NULL)
+    {
+        return TRUE;
+    }
+
+    prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (prgnClip == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Transform region into device coordinates */
+    if (!REGION_LPTODP(pdc, prgnClip, prgn))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    /* Intersect with the system or RAO region (these are (atm) without DC-origin) */
+    if (pdc->prgnRao)
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
+    else
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
+
+    /* Now account for the DC-origin */
+    if (!REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    IntEngInitClipObj(&xcoClip);
+    IntEngUpdateClipRegion(&xcoClip,
+                           prgnClip->rdh.nCount,
+                           prgnClip->Buffer,
+                           &prgnClip->rdh.rcBound );
+
+    /* Get the FG rop and create a MIX based on the BK mode */
+    rop2Fg = FIXUP_ROP2(pdc->pdcattr->jROP2);
+    mix = rop2Fg | (pdc->pdcattr->jBkMode == OPAQUE ? rop2Fg : R2_NOP) << 8;
+
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
+
+    /* Check if we have a fill brush */
+    if (pbrFill != NULL)
+    {
+        /* Initialize the brush object */
+        /// \todo Check parameters
+        EBRUSHOBJ_vInit(&eboFill, pbrFill, pdc->dclevel.pSurface, 0x00FFFFFF, 0, NULL);
+        pbo = &eboFill.BrushObject;
+    }
+    else
+    {
+        /* Update the fill brush if needed */
+        if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+            DC_vUpdateFillBrush(pdc);
+
+        /* Use the DC brush object */
+        pbo = &pdc->eboFill.BrushObject;
+    }
+
+    /* Call the internal function */
+    bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
+                       &xcoClip.ClipObj,
+                       pbo,
+                       &pdc->pdcattr->ptlBrushOrigin,
+                       mix);
+
+    DC_vFinishBlit(pdc, NULL);
+    REGION_Delete(prgnClip);
+    IntEngFreeClipResources(&xcoClip);
+
+    // Fill the region
+    return bRet;
+}
+
+BOOL
+FASTCALL
+IntGdiPaintRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn)
+{
+    return IntGdiFillRgn(pdc, prgn, NULL);
+}
+
+BOOL
+APIENTRY
+NtGdiFillRgn(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HBRUSH hbrush)
+{
+    PDC pdc;
+    PREGION prgn;
+    PBRUSH pbrFill;
+    BOOL bResult;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        ERR("Failed to lock hdc %p\n", hdc);
+        return FALSE;
+    }
+
+    /* Check if the DC has no surface (empty mem or info DC) */
+    if (pdc->dclevel.pSurface == NULL)
+    {
+        DC_UnlockDc(pdc);
+        return TRUE;
+    }
+
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
+    if (prgn == NULL)
+    {
+        ERR("Failed to lock hrgn %p\n", hrgn);
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    /* Lock the brush */
+    pbrFill = BRUSH_ShareLockBrush(hbrush);
+    if (pbrFill == NULL)
+    {
+        ERR("Failed to lock hbrush %p\n", hbrush);
+        REGION_UnlockRgn(prgn);
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    /* Call the internal function */
+    bResult = IntGdiFillRgn(pdc, prgn, pbrFill);
+
+    /* Cleanup locks */
+    BRUSH_ShareUnlockBrush(pbrFill);
+    REGION_UnlockRgn(prgn);
+    DC_UnlockDc(pdc);
+
+    return bResult;
+}
+
+BOOL
+APIENTRY
+NtGdiFrameRgn(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HBRUSH hbrush,
+    _In_ INT xWidth,
+    _In_ INT yHeight)
+{
+    HRGN hrgnFrame;
+    BOOL bResult;
+
+    hrgnFrame = GreCreateFrameRgn(hrgn, xWidth, yHeight);
+    if (hrgnFrame == NULL)
+    {
+        return FALSE;
+    }
+
+    bResult = NtGdiFillRgn(hdc, hrgnFrame, hbrush);
+
+    GreDeleteObject(hrgnFrame);
+    return bResult;
+}
+
+BOOL
+APIENTRY
+NtGdiInvertRgn(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn)
+{
+    BOOL bResult;
+    PDC pdc;
+    PREGION prgn;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Check if the DC has no surface (empty mem or info DC) */
+    if (pdc->dclevel.pSurface == NULL)
+    {
+        /* Nothing to do, Windows returns TRUE! */
+        DC_UnlockDc(pdc);
+        return TRUE;
+    }
+
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
+    if (prgn == NULL)
+    {
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    /* Call the internal function */
+    bResult = IntGdiBitBltRgn(pdc,
+                              prgn,
+                              NULL, // pbo
+                              NULL, // pptlBrush,
+                              ROP4_DSTINVERT);
+
+    /* Unlock the region and DC and return the result */
+    REGION_UnlockRgn(prgn);
+    DC_UnlockDc(pdc);
+    return bResult;
+}
 
 COLORREF
 APIENTRY
@@ -1062,6 +1371,7 @@ NtGdiSetPixel(
     EBRUSHOBJ_iSetSolidColor(pebo, iOldColor);
     pdc->pdcattr->ulDirty_ = ulDirty;
 
+    /// FIXME: we shouldn't dereference pSurface while the PDEV is not locked!
     /* Initialize an XLATEOBJ from the target surface to RGB */
     EXLATEOBJ_vInitialize(&exlo,
                           pdc->dclevel.pSurface->ppal,
@@ -1093,6 +1403,7 @@ NtGdiGetPixel(
     PDC pdc;
     ULONG ulRGBColor = CLR_INVALID;
     POINTL ptlSrc;
+    RECT rcDest;
     PSURFACE psurfSrc, psurfDest;
 
     /* Lock the DC */
@@ -1104,8 +1415,7 @@ NtGdiGetPixel(
     }
 
     /* Check if the DC has no surface (empty mem or info DC) */
-    psurfSrc = pdc->dclevel.pSurface;
-    if (psurfSrc == NULL)
+    if (pdc->dclevel.pSurface == NULL)
     {
         /* Fail! */
         goto leave;
@@ -1120,7 +1430,16 @@ NtGdiGetPixel(
     ptlSrc.x += pdc->ptlDCOrig.x;
     ptlSrc.y += pdc->ptlDCOrig.y;
 
+    rcDest.left = x;
+    rcDest.top = y;
+    rcDest.right = x + 1;
+    rcDest.bottom = y + 1;
+
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
+
     /* Check if the pixel is outside the surface */
+    psurfSrc = pdc->dclevel.pSurface;
     if ((ptlSrc.x >= psurfSrc->SurfObj.sizlBitmap.cx) ||
         (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy))
     {
@@ -1133,6 +1452,7 @@ NtGdiGetPixel(
                                      1,
                                      1,
                                      BMF_32BPP,
+                                     0,
                                      0,
                                      0,
                                      &ulRGBColor);
@@ -1165,7 +1485,9 @@ NtGdiGetPixel(
     }
 
 leave:
+
     /* Unlock the DC */
+    DC_vFinishBlit(pdc, NULL);
     DC_UnlockDc(pdc);
 
     /* Return the new RGB color or -1 on failure */

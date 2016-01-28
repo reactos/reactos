@@ -15,7 +15,7 @@ USED_COMPONENT  = {}
 KNOWN_COMPONENT = {}
 
 SRC_FILE_DIRS   = [ "src" ]
-TRACE_DEF_FILES = [ "include/internal/fttrace.h" ]
+TRACE_DEF_FILES = [ "include/freetype/internal/fttrace.h" ]
 
 
 # --------------------------------------------------------------

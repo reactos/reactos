@@ -52,6 +52,13 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define SYMBOLIC_LINK_ALL_ACCESS                STANDARD_RIGHTS_REQUIRED | 0x0001
 #endif
 
+#ifdef NTOS_MODE_USER
+
+/* File System Attributes Flags */
+#define FILE_READ_ONLY_VOLUME 0x00080000
+
+#endif
+
 //
 // NtCreateFile Result Flags
 //
@@ -620,6 +627,13 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION
     ULONG FileAttributes;
     ULONG ReparseTag;
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
+typedef struct _FILE_TRACKING_INFORMATION
+{
+    HANDLE DestinationFile;
+    ULONG ObjectInformationLength;
+    CHAR ObjectInformation[1];
+} FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
 //
 // File System Information structures for NtQueryInformationFile

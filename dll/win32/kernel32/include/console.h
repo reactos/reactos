@@ -14,10 +14,6 @@
 #define HANDLE_CREATE_NEW_CONSOLE   (HANDLE)-2
 #define HANDLE_CREATE_NO_WINDOW     (HANDLE)-3
 
-// Enable (and then get rid of) this define when support for
-// console initialization handles is implemented in CONSRV.
-// #define USE_CONSOLE_INIT_HANDLES
-
 
 /* FUNCTION PROTOTYPES ********************************************************/
 

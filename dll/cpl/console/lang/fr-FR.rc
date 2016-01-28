@@ -144,7 +144,7 @@ BEGIN
     CONTROL "&Enregistrer les propriétés pour les prochaines fenêtres avec le même titre", IDC_RADIO_APPLY_ALL,
             "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 31, 207, 10
     PUSHBUTTON "OK", IDOK, 58, 58, 50, 14, WS_VISIBLE
-    PUSHBUTTON "Cancel", IDCANCEL, 114, 58, 50, 14, WS_VISIBLE
+    PUSHBUTTON "Annuler", IDCANCEL, 114, 58, 50, 14, WS_VISIBLE
 END
 
 STRINGTABLE

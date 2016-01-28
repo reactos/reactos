@@ -25,6 +25,8 @@
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
 	4 "The specified installation package could not be opened.  Please check the file path and try again."

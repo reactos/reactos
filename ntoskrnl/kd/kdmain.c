@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/kd/kdinit.c
+ * FILE:            ntoskrnl/kd/kdmain.c
  * PURPOSE:         Kernel Debugger Initialization
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -26,8 +26,8 @@ VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
 {
-	ULONG ComponentId;
-	ULONG Level;
+    ULONG ComponentId;
+    ULONG Level;
 } KD_COMPONENT_DATA;
 #define MAX_KD_COMPONENT_TABLE_ENTRIES 128
 KD_COMPONENT_DATA KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
@@ -74,6 +74,7 @@ KdpServiceDispatcher(ULONG Service,
             break;
         }
 
+#if defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
         /* Register a debug callback */
         case 'CsoR':
         {
@@ -90,6 +91,7 @@ KdpServiceDispatcher(ULONG Service,
             }
             break;
         }
+#endif
 
         /* Special  case for stack frame dumps */
         case 'DsoR':
@@ -98,7 +100,7 @@ KdpServiceDispatcher(ULONG Service,
             break;
         }
 
-#if KDBG
+#if defined(KDBG)
         /* Register KDBG CLI callback */
         case 'RbdK':
         {
@@ -189,13 +191,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     /* Check if this is an assertion failure */
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
     {
-        /* Warn about it */
-        DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
-                 (PVOID)Context->Eip);
-
-        /* Bump EIP to the instruction following the int 2C and return */
+        /* Bump EIP to the instruction following the int 2C */
         Context->Eip += 2;
-        return TRUE;
     }
 #endif
 
@@ -380,7 +377,7 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
         Level = 1 << Level;
 
     /* Check if it is not the default component */
-    if (ComponentId != DPFLTR_DEFAULT_ID)
+    if (ComponentId != MAXULONG)
     {
         /* No, search for an existing entry in the table */
         for (i = 0; i < KdComponentTableEntries; i++)
@@ -412,7 +409,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     Level &= ~DPFLTR_MASK;
 
     /* Check if it is the default component */
-    if (ComponentId == DPFLTR_DEFAULT_ID)
+    if (ComponentId == MAXULONG)
     {
         /* Yes, modify the default mask */
         if (State)

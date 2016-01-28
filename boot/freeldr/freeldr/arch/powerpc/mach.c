@@ -209,14 +209,14 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                 BiosMemoryMap[slots].Length = claimed[i] - last;
                 slots++;
             }
-            
+
             BiosMemoryMap[slots].Type = BiosMemoryUsable;
             BiosMemoryMap[slots].BaseAddress = claimed[i];
             BiosMemoryMap[slots].Length = 8 * 1024 * 1024;
-            
+
             total += BiosMemoryMap[slots].Length;
-            last = 
-                BiosMemoryMap[slots].BaseAddress + 
+            last =
+                BiosMemoryMap[slots].BaseAddress +
                 BiosMemoryMap[slots].Length;
             slots++;
             i++;
@@ -236,12 +236,12 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                i,
                (int)BiosMemoryMap[i].BaseAddress,
                (int)BiosMemoryMap[i].Length);
-            
+
     }
 
     mem_range_end = regdata[1];
 
-    printf( "Returning memory map (%d entries, %dk free, %dk total ram)\n", 
+    printf( "Returning memory map (%d entries, %dk free, %dk total ram)\n",
             slots, total / 1024, regdata[1] / 1024 );
 
     return slots;
@@ -313,10 +313,10 @@ VOID NarrowToWide(WCHAR *wide_name, char *name)
 
 /* Recursively copy the device tree into our representation
  * It'll be passed to HAL.
- * 
- * When NT was first done on PPC, it was on PReP hardware, which is very 
+ *
+ * When NT was first done on PPC, it was on PReP hardware, which is very
  * like PC hardware (really, just a PPC on a PC motherboard).  HAL can guess
- * the addresses of needed resources in this scheme as it can on x86.  
+ * the addresses of needed resources in this scheme as it can on x86.
  *
  * Most PPC hardware doesn't assign fixed addresses to hardware, which is
  * the problem that open firmware partially solves.  It allows hardware makers
@@ -327,8 +327,8 @@ VOID NarrowToWide(WCHAR *wide_name, char *name)
  * recording information from openfirmware to be treated as hints.
  */
 VOID OfwCopyDeviceTree
-(PCONFIGURATION_COMPONENT_DATA ParentKey, 
- char *name, 
+(PCONFIGURATION_COMPONENT_DATA ParentKey,
+ char *name,
  int innode,
  ULONG *BusNumber,
  ULONG *DiskController,
@@ -360,7 +360,7 @@ VOID OfwCopyDeviceTree
         proplen = ofw_getproplen(node, cur_name);
         if (proplen > 256 || proplen < 0)
         {
-            printf("Warning: not getting prop %s (too long: %d)\n", 
+            printf("Warning: not getting prop %s (too long: %d)\n",
                    cur_name, proplen);
             continue;
         }
@@ -369,7 +369,7 @@ VOID OfwCopyDeviceTree
         /* Get device type so we can examine it */
         if (!strcmp(cur_name, "device_type"))
             strcpy(devtype, (char *)data);
-        
+
         NarrowToWide(wide_name, cur_name);
         //RegSetValue(NewKey, wide_name, REG_BINARY, data, proplen);
 

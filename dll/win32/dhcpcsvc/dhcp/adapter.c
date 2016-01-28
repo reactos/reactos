@@ -22,6 +22,7 @@ PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
           &MaxSubKeys, &MaxSubKeyLen,
           NULL, NULL, NULL, NULL, NULL, NULL );
 
+    MaxSubKeyLen++;
     DH_DbgPrint(MID_TRACE,("MaxSubKeys: %d, MaxSubKeyLen %d\n",
                            MaxSubKeys, MaxSubKeyLen));
 
@@ -475,6 +476,9 @@ HANDLE StartAdapterDiscovery(VOID) {
                               FALSE,
                               NULL);
 
+    if (EventHandle == NULL)
+        return NULL;
+
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
@@ -483,7 +487,10 @@ HANDLE StartAdapterDiscovery(VOID) {
                                 NULL);
 
     if (ThreadHandle == NULL)
+    {
+        CloseHandle(EventHandle);
         return NULL;
+    }
 
     CloseHandle(ThreadHandle);
 

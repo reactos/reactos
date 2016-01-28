@@ -123,6 +123,7 @@ PVOID    MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAdd
 
 extern PVOID FrLdrDefaultHeap;
 extern PVOID FrLdrTempHeap;
+extern SIZE_T FrLdrImageSize;
 
 PVOID
 FrLdrHeapCreate(

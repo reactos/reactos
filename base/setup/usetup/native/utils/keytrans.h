@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/keytrans.h
+ * FILE:            base/setup/usetup/native/utils/keytrans.h
  * PURPOSE:         Keyboard translation functionality
  * PROGRAMMER:      Tinus
  */

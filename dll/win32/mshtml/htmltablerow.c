@@ -56,14 +56,14 @@ static ULONG WINAPI HTMLTableRow_Release(IHTMLTableRow *iface)
 static HRESULT WINAPI HTMLTableRow_GetTypeInfoCount(IHTMLTableRow *iface, UINT *pctinfo)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLTableRow_GetTypeInfo(IHTMLTableRow *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
             ppTInfo);
 }
 
@@ -72,7 +72,7 @@ static HRESULT WINAPI HTMLTableRow_GetIDsOfNames(IHTMLTableRow *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
             cNames, lcid, rgDispId);
 }
 
@@ -81,7 +81,7 @@ static HRESULT WINAPI HTMLTableRow_Invoke(IHTMLTableRow *iface, DISPID dispIdMem
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
             lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
@@ -161,8 +161,9 @@ static HRESULT WINAPI HTMLTableRow_put_bgColor(IHTMLTableRow *iface, VARIANT v)
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
 
-    nsAString_InitDepend(&val, V_BSTR(&v));
-    variant_to_nscolor(&v, &val);
+    if (!variant_to_nscolor(&v, &val))
+        return S_OK;
+
     nsres = nsIDOMHTMLTableRowElement_SetBgColor(This->nsrow, &val);
     nsAString_Finish(&val);
 
@@ -293,15 +294,41 @@ static HRESULT WINAPI HTMLTableRow_get_cells(IHTMLTableRow *iface, IHTMLElementC
 static HRESULT WINAPI HTMLTableRow_insertCell(IHTMLTableRow *iface, LONG index, IDispatch **row)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%d %p)\n", This, index, row);
-    return E_NOTIMPL;
+    nsIDOMHTMLElement *nselem;
+    HTMLElement *elem;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("(%p)->(%d %p)\n", This, index, row);
+    nsres = nsIDOMHTMLTableRowElement_InsertCell(This->nsrow, index, &nselem);
+    if(NS_FAILED(nsres)) {
+        ERR("Insert Cell at %d failed: %08x\n", index, nsres);
+        return E_FAIL;
+    }
+
+    hres = HTMLTableCell_Create(This->element.node.doc, nselem, &elem);
+    nsIDOMHTMLElement_Release(nselem);
+    if (FAILED(hres)) {
+        ERR("Create TableCell failed: %08x\n", hres);
+        return hres;
+    }
+
+    *row = (IDispatch *)&elem->IHTMLElement_iface;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTableRow_deleteCell(IHTMLTableRow *iface, LONG index)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%d)\n", This, index);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%d)\n", This, index);
+    nsres = nsIDOMHTMLTableRowElement_DeleteCell(This->nsrow, index);
+    if(NS_FAILED(nsres)) {
+        ERR("Delete Cell failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 static const IHTMLTableRowVtbl HTMLTableRowVtbl = {
@@ -361,13 +388,44 @@ static HRESULT HTMLTableRow_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
+static void HTMLTableRow_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLTableRow *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsrow)
+        note_cc_edge((nsISupports*)This->nsrow, "This->nstablerow", cb);
+}
+
+static void HTMLTableRow_unlink(HTMLDOMNode *iface)
+{
+    HTMLTableRow *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsrow) {
+        nsIDOMHTMLTableRowElement *nsrow = This->nsrow;
+
+        This->nsrow = NULL;
+        nsIDOMHTMLTableRowElement_Release(nsrow);
+    }
+}
+
 static const NodeImplVtbl HTMLTableRowImplVtbl = {
     HTMLTableRow_QI,
     HTMLElement_destructor,
     HTMLElement_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
-    HTMLElement_get_attr_col
+    HTMLElement_get_attr_col,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLTableRow_traverse,
+    HTMLTableRow_unlink
 };
 
 static const tid_t HTMLTableRow_iface_tids[] = {
@@ -398,10 +456,7 @@ HRESULT HTMLTableRow_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HT
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLTableRow_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableRowElement, (void**)&ret->nsrow);
-
-    /* Share nsrow reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nsrow == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

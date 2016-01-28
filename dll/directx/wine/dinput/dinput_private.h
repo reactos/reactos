@@ -79,6 +79,7 @@ extern const struct dinput_device joystick_linuxinput_device DECLSPEC_HIDDEN;
 extern const struct dinput_device joystick_osx_device DECLSPEC_HIDDEN;
 
 extern void check_dinput_hooks(LPDIRECTINPUTDEVICE8W) DECLSPEC_HIDDEN;
+extern void check_dinput_events(void) DECLSPEC_HIDDEN;
 typedef int (*DI_EVENT_PROC)(LPDIRECTINPUTDEVICE8A, WPARAM, LPARAM);
 
 extern void _copy_diactionformatAtoW(LPDIACTIONFORMATW, LPDIACTIONFORMATA) DECLSPEC_HIDDEN;

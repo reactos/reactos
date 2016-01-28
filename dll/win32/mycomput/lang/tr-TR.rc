@@ -1,0 +1,8 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_MANAGE "Yönet"
+END

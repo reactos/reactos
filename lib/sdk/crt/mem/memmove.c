@@ -1,7 +1,7 @@
 #include <string.h>
 
 /* NOTE: This code is duplicated in memcpy function */
-void * memmove(void *dest,const void *src,size_t count)
+void * __cdecl memmove(void *dest,const void *src,size_t count)
 {
     char *char_dest = (char *)dest;
     char *char_src = (char *)src;

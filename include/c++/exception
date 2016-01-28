@@ -3,6 +3,8 @@
 #ifndef __EXCEPTION__
 #define __EXCEPTION__
 
+#include <crtdefs.h>
+
 extern "C++" {
 
 class exception

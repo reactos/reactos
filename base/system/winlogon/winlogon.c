@@ -318,6 +318,10 @@ WinMain(
 
     hAppInstance = hInstance;
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
         ERR("WL: Could not register logon process\n");
@@ -356,6 +360,13 @@ WinMain(
         ExitProcess(1);
     }
 
+    if (!StartRpcServer())
+    {
+        ERR("WL: Could not start the RPC server\n");
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
+    }
+
     if (!StartServicesManager())
     {
         ERR("WL: Could not start services.exe\n");
@@ -372,6 +383,9 @@ WinMain(
 
     /* Wait for the LSA server */
     WaitForLsass();
+
+    /* Init Notifications */
+    InitNotifications();
 
     /* Load and initialize gina */
     if (!GinaInit(WLSession))
@@ -420,6 +434,8 @@ WinMain(
     }
 #endif
 
+    CallNotificationDlls(WLSession, StartupHandler);
+
     /* Create a hidden window to get SAS notifications */
     if (!InitializeSAS(WLSession))
     {
@@ -427,8 +443,8 @@ WinMain(
         ExitProcess(2);
     }
 
-    //DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
-    //DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
 
     /* Display logged out screen */
     WLSession->LogonState = STATE_INIT;
@@ -446,6 +462,8 @@ WinMain(
     else
         PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
 
+    (void)LoadLibraryW(L"sfc_os.dll");
+
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */
     NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED | 1);
@@ -456,6 +474,8 @@ WinMain(
         TranslateMessage(&Msg);
         DispatchMessageW(&Msg);
     }
+
+    CleanupNotifications();
 
     /* We never go there */
 

@@ -138,7 +138,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] 文件 ...\n\n\
 DELAY [/m]n\n\n\
   /m          指定 n 的单位使用毫秒，否则为秒。\n"
     STRING_DIR_HELP1 "DIR [驱动器:][路径][文件名] [/A[[:]属性]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]排序顺序]] [/P] [/Q] [/S] [/T[[:]时间字段]] [/W] [/X] [/4]\n\n\
+  [/O[[:]排序顺序]] [/P] [/Q] [/R] [/S] [/T[[:]时间字段]] [/W] [/X] [/4]\n\n\
   [驱动器:][路径][文件名]\n\
               指定要列表显示的驱动器、目录和/或文件。\n\n\
   /A          显示具有指定属性的文件。\n\
@@ -156,6 +156,7 @@ DELAY [/m]n\n\n\
                G  分组目录在前                    -  反转顺序的前缀\n\
   /P          在每屏幕信息输出后停顿。\n\
   /Q          显示文件的所有者。\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          显示指定目录和所有子目录中的文件。\n\
   /T          控制要显示或者用于排序的时间字段。\n\
   时间字段    C  创建时间\n\
@@ -465,7 +466,6 @@ RESTORE       恢复窗口\n\
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
     STRING_REN_ERROR1 "MoveFile() 失败。错误码：%lu\n"
-    STRING_START_ERROR1 "现在没有批处理支持！"
     STRING_TIME_ERROR1 "无效时间。"
     STRING_TYPE_ERROR1 "无效选项 '/%s'\n"
     STRING_WINDOW_ERROR1 "未找到窗口"
@@ -490,9 +490,11 @@ RESTORE       恢复窗口\n\
     STRING_REPLACE_ERROR5 "禁止访问 - %s\n"
     STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
     STRING_REPLACE_ERROR7 "扩展错误 32\n"
+    STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
     STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
-    STRING_VERSION_RUNVER " 在 %s 上运行"
+    STRING_VERSION_RUNNING_ON "在 上运行"
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d 个文件已复制\n"
     STRING_DELETE_WIPE "已擦除"
     STRING_FOR_ERROR "无效的变量指定。"

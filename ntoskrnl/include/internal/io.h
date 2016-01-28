@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/io.h
+* FILE:            ntoskrnl/include/internal/io.h
 * PURPOSE:         Internal header for the I/O Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
@@ -10,7 +10,7 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x01
+#define _IO_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -79,6 +79,11 @@
 // Unable to create symbolic link pointing to the RAM disk device
 //
 #define RD_SYMLINK_CREATE_FAILED 5
+
+//
+// Max traversal of reparse points for a single open in IoParseDevice
+//
+#define IOP_MAX_REPARSE_TRAVERSAL 0x20
 
 //
 // We can call the Ob Inlined API, it's the same thing
@@ -385,7 +390,7 @@ typedef struct _OPEN_PACKET
 typedef struct _LOAD_UNLOAD_PARAMS
 {
     NTSTATUS Status;
-    PUNICODE_STRING ServiceName;
+    PCUNICODE_STRING RegistryPath;
     WORK_QUEUE_ITEM WorkItem;
     KEVENT Event;
     PDRIVER_OBJECT DriverObject;
@@ -657,7 +662,6 @@ IoDestroyDriverList(
 );
 
 NTSTATUS
-INIT_FUNCTION
 IopInitPlugPlayEvents(VOID);
 
 NTSTATUS
@@ -1058,6 +1062,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
+                IN PCUNICODE_STRING ServiceName,
                 PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
@@ -1082,10 +1087,11 @@ IopLoadServiceModule(
     OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
-VOID
+NTSTATUS
 NTAPI
 IopLoadUnloadDriver(
-    IN OUT PLOAD_UNLOAD_PARAMS LoadParams
+    _In_opt_ PCUNICODE_STRING RegistryPath,
+    _Inout_ PDRIVER_OBJECT *DriverObject
 );
 
 NTSTATUS
@@ -1162,7 +1168,7 @@ IopDeleteFile(
 
 NTSTATUS
 NTAPI
-IopSecurityFile(
+IopGetSetSecurityObject(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
     IN PSECURITY_INFORMATION SecurityInformation,
@@ -1208,6 +1214,14 @@ IoChangeFileObjectFilterContext(
     IN BOOLEAN Define
 );
 
+VOID
+NTAPI
+IopDoNameTransmogrify(
+    IN PIRP Irp,
+    IN PFILE_OBJECT FileObject,
+    IN PREPARSE_DATA_BUFFER DataBuffer
+);
+
 //
 // I/O Timer Routines
 //
@@ -1230,6 +1244,17 @@ VOID
 NTAPI
 IopDeleteIoCompletion(
     PVOID ObjectBody
+);
+
+NTSTATUS
+NTAPI
+IoSetIoCompletion(
+    IN PVOID IoCompletion,
+    IN PVOID KeyContext,
+    IN PVOID ApcContext,
+    IN NTSTATUS IoStatus,
+    IN ULONG_PTR IoStatusInformation,
+    IN BOOLEAN Quota 
 );
 
 //
@@ -1275,6 +1300,8 @@ extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
 extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 extern PDRIVER_OBJECT IopRootDriverObject;
+extern KSPIN_LOCK IopDeviceRelationsSpinLock;
+extern LIST_ENTRY IopDeviceRelationsRequestList;
 
 //
 // Inlined Functions

@@ -1,0 +1,136 @@
+/*
+ * Copyright 2015 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef __WIDL__
+#define threading(model)
+#endif
+
+cpp_quote("#if 0")
+import "unknwn.idl";
+cpp_quote("#endif")
+
+interface IStream;
+
+/* FIXME: Add full declarations. */
+interface ICifComponent;
+interface IEnumCifComponents;
+interface ICifGroup;
+interface IEnumCifGroups;
+interface ICifMode;
+interface IEnumCifModes;
+
+typedef struct {
+    DWORD cbSize;
+    DWORD dwInstallSize;
+    DWORD dwWinDriveSize;
+    DWORD dwDownloadSize;
+    DWORD dwDependancySize;
+    DWORD dwInstallDriveReq;
+    DWORD dwWinDriveReq;
+    DWORD dwDownloadDriveReq;
+    char chWinDrive;
+    char chInstallDrive;
+    char chDownloadDrive;
+    DWORD dwTotalDownloadSize;
+} COMPONENT_SIZES;
+
+[
+    uuid(6e449688-c509-11cf-aafa-00aa00b6015c),
+    local
+]
+interface ICifFile : IUnknown
+{
+    HRESULT EnumComponents(IEnumCifComponents **enum_components, DWORD filter, void *pv);
+    HRESULT FindComponent(const char *id, ICifComponent **p);
+    HRESULT EnumGroups(IEnumCifGroups **enum_groups, DWORD filter, void *pv);
+    HRESULT FindGroup(const char *id, ICifGroup **p);
+    HRESULT EnumModes(IEnumCifModes **cuf_modes, DWORD filter, void *pv);
+    HRESULT FindMode(const char *id, ICifMode **p);
+    HRESULT GetDescription(char *desc, DWORD size);
+    HRESULT GetDetDlls(char **dlls, DWORD size);
+}
+
+[
+    uuid(6e449685-c509-11cf-aafa-00aa00b6015c),
+    local
+]
+interface IInstallEngineCallback : IUnknown
+{
+   HRESULT OnEngineStatusChange(DWORD status, DWORD substatus);
+   HRESULT OnStartInstall(DWORD dl_size, DWORD install_size);
+   HRESULT OnStartComponent(const char *id, DWORD dl_size, DWORD install_size, const char *string);
+   HRESULT OnComponentProgress(const char *id, DWORD phrase, const char *string,
+           const char *msg_string, ULONG progress, ULONG max);
+   HRESULT OnStopComponent(const char *id, HRESULT error, DWORD phrase, const char *string, DWORD status);
+   HRESULT OnStopInstall(HRESULT error, const char *error_string, DWORD status);
+   HRESULT OnEngineProblem(DWORD problem, LPDWORD action);
+}
+
+[
+    uuid(6e449684-c509-11cf-aafa-00aa00b6015c),
+    local
+]
+interface IInstallEngine : IUnknown
+{
+   HRESULT GetEngineStatus(DWORD *status);
+   HRESULT SetCifFile(const char *cab_name, const char *cif_name);
+   HRESULT DownloadComponents(DWORD flags);
+   HRESULT InstallComponents(DWORD flags);
+   HRESULT EnumInstallIDs(UINT index, char **id);
+   HRESULT EnumDownloadIDs(UINT index, char **id);
+   HRESULT IsComponentInstalled(const char *id, DWORD *status);
+   HRESULT RegisterInstallEngineCallback(IInstallEngineCallback *callback);
+   HRESULT UnregisterInstallEngineCallback();
+   HRESULT SetAction(const char *id, DWORD action, DWORD priority);
+   HRESULT GetSizes(const char *id, COMPONENT_SIZES *sizes);
+   HRESULT LaunchExtraCommand(const char *inf_name, const char *section);
+   HRESULT GetDisplayName(const char *id, const char *name);
+   HRESULT SetBaseUrl(const char *base_name);
+   HRESULT SetDownloadDir(const char *download_dir);
+   HRESULT SetInstallDrive(char drive);
+   HRESULT SetInstallOptions(DWORD flags);
+   HRESULT SetHWND(HWND hwnd);
+   HRESULT SetIStream(IStream *stream);
+   HRESULT Abort(DWORD flags);
+   HRESULT Suspend();
+   HRESULT Resume();
+}
+
+[
+    uuid(6e449689-c509-11cf-aafa-00aa00b6015c),
+    local
+]
+interface IInstallEngine2 : IInstallEngine
+{
+    HRESULT SetLocalCif(const char *cif);
+    HRESULT GetICifFile(ICifFile **cif_file);
+}
+
+[
+    helpstring("Microsoft Active Setup Engine"),
+    threading(apartment),
+    uuid(6e449686-c509-11cf-aafa-00aa00b6015c)
+]
+coclass InstallEngine { }
+
+[
+    helpstring("Download Site Manager"),
+    threading(apartment),
+    uuid(bfc880f1-7484-11d0-8309-00aa00b6015c)
+]
+coclass DownloadSiteMgr { }

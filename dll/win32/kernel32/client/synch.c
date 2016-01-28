@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/synch/wait.c
+ * FILE:            dll/win32/kernel32/client/synch.c
  * PURPOSE:         Wrappers for the NT Wait Implementation
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

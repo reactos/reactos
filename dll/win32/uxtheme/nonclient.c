@@ -352,7 +352,8 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     rcPart.top += 3 ;
 
     /* Draw the icon */
-    if(hIcon && !(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW))
+    if(hIcon && !(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW)
+             && !(pcontext->wi.dwExStyle & WS_EX_DLGMODALFRAME))
     {
         int IconHeight = GetSystemMetrics(SM_CYSMICON);
         int IconWidth = GetSystemMetrics(SM_CXSMICON);
@@ -512,11 +513,7 @@ ThemeDrawMenuItem(PDRAW_CONTEXT pcontext, HMENU Menu, int imenu)
 
     GetMenuItemRect(pcontext->hWnd, Menu, imenu, &Rect);
 
-#ifdef __REACTOS__
-    OffsetRect(&Rect, -pcontext->wi.rcClient.left, -pcontext->wi.rcClient.top);
-#else
     OffsetRect(&Rect, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-#endif
     
     SetBkColor(pcontext->hDC, GetSysColor(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
     SetTextColor(pcontext->hDC, GetSysColor(Item.fState & MF_GRAYED ? COLOR_GRAYTEXT : COLOR_MENUTEXT));
@@ -1073,7 +1070,13 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     {
     case WM_NCPAINT:
         return ThemeHandleNCPaint(hWnd, (HRGN)wParam);
+    //
+    // WM_NCUAHDRAWCAPTION : wParam are DC_* flags.
+    //
     case WM_NCUAHDRAWCAPTION:
+    //
+    // WM_NCUAHDRAWFRAME : wParam is HDC, lParam are DC_ACTIVE and or DC_REDRAWHUNGWND.
+    //
     case WM_NCUAHDRAWFRAME:
     case WM_NCACTIVATE:
         ThemeHandleNCPaint(hWnd, (HRGN)1);

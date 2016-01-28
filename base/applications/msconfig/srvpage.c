@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/srvpage.c
+ * FILE:        base/applications/msconfig/srvpage.c
  * PURPOSE:     Services page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
@@ -187,19 +187,16 @@ GetServices ( void )
                             return;
                         }
                     }
-                    if (pServiceFailureActions->cActions)
-                    {
-                        if (pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
-                        {
-                            LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
-                            item.pszText = szStatus;
-                            item.iSubItem = 1;
-                            SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }
-                    }
 
                     if (pServiceFailureActions != NULL)
                     {
+                        if (pServiceFailureActions->cActions && pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
+                        {
+                                LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
+                                item.pszText = szStatus;
+                                item.iSubItem = 1;
+                                SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                        }
                         HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
                         pServiceFailureActions = NULL;
                     }

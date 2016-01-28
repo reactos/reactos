@@ -37,6 +37,11 @@ extern "C" {
 #define MM_VPN_BITS_SIZE                  20
 
 //
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+
+//
 // Address of the shared user page
 //
 #define MM_SHARED_USER_DATA_VA 0x7FFE0000
@@ -175,6 +180,22 @@ typedef struct _MMPTE_HARDWARE
 //
 #define HARDWARE_PTE        HARDWARE_PTE_X86
 #define PHARDWARE_PTE       PHARDWARE_PTE_X86
+
+typedef struct _MMPTE
+{
+    union
+    {
+        ULONG_PTR Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    } u;
+} MMPTE, *PMMPTE,
+  MMPDE, *PMMPDE;
 
 #ifdef __cplusplus
 }; // extern "C"

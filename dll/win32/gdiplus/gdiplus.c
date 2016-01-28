@@ -389,12 +389,12 @@ BOOL lengthen_path(GpPath *path, INT len)
     if(path->datalen == 0){
         path->datalen = len * 2;
 
-        path->pathdata.Points = GdipAlloc(path->datalen * sizeof(PointF));
+        path->pathdata.Points = heap_alloc_zero(path->datalen * sizeof(PointF));
         if(!path->pathdata.Points)   return FALSE;
 
-        path->pathdata.Types = GdipAlloc(path->datalen);
+        path->pathdata.Types = heap_alloc_zero(path->datalen);
         if(!path->pathdata.Types){
-            GdipFree(path->pathdata.Points);
+            heap_free(path->pathdata.Points);
             return FALSE;
         }
     }
@@ -403,12 +403,10 @@ BOOL lengthen_path(GpPath *path, INT len)
         while(path->datalen - path->pathdata.Count < len)
             path->datalen *= 2;
 
-        path->pathdata.Points = HeapReAlloc(GetProcessHeap(), 0,
-            path->pathdata.Points, path->datalen * sizeof(PointF));
+        path->pathdata.Points = heap_realloc(path->pathdata.Points, path->datalen * sizeof(PointF));
         if(!path->pathdata.Points)  return FALSE;
 
-        path->pathdata.Types = HeapReAlloc(GetProcessHeap(), 0,
-            path->pathdata.Types, path->datalen);
+        path->pathdata.Types = heap_realloc(path->pathdata.Types, path->datalen);
         if(!path->pathdata.Types)   return FALSE;
     }
 
@@ -450,8 +448,8 @@ void delete_element(region_element* element)
         default:
             delete_element(element->elementdata.combine.left);
             delete_element(element->elementdata.combine.right);
-            GdipFree(element->elementdata.combine.left);
-            GdipFree(element->elementdata.combine.right);
+            heap_free(element->elementdata.combine.left);
+            heap_free(element->elementdata.combine.right);
             break;
     }
 }

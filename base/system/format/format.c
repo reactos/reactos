@@ -8,7 +8,7 @@
 #include <winbase.h>
 #include <winnls.h>
 #include <winuser.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
 
@@ -56,10 +56,10 @@ int LoadStringAndOem(HINSTANCE hInst,
 		UINT uID,
 		LPTSTR szStr,
 		int Siz
-)	
+)
 {
   TCHAR szTmp[RC_STRING_MAX_SIZE];
-  int res = LoadString(hInst, uID, szTmp, sizeof(szTmp)); 
+  int res = LoadString(hInst, uID, szTmp, sizeof(szTmp));
   CharToOem(szTmp, szStr);
   return(res);
 }

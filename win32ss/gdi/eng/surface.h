@@ -49,7 +49,7 @@ enum _SURFACEFLAGS
 //#define HOOK_FILLPATH             0x00000040
 //#define HOOK_STROKEANDFILLPATH    0x00000080
 //#define HOOK_LINETO               0x00000100
-//#define SHAREACCESS_SURFACE       0x00000200
+    SHAREACCESS_SURFACE       = 0x00000200,
 //#define HOOK_COPYBITS             0x00000400
 //#define REDIRECTION_SURFACE       0x00000800 // ?
 //#define HOOK_MOVEPANNING          0x00000800
@@ -82,13 +82,10 @@ enum _SURFACEFLAGS
 };
 
 #define BMF_POOLALLOC 0x100
-#define PDEV_SURFACE              0x80000000
 
 /*  Internal interface  */
 
 #define SURFACE_AllocSurfaceWithHandle()    ((PSURFACE) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP, sizeof(SURFACE)))
-#define SURFACE_FreeSurface(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_SURF_TYPE)
-#define SURFACE_FreeSurfaceByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 
 /* NOTE: Use shared locks! */
 #define  SURFACE_ShareLockSurface(hBMObj) \
@@ -124,6 +121,7 @@ SURFACE_AllocSurface(
     _In_ ULONG iFormat,
     _In_ ULONG fjBitmap,
     _In_opt_ ULONG cjWidth,
+    _In_opt_ ULONG cjBits,
     _In_opt_ PVOID pvBits);
 
 FORCEINLINE

@@ -28,6 +28,7 @@
 #define IDS_SHOWTABS    6
 
 #define MENU_POPUP      1
+#define MENU_WEBBROWSER 2
 
 #define IDB_HHTOOLBAR   1000
 /* IDB_HHTOOLBAR bitmaps: */
@@ -38,6 +39,13 @@
 #define HHTB_CONTRACT   4
 #define HHTB_EXPAND     5
 #define HHTB_NUMBITMAPS HHTB_EXPAND
+
+#define MIID_SELECTALL  10
+#define MIID_VIEWSOURCE 11
+#define MIID_PROPERTIES 12
+#define MIID_CUT        13
+#define MIID_COPY       14
+#define MIID_PASTE      15
 
 #define IDB_HHTREEVIEW  1001
 /* IDB_HHTREEVIEW bitmaps: */

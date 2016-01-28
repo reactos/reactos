@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        misc/stubs.c
+ * FILE:        dll/win32/msafd/misc/stubs.c
  * PURPOSE:     Stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -9,6 +9,9 @@
  */
 
 #include <msafd.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 INT
 WSPAPI
@@ -20,9 +23,9 @@ WSPAddressToString(
     IN OUT  LPDWORD lpdwAddressStringLength,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 
@@ -31,7 +34,7 @@ WSPAPI
 WSPCancelBlockingCall(
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }
@@ -45,9 +48,9 @@ WSPDuplicateSocket(
     OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 
@@ -61,7 +64,7 @@ WSPGetOverlappedResult(
     OUT LPDWORD lpdwFlags,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return FALSE;
 }
@@ -75,7 +78,7 @@ WSPGetQOSByName(
     OUT     LPQOS lpQOS,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return FALSE;
 }
@@ -94,7 +97,7 @@ WSPJoinLeaf(
     IN  DWORD dwFlags,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return (SOCKET)0;
 }
@@ -109,9 +112,9 @@ WSPStringToAddress(
     IN OUT  LPINT lpAddressLength,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
-    return 0;
+    return SOCKET_ERROR;
 }
 
 /* EOF */

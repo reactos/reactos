@@ -82,7 +82,7 @@ END
 
 106 DIALOGEX 6, 18, 255, 109
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Connection Complete"
+CAPTION "Połączenie aktywne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 97, 91, 60, 14
@@ -316,7 +316,7 @@ BEGIN
     DEFPUSHBUTTON "&Dzwoń", 1590, 10, 180, 60, 14, WS_GROUP
     PUSHBUTTON "Anuluj", 1591, 72, 180, 60, 14
     PUSHBUTTON "Wł&aściwości", 1107, 134, 180, 60, 14
-    PUSHBUTTON "&Help", 1592, 197, 180, 60, 14
+    PUSHBUTTON "&Pomoc", 1592, 197, 180, 60, 14
 END
 
 121 DIALOGEX 6, 18, 230, 131
@@ -329,7 +329,7 @@ BEGIN
     AUTOCHECKBOX "&Negocjacja typu linii", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
     AUTOCHECKBOX "&Użyj starego, zastrzeżonego protokołu", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
-    LTEXT "&Channels to use:", 1154, 16, 65, 100, 8, NOT WS_GROUP
+    LTEXT "Użyj &kanałów:", 1154, 16, 65, 100, 8, NOT WS_GROUP
     EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Włącz kompresję sprzętową", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
     PUSHBUTTON "OK", 1, 99, 109, 60, 14, WS_GROUP
@@ -1265,14 +1265,14 @@ END
 
 560 DIALOGEX 6, 18, 240, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Połączenie Wstępne"
+CAPTION "Połączenie wstępne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Tak", 6, 68, 68, 50, 14
     PUSHBUTTON "&Nie", 7, 125, 68, 50, 14
     ICON 32516, 1575, 7, 7, 20, 20
     LTEXT "", 1576, 40, 7, 190, 33
-    AUTOCHECKBOX "&Nie wyświetlaj więcej tego komunikatu", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Nie &wyświetlaj więcej tego komunikatu", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
 END
 
 567 DIALOGEX 0, 0, 317, 143
@@ -1630,7 +1630,7 @@ END
 
 1660 DIALOGEX 0, 0, 258, 78
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Internet Connection Firewall"
+CAPTION "Zapora połączenia internetowego"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, -1, 7, 7, 20, 20
@@ -1724,10 +1724,10 @@ END
 
 7033 DIALOGEX 0, 0, 220, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Wła"
+CAPTION "Właściwości protokołu przychodzącego"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "Allow &callers to access my local area network", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Zezwól dzwoniącym na dostęp do mojej sieci lokalnej", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
     PUSHBUTTON "Anuluj", 2, 151, 30, 60, 14
 END

@@ -281,7 +281,7 @@ KdInitSystem(IN ULONG BootPhase,
     KdDebuggerDataBlock.KernBase = (ULONG_PTR)KdVersionBlock.KernBase;
 
     /* Initialize the debugger if requested */
-    if ((EnableKd) && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
+    if (EnableKd && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
     {
         /* Now set our real KD routine */
         KiDebugRoutine = KdpTrap;
@@ -289,9 +289,18 @@ KdInitSystem(IN ULONG BootPhase,
         /* Check if we've already initialized our structures */
         if (!KdpDebuggerStructuresInitialized)
         {
-            /* Set the Debug Switch Routine and Retries*/
+            /* Set the Debug Switch Routine and Retries */
             KdpContext.KdpDefaultRetries = 20;
             KiDebugSwitchRoutine = KdpSwitchProcessor;
+
+            /* Initialize breakpoints owed flag and table */
+            KdpOweBreakpoint = FALSE;
+            for (i = 0; i < KD_BREAKPOINT_MAX; i++)
+            {
+                KdpBreakpointTable[i].Flags   = 0;
+                KdpBreakpointTable[i].DirectoryTableBase = 0;
+                KdpBreakpointTable[i].Address = NULL;
+            }
 
             /* Initialize the Time Slip DPC */
             KeInitializeDpc(&KdpTimeSlipDpc, KdpTimeSlipDpcRoutine, NULL);

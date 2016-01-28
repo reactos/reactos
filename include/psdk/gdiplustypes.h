@@ -54,6 +54,7 @@ extern "C" {
 typedef BOOL (CALLBACK * ImageAbort)(VOID *);
 typedef ImageAbort DrawImageAbort;
 typedef ImageAbort GetThumbnailImageAbort;
+typedef struct GdiplusAbort GdiplusAbort;
 
 typedef BOOL (CALLBACK * EnumerateMetafileProc)(EmfPlusRecordType,UINT,UINT,const BYTE*,VOID*);
 

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/sc/start.c
+ * FILE:        base/applications/sc/start.c
  * PURPOSE:     Start a service
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *

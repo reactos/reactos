@@ -2,6 +2,7 @@
  * Spanish language support
  *
  * Copyright 2010 José Rostagno
+ * Copyright 2014 Ismael Ferreras Morezuelas
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,5 +29,5 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_FAILED, "Fallo inicio Wordpad"
+    IDS_FAILED, "Se produjo un fallo al iniciar Wordpad."
 }

@@ -314,7 +314,7 @@ HRESULT WINAPI NdrDllUnregisterProxy(HMODULE hDll,
 
       strcpyW( keyname, interfaceW );
       format_clsid( keyname + strlenW(keyname), proxy->header.piid );
-      SHDeleteKeyW(HKEY_CLASSES_ROOT, keyname);
+      RegDeleteTreeW(HKEY_CLASSES_ROOT, keyname);
     }
     pProxyFileList++;
   }
@@ -322,7 +322,7 @@ HRESULT WINAPI NdrDllUnregisterProxy(HMODULE hDll,
   /* unregister clsid */
   strcpyW( keyname, clsidW );
   strcatW( keyname, clsid );
-  SHDeleteKeyW(HKEY_CLASSES_ROOT, keyname);
+  RegDeleteTreeW(HKEY_CLASSES_ROOT, keyname);
 
   return S_OK;
 }

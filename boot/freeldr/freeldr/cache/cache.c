@@ -42,10 +42,10 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
     // If we already have a cache for this drive then
     // by all means lets keep it, unless it is a removable
     // drive, in which case we'll invalidate the cache
-    if ((CacheManagerInitialized == TRUE) &&
+    if ((CacheManagerInitialized) &&
         (DriveNumber == CacheManagerDrive.DriveNumber) &&
         (DriveNumber >= 0x80) &&
-        (CacheManagerDataInvalid != TRUE))
+        (!CacheManagerDataInvalid))
     {
         return TRUE;
     }

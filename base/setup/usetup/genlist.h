@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/genlist.h
+ * FILE:            base/setup/usetup/genlist.h
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -53,10 +53,6 @@ DrawGenericList(
     SHORT Top,
     SHORT Right,
     SHORT Bottom);
-
-VOID
-DrawScrollBarGenericLis(
-    PGENERIC_LIST List);
 
 VOID
 ScrollDownGenericList(
@@ -120,5 +116,9 @@ VOID
 GenericListKeyPress(
     PGENERIC_LIST List,
     CHAR AsciChar);
+
+BOOL
+GenericListHasSingleEntry(
+    PGENERIC_LIST List);
 
 /* EOF */

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
- * FILE:       lib/kernel32/thread/i386/thread.S
+ * FILE:       dll/win32/kernel32/client/i386/thread.S
  * PURPOSE:    Thread Start Thunks
  * PROGRAMMER: Alex Ionescu (alex@relsoft.net)
  */

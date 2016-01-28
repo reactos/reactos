@@ -1,4 +1,7 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -32,7 +35,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minute", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "&Solicită parolă la revenire", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Solicită pa&rolă la revenire", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Me&canisme de gestiune a consumului", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT "Aici veți putea ajusta parametrii actuali pentru gestiunea consumului de energie.", IDC_STATIC, 14, 166, 146, 27
@@ -79,7 +82,7 @@ BEGIN
     LTEXT "F&ont", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Măr&ime", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Mă&rime", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "&Culoare", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
@@ -124,11 +127,11 @@ BEGIN
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Dispozitive de afișare", 1820, 3, 107, 70, 9
-    LTEXT "<nespecificat>", IDC_SETTINGS_DEVICE, 9, 116, 224, 9
+    LTEXT "<nespecificat>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "Re&zoluție ecran", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT "Mică", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Mare", 1816, 93, 137, 25, 9, NOT WS_GROUP
+    LTEXT "Mare", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "Amplitudine &culoare", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -166,7 +169,7 @@ BEGIN
         MENUITEM "&Atașat", ID_MENU_ATTACHED
         MENUITEM "&Primar", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identificare", ID_MENU_IDENTIFY
+        MENUITEM "I&dentificare", ID_MENU_IDENTIFY
         MENUITEM "P&roprietăți", ID_MENU_PROPERTIES
     END
 END
@@ -212,8 +215,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Imagini (*.bmp;*.dib)\0*.bmp;*.dib\0"
-    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+    IDS_BACKGROUND_COMDLG_FILTER "Imagini"
 END
 
 STRINGTABLE

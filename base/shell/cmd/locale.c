@@ -62,7 +62,7 @@ GetDateString(VOID)
     INT len;
     GetLocalTime(&t);
 
-    len = GetDateFormat(LOCALE_USER_DEFAULT, 0, &t, _T("ddd"), szDate, sizeof szDate);
+    len = GetDateFormat(LOCALE_USER_DEFAULT, 0, &t, _T("ddd"), szDate, sizeof(szDate) / sizeof(szDate[0]));
     szDate[len - 1] = _T(' ');
     FormatDate(&szDate[len], &t, TRUE);
     return szDate;

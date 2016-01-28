@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            subsystems/win32/csrsrv/api.c
  * PURPOSE:         CSR Server DLL API LPC Implementation
- *                  "\windows\ApiPort" port process management functions
+ *                  "\Windows\ApiPort" port process management functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -156,52 +156,28 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     /* Check if we have a thread */
     if (CsrThread)
     {
-        /* Get the Process */
+        /* Get the Process and make sure we have it as well */
         CsrProcess = CsrThread->Process;
-
-        /* Make sure we have a Process as well */
         if (CsrProcess)
         {
             /* Reference the Process */
             CsrLockedReferenceProcess(CsrProcess);
 
-            /* Release the lock */
-            CsrReleaseProcessLock();
-
-            /* Duplicate the Object Directory */
-            Status = NtDuplicateObject(NtCurrentProcess(),
-                                       CsrObjectDirectory,
-                                       CsrProcess->ProcessHandle,
-                                       &ConnectInfo->ObjectDirectory,
-                                       0,
-                                       0,
-                                       DUPLICATE_SAME_ACCESS |
-                                       DUPLICATE_SAME_ATTRIBUTES);
-
-            /* Acquire the lock */
-            CsrAcquireProcessLock();
-
-            /* Check for success */
+            /* Attach the Shared Section */
+            Status = CsrSrvAttachSharedSection(CsrProcess, ConnectInfo);
             if (NT_SUCCESS(Status))
             {
-                /* Attach the Shared Section */
-                Status = CsrSrvAttachSharedSection(CsrProcess, ConnectInfo);
-
-                /* Check how this went */
-                if (NT_SUCCESS(Status))
-                {
-                    /* Allow the connection, and return debugging flag */
-                    ConnectInfo->DebugFlags = CsrDebug;
-                    AllowConnection = TRUE;
-                }
+                /* Allow the connection and return debugging flag */
+                ConnectInfo->DebugFlags = CsrDebug;
+                AllowConnection = TRUE;
             }
 
-            /* Dereference the project */
+            /* Dereference the Process */
             CsrLockedDereferenceProcess(CsrProcess);
         }
     }
 
-    /* Release the lock */
+    /* Release the Process Lock */
     CsrReleaseProcessLock();
 
     /* Setup the Port View Structure */
@@ -1067,7 +1043,7 @@ CsrConnectToUser(VOID)
     {
         Connected = FALSE;
     } _SEH2_END;
-    
+
     if (!Connected)
     {
         DPRINT1("CSRSS: CsrConnectToUser failed\n");

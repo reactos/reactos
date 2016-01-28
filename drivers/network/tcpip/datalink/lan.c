@@ -594,7 +594,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     
     InitializeObjectAttributes(&ObjectAttributes,
                                &TcpipRegistryPath,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                0,
                                NULL);
     
@@ -1074,7 +1074,7 @@ OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
     OBJECT_ATTRIBUTES Attributes;
     NTSTATUS Status;
 
-    InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
+    InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, 0, 0);
     Status = ZwOpenKey(RegHandle, KEY_ALL_ACCESS, &Attributes);
     return Status;
 }
@@ -1198,8 +1198,8 @@ cleanup:
     RtlFreeUnicodeString( &RootDevice );
     RtlFreeUnicodeString( &LinkageKeyName );
     RtlFreeUnicodeString( &DescKeyName );
-    if( LinkageKey ) NtClose( LinkageKey );
-    if( DescKey ) NtClose( DescKey );
+    if( LinkageKey ) ZwClose( LinkageKey );
+    if( DescKey ) ZwClose( DescKey );
 
     TI_DbgPrint(DEBUG_DATALINK,("Returning %x\n", Status));
 
@@ -1242,7 +1242,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
             Kbio = ExAllocatePool( NonPagedPool, KbioLength );
             if( !Kbio ) {
                 TI_DbgPrint(DEBUG_DATALINK,("Failed to allocate memory\n"));
-                NtClose( EnumKey );
+                ZwClose( EnumKey );
                 return STATUS_NO_MEMORY;
             }
 
@@ -1251,7 +1251,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
 
             if( !NT_SUCCESS(Status) ) {
                 TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
-                NtClose( EnumKey );
+                ZwClose( EnumKey );
                 ExFreePool( Kbio );
                 return Status;
             }
@@ -1265,14 +1265,14 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
             Status = CheckForDeviceDesc
                 ( &EnumKeyName, &TargetKeyName, Name, DeviceDesc );
             if( NT_SUCCESS(Status) ) {
-                NtClose( EnumKey );
+                ZwClose( EnumKey );
                 ExFreePool( Kbio );
                 return Status;
             } else Status = STATUS_SUCCESS;
         }
     }
 
-    NtClose( EnumKey );
+    ZwClose( EnumKey );
     ExFreePool( Kbio );
     return STATUS_UNSUCCESSFUL;
 }

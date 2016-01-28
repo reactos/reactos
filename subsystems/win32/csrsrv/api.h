@@ -191,7 +191,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
                    IN PVOID WaitArgument2,
                    IN ULONG WaitFlags,
                    IN BOOLEAN DereferenceThread);
-                   
+
 VOID
 NTAPI
 CsrReferenceNtSession(IN PCSR_NT_SESSION Session);

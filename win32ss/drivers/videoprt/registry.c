@@ -59,7 +59,7 @@ IntCopyRegistryKey(
             if (InfoBuffer == NULL)
             {
                 ERR_(VIDEOPRT, "Could not allocate buffer for key info\n");
-                return Status;
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
         }
 
@@ -211,7 +211,7 @@ IntCopyRegistryKey(
         if (!NT_SUCCESS(Status))
         {
             /* Just warn, but continue with the remaining sub-keys */
-            WARN_(VIDEOPRT, "failed to set value '%wZ'.\n", NameString);
+            WARN_(VIDEOPRT, "failed to set value '%wZ'.\n", &NameString);
         }
 
         /* Next subkey */
@@ -633,8 +633,8 @@ IntCreateRegistryPath(
         RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
     }
 
-    DbgPrint("Formatted registry key '%wZ' -> '%wZ'\n",
-             DriverRegistryPath, DeviceRegistryPath);
+    DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",
+           DriverRegistryPath, DeviceRegistryPath);
 
     return STATUS_SUCCESS;
 }

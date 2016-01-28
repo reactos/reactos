@@ -4,22 +4,12 @@
 
 #pragma once
 
-#define PLACE_IN_SECTION(s)	__attribute__((section (s)))
-#ifdef __GNUC__
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
-#define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#if defined(__GNUC__) && !defined(_MINIHAL_)
+#define INIT_SECTION __attribute__((section ("INIT")))
 #else
-#define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION
-#define PAGE_UNLOCKED_FUNCTION
+#define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
 
-#ifdef _MSC_VER
-#define REGISTERCALL FASTCALL
-#else
-#define REGISTERCALL __attribute__((regparm(3)))
-#endif
 
 #ifdef CONFIG_SMP
 #define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
@@ -46,13 +36,12 @@ typedef struct _HAL_BIOS_FRAME
 
 typedef
 VOID
-(*PHAL_SW_INTERRUPT_HANDLER)(
+(__cdecl *PHAL_SW_INTERRUPT_HANDLER)(
     VOID
 );
 
 typedef
 VOID
-ATTRIB_NORETURN
 (FASTCALL *PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -68,6 +57,7 @@ ATTRIB_NORETURN
 #define RTC_REGISTER_B          0x0B
 #define   RTC_REG_B_PI          0x40
 #define RTC_REGISTER_C          0x0C
+#define   RTC_REG_C_IRQ         0x80
 #define RTC_REGISTER_D          0x0D
 #define RTC_REGISTER_CENTURY    0x32
 
@@ -434,14 +424,14 @@ typedef struct _PIC_MASK
 
 typedef
 BOOLEAN
-( REGISTERCALL *PHAL_DISMISS_INTERRUPT)(
+(NTAPI *PHAL_DISMISS_INTERRUPT)(
     IN KIRQL Irql,
     IN ULONG Irq,
     OUT PKIRQL OldIrql
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqGeneric(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -449,7 +439,7 @@ HalpDismissIrqGeneric(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -457,7 +447,7 @@ HalpDismissIrq15(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -465,7 +455,7 @@ HalpDismissIrq13(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -473,7 +463,7 @@ HalpDismissIrq07(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrqLevel(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -481,7 +471,7 @@ HalpDismissIrqLevel(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq15Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -489,7 +479,7 @@ HalpDismissIrq15Level(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq13Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -497,7 +487,7 @@ HalpDismissIrq13Level(
 );
 
 BOOLEAN
-REGISTERCALL
+NTAPI
 HalpDismissIrq07Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -505,6 +495,7 @@ HalpDismissIrq07Level(
 );
 
 VOID
+__cdecl
 HalpHardwareInterruptLevel(
     VOID
 );
@@ -579,16 +570,19 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 
 /* pic.c */
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
-VOID HalpApcInterrupt(VOID);
-VOID HalpDispatchInterrupt(VOID);
-VOID HalpDispatchInterrupt2(VOID);
+VOID __cdecl HalpApcInterrupt(VOID);
+VOID __cdecl HalpDispatchInterrupt(VOID);
+VOID __cdecl HalpDispatchInterrupt2(VOID);
 DECLSPEC_NORETURN VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
+/* profil.c */
+extern BOOLEAN HalpProfilingStopped;
+
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
-VOID HalpClockInterrupt(VOID);
-VOID HalpProfileInterrupt(VOID);
+VOID __cdecl HalpClockInterrupt(VOID);
+VOID __cdecl HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -696,7 +690,7 @@ HalpExitToV86(
 );
 
 VOID
-DECLSPEC_NORETURN
+__cdecl
 HalpRealModeStart(
     VOID
 );

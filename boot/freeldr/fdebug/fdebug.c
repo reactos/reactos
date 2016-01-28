@@ -37,7 +37,7 @@ LRESULT CALLBACK    ConnectionDialogProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    CaptureDialogProc(HWND, UINT, WPARAM, LPARAM);
 VOID                EnableFileMenuItemByID(UINT Id, BOOL Enable);
 VOID                CheckLocalEchoMenuItem(BOOL Checked);
-VOID                Rs232Thread(VOID* Parameter);
+VOID __cdecl        Rs232Thread(VOID* Parameter);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
@@ -99,7 +99,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbSize = sizeof(WNDCLASSEX);
 
     wcex.style            = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = (WNDPROC)WndProc;
+    wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra        = 0;
     wcex.cbWndExtra        = 0;
     wcex.hInstance        = hInstance;
@@ -283,6 +283,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
+        (void)hdc; // FIXME
         EndPaint(hWnd, &ps);
         break;
     case WM_SIZE:
@@ -436,7 +437,7 @@ VOID CheckLocalEchoMenuItem(BOOL Checked)
     CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|(Checked ? MF_CHECKED : MF_UNCHECKED));
 }
 
-VOID Rs232Thread(VOID* Parameter)
+VOID __cdecl Rs232Thread(VOID* Parameter)
 {
     BYTE    Byte;
     TCHAR    String[MAX_PATH];

@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI WNDOBJ Functions
- * FILE:              subsystems/win32/win32k/eng/engwindow.c
+ * FILE:              win32ss/gdi/eng/engwindow.c
  * PROGRAMER:         Gregor Anich
  */
 
@@ -52,7 +52,7 @@ IntEngWndUpdateClipObj(
     XCLIPOBJ* Clip,
     PWND Window)
 {
-    PROSRGNDATA visRgn;
+    PREGION visRgn;
 
     TRACE("IntEngWndUpdateClipObj\n");
 
@@ -104,7 +104,7 @@ IntEngWindowChanged(
 
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
-    Clip = UserGetProp(Window, AtomWndObj);
+    Clip = UserGetProp(Window, AtomWndObj, TRUE);
     if (!Clip)
     {
         return;
@@ -208,7 +208,7 @@ EngCreateWnd(
     Clip->PixelFormat = iPixelFormat;
 
     /* associate object with window */
-    IntSetProp(Window, AtomWndObj, Clip);
+    UserSetProp(Window, AtomWndObj, Clip, TRUE);
     ++gcountPWO;
 
     TRACE("EngCreateWnd: SUCCESS: %p!\n", WndObjUser);
@@ -253,7 +253,7 @@ EngDeleteWnd(
     else
     {
         /* Remove object from window */
-        IntRemoveProp(Window, AtomWndObj);
+        UserRemoveProp(Window, AtomWndObj, TRUE);
     }
     --gcountPWO;
 

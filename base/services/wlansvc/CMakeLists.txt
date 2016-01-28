@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
-
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/wlansvc.idl)
 
 list(APPEND SOURCE

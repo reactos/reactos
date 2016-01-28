@@ -1043,7 +1043,7 @@ static void IntScrollCreateScrollBar(
   Info.cbSize = sizeof(SCROLLINFO);
   Info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
   Info.nMin = 0;
-  Info.nMax = 100;
+  Info.nMax = 0;
   Info.nPage = 0;
   Info.nPos = 0;
   Info.nTrackPos = 0;
@@ -1189,7 +1189,7 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
   {
      if (!pWnd->fnid)
      {
-        ERR("ScrollBar CTL size %d\n",(sizeof(SBWND)-sizeof(WND)));
+        TRACE("ScrollBar CTL size %d\n", (sizeof(SBWND)-sizeof(WND)));
         if ( pWnd->cbwndExtra != (sizeof(SBWND)-sizeof(WND)) )
         {
            ERR("Wrong Extra bytes for Scrollbar!\n");
@@ -1497,6 +1497,21 @@ RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
   }
   pSBData = IntGetSBData(pWnd, SBType);
   return NtUserSBGetParms(Wnd, SBType, pSBData, Info);
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI GetScrollBarInfo( _In_ HWND hwnd, _In_ LONG idObject, _Inout_ LPSCROLLBARINFO info)
+{
+    BOOL Ret;
+    PWND pWnd = ValidateHwnd(hwnd);
+    TRACE("hwnd=%p idObject=%d info=%p\n", hwnd, idObject, info);
+    if (!pWnd) return FALSE;
+    Ret = NtUserGetScrollBarInfo(hwnd, idObject, info); // This will be fixed once SB is server side.
+    /* rcScrollBar needs to be in screen coordinates */
+    OffsetRect( &(info->rcScrollBar), pWnd->rcWindow.left, pWnd->rcWindow.top );
+    return Ret;
 }
 
 /*

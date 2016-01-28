@@ -1,0 +1,236 @@
+/*
+ * Copyright 2012 Hans Leidekker for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+
+interface IWbemPath;
+interface IWbemPathKeyList;
+
+typedef [v1_enum] enum tag_WBEM_PATH_STATUS_FLAG
+{
+    WBEMPATH_INFO_ANON_LOCAL_MACHINE    = 0x1,
+    WBEMPATH_INFO_HAS_MACHINE_NAME      = 0x2,
+    WBEMPATH_INFO_IS_CLASS_REF          = 0x4,
+    WBEMPATH_INFO_IS_INST_REF           = 0x8,
+    WBEMPATH_INFO_HAS_SUBSCOPES         = 0x10,
+    WBEMPATH_INFO_IS_COMPOUND           = 0x20,
+    WBEMPATH_INFO_HAS_V2_REF_PATHS      = 0x40,
+    WBEMPATH_INFO_HAS_IMPLIED_KEY       = 0x80,
+    WBEMPATH_INFO_CONTAINS_SINGLETON    = 0x100,
+    WBEMPATH_INFO_V1_COMPLIANT          = 0x200,
+    WBEMPATH_INFO_V2_COMPLIANT          = 0x400,
+    WBEMPATH_INFO_CIM_COMPLIANT         = 0x800,
+    WBEMPATH_INFO_IS_SINGLETON          = 0x1000,
+    WBEMPATH_INFO_IS_PARENT             = 0x2000,
+    WBEMPATH_INFO_SERVER_NAMESPACE_ONLY = 0x4000,
+    WBEMPATH_INFO_NATIVE_PATH           = 0x8000,
+    WBEMPATH_INFO_WMI_PATH              = 0x10000,
+    WBEMPATH_INFO_PATH_HAD_SERVER       = 0x20000
+} tag_WBEM_PATH_STATUS_FLAG;
+
+typedef [v1_enum] enum tag_WBEM_PATH_CREATE_FLAG
+{
+    WBEMPATH_CREATE_ACCEPT_RELATIVE     = 0x1,
+    WBEMPATH_CREATE_ACCEPT_ABSOLUTE     = 0x2,
+    WBEMPATH_CREATE_ACCEPT_ALL          = 0x4,
+    WBEMPATH_TREAT_SINGLE_IDENT_AS_NS   = 0x8
+} tag_WBEM_PATH_CREATE_FLAG;
+
+typedef [v1_enum] enum tag_WBEM_GET_TEXT_FLAGS
+{
+    WBEMPATH_COMPRESSED                     = 0x1,
+    WBEMPATH_GET_RELATIVE_ONLY              = 0x2,
+    WBEMPATH_GET_SERVER_TOO                 = 0x4,
+    WBEMPATH_GET_SERVER_AND_NAMESPACE_ONLY  = 0x8,
+    WBEMPATH_GET_NAMESPACE_ONLY             = 0x10,
+    WBEMPATH_GET_ORIGINAL                   = 0x20
+} tag_WBEM_GET_TEXT_FLAGS;
+
+[
+    local,
+    object,
+    uuid(9ae62877-7544-4bb0-aa26-a13824659ed6)
+]
+interface IWbemPathKeyList : IUnknown
+{
+    HRESULT GetCount(
+        [out] ULONG *puKeyCount);
+
+    HRESULT SetKey(
+        [in,string] LPCWSTR wszName,
+        [in] ULONG uFlags,
+        [in] ULONG uCimType,
+        [in] LPVOID pKeyVal);
+
+    HRESULT SetKey2(
+        [in,string] LPCWSTR wszName,
+        [in] ULONG uFlags,
+        [in] ULONG uCimType,
+        [in] VARIANT *pKeyVal);
+
+    HRESULT GetKey(
+        [in] ULONG uKeyIx,
+        [in] ULONG uFlags,
+        [in,out] ULONG *puNameBufSize,
+        [in,out] LPWSTR pszKeyName,
+        [in,out] ULONG *puKeyValBufSize,
+        [in,out] LPVOID pKeyVal,
+        [out] ULONG *puApparentCimType);
+
+    HRESULT GetKey2(
+        [in] ULONG uKeyIx,
+        [in] ULONG uFlags,
+        [in,out] ULONG *puNameBufSize,
+        [in,out] LPWSTR pszKeyName,
+        [in,out] VARIANT *pKeyValue,
+        [out] ULONG *puApparentCimType);
+
+    HRESULT RemoveKey(
+        [in,string] LPCWSTR wszName,
+        [in] ULONG uFlags);
+
+    HRESULT RemoveAllKeys(
+        [in] ULONG uFlags);
+
+    HRESULT MakeSingleton([in] boolean bSet);
+
+    HRESULT GetInfo(
+        [in] ULONG uRequestedInfo,
+        [out] ULONGLONG *puResponse);
+
+    HRESULT GetText(
+        [in] long lFlags,
+        [in,out] ULONG *puBuffLength,
+        [in,out,string] LPWSTR pszText);
+};
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetClassName")
+cpp_quote("#endif")
+
+[
+    local,
+    object,
+    uuid(3bc15af2-736c-477e-9e51-238af8667dcc)
+]
+interface IWbemPath : IUnknown
+{
+    HRESULT SetText(
+        [in] ULONG uMode,
+        [in] LPCWSTR pszPath);
+
+    HRESULT GetText(
+        [in] long lFlags,
+        [in,out] ULONG *puBuffLength,
+        [in,out,string] LPWSTR pszText);
+
+    HRESULT GetInfo(
+        [in] ULONG uRequestedInfo,
+        [out] ULONGLONG *puResponse);
+
+    HRESULT SetServer(
+        [in,string] LPCWSTR Name);
+
+    HRESULT GetServer(
+        [in,out] ULONG *puNameBufLength,
+        [in,out,string] LPWSTR pName);
+
+    HRESULT GetNamespaceCount(
+        [out] ULONG *puCount);
+
+    HRESULT SetNamespaceAt(
+        [in] ULONG uIndex,
+        [in,string] LPCWSTR pszName);
+
+    HRESULT GetNamespaceAt(
+        [in] ULONG uIndex,
+        [in,out] ULONG *puNameBufLength,
+        [in,out,string] LPWSTR pName);
+
+    HRESULT RemoveNamespaceAt(
+        [in] ULONG uIndex);
+
+    HRESULT RemoveAllNamespaces();
+
+    HRESULT GetScopeCount(
+        [out] ULONG *puCount);
+
+    HRESULT SetScope(
+        [in] ULONG uIndex,
+        [in] LPWSTR pszClass);
+
+    HRESULT SetScopeFromText(
+        [in] ULONG uIndex,
+        [in] LPWSTR pszText);
+
+    HRESULT GetScope(
+        [in] ULONG uIndex,
+        [in,out] ULONG *puClassNameBufSize,
+        [in,out] LPWSTR pszClass,
+        [out] IWbemPathKeyList **pKeyList);
+
+    HRESULT GetScopeAsText(
+        [in] ULONG uIndex,
+        [in,out] ULONG *puTextBufSize,
+        [in,out] LPWSTR pszText);
+
+    HRESULT RemoveScope(
+        [in] ULONG uIndex);
+
+    HRESULT RemoveAllScopes();
+
+    HRESULT SetClassName(
+        [in,string] LPCWSTR Name);
+
+    HRESULT GetClassName(
+        [in,out] ULONG *puBuffLength,
+        [in,out,string] LPWSTR pszName);
+
+    HRESULT GetKeyList(
+        [out] IWbemPathKeyList **pOut);
+
+    HRESULT CreateClassPart(
+        [in] long lFlags,
+        [in,string] LPCWSTR Name);
+
+    HRESULT DeleteClassPart(
+        [in] long lFlags);
+
+    BOOL IsRelative(
+        [in,string] LPWSTR wszMachine,
+        [in,string] LPWSTR wszNamespace);
+
+    BOOL IsRelativeOrChild(
+        [in,string] LPWSTR wszMachine,
+        [in,string] LPWSTR wszNamespace,
+        [in] long lFlags);
+
+    BOOL IsLocal(
+        [in,string] LPCWSTR wszMachine);
+
+    BOOL IsSameClassName(
+        [in,string] LPCWSTR wszClass);
+};
+
+[
+    uuid(cf4cc405-e2c5-4ddd-b3ce-5e7582d8c9fa)
+]
+coclass WbemDefPath
+{
+    interface IWbemPath;
+};

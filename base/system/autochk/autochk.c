@@ -264,6 +264,12 @@ LoadProvider(
     {
       RtlInitUnicodeString(&ProviderDll, L"ufat.dll");
     }
+    else if (wcscmp(FileSystem, L"EXT2") == 0
+             || wcscmp(FileSystem, L"EXT3") == 0
+             || wcscmp(FileSystem, L"EXT4") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"uext2.dll");
+    }
     else
     {
       return NULL;

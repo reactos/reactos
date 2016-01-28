@@ -279,7 +279,7 @@ static BOOL fetch_macho_module_info_cb(const WCHAR* name, unsigned long base,
     /* NB: if we have a non-null base from the live-target use it.  If we have
      * a null base, then grab its base address from Mach-O file.
      */
-    if (!macho_fetch_file_info(name, &rbase, &size, &checksum))
+    if (!macho_fetch_file_info(dc->hProcess, name, base, &rbase, &size, &checksum))
         size = checksum = 0;
     add_module(dc, name, base ? base : rbase, size, 0 /* FIXME */, checksum, TRUE);
     return TRUE;

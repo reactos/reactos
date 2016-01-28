@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        apps/utils/net/netstat/netstat.c
+ * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */

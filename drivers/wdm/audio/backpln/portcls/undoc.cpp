@@ -207,6 +207,7 @@ PropertyItemDispatch(
     else
     {
         // invalid buffer size
+        FreeItem(PropertyRequest, TAG_PORTCLASS);
         return STATUS_INVALID_BUFFER_SIZE;
     }
 

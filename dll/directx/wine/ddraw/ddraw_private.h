@@ -65,6 +65,9 @@ struct FvfToDecl
 
 #define DDRAW_STRIDE_ALIGNMENT  8
 
+#define DDRAW_WINED3D_FLAGS     (WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING \
+        | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER)
+
 enum ddraw_device_state
 {
     DDRAW_DEVICE_STATE_OK,
@@ -125,7 +128,7 @@ struct ddraw
 
 #define DDRAW_WINDOW_CLASS_NAME "DirectDrawDeviceWnd"
 
-HRESULT ddraw_init(struct ddraw *ddraw, enum wined3d_device_type device_type) DECLSPEC_HIDDEN;
+HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type device_type) DECLSPEC_HIDDEN;
 void ddraw_d3dcaps1_from_7(D3DDEVICEDESC *caps1, D3DDEVICEDESC7 *caps7) DECLSPEC_HIDDEN;
 void ddraw_destroy_swapchain(struct ddraw *ddraw) DECLSPEC_HIDDEN;
 HRESULT ddraw_get_d3dcaps(const struct ddraw *ddraw, D3DDEVICEDESC7 *caps) DECLSPEC_HIDDEN;
@@ -188,10 +191,6 @@ struct ddraw_surface
     /* Surface description, for GetAttachedSurface */
     DDSURFACEDESC2          surface_desc;
 
-    /* Misc things */
-    DWORD                   uniqueness_value;
-    UINT                    mipmap_level;
-
     /* Clipper objects */
     struct ddraw_clipper *clipper;
     struct ddraw_palette *palette;
@@ -213,7 +212,7 @@ struct ddraw_texture
 HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_desc,
         struct ddraw_surface **surface, IUnknown *outer_unknown, unsigned int version) DECLSPEC_HIDDEN;
 struct wined3d_rendertarget_view *ddraw_surface_get_rendertarget_view(struct ddraw_surface *surface) DECLSPEC_HIDDEN;
-HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, struct ddraw_texture *texture,
+void ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, struct ddraw_texture *texture,
         struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 ULONG ddraw_surface_release_iface(struct ddraw_surface *This) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
@@ -302,6 +301,7 @@ struct d3d_device
     IUnknown IUnknown_inner;
     LONG ref;
     UINT version;
+    BOOL hw;
 
     IUnknown *outer_unknown;
     struct wined3d_device *wined3d_device;
@@ -344,7 +344,7 @@ struct d3d_device
     D3DMATRIXHANDLE          world, proj, view;
 };
 
-HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target, IUnknown *rt_iface,
+HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
         UINT version, struct d3d_device **device, IUnknown *outer_unknown) DECLSPEC_HIDDEN;
 enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device *device) DECLSPEC_HIDDEN;
 

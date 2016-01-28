@@ -18,4 +18,5 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(mesa_vbo STATIC ${SOURCE})
+add_dependencies(mesa_vbo xdk)
 add_pch(mesa_vbo precomp.h SOURCE)

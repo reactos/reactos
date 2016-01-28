@@ -12,4 +12,9 @@ BEGIN
     IDS_ERROR_NOMEM "Não há memória suficiente para completar a operação."
     IDS_ERROR_NOFONT "O arquivo %1 não é um arquivo de fonte válida."
     IDS_ERROR_NOCLASS "Não foi possível inicializar a janela."
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

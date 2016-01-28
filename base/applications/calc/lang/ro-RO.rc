@@ -1,4 +1,8 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * Translators: Petru Dimitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
@@ -331,8 +335,8 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -346,7 +350,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -363,8 +367,8 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -379,7 +383,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -396,13 +400,13 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifre", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR
