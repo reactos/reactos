@@ -1,7 +1,23 @@
-========================
-ReactOS™ Version 0.4.x
-Updated January 5, 2016
-========================
+================================================================================
+ReactOS™ Version 0.4.0-RC Preview
+for FOSDEM 2016
+================================================================================
+
+0. CD-ROM Contents
+------------------
+
+* ReactOS LiveCD and Installation
+* ReactOS on QEMU virtual machine
+* ReactOS Build Environment (RosBE) for Windows and Unix-like OSes
+* ReactOS source code
+
+This CD-ROM starts an AutoRun program under Windows. Alternatively you can
+browse the contents of this CD-ROM with any file browser. The folder names
+should be self-explanatory.
+
+The source code of ReactOS can be compiled using the ReactOS Build Environment
+under Windows or Unix-like operating systems such as Linux.
+
 
 1. What is ReactOS?
 -------------------
@@ -47,9 +63,3 @@ Developer and User Tutorials: http://www.reactos.org/wiki
 
 The tutorials contain more information on the project, compiling and testing
 ReactOS - amongst other topics. Contributors to the project are always welcome.
-
-
-6. Author
----------
-
-This document was written by Jason Filby (jasonfilby@yahoo.com).
