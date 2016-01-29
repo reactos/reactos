@@ -58,7 +58,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
 
 #create the empty Desktop, Favorites, and Start Menu folders
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "Profiles/Default User/Favorites\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs\n")
 
 add_custom_target(hybridcd
