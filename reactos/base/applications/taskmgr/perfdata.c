@@ -477,17 +477,29 @@ ULONG PerfDataGetProcessIndex(ULONG pid)
 
 ULONG PerfDataGetProcessCount(void)
 {
-    return ProcessCount;
+    ULONG Result;
+    EnterCriticalSection(&PerfDataCriticalSection);
+    Result = ProcessCount;
+    LeaveCriticalSection(&PerfDataCriticalSection);
+    return Result;
 }
 
 ULONG PerfDataGetProcessorUsage(void)
 {
-    return (ULONG)dbIdleTime;
+    ULONG Result;
+    EnterCriticalSection(&PerfDataCriticalSection);
+    Result = (ULONG)dbIdleTime;
+    LeaveCriticalSection(&PerfDataCriticalSection);
+    return Result;
 }
 
 ULONG PerfDataGetProcessorSystemUsage(void)
 {
-    return (ULONG)dbKernelTime;
+    ULONG Result;
+    EnterCriticalSection(&PerfDataCriticalSection);
+    Result = (ULONG)dbKernelTime;
+    LeaveCriticalSection(&PerfDataCriticalSection);
+    return Result;
 }
 
 BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount)
