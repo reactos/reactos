@@ -215,7 +215,7 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
     }
 
     /* FIXME: This leaks the security desriptor! */
-    DPRINT1("Potentially leaking key security descriptor. Please call CmpFreeSecurityDescriptor");
+    DPRINT1("Potentially leaking key security descriptor. Please call CmpFreeSecurityDescriptor\n");
 
     /* Free the key body itself, and then return our status */
     if (!CmpFreeKeyBody(Hive, Cell)) return STATUS_INSUFFICIENT_RESOURCES;
