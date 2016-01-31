@@ -51,7 +51,7 @@ STRINGTABLE
 BEGIN
     IDS_TOPICACTION0        "<msg>Sie müssen Ihren Computer mit der ReactOS-CD im Laufwerk neu starten, um die Installation zu starten.\n\nBITTE BEACHTEN SIE: Es wird dringend davon abgeraten, ReactOS auf einem Computer zu installieren, welcher wichtige Daten enthält!"
     IDS_TOPICACTION1        "\\extras\\ReactOS on QEMU\\ReactOS-040-FOSDEM2016RC-QEMU.7z"
-    IDS_TOPICACTION2        "\\extras\\ReactOS Build Environment\\RosBE-2.1.1.exe"
+    IDS_TOPICACTION2        "\\extras\\ReactOS Build Environment\\RosBE-2.1.3.exe"
     IDS_TOPICACTION3        "\\extras\\ReactOS Source Code\\ReactOS-040-FOSDEM2016RC-Source.7z"
     IDS_TOPICACTION4        "https://www.reactos.org/"
     IDS_TOPICACTION5        "explorer.exe"
