@@ -45,3 +45,195 @@ Index: mpr.spec
  22 stdcall @(long) MPR_Alloc
  23 stdcall @(ptr long) MPR_ReAlloc
  24 stdcall @(ptr) MPR_Free
+Index: wnet.c
+===================================================================
+--- wnet.c	(révision 70645)
++++ wnet.c	(copie de travail)
+@@ -1549,6 +1549,33 @@
+                               dwFlags, NULL, 0, NULL);
+ }
+ 
++/* Convert an ANSI string to wide */
++static LPWSTR strdupAtoW( LPCSTR str )
++{
++    LPWSTR ret;
++    INT len;
++
++    if (!str) return NULL;
++    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
++    ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
++    if (ret) MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
++    return ret;
++}
++
++/* Convert ANSI NETRESOURCE struct to wide structure */
++static VOID convert_netresourcea_to_w( LPNETRESOURCEA lpNetResourceA,
++                                       LPNETRESOURCEW lpNetResourceW )
++{
++    lpNetResourceW->dwScope = lpNetResourceA->dwScope;
++    lpNetResourceW->dwType = lpNetResourceA->dwType;
++    lpNetResourceW->dwDisplayType = lpNetResourceA->dwDisplayType;
++    lpNetResourceW->dwUsage = lpNetResourceA->dwUsage;
++    lpNetResourceW->lpLocalName = strdupAtoW(lpNetResourceA->lpLocalName);
++    lpNetResourceW->lpRemoteName = strdupAtoW(lpNetResourceA->lpRemoteName);
++    lpNetResourceW->lpComment = strdupAtoW(lpNetResourceA->lpComment);
++    lpNetResourceW->lpProvider = strdupAtoW(lpNetResourceA->lpProvider);
++}
++
+ /*****************************************************************
+  *  WNetUseConnectionA [MPR.@]
+  */
+@@ -1557,12 +1584,67 @@
+                                  LPSTR lpAccessName, LPDWORD lpBufferSize,
+                                  LPDWORD lpResult )
+ {
+-    FIXME( "(%p, %p, %p, %s, 0x%08X, %s, %p, %p), stub\n",
+-           hwndOwner, lpNetResource, lpPassword, debugstr_a(lpUserID), dwFlags,
+-           debugstr_a(lpAccessName), lpBufferSize, lpResult );
++    NETRESOURCEW resourcesW, *pRes = NULL;
++    PWSTR passW, userIDW, accessNameW = NULL;
++    DWORD ret = WN_MORE_DATA;
++    DWORD bufferSize = 1;
++    int len;
+ 
+-    SetLastError(WN_NO_NETWORK);
+-    return WN_NO_NETWORK;
++    if (lpNetResource)
++    {
++        convert_netresourcea_to_w(lpNetResource, &resourcesW);
++        pRes = &resourcesW;
++    }
++
++    passW = strdupAtoW(lpPassword);
++    userIDW = strdupAtoW(lpUserID);
++
++    if (lpAccessName && lpBufferSize && *lpBufferSize)
++    {
++        WCHAR probe;
++
++        ret = WNetUseConnectionW(hwndOwner, pRes, passW, userIDW, dwFlags,
++                                 &probe, &bufferSize, lpResult);
++        if (ret == WN_MORE_DATA)
++            accessNameW = HeapAlloc(GetProcessHeap(), 0, bufferSize * sizeof(WCHAR));
++    }
++
++    if (ret == WN_MORE_DATA)
++    {
++        ret = WNetUseConnectionW(hwndOwner, pRes, passW, userIDW, dwFlags,
++                                 accessNameW, &bufferSize, lpResult);
++        if (ret == WN_SUCCESS)
++        {
++            if (lpAccessName && lpBufferSize && *lpBufferSize && accessNameW)
++            {
++                len = WideCharToMultiByte(CP_ACP, 0, accessNameW, -1, NULL, 0, NULL, NULL);
++                if (len)
++                {
++                    if (len <= *lpBufferSize)
++                        WideCharToMultiByte(CP_ACP, 0, accessNameW, -1, lpAccessName, len, NULL, NULL);
++                    else
++                    {
++                        WNetCancelConnectionW(accessNameW, TRUE);
++                        *lpBufferSize = len;
++                       ret = WN_MORE_DATA;
++                    }
++                }
++            }
++        }
++    }
++
++    if (lpNetResource)
++    {
++        HeapFree(GetProcessHeap(), 0, resourcesW.lpLocalName);
++        HeapFree(GetProcessHeap(), 0, resourcesW.lpRemoteName);
++        HeapFree(GetProcessHeap(), 0, resourcesW.lpComment);
++        HeapFree(GetProcessHeap(), 0, resourcesW.lpProvider);
++    }
++    HeapFree(GetProcessHeap(), 0, passW);
++    HeapFree(GetProcessHeap(), 0, userIDW);
++    HeapFree(GetProcessHeap(), 0, accessNameW);
++
++    return ret;
+ }
+ 
+ /*****************************************************************
+@@ -1573,12 +1655,75 @@
+                                  LPWSTR lpAccessName, LPDWORD lpBufferSize,
+                                  LPDWORD lpResult )
+ {
+-    FIXME( "(%p, %p, %p, %s, 0x%08X, %s, %p, %p), stub\n",
+-           hwndOwner, lpNetResource, lpPassword, debugstr_w(lpUserID), dwFlags,
+-           debugstr_w(lpAccessName), lpBufferSize, lpResult );
++    DWORD provider;
++    DWORD cap;
++    char id;
++    DWORD drives;
++    DWORD ret;
++    PF_NPAddConnection3 addConn3;
++    PF_NPAddConnection addConn;
+ 
+-    SetLastError(WN_NO_NETWORK);
+-    return WN_NO_NETWORK;
++    if (!providerTable || providerTable->numProviders == 0) {
++        SetLastError(WN_NO_NETWORK);
++        return WN_NO_NETWORK;
++    }
++
++    if (!lpNetResource) {
++        SetLastError(ERROR_INVALID_PARAMETER);
++        return ERROR_INVALID_PARAMETER;
++    }
++
++    if (!lpNetResource->lpProvider || !*lpNetResource->lpProvider) {
++        SetLastError(ERROR_BAD_PROVIDER);
++        return ERROR_BAD_PROVIDER;
++    }
++
++    if (!lpNetResource->lpLocalName || !*lpNetResource->lpLocalName) {
++        SetLastError(ERROR_BAD_DEVICE);
++        return ERROR_BAD_DEVICE;
++    }
++
++    if ((!(lpNetResource->lpLocalName[0] >= 'a' && lpNetResource->lpLocalName[0] <= 'z') &&
++        !(lpNetResource->lpLocalName[0] >= 'A' && lpNetResource->lpLocalName[0] <= 'Z')) ||
++        lpNetResource->lpLocalName[1] != ':' || lpNetResource->lpLocalName[2]) {
++        SetLastError(ERROR_BAD_DEVICE);
++        return ERROR_BAD_DEVICE;
++    }
++
++    id = (lpNetResource->lpLocalName[0] >= 'a') ? lpNetResource->lpLocalName[0] - 'a' : lpNetResource->lpLocalName[0] - 'A';
++    drives = GetLogicalDrives();
++    if (drives & (1 << id)) {
++        SetLastError(ERROR_ALREADY_ASSIGNED);
++        return ERROR_ALREADY_ASSIGNED;
++    }
++
++    provider = _findProviderIndexW(lpNetResource->lpProvider);
++    if (provider == BAD_PROVIDER_INDEX) {
++        SetLastError(ERROR_BAD_PROVIDER);
++        return ERROR_BAD_PROVIDER;
++    }
++
++    cap = providerTable->table[provider].getCaps(WNNC_CONNECTION);
++    if (!(cap & WNNC_CON_ADDCONNECTION) && !(cap & WNNC_CON_ADDCONNECTION3)) {
++        SetLastError(ERROR_BAD_PROVIDER);
++        return ERROR_BAD_PROVIDER;
++    }
++
++    ret = WN_ACCESS_DENIED;
++    if (cap & WNNC_CON_ADDCONNECTION3) {
++        addConn3 = (PF_NPAddConnection3)GetProcAddress(providerTable->table[provider].hLib, "NPAddConnection3");
++        if (addConn3) {
++            ret = addConn3(hwndOwner, lpNetResource, (LPWSTR)lpPassword, (LPWSTR)lpUserID, dwFlags);
++        }
++    }
++    else if (cap & WNNC_CON_ADDCONNECTION) {
++        addConn = (PF_NPAddConnection)GetProcAddress(providerTable->table[provider].hLib, "NPAddConnection");
++        if (addConn) {
++            ret = addConn(lpNetResource, (LPWSTR)lpPassword, (LPWSTR)lpUserID);
++        }
++    }
++
++    return ret;
+ }
+ 
+ /*********************************************************************
