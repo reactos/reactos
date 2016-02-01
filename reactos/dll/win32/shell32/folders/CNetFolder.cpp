@@ -27,9 +27,40 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 #define HACKY_UNC_PATHS
 
+#ifdef HACKY_UNC_PATHS
+LPITEMIDLIST ILCreateFromNetworkPlaceW(LPCWSTR lpNetworkPlace)
+{
+    int cbData = sizeof(WORD) + sizeof(WCHAR) * (wcslen(lpNetworkPlace)+1);
+    LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbData + sizeof(WORD));
+    if (!pidl)
+        return NULL;
+
+    pidl->mkid.cb = cbData;
+    wcscpy((WCHAR*)&pidl->mkid.abID[0], lpNetworkPlace);
+    *(WORD*)((char*)pidl + cbData) = 0;
+
+    return pidl;
+}
+#endif
+
 /***********************************************************************
 *   IShellFolder implementation
 */
+
+class CNetFolderEnum :
+    public CEnumIDListBase
+{
+    public:
+        CNetFolderEnum();
+        ~CNetFolderEnum();
+        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
+        BOOL CreateMyCompEnumList(DWORD dwFlags);
+        BOOL EnumerateRec(LPNETRESOURCE lpNet);
+
+        BEGIN_COM_MAP(CNetFolderEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
+};
 
 static shvheader NetworkPlacesSFHeader[] = {
     {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
@@ -44,6 +75,119 @@ static shvheader NetworkPlacesSFHeader[] = {
 #define COLUMN_NETLOCATION   3
 
 #define NETWORKPLACESSHELLVIEWCOLUMNS 4
+
+CNetFolderEnum::CNetFolderEnum()
+{
+}
+
+CNetFolderEnum::~CNetFolderEnum()
+{
+}
+
+HRESULT WINAPI CNetFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
+{
+    if (CreateMyCompEnumList(dwFlags) == FALSE)
+        return E_FAIL;
+
+    return S_OK;
+}
+
+/**************************************************************************
+ *  CDrivesFolderEnum::CreateMyCompEnumList()
+ */
+
+BOOL CNetFolderEnum::EnumerateRec(LPNETRESOURCE lpNet)
+{
+    BOOL bRet = TRUE;
+    DWORD dRet;
+    HANDLE hEnum;
+    LPNETRESOURCE lpRes;
+    DWORD dSize = 0x1000;
+    DWORD dCount = -1;
+    LPNETRESOURCE lpCur;
+
+    dRet = WNetOpenEnum(RESOURCE_GLOBALNET, RESOURCETYPE_DISK, 0, lpNet, &hEnum);
+    if (dRet != WN_SUCCESS)
+    {
+        ERR("WNetOpenEnum() failed: %x\n", dRet);
+        return FALSE;
+    }
+
+    lpRes = (LPNETRESOURCE)CoTaskMemAlloc(dSize);
+    if (!lpRes)
+    {
+        ERR("CoTaskMemAlloc() failed\n");
+        WNetCloseEnum(hEnum);
+        return FALSE;
+    }
+
+    do
+    {
+        dSize = 0x1000;
+        dCount = -1;
+
+        memset(lpRes, 0, dSize);
+        dRet = WNetEnumResource(hEnum, &dCount, lpRes, &dSize);
+        if (dRet == WN_SUCCESS || dRet == WN_MORE_DATA)
+        {
+            lpCur = lpRes;
+            for (; dCount; dCount--)
+            {
+                TRACE("lpRemoteName: %S\n", lpCur->lpRemoteName);
+
+                if ((lpCur->dwUsage & RESOURCEUSAGE_CONTAINER) == RESOURCEUSAGE_CONTAINER)
+                {
+                    TRACE("Found provider: %S\n", lpCur->lpProvider);
+                    /* Sounds like a WTF hack.... Is Wine doing correct? */
+                    if (!wcscmp(lpCur->lpRemoteName, lpCur->lpProvider))
+                    {
+                        lpCur->lpRemoteName = NULL;
+                    }
+                    EnumerateRec(lpCur);
+                }
+                else
+                {
+                    LPITEMIDLIST pidl;
+
+#ifdef HACKY_UNC_PATHS
+                    pidl = ILCreateFromNetworkPlaceW(lpCur->lpRemoteName);
+#endif
+                    if (pidl != NULL)
+                        bRet = AddToEnumList(pidl);
+                    else
+                    {
+                        ERR("ILCreateFromPathW() failed\n");
+                        bRet = FALSE;
+                        break;
+                    }
+                }
+
+                lpCur++;
+            }
+        }
+    } while (dRet != WN_NO_MORE_ENTRIES);
+
+    WNetCloseEnum(hEnum);
+
+    TRACE("Done: %u\n", bRet);
+
+    return bRet;
+}
+
+BOOL CNetFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
+{
+    BOOL bRet = TRUE;
+
+    TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
+
+    /* enumerate the folders */
+    if (dwFlags & SHCONTF_FOLDERS)
+    {
+        bRet = EnumerateRec(NULL);
+    }
+
+    return bRet;
+}
 
 CNetFolder::CNetFolder()
 {
@@ -78,17 +222,13 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
     DWORD attrs = GetFileAttributes(lpszDisplayName);
     if ((attrs & FILE_ATTRIBUTE_DIRECTORY))
     {
+        if (pchEaten)
+            *pchEaten = 0;        /* strange but like the original */
+
         /* YES WE CAN */
 
         /* Create our hacky pidl */
-        int cbData = sizeof(WORD) + sizeof(WCHAR) * (wcslen(lpszDisplayName)+1);
-        LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbData + sizeof(WORD));
-        if (!pidl)
-            return NULL;
-
-        pidl->mkid.cb = cbData;
-        wcscpy((WCHAR*)&pidl->mkid.abID[0], lpszDisplayName);
-        *(WORD*)((char*)pidl + cbData) = 0;
+        LPITEMIDLIST pidl = ILCreateFromNetworkPlaceW(lpszDisplayName);
 
         *ppidl = pidl;
         if (pdwAttributes)
@@ -115,14 +255,7 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
 */
 HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    TRACE("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this,
-          hwndOwner, dwFlags, ppEnumIDList);
-
-    *ppEnumIDList = NULL; //IEnumIDList_Constructor();
-
-    TRACE("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-    return S_FALSE;
-    // return (*ppEnumIDList) ? S_OK : E_OUTOFMEMORY;
+    return ShellObjectCreatorInit<CNetFolderEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 /**************************************************************************

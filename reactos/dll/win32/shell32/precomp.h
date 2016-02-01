@@ -29,6 +29,7 @@
 #include <atlcom.h>
 #include <atlwin.h>
 #include <powrprof.h>
+#include <winnetwk.h>
 
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>
