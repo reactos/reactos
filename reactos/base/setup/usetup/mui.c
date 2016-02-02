@@ -257,7 +257,7 @@ MUIGetString(
 {
     ULONG i;
     const MUI_STRING * entry;
-    CHAR szErr[100];
+    CHAR szErr[128];
 
     entry = FindMUIStringEntries();
     if (entry)

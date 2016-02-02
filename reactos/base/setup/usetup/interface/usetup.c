@@ -1747,7 +1747,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     INPUT_RECORD Ir;
     COORD coPos;
     DWORD Written;
-    CHAR Buffer[100];
+    CHAR Buffer[128];
     WCHAR PartitionSizeBuffer[100];
     ULONG Index;
     WCHAR ch;

@@ -143,7 +143,7 @@ DrawFileSystemList(
     COORD coPos;
     DWORD Written;
     ULONG Index = 0;
-    CHAR Buffer[70];
+    CHAR Buffer[128];
 
     ListEntry = List->ListHead.Flink;
     while (ListEntry != &List->ListHead)
