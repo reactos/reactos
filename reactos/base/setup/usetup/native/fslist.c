@@ -7,6 +7,7 @@ NATIVE_CreateFileSystemList(
     FS_AddProvider(List, L"FAT", VfatFormat, VfatChkdsk);
 #if 0
     FS_AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
+    FS_AddProvider(List, L"NTFS", NtfsFormat, NtfsChkdsk);
 #endif
     return TRUE;
 }

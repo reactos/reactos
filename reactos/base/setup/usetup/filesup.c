@@ -354,7 +354,7 @@ SetupCopyFile(
 
     RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
     IoStatusBlock.Status = 0;
-    ByteOffset.QuadPart = 0;
+    ByteOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandleDest,
                          NULL,
                          NULL,
