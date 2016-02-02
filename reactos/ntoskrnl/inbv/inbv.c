@@ -31,15 +31,15 @@
 
 static KSPIN_LOCK BootDriverLock;
 static KIRQL InbvOldIrql;
-static INBV_DISPLAY_STATE InbvDisplayState;
+static INBV_DISPLAY_STATE InbvDisplayState = INBV_DISPLAY_STATE_DISABLED;
 BOOLEAN InbvBootDriverInstalled = FALSE;
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
-static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter;
-static ULONG ProgressBarLeft, ProgressBarTop;
+static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter = NULL;
+static ULONG ProgressBarLeft = 0, ProgressBarTop = 0;
 static BOOLEAN ShowProgressBar = FALSE;
 static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
-static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters;
+static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
 static ULONG ResourceCount = 0;
 static PUCHAR ResourceList[1 + IDB_CLUSTER_SERVER]; // First entry == NULL, followed by 'ResourceCount' entries.
 
@@ -214,8 +214,8 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                      InLoadOrderLinks);
 
         /* Check for a match */
-        if ((RtlEqualUnicodeString(&LdrEntry->BaseDllName, &UpString, TRUE)) ||
-            (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &MpString, TRUE)))
+        if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &UpString, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &MpString, TRUE))
         {
             /* Break out */
             break;
@@ -226,7 +226,7 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (NextEntry != ListHead)
     {
         /* Try to find the resource */
-        ResourceInfo.Type = 2; //RT_BITMAP;
+        ResourceInfo.Type = 2; // RT_BITMAP;
         ResourceInfo.Name = ResourceId;
         ResourceInfo.Language = 0;
         Status = LdrFindResource_U(LdrEntry->DllBase,
@@ -260,7 +260,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN ULONG Count)
 {
     PCHAR CommandLine;
-    BOOLEAN CustomLogo = FALSE;
+    BOOLEAN ResetMode = FALSE; // By default do not reset the video mode
     ULONG i;
 
     /* Quit if we're already installed */
@@ -270,18 +270,15 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     KeInitializeSpinLock(&BootDriverLock);
     if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
     {
-        /* Check if we have a custom boot logo */
+        /* Reset the video mode in case we do not have a custom boot logo */
         CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
-        CustomLogo  = (CommandLine && strstr(CommandLine, "BOOTLOGO") != NULL);
+        ResetMode   = (CommandLine == NULL) || (strstr(CommandLine, "BOOTLOGO") == NULL);
     }
 
     /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(FALSE);
+    InbvBootDriverInstalled = VidInitialize(ResetMode);
     if (InbvBootDriverInstalled)
     {
-        /* Now reset the display, but only if there's a custom boot logo */
-        VidResetDisplay(CustomLogo);
-
         /* Find bitmap resources in the kernel */
         ResourceCount = min(Count, RTL_NUMBER_OF(ResourceList) - 1);
         for (i = 1; i <= ResourceCount; i++)
@@ -696,7 +693,7 @@ InbvSetProgressBarCoordinates(IN ULONG Left,
 {
     /* Update the coordinates */
     ProgressBarLeft = Left;
-    ProgressBarTop = Top;
+    ProgressBarTop  = Top;
 
     /* Enable the progress bar */
     ShowProgressBar = TRUE;
