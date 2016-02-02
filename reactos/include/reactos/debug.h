@@ -137,15 +137,15 @@ RtlAssert(
 
     #define UNIMPLEMENTED
 
-    #define ERR_      __noop
-    #define WARN_     __noop
-    #define TRACE_    __noop
-    #define INFO_     __noop
+    #define ERR_(ch, ...)      __noop
+    #define WARN_(ch, ...)     __noop
+    #define TRACE_(ch, ...)    __noop
+    #define INFO_(ch, ...)     __noop
 
-    #define ERR__     __noop
-    #define WARN__    __noop
-    #define TRACE__   __noop
-    #define INFO__    __noop
+    #define ERR__(ch, ...)     __noop
+    #define WARN__(ch, ...)    __noop
+    #define TRACE__(ch, ...)   __noop
+    #define INFO__(ch, ...)    __noop
 #else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
