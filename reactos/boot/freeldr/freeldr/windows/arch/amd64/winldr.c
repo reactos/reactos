@@ -28,6 +28,7 @@ ULONG_PTR TssBasePage;
 
 /* FUNCTIONS **************************************************************/
 
+static
 BOOLEAN
 MempAllocatePageTables(VOID)
 {
@@ -60,6 +61,7 @@ MempAllocatePageTables(VOID)
     return TRUE;
 }
 
+static
 PHARDWARE_PTE
 MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
 {
@@ -85,6 +87,7 @@ MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
     return SubDir;
 }
 
+static
 BOOLEAN
 MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 {
@@ -143,6 +146,7 @@ MempIsPageMapped(PVOID VirtualAddress)
     return TRUE;
 }
 
+static
 PFN_NUMBER
 MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, PFN_NUMBER cPages)
 {
@@ -202,6 +206,7 @@ MempUnmapPage(PFN_NUMBER Page)
    // TRACE(">>> MempUnmapPage\n");
 }
 
+static
 VOID
 WinLdrpMapApic(VOID)
 {
@@ -234,6 +239,7 @@ WinLdrpMapApic(VOID)
     MempMapSinglePage(APIC_BASE, APICAddress);
 }
 
+static
 BOOLEAN
 WinLdrMapSpecialPages(VOID)
 {
@@ -265,6 +271,7 @@ WinLdrMapSpecialPages(VOID)
     return TRUE;
 }
 
+static
 VOID
 Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 {
@@ -313,6 +320,7 @@ Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
     TRACE("Leave Amd64SetupGdt()\n");
 }
 
+static
 VOID
 Amd64SetupIdt(PVOID IdtBase)
 {
@@ -421,4 +429,3 @@ VOID
 MempDump(VOID)
 {
 }
-

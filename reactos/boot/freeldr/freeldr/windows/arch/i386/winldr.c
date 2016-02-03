@@ -46,6 +46,7 @@ PVOID GdtIdt;
 
 /* FUNCTIONS **************************************************************/
 
+static
 BOOLEAN
 MempAllocatePageTables(VOID)
 {
@@ -115,6 +116,7 @@ MempAllocatePageTables(VOID)
     return TRUE;
 }
 
+static
 VOID
 MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 {
@@ -144,8 +146,8 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-        IN PFN_COUNT NumberOfPages,
-        IN BOOLEAN KernelMapping)
+                IN PFN_COUNT NumberOfPages,
+                IN BOOLEAN KernelMapping)
 {
     PHARDWARE_PTE PhysicalPT;
     PHARDWARE_PTE KernelPT;
@@ -221,6 +223,7 @@ MempUnmapPage(PFN_NUMBER Page)
     }
 }
 
+static
 VOID
 WinLdrpMapApic(VOID)
 {
@@ -252,6 +255,7 @@ WinLdrpMapApic(VOID)
     HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
 }
 
+static
 BOOLEAN
 WinLdrMapSpecialPages(void)
 {
@@ -297,6 +301,7 @@ enum
     UltraVision_8x10Font = 0x12,
 };
 
+static
 void WinLdrSetupSpecialDataPointers(VOID)
 {
     REGS BiosRegs;
@@ -690,4 +695,3 @@ MempDump(VOID)
     }
 }
 #endif
-

@@ -99,6 +99,7 @@ MempDump(VOID)
     return;
 }
 
+static
 BOOLEAN
 WinLdrMapSpecialPages(ULONG PcrBasePage)
 {
@@ -191,6 +192,7 @@ WinLdrSetupForNt(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     LoaderBlock->Thread = (ULONG_PTR)PdrPage->InitialThread;
 }
 
+static
 BOOLEAN
 MempAllocatePageTables(VOID)
 {
@@ -276,25 +278,4 @@ VOID
 WinLdrSetupMachineDependent(
     PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-}
-
-VOID DiskStopFloppyMotor(VOID)
-{
-}
-
-VOID
-RealEntryPoint(VOID)
-{
-    BootMain("");
-}
-
-VOID
-FrLdrBugCheckWithMessage(
-    ULONG BugCode,
-    PCHAR File,
-    ULONG Line,
-    PSTR Format,
-    ...)
-{
-
 }

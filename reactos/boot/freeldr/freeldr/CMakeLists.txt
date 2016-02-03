@@ -91,7 +91,6 @@ if(ARCH STREQUAL "i386")
         fs/pxe.c
         arch/i386/archmach.c
         arch/i386/drivemap.c
-        arch/i386/halstub.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
@@ -103,7 +102,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386rtl.c
         arch/i386/i386vid.c
         arch/i386/machpc.c
-        arch/i386/ntoskrnl.c
         arch/i386/pccons.c
         arch/i386/pcdisk.c
         arch/i386/pcmem.c
@@ -118,7 +116,9 @@ if(ARCH STREQUAL "i386")
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        arch/i386/winldr.c
+        windows/arch/i386/halstub.c
+        windows/arch/i386/ntoskrnl.c
+        windows/arch/i386/winldr.c
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
@@ -142,19 +142,20 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/i386disk.c
         arch/i386/i386vid.c
         arch/i386/machpc.c
-        arch/i386/ntoskrnl.c
         arch/i386/pccons.c
         arch/i386/pcdisk.c
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
-        arch/amd64/winldr.c)
+        windows/arch/i386/ntoskrnl.c
+        windows/arch/amd64/winldr.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/arm/boot.S)
     list(APPEND FREELDR_COMMON_SOURCE
+        arch/arm/entry.c
         arch/arm/macharm.c
-        arch/arm/winldr.c)
+        windows/arch/arm/winldr.c)
 else()
 #TBD
 endif()
@@ -193,7 +194,7 @@ if(MSVC)
         add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
         add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER")
     else()
-        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text ")
+        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
         add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
     endif()
 else()

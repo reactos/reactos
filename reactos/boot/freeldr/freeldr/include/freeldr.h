@@ -79,6 +79,8 @@
 #include <ui.h>
 #include <ver.h>
 #include <video.h>
+
+/* NTOS loader */
 #include <winldr.h>
 
 /* File system headers */
