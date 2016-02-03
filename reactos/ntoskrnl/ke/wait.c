@@ -608,7 +608,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
              (!Timeout || Timeout->QuadPart != 0))
     {
-        /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
+        /* HACK: tcpip is broken and waits with spinlocks acquired (CORE-6473) */
         DPRINT("%s called at DISPATCH_LEVEL with non-zero timeout!\n",
                __FUNCTION__);
     }

@@ -3828,7 +3828,7 @@ CHubController::SetDeviceInterface(
         //
         // register device interface
         //
-        Status = IoRegisterDeviceInterface(m_HubControllerDeviceObject, &GUID_DEVINTERFACE_USB_HUB, 0, &m_HubDeviceInterfaceString);
+        Status = IoRegisterDeviceInterface(m_HubControllerDeviceObject, &GUID_DEVINTERFACE_USB_HUB, NULL, &m_HubDeviceInterfaceString);
 
         if (NT_SUCCESS(Status))
         {
