@@ -420,10 +420,6 @@ PpcHwIdle(VOID)
     /* UNIMPLEMENTED */
 }
 
-/* Compatibility functions that don't do much */
-VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
-}
-
 void PpcDefaultMachVtbl()
 {
     MachVtbl.ConsPutChar = PpcOfwPutChar;
@@ -442,7 +438,6 @@ void PpcDefaultMachVtbl()
     MachVtbl.VideoSetPaletteColor = PpcVideoSetPaletteColor;
     MachVtbl.VideoGetPaletteColor = PpcVideoGetPaletteColor;
     MachVtbl.VideoSync = PpcVideoSync;
-    MachVtbl.VideoPrepareForReactOS = PpcVideoPrepareForReactOS;
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 

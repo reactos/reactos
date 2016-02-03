@@ -62,10 +62,6 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
     *Depth = 16;
 }
 
-void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
-{
-}
-
 VOID PpcInitializeMmu(int max);
 
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
@@ -140,8 +136,6 @@ void PpcPrepInit()
     MachVtbl.VideoClearScreen = PpcPrepVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcPrepVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PpcPrepVideoGetDisplaySize;
-
-    MachVtbl.VideoPrepareForReactOS = PpcPrepVideoPrepareForReactOS;
 
     MachVtbl.GetMemoryMap = PpcPrepGetMemoryMap;
     MachVtbl.HwDetect = PpcPrepHwDetect;
