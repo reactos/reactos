@@ -30,6 +30,50 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(icon);
 
+#include <pshpack1.h>
+
+typedef struct
+{
+    BYTE        bWidth;          /* Width, in pixels, of the image	*/
+    BYTE        bHeight;         /* Height, in pixels, of the image	*/
+    BYTE        bColorCount;     /* Number of colors in image (0 if >=8bpp) */
+    BYTE        bReserved;       /* Reserved ( must be 0)		*/
+    WORD        wPlanes;         /* Color Planes			*/
+    WORD        wBitCount;       /* Bits per pixel			*/
+    DWORD       dwBytesInRes;    /* How many bytes in this resource?	*/
+    DWORD       dwImageOffset;   /* Where in the file is this image?	*/
+} icoICONDIRENTRY, *LPicoICONDIRENTRY;
+
+typedef struct
+{
+    WORD            idReserved;   /* Reserved (must be 0) */
+    WORD            idType;       /* Resource Type (RES_ICON or RES_CURSOR) */
+    WORD            idCount;      /* How many images */
+    icoICONDIRENTRY idEntries[1]; /* An entry for each image (idCount of 'em) */
+} icoICONDIR, *LPicoICONDIR;
+
+typedef struct
+{
+    WORD offset;
+    WORD length;
+    WORD flags;
+    WORD id;
+    WORD handle;
+    WORD usage;
+} NE_NAMEINFO;
+
+typedef struct
+{
+    WORD  type_id;
+    WORD  count;
+    DWORD resloader;
+} NE_TYPEINFO;
+
+#define NE_RSCTYPE_ICON        0x8003
+#define NE_RSCTYPE_GROUP_ICON  0x800e
+
+#include <poppack.h>
+
 #if 0
 static void dumpIcoDirEnty ( LPicoICONDIRENTRY entry )
 {
@@ -122,7 +166,7 @@ static DWORD USER32_GetResourceTable(LPBYTE peimage,DWORD pesize,LPBYTE *retptr)
 	}
 	if (*((DWORD*)(peimage + mz_header->e_lfanew)) == IMAGE_NT_SIGNATURE )
 	  return IMAGE_NT_SIGNATURE;
-#ifdef WINE
+
 	if (*((WORD*)(peimage + mz_header->e_lfanew)) == IMAGE_OS2_SIGNATURE )
 	{
 	  IMAGE_OS2_HEADER	* ne_header;
@@ -139,10 +183,8 @@ static DWORD USER32_GetResourceTable(LPBYTE peimage,DWORD pesize,LPBYTE *retptr)
 
 	  return IMAGE_OS2_SIGNATURE;
 	}
-#endif
 	return 0; /* failed */
 }
-#ifdef WINE
 /*************************************************************************
  *			USER32_LoadResource
  */
@@ -204,7 +246,7 @@ static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG
 	}
 	return 0;
 }
-#endif
+
 /*************************************************************************
  *	ICO_ExtractIconExW		[internal]
  *
@@ -281,9 +323,8 @@ static UINT ICO_ExtractIconExW(
 
 	sig = USER32_GetResourceTable(peimage, fsizel, &pData);
 
-#ifdef WINE
-/* ico file or NE exe/dll*/
-	if (sig==IMAGE_OS2_SIGNATURE || sig==1) /* .ICO file */
+/* NE exe/dll */
+	if (sig==IMAGE_OS2_SIGNATURE)
 	{
 	  BYTE		*pCIDir = 0;
 	  NE_TYPEINFO	*pTInfo = (NE_TYPEINFO*)(pData + 2);
@@ -370,7 +411,7 @@ static UINT ICO_ExtractIconExW(
 	    }
 	  }
 	}
-#else
+    else
     if (sig == 1 || sig == 2) /* .ICO or .CUR file */
     {
         TRACE("-- icon Signature (0x%08x)\n", sig);
@@ -429,7 +470,6 @@ static UINT ICO_ExtractIconExW(
         }
         ret = iconCount;	/* return number of retrieved icons */
     }
-#endif
 /* end ico file */
 
 /* exe/dll */
