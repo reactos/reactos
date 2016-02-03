@@ -126,7 +126,11 @@ else()
     set_subsystem(rosload 16)
 endif()
 
-set_entrypoint(rosload OslMain@4)
+if(ARCH STREQUAL "i386")
+    set_entrypoint(rosload OslMain 4)
+else()
+    set_entrypoint(rosload OslMain)
+endif()
 
 target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
 

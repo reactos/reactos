@@ -2724,6 +2724,7 @@ Quickie:
  *
  *--*/
 NTSTATUS
+NTAPI
 BmMain (
     _In_ PBOOT_APPLICATION_PARAMETER_BLOCK BootParameters
     )

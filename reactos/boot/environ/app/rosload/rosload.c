@@ -17,7 +17,7 @@
 /*++
  * @name OslMain
  *
- *     The BmMain function implements the Windows Boot Application entrypoint for
+ *     The OslMain function implements the Windows Boot Application entrypoint for
  *     the OS Loader.
  *
  * @param  BootParameters

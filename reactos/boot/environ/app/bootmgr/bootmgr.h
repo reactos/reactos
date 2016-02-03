@@ -62,6 +62,7 @@ typedef struct _BL_PACKED_BOOT_ERROR
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+NTAPI
 BmMain (
     _In_ PBOOT_APPLICATION_PARAMETER_BLOCK BootParameters
     );
