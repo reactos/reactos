@@ -24,11 +24,6 @@
 
 /* GLOBALS ********************************************************************/
 
-// ARC Disk Information
-ARC_DISK_SIGNATURE reactos_arc_disk_info[32];
-ULONG reactos_disk_count = 0;
-CHAR reactos_arc_strings[32][256];
-
 typedef
 VOID
 (*OS_LOADING_METHOD)(IN OperatingSystemItem* OperatingSystem,

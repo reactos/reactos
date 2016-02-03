@@ -89,6 +89,7 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_EXTENDED              0x05      // Extended partition entry
 #define PARTITION_HUGE                  0x06      // Huge partition MS-DOS V4
 #define PARTITION_IFS                   0x07      // IFS Partition
+#define PARTITION_OS2BOOTMGR            0x0A      // OS/2 Boot Manager/OPUS/Coherent swap
 #define PARTITION_FAT32                 0x0B      // FAT32
 #define PARTITION_FAT32_XINT13          0x0C      // FAT32 using extended int13 services
 #define PARTITION_XINT13                0x0E      // Win95 partition using extended int13 services
@@ -97,6 +98,12 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_PREP                  0x41      // PowerPC Reference Platform (PReP) Boot Partition
 #define PARTITION_LDM                   0x42      // Logical Disk Manager partition
 #define PARTITION_UNIX                  0x63      // Unix
+#define VALID_NTFT                      0xC0      // NTFT uses high order bits
+#define PARTITION_NTFT                  0x80      // NTFT partition
+#ifdef __REACTOS__
+#define PARTITION_OLD_LINUX             0x43
+#define PARTITION_LINUX                 0x83
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

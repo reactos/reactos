@@ -16,6 +16,11 @@
 
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
+// ARC Disk Information
+ARC_DISK_SIGNATURE reactos_arc_disk_info[32];
+ULONG reactos_disk_count = 0;
+CHAR reactos_arc_strings[32][256];
+
 /* FUNCTIONS ******************************************************************/
 
 #define TAG_HW_COMPONENT_DATA 'DCwH'
