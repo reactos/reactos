@@ -53,11 +53,6 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
-#ifdef _M_IX86
-    HalpInitializePciStubs();
-    HalpInitBusHandler();
-#endif
-
     RunLoader();
 
 Quit:

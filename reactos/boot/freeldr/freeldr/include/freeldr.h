@@ -63,7 +63,6 @@
 #include <comm.h>
 #include <disk.h>
 #include <fs.h>
-#include <hal.h>
 #include <inffile.h>
 #include <inifile.h>
 #include <keycodes.h>
