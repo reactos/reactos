@@ -258,8 +258,8 @@ MmCheckFreeldrImageFile(VOID)
     FileHeader = &NtHeaders->FileHeader;
     if ((FileHeader->Machine != IMAGE_FILE_MACHINE_NATIVE) ||
         (FileHeader->NumberOfSections != FREELDR_SECTION_COUNT) ||
-        (FileHeader->PointerToSymbolTable != 0) ||
-        (FileHeader->NumberOfSymbols != 0) ||
+        (FileHeader->PointerToSymbolTable != 0) ||  // Symbols stripped
+        (FileHeader->NumberOfSymbols != 0) ||       //    ""      ""
         (FileHeader->SizeOfOptionalHeader != sizeof(IMAGE_OPTIONAL_HEADER)))
     {
         ERR("FreeLdr FileHeader is invalid.\n");
@@ -283,7 +283,7 @@ MmCheckFreeldrImageFile(VOID)
     /* Check the optional header */
     OptionalHeader = &NtHeaders->OptionalHeader;
     if ((OptionalHeader->Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) ||
-        (OptionalHeader->Subsystem != 1) || // native
+        (OptionalHeader->Subsystem != IMAGE_SUBSYSTEM_NATIVE) ||
         (OptionalHeader->ImageBase != FREELDR_PE_BASE) ||
         (OptionalHeader->SizeOfImage > MAX_FREELDR_PE_SIZE) ||
         (OptionalHeader->SectionAlignment != OptionalHeader->FileAlignment))

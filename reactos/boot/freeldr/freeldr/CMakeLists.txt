@@ -10,7 +10,7 @@ if(MSVC)
     replace_compile_flags("/hotpatch" " ")
 endif()
 
-spec2def(freeldr.sys freeldr.spec)
+spec2def(freeldr_pe.exe freeldr.spec)
 
 if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
@@ -177,12 +177,14 @@ list(APPEND FREELDR_BASE_SOURCE
     lib/inffile/inffile.c
     lib/rtl/libsupp.c)
 
-if(NOT MSVC)
-    list(APPEND FREELDR_BASE_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
+if(ARCH STREQUAL "i386")
+    # Must be included together with disk/scsiport.c
+    list(APPEND FREELDR_BASE_SOURCE
+        ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
 endif()
 
-add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
-add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
+add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC AND SEPARATE_DBG)
     set_target_properties(freeldr_pe PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
@@ -234,12 +236,10 @@ add_dependencies(freeldr_pe_dbg asm)
 get_target_property(_freeldr_pe_output_file freeldr_pe LOCATION)
 
 if(NOT ARCH STREQUAL "arm")
-
     concatenate_files(
         ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         ${_freeldr_pe_output_file})
-
     add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 else()
     add_custom_target(freeldr ALL DEPENDS ${_freeldr_pe_output_file})
@@ -250,16 +250,13 @@ add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINAT
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR livecd hybridcd NAME_ON_CD setupldr.sys)
 
 if(NOT ARCH STREQUAL "arm")
-
     concatenate_files(
         ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         ${_freeldr_pe_output_file})
-
     add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 else()
     add_custom_target(setupldr ALL DEPENDS ${_freeldr_pe_output_file})
 endif()
 
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
-
