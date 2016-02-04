@@ -773,7 +773,7 @@ AllocateUserMessage(BOOL KEvent)
 
    if (KEvent)
    {
-      Message->pkCompletionEvent = &Message->CompletionEvent;;
+      Message->pkCompletionEvent = &Message->CompletionEvent;
 
       KeInitializeEvent(Message->pkCompletionEvent, NotificationEvent, FALSE);
    }

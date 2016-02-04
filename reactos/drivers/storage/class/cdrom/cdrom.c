@@ -3294,7 +3294,7 @@ CdRomDeviceControlCompletion(
             // update information field.
             //
 
-            realIrp->IoStatus.Information = FIELD_OFFSET(DISK_GEOMETRY_EX, Data);;
+            realIrp->IoStatus.Information = FIELD_OFFSET(DISK_GEOMETRY_EX, Data);
             break;
         }
 

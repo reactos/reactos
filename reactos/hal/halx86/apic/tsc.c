@@ -93,7 +93,7 @@ HalpInitializeTsc(VOID)
     HalEnableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL, Latched);
 
     /* Read register C, so that the next interrupt can happen */
-    HalpReadCmos(RTC_REGISTER_C);;
+    HalpReadCmos(RTC_REGISTER_C);
 
     /* Wait for completion */
     _enable();

@@ -68,7 +68,7 @@ gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext)
     Status = KdpReceiveByte(&Byte);
     if (Status != KdPacketReceived)
         goto end;
-    ReceivedCheckSum = hex_value(Byte) << 4;;
+    ReceivedCheckSum = hex_value(Byte) << 4;
 
     Status = KdpReceiveByte(&Byte);
     if (Status != KdPacketReceived)

@@ -138,7 +138,7 @@ HRESULT ReadRegistryValue(HKEY root, PCWSTR path, PCWSTR valueName, PVOID * valu
 
     if (*valueLength > 0)
     {
-        PBYTE data = (PBYTE) CoTaskMemAlloc(*valueLength);;
+        PBYTE data = (PBYTE) CoTaskMemAlloc(*valueLength);
         *valueData = data;
 
         res = RegQueryValueExW(hkey, valueName, NULL, NULL, data, valueLength);

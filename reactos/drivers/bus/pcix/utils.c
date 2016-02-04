@@ -33,7 +33,7 @@ PciUnicodeStringStrStr(IN PUNICODE_STRING InputString,
 
     /* Build a partial string with the smaller substring */
     PartialString.Length = EqualString->Length;
-    PartialString.MaximumLength = InputString->MaximumLength;;
+    PartialString.MaximumLength = InputString->MaximumLength;
     PartialString.Buffer = InputString->Buffer;
 
     /* Check how many characters that need comparing */

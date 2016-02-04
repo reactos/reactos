@@ -65,7 +65,7 @@ UINT WINAPI IMM_ImmProcessKey(HWND hwnd, HKL hkl, UINT Vk, LPARAM lParam, DWORD 
 BOOL WINAPI IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
-    HMODULE imm32 = ghImm32;;
+    HMODULE imm32 = ghImm32;
 
     if (gImmApiEntries.pImmIsIME != 0)
     {

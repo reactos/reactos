@@ -1070,7 +1070,7 @@ BlockIoEfiGetDeviceInformation (
                 /* Otherwise, this is a raw disk */
                 BlockDevice->PartitionType = RawPartition;
                 Device->Local.HardDisk.PartitionType = RawPartition;
-                Device->Local.HardDisk.Raw.DiskNumber = BlockIoFirmwareRawDiskCount++;;
+                Device->Local.HardDisk.Raw.DiskNumber = BlockIoFirmwareRawDiskCount++;
             }
             else if (LeafNode->SubType == MEDIA_CDROM_DP)
             {

@@ -155,7 +155,7 @@ void MixColumn(MV_U8 a[4][MAXBC], MV_U8 rk[4][MAXBC]) {
     }
 	for(i = 0; i < 4; i++)
 		/*for(j = 0; j < BC; j++) a[i][j] = b[i][j];*/
-        ((MV_U32*)(&(a[i][0])))[0] = ((MV_U32*)(&(b[i][0])))[0] ^ ((MV_U32*)(&(rk[i][0])))[0];;
+        ((MV_U32*)(&(a[i][0])))[0] = ((MV_U32*)(&(b[i][0])))[0] ^ ((MV_U32*)(&(rk[i][0])))[0];
 }
 
 void InvMixColumn(MV_U8 a[4][MAXBC]) {

@@ -466,7 +466,7 @@ UserGetKeyboardLayout(
 
     pti = PsGetThreadWin32Thread(pThread);
     pKl = pti->KeyboardLayout;
-    hKl = pKl ? pKl->hkl : NULL;;
+    hKl = pKl ? pKl->hkl : NULL;
     ObDereferenceObject(pThread);
     return hKl;
 }

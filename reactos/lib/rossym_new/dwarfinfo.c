@@ -852,7 +852,7 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
             stackpush(&stack, val);
         } break;
         case OpFbreg: {
-            ulong val, offset = dwarfget128s(buf);;
+            ulong val, offset = dwarfget128s(buf);
             void* addr = (void*)cfa;
             werrstr("FBREG cfa %x offset %x", cfa, offset);
             if (!RosSymCallbacks.MemGetProc

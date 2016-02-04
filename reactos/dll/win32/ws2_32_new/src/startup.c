@@ -156,7 +156,7 @@ WSAStartup(IN WORD wVersionRequested,
         default:
 
             /* Return 2.2 */
-            VersionReturned = MAKEWORD(2, 2);;
+            VersionReturned = MAKEWORD(2, 2);
             break;
     }
 

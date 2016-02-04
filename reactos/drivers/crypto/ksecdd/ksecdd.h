@@ -71,7 +71,7 @@ typedef struct _KSEC_ENTROPY_DATA
     SYSTEM_PROCESS_INFORMATION SystemProcessInformation;
 } KSEC_ENTROPY_DATA, *PKSEC_ENTROPY_DATA;
 
-extern PEPROCESS KsecLsaProcess;;
+extern PEPROCESS KsecLsaProcess;
 extern HANDLE KsecLsaProcessHandle;
 
 NTSTATUS

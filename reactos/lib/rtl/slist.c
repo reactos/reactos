@@ -70,7 +70,7 @@ RtlFirstEntrySList(
 
 #if defined(_IA64_)
         /* On Itanium we stored the region in the list head */
-        Pointer.Region = SListHead->Region;;
+        Pointer.Region = SListHead->Region;
 #else
         /* On amd64 we just use the list head itself */
         Pointer.Region = (ULONG64)SListHead;

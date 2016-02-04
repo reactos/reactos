@@ -480,7 +480,7 @@ MmDeleteVirtualMapping(
 
     /* Return information to the caller */
     if (WasDirty)
-        *WasDirty = (BOOLEAN)OldPte.u.Hard.Dirty;;
+        *WasDirty = (BOOLEAN)OldPte.u.Hard.Dirty;
 
     if (Page)
         *Page = Pfn;

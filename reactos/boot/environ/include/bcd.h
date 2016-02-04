@@ -288,7 +288,7 @@ typedef struct _BCD_OBJECT_DESCRIPTION
 {
     ULONG Valid;
     ULONG Type;
-} BCD_OBJECT_DESCRIPTION, *PBCD_OBJECT_DESCRIPTION;;
+} BCD_OBJECT_DESCRIPTION, *PBCD_OBJECT_DESCRIPTION;
 
 /* FUNCTIONS ******************************************************************/
 

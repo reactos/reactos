@@ -135,7 +135,7 @@ x86BiosAllocateBuffer(
     *Segment = 0x2000;
     *Offset = 0;
 
-    return STATUS_SUCCESS;;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -159,7 +159,7 @@ x86BiosFreeBuffer(
     }
 
     /* Buffer is freed, nothing more to do */
-    return STATUS_SUCCESS;;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

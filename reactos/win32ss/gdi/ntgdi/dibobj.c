@@ -766,7 +766,7 @@ GreGetDIBitsInternal(
         Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
         Info->bmiHeader.biHeight = (psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
                                    -psurf->SurfObj.sizlBitmap.cy :
-                                   psurf->SurfObj.sizlBitmap.cy;;
+                                   psurf->SurfObj.sizlBitmap.cy;
         Info->bmiHeader.biPlanes = 1;
         Info->bmiHeader.biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
         Info->bmiHeader.biSizeImage = DIB_GetDIBImageBytes( Info->bmiHeader.biWidth,

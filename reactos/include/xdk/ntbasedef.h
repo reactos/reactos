@@ -322,7 +322,7 @@ typedef void *PVOID;
 typedef void * POINTER_64 PVOID64;
 
 /* Handle Type */
-typedef void *HANDLE, **PHANDLE;;
+typedef void *HANDLE, **PHANDLE;
 #ifdef STRICT
  #define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
 #else
@@ -367,7 +367,7 @@ typedef unsigned long FLONG;
 typedef unsigned char BOOLEAN, *PBOOLEAN;
 $if(_NTDEF_)
 typedef ULONG LOGICAL, *PLOGICAL;
-typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;;
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;
 typedef signed char SCHAR, *PSCHAR;
 $endif(_NTDEF_)
 

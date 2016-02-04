@@ -124,7 +124,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Read register C, so that the next interrupt can happen */
-    HalpReadCmos(RTC_REGISTER_C);;
+    HalpReadCmos(RTC_REGISTER_C);
 
     /* Save increment */
     LastIncrement = HalpCurrentTimeIncrement;

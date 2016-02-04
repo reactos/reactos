@@ -15,7 +15,7 @@
 
 extern ULONG gulFirstFree;
 extern ULONG gulFirstUnused;
-extern PENTRY gpentHmgr;;
+extern PENTRY gpentHmgr;
 
 ULONG gulLogUnique = 0;
 

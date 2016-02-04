@@ -665,7 +665,7 @@ IopAllocateIrpMustSucceed(IN CCHAR StackSize)
         i--;
 
         /* First, sleep for 10ms */
-        Sleep.QuadPart = -10 * 1000 * 10;;
+        Sleep.QuadPart = -10 * 1000 * 10;
         KeDelayExecutionThread(KernelMode, FALSE, &Sleep);
 
         /* Then, retry allocation */

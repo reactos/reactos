@@ -621,7 +621,7 @@ TranslateMachineInformationXML(IN PWCHAR *Buffer,
     if (!p) return STATUS_NO_MEMORY;
 
     wcscpy(p, L"<machine-info>\r\n");
-    p += wcslen(L"<machine-info>\r\n");;
+    p += wcslen(L"<machine-info>\r\n");
 
     if (MachineInformation->MachineName)
     {

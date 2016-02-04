@@ -870,7 +870,7 @@ Return Value:
         ClasspFreeSrb(FdoExtension, Srb);
     }
     else {
-        DBGERR(("ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));;
+        DBGERR(("ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));
         ExFreePool(Srb);
     }
 }

@@ -2085,7 +2085,7 @@ Return Value:
                                              RawSectorAlign( CurrentRawByteCount),
                                              PVOID );
                                              
-                ScratchUserBufferOffset += RawSectorAlign( CurrentRawByteCount);;
+                ScratchUserBufferOffset += RawSectorAlign( CurrentRawByteCount);
 
                 //
                 //  Set the flag indicating we want to round the scratch buffer

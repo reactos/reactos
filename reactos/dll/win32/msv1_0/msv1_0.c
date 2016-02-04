@@ -185,7 +185,7 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     LocalBuffer->LogonServer.Length = LogonServer->Length;
     LocalBuffer->LogonServer.MaximumLength = LogonServer->Length + sizeof(WCHAR);
-    LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);;
+    LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
     memcpy(Ptr,
            LogonServer->Buffer,
            LogonServer->Length);

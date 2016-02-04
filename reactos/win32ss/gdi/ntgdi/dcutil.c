@@ -272,7 +272,7 @@ GreGetGraphicsMode(HDC hdc)
       EngSetLastError(ERROR_INVALID_HANDLE);
       return CLR_INVALID;
    }
-   GraphicsMode = dc->pdcattr->iGraphicsMode;;
+   GraphicsMode = dc->pdcattr->iGraphicsMode;
    DC_UnlockDc(dc);
    return GraphicsMode;
 }
