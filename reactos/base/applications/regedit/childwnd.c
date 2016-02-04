@@ -309,6 +309,15 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
     LPCWSTR keyPath, rootName;
     LPWSTR fullPath;
 
+    /* Wipe the listview, the status bar and the address bar if the root key was selected */
+    if (TreeView_GetParent(g_pChildWnd->hTreeWnd, hItem) == NULL)
+    {
+        (void)ListView_DeleteAllItems(g_pChildWnd->hListWnd);
+        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
+        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
+        return;
+    }
+
     if (pszPath == NULL)
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
     else
@@ -347,12 +356,6 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
                     EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
             }
         }
-    }
-    else
-    {
-        (void)ListView_DeleteAllItems(g_pChildWnd->hListWnd);
-        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
-        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
     }
 }
 
