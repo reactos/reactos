@@ -294,7 +294,7 @@ KiIdleLoop(VOID)
         /* Check if a new thread is scheduled for execution */
         if (Prcb->NextThread)
         {
-            /* Enable interupts */
+            /* Enable interrupts */
             _enable();
 
             /* Capture current thread data */

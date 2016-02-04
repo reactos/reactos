@@ -151,7 +151,7 @@
                                 | OHCI_BULK_LIST_ENABLE)
 
 //
-//  All interupts
+//  All interrupts
 // 
 #define OHCI_ALL_INTERRUPTS     (OHCI_SCHEDULING_OVERRUN \
                                 | OHCI_WRITEBACK_DONE_HEAD \
@@ -163,7 +163,7 @@
                                 | OHCI_OWNERSHIP_CHANGE)
 
 //
-//  All normal interupts
+//  All normal interrupts
 //
 #define OHCI_NORMAL_INTERRUPTS      (OHCI_SCHEDULING_OVERRUN \
                                     | OHCI_WRITEBACK_DONE_HEAD \
