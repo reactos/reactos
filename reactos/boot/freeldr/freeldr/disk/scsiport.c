@@ -1,3 +1,13 @@
+/*
+ * PROJECT:         ReactOS Boot Loader (FreeLDR)
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            boot/freeldr/freeldr/disk/scsiport.c
+ * PURPOSE:         Interface for SCSI Emulation
+ * PROGRAMMERS:     Hervé Poussineau  <hpoussin@reactos.org>
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 
 #define _SCSIPORT_
@@ -48,10 +58,27 @@
 
 DBG_DEFAULT_CHANNEL(SCSIPORT);
 
+/* GLOBALS ********************************************************************/
+
 #ifdef _M_IX86
 VOID NTAPI HalpInitializePciStubs(VOID);
 VOID NTAPI HalpInitBusHandler(VOID);
 #endif
+
+typedef struct tagDISKCONTEXT
+{
+    /* Device ID */
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    UCHAR PathId;
+    UCHAR TargetId;
+    UCHAR Lun;
+
+    /* Device characteristics */
+    ULONG SectorSize;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
+    ULONGLONG SectorNumber;
+} DISKCONTEXT;
 
 typedef struct
 {
@@ -82,6 +109,8 @@ typedef struct
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
 PSCSI_PORT_DEVICE_EXTENSION ScsiDeviceExtensions[SCSI_MAXIMUM_BUSES];
+
+/* FUNCTIONS ******************************************************************/
 
 ULONG
 ntohl(
@@ -138,21 +167,6 @@ SpiSendSynchronousSrb(
 
     return ret;
 }
-
-typedef struct tagDISKCONTEXT
-{
-    /* Device ID */
-    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    UCHAR PathId;
-    UCHAR TargetId;
-    UCHAR Lun;
-
-    /* Device characteristics */
-    ULONG SectorSize;
-    ULONGLONG SectorOffset;
-    ULONGLONG SectorCount;
-    ULONGLONG SectorNumber;
-} DISKCONTEXT;
 
 static ARC_STATUS DiskClose(ULONG FileId)
 {
