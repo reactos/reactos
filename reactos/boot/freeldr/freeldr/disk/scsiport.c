@@ -65,21 +65,6 @@ VOID NTAPI HalpInitializePciStubs(VOID);
 VOID NTAPI HalpInitBusHandler(VOID);
 #endif
 
-typedef struct tagDISKCONTEXT
-{
-    /* Device ID */
-    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    UCHAR PathId;
-    UCHAR TargetId;
-    UCHAR Lun;
-
-    /* Device characteristics */
-    ULONG SectorSize;
-    ULONGLONG SectorOffset;
-    ULONGLONG SectorCount;
-    ULONGLONG SectorNumber;
-} DISKCONTEXT;
-
 typedef struct
 {
     PVOID NonCachedExtension;
@@ -107,6 +92,21 @@ typedef struct
 
     PVOID MiniPortDeviceExtension;
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
+
+typedef struct tagDISKCONTEXT
+{
+    /* Device ID */
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    UCHAR PathId;
+    UCHAR TargetId;
+    UCHAR Lun;
+
+    /* Device characteristics */
+    ULONG SectorSize;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
+    ULONGLONG SectorNumber;
+} DISKCONTEXT;
 
 PSCSI_PORT_DEVICE_EXTENSION ScsiDeviceExtensions[SCSI_MAXIMUM_BUSES];
 
