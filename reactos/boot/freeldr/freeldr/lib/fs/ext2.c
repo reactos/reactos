@@ -1294,7 +1294,7 @@ const DEVVTBL Ext2FuncTable =
     Ext2Open,
     Ext2Read,
     Ext2Seek,
-    L"ext2",
+    L"ext2fs",
 };
 
 const DEVVTBL* Ext2Mount(ULONG DeviceId)

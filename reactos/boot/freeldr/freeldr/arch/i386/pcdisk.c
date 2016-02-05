@@ -69,16 +69,16 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 {
     REGS                        RegsIn;
     REGS                        RegsOut;
-    ULONG                            RetryCount;
+    ULONG                       RetryCount;
     PI386_DISK_ADDRESS_PACKET    Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
     TRACE("PcDiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
     ASSERT(((ULONG_PTR)Buffer) <= 0xFFFFF);
 
     // BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
-    RegsIn.b.ah = 0x42;                    // Subfunction 42h
-    RegsIn.b.dl = DriveNumber;            // Drive number in DL (0 - floppy, 0x80 - harddisk)
-    RegsIn.x.ds = BIOSCALLBUFSEGMENT;    // DS:SI -> disk address packet
+    RegsIn.b.ah = 0x42;                 // Subfunction 42h
+    RegsIn.b.dl = DriveNumber;          // Drive number in DL (0 - floppy, 0x80 - harddisk)
+    RegsIn.x.ds = BIOSCALLBUFSEGMENT;   // DS:SI -> disk address packet
     RegsIn.w.si = BIOSCALLBUFOFFSET;
 
     // Setup disk address packet
@@ -115,11 +115,10 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
         {
             return TRUE;
         }
-        // If it failed the do the next retry
+        // If it failed then do the next retry
         else
         {
             PcDiskResetController(DriveNumber);
-
             continue;
         }
     }

@@ -29,16 +29,16 @@ DBG_DEFAULT_CHANNEL(WARNING);
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
     CmdLineParse(CmdLine);
-    MachInit(CmdLine);
-    FsInit();
 
     /* Debugger pre-initialization */
     DebugInit(FALSE);
 
     TRACE("BootMain() called.\n");
 
+    MachInit(CmdLine);
+
     /* Check if the CPU is new enough */
-    FrLdrCheckCpuCompatiblity();
+    FrLdrCheckCpuCompatiblity(); // FIXME: Should be done inside MachInit!
 
     /* UI pre-initialization */
     if (!UiInitialize(FALSE))
@@ -47,11 +47,15 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
+    /* Initialize memory manager */
     if (!MmInitializeMemoryManager())
     {
         UiMessageBoxCritical("Unable to initialize memory manager.");
         goto Quit;
     }
+
+    /* Initialize I/O subsystem */
+    FsInit();
 
     RunLoader();
 

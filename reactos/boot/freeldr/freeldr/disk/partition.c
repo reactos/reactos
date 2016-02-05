@@ -27,10 +27,11 @@ BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,
                                  ULONG *ActivePartition)
 {
-    ULONG            BootablePartitionCount = 0;
-    MASTER_BOOT_RECORD    MasterBootRecord;
+    ULONG              BootablePartitionCount = 0;
+    MASTER_BOOT_RECORD MasterBootRecord;
 
     *ActivePartition = 0;
+
     // Read master boot record
     if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
     {
@@ -134,7 +135,7 @@ BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITI
                 ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
             }
             // Read the partition boot record
-                if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
+            if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
             {
                 return FALSE;
             }
@@ -199,7 +200,7 @@ BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord,
 
 BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
-    ULONG        Index;
+    ULONG Index;
 
     // Read master boot record
     if (!MachDiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, DiskReadBuffer))
@@ -207,7 +208,6 @@ BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMA
         return FALSE;
     }
     RtlCopyMemory(BootRecord, DiskReadBuffer, sizeof(MASTER_BOOT_RECORD));
-
 
     TRACE("Dumping partition table for drive 0x%x:\n", DriveNumber);
     TRACE("Boot record logical start sector = %d\n", LogicalSectorNumber);
