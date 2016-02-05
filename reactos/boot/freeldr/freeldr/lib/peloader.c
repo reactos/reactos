@@ -2,15 +2,18 @@
  * PROJECT:         FreeLoader
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/freeldr/windows/peloader.c
- * PURPOSE:         Provides routines for loading PE files. To be merged with
- *                  arch/i386/loader.c in future
- *                  This article was very handy during development:
- *                  http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
+ * PURPOSE:         Provides routines for loading PE files.
+ *                  (Deprecated remark) To be merged with arch/i386/loader.c in future.
+ *
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ *
  *                  The source code in this file is based on the work of respective
  *                  authors of PE loading code in ReactOS and Brian Palmer and
  *                  Alex Ionescu's arch/i386/loader.c, and my research project
- *                  (creating a native EFI loader for Windows)
+ *                  (creating a native EFI loader for Windows).
+ *
+ * NOTE:            This article was very handy during development:
+ *                  http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
  */
 
 /* INCLUDES ***************************************************************/

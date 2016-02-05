@@ -8,7 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "ntoskrnl.h"
+#include <ntoskrnl.h>
 
 /* For KeStallExecutionProcessor */
 #if defined(_M_IX86) || defined(_M_AMD64)

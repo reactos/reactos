@@ -32,37 +32,55 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-list(APPEND FREELDR_COMMON_SOURCE
-    include/freeldr.h
+
+list(APPEND FREELDR_BOOTLIB_COMMON_SOURCE
+    lib/debug.c
+    lib/peloader.c
+
+    lib/comm/rs232.c
+    ## add KD support
+    lib/fs/ext2.c
+    lib/fs/fat.c
+    lib/fs/fs.c
+    lib/fs/iso.c
+    lib/fs/ntfs.c
+    lib/inifile/ini_init.c
+    lib/inifile/inifile.c
+    lib/inifile/parse.c
+    lib/mm/meminit.c
+    lib/mm/mm.c
+    lib/mm/heap.c
+    )
+
+list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+    ntldr/conversion.c
+    ntldr/registry.c
+    ntldr/winldr.c
+    ntldr/wlmemory.c
+    ntldr/wlregistry.c
+    )
+
+list(APPEND FREELDR_ARC_COMMON_SOURCE
     arcname.c
-    cmdline.c
-    custom.c
-    debug.c
-    linuxboot.c
-    miscboot.c
     machine.c
-    options.c
-    oslist.c
-    version.c
     arch/archwsup.c
     cache/blocklist.c
     cache/cache.c
-    comm/rs232.c
     disk/disk.c
     disk/partition.c
     disk/ramdisk.c
     #disk/scsiport.c
-    fs/ext2.c
-    fs/fat.c
-    fs/fs.c
-    fs/iso.c
-    fs/ntfs.c
-    lib/inifile/ini_init.c
-    lib/inifile/inifile.c
-    lib/inifile/parse.c
-    mm/meminit.c
-    mm/mm.c
-    mm/heap.c
+    )
+
+list(APPEND FREELDR_COMMON_SOURCE
+    include/freeldr.h
+    cmdline.c
+    custom.c
+    linuxboot.c
+    miscboot.c
+    options.c
+    oslist.c
+    version.c
     ui/directui.c
     ui/gui.c
     ui/minitui.c
@@ -73,12 +91,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     video/fade.c
     video/palette.c
     video/video.c
-    windows/conversion.c
-    windows/peloader.c
-    windows/registry.c
-    windows/winldr.c
-    windows/wlmemory.c
-    windows/wlregistry.c)
+    )
 
 if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -86,9 +99,21 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386pnp.S
         arch/i386/i386trap.S
         arch/i386/linux.S
-        arch/i386/mb.S)
-    list(APPEND FREELDR_COMMON_SOURCE
-        fs/pxe.c
+        arch/i386/mb.S
+        )
+
+    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+        ntldr/arch/i386/winldr.c
+        ntldr/headless.c
+        )
+
+    ## list(APPEND FREELDR_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_COMMON_SOURCE
+        lib/fs/pxe.c
+
+        arch/i386/halstub.c
+        arch/i386/ntoskrnl.c
+
         arch/i386/archmach.c
         arch/i386/drivemap.c
         arch/i386/hardware.c
@@ -116,10 +141,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
-        windows/arch/i386/halstub.c
-        windows/arch/i386/ntoskrnl.c
-        windows/arch/i386/winldr.c
-        windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
         list(APPEND FREELDR_COMMON_ASM_SOURCE arch/i386/drvmap.S)
@@ -129,8 +150,17 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/entry.S
         arch/amd64/int386.S
         arch/amd64/pnpbios.S)
-    list(APPEND FREELDR_COMMON_SOURCE
-        fs/pxe.c
+
+    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+        ntldr/arch/amd64/winldr.c
+        )
+
+    ## list(APPEND FREELDR_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_COMMON_SOURCE
+        lib/fs/pxe.c
+
+        arch/i386/ntoskrnl.c
+
         arch/i386/drivemap.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
@@ -146,22 +176,27 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/pcdisk.c
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
-        arch/i386/pcvideo.c
-        windows/arch/i386/ntoskrnl.c
-        windows/arch/amd64/winldr.c)
+        arch/i386/pcvideo.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/arm/boot.S)
-    list(APPEND FREELDR_COMMON_SOURCE
+
+    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+        ntldr/arch/arm/winldr.c
+        )
+
+    ## list(APPEND FREELDR_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_COMMON_SOURCE
         arch/arm/entry.c
-        arch/arm/macharm.c
-        windows/arch/arm/winldr.c)
+        arch/arm/macharm.c)
 else()
 #TBD
 endif()
 
 add_asm_files(freeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE})
-add_library(freeldr_common ${FREELDR_COMMON_SOURCE} ${freeldr_common_asm})
+add_library(freeldr_common ${FREELDR_BOOTLIB_COMMON_SOURCE} ${FREELDR_ARC_COMMON_SOURCE}
+            ${FREELDR_NTLDR_COMMON_SOURCE}
+            ${FREELDR_COMMON_SOURCE} ${freeldr_common_asm})
 add_pch(freeldr_common include/freeldr.h FREELDR_COMMON_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
 
@@ -173,7 +208,10 @@ endif()
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    windows/setupldr.c
+    ntldr/setupldr.c ## Strangely enough this file is needed in GCC builds
+                     ## even if ${FREELDR_NTLDR_COMMON_SOURCE} is not added,
+                     ## otherwise we get linking errors with Rtl**Bitmap** APIs.
+                     ## Do not happen on MSVC builds however...
     lib/inffile/inffile.c
     lib/rtl/libsupp.c)
 

@@ -17,33 +17,6 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 
 /* FUNCTIONS **************************************************************/
 
-#ifndef _ZOOM2_
-/* Arch-specific addresses translation implementation */
-PVOID
-VaToPa(PVOID Va)
-{
-    return (PVOID)((ULONG_PTR)Va & ~KSEG0_BASE);
-}
-
-PVOID
-PaToVa(PVOID Pa)
-{
-    return (PVOID)((ULONG_PTR)Pa | KSEG0_BASE);
-}
-#else
-PVOID
-VaToPa(PVOID Va)
-{
-    return Va;
-}
-
-PVOID
-PaToVa(PVOID Pa)
-{
-    return Pa;
-}
-#endif
-
 VOID
 List_PaToVa(_In_ PLIST_ENTRY ListHeadPa)
 {

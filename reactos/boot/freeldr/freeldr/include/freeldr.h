@@ -81,6 +81,7 @@
 
 /* NTOS loader */
 #include <winldr.h>
+#include <conversion.h> // More-or-less related to MM also...
 
 /* File system headers */
 #include <fs/ext2.h>
