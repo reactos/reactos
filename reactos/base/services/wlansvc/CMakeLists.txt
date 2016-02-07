@@ -8,7 +8,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/wlansvc_s.c)
 
-add_executable(wlansvc ${SOURCE})
+add_executable(wlansvc ${SOURCE} wlansvc.rc)
 
 if(NOT MSVC)
     target_link_libraries(wlansvc ${PSEH_LIB})
