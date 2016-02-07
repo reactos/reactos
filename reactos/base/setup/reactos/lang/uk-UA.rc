@@ -93,8 +93,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Інформація про Встановлення", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    LTEXT "Для початку встановлення натисніть Далі.", IDC_STATIC, 10, 180, 277, 20
+    LTEXT "Для початку встановлення натисніть Далі.", IDC_STATIC, 7, 180, 303, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -102,7 +101,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Виконується встановлення", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Копіювання файлів...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -113,7 +111,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Завершення встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Завершення першого етапу встановлення ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Перший етап встановлення ReactOS завершено.", IDC_STATIC, 20, 50, 277, 10
     LTEXT "Після натискання клавіші Завершити ваш комп'ютер буде перезавантажений.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8

@@ -87,8 +87,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Persediaan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Pemasangan ringkasan", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    LTEXT "Klik Seterusnya untuk memulakan proses pemasangan.", IDC_STATIC, 10, 180, 277, 20
+    LTEXT "Klik Seterusnya untuk memulakan proses pemasangan.", IDC_STATIC, 7, 180, 303, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -96,7 +95,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Persediaan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Persediaan tindakan", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Memasang fail...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -107,7 +105,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Melengkapkan persediaan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Melengkapkan tahap pertama persediaan ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 20, 50, 277, 10
     LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8

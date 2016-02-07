@@ -85,8 +85,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Sumário de instalação", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    LTEXT "Clique em Próximo para iniciar o processo de instalação.", IDC_STATIC, 10, 180, 277, 20
+    LTEXT "Clique em Próximo para iniciar o processo de instalação.", IDC_STATIC, 7, 180, 303, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -94,7 +93,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Atividade da instalação", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "Instalar arquivos...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "teste.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
@@ -105,7 +103,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Finalizando Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Finalizando primeira etapa de Instalação do ReactOS", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10, 0, 297, 172
     LTEXT "A primeira etapa de Instalação do ReactOS foi efetuada com sucesso.", IDC_STATIC, 20, 50, 277, 10
     LTEXT "Clique em Finalizar para reiniciar o computador.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
