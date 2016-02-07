@@ -170,6 +170,18 @@ BasepProbeForDllManifest(IN PVOID DllHandle,
 
         /* Store activation context pointer if it was created successfully */
         if (NT_SUCCESS(Status)) *ActCtx = Result;
+
+        /* CORE-10843: Windows always returns this since we pass the wrong struct */
+        if (Status == STATUS_SXS_INVALID_ACTCTXDATA_FORMAT)
+        {
+            /* Fake "Manifest not found" so the load doesn't fail  */
+            static int Once;
+            if (Once++)
+            {
+                DPRINT1("HACK: Passed invalid ACTIVATION_CONTEXT_DATA!\n");
+            }
+            Status = STATUS_RESOURCE_DATA_NOT_FOUND;
+        }
     }
 
     return Status;
