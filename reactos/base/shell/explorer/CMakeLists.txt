@@ -7,6 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 list(APPEND SOURCE
     desktop.cpp
     explorer.cpp
+    notifyiconscust.cpp
     rshell.cpp
     settings.cpp
     shellservice.cpp

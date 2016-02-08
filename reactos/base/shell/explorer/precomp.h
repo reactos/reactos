@@ -223,6 +223,13 @@ DesktopCreateWindow(IN OUT ITrayWindow *Tray);
 VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop);
 
+
+/*
+ * notifyiconscust.cpp
+ */
+VOID
+ShowCustomizeNotifyIcons(HINSTANCE, HWND);
+
 /*
  * taskband.cpp
  */
