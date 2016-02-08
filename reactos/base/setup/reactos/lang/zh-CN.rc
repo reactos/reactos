@@ -128,3 +128,10 @@ BEGIN
     IDS_NO_TXTSETUP_SIF "无法找到 'txtsetup.sif'\n安装程序无法继续。"
     IDS_CAPTION "ReactOS 安装"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END

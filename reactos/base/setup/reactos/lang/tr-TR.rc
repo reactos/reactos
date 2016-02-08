@@ -130,3 +130,10 @@ BEGIN
     IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKur sürdüremiyor."
     IDS_CAPTION "ReactOS Kur"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END

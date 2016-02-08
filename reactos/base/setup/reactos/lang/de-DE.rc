@@ -128,3 +128,10 @@ BEGIN
     IDS_NO_TXTSETUP_SIF "Die Datei 'txtsetup.sif' konnte nicht gefunden werden.\nSetup kann nicht fortfahren."
     IDS_CAPTION "ReactOS Setup"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END

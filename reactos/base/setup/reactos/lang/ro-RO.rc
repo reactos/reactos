@@ -137,3 +137,10 @@ BEGIN
     IDS_NO_TXTSETUP_SIF "Nu se poate găsi „txtsetup.sif”\nInstalarea nu se poate continua."
     IDS_CAPTION "Asistentul de instalare ReactOS"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END
