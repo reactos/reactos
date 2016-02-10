@@ -33,7 +33,7 @@
 #define KEY_NO_DELETE                   0x0008
 #define KEY_SYM_LINK                    0x0010
 #define KEY_COMP_NAME                   0x0020
-#define KEY_PREFEF_HANDLE               0x0040
+#define KEY_PREDEF_HANDLE               0x0040
 #define KEY_VIRT_MIRRORED               0x0080
 #define KEY_VIRT_TARGET                 0x0100
 #define KEY_VIRTUAL_STORE               0x0200
