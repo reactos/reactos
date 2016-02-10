@@ -220,8 +220,8 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
             HvFreeCell(Hive, CellData->ValueList.List);
         }
 
-        /* FIXME: This leaks the security desriptor! */
-        DPRINT("Potentially leaking key security descriptor. Please call CmpFreeSecurityDescriptor\n");
+        /* Free the key security descriptor */
+        CmpFreeSecurityDescriptor(Hive, Cell);
     }
 
     /* Free the key body itself, and then return our status */

@@ -676,7 +676,21 @@ NTAPI
 CmpFreeKeyByCell(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
-    IN BOOLEAN Unlink    
+    IN BOOLEAN Unlink
+);
+
+VOID
+NTAPI
+CmpRemoveSecurityCellList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SecurityCell
+);
+
+VOID
+NTAPI
+CmpFreeSecurityDescriptor(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
 );
 
 /******************************************************************************/

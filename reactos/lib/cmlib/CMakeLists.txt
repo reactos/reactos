@@ -8,6 +8,7 @@ list(APPEND SOURCE
     cmindex.c
     cmkeydel.c
     cmname.c
+    cmse.c
     cmvalue.c
     hivebin.c
     hivecell.c
