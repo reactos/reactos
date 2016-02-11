@@ -96,7 +96,8 @@ list(APPEND FREELDR_COMMON_SOURCE
 if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/i386/entry.S
-        arch/i386/i386pnp.S
+        arch/i386/int386.S
+        arch/i386/pnpbios.S
         arch/i386/i386trap.S
         arch/i386/linux.S
         arch/i386/mb.S

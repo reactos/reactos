@@ -52,6 +52,7 @@ _RealEntryPoint:
     /* Continue execution */
     jmp dword ptr ds:[ContinueAddress]
 
+PUBLIC ContinueAddress
 ContinueAddress:
     .long _FrldrStartup
 
@@ -95,60 +96,6 @@ stop:
     jmp stop
     nop
     nop
-
-Int386_regsin:
-    .long 0
-Int386_regsout:
-    .long 0
-
-/*
- * int Int386(int ivec, REGS* in, REGS* out);
- */
-PUBLIC _Int386
-_Int386:
-
-    /* Get the function parameters */
-    mov eax, dword ptr [esp + 4]
-    mov dword ptr ds:[BSS_IntVector], eax
-    mov eax, dword ptr [esp + 8]
-    mov dword ptr [Int386_regsin], eax
-    mov eax, dword ptr [esp + 12]
-    mov dword ptr [Int386_regsout], eax
-
-    /* Save all registers + segment registers */
-    push ds
-    push es
-    push fs
-    push gs
-    pusha
-
-    /* Copy input registers */
-    mov esi, dword ptr [Int386_regsin]
-    mov edi, BSS_RegisterSet
-    mov ecx, REGS_SIZE / 4
-    rep movsd
-
-    /* Set the function ID */
-    mov bx, FNID_Int386
-
-    /* Set continue address and switch to real mode */
-    mov dword ptr [ContinueAddress], offset Int386_return
-    jmp SwitchToReal
-
-Int386_return:
-
-    /* Copy output registers */
-    mov esi, BSS_RegisterSet
-    mov edi, dword ptr [Int386_regsout]
-    mov ecx, REGS_SIZE / 4
-    rep movsd
-
-    popa
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
 
 
 /*
@@ -195,7 +142,7 @@ _Reboot:
     /* Set the function ID */
     mov bx, FNID_Reboot
 
-    /*Switch to real mode (We don't return) */
+    /* Switch to real mode (we don't return) */
     jmp SwitchToReal
 
 
@@ -207,7 +154,7 @@ _ChainLoadBiosBootSectorCode:
     /* Set the function ID */
     mov bx, FNID_ChainLoadBiosBootSectorCode
 
-    /*Switch to real mode (We don't return) */
+    /* Switch to real mode (we don't return) */
     jmp SwitchToReal
 
 
@@ -223,6 +170,7 @@ i386CallRealMode_return:
 /* Entrypoint for realmode function calls
  * ContinueAddress must be set to the return point from realmode
  * bx must be set to the ID of the realmode function to call. */
+PUBLIC SwitchToReal
 SwitchToReal:
     /* Set sane segments */
     mov ax, PMODE_DS
