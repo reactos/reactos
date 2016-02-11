@@ -402,7 +402,7 @@ LocaleDlgProc(
                 if (NewLcid == (LCID)CB_ERR)
                     break;
 
-                            SetThreadLocale(NewLcid);
+                            NtSetDefaultLocale(TRUE, NewLcid);
                             InitializeDefaultUserLocale(&NewLcid);
                         }
 

@@ -21,6 +21,8 @@
 #include <winnls.h>
 #include <stdio.h>
 
+#include <ndk/exfuncs.h>
+
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(userinit);
 
