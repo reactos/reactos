@@ -950,7 +950,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
                 ButtonWidth = GetSystemMetrics(SM_CXSIZE);
 
             ButtonWidth -= 4;
-            ButtonWidth+= BUTTON_GAP_SIZE;
+            ButtonWidth += BUTTON_GAP_SIZE;
 
             if (wi.dwStyle & WS_SYSMENU)
             {
@@ -960,7 +960,13 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
                 }
                 else
                 {
-                    if(!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
+                    // if(!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
+                    // FIXME: The real test should check whether there is
+                    // an icon for the system window, and if so, do the
+                    // rect.left increase.
+                    // See win32ss/user/user32/windows/nonclient.c!DefWndNCHitTest
+                    // and win32ss/user/ntuser/nonclient.c!GetNCHitEx which does
+                    // the test better.
                         WindowRect.left += ButtonWidth;
                     WindowRect.right -= ButtonWidth;
                 }
