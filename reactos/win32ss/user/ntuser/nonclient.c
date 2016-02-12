@@ -356,9 +356,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
    if (iconic)
    {
-       // DragCursor = pwnd->pcls->spcur;
        DragCursor = pwnd->pcls->spicn;
-       ERR("pwnd->pcls->spicn = 0x%p ; pwnd->pcls->spcur = 0x%p\n", pwnd->pcls->spicn, pwnd->pcls->spcur);
        if (DragCursor)
        {
            UserReferenceObject(DragCursor);
