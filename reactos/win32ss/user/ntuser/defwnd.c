@@ -397,9 +397,8 @@ UserPaintCaption(PWND pWnd, INT Flags)
 {
   BOOL Ret = FALSE;
 
-  if ( pWnd->style & WS_VISIBLE && (pWnd->style & WS_CAPTION) == WS_CAPTION )
+  if ( (pWnd->style & WS_VISIBLE) && ((pWnd->style & WS_CAPTION) == WS_CAPTION) )
   {
-  
       if (pWnd->state & WNDS_HASCAPTION && pWnd->head.pti->MessageQueue == gpqForeground)
          Flags |= DC_ACTIVE;
     /* 

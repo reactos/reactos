@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Interface between Win32k and USERSRV
  * FILE:             win32ss/user/ntuser/csr.c
- * PROGRAMER:        Hermes Belusca-Maito (hermes.belusca@sfr.fr), based on
+ * PROGRAMMER:       Hermes Belusca-Maito (hermes.belusca@sfr.fr), based on
  *                   the original code by Ge van Geldorp (ge@gse.nl) and by
  *                   the CSR code in NTDLL.
  */
