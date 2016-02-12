@@ -356,7 +356,9 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
    if (iconic)
    {
+       // DragCursor = pwnd->pcls->spcur;
        DragCursor = pwnd->pcls->spicn;
+       ERR("pwnd->pcls->spicn = 0x%p ; pwnd->pcls->spcur = 0x%p\n", pwnd->pcls->spicn, pwnd->pcls->spcur);
        if (DragCursor)
        {
            UserReferenceObject(DragCursor);
@@ -630,7 +632,10 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    if (!hIcon && pWnd->pcls->spicn)
        return pWnd->pcls->spicn;
 
-   if (!hIcon && (pWnd->style & DS_MODALFRAME))
+   // WARNING: Wine code has this test completely wrong. The following is how
+   // Windows behaves for windows having the WS_EX_DLGMODALFRAME style set:
+   // it does not use the default icon! And it does not check for DS_MODALFRAME.
+   if (!hIcon && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME))
    {
       if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
       if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
@@ -656,13 +661,13 @@ UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down)
    {
       UserReferenceObject(WindowIcon);
 
-      Ret = UserDrawIconEx( hDC,
-                            Rect->left + 2,
-                            Rect->top + 2,
-                            WindowIcon,
-                            UserGetSystemMetrics(SM_CXSMICON),
-                            UserGetSystemMetrics(SM_CYSMICON),
-                            0, NULL, DI_NORMAL);
+      Ret = UserDrawIconEx(hDC,
+                           Rect->left + 2,
+                           Rect->top + 2,
+                           WindowIcon,
+                           UserGetSystemMetrics(SM_CXSMICON),
+                           UserGetSystemMetrics(SM_CYSMICON),
+                           0, NULL, DI_NORMAL);
 
       UserDereferenceObject(WindowIcon);
    }
@@ -966,9 +971,8 @@ VOID UserDrawCaptionBar(
       }
 
       if (!(Flags & DC_ICON)               &&
-           (Style & WS_SYSMENU)            &&
           !(Flags & DC_SMALLCAP)           &&
-          !(ExStyle & WS_EX_DLGMODALFRAME) && 
+           (Style & WS_SYSMENU)            &&
           !(ExStyle & WS_EX_TOOLWINDOW) )
       {
          pIcon = NC_IconForWindow(pWnd); // Force redraw of caption with icon if DC_ICON not flaged....
@@ -1435,7 +1439,7 @@ LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
       wParam = DC_CAPTION;
    }
 
-   if (Wnd->state & WNDS_NONCPAINT || !(Wnd->style & WS_VISIBLE))
+   if ((Wnd->state & WNDS_NONCPAINT) || !(Wnd->style & WS_VISIBLE))
       return 0;
 
    /* This isn't documented but is reproducible in at least XP SP2 and

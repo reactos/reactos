@@ -573,7 +573,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
             if (Next) continue;
          }
 
-         if ( Child->style & WS_VISIBLE)
+         if (Child->style & WS_VISIBLE)
          {
              USER_REFERENCE_ENTRY Ref;
              UserRefObjectCo(Child, &Ref);
@@ -2101,14 +2101,14 @@ BOOL UserDrawCaption(
 
    RECTL_vMakeWellOrdered(lpRc);
 
+   /* Determine whether the icon needs to be displayed */
    if (!hIcon && pWnd != NULL)
    {
-     HasIcon = (uFlags & DC_ICON) && (pWnd->style & WS_SYSMENU)
-        && !(uFlags & DC_SMALLCAP) && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME)
-        && !(pWnd->ExStyle & WS_EX_TOOLWINDOW);
+     HasIcon = (uFlags & DC_ICON) && !(uFlags & DC_SMALLCAP) &&
+               (pWnd->style & WS_SYSMENU) && !(pWnd->ExStyle & WS_EX_TOOLWINDOW);
    }
    else
-     HasIcon = (hIcon != 0);
+     HasIcon = (hIcon != NULL);
 
    // Draw the caption background
    if((uFlags & DC_GRADIENT) && !(uFlags & DC_INBUTTON))
@@ -2192,7 +2192,7 @@ BOOL UserDrawCaption(
          LONG cx = UserGetSystemMetrics(SM_CXSMICON);
          LONG cy = UserGetSystemMetrics(SM_CYSMICON);
          LONG x = Rect.left - cx/2 + 1 + (Rect.bottom - Rect.top)/2; // this is really what Window does
-         LONG y = (Rect.top + Rect.bottom)/2 - cy/2; // center
+         LONG y = (Rect.top + Rect.bottom - cy)/2; // center
          UserDrawIconEx(hDc, x, y, pIcon, cx, cy, 0, NULL, DI_NORMAL);
          UserDereferenceObject(pIcon);
       }
