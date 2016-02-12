@@ -689,7 +689,7 @@ UserHasMenu(PWND pWnd, ULONG Style)
  * FIXME:
  * - Cache bitmaps, then just bitblt instead of calling DFC() (and
  *   wasting precious CPU cycles) every time
- * - Center the buttons verticaly in the rect
+ * - Center the buttons vertically in the rect
  */
 VOID
 UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDown, ULONG Type)
@@ -751,8 +751,7 @@ UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
           PMENU pSysMenu = IntGetSystemMenu(pWnd, FALSE);
           UINT MenuState = IntGetMenuState(UserHMGetHandle(pSysMenu), SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
 
-         /* FIXME: A tool window has a smaller Close button */
-
+         /* A tool window has a smaller Close button */
          if (ExStyle & WS_EX_TOOLWINDOW)
          {
             TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSMSIZE);
