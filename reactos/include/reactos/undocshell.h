@@ -92,11 +92,11 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
  */
 
 /* RunFileDlg flags */
-#define RFF_NOBROWSE       0x01
-#define RFF_NODEFAULT      0x02
-#define RFF_CALCDIRECTORY  0x04
-#define RFF_NOLABEL        0x08
-#define RFF_NOSEPARATEMEM  0x20  /* NT only */
+#define RFF_NOBROWSE        0x01    /* Removes the browse button */
+#define RFF_NODEFAULT       0x02    /* No default item selected */
+#define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name */
+#define RFF_NOLABEL         0x08    /* Removes the edit box label */
+#define RFF_NOSEPARATEMEM   0x20    /* Removes the Separate Memory Space check box (Windows NT only) */
 
 #define DE_SAMEFILE     0x71
 #define DE_DESTSAMETREE 0x7D
