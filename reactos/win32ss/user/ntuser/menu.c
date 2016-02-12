@@ -2212,7 +2212,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
     {
         if ( (Wnd->style & WS_MINIMIZE))
         {
-          UserGetInsideRectNC(Wnd, &rect);
+          NC_GetInsideRect(Wnd, &rect);
           UserDrawSysMenuButton(Wnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
 	}
         return;

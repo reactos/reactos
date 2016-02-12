@@ -629,8 +629,8 @@ IntDefWindowProc(
 
             co_WinPosShowWindow(Wnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }
+         break;
       }
-      break;
 
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
@@ -688,16 +688,16 @@ IntDefWindowProc(
           break;
 
       case WM_NCLBUTTONDOWN:
-          return (NC_HandleNCLButtonDown( Wnd, wParam, lParam));
-
-      case WM_LBUTTONDBLCLK:
-          return (NC_HandleNCLButtonDblClk( Wnd, HTCLIENT, lParam));
-
-      case WM_NCLBUTTONDBLCLK:
-          return (NC_HandleNCLButtonDblClk( Wnd, wParam, lParam));
+          return NC_HandleNCLButtonDown(Wnd, wParam, lParam);
 
       case WM_NCRBUTTONDOWN:
-          return NC_HandleNCRButtonDown( Wnd, wParam, lParam );
+          return NC_HandleNCRButtonDown(Wnd, wParam, lParam);
+
+      case WM_LBUTTONDBLCLK:
+          return NC_HandleNCLButtonDblClk(Wnd, HTCLIENT, lParam);
+
+      case WM_NCLBUTTONDBLCLK:
+          return NC_HandleNCLButtonDblClk(Wnd, wParam, lParam);
 
       case WM_RBUTTONUP:
       {

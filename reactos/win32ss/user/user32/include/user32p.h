@@ -125,7 +125,6 @@ BOOL get_icon_size(HICON hIcon, SIZE *size);
 VOID FASTCALL IntNotifyWinEvent(DWORD, HWND, LONG, LONG, DWORD);
 UINT WINAPI WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos, POINT* MinTrack, POINT* MaxTrack);
 VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);
-void UserGetInsideRectNC(PWND Wnd, RECT *rect);
 VOID FASTCALL GetConnected(VOID);
 extern BOOL FASTCALL EnumNamesA(HWINSTA WindowStation, NAMEENUMPROCA EnumFunc, LPARAM Context, BOOL Desktops);
 extern BOOL FASTCALL EnumNamesW(HWINSTA WindowStation, NAMEENUMPROCW EnumFunc, LPARAM Context, BOOL Desktops);

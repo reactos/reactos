@@ -67,7 +67,7 @@ UserDrawMovingFrame(HDC hdc,
  * Get the 'inside' rectangle of a window, i.e. the whole window rectangle
  * but without the borders (if any).
  */
-void FASTCALL
+void FASTCALL // Previously known as "UserGetInsideRectNC"
 NC_GetInsideRect(PWND Wnd, RECT *rect)
 {
     ULONG Style;
@@ -83,27 +83,22 @@ NC_GetInsideRect(PWND Wnd, RECT *rect)
     if (Style & WS_ICONIC) return;
 
     /* Remove frame from rectangle */
-    if (UserHasThickFrameStyle(Style, ExStyle ))
+    if (UserHasThickFrameStyle(Style, ExStyle))
     {
         RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME));
     }
-    else
+    else if (UserHasDlgFrameStyle(Style, ExStyle))
     {
-        if (UserHasDlgFrameStyle(Style, ExStyle ))
-        {
-            RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
-            /* FIXME: this isn't in NC_AdjustRect? why not? */
-            if (ExStyle & WS_EX_DLGMODALFRAME)
-	            RECTL_vInflateRect( rect, -1, 0 );
-        }
-        else
-        {
-            if (UserHasThinFrameStyle(Style, ExStyle))
-            {
-                RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-            }
-        }
+        RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
+        /* FIXME: this isn't in NC_AdjustRect? why not? */
+        if (ExStyle & WS_EX_DLGMODALFRAME)
+            RECTL_vInflateRect( rect, -1, 0 );
     }
+    else if (UserHasThinFrameStyle(Style, ExStyle))
+    {
+        RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+    }
+
     /* We have additional border information if the window
      * is a child (but not an MDI child) */
     if ((Style & WS_CHILD) && !(ExStyle & WS_EX_MDICHILD))
@@ -670,57 +665,6 @@ UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down)
       UserDereferenceObject(WindowIcon);
    }
    return Ret;
-}
-
-void
-UserGetInsideRectNC(PWND Wnd, RECT *rect)
-{
-    ULONG Style;
-    ULONG ExStyle;
-
-    Style = Wnd->style;
-    ExStyle = Wnd->ExStyle;
-
-    rect->top    = rect->left = 0;
-    rect->right  = Wnd->rcWindow.right - Wnd->rcWindow.left;
-    rect->bottom = Wnd->rcWindow.bottom - Wnd->rcWindow.top;
-
-    if (Style & WS_ICONIC)
-    {
-        return;
-    }
-
-    /* Remove frame from rectangle */
-    if (UserHasThickFrameStyle(Style, ExStyle ))
-    {
-        RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME));
-    }
-    else
-    {
-        if (UserHasDlgFrameStyle(Style, ExStyle ))
-        {
-            RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
-            /* FIXME: this isn't in NC_AdjustRect? why not? */
-            if (ExStyle & WS_EX_DLGMODALFRAME)
-	            RECTL_vInflateRect( rect, -1, 0 );
-        }
-        else
-        {
-            if (UserHasThinFrameStyle(Style, ExStyle))
-            {
-                RECTL_vInflateRect(rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-            }
-        }
-    }
-    /* We have additional border information if the window
-     * is a child (but not an MDI child) */
-    if ((Style & WS_CHILD) && !(ExStyle & WS_EX_MDICHILD))
-    {
-       if (ExStyle & WS_EX_CLIENTEDGE)
-          RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
-       if (ExStyle & WS_EX_STATICEDGE)
-          RECTL_vInflateRect (rect, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-    }
 }
 
 BOOL
@@ -1588,7 +1532,7 @@ NC_HandleNCLButtonDown(PWND pWnd, WPARAM wParam, LPARAM lParam)
               {
                 RECT rect;
                 HDC hDC = UserGetWindowDC(pWnd);
-                UserGetInsideRectNC(pWnd, &rect);
+                NC_GetInsideRect(pWnd, &rect);
                 UserDrawSysMenuButton(pWnd, hDC, &rect, TRUE);
                 UserReleaseDC( pWnd, hDC, FALSE );
               }
@@ -1719,6 +1663,229 @@ LRESULT NC_HandleNCRButtonDown( PWND pwnd, WPARAM wParam, LPARAM lParam )
   return 0;
 }
 
+
+#if 0 // Old version, kept there for reference, which is also used
+      // almost unmodified in uxtheme.dll (in nonclient.c)
+/*
+ * FIXME:
+ * - Check the scrollbar handling
+ */
+LRESULT
+DefWndNCHitTest(HWND hWnd, POINT Point)
+{
+   RECT WindowRect, ClientRect, OrigWndRect;
+   POINT ClientPoint;
+   SIZE WindowBorders;
+   DWORD Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+   DWORD ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+
+   GetWindowRect(hWnd, &WindowRect);
+   if (!PtInRect(&WindowRect, Point))
+   {
+      return HTNOWHERE;
+   }
+   OrigWndRect = WindowRect;
+
+   if (UserHasWindowEdge(Style, ExStyle))
+   {
+      LONG XSize, YSize;
+
+      UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
+      InflateRect(&WindowRect, -WindowBorders.cx, -WindowBorders.cy);
+      XSize = GetSystemMetrics(SM_CXSIZE) * GetSystemMetrics(SM_CXBORDER);
+      YSize = GetSystemMetrics(SM_CYSIZE) * GetSystemMetrics(SM_CYBORDER);
+      if (!PtInRect(&WindowRect, Point))
+      {
+         BOOL ThickFrame;
+
+         ThickFrame = (Style & WS_THICKFRAME);
+         if (Point.y < WindowRect.top)
+         {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
+            if(!ThickFrame)
+              return HTBORDER;
+            if (Point.x < (WindowRect.left + XSize))
+               return HTTOPLEFT;
+            if (Point.x >= (WindowRect.right - XSize))
+               return HTTOPRIGHT;
+            return HTTOP;
+         }
+         if (Point.y >= WindowRect.bottom)
+         {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
+            if(!ThickFrame)
+              return HTBORDER;
+            if (Point.x < (WindowRect.left + XSize))
+               return HTBOTTOMLEFT;
+            if (Point.x >= (WindowRect.right - XSize))
+               return HTBOTTOMRIGHT;
+            return HTBOTTOM;
+         }
+         if (Point.x < WindowRect.left)
+         {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
+            if(!ThickFrame)
+              return HTBORDER;
+            if (Point.y < (WindowRect.top + YSize))
+               return HTTOPLEFT;
+            if (Point.y >= (WindowRect.bottom - YSize))
+               return HTBOTTOMLEFT;
+            return HTLEFT;
+         }
+         if (Point.x >= WindowRect.right)
+         {
+            if(Style & WS_MINIMIZE)
+              return HTCAPTION;
+            if(!ThickFrame)
+              return HTBORDER;
+            if (Point.y < (WindowRect.top + YSize))
+               return HTTOPRIGHT;
+            if (Point.y >= (WindowRect.bottom - YSize))
+               return HTBOTTOMRIGHT;
+            return HTRIGHT;
+         }
+      }
+   }
+   else
+   {
+      if (ExStyle & WS_EX_STATICEDGE)
+         InflateRect(&WindowRect,
+            -GetSystemMetrics(SM_CXBORDER),
+            -GetSystemMetrics(SM_CYBORDER));
+      if (!PtInRect(&WindowRect, Point))
+         return HTBORDER;
+   }
+
+   if ((Style & WS_CAPTION) == WS_CAPTION)
+   {
+      if (ExStyle & WS_EX_TOOLWINDOW)
+         WindowRect.top += GetSystemMetrics(SM_CYSMCAPTION);
+      else
+         WindowRect.top += GetSystemMetrics(SM_CYCAPTION);
+      if (!PtInRect(&WindowRect, Point))
+      {
+         if (Style & WS_SYSMENU)
+         {
+            if (ExStyle & WS_EX_TOOLWINDOW)
+            {
+               WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE);
+            }
+            else
+            {
+               // if(!(ExStyle & WS_EX_DLGMODALFRAME))
+               // FIXME: The real test should check whether there is
+               // an icon for the system window, and if so, do the
+               // rect.left increase.
+               // See dll/win32/uxtheme/nonclient.c!DefWndNCHitTest
+               // and win32ss/user/ntuser/nonclient.c!GetNCHitEx which does
+               // the test better.
+                  WindowRect.left += GetSystemMetrics(SM_CXSIZE);
+               WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
+            }
+         }
+         if (Point.x < WindowRect.left)
+            return HTSYSMENU;
+         if (WindowRect.right <= Point.x)
+            return HTCLOSE;
+         if (Style & WS_MAXIMIZEBOX || Style & WS_MINIMIZEBOX)
+            WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
+         if (Point.x >= WindowRect.right)
+            return HTMAXBUTTON;
+         if (Style & WS_MINIMIZEBOX)
+            WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
+         if (Point.x >= WindowRect.right)
+            return HTMINBUTTON;
+         return HTCAPTION;
+      }
+   }
+
+   if(!(Style & WS_MINIMIZE))
+   {
+     ClientPoint = Point;
+     ScreenToClient(hWnd, &ClientPoint);
+     GetClientRect(hWnd, &ClientRect);
+
+     if (PtInRect(&ClientRect, ClientPoint))
+     {
+        return HTCLIENT;
+     }
+
+     if (GetMenu(hWnd) && !(Style & WS_CHILD))
+     {
+        if (Point.x > 0 && Point.x < WindowRect.right && ClientPoint.y < 0)
+           return HTMENU;
+     }
+
+     if (ExStyle & WS_EX_CLIENTEDGE)
+     {
+        InflateRect(&WindowRect, -2 * GetSystemMetrics(SM_CXBORDER),
+           -2 * GetSystemMetrics(SM_CYBORDER));
+     }
+
+     if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
+         (WindowRect.bottom - WindowRect.top) > GetSystemMetrics(SM_CYHSCROLL))
+     {
+        RECT ParentRect, TempRect = WindowRect, TempRect2 = WindowRect;
+        HWND Parent = GetParent(hWnd);
+
+        TempRect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
+        if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+           TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+        if (PtInRect(&TempRect, Point))
+           return HTVSCROLL;
+
+        TempRect2.top = TempRect2.bottom - GetSystemMetrics(SM_CYHSCROLL);
+        if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+           TempRect2.left += GetSystemMetrics(SM_CXVSCROLL);
+        else
+           TempRect2.right -= GetSystemMetrics(SM_CXVSCROLL);
+        if (PtInRect(&TempRect2, Point))
+           return HTHSCROLL;
+
+        TempRect.top = TempRect2.top;
+        TempRect.bottom = TempRect2.bottom;
+        if(Parent)
+          GetClientRect(Parent, &ParentRect);
+        if (PtInRect(&TempRect, Point) && HASSIZEGRIP(Style, ExStyle,
+            GetWindowLongPtrW(Parent, GWL_STYLE), OrigWndRect, ParentRect))
+        {
+           if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+              return HTBOTTOMLEFT;
+           else
+              return HTBOTTOMRIGHT;
+        }
+     }
+     else
+     {
+        if (Style & WS_VSCROLL)
+        {
+           RECT TempRect = WindowRect;
+
+           if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+              TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+           else
+              TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+           if (PtInRect(&TempRect, Point))
+              return HTVSCROLL;
+        } else
+        if (Style & WS_HSCROLL)
+        {
+           RECT TempRect = WindowRect;
+           TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
+           if (PtInRect(&TempRect, Point))
+              return HTHSCROLL;
+        }
+     }
+   }
+
+   return HTNOWHERE;
+}
+#endif
 
 DWORD FASTCALL
 GetNCHitEx(PWND pWnd, POINT pt)
