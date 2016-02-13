@@ -72,7 +72,7 @@ void HandleKeyboardScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 void HandleMouseScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state)
 {
-    SCROLLINFO si; 
+    SCROLLINFO si;
     int Delta;
     int NewPos;
 
@@ -119,7 +119,7 @@ void HandleMouseScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 void HandleHorizontalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state)
 {
-    SCROLLINFO si; 
+    SCROLLINFO si;
     int Delta;
     int NewPos;
 
@@ -166,7 +166,7 @@ void HandleHorizontalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             NewPos = state->CurrentX;
             break;
         }
-    } 
+    }
 
    NewPos = min(state->MaxX, max(0, NewPos));
 
@@ -189,7 +189,7 @@ void HandleHorizontalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 void HandleVerticalScrollEvents(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state)
 {
-    SCROLLINFO si; 
+    SCROLLINFO si;
     int Delta;
     int NewPos;
 
