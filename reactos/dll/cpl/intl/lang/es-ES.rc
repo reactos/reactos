@@ -38,8 +38,8 @@ BEGIN
     PUSHBUTTON "&Detalles...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Compatibilidad con idiomas adicionales ", -1, 5, 62, 234, 82
     LTEXT "De forma predeterminada se instalan la mayoría de los idiomas. Para instalar idiomas adicionales, active las siguientes casillas de verificación.", -1, 12, 72, 220, 24
-    CHECKBOX "I&nstalar archivos de escritura compleja y de escritura de derecha a izquierda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stalar archivos para los idiomas de Asia Oriental", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nstalar archivos de escritura compleja y de escritura de derecha a izquierda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&stalar archivos para los idiomas de Asia Oriental", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX "Tablas de conversión de páginas de código ", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Configuración de la cuenta de usuario predeterminada ", -1, 5, 193, 234, 32
-    CHECKBOX "Aplicar toda la configuración a la cuenta de usuario actual y al perfil de usuario predeterminado", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Aplicar toda la configuración a la cuenta de usuario actual y al perfil de usuario predeterminado", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

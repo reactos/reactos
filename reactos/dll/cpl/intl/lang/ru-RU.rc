@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "&Подробнее...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Дополнительная языковая поддержка", -1, 5, 61, 234, 90
     LTEXT "Поддержка большинства языков устанавливается по умолчанию. Чтобы установить дополнительную поддержку языков с особыми способами письма, установите соответствующие флажки.", -1, 12, 72, 220, 32
-    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 108, 215, 18, BS_MULTILINE
-    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 129, 215, 15, BS_MULTILINE
+    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 108, 215, 18, BS_MULTILINE | BS_TOP
+    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 129, 215, 15, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX "Кодовые страницы таблиц преобразования", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 32
-    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

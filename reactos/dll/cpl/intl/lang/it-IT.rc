@@ -38,8 +38,8 @@ BEGIN
     PUSHBUTTON "&Dettagli...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Supporto lingua supplementare", -1, 5, 62, 234, 82
     LTEXT "La maggior parte delle lingue viene installata di default. Per installare ulteriori lingue, selezionare la relativa casella.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstalla i file delle lingue con alfabeti non latini e lingue destra-sinistra (incluso l'alfabeto thai)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stalla i file delle lingue per l'Asia orientale", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nstalla i file delle lingue con alfabeti non latini e lingue destra-sinistra (incluso l'alfabeto thai)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&stalla i file delle lingue per l'Asia orientale", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -55,7 +55,7 @@ BEGIN
     GROUPBOX "Tabella di conversione di tabelle codici", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Impostazioni account utente predefinito", -1, 5, 193, 234, 32
-    CHECKBOX "Appli&ca tutte le impostazioni all'account utente corrente e al profilo utente predefinito", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Appli&ca tutte le impostazioni all'account utente corrente e al profilo utente predefinito", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

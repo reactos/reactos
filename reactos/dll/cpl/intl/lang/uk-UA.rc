@@ -44,8 +44,8 @@ BEGIN
     PUSHBUTTON "&Подробиці...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Додаткова мовна підтримка", -1, 5, 62, 234, 82
     LTEXT "Більшість мов установлюється за замовчуванням. Щоб установити додаткові мови, установіть відповідні прапорці.", -1, 12, 72, 220, 18
-    CHECKBOX "&Установити підтримку для мов із письмом справа наліво та для мов зі складними знаками", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Ус&тановити підтримку для східно-азіатських мов", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "&Установити підтримку для мов із письмом справа наліво та для мов зі складними знаками", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "Ус&тановити підтримку для східно-азіатських мов", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -60,7 +60,7 @@ BEGIN
     GROUPBOX "Таблиці перетворення кодових сторінок", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Параметри стандартного облікового запису", -1, 5, 193, 234, 32
-    CHECKBOX "Застосувати всі параметри до поточного облікового запису та до стандартного профілю користувача", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Застосувати всі параметри до поточного облікового запису та до стандартного профілю користувача", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

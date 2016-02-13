@@ -40,8 +40,8 @@ BEGIN
     PUSHBUTTON "De&taje...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Mbështetje Gjuhë shtesë", -1, 5, 62, 234, 82
     LTEXT "Shumica e gjuhëve janë instaluar me parazgjedhje. Për të instaluar gjuhë shtesë, zgjidhni kutinë e përshtatshme, kontrolloni më poshtë.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstalo dokumenta për skripta komplekse dhe gjuhët djathtë në të majtë", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stalo dokumentat për gjuhët e Azisë Lindore", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nstalo dokumenta për skripta komplekse dhe gjuhët djathtë në të majtë", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&stalo dokumentat për gjuhët e Azisë Lindore", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -56,7 +56,7 @@ BEGIN
     GROUPBOX "Tabela konvertimit dhe kodet e faqeve ", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Konfigurimi llogarise përdoruesit parazgjedhur", -1, 5, 193, 234, 32
-    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

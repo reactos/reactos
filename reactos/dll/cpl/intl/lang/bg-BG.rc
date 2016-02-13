@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "По&дробности...", IDC_DETAIL_BUTTON, 172, 35, 60, 14
     GROUPBOX "Поддръжка на допълнителни езици", -1, 6, 62, 234, 82
     LTEXT "Повечето езици са сложени по подразбиране. За да сложите допълнителни езици, отбележете необходимото.", -1, 12, 72, 220, 18
-    CHECKBOX "&Слагане на файлове за сложни писмености или за писане отдясно наляво.", IDC_INST_FILES_FOR_RTOL_LANG, 15, 93, 216, 22, BS_MULTILINE
-    CHECKBOX "С&лагане на файлове за източно азиатски езици", IDC_INST_FILES_FOR_ASIAN, 15, 116, 216, 22, BS_MULTILINE
+    CHECKBOX "&Слагане на файлове за сложни писмености или за писане отдясно наляво.", IDC_INST_FILES_FOR_RTOL_LANG, 15, 93, 216, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "С&лагане на файлове за източно азиатски езици", IDC_INST_FILES_FOR_ASIAN, 15, 116, 216, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX "Знаков набор", -1, 6, 92, 233, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Подразбрани потребителски настройки", -1, 6, 183, 233, 33
-    CHECKBOX "Прилагане на всички настройки за текущия потребител и по подразбиране", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 192, 223, 22, BS_MULTILINE
+    CHECKBOX "Прилагане на всички настройки за текущия потребител и по подразбиране", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 192, 223, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

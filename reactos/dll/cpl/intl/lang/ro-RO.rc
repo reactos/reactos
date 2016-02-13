@@ -38,8 +38,8 @@ BEGIN
     PUSHBUTTON "&Detalii…", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Compatibilitate lingvistică suplimentară", -1, 5, 62, 234, 82
     LTEXT "ReactOS posedă în mod implicit compatibilitate pentru majoritatea limbilor. În caz de necesitate, această compatibilitate se poate extinde prin instalarea de fișiere suplimentare.", -1, 12, 72, 220, 25
-    CHECKBOX "Instalează fișierele pentru script-uri comple&xe și pentru limbile cu scriere inversă", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22, BS_MULTILINE
-    CHECKBOX "Instalează fișierele pentru limbile din &estul Asiei", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE
+    CHECKBOX "Instalează fișierele pentru script-uri comple&xe și pentru limbile cu scriere inversă", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "Instalează fișierele pentru limbile din &estul Asiei", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX "Tabele de conversie cod-pagină", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Opțiuni implicite pentru conturi de utilizator", -1, 5, 193, 234, 32
-    CHECKBOX "Apli&că aceste opțiuni atât pentru contul de utilizator curent cât și pentru cel implicit", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE
+    CHECKBOX "Apli&că aceste opțiuni atât pentru contul de utilizator curent cât și pentru cel implicit", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
