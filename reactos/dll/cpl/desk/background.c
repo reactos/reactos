@@ -432,7 +432,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     }
 
     /* Add all the images in the wallpaper directory. */
-    if (SHRegGetPath(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion"), TEXT("WallpaperDir"), szSearchPath, 0) == ERROR_SUCCESS)
+    if (SHRegGetPath(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion"), TEXT("WallPaperDir"), szSearchPath, 0) == ERROR_SUCCESS)
     {
         i = AddWallpapersFromDirectory(i, hwndBackgroundList, backgroundItem, pData, wallpaperFilename, szSearchPath);
     }
