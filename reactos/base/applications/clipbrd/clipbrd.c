@@ -193,7 +193,7 @@ void UpdateDisplayMenu(void)
     uFormat = EnumClipboardFormats(0);
     while (uFormat)
     {
-        RetrieveClipboardFormatName(Globals.hInstance, uFormat, szFormatName, ARRAYSIZE(szFormatName));
+        RetrieveClipboardFormatName(Globals.hInstance, uFormat, TRUE, szFormatName, ARRAYSIZE(szFormatName));
 
         if (!IsClipboardFormatSupported(uFormat))
         {
