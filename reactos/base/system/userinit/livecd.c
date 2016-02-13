@@ -160,6 +160,250 @@ CreateLanguagesList(HWND hwnd)
 }
 
 
+#if 0
+static
+BOOL
+GetLayoutID(LPWSTR szLayoutNum, LPWSTR szLCID)
+{
+    DWORD dwBufLen;
+    DWORD dwRes;
+    HKEY hKey;
+    WCHAR szTempLCID[9];
+
+    // Get the Layout ID
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+        dwRes = RegQueryValueExW(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
+
+        if (dwRes != ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    // Look for a substitude of this layout
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szTempLCID);
+
+        if (RegQueryValueExW(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
+        {
+            // No substitute found, then use the old LCID
+            wcscpy(szLCID, szTempLCID);
+        }
+
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        // Substitutes key couldn't be opened, so use the old LCID
+        wcscpy(szLCID, szTempLCID);
+    }
+
+    return TRUE;
+}
+#endif
+
+
+static
+BOOL
+GetLayoutName(
+    LPCWSTR szLCID,
+    LPWSTR szName)
+{
+    HKEY hKey;
+    DWORD dwBufLen;
+    WCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
+    HANDLE hLib;
+    unsigned i, j, k;
+
+    wsprintf(szBuf, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", szLCID);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwBufLen = sizeof(szBuf);
+
+        if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+        {
+            if (szDispName[0] == '@')
+            {
+                for (i = 0; i < wcslen(szDispName); i++)
+                {
+                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
+                    {
+                        for (j = i + 2, k = 0; j < wcslen(szDispName)+1; j++, k++)
+                        {
+                            szIndex[k] = szDispName[j];
+                        }
+                        szDispName[i - 1] = '\0';
+                        break;
+                    }
+                    else
+                        szDispName[i] = szDispName[i + 1];
+                }
+
+                if (ExpandEnvironmentStringsW(szDispName, szPath, MAX_PATH))
+                {
+                    hLib = LoadLibraryW(szPath);
+                    if (hLib)
+                    {
+                        if (LoadStringW(hLib, _wtoi(szIndex), szPath, sizeof(szPath) / sizeof(WCHAR)) != 0)
+                        {
+                            wcscpy(szName, szPath);
+                            RegCloseKey(hKey);
+                            return TRUE;
+                        }
+                        FreeLibrary(hLib);
+                    }
+                }
+            }
+        }
+
+        dwBufLen = sizeof(szBuf);
+
+        if (RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
+static
+VOID
+SetKeyboardLayout(
+    HWND hwnd)
+{
+#if 0
+    INT iCurSel;
+    PWSTR pszLCID;
+    HKL hKl;
+    WCHAR szLCID[9];
+
+    iCurSel = SendMessageW(hwnd, CB_GETCURSEL, 0, 0);
+    if (iCurSel == CB_ERR)
+        return;
+
+    pszLCID = (PWSTR)SendMessageW(hwnd, CB_GETITEMDATA, iCurSel, 0);
+    if (pszLCID == (PWSTR)CB_ERR)
+        return;
+
+    if (GetLayoutID(pszLCID, szLCID))
+    {
+        hKl = LoadKeyboardLayoutW(szLCID, KLF_ACTIVATE | KLF_SETFORPROCESS);
+        SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
+    }
+#endif
+}
+
+
+static
+VOID
+SelectKeyboardForLanguage(
+    HWND hwnd,
+    LCID lcid)
+{
+    INT i, nCount;
+    LCID LayoutId;
+
+    TRACE("LCID: %08lx\n", lcid);
+    TRACE("LangID: %04lx\n", LANGIDFROMLCID(lcid));
+
+    nCount = SendMessageW(hwnd, CB_GETCOUNT, 0, 0);
+
+    for (i = 0; i < nCount; i++)
+    {
+        LayoutId = (LCID)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        TRACE("Layout: %08lx\n", LayoutId);
+
+        if (LANGIDFROMLCID(LayoutId) == LANGIDFROMLCID(lcid))
+        {
+            TRACE("Found 1: %08lx --> %08lx\n", LayoutId, lcid);
+            SendMessageW(hwnd, CB_SETCURSEL, i, 0);
+            return;
+        }
+    }
+
+    for (i = 0; i < nCount; i++)
+    {
+        LayoutId = (LCID)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        TRACE("Layout: %08lx\n", LayoutId);
+
+        if (PRIMARYLANGID(LayoutId) == PRIMARYLANGID(lcid))
+        {
+            TRACE("Found 2: %08lx --> %08lx\n", LayoutId, lcid);
+            SendMessageW(hwnd, CB_SETCURSEL, i, 0);
+            return;
+        }
+    }
+
+    TRACE("No match found!\n");
+}
+
+
+static
+VOID
+CreateKeyboardLayoutList(
+    HWND hItemsList)
+{
+    HKEY hKey;
+    WCHAR szLayoutID[9], KeyName[MAX_PATH];
+    DWORD dwIndex = 0;
+    DWORD dwSize;
+    INT iIndex;
+    LONG lError;
+    ULONG ulLayoutID;
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"System\\CurrentControlSet\\Control\\Keyboard Layouts",
+                           0,
+                           KEY_ENUMERATE_SUB_KEYS,
+                           &hKey);
+    if (lError != ERROR_SUCCESS)
+        return;
+
+    while (TRUE)
+    {
+        dwSize = sizeof(szLayoutID) / sizeof(WCHAR);
+
+        lError = RegEnumKeyExW(hKey,
+                               dwIndex,
+                               szLayoutID,
+                               &dwSize,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        if (lError != ERROR_SUCCESS)
+            break;
+
+        GetLayoutName(szLayoutID, KeyName);
+
+        iIndex = (INT)SendMessageW(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
+
+        ulLayoutID = wcstoul(szLayoutID, NULL, 16);
+        SendMessageW(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)ulLayoutID);
+
+        // FIXME!
+        if (wcscmp(szLayoutID, L"00000409") == 0)
+        {
+            SendMessageW(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
+        }
+
+        dwIndex++;
+    }
+
+    RegCloseKey(hKey);
+}
+
+
 static
 VOID
 InitializeDefaultUserLocale(
@@ -365,7 +609,9 @@ LocaleDlgProc(
 
             /* Center the dialog window */
             CenterWindow (hwndDlg);
+
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+            CreateKeyboardLayoutList(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
 
             EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
             return FALSE;
@@ -377,12 +623,11 @@ LocaleDlgProc(
             return TRUE;
 
         case WM_COMMAND:
-            if (HIWORD(wParam) == BN_CLICKED)
+            switch (LOWORD(wParam))
             {
-                switch (LOWORD(wParam))
-                {
-                    case IDOK:
-                        {
+                case IDC_LANGUAGELIST:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
                         LCID NewLcid;
                         INT iCurSel;
 
@@ -391,28 +636,57 @@ LocaleDlgProc(
                                                      CB_GETCURSEL,
                                                      0,
                                                      0);
-                if (iCurSel == CB_ERR)
+                        if (iCurSel == CB_ERR)
+                            break;
+
+                        NewLcid = SendDlgItemMessageW(hwndDlg,
+                                                      IDC_LANGUAGELIST,
+                                                      CB_GETITEMDATA,
+                                                      iCurSel,
+                                                      0);
+                        if (NewLcid == (LCID)CB_ERR)
+                            break;
+
+                        TRACE("LCID: 0x%08lx\n", NewLcid);
+                        SelectKeyboardForLanguage(GetDlgItem(hwndDlg, IDC_LAYOUTLIST),
+                                                  NewLcid);
+                    }
                     break;
 
-                NewLcid = SendDlgItemMessageW(hwndDlg,
-                                              IDC_LANGUAGELIST,
-                                              CB_GETITEMDATA,
-                                              iCurSel,
-                                              0);
-                if (NewLcid == (LCID)CB_ERR)
-                    break;
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        LCID NewLcid;
+                        INT iCurSel;
 
-                            NtSetDefaultLocale(TRUE, NewLcid);
-                            InitializeDefaultUserLocale(&NewLcid);
-                        }
+                        iCurSel = SendDlgItemMessageW(hwndDlg,
+                                                     IDC_LANGUAGELIST,
+                                                     CB_GETCURSEL,
+                                                     0,
+                                                     0);
+                        if (iCurSel == CB_ERR)
+                            break;
+
+                        NewLcid = SendDlgItemMessageW(hwndDlg,
+                                                      IDC_LANGUAGELIST,
+                                                      CB_GETITEMDATA,
+                                                      iCurSel,
+                                                      0);
+                        if (NewLcid == (LCID)CB_ERR)
+                            break;
+
+                        NtSetDefaultLocale(TRUE, NewLcid);
+                        InitializeDefaultUserLocale(&NewLcid);
+
+                        SetKeyboardLayout(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
 
                         pState->NextPage = STARTPAGE;
                         EndDialog(hwndDlg, 0);
-                        break;
+                    }
+                    break;
 
-                    default:
-                        break;
-                }
+                default:
+                    break;
             }
             break;
 
