@@ -2,9 +2,9 @@
 list(APPEND SOURCE
     clipbrd.c
     cliputils.c
-    winutils.c
     fileutils.c
     scrollutils.c
+    winutils.c
     precomp.h)
 
 add_executable(clipbrd ${SOURCE} clipbrd.rc)

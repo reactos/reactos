@@ -8,7 +8,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "clipbrd.exe"
 #include <reactos/version.rc>
 
-CLIP_ICON ICON "res/clipbrd.ico"
+CLIPBRD_ICON ICON "res/clipbrd.ico"
+CLPFILE_ICON ICON "res/clpfile.ico"
 
 #include <reactos/manifest_exe.rc>
 

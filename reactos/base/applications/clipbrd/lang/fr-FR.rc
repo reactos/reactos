@@ -18,7 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "&Supprimer\tSuppr", CMD_DELETE
     END
-    POPUP "&Affichage"
+    POPUP "Affic&hage"
     BEGIN
         MENUITEM "&Automatique", CMD_AUTOMATIC
     END
@@ -33,6 +33,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Presse-papiers"
+    STRING_CLIPFILE  "Élément du Presse-papiers"
     STRING_DELETE_MSG "Voulez-vous effacer le contenu du Presse-papiers ?"
     STRING_DELETE_TITLE "Effacer le Presse-papiers"
     STRING_FORMAT_NT "Fichiers du Presse-papiers ReactOS (*.clp)"

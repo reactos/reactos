@@ -35,6 +35,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "剪貼簿"
+    STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "清除剪貼簿的內容嗎?"
     STRING_DELETE_TITLE "清除剪貼簿"
     STRING_FORMAT_NT "ReactOS 的剪貼簿檔案 (*.clp)"

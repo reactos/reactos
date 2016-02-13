@@ -33,6 +33,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Clipboard"
+    STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "Clear contents of the Clipboard?"
     STRING_DELETE_TITLE "Clear Clipboard"
     STRING_FORMAT_NT "Clipboard files for ReactOS (*.clp)"

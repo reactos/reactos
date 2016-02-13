@@ -34,6 +34,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Clipboard"
+    STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "Elimină conținutul din Clipboard?"
     STRING_DELETE_TITLE "Curăță Clipboard"
     STRING_FORMAT_NT "Fișiere clipboard pentru ReactOS (*.clp)"
