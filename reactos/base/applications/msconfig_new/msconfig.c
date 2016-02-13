@@ -190,8 +190,8 @@ int CALLBACK PropSheetCallback(HWND hDlg, UINT message, LPARAM lParam)
             /* Set the dialog icons */
             hIcon   = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
             hIconSm = (HICON)CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
-            SendMessage(hDlg, WM_SETICON, ICON_BIG,   (LPARAM)hIcon);
-            SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
+            SendMessageW(hDlg, WM_SETICON, ICON_BIG,   (LPARAM)hIcon);
+            SendMessageW(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
 
             /* Sub-class the property sheet window procedure */
             wpOrigEditProc = (WNDPROC)SetWindowLongPtr(hDlg, DWLP_DLGPROC, (LONG_PTR)MainWndProc);
