@@ -221,6 +221,67 @@ VOID ClipOrCenterWindowToMonitor(HWND hWnd, UINT flags)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+BOOL IsWindowsOS(VOID)
+{
+    BOOL bIsWindowsOS = FALSE;
+
+    OSVERSIONINFOW osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+    if (!GetVersionExW(&osvi))
+        return FALSE;
+
+    if (osvi.dwPlatformId != VER_PLATFORM_WIN32_NT)
+        return FALSE;
+
+    /* ReactOS reports as Windows NT 5.2 */
+
+    if ( (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion >= 2) ||
+         (osvi.dwMajorVersion  > 5) )
+    {
+        HKEY hKey = NULL;
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                          0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+        {
+            LONG ret;
+            DWORD dwType = 0, dwBufSize = 0;
+
+            ret = RegQueryValueExW(hKey, L"ProductName", NULL, &dwType, NULL, &dwBufSize);
+            if (ret == ERROR_SUCCESS && dwType == REG_SZ)
+            {
+                LPTSTR lpszProductName = (LPTSTR)MemAlloc(0, dwBufSize);
+                RegQueryValueExW(hKey, L"ProductName", NULL, &dwType, (LPBYTE)lpszProductName, &dwBufSize);
+
+                bIsWindowsOS = (FindSubStrI(lpszProductName, _T("Windows")) != NULL);
+
+                MemFree(lpszProductName);
+            }
+
+            RegCloseKey(hKey);
+        }
+    }
+    else
+    {
+        bIsWindowsOS = TRUE;
+    }
+    
+    return bIsWindowsOS;
+}
+
+BOOL IsPreVistaOSVersion(VOID)
+{
+    OSVERSIONINFOW osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+    if (!GetVersionExW(&osvi))
+        return FALSE;
+
+    /* Vista+-class OSes are NT >= 6 */
+    return ( (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) ? (osvi.dwMajorVersion < 6) : FALSE );
+}
+
 LPWSTR
 GetExecutableVendor(IN LPCWSTR lpszFilename)
 {

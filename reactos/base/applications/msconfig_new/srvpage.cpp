@@ -287,7 +287,7 @@ static void AddService(SC_HANDLE hSCManager, LPENUM_SERVICE_STATUS_PROCESS Servi
 
                 bAddServiceToList = params.bIsPresent;
 
-                if (bIsWindows && bIsOSVersionLessThanVista && !bAddServiceToList)
+                if (bIsWindows && bIsPreVistaOSVersion && !bAddServiceToList)
                 {
                     QUERY_REGISTRY_VALUES_TABLE ValuesQueryTable[2] = {};
                     ValuesQueryTable[0].QueryRoutine = GetRegistryValuedDisabledServicesQueryRoutine;
@@ -935,7 +935,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                                     KeysQueryTable[0].EntryContext = &params;
                                     RegQueryRegistryKeys(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\services", KeysQueryTable, (PVOID)svcName);
 
-                                    if (bIsWindows && bIsOSVersionLessThanVista && !params.bIsPresent)
+                                    if (bIsWindows && bIsPreVistaOSVersion && !params.bIsPresent)
                                     {
                                         QUERY_REGISTRY_VALUES_TABLE ValuesQueryTable[2] = {};
                                         ValuesQueryTable[0].QueryRoutine = GetRegistryValuedDisabledServicesQueryRoutine;
@@ -959,7 +959,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                                             //
                                             // Delete also the valued-entry of the service.
                                             //
-                                            if (bIsWindows && bIsOSVersionLessThanVista)
+                                            if (bIsWindows && bIsPreVistaOSVersion)
                                             {
                                                 HKEY hSubKey = NULL;
                                                 if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\services", 0, KEY_SET_VALUE /*KEY_READ*/, &hSubKey) == ERROR_SUCCESS)
@@ -1022,7 +1022,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                                     //
                                     // Save also a valued-entry for the service.
                                     //
-                                    if (bIsWindows && bIsOSVersionLessThanVista)
+                                    if (bIsWindows && bIsPreVistaOSVersion)
                                     {
                                         RegSetDWORDValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\services", svcName, TRUE, lpServiceConfig->dwStartType);
                                     }
