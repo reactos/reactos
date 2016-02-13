@@ -34,7 +34,7 @@ CAPTION "Paramètres de la loupe"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Quitter", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Aider", IDC_BUTTON_HELP, 38, 161, 50, 14
+    PUSHBUTTON "Aide", IDC_BUTTON_HELP, 38, 161, 50, 14
     LTEXT "Coefficient d'agrandissement:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Poursuite", IDC_STATIC, 7, 25, 139, 59
