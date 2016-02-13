@@ -262,8 +262,9 @@ void ReadClipboardFile(LPCWSTR lpFileName)
     BOOL bResult;
     int i;
 
-    /* Open the file */
-    hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    /* Open the file for read access */
+    hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastWin32Error(Globals.hMainWnd);
@@ -276,7 +277,6 @@ void ReadClipboardFile(LPCWSTR lpFileName)
         ShowLastWin32Error(Globals.hMainWnd);
         goto done;
     }
-    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
 
     /* Set data according to the clipboard file format ID */
     switch (wFileIdentifier)
@@ -286,7 +286,7 @@ void ReadClipboardFile(LPCWSTR lpFileName)
             SizeOfFormatHeader = sizeof(CLIPFORMATHEADER);
             pClipFileHeader    = &ClipFileHeader;
             pClipFormatArray   = &ClipFormatArray;
-            MessageBox(Globals.hMainWnd, L"We have a Win3.11 clipboard file!", L"File format", 0);
+            // MessageBox(Globals.hMainWnd, L"We have a Win3.11 clipboard file!", L"File format", 0);
             break;
 
         case CLIP_FMT_NT:
@@ -295,15 +295,16 @@ void ReadClipboardFile(LPCWSTR lpFileName)
             SizeOfFormatHeader = sizeof(NTCLIPFORMATHEADER);
             pClipFileHeader    = &NtClipFileHeader;
             pClipFormatArray   = &NtClipFormatArray;
-            MessageBox(Globals.hMainWnd, L"We have a WinNT clipboard file!", L"File format", 0);
+            // MessageBox(Globals.hMainWnd, L"We have a WinNT clipboard file!", L"File format", 0);
             break;
 
         default:
             MessageBoxRes(Globals.hMainWnd, Globals.hInstance, ERROR_INVALID_FILE_FORMAT, 0, MB_ICONSTOP | MB_OK);
             goto done;
     }
-    
+
     /* Completely read the header */
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
     if (!ReadFile(hFile, pClipFileHeader, SizeOfFileHeader, &dwBytesRead, NULL) ||
         dwBytesRead != SizeOfFileHeader)
     {
@@ -325,8 +326,8 @@ void ReadClipboardFile(LPCWSTR lpFileName)
             wFormatCount = ((NTCLIPFILEHEADER*)pClipFileHeader)->wFormatCount;
             break;
     }
-    
-    /* Loop through the data array */
+
+    /* Loop through the format data array */
     for (i = 0; i < wFormatCount; i++)
     {
         if (SetFilePointer(hFile, SizeOfFileHeader + i * SizeOfFormatHeader, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
@@ -415,8 +416,141 @@ done:
     return;
 }
 
-void WriteClipboardFile(LPCWSTR lpFileName)
+void WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier)
 {
-    MessageBoxW(Globals.hMainWnd, L"This function is currently not implemented.", L"Clipboard", MB_OK | MB_ICONINFORMATION);
+    CLIPFILEHEADER ClipFileHeader;
+    CLIPFORMATHEADER ClipFormatArray;
+    NTCLIPFILEHEADER NtClipFileHeader;
+    NTCLIPFORMATHEADER NtClipFormatArray;
+    PVOID pClipFileHeader;
+    PVOID pClipFormatArray;
+    DWORD SizeOfFileHeader, SizeOfFormatHeader;
+
+    WORD wFormatCount;
+    DWORD dwFormatID;
+    DWORD dwLenData;
+    DWORD dwOffData;
+    // PVOID szName;
+
+    HANDLE hFile;
+    DWORD dwBytesWritten;
+    int i;
+
+    WCHAR szFormatName[MAX_FMT_NAME_LEN];
+
+    /* Create the file for write access */
+    hFile = CreateFileW(lpFileName, GENERIC_WRITE, 0, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        goto done;
+    }
+
+    wFormatCount = CountClipboardFormats();
+
+    /* Select the file format and setup the header according to the clipboard file format ID */
+    switch (wFileIdentifier)
+    {
+        case CLIP_FMT_31:
+            SizeOfFileHeader   = sizeof(CLIPFILEHEADER);
+            SizeOfFormatHeader = sizeof(CLIPFORMATHEADER);
+            pClipFileHeader    = &ClipFileHeader;
+            pClipFormatArray   = &ClipFormatArray;
+            // MessageBox(Globals.hMainWnd, L"We write a Win3.11 clipboard file!", L"File format", 0);
+
+            ClipFileHeader.wFileIdentifier = CLIP_FMT_31; // wFileIdentifier
+            ClipFileHeader.wFormatCount    = wFormatCount;
+            break;
+
+        case CLIP_FMT_NT:
+        case CLIP_FMT_BK:
+            SizeOfFileHeader   = sizeof(NTCLIPFILEHEADER);
+            SizeOfFormatHeader = sizeof(NTCLIPFORMATHEADER);
+            pClipFileHeader    = &NtClipFileHeader;
+            pClipFormatArray   = &NtClipFormatArray;
+            // MessageBox(Globals.hMainWnd, L"We write a WinNT clipboard file!", L"File format", 0);
+
+            NtClipFileHeader.wFileIdentifier = CLIP_FMT_NT; // wFileIdentifier
+            NtClipFileHeader.wFormatCount    = wFormatCount;
+            break;
+
+        default:
+            MessageBoxRes(Globals.hMainWnd, Globals.hInstance, ERROR_INVALID_FILE_FORMAT, 0, MB_ICONSTOP | MB_OK);
+            goto done;
+    }
+
+    /* Write the header */
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    if (!WriteFile(hFile, pClipFileHeader, SizeOfFileHeader, &dwBytesWritten, NULL) ||
+        dwBytesWritten != SizeOfFileHeader)
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        goto done;
+    }
+
+    /* Compute where the data should start (after the file header and the format array) */
+    dwOffData = SizeOfFileHeader + wFormatCount * SizeOfFormatHeader;
+
+    /* Loop through each format and save the data */
+    i = 0;
+    dwFormatID = EnumClipboardFormats(0);
+    while (dwFormatID)
+    {
+        if (i >= wFormatCount) assert(FALSE); // break;
+
+        RetrieveClipboardFormatName(Globals.hInstance, dwFormatID, szFormatName, ARRAYSIZE(szFormatName));
+
+        // TODO: Copy the format name string into the format header,
+        // possibly converting into ANSI for Win3.1 format, and render
+        // in the file the different type of data. From the renderers
+        // we retrieve the real size of the data into 'dwLenData'.
+        /* TODO: Write the data stream at 'dwOffData' */
+        dwLenData = 0;
+
+        /* Write format data */
+        switch (wFileIdentifier)
+        {
+            case CLIP_FMT_31:
+                ((CLIPFORMATHEADER*)pClipFormatArray)->dwFormatID = dwFormatID;
+                ((CLIPFORMATHEADER*)pClipFormatArray)->dwLenData  = dwLenData;
+                ((CLIPFORMATHEADER*)pClipFormatArray)->dwOffData  = dwOffData;
+                // szName     = ((CLIPFORMATHEADER*)pClipFormatArray)->szName;
+                ZeroMemory( ((CLIPFORMATHEADER*)pClipFormatArray)->szName , sizeof(((CLIPFORMATHEADER*)pClipFormatArray)->szName) );
+                break;
+
+            case CLIP_FMT_NT:
+            case CLIP_FMT_BK:
+                ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwFormatID = dwFormatID;
+                ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwLenData  = dwLenData;
+                ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwOffData  = dwOffData;
+                // szName     = ((NTCLIPFORMATHEADER*)pClipFormatArray)->szName;
+                ZeroMemory( ((NTCLIPFORMATHEADER*)pClipFormatArray)->szName , sizeof(((NTCLIPFORMATHEADER*)pClipFormatArray)->szName) );
+                break;
+        }
+
+        if (SetFilePointer(hFile, SizeOfFileHeader + i * SizeOfFormatHeader, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        {
+            ShowLastWin32Error(Globals.hMainWnd);
+            goto done;
+        }
+
+        if (!WriteFile(hFile, pClipFormatArray, SizeOfFormatHeader, &dwBytesWritten, NULL))
+        {
+            ShowLastWin32Error(Globals.hMainWnd);
+            goto done;
+        }
+
+        /* Adjust the offset for the next data stream */
+        dwOffData += dwLenData;
+
+        i++;
+        dwFormatID = EnumClipboardFormats(dwFormatID);
+    }
+
+done:
+    if (hFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hFile);
+
     return;
 }

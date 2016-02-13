@@ -58,7 +58,7 @@ static void SaveClipboardToFile(void)
         return;
     }
 
-    WriteClipboardFile(szFileName);
+    WriteClipboardFile(szFileName, CLIP_FMT_NT /* CLIP_FMT_31 */);
 
     CloseClipboard();
 }

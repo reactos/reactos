@@ -88,7 +88,7 @@ void RetrieveClipboardFormatName(HINSTANCE hInstance, UINT uFormat, LPWSTR lpszF
 {
     if (!GetPredefinedClipboardFormatName(hInstance, uFormat, lpszFormat, cch))
     {
-        if (!GetClipboardFormatName(uFormat, lpszFormat, cch))
+        if (!GetClipboardFormatNameW(uFormat, lpszFormat, cch))
         {
             LoadStringW(hInstance, STRING_CF_UNKNOWN, lpszFormat, cch);
         }

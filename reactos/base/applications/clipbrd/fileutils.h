@@ -49,4 +49,4 @@ typedef struct _NTCLIPFORMATHEADER
 } NTCLIPFORMATHEADER;
 
 void ReadClipboardFile(LPCWSTR lpFileName);
-void WriteClipboardFile(LPCWSTR lpFileName);
+void WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier);
