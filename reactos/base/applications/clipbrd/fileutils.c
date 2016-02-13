@@ -4,6 +4,7 @@
  * FILE:            base/applications/clipbrd/fileutils.c
  * PURPOSE:         Clipboard file format helper functions.
  * PROGRAMMERS:     Ricardo Hanke
+ *                  Hermes Belusca-Maito
  */
 
 #include "precomp.h"
@@ -16,9 +17,7 @@ static HGLOBAL ClipboardReadMemoryBlock(HANDLE hFile, DWORD dwOffset, DWORD dwLe
 
     hData = GlobalAlloc(GHND, dwLength);
     if (!hData)
-    {
         return NULL;
-    }
 
     lpData = GlobalLock(hData);
     if (!lpData)
@@ -46,20 +45,22 @@ static HGLOBAL ClipboardReadMemoryBlock(HANDLE hFile, DWORD dwOffset, DWORD dwLe
     return hData;
 }
 
-static BOOL ClipboardReadMemory(HANDLE hFile, DWORD dwFormat, DWORD dwOffset, DWORD dwLength, LPCWSTR lpFormatName)
+static BOOL ClipboardReadMemory(HANDLE hFile, DWORD dwFormat, DWORD dwOffset, DWORD dwLength, WORD FileIdentifier, PVOID lpFormatName)
 {
     HGLOBAL hData;
     DWORD dwTemp;
 
     hData = ClipboardReadMemoryBlock(hFile, dwOffset, dwLength);
     if (!hData)
-    {
         return FALSE;
-    }
 
     if ((dwFormat >= 0xC000) && (dwFormat <= 0xFFFF))
     {
-        dwTemp = RegisterClipboardFormatW(lpFormatName);
+        if (FileIdentifier == CLIP_FMT_31)
+            dwTemp = RegisterClipboardFormatA((LPCSTR)lpFormatName);
+        else if ((FileIdentifier == CLIP_FMT_NT) || (FileIdentifier == CLIP_FMT_BK))
+            dwTemp = RegisterClipboardFormatW((LPCWSTR)lpFormatName);
+
         if (!dwTemp)
         {
             GlobalFree(hData);
@@ -114,6 +115,45 @@ static BOOL ClipboardReadPalette(HANDLE hFile, DWORD dwOffset, DWORD dwLength)
     if (!SetClipboardData(CF_PALETTE, hPalette))
     {
         DeleteObject(hPalette);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL ClipboardReadMetafile(HANDLE hFile, DWORD dwOffset, DWORD dwLength)
+{
+    HMETAFILE hMf;
+    HGLOBAL hData;
+    LPVOID lpData;
+
+    hData = ClipboardReadMemoryBlock(hFile, dwOffset, dwLength);
+    if (!hData)
+    {
+        return FALSE;
+    }
+
+    lpData = GlobalLock(hData);
+    if (!lpData)
+    {
+        GlobalFree(hData);
+        return FALSE;
+    }
+
+    hMf = SetMetaFileBitsEx(dwLength, lpData);
+
+    GlobalUnlock(hData);
+    GlobalFree(hData);
+
+    if (!hMf)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    if (!SetClipboardData(CF_METAFILEPICT, hMf))
+    {
+        DeleteMetaFile(hMf);
         return FALSE;
     }
 
@@ -202,13 +242,27 @@ static BOOL ClipboardReadBitmap(HANDLE hFile, DWORD dwOffset, DWORD dwLength)
 
 void ReadClipboardFile(LPCWSTR lpFileName)
 {
-    CLIPBOARDFILEHEADER cfhFileHeader;
-    CLIPBOARDFORMATHEADER *cfhFormatArray = NULL;
+    CLIPFILEHEADER ClipFileHeader;
+    CLIPFORMATHEADER ClipFormatArray;
+    NTCLIPFILEHEADER NtClipFileHeader;
+    NTCLIPFORMATHEADER NtClipFormatArray;
+    PVOID pClipFileHeader;
+    PVOID pClipFormatArray;
+    DWORD SizeOfFileHeader, SizeOfFormatHeader;
+
+    WORD wFileIdentifier;
+    WORD wFormatCount;
+    DWORD dwFormatID;
+    DWORD dwLenData;
+    DWORD dwOffData;
+    PVOID szName;
+
     HANDLE hFile;
     DWORD dwBytesRead;
     BOOL bResult;
     int i;
 
+    /* Open the file */
     hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -216,39 +270,99 @@ void ReadClipboardFile(LPCWSTR lpFileName)
         goto done;
     }
 
-    if (!ReadFile(hFile, &cfhFileHeader, sizeof(cfhFileHeader), &dwBytesRead, NULL))
+    /* Just read enough bytes to get the clipboard file format ID */
+    if (!ReadFile(hFile, &wFileIdentifier, sizeof(wFileIdentifier), &dwBytesRead, NULL))
+    {
+        ShowLastWin32Error(Globals.hMainWnd);
+        goto done;
+    }
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+
+    /* Set data according to the clipboard file format ID */
+    switch (wFileIdentifier)
+    {
+        case CLIP_FMT_31:
+            SizeOfFileHeader   = sizeof(CLIPFILEHEADER);
+            SizeOfFormatHeader = sizeof(CLIPFORMATHEADER);
+            pClipFileHeader    = &ClipFileHeader;
+            pClipFormatArray   = &ClipFormatArray;
+            MessageBox(Globals.hMainWnd, L"We have a Win3.11 clipboard file!", L"File format", 0);
+            break;
+
+        case CLIP_FMT_NT:
+        case CLIP_FMT_BK:
+            SizeOfFileHeader   = sizeof(NTCLIPFILEHEADER);
+            SizeOfFormatHeader = sizeof(NTCLIPFORMATHEADER);
+            pClipFileHeader    = &NtClipFileHeader;
+            pClipFormatArray   = &NtClipFormatArray;
+            MessageBox(Globals.hMainWnd, L"We have a WinNT clipboard file!", L"File format", 0);
+            break;
+
+        default:
+            MessageBoxRes(Globals.hMainWnd, Globals.hInstance, ERROR_INVALID_FILE_FORMAT, 0, MB_ICONSTOP | MB_OK);
+            goto done;
+    }
+    
+    /* Completely read the header */
+    if (!ReadFile(hFile, pClipFileHeader, SizeOfFileHeader, &dwBytesRead, NULL) ||
+        dwBytesRead != SizeOfFileHeader)
     {
         ShowLastWin32Error(Globals.hMainWnd);
         goto done;
     }
 
-    if ((cfhFileHeader.wFileIdentifier != CLIPBOARD_FORMAT_NT) && (cfhFileHeader.wFileIdentifier != CLIPBOARD_FORMAT_BK))
+    /* Get header data */
+    switch (wFileIdentifier)
     {
-        MessageBoxRes(Globals.hMainWnd, Globals.hInstance, ERROR_INVALID_FILE_FORMAT, 0, MB_ICONSTOP | MB_OK);
-        goto done;
-    }
+        case CLIP_FMT_31:
+            assert(wFileIdentifier == ((CLIPFILEHEADER*)pClipFileHeader)->wFileIdentifier);
+            wFormatCount = ((CLIPFILEHEADER*)pClipFileHeader)->wFormatCount;
+            break;
 
-    cfhFormatArray = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cfhFileHeader.wFormatCount * sizeof(CLIPBOARDFORMATHEADER));
-    if (!cfhFormatArray)
-    {
-        SetLastError(ERROR_OUTOFMEMORY);
-        ShowLastWin32Error(Globals.hMainWnd);
-        goto done;
+        case CLIP_FMT_NT:
+        case CLIP_FMT_BK:
+            assert(wFileIdentifier == ((NTCLIPFILEHEADER*)pClipFileHeader)->wFileIdentifier);
+            wFormatCount = ((NTCLIPFILEHEADER*)pClipFileHeader)->wFormatCount;
+            break;
     }
-
-    if (!ReadFile(hFile, cfhFormatArray, cfhFileHeader.wFormatCount * sizeof(CLIPBOARDFORMATHEADER), &dwBytesRead, NULL))
+    
+    /* Loop through the data array */
+    for (i = 0; i < wFormatCount; i++)
     {
-        ShowLastWin32Error(Globals.hMainWnd);
-        goto done;
-    }
+        if (SetFilePointer(hFile, SizeOfFileHeader + i * SizeOfFormatHeader, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        {
+            ShowLastWin32Error(Globals.hMainWnd);
+            goto done;
+        }
 
-    for (i = 0; i < cfhFileHeader.wFormatCount; i++)
-    {
-        switch (cfhFormatArray[i].dwFormatID)
+        if (!ReadFile(hFile, pClipFormatArray, SizeOfFormatHeader, &dwBytesRead, NULL))
+        {
+            ShowLastWin32Error(Globals.hMainWnd);
+            goto done;
+        }
+
+        /* Get format data */
+        switch (wFileIdentifier)
+        {
+            case CLIP_FMT_31:
+                dwFormatID = ((CLIPFORMATHEADER*)pClipFormatArray)->dwFormatID;
+                dwLenData  = ((CLIPFORMATHEADER*)pClipFormatArray)->dwLenData;
+                dwOffData  = ((CLIPFORMATHEADER*)pClipFormatArray)->dwOffData;
+                szName     = ((CLIPFORMATHEADER*)pClipFormatArray)->szName;
+                break;
+
+            case CLIP_FMT_NT:
+            case CLIP_FMT_BK:
+                dwFormatID = ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwFormatID;
+                dwLenData  = ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwLenData;
+                dwOffData  = ((NTCLIPFORMATHEADER*)pClipFormatArray)->dwOffData;
+                szName     = ((NTCLIPFORMATHEADER*)pClipFormatArray)->szName;
+                break;
+        }
+
+        switch (dwFormatID)
         {
             case CF_OWNERDISPLAY:
-            case CF_DSPMETAFILEPICT:
-            case CF_METAFILEPICT:
             {
                 break;
             }
@@ -256,49 +370,47 @@ void ReadClipboardFile(LPCWSTR lpFileName)
             case CF_BITMAP:
             case CF_DSPBITMAP:
             {
-                bResult = ClipboardReadBitmap(hFile, cfhFormatArray[i].dwOffData, cfhFormatArray[i].dwLenData);
+                bResult = ClipboardReadBitmap(hFile, dwOffData, dwLenData);
                 break;
             }
 
-            case CF_DSPENHMETAFILE:
-            case CF_ENHMETAFILE:
+            case CF_METAFILEPICT:
+            case CF_DSPMETAFILEPICT:
             {
-                bResult = ClipboardReadEnhMetafile(hFile, cfhFormatArray[i].dwOffData, cfhFormatArray[i].dwLenData);
+                bResult = ClipboardReadMetafile(hFile, dwOffData, dwLenData);
+                break;
+            }
+
+            case CF_ENHMETAFILE:
+            case CF_DSPENHMETAFILE:
+            {
+                bResult = ClipboardReadEnhMetafile(hFile, dwOffData, dwLenData);
                 break;
             }
 
             case CF_PALETTE:
             {
-                bResult = ClipboardReadPalette(hFile, cfhFormatArray[i].dwOffData, cfhFormatArray[i].dwLenData);
+                bResult = ClipboardReadPalette(hFile, dwOffData, dwLenData);
                 break;
             }
 
             default:
             {
-                if ((cfhFormatArray[i].dwFormatID < CF_PRIVATEFIRST) || (cfhFormatArray[i].dwFormatID > CF_PRIVATELAST))
+                if ((dwFormatID < CF_PRIVATEFIRST) || (dwFormatID > CF_PRIVATELAST))
                 {
-                    bResult = ClipboardReadMemory(hFile, cfhFormatArray[i].dwFormatID, cfhFormatArray[i].dwOffData, cfhFormatArray[i].dwLenData, cfhFormatArray[i].szName);
+                    bResult = ClipboardReadMemory(hFile, dwFormatID, dwOffData, dwLenData, wFileIdentifier, szName);
                 }
                 break;
             }
         }
 
         if (!bResult)
-        {
             ShowLastWin32Error(Globals.hMainWnd);
-        }
     }
 
 done:
     if (hFile != INVALID_HANDLE_VALUE)
-    {
         CloseHandle(hFile);
-    }
-
-    if (cfhFormatArray)
-    {
-        HeapFree(GetProcessHeap(), 0, cfhFormatArray);
-    }
 
     return;
 }

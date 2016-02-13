@@ -5,6 +5,8 @@
 
 #include <limits.h>
 
+#include <assert.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>

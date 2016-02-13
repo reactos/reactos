@@ -318,15 +318,15 @@ static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
-        case CF_ENHMETAFILE:
-        {
-            PlayEnhMetaFileFromClipboard(hdc, &rc);
-            break;
-        }
-
         case CF_METAFILEPICT:
         {
             PlayMetaFileFromClipboard(hdc, &rc);
+            break;
+        }
+
+        case CF_ENHMETAFILE:
+        {
+            PlayEnhMetaFileFromClipboard(hdc, &rc);
             break;
         }
 

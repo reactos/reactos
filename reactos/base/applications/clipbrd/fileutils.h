@@ -4,26 +4,49 @@
  * FILE:            base/applications/clipbrd/fileutils.h
  * PURPOSE:         Clipboard file format helper functions.
  * PROGRAMMERS:     Ricardo Hanke
+ *                  Hermes Belusca-Maito
  */
 
-#define CLIPBOARD_FORMAT_31 0xC350
-#define CLIPBOARD_FORMAT_NT 0xC351
-#define CLIPBOARD_FORMAT_BK 0xC352
+#define CLIP_FMT_31 0xC350
+#define CLIP_FMT_NT 0xC351
+#define CLIP_FMT_BK 0xC352
 #define MAX_FMT_NAME_LEN 79
 
-typedef struct _CLIPBOARDFILEHEADER
+/*
+ * Win3.1 Clipboard File Format (default)
+ */
+#pragma pack(push, 1)
+typedef struct _CLIPFILEHEADER
 {
     WORD wFileIdentifier;
     WORD wFormatCount;
-} CLIPBOARDFILEHEADER;
+} CLIPFILEHEADER;
 
-typedef struct _CLIPBOARDFORMATHEADER
+typedef struct _CLIPFORMATHEADER
+{
+    WORD  dwFormatID;
+    DWORD dwLenData;
+    DWORD dwOffData;
+    CHAR  szName[MAX_FMT_NAME_LEN];
+} CLIPFORMATHEADER;
+#pragma pack(pop)
+
+/*
+ * NT Clipboard File Format
+ */
+typedef struct _NTCLIPFILEHEADER
+{
+    WORD wFileIdentifier;
+    WORD wFormatCount;
+} NTCLIPFILEHEADER;
+
+typedef struct _NTCLIPFORMATHEADER
 {
     DWORD dwFormatID;
     DWORD dwLenData;
     DWORD dwOffData;
     WCHAR szName[MAX_FMT_NAME_LEN];
-} CLIPBOARDFORMATHEADER;
+} NTCLIPFORMATHEADER;
 
 void ReadClipboardFile(LPCWSTR lpFileName);
 void WriteClipboardFile(LPCWSTR lpFileName);
