@@ -32,7 +32,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Zwischenablage"
+    STRING_CLIPBOARD "Clipboard Viewer"
     STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "Soll der Inhalt der Zwischenablage gelöscht werden?"
     STRING_DELETE_TITLE "Zwischenablage löschen"

@@ -34,7 +34,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Portapapeles"
+    STRING_CLIPBOARD "Clipboard Viewer"
     STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "¿Borrar contenidos del Portapapeles?"
     STRING_DELETE_TITLE "Vaciar Portapapeles"

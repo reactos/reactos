@@ -46,6 +46,8 @@ macro(add_livecd_shortcut name app dest)
                 FOR livecd)
 endmacro(add_livecd_shortcut)
 
+## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
+## and taking their default english translation!
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd)
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/All Users/Desktop")
 add_livecd_shortcut("Device Manager" devmgmt.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
@@ -67,6 +69,7 @@ add_livecd_shortcut("Solitaire" sol.exe "Profiles/All Users/Start Menu/Programs/
 add_livecd_shortcut("Spider Solitaire" spider.exe "Profiles/All Users/Start Menu/Programs/Games")
 add_livecd_shortcut("WineMine" winmine.exe "Profiles/All Users/Start Menu/Programs/Games")
 add_livecd_shortcut("Character Map" charmap.exe "Profiles/All Users/Start Menu/Programs/System Tools")
+add_livecd_shortcut("Clipboard Viewer" clipbrd.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("Keyboard Layout Switcher" kbswitch.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("ReactX Diagnostic" dxdiag.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("Regedit" regedit.exe "Profiles/All Users/Start Menu/Programs/System Tools")
