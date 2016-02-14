@@ -75,7 +75,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Wine 도움말"
+STID_WINE_HELP, 	"ReactOS 도움말"
 STID_WHERROR, 		"에러"
 STID_WARNING,  		"경고"
 STID_INFO,  		"정보"

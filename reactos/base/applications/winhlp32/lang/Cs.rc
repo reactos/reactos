@@ -77,7 +77,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Nápověda Wine"
+STID_WINE_HELP, 	"Nápověda ReactOS"
 STID_WHERROR, 		"CHYBA"
 STID_WARNING,  		"VAROVÁNÍ"
 STID_INFO,  		"Informace"

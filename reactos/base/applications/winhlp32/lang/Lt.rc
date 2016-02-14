@@ -75,7 +75,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Wine žinynas"
+STID_WINE_HELP, 	"ReactOS žinynas"
 STID_WHERROR, 		"KLAIDA"
 STID_WARNING,  		"ĮSPĖJIMAS"
 STID_INFO,  		"Informacija"

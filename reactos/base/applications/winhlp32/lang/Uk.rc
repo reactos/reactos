@@ -80,7 +80,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Довідка Wine"
+STID_WINE_HELP, 	"Довідка ReactOS"
 STID_WHERROR, 		"ПОМИЛКА"
 STID_WARNING,  		"УВАГА"
 STID_INFO,  		"Інформація"
