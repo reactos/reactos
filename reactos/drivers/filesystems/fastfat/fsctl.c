@@ -121,16 +121,6 @@ VfatHasFileSystem(
             *RecognizedFS = TRUE;
         }
     }
-    else if (DiskGeometry.MediaType == Unknown)
-    {
-        /*
-         * Floppy disk driver can return Unknown as media type if it
-         * doesn't know yet what floppy in the drive really is. This is
-         * perfectly correct to do under Windows.
-         */
-        *RecognizedFS = TRUE;
-        DiskGeometry.BytesPerSector = 512;
-    }
     else
     {
         *RecognizedFS = TRUE;
