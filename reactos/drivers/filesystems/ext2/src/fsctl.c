@@ -1496,13 +1496,6 @@ Ext2MountVolume (IN PEXT2_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
 
-#ifdef __REACTOS__
-        if (DiskGeometry.MediaType == Unknown)
-        {
-            DiskGeometry.BytesPerSector = 512;
-        }
-#endif
-
         Status = IoCreateDevice(
                      MainDeviceObject->DriverObject,
                      sizeof(EXT2_VCB),
