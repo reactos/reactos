@@ -987,6 +987,11 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
             /* 3k: Clear the DO_DEVICE_INITIALIZING flag */
             gControllerInfo[i].DriveInfo[j].DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            /* 3l: Attempt to get drive info - if a floppy is already present */
+            StartMotor(&gControllerInfo[i].DriveInfo[j]);
+            RWDetermineMediaType(&gControllerInfo[i].DriveInfo[j], TRUE);
+            StopMotor(gControllerInfo[i].DriveInfo[j].ControllerInfo);
         }
     }
 

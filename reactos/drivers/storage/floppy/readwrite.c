@@ -149,8 +149,8 @@ RWFreeAdapterChannel(PADAPTER_OBJECT AdapterObject)
 }
 
 
-static NTSTATUS NTAPI
-RWDetermineMediaType(PDRIVE_INFO DriveInfo)
+NTSTATUS NTAPI
+RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
 /*
  * FUNCTION: Determine the media type of the disk in the drive and fill in the geometry
  * ARGUMENTS:
@@ -177,8 +177,8 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
     /*
      * This algorithm assumes that a 1.44MB floppy is in the drive.  If it's not,
-     * it works backwards until the read works.  Note that only 1.44 has been tested
-     * at all.
+     * it works backwards until the read works unless OneShot try is asked.
+     * Note that only 1.44 has been tested at all.
      */
 
     do
@@ -249,7 +249,10 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo)
         if(HwReadIdResult(DriveInfo->ControllerInfo, NULL, NULL) != STATUS_SUCCESS)
         {
             WARN_(FLOPPY, "RWDetermineMediaType(): ReadIdResult failed; continuing\n");
-            continue;
+            if (OneShot)
+                break;
+            else
+                continue;
         }
 
         /* Found the media; populate the geometry now */
@@ -492,7 +495,7 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
      */
     if(DriveInfo->DiskGeometry.MediaType == Unknown)
     {
-        if(RWDetermineMediaType(DriveInfo) != STATUS_SUCCESS)
+        if(RWDetermineMediaType(DriveInfo, FALSE) != STATUS_SUCCESS)
         {
             WARN_(FLOPPY, "ReadWritePassive(): unable to determine media type; completing with STATUS_UNSUCCESSFUL\n");
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
