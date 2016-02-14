@@ -34,10 +34,10 @@ CAPTION "Internet Time"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Automatically synchronize with an Internet time server",
+    AUTOCHECKBOX "Automatically &synchronize with an Internet time server",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "&Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT "Synchronization can only occur when your computer is connected to the Internet.", -1, 12, 114, 225, 25
