@@ -394,8 +394,9 @@ static void IntSendDestroyMsg(HWND hWnd)
 
    if (Window)
    {
-      /* Look whether the focus is within the tree of windows we will
-       * be destroying.
+      /*
+       * Look whether the focus is within the tree of windows
+       * we will be destroying.
        */
       // Rule #1
       if ( ti->MessageQueue->spwndActive == Window || // Fixes CORE-106 RegSvr32 exit and return focus to CMD.
@@ -433,7 +434,6 @@ static void IntSendDestroyMsg(HWND hWnd)
     * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
     * make sure that the window still exists when we come back.
     */
-
    if (IntIsWindow(hWnd))
    {
       HWND* pWndArray;
@@ -480,13 +480,12 @@ UserFreeWindowInfo(PTHREADINFO ti, PWND Wnd)
 }
 
 /***********************************************************************
- *           IntDestroyWindow
+ *           co_UserFreeWindow
  *
  * Destroy storage associated to a window. "Internals" p.358
  *
- * This is the "functional" DestroyWindows function ei. all stuff
- * done in CreateWindow is undone here and not in DestroyWindow:-P
-
+ * This is the "functional" DestroyWindows function i.e. all stuff
+ * done in CreateWindow is undone here and not in DestroyWindow :-P
  */
 LRESULT co_UserFreeWindow(PWND Window,
                           PPROCESSINFO ProcessData,
@@ -503,7 +502,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    if(Window->state2 & WNDS2_INDESTROY)
    {
-      TRACE("Tried to call IntDestroyWindow() twice\n");
+      TRACE("Tried to call co_UserFreeWindow() twice\n");
       return 0;
    }
    Window->state2 |= WNDS2_INDESTROY;
@@ -513,7 +512,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
-      in IntDestroyWindow() */
+      in co_UserFreeWindow() */
    RemoveEntryList(&Window->ThreadListEntry);
 
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
@@ -528,7 +527,7 @@ LRESULT co_UserFreeWindow(PWND Window,
       {
          if ((Child = IntGetWindowObject(*ChildHandle)))
          {
-            if(!IntWndBelongsToThread(Child, ThreadData))
+            if (!IntWndBelongsToThread(Child, ThreadData))
             {
                /* send WM_DESTROY messages to windows not belonging to the same thread */
                co_IntSendMessage( UserHMGetHandle(Child), WM_ASYNC_DESTROYWINDOW, 0, 0 );
@@ -542,7 +541,7 @@ LRESULT co_UserFreeWindow(PWND Window,
       ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
    }
 
-   if(SendMessages)
+   if (SendMessages)
    {
       /*
        * Clear the update region to make sure no WM_PAINT messages will be
@@ -551,7 +550,7 @@ LRESULT co_UserFreeWindow(PWND Window,
       co_UserRedrawWindow(Window, NULL, 0,
                           RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
                           RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
-      if(BelongsToThreadData)
+      if (BelongsToThreadData)
          co_IntSendMessage(UserHMGetHandle(Window), WM_NCDESTROY, 0, 0);
    }
 
@@ -570,7 +569,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
 
    /* reset shell window handles */
-   if(ThreadData->rpdesk)
+   if (ThreadData->rpdesk)
    {
       if (Window->head.h == ThreadData->rpdesk->rpwinstaParent->ShellWindow)
          ThreadData->rpdesk->rpwinstaParent->ShellWindow = NULL;
@@ -617,8 +616,8 @@ LRESULT co_UserFreeWindow(PWND Window,
       Window->IDMenu = 0;
    }
 
-   if(Window->SystemMenu
-         && (Menu = UserGetMenuObject(Window->SystemMenu)))
+   if (Window->SystemMenu
+        && (Menu = UserGetMenuObject(Window->SystemMenu)))
    {
       IntDestroyMenuObject(Menu, TRUE);
       Window->SystemMenu = (HMENU)0;
@@ -653,7 +652,7 @@ LRESULT co_UserFreeWindow(PWND Window,
                        Window->head.pti->ppi);
    Window->pcls = NULL;
 
-   if(Window->hrgnClip)
+   if (Window->hrgnClip)
    {
       IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
       GreDeleteObject(Window->hrgnClip);
@@ -2674,7 +2673,6 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
    /* Send destroy messages */
-
    IntSendDestroyMsg(UserHMGetHandle(Window));
 
    if (!IntIsWindow(UserHMGetHandle(Window)))
