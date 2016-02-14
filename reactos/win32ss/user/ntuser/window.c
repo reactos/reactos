@@ -424,10 +424,14 @@ static void IntSendDestroyMsg(HWND hWnd)
       }
    }
 
-   /*
-    * Send the WM_DESTROY to the window.
-    */
+   /* If the window being destroyed is the current clipboard owner... */
+   if (ti->ppi->prpwinsta != NULL && Window == ti->ppi->prpwinsta->spwndClipOwner)
+   {
+       /* ... make it release the clipboard */
+       UserClipboardRelease(Window);
+   }
 
+   /* Send the WM_DESTROY to the window */
    co_IntSendMessage(hWnd, WM_DESTROY, 0, 0);
 
    /*
@@ -554,6 +558,8 @@ LRESULT co_UserFreeWindow(PWND Window,
          co_IntSendMessage(UserHMGetHandle(Window), WM_NCDESTROY, 0, 0);
    }
 
+   UserClipboardFreeWindow(Window);
+
    DestroyTimersForWindow(ThreadData, Window);
 
    /* Unregister hot keys */
@@ -664,8 +670,6 @@ LRESULT co_UserFreeWindow(PWND Window,
    UserFreeWindowInfo(Window->head.pti, Window);
 
    UserDereferenceObject(Window);
-
-   UserClipboardFreeWindow(Window);
 
    return 0;
 }
