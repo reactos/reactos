@@ -643,6 +643,9 @@ BOOLEAN
 NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
 
 BOOLEAN
+NtfsFCBIsCompressed(PNTFS_FCB Fcb);
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID

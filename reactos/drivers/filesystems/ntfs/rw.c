@@ -71,6 +71,13 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     Fcb = (PNTFS_FCB)FileObject->FsContext;
 
+    if (NtfsFCBIsCompressed(Fcb))
+    {
+        DPRINT1("Compressed file!\n");
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
     if (FileRecord == NULL)
     {

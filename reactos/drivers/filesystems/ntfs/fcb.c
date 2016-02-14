@@ -138,6 +138,12 @@ NtfsFCBIsReparsePoint(PNTFS_FCB Fcb)
 
 
 BOOLEAN
+NtfsFCBIsCompressed(PNTFS_FCB Fcb)
+{
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_COMPRESSED) == NTFS_FILE_TYPE_COMPRESSED); 
+}
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb)
 {
     return (wcscmp(Fcb->PathName, L"\\") == 0);
