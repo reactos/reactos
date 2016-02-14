@@ -65,17 +65,21 @@ static void SaveClipboardToFile(void)
 
 static void LoadClipboardDataFromFile(LPWSTR lpszFileName)
 {
+    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
+                      STRING_DELETE_MSG, STRING_DELETE_TITLE,
+                      MB_ICONWARNING | MB_YESNO) != IDYES)
+    {
+        return;
+    }
+
     if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
         return;
     }
 
-    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance, STRING_DELETE_MSG, STRING_DELETE_TITLE, MB_ICONWARNING | MB_YESNO) == IDYES)
-    {
-        EmptyClipboard();
-        ReadClipboardFile(lpszFileName);
-    }
+    EmptyClipboard();
+    ReadClipboardFile(lpszFileName);
 
     CloseClipboard();
 }
@@ -227,10 +231,14 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
         case CMD_DELETE:
         {
-            if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance, STRING_DELETE_MSG, STRING_DELETE_TITLE, MB_ICONWARNING | MB_YESNO) == IDYES)
+            if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
+                              STRING_DELETE_MSG, STRING_DELETE_TITLE,
+                              MB_ICONWARNING | MB_YESNO) != IDYES)
             {
-                DeleteClipboardContent();
+                break;
             }
+
+            DeleteClipboardContent();
             break;
         }
 
@@ -272,10 +280,8 @@ static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     PAINTSTRUCT ps;
     RECT rc;
 
-    if (!OpenClipboard(NULL))
-    {
+    if (!OpenClipboard(Globals.hMainWnd))
         return;
-    }
 
     hdc = BeginPaint(hWnd, &ps);
     GetClientRect(hWnd, &rc);

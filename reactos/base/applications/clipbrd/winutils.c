@@ -243,7 +243,7 @@ UINT RealizeClipboardPalette(HWND hWnd)
     UINT uResult;
     HDC hDevContext;
 
-    if (!OpenClipboard(NULL))
+    if (!OpenClipboard(Globals.hMainWnd))
     {
         return GDI_ERROR;
     }

@@ -124,7 +124,7 @@ IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEA
 static BOOL FASTCALL
 IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
 {
-    /* Check if current thread has opened the clipboard */
+    /* Check if the current thread has opened the clipboard */
     return (pWinSta->ptiClipLock &&
             pWinSta->ptiClipLock == PsGetCurrentThreadWin32Thread());
 }
@@ -386,7 +386,7 @@ UserEnumClipboardFormats(UINT fmt)
     if (!pWinStaObj)
         goto cleanup;
 
-    /* Check if clipboard has been opened */
+    /* Check if the clipboard has been opened */
     if (!IntIsClipboardOpenByMe(pWinStaObj))
     {
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
@@ -433,18 +433,22 @@ UserOpenClipboard(HWND hWnd)
     if (!pWinStaObj)
         goto cleanup;
 
-    if (pWinStaObj->ptiClipLock)
+    /* Check if we already opened the clipboard */
+    if ((pWindow == pWinStaObj->spwndClipOpen) && IntIsClipboardOpenByMe(pWinStaObj))
     {
-        /* Clipboard is already opened */
-        if (pWinStaObj->spwndClipOpen != pWindow)
-        {
-            ERR("Access denied!\n");
-            EngSetLastError(ERROR_ACCESS_DENIED);
-            goto cleanup;
-        }
+        bRet = TRUE;
+        goto cleanup;
     }
 
-    /* Open clipboard */
+    /* If the clipboard was already opened by somebody else, bail out */
+    if ((pWindow != pWinStaObj->spwndClipOpen) && pWinStaObj->ptiClipLock)
+    {
+        ERR("Access denied!\n");
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        goto cleanup;
+    }
+
+    /* Open the clipboard */
     pWinStaObj->spwndClipOpen = pWindow;
     pWinStaObj->ptiClipLock = PsGetCurrentThreadWin32Thread();
     bRet = TRUE;
@@ -478,7 +482,7 @@ UserCloseClipboard(VOID)
     if (!pWinStaObj)
         goto cleanup;
 
-    /* Check if clipboard has been opened */
+    /* Check if the clipboard has been opened */
     if (!IntIsClipboardOpenByMe(pWinStaObj))
     {
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
@@ -613,7 +617,7 @@ UserEmptyClipboard(VOID)
     if (!pWinStaObj)
         return FALSE;
 
-    /* Check if clipboard has been opened */
+    /* Check if the clipboard has been opened */
     if (!IntIsClipboardOpenByMe(pWinStaObj))
     {
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
@@ -834,7 +838,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     if (!pWinStaObj)
         goto cleanup;
 
-    /* Check if clipboard has been opened */
+    /* Check if the clipboard has been opened */
     if (!IntIsClipboardOpenByMe(pWinStaObj))
     {
         EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
