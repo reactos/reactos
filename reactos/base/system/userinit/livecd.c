@@ -302,12 +302,16 @@ CreateKeyboardLayoutList(
     HWND hItemsList)
 {
     HKEY hKey;
-    WCHAR szLayoutID[9], KeyName[MAX_PATH];
+    WCHAR szLayoutId[9], szCurrentLayoutId[9];
+    WCHAR KeyName[MAX_PATH];
     DWORD dwIndex = 0;
     DWORD dwSize;
     INT iIndex;
     LONG lError;
-    ULONG ulLayoutID;
+    ULONG ulLayoutId;
+
+    if (!GetKeyboardLayoutNameW(szCurrentLayoutId))
+        wcscpy(szCurrentLayoutId, L"00000409");
 
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"System\\CurrentControlSet\\Control\\Keyboard Layouts",
@@ -319,11 +323,11 @@ CreateKeyboardLayoutList(
 
     while (TRUE)
     {
-        dwSize = sizeof(szLayoutID) / sizeof(WCHAR);
+        dwSize = sizeof(szLayoutId) / sizeof(WCHAR);
 
         lError = RegEnumKeyExW(hKey,
                                dwIndex,
-                               szLayoutID,
+                               szLayoutId,
                                &dwSize,
                                NULL,
                                NULL,
@@ -332,15 +336,14 @@ CreateKeyboardLayoutList(
         if (lError != ERROR_SUCCESS)
             break;
 
-        GetLayoutName(szLayoutID, KeyName);
+        GetLayoutName(szLayoutId, KeyName);
 
         iIndex = (INT)SendMessageW(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
-        ulLayoutID = wcstoul(szLayoutID, NULL, 16);
-        SendMessageW(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)ulLayoutID);
+        ulLayoutId = wcstoul(szLayoutId, NULL, 16);
+        SendMessageW(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)ulLayoutId);
 
-        // FIXME!
-        if (wcscmp(szLayoutID, L"00000409") == 0)
+        if (wcscmp(szLayoutId, szCurrentLayoutId) == 0)
         {
             SendMessageW(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
         }
