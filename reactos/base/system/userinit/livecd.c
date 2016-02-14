@@ -160,55 +160,6 @@ CreateLanguagesList(HWND hwnd)
 }
 
 
-#if 0
-static
-BOOL
-GetLayoutID(LPWSTR szLayoutNum, LPWSTR szLCID)
-{
-    DWORD dwBufLen;
-    DWORD dwRes;
-    HKEY hKey;
-    WCHAR szTempLCID[9];
-
-    // Get the Layout ID
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        dwBufLen = sizeof(szTempLCID);
-        dwRes = RegQueryValueExW(hKey, szLayoutNum, NULL, NULL, (LPBYTE)szTempLCID, &dwBufLen);
-
-        if (dwRes != ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        RegCloseKey(hKey);
-    }
-
-    // Look for a substitude of this layout
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        dwBufLen = sizeof(szTempLCID);
-
-        if (RegQueryValueExW(hKey, szTempLCID, NULL, NULL, (LPBYTE)szLCID, &dwBufLen) != ERROR_SUCCESS)
-        {
-            // No substitute found, then use the old LCID
-            wcscpy(szLCID, szTempLCID);
-        }
-
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        // Substitutes key couldn't be opened, so use the old LCID
-        wcscpy(szLCID, szTempLCID);
-    }
-
-    return TRUE;
-}
-#endif
-
-
 static
 BOOL
 GetLayoutName(
@@ -281,26 +232,23 @@ VOID
 SetKeyboardLayout(
     HWND hwnd)
 {
-#if 0
     INT iCurSel;
-    PWSTR pszLCID;
+    ULONG ulLayoutId;
     HKL hKl;
-    WCHAR szLCID[9];
+    WCHAR szLayoutId[9];
 
     iCurSel = SendMessageW(hwnd, CB_GETCURSEL, 0, 0);
     if (iCurSel == CB_ERR)
         return;
 
-    pszLCID = (PWSTR)SendMessageW(hwnd, CB_GETITEMDATA, iCurSel, 0);
-    if (pszLCID == (PWSTR)CB_ERR)
+    ulLayoutId = (ULONG)SendMessageW(hwnd, CB_GETITEMDATA, iCurSel, 0);
+    if (ulLayoutId == (ULONG)CB_ERR)
         return;
 
-    if (GetLayoutID(pszLCID, szLCID))
-    {
-        hKl = LoadKeyboardLayoutW(szLCID, KLF_ACTIVATE | KLF_SETFORPROCESS);
-        SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
-    }
-#endif
+    swprintf(szLayoutId, L"%08lx", ulLayoutId);
+
+    hKl = LoadKeyboardLayoutW(szLayoutId, KLF_ACTIVATE | KLF_REPLACELANG | KLF_SETFORPROCESS);
+    SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDWININICHANGE);
 }
 
 
@@ -610,9 +558,11 @@ LocaleDlgProc(
             /* Center the dialog window */
             CenterWindow (hwndDlg);
 
+            /* Fill the language and keyboard layout lists */
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
             CreateKeyboardLayoutList(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
 
+            /* Disable the 'Cancel' button*/
             EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
             return FALSE;
 
@@ -675,7 +625,10 @@ LocaleDlgProc(
                         if (NewLcid == (LCID)CB_ERR)
                             break;
 
+                        /* Set the locale for the current thread */
                         NtSetDefaultLocale(TRUE, NewLcid);
+
+                        /* Store the locale setings in the registry */
                         InitializeDefaultUserLocale(&NewLcid);
 
                         SetKeyboardLayout(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
