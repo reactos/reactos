@@ -299,7 +299,9 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-/* WARNING: Redundant with /ntuser/defwnd.c!UserPaintCaption !! */
+/* WARNING: Redundant with /ntuser/defwnd.c!UserPaintCaption !!
+   Use TWOPARAM_ROUTINE_REDRAWTITLE or HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK .
+ */
 static void
 UserPaintCaption(PWND pwnd, INT Flags)
 {
