@@ -1654,77 +1654,76 @@ DWORD WINAPI WNetUseConnectionA( HWND hwndOwner, LPNETRESOURCEA lpNetResource,
 /*****************************************************************
  *  WNetUseConnectionW [MPR.@]
  */
-DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, LPNETRESOURCEW lpNetResource,
-                                 LPCWSTR lpPassword, LPCWSTR lpUserID, DWORD dwFlags,
-                                 LPWSTR lpAccessName, LPDWORD lpBufferSize,
-                                 LPDWORD lpResult )
+DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, NETRESOURCEW *resource, LPCWSTR password,
+    LPCWSTR userid, DWORD flags, LPWSTR accessname, DWORD *buffer_size, DWORD *result )
 {
-    DWORD provider;
-    DWORD cap;
-    char id;
-    DWORD drives;
-    DWORD ret;
-    PF_NPAddConnection3 addConn3;
-    PF_NPAddConnection addConn;
+    WNetProvider *provider;
+    DWORD index, ret, caps;
 
-    if (!providerTable || providerTable->numProviders == 0) {
-        SetLastError(WN_NO_NETWORK);
+    TRACE( "(%p, %p, %p, %s, 0x%08X, %p, %p, %p)\n",
+           hwndOwner, resource, password, debugstr_w(userid), flags,
+           accessname, buffer_size, result );
+
+    if (!providerTable || providerTable->numProviders == 0)
+        return WN_NO_NETWORK;
+
+    if (!resource)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!resource->lpProvider)
+    {
+        FIXME("Networking provider selection is not implemented.\n");
         return WN_NO_NETWORK;
     }
 
-    if (!lpNetResource) {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return ERROR_INVALID_PARAMETER;
+    if (!resource->lpLocalName && (flags & CONNECT_REDIRECT))
+    {
+        FIXME("Locale device selection is not implemented.\n");
+        return WN_NO_NETWORK;
     }
 
-    if (!lpNetResource->lpProvider || !*lpNetResource->lpProvider) {
-        SetLastError(ERROR_BAD_PROVIDER);
+    if (flags & CONNECT_INTERACTIVE)
+        return ERROR_BAD_NET_NAME;
+
+    index = _findProviderIndexW(resource->lpProvider);
+    if (index == BAD_PROVIDER_INDEX)
         return ERROR_BAD_PROVIDER;
-    }
 
-    if (!lpNetResource->lpLocalName || !*lpNetResource->lpLocalName) {
-        SetLastError(ERROR_BAD_DEVICE);
-        return ERROR_BAD_DEVICE;
-    }
-
-    if ((!(lpNetResource->lpLocalName[0] >= 'a' && lpNetResource->lpLocalName[0] <= 'z') &&
-        !(lpNetResource->lpLocalName[0] >= 'A' && lpNetResource->lpLocalName[0] <= 'Z')) ||
-        lpNetResource->lpLocalName[1] != ':' || lpNetResource->lpLocalName[2]) {
-        SetLastError(ERROR_BAD_DEVICE);
-        return ERROR_BAD_DEVICE;
-    }
-
-    id = (lpNetResource->lpLocalName[0] >= 'a') ? lpNetResource->lpLocalName[0] - 'a' : lpNetResource->lpLocalName[0] - 'A';
-    drives = GetLogicalDrives();
-    if (drives & (1 << id)) {
-        SetLastError(ERROR_ALREADY_ASSIGNED);
-        return ERROR_ALREADY_ASSIGNED;
-    }
-
-    provider = _findProviderIndexW(lpNetResource->lpProvider);
-    if (provider == BAD_PROVIDER_INDEX) {
-        SetLastError(ERROR_BAD_PROVIDER);
+    provider = &providerTable->table[index];
+    caps = provider->getCaps(WNNC_CONNECTION);
+    if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
         return ERROR_BAD_PROVIDER;
-    }
 
-    cap = providerTable->table[provider].getCaps(WNNC_CONNECTION);
-    if (!(cap & WNNC_CON_ADDCONNECTION) && !(cap & WNNC_CON_ADDCONNECTION3)) {
-        SetLastError(ERROR_BAD_PROVIDER);
-        return ERROR_BAD_PROVIDER;
+    if (accessname && buffer_size && *buffer_size)
+    {
+        DWORD len;
+
+        if (resource->lpLocalName)
+            len = strlenW(resource->lpLocalName);
+        else
+            len = strlenW(resource->lpRemoteName);
+
+        if (++len > *buffer_size)
+        {
+            *buffer_size = len;
+            return ERROR_MORE_DATA;
+        }
     }
+    else
+        accessname = NULL;
 
     ret = WN_ACCESS_DENIED;
-    if (cap & WNNC_CON_ADDCONNECTION3) {
-        addConn3 = (PF_NPAddConnection3)GetProcAddress(providerTable->table[provider].hLib, "NPAddConnection3");
-        if (addConn3) {
-            ret = addConn3(hwndOwner, lpNetResource, (LPWSTR)lpPassword, (LPWSTR)lpUserID, dwFlags);
-        }
-    }
-    else if (cap & WNNC_CON_ADDCONNECTION) {
-        addConn = (PF_NPAddConnection)GetProcAddress(providerTable->table[provider].hLib, "NPAddConnection");
-        if (addConn) {
-            ret = addConn(lpNetResource, (LPWSTR)lpPassword, (LPWSTR)lpUserID);
-        }
+    if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
+        ret = provider->addConnection3(hwndOwner, resource, (LPWSTR)password, (LPWSTR)userid, flags);
+    else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
+        ret = provider->addConnection(resource, (LPWSTR)password, (LPWSTR)userid);
+
+    if (ret == WN_SUCCESS && accessname)
+    {
+        if (resource->lpLocalName)
+            strcpyW(accessname, resource->lpLocalName);
+        else
+            strcpyW(accessname, resource->lpRemoteName);
     }
 
     return ret;
