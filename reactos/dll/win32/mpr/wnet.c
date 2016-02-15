@@ -46,6 +46,8 @@ typedef struct _WNetProvider
     PF_NPEnumResource enumResource;
     PF_NPCloseEnum    closeEnum;
     PF_NPGetResourceInformation getResourceInformation;
+    PF_NPAddConnection addConnection;
+    PF_NPAddConnection3 addConnection3;
 } WNetProvider, *PWNetProvider;
 
 typedef struct _WNetProviderTable
@@ -152,8 +154,9 @@ static void _tryLoadProvider(PCWSTR provider)
 
                 if (hLib)
                 {
-                    PF_NPGetCaps getCaps = (PF_NPGetCaps)GetProcAddress(hLib,
-                     "NPGetCaps");
+#define MPR_GETPROC(proc) ((PF_##proc)GetProcAddress(hLib, #proc))
+
+                    PF_NPGetCaps getCaps = MPR_GETPROC(NPGetCaps);
 
                     TRACE("loaded lib %p\n", hLib);
                     if (getCaps)
@@ -172,22 +175,17 @@ static void _tryLoadProvider(PCWSTR provider)
                         if (provider->dwEnumScopes)
                         {
                             TRACE("supports enumeration\n");
-                            provider->openEnum = (PF_NPOpenEnum)
-                             GetProcAddress(hLib, "NPOpenEnum");
-                            TRACE("openEnum is %p\n", provider->openEnum);
-                            provider->enumResource = (PF_NPEnumResource)
-                             GetProcAddress(hLib, "NPEnumResource");
-                            TRACE("enumResource is %p\n",
-                             provider->enumResource);
-                            provider->closeEnum = (PF_NPCloseEnum)
-                             GetProcAddress(hLib, "NPCloseEnum");
-                            TRACE("closeEnum is %p\n", provider->closeEnum);
-                            provider->getResourceInformation = (PF_NPGetResourceInformation)
-                                    GetProcAddress(hLib, "NPGetResourceInformation");
-                            TRACE("getResourceInformation is %p\n",
-                                  provider->getResourceInformation);
-                            if (!provider->openEnum || !provider->enumResource
-                             || !provider->closeEnum)
+                            provider->openEnum = MPR_GETPROC(NPOpenEnum);
+                            TRACE("NPOpenEnum %p\n", provider->openEnum);
+                            provider->enumResource = MPR_GETPROC(NPEnumResource);
+                            TRACE("NPEnumResource %p\n", provider->enumResource);
+                            provider->closeEnum = MPR_GETPROC(NPCloseEnum);
+                            TRACE("NPCloseEnum %p\n", provider->closeEnum);
+                            provider->getResourceInformation = MPR_GETPROC(NPGetResourceInformation);
+                            TRACE("NPGetResourceInformation %p\n", provider->getResourceInformation);
+                            if (!provider->openEnum ||
+                                !provider->enumResource ||
+                                !provider->closeEnum)
                             {
                                 provider->openEnum = NULL;
                                 provider->enumResource = NULL;
@@ -196,6 +194,10 @@ static void _tryLoadProvider(PCWSTR provider)
                                 WARN("Couldn't load enumeration functions\n");
                             }
                         }
+                        provider->addConnection = MPR_GETPROC(NPAddConnection);
+                        provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+                        TRACE("NPAddConnection %p\n", provider->addConnection);
+                        TRACE("NPAddConnection3 %p\n", provider->addConnection3);
                         providerTable->numProviders++;
                     }
                     else
@@ -205,6 +207,8 @@ static void _tryLoadProvider(PCWSTR provider)
                         HeapFree(GetProcessHeap(), 0, name);
                         FreeLibrary(hLib);
                     }
+
+#undef MPR_GETPROC
                 }
                 else
                 {

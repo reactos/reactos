@@ -49,7 +49,7 @@ Index: wnet.c
 ===================================================================
 --- wnet.c	(révision 70645)
 +++ wnet.c	(copie de travail)
-@@ -1549,6 +1549,33 @@
+@@ -1553,6 +1553,33 @@
                                dwFlags, NULL, 0, NULL);
  }
  
@@ -83,7 +83,7 @@ Index: wnet.c
  /*****************************************************************
   *  WNetUseConnectionA [MPR.@]
   */
-@@ -1557,12 +1584,67 @@
+@@ -1561,12 +1588,67 @@
                                   LPSTR lpAccessName, LPDWORD lpBufferSize,
                                   LPDWORD lpResult )
  {
@@ -156,7 +156,7 @@ Index: wnet.c
  }
  
  /*****************************************************************
-@@ -1573,12 +1655,75 @@
+@@ -1577,12 +1659,75 @@
                                   LPWSTR lpAccessName, LPDWORD lpBufferSize,
                                   LPDWORD lpResult )
  {
