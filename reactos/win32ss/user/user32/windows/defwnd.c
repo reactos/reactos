@@ -299,6 +299,7 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+/* WARNING: Redundant with /ntuser/defwnd.c!UserPaintCaption !! */
 static void
 UserPaintCaption(PWND pwnd, INT Flags)
 {
@@ -309,7 +310,7 @@ UserPaintCaption(PWND pwnd, INT Flags)
     /* 
      * When themes are not enabled we can go on and paint the non client area.
      * However if we do that with themes enabled we will draw a classic frame.
-     * This is sovled by sending a themes specific message to notify the themes
+     * This is solved by sending a themes specific message to notify the themes
      * engine that the caption needs to be redrawn 
      */
     if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
