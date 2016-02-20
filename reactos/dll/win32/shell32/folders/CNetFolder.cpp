@@ -167,6 +167,7 @@ BOOL CNetFolderEnum::EnumerateRec(LPNETRESOURCE lpNet)
         }
     } while (dRet != WN_NO_MORE_ENTRIES);
 
+    CoTaskMemFree(lpRes);
     WNetCloseEnum(hEnum);
 
     TRACE("Done: %u\n", bRet);
