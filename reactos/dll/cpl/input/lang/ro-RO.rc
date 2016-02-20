@@ -101,7 +101,7 @@ BEGIN
     IDS_WHATS_THIS "Aceasta ce este?"
     IDS_LANGUAGE "Limbă"
     IDS_LAYOUT "Aranjament de tastatură"
-    IDS_REM_QUESTION "Doriți eliminarea aranjamentului de tastatură slectat?"
+    IDS_REM_QUESTION "Doriți eliminarea aranjamentului de tastatură selectat?"
     IDS_CONFIRMATION "Confirmare"
     IDS_LAYOUT_EXISTS "Aranjamentul de tastatură există deja."
     IDS_LAYOUT_EXISTS2 "Un asemenea aranjament de tastatură deja există și nu poate fi readăugat."

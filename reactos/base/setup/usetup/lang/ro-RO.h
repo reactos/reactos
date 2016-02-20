@@ -241,19 +241,19 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         8,
-        "Sistemul de operare ReactOS este oferit în termenii GNU GPL,",
+        "Sistemul de operare ReactOS este oferit în termenii Licenþei",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "cu pãrþi de cod din alte licenþe compatibile, cum ar fi",
+        "Publice Generale GNU, denumit în continuare GPL, cu pãrþi de",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "licenþele X11, BSD ºi GNU LGPL.",
+        "cod din alte licenþe compatibile (ca X11, BSD ºi LGPL).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -265,13 +265,13 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         13,
-        "prin urmare oferite sub licenþã GNU GPL, menþinându-ºi în",
+        "prin urmare oferite sub licenþa GPL, menþinându-ºi astfel ºi",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "acelaºi timp ºi licenþierea originalã.",
+        "licenþierea originalã în acelaºi timp.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -300,55 +300,55 @@ static MUI_ENTRY roROLicensePageEntries[] =
     },
     {
         8,
-        20,
-        "Dacã din vreun motiv careva nu aþi primit o copie a Licenþei",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
         21,
-        "Publice Generale GNU împreunã cu ReactOS, o puteþi consulta",
+        "Dacã din vreun careva motiv nu deþineþi o copie a licenþei",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         22,
-        "accesând pagina:",
+        "GPL împreunã cu ReactOS, o puteþi consulta (în englezã)",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
+        "accesând pagina:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        26,
+        27,
         "Garanþie:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
-        28,
+        29,
         "Acest sistem de operare este distribuit doar în speranþa cã",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        29,
+        30,
         "va fi util, neavând însã ataºatã NICI O GARANÞIE; nici mãcar",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        30,
+        31,
         "garanþia implicitã a VANDABILITÃÞII sau a UTILITÃÞII ÎNTR-UN",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        31,
+        32,
         "SCOP ANUME.",
         TEXT_STYLE_NORMAL
     },

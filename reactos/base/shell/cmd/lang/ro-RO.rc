@@ -424,8 +424,8 @@ TIME [/T][oră]\n\n\
 Tastați TIME fără perametri pentru a afișa ora curentă urmată de posibilitatea\n\
 de a introduce o nouă oră. Tastați ENTER pentru a păstra aceiași oră.\n"
     STRING_TIME_HELP2 "Introduceți noua oră: "
-    STRING_TIMER_HELP1 "S-au scurs %d msec\n"
-    STRING_TIMER_HELP2 "S-au scurs %02d%c%02d%c%02d%c%02d\n"
+    STRING_TIMER_HELP1 "Timp cronometrat: %d msec\n"
+    STRING_TIMER_HELP2 "Timp cronometrat: %02d%c%02d%c%02d%c%02d\n"
     STRING_TIMER_HELP3 "Permite utilizarea a zece cronometre.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON     Activează cronometru\n\

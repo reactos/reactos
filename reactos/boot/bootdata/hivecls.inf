@@ -673,6 +673,18 @@ CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
 [Strings.0018]
 CPLFILE_OPENWITH="Deschide în Panoul de control"
 
+CHMFILE="Manual compilat din HTML"
+HTMLFILE="Fișier HTML"
+XMLFILE="Document XML"
+XSLFILE="Fișier de stil XSL"
+MSIPACK="Pachet de instalare ReactOS"
+MSSTYLESFILE="Fișier de stil vizual"
+THEMEFILE="Temă de interfață grafică"
+WAVFILE="Fișier audio Wave"
+MIDFILE="Secvență audio MIDI"
+CDAFILE="Pistă de CD audio"
+AVIFILE="Fișier video"
+
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
