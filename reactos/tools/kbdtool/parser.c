@@ -982,6 +982,7 @@ DoParsing(VOID)
     }
 
     /* Now parse the keywords */
+    memset(KeyWords, 0, sizeof(KeyWords));
     while (KeyWord < (KEYWORD_COUNT - 1))
     {
         /* Save this keyword */
