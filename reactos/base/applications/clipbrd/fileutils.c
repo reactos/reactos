@@ -48,7 +48,7 @@ static HGLOBAL ClipboardReadMemoryBlock(HANDLE hFile, DWORD dwOffset, DWORD dwLe
 static BOOL ClipboardReadMemory(HANDLE hFile, DWORD dwFormat, DWORD dwOffset, DWORD dwLength, WORD FileIdentifier, PVOID lpFormatName)
 {
     HGLOBAL hData;
-    DWORD dwTemp;
+    DWORD dwTemp = 0;
 
     hData = ClipboardReadMemoryBlock(hFile, dwOffset, dwLength);
     if (!hData)
