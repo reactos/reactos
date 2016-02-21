@@ -3465,6 +3465,18 @@ static int ssl_handle_possible_reconnect( mbedtls_ssl_context *ssl )
  * uint16 epoch;            // DTLS only
  * uint48 sequence_number;  // DTLS only
  * uint16 length;
+ *
+ * Return 0 if header looks sane (and, for DTLS, the record is expected)
+ * MBEDTLS_ERR_SSL_INVALID_RECORD if the header looks bad,
+ * MBEDTLS_ERR_SSL_UNEXPECTED_RECORD (DTLS only) if sane but unexpected.
+ *
+ * With DTLS, mbedtls_ssl_read_record() will:
+ * 1. proceed with the record if this function returns 0
+ * 2. drop only the current record if this function returns UNEXPECTED_RECORD
+ * 3. return CLIENT_RECONNECT if this function return that value
+ * 4. drop the whole datagram if this function returns anything else.
+ * Point 2 is needed when the peer is resending, and we have already received
+ * the first record from a datagram but are still waiting for the others.
  */
 static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
 {
@@ -3500,34 +3512,6 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         return( MBEDTLS_ERR_SSL_INVALID_RECORD );
     }
 
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
-    {
-        /* Drop unexpected ChangeCipherSpec messages */
-        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC &&
-            ssl->state != MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC &&
-            ssl->state != MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ChangeCipherSpec" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-
-        /* Drop unexpected ApplicationData records,
-         * except at the beginning of renegotiations */
-        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_APPLICATION_DATA &&
-            ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER
-#if defined(MBEDTLS_SSL_RENEGOTIATION)
-            && ! ( ssl->renego_status == MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS &&
-                   ssl->state == MBEDTLS_SSL_SERVER_HELLO )
-#endif
-            )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ApplicationData" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-    }
-#endif
-
     /* Check version */
     if( major_ver != ssl->major_ver )
     {
@@ -3540,53 +3524,6 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "minor version mismatch" ) );
         return( MBEDTLS_ERR_SSL_INVALID_RECORD );
     }
-
-    /* Check epoch (and sequence number) with DTLS */
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
-    {
-        unsigned int rec_epoch = ( ssl->in_ctr[0] << 8 ) | ssl->in_ctr[1];
-
-        if( rec_epoch != ssl->in_epoch )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "record from another epoch: "
-                                        "expected %d, received %d",
-                                        ssl->in_epoch, rec_epoch ) );
-
-#if defined(MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE) && defined(MBEDTLS_SSL_SRV_C)
-            /*
-             * Check for an epoch 0 ClientHello. We can't use in_msg here to
-             * access the first byte of record content (handshake type), as we
-             * have an active transform (possibly iv_len != 0), so use the
-             * fact that the record header len is 13 instead.
-             */
-            if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
-                ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER &&
-                rec_epoch == 0 &&
-                ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE &&
-                ssl->in_left > 13 &&
-                ssl->in_buf[13] == MBEDTLS_SSL_HS_CLIENT_HELLO )
-            {
-                MBEDTLS_SSL_DEBUG_MSG( 1, ( "possible client reconnect "
-                                            "from the same port" ) );
-                return( ssl_handle_possible_reconnect( ssl ) );
-            }
-            else
-#endif /* MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE && MBEDTLS_SSL_SRV_C */
-                return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-
-#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
-        /* Replay detection only works for the current epoch */
-        if( rec_epoch == ssl->in_epoch &&
-            mbedtls_ssl_dtls_replay_check( ssl ) != 0 )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "replayed record" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-#endif
-    }
-#endif /* MBEDTLS_SSL_PROTO_DTLS */
 
     /* Check length against the size of our buffer */
     if( ssl->in_msglen > MBEDTLS_SSL_BUFFER_LEN
@@ -3636,6 +3573,82 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         }
 #endif
     }
+
+    /*
+     * DTLS-related tests done last, because most of them may result in
+     * silently dropping the record (but not the whole datagram), and we only
+     * want to consider that after ensuring that the "basic" fields (type,
+     * version, length) are sane.
+     */
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
+    {
+        unsigned int rec_epoch = ( ssl->in_ctr[0] << 8 ) | ssl->in_ctr[1];
+
+        /* Drop unexpected ChangeCipherSpec messages */
+        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC &&
+            ssl->state != MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC &&
+            ssl->state != MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ChangeCipherSpec" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+        /* Drop unexpected ApplicationData records,
+         * except at the beginning of renegotiations */
+        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_APPLICATION_DATA &&
+            ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER
+#if defined(MBEDTLS_SSL_RENEGOTIATION)
+            && ! ( ssl->renego_status == MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS &&
+                   ssl->state == MBEDTLS_SSL_SERVER_HELLO )
+#endif
+            )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ApplicationData" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+        /* Check epoch (and sequence number) with DTLS */
+        if( rec_epoch != ssl->in_epoch )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "record from another epoch: "
+                                        "expected %d, received %d",
+                                        ssl->in_epoch, rec_epoch ) );
+
+#if defined(MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE) && defined(MBEDTLS_SSL_SRV_C)
+            /*
+             * Check for an epoch 0 ClientHello. We can't use in_msg here to
+             * access the first byte of record content (handshake type), as we
+             * have an active transform (possibly iv_len != 0), so use the
+             * fact that the record header len is 13 instead.
+             */
+            if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
+                ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER &&
+                rec_epoch == 0 &&
+                ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE &&
+                ssl->in_left > 13 &&
+                ssl->in_buf[13] == MBEDTLS_SSL_HS_CLIENT_HELLO )
+            {
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "possible client reconnect "
+                                            "from the same port" ) );
+                return( ssl_handle_possible_reconnect( ssl ) );
+            }
+            else
+#endif /* MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE && MBEDTLS_SSL_SRV_C */
+                return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
+        /* Replay detection only works for the current epoch */
+        if( rec_epoch == ssl->in_epoch &&
+            mbedtls_ssl_dtls_replay_check( ssl ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "replayed record" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+#endif
+    }
+#endif /* MBEDTLS_SSL_PROTO_DTLS */
 
     return( 0 );
 }
@@ -3762,13 +3775,26 @@ read_record_header:
         if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
             ret != MBEDTLS_ERR_SSL_CLIENT_RECONNECT )
         {
-            /* Ignore bad record and get next one; drop the whole datagram
-             * since current header cannot be trusted to find the next record
-             * in current datagram */
-            ssl->next_record_offset = 0;
-            ssl->in_left = 0;
+            if( ret == MBEDTLS_ERR_SSL_UNEXPECTED_RECORD )
+            {
+                /* Skip unexpected record (but not whole datagram) */
+                ssl->next_record_offset = ssl->in_msglen
+                                        + mbedtls_ssl_hdr_len( ssl );
 
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding invalid record (header)" ) );
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding unexpected record "
+                                            "(header)" ) );
+            }
+            else
+            {
+                /* Skip invalid record and the rest of the datagram */
+                ssl->next_record_offset = 0;
+                ssl->in_left = 0;
+
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding invalid record "
+                                            "(header)" ) );
+            }
+
+            /* Get next record */
             goto read_record_header;
         }
 #endif
@@ -7071,6 +7097,23 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config *conf )
     memset( conf, 0, sizeof( mbedtls_ssl_config ) );
 }
 
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+static int ssl_preset_default_hashes[] = {
+#if defined(MBEDTLS_SHA512_C)
+    MBEDTLS_MD_SHA512,
+    MBEDTLS_MD_SHA384,
+#endif
+#if defined(MBEDTLS_SHA256_C)
+    MBEDTLS_MD_SHA256,
+    MBEDTLS_MD_SHA224,
+#endif
+#if defined(MBEDTLS_SHA1_C)
+    MBEDTLS_MD_SHA1,
+#endif
+    MBEDTLS_MD_NONE
+};
+#endif
+
 static int ssl_preset_suiteb_ciphersuites[] = {
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -7227,7 +7270,7 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-            conf->sig_hashes = mbedtls_md_list();
+            conf->sig_hashes = ssl_preset_default_hashes;
 #endif
 
 #if defined(MBEDTLS_ECP_C)

@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_x509_crt.h
+ * \file x509_crt.h
  *
  * \brief X.509 certificate parsing and writing
  *

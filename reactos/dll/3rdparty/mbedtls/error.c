@@ -430,6 +430,8 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
             mbedtls_snprintf( buf, buflen, "SSL - The operation timed out" );
         if( use_ret == -(MBEDTLS_ERR_SSL_CLIENT_RECONNECT) )
             mbedtls_snprintf( buf, buflen, "SSL - The client initiated a reconnect from the same port" );
+        if( use_ret == -(MBEDTLS_ERR_SSL_UNEXPECTED_RECORD) )
+            mbedtls_snprintf( buf, buflen, "SSL - Record header looks valid but is not expected" );
 #endif /* MBEDTLS_SSL_TLS_C */
 
 #if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)

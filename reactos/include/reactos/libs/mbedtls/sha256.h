@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_sha256.h
+ * \file sha256.h
  *
  * \brief SHA-224 and SHA-256 cryptographic hash function
  *

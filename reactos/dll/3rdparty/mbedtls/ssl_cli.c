@@ -2096,7 +2096,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( ( *md_alg = mbedtls_ssl_md_alg_from_hash( (*p)[0] ) ) == MBEDTLS_MD_NONE )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "Server used unsupported "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "Server used unsupported "
                             "HashAlgorithm %d", *(p)[0] ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }
@@ -2106,7 +2106,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( ( *pk_alg = mbedtls_ssl_pk_alg_from_sig( (*p)[1] ) ) == MBEDTLS_PK_NONE )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "server used unsupported "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "server used unsupported "
                             "SignatureAlgorithm %d", (*p)[1] ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }
@@ -2116,7 +2116,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( mbedtls_ssl_check_sig_hash( ssl, *md_alg ) != 0 )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "server used HashAlgorithm "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "server used HashAlgorithm "
                                     "that was not offered" ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }

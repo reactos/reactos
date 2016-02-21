@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_sha1.h
+ * \file sha1.h
  *
  * \brief SHA-1 cryptographic hash function
  *

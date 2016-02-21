@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_md4.h
+ * \file md4.h
  *
  * \brief MD4 message digest algorithm (hash function)
  *

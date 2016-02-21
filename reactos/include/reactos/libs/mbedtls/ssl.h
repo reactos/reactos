@@ -106,6 +106,7 @@
 #define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /**< Connection requires a write call. */
 #define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /**< The operation timed out. */
 #define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /**< The client initiated a reconnect from the same port. */
+#define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /**< Record header looks valid but is not expected. */
 
 /*
  * Various constants
@@ -1610,7 +1611,7 @@ void mbedtls_ssl_conf_curves( mbedtls_ssl_config *conf,
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 /**
  * \brief          Set the allowed hashes for signatures during the handshake.
- *                 (Default: all available hashes.)
+ *                 (Default: all available hashes except MD5.)
  *
  * \note           This only affects which hashes are offered and can be used
  *                 for signatures during the handshake. Hashes for message
@@ -2167,7 +2168,8 @@ int mbedtls_ssl_get_session( const mbedtls_ssl_context *ssl, mbedtls_ssl_session
  * \note           If this function returns something other than 0 or
  *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
  *                 becomes unusable, and you should either free it or call
- *                 \c mbedtls_ssl_session_reset() on it before re-using it.
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \note           If DTLS is in use, then you may choose to handle
  *                 MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED specially for logging
@@ -2182,6 +2184,12 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl );
  * \note           The state of the context (ssl->state) will be at
  *                 the following state after execution of this function.
  *                 Do not call this function if state is MBEDTLS_SSL_HANDSHAKE_OVER.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \param ssl      SSL context
  *
@@ -2201,6 +2209,12 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl );
  * \param ssl      SSL context
  *
  * \return         0 if successful, or any mbedtls_ssl_handshake() return value.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
@@ -2217,6 +2231,13 @@ int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl );
  *                 MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE, or
  *                 MBEDTLS_ERR_SSL_CLIENT_RECONNECT (see below), or
  *                 another negative error code.
+ *
+ * \note           If this function returns something other than a positive
+ *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE or
+ *                 MBEDTLS_ERR_SSL_CLIENT_RECONNECT, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \note           When this function return MBEDTLS_ERR_SSL_CLIENT_RECONNECT
  *                 (which can only happen server-side), it means that a client
@@ -2251,6 +2272,12 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
  *                 or MBEDTLS_ERR_SSL_WANT_WRITE of MBEDTLS_ERR_SSL_WANT_READ,
  *                 or another negative error code.
  *
+ * \note           If this function returns something other than a positive
+ *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE, the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
+ *
  * \note           When this function returns MBEDTLS_ERR_SSL_WANT_WRITE/READ,
  *                 it must be called later with the *same* arguments,
  *                 until it returns a positive value.
@@ -2274,6 +2301,12 @@ int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_
  * \param message   The alert message (SSL_ALERT_MSG_*)
  *
  * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl,
                             unsigned char level,
@@ -2282,6 +2315,14 @@ int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl,
  * \brief          Notify the peer that the connection is being closed
  *
  * \param ssl      SSL context
+ *
+ * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_close_notify( mbedtls_ssl_context *ssl );
 

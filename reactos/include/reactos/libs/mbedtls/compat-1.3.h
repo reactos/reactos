@@ -1,7 +1,8 @@
 /**
- * \file config.h
+ * \file compat-1.3.h
  *
- * \brief Compatibility names (set of defines)
+ * \brief Compatibility definitions for using mbed TLS with client code written
+ *  for the PolarSSL naming conventions.
  *
  * \deprecated Use the new names directly instead
  *

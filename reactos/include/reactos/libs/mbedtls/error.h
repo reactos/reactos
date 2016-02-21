@@ -79,7 +79,7 @@
  * ECP       4   8 (Started from top)
  * MD        5   4
  * CIPHER    6   6
- * SSL       6   16 (Started from top)
+ * SSL       6   17 (Started from top)
  * SSL       7   31
  *
  * Module dependent error code (5 bits 0x.00.-0x.F8.)

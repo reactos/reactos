@@ -1086,9 +1086,15 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
      * temporary buffer and check it before returning it.
      */
     sig_try = mbedtls_calloc( 1, ctx->len );
-    verif   = mbedtls_calloc( 1, ctx->len );
-    if( sig_try == NULL || verif == NULL )
+    if( sig_try == NULL )
         return( MBEDTLS_ERR_MPI_ALLOC_FAILED );
+
+    verif   = mbedtls_calloc( 1, ctx->len );
+    if( verif == NULL )
+    {
+        mbedtls_free( sig_try );
+        return( MBEDTLS_ERR_MPI_ALLOC_FAILED );
+    }
 
     MBEDTLS_MPI_CHK( mbedtls_rsa_private( ctx, f_rng, p_rng, sig, sig_try ) );
     MBEDTLS_MPI_CHK( mbedtls_rsa_public( ctx, sig_try, verif ) );

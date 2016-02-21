@@ -18,12 +18,21 @@
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
+
 /*
- *  This MPI implementation is based on:
+ *  The following sources were referenced in the design of this Multi-precision
+ *  Integer library:
  *
- *  http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf
- *  http://www.stillhq.com/extracted/gnupg-api/mpi/
- *  http://math.libtomcrypt.com/files/tommath.pdf
+ *  [1] Handbook of Applied Cryptography - 1997
+ *      Menezes, van Oorschot and Vanstone
+ *
+ *  [2] Multi-Precision Math
+ *      Tom St Denis
+ *      https://github.com/libtom/libtommath/blob/develop/tommath.pdf
+ *
+ *  [3] GNU Multi-Precision Arithmetic Library
+ *      https://gmplib.org/manual/index.html
+ *
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -348,6 +357,24 @@ size_t mbedtls_mpi_lsb( const mbedtls_mpi *X )
 }
 
 /*
+ * Count leading zero bits in a given integer
+ */
+static size_t mbedtls_clz( const mbedtls_mpi_uint x )
+{
+    size_t j;
+    mbedtls_mpi_uint mask = (mbedtls_mpi_uint) 1 << (biL - 1);
+
+    for( j = 0; j < biL; j++ )
+    {
+        if( x & mask ) break;
+
+        mask >>= 1;
+    }
+
+    return j;
+}
+
+/*
  * Return the number of bits
  */
 size_t mbedtls_mpi_bitlen( const mbedtls_mpi *X )
@@ -361,9 +388,7 @@ size_t mbedtls_mpi_bitlen( const mbedtls_mpi *X )
         if( X->p[i] != 0 )
             break;
 
-    for( j = biL; j > 0; j-- )
-        if( ( ( X->p[i] >> ( j - 1 ) ) & 1 ) != 0 )
-            break;
+    j = biL - mbedtls_clz( X->p[i] );
 
     return( ( i * biL ) + j );
 }
@@ -1187,6 +1212,102 @@ int mbedtls_mpi_mul_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint 
 }
 
 /*
+ * Unsigned integer divide - double mbedtls_mpi_uint dividend, u1/u0, and
+ * mbedtls_mpi_uint divisor, d
+ */
+static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
+            mbedtls_mpi_uint u0, mbedtls_mpi_uint d, mbedtls_mpi_uint *r )
+{
+#if defined(MBEDTLS_HAVE_UDBL)
+    mbedtls_t_udbl dividend, quotient;
+#else
+    const mbedtls_mpi_uint radix = (mbedtls_mpi_uint) 1 << biH;
+    const mbedtls_mpi_uint uint_halfword_mask = ( (mbedtls_mpi_uint) 1 << biH ) - 1;
+    mbedtls_mpi_uint d0, d1, q0, q1, rAX, r0, quotient;
+    mbedtls_mpi_uint u0_msw, u0_lsw;
+    size_t s;
+#endif
+
+    /*
+     * Check for overflow
+     */
+    if( 0 == d || u1 >= d )
+    {
+        if (r != NULL) *r = ~0;
+
+        return ( ~0 );
+    }
+
+#if defined(MBEDTLS_HAVE_UDBL)
+    dividend  = (mbedtls_t_udbl) u1 << biL;
+    dividend |= (mbedtls_t_udbl) u0;
+    quotient = dividend / d;
+    if( quotient > ( (mbedtls_t_udbl) 1 << biL ) - 1 )
+        quotient = ( (mbedtls_t_udbl) 1 << biL ) - 1;
+
+    if( r != NULL )
+        *r = (mbedtls_mpi_uint)( dividend - (quotient * d ) );
+
+    return (mbedtls_mpi_uint) quotient;
+#else
+
+    /*
+     * Algorithm D, Section 4.3.1 - The Art of Computer Programming
+     *   Vol. 2 - Seminumerical Algorithms, Knuth
+     */
+
+    /*
+     * Normalize the divisor, d, and dividend, u0, u1
+     */
+    s = mbedtls_clz( d );
+    d = d << s;
+
+    u1 = u1 << s;
+    u1 |= ( u0 >> ( biL - s ) ) & ( -(mbedtls_mpi_sint)s >> ( biL - 1 ) );
+    u0 =  u0 << s;
+
+    d1 = d >> biH;
+    d0 = d & uint_halfword_mask;
+
+    u0_msw = u0 >> biH;
+    u0_lsw = u0 & uint_halfword_mask;
+
+    /*
+     * Find the first quotient and remainder
+     */
+    q1 = u1 / d1;
+    r0 = u1 - d1 * q1;
+
+    while( q1 >= radix || ( q1 * d0 > radix * r0 + u0_msw ) )
+    {
+        q1 -= 1;
+        r0 += d1;
+
+        if ( r0 >= radix ) break;
+    }
+
+    rAX = ( u1 * radix ) + ( u0_msw - q1 * d );
+    q0 = rAX / d1;
+    r0 = rAX - q0 * d1;
+
+    while( q0 >= radix || ( q0 * d0 > radix * r0 + u0_lsw ) )
+    {
+        q0 -= 1;
+        r0 += d1;
+
+        if ( r0 >= radix ) break;
+    }
+
+    if (r != NULL)
+        *r = ( rAX * radix + u0_lsw - q0 * d ) >> s;
+
+    quotient = q1 * radix + q0;
+
+    return quotient;
+#endif
+}
+
+/*
  * Division by mbedtls_mpi: A = Q * B + R  (HAC 14.20)
  */
 int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B )
@@ -1243,57 +1364,8 @@ int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, c
             Z.p[i - t - 1] = ~0;
         else
         {
-#if defined(MBEDTLS_HAVE_UDBL)
-            mbedtls_t_udbl r;
-
-            r  = (mbedtls_t_udbl) X.p[i] << biL;
-            r |= (mbedtls_t_udbl) X.p[i - 1];
-            r /= Y.p[t];
-            if( r > ( (mbedtls_t_udbl) 1 << biL ) - 1 )
-                r = ( (mbedtls_t_udbl) 1 << biL ) - 1;
-
-            Z.p[i - t - 1] = (mbedtls_mpi_uint) r;
-#else
-            /*
-             * __udiv_qrnnd_c, from gmp/longlong.h
-             */
-            mbedtls_mpi_uint q0, q1, r0, r1;
-            mbedtls_mpi_uint d0, d1, d, m;
-
-            d  = Y.p[t];
-            d0 = ( d << biH ) >> biH;
-            d1 = ( d >> biH );
-
-            q1 = X.p[i] / d1;
-            r1 = X.p[i] - d1 * q1;
-            r1 <<= biH;
-            r1 |= ( X.p[i - 1] >> biH );
-
-            m = q1 * d0;
-            if( r1 < m )
-            {
-                q1--, r1 += d;
-                while( r1 >= d && r1 < m )
-                    q1--, r1 += d;
-            }
-            r1 -= m;
-
-            q0 = r1 / d1;
-            r0 = r1 - d1 * q0;
-            r0 <<= biH;
-            r0 |= ( X.p[i - 1] << biH ) >> biH;
-
-            m = q0 * d0;
-            if( r0 < m )
-            {
-                q0--, r0 += d;
-                while( r0 >= d && r0 < m )
-                    q0--, r0 += d;
-            }
-            r0 -= m;
-
-            Z.p[i - t - 1] = ( q1 << biH ) | q0;
-#endif /* MBEDTLS_HAVE_UDBL && !64-bit Apple with Clang 5.0 */
+            Z.p[i - t - 1] = mbedtls_int_div_int( X.p[i], X.p[i - 1],
+                                                            Y.p[t], NULL);
         }
 
         Z.p[i - t - 1]++;

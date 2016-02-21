@@ -2584,7 +2584,9 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     {
         dn_size = crt->subject_raw.len;
 
-        if( end < p || (size_t)( end - p ) < 2 + dn_size )
+        if( end < p ||
+            (size_t)( end - p ) < dn_size ||
+            (size_t)( end - p ) < 2 + dn_size )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "skipping CAs: buffer too short" ) );
             break;

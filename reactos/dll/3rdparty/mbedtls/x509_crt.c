@@ -2253,18 +2253,8 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
     {
         /* Look for a parent upwards the chain */
         for( parent = crt->next; parent != NULL; parent = parent->next )
-        {
-            /* +2 because the current step is not yet accounted for
-             * and because max_pathlen is one higher than it should be */
-            if( parent->max_pathlen > 0 &&
-                parent->max_pathlen < 2 + pathlen )
-            {
-                continue;
-            }
-
             if( x509_crt_check_parent( crt, parent, 0, pathlen == 0 ) == 0 )
                 break;
-        }
 
         /* Are we part of the chain or at the top? */
         if( parent != NULL )

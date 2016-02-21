@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_ripemd160.h
+ * \file ripemd160.h
  *
  * \brief RIPE MD-160 message digest
  *

@@ -3,6 +3,10 @@
  *
  * \brief Configuration options (set of defines)
  *
+ *  This set of compile-time options may be used to enable
+ *  or disable features selectively, and reduce the global
+ *  memory footprint.
+ *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -21,19 +25,8 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-/*
- * This set of compile-time options may be used to enable
- * or disable features selectively, and reduce the global
- * memory footprint.
- */
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
-
-#ifndef __REACTOS__
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
-#define _CRT_SECURE_NO_DEPRECATE 1
-#endif
-#endif
 
 /**
  * \name SECTION: System support
@@ -134,10 +127,10 @@
 //#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 
 /**
- * \def MBEDTLS_PLATFORM_XXX_ALT
+ * \def MBEDTLS_PLATFORM_EXIT_ALT
  *
- * Uncomment a macro to let mbed TLS support the function in the platform
- * abstraction layer.
+ * MBEDTLS_PLATFORM_XXX_ALT: Uncomment a macro to let mbed TLS support the
+ * function in the platform abstraction layer.
  *
  * Example: In case you uncomment MBEDTLS_PLATFORM_PRINTF_ALT, mbed TLS will
  * provide a function "mbedtls_platform_set_printf()" that allows you to set an
@@ -210,12 +203,12 @@
 //#define MBEDTLS_TIMING_ALT
 
 /**
- * \def MBEDTLS__MODULE_NAME__ALT
+ * \def MBEDTLS_AES_ALT
  *
- * Uncomment a macro to let mbed TLS use your alternate core implementation of
- * a symmetric crypto or hash module (e.g. platform specific assembly
- * optimized implementations). Keep in mind that the function prototypes
- * should remain the same.
+ * MBEDTLS__MODULE_NAME__ALT: Uncomment a macro to let mbed TLS use your
+ * alternate core implementation of a symmetric crypto or hash module (e.g.
+ * platform specific assembly optimized implementations). Keep in mind that
+ * the function prototypes should remain the same.
  *
  * This replaces the whole module. If you only want to replace one of the
  * functions, use one of the MBEDTLS__FUNCTION_NAME__ALT flags.
@@ -243,11 +236,11 @@
 //#define MBEDTLS_SHA512_ALT
 
 /**
- * \def MBEDTLS__FUNCTION_NAME__ALT
+ * \def MBEDTLS_MD2_PROCESS_ALT
  *
- * Uncomment a macro to let mbed TLS use you alternate core implementation of
- * symmetric crypto or hash function. Keep in mind that function prototypes
- * should remain the same.
+ * MBEDTLS__FUNCTION_NAME__ALT: Uncomment a macro to let mbed TLS use you
+ * alternate core implementation of symmetric crypto or hash function. Keep in
+ * mind that function prototypes should remain the same.
  *
  * This replaces only one function. The header file from mbed TLS is still
  * used, in contrast to the MBEDTLS__MODULE_NAME__ALT flags.
@@ -366,10 +359,11 @@
 //#define MBEDTLS_CIPHER_NULL_CIPHER
 
 /**
- * \def MBEDTLS_CIPHER_PADDING_XXX
+ * \def MBEDTLS_CIPHER_PADDING_PKCS7
  *
- * Uncomment or comment macros to add support for specific padding modes
- * in the cipher layer with cipher modes that support padding (e.g. CBC)
+ * MBEDTLS_CIPHER_PADDING_XXX: Uncomment or comment macros to add support for
+ * specific padding modes in the cipher layer with cipher modes that support
+ * padding (e.g. CBC)
  *
  * If you disable all padding modes, only full blocks can be used with CBC.
  *
@@ -409,10 +403,10 @@
 #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 
 /**
- * \def MBEDTLS_ECP_XXXX_ENABLED
+ * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
  *
- * Enables specific curves within the Elliptic Curve module.
- * By default all supported curves are enabled.
+ * MBEDTLS_ECP_XXXX_ENABLED: Enables specific curves within the Elliptic Curve
+ * module.  By default all supported curves are enabled.
  *
  * Comment macros to disable the curve and functions for it
  */

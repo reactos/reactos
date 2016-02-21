@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_sha512.h
+ * \file sha512.h
  *
  * \brief SHA-384 and SHA-512 cryptographic hash function
  *

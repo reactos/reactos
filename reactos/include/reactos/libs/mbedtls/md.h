@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_md.h
+ * \file md.h
  *
  * \brief Generic message digest wrapper
  *
