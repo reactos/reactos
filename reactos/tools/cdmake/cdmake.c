@@ -3,6 +3,11 @@
  * by Philip J. Erdelsky
  * pje@acm.org
  * http://alumnus.caltech.edu/~pje/
+ *
+ * http://alumnus.caltech.edu/~pje/cdmake.txt
+ *
+ * According to his website, this file was released into the public domain
+ * by Philip J. Erdelsky.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -13,6 +18,7 @@
  *                  Casper S. Hornstrup
  *                  Filip Navara
  *                  Magnus Olsen
+ *                  Hermes Belusca-Maito
  *
  * HISTORY:
  *
@@ -33,8 +39,6 @@
  * Convert long filename to ISO9660 file name by Magnus Olsen
  * magnus@greatlord.com
  */
-
-/* According to his website, this file was released into the public domain by Philip J. Erdelsky */
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -176,13 +180,21 @@ PDIR_RECORD sort_linked_list(PDIR_RECORD,
 static char DIRECTORY_TIMESTAMP[] = "~Y$'KOR$.3K&";
 
 static struct cd_image cd;
+DIR_RECORD root;
 
 char volume_label[32];
-DIR_RECORD root;
 char source[512];
 char *end_source;
+
 enum {QUIET, NORMAL, VERBOSE} verbosity;
 BOOL show_progress;
+
+BOOL scan_files_only = FALSE;
+// BOOL compute_crc = FALSE;
+
+/*
+ * ISO 9660 information
+ */
 DWORD size_limit;
 BOOL accept_punctuation_marks;
 
@@ -190,12 +202,23 @@ DWORD total_sectors;
 DWORD path_table_size;
 DWORD little_endian_path_table_sector;
 DWORD big_endian_path_table_sector;
+
+
+/*
+ * Stats
+ */
 DWORD number_of_files;
 DWORD bytes_in_files;
 DWORD unused_bytes_at_ends_of_files;
 DWORD number_of_directories;
 DWORD bytes_in_directories;
 
+struct target_dir_hash specified_files;
+
+
+/*
+ * El-Torito boot information
+ */
 BOOL eltorito;   // TRUE/FALSE: bootable/non-bootable CD-ROM
 BOOL multi_boot; // TRUE/FALSE: multi/single-boot CD-ROM
 DWORD boot_catalog_sector;
@@ -203,12 +226,19 @@ BOOT_VALIDATION_HEADER boot_validation_header;
 BOOT_ENTRY default_boot_entry;
 PBOOT_HEADER boot_header_list;
 
+/*
+ * Joliet information
+ */
 BOOL joliet;
 DWORD joliet_path_table_size;
 DWORD joliet_little_endian_path_table_sector;
 DWORD joliet_big_endian_path_table_sector;
 
-struct target_dir_hash specified_files;
+/*
+ * UDF information
+ */
+BOOL make_bridged_udf = TRUE;  // TRUE for "UDF-Bridge" (aka. UDF/ISO); FALSE for pure UDF.
+
 
 /*-----------------------------------------------------------------------------
 This function edits a 32-bit unsigned number into a comma-delimited form, such
@@ -685,7 +715,7 @@ static void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, B
         if (d->extension[0] != 0)
         {
             if (!joliet)
-                error_exit("Directory with extension %s", filename);
+                error_exit("Directory with extension '%s'", filename);
         }
         d->flags = DIRECTORY_FLAG;
     } else
@@ -993,7 +1023,7 @@ make_directory_records(PDIR_RECORD d)
     }
     else
     {
-        error_exit("Cannot open %s\n", source);
+        error_exit("Cannot open '%s'\n", source);
         return;
     }
 
@@ -1053,7 +1083,7 @@ make_directory_records(PDIR_RECORD d)
     }
     else
     {
-        error_exit("Cannot open %s\n", source);
+        error_exit("Cannot open '%s'\n", source);
         return;
     }
 
@@ -1136,7 +1166,7 @@ make_directory_records(PDIR_RECORD d)
     }
     else
     {
-        error_exit("Cannot open %s\n", source);
+        error_exit("Cannot open '%s'\n", source);
         return;
     }
 
@@ -1221,18 +1251,18 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
                                          FILE_ATTRIBUTE_NORMAL,
                                          NULL)) == INVALID_HANDLE_VALUE)
             {
-                error_exit("Cannot open timestamp file %s\n", file->source_name);
+                error_exit("Cannot open timestamp file '%s'\n", file->source_name);
             }
 
             if (!get_cd_file_time(open_file, &d->date_and_time))
             {
-                error_exit("Cannot stat timestamp file %s\n", file->source_name);
+                error_exit("Cannot stat timestamp file '%s'\n", file->source_name);
             }
             CloseHandle(open_file);
 #else
             if (stat(file->target_name, &stbuf) == -1)
             {
-                error_exit("Cannot stat timestamp file %s\n", file->source_name);
+                error_exit("Cannot stat timestamp file '%s'\n", file->source_name);
             }
             convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
 #endif
@@ -1257,15 +1287,15 @@ scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
                                          FILE_ATTRIBUTE_NORMAL,
                                          NULL)) == INVALID_HANDLE_VALUE)
             {
-                error_exit("Cannot open file %s\n", file->source_name);
+                error_exit("Cannot open file '%s'\n", file->source_name);
             }
             if (!get_cd_file_time(open_file, &new_d->date_and_time))
             {
-                error_exit("Cannot stat file %s\n", file->source_name);
+                error_exit("Cannot stat file '%s'\n", file->source_name);
             }
             if (!GetFileSizeEx(open_file, &file_size))
             {
-                error_exit("Cannot get file size of %s\n", file->source_name);
+                error_exit("Cannot get file size of '%s'\n", file->source_name);
             }
             new_d->size = new_d->joliet_size = file_size.QuadPart;
             new_d->orig_name = file->source_name;
@@ -1378,14 +1408,17 @@ static BOOL write_from_file(FILE *file, DWORD size)
 
 static void pass(void)
 {
-    PDIR_RECORD d;
-    PDIR_RECORD q;
+    PDIR_RECORD d, q;
     unsigned int index;
     unsigned int name_length;
     DWORD size;
     DWORD number_of_sectors;
     char *old_end_source;
     FILE *file;
+
+    PBOOT_HEADER header;
+    PBOOT_ENTRY  entry;
+
     char timestring[17];
 
     get_time_string(timestring);
@@ -1395,46 +1428,47 @@ static void pass(void)
 
 
     // Primary Volume Descriptor
+    if (make_bridged_udf)
+    {
+        write_string("\1CD001\1");
+        write_byte(0);
+        write_bytecounted_string(32, "", ' ');           // system identifier
+        write_bytecounted_string(32, volume_label, ' '); // volume label
 
-    write_string("\1CD001\1");
-    write_byte(0);
-    write_bytecounted_string(32, "", ' ');           // system identifier
-    write_bytecounted_string(32, volume_label, ' '); // volume label
+        write_block(8, 0);
+        write_both_endian_dword(total_sectors);
+        write_block(32, 0);
+        write_both_endian_word(1); // volume set size
+        write_both_endian_word(1); // volume sequence number
+        write_both_endian_word(2048); // sector size
+        write_both_endian_dword(path_table_size);
+        write_little_endian_dword(little_endian_path_table_sector);
+        write_little_endian_dword(0);  // second little endian path table
+        write_big_endian_dword(big_endian_path_table_sector);
+        write_big_endian_dword(0);  // second big endian path table
+        write_directory_record(&root, DOT_RECORD, FALSE);
 
-    write_block(8, 0);
-    write_both_endian_dword(total_sectors);
-    write_block(32, 0);
-    write_both_endian_word(1); // volume set size
-    write_both_endian_word(1); // volume sequence number
-    write_both_endian_word(2048); // sector size
-    write_both_endian_dword(path_table_size);
-    write_little_endian_dword(little_endian_path_table_sector);
-    write_little_endian_dword(0);  // second little endian path table
-    write_big_endian_dword(big_endian_path_table_sector);
-    write_big_endian_dword(0);  // second big endian path table
-    write_directory_record(&root, DOT_RECORD, FALSE);
+        write_bytecounted_string(128, volume_label, ' '); // volume set identifier
+        write_bytecounted_string(128, PUBLISHER_ID, ' '); // publisher identifier
+        write_bytecounted_string(128, DATA_PREP_ID, ' '); // data preparer identifier
+        write_bytecounted_string(128, APP_ID, ' ');       // application identifier
 
-    write_bytecounted_string(128, volume_label, ' '); // volume set identifier
-    write_bytecounted_string(128, PUBLISHER_ID, ' '); // publisher identifier
-    write_bytecounted_string(128, DATA_PREP_ID, ' '); // data preparer identifier
-    write_bytecounted_string(128, APP_ID, ' ');       // application identifier
+        write_bytecounted_string(37, "", ' '); // copyright file identifier
+        write_bytecounted_string(37, "", ' '); // abstract file identifier
+        write_bytecounted_string(37, "", ' '); // bibliographic file identifier
 
-    write_bytecounted_string(37, "", ' '); // copyright file identifier
-    write_bytecounted_string(37, "", ' '); // abstract file identifier
-    write_bytecounted_string(37, "", ' '); // bibliographic file identifier
-
-    write_string(timestring);  // volume creation
-    write_byte(0);
-    write_string(timestring);  // most recent modification
-    write_byte(0);
-    write_string("0000000000000000");  // volume expires
-    write_byte(0);
-    write_string("0000000000000000");  // volume is effective
-    write_byte(0);
-    write_byte(1);
-    write_byte(0);
-    fill_sector();
-
+        write_string(timestring);  // volume creation
+        write_byte(0);
+        write_string(timestring);  // most recent modification
+        write_byte(0);
+        write_string("0000000000000000");  // volume expires
+        write_byte(0);
+        write_string("0000000000000000");  // volume is effective
+        write_byte(0);
+        write_byte(1);
+        write_byte(0);
+        fill_sector();
+    }
 
     // Boot Volume Descriptor
     if (eltorito)
@@ -1492,17 +1526,17 @@ static void pass(void)
     }
 
     // Volume Descriptor Set Terminator
-    write_string("\377CD001\1");
-    fill_sector();
+    if (make_bridged_udf)
+    {
+        write_string("\377CD001\1");
+        fill_sector();
+    }
 
-    // Boot Catalog and Images
+    // TODO: Add UDF support!
+
+    // Boot Catalog
     if (eltorito)
     {
-        PBOOT_HEADER header;
-        PBOOT_ENTRY  entry;
-
-        // Boot Catalog
-
         boot_catalog_sector = cd.sector;
 
         // Validation entry header
@@ -1552,15 +1586,17 @@ static void pass(void)
         }
 
         fill_sector();
+    }
 
 
-        // Boot Images
-
+    // Boot Images
+    if (eltorito)
+    {
         default_boot_entry.load_rba = cd.sector;
 
         file = fopen(default_boot_entry.bootimage, "rb");
         if (file == NULL)
-            error_exit("Cannot open %s\n", default_boot_entry.bootimage);
+            error_exit("Cannot open '%s'\n", default_boot_entry.bootimage);
         fseek(file, 0, SEEK_END);
         size = ftell(file);
         if (size == 0 || (size % 2048))
@@ -1573,7 +1609,7 @@ static void pass(void)
         if (!write_from_file(file, size))
         {
             fclose(file);
-            error_exit("Read error in file %s\n", default_boot_entry.bootimage);
+            error_exit("Read error in file '%s'\n", default_boot_entry.bootimage);
         }
         fclose(file);
 
@@ -1589,7 +1625,7 @@ static void pass(void)
 
                 file = fopen(entry->bootimage, "rb");
                 if (file == NULL)
-                    error_exit("Cannot open %s\n", entry->bootimage);
+                    error_exit("Cannot open '%s'\n", entry->bootimage);
                 fseek(file, 0, SEEK_END);
                 size = ftell(file);
                 if (size == 0 || (size % 2048))
@@ -1602,7 +1638,7 @@ static void pass(void)
                 if (!write_from_file(file, size))
                 {
                     fclose(file);
-                    error_exit("Read error in file %s\n", entry->bootimage);
+                    error_exit("Read error in file '%s'\n", entry->bootimage);
                 }
                 fclose(file);
 
@@ -1615,7 +1651,9 @@ static void pass(void)
 //      fill_sector();
     }
 
+
     // Little Endian Path Table
+
     little_endian_path_table_sector = cd.sector;
     write_byte(1);
     write_byte(0);  // number of sectors in extended attribute record
@@ -1642,6 +1680,7 @@ static void pass(void)
     path_table_size = (cd.sector - little_endian_path_table_sector) *
                        SECTOR_SIZE + cd.offset;
     fill_sector();
+
 
     // Big Endian Path Table
 
@@ -1714,6 +1753,14 @@ static void pass(void)
         fill_sector();
     }
 
+    // TODO: Add UDF support!
+
+#if 0
+    // Boot Images ??
+#endif
+
+    // TODO: Add CRC block for header!
+
     // Directories and files
     for (d = &root; d != NULL; d = d->next_in_path_table)
     {
@@ -1784,11 +1831,11 @@ static void pass(void)
                         printf("Writing contents of %s\n", file_source);
                     file = fopen(file_source, "rb");
                     if (file == NULL)
-                        error_exit("Cannot open %s\n", file_source);
+                        error_exit("Cannot open '%s'\n", file_source);
                     if (!write_from_file(file, size))
                     {
                         fclose(file);
-                        error_exit("Read error in file %s\n", file_source);
+                        error_exit("Read error in file '%s'\n", file_source);
                     }
                     fclose(file);
                     end_source = old_end_source;
@@ -1798,19 +1845,31 @@ static void pass(void)
         }
     }
 
+    // TODO: Add final CRC block!
+
     total_sectors = (DWORD)cd.sector;
 }
 
 static char HELP[] =
     "\n"
     "CDMAKE CD-ROM Premastering Utility\n"
-    "Copyright (C) Philip J. Erdelsky\n"
-    "Copyright (C) 2003-2015 ReactOS Team\n"
+    "Copyright (C) 1997 Philip J. Erdelsky\n"
+    "Copyright (C) 2003-2016 ReactOS Team\n"
     "\n\n"
-    "CDMAKE [-vN] [-p] [-s N] [-m] [-j] [-pN] [-eN] [-b bootimage]\n"
+    "CDMAKE [-vN] [-p] [-s N] [-m] [-j] [-q] "
+        // "[-x] "
+        "[-pN] [-eN] [-b bootimage]\n"
     "       [-bootdata:N#<defaultBootEntry>#<bootEntry1>#...#<bootEntryN>]\n"
     "       source volume image\n"
     "\n"
+    "Mandatory options:\n"
+    "  source        Specifications of base directory containing all files to be\n"
+    "                written to CD-ROM image. Can be a directory, or a path to a\n"
+    "                file list (in which case the path must start with a '@').\n"
+    "  volume        Volume label.\n"
+    "  image         Image file or device.\n"
+    "\n"
+    "General options:\n"
     "  -vN           Verbosity level. Valid values for 'N' are:\n"
     "                    0: Quiet mode - display nothing but error messages.\n"
     "                    1: Normal mode (default).\n"
@@ -1819,16 +1878,24 @@ static char HELP[] =
     "  -p            Show progress while writing.\n"
     "  -s N          Abort operation before beginning write if image will be larger\n"
     "                than N megabytes (i.e. 1024*1024*N bytes).\n"
+    "  -q            Only scan the source files; do not create an image.\n"
+    // "  -x            Compute and encode the AutoCRC value in the image.\n"
+    "\n"
+    "ISO 9660 and Joliet options:\n"
     "  -m            Accept punctuation marks other than underscores in names and\n"
     "                extensions.\n"
     "  -j            Generate Joliet filename records.\n"
     "\n"
+    // "UDF options:\n"
+    // "  Not implemented yet!\n"
+    // "\n"
+    "El-Torito boot options:\n"
     "  -pN           Boot platform ID in hex format (default: 00 for a BIOS system).\n"
     "  -eN           Boot media emulation. Valid values for 'N' are:\n"
     "                    0 (or nothing): No emulation.\n"
-    "                    1: 1.2Mb  diskette.\n"
-    "                    2: 1.44Mb diskette.\n"
-    "                    3: 2.88Mb diskette.\n"
+    "                    1: 1.2 MB diskette.\n"
+    "                    2: 1.44MB diskette.\n"
+    "                    3: 2.88MB diskette.\n"
     "                    4: Hard disk.\n"
     "  -b bootimage  Create a single-boot El-Torito image.\n"
     "  -bootdata:    Create a multi-boot El-Torito image. This option cannot be\n"
@@ -1842,12 +1909,7 @@ static char HELP[] =
     "            - Do not use spaces.\n"
     "            - Each multi-boot entry must be delimited with a hash symbol (#).\n"
     "            - Each option for a boot entry must be delimited with a comma (,).\n"
-    "            - Each boot entry must specify the platform ID.\n"
-    "\n"
-    "  source        Specifications of base directory containing all files to be\n"
-    "                written to CD-ROM image.\n"
-    "  volume        Volume label.\n"
-    "  image         Image file or device.\n";
+    "            - Each boot entry must specify the platform ID.\n";
 
 /*-----------------------------------------------------------------------------
 Program execution starts here.
@@ -1879,6 +1941,20 @@ char* strtok_s(char *str, const char *delim, char **ctx)
 }
 #endif
 
+static void
+init_boot_entry(PBOOT_ENTRY boot_entry,
+                BYTE boot_emu_type, WORD load_segment,
+                char* bootimage)
+{
+    boot_entry->boot_id       = 0x88;           // Bootable entry
+    boot_entry->boot_emu_type = boot_emu_type;  // 0: No emulation, etc...
+    boot_entry->load_segment  = load_segment;   // If 0 then use default 0x07C0
+
+    boot_entry->bootimage[0]  = '\0';
+    strncpy(boot_entry->bootimage, bootimage, sizeof(boot_entry->bootimage));
+    boot_entry->bootimage[sizeof(boot_entry->bootimage)-1] = '\0';
+}
+
 int main(int argc, char **argv)
 {
     time_t timestamp = time(NULL);
@@ -1891,23 +1967,27 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Initialize root directory
+    // Initialize CD-ROM write buffer
+
+    cd.file = NULL;
+    cd.filespecs[0] = 0;
 
     cd.buffer = malloc(BUFFER_SIZE);
     if (cd.buffer == NULL)
         error_exit("Insufficient memory");
+
+    // Initialize root directory
 
     memset(&root, 0, sizeof(root));
     root.level = 1;
     root.flags = DIRECTORY_FLAG;
     convert_date_and_time(&root.date_and_time, &timestamp);
 
-    // Initialize CD-ROM write buffer
-
-    cd.file = NULL;
-    cd.filespecs[0] = 0;
-
     // Initialize parameters
+
+    scan_files_only = FALSE;
+    make_bridged_udf = TRUE;
+    // compute_crc = FALSE;
 
     verbosity = NORMAL;
     show_progress = FALSE;
@@ -1921,12 +2001,12 @@ int main(int argc, char **argv)
     multi_boot = FALSE;
     boot_validation_header.header_id   = 1;  // Validation header ID
     boot_validation_header.platform_id = 0;  // x86/64 BIOS system
-    default_boot_entry.boot_id       = 0x88; // Bootable entry
-    default_boot_entry.boot_emu_type = 0;    // No emulation
-    default_boot_entry.load_segment  = 0;    // 0 --> use default 0x07C0
+    init_boot_entry(&default_boot_entry,
+                    0,  // No emulation
+                    0,  // Use default 0x07C0
+                    "");
     default_boot_entry.sector_count  = 0;
     default_boot_entry.load_rba      = 0;
-    default_boot_entry.bootimage[0]  = '\0';
     boot_header_list = NULL;
 
     // Scan command line arguments
@@ -2041,7 +2121,7 @@ int main(int argc, char **argv)
             eltorito   = TRUE;
             multi_boot = TRUE;
 
-            // FIXME: Paths with '#' or ',' or ' ' inside are not yet supported!!
+            // FIXME: Paths containing '#' or ',' or ' ' are not yet supported!!
 
             // Start parsing...
             t = strtok_s(bootdata, "#", &entry_ctx);
@@ -2058,7 +2138,7 @@ int main(int argc, char **argv)
                 // Reset to default values
                 platform_id   = 0;  // x86/64 BIOS system
                 boot_emu_type = 0;  // No emulation
-                load_segment  = 0;  // 0 --> use default 0x07C0
+                load_segment  = 0;  // Use default 0x07C0
                 bootimage[0]  = '\0';
 
                 t = strtok_s(NULL, "#", &entry_ctx);
@@ -2106,7 +2186,7 @@ int main(int argc, char **argv)
 
                         case 't': // Loading segment
                         {
-                            if (*t == 0) // Not specified --> use default 0x07C0
+                            if (*t == 0) // Not specified: use default 0x07C0
                                 load_segment = 0;
                             else // Segment in hexadecimal
                                 load_segment = (BYTE)strtoul(t, NULL, 16);
@@ -2129,12 +2209,8 @@ int main(int argc, char **argv)
 
                     boot_validation_header.header_id   = 1;  // Validation header ID
                     boot_validation_header.platform_id = platform_id;
-                    default_boot_entry.boot_id       = 0x88; // Bootable entry
-                    default_boot_entry.boot_emu_type = boot_emu_type;
-                    default_boot_entry.load_segment  = load_segment;
 
-                    strncpy(default_boot_entry.bootimage, bootimage, sizeof(default_boot_entry.bootimage));
-                    default_boot_entry.bootimage[sizeof(default_boot_entry.bootimage)-1] = '\0';
+                    init_boot_entry(&default_boot_entry, boot_emu_type, load_segment, bootimage);
 
                     // Default entry is now initialized.
                     default_entry = FALSE;
@@ -2149,12 +2225,7 @@ int main(int argc, char **argv)
                         error_exit("Insufficient memory");
                     // boot_entry->next_entry = NULL;
 
-                    boot_entry->boot_id       = 0x88;   // Bootable entry
-                    boot_entry->boot_emu_type = boot_emu_type;
-                    boot_entry->load_segment  = load_segment;
-
-                    strncpy(boot_entry->bootimage, bootimage, sizeof(boot_entry->bootimage));
-                    boot_entry->bootimage[sizeof(boot_entry->bootimage)-1] = '\0';
+                    init_boot_entry(boot_entry, boot_emu_type, load_segment, bootimage);
 
                     // Create a new boot header if we don't have one yet
                     if (boot_header == NULL)
@@ -2211,6 +2282,10 @@ int main(int argc, char **argv)
 
             free(bootdata);
         }
+        else if (strcmp(argv[i], "-q") == 0)
+            scan_files_only = TRUE;
+        // else if (strcmp(argv[i], "-x") == 0)
+        //     compute_crc = TRUE;
         else if (i + 2 < argc)
         {
             strcpy(source, argv[i++]);
@@ -2249,7 +2324,7 @@ int main(int argc, char **argv)
         FILE *f = fopen(source+1, "r");
         if (!f)
         {
-            error_exit("Cannot open CD-ROM file description %s\n", source+1);
+            error_exit("Cannot open CD-ROM file description '%s'\n", source+1);
         }
         while (fgets(lineread, sizeof(lineread), f))
         {
@@ -2327,32 +2402,35 @@ int main(int argc, char **argv)
     if (size_limit != 0 && total_sectors > size_limit)
         error_exit("Size limit exceeded");
 
-    // re-initialize CD-ROM write buffer
-
-    cd.file = fopen(cd.filespecs, "w+b");
-    if (cd.file == NULL)
-        error_exit("Cannot open image file %s", cd.filespecs);
-    cd.sector = 0;
-    cd.offset = 0;
-    cd.count  = 0;
-
-
-    // make writing pass over directory structure
-
-    pass();
-
-    if (cd.count > 0)
-        flush_buffer();
-    if (show_progress)
-        printf("\r             \n");
-    if (fclose(cd.file) != 0)
+    if (!scan_files_only)
     {
-        cd.file = NULL;
-        error_exit("File write error in image file %s", cd.filespecs);
-    }
+        // re-initialize CD-ROM write buffer
 
-    if (verbosity >= NORMAL)
-        puts("CD-ROM image made successfully");
+        cd.file = fopen(cd.filespecs, "w+b");
+        if (cd.file == NULL)
+            error_exit("Cannot open image file '%s'", cd.filespecs);
+        cd.sector = 0;
+        cd.offset = 0;
+        cd.count  = 0;
+
+
+        // make writing pass over directory structure
+
+        pass();
+
+        if (cd.count > 0)
+            flush_buffer();
+        if (show_progress)
+            printf("\r             \n");
+        if (fclose(cd.file) != 0)
+        {
+            cd.file = NULL;
+            error_exit("File write error in image file '%s'", cd.filespecs);
+        }
+
+        if (verbosity >= NORMAL)
+            puts("CD-ROM image made successfully");
+    }
 
     dir_hash_destroy(&specified_files);
     release_memory();

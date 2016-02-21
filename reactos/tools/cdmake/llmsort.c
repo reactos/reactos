@@ -2,10 +2,18 @@
  * A Linked-List Memory Sort
  * by Philip J. Erdelsky
  * pje@acm.org
+ * pje@efgh.com
  * http://alumnus.caltech.edu/~pje/
+ *
+ * Version taken from:
+ * http://alumnus.caltech.edu/~pje/cdmake.txt
+ *
+ * An extended version can be found at:
+ * http://alumnus.caltech.edu/~pje/llmsort.html
+ * http://www.efgh.com/software/llmsort.htm
+ *
+ * Public domain; no restrictions on use.
  */
-
-/* According to his website, this file was released into the public domain by Philip J. Erdelsky */
 
 #include <stdio.h>
 
