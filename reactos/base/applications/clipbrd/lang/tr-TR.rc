@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -34,8 +34,8 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Clipboard Viewer"
-    STRING_CLIPFILE  "Clipboard Element"
+    STRING_CLIPBOARD "Pano Görüntüleyicisi"
+    STRING_CLIPFILE  "Pano Öğesi"
     STRING_DELETE_MSG "Pano içeriğini sil?"
     STRING_DELETE_TITLE "Pano Sil"
     STRING_FORMAT_NT "ReactOS İçin Pano Kütükleri (*.clp)"
