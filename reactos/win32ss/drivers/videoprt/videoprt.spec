@@ -7,6 +7,11 @@
 @ stdcall VideoPortAllocatePool(ptr long long long)
 @ stdcall VideoPortAssociateEventsWithDmaHandle(ptr ptr ptr ptr)
 @ stdcall VideoPortCheckForDeviceExistence(ptr long long long long long long)
+
+;; Starting NT 5.1, the following function was introduced for a mysterious reason
+;; (it differs from the previous one only by its name).
+@ stdcall VideoPortCheckForDeviceExistance(ptr long long long long long long) VideoPortCheckForDeviceExistence
+
 @ stdcall VideoPortClearEvent(ptr ptr)
 @ stdcall VideoPortCompareMemory(ptr ptr long) NTOSKRNL.RtlCompareMemory
 @ stdcall VideoPortCompleteDma(ptr ptr ptr long)
