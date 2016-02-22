@@ -116,7 +116,12 @@ typedef struct
 
     NTFS_INFO NtfsInfo;
 
+    ULONG Flags;
+    ULONG OpenHandleCount;
+
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
+
+#define VCB_VOLUME_LOCKED       0x0001
 
 typedef struct
 {
@@ -460,6 +465,7 @@ typedef struct _FCB
 
     LONG RefCount;
     ULONG Flags;
+    ULONG OpenHandleCount;
 
     ULONGLONG MFTIndex;
     USHORT LinkCount;
@@ -560,6 +566,12 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
                     IN OUT PVOID OutputBuffer,
                     IN OUT PULONG OutputBufferSize,
                     IN BOOLEAN Override);
+
+
+/* close.c */
+
+NTSTATUS
+NtfsCleanup(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* close.c */

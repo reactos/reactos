@@ -59,6 +59,7 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
+    DeviceExt->OpenHandleCount--;
 
     if (FileObject->FileName.Buffer)
     {

@@ -135,6 +135,7 @@ NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
 {
     DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP]                  = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsFsdDispatch;

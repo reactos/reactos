@@ -835,6 +835,55 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
 
 static
 NTSTATUS
+LockOrUnlockVolume(PDEVICE_EXTENSION DeviceExt,
+                   PIRP Irp,
+                   BOOLEAN Lock)
+{
+    PFILE_OBJECT FileObject;
+    PNTFS_FCB Fcb;
+    PIO_STACK_LOCATION Stack;
+
+    DPRINT("LockOrUnlockVolume(%p, %p, %d)\n", DeviceExt, Irp, Lock);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FileObject = Stack->FileObject;
+    Fcb = FileObject->FsContext;
+
+    /* Only allow locking with the volume open */
+    if (!(Fcb->Flags & FCB_IS_VOLUME))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Bail out if it's already in the demanded state */
+    if (((DeviceExt->Flags & VCB_VOLUME_LOCKED) && Lock) ||
+        (!(DeviceExt->Flags & VCB_VOLUME_LOCKED) && !Lock))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Deny locking if we're not alone */
+    if (Lock && DeviceExt->OpenHandleCount != 1)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Finally, proceed */
+    if (Lock)
+    {
+        DeviceExt->Flags |= VCB_VOLUME_LOCKED;
+    }
+    else
+    {
+        DeviceExt->Flags &= ~VCB_VOLUME_LOCKED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
                   PIRP Irp)
 {
@@ -854,7 +903,6 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
         case FSCTL_EXTEND_VOLUME:
         //case FSCTL_GET_RETRIEVAL_POINTER_BASE:
         case FSCTL_GET_RETRIEVAL_POINTERS:
-        case FSCTL_LOCK_VOLUME:
         //case FSCTL_LOOKUP_STREAM_FROM_CLUSTER:
         case FSCTL_MARK_HANDLE:
         case FSCTL_MOVE_FILE:
@@ -862,11 +910,18 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
         case FSCTL_READ_FILE_USN_DATA:
         case FSCTL_READ_USN_JOURNAL:
         //case FSCTL_SHRINK_VOLUME:
-        case FSCTL_UNLOCK_VOLUME:
         case FSCTL_WRITE_USN_CLOSE_RECORD:
             UNIMPLEMENTED;
             DPRINT1("Unimplemented user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
             Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case FSCTL_LOCK_VOLUME:
+            Status = LockOrUnlockVolume(DeviceExt, Irp, TRUE);
+            break;
+
+        case FSCTL_UNLOCK_VOLUME:
+            Status = LockOrUnlockVolume(DeviceExt, Irp, FALSE);
             break;
 
         case FSCTL_GET_NTFS_VOLUME_DATA:
