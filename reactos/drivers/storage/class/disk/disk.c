@@ -2248,6 +2248,11 @@ Return Value:
 
             PPARTITION_INFORMATION outputBuffer;
 
+            if (diskData->PartitionNumber == 0) {
+                DPRINT1("HACK: Handling partition 0 request!\n");
+                //ASSERT(FALSE);
+            }
+
             //
             // Update the geometry in case it has changed.
             //
@@ -2269,12 +2274,6 @@ Return Value:
             //
 
             diskData->DriveNotReady = FALSE;
-// HACK: ReactOS partition numbers must be wrong (>0 part)
-            if (diskData->PartitionType == 0 && (diskData->PartitionNumber > 0)) {
-
-                status = STATUS_INVALID_DEVICE_REQUEST;
-                break;
-            }
 
             outputBuffer =
                     (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
