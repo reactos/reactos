@@ -105,6 +105,31 @@ WdDdiWatchdogDpcCallback(
     UNIMPLEMENTED;
 }
 
+LONG
+FASTCALL
+VideoPortInterlockedDecrement(
+    IN PLONG Addend)
+{
+    return _InterlockedDecrement(Addend);
+}
+
+LONG
+FASTCALL
+VideoPortInterlockedIncrement(
+    IN PLONG Addend)
+{
+    return _InterlockedIncrement(Addend);
+}
+
+LONG
+FASTCALL
+VideoPortInterlockedExchange(
+    IN OUT PLONG Target,
+    IN LONG Value)
+{
+    return InterlockedExchange(Target, Value);
+}
+
 #ifdef _M_AMD64
 UCHAR
 NTAPI
@@ -326,31 +351,6 @@ VideoPortWriteRegisterBufferUlong(
     ULONG Count)
 {
     WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
-}
-
-LONG
-FASTCALL
-VideoPortInterlockedDecrement(
-    IN PLONG Addend)
-{
-    return _InterlockedDecrement(Addend);
-}
-
-LONG
-FASTCALL
-VideoPortInterlockedIncrement(
-    IN PLONG Addend)
-{
-    return _InterlockedIncrement(Addend);
-}
-
-LONG
-FASTCALL
-VideoPortInterlockedExchange(
-    IN OUT PLONG Target,
-    IN LONG Value)
-{
-    return InterlockedExchange(Target, Value);
 }
 
 VOID

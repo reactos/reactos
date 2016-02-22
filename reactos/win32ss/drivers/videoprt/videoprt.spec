@@ -44,12 +44,15 @@
 @ stdcall VideoPortGetVgaStatus(ptr ptr)
 @ stdcall VideoPortInitialize(ptr ptr ptr ptr)
 @ stdcall VideoPortInt10(ptr ptr)
-@ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
-@ fastcall -arch=x86_64 VideoPortInterlockedDecrement(ptr)
-@ fastcall -arch=i386,arm VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
-@ fastcall -arch=x86_64 VideoPortInterlockedExchange(ptr long)
-@ fastcall -arch=i386,arm VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
-@ fastcall -arch=x86_64 VideoPortInterlockedIncrement(ptr)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
+;;@ fastcall -arch=x86_64 VideoPortInterlockedDecrement(ptr)
+@ fastcall VideoPortInterlockedDecrement(ptr)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
+;;@ fastcall -arch=x86_64 VideoPortInterlockedExchange(ptr long)
+@ fastcall VideoPortInterlockedExchange(ptr long)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
+;;@ fastcall -arch=x86_64 VideoPortInterlockedIncrement(ptr)
+@ fastcall VideoPortInterlockedIncrement(ptr)
 @ stdcall VideoPortIsNoVesa()
 @ stdcall VideoPortLockBuffer(ptr ptr long long)
 @ stdcall VideoPortLockPages(ptr ptr ptr ptr long)
