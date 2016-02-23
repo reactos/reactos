@@ -305,6 +305,12 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         return STATUS_NOT_IMPLEMENTED;
     }
 
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource,
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return STATUS_PENDING;
+    }
+
     if (SearchPattern != NULL)
     {
         if (!Ccb->DirectorySearchPattern)
@@ -316,6 +322,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                 ExAllocatePoolWithTag(NonPagedPool, Pattern.MaximumLength, TAG_NTFS);
             if (!Ccb->DirectorySearchPattern)
             {
+                ExReleaseResourceLite(&Fcb->MainResource);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -329,6 +336,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         Ccb->DirectorySearchPattern = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_NTFS);
         if (!Ccb->DirectorySearchPattern)
         {
+            ExReleaseResourceLite(&Fcb->MainResource);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -460,6 +468,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     {
         Buffer0->NextEntryOffset = 0;
     }
+
+    ExReleaseResourceLite(&Fcb->MainResource);
 
     if (FileIndex > 0)
     {

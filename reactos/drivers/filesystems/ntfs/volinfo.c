@@ -246,6 +246,7 @@ NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
     ULONG BufferLength;
+    PDEVICE_EXTENSION DeviceExt;
 
     DPRINT("NtfsQueryVolumeInformation() called\n");
 
@@ -253,7 +254,15 @@ NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
 
     Irp = IrpContext->Irp;
     DeviceObject = IrpContext->DeviceObject;
+    DeviceExt = DeviceObject->DeviceExtension;
     Stack = IrpContext->Stack;
+
+    if (!ExAcquireResourceSharedLite(&DeviceExt->DirResource,
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
     FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
     BufferLength = Stack->Parameters.QueryVolume.Length;
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
@@ -291,6 +300,8 @@ NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
         default:
             Status = STATUS_NOT_SUPPORTED;
     }
+
+    ExReleaseResourceLite(&DeviceExt->DirResource);
 
     if (NT_SUCCESS(Status))
         Irp->IoStatus.Information =
