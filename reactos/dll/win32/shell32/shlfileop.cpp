@@ -274,15 +274,13 @@ static BOOL SHELL_ConfirmIDs(int nKindOfDialog, SHELL_ConfirmIDstruc *ids)
             return TRUE;
 
       case ASK_OVERWRITE_FILE:
-            ids->hIconInstance = NULL;
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+            ids->icon_resource_id = IDI_SHELL_FOLDER_MOVE2;
             ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
             ids->text_resource_id  = IDS_OVERWRITEFILE_TEXT;
             return TRUE;
 
       case ASK_OVERWRITE_FOLDER:
-            ids->hIconInstance = NULL;
-            ids->icon_resource_id = IDI_SHELL_CONFIRM_DELETE;
+            ids->icon_resource_id = IDI_SHELL_FOLDER_MOVE2;
             ids->caption_resource_id  = IDS_OVERWRITEFILE_CAPTION;
             ids->text_resource_id  = IDS_OVERWRITEFOLDER_TEXT;
             return TRUE;
