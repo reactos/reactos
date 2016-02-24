@@ -1989,7 +1989,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
             }
             pti->ptLast   = msg.pt;
             pti->timeLast = msg.time;
-            MessageQueue->ExtraInfo = ExtraInfo;
+            //MessageQueue->ExtraInfo = ExtraInfo;
             Ret = TRUE;
             break;
          }
