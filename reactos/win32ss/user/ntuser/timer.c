@@ -415,6 +415,8 @@ PostTimerMessages(PWND Window)
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
+           // Fix all wine win:test_GetMessagePos WM_TIMER tests. See CORE-10867.
+           Msg.pt      = gpsi->ptCursor;
 
            MsqPostMessage(pti, &Msg, FALSE, (QS_POSTMESSAGE|QS_ALLPOSTMESSAGE), 0, 0);
            pTmr->flags &= ~TMRF_READY;
