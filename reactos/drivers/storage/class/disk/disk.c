@@ -2310,6 +2310,7 @@ Return Value:
             status = STATUS_INFO_LENGTH_MISMATCH;
 
         }
+#if 0 // HACK: ReactOS partition numbers must be wrong
         else if (diskData->PartitionNumber == 0) {
 
             //
@@ -2320,9 +2321,15 @@ Return Value:
             status = STATUS_INVALID_DEVICE_REQUEST;
 
         }
+#endif
         else {
 
             PPARTITION_INFORMATION_EX outputBuffer;
+
+            if (diskData->PartitionNumber == 0) {
+                DPRINT1("HACK: Handling partition 0 request!\n");
+                //ASSERT(FALSE);
+            }
 
             //
             // Update the geometry in case it has changed.
