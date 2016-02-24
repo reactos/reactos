@@ -503,6 +503,11 @@ NtfsDirectoryControl(PNTFS_IRP_CONTEXT IrpContext)
             break;
     }
 
+    if (Status == STATUS_PENDING && IrpContext->Flags & IRPCONTEXT_COMPLETE)
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
     IrpContext->Irp->IoStatus.Information = 0;
 
     return Status;
