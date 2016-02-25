@@ -825,6 +825,11 @@ BEGIN
     IDS_FILE_DETAILSADV "文件扩展名为 '%s' 的类型 '%s'。若要更改会影响所有的 '%s' 文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
     IDS_COLUMN_EXTENSION "扩展"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s File"
+
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
     IDS_EXE_DESCRIPTION "描述："

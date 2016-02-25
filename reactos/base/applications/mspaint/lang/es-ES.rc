@@ -13,14 +13,14 @@ ID_MENU MENU
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "Nuevo\tCtrl+N", IDM_FILENEW
-        MENUITEM "Abrir...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "Guardar\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Guardar como...", IDM_FILESAVEAS
+        MENUITEM "&Nuevo\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Abrir...\tCtrl+A", IDM_FILEOPEN
+        MENUITEM "&Guardar\tCtrl+G", IDM_FILESAVE
+        MENUITEM "Guard&ar como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Vista de página", IDM_FILEPAGEVIEW
+        MENUITEM "Configurar página...", IDM_FILEPAGESETUP
+        MENUITEM "Imprimir...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Fondo de pantalla (normal)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Fondo de pantalla (centrado)", IDM_FILEASWALLPAPERCENTERED
@@ -36,9 +36,9 @@ BEGIN
         MENUITEM "Cortar\tCtrl+X", IDM_EDITCUT
         MENUITEM "Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Pegar\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Borrar selección\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Borrar selección\tSupr", IDM_EDITDELETESELECTION
         MENUITEM "Invertir selección", IDM_EDITINVERTSELECTION
-        MENUITEM "Seleccionar todo\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Seleccionar todo\tCtrl+E", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Copiar a...", IDM_EDITCOPYTO
         MENUITEM "Pegar desde...", IDM_EDITPASTEFROM
@@ -96,15 +96,15 @@ END
 ID_ACCELERATORS ACCELERATORS
 BEGIN
     "^N", IDM_FILENEW
-    "^O", IDM_FILEOPEN
-    "^S", IDM_FILESAVE
+    "^A", IDM_FILEOPEN
+    "^G", IDM_FILESAVE
     "^Z", IDM_EDITUNDO
     "^Y", IDM_EDITREDO
     "^X", IDM_EDITCUT
     "^C", IDM_EDITCOPY
     "^V", IDM_EDITPASTE
     VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
-    "^A", IDM_EDITSELECTALL
+    "^E", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
     "^G", IDM_VIEWSHOWGRID
@@ -193,7 +193,7 @@ BEGIN
     IDS_INFOTITLE "Paint para ReactOS"
     IDS_INFOTEXT "Paint para ReactOS está disponible bajo los términos de la GNU Lesser General Public License (LGPL, ver www.gnu.org)"
     IDS_SAVEPROMPTTEXT "¿Guardar cambios a %s?"
-    IDS_DEFAULTFILENAME "Sin titulo.bmp"
+    IDS_DEFAULTFILENAME "Sin título.bmp"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Selección de forma libre"
     IDS_TOOLTIP2 "Selección"
@@ -219,5 +219,5 @@ BEGIN
     IDS_PERCENTAGE "El porcentaje debe de estar entre 1 y 500."
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
-END
+    IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimesiones haciendo el lienzo más grande?"
+END 

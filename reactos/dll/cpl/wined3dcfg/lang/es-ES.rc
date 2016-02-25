@@ -1,3 +1,4 @@
+
 /* Spanish Language resource file
  *
  * Traducido por: Ismael Ferreras Morezuelas (2014-12-30)
@@ -37,6 +38,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D Options"
+    IDS_CPLNAME "Opciones de WineD3D"
     IDS_CPLDESCRIPTION "Configura los ajustes del motor de compatibilidad WineD3D."
 END

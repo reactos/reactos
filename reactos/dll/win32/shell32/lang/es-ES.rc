@@ -447,7 +447,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 279, 80
     PUSHBUTTON "&Nueva", 14001, 170, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "Eli&minar", 14002, 230, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Detalles para el tipo de archivo '%s'", 14003, 7, 130, 279, 100
+    GROUPBOX "Detalles para el tipo de archivo «%s»", 14003, 7, 130, 279, 100
     LTEXT "Se abre con:", -1, 12, 140, 50, 10
     //ICON
     LTEXT "Aplicación", 14005, 100, 140, 40, 10
@@ -816,10 +816,15 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "No hay ningún programa configurado en ReactOS para abrir este tipo de archivo."
 
-    IDS_FILE_DETAILS "Detalles para el tipo de archivo '%s'"
-    IDS_FILE_DETAILSADV "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
+    IDS_FILE_DETAILS "Detalles para el tipo de archivo «%s»"
+    IDS_FILE_DETAILSADV "Los archivos con extensión «%s» son del tipo «%s». Para cambiar la configuración de los archivos «%s», haga clic en Opciones avanzadas."
     IDS_FILE_TYPES "Tipos de archivo"
     IDS_COLUMN_EXTENSION "Extensiones"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "Archivo %s"
+
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplicación desconocida"
     IDS_EXE_DESCRIPTION "Descripción:"

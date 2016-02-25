@@ -275,10 +275,10 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
 
     if (!Entry->FileDescription[0])
     {
-        /* construct default 'FileExtensionFile' */
-        wcscpy(Entry->FileDescription, &Entry->FileExtension[1]);
-        wcscat(Entry->FileDescription, L" ");
-        wcscat(Entry->FileDescription, szFile);
+        /* construct default 'FileExtensionFile' by formatting the uppercase extension
+           with IDS_FILE_EXT_TYPE, outputting something like a l18n 'INI File' */
+
+        StringCchPrintf(Entry->FileDescription, _countof(Entry->FileDescription), szFile, &Entry->FileExtension[1]);
     }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
@@ -328,19 +328,19 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     InitializeFileTypesListCtrlColumns(hDlgCtrl);
 
     szFile[0] = 0;
-    if (!LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, szFile, sizeof(szFile) / sizeof(WCHAR)))
+    if (!LoadStringW(shell32_hInstance, IDS_FILE_EXT_TYPE, szFile, _countof(szFile)))
     {
         /* default to english */
-        wcscpy(szFile, L"File");
+        wcscpy(szFile, L"%s File");
     }
-    szFile[(sizeof(szFile)/sizeof(WCHAR))-1] = 0;
+    szFile[(_countof(szFile))-1] = 0;
 
-    dwName = sizeof(szName) / sizeof(WCHAR);
+    dwName = _countof(szName);
 
     while(RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
         InsertFileType(hDlgCtrl, szName, &iItem, szFile);
-        dwName = sizeof(szName) / sizeof(WCHAR);
+        dwName = _countof(szName);
     }
 
     /* sort list */

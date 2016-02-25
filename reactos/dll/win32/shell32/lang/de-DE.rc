@@ -819,6 +819,11 @@ BEGIN
     IDS_FILE_DETAILSADV "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
     IDS_FILE_TYPES "Dateitypen"
     IDS_COLUMN_EXTENSION "Erweiterungen"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s File"
+
     IDS_BYTES_FORMAT "Bytes"
     IDS_UNKNOWN_APP "Unbekannte Anwendung"
     IDS_EXE_DESCRIPTION "Beschreibung:"

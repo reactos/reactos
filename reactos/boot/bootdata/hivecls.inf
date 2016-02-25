@@ -155,8 +155,8 @@ HKCR,".htm","PerceivedType",0x00000000,"text"
 HKCR,".html","",0x00000000,"htmlfile"
 HKCR,".html","Content Type",0x00000000,"text/html"
 HKCR,".html","PerceivedType",0x00000000,"text"
-HKCR,"htmlfile","",0x00000000,%HTMLFILE%
-;;HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-912"
+HKCR,"htmlfile","",0x00000000,"HTML Document"
+HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\mshtml.dll,-7501"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
 HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
@@ -252,7 +252,7 @@ HKCR,"inffile","",0x00000000,"Setup Information"
 HKCR,"inffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\setupapi.dll,-2001"
 HKCR,"inffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
-HKCR,"inffile\shell\Install","",0x00000000,"Install"
+HKCR,"inffile\shell\Install","",0x00000000,%INSTALL%
 HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
 
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
@@ -313,7 +313,9 @@ HKCR,"Msi.Package","",0x00000000,%MSIPACK%
 ;;HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
+HKCR,"Msi.Package\shell\Repair","",0x00000000,%REPAIR%
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
+HKCR,"Msi.Package\shell\Uninstall","",0x00000000,%UNINSTALL%
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
 
 ; Program Information File for NT VDM
@@ -329,7 +331,7 @@ HKCR,"regfile","",0x00000000,"Registration File"
 HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\regedit.exe,-31000"
 HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
 HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
-HKCR,"regfile\shell\open","",0x00000000,"Merge"
+HKCR,"regfile\shell\open","",0x00000000,%MERGE%
 HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
 
 ; Screen Savers
@@ -337,16 +339,16 @@ HKCR,".scr","",0x00000000,"scrfile"
 HKCR,"scrfile","",0x00000000,"Screen Saver"
 HKCR,"scrfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-217"
 HKCR,"scrfile\DefaultIcon","",0x00000000,"%1"
-HKCR,"scrfile\shell\config","",0x00000000,"Configure"
+HKCR,"scrfile\shell\config","",0x00000000,%CONFIGURE%
 HKCR,"scrfile\shell\config\command","",0x00000000,"""%1"""
-HKCR,"scrfile\shell\install","",0x00000000,"Install"
+HKCR,"scrfile\shell\install","",0x00000000,%INSTALL%
 HKCR,"scrfile\shell\install\command","",0x00000000,"rundll32.exe desk.cpl,InstallScreenSaver %l"
-HKCR,"scrfile\shell\open","",0x00000000,"Test"
+HKCR,"scrfile\shell\open","",0x00000000,%TEST%
 HKCR,"scrfile\shell\open\command","",0x00000000,"""%1"" /S"
 
 ; Shell command files (e.g. "Show Desktop" in QuickLaunch bar)
 HKCR,".scf","",0x00000000,"SHCmdFile"
-HKCR,"SHCmdFile","",0x00000000,"ReactOS Explorer Command"
+HKCR,"SHCmdFile","",0x00000000,%SCFFILE%
 HKCR,"SHCmdFile","NeverShowExt",0x00000000,""
 HKCR,"SHCmdFile","InfoTip",0x00000000,"prop:DocComments"
 HKCR,"SHCmdFile\shell\open\command","",0x00000000,"%systemroot%\explorer.exe"
@@ -424,7 +426,7 @@ HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}","",0x00000000,"Display Monit
 HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","",0x00020000,"%SystemRoot%\system32\deskmon.dll"
 HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
-; For TCPIP Protocol property page
+; For the TCP/IP Protocol property page
 HKCR,"CLSID\{A907657F-6FDF-11D0-8EFB-00C04FD912B2}","",0x00000000,"TCP/IP Configuration Notify Object"
 HKCR,"CLSID\{A907657F-6FDF-11D0-8EFB-00C04FD912B2}\InProcServer32","",0x00000000,"netcfgx.dll"
 HKCR,"CLSID\{A907657F-6FDF-11D0-8EFB-00C04FD912B2}\InProcServer32","ThreadingModel",0x00000000,"Both"
@@ -451,7 +453,7 @@ HKCR,".asm","PerceivedType",0x00000000,"text"
 HKCR,".asmx","PerceivedType",0x00000000,"text"
 HKCR,".aspx","PerceivedType",0x00000000,"text"
 HKCR,".chk","PerceivedType",0x00000000,"system"
-HKCR,".css","",0x00000000,"CSSfile"
+HKCR,".css","",0x00000000,%CSSFILE%
 HKCR,".css","PerceivedType",0x00000000,"text"
 HKCR,".cxx","PerceivedType",0x00000000,"text"
 HKCR,".def","PerceivedType",0x00000000,"text"
@@ -463,7 +465,7 @@ HKCR,".java","PerceivedType",0x00000000,"text"
 HKCR,".local","PerceivedType",0x00000000,"system"
 HKCR,".manifest","PerceivedType",0x00000000,"system"
 HKCR,".nvr","PerceivedType",0x00000000,"text"
-HKCR,".ocx","",0x00000000,"ocxfile"
+HKCR,".ocx","",0x00000000,%OCXFILE%
 HKCR,".ocx","PerceivedType",0x00000000,"system"
 HKCR,".php3","PerceivedType",0x00000000,"text"
 HKCR,".pl","PerceivedType",0x00000000,"text"
@@ -477,7 +479,7 @@ HKCR,".text","PerceivedType",0x00000000,"text"
 HKCR,".tgz","PerceivedType",0x00000000,"compressed"
 HKCR,".tsv","PerceivedType",0x00000000,"text"
 HKCR,".wdp","PerceivedType",0x00000000,"image"
-HKCR,".wmz","",0x00000000,"WMZFile"
+HKCR,".wmz","",0x00000000,%WMZFILE%
 HKCR,".wmz","PerceivedType",0x00000000,"compressed"
 HKCR,".wsz","PerceivedType",0x00000000,"compressed"
 HKCR,".x","PerceivedType",0x00000000,"text"
@@ -625,36 +627,78 @@ CPLFILE_OPENWITH="Open with Control Panel"
 
 ;; In hhctrl.ocx
 CHMFILE="Compiled HTML Help File"
-;; In ieframe.dll
-HTMLFILE="HTML File"
+
 ;; In msxml3r.dll
 XMLFILE="XML Document"
 XSLFILE="XSL Stylesheet"
+
 ;; In msi.dll
 MSIPACK="ReactOS Installer Package"
+
 ;; In themeui.dll
 MSSTYLESFILE="Visual Style File"
 THEMEFILE="Theme File"
+
 ;; In some multimedia exe/dll
 WAVFILE="Wave Sound"
 MIDFILE="MIDI Sequence"
 CDAFILE="CD Audio Track"
 AVIFILE="Video Clip"
 
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="Cascading Style Sheet"
+OCXFILE="OLE Control Extension"
+SCFFILE="ReactOS Explorer Command"
+WMZFILE="Compressed Enhanced Metafile"
+
+:: For .reg files, right-click menu
+MERGE="Merge"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="Configure"
+INSTALL="Install"
+UNINSTALL="Uninstall"
+REPAIR="Repair"
+TEST="Test"
+
+
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
 CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 
+
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
 CPLFILE_OPENWITH="Abrir con el Panel de control"
+
+MERGE="Combinar"
+CONFIGURE="Configurar"
+INSTALL="Instalar"
+UNINSTALL="Desinstalar"
+REPAIR="Reparar"
+TEST="Probar"
+
+CHMFILE="Archivo de ayuda HTML compilado"
+XMLFILE="Documento XML"
+XSLFILE="Hoja de estilos XSL"
+MSIPACK="Paquete de instalación de ReactOS"
+MSSTYLESFILE="Archivo de estilo visual"
+THEMEFILE="Archivo de tema"
+WAVFILE="Archivo de audio"
+MIDFILE="Secuencia MIDI"
+CDAFILE="Pista de audio CD"
+AVIFILE="Secuencia de vídeo"
+CSSFILE="Hoja de estilos en cascada"
+OCXFILE="Extensión de control OLE"
+SCFFILE="Órden del explorador de ReactOS"
+WMZFILE="Metarchivo mejorado comprimido"
+
 
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
 CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
 
 CHMFILE="Fichier d'aide HTML compilé"
-HTMLFILE="Fichier HTML"
 XMLFILE="Document XML"
 XSLFILE="Feuille de style XSL"
 MSIPACK="Package ReactOS Installer"
@@ -665,9 +709,11 @@ MIDFILE="Séquence MIDI"
 CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
+
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
+
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
@@ -685,9 +731,11 @@ MIDFILE="Secvență audio MIDI"
 CDAFILE="Pistă de CD audio"
 AVIFILE="Fișier video"
 
+
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
+
 
 ; LANG_TURKISH SUBLANG_DEFAULT
 [Strings.041F]

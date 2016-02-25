@@ -822,6 +822,11 @@ BEGIN
     IDS_FILE_DETAILSADV "Pliki z rozszerzeniem '%s' są typu '%s'. Aby zmienić ustawienia, które dotyczą wszystkich plików '%s', kliknij przycisk Zaawansowane."
     IDS_FILE_TYPES "Typy plików"
     IDS_COLUMN_EXTENSION "Rozszerzenia"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s File"
+
     IDS_BYTES_FORMAT "bajtów"
     IDS_UNKNOWN_APP "Nieznana aplikacja"
     IDS_EXE_DESCRIPTION "Opis:"

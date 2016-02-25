@@ -820,6 +820,11 @@ BEGIN
     IDS_FILE_DETAILSADV "Fișierele cu extensia „%s” sunt de tipul „%s”. Pentru a modifica opțiunile care vor afecta toate fișierele „%s”, apăsați „Avansate”."
     IDS_FILE_TYPES "Tipuri"
     IDS_COLUMN_EXTENSION "Extensii"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s File"
+
     IDS_BYTES_FORMAT "octeți"
     IDS_UNKNOWN_APP "Aplicație nespecificată"
     IDS_EXE_DESCRIPTION "Descriere:"
