@@ -363,6 +363,13 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
     DPRINT("Buffer=%p tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
 
+    if (!ExAcquireResourceExclusiveLite(&DeviceExtension->DirResource,
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        ExReleaseResourceLite(&Fcb->MainResource);
+        return STATUS_PENDING;
+    }
+
     while (Status == STATUS_SUCCESS && BufferLength > 0)
     {
         Status = NtfsFindFileAt(DeviceExtension,
@@ -469,6 +476,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         Buffer0->NextEntryOffset = 0;
     }
 
+    ExReleaseResourceLite(&DeviceExtension->DirResource);
     ExReleaseResourceLite(&Fcb->MainResource);
 
     if (FileIndex > 0)
