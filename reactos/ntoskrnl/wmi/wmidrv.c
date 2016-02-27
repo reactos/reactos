@@ -439,7 +439,7 @@ WmiSetMark(
     PWMI_SET_MARK Buffer,
     ULONG Length)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
