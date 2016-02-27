@@ -750,6 +750,11 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                              providerTable->table[index].dwEnumScopes & WNNC_ENUM_GLOBAL)
                             {
                                 HANDLE handle;
+                                PVOID RemoteName = lpNet->lpRemoteName;
+
+                                if ((lpNet->dwUsage & RESOURCEUSAGE_CONTAINER) &&
+                                    RemoteName && !strcmpW(RemoteName, lpNet->lpProvider))
+                                    lpNet->lpRemoteName = NULL;
 
                                 ret = providerTable->table[index].openEnum(
                                  dwScope, dwType, dwUsage, lpNet, &handle);
@@ -760,6 +765,8 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                                     ret = *lphEnum ? WN_SUCCESS :
                                      WN_OUT_OF_MEMORY;
                                 }
+
+                                lpNet->lpRemoteName = RemoteName;
                             }
                             else
                                 ret = WN_NOT_SUPPORTED;

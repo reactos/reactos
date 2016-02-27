@@ -49,6 +49,28 @@ Index: wnet.c
 ===================================================================
 --- wnet.c	(révision 70645)
 +++ wnet.c	(copie de travail)
+@@ -750,7 +750,12 @@
+                              providerTable->table[index].dwEnumScopes & WNNC_ENUM_GLOBAL)
+                             {
+                                 HANDLE handle;
++                                PVOID RemoteName = lpNet->lpRemoteName;
+ 
++                                if ((lpNet->dwUsage & RESOURCEUSAGE_CONTAINER) &&
++                                    RemoteName && !strcmpW(RemoteName, lpNet->lpProvider))
++                                    lpNet->lpRemoteName = NULL;
++
+                                 ret = providerTable->table[index].openEnum(
+                                  dwScope, dwType, dwUsage, lpNet, &handle);
+                                 if (ret == WN_SUCCESS)
+@@ -760,6 +765,8 @@
+                                     ret = *lphEnum ? WN_SUCCESS :
+                                      WN_OUT_OF_MEMORY;
+                                 }
++
++                                lpNet->lpRemoteName = RemoteName;
+                             }
+                             else
+                                 ret = WN_NOT_SUPPORTED;
 @@ -1553,6 +1553,33 @@
                                dwFlags, NULL, 0, NULL);
  }
