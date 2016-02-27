@@ -1,8 +1,6 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
-
 add_definitions(-D__WINESRC__)
 
 list(APPEND SOURCE
@@ -13,7 +11,6 @@ list(APPEND SOURCE
     error.c
     exception.c
     file.c
-    generated.c
     info.c
     large_int.c
     om.c
@@ -27,6 +24,10 @@ list(APPEND SOURCE
     string.c
     time.c
     testlist.c)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND SOURCE generated.c)
+endif()
 
 add_executable(ntdll_winetest ${SOURCE})
 set_module_type(ntdll_winetest win32cui)

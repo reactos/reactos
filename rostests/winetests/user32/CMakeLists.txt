@@ -9,7 +9,6 @@ list(APPEND SOURCE
     dde.c
     dialog.c
     edit.c
-    generated.c
     input.c
     listbox.c
     menu.c
@@ -25,6 +24,10 @@ list(APPEND SOURCE
     winstation.c
     wsprintf.c
     testlist.c)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND SOURCE generated.c)
+endif()
 
 add_executable(user32_winetest ${SOURCE} resource.rc)
 # some tests need to be run from an app compiled as GUI

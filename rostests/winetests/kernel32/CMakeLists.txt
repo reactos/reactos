@@ -1,6 +1,5 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
@@ -18,7 +17,6 @@ list(APPEND SOURCE
     fiber.c
     file.c
     format_msg.c
-    #generated.c
     heap.c
     loader.c
     locale.c
@@ -38,6 +36,10 @@ list(APPEND SOURCE
     virtual.c
     volume.c
     testlist.c)
+
+#if(ARCH STREQUAL "i386")
+#    list(APPEND SOURCE generated.c)
+#endif()
 
 add_executable(kernel32_winetest ${SOURCE} resource.rc)
 

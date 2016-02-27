@@ -7,7 +7,6 @@ list(APPEND SOURCE
     autocomplete.c
     brsfolder.c
     ebrowser.c
-    generated.c
     progman_dde.c
     recyclebin.c
     shelldispatch.c
@@ -23,6 +22,10 @@ list(APPEND SOURCE
     systray.c
     testlist.c
     rsrc.rc)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND SOURCE generated.c)
+endif()
 
 add_executable(shell32_winetest ${SOURCE})
 target_link_libraries(shell32_winetest uuid)
