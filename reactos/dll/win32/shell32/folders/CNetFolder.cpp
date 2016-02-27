@@ -138,11 +138,6 @@ BOOL CNetFolderEnum::EnumerateRec(LPNETRESOURCE lpNet)
                 if ((lpCur->dwUsage & RESOURCEUSAGE_CONTAINER) == RESOURCEUSAGE_CONTAINER)
                 {
                     TRACE("Found provider: %S\n", lpCur->lpProvider);
-                    /* Sounds like a WTF hack.... Is Wine doing correct? */
-                    if (!wcscmp(lpCur->lpRemoteName, lpCur->lpProvider))
-                    {
-                        lpCur->lpRemoteName = NULL;
-                    }
                     EnumerateRec(lpCur);
                 }
                 else
