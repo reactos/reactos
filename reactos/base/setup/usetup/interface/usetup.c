@@ -2398,9 +2398,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
-    GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
-                                        PartType,
-                                        30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartType, 30);
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
@@ -2665,9 +2663,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* adjust partition type */
-    GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
-                                        PartTypeString,
-                                        30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartTypeString, 30);
 
     if (PartEntry->AutoCreate == TRUE)
     {
@@ -3068,7 +3064,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
-    WCHAR PartTypeString[32];
+    LPWSTR FileSystemName = NULL;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     NTSTATUS Status;
@@ -3101,14 +3097,49 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     CurrentFileSystem = PartEntry->FileSystem;
     if (CurrentFileSystem == NULL || CurrentFileSystem->FileSystemName == NULL)
     {
-        GetPartTypeStringFromPartitionTypeW(PartEntry->PartitionType, PartTypeString, 30);
+        /*
+         * Try to infer a preferred file system for this partition, given its ID.
+         *
+         * WARNING: This is partly a hack, since partitions with the same ID can
+         * be formatted with different file systems: for example, usual Linux
+         * partitions that are formatted in EXT2/3/4, ReiserFS, etc... have the
+         * same partition ID 0x83.
+         *
+         * The proper fix is to make a function that detects the existing FS
+         * from a given partition (not based on the partition ID).
+         * On the contrary, for unformatted partitions with a given ID, the
+         * following code is OK.
+         */
+        if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+            (PartEntry->PartitionType == PARTITION_FAT_16) ||
+            (PartEntry->PartitionType == PARTITION_HUGE) ||
+            (PartEntry->PartitionType == PARTITION_XINT13) ||
+            (PartEntry->PartitionType == PARTITION_FAT32) ||
+            (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
+        {
+            FileSystemName = L"FAT";
+        }
+        else if (PartEntry->PartitionType == PARTITION_EXT2)
+        {
+            // WARNING: See the warning above.
+            FileSystemName = L"EXT2";
+        }
+        else if (PartEntry->PartitionType == PARTITION_IFS)
+        {
+            // WARNING: See the warning above.
+            FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
+        }
 
-        DPRINT("PartTypeString: %S\n", PartTypeString);
+        DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
+                PartEntry->PartitionType, FileSystemName);
 
-        if (PartTypeString != NULL)
+        if (FileSystemName != NULL)
             CurrentFileSystem = GetFileSystemByName(FileSystemList,
-                                                    PartTypeString);
+                                                    FileSystemName);
     }
+
+    DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
+            PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
 
     /* HACK: Do not try to check a partition with an unknown filesytem */
     if (CurrentFileSystem == NULL)

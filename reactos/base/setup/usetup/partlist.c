@@ -33,6 +33,179 @@
 
 //#define DUMP_PARTITION_TABLE
 
+/* HELPERS FOR PARTITION TYPES **********************************************/
+
+typedef struct _PARTITION_TYPE
+{
+    UCHAR Type;
+    PCHAR Description;
+} PARTITION_TYPE, *PPARTITION_TYPE;
+
+/*
+ * This partiton type list was ripped off the kernelDisk.c module from:
+ *
+ * Visopsys Operating System
+ * Copyright (C) 1998-2015 J. Andrew McLaughlin
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *
+ * See also https://en.wikipedia.org/wiki/Partition_type#List_of_partition_IDs
+ * and http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+ * for a complete list.
+ */
+
+/* This is a table for keeping known partition type codes and descriptions */
+static PARTITION_TYPE PartitionTypes[] =
+{
+    { 0x00, "(Empty)" },
+    { 0x01, "FAT12" },
+    { 0x02, "XENIX root" },
+    { 0x03, "XENIX /usr" },
+    { 0x04, "FAT16 (small)" },
+    { 0x05, "Extended" },
+    { 0x06, "FAT16" },
+    { 0x07, "NTFS/HPFS/exFAT" },
+    { 0x08, "OS/2 or AIX boot" },
+    { 0x09, "AIX data" },
+    { 0x0A, "OS/2 Boot Manager" },
+    { 0x0B, "FAT32" },
+    { 0x0C, "FAT32 (LBA)" },
+    { 0x0E, "FAT16 (LBA)" },
+    { 0x0F, "Extended (LBA)" },
+    { 0x11, "Hidden FAT12" },
+    { 0x12, "FAT diagnostic" },
+    { 0x14, "Hidden FAT16 (small)" },
+    { 0x16, "Hidden FAT16" },
+    { 0x17, "Hidden HPFS or NTFS" },
+    { 0x1B, "Hidden FAT32" },
+    { 0x1C, "Hidden FAT32 (LBA)" },
+    { 0x1E, "Hidden FAT16 (LBA)" },
+    { 0x35, "JFS" },
+    { 0x39, "Plan 9" },
+    { 0x3C, "PartitionMagic" },
+    { 0x3D, "Hidden Netware" },
+    { 0x41, "PowerPC PReP" },
+    { 0x42, "Win2K dynamic extended" },
+    { 0x43, "Old Linux" },
+    { 0x44, "GoBack" },
+    { 0x4D, "QNX4.x" },
+    { 0x4D, "QNX4.x 2nd" },
+    { 0x4D, "QNX4.x 3rd" },
+    { 0x50, "Ontrack R/O" },
+    { 0x51, "Ontrack R/W or Novell" },
+    { 0x52, "CP/M" },
+    { 0x63, "GNU HURD or UNIX SysV" },
+    { 0x64, "Netware 2" },
+    { 0x65, "Netware 3/4" },
+    { 0x66, "Netware SMS" },
+    { 0x67, "Novell" },
+    { 0x68, "Novell" },
+    { 0x69, "Netware 5+" },
+    { 0x7E, "Veritas VxVM public" },
+    { 0x7F, "Veritas VxVM private" },
+    { 0x80, "Minix" },
+    { 0x81, "Linux or Minix" },
+    { 0x82, "Linux swap or Solaris" },
+    { 0x83, "Linux" },
+    { 0x84, "Hibernation" },
+    { 0x85, "Linux extended" },
+    { 0x86, "HPFS or NTFS mirrored" },
+    { 0x87, "HPFS or NTFS mirrored" },
+    { 0x8E, "Linux LVM" },
+    { 0x93, "Hidden Linux" },
+    { 0x9F, "BSD/OS" },
+    { 0xA0, "Laptop hibernation" },
+    { 0xA1, "Laptop hibernation" },
+    { 0xA5, "BSD, NetBSD, FreeBSD" },
+    { 0xA6, "OpenBSD" },
+    { 0xA7, "NeXTSTEP" },
+    { 0xA8, "OS-X UFS" },
+    { 0xA9, "NetBSD" },
+    { 0xAB, "OS-X boot" },
+    { 0xAF, "OS-X HFS" },
+    { 0xB6, "NT corrupt mirror" },
+    { 0xB7, "BSDI" },
+    { 0xB8, "BSDI swap" },
+    { 0xBE, "Solaris 8 boot" },
+    { 0xBF, "Solaris x86" },
+    { 0xC0, "NTFT" },
+    { 0xC1, "DR-DOS FAT12" },
+    { 0xC2, "Hidden Linux" },
+    { 0xC3, "Hidden Linux swap" },
+    { 0xC4, "DR-DOS FAT16 (small)" },
+    { 0xC5, "DR-DOS Extended" },
+    { 0xC6, "DR-DOS FAT16" },
+    { 0xC7, "HPFS mirrored" },
+    { 0xCB, "DR-DOS FAT32" },
+    { 0xCC, "DR-DOS FAT32 (LBA)" },
+    { 0xCE, "DR-DOS FAT16 (LBA)" },
+    { 0xD0, "MDOS" },
+    { 0xD1, "MDOS FAT12" },
+    { 0xD4, "MDOS FAT16 (small)" },
+    { 0xD5, "MDOS Extended" },
+    { 0xD6, "MDOS FAT16" },
+    { 0xD8, "CP/M-86" },
+    { 0xDF, "BootIt EMBRM(FAT16/32)" },
+    { 0xEB, "BeOS BFS" },
+    { 0xEE, "EFI GPT protective" },
+    { 0xEF, "EFI filesystem" },
+    { 0xF0, "Linux/PA-RISC boot" },
+    { 0xF2, "DOS 3.3+ second" },
+    { 0xFA, "Bochs" },
+    { 0xFB, "VmWare" },
+    { 0xFC, "VmWare swap" },
+    { 0xFD, "Linux RAID" },
+    { 0xFE, "NT hidden" },
+};
+
+VOID
+GetPartTypeStringFromPartitionType(
+    UCHAR partitionType,
+    PCHAR strPartType,
+    DWORD cchPartType)
+{
+    /* Determine partition type */
+
+    if (IsContainerPartition(partitionType))
+    {
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_EXTENDED_PARTITION));
+    }
+    else if (partitionType == PARTITION_ENTRY_UNUSED)
+    {
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNUSED));
+    }
+    else
+    {
+        UINT i;
+
+        /* Do the table lookup */
+        for (i = 0; i < ARRAYSIZE(PartitionTypes); i++)
+        {
+            if (partitionType == PartitionTypes[i].Type)
+            {
+                StringCchCopy(strPartType, cchPartType, PartitionTypes[i].Description);
+                return;
+            }
+        }
+
+        /* We are here because the partition type is unknown */
+        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNKNOWN));
+    }
+}
+
 /* FUNCTIONS ****************************************************************/
 
 #ifdef DUMP_PARTITION_TABLE
@@ -1448,66 +1621,6 @@ PrintEmptyLine(
 }
 
 
-VOID
-GetPartTypeStringFromPartitionTypeW(
-    UCHAR partitionType,
-    PWCHAR strPartType,
-    DWORD cchPartType)
-{
-    CHAR partTypeString[32];
-
-    GetPartTypeStringFromPartitionTypeA(partitionType,
-                                        partTypeString,
-                                        30);
-
-    mbstowcs(strPartType,
-             partTypeString,
-             (30 < cchPartType) ? 30 : cchPartType);
-}
-
-
-VOID
-GetPartTypeStringFromPartitionTypeA(
-    UCHAR partitionType,
-    PCHAR strPartType,
-    DWORD cchPartType)
-{
-    /* Determine partition type */
-    if ((partitionType == PARTITION_FAT_12) ||
-        (partitionType == PARTITION_FAT_16) ||
-        (partitionType == PARTITION_HUGE) ||
-        (partitionType == PARTITION_XINT13))
-    {
-        StringCchCopy(strPartType, cchPartType, "FAT");
-    }
-    else if ((partitionType == PARTITION_FAT32) ||
-             (partitionType == PARTITION_FAT32_XINT13))
-    {
-        StringCchCopy(strPartType, cchPartType, "FAT32");
-    }
-    else if (partitionType == PARTITION_EXT2)
-    {
-        StringCchCopy(strPartType, cchPartType, "EXT2");
-    }
-    else if (partitionType == PARTITION_IFS)
-    {
-        StringCchCopy(strPartType, cchPartType, "NTFS"); /* FIXME: Not quite correct! */
-    }
-    else if (IsContainerPartition(partitionType))
-    {
-        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_EXTENDED_PARTITION));
-    }
-    else if (partitionType == PARTITION_ENTRY_UNUSED)
-    {
-        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNUSED));
-    }
-    else
-    {
-        StringCchCopy(strPartType, cchPartType, MUIGetString(STRING_FORMATUNKNOWN));
-    }
-}
-
-
 static
 VOID
 PrintPartitionData(
@@ -1572,9 +1685,9 @@ PrintPartitionData(
         }
         else if (PartEntry->IsPartitioned == TRUE)
         {
-           GetPartTypeStringFromPartitionTypeA(PartEntry->PartitionType,
-                                               PartTypeString,
-                                               30);
+           GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                              PartTypeString,
+                                              30);
            PartType = PartTypeString;
         }
 

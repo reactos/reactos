@@ -2657,7 +2657,7 @@ InstallVBRToPartition(
             break;
 
         default:
-            DPRINT1("PartitionType 0x%02x unknown!\n", PartitionType);
+            DPRINT1("PartitionType 0x%02X unknown!\n", PartitionType);
             break;
     }
 

@@ -291,15 +291,9 @@ GetNextUncheckedPartition(
     OUT PPARTENTRY *pPartEntry);
 
 VOID
-GetPartTypeStringFromPartitionTypeA(
+GetPartTypeStringFromPartitionType(
     UCHAR partitionType,
-    PSTR strPartType,
-    DWORD cchPartType);
-
-VOID
-GetPartTypeStringFromPartitionTypeW(
-    UCHAR partitionType,
-    PWSTR strPartType,
+    PCHAR strPartType,
     DWORD cchPartType);
 
 /* EOF */
