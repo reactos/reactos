@@ -2786,8 +2786,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         if (UnattendFormatPartition)
         {
-            PartEntry->FileSystem = GetFileSystemByName(FileSystemList,
-                                                        L"FAT");
+            PartEntry->FileSystem = GetFileSystemByName(FileSystemList, L"FAT");
             return FORMAT_PARTITION_PAGE;
         }
 
@@ -3076,7 +3075,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
-    LPWSTR FileSystemName = NULL;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     NTSTATUS Status;
@@ -3087,9 +3085,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    if (!GetNextUncheckedPartition(PartitionList,
-                                   &DiskEntry,
-                                   &PartEntry))
+    if (!GetNextUncheckedPartition(PartitionList, &DiskEntry, &PartEntry))
     {
         return INSTALL_DIRECTORY_PAGE;
     }
@@ -3106,50 +3102,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    CurrentFileSystem = PartEntry->FileSystem;
-    if (CurrentFileSystem == NULL || CurrentFileSystem->FileSystemName == NULL)
-    {
-        /*
-         * Try to infer a preferred file system for this partition, given its ID.
-         *
-         * WARNING: This is partly a hack, since partitions with the same ID can
-         * be formatted with different file systems: for example, usual Linux
-         * partitions that are formatted in EXT2/3/4, ReiserFS, etc... have the
-         * same partition ID 0x83.
-         *
-         * The proper fix is to make a function that detects the existing FS
-         * from a given partition (not based on the partition ID).
-         * On the contrary, for unformatted partitions with a given ID, the
-         * following code is OK.
-         */
-        if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-            (PartEntry->PartitionType == PARTITION_FAT_16) ||
-            (PartEntry->PartitionType == PARTITION_HUGE) ||
-            (PartEntry->PartitionType == PARTITION_XINT13) ||
-            (PartEntry->PartitionType == PARTITION_FAT32) ||
-            (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-        {
-            FileSystemName = L"FAT";
-        }
-        else if (PartEntry->PartitionType == PARTITION_EXT2)
-        {
-            // WARNING: See the warning above.
-            FileSystemName = L"EXT2";
-        }
-        else if (PartEntry->PartitionType == PARTITION_IFS)
-        {
-            // WARNING: See the warning above.
-            FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
-        }
-
-        DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
-                PartEntry->PartitionType, FileSystemName);
-
-        if (FileSystemName != NULL)
-            CurrentFileSystem = GetFileSystemByName(FileSystemList,
-                                                    FileSystemName);
-    }
-
+    CurrentFileSystem = GetFileSystem(FileSystemList, PartEntry);
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
             PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
 

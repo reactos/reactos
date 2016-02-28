@@ -52,6 +52,16 @@ FS_AddProvider(
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc);
 
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName);
+
+PFILE_SYSTEM_ITEM
+GetFileSystem(
+    IN PFILE_SYSTEM_LIST FileSystemList,
+    IN PPARTENTRY PartEntry);
+
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
     IN SHORT Left,
@@ -74,10 +84,5 @@ ScrollDownFileSystemList(
 VOID
 ScrollUpFileSystemList(
     IN PFILE_SYSTEM_LIST List);
-
-PFILE_SYSTEM_ITEM
-GetFileSystemByName(
-    IN PFILE_SYSTEM_LIST List,
-    IN LPWSTR FileSystemName);
 
 /* EOF */

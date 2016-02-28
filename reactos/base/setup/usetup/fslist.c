@@ -66,6 +66,93 @@ FS_AddProvider(
 }
 
 
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName)
+{
+    PLIST_ENTRY ListEntry;
+    PFILE_SYSTEM_ITEM Item;
+
+    ListEntry = List->ListHead.Flink;
+    while (ListEntry != &List->ListHead)
+    {
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
+        if (Item->FileSystemName && wcsicmp(FileSystemName, Item->FileSystemName) == 0)
+            return Item;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+PFILE_SYSTEM_ITEM
+GetFileSystem(
+    IN PFILE_SYSTEM_LIST FileSystemList,
+    IN PPARTENTRY PartEntry)
+{
+    PFILE_SYSTEM_ITEM CurrentFileSystem;
+    LPWSTR FileSystemName = NULL;
+
+    CurrentFileSystem = PartEntry->FileSystem;
+
+    /* We have a file system, return it */
+    if (CurrentFileSystem != NULL && CurrentFileSystem->FileSystemName != NULL)
+        return CurrentFileSystem;
+
+    CurrentFileSystem = NULL;
+
+    /*
+     * We don't have one...
+     *
+     * Try to infer a preferred file system for this partition, given its ID.
+     *
+     * WARNING: This is partly a hack, since partitions with the same ID can
+     * be formatted with different file systems: for example, usual Linux
+     * partitions that are formatted in EXT2/3/4, ReiserFS, etc... have the
+     * same partition ID 0x83.
+     *
+     * The proper fix is to make a function that detects the existing FS
+     * from a given partition (not based on the partition ID).
+     * On the contrary, for unformatted partitions with a given ID, the
+     * following code is OK.
+     */
+    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+        (PartEntry->PartitionType == PARTITION_FAT_16) ||
+        (PartEntry->PartitionType == PARTITION_HUGE) ||
+        (PartEntry->PartitionType == PARTITION_XINT13) ||
+        (PartEntry->PartitionType == PARTITION_FAT32) ||
+        (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
+    {
+        FileSystemName = L"FAT";
+    }
+    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    {
+        // WARNING: See the warning above.
+        FileSystemName = L"EXT2";
+    }
+    else if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        // WARNING: See the warning above.
+        FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
+    }
+
+    // WARNING: We cannot write on this FS yet!
+    if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
+        DPRINT1("Recognized FileSystem %S that doesn't support write support yet!\n", FileSystemName);
+
+    DPRINT1("GetFileSystem -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
+            PartEntry->PartitionType, FileSystemName);
+
+    if (FileSystemName != NULL)
+        CurrentFileSystem = GetFileSystemByName(FileSystemList, FileSystemName);
+
+    return CurrentFileSystem;
+}
+
+
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
     IN SHORT Left,
@@ -208,28 +295,6 @@ ScrollUpFileSystemList(
         List->Selected = CONTAINING_RECORD(List->Selected->ListEntry.Blink, FILE_SYSTEM_ITEM, ListEntry);
         DrawFileSystemList(List);
     }
-}
-
-
-PFILE_SYSTEM_ITEM
-GetFileSystemByName(
-    IN PFILE_SYSTEM_LIST List,
-    IN LPWSTR FileSystemName)
-{
-    PLIST_ENTRY ListEntry;
-    PFILE_SYSTEM_ITEM Item;
-
-    ListEntry = List->ListHead.Flink;
-    while (ListEntry != &List->ListHead)
-    {
-        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystemName && wcsicmp(FileSystemName, Item->FileSystemName) == 0)
-            return Item;
-
-        ListEntry = ListEntry->Flink;
-    }
-
-    return NULL;
 }
 
 /* EOF */
