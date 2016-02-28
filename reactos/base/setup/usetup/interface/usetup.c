@@ -66,15 +66,27 @@ static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
 static UNICODE_STRING InstallPath;
 
-/* Path to the install directory */
+/*
+ * Path to the system partition, where the boot manager resides.
+ * On x86 PCs, this is usually the active partition.
+ * On ARC, (u)EFI, ... platforms, this is a dedicated partition.
+ *
+ * For more information, see:
+ * https://en.wikipedia.org/wiki/System_partition_and_boot_partition
+ * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/boot-and-system-volumes.html
+ * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/arc-boot-process.html
+ * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/efi-boot-process.html
+ * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-system-volume.html
+ * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-boot-volume.html
+ */
+static UNICODE_STRING SystemRootPath;
+
+/* Path to the install directory inside the ReactOS boot partition */
 static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
 static WCHAR DestinationDriveLetter;
-
-/* Path to the active partition (boot manager) */
-static UNICODE_STRING SystemRootPath;
 
 static HINF SetupInf;
 
@@ -2525,7 +2537,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
  *
  * SIDEEFFECTS
  *  Sets PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType (via UpdatePartitionType)
- *  Calls CheckActiveBootPartition()
+ *  Calls CheckActiveSystemPartition()
  *
  * RETURNS
  *   Number of the next page.
@@ -2551,11 +2563,11 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Find or set the active partition */
-    CheckActiveBootPartition(PartitionList);
+    /* Find or set the active system partition */
+    CheckActiveSystemPartition(PartitionList);
 
-    if (PartitionList->BootDisk == NULL ||
-        PartitionList->BootPartition == NULL)
+    if (PartitionList->SystemDisk == NULL ||
+        PartitionList->SystemPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
@@ -2564,10 +2576,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     switch (PartitionList->FormatState)
     {
         case Start:
-            if (PartitionList->CurrentPartition != PartitionList->BootPartition)
+            if (PartitionList->CurrentPartition != PartitionList->SystemPartition)
             {
-                PartitionList->TempDisk = PartitionList->BootDisk;
-                PartitionList->TempPartition = PartitionList->BootPartition;
+                PartitionList->TempDisk = PartitionList->SystemDisk;
+                PartitionList->TempPartition = PartitionList->SystemPartition;
                 PartitionList->TempPartition->NeedsCheck = TRUE;
 
                 PartitionList->FormatState = FormatSystemPartition;
@@ -3224,8 +3236,7 @@ InstallDirectoryPage1(PWCHAR InstallDir,
 
     /* Create 'InstallPath' string */
     RtlFreeUnicodeString(&InstallPath);
-    RtlCreateUnicodeString(&InstallPath,
-                           InstallDir);
+    RtlCreateUnicodeString(&InstallPath, InstallDir);
 
     /* Create 'DestinationRootPath' string */
     RtlFreeUnicodeString(&DestinationRootPath);
@@ -4174,13 +4185,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
     RtlFreeUnicodeString(&SystemRootPath);
     swprintf(PathBuffer,
              L"\\Device\\Harddisk%lu\\Partition%lu",
-             PartitionList->BootDisk->DiskNumber,
-             PartitionList->BootPartition->PartitionNumber);
-    RtlCreateUnicodeString(&SystemRootPath,
-                           PathBuffer);
+             PartitionList->SystemDisk->DiskNumber,
+             PartitionList->SystemPartition->PartitionNumber);
+    RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
     DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
-    PartitionType = PartitionList->BootPartition->PartitionType;
+    PartitionType = PartitionList->SystemPartition->PartitionType;
 
     if (IsUnattendedSetup)
     {
@@ -4196,7 +4206,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
-        DPRINT("Error: active partition invalid (unused)\n");
+        DPRINT("Error: system partition invalid (unused)\n");
         InstallOnFloppy = TRUE;
     }
     else if (PartitionType == PARTITION_OS2BOOTMGR)
@@ -4207,8 +4217,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
     else if (PartitionType == PARTITION_EXT2)
     {
-        /* Linux ext2 partition */
-        DPRINT("Found Linux ext2 partition\n");
+        /* Linux EXT2 partition */
+        DPRINT("Found Linux EXT2 partition\n");
         InstallOnFloppy = FALSE;
     }
     else if (PartitionType == PARTITION_IFS)
@@ -4393,7 +4403,7 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
     UCHAR PartitionType;
     NTSTATUS Status;
 
-    PartitionType = PartitionList->BootPartition->PartitionType;
+    PartitionType = PartitionList->SystemPartition->PartitionType;
 
     Status = InstallVBRToPartition(&SystemRootPath,
                                    &SourceRootPath,
@@ -4432,7 +4442,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     WCHAR SourceMbrPathBuffer[MAX_PATH];
 
     /* Step 1: Write the VBR */
-    PartitionType = PartitionList->BootPartition->PartitionType;
+    PartitionType = PartitionList->SystemPartition->PartitionType;
 
     Status = InstallVBRToPartition(&SystemRootPath,
                                    &SourceRootPath,
@@ -4447,7 +4457,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     /* Step 2: Write the MBR */
     swprintf(DestinationDevicePathBuffer,
              L"\\Device\\Harddisk%d\\Partition0",
-             PartitionList->BootDisk->DiskNumber);
+             PartitionList->SystemDisk->DiskNumber);
 
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");

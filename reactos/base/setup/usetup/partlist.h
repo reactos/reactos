@@ -71,10 +71,10 @@ typedef struct _PARTENTRY
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
 
-    /* Partition is new. Table does not exist on disk yet */
+    /* Partition is new, table does not exist on disk yet */
     BOOLEAN New;
 
-    /* Partition was created automatically. */
+    /* Partition was created automatically */
     BOOLEAN AutoCreate;
 
     FORMATSTATE FormatState;
@@ -149,14 +149,12 @@ typedef struct _PARTLIST
     SHORT Line;
     SHORT Offset;
 
-    ULONG TopDisk;
-    ULONG TopPartition;
-
     PDISKENTRY CurrentDisk;
     PPARTENTRY CurrentPartition;
 
-    PDISKENTRY BootDisk;
-    PPARTENTRY BootPartition;
+    /* The system disk and partition where the boot manager resides */
+    PDISKENTRY SystemDisk;
+    PPARTENTRY SystemPartition;
 
     PDISKENTRY TempDisk;
     PPARTENTRY TempPartition;
@@ -259,7 +257,7 @@ DeleteCurrentPartition(
     PPARTLIST List);
 
 VOID
-CheckActiveBootPartition(
+CheckActiveSystemPartition(
     PPARTLIST List);
 
 BOOLEAN

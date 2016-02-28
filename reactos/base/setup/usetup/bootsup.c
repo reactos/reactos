@@ -1270,9 +1270,9 @@ InstallMbrBootCodeToDisk(
     }
 
     /* Copy partition table from old MBR to new */
-    RtlCopyMemory (&NewBootSector->Signature,
-                   &OrigBootSector->Signature,
-                   sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
+    RtlCopyMemory(&NewBootSector->Signature,
+                  &OrigBootSector->Signature,
+                  sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -2262,7 +2262,7 @@ InstallFatBootcodeToPartition(
     /* FAT or FAT32 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
-    /* Copy FreeLoader to the boot partition */
+    /* Copy FreeLoader to the system partition */
     wcscpy(SrcPath, SourceRootPath->Buffer);
     wcscat(SrcPath, L"\\loader\\freeldr.sys");
     wcscpy(DstPath, SystemRootPath->Buffer);
@@ -2520,7 +2520,7 @@ InstallExt2BootcodeToPartition(
     /* EXT2 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
-    /* Copy FreeLoader to the boot partition */
+    /* Copy FreeLoader to the system partition */
     wcscpy(SrcPath, SourceRootPath->Buffer);
     wcscat(SrcPath, L"\\loader\\freeldr.sys");
     wcscpy(DstPath, SystemRootPath->Buffer);

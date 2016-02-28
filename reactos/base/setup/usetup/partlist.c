@@ -1434,14 +1434,11 @@ CreatePartitionList(
     List->Line = 0;
     List->Offset = 0;
 
-    List->TopDisk = (ULONG)-1;
-    List->TopPartition = (ULONG)-1;
-
     List->CurrentDisk = NULL;
     List->CurrentPartition = NULL;
 
-    List->BootDisk = NULL;
-    List->BootPartition = NULL;
+    List->SystemDisk = NULL;
+    List->SystemPartition = NULL;
 
     List->TempDisk = NULL;
     List->TempPartition = NULL;
@@ -1495,9 +1492,6 @@ CreatePartitionList(
     UpdateDiskSignatures(List);
 
     AssignDriveLetters(List);
-
-    List->TopDisk = 0;
-    List->TopPartition = 0;
 
     /* Search for first usable disk and partition */
     if (IsListEmpty(&List->DiskListHead))
@@ -3130,7 +3124,7 @@ DeleteCurrentPartition(
 
 
 VOID
-CheckActiveBootPartition(
+CheckActiveSystemPartition(
     PPARTLIST List)
 {
     PDISKENTRY DiskEntry;
@@ -3138,18 +3132,18 @@ CheckActiveBootPartition(
     PLIST_ENTRY ListEntry;
 
     /* Check for empty disk list */
-    if (IsListEmpty (&List->DiskListHead))
+    if (IsListEmpty(&List->DiskListHead))
     {
-        List->BootDisk = NULL;
-        List->BootPartition = NULL;
+        List->SystemDisk = NULL;
+        List->SystemPartition = NULL;
         return;
     }
 
 #if 0
-    if (List->BootDisk != NULL &&
-        List->BootPartition != NULL)
+    if (List->SystemDisk != NULL &&
+        List->SystemPartition != NULL)
     {
-        /* We already have an active boot partition */
+        /* We already have an active system partition */
         return;
     }
 #endif
@@ -3158,18 +3152,23 @@ CheckActiveBootPartition(
     DiskEntry = List->CurrentDisk;
 
     /* Check for empty partition list */
-    if (IsListEmpty (&DiskEntry->PrimaryPartListHead))
+    if (IsListEmpty(&DiskEntry->PrimaryPartListHead))
     {
-        List->BootDisk = NULL;
-        List->BootPartition = NULL;
+        List->SystemDisk = NULL;
+        List->SystemPartition = NULL;
         return;
     }
+
+    /*
+     * Check the first partition of the disk in case it is fresh new,
+     * and if so, use it as the system partition.
+     */
 
     PartEntry = CONTAINING_RECORD(DiskEntry->PrimaryPartListHead.Flink,
                                   PARTENTRY,
                                   ListEntry);
 
-    /* Set active boot partition */
+    /* Set active system partition */
     if ((DiskEntry->NewDisk == TRUE) ||
         (PartEntry->BootIndicator == FALSE))
     {
@@ -3179,15 +3178,15 @@ CheckActiveBootPartition(
         DiskEntry->Dirty = TRUE;
 
         /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
-        List->BootDisk = DiskEntry;
-        List->BootPartition = PartEntry;
+        List->SystemDisk = DiskEntry;
+        List->SystemPartition = PartEntry;
 
         return;
     }
 
     /* Disk is not new, scan all partitions to find a bootable one */
-    List->BootDisk = NULL;
-    List->BootPartition = NULL;
+    List->SystemDisk = NULL;
+    List->SystemPartition = NULL;
 
     ListEntry = DiskEntry->PrimaryPartListHead.Flink;
     while (ListEntry != &DiskEntry->PrimaryPartListHead)
@@ -3203,8 +3202,8 @@ CheckActiveBootPartition(
                 PartEntry->BootIndicator)
             {
                 /* Yes, we found it */
-                List->BootDisk = DiskEntry;
-                List->BootPartition = PartEntry;
+                List->SystemDisk = DiskEntry;
+                List->SystemPartition = PartEntry;
 
                 DPRINT("Found bootable partition disk %d, drive letter %c\n",
                        DiskEntry->DiskNumber, PartEntry->DriveLetter);
