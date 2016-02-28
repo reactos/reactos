@@ -251,16 +251,38 @@ static HRESULT WINAPI d3d9_CheckDeviceFormat(IDirect3D9Ex *iface, UINT adapter, 
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, usage %#x, resource_type %#x, format %#x.\n",
             iface, adapter, device_type, adapter_format, usage, resource_type, format);
 
+    usage = usage & (WINED3DUSAGE_MASK | WINED3DUSAGE_QUERY_MASK);
     switch (resource_type)
     {
+        case D3DRTYPE_SURFACE:
+            wined3d_rtype = WINED3D_RTYPE_SURFACE;
+            break;
+
+        case D3DRTYPE_VOLUME:
+            wined3d_rtype = WINED3D_RTYPE_VOLUME;
+            break;
+
+        case D3DRTYPE_TEXTURE:
+            wined3d_rtype = WINED3D_RTYPE_TEXTURE_2D;
+            break;
+
+        case D3DRTYPE_VOLUMETEXTURE:
+            wined3d_rtype = WINED3D_RTYPE_TEXTURE_3D;
+            break;
+
+        case D3DRTYPE_CUBETEXTURE:
+            wined3d_rtype = WINED3D_RTYPE_TEXTURE_2D;
+            usage |= WINED3DUSAGE_LEGACY_CUBEMAP;
+            break;
+
         case D3DRTYPE_VERTEXBUFFER:
         case D3DRTYPE_INDEXBUFFER:
             wined3d_rtype = WINED3D_RTYPE_BUFFER;
             break;
 
         default:
-            wined3d_rtype = resource_type;
-            break;
+            FIXME("Unhandled resource type %#x.\n", resource_type);
+            return WINED3DERR_INVALIDCALL;
     }
 
     wined3d_mutex_lock();
@@ -280,10 +302,15 @@ static HRESULT WINAPI d3d9_CheckDeviceMultiSampleType(IDirect3D9Ex *iface, UINT 
     TRACE("iface %p, adapter %u, device_type %#x, format %#x, windowed %#x, multisample_type %#x, levels %p.\n",
             iface, adapter, device_type, format, windowed, multisample_type, levels);
 
+    if (multisample_type > D3DMULTISAMPLE_16_SAMPLES)
+        return D3DERR_INVALIDCALL;
+
     wined3d_mutex_lock();
     hr = wined3d_check_device_multisample_type(d3d9->wined3d, adapter, device_type,
             wined3dformat_from_d3dformat(format), windowed, multisample_type, levels);
     wined3d_mutex_unlock();
+    if (hr == WINED3DERR_NOTAVAILABLE && levels)
+        *levels = 1;
 
     return hr;
 }
@@ -433,15 +460,22 @@ static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DD
 static HMONITOR WINAPI d3d9_GetAdapterMonitor(IDirect3D9Ex *iface, UINT adapter)
 {
     struct d3d9 *d3d9 = impl_from_IDirect3D9Ex(iface);
-    HMONITOR ret;
+    struct wined3d_output_desc desc;
+    HRESULT hr;
 
     TRACE("iface %p, adapter %u.\n", iface, adapter);
 
     wined3d_mutex_lock();
-    ret = wined3d_get_adapter_monitor(d3d9->wined3d, adapter);
+    hr = wined3d_get_output_desc(d3d9->wined3d, adapter, &desc);
     wined3d_mutex_unlock();
 
-    return ret;
+    if (FAILED(hr))
+    {
+        WARN("Failed to get output desc, hr %#x.\n", hr);
+        return NULL;
+    }
+
+    return desc.monitor;
 }
 
 static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDevice(IDirect3D9Ex *iface, UINT adapter,
@@ -633,7 +667,8 @@ static const struct IDirect3D9ExVtbl d3d9_vtbl =
 
 BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
 {
-    DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER;
+    DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
+            | WINED3D_SRGB_READ_WRITE_CONTROL;
 
     if (!extended)
         flags |= WINED3D_VIDMEM_ACCOUNTING;

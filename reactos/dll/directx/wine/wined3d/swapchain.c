@@ -260,7 +260,7 @@ HRESULT CDECL wined3d_swapchain_set_gamma_ramp(const struct wined3d_swapchain *s
     if (flags)
         FIXME("Ignoring flags %#x.\n", flags);
 
-    dc = GetDC(swapchain->device_window);
+    dc = GetDCEx(swapchain->device_window, 0, DCX_USESTYLE | DCX_CACHE);
     SetDeviceGammaRamp(dc, (void *)ramp);
     ReleaseDC(swapchain->device_window, dc);
 
@@ -280,7 +280,7 @@ HRESULT CDECL wined3d_swapchain_get_gamma_ramp(const struct wined3d_swapchain *s
 
     TRACE("swapchain %p, ramp %p.\n", swapchain, ramp);
 
-    dc = GetDC(swapchain->device_window);
+    dc = GetDCEx(swapchain->device_window, 0, DCX_USESTYLE | DCX_CACHE);
     GetDeviceGammaRamp(dc, ramp);
     ReleaseDC(swapchain->device_window, dc);
 
@@ -466,8 +466,8 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain, const RECT
         RECT rect = {0, 0, src_surface->resource.width, src_surface->resource.height};
 
         /* Blit the logo into the upper left corner of the drawable. */
-        wined3d_surface_blt(back_buffer, &rect, src_surface, &rect, WINEDDBLT_ALPHATEST,
-                NULL, WINED3D_TEXF_POINT);
+        wined3d_surface_blt(back_buffer, &rect, src_surface, &rect,
+                WINED3D_BLT_ALPHA_TEST, NULL, WINED3D_TEXF_POINT);
     }
 
 #if !defined(STAGING_CSMT)
@@ -483,13 +483,21 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain, const RECT
             swapchain->device->xScreenSpace + swapchain->device->cursorWidth - swapchain->device->xHotSpot,
             swapchain->device->yScreenSpace + swapchain->device->cursorHeight - swapchain->device->yHotSpot,
         };
+        RECT src_rect =
+        {
+            0, 0,
+            swapchain->device->cursor_texture->resource.width,
+            swapchain->device->cursor_texture->resource.height
+        };
+        const RECT clip_rect = {0, 0, back_buffer->resource.width, back_buffer->resource.height};
 
         TRACE("Rendering the software cursor.\n");
 
         if (swapchain->desc.windowed)
             MapWindowPoints(NULL, swapchain->win_handle, (POINT *)&destRect, 2);
-        wined3d_surface_blt(back_buffer, &destRect, cursor, NULL, WINEDDBLT_ALPHATEST,
-                NULL, WINED3D_TEXF_POINT);
+        if (wined3d_clip_blit(&clip_rect, &destRect, &src_rect))
+            wined3d_surface_blt(back_buffer, &destRect, cursor, &src_rect,
+                    WINED3D_BLT_ALPHA_TEST, NULL, WINED3D_TEXF_POINT);
     }
 
 #endif /* STAGING_CSMT */
@@ -957,7 +965,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
 
     TRACE("Creating front buffer.\n");
 
-    texture_desc.resource_type = WINED3D_RTYPE_TEXTURE;
+    texture_desc.resource_type = WINED3D_RTYPE_TEXTURE_2D;
     texture_desc.format = swapchain->desc.backbuffer_format;
     texture_desc.multisample_type = swapchain->desc.multisample_type;
     texture_desc.multisample_quality = swapchain->desc.multisample_quality;

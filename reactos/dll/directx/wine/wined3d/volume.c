@@ -38,32 +38,6 @@ BOOL volume_prepare_system_memory(struct wined3d_volume *volume)
     return TRUE;
 }
 
-#if !defined(STAGING_CSMT)
-void wined3d_volume_get_pitch(const struct wined3d_volume *volume, UINT *row_pitch, UINT *slice_pitch)
-{
-    const struct wined3d_format *format = volume->resource.format;
-
-    if (volume->container->resource.format_flags & WINED3DFMT_FLAG_BLOCKS)
-    {
-        /* Since compressed formats are block based, pitch means the amount of
-         * bytes to the next row of block rather than the next row of pixels. */
-        UINT row_block_count = (volume->resource.width + format->block_width - 1) / format->block_width;
-        UINT slice_block_count = (volume->resource.height + format->block_height - 1) / format->block_height;
-        *row_pitch = row_block_count * format->block_byte_count;
-        *slice_pitch = *row_pitch * slice_block_count;
-    }
-    else
-    {
-        unsigned char alignment = volume->resource.device->surface_alignment;
-        *row_pitch = format->byte_count * volume->resource.width;  /* Bytes / row */
-        *row_pitch = (*row_pitch + alignment - 1) & ~(alignment - 1);
-        *slice_pitch = *row_pitch * volume->resource.height;
-    }
-
-    TRACE("Returning row pitch %u, slice pitch %u.\n", *row_pitch, *slice_pitch);
-}
-
-#endif /* STAGING_CSMT */
 /* This call just uploads data, the caller is responsible for binding the
  * correct texture. */
 /* Context activation is done by the caller. */
@@ -98,7 +72,7 @@ void wined3d_volume_upload_data(struct wined3d_volume *volume, const struct wine
 #if defined(STAGING_CSMT)
         wined3d_resource_get_pitch(&volume->resource, &src_row_pitch, &src_slice_pitch);
 #else  /* STAGING_CSMT */
-        wined3d_volume_get_pitch(volume, &src_row_pitch, &src_slice_pitch);
+        wined3d_texture_get_pitch(volume->container, volume->texture_level, &src_row_pitch, &src_slice_pitch);
 #endif /* STAGING_CSMT */
 
         converted_mem = HeapAlloc(GetProcessHeap(), 0, dst_slice_pitch * depth);
@@ -240,8 +214,6 @@ static BOOL wined3d_volume_can_evict(const struct wined3d_volume *volume)
     if (volume->download_count >= 10)
         return FALSE;
     if (volume->resource.format->convert)
-        return FALSE;
-    if (volume->flags & WINED3D_VFLAG_CLIENT_STORAGE)
         return FALSE;
 
     return TRUE;
@@ -583,41 +555,10 @@ static void volume_unload(struct wined3d_resource *resource)
     }
 
     /* The texture name is managed by the container. */
-    volume->flags &= ~WINED3D_VFLAG_CLIENT_STORAGE;
 
     resource_unload(resource);
 }
 
-#if !defined(STAGING_CSMT)
-static BOOL volume_check_block_align(const struct wined3d_volume *volume,
-        const struct wined3d_box *box)
-{
-    UINT width_mask, height_mask;
-    const struct wined3d_format *format = volume->resource.format;
-
-    if (!box)
-        return TRUE;
-
-    /* This assumes power of two block sizes, but NPOT block sizes would be
-     * silly anyway.
-     *
-     * This also assumes that the format's block depth is 1. */
-    width_mask = format->block_width - 1;
-    height_mask = format->block_height - 1;
-
-    if (box->left & width_mask)
-        return FALSE;
-    if (box->top & height_mask)
-        return FALSE;
-    if (box->right & width_mask && box->right != volume->resource.width)
-        return FALSE;
-    if (box->bottom & height_mask && box->bottom != volume->resource.height)
-        return FALSE;
-
-    return TRUE;
-}
-
-#endif /* STAGING_CSMT */
 static BOOL wined3d_volume_check_box_dimensions(const struct wined3d_volume *volume,
         const struct wined3d_box *box)
 {
@@ -661,8 +602,8 @@ HRESULT wined3d_volume_map(struct wined3d_volume *volume,
     }
     if ((fmt_flags & WINED3DFMT_FLAG_BLOCKS) && !wined3d_resource_check_block_align(&volume->resource, box))
     {
-        WARN("Map box is misaligned for %ux%u blocks.\n",
-                format->block_width, format->block_height);
+        WARN("Map box %s is misaligned for %ux%u blocks.\n",
+                debug_box(box), format->block_width, format->block_height);
         return WINED3DERR_INVALIDCALL;
     }
 
@@ -692,8 +633,8 @@ HRESULT wined3d_volume_unmap(struct wined3d_volume *volume)
     const struct wined3d_format *format = volume->resource.format;
     const unsigned int fmt_flags = volume->container->resource.format_flags;
 
-    TRACE("volume %p, map_desc %p, box %p, flags %#x.\n",
-            volume, map_desc, box, flags);
+    TRACE("volume %p, map_desc %p, box %s, flags %#x.\n",
+            volume, map_desc, debug_box(box), flags);
 
     map_desc->data = NULL;
     if (!(volume->resource.access_flags & WINED3D_RESOURCE_ACCESS_CPU))
@@ -711,10 +652,11 @@ HRESULT wined3d_volume_unmap(struct wined3d_volume *volume)
         WARN("Map box is invalid.\n");
         return WINED3DERR_INVALIDCALL;
     }
-    if ((fmt_flags & WINED3DFMT_FLAG_BLOCKS) && !volume_check_block_align(volume, box))
+    if ((fmt_flags & WINED3DFMT_FLAG_BLOCKS) && box
+            && !wined3d_texture_check_block_align(volume->container, volume->texture_level, box))
     {
-        WARN("Map box is misaligned for %ux%u blocks.\n",
-                format->block_width, format->block_height);
+        WARN("Map box %s is misaligned for %ux%u blocks.\n",
+                debug_box(box), format->block_width, format->block_height);
         return WINED3DERR_INVALIDCALL;
     }
 
@@ -782,19 +724,16 @@ HRESULT wined3d_volume_unmap(struct wined3d_volume *volume)
     }
     else
     {
-        wined3d_volume_get_pitch(volume, &map_desc->row_pitch, &map_desc->slice_pitch);
+        wined3d_texture_get_pitch(volume->container, volume->texture_level,
+                &map_desc->row_pitch, &map_desc->slice_pitch);
     }
 
     if (!box)
     {
-        TRACE("No box supplied - all is ok\n");
         map_desc->data = base_memory;
     }
     else
     {
-        TRACE("Lock Box (%p) = l %u, t %u, r %u, b %u, fr %u, ba %u\n",
-                box, box->left, box->top, box->right, box->bottom, box->front, box->back);
-
         if ((fmt_flags & (WINED3DFMT_FLAG_BLOCKS | WINED3DFMT_FLAG_BROKEN_PITCH)) == WINED3DFMT_FLAG_BLOCKS)
         {
             /* Compressed textures are block based, so calculate the offset of

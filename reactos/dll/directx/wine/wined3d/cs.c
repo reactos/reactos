@@ -80,9 +80,7 @@ enum wined3d_cs_op
     WINED3D_CS_OP_BUFFER_PRELOAD,
     WINED3D_CS_OP_QUERY_ISSUE,
     WINED3D_CS_OP_QUERY_DESTROY,
-    WINED3D_CS_OP_UPDATE_SURFACE,
     WINED3D_CS_OP_TEXTURE_PRELOAD,
-    WINED3D_CS_OP_SURFACE_PRELOAD,
     WINED3D_CS_OP_UPDATE_TEXTURE,
     WINED3D_CS_OP_EVICT_RESOURCE,
     WINED3D_CS_OP_VIEW_DESTROY,
@@ -427,7 +425,7 @@ struct wined3d_cs_blt
     struct wined3d_surface *src_surface;
     RECT src_rect;
     DWORD flags;
-    WINEDDBLTFX fx;
+    struct wined3d_blt_fx fx;
     enum wined3d_texture_filter_type filter;
 };
 
@@ -494,25 +492,10 @@ struct wined3d_cs_query_destroy
     struct wined3d_query *query;
 };
 
-struct wined3d_cs_update_surface
-{
-    enum wined3d_cs_op opcode;
-    struct wined3d_surface *src, *dst;
-    RECT src_rect;
-    POINT dst_point;
-    BOOL has_src_rect, has_dst_point;
-};
-
 struct wined3d_cs_texture_preload
 {
     enum wined3d_cs_op opcode;
     struct wined3d_texture *texture;
-};
-
-struct wined3d_cs_surface_preload
-{
-    enum wined3d_cs_op opcode;
-    struct wined3d_surface *surface;
 };
 
 struct wined3d_cs_update_texture
@@ -2090,7 +2073,7 @@ static UINT wined3d_cs_exec_blt(struct wined3d_cs *cs, const void *data)
 
 void wined3d_cs_emit_blt(struct wined3d_cs *cs, struct wined3d_surface *dst_surface,
         const RECT *dst_rect, struct wined3d_surface *src_surface,
-        const RECT *src_rect, DWORD flags, const WINEDDBLTFX *fx,
+        const RECT *src_rect, DWORD flags, const struct wined3d_blt_fx *fx,
         enum wined3d_texture_filter_type filter)
 {
     struct wined3d_cs_blt *op;
@@ -2289,63 +2272,6 @@ void wined3d_cs_emit_query_destroy(struct wined3d_cs *cs, struct wined3d_query *
     cs->ops->submit(cs, sizeof(*op));
 }
 
-static UINT wined3d_cs_exec_update_surface(struct wined3d_cs *cs, const void *data)
-{
-    const struct wined3d_cs_update_surface *op = data;
-
-    surface_upload_from_surface(op->dst, op->has_dst_point ? &op->dst_point : NULL,
-            op->src, op->has_src_rect ? &op->src_rect : NULL);
-
-    if (op->src->container)
-        wined3d_resource_dec_fence(&op->src->container->resource);
-    else
-        wined3d_resource_inc_fence(&op->src->resource);
-
-    if (op->dst->container)
-        wined3d_resource_dec_fence(&op->dst->container->resource);
-    else
-        wined3d_resource_inc_fence(&op->dst->resource);
-
-    return sizeof(*op);
-}
-
-void wined3d_cs_emit_update_surface(struct wined3d_cs *cs, struct wined3d_surface *src, const RECT *src_rect,
-        struct wined3d_surface *dst, const POINT *dst_point)
-{
-    struct wined3d_cs_update_surface *op;
-
-    op = cs->ops->require_space(cs, sizeof(*op));
-    op->opcode = WINED3D_CS_OP_UPDATE_SURFACE;
-    op->src = src;
-    op->dst = dst;
-    op->has_src_rect = FALSE;
-    op->has_dst_point = FALSE;
-
-    if (src_rect)
-    {
-        op->has_src_rect = TRUE;
-        op->src_rect = *src_rect;
-    }
-
-    if (dst_point)
-    {
-        op->has_dst_point = TRUE;
-        op->dst_point = *dst_point;
-    }
-
-    if (src->container)
-        wined3d_resource_inc_fence(&src->container->resource);
-    else
-        wined3d_resource_inc_fence(&src->resource);
-
-    if (dst->container)
-        wined3d_resource_inc_fence(&dst->container->resource);
-    else
-        wined3d_resource_inc_fence(&dst->resource);
-
-    cs->ops->submit(cs, sizeof(*op));
-}
-
 static UINT wined3d_cs_exec_texture_preload(struct wined3d_cs *cs, const void *data)
 {
     const struct wined3d_cs_texture_preload *op = data;
@@ -2370,33 +2296,6 @@ void wined3d_cs_emit_texture_preload(struct wined3d_cs *cs, struct wined3d_textu
     op->texture = texture;
 
     wined3d_resource_inc_fence(&texture->resource);
-
-    cs->ops->submit(cs, sizeof(*op));
-}
-
-static UINT wined3d_cs_exec_surface_preload(struct wined3d_cs *cs, const void *data)
-{
-    const struct wined3d_cs_surface_preload *op = data;
-    struct wined3d_context *context;
-
-    context = context_acquire(cs->device, NULL);
-    wined3d_texture_preload(op->surface->container);
-    context_release(context);
-
-    wined3d_resource_dec_fence(&op->surface->container->resource);
-
-    return sizeof(*op);
-}
-
-void wined3d_cs_emit_surface_preload(struct wined3d_cs *cs, struct wined3d_surface *surface)
-{
-    struct wined3d_cs_surface_preload *op;
-
-    op = cs->ops->require_space(cs, sizeof(*op));
-    op->opcode = WINED3D_CS_OP_SURFACE_PRELOAD;
-    op->surface = surface;
-
-    wined3d_resource_inc_fence(&op->surface->container->resource);
 
     cs->ops->submit(cs, sizeof(*op));
 }
@@ -2729,6 +2628,7 @@ static UINT wined3d_cs_exec_create_dummy_textures(struct wined3d_cs *cs, const v
     struct wined3d_context *context = context_acquire(cs->device, NULL);
 
     device_create_dummy_textures(cs->device, context);
+    device_create_default_sampler(cs->device);
 
     context_release(context);
     return sizeof(*op);
@@ -3759,9 +3659,7 @@ static void (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void
     /* WINED3D_CS_OP_BUFFER_PRELOAD             */ wined3d_cs_exec_buffer_preload,
     /* WINED3D_CS_OP_QUERY_ISSUE                */ wined3d_cs_exec_query_issue,
     /* WINED3D_CS_OP_QUERY_DESTROY              */ wined3d_cs_exec_query_destroy,
-    /* WINED3D_CS_OP_UPDATE_SURFACE             */ wined3d_cs_exec_update_surface,
     /* WINED3D_CS_OP_TEXTURE_PRELOAD            */ wined3d_cs_exec_texture_preload,
-    /* WINED3D_CS_OP_SURFACE_PRELOAD            */ wined3d_cs_exec_surface_preload,
     /* WINED3D_CS_OP_UPDATE_TEXTURE             */ wined3d_cs_exec_update_texture,
     /* WINED3D_CS_OP_EVICT_RESOURCE             */ wined3d_cs_exec_evict_resource,
     /* WINED3D_CS_OP_VIEW_DESTROY               */ wined3d_cs_exec_view_destroy,

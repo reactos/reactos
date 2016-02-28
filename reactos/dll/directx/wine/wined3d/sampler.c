@@ -117,7 +117,8 @@ static void wined3d_sampler_init(struct wined3d_sampler *sampler, struct wined3d
         GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
     GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_FUNC,
             wined3d_gl_compare_func(desc->comparison_func)));
-    if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE] && !desc->srgb_decode)
+    if ((context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL)
+            && gl_info->supported[EXT_TEXTURE_SRGB_DECODE] && !desc->srgb_decode)
         GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT));
     checkGLcall("sampler creation");
 

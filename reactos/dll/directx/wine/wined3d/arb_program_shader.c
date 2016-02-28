@@ -796,7 +796,7 @@ static void shader_generate_arb_declarations(const struct wined3d_shader *shader
             DWORD highest_constf = 0, clip_limit;
 
             max_constantsF -= reserved_vs_const(shader_data, reg_maps, gl_info);
-            max_constantsF -= count_bits(reg_maps->integer_constants);
+            max_constantsF -= wined3d_popcount(reg_maps->integer_constants);
             max_constantsF -= gl_info->reserved_arb_constants;
 
             for (i = 0; i < shader->limits->constant_float; ++i)
@@ -817,7 +817,7 @@ static void shader_generate_arb_declarations(const struct wined3d_shader *shader
             else
             {
                 unsigned int mask = ctx->cur_vs_args->clip.boolclip.clipplane_mask;
-                clip_limit = min(count_bits(mask), 4);
+                clip_limit = min(wined3d_popcount(mask), 4);
             }
             *num_clipplanes = min(clip_limit, max_constantsF - highest_constf - 1);
             max_constantsF -= *num_clipplanes;
@@ -1796,7 +1796,7 @@ static void shader_hw_map2gl(const struct wined3d_shader_instruction *ins)
         case WINED3DSIH_MOVA:instruction = "ARR"; break;
         case WINED3DSIH_DSX: instruction = "DDX"; break;
         default: instruction = "";
-            FIXME("Unhandled opcode %#x\n", ins->handler_idx);
+            FIXME("Unhandled opcode %s.\n", debug_d3dshaderinstructionhandler(ins->handler_idx));
             break;
     }
 
@@ -2485,7 +2485,7 @@ static void shader_hw_mnxn(const struct wined3d_shader_instruction *ins)
             tmp_ins.handler_idx = WINED3DSIH_DP3;
             break;
         default:
-            FIXME("Unhandled opcode %#x\n", ins->handler_idx);
+            FIXME("Unhandled opcode %s.\n", debug_d3dshaderinstructionhandler(ins->handler_idx));
             break;
     }
 
@@ -2557,7 +2557,7 @@ static void shader_hw_scalar_op(const struct wined3d_shader_instruction *ins)
             instruction = "LG2";
             break;
         default: instruction = "";
-            FIXME("Unhandled opcode %#x\n", ins->handler_idx);
+            FIXME("Unhandled opcode %s.\n", debug_d3dshaderinstructionhandler(ins->handler_idx));
             break;
     }
 
@@ -3216,8 +3216,8 @@ static void vshader_add_footer(struct shader_arb_ctx_priv *priv_ctx,
     }
     else if (args->clip.boolclip.clip_texcoord)
     {
+        static const char component[4] = {'x', 'y', 'z', 'w'};
         unsigned int cur_clip = 0;
-        char component[4] = {'x', 'y', 'z', 'w'};
         const char *zero = arb_get_helper_value(WINED3D_SHADER_TYPE_VERTEX, ARB_ZERO);
 
         for (i = 0; i < gl_info->limits.clipplanes; ++i)
@@ -5214,122 +5214,148 @@ static void shader_arb_add_instruction_modifiers(const struct wined3d_shader_ins
 
 static const SHADER_HANDLER shader_arb_instruction_handler_table[WINED3DSIH_TABLE_SIZE] =
 {
-    /* WINED3DSIH_ABS                   */ shader_hw_map2gl,
-    /* WINED3DSIH_ADD                   */ shader_hw_map2gl,
-    /* WINED3DSIH_AND                   */ NULL,
-    /* WINED3DSIH_BEM                   */ pshader_hw_bem,
-    /* WINED3DSIH_BREAK                 */ shader_hw_break,
-    /* WINED3DSIH_BREAKC                */ shader_hw_breakc,
-    /* WINED3DSIH_BREAKP                */ NULL,
-    /* WINED3DSIH_CALL                  */ shader_hw_call,
-    /* WINED3DSIH_CALLNZ                */ NULL,
-    /* WINED3DSIH_CMP                   */ pshader_hw_cmp,
-    /* WINED3DSIH_CND                   */ pshader_hw_cnd,
-    /* WINED3DSIH_CRS                   */ shader_hw_map2gl,
-    /* WINED3DSIH_CUT                   */ NULL,
-    /* WINED3DSIH_DCL                   */ shader_hw_nop,
-    /* WINED3DSIH_DCL_CONSTANT_BUFFER   */ shader_hw_nop,
-    /* WINED3DSIH_DCL_INPUT_PRIMITIVE   */ shader_hw_nop,
-    /* WINED3DSIH_DCL_OUTPUT_TOPOLOGY   */ shader_hw_nop,
-    /* WINED3DSIH_DCL_VERTICES_OUT      */ shader_hw_nop,
-    /* WINED3DSIH_DEF                   */ shader_hw_nop,
-    /* WINED3DSIH_DEFB                  */ shader_hw_nop,
-    /* WINED3DSIH_DEFI                  */ shader_hw_nop,
-    /* WINED3DSIH_DIV                   */ NULL,
-    /* WINED3DSIH_DP2                   */ NULL,
-    /* WINED3DSIH_DP2ADD                */ pshader_hw_dp2add,
-    /* WINED3DSIH_DP3                   */ shader_hw_map2gl,
-    /* WINED3DSIH_DP4                   */ shader_hw_map2gl,
-    /* WINED3DSIH_DST                   */ shader_hw_map2gl,
-    /* WINED3DSIH_DSX                   */ shader_hw_map2gl,
-    /* WINED3DSIH_DSY                   */ shader_hw_dsy,
-    /* WINED3DSIH_ELSE                  */ shader_hw_else,
-    /* WINED3DSIH_EMIT                  */ NULL,
-    /* WINED3DSIH_ENDIF                 */ shader_hw_endif,
-    /* WINED3DSIH_ENDLOOP               */ shader_hw_endloop,
-    /* WINED3DSIH_ENDREP                */ shader_hw_endrep,
-    /* WINED3DSIH_EQ                    */ NULL,
-    /* WINED3DSIH_EXP                   */ shader_hw_scalar_op,
-    /* WINED3DSIH_EXPP                  */ shader_hw_scalar_op,
-    /* WINED3DSIH_FRC                   */ shader_hw_map2gl,
-    /* WINED3DSIH_FTOI                  */ NULL,
-    /* WINED3DSIH_GE                    */ NULL,
-    /* WINED3DSIH_IADD                  */ NULL,
-    /* WINED3DSIH_IEQ                   */ NULL,
-    /* WINED3DSIH_IF                    */ NULL /* Hardcoded into the shader */,
-    /* WINED3DSIH_IFC                   */ shader_hw_ifc,
-    /* WINED3DSIH_IGE                   */ NULL,
-    /* WINED3DSIH_IMUL                  */ NULL,
-    /* WINED3DSIH_ISHL                  */ NULL,
-    /* WINED3DSIH_ITOF                  */ NULL,
-    /* WINED3DSIH_LABEL                 */ shader_hw_label,
-    /* WINED3DSIH_LD                    */ NULL,
-    /* WINED3DSIH_LIT                   */ shader_hw_map2gl,
-    /* WINED3DSIH_LOG                   */ shader_hw_scalar_op,
-    /* WINED3DSIH_LOGP                  */ shader_hw_scalar_op,
-    /* WINED3DSIH_LOOP                  */ shader_hw_loop,
-    /* WINED3DSIH_LRP                   */ shader_hw_lrp,
-    /* WINED3DSIH_LT                    */ NULL,
-    /* WINED3DSIH_M3x2                  */ shader_hw_mnxn,
-    /* WINED3DSIH_M3x3                  */ shader_hw_mnxn,
-    /* WINED3DSIH_M3x4                  */ shader_hw_mnxn,
-    /* WINED3DSIH_M4x3                  */ shader_hw_mnxn,
-    /* WINED3DSIH_M4x4                  */ shader_hw_mnxn,
-    /* WINED3DSIH_MAD                   */ shader_hw_map2gl,
-    /* WINED3DSIH_MAX                   */ shader_hw_map2gl,
-    /* WINED3DSIH_MIN                   */ shader_hw_map2gl,
-    /* WINED3DSIH_MOV                   */ shader_hw_mov,
-    /* WINED3DSIH_MOVA                  */ shader_hw_mov,
-    /* WINED3DSIH_MOVC                  */ NULL,
-    /* WINED3DSIH_MUL                   */ shader_hw_map2gl,
-    /* WINED3DSIH_NE                    */ NULL,
-    /* WINED3DSIH_NOP                   */ shader_hw_nop,
-    /* WINED3DSIH_NRM                   */ shader_hw_nrm,
-    /* WINED3DSIH_OR                    */ NULL,
-    /* WINED3DSIH_PHASE                 */ shader_hw_nop,
-    /* WINED3DSIH_POW                   */ shader_hw_pow,
-    /* WINED3DSIH_RCP                   */ shader_hw_scalar_op,
-    /* WINED3DSIH_REP                   */ shader_hw_rep,
-    /* WINED3DSIH_RET                   */ shader_hw_ret,
-    /* WINED3DSIH_ROUND_NI              */ NULL,
-    /* WINED3DSIH_RSQ                   */ shader_hw_scalar_op,
-    /* WINED3DSIH_SAMPLE                */ NULL,
-    /* WINED3DSIH_SAMPLE_GRAD           */ NULL,
-    /* WINED3DSIH_SAMPLE_LOD            */ NULL,
-    /* WINED3DSIH_SETP                  */ NULL,
-    /* WINED3DSIH_SGE                   */ shader_hw_map2gl,
-    /* WINED3DSIH_SGN                   */ shader_hw_sgn,
-    /* WINED3DSIH_SINCOS                */ shader_hw_sincos,
-    /* WINED3DSIH_SLT                   */ shader_hw_map2gl,
-    /* WINED3DSIH_SQRT                  */ NULL,
-    /* WINED3DSIH_SUB                   */ shader_hw_map2gl,
-    /* WINED3DSIH_TEX                   */ pshader_hw_tex,
-    /* WINED3DSIH_TEXBEM                */ pshader_hw_texbem,
-    /* WINED3DSIH_TEXBEML               */ pshader_hw_texbem,
-    /* WINED3DSIH_TEXCOORD              */ pshader_hw_texcoord,
-    /* WINED3DSIH_TEXDEPTH              */ pshader_hw_texdepth,
-    /* WINED3DSIH_TEXDP3                */ pshader_hw_texdp3,
-    /* WINED3DSIH_TEXDP3TEX             */ pshader_hw_texdp3tex,
-    /* WINED3DSIH_TEXKILL               */ pshader_hw_texkill,
-    /* WINED3DSIH_TEXLDD                */ shader_hw_texldd,
-    /* WINED3DSIH_TEXLDL                */ shader_hw_texldl,
-    /* WINED3DSIH_TEXM3x2DEPTH          */ pshader_hw_texm3x2depth,
-    /* WINED3DSIH_TEXM3x2PAD            */ pshader_hw_texm3x2pad,
-    /* WINED3DSIH_TEXM3x2TEX            */ pshader_hw_texm3x2tex,
-    /* WINED3DSIH_TEXM3x3               */ pshader_hw_texm3x3,
-    /* WINED3DSIH_TEXM3x3DIFF           */ NULL,
-    /* WINED3DSIH_TEXM3x3PAD            */ pshader_hw_texm3x3pad,
-    /* WINED3DSIH_TEXM3x3SPEC           */ pshader_hw_texm3x3spec,
-    /* WINED3DSIH_TEXM3x3TEX            */ pshader_hw_texm3x3tex,
-    /* WINED3DSIH_TEXM3x3VSPEC          */ pshader_hw_texm3x3vspec,
-    /* WINED3DSIH_TEXREG2AR             */ pshader_hw_texreg2ar,
-    /* WINED3DSIH_TEXREG2GB             */ pshader_hw_texreg2gb,
-    /* WINED3DSIH_TEXREG2RGB            */ pshader_hw_texreg2rgb,
-    /* WINED3DSIH_UDIV                  */ NULL,
-    /* WINED3DSIH_UGE                   */ NULL,
-    /* WINED3DSIH_USHR                  */ NULL,
-    /* WINED3DSIH_UTOF                  */ NULL,
-    /* WINED3DSIH_XOR                   */ NULL,
+    /* WINED3DSIH_ABS                           */ shader_hw_map2gl,
+    /* WINED3DSIH_ADD                           */ shader_hw_map2gl,
+    /* WINED3DSIH_AND                           */ NULL,
+    /* WINED3DSIH_BEM                           */ pshader_hw_bem,
+    /* WINED3DSIH_BREAK                         */ shader_hw_break,
+    /* WINED3DSIH_BREAKC                        */ shader_hw_breakc,
+    /* WINED3DSIH_BREAKP                        */ NULL,
+    /* WINED3DSIH_CALL                          */ shader_hw_call,
+    /* WINED3DSIH_CALLNZ                        */ NULL,
+    /* WINED3DSIH_CMP                           */ pshader_hw_cmp,
+    /* WINED3DSIH_CND                           */ pshader_hw_cnd,
+    /* WINED3DSIH_CRS                           */ shader_hw_map2gl,
+    /* WINED3DSIH_CUT                           */ NULL,
+    /* WINED3DSIH_DCL                           */ shader_hw_nop,
+    /* WINED3DSIH_DCL_CONSTANT_BUFFER           */ shader_hw_nop,
+    /* WINED3DSIH_DCL_GLOBAL_FLAGS              */ NULL,
+    /* WINED3DSIH_DCL_IMMEDIATE_CONSTANT_BUFFER */ NULL,
+    /* WINED3DSIH_DCL_INPUT                     */ NULL,
+    /* WINED3DSIH_DCL_INPUT_PRIMITIVE           */ shader_hw_nop,
+    /* WINED3DSIH_DCL_INPUT_PS                  */ NULL,
+    /* WINED3DSIH_DCL_INPUT_PS_SGV              */ NULL,
+    /* WINED3DSIH_DCL_INPUT_PS_SIV              */ NULL,
+    /* WINED3DSIH_DCL_INPUT_SGV                 */ NULL,
+    /* WINED3DSIH_DCL_INPUT_SIV                 */ NULL,
+    /* WINED3DSIH_DCL_OUTPUT                    */ NULL,
+    /* WINED3DSIH_DCL_OUTPUT_SIV                */ NULL,
+    /* WINED3DSIH_DCL_OUTPUT_TOPOLOGY           */ shader_hw_nop,
+    /* WINED3DSIH_DCL_SAMPLER                   */ NULL,
+    /* WINED3DSIH_DCL_TEMPS                     */ NULL,
+    /* WINED3DSIH_DCL_VERTICES_OUT              */ shader_hw_nop,
+    /* WINED3DSIH_DEF                           */ shader_hw_nop,
+    /* WINED3DSIH_DEFB                          */ shader_hw_nop,
+    /* WINED3DSIH_DEFI                          */ shader_hw_nop,
+    /* WINED3DSIH_DIV                           */ NULL,
+    /* WINED3DSIH_DP2                           */ NULL,
+    /* WINED3DSIH_DP2ADD                        */ pshader_hw_dp2add,
+    /* WINED3DSIH_DP3                           */ shader_hw_map2gl,
+    /* WINED3DSIH_DP4                           */ shader_hw_map2gl,
+    /* WINED3DSIH_DST                           */ shader_hw_map2gl,
+    /* WINED3DSIH_DSX                           */ shader_hw_map2gl,
+    /* WINED3DSIH_DSY                           */ shader_hw_dsy,
+    /* WINED3DSIH_ELSE                          */ shader_hw_else,
+    /* WINED3DSIH_EMIT                          */ NULL,
+    /* WINED3DSIH_ENDIF                         */ shader_hw_endif,
+    /* WINED3DSIH_ENDLOOP                       */ shader_hw_endloop,
+    /* WINED3DSIH_ENDREP                        */ shader_hw_endrep,
+    /* WINED3DSIH_EQ                            */ NULL,
+    /* WINED3DSIH_EXP                           */ shader_hw_scalar_op,
+    /* WINED3DSIH_EXPP                          */ shader_hw_scalar_op,
+    /* WINED3DSIH_FRC                           */ shader_hw_map2gl,
+    /* WINED3DSIH_FTOI                          */ NULL,
+    /* WINED3DSIH_FTOU                          */ NULL,
+    /* WINED3DSIH_GE                            */ NULL,
+    /* WINED3DSIH_IADD                          */ NULL,
+    /* WINED3DSIH_IEQ                           */ NULL,
+    /* WINED3DSIH_IF                            */ NULL /* Hardcoded into the shader */,
+    /* WINED3DSIH_IFC                           */ shader_hw_ifc,
+    /* WINED3DSIH_IGE                           */ NULL,
+    /* WINED3DSIH_ILT                           */ NULL,
+    /* WINED3DSIH_IMAD                          */ NULL,
+    /* WINED3DSIH_IMAX                          */ NULL,
+    /* WINED3DSIH_IMIN                          */ NULL,
+    /* WINED3DSIH_IMUL                          */ NULL,
+    /* WINED3DSIH_INE                           */ NULL,
+    /* WINED3DSIH_INEG                          */ NULL,
+    /* WINED3DSIH_ISHL                          */ NULL,
+    /* WINED3DSIH_ITOF                          */ NULL,
+    /* WINED3DSIH_LABEL                         */ shader_hw_label,
+    /* WINED3DSIH_LD                            */ NULL,
+    /* WINED3DSIH_LIT                           */ shader_hw_map2gl,
+    /* WINED3DSIH_LOG                           */ shader_hw_scalar_op,
+    /* WINED3DSIH_LOGP                          */ shader_hw_scalar_op,
+    /* WINED3DSIH_LOOP                          */ shader_hw_loop,
+    /* WINED3DSIH_LRP                           */ shader_hw_lrp,
+    /* WINED3DSIH_LT                            */ NULL,
+    /* WINED3DSIH_M3x2                          */ shader_hw_mnxn,
+    /* WINED3DSIH_M3x3                          */ shader_hw_mnxn,
+    /* WINED3DSIH_M3x4                          */ shader_hw_mnxn,
+    /* WINED3DSIH_M4x3                          */ shader_hw_mnxn,
+    /* WINED3DSIH_M4x4                          */ shader_hw_mnxn,
+    /* WINED3DSIH_MAD                           */ shader_hw_map2gl,
+    /* WINED3DSIH_MAX                           */ shader_hw_map2gl,
+    /* WINED3DSIH_MIN                           */ shader_hw_map2gl,
+    /* WINED3DSIH_MOV                           */ shader_hw_mov,
+    /* WINED3DSIH_MOVA                          */ shader_hw_mov,
+    /* WINED3DSIH_MOVC                          */ NULL,
+    /* WINED3DSIH_MUL                           */ shader_hw_map2gl,
+    /* WINED3DSIH_NE                            */ NULL,
+    /* WINED3DSIH_NOP                           */ shader_hw_nop,
+    /* WINED3DSIH_NOT                           */ NULL,
+    /* WINED3DSIH_NRM                           */ shader_hw_nrm,
+    /* WINED3DSIH_OR                            */ NULL,
+    /* WINED3DSIH_PHASE                         */ shader_hw_nop,
+    /* WINED3DSIH_POW                           */ shader_hw_pow,
+    /* WINED3DSIH_RCP                           */ shader_hw_scalar_op,
+    /* WINED3DSIH_REP                           */ shader_hw_rep,
+    /* WINED3DSIH_RESINFO                       */ NULL,
+    /* WINED3DSIH_RET                           */ shader_hw_ret,
+    /* WINED3DSIH_ROUND_NI                      */ NULL,
+    /* WINED3DSIH_ROUND_PI                      */ NULL,
+    /* WINED3DSIH_ROUND_Z                       */ NULL,
+    /* WINED3DSIH_RSQ                           */ shader_hw_scalar_op,
+    /* WINED3DSIH_SAMPLE                        */ NULL,
+    /* WINED3DSIH_SAMPLE_B                      */ NULL,
+    /* WINED3DSIH_SAMPLE_C                      */ NULL,
+    /* WINED3DSIH_SAMPLE_C_LZ                   */ NULL,
+    /* WINED3DSIH_SAMPLE_GRAD                   */ NULL,
+    /* WINED3DSIH_SAMPLE_LOD                    */ NULL,
+    /* WINED3DSIH_SETP                          */ NULL,
+    /* WINED3DSIH_SGE                           */ shader_hw_map2gl,
+    /* WINED3DSIH_SGN                           */ shader_hw_sgn,
+    /* WINED3DSIH_SINCOS                        */ shader_hw_sincos,
+    /* WINED3DSIH_SLT                           */ shader_hw_map2gl,
+    /* WINED3DSIH_SQRT                          */ NULL,
+    /* WINED3DSIH_SUB                           */ shader_hw_map2gl,
+    /* WINED3DSIH_TEX                           */ pshader_hw_tex,
+    /* WINED3DSIH_TEXBEM                        */ pshader_hw_texbem,
+    /* WINED3DSIH_TEXBEML                       */ pshader_hw_texbem,
+    /* WINED3DSIH_TEXCOORD                      */ pshader_hw_texcoord,
+    /* WINED3DSIH_TEXDEPTH                      */ pshader_hw_texdepth,
+    /* WINED3DSIH_TEXDP3                        */ pshader_hw_texdp3,
+    /* WINED3DSIH_TEXDP3TEX                     */ pshader_hw_texdp3tex,
+    /* WINED3DSIH_TEXKILL                       */ pshader_hw_texkill,
+    /* WINED3DSIH_TEXLDD                        */ shader_hw_texldd,
+    /* WINED3DSIH_TEXLDL                        */ shader_hw_texldl,
+    /* WINED3DSIH_TEXM3x2DEPTH                  */ pshader_hw_texm3x2depth,
+    /* WINED3DSIH_TEXM3x2PAD                    */ pshader_hw_texm3x2pad,
+    /* WINED3DSIH_TEXM3x2TEX                    */ pshader_hw_texm3x2tex,
+    /* WINED3DSIH_TEXM3x3                       */ pshader_hw_texm3x3,
+    /* WINED3DSIH_TEXM3x3DIFF                   */ NULL,
+    /* WINED3DSIH_TEXM3x3PAD                    */ pshader_hw_texm3x3pad,
+    /* WINED3DSIH_TEXM3x3SPEC                   */ pshader_hw_texm3x3spec,
+    /* WINED3DSIH_TEXM3x3TEX                    */ pshader_hw_texm3x3tex,
+    /* WINED3DSIH_TEXM3x3VSPEC                  */ pshader_hw_texm3x3vspec,
+    /* WINED3DSIH_TEXREG2AR                     */ pshader_hw_texreg2ar,
+    /* WINED3DSIH_TEXREG2GB                     */ pshader_hw_texreg2gb,
+    /* WINED3DSIH_TEXREG2RGB                    */ pshader_hw_texreg2rgb,
+    /* WINED3DSIH_UDIV                          */ NULL,
+    /* WINED3DSIH_UGE                           */ NULL,
+    /* WINED3DSIH_USHR                          */ NULL,
+    /* WINED3DSIH_UTOF                          */ NULL,
+    /* WINED3DSIH_XOR                           */ NULL,
 };
 
 static BOOL get_bool_const(const struct wined3d_shader_instruction *ins,
@@ -5419,8 +5445,8 @@ static void get_loop_control_const(const struct wined3d_shader_instruction *ins,
 static void record_instruction(struct list *list, const struct wined3d_shader_instruction *ins)
 {
     unsigned int i;
-    struct wined3d_shader_dst_param *dst_param = NULL;
-    struct wined3d_shader_src_param *src_param = NULL, *rel_addr = NULL;
+    struct wined3d_shader_dst_param *dst_param;
+    struct wined3d_shader_src_param *src_param = NULL, *rel_addr;
     struct recorded_instruction *rec = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*rec));
     if(!rec)
     {
@@ -5729,7 +5755,7 @@ static void shader_arb_handle_instruction(const struct wined3d_shader_instructio
     /* Unhandled opcode */
     if (!hw_fct)
     {
-        FIXME("Backend can't handle opcode %#x\n", ins->handler_idx);
+        FIXME("Backend can't handle opcode %s.\n", debug_d3dshaderinstructionhandler(ins->handler_idx));
         return;
     }
     hw_fct(ins);
@@ -6084,8 +6110,7 @@ static const char *get_argreg(struct wined3d_string_buffer *buffer, DWORD argnum
             ret = "fragment.color.primary"; break;
 
         case WINED3DTA_CURRENT:
-            if (!stage) ret = "fragment.color.primary";
-            else ret = "ret";
+            ret = "ret";
             break;
 
         case WINED3DTA_TEXTURE:
@@ -6165,8 +6190,6 @@ static void gen_ffp_instr(struct wined3d_string_buffer *buffer, unsigned int sta
     switch (op)
     {
         case WINED3D_TOP_DISABLE:
-            if (!stage)
-                shader_addline(buffer, "MOV %s%s, fragment.color.primary;\n", dstreg, dstmask);
             break;
 
         case WINED3D_TOP_SELECT_ARG2:
@@ -6311,7 +6334,6 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
     DWORD arg0, arg1, arg2;
     BOOL tempreg_used = FALSE, tfactor_used = FALSE;
     BOOL op_equal;
-    const char *final_combiner_src = "ret";
     BOOL custom_linear_fog = FALSE;
     struct color_fixup_masks masks;
 
@@ -6442,7 +6464,7 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
     if (tempreg_used || settings->sRGB_write)
         shader_addline(&buffer, "MOV tempreg, 0.0;\n");
 
-    /* Generate texture sampling instructions) */
+    /* Generate texture sampling instructions */
     for (stage = 0; stage < MAX_TEXTURES && settings->op[stage].cop != WINED3D_TOP_DISABLE; ++stage)
     {
         if (!tex_read[stage])
@@ -6518,15 +6540,13 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
         shader_addline(&buffer, "KIL -TMP;\n"); /* discard if true */
     }
 
+    shader_addline(&buffer, "MOV ret, fragment.color.primary;\n");
+
     /* Generate the main shader */
     for (stage = 0; stage < MAX_TEXTURES; ++stage)
     {
         if (settings->op[stage].cop == WINED3D_TOP_DISABLE)
-        {
-            if (!stage)
-                final_combiner_src = "fragment.color.primary";
             break;
-        }
 
         if (settings->op[stage].cop == WINED3D_TOP_SELECT_ARG1
                 && settings->op[stage].aop == WINED3D_TOP_SELECT_ARG1)
@@ -6551,15 +6571,16 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
             gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
-            if (!stage)
-                shader_addline(&buffer, "MOV ret.w, fragment.color.primary.w;\n");
         }
         else if (op_equal)
         {
             gen_ffp_instr(&buffer, stage, TRUE, TRUE, settings->op[stage].dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
-        } else {
+        }
+        else if (settings->op[stage].cop != WINED3D_TOP_BUMPENVMAP
+                && settings->op[stage].cop != WINED3D_TOP_BUMPENVMAP_LUMINANCE)
+        {
             gen_ffp_instr(&buffer, stage, TRUE, FALSE, settings->op[stage].dst,
                           settings->op[stage].cop, settings->op[stage].carg0,
                           settings->op[stage].carg1, settings->op[stage].carg2);
@@ -6571,7 +6592,7 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
 
     if (settings->sRGB_write || custom_linear_fog)
     {
-        shader_addline(&buffer, "MAD ret, fragment.color.secondary, specular_enable, %s;\n", final_combiner_src);
+        shader_addline(&buffer, "MAD ret, fragment.color.secondary, specular_enable, ret;\n");
         if (settings->sRGB_write)
             arbfp_add_sRGB_correction(&buffer, "ret", "arg0", "arg1", "arg2", "tempreg", FALSE);
         if (custom_linear_fog)
@@ -6580,8 +6601,7 @@ static GLuint gen_arbfp_ffp_shader(const struct ffp_frag_settings *settings, con
     }
     else
     {
-        shader_addline(&buffer, "MAD result.color, fragment.color.secondary, specular_enable, %s;\n",
-                final_combiner_src);
+        shader_addline(&buffer, "MAD result.color, fragment.color.secondary, specular_enable, ret;\n");
     }
 
     /* Footer */
@@ -7785,6 +7805,7 @@ static BOOL arbfp_blit_supported(const struct wined3d_gl_info *gl_info,
                 TRACE("Color keying not supported with converted textures.\n");
                 return FALSE;
             }
+        case WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST:
         case WINED3D_BLIT_OP_COLOR_BLIT:
             break;
 
@@ -7839,7 +7860,7 @@ static BOOL arbfp_blit_supported(const struct wined3d_gl_info *gl_info,
     }
 }
 
-static void arbfp_blit_surface(struct wined3d_device *device, DWORD filter,
+static void arbfp_blit_surface(struct wined3d_device *device, enum wined3d_blit_op op, DWORD filter,
         struct wined3d_surface *src_surface, const RECT *src_rect_in,
         struct wined3d_surface *dst_surface, const RECT *dst_rect_in,
         const struct wined3d_color_key *color_key)
@@ -7847,6 +7868,7 @@ static void arbfp_blit_surface(struct wined3d_device *device, DWORD filter,
     struct wined3d_context *context;
     RECT src_rect = *src_rect_in;
     RECT dst_rect = *dst_rect_in;
+    struct wined3d_color_key alpha_test_key;
 
     /* Activate the destination context, set it up for blitting */
     context = context_acquire(device, dst_surface);
@@ -7878,6 +7900,14 @@ static void arbfp_blit_surface(struct wined3d_device *device, DWORD filter,
 
     if (!wined3d_resource_is_offscreen(&dst_surface->container->resource))
         surface_translate_drawable_coords(dst_surface, context->win_handle, &dst_rect);
+
+    if (op == WINED3D_BLIT_OP_COLOR_BLIT_ALPHATEST)
+    {
+        const struct wined3d_format *fmt = src_surface->resource.format;
+        alpha_test_key.color_space_low_value = 0;
+        alpha_test_key.color_space_high_value = ~(((1u << fmt->alpha_size) - 1) << fmt->alpha_offset);
+        color_key = &alpha_test_key;
+    }
 
     arbfp_blit_set(device->blit_priv, context, src_surface, color_key);
 
@@ -7912,15 +7942,15 @@ static void arbfp_blit_surface(struct wined3d_device *device, DWORD filter,
 #endif /* STAGING_CSMT */
 }
 
-static HRESULT arbfp_blit_color_fill(struct wined3d_device *device, struct wined3d_surface *dst_surface,
-        const RECT *dst_rect, const struct wined3d_color *color)
+static HRESULT arbfp_blit_color_fill(struct wined3d_device *device, struct wined3d_rendertarget_view *view,
+        const RECT *rect, const struct wined3d_color *color)
 {
     FIXME("Color filling not implemented by arbfp_blit\n");
     return WINED3DERR_INVALIDCALL;
 }
 
-static HRESULT arbfp_blit_depth_fill(struct wined3d_device *device,
-        struct wined3d_surface *surface, const RECT *rect, float depth)
+static HRESULT arbfp_blit_depth_fill(struct wined3d_device *device, struct wined3d_rendertarget_view *view,
+        const RECT *rect, float depth)
 {
     FIXME("Depth filling not implemented by arbfp_blit.\n");
     return WINED3DERR_INVALIDCALL;

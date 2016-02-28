@@ -159,41 +159,21 @@ HRESULT CDECL wined3d_rendertarget_view_create(const struct wined3d_rendertarget
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_rendertarget_view_create_from_surface(struct wined3d_surface *surface,
-        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_rendertarget_view **view)
-{
-    struct wined3d_rendertarget_view_desc desc;
-
-    TRACE("surface %p, parent %p, parent_ops %p, view %p.\n", surface, parent, parent_ops, view);
-
-    desc.format_id = surface->resource.format->id;
-    desc.u.texture.level_idx = surface->texture_level;
-    desc.u.texture.layer_idx = surface->texture_layer;
-    desc.u.texture.layer_count = 1;
-
-    return wined3d_rendertarget_view_create(&desc, &surface->container->resource, parent, parent_ops, view);
-}
-
 HRESULT CDECL wined3d_rendertarget_view_create_from_sub_resource(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_rendertarget_view **view)
 {
-    struct wined3d_resource *sub_resource;
+    struct wined3d_rendertarget_view_desc desc;
 
     TRACE("texture %p, sub_resource_idx %u, parent %p, parent_ops %p, view %p.\n",
             texture, sub_resource_idx, parent, parent_ops, view);
 
-    if (!(sub_resource = wined3d_texture_get_sub_resource(texture, sub_resource_idx)))
-        return WINED3DERR_INVALIDCALL;
+    desc.format_id = texture->resource.format->id;
+    desc.u.texture.level_idx = sub_resource_idx % texture->level_count;
+    desc.u.texture.layer_idx = sub_resource_idx / texture->level_count;
+    desc.u.texture.layer_count = 1;
 
-    if (sub_resource->type != WINED3D_RTYPE_SURFACE)
-    {
-        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(texture->resource.type));
-        return WINED3DERR_INVALIDCALL;
-    }
-
-    return wined3d_rendertarget_view_create_from_surface(surface_from_resource(sub_resource),
-            parent, parent_ops, view);
+    return wined3d_rendertarget_view_create(&desc, &texture->resource, parent, parent_ops, view);
 }
 
 ULONG CDECL wined3d_shader_resource_view_incref(struct wined3d_shader_resource_view *view)

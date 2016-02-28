@@ -201,26 +201,36 @@ static HRESULT WINAPI d3d8_surface_LockRect(IDirect3DSurface8 *iface,
     struct wined3d_box box;
     struct wined3d_map_desc map_desc;
     HRESULT hr;
+    D3DRESOURCETYPE type;
 
     TRACE("iface %p, locked_rect %p, rect %s, flags %#x.\n",
             iface, locked_rect, wine_dbgstr_rect(rect), flags);
 
     wined3d_mutex_lock();
+
+    if (surface->texture)
+        type = IDirect3DBaseTexture8_GetType(&surface->texture->IDirect3DBaseTexture8_iface);
+    else
+        type = D3DRTYPE_SURFACE;
+
     if (rect)
     {
         D3DSURFACE_DESC desc;
         IDirect3DSurface8_GetDesc(iface, &desc);
 
-        if ((rect->left < 0)
+        if (type != D3DRTYPE_TEXTURE
+                && ((rect->left < 0)
                 || (rect->top < 0)
                 || (rect->left >= rect->right)
                 || (rect->top >= rect->bottom)
                 || (rect->right > desc.Width)
-                || (rect->bottom > desc.Height))
+                || (rect->bottom > desc.Height)))
         {
             WARN("Trying to lock an invalid rectangle, returning D3DERR_INVALIDCALL\n");
             wined3d_mutex_unlock();
 
+            locked_rect->Pitch = 0;
+            locked_rect->pBits = NULL;
             return D3DERR_INVALIDCALL;
         }
         box.left = rect->left;
@@ -240,7 +250,7 @@ static HRESULT WINAPI d3d8_surface_LockRect(IDirect3DSurface8 *iface,
         locked_rect->Pitch = map_desc.row_pitch;
         locked_rect->pBits = map_desc.data;
     }
-    else
+    else if (type != D3DRTYPE_TEXTURE)
     {
         locked_rect->Pitch = 0;
         locked_rect->pBits = NULL;

@@ -727,7 +727,7 @@ drop_query:
 static void buffer_direct_upload(struct wined3d_buffer *This, const struct wined3d_gl_info *gl_info, DWORD flags)
 {
 #if defined(STAGING_CSMT)
-    UINT start = 0, len = 0;
+    UINT start, len;
 
     /* This potentially invalidates the element array buffer binding, but the
      * caller always takes care of this. */
@@ -752,7 +752,7 @@ static void buffer_direct_upload(struct wined3d_buffer *This, const struct wined
         This->flags &= ~WINED3D_BUFFER_APPLESYNC;
 #else  /* STAGING_CSMT */
     BYTE *map;
-    UINT start = 0, len = 0;
+    UINT start, len;
 
     /* This potentially invalidates the element array buffer binding, but the
      * caller always takes care of this. */
@@ -834,7 +834,7 @@ void buffer_internal_preload(struct wined3d_buffer *buffer, struct wined3d_conte
 {
     DWORD flags = buffer->flags & (WINED3D_BUFFER_SYNC | WINED3D_BUFFER_DISCARD);
     struct wined3d_device *device = buffer->resource.device;
-    UINT start = 0, end = 0, len = 0, vertices;
+    UINT start, end, len, vertices;
     const struct wined3d_gl_info *gl_info;
     BOOL decl_changed = FALSE;
     unsigned int i, j;
@@ -1347,6 +1347,33 @@ void CDECL wined3d_buffer_unmap(struct wined3d_buffer *buffer)
     }
 }
 
+HRESULT wined3d_buffer_upload_data(struct wined3d_buffer *buffer,
+        const struct wined3d_box *box, const void *data)
+{
+    UINT offset, size;
+    HRESULT hr;
+    BYTE *ptr;
+
+    if (box)
+    {
+        offset = box->left;
+        size = box->right - box->left;
+    }
+    else
+    {
+        offset = 0;
+        size = buffer->resource.size;
+    }
+
+    if (FAILED(hr = wined3d_buffer_map(buffer, offset, size, &ptr, 0)))
+        return hr;
+
+    memcpy(ptr, data, size);
+
+    wined3d_buffer_unmap(buffer);
+    return WINED3D_OK;
+}
+
 static ULONG buffer_resource_incref(struct wined3d_resource *resource)
 {
     return wined3d_buffer_incref(buffer_from_resource(resource));
@@ -1458,7 +1485,7 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     TRACE("size %#x, usage %#x, format %s, memory @ %p, iface @ %p.\n", buffer->resource.size, buffer->resource.usage,
             debug_d3dformat(buffer->resource.format->id), buffer->resource.heap_memory, buffer);
 
-    if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
+    if (device->create_parms.flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING || pool == WINED3D_POOL_MANAGED)
     {
         /* SWvp always returns the same pointer in buffer maps and retains data in DISCARD maps.
          * Keep a system memory copy of the buffer to provide the same behavior to the application.
@@ -1514,32 +1541,32 @@ static HRESULT buffer_init(struct wined3d_buffer *buffer, struct wined3d_device 
     }
     buffer->maps_size = 1;
 
-#endif /* STAGING_CSMT */
     if (data)
     {
-        BYTE *ptr;
-
-        hr = wined3d_buffer_map(buffer, 0, size, &ptr, 0);
-        if (FAILED(hr))
+        if (FAILED(hr = wined3d_buffer_upload_data(buffer, NULL, data->data)))
         {
-            ERR("Failed to map buffer, hr %#x\n", hr);
-#if defined(STAGING_CSMT)
+            ERR("Failed to upload data, hr %#x.\n", hr);
             HeapFree(GetProcessHeap(), 0, buffer->maps);
-#endif /* STAGING_CSMT */
             buffer_unload(&buffer->resource);
             resource_cleanup(&buffer->resource);
             return hr;
         }
-
-        memcpy(ptr, data->data, size);
-
-        wined3d_buffer_unmap(buffer);
     }
 
-#if defined(STAGING_CSMT)
     if (wined3d_settings.cs_multithreaded)
         buffer->flags |= WINED3D_BUFFER_DOUBLEBUFFER;
 #else  /* STAGING_CSMT */
+    if (data)
+    {
+        if (FAILED(hr = wined3d_buffer_upload_data(buffer, NULL, data->data)))
+        {
+            ERR("Failed to upload data, hr %#x.\n", hr);
+            buffer_unload(&buffer->resource);
+            resource_cleanup(&buffer->resource);
+            return hr;
+        }
+    }
+
     buffer->maps = HeapAlloc(GetProcessHeap(), 0, sizeof(*buffer->maps));
     if (!buffer->maps)
     {

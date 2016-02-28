@@ -68,7 +68,7 @@ static ULONG WINAPI d3d9_surface_AddRef(IDirect3DSurface9 *iface)
         wined3d_mutex_lock();
         if (surface->wined3d_rtv)
             wined3d_rendertarget_view_incref(surface->wined3d_rtv);
-        wined3d_surface_incref(surface->wined3d_surface);
+        wined3d_texture_incref(surface->wined3d_texture);
         wined3d_mutex_unlock();
     }
 
@@ -104,7 +104,7 @@ static ULONG WINAPI d3d9_surface_Release(IDirect3DSurface9 *iface)
         wined3d_mutex_lock();
         if (surface->wined3d_rtv)
             wined3d_rendertarget_view_decref(surface->wined3d_rtv);
-        wined3d_surface_decref(surface->wined3d_surface);
+        wined3d_texture_decref(surface->wined3d_texture);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -360,8 +360,8 @@ static const struct wined3d_parent_ops d3d9_surface_wined3d_parent_ops =
     surface_wined3d_object_destroyed,
 };
 
-void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
-        struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops)
+void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops)
 {
     struct wined3d_resource_desc desc;
     IDirect3DBaseTexture9 *texture;
@@ -369,7 +369,6 @@ void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_
     surface->IDirect3DSurface9_iface.lpVtbl = &d3d9_surface_vtbl;
     d3d9_resource_init(&surface->resource);
     surface->resource.refcount = 0;
-    surface->wined3d_surface = wined3d_surface;
     list_init(&surface->rtv_entry);
     surface->container = wined3d_texture_get_parent(wined3d_texture);
     surface->wined3d_texture = wined3d_texture;
