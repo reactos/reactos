@@ -53,10 +53,10 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
             if (FsRecGetDeviceSectorSize(MountDevice, &SectorSize))
             {
                 /* Try to read the superblock */
-                Offset.QuadPart = 0x400;
+                Offset.QuadPart = EXT2_SB_OFFSET;
                 if (FsRecReadBlock(MountDevice,
                                    &Offset,
-                                   0x400,
+                                   EXT2_SB_SIZE,
                                    SectorSize,
                                    (PVOID)&Spb,
                                    &DeviceError))
