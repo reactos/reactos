@@ -110,14 +110,14 @@ extern int winetest_vok( int condition, const char *msg, __winetest_va_list ap )
 extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
-
+# define WINETEST_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 
 #else /* __GNUC__ */
-
+# define WINETEST_PRINTF_ATTR(fmt,args)
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
 extern void __winetest_cdecl winetest_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
@@ -144,6 +144,16 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 #define todo_wine      todo_ros
 #else
 #define todo_wine      todo("wine")
+#endif
+
+#ifdef USE_WINE_TODOS
+#define todo_wine_if(is_todo) \
+  if ((is_todo) && (!strcmp(winetest_platform, "reactos"))) \
+    todo(winetest_platform)
+#else
+#define todo_wine_if(is_todo) \
+  if ((is_todo) && (!strcmp(winetest_platform, "wine"))) \
+    todo(winetest_platform)
 #endif
 
 
