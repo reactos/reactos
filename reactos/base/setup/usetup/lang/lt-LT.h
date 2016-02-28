@@ -835,7 +835,7 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY ltLTConfirmDeletePartitionEntries[] =
+static MUI_ENTRY ltLTConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -846,13 +846,13 @@ static MUI_ENTRY ltLTConfirmDeletePartitionEntries[] =
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "You have chosen to delete the system partition.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "System partitions can contain diagnostic programs, hardware configuration",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1657,7 +1657,7 @@ MUI_PAGE ltLTPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        ltLTConfirmDeletePartitionEntries
+        ltLTConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

@@ -835,7 +835,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY esESConfirmDeletePartitionEntries[] =
+static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1657,7 +1657,7 @@ MUI_PAGE esESPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        esESConfirmDeletePartitionEntries
+        esESConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

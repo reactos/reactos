@@ -881,7 +881,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY roROConfirmDeletePartitionEntries[] =
+static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1718,7 +1718,7 @@ MUI_PAGE roROPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        roROConfirmDeletePartitionEntries
+        roROConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

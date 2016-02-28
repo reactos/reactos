@@ -825,7 +825,7 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDConfirmDeletePartitionEntries[] =
+static MUI_ENTRY bnBDConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -836,13 +836,13 @@ static MUI_ENTRY bnBDConfirmDeletePartitionEntries[] =
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "You have chosen to delete the system partition.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "System partitions can contain diagnostic programs, hardware configuration",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1647,7 +1647,7 @@ MUI_PAGE bnBDPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        bnBDConfirmDeletePartitionEntries
+        bnBDConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

@@ -818,7 +818,7 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY trTRConfirmDeletePartitionEntries[] =
+static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1628,7 +1628,7 @@ MUI_PAGE trTRPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        trTRConfirmDeletePartitionEntries
+        trTRConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

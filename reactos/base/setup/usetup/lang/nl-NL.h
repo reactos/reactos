@@ -855,7 +855,7 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLConfirmDeletePartitionEntries[] =
+static MUI_ENTRY nlNLConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -866,13 +866,13 @@ static MUI_ENTRY nlNLConfirmDeletePartitionEntries[] =
     {
         6,
         8,
-        "You asked Setup to delete the system partition.",
+        "You have chosen to delete the system partition.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnose programs, hardware configuration",
+        "System partitions can contain diagnostic programs, hardware configuration",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1687,7 +1687,7 @@ MUI_PAGE nlNLPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        nlNLConfirmDeletePartitionEntries
+        nlNLConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,

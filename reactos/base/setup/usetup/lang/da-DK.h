@@ -843,7 +843,7 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY daDKConfirmDeletePartitionEntries[] =
+static MUI_ENTRY daDKConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1667,7 +1667,7 @@ MUI_PAGE daDKPages[] =
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        daDKConfirmDeletePartitionEntries
+        daDKConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
