@@ -743,8 +743,13 @@ SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
             InitLangList(hwndDlg, hImgList);
             (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
+
+            /* Disable the Remove button if there is only one layout in the layout list */
+            if (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST)) <= 1)
+                EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), FALSE);
         }
             break;
+
         case WM_NOTIFY:
         {
             switch (LOWORD(wParam))
@@ -753,11 +758,16 @@ SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             }
         }
             break;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_REMOVE_BUTTON:
                     DeleteLayout();
+
+                    /* Disable the Remove button if there is only one layout in the layout list */
+                    if (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST)) <= 1)
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), FALSE);
                     break;
 
                 case IDC_KEY_SET_BTN:
@@ -772,6 +782,10 @@ SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                               MAKEINTRESOURCE(IDD_ADD),
                               hwndDlg,
                               AddDlgProc);
+
+                    /* Enable the Remove button if there is more than one layout in the layout list */
+                    if (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST)) > 1)
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), TRUE);
                     break;
 
                 case IDC_PROP_BUTTON:
@@ -788,6 +802,7 @@ SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                     break;
             }
             break;
+
         case WM_DESTROY:
             break;
     }
