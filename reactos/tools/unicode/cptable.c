@@ -22,7 +22,7 @@
 
 #include "wine/unicode.h"
 
-/* Everything below this line is generated automatically by cpmap.pl */
+/* Everything below this line is generated automatically by make_unicode */
 /* ### cpmap begin ### */
 extern union cptable cptable_037;
 extern union cptable cptable_424;
@@ -173,7 +173,7 @@ static const union cptable * const cptables[72] =
     &cptable_28606,
 };
 /* ### cpmap end ### */
-/* Everything above this line is generated automatically by cpmap.pl */
+/* Everything above this line is generated automatically by make_unicode */
 
 #define NB_CODEPAGES  (sizeof(cptables)/sizeof(cptables[0]))
 

@@ -22,45 +22,7 @@
 
 #include "wine/unicode.h"
 
-/* search for a character in the unicode_compose_table; helper for compose() */
-static inline int binary_search( WCHAR ch, int low, int high )
-{
-    extern const WCHAR unicode_compose_table[];
-    while (low <= high)
-    {
-        int pos = (low + high) / 2;
-        if (unicode_compose_table[2*pos] < ch)
-        {
-            low = pos + 1;
-            continue;
-        }
-        if (unicode_compose_table[2*pos] > ch)
-        {
-            high = pos - 1;
-            continue;
-        }
-        return pos;
-    }
-    return -1;
-}
-
-/* return the result of the composition of two Unicode chars, or 0 if none */
-WCHAR compose( const WCHAR *str )
-{
-    extern const WCHAR unicode_compose_table[];
-    extern const unsigned int unicode_compose_table_size;
-
-    int idx = 1, low = 0, high = unicode_compose_table_size - 1;
-    for (;;)
-    {
-        int pos = binary_search( str[idx], low, high );
-        if (pos == -1) return 0;
-        if (!idx--) return unicode_compose_table[2*pos+1];
-        low = unicode_compose_table[2*pos+1];
-        high = unicode_compose_table[2*pos+3] - 1;
-    }
-}
-
+extern WCHAR wine_compose( const WCHAR *str );
 
 /****************************************************************/
 /* sbcs support */
@@ -91,7 +53,7 @@ static int get_length_sbcs( const struct sbcs_table *table, int flags,
         WCHAR wch = *src;
         unsigned char ch;
 
-        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = compose(src)))
+        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = wine_compose(src)))
         {
             /* now check if we can use the composed char */
             ch = uni2cp_low[uni2cp_high[composed >> 8] + (composed & 0xff)];
@@ -215,7 +177,7 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
     {
         WCHAR wch = *src;
 
-        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = compose(src)))
+        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = wine_compose(src)))
         {
             /* now check if we can use the composed char */
             *dst = uni2cp_low[uni2cp_high[composed >> 8] + (composed & 0xff)];
@@ -310,7 +272,7 @@ static int get_length_dbcs( const struct dbcs_table *table, int flags,
         unsigned short res;
         WCHAR wch = *src;
 
-        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = compose(src)))
+        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = wine_compose(src)))
         {
             /* now check if we can use the composed char */
             res = uni2cp_low[uni2cp_high[composed >> 8] + (composed & 0xff)];
@@ -395,7 +357,7 @@ static int wcstombs_dbcs_slow( const struct dbcs_table *table, int flags,
         unsigned short res;
         WCHAR wch = *src;
 
-        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = compose(src)))
+        if ((flags & WC_COMPOSITECHECK) && (srclen > 1) && (composed = wine_compose(src)))
         {
             /* now check if we can use the composed char */
             res = uni2cp_low[uni2cp_high[composed >> 8] + (composed & 0xff)];
@@ -469,25 +431,4 @@ int wine_cp_wcstombs( const union cptable *table, int flags,
                                        dst, dstlen, defchar, used );
         return wcstombs_dbcs( &table->dbcs, src, srclen, dst, dstlen );
     }
-}
-
-/* CP_SYMBOL implementation */
-/* return -1 on dst buffer overflow, -2 on invalid character */
-int wine_cpsymbol_wcstombs( const WCHAR *src, int srclen, char *dst, int dstlen)
-{
-    int len, i;
-    if( dstlen == 0) return srclen;
-    len = dstlen > srclen ? srclen : dstlen;
-    for( i = 0; i < len; i++)
-    {
-        WCHAR w = src [ i ];
-        if( w < 0x20 )
-            dst[i] = w;
-        else if( w >= 0xf020 && w < 0xf100)
-            dst[i] = w - 0xf000;
-        else
-            return -2;
-    }
-    if( srclen > len) return -1;
-    return len;
 }
