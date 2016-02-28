@@ -3,15 +3,12 @@ add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     ftp.c
+    generated_${ARCH}.c
     http.c
     internet.c
     url.c
     urlcache.c
     testlist.c)
-
-if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE generated.c)
-endif()
 
 add_executable(wininet_winetest ${SOURCE})
 set_module_type(wininet_winetest win32cui)

@@ -5,7 +5,7 @@ list(APPEND SOURCE
     assoc.c
     clist.c
     clsid.c
-    generated.c
+    generated_${ARCH}.c
     istream.c
     ordinal.c
     path.c

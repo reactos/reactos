@@ -2,6 +2,7 @@
 add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
+    generated_${ARCH}.c
     misc.c
     protocol.c
     sec_mgr.c
@@ -9,10 +10,6 @@ list(APPEND SOURCE
     uri.c
     url.c
     testlist.c)
-
-if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE generated.c)
-endif()
 
 add_executable(urlmon_winetest ${SOURCE})
 target_link_libraries(urlmon_winetest uuid)

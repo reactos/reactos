@@ -9,6 +9,7 @@ list(APPEND SOURCE
     dib.c
     font.c
     gdiobj.c
+    generated_${ARCH}.c
     icm.c
     mapping.c
     metafile.c
@@ -16,10 +17,6 @@ list(APPEND SOURCE
     path.c
     pen.c
     testlist.c)
-
-if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE generated.c)
-endif()
 
 add_executable(gdi32_winetest ${SOURCE} resource.rc)
 set_module_type(gdi32_winetest win32cui)

@@ -17,6 +17,7 @@ list(APPEND SOURCE
     fiber.c
     file.c
     format_msg.c
+    #generated_${ARCH}.c
     heap.c
     loader.c
     locale.c
@@ -36,10 +37,6 @@ list(APPEND SOURCE
     virtual.c
     volume.c
     testlist.c)
-
-#if(ARCH STREQUAL "i386")
-#    list(APPEND SOURCE generated.c)
-#endif()
 
 add_executable(kernel32_winetest ${SOURCE} resource.rc)
 

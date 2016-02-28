@@ -12,7 +12,7 @@ extern void func_dce(void);
 extern void func_dde(void);
 extern void func_dialog(void);
 extern void func_edit(void);
-extern void func_generated(void);
+//extern void func_generated(void);
 extern void func_input(void);
 extern void func_listbox(void);
 extern void func_menu(void);
@@ -53,7 +53,7 @@ const struct test winetest_testlist[] =
     { "dde", func_dde },
     { "dialog", func_dialog },
     { "edit", func_edit },
-    { "generated", func_generated },
+    //{ "generated", func_generated },
     { "input", func_input },
     { "listbox", func_listbox },
     { "menu", func_menu },
