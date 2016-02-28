@@ -1463,7 +1463,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
                     case 1: fs = page->file->fonts[font].LogFont.lfHeight; break;
                     case 2: fs = page->file->fonts[font].LogFont.lfHeight + 4; break;
                     }
-                    /* FIXME: missing at least colors, also bold attribute looses information */
+                    /* FIXME: colors are missing, at a minimum; also, the bold attribute loses information */
 
                     sprintf(tmp, "\\f%u\\cf%u\\fs%u%s%s%s%s",
                             font, font + 2, fs,
