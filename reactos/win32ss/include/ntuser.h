@@ -140,6 +140,7 @@ typedef struct _DESKTOPINFO
     HWND hProgmanWindow;
     HWND hShellWindow;
     struct _WND *spwndShell;
+    struct _WND *spwndBkGnd;
 
     struct _PROCESSINFO *ppiShellProcess;
 
