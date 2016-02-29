@@ -2563,56 +2563,55 @@ NtReadFile(IN HANDLE FileHandle,
         {
             /* Perform fast read */
             FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
-            if (FastIoDispatch != NULL && FastIoDispatch->FastIoRead != NULL)
+            ASSERT(FastIoDispatch != NULL && FastIoDispatch->FastIoRead != NULL);
+
+            Success = FastIoDispatch->FastIoRead(FileObject,
+                                                 &CapturedByteOffset,
+                                                 Length,
+                                                 TRUE,
+                                                 CapturedKey,
+                                                 Buffer,
+                                                 &KernelIosb,
+                                                 DeviceObject);
+
+            /* Only accept the result if we got a straightforward status */
+            if (Success &&
+                (KernelIosb.Status == STATUS_SUCCESS ||
+                 KernelIosb.Status == STATUS_BUFFER_OVERFLOW ||
+                 KernelIosb.Status == STATUS_END_OF_FILE))
             {
-                Success = FastIoDispatch->FastIoRead(FileObject,
-                                                     &CapturedByteOffset,
-                                                     Length,
-                                                     TRUE,
-                                                     CapturedKey,
-                                                     Buffer,
-                                                     &KernelIosb,
-                                                     DeviceObject);
+                /* Fast path -- update transfer & operation counts */
+                IopUpdateOperationCount(IopReadTransfer);
+                IopUpdateTransferCount(IopReadTransfer,
+                                       (ULONG)KernelIosb.Information);
 
-                /* Only accept the result if we got a straightforward status */
-                if (Success &&
-                    (KernelIosb.Status == STATUS_SUCCESS ||
-                     KernelIosb.Status == STATUS_BUFFER_OVERFLOW ||
-                     KernelIosb.Status == STATUS_END_OF_FILE))
+                /* Enter SEH to write the IOSB back */
+                _SEH2_TRY
                 {
-                    /* Fast path -- update transfer & operation counts */
-                    IopUpdateOperationCount(IopReadTransfer);
-                    IopUpdateTransferCount(IopReadTransfer,
-                                           (ULONG)KernelIosb.Information);
-
-                    /* Enter SEH to write the IOSB back */
-                    _SEH2_TRY
-                    {
-                        /* Write it back to the caller */
-                        *IoStatusBlock = KernelIosb;
-                    }
-                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                    {
-                        /* The caller's IOSB was invalid, so fail */
-                        if (EventObject) ObDereferenceObject(EventObject);
-                        IopUnlockFileObject(FileObject);
-                        ObDereferenceObject(FileObject);
-                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-                    }
-                    _SEH2_END;
-
-                    /* Signal the completion event */
-                    if (EventObject)
-                    {
-                        KeSetEvent(EventObject, 0, FALSE);
-                        ObDereferenceObject(EventObject);
-                    }
-
-                    /* Clean up */
+                    /* Write it back to the caller */
+                    *IoStatusBlock = KernelIosb;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* The caller's IOSB was invalid, so fail */
+                    if (EventObject) ObDereferenceObject(EventObject);
                     IopUnlockFileObject(FileObject);
                     ObDereferenceObject(FileObject);
-                    return KernelIosb.Status;
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 }
+                _SEH2_END;
+
+                /* Signal the completion event */
+                if (EventObject)
+                {
+                    KeSetEvent(EventObject, 0, FALSE);
+                    ObDereferenceObject(EventObject);
+                }
+
+                /* Clean up */
+                IopUnlockFileObject(FileObject);
+                ObDereferenceObject(FileObject);
+                return KernelIosb.Status;
             }
         }
 
@@ -3578,54 +3577,53 @@ NtWriteFile(IN HANDLE FileHandle,
         {
             /* Perform fast write */
             FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
-            if (FastIoDispatch != NULL && FastIoDispatch->FastIoWrite != NULL)
+            ASSERT(FastIoDispatch != NULL && FastIoDispatch->FastIoWrite != NULL);
+
+            Success = FastIoDispatch->FastIoWrite(FileObject,
+                                                  &CapturedByteOffset,
+                                                  Length,
+                                                  TRUE,
+                                                  CapturedKey,
+                                                  Buffer,
+                                                  &KernelIosb,
+                                                  DeviceObject);
+
+            /* Only accept the result if it was successful */
+            if (Success &&
+                KernelIosb.Status == STATUS_SUCCESS)
             {
-                Success = FastIoDispatch->FastIoWrite(FileObject,
-                                                      &CapturedByteOffset,
-                                                      Length,
-                                                      TRUE,
-                                                      CapturedKey,
-                                                      Buffer,
-                                                      &KernelIosb,
-                                                      DeviceObject);
+                /* Fast path -- update transfer & operation counts */
+                IopUpdateOperationCount(IopWriteTransfer);
+                IopUpdateTransferCount(IopWriteTransfer,
+                                       (ULONG)KernelIosb.Information);
 
-                /* Only accept the result if it was successful */
-                if (Success &&
-                    KernelIosb.Status == STATUS_SUCCESS)
+                /* Enter SEH to write the IOSB back */
+                _SEH2_TRY
                 {
-                    /* Fast path -- update transfer & operation counts */
-                    IopUpdateOperationCount(IopWriteTransfer);
-                    IopUpdateTransferCount(IopWriteTransfer,
-                                           (ULONG)KernelIosb.Information);
-
-                    /* Enter SEH to write the IOSB back */
-                    _SEH2_TRY
-                    {
-                        /* Write it back to the caller */
-                        *IoStatusBlock = KernelIosb;
-                    }
-                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                    {
-                        /* The caller's IOSB was invalid, so fail */
-                        if (EventObject) ObDereferenceObject(EventObject);
-                        IopUnlockFileObject(FileObject);
-                        ObDereferenceObject(FileObject);
-                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-                    }
-                    _SEH2_END;
-
-                    /* Signal the completion event */
-                    if (EventObject)
-                    {
-                        KeSetEvent(EventObject, 0, FALSE);
-                        ObDereferenceObject(EventObject);
-                    }
-
-                    /* Clean up */
+                    /* Write it back to the caller */
+                    *IoStatusBlock = KernelIosb;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* The caller's IOSB was invalid, so fail */
+                    if (EventObject) ObDereferenceObject(EventObject);
                     IopUnlockFileObject(FileObject);
                     ObDereferenceObject(FileObject);
-                    return KernelIosb.Status;
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 }
+                _SEH2_END;
+
+                /* Signal the completion event */
+                if (EventObject)
+                {
+                    KeSetEvent(EventObject, 0, FALSE);
+                    ObDereferenceObject(EventObject);
+                }
+
+                /* Clean up */
+                IopUnlockFileObject(FileObject);
+                ObDereferenceObject(FileObject);
+                return KernelIosb.Status;
             }
         }
 
