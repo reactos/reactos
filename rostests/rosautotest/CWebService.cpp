@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 static const WCHAR szHostname[] = L"reactos.org";
-static const WCHAR szServerFile[] = L"sites/all/modules/reactos/testman/webservice/";
+static const WCHAR szServerFile[] = L"testman/webservice/";
 
 /**
  * Constructs a CWebService object and immediately establishes a connection to the "testman" Web Service.
