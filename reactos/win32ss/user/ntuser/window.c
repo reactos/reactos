@@ -1956,9 +1956,21 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
         goto cleanup;
     }
 
-    /* FIXME: Is this correct? */
     if(OwnerWindow)
-        OwnerWindow = UserGetAncestor(OwnerWindow, GA_ROOT);
+    {
+       if (IntIsDesktopWindow(OwnerWindow)) OwnerWindow = NULL;
+       else if (ParentWindow && !IntIsDesktopWindow(ParentWindow))
+       {
+          ERR("an owned window must be created as top-level\n");
+          EngSetLastError( STATUS_ACCESS_DENIED );
+          goto cleanup;
+       }
+       else /* owner must be a top-level window */
+       {
+          while ((OwnerWindow->style & (WS_POPUP|WS_CHILD)) == WS_CHILD && !IntIsDesktopWindow(OwnerWindow->spwndParent))
+                 OwnerWindow = OwnerWindow->spwndParent;
+       }
+    }
 
    /* Fix the position and the size of the window */
    if (ParentWindow)
@@ -3467,6 +3479,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    {
        ti->pDeskInfo->hShellWindow = hwndShell;
        ti->pDeskInfo->spwndShell = WndShell;
+       ti->pDeskInfo->spwndBkGnd = WndListView;
        ti->pDeskInfo->ppiShellProcess = ti->ppi;
    }
 
