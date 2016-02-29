@@ -2,6 +2,7 @@
  * Copyright 2010, 2012 Christian Costa
  * Copyright 2012 André Hentschel
  * Copyright 2011-2014 Henri Verbeet for CodeWeavers
+ * Copyright 2014-2015 Aaryaman Vasishta
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -3693,6 +3694,404 @@ static void test_create_device_from_d3d3(void)
     DestroyWindow(window);
 }
 
+static char *create_bitmap(unsigned int w, unsigned int h, BOOL palettized)
+{
+    unsigned int bpp = palettized ? 8 : 24;
+    BITMAPFILEHEADER file_header;
+    DWORD written, size, ret;
+    unsigned char *buffer;
+    char path[MAX_PATH];
+    unsigned int i, j;
+    BITMAPINFO *info;
+    char *filename;
+    HANDLE file;
+
+    ret = GetTempPathA(MAX_PATH, path);
+    ok(ret, "Failed to get temporary file path.\n");
+    filename = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+    ret = GetTempFileNameA(path, "d3d", 0, filename);
+    ok(ret, "Failed to get filename.\n");
+    file = CreateFileA(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failed to open temporary file \"%s\".\n", filename);
+
+    size = FIELD_OFFSET(BITMAPINFO, bmiColors[palettized ? 256 : 0]);
+
+    memset(&file_header, 0, sizeof(file_header));
+    file_header.bfType = 0x4d42; /* BM */
+    file_header.bfOffBits = sizeof(file_header) + size;
+    file_header.bfSize = file_header.bfOffBits + w * h * (bpp / 8);
+    ret = WriteFile(file, &file_header, sizeof(file_header), &written, NULL);
+    ok(ret && written == sizeof(file_header), "Failed to write file header.\n");
+
+    info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    info->bmiHeader.biSize = sizeof(info->bmiHeader);
+    info->bmiHeader.biBitCount = bpp;
+    info->bmiHeader.biPlanes = 1;
+    info->bmiHeader.biWidth = w;
+    info->bmiHeader.biHeight = h;
+    info->bmiHeader.biCompression = BI_RGB;
+    if (palettized)
+    {
+        for (i = 0; i < 256; ++i)
+        {
+            info->bmiColors[i].rgbBlue = i;
+            info->bmiColors[i].rgbGreen = i;
+            info->bmiColors[i].rgbRed = i;
+        }
+    }
+    ret = WriteFile(file, info, size, &written, NULL);
+    ok(ret && written == size, "Failed to write bitmap info.\n");
+    HeapFree(GetProcessHeap(), 0, info);
+
+    size = w * h * (bpp / 8);
+    buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    for (i = 0, j = 0; i < size;)
+    {
+        if (palettized)
+        {
+            buffer[i++] = j++;
+            j %= 256;
+        }
+        else
+        {
+            buffer[i++] = j % 251;
+            buffer[i++] = j % 239;
+            buffer[i++] = j++ % 247;
+        }
+    }
+    ret = WriteFile(file, buffer, size, &written, NULL);
+    ok(ret && written == size, "Failed to write bitmap data.\n");
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    CloseHandle(file);
+
+    return filename;
+}
+
+static void test_bitmap_data(unsigned int test_idx, const D3DRMIMAGE *img,
+        BOOL upside_down, unsigned int w, unsigned int h, BOOL palettized)
+{
+    const unsigned char *data = img->buffer1;
+    unsigned int i, j;
+
+    ok(img->width == w, "Test %u: Got unexpected image width %u, expected %u.\n", test_idx, img->width, w);
+    ok(img->height == h, "Test %u: Got unexpected image height %u, expected %u.\n", test_idx, img->height, h);
+    ok(img->aspectx == 1, "Test %u: Got unexpected image aspectx %u.\n", test_idx, img->aspectx);
+    ok(img->aspecty == 1, "Test %u: Got unexpected image aspecty %u.\n", test_idx, img->aspecty);
+    ok(!img->buffer2, "Test %u: Got unexpected image buffer2 %p.\n", test_idx, img->buffer2);
+
+    /* The image is palettized if the total number of colors used is <= 256. */
+    if (w * h > 256 && !palettized)
+    {
+        /* D3drm aligns the 24bpp texture to 4 bytes in the buffer, with one
+         * byte padding from 24bpp texture. */
+        ok(img->depth == 32, "Test %u: Got unexpected image depth %u.\n", test_idx, img->depth);
+        ok(img->rgb == TRUE, "Test %u: Got unexpected image rgb %#x.\n", test_idx, img->rgb);
+        ok(img->bytes_per_line == w * 4, "Test %u: Got unexpected image bytes per line %u, expected %u.\n",
+                test_idx, img->bytes_per_line, w * 4);
+        ok(img->red_mask == 0xff0000, "Test %u: Got unexpected image red mask %#x.\n", test_idx, img->red_mask);
+        ok(img->green_mask == 0x00ff00, "Test %u: Got unexpected image green mask %#x.\n", test_idx, img->green_mask);
+        ok(img->blue_mask == 0x0000ff, "Test %u: Got unexpected image blue mask %#x.\n", test_idx, img->blue_mask);
+        ok(!img->alpha_mask, "Test %u: Got unexpected image alpha mask %#x.\n", test_idx, img->alpha_mask);
+        ok(!img->palette_size, "Test %u: Got unexpected palette size %u.\n", test_idx, img->palette_size);
+        ok(!img->palette, "Test %u: Got unexpected image palette %p.\n", test_idx, img->palette);
+        for (i = 0; i < h; ++i)
+        {
+            for (j = 0; j < w; ++j)
+            {
+                const unsigned char *ptr = &data[i * img->bytes_per_line + j * 4];
+                unsigned int idx = upside_down ? (h - 1 - i) * w + j : i * w + j;
+
+                if (ptr[0] != idx % 251 || ptr[1] != idx % 239 || ptr[2] != idx % 247 || ptr[3] != 0xff)
+                {
+                    ok(0, "Test %u: Got unexpected color 0x%02x%02x%02x%02x at position %u, %u, "
+                            "expected 0x%02x%02x%02x%02x.\n", test_idx, ptr[0], ptr[1], ptr[2], ptr[3],
+                            j, i, idx % 251, idx % 239, idx % 247, 0xff);
+                    return;
+                }
+            }
+        }
+        return;
+    }
+
+    ok(img->depth == 8, "Test %u: Got unexpected image depth %u.\n", test_idx, img->depth);
+    ok(!img->rgb, "Test %u: Got unexpected image rgb %#x.\n", test_idx, img->rgb);
+    ok(img->red_mask == 0xff, "Test %u: Got unexpected image red mask %#x.\n", test_idx, img->red_mask);
+    ok(img->green_mask == 0xff, "Test %u: Got unexpected image green mask %#x.\n", test_idx, img->green_mask);
+    ok(img->blue_mask == 0xff, "Test %u: Got unexpected image blue mask %#x.\n", test_idx, img->blue_mask);
+    ok(!img->alpha_mask, "Test %u: Got unexpected image alpha mask %#x.\n", test_idx, img->alpha_mask);
+    ok(!!img->palette, "Test %u: Got unexpected image palette %p.\n", test_idx, img->palette);
+    if (!palettized)
+    {
+        /* In this case, bytes_per_line is aligned to the next multiple of
+         * 4 from width. */
+        ok(img->bytes_per_line == ((w + 3) & ~3), "Test %u: Got unexpected image bytes per line %u, expected %u.\n",
+                test_idx, img->bytes_per_line, (w + 3) & ~3);
+        ok(img->palette_size == w * h, "Test %u: Got unexpected palette size %u, expected %u.\n",
+                test_idx, img->palette_size, w * h);
+        for (i = 0; i < img->palette_size; ++i)
+        {
+            unsigned int idx = upside_down ? (h - 1) * w - i + (i % w) * 2 : i;
+            ok(img->palette[i].red == idx % 251
+                    && img->palette[i].green == idx % 239 && img->palette[i].blue == idx % 247,
+                    "Test %u: Got unexpected palette entry (%u) color 0x%02x%02x%02x.\n",
+                    test_idx, i, img->palette[i].red, img->palette[i].green, img->palette[i].blue);
+            ok(img->palette[i].flags == D3DRMPALETTE_READONLY,
+                    "Test %u: Got unexpected palette entry (%u) flags %#x.\n",
+                    test_idx, i, img->palette[i].flags);
+        }
+        for (i = 0; i < h; ++i)
+        {
+            for (j = 0; j < w; ++j)
+            {
+                if (data[i * img->bytes_per_line + j] != i * w + j)
+                {
+                    ok(0, "Test %u: Got unexpected color 0x%02x at position %u, %u, expected 0x%02x.\n",
+                            test_idx, data[i * img->bytes_per_line + j], j, i, i * w + j);
+                    return;
+                }
+            }
+        }
+        return;
+    }
+
+    /* bytes_per_line is not always aligned by d3drm depending on the
+     * format. */
+    ok(img->bytes_per_line == w, "Test %u: Got unexpected image bytes per line %u, expected %u.\n",
+            test_idx, img->bytes_per_line, w);
+    ok(img->palette_size == 256, "Test %u: Got unexpected palette size %u.\n", test_idx, img->palette_size);
+    for (i = 0; i < 256; ++i)
+    {
+        ok(img->palette[i].red == i && img->palette[i].green == i && img->palette[i].blue == i,
+                "Test %u: Got unexpected palette entry (%u) color 0x%02x%02x%02x.\n",
+                test_idx, i, img->palette[i].red, img->palette[i].green, img->palette[i].blue);
+        ok(img->palette[i].flags == D3DRMPALETTE_READONLY,
+                "Test %u: Got unexpected palette entry (%u) flags %#x.\n",
+                test_idx, i, img->palette[i].flags);
+    }
+    for (i = 0; i < h; ++i)
+    {
+        for (j = 0; j < w; ++j)
+        {
+            unsigned int idx = upside_down ? (h - 1 - i) * w + j : i * w + j;
+            if (data[i * img->bytes_per_line + j] != idx % 256)
+            {
+                ok(0, "Test %u: Got unexpected color 0x%02x at position %u, %u, expected 0x%02x.\n",
+                        test_idx, data[i * img->bytes_per_line + j], j, i, idx % 256);
+                return;
+            }
+        }
+    }
+}
+
+static void test_load_texture(void)
+{
+    IDirect3DRMTexture3 *texture3;
+    IDirect3DRMTexture2 *texture2;
+    IDirect3DRMTexture *texture1;
+    D3DRMIMAGE *d3drm_img;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRM2 *d3drm2;
+    IDirect3DRM *d3drm1;
+    char *filename;
+    HRESULT hr;
+    BOOL ret;
+    int i;
+
+    static const struct
+    {
+        unsigned int w;
+        unsigned int h;
+        BOOL palettized;
+    }
+    tests[] =
+    {
+        {100, 100, TRUE },
+        {99,  100, TRUE },
+        {100, 100, FALSE},
+        {99,  100, FALSE},
+        {3,   39,  FALSE},
+    };
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Failed to create IDirect3DRM object, hr %#x.\n", hr);
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRM2 interface, hr %#x.\n", hr);
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRM3 interface, hr %#x.\n", hr);
+
+    for (i = 0; i < sizeof(tests) / sizeof(*tests); ++i)
+    {
+        filename = create_bitmap(tests[i].w, tests[i].h, tests[i].palettized);
+
+        hr = IDirect3DRM_LoadTexture(d3drm1, filename, &texture1);
+        ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture_GetImage(texture1);
+        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        if (d3drm_img)
+            test_bitmap_data(i * 4, d3drm_img, FALSE, tests[i].w, tests[i].h, tests[i].palettized);
+        IDirect3DRMTexture_Release(texture1);
+
+        hr = IDirect3DRM2_LoadTexture(d3drm2, filename, &texture2);
+        ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture2_GetImage(texture2);
+        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        if (d3drm_img)
+            test_bitmap_data(i * 4 + 1, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        IDirect3DRMTexture2_Release(texture2);
+
+        hr = IDirect3DRM3_LoadTexture(d3drm3, filename, &texture3);
+        ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture3_GetImage(texture3);
+        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        if (d3drm_img)
+            test_bitmap_data(i * 4 + 2, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        /* Test whether querying a version 1 texture from version 3 causes a
+         * change in the loading behavior. */
+        hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IDirect3DRMTexture, (void **)&texture1);
+        ok(SUCCEEDED(hr), "Failed to get IDirect3DRMTexture interface, hr %#x.\n", hr);
+        d3drm_img = IDirect3DRMTexture_GetImage(texture1);
+        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        if (d3drm_img)
+            test_bitmap_data(i * 4 + 3, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        IDirect3DRMTexture_Release(texture1);
+        IDirect3DRMTexture3_Release(texture3);
+
+        ret = DeleteFileA(filename);
+        ok(ret, "Test %u: Failed to delete bitmap \"%s\".\n", i, filename);
+        HeapFree(GetProcessHeap(), 0, filename);
+    }
+
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+}
+
+static void test_texture_qi(void)
+{
+    static const struct qi_test tests[] =
+    {
+        { &IID_IDirect3DRM3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM,                NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWinDevice,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown,           S_OK                      },
+        { &IID_IDirect3DRMViewport,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame2,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame3,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          &IID_IUnknown,           S_OK                      },
+        { &IID_IDirect3DRMMesh,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         &IID_IUnknown,           S_OK                      },
+        { &IID_IDirect3DRMTexture2,        &IID_IUnknown,           S_OK                      },
+        { &IID_IDirect3DRMTexture3,        &IID_IUnknown,           S_OK                      },
+        { &IID_IDirect3DRMWrap,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,                    CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown,           S_OK,                     },
+    };
+    HRESULT hr;
+    IDirect3DRM *d3drm1;
+    IDirect3DRM2 *d3drm2;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRMTexture *texture1;
+    IDirect3DRMTexture2 *texture2;
+    IDirect3DRMTexture3 *texture3;
+    IUnknown *unknown;
+    char *filename;
+    BOOL check;
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM interface (hr = %#x)\n", hr);
+    filename = create_bitmap(1, 1, TRUE);
+    hr = IDirect3DRM_LoadTexture(d3drm1, filename, &texture1);
+    ok(SUCCEEDED(hr), "Failed to load texture (hr = %#x).\n", hr);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMTexture interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMTexture_QueryInterface(texture1, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture (hr = %#x)\n", hr);
+    IDirect3DRMTexture_Release(texture1);
+    test_qi("texture1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM2 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM2_LoadTexture(d3drm2, filename, &texture2);
+    ok(SUCCEEDED(hr), "Failed to load texture (hr = %#x).\n", hr);
+    hr = IDirect3DRMTexture2_QueryInterface(texture2, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture2 (hr = %#x)\n", hr);
+    IDirect3DRMTexture2_Release(texture2);
+    test_qi("texture2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM3_LoadTexture(d3drm3, filename, &texture3);
+    ok(SUCCEEDED(hr), "Failed to load texture (hr = %#x).\n", hr);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMTexture3 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture3 (hr = %#x)\n", hr);
+    IDirect3DRMTexture3_Release(texture3);
+    test_qi("texture3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    check = DeleteFileA(filename);
+    ok(check, "Cannot delete image stored in %s (error = %d).\n", filename, GetLastError());
+    HeapFree(GetProcessHeap(), 0, filename);
+}
+
 START_TEST(d3drm)
 {
     test_MeshBuilder();
@@ -3720,4 +4119,6 @@ START_TEST(d3drm)
     test_create_device_from_d3d1();
     test_create_device_from_d3d2();
     test_create_device_from_d3d3();
+    test_load_texture();
+    test_texture_qi();
 }
