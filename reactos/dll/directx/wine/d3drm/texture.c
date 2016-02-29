@@ -670,21 +670,26 @@ static HRESULT WINAPI d3drm_texture3_QueryInterface(IDirect3DRMTexture3 *iface, 
 
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    if (IsEqualGUID(riid, &IID_IDirect3DRMTexture2)
-            || IsEqualGUID(riid, &IID_IDirect3DRMTexture)
+    if (IsEqualGUID(riid, &IID_IDirect3DRMTexture3)
+            || IsEqualGUID(riid, &IID_IDirect3DRMVisual)
+            || IsEqualGUID(riid, &IID_IDirect3DRMObject)
             || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        *out = &texture->IDirect3DRMTexture3_iface;
+    }
+    else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture2))
     {
         *out = &texture->IDirect3DRMTexture2_iface;
     }
-    else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture3))
+    else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture))
     {
-        *out = &texture->IDirect3DRMTexture3_iface;
+        *out = &texture->IDirect3DRMTexture_iface;
     }
     else
     {
         *out = NULL;
-        WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
+        WARN("%s not implemented, returning CLASS_E_CLASSNOTAVAILABLE.\n", debugstr_guid(riid));
+        return CLASS_E_CLASSNOTAVAILABLE;
     }
 
     IUnknown_AddRef((IUnknown *)*out);
