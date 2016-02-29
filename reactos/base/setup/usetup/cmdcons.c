@@ -556,7 +556,7 @@ static
 VOID
 HelpPartInfo(VOID)
 {
-    CONSOLE_ConOutPrintf("PARTINFO DiskNumber\n\nDumps a partiton table to the screen.\n\n");
+    CONSOLE_ConOutPrintf("PARTINFO DiskNumber\n\nDumps a partition table to the screen.\n\n");
 }
 
 

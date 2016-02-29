@@ -879,7 +879,7 @@ static MUI_ENTRY elGRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "programs on the partition, or when you are sure you want to delete them.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1454,7 +1454,7 @@ MUI_ERROR elGRErrorEntries[] =
           "† œš¡˜«á©«˜© ™¨ã¡œ æ«  «¦¬¢á® ©«¦¤ â¤˜ª ©¡¢¨æª ›å©¡¦ª §œ¨ â®œ  â¤˜ £ ©¬£™˜«æ\n"
           "partition table §¦¬ ›œ £§¦¨œå ¤˜ œ¢œš®Ÿœå ©à©«á!\n"
           "\n"
-          "† ›£ ¦¬¨šå˜ ã › ˜š¨˜­ã partitions £§¦¨œå ¤˜ ¡˜«˜©«¨â¯œ  «¦ partiton table.\n"
+          "† ›£ ¦¬¨šå˜ ã › ˜š¨˜­ã partitions £§¦¨œå ¤˜ ¡˜«˜©«¨â¯œ  «¦ partition table.\n"
           "\n"
           "  \x07  ˜«ã©«œ F3 š ˜ ¤˜ ˜§¦®à¨ã©œ«œ ˜§æ «¤ „š¡˜«á©«˜©.\n"
           "  \x07  ˜«ã©«œ ENTER š ˜ ¤˜ ©¬¤œ®å©œ«œ.",

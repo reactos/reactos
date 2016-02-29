@@ -874,7 +874,7 @@ static MUI_ENTRY svSEConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "programs on the partition, or when you are sure you want to delete them.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1732,7 +1732,7 @@ MUI_STRING svSEStrings[] =
      "Storlek p† den nya partitionen:"},
     {STRING_CHOOSENEWPARTITION,
      "You have chosen to create a primary partition on"},
-//     "Du har valt att skapa en ny partiton p†"},
+//     "Du har valt att skapa en ny partition p†"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,

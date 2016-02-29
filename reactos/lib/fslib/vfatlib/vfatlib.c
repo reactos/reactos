@@ -147,7 +147,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
             
             if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
             {
-                /* FAT16 CHS partition (partiton size < 32MB) */
+                /* FAT16 CHS partition (partition size < 32MB) */
                 PartitionInfo.PartitionType = PARTITION_FAT_16;
             }
             else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))

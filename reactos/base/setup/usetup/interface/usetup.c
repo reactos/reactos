@@ -2919,7 +2919,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
                     if (PartEntry->SectorCount.QuadPart < 65536)
                     {
-                        /* FAT16 CHS partition (partiton size < 32MB) */
+                        /* FAT16 CHS partition (partition size < 32MB) */
                         PartEntry->PartitionType = PARTITION_FAT_16;
                     }
                     else if (PartEntry->SectorCount.QuadPart < 1048576)

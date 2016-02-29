@@ -2524,7 +2524,7 @@ Return Value:
                     partitionEntry = &partitionList->PartitionEntry[i];
 
                     //
-                    // Check if empty, or describes extended partiton or hasn't changed.
+                    // Check if empty, or describes extended partition or hasn't changed.
                     //
 
                     if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
@@ -4885,7 +4885,7 @@ Return Value:
             partitionEntry = &partitionList->PartitionEntry[partition];
 
             //
-            // Check if empty, or describes extended partiton or hasn't changed.
+            // Check if empty, or describes extended partition or hasn't changed.
             //
 
             if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
@@ -4995,7 +4995,7 @@ Return Value:
         partitionEntry = &partitionList->PartitionEntry[partition];
 
         //
-        // Check if empty, or describes an extended partiton.
+        // Check if empty, or describes an extended partition.
         //
 
         if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||

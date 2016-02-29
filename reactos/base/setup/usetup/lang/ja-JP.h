@@ -868,7 +868,7 @@ static MUI_ENTRY jaJPConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "programs on the partiton, or when you are sure you want to delete them.",
+        "programs on the partition, or when you are sure you want to delete them.",
         TEXT_STYLE_NORMAL
     },
     {

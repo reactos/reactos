@@ -42,7 +42,7 @@ typedef struct _PARTITION_TYPE
 } PARTITION_TYPE, *PPARTITION_TYPE;
 
 /*
- * This partiton type list was ripped off the kernelDisk.c module from:
+ * This partition type list was ripped off the kernelDisk.c module from:
  *
  * Visopsys Operating System
  * Copyright (C) 1998-2015 J. Andrew McLaughlin
@@ -1362,12 +1362,12 @@ AddDiskToList(
         }
         else
         {
-            DPRINT1("No matching aligment found! Partiton 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
+            DPRINT1("No matching aligment found! Partition 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
         }
     }
     else
     {
-        DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
+        DPRINT1("No valid partition table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
     }
 
 
@@ -3036,7 +3036,7 @@ DeleteCurrentPartition(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
-    /* Delete all logical partiton entries if an extended partition will be deleted */
+    /* Delete all logical partition entries if an extended partition will be deleted */
     if (DiskEntry->ExtendedPartition == PartEntry)
     {
         while (!IsListEmpty(&DiskEntry->LogicalPartListHead))
