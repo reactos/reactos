@@ -484,7 +484,7 @@ SystemConfigurationDataQueryRoutine(
     ULONG i;
 
     if (ValueType != REG_FULL_RESOURCE_DESCRIPTOR ||
-        ValueLength < sizeof (CM_FULL_RESOURCE_DESCRIPTOR))
+        ValueLength < sizeof(CM_FULL_RESOURCE_DESCRIPTOR))
         return STATUS_UNSUCCESSFUL;
 
     FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
@@ -502,7 +502,8 @@ SystemConfigurationDataQueryRoutine(
             FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize % sizeof(CM_INT13_DRIVE_PARAMETER) != 0)
             continue;
 
-        *Int13Drives = (CM_INT13_DRIVE_PARAMETER*) RtlAllocateHeap(ProcessHeap, 0, FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
+        *Int13Drives = (CM_INT13_DRIVE_PARAMETER*)RtlAllocateHeap(ProcessHeap, 0,
+                       FullResourceDescriptor->PartialResourceList.PartialDescriptors[i].u.DeviceSpecificData.DataSize);
         if (*Int13Drives == NULL)
             return STATUS_NO_MEMORY;
 
@@ -598,7 +599,7 @@ EnumerateBiosDiskEntries(
                     DiskCount = 0;
                     while (1)
                     {
-                        BiosDiskEntry = (BIOSDISKENTRY*) RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
+                        BiosDiskEntry = (BIOSDISKENTRY*)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
                         if (BiosDiskEntry == NULL)
                         {
                             break;
@@ -1181,9 +1182,7 @@ AddDiskToList(
                         NULL);
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeHeap(ProcessHeap,
-                    0,
-                    Mbr);
+        RtlFreeHeap(ProcessHeap, 0, Mbr);
         DPRINT1("NtReadFile failed, status=%x\n", Status);
         return;
     }
@@ -1220,12 +1219,10 @@ AddDiskToList(
         DiskEntry->NoMbr = FALSE;
 
     /* Free Mbr sector buffer */
-    RtlFreeHeap(ProcessHeap,
-                0,
-                Mbr);
+    RtlFreeHeap(ProcessHeap, 0, Mbr);
 
     ListEntry = List->BiosDiskListHead.Flink;
-    while(ListEntry != &List->BiosDiskListHead)
+    while (ListEntry != &List->BiosDiskListHead)
     {
         BiosDiskEntry = CONTAINING_RECORD(ListEntry, BIOSDISKENTRY, ListEntry);
         /* FIXME:
@@ -1383,18 +1380,12 @@ AddDiskToList(
     {
         for (i = 0; i < 4; i++)
         {
-            AddPartitionToDisk(DiskNumber,
-                               DiskEntry,
-                               i,
-                               FALSE);
+            AddPartitionToDisk(DiskNumber, DiskEntry, i, FALSE);
         }
 
         for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i += 4)
         {
-            AddPartitionToDisk(DiskNumber,
-                               DiskEntry,
-                               i,
-                               TRUE);
+            AddPartitionToDisk(DiskNumber, DiskEntry, i, TRUE);
         }
     }
 
@@ -1481,9 +1472,7 @@ CreatePartitionList(
                             FILE_SYNCHRONOUS_IO_NONALERT);
         if (NT_SUCCESS(Status))
         {
-            AddDiskToList(FileHandle,
-                          DiskNumber,
-                          List);
+            AddDiskToList(FileHandle, DiskNumber, List);
 
             NtClose(FileHandle);
         }
@@ -1566,8 +1555,8 @@ DestroyPartitionList(
         RtlFreeHeap(ProcessHeap, 0, DiskEntry);
     }
 
-    /* release the bios disk info */
-    while(!IsListEmpty(&List->BiosDiskListHead))
+    /* Release the bios disk info */
+    while (!IsListEmpty(&List->BiosDiskListHead))
     {
         Entry = RemoveHeadList(&List->BiosDiskListHead);
         BiosDiskEntry = CONTAINING_RECORD(Entry, BIOSDISKENTRY, ListEntry);
@@ -1861,7 +1850,7 @@ PrintDiskData(
     /* Print separator line */
     PrintEmptyLine(List);
 
-    /* Print partition lines*/
+    /* Print partition lines */
     PrimaryEntry = DiskEntry->PrimaryPartListHead.Flink;
     while (PrimaryEntry != &DiskEntry->PrimaryPartListHead)
     {
@@ -3053,11 +3042,8 @@ DeleteCurrentPartition(
     /* Adjust unpartitioned disk space entries */
 
     /* Get pointer to previous and next unpartitioned entries */
-    PrevPartEntry = GetPrevUnpartitionedEntry(DiskEntry,
-                                              PartEntry);
-
-    NextPartEntry = GetNextUnpartitionedEntry(DiskEntry,
-                                              PartEntry);
+    PrevPartEntry = GetPrevUnpartitionedEntry(DiskEntry, PartEntry);
+    NextPartEntry = GetNextUnpartitionedEntry(DiskEntry, PartEntry);
 
     if (PrevPartEntry != NULL && NextPartEntry != NULL)
     {

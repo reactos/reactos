@@ -572,9 +572,9 @@ CheckUnattendedSetup(VOID)
     }
 
     /* search for LocaleID in the 'Unattend' section*/
-    if (SetupFindFirstLineW (UnattendInf, L"Unattend", L"LocaleID", &Context))
+    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"LocaleID", &Context))
     {
-        if (INF_GetData (&Context, NULL, &Value))
+        if (INF_GetData(&Context, NULL, &Value))
         {
             LONG Id = wcstol(Value, NULL, 16);
             swprintf(LocaleID,L"%08lx", Id);
@@ -666,7 +666,7 @@ LanguagePage(PINPUT_RECORD Ir)
                     xScreen - 3,
                     yScreen - 3);
 
-    ScrollToPositionGenericList (LanguageList, GetDefaultLanguageIndex());
+    ScrollToPositionGenericList(LanguageList, GetDefaultLanguageIndex());
 
     MUIDisplayPage(LANGUAGE_PAGE);
 
@@ -677,7 +677,7 @@ LanguagePage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            ScrollDownGenericList (LanguageList);
+            ScrollDownGenericList(LanguageList);
             RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -1327,7 +1327,7 @@ HandleGenericList(PGENERIC_LIST GenericList,
             ScrollUpGenericList(GenericList);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
         {
             ScrollPageDownGenericList(GenericList);
         }
@@ -1337,7 +1337,7 @@ HandleGenericList(PGENERIC_LIST GenericList,
             ScrollPageUpGenericList(GenericList);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-               (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
@@ -1530,7 +1530,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
-        else if (IsListEmpty (&PartitionList->DiskListHead))
+        else if (IsListEmpty(&PartitionList->DiskListHead))
         {
             MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
@@ -1966,10 +1966,8 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
         if (Quit == TRUE)
         {
-            if (ConfirmQuit (Ir) == TRUE)
-            {
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
-            }
         }
         else if (Cancel == TRUE)
         {
@@ -2123,10 +2121,8 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 
         if (Quit == TRUE)
         {
-            if (ConfirmQuit (Ir) == TRUE)
-            {
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
-            }
         }
         else if (Cancel == TRUE)
         {
@@ -2279,10 +2275,8 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 
         if (Quit == TRUE)
         {
-            if (ConfirmQuit (Ir) == TRUE)
-            {
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
-            }
         }
         else if (Cancel == TRUE)
         {
@@ -2357,9 +2351,7 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) == TRUE)
-            {
                 return QUIT_PAGE;
-            }
 
             break;
         }
@@ -2502,9 +2494,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) == TRUE)
-            {
                 return QUIT_PAGE;
-            }
 
             break;
         }
@@ -2801,9 +2791,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) == TRUE)
-            {
                 return QUIT_PAGE;
-            }
 
             break;
         }
@@ -2896,9 +2884,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) == TRUE)
-            {
                 return QUIT_PAGE;
-            }
 
             break;
         }
@@ -2973,6 +2959,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #endif
             else if (!PartEntry->FileSystem->FormatFunc)
             {
+                /* FIXME: show an error dialog */
                 return QUIT_PAGE;
             }
 
@@ -3708,11 +3695,12 @@ PrepareCopyPage(PINPUT_RECORD Ir)
     if (SetupFileQueue == NULL)
     {
         MUIDisplayError(ERROR_COPY_QUEUE, Ir, POPUP_WAIT_ENTER);
-        return(QUIT_PAGE);
+        return QUIT_PAGE;
     }
 
     if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
     {
+        /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
@@ -3775,6 +3763,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
         if (!PrepareCopyPageInfFile(InfHandle, KeyValue, Ir))
         {
+            /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
 #endif
@@ -4008,20 +3997,20 @@ RegistryPage(PINPUT_RECORD Ir)
 
     do
     {
-        INF_GetDataField (&InfContext, 0, &Action);
-        INF_GetDataField (&InfContext, 1, &File);
-        INF_GetDataField (&InfContext, 2, &Section);
+        INF_GetDataField(&InfContext, 0, &Action);
+        INF_GetDataField(&InfContext, 1, &File);
+        INF_GetDataField(&InfContext, 2, &Section);
 
         DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
         if (Action == NULL)
             break; // Hackfix
 
-        if (!_wcsicmp (Action, L"AddReg"))
+        if (!_wcsicmp(Action, L"AddReg"))
         {
             Delete = FALSE;
         }
-        else if (!_wcsicmp (Action, L"DelReg"))
+        else if (!_wcsicmp(Action, L"DelReg"))
         {
             Delete = TRUE;
         }
@@ -4420,7 +4409,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 
     Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
                                       DestinationDevicePathBuffer);
-    if (!NT_SUCCESS (Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
                 Status);
@@ -4452,14 +4441,14 @@ QuitPage(PINPUT_RECORD Ir)
     /* Destroy partition list */
     if (PartitionList != NULL)
     {
-        DestroyPartitionList (PartitionList);
+        DestroyPartitionList(PartitionList);
         PartitionList = NULL;
     }
 
     /* Destroy filesystem list */
     if (FileSystemList != NULL)
     {
-        DestroyFileSystemList (FileSystemList);
+        DestroyFileSystemList(FileSystemList);
         FileSystemList = NULL;
     }
 
