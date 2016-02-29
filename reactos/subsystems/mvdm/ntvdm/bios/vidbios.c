@@ -1991,6 +1991,13 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
 
     WORD WindowWidth, WindowHeight;
 
+    /* TODO: This function doesn't work in non-alphanumeric modes yet */
+    if (Bda->VideoMode > 3)
+    {
+        DPRINT1("VidBiosScrollWindow: not implemented for mode 0%Xh\n", Bda->VideoMode);
+        return FALSE;
+    }
+
     /* Fixup the rectangle if needed */
     Rectangle.Left   = min(max(Rectangle.Left  , 0), Bda->ScreenColumns - 1);
     Rectangle.Right  = min(max(Rectangle.Right , 0), Bda->ScreenColumns - 1);
