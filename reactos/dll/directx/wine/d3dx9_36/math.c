@@ -2127,21 +2127,21 @@ unsigned short float_32_to_16(const float in)
     if (isnan(in)) return (sign ? 0xffff : 0x7fff);
     if (in == 0.0f) return (sign ? 0x8000 : 0x0000);
 
-    if (tmp < powf(2, 10))
+    if (tmp < (float)(1u << 10))
     {
         do
         {
             tmp *= 2.0f;
             exp--;
-        } while (tmp < powf(2, 10));
+        } while (tmp < (float)(1u << 10));
     }
-    else if (tmp >= powf(2, 11))
+    else if (tmp >= (float)(1u << 11))
     {
         do
         {
             tmp /= 2.0f;
             exp++;
-        } while (tmp >= powf(2, 11));
+        } while (tmp >= (float)(1u << 11));
     }
 
     exp += 10;  /* Normalize the mantissa */
@@ -2179,7 +2179,7 @@ unsigned short float_32_to_16(const float in)
         exp = origexp;
 
         /* the 13 extra bits from single precision are used for rounding */
-        mantissa = (unsigned int)(tmp * powf(2, 13));
+        mantissa = (unsigned int)(tmp * (1u << 13));
         mantissa >>= 1 - exp; /* denormalize */
 
         mantissa -= ~(mantissa >> 13) & 1; /* round half to even */

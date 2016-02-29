@@ -146,7 +146,7 @@ HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
 
     *buffer = &object->ID3DXBuffer_iface;
 
-    TRACE("Created ID3DBuffer %p\n", *buffer);
+    TRACE("Created ID3DXBuffer %p.\n", *buffer);
 
     return D3D_OK;
 }

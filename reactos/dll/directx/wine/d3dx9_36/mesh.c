@@ -7560,3 +7560,12 @@ HRESULT WINAPI D3DXTessellateNPatches(ID3DXMesh *mesh, const DWORD *adjacency_in
 
     return E_NOTIMPL;
 }
+
+HRESULT WINAPI D3DXConvertMeshSubsetToSingleStrip(struct ID3DXBaseMesh *mesh_in, DWORD attribute_id,
+        DWORD ib_flags, struct IDirect3DIndexBuffer9 **index_buffer, DWORD *index_count)
+{
+    FIXME("mesh_in %p, attribute_id %u, ib_flags %u, index_buffer %p, index_count %p stub.\n",
+            mesh_in, attribute_id, ib_flags, index_buffer, index_count);
+
+    return E_NOTIMPL;
+}

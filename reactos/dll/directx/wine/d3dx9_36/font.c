@@ -207,8 +207,11 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
 
-    if (!string || count <= 0)
+    if (!string || count == 0)
         return 0;
+
+    if (count < 0)
+       count = -1;
 
     countW = MultiByteToWideChar(CP_ACP, 0, string, count, NULL, 0);
     stringW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR));
@@ -226,24 +229,31 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
     struct d3dx_font *This = impl_from_ID3DXFont(iface);
-    RECT calc_rect = *rect;
+    RECT calc_rect;
     INT height;
 
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
 
-    if (!string || count <= 0)
+    if (!string || count == 0)
         return 0;
+
+    if (count < 0)
+       count = lstrlenW(string);
 
     /* Strip terminating NULL characters */
     while (count > 0 && !string[count-1])
         count--;
 
+    if (rect)
+        calc_rect = *rect;
+
     height = DrawTextW(This->hdc, string, count, &calc_rect, format | DT_CALCRECT);
 
     if (format & DT_CALCRECT)
     {
-        *rect = calc_rect;
+        if (rect)
+            *rect = calc_rect;
         return height;
     }
 

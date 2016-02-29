@@ -40,39 +40,39 @@ static HRESULT WINAPI d3dx9_animation_controller_QueryInterface(ID3DXAnimationCo
 {
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_ID3DXAnimationController))
+    if (IsEqualGUID(riid, &IID_IUnknown) ||
+        IsEqualGUID(riid, &IID_ID3DXAnimationController))
     {
-        IUnknown_AddRef(iface);
+        iface->lpVtbl->AddRef(iface);
         *out = iface;
         return D3D_OK;
     }
 
-    WARN("%s not implemented, returning E_NOINTERFACE\n", debugstr_guid(riid));
-
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
     *out = NULL;
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI d3dx9_animation_controller_AddRef(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
-    ULONG refcount = InterlockedIncrement(&This->ref);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
+    ULONG refcount = InterlockedIncrement(&animation->ref);
 
-    TRACE("%p increasing refcount to %u.\n", This, refcount);
+    TRACE("%p increasing refcount to %u.\n", animation, refcount);
 
     return refcount;
 }
 
 static ULONG WINAPI d3dx9_animation_controller_Release(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
-    ULONG refcount = InterlockedDecrement(&This->ref);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
+    ULONG refcount = InterlockedDecrement(&animation->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", This, refcount);
+    TRACE("%p decreasing refcount to %u.\n", animation, refcount);
 
     if (!refcount)
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        HeapFree(GetProcessHeap(), 0, animation);
     }
 
     return refcount;
@@ -80,44 +80,44 @@ static ULONG WINAPI d3dx9_animation_controller_Release(ID3DXAnimationController 
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumAnimationOutputs(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return This->max_outputs;
+    return animation->max_outputs;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumAnimationSets(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return This->max_sets;
+    return animation->max_sets;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumTracks(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
 
-    FIXME("iface %p.\n", iface);
+    TRACE("iface %p.\n", iface);
 
-    return This->max_tracks;
+    return animation->max_tracks;
 }
 
 static UINT WINAPI d3dx9_animation_controller_GetMaxNumEvents(ID3DXAnimationController *iface)
 {
-    struct d3dx9_animation_controller *This = impl_from_ID3DXAnimationController(iface);
+    struct d3dx9_animation_controller *animation = impl_from_ID3DXAnimationController(iface);
 
-    FIXME("iface %p.\n", iface);
+    TRACE("iface %p.\n", iface);
 
-    return This->max_events;
+    return animation->max_events;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_RegisterAnimationOutput(ID3DXAnimationController *iface,
         const char *name, D3DXMATRIX *matrix, D3DXVECTOR3 *scale, D3DXQUATERNION *rotation, D3DXVECTOR3 *translation)
 {
-    FIXME("iface %p, name %s, matrix %p, scale %p, rotation %p, translation %p stub.\n", iface, wine_dbgstr_a(name),
+    FIXME("iface %p, name %s, matrix %p, scale %p, rotation %p, translation %p stub.\n", iface, debugstr_a(name),
             matrix, scale, rotation, translation);
 
     return E_NOTIMPL;
@@ -157,15 +157,15 @@ static HRESULT WINAPI d3dx9_animation_controller_GetAnimationSet(ID3DXAnimationC
 static HRESULT WINAPI d3dx9_animation_controller_GetAnimationSetByName(ID3DXAnimationController *iface,
         const char *name, ID3DXAnimationSet **anim_set)
 {
-    FIXME("iface %p, name %s, anim_set %p stub.\n", iface, wine_dbgstr_a(name), anim_set);
+    FIXME("iface %p, name %s, anim_set %p stub.\n", iface, debugstr_a(name), anim_set);
 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3dx9_animation_controller_AdvanceTime(ID3DXAnimationController *iface, DOUBLE time_delta,
-        ID3DXAnimationCallbackHandler **callback_handler)
+static HRESULT WINAPI d3dx9_animation_controller_AdvanceTime(ID3DXAnimationController *iface, double time_delta,
+        ID3DXAnimationCallbackHandler *callback_handler)
 {
-    FIXME("iface %p, time_delta %g, callback_handler %p stub.\n", iface, time_delta, callback_handler);
+    FIXME("iface %p, time_delta %.16e, callback_handler %p stub.\n", iface, time_delta, callback_handler);
 
     return E_NOTIMPL;
 }
@@ -177,7 +177,7 @@ static HRESULT WINAPI d3dx9_animation_controller_Reset(ID3DXAnimationController 
     return E_NOTIMPL;
 }
 
-static DOUBLE WINAPI d3dx9_animation_controller_GetTime(ID3DXAnimationController *iface)
+static double WINAPI d3dx9_animation_controller_GetTime(ID3DXAnimationController *iface)
 {
     FIXME("iface %p stub.\n", iface);
 
@@ -200,34 +200,34 @@ static HRESULT WINAPI d3dx9_animation_controller_GetTrackAnimationSet(ID3DXAnima
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3dx9_animation_controller_GetTrackPriority(ID3DXAnimationController *iface,
-        UINT track, D3DXPRIORITY_TYPE *priority)
+static HRESULT WINAPI d3dx9_animation_controller_SetTrackPriority(ID3DXAnimationController *iface,
+        UINT track, D3DXPRIORITY_TYPE priority)
 {
-    FIXME("iface %p, track %u, priority %p stub.\n", iface, track, priority);
+    FIXME("iface %p, track %u, priority %u stub.\n", iface, track, priority);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_SetTrackSpeed(ID3DXAnimationController *iface,
-        UINT track, FLOAT speed)
+        UINT track, float speed)
 {
-    FIXME("iface %p, track %u, speed %f stub.\n", iface, track, speed);
+    FIXME("iface %p, track %u, speed %.8e stub.\n", iface, track, speed);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_SetTrackWeight(ID3DXAnimationController *iface,
-        UINT track, FLOAT weight)
+        UINT track, float weight)
 {
-    FIXME("iface %p, track %u, weight %f stub.\n", iface, track, weight);
+    FIXME("iface %p, track %u, weight %.8e stub.\n", iface, track, weight);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_SetTrackPosition(ID3DXAnimationController *iface,
-        UINT track, DOUBLE position)
+        UINT track, double position)
 {
-    FIXME("iface %p, track %u, position %g stub.\n", iface, track, position);
+    FIXME("iface %p, track %u, position %.16e stub.\n", iface, track, position);
 
     return E_NOTIMPL;
 }
@@ -235,7 +235,7 @@ static HRESULT WINAPI d3dx9_animation_controller_SetTrackPosition(ID3DXAnimation
 static HRESULT WINAPI d3dx9_animation_controller_SetTrackEnable(ID3DXAnimationController *iface,
         UINT track, BOOL enable)
 {
-    FIXME("iface %p, track %u, enable %u stub.\n", iface, track, enable);
+    FIXME("iface %p, track %u, enable %#x stub.\n", iface, track, enable);
 
     return E_NOTIMPL;
 }
@@ -257,60 +257,60 @@ static HRESULT WINAPI d3dx9_animation_controller_GetTrackDesc(ID3DXAnimationCont
 }
 
 static HRESULT WINAPI d3dx9_animation_controller_SetPriorityBlend(ID3DXAnimationController *iface,
-        FLOAT blend_weight)
+        float blend_weight)
 {
-    FIXME("iface %p, blend_weight %f stub.\n", iface, blend_weight);
+    FIXME("iface %p, blend_weight %.8e stub.\n", iface, blend_weight);
 
     return E_NOTIMPL;
 }
 
-static FLOAT WINAPI d3dx9_animation_controller_GetPriorityBlend(ID3DXAnimationController *iface)
+static float WINAPI d3dx9_animation_controller_GetPriorityBlend(ID3DXAnimationController *iface)
 {
     FIXME("iface %p stub.\n", iface);
 
-    return 0.0;
+    return 0.0f;
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackSpeed(ID3DXAnimationController *iface,
-        UINT track, FLOAT new_speed, DOUBLE start_time, DOUBLE duration, D3DXTRANSITION_TYPE transition)
+        UINT track, float new_speed, double start_time, double duration, D3DXTRANSITION_TYPE transition)
 {
-    FIXME("iface %p, track %u, new_speed %f, start_time %g, duration %g, transition %u stub.\n", iface,
+    FIXME("iface %p, track %u, new_speed %.8e, start_time %.16e, duration %.16e, transition %u stub.\n", iface,
             track, new_speed, start_time, duration, transition);
 
     return 0;
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackWeight(ID3DXAnimationController *iface,
-        UINT track, FLOAT new_weight, DOUBLE start_time, DOUBLE duration, D3DXTRANSITION_TYPE transition)
+        UINT track, float new_weight, double start_time, double duration, D3DXTRANSITION_TYPE transition)
 {
-    FIXME("iface %p, track %u, new_weight %f, start_time %g, duration %g, transition %u stub.\n", iface,
+    FIXME("iface %p, track %u, new_weight %.8e, start_time %.16e, duration %.16e, transition %u stub.\n", iface,
             track, new_weight, start_time, duration, transition);
 
     return 0;
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackPosition(ID3DXAnimationController *iface,
-        UINT track, DOUBLE new_position, DOUBLE start_time)
+        UINT track, double new_position, double start_time)
 {
-    FIXME("iface %p, track %u, new_position %g, start_time %g stub.\n", iface,
+    FIXME("iface %p, track %u, new_position %.16e, start_time %.16e stub.\n", iface,
             track, new_position, start_time);
 
     return 0;
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackEnable(ID3DXAnimationController *iface,
-        UINT track, BOOL new_enable, DOUBLE start_time)
+        UINT track, BOOL new_enable, double start_time)
 {
-    FIXME("iface %p, track %u, new_enable %u, start_time %g stub.\n", iface,
+    FIXME("iface %p, track %u, new_enable %#x, start_time %.16e stub.\n", iface,
             track, new_enable, start_time);
 
     return 0;
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_KeyTrackBlend(ID3DXAnimationController *iface,
-        FLOAT new_blend_weight, DOUBLE start_time, DOUBLE duration, D3DXTRANSITION_TYPE transition)
+        float new_blend_weight, double start_time, double duration, D3DXTRANSITION_TYPE transition)
 {
-    FIXME("iface %p, new_blend_weight %f, start_time %g, duration %g, transition %u stub.\n", iface,
+    FIXME("iface %p, new_blend_weight %.8e, start_time %.16e, duration %.16e, transition %u stub.\n", iface,
             new_blend_weight, start_time, duration, transition);
 
     return 0;
@@ -361,9 +361,9 @@ static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetUpcomingTrackEvent(I
 }
 
 static D3DXEVENTHANDLE WINAPI d3dx9_animation_controller_GetUpcomingPriorityBlend(ID3DXAnimationController *iface,
-        D3DXEVENTHANDLE handle)
+        D3DXEVENTHANDLE event)
 {
-    FIXME("iface %p, handle %u stub.\n", iface, handle);
+    FIXME("iface %p, event %u stub.\n", iface, event);
 
     return 0;
 }
@@ -383,16 +383,16 @@ static HRESULT WINAPI d3dx9_animation_controller_GetEventDesc(ID3DXAnimationCont
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3dx9_animation_controller_CloneAnimationController(ID3DXAnimationController *iface, UINT max_num_anim_outputs,
-        UINT max_num_anim_sets, UINT max_num_tracks, UINT max_num_events, ID3DXAnimationController **anim_controller)
+static HRESULT WINAPI d3dx9_animation_controller_CloneAnimationController(ID3DXAnimationController *iface, UINT max_outputs,
+        UINT max_sets, UINT max_tracks, UINT max_events, ID3DXAnimationController **anim_controller)
 {
-    FIXME("iface %p, max_num_anim_outputs %u, max_num_anim_sets %u, max_num_tracks %u, max_num_events %u, anim_controller %p stub.\n",
-            iface, max_num_anim_outputs, max_num_anim_sets, max_num_tracks, max_num_events, anim_controller);
+    FIXME("iface %p, max_outputs %u, max_sets %u, max_tracks %u, max_events %u, anim_controller %p stub.\n",
+            iface, max_outputs, max_sets, max_tracks, max_events, anim_controller);
 
     return E_NOTIMPL;
 }
 
-static const struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl =
+static /* const */ struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl =
 {
     d3dx9_animation_controller_QueryInterface,
     d3dx9_animation_controller_AddRef,
@@ -412,7 +412,7 @@ static const struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl
     d3dx9_animation_controller_GetTime,
     d3dx9_animation_controller_SetTrackAnimationSet,
     d3dx9_animation_controller_GetTrackAnimationSet,
-    d3dx9_animation_controller_GetTrackPriority,
+    d3dx9_animation_controller_SetTrackPriority,
     d3dx9_animation_controller_SetTrackSpeed,
     d3dx9_animation_controller_SetTrackWeight,
     d3dx9_animation_controller_SetTrackPosition,
@@ -438,19 +438,16 @@ static const struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl
     d3dx9_animation_controller_CloneAnimationController
 };
 
-/***********************************************************************
- *           D3DXCreateAnimationController    (D3DX9_36.@)
- */
-HRESULT WINAPI D3DXCreateAnimationController(UINT MaxNumAnimationOutputs, UINT MaxNumAnimationSets,
-        UINT MaxNumTracks, UINT MaxNumEvents, ID3DXAnimationController **AnimationController)
+HRESULT WINAPI D3DXCreateAnimationController(UINT max_outputs, UINT max_sets,
+        UINT max_tracks, UINT max_events, ID3DXAnimationController **controller)
 {
-    struct d3dx9_animation_controller* object;
+    struct d3dx9_animation_controller *object;
 
-    TRACE("MaxNumAnimationOutputs %u, MaxNumAnimationSets %u, MaxNumTracks %u, MaxNumEvents %u, AnimationController %p.\n",
-            MaxNumAnimationOutputs, MaxNumAnimationSets, MaxNumTracks, MaxNumEvents, AnimationController);
+    TRACE("max_outputs %u, max_sets %u, max_tracks %u, max_events %u, controller %p.\n",
+            max_outputs, max_sets, max_tracks, max_events, controller);
 
-    if (!AnimationController)
-        return D3DERR_INVALIDCALL;
+    if (!max_outputs || !max_sets || !max_tracks || !max_events || !controller)
+        return D3D_OK;
 
     object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
     if (!object)
@@ -458,12 +455,12 @@ HRESULT WINAPI D3DXCreateAnimationController(UINT MaxNumAnimationOutputs, UINT M
 
     object->ID3DXAnimationController_iface.lpVtbl = &d3dx9_animation_controller_vtbl;
     object->ref = 1;
-    object->max_outputs = MaxNumAnimationOutputs;
-    object->max_sets    = MaxNumAnimationSets;
-    object->max_tracks  = MaxNumTracks;
-    object->max_events  = MaxNumEvents;
+    object->max_outputs = max_outputs;
+    object->max_sets    = max_sets;
+    object->max_tracks  = max_tracks;
+    object->max_events  = max_events;
 
-    *AnimationController = &object->ID3DXAnimationController_iface;
+    *controller = &object->ID3DXAnimationController_iface;
 
     return D3D_OK;
 }
