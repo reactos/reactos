@@ -2286,7 +2286,10 @@ static BOOL CRYPT_BuildCandidateChainFromCert(CertificateChainEngine *engine,
             chain->context.dwRevocationFreshnessTime = 0;
         }
         else
+        {
+            CRYPT_FreeSimpleChain(simpleChain);
             ret = FALSE;
+        }
         *ppChain = chain;
     }
     return ret;
