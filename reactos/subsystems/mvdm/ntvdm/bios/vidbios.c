@@ -3987,6 +3987,9 @@ BOOLEAN VidBiosInitialize(VOID)
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x14_OFFSET),
                   Font8x14, sizeof(Font8x14));
 
+    /* Make another copy of the lower half of the 8x8 font at F000:FA6E for compatibility */
+    RtlMoveMemory(SEG_OFF_TO_PTR(BIOS_SEGMENT, FONT_8x8_COMPAT_OFFSET), Font8x8, sizeof(Font8x8) / 2);
+
     VidBios32Initialize();
 
     /* Compute the ROM checksum and store it */

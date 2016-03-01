@@ -31,6 +31,8 @@
 #define FONT_8x16_OFFSET        0x0900
 #define FONT_8x14_OFFSET        0x1900
 
+#define FONT_8x8_COMPAT_OFFSET  0xFA6E
+
 #define VIDEO_STATE_INFO_OFFSET 0x3000 // == 0x1900 + (sizeof(Font8x14) == 0x0E00) + 0x0900 for padding
 
 #define VIDEO_BIOS_ROM_SIZE     0x4000
