@@ -319,20 +319,20 @@ static void testStringToBinaryA(void)
 
     ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, NULL, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
     ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
     /* Bogus format */
     ret = pCryptStringToBinaryA(tests[0].base64, 0, 0, NULL, &bufLen, NULL,
      NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-     "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     /* Decoding doesn't expect the NOCR flag to be specified */
     ret = pCryptStringToBinaryA(tests[0].base64, 1,
      CRYPT_STRING_BASE64 | CRYPT_STRING_NOCR, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-     "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     /* Bad strings */
     for (i = 0; i < sizeof(badStrings) / sizeof(badStrings[0]); i++)
     {
@@ -340,7 +340,7 @@ static void testStringToBinaryA(void)
         ret = pCryptStringToBinaryA(badStrings[i].str, 0, badStrings[i].format,
          NULL, &bufLen, NULL, NULL);
         ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-         "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+         "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     }
     /* Good strings */
     for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)

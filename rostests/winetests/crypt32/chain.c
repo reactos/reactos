@@ -2809,10 +2809,7 @@ static PCCERT_CHAIN_CONTEXT getChain(HCERTCHAINENGINE engine,
              checkTime->wDay, checkTime->wMonth, checkTime->wYear);
             ret = pCertGetCertificateChain(engine, endCert, &fileTime,
              includeStore ? store : NULL, &chainPara, flags, NULL, &chain);
-            if (todo & TODO_CHAIN)
-                todo_wine ok(ret, "Chain %d: CertGetCertificateChain failed: %08x\n",
-                 testIndex, GetLastError());
-            else
+            todo_wine_if (todo & TODO_CHAIN)
                 ok(ret, "Chain %d: CertGetCertificateChain failed: %08x\n",
                  testIndex, GetLastError());
             CertFreeCertificateContext(endCert);
@@ -2838,15 +2835,7 @@ static void checkElementStatus(const CERT_TRUST_STATUS *expected,
          "%s[%d], element [%d,%d]: expected error %08x, got %08x\n",
          testName, testIndex, chainIndex, elementIndex, expected->dwErrorStatus,
          got->dwErrorStatus);
-    else if (todo & TODO_ERROR)
-        todo_wine
-        ok(got->dwErrorStatus == expected->dwErrorStatus ||
-         broken((got->dwErrorStatus & ~ignore->dwErrorStatus) ==
-         (expected->dwErrorStatus & ~ignore->dwErrorStatus)),
-         "%s[%d], element [%d,%d]: expected error %08x, got %08x\n",
-         testName, testIndex, chainIndex, elementIndex, expected->dwErrorStatus,
-         got->dwErrorStatus);
-    else
+    else todo_wine_if (todo & TODO_ERROR)
         ok(got->dwErrorStatus == expected->dwErrorStatus ||
          broken((got->dwErrorStatus & ~ignore->dwErrorStatus) ==
          (expected->dwErrorStatus & ~ignore->dwErrorStatus)),
@@ -2859,15 +2848,7 @@ static void checkElementStatus(const CERT_TRUST_STATUS *expected,
          "%s[%d], element [%d,%d]: expected info %08x, got %08x\n",
          testName, testIndex, chainIndex, elementIndex, expected->dwInfoStatus,
          got->dwInfoStatus);
-    else if (todo & TODO_INFO)
-        todo_wine
-        ok(got->dwInfoStatus == expected->dwInfoStatus ||
-         broken((got->dwInfoStatus & ~ignore->dwInfoStatus) ==
-         (expected->dwInfoStatus & ~ignore->dwInfoStatus)),
-         "%s[%d], element [%d,%d]: expected info %08x, got %08x\n",
-         testName, testIndex, chainIndex, elementIndex, expected->dwInfoStatus,
-         got->dwInfoStatus);
-    else
+    else todo_wine_if (todo & TODO_INFO)
         ok(got->dwInfoStatus == expected->dwInfoStatus ||
          broken((got->dwInfoStatus & ~ignore->dwInfoStatus) ==
          (expected->dwInfoStatus & ~ignore->dwInfoStatus)),
@@ -2881,11 +2862,7 @@ static void checkSimpleChainStatus(const CERT_SIMPLE_CHAIN *simpleChain,
  const CERT_TRUST_STATUS *ignore, DWORD todo, LPCSTR testName, DWORD testIndex,
  DWORD chainIndex)
 {
-    if (todo & TODO_ELEMENTS)
-        todo_wine ok(simpleChain->cElement == simpleChainStatus->cElement,
-         "%s[%d]: expected %d elements, got %d\n", testName, testIndex,
-         simpleChainStatus->cElement, simpleChain->cElement);
-    else
+    todo_wine_if (todo & TODO_ELEMENTS)
         ok(simpleChain->cElement == simpleChainStatus->cElement,
          "%s[%d]: expected %d elements, got %d\n", testName, testIndex,
          simpleChainStatus->cElement, simpleChain->cElement);
@@ -2915,18 +2892,8 @@ static void checkChainStatus(PCCERT_CHAIN_CONTEXT chain,
     ok(chain->cChain == chainStatus->cChain,
      "%s[%d]: expected %d simple chains, got %d\n", testName, testIndex,
      chainStatus->cChain, chain->cChain);
-    if (todo & TODO_ERROR &&
+    todo_wine_if (todo & TODO_ERROR &&
      chain->TrustStatus.dwErrorStatus != chainStatus->status.dwErrorStatus)
-        todo_wine ok(chain->TrustStatus.dwErrorStatus ==
-         chainStatus->status.dwErrorStatus ||
-         broken((chain->TrustStatus.dwErrorStatus &
-         ~chainStatus->statusToIgnore.dwErrorStatus) ==
-         (chainStatus->status.dwErrorStatus &
-         ~chainStatus->statusToIgnore.dwErrorStatus)),
-         "%s[%d]: expected error %08x, got %08x\n",
-         testName, testIndex, chainStatus->status.dwErrorStatus,
-         chain->TrustStatus.dwErrorStatus);
-    else
         ok(chain->TrustStatus.dwErrorStatus ==
          chainStatus->status.dwErrorStatus ||
          broken((chain->TrustStatus.dwErrorStatus &
@@ -2937,18 +2904,8 @@ static void checkChainStatus(PCCERT_CHAIN_CONTEXT chain,
          "Verisign root certificate is available.\n",
          testName, testIndex, chainStatus->status.dwErrorStatus,
          chain->TrustStatus.dwErrorStatus, CERT_TRUST_IS_UNTRUSTED_ROOT);
-    if (todo & TODO_INFO &&
+    todo_wine_if (todo & TODO_INFO &&
      chain->TrustStatus.dwInfoStatus != chainStatus->status.dwInfoStatus)
-        todo_wine ok(chain->TrustStatus.dwInfoStatus ==
-         chainStatus->status.dwInfoStatus ||
-         broken((chain->TrustStatus.dwInfoStatus &
-         ~chainStatus->statusToIgnore.dwInfoStatus) ==
-         (chainStatus->status.dwInfoStatus &
-         ~chainStatus->statusToIgnore.dwInfoStatus)),
-         "%s[%d]: expected info %08x, got %08x\n",
-         testName, testIndex, chainStatus->status.dwInfoStatus,
-         chain->TrustStatus.dwInfoStatus);
-    else
         ok(chain->TrustStatus.dwInfoStatus ==
          chainStatus->status.dwInfoStatus ||
          broken((chain->TrustStatus.dwInfoStatus &
@@ -4411,16 +4368,7 @@ static void checkChainPolicyStatus(LPCSTR policy, HCERTCHAINENGINE engine,
         }
         if (ret)
         {
-            if (check->todo & TODO_ERROR)
-                todo_wine ok(policyStatus.dwError == check->status.dwError ||
-                 broken(policyStatus.dwError == CERT_TRUST_NO_ERROR) ||
-                 (check->brokenStatus && broken(policyStatus.dwError ==
-                 check->brokenStatus->dwError)),
-                 "%s[%d](%s): expected %08x, got %08x\n",
-                 testName, testIndex,
-                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
-                 check->status.dwError, policyStatus.dwError);
-            else
+            todo_wine_if (check->todo & TODO_ERROR)
                 ok(policyStatus.dwError == check->status.dwError ||
                  broken(policyStatus.dwError == CERT_TRUST_NO_ERROR) ||
                  (check->brokenStatus && broken(policyStatus.dwError ==
@@ -4438,16 +4386,7 @@ static void checkChainPolicyStatus(LPCSTR policy, HCERTCHAINENGINE engine,
                 pCertFreeCertificateChain(chain);
                 return;
             }
-            if (check->todo & TODO_CHAINS)
-                todo_wine ok(policyStatus.lChainIndex ==
-                 check->status.lChainIndex ||
-                 (check->brokenStatus && broken(policyStatus.lChainIndex ==
-                 check->brokenStatus->lChainIndex)),
-                 "%s[%d](%s): expected %d, got %d\n",
-                 testName, testIndex,
-                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
-                 check->status.lChainIndex, policyStatus.lChainIndex);
-            else
+            todo_wine_if (check->todo & TODO_CHAINS)
                 ok(policyStatus.lChainIndex == check->status.lChainIndex ||
                  (check->brokenStatus && broken(policyStatus.lChainIndex ==
                  check->brokenStatus->lChainIndex)),
@@ -4455,21 +4394,12 @@ static void checkChainPolicyStatus(LPCSTR policy, HCERTCHAINENGINE engine,
                  testName, testIndex,
                  IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  check->status.lChainIndex, policyStatus.lChainIndex);
-            if (check->todo & TODO_ELEMENTS)
-                todo_wine ok(policyStatus.lElementIndex ==
-                 check->status.lElementIndex ||
-                 (check->brokenStatus && broken(policyStatus.lElementIndex ==
-                 check->brokenStatus->lElementIndex)),
-                 "%s[%d](%s): expected %d, got %d\n",
-                 testName, testIndex,
-                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
-                 check->status.lElementIndex, policyStatus.lElementIndex);
-            else
+            todo_wine_if (check->todo & TODO_ELEMENTS)
                 ok(policyStatus.lElementIndex == check->status.lElementIndex ||
                  (check->brokenStatus && broken(policyStatus.lElementIndex ==
                  check->brokenStatus->lElementIndex)),
-                 testName, testIndex,
                  "%s[%d](%s): expected %d, got %d\n",
+                 testName, testIndex,
                  IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  check->status.lElementIndex, policyStatus.lElementIndex);
         }

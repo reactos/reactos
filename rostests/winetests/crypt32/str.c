@@ -254,16 +254,7 @@ static void test_CertRDNValueToStrA(void)
     {
         ret = pCertRDNValueToStrA(attrs[i].dwValueType, &attrs[i].Value,
          buffer, sizeof(buffer));
-        if (attrs[i].todo)
-        {
-            todo_wine
-            ok(ret == strlen(attrs[i].str) + 1, "Expected length %d, got %d\n",
-             lstrlenA(attrs[i].str) + 1, ret);
-            todo_wine
-            ok(!strcmp(buffer, attrs[i].str), "Expected %s, got %s\n",
-             attrs[i].str, buffer);
-        }
-        else
+        todo_wine_if (attrs[i].todo)
         {
             ok(ret == strlen(attrs[i].str) + 1, "Expected length %d, got %d\n",
              lstrlenA(attrs[i].str) + 1, ret);
@@ -359,16 +350,7 @@ static void test_CertRDNValueToStrW(void)
     {
         ret = pCertRDNValueToStrW(attrs[i].dwValueType, &attrs[i].Value,
          buffer, sizeof(buffer) / sizeof(buffer[0]));
-        if (attrs[i].todo)
-        {
-            todo_wine
-            ok(ret == lstrlenW(attrs[i].str) + 1,
-             "Expected length %d, got %d\n", lstrlenW(attrs[i].str) + 1, ret);
-            todo_wine
-            ok(!lstrcmpW(buffer, attrs[i].str), "Expected %s, got %s\n",
-             wine_dbgstr_w(attrs[i].str), wine_dbgstr_w(buffer));
-        }
-        else
+        todo_wine_if (attrs[i].todo)
         {
             ok(ret == lstrlenW(attrs[i].str) + 1,
              "Expected length %d, got %d\n", lstrlenW(attrs[i].str) + 1, ret);
@@ -394,27 +376,15 @@ static void test_NameToStrConversionA(PCERT_NAME_BLOB pName, DWORD dwStrType,
     DWORD i;
 
     i = pCertNameToStrA(X509_ASN_ENCODING, pName, dwStrType, NULL, 0);
-    if (todo)
-        todo_wine
-        ok(i == strlen(expected) + 1, "Expected %d chars, got %d\n",
-         lstrlenA(expected) + 1, i);
-    else
+    todo_wine_if (todo)
         ok(i == strlen(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenA(expected) + 1, i);
     i = pCertNameToStrA(X509_ASN_ENCODING,pName, dwStrType, buffer,
      sizeof(buffer));
-    if (todo)
-        todo_wine
+    todo_wine_if (todo)
         ok(i == strlen(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenA(expected) + 1, i);
-    else
-        ok(i == strlen(expected) + 1, "Expected %d chars, got %d\n",
-         lstrlenA(expected) + 1, i);
-    if (todo)
-        todo_wine
-        ok(!strcmp(buffer, expected), "Expected %s, got %s\n", expected,
-         buffer);
-    else
+    todo_wine_if (todo)
         ok(!strcmp(buffer, expected), "Expected %s, got %s\n", expected,
          buffer);
 }
@@ -577,24 +547,15 @@ static void test_NameToStrConversionW(PCERT_NAME_BLOB pName, DWORD dwStrType,
     DWORD i;
 
     i = pCertNameToStrW(X509_ASN_ENCODING,pName, dwStrType, NULL, 0);
-    if (todo)
-        todo_wine ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
-         lstrlenW(expected) + 1, i);
-    else
+    todo_wine_if (todo)
         ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenW(expected) + 1, i);
     i = pCertNameToStrW(X509_ASN_ENCODING,pName, dwStrType, buffer,
      sizeof(buffer) / sizeof(buffer[0]));
-    if (todo)
-        todo_wine ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
-         lstrlenW(expected) + 1, i);
-    else
+    todo_wine_if (todo)
         ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenW(expected) + 1, i);
-    if (todo)
-        todo_wine ok(!lstrcmpW(buffer, expected), "Expected %s, got %s\n",
-         wine_dbgstr_w(expected), wine_dbgstr_w(buffer));
-    else
+    todo_wine_if (todo)
         ok(!lstrcmpW(buffer, expected), "Expected %s, got %s\n",
          wine_dbgstr_w(expected), wine_dbgstr_w(buffer));
 }

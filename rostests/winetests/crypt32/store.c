@@ -317,11 +317,7 @@ static void compareStore(HCERTSTORE store, LPCSTR name, const BYTE *pb,
     ret = CertSaveStore(store, X509_ASN_ENCODING, CERT_STORE_SAVE_AS_STORE,
      CERT_STORE_SAVE_TO_MEMORY, &blob, 0);
     ok(ret, "CertSaveStore failed: %08x\n", GetLastError());
-    if (todo)
-        todo_wine
-        ok(blob.cbData == cb, "%s: expected size %d, got %d\n", name, cb,
-         blob.cbData);
-    else
+    todo_wine_if (todo)
         ok(blob.cbData == cb, "%s: expected size %d, got %d\n", name, cb,
          blob.cbData);
     blob.pbData = HeapAlloc(GetProcessHeap(), 0, blob.cbData);
@@ -330,10 +326,7 @@ static void compareStore(HCERTSTORE store, LPCSTR name, const BYTE *pb,
         ret = CertSaveStore(store, X509_ASN_ENCODING, CERT_STORE_SAVE_AS_STORE,
          CERT_STORE_SAVE_TO_MEMORY, &blob, 0);
         ok(ret, "CertSaveStore failed: %08x\n", GetLastError());
-        if (todo)
-            todo_wine
-            ok(!memcmp(pb, blob.pbData, cb), "%s: unexpected value\n", name);
-        else
+        todo_wine_if (todo)
             ok(!memcmp(pb, blob.pbData, cb), "%s: unexpected value\n", name);
         HeapFree(GetProcessHeap(), 0, blob.pbData);
     }

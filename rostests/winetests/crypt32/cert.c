@@ -3627,7 +3627,6 @@ static void testVerifyRevocation(void)
      "expected CRYPT_E_NO_REVOCATION_CHECK or CRYPT_E_REVOCATION_OFFLINE, got %08x\n",
      status.dwError);
     ok(status.dwIndex == 0, "expected index 0, got %d\n", status.dwIndex);
-    ok(status.dwIndex == 0, "expected index 0, got %d\n", status.dwIndex);
     /* Now add a CRL to the hCrlStore */
     revPara.hCrlStore = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
