@@ -1185,14 +1185,9 @@ if (0)
                 if (sizeof(title_hits) / sizeof(title_hits[0]) <= title_index)
                     break;
 
-                if (title_hits[title_index].todo) {
-                    todo_wine
+                todo_wine_if(title_hits[title_index].todo)
                     ok(title_hits[title_index].ht == res, "Expected %x, got %x, pos %d\n",
                                                           title_hits[title_index].ht, res, x);
-                } else {
-                    ok(title_hits[title_index].ht == res, "Expected %x, got %x, pos %d\n",
-                                                          title_hits[title_index].ht, res, x);
-                }
             }
             old_res = res;
         }

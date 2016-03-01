@@ -935,7 +935,7 @@ if (0)
     ret = SendMessageA(hdlg, PSM_INSERTPAGE, 0, (LPARAM)INVALID_HANDLE_VALUE);
 }
 
-    ret = SendMessageA(hdlg, PSM_INSERTPAGE, (LPARAM)INVALID_HANDLE_VALUE, (LPARAM)hpsp[2]);
+    ret = SendMessageA(hdlg, PSM_INSERTPAGE, (WPARAM)INVALID_HANDLE_VALUE, (LPARAM)hpsp[2]);
     ok(ret == FALSE, "got %d\n", ret);
 
     /* check item count */

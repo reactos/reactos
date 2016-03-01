@@ -368,6 +368,36 @@ static void test_LoadIconWithScaleDown(void)
     FreeLibrary(hinst);
 }
 
+static void check_class( const char *name, int must_exist, UINT style, UINT ignore )
+{
+    WNDCLASSA wc;
+
+    if (GetClassInfoA( 0, name, &wc ))
+    {
+todo_wine
+        ok( !(~wc.style & style & ~ignore), "System class %s is missing bits %x (%08x/%08x)\n",
+            name, ~wc.style & style, wc.style, style );
+        ok( !(wc.style & ~style), "System class %s has extra bits %x (%08x/%08x)\n",
+            name, wc.style & ~style, wc.style, style );
+        ok( !wc.hInstance, "System class %s has hInstance %p\n", name, wc.hInstance );
+    }
+    else
+        ok( !must_exist, "System class %s does not exist\n", name );
+}
+
+/* test styles of system classes */
+static void test_builtin_classes(void)
+{
+    /* check style bits */
+    check_class( "Button",     1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "ComboBox",   1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "Edit",       1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ListBox",    1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ScrollBar",  1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "Static",     1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ComboLBox",  1, CS_SAVEBITS | CS_DBLCLKS | CS_DROPSHADOW | CS_GLOBALCLASS, CS_DROPSHADOW );
+}
+
 START_TEST(misc)
 {
     ULONG_PTR ctx_cookie;
@@ -382,6 +412,7 @@ START_TEST(misc)
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
 
+    test_builtin_classes();
     test_TaskDialogIndirect();
     test_LoadIconWithScaleDown();
 

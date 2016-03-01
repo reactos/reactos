@@ -210,6 +210,7 @@ static const struct message setfocus_seq[] =
 {
     { WM_IME_SETCONTEXT, sent|wparam|optional, 1 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { BM_GETSTATE, sent|optional }, /* when touchscreen is present */
     { WM_SETFOCUS, sent|wparam },
     { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
     { WM_APP, sent|wparam|lparam },
@@ -232,6 +233,7 @@ static const struct message setfocus_static_seq[] =
 {
     { WM_IME_SETCONTEXT, sent|wparam|optional, 1 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { BM_GETSTATE, sent|optional }, /* when touchscreen is present */
     { WM_SETFOCUS, sent|wparam, 0 },
     { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
     { WM_COMMAND, sent|wparam|parent|optional, MAKEWPARAM(ID_BUTTON, BN_CLICKED) }, /* radio button */
@@ -244,6 +246,7 @@ static const struct message setfocus_groupbox_seq[] =
 {
     { WM_IME_SETCONTEXT, sent|wparam|optional, 1 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { BM_GETSTATE, sent|optional }, /* when touchscreen is present */
     { WM_SETFOCUS, sent|wparam, 0 },
     { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
     { WM_COMMAND, sent|wparam|parent|optional, MAKEWPARAM(ID_BUTTON, BN_CLICKED) }, /* radio button */
@@ -267,6 +270,7 @@ static const struct message setfocus_ownerdraw_seq[] =
 {
     { WM_IME_SETCONTEXT, sent|wparam|optional, 1 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { BM_GETSTATE, sent|optional }, /* when touchscreen is present */
     { WM_SETFOCUS, sent|wparam, 0 },
     { WM_DRAWITEM, sent|wparam|parent, ID_BUTTON },
     { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
@@ -292,6 +296,7 @@ static const struct message lbuttondown_seq[] =
     { WM_LBUTTONDOWN, sent|wparam|lparam, 0, 0 },
     { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { BM_GETSTATE, sent|defwinproc|optional }, /* when touchscreen is present */
     { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
     { BM_SETSTATE, sent|wparam|defwinproc, TRUE },
     { 0 }

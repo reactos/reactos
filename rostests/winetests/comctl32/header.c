@@ -1732,11 +1732,7 @@ static void check_orderarray(HWND hwnd, DWORD start, DWORD set, DWORD expected,
     for(i = 1; i<=count; i++)
         array |= order[i-1]<<(4*(count-i));
 
-    if (todo) {
-    todo_wine
-        ok_(__FILE__, line)(array == expected, "Expected %x, got %x\n", expected, array);
-    }
-    else
+    todo_wine_if(todo)
         ok_(__FILE__, line)(array == expected, "Expected %x, got %x\n", expected, array);
 }
 

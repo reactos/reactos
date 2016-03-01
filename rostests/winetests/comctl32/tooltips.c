@@ -450,6 +450,33 @@ static void test_gettext(void)
     r = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&toolinfoW);
     ok(!r, "Adding the tool to the tooltip succeeded!\n");
 
+    /* lpszText with an invalid address */
+    toolinfoW.cbSize = sizeof(TTTOOLINFOW);
+    toolinfoW.hwnd = notify;
+    toolinfoW.hinst = GetModuleHandleA(NULL);
+    toolinfoW.uFlags = 0;
+    toolinfoW.uId = 0;
+    toolinfoW.lpszText = (LPWSTR)0xdeadbeef;
+    toolinfoW.lParam = 0;
+    GetClientRect(hwnd, &toolinfoW.rect);
+    r = SendMessageA(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&toolinfoW);
+    ok(!r, "Adding the tool to the tooltip succeeded!\n");
+
+    /* lpszText with an invalid address. Crashes using TTTOOLINFOA message */
+    if(0)
+    {
+        toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+        toolinfoA.hwnd = notify;
+        toolinfoA.hinst = GetModuleHandleA(NULL);
+        toolinfoA.uFlags = 0;
+        toolinfoA.uId = 0;
+        toolinfoA.lpszText = (LPSTR)0xdeadbeef;
+        toolinfoA.lParam = 0;
+        GetClientRect(hwnd, &toolinfoA.rect);
+        r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
+        ok(!r, "Adding the tool to the tooltip succeeded!\n");
+    }
+
     if (0)  /* crashes on NT4 */
     {
         toolinfoW.hwnd = NULL;
