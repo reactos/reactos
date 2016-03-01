@@ -274,11 +274,11 @@ static const char *compare_line(const char *out_line, const char *out_end, const
 
 static void test_output(const char *out_data, DWORD out_size, const char *exp_data, DWORD exp_size)
 {
-    const char *out_ptr = out_data, *exp_ptr = exp_data, *out_nl, *exp_nl, *err;
+    const char *out_ptr = out_data, *exp_ptr = exp_data, *out_nl, *exp_nl, *err = NULL;
     DWORD line = 0;
     static const char todo_wine_cmd[] = {'@','t','o','d','o','_','w','i','n','e','@'};
     static const char resync_cmd[] = {'-','-','-'};
-    BOOL is_todo_wine, is_out_resync, is_exp_resync;
+    BOOL is_todo_wine, is_out_resync = FALSE, is_exp_resync = FALSE;
 
     while(out_ptr < out_data+out_size && exp_ptr < exp_data+exp_size) {
         line++;
@@ -288,32 +288,32 @@ static void test_output(const char *out_data, DWORD out_size, const char *exp_da
 
         is_todo_wine = (exp_ptr+sizeof(todo_wine_cmd) <= exp_nl &&
                         !memcmp(exp_ptr, todo_wine_cmd, sizeof(todo_wine_cmd)));
-        if (is_todo_wine) {
+        if (is_todo_wine)
             exp_ptr += sizeof(todo_wine_cmd);
-            winetest_start_todo("wine");
+
+        todo_wine_if(is_todo_wine)
+        {
+            is_exp_resync=(exp_ptr+sizeof(resync_cmd) <= exp_nl &&
+                           !memcmp(exp_ptr, resync_cmd, sizeof(resync_cmd)));
+            is_out_resync=(out_ptr+sizeof(resync_cmd) <= out_nl &&
+                           !memcmp(out_ptr, resync_cmd, sizeof(resync_cmd)));
+
+            err = compare_line(out_ptr, out_nl, exp_ptr, exp_nl);
+            if(err == out_nl)
+                ok(0, "unexpected end of line %d (got '%.*s', wanted '%.*s')\n",
+                   line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
+            else if(err == exp_nl)
+                ok(0, "excess characters on line %d (got '%.*s', wanted '%.*s')\n",
+                   line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
+            else if (!err && is_todo_wine && is_out_resync && is_exp_resync)
+                /* Consider that the todo_wine was to deal with extra lines,
+                 * not for the resync line itself
+                 */
+                err = NULL;
+            else
+                ok(!err, "unexpected char 0x%x position %d in line %d (got '%.*s', wanted '%.*s')\n",
+                   (err ? *err : 0), (err ? (int)(err-out_ptr) : -1), line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
         }
-        is_exp_resync=(exp_ptr+sizeof(resync_cmd) <= exp_nl &&
-                       !memcmp(exp_ptr, resync_cmd, sizeof(resync_cmd)));
-        is_out_resync=(out_ptr+sizeof(resync_cmd) <= out_nl &&
-                       !memcmp(out_ptr, resync_cmd, sizeof(resync_cmd)));
-
-        err = compare_line(out_ptr, out_nl, exp_ptr, exp_nl);
-        if(err == out_nl)
-            ok(0, "unexpected end of line %d (got '%.*s', wanted '%.*s')\n",
-               line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
-        else if(err == exp_nl)
-            ok(0, "excess characters on line %d (got '%.*s', wanted '%.*s')\n",
-               line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
-        else if (!err && is_todo_wine && is_out_resync && is_exp_resync)
-            /* Consider that the todo_wine was to deal with extra lines,
-             * not for the resync line itself
-             */
-            err = NULL;
-        else
-            ok(!err, "unexpected char 0x%x position %d in line %d (got '%.*s', wanted '%.*s')\n",
-               (err ? *err : 0), (err ? (int)(err-out_ptr) : -1), line, (int)(out_nl-out_ptr), out_ptr, (int)(exp_nl-exp_ptr), exp_ptr);
-
-        if(is_todo_wine) winetest_end_todo("wine");
 
         if (is_exp_resync && err && is_todo_wine)
         {
@@ -321,7 +321,8 @@ static void test_output(const char *out_data, DWORD out_size, const char *exp_da
             /* If we rewind to the beginning of the line, don't increment line number */
             line--;
         }
-        else if (!is_exp_resync || !err)
+        else if (!is_exp_resync || !err ||
+                 (is_exp_resync && is_out_resync && err))
         {
             exp_ptr = exp_nl+1;
             if(exp_nl+1 < exp_data+exp_size && exp_nl[0] == '\r' && exp_nl[1] == '\n')

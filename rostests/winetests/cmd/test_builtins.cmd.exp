@@ -331,7 +331,7 @@ N
 @todo_wine@'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
 ''@or_broken@'%~ai'
 ''@or_broken@'%~ai'
-'--a------'@or_broken@'%~ai'
+'--a------'@or_broken@'--a--------'@or_broken@'%~ai'
 '5'@or_broken@'%~zi'
 ''@or_broken@'%~ti'
 ''@or_broken@'%~ti'
@@ -1009,6 +1009,12 @@ h=%h i=a j=b k=c l=d e f g m=%m n=%n o=%o@or_broken@h=%h i=a j=b k=c l=d e f g m
 h=%h i=a j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=a j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
+------------ Testing del ------------
+deleting 'file'
+errorlevel is 0, good
+successfully deleted 'file'
+attempting to delete 'file', even though it is not present
+errorlevel is 0, good
 ------------ Testing del /a ------------
 not-r.test not found after delete, good
 r.test found before delete, good
@@ -1201,7 +1207,7 @@ passed
 --- a batch file can delete itself
 file correctly deleted
 --- a batch file can alter itself
-@todo_wine@bar
+bar
 ---------- Testing copy
 Passed: Found expected dummy.file
 Passed: Found expected dir1\file1
