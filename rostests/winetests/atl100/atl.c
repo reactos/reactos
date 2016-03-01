@@ -71,10 +71,58 @@ static const WCHAR fileW[] = {'f','i','l','e',':','/','/','/','\0'};
 static const WCHAR html_fileW[] = {'t','e','s','t','.','h','t','m','l','\0'};
 static const char html_str[] = "<html><body>test</body><html>";
 
+static BOOL is_token_admin(HANDLE token)
+{
+    PSID administrators = NULL;
+    SID_IDENTIFIER_AUTHORITY nt_authority = { SECURITY_NT_AUTHORITY };
+    DWORD groups_size;
+    PTOKEN_GROUPS groups;
+    DWORD group_index;
+
+    /* Create a well-known SID for the Administrators group. */
+    if (! AllocateAndInitializeSid(&nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                   &administrators))
+        return FALSE;
+
+    /* Get the group info from the token */
+    groups_size = 0;
+    GetTokenInformation(token, TokenGroups, NULL, 0, &groups_size);
+    groups = HeapAlloc(GetProcessHeap(), 0, groups_size);
+    if (groups == NULL)
+    {
+        FreeSid(administrators);
+        return FALSE;
+    }
+    if (! GetTokenInformation(token, TokenGroups, groups, groups_size, &groups_size))
+    {
+        HeapFree(GetProcessHeap(), 0, groups);
+        FreeSid(administrators);
+        return FALSE;
+    }
+
+    /* Now check if the token groups include the Administrators group */
+    for (group_index = 0; group_index < groups->GroupCount; group_index++)
+    {
+        if (EqualSid(groups->Groups[group_index].Sid, administrators))
+        {
+            HeapFree(GetProcessHeap(), 0, groups);
+            FreeSid(administrators);
+            return TRUE;
+        }
+    }
+
+    /* If we end up here we didn't find the Administrators group */
+    HeapFree(GetProcessHeap(), 0, groups);
+    FreeSid(administrators);
+    return FALSE;
+}
+
 static BOOL is_process_limited(void)
 {
     static BOOL (WINAPI *pOpenProcessToken)(HANDLE, DWORD, PHANDLE) = NULL;
     HANDLE token;
+    BOOL result=FALSE;
 
     if (!pOpenProcessToken)
     {
@@ -91,10 +139,19 @@ static BOOL is_process_limited(void)
         DWORD size;
 
         ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+        if (ret)
+        {
+            if (type == TokenElevationTypeDefault)
+                /* UAC is disabled, check for administrators group */
+                result = !is_token_admin(token);
+            else if (type == TokenElevationTypeFull)
+                result = FALSE;
+            else if (type == TokenElevationTypeLimited)
+                result = TRUE;
+        }
         CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
     }
-    return FALSE;
+    return result;
 }
 
 static void test_winmodule(void)
