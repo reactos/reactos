@@ -132,7 +132,7 @@ static void test_acquire(IDirectInputA *pDI, HWND hwnd)
 
     /* Foreground coop level requires window to have focus */
     /* Create a temporary window, this should make dinput
-     * loose mouse input */
+     * lose mouse input */
     hwnd2 = CreateWindowA("static", "Temporary", WS_VISIBLE, 10, 210, 200, 200, NULL, NULL, NULL,
                           NULL);
     ok(hwnd2 != NULL, "CreateWindowA failed with %u\n", GetLastError());

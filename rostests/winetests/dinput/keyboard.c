@@ -125,6 +125,12 @@ static const HRESULT SetCoop_null_window[16] =  {
     E_INVALIDARG, E_HANDLE,     S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
 
+static const HRESULT SetCoop_invalid_window[16] =  {
+    E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
+    E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
+    E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
+    E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+
 static const HRESULT SetCoop_real_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, S_OK,         S_OK,         E_INVALIDARG,
@@ -152,6 +158,11 @@ static void test_set_coop(IDirectInputA *pDI, HWND hwnd)
     {
         hr = IDirectInputDevice_SetCooperativeLevel(pKeyboard, NULL, i);
         ok(hr == SetCoop_null_window[i], "SetCooperativeLevel(NULL, %d): %08x\n", i, hr);
+    }
+    for (i=0; i<16; i++)
+    {
+        hr = IDirectInputDevice_SetCooperativeLevel(pKeyboard, (HWND)0x400000, i);
+        ok(hr == SetCoop_invalid_window[i], "SetCooperativeLevel(invalid, %d): %08x\n", i, hr);
     }
     for (i=0; i<16; i++)
     {
