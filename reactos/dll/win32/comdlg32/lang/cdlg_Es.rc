@@ -138,6 +138,7 @@ STRINGTABLE
     IDS_SAVE_AS     "&Guardar como"
     IDS_OPEN_FILE   "Abrir archivo"
     IDS_SELECT_FOLDER "Elegir carpeta"
+    IDS_FONT_SIZE_INPUT "Font size has to be a number."
 }
 
 /*

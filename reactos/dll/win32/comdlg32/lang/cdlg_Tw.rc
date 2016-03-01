@@ -138,6 +138,7 @@ STRINGTABLE
     IDS_SAVE_AS     "另存新檔"
     IDS_OPEN_FILE   "開啟檔案"
     IDS_SELECT_FOLDER "選擇資料夾"
+    IDS_FONT_SIZE_INPUT "Font size has to be a number."
 }
 
 /*

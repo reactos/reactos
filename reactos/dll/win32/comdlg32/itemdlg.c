@@ -372,13 +372,13 @@ static UINT get_file_name(FileDialogImpl *This, LPWSTR *str)
             lstrcpyW(*str, This->set_filename);
             return len;
         }
-        return FALSE;
+        return 0;
     }
 
     len = SendMessageW(hwnd_edit, WM_GETTEXTLENGTH, 0, 0);
     *str = CoTaskMemAlloc(sizeof(WCHAR)*(len+1));
     if(!*str)
-        return FALSE;
+        return 0;
 
     SendMessageW(hwnd_edit, WM_GETTEXT, len+1, (LPARAM)*str);
     return len;

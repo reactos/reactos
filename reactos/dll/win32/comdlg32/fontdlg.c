@@ -34,6 +34,7 @@ static const WCHAR strWineFontData[] = {'_','_','W','I','N','E','_','F','O','N',
 static const WCHAR strWineFontData_a[] =
                                {'_','_','W','I','N','E','_','F','O','N','T','D','L','G','D','A','T','A','_','A',0};
 static const WCHAR chooseFontW[] = {'C','H','O','O','S','E','_','F','O','N','T',0};
+static const WCHAR fontsizefmtW[] = {'%','d',0};
 
 /* image list with TrueType bitmaps and more */
 static HIMAGELIST himlTT = 0;
@@ -400,16 +401,15 @@ static BOOL AddFontSizeToCombo3(HWND hwnd, UINT h, const CHOOSEFONTW *lpcf)
 {
     int j;
     WCHAR buffer[20];
-    static const WCHAR strFormat[] = {'%','2','d',0};
 
     if (  (!(lpcf->Flags & CF_LIMITSIZE))  ||
             ((lpcf->Flags & CF_LIMITSIZE) && (h >= lpcf->nSizeMin) && (h <= lpcf->nSizeMax)))
     {
-        wsprintfW(buffer, strFormat, h);
+        sprintfW(buffer, fontsizefmtW, h);
         j=SendMessageW(hwnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
         if (j==CB_ERR)
         {
-            j=SendMessageW(hwnd, CB_ADDSTRING, 0, (LPARAM)buffer);
+            j=SendMessageW(hwnd, CB_INSERTSTRING, -1, (LPARAM)buffer);
             if (j!=CB_ERR) j = SendMessageW(hwnd, CB_SETITEMDATA, j, h);
             if (j==CB_ERR) return TRUE;
         }
@@ -515,10 +515,11 @@ static INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *
     return 1 ;
 }
 
-static BOOL CFn_FitFontSize( HWND hDlg, int points)
+static void CFn_FitFontSize( HWND hDlg, int points)
 {
+    WCHAR buffW[16];
     int i,n;
-    BOOL ret = FALSE;
+
     /* look for fitting font size in combobox3 */
     n=SendDlgItemMessageW(hDlg, cmb3, CB_GETCOUNT, 0, 0);
     for (i=0;i<n;i++)
@@ -530,11 +531,13 @@ static BOOL CFn_FitFontSize( HWND hDlg, int points)
             SendMessageW(hDlg, WM_COMMAND,
                     MAKEWPARAM(cmb3, CBN_SELCHANGE),
                     (LPARAM)GetDlgItem(hDlg,cmb3));
-            ret = TRUE;
-            break;
+            return;
         }
     }
-    return ret;
+
+    /* no default matching size, set text manually */
+    sprintfW(buffW, fontsizefmtW, points);
+    SetDlgItemTextW(hDlg, cmb3, buffW);
 }
 
 static BOOL CFn_FitFontStyle( HWND hDlg, LONG packedstyle )
@@ -737,6 +740,9 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
         SendMessageW(hDlg, WM_COMMAND, MAKEWPARAM(cmb5, CBN_SELCHANGE),
                 (LPARAM)GetDlgItem(hDlg,cmb5));
     }
+    /* limit text length user can type in as font size */
+    SendDlgItemMessageW(hDlg, cmb3, CB_LIMITTEXT, 5, 0);
+
     if ((lpcf->Flags & CF_USESTYLE) && lpcf->lpszStyle)
     {
         j=SendDlgItemMessageW(hDlg,cmb2,CB_FINDSTRING,-1,(LPARAM)lpcf->lpszStyle);
@@ -886,6 +892,31 @@ static LRESULT CFn_WMDrawItem(LPARAM lParam)
     return TRUE;
 }
 
+static INT get_dialog_font_point_size(HWND hDlg, CHOOSEFONTW *cf)
+{
+    BOOL invalid_size = FALSE;
+    INT i, size;
+
+    i = SendDlgItemMessageW(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+    if (i != CB_ERR)
+        size = LOWORD(SendDlgItemMessageW(hDlg, cmb3, CB_GETITEMDATA , i, 0));
+    else
+    {
+        WCHAR buffW[8], *endptrW;
+
+        GetDlgItemTextW(hDlg, cmb3, buffW, sizeof(buffW)/sizeof(*buffW));
+        size = strtolW(buffW, &endptrW, 10);
+        invalid_size = size == 0 && *endptrW;
+
+        if (size == 0)
+            size = 10;
+    }
+
+    cf->iPointSize = 10 * size;
+    cf->lpLogFont->lfHeight = -MulDiv(cf->iPointSize, GetScreenDPI(), 720);
+    return invalid_size ? -1 : size;
+}
+
 /***********************************************************************
  *           CFn_WMCommand                               [internal]
  */
@@ -959,9 +990,11 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             LPLOGFONTW lpxx=lpcf->lpLogFont;
 
             TRACE("WM_COMMAND/cmb2,3 =%08lX\n", lParam);
+
+            /* face name */
             i=SendDlgItemMessageW(hDlg,cmb1,CB_GETCURSEL,0,0);
             if (i==CB_ERR)
-                i=GetDlgItemTextW( hDlg, cmb1, str, 256 );
+                GetDlgItemTextW( hDlg, cmb1, str, sizeof(str)/sizeof(str[0]) );
             else
             {
                 SendDlgItemMessageW(hDlg,cmb1,CB_GETLBTEXT,i,
@@ -974,6 +1007,8 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
                 lpxx->lfPitchAndFamily = HIWORD(l) >> 8;
             }
             lstrcpynW(lpxx->lfFaceName, str, sizeof(lpxx->lfFaceName)/sizeof(lpxx->lfFaceName[0]));
+
+            /* style */
             i=SendDlgItemMessageW(hDlg, cmb2, CB_GETCURSEL, 0, 0);
             if (i!=CB_ERR)
             {
@@ -983,14 +1018,11 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
                 if ((lpxx->lfWeight=LOWORD(l)) > FW_MEDIUM)
                     lpcf->nFontType |= BOLD_FONTTYPE;
             }
-            i=SendDlgItemMessageW(hDlg, cmb3, CB_GETCURSEL, 0, 0);
-            if( i != CB_ERR)
-                lpcf->iPointSize = 10 * LOWORD(SendDlgItemMessageW(hDlg, cmb3,
-                            CB_GETITEMDATA , i, 0));
-            else
-                lpcf->iPointSize = 100;
-            lpxx->lfHeight = - MulDiv( lpcf->iPointSize ,
-                    GetScreenDPI(), 720);
+
+            /* size */
+            get_dialog_font_point_size(hDlg, lpcf);
+
+            /* charset */
             i=SendDlgItemMessageW(hDlg, cmb5, CB_GETCURSEL, 0, 0);
             if (i!=CB_ERR)
                 lpxx->lfCharSet=SendDlgItemMessageW(hDlg, cmb5, CB_GETITEMDATA, i, 0);
@@ -1037,6 +1069,18 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         break;
 
     case IDOK:
+    {
+        WCHAR msgW[80];
+        INT pointsize;
+
+        pointsize = get_dialog_font_point_size(hDlg, lpcf);
+        if (pointsize == -1)
+        {
+            LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE_INPUT, msgW, sizeof(msgW)/sizeof(*msgW));
+            MessageBoxW(hDlg, msgW, NULL, MB_OK | MB_ICONINFORMATION);
+            return TRUE;
+        }
+
         if (  (!(lpcf->Flags & CF_LIMITSIZE))  ||
               ( (lpcf->Flags & CF_LIMITSIZE) &&
                 (lpcf->iPointSize >= 10 * lpcf->nSizeMin) &&
@@ -1044,18 +1088,18 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             EndDialog(hDlg, TRUE);
         else
         {
-            WCHAR buffer[80];
             WCHAR format[80];
             DWORD_PTR args[2];
             LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE, format, sizeof(format)/sizeof(WCHAR));
             args[0] = lpcf->nSizeMin;
             args[1] = lpcf->nSizeMax;
             FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                           format, 0, 0, buffer, sizeof(buffer)/sizeof(*buffer),
+                           format, 0, 0, msgW, sizeof(msgW)/sizeof(*msgW),
                            (__ms_va_list*)args);
-            MessageBoxW(hDlg, buffer, NULL, MB_OK);
+            MessageBoxW(hDlg, msgW, NULL, MB_OK);
         }
         return(TRUE);
+    }
     case IDCANCEL:
         EndDialog(hDlg, FALSE);
         return(TRUE);

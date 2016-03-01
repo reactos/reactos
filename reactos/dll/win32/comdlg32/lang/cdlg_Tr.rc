@@ -137,6 +137,7 @@ STRINGTABLE
     IDS_SAVE_AS     "Ayrı Sakla"
     IDS_OPEN_FILE   "Kütük Aç"
     IDS_SELECT_FOLDER "Dizin Seç"
+    IDS_FONT_SIZE_INPUT "Font size has to be a number."
 }
 
 /*
