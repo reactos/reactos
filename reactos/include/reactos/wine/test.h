@@ -60,9 +60,9 @@ extern int winetest_interactive;
 extern const char *winetest_platform;
 
 extern void winetest_set_location( const char* file, int line );
-extern void winetest_start_todo( const char* platform );
+extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
-extern void winetest_end_todo( const char* platform );
+extern void winetest_end_todo(void);
 extern int winetest_get_mainargs( char*** pargv );
 extern LONG winetest_get_failures(void);
 extern void winetest_add_failures( LONG new_failures );
@@ -135,25 +135,18 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 #define win_skip win_skip_(__FILE__, __LINE__)
 #define trace    trace_(__FILE__, __LINE__)
 
-#define todo(platform) for (winetest_start_todo(platform); \
-                            winetest_loop_todo(); \
-                            winetest_end_todo(platform))
+#define todo_if(is_todo) for (winetest_start_todo(is_todo); \
+                              winetest_loop_todo(); \
+                              winetest_end_todo())
 
-#define todo_ros       todo("reactos")
+#define todo_ros                todo_if(!strcmp(winetest_platform, "reactos"))
+#define todo_ros_if(is_todo)    todo_if((is_todo) && !strcmp(winetest_platform, "reactos"))
 #ifdef USE_WINE_TODOS
-#define todo_wine      todo_ros
+#define todo_wine               todo_ros
+#define todo_wine_if            todo_ros_if
 #else
-#define todo_wine      todo("wine")
-#endif
-
-#ifdef USE_WINE_TODOS
-#define todo_wine_if(is_todo) \
-  if ((is_todo) && (!strcmp(winetest_platform, "reactos"))) \
-    todo(winetest_platform)
-#else
-#define todo_wine_if(is_todo) \
-  if ((is_todo) && (!strcmp(winetest_platform, "wine"))) \
-    todo(winetest_platform)
+#define todo_wine               todo_if(!strcmp(winetest_platform, "wine"))
+#define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
 
 
@@ -260,7 +253,7 @@ typedef struct
 {
     const char* current_file;        /* file of current check */
     int current_line;                /* line of current check */
-    int todo_level;                  /* current todo nesting level */
+    unsigned int todo_level;         /* current todo nesting level */
     int todo_do_loop;
     char *str_pos;                   /* position in debug buffer */
     char strings[2000];              /* buffer for debug strings */
@@ -448,11 +441,10 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
     __winetest_va_end(valist);
 }
 
-void winetest_start_todo( const char* platform )
+void winetest_start_todo( int is_todo )
 {
     tls_data* data=get_tls_data();
-    if (strcmp(winetest_platform,platform)==0)
-        data->todo_level++;
+    data->todo_level = (data->todo_level << 1) | (is_todo != 0);
     data->todo_do_loop=1;
 }
 
@@ -464,13 +456,10 @@ int winetest_loop_todo(void)
     return do_loop;
 }
 
-void winetest_end_todo( const char* platform )
+void winetest_end_todo(void)
 {
-    if (strcmp(winetest_platform,platform)==0)
-    {
-        tls_data* data=get_tls_data();
-        data->todo_level--;
-    }
+    tls_data* data=get_tls_data();
+    data->todo_level >>= 1;
 }
 
 int winetest_get_mainargs( char*** pargv )
