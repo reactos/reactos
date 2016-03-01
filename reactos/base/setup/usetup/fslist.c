@@ -91,7 +91,7 @@ GetFileSystemByName(
 PFILE_SYSTEM_ITEM
 GetFileSystem(
     IN PFILE_SYSTEM_LIST FileSystemList,
-    IN PPARTENTRY PartEntry)
+    IN struct _PARTENTRY* PartEntry)
 {
     PFILE_SYSTEM_ITEM CurrentFileSystem;
     LPWSTR FileSystemName = NULL;
@@ -101,6 +101,8 @@ GetFileSystem(
     /* We have a file system, return it */
     if (CurrentFileSystem != NULL && CurrentFileSystem->FileSystemName != NULL)
         return CurrentFileSystem;
+
+    DPRINT1("File system not found, try to guess one...\n");
 
     CurrentFileSystem = NULL;
 
@@ -121,9 +123,9 @@ GetFileSystem(
      */
     if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
         (PartEntry->PartitionType == PARTITION_FAT_16) ||
-        (PartEntry->PartitionType == PARTITION_HUGE) ||
+        (PartEntry->PartitionType == PARTITION_HUGE  ) ||
         (PartEntry->PartitionType == PARTITION_XINT13) ||
-        (PartEntry->PartitionType == PARTITION_FAT32) ||
+        (PartEntry->PartitionType == PARTITION_FAT32 ) ||
         (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
     {
         FileSystemName = L"FAT";
@@ -139,9 +141,9 @@ GetFileSystem(
         FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
     }
 
-    // WARNING: We cannot write on this FS yet!
+    // HACK: WARNING: We cannot write on this FS yet!
     if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
-        DPRINT1("Recognized FileSystem %S that doesn't support write support yet!\n", FileSystemName);
+        DPRINT1("Recognized file system %S that doesn't support write support yet!\n", FileSystemName);
 
     DPRINT1("GetFileSystem -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
             PartEntry->PartitionType, FileSystemName);

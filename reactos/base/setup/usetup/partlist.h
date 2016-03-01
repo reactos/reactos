@@ -155,6 +155,15 @@ typedef struct _PARTLIST
     /* The system disk and partition where the boot manager resides */
     PDISKENTRY SystemDisk;
     PPARTENTRY SystemPartition;
+    /*
+     * The original system disk and partition in case we are redefining them
+     * because we do not have write support on them.
+     * Please not that this is partly a HACK and MUST NEVER happen on
+     * architectures where real system partitions are mandatory (because then
+     * they are formatted in FAT FS and we support write operation on them).
+     */
+    PDISKENTRY OriginalSystemDisk;
+    PPARTENTRY OriginalSystemPartition;
 
     PDISKENTRY TempDisk;
     PPARTENTRY TempPartition;
@@ -258,7 +267,8 @@ DeleteCurrentPartition(
 
 VOID
 CheckActiveSystemPartition(
-    PPARTLIST List);
+    IN PPARTLIST List,
+    IN PFILE_SYSTEM_LIST FileSystemList);
 
 BOOLEAN
 WritePartitionsToDisk(

@@ -60,7 +60,6 @@
 
 /* Internal Headers */
 #include "interface/consup.h"
-#include "partlist.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
@@ -70,6 +69,7 @@
 #endif
 #include "registry.h"
 #include "fslist.h"
+#include "partlist.h"
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"

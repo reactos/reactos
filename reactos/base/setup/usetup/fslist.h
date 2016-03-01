@@ -57,10 +57,11 @@ GetFileSystemByName(
     IN PFILE_SYSTEM_LIST List,
     IN LPWSTR FileSystemName);
 
+struct _PARTENTRY; // Defined in partlist.h
 PFILE_SYSTEM_ITEM
 GetFileSystem(
     IN PFILE_SYSTEM_LIST FileSystemList,
-    IN PPARTENTRY PartEntry);
+    IN struct _PARTENTRY* PartEntry);
 
 PFILE_SYSTEM_LIST
 CreateFileSystemList(

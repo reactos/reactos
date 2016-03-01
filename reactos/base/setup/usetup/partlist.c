@@ -1430,6 +1430,8 @@ CreatePartitionList(
 
     List->SystemDisk = NULL;
     List->SystemPartition = NULL;
+    List->OriginalSystemDisk = NULL;
+    List->OriginalSystemPartition = NULL;
 
     List->TempDisk = NULL;
     List->TempPartition = NULL;
@@ -3111,28 +3113,25 @@ DeleteCurrentPartition(
 
 VOID
 CheckActiveSystemPartition(
-    PPARTLIST List)
+    IN PPARTLIST List,
+    IN PFILE_SYSTEM_LIST FileSystemList /* Needed for checking the FS of the candidate system partition */
+    )
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     PLIST_ENTRY ListEntry;
+
+    PFILE_SYSTEM_ITEM FileSystem;
 
     /* Check for empty disk list */
     if (IsListEmpty(&List->DiskListHead))
     {
         List->SystemDisk = NULL;
         List->SystemPartition = NULL;
+        List->OriginalSystemDisk = NULL;
+        List->OriginalSystemPartition = NULL;
         return;
     }
-
-#if 0
-    if (List->SystemDisk != NULL &&
-        List->SystemPartition != NULL)
-    {
-        /* We already have an active system partition */
-        return;
-    }
-#endif
 
     /* Choose the currently selected disk */
     DiskEntry = List->CurrentDisk;
@@ -3142,64 +3141,226 @@ CheckActiveSystemPartition(
     {
         List->SystemDisk = NULL;
         List->SystemPartition = NULL;
+        List->OriginalSystemDisk = NULL;
+        List->OriginalSystemPartition = NULL;
         return;
     }
 
-    /*
-     * Check the first partition of the disk in case it is fresh new,
-     * and if so, use it as the system partition.
-     */
+    if (List->SystemDisk != NULL && List->SystemPartition != NULL)
+    {
+        /* We already have an active system partition */
+        DPRINT1("Use the current system partition %lu in disk %lu, drive letter %c\n",
+                List->SystemPartition->PartitionNumber,
+                List->SystemDisk->DiskNumber,
+                (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+        return;
+    }
 
+    DPRINT1("We are here (1)!\n");
+
+    List->SystemDisk = NULL;
+    List->SystemPartition = NULL;
+    List->OriginalSystemDisk = NULL;
+    List->OriginalSystemPartition = NULL;
+
+    /* Retrieve the first partition of the disk */
     PartEntry = CONTAINING_RECORD(DiskEntry->PrimaryPartListHead.Flink,
                                   PARTENTRY,
                                   ListEntry);
+    List->SystemDisk = DiskEntry;
+    List->SystemPartition = PartEntry;
 
-    /* Set active system partition */
-    if ((DiskEntry->NewDisk == TRUE) ||
-        (PartEntry->BootIndicator == FALSE))
+    //
+    // See: https://svn.reactos.org/svn/reactos/trunk/reactos/base/setup/usetup/partlist.c?r1=63355&r2=63354&pathrev=63355#l2318
+    //
+
+    /* Check if the disk is new and if so, use its first partition as the active system partition */
+    if (DiskEntry->NewDisk)
     {
-        PartEntry->BootIndicator = TRUE;
-        DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].BootIndicator = TRUE;
-        DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
-        DiskEntry->Dirty = TRUE;
+        if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED || PartEntry->BootIndicator == FALSE)
+        {
+            /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
+            List->SystemDisk = DiskEntry;
+            List->SystemPartition = PartEntry;
 
-        /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
-        List->SystemDisk = DiskEntry;
-        List->SystemPartition = PartEntry;
+            List->OriginalSystemDisk = List->SystemDisk;
+            List->OriginalSystemPartition = List->SystemPartition;
 
-        return;
+            DPRINT1("Use new first active system partition %lu in disk %lu, drive letter %c\n",
+                    List->SystemPartition->PartitionNumber,
+                    List->SystemDisk->DiskNumber,
+                    (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+
+            goto SetSystemPartition;
+        }
+
+        // FIXME: What to do??
+        DPRINT1("NewDisk TRUE but first partition is used?\n");
     }
 
-    /* Disk is not new, scan all partitions to find a bootable one */
-    List->SystemDisk = NULL;
-    List->SystemPartition = NULL;
+    DPRINT1("We are here (2)!\n");
 
+    /*
+     * The disk is not new, check if any partition is initialized;
+     * if not, the first one becomes the system partition.
+     */
     ListEntry = DiskEntry->PrimaryPartListHead.Flink;
     while (ListEntry != &DiskEntry->PrimaryPartListHead)
     {
+        /* Retrieve the partition and go to the next one */
         PartEntry = CONTAINING_RECORD(ListEntry,
                                       PARTENTRY,
                                       ListEntry);
 
-        /* Check if it is partitioned */
-        if (PartEntry->IsPartitioned)
+        /* Check if the partition is partitioned and is used */
+        if (PartEntry->PartitionType != PARTITION_ENTRY_UNUSED || PartEntry->BootIndicator != FALSE)
         {
-            if (PartEntry->PartitionType != PARTITION_ENTRY_UNUSED &&
-                PartEntry->BootIndicator)
-            {
-                /* Yes, we found it */
-                List->SystemDisk = DiskEntry;
-                List->SystemPartition = PartEntry;
-
-                DPRINT("Found bootable partition disk %d, drive letter %c\n",
-                       DiskEntry->DiskNumber, PartEntry->DriveLetter);
-                break;
-            }
+            break;
         }
 
         /* Go to the next one */
         ListEntry = ListEntry->Flink;
     }
+    if (ListEntry == &DiskEntry->PrimaryPartListHead)
+    {
+        /*
+         * OK we haven't encountered any used and active partition,
+         * so use the first one as the system partition.
+         */
+
+        /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
+        List->OriginalSystemDisk = List->SystemDisk; // DiskEntry
+        List->OriginalSystemPartition = List->SystemPartition; // First PartEntry
+
+        DPRINT1("Use first active system partition %lu in disk %lu, drive letter %c\n",
+                List->SystemPartition->PartitionNumber,
+                List->SystemDisk->DiskNumber,
+                (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+
+        goto SetSystemPartition;
+    }
+
+    List->SystemDisk = NULL;
+    List->SystemPartition = NULL;
+    List->OriginalSystemDisk = NULL;
+    List->OriginalSystemPartition = NULL;
+
+    DPRINT1("We are here (3)!\n");
+
+    /* The disk is not new, scan all partitions to find the (active) system partition */
+    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    {
+        /* Retrieve the partition and go to the next one */
+        PartEntry = CONTAINING_RECORD(ListEntry,
+                                      PARTENTRY,
+                                      ListEntry);
+        ListEntry = ListEntry->Flink;
+
+        /* Check if the partition is partitioned and used */
+        if (PartEntry->IsPartitioned &&
+            PartEntry->PartitionType != PARTITION_ENTRY_UNUSED)
+        {
+            /* Check if the partition is active */
+            if (PartEntry->BootIndicator)
+            {
+                /* Yes, we found it */
+                List->SystemDisk = DiskEntry;
+                List->SystemPartition = PartEntry;
+
+                DPRINT1("Found active system partition %lu in disk %lu, drive letter %c\n",
+                        PartEntry->PartitionNumber,
+                        DiskEntry->DiskNumber,
+                        (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter);
+                break;
+            }
+        }
+    }
+
+    /* Check if we have found the system partition */
+    if (List->SystemDisk == NULL || List->SystemPartition == NULL)
+    {
+        /* Nothing, use the alternative system partition */
+        DPRINT1("No system partition found, use the alternative partition!\n");
+        goto UseAlternativeSystemPartition;
+    }
+
+    /* Save them */
+    List->OriginalSystemDisk = List->SystemDisk;
+    List->OriginalSystemPartition = List->SystemPartition;
+
+    /*
+     * ADDITIONAL CHECKS / BIG HACK:
+     *
+     * Retrieve its file system and check whether we have
+     * write support for it. If that is the case we are fine
+     * and we can use it directly. However if we don't have
+     * write support we will need to change the active system
+     * partition.
+     *
+     * NOTE that this is completely useless on architectures
+     * where a real system partition is required, as on these
+     * architectures the partition uses the FAT FS, for which
+     * we do have write support.
+     * NOTE also that for those architectures looking for a
+     * partition boot indicator is insufficient.
+     */
+    FileSystem = GetFileSystem(FileSystemList, List->OriginalSystemPartition);
+    if (FileSystem == NULL)
+    {
+        DPRINT1("System partition %lu in disk %lu with no FS?!\n",
+                List->OriginalSystemPartition->PartitionNumber,
+                List->OriginalSystemDisk->DiskNumber);
+        goto FindAndUseAlternativeSystemPartition;
+    }
+    // HACK: WARNING: We cannot write on this FS yet!
+    // See fslist.c:GetFileSystem()
+    if (List->OriginalSystemPartition->PartitionType == PARTITION_EXT2 ||
+        List->OriginalSystemPartition->PartitionType == PARTITION_IFS)
+    {
+        DPRINT1("Recognized file system %S that doesn't support write support yet!\n",
+                FileSystem->FileSystemName);
+        goto FindAndUseAlternativeSystemPartition;
+    }
+
+    DPRINT1("Use existing active system partition %lu in disk %lu, drive letter %c\n",
+            List->SystemPartition->PartitionNumber,
+            List->SystemDisk->DiskNumber,
+            (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+
+    return;
+
+FindAndUseAlternativeSystemPartition:
+    /*
+     * We are here because we have not found any (active) candidate
+     * system partition that we know how to support. What we are going
+     * to do is to change the existing system partition and use the
+     * partition on which we install ReactOS as the new system partition,
+     * and then we will need to add in FreeLdr's entry a boot entry to boot
+     * from the original system partition.
+     */
+
+    /* Unset the old system partition */
+    List->SystemPartition->BootIndicator = FALSE;
+    List->SystemDisk->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].BootIndicator = FALSE;
+    List->SystemDisk->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].RewritePartition = TRUE;
+    List->SystemDisk->Dirty = TRUE;
+
+UseAlternativeSystemPartition:
+    List->SystemDisk = List->CurrentDisk;
+    List->SystemPartition = List->CurrentPartition;
+
+    DPRINT1("Use alternative active system partition %lu in disk %lu, drive letter %c\n",
+            List->SystemPartition->PartitionNumber,
+            List->SystemDisk->DiskNumber,
+            (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+
+SetSystemPartition:
+    /* Set the new active system partition */
+    List->SystemPartition->BootIndicator = TRUE;
+    List->SystemDisk->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].BootIndicator = TRUE;
+    List->SystemDisk->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].RewritePartition = TRUE;
+    List->SystemDisk->Dirty = TRUE;
 }
 
 

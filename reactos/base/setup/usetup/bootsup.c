@@ -626,7 +626,6 @@ UpdateFreeLoaderIni(
     return STATUS_SUCCESS;
 }
 
-static
 BOOLEAN
 IsThereAValidBootSector(PWSTR RootPath)
 {
@@ -695,9 +694,8 @@ IsThereAValidBootSector(PWSTR RootPath)
     return (Instruction != 0x00000000);
 }
 
-static
 NTSTATUS
-SaveCurrentBootSector(
+SaveBootSector(
     PWSTR RootPath,
     PWSTR DstPath,
     ULONG Length)
@@ -1210,7 +1208,7 @@ InstallMbrBootCodeToDisk(
                         NULL,
                         &IoStatusBlock,
                         OrigBootSector,
-                        SECTORSIZE,
+                        sizeof(PARTITION_SECTOR),
                         &FileOffset,
                         NULL);
     NtClose(FileHandle);
@@ -1306,7 +1304,7 @@ InstallMbrBootCodeToDisk(
                          NULL,
                          &IoStatusBlock,
                          NewBootSector,
-                         SECTORSIZE,
+                         sizeof(PARTITION_SECTOR),
                          &FileOffset,
                          NULL);
     NtClose(FileHandle);
@@ -2447,10 +2445,10 @@ InstallFatBootcodeToPartition(
                 wcscat(DstPath, BootSectorFileName);
 
                 DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
-                Status = SaveCurrentBootSector(SystemRootPath->Buffer, DstPath, SECTORSIZE);
+                Status = SaveBootSector(SystemRootPath->Buffer, DstPath, SECTORSIZE);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
+                    DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
                     return Status;
                 }
             }
@@ -2582,10 +2580,10 @@ InstallExt2BootcodeToPartition(
             wcscat(DstPath, L"\\bootsect.old");
 
             DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
-            Status = SaveCurrentBootSector(SystemRootPath->Buffer, DstPath, sizeof(EXT2_BOOTSECTOR));
+            Status = SaveBootSector(SystemRootPath->Buffer, DstPath, sizeof(EXT2_BOOTSECTOR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("SaveCurrentBootSector() failed (Status %lx)\n", Status);
+                DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
                 return Status;
             }
         }

@@ -1731,8 +1731,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 return SELECT_PARTITION_PAGE;
             }
 
-            if (PartitionList->CurrentPartition->BootIndicator)
+            if (PartitionList->CurrentPartition->BootIndicator ||
+                PartitionList->CurrentPartition == PartitionList->SystemPartition)
+            {
                 return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
+            }
 
             return DELETE_PARTITION_PAGE;
         }
@@ -2553,8 +2556,21 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    /*** HACK! ***/
+    if (FileSystemList == NULL)
+    {
+        FileSystemList = CreateFileSystemList(6, 26, PartitionList->CurrentPartition->New, L"FAT");
+        if (FileSystemList == NULL)
+        {
+            /* FIXME: show an error dialog */
+            return QUIT_PAGE;
+        }
+
+        /* FIXME: Add file systems to list */
+    }
+
     /* Find or set the active system partition */
-    CheckActiveSystemPartition(PartitionList);
+    CheckActiveSystemPartition(PartitionList, FileSystemList);
 
     if (PartitionList->SystemDisk == NULL ||
         PartitionList->SystemPartition == NULL)
@@ -4130,7 +4146,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
              PartitionList->SystemDisk->DiskNumber,
              PartitionList->SystemPartition->PartitionNumber);
     RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
-    DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
+    DPRINT1("SystemRootPath: %wZ\n", &SystemRootPath);
 
     PartitionType = PartitionList->SystemPartition->PartitionType;
 
@@ -4382,6 +4398,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     NTSTATUS Status;
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
     WCHAR SourceMbrPathBuffer[MAX_PATH];
+    WCHAR DstPath[MAX_PATH];
 
     /* Step 1: Write the VBR */
     PartitionType = PartitionList->SystemPartition->PartitionType;
@@ -4404,8 +4421,23 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
 
-    DPRINT("Install MBR bootcode: %S ==> %S\n",
+    DPRINT1("Install MBR bootcode: %S ==> %S\n",
             SourceMbrPathBuffer, DestinationDevicePathBuffer);
+
+    if (IsThereAValidBootSector(DestinationDevicePathBuffer))
+    {
+        /* Save current MBR */
+        wcscpy(DstPath, SystemRootPath.Buffer);
+        wcscat(DstPath, L"\\mbr.old");
+
+        DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
+        Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
+            // Don't care if we succeeded or not saving the old MBR, just go ahead.
+        }
+    }
 
     Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
                                       DestinationDevicePathBuffer);

@@ -26,6 +26,15 @@
 
 #pragma once
 
+BOOLEAN
+IsThereAValidBootSector(PWSTR RootPath);
+
+NTSTATUS
+SaveBootSector(
+    PWSTR RootPath,
+    PWSTR DstPath,
+    ULONG Length);
+
 NTSTATUS
 InstallMbrBootCodeToDisk(
     PWSTR SrcPath,
