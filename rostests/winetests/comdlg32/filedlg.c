@@ -403,8 +403,7 @@ static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, L
             } else if( count == 1){
                 resize  = resize_testcases[index].resize_check;
                 GetWindowRect( parent, &rc);
-                if( resize_testcases[index].todo){
-                    todo_wine {
+                todo_wine_if( resize_testcases[index].todo){
                         ok( resize == rc.right - rc.left - initrc.right + initrc.left,
                             "testid %d size-x change %d expected %d\n", index,
                             rc.right - rc.left - initrc.right + initrc.left, resize);
@@ -412,14 +411,6 @@ static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, L
                             "testid %d size-y change %d expected %d\n", index,
                             rc.bottom - rc.top - initrc.bottom + initrc.top, resize);
                     }
-                }else{
-                    ok( resize == rc.right - rc.left - initrc.right + initrc.left,
-                        "testid %d size-x change %d expected %d\n", index,
-                        rc.right - rc.left - initrc.right + initrc.left, resize);
-                    ok( resize == rc.bottom - rc.top - initrc.bottom + initrc.top,
-                        "testid %d size-y change %d expected %d\n", index,
-                        rc.bottom - rc.top - initrc.bottom + initrc.top, resize);
-                }
                 if( resize_testcases[index].testcontrols) {
                     int i;
                     RECT rc;
@@ -789,7 +780,7 @@ static UINT_PTR WINAPI template_hook_arrange(HWND dlgChild, UINT msg, WPARAM wPa
                 ok( wrcParent.right - wrcParent.left == expectx,
                         "Wrong width of dialog %d, expected %d\n",
                         wrcParent.right - wrcParent.left, expectx);
-            } else todo_wine {
+            } else {
                 /* with the OFN_ENABLESIZING flag */
                 ok( wrcParent.bottom - wrcParent.top > expecty,
                         "Wrong height of dialog %d, expected more than %d\n",
