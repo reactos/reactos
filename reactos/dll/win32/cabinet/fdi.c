@@ -489,7 +489,7 @@ static char *FDI_read_string(FDI_Int *fdi, INT_PTR hf, long cabsize)
         break;
       }
       /* The buffer is too small for the string. Reset the file to the point
-       * were we started, free the buffer and increase the size for the next try
+       * where we started, free the buffer and increase the size for the next try
        */
       fdi->seek(hf, base, SEEK_SET);
       fdi->free(buf);
