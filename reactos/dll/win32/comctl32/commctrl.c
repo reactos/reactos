@@ -1153,7 +1153,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * Gets the Reference data from a subclass.
  *
  * PARAMS
- *     hWnd [in] Handle to window which were subclassing
+ *     hWnd [in] Handle to the window which we are subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
  *     uID [in] Unique identifier of the subclassing procedure
  *     pdwRef [out] Pointer to the reference data
@@ -1196,7 +1196,7 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * Removes a window subclass.
  *
  * PARAMS
- *     hWnd [in] Handle to the window were subclassing
+ *     hWnd [in] Handle to the window which we are subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
  *     uID [in] Unique identifier of this subclass
  *

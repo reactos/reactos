@@ -6200,8 +6200,10 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
     infoPtr->clrBtnShadow = CLR_DEFAULT;
     infoPtr->szPadding.cx = DEFPAD_CX;
     infoPtr->szPadding.cy = DEFPAD_CY;
+#ifdef __REACTOS__
     infoPtr->szSpacing.cx = DEFSPACE_CX;
     infoPtr->szSpacing.cy = DEFSPACE_CY;
+#endif
     infoPtr->iListGap = DEFLISTGAP;
     infoPtr->iTopMargin = default_top_margin(infoPtr);
     infoPtr->dwStyle = lpcs->style;
@@ -6972,6 +6974,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLBAR_MouseLeave (infoPtr);
 
 	case WM_CAPTURECHANGED:
+	    if (hwnd == (HWND)lParam) return 0;
 	    return TOOLBAR_CaptureChanged(infoPtr);
 
 	case WM_NCACTIVATE:

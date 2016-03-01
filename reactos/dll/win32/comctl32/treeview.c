@@ -75,7 +75,7 @@ typedef struct tagTREEVIEW_INFO
   HTREEITEM	focusedItem;    /* item that was under the cursor when WM_LBUTTONDOWN was received */
   HTREEITEM     editItem;       /* item being edited with builtin edit box */
 
-  HTREEITEM     firstVisible;   /* handle to first visible item */
+  HTREEITEM     firstVisible;   /* handle to item whose top edge is at y = 0 */
   LONG          maxVisibleOrder;
   HTREEITEM     dropItem;       /* handle to item selected by drag cursor */
   HTREEITEM     insertMarkItem; /* item after which insertion mark is placed */
@@ -141,7 +141,10 @@ typedef struct _TREEITEM    /* HTREEITEM is a _TREEINFO *. */
   LONG      imageOffset;
   LONG      textOffset;
   LONG      textWidth;      /* horizontal text extent for pszText */
-  LONG      visibleOrder;   /* visible ordering, 0 is first visible item */
+  LONG      visibleOrder;   /* Depth-first numbering of the items whose ancestors are all expanded,
+                               corresponding to a top-to-bottom ordering in the tree view.
+                               Each item takes up "item.iIntegral" spots in the visible order.
+                               0 is the root's first child. */
   const TREEVIEW_INFO *infoPtr; /* tree data this item belongs to */
 } TREEVIEW_ITEM;
 
@@ -537,7 +540,7 @@ TREEVIEW_SendTreeviewNotify(const TREEVIEW_INFO *infoPtr, UINT code, UINT action
     NMTREEVIEWW nmhdr;
     BOOL ret;
 
-    TRACE("code:%d action:%x olditem:%p newitem:%p\n",
+    TRACE("code:%d action:0x%x olditem:%p newitem:%p\n",
 	  code, action, oldItem, newItem);
 
     memset(&nmhdr, 0, sizeof(NMTREEVIEWW));
@@ -589,7 +592,7 @@ TREEVIEW_SendCustomDrawNotify(const TREEVIEW_INFO *infoPtr, DWORD dwDrawStage,
     NMTVCUSTOMDRAW nmcdhdr;
     NMCUSTOMDRAW *nmcd;
 
-    TRACE("drawstage:%x hdc:%p\n", dwDrawStage, hdc);
+    TRACE("drawstage:0x%x hdc:%p\n", dwDrawStage, hdc);
 
     nmcd = &nmcdhdr.nmcd;
     nmcd->dwDrawStage = dwDrawStage;
@@ -636,7 +639,7 @@ TREEVIEW_SendCustomDrawItemNotify(const TREEVIEW_INFO *infoPtr, HDC hdc,
     nmcd->lItemlParam = item->lParam;
     nmcdhdr->iLevel = item->iLevel;
 
-    TRACE("drawstage:%x hdc:%p item:%lx, itemstate:%x, lItemlParam:%lx\n",
+    TRACE("drawstage:0x%x hdc:%p item:%lx, itemstate:0x%x, lItemlParam:0x%lx\n",
 	  nmcd->dwDrawStage, nmcd->hdc, nmcd->dwItemSpec,
 	  nmcd->uItemState, nmcd->lItemlParam);
 
@@ -795,8 +798,9 @@ static BOOL
 TREEVIEW_HasChildren(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 {
     TREEVIEW_UpdateDispInfo(infoPtr, item, TVIF_CHILDREN);
-
-    return item->cChildren > 0;
+    /* Protect for a case when callback field is not changed by a host,
+       otherwise negative values trigger normal notifications. */
+    return item->cChildren != 0 && item->cChildren != I_CHILDRENCALLBACK;
 }
 
 static INT TREEVIEW_NotifyFormat (TREEVIEW_INFO *infoPtr, HWND hwndFrom, UINT nCommand)
@@ -1171,7 +1175,7 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 
     if (tvItem->mask & TVIF_STATE)
     {
-	TRACE("prevstate,state,mask:%x,%x,%x\n", item->state, tvItem->state,
+	TRACE("prevstate 0x%x, state 0x%x, mask 0x%x\n", item->state, tvItem->state,
 	      tvItem->stateMask);
 	item->state &= ~tvItem->stateMask;
 	item->state |= (tvItem->state & tvItem->stateMask);
@@ -1179,7 +1183,7 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 
     if (tvItem->mask & TVIF_STATEEX)
     {
-        FIXME("New extended state: %x\n", tvItem->uStateEx);
+        FIXME("New extended state: 0x%x\n", tvItem->uStateEx);
     }
 
     item->callbackMask |= callbackSet;
@@ -1337,7 +1341,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
     }
 
 
-    TRACE("new item %p; parent %p, mask %x\n", newItem,
+    TRACE("new item %p; parent %p, mask 0x%x\n", newItem,
 	  newItem->parent, tvItem->mask);
 
     newItem->iLevel = newItem->parent->iLevel + 1;
@@ -1420,10 +1424,12 @@ TREEVIEW_RemoveAllChildren(TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *parentIt
 static void
 TREEVIEW_UnlinkItem(const TREEVIEW_ITEM *item)
 {
-    TREEVIEW_ITEM *parentItem = item->parent;
+    TREEVIEW_ITEM *parentItem;
 
     assert(item != NULL);
     assert(item->parent != NULL); /* i.e. it must not be the root */
+
+    parentItem = item->parent;
 
     if (parentItem->firstChild == item)
 	parentItem->firstChild = item->nextSibling;
@@ -1518,6 +1524,7 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM item)
 
 	if (infoPtr->firstVisible == item)
 	{
+	    visible = TRUE;
 	    if (item->nextSibling)
 	       newFirstVisible = item->nextSibling;
 	    else if (item->prevSibling)
@@ -1553,11 +1560,13 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM item)
 
     TREEVIEW_VerifyTree(infoPtr);
 
+    if (visible)
+        TREEVIEW_SetFirstVisible(infoPtr, newFirstVisible, TRUE);
+
     if (!infoPtr->bRedraw) return TRUE;
 
     if (visible)
     {
-       TREEVIEW_SetFirstVisible(infoPtr, newFirstVisible, TRUE);
        TREEVIEW_RecalculateVisibleOrder(infoPtr, prev);
        TREEVIEW_UpdateScrollBars(infoPtr);
        TREEVIEW_Invalidate(infoPtr, NULL);
@@ -1962,7 +1971,7 @@ TREEVIEW_SetInsertMarkColor(TREEVIEW_INFO *infoPtr, COLORREF color)
 {
     COLORREF prevColor = infoPtr->clrInsertMark;
 
-    TRACE("%x\n", color);
+    TRACE("0x%08x\n", color);
     infoPtr->clrInsertMark = color;
 
     return (LRESULT)prevColor;
@@ -2134,7 +2143,7 @@ TREEVIEW_GetItemT(const TREEVIEW_INFO *infoPtr, LPTVITEMEXW tvItem, BOOL isW)
         tvItem->uStateEx = 0;
     }
 
-    TRACE("item <%p>, txt %p, img %d, mask %x\n",
+    TRACE("item <%p>, txt %p, img %d, mask 0x%x\n",
 	  item, tvItem->pszText, tvItem->iImage, tvItem->mask);
 
     return TRUE;
@@ -2150,7 +2159,7 @@ TREEVIEW_SetItemT(TREEVIEW_INFO *infoPtr, const TVITEMEXW *tvItem, BOOL isW)
 
     item = tvItem->hItem;
 
-    TRACE("item %d,mask %x\n", TREEVIEW_GetItemIndex(infoPtr, item),
+    TRACE("item %d, mask 0x%x\n", TREEVIEW_GetItemIndex(infoPtr, item),
 	  tvItem->mask);
 
     if (!TREEVIEW_ValidItem(infoPtr, item))
@@ -2245,7 +2254,7 @@ TREEVIEW_GetNextItem(const TREEVIEW_INFO *infoPtr, UINT which, HTREEITEM item)
 
     if (retval)
     {
-	TRACE("flags:%x, returns %p\n", which, retval);
+	TRACE("flags:0x%x, returns %p\n", which, retval);
 	return (LRESULT)retval;
     }
 
@@ -2275,11 +2284,11 @@ TREEVIEW_GetNextItem(const TREEVIEW_INFO *infoPtr, UINT which, HTREEITEM item)
 	retval = TREEVIEW_GetPrevListItem(infoPtr, item);
 	break;
     default:
-	TRACE("Unknown msg %x,item %p\n", which, item);
+	TRACE("Unknown msg 0x%x, item %p\n", which, item);
 	break;
     }
 
-    TRACE("flags:%x, item %p;returns %p\n", which, item, retval);
+    TRACE("flags: 0x%x, item %p;returns %p\n", which, item, retval);
     return (LRESULT)retval;
 }
 
@@ -2301,7 +2310,7 @@ TREEVIEW_ToggleItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 	unsigned int state;
 
 	state = STATEIMAGEINDEX(item->state);
-	TRACE("state:%x\n", state);
+	TRACE("state: 0x%x\n", state);
 	item->state &= ~TVIS_STATEIMAGEMASK;
 
 	if (state < 3)
@@ -2309,7 +2318,7 @@ TREEVIEW_ToggleItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 
 	item->state |= INDEXTOSTATEIMAGEMASK(state);
 
-	TRACE("state:%x\n", state);
+	TRACE("state: 0x%x\n", state);
 	TREEVIEW_Invalidate(infoPtr, item);
     }
 }
@@ -3683,7 +3692,7 @@ TREEVIEW_HitTest(const TREEVIEW_INFO *infoPtr, LPTVHITTESTINFO lpht)
     }
 
     lpht->hItem = item;
-    TRACE("(%d,%d):result %x\n", lpht->pt.x, lpht->pt.y, lpht->flags);
+    TRACE("(%d,%d):result 0x%x\n", lpht->pt.x, lpht->pt.y, lpht->flags);
 
     return (LRESULT)item;
 }
@@ -3760,7 +3769,7 @@ TREEVIEW_Edit_SubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TREEVIEW_Command(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("code=%x, id=%x, handle=%lx\n", HIWORD(wParam), LOWORD(wParam), lParam);
+    TRACE("code=0x%x, id=0x%x, handle=0x%lx\n", HIWORD(wParam), LOWORD(wParam), lParam);
 
     switch (HIWORD(wParam))
     {
@@ -4383,7 +4392,7 @@ TREEVIEW_DoSelectItem(TREEVIEW_INFO *infoPtr, INT action, HTREEITEM newSelect,
 
     assert(newSelect == NULL || TREEVIEW_ValidItem(infoPtr, newSelect));
 
-    TRACE("Entering item %p (%s), flag %x, cause %x, state %d\n",
+    TRACE("Entering item %p (%s), flag 0x%x, cause 0x%x, state %d\n",
 	  newSelect, TREEVIEW_ItemName(newSelect), action, cause,
 	  newSelect ? newSelect->state : 0);
 
@@ -4994,7 +5003,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     TREEVIEW_INFO *infoPtr;
     LOGFONTW lf;
 
-    TRACE("wnd %p, style %x\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
+    TRACE("wnd %p, style 0x%x\n", hwnd, GetWindowLongW(hwnd, GWL_STYLE));
 
     infoPtr = Alloc(sizeof(TREEVIEW_INFO));
 
