@@ -1596,7 +1596,7 @@ static HRESULT GetFileSourceFilter(LPCOLESTR pszFileName, IBaseFilter **filter)
     /* Try to find a match without reading the file first */
     hr = GetClassMediaFile(NULL, pszFileName, NULL, NULL, &clsid);
 
-    if (!hr)
+    if (hr == S_OK)
         return CreateFilterInstanceAndLoadFile(&clsid, pszFileName, filter);
 
     /* Now create a AyncReader instance, to check for signature bytes in the file */
@@ -1638,7 +1638,7 @@ static HRESULT GetFileSourceFilter(LPCOLESTR pszFileName, IBaseFilter **filter)
     hr = GetClassMediaFile(pReader, pszFileName, NULL, NULL, &clsid);
     IAsyncReader_Release(pReader);
 
-    if (!hr)
+    if (hr == S_OK)
     {
         /* Release the AsyncReader filter and create the matching one */
         IBaseFilter_Release(*filter);
@@ -2462,6 +2462,9 @@ static HRESULT WINAPI MediaSeeking_ConvertTimeFormat(IMediaSeeking *iface, LONGL
     if (!pSourceFormat)
         pSourceFormat = &This->timeformatseek;
 
+    if (!pTargetFormat)
+        pTargetFormat = &This->timeformatseek;
+
     if (IsEqualGUID(pTargetFormat, pSourceFormat))
         *pTarget = Source;
     else
@@ -2607,6 +2610,11 @@ static HRESULT WINAPI MediaSeeking_GetRate(IMediaSeeking *iface, double *pdRate)
     IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
 
     FIXME("(%p/%p)->(%p): stub !!!\n", This, iface, pdRate);
+
+    if (!pdRate)
+        return E_POINTER;
+
+    *pdRate = 1.0;
 
     return S_OK;
 }

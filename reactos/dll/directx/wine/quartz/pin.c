@@ -835,25 +835,3 @@ HRESULT WINAPI PullPin_NewSegment(IPin * iface, REFERENCE_TIME tStart, REFERENCE
 
     return SendFurther( iface, deliver_newsegment, &args, NULL );
 }
-
-static const IPinVtbl PullPin_Vtbl = 
-{
-    PullPin_QueryInterface,
-    BasePinImpl_AddRef,
-    PullPin_Release,
-    BaseInputPinImpl_Connect,
-    PullPin_ReceiveConnection,
-    PullPin_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    PullPin_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    PullPin_EndOfStream,
-    PullPin_BeginFlush,
-    PullPin_EndFlush,
-    PullPin_NewSegment
-};
