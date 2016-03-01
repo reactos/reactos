@@ -255,6 +255,7 @@ static void test_mediacontrol(void)
 {
     HRESULT hr;
     LONGLONG pos = 0xdeadbeef;
+    GUID format = GUID_NULL;
     IMediaSeeking *seeking = NULL;
     IMediaFilter *filter = NULL;
     IMediaControl *control = NULL;
@@ -281,6 +282,26 @@ static void test_mediacontrol(void)
         IMediaFilter_Release(filter);
         return;
     }
+
+    format = GUID_NULL;
+    hr = IMediaSeeking_GetTimeFormat(seeking, &format);
+    ok(hr == S_OK, "GetTimeFormat failed: %08x\n", hr);
+    ok(IsEqualGUID(&format, &TIME_FORMAT_MEDIA_TIME), "GetTimeFormat: unexpected format %s\n", wine_dbgstr_guid(&format));
+
+    pos = 0xdeadbeef;
+    hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, NULL, 0x123456789a, NULL);
+    ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+
+    pos = 0xdeadbeef;
+    hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, &TIME_FORMAT_MEDIA_TIME, 0x123456789a, NULL);
+    ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+
+    pos = 0xdeadbeef;
+    hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, NULL, 0x123456789a, &TIME_FORMAT_MEDIA_TIME);
+    ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
 
     hr = IMediaSeeking_GetCurrentPosition(seeking, &pos);
     ok(hr == S_OK, "GetCurrentPosition failed: %08x\n", hr);
