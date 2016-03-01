@@ -73,7 +73,7 @@ static void test_CredUIPromptForCredentials(void)
                                       sizeof(username)/sizeof(username[0]),
                                       password, sizeof(password)/sizeof(password[0]),
                                       NULL, CREDUI_FLAGS_SHOW_SAVE_CHECK_BOX);
-    ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_FLAGS instead of %d\n", ret);
+    ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
     if (winetest_interactive)
     {
