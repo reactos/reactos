@@ -8,7 +8,7 @@
 @ stub BCryptDecrypt
 @ stub BCryptDeleteContext
 @ stub BCryptDeriveKey
-@ stub BCryptDestroyHash
+@ stdcall BCryptDestroyHash(ptr)
 @ stub BCryptDestroyKey
 @ stub BCryptDestroySecret
 @ stub BCryptDuplicateHash
@@ -22,14 +22,14 @@
 @ stub BCryptEnumRegisteredProviders
 @ stub BCryptExportKey
 @ stub BCryptFinalizeKeyPair
-@ stub BCryptFinishHash
+@ stdcall BCryptFinishHash(ptr ptr long long)
 @ stub BCryptFreeBuffer
 @ stdcall BCryptGenRandom(ptr ptr long long)
 @ stub BCryptGenerateKeyPair
 @ stub BCryptGenerateSymmetricKey
 @ stdcall BCryptGetFipsAlgorithmMode(ptr)
 @ stdcall BCryptGetProperty(ptr wstr ptr long ptr long)
-@ stub BCryptHashData
+@ stdcall BCryptHashData(ptr ptr long long)
 @ stub BCryptImportKey
 @ stub BCryptImportKeyPair
 @ stdcall BCryptOpenAlgorithmProvider(ptr wstr wstr long)
