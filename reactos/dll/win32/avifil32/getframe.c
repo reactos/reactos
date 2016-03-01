@@ -394,8 +394,6 @@ static HRESULT WINAPI IGetFrame_fnSetFormat(IGetFrame *iface,
 	   lpbi->biSize + lpbi->biClrUsed * sizeof(RGBQUAD));
     if (lpbi->biBitCount <= 8)
       ICDecompressGetPalette(This->hic, This->lpInFormat, This->lpOutFormat);
-
-    return AVIERR_OK;
   } else {
     if (bBestDisplay) {
       ICGetDisplayFormat(This->hic, This->lpInFormat,
@@ -405,64 +403,64 @@ static HRESULT WINAPI IGetFrame_fnSetFormat(IGetFrame *iface,
       AVIFILE_CloseCompressor(This);
       return AVIERR_NOCOMPRESSOR;
     }
-
-    /* check output format */
-    if (This->lpOutFormat->biClrUsed == 0 &&
-	This->lpOutFormat->biBitCount <= 8)
-      This->lpOutFormat->biClrUsed = 1u << This->lpOutFormat->biBitCount;
-    if (This->lpOutFormat->biSizeImage == 0 &&
-	This->lpOutFormat->biCompression == BI_RGB) {
-      This->lpOutFormat->biSizeImage =
-	DIBWIDTHBYTES(*This->lpOutFormat) * This->lpOutFormat->biHeight;
-    }
-
-    if (lpBits == NULL) {
-      DWORD size = This->lpOutFormat->biClrUsed * sizeof(RGBQUAD);
-
-      size += This->lpOutFormat->biSize + This->lpOutFormat->biSizeImage;
-      This->lpOutFormat = HeapReAlloc(GetProcessHeap(), 0, This->lpOutFormat, size);
-      if (This->lpOutFormat == NULL) {
-	AVIFILE_CloseCompressor(This);
-	return AVIERR_MEMORY;
-      }
-      This->lpOutBuffer = DIBPTR(This->lpOutFormat);
-    } else
-      This->lpOutBuffer = lpBits;
-
-    /* for user size was irrelevant */
-    if (dx == -1)
-      dx = This->lpOutFormat->biWidth;
-    if (dy == -1)
-      dy = This->lpOutFormat->biHeight;
-
-    /* need to resize? */
-    if (x != 0 || y != 0) {
-      if (dy == This->lpOutFormat->biHeight &&
-	  dx == This->lpOutFormat->biWidth)
-	This->bResize = FALSE;
-      else
-	This->bResize = TRUE;
-    }
-
-    if (This->bResize) {
-      This->x  = x;
-      This->y  = y;
-      This->dx = dx;
-      This->dy = dy;
-
-      if (ICDecompressExBegin(This->hic,0,This->lpInFormat,This->lpInBuffer,0,
-			      0,This->lpInFormat->biWidth,
-			      This->lpInFormat->biHeight,This->lpOutFormat,
-			      This->lpOutBuffer, x, y, dx, dy) == ICERR_OK)
-	return AVIERR_OK;
-    } else if (ICDecompressBegin(This->hic, This->lpInFormat,
-				 This->lpOutFormat) == ICERR_OK)
-      return AVIERR_OK;
-
-    AVIFILE_CloseCompressor(This);
-
-    return AVIERR_COMPRESSOR;
   }
+
+  /* check output format */
+  if (This->lpOutFormat->biClrUsed == 0 &&
+      This->lpOutFormat->biBitCount <= 8)
+    This->lpOutFormat->biClrUsed = 1u << This->lpOutFormat->biBitCount;
+  if (This->lpOutFormat->biSizeImage == 0 &&
+      This->lpOutFormat->biCompression == BI_RGB) {
+    This->lpOutFormat->biSizeImage =
+      DIBWIDTHBYTES(*This->lpOutFormat) * This->lpOutFormat->biHeight;
+  }
+
+  if (lpBits == NULL) {
+    DWORD size = This->lpOutFormat->biClrUsed * sizeof(RGBQUAD);
+
+    size += This->lpOutFormat->biSize + This->lpOutFormat->biSizeImage;
+    This->lpOutFormat = HeapReAlloc(GetProcessHeap(), 0, This->lpOutFormat, size);
+    if (This->lpOutFormat == NULL) {
+      AVIFILE_CloseCompressor(This);
+      return AVIERR_MEMORY;
+    }
+    This->lpOutBuffer = DIBPTR(This->lpOutFormat);
+  } else
+    This->lpOutBuffer = lpBits;
+
+  /* for user size was irrelevant */
+  if (dx == -1)
+    dx = This->lpOutFormat->biWidth;
+  if (dy == -1)
+    dy = This->lpOutFormat->biHeight;
+
+  /* need to resize? */
+  if (x != 0 || y != 0) {
+    if (dy == This->lpOutFormat->biHeight &&
+        dx == This->lpOutFormat->biWidth)
+      This->bResize = FALSE;
+    else
+      This->bResize = TRUE;
+  }
+
+  if (This->bResize) {
+    This->x  = x;
+    This->y  = y;
+    This->dx = dx;
+    This->dy = dy;
+
+    if (ICDecompressExBegin(This->hic,0,This->lpInFormat,This->lpInBuffer,0,
+                            0,This->lpInFormat->biWidth,
+                            This->lpInFormat->biHeight,This->lpOutFormat,
+                            This->lpOutBuffer, x, y, dx, dy) == ICERR_OK)
+      return AVIERR_OK;
+  } else if (ICDecompressBegin(This->hic, This->lpInFormat,
+                               This->lpOutFormat) == ICERR_OK)
+    return AVIERR_OK;
+
+  AVIFILE_CloseCompressor(This);
+
+  return AVIERR_COMPRESSOR;
 }
 
 static const struct IGetFrameVtbl igetframeVtbl = {

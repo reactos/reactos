@@ -2256,7 +2256,7 @@ HRESULT WINAPI AVIPutFileOnClipboard(PAVIFILE pfile)
 HRESULT WINAPIV AVISaveA(LPCSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK lpfnCallback,
                         int nStreams, PAVISTREAM pavi, LPAVICOMPRESSOPTIONS lpOptions, ...)
 {
-    va_list vl;
+    __ms_va_list vl;
     int i;
     HRESULT ret;
     PAVISTREAM *streams;
@@ -2267,8 +2267,8 @@ HRESULT WINAPIV AVISaveA(LPCSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK l
 
     if (nStreams <= 0) return AVIERR_BADPARAM;
 
-    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(void *));
-    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(void *));
+    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*streams));
+    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*options));
     if (!streams || !options)
     {
         ret = AVIERR_MEMORY;
@@ -2278,13 +2278,13 @@ HRESULT WINAPIV AVISaveA(LPCSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK l
     streams[0] = pavi;
     options[0] = lpOptions;
 
-    va_start(vl, lpOptions);
+    __ms_va_start(vl, lpOptions);
     for (i = 1; i < nStreams; i++)
     {
-        streams[i] = va_arg(vl, void *);
-        options[i] = va_arg(vl, void *);
+        streams[i] = va_arg(vl, PAVISTREAM);
+        options[i] = va_arg(vl, PAVICOMPRESSOPTIONS);
     }
-    va_end(vl);
+    __ms_va_end(vl);
 
     for (i = 0; i < nStreams; i++)
         TRACE("Pair[%d] - Stream = %p, Options = %p\n", i, streams[i], options[i]);
@@ -2299,7 +2299,7 @@ error:
 HRESULT WINAPIV AVISaveW(LPCWSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK lpfnCallback,
                         int nStreams, PAVISTREAM pavi, LPAVICOMPRESSOPTIONS lpOptions, ...)
 {
-    va_list vl;
+    __ms_va_list vl;
     int i;
     HRESULT ret;
     PAVISTREAM *streams;
@@ -2310,8 +2310,8 @@ HRESULT WINAPIV AVISaveW(LPCWSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK 
 
     if (nStreams <= 0) return AVIERR_BADPARAM;
 
-    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(void *));
-    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(void *));
+    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*streams));
+    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*options));
     if (!streams || !options)
     {
         ret = AVIERR_MEMORY;
@@ -2321,13 +2321,13 @@ HRESULT WINAPIV AVISaveW(LPCWSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK 
     streams[0] = pavi;
     options[0] = lpOptions;
 
-    va_start(vl, lpOptions);
+    __ms_va_start(vl, lpOptions);
     for (i = 1; i < nStreams; i++)
     {
-        streams[i] = va_arg(vl, void *);
-        options[i] = va_arg(vl, void *);
+        streams[i] = va_arg(vl, PAVISTREAM);
+        options[i] = va_arg(vl, PAVICOMPRESSOPTIONS);
     }
-    va_end(vl);
+    __ms_va_end(vl);
 
     for (i = 0; i < nStreams; i++)
         TRACE("Pair[%d] - Stream = %p, Options = %p\n", i, streams[i], options[i]);

@@ -70,5 +70,6 @@ extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream) DECLSPEC_HIDDEN;
 extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams) DECLSPEC_HIDDEN;
 
 extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI avifil32_DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv) DECLSPEC_HIDDEN;
 
 #endif /* __AVIFILE_PRIVATE_H */
