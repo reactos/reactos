@@ -667,7 +667,7 @@ START_TEST(advpack)
         return;
 
     /* Make sure we create the temporary file in a directory
-     * were we have enough rights
+     * where we have adequate rights
      */
     GetTempPathA(MAX_PATH, inf_file);
     lstrcatA(inf_file,"test.inf");
