@@ -375,11 +375,6 @@ static void test_default_data(void)
     create_avi_file(&cah, filename);
 
     res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
-    ok(res != AVIERR_BADFORMAT, "Unable to open file: error1=%u\n", AVIERR_BADFORMAT);
-    ok(res != AVIERR_MEMORY, "Unable to open file: error2=%u\n", AVIERR_MEMORY);
-    ok(res != AVIERR_FILEREAD, "Unable to open file: error3=%u\n", AVIERR_FILEREAD);
-    ok(res != AVIERR_FILEOPEN, "Unable to open file: error4=%u\n", AVIERR_FILEOPEN);
-    ok(res != REGDB_E_CLASSNOTREG, "Unable to open file: error5=%u\n", REGDB_E_CLASSNOTREG);
     ok(res == 0, "Unable to open file: error=%u\n", res);
 
     res = AVIFileGetStream(pFile, &pStream0, 0, 0);
