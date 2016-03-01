@@ -347,6 +347,8 @@ HRESULT WINAPI TransformFilterImpl_Stop(IBaseFilter * iface)
         This->filter.state = State_Stopped;
         if (This->pFuncsTable->pfnStopStreaming)
             hr = This->pFuncsTable->pfnStopStreaming(This);
+        if (SUCCEEDED(hr))
+            hr = BaseOutputPinImpl_Inactive(impl_BaseOutputPin_from_IPin(This->ppPins[1]));
     }
     LeaveCriticalSection(&This->csReceive);
 
