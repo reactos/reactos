@@ -872,8 +872,8 @@ static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mo
     }
 
     notify_download_state(This, TRUE);
-    on_commandstate_change(This, CSC_NAVIGATEBACK, VARIANT_FALSE);
-    on_commandstate_change(This, CSC_NAVIGATEFORWARD, VARIANT_FALSE);
+    on_commandstate_change(This, CSC_NAVIGATEBACK, FALSE);
+    on_commandstate_change(This, CSC_NAVIGATEFORWARD, FALSE);
 
     if(This->document)
         deactivate_document(This);

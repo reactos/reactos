@@ -301,11 +301,6 @@ static void release_client_site(WebBrowser *This)
         IOleInPlaceUIWindow_Release(This->uiwindow);
         This->uiwindow = NULL;
     }
-
-    if(This->sink) {
-        IAdviseSink_Release(This->sink);
-        This->sink = NULL;
-    }
 }
 
 typedef struct {
@@ -461,8 +456,8 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     release_client_site(This);
 
     if(!pClientSite) {
-        on_commandstate_change(&This->doc_host, CSC_NAVIGATEBACK, VARIANT_FALSE);
-        on_commandstate_change(&This->doc_host, CSC_NAVIGATEFORWARD, VARIANT_FALSE);
+        on_commandstate_change(&This->doc_host, CSC_NAVIGATEBACK, FALSE);
+        on_commandstate_change(&This->doc_host, CSC_NAVIGATEFORWARD, FALSE);
 
         if(This->doc_host.document)
             deactivate_document(&This->doc_host);

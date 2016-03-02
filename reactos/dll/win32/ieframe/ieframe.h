@@ -295,7 +295,7 @@ HRESULT dochost_object_available(DocHost*,IUnknown*) DECLSPEC_HIDDEN;
 void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
 void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
 void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
-void on_commandstate_change(DocHost*,LONG,VARIANT_BOOL) DECLSPEC_HIDDEN;
+void on_commandstate_change(DocHost*,LONG,BOOL) DECLSPEC_HIDDEN;
 void notify_download_state(DocHost*,BOOL) DECLSPEC_HIDDEN;
 void update_navigation_commands(DocHost *dochost) DECLSPEC_HIDDEN;
 

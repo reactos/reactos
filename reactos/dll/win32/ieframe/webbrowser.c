@@ -160,6 +160,9 @@ static ULONG WINAPI WebBrowser_Release(IWebBrowser2 *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
+        if(This->sink)
+            IAdviseSink_Release(This->sink);
+
         if(This->doc_host.document)
             IUnknown_Release(This->doc_host.document);
 

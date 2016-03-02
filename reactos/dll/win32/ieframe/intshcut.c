@@ -490,8 +490,7 @@ static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileNam
                                           STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
                                           &pPropStg);
 
-            get_profile_string(str_header, str_iconfile, pszFileName, &iconfile);
-            if (iconfile != NULL)
+            if (get_profile_string(str_header, str_iconfile, pszFileName, &iconfile))
             {
                 PROPSPEC ps;
                 PROPVARIANT pv;
@@ -504,13 +503,10 @@ static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileNam
                 {
                     TRACE("Failed to store the iconfile to our property storage.  hr = 0x%x\n", hr);
                 }
-
-                CoTaskMemFree(iconfile);
             }
+            CoTaskMemFree(iconfile);
 
-            get_profile_string(str_header, str_iconindex, pszFileName, &iconindexstring);
-
-            if (iconindexstring != NULL)
+            if (get_profile_string(str_header, str_iconindex, pszFileName, &iconindexstring))
             {
                 int iconindex;
                 PROPSPEC ps;
@@ -527,9 +523,8 @@ static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileNam
                 {
                     TRACE("Failed to store the iconindex to our property storage.  hr = 0x%x\n", hr);
                 }
-
-                CoTaskMemFree(iconindexstring);
             }
+            CoTaskMemFree(iconindexstring);
 
             IPropertyStorage_Release(pPropStg);
         }

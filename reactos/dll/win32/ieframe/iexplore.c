@@ -458,7 +458,7 @@ static void create_rebar(InternetExplorer *ie)
     add_tb_button(ie, 4, ID_BROWSE_HOME, IDS_TB_HOME);
     add_tb_separator(ie);
     add_tb_button(ie, 5, ID_BROWSE_PRINT, IDS_TB_PRINT);
-    SendMessageW(ie->toolbar_hwnd, TB_SETBUTTONSIZE, 0, MAKELPARAM(55,50));
+    SendMessageW(ie->toolbar_hwnd, TB_SETBUTTONSIZE, 0, MAKELPARAM(65,50));
     SendMessageW(ie->toolbar_hwnd, TB_GETMAXSIZE, 0, (LPARAM)&toolbar_size);
 
     bandinf.cbSize = sizeof(bandinf);
