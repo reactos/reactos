@@ -1,4 +1,4 @@
-@ stub CopyPDBs
+@ stdcall CopyPDBs(ptr)
 @ stdcall ClearDownloadCache()
 @ stdcall CreateApplicationContext(ptr ptr)
 @ stdcall CreateAssemblyCache(ptr long)
