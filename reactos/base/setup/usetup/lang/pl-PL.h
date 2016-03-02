@@ -1754,6 +1754,8 @@ MUI_STRING plPLStrings[] =
     "Instalator kopiuje pliki systemu na wybran¥ partycj©."},
     {STRING_CHECKINGPART,
     "Instalator sprawdza wybran¥ partycj©."},
+    {STRING_CONTINUE,
+    "ENTER = Kontynuacja"},
     {STRING_QUITCONTINUE,
     "F3 = Wyj˜cie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,

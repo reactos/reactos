@@ -1753,6 +1753,8 @@ MUI_STRING esESStrings[] =
     "El instalador est  instalando ReactOS en la partici¢n"},
     {STRING_CHECKINGPART,
     "El instalador est  comprobando la partici¢n seleccionada."},
+    {STRING_CONTINUE,
+    "INTRO = Continuar"},
     {STRING_QUITCONTINUE,
     "F3 = Salir  INTRO = Continuar"},
     {STRING_REBOOTCOMPUTER,

@@ -1747,6 +1747,8 @@ MUI_STRING jaJPStrings[] =
     "¾¯Ä±¯ÌßÊ ReactOS¦ Êß°Ã¨¼®Ý ¼Þ®³Æ ²Ý½Ä°Ù¼Ï½¡"},
     {STRING_CHECKINGPART,
     "¾¯Ä±¯ÌßÊ ¾ÝÀ¸ »ÚÀ Êß°Ã¨¼®Ý¦ ¹Ý» ¼Ã²Ï½¡"},
+    {STRING_CONTINUE,
+    "ENTER = ¿Þ¯º³"},
     {STRING_QUITCONTINUE,
     "F3 = Á­³¼  ENTER = ¿Þ¯º³"},
     {STRING_REBOOTCOMPUTER,

@@ -1814,6 +1814,8 @@ MUI_STRING roROStrings[] =
     "ReactOS va fi instalat pe partiþia"},
     {STRING_CHECKINGPART,
     "Programul de instalare verificã acum partiþia aleasã."},
+    {STRING_CONTINUE,
+    "ENTER = Continuare"},
     {STRING_QUITCONTINUE,
     "F3 = Ieºire  ENTER = Continuare"},
     {STRING_REBOOTCOMPUTER,

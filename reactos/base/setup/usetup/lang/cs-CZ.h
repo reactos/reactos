@@ -1751,6 +1751,8 @@ MUI_STRING csCZStrings[] =
     "Instalace nakop°ruje ReactOS na odd°l"},
     {STRING_CHECKINGPART,
     "Instalace nyn° kontroluje zvolenÏ odd°l."},
+    {STRING_CONTINUE,
+    "ENTER = Pokraüovat"},
     {STRING_QUITCONTINUE,
     "F3 = Ukonüit  ENTER = Pokraüovat"},
     {STRING_REBOOTCOMPUTER,

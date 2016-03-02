@@ -1753,6 +1753,8 @@ MUI_STRING itITStrings[] =
     "Setup installer… ReactOS sulla partitione"},
     {STRING_CHECKINGPART,
     "Setup sta controllando la partizione selezionata."},
+    {STRING_CONTINUE,
+    "INVIO = Continua"},
     {STRING_QUITCONTINUE,
     "F3 = Esci  INVIO = Continua"},
     {STRING_REBOOTCOMPUTER,

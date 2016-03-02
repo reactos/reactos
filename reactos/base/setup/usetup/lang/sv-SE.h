@@ -1753,6 +1753,8 @@ MUI_STRING svSEStrings[] =
     "Setup installerar ReactOS till Partitionen"},
     {STRING_CHECKINGPART,
     "Setup unders”ker nu den valda partitionen."},
+    {STRING_CONTINUE,
+    "ENTER = Forts„tt"},
     {STRING_QUITCONTINUE,
     "F3 = Avsluta  ENTER = Forts„tt"},
     {STRING_REBOOTCOMPUTER,

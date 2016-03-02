@@ -3154,13 +3154,15 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
         if (!NT_SUCCESS(Status))
         {
             DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
-            sprintf(Buffer, "Setup failed to verify the selected partition.\n"
+            // sprintf(Buffer, "Setup failed to verify the selected partition.\n"
+            sprintf(Buffer, "ChkDsk detected some disk errors.\n"
                     "(Status 0x%08lx).\n", Status);
             PopupError(Buffer,
-                       MUIGetString(STRING_REBOOTCOMPUTER),
+                       // MUIGetString(STRING_REBOOTCOMPUTER),
+                       MUIGetString(STRING_CONTINUE),
                        Ir, POPUP_WAIT_ENTER);
 
-            return QUIT_PAGE;
+            // return QUIT_PAGE;
         }
 
         PartEntry->NeedsCheck = FALSE;

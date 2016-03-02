@@ -1768,6 +1768,8 @@ MUI_STRING frFRStrings[] =
     "Setup installe ReactOS sur la partition"},
     {STRING_CHECKINGPART,
     "Setup vÇrifie la partition sÇlectionnÇe."},
+    {STRING_CONTINUE,
+    "ENTRêE = Continuer"},
     {STRING_QUITCONTINUE,
     "F3 = Quitter  ENTRêE = Continuer"},
     {STRING_REBOOTCOMPUTER,

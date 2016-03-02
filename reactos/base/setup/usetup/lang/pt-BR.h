@@ -1783,6 +1783,8 @@ MUI_STRING ptBRStrings[] =
     "O instalador instala o ReactOS na parti‡Æo"},
     {STRING_CHECKINGPART,
     "O instalador est  verificando a parti‡Æo selecionada."},
+    {STRING_CONTINUE,
+    "ENTER=Continuar"},
     {STRING_QUITCONTINUE,
     "F3=Sair  ENTER=Continuar"},
     {STRING_REBOOTCOMPUTER,

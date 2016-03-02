@@ -1744,6 +1744,8 @@ MUI_STRING ruRUStrings[] =
     "ReactOS устанавливается на раздел:"},
     {STRING_CHECKINGPART,
     "Программа установки проверяет выбранный раздел."},
+    {STRING_CONTINUE,
+    "ENTER = Продолжить"},
     {STRING_QUITCONTINUE,
     "F3 = Выход  ENTER = Продолжить"},
     {STRING_REBOOTCOMPUTER,

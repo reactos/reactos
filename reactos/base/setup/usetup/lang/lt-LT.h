@@ -1753,6 +1753,8 @@ MUI_STRING ltLTStrings[] =
     "Setup installs ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
+    {STRING_CONTINUE,
+    "ENTER = Continue"},
     {STRING_QUITCONTINUE,
     "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,

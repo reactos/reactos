@@ -1747,6 +1747,8 @@ MUI_STRING deDEStrings[] =
     "ReactOS wird auf dieser Partition installiert."},
     {STRING_CHECKINGPART,
     "Die ausgewÑhlte Partition wird ÅberprÅft."},
+    {STRING_CONTINUE,
+    "EINGABETASTE = Fortsetzen"},
     {STRING_QUITCONTINUE,
     "F3 = Beenden  EINGABETASTE = Fortsetzen"},
     {STRING_REBOOTCOMPUTER,

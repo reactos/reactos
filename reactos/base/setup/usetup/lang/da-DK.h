@@ -1763,6 +1763,8 @@ MUI_STRING daDKStrings[] =
     "Installationen installere ReactOS p† partitionen"},
     {STRING_CHECKINGPART,
     "Installationen tjekker den valgte partition."},
+    {STRING_CONTINUE,
+    "ENTER = Forts‘t"},
     {STRING_QUITCONTINUE,
     "F3 = Afslut  ENTER = Forts‘t"},
     {STRING_REBOOTCOMPUTER,

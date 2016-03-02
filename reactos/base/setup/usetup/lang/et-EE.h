@@ -1743,6 +1743,8 @@ MUI_STRING etEEStrings[] =
     "ReactOS paigaldatakse partitsioonile"},
     {STRING_CHECKINGPART,
     "Valitud partitsiooni kontrollitakse."},
+    {STRING_CONTINUE,
+    "ENTER = J„tka"},
     {STRING_QUITCONTINUE,
     "F3 = V„lju  ENTER = J„tka"},
     {STRING_REBOOTCOMPUTER,

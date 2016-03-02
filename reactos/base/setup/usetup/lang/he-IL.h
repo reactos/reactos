@@ -1745,6 +1745,8 @@ MUI_STRING heILStrings[] =
     "Setup installs ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
+    {STRING_CONTINUE,
+    "ENTER = Ñéôä"},
     {STRING_QUITCONTINUE,
     "F3 = Åàå ÑöóêÑ  ENTER = Ñéôä"},
     {STRING_REBOOTCOMPUTER,

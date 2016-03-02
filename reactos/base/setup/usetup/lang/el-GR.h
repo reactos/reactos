@@ -1762,6 +1762,8 @@ MUI_STRING elGRStrings[] =
     "Setup install ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "† œš¡˜«á©«˜©ž œ¢âš®œ  «é¨˜ «¦ œ§ ¢œš£â¤¦ partition."},
+    {STRING_CONTINUE,
+    "ENTER = ‘¬¤â®œ ˜"},
     {STRING_QUITCONTINUE,
     "F3 = €§¦®é¨ž©ž  ENTER = ‘¬¤â®œ ˜"},
     {STRING_REBOOTCOMPUTER,

@@ -1758,6 +1758,8 @@ MUI_STRING bgBGStrings[] =
     "Слагане на РеактОС върху дял"},
     {STRING_CHECKINGPART,
     "Тече проверка на избрания дял."},
+    {STRING_CONTINUE,
+    "ENTER = Продължаване"},
     {STRING_QUITCONTINUE,
     "F3 = Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,

@@ -1753,6 +1753,8 @@ MUI_STRING ukUAStrings[] =
     "ReactOS встановлюється на роздiл"},
     {STRING_CHECKINGPART,
     "Встановлювач перевiряє вибраний роздiл."},
+    {STRING_CONTINUE,
+    "ENTER = Продовжити"},
     {STRING_QUITCONTINUE,
     "F3 = Вийти  ENTER = Продовжити"},
     {STRING_REBOOTCOMPUTER,

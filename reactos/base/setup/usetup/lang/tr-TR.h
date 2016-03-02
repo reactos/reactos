@@ -1724,6 +1724,8 @@ MUI_STRING trTRStrings[] =
     "Kur, ReactOS'u bîlÅm Åzerine kurar."},
     {STRING_CHECKINGPART,
     "Kur, üimdi seáili bîlÅmÅ gîzden geáiriyor."},
+    {STRING_CONTINUE,
+    "Giriü = SÅrdÅr"},
     {STRING_QUITCONTINUE,
     "ò3 = Äçk   Giriü = SÅrdÅr"},
     {STRING_REBOOTCOMPUTER,

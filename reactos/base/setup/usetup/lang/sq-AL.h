@@ -1750,6 +1750,8 @@ MUI_STRING sqALStrings[] =
     "Instalimi i ReactOS ne Particion"},
     {STRING_CHECKINGPART,
     "Instalimi tani ‰sht‰ duke kontrolluar particionin e p‰rzgjedhur."},
+    {STRING_CONTINUE,
+    "ENTER = Vazhdo"},
     {STRING_QUITCONTINUE,
     "F3 = Dil  ENTER = Vazhdo"},
     {STRING_REBOOTCOMPUTER,

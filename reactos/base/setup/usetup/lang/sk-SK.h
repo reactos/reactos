@@ -1757,6 +1757,8 @@ MUI_STRING skSKStrings[] =
     "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
     {STRING_CHECKINGPART,
     "Inçtal tor teraz skontroluje vybran£ oblasœ."},
+    {STRING_CONTINUE,
+    "ENTER = PokraŸovaœ"},
     {STRING_QUITCONTINUE,
     "F3 = SkonŸiœ  ENTER = PokraŸovaœ"},
     {STRING_REBOOTCOMPUTER,

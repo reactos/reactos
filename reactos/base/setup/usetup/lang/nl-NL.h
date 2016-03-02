@@ -1785,6 +1785,8 @@ MUI_STRING nlNLStrings[] =
     "Setup installeert ReactOS op Partitie"},
     {STRING_CHECKINGPART,
     "Setup controleert nu de geselecteerde partitie."},
+    {STRING_CONTINUE,
+    "ENTER = Doorgaan"},
     {STRING_QUITCONTINUE,
     "F3 = Afsluiten   ENTER = Doorgaan"},
     {STRING_REBOOTCOMPUTER,

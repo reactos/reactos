@@ -1632,6 +1632,8 @@ MUI_STRING msMYStrings[] =
     "Persediaan memasang ReactOS ke Partition"},
     {STRING_CHECKINGPART,
     "Persediaan kini sedang menyemak sekatan yang dipilih."},
+    {STRING_CONTINUE,
+    "ENTER = Teruskan"},
     {STRING_QUITCONTINUE,
     "F3 = Keluar  ENTER = Teruskan"},
     {STRING_REBOOTCOMPUTER,
