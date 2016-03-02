@@ -8,6 +8,7 @@
 #define _VFATLIB_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -21,12 +22,7 @@
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
-#include "check/common.h"
-#include "check/io.h"
-#include "check/fat.h"
-#include "check/file.h"
-#include "check/check.h"
-#include "check/boot.h"
+#include "check/dosfsck.h"
 
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
@@ -150,6 +146,9 @@ Fat32Format(HANDLE FileHandle,
 VOID
 UpdateProgress(PFORMAT_CONTEXT Context,
                ULONG Increment);
+
+VOID
+VfatPrintV(PCHAR Format, va_list args);
 
 VOID
 VfatPrint(PCHAR Format, ...);

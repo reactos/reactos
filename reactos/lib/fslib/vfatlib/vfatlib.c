@@ -4,7 +4,31 @@
  * FILE:        lib\fslib\vfatlib\vfatlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Aleksey Bragin (aleksey@reactos.org)
+ *              Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
+/* fsck.fat.c - User interface
+
+   Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
+   Copyright (C) 1998 Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>
+   Copyright (C) 2008-2014 Daniel Baumann <mail@daniel-baumann.ch>
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+   The complete text of the GNU General Public License
+   can be found in /usr/share/common-licenses/GPL-3 file.
+*/
 
 /* INCLUDES *******************************************************************/
 
@@ -17,8 +41,8 @@
 /* GLOBALS & FUNCTIONS ********************************************************/
 
 PFMIFSCALLBACK ChkdskCallback = NULL;
-PVOID FsCheckMemQueue;
 ULONG FsCheckFlags;
+PVOID FsCheckMemQueue;
 ULONG FsCheckTotalFiles;
 
 NTSTATUS
@@ -316,15 +340,12 @@ UpdateProgress(PFORMAT_CONTEXT Context,
 
 
 VOID
-VfatPrint(PCHAR Format, ...)
+VfatPrintV(PCHAR Format, va_list args)
 {
     TEXTOUTPUT TextOut;
     CHAR TextBuf[512];
-    va_list valist;
 
-    va_start(valist, Format);
-    _vsnprintf(TextBuf, sizeof(TextBuf), Format, valist);
-    va_end(valist);
+    _vsnprintf(TextBuf, sizeof(TextBuf), Format, args);
 
     /* Prepare parameters */
     TextOut.Lines = 1;
@@ -335,6 +356,17 @@ VfatPrint(PCHAR Format, ...)
     /* Do the callback */
     if (ChkdskCallback)
         ChkdskCallback(OUTPUT, 0, &TextOut);
+}
+
+
+VOID
+VfatPrint(PCHAR Format, ...)
+{
+    va_list valist;
+
+    va_start(valist, Format);
+    VfatPrintV(Format, valist);
+    va_end(valist);
 }
 
 
@@ -352,6 +384,8 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     ULONG free_clusters;
     DOS_FS fs;
 
+    RtlZeroMemory(&fs, sizeof(fs));
+
     /* Store callback pointer */
     ChkdskCallback = Callback;
     FsCheckMemQueue = NULL;
@@ -360,6 +394,8 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     FsCheckFlags = 0;
     if (Verbose)
         FsCheckFlags |= FSCHECK_VERBOSE;
+    if (FixErrors)
+        FsCheckFlags |= FSCHECK_READ_WRITE;
 
     FsCheckTotalFiles = 0;
 
@@ -367,7 +403,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     salvage_files = TRUE;
 
     /* Open filesystem */
-    fs_open(DriveRoot,FixErrors);
+    fs_open(DriveRoot, FsCheckFlags & FSCHECK_READ_WRITE);
 
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
@@ -376,6 +412,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     }
 
     read_boot(&fs);
+
     if (verify)
         VfatPrint("Starting check/repair pass.\n");
 
@@ -395,6 +432,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     qfree(&FsCheckMemQueue);
     if (verify)
     {
+        FsCheckTotalFiles = 0;
         VfatPrint("Starting verification pass.\n");
         read_fat(&fs);
         scan_root(&fs);
@@ -404,23 +442,29 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     if (fs_changed())
     {
-        if (FixErrors)
+        if (FsCheckFlags & FSCHECK_READ_WRITE)
         {
             if (FsCheckFlags & FSCHECK_INTERACTIVE)
-                FixErrors = get_key("yn","Perform changes ? (y/n)") == 'y';
+            {
+                FixErrors = get_key("yn", "Perform changes ? (y/n)") == 'y';
+                if (FixErrors)
+                    FsCheckFlags |= FSCHECK_READ_WRITE;
+                else
+                    FsCheckFlags &= ~FSCHECK_READ_WRITE;
+            }
             else
                 VfatPrint("Performing changes.\n");
         }
         else
         {
-            VfatPrint("Leaving file system unchanged.\n");
+            VfatPrint("Leaving filesystem unchanged.\n");
         }
     }
 
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
-        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters);
+        FsCheckTotalFiles, fs.data_clusters - free_clusters, fs.data_clusters);
 
-    if (FixErrors)
+    if (FsCheckFlags & FSCHECK_READ_WRITE)
     {
         /* Dismount the volume */
         fs_dismount();
@@ -429,8 +473,11 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
         fs_lock(FALSE);
     }
 
+    // https://technet.microsoft.com/en-us/library/cc730714.aspx
+    // https://support.microsoft.com/en-us/kb/265533
+
     /* Close the volume */
-    return (fs_close(FixErrors) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
+    return (fs_close(FsCheckFlags & FSCHECK_READ_WRITE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
 }
 
 /* EOF */

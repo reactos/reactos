@@ -1,0 +1,2096 @@
+commit ad1342e
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Sat May 16 02:10:18 2015 +0200
+
+    manpages: Mark MT and ME tags as untranslated for po4a
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 3ed9ec2
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Sun May 10 19:59:02 2015 +0200
+
+    mkfs: Small changes to FAT32 cluster size selection
+    
+    Put the cluster size selection back in line with the table used in
+    Microsoft's fatgen103.pdf and fix the comment. This only involved
+    changing some comparison operators, all values stayed the same.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 9984552
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Apr 20 23:41:34 2015 +0200
+
+    fsck: Mention -r is default in usage message
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 3eaca68
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Apr 20 23:30:56 2015 +0200
+
+    manpages: Remove obsolete information about Linux FAT support
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit a5e34de
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Thu Apr 16 23:16:08 2015 +0200
+
+    manpages: Convert the rest of argument placeholders to upper case
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 2303765
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Thu Apr 16 22:51:20 2015 +0200
+
+    manpages: Fix formatting
+    
+    Make the manpages conform to the rules for groff sources. First,
+    eliminate empty lines because these create vertical spaces where it
+    isn't desired. Man page sources should not contain empty lines. Second,
+    put a line break between sentences in a paragraph. A period is
+    recognized and formatted as a full stop period only when a line break
+    comes right after it.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit d3969b8
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Fri Apr 10 20:32:50 2015 +0200
+
+    fsck: Verify first cluster of a file is not 1
+    
+    Previously the FAT was checked for any out of bounds entries which were
+    cleared. However the first cluster of a file, as specified in its
+    directory entry, was not verified to not be 1.
+    
+    In addition to missing this filesystem error, code that correctly
+    assumes the FAT contained no bad entries anymore could still look up
+    invalid table indices depending on the value stored in entry 1. With
+    the right values and FAT size this can lead to a segfault by accessing
+    unallocated memory.
+    
+    Now test_file() will ignore files where the first cluster equals 1 and
+    an additional check in check_file() will truncate them.
+    
+    This bug was reported in http://bugs.debian.org/773885 by Jakub Wilk.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 2a56575
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Thu Apr 2 23:35:00 2015 +0200
+
+    Simplify synopses of man pages
+    
+    Since there is only one mode of invocation for the tools, it is
+    somewhat pointless to list every possible option in the synopsis.
+    
+    Fix a few style inconsistencies in addition, specifically that
+    placeholders for option arguments are in capital letters and should be
+    shown where the option is described.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 40f1436
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Apr 1 20:55:58 2015 +0200
+
+    Update homepage and maintainer sections of man pages
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 0169db8
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Apr 1 20:05:01 2015 +0200
+
+    mkfs: Show a clearer message that file already exists with -C
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 2967e27
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Mar 30 21:12:51 2015 +0200
+
+    mkfs: Remove O_TRUNC from file creation call
+    
+    open() is called with O_EXCL | O_CREAT, so it will definitely create a
+    new, empty file or error out. O_TRUNC is superfluous and may be harmless
+    in practice but its effect under these circumstances is unspecified.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 90612df
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Mar 30 21:09:51 2015 +0200
+
+    mkfs: Use ftruncate() for expanding created file
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 58e8e09
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Tue Mar 24 21:32:40 2015 +0100
+
+    mkfs: Add --invariant option
+    
+    The --invariant option is designed to prevent random or time based
+    differences to end up in generated filesystems so that multiple runs
+    generate on the same file or device create completely identical results.
+    
+    This is intended for debugging or regression testing of mkfs.fat.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 354feaf
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Thu Mar 19 21:35:21 2015 +0100
+
+    mkfs: Add long option parsing
+    
+    Add long option parsing with getopt_long() to mkfs and define --help as
+    the first long option. The usage() function now takes an exit code
+    parameter so that the --help option handling can exit the program with
+    a success exit code.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit b611549
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Mar 16 21:08:35 2015 +0100
+
+    Do not expect EOF as return value of getopt()
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit a41fc32
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Mar 11 21:45:04 2015 +0100
+
+    fsck.fat: Fix read beyond end of array on FAT12
+    
+    When a FAT12 filesystem contains an odd number of clusters, setting the
+    last cluster with set_fat() will trigger a read of the next entry,
+    which does not exist in the fat array allocated for this.
+    
+    Round up the allocation to an even number of FAT entries for FAT12 so
+    that this is fixed without introducing special casing in get_fat().
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit e18d72f
+Author: Álvaro Fernández Rojas <noltari@gmail.com>
+Date:   Sat Mar 7 13:23:23 2015 +0100
+
+    Remove linux/msdos_fs.h includes
+    
+    Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 245d0cc
+Author: Álvaro Fernández Rojas <noltari@gmail.com>
+Date:   Thu Feb 26 19:22:54 2015 +0100
+
+    Remove non standard int types
+    
+    Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 628b3ec
+Author: Álvaro Fernández Rojas <noltari@gmail.com>
+Date:   Thu Feb 26 19:41:19 2015 +0100
+
+    Improve .gitignore
+    
+    Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 02b5a6d
+Author: Álvaro Fernández Rojas <noltari@gmail.com>
+Date:   Thu Feb 26 12:51:23 2015 +0100
+
+    Makefile: avoid using install -D
+    
+    OS X and FreeBSD are not compatible with this option
+    
+    Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit fb6aea6
+Author: Álvaro Fernández Rojas <noltari@gmail.com>
+Date:   Thu Feb 26 12:50:57 2015 +0100
+
+    Makefile: fix typo in uninstall-man
+    
+    Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 357ab07
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Thu Feb 19 21:22:54 2015 +0100
+
+    fsck.fat: Make -r option default
+    
+    Default mode is now to interactively repair with the option to write
+    the changes back at the end (like the -r option) instead of the previous
+    default mode of interactively correcting but never writing back the
+    changes.
+    
+    The -r option continues to be recognized by fsck.fat.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 266a5fc
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Fri Feb 20 03:19:28 2015 +0100
+
+    mkfs.fat: Allow 0xF0 to be specified as media byte
+    
+    Let the -M option accept 0xF0, which should be the proper descriptor
+    byte for 3.5" 1.44 MB and 2.88 MB floppies.
+    
+    Also split the error reporting for -M between badly formatted and
+    invalid numbers.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 16e97e9
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Jan 28 15:07:18 2015 +0100
+
+    Make all char* that may take literals const
+    
+    Every char* variable or function argument that may be given a literal
+    string is now made const. Additionally add -Wwrite-strings to CFLAGS to
+    enable a warning where const would be missing.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 8b8948c
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Mon Dec 29 18:24:54 2014 +0100
+
+    mkfs.fat.c: Use unsigned char for binary data
+    
+    Simple char technically works for the dummy_boot_jump variables, but
+    some compiler warning settings would give a warning over a signed char
+    overflowing with the values given as initializers.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 45aeed0
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Sun Nov 16 19:49:22 2014 +0100
+
+    Fix indentation of "fix power loss damage" commit
+    
+    I fixed the (sometimes misleading) indentation of the code introduced in
+    commit 6893c45 to be in line with the reset of the code and also removed
+    the /* PATCH ED+DL */ comments which are quite meaningless to the wider
+    world.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 75c5446
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Sat Nov 15 16:48:48 2014 +0100
+
+    Add tags and editor backup files to .gitignore
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit cb98ae2 (tag: v3.0.27)
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Nov 12 01:10:23 2014 +0100
+
+    Releasing version 3.0.27.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit e2c8f06
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Wed Nov 12 00:22:17 2014 +0100
+
+    fsck.fat: Don't print version string every time -v is encountered
+    
+    Remove the printing of the version string every time -v is seen during
+    command line parsing in fsck.fat. The version string is printed anyway
+    before opening the filesystem device/image.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 82076b6
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Tue Nov 11 23:25:30 2014 +0100
+
+    Fix attempt to rename root dir in fsck due to uninitialized fields
+    
+    When add_file() is called with offset 0, it will construct a DIR_ENT for
+    the root directory instead of reading the contents from the filesystem.
+    It did not initialize the whole DIR_ENT on the stack, just select
+    values.
+    
+    In particular, the lcase field was left with an undefined value. If
+    that value happened to include the FAT_NO_83NAME bit, the "neither long
+    nor short file name" check in bad_name() added in 3.0.26 would trigger
+    and cause an attempt to rename the entry (which is not possible).
+    Example run:
+    
+        $ /sbin/fsck.fat -y bad.img
+        fsck.fat 3.0.26 (2014-03-07)
+        /
+          Bad short file name ().
+          Auto-renaming it.
+          Renamed to
+        bad.img: 14 files, 19388/403266 clusters
+    
+    This commit changes the initialization zeroize the whole struct before
+    setting individual fields. Thanks to AlexisM, who found the cause and
+    posted a patch on the Debian bug http://bugs.debian.org/764992 .
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit c24ecb6
+Author: Andreas Bombe <aeb@debian.org>
+Date:   Tue Nov 11 22:49:50 2014 +0100
+
+    Support long file names in volume labeling code
+    
+    The code to find the volume label directory entry in find_volume_de()
+    did not consider long file names so far. Directory entries that make up
+    long file names have four attribute bits set, including the "volume"
+    bit.
+    
+    This caused the code to mistake a directory entry that is part of a
+    long file name as the volume name entry. If such an entry is found
+    first, fatlabel would print garbage when asked to display the label and
+    mangle the long file name when asked to set it. The latter would lead
+    to the loss of the long file name and require a fsck to clean up.
+    
+    Change so that the set of attributes equal that of LFN entries will no
+    langer match as a volume label.
+    
+    Signed-off-by: Andreas Bombe <aeb@debian.org>
+
+commit 1646f6e (tag: v3.0.26)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Mar 7 18:40:13 2014 +0100
+
+    Releasing version 3.0.26.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 6893c45
+Author: Dir Lotter <dirk.lotter@siemens.com>
+Date:   Fri Mar 7 18:25:39 2014 +0100
+
+    Fix "odd" files created by frequent power-loss.
+    
+    After running many power losses the filesystem can degrate, containing "odd"
+    files making the filesystem corrupt that could not be solved by fsck:
+    
+      * file was not visible in a ls -l
+      * ls -i reported a "invalid file name" on the console
+      * a test program with diropen/dirread showed the file, a stat on this file
+        failed
+      * file was not accessible and could not be deleted
+    
+    After digging into the code we found why fsck didn't repair the file system:
+    One thing was we don't have short filenames. Another issue was that the LFN
+    pointer was set to NULL and so it looked like we didn't have short and long
+    filenames.
+    
+    Our patch of check.c includes:
+    
+      * returns 1 from function bad_name() in case no short and no long filename
+        exist
+      * auto_rename() and rename_file() got a special handling for the case no short
+        file name exist:
+        - it enables the short file name (we think here was a weakness of the old
+          code: it changed the short filename but didn't enabled it in the
+          file->dir_ent.lcase entry)
+        - it reset all attributes except ATTR_DIR and ATTR_VOLUME
+    
+    This solved our problem pretty well.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 621e11f
+Author: Natanael Copa <ncopa@alpinelinux.org>
+Date:   Sat Feb 8 18:53:30 2014 +0100
+
+    Build fixes for musl libc.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 52588b7 (tag: v3.0.25)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jan 17 07:11:11 2014 +0100
+
+    Releasing version 3.0.25.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit acf64ae
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jan 17 07:09:54 2014 +0100
+
+    Updating copyright headers for 2014.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 21fe921
+Author: Andrew Tridgell <tridge@samba.org>
+Date:   Tue Jan 14 09:37:51 2014 +1100
+
+    Fixed remaining 64 bit build warnings.
+    
+    Some of these may be real bugs.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 9e3a2b1
+Author: Andrew Tridgell <tridge@samba.org>
+Date:   Tue Jan 14 09:25:28 2014 +1100
+
+    Prevent corruption of FAT during fsck on 64 bit platforms.
+    
+    unsigned long is 64 bit on x86-64, which means set_fat was writing two
+    entries, which corrupts the next entry. This can cause loss of data in
+    another file.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0d2c9bc (tag: v3.0.24)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Nov 23 10:36:55 2013 +0100
+
+    Releasing version 3.0.24.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 55bd7b7
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Sat Nov 23 10:34:48 2013 +0100
+
+    Fixed dosfsck on big endian platforms (Resolves: rhbz#1029695).
+    
+    It seems there is problem in the double conversion on big endians.
+    The first conversion is done by the explicit conversion to __u16
+    in the GET_UNALIGNED_W macro, so the secondary conversion by le16toh
+    seems to be redundant (and wrong).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 6debb4a (tag: v3.0.23)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Oct 15 08:05:46 2013 +0200
+
+    Releasing version 3.0.23.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 07d85ff
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Oct 15 08:04:11 2013 +0200
+
+    Reformating mkfs.fat manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 137552f
+Author: Michael Shigorin <mike@altlinux.org>
+Date:   Tue Oct 15 01:29:33 2013 +0400
+
+    Fixing "Fixing default sectors per cluster for FAT32" for UEFI.
+    
+    FAT32 "EFI System Partition" is basically required for UEFI boot;
+    commit ge048a8d broke that for me with both virtualbox-4.2 and
+    real hardware (ASUS C60M1-I to be exact) given ~250Mb filesystem.
+    
+    This commit amends that one by reverting its effects for these
+    small sizes by restoring 512b cluster size for <= 260Mb FAT32.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2000696
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Aug 9 09:38:13 2013 +0200
+
+    Also allowing lowercase labels in mkfs (with warning message) consistent with the recent fsck change, thanks to Michael Baum <mbaum@devonit.com>.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 9b04807
+Author: Tim Harder <radhermit@gentoo.org>
+Date:   Fri Jul 19 18:15:21 2013 +0200
+
+    Add install-man dependency to install-symlinks Makefile target.
+    
+    This fixes a race condition during parallel installs where man page
+    symlinks won't be installed because install-man hasn't been run yet.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 651f91c (tag: v3.0.22)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jul 19 07:01:19 2013 +0200
+
+    Releasing version 3.0.22.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3dc5560
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jul 19 06:55:24 2013 +0200
+
+    Addding install-symlinks target to phony targets in Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit c6c0581
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jul 19 06:55:00 2013 +0200
+
+    Adding uninstall-symlinks target in Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 465dd8c
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jul 19 06:45:40 2013 +0200
+
+    Allowing fatlabel to write labels in all lowercase but give a warning about DOS/Windows (Closes: #714971).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3621b30
+Author: John S Gruber <JohnSGruber@gmail.com>
+Date:   Fri Jul 19 06:40:21 2013 +0200
+
+    Add options and make dos boot sector more compatible with reference system (Closes: #552673).
+    
+    Unless overridden by the user sets the DOS boot sector's
+    hidden-sectors field to match the start of a hard disk's
+    partition.
+    
+    Initialize DOS boot sector drive_number according to FAT media type
+    Addresses LP: #398241 and Debian #552673
+    
+    Adds options to override the DOS boot sector device_number and
+    the FAT media type.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit be1eed5
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jul 17 12:52:20 2013 +0200
+
+    Correcting wrong check preventing installation of fatlabel legacy manpage symlink.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d0065d3 (tag: v3.0.21)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jul 16 08:34:28 2013 +0200
+
+    Releasing version 3.0.21.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a74c12c
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Tue Jun 25 14:53:14 2013 +0200
+
+    Adding the missing -p option to the fsck manpage (to be consistent with the output of the tool).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 25e03c9
+Author: Patrick J. Volkerding <volkerdi@slackware.com>
+Date:   Mon Jun 24 14:23:00 2013 +0200
+
+    Using $MANDIR instead of hardcoded ${PREFIX}/share/man in the Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 7fd9cf7
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jun 14 18:50:31 2013 +0200
+
+    Making install-symlinks Makefile target depend on install-bin to not break when using make in parallel, thanks to David Walser <luigiwalser@yahoo.com>.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a76bbcd
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 12 13:00:10 2013 +0200
+
+    Using US digit date format in version date, rather than name abbrev.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a64195f (tag: v3.0.20)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 12 12:25:32 2013 +0200
+
+    Releasing version 3.0.20.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1a5d99f
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 12 12:07:58 2013 +0200
+
+    Softening message about different boot sectors a bit (Closes: #704198).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 4727286
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 12 11:42:52 2013 +0200
+
+    Harmonizing program name output.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 17c956c
+Author: Martin Wilck <mwilck@arcor.de>
+Date:   Wed Jun 12 11:38:00 2013 +0200
+
+    Don't align FAT to cluster size.
+    
+    See previous patch for explanation.
+    
+    With this patch and the previous two, the
+    mkdosfs generated FAT32 file systems work well in my extremely
+    picky TechniSat device. Of course, they're also detected cleanly
+    by Linux and Windows.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d63e0d6
+Author: Martin Wilck <mwilck@arcor.de>
+Date:   Wed Jun 12 11:36:08 2013 +0200
+
+    Don't align FAT32 reserved sectors to cluster size.
+    
+    For certain file system sizes (in particular, exact GB sizes -
+    don't ask me why) a Technisat HD S2 Plus DVB receiver will still
+    choke on mkdosfs generated file systems, even if the sectors per
+    cluster problem is fixed.
+    
+    By comparing the properties of generated FAT32 FS with results
+    of the Windows tool "h2format" (www.heise.de/download/h2format.html),
+    I found that the remaining problems were caused by rounding of the
+    reserved sectors and FAT space to cluster size (the h2format tool
+    doesn't do this).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e048a8d
+Author: Martin Wilck <mwilck@arcor.de>
+Date:   Wed Jun 12 11:33:33 2013 +0200
+
+    Fixing default sectors per cluster for FAT32 (Closes: #690062).
+    
+    The default sectors per cluster calculated by mkdosfs are outdated,
+    see http://technet.microsoft.com/en-us/library/cc938438.aspx.
+    
+    The deviations may cause some 3rd party devices (e.g. TechniSat DVB
+    receivers) to hang when reading mkdosfs generated file systems.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 86509aa
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 20:19:09 2013 +0200
+
+    Splitting out legacy symlink creation in toplevel Makefile to own target.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit da37dd1
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 12 11:29:12 2013 +0200
+
+    Correcting wrong toolname in fsck.fat.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b29a722
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 19:51:47 2013 +0200
+
+    Consistently spelling filesystem as filesystem, and not file system.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 977d7aa
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 19:30:19 2013 +0200
+
+    Removing Debian reference in GPL license headers.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5505cc2 (tag: v3.0.19)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 18:46:03 2013 +0200
+
+    Releasing version 3.0.19.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2c88f35
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 18:44:50 2013 +0200
+
+    Running indent on source files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d495d43
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jun 11 18:41:41 2013 +0200
+
+    Using memcpy instead of strcpy to fix segfault with fortify, thanks to Dave Reisner <falconindy@jabber.org>.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 9fb4ffc
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Jun 9 13:17:16 2013 +0200
+
+    Correcting fsck.fat spelling error in manpages, thanks to E.J.M. Hartman <E.J.M.Hartman@tudelft.nl>.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2d8ef9b (tag: v3.0.18)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Jun 6 09:49:00 2013 +0200
+
+    Releasing version 3.0.18.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d4e1180
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Jun 6 09:38:45 2013 +0200
+
+    Adding initial i18n support for manpages with po4a.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ea8f712
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Jun 6 09:17:13 2013 +0200
+
+    Renaming tools to sane namespace and keeping legacy symlinks in place.
+    
+    dosfslabel becomes fatlabel,
+    dosfsck becomes fsck.fat,
+    and mkdosfs becomes mkfs.fat.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a42b127
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 5 07:12:03 2013 +0200
+
+    Correcting wrong spelling of Debian in mkdosfs manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2749084
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jun 5 07:10:50 2013 +0200
+
+    Correcting spelling typo in boot.c.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 6461c83
+Author: Martin Pitt <martinpitt@gnome.org>
+Date:   Fri May 24 09:35:44 2013 +0200
+
+    dosfslabel: Do not read beyond string length (Closes: #709587).
+    
+    When checking whether the label contains any lower-case characters, do not read
+    beyond the end of the string.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 4203a90 (tag: v3.0.17)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed May 29 10:14:09 2013 +0200
+
+    Releasing version 3.0.17.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3aa88ed
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed May 29 09:48:24 2013 +0200
+
+    Updating maximal lenght of a label in manpage to talk about bytes instead of characters, thanks to Francois Wendling <frwendling@gmail.com> (Closes: #655953).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0916f8a
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Wed May 29 09:56:08 2013 +0200
+
+    Fixing segfault in dosfslabel.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 4a265c6
+Author: James Byrne <jbyrne@aminocom.com>
+Date:   Mon Apr 22 12:29:51 2013 +0100
+
+    Allow operation on SH4 CPUs and remove compiler warnings.
+    
+    Simplify the GET_UNALIGNED_W macro and use it in all cases instead of making it
+    conditional on CPU types. This missed some CPUs that needed it (e.g. SH4), and
+    in any case the implementation caused "dereferencing type-punned pointer will
+    break strict-aliasing rules" warnings.
+    
+    Enable extra warnings, but disable signed comparison and missing field
+    initializer warnings as these are not helpful.
+    
+    Update write_boot_label() so that the boot_sector_16 and boot_sector cases are
+    handled separately instead of using an aliased pointer, as that causes
+    "dereferencing type-punned pointer will break strict-aliasing rules" warnings.
+    
+    Make date_dos2unix(), usage() and cdiv() static functions as they are only used
+    in the files in which they are declared.
+    
+    Update bad_name() and lfn_get() so that the extension is processed separately
+    instead of by indexing past the end of the name field as that causes "array
+    subscript is above array bounds" warnings.
+    
+    Update the dosfsck() main function to avoid a warning that free_clusters may
+    be used uninitialized. Do not print the final count of files and clusters when
+    dosfsck is run with the "-b" option because the used files and clusters have
+    not been counted in this case.
+    
+    Alter the setup_tables() function so that it does not cause an "array subscript
+    is below array bounds" warning.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit eb68a14
+Author: James Byrne <jbyrne@aminocom.com>
+Date:   Mon Apr 22 13:32:01 2013 +0100
+
+    Add a .gitignore file.
+    
+    Add a .gitignore file so that the results of compilation do not appear as
+    changes.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 336e8f1
+Author: James Byrne <jbyrne@aminocom.com>
+Date:   Mon Apr 22 12:38:52 2013 +0100
+
+    Finish cleanup of byteswap code.
+    
+    Commit 9ba8992 left three references to the old CT_LE_W macro.
+    Remove these since no conversion was needed as the value being
+    converted was zero.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 64b6227
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Apr 4 08:08:00 2013 +0200
+
+    Shortening links to upstream homepage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 76304be
+Author: Cristian Rodríguez <crrodriguez@opensuse.org>
+Date:   Fri Mar 1 08:23:34 2013 +0100
+
+    Fix offsetof definition.
+    
+      * include stddef.h to get the correct offsetof definition.
+      * remove local offsetof definition, systems not having it on stddef.h
+        are in violation of C89, C99, POSIX.1-2001.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 9ba8992
+Author: Cristian Rodríguez <crrodriguez@opensuse.org>
+Date:   Fri Mar 1 08:58:36 2013 +0100
+
+    Cleanup byteswap code.
+    
+    Remove all duplicate macro definitions for byteswapping routines
+    and replace them for proper usage of userspace endian(3).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 8733e12 (tag: v3.0.16)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed May 29 10:06:01 2013 +0200
+
+    Releasing version 3.0.16.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a9fa87e
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:34:12 2013 +0100
+
+    Create rootdir entry volume label with mkdosfs, create it when
+    it doesn't exist with dosfslabel.
+    
+    See https://bugzilla.novell.com/show_bug.cgi?id=657011#c4
+    for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 92057f1
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:33:18 2013 +0100
+
+    Forbid lowercase letters in label.
+    
+    See https://bugzilla.novell.com/show_bug.cgi?id=657011#c4 and
+    http://support.microsoft.com/kb/71715/en-us for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5e265c4
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:32:02 2013 +0100
+
+    Read label also from rootdir entry.
+    
+    See https://bugzilla.novell.com/show_bug.cgi?id=657011#c4
+    for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5cec53c
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:30:21 2013 +0100
+
+    alloc_rootdir_entry() is intended to be called with pattern == "FSCK%04dREC",
+    the old code (probably c&p from auto_rename()) doesn't reflect this.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 63938f0
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:29:00 2013 +0100
+
+    Instead of eleven blanks, fill in "NO NAME    " as specification tells.
+    
+    See https://bugzilla.novell.com/show_bug.cgi?id=657011#c4 and
+    http://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 10c1c41
+Author: Petr Gajdos <pgajdos@suse.cz>
+Date:   Fri Mar 1 08:58:15 2013 +0100
+
+    Write uppercase letters in label.
+    
+    See https://bugzilla.novell.com/show_bug.cgi?id=657011#c4 and
+    http://support.microsoft.com/kb/71715/en-us for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a75fb1c (tag: v3.0.15)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Feb 21 15:06:52 2013 +0100
+
+    Releasing version 3.0.15.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit c8f84fd
+Author: Alexander Korolkov <alexander.korolkov@gmail.com>
+Date:   Mon Feb 4 00:22:34 2013 +0400
+
+    Using wcstombs() to convert LFN unicode characters to printable text.
+    
+    This closes Debian bug #596336.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1546545
+Author: Alexander Korolkov <alexander.korolkov@gmail.com>
+Date:   Sun Sep 5 18:59:47 2010 +0400
+
+    Recode short filenames from DOS codepage (default 437).
+    
+    Recode short filenames from DOS codepage (default 437) to the current
+    character encoding. This makes messages of dosfsck more readable.
+    Partially closes Debian bug #596336.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ad76cae
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Thu Feb 21 14:40:52 2013 +0100
+
+    Fixing root directory allocation.
+    
+    See https://bugzilla.redhat.com/show_bug.cgi?id=674095 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b8201b3
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Thu Feb 21 14:40:25 2013 +0100
+
+    Fixing device detection.
+    
+    See https://bugzilla.redhat.com/show_bug.cgi?id=710480 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 7a75638 (tag: v3.0.14)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jan 23 13:22:01 2013 +0100
+
+    Releasing version 3.0.14.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5bdd7ef
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jan 23 13:16:20 2013 +0100
+
+    Documenting dosfsck -b in its manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a307be2
+Author: Oleksij Rempel <bug-track@fisher-privat.net>
+Date:   Wed Jan 23 12:36:56 2013 +0100
+
+    Adding option for bootsector read-only check.
+    
+    Most boot sectors may contains marker for filesystem state. We can this
+    bit on every mount and warn user if some thing wrong, without checking
+    complete filesystem.
+    
+    Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ce2f8dc
+Author: Oleksij Rempel <bug-track@fisher-privat.net>
+Date:   Wed Jan 23 12:35:13 2013 +0100
+
+    Checking boot sector for dirty bit.
+    
+    Some OSos use reseved byte of boot sector to set state of the file
+    system. If first bit set, then filesystem is proably damaged - write
+    operation was not finished/cache not snycted/...
+    
+    Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f33ee8c
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jan 23 12:25:59 2013 +0100
+
+    Completing and updating all copyright headers for 2013.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit bfe6d25
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jan 23 12:17:20 2013 +0100
+
+    Updating my email address.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 13cdb4d (tag: v3.0.13)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Jun 30 19:10:44 2012 +0200
+
+    Releasing version 3.0.13.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d039482
+Author: Jaroslav Škarvada <jskarvad@redhat.com>
+Date:   Sat Jun 30 19:09:11 2012 +0200
+
+    Fix 'dosfslabel throws "Seek to 114116076544:Invalid argument" error when labeling'.
+    
+    See https://bugzilla.redhat.com/show_bug.cgi?id=693662 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e243612 (tag: v3.0.12)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Oct 29 08:40:53 2011 +0200
+
+    Releasing version 3.0.12.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 025b4f0
+Author: Michael Casadevall <mcasadevall@ubuntu.com>
+Date:   Tue Jun 7 19:19:30 2011 +0200
+
+    Correcting miscalculation of sector number in some cases.
+    
+    mkdosfs will incorrectly calculate the number of sectors of a
+    given FAT partition if the number sectors are odd due to
+    count_blocks incorrectly handling the remainder of a division
+    operation. This miscalculation causes the OMAP4 bootloader to
+    fail to boot.
+    
+    This bug can be observed by comparing the total sector size in
+    fdisk expert more to fsck.msdos; this discrepancy only shows up
+    when the number of sectors are odd.
+    
+    See https://bugs.launchpad.net/ubuntu/+source/dosfstools/+bug/794043
+    for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 91a1fb9
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Jan 8 23:38:59 2011 +0100
+
+    Re-running Nindent.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0390c4c
+Author: Sergey Gusarov <laborer2008@gmail.com>
+Date:   Sat Jan 8 23:36:11 2011 +0100
+
+    Fixing compiler warnings related to the mismatch of types "char *" / "unsigned
+    char *".
+    
+    These warnings appear when you compile the project with the option "-Wall", what
+    is done with the current default Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 4a8f8a6
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Thu Jan 6 22:35:00 2011 +0100
+
+    Fixing overflow bug in reclaim_file function, see
+    https://bugzilla.redhat.com/show_bug.cgi?id=660154 for more information.
+    
+    The problem is that alloc_rootdir_entry counts with 10000 files at max, but the
+    filename buffer is only 8 chars long. Due to pattern mask used it results to
+    only 10 files at max (FSCK0-9REC). If there is more than 10 files, it overflows
+    and hangs.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e0366da
+Author: Sergey Gusarov <laborer2008@gmail.com>
+Date:   Thu Jan 6 22:31:39 2011 +0100
+
+    Fixing conversion specifiers in accordance with the type of expressions.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2d8be9c
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Jan 2 15:41:44 2011 +0100
+
+    Indenting source files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 697af85
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Jan 2 15:39:03 2011 +0100
+
+    Adding Nindent script from syslinux.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 66d55cd (tag: v3.0.11)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Dec 24 17:58:29 2010 +0100
+
+    Releasing version 3.0.11.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d579802
+Author: Michael Stapelberg <michael@stapelberg.de>
+Date:   Fri Nov 19 14:09:36 2010 +0100
+
+    Add better error message when the device cannot be opened.
+    
+    This is helpful for SD cards or other removable media which have an enabled
+    write lock -- without the "Permission denied" message, the user has to strace
+    mkdosfs to find out what's going on.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit bb6000f
+Author: Jaroslav Skarvada <jskarvad@redhat.com>
+Date:   Fri Oct 8 13:38:16 2010 +0200
+
+    Unalign on s390x, see http://bugzilla.redhat.com/show_bug.cgi?id=624596 for
+    more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5ef7f1f (tag: v3.0.10)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Sep 12 09:35:47 2010 +0200
+
+    Releasing version 3.0.10.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ea41797
+Author: Alexander Korolkov <alexander.korolkov@gmail.com>
+Date:   Sun Sep 12 09:29:12 2010 +0200
+
+    Modify LFN direntries when file is renamed or deleted, see
+    Debian bug #596329.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e56ff72
+Author: Alexander Korolkov <alexander.korolkov@gmail.com>
+Date:   Sun Sep 12 09:27:07 2010 +0200
+
+    If the test of short filename fails, dosfsck could complain about
+    bad long filename, see Debian bug #596327.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f0a42d0
+Author: Alexander Korolkov <alexander.korolkov@gmail.com>
+Date:   Sun Sep 12 09:24:47 2010 +0200
+
+    dosfsck: don't complain about bad filenames when short filename
+    contains 7 or more characters with codes 128-255, see Debian
+    bug #596327.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0113c5b
+Author: Mitch Rybczynski <mrybczynski@miovision.com>
+Date:   Mon Jul 5 14:45:54 2010 +0200
+
+    Adding __arm__ define check for some crosscompile toolchains.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 88cb84f
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Mar 14 16:42:32 2010 +0100
+
+    Modernizing dosfslabel manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5aa7ec4
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Mar 14 16:33:47 2010 +0100
+
+    Modernizing dosfsck manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 807ed80
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Mar 14 16:05:32 2010 +0100
+
+    Fixing spelling error in boot.c.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 5b6849d (tag: v3.0.9)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Jan 31 08:31:32 2010 +0100
+
+    Releasing version 3.0.9.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 33bca7d
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date:   Sun Jan 31 00:11:41 2010 -0500
+
+    Be sure to store the updated reserved_sector count in the boot sector,
+    see Debian bug #567337.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2a3bef8 (tag: v3.0.8)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Jan 23 10:16:18 2010 +0100
+
+    Releasing version 3.0.8.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 726c02d
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Jan 23 10:15:01 2010 +0100
+
+    Removing some cruft in end-comments.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a5961d7
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Thu Jan 21 16:58:11 2010 +0100
+
+    When compiling a 32-bit version of dosfstools on an x86_64 machine,
+    the resulting applications report strange errors on "large" (> 2 GiB)
+    partitions:
+    
+      Seek to -2118967808:Invalid argument
+    
+      Warning: Filesystem is FAT32 according to fat_length and fat32_length fields,
+      but has only 8613 clusters, less than the required minimum of 65525.
+      This may lead to problems on some systems.
+    
+    This appears to be due to compilation with a 32-bit off_t and lseek() library
+    function.
+    
+    Use lseek64 for positioning, and change some suspect uses of off_t to loff_t.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit bbb25bf
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Thu Jan 21 16:56:26 2010 +0100
+
+    If dosfsck is run in read-only mode (-n), exit with code 0
+    if the only issue found is an uninitialized free cluster summary.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1cae726
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Thu Jan 21 16:55:30 2010 +0100
+
+    On x86_64, dosfsck incorrectly claims that a free_cluster summary of
+    0xFFFFFFFF, defined by Microsoft to be "uninitialized," is wrong.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 62f806a
+Author: H. Peter Anvin <hpa@zytor.com>
+Date:   Fri Jan 8 09:16:38 2010 +0100
+
+    mkdosfs: correct alignment of the root directory.
+    
+    Correct the code to align the root directory; it was broken before
+    since bs.dir_entries had already been set at the point of alignment.
+    This patch removes the dual use of bs.dir_entries and root_dir_entries
+    to carry the same information: the information is carried in
+    root_dir_entires exclusively, and then bs.dir_entries is set inside
+    setup_tables() at a late point.
+    
+    The code to align the root directory is also wrapped in
+    if (align_structures); this avoids rounding the number of root
+    directory entries up to a whole sector when used with -a
+    (i.e. preserves the previous behavior.)
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 8825bda
+Author: H. Peter Anvin <hpa@zytor.com>
+Date:   Wed Jan 6 20:55:36 2010 +0100
+
+    mkdosfs: improve wording in the man page for the -a option.
+    
+    Improve the English language used in the man page for the -a (no
+    align) option to mkdosfs.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 21d3f81
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Wed Jan 6 11:27:25 2010 +0100
+
+    Adding reference to dosfslable in mkdosfs manpage.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 247ba06
+Author: H. Peter Anvin <hpa@zytor.com>
+Date:   Wed Jan 6 11:18:55 2010 +0100
+
+    mkdosfs: by default align all structures to cluster boundaries
+    
+    Align all data structures (reserved sectors, FATs, root directory for
+    FAT12/16) to an even multiple of the cluster size. This means that if
+    the partition is aligned, so will all clusters be. This adds
+    significant performance for anything where the physical sector size is
+    larger than the logical sector size, e.g. flash media or large-sector
+    hard disks.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 171bc07 (tag: v3.0.7)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Dec 24 10:53:36 2009 +0100
+
+    Releasing version 3.0.7.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 28708fc
+Author: Ben Hutchings <ben@decadent.org.uk>
+Date:   Thu Dec 24 09:55:52 2009 +0100
+
+    Fixing dosfslabel to set volume label in the right place,
+    see Debian bug #559985.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2c405dd
+Author: Lubomir Rintel <lkundrak@v3.sk>
+Date:   Thu Dec 24 09:39:39 2009 +0100
+
+    Fixing out-of bound writes.
+    
+    Firstly, packed attribute is added to the structure so that extension
+    is guarranteed to immediately follow name for the cross-name-extension
+    reads to succeed.
+    
+    Secondly, writes into dir_entry->name that span through the extension as
+    well are split into two, so that FORTIFY_SOURCE's bound checking does
+    not abort dosfsck. There also was an off-by-one error in auto_rename()'s
+    sprintf().
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b8f3efe
+Author: San Mehat <san@google.com>
+Date:   Thu Dec 24 09:31:41 2009 +0100
+
+    Adding custom exit code in dosfsck for the case where the FS is read only.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0657e01 (tag: v3.0.6)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Oct 4 10:59:33 2009 +0200
+
+    Releasing version 3.0.6.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit bc84254
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Sun Oct 4 10:58:43 2009 +0200
+
+    Attempt to improve clarity of the orphan cluster reclaim code.
+    Minor optimization - remove some unnecessary checking.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 8054b4a
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Sun Oct 4 08:37:19 2009 +0200
+
+    Close hole that permitted clusters to link to (invalid) cluster 1.
+    
+    If an orphan chain that linked to cluster 1 was reclaimed to a file,
+    deletion of the file would result in a filesystem panic.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e51af88
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Sun Oct 4 08:32:30 2009 +0200
+
+    Fix erroneous report of huge number of clusters in use on big-endian
+    systems when the FSINFO free cluster count is reset.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 16ba63f (tag: v3.0.5)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Mon Jul 27 14:26:11 2009 +0200
+
+    Releasing version 3.0.5.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 28ff9d9
+Author: Piotr Kaczuba <pepe@attika.ath.cx>
+Date:   Sun Jul 26 22:21:25 2009 +0200
+
+    Signed/unsigned char mismatch in check.c causes false positives
+    in bad_name() and can result in data loss, see Debian bug #538758.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit d42a273
+Author: Andrew Tridgell <tridge@samba.org>
+Date:   Sun Jul 26 22:12:06 2009 +0200
+
+    Update to new kernel patches that add FAT_NO_83NAME flag.
+    
+    See http://lkml.org/lkml/2009/7/20/425 and
+    http://lkml.org/lkml/2009/7/20/424 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit dd0f0b5 (tag: v3.0.4)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Tue Jul 21 08:10:52 2009 +0200
+
+    Releasing version 3.0.4.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b9f37a6
+Author: Andrew Tridgell <tridge@samba.org>
+Date:   Tue Jul 21 07:59:22 2009 +0200
+
+    Modify dosfstools to support the dummy 8.3 short filename values
+    used by Linux systems with the VFAT_FS_DUALNAMES option disabled.
+    
+    See http://lkml.org/lkml/2009/6/26/313 and
+    http://lkml.org/lkml/2009/6/26/314 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ecd15e8
+Author: Paul Rupe <prupe@nc.rr.com>
+Date:   Tue May 19 10:37:52 2009 +0200
+
+    Fixing "Too many files need repair" error during fsck.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 7c16098 (tag: v3.0.3)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Mon May 18 15:12:04 2009 +0200
+
+    Releasing version 3.0.3.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b396dcf
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Mon May 18 15:10:55 2009 +0200
+
+    Also declaring arm as an unaligned architecture, see Debian bug #502961.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ff1b24e
+Author: Steven J. Magnani <steve@digidescorp.com>
+Date:   Mon May 18 15:01:49 2009 +0200
+
+    Adding support for limited-memory embedded systems.
+    
+    This patch reorganizes heap memory usage by dosfsck and mkdosfs
+    to support limited-memory embedded systems - in particular, those
+    based on Xilinx's Microblaze processor. It also adds a few comments.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 89f0b72
+Author: Mike Frysinger <vapier@gentoo.org>
+Date:   Thu Mar 5 07:03:36 2009 +0100
+
+    Declaring Blackfin as an unaligned architecture.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b54a8a4 (tag: v3.0.2)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Feb 28 09:48:04 2009 +0100
+
+    Releasing version 3.0.2.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 9500529
+Author: Hiroaki Ishizawa <hiroaki.ishizawa@gmail.com>
+Date:   Fri Feb 13 10:00:46 2009 +0100
+
+    dosfsck corrupts root directory when fs->nfats is 1.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 043f8a8
+Author: Stepan Kasal <skasal@redhat.com>
+Date:   Fri Jan 30 14:56:33 2009 +0100
+
+    src/dosfslabel.c (main): After writing the label, exit code should be 0.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 017da27
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Jan 30 14:06:01 2009 +0100
+
+    Also installing ChangeLog in install-doc target of Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1c76f0f
+Author: Stepan Kasal <skasal@redhat.com>
+Date:   Fri Jan 30 14:05:12 2009 +0100
+
+    Makefile: Do not clobber time stamps of doc files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit df2d2f1 (tag: v3.0.1)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Nov 23 22:45:45 2008 +0100
+
+    Releasing version 3.0.1.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 17b269b
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Nov 23 18:41:01 2008 +0100
+
+    Applying Fedoras dosfstools-vfat-timingfix.diff from Bill Nottingham
+    <notting@redhat.com> to fix vfat timing issue. See
+    https://bugzilla.redhat.com/show_bug.cgi?id=448247 for more information.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e597caf
+Author: Ulrich Mueller <ulm@gentoo.org>
+Date:   Tue Oct 7 07:55:37 2008 +0200
+
+    Patch to check for bad number of clusters in dosfsck:
+    
+      * FAT16 filesystems with 65525 clusters or more will be rejected
+        (Before, this was not tested for. Up to 65535 clusters were accepted
+        as good).
+    
+      * For FAT32 filesystems with less than 65525 a warning message will be
+        output.
+    
+    Macro MSDOS_FAT12 is now replaced by FAT12_THRESHOLD to make it
+    consistent with the definition in mkdosfs and to remove the dependency
+    on the kernel version.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 90102bc
+Author: Dann Frazier <dannf@hp.com>
+Date:   Tue Sep 30 07:25:19 2008 +0200
+
+    Changing some wording to make the indended meaning of "full-disk device"
+    more obvious.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 21e9ba0 (tag: v3.0.0)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Sep 28 11:43:19 2008 +0200
+
+    Releasing version 3.0.0.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit eaf145d
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Sep 28 11:29:01 2008 +0200
+
+    Adding GPL headers to all files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0826117
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sun Sep 28 10:51:55 2008 +0200
+
+    Adding new GPL license file.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f8d6127
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 23:31:12 2008 +0200
+
+    Redoing Makefile from scratch.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit b4feb73
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Sat Sep 27 00:17:38 2008 +0200
+
+    Removing whitespaces in all files at EOL and EOF.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1410138
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 23:48:56 2008 +0200
+
+    Adding Debians dosfslabel.8 manpage from Francois Wendling
+    <frwendling@free.fr>.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f62e7f2
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:36:04 2008 +0200
+
+    Updating version.h includes to new location of version.h file.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 32e5952
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:19:36 2008 +0200
+
+    Removing old lsm file.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 25a433b
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:07:47 2008 +0200
+
+    Removing old cvsignore files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit acac13f
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:18:39 2008 +0200
+
+    Removing old build file.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3ecdd21
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:19:16 2008 +0200
+
+    Removing old GPL license files.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f183d0e
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:21:57 2008 +0200
+
+    Unifying dosfsck and mkdosfs Makefiles in common src/Makefile.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 61e7466
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:04:02 2008 +0200
+
+    Unifying dosfsck and mkdosfs sources in common src directory.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 7552d57
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:05:27 2008 +0200
+
+    Unifying dosfsck and mkdosfs manpages in common man directory.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 124598b
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 18:12:29 2008 +0200
+
+    Unifying dosfsck and mkdosfs documents in common doc directory.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit fb9c46b
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:39:51 2008 +0200
+
+    Applying Gentoos dosfstools-2.11-preen.patch from Roy Marples
+    <uberlord@gentoo.org> to alias dosfsck -p to -a:
+    
+      * Map -p to -a for baselayout-2, #177514.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit aaa40a9
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:49:43 2008 +0200
+
+    Applying Gentoos dosfstools-2.11-build.patch from Mike Frysinger
+    <vapier@gentoo.org> to improve Makefile:
+    
+      * Respect user settings #157785/#157786 by Diego Petteno.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 251626d
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:37:34 2008 +0200
+
+    Applying Gentoos dosfstools-2.11-verify-double-count-fix.patch from
+    Robin H. Johnson <robbat2@gentoo.org> to fix double count of files
+    during verification:
+    
+      * Don't double-count n_files during a verification pass.
+        Bugzilla: http://bugs.gentoo.org/show_bug.cgi?id=99845
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit e670ea8
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:33:36 2008 +0200
+
+    Applying Gentoos dosfstools-2.11-fat32size.patch from Mike Frysinger
+    <vapier@gentoo.org> to fix generation of filesystems on 256meg devices:
+    
+      * Fix generation of FAT filesystems on devices that are 256meg in size
+        Patch by Ulrich Mueller and accepted upstream
+        http://bugs.gentoo.org/112504
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit a6dc6a4
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:22:06 2008 +0200
+
+    Applying Suses dosfstools-2.11-unsupported-sector-size.patch from Petr
+    Gajdos <pgajdos@suse.cz> to add sector size warning:
+    
+      * added warning for creation msdos on filesystem with sector size
+        greater than 4096 [fate#303325]
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit f746956
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:18:35 2008 +0200
+
+    Applying Suses dosfstools-2.11-mkdosfs-geo0.diff from Ludwig Nussel
+    <lnussel@suse.de> to fix handling of zero heads and sectors:
+    
+      * the HDIO_GETGEO ioctl works on device mapper devices but returns
+        zero heads and sectors. Therefore let's a) assume dummy values in
+        that case in mkdosfs and b) don't consider such fat file systems as
+        invalid in dosfsck. The Linux kernel accepts them anyways.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit cf243e4
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:15:40 2008 +0200
+
+    Applying Suses dosfstools-2.11-linuxfs.patch from Ruediger Oertel
+    <ro@suse.de> to not include linux/fs.h.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 2d4f184
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:11:50 2008 +0200
+
+    Applying Fedoras dosfstools-2.11-assumeKernel26.patch from Peter Vrabec
+    <pvrabec@redhat.com> to remove linux 2.6 conditionals:
+    
+      * LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0) does not work with
+        glibc-kernheaders-2.4-9.1.94
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 739a6fb
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 15:05:00 2008 +0200
+
+    Applying Debians 99-conglomeration.dpatch (no other information
+    available).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3b5ed8a
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:26:41 2008 +0200
+
+    Applying Debians 15-manpage-files.dpatch from Daniel Baumann
+    <daniel@debian.org> to improve dosfsck manpage:
+    
+      * Lists fsckNNNN.rec files in FILES section (Closes: #444596).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3b6a863
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:34:42 2008 +0200
+
+    Applying Debians 13-getopt.dpatch from Adonikam Virgo
+    <adonikam@virgonet.org> to fix mkdosfs getopt:
+    
+      * Fixes backup sector getopt (Closes: #232387, #479794).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 1b2c8ca
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:34:17 2008 +0200
+
+    Applying Debians 12-zero-slot.dpatch by Karl Tomlinson
+    <karlt@karlt.net> to fix dosfsck zero slot crashes:
+    
+      * Fixes crashes due to zero slot numbers causing a negative offset in
+        the call to copy_lfn_part in lfn_add_slot. On amd64 this results in
+        a SIGSEGV in copy_lfn_part. On x86 the result is heap corruption and
+        thus sometimes a SIGSEGV or double free abort later. (Closes:
+        #152550, #353198, #356377, #401798).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit eec8585
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:33:54 2008 +0200
+
+    Applying Debians 11-memory-efficiency.dpatch from Eero Tamminen
+    <eero.tamminen@nokia.com> to improve dosfsck memory efficiency:
+    
+      * Improves memory efficiency when checking filesystems.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 06bd669
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:33:28 2008 +0200
+
+    Applying Debians 10-manpage-synopsis.dpatch from Daniel Baumann
+    <daniel@debian.org> to fix manpage synopsis:
+    
+      * List alternative binary names in manpage synopsis (Closes: #284983).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 42d340d
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:32:46 2008 +0200
+
+    Applying Debians 09-manpage-fat32.dpatch from Daniel Baumann
+    <daniel@debian.org> to improve mkdosfs manpage:
+    
+      * Don't claim that FAT32 is not choosed automatically (Closes:
+        #414183).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 0f5ce0d
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:32:23 2008 +0200
+
+    Applying Debians 08-manpage-drop.dpatch from Daniel Baumann
+    <daniel@debian.org> to improve dosfsck manpage:
+    
+      * Don't use confusing word 'drop' when 'delete' is meant (Closes:
+        #134100).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 8ec54dd
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:31:50 2008 +0200
+
+    Applying Debians 07-manpage-spelling.dpatch from Justin Pryzby
+    <justinpryzby@users.sourceforge.net> to fix mkdosfs manpage typos.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 4371588
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:30:31 2008 +0200
+
+    Applying Suses dosfstools-2.11_determine-sector-size.patch from Petr
+    Gajdos <pgajdos@suse.cz> to determine mkdosfs sector size automatically:
+    
+      * determine sector size of device automatically or if -S parameter
+        present, verify, that it's not under physical sector size
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit fc92e19
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:30:03 2008 +0200
+
+    Applying Suses dosfstools-2.11-o_excl.patch from Pavol Rusnak
+    <prusnak@suse.cz> to use O_EXCL in mkdosfs:
+    
+      * mkdosfs now opens device with O_EXCL [#238687]
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 3084697
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 14:29:36 2008 +0200
+
+    Applying Debians 04-unaligned-memory.dpatch from Khalid Aziz
+    <khalid_aziz@hp.com> to fix dosfsck unaligned memory accesses:
+    
+      * Fix unaligned memory accesses which cause warnings to appear
+        everytime the elilo bootloader script runs. This has led a number of
+        users to believe their install has failed (Closes: #258839).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 6d5c091
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 13:47:40 2008 +0200
+
+    Applying Fedoras dosfstools-2.11-label.patch from Jeremy Katz
+    <katzj@redhat.com> to add dosfslabel (originally by Peter Jones).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 07ef487
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 13:41:14 2008 +0200
+
+    Applying Fedoras dosfstools-2.11-fortify.patch from Jakub Jelinek
+    <jakub@redhat.com> to make it build with -D_FORTIFY_SOURCE=2:
+    
+      * This violates -D_FORTIFY_SOURCE=2 (which is stricter than C
+        standard), but isn't actually any buffer overflow. But using memcpy
+        is more efficient anyway.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit 78f9dca
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Fri Sep 26 13:40:47 2008 +0200
+
+    Applying Fedoras dosfstools-2.7-argfix.patch (no other information
+    available).
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>
+
+commit ba6774a (tag: v2.11)
+Author: Daniel Baumann <mail@daniel-baumann.ch>
+Date:   Thu Jun 26 12:45:36 2008 +0200
+
+    Adding version 2.11.
+    
+    Signed-off-by: Daniel Baumann <mail@daniel-baumann.ch>

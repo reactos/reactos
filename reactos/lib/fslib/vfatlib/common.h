@@ -5,6 +5,7 @@
  * PURPOSE:     Common code for Fat support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Eric Kohl
+ *              Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #ifndef _VFATCOMMON_H_
