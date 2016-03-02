@@ -1,4 +1,3 @@
-add_subdirectory(chkdsk)
 add_subdirectory(chklib)
 add_subdirectory(ctm)
 add_subdirectory(gettype)
