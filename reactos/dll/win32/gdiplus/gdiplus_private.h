@@ -205,6 +205,7 @@ struct GpPen{
     REAL offset;    /* dash offset */
     GpBrush *brush;
     GpPenAlignment align;
+    GpMatrix transform;
 };
 
 struct GpGraphics{
