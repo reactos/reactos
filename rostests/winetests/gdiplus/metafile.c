@@ -52,11 +52,7 @@ typedef struct emfplus_check_state
 
 static void check_record(int count, const char *desc, const struct emfplus_record *expected, const struct emfplus_record *actual)
 {
-    if (expected->todo)
-        todo_wine ok(expected->record_type == actual->record_type,
-            "%s.%i: Expected record type 0x%x, got 0x%x\n", desc, count,
-            expected->record_type, actual->record_type);
-    else
+    todo_wine_if (expected->todo)
         ok(expected->record_type == actual->record_type,
             "%s.%i: Expected record type 0x%x, got 0x%x\n", desc, count,
             expected->record_type, actual->record_type);
@@ -147,9 +143,7 @@ static void check_emfplus(HENHMETAFILE hemf, const emfplus_record *expected, con
 
     EnumEnhMetaFile(0, hemf, enum_emf_proc, &state, NULL);
 
-    if (expected[state.count].todo)
-        todo_wine ok(expected[state.count].record_type == 0, "%s: Got %i records, expecting more\n", desc, state.count);
-    else
+    todo_wine_if (expected[state.count].todo)
         ok(expected[state.count].record_type == 0, "%s: Got %i records, expecting more\n", desc, state.count);
 }
 
@@ -201,9 +195,7 @@ static void check_metafile(GpMetafile *metafile, const emfplus_record *expected,
         3, src_rect, src_unit, enum_metafile_proc, &state, NULL);
     expect(Ok, stat);
 
-    if (expected[state.count].todo)
-        todo_wine ok(expected[state.count].record_type == 0, "%s: Got %i records, expecting more\n", desc, state.count);
-    else
+    todo_wine_if (expected[state.count].todo)
         ok(expected[state.count].record_type == 0, "%s: Got %i records, expecting more\n", desc, state.count);
 
     GdipDeleteGraphics(graphics);
@@ -221,17 +213,13 @@ static BOOL CALLBACK play_metafile_proc(EmfPlusRecordType record_type, unsigned 
 
     if (state->expected[state->count].record_type)
     {
-        if (state->expected[state->count].playback_todo)
-            todo_wine ok(stat == Ok, "%s.%i: GdipPlayMetafileRecord failed with stat %i\n", state->desc, state->count, stat);
-        else
+        todo_wine_if (state->expected[state->count].playback_todo)
             ok(stat == Ok, "%s.%i: GdipPlayMetafileRecord failed with stat %i\n", state->desc, state->count, stat);
         state->count++;
     }
     else
     {
-        if (state->expected[state->count].playback_todo)
-            todo_wine ok(0, "%s: too many records\n", state->desc);
-        else
+        todo_wine_if (state->expected[state->count].playback_todo)
             ok(0, "%s: too many records\n", state->desc);
 
         return FALSE;

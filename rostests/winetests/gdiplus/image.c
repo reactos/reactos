@@ -75,9 +75,7 @@ static void expect_guid(REFGUID expected, REFGUID got, int line, BOOL todo)
     WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer, sizeof(buffer), NULL, NULL);
     StringFromGUID2(expected, bufferW, sizeof(bufferW)/sizeof(bufferW[0]));
     WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer2, sizeof(buffer2), NULL, NULL);
-    if(todo)
-        todo_wine ok_(__FILE__, line)(IsEqualGUID(expected, got), "Expected %s, got %s\n", buffer2, buffer);
-    else
+    todo_wine_if (todo)
         ok_(__FILE__, line)(IsEqualGUID(expected, got), "Expected %s, got %s\n", buffer2, buffer);
 }
 
@@ -4318,10 +4316,8 @@ static void test_DrawImage_scale(void)
         expect(Ok, status);
 
         match = memcmp(dst_8x1, td[i].image, sizeof(dst_8x1)) == 0;
-        if (!match && td[i].todo)
-        todo_wine ok(match, "%d: data should match\n", i);
-        else
-        ok(match, "%d: data should match\n", i);
+        todo_wine_if (!match && td[i].todo)
+            ok(match, "%d: data should match\n", i);
         if (!match)
         {
             UINT i, size = sizeof(dst_8x1);
@@ -4699,9 +4695,7 @@ static void test_supported_encoders(void)
         ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
 
         status = GdipSaveImageToStream((GpImage *)bm, stream, &clsid, NULL);
-        if (td[i].todo)
-            todo_wine ok(status == Ok, "GdipSaveImageToStream error %d\n", status);
-        else
+        todo_wine_if (td[i].todo)
             ok(status == Ok, "GdipSaveImageToStream error %d\n", status);
 
         IStream_Release(stream);
