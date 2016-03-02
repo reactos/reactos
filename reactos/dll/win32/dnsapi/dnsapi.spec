@@ -34,7 +34,7 @@
 @ stdcall DnsExtractRecordsFromMessage_W(ptr long ptr)
 @ stdcall DnsFindAuthoritativeZone()
 @ stdcall DnsFlushResolverCache()
-@ stdcall DnsFlushResolverCacheEntry_A()
+@ stdcall DnsFlushResolverCacheEntry_A(str)
 @ stdcall DnsFlushResolverCacheEntry_UTF8()
 @ stdcall DnsFlushResolverCacheEntry_W()
 @ stdcall DnsFreeAdapterInformation()
