@@ -72,7 +72,7 @@ typedef ID3DInclude *LPD3D10INCLUDE;
 
 typedef struct _D3D10_SHADER_INPUT_BIND_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     D3D10_SHADER_INPUT_TYPE Type;
     UINT BindPoint;
     UINT BindCount;
@@ -84,7 +84,7 @@ typedef struct _D3D10_SHADER_INPUT_BIND_DESC
 
 typedef struct _D3D10_SIGNATURE_PARAMETER_DESC
 {
-    LPCSTR SemanticName;
+    const char *SemanticName;
     UINT SemanticIndex;
     UINT Register;
     D3D10_NAME SystemValueType;
@@ -96,7 +96,7 @@ typedef struct _D3D10_SIGNATURE_PARAMETER_DESC
 typedef struct _D3D10_SHADER_DESC
 {
     UINT Version;
-    LPCSTR Creator;
+    const char *Creator;
     UINT Flags;
     UINT ConstantBuffers;
     UINT BoundResources;
@@ -127,7 +127,7 @@ typedef struct _D3D10_SHADER_DESC
 
 typedef struct _D3D10_SHADER_BUFFER_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     D3D10_CBUFFER_TYPE Type;
     UINT Variables;
     UINT Size;
@@ -136,11 +136,11 @@ typedef struct _D3D10_SHADER_BUFFER_DESC
 
 typedef struct _D3D10_SHADER_VARIABLE_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     UINT StartOffset;
     UINT Size;
     UINT uFlags;
-    LPVOID DefaultValue;
+    void *DefaultValue;
 } D3D10_SHADER_VARIABLE_DESC;
 
 typedef struct _D3D10_SHADER_TYPE_DESC
@@ -161,8 +161,8 @@ DECLARE_INTERFACE(ID3D10ShaderReflectionType)
 {
     STDMETHOD(GetDesc)(THIS_ D3D10_SHADER_TYPE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10ShaderReflectionType *, GetMemberTypeByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10ShaderReflectionType *, GetMemberTypeByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(LPCSTR, GetMemberTypeName)(THIS_ UINT index) PURE;
+    STDMETHOD_(struct ID3D10ShaderReflectionType *, GetMemberTypeByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(const char *, GetMemberTypeName)(THIS_ UINT index) PURE;
 };
 #undef INTERFACE
 
@@ -183,7 +183,7 @@ DECLARE_INTERFACE(ID3D10ShaderReflectionConstantBuffer)
 {
     STDMETHOD(GetDesc)(THIS_ D3D10_SHADER_BUFFER_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10ShaderReflectionVariable *, GetVariableByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10ShaderReflectionVariable *, GetVariableByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10ShaderReflectionVariable *, GetVariableByName)(THIS_ const char *name) PURE;
 };
 #undef INTERFACE
 
@@ -193,13 +193,13 @@ DEFINE_GUID(IID_ID3D10ShaderReflection, 0xd40e20b6, 0xf8f7, 0x42ad, 0xab, 0x20, 
 DECLARE_INTERFACE_(ID3D10ShaderReflection, IUnknown)
 {
     /* IUnknown methods */
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /* ID3D10ShaderReflection methods */
     STDMETHOD(GetDesc)(THIS_ D3D10_SHADER_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10ShaderReflectionConstantBuffer *, GetConstantBufferByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10ShaderReflectionConstantBuffer *, GetConstantBufferByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10ShaderReflectionConstantBuffer *, GetConstantBufferByName)(THIS_ const char *name) PURE;
     STDMETHOD(GetResourceBindingDesc)(THIS_ UINT index, D3D10_SHADER_INPUT_BIND_DESC *desc) PURE;
     STDMETHOD(GetInputParameterDesc)(THIS_ UINT index, D3D10_SIGNATURE_PARAMETER_DESC *desc) PURE;
     STDMETHOD(GetOutputParameterDesc)(THIS_ UINT index, D3D10_SIGNATURE_PARAMETER_DESC *desc) PURE;
@@ -211,14 +211,14 @@ DECLARE_INTERFACE_(ID3D10ShaderReflection, IUnknown)
 extern "C" {
 #endif
 
-HRESULT WINAPI D3D10CompileShader(LPCSTR data, SIZE_T data_size, LPCSTR filename,
-        const D3D10_SHADER_MACRO *defines, ID3D10Include *include, LPCSTR entrypoint,
-        LPCSTR profile, UINT flags, ID3D10Blob **shader, ID3D10Blob **error_messages);
+HRESULT WINAPI D3D10CompileShader(const char *data, SIZE_T data_size, const char *filename,
+        const D3D10_SHADER_MACRO *defines, ID3D10Include *include, const char *entrypoint,
+        const char *profile, UINT flags, ID3D10Blob **shader, ID3D10Blob **error_messages);
 HRESULT WINAPI D3D10DisassembleShader(const void *data, SIZE_T data_size,
         BOOL color_code, const char *comments, ID3D10Blob **disassembly);
-LPCSTR WINAPI D3D10GetVertexShaderProfile(ID3D10Device *device);
-LPCSTR WINAPI D3D10GetGeometryShaderProfile(ID3D10Device *device);
-LPCSTR WINAPI D3D10GetPixelShaderProfile(ID3D10Device *device);
+const char * WINAPI D3D10GetVertexShaderProfile(ID3D10Device *device);
+const char * WINAPI D3D10GetGeometryShaderProfile(ID3D10Device *device);
+const char * WINAPI D3D10GetPixelShaderProfile(ID3D10Device *device);
 
 HRESULT WINAPI D3D10ReflectShader(const void *data, SIZE_T data_size, ID3D10ShaderReflection **reflector);
 HRESULT WINAPI D3D10GetInputSignatureBlob(const void *data, SIZE_T data_size, ID3D10Blob **blob);

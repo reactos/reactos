@@ -60,7 +60,7 @@ typedef enum _D3D10_DEVICE_STATE_TYPES
 
 typedef struct _D3D10_EFFECT_TYPE_DESC
 {
-    LPCSTR TypeName;
+    const char *TypeName;
     D3D10_SHADER_VARIABLE_CLASS Class;
     D3D10_SHADER_VARIABLE_TYPE Type;
     UINT Elements;
@@ -74,8 +74,8 @@ typedef struct _D3D10_EFFECT_TYPE_DESC
 
 typedef struct _D3D10_EFFECT_VARIABLE_DESC
 {
-    LPCSTR Name;
-    LPCSTR Semantic;
+    const char *Name;
+    const char *Semantic;
     UINT Flags;
     UINT Annotations;
     UINT BufferOffset;
@@ -84,7 +84,7 @@ typedef struct _D3D10_EFFECT_VARIABLE_DESC
 
 typedef struct _D3D10_TECHNIQUE_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     UINT Passes;
     UINT Annotations;
 } D3D10_TECHNIQUE_DESC;
@@ -133,14 +133,14 @@ typedef struct _D3D10_EFFECT_SHADER_DESC
     BOOL IsInline;
     const BYTE *pBytecode;
     UINT BytecodeLength;
-    LPCSTR SODecl;
+    const char *SODecl;
     UINT NumInputSignatureEntries;
     UINT NumOutputSignatureEntries;
 } D3D10_EFFECT_SHADER_DESC;
 
 typedef struct _D3D10_PASS_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     UINT Annotations;
     BYTE *pIAInputSignature;
     SIZE_T IAInputSignatureSize;
@@ -167,10 +167,10 @@ DECLARE_INTERFACE(ID3D10EffectType)
     STDMETHOD_(BOOL, IsValid)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_TYPE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectType *, GetMemberTypeByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectType *, GetMemberTypeByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectType *, GetMemberTypeBySemantic)(THIS_ LPCSTR semantic) PURE;
-    STDMETHOD_(LPCSTR, GetMemberName)(THIS_ UINT index) PURE;
-    STDMETHOD_(LPCSTR, GetMemberSemantic)(THIS_ UINT index) PURE;
+    STDMETHOD_(struct ID3D10EffectType *, GetMemberTypeByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectType *, GetMemberTypeBySemantic)(THIS_ const char *semantic) PURE;
+    STDMETHOD_(const char *, GetMemberName)(THIS_ UINT index) PURE;
+    STDMETHOD_(const char *, GetMemberSemantic)(THIS_ UINT index) PURE;
 };
 #undef INTERFACE
 
@@ -183,10 +183,10 @@ DECLARE_INTERFACE(ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -217,10 +217,10 @@ DECLARE_INTERFACE_(ID3D10EffectConstantBuffer, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -256,10 +256,10 @@ DECLARE_INTERFACE_(ID3D10EffectScalarVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -303,10 +303,10 @@ DECLARE_INTERFACE_(ID3D10EffectVectorVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -350,10 +350,10 @@ DECLARE_INTERFACE_(ID3D10EffectMatrixVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -393,10 +393,10 @@ DECLARE_INTERFACE_(ID3D10EffectStringVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -415,8 +415,8 @@ DECLARE_INTERFACE_(ID3D10EffectStringVariable, ID3D10EffectVariable)
     STDMETHOD(SetRawValue)(THIS_ void *data, UINT offset, UINT count) PURE;
     STDMETHOD(GetRawValue)(THIS_ void *data, UINT offset, UINT count) PURE;
     /* ID3D10EffectStringVariable methods */
-    STDMETHOD(GetString)(THIS_ LPCSTR *str) PURE;
-    STDMETHOD(GetStringArray)(THIS_ LPCSTR *strs, UINT offset, UINT count) PURE;
+    STDMETHOD(GetString)(THIS_ const char **str) PURE;
+    STDMETHOD(GetStringArray)(THIS_ const char **strs, UINT offset, UINT count) PURE;
 };
 #undef INTERFACE
 
@@ -431,10 +431,10 @@ DECLARE_INTERFACE_(ID3D10EffectShaderResourceVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -471,10 +471,10 @@ DECLARE_INTERFACE_(ID3D10EffectRenderTargetViewVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -511,10 +511,10 @@ DECLARE_INTERFACE_(ID3D10EffectDepthStencilViewVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -550,10 +550,10 @@ DECLARE_INTERFACE_(ID3D10EffectShaderVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -593,10 +593,10 @@ DECLARE_INTERFACE_(ID3D10EffectBlendVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -631,10 +631,10 @@ DECLARE_INTERFACE_(ID3D10EffectDepthStencilVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -669,10 +669,10 @@ DECLARE_INTERFACE_(ID3D10EffectRasterizerVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -707,10 +707,10 @@ DECLARE_INTERFACE_(ID3D10EffectSamplerVariable, ID3D10EffectVariable)
     STDMETHOD_(struct ID3D10EffectType *, GetType)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_VARIABLE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetMemberBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetElement)(THIS_ UINT index) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetParentConstantBuffer)(THIS) PURE;
     STDMETHOD_(struct ID3D10EffectScalarVariable *, AsScalar)(THIS) PURE;
@@ -742,9 +742,9 @@ DECLARE_INTERFACE(ID3D10EffectTechnique)
     STDMETHOD_(BOOL, IsValid)(THIS) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_TECHNIQUE_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectPass *, GetPassByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectPass *, GetPassByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectPass *, GetPassByName)(THIS_ const char *name) PURE;
     STDMETHOD(ComputeStateBlockMask)(THIS_ D3D10_STATE_BLOCK_MASK *mask) PURE;
 };
 #undef INTERFACE
@@ -755,7 +755,7 @@ DEFINE_GUID(IID_ID3D10Effect, 0x51b0ca8b, 0xec0b, 0x4519, 0x87, 0x0d, 0x8e, 0xe1
 DECLARE_INTERFACE_(ID3D10Effect, IUnknown)
 {
     /* IUnknown methods */
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /* ID3D10Effect methods */
@@ -764,12 +764,12 @@ DECLARE_INTERFACE_(ID3D10Effect, IUnknown)
     STDMETHOD(GetDevice)(THIS_ ID3D10Device **device) PURE;
     STDMETHOD(GetDesc)(THIS_ D3D10_EFFECT_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetConstantBufferByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetConstantBufferByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectConstantBuffer *, GetConstantBufferByName)(THIS_ const char *name) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetVariableByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetVariableByName)(THIS_ LPCSTR name) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetVariableBySemantic)(THIS_ LPCSTR semantic) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetVariableByName)(THIS_ const char *name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetVariableBySemantic)(THIS_ const char *semantic) PURE;
     STDMETHOD_(struct ID3D10EffectTechnique *, GetTechniqueByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectTechnique *, GetTechniqueByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectTechnique *, GetTechniqueByName)(THIS_ const char *name) PURE;
     STDMETHOD(Optimize)(THIS) PURE;
     STDMETHOD_(BOOL, IsOptimized)(THIS) PURE;
 };
@@ -781,7 +781,7 @@ DEFINE_GUID(IID_ID3D10EffectPool, 0x9537ab04, 0x3250, 0x412e, 0x82, 0x13, 0xfc, 
 DECLARE_INTERFACE_(ID3D10EffectPool, IUnknown)
 {
     /* IUnknown methods */
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /* ID3D10EffectPool methods */
@@ -800,7 +800,7 @@ DECLARE_INTERFACE(ID3D10EffectPass)
     STDMETHOD(GetGeometryShaderDesc)(THIS_ D3D10_PASS_SHADER_DESC *desc) PURE;
     STDMETHOD(GetPixelShaderDesc)(THIS_ D3D10_PASS_SHADER_DESC *desc) PURE;
     STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByIndex)(THIS_ UINT index) PURE;
-    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ LPCSTR name) PURE;
+    STDMETHOD_(struct ID3D10EffectVariable *, GetAnnotationByName)(THIS_ const char *name) PURE;
     STDMETHOD(Apply)(THIS_ UINT flags) PURE;
     STDMETHOD(ComputeStateBlockMask)(THIS_ D3D10_STATE_BLOCK_MASK *mask) PURE;
 };
