@@ -190,10 +190,7 @@ static void check_updates(LPCSTR header, const struct expected_update_accum *exp
 {
     DWORD i;
 
-    if (expected->todo)
-        todo_wine ok(expected->cUpdates == got->cUpdates, "%s: expected %d updates, got %d\n",
-            header, expected->cUpdates, got->cUpdates);
-    else
+    todo_wine_if (expected->todo)
         ok(expected->cUpdates == got->cUpdates, "%s: expected %d updates, got %d\n",
             header, expected->cUpdates, got->cUpdates);
     for (i = 0; i < min(expected->cUpdates, got->cUpdates); i++)
