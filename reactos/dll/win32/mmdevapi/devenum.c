@@ -1047,9 +1047,15 @@ static HRESULT WINAPI MMDevEnum_GetDevice(IMMDeviceEnumerator *iface, const WCHA
 
     for (i = 0; i < MMDevice_count; ++i)
     {
+        HRESULT hr;
         WCHAR *str;
         dev = &MMDevice_head[i]->IMMDevice_iface;
-        IMMDevice_GetId(dev, &str);
+        hr = IMMDevice_GetId(dev, &str);
+        if (FAILED(hr))
+        {
+            WARN("GetId failed: %08x\n", hr);
+            continue;
+        }
 
         if (str && !lstrcmpW(str, name))
         {
