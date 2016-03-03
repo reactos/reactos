@@ -355,7 +355,7 @@ data_type_l:
 data_type:
     TK_CHAR
         {
-            $$ = MSITYPE_STRING | 1;
+            $$ = MSITYPE_STRING | 0x400;
         }
   | TK_CHAR TK_LP data_count TK_RP
         {

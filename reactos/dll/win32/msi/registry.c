@@ -1305,7 +1305,7 @@ static UINT fetch_user_component( const WCHAR *usersid, DWORD ctx, DWORD index, 
     REGSAM access = KEY_ENUMERATE_SUB_KEYS | KEY_WOW64_64KEY;
     HKEY key_users, key_components;
 
-    if (ctx == MSIINSTALLCONTEXT_USERMANAGED) /* FIXME: were to find these? */
+    if (ctx == MSIINSTALLCONTEXT_USERMANAGED) /* FIXME: where to find these? */
         return ERROR_NO_MORE_ITEMS;
 
     if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, userdataW, 0, access, &key_users ))

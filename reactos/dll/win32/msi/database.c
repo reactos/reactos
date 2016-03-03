@@ -972,7 +972,7 @@ static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UI
         return r;
 
     /* if the destination folder does not exist then create it (folder name = table name) */
-    snprintfW( stream_filename, sizeof(stream_filename), fmt_folder, folder, table );
+    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_folder, folder, table );
     if (GetFileAttributesW( stream_filename ) == INVALID_FILE_ATTRIBUTES)
     {
         if (!CreateDirectoryW( stream_filename, NULL ))
@@ -980,7 +980,7 @@ static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UI
     }
 
     /* actually create the file */
-    snprintfW( stream_filename, sizeof(stream_filename), fmt_file, folder, table, stream_name );
+    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_file, folder, table, stream_name );
     file = CreateFileW( stream_filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
     if (file == INVALID_HANDLE_VALUE)

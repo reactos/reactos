@@ -2987,7 +2987,11 @@ static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
         {
             *p = 0;
             if (!p[1]) continue; /* trailing backslash */
+#ifdef __REACTOS__ /* CORE-10587 */
             hkey = open_key( comp, root, subkey, FALSE, access | READ_CONTROL );
+#else
+            hkey = open_key( comp, root, subkey, FALSE, access );
+#endif
             if (!hkey) break;
             res = RegDeleteKeyExW( hkey, p + 1, access, 0 );
             RegCloseKey( hkey );
@@ -4119,7 +4123,6 @@ static UINT ITERATE_PublishIcon(MSIRECORD *row, LPVOID param)
         if (rc != ERROR_SUCCESS)
         {
             ERR("Failed to get stream\n");
-            CloseHandle(the_file);  
             DeleteFileW(FilePath);
             break;
         }
