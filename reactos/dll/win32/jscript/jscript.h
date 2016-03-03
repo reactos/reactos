@@ -131,7 +131,8 @@ typedef enum {
     JSCLASS_REGEXP,
     JSCLASS_STRING,
     JSCLASS_ARGUMENTS,
-    JSCLASS_VBARRAY
+    JSCLASS_VBARRAY,
+    JSCLASS_JSON
 } jsclass_t;
 
 jsdisp_t *iface_to_jsdisp(IUnknown*) DECLSPEC_HIDDEN;
@@ -331,6 +332,7 @@ HRESULT create_string(script_ctx_t*,jsstr_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_bool(script_ctx_t*,BOOL,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_number(script_ctx_t*,double,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_vbarray(script_ctx_t*,SAFEARRAY*,jsdisp_t**) DECLSPEC_HIDDEN;
+HRESULT create_json(script_ctx_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 
 typedef enum {
     NO_HINT,
@@ -353,6 +355,7 @@ HRESULT variant_change_type(script_ctx_t*,VARIANT*,VARIANT*,VARTYPE) DECLSPEC_HI
 HRESULT decode_source(WCHAR*) DECLSPEC_HIDDEN;
 
 HRESULT double_to_string(double,jsstr_t**) DECLSPEC_HIDDEN;
+BOOL is_finite(double) DECLSPEC_HIDDEN;
 
 typedef struct named_item_t {
     IDispatch *disp;
@@ -471,6 +474,9 @@ struct match_state_t;
 HRESULT regexp_match_next(script_ctx_t*,jsdisp_t*,DWORD,jsstr_t*,struct match_state_t**) DECLSPEC_HIDDEN;
 HRESULT parse_regexp_flags(const WCHAR*,DWORD,DWORD*) DECLSPEC_HIDDEN;
 HRESULT regexp_string_match(script_ctx_t*,jsdisp_t*,jsstr_t*,jsval_t*) DECLSPEC_HIDDEN;
+
+BOOL bool_obj_value(jsdisp_t*) DECLSPEC_HIDDEN;
+unsigned array_get_length(jsdisp_t*) DECLSPEC_HIDDEN;
 
 static inline BOOL is_class(jsdisp_t *jsdisp, jsclass_t class)
 {

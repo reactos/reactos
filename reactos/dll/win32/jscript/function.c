@@ -814,6 +814,7 @@ static HRESULT FunctionConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     TRACE("\n");
 
     switch(flags) {
+    case DISPATCH_METHOD:
     case DISPATCH_CONSTRUCT: {
         IDispatch *ret;
 

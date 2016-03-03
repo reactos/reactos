@@ -64,6 +64,10 @@ static inline void *parser_alloc_tmp(parser_ctx_t *ctx, DWORD size)
     return heap_pool_alloc(&ctx->script->tmp_heap, size);
 }
 
+BOOL is_identifier_char(WCHAR) DECLSPEC_HIDDEN;
+BOOL unescape(WCHAR*) DECLSPEC_HIDDEN;
+HRESULT parse_decimal(const WCHAR**,const WCHAR*,double*) DECLSPEC_HIDDEN;
+
 typedef enum {
     LT_DOUBLE,
     LT_STRING,

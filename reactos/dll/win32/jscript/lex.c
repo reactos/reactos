@@ -20,8 +20,6 @@
 
 #include "parser.tab.h"
 
-#define LONGLONG_MAX (((LONGLONG)0x7fffffff<<32)|0xffffffff)
-
 static const WCHAR breakW[] = {'b','r','e','a','k',0};
 static const WCHAR caseW[] = {'c','a','s','e',0};
 static const WCHAR catchW[] = {'c','a','t','c','h',0};
@@ -97,7 +95,7 @@ static int lex_error(parser_ctx_t *ctx, HRESULT hres)
 }
 
 /* ECMA-262 3rd Edition    7.6 */
-static BOOL is_identifier_char(WCHAR c)
+BOOL is_identifier_char(WCHAR c)
 {
     return isalnumW(c) || c == '$' || c == '_' || c == '\\';
 }
@@ -237,7 +235,7 @@ static BOOL skip_spaces(parser_ctx_t *ctx)
     return ctx->ptr != ctx->end;
 }
 
-static BOOL unescape(WCHAR *str)
+BOOL unescape(WCHAR *str)
 {
     WCHAR *pd, *p, c;
     int i;
@@ -394,14 +392,14 @@ literal_t *new_boolean_literal(parser_ctx_t *ctx, BOOL bval)
     return ret;
 }
 
-static BOOL parse_double_literal(parser_ctx_t *ctx, LONG int_part, double *ret)
+HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
 {
-    LONGLONG d, hlp;
+    const WCHAR *ptr = *iter;
+    LONGLONG d = 0, hlp;
     int exp = 0;
 
-    d = int_part;
-    while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
-        hlp = d*10 + *(ctx->ptr++) - '0';
+    while(ptr < end && isdigitW(*ptr)) {
+        hlp = d*10 + *(ptr++) - '0';
         if(d>MAXLONGLONG/10 || hlp<0) {
             exp++;
             break;
@@ -409,51 +407,48 @@ static BOOL parse_double_literal(parser_ctx_t *ctx, LONG int_part, double *ret)
         else
             d = hlp;
     }
-    while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+    while(ptr < end && isdigitW(*ptr)) {
         exp++;
-        ctx->ptr++;
+        ptr++;
     }
 
-    if(*ctx->ptr == '.') {
-        ctx->ptr++;
+    if(*ptr == '.') {
+        ptr++;
 
-        while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
-            hlp = d*10 + *(ctx->ptr++) - '0';
+        while(ptr < end && isdigitW(*ptr)) {
+            hlp = d*10 + *(ptr++) - '0';
             if(d>MAXLONGLONG/10 || hlp<0)
                 break;
 
             d = hlp;
             exp--;
         }
-        while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
-            ctx->ptr++;
+        while(ptr < end && isdigitW(*ptr))
+            ptr++;
     }
 
-    if(ctx->ptr < ctx->end && (*ctx->ptr == 'e' || *ctx->ptr == 'E')) {
+    if(ptr < end && (*ptr == 'e' || *ptr == 'E')) {
         int sign = 1, e = 0;
 
-        ctx->ptr++;
-        if(ctx->ptr < ctx->end) {
-            if(*ctx->ptr == '+') {
-                ctx->ptr++;
-            }else if(*ctx->ptr == '-') {
+        if(++ptr < end) {
+            if(*ptr == '+') {
+                ptr++;
+            }else if(*ptr == '-') {
                 sign = -1;
-                ctx->ptr++;
-            }else if(!isdigitW(*ctx->ptr)) {
+                ptr++;
+            }else if(!isdigitW(*ptr)) {
                 WARN("Expected exponent part\n");
-                lex_error(ctx, E_FAIL);
-                return FALSE;
+                return E_FAIL;
             }
         }
 
-        if(ctx->ptr == ctx->end) {
+        if(ptr == end) {
             WARN("unexpected end of file\n");
-            lex_error(ctx, E_FAIL);
-            return FALSE;
+            return E_FAIL;
         }
 
-        while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
-            if(e > INT_MAX/10 || (e = e*10 + *ctx->ptr++ - '0')<0)
+        while(ptr < end && isdigitW(*ptr)) {
+            if(e > INT_MAX/10 || (e = e*10 + *ptr++ - '0')<0)
                 e = INT_MAX;
         }
         e *= sign;
@@ -463,22 +458,25 @@ static BOOL parse_double_literal(parser_ctx_t *ctx, LONG int_part, double *ret)
         else exp += e;
     }
 
-    if(is_identifier_char(*ctx->ptr)) {
+    if(is_identifier_char(*ptr)) {
         WARN("wrong char after zero\n");
-        lex_error(ctx, JS_E_MISSING_SEMICOLON);
-        return FALSE;
+        return JS_E_MISSING_SEMICOLON;
     }
 
     *ret = exp>=0 ? d*pow(10, exp) : d/pow(10, -exp);
-    return TRUE;
+    *iter = ptr;
+    return S_OK;
 }
 
 static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
 {
-    LONG l, d;
+    HRESULT hres;
 
-    l = *ctx->ptr++ - '0';
-    if(!l) {
+    if(*ctx->ptr == '0') {
+        LONG d, l = 0;
+
+        ctx->ptr++;
+
         if(*ctx->ptr == 'x' || *ctx->ptr == 'X') {
             if(++ctx->ptr == ctx->end) {
                 ERR("unexpected end of file\n");
@@ -534,7 +532,13 @@ static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
         }
     }
 
-    return parse_double_literal(ctx, l, ret);
+    hres = parse_decimal(&ctx->ptr, ctx->end, ret);
+    if(FAILED(hres)) {
+        lex_error(ctx, hres);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static int next_token(parser_ctx_t *ctx, void *lval)
@@ -587,8 +591,12 @@ static int next_token(parser_ctx_t *ctx, void *lval)
     case '.':
         if(++ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
             double n;
-            if(!parse_double_literal(ctx, 0, &n))
+            HRESULT hres;
+            hres = parse_decimal(&ctx->ptr, ctx->end, &n);
+            if(FAILED(hres)) {
+                lex_error(ctx, hres);
                 return -1;
+            }
             *(literal_t**)lval = new_double_literal(ctx, n);
             return tNumericLiteral;
         }

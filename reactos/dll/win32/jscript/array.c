@@ -55,6 +55,12 @@ static inline ArrayInstance *array_this(vdisp_t *jsthis)
     return is_vclass(jsthis, JSCLASS_ARRAY) ? array_from_vdisp(jsthis) : NULL;
 }
 
+unsigned array_get_length(jsdisp_t *array)
+{
+    assert(is_class(array, JSCLASS_ARRAY));
+    return array_from_jsdisp(array)->length;
+}
+
 static HRESULT get_length(script_ctx_t *ctx, vdisp_t *vdisp, jsdisp_t **jsthis, DWORD *ret)
 {
     ArrayInstance *array;

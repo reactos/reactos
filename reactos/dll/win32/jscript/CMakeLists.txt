@@ -21,6 +21,7 @@ list(APPEND SOURCE
     global.c
     jscript.c
     jscript_main.c
+    json.c
     jsregexp.c
     jsstr.c
     jsutils.c

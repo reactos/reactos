@@ -33,6 +33,12 @@ static inline BoolInstance *bool_this(vdisp_t *jsthis)
     return is_vclass(jsthis, JSCLASS_BOOLEAN) ? (BoolInstance*)jsthis->u.jsdisp : NULL;
 }
 
+BOOL bool_obj_value(jsdisp_t *obj)
+{
+    assert(is_class(obj, JSCLASS_BOOLEAN));
+    return ((BoolInstance*)obj)->val;
+}
+
 /* ECMA-262 3rd Edition    15.6.4.2 */
 static HRESULT Bool_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {

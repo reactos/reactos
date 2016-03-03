@@ -43,6 +43,11 @@ const char *debugstr_jsval(const jsval_t v)
     return NULL;
 }
 
+BOOL is_finite(double n)
+{
+    return !isnan(n) && !isinf(n);
+}
+
 #define MIN_BLOCK_SIZE  128
 #define ARENA_FREE_FILLER  0xaa
 
@@ -631,7 +636,7 @@ HRESULT to_int32(script_ctx_t *ctx, jsval_t v, INT *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = isnan(n) || isinf(n) ? 0 : n;
+    *ret = is_finite(n) ? n : 0;
     return S_OK;
 }
 
