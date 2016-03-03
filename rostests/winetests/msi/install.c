@@ -2994,7 +2994,7 @@ static void test_continuouscabs(void)
     }
     else
     {
-        ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAIRE, got %u\n", r);
+        ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
         todo_wine ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
         ok(!delete_pf("msitest\\caesar", TRUE), "File installed\n");
         todo_wine ok(!delete_pf("msitest\\maximus", TRUE), "File installed\n");

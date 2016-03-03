@@ -986,7 +986,7 @@ machine_tests:
     r = pMsiSourceListAddSourceExA(prodcode, NULL,
                                   MSIINSTALLCONTEXT_MACHINE,
                                   MSICODE_PRODUCT | MSISOURCETYPE_URL, "C:\\source", 0);
-    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
 
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
@@ -1315,7 +1315,7 @@ static void test_MsiSourceListEnumSources(void)
                                    MSIINSTALLCONTEXT_USERUNMANAGED,
                                    MSICODE_PRODUCT | MSICODE_PATCH | MSISOURCETYPE_URL,
                                    0, value, &size);
-    ok(r == ERROR_UNKNOWN_PATCH, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(r == ERROR_UNKNOWN_PATCH, "Expected ERROR_UNKNOWN_PATCH, got %d\n", r);
     ok(!lstrcmpA(value, "aaa"), "Expected value to be unchanged, got %s\n", value);
     ok(size == MAX_PATH, "Expected MAX_PATH, got %d\n", size);
 
