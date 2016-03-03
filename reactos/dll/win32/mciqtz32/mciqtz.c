@@ -165,6 +165,7 @@ static DWORD MCIQTZ_drvClose(DWORD dwDevID)
         CloseHandle(wma->task.notify);
         CloseHandle(wma->task.done);
         CloseHandle(wma->task.thread);
+        wma->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&wma->cs);
         mciSetDriverData(dwDevID, 0);
         CloseHandle(wma->stop_event);
@@ -939,6 +940,53 @@ static DWORD MCIQTZ_mciWindow(UINT wDevID, DWORD dwFlags, LPMCI_DGV_WINDOW_PARMS
     return 0;
 }
 
+/***************************************************************************
+ *                              MCIQTZ_mciPut                   [internal]
+ */
+static DWORD MCIQTZ_mciPut(UINT wDevID, DWORD dwFlags, MCI_GENERIC_PARMS *lpParms)
+{
+    WINE_MCIQTZ *wma = MCIQTZ_mciGetOpenDev(wDevID);
+    MCI_DGV_RECT_PARMS *rectparms;
+    HRESULT hr;
+
+    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if (!wma)
+        return MCIERR_INVALID_DEVICE_ID;
+
+    if (!(dwFlags & MCI_DGV_RECT)) {
+        FIXME("No support for non-RECT MCI_PUT\n");
+        return 1;
+    }
+
+    if (dwFlags & MCI_TEST)
+        return 0;
+
+    dwFlags &= ~MCI_DGV_RECT;
+    rectparms = (MCI_DGV_RECT_PARMS*)lpParms;
+
+    if (dwFlags & MCI_DGV_PUT_DESTINATION) {
+        hr = IVideoWindow_SetWindowPosition(wma->vidwin,
+                rectparms->rc.left, rectparms->rc.top,
+                rectparms->rc.right - rectparms->rc.left,
+                rectparms->rc.bottom - rectparms->rc.top);
+        if(FAILED(hr))
+            WARN("IVideoWindow_SetWindowPosition failed: 0x%x\n", hr);
+
+        dwFlags &= ~MCI_DGV_PUT_DESTINATION;
+    }
+
+    if (dwFlags & MCI_NOTIFY) {
+        MCIQTZ_mciNotify(lpParms->dwCallback, wma, MCI_NOTIFY_SUCCESSFUL);
+        dwFlags &= ~MCI_NOTIFY;
+    }
+
+    if (dwFlags)
+        FIXME("No support for some flags: 0x%x\n", dwFlags);
+
+    return 0;
+}
+
 /******************************************************************************
  *              MCIAVI_mciUpdate            [internal]
  */
@@ -1102,6 +1150,9 @@ static DWORD CALLBACK MCIQTZ_taskThread(LPVOID arg)
         case MCI_WINDOW:
             task->res = MCIQTZ_mciWindow(task->devid, task->flags, (LPMCI_DGV_WINDOW_PARMSW)task->parms);
             break;
+        case MCI_PUT:
+            task->res = MCIQTZ_mciPut(task->devid, task->flags, (MCI_GENERIC_PARMS*)task->parms);
+            break;
         case MCI_CLOSE:
             /* Special internal message */
             SetEvent(task->done);
@@ -1166,9 +1217,9 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         case MCI_SETAUDIO:
         case MCI_UPDATE:
         case MCI_WINDOW:
+        case MCI_PUT:
             if (!dwParam2) return MCIERR_NULL_PARAMETER_BLOCK;
             return MCIQTZ_relayTaskMessage(dwDevID, wMsg, dwParam1, dwParam2);
-        case MCI_PUT:
         case MCI_RECORD:
         case MCI_RESUME:
         case MCI_INFO:
