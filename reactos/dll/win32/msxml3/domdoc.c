@@ -428,7 +428,14 @@ static void sax_characters(void *ctx, const xmlChar *ch, int len)
             (!ctxt->node->last ||
             ((ctxt->node->last && (cur == '<' || ctxt->node->last->type != XML_TEXT_NODE))
            )))
+        {
+            /* Keep information about ignorable whitespace text node in previous or parent node */
+            if (ctxt->node->last)
+                *(DWORD*)&ctxt->node->last->_private |= NODE_PRIV_TRAILING_IGNORABLE_WS;
+            else if (ctxt->node->type != XML_DOCUMENT_NODE)
+                *(DWORD*)&ctxt->node->_private |= NODE_PRIV_CHILD_IGNORABLE_WS;
             return;
+        }
     }
 
     xmlSAX2Characters(ctxt, ch, len);
@@ -1217,8 +1224,31 @@ static HRESULT WINAPI domdoc_cloneNode(
     IXMLDOMNode** outNode)
 {
     domdoc *This = impl_from_IXMLDOMDocument3( iface );
+    xmlNodePtr clone;
+
     TRACE("(%p)->(%d %p)\n", This, deep, outNode);
-    return node_clone( &This->node, deep, outNode );
+
+    if (!outNode)
+        return E_INVALIDARG;
+
+    *outNode = NULL;
+
+    clone = xmlCopyNode((xmlNodePtr)get_doc(This), deep ? 1 : 2);
+    if (!clone)
+        return E_FAIL;
+
+    clone->doc->_private = create_priv();
+    xmldoc_add_orphan(clone->doc, clone);
+    xmldoc_add_ref(clone->doc);
+
+    priv_from_xmlDocPtr(clone->doc)->properties = copy_properties(This->properties);
+    if (!(*outNode = (IXMLDOMNode*)create_domdoc(clone)))
+    {
+        xmldoc_release(clone->doc);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 
@@ -3613,16 +3643,16 @@ HRESULT DOMDocument_create(MSXML_VERSION version, void **ppObj)
 
 IUnknown* create_domdoc( xmlNodePtr document )
 {
-    void* pObj = NULL;
+    IUnknown *obj = NULL;
     HRESULT hr;
 
     TRACE("(%p)\n", document);
 
-    hr = get_domdoc_from_xmldoc((xmlDocPtr)document, (IXMLDOMDocument3**)&pObj);
+    hr = get_domdoc_from_xmldoc((xmlDocPtr)document, (IXMLDOMDocument3**)&obj);
     if (FAILED(hr))
         return NULL;
 
-    return pObj;
+    return obj;
 }
 
 #else
