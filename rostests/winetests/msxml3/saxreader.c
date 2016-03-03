@@ -302,7 +302,10 @@ static inline void flush_sequence(struct call_sequence **seg, int sequence_index
             SysFreeString(call_seq->sequence[i].attributes[j].uriW);
             SysFreeString(call_seq->sequence[i].attributes[j].localW);
             SysFreeString(call_seq->sequence[i].attributes[j].qnameW);
+            SysFreeString(call_seq->sequence[i].attributes[j].valueW);
         }
+        HeapFree(GetProcessHeap(), 0, call_seq->sequence[i].attributes);
+        call_seq->sequence[i].attr_count = 0;
 
         SysFreeString(call_seq->sequence[i].arg1W);
         SysFreeString(call_seq->sequence[i].arg2W);
@@ -2868,9 +2871,7 @@ static void test_saxreader_encoding(void)
         CloseHandle(file);
 
         hr = ISAXXMLReader_parseURL(reader, testXmlW);
-        if (entry->todo)
-            todo_wine ok(hr == entry->hr, "Expected 0x%08x, got 0x%08x. CLSID %s\n", entry->hr, hr, entry->clsid);
-        else
+        todo_wine_if(entry->todo)
             ok(hr == entry->hr, "Expected 0x%08x, got 0x%08x. CLSID %s\n", entry->hr, hr, entry->clsid);
 
         DeleteFileA(testXmlA);

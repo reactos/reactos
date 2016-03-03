@@ -1690,6 +1690,7 @@ static void test_XMLHTTP(void)
     hr = GetHGlobalFromStream((IStream*)V_UNKNOWN(&varbody), &g);
     EXPECT_HR(hr, S_OK);
     ok(g != NULL, "got %p\n", g);
+    VariantClear(&varbody);
 
     IDispatch_Release(event);
 
@@ -1757,6 +1758,7 @@ static void test_safe_httpreq(void)
     test_open(xhr, "GET", "http://www.test.winehq.org/tests/hello.html", E_ACCESSDENIED);
 
     IXMLHttpRequest_Release(xhr);
+    free_bstrs();
 }
 
 START_TEST(httpreq)
