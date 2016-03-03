@@ -377,7 +377,7 @@ HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
  * 	Success: Pointer to newly allocated memory block.
  *  Failure: NULL.
  */
-LPVOID WINAPI CoTaskMemAlloc(ULONG size)
+LPVOID WINAPI CoTaskMemAlloc(SIZE_T size)
 {
         return IMalloc_Alloc(&Malloc32.IMalloc_iface,size);
 }
@@ -411,7 +411,7 @@ VOID WINAPI CoTaskMemFree(LPVOID ptr)
  * 	Success: Pointer to newly allocated memory block.
  *  Failure: NULL.
  */
-LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
+LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, SIZE_T size)
 {
         return IMalloc_Realloc(&Malloc32.IMalloc_iface, pvOld, size);
 }
