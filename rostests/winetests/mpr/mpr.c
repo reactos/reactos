@@ -164,6 +164,7 @@ static DWORD (WINAPI *pWNetCachePassword)( LPSTR, WORD, LPSTR, WORD, BYTE, WORD 
 static DWORD (WINAPI *pWNetGetCachedPassword)( LPSTR, WORD, LPSTR, LPWORD, BYTE );
 static UINT (WINAPI *pWNetEnumCachedPasswords)( LPSTR, WORD, BYTE, ENUMPASSWORDPROC, DWORD);
 static UINT (WINAPI *pWNetRemoveCachedPassword)( LPSTR, WORD, BYTE );
+static DWORD (WINAPI *pWNetUseConnectionA)( HWND, LPNETRESOURCEA, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD, LPDWORD );
 
 #define MPR_GET_PROC(func) \
     p ## func = (void*)GetProcAddress(hmpr, #func)
@@ -176,6 +177,7 @@ static void InitFunctionPtrs(void)
     MPR_GET_PROC(WNetGetCachedPassword);
     MPR_GET_PROC(WNetEnumCachedPasswords);
     MPR_GET_PROC(WNetRemoveCachedPassword);
+    MPR_GET_PROC(WNetUseConnectionA);
 }
 
 static const char* m_resource = "wine-test-resource";
@@ -257,9 +259,62 @@ static void test_WNetCachePassword(void)
     }
 }
 
+static void test_WNetUseConnection(void)
+{
+    DWORD ret;
+    DWORD bufSize;
+    DWORD outRes;
+    LPNETRESOURCEA netRes;
+    CHAR outBuf[4];
+
+    if (pWNetUseConnectionA)
+    {
+        netRes = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETRESOURCEA) + sizeof("\\\\127.0.0.1\\c$") + sizeof("J:"));
+        netRes->dwType = RESOURCETYPE_DISK;
+        netRes->dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+        netRes->dwUsage = RESOURCEUSAGE_CONNECTABLE;
+        netRes->lpLocalName = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA));
+        netRes->lpRemoteName = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA) + sizeof("J:"));
+        strcpy(netRes->lpLocalName, "J:");
+        strcpy(netRes->lpRemoteName, "\\\\127.0.0.1\\c$");
+        bufSize = 0;
+        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, NULL, &bufSize, &outRes);
+        todo_wine
+        ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
+        ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
+        if (ret == WN_SUCCESS)
+            WNetCancelConnectionA("J:", TRUE);
+        bufSize = 0;
+        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+        todo_wine
+        ok(ret == ERROR_INVALID_PARAMETER, "Unexpected return: %u\n", ret);
+        ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
+        if (ret == WN_SUCCESS)
+            WNetCancelConnectionA("J:", TRUE);
+        bufSize = 1;
+        todo_wine {
+        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+        ok(ret == ERROR_MORE_DATA, "Unexpected return: %u\n", ret);
+        ok(bufSize == 3, "Unexpected buffer size: %u\n", bufSize);
+        if (ret == WN_SUCCESS)
+            WNetCancelConnectionA("J:", TRUE);
+        bufSize = 4;
+        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+        ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
+        }
+        ok(bufSize == 4, "Unexpected buffer size: %u\n", bufSize);
+        if (ret == WN_SUCCESS)
+            WNetCancelConnectionA("J:", TRUE);
+        HeapFree(GetProcessHeap(), 0, netRes);
+    } else {
+        win_skip("WNetUseConnection() is not supported.\n");
+    }
+}
+
 START_TEST(mpr)
 {
     test_WNetGetUniversalName();
     test_WNetGetRemoteName();
     test_WNetCachePassword();
+    test_WNetUseConnection();
 }
