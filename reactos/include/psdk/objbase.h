@@ -363,7 +363,7 @@ __drv_allocatesMem(Mem)
 _Check_return_
 LPVOID
 WINAPI
-CoTaskMemAlloc(_In_ ULONG size) __WINE_ALLOC_SIZE(1);
+CoTaskMemAlloc(_In_ SIZE_T size) __WINE_ALLOC_SIZE(1);
 
 void
 WINAPI
@@ -377,7 +377,7 @@ LPVOID
 WINAPI
 CoTaskMemRealloc(
   _In_opt_ __drv_freesMem(Mem) _Post_invalid_ LPVOID ptr,
-  _In_ ULONG size);
+  _In_ SIZE_T size);
 
 HRESULT WINAPI CoRegisterMallocSpy(_In_ LPMALLOCSPY pMallocSpy);
 HRESULT WINAPI CoRevokeMallocSpy(void);
