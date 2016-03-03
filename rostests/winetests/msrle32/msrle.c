@@ -137,7 +137,7 @@ static void test_raw_decompress(void)
         hic = ICLocate(FCC('V', 'I', 'D', 'C'), codecs[i], bih, NULL, ICMODE_DECOMPRESS);
         ok(hic != NULL, "Test[%d]: Expected non-NULL return\n", i);
 
-        /* Now wich is this codec? Windows returns MRLE for uncompressed cases */
+        /* Now which is this codec? Windows returns MRLE for uncompressed cases */
         memset(&codec_info, 0, sizeof(codec_info));
         hr = ICGetInfo(hic, &codec_info, sizeof(codec_info));
         ok(hr == sizeof(codec_info), "Test[%d]: Incorrect amount of data returned\n", i);
