@@ -1766,6 +1766,89 @@ ok(isNaN(tmp), "Math.tan(Infinity) is not NaN");
 tmp = Math.tan(-Infinity);
 ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
 
+(function() {
+    if(invokeVersion < 2)
+        return;
+
+    var stringify_tests = [
+        [[true], "true"],
+        [[false], "false"],
+        [[null], "null"],
+        [[1], "1"],
+        [["test"], "\"test\""],
+        [["test\"\\\b\f\n\r\t\u0002 !"], "\"test\\\"\\\\\\b\\f\\n\\r\\t\\u0002 !\""],
+        [[NaN], "null"],
+        [[Infinity], "null"],
+        [[-Infinity], "null"],
+        [[{prop1: true, prop2: "string"}], "{\"prop1\":true,\"prop2\":\"string\"}"],
+        [[{prop1: true, prop2: testObj, prop3: undefined}], "{\"prop1\":true}"],
+        [[{prop1: true, prop2: {prop: "string"}},undefined,"  "],
+                "{\n  \"prop1\": true,\n  \"prop2\": {\n    \"prop\": \"string\"\n  }\n}"],
+        [[{ },undefined," "], "{}"],
+        [[[,2,undefined,3,{ },]],"[null,2,null,3,{},null]"],
+        [[[,2,undefined,3,{prop:0},],undefined,"  "],"[\n  null,\n  2,\n  null,\n  3,\n  {\n    \"prop\": 0\n  },\n  null\n]"]
+    ];
+
+    var i, s, v;
+
+    for(i=0; i < stringify_tests.length; i++) {
+        s = JSON.stringify.apply(null, stringify_tests[i][0]);
+        ok(s === stringify_tests[i][1],
+           "["+i+"] stringify(" + stringify_tests[i][0] + ") returned " + s + " expected " + stringify_tests[i][1]);
+    }
+
+    s = JSON.stringify(testObj);
+    ok(s === undefined || s === "undefined" /* broken on some old versions */,
+       "stringify(testObj) returned " + s + " expected undfined");
+
+    s = JSON.stringify(undefined);
+    ok(s === undefined || s === "undefined" /* broken on some old versions */,
+       "stringify(undefined) returned " + s + " expected undfined");
+
+    var parse_tests = [
+        ["true", true],
+        ["   \nnull  ", null],
+        ["{}", {}],
+        ["\"\\r\\n test\\u1111\"", "\r\n test\u1111"],
+        ["{\"x\" :\n true}", {x:true}],
+        ["{\"x y\": {}, \"z\": {\"x\":null}}", {"x y":{}, z:{x:null}}],
+        ["[]", []],
+        ["[false,{},{\"x\": []}]", [false,{},{x:[]}]],
+        ["0", 0],
+        ["- 1", -1],
+        ["1e2147483648", Infinity]
+    ];
+
+    function json_cmp(x, y) {
+        if(x === y)
+            return true;
+
+        if(!(x instanceof Object) || !(y instanceof Object))
+            return false;
+
+        for(var prop in x) {
+            if(!x.hasOwnProperty(prop))
+                continue;
+            if(!x.hasOwnProperty(prop))
+                return false;
+            if(!json_cmp(x[prop], y[prop]))
+                return false;
+        }
+
+        for(var prop in y) {
+            if(!x.hasOwnProperty(prop) && y.hasOwnProperty(prop))
+                return false;
+        }
+
+        return true;
+    }
+
+    for(i=0; i < parse_tests.length; i++) {
+        v = JSON.parse(parse_tests[i][0]);
+        ok(json_cmp(v, parse_tests[i][1]), "parse[" + i + "] returned " + v + ", expected " + parse_tests[i][1]);
+    }
+})();
+
 var func = function  (a) {
         var a = 1;
         if(a) return;
@@ -1868,6 +1951,16 @@ tmp = func();
 ok(tmp === undefined, "func() = " + tmp);
 tmp = func.toString();
 ok(tmp == "function anonymous() {\n\n}", "func.toString() = " + tmp);
+
+// Function constructor called as function
+func = Function("return 3;");
+
+tmp = func();
+ok(tmp === 3, "func() = " + tmp);
+ok(func.call() === 3, "func.call() = " + tmp);
+ok(func.length === 0, "func.length = " + func.length);
+tmp = func.toString();
+ok(tmp === "function anonymous() {\nreturn 3;\n}", "func.toString() = " + tmp);
 
 func = (function() {
         var tmp = 3;
@@ -2707,6 +2800,14 @@ testFunctions(VBArray.prototype, [
         ["lbound", 0],
         ["toArray", 0],
         ["ubound", 0]
+]);
+
+if(invokeVersion < 2)
+    ok(typeof(JSON) === "undefined", "JSON is not undefined");
+else
+    testFunctions(JSON, [
+        ["parse", 2],
+        ["stringify", 3]
     ]);
 
 ok(ActiveXObject.length == 1, "ActiveXObject.length = " + ActiveXObject.length);
