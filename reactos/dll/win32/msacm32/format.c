@@ -384,12 +384,8 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
     MMRESULT			mmr;
     static const WCHAR		fmt1[] = {'%','d',' ','H','z',0};
     static const WCHAR		fmt2[] = {';',' ','%','d',' ','b','i','t','s',0};
-    ACMFORMATTAGDETAILSA	aftd;
 
     TRACE("(%p, %p, %d)\n", had, pafd, fdwDetails);
-
-    memset(&aftd, 0, sizeof(aftd));
-    aftd.cbStruct = sizeof(aftd);
 
     if (pafd->cbStruct < sizeof(*pafd)) return MMSYSERR_INVALPARAM;
 
