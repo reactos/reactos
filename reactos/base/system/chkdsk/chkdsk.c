@@ -4,7 +4,7 @@
 //
 // Copyright (c) 1998 Mark Russinovich
 // Systems Internals
-// http://www.sysinternals.com/
+// http://www.sysinternals.com
 //
 // Chkdsk clone that demonstrates the use of the FMIFS file system
 // utility library.
@@ -43,10 +43,14 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
 
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
+/* FMIFS Public Header */
 #include <fmifs/fmifs.h>
 
 #define FMIFS_IMPORT_DLL
@@ -118,9 +122,8 @@ CtrlCIntercept(DWORD dwCtrlType)
 //
 // Tell the user how to use the program
 //
-// 19990216 EA Missing printf %s argument
 //----------------------------------------------------------------------
-VOID
+static VOID
 Usage(PWCHAR ProgramName)
 {
     wprintf(L"Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n"
@@ -140,7 +143,7 @@ Usage(PWCHAR ProgramName)
 // Get the switches.
 //
 //----------------------------------------------------------------------
-int
+static int
 ParseCommandLine(
     int argc,
     WCHAR *argv[]
@@ -160,9 +163,9 @@ ParseCommandLine(
 
                 switch (argv[i][1])
                 {
-                    case L'?':
-                        Usage(argv[0]);
-                        break;
+                    // case L'?':
+                        // Usage(argv[0]);
+                        // return i;
 
                     case L'F': case L'f':
                     {
@@ -309,7 +312,7 @@ ChkdskCallback(
 
         case DONE:
             status = (PBOOLEAN)Argument;
-            if (*status == TRUE)
+            if (*status == FALSE)
             {
                 wprintf(L"Chkdsk was unable to complete successfully.\n\n");
                 Error = TRUE;
@@ -329,7 +332,7 @@ ChkdskCallback(
 // 19990216 EA Used wide functions
 //
 //----------------------------------------------------------------------
-BOOLEAN
+static BOOLEAN
 LoadFMIFSEntryPoints(VOID)
 {
     HMODULE hFmifs = LoadLibraryW(L"fmifs.dll");

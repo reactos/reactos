@@ -1,4 +1,5 @@
-/* PROJECT:         ReactOS Kernel
+/*
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/autochk/autochk.c
  * PURPOSE:         Filesystem checker

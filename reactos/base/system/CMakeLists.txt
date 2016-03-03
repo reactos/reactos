@@ -1,6 +1,7 @@
 
 add_subdirectory(autochk)
 add_subdirectory(bootok)
+add_subdirectory(chkdsk)
 add_subdirectory(diskpart)
 add_subdirectory(expand)
 add_subdirectory(format)
