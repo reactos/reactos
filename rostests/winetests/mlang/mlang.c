@@ -1216,8 +1216,7 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
             short_broken_name[MAX_LOCALE_NAME - 2] = 0;
         }
 
-        if (info_table[i].todo & TODO_NAME) {
-            todo_wine
+        todo_wine_if (info_table[i].todo & TODO_NAME) {
             ok( (!lstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
                (info_table[i].broken_name && (
                 broken(!lstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
@@ -1225,14 +1224,6 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
                 "#%02d: got %s (expected %s)\n", i,
                 wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
         }
-        else
-            ok( (!lstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
-               (info_table[i].broken_name && (
-                broken(!lstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
-                broken(!lstrcmpW(prfc->wszLocaleName, short_broken_name)))),
-                "#%02d: got %s (expected %s)\n", i,
-                wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
-
     }
 
     /* SUBLANG_NEUTRAL only allowed for English, Arabic, Chinese */
