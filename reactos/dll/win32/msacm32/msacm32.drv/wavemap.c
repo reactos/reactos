@@ -522,6 +522,7 @@ static	DWORD	wodGetDevCaps(UINT wDevID, WAVEMAPDATA* wom, LPWAVEOUTCAPSW lpWaveC
 	    WAVE_FORMAT_2M08 | WAVE_FORMAT_2S08 | WAVE_FORMAT_2M16 | WAVE_FORMAT_2S16 |
 	    WAVE_FORMAT_1M08 | WAVE_FORMAT_1S08 | WAVE_FORMAT_1M16 | WAVE_FORMAT_1S16;
 	woc.wChannels = 2;
+	woc.wReserved1 = 0;
 	woc.dwSupport = WAVECAPS_VOLUME | WAVECAPS_LRVOLUME;
         memcpy(lpWaveCaps, &woc, min(dwParam2, sizeof(woc)));
 
@@ -1077,6 +1078,7 @@ static	DWORD	widGetDevCaps(UINT wDevID, WAVEMAPDATA* wim, LPWAVEINCAPSW lpWaveCa
 	    WAVE_FORMAT_2M08 | WAVE_FORMAT_2S08 | WAVE_FORMAT_2M16 | WAVE_FORMAT_2S16 |
 	    WAVE_FORMAT_1M08 | WAVE_FORMAT_1S08 | WAVE_FORMAT_1M16 | WAVE_FORMAT_1S16;
 	wic.wChannels = 2;
+	wic.wReserved1 = 0;
         memcpy(lpWaveCaps, &wic, min(dwParam2, sizeof(wic)));
 
 	return MMSYSERR_NOERROR;
