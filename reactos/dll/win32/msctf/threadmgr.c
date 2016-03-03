@@ -576,7 +576,7 @@ static HRESULT WINAPI ThreadMgr_ActivateEx(ITfThreadMgrEx *iface, TfClientId *id
         ITfClientId_GetClientId(&This->ITfClientId_iface, &guid, &processId);
     }
 
-    activate_textservices((ITfThreadMgr *)iface);
+    activate_textservices(iface);
     This->activationCount++;
     *id = processId;
     return S_OK;

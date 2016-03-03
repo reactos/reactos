@@ -82,7 +82,7 @@ extern DWORD enumerate_Cookie(DWORD magic, DWORD *index) DECLSPEC_HIDDEN;
 /* activated text services functions */
 extern HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
 extern BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
-extern HRESULT activate_textservices(ITfThreadMgr *tm) DECLSPEC_HIDDEN;
+extern HRESULT activate_textservices(ITfThreadMgrEx *tm) DECLSPEC_HIDDEN;
 extern HRESULT deactivate_textservices(void) DECLSPEC_HIDDEN;
 
 extern CLSID get_textservice_clsid(TfClientId tid) DECLSPEC_HIDDEN;
