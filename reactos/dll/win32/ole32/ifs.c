@@ -148,7 +148,7 @@ static ULONG WINAPI IMalloc_fnAddRefRelease (LPMALLOC iface) {
 /******************************************************************************
  *	IMalloc32_Alloc 		[VTABLE]
  */
-static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, DWORD cb) {
+static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, SIZE_T cb) {
 
 	LPVOID addr;
 
@@ -182,7 +182,7 @@ static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, DWORD cb) {
 /******************************************************************************
  * IMalloc32_Realloc [VTABLE]
  */
-static LPVOID WINAPI IMalloc_fnRealloc(LPMALLOC iface,LPVOID pv,DWORD cb) {
+static LPVOID WINAPI IMalloc_fnRealloc(LPMALLOC iface,LPVOID pv,SIZE_T cb) {
 
 	LPVOID pNewMemory;
 
@@ -270,7 +270,7 @@ static VOID WINAPI IMalloc_fnFree(LPMALLOC iface,LPVOID pv) {
  *      win95:  size allocated (4 byte boundarys)
  *      win2k:  size originally requested !!! (allocated on 8 byte boundarys)
  */
-static DWORD WINAPI IMalloc_fnGetSize(LPMALLOC iface,LPVOID pv) {
+static SIZE_T WINAPI IMalloc_fnGetSize(LPMALLOC iface,LPVOID pv) {
 
 	DWORD cb;
         BOOL fSpyed = FALSE;
