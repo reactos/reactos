@@ -303,6 +303,7 @@ static IOleObject oleobject = { &oleobjectvtbl };
 
 static void test_OleUIAddVerbMenu(void)
 {
+    static const WCHAR cadabraW[] = {'c','a','d','a','b','r','a',0};
     HMENU hMenu, verbmenu;
     MENUITEMINFOW info;
     WCHAR buffW[50];
@@ -416,6 +417,72 @@ static void test_OleUIAddVerbMenu(void)
 
     count = GetMenuItemCount(hMenu);
     ok(count == 5, "got %d\n", count);
+
+    DestroyMenu(hMenu);
+
+    /* try to add verb menu repeatedly, with same id */
+    hMenu = CreatePopupMenu();
+
+    count = GetMenuItemCount(hMenu);
+    ok(count == 0, "got %d\n", count);
+
+    verbmenu = NULL;
+    ret = OleUIAddVerbMenuW(NULL, NULL, hMenu, 0, 5, 10, TRUE, 3, &verbmenu);
+    ok(!ret, "got %d\n", ret);
+    ok(verbmenu == NULL, "got %p\n", verbmenu);
+
+    count = GetMenuItemCount(hMenu);
+    ok(count == 1, "got %d\n", count);
+
+    verbmenu = NULL;
+    ret = OleUIAddVerbMenuW(NULL, NULL, hMenu, 0, 5, 10, TRUE, 3, &verbmenu);
+    ok(!ret, "got %d\n", ret);
+    ok(verbmenu == NULL, "got %p\n", verbmenu);
+
+    count = GetMenuItemCount(hMenu);
+    ok(count == 1, "got %d\n", count);
+
+    /* same position, different id */
+    verbmenu = NULL;
+    ret = OleUIAddVerbMenuW(NULL, NULL, hMenu, 0, 6, 10, TRUE, 3, &verbmenu);
+    ok(!ret, "got %d\n", ret);
+    ok(verbmenu == NULL, "got %p\n", verbmenu);
+
+    count = GetMenuItemCount(hMenu);
+    ok(count == 1, "got %d\n", count);
+
+    /* change added item string and state */
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_STRING|MIIM_STATE;
+    info.fState = MFS_ENABLED;
+    info.dwTypeData = buffW;
+    lstrcpyW(buffW, cadabraW);
+    ret = SetMenuItemInfoW(hMenu, 0, TRUE, &info);
+    ok(ret, "got %d\n", ret);
+
+    buffW[0] = 0;
+    GetMenuStringW(hMenu, 0, buffW, sizeof(buffW)/sizeof(buffW[0]), MF_BYPOSITION);
+    ok(!lstrcmpW(buffW, cadabraW), "got %s\n", wine_dbgstr_w(buffW));
+
+    verbmenu = NULL;
+    ret = OleUIAddVerbMenuW(NULL, NULL, hMenu, 0, 5, 10, TRUE, 3, &verbmenu);
+    ok(!ret, "got %d\n", ret);
+    ok(verbmenu == NULL, "got %p\n", verbmenu);
+
+    memset(&info, 0, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_STRING|MIIM_STATE;
+    buffW[0] = 0;
+    info.dwTypeData = buffW;
+    info.cch = sizeof(buffW)/sizeof(WCHAR);
+    ret = GetMenuItemInfoW(hMenu, 0, TRUE, &info);
+    ok(ret, "got %d\n", ret);
+    ok(lstrcmpW(buffW, cadabraW), "got %s\n", wine_dbgstr_w(buffW));
+    ok(info.fState == MF_GRAYED, "got state 0x%08x\n", info.fState);
+
+    count = GetMenuItemCount(hMenu);
+    ok(count == 1, "got %d\n", count);
 
     DestroyMenu(hMenu);
 }
