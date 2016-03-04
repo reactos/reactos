@@ -58,12 +58,14 @@ xbuf_resize(marshal_state *buf, DWORD newsize)
 
     if(buf->base)
     {
+        newsize = max(newsize, buf->size * 2);
         buf->base = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buf->base, newsize);
         if(!buf->base)
             return E_OUTOFMEMORY;
     }
     else
     {
+        newsize = max(newsize, 256);
         buf->base = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, newsize);
         if(!buf->base)
             return E_OUTOFMEMORY;
@@ -79,7 +81,7 @@ xbuf_add(marshal_state *buf, const BYTE *stuff, DWORD size)
 
     if(buf->size - buf->curoff < size)
     {
-        hr = xbuf_resize(buf, buf->size + size + 100);
+        hr = xbuf_resize(buf, buf->size + size);
         if(FAILED(hr)) return hr;
     }
     memcpy(buf->base+buf->curoff,stuff,size);

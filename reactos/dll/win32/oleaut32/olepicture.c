@@ -452,7 +452,7 @@ static HRESULT WINAPI OLEPictureImpl_QueryInterface(
 
   if (!*ppvObject)
   {
-    FIXME("() : asking for un supported interface %s\n",debugstr_guid(riid));
+    FIXME("() : asking for unsupported interface %s\n",debugstr_guid(riid));
     return E_NOINTERFACE;
   }
 

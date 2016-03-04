@@ -39,15 +39,6 @@ static const WCHAR szPercent_d[] = { '%','d','\0' };
 static const WCHAR szPercentZeroTwo_d[] = { '%','0','2','d','\0' };
 static const WCHAR szPercentZeroStar_d[] = { '%','0','*','d','\0' };
 
-#if 0
-#define dump_tokens(rgb) do { \
-  int i_; TRACE("Tokens->{\n"); \
-  for (i_ = 0; i_ < rgb[0]; i_++) \
-    TRACE("%s0x%02x", i_?",":"",rgb[i_]); \
-  TRACE(" }\n"); \
-  } while(0)
-#endif
-
 /******************************************************************************
  * Variant-Formats {OLEAUT32}
  *
@@ -1200,13 +1191,13 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   else
   {
     /* Get a number string from pVarIn, and parse it */
-    hRes = VariantChangeTypeEx(&vString, pVarIn, LCID_US, VARIANT_NOUSEROVERRIDE, VT_BSTR);
+    hRes = VariantChangeTypeEx(&vString, pVarIn, lcid, VARIANT_NOUSEROVERRIDE, VT_BSTR);
     if (FAILED(hRes))
       return hRes;
 
     np.cDig = sizeof(rgbDig);
     np.dwInFlags = NUMPRS_STD;
-    hRes = VarParseNumFromStr(V_BSTR(&vString), LCID_US, 0, &np, rgbDig);
+    hRes = VarParseNumFromStr(V_BSTR(&vString), lcid, 0, &np, rgbDig);
     if (FAILED(hRes))
       return hRes;
 
@@ -1609,7 +1600,7 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   {
     USHORT usFlags = dwFlags & VARIANT_CALENDAR_HIJRI ? VAR_CALENDAR_HIJRI : 0;
 
-    hRes = VariantChangeTypeEx(&vDate, pVarIn, LCID_US, usFlags, VT_DATE);
+    hRes = VariantChangeTypeEx(&vDate, pVarIn, lcid, usFlags, VT_DATE);
     if (FAILED(hRes))
       return hRes;
     dateHeader = (FMT_DATE_HEADER*)(rgbTok + FmtGetPositive(header));
@@ -1948,7 +1939,7 @@ static HRESULT VARIANT_FormatString(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   }
   else
   {
-    hRes = VariantChangeTypeEx(&vStr, pVarIn, LCID_US, VARIANT_NOUSEROVERRIDE, VT_BSTR);
+    hRes = VariantChangeTypeEx(&vStr, pVarIn, lcid, VARIANT_NOUSEROVERRIDE, VT_BSTR);
     if (FAILED(hRes))
       return hRes;
 
