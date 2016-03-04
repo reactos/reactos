@@ -282,6 +282,7 @@ static void test_marshal_LPSAFEARRAY(void)
     ok(lpsa2->cLocks == 0, "got lock count %u, expected 0\n", lpsa2->cLocks);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
+    ok(!lpsa2, "lpsa2 was not set to 0 by LPSAFEARRAY_UserFree\n");
     HeapFree(GetProcessHeap(), 0, buffer);
     lpsa->cLocks = 0;
     hr = SafeArrayDestroy(lpsa);
@@ -771,10 +772,10 @@ static void test_marshal_VARIANT(void)
     double d;
     void *mem;
     DWORD *wirev;
-    BSTR b;
+    BSTR b, b2;
     WCHAR str[] = {'m','a','r','s','h','a','l',' ','t','e','s','t',0};
     SAFEARRAYBOUND sab;
-    LPSAFEARRAY lpsa;
+    LPSAFEARRAY lpsa, lpsa2, lpsa_copy;
     DECIMAL dec, dec2;
     HeapUnknown *heap_unknown;
     DWORD expected;
@@ -1241,15 +1242,21 @@ static void test_marshal_VARIANT(void)
     ok(*wirev, "wv[6] %08x\n", *wirev); /* win2k: this is b. winxp: this is (char*)b + 1 */
     wirev++;
     check_bstr(wirev, b);
+    b2 = SysAllocString(str);
+    b2[0] = 0;
+    V_VT(&v2) = VT_BSTR | VT_BYREF;
+    V_BSTRREF(&v2) = &b2;
+    mem = b2;
     VariantInit(&v2);
     stubMsg.Buffer = buffer;
     next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
     ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
+    ok(mem == b2, "BSTR should be reused\n");
     ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
     ok(SysStringByteLen(*V_BSTRREF(&v)) == SysStringByteLen(*V_BSTRREF(&v2)), "bstr string lens differ\n");
     ok(!memcmp(*V_BSTRREF(&v), *V_BSTRREF(&v2), SysStringByteLen(*V_BSTRREF(&v))), "bstrs differ\n");
 
-    VARIANT_UserFree(&umcb.Flags, &v2);
+    SysFreeString(b2);
     HeapFree(GetProcessHeap(), 0, oldbuffer);
     SysFreeString(b);
 
@@ -1341,6 +1348,59 @@ static void test_marshal_VARIANT(void)
     }
     VARIANT_UserFree(&umcb.Flags, &v2);
     HeapFree(GetProcessHeap(), 0, oldbuffer);
+
+    /*** ARRAY BYREF ***/
+    VariantInit(&v);
+    V_VT(&v) = VT_UI4 | VT_ARRAY | VT_BYREF;
+    V_ARRAYREF(&v) = &lpsa;
+    lpsa->fFeatures |= FADF_STATIC;
+
+    rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 0, &v);
+    expected = 152;
+    ok(stubMsg.BufferLength == expected || stubMsg.BufferLength == expected + 16, /* win64 */
+       "size %u instead of %u\n", stubMsg.BufferLength, expected);
+    buffer = rpcMsg.Buffer = stubMsg.Buffer = stubMsg.BufferStart = alloc_aligned(stubMsg.BufferLength, &oldbuffer);
+    stubMsg.BufferEnd = stubMsg.Buffer + stubMsg.BufferLength;
+    next = VARIANT_UserMarshal(&umcb.Flags, buffer, &v);
+    ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
+    wirev = (DWORD*)buffer;
+
+    wirev = check_variant_header(wirev, &v, expected);
+    ok(*wirev == 4, "wv[5] %08x\n", *wirev);
+    wirev++;
+    ok(*wirev, "wv[6] %08x\n", *wirev); /* win2k: this is lpsa. winxp: this is (char*)lpsa + 1 */
+    wirev++;
+    check_safearray(wirev, lpsa);
+    lpsa_copy = lpsa2 = SafeArrayCreate(VT_I8, 1, &sab);
+    /* set FADF_STATIC feature to make sure lpsa2->pvData pointer changes if new data buffer is allocated */
+    lpsa2->fFeatures |= FADF_STATIC;
+    mem = lpsa2->pvData;
+    V_VT(&v2) = VT_UI4 | VT_ARRAY | VT_BYREF;
+    V_ARRAYREF(&v2) = &lpsa2;
+    stubMsg.Buffer = buffer;
+    next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
+    ok(next == buffer + expected, "got %p expect %p\n", next, buffer + expected);
+    ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
+    ok(lpsa2 == lpsa_copy, "safearray should be reused\n");
+    ok(mem == lpsa2->pvData, "safearray data should be reused\n");
+    ok(SafeArrayGetDim(*V_ARRAYREF(&v)) == SafeArrayGetDim(*V_ARRAYREF(&v2)), "array dims differ\n");
+    SafeArrayGetLBound(*V_ARRAYREF(&v), 1, &bound);
+    SafeArrayGetLBound(*V_ARRAYREF(&v2), 1, &bound2);
+    ok(bound == bound2, "array lbounds differ\n");
+    SafeArrayGetUBound(*V_ARRAYREF(&v), 1, &bound);
+    SafeArrayGetUBound(*V_ARRAYREF(&v2), 1, &bound2);
+    ok(bound == bound2, "array ubounds differ\n");
+    if (pSafeArrayGetVartype)
+    {
+        pSafeArrayGetVartype(*V_ARRAYREF(&v), &vt);
+        pSafeArrayGetVartype(*V_ARRAYREF(&v2), &vt2);
+        ok(vt == vt2, "array vts differ %x %x\n", vt, vt2);
+    }
+    lpsa2->fFeatures &= ~FADF_STATIC;
+    hr = SafeArrayDestroy(*V_ARRAYREF(&v2));
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    HeapFree(GetProcessHeap(), 0, oldbuffer);
+    lpsa->fFeatures &= ~FADF_STATIC;
     hr = SafeArrayDestroy(lpsa);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 

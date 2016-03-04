@@ -919,11 +919,10 @@ static HRESULT WINAPI Widget_VarArg_Ref_Run(
 }
 
 static HRESULT WINAPI Widget_Coclass(
-    IWidget *iface,
-    ApplicationObject2 *p)
+    IWidget *iface, ApplicationObject2 *param)
 {
-    trace("Coclass(%p)\n", p);
-    ok(p == (ApplicationObject2 *)iface, "expected p == %p, got %p\n", iface, p);
+    trace("Coclass(%p)\n", param);
+    ok(param == (ApplicationObject2 *)iface, "expected param == %p, got %p\n", iface, param);
     return S_OK;
 }
 
@@ -1515,7 +1514,7 @@ static void test_typelibmarshal(void)
     ok(V_VT(&varresult) == VT_DISPATCH, "V_VT(&varresult) was %d instead of VT_DISPATCH\n", V_VT(&varresult));
     ok(V_DISPATCH(&varresult) != NULL, "expected V_DISPATCH(&varresult) != NULL\n");
 
-    /* call CoClass with VT_DISPATCH type */
+    /* call Coclass with VT_DISPATCH type */
     vararg[0] = varresult;
     dispparams.cNamedArgs = 0;
     dispparams.rgdispidNamedArgs = NULL;

@@ -141,6 +141,8 @@ library register_test
         LONG testprop([in] LONG *i);
         [propputref, id(2)]
         LONG testprop2([in] IUnknown *i);
+        [id(3)]
+        HRESULT testfunc([in] int i, [out, retval] int *p);
     }
 
     /* uuid is same as for test_struct2 in test_tlb.idl, fields are different */

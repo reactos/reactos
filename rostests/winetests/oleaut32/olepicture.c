@@ -1056,7 +1056,9 @@ static void test_load_save_bmp(void)
     DWORD *mem;
     IPersistStream *src_stream;
     IStream *dst_stream;
+    LARGE_INTEGER offset;
     HRESULT hr;
+    LONG size;
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_BITMAP;
@@ -1077,6 +1079,27 @@ static void test_load_save_bmp(void)
     hmem = GlobalAlloc(GMEM_ZEROINIT, 4096);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
     ok(hr == S_OK, "createstreamonhglobal error %#x\n", hr);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, TRUE, &size);
+    ok(hr == S_OK, "IPicture_SaveasFile error %#x\n", hr);
+todo_wine
+    ok(size == 66, "expected 66, got %d\n", size);
+    mem = GlobalLock(hmem);
+todo_wine
+    ok(!memcmp(&mem[0], "BM", 2), "got wrong bmp header %04x\n", mem[0]);
+    GlobalUnlock(hmem);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, FALSE, &size);
+todo_wine
+    ok(hr == E_FAIL, "expected E_FAIL, got %#x\n", hr);
+todo_wine
+    ok(size == -1, "expected -1, got %d\n", size);
+
+    offset.QuadPart = 0;
+    hr = IStream_Seek(dst_stream, offset, SEEK_SET, NULL);
+    ok(hr == S_OK, "IStream_Seek %#x\n", hr);
 
     hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
     ok(hr == S_OK, "QueryInterface error %#x\n", hr);
@@ -1109,7 +1132,9 @@ static void test_load_save_icon(void)
     DWORD *mem;
     IPersistStream *src_stream;
     IStream *dst_stream;
+    LARGE_INTEGER offset;
     HRESULT hr;
+    LONG size;
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_ICON;
@@ -1129,6 +1154,27 @@ static void test_load_save_icon(void)
     hmem = GlobalAlloc(GMEM_ZEROINIT, 8192);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
     ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, TRUE, &size);
+    ok(hr == S_OK, "IPicture_SaveasFile error %#x\n", hr);
+todo_wine
+    ok(size == 766, "expected 766, got %d\n", size);
+    mem = GlobalLock(hmem);
+todo_wine
+    ok(mem[0] == 0x00010000, "got wrong icon header %04x\n", mem[0]);
+    GlobalUnlock(hmem);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, FALSE, &size);
+todo_wine
+    ok(hr == E_FAIL, "expected E_FAIL, got %#x\n", hr);
+todo_wine
+    ok(size == -1, "expected -1, got %d\n", size);
+
+    offset.QuadPart = 0;
+    hr = IStream_Seek(dst_stream, offset, SEEK_SET, NULL);
+    ok(hr == S_OK, "IStream_Seek %#x\n", hr);
 
     hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
     ok(hr == S_OK, "QueryInterface error %#x\n", hr);
@@ -1164,6 +1210,7 @@ static void test_load_save_empty_picture(void)
     IStream *dst_stream, *stream;
     LARGE_INTEGER offset;
     HRESULT hr;
+    LONG size;
 
     memset(&pic, 0, sizeof(pic));
     desc.cbSizeofstruct = sizeof(desc);
@@ -1173,7 +1220,7 @@ static void test_load_save_empty_picture(void)
 
     type = -1;
     hr = IPicture_get_Type(pic, &type);
-    ok(hr == S_OK,"get_Type error %#8x\n", hr);
+    ok(hr == S_OK, "get_Type error %#x\n", hr);
     ok(type == PICTYPE_NONE,"expected picture type PICTYPE_NONE, got %d\n", type);
 
     handle = (OLE_HANDLE)0xdeadbeef;
@@ -1184,6 +1231,18 @@ static void test_load_save_empty_picture(void)
     hmem = GlobalAlloc(GMEM_ZEROINIT, 4096);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
     ok(hr == S_OK, "createstreamonhglobal error %#x\n", hr);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, TRUE, &size);
+    ok(hr == S_OK, "IPicture_SaveasFile error %#x\n", hr);
+todo_wine
+    ok(size == -1, "expected -1, got %d\n", size);
+
+    size = -1;
+    hr = IPicture_SaveAsFile(pic, dst_stream, FALSE, &size);
+    ok(hr == S_OK, "IPicture_SaveasFile error %#x\n", hr);
+todo_wine
+    ok(size == -1, "expected -1, got %d\n", size);
 
     hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
     ok(hr == S_OK, "QueryInterface error %#x\n", hr);
