@@ -254,7 +254,7 @@ static void test_GetPerformanceInfo(void)
         /* compare with values from SYSTEM_PROCESS_INFORMATION */
         size = 0;
         status = pNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &size);
-        ok(status == STATUS_INFO_LENGTH_MISMATCH, "expected STATUS_LENGTH_MISMATCH, got %08x\n", status);
+        ok(status == STATUS_INFO_LENGTH_MISMATCH, "expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
         ok(size > 0, "incorrect length %d\n", size);
         while (status == STATUS_INFO_LENGTH_MISMATCH)
         {
