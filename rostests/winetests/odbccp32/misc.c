@@ -112,6 +112,11 @@ static void test_SQLInstallDriverManager(void)
     /* Length OK */
     bool_ret = SQLInstallDriverManager(target_path, MAX_PATH, NULL);
     sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    if(!bool_ret && error_code == ODBC_ERROR_WRITING_SYSINFO_FAILED)
+    {
+         win_skip("not enough privileges\n");
+         return;
+    }
     ok(bool_ret, "SQLInstallDriverManager unexpectedly failed: %d\n",
         error_code);
     if (bool_ret)
