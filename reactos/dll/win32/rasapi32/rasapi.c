@@ -498,6 +498,18 @@ DWORD WINAPI RasRenameEntryW(LPCWSTR lpszPhonebook, LPCWSTR lpszOldEntry, LPCWST
     return 0;
 }
 
+DWORD WINAPI RasSetCustomAuthDataA(const char *phonebook, const char *entry, BYTE *authdata, DWORD size)
+{
+    FIXME("(%s,%s,%p,0x%08x), stub!\n", debugstr_a(phonebook), debugstr_a(entry), authdata, size);
+    return 0;
+}
+
+DWORD WINAPI RasSetCustomAuthDataW(const WCHAR *phonebook, const WCHAR *entry, BYTE *authdata, DWORD size)
+{
+    FIXME("(%s,%s,%p,0x%08x), stub!\n", debugstr_w(phonebook), debugstr_w(entry), authdata, size);
+    return 0;
+}
+
 DWORD WINAPI RasSetEntryDialParamsA(LPCSTR lpszPhonebook, LPRASDIALPARAMSA lprasdialparams,
                                     BOOL fRemovePassword)
 {
@@ -529,5 +541,11 @@ DWORD WINAPI RasSetSubEntryPropertiesW(LPCWSTR lpszPhonebook, LPCWSTR lpszEntry,
     FIXME("(%s,%s,0x%08x,%p,0x%08x,%p,0x%08x), stub!\n", debugstr_w(lpszPhonebook),
           debugstr_w(lpszEntry), dwSubEntry, lpRasSubEntry, dwcbRasSubEntry, lpbDeviceConfig,
           dwcbDeviceConfig);
+    return 0;
+}
+
+DWORD WINAPI RasGetLinkStatistics(HRASCONN connection, DWORD entry, RAS_STATS *statistics)
+{
+    FIXME("(%p,%u,%p), stub!\n", connection, entry, statistics);
     return 0;
 }

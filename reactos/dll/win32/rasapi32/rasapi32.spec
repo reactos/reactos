@@ -45,9 +45,9 @@
 @ stdcall RasGetErrorStringW(long ptr long)
 @ stub RasGetErrorStringWow
 @ stub RasGetHport
+@ stdcall RasGetLinkStatistics(ptr long ptr)
 @ stdcall RasGetProjectionInfoA(ptr ptr ptr ptr)
 @ stdcall RasGetProjectionInfoW(ptr ptr ptr ptr)
-@ stub RasGetLinkStatistics
 @ stub RasGetSubEntryHandleA
 @ stub RasGetSubEntryHandleW
 @ stub RasGetSubEntryPropertiesA
@@ -65,6 +65,8 @@
 @ stdcall RasSetAutodialParamW(long ptr long)
 @ stub RasSetCredentialsA
 @ stub RasSetCredentialsW
+@ stdcall RasSetCustomAuthDataA(str str ptr long)
+@ stdcall RasSetCustomAuthDataW(wstr wstr ptr long)
 @ stdcall RasSetEntryDialParamsA(str ptr long)
 @ stdcall RasSetEntryDialParamsW(wstr ptr long)
 @ stdcall RasSetEntryPropertiesA(str str ptr long ptr long)
