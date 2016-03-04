@@ -21,38 +21,19 @@
 #include <windows.h>
 #include <wingdi.h>
 #include "wine/test.h"
-
-void WINAPI glClearColor(float red, float green, float blue, float alpha);
-void WINAPI glClear(unsigned int mask);
-#define GL_COLOR 0x1800
-typedef unsigned int GLenum;
-typedef int GLint;
-void WINAPI glCopyPixels(int x, int y, int width, int height, GLenum type);
-void WINAPI glFinish(void);
-#define GL_NO_ERROR 0x0
-#define GL_INVALID_OPERATION 0x502
-GLenum WINAPI glGetError(void);
-#define GL_COLOR_BUFFER_BIT 0x00004000
-const unsigned char * WINAPI glGetString(unsigned int);
-#define GL_VENDOR 0x1F00
-#define GL_RENDERER 0x1F01
-#define GL_VERSION 0x1F02
-#define GL_EXTENSIONS 0x1F03
-
-#define GL_VIEWPORT 0x0ba2
-void WINAPI glGetIntegerv(GLenum pname, GLint *params);
+#include "wine/wgl.h"
 
 #define MAX_FORMATS 256
 typedef void* HPBUFFERARB;
 
 /* WGL_ARB_create_context */
 static HGLRC (WINAPI *pwglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int *attribList);
-/* GetLastError */
-#define ERROR_INVALID_VERSION_ARB 0x2095
+
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
 #define WGL_CONTEXT_LAYER_PLANE_ARB 0x2093
 #define WGL_CONTEXT_FLAGS_ARB 0x2094
+
 /* Flags for WGL_CONTEXT_FLAGS_ARB */
 #define WGL_CONTEXT_DEBUG_BIT_ARB 0x0001
 #define WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB	0x0002
@@ -90,6 +71,11 @@ static HDC (WINAPI *pwglGetPbufferDCARB)(HPBUFFERARB);
 static BOOL (WINAPI *pwglSwapIntervalEXT)(int interval);
 static int (WINAPI *pwglGetSwapIntervalEXT)(void);
 
+/* GL_ARB_debug_output */
+static void (WINAPI *pglDebugMessageCallbackARB)(void *, void *);
+static void (WINAPI *pglDebugMessageControlARB)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean);
+static void (WINAPI *pglDebugMessageInsertARB)(GLenum, GLenum, GLuint, GLenum, GLsizei, const char *);
+
 static const char* wgl_extensions = NULL;
 
 static void init_functions(void)
@@ -121,6 +107,11 @@ static void init_functions(void)
     /* WGL_EXT_swap_control */
     GET_PROC(wglSwapIntervalEXT)
     GET_PROC(wglGetSwapIntervalEXT)
+
+    /* GL_ARB_debug_output */
+    GET_PROC(glDebugMessageCallbackARB)
+    GET_PROC(glDebugMessageControlARB)
+    GET_PROC(glDebugMessageInsertARB)
 
 #undef GET_PROC
 }
@@ -249,6 +240,39 @@ static void test_pbuffers(HDC hdc)
         pwglReleasePbufferDCARB(pbuffer, hdc);
     }
     else skip("Pbuffer test for offscreen pixelformat skipped as no offscreen-only format with pbuffer capabilities has been found\n");
+}
+
+static void WINAPI gl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                             GLsizei length, const GLchar *message, const void *userParam)
+{
+    DWORD *count = (DWORD *)userParam;
+    (*count)++;
+}
+
+static void test_debug_message_callback(void)
+{
+    static const char testmsg[] = "Hello World";
+    DWORD count;
+
+    if (!pglDebugMessageCallbackARB)
+    {
+        skip("glDebugMessageCallbackARB not supported\n");
+        return;
+    }
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+    pglDebugMessageCallbackARB(gl_debug_message_callback, &count);
+    pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+
+    count = 0;
+    pglDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0x42424242,
+                             GL_DEBUG_SEVERITY_LOW, sizeof(testmsg), testmsg);
+    ok(count == 1, "expected count == 1, got %u\n", count);
+
+    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDisable(GL_DEBUG_OUTPUT);
 }
 
 static void test_setpixelformat(HDC winhdc)
@@ -1703,6 +1727,7 @@ START_TEST(opengl)
             return;
         }
 
+        test_debug_message_callback();
         test_setpixelformat(hdc);
         test_destroy(hdc);
         test_sharelists(hdc);
