@@ -2327,6 +2327,15 @@ typedef enum _APTTYPE {
     APTTYPE_MAINSTA = 3
 } APTTYPE;
 
+typedef enum _APTTYPEQUALIFIER {
+    APTTYPEQUALIFIER_NONE                = 0,
+    APTTYPEQUALIFIER_IMPLICIT_MTA        = 1,
+    APTTYPEQUALIFIER_NA_ON_MTA           = 2,
+    APTTYPEQUALIFIER_NA_ON_STA           = 3,
+    APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA  = 4,
+    APTTYPEQUALIFIER_NA_ON_MAINSTA       = 5
+} APTTYPEQUALIFIER;
+
 typedef enum _THDTYPE {
     THDTYPE_BLOCKMESSAGES   = 0,
     THDTYPE_PROCESSMESSAGES = 1
@@ -2449,6 +2458,17 @@ interface IGlobalOptions : IUnknown
 interface IDummyHICONIncluder : IUnknown
 {
     HRESULT Dummy([in] HICON hIcon, [in] HDC hdc);
+}
+
+[
+    object,
+    local,
+    pointer_default(unique),
+    uuid(a2f05a09-27a2-42b5-bc0e-ac163ef49d9b)
+]
+interface IApartmentShutdown : IUnknown
+{
+    void OnUninitialize([in] UINT64 identifier);
 }
 
 cpp_quote("#ifdef USE_COM_CONTEXT_DEF")
