@@ -113,7 +113,7 @@ static FORMATETC *g_expected_fetc = NULL;
 
 static BOOL g_showRunnable = TRUE;
 static BOOL g_isRunning = TRUE;
-static BOOL g_failGetMiscStatus;
+static HRESULT g_GetMiscStatusFailsWith = S_OK;
 static HRESULT g_QIFailsWith;
 
 static UINT cf_test_1, cf_test_2, cf_test_3;
@@ -423,12 +423,15 @@ static HRESULT WINAPI OleObject_EnumAdvise
 static HRESULT WINAPI OleObject_GetMiscStatus
 (
     IOleObject *iface,
-    DWORD dwAspect,
+    DWORD aspect,
     DWORD *pdwStatus
 )
 {
     CHECK_EXPECTED_METHOD("OleObject_GetMiscStatus");
-    if(!g_failGetMiscStatus)
+
+    ok(aspect == DVASPECT_CONTENT, "got aspect %d\n", aspect);
+
+    if (g_GetMiscStatusFailsWith == S_OK)
     {
         *pdwStatus = OLEMISC_RECOMPOSEONRESIZE;
         return S_OK;
@@ -436,7 +439,7 @@ static HRESULT WINAPI OleObject_GetMiscStatus
     else
     {
         *pdwStatus = 0x1234;
-        return E_FAIL;
+        return g_GetMiscStatusFailsWith;
     }
 }
 
@@ -483,7 +486,7 @@ static IOleObject OleObject = { &OleObjectVtbl };
 static HRESULT WINAPI OleObjectPersistStg_QueryInterface(IPersistStorage *iface, REFIID riid, void **ppv)
 {
     trace("OleObjectPersistStg_QueryInterface\n");
-    return IUnknown_QueryInterface((IUnknown *)&OleObject, riid, ppv);
+    return IOleObject_QueryInterface(&OleObject, riid, ppv);
 }
 
 static ULONG WINAPI OleObjectPersistStg_AddRef(IPersistStorage *iface)
@@ -581,7 +584,7 @@ static IPersistStorage OleObjectPersistStg = { &OleObjectPersistStgVtbl };
 
 static HRESULT WINAPI OleObjectCache_QueryInterface(IOleCache *iface, REFIID riid, void **ppv)
 {
-    return IUnknown_QueryInterface((IUnknown *)&OleObject, riid, ppv);
+    return IOleObject_QueryInterface(&OleObject, riid, ppv);
 }
 
 static ULONG WINAPI OleObjectCache_AddRef(IOleCache *iface)
@@ -707,7 +710,7 @@ static ULONG WINAPI OleObjectCF_Release(IClassFactory *iface)
 
 static HRESULT WINAPI OleObjectCF_CreateInstance(IClassFactory *iface, IUnknown *punkOuter, REFIID riid, void **ppv)
 {
-    return IUnknown_QueryInterface((IUnknown *)&OleObject, riid, ppv);
+    return IOleObject_QueryInterface(&OleObject, riid, ppv);
 }
 
 static HRESULT WINAPI OleObjectCF_LockServer(IClassFactory *iface, BOOL lock)
@@ -728,7 +731,7 @@ static IClassFactory OleObjectCF = { &OleObjectCFVtbl };
 
 static HRESULT WINAPI OleObjectRunnable_QueryInterface(IRunnableObject *iface, REFIID riid, void **ppv)
 {
-    return IUnknown_QueryInterface((IUnknown *)&OleObject, riid, ppv);
+    return IOleObject_QueryInterface(&OleObject, riid, ppv);
 }
 
 static ULONG WINAPI OleObjectRunnable_AddRef(IRunnableObject *iface)
@@ -919,6 +922,30 @@ static void test_OleCreate(IStorage *pStorage)
         { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
         { NULL, 0 }
     };
+    static const struct expected_method methods_olerender_draw_with_site[] =
+    {
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_AddRef", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_AddRef", 0 },
+        { "OleObject_GetMiscStatus", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObjectPersistStg_AddRef", 0 },
+        { "OleObjectPersistStg_InitNew", 0 },
+        { "OleObjectPersistStg_Release", 0 },
+        { "OleObject_SetClientSite", 0 },
+        { "OleObject_Release", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObjectRunnable_AddRef", 0 },
+        { "OleObjectRunnable_Run", 0 },
+        { "OleObjectRunnable_Release", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObjectCache_AddRef", 0 },
+        { "OleObjectCache_Cache", 0 },
+        { "OleObjectCache_Release", 0 },
+        { "OleObject_Release", 0 },
+        { NULL, 0 }
+    };
     static const struct expected_method methods_olerender_format[] =
     {
         { "OleObject_QueryInterface", 0 },
@@ -1021,6 +1048,23 @@ static void test_OleCreate(IStorage *pStorage)
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
 
+    expected_method_list = methods_olerender_draw_with_site;
+    trace("OleCreate with OLERENDER_DRAW, with site:\n");
+    hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, (IOleClientSite*)0xdeadbeef, pStorage, (void **)&pObject);
+    ok_ole_success(hr, "OleCreate");
+    IOleObject_Release(pObject);
+    CHECK_NO_EXTRA_METHODS();
+
+    /* GetMiscStatus fails */
+    g_GetMiscStatusFailsWith = 0x8fafefaf;
+    expected_method_list = methods_olerender_draw_with_site;
+    trace("OleCreate with OLERENDER_DRAW, with site:\n");
+    hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, (IOleClientSite*)0xdeadbeef, pStorage, (void **)&pObject);
+    ok_ole_success(hr, "OleCreate");
+    IOleObject_Release(pObject);
+    CHECK_NO_EXTRA_METHODS();
+    g_GetMiscStatusFailsWith = S_OK;
+
     formatetc.cfFormat = CF_TEXT;
     formatetc.ptd = NULL;
     formatetc.dwAspect = DVASPECT_CONTENT;
@@ -1094,7 +1138,7 @@ static void test_OleLoad(IStorage *pStorage)
 
     /* Test once with IOleObject_GetMiscStatus failing */
     expected_method_list = methods_oleload;
-    g_failGetMiscStatus = TRUE;
+    g_GetMiscStatusFailsWith = E_FAIL;
     trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
     ok(hr == S_OK ||
@@ -1110,9 +1154,9 @@ static void test_OleLoad(IStorage *pStorage)
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
     }
+    g_GetMiscStatusFailsWith = S_OK;
 
     /* Test again, let IOleObject_GetMiscStatus succeed. */
-    g_failGetMiscStatus = FALSE;
     expected_method_list = methods_oleload;
     trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
@@ -1454,6 +1498,39 @@ static IDataObjectVtbl DataObjectVtbl =
 
 static IDataObject DataObject = { &DataObjectVtbl };
 
+static HRESULT WINAPI Unknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IUnknown)) *ppv = iface;
+    if (*ppv)
+    {
+        IUnknown_AddRef((IUnknown *)*ppv);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI Unknown_AddRef(IUnknown *iface)
+{
+    ok(0, "unexpected AddRef\n");
+    return 2;
+}
+
+static ULONG WINAPI Unknown_Release(IUnknown *iface)
+{
+    ok(0, "unexpected Release\n");
+    return 1;
+}
+
+static const IUnknownVtbl UnknownVtbl =
+{
+    Unknown_QueryInterface,
+    Unknown_AddRef,
+    Unknown_Release
+};
+
+static IUnknown unknown = { &UnknownVtbl };
+
 static void test_data_cache(void)
 {
     HRESULT hr;
@@ -1523,6 +1600,17 @@ static void test_data_cache(void)
 
     hr = StgCreateDocfile(NULL, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE | STGM_DELETEONRELEASE, 0, &pStorage);
     ok_ole_success(hr, "StgCreateDocfile");
+
+    /* aggregation */
+
+    /* requested is not IUnknown */
+    hr = CreateDataCache(&unknown, &CLSID_NULL, &IID_IOleCache2, (void**)&pOleCache);
+todo_wine
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = CreateDataCache(&unknown, &CLSID_NULL, &IID_IUnknown, (void**)&pOleCache);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IOleCache2_Release(pOleCache);
 
     /* Test with new data */
 
@@ -1870,13 +1958,13 @@ static void test_data_cache_dib_contents_stream(int num)
     CLSID cls;
     SIZEL sz;
 
-    hr = CreateDataCache( NULL, &CLSID_Picture_Metafile, &IID_IUnknown, (void *)&unk );
+    hr = CreateDataCache( NULL, &CLSID_Picture_Metafile, &IID_IUnknown, (void **)&unk );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
-    hr = IUnknown_QueryInterface( unk, &IID_IPersistStorage, (void *)&persist );
+    hr = IUnknown_QueryInterface( unk, &IID_IPersistStorage, (void **)&persist );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
-    hr = IUnknown_QueryInterface( unk, &IID_IDataObject, (void *)&data );
+    hr = IUnknown_QueryInterface( unk, &IID_IDataObject, (void **)&data );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
-    hr = IUnknown_QueryInterface( unk, &IID_IViewObject2, (void *)&view );
+    hr = IUnknown_QueryInterface( unk, &IID_IViewObject2, (void **)&view );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
 
     stg = create_storage( num );
@@ -2172,34 +2260,6 @@ static void test_runnable(void)
     g_showRunnable = TRUE;
 }
 
-static HRESULT WINAPI Unknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown)) *ppv = iface;
-    if (*ppv)
-    {
-        IUnknown_AddRef((IUnknown *)*ppv);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI Unknown_AddRef(IUnknown *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI Unknown_Release(IUnknown *iface)
-{
-    return 1;
-}
-
-static const IUnknownVtbl UnknownVtbl =
-{
-    Unknown_QueryInterface,
-    Unknown_AddRef,
-    Unknown_Release
-};
 
 static HRESULT WINAPI OleRun_QueryInterface(IRunnableObject *iface, REFIID riid, void **ppv)
 {
@@ -2272,7 +2332,6 @@ static const IRunnableObjectVtbl oleruntestvtbl =
     OleRun_SetContainedObject
 };
 
-static IUnknown unknown = { &UnknownVtbl };
 static IRunnableObject testrunnable = { &oleruntestvtbl };
 
 static void test_OleRun(void)
@@ -2291,7 +2350,7 @@ static void test_OleLockRunning(void)
 {
     HRESULT hr;
 
-    hr = OleLockRunning((LPUNKNOWN)&unknown, TRUE, FALSE);
+    hr = OleLockRunning(&unknown, TRUE, FALSE);
     ok(hr == S_OK, "OleLockRunning failed 0x%08x\n", hr);
 }
 

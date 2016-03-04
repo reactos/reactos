@@ -1180,7 +1180,7 @@ static void test_writeclassstg(void)
 {
     IStorage *stg = NULL;
     HRESULT r;
-    CLSID temp_cls;
+    CLSID temp_cls, cls2;
 
     DeleteFileA(filenameA);
 
@@ -1191,6 +1191,12 @@ static void test_writeclassstg(void)
 
     r = ReadClassStg( NULL, NULL );
     ok(r == E_INVALIDARG, "ReadClassStg should return E_INVALIDARG instead of 0x%08X\n", r);
+
+    memset(&temp_cls, 0xcc, sizeof(temp_cls));
+    memset(&cls2, 0xcc, sizeof(cls2));
+    r = ReadClassStg( NULL, &temp_cls );
+    ok(r == E_INVALIDARG, "got 0x%08x\n", r);
+    ok(IsEqualCLSID(&temp_cls, &cls2), "got wrong clsid\n");
 
     r = ReadClassStg( stg, NULL );
     ok(r == E_INVALIDARG, "ReadClassStg should return E_INVALIDARG instead of 0x%08X\n", r);
@@ -1961,7 +1967,7 @@ static void test_nonroot_transacted(void)
 
 static void test_ReadClassStm(void)
 {
-    CLSID clsid;
+    CLSID clsid, clsid2;
     HRESULT hr;
     IStream *pStream;
     static const LARGE_INTEGER llZero;
@@ -1976,6 +1982,12 @@ static void test_ReadClassStm(void)
 
     hr = ReadClassStm(pStream, NULL);
     ok(hr == E_INVALIDARG, "ReadClassStm should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
+    memset(&clsid, 0xcc, sizeof(clsid));
+    memset(&clsid2, 0xcc, sizeof(clsid2));
+    hr = ReadClassStm(NULL, &clsid);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &clsid2), "got wrong clsid\n");
 
     /* test not rewound stream */
     hr = ReadClassStm(pStream, &clsid);

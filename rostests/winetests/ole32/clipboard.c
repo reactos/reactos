@@ -461,6 +461,17 @@ static HRESULT DataObjectImpl_CreateComplex(LPDATAOBJECT *lplpdataobj)
     return S_OK;
 }
 
+static void test_get_clipboard_unitialized(void)
+{
+    HRESULT hr;
+    IDataObject *pDObj;
+
+    pDObj = (IDataObject *)0xdeadbeef;
+    hr = OleGetClipboard(&pDObj);
+    todo_wine ok(hr == S_OK, "OleGetClipboard() got 0x%08x instead of 0x%08x\n", hr, S_OK);
+    if (pDObj && pDObj != (IDataObject *)0xdeadbeef) IDataObject_Release(pDObj);
+}
+
 static void test_get_clipboard(void)
 {
     HRESULT hr;
@@ -1545,11 +1556,65 @@ static void test_getdatahere(void)
 
 }
 
+static DWORD CALLBACK test_data_obj(void *arg)
+{
+    IDataObject *data_obj = arg;
+
+    IDataObject_Release(data_obj);
+    return 0;
+}
+
+static void test_multithreaded_clipboard(void)
+{
+    IDataObject *data_obj;
+    HANDLE thread;
+    HRESULT hr;
+    DWORD ret;
+
+    OleInitialize(NULL);
+
+    hr = OleGetClipboard(&data_obj);
+    ok(hr == S_OK, "OleGetClipboard returned %x\n", hr);
+
+    thread = CreateThread(NULL, 0, test_data_obj, data_obj, 0, NULL);
+    ok(thread != NULL, "CreateThread failed (%d)\n", GetLastError());
+    ret = WaitForSingleObject(thread, 5000);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", ret);
+
+    hr = OleGetClipboard(&data_obj);
+    ok(hr == S_OK, "OleGetClipboard returned %x\n", hr);
+    IDataObject_Release(data_obj);
+
+    OleUninitialize();
+}
+
+static void test_get_clipboard_locked(void)
+{
+    HRESULT hr;
+    IDataObject *pDObj;
+
+    OleInitialize(NULL);
+
+    pDObj = (IDataObject *)0xdeadbeef;
+    /* lock clipboard */
+    OpenClipboard(NULL);
+    hr = OleGetClipboard(&pDObj);
+    todo_wine ok(hr == CLIPBRD_E_CANT_OPEN, "OleGetClipboard() got 0x%08x instead of 0x%08x\n", hr, CLIPBRD_E_CANT_OPEN);
+    todo_wine ok(pDObj == NULL, "OleGetClipboard() got 0x%p instead of NULL\n",pDObj);
+    if (pDObj) IDataObject_Release(pDObj);
+    CloseClipboard();
+
+    OleUninitialize();
+}
+
 START_TEST(clipboard)
 {
+    test_get_clipboard_unitialized();
     test_set_clipboard();
     test_consumer_refs();
     test_flushed_getdata();
     test_nonole_clipboard();
     test_getdatahere();
+    test_multithreaded_clipboard();
+    test_get_clipboard_locked();
 }
