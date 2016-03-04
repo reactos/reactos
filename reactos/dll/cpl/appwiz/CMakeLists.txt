@@ -10,6 +10,7 @@ list(APPEND SOURCE
     addons.c
     appwiz.c
     createlink.c
+    removestartmenuitems.c
     appwiz.h)
 
 file(GLOB appwiz_rc_deps resources/*.*)
