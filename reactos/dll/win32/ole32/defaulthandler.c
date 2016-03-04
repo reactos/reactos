@@ -239,7 +239,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
   /* Check that we obtained an interface. */
   if (*ppvObject == NULL)
   {
-    WARN( "() : asking for un supported interface %s\n", debugstr_guid(riid));
+    WARN( "() : asking for unsupported interface %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
   }
 

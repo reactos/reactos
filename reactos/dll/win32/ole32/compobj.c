@@ -308,7 +308,8 @@ static NTSTATUS create_key( HKEY *retkey, ACCESS_MASK access, OBJECT_ATTRIBUTES 
 static const WCHAR classes_rootW[] = L"\\REGISTRY\\Machine\\Software\\Classes";
 #else
 static const WCHAR classes_rootW[] =
-    {'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\','C','l','a','s','s','e','s',0};
+    {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e',
+     '\\','S','o','f','t','w','a','r','e','\\','C','l','a','s','s','e','s',0};
 #endif
 
 static HKEY classes_root_hkey;
@@ -443,8 +444,7 @@ struct apartment_loaded_dll
     BOOL multi_threaded;
 };
 
-static const WCHAR wszAptWinClass[] = {'O','l','e','M','a','i','n','T','h','r','e','a','d','W','n','d','C','l','a','s','s',' ',
-                                       '0','x','#','#','#','#','#','#','#','#',' ',0};
+static const WCHAR wszAptWinClass[] = {'O','l','e','M','a','i','n','T','h','r','e','a','d','W','n','d','C','l','a','s','s',0};
 
 /*****************************************************************************
  * This section contains OpenDllList implementation
@@ -1950,6 +1950,8 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
 
   if (!--info->inits)
   {
+    if (info->ole_inits)
+      WARN("uninitializing apartment while Ole is still initialized\n");
     apartment_release(info->apt);
     info->apt = NULL;
   }
@@ -5002,6 +5004,35 @@ HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     }
 
     return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *           CoGetApartmentType [OLE32.@]
+ */
+HRESULT WINAPI CoGetApartmentType(APTTYPE *type, APTTYPEQUALIFIER *qualifier)
+{
+    struct oletls *info = COM_CurrentInfo();
+
+    FIXME("(%p %p): semi-stub\n", type, qualifier);
+
+    if (!type || !qualifier)
+        return E_INVALIDARG;
+
+    if (!info)
+        return E_OUTOFMEMORY;
+
+    if (!info->apt)
+        *type = APTTYPE_CURRENT;
+    else if (info->apt->multi_threaded)
+        *type = APTTYPE_MTA;
+    else if (info->apt->main)
+        *type = APTTYPE_MAINSTA;
+    else
+        *type = APTTYPE_STA;
+
+    *qualifier = APTTYPEQUALIFIER_NONE;
+
+    return info->apt ? ERROR_SUCCESS : CO_E_NOTINITIALIZED;
 }
 
 /***********************************************************************

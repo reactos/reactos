@@ -155,6 +155,15 @@ typedef struct PresentationDataHeader
  */
 static ole_clipbrd* theOleClipboard;
 
+static CRITICAL_SECTION latest_snapshot_cs;
+static CRITICAL_SECTION_DEBUG latest_snapshot_cs_debug =
+{
+        0, 0, &latest_snapshot_cs,
+        { &latest_snapshot_cs_debug.ProcessLocksList, &latest_snapshot_cs_debug.ProcessLocksList },
+        0, 0, { (DWORD_PTR)(__FILE__ ": clipboard last snapshot") }
+};
+static CRITICAL_SECTION latest_snapshot_cs = { &latest_snapshot_cs_debug, -1, 0, 0, 0, 0 };
+
 static inline HRESULT get_ole_clipbrd(ole_clipbrd **clipbrd)
 {
     struct oletls *info = COM_CurrentInfo();
@@ -1023,13 +1032,17 @@ static ULONG WINAPI snapshot_Release(IDataObject *iface)
 
     if (ref == 0)
     {
-        ole_clipbrd *clipbrd;
-        HRESULT hr = get_ole_clipbrd(&clipbrd);
+        EnterCriticalSection(&latest_snapshot_cs);
+        if (This->ref)
+        {
+            LeaveCriticalSection(&latest_snapshot_cs);
+            return ref;
+        }
+        if (theOleClipboard->latest_snapshot == This)
+            theOleClipboard->latest_snapshot = NULL;
+        LeaveCriticalSection(&latest_snapshot_cs);
 
         if(This->data) IDataObject_Release(This->data);
-
-        if(SUCCEEDED(hr) && clipbrd->latest_snapshot == This)
-            clipbrd->latest_snapshot = NULL;
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -2169,21 +2182,28 @@ HRESULT WINAPI OleGetClipboard(IDataObject **obj)
     TRACE("(%p)\n", obj);
 
     if(!obj) return E_INVALIDARG;
+    *obj = NULL;
 
     if(FAILED(hr = get_ole_clipbrd(&clipbrd))) return hr;
 
     seq_no = GetClipboardSequenceNumber();
+    EnterCriticalSection(&latest_snapshot_cs);
     if(clipbrd->latest_snapshot && clipbrd->latest_snapshot->seq_no != seq_no)
         clipbrd->latest_snapshot = NULL;
 
     if(!clipbrd->latest_snapshot)
     {
         clipbrd->latest_snapshot = snapshot_construct(seq_no);
-        if(!clipbrd->latest_snapshot) return E_OUTOFMEMORY;
+        if(!clipbrd->latest_snapshot)
+        {
+            LeaveCriticalSection(&latest_snapshot_cs);
+            return E_OUTOFMEMORY;
+        }
     }
 
     *obj = &clipbrd->latest_snapshot->IDataObject_iface;
     IDataObject_AddRef(*obj);
+    LeaveCriticalSection(&latest_snapshot_cs);
 
     return S_OK;
 }

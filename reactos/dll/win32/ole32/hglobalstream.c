@@ -5,6 +5,7 @@
  * for streams contained supported by an HGLOBAL pointer.
  *
  * Copyright 1999 Francis Beaudet
+ * Copyright 2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +24,158 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(storage);
+WINE_DEFAULT_DEBUG_CHANNEL(hglobalstream);
+
+struct handle_wrapper
+{
+    LONG ref;
+    HGLOBAL hglobal;
+    ULONG size;
+    BOOL delete_on_release;
+    CRITICAL_SECTION lock;
+};
+
+static void handle_addref(struct handle_wrapper *handle)
+{
+    InterlockedIncrement(&handle->ref);
+}
+
+static void handle_release(struct handle_wrapper *handle)
+{
+    ULONG ref = InterlockedDecrement(&handle->ref);
+
+    if (!ref)
+    {
+        if (handle->delete_on_release)
+        {
+            GlobalFree(handle->hglobal);
+            handle->hglobal = NULL;
+        }
+
+        handle->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&handle->lock);
+        HeapFree(GetProcessHeap(), 0, handle);
+    }
+}
+
+static ULONG handle_read(struct handle_wrapper *handle, ULONG *pos, void *dest, ULONG len)
+{
+    void *source;
+
+    EnterCriticalSection(&handle->lock);
+
+    if (*pos < handle->size)
+        len = min(handle->size - *pos, len);
+    else
+        len = 0;
+
+    source = GlobalLock(handle->hglobal);
+    if (source)
+    {
+        memcpy(dest, (char *)source + *pos, len);
+        *pos += len;
+        GlobalUnlock(handle->hglobal);
+    }
+    else
+    {
+        WARN("read from invalid hglobal %p\n", handle->hglobal);
+        len = 0;
+    }
+
+    LeaveCriticalSection(&handle->lock);
+    return len;
+}
+
+static ULONG handle_write(struct handle_wrapper *handle, ULONG *pos, const void *source, ULONG len)
+{
+    void *dest;
+
+    if (!len)
+        return 0;
+
+    EnterCriticalSection(&handle->lock);
+
+    if (*pos + len > handle->size)
+    {
+        HGLOBAL hglobal = GlobalReAlloc(handle->hglobal, *pos + len, GMEM_MOVEABLE);
+        if (hglobal)
+        {
+            handle->hglobal = hglobal;
+            handle->size = *pos + len;
+        }
+        else
+        {
+            len = 0;
+            goto done;
+        }
+    }
+
+    dest = GlobalLock(handle->hglobal);
+    if (dest)
+    {
+        memcpy((char *)dest + *pos, source, len);
+        *pos += len;
+        GlobalUnlock(handle->hglobal);
+    }
+    else
+    {
+        WARN("write to invalid hglobal %p\n", handle->hglobal);
+        /* len = 0; */
+    }
+
+done:
+    LeaveCriticalSection(&handle->lock);
+    return len;
+}
+
+static HGLOBAL handle_gethglobal(struct handle_wrapper *handle)
+{
+    return handle->hglobal;
+}
+
+static HRESULT handle_setsize(struct handle_wrapper *handle, ULONG size)
+{
+    HRESULT hr = S_OK;
+
+    EnterCriticalSection(&handle->lock);
+
+    if (handle->size != size)
+    {
+        HGLOBAL hglobal = GlobalReAlloc(handle->hglobal, size, GMEM_MOVEABLE);
+        if (hglobal)
+        {
+            handle->hglobal = hglobal;
+            handle->size = size;
+        }
+        else
+            hr = E_OUTOFMEMORY;
+    }
+
+    LeaveCriticalSection(&handle->lock);
+    return hr;
+}
+
+static ULONG handle_getsize(struct handle_wrapper *handle)
+{
+    return handle->size;
+}
+
+static struct handle_wrapper *handle_create(HGLOBAL hglobal, BOOL delete_on_release)
+{
+    struct handle_wrapper *handle;
+
+    handle = HeapAlloc(GetProcessHeap(), 0, sizeof(*handle));
+    if (handle)
+    {
+        handle->ref = 1;
+        handle->hglobal = hglobal;
+        handle->size = GlobalSize(hglobal);
+        handle->delete_on_release = delete_on_release;
+        InitializeCriticalSection(&handle->lock);
+        handle->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": handle_wrapper.lock");
+    }
+    return handle;
+}
 
 /****************************************************************************
  * HGLOBALStreamImpl definition.
@@ -36,14 +188,7 @@ typedef struct
   IStream IStream_iface;
   LONG ref;
 
-  /* support for the stream */
-  HGLOBAL supportHandle;
-
-  /* if TRUE the HGLOBAL is destroyed when the stream is finally released */
-  BOOL deleteOnRelease;
-
-  /* size of the stream */
-  ULARGE_INTEGER streamSize;
+  struct handle_wrapper *handle;
 
   /* current position of the cursor */
   ULARGE_INTEGER currentPosition;
@@ -95,12 +240,7 @@ static ULONG WINAPI HGLOBALStreamImpl_Release(
 
   if (!ref)
   {
-    if (This->deleteOnRelease)
-    {
-      GlobalFree(This->supportHandle);
-      This->supportHandle = NULL;
-    }
-
+    handle_release(This->handle);
     HeapFree(GetProcessHeap(), 0, This);
   }
 
@@ -123,59 +263,12 @@ static HRESULT WINAPI HGLOBALStreamImpl_Read(
 		  ULONG*         pcbRead)   /* [out] */
 {
   HGLOBALStreamImpl* This = impl_from_IStream(iface);
+  ULONG num_bytes;
 
-  void* supportBuffer;
-  ULONG bytesReadBuffer;
-  ULONG bytesToReadFromBuffer;
+  TRACE("(%p, %p, %d, %p)\n", iface, pv, cb, pcbRead);
 
-  TRACE("(%p, %p, %d, %p)\n", iface,
-	pv, cb, pcbRead);
-
-  /*
-   * If the caller is not interested in the number of bytes read,
-   * we use another buffer to avoid "if" statements in the code.
-   */
-  if (pcbRead==0)
-    pcbRead = &bytesReadBuffer;
-
-  /*
-   * Using the known size of the stream, calculate the number of bytes
-   * to read from the block chain
-   */
-  bytesToReadFromBuffer = min( This->streamSize.u.LowPart - This->currentPosition.u.LowPart, cb);
-
-  /*
-   * Lock the buffer in position and copy the data.
-   */
-  supportBuffer = GlobalLock(This->supportHandle);
-  if (!supportBuffer)
-  {
-      WARN("read from invalid hglobal %p\n", This->supportHandle);
-      *pcbRead = 0;
-      return S_OK;
-  }
-
-  memcpy(pv, (char *) supportBuffer+This->currentPosition.u.LowPart, bytesToReadFromBuffer);
-
-  /*
-   * Move the current position to the new position
-   */
-  This->currentPosition.u.LowPart+=bytesToReadFromBuffer;
-
-  /*
-   * Return the number of bytes read.
-   */
-  *pcbRead = bytesToReadFromBuffer;
-
-  /*
-   * Cleanup
-   */
-  GlobalUnlock(This->supportHandle);
-
-  /*
-   * Always returns S_OK even if the end of the stream is reached before the
-   * buffer is filled
-   */
+  num_bytes = handle_read(This->handle, &This->currentPosition.u.LowPart, pv, cb);
+  if (pcbRead) *pcbRead = num_bytes;
 
   return S_OK;
 }
@@ -197,71 +290,14 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
 		  ULONG*         pcbWritten)  /* [out] */
 {
   HGLOBALStreamImpl* This = impl_from_IStream(iface);
-
-  void*          supportBuffer;
-  ULARGE_INTEGER newSize;
-  ULONG          bytesWritten = 0;
+  ULONG num_bytes;
 
   TRACE("(%p, %p, %d, %p)\n", iface, pv, cb, pcbWritten);
 
-  /*
-   * If the caller is not interested in the number of bytes written,
-   * we use another buffer to avoid "if" statements in the code.
-   */
-  if (pcbWritten == 0)
-    pcbWritten = &bytesWritten;
+  num_bytes = handle_write(This->handle, &This->currentPosition.u.LowPart, pv, cb);
+  if (pcbWritten) *pcbWritten = num_bytes;
 
-  if (cb == 0)
-    goto out;
-
-  *pcbWritten = 0;
-
-  newSize.u.HighPart = 0;
-  newSize.u.LowPart = This->currentPosition.u.LowPart + cb;
-
-  /*
-   * Verify if we need to grow the stream
-   */
-  if (newSize.u.LowPart > This->streamSize.u.LowPart)
-  {
-    /* grow stream */
-    HRESULT hr = IStream_SetSize(iface, newSize);
-    if (FAILED(hr))
-    {
-      ERR("IStream_SetSize failed with error 0x%08x\n", hr);
-      return hr;
-    }
-  }
-
-  /*
-   * Lock the buffer in position and copy the data.
-   */
-  supportBuffer = GlobalLock(This->supportHandle);
-  if (!supportBuffer)
-  {
-      WARN("write to invalid hglobal %p\n", This->supportHandle);
-      return S_OK;
-  }
-
-  memcpy((char *) supportBuffer+This->currentPosition.u.LowPart, pv, cb);
-
-  /*
-   * Move the current position to the new position
-   */
-  This->currentPosition.u.LowPart+=cb;
-
-  /*
-   * Cleanup
-   */
-  GlobalUnlock(This->supportHandle);
-
-out:
-  /*
-   * Return the number of bytes read.
-   */
-  *pcbWritten = cb;
-
-  return S_OK;
+  return (num_bytes < cb) ? E_OUTOFMEMORY : S_OK;
 }
 
 /***
@@ -299,7 +335,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
     case STREAM_SEEK_CUR:
       break;
     case STREAM_SEEK_END:
-      newPosition = This->streamSize;
+      newPosition.QuadPart = handle_getsize(This->handle);
       break;
     default:
       hr = STG_E_SEEKERROR;
@@ -344,29 +380,13 @@ static HRESULT WINAPI HGLOBALStreamImpl_SetSize(
 				     ULARGE_INTEGER  libNewSize)   /* [in] */
 {
   HGLOBALStreamImpl* This = impl_from_IStream(iface);
-  HGLOBAL supportHandle;
 
   TRACE("(%p, %d)\n", iface, libNewSize.u.LowPart);
 
   /*
    * HighPart is ignored as shown in tests
    */
-
-  if (This->streamSize.u.LowPart == libNewSize.u.LowPart)
-    return S_OK;
-
-  /*
-   * Re allocate the HGlobal to fit the new size of the stream.
-   */
-  supportHandle = GlobalReAlloc(This->supportHandle, libNewSize.u.LowPart, 0);
-
-  if (supportHandle == 0)
-    return E_OUTOFMEMORY;
-
-  This->supportHandle = supportHandle;
-  This->streamSize.u.LowPart = libNewSize.u.LowPart;
-
-  return S_OK;
+  return handle_setsize(This->handle, libNewSize.u.LowPart);
 }
 
 /***
@@ -514,9 +534,24 @@ static HRESULT WINAPI HGLOBALStreamImpl_Stat(
 
   pstatstg->pwcsName = NULL;
   pstatstg->type     = STGTY_STREAM;
-  pstatstg->cbSize   = This->streamSize;
+  pstatstg->cbSize.QuadPart = handle_getsize(This->handle);
 
   return S_OK;
+}
+
+static const IStreamVtbl HGLOBALStreamImplVtbl;
+
+static HGLOBALStreamImpl *HGLOBALStreamImpl_Create(void)
+{
+    HGLOBALStreamImpl *This;
+
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (This)
+    {
+        This->IStream_iface.lpVtbl = &HGLOBALStreamImplVtbl;
+        This->ref = 1;
+    }
+    return This;
 }
 
 static HRESULT WINAPI HGLOBALStreamImpl_Clone(
@@ -524,14 +559,24 @@ static HRESULT WINAPI HGLOBALStreamImpl_Clone(
 		  IStream**    ppstm) /* [out] */
 {
   HGLOBALStreamImpl* This = impl_from_IStream(iface);
+  HGLOBALStreamImpl* clone;
   ULARGE_INTEGER dummy;
   LARGE_INTEGER offset;
-  HRESULT hr;
 
-  TRACE(" Cloning %p (deleteOnRelease=%d seek position=%ld)\n",iface,This->deleteOnRelease,(long)This->currentPosition.QuadPart);
-  hr = CreateStreamOnHGlobal(This->supportHandle, FALSE, ppstm);
-  if(FAILED(hr))
-    return hr;
+  if (!ppstm) return E_INVALIDARG;
+
+  *ppstm = NULL;
+
+  TRACE(" Cloning %p (seek position=%d)\n", iface, This->currentPosition.u.LowPart);
+
+  clone = HGLOBALStreamImpl_Create();
+  if (!clone) return E_OUTOFMEMORY;
+
+  *ppstm = &clone->IStream_iface;
+
+  handle_addref(This->handle);
+  clone->handle = This->handle;
+
   offset.QuadPart = (LONGLONG)This->currentPosition.QuadPart;
   IStream_Seek(*ppstm, offset, STREAM_SEEK_SET, &dummy);
   return S_OK;
@@ -568,27 +613,18 @@ HRESULT WINAPI CreateStreamOnHGlobal(
   if (!ppstm)
     return E_INVALIDARG;
 
-  This = HeapAlloc(GetProcessHeap(), 0, sizeof(HGLOBALStreamImpl));
+  This = HGLOBALStreamImpl_Create();
   if (!This) return E_OUTOFMEMORY;
 
-  This->IStream_iface.lpVtbl = &HGLOBALStreamImplVtbl;
-  This->ref = 1;
-
-  /* initialize the support */
-  This->supportHandle = hGlobal;
-  This->deleteOnRelease = fDeleteOnRelease;
-
   /* allocate a handle if one is not supplied */
-  if (!This->supportHandle)
-    This->supportHandle = GlobalAlloc(GMEM_MOVEABLE|GMEM_NODISCARD|GMEM_SHARE, 0);
+  if (!hGlobal)
+    hGlobal = GlobalAlloc(GMEM_MOVEABLE|GMEM_NODISCARD|GMEM_SHARE, 0);
+
+  This->handle = handle_create(hGlobal, fDeleteOnRelease);
 
   /* start at the beginning */
   This->currentPosition.u.HighPart = 0;
   This->currentPosition.u.LowPart = 0;
-
-  /* initialize the size of the stream to the size of the handle */
-  This->streamSize.u.HighPart = 0;
-  This->streamSize.u.LowPart = GlobalSize(This->supportHandle);
 
   *ppstm = &This->IStream_iface;
 
@@ -602,16 +638,16 @@ HRESULT WINAPI GetHGlobalFromStream(IStream* pstm, HGLOBAL* phglobal)
 {
   HGLOBALStreamImpl* pStream;
 
-  if (pstm == NULL)
+  if (!pstm || !phglobal)
     return E_INVALIDARG;
 
-  pStream = (HGLOBALStreamImpl*) pstm;
+  pStream = impl_from_IStream(pstm);
 
   /*
    * Verify that the stream object was created with CreateStreamOnHGlobal.
    */
   if (pStream->IStream_iface.lpVtbl == &HGLOBALStreamImplVtbl)
-    *phglobal = pStream->supportHandle;
+    *phglobal = handle_gethglobal(pStream->handle);
   else
   {
     *phglobal = 0;

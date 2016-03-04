@@ -95,11 +95,6 @@ static const WCHAR prop_oledroptarget[] =
 static const WCHAR prop_marshalleddroptarget[] =
   {'W','i','n','e','M','a','r','s','h','a','l','l','e','d','D','r','o','p','T','a','r','g','e','t',0};
 
-static const WCHAR clsidfmtW[] =
-  {'C','L','S','I','D','\\','{','%','0','8','x','-','%','0','4','x','-','%','0','4','x','-',
-   '%','0','2','x','%','0','2','x','-','%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
-    '%','0','2','x','%','0','2','x','}','\\',0};
-
 static const WCHAR emptyW[] = { 0 };
 
 /******************************************************************************
@@ -166,6 +161,8 @@ HRESULT WINAPI DECLSPEC_HOTPATCH OleInitialize(LPVOID reserved)
 
   if (!COM_CurrentInfo()->ole_inits)
     hr = S_OK;
+  else
+    hr = S_FALSE;
 
   /*
    * Then, it has to initialize the OLE specific modules.
@@ -209,6 +206,11 @@ void WINAPI DECLSPEC_HOTPATCH OleUninitialize(void)
 {
   TRACE("()\n");
 
+  if (COM_CurrentInfo()->ole_inits == 0)
+  {
+    WARN("ole_inits is already 0\n");
+    return ;
+  }
   /*
    * If we hit the bottom of the lock stack, free the libraries.
    */
@@ -641,88 +643,73 @@ HRESULT WINAPI RevokeDragDrop(HWND hwnd)
 
 /***********************************************************************
  *           OleRegGetUserType (OLE32.@)
- *
- * This implementation of OleRegGetUserType ignores the dwFormOfType
- * parameter and always returns the full name of the object. This is
- * not too bad since this is the case for many objects because of the
- * way they are registered.
  */
-HRESULT WINAPI OleRegGetUserType(
-	REFCLSID clsid,
-	DWORD dwFormOfType,
-	LPOLESTR* pszUserType)
+HRESULT WINAPI OleRegGetUserType(REFCLSID clsid, DWORD form, LPOLESTR *usertype)
 {
-  WCHAR   keyName[60];
-  DWORD   dwKeyType;
-  DWORD   cbData;
-  HKEY    clsidKey;
-  LONG    hres;
+  static const WCHAR auxusertypeW[] = {'A','u','x','U','s','e','r','T','y','p','e','\\','%','d',0};
+  DWORD valuetype, valuelen;
+  WCHAR auxkeynameW[16];
+  HKEY    usertypekey;
+  HRESULT hres;
+  LONG    ret;
 
-  /*
-   * Initialize the out parameter.
-   */
-  *pszUserType = NULL;
+  TRACE("(%s, %u, %p)\n", debugstr_guid(clsid), form, usertype);
 
-  /*
-   * Build the key name we're looking for
-   */
-  sprintfW( keyName, clsidfmtW,
-            clsid->Data1, clsid->Data2, clsid->Data3,
-            clsid->Data4[0], clsid->Data4[1], clsid->Data4[2], clsid->Data4[3],
-            clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
+  if (!usertype)
+    return E_INVALIDARG;
 
-  TRACE("(%s, %d, %p)\n", debugstr_w(keyName), dwFormOfType, pszUserType);
+  *usertype = NULL;
 
-  /*
-   * Open the class id Key
-   */
-  hres = open_classes_key(HKEY_CLASSES_ROOT, keyName, MAXIMUM_ALLOWED, &clsidKey);
-  if (hres != ERROR_SUCCESS)
-    return REGDB_E_CLASSNOTREG;
+  /* Return immediately if it's not registered. */
+  hres = COM_OpenKeyForCLSID(clsid, NULL, KEY_READ, &usertypekey);
+  if (FAILED(hres))
+    return hres;
 
-  /*
-   * Retrieve the size of the name string.
-   */
-  cbData = 0;
+  valuelen = 0;
 
-  hres = RegQueryValueExW(clsidKey,
-			  emptyW,
-			  NULL,
-			  &dwKeyType,
-			  NULL,
-			  &cbData);
-
-  if (hres!=ERROR_SUCCESS)
+  /* Try additional types if requested. If they don't exist fall back to USERCLASSTYPE_FULL. */
+  if (form != USERCLASSTYPE_FULL)
   {
-    RegCloseKey(clsidKey);
+    HKEY auxkey;
+
+    sprintfW(auxkeynameW, auxusertypeW, form);
+    if (COM_OpenKeyForCLSID(clsid, auxkeynameW, KEY_READ, &auxkey) == S_OK)
+    {
+      if (!RegQueryValueExW(auxkey, emptyW, NULL, &valuetype, NULL, &valuelen) && valuelen)
+      {
+        RegCloseKey(usertypekey);
+        usertypekey = auxkey;
+      }
+      else
+        RegCloseKey(auxkey);
+    }
+  }
+
+  valuelen = 0;
+  if (RegQueryValueExW(usertypekey, emptyW, NULL, &valuetype, NULL, &valuelen))
+  {
+    RegCloseKey(usertypekey);
     return REGDB_E_READREGDB;
   }
 
-  /*
-   * Allocate a buffer for the registry value.
-   */
-  *pszUserType = CoTaskMemAlloc(cbData);
-
-  if (*pszUserType==NULL)
+  *usertype = CoTaskMemAlloc(valuelen);
+  if (!*usertype)
   {
-    RegCloseKey(clsidKey);
+    RegCloseKey(usertypekey);
     return E_OUTOFMEMORY;
   }
 
-  hres = RegQueryValueExW(clsidKey,
+  ret = RegQueryValueExW(usertypekey,
 			  emptyW,
 			  NULL,
-			  &dwKeyType,
-			  (LPBYTE) *pszUserType,
-			  &cbData);
-
-  RegCloseKey(clsidKey);
-
-  if (hres != ERROR_SUCCESS)
+			  &valuetype,
+			  (LPBYTE)*usertype,
+			  &valuelen);
+  RegCloseKey(usertypekey);
+  if (ret != ERROR_SUCCESS)
   {
-    CoTaskMemFree(*pszUserType);
-    *pszUserType = NULL;
-
+    CoTaskMemFree(*usertype);
+    *usertype = NULL;
     return REGDB_E_READREGDB;
   }
 
@@ -848,21 +835,13 @@ HRESULT WINAPI OleRegGetMiscStatus(
 {
   static const WCHAR miscstatusW[] = {'M','i','s','c','S','t','a','t','u','s',0};
   static const WCHAR dfmtW[] = {'%','d',0};
-  WCHAR   keyName[60];
-  HKEY    clsidKey;
+  WCHAR   keyName[16];
   HKEY    miscStatusKey;
   HKEY    aspectKey;
   LONG    result;
+  HRESULT hr;
 
-  /*
-   * Build the key name we're looking for
-   */
-  sprintfW( keyName, clsidfmtW,
-            clsid->Data1, clsid->Data2, clsid->Data3,
-            clsid->Data4[0], clsid->Data4[1], clsid->Data4[2], clsid->Data4[3],
-            clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
-
-  TRACE("(%s, %d, %p)\n", debugstr_w(keyName), dwAspect, pdwStatus);
+  TRACE("(%s, %d, %p)\n", debugstr_guid(clsid), dwAspect, pdwStatus);
 
   if (!pdwStatus) return E_INVALIDARG;
 
@@ -870,26 +849,11 @@ HRESULT WINAPI OleRegGetMiscStatus(
 
   if (actctx_get_miscstatus(clsid, dwAspect, pdwStatus)) return S_OK;
 
-  /*
-   * Open the class id Key
-   */
-  result = open_classes_key(HKEY_CLASSES_ROOT, keyName, MAXIMUM_ALLOWED, &clsidKey);
-  if (result != ERROR_SUCCESS)
-    return REGDB_E_CLASSNOTREG;
+  hr = COM_OpenKeyForCLSID(clsid, miscstatusW, KEY_READ, &miscStatusKey);
+  if (FAILED(hr))
+    /* missing key is not a failure */
+    return hr == REGDB_E_KEYMISSING ? S_OK : hr;
 
-  /*
-   * Get the MiscStatus
-   */
-  result = open_classes_key(clsidKey, miscstatusW, MAXIMUM_ALLOWED, &miscStatusKey);
-  if (result != ERROR_SUCCESS)
-  {
-    RegCloseKey(clsidKey);
-    return S_OK;
-  }
-
-  /*
-   * Read the default value
-   */
   OLEUTL_ReadRegistryDWORDValue(miscStatusKey, pdwStatus);
 
   /*
@@ -897,19 +861,14 @@ HRESULT WINAPI OleRegGetMiscStatus(
    */
   sprintfW(keyName, dfmtW, dwAspect);
 
-  result = open_classes_key(miscStatusKey, keyName, MAXIMUM_ALLOWED, &aspectKey);
+  result = open_classes_key(miscStatusKey, keyName, KEY_READ, &aspectKey);
   if (result == ERROR_SUCCESS)
   {
     OLEUTL_ReadRegistryDWORDValue(aspectKey, pdwStatus);
     RegCloseKey(aspectKey);
   }
 
-  /*
-   * Cleanup
-   */
   RegCloseKey(miscStatusKey);
-  RegCloseKey(clsidKey);
-
   return S_OK;
 }
 
@@ -2567,7 +2526,7 @@ HRESULT WINAPI OleCreate(
         if (SUCCEEDED(hres))
         {
             DWORD dwStatus;
-            hres = IOleObject_GetMiscStatus(pOleObject, DVASPECT_CONTENT, &dwStatus);
+            IOleObject_GetMiscStatus(pOleObject, DVASPECT_CONTENT, &dwStatus);
         }
     }
 
@@ -2596,21 +2555,12 @@ HRESULT WINAPI OleCreate(
     if (((renderopt == OLERENDER_DRAW) || (renderopt == OLERENDER_FORMAT)) &&
         SUCCEEDED(hres))
     {
-        IRunnableObject *pRunnable;
-        IOleCache *pOleCache;
-        HRESULT hres2;
-
-        hres2 = IUnknown_QueryInterface(pUnk, &IID_IRunnableObject, (void **)&pRunnable);
-        if (SUCCEEDED(hres2))
-        {
-            hres = IRunnableObject_Run(pRunnable, NULL);
-            IRunnableObject_Release(pRunnable);
-        }
-
+        hres = OleRun(pUnk);
         if (SUCCEEDED(hres))
         {
-            hres2 = IUnknown_QueryInterface(pUnk, &IID_IOleCache, (void **)&pOleCache);
-            if (SUCCEEDED(hres2))
+            IOleCache *pOleCache;
+
+            if (SUCCEEDED(IUnknown_QueryInterface(pUnk, &IID_IOleCache, (void **)&pOleCache)))
             {
                 DWORD dwConnection;
                 if (renderopt == OLERENDER_DRAW && !pFormatEtc) {

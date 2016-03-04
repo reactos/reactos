@@ -8882,7 +8882,7 @@ HRESULT WINAPI StgOpenStorage(
    * Refuse to open the file if it's too small to be a structured storage file
    * FIXME: verify the file when reading instead of here
    */
-  if (GetFileSize(hFile, NULL) < 0x100)
+  if (GetFileSize(hFile, NULL) < HEADER_SIZE)
   {
     CloseHandle(hFile);
     hr = STG_E_FILEALREADYEXISTS;
