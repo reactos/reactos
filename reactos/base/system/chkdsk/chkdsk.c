@@ -29,13 +29,13 @@
 // --------------------------------------------------------------------
 //
 // 1999 February (Emanuele Aliberti)
-//  Adapted for ReactOS and lcc-win32.
+//      Adapted for ReactOS and lcc-win32.
 //
 // 1999 April (Emanuele Aliberti)
-//  Adapted for ReactOS and egcs.
+//      Adapted for ReactOS and egcs.
 //
 // 2008 July (Aleksey Bragin)
-//  Cleanup, use ReactOS's fmifs.h
+//      Cleanup, use ReactOS's fmifs.h
 //
 //======================================================================
 
@@ -70,10 +70,10 @@ WCHAR   CurrentDirectory[1024];
 
 #ifndef FMIFS_IMPORT_DLL
 //
-// FMIFS function
+// Functions in FMIFS.DLL
 //
-// PCHKDSK   Chkdsk;
-#endif /* ndef FMIFS_IMPORT_DLL */
+PCHKDSK Chkdsk;
+#endif
 
 
 //----------------------------------------------------------------------
@@ -144,10 +144,7 @@ Usage(PWCHAR ProgramName)
 //
 //----------------------------------------------------------------------
 static int
-ParseCommandLine(
-    int argc,
-    WCHAR *argv[]
-    )
+ParseCommandLine(int argc, WCHAR *argv[])
 {
     int i;
     BOOLEAN gotFix = FALSE;
@@ -231,8 +228,7 @@ WINAPI
 ChkdskCallback(
     CALLBACKCOMMAND Command,
     DWORD       Modifier,
-    PVOID       Argument
-    )
+    PVOID       Argument)
 {
     PDWORD      percent;
     PBOOLEAN    status;
@@ -329,8 +325,6 @@ ChkdskCallback(
 //
 // Loads FMIFS.DLL and locates the entry point(s) we are going to use
 //
-// 19990216 EA Used wide functions
-//
 //----------------------------------------------------------------------
 static BOOLEAN
 LoadFMIFSEntryPoints(VOID)
@@ -340,7 +334,6 @@ LoadFMIFSEntryPoints(VOID)
         return FALSE;
 
     Chkdsk = (PCHKDSK)GetProcAddress(hFmifs, "Chkdsk");
-
     if (!Chkdsk)
     {
         FreeLibrary(hFmifs);
@@ -349,7 +342,7 @@ LoadFMIFSEntryPoints(VOID)
 
     return TRUE;
 }
-#endif /* ndef FMIFS_IMPORT_DLL */
+#endif
 
 
 //----------------------------------------------------------------------
@@ -374,10 +367,10 @@ wmain(int argc, WCHAR *argv[])
     DWORD   serialNumber;
     DWORD   flags, maxComponent;
 
-    wprintf(L"\n\
-Chkdskx v1.0.1 by Mark Russinovich\n\
-Systems Internals - http://www.sysinternals.com/\n\
-ReactOS adaptation 1999 by Emanuele Aliberti\n\n");
+    wprintf(L"\n"
+            L"Chkdskx v1.0.1 by Mark Russinovich\n"
+            L"Systems Internals - http://www.sysinternals.com\n"
+            L"ReactOS adaptation 1999 by Emanuele Aliberti\n\n");
 
 #ifndef FMIFS_IMPORT_DLL
     //
@@ -388,7 +381,7 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n");
         wprintf(L"Could not located FMIFS entry points.\n\n");
         return -1;
     }
-#endif /* ndef FMIFS_IMPORT_DLL */
+#endif
 
     //
     // Parse command line

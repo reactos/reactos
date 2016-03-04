@@ -362,11 +362,11 @@ VfatPrintV(PCHAR Format, va_list args)
 VOID
 VfatPrint(PCHAR Format, ...)
 {
-    va_list valist;
+    va_list args;
 
-    va_start(valist, Format);
-    VfatPrintV(Format, valist);
-    va_end(valist);
+    va_start(args, Format);
+    VfatPrintV(Format, args);
+    va_end(args);
 }
 
 

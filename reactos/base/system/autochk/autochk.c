@@ -297,7 +297,7 @@ CheckVolume(
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
                            FileSystem,
-                           sizeof(FileSystem) / sizeof(FileSystem[0]));
+                           ARRAYSIZE(FileSystem));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
@@ -334,7 +334,7 @@ CheckVolume(
     NtDrivePath[wcslen(NtDrivePath)-1] = 0;
     RtlInitUnicodeString(&DrivePathU, NtDrivePath);
 
-    DPRINT("AUTOCHK: Checking %wZ\n", &DrivePathU);
+    DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose
