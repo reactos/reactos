@@ -469,7 +469,7 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
 {
     static const WCHAR prefix[] = {'B','I','T', 0};
     WCHAR tmpDir[MAX_PATH], tmpName[MAX_PATH];
-    WCHAR host[MAX_PATH], path[MAX_PATH];
+    WCHAR host[MAX_PATH];
     URL_COMPONENTSW uc;
     BOOL ret;
 
@@ -511,10 +511,8 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
     uc.lpszHostName      = host;
     uc.dwHostNameLength  = sizeof(host)/sizeof(host[0]);
     uc.nPort             = 0;
-    uc.lpszUrlPath       = path;
-    uc.dwUrlPathLength   = sizeof(path)/sizeof(path[0]);
-    uc.lpszExtraInfo     = NULL;
-    uc.dwExtraInfoLength = 0;
+    uc.lpszUrlPath       = NULL;
+    uc.dwUrlPathLength   = ~0u;
     ret = WinHttpCrackUrl(file->info.RemoteName, 0, 0, &uc);
     if (!ret)
     {
