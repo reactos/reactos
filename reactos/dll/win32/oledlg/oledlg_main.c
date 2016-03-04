@@ -169,6 +169,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
     LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
     /* no object, or object without enumeration support */
     if (!object || !enumverbs) {
+        RemoveMenu(hMenu, uPos, MF_BYPOSITION);
         InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_STRING|MF_GRAYED, idmin, resstrW);
         return FALSE;
     }
