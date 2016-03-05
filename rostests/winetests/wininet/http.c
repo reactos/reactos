@@ -212,9 +212,7 @@ static void _test_status_code(unsigned line, HINTERNET req, DWORD excode, BOOL i
     size = sizeof(code);
     res = HttpQueryInfoA(req, HTTP_QUERY_STATUS_CODE|HTTP_QUERY_FLAG_NUMBER, &code, &size, NULL);
     ok_(__FILE__,line)(res, "[1] HttpQueryInfoA(HTTP_QUERY_STATUS_CODE|number) failed: %u\n", GetLastError());
-    if (is_todo)
-        todo_wine ok_(__FILE__,line)(code == excode, "code = %d, expected %d\n", code, excode);
-    else
+    todo_wine_if (is_todo)
         ok_(__FILE__,line)(code == excode, "code = %d, expected %d\n", code, excode);
     ok_(__FILE__,line)(size == sizeof(code), "size = %u\n", size);
 
@@ -223,10 +221,7 @@ static void _test_status_code(unsigned line, HINTERNET req, DWORD excode, BOOL i
     size = sizeof(code);
     res = HttpQueryInfoA(req, HTTP_QUERY_STATUS_CODE|HTTP_QUERY_FLAG_NUMBER, &code, &size, &index);
     ok_(__FILE__,line)(res, "[2] HttpQueryInfoA(HTTP_QUERY_STATUS_CODE|number index) failed: %u\n", GetLastError());
-    if (is_todo)
-        todo_wine ok_(__FILE__,line)(code == excode, "code = %d, expected %d\n", code, excode);
-    else
-        ok_(__FILE__,line)(!index, "index = %d, expected 0\n", code);
+    ok_(__FILE__,line)(!index, "index = %d, expected 0\n", index);
     ok_(__FILE__,line)(size == sizeof(code), "size = %u\n", size);
 
     sprintf(exbuf, "%u", excode);
@@ -234,9 +229,7 @@ static void _test_status_code(unsigned line, HINTERNET req, DWORD excode, BOOL i
     size = sizeof(bufa);
     res = HttpQueryInfoA(req, HTTP_QUERY_STATUS_CODE, bufa, &size, NULL);
     ok_(__FILE__,line)(res, "[3] HttpQueryInfoA(HTTP_QUERY_STATUS_CODE) failed: %u\n", GetLastError());
-    if (is_todo)
-        todo_wine ok_(__FILE__,line)(!strcmp(bufa, exbuf), "unexpected status code %s, expected %s\n", bufa, exbuf);
-    else
+    todo_wine_if (is_todo)
         ok_(__FILE__,line)(!strcmp(bufa, exbuf), "unexpected status code %s, expected %s\n", bufa, exbuf);
     ok_(__FILE__,line)(size == strlen(exbuf), "unexpected size %d for \"%s\"\n", size, exbuf);
 
@@ -249,9 +242,7 @@ static void _test_status_code(unsigned line, HINTERNET req, DWORD excode, BOOL i
     size = sizeof(bufw);
     res = HttpQueryInfoW(req, HTTP_QUERY_STATUS_CODE, bufw, &size, NULL);
     ok_(__FILE__,line)(res, "[5] HttpQueryInfoW(HTTP_QUERY_STATUS_CODE) failed: %u\n", GetLastError());
-    if (is_todo)
-        todo_wine ok_(__FILE__,line)(!strcmp_wa(bufw, exbuf), "unexpected status code %s, expected %s\n", bufa, exbuf);
-    else
+    todo_wine_if (is_todo)
         ok_(__FILE__,line)(!strcmp_wa(bufw, exbuf), "unexpected status code %s, expected %s\n", bufa, exbuf);
     ok_(__FILE__,line)(size == strlen(exbuf)*sizeof(WCHAR), "unexpected size %d for \"%s\"\n", size, exbuf);
 
@@ -296,10 +287,8 @@ static void _test_request_flags(unsigned line, HINTERNET req, DWORD exflags, BOO
 
     /* FIXME: Remove once we have INTERNET_REQFLAG_CACHE_WRITE_DISABLED implementation */
     flags &= ~INTERNET_REQFLAG_CACHE_WRITE_DISABLED;
-    if(!is_todo)
+    todo_wine_if (is_todo)
         ok_(__FILE__,line)(flags == exflags, "flags = %x, expected %x\n", flags, exflags);
-    else
-        todo_wine ok_(__FILE__,line)(flags == exflags, "flags = %x, expected %x\n", flags, exflags);
 }
 
 #define test_http_version(a) _test_http_version(__LINE__,a)
@@ -6093,15 +6082,33 @@ static void init_status_tests(void)
 
 static void WINAPI header_cb( HINTERNET handle, DWORD_PTR ctx, DWORD status, LPVOID info, DWORD len )
 {
-    if (status == INTERNET_STATUS_REQUEST_COMPLETE) SetEvent( (HANDLE)ctx );
+    BOOL ret;
+    DWORD index, size;
+    char buf[256];
+
+    if (status == INTERNET_STATUS_SENDING_REQUEST)
+    {
+        ret = HttpAddRequestHeadersA( handle, "winetest: winetest", ~0u, HTTP_ADDREQ_FLAG_ADD );
+        ok( ret, "HttpAddRequestHeadersA failed %u\n", GetLastError() );
+        SetEvent( (HANDLE)ctx );
+    }
+    else if (status == INTERNET_STATUS_REQUEST_SENT)
+    {
+        index = 0;
+        size = sizeof(buf);
+        ret = HttpQueryInfoA( handle, HTTP_QUERY_RAW_HEADERS_CRLF|HTTP_QUERY_FLAG_REQUEST_HEADERS,
+                              buf, &size, &index );
+        ok( ret, "HttpQueryInfoA failed %u\n", GetLastError() );
+        ok( strstr( buf, "winetest: winetest" ) != NULL, "header missing\n" );
+        SetEvent( (HANDLE)ctx );
+    }
 }
 
 static void test_concurrent_header_access(void)
 {
     HINTERNET ses, con, req;
-    DWORD index, len, err;
+    DWORD err;
     BOOL ret;
-    char buf[128];
     HANDLE wait = CreateEventW( NULL, FALSE, FALSE, NULL );
 
     ses = InternetOpenA( "winetest", 0, NULL, NULL, INTERNET_FLAG_ASYNC );
@@ -6122,16 +6129,7 @@ static void test_concurrent_header_access(void)
     ok( !ret, "HttpSendRequestA succeeded\n" );
     ok( err == ERROR_IO_PENDING, "got %u\n", ERROR_IO_PENDING );
 
-    ret = HttpAddRequestHeadersA( req, "winetest: winetest", ~0u, HTTP_ADDREQ_FLAG_ADD );
-    ok( ret, "HttpAddRequestHeadersA failed %u\n", GetLastError() );
-
-    index = 0;
-    len = sizeof(buf);
-    ret = HttpQueryInfoA( req, HTTP_QUERY_RAW_HEADERS_CRLF|HTTP_QUERY_FLAG_REQUEST_HEADERS,
-                          buf, &len, &index );
-    ok( ret, "HttpQueryInfoA failed %u\n", GetLastError() );
-    ok( strstr( buf, "winetest: winetest" ) != NULL, "header missing\n" );
-
+    WaitForSingleObject( wait, 5000 );
     WaitForSingleObject( wait, 5000 );
 
     InternetCloseHandle( req );
