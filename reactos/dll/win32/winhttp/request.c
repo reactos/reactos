@@ -2411,8 +2411,8 @@ static BOOL receive_response( request_t *request, BOOL async )
         {
             if (request->hdr.disable_flags & WINHTTP_DISABLE_AUTHENTICATION) break;
 
-            drain_content( request );
             if (!handle_authorization( request, status )) break;
+            drain_content( request );
 
             /* recurse synchronously */
             if ((ret = send_request( request, NULL, 0, request->optional, request->optional_len, 0, 0, FALSE ))) continue;
@@ -3052,7 +3052,7 @@ static HRESULT WINAPI winhttp_request_SetCredentials(
     DWORD target, scheme = WINHTTP_AUTH_SCHEME_BASIC; /* FIXME: query supported schemes */
     DWORD err = ERROR_SUCCESS;
 
-    TRACE("%p, %s, %p\n", request, debugstr_w(username), password);
+    TRACE("%p, %s, %p, 0x%08x\n", request, debugstr_w(username), password, flags);
 
     EnterCriticalSection( &request->cs );
     if (request->state < REQUEST_STATE_OPEN)
