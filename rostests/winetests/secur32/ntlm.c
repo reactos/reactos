@@ -928,7 +928,7 @@ static void testSignSeal(void)
     static char             sec_pkg_name[] = "NTLM";
     SecBufferDesc           crypt;
     SecBuffer               data[2], fake_data[2], complex_data[4];
-    ULONG                   qop = 0;
+    ULONG                   qop = 0xdeadbeef;
     SecPkgContext_Sizes     ctxt_sizes;
     static char             test_user[] = "testuser",
                             workgroup[] = "WORKGROUP",
@@ -1041,12 +1041,13 @@ static void testSignSeal(void)
     ok(sec_status == SEC_E_MESSAGE_ALTERED,
             "VerifySignature returned %s, not SEC_E_MESSAGE_ALTERED.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     memcpy(data[0].pvBuffer, message_signature, data[0].cbBuffer);
-
     sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     if (sec_status == SEC_E_UNSUPPORTED_FUNCTION)
@@ -1093,6 +1094,7 @@ static void testSignSeal(void)
         ok(!memcmp(crypt.pBuffers[1].pvBuffer, message_binary,
                    crypt.pBuffers[1].cbBuffer),
            "Failed to decrypt message correctly.\n");
+        ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
     }
     else trace( "A different session key is being used\n" );
 
@@ -1130,6 +1132,7 @@ static void testSignSeal(void)
     sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_OK, "EncryptMessage returned %s, not SEC_E_OK.\n",
@@ -1161,6 +1164,7 @@ static void testSignSeal(void)
     sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
 
 end:
