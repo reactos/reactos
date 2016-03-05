@@ -703,7 +703,7 @@ DWORD get_cookie_header(const WCHAR *host, const WCHAR *path, WCHAR **ret)
     }
 
     LeaveCriticalSection(&cookie_cs);
-    return ERROR_SUCCESS;
+    return res;
 }
 
 /***********************************************************************

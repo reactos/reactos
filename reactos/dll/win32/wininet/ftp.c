@@ -2286,7 +2286,7 @@ BOOL WINAPI FtpCommandW( HINTERNET hConnect, BOOL fExpectResponse, DWORD dwFlags
     strcat(cmd, szCRLF);
     len--;
 
-    TRACE("Sending (%s) len(%d)\n", cmd, len);
+    TRACE("Sending (%s) len(%d)\n", debugstr_a(cmd), len);
     while ((nBytesSent < len) && (nRC != -1))
     {
         nRC = sock_send(lpwfs->sndSocket, cmd + nBytesSent, len - nBytesSent, 0);
@@ -2705,7 +2705,7 @@ static BOOL FTP_SendCommandA(INT nSocket, FTP_COMMAND ftpCmd, LPCSTR lpszParam,
 	sprintf(buf, "%s%s%s%s", szFtpCommands[ftpCmd], dwParamLen ? " " : "",
 		dwParamLen ? lpszParam : "", szCRLF);
 
-	TRACE("Sending (%s) len(%d)\n", buf, len);
+	TRACE("Sending (%s) len(%d)\n", debugstr_a(buf), len);
 	while((nBytesSent < len) && (nRC != -1))
 	{
 		nRC = sock_send(nSocket, buf+nBytesSent, len - nBytesSent, 0);
