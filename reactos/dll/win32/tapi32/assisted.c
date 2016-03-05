@@ -46,7 +46,7 @@ DWORD WINAPI tapiGetLocationInfoW(LPWSTR countrycode, LPWSTR citycode)
          'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
          'T','e','l','e','p','h','o','n','y','\\','L','o','c','a','t','i','o','n','s',0};
 
-    if(!RegOpenKeyW(HKEY_LOCAL_MACHINE, locations_keyW, &hkey) != ERROR_SUCCESS) {
+    if(RegOpenKeyW(HKEY_LOCAL_MACHINE, locations_keyW, &hkey) == ERROR_SUCCESS) {
         valsize = sizeof( DWORD);
         if(!RegQueryValueExW(hkey, currentidW, 0, &type, (LPBYTE) &currid, &valsize) &&
            type == REG_DWORD) {
