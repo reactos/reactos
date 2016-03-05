@@ -101,15 +101,9 @@ static void ok_pos_(IXmlReader *reader, int line, int pos, int line_broken,
         broken_state = broken((line_broken == -1 ? line : line_broken) == l &&
                               (pos_broken == -1 ? pos : pos_broken) == p);
 
-    if (todo)
-        todo_wine
+    todo_wine_if (todo)
         ok_(__FILE__, _line_)((l == line && pos == p) || broken_state,
                             "Expected (%d,%d), got (%d,%d)\n", line, pos, l, p);
-    else
-    {
-        ok_(__FILE__, _line_)((l == line && pos == p) || broken_state,
-                            "Expected (%d,%d), got (%d,%d)\n", line, pos, l, p);
-    }
 }
 #define ok_pos(reader, l, p, l_brk, p_brk, todo) ok_pos_(reader, l, p, l_brk, p_brk, todo, __LINE__)
 
@@ -152,12 +146,8 @@ static void ok_iids_(const input_iids_t *iids, const IID **expected, const IID *
 
     while (expected[i++]) size++;
 
-    if (todo) {
-        todo_wine
-            ok_(__FILE__, line)(iids->count == size, "Sequence size mismatch (%d), got (%d)\n", size, iids->count);
-    }
-    else
-       ok_(__FILE__, line)(iids->count == size, "Sequence size mismatch (%d), got (%d)\n", size, iids->count);
+    todo_wine_if (todo)
+        ok_(__FILE__, line)(iids->count == size, "Sequence size mismatch (%d), got (%d)\n", size, iids->count);
 
     if (iids->count != size) return;
 
@@ -252,13 +242,7 @@ static void test_read_state_(IXmlReader *reader, XmlReadState expected,
     else
         broken_state = broken(exp_broken == state);
 
-    if (todo)
-    {
-    todo_wine
-        ok_(__FILE__, line)(state == expected || broken_state, "Expected (%s), got (%s)\n",
-                                   state_to_str(expected), state_to_str(state));
-    }
-    else
+    todo_wine_if (todo)
         ok_(__FILE__, line)(state == expected || broken_state, "Expected (%s), got (%s)\n",
                                    state_to_str(expected), state_to_str(state));
 }
@@ -1520,14 +1504,7 @@ static void test_read_cdata(void)
             ok(hr == S_OK, "got 0x%08x\n", hr);
 
             str_exp = a2w(test->value);
-            if (test->todo)
-            {
-            todo_wine {
-                ok(len == strlen(test->value), "got %u\n", len);
-                ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
-            }
-            }
-            else
+            todo_wine_if (test->todo)
             {
                 ok(len == strlen(test->value), "got %u\n", len);
                 ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
@@ -1620,14 +1597,7 @@ static void test_read_text(void)
             ok(hr == S_OK, "got 0x%08x\n", hr);
 
             str_exp = a2w(test->value);
-            if (test->todo)
-            {
-            todo_wine {
-                ok(len == strlen(test->value), "got %u\n", len);
-                ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
-            }
-            }
-            else
+            todo_wine_if (test->todo)
             {
                 ok(len == strlen(test->value), "got %u\n", len);
                 ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
