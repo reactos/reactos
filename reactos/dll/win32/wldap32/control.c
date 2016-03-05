@@ -258,15 +258,37 @@ INT CDECL ldap_create_vlv_controlW( WLDAP32_LDAP *ld, WLDAP32_LDAPVLVInfo *info,
     return ret;
 }
 
+static inline void bv_val_dup( const struct WLDAP32_berval *src, struct WLDAP32_berval *dst )
+{
+    dst->bv_val = HeapAlloc( GetProcessHeap(), 0, src->bv_len );
+    if (dst->bv_val)
+    {
+        memcpy( dst->bv_val, src->bv_val, src->bv_len );
+        dst->bv_len = src->bv_len;
+    }
+    else
+        dst->bv_len = 0;
+}
+
 /***********************************************************************
  *      ldap_encode_sort_controlA     (WLDAP32.@)
  *
  * See ldap_encode_sort_controlW.
  */
 ULONG CDECL ldap_encode_sort_controlA( WLDAP32_LDAP *ld, PLDAPSortKeyA *sortkeys,
-    PLDAPControlA control, BOOLEAN critical )
+    PLDAPControlA ret, BOOLEAN critical )
 {
-    return ldap_create_sort_controlA( ld, sortkeys, critical, &control );
+    LDAPControlA *control = NULL;
+    ULONG result;
+
+    if ((result = ldap_create_sort_controlA( ld, sortkeys, critical, &control )) == WLDAP32_LDAP_SUCCESS)
+    {
+        ret->ldctl_oid = strdupU(control->ldctl_oid);
+        bv_val_dup( &control->ldctl_value, &ret->ldctl_value );
+        ret->ldctl_iscritical = control->ldctl_iscritical;
+        ldap_control_freeA( control );
+    }
+    return result;
 }
 
 /***********************************************************************
@@ -292,9 +314,19 @@ ULONG CDECL ldap_encode_sort_controlA( WLDAP32_LDAP *ld, PLDAPSortKeyA *sortkeys
  *  ldap_create_sort_control instead.
  */
 ULONG CDECL ldap_encode_sort_controlW( WLDAP32_LDAP *ld, PLDAPSortKeyW *sortkeys,
-    PLDAPControlW control, BOOLEAN critical )
+    PLDAPControlW ret, BOOLEAN critical )
 {
-    return ldap_create_sort_controlW( ld, sortkeys, critical, &control );
+    LDAPControlW *control = NULL;
+    ULONG result;
+
+    if ((result = ldap_create_sort_controlW( ld, sortkeys, critical, &control )) == WLDAP32_LDAP_SUCCESS)
+    {
+        ret->ldctl_oid = strdupW(control->ldctl_oid);
+        bv_val_dup( &control->ldctl_value, &ret->ldctl_value );
+        ret->ldctl_iscritical = control->ldctl_iscritical;
+        ldap_control_freeW( control );
+    }
+    return result;
 }
 
 /***********************************************************************
