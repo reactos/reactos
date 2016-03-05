@@ -1311,14 +1311,14 @@ static void test_CopyBindInfo(void)
     memset(src, 0, sizeof(BINDINFO[2]));
     memset(dest, 0xde, sizeof(BINDINFO[2]));
     hres = pCopyBindInfo(src, dest);
-    ok(hres == E_INVALIDARG, "CopyBindInfo retuned: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "CopyBindInfo returned: %08x, expected E_INVALIDARG\n", hres);
 
     memset(src, 0, sizeof(BINDINFO[2]));
     memset(dest, 0xde, sizeof(BINDINFO[2]));
     src[0].cbSize = sizeof(BINDINFO);
     dest[0].cbSize = 0;
     hres = pCopyBindInfo(src, dest);
-    ok(hres == E_INVALIDARG, "CopyBindInfo retuned: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "CopyBindInfo returned: %08x, expected E_INVALIDARG\n", hres);
 
     memset(src, 0, sizeof(BINDINFO[2]));
     memset(dest, 0xde, sizeof(BINDINFO[2]));

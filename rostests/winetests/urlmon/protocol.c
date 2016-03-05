@@ -1382,7 +1382,7 @@ static HRESULT WINAPI BindInfo_GetBindString(IInternetBindInfo *iface, ULONG ulS
         CHECK_EXPECT(GetBindString_USER_AGENT);
         ok(cEl == 1, "cEl=%d, expected 1\n", cEl);
         if(pcElFetched) {
-            ok(*pcElFetched == 0, "*pcElFetch=%d, expectd 0\n", *pcElFetched);
+            ok(*pcElFetched == 0, "*pcElFetch=%d, expected 0\n", *pcElFetched);
             *pcElFetched = 1;
         }
         if(ppwzStr) {
@@ -1394,14 +1394,14 @@ static HRESULT WINAPI BindInfo_GetBindString(IInternetBindInfo *iface, ULONG ulS
         CHECK_EXPECT(GetBindString_POST_COOKIE);
         ok(cEl == 1, "cEl=%d, expected 1\n", cEl);
         if(pcElFetched)
-            ok(*pcElFetched == 0, "*pcElFetch=%d, expectd 0\n", *pcElFetched);
+            ok(*pcElFetched == 0, "*pcElFetch=%d, expected 0\n", *pcElFetched);
         return S_OK;
     case BINDSTRING_URL: {
         DWORD size;
 
         CHECK_EXPECT(GetBindString_URL);
         ok(cEl == 1, "cEl=%d, expected 1\n", cEl);
-        ok(*pcElFetched == 0, "*pcElFetch=%d, expectd 0\n", *pcElFetched);
+        ok(*pcElFetched == 0, "*pcElFetch=%d, expected 0\n", *pcElFetched);
         *pcElFetched = 1;
 
         size = (lstrlenW(binding_urls[tested_protocol])+1)*sizeof(WCHAR);

@@ -7437,13 +7437,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
     switch(prop->property) {
     case Uri_PROPERTY_FRAGMENT:
         hr = IUriBuilder_SetFragment(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetFragment returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetFragment returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7451,13 +7445,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_HOST:
         hr = IUriBuilder_SetHost(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetHost returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetHost returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7465,13 +7453,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_PASSWORD:
         hr = IUriBuilder_SetPassword(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetPassword returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetPassword returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7479,13 +7461,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_PATH:
         hr = IUriBuilder_SetPath(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetPath returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetPath returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7493,13 +7469,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_QUERY:
         hr = IUriBuilder_SetQuery(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetQuery returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetQuery returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7507,13 +7477,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_SCHEME_NAME:
         hr = IUriBuilder_SetSchemeName(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetSchemeName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetSchemeName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7521,13 +7485,7 @@ static void change_property(IUriBuilder *builder, const uri_builder_property *pr
         break;
     case Uri_PROPERTY_USER_NAME:
         hr = IUriBuilder_SetUserName(builder, valueW);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == prop->expected,
-                    "Error: IUriBuilder_SetUserName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, prop->expected, test_index);
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == prop->expected,
                 "Error: IUriBuilder_SetUserName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, prop->expected, test_index);
@@ -7594,15 +7552,9 @@ static void test_CreateUri_InvalidUri(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.flags, 0, &uri);
-        if(test.todo) {
-            todo_wine {
-                ok(hr == E_INVALIDARG, "Error: CreateUri returned 0x%08x, expected 0x%08x on invalid_uri_tests[%d].\n",
-                    hr, E_INVALIDARG, i);
-            }
-        } else {
+        todo_wine_if(test.todo)
             ok(hr == E_INVALIDARG, "Error: CreateUri returned 0x%08x, expected 0x%08x on invalid_uri_tests[%d].\n",
                 hr, E_INVALIDARG, i);
-        }
         if(uri) IUri_Release(uri);
 
         heap_free(uriW);
@@ -7651,15 +7603,9 @@ static void test_IUri_GetPropertyBSTR(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x. Failed on uri_tests[%d].\n",
-                        hr, test.create_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x. Failed on uri_tests[%d].\n",
                     hr, test.create_expected, i);
-        }
 
         if(SUCCEEDED(hr)) {
             DWORD j;
@@ -7670,17 +7616,7 @@ static void test_IUri_GetPropertyBSTR(void) {
                 uri_str_property prop = test.str_props[j];
 
                 hr = IUri_GetPropertyBSTR(uri, j, &received, 0);
-                if(prop.todo) {
-                    todo_wine {
-                        ok(hr == prop.expected, "GetPropertyBSTR returned 0x%08x, expected 0x%08x. On uri_tests[%d].str_props[%d].\n",
-                                hr, prop.expected, i, j);
-                    }
-                    todo_wine {
-                        ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
-                                "Expected %s but got %s on uri_tests[%d].str_props[%d].\n",
-                                prop.value, wine_dbgstr_w(received), i, j);
-                    }
-                } else {
+                todo_wine_if(prop.todo) {
                     ok(hr == prop.expected, "GetPropertyBSTR returned 0x%08x, expected 0x%08x. On uri_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
                     ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
@@ -7724,15 +7660,9 @@ static void test_IUri_GetPropertyDWORD(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x. Failed on uri_tests[%d].\n",
-                        hr, test.create_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x. Failed on uri_tests[%d].\n",
                     hr, test.create_expected, i);
-        }
 
         if(SUCCEEDED(hr)) {
             DWORD j;
@@ -7743,16 +7673,7 @@ static void test_IUri_GetPropertyDWORD(void) {
                 uri_dword_property prop = test.dword_props[j];
 
                 hr = IUri_GetPropertyDWORD(uri, j+Uri_PROPERTY_DWORD_START, &received, 0);
-                if(prop.todo) {
-                    todo_wine {
-                        ok(hr == prop.expected, "GetPropertyDWORD returned 0x%08x, expected 0x%08x. On uri_tests[%d].dword_props[%d].\n",
-                                hr, prop.expected, i, j);
-                    }
-                    todo_wine {
-                        ok(prop.value == received, "Expected %d but got %d on uri_tests[%d].dword_props[%d].\n",
-                                prop.value, received, i, j);
-                    }
-                } else {
+                todo_wine_if(prop.todo) {
                     ok(hr == prop.expected, "GetPropertyDWORD returned 0x%08x, expected 0x%08x. On uri_tests[%d].dword_props[%d].\n",
                             hr, prop.expected, i, j);
                     ok(prop.value == received, "Expected %d but got %d on uri_tests[%d].dword_props[%d].\n",
@@ -7831,15 +7752,9 @@ static void test_IUri_GetStrProperties(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                        hr, test.create_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                     hr, test.create_expected, i);
-        }
 
         if(SUCCEEDED(hr)) {
             uri_str_property prop;
@@ -7848,17 +7763,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetAbsoluteUri() tests. */
             prop = test.str_props[Uri_PROPERTY_ABSOLUTE_URI];
             hr = IUri_GetAbsoluteUri(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetAbsoluteUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
-                            "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetAbsoluteUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
@@ -7871,16 +7776,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetAuthority() tests. */
             prop = test.str_props[Uri_PROPERTY_AUTHORITY];
             hr = IUri_GetAuthority(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetAuthority returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetAuthority returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -7892,17 +7788,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetDisplayUri() tests. */
             prop = test.str_props[Uri_PROPERTY_DISPLAY_URI];
             hr = IUri_GetDisplayUri(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetDisplayUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
-                            "Error: Expected %s but got %s on uri_test[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetDisplayUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
@@ -7915,16 +7801,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetDomain() tests. */
             prop = test.str_props[Uri_PROPERTY_DOMAIN];
             hr = IUri_GetDomain(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetDomain returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetDomain returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -7936,16 +7813,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetExtension() tests. */
             prop = test.str_props[Uri_PROPERTY_EXTENSION];
             hr = IUri_GetExtension(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetExtension returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetExtension returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -7957,16 +7825,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetFragment() tests. */
             prop = test.str_props[Uri_PROPERTY_FRAGMENT];
             hr = IUri_GetFragment(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetFragment returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetFragment returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -7978,16 +7837,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetHost() tests. */
             prop = test.str_props[Uri_PROPERTY_HOST];
             hr = IUri_GetHost(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetHost returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetHost returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -7999,16 +7849,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetPassword() tests. */
             prop = test.str_props[Uri_PROPERTY_PASSWORD];
             hr = IUri_GetPassword(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetPassword returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetPassword returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8020,16 +7861,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetPath() tests. */
             prop = test.str_props[Uri_PROPERTY_PATH];
             hr = IUri_GetPath(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetPath returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetPath returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8041,16 +7873,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetPathAndQuery() tests. */
             prop = test.str_props[Uri_PROPERTY_PATH_AND_QUERY];
             hr = IUri_GetPathAndQuery(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetPathAndQuery returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetPathAndQuery returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8062,16 +7885,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetQuery() tests. */
             prop = test.str_props[Uri_PROPERTY_QUERY];
             hr = IUri_GetQuery(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetQuery returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetQuery returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8083,16 +7897,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetRawUri() tests. */
             prop = test.str_props[Uri_PROPERTY_RAW_URI];
             hr = IUri_GetRawUri(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetRawUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetRawUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8104,16 +7909,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetSchemeName() tests. */
             prop = test.str_props[Uri_PROPERTY_SCHEME_NAME];
             hr = IUri_GetSchemeName(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetSchemeName returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetSchemeName returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8125,16 +7921,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetUserInfo() tests. */
             prop = test.str_props[Uri_PROPERTY_USER_INFO];
             hr = IUri_GetUserInfo(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetUserInfo returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetUserInfo returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8146,16 +7933,7 @@ static void test_IUri_GetStrProperties(void) {
             /* GetUserName() tests. */
             prop = test.str_props[Uri_PROPERTY_USER_NAME];
             hr = IUri_GetUserName(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetUserName returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
-                            prop.value, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetUserName returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
@@ -8200,15 +7978,9 @@ static void test_IUri_GetDwordProperties(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                        hr, test.create_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                     hr, test.create_expected, i);
-        }
 
         if(SUCCEEDED(hr)) {
             uri_dword_property prop;
@@ -8222,15 +7994,7 @@ static void test_IUri_GetDwordProperties(void) {
             /* GetHostType() tests. */
             prop = test.dword_props[Uri_PROPERTY_HOST_TYPE-Uri_PROPERTY_DWORD_START];
             hr = IUri_GetHostType(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetHostType returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetHostType returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
@@ -8240,15 +8004,7 @@ static void test_IUri_GetDwordProperties(void) {
             /* GetPort() tests. */
             prop = test.dword_props[Uri_PROPERTY_PORT-Uri_PROPERTY_DWORD_START];
             hr = IUri_GetPort(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetPort returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetPort returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
@@ -8258,15 +8014,7 @@ static void test_IUri_GetDwordProperties(void) {
             /* GetScheme() tests. */
             prop = test.dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START];
             hr = IUri_GetScheme(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetScheme returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetScheme returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
@@ -8276,15 +8024,7 @@ static void test_IUri_GetDwordProperties(void) {
             /* GetZone() tests. */
             prop = test.dword_props[Uri_PROPERTY_ZONE-Uri_PROPERTY_DWORD_START];
             hr = IUri_GetZone(uri, &received);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.expected, "Error: GetZone returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                            hr, prop.expected, i);
-                }
-                todo_wine {
-                    ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
-                }
-            } else {
+            todo_wine_if(prop.todo) {
                 ok(hr == prop.expected, "Error: GetZone returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
                 ok(received == prop.value, "Error: Expected %d but got %d on uri_tests[%d].\n", prop.value, received, i);
@@ -8324,15 +8064,9 @@ static void test_IUri_GetPropertyLength(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
-                        hr, test.create_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x on uri_test[%d].\n",
                     hr, test.create_expected, i);
-        }
 
         if(SUCCEEDED(hr)) {
             DWORD j;
@@ -8347,17 +8081,7 @@ static void test_IUri_GetPropertyLength(void) {
                 receivedLen = -1;
 
                 hr = IUri_GetPropertyLength(uri, j, &receivedLen, 0);
-                if(prop.todo) {
-                    todo_wine {
-                        ok(hr == prop.expected, "Error: GetPropertyLength returned 0x%08x, expected 0x%08x on uri_tests[%d].str_props[%d].\n",
-                                hr, prop.expected, i, j);
-                    }
-                    todo_wine {
-                        ok(receivedLen == expectedLen || broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
-                                "Error: Expected a length of %d but got %d on uri_tests[%d].str_props[%d].\n",
-                                expectedLen, receivedLen, i, j);
-                    }
-                } else {
+                todo_wine_if(prop.todo) {
                     ok(hr == prop.expected, "Error: GetPropertyLength returned 0x%08x, expected 0x%08x on uri_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
                     ok(receivedLen == expectedLen || broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
@@ -8410,13 +8134,8 @@ static void test_IUri_GetProperties(void) {
 
         uriW = a2w(test.uri);
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
-        }
 
         if(SUCCEEDED(hr)) {
             DWORD received = 0, expected_props;
@@ -8463,13 +8182,8 @@ static void test_IUri_HasProperty(void) {
         uriW = a2w(test.uri);
 
         hr = pCreateUri(uriW, test.create_flags, 0, &uri);
-        if(test.create_todo) {
-            todo_wine {
-                ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
-            }
-        } else {
+        todo_wine_if(test.create_todo)
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
-        }
 
         if(SUCCEEDED(hr)) {
             DWORD expected_props, j;
@@ -8540,10 +8254,7 @@ static void test_IUri_IsEqual(void) {
 
         equal = -1;
         hres = IUri_IsEqual(uriA, uriB, &equal);
-        if(test.todo) todo_wine {
-            ok(hres == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n", hres, S_OK, i);
-            ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
-        } else {
+        todo_wine_if(test.todo) {
             ok(hres == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n", hres, S_OK, i);
             ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
         }
@@ -8602,13 +8313,7 @@ static void test_CreateUriWithFragment(void) {
         fragW = a2w(test.fragment);
 
         hr = pCreateUriWithFragment(uriW, fragW, test.create_flags, 0, &uri);
-        if(test.expected_todo) {
-            todo_wine {
-                ok(hr == test.create_expected,
-                    "Error: CreateUriWithFragment returned 0x%08x, expected 0x%08x on uri_fragment_tests[%d].\n",
-                    hr, test.create_expected, i);
-            }
-        } else
+        todo_wine_if(test.expected_todo)
             ok(hr == test.create_expected,
                 "Error: CreateUriWithFragment returned 0x%08x, expected 0x%08x on uri_fragment_tests[%d].\n",
                 hr, test.create_expected, i);
@@ -8617,18 +8322,7 @@ static void test_CreateUriWithFragment(void) {
             BSTR received = NULL;
 
             hr = IUri_GetAbsoluteUri(uri, &received);
-            if(test.expected_todo) {
-                todo_wine {
-                    ok(hr == S_OK,
-                        "Error: GetAbsoluteUri returned 0x%08x, expected 0x%08x on uri_fragment_tests[%d].\n",
-                        hr, S_OK, i);
-                }
-                todo_wine {
-                    ok(!strcmp_aw(test.expected_uri, received),
-                        "Error: Expected %s but got %s on uri_fragment_tests[%d].\n",
-                        test.expected_uri, wine_dbgstr_w(received), i);
-                }
-            } else {
+            todo_wine_if(test.expected_todo) {
                 ok(hr == S_OK, "Error: GetAbsoluteUri returned 0x%08x, expected 0x%08x on uri_fragment_tests[%d].\n",
                     hr, S_OK, i);
                 ok(!strcmp_aw(test.expected_uri, received), "Error: Expected %s but got %s on uri_fragment_tests[%d].\n",
@@ -8680,17 +8374,10 @@ static void test_IUriBuilder_CreateUri(IUriBuilder *builder, const uri_builder_t
     IUri *uri = NULL;
 
     hr = IUriBuilder_CreateUri(builder, test->uri_flags, 0, 0, &uri);
-    if(test->uri_todo) {
-        todo_wine {
-            ok(hr == test->uri_hres,
-                "Error: IUriBuilder_CreateUri returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                hr, test->uri_hres, test_index);
-        }
-    } else {
+    todo_wine_if(test->uri_todo)
         ok(hr == test->uri_hres,
             "Error: IUriBuilder_CreateUri returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
             hr, test->uri_hres, test_index);
-    }
 
     if(SUCCEEDED(hr)) {
         DWORD i;
@@ -8700,29 +8387,15 @@ static void test_IUriBuilder_CreateUri(IUriBuilder *builder, const uri_builder_t
             BSTR received = NULL;
 
             hr = IUri_GetPropertyBSTR(uri, i, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(!strcmp_aw(prop.expected, received),
-                            "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
-                            prop.expected, wine_dbgstr_w(received), test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(!strcmp_aw(prop.expected, received),
                         "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
                         prop.expected, wine_dbgstr_w(received), test_index, i);
-                }
             }
             SysFreeString(received);
         }
@@ -8732,29 +8405,15 @@ static void test_IUriBuilder_CreateUri(IUriBuilder *builder, const uri_builder_t
             DWORD received = -2;
 
             hr = IUri_GetPropertyDWORD(uri, i+Uri_PROPERTY_DWORD_START, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(received == prop.expected,
-                            "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                            prop.expected, received, test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(received == prop.expected,
                         "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
                         prop.expected, received, test_index, i);
-                }
             }
         }
     }
@@ -8767,17 +8426,10 @@ static void test_IUriBuilder_CreateUriSimple(IUriBuilder *builder, const uri_bui
     IUri *uri = NULL;
 
     hr = IUriBuilder_CreateUriSimple(builder, test->uri_simple_encode_flags, 0, &uri);
-    if(test->uri_simple_todo) {
-        todo_wine {
-            ok(hr == test->uri_simple_hres,
-                "Error: IUriBuilder_CreateUriSimple returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                hr, test->uri_simple_hres, test_index);
-        }
-    } else {
+    todo_wine_if(test->uri_simple_todo)
         ok(hr == test->uri_simple_hres,
             "Error: IUriBuilder_CreateUriSimple returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
             hr, test->uri_simple_hres, test_index);
-    }
 
     if(SUCCEEDED(hr)) {
         DWORD i;
@@ -8787,29 +8439,15 @@ static void test_IUriBuilder_CreateUriSimple(IUriBuilder *builder, const uri_bui
             BSTR received = NULL;
 
             hr = IUri_GetPropertyBSTR(uri, i, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(!strcmp_aw(prop.expected, received),
-                            "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
-                            prop.expected, wine_dbgstr_w(received), test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(!strcmp_aw(prop.expected, received),
                         "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
                         prop.expected, wine_dbgstr_w(received), test_index, i);
-                }
             }
             SysFreeString(received);
         }
@@ -8819,29 +8457,15 @@ static void test_IUriBuilder_CreateUriSimple(IUriBuilder *builder, const uri_bui
             DWORD received = -2;
 
             hr = IUri_GetPropertyDWORD(uri, i+Uri_PROPERTY_DWORD_START, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(received == prop.expected,
-                            "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                            prop.expected, received, test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(received == prop.expected,
                         "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
                         prop.expected, received, test_index, i);
-                }
             }
         }
     }
@@ -8855,17 +8479,10 @@ static void test_IUriBuilder_CreateUriWithFlags(IUriBuilder *builder, const uri_
 
     hr = IUriBuilder_CreateUriWithFlags(builder, test->uri_with_flags, test->uri_with_builder_flags,
                                         test->uri_with_encode_flags, 0, &uri);
-    if(test->uri_with_todo) {
-        todo_wine {
-            ok(hr == test->uri_with_hres,
-                "Error: IUriBuilder_CreateUriWithFlags returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                hr, test->uri_with_hres, test_index);
-        }
-    } else {
+    todo_wine_if(test->uri_with_todo)
         ok(hr == test->uri_with_hres,
             "Error: IUriBuilder_CreateUriWithFlags returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
             hr, test->uri_with_hres, test_index);
-    }
 
     if(SUCCEEDED(hr)) {
         DWORD i;
@@ -8875,29 +8492,15 @@ static void test_IUriBuilder_CreateUriWithFlags(IUriBuilder *builder, const uri_
             BSTR received = NULL;
 
             hr = IUri_GetPropertyBSTR(uri, i, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_str_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(!strcmp_aw(prop.expected, received),
-                            "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
-                            prop.expected, wine_dbgstr_w(received), test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(!strcmp_aw(prop.expected, received),
                         "Error: Expected %s but got %s instead on uri_builder_tests[%d].expected_str_props[%d].\n",
                         prop.expected, wine_dbgstr_w(received), test_index, i);
-                }
             }
             SysFreeString(received);
         }
@@ -8907,29 +8510,15 @@ static void test_IUriBuilder_CreateUriWithFlags(IUriBuilder *builder, const uri_
             DWORD received = -2;
 
             hr = IUri_GetPropertyDWORD(uri, i+Uri_PROPERTY_DWORD_START, &received, 0);
-            if(prop.todo) {
-                todo_wine {
-                    ok(hr == prop.result,
-                        "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                        hr, prop.result, test_index, i);
-                }
-            } else {
+            todo_wine_if(prop.todo)
                 ok(hr == prop.result,
                     "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].expected_dword_props[%d].\n",
                     hr, prop.result, test_index, i);
-            }
             if(SUCCEEDED(hr)) {
-                if(prop.todo) {
-                    todo_wine {
-                        ok(received == prop.expected,
-                            "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
-                            prop.expected, received, test_index, i);
-                    }
-                } else {
+                todo_wine_if(prop.todo)
                     ok(received == prop.expected,
                         "Error: Expected %d but got %d instead on uri_builder_tests[%d].expected_dword_props[%d].\n",
                         prop.expected, received, test_index, i);
-                }
             }
         }
     }
@@ -9169,32 +8758,17 @@ static void test_IUriBuilder_GetFragment(IUriBuilder *builder, const uri_builder
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetFragment(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetFragment returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetFragment returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9279,32 +8853,17 @@ static void test_IUriBuilder_GetHost(IUriBuilder *builder, const uri_builder_tes
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetHost(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetHost returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetHost returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9389,32 +8948,17 @@ static void test_IUriBuilder_GetPassword(IUriBuilder *builder, const uri_builder
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetPassword(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetPassword returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetPassword returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9499,32 +9043,17 @@ static void test_IUriBuilder_GetPath(IUriBuilder *builder, const uri_builder_tes
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetPath(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetPath returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetPath returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9597,37 +9126,19 @@ static void test_IUriBuilder_GetPort(IUriBuilder *builder, const uri_builder_tes
     DWORD received = -1;
 
     if(test->port_prop.change) {
-        DWORD expected = test->port_prop.value;
-
         hr = IUriBuilder_GetPort(builder, &has_port, &received);
-        if(test->port_prop.todo) {
-            todo_wine {
-                ok(hr == S_OK,
-                    "Error: IUriBuilder_GetPort returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, S_OK, test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(has_port == test->port_prop.set,
-                        "Error: Expected has_port to be %d but was %d instead on uri_builder_tests[%d].\n",
-                        test->port_prop.set, has_port, test_index);
-                }
-                todo_wine {
-                    ok(received == expected,
-                        "Error: Expected received to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected, received, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(test->port_prop.todo) {
             ok(hr == S_OK,
                 "Error: IUriBuilder_GetPort returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, S_OK, test_index);
-            ok(has_port == test->port_prop.set,
-                "Error: Expected has_port to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                test->port_prop.set, has_port, test_index);
-            ok(received == test->port_prop.value,
-                "Error: Expected port to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                test->port_prop.value, received, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(has_port == test->port_prop.set,
+                   "Error: Expected has_port to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   test->port_prop.set, has_port, test_index);
+                ok(received == test->port_prop.value,
+                   "Error: Expected port to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   test->port_prop.value, received, test_index);
+            }
         }
     } else {
         IUri *uri = NULL;
@@ -9694,32 +9205,17 @@ static void test_IUriBuilder_GetQuery(IUriBuilder *builder, const uri_builder_te
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetQuery(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetQuery returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetQuery returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9804,32 +9300,17 @@ static void test_IUriBuilder_GetSchemeName(IUriBuilder *builder, const uri_build
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetSchemeName(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetSchemeName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetSchemeName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9914,32 +9395,17 @@ static void test_IUriBuilder_GetUserName(IUriBuilder *builder, const uri_builder
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
         DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetUserName(builder, &len, &received);
-        if(prop->todo) {
-            todo_wine {
-                ok(hr == (expected ? S_OK : S_FALSE),
-                    "Error: IUriBuilder_GetUserName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, (expected ? S_OK : S_FALSE), test_index);
-            }
-            if(SUCCEEDED(hr)) {
-                todo_wine {
-                    ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                        expected, wine_dbgstr_w(received), test_index);
-                }
-                todo_wine {
-                    ok(expected_len == len,
-                        "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        expected_len, len, test_index);
-                }
-            }
-        } else {
+        todo_wine_if(prop->todo) {
             ok(hr == (expected ? S_OK : S_FALSE),
                 "Error: IUriBuilder_GetUserName returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, (expected ? S_OK : S_FALSE), test_index);
-            ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
-                expected, wine_dbgstr_w(received), test_index);
-            ok(expected_len == len,
-                "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                expected_len, len, test_index);
+            if(SUCCEEDED(hr)) {
+                ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
+                   expected, wine_dbgstr_w(received), test_index);
+                ok(expected_len == len,
+                   "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
+                   expected_len, len, test_index);
+            }
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -10024,17 +9490,10 @@ static void test_IUriBuilder(void) {
             if(FAILED(hr)) continue;
         }
         hr = pCreateIUriBuilder(uri, 0, 0, &builder);
-        if(test.create_builder_todo) {
-            todo_wine {
-                ok(hr == test.create_builder_expected,
-                    "Error: CreateIUriBuilder returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                    hr, test.create_builder_expected, i);
-            }
-        } else {
+        todo_wine_if(test.create_builder_todo)
             ok(hr == test.create_builder_expected,
                 "Error: CreateIUriBuilder returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                 hr, test.create_builder_expected, i);
-        }
         if(SUCCEEDED(hr)) {
             DWORD j;
             BOOL modified = FALSE, received = FALSE;
@@ -10058,17 +9517,10 @@ static void test_IUriBuilder(void) {
             if(test.port_prop.change) {
                 hr = IUriBuilder_SetPort(builder, test.port_prop.set, test.port_prop.value);
                 modified = TRUE;
-                if(test.port_prop.todo) {
-                    todo_wine {
-                        ok(hr == test.port_prop.expected,
-                            "Error: IUriBuilder_SetPort returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
-                            hr, test.port_prop.expected, i);
-                    }
-                } else {
+                todo_wine_if(test.port_prop.todo)
                     ok(hr == test.port_prop.expected,
                         "Error: IUriBuilder_SetPort returned 0x%08x, expected 0x%08x on uri_builder_tests[%d].\n",
                         hr, test.port_prop.expected, i);
-                }
             }
 
             hr = IUriBuilder_HasBeenModified(builder, &received);
@@ -10388,45 +9840,25 @@ static void test_IUriBuilder_RemoveProperties(void) {
             builder = NULL;
 
             hr = pCreateIUriBuilder(uri, 0, 0, &builder);
-            if(test.create_builder_todo) {
-                todo_wine {
-                    ok(hr == test.create_builder_expected,
-                        "Error: CreateIUriBuilder returned 0x%08x, expected 0x%08x on test %d.\n",
-                        hr, test.create_builder_expected, i);
-                }
-            } else {
+            todo_wine_if(test.create_builder_todo)
                 ok(hr == test.create_builder_expected,
                     "Error: CreateIUriBuilder returned 0x%08x, expected 0x%08x on test %d.\n",
                     hr, test.create_builder_expected, i);
-            }
+
             if(SUCCEEDED(hr)) {
                 hr = IUriBuilder_RemoveProperties(builder, test.remove_properties);
-                if(test.remove_todo) {
-                    todo_wine {
-                        ok(hr == test.remove_expected,
-                            "Error: IUriBuilder_RemoveProperties returned 0x%08x, expected 0x%08x on test %d.\n",
-                            hr, test.remove_expected, i);
-                    }
-                } else {
+                todo_wine_if(test.remove_todo)
                     ok(hr == test.remove_expected,
                         "Error: IUriBuilder returned 0x%08x, expected 0x%08x on test %d.\n",
                         hr, test.remove_expected, i);
-                }
                 if(SUCCEEDED(hr)) {
                     IUri *result = NULL;
 
                     hr = IUriBuilder_CreateUri(builder, test.expected_flags, 0, 0, &result);
-                    if(test.expected_todo) {
-                        todo_wine {
-                            ok(hr == test.expected_hres,
-                                "Error: IUriBuilder_CreateUri returned 0x%08x, expected 0x%08x on test %d.\n",
-                                hr, test.expected_hres, i);
-                        }
-                    } else {
+                    todo_wine_if(test.expected_todo)
                         ok(hr == test.expected_hres,
                             "Error: IUriBuilder_CreateUri returned 0x%08x, expected 0x%08x on test %d.\n",
                             hr, test.expected_hres, i);
-                    }
                     if(SUCCEEDED(hr)) {
                         BSTR received = NULL;
 
@@ -10607,17 +10039,10 @@ static void test_CoInternetCombineIUri(void) {
                 result = NULL;
 
                 hr = pCoInternetCombineIUri(base, relative, uri_combine_tests[i].combine_flags, &result, 0);
-                if(uri_combine_tests[i].todo) {
-                    todo_wine {
-                        ok(hr == uri_combine_tests[i].expected,
-                            "Error: CoInternetCombineIUri returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].\n",
-                            hr, uri_combine_tests[i].expected, i);
-                    }
-                } else {
+                todo_wine_if(uri_combine_tests[i].todo)
                     ok(hr == uri_combine_tests[i].expected,
                         "Error: CoInternetCombineIUri returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].\n",
                         hr, uri_combine_tests[i]. expected, i);
-                }
                 if(SUCCEEDED(hr)) {
                     DWORD j;
 
@@ -10626,19 +10051,7 @@ static void test_CoInternetCombineIUri(void) {
                         BSTR received;
 
                         hr = IUri_GetPropertyBSTR(result, j, &received, 0);
-                        if(prop.todo) {
-                            todo_wine {
-                                ok(hr == prop.expected,
-                                    "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].str_props[%d].\n",
-                                    hr, prop.expected, i, j);
-                            }
-                            todo_wine {
-                                ok(!strcmp_aw(prop.value, received) ||
-                                   broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
-                                    "Error: Expected \"%s\" but got %s instead on uri_combine_tests[%d].str_props[%d].\n",
-                                    prop.value, wine_dbgstr_w(received), i, j);
-                            }
-                        } else {
+                        todo_wine_if(prop.todo) {
                             ok(hr == prop.expected,
                                 "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].str_props[%d].\n",
                                 hr, prop.expected, i, j);
@@ -10655,17 +10068,7 @@ static void test_CoInternetCombineIUri(void) {
                         DWORD received;
 
                         hr = IUri_GetPropertyDWORD(result, j+Uri_PROPERTY_DWORD_START, &received, 0);
-                        if(prop.todo) {
-                            todo_wine {
-                                ok(hr == prop.expected,
-                                    "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
-                                    hr, prop.expected, i, j);
-                            }
-                            todo_wine {
-                                ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
-                                    prop.value, received, i, j);
-                            }
-                        } else {
+                        todo_wine_if(prop.todo) {
                             ok(hr == prop.expected || broken(prop.broken_combine_hres && hr == S_FALSE),
                                 "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
                                 hr, prop.expected, i, j);
@@ -10923,17 +10326,10 @@ static void test_CoInternetCombineUrlEx(void) {
 
             hr = pCoInternetCombineUrlEx(base, relativeW, uri_combine_tests[i].combine_flags,
                                          &result, 0);
-            if(uri_combine_tests[i].todo) {
-                todo_wine {
-                    ok(hr == uri_combine_tests[i].expected,
-                        "Error: CoInternetCombineUrlEx returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].\n",
-                        hr, uri_combine_tests[i].expected, i);
-                }
-            } else {
+            todo_wine_if(uri_combine_tests[i].todo)
                 ok(hr == uri_combine_tests[i].expected,
                     "Error: CoInternetCombineUrlEx returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].\n",
                     hr, uri_combine_tests[i]. expected, i);
-            }
             if(SUCCEEDED(hr)) {
                 DWORD j;
 
@@ -10943,19 +10339,7 @@ static void test_CoInternetCombineUrlEx(void) {
                     LPCSTR value = (prop.value_ex) ? prop.value_ex : prop.value;
 
                     hr = IUri_GetPropertyBSTR(result, j, &received, 0);
-                    if(prop.todo) {
-                        todo_wine {
-                            ok(hr == prop.expected,
-                                "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].str_props[%d].\n",
-                                hr, prop.expected, i, j);
-                        }
-                        todo_wine {
-                            ok(!strcmp_aw(value, received) ||
-                               broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
-                                "Error: Expected \"%s\" but got %s instead on uri_combine_tests[%d].str_props[%d].\n",
-                                value, wine_dbgstr_w(received), i, j);
-                        }
-                    } else {
+                    todo_wine_if(prop.todo) {
                         ok(hr == prop.expected,
                             "Error: IUri_GetPropertyBSTR returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
@@ -10972,17 +10356,7 @@ static void test_CoInternetCombineUrlEx(void) {
                     DWORD received;
 
                     hr = IUri_GetPropertyDWORD(result, j+Uri_PROPERTY_DWORD_START, &received, 0);
-                    if(prop.todo) {
-                        todo_wine {
-                            ok(hr == prop.expected,
-                                "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
-                                hr, prop.expected, i, j);
-                        }
-                        todo_wine {
-                            ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
-                                prop.value, received, i, j);
-                        }
-                    } else {
+                    todo_wine_if(prop.todo) {
                         ok(hr == prop.expected || broken(prop.broken_combine_hres && hr == S_FALSE),
                             "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
                             hr, prop.expected, i, j);
@@ -11111,17 +10485,10 @@ static void test_CoInternetParseIUri(void) {
             DWORD result_len = -1;
 
             hr = pCoInternetParseIUri(uri, test.action, test.flags, result, INTERNET_MAX_URL_LENGTH+1, &result_len, 0);
-            if(test.todo) {
-                todo_wine {
-                    ok(hr == test.expected,
-                        "Error: CoInternetParseIUri returned 0x%08x, expected 0x%08x on uri_parse_tests[%d].\n",
-                        hr, test.expected, i);
-                }
-            } else {
+            todo_wine_if(test.todo)
                 ok(hr == test.expected,
                     "Error: CoInternetParseIUri returned 0x%08x, expected 0x%08x on uri_parse_tests[%d].\n",
                     hr, test.expected, i);
-            }
             if(SUCCEEDED(hr)) {
                 DWORD len = lstrlenA(test.property);
                 ok(!strcmp_aw(test.property, result),
