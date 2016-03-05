@@ -1199,7 +1199,6 @@ DWORD WINAPI VerFindFileA(
 
     GetSystemDirectoryA(systemDir, sizeof(systemDir));
     curDir = "";
-    destDir = "";
 
     if(flags & VFFF_ISSHAREDFILE)
     {
@@ -1296,7 +1295,6 @@ DWORD WINAPI VerFindFileW( DWORD flags,LPCWSTR lpszFilename,LPCWSTR lpszWinDir,
 
     GetSystemDirectoryW(systemDir, sizeof(systemDir)/sizeof(WCHAR));
     curDir = &emptyW;
-    destDir = &emptyW;
 
     if(flags & VFFF_ISSHAREDFILE)
     {
