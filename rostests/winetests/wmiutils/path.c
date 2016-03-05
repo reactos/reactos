@@ -140,8 +140,8 @@ static void test_IWbemPath_SetText(void)
     for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
     {
         hr = IWbemPath_SetText( path, test[i].mode, test[i].path );
-        if (test[i].todo) todo_wine ok( hr == test[i].ret, "%u got %08x\n", i, hr );
-        else ok( hr == test[i].ret, "%u got %08x\n", i, hr );
+        todo_wine_if (test[i].todo)
+            ok( hr == test[i].ret, "%u got %08x\n", i, hr );
 
         if (test[i].ret == S_OK)
         {
