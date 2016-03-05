@@ -49,7 +49,7 @@ typedef NTSTATUS *PNTSTATUS;
 #define BCRYPT_HASH_BLOCK_LENGTH L"HashBlockLength"
 #define BCRYPT_HASH_LENGTH L"HashDigestLength"
 #define BCRYPT_HASH_OID_LIST L"HashOIDList"
-#define BCRYPT_KEY_LENGTH L"KeyLengths"
+#define BCRYPT_KEY_LENGTH L"KeyLength"
 #define BCRYPT_KEY_LENGTHS L"KeyLengths"
 #define BCRYPT_KEY_OBJECT_LENGTH L"KeyObjectLength"
 #define BCRYPT_KEY_STRENGTH L"KeyStrength"
