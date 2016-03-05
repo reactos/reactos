@@ -1220,6 +1220,7 @@ typedef enum {
 #define URL_UNESCAPE_INPLACE         0x00100000
 
 #define URL_FILE_USE_PATHURL         0x00010000
+#define URL_ESCAPE_AS_UTF8           0x00040000
 
 #define URL_ESCAPE_SEGMENT_ONLY      0x00002000
 #define URL_ESCAPE_PERCENT           0x00001000
