@@ -102,7 +102,12 @@ static void test_select( IWbemServices *services )
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_',
          'P','r','o','c','e','s','s',' ','W','H','E','R','E',' ','C','a','p','t','i','o','n',' ',
          'L','I','K','E',' ','"','%','f','i','r','e','f','o','x','.','e','x','e','"',0};
-    static const WCHAR *test[] = { query1, query2, query3, query4, query5, query6, query7, query8, query9, query10 };
+    static const WCHAR query11[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         'W','i','n','3','2','_','V','i','d','e','o','C','o','n','t','r','o','l','l','e','r',' ','w','h','e','r','e',' ',
+         'a','v','a','i','l','a','b','i','l','i','t','y',' ','=',' ','\'','3','\'',0};
+    static const WCHAR *test[] = { query1, query2, query3, query4, query5, query6, query7, query8, query9, query10,
+                                   query11 };
     HRESULT hr;
     IEnumWbemClassObject *result;
     BSTR wql = SysAllocString( wqlW );
