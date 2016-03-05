@@ -310,8 +310,12 @@ static VOID MAIN_MenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       break;
 
     case PM_ABOUT_WINE:
-      ShellAboutA(hWnd, "WINE", "Program Manager", 0);
-      break;
+    {
+        WCHAR szTitle[MAX_STRING_LEN];
+        LoadStringW(Globals.hInstance, IDS_PROGRAM_MANAGER, szTitle, ARRAYSIZE(szTitle));
+        ShellAboutW(hWnd, szTitle, NULL, NULL);
+        break;
+    }
 
     default:
 	MAIN_MessageBoxIDS(IDS_NOT_IMPLEMENTED, IDS_ERROR, MB_OK);

@@ -188,7 +188,7 @@ LTEXT         "&Working directory:",    PM_DIRECTORY_TXT,     5, 40,  75, 10
 EDITTEXT                                   PM_DIRECTORY,         95, 40,  90, 15, WS_TABSTOP
 LTEXT         "&Key combination:",      PM_HOT_KEY_TXT,       5, 55,  75, 10
 EDITTEXT                                   PM_HOT_KEY,           95, 55,  90, 15, WS_TABSTOP
-ICON          "",                          PM_ICON,              20, 70
+ICON          "",                          PM_ICON,              20, 70, 20, 20
 CHECKBOX      "&Minimize at launch",       PM_SYMBOL,            95, 75,  90, 10, WS_TABSTOP
 DEFPUSHBUTTON "OK",                   IDOK,                200,  5,  70, 15, WS_TABSTOP
 PUSHBUTTON    "Cancel",               IDCANCEL,            200, 25,  70, 15, WS_TABSTOP

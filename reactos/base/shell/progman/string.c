@@ -30,27 +30,31 @@ WCHAR STRING_PROGRAM_WIN_CLASS_NAME[] = {'P','M','P','r','o','g','r','a','m',0};
 
 VOID STRING_LoadMenus(VOID)
 {
-  CHAR   caption[MAX_STRING_LEN];
-  HMENU  hMainMenu;
+    WCHAR caption[MAX_STRING_LEN];
+    HMENU hMainMenu;
 
-  /* Set frame caption */
-  LoadStringA(Globals.hInstance, IDS_PROGRAM_MANAGER, caption, sizeof(caption));
-  SetWindowTextA(Globals.hMainWnd, caption);
+    /* Set frame caption */
+    LoadStringW(Globals.hInstance, IDS_PROGRAM_MANAGER, caption, sizeof(caption));
+    SetWindowTextW(Globals.hMainWnd, caption);
 
-  /* Create menu */
-  hMainMenu = LoadMenuW(Globals.hInstance, MAKEINTRESOURCEW(MAIN_MENU));
-  Globals.hFileMenu     = GetSubMenu(hMainMenu, 0);
-  Globals.hOptionMenu   = GetSubMenu(hMainMenu, 1);
-  Globals.hWindowsMenu  = GetSubMenu(hMainMenu, 2);
-  Globals.hLanguageMenu = GetSubMenu(hMainMenu, 3);
+    /* Create menu */
+    hMainMenu = LoadMenuW(Globals.hInstance, MAKEINTRESOURCEW(MAIN_MENU));
+    Globals.hFileMenu     = GetSubMenu(hMainMenu, 0);
+    Globals.hOptionMenu   = GetSubMenu(hMainMenu, 1);
+    Globals.hWindowsMenu  = GetSubMenu(hMainMenu, 2);
+    Globals.hLanguageMenu = GetSubMenu(hMainMenu, 3);
 
-  if (Globals.hMDIWnd)
-    SendMessageW(Globals.hMDIWnd, WM_MDISETMENU,
-		(WPARAM) hMainMenu,
-		(LPARAM) Globals.hWindowsMenu);
-  else SetMenu(Globals.hMainWnd, hMainMenu);
+    if (Globals.hMDIWnd)
+    {
+        SendMessageW(Globals.hMDIWnd, WM_MDISETMENU,
+                     (WPARAM)hMainMenu, (LPARAM)Globals.hWindowsMenu);
+    }
+    else
+    {
+        SetMenu(Globals.hMainWnd, hMainMenu);
+    }
 
-  /* Destroy old menu */
-  if (Globals.hMainMenu) DestroyMenu(Globals.hMainMenu);
-  Globals.hMainMenu = hMainMenu;
+    /* Destroy old menu */
+    if (Globals.hMainMenu) DestroyMenu(Globals.hMainMenu);
+    Globals.hMainMenu = hMainMenu;
 }
