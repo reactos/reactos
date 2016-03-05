@@ -174,6 +174,7 @@ typedef enum _FILE_SYSTEM_TYPE
     FS_TYPE_CDFS,
     FS_TYPE_UDFS,
     FS_TYPE_EXT2,
+    FS_TYPE_BTRFS,
 } FILE_SYSTEM_TYPE, *PFILE_SYSTEM_TYPE;
 
 /* FS Recognizer State */
@@ -224,6 +225,13 @@ FsRecUdfsFsControl(
 NTSTATUS
 NTAPI
 FsRecExt2FsControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FsRecBtrfsFsControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );
