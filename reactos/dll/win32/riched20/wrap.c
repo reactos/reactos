@@ -23,6 +23,7 @@
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+WINE_DECLARE_DEBUG_CHANNEL(richedit_check);
 
 /*
  * Unsolved problems:
@@ -123,12 +124,8 @@ static ME_DisplayItem *split_run_extents(ME_WrapContext *wc, ME_DisplayItem *ite
   ME_Cursor cursor = {wc->pPara, item, nVChar};
 
   assert(item->member.run.nCharOfs != -1);
-  if(TRACE_ON(richedit))
-  {
-    TRACE("Before check before split\n");
+  if(TRACE_ON(richedit_check))
     ME_CheckCharOffsets(editor);
-    TRACE("After check before split\n");
-  }
 
   run = &item->member.run;
 
@@ -147,15 +144,12 @@ static ME_DisplayItem *split_run_extents(ME_WrapContext *wc, ME_DisplayItem *ite
   run2->pt.x = run->pt.x+run->nWidth;
   run2->pt.y = run->pt.y;
 
-  if(TRACE_ON(richedit))
-  {
-    TRACE("Before check after split\n");
+  if(TRACE_ON(richedit_check))
     ME_CheckCharOffsets(editor);
-    TRACE("After check after split\n");
-    TRACE("After split: %s(%d, %d), %s(%d, %d)\n",
-      debugstr_run( run ), run->pt.x, run->pt.y,
-      debugstr_run( run2 ), run2->pt.x, run2->pt.y);
-  }
+
+  TRACE("After split: %s(%d, %d), %s(%d, %d)\n",
+        debugstr_run( run ), run->pt.x, run->pt.y,
+        debugstr_run( run2 ), run2->pt.x, run2->pt.y);
 
   return cursor.pRun;
 }

@@ -102,6 +102,8 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
 {
   ME_DisplayItem *p = editor->pBuffer->pFirst;
   int ofs = 0, ofsp = 0;
+
+  TRACE_(richedit_check)("Checking begin\n");
   if(TRACE_ON(richedit_lists))
   {
     TRACE_(richedit_lists)("---\n");
@@ -113,6 +115,7 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
       case diTextEnd:
         TRACE_(richedit_check)("tend, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
         assert(ofsp+ofs == p->member.para.nCharOfs);
+        TRACE_(richedit_check)("Checking finished\n");
         return;
       case diParagraph:
         TRACE_(richedit_check)("para, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
@@ -137,6 +140,7 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
         assert(0);
     }
   } while(1);
+  TRACE_(richedit_check)("Checking finished\n");
 }
 
 /******************************************************************************
@@ -239,12 +243,8 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
   ME_Remove(pNext);
   ME_DestroyDisplayItem(pNext);
   ME_UpdateRunFlags(editor, &p->member.run);
-  if(TRACE_ON(richedit))
-  {
-    TRACE("Before check after join\n");
+  if(TRACE_ON(richedit_check))
     ME_CheckCharOffsets(editor);
-    TRACE("After check after join\n");
-  }
 }
 
 /******************************************************************************

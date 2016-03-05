@@ -544,7 +544,8 @@ void ME_RTFParAttrHook(RTF_Info *info)
   PARAFORMAT2 fmt;
   fmt.cbSize = sizeof(fmt);
   fmt.dwMask = 0;
-  
+  fmt.wEffects = 0;
+
   switch(info->rtfMinor)
   {
   case rtfParDef: /* restores default paragraph attributes */
@@ -939,7 +940,7 @@ void ME_RTFTblAttrHook(RTF_Info *info)
         ME_DisplayItem *para = info->editor->pCursors[0].pPara;
         PARAFORMAT2 *pFmt = para->member.para.pFmt;
         pFmt->rgxTabs[cellNum] &= ~0x00FFFFFF;
-        pFmt->rgxTabs[cellNum] = 0x00FFFFFF & info->rtfParam;
+        pFmt->rgxTabs[cellNum] |= 0x00FFFFFF & info->rtfParam;
       }
       info->tableDef->numCellsDefined++;
       break;
