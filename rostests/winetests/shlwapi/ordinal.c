@@ -76,6 +76,24 @@ static HRESULT (WINAPI *pSKDeleteValueW)(DWORD, LPCWSTR, LPCWSTR);
 static HRESULT (WINAPI *pSKAllocValueW)(DWORD, LPCWSTR, LPCWSTR, DWORD*, void**, DWORD*);
 static HWND    (WINAPI *pSHSetParentHwnd)(HWND, HWND);
 static HRESULT (WINAPI *pIUnknown_GetClassID)(IUnknown*, CLSID*);
+static HRESULT (WINAPI *pDllGetVersion)(DLLVERSIONINFO2*);
+
+typedef struct SHELL_USER_SID {
+    SID_IDENTIFIER_AUTHORITY sidAuthority;
+    DWORD                    dwUserGroupID;
+    DWORD                    dwUserID;
+} SHELL_USER_SID, *PSHELL_USER_SID;
+typedef struct SHELL_USER_PERMISSION {
+
+    SHELL_USER_SID susID;
+    DWORD          dwAccessType;
+    BOOL           fInherit;
+    DWORD          dwAccessMask;
+    DWORD          dwInheritMask;
+    DWORD          dwInheritAccessMask;
+} SHELL_USER_PERMISSION, *PSHELL_USER_PERMISSION;
+
+static SECURITY_DESCRIPTOR* (WINAPI *pGetShellSecurityDescriptor)(const SHELL_USER_PERMISSION**,int);
 
 static HMODULE hmlang;
 static HRESULT (WINAPI *pLcidToRfc1766A)(LCID, LPSTR, INT);
@@ -522,6 +540,11 @@ static void test_alloc_shared(int argc, char **argv)
         ret = pSHFreeShared(hmem2, procid);
         ok(ret, "SHFreeShared failed: %u\n", GetLastError());
     }
+
+    SetLastError(0xdeadbeef);
+    ret = pSHFreeShared(NULL, procid);
+    ok(ret, "SHFreeShared failed: %u\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "last error should not have changed, got %u\n", GetLastError());
 }
 
 static void test_alloc_shared_remote(DWORD procid, HANDLE hmem)
@@ -551,6 +574,11 @@ static void test_alloc_shared_remote(DWORD procid, HANDLE hmem)
     ok(ret, "SHUnlockShared failed: %u\n", GetLastError());
 
     /* test SHMapHandle */
+    SetLastError(0xdeadbeef);
+    hmem2 = pSHMapHandle(NULL, procid, GetCurrentProcessId(), 0, 0);
+    ok(hmem2 == NULL, "expected NULL, got new handle\n");
+    ok(GetLastError() == 0xdeadbeef, "last error should not have changed, got %u\n", GetLastError());
+
     hmem2 = pSHMapHandle(hmem, procid, GetCurrentProcessId(), 0, 0);
 
     /* It seems like Windows Vista/2008 uses a different internal implementation
@@ -676,39 +704,22 @@ static void test_fdsa(void)
     HeapFree(GetProcessHeap(), 0, mem);
 }
 
-
-typedef struct SHELL_USER_SID {
-    SID_IDENTIFIER_AUTHORITY sidAuthority;
-    DWORD                    dwUserGroupID;
-    DWORD                    dwUserID;
-} SHELL_USER_SID, *PSHELL_USER_SID;
-typedef struct SHELL_USER_PERMISSION {
-    SHELL_USER_SID susID;
-    DWORD          dwAccessType;
-    BOOL           fInherit;
-    DWORD          dwAccessMask;
-    DWORD          dwInheritMask;
-    DWORD          dwInheritAccessMask;
-} SHELL_USER_PERMISSION, *PSHELL_USER_PERMISSION;
 static void test_GetShellSecurityDescriptor(void)
 {
-    SHELL_USER_PERMISSION supCurrentUserFull = {
+    static const SHELL_USER_PERMISSION supCurrentUserFull = {
         { {SECURITY_NULL_SID_AUTHORITY}, 0, 0 },
         ACCESS_ALLOWED_ACE_TYPE, FALSE,
         GENERIC_ALL, 0, 0 };
 #define MY_INHERITANCE 0xBE /* invalid value to proof behavior */
-    SHELL_USER_PERMISSION supEveryoneDenied = {
+    static const SHELL_USER_PERMISSION supEveryoneDenied = {
         { {SECURITY_WORLD_SID_AUTHORITY}, SECURITY_WORLD_RID, 0 },
         ACCESS_DENIED_ACE_TYPE, TRUE,
         GENERIC_WRITE, MY_INHERITANCE | 0xDEADBA00, GENERIC_READ };
-    PSHELL_USER_PERMISSION rgsup[2] = {
+    const SHELL_USER_PERMISSION* rgsup[2] = {
         &supCurrentUserFull, &supEveryoneDenied,
     };
     SECURITY_DESCRIPTOR* psd;
-    SECURITY_DESCRIPTOR* (WINAPI*pGetShellSecurityDescriptor)(PSHELL_USER_PERMISSION*,int);
     void *pChrCmpIW = GetProcAddress(hShlwapi, "ChrCmpIW");
-
-    pGetShellSecurityDescriptor=(void*)GetProcAddress(hShlwapi,(char*)475);
 
     if(!pGetShellSecurityDescriptor)
     {
@@ -3072,6 +3083,7 @@ static void init_pointers(void)
     MAKEFUNC(SHFormatDateTimeA, 353);
     MAKEFUNC(SHFormatDateTimeW, 354);
     MAKEFUNC(SHIShellFolder_EnumObjects, 404);
+    MAKEFUNC(GetShellSecurityDescriptor, 475);
     MAKEFUNC(SHGetObjectCompatFlags, 476);
     MAKEFUNC(IUnknown_QueryServiceExec, 484);
     MAKEFUNC(SHGetShellKey, 491);
@@ -3082,6 +3094,8 @@ static void init_pointers(void)
     MAKEFUNC(SKDeleteValueW, 518);
     MAKEFUNC(SKAllocValueW, 519);
 #undef MAKEFUNC
+
+    pDllGetVersion = (void*)GetProcAddress(hShlwapi, "DllGetVersion");
 }
 
 static void test_SHSetParentHwnd(void)
@@ -3255,6 +3269,14 @@ if (0) /* crashes on native systems */
         "got wrong clsid %s\n", wine_dbgstr_guid(&clsid));
 }
 
+static void test_DllGetVersion(void)
+{
+    HRESULT hr;
+
+    hr = pDllGetVersion(NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+}
+
 START_TEST(ordinal)
 {
     char **argv;
@@ -3310,6 +3332,7 @@ START_TEST(ordinal)
     test_SHGetShellKey();
     test_SHSetParentHwnd();
     test_IUnknown_GetClassID();
+    test_DllGetVersion();
 
     FreeLibrary(hshell32);
     FreeLibrary(hmlang);
