@@ -29,11 +29,13 @@
 #include <winuser.h>
 #include <winnls.h>
 #include <ole2.h>
+#include <commdlg.h>
 #include <richedit.h>
 #include <time.h>
 #include <wine/test.h>
 
 static HMODULE hmoduleRichEdit;
+static BOOL is_lang_japanese;
 
 static HWND new_window(LPCSTR lpClassName, DWORD dwStyle, HWND parent) {
   HWND hwnd;
@@ -128,22 +130,33 @@ static void test_WM_SETTEXT(void)
 static void test_WM_GETTEXTLENGTH(void)
 {
     HWND hwndRichEdit = new_richedit(NULL);
-    static const char text3[] = "aaa\r\nbbb\r\nccc\r\nddd\r\neee";
-    static const char text4[] = "aaa\r\nbbb\r\nccc\r\nddd\r\neee\r\n";
+    static const char text1[] = "aaa\r\nbbb\r\nccc\r\nddd\r\neee";
+    static const char text2[] = "aaa\r\nbbb\r\nccc\r\nddd\r\neee\r\n";
+    static const char text3[] = "abcdef\x8e\xf0";
     int result;
 
     /* Test for WM_GETTEXTLENGTH */
-    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text3);
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text1);
     result = SendMessageA(hwndRichEdit, WM_GETTEXTLENGTH, 0, 0);
-    ok(result == lstrlenA(text3),
-        "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
-        result, lstrlenA(text3));
+    ok(result == lstrlenA(text1),
+       "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
+       result, lstrlenA(text1));
 
-    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text4);
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text2);
     result = SendMessageA(hwndRichEdit, WM_GETTEXTLENGTH, 0, 0);
-    ok(result == lstrlenA(text4),
-        "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
-        result, lstrlenA(text4));
+    ok(result == lstrlenA(text2),
+       "WM_GETTEXTLENGTH reports incorrect length %d, expected %d\n",
+       result, lstrlenA(text2));
+
+    /* Test with multibyte character */
+    if (!is_lang_japanese)
+        skip("Skip multibyte character tests on non-Japanese platform\n");
+    else
+    {
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text3);
+        result = SendMessageA(hwndRichEdit, WM_GETTEXTLENGTH, 0, 0);
+        ok(result == 8, "WM_GETTEXTLENGTH returned %d, expected 8\n", result);
+    }
 
     DestroyWindow(hwndRichEdit);
 }
@@ -497,6 +510,29 @@ static void test_EM_LINELENGTH(void)
        offset_test[i][0], result, offset_test[i][1]);
   }
 
+  /* Test with multibyte character */
+  if (!is_lang_japanese)
+    skip("Skip multibyte character tests on non-Japanese platform\n");
+  else
+  {
+    const char *text1 =
+          "wine\n"
+          "richedit\x8e\xf0\n"
+          "wine";
+    static int offset_test1[3][3] = {
+           {0, 4},  /* Line 1: |wine\n */
+           {5, 10, 1}, /* Line 2: |richedit\x8e\xf0\n */
+           {16, 4}, /* Line 3: |wine */
+    };
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text1);
+    for (i = 0; i < sizeof(offset_test1)/sizeof(offset_test1[0]); i++) {
+      result = SendMessageA(hwndRichEdit, EM_LINELENGTH, offset_test1[i][0], 0);
+      todo_wine_if (offset_test1[i][2])
+          ok(result == offset_test1[i][1], "Length of line at offset %d is %ld, expected %d\n",
+             offset_test1[i][0], result, offset_test1[i][1]);
+    }
+  }
+
   DestroyWindow(hwndRichEdit);
 }
 
@@ -538,6 +574,18 @@ static void test_EM_GETTEXTRANGE(void)
 
     ok(!strcmp(expect3, buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
 
+    /* Test with multibyte character */
+    if (!is_lang_japanese)
+        skip("Skip multibyte character tests on non-Japanese platform\n");
+    else
+    {
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
+        textRange.chrg.cpMin = 4;
+        textRange.chrg.cpMax = 8;
+        result = SendMessageA(hwndRichEdit, EM_GETTEXTRANGE, 0, (LPARAM)&textRange);
+        ok(result == 4, "EM_GETTEXTRANGE returned %ld\n", result);
+        todo_wine ok(!strcmp("ef\x8e\xf0", buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
+    }
 
     DestroyWindow(hwndRichEdit);
 }
@@ -556,17 +604,27 @@ static void test_EM_GETSELTEXT(void)
 
     SendMessageA(hwndRichEdit, EM_SETSEL, 4, 12);
     result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, 0, (LPARAM)buffer);
-    ok(result == 8, "EM_GETTEXTRANGE returned %ld\n", result);
-    ok(!strcmp(expect1, buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
+    ok(result == 8, "EM_GETSELTEXT returned %ld\n", result);
+    ok(!strcmp(expect1, buffer), "EM_GETSELTEXT filled %s\n", buffer);
 
     SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text2);
 
     SendMessageA(hwndRichEdit, EM_SETSEL, 4, 11);
     result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, 0, (LPARAM)buffer);
-    ok(result == 7, "EM_GETTEXTRANGE returned %ld\n", result);
+    ok(result == 7, "EM_GETSELTEXT returned %ld\n", result);
+    ok(!strcmp(expect2, buffer), "EM_GETSELTEXT filled %s\n", buffer);
 
-    ok(!strcmp(expect2, buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
-
+    /* Test with multibyte character */
+    if (!is_lang_japanese)
+        skip("Skip multibyte character tests on non-Japanese platform\n");
+    else
+    {
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
+        SendMessageA(hwndRichEdit, EM_SETSEL, 4, 8);
+        result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, 0, (LPARAM)buffer);
+        ok(result == 4, "EM_GETSELTEXT returned %ld\n", result);
+        todo_wine ok(!strcmp("ef\x8e\xf0", buffer), "EM_GETSELTEXT filled %s\n", buffer);
+    }
 
     DestroyWindow(hwndRichEdit);
 }
@@ -1200,6 +1258,163 @@ static void test_enter(void)
   DestroyWindow(hwndRichEdit);
 }
 
+struct exsetsel_s {
+  LONG min;
+  LONG max;
+  LRESULT expected_retval;
+  int expected_getsel_start;
+  int expected_getsel_end;
+  BOOL result_todo;
+  BOOL sel_todo;
+};
+
+static const struct exsetsel_s exsetsel_tests[] = {
+  /* sanity tests */
+  {5, 10, 10, 5, 10, 0, 0 },
+  {15, 17, 17, 15, 17, 0, 0 },
+  /* test cpMax > strlen() */
+  {0, 100, 19, 0, 19, 1, 0 },
+  /* test cpMin < 0 && cpMax >= 0 after cpMax > strlen() */
+  {-1, 1, 17, 17, 17, 1, 0 },
+  /* test cpMin == cpMax */
+  {5, 5, 5, 5, 5, 0, 0 },
+  /* test cpMin < 0 && cpMax >= 0 (bug 4462) */
+  {-1, 0, 5, 5, 5, 0, 0 },
+  {-1, 17, 5, 5, 5, 0, 0 },
+  {-1, 18, 5, 5, 5, 0, 0 },
+  /* test cpMin < 0 && cpMax < 0 */
+  {-1, -1, 17, 17, 17, 0, 0 },
+  {-4, -5, 17, 17, 17, 0, 0 },
+  /* test cpMin >=0 && cpMax < 0 (bug 6814) */
+  {0, -1, 19, 0, 19, 1, 0 },
+  {17, -5, 19, 17, 19, 1, 0 },
+  {18, -3, 19, 17, 19, 1, 1 },
+  /* test if cpMin > cpMax */
+  {15, 19, 19, 15, 19, 1, 0 },
+  {19, 15, 19, 15, 19, 1, 0 },
+  /* cpMin == strlen() && cpMax > cpMin */
+  {17, 18, 17, 17, 17, 1, 1 },
+  {17, 50, 19, 17, 19, 1, 0 },
+};
+
+static void check_EM_EXSETSEL(HWND hwnd, const struct exsetsel_s *setsel, int id) {
+    CHARRANGE cr;
+    LRESULT result;
+    int start, end;
+
+    cr.cpMin = setsel->min;
+    cr.cpMax = setsel->max;
+    result = SendMessageA(hwnd, EM_EXSETSEL, 0, (LPARAM)&cr);
+
+    todo_wine_if (setsel->result_todo)
+        ok(result == setsel->expected_retval, "EM_EXSETSEL(%d): expected: %ld actual: %ld\n", id, setsel->expected_retval, result);
+
+    SendMessageA(hwnd, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+
+    todo_wine_if (setsel->sel_todo)
+        ok(start == setsel->expected_getsel_start && end == setsel->expected_getsel_end,
+           "EM_EXSETSEL(%d): expected (%d,%d) actual:(%d,%d)\n",
+           id, setsel->expected_getsel_start, setsel->expected_getsel_end, start, end);
+}
+
+static void test_EM_EXSETSEL(void)
+{
+    HWND hwndRichEdit = new_richedit(NULL);
+    int i;
+    const int num_tests = sizeof(exsetsel_tests)/sizeof(struct exsetsel_s);
+
+    /* sending some text to the window */
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"testing selection");
+    /*                                                 01234567890123456 */
+
+    for (i = 0; i < num_tests; i++) {
+        check_EM_EXSETSEL(hwndRichEdit, &exsetsel_tests[i], i);
+    }
+
+    if (!is_lang_japanese)
+        skip("Skip multibyte character tests on non-Japanese platform\n");
+    else
+    {
+        CHARRANGE cr;
+        LRESULT result;
+#define MAX_BUF_LEN 1024
+        char bufA[MAX_BUF_LEN] = {0};
+
+        /* Test with multibyte character */
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
+        /*                                                 012345  6   7 8901 */
+        cr.cpMin = 4, cr.cpMax = 8;
+        result =  SendMessageA(hwndRichEdit, EM_EXSETSEL, 0, (LPARAM)&cr);
+        todo_wine ok(result == 7, "EM_EXSETSEL return %ld expected 7\n", result);
+        result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, sizeof(bufA), (LPARAM)bufA);
+        todo_wine ok(!strcmp(bufA, "ef\x8e\xf0"), "EM_GETSELTEXT return incorrect string\n");
+        SendMessageA(hwndRichEdit, EM_EXGETSEL, 0, (LPARAM)&cr);
+        ok(cr.cpMin == 4, "Selection start incorrectly: %d expected 4\n", cr.cpMin);
+        ok(cr.cpMax == 8, "Selection end incorrectly: %d expected 8\n", cr.cpMax);
+    }
+
+    DestroyWindow(hwndRichEdit);
+}
+
+static void check_EM_SETSEL(HWND hwnd, const struct exsetsel_s *setsel, int id) {
+    LRESULT result;
+    int start, end;
+
+    result = SendMessageA(hwnd, EM_SETSEL, setsel->min, setsel->max);
+
+    todo_wine_if (setsel->result_todo)
+        ok(result == setsel->expected_retval, "EM_SETSEL(%d): expected: %ld actual: %ld\n", id, setsel->expected_retval, result);
+
+    SendMessageA(hwnd, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+
+    todo_wine_if (setsel->sel_todo)
+        ok(start == setsel->expected_getsel_start && end == setsel->expected_getsel_end,
+           "EM_SETSEL(%d): expected (%d,%d) actual:(%d,%d)\n",
+           id, setsel->expected_getsel_start, setsel->expected_getsel_end, start, end);
+}
+
+static void test_EM_SETSEL(void)
+{
+    char buffA[32] = {0};
+    HWND hwndRichEdit = new_richedit(NULL);
+    int i;
+    const int num_tests = sizeof(exsetsel_tests)/sizeof(struct exsetsel_s);
+
+    /* sending some text to the window */
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"testing selection");
+    /*                                                 01234567890123456 */
+
+    for (i = 0; i < num_tests; i++) {
+        check_EM_SETSEL(hwndRichEdit, &exsetsel_tests[i], i);
+    }
+
+    SendMessageA(hwndRichEdit, EM_SETSEL, 17, 18);
+    buffA[0] = 123;
+    SendMessageA(hwndRichEdit, EM_GETSELTEXT, 0, (LPARAM)buffA);
+    ok(buffA[0] == 0, "selection text %s\n", buffA);
+
+    if (!is_lang_japanese)
+        skip("Skip multibyte character tests on non-Japanese platform\n");
+    else
+    {
+        int sel_start, sel_end;
+        LRESULT result;
+
+        /* Test with multibyte character */
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
+        /*                                                 012345  6   7 8901 */
+        result =  SendMessageA(hwndRichEdit, EM_SETSEL, 4, 8);
+        todo_wine ok(result == 7, "EM_SETSEL return %ld expected 7\n", result);
+        result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, sizeof(buffA), (LPARAM)buffA);
+        todo_wine ok(!strcmp(buffA, "ef\x8e\xf0"), "EM_GETSELTEXT return incorrect string\n");
+        result = SendMessageA(hwndRichEdit, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
+        ok(sel_start == 4, "Selection start incorrectly: %d expected 4\n", sel_start);
+        ok(sel_end == 8, "Selection end incorrectly: %d expected 8\n", sel_end);
+    }
+
+    DestroyWindow(hwndRichEdit);
+}
+
 START_TEST( editor )
 {
   MSG msg;
@@ -1210,6 +1425,7 @@ START_TEST( editor )
    * RICHED32.DLL, so the linker doesn't actually link to it. */
   hmoduleRichEdit = LoadLibraryA("riched32.dll");
   ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
+  is_lang_japanese = (PRIMARYLANGID(GetUserDefaultLangID()) == LANG_JAPANESE);
 
   test_WM_SETTEXT();
   test_EM_GETTEXTRANGE();
@@ -1225,6 +1441,8 @@ START_TEST( editor )
   test_EM_GETOPTIONS();
   test_autoscroll();
   test_enter();
+  test_EM_EXSETSEL();
+  test_EM_SETSEL();
 
   /* Set the environment variable WINETEST_RICHED32 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
