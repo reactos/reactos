@@ -568,7 +568,7 @@ static void test_safearray(SAFEARRAY *safearray, unsigned indims)
     ok(!safearray->cLocks, "safearray->cLocks = %x\n", safearray->cLocks);
 
     for(i=0; i < safearray->cDims; i++) {
-        ok(safearray->rgsabound[i].cElements == indims ? i+4 : 1, "safearray->rgsabound[%d].cElements = %d\n", i,
+        ok(safearray->rgsabound[i].cElements == (indims ? i+4 : 1), "safearray->rgsabound[%d].cElements = %d\n", i,
            safearray->rgsabound[i].cElements);
         ok(!safearray->rgsabound[i].lLbound, "safearray->rgsabound[%d].lLbound = %d\n", i, safearray->rgsabound[i].lLbound);
     }
