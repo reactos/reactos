@@ -78,6 +78,12 @@ HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwSrcProcId, DWORD dwDstProcId,
   TRACE("(%p,%d,%d,%08x,%08x)\n", hShared, dwDstProcId, dwSrcProcId,
         dwAccess, dwOptions);
 
+  if (!hShared)
+  {
+    TRACE("Returning handle NULL\n");
+    return NULL;
+  }
+
   /* Get dest process handle */
   if (dwDstProcId == dwMyProcId)
     hDst = GetCurrentProcess();
@@ -238,6 +244,9 @@ BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
   HANDLE hClose;
 
   TRACE("(%p %d)\n", hShared, dwProcId);
+
+  if (!hShared)
+    return TRUE;
 
   /* Get a copy of the handle for our process, closing the source handle */
   hClose = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(),
@@ -4022,7 +4031,7 @@ BOOL WINAPI IsOS(DWORD feature)
     case OS_SMALLBUSINESSSERVER:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
     case OS_TABLETPC:
-        FIXME("(OS_TABLEPC) What should we return here?\n");
+        FIXME("(OS_TABLETPC) What should we return here?\n");
         return FALSE;
     case OS_SERVERADMINUI:
         FIXME("(OS_SERVERADMINUI) What should we return here?\n");
@@ -4819,7 +4828,7 @@ typedef struct SHELL_USER_PERMISSION { /* ...and this should be in shlwapi.h */
  * NOTES
  *  Call should free returned descriptor with LocalFree
  */
-PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(PSHELL_USER_PERMISSION *apUserPerm, int cUserPerm)
+PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(const PSHELL_USER_PERMISSION *apUserPerm, int cUserPerm)
 {
     PSID *sidlist;
     PSID  cur_user = NULL;

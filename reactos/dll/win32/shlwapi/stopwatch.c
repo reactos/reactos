@@ -175,16 +175,16 @@ void WINAPI StopWatch_MarkJavaStop(LPCWSTR lpszEvent, HWND hWnd, DWORD dwReserve
  */
 DWORD WINAPI GetPerfTime(void)
 {
-  static LONG64 iCounterFreq = 0;
+  static LARGE_INTEGER iCounterFreq = { {0} };
   LARGE_INTEGER iCounter;
 
   TRACE("()\n");
 
-  if (!iCounterFreq)
-   QueryPerformanceFrequency((LARGE_INTEGER*)&iCounterFreq);
+  if (!iCounterFreq.QuadPart)
+   QueryPerformanceFrequency(&iCounterFreq);
 
   QueryPerformanceCounter(&iCounter);
-  iCounter.QuadPart = iCounter.QuadPart * 1000 / iCounterFreq;
+  iCounter.QuadPart = iCounter.QuadPart * 1000 / iCounterFreq.QuadPart;
   return iCounter.u.LowPart;
 }
 

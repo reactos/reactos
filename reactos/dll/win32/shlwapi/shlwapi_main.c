@@ -85,6 +85,9 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 
   TRACE("(%p)\n",pdvi);
 
+  if (!pdvi)
+    return E_INVALIDARG;
+
   switch (pdvi2->info1.cbSize)
   {
   case sizeof(DLLVERSIONINFO2):
@@ -98,7 +101,7 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
     pdvi2->info1.dwPlatformID = DLLVER_PLATFORM_WINDOWS;
     return S_OK;
  }
- if (pdvi)
-   WARN("pdvi->cbSize = %d, unhandled\n", pdvi2->info1.cbSize);
+
+ WARN("pdvi->cbSize = %d, unhandled\n", pdvi2->info1.cbSize);
  return E_INVALIDARG;
 }

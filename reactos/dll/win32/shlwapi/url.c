@@ -946,6 +946,8 @@ HRESULT WINAPI UrlEscapeA(
 
     if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
         return E_INVALIDARG;
+    if(dwFlags & URL_ESCAPE_AS_UTF8)
+        return E_NOTIMPL;
     if((ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags)) == E_POINTER) {
         escapedW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
         ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags);
@@ -980,6 +982,9 @@ static inline BOOL URL_NeedEscapeW(WCHAR ch, DWORD flags, DWORD int_flags)
         return ch == ' ';
 
     if ((flags & URL_ESCAPE_PERCENT) && (ch == '%'))
+	return TRUE;
+
+    if ((flags & URL_ESCAPE_AS_UTF8) && (ch >= 0x80))
 	return TRUE;
 
     if (ch <= 31 || (ch >= 127 && ch <= 255) )
@@ -1057,8 +1062,8 @@ HRESULT WINAPI UrlEscapeW(
     LPCWSTR src;
     DWORD needed = 0, ret;
     BOOL stop_escaping = FALSE;
-    WCHAR next[5], *dst, *dst_ptr;
-    INT len;
+    WCHAR next[12], *dst, *dst_ptr;
+    INT i, len;
     PARSEDURLW parsed_url;
     DWORD int_flags;
     DWORD slashes = 0;
@@ -1073,7 +1078,8 @@ HRESULT WINAPI UrlEscapeW(
     if(dwFlags & ~(URL_ESCAPE_SPACES_ONLY |
 		   URL_ESCAPE_SEGMENT_ONLY |
 		   URL_DONT_ESCAPE_EXTRA_INFO |
-		   URL_ESCAPE_PERCENT))
+		   URL_ESCAPE_PERCENT |
+		   URL_ESCAPE_AS_UTF8))
         FIXME("Unimplemented flags: %08x\n", dwFlags);
 
     dst_ptr = dst = HeapAlloc(GetProcessHeap(), 0, *pcchEscaped*sizeof(WCHAR));
@@ -1176,10 +1182,39 @@ HRESULT WINAPI UrlEscapeW(
             if(cur == '\\' && (int_flags & WINE_URL_BASH_AS_SLASH) && !stop_escaping) cur = '/';
 
             if(URL_NeedEscapeW(cur, dwFlags, int_flags) && stop_escaping == FALSE) {
-                next[0] = '%';
-                next[1] = hexDigits[(cur >> 4) & 0xf];
-                next[2] = hexDigits[cur & 0xf];
-                len = 3;
+                if(dwFlags & URL_ESCAPE_AS_UTF8) {
+                    char utf[16];
+
+                    if ((cur >= 0xd800 && cur <= 0xdfff) &&
+                        (src[1] >= 0xdc00 && src[1] <= 0xdfff))
+                    {
+                        len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, src, 2,
+                                                   utf, sizeof(utf), NULL, NULL );
+                        src++;
+                    }
+                    else
+                        len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, &cur, 1,
+                                                   utf, sizeof(utf), NULL, NULL );
+
+                    if (!len) {
+                        utf[0] = 0xef;
+                        utf[1] = 0xbf;
+                        utf[2] = 0xbd;
+                        len = 3;
+                    }
+
+                    for(i = 0; i < len; i++) {
+                        next[i*3+0] = '%';
+                        next[i*3+1] = hexDigits[(utf[i] >> 4) & 0xf];
+                        next[i*3+2] = hexDigits[utf[i] & 0xf];
+                    }
+                    len *= 3;
+                } else {
+                    next[0] = '%';
+                    next[1] = hexDigits[(cur >> 4) & 0xf];
+                    next[2] = hexDigits[cur & 0xf];
+                    len = 3;
+                }
             } else {
                 next[0] = cur;
                 len = 1;
