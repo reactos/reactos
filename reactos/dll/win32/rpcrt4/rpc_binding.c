@@ -1616,6 +1616,16 @@ RpcBindingInqAuthClientExW( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *
 }
 
 /***********************************************************************
+ *             RpcBindingServerFromClient (RPCRT4.@)
+ */
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcBindingServerFromClient( RPC_BINDING_HANDLE ClientBinding, RPC_BINDING_HANDLE *ServerBinding )
+{
+    FIXME("%p %p: stub\n", ClientBinding, ServerBinding);
+    return RPC_S_INVALID_BINDING;
+}
+
+/***********************************************************************
  *             RpcBindingSetAuthInfoExA (RPCRT4.@)
  */
 RPCRTAPI RPC_STATUS RPC_ENTRY
