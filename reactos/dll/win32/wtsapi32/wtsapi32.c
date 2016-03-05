@@ -28,6 +28,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wtsapi);
 
+/* FIXME: Inspect */
+#define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)
+
 
 /************************************************************
  *                WTSCloseServer  (WTSAPI32.@)
@@ -311,7 +314,16 @@ BOOL WINAPI WTSQuerySessionInformationW(
 BOOL WINAPI WTSQueryUserToken(ULONG session_id, PHANDLE token)
 {
     FIXME("%u %p\n", session_id, token);
-    return FALSE;
+
+    if (!token)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return DuplicateHandle(GetCurrentProcess(), GetCurrentProcessToken(),
+                           GetCurrentProcess(), token,
+                           0, FALSE, DUPLICATE_SAME_ACCESS);
 }
 
 /************************************************************
