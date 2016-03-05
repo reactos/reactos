@@ -1472,7 +1472,7 @@ static BOOL parse_reg_name(const WCHAR **ptr, parse_data *data, DWORD flags, DWO
     while((!is_res && !is_auth_delim(**ptr, known_scheme)) ||
           (is_res && **ptr && **ptr != '/')) {
         if(**ptr == ':' && !ignore_col) {
-            /* We can ignore ':' if were inside brackets.*/
+            /* We can ignore ':' if we are inside brackets.*/
             if(!inside_brackets) {
                 const WCHAR *tmp = (*ptr)++;
 
