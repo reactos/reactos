@@ -34,15 +34,19 @@
 #include <winhttp.h>
 #include <wincrypt.h>
 #include <winreg.h>
+#include <stdio.h>
 //#include "initguid.h"
 #include <httprequest.h>
 #include <httprequestid.h>
 
 #include <wine/test.h>
 
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+
 static const WCHAR test_useragent[] =
     {'W','i','n','e',' ','R','e','g','r','e','s','s','i','o','n',' ','T','e','s','t',0};
 static const WCHAR test_winehq[] = {'t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
+static const WCHAR test_winehq_https[] = {'h','t','t','p','s',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',':','4','4','3',0};
 static const WCHAR localhostW[] = {'l','o','c','a','l','h','o','s','t',0};
 
 static BOOL proxy_active(void)
@@ -975,8 +979,9 @@ static void CALLBACK cert_error(HINTERNET handle, DWORD_PTR ctx, DWORD status, L
 
 static void test_secure_connection(void)
 {
+    static const char data_start[] = "<!DOCTYPE html PUBLIC";
     HINTERNET ses, con, req;
-    DWORD size, status, policy, bitness, read_size, err;
+    DWORD size, status, policy, bitness, read_size, err, available_size;
     BOOL ret;
     CERT_CONTEXT *cert;
     WINHTTP_CERTIFICATE_INFO info;
@@ -1055,11 +1060,16 @@ static void test_secure_connection(void)
     ret = WinHttpReceiveResponse(req, NULL);
     ok(ret, "failed to receive response %u\n", GetLastError());
 
+    available_size = 0;
+    ret = WinHttpQueryDataAvailable(req, &available_size);
+    ok(ret, "failed to query available data %u\n", GetLastError());
+    ok(available_size > 2014, "available_size = %u\n", available_size);
+
     status = 0xdeadbeef;
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed unexpectedly %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
 
     size = 0;
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_RAW_HEADERS_CRLF, NULL, NULL, &size, NULL);
@@ -1073,8 +1083,11 @@ static void test_secure_connection(void)
         ok(ret == TRUE, "WinHttpReadData failed: %u.\n", GetLastError());
         if (!size) break;
         read_size += size;
+
+        if (read_size <= 32)
+            ok(!memcmp(buffer, data_start, sizeof(data_start)-1), "not expected: %.32s\n", buffer);
     }
-    ok(read_size > 2014, "read_size = %u\n", read_size);
+    ok(read_size >= available_size, "read_size = %u, available_size = %u\n", read_size, available_size);
 
 cleanup:
     WinHttpCloseHandle(req);
@@ -1120,7 +1133,7 @@ static void test_request_parameter_defaults(void)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed unexpectedly %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
 
     WinHttpCloseHandle(req);
 
@@ -1156,7 +1169,7 @@ static void test_request_parameter_defaults(void)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed unexpectedly %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
 
 done:
     WinHttpCloseHandle(req);
@@ -2000,18 +2013,25 @@ static const char noauthmsg[] =
 "Server: winetest\r\n"
 "Connection: close\r\n"
 "WWW-Authenticate: Basic realm=\"placebo\"\r\n"
+"Content-Length: 12\r\n"
+"Content-Type: text/plain\r\n"
 "\r\n";
 
 static const char okauthmsg[] =
 "HTTP/1.1 200 OK\r\n"
 "Server: winetest\r\n"
 "Connection: close\r\n"
+"Content-Length: 11\r\n"
+"Content-Type: text/plain\r\n"
 "\r\n";
 
 static const char headmsg[] =
 "HTTP/1.1 200 OK\r\n"
 "Content-Length: 100\r\n"
 "\r\n";
+
+static const char unauthorized[] = "Unauthorized";
+static const char hello_world[] = "Hello World";
 
 struct server_info
 {
@@ -2074,9 +2094,16 @@ static DWORD CALLBACK server_thread(LPVOID param)
         if (strstr(buffer, "/auth"))
         {
             if (strstr(buffer, "Authorization: Basic dXNlcjpwd2Q="))
+            {
                 send(c, okauthmsg, sizeof okauthmsg - 1, 0);
+                send(c, hello_world, sizeof hello_world - 1, 0);
+            }
             else
+            {
                 send(c, noauthmsg, sizeof noauthmsg - 1, 0);
+                send(c, unauthorized, sizeof unauthorized - 1, 0);
+            }
+            continue;
         }
         if (strstr(buffer, "/big"))
         {
@@ -2171,7 +2198,7 @@ static void test_basic_request(int port, const WCHAR *verb, const WCHAR *path)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed to query status code %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
 
     supported = first = target = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -2218,6 +2245,7 @@ static void test_basic_authentication(int port)
     static WCHAR pass2W[] = {'p','w','d','2',0};
     HINTERNET ses, con, req;
     DWORD status, size, error, supported, first, target;
+    char buffer[32];
     BOOL ret;
 
     ses = WinHttpOpen(test_useragent, WINHTTP_ACCESS_TYPE_NO_PROXY, NULL, NULL, 0);
@@ -2288,7 +2316,17 @@ static void test_basic_authentication(int port)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed to query status code %u\n", GetLastError());
-    ok(status == 401, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_DENIED, "request failed unexpectedly %u\n", status);
+
+    size = 0;
+    ret = WinHttpReadData(req, buffer, sizeof(buffer), &size);
+    error = GetLastError();
+    ok(ret || broken(error == ERROR_WINHTTP_SHUTDOWN || error == ERROR_WINHTTP_TIMEOUT) /* XP */, "failed to read data %u\n", GetLastError());
+    if (ret)
+    {
+        ok(size == 12, "expected 12, got %u\n", size);
+        ok(!memcmp(buffer, unauthorized, 12), "got %s\n", buffer);
+    }
 
     supported = first = target = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -2349,7 +2387,17 @@ static void test_basic_authentication(int port)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed to query status code %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
+
+    size = 0;
+    ret = WinHttpReadData(req, buffer, sizeof(buffer), &size);
+    error = GetLastError();
+    ok(ret || broken(error == ERROR_WINHTTP_SHUTDOWN || error == ERROR_WINHTTP_TIMEOUT) /* XP */, "failed to read data %u\n", GetLastError());
+    if (ret)
+    {
+        ok(size == 11, "expected 11, got %u\n", size);
+        ok(!memcmp(buffer, hello_world, 11), "got %s\n", buffer);
+    }
 
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(con);
@@ -2385,7 +2433,7 @@ static void test_basic_authentication(int port)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed to query status code %u\n", GetLastError());
-    ok(status == 200, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
 
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(con);
@@ -2403,7 +2451,7 @@ static void test_basic_authentication(int port)
     ret = WinHttpSetOption(req, WINHTTP_OPTION_USERNAME, userW, lstrlenW(userW));
     ok(ret, "failed to set username %u\n", GetLastError());
 
-    ret = WinHttpSetOption(req, WINHTTP_OPTION_PASSWORD, pass2W, lstrlenW(passW));
+    ret = WinHttpSetOption(req, WINHTTP_OPTION_PASSWORD, passW, lstrlenW(passW));
     ok(ret, "failed to set password %u\n", GetLastError());
 
     ret = WinHttpSetCredentials(req, WINHTTP_AUTH_TARGET_SERVER, WINHTTP_AUTH_SCHEME_BASIC, userW, pass2W, NULL);
@@ -2419,7 +2467,7 @@ static void test_basic_authentication(int port)
     size = sizeof(status);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
     ok(ret, "failed to query status code %u\n", GetLastError());
-    ok(status == 401, "request failed unexpectedly %u\n", status);
+    ok(status == HTTP_STATUS_DENIED, "request failed unexpectedly %u\n", status);
 
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(con);
@@ -2501,7 +2549,7 @@ static void test_no_content(int port)
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
                               NULL, &status, &size, NULL);
     ok(ret, "expected success\n");
-    ok(status == 204, "expected status 204, got %d\n", status);
+    ok(status == HTTP_STATUS_NO_CONTENT, "expected status 204, got %d\n", status);
 
     SetLastError(0xdeadbeef);
     size = sizeof(status);
@@ -2575,14 +2623,14 @@ static void test_head_request(int port)
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
                               NULL, &status, &size, NULL);
     ok(ret, "failed to get status code %u\n", GetLastError());
-    ok(status == 200, "got %u\n", status);
+    ok(status == HTTP_STATUS_OK, "got %u\n", status);
 
     len = 0xdeadbeef;
     size = sizeof(len);
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_CONTENT_LENGTH | WINHTTP_QUERY_FLAG_NUMBER,
                               NULL, &len, &size, 0);
     ok(ret, "failed to get content-length header %u\n", GetLastError());
-    ok(len == 100, "got %u\n", len);
+    ok(len == HTTP_STATUS_CONTINUE, "got %u\n", len);
 
     count = 0xdeadbeef;
     ret = WinHttpQueryDataAvailable(req, &count);
@@ -2778,7 +2826,7 @@ static void test_cookies( int port )
     size = sizeof(status);
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
     ok( ret, "failed to query status code %u\n", GetLastError() );
-    ok( status == 200, "request failed unexpectedly %u\n", status );
+    ok( status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status );
 
     WinHttpCloseHandle( req );
 
@@ -2795,7 +2843,7 @@ static void test_cookies( int port )
     size = sizeof(status);
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
     ok( ret, "failed to query status code %u\n", GetLastError() );
-    ok( status == 200, "request failed unexpectedly %u\n", status );
+    ok( status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status );
 
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
@@ -2816,7 +2864,7 @@ static void test_cookies( int port )
     size = sizeof(status);
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
     ok( ret, "failed to query status code %u\n", GetLastError() );
-    ok( status == 200, "request failed unexpectedly %u\n", status );
+    ok( status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status );
 
     WinHttpCloseHandle( req );
 
@@ -2833,7 +2881,7 @@ static void test_cookies( int port )
     size = sizeof(status);
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
     ok( ret, "failed to query status code %u\n", GetLastError() );
-    ok( status == 200 || broken(status == 400), "request failed unexpectedly %u\n", status );
+    ok( status == HTTP_STATUS_OK || broken(status == HTTP_STATUS_BAD_REQUEST), "request failed unexpectedly %u\n", status );
 
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
@@ -2858,7 +2906,7 @@ static void test_cookies( int port )
     size = sizeof(status);
     ret = WinHttpQueryHeaders( req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL );
     ok( ret, "failed to query status code %u\n", GetLastError() );
-    ok( status == 400, "request failed unexpectedly %u\n", status );
+    ok( status == HTTP_STATUS_BAD_REQUEST, "request failed unexpectedly %u\n", status );
 
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
@@ -2908,7 +2956,7 @@ static void test_connection_info( int port )
     memset( &info, 0, sizeof(info) );
     ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
     ok( ret, "failed to retrieve connection info %u\n", GetLastError() );
-    ok( info.cbSize == sizeof(info), "wrong size %u\n", info.cbSize );
+    ok( info.cbSize == sizeof(info) || info.cbSize == sizeof(info) - sizeof(info.cbSize) /* Win7 */, "wrong size %u\n", info.cbSize );
 
     ret = WinHttpReceiveResponse( req, NULL );
     ok( ret, "failed to receive response %u\n", GetLastError() );
@@ -2917,7 +2965,7 @@ static void test_connection_info( int port )
     memset( &info, 0, sizeof(info) );
     ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
     ok( ret, "failed to retrieve connection info %u\n", GetLastError() );
-    ok( info.cbSize == sizeof(info), "wrong size %u\n", info.cbSize );
+    ok( info.cbSize == sizeof(info) || info.cbSize == sizeof(info) - sizeof(info.cbSize) /* Win7 */, "wrong size %u\n", info.cbSize );
 
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
@@ -3045,8 +3093,9 @@ static void test_credentials(void)
     WinHttpCloseHandle(ses);
 }
 
-static void test_IWinHttpRequest(void)
+static void test_IWinHttpRequest(int port)
 {
+    static const WCHAR data_start[] = {'<','!','D','O','C','T','Y','P','E',' ','h','t','m','l',' ','P','U','B','L','I','C'};
     static const WCHAR usernameW[] = {'u','s','e','r','n','a','m','e',0};
     static const WCHAR passwordW[] = {'p','a','s','s','w','o','r','d',0};
     static const WCHAR url1W[] = {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
@@ -3062,6 +3111,7 @@ static void test_IWinHttpRequest(void)
     static const WCHAR dateW[] = {'D','a','t','e',0};
     static const WCHAR test_dataW[] = {'t','e','s','t','d','a','t','a',128,0};
     static const WCHAR utf8W[] = {'u','t','f','-','8',0};
+    static const WCHAR unauthW[] = {'U','n','a','u','t','h','o','r','i','z','e','d',0};
     HRESULT hr;
     IWinHttpRequest *req;
     BSTR method, url, username, password, response = NULL, status_text = NULL, headers = NULL;
@@ -3074,6 +3124,7 @@ static void test_IWinHttpRequest(void)
     IStream *stream, *stream2;
     LARGE_INTEGER pos;
     char buf[128];
+    WCHAR bufW[128];
     DWORD count;
 
     GetSystemTime( &st );
@@ -3354,6 +3405,7 @@ static void test_IWinHttpRequest(void)
 
     hr = IWinHttpRequest_get_ResponseText( req, &response );
     ok( hr == S_OK, "got %08x\n", hr );
+    ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n", wine_dbgstr_wn(response, 32) );
     SysFreeString( response );
 
     hr = IWinHttpRequest_get_Status( req, NULL );
@@ -3554,6 +3606,66 @@ static void test_IWinHttpRequest(void)
     SysFreeString( today );
     VariantClear( &proxy_server );
     VariantClear( &bypass_list );
+
+    hr = CoCreateInstance( &CLSID_WinHttpRequest, NULL, CLSCTX_INPROC_SERVER, &IID_IWinHttpRequest, (void **)&req );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    url = SysAllocString( test_winehq_https );
+    method = SysAllocString( method3W );
+    V_VT( &async ) = VT_BOOL;
+    V_BOOL( &async ) = VARIANT_FALSE;
+    hr = IWinHttpRequest_Open( req, method, url, async );
+    ok( hr == S_OK, "got %08x\n", hr );
+    SysFreeString( method );
+    SysFreeString( url );
+
+    hr = IWinHttpRequest_Send( req, empty );
+    ok( hr == S_OK || broken(hr == HRESULT_FROM_WIN32( ERROR_WINHTTP_INVALID_SERVER_RESPONSE )), "got %08x\n", hr );
+    if (hr == S_OK)
+    {
+        hr = IWinHttpRequest_get_ResponseText( req, &response );
+        ok( hr == S_OK, "got %08x\n", hr );
+        ok( !memcmp(response, data_start, sizeof(data_start)), "got %s\n", wine_dbgstr_wn(response, 32) );
+        SysFreeString( response );
+    }
+
+    IWinHttpRequest_Release( req );
+
+    hr = CoCreateInstance( &CLSID_WinHttpRequest, NULL, CLSCTX_INPROC_SERVER, &IID_IWinHttpRequest, (void **)&req );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    sprintf( buf, "http://localhost:%d/auth", port );
+    MultiByteToWideChar( CP_ACP, 0, buf, -1, bufW, sizeof(bufW)/sizeof(bufW[0]) );
+    url = SysAllocString( bufW );
+    method = SysAllocString( method3W );
+    V_VT( &async ) = VT_BOOL;
+    V_BOOL( &async ) = VARIANT_FALSE;
+    hr = IWinHttpRequest_Open( req, method, url, async );
+    ok( hr == S_OK, "got %08x\n", hr );
+    SysFreeString( method );
+    SysFreeString( url );
+
+    hr = IWinHttpRequest_get_Status( req, &status );
+    ok( hr == HRESULT_FROM_WIN32( ERROR_WINHTTP_CANNOT_CALL_BEFORE_SEND ), "got %08x\n", hr );
+
+    V_VT( &data ) = VT_BSTR;
+    V_BSTR( &data ) = SysAllocString( test_dataW );
+    hr = IWinHttpRequest_Send( req, data );
+    ok( hr == S_OK, "got %08x\n", hr );
+    SysFreeString( V_BSTR( &data ) );
+
+    hr = IWinHttpRequest_get_ResponseText( req, &response );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( !memcmp( response, unauthW, sizeof(unauthW) ), "got %s\n", wine_dbgstr_w(response) );
+    SysFreeString( response );
+
+    status = 0xdeadbeef;
+    hr = IWinHttpRequest_get_Status( req, &status );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( status == HTTP_STATUS_DENIED, "got %d\n", status );
+
+    IWinHttpRequest_Release( req );
+
     CoUninitialize();
 }
 
@@ -4092,7 +4204,6 @@ START_TEST (winhttp)
     test_Timeouts();
     test_resolve_timeout();
     test_credentials();
-    test_IWinHttpRequest();
     test_IWinHttpRequest_Invoke();
     test_WinHttpDetectAutoProxyConfigUrl();
     test_WinHttpGetIEProxyConfigForCurrentUser();
@@ -4110,6 +4221,7 @@ START_TEST (winhttp)
     if (ret != WAIT_OBJECT_0)
         return;
 
+    test_IWinHttpRequest(si.port);
     test_connection_info(si.port);
     test_basic_request(si.port, NULL, basicW);
     test_no_headers(si.port);
