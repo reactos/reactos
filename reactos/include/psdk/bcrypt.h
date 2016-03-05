@@ -40,33 +40,31 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS *PNTSTATUS;
 #endif
 
-#define BCRYPT_ALGORITHM_NAME (const WCHAR []){'A','l','g','o','r','i','t','h','m','N','a','m','e',0}
-#define BCRYPT_AUTH_TAG_LENGTH (const WCHAR []){'A','u','t','h','T','a','g','L','e','n','g','t','h',0}
-#define BCRYPT_BLOCK_LENGTH (const WCHAR []){'B','l','o','c','k','L','e','n','g','t','h',0}
-#define BCRYPT_BLOCK_SIZE_LIST (const WCHAR []){'B','l','o','c','k','S','i','z','e','L','i','s','t',0}
-#define BCRYPT_CHAINING_MODE (const WCHAR []){'C','h','a','i','n','i','n','g','M','o','d','e',0}
-#define BCRYPT_EFFECTIVE_KEY_LENGTH (const WCHAR []){'E','f','f','e','c','t','i','v','e','K','e','y','L','e','n','g','t','h',0}
-#define BCRYPT_HASH_BLOCK_LENGTH (const WCHAR []){'H','a','s','h','B','l','o','c','k','L','e','n','g','t','h',0}
-#define BCRYPT_HASH_LENGTH (const WCHAR []){'H','a','s','h','D','i','g','e','s','t','L','e','n','g','t','h',0}
-#define BCRYPT_HASH_OID_LIST (const WCHAR []){'H','a','s','h','O','I','D','L','i','s','t',0}
-#define BCRYPT_KEY_LENGTH (const WCHAR []){'K','e','y','L','e','n','g','t','h',0}
-#define BCRYPT_KEY_LENGTHS (const WCHAR []){'K','e','y','L','e','n','g','t','h','s',0}
-#define BCRYPT_KEY_OBJECT_LENGTH (const WCHAR []){'K','e','y','O','b','j','e','c','t','L','e','n','g','t','h',0}
-#define BCRYPT_KEY_STRENGTH (const WCHAR []){'K','e','y','S','t','r','e','n','g','t','h',0}
-#define BCRYPT_OBJECT_LENGTH (const WCHAR []){'O','b','j','e','c','t','L','e','n','g','t','h',0}
-#define BCRYPT_PADDING_SCHEMES (const WCHAR []){'P','a','d','d','i','n','g','S','c','h','e','m','e','s',0}
-#define BCRYPT_PROVIDER_HANDLE (const WCHAR []){'P','r','o','v','i','d','e','r','H','a','n','d','l','e',0}
-#define BCRYPT_SIGNATURE_LENGTH (const WCHAR []){'S','i','g','n','a','t','u','r','e','L','e','n','g','t','h',0}
+#define BCRYPT_ALGORITHM_NAME L"AlgorithmName"
+#define BCRYPT_AUTH_TAG_LENGTH L"AuthTagLength"
+#define BCRYPT_BLOCK_LENGTH L"BlockLength"
+#define BCRYPT_BLOCK_SIZE_LIST L"BlockSizeList"
+#define BCRYPT_CHAINING_MODE L"ChainingMode"
+#define BCRYPT_EFFECTIVE_KEY_LENGTH L"EffectiveKeyLength"
+#define BCRYPT_HASH_BLOCK_LENGTH L"HashBlockLength"
+#define BCRYPT_HASH_LENGTH L"HashDigestLength"
+#define BCRYPT_HASH_OID_LIST L"HashOIDList"
+#define BCRYPT_KEY_LENGTH L"KeyLengths"
+#define BCRYPT_KEY_LENGTHS L"KeyLengths"
+#define BCRYPT_KEY_OBJECT_LENGTH L"KeyObjectLength"
+#define BCRYPT_KEY_STRENGTH L"KeyStrength"
+#define BCRYPT_OBJECT_LENGTH L"ObjectLength"
+#define BCRYPT_PADDING_SCHEMES L"PaddingSchemes"
+#define BCRYPT_PROVIDER_HANDLE L"ProviderHandle"
+#define BCRYPT_SIGNATURE_LENGTH L"SignatureLength"
 
-#define MS_PRIMITIVE_PROVIDER (const WCHAR [])\
-    {'M','i','c','r','o','s','o','f','t',' ','P','r','i','m','i','t','i','v','e',' ','P','r','o','v','i','d','e','r',0}
-#define MS_PLATFORM_CRYPTO_PROVIDER (const WCHAR [])\
-    {'M','i','c','r','o','s','o','f','t',' ','P','l','a','t','f','o','r','m',' ','C','r','y','p','t','o',' ','P','r','o','v','i','d','e','r',0}
+#define MS_PRIMITIVE_PROVIDER L"Microsoft Primitive Provider"
+#define MS_PLATFORM_CRYPTO_PROVIDER L"Microsoft Platform Crypto Provider"
 
-#define BCRYPT_SHA1_ALGORITHM       (const WCHAR []){'S','H','A','1',0}
-#define BCRYPT_SHA256_ALGORITHM     (const WCHAR []){'S','H','A','2','5','6',0}
-#define BCRYPT_SHA384_ALGORITHM     (const WCHAR []){'S','H','A','3','8','4',0}
-#define BCRYPT_SHA512_ALGORITHM     (const WCHAR []){'S','H','A','5','1','2',0}
+#define BCRYPT_SHA1_ALGORITHM       L"SHA1"
+#define BCRYPT_SHA256_ALGORITHM     L"SHA256"
+#define BCRYPT_SHA384_ALGORITHM     L"SHA384"
+#define BCRYPT_SHA512_ALGORITHM     L"SHA512"
 
 typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
 {
