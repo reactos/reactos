@@ -438,11 +438,13 @@ static void mixer_test_deviceA(int device)
 
             mixerlineA.cbStruct = sizeof(mixerlineA);
             mixerlineA.dwDestination=d;
+            mixerlineA.dwUser = (ULONG_PTR)0xdeadbeef;
             rc = mixerGetLineInfoA(mix, &mixerlineA, MIXER_GETLINEINFOF_DESTINATION);
             ok(rc==MMSYSERR_NOERROR||rc==MMSYSERR_NODRIVER,
                "mixerGetLineInfoA(MIXER_GETLINEINFOF_DESTINATION): "
                "MMSYSERR_NOERROR expected, got %s\n",
                mmsys_error(rc));
+            ok(mixerlineA.dwUser == 0, "dwUser was not reset\n");
             if (rc==MMSYSERR_NODRIVER)
                 trace("  No Driver\n");
             else if (rc==MMSYSERR_NOERROR) {
@@ -822,11 +824,13 @@ static void mixer_test_deviceW(int device)
 
             mixerlineW.cbStruct = sizeof(mixerlineW);
             mixerlineW.dwDestination=d;
+            mixerlineW.dwUser = (ULONG_PTR)0xdeadbeef;
             rc = mixerGetLineInfoW(mix, &mixerlineW, MIXER_GETLINEINFOF_DESTINATION);
             ok(rc==MMSYSERR_NOERROR||rc==MMSYSERR_NODRIVER,
                "mixerGetLineInfoW(MIXER_GETLINEINFOF_DESTINATION): "
                "MMSYSERR_NOERROR expected, got %s\n",
                mmsys_error(rc));
+            ok(mixerlineW.dwUser == 0, "dwUser was not reset\n");
             if (rc==MMSYSERR_NODRIVER)
                 trace("  No Driver\n");
             else if (rc==MMSYSERR_NOERROR && winetest_interactive) {
