@@ -267,6 +267,12 @@ typedef struct{
     WORD Alternate[1];
 } GSUB_AlternateSet;
 
+typedef struct {
+    WORD SubstFormat;
+    WORD ExtensionLookupType;
+    DWORD ExtensionOffset;
+} GSUB_ExtensionPosFormat1;
+
 /* These are all structures needed for the GPOS table */
 
 typedef struct {
@@ -715,6 +721,25 @@ static INT GSUB_is_glyph_covered(LPCVOID table , UINT glyph)
     return -1;
 }
 
+static const BYTE *GSUB_get_subtable(const OT_LookupTable *look, int index)
+{
+    int offset = GET_BE_WORD(look->SubTable[index]);
+
+    if (GET_BE_WORD(look->LookupType) == 7)
+    {
+        const GSUB_ExtensionPosFormat1 *ext = (const GSUB_ExtensionPosFormat1 *)((const BYTE *)look + offset);
+        if (GET_BE_WORD(ext->SubstFormat) == 1)
+        {
+            offset += GET_BE_DWORD(ext->ExtensionOffset);
+        }
+        else
+        {
+            FIXME("Unhandled Extension Substitution Format %i\n",GET_BE_WORD(ext->SubstFormat));
+        }
+    }
+    return (const BYTE *)look + offset;
+}
+
 static INT GSUB_apply_SingleSubst(const OT_LookupTable *look, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count)
 {
     int j;
@@ -722,10 +747,7 @@ static INT GSUB_apply_SingleSubst(const OT_LookupTable *look, WORD *glyphs, INT 
 
     for (j = 0; j < GET_BE_WORD(look->SubTableCount); j++)
     {
-        int offset;
-        const GSUB_SingleSubstFormat1 *ssf1;
-        offset = GET_BE_WORD(look->SubTable[j]);
-        ssf1 = (const GSUB_SingleSubstFormat1*)((const BYTE*)look+offset);
+        const GSUB_SingleSubstFormat1 *ssf1 = (const GSUB_SingleSubstFormat1*)GSUB_get_subtable(look, j);
         if (GET_BE_WORD(ssf1->SubstFormat) == 1)
         {
             int offset = GET_BE_WORD(ssf1->Coverage);
@@ -773,8 +795,7 @@ static INT GSUB_apply_MultipleSubst(const OT_LookupTable *look, WORD *glyphs, IN
     {
         int offset, index;
         const GSUB_MultipleSubstFormat1 *msf1;
-        offset = GET_BE_WORD(look->SubTable[j]);
-        msf1 = (const GSUB_MultipleSubstFormat1*)((const BYTE*)look+offset);
+        msf1 = (const GSUB_MultipleSubstFormat1*)GSUB_get_subtable(look, j);
 
         offset = GET_BE_WORD(msf1->Coverage);
         index = GSUB_is_glyph_covered((const BYTE*)msf1+offset, glyphs[glyph_index]);
@@ -823,8 +844,7 @@ static INT GSUB_apply_AlternateSubst(const OT_LookupTable *look, WORD *glyphs, I
         const GSUB_AlternateSubstFormat1 *asf1;
         INT index;
 
-        offset = GET_BE_WORD(look->SubTable[j]);
-        asf1 = (const GSUB_AlternateSubstFormat1*)((const BYTE*)look+offset);
+        asf1 = (const GSUB_AlternateSubstFormat1*)GSUB_get_subtable(look, j);
         offset = GET_BE_WORD(asf1->Coverage);
 
         index = GSUB_is_glyph_covered((const BYTE*)asf1+offset, glyphs[glyph_index]);
@@ -856,8 +876,7 @@ static INT GSUB_apply_LigatureSubst(const OT_LookupTable *look, WORD *glyphs, IN
         const GSUB_LigatureSubstFormat1 *lsf1;
         int offset,index;
 
-        offset = GET_BE_WORD(look->SubTable[j]);
-        lsf1 = (const GSUB_LigatureSubstFormat1*)((const BYTE*)look+offset);
+        lsf1 = (const GSUB_LigatureSubstFormat1*)GSUB_get_subtable(look, j);
         offset = GET_BE_WORD(lsf1->Coverage);
         index = GSUB_is_glyph_covered((const BYTE*)lsf1+offset, glyphs[glyph_index]);
         TRACE("  Coverage index %i\n",index);
@@ -923,8 +942,7 @@ static INT GSUB_apply_ChainContextSubst(const OT_LookupList* lookup, const OT_Lo
         int dirLookahead = write_dir;
         int dirBacktrack = -1 * write_dir;
 
-        offset = GET_BE_WORD(look->SubTable[j]);
-        ccsf1 = (const GSUB_ChainContextSubstFormat1*)((const BYTE*)look+offset);
+        ccsf1 = (const GSUB_ChainContextSubstFormat1*)GSUB_get_subtable(look, j);
         if (GET_BE_WORD(ccsf1->SubstFormat) == 1)
         {
             static int once;
@@ -1019,12 +1037,34 @@ static INT GSUB_apply_ChainContextSubst(const OT_LookupList* lookup, const OT_Lo
 static INT GSUB_apply_lookup(const OT_LookupList* lookup, INT lookup_index, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count)
 {
     int offset;
+    int type;
     const OT_LookupTable *look;
 
     offset = GET_BE_WORD(lookup->Lookup[lookup_index]);
     look = (const OT_LookupTable*)((const BYTE*)lookup + offset);
-    TRACE("type %i, flag %x, subtables %i\n",GET_BE_WORD(look->LookupType),GET_BE_WORD(look->LookupFlag),GET_BE_WORD(look->SubTableCount));
-    switch(GET_BE_WORD(look->LookupType))
+    type = GET_BE_WORD(look->LookupType);
+    TRACE("type %i, flag %x, subtables %i\n",type,GET_BE_WORD(look->LookupFlag),GET_BE_WORD(look->SubTableCount));
+    if (type == 7)
+    {
+        if (GET_BE_WORD(look->SubTableCount))
+        {
+            const GSUB_ExtensionPosFormat1 *ext = (const GSUB_ExtensionPosFormat1 *)((const BYTE *)look + GET_BE_WORD(look->SubTable[0]));
+            if (GET_BE_WORD(ext->SubstFormat) == 1)
+            {
+                type = GET_BE_WORD(ext->ExtensionLookupType);
+                TRACE("extension type %i\n",type);
+            }
+            else
+            {
+                FIXME("Unhandled Extension Substitution Format %i\n",GET_BE_WORD(ext->SubstFormat));
+            }
+        }
+        else
+        {
+            WARN("lookup type is Extension Substitution but no extension subtable exists\n");
+        }
+    }
+    switch(type)
     {
         case 1:
             return GSUB_apply_SingleSubst(look, glyphs, glyph_index, write_dir, glyph_count);
@@ -1036,8 +1076,11 @@ static INT GSUB_apply_lookup(const OT_LookupList* lookup, INT lookup_index, WORD
             return GSUB_apply_LigatureSubst(look, glyphs, glyph_index, write_dir, glyph_count);
         case 6:
             return GSUB_apply_ChainContextSubst(lookup, look, glyphs, glyph_index, write_dir, glyph_count);
+        case 7:
+            FIXME("Extension Substitution types not valid here\n");
+            break;
         default:
-            FIXME("We do not handle SubType %i\n",GET_BE_WORD(look->LookupType));
+            FIXME("We do not handle SubType %i\n",type);
     }
     return GSUB_E_NOGLYPH;
 }

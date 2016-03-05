@@ -244,7 +244,7 @@ typedef void (*reorder_function)(LPWSTR pwChar, IndicSyllable *syllable, lexical
 int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target) DECLSPEC_HIDDEN;
 
 BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
-                const SCRIPT_CONTROL *c, WORD *lpOutLevels ) DECLSPEC_HIDDEN;
+                const SCRIPT_CONTROL *c, WORD *lpOutLevels, WORD *lpOutOverrides ) DECLSPEC_HIDDEN;
 BOOL BIDI_GetStrengths(LPCWSTR lpString, INT uCount, const SCRIPT_CONTROL *c,
                       WORD* lpStrength) DECLSPEC_HIDDEN;
 INT BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse) DECLSPEC_HIDDEN;
