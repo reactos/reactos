@@ -19,8 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-// #define OEMRESOURCE
 #include "progman.h"
+
+#include <shellapi.h>
 
 GLOBALS Globals;
 
@@ -38,11 +39,18 @@ static VOID MAIN_AutoStart(void);
  *           WinMain
  */
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
+#ifdef __REACTOS__
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
+#else
+int PASCAL WinMain (HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
+#endif
 {
   MSG      msg;
 
   Globals.lpszIniFile         = "progman.ini";
+#ifndef __REACTOS__
+  Globals.lpszIcoFile         = "progman.ico";
+#endif
 
   Globals.hInstance           = hInstance;
   Globals.hGroups             = 0;
@@ -57,9 +65,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show
     GetPrivateProfileIntA("Settings", "SaveSettings", 0, Globals.lpszIniFile);
 
   /* Load default icons */
-  Globals.hMainIcon    = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_APPICON));
-  Globals.hGroupIcon   = Globals.hMainIcon; // ExtractIconA(Globals.hInstance, Globals.lpszIcoFile, 0);
-  Globals.hDefaultIcon = Globals.hMainIcon; // ExtractIconA(Globals.hInstance, Globals.lpszIcoFile, 0);
+#ifdef __REACTOS__
+  Globals.hMainIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_APPICON));
+  Globals.hGroupIcon = Globals.hMainIcon;
+  Globals.hDefaultIcon = Globals.hMainIcon;
+#else
+  Globals.hMainIcon    = ExtractIconA(Globals.hInstance, Globals.lpszIcoFile, 0);
+  Globals.hGroupIcon   = ExtractIconA(Globals.hInstance, Globals.lpszIcoFile, 0);
+  Globals.hDefaultIcon = ExtractIconA(Globals.hInstance, Globals.lpszIcoFile, 0);
+#endif
   if (!Globals.hMainIcon)    Globals.hMainIcon = LoadIconW(0, (LPWSTR)DEFAULTICON);
   if (!Globals.hGroupIcon)   Globals.hGroupIcon = LoadIconW(0, (LPWSTR)DEFAULTICON);
   if (!Globals.hDefaultIcon) Globals.hDefaultIcon = LoadIconW(0, (LPWSTR)DEFAULTICON);
@@ -310,12 +324,17 @@ static VOID MAIN_MenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       break;
 
     case PM_ABOUT_WINE:
+#ifdef __REACTOS__
     {
         WCHAR szTitle[MAX_STRING_LEN];
         LoadStringW(Globals.hInstance, IDS_PROGRAM_MANAGER, szTitle, ARRAYSIZE(szTitle));
         ShellAboutW(hWnd, szTitle, NULL, NULL);
         break;
     }
+#else
+      ShellAboutA(hWnd, "WINE", "Program Manager", 0);
+      break;
+#endif
 
     default:
 	MAIN_MessageBoxIDS(IDS_NOT_IMPLEMENTED, IDS_ERROR, MB_OK);
@@ -338,7 +357,7 @@ static ATOM MAIN_RegisterMainWinClass(void)
   class.cbWndExtra    = 0;
   class.hInstance     = Globals.hInstance;
   class.hIcon         = Globals.hMainIcon;
-  class.hCursor       = LoadCursorW(0, (LPWSTR)IDC_ARROW);
+  class.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
   class.hbrBackground = GetStockObject (NULL_BRUSH);
   class.lpszMenuName  = 0;
   class.lpszClassName = STRING_MAIN_WIN_CLASS_NAME;

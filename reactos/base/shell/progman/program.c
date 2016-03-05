@@ -77,7 +77,7 @@ ATOM PROGRAM_RegisterProgramWinClass(void)
   class.cbWndExtra    = sizeof(LONG_PTR);
   class.hInstance     = Globals.hInstance;
   class.hIcon         = 0;
-  class.hCursor       = LoadCursorW(0, (LPWSTR)IDC_ARROW);
+  class.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
   class.hbrBackground = GetStockObject (WHITE_BRUSH);
   class.lpszMenuName  = 0;
   class.lpszClassName = STRING_PROGRAM_WIN_CLASS_NAME;

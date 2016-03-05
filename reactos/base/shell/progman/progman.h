@@ -23,20 +23,16 @@
 #define PROGMAN_H
 
 #include <stdio.h>
-#include <string.h>
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
-#include <commdlg.h>
-#include <shellapi.h>
-
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 
 #define MAX_STRING_LEN      255
 #define MAX_PATHNAME_LEN    1024
 #define MAX_LANGUAGE_NUMBER (PM_LAST_LANGUAGE - PM_FIRST_LANGUAGE)
-
 
 #include "resource.h"
 
@@ -138,6 +134,9 @@ typedef struct
   HMENU   hWindowsMenu;
   HMENU   hLanguageMenu;
   LPCSTR  lpszIniFile;
+#ifndef __REACTOS__
+  LPCSTR  lpszIcoFile;
+#endif
   BOOL    bAutoArrange;
   BOOL    bSaveSettings;
   BOOL    bMinOnRun;
@@ -206,3 +205,7 @@ extern WCHAR STRING_GROUP_WIN_CLASS_NAME[];
 extern WCHAR STRING_PROGRAM_WIN_CLASS_NAME[];
 
 #endif /* PROGMAN_H */
+
+/* Local Variables:    */
+/* c-file-style: "GNU" */
+/* End:                */

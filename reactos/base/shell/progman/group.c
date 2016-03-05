@@ -58,8 +58,8 @@ ATOM GROUP_RegisterGroupWinClass(void)
   class.cbClsExtra    = 0;
   class.cbWndExtra    = sizeof(LONG_PTR);
   class.hInstance     = Globals.hInstance;
-  class.hIcon         = LoadIconW(0, (LPWSTR)IDI_WINLOGO);
-  class.hCursor       = LoadCursorW(0, (LPWSTR)IDC_ARROW);
+  class.hIcon         = LoadIconW (0, (LPWSTR)IDI_WINLOGO);
+  class.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
   class.hbrBackground = GetStockObject (WHITE_BRUSH);
   class.lpszMenuName  = 0;
   class.lpszClassName = STRING_GROUP_WIN_CLASS_NAME;
@@ -170,7 +170,11 @@ HLOCAL GROUP_AddGroup(LPCSTR lpszName, LPCSTR lpszGrpFile, INT nCmdShow,
   cs.style   = 0;
   cs.lParam  = 0;
 
+#ifdef __REACTOS__
   group->hWnd = (HWND)SendMessageW(Globals.hMDIWnd, WM_MDICREATE, 0, (LPARAM)&cs);
+#else
+  group->hWnd = (HWND)SendMessageA(Globals.hMDIWnd, WM_MDICREATE, 0, (LPARAM)&cs);
+#endif
   SetWindowTextA( group->hWnd, lpszName );
   SetWindowLongPtrW(group->hWnd, 0, (LONG_PTR) hGroup);
 

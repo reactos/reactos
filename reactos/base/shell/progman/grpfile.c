@@ -20,7 +20,6 @@
  */
 
 #include "progman.h"
-// #include <mmsystem.h>
 
 #define MALLOCHUNK 1000
 
@@ -277,7 +276,11 @@ static HLOCAL GRPFILE_ScanProgram(LPCSTR buffer, INT size,
   if (iconANDbits_ptr + iconANDsize > buffer + size ||
       iconXORbits_ptr + iconXORsize > buffer + size) return(0);
 
-  hIcon = CreateIcon( Globals.hInstance, width, height, planes, bpp, (PBYTE)iconANDbits_ptr, (PBYTE)iconXORbits_ptr );
+#ifdef __REACTOS__
+  hIcon = CreateIcon(Globals.hInstance, width, height, planes, bpp, (PBYTE)iconANDbits_ptr, (PBYTE)iconXORbits_ptr);
+#else
+  hIcon = CreateIcon( Globals.hInstance, width, height, planes, bpp, iconANDbits_ptr, iconXORbits_ptr );
+#endif
 
   lpszName        = buffer + GET_USHORT(program_ptr, 18);
   lpszCmdLine     = buffer + GET_USHORT(program_ptr, 20);
@@ -508,7 +511,11 @@ static BOOL GRPFILE_DoWriteGroupFile(HFILE file, PROGGROUP *group)
   HLOCAL hProgram;
   INT    NumProg, Title, Progs, Icons, Extension;
   INT    CurrProg, CurrIcon, nCmdShow, ptr, seqnum;
-  UINT   sizeAnd, sizeXor;
+#ifdef __REACTOS__
+  UINT sizeAnd, sizeXor;
+#else
+  DWORD  sizeAnd, sizeXor;
+#endif
   BOOL   need_extension;
   LPCSTR lpszTitle = LocalLock(group->hName);
 
