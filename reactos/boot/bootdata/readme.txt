@@ -1,5 +1,32 @@
+================================================================================
+ReactOS™ Version 0.4.0
+für die Chemnitzer Linux-Tage 2016
+================================================================================
+
+Willkommen zu ReactOS!
+
+CD-INHALT:
+
+  * ReactOS Live-System/Installation
+  * ReactOS in einer virtuellen QEMU-Maschine
+  * ReactOS Build Environment (RosBE)
+  * Quellcode
+
+Diese CD sollte unter Windows ein AutoRun-Programm starten. Alternativ
+können Sie sich den CD-Inhalt über einen Dateibrowser anschauen.
+Die Ordnernamen sollten selbsterklärend sein.
+
+Der gesamte Quellcode des Betriebssystems lässt sich unter Einsatz des
+ReactOS Build Environments sowohl unter Windows als auch unter
+Unix-ähnlichen Betriebssystemen wie Linux kompilieren.
+
+Weitere Informationen über ReactOS finden Sie unter www.reactos.org!
+
+================================================================================
+
+
 ========================
-ReactOS™ Version 0.4.x
+ReactOS™ Version 0.4.0
 Updated January 5, 2016
 ========================
 
@@ -47,9 +74,3 @@ Developer and User Tutorials: http://www.reactos.org/wiki
 
 The tutorials contain more information on the project, compiling and testing
 ReactOS - amongst other topics. Contributors to the project are always welcome.
-
-
-6. Author
----------
-
-This document was written by Jason Filby (jasonfilby@yahoo.com).
