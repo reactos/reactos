@@ -487,7 +487,7 @@ static void test_read(void)
     ok(!ret, "Expected failure\n");
     ok(read == 0, "Expected no bytes read\n");
     ok(needed > sizeof(EVENTLOGRECORD), "Expected the needed buffersize to be bigger than sizeof(EVENTLOGRECORD)\n");
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
     /* Read the first record */
     toread = needed;
