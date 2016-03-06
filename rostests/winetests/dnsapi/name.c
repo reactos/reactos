@@ -27,6 +27,8 @@
 //#include "winnls.h"
 #include <windns.h>
 
+BOOL WINAPI DnsFlushResolverCacheEntry_A(PCSTR);
+
 static const struct
 {
     LPCSTR name;
@@ -154,22 +156,22 @@ static void test_DnsValidateName_A( void )
 
 static void test_DnsNameCompare_A( void )
 {
-    static CHAR empty[]          = "",
-                dot[]            = ".",
-                dotdot[]         = "..",
-                A[]              = "A",
-                a[]              = "a",
-                B[]              = "B",
-                b[]              = "b",
-                A_dot_B[]        = "A.B",
-                a_dot_a[]        = "a.a",
-                a_dot_b[]        = "a.b",
-                a_dot_b_dot[]    = "a.b.",
-                a_dot_b_dotdot[] = "a.b..",
-                B_dot_A[]        = "B.A",
-                b_dot_a[]        = "b.a",
-                b_dot_a_dot[]    = "b.a.",
-                b_dot_a_dotdot[] = "b.a..";
+    static const CHAR empty[]          = "",
+                      dot[]            = ".",
+                      dotdot[]         = "..",
+                      A[]              = "A",
+                      a[]              = "a",
+                      B[]              = "B",
+                      b[]              = "b",
+                      A_dot_B[]        = "A.B",
+                      a_dot_a[]        = "a.a",
+                      a_dot_b[]        = "a.b",
+                      a_dot_b_dot[]    = "a.b.",
+                      a_dot_b_dotdot[] = "a.b..",
+                      B_dot_A[]        = "B.A",
+                      b_dot_a[]        = "b.a",
+                      b_dot_a_dot[]    = "b.a.",
+                      b_dot_a_dotdot[] = "b.a..";
 
     ok( DnsNameCompare_A( NULL, NULL ) == TRUE, "failed unexpectedly\n" );
 
@@ -202,8 +204,27 @@ static void test_DnsNameCompare_A( void )
     ok( DnsNameCompare_A( a_dot_b, b_dot_a_dot ) == FALSE, "succeeded unexpectedly\n" );
 }
 
+static void test_DnsFlushResolverCacheEntry_A(void)
+{
+    BOOL ret;
+    DWORD err;
+
+    SetLastError( 0xdeadbeef );
+    ret = DnsFlushResolverCacheEntry_A( NULL );
+    err = GetLastError();
+    ok( !ret, "got %d\n", ret );
+    ok( err == 0xdeadbeef, "got %u\n", err );
+
+    ret = DnsFlushResolverCacheEntry_A( "localhost" );
+    ok( ret, "got %d\n", ret );
+
+    ret = DnsFlushResolverCacheEntry_A( "nxdomain.test.winehq.org" );
+    ok( ret, "got %d\n", ret );
+}
+
 START_TEST(name)
 {
     test_DnsValidateName_A();
     test_DnsNameCompare_A();
+    test_DnsFlushResolverCacheEntry_A();
 }

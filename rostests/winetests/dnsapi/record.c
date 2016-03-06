@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define UNICODE
+
 #include <wine/test.h>
 
 //#include <stdarg.h>
@@ -28,12 +30,12 @@
 //#include "winnls.h"
 #include <windns.h>
 
-static char name1[] = "localhost";
-static char name2[] = "LOCALHOST";
+static WCHAR name1[] = {'l','o','c','a','l','h','o','s','t',0};
+static WCHAR name2[] = {'L','O','C','A','L','H','O','S','T',0};
 
-static DNS_RECORDA r1 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
-static DNS_RECORDA r2 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
-static DNS_RECORDA r3 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
+static DNS_RECORDW r1 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
+static DNS_RECORDW r2 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
+static DNS_RECORDW r3 = { NULL, name1, DNS_TYPE_A, sizeof(DNS_A_DATA), { 0 }, 1200, 0, { { 0xffffffff } } };
 
 static void test_DnsRecordCompare( void )
 {
@@ -43,10 +45,10 @@ static void test_DnsRecordCompare( void )
     ok( DnsRecordCompare( &r1, &r2 ) == TRUE, "failed unexpectedly\n" );
 
     r2.Flags.S.CharSet = DnsCharSetUnicode;
-    ok( DnsRecordCompare( &r1, &r2 ) == FALSE, "succeeded unexpectedly\n" );
+    ok( DnsRecordCompare( &r1, &r2 ) == TRUE, "failed unexpectedly\n" );
 
     r2.Flags.S.CharSet = DnsCharSetAnsi;
-    ok( DnsRecordCompare( &r1, &r2 ) == FALSE, "succeeded unexpectedly\n" );
+    ok( DnsRecordCompare( &r1, &r2 ) == TRUE, "failed unexpectedly\n" );
 
     r1.Flags.S.CharSet = DnsCharSetAnsi;
     ok( DnsRecordCompare( &r1, &r2 ) == TRUE, "failed unexpectedly\n" );
@@ -60,8 +62,8 @@ static void test_DnsRecordCompare( void )
 
 static void test_DnsRecordSetCompare( void )
 {
-    DNS_RECORD *diff1;
-    DNS_RECORD *diff2;
+    DNS_RECORDW *diff1;
+    DNS_RECORDW *diff2;
     DNS_RRSET rr1, rr2;
 
     r1.Flags.DW = 0x2019;
@@ -120,7 +122,7 @@ static void test_DnsRecordSetCompare( void )
 static void test_DnsRecordSetDetach( void )
 {
     DNS_RRSET rr;
-    DNS_RECORDA *r, *s;
+    DNS_RECORDW *r, *s;
 
     DNS_RRSET_INIT( rr );
     DNS_RRSET_ADD( rr, &r1 );
