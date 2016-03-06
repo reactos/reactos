@@ -491,6 +491,13 @@ extern "C" {
 typedef long LONG_PTR;
 #endif
 
+#if (WINVER >= 0x0600)
+#define MUI_FULL_LANGUAGE             0x01
+#define MUI_LANGUAGE_ID               0x04
+#define MUI_LANGUAGE_NAME             0x08
+#define MUI_MACHINE_LANGUAGE_SETTINGS 0x400
+#endif /* (WINVER >= 0x0600) */
+
 #ifndef RC_INVOKED
 typedef DWORD LCTYPE;
 typedef DWORD CALTYPE;
