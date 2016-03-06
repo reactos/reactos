@@ -1,0 +1,270 @@
+/*
+ * Copyright (C) 2003 Robert Shearman
+ *               2005 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#pragma makedep regtypelib
+
+import "oaidl.idl";
+
+#include <olectl.h>
+
+[
+    uuid(bef6e001-a874-101a-8bba-00aa00300cab),
+    version(2.0),
+    helpstring("Standard OLE Types")
+]
+library StdType
+{
+    importlib("stdole2.tlb");
+
+    typedef [uuid(66504301-BE0F-101A-8BBB-00AA00300CAB), public]
+        unsigned long OLE_COLOR;
+
+    typedef [uuid(66504302-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_XPOS_PIXELS;
+
+    typedef [uuid(66504303-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_YPOS_PIXELS;
+
+    typedef [uuid(66504304-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_XSIZE_PIXELS;
+
+    typedef [uuid(66504305-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_YSIZE_PIXELS;
+
+    typedef [uuid(66504306-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_XPOS_HIMETRIC;
+
+    typedef [uuid(66504307-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_YPOS_HIMETRIC;
+
+    typedef [uuid(66504308-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_XSIZE_HIMETRIC;
+
+    typedef [uuid(66504309-BE0F-101A-8BBB-00AA00300CAB), public]
+        long OLE_YSIZE_HIMETRIC;
+
+    typedef [uuid(BF030640-9069-101B-AE2D-08002B2EC713), public]
+        float OLE_XPOS_CONTAINER;
+
+    typedef [uuid(BF030641-9069-101B-AE2D-08002B2EC713), public]
+        float OLE_YPOS_CONTAINER;
+
+    typedef [uuid(BF030642-9069-101B-AE2D-08002B2EC713), public]
+        float OLE_XSIZE_CONTAINER;
+
+    typedef [uuid(BF030643-9069-101B-AE2D-08002B2EC713), public]
+        float OLE_YSIZE_CONTAINER;
+
+    typedef [uuid(66504313-BE0F-101A-8BBB-00AA00300CAB), public]
+        int OLE_HANDLE;
+
+    typedef [uuid(6650430B-BE0F-101A-8BBB-00AA00300CAB), public]
+        VARIANT_BOOL OLE_OPTEXCLUSIVE;
+
+    typedef [uuid(BF030644-9069-101B-AE2D-08002B2EC713), public]
+        VARIANT_BOOL OLE_CANCELBOOL;
+
+    typedef [uuid(BF030645-9069-101B-AE2D-08002B2EC713), public]
+        VARIANT_BOOL OLE_ENABLEDEFAULTBOOL;
+
+    [
+     uuid(6650430A-BE0F-101A-8BBB-00AA00300CAB)
+    ]
+    enum OLE_TRISTATE {
+        Unchecked = 0,
+        Checked = 1,
+        Gray = 2
+    };
+
+    typedef [uuid(6650430D-BE0F-101A-8BBB-00AA00300CAB), public]
+        BSTR FONTNAME;
+
+    typedef [uuid(6650430E-BE0F-101A-8BBB-00AA00300CAB), public]
+        CURRENCY FONTSIZE;
+
+    typedef [uuid(6650430F-BE0F-101A-8BBB-00AA00300CAB), public]
+        VARIANT_BOOL FONTBOLD;
+
+    typedef [uuid(66504310-BE0F-101A-8BBB-00AA00300CAB), public]
+        VARIANT_BOOL FONTITALIC;
+
+    typedef [uuid(66504311-BE0F-101A-8BBB-00AA00300CAB), public]
+        VARIANT_BOOL FONTUNDERSCORE;
+
+    typedef [uuid(66504312-BE0F-101A-8BBB-00AA00300CAB), public]
+        VARIANT_BOOL FONTSTRIKETHROUGH;
+
+
+    [
+     odl,
+     uuid(BEF6E002-A874-101A-8BBA-00AA00300CAB),
+     helpstring("Font Object"),
+     hidden
+    ]
+    interface IFont : IUnknown {
+        [propget] HRESULT Name([out, retval] BSTR *pname);
+        [propput] HRESULT Name([in] BSTR pname);
+
+        [propget] HRESULT Size([out, retval] CURRENCY *psize);
+        [propput] HRESULT Size([in] CURRENCY psize);
+
+        [propget] HRESULT Bold([out, retval] VARIANT_BOOL *pbold);
+        [propput] HRESULT Bold([in] VARIANT_BOOL pbold);
+
+        [propget] HRESULT Italic([out, retval] VARIANT_BOOL *pitalic);
+        [propput] HRESULT Italic([in] VARIANT_BOOL pitalic);
+
+        [propget] HRESULT Underline([out, retval] VARIANT_BOOL *punderline);
+        [propput] HRESULT Underline([in] VARIANT_BOOL punderline);
+
+        [propget] HRESULT Strikethrough([out, retval] VARIANT_BOOL *pstrikethrough);
+        [propput] HRESULT Strikethrough([in] VARIANT_BOOL pstrikethrough);
+
+        [propget] HRESULT Weight([out, retval] short *pweight);
+        [propput] HRESULT Weight([in] short pweight);
+
+        [propget] HRESULT Charset([out, retval] short *pcharset);
+        [propput] HRESULT Charset([in] short pcharset);
+
+        [propget] HRESULT hFont([out, retval] OLE_HANDLE *phfont);
+
+        HRESULT Clone([out] IFont **ppfont);
+
+        HRESULT IsEqual([in] IFont *pfontOther);
+
+        HRESULT SetRatio([in] long cyLogical, [in] long cyHimetric);
+
+        HRESULT AddRefHfont([in] OLE_HANDLE hFont);
+
+        HRESULT ReleaseHfont([in] OLE_HANDLE hFont);
+    };
+
+
+    [
+     odl,
+     uuid(BEF6E003-A874-101A-8BBA-00AA00300CAB)
+    ]
+    dispinterface Font {
+    properties:
+        [id(DISPID_FONT_NAME)] BSTR Name;
+        [id(DISPID_FONT_SIZE)] CURRENCY Size;
+        [id(DISPID_FONT_BOLD)] VARIANT_BOOL Bold;
+        [id(DISPID_FONT_ITALIC)] VARIANT_BOOL Italic;
+        [id(DISPID_FONT_UNDER)] VARIANT_BOOL Underline;
+        [id(DISPID_FONT_STRIKE)] VARIANT_BOOL Strikethrough;
+        [id(DISPID_FONT_WEIGHT)] short Weight;
+        [id(DISPID_FONT_CHARSET)] short Charset;
+    methods:
+    }
+
+    typedef [public] Font IFontDisp;
+
+    [
+     uuid(0BE35203-8F91-11CE-9DE3-00AA004BB851)
+    ]
+    coclass StdFont {
+        [default] dispinterface Font;
+        interface IFont;
+    };
+
+    [
+     odl,
+     uuid(7BF80980-BF32-101A-8BBB-00AA00300CAB),
+     helpstring("Picture Object"),
+     hidden
+    ]
+    interface IPicture : IUnknown {
+        [propget] HRESULT Handle([out, retval] OLE_HANDLE *phandle);
+
+        [propget] HRESULT hPal([out, retval] OLE_HANDLE *phpal);
+
+        [propget] HRESULT Type([out, retval] short *ptype);
+
+        [propget] HRESULT Width([out, retval] OLE_XSIZE_HIMETRIC *pwidth);
+
+        [propget] HRESULT Height([out, retval] OLE_YSIZE_HIMETRIC *pheight);
+
+        HRESULT Render([in] int hdc,
+                       [in] long x,
+                       [in] long y,
+                       [in] long cx,
+                       [in] long cy,
+                       [in] OLE_XPOS_HIMETRIC xSrc,
+                       [in] OLE_YPOS_HIMETRIC ySrc,
+                       [in] OLE_XSIZE_HIMETRIC cxSrc,
+                       [in] OLE_YSIZE_HIMETRIC cySrc,
+                       [in] void *prcWBounds);
+
+        [propput] HRESULT hPal([in] OLE_HANDLE phpal);
+
+        [propget] HRESULT CurDC([out, retval] int *phdcOut);
+
+        HRESULT SelectPicture([in] int hdcIn,
+                              [out] int *phdcOut,
+                              [out] OLE_HANDLE *phbmpOut);
+
+        [propget] HRESULT KeepOriginalFormat([out, retval] VARIANT_BOOL *pfkeep);
+        [propput] HRESULT KeepOriginalFormat([in] VARIANT_BOOL pfkeep);
+
+        HRESULT PictureChanged();
+
+        HRESULT SaveAsFile([in] void *pstm,
+                           [in] VARIANT_BOOL fSaveMemCopy,
+                           [out] long *pcbSize);
+
+        [propget] HRESULT Attributes([out, retval] long *pdwAttr);
+
+        HRESULT SetHdc([in] OLE_HANDLE hdc);
+    };
+
+    [
+     uuid(7BF80981-BF32-101A-8BBB-00AA00300CAB)
+    ]
+    dispinterface Picture {
+    properties:
+        [id(DISPID_PICT_HANDLE), readonly] OLE_HANDLE Handle;
+        [id(DISPID_PICT_HPAL)] OLE_HANDLE hPal;
+        [id(DISPID_PICT_TYPE), readonly] short Type;
+        [id(DISPID_PICT_WIDTH), readonly] OLE_XSIZE_HIMETRIC Width;
+        [id(DISPID_PICT_HEIGHT), readonly] OLE_YSIZE_HIMETRIC Height;
+    methods:
+        [id(DISPID_PICT_RENDER)]
+                  void Render(int hdc,
+                              long x,
+                              long y,
+                              long cx,
+                              long cy,
+                              OLE_XPOS_HIMETRIC xSrc,
+                              OLE_YPOS_HIMETRIC ySrc,
+                              OLE_XSIZE_HIMETRIC cxSrc,
+                              OLE_YSIZE_HIMETRIC cySrc,
+                              void *prcWBounds);
+    };
+
+    typedef [public] Picture IPictureDisp;
+
+    [
+     uuid(0BE35204-8F91-11CE-9DE3-00AA004BB851)
+    ]
+    coclass StdPicture {
+        [default] dispinterface Picture;
+        interface IPicture;
+    };
+};
