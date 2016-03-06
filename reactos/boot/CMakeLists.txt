@@ -57,9 +57,9 @@ add_custom_target(livecd
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
 
 #create the empty Desktop, Favorites, and Start Menu folders
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "Profiles/Default User/Desktop\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "Profiles/Default User/Favorites\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "Profiles/Default User/Start Menu/Programs\n")
 
 add_custom_target(hybridcd
     COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso

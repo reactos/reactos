@@ -5,54 +5,57 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Welcome"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Welcome to React Operating System.\n\nClick a topic on the left."
-//    IDS_CHECKTEXT "Show this dialog again"
-//    IDS_CLOSETEXT "Exit"
+    IDS_APPTITLE            "ReactOS 0.4.0-RC for CLT 2016"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "ReactOS is a modern open source operating system based on the design of Windows® XP/2003. This encompasses full compatibility with Windows applications and drivers as well as a familiar user interface, such that people accustomed to Windows would find using ReactOS straightforward. The source code of the entire system is available for free under several open source licenses, mostly the GNU General Public License."
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Install ReactOS"
-    IDS_TOPICBUTTON1 "Browse this CD"
-    IDS_TOPICBUTTON2 "Exit"
-//    IDS_TOPICBUTTON3 "Empty Topic 3"
-//    IDS_TOPICBUTTON4 "Empty Topic 4"
-//    IDS_TOPICBUTTON5 "Empty Topic 5"
-//    IDS_TOPICBUTTON6 "Empty Topic 6"
-//    IDS_TOPICBUTTON7 "Empty Topic 7"
-//    IDS_TOPICBUTTON8 "Empty Topic 8"
-//    IDS_TOPICBUTTON9 "Empty Topic 9"
+    IDS_TOPICBUTTON0        "Install ReactOS"
+    IDS_TOPICBUTTON1        "Try out ReactOS in QEMU"
+    IDS_TOPICBUTTON2        "Install ReactOS Build Environment"
+    IDS_TOPICBUTTON3        "Open the ReactOS Source Code Package"
+    IDS_TOPICBUTTON4        "Visit the ReactOS Website"
+    IDS_TOPICBUTTON5        "Browse the CD"
+    IDS_TOPICBUTTON6        "Exit"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Install ReactOS"
-    IDS_TOPICTITLE1 "Browse this CD"
-    IDS_TOPICTITLE2 "Exit"
-//    IDS_TOPICTITLE3 "Empty Topic Title 3"
-//    IDS_TOPICTITLE4 "Empty Topic Title 4"
-//    IDS_TOPICTITLE5 "Empty Topic Title 5"
-//    IDS_TOPICTITLE6 "Empty Topic Title 6"
-//    IDS_TOPICTITLE7 "Empty Topic Title 7"
-//    IDS_TOPICTITLE8 "Empty Topic Title 8"
-//    IDS_TOPICTITLE9 "Empty Topic Title 9"
+    IDS_TOPICTITLE0         "Install ReactOS"
+    IDS_TOPICTITLE1         "Try out ReactOS in QEMU"
+    IDS_TOPICTITLE2         "Install ReactOS Build Environment"
+    IDS_TOPICTITLE3         "Open the ReactOS Source Code Package"
+    IDS_TOPICTITLE4         "Visit the ReactOS Website"
+    IDS_TOPICTITLE5         "Browse the CD"
+    IDS_TOPICTITLE6         "Exit"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Create a new ReactOS installation on your computer or upgrade an existing installation."
-    IDS_TOPICDESC1 "Browse the CD."
-    IDS_TOPICDESC2 "Click to exit this application."
-//    IDS_TOPICDESC3 "Topic description 3.\n\nDescribe topic 3 here."
-//    IDS_TOPICDESC4 "Topic description 4.\n\nDescribe topic 4 here."
-//    IDS_TOPICDESC5 "Topic description 5.\n\nDescribe topic 5 here."
-//    IDS_TOPICDESC6 "Topic description 6.\n\nDescribe topic 6 here."
-//    IDS_TOPICDESC7 "Topic description 7.\n\nDescribe topic 7 here."
-//    IDS_TOPICDESC8 "Topic description 8.\n\nDescribe topic 8 here."
-//    IDS_TOPICDESC9 "Topic description 9.\n\nDescribe topic 9 here."
+    IDS_TOPICDESC0          "Installs ReactOS on your computer.\n\nPlease note that you have to restart your computer with the ReactOS CD in the drive to start the installation.\n\nAlternatively, you can easily try out ReactOS in a QEMU virtual machine by choosing the respective menu entry on the left side."
+    IDS_TOPICDESC1          "Perhaps you don't want to try out an alpha-stage operating system on your own computer or you face problems during the installation. For these cases, we have preinstalled ReactOS on a QEMU virtual machine. This way, you can try out the operating system without needing to install it on your computer.\n\nA click on this menu entry opens the QEMU package in 7-Zip."
+    IDS_TOPICDESC2          "To make building ReactOS as easy as possible, the ReactOS Build Environment has been created. This contains the right compiler versions and all needed tools to compile the entire ReactOS Source Code.\n\nThe Windows version of the Build Environment is compatible with Windows XP or newer versions. It is installed using this menu entry.\n\nAdditionally, the source code of this ReactOS version is included on this CD."
+    IDS_TOPICDESC3          "The CD also contains the entire source code of this ReactOS version, which can be compiled using the ReactOS Build Environment.\n\nA click on this menu entry opens it in 7-Zip."
+    IDS_TOPICDESC4          "The ReactOS Website offers many more information about the project. Here you find the latest ReactOS releases and news regarding the development."
+    IDS_TOPICDESC5          "Browse the contents of this CD."
+    IDS_TOPICDESC6          "Exits the AutoRun program."
 END
+
+/* Topic actions */
+STRINGTABLE
+BEGIN
+    IDS_TOPICACTION0        "<msg>You have to restart your computer with the ReactOS CD in the drive to start the installation.\n\nPLEASE NOTE: You're highly advised to not install ReactOS on a computer that contains important data!"
+    IDS_TOPICACTION1        "\\extras\\ReactOS on QEMU\\ReactOS-040-CLT2016-QEMU.7z"
+    IDS_TOPICACTION2        "\\extras\\ReactOS Build Environment\\RosBE-2.1.3.exe"
+    IDS_TOPICACTION3        "\\extras\\ReactOS Source Code\\ReactOS-040-CLT2016-Source.7z"
+    IDS_TOPICACTION4        "https://www.reactos.org/"
+    IDS_TOPICACTION5        "explorer.exe"
+    IDS_TOPICACTION6        "<exit>"
+END
+
+/* EOF */
