@@ -4066,6 +4066,35 @@ interface ITransferDestination : IUnknown
                        [out, iid_is(riid)] void **presources);
 }
 
+
+typedef [v1_enum] enum ACTIVATEOPTIONS
+{
+    AO_NONE             = 0x00000000,
+    AO_DESIGNMODE       = 0x00000001,
+    AO_NOERRORUI        = 0x00000002,
+    AO_NOSPLASHSCREEN   = 0x00000004
+} ACTIVATEOPTIONS;
+
+[
+    uuid(2e941141-7f97-4756-ba1d-9decde894a3d),
+    object,
+    pointer_default(unique)
+]
+interface IApplicationActivationManager : IUnknown
+{
+    HRESULT ActivateApplication([in] LPCWSTR appusermodelid,
+                                [in, unique] LPCWSTR arguments,
+                                [in] ACTIVATEOPTIONS options,
+                                [out] DWORD *processid);
+    HRESULT ActivateForFile([in] LPCWSTR appusermodelid,
+                            [in] IShellItemArray *itemarray,
+                            [in, unique] LPCWSTR verb,
+                            [out] DWORD *processid);
+    HRESULT ActivateForProtocol([in] LPCWSTR appusermodelid,
+                                [in] IShellItemArray *itemarray,
+                                [out] DWORD *processid);
+}
+
 /*****************************************************************************
  * ShellObjects typelibrary
  */
@@ -4160,6 +4189,14 @@ library ShellObjects
     ]
     coclass ShellItem {
         interface IShellItem2;
+    }
+
+    [
+        uuid(45ba127d-10a8-46ea-8ab7-56ea9078943c)
+    ]
+    coclass ApplicationActivationManager
+    {
+        interface IApplicationActivationManager;
     }
 }
 
