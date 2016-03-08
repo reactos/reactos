@@ -30,14 +30,15 @@ typedef enum _MODE {
 #define SEMAPHORE_MODIFY_STATE (0x0002)
 #define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
-typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
-  RelationProcessorCore,
-  RelationNumaNode,
-  RelationCache,
-  RelationProcessorPackage,
-  RelationGroup,
-  RelationAll = 0xffff
-} LOGICAL_PROCESSOR_RELATIONSHIP;
+$endif(_WDMDDK_)
+$if(_WDMDDK_ || _WINNT_)
+
+typedef struct _PROCESSOR_GROUP_INFO {
+  UCHAR MaximumProcessorCount;
+  UCHAR ActiveProcessorCount;
+  UCHAR Reserved[38];
+  KAFFINITY ActiveProcessorMask;
+} PROCESSOR_GROUP_INFO, *PPROCESSOR_GROUP_INFO;
 
 typedef enum _PROCESSOR_CACHE_TYPE {
   CacheUnified,
@@ -53,28 +54,6 @@ typedef struct _CACHE_DESCRIPTOR {
   ULONG Size;
   PROCESSOR_CACHE_TYPE Type;
 } CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
-
-typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
-  ULONG_PTR ProcessorMask;
-  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-  _ANONYMOUS_UNION union {
-    struct {
-      UCHAR Flags;
-    } ProcessorCore;
-    struct {
-      ULONG NodeNumber;
-    } NumaNode;
-    CACHE_DESCRIPTOR Cache;
-    ULONGLONG Reserved[2];
-  } DUMMYUNIONNAME;
-} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
-
-typedef struct _PROCESSOR_RELATIONSHIP {
-  UCHAR Flags;
-  UCHAR Reserved[21];
-  USHORT GroupCount;
-  _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
-} PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
 
 typedef struct _NUMA_NODE_RELATIONSHIP {
   ULONG NodeNumber;
@@ -92,19 +71,43 @@ typedef struct _CACHE_RELATIONSHIP {
   GROUP_AFFINITY GroupMask;
 } CACHE_RELATIONSHIP, *PCACHE_RELATIONSHIP;
 
-typedef struct _PROCESSOR_GROUP_INFO {
-  UCHAR MaximumProcessorCount;
-  UCHAR ActiveProcessorCount;
-  UCHAR Reserved[38];
-  KAFFINITY ActiveProcessorMask;
-} PROCESSOR_GROUP_INFO, *PPROCESSOR_GROUP_INFO;
-
 typedef struct _GROUP_RELATIONSHIP {
   USHORT MaximumGroupCount;
   USHORT ActiveGroupCount;
   UCHAR Reserved[20];
   PROCESSOR_GROUP_INFO GroupInfo[ANYSIZE_ARRAY];
 } GROUP_RELATIONSHIP, *PGROUP_RELATIONSHIP;
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll = 0xffff
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+typedef struct _PROCESSOR_RELATIONSHIP {
+  UCHAR Flags;
+  UCHAR Reserved[21];
+  USHORT GroupCount;
+  _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
+} PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+  ULONG_PTR ProcessorMask;
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  _ANONYMOUS_UNION union {
+    struct {
+      UCHAR Flags;
+    } ProcessorCore;
+    struct {
+      ULONG NodeNumber;
+    } NumaNode;
+    CACHE_DESCRIPTOR Cache;
+    ULONGLONG Reserved[2];
+  } DUMMYUNIONNAME;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
 typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
   LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
@@ -116,6 +119,9 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
     GROUP_RELATIONSHIP Group;
   } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;
+
+$endif(_WDMDDK_ || _WINNT_)
+$if(_WDMDDK_)
 
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA       0

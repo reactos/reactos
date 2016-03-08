@@ -1100,6 +1100,9 @@ typedef VOID (NTAPI *WORKERCALLBACKFUNC)(PVOID);
 #define IO_REPARSE_TAG_SYMBOLIC_LINK IO_REPARSE_TAG_RESERVED_ZERO
 #define IO_REPARSE_TAG_MOUNT_POINT 0xA0000003
 #define IO_REPARSE_TAG_SYMLINK 0xA000000CL
+
+#define RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO 0x01000000
+
 #ifndef RC_INVOKED
 
 #ifdef _GUID_DEFINED
@@ -3926,46 +3929,7 @@ typedef enum _HEAP_INFORMATION_CLASS {
   HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
 
-typedef enum _PROCESSOR_CACHE_TYPE {
-  CacheUnified,
-  CacheInstruction,
-  CacheData,
-  CacheTrace
-} PROCESSOR_CACHE_TYPE;
-
-typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
-  RelationProcessorCore,
-  RelationNumaNode,
-  RelationCache,
-  RelationProcessorPackage,
-  RelationGroup,
-  RelationAll = 0xffff
-} LOGICAL_PROCESSOR_RELATIONSHIP;
-
 #define CACHE_FULLY_ASSOCIATIVE 0xFF
-
-typedef struct _CACHE_DESCRIPTOR {
-  BYTE Level;
-  BYTE Associativity;
-  WORD LineSize;
-  DWORD Size;
-  PROCESSOR_CACHE_TYPE Type;
-} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
-
-typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
-  ULONG_PTR ProcessorMask;
-  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-  _ANONYMOUS_UNION union {
-    struct {
-      BYTE Flags;
-    } ProcessorCore;
-    struct {
-      DWORD NodeNumber;
-    } NumaNode;
-    CACHE_DESCRIPTOR Cache;
-    ULONGLONG Reserved[2];
-  } DUMMYUNIONNAME;
-} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
 _Check_return_
 NTSYSAPI

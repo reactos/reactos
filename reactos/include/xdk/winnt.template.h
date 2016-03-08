@@ -71,6 +71,7 @@ $define(USHORT=WORD)
 $define(UCHAR=BYTE)
 $include(ntbasedef.h)
 $include(interlocked.h)
+$include(ketypes.h)
 $include(winnt_old.h)
 
 #ifdef __cplusplus
