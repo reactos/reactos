@@ -30,12 +30,6 @@
 #define STATUS_DEBUGGER_INACTIVE         ((NTSTATUS) 0xC0000354)
 #endif
 
-#ifdef __GNUC__
-#define PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
-#else
-#define PRINTF_ATTR(fmt,args)
-#endif
-
 #define child_ok (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_child_ok
 
 static int    myARGC;
@@ -49,7 +43,7 @@ static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 
 static LONG child_failures;
 
-static void PRINTF_ATTR(2, 3) test_child_ok(int condition, const char *msg, ...)
+static void WINETEST_PRINTF_ATTR(2, 3) test_child_ok(int condition, const char *msg, ...)
 {
     va_list valist;
 

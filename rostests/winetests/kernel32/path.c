@@ -858,6 +858,33 @@ static void test_PathNameA(CHAR *curdir, CHAR curDrive, CHAR otherDrive)
     ok(lstrcmpiA(SHORTFILE,strptr)==0,
        "GetFullPathNameA returned part '%s' instead of '%s'\n",strptr,SHORTFILE);
   }
+  /* Don't Starve relies on GetLongPathName returning the passed in filename,
+     even if the actual file on disk has a different case or separator */
+  if (pGetLongPathNameA) {
+    int len = lstrlenA(LONGDIR) + 1;
+    sprintf(tmpstr,"%s/%s",LONGDIR,LONGFILE);
+    ok(GetLongPathNameA(tmpstr,tmpstr1,MAX_PATH),"GetLongPathNameA failed\n");
+    ok(lstrcmpiA(tmpstr,tmpstr1)==0,
+       "GetLongPathNameA returned '%s' instead of '%s'\n",tmpstr1,tmpstr);
+    tmpstr[len] = tolower(tmpstr[len]);
+    ok(GetLongPathNameA(tmpstr,tmpstr1,MAX_PATH),"GetLongPathNameA failed\n");
+    ok(lstrcmpA(tmpstr,tmpstr1)==0,
+       "GetLongPathNameA returned '%s' instead of '%s'\n",tmpstr1,tmpstr);
+    sprintf(tmpstr,"%s/%s",SHORTDIR,SHORTFILE);
+    ok(GetLongPathNameA(tmpstr,tmpstr1,MAX_PATH),"GetLongPathNameA failed\n");
+    ok(lstrcmpiA(tmpstr,tmpstr1)==0,
+       "GetLongPathNameA returned '%s' instead of '%s'\n",tmpstr1,tmpstr);
+    len = lstrlenA(SHORTDIR) + 1;
+    tmpstr[len] = toupper(tmpstr[len]);
+    ok(GetLongPathNameA(tmpstr,tmpstr1,MAX_PATH),"GetLongPathNameA failed\n");
+    ok(lstrcmpiA(tmpstr,tmpstr1)==0 && lstrcmpA(tmpstr,tmpstr1) != 0,
+       "GetLongPathNameA returned '%s' instead of '%s/%s'\n",tmpstr1,SHORTDIR,SHORTFILE);
+  }
+  sprintf(tmpstr,"%s/%s",SHORTDIR,SHORTFILE);
+  ok(GetShortPathNameA(tmpstr,tmpstr1,MAX_PATH),"GetShortPathNameA failed\n");
+  ok(lstrcmpiA(tmpstr,tmpstr1)==0,
+       "GetShortPathNameA returned '%s' instead of '%s'\n",tmpstr1,tmpstr);
+
 /**/
   sprintf(tmpstr,"%c:%s/%s",curdir[0],SHORTDIR,SHORTFILE);
   ok(GetFullPathNameA(tmpstr,MAX_PATH,tmpstr1,&strptr),"GetFullPathNameA failed\n");
@@ -2161,6 +2188,15 @@ static void test_relative_path(void)
     ret = GetShortPathNameA("..\\foo\\file", buf, MAX_PATH);
     ok(ret, "GetShortPathName error %d\n", GetLastError());
     ok(!strcmp(buf, "..\\foo\\file"), "expected ..\\foo\\file, got %s\n", buf);
+
+    strcpy(buf, "deadbeef");
+    ret = pGetLongPathNameA(".\\..\\foo\\file", buf, MAX_PATH);
+    ok(ret, "GetLongPathName error %d\n", GetLastError());
+    ok(!strcmp(buf, ".\\..\\foo\\file"), "expected .\\..\\foo\\file, got %s\n", buf);
+    strcpy(buf, "deadbeef");
+    ret = GetShortPathNameA(".\\..\\foo\\file", buf, MAX_PATH);
+    ok(ret, "GetShortPathName error %d\n", GetLastError());
+    ok(!strcmp(buf, ".\\..\\foo\\file"), "expected .\\..\\foo\\file, got %s\n", buf);
 
     SetCurrentDirectoryA("..");
     DeleteFileA("foo\\file");

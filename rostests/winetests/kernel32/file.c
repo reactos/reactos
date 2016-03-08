@@ -1317,20 +1317,15 @@ static void test_CreateFileA(void)
                 skip("Do not have authority to access volumes. Test for %s skipped\n", filename);
         }
         /* otherwise validate results with expectations */
-        else if (p[i].todo_flag)
-            todo_wine ok(
-                (hFile == INVALID_HANDLE_VALUE &&
-                  (p[i].err == GetLastError() || p[i].err2 == GetLastError())) ||
-                (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
-                "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
-                filename, hFile, GetLastError(), p[i].err);
         else
-            ok(
-                (hFile == INVALID_HANDLE_VALUE &&
-                 (p[i].err == GetLastError() || p[i].err2 == GetLastError())) ||
-                (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
+        {
+            todo_wine_if (p[i].todo_flag)
+                ok((hFile == INVALID_HANDLE_VALUE &&
+                   (p[i].err == GetLastError() || p[i].err2 == GetLastError())) ||
+                   (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
                 "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
                 filename, hFile, GetLastError(), p[i].err);
+        }
         if (hFile != INVALID_HANDLE_VALUE)
             CloseHandle( hFile );
         i++;
@@ -2509,11 +2504,86 @@ static char get_windows_drive(void)
     return windowsdir[0];
 }
 
+static
+struct
+{
+    const char *path;
+    BOOL expected;
+}
+const invalid_char_tests[] =
+{
+    { "./test-dir",                     TRUE },
+    { "./test-dir/",                    FALSE },
+    { ".\\test-dir",                    TRUE },
+    { ".\\test-dir\\",                  FALSE },
+    { "/>test-dir",                     FALSE },
+    { "<\"test->dir",                   FALSE },
+    { "<test->dir",                     FALSE },
+    { "><test->dir",                    FALSE },
+    { ">>test-dir",                     FALSE },
+    { ">test->dir",                     FALSE },
+    { ">test-dir",                      FALSE },
+    { "\"test-dir\"",                   FALSE },
+    { "\"test-file\"",                  FALSE },
+    { "test-/>dir",                     FALSE },
+    { "test-dir/",                      FALSE },
+    { "test-dir//",                     FALSE },
+    { "test-dir/:",                     FALSE },
+    { "test-dir/<",                     TRUE },
+    { "test-dir/>",                     TRUE },
+    { "test-dir/\"",                    TRUE },
+    { "test-dir/\\",                    FALSE },
+    { "test-dir/|",                     FALSE },
+    { "test-dir<",                      TRUE },
+    { "test-dir</",                     FALSE },
+    { "test-dir<<",                     TRUE },
+    { "test-dir<<<><><>\"\"\"\"<<<>",   TRUE },
+    { "test-dir<>",                     TRUE },
+    { "test-dir<\"",                    TRUE },
+    { "test-dir>",                      TRUE },
+    { "test-dir>/",                     FALSE },
+    { "test-dir><",                     TRUE },
+    { "test-dir>>",                     TRUE },
+    { "test-dir>\"",                    TRUE },
+    { "test-dir\"",                     TRUE },
+    { "test-dir\"/",                    FALSE },
+    { "test-dir\"<",                    TRUE },
+    { "test-dir\">",                    TRUE },
+    { "test-dir\"\"",                   TRUE },
+    { "test-dir\"\"\"\"\"",             TRUE },
+    { "test-dir\\",                     FALSE },
+    { "test-dir\\/",                    FALSE },
+    { "test-dir\\<",                    TRUE },
+    { "test-dir\\>",                    TRUE },
+    { "test-dir\\\"",                   TRUE },
+    { "test-dir\\\\",                   FALSE },
+    { "test-file/",                     FALSE },
+    { "test-file/<",                    FALSE },
+    { "test-file/>",                    FALSE },
+    { "test-file/\"",                   FALSE },
+    { "test-file<",                     TRUE },
+    { "test-file<<",                    TRUE },
+    { "test-file<>",                    TRUE },
+    { "test-file<\"",                   TRUE },
+    { "test-file>",                     TRUE },
+    { "test-file><",                    TRUE },
+    { "test-file>>",                    TRUE },
+    { "test-file>\"",                   TRUE },
+    { "test-file\"",                    TRUE },
+    { "test-file\"<",                   TRUE },
+    { "test-file\">",                   TRUE },
+    { "test-file\"\"",                  TRUE },
+    { "test-file\\",                    FALSE },
+    { "test-file\\<",                   FALSE },
+    { "test-file\\>",                   FALSE },
+    { "test-file\\\"",                  FALSE },
+};
+
 static void test_FindFirstFileA(void)
 {
     HANDLE handle;
     WIN32_FIND_DATAA data;
-    int err;
+    int err, i;
     char buffer[5] = "C:\\";
     char buffer2[100];
     char nonexistent[MAX_PATH];
@@ -2681,6 +2751,30 @@ static void test_FindFirstFileA(void)
     err = GetLastError();
     ok ( handle == INVALID_HANDLE_VALUE, "FindFirstFile on %s should fail\n", buffer2 );
     ok ( err == ERROR_PATH_NOT_FOUND, "Bad Error number %d\n", err );
+
+    /* try FindFirstFileA with invalid characters */
+    CreateDirectoryA("test-dir", NULL);
+    _lclose(_lcreat("test-file", 0));
+
+    for (i = 0; i < sizeof(invalid_char_tests) / sizeof(invalid_char_tests[0]); i++)
+    {
+        handle = FindFirstFileA(invalid_char_tests[i].path, &data);
+        if (invalid_char_tests[i].expected)
+        {
+            ok(handle != INVALID_HANDLE_VALUE, "FindFirstFileA on %s should succeed\n",
+               invalid_char_tests[i].path);
+        }
+        else
+        {
+            ok(handle == INVALID_HANDLE_VALUE, "FindFirstFileA on %s should fail\n",
+               invalid_char_tests[i].path);
+        }
+        if (handle != INVALID_HANDLE_VALUE)
+            FindClose(handle);
+    }
+
+    DeleteFileA("test-file");
+    RemoveDirectoryA("test-dir");
 }
 
 static void test_FindNextFileA(void)
@@ -3096,7 +3190,7 @@ static void test_read_write(void)
         "wrong error %u\n", GetLastError() );
     ok( bytes == 0, "read %x bytes\n", bytes );
 
-    VirtualFree( mem, 0, MEM_FREE );
+    VirtualFree( mem, 0, MEM_RELEASE );
 
     ret = CloseHandle(hFile);
     ok( ret, "CloseHandle: error %d\n", GetLastError());
@@ -3948,8 +4042,8 @@ static void test_GetFileInformationByHandleEx(void)
     ret = pGetFileInformationByHandleEx(file, FileStandardInfo, buffer, sizeof(buffer));
     ok(ret, "GetFileInformationByHandleEx: failed to get FileStandardInfo, %u\n", GetLastError());
     standardInfo = (FILE_STANDARD_INFO *)buffer;
-    ok(standardInfo->NumberOfLinks == 1, "GetFileInformationByHandleEx: Unexpcted number of links\n");
-    ok(standardInfo->DeletePending == FALSE, "GetFileInformationByHandleEx: Unexpcted pending delete\n");
+    ok(standardInfo->NumberOfLinks == 1, "GetFileInformationByHandleEx: Unexpected number of links\n");
+    ok(standardInfo->DeletePending == FALSE, "GetFileInformationByHandleEx: Unexpected pending delete\n");
     ok(standardInfo->Directory == FALSE, "GetFileInformationByHandleEx: Incorrect directory flag\n");
 
     /* Test FileNameInfo */

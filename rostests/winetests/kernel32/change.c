@@ -767,7 +767,7 @@ static void test_readdirectorychanges_filedir(void)
 
     hfile = CreateFileW( file, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
     ok( hfile != INVALID_HANDLE_VALUE, "failed to create file\n");
-    ok( CloseHandle(hfile), "failed toc lose file\n");
+    ok( CloseHandle(hfile), "failed to close file\n");
 
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );

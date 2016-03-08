@@ -452,10 +452,7 @@ static void test_Loader(void)
             ptr = VirtualAlloc(hlib, page_size, MEM_COMMIT, info.Protect);
             ok(!ptr, "%d: VirtualAlloc should fail\n", i);
             /* FIXME: Remove once Wine is fixed */
-            if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
-todo_wine
-            ok(GetLastError() == ERROR_ACCESS_DENIED, "%d: expected ERROR_ACCESS_DENIED, got %d\n", i, GetLastError());
-            else
+            todo_wine_if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
             ok(GetLastError() == ERROR_ACCESS_DENIED, "%d: expected ERROR_ACCESS_DENIED, got %d\n", i, GetLastError());
 
             SetLastError(0xdeadbeef);
@@ -541,11 +538,7 @@ todo_wine
                 ptr = VirtualAlloc((char *)hlib + section.VirtualAddress, page_size, MEM_COMMIT, info.Protect);
                 ok(!ptr, "%d: VirtualAlloc should fail\n", i);
                 /* FIXME: Remove once Wine is fixed */
-                if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
-todo_wine
-                ok(GetLastError() == ERROR_ACCESS_DENIED || GetLastError() == ERROR_INVALID_ADDRESS,
-                   "%d: expected ERROR_ACCESS_DENIED, got %d\n", i, GetLastError());
-                else
+                todo_wine_if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
                 ok(GetLastError() == ERROR_ACCESS_DENIED || GetLastError() == ERROR_INVALID_ADDRESS,
                    "%d: expected ERROR_ACCESS_DENIED, got %d\n", i, GetLastError());
             }
@@ -1139,9 +1132,7 @@ static void test_section_access(void)
             size = VirtualQuery((char *)hlib + section.VirtualAddress, &info, sizeof(info));
             ok(size == sizeof(info), "%d: VirtualQuery error %d\n", i, GetLastError());
             /* FIXME: remove the condition below once Wine is fixed */
-            if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
-                todo_wine ok(info.Protect == td[i].scn_page_access_after_write, "%d: got %#x != expected %#x\n", i, info.Protect, td[i].scn_page_access_after_write);
-            else
+            todo_wine_if (info.Protect == PAGE_WRITECOPY || info.Protect == PAGE_EXECUTE_WRITECOPY)
                 ok(info.Protect == td[i].scn_page_access_after_write, "%d: got %#x != expected %#x\n", i, info.Protect, td[i].scn_page_access_after_write);
         }
 
@@ -1498,10 +1489,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             ret = pRtlDllShutdownInProgress();
 
             /* FIXME: remove once Wine is fixed */
-            if (expected_code == STILL_ACTIVE || expected_code == 196)
-                ok(!ret || broken(ret) /* before Vista */, "RtlDllShutdownInProgress returned %d\n", ret);
-            else
-            todo_wine
+            todo_wine_if (!(expected_code == STILL_ACTIVE || expected_code == 196))
                 ok(!ret || broken(ret) /* before Vista */, "RtlDllShutdownInProgress returned %d\n", ret);
         }
 

@@ -666,9 +666,9 @@ static void test_GetVolumePathNameA(void)
             "\\\\ReallyBogus\\InvalidDrive:\\" /* win2k, winxp */, sizeof(volume_path),
             ERROR_INVALID_NAME, NO_ERROR
         },
-        { /* test 15: poor quality input, valid output, valid output length, different drive */
-            "D::", "D:\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
+        { /* test 15: poor quality input, valid output, valid (but short) output length */
+            "C::", "C:\\", 4,
+            NO_ERROR, ERROR_MORE_DATA
         },
         { /* test 16: unused drive letter */
             "M::", "C:\\", 4,

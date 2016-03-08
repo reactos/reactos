@@ -1136,6 +1136,64 @@ static void test_threadcp(void)
     SetThreadLocale(last);
 }
 
+static void test_dbcs_to_widechar(void)
+{
+    int i, count, count2;
+    WCHAR wbuf[2];
+    unsigned char buf[] = {0xbf, 0xb4, 0xc7};
+    static const DWORD flags[] = {
+        MB_PRECOMPOSED,
+        MB_COMPOSITE,
+
+        MB_PRECOMPOSED|MB_USEGLYPHCHARS,
+        MB_COMPOSITE  |MB_USEGLYPHCHARS,
+
+        MB_PRECOMPOSED|MB_ERR_INVALID_CHARS,
+        MB_COMPOSITE  |MB_ERR_INVALID_CHARS,
+
+        MB_PRECOMPOSED|MB_ERR_INVALID_CHARS|MB_USEGLYPHCHARS,
+        MB_COMPOSITE  |MB_ERR_INVALID_CHARS|MB_USEGLYPHCHARS,
+    };
+
+    for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
+    {
+        wbuf[0] = 0xffff;
+        wbuf[1] = 0xffff;
+        count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 2, NULL, 0);
+        count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 2, wbuf, count);
+
+        ok(count == 1, "%04x: returned %d (expected 1)\n", flags[i], count);
+        ok(count2 == 1, "%04x: returned %d (expected 1)\n", flags[i], count2);
+        ok(wbuf[0] == 0x770b, "%04x: returned %04x (expected 770b)\n", flags[i], wbuf[0]);
+        ok(wbuf[1] == 0xffff, "%04x: returned %04x (expected ffff)\n", flags[i], wbuf[1]);
+    }
+
+    for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
+    {
+        wbuf[0] = 0xffff;
+        wbuf[1] = 0xffff;
+        count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 3, NULL, 0);
+        SetLastError( 0xdeadbeef );
+        count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 3, wbuf, count);
+
+        if (flags[i] & MB_ERR_INVALID_CHARS)
+        {
+            ok(count == 0, "%04x: returned %d (expected 0)\n", flags[i], count);
+            ok(count2 == 0, "%04x: returned %d (expected 0)\n", flags[i], count2);
+            ok(GetLastError() == ERROR_NO_UNICODE_TRANSLATION, "%04x: returned %d (expected %d)\n",
+               flags[i], GetLastError(), ERROR_NO_UNICODE_TRANSLATION);
+        }
+        else
+        {
+            ok(count == 2, "%04x: returned %d (expected 2)\n", flags[i], count);
+            ok(count2 == 2, "%04x: returned %d (expected 2)\n", flags[i], count2);
+            ok(wbuf[0] == 0x770b, "%04x: returned %04x (expected 770b)\n", flags[i], wbuf[0]);
+            ok(wbuf[1] == 0x003f || broken(wbuf[1] == 0), /*windows xp*/
+               "%04x: wrong wide char: %04x\n", flags[i], wbuf[1]);
+        }
+    }
+}
+
 START_TEST(codepage)
 {
     BOOL bUsedDefaultChar;
@@ -1156,4 +1214,6 @@ START_TEST(codepage)
 
     test_undefined_byte_char();
     test_threadcp();
+
+    test_dbcs_to_widechar();
 }

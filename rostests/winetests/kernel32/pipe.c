@@ -1154,213 +1154,6 @@ static void test_CreateNamedPipe_instances_must_match(void)
     ok(CloseHandle(hnp2), "CloseHandle\n");
 }
 
-static void test_CloseNamedPipe(void)
-{
-    HANDLE hnp;
-    HANDLE hFile;
-    static const char obuf[] = "Bit Bucket";
-    char ibuf[32];
-    DWORD written;
-    DWORD readden;
-    DWORD state;
-    BOOL ret;
-
-    hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
-                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-                           /* nMaxInstances */ 1,
-                           /* nOutBufSize */ 1024,
-                           /* nInBufSize */ 1024,
-                           /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-                           /* lpSecurityAttrib */ NULL);
-    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-
-    hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
-
-    /* don't try to do i/o if one side couldn't be opened, as it hangs */
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        /* Make sure we can read and write a few bytes in both directions */
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len 1\n");
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-
-        /* close server end without disconnecting */
-        ok(CloseHandle(hnp), "CloseHandle() failed: %08x\n", GetLastError());
-
-        ok(ReadFile(hFile, ibuf, 0, &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == 0, "got %d bytes\n", readden);
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-        /* pipe is empty now */
-
-        ret = GetNamedPipeHandleStateA(hFile, &state, NULL, NULL, NULL, NULL, 0);
-        todo_wine
-        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
-        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
-        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
-        todo_wine
-        ok(ret, "SetNamedPipeHandleState failed with %d\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hFile, ibuf, 0, &readden, NULL), "ReadFile() succeeded\n");
-        ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        CloseHandle(hFile);
-    }
-
-    hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
-                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-                           /* nMaxInstances */ 1,
-                           /* nOutBufSize */ 1024,
-                           /* nInBufSize */ 1024,
-                           /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-                           /* lpSecurityAttrib */ NULL);
-    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-
-    hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
-
-    /* don't try to do i/o if one side couldn't be opened, as it hangs */
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len 1\n");
-
-        /* close server end without disconnecting */
-        ok(CloseHandle(hnp), "CloseHandle() failed: %08x\n", GetLastError());
-
-        todo_wine
-        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == 0, "got %d bytes\n", readden);
-        /* pipe is empty now */
-
-        ret = GetNamedPipeHandleStateA(hFile, &state, NULL, NULL, NULL, NULL, 0);
-        todo_wine
-        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
-        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
-        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
-        todo_wine
-        ok(ret, "SetNamedPipeHandleState failed with %d\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        CloseHandle(hFile);
-    }
-
-    hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
-                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-                           /* nMaxInstances */ 1,
-                           /* nOutBufSize */ 1024,
-                           /* nInBufSize */ 1024,
-                           /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-                           /* lpSecurityAttrib */ NULL);
-    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-
-    hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
-
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        /* Make sure we can read and write a few bytes in both directions */
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len 1\n");
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-
-        /* close client end without disconnecting */
-        ok(CloseHandle(hFile), "CloseHandle() failed: %08x\n", GetLastError());
-
-        /* you'd think ERROR_MORE_DATA, but no */
-        ok(ReadFile(hnp, ibuf, 0, &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == 0, "got %d bytes\n", readden);
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-        /* pipe is empty now */
-
-        ret = GetNamedPipeHandleStateA(hnp, &state, NULL, NULL, NULL, NULL, 0);
-        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
-        SetLastError(0xdeadbeef);
-        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
-        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
-        ok(!ret, "SetNamedPipeHandleState unexpectedly succeeded\n");
-        ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError() returned %08x, expected ERROR_INVALID_HANDLE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hnp, ibuf, 0, &readden, NULL), "ReadFile() succeeded\n");
-        ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        CloseHandle(hnp);
-    }
-
-    hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
-                           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-                           /* nMaxInstances */ 1,
-                           /* nOutBufSize */ 1024,
-                           /* nInBufSize */ 1024,
-                           /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-                           /* lpSecurityAttrib */ NULL);
-    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-
-    hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
-
-    /* don't try to do i/o if one side couldn't be opened, as it hangs */
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len 1\n");
-
-        /* close server end without disconnecting */
-        ok(CloseHandle(hFile), "CloseHandle() failed: %08x\n", GetLastError());
-
-        todo_wine
-        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == 0, "got %d bytes\n", readden);
-        /* pipe is empty now */
-
-        ret = GetNamedPipeHandleStateA(hnp, &state, NULL, NULL, NULL, NULL, 0);
-        ok(ret, "GetNamedPipeHandleState failed with %d\n", GetLastError());
-        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
-        SetLastError(0xdeadbeef);
-        state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
-        ret = SetNamedPipeHandleState(hFile, &state, NULL, NULL);
-        ok(!ret, "SetNamedPipeHandleState unexpectedly succeeded\n");
-        ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError() returned %08x, expected ERROR_INVALID_HANDLE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(GetLastError() == ERROR_BROKEN_PIPE, "GetLastError() returned %08x, expected ERROR_BROKEN_PIPE\n", GetLastError());
-
-        SetLastError(0xdeadbeef);
-        ok(!WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile() succeeded\n");
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        CloseHandle(hnp);
-    }
-}
-
 /** implementation of alarm() */
 static DWORD CALLBACK alarmThreadMain(LPVOID arg)
 {
@@ -2069,6 +1862,200 @@ static void test_CreatePipe(void)
 
     ok(user_apc_ran == FALSE, "user apc ran, pipe using alertable io mode\n");
     SleepEx(0, TRUE); /* get rid of apc */
+}
+
+static void test_CloseHandle(void)
+{
+    static const char testdata[] = "Hello World";
+    DWORD state, numbytes;
+    HANDLE hpipe, hfile;
+    char buffer[32];
+    BOOL ret;
+
+    hpipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                             1, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(hpipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    hfile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    ret = WriteFile(hpipe, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(ret, "WriteFile failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    numbytes = 0xdeadbeef;
+    ret = PeekNamedPipe(hfile, NULL, 0, NULL, &numbytes, NULL);
+    ok(ret, "PeekNamedPipe failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    ret = CloseHandle(hpipe);
+    ok(ret, "CloseHandle failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hfile, buffer, 0, &numbytes, NULL);
+    ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hfile, buffer, sizeof(buffer), &numbytes, NULL);
+    ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    ret = GetNamedPipeHandleStateA(hfile, &state, NULL, NULL, NULL, NULL, 0);
+    ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
+    state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+    ret = SetNamedPipeHandleState(hfile, &state, NULL, NULL);
+    ok(ret, "SetNamedPipeHandleState failed with %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hfile, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(hfile, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(!ret, "WriteFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+
+    CloseHandle(hfile);
+
+    hpipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                             1, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(hpipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    hfile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    ret = WriteFile(hpipe, testdata, 0, &numbytes, NULL);
+    ok(ret, "WriteFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    ret = CloseHandle(hpipe);
+    ok(ret, "CloseHandle failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hfile, buffer, sizeof(buffer), &numbytes, NULL);
+    todo_wine ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    ret = GetNamedPipeHandleStateA(hfile, &state, NULL, NULL, NULL, NULL, 0);
+    ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
+    state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+    ret = SetNamedPipeHandleState(hfile, &state, NULL, NULL);
+    ok(ret, "SetNamedPipeHandleState failed with %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hfile, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(hfile, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(!ret, "WriteFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+
+    CloseHandle(hfile);
+
+    /* repeat test with hpipe <-> hfile swapped */
+
+    hpipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                             1, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(hpipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    hfile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    ret = WriteFile(hfile, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(ret, "WriteFile failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    numbytes = 0xdeadbeef;
+    ret = PeekNamedPipe(hpipe, NULL, 0, NULL, &numbytes, NULL);
+    ok(ret, "PeekNamedPipe failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    ret = CloseHandle(hfile);
+    ok(ret, "CloseHandle failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hpipe, buffer, 0, &numbytes, NULL);
+    ok(ret || broken(GetLastError() == ERROR_MORE_DATA) /* >= Win 8 */,
+       "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hpipe, buffer, sizeof(buffer), &numbytes, NULL);
+    ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == sizeof(testdata), "expected sizeof(testdata), got %u\n", numbytes);
+
+    ret = GetNamedPipeHandleStateA(hpipe, &state, NULL, NULL, NULL, NULL, 0);
+    ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
+    state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+    ret = SetNamedPipeHandleState(hpipe, &state, NULL, NULL);
+    ok(ret, "SetNamedPipeHandleState failed with %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hpipe, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(hpipe, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(!ret, "WriteFile unexpectedly succeeded\n");
+    todo_wine ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+
+    CloseHandle(hpipe);
+
+    hpipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                             1, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(hpipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    hfile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    ret = WriteFile(hfile, testdata, 0, &numbytes, NULL);
+    ok(ret, "WriteFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    ret = CloseHandle(hfile);
+    ok(ret, "CloseHandle failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    memset(buffer, 0, sizeof(buffer));
+    ret = ReadFile(hpipe, buffer, sizeof(buffer), &numbytes, NULL);
+    todo_wine ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    ret = GetNamedPipeHandleStateA(hpipe, &state, NULL, NULL, NULL, NULL, 0);
+    ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
+    state = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+    ret = SetNamedPipeHandleState(hpipe, &state, NULL, NULL);
+    ok(ret, "SetNamedPipeHandleState failed with %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hpipe, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(hpipe, testdata, sizeof(testdata), &numbytes, NULL);
+    ok(!ret, "WriteFile unexpectedly succeeded\n");
+    todo_wine ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+
+    CloseHandle(hpipe);
 }
 
 struct named_pipe_client_params
@@ -3409,8 +3396,8 @@ START_TEST(pipe)
     test_NamedPipe_2();
     test_CreateNamedPipe(PIPE_TYPE_BYTE);
     test_CreateNamedPipe(PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE);
-    test_CloseNamedPipe();
     test_CreatePipe();
+    test_CloseHandle();
     test_impersonation();
     test_overlapped();
     test_nowait(PIPE_TYPE_BYTE);

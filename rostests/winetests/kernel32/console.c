@@ -2606,7 +2606,23 @@ static void test_GetCurrentConsoleFont(HANDLE std_output)
 
     memset(&cfi, 0, sizeof(CONSOLE_FONT_INFO));
     SetLastError(0xdeadbeef);
+    ret = GetCurrentConsoleFont(NULL, TRUE, &cfi);
+    ok(!ret, "got %d, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+    ok(!cfi.dwFontSize.X, "got %d, expected 0\n", cfi.dwFontSize.X);
+    ok(!cfi.dwFontSize.Y, "got %d, expected 0\n", cfi.dwFontSize.Y);
+
+    memset(&cfi, 0, sizeof(CONSOLE_FONT_INFO));
+    SetLastError(0xdeadbeef);
     ret = GetCurrentConsoleFont(GetStdHandle(STD_INPUT_HANDLE), FALSE, &cfi);
+    ok(!ret, "got %d, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+    ok(!cfi.dwFontSize.X, "got %d, expected 0\n", cfi.dwFontSize.X);
+    ok(!cfi.dwFontSize.Y, "got %d, expected 0\n", cfi.dwFontSize.Y);
+
+    memset(&cfi, 0, sizeof(CONSOLE_FONT_INFO));
+    SetLastError(0xdeadbeef);
+    ret = GetCurrentConsoleFont(GetStdHandle(STD_INPUT_HANDLE), TRUE, &cfi);
     ok(!ret, "got %d, expected 0\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
     ok(!cfi.dwFontSize.X, "got %d, expected 0\n", cfi.dwFontSize.X);
@@ -2625,6 +2641,16 @@ static void test_GetCurrentConsoleFont(HANDLE std_output)
         "got %d, expected %d\n", cfi.dwFontSize.X, width);
     ok(cfi.dwFontSize.Y == height || cfi.dwFontSize.Y == c.Y /* Vista and higher */,
         "got %d, expected %d\n", cfi.dwFontSize.Y, height);
+
+    memset(&cfi, 0, sizeof(CONSOLE_FONT_INFO));
+    SetLastError(0xdeadbeef);
+    ret = GetCurrentConsoleFont(std_output, TRUE, &cfi);
+    ok(ret, "got %d, expected non-zero\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "got %u, expected 0xdeadbeef\n", GetLastError());
+    ok(cfi.dwFontSize.X == csbi.dwMaximumWindowSize.X,
+       "got %d, expected %d\n", cfi.dwFontSize.X, csbi.dwMaximumWindowSize.X);
+    ok(cfi.dwFontSize.Y == csbi.dwMaximumWindowSize.Y,
+       "got %d, expected %d\n", cfi.dwFontSize.Y, csbi.dwMaximumWindowSize.Y);
 }
 
 static void test_GetConsoleFontSize(HANDLE std_output)
@@ -2679,6 +2705,78 @@ static void test_GetConsoleFontSize(HANDLE std_output)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %u, expected 87\n", GetLastError());
     ok(!c.X, "got %d, expected 0\n", c.X);
     ok(!c.Y, "got %d, expected 0\n", c.Y);
+}
+
+static void test_GetLargestConsoleWindowSize(HANDLE std_output)
+{
+    COORD c, font;
+    RECT r;
+    LONG workarea_w, workarea_h, maxcon_w, maxcon_h;
+    CONSOLE_SCREEN_BUFFER_INFO sbi;
+    CONSOLE_FONT_INFO cfi;
+    DWORD index, i;
+    HMODULE hmod;
+    BOOL ret;
+    DWORD (WINAPI *pGetNumberOfConsoleFonts)(void);
+    BOOL (WINAPI *pSetConsoleFont)(HANDLE, DWORD);
+
+    memset(&c, 10, sizeof(COORD));
+    SetLastError(0xdeadbeef);
+    c = GetLargestConsoleWindowSize(NULL);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+    ok(!c.X, "got %d, expected 0\n", c.X);
+    ok(!c.Y, "got %d, expected 0\n", c.Y);
+
+    memset(&c, 10, sizeof(COORD));
+    SetLastError(0xdeadbeef);
+    c = GetLargestConsoleWindowSize(GetStdHandle(STD_INPUT_HANDLE));
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+    ok(!c.X, "got %d, expected 0\n", c.X);
+    ok(!c.Y, "got %d, expected 0\n", c.Y);
+
+    SystemParametersInfoW(SPI_GETWORKAREA, 0, &r, 0);
+    workarea_w = r.right - r.left;
+    workarea_h = r.bottom - r.top - GetSystemMetrics(SM_CYCAPTION);
+
+    GetCurrentConsoleFont(std_output, FALSE, &cfi);
+    index = cfi.nFont; /* save current font index */
+
+    hmod = GetModuleHandleA("kernel32.dll");
+    pGetNumberOfConsoleFonts = (void *)GetProcAddress(hmod, "GetNumberOfConsoleFonts");
+    if (!pGetNumberOfConsoleFonts)
+    {
+        win_skip("GetNumberOfConsoleFonts is not available\n");
+        return;
+    }
+    pSetConsoleFont = (void *)GetProcAddress(hmod, "SetConsoleFont");
+    if (!pSetConsoleFont)
+    {
+        win_skip("SetConsoleFont is not available\n");
+        return;
+    }
+
+    for (i = 0; i < pGetNumberOfConsoleFonts(); i++)
+    {
+        pSetConsoleFont(std_output, i);
+        memset(&c, 10, sizeof(COORD));
+        SetLastError(0xdeadbeef);
+        c = GetLargestConsoleWindowSize(std_output);
+        ok(GetLastError() == 0xdeadbeef, "got %u, expected 0xdeadbeef\n", GetLastError());
+        GetCurrentConsoleFont(std_output, FALSE, &cfi);
+        font = GetConsoleFontSize(std_output, cfi.nFont);
+        maxcon_w = workarea_w / font.X;
+        maxcon_h = workarea_h / font.Y;
+        ok(c.X == maxcon_w || c.X == maxcon_w - 1 /* Win10 */, "got %d, expected %d\n", c.X, maxcon_w);
+        ok(c.Y == maxcon_h || c.Y == maxcon_h - 1 /* Win10 */, "got %d, expected %d\n", c.Y, maxcon_h);
+
+        ret = GetConsoleScreenBufferInfo(std_output, &sbi);
+        ok(ret, "GetConsoleScreenBufferInfo failed %u\n", GetLastError());
+        ok(sbi.dwMaximumWindowSize.X == min(c.X, sbi.dwSize.X), "got %d, expected %d\n",
+           sbi.dwMaximumWindowSize.X, min(c.X, sbi.dwSize.X));
+        ok(sbi.dwMaximumWindowSize.Y == min(c.Y, sbi.dwSize.Y), "got %d, expected %d\n",
+           sbi.dwMaximumWindowSize.Y, min(c.Y, sbi.dwSize.Y));
+    }
+    pSetConsoleFont(std_output, index); /* restore original font size */
 }
 
 START_TEST(console)
@@ -2787,6 +2885,17 @@ START_TEST(console)
     testScroll(hConOut, sbi.dwSize);
     /* will test sb creation / modification / codepage handling */
     testScreenBuffer(hConOut);
+
+    /* clear duplicated console font table */
+    CloseHandle(hConIn);
+    CloseHandle(hConOut);
+    FreeConsole();
+    ok(AllocConsole(), "Couldn't alloc console\n");
+    hConIn = CreateFileA("CONIN$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    hConOut = CreateFileA("CONOUT$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hConIn != INVALID_HANDLE_VALUE, "Opening ConIn\n");
+    ok(hConOut != INVALID_HANDLE_VALUE, "Opening ConOut\n");
+
     testCtrlHandler();
     /* still to be done: access rights & access on objects */
 
@@ -2815,4 +2924,5 @@ START_TEST(console)
     test_ReadConsoleOutputAttribute(hConOut);
     test_GetCurrentConsoleFont(hConOut);
     test_GetConsoleFontSize(hConOut);
+    test_GetLargestConsoleWindowSize(hConOut);
 }
