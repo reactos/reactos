@@ -18,6 +18,7 @@
  */
 
 #include <wine/config.h>
+#include <wine/port.h>
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -28,6 +29,13 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <wine/library.h>
+
+#ifdef SONAME_LIBMBEDTLS
+#include <mbedtls/sha1.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/sha512.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
 
@@ -106,7 +114,91 @@ static void gnutls_uninitialize(void)
     wine_dlclose( libgnutls_handle, NULL, 0 );
     libgnutls_handle = NULL;
 }
-#endif /* HAVE_GNUTLS_HASH && !HAVE_COMMONCRYPTO_COMMONDIGEST_H */
+#elif defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONDIGEST_H) && !defined(__REACTOS__)
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
+
+void *libmbedtls_handle;
+
+#define MAKE_FUNCPTR(f) static typeof(f) * p##f
+MAKE_FUNCPTR(mbedtls_sha1_init);
+MAKE_FUNCPTR(mbedtls_sha1_starts);
+MAKE_FUNCPTR(mbedtls_sha1_update);
+MAKE_FUNCPTR(mbedtls_sha1_finish);
+MAKE_FUNCPTR(mbedtls_sha1_free);
+MAKE_FUNCPTR(mbedtls_sha256_init);
+MAKE_FUNCPTR(mbedtls_sha256_starts);
+MAKE_FUNCPTR(mbedtls_sha256_update);
+MAKE_FUNCPTR(mbedtls_sha256_finish);
+MAKE_FUNCPTR(mbedtls_sha256_free);
+MAKE_FUNCPTR(mbedtls_sha512_init);
+MAKE_FUNCPTR(mbedtls_sha512_starts);
+MAKE_FUNCPTR(mbedtls_sha512_update);
+MAKE_FUNCPTR(mbedtls_sha512_finish);
+MAKE_FUNCPTR(mbedtls_sha512_free);
+#undef MAKE_FUNCPTR
+
+#define mbedtls_sha1_init           pmbedtls_sha1_init
+#define mbedtls_sha1_starts         pmbedtls_sha1_starts
+#define mbedtls_sha1_update         pmbedtls_sha1_update
+#define mbedtls_sha1_finish         pmbedtls_sha1_finish
+#define mbedtls_sha1_free           pmbedtls_sha1_free
+#define mbedtls_sha256_init         pmbedtls_sha256_init
+#define mbedtls_sha256_starts       pmbedtls_sha256_starts
+#define mbedtls_sha256_update       pmbedtls_sha256_update
+#define mbedtls_sha256_finish       pmbedtls_sha256_finish
+#define mbedtls_sha256_free         pmbedtls_sha256_free
+#define mbedtls_sha512_init         pmbedtls_sha512_init
+#define mbedtls_sha512_starts       pmbedtls_sha512_starts
+#define mbedtls_sha512_update       pmbedtls_sha512_update
+#define mbedtls_sha512_finish       pmbedtls_sha512_finish
+#define mbedtls_sha512_free         pmbedtls_sha512_free
+
+static BOOL mbedtls_initialize(void)
+{
+    if (!(libmbedtls_handle = wine_dlopen( SONAME_LIBMBEDTLS, RTLD_NOW, NULL, 0 )))
+    {
+        ERR_(winediag)( "failed to load libmbedtls, no support for crypto hashes\n" );
+        return FALSE;
+    }
+
+#define LOAD_FUNCPTR(f) \
+    if (!(p##f = wine_dlsym( libmbedtls_handle, #f, NULL, 0 ))) \
+    { \
+        ERR( "failed to load %s\n", #f ); \
+        goto fail; \
+    }
+
+    LOAD_FUNCPTR(mbedtls_sha1_init)
+    LOAD_FUNCPTR(mbedtls_sha1_starts)
+    LOAD_FUNCPTR(mbedtls_sha1_update)
+    LOAD_FUNCPTR(mbedtls_sha1_finish)
+    LOAD_FUNCPTR(mbedtls_sha1_free);
+    LOAD_FUNCPTR(mbedtls_sha256_init)
+    LOAD_FUNCPTR(mbedtls_sha256_starts)
+    LOAD_FUNCPTR(mbedtls_sha256_update)
+    LOAD_FUNCPTR(mbedtls_sha256_finish)
+    LOAD_FUNCPTR(mbedtls_sha256_free);
+    LOAD_FUNCPTR(mbedtls_sha512_init)
+    LOAD_FUNCPTR(mbedtls_sha512_starts)
+    LOAD_FUNCPTR(mbedtls_sha512_update)
+    LOAD_FUNCPTR(mbedtls_sha512_finish)
+    LOAD_FUNCPTR(mbedtls_sha512_free);
+#undef LOAD_FUNCPTR
+
+    return TRUE;
+
+fail:
+    wine_dlclose( libmbedtls_handle, NULL, 0 );
+    libmbedtls_handle = NULL;
+    return FALSE;
+}
+
+static void mbedtls_uninitialize(void)
+{
+    wine_dlclose( libmbedtls_handle, NULL, 0 );
+    libmbedtls_handle = NULL;
+}
+#endif /* SONAME_LIBMBEDTLS && !HAVE_COMMONCRYPTO_COMMONDIGEST_H && !__REACTOS__ */
 
 NTSTATUS WINAPI BCryptEnumAlgorithms(ULONG dwAlgOperations, ULONG *pAlgCount,
                                      BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags)
@@ -390,6 +482,108 @@ static NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
     pgnutls_hash_deinit( hash->handle, output );
     return STATUS_SUCCESS;
 }
+#elif defined(SONAME_LIBMBEDTLS)
+struct hash
+{
+    struct object    hdr;
+    enum alg_id      alg_id;
+    union
+    {
+        mbedtls_sha1_context   sha1_ctx;
+        mbedtls_sha256_context sha256_ctx;
+        mbedtls_sha512_context sha512_ctx;
+    } u;
+};
+
+static NTSTATUS hash_init( struct hash *hash )
+{
+#ifndef __REACTOS__
+    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
+#endif
+    switch (hash->alg_id)
+    {
+    case ALG_ID_SHA1:
+        mbedtls_sha1_init(&hash->u.sha1_ctx);
+        mbedtls_sha1_starts(&hash->u.sha1_ctx);
+        break;
+
+    case ALG_ID_SHA256:
+        mbedtls_sha256_init(&hash->u.sha256_ctx);
+        mbedtls_sha256_starts(&hash->u.sha256_ctx, FALSE);
+        break;
+
+    case ALG_ID_SHA384:
+    case ALG_ID_SHA512:
+        mbedtls_sha512_init(&hash->u.sha512_ctx);
+        mbedtls_sha512_starts(&hash->u.sha512_ctx, hash->alg_id==ALG_ID_SHA384);
+        break;
+
+    default:
+        ERR( "unhandled id %u\n", hash->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
+{
+#ifndef __REACTOS__
+    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
+#endif
+    switch (hash->alg_id)
+    {
+    case ALG_ID_SHA1:
+        mbedtls_sha1_update(&hash->u.sha1_ctx, input, size);
+        break;
+
+    case ALG_ID_SHA256:
+        mbedtls_sha256_update(&hash->u.sha256_ctx, input, size);
+        break;
+
+    case ALG_ID_SHA384:
+    case ALG_ID_SHA512:
+        mbedtls_sha512_update(&hash->u.sha512_ctx, input, size);
+        break;
+
+    default:
+        ERR( "unhandled id %u\n", hash->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
+{
+#ifndef __REACTOS__
+    if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
+#endif
+    switch (hash->alg_id)
+    {
+    case ALG_ID_SHA1:
+        mbedtls_sha1_finish(&hash->u.sha1_ctx, output);
+        mbedtls_sha1_free(&hash->u.sha1_ctx);
+        break;
+
+    case ALG_ID_SHA256:
+        mbedtls_sha256_finish(&hash->u.sha256_ctx, output);
+        mbedtls_sha256_free(&hash->u.sha256_ctx);
+        break;
+
+    case ALG_ID_SHA384:
+    case ALG_ID_SHA512:
+        mbedtls_sha512_finish(&hash->u.sha512_ctx, output);
+        mbedtls_sha512_free(&hash->u.sha512_ctx);
+        break;
+
+    default:
+        ERR( "unhandled id %u\n", hash->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
 #else
 struct hash
 {
@@ -621,6 +815,8 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         DisableThreadLibraryCalls( hinst );
 #if defined(HAVE_GNUTLS_HASH) && !defined(HAVE_COMMONCRYPTO_COMMONDIGEST_H)
         gnutls_initialize();
+#elif defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONDIGEST_H) && !defined(__REACTOS__)
+        mbedtls_initialize();
 #endif
         break;
 
@@ -628,6 +824,8 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         if (reserved) break;
 #if defined(HAVE_GNUTLS_HASH) && !defined(HAVE_COMMONCRYPTO_COMMONDIGEST_H)
         gnutls_uninitialize();
+#elif defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONDIGEST_H) && !defined(__REACTOS__)
+        mbedtls_uninitialize();
 #endif
         break;
     }

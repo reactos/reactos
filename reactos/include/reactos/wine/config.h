@@ -1242,7 +1242,7 @@
 #define SONAME_LIBJPEG "libjpeg"
 
 /* Define to the soname of the libmbedtls library. */
-#define SONAME_LIBMBEDTLS L"mbedtls"
+#define SONAME_LIBMBEDTLS "mbedtls"
 
 /* Define to the soname of the libncurses library. */
 /* #undef SONAME_LIBNCURSES */
