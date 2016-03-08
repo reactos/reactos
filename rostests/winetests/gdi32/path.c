@@ -390,9 +390,7 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
     size = GetPath(hdc, pnt, types, size);
     assert(size > 0);
 
-    if (todo_size) todo_wine
-        ok(size == expected_size, "Path size %d does not match expected size %d\n", size, expected_size);
-    else
+    todo_wine_if (todo_size)
         ok(size == expected_size, "Path size %d does not match expected size %d\n", size, expected_size);
 
     if (winetest_debug > 2)
@@ -407,11 +405,7 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
             (pnt[idx].x >= expected[eidx].x-2 && pnt[idx].x <= expected[eidx].x+2) &&
             (pnt[idx].y >= expected[eidx].y-2 && pnt[idx].y <= expected[eidx].y+2);
 
-        if (expected[eidx].todo || numskip) todo_wine
-            ok(match, "Expected #%d: %s (%d,%d) but got %s (%d,%d)\n", eidx,
-               type_string[expected[eidx].type], expected[eidx].x, expected[eidx].y,
-               type_string[types[idx]], pnt[idx].x, pnt[idx].y);
-        else
+        todo_wine_if (expected[eidx].todo || numskip)
             ok(match, "Expected #%d: %s (%d,%d) but got %s (%d,%d)\n", eidx,
                type_string[expected[eidx].type], expected[eidx].x, expected[eidx].y,
                type_string[types[idx]], pnt[idx].x, pnt[idx].y);

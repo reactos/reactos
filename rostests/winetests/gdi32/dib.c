@@ -1322,10 +1322,7 @@ static void compare_hash_broken_todo(HDC hdc, const BITMAPINFO *bmi, BYTE *bits,
     for(i = 1; i <= num_broken; i++)
         ok_cond = ok_cond || broken( !strcmp(hash, current_sha1[i]) );
 
-    if(todo)
-        todo_wine ok( ok_cond, "%s: %s: expected hash %s got %s\n",
-                      dst_format, info, *current_sha1, hash );
-    else
+    todo_wine_if(todo)
         ok( ok_cond, "%s: %s: expected hash %s got %s\n",
             dst_format, info, *current_sha1, hash );
 

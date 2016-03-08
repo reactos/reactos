@@ -926,7 +926,7 @@ static void test_bitmap_font_metrics(void)
     trace("ACP %d -> charset %d\n", GetACP(), expected_cs);
 
     hdc = CreateCompatibleDC(0);
-    assert(hdc);
+    ok(hdc != NULL, "failed to create hdc\n");
 
     trace("logpixelsX %d, logpixelsY %d\n", GetDeviceCaps(hdc, LOGPIXELSX),
           GetDeviceCaps(hdc, LOGPIXELSY));
@@ -974,9 +974,7 @@ static void test_bitmap_font_metrics(void)
             {
                 if (font_res == fd[i].dpi && lf.lfCharSet == expected_cs)
                 {
-                    if (ret) /* FIXME: Remove once Wine is fixed */
-                        todo_wine ok(!ret, "%s height %d charset %d dpi %d should be enumerated\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
-                    else
+                    todo_wine_if (ret) /* FIXME: Remove once Wine is fixed */
                         ok(!ret, "%s height %d charset %d dpi %d should be enumerated\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
                 }
             }
@@ -1136,26 +1134,26 @@ static void ABCWidths_helper(const char* description, HDC hdc, WORD *glyphs, ABC
     ret = pGetCharABCWidthsI(hdc, 0, 1, glyphs, abc);
     ok(ret, "%s: GetCharABCWidthsI should have succeeded\n", description);
     ok ((INT)abc->abcB > 0, "%s: abcB should be positive\n", description);
-    if (todo) todo_wine ok(abc->abcA * base_abci->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
-    else ok(abc->abcA * base_abci->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
-    if (todo) todo_wine ok(abc->abcC * base_abci->abcC >= 0, "%s: abcC's sign should be unchanged\n", description);
-    else ok(abc->abcC * base_abci->abcC >= 0, "%s: abcC's sign should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abc->abcA * base_abci->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abc->abcC * base_abci->abcC >= 0, "%s: abcC's sign should be unchanged\n", description);
 
     ret = pGetCharABCWidthsW(hdc, 'i', 'i', abc);
     ok(ret, "%s: GetCharABCWidthsW should have succeeded\n", description);
     ok ((INT)abc->abcB > 0, "%s: abcB should be positive\n", description);
-    if (todo) todo_wine ok(abc->abcA * base_abcw->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
-    else ok(abc->abcA * base_abcw->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
-    if (todo) todo_wine ok(abc->abcC * base_abcw->abcC >= 0, "%s: abcC's sign should be unchanged\n", description);
-    else ok(abc->abcC * base_abcw->abcC >= 0, "%s: abcC's should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abc->abcA * base_abcw->abcA >= 0, "%s: abcA's sign should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abc->abcC * base_abcw->abcC >= 0, "%s: abcC's sign should be unchanged\n", description);
 
     ret = pGetCharABCWidthsFloatW(hdc, 'i', 'i', abcf);
     ok(ret, "%s: GetCharABCWidthsFloatW should have succeeded\n", description);
     ok (abcf->abcfB > 0.0, "%s: abcfB should be positive\n", description);
-    if (todo) todo_wine ok(abcf->abcfA * base_abcf->abcfA >= 0.0, "%s: abcfA's sign should be unchanged\n", description);
-    else ok(abcf->abcfA * base_abcf->abcfA >= 0.0, "%s: abcfA's should be unchanged\n", description);
-    if (todo) todo_wine ok(abcf->abcfC * base_abcf->abcfC >= 0.0, "%s: abcfC's sign should be unchanged\n", description);
-    else ok(abcf->abcfC * base_abcf->abcfC >= 0.0, "%s: abcfC's sign should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abcf->abcfA * base_abcf->abcfA >= 0.0, "%s: abcfA's sign should be unchanged\n", description);
+    todo_wine_if (todo)
+        ok(abcf->abcfC * base_abcf->abcfC >= 0.0, "%s: abcfC's sign should be unchanged\n", description);
 }
 
 static void test_GetCharABCWidths(void)
@@ -1410,6 +1408,7 @@ static void test_GetCharABCWidths(void)
 static void test_text_extents(void)
 {
     static const WCHAR wt[] = {'O','n','e','\n','t','w','o',' ','3',0};
+    static const WCHAR emptyW[] = {0};
     LPINT extents;
     INT i, len, fit1, fit2, extents2[3];
     LOGFONTA lf;
@@ -1428,8 +1427,19 @@ static void test_text_extents(void)
     hdc = GetDC(0);
     hfont = SelectObject(hdc, hfont);
     GetTextMetricsA(hdc, &tm);
-    GetTextExtentPointA(hdc, "o", 1, &sz);
+    ret = GetTextExtentPointA(hdc, "o", 1, &sz);
+    ok(ret, "got %d\n", ret);
     ok(sz.cy == tm.tmHeight, "cy %d tmHeight %d\n", sz.cy, tm.tmHeight);
+
+    memset(&sz, 0xcc, sizeof(sz));
+    ret = GetTextExtentPointA(hdc, "o", 0, &sz);
+    ok(ret, "got %d\n", ret);
+    ok(sz.cx == 0 && sz.cy == 0, "cx %d, cy %d\n", sz.cx, sz.cy);
+
+    memset(&sz, 0xcc, sizeof(sz));
+    ret = GetTextExtentPointA(hdc, "", 0, &sz);
+    ok(ret, "got %d\n", ret);
+    ok(sz.cx == 0 && sz.cy == 0, "cx %d, cy %d\n", sz.cx, sz.cy);
 
     SetLastError(0xdeadbeef);
     GetTextExtentExPointW(hdc, wt, 1, 1, &fit1, &fit2, &sz1);
@@ -1441,6 +1451,16 @@ static void test_text_extents(void)
         ReleaseDC(0, hdc);
         return;
     }
+
+    memset(&sz, 0xcc, sizeof(sz));
+    ret = GetTextExtentPointW(hdc, wt, 0, &sz);
+    ok(ret, "got %d\n", ret);
+    ok(sz.cx == 0 && sz.cy == 0, "cx %d, cy %d\n", sz.cx, sz.cy);
+
+    memset(&sz, 0xcc, sizeof(sz));
+    ret = GetTextExtentPointW(hdc, emptyW, 0, &sz);
+    ok(ret, "got %d\n", ret);
+    ok(sz.cx == 0 && sz.cy == 0, "cx %d, cy %d\n", sz.cx, sz.cy);
 
     len = lstrlenW(wt);
     extents = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof extents[0]);
@@ -1724,7 +1744,7 @@ static void test_GetKerningPairs(void)
         strcpy(lf.lfFaceName, kd[i].face_name);
         lf.lfHeight = kd[i].height;
         hfont = CreateFontIndirectA(&lf);
-        assert(hfont != 0);
+        ok(hfont != NULL, "failed to create a font, name %s\n", kd[i].face_name);
 
         hfont_old = SelectObject(hdc, hfont);
 
@@ -1850,7 +1870,7 @@ static void test_height( HDC hdc, const struct font_data *fd )
         strcpy(lf.lfFaceName, fd[i].face_name);
 
         hfont = CreateFontIndirectA(&lf);
-        assert(hfont);
+        ok(hfont != NULL, "failed to create a font, name %s\n", fd[i].face_name);
 
         old_hfont = SelectObject(hdc, hfont);
         ret = GetTextMetricsA(hdc, &tm);
@@ -2076,12 +2096,40 @@ static void test_height_selection(void)
         {"", 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
     HDC hdc = CreateCompatibleDC(0);
-    assert(hdc);
+    ok(hdc != NULL, "failed to create hdc\n");
 
     test_height( hdc, tahoma );
     test_height_selection_vdmx( hdc );
 
     DeleteDC(hdc);
+}
+
+static UINT get_font_fsselection(LOGFONTA *lf)
+{
+    OUTLINETEXTMETRICA *otm;
+    HFONT hfont, hfont_old;
+    DWORD ret, otm_size;
+    UINT fsSelection;
+    HDC hdc;
+
+    hdc = GetDC(0);
+    hfont = CreateFontIndirectA(lf);
+    ok(hfont != NULL, "failed to create a font\n");
+
+    hfont_old = SelectObject(hdc, hfont);
+
+    otm_size = GetOutlineTextMetricsA(hdc, 0, NULL);
+    otm = HeapAlloc(GetProcessHeap(), 0, otm_size);
+    otm->otmSize = sizeof(*otm);
+    ret = GetOutlineTextMetricsA(hdc, otm->otmSize, otm);
+    ok(ret == otm->otmSize, "expected %u, got %u, error %d\n", otm->otmSize, ret, GetLastError());
+    fsSelection = otm->otmfsSelection;
+    HeapFree(GetProcessHeap(), 0, otm);
+    SelectObject(hdc, hfont_old);
+    DeleteObject(hfont);
+    ReleaseDC(0, hdc);
+
+    return fsSelection;
 }
 
 static void test_GetOutlineTextMetrics(void)
@@ -2092,6 +2140,38 @@ static void test_GetOutlineTextMetrics(void)
     HDC hdc;
     DWORD ret, otm_size;
     LPSTR unset_ptr;
+    UINT fsSelection;
+
+    /* check fsSelection field with bold simulation */
+    memset(&lf, 0, sizeof(lf));
+    strcpy(lf.lfFaceName, "Wingdings");
+    lf.lfCharSet = SYMBOL_CHARSET;
+
+    /* regular face */
+    fsSelection = get_font_fsselection(&lf);
+    ok((fsSelection & (1 << 5)) == 0, "got 0x%x\n", fsSelection);
+
+    /* face with bold simulation */
+    lf.lfWeight = FW_BOLD;
+    fsSelection = get_font_fsselection(&lf);
+    ok((fsSelection & (1 << 5)) != 0, "got 0x%x\n", fsSelection);
+
+    /* check fsSelection field with oblique simulation */
+    memset(&lf, 0, sizeof(lf));
+    strcpy(lf.lfFaceName, "Tahoma");
+    lf.lfHeight = -13;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
+    lf.lfQuality = PROOF_QUALITY;
+
+    /* regular face */
+    fsSelection = get_font_fsselection(&lf);
+    ok((fsSelection & 1) == 0, "got 0x%x\n", fsSelection);
+
+    lf.lfItalic = 1;
+    /* face with oblique simulation */
+    fsSelection = get_font_fsselection(&lf);
+    ok((fsSelection & 1) == 1, "got 0x%x\n", fsSelection);
 
     if (!is_font_installed("Arial"))
     {
@@ -2108,7 +2188,7 @@ static void test_GetOutlineTextMetrics(void)
     lf.lfPitchAndFamily = DEFAULT_PITCH;
     lf.lfQuality = PROOF_QUALITY;
     hfont = CreateFontIndirectA(&lf);
-    assert(hfont != 0);
+    ok(hfont != NULL, "failed to create a font\n");
 
     hfont_old = SelectObject(hdc, hfont);
     otm_size = GetOutlineTextMetricsA(hdc, 0, NULL);
@@ -3782,11 +3862,7 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
         expect_default_A  = expect_default_W;
 
         /* Wine currently uses SYMBOL_CHARSET to identify whether the ANSI metrics need special handling */
-        if(cmap_type != cmap_ms_symbol && tmA.tmCharSet == SYMBOL_CHARSET && expect_first_A != 0x1e)
-            todo_wine ok(tmA.tmFirstChar == expect_first_A ||
-                         tmA.tmFirstChar == expect_first_A + 1 /* win9x */,
-                         "A: tmFirstChar for %s got %02x expected %02x\n", font_name, tmA.tmFirstChar, expect_first_A);
-        else
+        todo_wine_if(cmap_type != cmap_ms_symbol && tmA.tmCharSet == SYMBOL_CHARSET && expect_first_A != 0x1e)
             ok(tmA.tmFirstChar == expect_first_A ||
                tmA.tmFirstChar == expect_first_A + 1 /* win9x */,
                "A: tmFirstChar for %s got %02x expected %02x\n", font_name, tmA.tmFirstChar, expect_first_A);
@@ -3810,18 +3886,12 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
         if (ret)
         {
             /* Wine uses the os2 first char */
-            if(cmap_first != os2_first_char && cmap_type != cmap_ms_symbol)
-                todo_wine ok(tmW.tmFirstChar == expect_first_W, "W: tmFirstChar for %s got %02x expected %02x\n",
-                             font_name, tmW.tmFirstChar, expect_first_W);
-            else
+            todo_wine_if(cmap_first != os2_first_char && cmap_type != cmap_ms_symbol)
                 ok(tmW.tmFirstChar == expect_first_W, "W: tmFirstChar for %s got %02x expected %02x\n",
                    font_name, tmW.tmFirstChar, expect_first_W);
 
             /* Wine uses the os2 last char */
-            if(expect_last_W != os2_last_char && cmap_type != cmap_ms_symbol)
-                todo_wine ok(tmW.tmLastChar == expect_last_W, "W: tmLastChar for %s got %02x expected %02x\n",
-                             font_name, tmW.tmLastChar, expect_last_W);
-            else
+            todo_wine_if(expect_last_W != os2_last_char && cmap_type != cmap_ms_symbol)
                 ok(tmW.tmLastChar == expect_last_W, "W: tmLastChar for %s got %02x expected %02x\n",
                    font_name, tmW.tmLastChar, expect_last_W);
             ok(tmW.tmBreakChar == expect_break_W, "W: tmBreakChar for %s got %02x expected %02x\n",
@@ -6054,14 +6124,11 @@ static void test_stock_fonts(void)
             }
 
             /* FIXME: Remove once Wine is fixed */
-            if (td[i][j].dpi != 96 &&
+            todo_wine_if (td[i][j].dpi != 96 &&
                 /* MS Sans Serif for 120 dpi and higher should include 12 pixel bitmap set */
                 ((!strcmp(td[i][j].face_name, "MS Sans Serif") && td[i][j].height == 12) ||
                 /* System for 120 dpi and higher should include 20 pixel bitmap set */
                 (!strcmp(td[i][j].face_name, "System") && td[i][j].height > 16)))
-            todo_wine
-            ok(height == td[i][j].height_pixels, "%d(%d): expected height %d, got %d\n", i, j, td[i][j].height_pixels, height);
-            else
             ok(height == td[i][j].height_pixels, "%d(%d): expected height %d, got %d\n", i, j, td[i][j].height_pixels, height);
 
             ok(td[i][j].weight == lf.lfWeight, "%d(%d): expected lfWeight %d, got %d\n", i, j, td[i][j].weight, lf.lfWeight);
@@ -6281,13 +6348,18 @@ static void test_GetCharWidth32(void)
 
 static void test_fake_bold_font(void)
 {
+    static const MAT2 x2_mat = { {0,2}, {0,0}, {0,0}, {0,2} };
     HDC hdc;
-    HFONT hfont, hfont_old;
     LOGFONTA lf;
     BOOL ret;
-    TEXTMETRICA tm[2];
-    ABC abc[2];
-    INT w[2];
+    struct glyph_data {
+        TEXTMETRICA tm;
+        ABC abc;
+        INT w;
+        GLYPHMETRICS gm;
+    } data[2];
+    int i;
+    DWORD r;
 
     if (!pGetCharWidth32A || !pGetCharABCWidthsA) {
         win_skip("GetCharWidth32A/GetCharABCWidthA is not available on this platform\n");
@@ -6297,45 +6369,51 @@ static void test_fake_bold_font(void)
     /* Test outline font */
     memset(&lf, 0, sizeof(lf));
     strcpy(lf.lfFaceName, "Wingdings");
-    lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = SYMBOL_CHARSET;
-    hfont = CreateFontIndirectA(&lf);
 
     hdc = GetDC(NULL);
-    hfont_old = SelectObject(hdc, hfont);
 
-    /* base metrics */
-    ret = GetTextMetricsA(hdc, &tm[0]);
-    ok(ret, "got %d\n", ret);
-    ret = pGetCharABCWidthsA(hdc, 0x76, 0x76, &abc[0]);
-    ok(ret, "got %d\n", ret);
+    for (i = 0; i <= 1; i++)
+    {
+        HFONT hfont, hfont_old;
 
-    lf.lfWeight = FW_BOLD;
-    hfont = CreateFontIndirectA(&lf);
-    DeleteObject(SelectObject(hdc, hfont));
+        lf.lfWeight = i ? FW_BOLD : FW_NORMAL;
+        hfont = CreateFontIndirectA(&lf);
+        hfont_old = SelectObject(hdc, hfont);
 
-    /* bold metrics */
-    ret = GetTextMetricsA(hdc, &tm[1]);
-    ok(ret, "got %d\n", ret);
-    ret = pGetCharABCWidthsA(hdc, 0x76, 0x76, &abc[1]);
-    ok(ret, "got %d\n", ret);
+        ret = GetTextMetricsA(hdc, &data[i].tm);
+        ok(ret, "got %d\n", ret);
+        ret = pGetCharABCWidthsA(hdc, 0x76, 0x76, &data[i].abc);
+        ok(ret, "got %d\n", ret);
+        data[i].w = data[i].abc.abcA + data[i].abc.abcB + data[i].abc.abcC;
+        r = GetGlyphOutlineA(hdc, 0x76, GGO_METRICS, &data[i].gm, 0, NULL, &x2_mat);
+        ok(r != GDI_ERROR, "got %d\n", ret);
 
-    DeleteObject(SelectObject(hdc, hfont_old));
+        SelectObject(hdc, hfont_old);
+        DeleteObject(hfont);
+    }
     ReleaseDC(NULL, hdc);
 
     /* compare results (outline) */
-    ok(tm[0].tmHeight == tm[1].tmHeight, "expected %d, got %d\n", tm[0].tmHeight, tm[1].tmHeight);
-    ok(tm[0].tmAscent == tm[1].tmAscent, "expected %d, got %d\n", tm[0].tmAscent, tm[1].tmAscent);
-    ok(tm[0].tmDescent == tm[1].tmDescent, "expected %d, got %d\n", tm[0].tmDescent, tm[1].tmDescent);
-    ok((tm[0].tmAveCharWidth + 1) == tm[1].tmAveCharWidth,
-       "expected %d, got %d\n", tm[0].tmAveCharWidth + 1, tm[1].tmAveCharWidth);
-    ok((tm[0].tmMaxCharWidth + 1) == tm[1].tmMaxCharWidth,
-       "expected %d, got %d\n", tm[0].tmMaxCharWidth + 1, tm[1].tmMaxCharWidth);
-    ok(tm[0].tmOverhang == tm[1].tmOverhang, "expected %d, got %d\n", tm[0].tmOverhang, tm[1].tmOverhang);
-    w[0] = abc[0].abcA + abc[0].abcB + abc[0].abcC;
-    w[1] = abc[1].abcA + abc[1].abcB + abc[1].abcC;
-    ok((w[0] + 1) == w[1], "expected %d, got %d\n", w[0] + 1, w[1]);
+    ok(data[0].tm.tmHeight == data[1].tm.tmHeight,
+       "expected %d, got %d\n", data[0].tm.tmHeight, data[1].tm.tmHeight);
+    ok(data[0].tm.tmAscent == data[1].tm.tmAscent,
+       "expected %d, got %d\n", data[0].tm.tmAscent, data[1].tm.tmAscent);
+    ok(data[0].tm.tmDescent == data[1].tm.tmDescent,
+       "expected %d, got %d\n", data[0].tm.tmDescent, data[1].tm.tmDescent);
+    ok(data[0].tm.tmAveCharWidth + 1 == data[1].tm.tmAveCharWidth,
+       "expected %d, got %d\n", data[0].tm.tmAveCharWidth + 1, data[1].tm.tmAveCharWidth);
+    ok(data[0].tm.tmMaxCharWidth + 1 == data[1].tm.tmMaxCharWidth,
+       "expected %d, got %d\n", data[0].tm.tmMaxCharWidth + 1, data[1].tm.tmMaxCharWidth);
+    ok(data[0].tm.tmOverhang == data[1].tm.tmOverhang,
+       "expected %d, got %d\n", data[0].tm.tmOverhang, data[1].tm.tmOverhang);
+    ok(data[0].w + 1 == data[1].w,
+       "expected %d, got %d\n", data[0].w + 1, data[1].w);
 
+    ok(data[0].gm.gmCellIncX + 1 == data[1].gm.gmCellIncX,
+       "expected %d, got %d\n", data[0].gm.gmCellIncX + 1, data[1].gm.gmCellIncX);
+    ok(data[0].gm.gmCellIncY == data[1].gm.gmCellIncY,
+       "expected %d, got %d\n", data[0].gm.gmCellIncY, data[1].gm.gmCellIncY);
 }
 
 static void test_bitmap_font_glyph_index(void)
