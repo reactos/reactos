@@ -345,8 +345,8 @@ DumpMemoryTxt(HANDLE hFile)
         }
 
         /* ... align with spaces if needed... */
-        RtlFillMemory(Line, 0x0F + 4 - i, ' ');
-        Line += 0x0F + 4 - i;
+        RtlFillMemory(Line, (0x0F + 2 - i) * 3 + 2, ' ');
+        Line += (0x0F + 2 - i) * 3 + 2;
 
         /* ... then in character form. */
         i = 0;
