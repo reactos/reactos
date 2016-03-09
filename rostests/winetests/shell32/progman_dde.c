@@ -372,7 +372,13 @@ static HWND CheckWindowCreated(const char *winName, BOOL closeWindow, int testPa
     for (i = 0; window == NULL && i < PDDE_POLL_NUM; i++)
     {
         Sleep(PDDE_POLL_TIME);
-        window = FindWindowA(NULL, winName);
+        /* Specify the window class name to make sure what we find is really an
+         * Explorer window. Explorer used two different window classes so try
+         * both.
+         */
+        window = FindWindowA("ExplorerWClass", winName);
+        if (!window)
+            window = FindWindowA("CabinetWClass", winName);
     }
     ok (window != NULL, "Window \"%s\" was not created in %i seconds - assumed failure.%s\n",
         winName, PDDE_POLL_NUM*PDDE_POLL_TIME/1000, GetStringFromTestParams(testParams));

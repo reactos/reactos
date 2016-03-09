@@ -388,6 +388,14 @@ static void test_EnumObjects(IShellFolder *iFolder)
         SFGAO_CAPABILITYMASK | SFGAO_FILESYSTEM,
         SFGAO_CAPABILITYMASK | SFGAO_FILESYSTEM,
     };
+    static const ULONG full_attrs[5] =
+    {
+        SFGAO_CAPABILITYMASK | SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR,
+        SFGAO_CAPABILITYMASK | SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR,
+        SFGAO_CAPABILITYMASK | SFGAO_STREAM | SFGAO_FILESYSTEM,
+        SFGAO_CAPABILITYMASK | SFGAO_STREAM | SFGAO_FILESYSTEM,
+        SFGAO_CAPABILITYMASK | SFGAO_STREAM | SFGAO_FILESYSTEM,
+    };
 
     hr = IShellFolder_EnumObjects(iFolder, NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &iEnumList);
     ok(hr == S_OK, "EnumObjects failed %08x\n", hr);
@@ -440,6 +448,11 @@ static void test_EnumObjects(IShellFolder *iFolder)
         ok(flags == attrs[i] ||
            flags == (attrs[i] & ~SFGAO_FILESYSANCESTOR), /* Win9x, NT4 */
            "GetAttributesOf[%i] got %08x, expected %08x\n", i, flags, attrs[i]);
+
+        flags = ~0u;
+        hr = IShellFolder_GetAttributesOf(iFolder, 1, (LPCITEMIDLIST*)(idlArr + i), &flags);
+        ok(hr == S_OK, "GetAttributesOf returns %08x\n", hr);
+        ok((flags & ~SFGAO_HASSUBFOLDER) == full_attrs[i], "%d: got %08x expected %08x\n", i, flags, full_attrs[i]);
     }
 
     for (i=0;i<5;i++)
@@ -1889,14 +1902,14 @@ static void test_SHGetFolderPathA(void)
     if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
 
     hr = pSHGetFolderPathA( 0, CSIDL_PROGRAM_FILES, 0, SHGFP_TYPE_CURRENT, path );
-    ok( !hr, "SHGetFolderPathA failed %x\n", hr );
+    ok( hr == S_OK, "SHGetFolderPathA failed %x\n", hr );
     hr = pSHGetFolderPathA( 0, CSIDL_PROGRAM_FILESX86, 0, SHGFP_TYPE_CURRENT, path_x86 );
     if (hr == E_FAIL)
     {
         win_skip( "Program Files (x86) not supported\n" );
         return;
     }
-    ok( !hr, "SHGetFolderPathA failed %x\n", hr );
+    ok( hr == S_OK, "SHGetFolderPathA failed %x\n", hr );
     if (is_win64)
     {
         ok( lstrcmpiA( path, path_x86 ), "paths are identical '%s'\n", path );
@@ -1924,14 +1937,14 @@ static void test_SHGetFolderPathA(void)
     }
 
     hr = pSHGetFolderPathA( 0, CSIDL_PROGRAM_FILES_COMMON, 0, SHGFP_TYPE_CURRENT, path );
-    ok( !hr, "SHGetFolderPathA failed %x\n", hr );
+    ok( hr == S_OK, "SHGetFolderPathA failed %x\n", hr );
     hr = pSHGetFolderPathA( 0, CSIDL_PROGRAM_FILES_COMMONX86, 0, SHGFP_TYPE_CURRENT, path_x86 );
     if (hr == E_FAIL)
     {
         win_skip( "Common Files (x86) not supported\n" );
         return;
     }
-    ok( !hr, "SHGetFolderPathA failed %x\n", hr );
+    ok( hr == S_OK, "SHGetFolderPathA failed %x\n", hr );
     if (is_win64)
     {
         ok( lstrcmpiA( path, path_x86 ), "paths are identical '%s'\n", path );
@@ -5256,6 +5269,63 @@ static void test_SHCreateShellFolderViewEx(void)
     IShellFolder_Release(desktop);
 }
 
+static void test_DataObject(void)
+{
+    IShellFolder *desktop;
+    IDataObject *data_obj;
+    HRESULT hres;
+    IEnumIDList *peidl;
+    LPITEMIDLIST apidl;
+    FORMATETC fmt;
+    DWORD cf_shellidlist;
+    STGMEDIUM medium;
+
+    SHGetDesktopFolder(&desktop);
+
+    hres = IShellFolder_EnumObjects(desktop, NULL,
+            SHCONTF_NONFOLDERS|SHCONTF_FOLDERS|SHCONTF_INCLUDEHIDDEN, &peidl);
+    ok(hres == S_OK, "got %x\n", hres);
+
+    if(IEnumIDList_Next(peidl, 1, &apidl, NULL) != S_OK) {
+        skip("no files on desktop - skipping GetDataObject tests\n");
+        IEnumIDList_Release(peidl);
+        IShellFolder_Release(desktop);
+        return;
+    }
+    IEnumIDList_Release(peidl);
+
+    hres = IShellFolder_GetUIObjectOf(desktop, NULL, 1, (LPCITEMIDLIST*)&apidl,
+            &IID_IDataObject, NULL, (void**)&data_obj);
+    ok(hres == S_OK, "got %x\n", hres);
+    pILFree(apidl);
+    IShellFolder_Release(desktop);
+
+    cf_shellidlist = RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
+    fmt.cfFormat = cf_shellidlist;
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    fmt.tymed = TYMED_HGLOBAL;
+    hres = IDataObject_QueryGetData(data_obj, &fmt);
+    ok(hres == S_OK, "got %x\n", hres);
+
+    fmt.tymed = TYMED_HGLOBAL | TYMED_ISTREAM;
+    hres = IDataObject_QueryGetData(data_obj, &fmt);
+    ok(hres == S_OK, "got %x\n", hres);
+
+    fmt.tymed = TYMED_ISTREAM;
+    hres = IDataObject_QueryGetData(data_obj, &fmt);
+    todo_wine ok(hres == S_FALSE, "got %x\n", hres);
+
+    fmt.tymed = TYMED_HGLOBAL | TYMED_ISTREAM;
+    hres = IDataObject_GetData(data_obj, &fmt, &medium);
+    ok(hres == S_OK, "got %x\n", hres);
+    ok(medium.tymed == TYMED_HGLOBAL, "medium.tymed = %x\n", medium.tymed);
+    ReleaseStgMedium(&medium);
+
+    IDataObject_Release(data_obj);
+}
+
 START_TEST(shlfolder)
 {
     init_function_pointers();
@@ -5296,6 +5366,7 @@ START_TEST(shlfolder)
     test_SHCreateDefaultContextMenu();
     test_SHCreateShellFolderView();
     test_SHCreateShellFolderViewEx();
+    test_DataObject();
 
     OleUninitialize();
 }

@@ -74,6 +74,7 @@ static HRESULT (WINAPI *pSHPropStgReadMultiple)(IPropertyStorage*, UINT,
 static HRESULT (WINAPI *pSHPropStgWriteMultiple)(IPropertyStorage*, UINT*,
         ULONG, const PROPSPEC*, PROPVARIANT*, PROPID);
 static HRESULT (WINAPI *pSHCreateQueryCancelAutoPlayMoniker)(IMoniker**);
+static HRESULT (WINAPI *pSHCreateSessionKey)(REGSAM, HKEY*);
 
 static void init(void)
 {
@@ -83,6 +84,7 @@ static void init(void)
     pSHPropStgReadMultiple = (void*)GetProcAddress(hmod, "SHPropStgReadMultiple");
     pSHPropStgWriteMultiple = (void*)GetProcAddress(hmod, "SHPropStgWriteMultiple");
     pSHCreateQueryCancelAutoPlayMoniker = (void*)GetProcAddress(hmod, "SHCreateQueryCancelAutoPlayMoniker");
+    pSHCreateSessionKey = (void*)GetProcAddress(hmod, (char*)723);
 }
 
 static HRESULT WINAPI PropertyStorage_QueryInterface(IPropertyStorage *This,
@@ -857,6 +859,36 @@ static void test_DragQueryFile(void)
 }
 #undef DROPTEST_FILENAME
 
+static void test_SHCreateSessionKey(void)
+{
+    HKEY hkey, hkey2;
+    HRESULT hr;
+
+    if (!pSHCreateSessionKey)
+    {
+        skip("SHCreateSessionKey is not implemented\n");
+        return;
+    }
+
+if (0) /* crashes on native */
+    hr = pSHCreateSessionKey(KEY_READ, NULL);
+
+    hkey = (HKEY)0xdeadbeef;
+    hr = pSHCreateSessionKey(0, &hkey);
+    todo_wine ok(hr == E_ACCESSDENIED, "got 0x%08x\n", hr);
+    todo_wine ok(hkey == NULL, "got %p\n", hkey);
+
+    hr = pSHCreateSessionKey(KEY_READ, &hkey);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = pSHCreateSessionKey(KEY_READ, &hkey2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hkey != hkey2, "got %p, %p\n", hkey, hkey2);
+
+    RegCloseKey(hkey);
+    RegCloseKey(hkey2);
+}
+
 START_TEST(shellole)
 {
     init();
@@ -864,4 +896,5 @@ START_TEST(shellole)
     test_SHPropStg_functions();
     test_SHCreateQueryCancelAutoPlayMoniker();
     test_DragQueryFile();
+    test_SHCreateSessionKey();
 }
