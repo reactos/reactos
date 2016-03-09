@@ -146,7 +146,7 @@ static void init_thiscall_thunk(void)
 }
 
 #define call_func1(func,_this) call_thiscall_func1(func,_this)
-#define call_func2(func,_this,a) call_thiscall_func2(func,_this,(const void*)a)
+#define call_func2(func,_this,a) call_thiscall_func2(func,_this,(const void*)(a))
 
 #else
 
@@ -452,8 +452,7 @@ static void test_exception(void)
   {
     /* Check the rtti */
     type_info *ti = p__RTtypeid(&e);
-    ok (ti && ti->mangled &&
-        !strcmp(ti->mangled, ".?AVexception@@"), "bad rtti for e\n");
+    ok (ti && !strcmp(ti->mangled, ".?AVexception@@"), "bad rtti for e\n");
 
     if (ti)
     {
@@ -1036,15 +1035,13 @@ static void test_rtti(void)
   child_class_sig0_rtti.object_locator.type_hierarchy = RTTI_REF_SIG0(child_class_sig0_rtti, object_hierarchy, base);
 
   ti = p__RTtypeid(&simple_class_sig0);
-  ok (ti && ti->mangled && !strcmp(ti->mangled, "simple_class"),
-          "incorrect rtti data\n");
+  ok (ti && !strcmp(ti->mangled, "simple_class"), "incorrect rtti data\n");
 
   casted = p__RTCastToVoid(&simple_class_sig0);
   ok (casted == (void*)&simple_class_sig0, "failed cast to void\n");
 
   ti = p__RTtypeid(&child_class_sig0);
-  ok (ti && ti->mangled && !strcmp(ti->mangled, "child_class"),
-          "incorrect rtti data\n");
+  ok (ti && !strcmp(ti->mangled, "child_class"), "incorrect rtti data\n");
 
   casted = p__RTCastToVoid(&child_class_sig0);
   ok (casted == (void*)&child_class_sig0, "failed cast to void\n");
@@ -1064,15 +1061,13 @@ static void test_rtti(void)
   }
 
   ti = p__RTtypeid(&simple_class);
-  ok (ti && ti->mangled && !strcmp(ti->mangled, "simple_class"),
-          "incorrect rtti data\n");
+  ok (ti && !strcmp(ti->mangled, "simple_class"), "incorrect rtti data\n");
 
   casted = p__RTCastToVoid(&simple_class);
   ok (casted == (void*)&simple_class, "failed cast to void\n");
 
   ti = p__RTtypeid(&child_class);
-  ok (ti && ti->mangled && !strcmp(ti->mangled, "child_class"),
-        "incorrect rtti data\n");
+  ok (ti && !strcmp(ti->mangled, "child_class"), "incorrect rtti data\n");
 
   casted = p__RTCastToVoid(&child_class);
   ok (casted == (void*)&child_class, "failed cast to void\n");
@@ -1323,6 +1318,11 @@ static void test_demangle(void)
 /* 128 */ {"??Xstd@@YAAEAV?$complex@M@0@AEAV10@AEBV10@@Z",
            "class std::complex<float> & std::operator*=(class std::complex<float> &,class std::complex<float> const &)",
            "??Xstd@@YAAEAV?$complex@M@0@AEAV10@AEBV10@@Z", 2},
+/* 129 */ {"??$run@XVTask_Render_Preview@@@QtConcurrent@@YA?AV?$QFuture@X@@PEAVTask_Render_Preview@@P82@EAAXXZ@Z",
+           "class QFuture<void> __cdecl QtConcurrent::run<void,class Task_Render_Preview>(class Task_Render_Preview * __ptr64,void (__cdecl Task_Render_Preview::*)(void) __ptr64)",
+           "??$run@XVTask_Render_Preview@@@QtConcurrent@@YA?AV?$QFuture@X@@PEAVTask_Render_Preview@@P82@EAAXXZ@Z"},
+/* 130 */ {"??_E?$TStrArray@$$BY0BAA@D$0BA@@@UAEPAXI@Z",
+           "public: virtual void * __thiscall TStrArray<char [256],16>::`vector deleting destructor'(unsigned int)"},
     };
     int i, num_test = (sizeof(test)/sizeof(test[0]));
     char* name;

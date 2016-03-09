@@ -165,7 +165,7 @@ static void test_sscanf( void )
     ret = sscanf(buffer, "%lld", &result64);
     ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ret = sprintf(buffer1, "%lld", result64);
-    ok(ret==14 || broken(ret==10), "sprintf retuned %d\n", ret);
+    ok(ret==14 || broken(ret==10), "sprintf returned %d\n", ret);
     if(ret == 14)
         ok(!strcmp(buffer, buffer1), "got %s, expected %s\n", buffer1, buffer);
 
@@ -244,6 +244,13 @@ static void test_sscanf( void )
     ret = sscanf(buffer, "%d:%d%n", &hour, &min, &number_so_far);
     ok(ret == 2, "Wrong number of arguments read: %d\n", ret);
     ok(number_so_far == 4, "%%n yielded wrong result: %d\n", number_so_far);
+
+    buffer[0] = 0;
+    buffer1[0] = 0;
+    ret = sscanf("test=value\xda", "%[^=] = %[^;]", buffer, buffer1);
+    ok(ret == 2, "got %d\n", ret);
+    ok(!strcmp(buffer, "test"), "buf %s\n", buffer);
+    ok(!strcmp(buffer1, "value\xda"), "buf %s\n", buffer1);
 }
 
 static void test_sscanf_s(void)
