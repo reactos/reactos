@@ -1542,6 +1542,28 @@ static void testSetupDiGetINFClassA(void)
     }
 }
 
+static void testSetupDiGetClassDevsA(void)
+{
+    static GUID displayguid = {0x4d36e968, 0xe325, 0x11ce, {0xbf,0xc1,0x08,0x00,0x2b,0xe1,0x03,0x18}};
+    SP_DEVINFO_DATA devinfo;
+    DISPLAY_DEVICEA disp;
+    HDEVINFO set;
+    BOOL ret;
+
+    disp.cb = sizeof(disp);
+    ok(EnumDisplayDevicesA(NULL, 0, &disp, 0), "EnumDisplayDevices failed: %08x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    set = pSetupDiGetClassDevsA(&displayguid, disp.DeviceID, 0, 0);
+    ok(set != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsA failed: %08x\n", GetLastError());
+
+    devinfo.cbSize = sizeof(devinfo);
+    ret = SetupDiEnumDeviceInfo(set, 0, &devinfo);
+    ok(ret, "SetupDiEnumDeviceInfo failed: %08x\n", GetLastError());
+
+    pSetupDiDestroyDeviceInfoList(set);
+}
+
 START_TEST(devinst)
 {
     init_function_pointers();
@@ -1569,6 +1591,7 @@ START_TEST(devinst)
     testRegisterAndGetDetail();
     testDeviceRegistryPropertyA();
     testDeviceRegistryPropertyW();
+    testSetupDiGetClassDevsA();
 
     if (!winetest_interactive)
     {
