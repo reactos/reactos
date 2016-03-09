@@ -224,7 +224,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ajustes del recurso:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -298,13 +298,13 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Abrir el diálogo de propiedades para le selección actual."
-  IDS_HINT_SCAN         " Buscar dispositivos PnP nuevos o que hayan cambiado."
+  IDS_HINT_PROPERTIES   " Abre el diálogo de propiedades para le selección actual."
+  IDS_HINT_SCAN         " Busca dispositivos PnP nuevos o que hayan cambiado."
   IDS_HINT_ENABLE       " Habilita el dispositivo seleccionado."
   IDS_HINT_DISABLE      " Deshabilita el dispositivo seleccionado."
   IDS_HINT_UPDATE       " Inicia el asistente de actualización de controladores para el dispositivo seleccionado."
   IDS_HINT_UNINSTALL    " Desinstala el controlador del dispositivo seleccionado."
-  IDS_HINT_ADD          " Añade un dispositivo antiguo (sin PnP) al equipo." 
+  IDS_HINT_ADD          " Añade un dispositivo antiguo (sin PnP) al equipo."
   IDS_HINT_ABOUT        " Acerca del administrador de dispositivos de ReactOS."
   IDS_HINT_EXIT         " Salir del programa."
 
@@ -319,6 +319,6 @@ BEGIN
   IDS_HINT_SYS_SIZE     " Cambia el tamaño de la ventana."
   IDS_HINT_SYS_MINIMIZE " Reduce la ventana a un icono en la barra de tareas."
   IDS_HINT_SYS_MAXIMIZE " Amplía la ventana hasta llenar la pantalla."
-  IDS_HINT_SYS_CLOSE    " Cerrar la ventana."
+  IDS_HINT_SYS_CLOSE    " Cierra la ventana."
 END
 

@@ -1,10 +1,10 @@
 /*
- * PROJECT:    PAINT for ReactOS
- * LICENSE:    LGPL
- * FILE:       base/applications/mspaint/lang/es-ES.rc
- * PURPOSE:    Spanish Language resource file
- * TRANSLATOR: Gabriel Ilardi
- * PROOFREAD:  Ismael Ferreras Morezuelas
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL
+ * FILE:        base/applications/mspaint/lang/es-ES.rc
+ * PURPOSE:     Spanish Language resource file
+ * TRANSLATORS: Gabriel Ilardi
+ *              Ismael Ferreras Morezuelas
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -219,5 +219,5 @@ BEGIN
     IDS_PERCENTAGE "El porcentaje debe de estar entre 1 y 500."
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
-    IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimesiones haciendo el lienzo más grande?"
-END 
+    IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimensiones del lienzo a su nuevo tamaño?"
+END

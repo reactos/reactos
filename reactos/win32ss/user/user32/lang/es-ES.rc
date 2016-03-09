@@ -1,3 +1,5 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* Dialogs */
@@ -5,7 +7,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 SELWINDOW DIALOGEX 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Selecciones Ventana"
+CAPTION "Elegir ventana"
 BEGIN
     LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "&Aceptar", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -25,7 +27,7 @@ BEGIN
         MENUITEM "&Pegar", WM_PASTE
         MENUITEM "Borrar", WM_CLEAR
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar &Todo", EM_SETSEL
+        MENUITEM "Seleccionar &todo", EM_SETSEL
     END
 END
 
@@ -63,15 +65,15 @@ BEGIN
     IDS_ABORT "&Abortar"
     IDS_RETRY "&Reintentar"
     IDS_IGNORE "&Ignorar"
-    IDS_YES "&Si"
+    IDS_YES "&Sí"
     IDS_NO "&No"
     IDS_CLOSE "&Cerrar"
     IDS_HELP "Ayuda"
-    IDS_TRYAGAIN "In&tentar Otra vez"
+    IDS_TRYAGAIN "Rein&tentar"
     IDS_CONTINUE "&Continuar"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MDI_MOREWINDOWS "&Más Ventanas..."
+    IDS_MDI_MOREWINDOWS "&Más ventanas..."
 END
