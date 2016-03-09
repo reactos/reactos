@@ -2,7 +2,9 @@
 #define _BASETSD_H_
 #pragma once
 
+#ifdef __GNUC__
 #include <msvctarget.h>
+#endif
 
 #ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)

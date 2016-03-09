@@ -37,7 +37,9 @@
 
 #include <ctype.h>
 //#include <winapifamily.h>
+#ifdef __GNUC__
 #include <msvctarget.h>
+#endif
 #include <specstrings.h>
 #include <kernelspecs.h>
 

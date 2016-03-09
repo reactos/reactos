@@ -121,8 +121,8 @@
  #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT($ULONG)
 #elif defined(_IA64_) || defined(_ARM_)
  #define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT($ULONG))
-#else
- #error "unknown architecture"
+#elif !defined(RC_INVOKED)
+ #error "Unknown architecture"
 #endif
 
 #if defined(_WIN64)
