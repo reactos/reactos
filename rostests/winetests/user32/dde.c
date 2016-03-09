@@ -43,6 +43,15 @@ static WNDPROC old_dde_client_wndproc;
 
 static const DWORD default_timeout = 200;
 
+static BOOL is_cjk(void)
+{
+    int lang_id = PRIMARYLANGID(GetUserDefaultLangID());
+
+    if (lang_id == LANG_CHINESE || lang_id == LANG_JAPANESE || lang_id == LANG_KOREAN)
+        return TRUE;
+    return FALSE;
+}
+
 static void flush_events(void)
 {
     MSG msg;
@@ -2385,6 +2394,7 @@ static WCHAR test_cmd_w_to_w[][32] = {
     { 0x2018, 0x2019, 0x0161, 0x0041, 0x02dc, 0 },  /* some chars that should map properly to CP1252 */
     { 0x2026, 0x2020, 0x2021, 0x0d0a, 0 },  /* false negative for IsTextUnicode */
     { 0x4efa, 0x4efc, 0x0061, 0x4efe, 0 },  /* some Chinese chars */
+    { 0x0061, 0x0062, 0x0063, 0x9152, 0 },  /* Chinese with latin characters begin */
 };
 static const int nb_callbacks = 5 + sizeof(test_cmd_w_to_w)/sizeof(test_cmd_w_to_w[0]);
 
@@ -2457,7 +2467,7 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
         ok(size == 12, "Expected 12, got %d, msg_index=%d\n", size, msg_index);
 
         size = DdeGetData(hdata, NULL, 0, 0);
-        ok((buffer = HeapAlloc(GetProcessHeap(), 0, size)) != NULL, "should not be null\n");
+        ok((buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)) != NULL, "should not be null\n");
         rsize = DdeGetData(hdata, buffer, size, 0);
         ok(rsize == size, "Incorrect size returned, expected %d got %d, msg_index=%d\n",
            size, rsize, msg_index);
@@ -2545,11 +2555,47 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                    "Expected %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), msg_index);
             }
             break;
+        case 5: /* Chinese with latin characters begin */
+            if (unicode_server && unicode_client)
+            {
+                todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
+                MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
+                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                todo_wine ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
+                             "Expected %s got %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), wine_dbgstr_w((WCHAR *)buffer), msg_index);
+            }
+            else if (unicode_server)
+            {
+                todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
+                MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
+                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                if (!is_cjk())
+                    todo_wine ok(!lstrcmpW((WCHAR*)buffer, test_cmd_a_to_w), "Expected %s, got %s, msg_index=%d\n",
+                                 wine_dbgstr_w(test_cmd_a_to_w), wine_dbgstr_w((WCHAR*)buffer), msg_index);
+                else
+                    todo_wine ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
+                                 "Expected %s got %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), wine_dbgstr_w((WCHAR *)buffer), msg_index);
+            }
+            else if (unicode_client)
+            {
+                ok(size == size_w_to_a, "Wrong size %d expected %d, msg_index=%d\n", size, size_w_to_a, msg_index);
+                ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
+                   test_cmd_w_to_a, buffer, msg_index);
+            }
+            else
+            {
+                todo_wine ok(size == size_w_to_a || size == (size_w_to_a - 1), "Wrong size %d expected %d or %d, msg_index=%d\n",
+                             size, size_w_to_a, size_w_to_a - 1, msg_index);
+                todo_wine ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
+                             test_cmd_w_to_a, buffer, msg_index);
+            }
+            break;
 
         default:
             ok( 0, "Invalid message %u\n", msg_index );
             break;
         }
+        HeapFree(GetProcessHeap(), 0, buffer);
         return (HDDEDATA) DDE_FACK;
     }
     case XTYP_DISCONNECT:

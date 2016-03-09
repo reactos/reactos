@@ -524,11 +524,11 @@ static void test_work_area(void)
           wp.rcNormalPosition.left, wp.rcNormalPosition.top,
           wp.rcNormalPosition.right, wp.rcNormalPosition.bottom);
     OffsetRect(&wp.rcNormalPosition, rc_work.left, rc_work.top);
-    if (mi.rcMonitor.left != mi.rcWork.left ||
+    todo_wine_if (mi.rcMonitor.left != mi.rcWork.left ||
         mi.rcMonitor.top != mi.rcWork.top)  /* FIXME: remove once Wine is fixed */
-        todo_wine ok(EqualRect(&rc_normal, &wp.rcNormalPosition), "normal pos is different\n");
-    else
+    {
         ok(EqualRect(&rc_normal, &wp.rcNormalPosition), "normal pos is different\n");
+    }
 
     SetWindowLongA(hwnd, GWL_EXSTYLE, WS_EX_TOOLWINDOW);
 

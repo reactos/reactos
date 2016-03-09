@@ -394,17 +394,8 @@ static void test_GetNextDlgItem(void)
     {
         HWND a;
         a = (p->tab ? GetNextDlgTabItem : GetNextDlgGroupItem) (hwnd[p->dlg], hwnd[p->ctl], p->prev);
-        if (p->isok)
-        {
+        todo_wine_if (!p->isok)
             ok (a == hwnd[p->res], "Test %d: %s %s item of %d in %d was %d instead of %d\n", p->test, p->prev ? "Prev" : "Next", p->tab ? "Tab" : "Group", p->ctl, p->dlg, id(a), p->res);
-        }
-        else
-        {
-            todo_wine
-            {
-                ok (a == hwnd[p->res], "Test %d: %s %s item of %d in %d was actually  %d matching expected %d\n", p->test, p->prev ? "Prev" : "Next", p->tab ? "Tab" : "Group", p->ctl, p->dlg, id(a), p->res);
-            }
-        }
         p++;
     }
 }
@@ -795,7 +786,8 @@ static INT_PTR CALLBACK focusDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wParam,
     switch (uiMsg)
     {
     case WM_INITDIALOG:
-       return TRUE;
+        SetWindowTextA(GetDlgItem(hDlg, 200), "new caption");
+        return TRUE;
 
     case WM_COMMAND:
        if (LOWORD(wParam) == 200)
@@ -964,6 +956,34 @@ static void test_focus(void)
         SetFocus(NULL);
         SendMessageA(hDlg, WM_SETFOCUS, 0, 0);
         ok(GetFocus() == hLabel, "Focus not set to label on WM_SETFOCUS, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
+
+        DestroyWindow(hDlg);
+    }
+
+    /* Test 5:
+     * Select textbox's text on creation */
+    {
+        HWND hDlg;
+        HRSRC hResource;
+        HANDLE hTemplate;
+        DLGTEMPLATE* pTemplate;
+        HWND edit;
+        DWORD selectionStart = 0xdead, selectionEnd = 0xbeef;
+
+        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG_3", (LPCSTR)RT_DIALOG);
+        hTemplate = LoadResource(g_hinst, hResource);
+        pTemplate = LockResource(hTemplate);
+
+        hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, focusDlgWinProc, 0);
+        ok(hDlg != 0, "Failed to create test dialog.\n");
+        edit = GetDlgItem(hDlg, 200);
+
+        ok(GetFocus() == edit, "Focus not set to edit, focus=%p, dialog=%p, edit=%p\n",
+                GetFocus(), hDlg, edit);
+        SendMessageA(edit, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
+        ok(selectionStart == 0 && selectionEnd == 11,
+                "Text selection after WM_SETFOCUS is [%i, %i) expected [0, 11)\n",
+                selectionStart, selectionEnd);
 
         DestroyWindow(hDlg);
     }
@@ -1452,12 +1472,122 @@ static void test_timer_message(void)
     DialogBoxA(g_hinst, "RADIO_TEST_DIALOG", NULL, timer_message_dlg_proc);
 }
 
+struct create_window_params
+{
+    BOOL owner;
+    char caption[64];
+    DWORD style;
+};
+
+static DWORD WINAPI create_window_thread(void *param)
+{
+    struct create_window_params *p = param;
+    HWND owner = 0;
+
+    if (p->owner)
+    {
+        owner = CreateWindowExA(0, "Static", NULL, WS_POPUP, 10, 10, 10, 10, 0, 0, 0, NULL);
+        ok(owner != 0, "failed to create owner window\n");
+    }
+
+    MessageBoxA(owner, NULL, p->caption, p->style);
+
+    if (owner) DestroyWindow(owner);
+
+    return 0;
+}
+
+static HWND wait_for_window(const char *caption)
+{
+    HWND hwnd;
+    DWORD timeout = 0;
+
+    for (;;)
+    {
+        hwnd = FindWindowA(NULL, caption);
+        if (hwnd) break;
+
+        Sleep(50);
+        timeout += 50;
+        if (timeout > 3000)
+        {
+            ok(0, "failed to wait for a window %s\n", caption);
+            break;
+        }
+    }
+
+    return hwnd;
+}
+
+static void test_MessageBox(void)
+{
+    static const struct
+    {
+        DWORD mb_style;
+        DWORD ex_style;
+    } test[] =
+    {
+        { MB_OK, 0 },
+        { MB_OK | MB_TASKMODAL, 0 },
+        { MB_OK | MB_SYSTEMMODAL, WS_EX_TOPMOST },
+    };
+    DWORD tid, i;
+    HANDLE thread;
+    struct create_window_params params;
+
+    sprintf(params.caption, "pid %08x, tid %08x, time %08x",
+            GetCurrentProcessId(), GetCurrentThreadId(), GetCurrentTime());
+
+    params.owner = FALSE;
+
+    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    {
+        HWND hwnd;
+        DWORD ex_style;
+
+        params.style = test[i].mb_style;
+
+        thread = CreateThread(NULL, 0, create_window_thread, &params, 0, &tid);
+
+        hwnd = wait_for_window(params.caption);
+        ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
+        ok((ex_style & test[i].ex_style) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
+
+        PostMessageA(hwnd, WM_COMMAND, IDCANCEL, 0);
+
+        ok(WaitForSingleObject(thread, 5000) != WAIT_TIMEOUT, "thread failed to terminate\n");
+        CloseHandle(thread);
+    }
+
+    params.owner = TRUE;
+
+    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    {
+        HWND hwnd;
+        DWORD ex_style;
+
+        params.style = test[i].mb_style;
+
+        thread = CreateThread(NULL, 0, create_window_thread, &params, 0, &tid);
+
+        hwnd = wait_for_window(params.caption);
+        ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
+        ok((ex_style & test[i].ex_style) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
+
+        PostMessageA(hwnd, WM_COMMAND, IDCANCEL, 0);
+
+        ok(WaitForSingleObject(thread, 5000) != WAIT_TIMEOUT, "thread failed to terminate\n");
+        CloseHandle(thread);
+    }
+}
+
 START_TEST(dialog)
 {
     g_hinst = GetModuleHandleA (0);
 
     if (!RegisterWindowClasses()) assert(0);
 
+    test_MessageBox();
     test_GetNextDlgItem();
     test_IsDialogMessage();
     test_WM_NEXTDLGCTL();

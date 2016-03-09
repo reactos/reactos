@@ -1635,6 +1635,9 @@ static const struct tounicode_tests
     { 0, ctrl, '^', 1, {0x1e}},
     { 0, ctrl, '_', 1, {0x1f}},
     { 0, ctrl, '`', 0, {0}},
+    { VK_SPACE, 0, 0, 1, {' ',0}},
+    { VK_SPACE, shift, 0, 1, {' ',0}},
+    { VK_SPACE, ctrl, 0, 1, {' ',0}},
 };
 
 static void test_ToUnicode(void)

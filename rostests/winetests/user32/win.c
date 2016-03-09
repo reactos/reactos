@@ -39,6 +39,10 @@
 #define SPI_GETDESKWALLPAPER 0x0073
 #endif
 
+#ifndef WM_SYSTIMER
+#define WM_SYSTIMER 0x0118
+#endif
+
 #define LONG_PTR INT_PTR
 #define ULONG_PTR UINT_PTR
 
@@ -183,6 +187,8 @@ static BOOL ignore_message( UINT message )
     return (message >= 0xc000 ||
             message == WM_GETICON ||
             message == WM_GETOBJECT ||
+            message == WM_TIMER ||
+            message == WM_SYSTIMER ||
             message == WM_TIMECHANGE ||
             message == WM_DEVICECHANGE);
 }
@@ -983,6 +989,52 @@ static void FixedAdjustWindowRectEx(RECT* rc, LONG style, BOOL menu, LONG exstyl
 	rc->bottom += GetSystemMetrics(SM_CYHSCROLL);
 }
 
+/* reimplement it to check that the Wine algorithm gives the correct result */
+static void wine_AdjustWindowRectEx( RECT *rect, LONG style, BOOL menu, LONG exStyle )
+{
+    int adjust;
+
+    if ((exStyle & (WS_EX_STATICEDGE|WS_EX_DLGMODALFRAME)) ==
+        WS_EX_STATICEDGE)
+    {
+        adjust = 1; /* for the outer frame always present */
+    }
+    else
+    {
+        adjust = 0;
+        if ((exStyle & WS_EX_DLGMODALFRAME) ||
+            (style & (WS_THICKFRAME|WS_DLGFRAME))) adjust = 2; /* outer */
+    }
+    if (style & WS_THICKFRAME)
+        adjust += GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME); /* The resize border */
+    if ((style & (WS_BORDER|WS_DLGFRAME)) ||
+        (exStyle & WS_EX_DLGMODALFRAME))
+        adjust++; /* The other border */
+
+    InflateRect (rect, adjust, adjust);
+
+    if ((style & WS_CAPTION) == WS_CAPTION)
+    {
+        if (exStyle & WS_EX_TOOLWINDOW)
+            rect->top -= GetSystemMetrics(SM_CYSMCAPTION);
+        else
+            rect->top -= GetSystemMetrics(SM_CYCAPTION);
+    }
+    if (menu) rect->top -= GetSystemMetrics(SM_CYMENU);
+
+    if (exStyle & WS_EX_CLIENTEDGE)
+        InflateRect(rect, GetSystemMetrics(SM_CXEDGE), GetSystemMetrics(SM_CYEDGE));
+
+    if (style & WS_VSCROLL)
+    {
+        if((exStyle & WS_EX_LEFTSCROLLBAR) != 0)
+            rect->left  -= GetSystemMetrics(SM_CXVSCROLL);
+        else
+            rect->right += GetSystemMetrics(SM_CXVSCROLL);
+    }
+    if (style & WS_HSCROLL) rect->bottom += GetSystemMetrics(SM_CYHSCROLL);
+}
+
 static void test_nonclient_area(HWND hwnd)
 {
     DWORD style, exstyle;
@@ -1005,6 +1057,14 @@ static void test_nonclient_area(HWND hwnd)
     MapWindowPoints(hwnd, 0, (LPPOINT)&rc, 2);
     FixedAdjustWindowRectEx(&rc, style, menu, exstyle);
 
+    ok(EqualRect(&rc, &rc_window),
+       "window rect does not match: style:exstyle=0x%08x:0x%08x, menu=%d, win=(%d,%d)-(%d,%d), calc=(%d,%d)-(%d,%d)\n",
+       style, exstyle, menu, rc_window.left, rc_window.top, rc_window.right, rc_window.bottom,
+       rc.left, rc.top, rc.right, rc.bottom);
+
+    CopyRect(&rc, &rc_client);
+    MapWindowPoints(hwnd, 0, (LPPOINT)&rc, 2);
+    wine_AdjustWindowRectEx(&rc, style, menu, exstyle);
     ok(EqualRect(&rc, &rc_window),
        "window rect does not match: style:exstyle=0x%08x:0x%08x, menu=%d, win=(%d,%d)-(%d,%d), calc=(%d,%d)-(%d,%d)\n",
        style, exstyle, menu, rc_window.left, rc_window.top, rc_window.right, rc_window.bottom,
@@ -2000,10 +2060,12 @@ static BOOL mdi_RegisterWindowClasses(void)
 
 static void test_mdi(void)
 {
+    static const DWORD style[] = { 0, WS_HSCROLL, WS_VSCROLL, WS_HSCROLL | WS_VSCROLL };
     HWND mdi_hwndMain, mdi_client;
     CLIENTCREATESTRUCT client_cs;
     RECT rc;
-    /*MSG msg;*/
+    DWORD i;
+    MSG msg;
 
     if (!mdi_RegisterWindowClasses()) assert(0);
 
@@ -2019,6 +2081,138 @@ static void test_mdi(void)
 
     client_cs.hWindowMenu = 0;
     client_cs.idFirstChild = 1;
+
+    for (i = 0; i < sizeof(style)/sizeof(style[0]); i++)
+    {
+        HWND mdi_child;
+        SCROLLINFO si;
+        BOOL ret, gotit;
+
+        mdi_client = CreateWindowExA(0, "mdiclient", NULL,
+                                 WS_CHILD | style[i],
+                                 0, 0, rc.right, rc.bottom,
+                                 mdi_hwndMain, 0, 0, &client_cs);
+        ok(mdi_client != 0, "MDI client creation failed\n");
+
+        mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_Class_1", "MDI child",
+                                0,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, 0,
+                                mdi_lParam_test_message);
+        ok(mdi_child != 0, "MDI child creation failed\n");
+
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_ALL;
+        ret = GetScrollInfo(mdi_client, SB_HORZ, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_HORZ) failed\n", style[i]);
+            ok(si.nPage == 0, "expected 0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin == 0, "expected 0\n");
+            ok(si.nMax == 100, "expected 100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_HORZ) should fail\n", style[i]);
+
+        ret = GetScrollInfo(mdi_client, SB_VERT, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_VERT) failed\n", style[i]);
+            ok(si.nPage == 0, "expected 0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin == 0, "expected 0\n");
+            ok(si.nMax == 100, "expected 100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_VERT) should fail\n", style[i]);
+
+        SetWindowPos(mdi_child, 0, -100, -100, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_ALL;
+        ret = GetScrollInfo(mdi_client, SB_HORZ, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_HORZ) failed\n", style[i]);
+            ok(si.nPage == 0, "expected 0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin == 0, "expected 0\n");
+            ok(si.nMax == 100, "expected 100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_HORZ) should fail\n", style[i]);
+
+        ret = GetScrollInfo(mdi_client, SB_VERT, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_VERT) failed\n", style[i]);
+            ok(si.nPage == 0, "expected 0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin == 0, "expected 0\n");
+            ok(si.nMax == 100, "expected 100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_VERT) should fail\n", style[i]);
+
+        gotit = FALSE;
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_MOUSEMOVE || msg.message == WM_PAINT)
+            {
+                DispatchMessageA(&msg);
+                continue;
+            }
+
+            if (msg.message == 0x003f) /* WM_MDICALCCHILDSCROLL ??? */
+            {
+                ok(msg.hwnd == mdi_client, "message 0x003f should be posted to mdiclient\n");
+                gotit = TRUE;
+            }
+            else
+                ok(msg.hwnd != mdi_client, "message %04x should not be posted to mdiclient\n", msg.message);
+            DispatchMessageA(&msg);
+        }
+        ok(gotit, "message 0x003f should appear after SetWindowPos\n");
+
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_ALL;
+        ret = GetScrollInfo(mdi_client, SB_HORZ, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_HORZ) failed\n", style[i]);
+todo_wine
+            ok(si.nPage != 0, "expected !0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin != 0, "expected !0\n");
+            ok(si.nMax != 100, "expected !100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_HORZ) should fail\n", style[i]);
+
+        ret = GetScrollInfo(mdi_client, SB_VERT, &si);
+        if (style[i] & (WS_HSCROLL | WS_VSCROLL))
+        {
+            ok(ret, "style %#x: GetScrollInfo(SB_VERT) failed\n", style[i]);
+todo_wine
+            ok(si.nPage != 0, "expected !0\n");
+            ok(si.nPos == 0, "expected 0\n");
+            ok(si.nTrackPos == 0, "expected 0\n");
+            ok(si.nMin != 0, "expected !0\n");
+            ok(si.nMax != 100, "expected !100\n");
+        }
+        else
+            ok(!ret, "style %#x: GetScrollInfo(SB_VERT) should fail\n", style[i]);
+
+        DestroyWindow(mdi_child);
+        DestroyWindow(mdi_client);
+    }
 
     /* MDIClient without MDIS_ALLCHILDSTYLES */
     mdi_client = CreateWindowExA(0, "mdiclient",
@@ -3299,7 +3493,7 @@ static BOOL peek_message( MSG *msg )
     do
     {
         ret = PeekMessageA(msg, 0, 0, 0, PM_REMOVE);
-    } while (ret && (msg->message == WM_TIMER || ignore_message(msg->message)));
+    } while (ret && ignore_message(msg->message));
     return ret;
 }
 
@@ -3463,7 +3657,7 @@ static void test_mouse_input(HWND hwnd)
     /* FIXME: SetCursorPos in Wine generates additional WM_MOUSEMOVE message */
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
     {
-        if (msg.message == WM_TIMER || ignore_message(msg.message)) continue;
+        if (ignore_message(msg.message)) continue;
         ok(msg.hwnd == popup && msg.message == WM_MOUSEMOVE,
            "hwnd %p message %04x\n", msg.hwnd, msg.message);
         DispatchMessageA(&msg);
@@ -4605,26 +4799,16 @@ static BOOL AWR_init(void)
 
 static void test_AWR_window_size(BOOL menu)
 {
-    LONG styles[] = {
-	WS_POPUP,
-	WS_MAXIMIZE, WS_BORDER, WS_DLGFRAME, 
-	WS_SYSMENU, 
-	WS_THICKFRAME,
-	WS_MINIMIZEBOX, WS_MAXIMIZEBOX,
-	WS_HSCROLL, WS_VSCROLL
+    static const DWORD styles[] = {
+        WS_POPUP, WS_MAXIMIZE, WS_BORDER, WS_DLGFRAME, WS_CAPTION, WS_SYSMENU,
+        WS_THICKFRAME, WS_MINIMIZEBOX, WS_MAXIMIZEBOX, WS_HSCROLL, WS_VSCROLL
     };
-    LONG exStyles[] = {
-	WS_EX_CLIENTEDGE,
-	WS_EX_TOOLWINDOW, WS_EX_WINDOWEDGE,
-	WS_EX_APPWINDOW,
-#if 0
-	/* These styles have problems on (at least) WinXP (SP2) and Wine */
-	WS_EX_DLGMODALFRAME, 
-	WS_EX_STATICEDGE, 
-#endif
+    static const DWORD exStyles[] = {
+	WS_EX_CLIENTEDGE, WS_EX_TOOLWINDOW, WS_EX_WINDOWEDGE, WS_EX_APPWINDOW,
+	WS_EX_DLGMODALFRAME, WS_EX_DLGMODALFRAME | WS_EX_STATICEDGE
     };
 
-    int i;    
+    unsigned int i;
 
     /* A exhaustive check of all the styles takes too long
      * so just do a (hopefully representative) sample
@@ -4634,6 +4818,33 @@ static void test_AWR_window_size(BOOL menu)
     for (i = 0; i < COUNTOF(exStyles); ++i) {
         test_AWRwindow(szAWRClass, WS_POPUP, exStyles[i], menu);
         test_AWRwindow(szAWRClass, WS_THICKFRAME, exStyles[i], menu);
+    }
+}
+
+static void test_AWR_flags(void)
+{
+    static const DWORD styles[] = { WS_POPUP, WS_BORDER, WS_DLGFRAME, WS_THICKFRAME };
+    static const DWORD exStyles[] = { WS_EX_CLIENTEDGE, WS_EX_TOOLWINDOW, WS_EX_WINDOWEDGE,
+                                      WS_EX_APPWINDOW, WS_EX_DLGMODALFRAME, WS_EX_STATICEDGE };
+
+    DWORD i, j, k, style, exstyle;
+    RECT rect, rect2;
+
+    for (i = 0; i < (1 << COUNTOF(styles)); i++)
+    {
+        for (k = style = 0; k < COUNTOF(styles); k++) if (i & (1 << k)) style |= styles[k];
+
+        for (j = 0; j < (1 << COUNTOF(exStyles)); j++)
+        {
+            for (k = exstyle = 0; k < COUNTOF(exStyles); k++) if (j & (1 << k)) exstyle |= exStyles[k];
+            SetRect( &rect, 100, 100, 200, 200 );
+            rect2 = rect;
+            AdjustWindowRectEx( &rect, style, FALSE, exstyle );
+            wine_AdjustWindowRectEx( &rect2, style, FALSE, exstyle );
+            ok( EqualRect( &rect, &rect2 ), "rects do not match: win %d,%d-%d,%d wine %d,%d-%d,%d\n",
+                rect.left, rect.top, rect.right, rect.bottom,
+                rect2.left, rect2.top, rect2.right, rect2.bottom );
+        }
     }
 }
 #undef COUNTOF
@@ -4661,6 +4872,7 @@ static void test_AdjustWindowRect(void)
 
     test_AWR_window_size(FALSE);
     test_AWR_window_size(TRUE);
+    test_AWR_flags();
 
     DestroyMenu(hmenu);
 }
@@ -6705,11 +6917,11 @@ static void test_fullscreen(void)
             /* Windows makes a maximized window slightly larger (to hide the borders?) */
             fixup = min(abs(rc.left), abs(rc.top));
             InflateRect(&rc, -fixup, -fixup);
-            ok(rc.left >= mi.rcWork.left && rc.top <= mi.rcWork.top &&
-               rc.right <= mi.rcWork.right && rc.bottom <= mi.rcWork.bottom,
+            ok(rc.left >= mi.rcMonitor.left && rc.top >= mi.rcMonitor.top &&
+               rc.right <= mi.rcMonitor.right && rc.bottom <= mi.rcMonitor.bottom,
                "%#x/%#x: window rect %d,%d-%d,%d must be in %d,%d-%d,%d\n",
                ex_style, style, rc.left, rc.top, rc.right, rc.bottom,
-               mi.rcWork.left, mi.rcWork.top, mi.rcWork.right, mi.rcWork.bottom);
+               mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
             DestroyWindow(hwnd);
 
             style = t_style[i] | WS_MAXIMIZE | WS_MAXIMIZEBOX;
@@ -6727,8 +6939,8 @@ static void test_fullscreen(void)
                    rc.right >= mi.rcMonitor.right && rc.bottom >= mi.rcMonitor.bottom,
                    "%#x/%#x: window rect %d,%d-%d,%d\n", ex_style, style, rc.left, rc.top, rc.right, rc.bottom);
             else
-                ok(rc.left >= mi.rcWork.left && rc.top <= mi.rcWork.top &&
-                   rc.right <= mi.rcWork.right && rc.bottom <= mi.rcWork.bottom,
+                ok(rc.left >= mi.rcMonitor.left && rc.top >= mi.rcMonitor.top &&
+                   rc.right <= mi.rcMonitor.right && rc.bottom <= mi.rcMonitor.bottom,
                    "%#x/%#x: window rect %d,%d-%d,%d\n", ex_style, style, rc.left, rc.top, rc.right, rc.bottom);
             DestroyWindow(hwnd);
         }
@@ -7488,9 +7700,7 @@ static void test_child_window_from_point(void)
         ok(hwnd != 0, "RealChildWindowFromPoint failed\n");
         ret = window_to_index(hwnd, window, sizeof(window)/sizeof(window[0]));
         /* FIXME: remove once Wine is fixed */
-        if (ret != real_child_pos[i])
-            todo_wine ok(ret == real_child_pos[i] || broken(ret == real_child_pos_nt4[i]), "expected %d, got %d\n", real_child_pos[i], ret);
-        else
+        todo_wine_if (ret != real_child_pos[i])
             ok(ret == real_child_pos[i] || broken(ret == real_child_pos_nt4[i]), "expected %d, got %d\n", real_child_pos[i], ret);
 
         get_window_attributes(hwnd, &attrs);

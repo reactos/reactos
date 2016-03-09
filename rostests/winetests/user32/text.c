@@ -604,15 +604,13 @@ static void strfmt( const char *str, char *strout)
 
 
 #define TABTEST( tabval, tabcount, string, _exp) \
-{ int i,x_act, x_exp; char strdisp[64];\
+{ int i; char strdisp[64];\
     for(i=0;i<8;i++) tabs[i]=(i+1)*(tabval); \
     extent = GetTabbedTextExtentA( hdc, string, strlen( string), (tabcount), tabs); \
     strfmt( string, strdisp); \
  /*   trace( "Extent is %08lx\n", extent); */\
-    x_act = LOWORD( extent); \
-    x_exp = (_exp); \
-    ok( x_act == x_exp, "Test case \"%s\". Text extent is %d, expected %d tab %d tabcount %d\n", \
-        strdisp, x_act, x_exp, tabval, tabcount); \
+    ok( extent == _exp, "Test case \"%s\". Text extent is 0x%x, expected 0x%x tab %d tabcount %d\n", \
+        strdisp, extent, _exp, tabval, tabcount); \
 } \
 
 
@@ -649,16 +647,16 @@ static void test_TabbedText(void)
         tab =  (cx *4 + t);
         /* test the special case tabcount =1 and the general array (80 of tabs */
         for( tabcount = 1; tabcount <= 8; tabcount +=7) { 
-            TABTEST( align * tab, tabcount, "\t", tab)
-            TABTEST( align * tab, tabcount, "xxx\t", tab)
-            TABTEST( align * tab, tabcount, "\tx", tab+cx)
-            TABTEST( align * tab, tabcount, "\t\t", tab*2)
-            TABTEST( align * tab, tabcount, "\tx\t", tab*2)
-            TABTEST( align * tab, tabcount, "x\tx", tab+cx)
-            TABTEST( align * tab, tabcount, "xx\tx", tab+cx)
-            TABTEST( align * tab, tabcount, "xxx\tx", tab+cx)
-            TABTEST( align * tab, tabcount, "xxxx\tx", t>0 ? tab + cx : 2*tab+cx)
-            TABTEST( align * tab, tabcount, "xxxxx\tx", 2*tab+cx)
+            TABTEST( align * tab, tabcount, "\t", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "xxx\t", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "\tx", MAKELONG(tab+cx, cy))
+            TABTEST( align * tab, tabcount, "\t\t", MAKELONG(tab*2, cy))
+            TABTEST( align * tab, tabcount, "\tx\t", MAKELONG(tab*2, cy))
+            TABTEST( align * tab, tabcount, "x\tx", MAKELONG(tab+cx, cy))
+            TABTEST( align * tab, tabcount, "xx\tx", MAKELONG(tab+cx, cy))
+            TABTEST( align * tab, tabcount, "xxx\tx", MAKELONG(tab+cx, cy))
+            TABTEST( align * tab, tabcount, "xxxx\tx", MAKELONG(t>0 ? tab + cx : 2*tab+cx, cy))
+            TABTEST( align * tab, tabcount, "xxxxx\tx", MAKELONG(2*tab+cx, cy))
         }
     }
     align=-1;
@@ -667,16 +665,16 @@ static void test_TabbedText(void)
         tab =  (cx *4 + t);
         /* test the special case tabcount =1 and the general array (8) of tabs */
         for( tabcount = 1; tabcount <= 8; tabcount +=7) { 
-            TABTEST( align * tab, tabcount, "\t", tab)
-            TABTEST( align * tab, tabcount, "xxx\t", tab)
-            TABTEST( align * tab, tabcount, "\tx", tab)
-            TABTEST( align * tab, tabcount, "\t\t", tab*2)
-            TABTEST( align * tab, tabcount, "\tx\t", tab*2)
-            TABTEST( align * tab, tabcount, "x\tx", tab)
-            TABTEST( align * tab, tabcount, "xx\tx", tab)
-            TABTEST( align * tab, tabcount, "xxx\tx", 4 * cx >= tab ? 2*tab :tab)
-            TABTEST( align * tab, tabcount, "xxxx\tx", 2*tab)
-            TABTEST( align * tab, tabcount, "xxxxx\tx", 2*tab)
+            TABTEST( align * tab, tabcount, "\t", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "xxx\t", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "\tx", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "\t\t", MAKELONG(tab*2, cy))
+            TABTEST( align * tab, tabcount, "\tx\t", MAKELONG(tab*2, cy))
+            TABTEST( align * tab, tabcount, "x\tx", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "xx\tx", MAKELONG(tab, cy))
+            TABTEST( align * tab, tabcount, "xxx\tx", MAKELONG(4 * cx >= tab ? 2*tab :tab, cy))
+            TABTEST( align * tab, tabcount, "xxxx\tx", MAKELONG(2*tab, cy))
+            TABTEST( align * tab, tabcount, "xxxxx\tx", MAKELONG(2*tab, cy))
         }
     }
 

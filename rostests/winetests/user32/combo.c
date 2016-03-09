@@ -378,12 +378,12 @@ static void test_changesize( DWORD style)
     /* first make it slightly smaller */
     MoveWindow( hCombo, 10, 10, clwidth - 2, clheight - 2, TRUE);
     GetClientRect( hCombo, &rc);
-    ok( rc.right - rc.left == clwidth - 2, "clientrect witdh is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth - 2, "clientrect width is %d vs %d\n",
             rc.right - rc.left, clwidth - 2);
     ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
                 rc.bottom - rc.top, clheight);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
-    ok( rc.right - rc.left == clwidth - 2, "drop-down rect witdh is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth - 2, "drop-down rect width is %d vs %d\n",
             rc.right - rc.left, clwidth - 2);
     ok( rc.bottom - rc.top == ddheight, "drop-down rect height is %d vs %d\n",
             rc.bottom - rc.top, ddheight);
@@ -392,12 +392,12 @@ static void test_changesize( DWORD style)
     /* new cx, cy is slightly bigger than the initial values */
     MoveWindow( hCombo, 10, 10, clwidth + 2, clheight + 2, TRUE);
     GetClientRect( hCombo, &rc);
-    ok( rc.right - rc.left == clwidth + 2, "clientrect witdh is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth + 2, "clientrect width is %d vs %d\n",
             rc.right - rc.left, clwidth + 2);
     ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
             rc.bottom - rc.top, clheight);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
-    ok( rc.right - rc.left == clwidth + 2, "drop-down rect witdh is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth + 2, "drop-down rect width is %d vs %d\n",
             rc.right - rc.left, clwidth + 2);
     todo_wine {
         ok( rc.bottom - rc.top == clheight + 2, "drop-down rect height is %d vs %d\n",
@@ -476,6 +476,8 @@ static void test_editselection(void)
 
     /* Now what is the selection - still empty */
     SendMessageA(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    ok(start==0, "Unexpected start position for selection %d\n", start);
+    ok(end==0, "Unexpected end position for selection %d\n", end);
     len = SendMessageA(hCombo, CB_GETEDITSEL, 0,0);
     ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
     ok(HIWORD(len)==0, "Unexpected end position for selection %d\n", HIWORD(len));
@@ -483,6 +485,8 @@ static void test_editselection(void)
     /* Give it focus, and it gets selected */
     SendMessageA(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
     SendMessageA(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    ok(start==0, "Unexpected start position for selection %d\n", start);
+    ok(end==6, "Unexpected end position for selection %d\n", end);
     len = SendMessageA(hCombo, CB_GETEDITSEL, 0,0);
     ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
     ok(HIWORD(len)==6, "Unexpected end position for selection %d\n", HIWORD(len));
@@ -523,6 +527,8 @@ static void test_editselection(void)
 
     /* Now what is the selection */
     SendMessageA(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    ok(start==0, "Unexpected start position for selection %d\n", start);
+    ok(end==6, "Unexpected end position for selection %d\n", end);
     len = SendMessageA(hCombo, CB_GETEDITSEL, 0,0);
     ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
     ok(HIWORD(len)==6, "Unexpected end position for selection %d\n", HIWORD(len));
@@ -534,6 +540,107 @@ static void test_editselection(void)
     SendMessageA(hCombo, WM_CHAR, 'A', 0x1c0001);
     SendMessageA(hCombo, WM_GETTEXT, sizeof(edit), (LPARAM)edit);
     ok(strcmp(edit, "Jason2A")==0, "Unexpected text retrieved %s\n", edit);
+    DestroyWindow(hCombo);
+}
+
+static WNDPROC edit_window_proc;
+static long setsel_start = 1, setsel_end = 1;
+static HWND hCBN_SetFocus, hCBN_KillFocus;
+
+static LRESULT CALLBACK combobox_subclass_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == EM_SETSEL)
+    {
+        setsel_start = wParam;
+        setsel_end = lParam;
+    }
+    return CallWindowProcA(edit_window_proc, hwnd, msg, wParam, lParam);
+}
+
+static LRESULT CALLBACK test_window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_COMMAND:
+        switch (HIWORD(wParam))
+        {
+        case CBN_SETFOCUS:
+            hCBN_SetFocus = (HWND)lParam;
+            break;
+        case CBN_KILLFOCUS:
+            hCBN_KillFocus = (HWND)lParam;
+            break;
+        }
+        break;
+    case WM_NEXTDLGCTL:
+        SetFocus((HWND)wParam);
+        break;
+    }
+    return CallWindowProcA(old_parent_proc, hwnd, msg, wParam, lParam);
+}
+
+static void test_editselection_focus(DWORD style)
+{
+    BOOL (WINAPI *pGetComboBoxInfo)(HWND, PCOMBOBOXINFO);
+    HWND hCombo, hEdit, hButton;
+    COMBOBOXINFO cbInfo;
+    BOOL ret;
+    const char wine_test[] = "Wine Test";
+    char buffer[16] = {0};
+    DWORD len;
+
+    pGetComboBoxInfo = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "GetComboBoxInfo");
+    if (!pGetComboBoxInfo)
+    {
+        win_skip("GetComboBoxInfo is not available\n");
+        return;
+    }
+
+    hCombo = build_combo(style);
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    SetLastError(0xdeadbeef);
+    ret = pGetComboBoxInfo(hCombo, &cbInfo);
+    ok(ret, "Failed to get COMBOBOXINFO structure; LastError: %u\n", GetLastError());
+    hEdit = cbInfo.hwndItem;
+
+    hButton = CreateWindowA("Button", "OK", WS_VISIBLE|WS_CHILD|BS_DEFPUSHBUTTON,
+                            5, 50, 100, 20, hMainWnd, NULL,
+                            (HINSTANCE)GetWindowLongPtrA(hMainWnd, GWLP_HINSTANCE), NULL);
+
+    old_parent_proc = (WNDPROC)SetWindowLongPtrA(hMainWnd, GWLP_WNDPROC, (ULONG_PTR)test_window_proc);
+    edit_window_proc = (WNDPROC)SetWindowLongPtrA(hEdit, GWLP_WNDPROC, (ULONG_PTR)combobox_subclass_proc);
+
+    SendMessageA(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
+    ok(setsel_start == 0, "Unexpected EM_SETSEL start value; got %ld\n", setsel_start);
+    todo_wine ok(setsel_end == INT_MAX, "Unexpected EM_SETSEL end value; got %ld\n", setsel_end);
+    ok(hCBN_SetFocus == hCombo, "Wrong handle set by CBN_SETFOCUS; got %p\n", hCBN_SetFocus);
+    ok(GetFocus() == hEdit, "hEdit should have keyboard focus\n");
+
+    SendMessageA(hMainWnd, WM_NEXTDLGCTL, (WPARAM)hButton, TRUE);
+    ok(setsel_start == 0, "Unexpected EM_SETSEL start value; got %ld\n", setsel_start);
+    todo_wine ok(setsel_end == 0, "Unexpected EM_SETSEL end value; got %ld\n", setsel_end);
+    ok(hCBN_KillFocus == hCombo, "Wrong handle set by CBN_KILLFOCUS; got %p\n", hCBN_KillFocus);
+    ok(GetFocus() == hButton, "hButton should have keyboard focus\n");
+
+    SendMessageA(hCombo, WM_SETTEXT, 0, (LPARAM)wine_test);
+    SendMessageA(hMainWnd, WM_NEXTDLGCTL, (WPARAM)hCombo, TRUE);
+    ok(setsel_start == 0, "Unexpected EM_SETSEL start value; got %ld\n", setsel_start);
+    todo_wine ok(setsel_end == INT_MAX, "Unexpected EM_SETSEL end value; got %ld\n", setsel_end);
+    ok(hCBN_SetFocus == hCombo, "Wrong handle set by CBN_SETFOCUS; got %p\n", hCBN_SetFocus);
+    ok(GetFocus() == hEdit, "hEdit should have keyboard focus\n");
+    SendMessageA(hCombo, WM_GETTEXT, sizeof(buffer), (LPARAM)buffer);
+    ok(!strcmp(buffer, wine_test), "Unexpected text in edit control; got '%s'\n", buffer);
+
+    SendMessageA(hMainWnd, WM_NEXTDLGCTL, (WPARAM)hButton, TRUE);
+    ok(setsel_start == 0, "Unexpected EM_SETSEL start value; got %ld\n", setsel_start);
+    todo_wine ok(setsel_end == 0, "Unexpected EM_SETSEL end value; got %ld\n", setsel_end);
+    ok(hCBN_KillFocus == hCombo, "Wrong handle set by CBN_KILLFOCUS; got %p\n", hCBN_KillFocus);
+    ok(GetFocus() == hButton, "hButton should have keyboard focus\n");
+    len = SendMessageA(hCombo, CB_GETEDITSEL, 0, 0);
+    ok(len == 0, "Unexpected text selection; start: %u, end: %u\n", LOWORD(len), HIWORD(len));
+
+    SetWindowLongPtrA(hMainWnd, GWLP_WNDPROC, (ULONG_PTR)old_parent_proc);
+    DestroyWindow(hButton);
     DestroyWindow(hCombo);
 }
 
@@ -606,6 +713,8 @@ START_TEST(combo)
     test_changesize(CBS_DROPDOWN);
     test_changesize(CBS_DROPDOWNLIST);
     test_editselection();
+    test_editselection_focus(CBS_SIMPLE);
+    test_editselection_focus(CBS_DROPDOWN);
     test_listbox_styles(CBS_SIMPLE);
     test_listbox_styles(CBS_DROPDOWN);
     test_listbox_styles(CBS_DROPDOWNLIST);

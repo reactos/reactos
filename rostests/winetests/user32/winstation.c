@@ -23,6 +23,9 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
+#include "wine/winternl.h"
+
+static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 
 #define DESKTOP_ALL_ACCESS 0x01ff
 
@@ -202,6 +205,34 @@ static void test_handles(void)
     else if (le == ERROR_ACCESS_DENIED)
         win_skip( "Not enough privileges for CreateWindowStation\n" );
 
+    SetLastError( 0xdeadbeef );
+    w2 = OpenWindowStationA( "", TRUE, WINSTA_ALL_ACCESS );
+    ok( !w2, "open station succeeded\n" );
+    todo_wine
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    w2 = CreateWindowStationA( "", 0, WINSTA_ALL_ACCESS, NULL );
+    ok( w2 != 0, "create station failed err %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    w3 = OpenWindowStationA( "", TRUE, WINSTA_ALL_ACCESS );
+    todo_wine
+    ok( w3 != 0, "open station failed err %u\n", GetLastError() );
+    CloseWindowStation( w3 );
+    CloseWindowStation( w2 );
+
+    SetLastError( 0xdeadbeef );
+    w2 = CreateWindowStationA( "foo\\bar", 0, WINSTA_ALL_ACCESS, NULL );
+    ok( !w2, "create station succeeded\n" );
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_ACCESS_DENIED,
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    w2 = OpenWindowStationA( "foo\\bar", TRUE, WINSTA_ALL_ACCESS );
+    ok( !w2, "create station succeeded\n" );
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND, "wrong error %u\n", GetLastError() );
+
     /* desktops */
     d1 = GetThreadDesktop(GetCurrentThreadId());
     initial_desktop = d1;
@@ -235,6 +266,28 @@ static void test_handles(void)
 
     d2 = OpenDesktopA( "dummy name", 0, TRUE, DESKTOP_ALL_ACCESS );
     ok( !d2, "open dummy desktop succeeded\n" );
+
+    SetLastError( 0xdeadbeef );
+    d2 = CreateDesktopA( "", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    todo_wine
+    ok( !d2, "create empty desktop succeeded\n" );
+    todo_wine
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = OpenDesktopA( "", 0, TRUE, DESKTOP_ALL_ACCESS );
+    ok( !d2, "open mepty desktop succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = CreateDesktopA( "foo\\bar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    ok( !d2, "create desktop succeeded\n" );
+    ok( GetLastError() == ERROR_BAD_PATHNAME, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = OpenDesktopA( "foo\\bar", 0, TRUE, DESKTOP_ALL_ACCESS );
+    ok( !d2, "open desktop succeeded\n" );
+    ok( GetLastError() == ERROR_BAD_PATHNAME, "wrong error %u\n", GetLastError() );
 
     d2 = CreateDesktopA( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
     ok( d2 != 0, "create foobar desktop failed\n" );
@@ -388,12 +441,14 @@ static void test_enumdesktops(void)
 
 static void test_getuserobjectinformation(void)
 {
-    HDESK desk;
-    WCHAR bufferW[20];
-    char buffer[20];
-    WCHAR foobarTestW[] = {'f','o','o','b','a','r','T','e','s','t',0};
+    WCHAR foobarTestW[] = {'\\','f','o','o','b','a','r','T','e','s','t',0};
     WCHAR DesktopW[] = {'D','e','s','k','t','o','p',0};
+    OBJECT_NAME_INFORMATION *name_info;
+    WCHAR bufferW[20];
+    char buffer[64];
+    NTSTATUS status;
     DWORD size;
+    HDESK desk;
     BOOL ret;
 
     desk = CreateDesktopA("foobarTest", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
@@ -440,8 +495,15 @@ static void test_getuserobjectinformation(void)
     ok(ret, "GetUserObjectInformationW returned %x\n", ret);
     ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
 
-    ok(lstrcmpW(bufferW, foobarTestW) == 0, "Buffer is not set to 'foobarTest'\n");
+    ok(lstrcmpW(bufferW, foobarTestW + 1) == 0, "Buffer is not set to 'foobarTest'\n");
     ok(size == 22, "size is set to %d\n", size);  /* 22 bytes in 'foobarTest\0' in Unicode */
+
+    /* ObjectNameInformation does not return the full desktop name */
+    name_info = (OBJECT_NAME_INFORMATION *)buffer;
+    status = pNtQueryObject(desk, ObjectNameInformation, name_info, sizeof(buffer), NULL);
+    ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(lstrcmpW(name_info->Name.Buffer, foobarTestW) == 0,
+       "expected '\\foobarTest', got %s\n", wine_dbgstr_w(name_info->Name.Buffer));
 
     /** Tests for UOI_TYPE **/
 
@@ -880,10 +942,8 @@ static void test_foregroundwindow(void)
                     if (input_desk_id == thread_desk_id)
                     {
                         ok(ret, "SetForegroundWindow failed!\n");
-                        if (hwnd)
+                        todo_wine_if (!hwnd)
                             ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
-                        else
-                            todo_wine ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
                     }
                     else
                     {
@@ -896,18 +956,14 @@ static void test_foregroundwindow(void)
                     if (input_desk_id == thread_desk_id)
                     {
                         ok(!ret, "SetForegroundWindow should fail!\n");
-                        if (hwnd)
+                        todo_wine_if (!hwnd)
                             ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
-                        else
-                            todo_wine ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
                     }
                     else
                     {
                         todo_wine ok(!ret, "SetForegroundWindow should fail!\n");
-                        if (!hwnd)
+                        todo_wine_if (hwnd)
                             ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
-                        else
-                            todo_wine ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
                     }
                 }
             }
@@ -935,6 +991,9 @@ static void test_foregroundwindow(void)
 
 START_TEST(winstation)
 {
+    HMODULE hntdll = GetModuleHandleA("ntdll.dll");
+    pNtQueryObject = (void *)GetProcAddress(hntdll, "NtQueryObject");
+
     /* Check whether this platform supports WindowStation calls */
 
     SetLastError( 0xdeadbeef );
