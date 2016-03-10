@@ -350,7 +350,7 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
     BOOL Enable = FALSE;
     INT Length, n;
     HWND Edit = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
-    Length = GetWindowTextLengthA(Edit);
+    Length = GetWindowTextLengthW(Edit);
     if (Length > 0)
     {
         PWCHAR psz = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, (Length + 1) * sizeof(WCHAR));
