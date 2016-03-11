@@ -207,25 +207,12 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                     hIcon = (HICON)SendMessageW(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, 0);
 
                     if (lpdis->itemID == (UINT)index)
-                    {
-                        HBRUSH hBrush;
-                        hBrush = CreateSolidBrush(RGB(0, 0, 255));
-                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
-                        DeleteObject(hBrush);
-                    }
+                        FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1)));
                     else
-                    {
-                        HBRUSH hBrush;
-                        hBrush = CreateSolidBrush(RGB(255, 255, 255));
-                        FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
-                        DeleteObject(hBrush);
-                    }
-                    DrawIconEx(lpdis->hDC, lpdis->rcItem.left,lpdis->rcItem.top, hIcon, 
-                                0,
-                                0,
-                                0,
-                                NULL,
-                                DI_NORMAL);
+                        FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
+
+                    DrawIconEx(lpdis->hDC, lpdis->rcItem.left,lpdis->rcItem.top, hIcon,
+                               0, 0, 0, NULL, DI_NORMAL);
                     break;
             }
             break;
