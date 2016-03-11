@@ -207,7 +207,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                     hIcon = (HICON)SendMessageW(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, 0);
 
                     if (lpdis->itemID == (UINT)index)
-                        FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1)));
+                        FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1));
                     else
                         FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
 
