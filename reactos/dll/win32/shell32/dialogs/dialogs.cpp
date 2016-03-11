@@ -84,7 +84,7 @@ DestroyIconList(HWND hDlgCtrl)
     int count;
     int index;
 
-    count = SendMessage(hDlgCtrl, LB_GETCOUNT, 0, 0);
+    count = SendMessageW(hDlgCtrl, LB_GETCOUNT, 0, 0);
     if (count == LB_ERR)
         return;
 
@@ -101,8 +101,8 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     LPARAM lParam
 )
 {
-    LPMEASUREITEMSTRUCT lpmis; 
-    LPDRAWITEMSTRUCT lpdis; 
+    LPMEASUREITEMSTRUCT lpmis;
+    LPDRAWITEMSTRUCT lpdis;
     HICON hIcon;
     INT index, count;
     WCHAR szText[MAX_PATH], szTitle[100], szFilter[100];
@@ -123,7 +123,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         else
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
 
-        count = SendMessage(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
+        count = SendMessageW(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
         if (count != LB_ERR)
         {
             if (count > pIconContext->Index)
@@ -189,22 +189,22 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         }
         break;
         case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam; 
+            lpmis = (LPMEASUREITEMSTRUCT) lParam;
             lpmis->itemHeight = 32;
             lpmis->itemWidth = 64;
-            return TRUE; 
-        case WM_DRAWITEM: 
-            lpdis = (LPDRAWITEMSTRUCT) lParam; 
-           if (lpdis->itemID == (UINT)-1) 
-            { 
-                break; 
-            } 
-            switch (lpdis->itemAction) 
-            { 
-                case ODA_SELECT: 
+            return TRUE;
+        case WM_DRAWITEM:
+            lpdis = (LPDRAWITEMSTRUCT) lParam;
+            if (lpdis->itemID == (UINT)-1)
+            {
+                break;
+            }
+            switch (lpdis->itemAction)
+            {
+                case ODA_SELECT:
                 case ODA_DRAWENTIRE:
                     index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
-                    hIcon =(HICON)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM) 0);
+                    hIcon = (HICON)SendMessageW(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, 0);
 
                     if (lpdis->itemID == (UINT)index)
                     {
@@ -448,7 +448,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             {
                                 HeapFree(GetProcessHeap(), 0, psz);
                                 HeapFree(GetProcessHeap(), 0, parent);
-                                SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                                SendMessageW(htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
                                 return TRUE;
                             }
 
@@ -499,9 +499,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     if (ofnProc(&ofn))
                     {
-                        SetFocus (GetDlgItem (hwnd, IDOK));
-                        SetWindowTextW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName);
-                        SendMessageW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                        SetFocus(GetDlgItem (hwnd, IDOK));
+                        SetWindowTextW(GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName);
+                        SendMessageW(GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
                         EnableOkButtonFromEditContents(hwnd);
                         SetFocus (GetDlgItem (hwnd, IDOK));
                     }
@@ -780,7 +780,7 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
  *     exported by ordinal
  */
 /*
- * TODO: 
+ * TODO:
  * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
  *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
  */
