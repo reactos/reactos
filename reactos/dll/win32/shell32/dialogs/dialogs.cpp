@@ -58,22 +58,21 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
 {
     WCHAR szName[100];
     int index;
-    HICON  hIcon;
-    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)lParam;
+    HICON hIcon;
+    HWND hDlgCtrl = (HWND)lParam;
 
     if (IS_INTRESOURCE(lpszName))
         swprintf(szName, L"%u", (DWORD)lpszName);
     else
         wcscpy(szName, (WCHAR*)lpszName);
 
-
-    hIcon = LoadIconW(pIconContext->hLibrary, (LPCWSTR)lpszName);
+    hIcon = LoadIconW(hModule, lpszName);
     if (hIcon == NULL)
         return TRUE;
 
-    index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
+    index = SendMessageW(hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
     if (index != LB_ERR)
-        SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)hIcon);
+        SendMessageW(hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)hIcon);
 
     return TRUE;
 }
@@ -117,7 +116,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
-        EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+        EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
         else
@@ -177,7 +176,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 FreeLibrary(pIconContext->hLibrary);
                 pIconContext->hLibrary = hLibrary;
                 wcscpy(pIconContext->szName, szText);
-                EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+                EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
                 if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
                     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
                 else
