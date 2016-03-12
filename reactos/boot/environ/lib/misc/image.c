@@ -1456,7 +1456,7 @@ BlImgLoadBootApplication (
     }
 
     /* Zero it out */
-    RtlZeroMemory(AppEntry, sizeof(AppEntry));
+    RtlZeroMemory(AppEntry, sizeof(*AppEntry));
 
     /* Initialize it */
     strcpy(AppEntry->Signature, "BTAPENT");
@@ -1493,7 +1493,7 @@ BlImgLoadBootApplication (
         }
 
         /* Zero out the entries for now */
-        RtlZeroMemory(IapImageTable, sizeof(IapTableEntries * sizeof(PVOID)));
+        RtlZeroMemory(IapImageTable, IapTableEntries * sizeof(PVOID));
     }
 
     /* Set this entry into the table */
