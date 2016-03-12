@@ -234,12 +234,12 @@ BOOL WINAPI PickIconDlg(
     hLibrary = LoadLibraryExW(lpstrFile, NULL, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
     IconContext.hLibrary = hLibrary;
     IconContext.Index = *lpdwIconIndex;
-    wcscpy(IconContext.szName, lpstrFile);
+    StringCchCopyNW(IconContext.szName, ARRAYSIZE(IconContext.szName), lpstrFile, nMaxFile);
 
     res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hwndOwner, PickIconProc, (LPARAM)&IconContext);
     if (res)
     {
-        wcscpy(lpstrFile, IconContext.szName);
+        StringCchCopyNW(lpstrFile, nMaxFile, IconContext.szName, ARRAYSIZE(IconContext.szName));
         *lpdwIconIndex = IconContext.Index;
     }
 
