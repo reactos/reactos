@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Reactos - Selamat Datang"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Selamat datang ke React Operating System.\n\nKlik tajuk di sebelah kiri."
+    IDS_DEFAULTTOPICDESC "Selamat datang ke ReactOS Operating System.\n\nKlik tajuk di sebelah kiri."
 //    IDS_CHECKTEXT "Show this dialog again"
 //    IDS_CLOSETEXT "Exit"
 END

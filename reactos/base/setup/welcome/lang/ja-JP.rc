@@ -7,7 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Welcome"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "React へようこそ。\n\n左側のトピックをクリックしてください。"
+    IDS_DEFAULTTOPICDESC "ReactOS へようこそ。\n\n左側のトピックをクリックしてください。"
 //    IDS_CHECKTEXT "Show this dialog again"
 //    IDS_CLOSETEXT "Exit"
 END

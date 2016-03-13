@@ -7,7 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Welcome"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Welcome to React Operating System.\n\nClick a topic on the left."
+    IDS_DEFAULTTOPICDESC "Welcome to ReactOS Operating System.\n\nClick a topic on the left."
 //    IDS_CHECKTEXT "Show this dialog again"
 //    IDS_CLOSETEXT "Exit"
 END

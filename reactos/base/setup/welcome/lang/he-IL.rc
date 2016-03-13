@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ברוכים הבאים - ReactOS"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "ברוכים הבאים למערכת ההפעלה React,\nבחר נושא מצד ימין"
+    IDS_DEFAULTTOPICDESC "ברוכים הבאים למערכת ההפעלה ReactOS,\nבחר נושא מצד ימין"
 //    IDS_CHECKTEXT "הראה חלון זה שוב"
 //    IDS_CLOSETEXT "יציאה"
 END

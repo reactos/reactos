@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - 欢迎"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "欢迎使用 React 操作系统。\n\n 请点击左边的主题。"
+    IDS_DEFAULTTOPICDESC "欢迎使用 ReactOS 操作系统。\n\n 请点击左边的主题。"
 //    IDS_CHECKTEXT "Show this dialog again"
 //    IDS_CLOSETEXT "Exit"
 END

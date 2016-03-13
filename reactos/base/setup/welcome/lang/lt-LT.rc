@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Sveiki"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Sveiki, čia React Operacinė Sistema.\n\nPasirinkite punktą kairėje."
+    IDS_DEFAULTTOPICDESC "Sveiki, čia ReactOS Operacinė Sistema.\n\nPasirinkite punktą kairėje."
 //    IDS_CHECKTEXT "Rodyti šį langą vėl"
 //    IDS_CLOSETEXT "Išeiti"
 END

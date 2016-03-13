@@ -11,7 +11,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Mirë se vini"
     IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Mirë se vini në Sistemin Operative React.\n\nKliko në një topik në të majtë."
+    IDS_DEFAULTTOPICDESC "Mirë se vini në Sistemin Operative ReactOS.\n\nKliko në një topik në të majtë."
 //    IDS_CHECKTEXT "Trego këtë dialog përsëri"
 //    IDS_CLOSETEXT "Dil"
 END
