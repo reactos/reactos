@@ -55,12 +55,12 @@ BEGIN
     LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
     LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Cosa volete fare?", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Bloccare il computer", IDC_LOCK, 10, 135, 70, 14
-    PUSHBUTTON "Fine sessione", IDC_LOGOFF, 90, 135, 70, 14
-    PUSHBUTTON "Spegnimento", IDC_SHUTDOWN, 170, 135, 70, 14
+    PUSHBUTTON "Bloccare il computer", IDC_LOCK, 10, 135, 76, 14
+    PUSHBUTTON "Fine sessione", IDC_LOGOFF, 100, 135, 75, 14
+    PUSHBUTTON "Spegnimento", IDC_SHUTDOWN, 189, 135, 76, 14
     PUSHBUTTON "Cambia password", IDC_CHANGEPWD, 10, 154, 76, 14
-    PUSHBUTTON "Gestione attività", IDC_TASKMGR, 90, 154, 70, 14
-    PUSHBUTTON "Annulla", IDCANCEL, 170, 154, 70, 14
+    PUSHBUTTON "Gestione attività", IDC_TASKMGR,100, 154, 75, 14
+    PUSHBUTTON "Annulla", IDCANCEL, 189, 154, 76, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121
