@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer interface (specification).             */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTREND1_H__
-#define __FTREND1_H__
+#ifndef FTREND1_H_
+#define FTREND1_H_
 
 
 #include <ft2build.h>
@@ -32,7 +32,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTREND1_H__ */
+#endif /* FTREND1_H_ */
 
 
 /* END */

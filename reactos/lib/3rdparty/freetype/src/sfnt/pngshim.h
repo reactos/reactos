@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
+/*  Copyright 2013-2016 by                                                 */
 /*  Google, Inc.                                                           */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __PNGSHIM_H__
-#define __PNGSHIM_H__
+#ifndef PNGSHIM_H_
+#define PNGSHIM_H_
 
 
 #include <ft2build.h>
@@ -44,7 +44,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PNGSHIM_H__ */
+#endif /* PNGSHIM_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin writing system (body).        */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -83,7 +83,6 @@
     {
       FT_Error            error;
       FT_ULong            glyph_index;
-      FT_Long             y_offset;
       int                 dim;
 #ifdef __REACTOS__
       AF_LatinMetricsRec *dummy = malloc(sizeof(AF_LatinMetricsRec));
@@ -100,52 +99,63 @@
       AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
                                        [style_class->script];
 
-      FT_UInt32  standard_char;
+      void*        shaper_buf;
+      const char*  p;
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+      FT_ULong  ch = 0;
+#endif
+
+      p          = script_class->standard_charstring;
+      shaper_buf = af_shaper_buf_create( face );
 
       /*
-       * We check more than a single standard character to catch features
-       * like `c2sc' (small caps from caps) that don't contain lowercase
-       * letters by definition, or other features that mainly operate on
-       * numerals.
+       * We check a list of standard characters to catch features like
+       * `c2sc' (small caps from caps) that don't contain lowercase letters
+       * by definition, or other features that mainly operate on numerals.
+       * The first match wins.
        */
 
-      standard_char = script_class->standard_char1;
-      af_get_char_index( &metrics->root,
-                         standard_char,
-                         &glyph_index,
-                         &y_offset );
-      if ( !glyph_index )
+      glyph_index = 0;
+      while ( *p )
       {
-        if ( script_class->standard_char2 )
-        {
-          standard_char = script_class->standard_char2;
-          af_get_char_index( &metrics->root,
-                             standard_char,
-                             &glyph_index,
-                             &y_offset );
-          if ( !glyph_index )
-          {
-            if ( script_class->standard_char3 )
-            {
-              standard_char = script_class->standard_char3;
-              af_get_char_index( &metrics->root,
-                                 standard_char,
-                                 &glyph_index,
-                                 &y_offset );
-              if ( !glyph_index )
-                goto Exit;
-            }
-            else
-              goto Exit;
-          }
-        }
-        else
-          goto Exit;
+        unsigned int  num_idx;
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+        const char*  p_old;
+#endif
+
+
+        while ( *p == ' ' )
+          p++;
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+        p_old = p;
+        GET_UTF8_CHAR( ch, p_old );
+#endif
+
+        /* reject input that maps to more than a single glyph */
+        p = af_shaper_get_cluster( p, &metrics->root, shaper_buf, &num_idx );
+        if ( num_idx > 1 )
+          continue;
+
+        /* otherwise exit loop if we have a result */
+        glyph_index = af_shaper_get_elem( &metrics->root,
+                                          shaper_buf,
+                                          0,
+                                          NULL,
+                                          NULL );
+        if ( glyph_index )
+          break;
       }
 
+      af_shaper_buf_destroy( face, shaper_buf );
+
+      if ( !glyph_index )
+        goto Exit;
+
       FT_TRACE5(( "standard character: U+%04lX (glyph index %d)\n",
-                  standard_char, glyph_index ));
+                  ch, glyph_index ));
 
       error = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
       if ( error || face->glyph->outline.n_points <= 0 )
@@ -296,6 +306,8 @@
 
     FT_Pos  flat_threshold = FLAT_THRESHOLD( metrics->units_per_em );
 
+    void*  shaper_buf;
+
 
     /* we walk over the blue character strings as specified in the */
     /* style's entry in the `af_blue_stringset' array              */
@@ -303,6 +315,8 @@
     FT_TRACE5(( "latin blue zones computation\n"
                 "============================\n"
                 "\n" ));
+
+    shaper_buf = af_shaper_buf_create( face );
 
     for ( ; bs->string != AF_BLUE_STRING_MAX; bs++ )
     {
@@ -327,6 +341,11 @@
           if ( AF_LATIN_IS_TOP_BLUE( bs ) )
           {
             FT_TRACE5(( "top" ));
+            have_flag = 1;
+          }
+          else if ( AF_LATIN_IS_SUB_TOP_BLUE( bs ) )
+          {
+            FT_TRACE5(( "sub top" ));
             have_flag = 1;
           }
 
@@ -367,401 +386,477 @@
 
       while ( *p )
       {
-        FT_ULong    ch;
         FT_ULong    glyph_index;
         FT_Long     y_offset;
-        FT_Pos      best_y;                            /* same as points.y */
         FT_Int      best_point, best_contour_first, best_contour_last;
         FT_Vector*  points;
-        FT_Bool     round = 0;
+
+        FT_Pos   best_y_extremum;                      /* same as points.y */
+        FT_Bool  best_round = 0;
+
+        unsigned int  i, num_idx;
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+        const char*  p_old;
+        FT_ULong     ch;
+#endif
 
 
-        GET_UTF8_CHAR( ch, p );
+        while ( *p == ' ' )
+          p++;
 
-        /* load the character in the face -- skip unknown or empty ones */
-        af_get_char_index( &metrics->root, ch, &glyph_index, &y_offset );
-        if ( glyph_index == 0 )
+#ifdef FT_DEBUG_LEVEL_TRACE
+        p_old = p;
+        GET_UTF8_CHAR( ch, p_old );
+#endif
+
+        p = af_shaper_get_cluster( p, &metrics->root, shaper_buf, &num_idx );
+
+        if ( !num_idx )
         {
           FT_TRACE5(( "  U+%04lX unavailable\n", ch ));
           continue;
         }
 
-        error   = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
-        outline = face->glyph->outline;
-        /* reject glyphs that don't produce any rendering */
-        if ( error || outline.n_points <= 2 )
+        if ( AF_LATIN_IS_TOP_BLUE( bs ) )
+          best_y_extremum = FT_INT_MIN;
+        else
+          best_y_extremum = FT_INT_MAX;
+
+        /* iterate over all glyph elements of the character cluster */
+        /* and get the data of the `biggest' one                    */
+        for ( i = 0; i < num_idx; i++ )
         {
-          FT_TRACE5(( "  U+%04lX contains no (usable) outlines\n", ch ));
-          continue;
-        }
-
-        /* now compute min or max point indices and coordinates */
-        points             = outline.points;
-        best_point         = -1;
-        best_y             = 0;  /* make compiler happy */
-        best_contour_first = 0;  /* ditto */
-        best_contour_last  = 0;  /* ditto */
-
-        {
-          FT_Int  nn;
-          FT_Int  first = 0;
-          FT_Int  last  = -1;
+          FT_Pos   best_y;
+          FT_Bool  round = 0;
 
 
-          for ( nn = 0; nn < outline.n_contours; first = last + 1, nn++ )
+          /* load the character in the face -- skip unknown or empty ones */
+          glyph_index = af_shaper_get_elem( &metrics->root,
+                                            shaper_buf,
+                                            i,
+                                            NULL,
+                                            &y_offset );
+          if ( glyph_index == 0 )
           {
-            FT_Int  old_best_point = best_point;
-            FT_Int  pp;
-
-
-            last = outline.contours[nn];
-
-            /* Avoid single-point contours since they are never rasterized. */
-            /* In some fonts, they correspond to mark attachment points     */
-            /* that are way outside of the glyph's real outline.            */
-            if ( last <= first )
-              continue;
-
-            if ( AF_LATIN_IS_TOP_BLUE( bs ) )
-            {
-              for ( pp = first; pp <= last; pp++ )
-              {
-                if ( best_point < 0 || points[pp].y > best_y )
-                {
-                  best_point = pp;
-                  best_y     = points[pp].y;
-                  ascender   = FT_MAX( ascender, best_y + y_offset );
-                }
-                else
-                  descender = FT_MIN( descender, points[pp].y + y_offset );
-              }
-            }
-            else
-            {
-              for ( pp = first; pp <= last; pp++ )
-              {
-                if ( best_point < 0 || points[pp].y < best_y )
-                {
-                  best_point = pp;
-                  best_y     = points[pp].y;
-                  descender  = FT_MIN( descender, best_y + y_offset );
-                }
-                else
-                  ascender = FT_MAX( ascender, points[pp].y + y_offset );
-              }
-            }
-
-            if ( best_point != old_best_point )
-            {
-              best_contour_first = first;
-              best_contour_last  = last;
-            }
-          }
-        }
-
-        /* now check whether the point belongs to a straight or round   */
-        /* segment; we first need to find in which contour the extremum */
-        /* lies, then inspect its previous and next points              */
-        if ( best_point >= 0 )
-        {
-          FT_Pos  best_x = points[best_point].x;
-          FT_Int  prev, next;
-          FT_Int  best_segment_first, best_segment_last;
-          FT_Int  best_on_point_first, best_on_point_last;
-          FT_Pos  dist;
-
-
-          best_segment_first = best_point;
-          best_segment_last  = best_point;
-
-          if ( FT_CURVE_TAG( outline.tags[best_point] ) == FT_CURVE_TAG_ON )
-          {
-            best_on_point_first = best_point;
-            best_on_point_last  = best_point;
-          }
-          else
-          {
-            best_on_point_first = -1;
-            best_on_point_last  = -1;
+            FT_TRACE5(( "  U+%04lX unavailable\n", ch ));
+            continue;
           }
 
-          /* look for the previous and next points on the contour  */
-          /* that are not on the same Y coordinate, then threshold */
-          /* the `closeness'...                                    */
-          prev = best_point;
-          next = prev;
-
-          do
+          error   = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
+          outline = face->glyph->outline;
+          /* reject glyphs that don't produce any rendering */
+          if ( error || outline.n_points <= 2 )
           {
-            if ( prev > best_contour_first )
-              prev--;
+#ifdef FT_DEBUG_LEVEL_TRACE
+            if ( num_idx == 1 )
+              FT_TRACE5(( "  U+%04lX contains no (usable) outlines\n", ch ));
             else
-              prev = best_contour_last;
+              FT_TRACE5(( "  component %d of cluster starting with U+%04lX"
+                          " contains no (usable) outlines\n", i, ch ));
+#endif
+            continue;
+          }
 
-            dist = FT_ABS( points[prev].y - best_y );
-            /* accept a small distance or a small angle (both values are */
-            /* heuristic; value 20 corresponds to approx. 2.9 degrees)   */
-            if ( dist > 5 )
-              if ( FT_ABS( points[prev].x - best_x ) <= 20 * dist )
-                break;
+          /* now compute min or max point indices and coordinates */
+          points             = outline.points;
+          best_point         = -1;
+          best_y             = 0;  /* make compiler happy */
+          best_contour_first = 0;  /* ditto */
+          best_contour_last  = 0;  /* ditto */
 
-            best_segment_first = prev;
-
-            if ( FT_CURVE_TAG( outline.tags[prev] ) == FT_CURVE_TAG_ON )
-            {
-              best_on_point_first = prev;
-              if ( best_on_point_last < 0 )
-                best_on_point_last = prev;
-            }
-
-          } while ( prev != best_point );
-
-          do
           {
-            if ( next < best_contour_last )
-              next++;
-            else
-              next = best_contour_first;
+            FT_Int  nn;
+            FT_Int  first = 0;
+            FT_Int  last  = -1;
 
-            dist = FT_ABS( points[next].y - best_y );
-            if ( dist > 5 )
-              if ( FT_ABS( points[next].x - best_x ) <= 20 * dist )
-                break;
 
-            best_segment_last = next;
-
-            if ( FT_CURVE_TAG( outline.tags[next] ) == FT_CURVE_TAG_ON )
+            for ( nn = 0; nn < outline.n_contours; first = last + 1, nn++ )
             {
-              best_on_point_last = next;
-              if ( best_on_point_first < 0 )
-                best_on_point_first = next;
-            }
-
-          } while ( next != best_point );
-
-          if ( AF_LATIN_IS_LONG_BLUE( bs ) )
-          {
-            /* If this flag is set, we have an additional constraint to  */
-            /* get the blue zone distance: Find a segment of the topmost */
-            /* (or bottommost) contour that is longer than a heuristic   */
-            /* threshold.  This ensures that small bumps in the outline  */
-            /* are ignored (for example, the `vertical serifs' found in  */
-            /* many Hebrew glyph designs).                               */
-
-            /* If this segment is long enough, we are done.  Otherwise,  */
-            /* search the segment next to the extremum that is long      */
-            /* enough, has the same direction, and a not too large       */
-            /* vertical distance from the extremum.  Note that the       */
-            /* algorithm doesn't check whether the found segment is      */
-            /* actually the one (vertically) nearest to the extremum.    */
-
-            /* heuristic threshold value */
-            FT_Pos  length_threshold = metrics->units_per_em / 25;
+              FT_Int  old_best_point = best_point;
+              FT_Int  pp;
 
 
-            dist = FT_ABS( points[best_segment_last].x -
-                             points[best_segment_first].x );
+              last = outline.contours[nn];
 
-            if ( dist < length_threshold                       &&
-                 best_segment_last - best_segment_first + 2 <=
-                   best_contour_last - best_contour_first      )
-            {
-              /* heuristic threshold value */
-              FT_Pos  height_threshold = metrics->units_per_em / 4;
-
-              FT_Int   first;
-              FT_Int   last;
-              FT_Bool  hit;
-
-              /* we intentionally declare these two variables        */
-              /* outside of the loop since various compilers emit    */
-              /* incorrect warning messages otherwise, talking about */
-              /* `possibly uninitialized variables'                  */
-              FT_Int  p_first = 0;            /* make compiler happy */
-              FT_Int  p_last  = 0;
-
-              FT_Bool  left2right;
-
-
-              /* compute direction */
-              prev = best_point;
-
-              do
-              {
-                if ( prev > best_contour_first )
-                  prev--;
-                else
-                  prev = best_contour_last;
-
-                if ( points[prev].x != best_x )
-                  break;
-
-              } while ( prev != best_point );
-
-              /* skip glyph for the degenerate case */
-              if ( prev == best_point )
+              /* Avoid single-point contours since they are never      */
+              /* rasterized.  In some fonts, they correspond to mark   */
+              /* attachment points that are way outside of the glyph's */
+              /* real outline.                                         */
+              if ( last <= first )
                 continue;
 
-              left2right = FT_BOOL( points[prev].x < points[best_point].x );
-
-              first = best_segment_last;
-              last  = first;
-              hit   = 0;
-
-              do
+              if ( AF_LATIN_IS_TOP_BLUE( bs )     ||
+                   AF_LATIN_IS_SUB_TOP_BLUE( bs ) )
               {
-                FT_Bool  l2r;
-                FT_Pos   d;
-
-
-                if ( !hit )
+                for ( pp = first; pp <= last; pp++ )
                 {
-                  /* no hit; adjust first point */
-                  first = last;
-
-                  /* also adjust first and last on point */
-                  if ( FT_CURVE_TAG( outline.tags[first] ) ==
-                         FT_CURVE_TAG_ON )
+                  if ( best_point < 0 || points[pp].y > best_y )
                   {
-                    p_first = first;
-                    p_last  = first;
+                    best_point = pp;
+                    best_y     = points[pp].y;
+                    ascender   = FT_MAX( ascender, best_y + y_offset );
                   }
                   else
+                    descender = FT_MIN( descender, points[pp].y + y_offset );
+                }
+              }
+              else
+              {
+                for ( pp = first; pp <= last; pp++ )
+                {
+                  if ( best_point < 0 || points[pp].y < best_y )
                   {
-                    p_first = -1;
-                    p_last  = -1;
+                    best_point = pp;
+                    best_y     = points[pp].y;
+                    descender  = FT_MIN( descender, best_y + y_offset );
+                  }
+                  else
+                    ascender = FT_MAX( ascender, points[pp].y + y_offset );
+                }
+              }
+
+              if ( best_point != old_best_point )
+              {
+                best_contour_first = first;
+                best_contour_last  = last;
+              }
+            }
+          }
+
+          /* now check whether the point belongs to a straight or round   */
+          /* segment; we first need to find in which contour the extremum */
+          /* lies, then inspect its previous and next points              */
+          if ( best_point >= 0 )
+          {
+            FT_Pos  best_x = points[best_point].x;
+            FT_Int  prev, next;
+            FT_Int  best_segment_first, best_segment_last;
+            FT_Int  best_on_point_first, best_on_point_last;
+            FT_Pos  dist;
+
+
+            best_segment_first = best_point;
+            best_segment_last  = best_point;
+
+            if ( FT_CURVE_TAG( outline.tags[best_point] ) == FT_CURVE_TAG_ON )
+            {
+              best_on_point_first = best_point;
+              best_on_point_last  = best_point;
+            }
+            else
+            {
+              best_on_point_first = -1;
+              best_on_point_last  = -1;
+            }
+
+            /* look for the previous and next points on the contour  */
+            /* that are not on the same Y coordinate, then threshold */
+            /* the `closeness'...                                    */
+            prev = best_point;
+            next = prev;
+
+            do
+            {
+              if ( prev > best_contour_first )
+                prev--;
+              else
+                prev = best_contour_last;
+
+              dist = FT_ABS( points[prev].y - best_y );
+              /* accept a small distance or a small angle (both values are */
+              /* heuristic; value 20 corresponds to approx. 2.9 degrees)   */
+              if ( dist > 5 )
+                if ( FT_ABS( points[prev].x - best_x ) <= 20 * dist )
+                  break;
+
+              best_segment_first = prev;
+
+              if ( FT_CURVE_TAG( outline.tags[prev] ) == FT_CURVE_TAG_ON )
+              {
+                best_on_point_first = prev;
+                if ( best_on_point_last < 0 )
+                  best_on_point_last = prev;
+              }
+
+            } while ( prev != best_point );
+
+            do
+            {
+              if ( next < best_contour_last )
+                next++;
+              else
+                next = best_contour_first;
+
+              dist = FT_ABS( points[next].y - best_y );
+              if ( dist > 5 )
+                if ( FT_ABS( points[next].x - best_x ) <= 20 * dist )
+                  break;
+
+              best_segment_last = next;
+
+              if ( FT_CURVE_TAG( outline.tags[next] ) == FT_CURVE_TAG_ON )
+              {
+                best_on_point_last = next;
+                if ( best_on_point_first < 0 )
+                  best_on_point_first = next;
+              }
+
+            } while ( next != best_point );
+
+            if ( AF_LATIN_IS_LONG_BLUE( bs ) )
+            {
+              /* If this flag is set, we have an additional constraint to  */
+              /* get the blue zone distance: Find a segment of the topmost */
+              /* (or bottommost) contour that is longer than a heuristic   */
+              /* threshold.  This ensures that small bumps in the outline  */
+              /* are ignored (for example, the `vertical serifs' found in  */
+              /* many Hebrew glyph designs).                               */
+
+              /* If this segment is long enough, we are done.  Otherwise,  */
+              /* search the segment next to the extremum that is long      */
+              /* enough, has the same direction, and a not too large       */
+              /* vertical distance from the extremum.  Note that the       */
+              /* algorithm doesn't check whether the found segment is      */
+              /* actually the one (vertically) nearest to the extremum.    */
+
+              /* heuristic threshold value */
+              FT_Pos  length_threshold = metrics->units_per_em / 25;
+
+
+              dist = FT_ABS( points[best_segment_last].x -
+                               points[best_segment_first].x );
+
+              if ( dist < length_threshold                       &&
+                   best_segment_last - best_segment_first + 2 <=
+                     best_contour_last - best_contour_first      )
+              {
+                /* heuristic threshold value */
+                FT_Pos  height_threshold = metrics->units_per_em / 4;
+
+                FT_Int   first;
+                FT_Int   last;
+                FT_Bool  hit;
+
+                /* we intentionally declare these two variables        */
+                /* outside of the loop since various compilers emit    */
+                /* incorrect warning messages otherwise, talking about */
+                /* `possibly uninitialized variables'                  */
+                FT_Int  p_first = 0;            /* make compiler happy */
+                FT_Int  p_last  = 0;
+
+                FT_Bool  left2right;
+
+
+                /* compute direction */
+                prev = best_point;
+
+                do
+                {
+                  if ( prev > best_contour_first )
+                    prev--;
+                  else
+                    prev = best_contour_last;
+
+                  if ( points[prev].x != best_x )
+                    break;
+
+                } while ( prev != best_point );
+
+                /* skip glyph for the degenerate case */
+                if ( prev == best_point )
+                  continue;
+
+                left2right = FT_BOOL( points[prev].x < points[best_point].x );
+
+                first = best_segment_last;
+                last  = first;
+                hit   = 0;
+
+                do
+                {
+                  FT_Bool  l2r;
+                  FT_Pos   d;
+
+
+                  if ( !hit )
+                  {
+                    /* no hit; adjust first point */
+                    first = last;
+
+                    /* also adjust first and last on point */
+                    if ( FT_CURVE_TAG( outline.tags[first] ) ==
+                           FT_CURVE_TAG_ON )
+                    {
+                      p_first = first;
+                      p_last  = first;
+                    }
+                    else
+                    {
+                      p_first = -1;
+                      p_last  = -1;
+                    }
+
+                    hit = 1;
                   }
 
-                  hit = 1;
-                }
+                  if ( last < best_contour_last )
+                    last++;
+                  else
+                    last = best_contour_first;
 
-                if ( last < best_contour_last )
-                  last++;
-                else
-                  last = best_contour_first;
-
-                if ( FT_ABS( best_y - points[first].y ) > height_threshold )
-                {
-                  /* vertical distance too large */
-                  hit = 0;
-                  continue;
-                }
-
-                /* same test as above */
-                dist = FT_ABS( points[last].y - points[first].y );
-                if ( dist > 5 )
-                  if ( FT_ABS( points[last].x - points[first].x ) <=
-                         20 * dist )
+                  if ( FT_ABS( best_y - points[first].y ) > height_threshold )
                   {
+                    /* vertical distance too large */
                     hit = 0;
                     continue;
                   }
 
-                if ( FT_CURVE_TAG( outline.tags[last] ) == FT_CURVE_TAG_ON )
-                {
-                  p_last = last;
-                  if ( p_first < 0 )
-                    p_first = last;
-                }
-
-                l2r = FT_BOOL( points[first].x < points[last].x );
-                d   = FT_ABS( points[last].x - points[first].x );
-
-                if ( l2r == left2right     &&
-                     d >= length_threshold )
-                {
-                  /* all constraints are met; update segment after finding */
-                  /* its end                                               */
-                  do
-                  {
-                    if ( last < best_contour_last )
-                      last++;
-                    else
-                      last = best_contour_first;
-
-                    d = FT_ABS( points[last].y - points[first].y );
-                    if ( d > 5 )
-                      if ( FT_ABS( points[next].x - points[first].x ) <=
-                             20 * dist )
-                      {
-                        if ( last > best_contour_first )
-                          last--;
-                        else
-                          last = best_contour_last;
-                        break;
-                      }
-
-                    p_last = last;
-
-                    if ( FT_CURVE_TAG( outline.tags[last] ) ==
-                           FT_CURVE_TAG_ON )
+                  /* same test as above */
+                  dist = FT_ABS( points[last].y - points[first].y );
+                  if ( dist > 5 )
+                    if ( FT_ABS( points[last].x - points[first].x ) <=
+                           20 * dist )
                     {
-                      p_last = last;
-                      if ( p_first < 0 )
-                        p_first = last;
+                      hit = 0;
+                      continue;
                     }
 
-                  } while ( last != best_segment_first );
+                  if ( FT_CURVE_TAG( outline.tags[last] ) == FT_CURVE_TAG_ON )
+                  {
+                    p_last = last;
+                    if ( p_first < 0 )
+                      p_first = last;
+                  }
 
-                  best_y = points[first].y;
+                  l2r = FT_BOOL( points[first].x < points[last].x );
+                  d   = FT_ABS( points[last].x - points[first].x );
 
-                  best_segment_first = first;
-                  best_segment_last  = last;
+                  if ( l2r == left2right     &&
+                       d >= length_threshold )
+                  {
+                    /* all constraints are met; update segment after */
+                    /* finding its end                               */
+                    do
+                    {
+                      if ( last < best_contour_last )
+                        last++;
+                      else
+                        last = best_contour_first;
 
-                  best_on_point_first = p_first;
-                  best_on_point_last  = p_last;
+                      d = FT_ABS( points[last].y - points[first].y );
+                      if ( d > 5 )
+                        if ( FT_ABS( points[next].x - points[first].x ) <=
+                               20 * dist )
+                        {
+                          if ( last > best_contour_first )
+                            last--;
+                          else
+                            last = best_contour_last;
+                          break;
+                        }
 
-                  break;
-                }
+                      p_last = last;
 
-              } while ( last != best_segment_first );
+                      if ( FT_CURVE_TAG( outline.tags[last] ) ==
+                             FT_CURVE_TAG_ON )
+                      {
+                        p_last = last;
+                        if ( p_first < 0 )
+                          p_first = last;
+                      }
+
+                    } while ( last != best_segment_first );
+
+                    best_y = points[first].y;
+
+                    best_segment_first = first;
+                    best_segment_last  = last;
+
+                    best_on_point_first = p_first;
+                    best_on_point_last  = p_last;
+
+                    break;
+                  }
+
+                } while ( last != best_segment_first );
+              }
+            }
+
+            /* for computing blue zones, we add the y offset as returned */
+            /* by the currently used OpenType feature -- for example,    */
+            /* superscript glyphs might be identical to subscript glyphs */
+            /* with a vertical shift                                     */
+            best_y += y_offset;
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+            if ( num_idx == 1 )
+              FT_TRACE5(( "  U+%04lX: best_y = %5ld", ch, best_y ));
+            else
+              FT_TRACE5(( "  component %d of cluster starting with U+%04lX:"
+                          " best_y = %5ld", i, ch, best_y ));
+#endif
+
+            /* now set the `round' flag depending on the segment's kind: */
+            /*                                                           */
+            /* - if the horizontal distance between the first and last   */
+            /*   `on' point is larger than a heuristic threshold         */
+            /*   we have a flat segment                                  */
+            /* - if either the first or the last point of the segment is */
+            /*   an `off' point, the segment is round, otherwise it is   */
+            /*   flat                                                    */
+            if ( best_on_point_first >= 0                               &&
+                 best_on_point_last >= 0                                &&
+                 ( FT_ABS( points[best_on_point_last].x -
+                           points[best_on_point_first].x ) ) >
+                   flat_threshold                                       )
+              round = 0;
+            else
+              round = FT_BOOL(
+                        FT_CURVE_TAG( outline.tags[best_segment_first] ) !=
+                          FT_CURVE_TAG_ON                                   ||
+                        FT_CURVE_TAG( outline.tags[best_segment_last]  ) !=
+                          FT_CURVE_TAG_ON                                   );
+
+            if ( round && AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
+            {
+              /* only use flat segments for a neutral blue zone */
+              FT_TRACE5(( " (round, skipped)\n" ));
+              continue;
+            }
+
+            FT_TRACE5(( " (%s)\n", round ? "round" : "flat" ));
+          }
+
+          if ( AF_LATIN_IS_TOP_BLUE( bs ) )
+          {
+            if ( best_y > best_y_extremum )
+            {
+              best_y_extremum = best_y;
+              best_round      = round;
+            }
+          }
+          else
+          {
+            if ( best_y < best_y_extremum )
+            {
+              best_y_extremum = best_y;
+              best_round      = round;
             }
           }
 
-          /* for computing blue zones, we add the y offset as returned */
-          /* by the currently used OpenType feature -- for example,    */
-          /* superscript glyphs might be identical to subscript glyphs */
-          /* with a vertical shift                                     */
-          best_y += y_offset;
+        } /* end for loop */
 
-          FT_TRACE5(( "  U+%04lX: best_y = %5ld", ch, best_y ));
-
-          /* now set the `round' flag depending on the segment's kind: */
-          /*                                                           */
-          /* - if the horizontal distance between the first and last   */
-          /*   `on' point is larger than a heuristic threshold         */
-          /*   we have a flat segment                                  */
-          /* - if either the first or the last point of the segment is */
-          /*   an `off' point, the segment is round, otherwise it is   */
-          /*   flat                                                    */
-          if ( best_on_point_first >= 0                               &&
-               best_on_point_last >= 0                                &&
-               ( FT_ABS( points[best_on_point_last].x -
-                         points[best_on_point_first].x ) ) >
-                 flat_threshold                                       )
-            round = 0;
+        if ( !( best_y_extremum == FT_INT_MIN ||
+                best_y_extremum == FT_INT_MAX ) )
+        {
+          if ( best_round )
+            rounds[num_rounds++] = best_y_extremum;
           else
-            round = FT_BOOL(
-                      FT_CURVE_TAG( outline.tags[best_segment_first] ) !=
-                        FT_CURVE_TAG_ON                                   ||
-                      FT_CURVE_TAG( outline.tags[best_segment_last]  ) !=
-                        FT_CURVE_TAG_ON                                   );
-
-          if ( round && AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
-          {
-            /* only use flat segments for a neutral blue zone */
-            FT_TRACE5(( " (round, skipped)\n" ));
-            continue;
-          }
-
-          FT_TRACE5(( " (%s)\n", round ? "round" : "flat" ));
+            flats[num_flats++]   = best_y_extremum;
         }
 
-        if ( round )
-          rounds[num_rounds++] = best_y;
-        else
-          flats[num_flats++]   = best_y;
-      }
+      } /* end while loop */
 
       if ( num_flats == 0 && num_rounds == 0 )
       {
@@ -811,7 +906,8 @@
         FT_Bool  over_ref = FT_BOOL( shoot > ref );
 
 
-        if ( AF_LATIN_IS_TOP_BLUE( bs ) ^ over_ref )
+        if ( ( AF_LATIN_IS_TOP_BLUE( bs )    ||
+               AF_LATIN_IS_SUB_TOP_BLUE( bs) ) ^ over_ref )
         {
           *blue_ref   =
           *blue_shoot = ( shoot + ref ) / 2;
@@ -827,6 +923,8 @@
       blue->flags = 0;
       if ( AF_LATIN_IS_TOP_BLUE( bs ) )
         blue->flags |= AF_LATIN_BLUE_TOP;
+      if ( AF_LATIN_IS_SUB_TOP_BLUE( bs ) )
+        blue->flags |= AF_LATIN_BLUE_SUB_TOP;
       if ( AF_LATIN_IS_NEUTRAL_BLUE( bs ) )
         blue->flags |= AF_LATIN_BLUE_NEUTRAL;
 
@@ -841,7 +939,10 @@
       FT_TRACE5(( "    -> reference = %ld\n"
                   "       overshoot = %ld\n",
                   *blue_ref, *blue_shoot ));
-    }
+
+    } /* end for loop */
+
+    af_shaper_buf_destroy( face, shaper_buf );
 
     FT_TRACE5(( "\n" ));
 
@@ -855,27 +956,36 @@
   af_latin_metrics_check_digits( AF_LatinMetrics  metrics,
                                  FT_Face          face )
   {
-    FT_UInt   i;
     FT_Bool   started = 0, same_width = 1;
     FT_Fixed  advance, old_advance = 0;
 
+    void*  shaper_buf;
 
-    /* digit `0' is 0x30 in all supported charmaps */
-    for ( i = 0x30; i <= 0x39; i++ )
+    /* in all supported charmaps, digits have character codes 0x30-0x39 */
+    const char   digits[] = "0 1 2 3 4 5 6 7 8 9";
+    const char*  p;
+
+
+    p          = digits;
+    shaper_buf = af_shaper_buf_create( face );
+
+    while ( *p )
     {
-      FT_ULong  glyph_index;
-      FT_Long   y_offset;
+      FT_ULong      glyph_index;
+      unsigned int  num_idx;
 
 
-      af_get_char_index( &metrics->root, i, &glyph_index, &y_offset );
-      if ( glyph_index == 0 )
+      /* reject input that maps to more than a single glyph */
+      p = af_shaper_get_cluster( p, &metrics->root, shaper_buf, &num_idx );
+      if ( num_idx > 1 )
         continue;
 
-      if ( FT_Get_Advance( face, glyph_index,
-                           FT_LOAD_NO_SCALE         |
-                           FT_LOAD_NO_HINTING       |
-                           FT_LOAD_IGNORE_TRANSFORM,
-                           &advance ) )
+      glyph_index = af_shaper_get_elem( &metrics->root,
+                                        shaper_buf,
+                                        0,
+                                        &advance,
+                                        NULL );
+      if ( !glyph_index )
         continue;
 
       if ( started )
@@ -892,6 +1002,8 @@
         started     = 1;
       }
     }
+
+    af_shaper_buf_destroy( face, shaper_buf );
 
     metrics->root.digits_have_same_width = same_width;
   }
@@ -1182,21 +1294,63 @@
 #endif
 
           blue->flags |= AF_LATIN_BLUE_ACTIVE;
-
-          FT_TRACE5(( "  reference %d: %d scaled to %.2f%s\n"
-                      "  overshoot %d: %d scaled to %.2f%s\n",
-                      nn,
-                      blue->ref.org,
-                      blue->ref.fit / 64.0,
-                      blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
-                                                         : " (inactive)",
-                      nn,
-                      blue->shoot.org,
-                      blue->shoot.fit / 64.0,
-                      blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
-                                                         : " (inactive)" ));
         }
       }
+
+      /* use sub-top blue zone only if it doesn't overlap with */
+      /* another (non-sup-top) blue zone; otherwise, the       */
+      /* effect would be similar to a neutral blue zone, which */
+      /* is not desired here                                   */
+      for ( nn = 0; nn < axis->blue_count; nn++ )
+      {
+        AF_LatinBlue  blue = &axis->blues[nn];
+        FT_UInt       i;
+
+
+        if ( !( blue->flags & AF_LATIN_BLUE_SUB_TOP ) )
+          continue;
+        if ( !( blue->flags & AF_LATIN_BLUE_ACTIVE ) )
+          continue;
+
+        for ( i = 0; i < axis->blue_count; i++ )
+        {
+          AF_LatinBlue  b = &axis->blues[i];
+
+
+          if ( b->flags & AF_LATIN_BLUE_SUB_TOP )
+            continue;
+          if ( !( b->flags & AF_LATIN_BLUE_ACTIVE ) )
+            continue;
+
+          if ( b->ref.fit <= blue->shoot.fit &&
+               b->shoot.fit >= blue->ref.fit )
+          {
+            blue->flags &= ~AF_LATIN_BLUE_ACTIVE;
+            break;
+          }
+        }
+      }
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+      for ( nn = 0; nn < axis->blue_count; nn++ )
+      {
+        AF_LatinBlue  blue = &axis->blues[nn];
+
+
+        FT_TRACE5(( "  reference %d: %d scaled to %.2f%s\n"
+                    "  overshoot %d: %d scaled to %.2f%s\n",
+                    nn,
+                    blue->ref.org,
+                    blue->ref.fit / 64.0,
+                    blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
+                                                       : " (inactive)",
+                    nn,
+                    blue->shoot.org,
+                    blue->shoot.fit / 64.0,
+                    blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
+                                                       : " (inactive)" ));
+      }
+#endif
     }
   }
 
@@ -1635,6 +1789,12 @@
     FT_Memory     memory = hints->memory;
     AF_LatinAxis  laxis  = &((AF_LatinMetrics)hints->metrics)->axis[dim];
 
+    AF_StyleClass   style_class  = hints->metrics->style_class;
+    AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+                                     [style_class->script];
+
+    FT_Bool  top_to_bottom_hinting = 0;
+
     AF_Segment    segments      = axis->segments;
     AF_Segment    segment_limit = segments + axis->num_segments;
     AF_Segment    seg;
@@ -1656,6 +1816,9 @@
     up_dir = ( dim == AF_DIMENSION_HORZ ) ? AF_DIR_UP
                                           : AF_DIR_RIGHT;
 #endif
+
+    if ( dim == AF_DIMENSION_VERT )
+      top_to_bottom_hinting = script_class->top_to_bottom_hinting;
 
     /*
      *  We ignore all segments that are less than 1 pixel in length
@@ -1734,6 +1897,7 @@
         /* sort according to the position    */
         error = af_axis_hints_new_edge( axis, seg->pos,
                                         (AF_Direction)seg->dir,
+                                        top_to_bottom_hinting,
                                         memory, &edge );
         if ( error )
           goto Exit;
@@ -1989,7 +2153,8 @@
         /* the major direction) -- this assumes the TrueType convention  */
         /* for the orientation of contours                               */
         is_top_blue =
-          (FT_Byte)( ( blue->flags & AF_LATIN_BLUE_TOP ) != 0 );
+          (FT_Byte)( ( blue->flags & ( AF_LATIN_BLUE_TOP     |
+                                       AF_LATIN_BLUE_SUB_TOP ) ) != 0 );
         is_neutral_blue =
           (FT_Byte)( ( blue->flags & AF_LATIN_BLUE_NEUTRAL ) != 0);
         is_major_dir =
@@ -2419,14 +2584,23 @@
     AF_Edge       anchor     = NULL;
     FT_Int        has_serifs = 0;
 
+    AF_StyleClass   style_class  = hints->metrics->style_class;
+    AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+                                     [style_class->script];
+
+    FT_Bool  top_to_bottom_hinting = 0;
+
 #ifdef FT_DEBUG_LEVEL_TRACE
-    FT_UInt       num_actions = 0;
+    FT_UInt  num_actions = 0;
 #endif
 
 
     FT_TRACE5(( "latin %s edge hinting (style `%s')\n",
                 dim == AF_DIMENSION_VERT ? "horizontal" : "vertical",
                 af_style_names[hints->metrics->style_class->style] ));
+
+    if ( dim == AF_DIMENSION_VERT )
+      top_to_bottom_hinting = script_class->top_to_bottom_hinting;
 
     /* we begin by aligning all stems relative to the blue zone */
     /* if needed -- that's only for horizontal edges            */
@@ -2723,7 +2897,9 @@
         edge->flags  |= AF_EDGE_DONE;
         edge2->flags |= AF_EDGE_DONE;
 
-        if ( edge > edges && edge->pos < edge[-1].pos )
+        if ( edge > edges                                             &&
+             ( top_to_bottom_hinting ? ( edge->pos > edge[-1].pos )
+                                     : ( edge->pos < edge[-1].pos ) ) )
         {
 #ifdef FT_DEBUG_LEVEL_TRACE
           FT_TRACE5(( "  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
@@ -2884,7 +3060,9 @@
 #endif
         edge->flags |= AF_EDGE_DONE;
 
-        if ( edge > edges && edge->pos < edge[-1].pos )
+        if ( edge > edges                                             &&
+             ( top_to_bottom_hinting ? ( edge->pos > edge[-1].pos )
+                                     : ( edge->pos < edge[-1].pos ) ) )
         {
 #ifdef FT_DEBUG_LEVEL_TRACE
           FT_TRACE5(( "  BOUND: edge %d (pos=%.2f) moved to %.2f\n",
@@ -2895,9 +3073,10 @@
           edge->pos = edge[-1].pos;
         }
 
-        if ( edge + 1 < edge_limit        &&
-             edge[1].flags & AF_EDGE_DONE &&
-             edge->pos > edge[1].pos      )
+        if ( edge + 1 < edge_limit                                   &&
+             edge[1].flags & AF_EDGE_DONE                            &&
+             ( top_to_bottom_hinting ? ( edge->pos < edge[1].pos )
+                                     : ( edge->pos > edge[1].pos ) ) )
         {
 #ifdef FT_DEBUG_LEVEL_TRACE
           FT_TRACE5(( "  BOUND: edge %d (pos=%.2f) moved to %.2f\n",

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTMODAPI_H__
-#define __FTMODAPI_H__
+#ifndef FTMODAPI_H_
+#define FTMODAPI_H_
 
 
 #include <ft2build.h>
@@ -613,12 +613,7 @@ FT_BEGIN_HEADER
    *       The library doesn't implement any kind of bytecode interpreter.
    *
    *     FT_TRUETYPE_ENGINE_TYPE_UNPATENTED ::
-   *       The library implements a bytecode interpreter that doesn't
-   *       support the patented operations of the TrueType virtual machine.
-   *
-   *       Its main use is to load certain Asian fonts that position and
-   *       scale glyph components with bytecode instructions.  It produces
-   *       bad output for most other fonts.
+   *       Deprecated and removed.
    *
    *     FT_TRUETYPE_ENGINE_TYPE_PATENTED ::
    *       The library implements a bytecode interpreter that covers
@@ -666,7 +661,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTMODAPI_H__ */
+#endif /* FTMODAPI_H_ */
 
 
 /* END */

@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  hbshim.h                                                               */
+/*  afshaper.h                                                             */
 /*                                                                         */
 /*    HarfBuzz interface for accessing OpenType features (specification).  */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
+/*  Copyright 2013-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __HBSHIM_H__
-#define __HBSHIM_H__
+#ifndef AFSHAPER_H_
+#define AFSHAPER_H_
 
 
 #include <ft2build.h>
@@ -36,21 +36,37 @@
 FT_BEGIN_HEADER
 
   FT_Error
-  af_get_coverage( AF_FaceGlobals  globals,
-                   AF_StyleClass   style_class,
-                   FT_UShort*      gstyles );
+  af_shaper_get_coverage( AF_FaceGlobals  globals,
+                          AF_StyleClass   style_class,
+                          FT_UShort*      gstyles,
+                          FT_Bool         default_script );
 
-  FT_Error
-  af_get_char_index( AF_StyleMetrics  metrics,
-                     FT_ULong         charcode,
-                     FT_ULong        *codepoint,
-                     FT_Long         *y_offset );
+
+  void*
+  af_shaper_buf_create( FT_Face  face );
+
+  void
+  af_shaper_buf_destroy( FT_Face  face,
+                         void*    buf );
+
+  const char*
+  af_shaper_get_cluster( const char*      p,
+                         AF_StyleMetrics  metrics,
+                         void*            buf_,
+                         unsigned int*    count );
+
+  FT_ULong
+  af_shaper_get_elem( AF_StyleMetrics  metrics,
+                      void*            buf_,
+                      unsigned int     idx,
+                      FT_Long*         x_advance,
+                      FT_Long*         y_offset );
 
  /* */
 
 FT_END_HEADER
 
-#endif /* __HBSHIM_H__ */
+#endif /* AFSHAPER_H_ */
 
 
 /* END */

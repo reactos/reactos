@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType common tables validation (specification).                   */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __OTVCOMMN_H__
-#define __OTVCOMMN_H__
+#ifndef OTVCOMMN_H_
+#define OTVCOMMN_H_
 
 
 #include <ft2build.h>
@@ -431,7 +431,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __OTVCOMMN_H__ */
+#endif /* OTVCOMMN_H_ */
 
 
 /* END */

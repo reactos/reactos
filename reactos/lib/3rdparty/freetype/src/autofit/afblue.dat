@@ -2,7 +2,7 @@
 //
 //    Auto-fitter data for blue strings.
 //
-//  Copyright 2013-2015 by
+//  Copyright 2013-2016 by
 //  David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 //  This file is part of the FreeType project, and may only be used,
@@ -20,9 +20,8 @@
 // labels separated by whitespace and followed by a colon (everything in a
 // single line); the first label gives the name of the enumeration template,
 // the second the name of the array template, and the third the name of the
-// `maximum' template, holding the size of the largest array element.  The
-// script then fills the corresponding templates (indicated by `@'
-// characters around the name).
+// `maximum' template.  The script then fills the corresponding templates
+// (indicated by `@' characters around the name).
 //
 // A section contains one or more data records.  Each data record consists
 // of two or more lines.  The first line holds the enumeration name, and the
@@ -30,15 +29,20 @@
 //
 // There are two possible representations for array data.
 //
-// - A string of characters in UTF-8 encoding enclosed in double quotes,
-//   using C syntax.  There can be only one string per line, thus the
-//   starting and ending double quote must be the first and last character
-//   in the line, respectively, ignoring whitespace before and after the
-//   string.  Space characters within the string are ignored too.  If there
-//   are multiple strings (in multiple lines), they are concatenated to a
-//   single string.  In the output, a string gets represented as a series of
-//   singles bytes, followed by a zero byte.  The enumeration values simply
-//   hold byte offsets to the start of the corresponding strings.
+// - A string of characters or character clusters (for example, representing
+//   Aksharas, Devanagari syllables) in UTF-8 encoding enclosed in double
+//   quotes, using C syntax, where the elements are separated by spaces.
+//   There can be only one string per line, thus the starting and ending
+//   double quote must be the first and last character in the line,
+//   respectively, ignoring whitespace before and after the string.  If
+//   there are multiple strings (in multiple lines), they are concatenated
+//   to a single string.  In the output, a string gets represented as a
+//   series of singles bytes, followed by a zero byte.  The enumeration
+//   values simply hold byte offsets to the start of the corresponding
+//   strings.
+//
+//   For strings, the `maximum' template holds the maximum number of
+//   non-space characters in all strings.
 //
 // - Data blocks enclosed in balanced braces, which get copied verbatim and
 //   which can span multiple lines.  The opening brace of a block must be
@@ -46,6 +50,9 @@
 //   brace the last (ignoring whitespace also).  The script appends a comma
 //   character after each block and counts the number of blocks to set the
 //   enumeration values.
+//
+//   For data blocks, the `maximum' template holds the maximum number of
+//   array elements.
 //
 // A section can contain either strings only or data blocks only.
 //
@@ -79,17 +86,22 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
   AF_BLUE_STRING_ARABIC_JOIN
     "ـ"
 
-  AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP
-    "БВЕПЗОСЭ"
-  AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM
-    "БВЕШЗОСЭ"
-  AF_BLUE_STRING_CYRILLIC_SMALL
-    "хпншезос"
-  AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER
-    "руф"
+  AF_BLUE_STRING_BENGALI_BASE
+    "অ ড ত ন ব ভ ল ক"
+  AF_BLUE_STRING_BENGALI_TOP
+    "ই ট ঠ ি ী ৈ ৗ"
+  AF_BLUE_STRING_BENGALI_HEAD
+    "ও এ ড ত ন ব ল ক"
 
-  // we separate the letters with spaces to avoid ligatures;
-  // this is just for convenience to simplify reading
+  AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP
+    "Б В Е П З О С Э"
+  AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM
+    "Б В Е Ш З О С Э"
+  AF_BLUE_STRING_CYRILLIC_SMALL
+    "х п н ш е з о с"
+  AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER
+    "р у ф"
+
   AF_BLUE_STRING_DEVANAGARI_BASE
     "क म अ आ थ ध भ श"
   AF_BLUE_STRING_DEVANAGARI_TOP
@@ -103,22 +115,43 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
     "ु ृ"
 
   AF_BLUE_STRING_GREEK_CAPITAL_TOP
-    "ΓΒΕΖΘΟΩ"
+    "Γ Β Ε Ζ Θ Ο Ω"
   AF_BLUE_STRING_GREEK_CAPITAL_BOTTOM
-    "ΒΔΖΞΘΟ"
+    "Β Δ Ζ Ξ Θ Ο"
   AF_BLUE_STRING_GREEK_SMALL_BETA_TOP
-    "βθδζλξ"
+    "β θ δ ζ λ ξ"
   AF_BLUE_STRING_GREEK_SMALL
-    "αειοπστω"
+    "α ε ι ο π σ τ ω"
   AF_BLUE_STRING_GREEK_SMALL_DESCENDER
-    "βγημρφχψ"
+    "β γ η μ ρ φ χ ψ"
 
   AF_BLUE_STRING_HEBREW_TOP
-    "בדהחךכםס"
+    "ב ד ה ח ך כ ם ס"
   AF_BLUE_STRING_HEBREW_BOTTOM
-    "בטכםסצ"
+    "ב ט כ ם ס צ"
   AF_BLUE_STRING_HEBREW_DESCENDER
-    "קךןףץ"
+    "ק ך ן ף ץ"
+
+  AF_BLUE_STRING_KANNADA_TOP
+    "ಇ ಊ ಐ ಣ ಸಾ ನಾ ದಾ ರಾ"
+  AF_BLUE_STRING_KANNADA_BOTTOM
+    "ಅ ಉ ಎ ಲ ೦ ೨ ೬ ೭"
+
+  AF_BLUE_STRING_KHMER_TOP
+    "ខ ទ ន ឧ ឩ ា"
+  AF_BLUE_STRING_KHMER_SUBSCRIPT_TOP
+    "ក្ក ក្ខ ក្គ ក្ថ"
+  AF_BLUE_STRING_KHMER_BOTTOM
+    "ខ ឃ ច ឋ ប ម យ ឲ"
+  AF_BLUE_STRING_KHMER_DESCENDER
+    "ត្រ រៀ ឲ្យ អឿ"
+  AF_BLUE_STRING_KHMER_LARGE_DESCENDER
+    "ន្ត្រៃ ង្ខ្យ ក្បៀ ច្រៀ ន្តឿ ល្បឿ"
+
+  AF_BLUE_STRING_KHMER_SYMBOLS_WAXING_TOP
+    "᧠ ᧡"
+  AF_BLUE_STRING_KHMER_SYMBOLS_WANING_BOTTOM
+    "᧶ ᧹"
 
   AF_BLUE_STRING_LAO_TOP
     "າ ດ ອ ມ ລ ວ ຣ ງ"
@@ -132,43 +165,50 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
     "ງ ຊ ຖ ຽ ໆ ຯ"
 
   AF_BLUE_STRING_LATIN_CAPITAL_TOP
-    "THEZOCQS"
+    "T H E Z O C Q S"
   AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM
-    "HEZLOCUS"
+    "H E Z L O C U S"
   AF_BLUE_STRING_LATIN_SMALL_F_TOP
-    "fijkdbh"
+    "f i j k d b h"
   AF_BLUE_STRING_LATIN_SMALL
-    "xzroesc"
+    "x z r o e s c"
   AF_BLUE_STRING_LATIN_SMALL_DESCENDER
-    "pqgjy"
+    "p q g j y"
 
   // we assume that both the subscript and superscript ranges
   // don't contain oldstyle digits (actually, most fonts probably
   // have digits only in those ranges)
   AF_BLUE_STRING_LATIN_SUBS_CAPITAL_TOP
-    "₀₃₅₇₈"
+    "₀ ₃ ₅ ₇ ₈"
   AF_BLUE_STRING_LATIN_SUBS_CAPITAL_BOTTOM
-    "₀₁₂₃₈"
+    "₀ ₁ ₂ ₃ ₈"
   AF_BLUE_STRING_LATIN_SUBS_SMALL_F_TOP
-    "ᵢⱼₕₖₗ"
+    "ᵢ ⱼ ₕ ₖ ₗ"
   AF_BLUE_STRING_LATIN_SUBS_SMALL
-    "ₐₑₒₓₙₛᵥᵤᵣ"
+    "ₐ ₑ ₒ ₓ ₙ ₛ ᵥ ᵤ ᵣ"
   AF_BLUE_STRING_LATIN_SUBS_SMALL_DESCENDER
-    "ᵦᵧᵨᵩₚ"
+    "ᵦ ᵧ ᵨ ᵩ ₚ"
 
   AF_BLUE_STRING_LATIN_SUPS_CAPITAL_TOP
-    "⁰³⁵⁷ᵀᴴᴱᴼ"
+    "⁰ ³ ⁵ ⁷ ᵀ ᴴ ᴱ ᴼ"
   AF_BLUE_STRING_LATIN_SUPS_CAPITAL_BOTTOM
-    "⁰¹²³ᴱᴸᴼᵁ"
+    "⁰ ¹ ² ³ ᴱ ᴸ ᴼ ᵁ"
   AF_BLUE_STRING_LATIN_SUPS_SMALL_F_TOP
-    "ᵇᵈᵏʰʲᶠⁱ"
+    "ᵇ ᵈ ᵏ ʰ ʲ ᶠ ⁱ"
   AF_BLUE_STRING_LATIN_SUPS_SMALL
-    "ᵉᵒʳˢˣᶜᶻ"
+    "ᵉ ᵒ ʳ ˢ ˣ ᶜ ᶻ"
   AF_BLUE_STRING_LATIN_SUPS_SMALL_DESCENDER
-    "ᵖʸᵍ"
+    "ᵖ ʸ ᵍ"
 
-  // we separate the letters with spaces to avoid ligatures;
-  // this is just for convenience to simplify reading
+  AF_BLUE_STRING_MYANMAR_TOP
+    "ခ ဂ င ဒ ဝ ၥ ၊ ။"
+  AF_BLUE_STRING_MYANMAR_BOTTOM
+    "င ဎ ဒ ပ ဗ ဝ ၊ ။"
+  AF_BLUE_STRING_MYANMAR_ASCENDER
+    "ဩ ြ ၍ ၏ ၆ ါ ိ"
+  AF_BLUE_STRING_MYANMAR_DESCENDER
+    "ဉ ည ဥ ဩ ဨ ၂ ၅ ၉"
+
   AF_BLUE_STRING_TELUGU_TOP
     "ఇ ఌ ఙ ఞ ణ ఱ ౯"
   AF_BLUE_STRING_TELUGU_BOTTOM
@@ -193,44 +233,44 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 #ifdef AF_CONFIG_OPTION_CJK
 
   AF_BLUE_STRING_CJK_TOP
-    "他们你來們到和地"
-    "对對就席我时時會"
-    "来為能舰說说这這"
-    "齊 |"
-    "军同已愿既星是景"
-    "民照现現理用置要"
-    "軍那配里開雷露面"
-    "顾"
+    "他 们 你 來 們 到 和 地"
+    " 对 對 就 席 我 时 時 會"
+    " 来 為 能 舰 說 说 这 這"
+    " 齊 |"
+    " 军 同 已 愿 既 星 是 景"
+    " 民 照 现 現 理 用 置 要"
+    " 軍 那 配 里 開 雷 露 面"
+    " 顾"
   AF_BLUE_STRING_CJK_BOTTOM
-    "个为人他以们你來"
-    "個們到和大对對就"
-    "我时時有来為要說"
-    "说 |"
-    "主些因它想意理生"
-    "當看着置者自著裡"
-    "过还进進過道還里"
-    "面"
+    "个 为 人 他 以 们 你 來"
+    " 個 們 到 和 大 对 對 就"
+    " 我 时 時 有 来 為 要 說"
+    " 说 |"
+    " 主 些 因 它 想 意 理 生"
+    " 當 看 着 置 者 自 著 裡"
+    " 过 还 进 進 過 道 還 里"
+    " 面"
 
 #ifdef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
 
   AF_BLUE_STRING_CJK_LEFT
-    "些们你來們到和地"
-    "她将將就年得情最"
-    "样樣理能說说这這"
-    "通 |"
-    "即吗吧听呢品响嗎"
-    "师師收断斷明眼間"
-    "间际陈限除陳随際"
-    "隨"
+    " 些 们 你 來 們 到 和 地"
+    " 她 将 將 就 年 得 情 最"
+    " 样 樣 理 能 說 说 这 這"
+    " 通 |"
+    " 即 吗 吧 听 呢 品 响 嗎"
+    " 师 師 收 断 斷 明 眼 間"
+    " 间 际 陈 限 除 陳 随 際"
+    " 隨"
   AF_BLUE_STRING_CJK_RIGHT
-    "事前學将將情想或"
-    "政斯新样樣民沒没"
-    "然特现現球第經谁"
-    "起 |"
-    "例別别制动動吗嗎"
-    "增指明朝期构物确"
-    "种調调費费那都間"
-    "间"
+    "事 前 學 将 將 情 想 或"
+    " 政 斯 新 样 樣 民 沒 没"
+    " 然 特 现 現 球 第 經 谁"
+    " 起 |"
+    " 例 別 别 制 动 動 吗 嗎"
+    " 增 指 明 朝 期 构 物 确"
+    " 种 調 调 費 费 那 都 間"
+    " 间"
 
 #endif /* AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT */
 
@@ -262,6 +302,14 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 // respectively.  Only horizontal blue zones (i.e., adjusting vertical
 // coordinate values) are supported.
 //
+// Some scripts like Khmer need character composition to get all necessary
+// blue zones, since Unicode only provides an abstract data model that
+// doesn't represent all possible glyph shapes.  For such character
+// clusters, the HarfBuzz library is used to convert them into the
+// corresponding glyphs.  The largest glyph element (where `largest' can be
+// either `largest ascender' or `largest descender') then defines the
+// corresponding flat or round extremum.
+//
 // For the latin auto-hinter, the overshoot should be larger than the
 // reference for top zones, and vice versa for bottom zones.
 //
@@ -271,6 +319,21 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 //     values.
 //
 //     If not set, take the minimum values.
+//
+//     Mutually exclusive with `LATIN_SUB_TOP'.
+//
+//   LATIN_SUB_TOP
+//     For all glyphs of a character cluster, compute the maximum flat
+//     and round coordinate values of each component, then take the
+//     smallest of the maximum values.  The idea is to get the top of
+//     subscript glyphs, as used in Khmer, for example.  Note that
+//     this mechanism doesn't work for ordinary ligatures.
+//
+//     This flags indicates a secondary blue zone: It gets removed if
+//     there is a non-LATIN_SUB_TOP blue zone at the same coordinate
+//     value (after scaling).
+//
+//     Mutually exclusive with `LATIN_TOP'.
 //
 //   LATIN_NEUTRAL
 //     Ignore round extrema and define the blue zone with flat values only.
@@ -307,11 +370,11 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
 //
 // Characters in a blue string are *not* automatically classified.  Instead,
 // first come the characters used for the overshoot value, then the
-// character `|', then the characters used for the reference value.  The
-// blue zone is then set up by the mean values of all reference values and
-// all overshoot values, respectively.  Both horizontal and vertical blue
-// zones (i.e., adjusting vertical and horizontal coordinate values,
-// respectively) are supported.
+// character `|', then the characters used for the reference value
+// (everything separated by space characters).  The blue zone is then set up
+// by the mean values of all reference values and all overshoot values,
+// respectively.  Both horizontal and vertical blue zones (i.e., adjusting
+// vertical and horizontal coordinate values, respectively) are supported.
 //
 // For the cjk auto-hinter, the overshoot should be smaller than the
 // reference for top zones, and vice versa for bottom zones.
@@ -336,6 +399,15 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_ARABIC_BOTTOM, 0                              }
     { AF_BLUE_STRING_ARABIC_JOIN,   AF_BLUE_PROPERTY_LATIN_NEUTRAL }
     { AF_BLUE_STRING_MAX,           0                              }
+
+  AF_BLUE_STRINGSET_BENG
+    { AF_BLUE_STRING_BENGALI_TOP,    AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_BENGALI_HEAD,   AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_BENGALI_BASE,   AF_BLUE_PROPERTY_LATIN_TOP      |
+                                     AF_BLUE_PROPERTY_LATIN_NEUTRAL  |
+                                     AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_BENGALI_BASE,   0                                 }
+    { AF_BLUE_STRING_MAX,            0                                 }
 
   AF_BLUE_STRINGSET_CYRL
     { AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
@@ -372,6 +444,26 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_HEBREW_BOTTOM,    0                             }
     { AF_BLUE_STRING_HEBREW_DESCENDER, 0                             }
     { AF_BLUE_STRING_MAX,              0                             }
+
+  AF_BLUE_STRINGSET_KNDA
+    { AF_BLUE_STRING_KANNADA_TOP,    AF_BLUE_PROPERTY_LATIN_TOP }
+    { AF_BLUE_STRING_KANNADA_BOTTOM, 0                          }
+    { AF_BLUE_STRING_MAX,            0                          }
+
+  AF_BLUE_STRINGSET_KHMR
+    { AF_BLUE_STRING_KHMER_TOP,             AF_BLUE_PROPERTY_LATIN_TOP      |
+                                            AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_KHMER_SUBSCRIPT_TOP,   AF_BLUE_PROPERTY_LATIN_SUB_TOP    }
+    { AF_BLUE_STRING_KHMER_BOTTOM,          0                                 }
+    { AF_BLUE_STRING_KHMER_DESCENDER,       0                                 }
+    { AF_BLUE_STRING_KHMER_LARGE_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                   0                                 }
+
+  AF_BLUE_STRINGSET_KHMS
+    { AF_BLUE_STRING_KHMER_SYMBOLS_WAXING_TOP,    AF_BLUE_PROPERTY_LATIN_TOP      |
+                                                  AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_KHMER_SYMBOLS_WANING_BOTTOM, 0                                 }
+    { AF_BLUE_STRING_MAX,                         0                                 }
 
   AF_BLUE_STRINGSET_LAO
     { AF_BLUE_STRING_LAO_TOP,             AF_BLUE_PROPERTY_LATIN_TOP      |
@@ -411,6 +503,14 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_LATIN_SUPS_SMALL,           0                                 }
     { AF_BLUE_STRING_LATIN_SUPS_SMALL_DESCENDER, 0                                 }
     { AF_BLUE_STRING_MAX,                        0                                 }
+
+  AF_BLUE_STRINGSET_MYMR
+    { AF_BLUE_STRING_MYANMAR_TOP,       AF_BLUE_PROPERTY_LATIN_TOP      |
+                                        AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_MYANMAR_BOTTOM,    0                                 }
+    { AF_BLUE_STRING_MYANMAR_ASCENDER,  AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_MYANMAR_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,               0                                 }
 
   AF_BLUE_STRINGSET_TELU
     { AF_BLUE_STRING_TELUGU_TOP,    AF_BLUE_PROPERTY_LATIN_TOP }

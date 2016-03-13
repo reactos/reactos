@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -66,6 +66,7 @@
 #include FT_MULTIPLE_MASTERS_H
 #include FT_INTERNAL_TYPE1_TYPES_H
 #include FT_INTERNAL_CALC_H
+#include FT_INTERNAL_HASH_H
 
 #include "t1load.h"
 #include "t1errors.h"
@@ -1404,6 +1405,8 @@
     FT_Memory  memory = parser->root.memory;
     FT_Error   error;
     FT_Int     num_subrs;
+    FT_UInt    count;
+    FT_Hash    hash = NULL;
 
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
@@ -1430,13 +1433,41 @@
     }
 
     /* we certainly need more than 8 bytes per subroutine */
-    if ( num_subrs > ( parser->root.limit - parser->root.cursor ) >> 3 )
+    if ( parser->root.limit > parser->root.cursor                      &&
+         num_subrs > ( parser->root.limit - parser->root.cursor ) >> 3 )
     {
+      /*
+       * There are two possibilities.  Either the font contains an invalid
+       * value for `num_subrs', or we have a subsetted font where the
+       * subroutine indices are not adjusted, e.g.
+       *
+       *   /Subrs 812 array
+       *     dup 0 { ... } NP
+       *     dup 51 { ... } NP
+       *     dup 681 { ... } NP
+       *   ND
+       *
+       * In both cases, we use a number hash that maps from subr indices to
+       * actual array elements.
+       */
+
       FT_TRACE0(( "parse_subrs: adjusting number of subroutines"
                   " (from %d to %d)\n",
                   num_subrs,
                   ( parser->root.limit - parser->root.cursor ) >> 3 ));
       num_subrs = ( parser->root.limit - parser->root.cursor ) >> 3;
+
+      if ( !hash )
+      {
+        if ( FT_NEW( hash ) )
+          goto Fail;
+
+        loader->subrs_hash = hash;
+
+        error = ft_hash_num_init( hash, memory );
+        if ( error )
+          goto Fail;
+      }
     }
 
     /* position the parser right before the `dup' of the first subr */
@@ -1458,7 +1489,7 @@
     /*                         */
     /*   `index' + binary data */
     /*                         */
-    for (;;)
+    for ( count = 0; ; count++ )
     {
       FT_Long   idx;
       FT_ULong  size;
@@ -1492,6 +1523,14 @@
       {
         T1_Skip_PS_Token( parser ); /* skip `put' */
         T1_Skip_Spaces  ( parser );
+      }
+
+      /* if we use a hash, the subrs index is the key, and a running */
+      /* counter specified for `T1_Add_Table' acts as the value      */
+      if ( hash )
+      {
+        ft_hash_num_insert( idx, count, hash, memory );
+        idx = count;
       }
 
       /* with synthetic fonts it is possible we get here twice */
@@ -2105,17 +2144,6 @@
     FT_UNUSED( face );
 
     FT_MEM_ZERO( loader, sizeof ( *loader ) );
-    loader->num_glyphs = 0;
-    loader->num_chars  = 0;
-
-    /* initialize the tables -- simply set their `init' field to 0 */
-    loader->encoding_table.init  = 0;
-    loader->charstrings.init     = 0;
-    loader->glyph_names.init     = 0;
-    loader->subrs.init           = 0;
-    loader->swap_table.init      = 0;
-    loader->fontdata             = 0;
-    loader->keywords_encountered = 0;
   }
 
 
@@ -2123,6 +2151,7 @@
   t1_done_loader( T1_Loader  loader )
   {
     T1_Parser  parser = &loader->parser;
+    FT_Memory  memory = parser->root.memory;
 
 
     /* finalize tables */
@@ -2131,6 +2160,10 @@
     T1_Release_Table( &loader->glyph_names );
     T1_Release_Table( &loader->swap_table );
     T1_Release_Table( &loader->subrs );
+
+    /* finalize hash */
+    ft_hash_num_free( loader->subrs_hash, memory );
+    FT_FREE( loader->subrs_hash );
 
     /* finalize parser */
     T1_Finalize_Parser( parser );
@@ -2248,11 +2281,15 @@
 
     if ( loader.subrs.init )
     {
-      loader.subrs.init  = 0;
       type1->num_subrs   = loader.num_subrs;
       type1->subrs_block = loader.subrs.block;
       type1->subrs       = loader.subrs.elements;
       type1->subrs_len   = loader.subrs.lengths;
+      type1->subrs_hash  = loader.subrs_hash;
+
+      /* prevent `t1_done_loader' from freeing the propagated data */
+      loader.subrs.init = 0;
+      loader.subrs_hash = NULL;
     }
 
     if ( !IS_INCREMENTAL )

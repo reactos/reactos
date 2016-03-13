@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTOPTION_H__
-#define __FTOPTION_H__
+#ifndef FTOPTION_H_
+#define FTOPTION_H_
 
 
 #include <ft2build.h>
@@ -607,56 +607,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
-  /* of the TrueType bytecode interpreter is used that doesn't implement   */
-  /* any of the patented opcodes and algorithms.  The patents related to   */
-  /* TrueType hinting have expired worldwide since May 2010; this option   */
-  /* is now deprecated.                                                    */
-  /*                                                                       */
-  /* Note that the TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored*  */
-  /* if you define TT_CONFIG_OPTION_BYTECODE_INTERPRETER; in other words,  */
-  /* either define TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                */
-  /* TT_CONFIG_OPTION_UNPATENTED_HINTING but not both at the same time.    */
-  /*                                                                       */
-  /* This macro is only useful for a small number of font files (mostly    */
-  /* for Asian scripts) that require bytecode interpretation to properly   */
-  /* load glyphs.  For all other fonts, this produces unpleasant results,  */
-  /* thus the unpatented interpreter is never used to load glyphs from     */
-  /* TrueType fonts unless one of the following two options is used.       */
-  /*                                                                       */
-  /*   - The unpatented interpreter is explicitly activated by the user    */
-  /*     through the FT_PARAM_TAG_UNPATENTED_HINTING parameter tag         */
-  /*     when opening the FT_Face.                                         */
-  /*                                                                       */
-  /*   - FreeType detects that the FT_Face corresponds to one of the       */
-  /*     `trick' fonts (e.g., `Mingliu') it knows about.  The font engine  */
-  /*     contains a hard-coded list of font names and other matching       */
-  /*     parameters (see function `tt_face_init' in file                   */
-  /*     `src/truetype/ttobjs.c').                                         */
-  /*                                                                       */
-  /* Here a sample code snippet for using FT_PARAM_TAG_UNPATENTED_HINTING. */
-  /*                                                                       */
-  /*   {                                                                   */
-  /*     FT_Parameter  parameter;                                          */
-  /*     FT_Open_Args  open_args;                                          */
-  /*                                                                       */
-  /*                                                                       */
-  /*     parameter.tag = FT_PARAM_TAG_UNPATENTED_HINTING;                  */
-  /*                                                                       */
-  /*     open_args.flags      = FT_OPEN_PATHNAME | FT_OPEN_PARAMS;         */
-  /*     open_args.pathname   = my_font_pathname;                          */
-  /*     open_args.num_params = 1;                                         */
-  /*     open_args.params     = &parameter;                                */
-  /*                                                                       */
-  /*     error = FT_Open_Face( library, &open_args, index, &face );        */
-  /*     ...                                                               */
-  /*   }                                                                   */
-  /*                                                                       */
-/* #define TT_CONFIG_OPTION_UNPATENTED_HINTING */
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Define TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED to compile the        */
   /* TrueType glyph loader to use Apple's definition of how to handle      */
   /* component offsets in composite glyphs.                                */
@@ -856,13 +806,10 @@ FT_BEGIN_HEADER
 
 
   /*
-   * This macro is defined if either unpatented or native TrueType
-   * hinting is requested by the definitions above.
+   * This macro is defined if native TrueType hinting is requested by the
+   * definitions above.
    */
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-#define  TT_USE_BYTECODE_INTERPRETER
-#undef   TT_CONFIG_OPTION_UNPATENTED_HINTING
-#elif defined TT_CONFIG_OPTION_UNPATENTED_HINTING
 #define  TT_USE_BYTECODE_INTERPRETER
 #endif
 
@@ -898,7 +845,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __FTOPTION_H__ */
+#endif /* FTOPTION_H_ */
 
 
 /* END */

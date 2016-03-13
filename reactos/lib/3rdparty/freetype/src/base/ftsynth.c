@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType synthesizing code for emboldening and slanting (body).      */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */

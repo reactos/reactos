@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing PFR-specific data (specification only).   */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTPFR_H__
-#define __FTPFR_H__
+#ifndef FTPFR_H_
+#define FTPFR_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -166,7 +166,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTPFR_H__ */
+#endif /* FTPFR_H_ */
 
 
 /* END */

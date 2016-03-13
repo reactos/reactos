@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (specification).                  */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFLOADER_H__
-#define __AFLOADER_H__
+#ifndef AFLOADER_H_
+#define AFLOADER_H_
 
 #include "afhints.h"
 #include "afmodule.h"
@@ -85,7 +85,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AFLOADER_H__ */
+#endif /* AFLOADER_H_ */
 
 
 /* END */

@@ -25,8 +25,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef __BDFDRIVR_H__
-#define __BDFDRIVR_H__
+#ifndef BDFDRIVR_H_
+#define BDFDRIVR_H_
 
 #include <ft2build.h>
 #include FT_INTERNAL_DRIVER_H
@@ -74,7 +74,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __BDFDRIVR_H__ */
+#endif /* BDFDRIVR_H_ */
 
 
 /* END */

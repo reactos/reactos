@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for cff module.      */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __CFFPIC_H__
-#define __CFFPIC_H__
+#ifndef CFFPIC_H_
+#define CFFPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -102,7 +102,7 @@ FT_END_HEADER
 
  /* */
 
-#endif /* __CFFPIC_H__ */
+#endif /* CFFPIC_H_ */
 
 
 /* END */

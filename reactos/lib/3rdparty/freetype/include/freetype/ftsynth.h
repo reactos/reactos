@@ -5,7 +5,7 @@
 /*    FreeType synthesizing code for emboldening and slanting              */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,8 +41,8 @@
   /* adapted to the particular needs.                               */
 
 
-#ifndef __FTSYNTH_H__
-#define __FTSYNTH_H__
+#ifndef FTSYNTH_H_
+#define FTSYNTH_H_
 
 
 #include <ft2build.h>
@@ -78,7 +78,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTSYNTH_H__ */
+#endif /* FTSYNTH_H_ */
 
 
 /* END */

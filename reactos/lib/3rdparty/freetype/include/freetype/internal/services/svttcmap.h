@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType TrueType/sfnt cmap extra information service.           */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  Masatake YAMATO, Redhat K.K.,                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -19,8 +19,8 @@
 /* Development of this service is support of
    Information-technology Promotion Agency, Japan. */
 
-#ifndef __SVTTCMAP_H__
-#define __SVTTCMAP_H__
+#ifndef SVTTCMAP_H_
+#define SVTTCMAP_H_
 
 #include FT_INTERNAL_SERVICE_H
 #include FT_TRUETYPE_TABLES_H
@@ -100,7 +100,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __SVTTCMAP_H__ */
+#endif /* SVTTCMAP_H_ */
 
 
 /* END */

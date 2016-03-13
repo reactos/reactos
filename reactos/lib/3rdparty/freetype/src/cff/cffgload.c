@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -2082,15 +2082,14 @@
 
           if ( args[0] > 0 )
           {
-            FT_Int    count = 9;
-            FT_Fixed  root  = args[0];
+            FT_Fixed  root = args[0];
             FT_Fixed  new_root;
 
 
             for (;;)
             {
               new_root = ( root + FT_DivFix( args[0], root ) + 1 ) >> 1;
-              if ( new_root == root || count <= 0 )
+              if ( new_root == root )
                 break;
               root = new_root;
             }
@@ -2221,12 +2220,23 @@
           break;
 
         case cff_op_store:
+          /* this operator was removed from the Type2 specification */
+          /* in version 16-March-2000                               */
           FT_TRACE4(( " store\n"));
 
           goto Unimplemented;
 
         case cff_op_load:
+          /* this operator was removed from the Type2 specification */
+          /* in version 16-March-2000                               */
           FT_TRACE4(( " load\n" ));
+
+          goto Unimplemented;
+
+        case cff_op_blend:
+          /* this operator was removed from the Type2 specification */
+          /* in version 16-March-2000                               */
+          FT_TRACE4(( " blend\n" ));
 
           goto Unimplemented;
 
@@ -2358,9 +2368,21 @@
           }
           break;
 
-        case cff_op_eq:
+        case cff_op_not:
           {
             FT_Fixed  cond = !args[0];
+
+
+            FT_TRACE4(( " not\n" ));
+
+            args[0] = cond ? 0x10000L : 0;
+            args++;
+          }
+          break;
+
+        case cff_op_eq:
+          {
+            FT_Fixed  cond = args[0] == args[1];
 
 
             FT_TRACE4(( " eq\n" ));

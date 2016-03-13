@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Bzip2-compressed stream support.                                     */
 /*                                                                         */
-/*  Copyright 2010-2015 by                                                 */
+/*  Copyright 2010-2016 by                                                 */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTBZIP2_H__
-#define __FTBZIP2_H__
+#ifndef FTBZIP2_H_
+#define FTBZIP2_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -96,7 +96,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTBZIP2_H__ */
+#endif /* FTBZIP2_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -248,6 +248,8 @@
       FT_TRACE1(( "T1_Read_Metrics:"
                   " Freeing previously attached metrics data.\n" ));
       T1_Done_Metrics( memory, (AFM_FontInfo)face->afm_data );
+
+      face->afm_data = NULL;
     }
 
     if ( FT_NEW( fi )                   ||

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Memory debugger (body).                                              */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -367,7 +367,8 @@
         {
           printf(
             "leaked memory block at address %p, size %8ld in (%s:%ld)\n",
-            node->address, node->size,
+            (void*)node->address,
+            node->size,
             FT_FILENAME( node->source->file_name ),
             node->source->line_no );
 

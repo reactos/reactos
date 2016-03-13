@@ -5,7 +5,7 @@
 #
 # Process a blue zone character data file.
 #
-# Copyright 2013-2015 by
+# Copyright 2013-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used,
@@ -38,7 +38,8 @@ my $curr_max;          # Name of the current maximum value.
 
 my $curr_enum_element; # Name of the current enumeration element.
 my $curr_offset;       # The offset relative to current aux. variable.
-my $curr_elem_size;    # The size of the current string or block.
+my $curr_elem_size;    # The number of non-space characters in the current string or
+                       # the number of elements in the current block.
 
 my $have_sections = 0; # Boolean; set if start of a section has been seen.
 my $have_strings;      # Boolean; set if current section contains strings.
@@ -159,12 +160,14 @@ sub convert_ascii_chars
   # A series of ASCII characters in the printable range.
   my $s = shift;
 
-  # We ignore spaces.
-  $s =~ s/ //g;
+  # We reduce multiple space characters to a single one.
+  $s =~ s/ +/ /g;
 
-  my $count = $s =~ s/\G(.)/'$1', /g;
-  $curr_offset += $count;
-  $curr_elem_size += $count;
+  # Count all non-space characters.  Note that `()' applies a list context
+  # to the capture that is used to count the elements.
+  $curr_elem_size += () = $s =~ /[^ ]/g;
+
+  $curr_offset += $s =~ s/\G(.)/'$1', /g;
 
   return $s;
 }

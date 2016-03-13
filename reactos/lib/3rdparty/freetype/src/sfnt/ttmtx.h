@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Load the metrics tables common to TTF and OTF fonts (specification). */
 /*                                                                         */
-/*  Copyright 2006-2015 by                                                 */
+/*  Copyright 2006-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __TTMTX_H__
-#define __TTMTX_H__
+#ifndef TTMTX_H_
+#define TTMTX_H_
 
 
 #include <ft2build.h>
@@ -49,7 +49,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __TTMTX_H__ */
+#endif /* TTMTX_H_ */
 
 
 /* END */

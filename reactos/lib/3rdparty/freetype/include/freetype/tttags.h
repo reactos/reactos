@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Tags for TrueType and OpenType tables (specification only).          */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __TTAGS_H__
-#define __TTAGS_H__
+#ifndef TTAGS_H_
+#define TTAGS_H_
 
 
 #include <ft2build.h>
@@ -105,7 +105,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __TTAGS_H__ */
+#endif /* TTAGS_H_ */
 
 
 /* END */

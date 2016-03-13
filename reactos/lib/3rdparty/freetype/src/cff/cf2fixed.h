@@ -36,8 +36,8 @@
 /***************************************************************************/
 
 
-#ifndef __CF2FIXED_H__
-#define __CF2FIXED_H__
+#ifndef CF2FIXED_H_
+#define CF2FIXED_H_
 
 
 FT_BEGIN_HEADER
@@ -89,7 +89,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /*  __CF2FIXED_H__ */
+#endif /* CF2FIXED_H_ */
 
 
 /* END */

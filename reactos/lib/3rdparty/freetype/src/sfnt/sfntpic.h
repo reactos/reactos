@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for sfnt module.     */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __SFNTPIC_H__
-#define __SFNTPIC_H__
+#ifndef SFNTPIC_H_
+#define SFNTPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -106,7 +106,7 @@ FT_END_HEADER
 
   /* */
 
-#endif /* __SFNTPIC_H__ */
+#endif /* SFNTPIC_H_ */
 
 
 /* END */

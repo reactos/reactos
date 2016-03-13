@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -586,7 +586,10 @@
       /* if we are performing a simple font format check, exit immediately */
       /* (this is here for pure CFF)                                       */
       if ( face_index < 0 )
+      {
+        cffface->num_faces = (FT_Long)cff->num_faces;
         return FT_Err_Ok;
+      }
 
       cff->pshinter = pshinter;
       cff->psnames  = psnames;

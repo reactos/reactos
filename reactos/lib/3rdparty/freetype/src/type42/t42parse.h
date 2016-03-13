@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (specification).                                 */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __T42PARSE_H__
-#define __T42PARSE_H__
+#ifndef T42PARSE_H_
+#define T42PARSE_H_
 
 
 #include "t42objs.h"
@@ -85,7 +85,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __T42PARSE_H__ */
+#endif /* T42PARSE_H_ */
 
 
 /* END */

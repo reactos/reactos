@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A new `perfect' anti-aliasing renderer (body).                       */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,7 +18,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* This file can be compiled without the rest of the FreeType engine, by */
-  /* defining the _STANDALONE_ macro when compiling it.  You also need to  */
+  /* defining the STANDALONE_ macro when compiling it.  You also need to   */
   /* put the files `ftgrays.h' and `ftimage.h' into the current            */
   /* compilation directory.  Typically, you could do something like        */
   /*                                                                       */
@@ -27,9 +27,9 @@
   /* - copy `include/freetype/ftimage.h' and `src/smooth/ftgrays.h' to the */
   /*   same directory                                                      */
   /*                                                                       */
-  /* - compile `ftgrays' with the _STANDALONE_ macro defined, as in        */
+  /* - compile `ftgrays' with the STANDALONE_ macro defined, as in         */
   /*                                                                       */
-  /*     cc -c -D_STANDALONE_ ftgrays.c                                    */
+  /*     cc -c -DSTANDALONE_ ftgrays.c                                     */
   /*                                                                       */
   /* The renderer can be initialized with a call to                        */
   /* `ft_gray_raster.raster_new'; an anti-aliased bitmap can be generated  */
@@ -91,7 +91,7 @@
 #define FT_COMPONENT  trace_smooth
 
 
-#ifdef _STANDALONE_
+#ifdef STANDALONE_
 
 
   /* The size in bytes of the render pool used by the scan-line converter  */
@@ -256,7 +256,7 @@ typedef ptrdiff_t  FT_PtrDist;
          };
 
 
-#else /* !_STANDALONE_ */
+#else /* !STANDALONE_ */
 
 
 #include <ft2build.h>
@@ -274,7 +274,7 @@ typedef ptrdiff_t  FT_PtrDist;
 #define ErrRaster_Memory_Overflow   Smooth_Err_Out_Of_Memory
 
 
-#endif /* !_STANDALONE_ */
+#endif /* !STANDALONE_ */
 
 
 #ifndef FT_MEM_SET
@@ -1601,7 +1601,7 @@ typedef ptrdiff_t  FT_PtrDist;
   }
 
 
-#ifdef _STANDALONE_
+#ifdef STANDALONE_
 
   /*************************************************************************/
   /*                                                                       */
@@ -1883,7 +1883,7 @@ typedef ptrdiff_t  FT_PtrDist;
     return FT_THROW( Invalid_Outline );
   }
 
-#endif /* _STANDALONE_ */
+#endif /* STANDALONE_ */
 
 
   typedef struct  gray_TBand_
@@ -2184,7 +2184,7 @@ typedef ptrdiff_t  FT_PtrDist;
   /**** RASTER OBJECT CREATION: In stand-alone mode, we simply use *****/
   /****                         a static object.                   *****/
 
-#ifdef _STANDALONE_
+#ifdef STANDALONE_
 
   static int
   gray_raster_new( void*       memory,
@@ -2209,7 +2209,7 @@ typedef ptrdiff_t  FT_PtrDist;
     FT_UNUSED( raster );
   }
 
-#else /* !_STANDALONE_ */
+#else /* !STANDALONE_ */
 
   static int
   gray_raster_new( FT_Memory   memory,
@@ -2239,7 +2239,7 @@ typedef ptrdiff_t  FT_PtrDist;
     FT_FREE( raster );
   }
 
-#endif /* !_STANDALONE_ */
+#endif /* !STANDALONE_ */
 
 
   static void

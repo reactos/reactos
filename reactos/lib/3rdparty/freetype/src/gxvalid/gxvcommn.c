@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common tables validation (body).                      */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -1159,10 +1159,6 @@
       case GXV_GLYPHOFFSET_LONG:
         glyphOffset.l = FT_NEXT_LONG( p );
         break;
-
-      default:
-        GXV_SET_ERR_IF_PARANOID( FT_INVALID_FORMAT );
-        goto Exit;
       }
 
       if ( NULL != gxvalid->statetable.entry_validate_func )
@@ -1174,7 +1170,6 @@
                                                  gxvalid );
     }
 
-  Exit:
     *length_p = (FT_UShort)( p - table );
 
     GXV_EXIT;

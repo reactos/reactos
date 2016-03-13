@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,7 @@
 #include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
+#include FT_INTERNAL_HASH_H
 #include FT_OUTLINE_H
 
 #include "t1decode.h"
@@ -1348,6 +1349,19 @@
             FT_TRACE4(( " callsubr" ));
 
             idx = Fix2Int( top[0] );
+
+            if ( decoder->subrs_hash )
+            {
+              size_t*  val = ft_hash_num_lookup( idx,
+                                                 decoder->subrs_hash );
+
+
+              if ( val )
+                idx = *val;
+              else
+                idx = -1;
+            }
+
             if ( idx < 0 || idx >= decoder->num_subrs )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings:"

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for autofit module.  */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -122,7 +122,7 @@
 #include "afwrtsys.h"
 
 #undef  SCRIPT
-#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )          \
+#define SCRIPT( s, S, d, h, H, sss )                 \
         FT_Init_Class_af_ ## s ## _script_class(     \
           &container->af_script_classes_rec[ss++] );
 

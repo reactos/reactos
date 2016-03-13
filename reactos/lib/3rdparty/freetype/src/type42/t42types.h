@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font data types (specification only).                        */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __T42TYPES_H__
-#define __T42TYPES_H__
+#ifndef T42TYPES_H_
+#define T42TYPES_H_
 
 
 #include <ft2build.h>
@@ -51,7 +51,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __T42TYPES_H__ */
+#endif /* T42TYPES_H_ */
 
 
 /* END */

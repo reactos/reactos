@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating TrueTypeGX/AAT tables (specification).   */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  Masatake YAMATO, Redhat K.K,                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -25,8 +25,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTGXVAL_H__
-#define __FTGXVAL_H__
+#ifndef FTGXVAL_H_
+#define FTGXVAL_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -351,7 +351,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTGXVAL_H__ */
+#endif /* FTGXVAL_H_ */
 
 
 /* END */

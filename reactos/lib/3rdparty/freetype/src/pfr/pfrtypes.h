@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR data structures (specification only).                   */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PFRTYPES_H__
-#define __PFRTYPES_H__
+#ifndef PFRTYPES_H_
+#define PFRTYPES_H_
 
 #include <ft2build.h>
 #include FT_INTERNAL_OBJECTS_H
@@ -356,7 +356,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PFRTYPES_H__ */
+#endif /* PFRTYPES_H_ */
 
 
 /* END */

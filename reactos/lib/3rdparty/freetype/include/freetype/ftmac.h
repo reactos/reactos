@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Additional Mac-specific API.                                         */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,8 +25,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTMAC_H__
-#define __FTMAC_H__
+#ifndef FTMAC_H_
+#define FTMAC_H_
 
 
 #include <ft2build.h>
@@ -268,7 +268,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __FTMAC_H__ */
+#endif /* FTMAC_H_ */
 
 
 /* END */

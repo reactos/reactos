@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Quick computation of advance widths (specification only).            */
 /*                                                                         */
-/*  Copyright 2008-2015 by                                                 */
+/*  Copyright 2008-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTADVANC_H__
-#define __FTADVANC_H__
+#ifndef FTADVANC_H_
+#define FTADVANC_H_
 
 
 #include <ft2build.h>
@@ -181,7 +181,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTADVANC_H__ */
+#endif /* FTADVANC_H_ */
 
 
 /* END */

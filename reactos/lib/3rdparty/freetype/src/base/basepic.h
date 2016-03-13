@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for base.            */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __BASEPIC_H__
-#define __BASEPIC_H__
+#ifndef BASEPIC_H_
+#define BASEPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -85,7 +85,7 @@ FT_END_HEADER
 
   /* */
 
-#endif /* __BASEPIC_H__ */
+#endif /* BASEPIC_H_ */
 
 
 /* END */

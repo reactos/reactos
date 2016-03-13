@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -231,9 +231,6 @@
     if ( info->is_fixed_pitch )
       root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
-    /* We only set this flag if we have the patented bytecode interpreter. */
-    /* There are no known `tricky' Type42 fonts that could be loaded with  */
-    /* the unpatented interpreter.                                         */
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
     root->face_flags |= FT_FACE_FLAG_HINTER;
 #endif

@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  hbshim.c                                                               */
+/*  afshaper.c                                                             */
 /*                                                                         */
 /*    HarfBuzz interface for accessing OpenType features (body).           */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
+/*  Copyright 2013-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,7 +20,7 @@
 #include FT_FREETYPE_H
 #include "afglobal.h"
 #include "aftypes.h"
-#include "hbshim.h"
+#include "afshaper.h"
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
 
@@ -32,7 +32,7 @@
   /* messages during execution.                                            */
   /*                                                                       */
 #undef  FT_COMPONENT
-#define FT_COMPONENT  trace_afharfbuzz
+#define FT_COMPONENT  trace_afshaper
 
 
   /*
@@ -86,7 +86,7 @@
 
   /* load HarfBuzz script tags */
 #undef  SCRIPT
-#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )  h,
+#define SCRIPT( s, S, d, h, H, ss )  h,
 
 
   static const hb_script_t  scripts[] =
@@ -96,9 +96,10 @@
 
 
   FT_Error
-  af_get_coverage( AF_FaceGlobals  globals,
-                   AF_StyleClass   style_class,
-                   FT_UShort*      gstyles )
+  af_shaper_get_coverage( AF_FaceGlobals  globals,
+                          AF_StyleClass   style_class,
+                          FT_UShort*      gstyles,
+                          FT_Bool         default_script )
   {
     hb_face_t*  face;
 
@@ -143,8 +144,7 @@
     /* `hb_ot_tags_from_script' usually returns HB_OT_TAG_DEFAULT_SCRIPT */
     /* as the second tag.  We change that to HB_TAG_NONE except for the  */
     /* default script.                                                   */
-    if ( style_class->script == globals->module->default_script &&
-         style_class->coverage == AF_COVERAGE_DEFAULT           )
+    if ( default_script )
     {
       if ( script_tags[0] == HB_TAG_NONE )
         script_tags[0] = HB_OT_TAG_DEFAULT_SCRIPT;
@@ -158,6 +158,11 @@
     }
     else
     {
+      /* we use non-standard tags like `khms' for special purposes;       */
+      /* HarfBuzz maps them to `DFLT', which we don't want to handle here */
+      if ( script_tags[0] == HB_OT_TAG_DEFAULT_SCRIPT )
+        goto Exit;
+
       if ( script_tags[1] == HB_OT_TAG_DEFAULT_SCRIPT )
         script_tags[1] = HB_TAG_NONE;
     }
@@ -418,88 +423,150 @@
   };
 
 
-  FT_Error
-  af_get_char_index( AF_StyleMetrics  metrics,
-                     FT_ULong         charcode,
-                     FT_ULong        *codepoint,
-                     FT_Long         *y_offset )
+  void*
+  af_shaper_buf_create( FT_Face  face )
   {
-    AF_StyleClass  style_class;
+    FT_UNUSED( face );
 
+    return (void*)hb_buffer_create();
+  }
+
+
+  void
+  af_shaper_buf_destroy( FT_Face  face,
+                         void*    buf )
+  {
+    FT_UNUSED( face );
+
+    hb_buffer_destroy( (hb_buffer_t*)buf );
+  }
+
+
+  const char*
+  af_shaper_get_cluster( const char*      p,
+                         AF_StyleMetrics  metrics,
+                         void*            buf_,
+                         unsigned int*    count )
+  {
+    AF_StyleClass        style_class;
     const hb_feature_t*  feature;
+    FT_Int               upem;
+    const char*          q;
+    int                  len;
 
-    FT_ULong  in_idx, out_idx;
+    hb_buffer_t*    buf = (hb_buffer_t*)buf_;
+    hb_font_t*      font;
+    hb_codepoint_t  dummy;
 
 
-    if ( !metrics )
-      return FT_THROW( Invalid_Argument );
-
-    in_idx = FT_Get_Char_Index( metrics->globals->face, charcode );
-
+    upem        = (FT_Int)metrics->globals->face->units_per_EM;
     style_class = metrics->style_class;
+    feature     = features[style_class->coverage];
 
-    feature = features[style_class->coverage];
+    font = metrics->globals->hb_font;
+
+    /* we shape at a size of units per EM; this means font units */
+    hb_font_set_scale( font, upem, upem );
+
+    while ( *p == ' ' )
+      p++;
+
+    /* count bytes up to next space (or end of buffer) */
+    q = p;
+    while ( !( *q == ' ' || *q == '\0' ) )
+      GET_UTF8_CHAR( dummy, q );
+    len = (int)( q - p );
+
+    /* feed character(s) to the HarfBuzz buffer */
+    hb_buffer_clear_contents( buf );
+    hb_buffer_add_utf8( buf, p, len, 0, len );
+
+    /* we let HarfBuzz guess the script and writing direction */
+    hb_buffer_guess_segment_properties( buf );
+
+    /* shape buffer, which means conversion from character codes to */
+    /* glyph indices, possibly applying a feature                   */
+    hb_shape( font, buf, feature, feature ? 1 : 0 );
 
     if ( feature )
     {
-      FT_Int  upem = (FT_Int)metrics->globals->face->units_per_EM;
+      hb_buffer_t*  hb_buf = metrics->globals->hb_buf;
 
-      hb_font_t*    font = metrics->globals->hb_font;
-      hb_buffer_t*  buf  = hb_buffer_create();
+      unsigned int      gcount;
+      hb_glyph_info_t*  ginfo;
 
-      uint32_t  c = (uint32_t)charcode;
-
-      hb_glyph_info_t*      ginfo;
-      hb_glyph_position_t*  gpos;
-      unsigned int          gcount;
+      unsigned int      hb_gcount;
+      hb_glyph_info_t*  hb_ginfo;
 
 
-      /* we shape at a size of units per EM; this means font units */
-      hb_font_set_scale( font, upem, upem );
+      /* we have to check whether applying a feature does actually change */
+      /* glyph indices; otherwise the affected glyph or glyphs aren't     */
+      /* available at all in the feature                                  */
 
-      /* XXX: is this sufficient for a single character of any script? */
-      hb_buffer_set_direction( buf, HB_DIRECTION_LTR );
-      hb_buffer_set_script( buf, scripts[style_class->script] );
+      hb_buffer_clear_contents( hb_buf );
+      hb_buffer_add_utf8( hb_buf, p, len, 0, len );
+      hb_buffer_guess_segment_properties( hb_buf );
+      hb_shape( font, hb_buf, NULL, 0 );
 
-      /* we add one character to `buf' ... */
-      hb_buffer_add_utf32( buf, &c, 1, 0, 1 );
+      ginfo    = hb_buffer_get_glyph_infos( buf, &gcount );
+      hb_ginfo = hb_buffer_get_glyph_infos( hb_buf, &hb_gcount );
 
-      /* ... and apply one feature */
-      hb_shape( font, buf, feature, 1 );
-
-      ginfo = hb_buffer_get_glyph_infos( buf, &gcount );
-      gpos  = hb_buffer_get_glyph_positions( buf, &gcount );
-
-      out_idx = ginfo[0].codepoint;
-
-      /* getting the same index indicates no substitution,         */
-      /* which means that the glyph isn't available in the feature */
-      if ( in_idx == out_idx )
+      if ( gcount == hb_gcount )
       {
-        *codepoint = 0;
-        *y_offset  = 0;
-      }
-      else
-      {
-        *codepoint = out_idx;
-        *y_offset  = gpos[0].y_offset;
-      }
+        unsigned int  i;
 
-      hb_buffer_destroy( buf );
+
+        for (i = 0; i < gcount; i++ )
+          if ( ginfo[i].codepoint != hb_ginfo[i].codepoint )
+            break;
+
+        if ( i == gcount )
+        {
+          /* both buffers have identical glyph indices */
+          hb_buffer_clear_contents( buf );
+        }
+      }
+    }
+
+    *count = hb_buffer_get_length( buf );
 
 #ifdef FT_DEBUG_LEVEL_TRACE
-      if ( gcount > 1 )
-        FT_TRACE1(( "af_get_char_index:"
-                    " input character mapped to multiple glyphs\n" ));
+    if ( feature && *count > 1 )
+      FT_TRACE1(( "af_shaper_get_cluster:"
+                  " input character mapped to multiple glyphs\n" ));
 #endif
-    }
-    else
-    {
-      *codepoint = in_idx;
-      *y_offset  = 0;
-    }
 
-    return FT_Err_Ok;
+    return q;
+  }
+
+
+  FT_ULong
+  af_shaper_get_elem( AF_StyleMetrics  metrics,
+                      void*            buf_,
+                      unsigned int     idx,
+                      FT_Long*         advance,
+                      FT_Long*         y_offset )
+  {
+    hb_buffer_t*          buf = (hb_buffer_t*)buf_;
+    hb_glyph_info_t*      ginfo;
+    hb_glyph_position_t*  gpos;
+    unsigned int          gcount;
+
+    FT_UNUSED( metrics );
+
+
+    ginfo = hb_buffer_get_glyph_infos( buf, &gcount );
+    gpos  = hb_buffer_get_glyph_positions( buf, &gcount );
+
+    if ( idx >= gcount )
+      return 0;
+
+    if ( advance )
+      *advance = gpos[idx].x_advance;
+    if ( y_offset )
+      *y_offset = gpos[idx].y_offset;
+
+    return ginfo[idx].codepoint;
   }
 
 
@@ -507,36 +574,106 @@
 
 
   FT_Error
-  af_get_coverage( AF_FaceGlobals  globals,
-                   AF_StyleClass   style_class,
-                   FT_UShort*      gstyles )
+  af_shaper_get_coverage( AF_FaceGlobals  globals,
+                          AF_StyleClass   style_class,
+                          FT_UShort*      gstyles,
+                          FT_Bool         default_script )
   {
     FT_UNUSED( globals );
     FT_UNUSED( style_class );
     FT_UNUSED( gstyles );
+    FT_UNUSED( default_script );
 
     return FT_Err_Ok;
   }
 
 
-  FT_Error
-  af_get_char_index( AF_StyleMetrics  metrics,
-                     FT_ULong         charcode,
-                     FT_ULong        *codepoint,
-                     FT_Long         *y_offset )
+  void*
+  af_shaper_buf_create( FT_Face  face )
   {
-    FT_Face  face;
+    FT_Error   error;
+    FT_Memory  memory = face->memory;
+    FT_ULong*  buf;
 
 
-    if ( !metrics )
-      return FT_THROW( Invalid_Argument );
+    FT_MEM_ALLOC( buf, sizeof ( FT_ULong ) );
 
-    face = metrics->globals->face;
+    return (void*)buf;
+  }
 
-    *codepoint = FT_Get_Char_Index( face, charcode );
-    *y_offset  = 0;
 
-    return FT_Err_Ok;
+  void
+  af_shaper_buf_destroy( FT_Face  face,
+                         void*    buf )
+  {
+    FT_Memory  memory = face->memory;
+
+
+    FT_FREE( buf );
+  }
+
+
+  const char*
+  af_shaper_get_cluster( const char*      p,
+                         AF_StyleMetrics  metrics,
+                         void*            buf_,
+                         unsigned int*    count )
+  {
+    FT_Face    face      = metrics->globals->face;
+    FT_ULong   ch, dummy = 0;
+    FT_ULong*  buf       = (FT_ULong*)buf_;
+
+
+    while ( *p == ' ' )
+      p++;
+
+    GET_UTF8_CHAR( ch, p );
+
+    /* since we don't have an engine to handle clusters, */
+    /* we scan the characters but return zero            */
+    while ( !( *p == ' ' || *p == '\0' ) )
+      GET_UTF8_CHAR( dummy, p );
+
+    if ( dummy )
+    {
+      *buf   = 0;
+      *count = 0;
+    }
+    else
+    {
+      *buf   = FT_Get_Char_Index( face, ch );
+      *count = 1;
+    }
+
+    return p;
+  }
+
+
+  FT_ULong
+  af_shaper_get_elem( AF_StyleMetrics  metrics,
+                      void*            buf_,
+                      unsigned int     idx,
+                      FT_Long*         advance,
+                      FT_Long*         y_offset )
+  {
+    FT_Face   face        = metrics->globals->face;
+    FT_ULong  glyph_index = *(FT_ULong*)buf_;
+
+    FT_UNUSED( idx );
+
+
+    if ( advance )
+      FT_Get_Advance( face,
+                      glyph_index,
+                      FT_LOAD_NO_SCALE         |
+                      FT_LOAD_NO_HINTING       |
+                      FT_LOAD_IGNORE_TRANSFORM,
+                      advance );
+
+    if ( y_offset )
+      *y_offset = 0;
+
+    return glyph_index;
   }
 
 

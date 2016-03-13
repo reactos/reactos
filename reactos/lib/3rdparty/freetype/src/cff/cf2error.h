@@ -36,13 +36,13 @@
 /***************************************************************************/
 
 
-#ifndef __CF2ERROR_H__
-#define __CF2ERROR_H__
+#ifndef CF2ERROR_H_
+#define CF2ERROR_H_
 
 
 #include FT_MODULE_ERRORS_H
 
-#undef __FTERRORS_H__
+#undef FTERRORS_H_
 
 #undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  CF2_Err_
@@ -113,7 +113,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __CF2ERROR_H__ */
+#endif /* CF2ERROR_H_ */
 
 
 /* END */

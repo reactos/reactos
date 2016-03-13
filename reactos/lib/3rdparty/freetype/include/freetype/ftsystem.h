@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType low-level system interface definition (specification).      */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTSYSTEM_H__
-#define __FTSYSTEM_H__
+#ifndef FTSYSTEM_H_
+#define FTSYSTEM_H_
 
 
 #include <ft2build.h>
@@ -349,7 +349,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTSYSTEM_H__ */
+#endif /* FTSYSTEM_H_ */
 
 
 /* END */

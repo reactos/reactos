@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (specification).                                 */
 /*                                                                         */
-/*  Copyright 2002-2015 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PFRLOAD_H__
-#define __PFRLOAD_H__
+#ifndef PFRLOAD_H_
+#define PFRLOAD_H_
 
 #include "pfrobjs.h"
 #include FT_INTERNAL_STREAM_H
@@ -117,7 +117,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PFRLOAD_H__ */
+#endif /* PFRLOAD_H_ */
 
 
 /* END */

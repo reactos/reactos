@@ -5,7 +5,7 @@
 /*    Auto-fitter hinting routines for Indic writing system                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2007-2015 by                                                 */
+/*  Copyright 2007-2016 by                                                 */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFINDIC_H__
-#define __AFINDIC_H__
+#ifndef AFINDIC_H_
+#define AFINDIC_H_
 
 #include "afhints.h"
 
@@ -35,7 +35,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AFINDIC_H__ */
+#endif /* AFINDIC_H_ */
 
 
 /* END */

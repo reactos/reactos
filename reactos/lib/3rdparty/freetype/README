@@ -1,4 +1,4 @@
-  FreeType 2.6.2
+  FreeType 2.6.3
   ==============
 
   Homepage: http://www.freetype.org
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.6.2.tar.bz2
-    freetype-doc-2.6.2.tar.gz
-    ftdoc262.zip
+    freetype-doc-2.6.3.tar.bz2
+    freetype-doc-2.6.3.tar.gz
+    ftdoc263.zip
 
   To view the documentation online, go to
 
@@ -71,7 +71,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2015 by
+Copyright 2006-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

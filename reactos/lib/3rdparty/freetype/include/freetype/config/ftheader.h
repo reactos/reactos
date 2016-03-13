@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Build macros of the FreeType 2 library.                              */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,8 +15,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-#ifndef __FT_HEADER_H__
-#define __FT_HEADER_H__
+#ifndef FTHEADER_H_
+#define FTHEADER_H_
 
 
   /*@***********************************************************************/
@@ -753,8 +753,7 @@
    *   FT_UNPATENTED_HINTING_H
    *
    * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs color filtering for subpixel rendering.
+   *   Deprecated.
    */
 #define FT_UNPATENTED_HINTING_H  <freetype/ttunpat.h>
 
@@ -766,7 +765,7 @@
    *
    * @description:
    *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs color filtering for subpixel rendering.
+   *   FreeType~2 API which performs incremental glyph loading.
    */
 #define FT_INCREMENTAL_H  <freetype/ftincrem.h>
 
@@ -828,7 +827,7 @@
 #endif /* FT2_BUILD_LIBRARY */
 
 
-#endif /* __FT2_BUILD_H__ */
+#endif /* FTHEADER_H_ */
 
 
 /* END */

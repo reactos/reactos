@@ -5,7 +5,7 @@
 /*    Basic Type1/Type2 type definitions and interface (specification      */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,14 +17,15 @@
 /***************************************************************************/
 
 
-#ifndef __T1TYPES_H__
-#define __T1TYPES_H__
+#ifndef T1TYPES_H_
+#define T1TYPES_H_
 
 
 #include <ft2build.h>
 #include FT_TYPE1_TABLES_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 #include FT_INTERNAL_SERVICE_H
+#include FT_INTERNAL_HASH_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 
@@ -107,6 +108,7 @@ FT_BEGIN_HEADER
     FT_Int           num_subrs;
     FT_Byte**        subrs;
     FT_UInt*         subrs_len;
+    FT_Hash          subrs_hash;
 
     FT_Int           num_glyphs;
     FT_String**      glyph_names;       /* array of glyph names       */
@@ -249,7 +251,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __T1TYPES_H__ */
+#endif /* T1TYPES_H_ */
 
 
 /* END */

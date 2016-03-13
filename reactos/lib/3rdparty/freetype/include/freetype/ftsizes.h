@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType size objects management (specification).                    */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,8 +25,8 @@
   /*************************************************************************/
 
 
-#ifndef __FTSIZES_H__
-#define __FTSIZES_H__
+#ifndef FTSIZES_H_
+#define FTSIZES_H_
 
 
 #include <ft2build.h>
@@ -153,7 +153,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTSIZES_H__ */
+#endif /* FTSIZES_H_ */
 
 
 /* END */

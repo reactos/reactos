@@ -5,7 +5,7 @@
 /*    Auto-fitter routines to compute global hinting values                */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,13 +17,13 @@
 /***************************************************************************/
 
 
-#ifndef __AFGLOBAL_H__
-#define __AFGLOBAL_H__
+#ifndef AFGLOBAL_H_
+#define AFGLOBAL_H_
 
 
 #include "aftypes.h"
 #include "afmodule.h"
-#include "hbshim.h"
+#include "afshaper.h"
 
 
 FT_BEGIN_HEADER
@@ -34,7 +34,7 @@ FT_BEGIN_HEADER
 
 
 #undef  SCRIPT
-#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )                    \
+#define SCRIPT( s, S, d, h, H, ss )                            \
           AF_DECLARE_SCRIPT_CLASS( af_ ## s ## _script_class )
 
 #include "afscript.h"
@@ -110,6 +110,7 @@ FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
     hb_font_t*       hb_font;
+    hb_buffer_t*     hb_buf;           /* for feature comparison */
 #endif
 
     /* per-face auto-hinter properties */
@@ -166,7 +167,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AFGLOBAL_H__ */
+#endif /* AFGLOBAL_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module (body).                                           */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,7 @@
 #include "afcjk.c"
 #include "afindic.c"
 
-#include "hbshim.c"
+#include "afshaper.c"
 
 #include "afloader.c"
 #include "afmodule.c"

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (specification).                    */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,8 +21,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTRFORK_H__
-#define __FTRFORK_H__
+#ifndef FTRFORK_H_
+#define FTRFORK_H_
 
 
 #include <ft2build.h>
@@ -260,7 +260,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTRFORK_H__ */
+#endif /* FTRFORK_H_ */
 
 
 /* END */

@@ -3,7 +3,7 @@
 #
 #    Auxiliary functions for the `docmaker' tool (library file).
 #
-#  Copyright 2002-2015 by
+#  Copyright 2002-2016 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,

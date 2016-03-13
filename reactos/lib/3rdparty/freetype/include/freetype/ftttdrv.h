@@ -5,7 +5,7 @@
 /*    FreeType API for controlling the TrueType driver                     */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
+/*  Copyright 2013-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTTTDRV_H__
-#define __FTTTDRV_H__
+#ifndef FTTTDRV_H_
+#define FTTTDRV_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -304,7 +304,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __FTTTDRV_H__ */
+#endif /* FTTTDRV_H_ */
 
 
 /* END */

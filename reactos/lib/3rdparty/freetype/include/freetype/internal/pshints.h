@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the `type1', `cid', and `cff' font drivers.           */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,8 +18,8 @@
 /***************************************************************************/
 
 
-#ifndef __PSHINTS_H__
-#define __PSHINTS_H__
+#ifndef PSHINTS_H_
+#define PSHINTS_H_
 
 
 #include <ft2build.h>
@@ -716,7 +716,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PSHINTS_H__ */
+#endif /* PSHINTS_H_ */
 
 
 /* END */

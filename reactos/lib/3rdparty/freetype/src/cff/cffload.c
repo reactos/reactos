@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -501,8 +501,8 @@
           {
             element++;
             off2 = cff_index_read_offset( idx, &error );
-          }
-          while ( off2 == 0 && element < idx->count );
+
+          } while ( off2 == 0 && element < idx->count );
         }
       }
       else   /* use offsets table */

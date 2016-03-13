@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for pshinter module. */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PSHPIC_H__
-#define __PSHPIC_H__
+#ifndef PSHPIC_H_
+#define PSHPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -57,7 +57,7 @@ FT_END_HEADER
 
  /* */
 
-#endif /* __PSHPIC_H__ */
+#endif /* PSHPIC_H_ */
 
 
 /* END */

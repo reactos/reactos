@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (specification).       */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __TTSBIT_H__
-#define __TTSBIT_H__
+#ifndef TTSBIT_H_
+#define TTSBIT_H_
 
 
 #include <ft2build.h>
@@ -57,7 +57,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __TTSBIT_H__ */
+#endif /* TTSBIT_H_ */
 
 
 /* END */

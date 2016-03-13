@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `sfnt' driver interface (specification).                  */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __SFNT_H__
-#define __SFNT_H__
+#ifndef SFNT_H_
+#define SFNT_H_
 
 
 #include <ft2build.h>
@@ -742,7 +742,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __SFNT_H__ */
+#endif /* SFNT_H_ */
 
 
 /* END */

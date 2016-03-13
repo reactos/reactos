@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility functions for bitmaps (specification).              */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTBITMAP_H__
-#define __FTBITMAP_H__
+#ifndef FTBITMAP_H_
+#define FTBITMAP_H_
 
 
 #include <ft2build.h>
@@ -234,7 +234,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTBITMAP_H__ */
+#endif /* FTBITMAP_H_ */
 
 
 /* END */

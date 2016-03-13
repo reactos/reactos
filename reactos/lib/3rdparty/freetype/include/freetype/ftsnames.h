@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    This is _not_ used to retrieve glyph names!                          */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,8 +19,8 @@
 /***************************************************************************/
 
 
-#ifndef __FT_SFNT_NAMES_H__
-#define __FT_SFNT_NAMES_H__
+#ifndef FTSNAMES_H_
+#define FTSNAMES_H_
 
 
 #include <ft2build.h>
@@ -194,7 +194,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FT_SFNT_NAMES_H__ */
+#endif /* FTSNAMES_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for truetype module. */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __TTPIC_H__
-#define __TTPIC_H__
+#ifndef TTPIC_H_
+#define TTPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -77,7 +77,7 @@ FT_END_HEADER
 
  /* */
 
-#endif /* __TTPIC_H__ */
+#endif /* TTPIC_H_ */
 
 
 /* END */

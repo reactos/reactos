@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Internal header files (specification only).                          */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -30,6 +30,7 @@
 #define FT_INTERNAL_MEMORY_H              <freetype/internal/ftmemory.h>
 #define FT_INTERNAL_DEBUG_H               <freetype/internal/ftdebug.h>
 #define FT_INTERNAL_CALC_H                <freetype/internal/ftcalc.h>
+#define FT_INTERNAL_HASH_H                <freetype/internal/fthash.h>
 #define FT_INTERNAL_DRIVER_H              <freetype/internal/ftdriver.h>
 #define FT_INTERNAL_TRACE_H               <freetype/internal/fttrace.h>
 #define FT_INTERNAL_GLYPH_LOADER_H        <freetype/internal/ftgloadr.h>

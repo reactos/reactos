@@ -25,8 +25,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef __PCF_H__
-#define __PCF_H__
+#ifndef PCF_H_
+#define PCF_H_
 
 
 #include <ft2build.h>
@@ -232,7 +232,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PCF_H__ */
+#endif /* PCF_H_ */
 
 
 /* END */

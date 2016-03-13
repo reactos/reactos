@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType name ID definitions (specification only).                   */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __TTNAMEID_H__
-#define __TTNAMEID_H__
+#ifndef TTNAMEID_H_
+#define TTNAMEID_H_
 
 
 #include <ft2build.h>
@@ -1231,7 +1231,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __TTNAMEID_H__ */
+#endif /* TTNAMEID_H_ */
 
 
 /* END */

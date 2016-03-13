@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter scripts (specification only).                            */
 /*                                                                         */
-/*  Copyright 2013-2015 by                                                 */
+/*  Copyright 2013-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,126 +33,170 @@
   SCRIPT( arab, ARAB,
           "Arabic",
           HB_SCRIPT_ARABIC,
-          0x644, 0x62D, 0x640 ) /* ل ح ـ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xD9\x84 \xD8\xAD \xD9\x80" ) /* ل ح ـ */
+
+  /* there are no simple forms for letters; we thus use two digit shapes */
+  SCRIPT( beng, BENG,
+          "Bengali",
+          HB_SCRIPT_BENGALI,
+          HINTING_TOP_TO_BOTTOM,
+          "\xE0\xA7\xA6 \xE0\xA7\xAA" ) /* ০ ৪*/
 
   SCRIPT( cyrl, CYRL,
           "Cyrillic",
           HB_SCRIPT_CYRILLIC,
-          0x43E, 0x41E, 0x0 ) /* о О */
+          HINTING_BOTTOM_TO_TOP,
+          "\xD0\xBE \xD0\x9E" ) /* о О */
 
   SCRIPT( deva, DEVA,
           "Devanagari",
           HB_SCRIPT_DEVANAGARI,
-          0x920, 0x935, 0x91F ) /* ठ व ट */
+          HINTING_TOP_TO_BOTTOM,
+          "\xE0\xA4\xA0 \xE0\xA4\xB5 \xE0\xA4\x9F" ) /* ठ व ट */
 
   SCRIPT( grek, GREK,
           "Greek",
           HB_SCRIPT_GREEK,
-          0x3BF, 0x39F, 0x0 ) /* ο Ο */
+          HINTING_BOTTOM_TO_TOP,
+          "\xCE\xBF \xCE\x9F" ) /* ο Ο */
 
   SCRIPT( hebr, HEBR,
           "Hebrew",
           HB_SCRIPT_HEBREW,
-          0x5DD, 0x0, 0x0 ) /* ם */
+          HINTING_BOTTOM_TO_TOP,
+          "\xD7\x9D" ) /* ם */
+
+  SCRIPT( knda, KNDA,
+          "Kannada",
+          HB_SCRIPT_KANNADA,
+          HINTING_BOTTOM_TO_TOP,
+          "\xE0\xB3\xA6 \xE0\xB2\xAC" ) /* ೦ ಬ */
+
+  /* only digit zero has a simple shape in the Khmer script */
+  SCRIPT( khmr, KHMR,
+          "Khmer",
+          HB_SCRIPT_KHMER,
+          HINTING_BOTTOM_TO_TOP,
+          "\xE1\x9F\xA0" ) /* ០ */
+
+  SCRIPT( khms, KHMS,
+          "Khmer Symbols",
+          HB_SCRIPT_INVALID,
+          HINTING_BOTTOM_TO_TOP,
+          "\xE1\xA7\xA1 \xE1\xA7\xAA" ) /* ᧡ ᧪ */
 
   /* only digit zero has a simple shape in the Lao script */
   SCRIPT( lao, LAO,
           "Lao",
           HB_SCRIPT_LAO,
-          0xED0, 0x0, 0x0 ) /* ໐ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE0\xBB\x90" ) /* ໐ */
 
   SCRIPT( latn, LATN,
           "Latin",
           HB_SCRIPT_LATIN,
-          'o', 'O', '0' )
+          HINTING_BOTTOM_TO_TOP,
+          "o O 0" )
 
   SCRIPT( latb, LATB,
           "Latin Subscript Fallback",
           HB_SCRIPT_INVALID,
-          0x2092, 0x2080, 0x0 ) /* ₒ ₀ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE2\x82\x92 \xE2\x82\x80" ) /* ₒ ₀ */
 
   SCRIPT( latp, LATP,
           "Latin Superscript Fallback",
           HB_SCRIPT_INVALID,
-          0x1D52, 0x1D3C, 0x2070 ) /* ᵒ ᴼ ⁰ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE1\xB5\x92 \xE1\xB4\xBC \xE2\x81\xB0" ) /* ᵒ ᴼ ⁰ */
+
+  SCRIPT( mymr, MYMR,
+          "Myanmar",
+          HB_SCRIPT_MYANMAR,
+          HINTING_BOTTOM_TO_TOP,
+          "\xE1\x80\x9D \xE1\x80\x84 \xE1\x80\x82" ) /* ဝ င ဂ */
 
   SCRIPT( none, NONE,
           "no script",
           HB_SCRIPT_INVALID,
-          0x0, 0x0, 0x0 )
+          HINTING_BOTTOM_TO_TOP,
+          "" )
 
   /* there are no simple forms for letters; we thus use two digit shapes */
   SCRIPT( telu, TELU,
           "Telugu",
           HB_SCRIPT_TELUGU,
-          0xC66, 0xC67, 0x0 ) /* ౦ ౧ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE0\xB1\xA6 \xE0\xB1\xA7" ) /* ౦ ౧ */
 
   SCRIPT( thai, THAI,
           "Thai",
           HB_SCRIPT_THAI,
-          0xE32, 0xE45, 0xE50 ) /* า ๅ ๐ */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE0\xB8\xB2 \xE0\xB9\x85 \xE0\xB9\x90" ) /* า ๅ ๐ */
 
 #ifdef AF_CONFIG_OPTION_INDIC
-
-  SCRIPT( beng, BENG,
-          "Bengali",
-          HB_SCRIPT_BENGALI,
-          'o', 0x0, 0x0 ) /* XXX */
 
   SCRIPT( gujr, GUJR,
           "Gujarati",
           HB_SCRIPT_GUJARATI,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( guru, GURU,
           "Gurmukhi",
           HB_SCRIPT_GURMUKHI,
-          'o', 0x0, 0x0 ) /* XXX */
-
-  SCRIPT( knda, KNDA,
-          "Kannada",
-          HB_SCRIPT_KANNADA,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( limb, LIMB,
           "Limbu",
           HB_SCRIPT_LIMBU,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( mlym, MLYM,
           "Malayalam",
           HB_SCRIPT_MALAYALAM,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( orya, ORYA,
           "Oriya",
           HB_SCRIPT_ORIYA,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( sinh, SINH,
           "Sinhala",
           HB_SCRIPT_SINHALA,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( sund, SUND,
           "Sundanese",
           HB_SCRIPT_SUNDANESE,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( sylo, SYLO,
           "Syloti Nagri",
           HB_SCRIPT_SYLOTI_NAGRI,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( taml, TAML,
           "Tamil",
           HB_SCRIPT_TAMIL,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
   SCRIPT( tibt, TIBT,
           "Tibetan",
           HB_SCRIPT_TIBETAN,
-          'o', 0x0, 0x0 ) /* XXX */
+          HINTING_BOTTOM_TO_TOP,
+          "o" ) /* XXX */
 
 #endif /* AF_CONFIG_OPTION_INDIC */
 
@@ -161,7 +205,8 @@
   SCRIPT( hani, HANI,
           "CJKV ideographs",
           HB_SCRIPT_HAN,
-          0x7530, 0x56D7, 0x0 ) /* 田囗 */
+          HINTING_BOTTOM_TO_TOP,
+          "\xE7\x94\xB0 \xE5\x9B\x97" ) /* 田 囗 */
 
 #endif /* AF_CONFIG_OPTION_CJK */
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -196,6 +196,7 @@
     decoder.num_subrs     = type1->num_subrs;
     decoder.subrs         = type1->subrs;
     decoder.subrs_len     = type1->subrs_len;
+    decoder.subrs_hash    = type1->subrs_hash;
 
     decoder.buildchar     = face->buildchar;
     decoder.len_buildchar = face->len_buildchar;
@@ -277,9 +278,10 @@
     decoder.builder.metrics_only = 1;
     decoder.builder.load_points  = 0;
 
-    decoder.num_subrs = type1->num_subrs;
-    decoder.subrs     = type1->subrs;
-    decoder.subrs_len = type1->subrs_len;
+    decoder.num_subrs  = type1->num_subrs;
+    decoder.subrs      = type1->subrs;
+    decoder.subrs_len  = type1->subrs_len;
+    decoder.subrs_hash = type1->subrs_hash;
 
     decoder.buildchar     = face->buildchar;
     decoder.len_buildchar = face->len_buildchar;
@@ -387,6 +389,7 @@
     decoder.num_subrs     = type1->num_subrs;
     decoder.subrs         = type1->subrs;
     decoder.subrs_len     = type1->subrs_len;
+    decoder.subrs_hash    = type1->subrs_hash;
 
     decoder.buildchar     = face->buildchar;
     decoder.len_buildchar = face->len_buildchar;

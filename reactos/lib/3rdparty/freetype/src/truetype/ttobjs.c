@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -30,10 +30,6 @@
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
 #include "ttinterp.h"
-#endif
-
-#ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
-#include FT_TRUETYPE_UNPATENTED_H
 #endif
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
@@ -246,7 +242,7 @@
   tt_check_trickyness_sfnt_ids( TT_Face  face )
   {
 #define TRICK_SFNT_IDS_PER_FACE   3
-#define TRICK_SFNT_IDS_NUM_FACES  17
+#define TRICK_SFNT_IDS_NUM_FACES  18
 
     static const tt_sfnt_id_rec sfnt_id[TRICK_SFNT_IDS_NUM_FACES]
                                        [TRICK_SFNT_IDS_PER_FACE] = {
@@ -268,6 +264,11 @@
       { /* DFKaiShu */
         { 0x11E5EAD4UL, 0x00000350UL }, /* cvt  */
         { 0x5A30CA3BUL, 0x00009063UL }, /* fpgm */
+        { 0x13A42602UL, 0x0000007EUL }  /* prep */
+      },
+      { /* DFKaiShu2 */
+        { 0x11E5EAD4UL, 0x00000350UL }, /* cvt  */
+        { 0xA6E78C01UL, 0x00008998UL }, /* fpgm */
         { 0x13A42602UL, 0x0000007EUL }  /* prep */
       },
       { /* HuaTianKaiTi */
@@ -676,29 +677,6 @@
 
 #endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
 
-#if defined( TT_CONFIG_OPTION_UNPATENTED_HINTING    ) && \
-    !defined( TT_CONFIG_OPTION_BYTECODE_INTERPRETER )
-
-    {
-      FT_Bool  unpatented_hinting;
-      int      i;
-
-
-      /* Determine whether unpatented hinting is to be used for this face. */
-      unpatented_hinting = FT_BOOL
-        ( library->debug_hooks[FT_DEBUG_HOOK_UNPATENTED_HINTING] != NULL );
-
-      for ( i = 0; i < num_params && !face->unpatented_hinting; i++ )
-        if ( params[i].tag == FT_PARAM_TAG_UNPATENTED_HINTING )
-          unpatented_hinting = TRUE;
-
-      if ( !unpatented_hinting )
-        ttface->internal->ignore_unpatented_hinter = TRUE;
-    }
-
-#endif /* TT_CONFIG_OPTION_UNPATENTED_HINTING &&
-          !TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
-
     /* initialize standard glyph loading routines */
     TT_Init_Glyph_Loading( face );
 
@@ -1080,7 +1058,7 @@
     /* Fine, now run the font program! */
 
     /* In case of an error while executing `fpgm', we intentionally don't */
-    /* clean up immediately – bugs in the `fpgm' are so fundamental that  */
+    /* clean up immediately â€“ bugs in the `fpgm' are so fundamental that  */
     /* all following hinting calls should fail.  Additionally, `fpgm' is  */
     /* to be executed just once; calling it again is completely useless   */
     /* and might even lead to extremely slow behaviour if it is malformed */

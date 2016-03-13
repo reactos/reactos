@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (body).                             */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -71,7 +71,8 @@
 
     /* 0x40000000 comes from regression analysis between true */
     /* and CORDIC hypotenuse, so it minimizes the error       */
-    val = (FT_Fixed)( ( (FT_Int64)val * FT_TRIG_SCALE + 0x40000000UL ) >> 32 );
+    val = (FT_Fixed)(
+            ( (FT_UInt64)val * FT_TRIG_SCALE + 0x40000000UL ) >> 32 );
 
     return s < 0 ? -val : val;
   }

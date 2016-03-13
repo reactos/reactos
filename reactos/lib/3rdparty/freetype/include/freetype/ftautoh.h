@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for controlling the auto-hinter (specification only).   */
 /*                                                                         */
-/*  Copyright 2012-2015 by                                                 */
+/*  Copyright 2012-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTAUTOH_H__
-#define __FTAUTOH_H__
+#ifndef FTAUTOH_H_
+#define FTAUTOH_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -497,7 +497,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTAUTOH_H__ */
+#endif /* FTAUTOH_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (specification).                        */
 /*                                                                         */
-/*  Copyright 2001-2015 by                                                 */
+/*  Copyright 2001-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PSHALGO_H__
-#define __PSHALGO_H__
+#ifndef PSHALGO_H_
+#define PSHALGO_H_
 
 
 #include "pshrec.h"
@@ -235,7 +235,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __PSHALGO_H__ */
+#endif /* PSHALGO_H_ */
 
 
 /* END */

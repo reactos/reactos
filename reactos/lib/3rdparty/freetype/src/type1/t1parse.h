@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (specification).                                       */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __T1PARSE_H__
-#define __T1PARSE_H__
+#ifndef T1PARSE_H_
+#define T1PARSE_H_
 
 
 #include <ft2build.h>
@@ -123,7 +123,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __T1PARSE_H__ */
+#endif /* T1PARSE_H_ */
 
 
 /* END */

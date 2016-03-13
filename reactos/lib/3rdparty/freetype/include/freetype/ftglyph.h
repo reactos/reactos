@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (specification).     */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,8 +29,8 @@
   /*************************************************************************/
 
 
-#ifndef __FTGLYPH_H__
-#define __FTGLYPH_H__
+#ifndef FTGLYPH_H_
+#define FTGLYPH_H_
 
 
 #include <ft2build.h>
@@ -594,7 +594,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTGLYPH_H__ */
+#endif /* FTGLYPH_H_ */
 
 
 /* END */

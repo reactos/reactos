@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FREETYPE_H__
-#define __FREETYPE_H__
+#ifndef FREETYPE_H_
+#define FREETYPE_H_
 
 
 #ifndef FT_FREETYPE_H
@@ -141,7 +141,6 @@ FT_BEGIN_HEADER
   /*    FT_FACE_FLAG_GLYPH_NAMES                                           */
   /*    FT_FACE_FLAG_EXTERNAL_STREAM                                       */
   /*    FT_FACE_FLAG_HINTER                                                */
-  /*    FT_FACE_FLAG_TRICKY                                                */
   /*                                                                       */
   /*    FT_HAS_HORIZONTAL                                                  */
   /*    FT_HAS_VERTICAL                                                    */
@@ -3015,6 +3014,22 @@ FT_BEGIN_HEADER
   /*    the glyph image format, finding the relevant renderer, and         */
   /*    invoking it.                                                       */
   /*                                                                       */
+  /* <InOut>                                                               */
+  /*    slot        :: A handle to the glyph slot containing the image to  */
+  /*                   convert.                                            */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    render_mode :: This is the render mode used to render the glyph    */
+  /*                   image into a bitmap.  See @FT_Render_Mode for a     */
+  /*                   list of possible values.                            */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    To get meaningful results, font scaling values must be set with    */
+  /*    functions like @FT_Set_Char_Size before calling FT_Render_Glyph.   */
+  /*                                                                       */
   /*    When FreeType outputs a bitmap of a glyph, it really outputs an    */
   /*    alpha coverage map.  If a pixel is completely covered by a         */
   /*    filled-in outline, the bitmap contains 0xFF at that pixel, meaning */
@@ -3091,22 +3106,6 @@ FT_BEGIN_HEADER
   /*    only difference to gray linear blending is that subpixel-rendered  */
   /*    linear blending is done 3~times per pixel: red foreground subpixel */
   /*    to red background subpixel and so on for green and blue.           */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    slot        :: A handle to the glyph slot containing the image to  */
-  /*                   convert.                                            */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    render_mode :: This is the render mode used to render the glyph    */
-  /*                   image into a bitmap.  See @FT_Render_Mode for a     */
-  /*                   list of possible values.                            */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    To get meaningful results, font scaling values must be set with    */
-  /*    functions like @FT_Set_Char_Size before calling FT_Render_Glyph.   */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Render_Glyph( FT_GlyphSlot    slot,
@@ -4173,7 +4172,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  6
-#define FREETYPE_PATCH  2
+#define FREETYPE_PATCH  3
 
 
   /*************************************************************************/
@@ -4218,20 +4217,13 @@ FT_BEGIN_HEADER
   /*    FT_Face_CheckTrueTypePatents                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Parse all bytecode instructions of a TrueType font file to check   */
-  /*    whether any of the patented opcodes are used.  This is only useful */
-  /*    if you want to be able to use the unpatented hinter with           */
-  /*    fonts that do *not* use these opcodes.                             */
-  /*                                                                       */
-  /*    Note that this function parses *all* glyph instructions in the     */
-  /*    font file, which may be slow.                                      */
+  /*    Deprecated, does nothing.                                          */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face :: A face handle.                                             */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    1~if this is a TrueType font that uses one of the patented         */
-  /*    opcodes, 0~otherwise.                                              */
+  /*    Always returns false.                                              */
   /*                                                                       */
   /* <Note>                                                                */
   /*    Since May 2010, TrueType hinting is no longer patented.            */
@@ -4249,9 +4241,7 @@ FT_BEGIN_HEADER
   /*    FT_Face_SetUnpatentedHinting                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Enable or disable the unpatented hinter for a given face.          */
-  /*    Only enable it if you have determined that the face doesn't        */
-  /*    use any patented opcodes (see @FT_Face_CheckTrueTypePatents).      */
+  /*    Deprecated, does nothing.                                          */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face  :: A face handle.                                            */
@@ -4259,9 +4249,7 @@ FT_BEGIN_HEADER
   /*    value :: New boolean setting.                                      */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    The old setting value.  This will always be false if this is not   */
-  /*    an SFNT font, or if the unpatented hinter is not compiled in this  */
-  /*    instance of the library.                                           */
+  /*    Always returns false.                                              */
   /*                                                                       */
   /* <Note>                                                                */
   /*    Since May 2010, TrueType hinting is no longer patented.            */
@@ -4278,7 +4266,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FREETYPE_H__ */
+#endif /* FREETYPE_H_ */
 
 
 /* END */

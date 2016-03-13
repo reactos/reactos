@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating TrueTyepGX/AAT tables (body).            */
 /*                                                                         */
-/*  Copyright 2004-2015 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  Masatake YAMATO, Redhat K.K,                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */

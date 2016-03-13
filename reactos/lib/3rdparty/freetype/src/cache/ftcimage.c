@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Image cache (body).                                         */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -70,7 +70,7 @@
       FTC_GNode         gnode  = FTC_GNODE( inode );
       FTC_Family        family = gquery->family;
       FT_UInt           gindex = gquery->gindex;
-      FTC_IFamilyClass  clazz  = FTC_CACHE__IFAMILY_CLASS( cache );
+      FTC_IFamilyClass  clazz  = FTC_CACHE_IFAMILY_CLASS( cache );
 
 
       /* initialize its inner fields */

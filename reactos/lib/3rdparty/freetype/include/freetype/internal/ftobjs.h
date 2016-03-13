@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,8 +23,8 @@
   /*************************************************************************/
 
 
-#ifndef __FTOBJS_H__
-#define __FTOBJS_H__
+#ifndef FTOBJS_H_
+#define FTOBJS_H_
 
 #include <ft2build.h>
 #include FT_RENDER_H
@@ -341,12 +341,6 @@ FT_BEGIN_HEADER
   /*      this data when first opened.  This field exists only if          */
   /*      @FT_CONFIG_OPTION_INCREMENTAL is defined.                        */
   /*                                                                       */
-  /*    ignore_unpatented_hinter ::                                        */
-  /*      This boolean flag instructs the glyph loader to ignore the       */
-  /*      native font hinter, if one is found.  This is exclusively used   */
-  /*      in the case when the unpatented hinter is compiled within the    */
-  /*      library.                                                         */
-  /*                                                                       */
   /*    refcount ::                                                        */
   /*      A counter initialized to~1 at the time an @FT_Face structure is  */
   /*      created.  @FT_Reference_Face increments this counter, and        */
@@ -365,7 +359,6 @@ FT_BEGIN_HEADER
     FT_Incremental_InterfaceRec*  incremental_interface;
 #endif
 
-    FT_Bool             ignore_unpatented_hinter;
     FT_Int              refcount;
 
   } FT_Face_InternalRec;
@@ -773,13 +766,6 @@ FT_BEGIN_HEADER
   /* This hook is used by the TrueType debugger.  It must be set to an */
   /* alternate truetype bytecode interpreter function.                 */
 #define FT_DEBUG_HOOK_TRUETYPE            0
-
-
-  /* Set this debug hook to a non-null pointer to force unpatented hinting */
-  /* for all faces when both TT_USE_BYTECODE_INTERPRETER and               */
-  /* TT_CONFIG_OPTION_UNPATENTED_HINTING are defined.  This is only used   */
-  /* during debugging.                                                     */
-#define FT_DEBUG_HOOK_UNPATENTED_HINTING  1
 
 
   typedef void  (*FT_Bitmap_LcdFilterFunc)( FT_Bitmap*      bitmap,
@@ -1568,7 +1554,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTOBJS_H__ */
+#endif /* FTOBJS_H_ */
 
 
 /* END */

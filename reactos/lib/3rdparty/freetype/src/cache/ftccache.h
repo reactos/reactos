@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,16 +16,16 @@
 /***************************************************************************/
 
 
-#ifndef __FTCCACHE_H__
-#define __FTCCACHE_H__
+#ifndef FTCCACHE_H_
+#define FTCCACHE_H_
 
 
 #include "ftcmru.h"
 
 FT_BEGIN_HEADER
 
-#define _FTC_FACE_ID_HASH( i )                                  \
-          ( ( (FT_Offset)(i) >> 3 ) ^ ( (FT_Offset)(i) << 7 ) )
+#define FTC_FACE_ID_HASH( i )                                  \
+         ( ( (FT_Offset)(i) >> 3 ) ^ ( (FT_Offset)(i) << 7 ) )
 
   /* handle to cache object */
   typedef struct FTC_CacheRec_*  FTC_Cache;
@@ -69,11 +69,11 @@ FT_BEGIN_HEADER
 #define FTC_NODE( x )    ( (FTC_Node)(x) )
 #define FTC_NODE_P( x )  ( (FTC_Node*)(x) )
 
-#define FTC_NODE__NEXT( x )  FTC_NODE( (x)->mru.next )
-#define FTC_NODE__PREV( x )  FTC_NODE( (x)->mru.prev )
+#define FTC_NODE_NEXT( x )  FTC_NODE( (x)->mru.next )
+#define FTC_NODE_PREV( x )  FTC_NODE( (x)->mru.prev )
 
 #ifdef FTC_INLINE
-#define FTC_NODE__TOP_FOR_HASH( cache, hash )                     \
+#define FTC_NODE_TOP_FOR_HASH( cache, hash )                      \
         ( ( cache )->buckets +                                    \
             ( ( ( ( hash ) &   ( cache )->mask ) < ( cache )->p ) \
               ? ( ( hash ) & ( ( cache )->mask * 2 + 1 ) )        \
@@ -82,7 +82,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FTC_Node* )
   ftc_get_top_node_for_hash( FTC_Cache  cache,
                              FT_Offset  hash );
-#define FTC_NODE__TOP_FOR_HASH( cache, hash )            \
+#define FTC_NODE_TOP_FOR_HASH( cache, hash )             \
         ftc_get_top_node_for_hash( ( cache ), ( hash ) )
 #endif
 
@@ -220,7 +220,7 @@ FT_BEGIN_HEADER
     node  = NULL;                                                        \
                                                                          \
     /* Go to the `top' node of the list sharing same masked hash */      \
-    _bucket = _pnode = FTC_NODE__TOP_FOR_HASH( _cache, _hash );          \
+    _bucket = _pnode = FTC_NODE_TOP_FOR_HASH( _cache, _hash );           \
                                                                          \
     /* Look up a node with identical hash and queried properties.    */  \
     /* NOTE: _nodcomp() may change the linked list to reduce memory. */  \
@@ -228,7 +228,7 @@ FT_BEGIN_HEADER
     {                                                                    \
       _node = *_pnode;                                                   \
       if ( _node == NULL )                                               \
-        goto _NewNode;                                                   \
+        goto NewNode_;                                                   \
                                                                          \
       if ( _node->hash == _hash                             &&           \
            _nodcomp( _node, query, _cache, &_list_changed ) )            \
@@ -240,7 +240,7 @@ FT_BEGIN_HEADER
     if ( _list_changed )                                                 \
     {                                                                    \
       /* Update _bucket by possibly modified linked list */              \
-      _bucket = _pnode = FTC_NODE__TOP_FOR_HASH( _cache, _hash );        \
+      _bucket = _pnode = FTC_NODE_TOP_FOR_HASH( _cache, _hash );         \
                                                                          \
       /* Update _pnode by possibly modified linked list */               \
       while ( *_pnode != _node )                                         \
@@ -248,7 +248,7 @@ FT_BEGIN_HEADER
         if ( *_pnode == NULL )                                           \
         {                                                                \
           FT_ERROR(( "FTC_CACHE_LOOKUP_CMP: oops!!! node missing\n" ));  \
-          goto _NewNode;                                                 \
+          goto NewNode_;                                                 \
         }                                                                \
         else                                                             \
           _pnode = &((*_pnode)->link);                                   \
@@ -273,12 +273,12 @@ FT_BEGIN_HEADER
         FTC_MruNode_Up( (FTC_MruNode*)_nl,                               \
                         (FTC_MruNode)_node );                            \
     }                                                                    \
-    goto _Ok;                                                            \
+    goto Ok_;                                                            \
                                                                          \
-  _NewNode:                                                              \
+  NewNode_:                                                              \
     error = FTC_Cache_NewNode( _cache, _hash, query, &_node );           \
                                                                          \
-  _Ok:                                                                   \
+  Ok_:                                                                   \
     node = _node;                                                        \
   FT_END_STMNT
 
@@ -346,7 +346,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __FTCCACHE_H__ */
+#endif /* FTCCACHE_H_ */
 
 
 /* END */

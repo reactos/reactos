@@ -36,8 +36,8 @@
 /***************************************************************************/
 
 
-#ifndef __CF2FT_H__
-#define __CF2FT_H__
+#ifndef CF2FT_H_
+#define CF2FT_H_
 
 
 #include "cf2types.h"
@@ -141,7 +141,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __CF2FT_H__ */
+#endif /* CF2FT_H_ */
 
 
 /* END */

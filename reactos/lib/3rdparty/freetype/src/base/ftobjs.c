@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (body).                            */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -688,7 +688,6 @@
         /* both `fpgm' and `prep' tables are missing                 */
         if ( ( mode == FT_RENDER_MODE_LIGHT                   &&
                !FT_DRIVER_HINTS_LIGHTLY( driver ) )             ||
-             face->internal->ignore_unpatented_hinter           ||
              ( FT_IS_SFNT( face )                             &&
                ttface->num_locations                          &&
                ttface->max_profile.maxSizeOfInstructions == 0 &&
@@ -1521,7 +1520,8 @@
     if ( error )
       goto Exit;
 
-    if ( FT_Stream_Seek( stream, pos + offset ) )
+    error = FT_Stream_Seek( stream, pos + offset );
+    if ( error )
       goto Exit;
 
     if ( FT_ALLOC( sfnt_ps, (FT_Long)length ) )
@@ -1802,7 +1802,8 @@
       goto Exit;
 
     /* rewind sfnt stream before open_face_PS_from_sfnt_stream() */
-    if ( FT_Stream_Seek( stream, flag_offset + 4 ) )
+    error = FT_Stream_Seek( stream, flag_offset + 4 );
+    if ( error )
       goto Exit;
 
     if ( FT_ALLOC( sfnt_data, rlen ) )
@@ -2183,7 +2184,8 @@
                FT_ERR_EQ( error, Table_Missing )                        )
           {
             /* TrueType but essential tables are missing */
-            if ( FT_Stream_Seek( stream, 0 ) )
+            error = FT_Stream_Seek( stream, 0 );
+            if ( error )
               break;
 
             error = open_face_PS_from_sfnt_stream( library,
@@ -4199,7 +4201,8 @@
 
 
           MD5_Init( &ctx );
-          MD5_Update( &ctx, bitmap.buffer, rows * pitch );
+          if ( bitmap.buffer )
+            MD5_Update( &ctx, bitmap.buffer, rows * pitch );
           MD5_Final( md5, &ctx );
 
           FT_TRACE3(( "MD5 checksum for %dx%d bitmap:\n"

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Generic list support for FreeType (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,8 +24,8 @@
   /*************************************************************************/
 
 
-#ifndef __FTLIST_H__
-#define __FTLIST_H__
+#ifndef FTLIST_H_
+#define FTLIST_H_
 
 
 #include <ft2build.h>
@@ -270,7 +270,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTLIST_H__ */
+#endif /* FTLIST_H_ */
 
 
 /* END */

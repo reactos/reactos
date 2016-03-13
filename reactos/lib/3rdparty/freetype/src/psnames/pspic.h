@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for psnames module.  */
 /*                                                                         */
-/*  Copyright 2009-2015 by                                                 */
+/*  Copyright 2009-2016 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PSPIC_H__
-#define __PSPIC_H__
+#ifndef PSPIC_H_
+#define PSPIC_H_
 
 
 #include FT_INTERNAL_PIC_H
@@ -62,7 +62,7 @@ FT_END_HEADER
 
  /* */
 
-#endif /* __PSPIC_H__ */
+#endif /* PSPIC_H_ */
 
 
 /* END */

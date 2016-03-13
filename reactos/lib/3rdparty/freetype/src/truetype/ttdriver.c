@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2015 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -194,7 +194,7 @@
                    FT_Fixed  *advances )
   {
     FT_UInt  nn;
-    TT_Face  face  = (TT_Face) ttface;
+    TT_Face  face = (TT_Face) ttface;
 
 
     /* XXX: TODO: check for sbits */
@@ -227,6 +227,7 @@
 
     return FT_Err_Ok;
   }
+
 
   /*************************************************************************/
   /*************************************************************************/
@@ -429,11 +430,7 @@
   {
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
-#ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
-    FT_TRUETYPE_ENGINE_TYPE_UNPATENTED
-#else
     FT_TRUETYPE_ENGINE_TYPE_PATENTED
-#endif
 
 #else /* !TT_USE_BYTECODE_INTERPRETER */
 

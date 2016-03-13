@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType internal cache interface (body).                        */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -85,7 +85,7 @@
 
 
   /* get a top bucket for specified hash from cache,
-   * body for FTC_NODE__TOP_FOR_HASH( cache, hash )
+   * body for FTC_NODE_TOP_FOR_HASH( cache, hash )
    */
   FT_LOCAL_DEF( FTC_Node* )
   ftc_get_top_node_for_hash( FTC_Cache  cache,
@@ -224,7 +224,7 @@
   ftc_node_hash_unlink( FTC_Node   node0,
                         FTC_Cache  cache )
   {
-    FTC_Node  *pnode = FTC_NODE__TOP_FOR_HASH( cache, node0->hash );
+    FTC_Node  *pnode = FTC_NODE_TOP_FOR_HASH( cache, node0->hash );
 
 
     for (;;)
@@ -257,7 +257,7 @@
   ftc_node_hash_link( FTC_Node   node,
                       FTC_Cache  cache )
   {
-    FTC_Node  *pnode = FTC_NODE__TOP_FOR_HASH( cache, node->hash );
+    FTC_Node  *pnode = FTC_NODE_TOP_FOR_HASH( cache, node->hash );
 
 
     node->link = *pnode;
@@ -498,7 +498,7 @@
       return FT_THROW( Invalid_Argument );
 
     /* Go to the `top' node of the list sharing same masked hash */
-    bucket = pnode = FTC_NODE__TOP_FOR_HASH( cache, hash );
+    bucket = pnode = FTC_NODE_TOP_FOR_HASH( cache, hash );
 
     /* Lookup a node with exactly same hash and queried properties.  */
     /* NOTE: _nodcomp() may change the linked list to reduce memory. */
@@ -518,7 +518,7 @@
     if ( list_changed )
     {
       /* Update bucket by modified linked list */
-      bucket = pnode = FTC_NODE__TOP_FOR_HASH( cache, hash );
+      bucket = pnode = FTC_NODE_TOP_FOR_HASH( cache, hash );
 
       /* Update pnode by modified linked list */
       while ( *pnode != node )

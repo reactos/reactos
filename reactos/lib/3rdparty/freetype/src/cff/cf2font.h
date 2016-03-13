@@ -36,8 +36,8 @@
 /***************************************************************************/
 
 
-#ifndef __CF2FONT_H__
-#define __CF2FONT_H__
+#ifndef CF2FONT_H_
+#define CF2FONT_H_
 
 
 #include "cf2ft.h"
@@ -54,6 +54,7 @@ FT_BEGIN_HEADER
                                    /* (Hiragino Kaku Gothic ProN W3;      */
                                    /* 8.2d6e1; 2014-12-19) that exceed    */
                                    /* this limit                          */
+#define CF2_STORAGE_SIZE        32
 
 
   /* typedef is in `cf2glue.h' */
@@ -115,7 +116,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __CF2FONT_H__ */
+#endif /* CF2FONT_H_ */
 
 
 /* END */

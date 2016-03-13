@@ -1,3 +1,817 @@
+2016-02-07  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.6.3 released.
+	=========================
+
+
+	Tag sources with `VER-2-6-3'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.6.3.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.6.2/2.6.3/, s/262/263/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 3.
+
+	* builds/unix/configure.raw (version_info): Set to 18:3:12.
+	* CMakeLists.txt (VERSION_PATCH): Set to 2.
+
+	* docs/CHANGES: Updated.
+
+2016-02-07  Werner Lemberg  <wl@gnu.org>
+
+	Fix another runtime error found by clang's sanitizer (#47082).
+
+	* src/base/ftstroke.c (ft_stroke_border_export): Properly handle
+	empty input buffer.
+
+2016-02-07  Werner Lemberg  <wl@gnu.org>
+
+	Fix runtime errors found by clang's sanitizer (#47082).
+
+	* src/base/ftobjs.c (FT_Render_Glyph_Internal), src/base/ftoutln.c
+	(FT_Outline_Copy), src/cache/ftcsbits.c (ftc_sbit_copy_bitmap):
+	Properly handle empty input buffer.
+
+2016-02-07  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Minor.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings) <cff_op_sqrt>:
+	Remove dead code.
+
+2016-02-07  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Implement missing operators in new engine (except `random').
+
+	* src/cff/cf2font.h (CF2_STORAGE_SIZE): New macro.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString): Implement the
+	following operators: abs, add, and, div, drop, dup, eq, exch, get,
+	ifelse, index, mul, neg, not, or, put, roll, sqrt, sub.
+
+	* src/cff/cf2stack.h, src/cff/cf2stack.c (cf2_stack_roll): New
+	auxiliary function for `roll' operator.
+
+2016-02-06  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix some Type 2 operators in old CFF engine.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings): Fix `eq'
+	operator, add `not' and (unsupported) `blend' operators.
+
+2016-02-05  Sebastian Rasmussen  <sebras@gmail.com>
+
+	Make direct call of `make install' work (#47072).
+
+	* builds/unix/unix-def.in (freetype-config): Make sure
+	`freetype-config' is generated for both make targets (`all' and
+	`install').
+
+2016-02-05  Werner Lemberg  <wl@gnu.org>
+
+	[base] Fix advance width loading for MM and GX fonts (#47064).
+
+	* src/base/ftadvanc.c (LOAD_ADVANCE_FAST_CHECK): Return false for
+	MM and GX fonts.
+	Update callers.
+
+2016-02-03  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix handling of face_index == -1 for pure CFF.
+
+	* src/cff/cffobjs.c (cff_face_init): Return correct number of faces.
+
+2016-01-30  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Minor tracing improvement.
+
+	* src/autofit/afhints.c (af_glyph_hints_dump_points): Insert newline
+	at the start of a new contour.
+
+2016-01-28  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	Remove unpatented hinter (3/3).
+
+	* include/freetype/config/ftoption.h
+	(TT_CONFIG_OPTION_UNPATENTED_HINTING): Remove.
+
+	* include/freetype/internal/ftobjs.h (FT_Face_InternalRec): Remove
+	`ignore_unpatented_hinter' field.
+	Update users.
+	(FT_DEBUG_HOOK_UNPATENTED_HINTING): Remove.
+	Update users.
+
+	* include/freetype/internal/tttypes.h (TT_FaceRec): Remove
+	`unpatented_hinting' field.
+	Update users.
+
+	* src/base/ftpatent.c (_tt_check_patents_in_range,
+	_tt_check_patents_in_table, _tt_face_check_patents): Remove.
+	(FT_Face_CheckTrueTypePatents, FT_Face_SetUnpatentedHinting):
+	Replace code with dummies.
+
+	* src/truetype/ttobjs.c (tt_face_init): Remove now defunct code.
+	* src/truetype/ttobjs.h (TT_GraphicsState): Remove `both_x_axis'
+	field.
+
+2016-01-28  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	Remove unpatented hinter (2/3).
+
+	* devel/ftoption.h (TT_CONFIG_OPTION_UNPATENTED_HINTING): Remove.
+
+2016-01-28  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	Remove unpatented hinter (1/3).
+
+	* src/truetype/ttinterp.c [TT_CONFIG_OPTION_UNPATENTED_HINTING]:
+	Remove all code related to this macro.
+
+2016-01-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add blue-zone support for Kannada script.
+
+	This essentially moves the Kannada script from the `Indic' hinter to
+	the `Latin' hinter.
+
+	* src/autofit/afblue.dat: Add blue zone data for Kannada.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Kannada standard characters and move
+	data out of AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afranges.c: Move Kannada data out of
+	AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afstyles.h: Update Kannada data; in particular, use
+	AF_WRITING_SYSTEM_LATIN.
+
+2016-01-22  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Better access to 64-bit integers for C99 compilers.
+
+	* include/freetype/config/ftconfig.h [FT_LONG64]: Use
+	__STDC_VERSION__ to define 64-bit integers.
+	* builds/unix/ftconfig.in [FT_LONG64]: Ditto.
+	* builds/vms/ftconfig.h [FT_LONG64]: Ditto.
+
+2016-01-21  Werner Lemberg  <wl@gnu.org>
+
+	[gxvalid] Remove commented out code.
+
+	* src/gxvalid/gxvcommn.c (gxv_EntryTable_validate): Do it.
+
+2016-01-20  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Complete last autofit commit.
+
+	Problem reported by Kostya Serebryany <kcc@google.com>.
+
+	* src/autofit/afshaper.c (af_shaper_get_coverage)
+	[!FT_CONFIG_OPTION_USE_HARFBUZZ]: Update signature.
+
+2016-01-20  Werner Lemberg  <wl@gnu.org>
+
+	Still handle `__FTERRORS_H__'.
+
+	We need this for backwards compatibility.
+
+	Problem reported by John Emmas <johne53@tiscali.co.uk>.
+
+	* include/freetype/fterrors.h: Fix inclusion guard so that
+	undefining either `FTERRORS_H_' or `__FTERRORS_H__' works as
+	expected.
+
+2016-01-19  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix handling of default script.
+
+	Patch taken from ttfautohint, commit
+	071ae2c00e0d67f9d19418f4fade1c23d27dc185.
+
+	There were two bugs.
+
+	  - We now use non-standard script tags like `khms' for special
+	    purposes.  However, HarfBuzz maps such tags to `DFLT', and
+	    without this commit the associated lookups were incorrectly
+	    assigned to the non-standard tags.
+
+	  - Let's assume we have a Bengali font, and the font's `DFLT'
+	    script tag handles the necessary lookups for Bengali, too.
+	    Without this commit, the `DFLT' lookups were assigned to
+	    ttfautohint's default script (usually `latn') before the
+	    standard lookups for Bengali were handled.
+
+	    We now have the following order while searching for covered
+	    glyph indices.
+
+	      special features of scripts (e.g. `sups' for Cyrillic)
+	      Unicode mappings of scripts
+	      remaining features of scripts (especially important for Indic
+	        scripts)
+	      default features of default script
+
+	* src/autofit/afshaper.c, src/autofit/afshaper.h
+	(af_shaper_get_coverage): Add boolean parameter to indicate default
+	script.
+	Update all callers.
+
+	* src/autofit/afglobal.c (af_face_globals_compute_style_coverage):
+	Fix search order for coverages.
+
+2016-01-19  Werner Lemberg  <wl@gnu.org>
+
+	Various minor clang fixes.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths),
+	src/autofit/aflatin.c (af_latin_metrics_init_widths): Initialize
+	`ch'.
+
+	* src/base/ftcalc.c (FT_MulFix) [FT_LONG64]: Add cast.
+
+	* src/base/ftdbgmem.c (ft_mem_table_destroy): Add cast.
+
+	* src/base/fthash.c (hash_num_lookup): Add cast.
+
+	* src/base/fttrigon.c (ft_trig_downscale) [FT_LONG64]: Fix cast.
+
+	* src/gxvalid/gxvcommn.c (gxv_EntryTable_validate): Comment out
+	redundant code.
+
+	* src/type1/t1driver.c (t1_get_ps_font_value) <PS_DICT_SUBR>: Add
+	cast.
+
+	* src/type1/t1load.c (parse_subrs): Fix type of `count'.
+
+2016-01-19  Derek B. Noonburg  <derekn@glyphandcog.com>
+
+	[truetype] Add another tricky font.
+
+	* src/truetype/ttobjs.c (TRICK_SFNT_IDS_NUM_FACES): Increase.
+	(sfnt_id): Add variant of `DFKaiShu'.
+
+2016-01-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Empower `FT_Library_SetLcdFilterWeights'.
+
+	* src/base/ftlcdfil.c (FT_Library_SetLcdFilterWeights): Enable filter
+	in addition to setting weights.
+	(FT_Library_SetLcdFilter): Clean out FT_FORCE_LIGHT_LCD_FILTER and
+	FT_FORCE_LEGACY_LCD_FILTER.
+	* include/freetype/ftlcdfil.h: Documentation update.
+
+2016-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Don't use macro names that start with `_[A-Z]' [3/3].
+
+	Such macro names are reserved for both C and C++.
+
+	* src/cache/ftccache.h: s/_FTC_FACE_ID_HASH/FTC_FACE_ID_HASH/.
+	Update all callers.
+	(FTC_CACHE_LOOKUP_CMP): Replace `_XXX' with `XXX_'.
+	* src/cache/ftcmru.c (FTC_MRULIST_LOOKUP_CMP): Ditto.
+
+2016-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Don't use macro names that start with `_[A-Z]' [2/3].
+
+	Such macro names are reserved for both C and C++.
+
+	* include/freetype/ftimage.h, src/raster/ftraster.c,
+	src/smooth/ftgrays.c, src/smooth/ftgrays.h:
+	s/_STANDALONE_/STANDALONE_/.
+
+2016-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Don't use macro names that start with `_[A-Z]' [1/3].
+
+	Such macro names are reserved for both C and C++.
+
+	* src/bdf/bdflib.c: Replace macros of the form `_BDF_XXX' with
+	`BDF_XXX_'.
+
+2016-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Don't use macro names that contain `__' [2/2].
+
+	Such macro names are reserved for both C and C++.
+
+	* src/cache/*: s/__/_/.
+
+2016-01-12  Werner Lemberg  <wl@gnu.org>
+
+	Don't use macro names that contain `__' [1/2].
+
+	Such macro names are reserved for both C and C++.
+
+	* */*: Replace macros of the form `__XXX_H__' with `XXX_H_'.
+
+2016-01-10  Jered Gray  <jegray@google.com>
+
+	[cff] Fix usage of `|' operator.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString) [cf2_cmdEXTENDEDNMBR,
+	default]: `|' is not guaranteed to be processed from left to right
+	by the compiler.  However, the code repeatedly calls
+	`cf2_buf_readByte' to get the arguments to `|' ...  Fix this.
+
+2015-12-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Make top-to-bottom hinting work in latin auto-hinter.
+
+	This improves rendering of scripts like Bengali or Devanagari.
+
+	* src/autofit/afhints.c (af_axis_hints_new_edge): Add parameter to
+	pass top-to-bottom hinting flag.  This makes the function sort edges
+	in descending vertical position.
+
+	* src/autofit/afhints.c: Updated.
+
+	* src/autofit/aflatin.c (af_latin_hints_compute_edges,
+	af_latin_hint_edges): Use `top_to_bottom_hinting' flag.
+
+	* src/autofit/afcjk.c (af_cjk_hints_compute_edges),
+	src/autofit/aflatin2.c (af_latin2_hints_compute_edges): Updated.
+
+2015-12-24  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add hinting direction to `AF_ScriptClassRec'.
+
+	Still unused.
+
+	* src/autofit/afglobal.c (SCRIPT): Handle hinting direction.
+
+	* src/autofit/aftypes.h (AF_ScriptClassRec): Add
+	`top_to_bottom_hinting' field.
+	(AF_HINTING_BOTTOM_TO_TOP, AF_HINTING_TOP_TO_BOTTOM): New macros.
+	(AF_DEFINE_SCRIPT_CLASS): Updated.
+
+2015-12-23  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Start implementing hinting direction (up/down, down/up).
+
+	Right now, it does nothing.
+
+	* src/autofit/afscript.h: Add another parameter to `SCRIPT',
+	specifying hinting direction.
+
+	* src/autofit/afglobal.c, scr/autofit/afglobal.h,
+	src/autofit/afpic.c, src/autofit/afranges.h, src/autofit/afshaper.c,
+	src/autofit/aftypes.h: Extend `SCRIPT' definitions.
+
+2015-12-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/type1/t1load.c (parse_subrs): Fix memory leak (#46744).
+
+2015-12-22  Werner Lemberg  <wl@gnu.org>
+
+	[base] Make hash interface symmetric.
+
+	Use `num' and `str' infixes everywhere.
+
+	* src/base/fthash.c (ft_hash_init): Renamed to...
+	(hash_init): ... This.
+	(ft_hash_str_init, ft_hash_num_init): New functions.
+	(ft_hash_free): Renamed to...
+	(ft_hash_str_free): ... This.
+
+	* include/freetype/internal/fthash.h: Updated.
+
+	* src/bdf/bdflib.c, src/type1/t1load.c, src/type1/t1objs.c: Updated.
+
+2015-12-21  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Avoid shift of negative numbers (#46732).
+
+	* src/type1/t1load.c (parse_subrs): Do it.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[type1, psaux] Handle large values of num_subrs correctly (#46692).
+
+	We now use a hash to map from subr indices to array elements holding
+	the subroutines, if necessary.
+
+	* include/freetype/internal/t1types.h: Include FT_INTERNAL_HASH_H.
+	(T1_FontRec): Add `subrs_hash' field.
+
+	* include/freetype/internal/psaux.h: Include FT_INTERNAL_HASH_H.
+	(T1_DecoderRec): Add `subrs_hash' field.
+
+	* src/type1/t1load.h (T1_LoaderRec): Add `subrs_hash' field.
+
+	* src/type1/t1driver.c: Include FT_INTERNAL_HASH_H.
+	(t1_ps_get_font_value) [PS_DICT_SUBR]: Look up hash if necessary.
+
+	* src/type1/t1load.c: Include FT_INTERNAL_HASH_H.
+	(parse_subrs): Use hash for subr indices that exceed the allocated
+	number of subr slots.
+	(t1_init_loader): Remove unnecessary code.
+	(t1_done_loader, T1_Open_Face): Updated.
+
+	* src/type1/t1gload.c (T1_Compute_Max_Advance, T1_Get_Advances,
+	T1_Load_Glyph): Updated.
+
+	* src/type1/t1objs.c (T1_Face_Done): Updated.
+
+	* src/psaux/t1decode.c: Include FT_INTERNAL_HASH_H.
+	(t1_decoder_parse_charstrings) [op_callsubr]: Look up hash if
+	necessary.
+
+	* src/cid/cidgload.c (cid_load_glyph): Updated.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[base] Thinko: Remove free function pointer.
+
+	We don't copy keys or values while hashing.
+
+	* include/freetype/internal/fthash.h (FT_Hash_FreeFunc): Removed.
+	(FT_HashRec): Remove `free' field.
+
+	* src/base/fthash.c (hash_str_free): Removed.
+	(ft_hash_init, ft_hash_free): Updated.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[base, bdf] Don't expose `FT_Hashnode' in hash functions.
+
+	* src/base/fthash.c (hash_lookup, ft_hash_str_lookup,
+	ft_hash_num_lookup): Return pointer to `size_t' instead of
+	`FT_Hashnode'.
+
+	* include/freetype/internal/fthash.h: Updated.
+
+	* src/bdf/bdflib.c (bdf_get_property, _bdf_add_property,
+	bdf_get_font_property): Updated.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[base, bdf] Add number hashing.
+
+	* src/base/fthash.c (hash_num_lookup, hash_num_compare): New
+	functions.
+	(ft_hash_init): Add argument to select between number and string
+	hashing.
+	(ft_hash_num_insert, ft_hash_num_lookup): New functions.
+
+	* include/freetype/internal/fthash.h: Updated.
+
+	* src/bdf/bdflib.c (_bdf_parse_start): Updated.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[base] Introduce hash lookup, compare, and free function pointers.
+
+	* include/freetype/internal/fthash.c (FT_Hash_LookupFunc,
+	FT_Hash_CompareFunc, FT_Hash_FreeFunc): New typedefs.
+	(FT_HashRec): Add `lookup', `compare', and `free' fields.
+
+	* src/base/fthash.c (hash_str_lookup, hash_str_compare,
+	hash_str_free): New functions.
+	(ft_hash_init): Set function pointers.
+	(hash_bucket, ft_hash_free): Use them.
+
+2015-12-20  Werner Lemberg  <wl@gnu.org>
+
+	[base, bdf] Use a union as a hash key.
+
+	We want to support both an integer and a string key later on.
+
+	* include/freetype/internal/fthash.h (FT_Hashkey): New union.
+	(FT_HashnodeRec): Updated.
+	(ft_hash_insert, ft_hash_lookup): Renamed to ...
+	(ft_hash_str_insert, ft_hash_str_lookup): ... this.
+
+	* src/base/fthash.c (hash_bucket): Updated.
+	(ft_hash_insert, ft_hash_lookup): Renamed to ...
+	(hash_insert, hash_lookup): ... this.
+	(ft_hash_str_insert, ft_hash_str_lookup): New wrapper functions.
+
+	* src/bdf/bdflib.c: Updated.
+
+2015-12-19  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Use new hash functions.
+
+	* src/bdf/bdf.h: Include FT_INTERNAL_HASH_H.
+	(hashnode, hashtable): Removed.
+	(bdf_font_t): Use `FT_HashRec' type for `proptbl'.
+
+	* src/bdf/bdflib.c: Remove all hash functions.
+	Update code for new hash structure and function names.
+
+2015-12-19  Werner Lemberg  <wl@gnu.org>
+
+	[bdf, base] Lift hash functions from bdf driver to base module.
+
+	* src/base/fthash.c, include/freetype/internal/fthash.h: New files,
+	containing (massaged) code from `bdflib.c' and `bdf.h'.
+
+	* include/freetype/internal/internal.h (FT_INTERNAL_HASH_H): New
+	macro.
+
+	* src/base/ftbase.c: Include `fthash.c'.
+
+	* src/base/Jamfile (_sources): Add `fthash'.
+
+	* src/base/rules.mk (BASE_SRC): Add `fthash.c'.
+
+	* docs/LICENSE.TXT: Updated.
+
+2015-12-15  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add blue-zone support for Bengali script.
+
+	This essentially moves the Bengali script from the `Indic' hinter to
+	the `Latin' hinter.
+
+	* src/autofit/afblue.dat: Add blue zone data for Bengali.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Bengali standard characters and move
+	data out of AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afranges.c: Move Bengali data out of
+	AF_CONFIG_OPTION_INDIC block.
+
+	* src/autofit/afstyles.h: Update Bengali data; in particular, use
+	AF_WRITING_SYSTEM_LATIN.
+
+2015-12-14  Ben Wagner  <bungeman@gmail.com>
+
+	[bdf] Remove dead code (#46625).
+
+	The BDF specification only allows decimal numbers, no octal or
+	hexidecimal decoding is needed.
+
+	* src/bdf/bdflib.c (_bdf_atoul, _bdf_atol, _bdf_atous,
+	_bdf_atos): Remove unused code and parameters.
+	Update all callers.
+	(odigits): Remove.
+
+2015-12-14  Werner Lemberg  <wl@gnu.org>
+
+	[base] Fix calls to `FT_Stream_Seek'.
+
+	* src/base/ftobjs.c (Mac_Read_sfnt_Resource, FT_Open_Face): Set
+	`error'.
+
+2015-12-14  Ben Wagner <bungeman@gmail.com>
+
+	[base] Check error when seeking to data supplied offset (#46635).
+
+	* src/base/ftobjs.c (open_face_PS_from_sfnt_stream):
+	`ft_lookup_PS_in_sfnt_stream' returns offset and and length from
+	user supplied data.  Use of this these values must be checked.
+
+2015-12-13  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add support for Myanmar script.
+
+	* src/autofit/afblue.dat: Add blue zone data for Myanmar.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Myanmar standard characters.
+
+	* src/autofit/afranges.c: Add Myanmar data.
+
+	* src/autofit/afstyles.h: Add Myanmar data.
+
+2015-12-12  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Minor.
+
+2015-12-12  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afscript.h: Avoid potential crash.
+
+2015-12-10  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Restore OpenType feature check.
+
+	This was removed while rewriting the HarfBuzz interface.
+
+	* src/autofit/afglobal.h (AF_FaceGlobalsRec): Add `hb_buf' field to
+	hold internal HarfBuzz buffer, needed for feature comparison.
+
+	* src/autofit/afglobal.c (af_face_globals_new,
+	af_face_globals_free): Initialize and destroy `hb_buf'.
+
+	* src/autofit/afshaper.c (af_shaper_get_cluster): Compare character
+	(cluster) with and without applied feature.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Fix tracing
+	message.
+
+2015-12-10  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Remove redundant code.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths): Do it.
+
+2015-12-09  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Thinko.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Don't count
+	empty blue zones (bug introduced 2015-12-06).
+
+2015-12-09  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Introduce subscript top blue zones.
+
+	This feature is mainly for Khmer: The idea is to avoid a clash
+	between the top of subscript glyphs and the bottom of normal
+	baseline glyphs.
+
+	This only works for character clusters mapped to multiple glyphs.
+
+	* src/autofit/afblue.dat: Add subscript top blue zone for Khmer.
+
+	* src/autofit/afblue.hin (AF_BLUE_PROPERTY_LATIN_SUB_TOP): New
+	macro.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/aflatin.h (AF_LATIN_IS_SUB_TOP_BLUE,
+	AF_LATIN_BLUE_SUB_TOP): New macros.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Handle new
+	blue zone property.
+	Update tracing messages.
+	(af_latin_metrics_scale_dim): Handle new blue zone property.
+	(af_latin_hints_compute_blue_edges): Updated.
+
+2015-12-09  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix tracing message.
+
+	* src/autofit/aflatin.c (af_latin_metrics_scale_dim): Display
+	inactive blue zones also.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afblue.dat: Add more Khmer clusters.
+
+	Some fonts have incorrect ligatures; we need more samples to get a
+	good mean value.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Typos.
+
+	* src/autofit/afshaper.c (af_shaper_buf_create, af_shaper_get_elem)
+	[!FT_CONFIG_OPTION_USE_HARFBUZZ]: Make it compile.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add support for Khmer script.
+
+	We split Khmer into two auto-hinter scripts: `Khmer' (`khmr') and
+	`Khmer symbols' (`khms', U+19E0-U+19FF).
+
+	* src/autofit/afblue.dat: Add blue zone data for Khmer.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Khmer standard characters.
+
+	* src/autofit/afranges.c: Add Khmer data.
+
+	* src/autofit/afstyles.h: Add Khmer data.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Rewrite HarfBuzz interface to support character clusters.
+
+	Scripts like Khmer have blue zones that can't be directly
+	represented by Unicode characters.  Instead, it is necessary to let
+	HarfBuzz convert character clusters into proper glyph representation
+	forms, then deriving the blue zone information from the resulting
+	glyphs.
+
+	* src/autofit/hbshim.c, src/autofit/hbshim.h: Replaced by...
+	* src/autofit/afshaper.c, src/autofit/afshaper.h: ... these two new
+	files, providing a new API to access HarfBuzz.
+
+	The new API manages a HarfBuzz buffer with `af_shaper_buf_create'
+	and `af_shaper_buf_destroy'.  The buffer receives a UTF8 encoded
+	string with function `af_shaper_get_cluster', and the resulting
+	glyph data (indices, advance widths, vertical offsets) can be
+	iteratively accessed with function `af_shaper_get_elem'.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths,
+	af_cjk_metrics_init_blues, af_cjk_metrics_check_digits): Updated.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths,
+	af_latin_metrics_init_blues, af_latin_metrics_check_digits):
+	Updated.
+
+	* include/freetype/internal/fttrace.h: s/afharfbuzz/afshaper/.
+
+	* src/autofit/afglobal.c: s/hbshim.h/afshaper.h/.
+	(af_face_globals_compute_style_coverage): Updated.
+
+	* src/autofit/afglocal.h: s/hbshim.h/afshaper.h/.
+
+	* src/autofit/autofit.c: s/hbshim.c/afshaper.c/.
+
+	* src/autofit/Jamfile, src/autofit/rules.mk (AUTOF_DRV_SRC):
+	Updated.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Prepare forthcoming changes.
+
+	This makes it easier to control the commits.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Add dummy
+	loop.  No functional change.
+
+2015-12-06  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Use string of standard characters.
+
+	This is more flexible; additionally, it would allow character
+	clusters.
+
+	* src/autofit/aftypes.h (SCRIPT, AF_DEFINE_SCRIPT_CLASS): Updated.
+	(AF_ScriptClassRec): Replace `standard_char[123]' with
+	`standard_charstring'.
+
+	* src/autofit/afscript.h: Replace last three character arguments
+	of the `SCRIPT' calls with a string parameter, holding the standard
+	characters (in UTF-8 encoding) separated with spaces.
+
+	* src/autofit/afglobal.c, src/autofit/afglobal.h,
+	src/autofit/afpic.c, src/autofit/afranges.c, src/autofit/hbshim.c
+	(SCRIPT): Updated.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths),
+	src/autofit/aflatin.c (af_latin_metrics_init_widths): Updated.
+
+2015-12-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afblue.dat: Separate blue zone characters with spaces.
+
+	Another preparation for character cluster support.
+
+	* src/autofit/afblue.c, src/autofit.afblue.h: Regenerated.
+
+2015-12-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/afblue.pl (convert_ascii_chars): Don't ignore spaces.
+
+	Instead, reduce multiple spaces to a single one.  We need this later
+	for supporting character clusters in `afblue.dat'.
+
+2015-12-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afblue.hin (GET_UTF8_CHAR): Use `do...while(0)'.
+
+	* src/autofit/afblue.h: Regenerated.
+
+2015-12-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afwarp.c: s/INT_MIN/FT_INT_MIN/.
+
+2015-12-03  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/install.mk (install): Remove stale `ft2build.h'.
+
+2015-12-01  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Avoid dangling pointer (#46572).
+
+	* src/type1/t1afm.c (T1_Read_Metrics): Properly reset
+	`face->afm_data'.
+
+2015-11-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* include/freetype/ftlcdfil.h: Documentation tweak.
+
 2015-11-28  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.6.2 released.
@@ -322,7 +1136,7 @@
 	Handle them.
 	(af_autofitter_init): Initialize them.
 
-2015-11-02  Bungeman  <bungeman@gmail.com>
+2015-11-02  Ben Wagner  <bungeman@gmail.com>
 
 	[ftfuzzer] Add support for multiple files (patch #8779).
 
@@ -385,7 +1199,7 @@
 	(PFR_CHECK_SIZE): ... this.
 	(PFR_SIZE): [!PFR_CONFIG_NO_CHECKS]: Define to PFR_CHECK_SIZE.
 
-	* src/pfr/pfrload.c (pfr_log_font_count): Check `count'. 
+	* src/pfr/pfrload.c (pfr_log_font_count): Check `count'.
 	(pfr_extra_item_load_kerning_pairs): Remove tracing message.
 	(pfr_phy_font_load): Use PFR_CHECK_SIZE where appropriate.
 	Allocate `chars' after doing a size checks.
@@ -530,7 +1344,7 @@
 
 	* src/type1/t1afm.c (T1_Read_Metrics): Fix memory leak (#46229).
 
-2015-10-19  Bungeman  <bungeman@gmail.com>
+2015-10-19  Ben Wagner  <bungeman@gmail.com>
 
 	[cid] Better handle invalid glyph stream offsets (#46221).
 
@@ -608,7 +1422,7 @@
 
 	* src/tools/ftfuzzer/README: New file.
 
-2015-10-15  Bungeman  <bungeman@gmail.com>
+2015-10-15  Ben Wagner  <bungeman@gmail.com>
 
 	[bdf] Fix memory leak (#46213).
 
@@ -631,7 +1445,7 @@
 
 	The used indices were off by 1.
 
-2015-10-15  Bungeman  <bungeman@gmail.com>
+2015-10-15  Ben Wagner  <bungeman@gmail.com>
 	    Werner Lemberg  <wl@gnu.org>
 
 	* src/tools/ftfuzzer/ftfuzzer.cc: Handle fixed sizes (#46211).
@@ -977,7 +1791,7 @@
 	* src/autofit/afstyles.h: Add Lao data.
 
 2015-09-27  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
- 
+
 	[base] Fix a leak by broken sfnt-PS or resource fork (#46028).
 
 	open_face_from_buffer() frees passed buffer if valid font
@@ -3590,7 +4404,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2015 by
+Copyright 2015-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

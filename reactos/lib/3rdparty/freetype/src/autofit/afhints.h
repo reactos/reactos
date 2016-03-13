@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (specification).                        */
 /*                                                                         */
-/*  Copyright 2003-2015 by                                                 */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFHINTS_H__
-#define __AFHINTS_H__
+#ifndef AFHINTS_H_
+#define AFHINTS_H_
 
 #include "aftypes.h"
 
@@ -419,6 +419,7 @@ FT_BEGIN_HEADER
   af_axis_hints_new_edge( AF_AxisHints  axis,
                           FT_Int        fpos,
                           AF_Direction  dir,
+                          FT_Bool       top_to_bottom_hinting,
                           FT_Memory     memory,
                           AF_Edge      *edge );
 
@@ -472,7 +473,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __AFHINTS_H__ */
+#endif /* AFHINTS_H_ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2015 by                                                 */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -494,7 +494,7 @@
         else
           weight += cache->clazz.node_weight( node, cache );
 
-        node = FTC_NODE__NEXT( node );
+        node = FTC_NODE_NEXT( node );
 
       } while ( node != first );
 
@@ -513,7 +513,7 @@
       do
       {
         count++;
-        node = FTC_NODE__NEXT( node );
+        node = FTC_NODE_NEXT( node );
 
       } while ( node != first );
 
@@ -556,13 +556,13 @@
       return;
 
     /* go to last node -- it's a circular list */
-    node = FTC_NODE__PREV( first );
+    node = FTC_NODE_PREV( first );
     do
     {
       FTC_Node  prev;
 
 
-      prev = ( node == first ) ? NULL : FTC_NODE__PREV( node );
+      prev = ( node == first ) ? NULL : FTC_NODE_PREV( node );
 
       if ( node->ref_count <= 0 )
         ftc_node_destroy( node, manager );
@@ -641,10 +641,10 @@
       return 0;
 
     /* go to last node - it's a circular list */
-    node = FTC_NODE__PREV(first);
+    node = FTC_NODE_PREV(first);
     for ( result = 0; result < count; )
     {
-      FTC_Node  prev = FTC_NODE__PREV( node );
+      FTC_Node  prev = FTC_NODE_PREV( node );
 
 
       /* don't touch locked nodes */
