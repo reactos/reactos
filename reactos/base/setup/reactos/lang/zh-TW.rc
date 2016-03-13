@@ -18,9 +18,9 @@ CAPTION "ReactOS 安裝"
 FONT 9, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "安裝 ReactOS 的新副本。此選項沒有儲存你的檔案、 設定和程式。你可以對磁碟和分區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "更新或修復 ReactOS 安裝的副本。此選項會儲存您的檔案、 設定和程式。如果 ReactOS 已經安裝在此計算機上, 此選項才能使用的。", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "點選下一步安裝裝置。", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -133,7 +133,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_TYPE "Type"
+    IDS_PARTITION_NAME "名稱"
+    IDS_PARTITION_SIZE "大小"
+    IDS_PARTITION_TYPE "類型"
 END
