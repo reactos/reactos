@@ -1,0 +1,13 @@
+/* By Riccardo Montanari - Bassa31 - bassa31@outlook.it */
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Mostra la struttura del drive o della cartella.\n\n\
+TREE [drive:][path] [/F] [/A]\n\n\
+\t/F   Mostra il nome del file in ogni cartella.\n\
+\t/A   Usa carattere ASCII per i caratteri estesi.\n"
+    IDS_NO_SUBDIRECTORIES "Non esistono sub-cartelle"
+    IDS_FOLDER_PATH "Lista della cartella PATH\n"
+    IDS_VOL_SERIAL "Numero di serie del Volume  %x:%x\n"
+END
