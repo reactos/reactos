@@ -11,14 +11,14 @@ BEGIN
     POPUP "&Programmi"
     BEGIN
         MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Disinstalla\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Rimuovi\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifica", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remuovi da Registry", ID_REGREMOVE
+        MENUITEM "&Cancella dal registro", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Aggiorna Da&tabase", ID_RESETDB
     END
     POPUP "?"
     BEGIN
@@ -41,14 +41,14 @@ BEGIN
     POPUP "popup"
     BEGIN
         MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Disinstalla\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Rimuovi\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifica", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Rimuovi da Registry", ID_REGREMOVE
+        MENUITEM "&Cancella dal registro", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aggiorna Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -61,17 +61,17 @@ BEGIN
     AUTOCHECKBOX "&Salva la posizione della finestra", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Aggiorna la lista dei programmi accessibili", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Registra la installazione o disinstallazione dei programmi", IDC_LOG_ENABLED, 15, 46, 219, 12
-    GROUPBOX "Downloading", -1, 4, 65, 240, 51
+    GROUPBOX "Scaricamenti", -1, 4, 65, 240, 51
     LTEXT "Cartella:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Scegli", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Rimuovere la procedura di installazione dopo l'uso", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    CONTROL "Impostazioni proxy di sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Diretto (nessun proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy:", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "Ignora proxy per:", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Predefiniti", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Download in corso"
+CAPTION "Scaricamento in corso"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -113,7 +113,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL "Installa"
-    IDS_TOOLTIP_UNINSTALL "Disinstalla"
+    IDS_TOOLTIP_UNINSTALL "Rimuovi"
     IDS_TOOLTIP_MODIFY "Modifica"
     IDS_TOOLTIP_SETTINGS "Impostazioni"
     IDS_TOOLTIP_REFRESH "Aggiorna"
@@ -161,9 +161,9 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
     IDS_CAT_DEVEL "Sviluppo"
-    IDS_CAT_DRIVERS "Drivers"
+    IDS_CAT_DRIVERS "Driver"
     IDS_CAT_EDU "Edutainment"
-    IDS_CAT_ENGINEER "Scienze"
+    IDS_CAT_ENGINEER "Ingegneria"
     IDS_CAT_FINANCE "Finanza"
     IDS_CAT_GAMES "Giochi e divertimento"
     IDS_CAT_GRAPHICS "Grafica"
@@ -181,7 +181,7 @@ BEGIN
     IDS_APPTITLE "ReactOS Gestione applicazioni"
     IDS_SEARCH_TEXT "Cerca..."
     IDS_INSTALL "Installa"
-    IDS_UNINSTALL "Disinstalla"
+    IDS_UNINSTALL "Rimuovi"
     IDS_MODIFY "Modifica"
     IDS_APPS_COUNT "Numero applicazioni: %d"
     IDS_WELCOME_TITLE "Benvenuto!\n\n"
@@ -193,8 +193,8 @@ BEGIN
     IDS_APPLICATIONS "Applicazioni"
     IDS_CHOOSE_FOLDER_TEXT "Scegliere una cartella dove scaricare le applicazioni:"
     IDS_CHOOSE_FOLDER_ERROR "La cartella indicata non esiste. Vuoi crearla?"
-    IDS_APP_REG_REMOVE "Sicuro di voler cancellare dal registry i dati sui programmi installati?"
+    IDS_APP_REG_REMOVE "Sicuro di voler cancellare dal registro i dati sui programmi installati?"
     IDS_INFORMATION "Informazioni"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
-    IDS_UNABLE_TO_REMOVE "Impossibile cancellare i dati dal registry!"
+    IDS_UNABLE_TO_DOWNLOAD "Impossibile scaricare il pacchetto! Indirizzo non trovato!"
+    IDS_UNABLE_TO_REMOVE "Impossibile cancellare i dati dal registro!"
 END
