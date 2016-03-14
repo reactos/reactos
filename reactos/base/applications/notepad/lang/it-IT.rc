@@ -68,40 +68,40 @@ BEGIN
 END
 
 /* Dialog 'Page setup' */
-DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+DIALOG_PAGESETUP DIALOGEX 0, 0, 390, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Page Setup"
+CAPTION "Imposta pagina"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
-    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
-    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
-    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
-    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
-    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
-    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
-    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
-    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
-    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Header:", 0x140, 8, 132, 40, 15
-    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
-    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    GROUPBOX "Anteprima", 0, 269, 6, 115, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 284, 40, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 364, 44, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 288, 120, 80, 4
+    GROUPBOX "Foglio", grp2, 8, 8, 256, 56, BS_GROUPBOX
+    LTEXT "&Dimensioni:", stc2, 16, 20, 68, 12, SS_CENTERIMAGE
+    COMBOBOX cmb2, 88, 20, 168, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Alimentazione:", stc3, 16, 42, 68, 12, SS_CENTERIMAGE
+    COMBOBOX cmb3, 88, 40, 168, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Orientamento", grp1, 8, 68, 68, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Verticale", rad1, 16, 80, 56, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Orizzontale", rad2, 16, 100, 56, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Margini", grp4, 84, 68, 180, 56, BS_GROUPBOX
+    LTEXT "&Sinistro:", stc15, 92, 80, 36, 12, SS_CENTERIMAGE
+    EDITTEXT edt4, 132, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Destro:", stc16, 180, 80, 32, 12, SS_CENTERIMAGE
+    EDITTEXT edt6, 216, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "S&uperiore:", stc17, 92, 100, 36, 12, SS_CENTERIMAGE
+    EDITTEXT edt5, 132, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "I&nferiore:", stc18, 180, 100, 32, 8, SS_CENTERIMAGE
+    EDITTEXT edt7, 216, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Intestazione:", 0x140, 8, 132, 56, 12, SS_CENTERIMAGE
+    EDITTEXT 0x141, 68, 132, 193, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Piè di pagina:", 0x142, 8, 148, 56, 12, SS_CENTERIMAGE
+    EDITTEXT 0x143, 68, 148, 193, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Aiuto", IDHELP, 8, 168, 52, 16
+    DEFPUSHBUTTON "OK", IDOK, 212, 168, 52, 16, BS_PUSHBUTTON
+    PUSHBUTTON "Annulla", IDCANCEL, 272, 168, 52, 16
+    PUSHBUTTON "S&tampante...", psh3, 332, 168, 52, 16
 END
 
 /* Dialog 'Encoding' */
@@ -181,7 +181,7 @@ di memoria libera."
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linea %d, colonna %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_PRINTERROR "Impossibile stampare il file '%s'.\n\nControllare che la stampante sia accesa e impostata correttamente."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Documento di testo"
 END
