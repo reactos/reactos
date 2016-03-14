@@ -25,39 +25,38 @@ BEGIN
         MENUITEM "Apri...", ID_FILE_OPEN
         MENUITEM "Salva", ID_FILE_SAVE, GRAYED
         MENUITEM "Salva con nome...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "Ripristina...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Proprietà", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Esci", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Modifica"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "&Copia", ID_EDIT_COPY
+        MENUITEM "&Incolla inserito", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Incolla mi&xato", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "I&nserisci file...", ID_EDIT_INSERTFILE
+        MENUITEM "&Mixaggio con file...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "Cancella &prima della posizione corrente",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Cancella &dopo la posizione corrente",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "Proprietà a&udio", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "&Effetti"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "&Incrementa il volume (del 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Diminuisce il volume", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "I&ncrementa la velocità (del 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "D&iminuisce la velocità", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "&Aggiunge eco", ID_EFFECTS_ECHO
+        MENUITEM "&Riproduce al contrario", ID_EFFECTS_REVERSE
     END
     POPUP "?"
-    BEGIN
-        MENUITEM "Informazioni...", ID_ABOUT
+    BEGIN        MENUITEM "Informazioni...", ID_ABOUT
     END
 END
 
