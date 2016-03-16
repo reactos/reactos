@@ -1560,7 +1560,162 @@ DWORD WINAPI WNetAddConnection3W( HWND hwndOwner, LPNETRESOURCEW lpNetResource,
                               dwFlags, NULL, 0, NULL);
 }
 
-/* Convert an ANSI string to wide */
+struct use_connection_context
+{
+    HWND hwndOwner;
+    NETRESOURCEW *resource;
+    NETRESOURCEA *resourceA; /* only set for WNetUseConnectionA */
+    WCHAR *password;
+    WCHAR *userid;
+    DWORD flags;
+    void *accessname;
+    DWORD *buffer_size;
+    DWORD *result;
+    DWORD (*pre_set_accessname)(struct use_connection_context*);
+    void  (*set_accessname)(struct use_connection_context*);
+};
+
+static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *ctxt)
+{
+    if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
+    {
+        DWORD len;
+
+        if (ctxt->resource->lpLocalName)
+            len = strlenW(ctxt->resource->lpLocalName);
+        else
+            len = strlenW(ctxt->resource->lpRemoteName);
+
+        if (++len > *ctxt->buffer_size)
+        {
+            *ctxt->buffer_size = len;
+            return ERROR_MORE_DATA;
+        }
+    }
+    else
+        ctxt->accessname = NULL;
+
+    return ERROR_SUCCESS;
+}
+
+static void use_connection_set_accessnameW(struct use_connection_context *ctxt)
+{
+    WCHAR *accessname = ctxt->accessname;
+    if (ctxt->resource->lpLocalName)
+        strcpyW(accessname, ctxt->resource->lpLocalName);
+    else
+        strcpyW(accessname, ctxt->resource->lpRemoteName);
+}
+
+static DWORD wnet_use_connection( struct use_connection_context *ctxt )
+{
+    WNetProvider *provider;
+    DWORD index, ret, caps;
+
+    if (!providerTable || providerTable->numProviders == 0)
+        return WN_NO_NETWORK;
+
+    if (!ctxt->resource)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!ctxt->resource->lpProvider)
+    {
+        FIXME("Networking provider selection is not implemented.\n");
+        return WN_NO_NETWORK;
+    }
+
+    if (!ctxt->resource->lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
+    {
+        FIXME("Locale device selection is not implemented.\n");
+        return WN_NO_NETWORK;
+    }
+
+    if (ctxt->flags & CONNECT_INTERACTIVE)
+        return ERROR_BAD_NET_NAME;
+
+    index = _findProviderIndexW(ctxt->resource->lpProvider);
+    if (index == BAD_PROVIDER_INDEX)
+        return ERROR_BAD_PROVIDER;
+
+    provider = &providerTable->table[index];
+    caps = provider->getCaps(WNNC_CONNECTION);
+    if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
+        return ERROR_BAD_PROVIDER;
+
+    if ((ret = ctxt->pre_set_accessname(ctxt)))
+        return ret;
+
+    ret = WN_ACCESS_DENIED;
+    if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
+        ret = provider->addConnection3(ctxt->hwndOwner, ctxt->resource, ctxt->password, ctxt->userid, ctxt->flags);
+    else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
+        ret = provider->addConnection(ctxt->resource, ctxt->password, ctxt->userid);
+
+    if (ret == WN_SUCCESS && ctxt->accessname)
+        ctxt->set_accessname(ctxt);
+
+    return ret;
+}
+
+/*****************************************************************
+ *  WNetUseConnectionW [MPR.@]
+ */
+DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, NETRESOURCEW *resource, LPCWSTR password,
+    LPCWSTR userid, DWORD flags, LPWSTR accessname, DWORD *buffer_size, DWORD *result )
+{
+    struct use_connection_context ctxt;
+
+    TRACE( "(%p, %p, %p, %s, 0x%08X, %p, %p, %p)\n",
+           hwndOwner, resource, password, debugstr_w(userid), flags,
+           accessname, buffer_size, result );
+
+    ctxt.hwndOwner = hwndOwner;
+    ctxt.resource = resource;
+    ctxt.resourceA = NULL;
+    ctxt.password = (WCHAR*)password;
+    ctxt.userid = (WCHAR*)userid;
+    ctxt.flags = flags;
+    ctxt.accessname = accessname;
+    ctxt.buffer_size = buffer_size;
+    ctxt.result = result;
+    ctxt.pre_set_accessname = use_connection_pre_set_accessnameW;
+    ctxt.set_accessname = use_connection_set_accessnameW;
+
+    return wnet_use_connection(&ctxt);
+}
+
+static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *ctxt)
+{
+    if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
+    {
+        DWORD len;
+
+        if (ctxt->resourceA->lpLocalName)
+            len = strlen(ctxt->resourceA->lpLocalName);
+        else
+            len = strlen(ctxt->resourceA->lpRemoteName);
+
+        if (++len > *ctxt->buffer_size)
+        {
+            *ctxt->buffer_size = len;
+            return ERROR_MORE_DATA;
+        }
+    }
+    else
+        ctxt->accessname = NULL;
+
+    return ERROR_SUCCESS;
+}
+
+static void use_connection_set_accessnameA(struct use_connection_context *ctxt)
+{
+    char *accessname = ctxt->accessname;
+    if (ctxt->resourceA->lpLocalName)
+        strcpy(accessname, ctxt->resourceA->lpLocalName);
+    else
+        strcpy(accessname, ctxt->resourceA->lpRemoteName);
+}
+
 static LPWSTR strdupAtoW( LPCSTR str )
 {
     LPWSTR ret;
@@ -1573,165 +1728,59 @@ static LPWSTR strdupAtoW( LPCSTR str )
     return ret;
 }
 
-/* Convert ANSI NETRESOURCE struct to wide structure */
-static VOID convert_netresourcea_to_w( LPNETRESOURCEA lpNetResourceA,
-                                       LPNETRESOURCEW lpNetResourceW )
+static void netresource_a_to_w( NETRESOURCEA *resourceA, NETRESOURCEW *resourceW )
 {
-    lpNetResourceW->dwScope = lpNetResourceA->dwScope;
-    lpNetResourceW->dwType = lpNetResourceA->dwType;
-    lpNetResourceW->dwDisplayType = lpNetResourceA->dwDisplayType;
-    lpNetResourceW->dwUsage = lpNetResourceA->dwUsage;
-    lpNetResourceW->lpLocalName = strdupAtoW(lpNetResourceA->lpLocalName);
-    lpNetResourceW->lpRemoteName = strdupAtoW(lpNetResourceA->lpRemoteName);
-    lpNetResourceW->lpComment = strdupAtoW(lpNetResourceA->lpComment);
-    lpNetResourceW->lpProvider = strdupAtoW(lpNetResourceA->lpProvider);
+    resourceW->dwScope = resourceA->dwScope;
+    resourceW->dwType = resourceA->dwType;
+    resourceW->dwDisplayType = resourceA->dwDisplayType;
+    resourceW->dwUsage = resourceA->dwUsage;
+    resourceW->lpLocalName = strdupAtoW(resourceA->lpLocalName);
+    resourceW->lpRemoteName = strdupAtoW(resourceA->lpRemoteName);
+    resourceW->lpComment = strdupAtoW(resourceA->lpComment);
+    resourceW->lpProvider = strdupAtoW(resourceA->lpProvider);
+}
+
+static void free_netresourceW( NETRESOURCEW *resource )
+{
+    HeapFree(GetProcessHeap(), 0, resource->lpLocalName);
+    HeapFree(GetProcessHeap(), 0, resource->lpRemoteName);
+    HeapFree(GetProcessHeap(), 0, resource->lpComment);
+    HeapFree(GetProcessHeap(), 0, resource->lpProvider);
 }
 
 /*****************************************************************
  *  WNetUseConnectionA [MPR.@]
  */
-DWORD WINAPI WNetUseConnectionA( HWND hwndOwner, LPNETRESOURCEA lpNetResource,
-                                 LPCSTR lpPassword, LPCSTR lpUserID, DWORD dwFlags,
-                                 LPSTR lpAccessName, LPDWORD lpBufferSize,
-                                 LPDWORD lpResult )
+DWORD WINAPI WNetUseConnectionA( HWND hwndOwner, NETRESOURCEA *resource,
+    LPCSTR password, LPCSTR userid, DWORD flags, LPSTR accessname,
+    DWORD *buffer_size, DWORD *result )
 {
-    NETRESOURCEW resourcesW, *pRes = NULL;
-    PWSTR passW, userIDW, accessNameW = NULL;
-    DWORD ret = WN_MORE_DATA;
-    DWORD bufferSize = 1;
-    int len;
+    struct use_connection_context ctxt;
+    NETRESOURCEW resourceW;
+    DWORD ret;
 
-    if (lpNetResource)
-    {
-        convert_netresourcea_to_w(lpNetResource, &resourcesW);
-        pRes = &resourcesW;
-    }
+    TRACE( "(%p, %p, %p, %s, 0x%08X, %p, %p, %p)\n", hwndOwner, resource, password, debugstr_a(userid), flags,
+        accessname, buffer_size, result );
 
-    passW = strdupAtoW(lpPassword);
-    userIDW = strdupAtoW(lpUserID);
+    netresource_a_to_w(resource, &resourceW);
 
-    if (lpAccessName && lpBufferSize && *lpBufferSize)
-    {
-        WCHAR probe;
+    ctxt.hwndOwner = hwndOwner;
+    ctxt.resource = &resourceW;
+    ctxt.resourceA = resource;
+    ctxt.password = strdupAtoW(password);
+    ctxt.userid = strdupAtoW(userid);
+    ctxt.flags = flags;
+    ctxt.accessname = accessname;
+    ctxt.buffer_size = buffer_size;
+    ctxt.result = result;
+    ctxt.pre_set_accessname = use_connection_pre_set_accessnameA;
+    ctxt.set_accessname = use_connection_set_accessnameA;
 
-        ret = WNetUseConnectionW(hwndOwner, pRes, passW, userIDW, dwFlags,
-                                 &probe, &bufferSize, lpResult);
-        if (ret == WN_MORE_DATA)
-            accessNameW = HeapAlloc(GetProcessHeap(), 0, bufferSize * sizeof(WCHAR));
-    }
+    ret = wnet_use_connection(&ctxt);
 
-    if (ret == WN_MORE_DATA)
-    {
-        ret = WNetUseConnectionW(hwndOwner, pRes, passW, userIDW, dwFlags,
-                                 accessNameW, &bufferSize, lpResult);
-        if (ret == WN_SUCCESS)
-        {
-            if (lpAccessName && lpBufferSize && *lpBufferSize && accessNameW)
-            {
-                len = WideCharToMultiByte(CP_ACP, 0, accessNameW, -1, NULL, 0, NULL, NULL);
-                if (len)
-                {
-                    if (len <= *lpBufferSize)
-                        WideCharToMultiByte(CP_ACP, 0, accessNameW, -1, lpAccessName, len, NULL, NULL);
-                    else
-                    {
-                        WNetCancelConnectionW(accessNameW, TRUE);
-                        *lpBufferSize = len;
-                       ret = WN_MORE_DATA;
-                    }
-                }
-            }
-        }
-    }
-
-    if (lpNetResource)
-    {
-        HeapFree(GetProcessHeap(), 0, resourcesW.lpLocalName);
-        HeapFree(GetProcessHeap(), 0, resourcesW.lpRemoteName);
-        HeapFree(GetProcessHeap(), 0, resourcesW.lpComment);
-        HeapFree(GetProcessHeap(), 0, resourcesW.lpProvider);
-    }
-    HeapFree(GetProcessHeap(), 0, passW);
-    HeapFree(GetProcessHeap(), 0, userIDW);
-    HeapFree(GetProcessHeap(), 0, accessNameW);
-
-    return ret;
-}
-
-/*****************************************************************
- *  WNetUseConnectionW [MPR.@]
- */
-DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, NETRESOURCEW *resource, LPCWSTR password,
-    LPCWSTR userid, DWORD flags, LPWSTR accessname, DWORD *buffer_size, DWORD *result )
-{
-    WNetProvider *provider;
-    DWORD index, ret, caps;
-
-    TRACE( "(%p, %p, %p, %s, 0x%08X, %p, %p, %p)\n",
-           hwndOwner, resource, password, debugstr_w(userid), flags,
-           accessname, buffer_size, result );
-
-    if (!providerTable || providerTable->numProviders == 0)
-        return WN_NO_NETWORK;
-
-    if (!resource)
-        return ERROR_INVALID_PARAMETER;
-
-    if (!resource->lpProvider)
-    {
-        FIXME("Networking provider selection is not implemented.\n");
-        return WN_NO_NETWORK;
-    }
-
-    if (!resource->lpLocalName && (flags & CONNECT_REDIRECT))
-    {
-        FIXME("Locale device selection is not implemented.\n");
-        return WN_NO_NETWORK;
-    }
-
-    if (flags & CONNECT_INTERACTIVE)
-        return ERROR_BAD_NET_NAME;
-
-    index = _findProviderIndexW(resource->lpProvider);
-    if (index == BAD_PROVIDER_INDEX)
-        return ERROR_BAD_PROVIDER;
-
-    provider = &providerTable->table[index];
-    caps = provider->getCaps(WNNC_CONNECTION);
-    if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
-        return ERROR_BAD_PROVIDER;
-
-    if (accessname && buffer_size && *buffer_size)
-    {
-        DWORD len;
-
-        if (resource->lpLocalName)
-            len = strlenW(resource->lpLocalName);
-        else
-            len = strlenW(resource->lpRemoteName);
-
-        if (++len > *buffer_size)
-        {
-            *buffer_size = len;
-            return ERROR_MORE_DATA;
-        }
-    }
-    else
-        accessname = NULL;
-
-    ret = WN_ACCESS_DENIED;
-    if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
-        ret = provider->addConnection3(hwndOwner, resource, (LPWSTR)password, (LPWSTR)userid, flags);
-    else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
-        ret = provider->addConnection(resource, (LPWSTR)password, (LPWSTR)userid);
-
-    if (ret == WN_SUCCESS && accessname)
-    {
-        if (resource->lpLocalName)
-            strcpyW(accessname, resource->lpLocalName);
-        else
-            strcpyW(accessname, resource->lpRemoteName);
-    }
+    free_netresourceW(&resourceW);
+    HeapFree(GetProcessHeap(), 0, ctxt.password);
+    HeapFree(GetProcessHeap(), 0, ctxt.userid);
 
     return ret;
 }
