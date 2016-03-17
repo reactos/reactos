@@ -750,7 +750,7 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                              providerTable->table[index].dwEnumScopes & WNNC_ENUM_GLOBAL)
                             {
                                 HANDLE handle;
-                                PVOID RemoteName = lpNet->lpRemoteName;
+                                PWSTR RemoteName = lpNet->lpRemoteName;
 
                                 if ((lpNet->dwUsage & RESOURCEUSAGE_CONTAINER) &&
                                     RemoteName && !strcmpW(RemoteName, lpNet->lpProvider))
