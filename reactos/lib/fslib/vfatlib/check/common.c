@@ -42,7 +42,7 @@ typedef struct _link {
 DECLSPEC_NORETURN // __attribute((noreturn))
 void exit(int exitcode)
 {
-    DbgBreakPoint();
+    // DbgBreakPoint();
     NtTerminateProcess(NtCurrentProcess(), exitcode);
 
     /* Should never get here */
@@ -50,7 +50,7 @@ void exit(int exitcode)
 }
 
 DECLSPEC_NORETURN // __attribute((noreturn))
-void die(const char *msg, ...)
+void die_func(const char *msg, ...) // die
 {
     va_list args;
 
@@ -59,14 +59,14 @@ void die(const char *msg, ...)
     DPRINT1("Unrecoverable problem!\n");
     VfatPrintV((char*)msg, args);
     va_end(args);
-    // fprintf(stderr, "\n");
-    VfatPrint("\n");
+    // // fprintf(stderr, "\n");
+    // VfatPrint("\n");
 
     exit(1);
 }
 
 DECLSPEC_NORETURN // __attribute((noreturn))
-void pdie(const char *msg, ...)
+void pdie_func(const char *msg, ...) // pdie
 {
     va_list args;
 
@@ -75,9 +75,9 @@ void pdie(const char *msg, ...)
     DPRINT1("Unrecoverable problem!\n");
     VfatPrintV((char*)msg, args);
     va_end(args);
-    // fprintf(stderr, ":%s\n", strerror(errno));
-    // VfatPrint(":%s\n", strerror(errno));
-    VfatPrint("\n");
+    // // fprintf(stderr, ":%s\n", strerror(errno));
+    // // VfatPrint(":%s\n", strerror(errno));
+    // VfatPrint("\n");
 
     exit(1);
 }

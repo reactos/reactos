@@ -28,12 +28,22 @@
 #define _COMMON_H
 
 DECLSPEC_NORETURN // __attribute((noreturn))
-void die(const char *msg, ...);
+// void die(const char *msg, ...);
+void die_func(const char *msg, ...);
+#define die(msg, ...)   \
+do {                    \
+    die_func("DIE! (%s:%d) " msg "\n", __RELFILE__, __LINE__, ##__VA_ARGS__)  \
+} while (0)
 
 /* Displays a prinf-style message and terminates the program. */
 
 DECLSPEC_NORETURN // __attribute((noreturn))
-void pdie(const char *msg, ...);
+// void pdie(const char *msg, ...);
+void pdie_func(const char *msg, ...);
+#define pdie(msg, ...)   \
+do {                    \
+    pdie_func("P-DIE! (%s:%d) " msg "\n", __RELFILE__, __LINE__, ##__VA_ARGS__)  \
+} while (0)
 
 /* Like die, but appends an error message according to the state of errno. */
 
