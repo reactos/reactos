@@ -23,6 +23,7 @@
 #include "atlcore.h"
 #include "statreg.h"
 #include "atlcomcli.h"
+#include "atlalloc.h"
 
 #ifdef _MSC_VER
 // It is common to use this in ATL constructors. They only store this for later use, so the usage is safe.
@@ -817,91 +818,38 @@ public:
 
 extern CAtlWinModule _AtlWinModule;
 
-
-// TODO: When someone needs it, make the allocator a template, so you can use it for both
-//       CoTask* allocations, and CRT-like allocations (malloc, realloc, free)
-template<class T>
-class CComHeapPtr
+class CComAllocator
 {
 public:
-    CComHeapPtr() :
-        m_Data(NULL)
+    static void* Allocate(_In_ size_t size)
+    {
+        return ::CoTaskMemAlloc(size);
+    }
+
+    static void* Reallocate(_In_opt_ void* ptr, _In_ size_t size)
+    {
+        return ::CoTaskMemRealloc(ptr, size);
+    }
+
+    static void Free(_In_opt_ void* ptr)
+    {
+        ::CoTaskMemFree(ptr);
+    }
+};
+
+
+template<class T>
+class CComHeapPtr : public CHeapPtr<T, CComAllocator>
+{
+public:
+    CComHeapPtr()
     {
     }
 
     explicit CComHeapPtr(T *lp) :
-        m_Data(lp)
+        CHeapPtr<T, CComAllocator>(lp)
     {
     }
-
-    explicit CComHeapPtr(CComHeapPtr<T> &lp)
-    {
-        m_Data = lp.Detach();
-    }
-
-    ~CComHeapPtr()
-    {
-        Release();
-    }
-
-    T *operator = (CComHeapPtr<T> &lp)
-    {
-        if (lp.m_Data != m_Data)
-            Attach(lp.Detach());
-        return *this;
-    }
-
-    bool Allocate(size_t nElements = 1)
-    {
-        ATLASSERT(m_Data == NULL);
-        m_Data = static_cast<T*>(::CoTaskMemAlloc(nElements * sizeof(T)));
-        return m_Data != NULL;
-    }
-
-    bool Reallocate(_In_ size_t nElements)
-    {
-        T* newData = static_cast<T*>(::CoTaskMemRealloc(m_Data, nElements * sizeof(T)));
-        if (newData == NULL)
-            return false;
-        m_Data = newData;
-        return true;
-    }
-
-    void Release()
-    {
-        if (m_Data)
-        {
-            ::CoTaskMemFree(m_Data);
-            m_Data = NULL;
-        }
-    }
-
-    void Attach(T *lp)
-    {
-        Release();
-        m_Data = lp;
-    }
-
-    T *Detach()
-    {
-        T *saveP = m_Data;
-        m_Data = NULL;
-        return saveP;
-    }
-
-    T **operator &()
-    {
-        ATLASSERT(m_Data == NULL);
-        return &m_Data;
-    }
-
-    operator T* () const
-    {
-        return m_Data;
-    }
-
-protected:
-    T *m_Data;
 };
 
 
