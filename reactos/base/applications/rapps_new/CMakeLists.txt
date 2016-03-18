@@ -3,6 +3,7 @@ project(RAPPS_NEW)
 set_cpp(WITH_RUNTIME)
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
+include_directories(${REACTOS_SOURCE_DIR}/lib/cryptlib)
 
 list(APPEND SOURCE
     aboutdlg.cpp
@@ -10,6 +11,7 @@ list(APPEND SOURCE
     gui.cpp
     installdlg.cpp
     installed.cpp
+    integrity.cpp
     loaddlg.cpp
     misc.cpp
     settingsdlg.cpp

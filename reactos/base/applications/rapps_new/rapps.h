@@ -89,8 +89,8 @@ typedef struct
     FILETIME ftCacheStamp;
     LIST_ENTRY List;
 
-    /* optional integrity checks */
-    BYTE MD5Checksum[16];
+    /* optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form) */
+    WCHAR szSHA1[40 + 1];
 
 } APPLICATION_INFO, *PAPPLICATION_INFO;
 
@@ -184,6 +184,9 @@ VOID NewRichEditText(PCWSTR szText, DWORD flags);
 VOID InsertRichEditText(PCWSTR szText, DWORD flags);
 extern HWND hListView;
 extern WCHAR szSearchPattern[MAX_STR_LEN];
+
+/* integrity.cpp */
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
 
 //extern HWND hTreeView;
 //BOOL CreateTreeView(HWND hwnd);

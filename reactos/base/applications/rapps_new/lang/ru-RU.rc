@@ -197,4 +197,7 @@ BEGIN
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
+    IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
+    IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
+    IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
 END

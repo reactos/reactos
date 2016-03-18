@@ -197,4 +197,7 @@ BEGIN
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
+    IDS_CERT_DOES_NOT_MATCH "La vérification du certificat SSL a échoué."
+    IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet..."
+    IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
 END

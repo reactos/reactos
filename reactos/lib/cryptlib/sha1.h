@@ -1,6 +1,11 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <ntdef.h>
 
 /* SHA Context Structure Declaration */
@@ -21,4 +26,7 @@ A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, ULONG BufferSize);
 VOID NTAPI
 A_SHAFinal(PSHA_CTX Context, PULONG Result);
 
+#ifdef __cplusplus
+}
+#endif
 
