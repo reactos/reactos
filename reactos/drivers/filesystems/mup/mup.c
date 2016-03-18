@@ -2157,7 +2157,7 @@ CreateRedirectedFile(PIRP Irp,
                     ExReleaseResourceLite(&MasterQueryContext->QueryPathListLock);
 
                     /* Query the provider !*/
-                    DPRINT1("Requeting UNC provider: %wZ\n", &UncProvider->DeviceName);
+                    DPRINT1("Requesting UNC provider: %wZ\n", &UncProvider->DeviceName);
                     DPRINT("Calling: %wZ\n", &UncProvider->DeviceObject->DriverObject->DriverName);
                     Status = IoCallDriver(UncProvider->DeviceObject, QueryIrp);
                 }

@@ -704,7 +704,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     /* Check if this was synch I/O */
     if (!LocalEvent)
     {
-        /* Check if the requet is pending */
+        /* Check if the request is pending */
         if (Status == STATUS_PENDING)
         {
             /* Wait on the file object */
@@ -1217,7 +1217,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     /* Check if this was synch I/O */
     if (!LocalEvent)
     {
-        /* Check if the requet is pending */
+        /* Check if the request is pending */
         if (Status == STATUS_PENDING)
         {
             /* Wait on the file object */
