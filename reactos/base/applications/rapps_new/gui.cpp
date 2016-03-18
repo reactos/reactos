@@ -1224,7 +1224,7 @@ public:
             0, 0, NULL, 
             LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAIN)),
             LoadCursor(NULL, IDC_ARROW),
-            (HBRUSH) (COLOR_BTNFACE + 1), NULL,
+            (HBRUSH) (COLOR_BTNFACE + 1), MAKEINTRESOURCE(IDR_MAINMENU),
             L"RAppsWnd", NULL },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
         };
