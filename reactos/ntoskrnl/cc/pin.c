@@ -252,7 +252,7 @@ CcUnpinDataForThread (
         return;
     }
 
-    return CcUnpinData(Bcb);
+    CcUnpinData(Bcb);
 }
 
 /*
