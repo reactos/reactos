@@ -1065,7 +1065,10 @@ typedef struct _SYMBOL_INFO
     ULONG       SizeOfStruct;
     ULONG       TypeIndex;
     ULONG64     Reserved[2];
-    ULONG       info;   /* sdk states info, while MSDN says it's Index... */
+    union {
+      ULONG       info;   /* wrong, but wine needs it */
+      ULONG       Index;
+    };
     ULONG       Size;
     ULONG64     ModBase;
     ULONG       Flags;
