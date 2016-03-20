@@ -242,9 +242,17 @@ CcUnpinDataForThread (
     IN	PVOID Bcb,
     IN	ERESOURCE_THREAD ResourceThreadId)
 {
+    PINTERNAL_BCB iBcb = Bcb;
+
     CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
 
-    UNIMPLEMENTED;
+    if (iBcb->OwnerPointer != (PVOID)ResourceThreadId)
+    {
+        DPRINT1("Invalid owner! Caller: %p, Owner: %p\n", (PVOID)ResourceThreadId, iBcb->OwnerPointer);
+        return;
+    }
+
+    return CcUnpinData(Bcb);
 }
 
 /*

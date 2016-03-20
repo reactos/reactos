@@ -117,10 +117,14 @@ CcSetBcbOwnerPointer (
 	IN	PVOID	Owner
 	)
 {
+    PINTERNAL_BCB iBcb = Bcb;
+
     CCTRACE(CC_API_DEBUG, "Bcb=%p Owner=%p\n",
         Bcb, Owner);
 
-	UNIMPLEMENTED;
+    if (iBcb->OwnerPointer)
+        DPRINT1("OwnerPointer was already set?! Old: %p, New: %p\n", iBcb->OwnerPointer, Owner);
+    iBcb->OwnerPointer = Owner;
 }
 
 /*

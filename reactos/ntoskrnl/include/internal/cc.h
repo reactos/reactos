@@ -194,6 +194,7 @@ typedef struct _INTERNAL_BCB
     PROS_VACB Vacb;
     BOOLEAN Dirty;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+    PVOID OwnerPointer;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID
