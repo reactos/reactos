@@ -270,7 +270,7 @@ struct buffer_head *ext3_bread(struct ext2_icb *icb, struct inode *inode,
 
     *err = bh_submit_read(bh);
     if (*err) {
-	    brelse(bh);
+	    __brelse(bh);
 	    return NULL;
     }
     return bh;
@@ -402,11 +402,11 @@ int add_dirent_to_buf(struct ext2_icb *icb, struct dentry *dentry,
         while ((char *) de <= top) {
             if (!ext3_check_dir_entry("ext3_add_entry", dir, de,
                                       bh, offset)) {
-                brelse(bh);
+                __brelse(bh);
                 return -EIO;
             }
             if (ext3_match(namelen, name, de)) {
-                brelse(bh);
+                __brelse(bh);
                 return -EEXIST;
             }
             nlen = EXT3_DIR_REC_LEN(de->name_len);
@@ -454,7 +454,7 @@ int add_dirent_to_buf(struct ext2_icb *icb, struct dentry *dentry,
     dir->i_version++;
     ext3_mark_inode_dirty(icb, dir);
     set_buffer_dirty(bh);
-    brelse(bh);
+    __brelse(bh);
     return 0;
 }
 
@@ -971,7 +971,7 @@ struct stats dx_show_entries(struct ext2_icb *icb, struct dx_hash_info *hinfo,
         names += stats.names;
         space += stats.space;
         bcount += stats.bcount;
-        brelse (bh);
+        __brelse (bh);
     }
     if (bcount)
         printk("%snames %u, fullness %u (%u%%)\n", levels?"":"   ",
@@ -1023,7 +1023,7 @@ static struct dx_frame *
         ext3_warning(dir->i_sb, __FUNCTION__,
                      "Unrecognised inode hash code %d",
                      root->info.hash_version);
-        brelse(bh);
+        __brelse(bh);
         *err = ERR_BAD_DX_DIR;
         goto fail;
     }
@@ -2181,7 +2181,7 @@ struct buffer_head * ext3_find_entry (struct ext2_icb *icb,
         return NULL;
 
 #ifdef EXT2_HTREE_INDEX
-    if (is_dx(dir)) {
+    if (icb->MajorFunction != IRP_MJ_CREATE && is_dx(dir)) {
         bh = ext3_dx_find_entry(icb, dentry, res_dir, &err);
         /*
          * On success, or if the error was file not found,

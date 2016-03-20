@@ -353,6 +353,10 @@ free_buffer_head(struct buffer_head * bh)
 
             Ext2DestroyMdl(bh->b_mdl);
         }
+        if (bh->b_bcb) {
+            CcUnpinDataForThread(bh->b_bcb, (ERESOURCE_THREAD)bh | 0x3);
+        }
+
         DEBUG(DL_BH, ("bh=%p freed.\n", bh));
         DEC_MEM_COUNT(PS_BUFF_HEAD, bh, sizeof(struct buffer_head));
         kmem_cache_free(g_jbh.bh_cache, bh);
@@ -420,7 +424,7 @@ static void buffer_head_remove(struct block_device *bdev, struct buffer_head *bh
 }
 
 struct buffer_head *
-get_block_bh(
+get_block_bh_mdl(
     struct block_device *   bdev,
     sector_t                block,
     unsigned long           size,
@@ -538,17 +542,7 @@ errorout:
     return bh;
 }
 
-struct buffer_head *
-__getblk(
-    struct block_device *   bdev,
-    sector_t                block,
-    unsigned long           size
-)
-{
-    return get_block_bh(bdev, block, size, 0);
-}
-
-int submit_bh(int rw, struct buffer_head *bh)
+int submit_bh_mdl(int rw, struct buffer_head *bh)
 {
     struct block_device *bdev = bh->b_bdev;
     PEXT2_VCB            Vcb  = bdev->bd_priv;
@@ -607,6 +601,159 @@ errorout:
     return 0;
 }
 
+struct buffer_head *
+get_block_bh(
+    struct block_device *   bdev,
+    sector_t                block,
+    unsigned long           size,
+    int                     zero
+) 
+{
+    PEXT2_VCB Vcb = bdev->bd_priv;
+    LARGE_INTEGER offset;
+
+    KIRQL irql = 0;
+    struct list_head *entry;
+
+    /* allocate buffer_head and initialize it */
+    struct buffer_head *bh = NULL, *tbh = NULL;
+
+    /* check the block is valid or not */
+    if (block >= TOTAL_BLOCKS) {
+        DbgBreak();
+        goto errorout;
+    }
+
+    /* search the bdev bh list */
+    spin_lock_irqsave(&bdev->bd_bh_lock, irql);
+    tbh = buffer_head_search(bdev, block);
+    if (tbh) {
+        bh = tbh;
+        get_bh(bh);
+        spin_unlock_irqrestore(&bdev->bd_bh_lock, irql);
+        goto errorout;
+    }
+    spin_unlock_irqrestore(&bdev->bd_bh_lock, irql);
+
+    bh = new_buffer_head();
+    if (!bh) {
+        goto errorout;
+    }
+    bh->b_bdev = bdev;
+    bh->b_blocknr = block;
+    bh->b_size = size;
+    bh->b_data = NULL;
+    atomic_inc(&g_jbh.bh_count);
+    atomic_inc(&g_jbh.bh_acount);
+
+again:
+
+    offset.QuadPart = (s64) bh->b_blocknr;
+    offset.QuadPart <<= BLOCK_BITS;
+
+    if (zero) {
+        if (!CcPreparePinWrite(Vcb->Volume,
+                            &offset,
+                            bh->b_size,
+                            FALSE,
+                            PIN_WAIT | PIN_EXCLUSIVE,
+                            &bh->b_bcb,
+                            (PVOID *)&bh->b_data)) {
+            Ext2Sleep(100);
+            goto again;
+        }
+    } else {
+        if (!CcPinRead( Vcb->Volume,
+                        &offset,
+                        bh->b_size,
+                        PIN_WAIT,
+                        &bh->b_bcb,
+                        (PVOID *)&bh->b_data)) {
+            Ext2Sleep(100);
+            goto again;
+        }
+        set_buffer_uptodate(bh);
+    }
+
+    if (!bh->b_data) {
+        free_buffer_head(bh);
+        bh = NULL;
+        goto errorout;
+    }
+
+    get_bh(bh);
+    CcSetBcbOwnerPointer(bh->b_bcb, (PVOID)((ERESOURCE_THREAD)bh | 0x3));
+
+    DEBUG(DL_BH, ("getblk: Vcb=%p bhcount=%u block=%u bh=%p ptr=%p.\n",
+                  Vcb, atomic_read(&g_jbh.bh_count), block, bh, bh->b_data));
+
+    spin_lock_irqsave(&bdev->bd_bh_lock, irql);
+
+    /* do search again here */
+    tbh = buffer_head_search(bdev, block);
+    if (tbh) {
+        get_bh(tbh);
+        spin_unlock_irqrestore(&bdev->bd_bh_lock, irql);
+        free_buffer_head(bh);
+        bh = tbh;
+        goto errorout;
+    } else {
+        buffer_head_insert(bdev, bh);
+    }
+
+    spin_unlock_irqrestore(&bdev->bd_bh_lock, irql);
+
+    /* we get it */
+errorout:
+
+    return bh;
+}
+
+int submit_bh(int rw, struct buffer_head *bh)
+{
+    struct block_device *bdev = bh->b_bdev;
+    PEXT2_VCB            Vcb  = bdev->bd_priv;
+    PVOID                Buffer;
+    LARGE_INTEGER        Offset;
+
+    ASSERT(Vcb->Identifier.Type == EXT2VCB);
+    ASSERT(bh->b_data && bh->b_bcb);
+
+    if (rw == WRITE) {
+
+        if (IsVcbReadOnly(Vcb)) {
+            goto errorout;
+        }
+
+        SetFlag(Vcb->Volume->Flags, FO_FILE_MODIFIED);
+        Offset.QuadPart = ((LONGLONG)bh->b_blocknr) << BLOCK_BITS;
+
+        CcSetDirtyPinnedData(bh->b_bcb, NULL);
+        Ext2AddBlockExtent( Vcb, NULL,
+                            (ULONG)bh->b_blocknr,
+                            (ULONG)bh->b_blocknr,
+                            (bh->b_size >> BLOCK_BITS));
+    } else {
+        DbgBreak();
+    }
+
+errorout:
+
+    unlock_buffer(bh);
+    put_bh(bh);
+    return 0;
+}
+
+struct buffer_head *
+__getblk(
+    struct block_device *   bdev,
+    sector_t                block,
+    unsigned long           size
+)
+{
+    return get_block_bh(bdev, block, size, 0);
+}
+
 void __brelse(struct buffer_head *bh)
 {
     struct block_device *bdev = bh->b_bdev;
@@ -635,6 +782,7 @@ void __brelse(struct buffer_head *bh)
     free_buffer_head(bh);
     atomic_dec(&g_jbh.bh_count);
 }
+
 
 void __bforget(struct buffer_head *bh)
 {

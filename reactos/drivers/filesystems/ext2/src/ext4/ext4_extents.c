@@ -878,7 +878,7 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 	neh = ext_block_hdr(bh);
 	neh->eh_entries = 0;
 	neh->eh_max = cpu_to_le16(ext4_ext_space_block(inode, 0));
-	neh->eh_magic = EXT4_EXT_MAGIC;
+	neh->eh_magic = cpu_to_le16(EXT4_EXT_MAGIC);
 	neh->eh_depth = 0;
 
 	/* move remainder of path[depth] to the new leaf */
@@ -948,7 +948,7 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 
 		neh = ext_block_hdr(bh);
 		neh->eh_entries = cpu_to_le16(1);
-		neh->eh_magic = EXT4_EXT_MAGIC;
+		neh->eh_magic = cpu_to_le16(EXT4_EXT_MAGIC);
 		neh->eh_max = cpu_to_le16(ext4_ext_space_block_idx(inode, 0));
 		neh->eh_depth = cpu_to_le16(depth - i);
 		fidx = EXT_FIRST_INDEX(neh);
@@ -1064,10 +1064,10 @@ static int ext4_ext_grow_indepth(void *icb, handle_t *handle, struct inode *inod
 	/* old root could have indexes or leaves
 	 * so calculate e_max right way */
 	if (ext_depth(inode))
-		neh->eh_max = (ext4_ext_space_block_idx(inode, 0));
+		neh->eh_max = cpu_to_le16(ext4_ext_space_block_idx(inode, 0));
 	else
-		neh->eh_max = (ext4_ext_space_block(inode, 0));
-	neh->eh_magic = EXT4_EXT_MAGIC;
+		neh->eh_max = cpu_to_le16(ext4_ext_space_block(inode, 0));
+	neh->eh_magic = cpu_to_le16(EXT4_EXT_MAGIC);
 	ext4_extent_block_csum_set(inode, neh);
 	set_buffer_uptodate(bh);
 
@@ -1077,11 +1077,11 @@ static int ext4_ext_grow_indepth(void *icb, handle_t *handle, struct inode *inod
 
 	/* Update top-level index: num,max,pointer */
 	neh = ext_inode_hdr(inode);
-	neh->eh_entries = (1);
+	neh->eh_entries = cpu_to_le16(1);
 	ext4_idx_store_pblock(EXT_FIRST_INDEX(neh), newblock);
 	if (neh->eh_depth == 0) {
 		/* Root extent block becomes index block */
-		neh->eh_max = (ext4_ext_space_root_idx(inode, 0));
+		neh->eh_max = cpu_to_le16(ext4_ext_space_root_idx(inode, 0));
 		EXT_FIRST_INDEX(neh)->ei_block =
 			EXT_FIRST_EXTENT(neh)->ee_block;
 	}
@@ -2310,7 +2310,7 @@ int ext4_ext_tree_init(void *icb, handle_t *handle, struct inode *inode)
 	eh = ext_inode_hdr(inode);
 	eh->eh_depth = 0;
 	eh->eh_entries = 0;
-	eh->eh_magic = EXT4_EXT_MAGIC;
+	eh->eh_magic = cpu_to_le16(EXT4_EXT_MAGIC);
 	eh->eh_max = cpu_to_le16(ext4_ext_space_root(inode, 0));
 	ext4_mark_inode_dirty(icb, handle, inode);
 	return 0;
@@ -2500,6 +2500,17 @@ out2:
 	/*mutex_unlock(&ext4_I(inode)->truncate_mutex);*/
 
 	return err ? err : allocated;
+}
+
+int ext4_ext_truncate(void *icb, struct inode *inode, unsigned long start)
+{
+    int ret = ext4_ext_remove_space(icb, inode, start);
+
+	/* Save modifications on i_blocks field of the inode. */
+	if (!ret)
+		ret = ext4_mark_inode_dirty(icb, NULL, inode);
+
+	return ret;
 }
 
 #ifdef _MSC_VER

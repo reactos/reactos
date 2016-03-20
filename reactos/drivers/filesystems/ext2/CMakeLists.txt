@@ -56,6 +56,7 @@ list(APPEND SOURCE
     src/nls/nls_koi8-ru.c
     src/nls/nls_koi8-u.c
     src/nls/nls_utf8.c
+    src/access.c
     src/block.c
     src/cleanup.c
     src/close.c

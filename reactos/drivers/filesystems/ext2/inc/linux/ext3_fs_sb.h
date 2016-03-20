@@ -36,7 +36,7 @@ struct ext3_sb_info {
     int s_addr_per_block_bits;
     int s_desc_per_block_bits;
 
-    struct buffer_head **s_group_desc;
+    ext3_fsblk_t  *s_group_desc;
 
 #if 0
     unsigned long s_frag_size;	/* Size of a fragment in bytes */

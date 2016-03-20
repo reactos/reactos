@@ -4,7 +4,7 @@
  * FILE:             Modules.h
  * PURPOSE:          Header file: nls structures & linux kernel ...
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
- * HOMEPAGE:         http://ext2.yeah.net
+ * HOMEPAGE:         http://www.ext2fsd.com
  * UPDATE HISTORY:
  */
 
@@ -15,9 +15,9 @@
 
 #include <linux/types.h>
 #include <linux/errno.h>
+#include <linux/rbtree.h>
 #include <linux/fs.h>
 #include <linux/log2.h>
-#include <linux/rbtree.h>
 
 #if _WIN32_WINNT <= 0x500
 #define _WIN2K_TARGET_ 1
@@ -712,7 +712,7 @@ struct buffer_head {
     unsigned long b_state;		            /* buffer state bitmap (see above) */
     struct page *b_page;                    /* the page this bh is mapped to */
     PMDL         b_mdl;                     /* MDL of the locked buffer */
-    void	*b_bcb;			    /* BCB of the buffer */
+    void	    *b_bcb;                     /* BCB of the buffer */
 
     // kdev_t b_dev;                        /* device (B_FREE = free) */
     struct block_device *b_bdev;            /* block device object */
@@ -938,6 +938,14 @@ static inline void brelse(struct buffer_head *bh)
 {
     if (bh)
         __brelse(bh);
+}
+
+static inline void fini_bh(struct buffer_head **bh)
+{
+    if (bh && *bh) {
+        brelse(*bh);
+        *bh = NULL;
+    }
 }
 
 static inline void bforget(struct buffer_head *bh)

@@ -22,12 +22,12 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT  DeviceObject;
     NTSTATUS        Status = STATUS_SUCCESS;
-    PEXT2_VCB       Vcb;
+    PEXT2_VCB       Vcb = NULL;
     PFILE_OBJECT    FileObject;
-    PEXT2_FCB       Fcb;
-    PEXT2_CCB       Ccb;
-    PIRP            Irp;
-    PEXT2_MCB       Mcb;
+    PEXT2_FCB       Fcb = NULL;
+    PEXT2_CCB       Ccb = NULL;
+    PIRP            Irp = NULL;
+    PEXT2_MCB       Mcb = NULL;
 
 
     BOOLEAN         VcbResourceAcquired = FALSE;
@@ -75,7 +75,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
         VcbResourceAcquired =
             ExAcquireResourceExclusiveLite(
                 &Vcb->MainResource,
-                IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
+                TRUE
             );
 
         if (Fcb->Identifier.Type == EXT2VCB) {
@@ -143,7 +143,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
         FcbResourceAcquired =
             ExAcquireResourceExclusiveLite(
                 &Fcb->MainResource,
-                IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
+                TRUE
             );
 
         ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
@@ -237,8 +237,14 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                     if (Fcb->Header.ValidDataLength.QuadPart < Fcb->Header.FileSize.QuadPart) {
                         if (!INODE_HAS_EXTENT(Fcb->Inode)) {
                         #if EXT2_PRE_ALLOCATION_SUPPORT
-                            CcZeroData(FileObject, &Fcb->Header.ValidDataLength,
-                                       &Fcb->Header.AllocationSize, TRUE);
+                            _SEH2_TRY {
+                                CcZeroData( FileObject,
+                                           &Fcb->Header.ValidDataLength,
+                                           &Fcb->Header.AllocationSize,
+                                           TRUE);
+                            } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+                                DbgBreak();
+                            } _SEH2_END;
                         #endif
                         }
                     }
@@ -315,7 +321,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 FcbResourceAcquired =
                     ExAcquireResourceExclusiveLite(
                         &Fcb->MainResource,
-                        IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
+                        TRUE
                     );
 
                 SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
@@ -329,7 +335,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
         if (!IsDirectory(Fcb)) {
 
             if ( IsFlagOn(FileObject->Flags, FO_CACHE_SUPPORTED) &&
-                    (Fcb->NonCachedOpenCount + 1 == Fcb->ReferenceCount) &&
+                    (Fcb->NonCachedOpenCount == Fcb->OpenHandleCount) &&
                     (Fcb->SectionObject.DataSectionObject != NULL)) {
 
                 if (!IsVcbReadOnly(Vcb)) {
@@ -337,14 +343,17 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                     ClearLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
                 }
 
-                if (ExAcquireResourceExclusiveLite(&(Fcb->PagingIoResource), TRUE)) {
-                    ExReleaseResourceLite(&(Fcb->PagingIoResource));
-                }
+                /* purge cache if all remaining openings are non-cached */
+                if (Fcb->NonCachedOpenCount > 0) {
+                    if (ExAcquireResourceExclusiveLite(&(Fcb->PagingIoResource), TRUE)) {
+                        ExReleaseResourceLite(&(Fcb->PagingIoResource));
+                    }
 
-                CcPurgeCacheSection( &Fcb->SectionObject,
-                                     NULL,
-                                     0,
-                                     FALSE );
+                    CcPurgeCacheSection( &Fcb->SectionObject,
+                                         NULL,
+                                         0,
+                                         FALSE );
+                }
             }
 
             CcUninitializeCacheMap(FileObject, NULL, NULL);

@@ -4,7 +4,7 @@
  * FILE:             Ext2fs.h
  * PURPOSE:          Header file: ext2 structures
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
- * HOMEPAGE:         http://ext2.yeah.net
+ * HOMEPAGE:         http://www.ext2fsd.com
  * UPDATE HISTORY:
  */
 
@@ -18,7 +18,8 @@
 #include <ndk/rtlfuncs.h>
 #include <pseh/pseh2.h>
 #endif
-#include "stdio.h"
+#include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <linux/ext2_fs.h>
 #include <linux/ext3_fs.h>
@@ -46,8 +47,13 @@
 
 /* STRUCTS & CONSTS******************************************************/
 
-#define EXT2FSD_VERSION                 "0.62"
+#define EXT2FSD_VERSION                 "0.63"
 
+
+/* WDK DEFINITIONS ******************************************************/
+
+
+/* COMPILER SWITCH / OPTIONS ********************************************/
 
 //
 // Ext2Fsd build options
@@ -378,9 +384,24 @@ Ext2ClearFlag(PULONG Flags, ULONG FlagBit)
 #define Ext2SetOwnerReadOnly(m) do {(m) &= ~S_IWUSR;} while(0)
 
 #define Ext2IsOwnerWritable(m)  (((m) & S_IWUSR) == S_IWUSR)
-#define Ext2IsOwnerReadOnly(m)  (!(Ext2IsOwnerWritable(m)))
+#define Ext2IsOwnerReadable(m)  (((m) & S_IRUSR) == S_IRUSR)
+#define Ext2IsOwnerReadOnly(m)  (!(Ext2IsOwnerWritable(m)) && Ext2IsOwnerReadable(m))
+
+#define Ext2IsGroupWritable(m)  (((m) & S_IWGRP) == S_IWGRP)
+#define Ext2IsGroupReadable(m)  (((m) & S_IRGRP) == S_IRGRP)
+#define Ext2IsGroupReadOnly(m)  (!(Ext2IsGroupWritable(m)) && Ext2IsGroupReadable(m))
+
+#define Ext2IsOtherWritable(m)  (((m) & S_IWOTH) == S_IWOTH)
+#define Ext2IsOtherReadable(m)  (((m) & S_IROTH) == S_IROTH)
+#define Ext2IsOtherReadOnly(m)  (!(Ext2IsOtherWritable(m)) && Ext2IsOtherReadable(m))
 
 #define Ext2SetReadOnly(m) do {(m) &= ~(S_IWUSR | S_IWGRP | S_IWOTH);} while(0)
+
+
+#define Ext2FileCanRead         (0x1)
+#define Ext2FileCanWrite        (0x2)
+#define Ext2FileCanExecute      (0x4)
+
 
 /*
  * We need 8-bytes aligned for all the sturctures
@@ -690,6 +711,14 @@ typedef struct _EXT2_VCB {
     BOOLEAN                     bHidingSuffix;
     CHAR                        sHidingSuffix[HIDINGPAT_LEN];
 
+    /* User to impersanate */
+    uid_t                       uid;
+    gid_t                       gid;
+
+    /* User to act as */
+    uid_t                       euid;
+    gid_t                       egid;
+
     /* mountpoint: symlink to DesDevices */
     UCHAR                       DrvLetter;
 
@@ -713,6 +742,8 @@ typedef struct _EXT2_VCB {
 #define VCB_DISMOUNT_PENDING    0x00000008
 #define VCB_NEW_VPB             0x00000010
 #define VCB_BEING_CLOSED        0x00000020
+#define VCB_USER_IDS            0x00000040  /* uid/gid specified by user */
+#define VCB_USER_EIDS           0x00000080  /* euid/egid specified by user */
 
 #define VCB_FORCE_WRITING       0x00004000
 #define VCB_DEVICE_REMOVED      0x00008000
@@ -816,7 +847,7 @@ struct _EXT2_MCB {
 
     // Link List Info
     PEXT2_MCB                       Parent; // Parent
-    PEXT2_MCB                       Next;   // Brothers
+    PEXT2_MCB                       Next;   // Siblings
 
     union {
         PEXT2_MCB                   Child;  // Children Mcb nodes
@@ -943,7 +974,7 @@ typedef struct _EXT2_CCB {
 #define CCB_FROM_POOL               0x00000001
 #define CCB_VOLUME_DASD_PURGE       0x00000002
 #define CCB_LAST_WRITE_UPDATED      0x00000004
-
+#define CCB_OPEN_REPARSE_POINT      0x00000008
 #define CCB_DELETE_ON_CLOSE         0x00000010
 
 #define CCB_ALLOW_EXTENDED_DASD_IO  0x80000000
@@ -1101,6 +1132,14 @@ typedef struct _EXT2_FILLDIR_CONTEXT {
     FILE_INFORMATION_CLASS  efc_fi;
     BOOLEAN                 efc_single;
 } EXT2_FILLDIR_CONTEXT, *PEXT2_FILLDIR_CONTEXT;
+
+//
+// Access.c
+//
+
+
+int Ext2CheckInodeAccess(PEXT2_VCB Vcb, struct inode *in, int attempt);
+int Ext2CheckFileAccess (PEXT2_VCB Vcb, PEXT2_MCB Mcb, int attempt);
 
 //
 // Block.c
@@ -1268,7 +1307,7 @@ Ext2FollowLink (
     IN PEXT2_VCB            Vcb,
     IN PEXT2_MCB            Parent,
     IN PEXT2_MCB            Mcb,
-    IN USHORT               Linkdep
+    IN ULONG                Linkdep
 );
 
 NTSTATUS
@@ -1287,6 +1326,9 @@ Ext2IsSpecialSystemFile(
     IN BOOLEAN         bDirectory
 );
 
+#define EXT2_LOOKUP_FLAG_MASK   (0xFF00000)
+#define EXT2_LOOKUP_NOT_FOLLOW  (0x8000000)
+
 NTSTATUS
 Ext2LookupFile (
     IN PEXT2_IRP_CONTEXT    IrpContext,
@@ -1294,7 +1336,7 @@ Ext2LookupFile (
     IN PUNICODE_STRING      FullName,
     IN PEXT2_MCB            Parent,
     OUT PEXT2_MCB *         Ext2Mcb,
-    IN USHORT               Linkdep
+    IN ULONG                Linkdep
 );
 
 NTSTATUS
@@ -1733,6 +1775,9 @@ Ext2LoadGroup(IN PEXT2_VCB Vcb);
 VOID
 Ext2PutGroup(IN PEXT2_VCB Vcb);
 
+VOID
+Ext2DropGroup(IN PEXT2_VCB Vcb);
+
 BOOLEAN
 Ext2SaveGroup(
     IN PEXT2_IRP_CONTEXT    IrpContext,
@@ -1882,6 +1927,14 @@ Ext2AddEntry (
     IN struct inode       *Inode,
     IN PUNICODE_STRING     FileName,
     OUT struct dentry    **dentry
+);
+
+NTSTATUS
+Ext2SetFileType (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_FCB            Dcb,
+    IN PEXT2_MCB            Mcb
 );
 
 NTSTATUS
@@ -2116,6 +2169,14 @@ Ext2SetRenameInfo(
     PEXT2_CCB Ccb
 );
 
+NTSTATUS
+Ext2SetLinkInfo(
+    PEXT2_IRP_CONTEXT IrpContext,
+    PEXT2_VCB Vcb,
+    PEXT2_FCB Fcb,
+    PEXT2_CCB Ccb
+);
+
 ULONG
 Ext2InodeType(PEXT2_MCB Mcb);
 
@@ -2160,6 +2221,34 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext);
 //
 // Fsctl.c
 //
+
+NTSTATUS
+Ext2ReadSymlink (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Mcb,
+    IN PVOID                Buffer,
+    IN ULONG                Size,
+    OUT PULONG              BytesRead
+    );
+
+NTSTATUS
+Ext2WriteSymlink (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Mcb,
+    IN PVOID                Buffer,
+    IN ULONG                Size,
+    OUT PULONG              BytesWritten
+);
+
+NTSTATUS
+Ext2TruncateSymlink(
+    PEXT2_IRP_CONTEXT IrpContext,
+    PEXT2_VCB         Vcb,
+    PEXT2_MCB         Mcb,
+    ULONG             Size
+);
 
 //
 // MountPoint process workitem
@@ -2400,7 +2489,7 @@ VOID
 Ext2RemoveFcb(PEXT2_VCB Vcb, PEXT2_FCB Fcb);
 
 PEXT2_CCB
-Ext2AllocateCcb (PEXT2_MCB  SymLink);
+Ext2AllocateCcb (ULONG Flags, PEXT2_MCB SymLink);
 
 VOID
 Ext2FreeMcb (

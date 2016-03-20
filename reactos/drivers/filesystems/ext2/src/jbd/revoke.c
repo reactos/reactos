@@ -131,9 +131,9 @@ repeat:
     record->sequence = seq;
     record->blocknr = blocknr;
     hash_list = &journal->j_revoke->hash_table[hash(journal, blocknr)];
-    spin_lock(&journal->j_revoke_lock);
+    jbd_lock(&journal->j_revoke_lock);
     list_add(&record->hash, hash_list);
-    spin_unlock(&journal->j_revoke_lock);
+    jbd_unlock(&journal->j_revoke_lock);
     return 0;
 
 oom:
@@ -154,16 +154,16 @@ static struct jbd_revoke_record_s *find_revoke_record(journal_t *journal,
 
     hash_list = &journal->j_revoke->hash_table[hash(journal, blocknr)];
 
-    spin_lock(&journal->j_revoke_lock);
+    jbd_lock(&journal->j_revoke_lock);
     record = (struct jbd_revoke_record_s *) hash_list->next;
     while (&(record->hash) != hash_list) {
         if (record->blocknr == blocknr) {
-            spin_unlock(&journal->j_revoke_lock);
+            jbd_unlock(&journal->j_revoke_lock);
             return record;
         }
         record = (struct jbd_revoke_record_s *) record->hash.next;
     }
-    spin_unlock(&journal->j_revoke_lock);
+    jbd_unlock(&journal->j_revoke_lock);
     return NULL;
 }
 
@@ -261,7 +261,7 @@ int journal_init_revoke(journal_t *journal, int hash_size)
     for (tmp = 0; tmp < hash_size; tmp++)
         INIT_LIST_HEAD(&journal->j_revoke->hash_table[tmp]);
 
-    spin_lock_init(&journal->j_revoke_lock);
+    jbd_lock_init(&journal->j_revoke_lock);
 
     return 0;
 }
@@ -447,9 +447,9 @@ int journal_cancel_revoke(handle_t *handle, struct journal_head *jh)
         if (record) {
             jbd_debug(4, "cancelled existing revoke on "
                       "blocknr %llu\n", (u64)bh->b_blocknr);
-            spin_lock(&journal->j_revoke_lock);
+            jbd_lock(&journal->j_revoke_lock);
             list_del(&record->hash);
-            spin_unlock(&journal->j_revoke_lock);
+            jbd_unlock(&journal->j_revoke_lock);
             kmem_cache_free(revoke_record_cache, record);
             did_revoke = 1;
         }

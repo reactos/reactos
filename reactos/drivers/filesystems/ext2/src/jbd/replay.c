@@ -43,9 +43,9 @@ int log_start_commit(journal_t *journal, tid_t tid)
 {
     int ret;
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     ret = __log_start_commit(journal, tid);
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
     return ret;
 }
 
@@ -69,12 +69,12 @@ static void __journal_abort_hard(journal_t *journal)
     if (journal->j_flags & JFS_ABORT)
         return;
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     journal->j_flags |= JFS_ABORT;
     transaction = journal->j_running_transaction;
     if (transaction)
         __log_start_commit(journal, transaction->t_tid);
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
 }
 
 /* Soft abort: record the abort error status in the journal superblock,
@@ -160,12 +160,12 @@ int journal_errno(journal_t *journal)
 {
     int err;
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     if (journal->j_flags & JFS_ABORT)
         err = -EROFS;
     else
         err = journal->j_errno;
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
     return err;
 }
 
@@ -180,12 +180,12 @@ int journal_clear_err(journal_t *journal)
 {
     int err = 0;
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     if (journal->j_flags & JFS_ABORT)
         err = -EROFS;
     else
         journal->j_errno = 0;
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
     return err;
 }
 
@@ -198,10 +198,10 @@ int journal_clear_err(journal_t *journal)
  */
 void journal_ack_err(journal_t *journal)
 {
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     if (journal->j_errno)
         journal->j_flags |= JFS_ACK_ERR;
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
 }
 
 int journal_blocks_per_page(struct inode *inode)
@@ -462,7 +462,7 @@ int journal_next_log_block(journal_t *journal, unsigned long *retp)
 {
     unsigned long blocknr;
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     J_ASSERT(journal->j_free > 1);
 
     blocknr = journal->j_head;
@@ -470,7 +470,7 @@ int journal_next_log_block(journal_t *journal, unsigned long *retp)
     journal->j_free--;
     if (journal->j_head == journal->j_last)
         journal->j_head = journal->j_first;
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
     return journal_bmap(journal, blocknr, retp);
 }
 
@@ -561,9 +561,9 @@ static journal_t * journal_init_common (void)
     init_waitqueue_head(&journal->j_wait_updates);
     mutex_init(&journal->j_barrier);
     mutex_init(&journal->j_checkpoint_mutex);
-    spin_lock_init(&journal->j_revoke_lock);
-    spin_lock_init(&journal->j_list_lock);
-    spin_lock_init(&journal->j_state_lock);
+    jbd_lock_init(&journal->j_revoke_lock);
+    jbd_lock_init(&journal->j_list_lock);
+    jbd_lock_init(&journal->j_state_lock);
 
     journal->j_commit_interval = (HZ * JBD_DEFAULT_MAX_COMMIT_AGE);
 
@@ -688,17 +688,17 @@ void journal_destroy(journal_t *journal)
     /* Force any old transactions to disk */
 
     /* Totally anal locking here... */
-    spin_lock(&journal->j_list_lock);
+    jbd_lock(&journal->j_list_lock);
     while (journal->j_checkpoint_transactions != NULL) {
-        spin_unlock(&journal->j_list_lock);
+        jbd_unlock(&journal->j_list_lock);
         log_do_checkpoint(journal);
-        spin_lock(&journal->j_list_lock);
+        jbd_lock(&journal->j_list_lock);
     }
 
     J_ASSERT(journal->j_running_transaction == NULL);
     J_ASSERT(journal->j_committing_transaction == NULL);
     J_ASSERT(journal->j_checkpoint_transactions == NULL);
-    spin_unlock(&journal->j_list_lock);
+    jbd_unlock(&journal->j_list_lock);
 
     /* We can now mark the journal as empty. */
     journal->j_tail = 0;
@@ -1048,14 +1048,14 @@ void journal_update_superblock(journal_t *journal, int wait)
         goto out;
     }
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     jbd_debug(1,"JBD: updating superblock (start %ld, seq %d, errno %d)\n",
               journal->j_tail, journal->j_tail_sequence, journal->j_errno);
 
     sb->s_sequence = cpu_to_be32(journal->j_tail_sequence);
     sb->s_start    = cpu_to_be32(journal->j_tail);
     sb->s_errno    = cpu_to_be32(journal->j_errno);
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
 
     BUFFER_TRACE(bh, "marking dirty");
     mark_buffer_dirty(bh);
@@ -1069,12 +1069,12 @@ out:
      * any future commit will have to be careful to update the
      * superblock again to re-record the true start of the log. */
 
-    spin_lock(&journal->j_state_lock);
+    jbd_lock(&journal->j_state_lock);
     if (sb->s_start)
         journal->j_flags &= ~JFS_FLUSHED;
     else
         journal->j_flags |= JFS_FLUSHED;
-    spin_unlock(&journal->j_state_lock);
+    jbd_unlock(&journal->j_state_lock);
 }
 
 /*
@@ -1240,7 +1240,7 @@ static void __journal_temp_unlink_buffer(struct journal_head *jh)
     J_ASSERT_JH(jh, jbd_is_locked_bh_state(bh));
     transaction = jh->b_transaction;
     if (transaction)
-        assert_spin_locked(&transaction->t_journal->j_list_lock);
+        assert_jbd_locked(&transaction->t_journal->j_list_lock);
 
     J_ASSERT_JH(jh, jh->b_jlist < BJ_Types);
     if (jh->b_jlist != BJ_None)
@@ -1292,9 +1292,9 @@ void __journal_unfile_buffer(struct journal_head *jh)
 void journal_unfile_buffer(journal_t *journal, struct journal_head *jh)
 {
     jbd_lock_bh_state(jh2bh(jh));
-    spin_lock(&journal->j_list_lock);
+    jbd_lock(&journal->j_list_lock);
     __journal_unfile_buffer(jh);
-    spin_unlock(&journal->j_list_lock);
+    jbd_unlock(&journal->j_list_lock);
     jbd_unlock_bh_state(jh2bh(jh));
 }
 
@@ -1342,7 +1342,7 @@ void __journal_file_buffer(struct journal_head *jh,
     struct buffer_head *bh = jh2bh(jh);
 
     J_ASSERT_JH(jh, jbd_is_locked_bh_state(bh));
-    assert_spin_locked(&transaction->t_journal->j_list_lock);
+    assert_jbd_locked(&transaction->t_journal->j_list_lock);
 
     J_ASSERT_JH(jh, jh->b_jlist < BJ_Types);
     J_ASSERT_JH(jh, jh->b_transaction == transaction ||
@@ -1409,9 +1409,9 @@ void journal_file_buffer(struct journal_head *jh,
                          transaction_t *transaction, int jlist)
 {
     jbd_lock_bh_state(jh2bh(jh));
-    spin_lock(&transaction->t_journal->j_list_lock);
+    jbd_lock(&transaction->t_journal->j_list_lock);
     __journal_file_buffer(jh, transaction, jlist);
-    spin_unlock(&transaction->t_journal->j_list_lock);
+    jbd_unlock(&transaction->t_journal->j_list_lock);
     jbd_unlock_bh_state(jh2bh(jh));
 }
 
@@ -1455,7 +1455,7 @@ int journal_forget (handle_t *handle, struct buffer_head *bh)
     BUFFER_TRACE(bh, "entry");
 
     jbd_lock_bh_state(bh);
-    spin_lock(&journal->j_list_lock);
+    jbd_lock(&journal->j_list_lock);
 
     if (!buffer_jbd(bh))
         goto not_jbd;
@@ -1508,7 +1508,7 @@ int journal_forget (handle_t *handle, struct buffer_head *bh)
             journal_remove_journal_head(bh);
             __brelse(bh);
             if (!buffer_jbd(bh)) {
-                spin_unlock(&journal->j_list_lock);
+                jbd_unlock(&journal->j_list_lock);
                 jbd_unlock_bh_state(bh);
                 __bforget(bh);
                 goto drop;
@@ -1531,7 +1531,7 @@ int journal_forget (handle_t *handle, struct buffer_head *bh)
     }
 
 not_jbd:
-    spin_unlock(&journal->j_list_lock);
+    jbd_unlock(&journal->j_list_lock);
     jbd_unlock_bh_state(bh);
     __brelse(bh);
 drop:

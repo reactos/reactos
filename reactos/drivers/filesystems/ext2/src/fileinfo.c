@@ -25,6 +25,7 @@ extern PEXT2_GLOBAL Ext2Global;
 #pragma alloc_text(PAGE, Ext2TruncateFile)
 #pragma alloc_text(PAGE, Ext2SetDispositionInfo)
 #pragma alloc_text(PAGE, Ext2SetRenameInfo)
+#pragma alloc_text(PAGE, Ext2SetLinkInfo)
 #pragma alloc_text(PAGE, Ext2DeleteFile)
 #endif
 
@@ -34,11 +35,11 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
     PDEVICE_OBJECT          DeviceObject;
     NTSTATUS                Status = STATUS_UNSUCCESSFUL;
     PFILE_OBJECT            FileObject;
-    PEXT2_VCB               Vcb;
-    PEXT2_FCB               Fcb;
-    PEXT2_MCB               Mcb;
-    PEXT2_CCB               Ccb;
-    PIRP                    Irp;
+    PEXT2_VCB               Vcb = NULL;
+    PEXT2_FCB               Fcb = NULL;
+    PEXT2_MCB               Mcb = NULL;
+    PEXT2_CCB               Ccb = NULL;
+    PIRP                    Irp = NULL;
     PIO_STACK_LOCATION      IoStackLocation;
     FILE_INFORMATION_CLASS  FileInformationClass;
     ULONG                   Length;
@@ -489,13 +490,13 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT          DeviceObject;
     NTSTATUS                Status = STATUS_UNSUCCESSFUL;
-    PEXT2_VCB               Vcb;
-    PFILE_OBJECT            FileObject;
-    PEXT2_FCB               Fcb;
-    PEXT2_CCB               Ccb;
-    PEXT2_MCB               Mcb;
-    PIRP                    Irp;
-    PIO_STACK_LOCATION      IoStackLocation;
+    PEXT2_VCB               Vcb = NULL;
+    PFILE_OBJECT            FileObject = NULL;
+    PEXT2_FCB               Fcb = NULL;
+    PEXT2_CCB               Ccb = NULL;
+    PEXT2_MCB               Mcb = NULL;
+    PIRP                    Irp = NULL;
+    PIO_STACK_LOCATION      IoStackLocation = NULL;
     FILE_INFORMATION_CLASS  FileInformationClass;
 
     ULONG                   NotifyFilter = 0;
@@ -541,8 +542,9 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
 
-        /* we need grab Vcb in case it's a rename operation */
-        if (FileInformationClass == FileRenameInformation) {
+        /* we need grab Vcb in case it's rename or sethardlink */
+        if (FileInformationClass == FileRenameInformation ||
+            FileInformationClass == FileLinkInformation) {
             if (!ExAcquireResourceExclusiveLite(
                         &Vcb->MainResource,
                         IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
@@ -616,10 +618,11 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             Fcb->Header.IsFastIoPossible = Ext2IsFastIoPossible(Fcb);
         }
 
-        /* for renaming, we must not get any Fcb locks here, function
-           Ext2SetRenameInfo will get Dcb resource exclusively.  */
+        /* for renaming or set link, we must not grab any Fcb locks,
+           and later we will get Dcb or Fcb resources exclusively.  */
         if (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE) &&
-                FileInformationClass != FileRenameInformation) {
+            FileInformationClass != FileRenameInformation &&
+            FileInformationClass != FileLinkInformation) {
 
             if (!ExAcquireResourceExclusiveLite(
                         &Fcb->MainResource,
@@ -975,6 +978,14 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
         break;
 
+
+        case FileLinkInformation:
+        {
+            Status = Ext2SetLinkInfo(IrpContext, Vcb, Fcb, Ccb);
+        }
+
+        break;
+
         //
         // This is the only set file information request supported on read
         // only file systems
@@ -1005,11 +1016,6 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         }
 
         break;
-
-        case FileLinkInformation:
-
-            Status = STATUS_INVALID_DEVICE_REQUEST;
-            break;
 
         default:
             DEBUG(DL_WRN, ( "Ext2SetInformation: invalid class: %d\n",
@@ -1656,6 +1662,262 @@ errorout:
     return Status;
 }
 
+NTSTATUS
+Ext2SetLinkInfo(
+    PEXT2_IRP_CONTEXT IrpContext,
+    PEXT2_VCB         Vcb,
+    PEXT2_FCB         Fcb,
+    PEXT2_CCB         Ccb
+)
+{
+    PEXT2_MCB               Mcb = Fcb->Mcb;
+
+    PEXT2_FCB               TargetDcb = NULL;   /* Dcb of target directory */
+    PEXT2_MCB               TargetMcb = NULL;
+    PEXT2_FCB               ParentDcb = NULL;   /* Dcb of it's current parent */
+    PEXT2_MCB               ParentMcb = NULL;
+
+    PEXT2_FCB               ExistingFcb = NULL; /* Target file Fcb if it exists*/
+    PEXT2_MCB               ExistingMcb = NULL;
+    PEXT2_MCB               LinkMcb = NULL;     /* Mcb for new hardlink */
+
+    UNICODE_STRING          FileName;
+
+    NTSTATUS                Status;
+
+    PIRP                    Irp;
+    PIO_STACK_LOCATION      IrpSp;
+
+    PFILE_OBJECT            FileObject;
+    PFILE_OBJECT            TargetObject;
+
+    BOOLEAN                 ReplaceIfExists;
+    BOOLEAN                 bTargetRemoved = FALSE;
+    BOOLEAN                 bNewTargetDcb = FALSE;
+    BOOLEAN                 bNewParentDcb = FALSE;
+
+    PFILE_LINK_INFORMATION  FLI;
+
+    if (Ccb->SymLink) {
+        Mcb = Ccb->SymLink;
+    }
+
+    if (IsMcbDirectory(Mcb)) {
+        Status = STATUS_INVALID_PARAMETER;
+        goto errorout;
+    }
+
+    Irp = IrpContext->Irp;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    FileObject = IrpSp->FileObject;
+    TargetObject = IrpSp->Parameters.SetFile.FileObject;
+    ReplaceIfExists = IrpSp->Parameters.SetFile.ReplaceIfExists;
+
+    FLI = (PFILE_LINK_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+    if (TargetObject == NULL) {
+
+        UNICODE_STRING  NewName;
+
+        NewName.Buffer = FLI->FileName;
+        NewName.MaximumLength = NewName.Length = (USHORT)FLI->FileNameLength;
+
+        while (NewName.Length > 0 && NewName.Buffer[NewName.Length/2 - 1] == L'\\') {
+            NewName.Buffer[NewName.Length/2 - 1] = 0;
+            NewName.Length -= 2;
+        }
+
+        while (NewName.Length > 0 && NewName.Buffer[NewName.Length/2 - 1] != L'\\') {
+            NewName.Length -= 2;
+        }
+
+        NewName.Buffer = (USHORT *)((UCHAR *)NewName.Buffer + NewName.Length);
+        NewName.Length = (USHORT)(FLI->FileNameLength - NewName.Length);
+
+        FileName = NewName;
+
+        TargetMcb = Mcb->Parent;
+        if (IsMcbSymLink(TargetMcb)) {
+            TargetMcb = TargetMcb->Target;
+            ASSERT(!IsMcbSymLink(TargetMcb));
+        }
+
+        if (TargetMcb == NULL || FileName.Length >= EXT2_NAME_LEN*2) {
+            Status = STATUS_OBJECT_NAME_INVALID;
+            goto errorout;
+        }
+
+    } else {
+
+        TargetDcb = (PEXT2_FCB)(TargetObject->FsContext);
+        if (!TargetDcb || TargetDcb->Vcb != Vcb) {
+            DbgBreak();
+            Status = STATUS_INVALID_PARAMETER;
+            goto errorout;
+        }
+
+        TargetMcb = TargetDcb->Mcb;
+        FileName = TargetObject->FileName;
+    }
+
+    if (FsRtlDoesNameContainWildCards(&FileName)) {
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto errorout;
+    }
+
+    if (TargetMcb->Inode.i_ino == Mcb->Parent->Inode.i_ino) {
+        if (FsRtlAreNamesEqual( &FileName,
+                                &(Mcb->ShortName),
+                                FALSE,
+                                NULL )) {
+            Status = STATUS_SUCCESS;
+            goto errorout;
+        }
+    }
+
+    TargetDcb = TargetMcb->Fcb;
+    if (TargetDcb == NULL) {
+        TargetDcb = Ext2AllocateFcb(Vcb, TargetMcb);
+        if (TargetDcb) {
+            Ext2ReferXcb(&TargetDcb->ReferenceCount);
+            bNewTargetDcb = TRUE;
+        }
+    }
+
+    if (TargetDcb) {
+        SetLongFlag(TargetDcb->Flags, FCB_STATE_BUSY);
+    }
+
+    ParentMcb = Mcb->Parent;
+    ParentDcb = ParentMcb->Fcb;
+
+    if ((TargetMcb->Inode.i_ino != ParentMcb->Inode.i_ino)) {
+
+        if (ParentDcb == NULL) {
+            ParentDcb = Ext2AllocateFcb(Vcb, ParentMcb);
+            if (ParentDcb) {
+                Ext2ReferXcb(&ParentDcb->ReferenceCount);
+                bNewParentDcb = TRUE;
+            }
+        }
+        if (ParentDcb) {
+            SetLongFlag(ParentDcb->Flags, FCB_STATE_BUSY);
+        }
+    }
+
+    if (!TargetDcb || !ParentDcb) {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto errorout;
+    }
+
+    DEBUG(DL_RES, ("Ext2SetLinkInfo: %wZ\\%wZ -> %wZ\n",
+                   &TargetMcb->FullName, &FileName, &Mcb->FullName));
+
+    Status = Ext2LookupFile(IrpContext, Vcb, &FileName,
+                            TargetMcb, &ExistingMcb, 0);
+    if (NT_SUCCESS(Status) && ExistingMcb != Mcb) {
+
+        if (!ReplaceIfExists) {
+
+            Status = STATUS_OBJECT_NAME_COLLISION;
+            DEBUG(DL_RES, ("Ext2SetRenameInfo: Target file %wZ exists\n",
+                           &ExistingMcb->FullName));
+            goto errorout;
+
+        } else {
+
+            if ( (ExistingFcb = ExistingMcb->Fcb) && !IsMcbSymLink(ExistingMcb) ) {
+                Status = Ext2IsFileRemovable(IrpContext, Vcb, ExistingFcb, Ccb);
+                if (!NT_SUCCESS(Status)) {
+                    DEBUG(DL_REN, ("Ext2SetRenameInfo: Target file %wZ cannot be removed.\n",
+                                   &ExistingMcb->FullName));
+                    goto errorout;
+                }
+            }
+
+            Status = Ext2DeleteFile(IrpContext, Vcb, ExistingFcb, ExistingMcb);
+            if (!NT_SUCCESS(Status)) {
+                DEBUG(DL_REN, ("Ext2SetRenameInfo: Failed to delete %wZ with status: %xh.\n",
+                               &FileName, Status));
+
+                goto errorout;
+            }
+            bTargetRemoved = TRUE;
+        }
+    }
+
+    /* add new entry for new target name */
+    Status = Ext2AddEntry(IrpContext, Vcb, TargetDcb, &Mcb->Inode, &FileName, NULL);
+    if (!NT_SUCCESS(Status)) {
+        DEBUG(DL_REN, ("Ext2SetLinkInfo: Failed to add entry for %wZ with status: %xh.\n",
+                       &FileName, Status));
+        goto errorout;
+    }
+
+    if (bTargetRemoved) {
+        Ext2NotifyReportChange(
+            IrpContext,
+            Vcb,
+            ExistingMcb,
+            (IsMcbDirectory(ExistingMcb) ?
+             FILE_NOTIFY_CHANGE_DIR_NAME :
+             FILE_NOTIFY_CHANGE_FILE_NAME ),
+            FILE_ACTION_REMOVED);
+    }
+
+    if (NT_SUCCESS(Status)) {
+
+        Ext2LookupFile(IrpContext, Vcb, &FileName, TargetMcb, &LinkMcb, 0);
+        if (!LinkMcb)
+            goto errorout;
+
+        Ext2NotifyReportChange(
+            IrpContext,
+            Vcb,
+            LinkMcb,
+            FILE_NOTIFY_CHANGE_FILE_NAME,
+            FILE_ACTION_ADDED);
+    }
+
+errorout:
+
+    if (TargetDcb) {
+        if (ParentDcb && ParentDcb->Inode->i_ino != TargetDcb->Inode->i_ino) {
+            ClearLongFlag(ParentDcb->Flags, FCB_STATE_BUSY);
+        }
+        ClearLongFlag(TargetDcb->Flags, FCB_STATE_BUSY);
+    }
+
+    if (bNewTargetDcb) {
+        ASSERT(TargetDcb != NULL);
+        if (Ext2DerefXcb(&TargetDcb->ReferenceCount) == 0) {
+            Ext2FreeFcb(TargetDcb);
+            TargetDcb = NULL;
+        } else {
+            DEBUG(DL_RES, ( "Ext2SetLinkInfo: TargetDcb is resued by other threads.\n"));
+        }
+    }
+
+    if (bNewParentDcb) {
+        ASSERT(ParentDcb != NULL);
+        if (Ext2DerefXcb(&ParentDcb->ReferenceCount) == 0) {
+            Ext2FreeFcb(ParentDcb);
+            ParentDcb = NULL;
+        } else {
+            DEBUG(DL_RES, ( "Ext2SeLinkInfo: ParentDcb is resued by other threads.\n"));
+        }
+    }
+
+    if (ExistingMcb)
+        Ext2DerefMcb(ExistingMcb);
+
+    if (LinkMcb)
+        Ext2DerefMcb(LinkMcb);
+
+    return Status;
+}
+
 ULONG
 Ext2InodeType(PEXT2_MCB Mcb)
 {
@@ -1704,7 +1966,6 @@ Ext2DeleteFile(
             return STATUS_DIRECTORY_NOT_EMPTY;
         }
     }
-
 
     _SEH2_TRY {
 

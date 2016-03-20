@@ -28,11 +28,11 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
     PDEVICE_OBJECT  DeviceObject;
     NTSTATUS        Status = STATUS_SUCCESS;
     PEXT2_VCB       Vcb = NULL;
-    BOOLEAN         VcbResourceAcquired = FALSE;
     PFILE_OBJECT    FileObject;
-    PEXT2_FCB       Fcb;
+    PEXT2_FCB       Fcb = NULL;
+    PEXT2_CCB       Ccb = NULL;
+    BOOLEAN         VcbResourceAcquired = FALSE;
     BOOLEAN         FcbResourceAcquired = FALSE;
-    PEXT2_CCB       Ccb;
     BOOLEAN         bDeleteVcb = FALSE;
     BOOLEAN         bBeingClosed = FALSE;
     BOOLEAN         bSkipLeave = FALSE;
@@ -57,7 +57,7 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (!ExAcquireResourceExclusiveLite(
                     &Vcb->MainResource,
-                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+                    TRUE )) {
             DEBUG(DL_INF, ("Ext2Close: PENDING ... Vcb: %xh/%xh\n",
                            Vcb->OpenHandleCount, Vcb->ReferenceCount));
 
@@ -118,7 +118,7 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (!ExAcquireResourceExclusiveLite(
                     &Fcb->MainResource,
-                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+                    TRUE )) {
             Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
@@ -178,7 +178,7 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (NT_SUCCESS(Status) && Vcb != NULL && IsVcbInited(Vcb)) {
             /* for Ext2Fsd driver open/close, Vcb is NULL */
-            if ((!bBeingClosed) && (Vcb->ReferenceCount == 0)&&
+            if ((!bBeingClosed) && (Vcb->ReferenceCount == 0) &&
                 (!IsMounted(Vcb) || IsDispending(Vcb))) {
                 bDeleteVcb = TRUE;
             }

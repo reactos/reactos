@@ -137,7 +137,7 @@ Ext2LockVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PIO_STACK_LOCATION IrpSp;
     PDEVICE_OBJECT  DeviceObject;
-    PEXT2_VCB       Vcb;
+    PEXT2_VCB       Vcb = NULL;
     NTSTATUS        Status;
     BOOLEAN VcbResourceAcquired = FALSE;
 
@@ -242,10 +242,10 @@ Ext2UnlockVolume (
     IN PEXT2_IRP_CONTEXT IrpContext
 )
 {
-    PIO_STACK_LOCATION IrpSp;
-    PDEVICE_OBJECT  DeviceObject;
+    PIO_STACK_LOCATION IrpSp = NULL;
+    PDEVICE_OBJECT  DeviceObject = NULL;
+    PEXT2_VCB       Vcb = NULL;
     NTSTATUS        Status;
-    PEXT2_VCB       Vcb;
     BOOLEAN         VcbResourceAcquired = FALSE;
 
     _SEH2_TRY {
@@ -1289,6 +1289,595 @@ Ext2GetRetrievalPointerBase (
     return Status;
 }
 
+NTSTATUS
+Ext2InspectReparseData(
+    IN PREPARSE_DATA_BUFFER RDB,
+    IN ULONG InputBufferLength
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!RDB) {
+        Status = STATUS_INVALID_PARAMETER;
+        goto out;
+    }
+
+    if (InputBufferLength < sizeof(REPARSE_DATA_BUFFER)) {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto out;
+    }
+
+    if (InputBufferLength < RDB->ReparseDataLength) {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto out;
+    }
+
+    if (RDB->ReparseTag != IO_REPARSE_TAG_SYMLINK) {
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto out;
+    }
+
+    if ((PUCHAR)RDB->SymbolicLinkReparseBuffer.PathBuffer
+          + RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset
+          + RDB->SymbolicLinkReparseBuffer.SubstituteNameLength
+        > (PUCHAR)RDB + InputBufferLength ) {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto out;
+    }
+
+    if ((PUCHAR)RDB->SymbolicLinkReparseBuffer.PathBuffer
+          + RDB->SymbolicLinkReparseBuffer.PrintNameOffset
+          + RDB->SymbolicLinkReparseBuffer.PrintNameLength
+        > (PUCHAR)RDB + InputBufferLength) {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto out;
+    }
+
+    if (RDB->SymbolicLinkReparseBuffer.Flags != SYMLINK_FLAG_RELATIVE) {
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto out;
+    }
+
+out:
+    return Status;
+}
+
+VOID
+Ext2InitializeReparseData(IN PREPARSE_DATA_BUFFER RDB, USHORT PathBufferLength)
+{
+    ASSERT(FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.SubstituteNameOffset) ==
+           REPARSE_DATA_BUFFER_HEADER_SIZE);
+    RDB->ReparseTag = IO_REPARSE_TAG_SYMLINK;
+    RDB->ReparseDataLength = FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                             FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                             PathBufferLength * sizeof(WCHAR);
+    RDB->Reserved = 0;
+    RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset = PathBufferLength;
+    RDB->SymbolicLinkReparseBuffer.SubstituteNameLength = PathBufferLength;
+    RDB->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+    RDB->SymbolicLinkReparseBuffer.PrintNameLength = PathBufferLength;
+    RDB->SymbolicLinkReparseBuffer.Flags = SYMLINK_FLAG_RELATIVE;
+    RtlZeroMemory(&RDB->SymbolicLinkReparseBuffer.PathBuffer, PathBufferLength * 2);
+}
+
+NTSTATUS
+Ext2ReadSymlink (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Mcb,
+    IN PVOID                Buffer,
+    IN ULONG                Size,
+    OUT PULONG              BytesRead
+    )
+{
+    return Ext2ReadInode (  IrpContext,
+                            Vcb,
+                            Mcb,
+                            0,
+                            Buffer,
+                            Size,
+                            FALSE,
+                            BytesRead);
+}
+
+
+
+NTSTATUS
+Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
+{
+    PIRP                        Irp = NULL;
+    PIO_STACK_LOCATION          IrpSp;
+    PEXTENDED_IO_STACK_LOCATION EIrpSp;
+
+    PDEVICE_OBJECT      DeviceObject;
+
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PEXT2_MCB           Mcb = NULL;
+
+    NTSTATUS            Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN             MainResourceAcquired = FALSE;
+
+    PVOID               OutputBuffer;
+    ULONG               OutputBufferLength;
+    ULONG               BytesRead = 0;
+
+    PREPARSE_DATA_BUFFER RDB;
+
+    UNICODE_STRING  UniName;
+    OEM_STRING      OemName;
+    
+    PCHAR           OemNameBuffer = NULL;
+    int             OemNameLength = 0, i;
+
+    Ccb = IrpContext->Ccb;
+    ASSERT(Ccb != NULL);
+    ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
+           (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
+    DeviceObject = IrpContext->DeviceObject;
+    Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+    Mcb = IrpContext->Fcb->Mcb;
+    Irp = IrpContext->Irp;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    
+    _SEH2_TRY {
+
+        if (!Mcb || !IsInodeSymLink(&Mcb->Inode)) {
+            Status = STATUS_NOT_A_REPARSE_POINT;
+            _SEH2_LEAVE;
+        }
+        
+        OutputBuffer  = (PVOID)Irp->AssociatedIrp.SystemBuffer;
+        OutputBufferLength = IrpSp->Parameters.FileSystemControl.OutputBufferLength;
+
+        RDB = (PREPARSE_DATA_BUFFER)OutputBuffer;
+        if (!RDB) {
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+        if (OutputBufferLength < sizeof(REPARSE_DATA_BUFFER)) {
+            Status = STATUS_BUFFER_OVERFLOW;
+            _SEH2_LEAVE;
+        }
+
+        OemNameLength = (ULONG)Mcb->Inode.i_size;
+        if (OemNameLength > USHRT_MAX) {
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+        OemName.Length = (USHORT)OemNameLength;
+        OemName.MaximumLength = OemNameLength + 1;
+        OemNameBuffer = OemName.Buffer = Ext2AllocatePool(NonPagedPool,
+                                          OemName.MaximumLength,
+                                          'NL2E');
+        if (!OemNameBuffer) {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        Status = Ext2ReadSymlink(IrpContext,
+                                 Vcb,
+                                 Mcb,
+                                 OemNameBuffer,
+                                 OemNameLength,
+                                 &BytesRead
+                                );
+        OemName.Buffer[OemName.Length] = '\0';
+        for (i = 0;i < OemName.Length;i++) {
+            if (OemName.Buffer[i] == '/') {
+                OemName.Buffer[i] = '\\';
+            }
+        }
+
+        if (OutputBufferLength - FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) > USHRT_MAX) {
+            UniName.Length = USHRT_MAX;
+        } else {
+            UniName.Length = (USHORT)OutputBufferLength - FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer);
+        }
+        UniName.MaximumLength = UniName.Length;
+        UniName.Length = (USHORT)Ext2OEMToUnicodeSize(Vcb, &OemName);
+        Irp->IoStatus.Information = FIELD_OFFSET(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) + 2 * UniName.Length;
+        if (UniName.MaximumLength < 2*UniName.Length) {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            _SEH2_LEAVE;
+        }
+
+        Ext2InitializeReparseData(RDB, UniName.Length);
+        UniName.Buffer = RDB->SymbolicLinkReparseBuffer.PathBuffer;
+        /*
+            (PWCHAR)((PUCHAR)&
+             + RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset);
+         */
+        Ext2OEMToUnicode(Vcb, &UniName, &OemName);
+        RtlMoveMemory( (PUCHAR)RDB->SymbolicLinkReparseBuffer.PathBuffer +
+                               RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset,
+                       UniName.Buffer, UniName.Length);
+        
+        Status = STATUS_SUCCESS;
+
+    } _SEH2_FINALLY {
+        
+        if (OemNameBuffer) {
+            Ext2FreePool(OemNameBuffer, 'NL2E');
+        }
+
+        if (!_SEH2_AbnormalTermination()) {
+            if (Status == STATUS_PENDING || Status == STATUS_CANT_WAIT) {
+                Status = Ext2QueueRequest(IrpContext);
+            } else {
+                Ext2CompleteIrpContext(IrpContext, Status);
+            }
+        }
+    } _SEH2_END;
+    
+    return Status;
+}
+
+
+NTSTATUS
+Ext2WriteSymlink (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Mcb,
+    IN PVOID                Buffer,
+    IN ULONG                Size,
+    OUT PULONG              BytesWritten
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PUCHAR   Data = (PUCHAR)(&Mcb->Inode.i_block[0]);
+
+    if (Size >= EXT2_LINKLEN_IN_INODE) {
+
+        /* initialize inode i_block[] */
+        if (0 == Mcb->Inode.i_blocks) {
+            memset(Data, 0, EXT2_LINKLEN_IN_INODE);
+            ClearFlag(Mcb->Inode.i_flags, EXT4_EXTENTS_FL);
+            Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
+        }
+
+        Status = Ext2WriteInode(IrpContext, Vcb, Mcb,
+                                0, Buffer, Size,
+                                FALSE, BytesWritten);
+        if (!NT_SUCCESS(Status)) {
+            goto out;
+        }
+
+    } else {
+
+        /* free inode blocks before writing in line */
+        if (Mcb->Inode.i_blocks) {
+            LARGE_INTEGER Zero = {0, 0};
+            Ext2TruncateFile(IrpContext, Vcb, Mcb, &Zero);
+        }
+
+        ClearFlag(Mcb->Inode.i_flags, EXT4_EXTENTS_FL);
+        memset(Data, 0, EXT2_LINKLEN_IN_INODE);
+        RtlCopyMemory(Data, Buffer, Size);
+    }
+
+    Mcb->Inode.i_size = Size;
+    Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
+
+    if (BytesWritten) {
+        *BytesWritten = Size;
+    }
+
+out:
+    return Status;
+}
+
+
+NTSTATUS
+Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
+{
+    PIRP                Irp = NULL;
+    PIO_STACK_LOCATION  IrpSp;
+
+    PDEVICE_OBJECT      DeviceObject;
+
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_FCB           Fcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PEXT2_MCB           Mcb = NULL;
+
+    NTSTATUS            Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN             bNewParentDcb = FALSE;
+    BOOLEAN             MainResourceAcquired = FALSE;
+    
+    PVOID               InputBuffer;
+    ULONG               InputBufferLength;
+    ULONG               BytesWritten = 0;
+
+    PEXT2_FCB           ParentDcb = NULL;   /* Dcb of it's current parent */
+    PEXT2_MCB           ParentMcb = NULL;
+
+    PREPARSE_DATA_BUFFER RDB;
+
+    UNICODE_STRING      UniName;
+    OEM_STRING          OemName;
+    
+    PCHAR               OemNameBuffer = NULL;
+    int                 OemNameLength = 0, i;
+
+
+    _SEH2_TRY {
+
+        Ccb = IrpContext->Ccb;
+        ASSERT(Ccb != NULL);
+        ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
+               (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
+        DeviceObject = IrpContext->DeviceObject;
+        Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        Fcb = IrpContext->Fcb;
+        Mcb = Fcb->Mcb;
+        Irp = IrpContext->Irp;
+        IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+        ParentMcb = Mcb->Parent;
+        ParentDcb = ParentMcb->Fcb;
+        if (ParentDcb == NULL) {
+            ParentDcb = Ext2AllocateFcb(Vcb, ParentMcb);
+            if (ParentDcb) {
+                Ext2ReferXcb(&ParentDcb->ReferenceCount);
+                bNewParentDcb = TRUE;
+            }
+        }
+
+        if (!Mcb)
+            _SEH2_LEAVE;
+
+        if (!ExAcquireResourceSharedLite(
+                    &Fcb->MainResource,
+                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+        MainResourceAcquired = TRUE;
+        
+        InputBuffer  = Irp->AssociatedIrp.SystemBuffer;
+        InputBufferLength = IrpSp->Parameters.FileSystemControl.InputBufferLength;
+
+        RDB = (PREPARSE_DATA_BUFFER)InputBuffer;
+        Status = Ext2InspectReparseData(RDB, InputBufferLength);
+        if (!NT_SUCCESS(Status)) {
+            _SEH2_LEAVE;
+        }
+
+        UniName.Length = RDB->SymbolicLinkReparseBuffer.SubstituteNameLength;
+        UniName.MaximumLength = UniName.Length;
+        UniName.Buffer =
+            (PWCHAR)((PUCHAR)&RDB->SymbolicLinkReparseBuffer.PathBuffer
+             + RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset);
+
+        OemNameLength = Ext2UnicodeToOEMSize(Vcb, &UniName);
+        if (OemNameLength > USHRT_MAX) {
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+        OemName.Length = (USHORT)OemNameLength;
+        OemName.MaximumLength = OemNameLength + 1;
+        OemNameBuffer = OemName.Buffer = Ext2AllocatePool(PagedPool,
+                                          OemName.MaximumLength,
+                                          'NL2E');
+        if (!OemNameBuffer) {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        Ext2UnicodeToOEM(Vcb, &OemName, &UniName);
+        OemName.Buffer[OemName.Length] = '\0';
+        for (i = 0;i < OemName.Length;i++) {
+            if (OemName.Buffer[i] == '\\') {
+                OemName.Buffer[i] = '/';
+            }
+        }
+
+        /* overwrite inode mode as type SYMLINK */
+        Mcb->Inode.i_mode = S_IFLNK | S_IRWXUGO;
+        Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
+        SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_REPARSE_POINT);
+
+        Status = Ext2WriteSymlink(IrpContext, Vcb, Mcb, OemNameBuffer,
+                                  OemNameLength, &BytesWritten);
+        if (NT_SUCCESS(Status)) {
+            Status = Ext2SetFileType(IrpContext, Vcb, ParentDcb, Mcb);
+        }
+
+    } _SEH2_FINALLY {
+
+        if (MainResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+        
+        if (OemNameBuffer) {
+            Ext2FreePool(OemNameBuffer, 'NL2E');
+        }
+        
+        if (NT_SUCCESS(Status)) {
+            Ext2NotifyReportChange(
+                IrpContext,
+                Vcb,
+                Mcb,
+                FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                FILE_ACTION_MODIFIED );
+        }
+
+        if (bNewParentDcb) {
+            ASSERT(ParentDcb != NULL);
+            if (Ext2DerefXcb(&ParentDcb->ReferenceCount) == 0) {
+                Ext2FreeFcb(ParentDcb);
+                ParentDcb = NULL;
+            } else {
+                DEBUG(DL_RES, ( "Ext2SetRenameInfo: ParentDcb is resued by other threads.\n"));
+            }
+        }
+
+        if (!_SEH2_AbnormalTermination()) {
+            if (Status == STATUS_PENDING || Status == STATUS_CANT_WAIT) {
+                Status = Ext2QueueRequest(IrpContext);
+            } else {
+                Ext2CompleteIrpContext(IrpContext, Status);
+            }
+        }
+    } _SEH2_END;
+    
+    return Status;
+}
+
+NTSTATUS
+Ext2TruncateSymlink(
+    PEXT2_IRP_CONTEXT IrpContext,
+    PEXT2_VCB         Vcb,
+    PEXT2_MCB         Mcb,
+    ULONG             Size
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    PUCHAR   data = (PUCHAR)&Mcb->Inode.i_block;
+    ULONG    len = (ULONG)Mcb->Inode.i_size;
+    LARGE_INTEGER NewSize;
+    
+    if (len < EXT2_LINKLEN_IN_INODE && !Mcb->Inode.i_blocks) {
+
+        RtlZeroMemory(data + Size, EXT2_LINKLEN_IN_INODE - Size);
+        Mcb->Inode.i_size = Size;
+        Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
+
+    } else {
+        NewSize.QuadPart = Size;
+        status = Ext2TruncateFile(IrpContext, Vcb, Mcb, &NewSize);
+        if (!NT_SUCCESS(status)) {
+            goto out;
+        }
+    }
+    
+out:
+    return status;
+}
+
+
+/* FIXME: We can only handle one reparse point right now. */
+NTSTATUS
+Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
+{
+    PIRP                        Irp = NULL;
+
+    PDEVICE_OBJECT      DeviceObject;
+
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_FCB           Fcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PEXT2_MCB           Mcb = NULL;
+
+    NTSTATUS            Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN             bNewParentDcb = FALSE;
+    BOOLEAN             bFcbAllocated = FALSE;
+    BOOLEAN             MainResourceAcquired = FALSE;
+    
+    PEXT2_FCB           ParentDcb = NULL;   /* Dcb of it's current parent */
+    PEXT2_MCB           ParentMcb = NULL;
+
+    _SEH2_TRY {
+
+        Ccb = IrpContext->Ccb;
+        ASSERT(Ccb != NULL);
+        ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
+               (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
+        DeviceObject = IrpContext->DeviceObject;
+        Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        Mcb = IrpContext->Fcb->Mcb;
+        Irp = IrpContext->Irp;
+
+        ParentMcb = Mcb->Parent;
+        ParentDcb = ParentMcb->Fcb;
+        if (ParentDcb == NULL) {
+            ParentDcb = Ext2AllocateFcb(Vcb, ParentMcb);
+            if (ParentDcb) {
+                Ext2ReferXcb(&ParentDcb->ReferenceCount);
+                bNewParentDcb = TRUE;
+            }
+        }
+
+        if (!Mcb) {
+            Status = STATUS_NOT_A_REPARSE_POINT;
+            _SEH2_LEAVE;
+        }
+        
+        Fcb = Ext2AllocateFcb (Vcb, Mcb);
+        if (Fcb) {
+            bFcbAllocated = TRUE;
+        } else {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+        Ext2ReferXcb(&Fcb->ReferenceCount);
+
+        if (!ExAcquireResourceSharedLite(
+                    &Fcb->MainResource,
+                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
+        MainResourceAcquired = TRUE;
+
+        Status = Ext2TruncateSymlink(IrpContext, Vcb, Mcb, 0);
+        if (!NT_SUCCESS(Status)) {
+            _SEH2_LEAVE;
+        }
+        if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, EXT4_FEATURE_INCOMPAT_EXTENTS)) {
+            SetFlag(Mcb->Inode.i_flags, EXT4_EXTENTS_FL);
+        }
+        ClearFlag(Mcb->FileAttr, FILE_ATTRIBUTE_REPARSE_POINT);
+        ClearFlag(Mcb->Inode.i_flags, S_IFLNK);
+        Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
+        if (NT_SUCCESS(Status)) {
+            Status = Ext2SetFileType(IrpContext, Vcb, ParentDcb, Mcb);
+        }
+
+    } _SEH2_FINALLY {
+
+        if (MainResourceAcquired) {
+            ExReleaseResourceLite(&Fcb->MainResource);
+        }
+        
+        if (NT_SUCCESS(Status)) {
+            Ext2NotifyReportChange(
+                IrpContext,
+                Vcb,
+                Mcb,
+                FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                FILE_ACTION_MODIFIED );
+
+        }
+        
+        if (bNewParentDcb) {
+            ASSERT(ParentDcb != NULL);
+            if (Ext2DerefXcb(&ParentDcb->ReferenceCount) == 0) {
+                Ext2FreeFcb(ParentDcb);
+                ParentDcb = NULL;
+            } else {
+                DEBUG(DL_RES, ( "Ext2DeleteReparsePoint: ParentDcb is resued.\n"));
+            }
+        }
+
+        if (!_SEH2_AbnormalTermination()) {
+            if (Status == STATUS_PENDING || Status == STATUS_CANT_WAIT) {
+                Status = Ext2QueueRequest(IrpContext);
+            } else {
+                Ext2CompleteIrpContext(IrpContext, Status);
+            }
+        }
+        
+        if (bFcbAllocated) {
+            if (Ext2DerefXcb(&Fcb->ReferenceCount) == 0) {
+                Ext2FreeFcb(Fcb);
+            }
+        }
+    } _SEH2_END;
+    
+    return Status;
+}
 
 NTSTATUS
 Ext2UserFsRequest (IN PEXT2_IRP_CONTEXT IrpContext)
@@ -1304,7 +1893,6 @@ Ext2UserFsRequest (IN PEXT2_IRP_CONTEXT IrpContext)
            (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
     Irp = IrpContext->Irp;
-
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
 #ifndef _GNU_NTIFS_
@@ -1316,6 +1904,18 @@ Ext2UserFsRequest (IN PEXT2_IRP_CONTEXT IrpContext)
 #endif
 
     switch (FsControlCode) {
+
+    case FSCTL_GET_REPARSE_POINT:
+        Status = Ext2GetReparsePoint(IrpContext);
+        break;
+        
+    case FSCTL_SET_REPARSE_POINT:
+        Status = Ext2SetReparsePoint(IrpContext);
+        break;
+        
+    case FSCTL_DELETE_REPARSE_POINT:
+        Status = Ext2DeleteReparsePoint(IrpContext);
+        break;
 
     case FSCTL_LOCK_VOLUME:
         Status = Ext2LockVolume(IrpContext);
@@ -1513,6 +2113,10 @@ Ext2MountVolume (IN PEXT2_IRP_CONTEXT IrpContext)
         VolumeDeviceObject->StackSize = (CCHAR)(TargetDeviceObject->StackSize + 1);
         ClearFlag(VolumeDeviceObject->Flags, DO_DEVICE_INITIALIZING);
 
+/*
+        These are for buffer-address alignment requirements.
+        Never do this check, unless you want fail user requests :)
+
         if (TargetDeviceObject->AlignmentRequirement >
                 VolumeDeviceObject->AlignmentRequirement) {
 
@@ -1520,6 +2124,14 @@ Ext2MountVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                 TargetDeviceObject->AlignmentRequirement;
         }
 
+        if (DiskGeometry.BytesPerSector - 1 >
+                VolumeDeviceObject->AlignmentRequirement) {
+            VolumeDeviceObject->AlignmentRequirement =
+                DiskGeometry.BytesPerSector - 1;
+            TargetDeviceObject->AlignmentRequirement =
+                DiskGeometry.BytesPerSector - 1;
+        }
+*/
         (IoStackLocation->Parameters.MountVolume.Vpb)->DeviceObject =
             VolumeDeviceObject;
         Vpb = IoStackLocation->Parameters.MountVolume.Vpb;
@@ -1891,7 +2503,7 @@ Ext2DismountVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT  DeviceObject;
     NTSTATUS        Status = STATUS_UNSUCCESSFUL;
-    PEXT2_VCB       Vcb;
+    PEXT2_VCB       Vcb = NULL;
     BOOLEAN         VcbResourceAcquired = FALSE;
 
     _SEH2_TRY {
@@ -1968,11 +2580,12 @@ Ext2CheckDismount (
     BOOLEAN bDeleted = FALSE, bTearDown = FALSE;
     ULONG   UnCleanCount = 0;
 
-    NewVpb = Ext2AllocatePool(NonPagedPool, VPB_SIZE, TAG_VPB);
+    NewVpb = ExAllocatePoolWithTag(NonPagedPool, VPB_SIZE, TAG_VPB);
     if (NewVpb == NULL) {
         DEBUG(DL_ERR, ( "Ex2CheckDismount: failed to allocate NewVpb.\n"));
         return FALSE;
     }
+    DEBUG(DL_DBG, ("Ext2CheckDismount: NewVpb allocated: %p\n", NewVpb));
     INC_MEM_COUNT(PS_VPB, NewVpb, sizeof(VPB));
     memset(NewVpb, '_', VPB_SIZE);
     RtlZeroMemory(NewVpb, sizeof(VPB));
@@ -1985,15 +2598,16 @@ Ext2CheckDismount (
 
     if ((IrpContext->MajorFunction == IRP_MJ_CREATE) &&
             (IrpContext->RealDevice == Vcb->RealDevice)) {
-        UnCleanCount = 3;
-    } else {
         UnCleanCount = 2;
+    } else {
+        UnCleanCount = 1;
     }
 
     IoAcquireVpbSpinLock (&Irql);
 
     DEBUG(DL_DBG, ("Ext2CheckDismount: Vpb %p ioctl=%d Device %p\n",
                    Vpb, Vpb->ReferenceCount, Vpb->RealDevice));
+
     if (Vpb->ReferenceCount <= UnCleanCount) {
 
         if (!IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
@@ -2018,10 +2632,17 @@ Ext2CheckDismount (
             Vpb->DeviceObject = NULL;
         }
 
+        DEBUG(DL_DBG, ("Ext2CheckDismount: Vpb: %p bDeleted=%d bTearDown=%d\n",
+                        Vpb, bDeleted, bTearDown));
+
+
     } else if (bForce) {
 
-        DEBUG(DL_DBG, ( "Ext2CheckDismount: NewVpb %p Realdevice = %p\n",
-                        NewVpb, Vpb->RealDevice));
+        DEBUG(DL_DBG, ( "Ext2CheckDismount: New/Old Vpb %p/%p Realdevice = %p\n",
+                        NewVpb, Vcb->Vpb, Vpb->RealDevice));
+
+        /* keep vpb president and later we'll free it */
+        SetFlag(Vpb->Flags, VPB_PERSISTENT);
 
         Vcb->Vpb2 = Vcb->Vpb;
         NewVpb->Type = IO_TYPE_VPB;
@@ -2051,8 +2672,8 @@ Ext2CheckDismount (
     }
 
     if (NewVpb != NULL) {
-        DEBUG(DL_DBG, ( "Ext2CheckDismount: freeing Vpb %p\n", NewVpb));
-        Ext2FreePool(NewVpb, TAG_VPB);
+        DEBUG(DL_DBG, ( "Ext2CheckDismount: freeing new Vpb %p\n", NewVpb));
+        ExFreePoolWithTag(NewVpb, TAG_VPB);
         DEC_MEM_COUNT(PS_VPB, NewVpb, sizeof(VPB));
     }
 
@@ -2080,8 +2701,6 @@ Ext2PurgeVolume (IN PEXT2_VCB Vcb,
         if (IsVcbReadOnly(Vcb)) {
             FlushBeforePurge = FALSE;
         }
-
-        Ext2PutGroup(Vcb);
 
         FcbListEntry= NULL;
         InitializeListHead(&FcbList);

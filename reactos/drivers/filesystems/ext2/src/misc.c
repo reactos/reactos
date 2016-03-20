@@ -382,9 +382,12 @@ int Ext2LinuxError (NTSTATUS Status)
     case STATUS_HOST_UNREACHABLE:
         return (-EHOSTUNREACH);
 
+    case STATUS_CANT_WAIT:
     case STATUS_PENDING:
-    case STATUS_DEVICE_NOT_READY:
         return (-EAGAIN);
+
+    case STATUS_DEVICE_NOT_READY:
+        return (-EIO);
 
     case STATUS_CANCELLED:
     case STATUS_REQUEST_ABORTED:
@@ -503,7 +506,7 @@ NTSTATUS Ext2WinntError(int rc)
         return STATUS_HOST_UNREACHABLE;
 
     case -EAGAIN:
-        return STATUS_DEVICE_NOT_READY;
+        return STATUS_CANT_WAIT;
 
     case -EINTR:
         return  STATUS_CANCELLED;

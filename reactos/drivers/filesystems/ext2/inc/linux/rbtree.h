@@ -94,8 +94,6 @@ static inline struct page * rb_insert_page_cache(struct inode * inode,
 #ifndef	_LINUX_RBTREE_H
 #define	_LINUX_RBTREE_H
 
-#include <linux/module.h>
-
 struct rb_node
 {
     ULONG_PTR       rb_parent_color;

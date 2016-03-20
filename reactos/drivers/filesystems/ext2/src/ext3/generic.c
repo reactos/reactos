@@ -3,7 +3,7 @@
  * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
  * FILE:             generic.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
- * HOMEPAGE:         http://ext2.yeah.net
+ * HOMEPAGE:         http://www.ext2fsd.com
  * UPDATE HISTORY:
  */
 
@@ -132,15 +132,15 @@ Ext2LoadGroup(IN PEXT2_VCB Vcb)
 {
     struct super_block  *sb = &Vcb->sb;
     struct ext3_sb_info *sbi = &Vcb->sbi;
+    ext3_fsblk_t sb_block = 1;
     unsigned long i;
-    ext3_fsblk_t block, sb_block = 1;
 
     if (BLOCK_SIZE != EXT3_MIN_BLOCK_SIZE) {
         sb_block = EXT4_MIN_BLOCK_SIZE / BLOCK_SIZE;
     }
 
     if (NULL == sbi->s_group_desc) {
-        sbi->s_group_desc = kzalloc(sbi->s_gdb_count * sizeof(void *),
+        sbi->s_group_desc = kzalloc(sbi->s_gdb_count * sizeof(ext3_fsblk_t),
                                     GFP_KERNEL);
     }
     if (sbi->s_group_desc == NULL) {
@@ -149,10 +149,7 @@ Ext2LoadGroup(IN PEXT2_VCB Vcb)
     }
 
     for (i = 0; i < sbi->s_gdb_count; i++) {
-        block = descriptor_loc(sb, sb_block, i);
-        if (sbi->s_group_desc[i])
-            continue;
-        sbi->s_group_desc[i] = sb_bread(sb, block);
+        sbi->s_group_desc[i] =  descriptor_loc(sb, sb_block, i);
         if (!sbi->s_group_desc[i]) {
             DEBUG(DL_ERR, ("Ext2LoadGroup: can't read group descriptor %d\n", i));
             return FALSE;
@@ -167,28 +164,19 @@ Ext2LoadGroup(IN PEXT2_VCB Vcb)
     return TRUE;
 }
 
+
 VOID
-Ext2PutGroup(IN PEXT2_VCB Vcb)
+Ext2DropGroup(IN PEXT2_VCB Vcb)
 {
     struct ext3_sb_info *sbi = &Vcb->sbi;
     unsigned long i;
 
-    ExAcquireResourceExclusiveLite(&Vcb->MetaLock, TRUE);
     if (NULL == sbi->s_group_desc) {
-        ExReleaseResourceLite(&Vcb->MetaLock);
         return;
-    }
-
-    for (i = 0; i < sbi->s_gdb_count; i++) {
-        if (sbi->s_group_desc[i]) {
-            brelse(sbi->s_group_desc[i]);
-            sbi->s_group_desc[i] = NULL;
-        }
     }
 
     kfree(sbi->s_group_desc);
     sbi->s_group_desc = NULL;
-    ExReleaseResourceLite(&Vcb->MetaLock);
 }
 
 BOOLEAN
@@ -198,22 +186,17 @@ Ext2SaveGroup(
     IN ULONG                Group
 )
 {
-    struct ext4_group_desc *desc;
-    struct buffer_head  *bh = NULL;
+    struct ext4_group_desc *gd;
+    struct buffer_head     *gb = NULL;
     unsigned long i;
 
-    ExAcquireResourceExclusiveLite(&Vcb->MetaLock, TRUE);
-    desc = ext4_get_group_desc(&Vcb->sb, Group, &bh);
-    if (bh)
-        get_bh(bh);
-    ExReleaseResourceLite(&Vcb->MetaLock);
-
-    if (!bh)
+    gd = ext4_get_group_desc(&Vcb->sb, Group, &gb);
+    if (!gd)
         return 0;
 
-    desc->bg_checksum = ext4_group_desc_csum(&Vcb->sbi, Group, desc);
-    mark_buffer_dirty(bh);
-    __brelse(bh);
+    gd->bg_checksum = ext4_group_desc_csum(&Vcb->sbi, Group, gd);
+    mark_buffer_dirty(gb);
+    fini_bh(&gb);
 
     return TRUE;
 }
@@ -236,6 +219,7 @@ Ext2GetInodeLba (
 )
 {
     PEXT2_GROUP_DESC gd;
+    struct buffer_head *bh = NULL;
     ext4_fsblk_t loc;
     int group;
 
@@ -246,8 +230,8 @@ Ext2GetInodeLba (
     }
 
     group = (inode - 1) / INODES_PER_GROUP ;
-    gd = ext4_get_group_desc(&Vcb->sb, group, NULL);
-    if (!gd) {
+    gd = ext4_get_group_desc(&Vcb->sb, group, &bh);
+    if (!bh) {
         *offset = 0;
         DbgBreak();
         return FALSE;
@@ -257,6 +241,7 @@ Ext2GetInodeLba (
     loc = loc + ((inode - 1) % INODES_PER_GROUP) * Vcb->InodeSize;
 
     *offset = loc;
+    __brelse(bh);
 
     return TRUE;
 }
@@ -273,11 +258,14 @@ void Ext2DecodeInode(struct inode *dst, struct ext3_inode *src)
     if (S_ISREG(src->i_mode)) {
         dst->i_size |= (loff_t)src->i_size_high << 32;
     }
+    dst->i_file_acl = src->i_file_acl_lo;
+    dst->i_file_acl |= (ext4_fsblk_t)src->osd2.linux2.l_i_file_acl_high << 32;
     dst->i_atime = src->i_atime;
     dst->i_ctime = src->i_ctime;
     dst->i_mtime = src->i_mtime;
     dst->i_dtime = src->i_dtime;
     dst->i_blocks = ext3_inode_blocks(src, dst);
+    dst->i_extra_isize = src->i_extra_isize;
     memcpy(&dst->i_block[0], &src->i_block[0], sizeof(__u32) * 15);
 }
 
@@ -293,10 +281,13 @@ void Ext2EncodeInode(struct ext3_inode *dst,  struct inode *src)
     if (S_ISREG(src->i_mode)) {
         dst->i_size_high = (__u32)(src->i_size >> 32);
     }
+    dst->i_file_acl_lo = (__u32)src->i_file_acl;
+    dst->osd2.linux2.l_i_file_acl_high |= (__u16)(src->i_file_acl >> 32);
     dst->i_atime = src->i_atime;
     dst->i_ctime = src->i_ctime;
     dst->i_mtime = src->i_mtime;
     dst->i_dtime = src->i_dtime;
+    dst->i_extra_isize = src->i_extra_isize;
     ASSERT(src->i_sb);
     ext3_inode_blocks_set(dst, src);
     memcpy(&dst->i_block[0], &src->i_block[0], sizeof(__u32) * 15);
@@ -584,8 +575,9 @@ Ext2NewBlock(
 )
 {
     struct super_block      *sb = &Vcb->sb;
-    PEXT2_GROUP_DESC        group_desc;
-    struct buffer_head*     bh = NULL;
+    PEXT2_GROUP_DESC        gd;
+    struct buffer_head     *gb = NULL;
+    struct buffer_head     *bh = NULL;
     ext4_fsblk_t            bitmap_blk;
 
     RTL_BITMAP              BlockBitmap;
@@ -617,31 +609,32 @@ Ext2NewBlock(
 
 Again:
 
-    if (bh) {
-        __brelse(bh);
-        bh = NULL;
-    }
+    if (bh)
+        fini_bh(&bh);
 
-    group_desc = ext4_get_group_desc(sb, Group, NULL);
-    if (!group_desc) {
+    if (gb)
+        fini_bh(&gb);
+
+    gd = ext4_get_group_desc(sb, Group, &gb);
+    if (!gd) {
         DbgBreak();
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto errorout;
     }
 
-    bitmap_blk = ext4_block_bitmap(sb, group_desc);
+    bitmap_blk = ext4_block_bitmap(sb, gd);
 
-    if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_BLOCK_UNINIT)) {
+    if (gd->bg_flags & cpu_to_le16(EXT4_BG_BLOCK_UNINIT)) {
         bh = sb_getblk_zero(sb, bitmap_blk);
         if (!bh) {
             DbgBreak();
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto errorout;
         }
-        group_desc->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, group_desc);
-        ext4_init_block_bitmap(sb, bh, Group, group_desc);
+        gd->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, gd);
+        ext4_init_block_bitmap(sb, bh, Group, gd);
         set_buffer_uptodate(bh);
-        group_desc->bg_flags &= cpu_to_le16(~EXT4_BG_BLOCK_UNINIT);
+        gd->bg_flags &= cpu_to_le16(~EXT4_BG_BLOCK_UNINIT);
         Ext2SaveGroup(IrpContext, Vcb, Group);
     } else {
         bh = sb_getblk(sb, bitmap_blk);
@@ -661,7 +654,7 @@ Again:
 	    }
     }
 
-    if (ext4_free_blks_count(sb, group_desc)) {
+    if (ext4_free_blks_count(sb, gd)) {
 
         if (Group == Vcb->sbi.s_groups_count - 1) {
 
@@ -696,7 +689,7 @@ Again:
                 RtlZeroMemory(&BlockBitmap, sizeof(RTL_BITMAP));
 
                 /* no blocks found: set bg_free_blocks_count to 0 */
-                ext4_free_blks_set(sb, group_desc, 0);
+                ext4_free_blks_set(sb, gd, 0);
                 Ext2SaveGroup(IrpContext, Vcb, Group);
 
                 /* will try next group */
@@ -732,7 +725,7 @@ Again:
         mark_buffer_dirty(bh);
 
         /* update group description */
-        ext4_free_blks_set(sb, group_desc, RtlNumberOfClearBits(&BlockBitmap));
+        ext4_free_blks_set(sb, gd, RtlNumberOfClearBits(&BlockBitmap));
         Ext2SaveGroup(IrpContext, Vcb, Group);
 
         /* update Vcb free blocks */
@@ -746,9 +739,9 @@ Again:
             goto Again;
         }
 
-        if (ext4_block_bitmap(sb, group_desc) == *Block ||
-            ext4_inode_bitmap(sb, group_desc) == *Block ||
-            ext4_inode_table(sb, group_desc)  == *Block ) {
+        if (ext4_block_bitmap(sb, gd) == *Block ||
+            ext4_inode_bitmap(sb, gd) == *Block ||
+            ext4_inode_table(sb,  gd)  == *Block ) {
             DbgBreak();
             dwHint = 0;
             goto Again;
@@ -772,7 +765,10 @@ errorout:
     ExReleaseResourceLite(&Vcb->MetaLock);
 
     if (bh)
-        __brelse(bh);
+        fini_bh(&bh);
+
+    if (gb)
+        fini_bh(&gb);
 
     return Status;
 }
@@ -786,7 +782,8 @@ Ext2FreeBlock(
 )
 {
     struct super_block     *sb = &Vcb->sb;
-    PEXT2_GROUP_DESC        group_desc;
+    PEXT2_GROUP_DESC        gd;
+    struct buffer_head     *gb = NULL;
     ext4_fsblk_t            bitmap_blk;
 
     RTL_BITMAP      BlockBitmap;
@@ -812,6 +809,9 @@ Ext2FreeBlock(
 
 Again:
 
+    if (gb)
+        fini_bh(&gb);
+
     if ( Block < EXT2_FIRST_DATA_BLOCK ||
          Block >= TOTAL_BLOCKS ||
          Group >= Vcb->sbi.s_groups_count) {
@@ -821,13 +821,13 @@ Again:
 
     } else  {
 
-        group_desc = ext4_get_group_desc(sb, Group, NULL);
-        if (!group_desc) {
+        gd = ext4_get_group_desc(sb, Group, &gb);
+        if (!gd) {
             DbgBreak();
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto errorout;
         }
-        bitmap_blk = ext4_block_bitmap(sb, group_desc);
+        bitmap_blk = ext4_block_bitmap(sb, gd);
 
         /* check the block is valid or not */
         if (bitmap_blk >= TOTAL_BLOCKS) {
@@ -874,7 +874,7 @@ Again:
         RtlClearBits(&BlockBitmap, Index, Count);
 
         /* update group description table */
-        ext4_free_blks_set(sb, group_desc, RtlNumberOfClearBits(&BlockBitmap));
+        ext4_free_blks_set(sb, gd, RtlNumberOfClearBits(&BlockBitmap));
 
         /* indict the cache range is dirty */
         CcSetDirtyPinnedData(BitmapBcb, NULL );
@@ -913,6 +913,9 @@ Again:
 
 errorout:
 
+    if (gb)
+        fini_bh(&gb);
+
     ExReleaseResourceLite(&Vcb->MetaLock);
 
     return Status;
@@ -929,7 +932,8 @@ Ext2NewInode(
 )
 {
     struct super_block     *sb = &Vcb->sb;
-    PEXT2_GROUP_DESC        group_desc;
+    PEXT2_GROUP_DESC        gd;
+    struct buffer_head     *gb = NULL;
     struct buffer_head     *bh = NULL;
     ext4_fsblk_t            bitmap_blk;
 
@@ -951,13 +955,14 @@ Ext2NewInode(
 
 repeat:
 
-    if (bh) {
-        __brelse(bh);
-        bh = NULL;
-    }
+    if (bh)
+        fini_bh(&bh);
+
+    if (gb)
+        fini_bh(&gb);
 
     Group = i = 0;
-    group_desc = NULL;
+    gd = NULL;
 
     if (Type == EXT2_FT_DIR) {
 
@@ -966,31 +971,33 @@ repeat:
         for (j = 0; j < Vcb->sbi.s_groups_count; j++) {
 
             i = (j + GroupHint) % (Vcb->sbi.s_groups_count);
-            group_desc = ext4_get_group_desc(sb, i, NULL);
-            if (!group_desc) {
-                DbgBreak();
+            gd = ext4_get_group_desc(sb, i, &gb);
+            if (!gd) {
+                    DbgBreak();
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto errorout;
             }
 
-            if ((group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) ||
-                (ext4_used_dirs_count(sb, group_desc) << 8 < 
-                 ext4_free_inodes_count(sb, group_desc)) ) {
+            if ((gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) ||
+                (ext4_used_dirs_count(sb, gd) << 8 < 
+                 ext4_free_inodes_count(sb, gd)) ) {
                 Group = i + 1;
                 break;
             }
+            fini_bh(&gb);
         }
 
         if (!Group) {
 
             PEXT2_GROUP_DESC  desc = NULL;
 
-            group_desc = NULL;
+            gd = NULL;
 
             /* get the group with the biggest vacancy */
             for (j = 0; j < Vcb->sbi.s_groups_count; j++) {
 
-                desc = ext4_get_group_desc(sb, j, NULL);
+                struct buffer_head *gt = NULL;
+                desc = ext4_get_group_desc(sb, j, &gt);
                 if (!desc) {
                     DbgBreak();
                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1000,23 +1007,38 @@ repeat:
                 /* return the group if it's not initialized yet */
                 if (desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) {
                     Group = j + 1;
-                    group_desc = desc;
+                    gd = desc;
+
+                    if (gb)
+                        fini_bh(&gb);
+                    gb = gt;
+                    gt = NULL;
                     break;
                 }
 
-                if (!group_desc) {
+                if (!gd) {
                     if (ext4_free_inodes_count(sb, desc) > 0) {
                         Group = j + 1;
-                        group_desc = desc;
+                        gd = desc;
+                        if (gb)
+                            fini_bh(&gb);
+                        gb = gt;
+                        gt = NULL;
                     }
                 } else {
                     if (ext4_free_inodes_count(sb, desc) >
-                        ext4_free_inodes_count(sb, group_desc)) {
+                        ext4_free_inodes_count(sb, gd)) {
                         Group = j + 1;
-                        group_desc = desc;
+                        gd = desc;
+                        if (gb)
+                            fini_bh(&gb);
+                        gb = gt;
+                        gt = NULL;
                         break;
                     }
                 }
+                if (gt)
+                    fini_bh(&gt);
             }
         }
 
@@ -1026,20 +1048,23 @@ repeat:
          * Try to place the inode in its parent directory (GroupHint)
          */
 
-        group_desc = ext4_get_group_desc(sb, GroupHint, NULL);
-        if (!group_desc) {
+        gd = ext4_get_group_desc(sb, GroupHint, &gb);
+        if (!gb) {
             DbgBreak();
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto errorout;
         }
 
-        if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
-            ext4_free_inodes_count(sb, group_desc)) {
+        if (gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
+            ext4_free_inodes_count(sb, gd)) {
 
             Group = GroupHint + 1;
 
         } else {
 
+            /* this group is 100% cocucpied */
+            fini_bh(&gb);
+ 
             i = GroupHint;
 
             /*
@@ -1048,19 +1073,22 @@ repeat:
 
             for (j = 1; j < Vcb->sbi.s_groups_count; j <<= 1) {
 
+
                 i = (i + j) % Vcb->sbi.s_groups_count;
-                group_desc = ext4_get_group_desc(sb, i, NULL);
-                if (!group_desc) {
+                gd = ext4_get_group_desc(sb, i, &gb);
+                if (!gd) {
                     DbgBreak();
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     goto errorout;
                 }
 
-                if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
-                        ext4_free_inodes_count(sb, group_desc)) {
+                if (gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
+                    ext4_free_inodes_count(sb, gd)) {
                     Group = i + 1;
                     break;
                 }
+
+                fini_bh(&gb);  
             }
         }
 
@@ -1072,23 +1100,25 @@ repeat:
             for (j = 2; j < Vcb->sbi.s_groups_count; j++) {
 
                 i = (i + 1) % Vcb->sbi.s_groups_count;
-                group_desc = ext4_get_group_desc(sb, i, NULL);
-                if (!group_desc) {
+                gd = ext4_get_group_desc(sb, i, &gb);
+                if (!gd) {
                     DbgBreak();
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     goto errorout;
                 }
 
-                if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
-                    ext4_free_inodes_count(sb, group_desc)) {
+                if (gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT) ||
+                    ext4_free_inodes_count(sb, gd)) {
                     Group = i + 1;
                     break;
                 }
+
+                fini_bh(&gb);
             }
         }
     }
 
-    if (group_desc == NULL || Group == 0) {
+    if (gd == NULL || Group == 0) {
         goto errorout;
     }
 
@@ -1101,8 +1131,8 @@ repeat:
     /* valid group number starts from 1, not 0 */
     Group -= 1;
 
-    ASSERT(group_desc);
-    bitmap_blk = ext4_inode_bitmap(sb, group_desc);
+    ASSERT(gd);
+    bitmap_blk = ext4_inode_bitmap(sb, gd);
     /* check the block is valid or not */
     if (bitmap_blk == 0 || bitmap_blk >= TOTAL_BLOCKS) {
         DbgBreak();
@@ -1110,17 +1140,17 @@ repeat:
         goto errorout;
     }
 
-    if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) {
+    if (gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) {
         bh = sb_getblk_zero(sb, bitmap_blk);
         if (!bh) {
             DbgBreak();
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto errorout;
         }
-        group_desc->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, group_desc);
-        ext4_init_inode_bitmap(sb, bh, Group, group_desc);
+        gd->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, gd);
+        ext4_init_inode_bitmap(sb, bh, Group, gd);
         set_buffer_uptodate(bh);
-        group_desc->bg_flags &= cpu_to_le16(~EXT4_BG_INODE_UNINIT);
+        gd->bg_flags &= cpu_to_le16(~EXT4_BG_INODE_UNINIT);
         Ext2SaveGroup(IrpContext, Vcb, Group);
     } else {
         bh = sb_getblk(sb, bitmap_blk);
@@ -1160,8 +1190,8 @@ repeat:
     if (dwInode == 0xFFFFFFFF || dwInode >= Length) {
 
         RtlZeroMemory(&InodeBitmap, sizeof(RTL_BITMAP));
-        if (ext4_free_inodes_count(sb, group_desc) > 0) {
-            ext4_free_inodes_set(sb, group_desc, 0);
+        if (ext4_free_inodes_count(sb, gd) > 0) {
+            ext4_free_inodes_set(sb, gd, 0);
             Ext2SaveGroup(IrpContext, Vcb, Group);
         }
         goto repeat;
@@ -1171,8 +1201,8 @@ repeat:
         __u32 count = 0;
 
         /* update unused inodes count */
-        count = ext4_free_inodes_count(sb, group_desc) - 1;
-        ext4_free_inodes_set(sb, group_desc, count);
+        count = ext4_free_inodes_count(sb, gd) - 1;
+        ext4_free_inodes_set(sb, gd, count);
 
         RtlSetBits(&InodeBitmap, dwInode, 1);
 
@@ -1185,8 +1215,8 @@ repeat:
 
             __u32 free;
 
-            if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) {
-                group_desc->bg_flags &= cpu_to_le16(~EXT4_BG_INODE_UNINIT);
+            if (gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) {
+                gd->bg_flags &= cpu_to_le16(~EXT4_BG_INODE_UNINIT);
                 /* When marking the block group with
                  * ~EXT4_BG_INODE_UNINIT we don't want to depend
                  * on the value of bg_itable_unused even though
@@ -1196,7 +1226,7 @@ repeat:
 
                 free = 0;
             } else {
-                free = EXT3_INODES_PER_GROUP(sb) - ext4_itable_unused_count(sb, group_desc);
+                free = EXT3_INODES_PER_GROUP(sb) - ext4_itable_unused_count(sb, gd);
             }
 
             /*
@@ -1206,24 +1236,24 @@ repeat:
              *
              */
             if (dwInode + 1 > free) {
-                ext4_itable_unused_set(sb, group_desc,
+                ext4_itable_unused_set(sb, gd,
                                        (EXT3_INODES_PER_GROUP(sb) - 1 - dwInode));
             }
 
             /* We may have to initialize the block bitmap if it isn't already */
-            if (group_desc->bg_flags & cpu_to_le16(EXT4_BG_BLOCK_UNINIT)) {
+            if (gd->bg_flags & cpu_to_le16(EXT4_BG_BLOCK_UNINIT)) {
 
                 struct buffer_head *block_bitmap_bh = NULL;
 
                 /* recheck and clear flag under lock if we still need to */
-                block_bitmap_bh = sb_getblk_zero(sb, ext4_block_bitmap(sb, group_desc));
+                block_bitmap_bh = sb_getblk_zero(sb, ext4_block_bitmap(sb, gd));
                 if (block_bitmap_bh) {
-                    group_desc->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, group_desc);
-                    free = ext4_init_block_bitmap(sb, block_bitmap_bh, Group, group_desc);
+                    gd->bg_checksum = ext4_group_desc_csum(EXT3_SB(sb), Group, gd);
+                    free = ext4_init_block_bitmap(sb, block_bitmap_bh, Group, gd);
                     set_buffer_uptodate(block_bitmap_bh);
                     brelse(block_bitmap_bh);
-                    group_desc->bg_flags &= cpu_to_le16(~EXT4_BG_BLOCK_UNINIT);
-                    ext4_free_blks_set(sb, group_desc, free);
+                    gd->bg_flags &= cpu_to_le16(~EXT4_BG_BLOCK_UNINIT);
+                    ext4_free_blks_set(sb, gd, free);
                     Ext2SaveGroup(IrpContext, Vcb, Group);
                 }
             }
@@ -1233,7 +1263,7 @@ repeat:
 
         /* update group_desc / super_block */
         if (Type == EXT2_FT_DIR) {
-            ext4_used_dirs_set(sb, group_desc, ext4_used_dirs_count(sb, group_desc) + 1);
+            ext4_used_dirs_set(sb, gd, ext4_used_dirs_count(sb, gd) + 1);
         }
         Ext2SaveGroup(IrpContext, Vcb, Group);
         Ext2UpdateVcbStat(IrpContext, Vcb);
@@ -1244,9 +1274,12 @@ errorout:
 
     ExReleaseResourceLite(&Vcb->MetaLock);
 
-    if (bh) {
-        brelse(bh);
-    }
+    if (bh)
+        fini_bh(&bh);
+
+    if (gb)
+        fini_bh(&gb);
+
 
     return Status;
 }
@@ -1260,7 +1293,8 @@ Ext2FreeInode(
 )
 {
     struct super_block     *sb = &Vcb->sb;
-    PEXT2_GROUP_DESC        group_desc;
+    PEXT2_GROUP_DESC        gd;
+    struct buffer_head     *gb = NULL;
     struct buffer_head     *bh = NULL;
     ext4_fsblk_t            bitmap_blk;
 
@@ -1287,14 +1321,14 @@ Ext2FreeInode(
         goto errorout;
     }
 
-    group_desc = ext4_get_group_desc(sb, Group, NULL);
-    if (!group_desc) {
+    gd = ext4_get_group_desc(sb, Group, &gb);
+    if (!gd) {
         DbgBreak();
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto errorout;
     }
 
-    bitmap_blk = ext4_inode_bitmap(sb, group_desc);
+    bitmap_blk = ext4_inode_bitmap(sb, gd);
     bh = sb_getblk(sb, bitmap_blk);
     if (!bh) {
         DbgBreak();
@@ -1333,7 +1367,7 @@ Ext2FreeInode(
 
     if (bModified) {
         /* update group free inodes */
-        ext4_free_inodes_set(sb, group_desc,
+        ext4_free_inodes_set(sb, gd,
                              RtlNumberOfClearBits(&InodeBitmap));
 
         /* set inode block dirty and add to vcb dirty range */
@@ -1341,8 +1375,8 @@ Ext2FreeInode(
 
         /* update group_desc and super_block */
         if (Type == EXT2_FT_DIR) {
-            ext4_used_dirs_set(sb, group_desc,
-                               ext4_used_dirs_count(sb, group_desc) - 1);
+            ext4_used_dirs_set(sb, gd,
+                               ext4_used_dirs_count(sb, gd) - 1);
         }
         Ext2SaveGroup(IrpContext, Vcb, Group);
         Ext2UpdateVcbStat(IrpContext, Vcb);
@@ -1353,9 +1387,12 @@ errorout:
 
     ExReleaseResourceLite(&Vcb->MetaLock);
 
-    if (bh) {
-        brelse(bh);
-    }
+    if (bh)
+        fini_bh(&bh);
+
+    if (gb)
+        fini_bh(&gb);
+
     return Status;
 }
 
@@ -1410,8 +1447,10 @@ Ext2AddEntry (
             ext3_inc_count(Inode);
             ext3_mark_inode_dirty(IrpContext, Inode);
 
-            *Dentry = de;
-            de = NULL;
+            if (Dentry) {
+                *Dentry = de;
+                de = NULL;
+            }
         }
 
     } _SEH2_FINALLY {
@@ -1429,6 +1468,69 @@ Ext2AddEntry (
     return status;
 }
 
+
+NTSTATUS
+Ext2SetFileType (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_FCB            Dcb,
+    IN PEXT2_MCB            Mcb
+    )
+{
+    struct inode *dir = Dcb->Inode;
+    struct buffer_head *bh = NULL;
+    struct ext3_dir_entry_2 *de;
+    struct inode *inode;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN  MainResourceAcquired = FALSE;
+
+    if (!EXT3_HAS_INCOMPAT_FEATURE(dir->i_sb, EXT3_FEATURE_INCOMPAT_FILETYPE)) {
+        return STATUS_SUCCESS;
+    }
+
+    if (!IsDirectory(Dcb)) {
+        return STATUS_NOT_A_DIRECTORY;
+    }
+
+    ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
+    MainResourceAcquired = TRUE;
+
+    _SEH2_TRY {
+
+        Ext2ReferXcb(&Dcb->ReferenceCount);
+
+        bh = ext3_find_entry(IrpContext, Mcb->de, &de);
+        if (!bh)
+            _SEH2_LEAVE;
+
+        inode = &Mcb->Inode;
+        if (le32_to_cpu(de->inode) != inode->i_ino)
+            _SEH2_LEAVE;
+
+        ext3_set_de_type(inode->i_sb, de, inode->i_mode);
+        mark_buffer_dirty(bh);
+        
+        //if (!inode->i_nlink)
+        //    ext3_orphan_add(handle, inode);
+
+        dir->i_ctime = dir->i_mtime = ext3_current_time(dir);
+        ext3_mark_inode_dirty(IrpContext, dir);
+
+        Status = STATUS_SUCCESS;
+
+    } _SEH2_FINALLY {
+
+        Ext2DerefXcb(&Dcb->ReferenceCount);
+
+        if (MainResourceAcquired)
+            ExReleaseResourceLite(&Dcb->MainResource);
+
+        if (bh)
+            brelse(bh);
+    } _SEH2_END;
+
+    return Status;
+}
 
 NTSTATUS
 Ext2RemoveEntry (
@@ -2259,7 +2361,7 @@ static int ext4_group_used_meta_blocks(struct super_block *sb,
 
     if (EXT3_HAS_INCOMPAT_FEATURE(sb, EXT4_FEATURE_INCOMPAT_FLEX_BG)) {
         struct ext4_group_desc *gdp;
-        struct buffer_head *bh;
+        struct buffer_head *bh = NULL;
 
         gdp = ext4_get_group_desc(sb, block_group, &bh);
         if (!ext4_block_in_group(sb, ext4_block_bitmap(sb, gdp),
@@ -2276,6 +2378,8 @@ static int ext4_group_used_meta_blocks(struct super_block *sb,
             if (!ext4_block_in_group(sb, tmp, block_group))
                 used_blocks -= 1;
         }
+        if (bh)
+            fini_bh(&bh);
     }
     return used_blocks;
 }
@@ -2384,11 +2488,16 @@ unsigned ext4_init_block_bitmap(struct super_block *sb, struct buffer_head *bh,
 struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
                     ext4_group_t block_group, struct buffer_head **bh)
 {
-    unsigned int group_desc;
-    unsigned int offset;
     struct ext4_group_desc *desc = NULL;
+    struct buffer_head  *gb = NULL;
     struct ext3_sb_info *sbi = EXT3_SB(sb);
     PEXT2_VCB vcb = sb->s_priv;
+
+    unsigned int group;
+    unsigned int offset;
+
+    if (bh)
+        *bh = NULL;
 
     if (block_group >= sbi->s_groups_count) {
         ext4_error(sb, "ext4_get_group_desc",
@@ -2400,39 +2509,38 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
     }
     smp_rmb();
 
-    group_desc = block_group >> EXT4_DESC_PER_BLOCK_BITS(sb);
+    group = block_group >> EXT4_DESC_PER_BLOCK_BITS(sb);
     offset = block_group & (EXT4_DESC_PER_BLOCK(sb) - 1);
 
-    ExAcquireResourceExclusiveLite(&vcb->MetaLock, TRUE);
-
-    if (!sbi->s_group_desc || !sbi->s_group_desc[group_desc]) {
-        if (!Ext2LoadGroup(vcb)) {
-            ext4_error(sb, "ext4_get_group_desc",
-                       "failed to load group desc: "
-                       "block_group >= groups_count - "
-                       "block_group = %u, groups_count = %u",
-                       block_group, sbi->s_groups_count);
-            goto errorout;
-        }
+    if (!sbi->s_group_desc || !sbi->s_group_desc[group]) {
+        Ext2LoadGroup(vcb);
     }
 
-    if (!sbi->s_group_desc[group_desc]) {
+    if (!sbi->s_group_desc[group]) {
         ext4_error(sb, "ext4_get_group_desc",
                    "Group descriptor not loaded - "
-                   "block_group = %u, group_desc = %u, desc = %u",
-                   block_group, group_desc, offset);
+                   "block_group = %u, group = %u, desc = %u",
+                   block_group, group, offset);
         goto errorout;
     }
 
-    desc = (struct ext4_group_desc *)(
-               (__u8 *)sbi->s_group_desc[group_desc]->b_data +
-               offset * EXT4_DESC_SIZE(sb));
+    gb = sb_getblk(sb, sbi->s_group_desc[group]);
+    if (!gb) {
+        ext4_error(sb, "ext4_get_group_desc",
+                   "failed to load group - "
+                   "block_group = %u, group = %u, desc = %u",
+                   block_group, group, offset);
+        goto errorout;
+    }
+
+    desc = (struct ext4_group_desc *)(gb->b_data +
+                      offset * EXT4_DESC_SIZE(sb));
     if (bh)
-        *bh = sbi->s_group_desc[group_desc];
+        *bh = gb;
+    else
+        fini_bh(&gb);
 
 errorout:
-
-    ExReleaseResourceLite(&vcb->MetaLock);
 
     return desc;
 }
@@ -2447,16 +2555,18 @@ ext4_fsblk_t ext4_count_free_blocks(struct super_block *sb)
 {
     ext4_fsblk_t desc_count;
     struct ext4_group_desc *gdp;
+    struct buffer_head *bh = NULL;
     ext4_group_t i;
     ext4_group_t ngroups = EXT3_SB(sb)->s_groups_count;
 
     desc_count = 0;
     smp_rmb();
     for (i = 0; i < ngroups; i++) {
-        gdp = ext4_get_group_desc(sb, i, NULL);
-        if (!gdp)
+        gdp = ext4_get_group_desc(sb, i, &bh);
+        if (!bh)
             continue;
         desc_count += ext4_free_blks_count(sb, gdp);
+        fini_bh(&bh);
     }
 
     return desc_count;
@@ -2466,15 +2576,16 @@ unsigned long ext4_count_free_inodes(struct super_block *sb)
 {
     unsigned long desc_count;
     struct ext4_group_desc *gdp;
+    struct buffer_head *bh = NULL;
     ext4_group_t i;
 
     desc_count = 0;
     for (i = 0; i < EXT3_SB(sb)->s_groups_count; i++) {
-        gdp = ext4_get_group_desc(sb, i, NULL);
-        if (!gdp)
+        gdp = ext4_get_group_desc(sb, i, &bh);
+        if (!bh)
             continue;
         desc_count += ext4_free_inodes_count(sb, gdp);
-        cond_resched();
+        fini_bh(&bh);
     }
     return desc_count;
 }
@@ -2482,14 +2593,17 @@ unsigned long ext4_count_free_inodes(struct super_block *sb)
 /* Called at mount-time, super-block is locked */
 unsigned long ext4_count_dirs(struct super_block * sb)
 {
+    struct ext4_group_desc *gdp;
+    struct buffer_head *bh = NULL;
     unsigned long count = 0;
     ext4_group_t i;
 
     for (i = 0; i < EXT3_SB(sb)->s_groups_count; i++) {
-        struct ext4_group_desc *gdp = ext4_get_group_desc(sb, i, NULL);
-        if (!gdp)
+        gdp = ext4_get_group_desc(sb, i, &bh);
+        if (!bh)
             continue;
         count += ext4_used_dirs_count(sb, gdp);
+        fini_bh(&bh);
     }
     return count;
 }
@@ -2513,7 +2627,12 @@ int ext4_check_descriptors(struct super_block *sb)
     DEBUG(DL_INF, ("Checking group descriptors"));
 
     for (i = 0; i < sbi->s_groups_count; i++) {
-        struct ext4_group_desc *gdp = ext4_get_group_desc(sb, i, NULL);
+
+        struct buffer_head *bh = NULL;
+        struct ext4_group_desc *gdp = ext4_get_group_desc(sb, i, &bh);
+
+        if (!bh)
+            continue;
 
         if (i == sbi->s_groups_count - 1 || flexbg_flag)
             last_block = ext3_blocks_count(sbi->s_es) - 1;
@@ -2526,6 +2645,7 @@ int ext4_check_descriptors(struct super_block *sb)
             printk(KERN_ERR "EXT4-fs: ext4_check_descriptors: "
                    "Block bitmap for group %u not in group "
                    "(block %llu)!\n", i, block_bitmap);
+            __brelse(bh);
             return 0;
         }
         inode_bitmap = ext4_inode_bitmap(sb, gdp);
@@ -2533,6 +2653,7 @@ int ext4_check_descriptors(struct super_block *sb)
             printk(KERN_ERR "EXT4-fs: ext4_check_descriptors: "
                    "Inode bitmap for group %u not in group "
                    "(block %llu)!\n", i, inode_bitmap);
+            __brelse(bh);
             return 0;
         }
         inode_table = ext4_inode_table(sb, gdp);
@@ -2541,6 +2662,7 @@ int ext4_check_descriptors(struct super_block *sb)
             printk(KERN_ERR "EXT4-fs: ext4_check_descriptors: "
                    "Inode table for group %u not in group "
                    "(block %llu)!\n", i, inode_table);
+            __brelse(bh);
             return 0;
         }
 
@@ -2550,12 +2672,15 @@ int ext4_check_descriptors(struct super_block *sb)
                    i, le16_to_cpu(ext4_group_desc_csum(sbi, i,
                                                        gdp)), le16_to_cpu(gdp->bg_checksum));
             if (!IsVcbReadOnly(Vcb)) {
+                __brelse(bh);
                 return 0;
             }
         }
 
         if (!flexbg_flag)
             first_block += EXT4_BLOCKS_PER_GROUP(sb);
+
+        __brelse(bh);
     }
 
     ext3_free_blocks_count_set(sbi->s_es, ext4_count_free_blocks(sb));

@@ -65,15 +65,15 @@ Ext2ReadVolume (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
 
-    PEXT2_VCB           Vcb;
-    PEXT2_CCB           Ccb;
-    PEXT2_FCBVCB        FcbOrVcb;
-    PFILE_OBJECT        FileObject;
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PEXT2_FCBVCB        FcbOrVcb = NULL;
+    PFILE_OBJECT        FileObject = NULL;
 
-    PDEVICE_OBJECT      DeviceObject;
+    PDEVICE_OBJECT      DeviceObject = NULL;
 
     PIRP                Irp = NULL;
-    PIO_STACK_LOCATION  IoStackLocation;
+    PIO_STACK_LOCATION  IoStackLocation = NULL;
 
     ULONG               Length;
     LARGE_INTEGER       ByteOffset;
@@ -347,11 +347,9 @@ Ext2ReadInode (
 
 
         /* handle fast symlinks */
-        if (S_ISLNK(Mcb->Inode.i_mode) &&
-                Mcb->Inode.i_size < EXT2_LINKLEN_IN_INODE) {
+        if (S_ISLNK(Mcb->Inode.i_mode) && 0 == Mcb->Inode.i_blocks) {
 
             PUCHAR Data = (PUCHAR) (&Mcb->Inode.i_block[0]);
-
             if (!Buffer) {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 _SEH2_LEAVE;
@@ -474,15 +472,15 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
 {
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
 
-    PEXT2_VCB           Vcb;
-    PEXT2_FCB           Fcb;
-    PEXT2_CCB           Ccb;
-    PFILE_OBJECT        FileObject;
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_FCB           Fcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PFILE_OBJECT        FileObject = NULL;
 
-    PDEVICE_OBJECT      DeviceObject;
+    PDEVICE_OBJECT      DeviceObject = NULL;
 
-    PIRP                Irp;
-    PIO_STACK_LOCATION  IoStackLocation;
+    PIRP                Irp = NULL;
+    PIO_STACK_LOCATION  IoStackLocation = NULL;
 
     ULONG               Length;
     ULONG               ReturnedLength = 0;
@@ -534,6 +532,11 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
         DEBUG(DL_INF, ("Ext2ReadFile: reading %wZ Off=%I64xh Len=%xh Paging=%xh Nocache=%xh\n",
                        &Fcb->Mcb->ShortName, ByteOffset.QuadPart, Length, PagingIo, Nocache));
 
+        if (IsSpecialFile(Fcb) || IsInodeSymLink(Fcb->Inode) ) {
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            _SEH2_LEAVE;
+        }
+
         if ((IsSymLink(Fcb) && IsFileDeleted(Fcb->Mcb->Target)) ||
             IsFileDeleted(Fcb->Mcb)) {
             Status = STATUS_FILE_DELETED;
@@ -546,9 +549,13 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
 
-        if (Nocache &&
-                (ByteOffset.LowPart & (SECTOR_SIZE - 1) ||
-                 Length & (SECTOR_SIZE - 1))) {
+        if (ByteOffset.LowPart == FILE_USE_FILE_POINTER_POSITION &&
+            ByteOffset.HighPart == -1) {
+            ByteOffset = FileObject->CurrentByteOffset;
+        }
+
+        if (Nocache && (ByteOffset.LowPart & (SECTOR_SIZE - 1) ||
+                        Length & (SECTOR_SIZE - 1))) {
             Status = STATUS_INVALID_PARAMETER;
             DbgBreak();
             _SEH2_LEAVE;
@@ -559,17 +566,6 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
             Status = STATUS_PENDING;
             DbgBreak();
             _SEH2_LEAVE;
-        }
-
-        if (!PagingIo && Nocache && (FileObject->SectionObjectPointer->DataSectionObject != NULL)) {
-            CcFlushCache( FileObject->SectionObjectPointer,
-                          &ByteOffset,
-                          Length,
-                          &Irp->IoStatus );
-
-            if (!NT_SUCCESS(Irp->IoStatus.Status)) {
-                _SEH2_LEAVE;
-            }
         }
 
         ReturnedLength = Length;
@@ -595,6 +591,15 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
                     _SEH2_LEAVE;
                 }
                 MainResourceAcquired = TRUE;
+
+                if (FileObject->SectionObjectPointer->DataSectionObject != NULL) {
+                    CcFlushCache( FileObject->SectionObjectPointer,
+                                 &ByteOffset,
+                                  Length,
+                                 &Irp->IoStatus );
+                    if (!NT_SUCCESS(Irp->IoStatus.Status))
+                        _SEH2_LEAVE;
+                }
 
             } else {
 

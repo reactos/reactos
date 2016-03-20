@@ -52,3 +52,17 @@ void extents_brelse(struct buffer_head *bh)
 {
     brelse(bh);
 }
+
+/*
+ * extents_bforget: Release the corresponding buffer header.
+ * NOTE: The page owned by @bh will be marked invalidated.
+ *
+ * @bh: The corresponding buffer header that is going to be freed.
+ *
+ * The pages underlying the buffer header will be unlocked.
+ */
+void extents_bforget(struct buffer_head *bh)
+{
+    clear_buffer_uptodate(bh);
+    bforget(bh);
+}

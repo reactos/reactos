@@ -63,7 +63,7 @@ Ext2Pnp (IN PEXT2_IRP_CONTEXT IrpContext)
 
     PIRP                Irp;
     PIO_STACK_LOCATION  IrpSp;
-    PEXT2_VCB           Vcb;
+    PEXT2_VCB           Vcb = NULL;
     PDEVICE_OBJECT      DeviceObject;
 
     _SEH2_TRY {

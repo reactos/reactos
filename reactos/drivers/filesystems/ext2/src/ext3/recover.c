@@ -3,7 +3,7 @@
  * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
  * FILE:             recover.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
- * HOMEPAGE:         http://ext2.yeah.net
+ * HOMEPAGE:         http://www.ext2fsd.com
  * UPDATE HISTORY:
  */
 

@@ -96,6 +96,8 @@ Ext2ProcessEntry(
     LONGLONG AllocationSize;
     ULONG   FileAttributes = 0;
 
+    BOOLEAN IsEntrySymlink = FALSE;
+
     *EntrySize = 0;
     NameLength = pName->Length;
     ASSERT((UsedLength & 7) == 0);
@@ -120,7 +122,12 @@ Ext2ProcessEntry(
     DEBUG(DL_CP, ("Ext2ProcessDirEntry: %wZ in %wZ\n", pName, &Dcb->Mcb->FullName ));
 
     Mcb = Ext2SearchMcb(Vcb, Dcb->Mcb, pName);
-    if (NULL == Mcb) {
+    if (NULL != Mcb) {
+        if (S_ISLNK(Mcb->Inode.i_mode) && NULL == Mcb->Target) {
+            Ext2FollowLink( IrpContext, Vcb, Dcb->Mcb, Mcb, 0);
+        }
+
+    } else {
 
         Inode.i_ino = in;
         Inode.i_sb = &Vcb->sb;
@@ -136,7 +143,7 @@ Ext2ProcessEntry(
         } else if (S_ISLNK(Inode.i_mode)) {
             DEBUG(DL_RES, ("Ext2ProcessDirEntry: SymLink: %wZ\\%wZ\n",
                            &Dcb->Mcb->FullName, pName));
-            Ext2LookupFile(IrpContext, Vcb, pName, Dcb->Mcb, &Mcb, 0);
+            Ext2LookupFile(IrpContext, Vcb, pName, Dcb->Mcb, &Mcb,0);
 
             if (Mcb && IsMcbSpecialFile(Mcb)) {
                 Ext2DerefMcb(Mcb);
@@ -156,6 +163,7 @@ Ext2ProcessEntry(
             ASSERT(!IsMcbSymLink(Target));
             if (IsMcbDirectory(Target)) {
                 FileSize = 0;
+                FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
             } else {
                 FileSize = Target->Inode.i_size;
             }
@@ -171,6 +179,10 @@ Ext2ProcessEntry(
             }
         }
 
+        if (IsInodeSymLink(&Mcb->Inode)) {
+            IsEntrySymlink = TRUE;
+        }
+
     } else {
 
         if (S_ISDIR(Inode.i_mode)) {
@@ -181,11 +193,14 @@ Ext2ProcessEntry(
 
         if (S_ISDIR(Inode.i_mode)) {
             FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+        } else if (S_ISLNK(Inode.i_mode)) {
+            FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            IsEntrySymlink = TRUE;
         } else {
             FileAttributes = FILE_ATTRIBUTE_NORMAL;
         }
 
-        if (!CanIWrite(Vcb) && Ext2IsOwnerReadOnly(Inode.i_mode)) {
+        if (!Ext2CheckInodeAccess(Vcb, &Inode, Ext2FileCanWrite)) {
             SetFlag(FileAttributes, FILE_ATTRIBUTE_READONLY);
         }
     }
@@ -254,8 +269,14 @@ Ext2ProcessEntry(
 
         if (FIF) {
             FIF->FileId.QuadPart = (LONGLONG) in;
+            if (IsEntrySymlink) {
+                FIF->EaSize = IO_REPARSE_TAG_SYMLINK;
+            }
             RtlCopyMemory(&FIF->FileName[0], &pName->Buffer[0], NameLength);
         } else if (FFI) {
+            if (IsEntrySymlink) {
+                FFI->EaSize = IO_REPARSE_TAG_SYMLINK;
+            }
             RtlCopyMemory(&FFI->FileName[0], &pName->Buffer[0], NameLength);
         } else {
             RtlCopyMemory(&FDI->FileName[0], &pName->Buffer[0], NameLength);
@@ -302,6 +323,9 @@ Ext2ProcessEntry(
 
         if (FIB) {
             FIB->FileId.QuadPart = (LONGLONG)in;
+            if (IsEntrySymlink) {
+                FIB->EaSize = IO_REPARSE_TAG_SYMLINK;
+            }
             RtlCopyMemory(&FIB->FileName[0], &pName->Buffer[0], NameLength);
         } else {
             RtlCopyMemory(&FBI->FileName[0], &pName->Buffer[0], NameLength);
@@ -502,13 +526,13 @@ Ext2QueryDirectory (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT          DeviceObject;
     NTSTATUS                Status = STATUS_UNSUCCESSFUL;
-    PEXT2_VCB               Vcb;
-    PFILE_OBJECT            FileObject;
-    PEXT2_FCB               Fcb;
-    PEXT2_MCB               Mcb;
-    PEXT2_CCB               Ccb;
-    PIRP                    Irp;
-    PIO_STACK_LOCATION      IoStackLocation;
+    PEXT2_VCB               Vcb = NULL;
+    PFILE_OBJECT            FileObject = NULL;
+    PEXT2_FCB               Fcb = NULL;
+    PEXT2_MCB               Mcb = NULL;
+    PEXT2_CCB               Ccb = NULL;
+    PIRP                    Irp = NULL;
+    PIO_STACK_LOCATION      IoStackLocation = NULL;
 
     ULONG                   Length;
     ULONG                   FileIndex;
@@ -1009,12 +1033,12 @@ Ext2NotifyChangeDirectory (
     PDEVICE_OBJECT      DeviceObject;
     BOOLEAN             CompleteRequest = TRUE;
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
-    PEXT2_VCB           Vcb;
-    PFILE_OBJECT        FileObject;
-    PEXT2_FCB           Fcb;
-    PEXT2_CCB           Ccb;
-    PIRP                Irp;
+    PEXT2_VCB           Vcb = NULL;
+    PEXT2_FCB           Fcb = NULL;
+    PEXT2_CCB           Ccb = NULL;
+    PIRP                Irp = NULL;
     PIO_STACK_LOCATION  IrpSp;
+    PFILE_OBJECT        FileObject;
     ULONG               CompletionFilter;
     BOOLEAN             WatchTree;
 
