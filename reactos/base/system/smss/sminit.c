@@ -361,7 +361,7 @@ SmpConfigureFileRenames(IN PWSTR ValueName,
     if (Canary)
     {
         /* Save the data into the list */
-        DPRINT1("Renamed file: '%S' - '%S'\n", Canary, ValueData);
+        DPRINT("Renamed file: '%S' - '%S'\n", Canary, ValueData);
         Status = SmpSaveRegistryValue(EntryContext, Canary, ValueData, FALSE);
         Canary = NULL;
     }
@@ -2000,7 +2000,7 @@ SmpProcessFileRenames(VOID)
         /* Get this entry */
         NextEntry = RemoveHeadList(Head);
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Processing PFRO: '%wZ' / '%wZ'\n", &RegEntry->Value, &RegEntry->Name);
+        DPRINT("Processing PFRO: '%wZ' / '%wZ'\n", &RegEntry->Value, &RegEntry->Name);
 
         /* Skip past the '@' marker */
         if (!(RegEntry->Value.Length) && (*RegEntry->Name.Buffer == L'@'))
@@ -2083,7 +2083,7 @@ SmpProcessFileRenames(VOID)
                 Buffer->ReplaceIfExists)
             {
                 /* Open the file for write attribute access this time... */
-                DPRINT1("\nSMSS: '%wZ' => '%wZ' failed - Status == %x, Possible readonly target\n",
+                DPRINT("\nSMSS: '%wZ' => '%wZ' failed - Status == %x, Possible readonly target\n",
                         &RegEntry->Name,
                         &RegEntry->Value,
                         STATUS_OBJECT_NAME_COLLISION);
@@ -2110,7 +2110,7 @@ SmpProcessFileRenames(VOID)
                 else
                 {
                     /* Now remove the read-only attribute from the file */
-                    DPRINT1("     SMSS: Open Existing Success\n");
+                    DPRINT("     SMSS: Open Existing Success\n");
                     RtlZeroMemory(&BasicInfo, sizeof(BasicInfo));
                     BasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
                     Status = NtSetInformationFile(FileHandle,
@@ -2128,7 +2128,7 @@ SmpProcessFileRenames(VOID)
                     else
                     {
                         /* Now that the file is no longer read-only, delete! */
-                        DPRINT1("     SMSS: Set To NORMAL OK\n");
+                        DPRINT("     SMSS: Set To NORMAL OK\n");
                         Status = NtSetInformationFile(OtherFileHandle,
                                                       &IoStatusBlock,
                                                       Buffer,
@@ -2143,7 +2143,7 @@ SmpProcessFileRenames(VOID)
                         else
                         {
                             /* Everything ok */
-                            DPRINT1("     SMSS: Re-Rename Worked OK\n");
+                            DPRINT("     SMSS: Re-Rename Worked OK\n");
                         }
                     }
                 }
@@ -2162,12 +2162,12 @@ Quickie:
         else if (RegEntry->Value.Length)
         {
             /* We succeed with a rename */
-            DPRINT1("SMSS: '%wZ' (renamed to) '%wZ'\n", &RegEntry->Name, &RegEntry->Value);
+            DPRINT("SMSS: '%wZ' (renamed to) '%wZ'\n", &RegEntry->Name, &RegEntry->Value);
         }
         else
         {
             /* We suceeded with a delete */
-            DPRINT1("SMSS: '%wZ' (deleted)\n", &RegEntry->Name);
+            DPRINT("SMSS: '%wZ' (deleted)\n", &RegEntry->Name);
         }
 
         /* Now free this entry and keep going */
@@ -2242,7 +2242,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     }
 
     /* Print out if this is the case */
-    if (MiniNTBoot) DPRINT1("SMSS: !!! MiniNT Boot !!!\n");
+    if (MiniNTBoot) DPRINT("SMSS: !!! MiniNT Boot !!!\n");
 
     /* Open the environment key to see if we are booted in safe mode */
     RtlInitUnicodeString(&DestinationString,

@@ -317,7 +317,7 @@ SmpDeletePagingFile(IN PUNICODE_STRING FileName)
         }
         else
         {
-            DPRINT1("SMSS:PFILE: Deleted stale paging file - %wZ\n", FileName);
+            DPRINT("SMSS:PFILE: Deleted stale paging file - %wZ\n", FileName);
         }
 
         /* Close the handle */
@@ -1040,7 +1040,7 @@ SmpCreatePagingFiles(VOID)
             if (!NT_SUCCESS(Status))
             {
                 /* We failed -- try again, with size minimization this time */
-                DPRINT1("SMSS:PFILE: Trying lower sizes for (`%wZ')\n",
+                DPRINT("SMSS:PFILE: Trying lower sizes for (`%wZ')\n",
                         &Descriptor->Name);
                 Status = SmpCreateSystemManagedPagingFile(Descriptor, TRUE);
             }
@@ -1063,7 +1063,7 @@ SmpCreatePagingFiles(VOID)
                 if (!NT_SUCCESS(Status))
                 {
                     /* We failed to create it. Try again with a smaller size */
-                    DPRINT1("SMSS:PFILE: Trying lower sizes for (`%wZ')\n",
+                    DPRINT("SMSS:PFILE: Trying lower sizes for (`%wZ')\n",
                             &Descriptor->Name);
                     Size.QuadPart = 16 * MEGABYTE;
                     Status = SmpCreatePagingFileOnAnyDrive(Descriptor,

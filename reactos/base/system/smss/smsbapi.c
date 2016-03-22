@@ -179,7 +179,7 @@ SmpSbCreateSession(IN PVOID Reserved,
 #endif
 
     /* This is a native application being started as the initial command */
-    DPRINT1("Subsystem active, starting thread\n");
+    DPRINT("Subsystem active, starting thread\n");
     NtClose(ProcessInformation->ProcessHandle);
     NtResumeThread(ProcessInformation->ThreadHandle, NULL);
     NtClose(ProcessInformation->ThreadHandle);
