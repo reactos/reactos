@@ -1065,10 +1065,7 @@ typedef struct _SYMBOL_INFO
     ULONG       SizeOfStruct;
     ULONG       TypeIndex;
     ULONG64     Reserved[2];
-    union {
-      ULONG       info;   /* wrong, but wine needs it */
-      ULONG       Index;
-    };
+    ULONG       Index;
     ULONG       Size;
     ULONG64     ModBase;
     ULONG       Flags;

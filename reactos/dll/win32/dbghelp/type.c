@@ -460,7 +460,7 @@ BOOL WINAPI SymEnumTypes(HANDLE hProcess, ULONG64 BaseOfDll,
     {
         type = *(struct symt**)vector_at(&pair.effective->vtypes, i);
         sym_info->TypeIndex = symt_ptr2index(pair.effective, type);
-        sym_info->info = 0; /* FIXME */
+        sym_info->Index = 0; /* FIXME */
         symt_get_info(pair.effective, type, TI_GET_LENGTH, &size);
         sym_info->Size = size;
         sym_info->ModBase = pair.requested->module.BaseOfImage;

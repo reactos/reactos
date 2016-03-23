@@ -572,7 +572,7 @@ static void symt_fill_sym_info(struct module_pair* pair,
 
     if (!symt_get_info(pair->effective, sym, TI_GET_TYPE, &sym_info->TypeIndex))
         sym_info->TypeIndex = 0;
-    sym_info->info = symt_ptr2index(pair->effective, sym);
+    sym_info->Index = symt_ptr2index(pair->effective, sym);
     sym_info->Reserved[0] = sym_info->Reserved[1] = 0;
     if (!symt_get_info(pair->effective, sym, TI_GET_LENGTH, &size) &&
         (!sym_info->TypeIndex ||
@@ -731,7 +731,7 @@ static BOOL send_symbol(const struct sym_enum* se, struct module_pair* pair,
                         const struct symt_function* func, const struct symt* sym)
 {
     symt_fill_sym_info(pair, func, sym, se->sym_info);
-    if (se->index && se->sym_info->info != se->index) return FALSE;
+    if (se->index && se->sym_info->Index != se->index) return FALSE;
     if (se->tag && se->sym_info->Tag != se->tag) return FALSE;
     if (se->addr && !(se->addr >= se->sym_info->Address && se->addr < se->sym_info->Address + se->sym_info->Size)) return FALSE;
     return !se->cb(se->sym_info, se->sym_info->Size, se->user);
@@ -995,7 +995,7 @@ void copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si)
     siw->TypeIndex = si->TypeIndex; 
     siw->Reserved[0] = si->Reserved[0];
     siw->Reserved[1] = si->Reserved[1];
-    siw->Index = si->info; /* FIXME: see dbghelp.h */
+    siw->Index = si->Index;
     siw->Size = si->Size;
     siw->ModBase = si->ModBase;
     siw->Flags = si->Flags;
