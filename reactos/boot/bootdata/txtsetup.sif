@@ -67,6 +67,7 @@ ntdll.dll=,,,,,,,,,,,,2
 wmilib.sys=,,,,,,,,,,,,4
 ksecdd.sys=,,,,,,,,,,,,4
 mountmgr.sys=,,,,,,x,,,,,,4
+btrfs.sys=,,,,,,x,,,,,,4
 
 [SystemPartitionFiles]
 
