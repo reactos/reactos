@@ -1893,7 +1893,13 @@ static NTSTATUS STDCALL stream_set_end_of_file_information(device_extension* Vcb
             free_traverse_ptr(&tp);
             return STATUS_INTERNAL_ERROR;
         }
-        
+
+#ifdef __REACTOS__
+        // BUGBUG: FIXME!!
+        ERR("BUGBUG: datalen is uninitialized! Set it to zero temporarily...\n");
+        datalen = 0;
+#endif
+
         if (tp.item->size < datalen) {
             ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, datalen);
             free_traverse_ptr(&tp);
