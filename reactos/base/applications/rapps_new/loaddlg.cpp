@@ -36,7 +36,6 @@
 #include <shellutils.h>
 
 static PAPPLICATION_INFO AppInfo;
-static HICON hIcon = NULL;
 
 class CDownloadDialog :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -359,12 +358,16 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     switch (Msg)
     {
         case WM_INITDIALOG:
+        {
+            HICON hIconSm = NULL, hIconBg = NULL;
 
-            hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-            if (hIcon)
+            hIconBg = (HICON)GetClassLongPtr(hMainWnd, GCLP_HICON);
+            hIconSm = (HICON)GetClassLongPtr(hMainWnd, GCLP_HICONSM);
+
+            if (hIconBg && hIconSm)
             {
-                SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
-                SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIcon);
+                SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
+                SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
             }
 
             SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
@@ -379,7 +382,7 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             if (!Thread) return FALSE;
             CloseHandle(Thread);
             return TRUE;
-
+        }
         case WM_COMMAND:
             if (wParam == IDCANCEL)
             {
@@ -389,7 +392,6 @@ DownloadDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             return FALSE;
 
         case WM_CLOSE:
-            if (hIcon) DestroyIcon(hIcon);
             EndDialog(Dlg, 0);
             return TRUE;
 
