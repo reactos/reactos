@@ -413,8 +413,26 @@ ThreadFunc(LPVOID Context)
 
     do
     {
-        if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead)) goto end;
-        if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL)) goto end;
+        if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
+        {
+            WCHAR szMsgText[MAX_STR_LEN];
+
+            if (!LoadStringW(hInst, IDS_INTERRUPTED_DOWNLOAD, szMsgText, _countof(szMsgText)))
+                goto end;
+
+            MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
+            goto end;
+        }
+        if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
+        {
+            WCHAR szMsgText[MAX_STR_LEN];
+
+            if (!LoadStringW(hInst, IDS_UNABLE_TO_WRITE, szMsgText, _countof(szMsgText)))
+                goto end;
+
+            MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
+            goto end;
+        }
         dwCurrentBytesRead += dwBytesRead;
         dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, AppInfo->szUrlDownload);
     }

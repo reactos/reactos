@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+ * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -203,4 +203,6 @@ BEGIN
     IDS_CERT_DOES_NOT_MATCH "Ha fallado la comprobación del certificado SSL."
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete..."
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
+    IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
+    IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
 END

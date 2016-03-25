@@ -202,4 +202,6 @@ BEGIN
     IDS_CERT_DOES_NOT_MATCH "SSL onay belgesi doğrulaması başarısız."
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor..."
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veyâ indirme esnâsında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
+    IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. Umûmî Ağ bağlantınızı denetleyiniz."
+    IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
 END
