@@ -1,0 +1,27 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "The format of the %1 RunEx or RunOnceEx entry was invalid. A vertical bar ('|') is needed after the function name and the function needs to support WinMain() parameters."
+    IDS_LOADERROR "An error occurred loading %1. The file may not have been installed or it has been corrupted."
+    IDS_CALLERROR "An error or exception occurred while calling the function %1 in %2."
+    IDS_INCORRECTFORMAT "The format of the following RunEx or RunOnceEx command is incorrect: %1. The shell execute command must start with ||."
+    IDS_NOEXPORT "Unable to call the function %1 in the file %2 because that function does not exist or is not exported."
+    IDS_EXECUTEERROR "An error or exception occurred while executing %1."
+    IDS_NOFUNCTION "Unable to find the function %1 in the file %2."
+    IDS_NODEPENDENCY "Unable to load the dependency file %1."
+    IDS_SETUPERROR "An error has occurred while setting up %1. This error has been logged, the installation will continue"
+    IDS_INCOMPLETE "The previous installation of an application has not been completed.\n\nLogon with an Administrator account to complete the installation."
+    IDS_SETUP "ReactOS Setup"
+    IDS_SERVICEERROR "Some services could not be started. Setup needs to restart your system in order to start the services."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS is now setting up the following items:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

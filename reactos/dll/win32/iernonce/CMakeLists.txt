@@ -3,6 +3,7 @@ spec2def(iernonce.dll iernonce.spec)
 
 add_library(iernonce SHARED
     iernonce.c
+    iernonce.rc
     ${CMAKE_CURRENT_BINARY_DIR}/iernonce.def)
 
 set_module_type(iernonce win32dll UNICODE)

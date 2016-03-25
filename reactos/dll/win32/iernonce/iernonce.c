@@ -2,18 +2,14 @@
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll\win32\iernonce\iernonce.c
- * PURPOSE:     DLL for RunOnceEx Keys
- * PROGRAMMERS: Copyright 2013 Robert Naumann
+ * PURPOSE:     ReactOS Extended RunOnce processing with UI
+ * PROGRAMMERS: Copyright 2013-2016 Robert Naumann
  */
 
 
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <setupapi.h>
 
 #define NDEBUG
 #include <debug.h>
