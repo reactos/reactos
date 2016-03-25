@@ -28,8 +28,12 @@
 
 #include "resource.h"
 
-/* FIXME: this should be downloaded by HTTPS once is supported */
-#define APPLICATION_DATABASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
+#ifdef USE_CERT_PINNING
+  #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
+  #define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#endif
+
+#define APPLICATION_DATABASE_URL L"https://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256

@@ -18,6 +18,7 @@ list(APPEND SOURCE
     winmain.cpp
     rapps.h)
 
+add_definitions(-DUSE_CERT_PINNING)
 file(GLOB_RECURSE rapps_new_rc_deps res/*.*)
 add_rc_deps(rapps.rc ${rapps_new_rc_deps})
 add_executable(rapps_new ${SOURCE} rapps.rc)
