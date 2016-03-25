@@ -244,6 +244,16 @@ VOID KmtFreeGuarded(PVOID Pointer);
     ok_eq_hex(ExceptionStatus, (ExpectedStatus));   \
 }
 
+#define KmtGetSystemOrEmbeddedRoutineAddress(RoutineName)           \
+    p##RoutineName = KmtGetSystemRoutineAddress(L ## #RoutineName); \
+    if (!p##RoutineName)                                            \
+    {                                                               \
+        p##RoutineName = RoutineName;                               \
+        trace("Using embedded routine for " #RoutineName "\n");     \
+    }                                                               \
+    else                                                            \
+        trace("Using system routine for " #RoutineName "\n");
+
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 
 #if defined KMT_KERNEL_MODE
