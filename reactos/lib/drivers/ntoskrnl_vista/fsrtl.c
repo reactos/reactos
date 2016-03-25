@@ -16,7 +16,7 @@ FsRtlRemoveDotsFromPath(IN PWSTR OriginalString,
                         IN USHORT PathLength,
                         OUT USHORT *NewLength)
 {
-    USHORT Length, ReadPos, WritePos = 0;
+    USHORT Length, ReadPos, WritePos;
 
     Length = PathLength / sizeof(WCHAR);
 
@@ -35,79 +35,79 @@ FsRtlRemoveDotsFromPath(IN PWSTR OriginalString,
         return STATUS_IO_REPARSE_DATA_INVALID;
     }
 
-    if (Length > 0)
+    for (ReadPos = 0, WritePos = 0; ReadPos < Length; ++WritePos)
     {
-        ReadPos = 0;
-
-        for (; ReadPos < Length; ++WritePos)
+        for (; ReadPos > 0 && ReadPos < Length; ++ReadPos)
         {
-            for (; ReadPos < Length; ++ReadPos)
+            if (ReadPos < Length - 1 && OriginalString[ReadPos] == '\\' && OriginalString[ReadPos + 1] == '\\')
             {
-                if (ReadPos < Length - 1 && OriginalString[ReadPos] == '\\' && OriginalString[ReadPos + 1] == '\\')
+                continue;
+            }
+
+            if (OriginalString[ReadPos] != '.')
+            {
+                break;
+            }
+
+            if (ReadPos == Length - 1)
+            {
+                if (OriginalString[ReadPos - 1] == '\\')
                 {
+                    if (WritePos > 1)
+                    {
+                        --WritePos;
+                    }
+
                     continue;
                 }
 
-                if (OriginalString[ReadPos] != '.')
+                OriginalString[WritePos] = '.';
+                ++WritePos;
+                continue;
+            }
+
+            if (OriginalString[ReadPos + 1] == '\\')
+            {
+                if (OriginalString[ReadPos - 1] != '\\')
                 {
-                    break;
+                    OriginalString[WritePos] = '.';
+                    ++WritePos;
+                    continue;
                 }
-
-                if (ReadPos == Length - 1)
+            }
+            else
+            {
+                if (OriginalString[ReadPos + 1] != '.' || OriginalString[ReadPos - 1] != '\\' ||
+                    ((ReadPos != Length - 2) && OriginalString[ReadPos + 2] != '\\'))
                 {
-                    if (OriginalString[ReadPos - 1] == '\\')
-                    {
-                        if (WritePos > 1)
-                        {
-                            --WritePos;
-                        }
-
-                        continue;
-                    }
-
                     OriginalString[WritePos] = '.';
                     ++WritePos;
                     continue;
                 }
 
-                if (OriginalString[ReadPos + 1] == '\\')
+                for (WritePos -= 2; (SHORT)WritePos > 0 && OriginalString[WritePos] != '\\'; --WritePos);
+
+                if ((SHORT)WritePos < 0 || OriginalString[WritePos] != '\\')
                 {
-                    if (OriginalString[ReadPos - 1] != '\\')
-                    {
-                        OriginalString[WritePos] = '.';
-                        ++WritePos;
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (OriginalString[ReadPos + 1] != '.' || OriginalString[ReadPos - 1] != '\\' ||
-                        ((ReadPos != Length - 2) && OriginalString[ReadPos + 2] != '\\'))
-                    {
-                        OriginalString[WritePos] = '.';
-                        ++WritePos;
-                        continue;
-                    }
-
-                    for (WritePos -= 2; (SHORT)WritePos > 0 && OriginalString[WritePos] != '\\'; --WritePos);
-
-                    if ((SHORT)WritePos < 0 || OriginalString[WritePos] != '\\')
-                    {
-                        return STATUS_IO_REPARSE_DATA_INVALID;
-                    }
-
-                    if (WritePos == 0 && ReadPos == Length - 2)
-                    {
-                        WritePos = 1;
-                    }
+                    return STATUS_IO_REPARSE_DATA_INVALID;
                 }
 
-                ++ReadPos;
+                if (WritePos == 0 && ReadPos == Length - 2)
+                {
+                    WritePos = 1;
+                }
             }
 
-            OriginalString[WritePos] = OriginalString[ReadPos];
             ++ReadPos;
         }
+
+        if (ReadPos >= Length)
+        {
+            break;
+        }
+
+        OriginalString[WritePos] = OriginalString[ReadPos];
+        ++ReadPos;
     }
 
     *NewLength = WritePos * sizeof(WCHAR);
