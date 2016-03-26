@@ -112,6 +112,7 @@ typedef struct
      * states it must keep coherency with USER32 on its own. This is true for
      * Windows as well.
      */
+    LONG      reserved;
     UINT      nActiveChildren;
     HWND      hwndChildMaximized;
     HWND      hwndActiveChild;
@@ -216,7 +217,7 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
     0,                      /* style */
     MDIClientWndProcA,      /* procA */
     MDIClientWndProcW,      /* procW */
-    sizeof(MDICLIENTINFO),  /* extra */
+    sizeof(MDIWND),         /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
 };
@@ -225,7 +226,7 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
 static MDICLIENTINFO *get_client_info( HWND client )
 {
 #ifdef __REACTOS__
-    return (MDICLIENTINFO *)GetWindowLongPtr(client, 0);
+    return (MDICLIENTINFO *)GetWindowLongPtr(client, GWLP_MDIWND);
 #else
     MDICLIENTINFO *ret = NULL;
     WND *win = WIN_GetPtr( client );
@@ -1123,7 +1124,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 #ifdef __REACTOS__
           if (!(ci = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ci))))
              return FALSE;
-           SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
+           SetWindowLongPtrW( hwnd, GWLP_MDIWND, (LONG_PTR)ci );
            ci->hBmpClose = 0;
            NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
 #else
@@ -1174,7 +1175,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
           HeapFree( GetProcessHeap(), 0, ci->frameTitle );
 #ifdef __REACTOS__
           HeapFree( GetProcessHeap(), 0, ci );
-          SetWindowLongPtrW( hwnd, 0, 0 );
+          SetWindowLongPtrW( hwnd, GWLP_MDIWND, 0 );
 #endif
           return 0;
       }
@@ -1592,7 +1593,8 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         break;
 
     case WM_CHILDACTIVATE:
-        MDI_ChildActivate( client, hwnd );
+        if (IsWindowEnabled( hwnd ))
+            MDI_ChildActivate( client, hwnd );
         return 0;
 
     case WM_SYSCOMMAND:

@@ -731,6 +731,15 @@ typedef struct _SBWND
     SBCALC SBCalc;
 } SBWND, *PSBWND;
 
+typedef struct _MDIWND
+{
+  WND wnd;
+  DWORD dwReserved;
+  PVOID pmdi;
+} MDIWND, *PMDIWND;
+
+#define GWLP_MDIWND 4
+
 typedef struct _MENUWND
 {
     WND wnd;
