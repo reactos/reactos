@@ -260,7 +260,7 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
         {
             CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
             DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunLength != (ULONGLONG)-1)
+            if (DataRunOffset != (ULONGLONG)-1)
             {
                 DataRunStartLCN = LastLCN + DataRunOffset;
                 LastLCN = DataRunStartLCN;
