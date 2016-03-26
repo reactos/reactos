@@ -143,13 +143,13 @@ CreateShortcut(
     LPCTSTR pszName,
     LPCTSTR pszCommand,
     LPCTSTR pszDescription,
-    INT iIconNr)
+    INT iIconNr,
+    LPCTSTR pszWorkingDir)
 {
     TCHAR szPath[MAX_PATH];
     TCHAR szExeName[MAX_PATH];
-    LPTSTR Ptr;
     TCHAR szWorkingDirBuf[MAX_PATH];
-    LPTSTR pszWorkingDir = NULL;
+    LPTSTR Ptr;
     LPTSTR lpFilePart;
     DWORD dwLen;
 
@@ -177,17 +177,23 @@ CreateShortcut(
         /* Save the file name */
         _tcscpy(szExeName, lpFilePart);
 
-        /* We're only interested in the path. Cut the file name off.
-           Also remove the trailing backslash unless the working directory
-           is only going to be a drive, ie. C:\ */
-        *(lpFilePart--) = _T('\0');
-        if (!(lpFilePart - szWorkingDirBuf == 2 && szWorkingDirBuf[1] == _T(':') &&
-              szWorkingDirBuf[2] == _T('\\')))
+        if (pszWorkingDir == NULL || pszWorkingDir[0] == _T('\0'))
         {
-            *lpFilePart = _T('\0');
+            /* We're only interested in the path. Cut the file name off.
+               Also remove the trailing backslash unless the working directory
+               is only going to be a drive, ie. C:\ */
+            *(lpFilePart--) = _T('\0');
+            if (!(lpFilePart - szWorkingDirBuf == 2 && szWorkingDirBuf[1] == _T(':') &&
+                  szWorkingDirBuf[2] == _T('\\')))
+            {
+                *lpFilePart = _T('\0');
+            }
+            pszWorkingDir = szWorkingDirBuf;
         }
-
-        pszWorkingDir = szWorkingDirBuf;
+    }
+    else if (pszWorkingDir && pszWorkingDir[0] == _T('\0'))
+    {
+        pszWorkingDir = NULL;
     }
 
     _tcscpy(szPath, pszFolder);
@@ -204,9 +210,11 @@ CreateShortcut(
 static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR  pszSection, LPCWSTR pszFolder)
 {
     INFCONTEXT Context;
+    DWORD dwFieldCount;
     WCHAR szCommand[MAX_PATH];
     WCHAR szName[MAX_PATH];
     WCHAR szDescription[MAX_PATH];
+    WCHAR szDirectory[MAX_PATH];
     INT iIconNr;
 
     if (!SetupFindFirstLine(hinf, pszSection, NULL, &Context))
@@ -214,7 +222,8 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR  pszSection, LPCWSTR ps
 
     do
     {
-        if (SetupGetFieldCount(&Context) < 4)
+        dwFieldCount = SetupGetFieldCount(&Context);
+        if (dwFieldCount < 4)
             continue;
 
         if (!SetupGetStringFieldW(&Context, 1, szCommand, MAX_PATH, NULL))
@@ -229,11 +238,14 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR  pszSection, LPCWSTR ps
         if (!SetupGetIntField(&Context, 4, &iIconNr))
             continue;
 
+        if (dwFieldCount < 5 || !SetupGetStringFieldW(&Context, 5, szDirectory, MAX_PATH, NULL))
+            szDirectory[0] = L'\0';
+
         _tcscat(szName, L".lnk");
 
-        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr);
+        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory);
 
-    }while (SetupFindNextLine(&Context, &Context));
+    } while (SetupFindNextLine(&Context, &Context));
 
     return TRUE;
 }

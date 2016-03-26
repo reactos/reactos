@@ -14,7 +14,7 @@ CommunicationsShortcuts=2, %ACCESSORIES%\%COMMUNICATIONS%
 GamesShortcuts=2, %GAMES%
 
 [DesktopShortcuts]
-%SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0
+%SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
 [ProgramShortcuts]
@@ -32,7 +32,7 @@ GamesShortcuts=2, %GAMES%
 
 [AccessoriesShortcuts]
 %SystemRoot%\system32\calc.exe, %CALC_TITLE%, %CALC_DESC%, 0
-%SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0
+%SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\notepad.exe, %NOTEPAD_TITLE%, %NOTEPAD_DESC%, 0
 %SystemRoot%\system32\screenshot.exe, %SCREENSHOT_TITLE%, %SCREENSHOT_DESC%, 0
 %SystemRoot%\system32\wordpad.exe, %WORDPAD_TITLE%, %WORDPAD_DESC%, 0
