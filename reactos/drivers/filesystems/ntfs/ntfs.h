@@ -86,8 +86,8 @@ typedef struct _NTFS_INFO
 
 #define NTFS_TYPE_CCB         '20SF'
 #define NTFS_TYPE_FCB         '30SF'
-#define	NTFS_TYPE_VCB         '50SF'
-#define NTFS_TYPE_IRP_CONTEST '60SF'
+#define NTFS_TYPE_VCB         '50SF'
+#define NTFS_TYPE_IRP_CONTEXT '60SF'
 #define NTFS_TYPE_GLOBAL_DATA '70SF'
 
 typedef struct

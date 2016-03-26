@@ -76,7 +76,7 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 
     RtlZeroMemory(IrpContext, sizeof(NTFS_IRP_CONTEXT));
 
-    IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
+    IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEXT;
     IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
     IrpContext->Irp = Irp;
     IrpContext->DeviceObject = DeviceObject;
