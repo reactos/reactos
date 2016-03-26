@@ -1049,7 +1049,11 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 focus = GetNextDlgTabItem( hwnd, 0, FALSE );
                 if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
                 if (focus)
+                {
+                    if (SendMessageW( focus, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
+                        SendMessageW( focus, EM_SETSEL, 0, MAXLONG );
                     SetFocus( focus );
+                }
             }
 //// ReactOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
 //// This now breaks test_SaveRestoreFocus.
@@ -2021,7 +2025,7 @@ DlgDirSelectExW(
 
 
 /*
- * @implemented Modified for ReactOS.
+ * @implemented Modified for ReactOS. Do not Port Sync!!!
  */
 BOOL
 WINAPI
