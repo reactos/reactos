@@ -386,6 +386,7 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
 //     t->address = addr;
 //     t->level = th->level;
     t->refcount = 1;
+    t->has_address = TRUE;
     t->Vcb = Vcb;
     t->parent = NULL;
     t->root = r;
@@ -393,6 +394,7 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
     t->paritem = NULL;
     t->size = 0;
     t->new_address = 0;
+    t->has_new_address = FALSE;
 #ifdef DEBUG_TREE_REFCOUNTS   
 #ifdef DEBUG_LONG_MESSAGES
     _debug_message(func, file, line, "loaded tree %p (%llx)\n", t, addr);
@@ -698,11 +700,20 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
         }
 
         if (t->header.level == 0 && cmp == 0 && !ignore && td && td->ignore) {
+            tree_data* origtd = td;
+            
             while (td && td->ignore)
                 td = next_item(t, td);
             
-            if (td)
+            if (td) {
                 cmp = keycmp(searchkey, &td->key);
+                
+                if (cmp != 0) {
+                    td = origtd;
+                    cmp = 0;
+                }
+            } else
+                td = origtd;
         }
     } while (td && cmp == 1);
     

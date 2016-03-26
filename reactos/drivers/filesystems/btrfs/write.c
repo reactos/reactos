@@ -1093,13 +1093,13 @@ static BOOL trees_consistent(device_extension* Vcb) {
         tree_cache* tc2 = CONTAINING_RECORD(le, tree_cache, list_entry);
         
         if (tc2->write) {
-            if (tc2->tree->header.num_items == 0)
+            if (tc2->tree->header.num_items == 0 && tc2->tree->parent)
                 return FALSE;
             
             if (tc2->tree->size > maxsize)
                 return FALSE;
             
-            if (tc2->tree->new_address == 0)
+            if (!tc2->tree->has_new_address)
                 return FALSE;
         }
         
@@ -1263,6 +1263,7 @@ static BOOL insert_tree_extent_skinny(device_extension* Vcb, tree* t, chunk* c, 
     free_traverse_ptr(&insert_tp);
     
     t->new_address = address;
+    t->has_new_address = TRUE;
     
     return TRUE;
 }
@@ -1272,7 +1273,7 @@ static BOOL insert_tree_extent(device_extension* Vcb, tree* t, chunk* c, LIST_EN
     EXTENT_ITEM_TREE2* eit2;
     traverse_ptr insert_tp;
     
-    TRACE("(%p, %p, %p, %p)\n", Vcb, t, c);
+    TRACE("(%p, %p, %p, %p)\n", Vcb, t, c, rollback);
     
     if (!find_address_in_chunk(Vcb, c, Vcb->superblock.node_size, &address))
         return FALSE;
@@ -1316,6 +1317,7 @@ static BOOL insert_tree_extent(device_extension* Vcb, tree* t, chunk* c, LIST_EN
     free_traverse_ptr(&insert_tp);
     
     t->new_address = address;
+    t->has_new_address = TRUE;
     
     return TRUE;
 }
@@ -1341,7 +1343,7 @@ static NTSTATUS get_tree_new_address(device_extension* Vcb, tree* t, LIST_ENTRY*
 //         }
 //     }
     
-    if (t->header.address != 0) {
+    if (t->has_address) {
         origchunk = get_chunk_from_address(Vcb, t->header.address);
         
         if (insert_tree_extent(Vcb, t, origchunk, rollback))
@@ -1384,7 +1386,7 @@ static BOOL reduce_tree_extent_skinny(device_extension* Vcb, UINT64 address, tre
     
     searchkey.obj_id = address;
     searchkey.obj_type = TYPE_METADATA_ITEM;
-    searchkey.offset = t->header.level;
+    searchkey.offset = 0xffffffffffffffff;
     
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, FALSE);
     if (!NT_SUCCESS(Status)) {
@@ -1392,7 +1394,7 @@ static BOOL reduce_tree_extent_skinny(device_extension* Vcb, UINT64 address, tre
         return FALSE;
     }
     
-    if (keycmp(&tp.item->key, &searchkey)) {
+    if (tp.item->key.obj_id != searchkey.obj_id || tp.item->key.obj_type != searchkey.obj_type) {
         TRACE("could not find %llx,%x,%llx in extent_root\n", searchkey.obj_id, searchkey.obj_type, searchkey.offset);
         free_traverse_ptr(&tp);
         return FALSE;
@@ -1765,7 +1767,7 @@ static NTSTATUS allocate_tree_extents(device_extension* Vcb, LIST_ENTRY* rollbac
     while (le != &Vcb->tree_cache) {
         tree_cache* tc2 = CONTAINING_RECORD(le, tree_cache, list_entry);
         
-        if (tc2->write && tc2->tree->new_address == 0) {
+        if (tc2->write && !tc2->tree->has_new_address) {
             chunk* c;
             
             Status = get_tree_new_address(Vcb, tc2->tree, rollback);
@@ -1776,7 +1778,7 @@ static NTSTATUS allocate_tree_extents(device_extension* Vcb, LIST_ENTRY* rollbac
             
             TRACE("allocated extent %llx\n", tc2->tree->new_address);
             
-            if (tc2->tree->header.address != 0) {
+            if (tc2->tree->has_address) {
                 Status = reduce_tree_extent(Vcb, tc2->tree->header.address, tc2->tree, rollback);
                 
                 if (!NT_SUCCESS(Status)) {
@@ -2088,7 +2090,7 @@ static NTSTATUS write_trees(device_extension* Vcb) {
                 traverse_ptr tp;
                 EXTENT_ITEM_TREE* eit;
                 
-                if (tc2->tree->new_address == 0) {
+                if (!tc2->tree->has_new_address) {
                     ERR("error - tried to write tree with no new address\n");
                     int3;
                 }
@@ -2226,13 +2228,8 @@ static NTSTATUS write_trees(device_extension* Vcb) {
                 crash = TRUE;
             }
             
-            if (tc2->tree->new_address == 0) {
-                ERR("tree %llx, level %x: tried to write tree to address 0\n", tc2->tree->root->id, tc2->tree->header.level);
-                crash = TRUE;
-            }
-            
-            if (tc2->tree->header.num_items == 0) {
-                ERR("tree %llx, level %x: tried to write empty tree\n", tc2->tree->root->id, tc2->tree->header.level);
+            if (tc2->tree->header.num_items == 0 && tc2->tree->parent) {
+                ERR("tree %llx, level %x: tried to write empty tree with parent\n", tc2->tree->root->id, tc2->tree->header.level);
                 crash = TRUE;
             }
             
@@ -2257,6 +2254,7 @@ static NTSTATUS write_trees(device_extension* Vcb) {
             tc2->tree->header.address = tc2->tree->new_address;
             tc2->tree->header.generation = Vcb->superblock.generation;
             tc2->tree->header.flags |= HEADER_FLAG_MIXED_BACKREF;
+            tc2->tree->has_address = TRUE;
             
             data = ExAllocatePoolWithTag(NonPagedPool, Vcb->superblock.node_size, ALLOC_TAG);
             if (!data) {
@@ -2564,11 +2562,13 @@ static NTSTATUS STDCALL split_tree_at(device_extension* Vcb, tree* t, tree_data*
     nt->header.flags = HEADER_FLAG_MIXED_BACKREF;
     
     nt->refcount = 0;
+    nt->has_address = FALSE;
     nt->Vcb = Vcb;
     nt->parent = t->parent;
     nt->root = t->root;
 //     nt->nonpaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(tree_nonpaged), ALLOC_TAG);
     nt->new_address = 0;
+    nt->has_new_address = FALSE;
     nt->flags = t->flags;
     InitializeListHead(&nt->itemlist);
     
@@ -2637,6 +2637,22 @@ static NTSTATUS STDCALL split_tree_at(device_extension* Vcb, tree* t, tree_data*
     
 // //     TRACE("last item is now (%x,%x,%x)\n", (UINT32)oldlastitem->key.obj_id, oldlastitem->key.obj_type, (UINT32)oldlastitem->key.offset);
     
+    if (nt->header.level > 0) {
+        LIST_ENTRY* le = nt->itemlist.Flink;
+        
+        while (le != &nt->itemlist) {
+            tree_data* td2 = CONTAINING_RECORD(le, tree_data, list_entry);
+            
+            if (td2->treeholder.tree) {
+                td2->treeholder.tree->parent = nt;
+                increase_tree_rc(nt);
+                free_tree(t);
+            }
+            
+            le = le->Flink;
+        }
+    }
+    
     if (nt->parent) {
         increase_tree_rc(nt->parent);
         
@@ -2648,7 +2664,7 @@ static NTSTATUS STDCALL split_tree_at(device_extension* Vcb, tree* t, tree_data*
     
         td->key = newfirstitem->key;
         
-        InsertAfter(&t->itemlist, &td->list_entry, &t->paritem->list_entry);
+        InsertHeadList(&t->paritem->list_entry, &td->list_entry);
         
         td->ignore = FALSE;
         td->inserted = TRUE;
@@ -2683,11 +2699,13 @@ static NTSTATUS STDCALL split_tree_at(device_extension* Vcb, tree* t, tree_data*
     pt->header.flags = HEADER_FLAG_MIXED_BACKREF;
     
     pt->refcount = 2;
+    pt->has_address = FALSE;
     pt->Vcb = Vcb;
     pt->parent = NULL;
     pt->paritem = NULL;
     pt->root = t->root;
     pt->new_address = 0;
+    pt->has_new_address = FALSE;
 //     pt->nonpaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(tree_nonpaged), ALLOC_TAG);
     pt->size = pt->header.num_items * sizeof(internal_node);
     pt->flags = t->flags;
@@ -2743,6 +2761,7 @@ static NTSTATUS STDCALL split_tree_at(device_extension* Vcb, tree* t, tree_data*
     nt->parent = pt;
     
 end:
+    t->root->root_item.bytes_used += Vcb->superblock.node_size;
 
 // #ifdef DEBUG_PARANOID
 //     lastkey2.obj_id = 0xffffffffffffffff;
@@ -2857,6 +2876,22 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
         t->header.num_items += next_tree->header.num_items;
         t->size += next_tree->size;
         
+        if (next_tree->header.level > 0) {
+            le = next_tree->itemlist.Flink;
+            
+            while (le != &next_tree->itemlist) {
+                tree_data* td2 = CONTAINING_RECORD(le, tree_data, list_entry);
+                
+                if (td2->treeholder.tree) {
+                    td2->treeholder.tree->parent = t;
+                    increase_tree_rc(t);
+                    free_tree(next_tree);
+                }
+                
+                le = le->Flink;
+            }
+        }
+        
         t->itemlist.Blink->Flink = next_tree->itemlist.Flink;
         t->itemlist.Blink->Flink->Blink = t->itemlist.Blink;
         t->itemlist.Blink = next_tree->itemlist.Blink;
@@ -2877,7 +2912,7 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
         next_tree->header.num_items = 0;
         next_tree->size = 0;
         
-        if (next_tree->new_address != 0) { // delete associated EXTENT_ITEM
+        if (next_tree->has_new_address) { // delete associated EXTENT_ITEM
             Status = reduce_tree_extent(Vcb, next_tree->new_address, next_tree, rollback);
             
             if (!NT_SUCCESS(Status)) {
@@ -2885,7 +2920,7 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
                 free_tree(next_tree);
                 return Status;
             }
-        } else if (next_tree->header.address != 0) {
+        } else if (next_tree->has_address) {
             Status = reduce_tree_extent(Vcb, next_tree->header.address, next_tree, rollback);
             
             if (!NT_SUCCESS(Status)) {
@@ -2910,6 +2945,8 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
         RemoveEntryList(&nextparitem->list_entry);
         ExFreePool(next_tree->paritem);
         next_tree->paritem = NULL;
+        
+        next_tree->root->root_item.bytes_used -= Vcb->superblock.node_size;
         
         free_tree(next_tree);
         
@@ -2950,6 +2987,12 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
             if (t->size + size < Vcb->superblock.node_size - sizeof(tree_header)) {
                 RemoveEntryList(&td->list_entry);
                 InsertTailList(&t->itemlist, &td->list_entry);
+                
+                if (next_tree->header.level > 0 && td->treeholder.tree) {
+                    td->treeholder.tree->parent = t;
+                    increase_tree_rc(t);
+                    free_tree(next_tree);
+                }
                 
                 if (!td->ignore) {
                     next_tree->size -= size;
@@ -2993,6 +3036,106 @@ static NTSTATUS try_tree_amalgamate(device_extension* Vcb, tree* t, LIST_ENTRY* 
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS update_extent_level(device_extension* Vcb, UINT64 address, tree* t, UINT8 level, LIST_ENTRY* rollback) {
+    KEY searchkey;
+    traverse_ptr tp;
+    NTSTATUS Status;
+    
+    if (Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA) {
+        searchkey.obj_id = address;
+        searchkey.obj_type = TYPE_METADATA_ITEM;
+        searchkey.offset = t->header.level;
+        
+        Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, FALSE);
+        if (!NT_SUCCESS(Status)) {
+            ERR("error - find_item returned %08x\n", Status);
+            return Status;
+        }
+        
+        if (!keycmp(&tp.item->key, &searchkey)) {
+            EXTENT_ITEM_SKINNY_METADATA* eism;
+            
+            if (tp.item->size > 0) {
+                eism = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
+                
+                if (!eism) {
+                    ERR("out of memory\n");
+                    free_traverse_ptr(&tp);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+                
+                RtlCopyMemory(eism, tp.item->data, tp.item->size);
+            } else
+                eism = NULL;
+            
+            delete_tree_item(Vcb, &tp, rollback);
+            
+            if (!insert_tree_item(Vcb, Vcb->extent_root, address, TYPE_METADATA_ITEM, level, eism, tp.item->size, NULL, rollback)) {
+                ERR("insert_tree_item failed\n");
+                ExFreePool(eism);
+                free_traverse_ptr(&tp);
+                return STATUS_INTERNAL_ERROR;
+            }
+            
+            free_traverse_ptr(&tp);
+            return STATUS_SUCCESS;
+        }
+        
+        free_traverse_ptr(&tp);
+    }
+    
+    searchkey.obj_id = address;
+    searchkey.obj_type = TYPE_EXTENT_ITEM;
+    searchkey.offset = 0xffffffffffffffff;
+    
+    Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, FALSE);
+    if (!NT_SUCCESS(Status)) {
+        ERR("error - find_item returned %08x\n", Status);
+        return Status;
+    }
+    
+    if (tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type == searchkey.obj_type) {
+        EXTENT_ITEM_TREE* eit;
+        
+        if (tp.item->size < sizeof(EXTENT_ITEM_TREE)) {
+            ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM_TREE));
+            free_traverse_ptr(&tp);
+            return STATUS_INTERNAL_ERROR;
+        }
+        
+        eit = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
+                
+        if (!eit) {
+            ERR("out of memory\n");
+            free_traverse_ptr(&tp);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        
+        RtlCopyMemory(eit, tp.item->data, tp.item->size);
+        
+        delete_tree_item(Vcb, &tp, rollback);
+        
+        eit->level = level;
+        
+        if (!insert_tree_item(Vcb, Vcb->extent_root, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, eit, tp.item->size, NULL, rollback)) {
+            ERR("insert_tree_item failed\n");
+            ExFreePool(eit);
+            free_traverse_ptr(&tp);
+            return STATUS_INTERNAL_ERROR;
+        }
+        
+        free_traverse_ptr(&tp);
+    
+        return STATUS_SUCCESS;
+    }
+    
+    ERR("could not find EXTENT_ITEM for address %llx\n", address);
+    
+    free_traverse_ptr(&tp);
+    
+    return STATUS_INTERNAL_ERROR;
+}
+
 static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
 //     LIST_ENTRY *le, *le2;
 //     write_tree* wt;
@@ -3025,38 +3168,39 @@ static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
                 empty = FALSE;
                 
                 if (tc2->tree->header.num_items == 0) {
-                    LIST_ENTRY* le2;
-                    KEY firstitem = {0xcccccccccccccccc,0xcc,0xcccccccccccccccc};
-                    
-                    done_deletions = TRUE;
-        
-                    le2 = tc2->tree->itemlist.Flink;
-                    while (le2 != &tc2->tree->itemlist) {
-                        tree_data* td = CONTAINING_RECORD(le2, tree_data, list_entry);
-                        firstitem = td->key;
-                        break;
-                    }
-                    
-                    ERR("deleting tree in root %llx (first item was %llx,%x,%llx)\n",
-                        tc2->tree->root->id, firstitem.obj_id, firstitem.obj_type, firstitem.offset);
-                    
-                    if (tc2->tree->new_address != 0) { // delete associated EXTENT_ITEM
-                        Status = reduce_tree_extent(Vcb, tc2->tree->new_address, tc2->tree, rollback);
-                        
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("reduce_tree_extent returned %08x\n", Status);
-                            return Status;
-                        }
-                    } else if (tc2->tree->header.address != 0) {
-                        Status = reduce_tree_extent(Vcb,tc2->tree->header.address, tc2->tree, rollback);
-                        
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("reduce_tree_extent returned %08x\n", Status);
-                            return Status;
-                        }
-                    }
-                    
                     if (tc2->tree->parent) {
+                        LIST_ENTRY* le2;
+                        KEY firstitem = {0xcccccccccccccccc,0xcc,0xcccccccccccccccc};
+                        
+                        done_deletions = TRUE;
+            
+                        le2 = tc2->tree->itemlist.Flink;
+                        while (le2 != &tc2->tree->itemlist) {
+                            tree_data* td = CONTAINING_RECORD(le2, tree_data, list_entry);
+                            firstitem = td->key;
+                            break;
+                        }
+                        TRACE("deleting tree in root %llx (first item was %llx,%x,%llx)\n",
+                              tc2->tree->root->id, firstitem.obj_id, firstitem.obj_type, firstitem.offset);
+                        
+                        tc2->tree->root->root_item.bytes_used -= Vcb->superblock.node_size;
+                        
+                        if (tc2->tree->has_new_address) { // delete associated EXTENT_ITEM
+                            Status = reduce_tree_extent(Vcb, tc2->tree->new_address, tc2->tree, rollback);
+                            
+                            if (!NT_SUCCESS(Status)) {
+                                ERR("reduce_tree_extent returned %08x\n", Status);
+                                return Status;
+                            }
+                        } else if (tc2->tree->has_address) {
+                            Status = reduce_tree_extent(Vcb,tc2->tree->header.address, tc2->tree, rollback);
+                            
+                            if (!NT_SUCCESS(Status)) {
+                                ERR("reduce_tree_extent returned %08x\n", Status);
+                                return Status;
+                            }
+                        }
+                        
                         if (!tc2->tree->paritem->ignore) {
                             tc2->tree->paritem->ignore = TRUE;
                             tc2->tree->parent->header.num_items--;
@@ -3071,19 +3215,25 @@ static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
                         
                         RemoveEntryList(le);
                         ExFreePool(tc2);
-                    } else {
-                        FIXME("trying to delete top root, not sure what to do here\n"); // FIXME
-                        return STATUS_INTERNAL_ERROR;
-                    }
-                } else {
-                    if (tc2->tree->size > Vcb->superblock.node_size - sizeof(tree_header)) {
-                        TRACE("splitting overlarge tree (%x > %x)\n", tc2->tree->size, Vcb->superblock.node_size - sizeof(tree_header));
-                        Status = split_tree(Vcb, tc2->tree);
-
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("split_tree returned %08x\n", Status);
-                            return Status;
+                    } else if (tc2->tree->header.level != 0) {
+                        if (tc2->tree->has_new_address) {
+                            Status = update_extent_level(Vcb, tc2->tree->new_address, tc2->tree, 0, rollback);
+                            
+                            if (!NT_SUCCESS(Status)) {
+                                ERR("update_extent_level returned %08x\n", Status);
+                                return Status;
+                            }
                         }
+                        
+                        tc2->tree->header.level = 0;
+                    }
+                } else if (tc2->tree->size > Vcb->superblock.node_size - sizeof(tree_header)) {
+                    TRACE("splitting overlarge tree (%x > %x)\n", tc2->tree->size, Vcb->superblock.node_size - sizeof(tree_header));
+                    Status = split_tree(Vcb, tc2->tree);
+
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("split_tree returned %08x\n", Status);
+                        return Status;
                     }
                 }
             }
@@ -3145,16 +3295,16 @@ static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
                             le2 = le2->Flink;
                         }
                         
-                        ERR("deleting top-level tree in root %llx with one item\n", tc2->tree->root->id);
+                        TRACE("deleting top-level tree in root %llx with one item\n", tc2->tree->root->id);
                         
-                        if (tc2->tree->new_address != 0) { // delete associated EXTENT_ITEM
+                        if (tc2->tree->has_new_address) { // delete associated EXTENT_ITEM
                             Status = reduce_tree_extent(Vcb, tc2->tree->new_address, tc2->tree, rollback);
                             
                             if (!NT_SUCCESS(Status)) {
                                 ERR("reduce_tree_extent returned %08x\n", Status);
                                 return Status;
                             }
-                        } else if (tc2->tree->header.address != 0) {
+                        } else if (tc2->tree->has_address) {
                             Status = reduce_tree_extent(Vcb,tc2->tree->header.address, tc2->tree, rollback);
                             
                             if (!NT_SUCCESS(Status)) {
@@ -3180,8 +3330,11 @@ static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
                         
                         if (child_tree) {
                             child_tree->parent = NULL;
+                            child_tree->paritem = NULL;
                             free_tree(tc2->tree);
                         }
+                        
+                        tc2->tree->root->root_item.bytes_used -= Vcb->superblock.node_size;
 
                         free_tree(tc2->tree);
                         
@@ -3208,7 +3361,7 @@ NTSTATUS STDCALL do_write(device_extension* Vcb, LIST_ENTRY* rollback) {
     TRACE("(%p)\n", Vcb);
     
     // If only changing superblock, e.g. changing label, we still need to rewrite
-    // the root tree so the generations mach. Otherwise you won't be able to mount on Linux.
+    // the root tree so the generations match, otherwise you won't be able to mount on Linux.
     if (Vcb->write_trees > 0) {
         KEY searchkey;
         traverse_ptr tp;
@@ -4236,6 +4389,8 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
 
     do {
         EXTENT_DATA* ed = (EXTENT_DATA*)tp.item->data;
+        EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
+        UINT64 len;
         
         if (tp.item->size < sizeof(EXTENT_DATA)) {
             ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA));
@@ -4251,7 +4406,9 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
         
         b = find_next_item(Vcb, &tp, &next_tp, FALSE);
         
-        if (tp.item->key.offset < end_data && tp.item->key.offset + ed->decoded_size >= start_data) {
+        len = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
+        
+        if (tp.item->key.offset < end_data && tp.item->key.offset + len >= start_data) {
             if (ed->compression != BTRFS_COMPRESSION_NONE) {
                 FIXME("FIXME - compression not supported at present\n");
                 Status = STATUS_NOT_SUPPORTED;
@@ -4270,20 +4427,18 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                 goto end;
             }
             
-            // FIXME - is ed->decoded_size the size of the whole extent, or just this bit of it?
-            
             if (ed->type == EXTENT_TYPE_INLINE) {
-                if (start_data <= tp.item->key.offset && end_data >= tp.item->key.offset + ed->decoded_size) { // remove all
+                if (start_data <= tp.item->key.offset && end_data >= tp.item->key.offset + len) { // remove all
                     delete_tree_item(Vcb, &tp, rollback);
                     
-                    fcb->inode_item.st_blocks -= ed->decoded_size;
-                } else if (start_data <= tp.item->key.offset && end_data < tp.item->key.offset + ed->decoded_size) { // remove beginning
+                    fcb->inode_item.st_blocks -= len;
+                } else if (start_data <= tp.item->key.offset && end_data < tp.item->key.offset + len) { // remove beginning
                     EXTENT_DATA* ned;
                     UINT64 size;
                     
                     delete_tree_item(Vcb, &tp, rollback);
                     
-                    size = ed->decoded_size - (end_data - tp.item->key.offset);
+                    size = len - (end_data - tp.item->key.offset);
                     
                     ned = ExAllocatePoolWithTag(PagedPool, sizeof(EXTENT_DATA) - 1 + size, ALLOC_TAG);
                     if (!ned) {
@@ -4309,7 +4464,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     }
                     
                     fcb->inode_item.st_blocks -= end_data - tp.item->key.offset;
-                } else if (start_data > tp.item->key.offset && end_data >= tp.item->key.offset + ed->decoded_size) { // remove end
+                } else if (start_data > tp.item->key.offset && end_data >= tp.item->key.offset + len) { // remove end
                     EXTENT_DATA* ned;
                     UINT64 size;
                     
@@ -4340,8 +4495,8 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                         goto end;
                     }
                     
-                    fcb->inode_item.st_blocks -= tp.item->key.offset + ed->decoded_size - start_data;
-                } else if (start_data > tp.item->key.offset && end_data < tp.item->key.offset + ed->decoded_size) { // remove middle
+                    fcb->inode_item.st_blocks -= tp.item->key.offset + len - start_data;
+                } else if (start_data > tp.item->key.offset && end_data < tp.item->key.offset + len) { // remove middle
                     EXTENT_DATA* ned;
                     UINT64 size;
                     
@@ -4372,7 +4527,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                         goto end;
                     }
                     
-                    size = tp.item->key.offset + ed->decoded_size - end_data;
+                    size = tp.item->key.offset + len - end_data;
                     
                     ned = ExAllocatePoolWithTag(PagedPool, sizeof(EXTENT_DATA) - 1 + size, ALLOC_TAG);
                     if (!ned) {
@@ -4400,39 +4555,24 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     fcb->inode_item.st_blocks -= end_data - start_data;
                 }
             } else if (ed->type == EXTENT_TYPE_REGULAR || ed->type == EXTENT_TYPE_PREALLOC) {
-                EXTENT_DATA2* ed2 = (EXTENT_DATA2*)&ed->data[0];
-                
-                if (start_data <= tp.item->key.offset && end_data >= tp.item->key.offset + ed->decoded_size) { // remove all
+                if (start_data <= tp.item->key.offset && end_data >= tp.item->key.offset + len) { // remove all
                     if (ed2->address != 0) {
-                        Status = remove_extent_ref(Vcb, ed2->address, ed2->size, fcb->subvol, fcb->inode, tp.item->key.offset, changed_sector_list, rollback);
+                        Status = remove_extent_ref(Vcb, ed2->address, ed2->size, fcb->subvol, fcb->inode, tp.item->key.offset - ed2->offset, changed_sector_list, rollback);
                         if (!NT_SUCCESS(Status)) {
                             ERR("remove_extent_ref returned %08x\n", Status);
                             goto end;
                         }
                         
-                        fcb->inode_item.st_blocks -= ed->decoded_size;
+                        fcb->inode_item.st_blocks -= len;
                     }
                     
                     delete_tree_item(Vcb, &tp, rollback);
-                } else if (start_data <= tp.item->key.offset && end_data < tp.item->key.offset + ed->decoded_size) { // remove beginning
+                } else if (start_data <= tp.item->key.offset && end_data < tp.item->key.offset + len) { // remove beginning
                     EXTENT_DATA* ned;
                     EXTENT_DATA2* ned2;
                     
-                    if (ed2->address != 0) {
-                        Status = add_extent_ref(Vcb, ed2->address, ed2->size, fcb->subvol, fcb->inode, end_data, rollback);
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("add_extent_ref returned %08x\n", Status);
-                            goto end;
-                        }
-                        
-                        Status = remove_extent_ref(Vcb, ed2->address, ed2->size, fcb->subvol, fcb->inode, tp.item->key.offset, changed_sector_list, rollback);
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("remove_extent_ref returned %08x\n", Status);
-                            goto end;
-                        }
-                        
+                    if (ed2->address != 0)
                         fcb->inode_item.st_blocks -= end_data - tp.item->key.offset;
-                    }
                     
                     delete_tree_item(Vcb, &tp, rollback);
                     
@@ -4446,7 +4586,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     ned2 = (EXTENT_DATA2*)&ned->data[0];
                     
                     ned->generation = Vcb->superblock.generation;
-                    ned->decoded_size = ed->decoded_size - (end_data - tp.item->key.offset);
+                    ned->decoded_size = ed->decoded_size;
                     ned->compression = ed->compression;
                     ned->encryption = ed->encryption;
                     ned->encoding = ed->encoding;
@@ -4462,12 +4602,12 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                         Status = STATUS_INTERNAL_ERROR;
                         goto end;
                     }
-                } else if (start_data > tp.item->key.offset && end_data >= tp.item->key.offset + ed->decoded_size) { // remove end
+                } else if (start_data > tp.item->key.offset && end_data >= tp.item->key.offset + len) { // remove end
                     EXTENT_DATA* ned;
                     EXTENT_DATA2* ned2;
                     
                     if (ed2->address != 0)
-                        fcb->inode_item.st_blocks -= tp.item->key.offset + ed->decoded_size - start_data;
+                        fcb->inode_item.st_blocks -= tp.item->key.offset + len - start_data;
                     
                     delete_tree_item(Vcb, &tp, rollback);
                     
@@ -4481,7 +4621,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     ned2 = (EXTENT_DATA2*)&ned->data[0];
                     
                     ned->generation = Vcb->superblock.generation;
-                    ned->decoded_size = start_data - tp.item->key.offset;
+                    ned->decoded_size = ed->decoded_size;
                     ned->compression = ed->compression;
                     ned->encryption = ed->encryption;
                     ned->encoding = ed->encoding;
@@ -4497,19 +4637,12 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                         Status = STATUS_INTERNAL_ERROR;
                         goto end;
                     }
-                } else if (start_data > tp.item->key.offset && end_data < tp.item->key.offset + ed->decoded_size) { // remove middle
+                } else if (start_data > tp.item->key.offset && end_data < tp.item->key.offset + len) { // remove middle
                     EXTENT_DATA* ned;
                     EXTENT_DATA2* ned2;
                     
-                    if (ed2->address != 0) {
-                        Status = add_extent_ref(Vcb, ed2->address, ed2->size, fcb->subvol, fcb->inode, end_data, rollback);
-                        if (!NT_SUCCESS(Status)) {
-                            ERR("add_extent_ref returned %08x\n", Status);
-                            goto end;
-                        }
-                        
+                    if (ed2->address != 0)
                         fcb->inode_item.st_blocks -= end_data - start_data;
-                    }
                     
                     delete_tree_item(Vcb, &tp, rollback);
                     
@@ -4523,7 +4656,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     ned2 = (EXTENT_DATA2*)&ned->data[0];
                     
                     ned->generation = Vcb->superblock.generation;
-                    ned->decoded_size = start_data - tp.item->key.offset;
+                    ned->decoded_size = ed->decoded_size;
                     ned->compression = ed->compression;
                     ned->encryption = ed->encryption;
                     ned->encoding = ed->encoding;
@@ -4550,7 +4683,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     ned2 = (EXTENT_DATA2*)&ned->data[0];
                     
                     ned->generation = Vcb->superblock.generation;
-                    ned->decoded_size = tp.item->key.offset + ed->decoded_size - end_data;
+                    ned->decoded_size = ed->decoded_size;
                     ned->compression = ed->compression;
                     ned->encryption = ed->encryption;
                     ned->encoding = ed->encoding;
@@ -4558,7 +4691,7 @@ NTSTATUS excise_extents(device_extension* Vcb, fcb* fcb, UINT64 start_data, UINT
                     ned2->address = ed2->address;
                     ned2->size = ed2->size;
                     ned2->offset = ed2->address == 0 ? 0 : (ed2->offset + (end_data - tp.item->key.offset));
-                    ned2->num_bytes = tp.item->key.offset + ed->decoded_size - end_data;
+                    ned2->num_bytes = tp.item->key.offset + len - end_data;
                     
                     if (!insert_tree_item(Vcb, fcb->subvol, fcb->inode, TYPE_EXTENT_DATA, end_data, ned, sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2), NULL, rollback)) {
                         ERR("insert_tree_item failed\n");
@@ -4830,9 +4963,16 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
         TRACE("not extending extent which is not EXTENT_TYPE_REGULAR\n");
         goto end;
     }
+    
+    ed2 = (EXTENT_DATA2*)ed->data;
+    
+    if (tp.item->size < sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
+        ERR("(%llx,%x,%llx) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2));
+        goto end;
+    }
 
-    if (tp.item->key.offset + ed->decoded_size != start_data) {
-        TRACE("last EXTENT_DATA does not run up to start_data (%llx + %llx != %llx)\n", tp.item->key.offset, ed->decoded_size, start_data);
+    if (tp.item->key.offset + ed2->num_bytes != start_data) {
+        TRACE("last EXTENT_DATA does not run up to start_data (%llx + %llx != %llx)\n", tp.item->key.offset, ed2->num_bytes, start_data);
         goto end;
     }
     
@@ -4851,14 +4991,7 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
         goto end;
     }
     
-    ed2 = (EXTENT_DATA2*)ed->data;
-    
-    if (tp.item->size < sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
-        ERR("(%llx,%x,%llx) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2));
-        goto end;
-    }
-    
-    if (ed2->size - ed2->offset != ed->decoded_size) {
+    if (ed2->size - ed2->offset != ed2->num_bytes) {
         TRACE("last EXTENT_DATA does not run all the way to the end of the extent\n");
         goto end;
     }
@@ -5033,6 +5166,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
         traverse_ptr tp;
         NTSTATUS Status;
         EXTENT_DATA* ed;
+        UINT64 len;
         
         searchkey.obj_id = fcb->inode;
         searchkey.obj_type = TYPE_EXTENT_DATA;
@@ -5065,19 +5199,24 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
 //             return STATUS_INTERNAL_ERROR;
 //         }
 
-        if (tp.item->key.obj_type == TYPE_EXTENT_DATA && tp.item->size >= sizeof(EXTENT_DATA))
+        if (tp.item->key.obj_type == TYPE_EXTENT_DATA && tp.item->size >= sizeof(EXTENT_DATA)) {
+            EXTENT_DATA2* ed2;
+            
             ed = (EXTENT_DATA*)tp.item->data;
-        else
+            ed2 = (EXTENT_DATA2*)ed->data;
+            
+            len = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
+        } else
             ed = NULL;
         
-        if (tp.item->key.obj_id != fcb->inode || tp.item->key.obj_type != TYPE_EXTENT_DATA || !ed || tp.item->key.offset + ed->decoded_size < start_data) {
+        if (tp.item->key.obj_id != fcb->inode || tp.item->key.obj_type != TYPE_EXTENT_DATA || !ed || tp.item->key.offset + len < start_data) {
             if (tp.item->key.obj_id != fcb->inode || tp.item->key.obj_type != TYPE_EXTENT_DATA)
                 Status = insert_sparse_extent(Vcb, fcb->subvol, fcb->inode, 0, start_data, rollback);
             else if (!ed)
                 ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA));
             else {
-                Status = insert_sparse_extent(Vcb, fcb->subvol, fcb->inode, tp.item->key.offset + ed->decoded_size,
-                                              start_data - tp.item->key.offset - ed->decoded_size, rollback);
+                Status = insert_sparse_extent(Vcb, fcb->subvol, fcb->inode, tp.item->key.offset + len,
+                                              start_data - tp.item->key.offset - len, rollback);
             }
             if (!NT_SUCCESS(Status)) {
                 ERR("insert_sparse_extent returned %08x\n", Status);
@@ -5388,14 +5527,17 @@ NTSTATUS extend_file(fcb* fcb, UINT64 end, LIST_ENTRY* rollback) {
         
         oldalloc = 0;
         if (tp.item->key.obj_id == fcb->inode && tp.item->key.obj_type == TYPE_EXTENT_DATA) {
+            EXTENT_DATA* ed = (EXTENT_DATA*)tp.item->data;
+            EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
+            
             if (tp.item->size < sizeof(EXTENT_DATA)) {
                 ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA));
                 free_traverse_ptr(&tp);
                 return STATUS_INTERNAL_ERROR;
             }
             
-            oldalloc = tp.item->key.offset + ((EXTENT_DATA*)tp.item->data)->decoded_size;
-            cur_inline = ((EXTENT_DATA*)tp.item->data)->type == EXTENT_TYPE_INLINE;
+            oldalloc = tp.item->key.offset + (ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes);
+            cur_inline = ed->type == EXTENT_TYPE_INLINE;
         
             if (cur_inline && end > fcb->Vcb->max_inline) {
                 LIST_ENTRY changed_sector_list;
@@ -5405,7 +5547,7 @@ NTSTATUS extend_file(fcb* fcb, UINT64 end, LIST_ENTRY* rollback) {
                 
                 TRACE("giving inline file proper extents\n");
                 
-                origlength = ((EXTENT_DATA*)tp.item->data)->decoded_size;
+                origlength = ed->decoded_size;
                 
                 cur_inline = FALSE;
                 
@@ -5426,7 +5568,7 @@ NTSTATUS extend_file(fcb* fcb, UINT64 end, LIST_ENTRY* rollback) {
                 if (length > origlength)
                     RtlZeroMemory(data + origlength, length - origlength);
                 
-                RtlCopyMemory(data, ((EXTENT_DATA*)tp.item->data)->data, origlength);
+                RtlCopyMemory(data, ed->data, origlength);
                 
                 fcb->inode_item.st_blocks -= origlength;
                 
@@ -5447,7 +5589,6 @@ NTSTATUS extend_file(fcb* fcb, UINT64 end, LIST_ENTRY* rollback) {
             }
             
             if (cur_inline) {
-                EXTENT_DATA* ed;
                 ULONG edsize;
                 
                 if (end > oldalloc) {
@@ -5868,7 +6009,7 @@ static void check_extents_consistent(device_extension* Vcb, fcb* fcb) {
     ed = (EXTENT_DATA*)tp.item->data;
     ed2 = (EXTENT_DATA2*)&ed->data[0];
     
-    length = oldlength = ed->decoded_size;
+    length = oldlength = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
     lastoff = tp.item->key.offset;
     
     TRACE("(%llx,%x,%llx) length = %llx\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, length);
@@ -5895,7 +6036,7 @@ static void check_extents_consistent(device_extension* Vcb, fcb* fcb) {
         ed = (EXTENT_DATA*)tp.item->data;
         ed2 = (EXTENT_DATA2*)&ed->data[0];
     
-        length = ed->decoded_size;
+        length = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
     
         TRACE("(%llx,%x,%llx) length = %llx\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, length);
         

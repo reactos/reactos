@@ -368,6 +368,9 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
 //     }
     
     do {
+        UINT64 len;
+        EXTENT_DATA2* ed2;
+        
         ed = (EXTENT_DATA*)tp.item->data;
         
         if (tp.item->size < sizeof(EXTENT_DATA)) {
@@ -384,7 +387,11 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
             goto exit;
         }
         
-        if (tp.item->key.offset + ed->decoded_size < start) {
+        ed2 = (EXTENT_DATA2*)ed->data;
+        
+        len = ed->type == EXTENT_TYPE_INLINE ? ed->decoded_size : ed2->num_bytes;
+        
+        if (tp.item->key.offset + len < start) {
             ERR("Tried to read beyond end of file\n");
             free_traverse_ptr(&tp);
             Status = STATUS_END_OF_FILE;
@@ -416,9 +423,8 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
             case EXTENT_TYPE_INLINE:
             {
                 UINT64 off = start + bytes_read - tp.item->key.offset;
-                UINT64 read;
+                UINT64 read = len - off;
                 
-                read = ed->decoded_size - off;
                 if (read > length) read = length;
                 
                 RtlCopyMemory(data + bytes_read, &ed->data[off], read);
@@ -430,12 +436,11 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
             
             case EXTENT_TYPE_REGULAR:
             {
-                EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
                 UINT64 off = start + bytes_read - tp.item->key.offset;
                 UINT32 to_read, read;
                 UINT8* buf;
                 
-                read = ed->decoded_size - off;
+                read = len - off;
                 if (read > length) read = length;
                 
                 if (ed2->address == 0) {
@@ -476,9 +481,8 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
             case EXTENT_TYPE_PREALLOC:
             {
                 UINT64 off = start + bytes_read - tp.item->key.offset;
-                UINT32 read;
+                UINT32 read = len - off;
                 
-                read = ed->decoded_size - off;
                 if (read > length) read = length;
 
                 RtlZeroMemory(data + bytes_read, read);
@@ -503,7 +507,7 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
                 break;
             else if (next_tp.item->key.obj_id != inode ||
                 next_tp.item->key.obj_type != TYPE_EXTENT_DATA ||
-                next_tp.item->key.offset != tp.item->key.offset + ed->decoded_size
+                next_tp.item->key.offset != tp.item->key.offset + len
             ) {
                 free_traverse_ptr(&next_tp);
                 break;

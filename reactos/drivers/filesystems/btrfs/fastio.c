@@ -137,13 +137,51 @@ static NTSTATUS STDCALL fast_io_release_for_mod_write(PFILE_OBJECT FileObject, s
 
 static NTSTATUS STDCALL fast_io_acquire_for_ccflush(PFILE_OBJECT FileObject, PDEVICE_OBJECT DeviceObject){
     TRACE("STUB: fast_io_acquire_for_ccflush\n");
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS STDCALL fast_io_release_for_ccflush(PFILE_OBJECT FileObject, PDEVICE_OBJECT DeviceObject){
     TRACE("STUB: fast_io_release_for_ccflush\n");
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
+
+#ifdef DEBUG
+static BOOLEAN STDCALL fast_io_read(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %x, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+
+    return FsRtlCopyRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+}
+
+static BOOLEAN STDCALL fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %x, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+
+    return FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+}
+
+static BOOLEAN STDCALL fast_io_mdl_read(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, ULONG LockKey, PMDL* MdlChain, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
+
+    return FsRtlMdlReadDev(FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
+}
+
+static BOOLEAN STDCALL fast_io_mdl_read_complete(PFILE_OBJECT FileObject, PMDL* MdlChain, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %p)\n", FileObject, MdlChain, DeviceObject);
+
+    return FsRtlMdlReadCompleteDev(FileObject, MdlChain, DeviceObject);
+}
+
+static BOOLEAN STDCALL fast_io_prepare_mdl_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, ULONG LockKey, PMDL* MdlChain, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
+
+    return FsRtlPrepareMdlWriteDev(FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
+}
+
+static BOOLEAN STDCALL fast_io_mdl_write_complete(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, PMDL* MdlChain, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p, %p, %p, %p)\n", FileObject, FileOffset, MdlChain, DeviceObject);
+
+    return FsRtlMdlWriteCompleteDev(FileObject, FileOffset, MdlChain, DeviceObject);
+}
+#endif
 
 void __stdcall init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     RtlZeroMemory(&FastIoDispatch, sizeof(FastIoDispatch));
@@ -151,8 +189,6 @@ void __stdcall init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
 
     FastIoDispatch.FastIoCheckIfPossible = fast_io_check_if_possible;
-    FastIoDispatch.FastIoRead = FsRtlCopyRead;
-    FastIoDispatch.FastIoWrite = FsRtlCopyWrite;
     FastIoDispatch.FastIoQueryBasicInfo = fast_query_basic_info;
     FastIoDispatch.FastIoQueryStandardInfo = fast_query_standard_info;
     FastIoDispatch.FastIoLock = fast_io_lock;
@@ -165,10 +201,6 @@ void __stdcall init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     FastIoDispatch.FastIoDetachDevice = fast_io_detach_device;
     FastIoDispatch.FastIoQueryNetworkOpenInfo = fast_io_query_network_open_info;
     FastIoDispatch.AcquireForModWrite = fast_io_acquire_for_mod_write;
-    FastIoDispatch.MdlRead = FsRtlMdlReadDev;
-    FastIoDispatch.MdlReadComplete = FsRtlMdlReadCompleteDev;
-    FastIoDispatch.PrepareMdlWrite = FsRtlPrepareMdlWriteDev;
-    FastIoDispatch.MdlWriteComplete = FsRtlMdlWriteCompleteDev;
     FastIoDispatch.FastIoReadCompressed = fast_io_read_compressed;
     FastIoDispatch.FastIoWriteCompressed = fast_io_write_compressed;
     FastIoDispatch.MdlReadCompleteCompressed = fast_io_mdl_read_complete_compressed;
@@ -177,6 +209,22 @@ void __stdcall init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     FastIoDispatch.ReleaseForModWrite = fast_io_release_for_mod_write;
     FastIoDispatch.AcquireForCcFlush = fast_io_acquire_for_ccflush;
     FastIoDispatch.ReleaseForCcFlush = fast_io_release_for_ccflush;
+    
+#ifdef DEBUG
+    FastIoDispatch.FastIoRead = fast_io_read;
+    FastIoDispatch.FastIoWrite = fast_io_write;
+    FastIoDispatch.MdlRead = fast_io_mdl_read;
+    FastIoDispatch.MdlReadComplete = fast_io_mdl_read_complete;
+    FastIoDispatch.PrepareMdlWrite = fast_io_prepare_mdl_write;
+    FastIoDispatch.MdlWriteComplete = fast_io_mdl_write_complete;
+#else
+    FastIoDispatch.FastIoRead = FsRtlCopyRead;
+    FastIoDispatch.FastIoWrite = FsRtlCopyWrite;
+    FastIoDispatch.MdlRead = FsRtlMdlReadDev;
+    FastIoDispatch.MdlReadComplete = FsRtlMdlReadCompleteDev;
+    FastIoDispatch.PrepareMdlWrite = FsRtlPrepareMdlWriteDev;
+    FastIoDispatch.MdlWriteComplete = FsRtlMdlWriteCompleteDev;
+#endif
     
     *fiod = &FastIoDispatch;
 }

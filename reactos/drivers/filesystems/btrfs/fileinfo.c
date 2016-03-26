@@ -2194,7 +2194,7 @@ NTSTATUS STDCALL drv_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
             break;
             
         case FileRemoteProtocolInformation:
-            FIXME("STUB: FileRemoteProtocolInformation\n");
+            TRACE("FileRemoteProtocolInformation\n");
             break;
 #endif
             
@@ -2884,7 +2884,7 @@ static NTSTATUS STDCALL query_info(device_extension* Vcb, PFILE_OBJECT FileObjec
         }
         
         case FileRemoteProtocolInformation:
-            FIXME("STUB: FileRemoteProtocolInformation\n");
+            TRACE("FileRemoteProtocolInformation\n");
             Status = STATUS_INVALID_PARAMETER;
             goto exit;
 #endif

@@ -26,7 +26,10 @@ static BOOLEAN STDCALL acquire_for_lazy_write(PVOID Context, BOOLEAN Wait) {
     
     TRACE("(%p, %u)\n", Context, Wait);
     
-    if (!fcb || FileObject->Flags & FO_CLEANUP_COMPLETE)
+//     if (!fcb || FileObject->Flags & FO_CLEANUP_COMPLETE)
+//         return FALSE;
+
+    if (!ExAcquireResourceSharedLite(fcb->Header.PagingIoResource, Wait))
         return FALSE;
     
     fcb->lazy_writer_thread = KeGetCurrentThread();
@@ -40,10 +43,12 @@ static void STDCALL release_from_lazy_write(PVOID Context) {
     
     TRACE("(%p)\n", Context);
     
-    if (!fcb || FileObject->Flags & FO_CLEANUP_COMPLETE)
-        return;
+//     if (!fcb || FileObject->Flags & FO_CLEANUP_COMPLETE)
+//         return;
     
     fcb->lazy_writer_thread = NULL;
+    
+    ExReleaseResourceLite(fcb->Header.PagingIoResource);
 }
 
 static BOOLEAN STDCALL acquire_for_read_ahead(PVOID Context, BOOLEAN Wait) {

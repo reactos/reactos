@@ -16,10 +16,35 @@
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "btrfs_drv.h"
+#include "btrfsioctl.h"
 
 #ifndef FSCTL_CSV_CONTROL
 #define FSCTL_CSV_CONTROL CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 181, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #endif
+
+static NTSTATUS get_file_ids(PFILE_OBJECT FileObject, void* data, ULONG length) {
+    btrfs_get_file_ids* bgfi;
+    fcb* fcb;
+    
+    if (length < sizeof(btrfs_get_file_ids))
+        return STATUS_BUFFER_OVERFLOW;
+    
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+    
+    fcb = FileObject->FsContext;
+    
+    if (!fcb)
+        return STATUS_INVALID_PARAMETER;
+    
+    bgfi = data;
+    
+    bgfi->subvol = fcb->subvol->id;
+    bgfi->inode = fcb->inode;
+    bgfi->top = fcb->Vcb->root_fcb == fcb ? TRUE : FALSE;
+    
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL user) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -496,6 +521,9 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 #endif
+        case FSCTL_BTRFS_GET_FILE_IDS:
+            Status = get_file_ids(IrpSp->FileObject, map_user_buffer(Irp), IrpSp->Parameters.DeviceIoControl.OutputBufferLength);
+            break;
 
         default:
             WARN("unknown control code %x (DeviceType = %x, Access = %x, Function = %x, Method = %x)\n",

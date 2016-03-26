@@ -1550,8 +1550,8 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     // FIXME - delete all children if deleting directory
     
     if (fcb->deleted) {
-        ERR("trying to delete already-deleted file\n");
-        return STATUS_INTERNAL_ERROR;
+        WARN("trying to delete already-deleted file\n");
+        return STATUS_SUCCESS;
     }
     
     if (!fcb->par) {
@@ -1772,7 +1772,7 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     
     InitializeListHead(&changed_sector_list);
     
-    if (fcb->type != BTRFS_TYPE_DIRECTORY) {
+    if (fcb->type != BTRFS_TYPE_DIRECTORY && fcb->inode_item.st_size > 0) {
         Status = excise_extents(fcb->Vcb, fcb, 0, sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size), &changed_sector_list, rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("excise_extents returned %08x\n", Status);
@@ -1879,9 +1879,9 @@ void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) 
 #ifdef DEBUG_FCB_REFCOUNTS
 //     WARN("fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
 #ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, file, line, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+    _debug_message(func, 1, file, line, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
 #else
-    _debug_message(func, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+    _debug_message(func, 1, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
 #endif
 #endif
     
@@ -1930,9 +1930,9 @@ void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) 
     ExFreePool(fcb);
 #ifdef DEBUG_FCB_REFCOUNTS
 #ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, file, line, "freeing fcb %p\n", fcb);
+    _debug_message(func, 1, file, line, "freeing fcb %p\n", fcb);
 #else
-    _debug_message(func, "freeing fcb %p\n", fcb);
+    _debug_message(func, 1, "freeing fcb %p\n", fcb);
 #endif
 #endif
 }
@@ -1964,12 +1964,9 @@ static NTSTATUS STDCALL close_file(device_extension* Vcb, PFILE_OBJECT FileObjec
         ExFreePool(ccb);
     }
     
-    if (fcb->refcount == 1)
-        CcUninitializeCacheMap(FileObject, NULL, NULL);
+    CcUninitializeCacheMap(FileObject, NULL, NULL);
     
     free_fcb(fcb);
-    
-    FileObject->FsContext = NULL;
     
     return STATUS_SUCCESS;
 }
@@ -2072,6 +2069,9 @@ static NTSTATUS STDCALL drv_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoRemoveShareAccess(FileObject, &fcb->share_access);
         
         oc = InterlockedDecrement(&fcb->open_count);
+#ifdef DEBUG_FCB_REFCOUNTS
+        ERR("fcb %p: open_count now %i\n", fcb, oc);
+#endif
         
         if (oc == 0) {
             if (fcb->delete_on_close && fcb != fcb->Vcb->root_fcb && fcb != fcb->Vcb->volume_fcb) {
@@ -2115,10 +2115,10 @@ static NTSTATUS STDCALL drv_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
                 TRACE("flushed cache on close (FileObject = %p, fcb = %p, AllocationSize = %llx, FileSize = %llx, ValidDataLength = %llx)\n",
                       FileObject, fcb, fcb->Header.AllocationSize.QuadPart, fcb->Header.FileSize.QuadPart, fcb->Header.ValidDataLength.QuadPart);
             }
+            
+            if (fcb->Vcb && fcb != fcb->Vcb->volume_fcb)
+                CcUninitializeCacheMap(FileObject, NULL, NULL);
         }
-        
-        if (fcb->Vcb && fcb != fcb->Vcb->volume_fcb)
-            CcUninitializeCacheMap(FileObject, NULL, NULL);
         
         FileObject->Flags |= FO_CLEANUP_COMPLETE;
     }
@@ -3029,12 +3029,23 @@ void protect_superblocks(device_extension* Vcb, chunk* c) {
         
         for (j = 0; j < ci->num_stripes; j++) {
             if (cis[j].offset + ci->size > superblock_addrs[i] && cis[j].offset <= superblock_addrs[i] + sizeof(superblock)) {
+                UINT32 size;
+                
                 TRACE("cut out superblock in chunk %llx\n", c->offset);
                 
                 addr = (superblock_addrs[i] - cis[j].offset) + c->offset;
                 TRACE("addr %llx\n", addr);
                 
-                add_to_space_list(c, addr, sizeof(superblock), SPACE_TYPE_USED);
+                // This prevents trees from spanning a stripe boundary, which btrfs check complains
+                // about. It also prevents the chunk tree being placed at 0x11000, which for some
+                // reason makes the FS unmountable on Linux (it tries to read 0x10000, i.e. the 
+                // superblock, instead).
+                if (ci->type & BLOCK_FLAG_SYSTEM || ci->type & BLOCK_FLAG_METADATA)
+                    size = max(sizeof(superblock), Vcb->superblock.node_size);
+                else
+                    size = sizeof(superblock);
+                
+                add_to_space_list(c, addr, size, SPACE_TYPE_USED);
             }
         }
         
