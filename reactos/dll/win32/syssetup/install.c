@@ -28,6 +28,8 @@
 
 #include "precomp.h"
 
+#define COBJMACROS
+
 #include <io.h>
 #include <wincon.h>
 #include <winnls.h>
@@ -35,6 +37,7 @@
 #include <userenv.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <shobjidl.h>
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
 
@@ -83,44 +86,44 @@ CreateShellLink(
     INT iIconNr,
     LPCWSTR pszComment)
 {
-    IShellLink *psl;
+    IShellLinkW *psl;
     IPersistFile *ppf;
 
     HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
 
     if (SUCCEEDED(hr))
     {
-        hr = psl->lpVtbl->SetPath(psl, pszCmd);
+        hr = IShellLinkW_SetPath(psl, pszCmd);
 
         if (pszArg)
         {
-            hr = psl->lpVtbl->SetArguments(psl, pszArg);
+            hr = IShellLinkW_SetArguments(psl, pszArg);
         }
 
         if (pszDir)
         {
-            hr = psl->lpVtbl->SetWorkingDirectory(psl, pszDir);
+            hr = IShellLinkW_SetWorkingDirectory(psl, pszDir);
         }
 
         if (pszIconPath)
         {
-            hr = psl->lpVtbl->SetIconLocation(psl, pszIconPath, iIconNr);
+            hr = IShellLinkW_SetIconLocation(psl, pszIconPath, iIconNr);
         }
 
         if (pszComment)
         {
-            hr = psl->lpVtbl->SetDescription(psl, pszComment);
+            hr = IShellLinkW_SetDescription(psl, pszComment);
         }
 
-        hr = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+        hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
 
         if (SUCCEEDED(hr))
         {
-            hr = ppf->lpVtbl->Save(ppf, pszLinkPath, TRUE);
-            ppf->lpVtbl->Release(ppf);
+            hr = IPersistFile_Save(ppf, pszLinkPath, TRUE);
+            IPersistFile_Release(ppf);
         }
 
-        psl->lpVtbl->Release(psl);
+        IShellLinkW_Release(psl);
     }
 
     return hr;
@@ -297,7 +300,7 @@ CreateTempDir(
     }
 
     /* Get temp dir */
-    dwLength = ARRAYSIZE(szBuffer) * sizeof(WCHAR);
+    dwLength = sizeof(szBuffer);
     if (RegQueryValueExW(hKey,
                          VarName,
                          NULL,
