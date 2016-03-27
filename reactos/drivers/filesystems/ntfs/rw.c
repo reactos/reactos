@@ -145,8 +145,12 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
         RealReadOffset = ROUND_DOWN(ReadOffset, DeviceExt->NtfsInfo.BytesPerSector);
         RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
+        /* do we need to extend RealLength by one sector? */
+        if (RealLength + RealReadOffset < ReadOffset + Length)
+            RealLength += DeviceExt->NtfsInfo.BytesPerSector;
 
-        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + DeviceExt->NtfsInfo.BytesPerSector, TAG_NTFS);
+
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + (DeviceExt->NtfsInfo.BytesPerSector * 2), TAG_NTFS);
         if (ReadBuffer == NULL)
         {
             DPRINT1("Not enough memory!\n");
