@@ -121,6 +121,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modifiko"
     IDS_TOOLTIP_SETTINGS "Konfigurime"
     IDS_TOOLTIP_REFRESH "Rifresko"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Dil"
 END
 

@@ -120,6 +120,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modificar"
     IDS_TOOLTIP_SETTINGS "Ajustes"
     IDS_TOOLTIP_REFRESH "Recargar"
+    IDS_TOOLTIP_UPDATE_DB "Actualizar el listado desde Internet"
     IDS_TOOLTIP_EXIT "Salir"
 END
 

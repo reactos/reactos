@@ -122,6 +122,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Zmeniť"
     IDS_TOOLTIP_SETTINGS "Nastavenia"
     IDS_TOOLTIP_REFRESH "Obnoviť"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Skončiť"
 END
 

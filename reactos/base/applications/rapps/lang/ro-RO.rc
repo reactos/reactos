@@ -123,6 +123,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modifică"
     IDS_TOOLTIP_SETTINGS "Preferințe"
     IDS_TOOLTIP_REFRESH "Împrospătează"
+    IDS_TOOLTIP_UPDATE_DB "Actualizează baza de date"
     IDS_TOOLTIP_EXIT "Ieșire"
 END
 

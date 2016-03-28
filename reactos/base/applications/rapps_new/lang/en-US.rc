@@ -117,6 +117,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modify"
     IDS_TOOLTIP_SETTINGS "Settings"
     IDS_TOOLTIP_REFRESH "Refresh"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Exit"
 END
 

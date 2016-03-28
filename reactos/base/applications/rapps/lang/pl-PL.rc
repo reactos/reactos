@@ -125,6 +125,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modyfikuj"
     IDS_TOOLTIP_SETTINGS "Ustawienia"
     IDS_TOOLTIP_REFRESH "Odśwież"
+    IDS_TOOLTIP_UPDATE_DB "Aktualizuj bazę programów"
     IDS_TOOLTIP_EXIT "Wyjście"
 END
 

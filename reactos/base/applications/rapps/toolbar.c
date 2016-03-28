@@ -25,9 +25,10 @@ static const TBBUTTON Buttons[] =
     { 2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, (INT_PTR)szModifyBtn},
     { 5, 0,            TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
     { 3, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
+    { 4, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
     { 5, 0,            TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
-    { 4, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
-    { 5, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0}
+    { 5, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
+    { 6, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0}
 };
 
 
@@ -60,6 +61,10 @@ ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt)
 
         case ID_REFRESH:
             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_REFRESH);
+            break;
+            
+        case ID_RESETDB:
+            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UPDATE_DB);
             break;
     }
 }
@@ -104,6 +109,7 @@ InitImageList(VOID)
     AddImageToImageList(hImageList, IDI_UNINSTALL);
     AddImageToImageList(hImageList, IDI_MODIFY);
     AddImageToImageList(hImageList, IDI_REFRESH);
+    AddImageToImageList(hImageList, IDI_UPDATE_DB);
     AddImageToImageList(hImageList, IDI_SETTINGS);
     AddImageToImageList(hImageList, IDI_EXIT);
 

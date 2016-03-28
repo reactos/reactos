@@ -125,6 +125,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Змінити"
     IDS_TOOLTIP_SETTINGS "Налаштування"
     IDS_TOOLTIP_REFRESH "Оновити"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Вихід"
 END
 

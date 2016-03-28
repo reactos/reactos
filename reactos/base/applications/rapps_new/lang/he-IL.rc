@@ -119,6 +119,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "שינוי"
     IDS_TOOLTIP_SETTINGS "הגדרות"
     IDS_TOOLTIP_REFRESH "רענון"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "יציאה"
 END
 

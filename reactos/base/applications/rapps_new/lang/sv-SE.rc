@@ -124,6 +124,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Redigera"
     IDS_TOOLTIP_SETTINGS "Inställingar"
     IDS_TOOLTIP_REFRESH "Uppdatera"
+    IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Avsluta"
 END
 

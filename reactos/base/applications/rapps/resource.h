@@ -11,6 +11,7 @@
 #define IDI_APPS                 17
 #define IDI_APPUPD               18
 #define IDI_CATEGORY             19
+#define IDI_UPDATE_DB            20
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -109,6 +110,7 @@
 #define IDS_TOOLTIP_SETTINGS     203
 #define IDS_TOOLTIP_REFRESH      204
 #define IDS_TOOLTIP_EXIT         205
+#define IDS_TOOLTIP_UPDATE_DB    206
 
 /* Columns info */
 #define IDS_APP_NAME             250

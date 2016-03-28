@@ -119,6 +119,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Değiştir"
     IDS_TOOLTIP_SETTINGS "Ayarlar"
     IDS_TOOLTIP_REFRESH "Yenile"
+    IDS_TOOLTIP_UPDATE_DB "Yazılım Veri Tabanını Yenile"
     IDS_TOOLTIP_EXIT "Çıkış"
 END
 
