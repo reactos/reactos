@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Russian translation by Alexander Rechitskiy (jedi-to-be) (rechitskiy@reactos.org)
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)

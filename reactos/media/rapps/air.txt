@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
