@@ -117,11 +117,11 @@ static int get_dib_image_size( int width, int height, int depth )
 
 static BOOL is_dib_monochrome( const BITMAPINFO* info )
 {
-    if (info->bmiHeader.biBitCount != 1) return FALSE;
-
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
         const RGBTRIPLE *rgb = ((const BITMAPCOREINFO*)info)->bmciColors;
+
+        if (((const BITMAPCOREINFO*)info)->bmciHeader.bcBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
         if ((rgb->rgbtRed == 0) && (rgb->rgbtGreen == 0) && (rgb->rgbtBlue == 0))
@@ -137,6 +137,8 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
     else  /* assume BITMAPINFOHEADER */
     {
         const RGBQUAD *rgb = info->bmiColors;
+
+        if (info->bmiHeader.biBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
         if ((rgb->rgbRed == 0) && (rgb->rgbGreen == 0) &&
