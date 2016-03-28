@@ -10,7 +10,7 @@ Description = Graphical Frontend for MPlayer.
 Size = 23.6 MB
 Category = 2
 URLSite = http://smplayer.sourceforge.net/en/
-URLDownload = http://www.fosshub.com/SMPlayer.html/smplayer-16.1.0-win32.exe
+URLDownload = http://download.sourceforge.net/project/smplayer/SMPlayer/16.1.0/smplayer-16.1.0-win32.exe
 SHA1 = 477e0b57877e96c44d2b5b4e3360134649369993
 CDPath = none
 
