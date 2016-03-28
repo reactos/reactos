@@ -116,7 +116,7 @@ static
 int
 IsSeparator(char chr)
 {
-    return ((chr <= ',' && chr != '$') ||
+    return ((chr <= ',' && chr != '$' && chr != '#') ||
             (chr >= ':' && chr < '?') );
 }
 
