@@ -425,7 +425,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "&История ЦП"
     IDS_MENU_SHOWKERNELTIMES "&Вывод времени ядра"
     IDS_CREATENEWTASK "Создать новую задачу"
-    IDS_CREATENEWTASK_DESC "Вывести название программы, папки или документа для открытия в Менеджере задач."
+    IDS_CREATENEWTASK_DESC "Введите имя программы, папки, документа или ресурса Интернета, и ReactOS откроет их."
     IDS_MSG_ACCESSPROCESSAFF "Не удается получить доступ или установить приоритет процесса"
     IDS_MSG_PROCESSONEPRO "Процесс должен иметь доступ по крайней мере к одному процессору."
     IDS_MSG_INVALIDOPTION "Неправильные настройки"
