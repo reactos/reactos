@@ -1407,8 +1407,8 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
         }
         else if (xmlstr_cmp(&attr_name, languageW))
         {
-            DPRINT1("Unsupported yet language attribute (%S)\n",
-                 ai->language);
+            DPRINT1("Unsupported yet language attribute (%.*S)\n",
+                    attr_value.len, attr_value.ptr);
             if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
         }
         else
