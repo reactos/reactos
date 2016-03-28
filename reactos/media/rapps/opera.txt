@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Opera
-Version = 12.17
+Version = 12.18
 License = Freeware
 Description = The popular Opera Browser with many advanced features, including an e-mail and BitTorrent client.
-Size = 12.57 MB
+Size = 12.36 MB
 Category = 5
 URLSite = http://www.opera.com/
-URLDownload = http://ftp.opera.com/pub/opera/win/1217/int/Opera_1217_int_Setup.exe
-SHA1 = 466f87164de1cbf7e96832771287c2bfee87734b
+URLDownload = http://ftp.opera.com/pub/opera/win/1218/int/Opera_1218_int_Setup.exe
+SHA1 = b2344bfd13e85dab4f50c0b579b9a485bf473136
 CDPath = none
 
 [Section.0405]
@@ -25,7 +25,7 @@ Description = Popular navegador web con muchas características avanzadas, inclu
 
 [Section.040c]
 Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités avancées, incluant un client mail et BitTorrent.
-Size = 12,57 Mo
+Size = 12,36 Mo
 
 [Section.0410]
 Description = Il famoso browser Opera con funzionalità avanzate come un client BitTorrent integrato e la gestione delle Mail.
@@ -39,7 +39,7 @@ Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkc
 [Section.0418]
 License = Gratuită
 Description = Navigator web popular cu multe funcționalități avansate, inclusiv un client de poștă electronică și de BitTorrent.
-Size = 12,57 Mo
+Size = 12,36 Mo
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
@@ -47,7 +47,7 @@ Description = Популярный браузер со многими допол
 [Section.041f]
 License = Ücretsiz
 Description = Bir posta ve BitTorrent istemcisini kapsayan birçok gelişmiş husûsiyetle, tutulan Opera Tarayıcı.
-Size = 12,57 MB
+Size = 12,36 MB
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.

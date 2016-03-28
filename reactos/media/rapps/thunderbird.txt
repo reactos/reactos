@@ -1,99 +1,99 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Mozilla Thunderbird 38
-Version = 38.1.0
+Version = 38.7.1
 License = MPL/GPL/LGPL
 Description = Popular and open source e-mail client.
-Size = 27.57 MB
+Size = 32.5 MB
 Category = 5
 URLSite = https://www.mozilla.org/en-US/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/en-US/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = da97f1610f825dfe837652f125cc6abdd714917e
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/en-US/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = b3faa8e744c0e1a0b45172b9187c68b3f7a50cb1
 CDPath = none
 
 [Section.0407]
 Description = Populärer und quelloffener E-Mail-Client.
-Size = 27.41 MB
+Size = 32.3 MB
 URLSite = https://www.mozilla.org/de/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/de/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = b010e11c2e2a080b28bbe40124b46c015b42ceba
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/de/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = b4dedb3ccd4be3ab86e28eb212637a6d4bfab4ad
 
 [Section.0a]
 Description = Cliente de correo electrónico popular y de código abierto.
-Size = 27.36 MB
+Size = 32.3 MB
 URLSite = https://www.mozilla.org/es-ES/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/es-ES/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = c476aa8427a7b64508773ac0c43fd561d879551c
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/es-ES/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 148ec305e84222754706ae203e87161766a4955e
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
-Size = 27,72 Mo
+Size = 32,5 Mo
 URLSite = https://www.mozilla.org/fr/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/fr/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = d3f176d9622b99c8564c7cbd58c594ae2b760453
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/fr/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 4dd88697aeff0666926b92ea39310b37de153f06
 
 [Section.0410]
 Description = Il più popolare e il migliore Client mail gratuito.
-Size = 27.36 MB
+Size = 32.3 MB
 URLSite = https://www.mozilla.org/it/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/it/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 4b5f911bc32b0436963e9c856c21e5554c0d4bbc
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/it/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 4d160b92f398e5e3872767a8da422cf465d1d03e
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
 Size = 28.06 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/nl/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 8908d808deb78d077328546786f4d4284c0254c4
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/nl/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 15742ca81075a80914e58b69c5e25a882dc578ed
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
-Size = 28.27 MB
+Size = 33.0 MB
 URLSite = https://www.mozilla.org/pl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/pl/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 891176fa659ff4cfedf88a0d2326f383887906c9
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/pl/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 963d4e0f3088e155f06ad3048f3461da92129630
 
 [Section.0418]
 Description = Client popular de poștă electronică, cu surse deschise.
 Size = 27,93 Mo
 URLSite = https://www.mozilla.org/ro/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/ro/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = f4bc49a1eaf6950c802093a0f17d8053c8a29402
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/ro/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 0ef2a1e47f24ff31dc53042e9aa1104a7906e032
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
-Size = 27.83 MB
+Size = 32.8 MB
 URLSite = https://www.mozilla.org/ru/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/ru/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 947ed054ee2f45b172d327b5363c4f67b4010e05
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/ru/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 42e1f78059da2074e9ccde3083c48d1017958c51
 
 [Section.041f]
 Description = Tutulan ve açık kaynak posta istemcisi.
-Size = 27,44 MB
+Size = 32,4 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/tr/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 0e790c5cc7d8f53c751243d20196ac0a000bf40e
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/tr/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 83a833f431107fc41b34ff45ffdd22c5dda7bc1e
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
-Size = 27.86 MB
+Size = 32.8 MB
 URLSite = https://www.mozilla.org/uk/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/uk/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = c31b958b1a5d557cd1a7b9411dd793d813c681ab
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/uk/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = b9402337f659c526fc0458c4ee6e81953d1c94fc
 
 [Section.0804]
 Description = 最受欢迎的开源电子邮件客户端。
-Size = 27.50 MB
+Size = 32.4 MB
 URLSite = https://www.mozilla.org/zh-CN/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/zh-CN/Thunderbird%20Setup%2038.1.0.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/zh-CN/Thunderbird%20Setup%2038.7.1.exe
 SHA1 = 689becfcb904779e388903075686b70043a23c75
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
-Size = 28.06 MB
+Size = 33.0 MB
 URLSite = https://www.mozilla.org/nl/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.1.0/win32/nl/Thunderbird%20Setup%2038.1.0.exe
-SHA1 = 8908d808deb78d077328546786f4d4284c0254c4
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/nl/Thunderbird%20Setup%2038.7.1.exe
+SHA1 = 15742ca81075a80914e58b69c5e25a882dc578ed

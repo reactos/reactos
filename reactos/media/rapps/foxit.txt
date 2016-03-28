@@ -1,50 +1,51 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Foxit Reader
-Version = 7.2.0.0722
+Version = 7.3.4
 License = Freeware
 Description = Alternative PDF reader, rivaling Adobe Reader functionality-wise.
-Size = 42.00 MB
+Size = 41.1 MB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/en_us/FoxitReader720.0722_prom_enu_Setup.exe
-SHA1 = bebe3c6c814045c95a068d9b2a5609fa4ee3fefb
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/en_us/FoxitReader734_prom_enu_Setup.exe
+SHA1 = 00d4c85d33ad098e4ef45aabaeb6987e73c3c79b
 CDPath = none
 
 [Section.0407]
-Version = 7.0.8.1216
+Version = 7.2.5.0930
 Description = Alternativer PDF Reader. Neben Adobe Reader der beste PDF Reader.
-Size = 50.62 MB
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
-SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
+Size = 58.9 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
+SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
 [Section.0a]
-Version = 7.0.8.1216
+Version = 7.2.5.0930
 License = Gratuito
 Description = Uno de los mejores lectores de PDF, parecido a Adobe Reader.
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
-SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
+Size = 58.9 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
+SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
 [Section.0418]
 License = Gratuită
 Description = Lector PDF, rivalizând în funcționalitate cu Adobe Reader.
-Size = 36,80 Mo
+Size = 41,1 Mo
 
 [Section.041f]
 Name = Foxit Okuyucu
-Version = 7.0.8.1216
+Version = 7.2.5.0930
 License = Ücretsiz
 Description = Başka PDF okuyucusu, işlevlilik yöntemi olarak Adobe Okuyucu'yla yarışıyor.
-Size = 50,62 MB
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
-SHA1 = b0efb5b90244993180cb5a78bb7a5ce84e453275
+Size = 58,9 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
+SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
 [Section.0804]
-Version = 7.1.4.330
+Version = 7.3.1.125
 Description = 替代的 PDF 阅读器，媲美 Adobe Reader 功能智者。
-Size = 43,60 MB
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.1/zh_cn/FoxitReader714.330_zh_cn_Setup.exe
-SHA1 = 8c4385f4e7b70a31e805a55e538c9ae925b3456d
+Size = 47,7 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/zh_cn/Foxit_FoxitReader_CHS_7.3.1.125_Exe.exe
+SHA1 = 9492df6056a40166031ebc8cd06afdd9aaaa225b

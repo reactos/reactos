@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Audacity
-Version = 2.1.1
+Version = 2.1.2
 License = GPL
 Description = Free, open source, cross-platform software for recording and editing sounds.
-Size = 24.0 MB
+Size = 25.27 MB
 Category = 1
 URLSite = http://audacityteam.org/
-URLDownload = https://svn.reactos.org/packages/audacity-win-2.1.1.exe
-SHA1 = e72f196e390bf348b84fc3305f27bebbd2104fc3
+URLDownload = http://www.fosshub.com/Audacity.html/audacity-win-2.1.2.exe
+SHA1 = 850f643bb715782f120edb8eee982b0f3543a332
 CDPath = none
 
 [Section.0407]
@@ -22,11 +22,11 @@ Description = Programa libre, gratuito y multiplataforma para grabar y editar au
 
 [Section.0418]
 Description = Un program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.
-Size = 24,0 Mo
+Size = 25,27 Mo
 
 [Section.041f]
 Description = Sesleri kaydetme ve düzenleme için özgür, açık kaynak ve çapraz platform yazılımdır.
-Size = 24,0 MB
+Size = 25,27 MB
 
 [Section.0804]
 Description = 免费、 开源的、 跨平台软件的录制和编辑声音。

@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = nginx
-Version = 1.9.3
+Version = 1.9.12
 License = FreeBSD
 Description = An HTTP and reverse proxy server, as well as a mail proxy server, written by Igor Sysoev.
-Size = 1.22 MB
+Size = 1.3 MB
 Category = 5
 URLSite = http://nginx.org/
-URLDownload = http://nginx.org/download/nginx-1.9.3.zip
-SHA1 = 20630c962754abe6b9855b33dec8de9440ee31eb
+URLDownload = http://nginx.org/download/nginx-1.9.12.zip
+SHA1 = cd944402823832d83b18940b914608e2d0ebf3a1
 CDPath = none
 
 [Section.0407]
@@ -20,11 +20,11 @@ Description = HTTP- und Reverse Proxy Server, sowie Mail Proxy Server, erstellt 
 [Section.0418]
 License = FreeBSD
 Description = Server HTTP, cu funcționalități de mandatar-invers (reverse proxy) și mandatar poștal, creat de Igor Sysoev.
-Size = 1,22 Mo
+Size = 1,3 Mo
 
 [Section.041f]
 Description = Igor Sysoev eliyle yazılmış, bir posta vekil sunucusu denli iyi bir HTTP ve tersine vekil sunucusu.
-Size = 1,22 MB
+Size = 1,3 MB
 
 [Section.0804]
 Description = HTTP 和反向代理服务器，以及一个邮件代理服务器，由 Igor Sysoev 写。

@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = Code::Blocks (without compiler)
-Version = 13.12
+Version = 16.01
 License = GPLv3
 Description = An open source, cross-platform, powerful IDE. It does not contain a compiler.
-Size = 29.2 MB
+Size = 32.9 MB
 Category = 7
 URLSite = http://www.codeblocks.org/
-URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/Windows/codeblocks-13.12-setup.exe
-SHA1 = 2d908cbcea04408fe5869584e49097c288936b27
+URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/16.01/Windows/codeblocks-16.01-setup.exe
+SHA1 = fac3803e842057742d993de3ccc54ecfe870c4d1
 CDPath = none
 
 [Section.0407]
@@ -27,13 +27,13 @@ Description = Un IDE potente, open source, multipiattaforma. Non contiene un com
 [Section.0418]
 Name = Code::Blocks (fără compilator)
 Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Nu conține nici un compilator.
-Size = 29,2 Mo
+Size = 32,9 Mo
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
 License = GPL sürüm 3
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
-Size = 29,2 MB
+Size = 32,9 MB
 
 [Section.0804]
 Description = 开源、 跨平台的强大的 IDE。它不包含一个编译器。

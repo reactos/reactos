@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = SMPlayer
-Version = 14.9.0
+Version = 16.1.0
 License = GPL
 Description = Graphical Frontend for MPlayer.
-Size = 20.7 MB
+Size = 23.6 MB
 Category = 2
 URLSite = http://smplayer.sourceforge.net/en/
-URLDownload = http://download.sourceforge.net/project/smplayer/SMPlayer/14.9.0/smplayer-14.9.0-win32.exe
-SHA1 = 3ca93ed3aca05b91217453d8091f30ab53c49466
+URLDownload = http://www.fosshub.com/SMPlayer.html/smplayer-16.1.0-win32.exe
+SHA1 = 477e0b57877e96c44d2b5b4e3360134649369993
 CDPath = none
 
 [Section.0407]
@@ -23,7 +23,7 @@ Description = Interfaz gráfica para Mplayer, el reproductor multimedia.
 URLSite = http://smplayer.sourceforge.net/es/
 
 [Section.040c]
-Size = 20,7 Mo
+Size = 23,6 Mo
 URLSite = http://smplayer.sourceforge.net/fr/
 
 [Section.0410]
@@ -38,11 +38,11 @@ URLSite = http://smplayer.sourceforge.net/pl/
 
 [Section.0418]
 Description = Lector multimedia (interfață pentru MPlayer).
-Size = 20,7 Mo
+Size = 23,6 Mo
 
 [Section.041f]
 Description = MPlayer için çizgelik arayüz.
-Size = 20,7 MB
+Size = 23,6 MB
 URLSite = http://smplayer.sourceforge.net/tr/
 
 [Section.0422]

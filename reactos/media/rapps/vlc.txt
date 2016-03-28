@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = VLC media player
-Version = 2.2.1
+Version = 2.2.2
 License = GPL
 Description = A fully featured FOSS media player with built-in codecs.
-Size = 27.51 MB
+Size = 29.1 MB
 Category = 2
 URLSite = http://www.videolan.org/vlc/
-URLDownload = https://get.videolan.org/vlc/2.2.1/win32/vlc-2.2.1-win32.exe
-SHA1 = 4cbcea9764b6b657d2147645eeb5b973b642530e
+URLDownload = http://artfiles.org/videolan.org/vlc/2.2.2/win32/vlc-2.2.2-win32.exe
+SHA1 = 8a5a71bb10cbcf24eb393ea7feb9196f19d60edf
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Completo reproductor multimedia, de código abierto y con códecs 
 
 [Section.040c]
 Description = Un lecteur media.
-Size = 27,51 Mo
+Size = 29,1 Mo
 
 [Section.0410]
 Description = Lettore multimediale.
@@ -35,7 +35,7 @@ Description = Odtwarzacz multimediów.
 
 [Section.0418]
 Description = Lector multimedia complet, gratuit cu surse deschise și codecuri încorporate.
-Size = 27,51 Mo
+Size = 29,1 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.
@@ -46,7 +46,7 @@ Description = Multimediálny prehrávač.
 [Section.041f]
 Name = VLC Ortam Oynatıcısı
 Description = İçindeki kodeklerle tüm husûsiyetli bir FOSS ortam oynatıcısı.
-Size = 27,51 MB
+Size = 29,1 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.

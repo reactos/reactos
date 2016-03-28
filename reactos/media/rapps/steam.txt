@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
@@ -6,11 +6,11 @@
 Name = Steam
 License = Freeware
 Description = Popular Internet game distribution platform and social network. Includes DRM.
-Size = 1.08 MB
+Size = 1.32 MB
 Category = 4
 URLSite = http://store.steampowered.com/
 URLDownload = http://media.steampowered.com/client/installer/SteamSetup.exe
-SHA1 = 0e8046d40c38d817338135ec73a5b217cc340cf5
+SHA1 = 728e3c82fd57c68cbbdb64965719081ffee6272c
 CDPath = none
 
 [Section.0407]
@@ -23,7 +23,7 @@ URLSite = http://store.steampowered.com/?l=spanish
 
 [Section.040c]
 Description = La plateforme de jeu Steam utilisée par beaucoup de jeux de nos jours.
-Size = 1,08 Mo
+Size = 1,32 Mo
 URLSite = http://store.steampowered.com/?l=french
 
 [Section.0410]
@@ -41,13 +41,13 @@ URLSite = http://store.steampowered.com/?l=polish
 [Section.0418]
 License = Gratuită
 Description = Platformă populară de distribuție a jocurilor și rețea de socializare. Include mecanisme de gestiune a drepturilor de autor (DRM).
-Size = 1,08 Mo
+Size = 1,32 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.041f]
 License = Ücretsiz
 Description = Tutulan Umûmî Ağ oyun dağıtım platformu ve toplumluk ağ. DRM içerir.
-Size = 1,08 MB
+Size = 1,32 MB
 URLSite = http://store.steampowered.com/?l=turkish
 
 [Section.0422]

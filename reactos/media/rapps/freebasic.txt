@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = FreeBASIC
-Version = 1.04.0
+Version = 1.05.0
 License = GPL/LGPL
 Description = Open Source BASIC Compiler. The BASIC syntax is compatible with QBASIC.
-Size = 11.2 MB
+Size = 10.7 MB
 Category = 7
 URLSite = http://www.freebasic.net/
-URLDownload = http://download.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-1.04.0-win32.exe
-SHA1 = 644049e6c86efdacc820dedf188f370434d389a5
+URLDownload = http://download.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-1.05.0-win32.exe
+SHA1 = fb88a42c83ac9cc589207e91c2d7039e7832e823
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatib
 
 [Section.040c]
 Description = Compilateur BASIC open source. La syntaxe du BASIC est compatible avec le QBASIC.
-Size = 11,2 Mo
+Size = 10,7 Mo
 
 [Section.0410]
 Description = Compilatore BASIC open source. La sintassi del BASIC è compatibile con il QBASIC.
@@ -32,11 +32,11 @@ Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
 
 [Section.0418]
 Description = Compilator (cu surse deschise) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
-Size = 11,2 Mo
+Size = 10,7 Mo
 
 [Section.041f]
 Description = Açık kaynak BASIC derleyicisi. Bu BASIC söz dizimi, QBASIC ile uyumludur.
-Size = 11,2 MB
+Size = 10,7 MB
 
 [Section.0422]
 Description = Відкритий компілятор BASIC. Синтаксис сумісний з QBASIC.

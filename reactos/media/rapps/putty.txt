@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = PuTTY
-Version = 0.65
+Version = 0.67
 License = MIT
 Description = A free SSH, Telnet, rlogin, and raw TCP client.
-Size = 1.84 MB
+Size = 1.71 MB
 Category = 5
 URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
-URLDownload = http://the.earth.li/~sgtatham/putty/0.65/x86/putty-0.65-installer.exe
-SHA1 = 119261bd53b792e13e7fd27384e86ea960597a7e
+URLDownload = http://the.earth.li/~sgtatham/putty/0.67/x86/putty-0.67-installer.exe
+SHA1 = 3911d72eb2371b9a530744a4afef993ecdd2f57e
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Un cliente SSH, Telnet, rlogin y TCP libre y gratuito.
 
 [Section.040c]
 Description = Un client SSH, Telnet, rlogin et raw TCP gratuit.
-Size = 1,84 Mo
+Size = 1,71 Mo
 
 [Section.0410]
 Description = Un client SSH, Telnet, rlogin, and raw TCP gratuito.
@@ -35,11 +35,11 @@ Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz b
 
 [Section.0418]
 Description = Client gratuit de SSH, Telnet, rlogin, și TCP brut.
-Size = 1,84 Mo
+Size = 1,71 Mo
 
 [Section.041f]
 Description = Ücretsiz bir SSH, Telnet, rlogin ve işlenmemiş TCP istemcisi.
-Size = 1,84 MB
+Size = 1,71 MB
 
 [Section.0422]
 Description = Безплатний SSH, Telnet, rlogin та raw TCP клієнт.

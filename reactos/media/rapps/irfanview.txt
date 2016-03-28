@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = IrfanView
-Version = 4.40
+Version = 4.42
 License = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
-Size = 2.00 MB
+Size = 2.32 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = ftp://ftp.uibk.ac.at/pub/software/win32/iview440g_setup.exe
-SHA1 = 31d8180c35a92f7ee0eac9d555f1990d23fe5d86
+URLDownload = ftp://ftp.uibk.ac.at/pub/software/win32/iview442g_setup.exe
+SHA1 = 6a4a956ef9131aa0fbf8e7e85be36109f385f2a1
 CDPath = none
 
 [Section.0407]
@@ -25,7 +25,7 @@ Description = Visor para toda clase de archivos de imagen, audio y video.
 [Section.040c]
 License = Gratuit (pour un usage personnel)
 Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
-Size = 2,00 Mo
+Size = 2,32 Mo
 
 [Section.0410]
 License = Gratuita (per uso personale)
@@ -42,12 +42,12 @@ Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz
 [Section.0418]
 License = Gratuită (pentru uz personal)
 Description = Lector pentru multiple formaturi de fișiere grafice/audio/video.
-Size = 2,00 Mo
+Size = 2,32 Mo
 
 [Section.041f]
 License = Şahsî kullanım için ücretsiz.
 Description = Çizgelerin, ses kütüklerinin, vidyo kütüklerinin tüm türleri için görüntüleyici.
-Size = 2,00 MB
+Size = 2,32 MB
 
 [Section.0422]
 License = Freeware (для домашнього використання)

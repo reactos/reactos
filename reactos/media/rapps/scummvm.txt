@@ -1,17 +1,17 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 ; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
 
 [Section]
 Name = ScummVM
-Version = 1.7.0
+Version = 1.8.0
 License = GPL
 Description = Open source reimplementation of classic adventure videogame engines (like Monkey Island, Sam and Max or Day of the Tentacle), making them work on ReactOS.
-Size = 6.9 MB
+Size = 8.66 MB
 Category = 4
 URLSite = http://scummvm.org/
-URLDownload = http://download.sourceforge.net/project/scummvm/scummvm/1.7.0/scummvm-1.7.0-win32.exe
-SHA1 = 29f6a33fd0cfa37daad7ea06f8d95790012586e6
+URLDownload = http://scummvm.org/frs/scummvm/1.8.0/scummvm-1.8.0-win32.exe
+SHA1 = 1f3c514a4f04b2f63154136f250a033933952005
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Reimplementación de código abierto de motores de juegos de avent
 
 [Section.040c]
 Description = Sam and Max, Day of the Tentacle, etc sur ReactOS.
-Size = 6,9 Mo
+Size = 8,66 Mo
 
 [Section.0410]
 Description = Software che riproduce il funzionamento di motori grafici per videogiochi (Sam and Max, Day of the Tentacle, etc) su ReactOS.
@@ -35,11 +35,11 @@ Description = Program pozwalający uruchomić stare gry przygodowe (Sam and Max,
 
 [Section.0418]
 Description = Reimplementarea în surse deschise a motoarelor clasice de jocuri video de aventură (ca „Monkey Island”, „Sam and Max”, sau „Day of the Tentacle”), făcându-le să meargă în ReactOS.
-Size = 6,9 Mo
+Size = 8,66 Mo
 
 [Section.041f]
 Description = Sam ve Max, Day of the Tentacle, Monkey Island gibi kökleşik mâcera vidyo oyunlarının oyun motorlarının ReactOS üzerinde çalışmasını sağlayan açık kaynak uyarlaması.
-Size = 6,9 MB
+Size = 8,66 MB
 
 [Section.0422]
 Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.
