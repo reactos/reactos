@@ -530,3 +530,51 @@ LRESULT APIENTRY CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
     }
     return 0;
 }
+
+/**************************************************************************
+ *  IAutoCompleteDropDown
+ */
+HRESULT STDMETHODCALLTYPE CAutoComplete::GetDropDownStatus(DWORD *pdwFlags, LPWSTR *ppwszString)
+{
+    FIXME("(%p, %p, %p): stub\n", this, pdwFlags, ppwszString);
+    if (pdwFlags)
+        *pdwFlags = 0;
+    if (ppwszString)
+        *ppwszString = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CAutoComplete::ResetEnumerator()
+{
+    FIXME("(%p): stub\n", this);
+    return E_NOTIMPL;
+}
+
+/**************************************************************************
+ *  IEnumString
+ */
+HRESULT STDMETHODCALLTYPE CAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
+{
+    FIXME("(%p, %d, %p, %p): stub\n", this, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CAutoComplete::Skip(ULONG celt)
+{
+    FIXME("(%p, %d): stub\n", this, celt);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CAutoComplete::Reset()
+{
+    FIXME("(%p): stub\n", this);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CAutoComplete::Clone(IEnumString **ppOut)
+{
+    FIXME("(%p, %p): stub\n", this, ppOut);
+    *ppOut = NULL;
+    return E_NOTIMPL;
+}

@@ -25,7 +25,9 @@
 class CAutoComplete :
 	public CComCoClass<CAutoComplete, &CLSID_AutoComplete>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IAutoComplete2
+	public IAutoComplete2,
+	public IAutoCompleteDropDown,
+	public IEnumString
 {
 private:
 	BOOL					enabled;
@@ -52,6 +54,16 @@ public:
 	virtual HRESULT WINAPI GetOptions(DWORD *pdwFlag);
 	virtual HRESULT WINAPI SetOptions(DWORD dwFlag);
 
+	// IAutoCompleteDropDown
+	virtual HRESULT STDMETHODCALLTYPE GetDropDownStatus(DWORD *pdwFlags, LPWSTR *ppwszString);
+	virtual HRESULT STDMETHODCALLTYPE ResetEnumerator();
+
+	// IEnumString methods
+	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
+	virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
+	virtual HRESULT STDMETHODCALLTYPE Reset();
+	virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppenum);
+
 DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)
 DECLARE_NOT_AGGREGATABLE(CAutoComplete)
 
@@ -60,6 +72,8 @@ DECLARE_PROTECT_FINAL_CONSTRUCT()
 BEGIN_COM_MAP(CAutoComplete)
 	COM_INTERFACE_ENTRY_IID(IID_IAutoComplete, IAutoComplete)
 	COM_INTERFACE_ENTRY_IID(IID_IAutoComplete2, IAutoComplete2)
+	COM_INTERFACE_ENTRY_IID(IID_IAutoCompleteDropDown, IAutoCompleteDropDown)
+	COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
 END_COM_MAP()
 };
 
