@@ -463,11 +463,18 @@ HRESULT WINAPI CDesktopFolder::BindToStorage(
  */
 HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    bool bIsDesktopFolder1, bIsDesktopFolder2;
+
     if (!pidl1 || !pidl2)
     {
         ERR("Got null pidl pointer (%Ix %p %p)!\n", lParam, pidl1, pidl2);
         return E_INVALIDARG;
     }
+
+    bIsDesktopFolder1 = _ILIsDesktop(pidl1);
+    bIsDesktopFolder2 = _ILIsDesktop(pidl2);
+    if (bIsDesktopFolder1 || bIsDesktopFolder2)
+        return MAKE_COMPARE_HRESULT(bIsDesktopFolder1 - bIsDesktopFolder2);
 
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
         return SHELL32_CompareGuidItems(this, lParam, pidl1, pidl2);
