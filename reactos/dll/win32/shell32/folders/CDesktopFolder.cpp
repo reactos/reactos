@@ -463,6 +463,12 @@ HRESULT WINAPI CDesktopFolder::BindToStorage(
  */
 HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    if (!pidl1 || !pidl2)
+    {
+        ERR("Got null pidl pointer (%Ix %p %p)!\n", lParam, pidl1, pidl2);
+        return E_INVALIDARG;
+    }
+
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
         return SHELL32_CompareGuidItems(this, lParam, pidl1, pidl2);
 
