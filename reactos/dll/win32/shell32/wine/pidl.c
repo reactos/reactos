@@ -1338,7 +1338,7 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     if(!ppidl)
         return E_INVALIDARG;
 
-    if (!pszName || !psfgaoOut)
+    if (!pszName)
     {
         *ppidl = NULL;
         return E_INVALIDARG;
@@ -1356,9 +1356,13 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     IShellFolder_Release(psfDesktop);
 
     if (SUCCEEDED(hr))
-        *psfgaoOut = dwAttr;
+    {
+        if (psfgaoOut) *psfgaoOut = dwAttr;
+    }
     else
+    {
         *ppidl = NULL;
+    }
 
     return hr;
 }
