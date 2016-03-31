@@ -126,7 +126,7 @@
 126 stdcall CredUnmarshalCredentialW(wstr ptr ptr)
 127 stdcall CredWriteA(ptr long)
 # CredWriteDomainCredentialsA
-# CredWriteDomainCredentialsW
+129 stub CredWriteDomainCredentialsW
 130 stdcall CredWriteW(ptr long)
 131 stub CredpConvertCredential
 132 stub CredpConvertTargetInfo
