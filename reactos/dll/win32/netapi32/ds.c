@@ -65,3 +65,23 @@ VOID WINAPI DsRoleFreeMemory(PVOID Buffer)
     TRACE("(%p)\n", Buffer);
     HeapFree(GetProcessHeap(), 0, Buffer);
 }
+
+/************************************************************
+ *  DsEnumerateDomainTrustsA (NETAPI32.@)
+ */
+ 
+DWORD WINAPI DsEnumerateDomainTrustsA(LPSTR ServerName, ULONG Flags, PDS_DOMAIN_TRUSTSA* Domains, PULONG DomainCount)
+{
+    FIXME("(%s, %x, %p, %p): stub\n", ServerName, Flags, Domains, DomainCount);
+    return ERROR_NO_LOGON_SERVERS;
+}
+
+/************************************************************
+ *  DsEnumerateDomainTrustsW (NETAPI32.@)
+ */
+ 
+DWORD WINAPI DsEnumerateDomainTrustsW(LPWSTR ServerName, ULONG Flags, PDS_DOMAIN_TRUSTSW* Domains, PULONG DomainCount)
+{
+    FIXME("(%s, %x, %p, %p): stub\n", ServerName, Flags, Domains, DomainCount);
+    return ERROR_NO_LOGON_SERVERS;
+}
