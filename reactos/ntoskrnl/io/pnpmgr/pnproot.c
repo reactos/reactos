@@ -198,7 +198,7 @@ PnpRootCreateDevice(
     UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
     ULONG NextInstance;
     UNICODE_STRING EnumKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM);
-    HANDLE EnumHandle, DeviceKeyHandle = INVALID_HANDLE_VALUE, InstanceKeyHandle;
+    HANDLE EnumHandle, DeviceKeyHandle = NULL, InstanceKeyHandle;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -377,7 +377,7 @@ cleanup:
         RtlFreeUnicodeString(&Device->InstanceID);
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
-    if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
+    if (DeviceKeyHandle != NULL)
         ObCloseHandle(DeviceKeyHandle, KernelMode);
     return Status;
 }
@@ -447,9 +447,9 @@ EnumerateDevices(
     WCHAR DevicePath[MAX_PATH + 1];
     RTL_QUERY_REGISTRY_TABLE QueryTable[4];
     PPNPROOT_DEVICE Device = NULL;
-    HANDLE KeyHandle = INVALID_HANDLE_VALUE;
-    HANDLE SubKeyHandle = INVALID_HANDLE_VALUE;
-    HANDLE DeviceKeyHandle = INVALID_HANDLE_VALUE;
+    HANDLE KeyHandle = NULL;
+    HANDLE SubKeyHandle = NULL;
+    HANDLE DeviceKeyHandle = NULL;
     ULONG BufferSize;
     ULONG ResultSize;
     ULONG Index1, Index2;
@@ -627,7 +627,7 @@ EnumerateDevices(
                 }
 
                 ZwClose(DeviceKeyHandle);
-                DeviceKeyHandle = INVALID_HANDLE_VALUE;
+                DeviceKeyHandle = NULL;
 
                 /* Insert the newly created device into the list */
                 InsertTailList(
@@ -641,7 +641,7 @@ EnumerateDevices(
         }
 
         ZwClose(SubKeyHandle);
-        SubKeyHandle = INVALID_HANDLE_VALUE;
+        SubKeyHandle = NULL;
         Index1++;
     }
 
@@ -652,11 +652,11 @@ cleanup:
         /* FIXME */
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
-    if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
+    if (DeviceKeyHandle != NULL)
         ZwClose(DeviceKeyHandle);
-    if (SubKeyHandle != INVALID_HANDLE_VALUE)
+    if (SubKeyHandle != NULL)
         ZwClose(SubKeyHandle);
-    if (KeyHandle != INVALID_HANDLE_VALUE)
+    if (KeyHandle != NULL)
         ZwClose(KeyHandle);
     if (KeyInfo)
         ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);

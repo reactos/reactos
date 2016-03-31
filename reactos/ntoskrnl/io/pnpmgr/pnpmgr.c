@@ -781,7 +781,7 @@ IopStartDevice(
    PDEVICE_NODE DeviceNode)
 {
    NTSTATUS Status;
-   HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
+   HANDLE InstanceHandle = NULL, ControlHandle = NULL;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -817,10 +817,10 @@ IopStartDevice(
    // }
 
 ByeBye:
-   if (ControlHandle != INVALID_HANDLE_VALUE)
+   if (ControlHandle != NULL)
        ZwClose(ControlHandle);
 
-   if (InstanceHandle != INVALID_HANDLE_VALUE)
+   if (InstanceHandle != NULL)
        ZwClose(InstanceHandle);
 
    return Status;
