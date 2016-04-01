@@ -292,7 +292,6 @@ USBSTOR_ClassRequest(
 
 {
     PURB Urb;
-    PUCHAR Buffer;
     NTSTATUS Status;
 
     //
@@ -304,19 +303,6 @@ USBSTOR_ClassRequest(
         //
         // no memory
         //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // allocate 1-byte buffer
-    //
-    Buffer = (PUCHAR)AllocateItem(NonPagedPool, sizeof(UCHAR));
-    if (!Buffer)
-    {
-        //
-        // no memory
-        //
-        FreeItem(Buffer);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
