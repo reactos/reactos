@@ -82,6 +82,6 @@ DWORD WINAPI DsEnumerateDomainTrustsA(LPSTR ServerName, ULONG Flags, PDS_DOMAIN_
  
 DWORD WINAPI DsEnumerateDomainTrustsW(LPWSTR ServerName, ULONG Flags, PDS_DOMAIN_TRUSTSW* Domains, PULONG DomainCount)
 {
-    FIXME("(%s, %x, %p, %p): stub\n", ServerName, Flags, Domains, DomainCount);
+    FIXME("(%s, %x, %p, %p): stub\n", debugstr_w(ServerName), Flags, Domains, DomainCount);
     return ERROR_NO_LOGON_SERVERS;
 }
