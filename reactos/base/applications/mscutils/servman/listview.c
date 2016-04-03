@@ -9,6 +9,27 @@
 
 #include "precomp.h"
 
+typedef struct _COLUMN_LIST
+{
+    int  iSubItem;
+    int  cx;
+    UINT idsText;
+} COLUMN_LIST;
+
+static const COLUMN_LIST Columns[] =
+{
+    /* name */
+    { LVNAME,    150, IDS_FIRSTCOLUMN  },
+    /* description */
+    { LVDESC,    240, IDS_SECONDCOLUMN },
+    /* status */
+    { LVSTATUS,   55, IDS_THIRDCOLUMN  },
+    /* startup type */
+    { LVSTARTUP,  80, IDS_FOURTHCOLUMN },
+    /* logon as */
+    { LVLOGONAS, 100, IDS_FITHCOLUMN   },
+};
+
 VOID
 SetListViewStyle(HWND hListView,
                  DWORD View)
@@ -336,6 +357,8 @@ CreateListView(PMAIN_WND_INFO Info)
 {
     LVCOLUMNW lvc = { 0 };
     WCHAR szTemp[256];
+    HDITEM hdi;
+    int i, n;
 
     Info->hListView = CreateWindowExW(WS_EX_CLIENTEDGE,
                                       WC_LISTVIEWW,
@@ -356,72 +379,32 @@ CreateListView(PMAIN_WND_INFO Info)
         return FALSE;
     }
 
+    Info->hHeader = ListView_GetHeader(Info->hListView);
+
     (void)ListView_SetExtendedListViewStyle(Info->hListView,
                                             LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);/*LVS_EX_GRIDLINES |*/
 
     lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
     lvc.fmt  = LVCFMT_LEFT;
+    lvc.pszText = szTemp;
 
     /* Add columns to the list-view */
-    /* name */
-    lvc.iSubItem = LVNAME;
-    lvc.cx       = 150;
-    LoadStringW(hInstance,
-                IDS_FIRSTCOLUMN,
-                szTemp,
-                sizeof(szTemp) / sizeof(WCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                0,
-                                &lvc);
+    for (n = 0; n < sizeof(Columns) / sizeof(Columns[0]); n++)
+    {
+        lvc.iSubItem = Columns[n].iSubItem;
+        lvc.cx = Columns[n].cx;
 
-    /* description */
-    lvc.iSubItem = LVDESC;
-    lvc.cx       = 240;
-    LoadStringW(hInstance,
-                IDS_SECONDCOLUMN,
-                szTemp,
-                sizeof(szTemp) / sizeof(WCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                1,
-                                &lvc);
+        LoadStringW(hInstance,
+                    Columns[n].idsText,
+                    szTemp,
+                    sizeof(szTemp) / sizeof(szTemp[0]));
 
-    /* status */
-    lvc.iSubItem = LVSTATUS;
-    lvc.cx       = 55;
-    LoadStringW(hInstance,
-                IDS_THIRDCOLUMN,
-                szTemp,
-                sizeof(szTemp) / sizeof(WCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                2,
-                                &lvc);
+        i = ListView_InsertColumn(Info->hListView, Columns[n].iSubItem, &lvc);
 
-    /* startup type */
-    lvc.iSubItem = LVSTARTUP;
-    lvc.cx       = 80;
-    LoadStringW(hInstance,
-                IDS_FOURTHCOLUMN,
-                szTemp,
-                sizeof(szTemp) / sizeof(WCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                3,
-                                &lvc);
-
-    /* logon as */
-    lvc.iSubItem = LVLOGONAS;
-    lvc.cx       = 100;
-    LoadStringW(hInstance,
-                IDS_FITHCOLUMN,
-                szTemp,
-                sizeof(szTemp) / sizeof(WCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                4,
-                                &lvc);
+        hdi.mask = HDI_LPARAM;
+        hdi.lParam = ORD_ASCENDING;
+        (void)Header_SetItem(Info->hHeader, i, &hdi);
+    }
 
     InitListViewImage(Info);
 

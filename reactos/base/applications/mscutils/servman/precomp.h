@@ -46,12 +46,16 @@
 #define ACTION_RESUME   4
 #define ACTION_RESTART  5
 
+#define ORD_ASCENDING   1
+#define ORD_DESCENDING  -1
+
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;
     HWND  hListView;
     HWND  hStatus;
     HWND  hTool;
+    HWND  hHeader;
     HMENU hShortcutMenu;
     int   nCmdShow;
 
@@ -59,6 +63,9 @@ typedef struct _MAIN_WND_INFO
     ENUM_SERVICE_STATUS_PROCESS *pCurrentService;
 
     INT SelectedItem;/* selection number in the list view */
+    INT SortSelection;
+    INT SortDirection;
+
     BOOL bDlgOpen;
     BOOL bInMenuLoop;
     BOOL bIsUserAnAdmin;

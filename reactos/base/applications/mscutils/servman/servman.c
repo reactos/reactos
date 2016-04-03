@@ -41,7 +41,7 @@ wWinMain(HINSTANCE hThisInstance,
     ProcessHeap = GetProcessHeap();
 
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
+    icex.dwICC = ICC_WIN95_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
 
     if (!AllocAndLoadString(&lpAppName,
