@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Microsoft XML 3
 Version = 3.0
 License = Unknown
 Description = Needed for some MSI Installers. Contains: msxml3.dll, msxml3a.dll, msxml3r.dll.
-Size = 1.02 MB
+Size = 1.0 MiB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=28494391-052B-42FF-9674-F752BDCA9582&displaylang=en
 URLDownload = https://web.archive.org/web/20070126162308/http://download.microsoft.com/download/8/8/8/888f34b7-4f54-4f06-8dac-fa29b19f33dd/msxml3.msi
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Wird von einigen MSI Installern benötigt. Beinhaltet: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Size = 1,0 MiB
 
 [Section.0a]
 License = Desconocida
@@ -25,7 +22,7 @@ Description = Necesario para algunos instaladores MSI. Incluye: msxml3.dll, msxm
 [Section.040c]
 License = Inconnue
 Description = MSXML3 est nécessaire pour certains installateurs MSI. Contient: msxml3.dll, msxml3a.dll, msxml3r.dll.
-Size = 1,02 Mo
+Size = 1,0 Mio
 
 [Section.0410]
 License = Sconosciuto
@@ -42,12 +39,12 @@ Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera
 [Section.0418]
 License = Nespecificată
 Description = Modúl necesar unor programe de instalare MSI. Conține: msxml3.dll, msxml3a.dll, msxml3r.dll.
-Size = 1,02 Mo
+Size = 1,0 Mio
 
 [Section.041f]
 License = Bilinmiyor
 Description = Birtakım Microsoft Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
-Size = 1,02 MB
+Size = 1,0 MiB
 
 [Section.0422]
 License = Невідома
@@ -60,3 +57,4 @@ Description = 需要一些 MSI 安装程序。包含： msxml3.dll、 msxml3a.dl
 [Section.0813]
 License = Ongekend
 Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml3.dll, msxml3a.dll, msxml3r.dll.
+

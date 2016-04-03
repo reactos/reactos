@@ -1,15 +1,9 @@
-; UTF-8
-; Polish translation by wojo664
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
-
 [Section]
 Name = Mozilla Fira Font
 Version = 4.1
 License = Unknown
 Description = A font pack that includes Mono and Sans fonts. Unzip in the ReactOS folder.
-Size = 2.86 MB
+Size = 2.9 MiB
 Category = 14
 URLSite = https://github.com/mozilla/Fira
 URLDownload = http://svn.reactos.org/packages/Fira.exe
@@ -19,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Font Pack, der Mono und Sans Schriften beinhaltet. Bitte in den "ReactOS" Ordner entpacken.
+Size = 2,9 MiB
 
 [Section.0a]
 Description = Paquete de fuentes de Mozilla Fira. Incluye las fuentes Mono y Sans. Debe descomprimirse en la carpeta ReactOS.
@@ -34,13 +29,14 @@ Description = Pakiet czcionek Mozilla Fira Font, zawiera czcionki Mono i Sans. W
 [Section.0418]
 License = Nespecificată
 Description = Pachet care include fonturi Mono și Sans. Dezarhivați în dosarul ReactOS.
-Size = 2,86 Mo
+Size = 2,9 Mio
 
 [Section.041f]
 Name = Mozilla Fira Yazı Tipi
 License = Bilinmiyor
 Description = Bir yazı tipi paketi, Mono ve Sans yazı tiplerini kapsar. ReactOS'un dizinine çıkartınız.
-Size = 2,86 MB
+Size = 2,9 MiB
 
 [Section.0804]
 Description = 含有 Mono 和 Sans 字体的字体包。在 ReactOS 文件夹中解压缩。
+

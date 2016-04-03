@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Christmas Bound
 Version = 1.4
 License = Freeware
 Description = A game similar to Frozen Fruits.
-Size = 892 kB
+Size = 892.3 KiB
 Category = 4
 URLSite = http://www.blueskied.com/xmas/christmas_main.htm
 URLDownload = http://www.blueskied.com/xmas/ChristmasBound_setup.exe
@@ -16,6 +12,7 @@ CDPath = none
 
 [Section.0407]
 Description = Spiel ähnlich zu Frozen Fruits.
+Size = 892,3 KiB
 
 [Section.0a]
 License = Gratuito
@@ -27,12 +24,13 @@ Description = Un gioco simile a Frozen Fruits.
 [Section.0418]
 License = Gratuită
 Description = Joc similar cu „Frozen Fruits”.
-Size = 892 ko
+Size = 892,3 Kio
 
 [Section.041f]
 License = Ücretsiz
 Description = Frozen Fruits benzeri bir oyun.
-Size = 892 KB
+Size = 892,3 KiB
 
 [Section.0804]
 Description = 一个冷冻水果类似的游戏。
+

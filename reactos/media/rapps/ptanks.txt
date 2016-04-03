@@ -1,14 +1,9 @@
-; UTF-8
-; Polish translation by wojo664
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Pocket Tanks
 Version = 1.6
 License = Shareware
 Description = The fastest game of artillery you'll ever play.
-Size = 2.86 MB
+Size = 2.9 MiB
 Category = 4
 URLSite = http://www.blitwise.com/ptanks.html
 URLDownload = http://www.blitwise.com/ptanks.exe
@@ -17,6 +12,7 @@ CDPath = none
 
 [Section.0407]
 Description = Das schnellste Artillerie-Spiel, das Sie jemals gespielt haben.
+Size = 2,9 MiB
 
 [Section.0a]
 Description = Un divertido y rápido juego de artillería.
@@ -25,17 +21,18 @@ Description = Un divertido y rápido juego de artillería.
 Description = Il gioco d'artiglieria più veloce a cui potrai giocare.
 
 [Section.0415]
-Description = Szybka gra artyleryjska 
+Description = Szybka gra artyleryjska
 
 [Section.0418]
 License = Versiune de evaluare
 Description = Joc rapid de artilerie.
-Size = 2,86 Mo
+Size = 2,9 Mio
 
 [Section.041f]
 License = Paylaşımlı
 Description = Şimdiye dek oynayacağınız en hızlı topçuluk oyunu.
-Size = 2,86 MB
+Size = 2,9 MiB
 
 [Section.0804]
 Description = 你玩过的火炮最快的游戏。
+

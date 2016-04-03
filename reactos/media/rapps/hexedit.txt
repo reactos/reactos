@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = HexEdit
 Version = 1.2.1
 License = Freeware
 Description = A hexadecimal file editor for Windows.
-Size = 146.28 KB
+Size = 146.3 KiB
 Category = 7
 URLSite = http://www.catch22.net/software/hexedit1
 URLDownload = http://www.catch22.net/sites/default/files/HexEdit121.zip
@@ -16,16 +12,18 @@ CDPath = none
 
 [Section.0407]
 Description = Ein HEX-Editor für Windows.
+Size = 146,3 KiB
 
 [Section.0418]
 License = Gratuită
 Description = Un editor hexazecimal de fișiere pentru Windows.
-Size = 146,28 ko
+Size = 146,3 Kio
 
 [Section.041f]
 License = Ücretsiz
 Description = Windows için bir onaltılık kütük düzenleyicisi.
-Size = 146,28 KB
+Size = 146,3 KiB
 
 [Section.0804]
 Description = 一个十六进制文件编辑器。
+

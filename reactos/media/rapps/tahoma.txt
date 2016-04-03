@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Microsoft Tahoma Font
 Version = 1.0
 License = Unknown
 Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.ttf, Tahomabd.ttf.
-Size = 305.12 kB
+Size = 305.1 KiB
 Category = 14
 URLSite = http://support.microsoft.com/
 URLDownload = http://download.microsoft.com/download/office97pro/fonts/1/w95/en-us/tahoma32.exe
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Tahoma Font Pack, der von einigen Anwendungen benötigt wird (Steam). Beinhaltet: Tahoma.ttf, Tahomabd.ttf.
+Size = 305,1 KiB
 
 [Section.0a]
 License = Desconocida
@@ -25,7 +22,7 @@ Description = Paquete tipográfico Tahoma, necesario para ciertas aplicaciones (
 [Section.040c]
 License = Inconnue
 Description = Package pour la police Tahoma, nécessaire pour certaines applications (Steam). Contient: Tahoma.ttf, Tahomabd.ttf.
-Size = 305,12 ko
+Size = 305,1 Kio
 
 [Section.0410]
 Description = Il font pack Tahoma è richiesto da alcune applicazioni (Steam). Contiene: Tahoma.ttf, Tahomabd.ttf.
@@ -40,13 +37,13 @@ Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Stea
 [Section.0418]
 License = Nespecificată
 Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
-Size = 305,12 ko
+Size = 305,1 Kio
 
 [Section.041f]
 Name = Microsoft Tahoma Yazı Tipi
 License = Bilinmiyor
 Description = Tahoma Yazı Tipi paketi, Steam gibi birtakım uygulamalar için gereklidir. Şunları içerir: Tahoma.ttf, Tahomabd.ttf.
-Size = 305,12 KB
+Size = 305,1 KiB
 
 [Section.0422]
 License = Невідома
@@ -59,3 +56,4 @@ Description = Tahoma 字体包所需的一些应用程序 (Steam)。包含: Taho
 [Section.0813]
 License = Ongekend
 Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). Bevat: Tahoma.ttf, Tahomabt.ttf.
+

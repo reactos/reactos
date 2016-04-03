@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Simple Direct Media Layer (SDL) Runtime
 Version = 1.2.15
 License = LGPL
 Description = Needed for many open source games to run. You will need a tool like 7-Zip to extract it.
-Size = 136.67 kB
+Size = 136.7 KiB
 Category = 14
 URLSite = http://www.libsdl.org/
 URLDownload = http://www.libsdl.org/release/SDL-1.2.15-win32.zip
@@ -19,6 +15,7 @@ Description = Nutný pro spuštění některých open source her. K rozbalení j
 
 [Section.0407]
 Description = Erforderlich um einige quelloffene Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+Size = 136,7 KiB
 
 [Section.0a]
 Description = Necesario para ejecutar muchos juegos de código abierto. Se necesita 7-Zip o una utilidad similar para extraerlo.
@@ -26,7 +23,7 @@ Description = Necesario para ejecutar muchos juegos de código abierto. Se neces
 [Section.040c]
 Name = Bibliothèque Simple Direct Media Layer (SDL)
 Description = Nécessaire pour faire tourner certains jeux open source. Vous aurez besoin de 7-Zip ou d'un outil similaire pour l'extraire.
-Size = 136,67 ko
+Size = 136,7 Kio
 
 [Section.0410]
 Description = Necessario per il corretto funzionamento di alcuni giochi OpenSource. Necessita di 7-zip o utility simili per essere estratto.
@@ -40,12 +37,12 @@ Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej 
 
 [Section.0418]
 Description = Necesar pentru execuția multor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
-Size = 136,67 ko
+Size = 136,7 Kio
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Yürütücü
 Description = Birçok açık kaynak oyunu çalıştırmak için gereklidir. Çıkartmak için Zip gibi bir araca gereksinim duyacaksınız.
-Size = 136,67 KB
+Size = 136,7 KiB
 
 [Section.0422]
 Name = Бібліотека Simple Direct Media Layer (SDL)
@@ -56,3 +53,4 @@ Description = 需要很多的开源游戏才能够运行。您将需要一个像
 
 [Section.0813]
 Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.
+

@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Agat Emulator
 Version = 1.27
 License = GPL
 Description = Apple ][ and Agat 7/9 software simulation program for Win32.
-Size = 6.02 MB
+Size = 6.0 MiB
 Category = 15
 URLSite = http://agatemulator.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/agatemulator/agatemulator/1.27/agatemulator-1.27.exe
@@ -16,6 +12,7 @@ CDPath = none
 
 [Section.0407]
 Description = Apple ][ und Agat 7/9 Emulator für Win32.
+Size = 6,0 MiB
 
 [Section.0a]
 Name = Emulador Agat
@@ -23,12 +20,13 @@ Description = Emulador de Apple ][ y Agat 7/9 para Win32.
 
 [Section.0418]
 Description = Eimulator de Apple ][ și Agat 7/9 pentru Win32.
-Size = 6,02 Mo
+Size = 6,0 Mio
 
 [Section.041f]
 Name = Agat Öykünücü
 Description = Win32 için Apple ][ ve Agat 7/9 yazılım benzetim izlencesi.
-Size = 6,02 MB
+Size = 6,0 MiB
 
 [Section.0804]
 Description = 苹果][和 Win32 的 Agat 7/9 软件仿真程序。
+

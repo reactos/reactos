@@ -1,14 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
-
 [Section]
 Name = Double Commander
 Version = 0.7.1 beta
 License = GPL
 Description = An open source file manager with two panels side by side. You will need a tool like 7-Zip to extract it.
-Size = 5.2 MB
+Size = 5.2 MiB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.7.1%20beta/doublecmd-0.7.1.i386-win32.exe
@@ -17,6 +12,7 @@ CDPath = none
 
 [Section.0407]
 Description = Quelloffener Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Size = 5,2 MiB
 
 [Section.0a]
 Description = Un explorador de archivos multipanel de código abierto. Es necesario utilizar 7-Zip u otro programa alternativo para extraerlo.
@@ -32,7 +28,7 @@ Description = Double Commander to menedżer plików, o otwartym źródle, z klas
 
 [Section.0418]
 Description = Gestionar (cu surse deschise) de fișiere după modelul paneluri-alăturate. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
-Size = 5,2 Mo
+Size = 5,2 Mio
 
 [Section.0419]
 Description = Double Commander - это открытый двухпанельный файловый менеджер. Вам нужен 7-Zip или подобная утилита для его распаковки.
@@ -40,7 +36,7 @@ Description = Double Commander - это открытый двухпанельн�
 [Section.041f]
 Version = 0.7.1 Gelişme
 Description = Yan yana iki bölmeli bir açık kaynak kütük yöneticisidir. Çıkartmak için 7-Zip gibi bir araca gereksinim duyacaksınız.
-Size = 5,2 MB
+Size = 5,2 MiB
 
 [Section.0422]
 Description = Double Commander - це відкритий двопанельний файловий менеджер. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
@@ -50,3 +46,4 @@ Description = 含有两个面板并排的开放源码文件管理器。您将需
 
 [Section.0813]
 Description = Double Commander is een open-bron file-manager met twee panelen zij-aan-zij. Gebruik 7-Zip of een gelijkaardige applicatie om het uit te pakken.
+

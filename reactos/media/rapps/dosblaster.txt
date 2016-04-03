@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = DosBlaster
 Version = 2.5
 License = GPL
 Description = A shell extension which makes it possible to open any DOS executable in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
-Size = 2.05 MB
+Size = 2.1 MiB
 Category = 15
 URLSite = http://dosblaster.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/dosblaster/DosBlaster%202.5%20%28x86%29/Downloads/DosbasterSetup_2_5.exe
@@ -16,13 +12,14 @@ CDPath = none
 
 [Section.0407]
 Description = Shell Extension, die es ermöglicht jede DOS Anwendung via Rechtsklick in DOSBox zu öffnen. Diese Version beinhaltet DOSBox 0.70, kann aber sehr einfach aktualisiert werden, indem man ein neueres DOSBox in die DosBlaster Ordner installiert.
+Size = 2,1 MiB
 
 [Section.0a]
 Description = Una extensión del explorador de archivos que permite abrir cualquier ejecutable DOS en DOSBox haciendo clic derecho del ratón. Esta versión contiene DOSBox 0.70, pero se puede actualizar fácilmente instalando una nueva versión de DOSBox en la carpeta de DosBlaster.
 
 [Section.040c]
 Description = DosBlaster est une extension Shell qui permet d'ouvrir n'importe quel exécutable DOS dans DOSBox via un click droit. Cette version contient DOSBox 0.70 mais peut être simplement mise à jour en installant une nouvelle version de DOSBox dans les répertoires de DosBlaster.
-Size = 2,05 Mo
+Size = 2,1 Mio
 
 [Section.0410]
 Description = DosBlaster è un'estensione della shell, consente di aprire qualsiasi file DOS eseguibile in DOSBox tramite un clic del tasto destro. Questa versione contiene DOSBox 0,70, ma può essere aggiornato semplicemente installando una nuova versione di DOSBox nella directory DosBlaster.
@@ -35,11 +32,11 @@ Description = DosBlaster to rozszerzenie powłoki, które umożliwia otwarcie ka
 
 [Section.0418]
 Description = O extensie a interfeței de utilizator a sistemului, cu posibilitatea lansării de programe DOS prin clic dreapta. Această versiune conține DOSBox 0.70, însă poate fi actualizată instalând în dosarele DosBlaster o versiune mai nouă de DOSBox.
-Size = 2,05 Mo
+Size = 2,1 Mio
 
 [Section.041f]
 Description = Bir DOS uygulamasını DOSBox'ta sağ tıklamayla açtırılabilmesini olanaklı duruma getiren bir kabuk uzantısıdır. Bu sürüm DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak kolayca şimdikileştirilebilir.
-Size = 2,05 MB
+Size = 2,1 MiB
 
 [Section.0422]
 Description = DosBlaster це розширення оболонки, яке дозволяє запустити будь-який виконавчий файл DOS в DOSBox через правий клік. Ця версія містить DOSBox 0.70, але може бути оновлена встановленням новішої версії DOSBox в теки DosBlaster.
@@ -49,3 +46,4 @@ Description = 这使得能够打开任何 DOS 可执行文件在 DOSBox 中通�
 
 [Section.0813]
 Description = DosBlaster is een Shell uitbreiding dat het mogelijk maakt om een DOS executable in DOSBox te openen via een rechterklik. Deze versie bevat DOSBox 0.70, maar kan eenvoudig worden geupdatet door een recentere versie van DOSBox te installeren in de DosBlaster mappen.
+

@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = LibreOffice Help Pack
 Version = 5.1.1
 License = GPLv3
 Description = Offline help content of LibreOffice.
-Size = 5.03 MB
+Size = 5.0 MiB
 Category = 6
 URLSite = http://www.documentfoundation.org/
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.1/win/x86/LibreOffice_5.1.1_Win_x86_helppack_en-US.msi
@@ -17,18 +13,18 @@ CDPath = none
 [Section.0407]
 Name = LibreOffice Help Pack
 Description = Offline Hilfe für LibreOffice.
-Size = 7.11 MB
+Size = 7,1 MiB
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.1/win/x86/LibreOffice_5.1.1_Win_x86_helppack_de.msi
 SHA1 = d396bdf53a627d349c927badb983759952bab119
 
 [Section.0418]
 Description = Conținut de asistență și ajutor (în limba engleză) pentru LibreOffice.
-Size = 5,03 Mo
+Size = 5,0 Mio
 
 [Section.0a]
 Name = LibreOffice — Paquete de ayuda
 Description = Páginas de ayuda para LibreOffice.
-Size = 7.03 MB
+Size = 7.0 MiB
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.1/win/x86/LibreOffice_5.1.1_Win_x86_helppack_es.msi
 SHA1 = a95e0ed017449f44c0495afd2ae27100f1ff1012
 
@@ -36,13 +32,14 @@ SHA1 = a95e0ed017449f44c0495afd2ae27100f1ff1012
 Name = LibreOffice Yardım Paketi
 License = GPL sürüm 3
 Description = LibreOffice'in çevrim dışı yardım içeriği.
-Size = 6,96 MB
+Size = 7,0 MiB
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.1/win/x86/LibreOffice_5.1.1_Win_x86_helppack_tr.msi
 SHA1 = 02b307c548dda46823f92fcff48e7f25c6026980
 
 [Section.0804]
 Name = LibreOffice 帮助包
 Description = LibreOffice 的脱机帮助内容。
-Size = 9.58 MB
+Size = 9.6 MiB
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.1/win/x86/LibreOffice_5.1.1_Win_x86_helppack_zh-CN.msi
 SHA1 = e889129ab1677f8826afaa822a5e547a1e241032
+

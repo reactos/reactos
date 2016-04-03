@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = K Desktop Environment
 Version = 1.0.0
 License = GPL
 Description = KDE for Windows.
-Size = 2.16 MB
+Size = 2.2 MiB
 Category = 15
 URLSite = http://www.winkde.org/
 URLDownload = http://download.kde.org/stable/kdewin/installer/kdewin-installer-gui-1.0.0.exe
@@ -16,13 +12,14 @@ CDPath = none
 
 [Section.0407]
 Description = KDE für Windows.
+Size = 2,2 MiB
 
 [Section.0a]
 Description = KDE para Windows.
 
 [Section.040c]
 Description = KDE pour Windows.
-Size = 2,16 Mo
+Size = 2,2 Mio
 
 [Section.0410]
 Description = KDE per Windows.
@@ -35,12 +32,12 @@ Description = KDE dla Windows.
 
 [Section.0418]
 Description = KDE pentru Windows.
-Size = 2,16 Mo
+Size = 2,2 Mio
 
 [Section.041f]
 Name = K Masaüstü Ortamı
 Description = Windows için KDE.
-Size = 2,16 MB
+Size = 2,2 MiB
 
 [Section.0422]
 Description = KDE для Windows.
@@ -50,3 +47,4 @@ Description = 对于 Windows 的 KDE。
 
 [Section.0813]
 Description = KDE voor Windows.
+

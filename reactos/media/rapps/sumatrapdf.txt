@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = SumatraPDF
 Version = 3.1.1
 License = GPLv3
 Description = A slim, free, open-source PDF reader. Portable out of the box.
-Size = 4.59 MB
+Size = 4.6 MiB
 Category = 6
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
 URLDownload = https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.1.1-install.exe
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 Description = Freies, schlankes, quelloffenes PDF-Anzeigeprogramm.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-de.html
+Size = 4,6 MiB
 
 [Section.0a]
 Description = Un lector PDF ligero, libre y de código abierto que no necesita instalación.
@@ -24,8 +21,8 @@ URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-es.html
 
 [Section.040c]
 Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source.
-Size = 4,59 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-fr.html
+Size = 4,6 Mio
 
 [Section.0410]
 Description = Sumatra PDF è un visualizzatore di file PDF, leggero e open source.
@@ -38,13 +35,13 @@ Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 
 [Section.0418]
 Description = Lector PDF ușor, gratuit (cu surse deschise), și portabil.
-Size = 4,59 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
+Size = 4,6 Mio
 
 [Section.041f]
 License = GPL sürüm 3
 Description = Yeğni, ücretsiz ve açık kaynak bir PDF okuyucusu. Kutunun dışında taşınabilirdir.
-Size = 4,59 MB
+Size = 4,6 MiB
 
 [Section.0804]
 Description = 一个纤细、 免费、 开源的 PDF 阅读器。开箱即用的便携式。
@@ -52,3 +49,4 @@ URLSite = http://www.sumatrapdfreader.org/free-pdf-reader-cn.html
 
 [Section.0813]
 Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.
+

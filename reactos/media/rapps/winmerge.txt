@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = WinMerge
 Version = 2.14.0
 License = GPLv2
 Description = A tool for visual difference display and merging, for both files and directories.
-Size = 6.13 MB
+Size = 6.1 MiB
 Category = 12
 URLSite = http://winmerge.org/
 URLDownload = http://downloads.sourceforge.net/project/winmerge/stable/2.14.0/WinMerge-2.14.0-Setup.exe
@@ -16,15 +12,17 @@ CDPath = none
 
 [Section.0407]
 Description = Werkzeug zur grafischen Darstellung und Zusammenführen von Dateien und Ordnern.
+Size = 6,1 MiB
 
 [Section.0418]
 Description = Un instrument pentru inspecția vizuală a diferențelor și unificarea de fișiere și dosare.
-Size = 6,13 Mo
+Size = 6,1 Mio
 
 [Section.041f]
 License = GPL sürüm 2
 Description = Kütükler ve dizinler için, görmelik ayrım görüntüleme ve birleştirme için bir araç.
-Size = 6,13 MB
+Size = 6,1 MiB
 
 [Section.0804]
 Description = 视觉上的差异显示和合并、 文件和目录的工具。
+

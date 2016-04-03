@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Hiawatha
 Version = 10.1
 License = GPLv2
 Description = An open source webserver with a focus on security.
-Size = 3.55 MB
+Size = 3.6 MiB
 Category = 5
 URLSite = https://www.hiawatha-webserver.org/
 URLDownload = https://www.hiawatha-webserver.org/files/hiawatha-10.1.zip
@@ -16,12 +12,14 @@ CDPath = none
 
 [Section.0407]
 Description = Quelloffener Webserver mit einem Augenmerk auf Sicherheit.
+Size = 3,6 MiB
 
 [Section.041f]
 License = GPL sürüm 2
 Description = Güvenlik üzerine odaklı açık kaynak bir Umûmî Ağ sunucusu.
-Size = 3,55 MB
+Size = 3,6 MiB
 
 [Section.0418]
 Description = Server web cu surse deschise, având securitatea în prim plan.
-Size = 3,55 Mo
+Size = 3,6 Mio
+

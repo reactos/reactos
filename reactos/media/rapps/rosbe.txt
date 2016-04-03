@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = ReactOS Build Environment
 Version = 2.1.3
 License = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
-Size = 32.2 MB
+Size = 32.2 MiB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
 URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.3.exe
@@ -19,13 +15,14 @@ Description = Dovoluje zkompilovat zdrojový kód systému ReactOS. Pro další 
 
 [Section.0407]
 Description = Erlaubt es Ihnen den ReactOS Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
+Size = 32,2 MiB
 
 [Section.0a]
 Description = Te permite compilar el código de ReactOS. Para más información consulta la Wiki de ReactOS.
 
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS. Pour plus d'instructions, reportez-vous au wiki ReactOS.
-Size = 32,2 Mo
+Size = 32,2 Mio
 
 [Section.0410]
 Description = Permette di compilare i sorgenti di ReactOS. Per maggiori informazioni consultare il Wiki di ReactOS.
@@ -38,12 +35,12 @@ Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej infor
 
 [Section.0418]
 Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consultați wiki ReactOS.
-Size = 32,2 Mo
+Size = 32,2 Mio
 
 [Section.041f]
 Name = ReactOS Yapma Ortamı
 Description = ReactOS Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
-Size = 32,2 MB
+Size = 32,2 MiB
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
@@ -53,3 +50,4 @@ Description = 允许您建立 ReactOS 源。更多的说明请参阅 ReactOS 维
 
 [Section.0813]
 Description = Maakt het mogelijk om de ReactOS broncode te bouwen. Meer instructies vind u op de ReastOS wiki.
+

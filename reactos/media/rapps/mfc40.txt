@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = OLE Viewer and Microsoft Foundation Classes version 4
 Version = 4.0
 License = Unknown
 Description = MFC 4 is needed by some applications. Contains: mfc40.dll, msvcrt40.dll.
-Size = 865.04 kB
+Size = 865.0 KiB
 Category = 14
 URLSite = http://support.microsoft.com/kb/122244/
 URLDownload = https://svn.reactos.org/packages/OLE2V.EXE
@@ -18,6 +14,7 @@ CDPath = none
 Name = OLE Anzeige und Microsoft Foundation Classes Version 4
 License = Unbekannt
 Description = MFC 4 wird von einigen Anwendungen benötigt. Beinhaltet: mfc40.dll, msvcrt40.dll.
+Size = 865,0 KiB
 
 [Section.0a]
 Name = Visor OLE y Microsoft Foundation Classes Version 4
@@ -28,7 +25,7 @@ Description = MFC 4 es necesario para varias aplicaciones. Incluye: mfc40.dll, m
 Name = Visionneur OLE et Microsoft Foundation Classes version 4
 License = Inconnue
 Description = MFC 4 est nécessaire pour certaines applications. Contient: mfc40.dll, msvcrt40.dll.
-Size = 865,04 ko
+Size = 865,0 Kio
 
 [Section.0410]
 License = Sconosciuta
@@ -46,13 +43,13 @@ Description = Biblioteka MFC 4 jest używana przez część aplikacji. Zawiera: 
 [Section.0418]
 License = Nespecificată
 Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt40.dll.
-Size = 865,04 ko
+Size = 865,0 Kio
 
 [Section.041f]
 Name = OLE Görüntüleyicisi ve Microsoft Ana Sınıfları (MFC) Sürüm 4
 License = Bilinmiyor
 Description = MFC 4, birtakım uygulamalar için gereklidir. Şunları içerir: mfc40.dll, msvcrt40.dll.
-Size = 865,04 KB
+Size = 865,0 KiB
 
 [Section.0422]
 Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4
@@ -67,3 +64,4 @@ Description = MFC 4 是一些应用程序所需的。包含： mfc40.dll、 msvc
 [Section.0813]
 License = Ongekend
 Description = MFC 4 is nodig voor bepaalde applicaties. Bevat: mfc40.dll, msvcrt40.dll.
+

@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Watercolor
 Version = 4.3
 License = Freeware
 Description = A Windows theme based on the look of Windows Codename Whistler.
-Size = 861 kB
+Size = 861.1 KiB
 Category = 15
 URLSite = http://www.neowin.net/forum/topic/32604-watercolor-v43/
 URLDownload = http://homepage.ntlworld.com/sherry.ponting/Junk/Watercolor43.exe
@@ -16,16 +12,18 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Windows Design basierend auf dem Aussehenvon Windows Codename Whistler.
+Size = 861,1 KiB
 
 [Section.0418]
 License = Gratuită
 Description = O temă pentru Windows bazată pe Windows Codename Whistler.
-Size = 861 ko
+Size = 861,1 Kio
 
 [Section.041f]
 License = Ücretsiz
 Description = Windows Codename Whistler görünümü tabanlı bir Windows teması.
-Size = 861 KB
+Size = 861,1 KiB
 
 [Section.0804]
 Description = 基于 Windows 代号 Whistler 的外观的 Windows 主题。
+

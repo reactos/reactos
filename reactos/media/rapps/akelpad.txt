@@ -1,14 +1,9 @@
-; UTF-8
-; Russian translation by Alexander Rechitskiy (jedi-to-be) (rechitskiy@reactos.org)
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = AkelPad
 Version = 4.9.7
 License = GPL
 Description = An open source plain text editor designed to be small and fast.
-Size = 1.16 MB
+Size = 1.2 MiB
 Category = 6
 URLSite = http://akelpad.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/akelpad/AkelPad%204/4.9.7/AkelPad-4.9.7-setup.exe
@@ -20,18 +15,19 @@ Description = Un editor de texto plano de código abierto. Se diseñó para ser 
 
 [Section.0407]
 Description = Kleiner, schneller und quelloffener Text Editor.
+Size = 1,2 MiB
 
 [Section.0418]
 Description = Editor simplu de text, cu surse deschise, conceput pentru a fi mic și rapid.
-Size = 1,16 Mo
+Size = 1,2 Mio
 
 [Section.0419]
 Description = AkelPad - текстовый редактор с открытым исходным кодом, созданный, чтобы быть маленьким и быстрым.
-Size = 1.16 MB
 
 [Section.041f]
 Description = Küçük ve hızlı olmak içn tasarlanmış bir açık kaynak metin düzenleyicisi.
-Size = 1,16 MB
+Size = 1,2 MiB
 
 [Section.0804]
 Description = 开放源码纯文本编辑器旨在又小又快。
+

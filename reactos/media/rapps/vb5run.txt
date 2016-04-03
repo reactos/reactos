@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Microsoft Visual Basic 5 Runtime
 Version = 5.0
 License = Unknown
 Description = Needed by applications written in Visual Basic 5. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969.59 kB
+Size = 969.6 KiB
 Category = 14
 URLSite = http://support.microsoft.com/kb/180071/
 URLDownload = http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Benötigt für Visual Basic 5 basierte Anwendungen. Beinhaltet: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Size = 969,6 KiB
 
 [Section.0a]
 License = Desconocida
@@ -25,7 +22,7 @@ Description = Necesario para aplicaciones escritas en Visual Basic 5. Incluye: a
 [Section.040c]
 License = Inconnue
 Description = Bibliothèque Microsoft Visual Basic 5. Contient: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969,59 ko
+Size = 969,6 Kio
 
 [Section.0410]
 License = Sconosciuta
@@ -42,13 +39,13 @@ Description = Biblioteki uruchomieniowe Microsoft Visual Basic 5. Zawiera: advpa
 [Section.0418]
 License = Nespecificată
 Description = Pachet necesar pentru aplicațiile compilate cu Visual Basic 5. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969,59 ko
+Size = 969,6 Kio
 
 [Section.041f]
 Name = Microsoft Visual Basic 5 Yürütücü
 License = Bilinmiyor
 Description = Visual Basic 5'te yazılmış uygulamalar eliyle gereklidir. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969,59 KB
+Size = 969,6 KiB
 
 [Section.0422]
 License = Невідома
@@ -61,3 +58,4 @@ Description = 在 Visual Basic 5 编写的应用程序所需。包含: advpack.d
 [Section.0813]
 License = Ongekend
 Description = Microsoft Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+

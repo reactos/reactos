@@ -1,12 +1,8 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Steam
 License = Freeware
 Description = Popular Internet game distribution platform and social network. Includes DRM.
-Size = 1.32 MB
+Size = 1.3 MiB
 Category = 4
 URLSite = http://store.steampowered.com/
 URLDownload = http://media.steampowered.com/client/installer/SteamSetup.exe
@@ -16,6 +12,7 @@ CDPath = none
 [Section.0407]
 Description = Beliebte Internet Spiel-Vertriebsplattform und soziales Netz. Enthält DRM.
 URLSite = http://store.steampowered.com/?l=german
+Size = 1,3 MiB
 
 [Section.0a]
 Description = Plataforma de distribución de juegos por Internet y red social. Incluye DRM.
@@ -23,8 +20,8 @@ URLSite = http://store.steampowered.com/?l=spanish
 
 [Section.040c]
 Description = La plateforme de jeu Steam utilisée par beaucoup de jeux de nos jours.
-Size = 1,32 Mo
 URLSite = http://store.steampowered.com/?l=french
+Size = 1,3 Mio
 
 [Section.0410]
 Description = La piattaforma di gioco Steam usata da molti giochi in questi giorni.
@@ -41,14 +38,14 @@ URLSite = http://store.steampowered.com/?l=polish
 [Section.0418]
 License = Gratuită
 Description = Platformă populară de distribuție a jocurilor și rețea de socializare. Include mecanisme de gestiune a drepturilor de autor (DRM).
-Size = 1,32 Mo
 URLSite = http://store.steampowered.com/?l=romanian
+Size = 1,3 Mio
 
 [Section.041f]
 License = Ücretsiz
 Description = Tutulan Umûmî Ağ oyun dağıtım platformu ve toplumluk ağ. DRM içerir.
-Size = 1,32 MB
 URLSite = http://store.steampowered.com/?l=turkish
+Size = 1,3 MiB
 
 [Section.0422]
 Description = Ігрова платформа, що використовується багатьма іграми.
@@ -61,3 +58,4 @@ URLSite = http://store.steampowered.com/?l=schinese
 [Section.0813]
 Description = Het Steam platform, veel gebruikt voor spelletjes.
 URLSite = http://store.steampowered.com/?l=dutch
+

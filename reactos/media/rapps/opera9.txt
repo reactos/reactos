@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Opera
 Version = 9.64
 License = Freeware
 Description = The popular Opera Browser with many advanced features, including an e-mail and BitTorrent client.
-Size = 7.21 MB
+Size = 7.2 MiB
 Category = 5
 URLSite = http://www.opera.com/
 URLDownload = http://arc.opera.com/pub/opera/win/964/int/Opera_964_int_Setup.exe
@@ -19,13 +15,14 @@ Description = Populární prohlížeč Opera s mnoha pokročilými vlastnostmi, 
 
 [Section.0407]
 Description = Der populäre Opera Browser mit vielen fortschrittlichen Eigenschaften, enthält einen E-Mail und BitTorrent Client.
+Size = 7,2 MiB
 
 [Section.0a]
 Description = Popular navegador web con muchas características avanzadas, incluyendo un cliente de correo y BitTorrent.
 
 [Section.040c]
 Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités avancées, incluant un client mail et BitTorrent.
-Size = 7,21 Mo
+Size = 7,2 Mio
 
 [Section.0410]
 Description = Il famoso browser Opera con funzionalità avanzate come un client BitTorrent integrato e la gestione delle Mail.
@@ -39,7 +36,7 @@ Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkc
 [Section.0418]
 License = Gratuită
 Description = Navigator popular cu multe funcționalități avansate, incluzând poștă electronică și client de BitTorrent.
-Size = 7,21 Mo
+Size = 7,2 Mio
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
@@ -47,7 +44,7 @@ Description = Популярный браузер со многими допол
 [Section.041f]
 License = Ücretsiz
 Description = Bir posta ve BitTorrent istemcisini kapsayan birçok gelişmiş husûsiyetle, tutulan Opera Tarayıcı.
-Size = 7,21 MB
+Size = 7,2 MiB
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.
@@ -57,3 +54,4 @@ Description = 最受欢迎的 Opera 浏览器有许多高级功能，包括电�
 
 [Section.0813]
 Description = De populaire Opera Browser met vele gevorderde mogelijkheden, inclusief e-mail en BitTorrent afnemers.
+

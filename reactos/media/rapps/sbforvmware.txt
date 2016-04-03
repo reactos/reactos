@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = SoundBlaster Driver for VMWare
 Version = 5.12.1.5017
 License = Unknown
 Description = Audio driver for SoundBlaster-compatible devices. Unzip in the ReactOS folder and restart twice.
-Size = 2.22 MB
+Size = 2.2 MiB
 Category = 13
 URLDownload = http://svn.reactos.org/packages/sb_vmware.exe
 SHA1 = d731e7490e5d287fff41d1cc19598fad48b743cd
@@ -22,6 +18,7 @@ Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 Name = SoundBlaster Treiber für VMWare
 License = Unbekannt
 Description = Sound Treiber für SoundBlaster-kompatible Geräte. Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+Size = 2,2 MiB
 
 [Section.0a]
 Name = Controlador SoundBlaster para VMWare
@@ -32,7 +29,7 @@ Description = Controlador de audio para dispositivos compatibles con SoundBlaste
 Name = Pilote SoundBlaster pour VMWare
 License = Inconnue
 Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois.
-Size = 2,22 Mo
+Size = 2,2 Mio
 
 [Section.0410]
 Name = Driver SoundBlaster per VMWare
@@ -53,7 +50,7 @@ Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj 
 Name = Modúl-pilot SoundBlaster pentru VMWare
 License = Nespecificată
 Description = Modúl-pilot audio pentru dispozitive compatibile cu SoundBlaster. Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
-Size = 2,22 Mo
+Size = 2,2 Mio
 
 [Section.0419]
 Name = Драйвер SoundBlaster для VMWare
@@ -64,7 +61,7 @@ Description = Pазархивируйте содержимое в папку "Re
 Name = VMWare için SoundBlaster Sürücüsü
 License = Bilinmiyor
 Description = SoundBlaster uyumlu aygıtlar için ses sürücüsü. ReactOS dizinine çıkartınız ve bilgisayarı iki kez yeniden başlatınız.
-Size = 2,22 MB
+Size = 2,2 MiB
 
 [Section.0422]
 Name = Драйвер SoundBlaster для VMWare
@@ -80,3 +77,4 @@ Description = Sound Blaster兼容设备的音频驱动程序。解压在电脑�
 Name = SoundBlaster Driver voor VMWare
 License = Ongekend
 Description = Pak uit in de "ReactOS" folder en start ReactOS tweemaal opnieuw op.
+

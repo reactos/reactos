@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
 Version = 1.2.12
 License = LGPL
 Description = Needed for some open source games to run. You will need a tool like 7-Zip to extract it.
-Size = 548.02 kB
+Size = 548.0 KiB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
 URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.12-win32.zip
@@ -19,13 +15,14 @@ Description = Nutný pro spuštění některých open source her. K rozbalení j
 
 [Section.0407]
 Description = Erforderlich um einige quelloffene Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+Size = 548,0 KiB
 
 [Section.0a]
 Description = Necesario para ejecutar varios juegos de código abierto. Se necesita 7-Zip o una utilidad similar para extraerlo.
 
 [Section.040c]
 Description = Nécessaire pour faire tourner certains jeux open source. Vous aurez besoin de 7-Zip ou d'un outil similaire pour l'extraire.
-Size = 548,02 ko
+Size = 548,0 Kio
 
 [Section.0410]
 Description = Necessario per il corretto funzionamento di alcuni giochi OpenSource. Necessita di 7-zip o utility simili per essere estratto.
@@ -38,12 +35,12 @@ Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym 
 
 [Section.0418]
 Description = Pachet necesar pentru execuția unor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
-Size = 548,02 ko
+Size = 548,0 Kio
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı
 Description = Birtakım açık kaynak oyunları çalıştırmak için gereklidir. Çıkartmak için Zip gibi bir araca gereksinim duyacaksınız.
-Size = 548,02 KB
+Size = 548,0 KiB
 
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
@@ -53,3 +50,4 @@ Description = 需要一些开源游戏来运行。您将需要一个像 7-Zip �
 
 [Section.0813]
 Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.
+

@@ -1,12 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-
 [Section]
 Name = WinDirStat
 Version = 1.1.2
 Licence = GPL
 Description = Program for analyzing disk usage and his cleanup.
-Size = 631 kB
+Size = 630.6 KiB
 Category = 12
 URLSite = http://windirstat.info/
 URLDownload = https://download.sourceforge.net/project/windirstat/windirstat/1.1.2%20installer%20re-release%20(more%20languages!)/windirstat1_1_2_setup.exe
@@ -14,14 +11,16 @@ SHA1 = 6fa92dd2ca691c11dfbfc0a239e34369897a7fab
 
 [Section.0407]
 Description = Programm zur Laufwerkanalyse und Bereinigung.
+Size = 630,6 KiB
 
 [Section.0418]
 Description = Program pentru analiza utilizării și curățarea discurilor.
-Size = 631 ko
+Size = 630,6 Kio
 
 [Section.0419]
 Description = Программа для анализа использования дискового пространства и его очистки.
 
 [Section.041f]
 Description = Disk kullanımını çözümleme ve silme için izlence.
-Size = 631 KB
+Size = 630,6 KiB
+

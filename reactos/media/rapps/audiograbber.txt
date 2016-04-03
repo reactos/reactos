@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Audio Grabber
 Version = 1.83 SE
 License = Freeware
 Description = A very good CD Ripper/Audio File Converter.
-Size = 3.43 MB
+Size = 3.4 MiB
 Category = 1
 URLSite = http://www.audiograbber.de/
 URLDownload = http://ftp.freenet.de/pub/filepilot/fpt/audio/bearbeitung/audiograbber/agsetup183se.exe
@@ -16,6 +12,7 @@ CDPath = none
 
 [Section.0407]
 Description = Sehr guter CD-Ripper/Audio-Datei-Konverter.
+Size = 3,4 MiB
 
 [Section.0410]
 Description = Un buon CD Ripper/Convertitore di file Audio.
@@ -25,10 +22,7 @@ Description = Un buen extractor de pistas de CDs de música y conversor de archi
 
 [Section.040c]
 Description = Un très bon extracteur de CD/convertisseur de fichier audio.
-Size = 3,43 Mo
-
-[Section.0410]
-Description = Un ottimo CD Ripper/Audio File Converter.
+Size = 3,4 Mio
 
 [Section.0413]
 Description = Een goede CD Ripper/Audio-bestandsomzetter.
@@ -39,12 +33,12 @@ Description = Bardzo dobry CD Ripper/konwerter plików audio.
 [Section.0418]
 License = Gratuită
 Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
-Size = 3,43 Mo
+Size = 3,4 Mio
 
 [Section.041f]
 License = Ücretsiz
 Description = Çok iyi bir CD ripleyicisi ve ses kütüğü dönüştürücüsü.
-Size = 3,43 MB
+Size = 3,4 MiB
 
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.
@@ -54,3 +48,4 @@ Description = 一个很好的 CD 提取器/音频文件转换器。
 
 [Section.0813]
 Description = Een goede CD Ripper/Audio-bestandsomzetter.
+

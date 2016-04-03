@@ -1,13 +1,9 @@
-; UTF-8
-; Translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-
 [Section]
 Name = Scribus
 Version = 1.4.6
 License = GPLv2
-Description =  An open-source program that brings professional page layout to ReactOS. 
-Size = 78.2 MB
+Description = An open-source program that brings professional page layout to ReactOS.
+Size = 78.2 MiB
 Category = 3
 URLSite = http://www.scribus.net/
 URLDownload = http://downloads.sourceforge.net/project/scribus/scribus/1.4.6/scribus-1.4.6-windows.exe
@@ -19,13 +15,14 @@ Description = Open-source program, který přináší profesionální stránky r
 
 [Section.0407]
 Description = Ein Open-Source-Programm, das professionelles Seitenlayout in ReactOS bringt.
+Size = 78,2 MiB
 
 [Section.0a]
 Description = Un programa de código abierto que brinda diseño de página profesional a ReactOS.
 
 [Section.040c]
 Description = Un programme open source qui apporte la mise en page professionnelle de ReactOS.
-Size = 78,2 Mo
+Size = 78,2 Mio
 
 [Section.0410]
 Description = Un programma open-source che porta l'impaginazione professionale di ReactOS.
@@ -41,18 +38,18 @@ Description = Program open source, który przynosi profesjonalny ³ad strony Rea
 
 [Section.0418]
 Description = Un program cu surse deschise care aduce aspectul paginii profesionale la ReactOS.
-Size = 78,2 Mo
+Size = 78,2 Mio
 
 [Section.0419]
 Description = Открытым исходным кодом программы, которая приносит профессиональных макет страницы для ReactOS.
 
-[Section.041b] 
+[Section.041b]
 Description = Open-source program, ktorý prináša profesionálnej stránke rozloženie na ReactOS.
 
 [Section.041f]
 License = GPL sürüm 2
 Description = ReactOS'a profesyonel sayfa düzenlemesi getiren bir açık kaynak izlence.
-Size = 78,2 MB
+Size = 78,2 MiB
 
 [Section.0422]
 Description = Відкритим вихідним кодом програми, що приносить професійний режим перегляду для ReactOS.
@@ -62,3 +59,4 @@ Description = 一个开放源码程序，以给 ReactOS 带来专业的页面布
 
 [Section.0813]
 Description = Een open-source programma dat professionele pagina-indeling aan ReactOS brengt.
+

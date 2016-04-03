@@ -1,14 +1,9 @@
-; UTF-8
-; Polish translation by wojo664
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Hover!
 Version = 1.0
 License = MS EULA
 Description = The classic Hover CTF game which was found on the Windows 95 CD.
-Size = 6.2 MB
+Size = 6.2 MiB
 Category = 4
 URLDownload = http://svn.reactos.org/packages/Hover.exe
 SHA1 = 2e9220901494175df906e6bb8d16fa4c6b730921
@@ -16,6 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu finden war.
+Size = 6,2 MiB
 
 [Section.0a]
 Description = El clásico juego Hover CTF (captura la bandera) incluido en el CD de Windows 95.
@@ -28,11 +24,12 @@ Description = Klasyczna gra Hover CTF znaleziona na dysku Windows 95
 
 [Section.0418]
 Description = Jocul clasic Hover CTF, care se găsea pe CD-ul Windows 95.
-Size = 6,2 Mo
+Size = 6,2 Mio
 
 [Section.041f]
 Description = Windows 95 CD'sinde bulunan kökleşik Hover CTF oyunu.
-Size = 6,2 MB
+Size = 6,2 MiB
 
 [Section.0804]
 Description = 经典的 Hover CTF 游戏在 Windows 95 安装光盘中可找到。
+

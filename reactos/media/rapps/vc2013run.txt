@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Microsoft Visual C++ 2013 Redistributable
 Version = 12.0
 License = Unknown
 Description = Needed by applications compiled with Visual Studio 2013. Contains: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
-Size = 6.20 MB
+Size = 6.2 MiB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=40784
 URLDownload = http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Benötigt für Visual Studio 2013 basierte Anwendungen. Beinhaltet: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6,2 MiB
 
 [Section.0a]
 License = Desconocida
@@ -25,7 +22,7 @@ Description = Necesario para aplicaciones compiladas con Visual Studio 2013. Inc
 [Section.040c]
 License = Inconnue
 Description = Bibliothèque Microsoft Visual Studio 2013. Contient: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
-Size = 6.20 Mo
+Size = 6,2 Mio
 
 [Section.0410]
 License = Sconosciuta
@@ -42,13 +39,13 @@ Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2013. Zawiera: a
 [Section.0418]
 License = Nespecificată
 Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2013. Conține: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
-Size = 6,20 Mo
+Size = 6,2 Mio
 
 [Section.041f]
 Name = Microsoft Visual C++ 2013 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
 Description = Visual Studio 2013 ile derlenmiş uygulamalar eliyle gereklidir. Şunları içerir: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
-Size = 6,20 MB
+Size = 6,2 MiB
 
 [Section.0422]
 License = Невідома
@@ -61,3 +58,4 @@ Description = 用 Visual Studio 2013年编译的应用程序所需。包含: atl
 [Section.0813]
 License = Ongekend
 Description = Microsoft Visual Studio 2013 Runtime. Bevat: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+

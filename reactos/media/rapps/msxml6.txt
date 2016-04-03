@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Microsoft XML 6
 Version = 6.0
 License = Unknown
 Description = Needed for some MSI Installers. Contains: msxml6.dll, msxml6r.dll.
-Size = 1.46 MB
+Size = 1.5 MiB
 Category = 14
 URLSite = https://www.microsoft.com/en-us/download/details.aspx?id=3988
 URLDownload = https://download.microsoft.com/download/2/e/0/2e01308a-e17f-4bf9-bf48-161356cf9c81/msxml6.msi
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Wird von einigen MSI Installern benötigt. Beinhaltet: msxml6.dll, msxml6r.dll.
+Size = 1,5 MiB
 
 [Section.0a]
 License = Desconocida
@@ -25,7 +22,7 @@ Description = Necesario para algunos instaladores MSI. Incluye: msxml6.dll, msxm
 [Section.040c]
 License = Inconnue
 Description = MSXML3 est nécessaire pour certains installateurs MSI. Contient: msxml6.dll, msxml6r.dll.
-Size = 1,46 Mo
+Size = 1,5 Mio
 
 [Section.0410]
 License = Sconosciuto
@@ -42,12 +39,12 @@ Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera
 [Section.0418]
 License = Nespecificată
 Description = Modúl necesar unor programe de instalare MSI. Conține: msxml6.dll, msxml6r.dll.
-Size = 1,46 Mo
+Size = 1,5 Mio
 
 [Section.041f]
 License = Bilinmiyor
 Description = Birtakım Microsoft Yükleyicileri için gereklidir. Şunları içerir: msxml6.dll, msxml6r.dll.
-Size = 1,46 MB
+Size = 1,5 MiB
 
 [Section.0422]
 License = Невідома
@@ -60,3 +57,4 @@ Description = 需要一些 MSI 安装程序。包含： msxml6.dll, msxml6r.dll�
 [Section.0813]
 License = Ongekend
 Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml6.dll, msxml6r.dll.
+

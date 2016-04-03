@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = UltraVNC
 Version = 1.2.1.0
 License = GPL
 Description = Open source VNC client/server.
-Size = 3.14 MB
+Size = 3.1 MiB
 Category = 5
 URLSite = http://www.uvnc.com/
 URLDownload = http://www.uvnc.eu/download/1210/UltraVNC_1_2_10_X86_Setup.exe
@@ -16,13 +12,14 @@ CDPath = none
 
 [Section.0407]
 Description = Quelloffener VNC Client/Server.
+Size = 3,1 MiB
 
 [Section.0a]
 Description = Cliente/servidor VNC de código abierto.
 
 [Section.040c]
 Description = Client/serveur VNC open source.
-Size = 3,14 Mo
+Size = 3,1 Mio
 
 [Section.0410]
 Description = Client/server VNC open source.
@@ -35,11 +32,11 @@ Description = Otwarty klient/serwer VNC.
 
 [Section.0418]
 Description = Sistem client/server computațional de rețea virtuală (VNC) cu surse deschise.
-Size = 3,14 Mo
+Size = 3,1 Mio
 
 [Section.041f]
 Description = Açık kaynak VNC istemcisi ve sunucusu.
-Size = 3,14 MB
+Size = 3,1 MiB
 
 [Section.0422]
 Description = Відкритий VNC клієнт/сервер.
@@ -49,3 +46,4 @@ Description = 开源 VNC 客户端/服务器。
 
 [Section.0813]
 Description = Open-bron VNC afnemer/aanbieder.
+

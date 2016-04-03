@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Total Commander
 Version = 8.52a
 License = Shareware
 Description = A file manager for power users with two panels side by side.
-Size = 3.62 MB
+Size = 3.6 MiB
 Category = 12
 URLSite = http://www.ghisler.com/
 URLDownload = http://totalcmd2.s3.amazonaws.com/tcmd852ax32.exe
@@ -17,6 +13,7 @@ CDPath = none
 [Section.0407]
 Description = Dateimanager für Power User mit zwei nebeneinander liegenden Panels.
 URLSite = http://www.ghisler.com/deutsch.htm
+Size = 3,6 MiB
 
 [Section.0a]
 Description = Un navegador de archivos multipanel para usuarios avanzados.
@@ -33,12 +30,12 @@ Description = Total Commander to popularny menedżer plików z dwoma panelami, u
 [Section.0418]
 License = Versiune de evaluare
 Description = Gestionar de fișiere după modelul paneluri-alăturate, pentru utilizatori avansați.
-Size = 3,62 Mo
+Size = 3,6 Mio
 
 [Section.041f]
 License = Paylaşımlı
 Description = Güçlü kullanıcılar için yan yana iki bölmeli bir kütük yöneticisi.
-Size = 3,62 MB
+Size = 3,6 MiB
 
 [Section.0804]
 Description = 电力用户提供两个面板并排的的文件管理器。
@@ -46,3 +43,4 @@ URLSite = http://xbeta.info/tc/
 
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.
+

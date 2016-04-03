@@ -1,13 +1,9 @@
-; UTF-8
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-
 [Section]
 Name = Pidgin
 Version = 2.10.12
 License = GPLv2
 Description = An instant messaging program which lets you log in to accounts on multiple chat networks simultaneously.
-Size = 8.62 MB
+Size = 8.6 MiB
 Category = 5
 URLSite = https://pidgin.im/
 URLDownload = http://downloads.sourceforge.net/project/pidgin/Pidgin/2.10.12/pidgin-2.10.12.exe
@@ -16,10 +12,12 @@ CDPath = none
 
 [Section.0407]
 Description = Ein instant messaging-Programm, welches läßt Sie zu Konten auf mehreren Chat-Netzwerken gleichzeitig anmelden.
+Size = 8,6 MiB
 
 [Section.0418]
 Description = Program de mesagerie instantă. Permite autentificarea simultană în diverse rețele de conversație.
-Size = 8,62 Mo
+Size = 8,6 Mio
 
 [Section.0804]
 Description = 该对话框允许您登录到帐户多个聊天网络上同时即时消息程序。
+

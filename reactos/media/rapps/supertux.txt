@@ -1,14 +1,9 @@
-; UTF-8
-; Polish translation by wojo664
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = SuperTux
 Version = 0.1.3
 License = GPL
 Description = A free, open-source two-dimensional platform game.
-Size = 7.3 MB
+Size = 7.3 MiB
 Category = 4
 URLSite = http://www.supertux.lethargik.org
 URLDownload = http://download.sourceforge.net/project/supertux.berlios/supertux-0.1.3-setup.exe
@@ -16,7 +11,8 @@ SHA1 = 58cd8c443bcb9f4dda73a49630eca21c82795b81
 CDPath = none
 
 [Section.0407]
-Description = Zweidimensionales, freies, quelloffenes Plattformspiel. 
+Description = Zweidimensionales, freies, quelloffenes Plattformspiel.
+Size = 7,3 MiB
 
 [Section.0a]
 Description = Un juego 2D plataformero de código abierto.
@@ -29,11 +25,12 @@ Description = SuperTux to darmowa dwu wymiarowa gra platformowa OpenSource.
 
 [Section.0418]
 Description = Joc 2D gratuit, cu surse deschise.
-Size = 7,3 Mo
+Size = 7,3 Mio
 
 [Section.041f]
 Description = Ücretsiz, açık kaynak ve iki boyutlu bir platform oyunu.
-Size = 7,3 MB
+Size = 7,3 MiB
 
 [Section.0804]
 Description = 一个免费、 开源的二维平台游戏。
+

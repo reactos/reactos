@@ -1,23 +1,19 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = Foxit Reader
 Version = 7.3.4
 License = Freeware
 Description = Alternative PDF reader, rivaling Adobe Reader functionality-wise.
-Size = 41.1 MB
+Size = 40.9 MiB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/en_us/FoxitReader734_prom_enu_Setup.exe
-SHA1 = 00d4c85d33ad098e4ef45aabaeb6987e73c3c79b
+SHA1 = 72f4ed8f850130073d7d0fa3d8a7a80a464ad198
 CDPath = none
 
 [Section.0407]
 Version = 7.2.5.0930
 Description = Alternativer PDF Reader. Neben Adobe Reader der beste PDF Reader.
-Size = 58.9 MB
+Size = 58,9 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
 SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
@@ -25,27 +21,28 @@ SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 Version = 7.2.5.0930
 License = Gratuito
 Description = Uno de los mejores lectores de PDF, parecido a Adobe Reader.
-Size = 58.9 MB
+Size = 58.9 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
 SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
 [Section.0418]
 License = Gratuită
 Description = Lector PDF, rivalizând în funcționalitate cu Adobe Reader.
-Size = 41,1 Mo
+Size = 40,9 Mio
 
 [Section.041f]
 Name = Foxit Okuyucu
 Version = 7.2.5.0930
 License = Ücretsiz
 Description = Başka PDF okuyucusu, işlevlilik yöntemi olarak Adobe Okuyucu'yla yarışıyor.
-Size = 58,9 MB
+Size = 58,9 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.2/L10N/FoxitReader725.0930_prom_L10N_Setup.exe
 SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 
 [Section.0804]
 Version = 7.3.1.125
 Description = 替代的 PDF 阅读器，媲美 Adobe Reader 功能智者。
-Size = 47,7 MB
+Size = 47.7 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/zh_cn/Foxit_FoxitReader_CHS_7.3.1.125_Exe.exe
 SHA1 = 9492df6056a40166031ebc8cd06afdd9aaaa225b
+

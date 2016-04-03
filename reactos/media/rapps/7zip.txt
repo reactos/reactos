@@ -1,13 +1,9 @@
-; UTF-8
-; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
-; Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
-
 [Section]
 Name = 7-Zip
 Version = 15.14
 License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
-Size = 1.21 MB
+Size = 1.2 MiB
 Category = 12
 URLSite = http://www.7-zip.org/
 URLDownload = http://www.7-zip.org/a/7z1514.msi
@@ -16,13 +12,14 @@ CDPath = none
 
 [Section.0407]
 Description = Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
+Size = 1,2 MiB
 
 [Section.0a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
 
 [Section.040c]
 Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et d'autres archives.
-Size = 1,21 Mo
+Size = 1,2 Mio
 
 [Section.0410]
 Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
@@ -35,14 +32,14 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 
 [Section.0418]
 Description = Utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
-Size = 1,21 Mo
+Size = 1,2 Mio
 
 [Section.0419]
 Description = Утилита для создания и открытия 7zip, zip, tar, rar и других архивных файлов.
 
 [Section.041f]
 Description = 7zip, zip, tar, rar ve başka birçok belgelik biçimi destekli bir kütük belgelikleme aracı.
-Size = 1,21 MB
+Size = 1,2 MiB
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.
@@ -52,3 +49,4 @@ Description = 一个文件归档实用程序与支持 7zip、 zip、 tar、 rar 
 
 [Section.0813]
 Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden.
+
