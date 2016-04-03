@@ -64,18 +64,6 @@ typedef enum CV_call_e {
 
 #endif // __REACTOS__
 
-#define MAX_SYMBOL_NAME        1024
-typedef struct _SYMINFO_EX
-{
-    SYMBOL_INFO si;
-    CHAR achName[MAX_SYMBOL_NAME];
-} SYMINFO_EX;
-
-typedef struct _SYMBOL64_EX
-{
-    IMAGEHLP_SYMBOL64 sym64;
-    CHAR achName[MAX_SYMBOL_NAME];
-} SYMBOL64_EX, *PSYMBOL64_EX;
 
 typedef enum _PARAM_TYPES
 {
@@ -290,7 +278,7 @@ LoadModuleWithSymbols(
     }
 
     /* Try system32 */
-    strcpy_s(szFullFileName, sizeof(szFullFileName), "%systemroot%\\system32");
+    strcpy_s(szFullFileName, sizeof(szFullFileName), "%systemroot%\\system32\\");
     strcat_s(szFullFileName, sizeof(szFullFileName), pszModuleName);
     hmod = LoadModuleWithSymbolsFullPath(szFullFileName);
     if (hmod != NULL)
@@ -299,8 +287,8 @@ LoadModuleWithSymbols(
     }
 
 #ifdef _WIN64
-    /* Try SysWoW64 */
-    strcpy_s(szFullFileName, sizeof(szFullFileName), "%systemroot%\\system32");
+    /* Try SysWOW64 */
+    strcpy_s(szFullFileName, sizeof(szFullFileName), "%systemroot%\\SysWOW64\\");
     strcat_s(szFullFileName, sizeof(szFullFileName), pszModuleName);
     hmod = LoadModuleWithSymbolsFullPath(szFullFileName);
     if (hmod != NULL)
@@ -500,7 +488,7 @@ ULONG64
 GetFunctionFromForwarder(
     _In_ PCSTR pszForwarder)
 {
-    CHAR szDllName[MAX_SYMBOL_NAME];
+    CHAR szDllName[MAX_SYM_NAME];
     PCH pchDot, pszName;
     ULONG64 ullFunction;
     HMODULE hmod;
@@ -560,7 +548,7 @@ ParseImageSymbols(
     DWORD64 dwModuleBase;
     ULONG i;
     IMAGEHLP_STACK_FRAME StackFrame;
-    SYMINFO_EX sym;
+    SYMBOL_INFO_PACKAGE sym;
 
     dwModuleBase = (DWORD_PTR)hmod;
 
@@ -585,7 +573,7 @@ ParseImageSymbols(
 
         RtlZeroMemory(&sym, sizeof(sym));
         sym.si.SizeOfStruct = sizeof(SYMBOL_INFO);
-        sym.si.MaxNameLen = MAX_SYMBOL_NAME;
+        sym.si.MaxNameLen = MAX_SYM_NAME;
 
         /* Try to find the symbol */
         if (!SymFromAddr(ghProcess, ullFunction, &ullDisplacement, &sym.si))
