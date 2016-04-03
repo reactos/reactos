@@ -210,9 +210,13 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
             }
             else
             {
-                /* Add the length of the PATH variable */
+                /* Add the length of the PATH variable unless it's empty */
                 ASSERT(!(EnvPath.Length & 1));
-                PathLengthInBytes += (EnvPath.Length + sizeof(L';'));
+                if (EnvPath.Length)
+                {
+                    /* Reserve space for the variable and a semicolon */
+                    PathLengthInBytes += (EnvPath.Length + sizeof(L';'));
+                }
             }
             break;
 
