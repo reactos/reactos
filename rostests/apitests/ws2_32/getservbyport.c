@@ -133,8 +133,8 @@ START_TEST(getservbyport)
                Tests[i].Port, Tests[i].Protos[Proto].Proto, ntohs(Serv->s_port));
 
             /* Check proto */
-            ok(Serv->s_proto != NULL, "[%d, %s] s_proto = NULL\n",
-               Tests[i].Port, Tests[i].Protos[Proto].Proto);
+            ok(!strcmp(Serv->s_proto, Tests[i].Protos[ExpectProto].Proto), "[%d, %s] s_proto = '%s', expected '%s'\n",
+               Tests[i].Port, Tests[i].Protos[Proto].Proto, Serv->s_proto, Tests[i].Protos[ExpectProto].Proto);
         /* We want to include one NULL past the last proto in the array */
         } while (Tests[i].Protos[Proto++].Proto != NULL);
     }
