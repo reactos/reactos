@@ -140,6 +140,7 @@ LrgCellWndProc(HWND hwnd,
             EndPaint(hwnd,
                      &ps);
 
+            UpdateStatusBar(infoPtr->pActiveCell->ch);
             break;
         }
 

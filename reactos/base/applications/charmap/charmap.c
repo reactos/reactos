@@ -24,6 +24,10 @@ HICON     hSmIcon;
 HICON     hBgIcon;
 SETTINGS  Settings;
 
+/* GetUName prototype */
+typedef int (WINAPI * GETUNAME)(WORD wCharCode, LPWSTR lpbuf);
+GETUNAME GetUName;
+
 /* Font-enumeration callback */
 static
 int
@@ -256,6 +260,20 @@ UpdateSettings(HWND hDlg)
     }
 }
 #endif
+
+VOID
+UpdateStatusBar(WCHAR wch)
+{
+    WCHAR buff[MAX_PATH];
+    WCHAR szDesc[MAX_PATH];
+
+    if (GetUName)
+    {
+        GetUName(wch, szDesc);
+        wsprintfW(buff, L"U+%04X: %s", wch, szDesc);
+        SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)buff);
+    }
+}
 
 static
 void
@@ -571,12 +589,25 @@ wWinMain(HINSTANCE hInst,
     INT Ret = 1;
     HMODULE hRichEd20;
     MSG Msg;
+    HINSTANCE hGetUName = NULL;
 
     hInstance = hInst;
 
     iccx.dwSize = sizeof(INITCOMMONCONTROLSEX);
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
+
+    /* Loading the GetUName function */
+    hGetUName = LoadLibraryW(L"getuname.dll");
+    if (hGetUName != NULL)
+    {
+        GetUName = (GETUNAME) GetProcAddress(hGetUName, "GetUName");
+        if (GetUName == NULL)
+        {
+            FreeLibrary(hGetUName);
+            hGetUName = NULL;
+        }
+    }
 
     if (RegisterMapClasses(hInstance))
     {
@@ -602,6 +633,9 @@ wWinMain(HINSTANCE hInst,
         }
         UnregisterMapClasses(hInstance);
     }
+
+    if (hGetUName != NULL)
+        FreeLibrary(hGetUName);
 
     return Ret;
 }

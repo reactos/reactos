@@ -74,6 +74,7 @@ BOOL RegisterMapClasses(HINSTANCE hInstance);
 VOID UnregisterMapClasses(HINSTANCE hInstance);
 
 /* charmap.c */
+VOID UpdateStatusBar(WCHAR wch);
 extern VOID ChangeMapFont(HWND hDlg);
 
 /* settings.c */
