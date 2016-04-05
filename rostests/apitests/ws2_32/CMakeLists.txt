@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     getaddrinfo.c
+    getservbyport.c
     helpers.c
     ioctlsocket.c
     nostartup.c
