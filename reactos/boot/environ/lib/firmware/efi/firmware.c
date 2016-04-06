@@ -1365,7 +1365,7 @@ MmFwGetMemoryMap (
     NTSTATUS Status;
     ULONGLONG Pages, StartPage, EndPage;
     UINTN EfiMemoryMapSize, MapKey, DescriptorSize, DescriptorVersion;
-    EFI_PHYSICAL_ADDRESS EfiBuffer;
+    EFI_PHYSICAL_ADDRESS EfiBuffer = 0;
     EFI_MEMORY_DESCRIPTOR* EfiMemoryMap;
     EFI_STATUS EfiStatus;
     BL_ARCH_MODE OldMode;
