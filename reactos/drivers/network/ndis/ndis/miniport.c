@@ -2100,7 +2100,7 @@ NdisIPnPStartDevice(
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
-      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter (%lx).\n", NdisStatus));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       if (Adapter->NdisMiniportBlock.Interrupt)
       {
