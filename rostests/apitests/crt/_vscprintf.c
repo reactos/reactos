@@ -17,6 +17,7 @@ static void call_varargs(int expected_ret, LPCSTR formatString, ...)
     /* Test the basic functionality */
     va_start(args, formatString);
     ret = _vscprintf(formatString, args);
+    va_end(args);
     ok(expected_ret == ret, "Test failed: expected %i, got %i.\n", expected_ret, ret);
 }
 

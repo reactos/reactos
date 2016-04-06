@@ -17,6 +17,7 @@ static void call_varargs(int expected_ret, LPCWSTR formatString, ...)
     /* Test the basic functionality */
     va_start(args, formatString);
     ret = _vscwprintf(formatString, args);
+    va_end(args);
     ok(expected_ret == ret, "expected %i, got %i.\n", expected_ret, ret);
 }
 
