@@ -2001,8 +2001,8 @@ IopLoadUnloadDriver(
      */
     Status = IopGetDriverObject(DriverObject,
                                 &ServiceName,
-                                (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-                                 Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
+                                (Type == SERVICE_FILE_SYSTEM_DRIVER ||
+                                 Type == SERVICE_RECOGNIZER_DRIVER));
 
     if (!NT_SUCCESS(Status))
     {
@@ -2037,8 +2037,8 @@ IopLoadUnloadDriver(
         Status = IopInitializeDriverModule(DeviceNode,
                                            ModuleObject,
                                            &DeviceNode->ServiceName,
-                                           (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-                                            Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
+                                           (Type == SERVICE_FILE_SYSTEM_DRIVER ||
+                                            Type == SERVICE_RECOGNIZER_DRIVER),
                                            DriverObject);
         if (!NT_SUCCESS(Status))
         {
