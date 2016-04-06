@@ -919,6 +919,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                                  NULL,
                                  &ServiceName,
                                  &DeviceNode);
+    RtlFreeUnicodeString(&ServiceName);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
