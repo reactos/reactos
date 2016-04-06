@@ -874,6 +874,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
     UNICODE_STRING ServiceName;
+    BOOLEAN Success;
 
     /*
      * Display 'Loading XXX...' message
@@ -897,7 +898,12 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     /*
      * Strip the file extension from ServiceName
      */
-    RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
+    Success = RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
+    if (!Success)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     FileExtension = wcsrchr(ServiceName.Buffer, '.');
     if (FileExtension != NULL)
     {
