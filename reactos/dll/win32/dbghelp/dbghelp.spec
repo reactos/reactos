@@ -192,7 +192,7 @@
 @ stdcall WinDbgExtensionDllInit(ptr long long)
 #@ stdcall block
 #@ stdcall chksym
-#@ stdcall dbghelp
+@ stdcall -stub dbghelp(ptr ptr)
 #@ stdcall dh
 #@ stdcall fptr
 #@ stdcall homedir
