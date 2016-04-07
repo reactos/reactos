@@ -1,5 +1,6 @@
 /*
  * Copyright 2007 Juan Lang
+ * Copyright 2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -199,6 +200,170 @@ static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
     return err;
 }
 
+/* See https://www.cs.auckland.ac.nz/~pgut001/pubs/authenticode.txt
+ * for details about the hashing.
+ */
+static BOOL SOFTPUB_HashPEFile(BYTE *file, LARGE_INTEGER *size, HCRYPTHASH hash)
+{
+    IMAGE_DOS_HEADER *dosheader = (IMAGE_DOS_HEADER *)file;
+    IMAGE_NT_HEADERS *ntheader;
+    IMAGE_DATA_DIRECTORY *security_dir;
+    DWORD *checksum;
+
+    if (sizeof(dosheader) > size->QuadPart)
+        return FALSE;
+
+    if (dosheader->e_magic != IMAGE_DOS_SIGNATURE)
+    {
+        ERR("Unrecognized IMAGE_DOS_HEADER magic %04x\n", dosheader->e_magic);
+        return FALSE;
+    }
+
+    if (dosheader->e_lfanew >= 256 * 1024 * 1024) /* see RtlImageNtHeaderEx */
+        return FALSE;
+    if (dosheader->e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader.MajorLinkerVersion) > size->QuadPart)
+        return FALSE;
+
+    ntheader = (IMAGE_NT_HEADERS *)(file + dosheader->e_lfanew);
+    if (ntheader->Signature != IMAGE_NT_SIGNATURE)
+    {
+        ERR("Unrecognized IMAGE_NT_HEADERS signature %08x\n", ntheader->Signature);
+        return FALSE;
+    }
+
+    if (ntheader->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+    {
+        IMAGE_NT_HEADERS32 *nt32 = (IMAGE_NT_HEADERS32 *)ntheader;
+        if (dosheader->e_lfanew + sizeof(nt32) > size->QuadPart)
+            return FALSE;
+
+        checksum        = &nt32->OptionalHeader.CheckSum;
+        security_dir    = &nt32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY];
+    }
+    else if (ntheader->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+    {
+        IMAGE_NT_HEADERS64 *nt64 = (IMAGE_NT_HEADERS64 *)ntheader;
+        if (dosheader->e_lfanew + sizeof(nt64) > size->QuadPart)
+            return FALSE;
+
+        checksum        = &nt64->OptionalHeader.CheckSum;
+        security_dir    = &nt64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY];
+    }
+    else
+    {
+        ERR("Unrecognized OptionalHeader magic %04x\n", ntheader->OptionalHeader.Magic);
+        return FALSE;
+    }
+
+    if (security_dir->VirtualAddress < (BYTE *)(security_dir + 1) - file)
+        return FALSE;
+    if (security_dir->VirtualAddress > size->QuadPart)
+        return FALSE;
+    if (security_dir->VirtualAddress + security_dir->Size != size->QuadPart)
+        return FALSE;
+
+    /* Hash until checksum. */
+    if (!CryptHashData(hash, file, (BYTE *)checksum - file, 0))
+        return FALSE;
+
+    /* Hash until the DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY] entry. */
+    if (!CryptHashData(hash, (BYTE *)(checksum + 1), (BYTE *)security_dir - (BYTE *)(checksum + 1), 0))
+        return FALSE;
+
+    /* Hash until the end of the file. */
+    if (!CryptHashData(hash, (BYTE *)(security_dir + 1),
+                       file + security_dir->VirtualAddress - (BYTE *)(security_dir + 1), 0))
+        return FALSE;
+
+    return TRUE;
+}
+
+static DWORD SOFTPUB_VerifyImageHash(CRYPT_PROVIDER_DATA *data, HANDLE file)
+{
+    SPC_INDIRECT_DATA_CONTENT *indirect = (SPC_INDIRECT_DATA_CONTENT *)data->u.pPDSip->psIndirectData;
+    DWORD err, hash_size, length;
+    BYTE *hash_data, *file_map = NULL;
+    LARGE_INTEGER file_size;
+    BOOL release_prov = FALSE;
+    HCRYPTPROV prov = data->hProv;
+    HCRYPTHASH hash = 0;
+    ALG_ID algID;
+    HANDLE map = NULL;
+
+    if (((ULONG_PTR)indirect->Data.pszObjId >> 16) == 0 ||
+        strcmp(indirect->Data.pszObjId, SPC_PE_IMAGE_DATA_OBJID))
+    {
+        FIXME("Cannot verify hash for pszObjId=%s\n", debugstr_a(indirect->Data.pszObjId));
+        return ERROR_SUCCESS;
+    }
+
+    if (!(algID = CertOIDToAlgId(indirect->DigestAlgorithm.pszObjId)))
+        return TRUST_E_SYSTEM_ERROR; /* FIXME */
+
+    if (!prov)
+    {
+        if (!CryptAcquireContextW(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+            return GetLastError();
+        release_prov = TRUE;
+    }
+
+    if (!CryptCreateHash(prov, algID, 0, 0, &hash))
+    {
+        err = GetLastError();
+        goto done;
+    }
+
+    if (!GetFileSizeEx(file, &file_size) ||
+        !(map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL)) ||
+        !(file_map = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0)))
+    {
+        err = GetLastError();
+        goto done;
+    }
+
+    if (!SOFTPUB_HashPEFile(file_map, &file_size, hash))
+    {
+        err = TRUST_E_NOSIGNATURE;
+        goto done;
+    }
+
+    length = sizeof(hash_size);
+    if (!CryptGetHashParam(hash, HP_HASHSIZE, (BYTE *)&hash_size, &length, 0))
+    {
+        err = GetLastError();
+        goto done;
+    }
+
+    if (!(hash_data = data->psPfns->pfnAlloc(hash_size)))
+    {
+        err = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (!CryptGetHashParam(hash, HP_HASHVAL, hash_data, &hash_size, 0))
+    {
+        err = GetLastError();
+        data->psPfns->pfnFree(hash_data);
+        goto done;
+    }
+
+    err = (hash_size == indirect->Digest.cbData &&
+           !memcmp(hash_data, indirect->Digest.pbData, hash_size)) ? S_OK : TRUST_E_BAD_DIGEST;
+    data->psPfns->pfnFree(hash_data);
+
+done:
+    if (file_map)
+        UnmapViewOfFile(file_map);
+    if (map)
+        CloseHandle(map);
+    if (hash)
+        CryptDestroyHash(hash);
+    if (release_prov)
+        CryptReleaseContext(prov, 0);
+    return err;
+}
+
+
 static DWORD SOFTPUB_CreateStoreFromMessage(CRYPT_PROVIDER_DATA *data)
 {
     DWORD err = ERROR_SUCCESS;
@@ -362,6 +527,9 @@ static DWORD SOFTPUB_LoadFileMessage(CRYPT_PROVIDER_DATA *data)
     if (err)
         goto error;
     err = SOFTPUB_DecodeInnerContent(data);
+    if (err)
+        goto error;
+    err = SOFTPUB_VerifyImageHash(data, data->pWintrustData->u.pFile->hFile);
 
 error:
     if (err && data->fOpenedFile && data->pWintrustData->u.pFile)
