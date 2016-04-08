@@ -1434,4 +1434,91 @@ public:
     {offsetofclass(ATL::_ICPLocator<&iid>, _atl_conn_classtype) -                \
     offsetofclass(ATL::IConnectionPointContainerImpl<_atl_conn_classtype>, _atl_conn_classtype)},
 
+
+
+/* TODO:
+ - IDispatchImpl contains a static member of type CComTypeInfoHolder that manages the type information for the dual interface.
+   If you have multiple objects that implement the same dual interface, only one instance of CComTypeInfoHolder is used.
+ - By default, the IDispatchImpl class looks up the type information for T in the registry.
+   To implement an unregistered interface, you can use the IDispatchImpl class without accessing the registry by using a predefined version number.
+   If you create an IDispatchImpl object that has 0xFFFF as the value for wMajor and 0xFFFF as the value for wMinor,
+   the IDispatchImpl class retrieves the type library from the .dll file instead of the registry.
+*/
+template<class T, const IID* piid /*= &__uuidof(T)*/, const GUID* plibid = &CAtlModule::m_libid, WORD wMajor = 1, WORD wMinor = 0>
+class IDispatchImpl :
+    public T
+{
+private:
+    CComPtr<ITypeInfo> m_pTypeInfo;
+
+    STDMETHOD(EnsureTILoaded)(LCID lcid)
+    {
+        HRESULT hr = S_OK;
+        if (m_pTypeInfo != NULL)
+            return hr;
+
+        if (IsEqualCLSID(CLSID_NULL, *plibid))
+            OutputDebugStringA("IDispatchImpl: plibid is CLSID_NULL!\r\n");
+
+        // Should we assert here?
+        if (wMajor == 0xffff && wMinor == 0xffff)
+            OutputDebugStringA("IDispatchImpl: not fully implemented, missing functionality to load TLB from file!\r\n");
+
+        CComPtr<ITypeLib> spTypeLib;
+        hr = LoadRegTypeLib(*plibid, wMajor, wMinor, lcid, &spTypeLib);
+        if (SUCCEEDED(hr))
+        {
+            hr = spTypeLib->GetTypeInfoOfGuid(*piid, &m_pTypeInfo);
+        }
+        return hr;
+    }
+
+public:
+    IDispatchImpl()
+    {
+    }
+
+
+    // *** IDispatch methods ***
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo)
+    {
+        if (pctinfo == NULL)
+            return E_POINTER;
+
+        *pctinfo = 1;
+        return S_OK;
+    }
+
+    STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+    {
+        if (iTInfo != 0)
+            return DISP_E_BADINDEX;
+        if (ppTInfo == NULL)
+            return E_POINTER;
+
+        HRESULT hr = EnsureTILoaded(lcid);
+        *ppTInfo = m_pTypeInfo;
+        if (*ppTInfo)
+            (*ppTInfo)->AddRef();
+
+        return hr;
+    }
+
+    STDMETHOD(GetIDsOfNames)(REFIID /*riid*/, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+    {
+        HRESULT hr = EnsureTILoaded(lcid);
+        if (SUCCEEDED(hr))
+            hr = m_pTypeInfo->GetIDsOfNames(rgszNames, cNames, rgDispId);
+        return hr;
+    }
+
+    STDMETHOD(Invoke)(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+    {
+        HRESULT hr = EnsureTILoaded(lcid);
+        if (SUCCEEDED(hr))
+            hr = m_pTypeInfo->Invoke(this, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+        return hr;
+    }
+};
+
 }; // namespace ATL

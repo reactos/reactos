@@ -395,9 +395,9 @@ public:
 
 class CAtlModule : public _ATL_MODULE
 {
-protected:
-    static GUID m_libid;
 public:
+    static GUID m_libid;
+
     CAtlModule()
     {
         ATLASSERT(_pAtlModule == NULL);
