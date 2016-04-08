@@ -30,6 +30,7 @@
 #include <atlwin.h>
 #include <powrprof.h>
 #include <winnetwk.h>
+#include <objsafe.h>
 
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>
@@ -49,6 +50,10 @@
 #include "shfldr.h"
 #include "CShellItem.h"
 #include "CShellLink.h"
+#include "CFolderItemVerbs.h"
+#include "CFolderItems.h"
+#include "CFolder.h"
+#include "CShell.h"
 #include "CDropTargetHelper.h"
 #include "folders/CFSFolder.h"
 #include "folders/CDrivesFolder.h"
