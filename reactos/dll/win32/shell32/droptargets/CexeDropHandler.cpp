@@ -83,7 +83,7 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         }
     }
 
-    ShellExecute(NULL, L"open", sPathTarget, wszBuf, NULL,SW_SHOWNORMAL);
+    ShellExecuteW(NULL, L"open", sPathTarget, wszBuf, NULL,SW_SHOWNORMAL);
 
     return S_OK;
 }
