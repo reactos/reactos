@@ -66,7 +66,7 @@ typedef struct
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellView,
+    public IShellView2,
     public IFolderView,
     public IShellFolderView,
     public IOleCommandTarget,
@@ -164,6 +164,12 @@ class CDefView :
         virtual HRESULT STDMETHODCALLTYPE SaveViewState();
         virtual HRESULT STDMETHODCALLTYPE SelectItem(PCUITEMID_CHILD pidlItem, SVSIF uFlags);
         virtual HRESULT STDMETHODCALLTYPE GetItemObject(UINT uItem, REFIID riid, void **ppv);
+
+        // *** IShellView2 methods ***
+        virtual HRESULT STDMETHODCALLTYPE GetView(SHELLVIEWID *view_guid, ULONG view_type);
+        virtual HRESULT STDMETHODCALLTYPE CreateViewWindow2(LPSV2CVW2_PARAMS view_params);
+        virtual HRESULT STDMETHODCALLTYPE HandleRename(LPCITEMIDLIST new_pidl);
+        virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItem(LPCITEMIDLIST item, UINT flags, POINT *point);
 
         // *** IFolderView methods ***
         virtual HRESULT STDMETHODCALLTYPE GetCurrentViewMode(UINT *pViewMode);
@@ -319,6 +325,7 @@ class CDefView :
         // Windows returns E_NOINTERFACE for IOleWindow
         // COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
+        COM_INTERFACE_ENTRY_IID(IID_IShellView2, IShellView2)
         COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
@@ -2486,6 +2493,34 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
+    return E_NOTIMPL;
+}
+
+/**********************************************************
+ * IShellView2 implementation
+ */
+
+HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *view_guid, ULONG view_type)
+{
+    FIXME("(%p)->(%p, %lu) stub\n", this, view_guid, view_type);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_params)
+{
+    FIXME("(%p)->(%p) stub\n", this, view_params);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::HandleRename(LPCITEMIDLIST new_pidl)
+{
+    FIXME("(%p)->(%p) stub\n", this, new_pidl);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItem(LPCITEMIDLIST item, UINT flags, POINT *point)
+{
+    FIXME("(%p)->(%p, %u, %p) stub\n", this, item, flags, point);
     return E_NOTIMPL;
 }
 
