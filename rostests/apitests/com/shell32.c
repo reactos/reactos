@@ -25,6 +25,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x20,   &IID_IOleCommandTarget },
             {   0x24,   &IID_ICDBurn },
             {   0x2c,   &IID_IPersistPropertyBag },
+            {   0x34,   &IID_INamespaceWalkCB },
             {   0x3c,   &IID_IServiceProvider },
         }
     },
