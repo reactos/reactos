@@ -30,7 +30,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_CUrlHistory),
         {
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IUrlHistoryStg2 },
+            {    0x0,       &IID_IUrlHistoryStg },
+            {    0x0,           &IID_IUnknown },
         }
     },
     {
@@ -65,6 +67,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x44,   &IID_IOleCommandTarget },
             {   0x48,   &IID_IServiceProvider },
             {   0x4c,   &IID_IPropertyStore },
+            {   0x50,   &IID_IInitializeWithFile },
+            {   0x54,   &IID_IInitializeWithBindCtx },
         }
     },
     {
@@ -106,8 +110,10 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0xbc,   &IID_INSCTree },
             {   0xc4,   &IID_IShellBrowser },
             {   0xc8,   &IID_IFolderFilterSite },
+            {   0xcc,   &IID_INewMenuClient },
             {   0xd0,   &IID_IServiceProvider },
             {   0xd4,   &IID_INameSpaceTreeControl },
+            {   0xe0,   &IID_IVisualProperties },
             {   0xe4,   &IID_IWinEventHandler },
         }
     },
@@ -152,10 +158,22 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {  0x120,               &IID_IDispatch },
             {  0x130,   &IID_IOleCommandTarget },
             {  0x134,   &IID_IObjectSafety },
+            {  0x13c,   &IID_ITargetEmbedding },
             {  0x140,   &IID_IPersistStorage },
             {  0x144,   &IID_IPersistHistory },
             { FARAWY,   &IID_IShellService },
             { FARAWY,   &IID_IServiceProvider },
+            { FARAWY,   &IID_IHlinkFrame },
+            { FARAWY,   &IID_IUrlHistoryNotify },
+            { FARAWY,   &IID_ITargetFrame2 },
+            { FARAWY,   &IID_ITargetNotify },
+            { FARAWY,   &IID_ITargetFramePriv2 },
+            { FARAWY,       &IID_ITargetFramePriv },
+            { FARAWY,   &IID_IEFrameAuto },
+            { FARAWY,   &IID_IWebBrowserPriv },
+            { FARAWY,   &IID_IWebBrowserPriv2 },
+            { FARAWY,   &IID_ISecMgrCacheSeedTarget },
+            { FARAWY,   &IID_ITargetFrame },
         }
     },
     {
@@ -183,10 +201,22 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {  0x120,               &IID_IDispatch },
             {  0x130,   &IID_IOleCommandTarget },
             {  0x134,   &IID_IObjectSafety },
+            {  0x13c,   &IID_ITargetEmbedding },
             {  0x140,   &IID_IPersistStorage },
             {  0x144,   &IID_IPersistHistory },
             { FARAWY,   &IID_IShellService },
             { FARAWY,   &IID_IServiceProvider },
+            { FARAWY,   &IID_IHlinkFrame },
+            { FARAWY,   &IID_IUrlHistoryNotify },
+            { FARAWY,   &IID_ITargetFrame2 },
+            { FARAWY,   &IID_ITargetNotify },
+            { FARAWY,   &IID_ITargetFramePriv2 },
+            { FARAWY,       &IID_ITargetFramePriv },
+            { FARAWY,   &IID_IEFrameAuto },
+            { FARAWY,   &IID_IWebBrowserPriv },
+            { FARAWY,   &IID_IWebBrowserPriv2 },
+            { FARAWY,   &IID_ISecMgrCacheSeedTarget },
+            { FARAWY,   &IID_ITargetFrame },
         }
     },
 };

@@ -20,13 +20,18 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x8,   &IID_IShellExtInit },
             {    0xc,   &IID_IContextMenu },
             {   0x10,   &IID_IShellPropSheetExt },
+            {   0x14,   &IID_IDiscMasterProgressEvents },
             {   0x18,   &IID_IDropTarget },
             {   0x1c,   &IID_IPersistFile },
             {   0x20,   &IID_IOleCommandTarget },
             {   0x24,   &IID_ICDBurn },
+            {   0x28,   &IID_ICDBurnPriv },
             {   0x2c,   &IID_IPersistPropertyBag },
+            {   0x30,   &IID_IDriveFolderExt },
             {   0x34,   &IID_INamespaceWalkCB },
             {   0x3c,   &IID_IServiceProvider },
+            {   0x40,   &IID_ITransferAdviseSinkPriv },
+            {   0x44,   &IID_IQueryCancelAutoPlay },
         }
     },
     {
@@ -550,6 +555,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x38,   &IID_IFilter },
             {   0x3c,   &IID_IObjectWithSite },
             {   0x44,   &IID_ICustomizeInfoTip },
+            { FARAWY,   &IID_ISLTracker },
         }
     },
 #if 0 // Apparently we can only get this through Folder.Items().GetLink
