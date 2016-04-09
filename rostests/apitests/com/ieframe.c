@@ -13,11 +13,93 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_Internet),
+        {
+            {  -0x14,   &IID_IShellFolder2 },
+            {  -0x14,       &IID_IShellFolder },
+            {  -0x10,   &IID_IPersistFolder2 },
+            {  -0x10,       &IID_IPersistFolder },
+            {  -0x10,           &IID_IPersist },
+            {   -0xc,   &IID_IBrowserFrameOptions },
+            {    0x0,   &IID_IContextMenu },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IShellExtInit },
+        }
+    },
+    {
+        ID_NAME(CLSID_CUrlHistory),
+        {
+            {    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_CURLSearchHook),
         {
             {    0x0,   &IID_IURLSearchHook2 },
             {    0x0,       &IID_IURLSearchHook },
             {    0x0,           &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_InternetShortcut),
+        {
+            {   -0xc,   &IID_IDataObject },
+            {   -0x8,   &IID_IContextMenu2 },
+            {   -0x8,       &IID_IContextMenu },
+            {   -0x4,   &IID_IExtractIconA },
+            {    0x0,   &IID_IExtractIconW },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IPersistFile },
+            {    0x4,       &IID_IPersist },
+            {    0x8,   &IID_IPersistStream },
+            {    0xc,   &IID_IShellExtInit },
+            {   0x10,   &IID_IShellLinkA },
+            {   0x14,   &IID_IShellLinkW },
+            {   0x18,   &IID_IShellPropSheetExt },
+            {   0x20,   &IID_INewShortcutHookA },
+            {   0x24,   &IID_INewShortcutHookW },
+            {   0x30,   &IID_IQueryInfo },
+            {   0x38,   &IID_IObjectWithSite },
+            {   0x44,   &IID_IOleCommandTarget },
+            {   0x48,   &IID_IServiceProvider },
+        }
+    },
+    {
+        ID_NAME(CLSID_ShellUIHelper),
+        {
+            {    0x0,   &IID_IUnknown },
+            {    0xc,   &IID_IObjectWithSite },
+            {   0x10,   &IID_IObjectSafety },
+            {   0x14,   &IID_IShellUIHelper2 },
+            {   0x14,       &IID_IShellUIHelper },
+            {   0x14,           &IID_IDispatch },
+        }
+    },
+    {
+        ID_NAME(CLSID_ShellNameSpace),
+        {
+            {    0x0,   &IID_IShellNameSpace },
+            {    0x0,       &IID_IShellFavoritesNameSpace },
+            {    0x0,           &IID_IDispatch },
+            {    0x0,               &IID_IUnknown },
+            {    0x8,   &IID_IPersistStreamInit },
+            {   0x10,   &IID_IPersistPropertyBag },
+            {   0x1c,   &IID_IOleObject },
+            {   0x20,   &IID_IOleInPlaceActiveObject },
+            {   0x24,   &IID_IViewObjectEx },
+            {   0x24,       &IID_IViewObject2 },
+            {   0x24,           &IID_IViewObject },
+            {   0x28,   &IID_IOleInPlaceObjectWindowless },
+            {   0x28,       &IID_IOleInPlaceObject },
+            {   0x28,           &IID_IOleWindow },
+            {   0x3c,   &IID_IDropTarget },
+            {   0xb4,   &IID_IObjectWithSite },
+            {   0xbc,   &IID_INSCTree },
+            {   0xc4,   &IID_IShellBrowser },
+            {   0xc8,   &IID_IFolderFilterSite },
+            {   0xd0,   &IID_IServiceProvider },
+            {   0xd4,   &IID_INameSpaceTreeControl },
+            {   0xe4,   &IID_IWinEventHandler },
         }
     },
     {
@@ -33,6 +115,60 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IUnknown },
             { FARAWY,   &IID_IShellWindows },
             { FARAWY,   &IID_IDispatch },
+        }
+    },
+    {
+        ID_NAME(CLSID_WebBrowser),
+        {
+            {  -0x20,   &IID_IPersist },
+            {  -0x1c,   &IID_IOleObject },
+            {  -0x18,   &IID_IViewObject2 },
+            {  -0x18,       &IID_IViewObject },
+            {  -0x14,   &IID_IDataObject },
+            {  -0x10,   &IID_IOleInPlaceObject },
+            {  -0x10,       &IID_IOleWindow },
+            {   -0xc,   &IID_IOleInPlaceActiveObject },
+            {    0x0,   &IID_IUnknown },
+            {   0x98,   &IID_IPersistStream },
+            {   0x98,   &IID_IPersistStreamInit },
+            {   0x9c,   &IID_IPersistPropertyBag },
+            {  0x120,   &IID_IWebBrowser2 },
+            {  0x120,       &IID_IWebBrowserApp },
+            {  0x120,           &IID_IWebBrowser },
+            {  0x120,               &IID_IDispatch },
+            {  0x130,   &IID_IOleCommandTarget },
+            {  0x134,   &IID_IObjectSafety },
+            {  0x140,   &IID_IPersistStorage },
+            {  0x144,   &IID_IPersistHistory },
+            { FARAWY,   &IID_IShellService },
+            { FARAWY,   &IID_IServiceProvider },
+        }
+    },
+    {
+        ID_NAME(CLSID_WebBrowser_V1),
+        {
+            {  -0x20,   &IID_IPersist },
+            {  -0x1c,   &IID_IOleObject },
+            {  -0x18,   &IID_IViewObject2 },
+            {  -0x18,       &IID_IViewObject },
+            {  -0x14,   &IID_IDataObject },
+            {  -0x10,   &IID_IOleInPlaceObject },
+            {  -0x10,       &IID_IOleWindow },
+            {   -0xc,   &IID_IOleInPlaceActiveObject },
+            {    0x0,   &IID_IUnknown },
+            {   0x98,   &IID_IPersistStream },
+            {   0x98,   &IID_IPersistStreamInit },
+            {   0x9c,   &IID_IPersistPropertyBag },
+            {  0x120,   &IID_IWebBrowser2 },
+            {  0x120,       &IID_IWebBrowserApp },
+            {  0x120,           &IID_IWebBrowser },
+            {  0x120,               &IID_IDispatch },
+            {  0x130,   &IID_IOleCommandTarget },
+            {  0x134,   &IID_IObjectSafety },
+            {  0x140,   &IID_IPersistStorage },
+            {  0x144,   &IID_IPersistHistory },
+            { FARAWY,   &IID_IShellService },
+            { FARAWY,   &IID_IServiceProvider },
         }
     },
 };
