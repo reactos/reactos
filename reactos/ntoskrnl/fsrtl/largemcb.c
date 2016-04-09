@@ -198,9 +198,6 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     /* finally insert the resulting run */
     RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Node, sizeof(Node), &NewElement);
     ASSERT(NewElement);
-    Node.RunStartVbn.QuadPart = Vbn;
-    Node.RunEndVbn.QuadPart = Vbn + SectorCount;
-    Node.StartingLbn.QuadPart = Lbn;
 
     // NB: Two consecutive runs can only be merged, if actual LBNs also match!
 
