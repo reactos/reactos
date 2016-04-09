@@ -241,6 +241,9 @@ static void WINAPI IMalloc_fnFree(IMalloc *iface, void *pv)
 
 	TRACE("(%p)\n",pv);
 
+	if(!pv)
+	    return;
+
 	if(Malloc32.pSpy) {
             EnterCriticalSection(&IMalloc32_SpyCS);
             fSpyed = RemoveMemoryLocation(pv);

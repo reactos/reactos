@@ -2936,6 +2936,140 @@ static void test_CoGetApartmentType(void)
     CoUninitialize();
 }
 
+
+static HRESULT WINAPI testspy_QI(IMallocSpy *iface, REFIID riid, void **obj)
+{
+    if (IsEqualIID(riid, &IID_IMallocSpy) || IsEqualIID(riid, &IID_IUnknown))
+    {
+        *obj = iface;
+        IMallocSpy_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI testspy_AddRef(IMallocSpy *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI testspy_Release(IMallocSpy *iface)
+{
+    return 1;
+}
+
+static SIZE_T WINAPI testspy_PreAlloc(IMallocSpy *iface, SIZE_T cb)
+{
+    ok(0, "unexpected call\n");
+    return 0;
+}
+
+static void* WINAPI testspy_PostAlloc(IMallocSpy *iface, void *ptr)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static void* WINAPI testspy_PreFree(IMallocSpy *iface, void *ptr, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static void WINAPI testspy_PostFree(IMallocSpy *iface, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+}
+
+static SIZE_T WINAPI testspy_PreRealloc(IMallocSpy *iface, void *ptr, SIZE_T cb, void **newptr, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return 0;
+}
+
+static void* WINAPI testspy_PostRealloc(IMallocSpy *iface, void *ptr, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static void* WINAPI testspy_PreGetSize(IMallocSpy *iface, void *ptr, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static SIZE_T WINAPI testspy_PostGetSize(IMallocSpy *iface, SIZE_T actual, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return 0;
+}
+
+static void* WINAPI testspy_PreDidAlloc(IMallocSpy *iface, void *ptr, BOOL spyed)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static int WINAPI testspy_PostDidAlloc(IMallocSpy *iface, void *ptr, BOOL spyed, int actual)
+{
+    ok(0, "unexpected call\n");
+    return 0;
+}
+
+static void WINAPI testspy_PreHeapMinimize(IMallocSpy *iface)
+{
+    ok(0, "unexpected call\n");
+}
+
+static void WINAPI testspy_PostHeapMinimize(IMallocSpy *iface)
+{
+    ok(0, "unexpected call\n");
+}
+
+static const IMallocSpyVtbl testspyvtbl =
+{
+    testspy_QI,
+    testspy_AddRef,
+    testspy_Release,
+    testspy_PreAlloc,
+    testspy_PostAlloc,
+    testspy_PreFree,
+    testspy_PostFree,
+    testspy_PreRealloc,
+    testspy_PostRealloc,
+    testspy_PreGetSize,
+    testspy_PostGetSize,
+    testspy_PreDidAlloc,
+    testspy_PostDidAlloc,
+    testspy_PreHeapMinimize,
+    testspy_PostHeapMinimize
+};
+
+static IMallocSpy testspy = { &testspyvtbl };
+
+static void test_IMallocSpy(void)
+{
+    IMalloc *imalloc;
+    HRESULT hr;
+
+    hr = CoRegisterMallocSpy(&testspy);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    imalloc = NULL;
+    hr = CoGetMalloc(MEMCTX_TASK, &imalloc);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(imalloc != NULL, "got %p\n", imalloc);
+
+    IMalloc_Free(imalloc, NULL);
+
+    IMalloc_Release(imalloc);
+
+    hr = CoRevokeMallocSpy();
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+}
+
 static void init_funcs(void)
 {
     HMODULE hOle32 = GetModuleHandleA("ole32");
@@ -3003,4 +3137,5 @@ START_TEST(compobj)
     test_CoGetMalloc();
     test_OleRegGetUserType();
     test_CoGetApartmentType();
+    test_IMallocSpy();
 }
