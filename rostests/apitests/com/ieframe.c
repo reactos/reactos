@@ -15,6 +15,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_Internet),
         {
+            {  -0x18,   &IID_IObjectWithBackReferences },
             {  -0x14,   &IID_IShellFolder2 },
             {  -0x14,       &IID_IShellFolder },
             {  -0x10,   &IID_IPersistFolder2 },
@@ -56,12 +57,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x10,   &IID_IShellLinkA },
             {   0x14,   &IID_IShellLinkW },
             {   0x18,   &IID_IShellPropSheetExt },
+            {   0x1c,   &IID_IPropertySetStorage },
             {   0x20,   &IID_INewShortcutHookA },
             {   0x24,   &IID_INewShortcutHookW },
             {   0x30,   &IID_IQueryInfo },
             {   0x38,   &IID_IObjectWithSite },
             {   0x44,   &IID_IOleCommandTarget },
             {   0x48,   &IID_IServiceProvider },
+            {   0x4c,   &IID_IPropertyStore },
         }
     },
     {
@@ -73,6 +76,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x14,   &IID_IShellUIHelper2 },
             {   0x14,       &IID_IShellUIHelper },
             {   0x14,           &IID_IDispatch },
+            {   0x18,   &IID_IDispatchEx },
         }
     },
     {
@@ -82,8 +86,12 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IShellFavoritesNameSpace },
             {    0x0,           &IID_IDispatch },
             {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IProvideClassInfo2 },
+            {    0x4,       &IID_IProvideClassInfo },
             {    0x8,   &IID_IPersistStreamInit },
             {   0x10,   &IID_IPersistPropertyBag },
+            {   0x14,   &IID_IQuickActivate },
+            {   0x18,   &IID_IOleControl },
             {   0x1c,   &IID_IOleObject },
             {   0x20,   &IID_IOleInPlaceActiveObject },
             {   0x24,   &IID_IViewObjectEx },
@@ -92,6 +100,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x28,   &IID_IOleInPlaceObjectWindowless },
             {   0x28,       &IID_IOleInPlaceObject },
             {   0x28,           &IID_IOleWindow },
+            {   0x38,   &IID_IConnectionPointContainer },
             {   0x3c,   &IID_IDropTarget },
             {   0xb4,   &IID_IObjectWithSite },
             {   0xbc,   &IID_INSCTree },
@@ -115,6 +124,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IUnknown },
             { FARAWY,   &IID_IShellWindows },
             { FARAWY,   &IID_IDispatch },
+            { FARAWY,   &IID_IConnectionPointContainer },
         }
     },
     {
@@ -132,6 +142,10 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x98,   &IID_IPersistStream },
             {   0x98,   &IID_IPersistStreamInit },
             {   0x9c,   &IID_IPersistPropertyBag },
+            {   0xa0,   &IID_IOleControl },
+            {   0xa8,   &IID_IProvideClassInfo2 },
+            {   0xa8,       &IID_IProvideClassInfo },
+            {   0xac,   &IID_IConnectionPointContainer },
             {  0x120,   &IID_IWebBrowser2 },
             {  0x120,       &IID_IWebBrowserApp },
             {  0x120,           &IID_IWebBrowser },
@@ -159,6 +173,10 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x98,   &IID_IPersistStream },
             {   0x98,   &IID_IPersistStreamInit },
             {   0x9c,   &IID_IPersistPropertyBag },
+            {   0xa0,   &IID_IOleControl },
+            {   0xa8,   &IID_IProvideClassInfo2 },
+            {   0xa8,       &IID_IProvideClassInfo },
+            {   0xac,   &IID_IConnectionPointContainer },
             {  0x120,   &IID_IWebBrowser2 },
             {  0x120,       &IID_IWebBrowserApp },
             {  0x120,           &IID_IWebBrowser },

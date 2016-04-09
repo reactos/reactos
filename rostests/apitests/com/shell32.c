@@ -60,6 +60,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x70,   &IID_IDeskMovr },
             {   0x74,   &IID_IOleObject },
             {   0x78,   &IID_IPersistPropertyBag },
+            {   0x7c,   &IID_IOleControl },
             {   0x80,   &IID_IOleInPlaceActiveObject },
             {   0x84,   &IID_IViewObjectEx },
             {   0x84,       &IID_IViewObject2 },
@@ -67,6 +68,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x88,   &IID_IOleWindow },
             {   0x88,       &IID_IOleInPlaceObject },
             {   0x88,           &IID_IOleInPlaceObjectWindowless },
+            {   0x8c,   &IID_IQuickActivate },
         }
     },
     {
@@ -96,7 +98,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0xc,       &IID_IDockingWindow },
             {    0xc,           &IID_IOleWindow },
             {   0x10,   &IID_IInputObject },
+            {   0x14,   &IID_IOleClientSite },
             {   0x18,   &IID_IOleInPlaceSite },
+            {   0x1c,   &IID_IOleControlSite },
         }
     },
     {
@@ -111,6 +115,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x4,       &IID_IPersistFolder },
             {    0x4,           &IID_IPersist },
             {    0x8,   &IID_IObjectSafety },
+            {   0x10,   &IID_IParentAndItem },
         }
     },
     {
@@ -254,6 +259,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0xc,           &IID_IPersist },
             {   0x10,   &IID_IPersistPropertyBag },
             {   0x14,   &IID_IShellIconOverlay },
+            {   0x18,   &IID_ICompositeFolder },
+            {   0x1c,   &IID_IItemNameLimits },
         }
     },
     {
@@ -296,6 +303,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { FARAWY,   &IID_IStorage },
             { FARAWY,   &IID_IContextMenuCB },
             { FARAWY,   &IID_IOleCommandTarget },
+            { FARAWY,   &IID_IItemNameLimits },
+            { FARAWY,   &IID_IPropertySetStorage },
         }
     },
     {
@@ -438,6 +447,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0xc,   &IID_IShellIcon },
             {   0x14,   &IID_IContextMenuCB },
             {   0x18,   &IID_ITranslateShellChangeNotify },
+            {   0x1c,   &IID_IItemNameLimits },
             {   0x20,   &IID_IOleCommandTarget },
             { FARAWY,   &IID_IShellIconOverlay },
             { FARAWY,   &IID_IShellFolder2 },
@@ -458,6 +468,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x18,               &IID_IPersist },
             {   0x18,               &IID_IPersistFreeThreadedObject },
             {   0x1c,   &IID_IStorage },
+            {   0x24,   &IID_IPropertySetStorage },
+            {   0x28,   &IID_IItemNameLimits },
             {   0x2c,   &IID_IContextMenuCB },
             {   0x34,   &IID_IOleCommandTarget },
         }
@@ -482,6 +494,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x8,   &IID_IServiceProvider },
             {    0xc,   &IID_IObjectSafety },
             {   0x14,   &IID_IObjectWithSite },
+            {   0x1c,   &IID_IConnectionPointContainer },
         }
     },
     {
@@ -490,9 +503,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IFolderViewOC },
             {    0x0,       &IID_IDispatch },
             {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IProvideClassInfo2 },
+            {    0x4,       &IID_IProvideClassInfo },
             {    0x8,   &IID_IObjectSafety },
+            {   0x10,   &IID_IConnectionPointContainer },
             {   0x88,   &IID_IPersistStreamInit },
             {   0x88,       &IID_IPersist },
+            {   0x8c,   &IID_IOleControl },
             {   0x90,   &IID_IOleObject },
             {   0x94,   &IID_IOleInPlaceActiveObject },
             {   0x98,   &IID_IOleInPlaceObjectWindowless },
@@ -506,6 +523,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IShellItem },
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IPersistIDList },
+            {    0x8,   &IID_IParentAndItem },
         }
     },
     {
@@ -529,7 +547,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x2c,       &IID_IExtractImage },
             {   0x30,   &IID_IPersistPropertyBag },
             {   0x34,   &IID_IServiceProvider },
+            {   0x38,   &IID_IFilter },
             {   0x3c,   &IID_IObjectWithSite },
+            {   0x44,   &IID_ICustomizeInfoTip },
         }
     },
 #if 0 // Apparently we can only get this through Folder.Items().GetLink
