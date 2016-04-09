@@ -41,7 +41,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
+CdfsReadFile(PCDFS_IRP_CONTEXT IrpContext,
              PFILE_OBJECT FileObject,
              PUCHAR Buffer,
              ULONG Length,
@@ -53,6 +53,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
              */
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_EXTENSION DeviceExt;
     PFCB Fcb;
     ULONG ToRead = Length;
 
@@ -63,6 +64,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (Length == 0)
         return(STATUS_SUCCESS);
 
+    DeviceExt = IrpContext->DeviceObject->DeviceExtension;
     Fcb = (PFCB)FileObject->FsContext;
 
     if (ReadOffset >= Fcb->Entry.DataLengthL)
@@ -70,6 +72,15 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         
     if (ReadOffset + Length > Fcb->Entry.DataLengthL)
         ToRead = Fcb->Entry.DataLengthL - ReadOffset;
+
+    if (!(IrpFlags & IRP_PAGING_IO) &&
+        FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+    {
+        if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
+        {
+            return STATUS_FILE_LOCK_CONFLICT;
+        }
+    }
 
     DPRINT("Reading %u bytes at %u\n", Length, ReadOffset);
 
@@ -179,8 +190,6 @@ CdfsRead(
     PCDFS_IRP_CONTEXT IrpContext)
 {
     PIRP Irp;
-    PDEVICE_OBJECT DeviceObject;
-    PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     PVOID Buffer = NULL;
@@ -194,17 +203,15 @@ CdfsRead(
     ASSERT(IrpContext);
 
     Irp = IrpContext->Irp;
-    DeviceObject = IrpContext->DeviceObject;
     Stack = IrpContext->Stack;
 
-    DeviceExt = DeviceObject->DeviceExtension;
     FileObject = Stack->FileObject;
 
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
     if (ReadLength) Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-    Status = CdfsReadFile(DeviceExt,
+    Status = CdfsReadFile(IrpContext,
         FileObject,
         Buffer,
         ReadLength,

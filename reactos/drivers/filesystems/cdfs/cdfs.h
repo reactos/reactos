@@ -220,6 +220,7 @@ typedef struct _FCB
 
   ERESOURCE  NameListResource;
   LIST_ENTRY ShortNameList;
+  FILE_LOCK FileLock;
 } FCB, *PFCB;
 
 

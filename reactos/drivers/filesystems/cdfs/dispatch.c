@@ -55,6 +55,34 @@ CdfsQueueRequest(PCDFS_IRP_CONTEXT IrpContext)
 
 static
 NTSTATUS
+CdfsLockControl(
+    IN PCDFS_IRP_CONTEXT IrpContext)
+{
+    PFCB Fcb;
+    NTSTATUS Status;
+
+    DPRINT("CdfsLockControl(IrpContext %p)\n", IrpContext);
+
+    if (IrpContext->DeviceObject == CdfsGlobalData->DeviceObject)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    Fcb = IrpContext->FileObject->FsContext;
+    if (CdfsFCBIsDirectory(Fcb))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
+    Status = FsRtlProcessFileLock(&Fcb->FileLock,
+                                  IrpContext->Irp,
+                                  NULL);
+    return Status;
+}
+
+static
+NTSTATUS
 CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
 {
     PIRP Irp = IrpContext->Irp;
@@ -114,6 +142,10 @@ CdfsDispatch(PCDFS_IRP_CONTEXT IrpContext)
 
         case IRP_MJ_FILE_SYSTEM_CONTROL:
             Status = CdfsFileSystemControl(IrpContext);
+            break;
+
+        case IRP_MJ_LOCK_CONTROL:
+            Status = CdfsLockControl(IrpContext);
             break;
     }
 

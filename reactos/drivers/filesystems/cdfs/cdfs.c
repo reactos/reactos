@@ -96,6 +96,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = CdfsFsdDispatch;
 
     CdfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
     CdfsGlobalData->FastIoDispatch.FastIoCheckIfPossible = CdfsFastIoCheckIfPossible;
