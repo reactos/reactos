@@ -64,6 +64,13 @@ void SdbpFree(LPVOID mem);
 
 #endif
 
+
+/* layer.c */
+BOOL WINAPI AllowPermLayer(PCWSTR path);
+BOOL WINAPI SdbGetPermLayerKeys(PCWSTR wszPath, PWSTR pwszLayers, PDWORD pdwBytes, DWORD dwFlags);
+BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

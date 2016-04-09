@@ -1,4 +1,5 @@
 
+add_subdirectory(acppage)
 add_subdirectory(deskadp)
 add_subdirectory(deskmon)
 add_subdirectory(devcpux)
