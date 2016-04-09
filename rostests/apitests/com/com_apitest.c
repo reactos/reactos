@@ -73,6 +73,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IBrowserService4),            TRUE },
     { ID_NAME(IID_ICDBurn)                           },
     { ID_NAME(IID_ICDBurnExt)                        },
+    { ID_NAME(IID_ICallFactory),                TRUE },
     { ID_NAME(IID_IClassFactory)                     },
     { ID_NAME(IID_IClassFactory2)                    },
     { ID_NAME(IID_IClassFactory3),              TRUE },
@@ -150,6 +151,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IFolderViewHost),             TRUE },
     { ID_NAME(IID_IFolderViewOC)                     },
     { ID_NAME(IID_IFolderViewSettings)               },
+    { ID_NAME(IID_IForegroundTransfer),         TRUE },
     { ID_NAME(IID_IGetNameSpaceExtensionPointer),TRUE},
     { ID_NAME(IID_IGlobalFolderSettings),       TRUE },
     { ID_NAME(IID_IHWEventHandler)                   },
@@ -168,8 +170,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IMoniker)                          },
     { ID_NAME(IID_IMultiMonitorDockingSite),    TRUE },
     { ID_NAME(IID_IMultiQI),                    TRUE },
-    { ID_NAME(IID_INamespaceProxy),             TRUE },
     { ID_NAME(IID_INameSpaceTreeControl),       TRUE },
+    { ID_NAME(IID_INamespaceProxy),             TRUE },
     { ID_NAME(IID_INamespaceWalk)                    },
     { ID_NAME(IID_INamespaceWalkCB)                  },
     { ID_NAME(IID_INamespaceWalkCB2)                 },
@@ -232,6 +234,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IRegTreeOptions),             TRUE },
     { ID_NAME(IID_IRemoteComputer)                   },
     { ID_NAME(IID_IResolveShellLink)                 },
+    { ID_NAME(IID_IRpcOptions),                 TRUE },
     { ID_NAME(IID_IRunnableObject)                   },
     { ID_NAME(IID_IScriptErrorList)                  },
     { ID_NAME(IID_ISearch)                           },
@@ -455,7 +458,7 @@ TestModuleInterfaces(
                 continue;
             offset = GetInterfaceOffset(pUnk, iface->iid);
 #ifdef GENERATE_TABLE_ENTRIES
-            ok(offset == INTF_NOT_EXPOSED, "%s: { %s0x%x,   &%s },\n", class->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, iface->name);
+            ok(offset == INTF_NOT_EXPOSED, "%s: { %s0x%lx,   &%s },\n", class->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, iface->name);
 #else
             ok(offset == INTF_NOT_EXPOSED, "%s exposes %s (offset %ld), but shouldn't\n", class->name, iface->name, offset);
 #endif
