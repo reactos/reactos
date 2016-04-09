@@ -21,6 +21,7 @@
 #include <objbase.h>
 #include <objsafe.h>
 #include <oleacc.h>
+#include <oledb.h>
 #include <oaidl.h>
 #include <netcon.h>
 #include <netcfgx.h>
@@ -35,6 +36,8 @@
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <shlwapi.h>
+#include <commoncontrols.h>
+#include <activscp.h>
 #include <ndk/rtlfuncs.h>
 #include <initguid.h>
 

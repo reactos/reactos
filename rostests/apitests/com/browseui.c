@@ -207,6 +207,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   -0xc,   &IID_IDockingWindow },
             {   -0x8,   &IID_IObjectWithSite },
             {   -0x4,   &IID_IExplorerToolbar },
+            {    0x0,   &DIID_DWebBrowserEvents },
             {    0x0,   &IID_IDispatch },
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IPersistStreamInit },
