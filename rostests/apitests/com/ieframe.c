@@ -13,6 +13,25 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_IE_SearchBand),
+        {
+            {  -0x30,   &IID_IObjectWithSite },
+            {  -0x28,   &IID_IDeskBand },
+            {  -0x28,       &IID_IDockingWindow },
+            {  -0x28,           &IID_IOleWindow },
+            {  -0x24,   &IID_IInputObject },
+            {  -0x20,   &IID_IPersistStream },
+            {  -0x20,       &IID_IPersist },
+            {  -0x1c,   &IID_IOleCommandTarget },
+            {  -0x18,   &IID_IServiceProvider },
+            {    0x0,   &IID_IContextMenu },
+            {    0x0,       &IID_IUnknown },
+            {    0x8,   &IID_IDispatch },
+            {   0x10,   &IID_IPersistPropertyBag },
+            {   0x8c,   &IID_IBandNavigate },
+        }
+    },
+    {
         ID_NAME(CLSID_Internet),
         {
             {  -0x18,   &IID_IObjectWithBackReferences },

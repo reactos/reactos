@@ -263,6 +263,27 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_SH_SearchBand),
+        {
+            {    0x0,   &IID_IUnknown },
+            {   0x74,   &IID_IOleContainer },
+            {   0x78,   &IID_IOleInPlaceFrame },
+            //{   0x78,       &IID_IOleInPlaceUIWindow },
+            {   0x78,           &IID_IOleWindow },
+            {   0xb0,   &IID_IDeskBand },
+            {   0xb0,       &IID_IDockingWindow },
+            {   0xb4,   &IID_IInputObject },
+            {   0xb8,   &IID_IObjectWithSite },
+            {   0xbc,   &IID_IContextMenu },
+            {   0xc0,   &IID_IServiceProvider },
+            {   0xc8,   &IID_ISearchBar },
+            {   0xcc,   &IID_IFileSearchBand },
+            {   0xcc,       &IID_IDispatch },
+            {   0xd0,   &IID_IBandNavigate },
+            {   0xd8,   &IID_IPersist },
+        }
+    },
+    {
         ID_NAME(CLSID_SharedTaskScheduler),
         {
             {    0x0,   &IID_IShellTaskScheduler },

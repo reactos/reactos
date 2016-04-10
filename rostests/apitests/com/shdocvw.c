@@ -89,6 +89,45 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_SH_FavBand),
+        {
+            {  -0x30,   &IID_IDeskBand },
+            {  -0x30,       &IID_IDockingWindow },
+            {  -0x30,           &IID_IOleWindow },
+            {  -0x2c,   &IID_IObjectWithSite },
+            {  -0x24,   &IID_IInputObject },
+            {  -0x20,   &IID_IPersistStream },
+            {  -0x20,       &IID_IPersist },
+            {  -0x1c,   &IID_IOleCommandTarget },
+            {  -0x18,   &IID_IServiceProvider },
+            {    0x0,   &IID_IContextMenu },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IBandNavigate },
+            {    0x8,   &IID_IWinEventHandler },
+            {    0xc,   &IID_INamespaceProxy },
+        }
+    },
+    {
+        ID_NAME(CLSID_SH_HistBand),
+        {
+            {  -0xb4,   &IID_IDeskBand },
+            {  -0xb4,       &IID_IDockingWindow },
+            {  -0xb4,           &IID_IOleWindow },
+            {  -0xb0,   &IID_IObjectWithSite },
+            {  -0xa8,   &IID_IInputObject },
+            {  -0xa4,   &IID_IPersistStream },
+            {  -0xa4,       &IID_IPersist },
+            {  -0xa0,   &IID_IOleCommandTarget },
+            {  -0x9c,   &IID_IServiceProvider },
+            {  -0x84,   &IID_IContextMenu },
+            {  -0x80,   &IID_IBandNavigate },
+            {  -0x7c,   &IID_IWinEventHandler },
+            {  -0x78,   &IID_INamespaceProxy },
+            {    0x0,   &IID_IShellFolderSearchableCallback },
+            {    0x0,       &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_SearchAssistantOC),
         {
             {    0x0,   &IID_ISearchAssistantOC3 },
@@ -112,6 +151,16 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x34,   &IID_IObjectSafety },
             {   0x3c,   &IID_IOleCommandTarget },
             {   0x40,   &IID_IObjectWithSite },
+        }
+    },
+    {
+        ID_NAME(CLSID_SearchBand),
+        {
+            {    0x0,   &IID_IContextMenu },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IShellExtInit },
+            {    0x8,   &IID_IPersistPropertyBag },
+            {    0x8,       &IID_IPersist },
         }
     },
     {

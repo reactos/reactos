@@ -6,6 +6,7 @@ list(APPEND SOURCE
     ieframe.c
     netcfgx.c
     netshell.c
+    ole32.c
     shdocvw.c
     shell32.c
     com_apitest.c
