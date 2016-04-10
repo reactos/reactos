@@ -958,7 +958,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTDEV_UNIQUE_ID UniqueId, NewUniqueId;
     PSAVED_LINK_INFORMATION SavedLinkInformation;
     PDEVICE_INFORMATION DeviceInformation, CurrentDevice;
-    WCHAR CSymLinkBuffer[MAX_PATH], LinkTargetBuffer[MAX_PATH];
+    WCHAR CSymLinkBuffer[RTL_NUMBER_OF(Cunc)], LinkTargetBuffer[MAX_PATH];
     UNICODE_STRING TargetDeviceName, SuggestedLinkName, DeviceName, VolumeName, DriveLetter, LinkTarget, CSymLink;
     BOOLEAN HasGuid, HasGptDriveLetter, Valid, UseOnlyIfThereAreNoOtherLinks, IsDrvLetter, IsOff, IsVolumeName, LinkError;
 
@@ -1119,7 +1119,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
 
             InitializeObjectAttributes(&ObjectAttributes,
                                        &CSymLink,
-                                       OBJ_CASE_INSENSITIVE,
+                                       OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                        NULL,
                                        NULL);
 
