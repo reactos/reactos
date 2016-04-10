@@ -4771,6 +4771,9 @@ typedef struct {
     _In_ int i,
     _In_ void *pitem);
 
+  #define DSA_GetItemCount(hdsa) (*(int *) (hdsa))
+  #define DSA_AppendItem(hdsa, pitem) DSA_InsertItem (hdsa, DA_LAST, pitem)
+
   typedef struct _DPA *HDPA;
 
   WINCOMMCTRLAPI HDPA WINAPI DPA_Create(int cItemGrow);
