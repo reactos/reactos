@@ -276,6 +276,30 @@ static VOID FsRtlLargeMcbTest()
     ok(SectorCount == 1536, "Expected SectorCount 1536, got: %I64d\n", SectorCount);
 
     FsRtlUninitializeLargeMcb(&LargeMcb);
+
+    FsRtlInitializeLargeMcb(&LargeMcb, PagedPool);
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 0, "Expected 0 runs, got: %lu\n", NbRuns);
+
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 0, 1, 1024) == TRUE, "expected TRUE, got FALSE\n");
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 1, "Expected 1 runs, got: %lu\n", NbRuns);
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 0, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 0, "Expected Vbn 0, got: %I64d\n", Vbn);
+    ok(Lbn == 1, "Expected Lbn 1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+    DumpAllRuns(&LargeMcb);
+
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 0, 2, 1024) == FALSE, "expected FALSE, got TRUE\n");
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 1, "Expected 1 runs, got: %lu\n", NbRuns);
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 0, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 0, "Expected Vbn 0, got: %I64d\n", Vbn);
+    ok(Lbn == 1, "Expected Lbn 1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+    DumpAllRuns(&LargeMcb);
+
+    FsRtlUninitializeLargeMcb(&LargeMcb);
 }
 
 static VOID FsRtlLargeMcbTestsExt2()
