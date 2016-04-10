@@ -79,6 +79,8 @@ END
 
 #include <reactos/manifest_dll.rc>
 
+1 TYPELIB "shell32_shldisp.tlb"
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.

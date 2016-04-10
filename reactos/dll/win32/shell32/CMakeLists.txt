@@ -91,6 +91,10 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
+
+add_typelib(shell32_shldisp.idl)
+set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
+
 set_module_type(shell32 win32dll UNICODE)
 target_link_libraries(shell32 shellmenu shelldesktop atlnew wine uuid recyclebin)
 add_delay_importlibs(shell32 uxtheme ole32 oleaut32 userenv version fmifs)

@@ -350,7 +350,7 @@ STDAPI DllRegisterServer()
 {
     HRESULT hr;
 
-    hr = gModule.DllRegisterServer(FALSE);
+    hr = gModule.DllRegisterServer(TRUE);
     if (FAILED(hr))
         return hr;
 
@@ -372,7 +372,7 @@ STDAPI DllUnregisterServer()
 {
     HRESULT hr;
 
-    hr = gModule.DllUnregisterServer(FALSE);
+    hr = gModule.DllUnregisterServer(TRUE);
     if (FAILED(hr))
         return hr;
 
