@@ -171,7 +171,8 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     NeedleRun.RunEndVbn.QuadPart = NeedleRun.RunStartVbn.QuadPart + 1;
     NeedleRun.StartingLbn.QuadPart = ~0ULL;
     Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
-    if ((LowerRun = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &NeedleRun)))
+    if ((LowerRun = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &NeedleRun)) &&
+        (LowerRun->StartingLbn.QuadPart < Node.StartingLbn.QuadPart))
     {
         ASSERT(LowerRun->RunEndVbn.QuadPart == Node.RunStartVbn.QuadPart);
         Node.RunStartVbn.QuadPart = LowerRun->RunStartVbn.QuadPart;
@@ -185,7 +186,8 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     NeedleRun.RunStartVbn.QuadPart = Node.RunEndVbn.QuadPart;
     NeedleRun.RunEndVbn.QuadPart = NeedleRun.RunStartVbn.QuadPart + 1;
     Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
-    if ((HigherRun = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &NeedleRun)))
+    if ((HigherRun = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &NeedleRun)) &&
+        (Node.StartingLbn.QuadPart <= HigherRun->StartingLbn.QuadPart))
     {
         ASSERT(HigherRun->RunStartVbn.QuadPart == Node.RunEndVbn.QuadPart);
         Node.RunEndVbn.QuadPart = HigherRun->RunEndVbn.QuadPart;
