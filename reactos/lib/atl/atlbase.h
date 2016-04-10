@@ -24,6 +24,7 @@
 #include "statreg.h"
 #include "atlcomcli.h"
 #include "atlalloc.h"
+#include "comcat.h"
 
 #ifdef _MSC_VER
 // It is common to use this in ATL constructors. They only store this for later use, so the usage is safe.
@@ -63,6 +64,18 @@ class CAtlComModule;
 __declspec(selectany) CAtlModule *_pAtlModule = NULL;
 __declspec(selectany) CComModule *_pModule = NULL;
 extern CAtlComModule _AtlComModule;
+
+
+struct _ATL_CATMAP_ENTRY
+{
+   int iType;
+   const GUID* pcatid;
+};
+
+#define _ATL_CATMAP_ENTRY_END 0
+#define _ATL_CATMAP_ENTRY_IMPLEMENTED 1
+#define _ATL_CATMAP_ENTRY_REQUIRED 2
+
 
 typedef HRESULT (WINAPI _ATL_CREATORFUNC)(void *pv, REFIID riid, LPVOID *ppv);
 typedef LPCTSTR (WINAPI _ATL_DESCRIPTIONFUNC)();
@@ -178,6 +191,10 @@ HRESULT __stdcall AtlInternalQueryInterface(void *pThis, const _ATL_INTMAP_ENTRY
 void __stdcall AtlWinModuleAddCreateWndData(_ATL_WIN_MODULE *pWinModule, _AtlCreateWndData *pData, void *pObject);
 void *__stdcall AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinModule);
 HRESULT __stdcall AtlComModuleGetClassObject(_ATL_COM_MODULE *pComModule, REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+
+HRESULT __stdcall AtlComModuleRegisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
+HRESULT __stdcall AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
+
 
 template<class TLock>
 class CComCritSecLock
@@ -516,6 +533,10 @@ class CAtlModuleT : public CAtlModule
 {
 public:
 
+    HRESULT RegisterServer(BOOL bRegTypeLib = FALSE, const CLSID *pCLSID = NULL);
+    HRESULT UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID = NULL);
+
+
     virtual HRESULT AddCommonRGSReplacements(IRegistrarBase *pRegistrar)
     {
         return pRegistrar->AddReplacement(L"APPID", T::GetAppId());
@@ -549,6 +570,17 @@ public:
         Term();
     }
 
+    HRESULT RegisterServer(BOOL bRegTypeLib = FALSE, const CLSID *pCLSID = NULL)
+    {
+        return AtlComModuleRegisterServer(this, bRegTypeLib, pCLSID);
+    }
+
+    HRESULT UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID = NULL)
+    {
+        return AtlComModuleUnregisterServer(this, bUnRegTypeLib, pCLSID);
+    }
+
+
     void Term()
     {
         if (cbSize != 0)
@@ -560,6 +592,18 @@ public:
         }
     }
 };
+
+template <class T>
+HRESULT CAtlModuleT<T>::RegisterServer(BOOL bRegTypeLib, const CLSID *pCLSID)
+{
+    return _AtlComModule.RegisterServer(bRegTypeLib, pCLSID);
+}
+
+template <class T>
+HRESULT CAtlModuleT<T>::UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID)
+{
+    return _AtlComModule.UnregisterServer(bUnRegTypeLib, pCLSID);
+}
 
 template <class T>
 class CAtlDllModuleT : public CAtlModuleT<T>
@@ -730,6 +774,8 @@ public:
                 objectMapEntry++;
             }
         }
+        if (SUCCEEDED(hResult))
+            hResult = CAtlModuleT<CComModule>::RegisterServer(bRegTypeLib, pCLSID);
         return hResult;
     }
 
@@ -753,6 +799,9 @@ public:
                 objectMapEntry++;
             }
         }
+        if (SUCCEEDED(hResult))
+            hResult = CAtlModuleT<CComModule>::UnregisterServer(bUnRegTypeLib, pCLSID);
+
         return hResult;
     }
 
@@ -991,6 +1040,202 @@ inline void *__stdcall AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinMod
     }
     return result;
 }
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlLoadTypeLib(HINSTANCE inst, LPCOLESTR lpszIndex,
+        BSTR *pbstrPath, ITypeLib **ppTypeLib)
+{
+    size_t index_len = lpszIndex ? wcslen(lpszIndex) : 0;
+    CComHeapPtr<WCHAR> path;
+    path.Allocate(MAX_PATH + index_len + wcslen(L".tlb"));
+
+    if (!path)
+        return E_OUTOFMEMORY;
+
+    size_t path_len = GetModuleFileNameW(inst, path, MAX_PATH);
+    if (!path_len)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    if (index_len)
+        wcscat(path, lpszIndex);
+
+    CComPtr<ITypeLib> typelib;
+    HRESULT hResult = LoadTypeLib(path, &typelib);
+    if (FAILED(hResult))
+    {
+        WCHAR *ptr;
+        for (ptr = path+path_len-1; ptr > path && *ptr != '\\' && *ptr != '.'; ptr--)
+            ;
+        if (*ptr != '.')
+            ptr = (WCHAR*)path + path_len;
+        wcscpy(ptr, L".tlb");
+
+        hResult = LoadTypeLib(path, &typelib);
+    }
+
+    if (SUCCEEDED(hResult))
+    {
+        *pbstrPath = SysAllocString(path);
+        if (!*pbstrPath)
+        {
+            typelib.Release();
+            hResult = E_OUTOFMEMORY;
+        }
+    }
+
+    if (FAILED(hResult))
+        return hResult;
+
+    *ppTypeLib = typelib.Detach();
+    return S_OK;
+}
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlRegisterTypeLib(HINSTANCE inst, const WCHAR *index)
+{
+    CComBSTR path;
+    CComPtr<ITypeLib> typelib;
+    HRESULT hResult = AtlLoadTypeLib(inst, index, &path, &typelib);
+    if (FAILED(hResult))
+        return hResult;
+
+    return RegisterTypeLib(typelib, path, NULL); /* FIXME: pass help directory */
+}
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlRegisterClassCategoriesHelper(REFCLSID clsid, const _ATL_CATMAP_ENTRY *catmap, BOOL reg)
+{
+    if (!catmap)
+        return S_OK;
+
+    CComPtr<ICatRegister> catreg;
+
+    HRESULT hResult = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&catreg);
+    if (FAILED(hResult))
+        return hResult;
+
+    for (const _ATL_CATMAP_ENTRY *iter = catmap; iter->iType != _ATL_CATMAP_ENTRY_END; iter++)
+    {
+        CATID catid = *iter->pcatid;
+
+        if (iter->iType == _ATL_CATMAP_ENTRY_IMPLEMENTED)
+        {
+            if (reg)
+                hResult = catreg->RegisterClassImplCategories(clsid, 1, &catid);
+            else
+                hResult = catreg->UnRegisterClassImplCategories(clsid, 1, &catid);
+        }
+        else
+        {
+            if (reg)
+                hResult = catreg->RegisterClassReqCategories(clsid, 1, &catid);
+            else
+                hResult = catreg->UnRegisterClassReqCategories(clsid, 1, &catid);
+        }
+        if (FAILED(hResult))
+            return hResult;
+    }
+
+    if (!reg)
+    {
+        WCHAR reg_path[256] = L"CLSID\\";
+
+        StringFromGUID2(clsid, reg_path + wcslen(reg_path), 64);
+        wcscat(reg_path, L"\\");
+        WCHAR* ptr = reg_path + wcslen(reg_path);
+
+        wcscpy(ptr, L"Implemented Categories");
+        RegDeleteKeyW(HKEY_CLASSES_ROOT, reg_path);
+
+        wcscpy(ptr, L"Required Categories");
+        RegDeleteKeyW(HKEY_CLASSES_ROOT, reg_path);
+    }
+
+    return hResult;
+}
+
+
+// Adapted from dll/win32/atl80/atl80.c
+inline HRESULT __stdcall AtlComModuleRegisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid)
+{
+    HRESULT hResult = S_OK;
+
+    for (_ATL_OBJMAP_ENTRY ** iter = mod->m_ppAutoObjMapFirst; iter < mod->m_ppAutoObjMapLast; iter++)
+    {
+        if (!*iter)
+            continue;
+        _ATL_OBJMAP_ENTRY* entry = *iter;
+        if (clsid && !IsEqualCLSID(*entry->pclsid, *clsid))
+            continue;
+
+        hResult = entry->pfnUpdateRegistry(TRUE);
+        if (FAILED(hResult))
+            return hResult;
+
+        const _ATL_CATMAP_ENTRY *catmap = entry->pfnGetCategoryMap();
+        if (catmap)
+        {
+            hResult = AtlRegisterClassCategoriesHelper(*entry->pclsid, catmap, TRUE);
+            if (FAILED(hResult))
+                return hResult;
+        }
+    }
+
+    if (bRegTypeLib)
+    {
+        hResult = AtlRegisterTypeLib(mod->m_hInstTypeLib, NULL);
+    }
+
+    return hResult;
+}
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bUnRegTypeLib, const CLSID *clsid)
+{
+    HRESULT hResult = S_OK;
+
+    for (_ATL_OBJMAP_ENTRY **iter = mod->m_ppAutoObjMapFirst; iter < mod->m_ppAutoObjMapLast; iter++)
+    {
+        if (!*iter)
+            continue;
+        _ATL_OBJMAP_ENTRY* entry = *iter;
+        if (clsid && !IsEqualCLSID(*entry->pclsid, *clsid))
+            continue;
+
+        const _ATL_CATMAP_ENTRY *catmap = entry->pfnGetCategoryMap();
+        if (catmap)
+        {
+            hResult = AtlRegisterClassCategoriesHelper(*entry->pclsid, catmap, FALSE);
+            if (FAILED(hResult))
+                return hResult;
+        }
+
+        hResult = entry->pfnUpdateRegistry(FALSE);
+        if (FAILED(hResult))
+            return hResult;
+    }
+
+    if (bUnRegTypeLib)
+    {
+        CComPtr<ITypeLib> typelib;
+        TLIBATTR *attr;
+        CComBSTR path;
+
+        hResult = AtlLoadTypeLib(mod->m_hInstTypeLib, NULL, &path, &typelib);
+        if (FAILED(hResult))
+            return hResult;
+
+        hResult = typelib->GetLibAttr(&attr);
+        if (SUCCEEDED(hResult))
+        {
+            hResult = UnRegisterTypeLib(attr->guid, attr->wMajorVerNum, attr->wMinorVerNum, attr->lcid, attr->syskind);
+            typelib->ReleaseTLibAttr(attr);
+        }
+    }
+
+    return hResult;
+}
+
 
 }; // namespace ATL
 

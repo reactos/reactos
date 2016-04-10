@@ -31,6 +31,7 @@ add_importlibs(stobject
     advapi32
     winmm
     ole32
+    oleaut32
     shlwapi
     shell32
     comctl32
