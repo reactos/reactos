@@ -80,6 +80,7 @@ class CDefView :
         CComPtr<IShellFolder2>    m_pSF2Parent;
         CComPtr<IShellBrowser>    m_pShellBrowser;
         CComPtr<ICommDlgBrowser>  m_pCommDlgBrowser;
+        CComPtr<IShellFolderViewDual> m_pShellFolderViewDual;
         CListView                 m_ListView;
         HWND                      m_hWndParent;
         FOLDERSETTINGS            m_FolderSettings;
@@ -2301,6 +2302,12 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
                 if (FAILED(hr))
                     return hr;
                 *ppvOut = pcm;
+            }
+            else if (IsEqualIID(riid, IID_IDispatch))
+            {
+                if (m_pShellFolderViewDual == NULL)
+                    hr = CDefViewDual_Constructor(riid, (LPVOID*)&m_pShellFolderViewDual);
+                hr = m_pShellFolderViewDual->QueryInterface(riid, ppvOut);
             }
             break;
 
