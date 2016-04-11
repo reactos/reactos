@@ -24,22 +24,17 @@
 class CFolderItemVerb:
     public CComCoClass<CFolderItemVerb>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public FolderItemVerb
+    public IDispatchImpl<FolderItemVerb, &IID_FolderItemVerb>
 {
 private:
+    CComPtr<IContextMenu> m_contextmenu;
+    CComBSTR m_name;
 
 public:
     CFolderItemVerb();
     ~CFolderItemVerb();
 
-    //void Init(LPITEMIDLIST idlist);
-
-
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    void Init(IContextMenu* menu, BSTR name);
 
     // *** FolderItemVerb methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
@@ -61,22 +56,18 @@ END_COM_MAP()
 class CFolderItemVerbs:
     public CComCoClass<CFolderItemVerbs>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public FolderItemVerbs
+    public IDispatchImpl<FolderItemVerbs, &IID_FolderItemVerbs>
 {
 private:
+    CComPtr<IContextMenu> m_contextmenu;
+    HMENU m_menu;
+    int m_count;
 
 public:
     CFolderItemVerbs();
-    ~CFolderItemVerbs();
+    virtual ~CFolderItemVerbs();
 
-    //void Init(LPITEMIDLIST idlist);
-
-
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    HRESULT Init(LPITEMIDLIST idlist);
 
     // *** FolderItemVerbs methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Count(LONG *plCount);

@@ -880,17 +880,8 @@ START_TEST(shelldispatch)
     init_function_pointers();
     test_namespace();
     test_service();
-#ifdef __REACTOS__
-    if (!winetest_interactive)
-        skip("ROSTESTS-209: Skipping test_ShellFolderViewDual() and test_ShellWindows().\n");
-    else
-    {
-#endif
     test_ShellFolderViewDual();
     test_ShellWindows();
-#ifdef __REACTOS__
-    }
-#endif
     test_ParseName();
     test_Verbs();
 

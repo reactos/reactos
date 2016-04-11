@@ -36,32 +36,6 @@ void CFolderItem::Init(LPITEMIDLIST idlist)
     m_idlist.Attach(idlist);
 }
 
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CFolderItem::GetTypeInfoCount(UINT *pctinfo)
-{
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItem::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItem::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItem::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
-}
-
 // *** FolderItem methods ***
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Application(IDispatch **ppid)
 {
@@ -165,9 +139,15 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Type(BSTR *pbs)
 
 HRESULT STDMETHODCALLTYPE CFolderItem::Verbs(FolderItemVerbs **ppfic)
 {
-    if(!ppfic)
+    if (!ppfic)
         return E_POINTER;
     CFolderItemVerbs* verbs = new CComObject<CFolderItemVerbs>();
+    HRESULT hr = verbs->Init(m_idlist);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        delete verbs;
+        return hr;
+    }
     verbs->AddRef();
     *ppfic = verbs;
     return S_OK;
@@ -181,40 +161,12 @@ HRESULT STDMETHODCALLTYPE CFolderItem::InvokeVerb(VARIANT vVerb)
 
 
 
-
-
 CFolderItems::CFolderItems()
 {
 }
 
 CFolderItems::~CFolderItems()
 {
-}
-
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CFolderItems::GetTypeInfoCount(UINT *pctinfo)
-{
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItems::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItems::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItems::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
 }
 
 // *** FolderItems methods ***

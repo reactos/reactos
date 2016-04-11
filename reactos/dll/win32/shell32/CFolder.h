@@ -25,9 +25,11 @@
 class CFolder:
     public CComCoClass<CFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public Folder2
+    public IDispatchImpl<Folder2, &IID_Folder2>
 {
 private:
+    HRESULT GetShellFolder(CComPtr<IShellFolder>& psfCurrent);
+
     CComHeapPtr<ITEMIDLIST> m_idlist;
 
 public:
@@ -35,13 +37,6 @@ public:
     ~CFolder();
 
     void Init(LPITEMIDLIST idlist);
-
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
-
 
     // *** Folder methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Title(BSTR *pbs);

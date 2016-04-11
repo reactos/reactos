@@ -26,7 +26,7 @@
 class CShell:
     public CComCoClass<CShell, &CLSID_Shell>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellDispatch4,
+    public IDispatchImpl<IShellDispatch4, &IID_IShellDispatch4>,
     public IObjectSafety,
     public IObjectWithSite
 {
@@ -36,11 +36,7 @@ public:
     CShell();
     ~CShell();
 
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    HRESULT Initialize();
 
     // *** IShellDispatch methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);

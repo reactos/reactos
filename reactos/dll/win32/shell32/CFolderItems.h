@@ -25,7 +25,7 @@
 class CFolderItem:
     public CComCoClass<CFolderItem>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public FolderItem
+    public IDispatchImpl<FolderItem, &IID_FolderItem>
 {
 private:
     CComHeapPtr<ITEMIDLIST> m_idlist;
@@ -36,12 +36,6 @@ public:
 
     void Init(LPITEMIDLIST idlist);
 
-
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
     // *** FolderItem methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
@@ -75,19 +69,13 @@ END_COM_MAP()
 class CFolderItems:
     public CComCoClass<CFolderItems>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public FolderItems
+    public IDispatchImpl<FolderItems, &IID_FolderItems>
 {
 private:
 
 public:
     CFolderItems();
     ~CFolderItems();
-
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
     // *** FolderItems methods ***
     virtual HRESULT STDMETHODCALLTYPE get_Count(long *plCount);

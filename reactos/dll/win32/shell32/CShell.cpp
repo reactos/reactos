@@ -31,33 +31,10 @@ CShell::~CShell()
 {
 }
 
-
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CShell::GetTypeInfoCount(UINT *pctinfo)
+HRESULT CShell::Initialize()
 {
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
+    return S_OK;
 }
-
-HRESULT STDMETHODCALLTYPE CShell::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CShell::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CShell::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
-}
-
 
 // *** IShellDispatch methods ***
 HRESULT STDMETHODCALLTYPE CShell::get_Application(IDispatch **ppid)
@@ -341,4 +318,8 @@ HRESULT STDMETHODCALLTYPE CShell::GetSite(REFIID riid, PVOID *ppvSite)
     return E_NOTIMPL;
 }
 
+HRESULT WINAPI CShell_Constructor(REFIID riid, LPVOID * ppvOut)
+{
+    return ShellObjectCreatorInit<CShell>(riid, ppvOut);
+}
 

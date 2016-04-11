@@ -36,38 +36,30 @@ void CFolder::Init(LPITEMIDLIST idlist)
     m_idlist.Attach(idlist);
 }
 
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CFolder::GetTypeInfoCount(UINT *pctinfo)
+HRESULT CFolder::GetShellFolder(CComPtr<IShellFolder>& psfCurrent)
 {
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
-}
+    CComPtr<IShellFolder> psfDesktop;
 
-HRESULT STDMETHODCALLTYPE CFolder::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
+    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-HRESULT STDMETHODCALLTYPE CFolder::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
+    return psfDesktop->BindToObject(m_idlist, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
 }
-
-HRESULT STDMETHODCALLTYPE CFolder::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
-}
-
 
 // *** Folder methods ***
 HRESULT STDMETHODCALLTYPE CFolder::get_Title(BSTR *pbs)
 {
-    TRACE("(%p, %p)\n", this, pbs);
-    return E_NOTIMPL;
+    if (!pbs)
+        return E_POINTER;
+
+    WCHAR path[MAX_PATH+2] = {0};
+    HRESULT hr = ILGetDisplayNameExW(NULL, m_idlist, path, ILGDN_INFOLDER);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    *pbs = SysAllocString(path);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::get_Application(IDispatch **ppid)
@@ -97,15 +89,12 @@ HRESULT STDMETHODCALLTYPE CFolder::Items(FolderItems **ppid)
 HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
 {
     TRACE("(%p, %s, %p)\n", this, wine_dbgstr_w(bName), ppid);
-
-    CComPtr<IShellFolder> psfDesktop;
-
-    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (!ppid)
+        return E_POINTER;
+    *ppid = NULL;
 
     CComPtr<IShellFolder> psfCurrent;
-    hr = psfDesktop->BindToObject(m_idlist, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
+    HRESULT hr = GetShellFolder(psfCurrent);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

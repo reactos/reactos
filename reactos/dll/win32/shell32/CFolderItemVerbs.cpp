@@ -31,35 +31,10 @@ CFolderItemVerb::~CFolderItemVerb()
 {
 }
 
-//void CFolderItemVerb::Init(LPITEMIDLIST idlist)
-//{
-//    m_idlist.Attach(idlist);
-//}
-
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CFolderItemVerb::GetTypeInfoCount(UINT *pctinfo)
+void CFolderItemVerb::Init(IContextMenu* menu, BSTR name)
 {
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItemVerb::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItemVerb::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItemVerb::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    m_contextmenu = menu;
+    m_name.m_str = name;
 }
 
 // *** FolderItemVerb methods ***
@@ -78,12 +53,10 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Parent(IDispatch **ppid)
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::get_Name(BSTR *pbs)
 {
-    TRACE("(%p, %p)\n", this, pbs);
     if (!pbs)
         return E_POINTER;
-    // Terminating item:
-    *pbs = SysAllocString(L"");
-    return E_NOTIMPL;
+    *pbs = SysAllocString(m_name);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerb::DoIt()
@@ -98,52 +71,45 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerb::DoIt()
 
 
 CFolderItemVerbs::CFolderItemVerbs()
+    :m_menu(NULL)
+    ,m_count(0)
 {
 }
 
 CFolderItemVerbs::~CFolderItemVerbs()
 {
+    DestroyMenu(m_menu);
 }
 
-//void CFolderItemVerbs::Init(LPITEMIDLIST idlist)
-//{
-//    m_idlist.Attach(idlist);
-//}
-
-// *** IDispatch methods ***
-HRESULT STDMETHODCALLTYPE CFolderItemVerbs::GetTypeInfoCount(UINT *pctinfo)
+HRESULT CFolderItemVerbs::Init(LPITEMIDLIST idlist)
 {
-    TRACE("(%p, %p)\n", this, pctinfo);
-    return E_NOTIMPL;
+    CComPtr<IShellFolder> folder;
+    LPCITEMIDLIST child;
+    HRESULT hr = SHBindToParent(idlist, IID_PPV_ARG(IShellFolder, &folder), &child);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = folder->GetUIObjectOf(NULL, 1, &child, IID_IContextMenu, NULL, (PVOID*)&m_contextmenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    m_menu = CreatePopupMenu();
+    hr = m_contextmenu->QueryContextMenu(m_menu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    m_count = GetMenuItemCount(m_menu);
+    return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CFolderItemVerbs::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    TRACE("(%p, %lu, %lu, %p)\n", this, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItemVerbs::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    TRACE("(%p, %s, %p, %lu, %lu, %p)\n", this, wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CFolderItemVerbs::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    TRACE("(%p, %lu, %s, %lu, %lu, %p, %p, %p, %p)\n", this, dispIdMember, wine_dbgstr_guid(&riid), lcid, (DWORD)wFlags,
-        pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
-}
 
 // *** FolderItemVerbs methods ***
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Count(LONG *plCount)
 {
-    TRACE("(%p, %p)\n", this, plCount);
     if (!plCount)
         return E_POINTER;
-    *plCount = 0;
-    return E_NOTIMPL;
+    *plCount = m_count;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Application(IDispatch **ppid)
@@ -158,18 +124,51 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Parent(IDispatch **ppid)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CFolderItemVerbs::Item(VARIANT index, FolderItemVerb **ppid)
+HRESULT STDMETHODCALLTYPE CFolderItemVerbs::Item(VARIANT indexVar, FolderItemVerb **ppid)
 {
-    TRACE("(%p, %s, %p)\n", this, wine_dbgstr_variant(&index), ppid);
     if (!ppid)
         return E_POINTER;
 
-    /* FIXME! */
+    CComVariant var;
+    VariantCopyInd(&var, &indexVar);
+
+    HRESULT hr = VariantChangeType(&var, &var, 0, VT_I4);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_INVALIDARG;
+
+    int index = V_I4(&var);
+
+    if (index > m_count)
+        return S_OK;
+
+    BSTR name = NULL;
+
+    if(index == m_count)
+        name = SysAllocStringLen(NULL, 0);
+    else
+    {
+        MENUITEMINFOW info = { sizeof(info), 0 };
+        info.fMask = MIIM_STRING;
+        if (!GetMenuItemInfoW(m_menu, index, TRUE, &info))
+            return E_FAIL;
+        name = SysAllocStringLen(NULL, info.cch);
+        if (name)
+        {
+            info.dwTypeData = name;
+            info.cch++;
+            GetMenuItemInfoW(m_menu, index, TRUE, &info);
+        }
+    }
+
+    if (!name)
+        return E_OUTOFMEMORY;
+
     CFolderItemVerb* verb = new CComObject<CFolderItemVerb>();
+    verb->Init(m_contextmenu, name);
     verb->AddRef();
     *ppid = verb;
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::_NewEnum(IUnknown **ppunk)

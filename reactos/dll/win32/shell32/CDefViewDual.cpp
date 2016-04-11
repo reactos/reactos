@@ -46,9 +46,8 @@ class CDefViewDual :
         virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **app) override
         {
             if (!app) return E_INVALIDARG;
-            *app = NULL;
-            FIXME("CDefViewDual::get_Application is UNIMPLEMENTED (%p, %p)\n", this, app);
-            return E_NOTIMPL;
+
+            return CShell_Constructor(IID_IDispatch, (LPVOID*)app);
         }
 
         virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **parent) override
