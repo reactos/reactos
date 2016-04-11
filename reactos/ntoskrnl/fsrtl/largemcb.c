@@ -135,10 +135,12 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                      IN LONGLONG SectorCount)
 {
     BOOLEAN Result = TRUE;
+    BOOLEAN IntResult;
     PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
     LARGE_MCB_MAPPING_ENTRY Node, NeedleRun;
     PLARGE_MCB_MAPPING_ENTRY LowerRun, HigherRun;
     BOOLEAN NewElement;
+    LONGLONG IntLbn;
 
     DPRINT("FsRtlAddBaseMcbEntry(%p, %I64d, %I64d, %I64d)\n", OpaqueMcb, Vbn, Lbn, SectorCount);
 
@@ -152,6 +154,16 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     {
         Result = FALSE;
         goto quit;
+    }
+
+    IntResult = FsRtlLookupBaseMcbEntry(OpaqueMcb, Vbn, &IntLbn, NULL, NULL, NULL, NULL);
+    if (IntResult)
+    {
+        if (IntLbn != -1 && IntLbn != Lbn)
+        {
+            Result = FALSE;
+            goto quit;
+        }
     }
 
     /* clean any possible previous entries in our range */
