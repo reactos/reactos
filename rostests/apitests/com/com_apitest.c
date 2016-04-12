@@ -176,6 +176,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IInputObject)                      },
     { ID_NAME(IID_IInputObjectSite)                  },
     { ID_NAME(IID_IInternalUnknown),            TRUE },
+    { ID_NAME(IID_IInternetSecurityManager)          },
+    { ID_NAME(IID_IInternetZoneManager),        TRUE },
     { ID_NAME(IID_IItemNameLimits)                   },
     { ID_NAME(IID_IMarshal)                          },
     { ID_NAME(IID_IMarshal2),                   TRUE },

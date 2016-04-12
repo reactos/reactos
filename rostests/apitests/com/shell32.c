@@ -592,6 +592,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_Thumbnail),
+        {
+            {    0x0,   &IID_IUnknown },
+            {    0x4,   &IID_IParentAndItem },
+            {    0x8,   &IID_IObjectWithSite },
+        },
+    },
+    {
         ID_NAME(CLSID_TrackShellMenu),
         {
             {    0x0,   &IID_ITrackShellMenu },
