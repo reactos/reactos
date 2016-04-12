@@ -589,6 +589,7 @@ cpp_quote("HRESULT WINAPI SHGetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE
 cpp_quote("HRESULT WINAPI SHGetItemFromObject(IUnknown *punk, REFIID riid, void **ppv);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArray(PCIDLIST_ABSOLUTE pidlParent, IShellFolder* psf, UINT cidl, PCUITEMID_CHILD_ARRAY ppidl, IShellItemArray **ppsiItemArray);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromShellItem(IShellItem *psi, REFIID riid, void **ppv);")
+cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromIDLists(UINT cidl, PCIDLIST_ABSOLUTE_ARRAY pidl_array, IShellItemArray **psia);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromDataObject(IDataObject *pdo, REFIID riid, void **ppv);")
 
 /*****************************************************************************
@@ -798,6 +799,35 @@ cpp_quote("#include <poppack.h>")
         [in] UINT flags,
         [in] POINT *point
     );
+}
+
+[
+    object,
+    uuid(ec39fa88-f8af-41c5-8421-38bed28f4673),
+    pointer_default(unique)
+]
+interface IShellView3 : IShellView2
+{
+    [v1_enum] enum _SV3CVW3_FLAGS
+    {
+        SV3CVW3_DEFAULT          = 0x00000000,
+        SV3CVW3_NONINTERACTIVE   = 0x00000001,
+        SV3CVW3_FORCEVIEWMODE    = 0x00000002,
+        SV3CVW3_FORCEFOLDERFLAGS = 0x00000004
+    };
+
+    typedef DWORD SV3CVW3_FLAGS;
+
+    HRESULT CreateViewWindow3(
+        [in] IShellBrowser *owner,
+        [in, unique] IShellView *prev_view,
+        [in] SV3CVW3_FLAGS view_flags,
+        [in] FOLDERFLAGS mask,
+        [in] FOLDERFLAGS flags,
+        [in] FOLDERVIEWMODE mode,
+        [in, unique] const SHELLVIEWID *view_id,
+        [in] const RECT *rect,
+        [out] HWND *hwnd);
 }
 
 /*****************************************************************************
@@ -4065,6 +4095,53 @@ interface ITransferDestination : IUnknown
                        [out, iid_is(riid)] void **presources);
 }
 
+[
+    uuid(92218cab-ecaa-4335-8133-807fd234c2ee),
+    object,
+    pointer_default(unique)
+]
+interface IAssocHandlerInvoker : IUnknown
+{
+    HRESULT SupportsSelection();
+    HRESULT Invoke();
+}
+
+[
+    uuid(f04061ac-1659-4a3f-a954-775aa57fc083),
+    object,
+    pointer_default(unique)
+]
+interface IAssocHandler : IUnknown
+{
+    HRESULT GetName([out, string] LPWSTR *name);
+    HRESULT GetUIName([out, string] LPWSTR *uiname);
+    HRESULT GetIconLocation([out, string] LPWSTR *path,
+                            [out] int *index);
+    HRESULT IsRecommended();
+    HRESULT MakeDefault([in, string] LPCWSTR description);
+    HRESULT Invoke([in] IDataObject *object);
+    HRESULT CreateInvoker([in] IDataObject *object,
+                          [out] IAssocHandlerInvoker **invoker);
+}
+
+[
+    uuid(973810ae-9599-4b88-9e4d-6ee98c9552da),
+    object,
+    pointer_default(unique)
+]
+interface IEnumAssocHandlers : IUnknown
+{
+    HRESULT Next([in]  ULONG count,
+                 [out, size_is(count), length_is(*fetched)] IAssocHandler **handlers,
+                 [out] ULONG *fetched);
+}
+
+typedef enum ASSOC_FILTER
+{
+    ASSOC_FILTER_NONE = 0,
+    ASSOC_FILTER_RECOMMENDED
+} ASSOC_FILTER;
+cpp_quote("HRESULT WINAPI SHAssocEnumHandlers(PCWSTR extra, ASSOC_FILTER filter, IEnumAssocHandlers **handlersenum);")
 
 typedef [v1_enum] enum ACTIVATEOPTIONS
 {
@@ -4173,6 +4250,14 @@ library ShellObjects
     ]
     coclass DestinationList {
         interface ICustomDestinationList;
+    }
+
+    [
+        uuid(2d3468c1-36a7-43b6-ac24-d3f02fd9607a)
+    ]
+    coclass EnumerableObjectCollection
+    {
+        interface IEnumObjects;
     }
 
     [
