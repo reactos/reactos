@@ -542,7 +542,7 @@ AcpiEvInitializeGpeBlock (
 
     if (GpeEnabledCount)
     {
-        ACPI_INFO ((AE_INFO,
+        ACPI_INFO ((
             "Enabled %u GPEs in block %02X to %02X", GpeEnabledCount,
             (UINT32) GpeBlock->BlockBaseNumber,
             (UINT32) (GpeBlock->BlockBaseNumber + (GpeBlock->GpeCount - 1))));

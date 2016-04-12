@@ -86,8 +86,6 @@ ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerBitWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerByteWidth);
 ACPI_GLOBAL (UINT8,                     AcpiGbl_IntegerNybbleWidth);
 
-ACPI_INIT_GLOBAL (UINT8,                AcpiGbl_GroupModuleLevelCode, FALSE);
-
 
 /*****************************************************************************
  *
@@ -170,7 +168,7 @@ ACPI_GLOBAL (UINT8,                     AcpiGbl_NextOwnerIdOffset);
 
 /* Initialization sequencing */
 
-ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_RegMethodsEnabled, FALSE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_NamespaceInitialized, FALSE);
 
 /* Misc */
 
@@ -191,6 +189,8 @@ extern const char                      *AcpiGbl_SleepStateNames[ACPI_S_STATE_COU
 extern const char                      *AcpiGbl_LowestDstateNames[ACPI_NUM_SxW_METHODS];
 extern const char                      *AcpiGbl_HighestDstateNames[ACPI_NUM_SxD_METHODS];
 extern const char                      *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS];
+extern const char                       AcpiGbl_LowerHexDigits[];
+extern const char                       AcpiGbl_UpperHexDigits[];
 extern const ACPI_OPCODE_INFO           AcpiGbl_AmlOpInfo[AML_NUM_OPCODES];
 
 
@@ -372,6 +372,14 @@ ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandComplete);
 
 #endif /* ACPI_DEBUGGER */
 
+#if defined (ACPI_DISASSEMBLER) || defined (ACPI_ASL_COMPILER)
+
+ACPI_GLOBAL (const char,                *AcpiGbl_PldPanelList[]);
+ACPI_GLOBAL (const char,                *AcpiGbl_PldVerticalPositionList[]);
+ACPI_GLOBAL (const char,                *AcpiGbl_PldHorizontalPositionList[]);
+ACPI_GLOBAL (const char,                *AcpiGbl_PldShapeList[]);
+
+#endif
 
 /*****************************************************************************
  *

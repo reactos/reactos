@@ -582,7 +582,6 @@ AcpiEvInitializeRegion (
         return_ACPI_STATUS (AE_OK);
     }
 
-    AcpiEvAssociateRegMethod (RegionObj);
     RegionObj->Common.Flags |= AOPOBJ_OBJECT_INITIALIZED;
 
     Node = RegionObj->Region.Node->Parent;

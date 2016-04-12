@@ -248,7 +248,7 @@ typedef struct acpi_table_facs
 /*******************************************************************************
  *
  * FADT - Fixed ACPI Description Table (Signature "FACP")
- *        Version 4
+ *        Version 6
  *
  ******************************************************************************/
 
@@ -448,5 +448,7 @@ typedef struct acpi_table_desc
 #define ACPI_FADT_V3_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepControl))
 #define ACPI_FADT_V5_SIZE       (UINT32) (ACPI_FADT_OFFSET (HypervisorId))
 #define ACPI_FADT_V6_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
+
+#define ACPI_FADT_CONFORMANCE   "ACPI 6.1 (FADT version 6)"
 
 #endif /* __ACTBL_H__ */

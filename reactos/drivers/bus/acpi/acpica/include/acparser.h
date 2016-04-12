@@ -171,7 +171,7 @@ const ACPI_OPCODE_INFO *
 AcpiPsGetOpcodeInfo (
     UINT16                  Opcode);
 
-char *
+const char *
 AcpiPsGetOpcodeName (
     UINT16                  Opcode);
 

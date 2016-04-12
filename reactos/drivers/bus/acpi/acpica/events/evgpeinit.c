@@ -292,7 +292,7 @@ AcpiEvUpdateGpes (
 
     if (WalkInfo.Count)
     {
-        ACPI_INFO ((AE_INFO, "Enabled %u new GPEs", WalkInfo.Count));
+        ACPI_INFO (("Enabled %u new GPEs", WalkInfo.Count));
     }
 
     (void) AcpiUtReleaseMutex (ACPI_MTX_EVENTS);

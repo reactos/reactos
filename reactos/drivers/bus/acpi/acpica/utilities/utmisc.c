@@ -401,7 +401,7 @@ void
 AcpiUtDisplayInitPathname (
     UINT8                   Type,
     ACPI_NAMESPACE_NODE     *ObjHandle,
-    char                    *Path)
+    const char              *Path)
 {
     ACPI_STATUS             Status;
     ACPI_BUFFER             Buffer;

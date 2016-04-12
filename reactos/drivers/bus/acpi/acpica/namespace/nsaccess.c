@@ -116,7 +116,7 @@ AcpiNsRootInitialize (
             continue;
         }
 
-        Status = AcpiNsLookup (NULL, InitVal->Name, InitVal->Type,
+        Status = AcpiNsLookup (NULL, (char *) InitVal->Name, InitVal->Type,
             ACPI_IMODE_LOAD_PASS2, ACPI_NS_NO_UPSEARCH,
             NULL, &NewNode);
         if (ACPI_FAILURE (Status))

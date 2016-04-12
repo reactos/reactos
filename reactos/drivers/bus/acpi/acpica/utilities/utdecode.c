@@ -506,7 +506,7 @@ AcpiUtGetMutexName (
 
 /* Names for Notify() values, used for debug output */
 
-static const char           *AcpiGbl_GenericNotify[ACPI_NOTIFY_MAX + 1] =
+static const char           *AcpiGbl_GenericNotify[ACPI_GENERIC_NOTIFY_MAX + 1] =
 {
     /* 00 */ "Bus Check",
     /* 01 */ "Device Check",
@@ -520,32 +520,35 @@ static const char           *AcpiGbl_GenericNotify[ACPI_NOTIFY_MAX + 1] =
     /* 09 */ "Device PLD Check",
     /* 0A */ "Reserved",
     /* 0B */ "System Locality Update",
-    /* 0C */ "Shutdown Request",
+    /* 0C */ "Shutdown Request", /* Reserved in ACPI 6.0 */
     /* 0D */ "System Resource Affinity Update"
 };
 
-static const char           *AcpiGbl_DeviceNotify[4] =
+static const char           *AcpiGbl_DeviceNotify[5] =
 {
     /* 80 */ "Status Change",
     /* 81 */ "Information Change",
     /* 82 */ "Device-Specific Change",
-    /* 83 */ "Device-Specific Change"
+    /* 83 */ "Device-Specific Change",
+    /* 84 */ "Reserved"
 };
 
-static const char           *AcpiGbl_ProcessorNotify[4] =
+static const char           *AcpiGbl_ProcessorNotify[5] =
 {
     /* 80 */ "Performance Capability Change",
     /* 81 */ "C-State Change",
     /* 82 */ "Throttling Capability Change",
-    /* 83 */ "Device-Specific Change"
+    /* 83 */ "Guaranteed Change",
+    /* 84 */ "Minimum Excursion"
 };
 
-static const char           *AcpiGbl_ThermalNotify[4] =
+static const char           *AcpiGbl_ThermalNotify[5] =
 {
     /* 80 */ "Thermal Status Change",
     /* 81 */ "Thermal Trip Point Change",
     /* 82 */ "Thermal Device List Change",
-    /* 83 */ "Thermal Relationship Change"
+    /* 83 */ "Thermal Relationship Change",
+    /* 84 */ "Reserved"
 };
 
 
@@ -555,23 +558,23 @@ AcpiUtGetNotifyName (
     ACPI_OBJECT_TYPE        Type)
 {
 
-    /* 00 - 0D are common to all object types */
+    /* 00 - 0D are "common to all object types" (from ACPI Spec) */
 
-    if (NotifyValue <= ACPI_NOTIFY_MAX)
+    if (NotifyValue <= ACPI_GENERIC_NOTIFY_MAX)
     {
         return (AcpiGbl_GenericNotify[NotifyValue]);
     }
 
-    /* 0D - 7F are reserved */
+    /* 0E - 7F are reserved */
 
     if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
     {
         return ("Reserved");
     }
 
-    /* 80 - 83 are per-object-type */
+    /* 80 - 84 are per-object-type */
 
-    if (NotifyValue <= 0x83)
+    if (NotifyValue <= ACPI_SPECIFIC_NOTIFY_MAX)
     {
         switch (Type)
         {

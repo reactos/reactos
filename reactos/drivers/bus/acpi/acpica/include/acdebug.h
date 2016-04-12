@@ -55,7 +55,7 @@
 
 typedef struct acpi_db_command_info
 {
-    char                    *Name;          /* Command Name */
+    const char              *Name;          /* Command Name */
     UINT8                   MinArgs;        /* Minimum arguments required */
 
 } ACPI_DB_COMMAND_INFO;
@@ -70,7 +70,7 @@ typedef struct acpi_db_command_help
 
 typedef struct acpi_db_argument_info
 {
-    char                    *Name;          /* Argument Name */
+    const char              *Name;          /* Argument Name */
 
 } ACPI_DB_ARGUMENT_INFO;
 

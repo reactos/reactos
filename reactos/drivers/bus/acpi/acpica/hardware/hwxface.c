@@ -565,8 +565,7 @@ AcpiGetSleepTypeData (
      * Evaluate the \_Sx namespace object containing the register values
      * for this state
      */
-    Info->RelativePathname = ACPI_CAST_PTR (char,
-        AcpiGbl_SleepStateNames[SleepState]);
+    Info->RelativePathname = AcpiGbl_SleepStateNames[SleepState];
 
     Status = AcpiNsEvaluate (Info);
     if (ACPI_FAILURE (Status))

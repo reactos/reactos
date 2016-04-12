@@ -396,7 +396,7 @@ AcpiNsExecModuleCodeList (
         AcpiUtRemoveReference (Prev);
     }
 
-    ACPI_INFO ((AE_INFO,
+    ACPI_INFO ((
         "Executed %u blocks of module-level executable AML code",
         MethodCount));
 

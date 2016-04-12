@@ -100,7 +100,7 @@ AcpiUtRemoveAllocation (
 
 ACPI_STATUS
 AcpiUtCreateList (
-    char                    *ListName,
+    const char              *ListName,
     UINT16                  ObjectSize,
     ACPI_MEMORY_LIST        **ReturnCache)
 {
@@ -775,7 +775,7 @@ AcpiUtDumpAllocations (
 
     if (!NumOutstanding)
     {
-        ACPI_INFO ((AE_INFO, "No outstanding allocations"));
+        ACPI_INFO (("No outstanding allocations"));
     }
     else
     {

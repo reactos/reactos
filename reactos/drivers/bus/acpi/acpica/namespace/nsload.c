@@ -140,8 +140,8 @@ AcpiNsLoadTable (
         (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
         AcpiNsDeleteNamespaceByOwner (
             AcpiGbl_RootTableList.Tables[TableIndex].OwnerId);
-            AcpiTbReleaseOwnerId (TableIndex);
 
+        AcpiTbReleaseOwnerId (TableIndex);
         return_ACPI_STATUS (Status);
     }
 

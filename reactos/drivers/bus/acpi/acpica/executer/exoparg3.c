@@ -134,8 +134,10 @@ AcpiExOpcode_3A_0T_0R (
          * op is intended for use by disassemblers in order to properly
          * disassemble control method invocations. The opcode or group of
          * opcodes should be surrounded by an "if (0)" clause to ensure that
-         * AML interpreters never see the opcode.
+         * AML interpreters never see the opcode. Thus, something is
+         * wrong if an external opcode ever gets here.
          */
+        ACPI_ERROR ((AE_INFO, "Executed External Op"));
         Status = AE_OK;
         goto Cleanup;
 

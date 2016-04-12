@@ -38,6 +38,7 @@ list(APPEND ACPICA_SOURCE
     acpica/events/evxfevnt.c
     acpica/events/evxfgpe.c
     acpica/events/evxfregn.c
+    acpica/executer/exconcat.c
     acpica/executer/exconfig.c
     acpica/executer/exconvrt.c
     acpica/executer/excreate.c

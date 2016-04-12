@@ -87,6 +87,12 @@ const char                  *AcpiGbl_HighestDstateNames[ACPI_NUM_SxD_METHODS] =
 };
 
 
+/* Hex-to-ascii */
+
+const char                  AcpiGbl_LowerHexDigits[] = "0123456789abcdef";
+const char                  AcpiGbl_UpperHexDigits[] = "0123456789ABCDEF";
+
+
 /*******************************************************************************
  *
  * Namespace globals
@@ -178,6 +184,55 @@ ACPI_FIXED_EVENT_INFO       AcpiGbl_FixedEventInfo[ACPI_NUM_FIXED_EVENTS] =
     /* ACPI_EVENT_RTC           */  {ACPI_BITREG_RT_CLOCK_STATUS,       ACPI_BITREG_RT_CLOCK_ENABLE,     ACPI_BITMASK_RT_CLOCK_STATUS,       ACPI_BITMASK_RT_CLOCK_ENABLE},
 };
 #endif /* !ACPI_REDUCED_HARDWARE */
+
+
+#if defined (ACPI_DISASSEMBLER) || defined (ACPI_ASL_COMPILER)
+
+/* ToPld macro: compile/disassemble strings */
+
+const char              *AcpiGbl_PldPanelList[] =
+{
+    "TOP",
+    "BOTTOM",
+    "LEFT",
+    "RIGHT",
+    "FRONT",
+    "BACK",
+    "UNKNOWN",
+    NULL
+};
+
+const char              *AcpiGbl_PldVerticalPositionList[] =
+{
+    "UPPER",
+    "CENTER",
+    "LOWER",
+    NULL
+};
+
+const char              *AcpiGbl_PldHorizontalPositionList[] =
+{
+    "LEFT",
+    "CENTER",
+    "RIGHT",
+    NULL
+};
+
+const char              *AcpiGbl_PldShapeList[] =
+{
+    "ROUND",
+    "OVAL",
+    "SQUARE",
+    "VERTICALRECTANGLE",
+    "HORIZONTALRECTANGLE",
+    "VERTICALTRAPEZOID",
+    "HORIZONTALTRAPEZOID",
+    "UNKNOWN",
+    "CHAMFERED",
+    NULL
+};
+#endif
+
 
 /* Public globals */
 

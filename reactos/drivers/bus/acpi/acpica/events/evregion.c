@@ -99,7 +99,6 @@ AcpiEvInitializeOpRegions (
 
     /* Run the _REG methods for OpRegions in each default address space */
 
-    AcpiGbl_RegMethodsEnabled = TRUE;
     for (i = 0; i < ACPI_NUM_DEFAULT_SPACES; i++)
     {
         /*
@@ -552,58 +551,6 @@ AcpiEvAttachRegion (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiEvAssociateRegMethod
- *
- * PARAMETERS:  RegionObj           - Region object
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Find and associate _REG method to a region
- *
- ******************************************************************************/
-
-void
-AcpiEvAssociateRegMethod (
-    ACPI_OPERAND_OBJECT     *RegionObj)
-{
-    ACPI_NAME               *RegNamePtr = (ACPI_NAME *) METHOD_NAME__REG;
-    ACPI_NAMESPACE_NODE     *MethodNode;
-    ACPI_NAMESPACE_NODE     *Node;
-    ACPI_OPERAND_OBJECT     *RegionObj2;
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_TRACE (EvAssociateRegMethod);
-
-
-    RegionObj2 = AcpiNsGetSecondaryObject (RegionObj);
-    if (!RegionObj2)
-    {
-        return_VOID;
-    }
-
-    Node = RegionObj->Region.Node->Parent;
-
-    /* Find any "_REG" method associated with this region definition */
-
-    Status = AcpiNsSearchOneScope (
-        *RegNamePtr, Node, ACPI_TYPE_METHOD, &MethodNode);
-    if (ACPI_SUCCESS (Status))
-    {
-        /*
-         * The _REG method is optional and there can be only one per region
-         * definition. This will be executed when the handler is attached
-         * or removed
-         */
-        RegionObj2->Extra.Method_REG = MethodNode;
-    }
-
-    return_VOID;
-}
-
-
-/*******************************************************************************
- *
  * FUNCTION:    AcpiEvExecuteRegMethod
  *
  * PARAMETERS:  RegionObj           - Region object
@@ -623,11 +570,20 @@ AcpiEvExecuteRegMethod (
     ACPI_EVALUATE_INFO      *Info;
     ACPI_OPERAND_OBJECT     *Args[3];
     ACPI_OPERAND_OBJECT     *RegionObj2;
+    const ACPI_NAME         *RegNamePtr = ACPI_CAST_PTR (ACPI_NAME, METHOD_NAME__REG);
+    ACPI_NAMESPACE_NODE     *MethodNode;
+    ACPI_NAMESPACE_NODE     *Node;
     ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_TRACE (EvExecuteRegMethod);
 
+
+    if (!AcpiGbl_NamespaceInitialized ||
+        RegionObj->Region.Handler == NULL)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
 
     RegionObj2 = AcpiNsGetSecondaryObject (RegionObj);
     if (!RegionObj2)
@@ -635,9 +591,24 @@ AcpiEvExecuteRegMethod (
         return_ACPI_STATUS (AE_NOT_EXIST);
     }
 
-    if (RegionObj2->Extra.Method_REG == NULL ||
-        RegionObj->Region.Handler == NULL ||
-        !AcpiGbl_RegMethodsEnabled)
+    /*
+     * Find any "_REG" method associated with this region definition.
+     * The method should always be updated as this function may be
+     * invoked after a namespace change.
+     */
+    Node = RegionObj->Region.Node->Parent;
+    Status = AcpiNsSearchOneScope (
+        *RegNamePtr, Node, ACPI_TYPE_METHOD, &MethodNode);
+    if (ACPI_SUCCESS (Status))
+    {
+        /*
+         * The _REG method is optional and there can be only one per
+         * region definition. This will be executed when the handler is
+         * attached or removed.
+         */
+        RegionObj2->Extra.Method_REG = MethodNode;
+    }
+    if (RegionObj2->Extra.Method_REG == NULL)
     {
         return_ACPI_STATUS (AE_OK);
     }

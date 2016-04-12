@@ -268,7 +268,8 @@ enum AcpiEinjActions
     ACPI_EINJ_CHECK_BUSY_STATUS             = 6,
     ACPI_EINJ_GET_COMMAND_STATUS            = 7,
     ACPI_EINJ_SET_ERROR_TYPE_WITH_ADDRESS   = 8,
-    ACPI_EINJ_ACTION_RESERVED               = 9,     /* 9 and greater are reserved */
+    ACPI_EINJ_GET_EXECUTE_TIMINGS           = 9,
+    ACPI_EINJ_ACTION_RESERVED               = 10,    /* 10 and greater are reserved */
     ACPI_EINJ_TRIGGER_ERROR                 = 0xFF   /* Except for this value */
 };
 
@@ -397,7 +398,8 @@ enum AcpiErstActions
     ACPI_ERST_GET_ERROR_RANGE       = 13,
     ACPI_ERST_GET_ERROR_LENGTH      = 14,
     ACPI_ERST_GET_ERROR_ATTRIBUTES  = 15,
-    ACPI_ERST_ACTION_RESERVED       = 16    /* 16 and greater are reserved */
+    ACPI_ERST_EXECUTE_TIMINGS       = 16,
+    ACPI_ERST_ACTION_RESERVED       = 17    /* 17 and greater are reserved */
 };
 
 /* Values for Instruction field above */
@@ -489,7 +491,8 @@ enum AcpiHestTypes
     ACPI_HEST_TYPE_AER_ENDPOINT         = 7,
     ACPI_HEST_TYPE_AER_BRIDGE           = 8,
     ACPI_HEST_TYPE_GENERIC_ERROR        = 9,
-    ACPI_HEST_TYPE_RESERVED             = 10    /* 10 and greater are reserved */
+    ACPI_HEST_TYPE_GENERIC_ERROR_V2     = 10,
+    ACPI_HEST_TYPE_RESERVED             = 11    /* 11 and greater are reserved */
 };
 
 
@@ -578,7 +581,11 @@ enum AcpiHestNotifyTypes
     ACPI_HEST_NOTIFY_NMI        = 4,
     ACPI_HEST_NOTIFY_CMCI       = 5,    /* ACPI 5.0 */
     ACPI_HEST_NOTIFY_MCE        = 6,    /* ACPI 5.0 */
-    ACPI_HEST_NOTIFY_RESERVED   = 7     /* 7 and greater are reserved */
+    ACPI_HEST_NOTIFY_GPIO       = 7,    /* ACPI 6.0 */
+    ACPI_HEST_NOTIFY_SEA        = 8,    /* ACPI 6.1 */
+    ACPI_HEST_NOTIFY_SEI        = 9,    /* ACPI 6.1 */
+    ACPI_HEST_NOTIFY_GSIV       = 10,   /* ACPI 6.1 */
+    ACPI_HEST_NOTIFY_RESERVED   = 11    /* 11 and greater are reserved */
 };
 
 /* Values for ConfigWriteEnable bitfield above */
@@ -697,6 +704,27 @@ typedef struct acpi_hest_generic
 } ACPI_HEST_GENERIC;
 
 
+/* 10: Generic Hardware Error Source, version 2 */
+
+typedef struct acpi_hest_generic_v2
+{
+    ACPI_HEST_HEADER        Header;
+    UINT16                  RelatedSourceId;
+    UINT8                   Reserved;
+    UINT8                   Enabled;
+    UINT32                  RecordsToPreallocate;
+    UINT32                  MaxSectionsPerRecord;
+    UINT32                  MaxRawDataLength;
+    ACPI_GENERIC_ADDRESS    ErrorStatusAddress;
+    ACPI_HEST_NOTIFY        Notify;
+    UINT32                  ErrorBlockLength;
+    ACPI_GENERIC_ADDRESS    ReadAckRegister;
+    UINT64                  ReadAckPreserve;
+    UINT64                  ReadAckWrite;
+
+} ACPI_HEST_GENERIC_V2;
+
+
 /* Generic Error Status block */
 
 typedef struct acpi_hest_generic_status
@@ -732,6 +760,35 @@ typedef struct acpi_hest_generic_data
     UINT8                   FruText[20];
 
 } ACPI_HEST_GENERIC_DATA;
+
+/* Extension for revision 0x0300 */
+
+typedef struct acpi_hest_generic_data_v300
+{
+    UINT8                   SectionType[16];
+    UINT32                  ErrorSeverity;
+    UINT16                  Revision;
+    UINT8                   ValidationBits;
+    UINT8                   Flags;
+    UINT32                  ErrorDataLength;
+    UINT8                   FruId[16];
+    UINT8                   FruText[20];
+    UINT64                  TimeStamp;
+
+} ACPI_HEST_GENERIC_DATA_V300;
+
+/* Values for ErrorSeverity above */
+
+#define ACPI_HEST_GEN_ERROR_RECOVERABLE     0
+#define ACPI_HEST_GEN_ERROR_FATAL           1
+#define ACPI_HEST_GEN_ERROR_CORRECTED       2
+#define ACPI_HEST_GEN_ERROR_NONE            3
+
+/* Flags for ValidationBits above */
+
+#define ACPI_HEST_GEN_VALID_FRU_ID          (1)
+#define ACPI_HEST_GEN_VALID_FRU_STRING      (1<<1)
+#define ACPI_HEST_GEN_VALID_TIMESTAMP       (1<<2)
 
 
 /*******************************************************************************
@@ -1095,7 +1152,7 @@ typedef struct acpi_msct_proximity
 
 /*******************************************************************************
  *
- * NFIT - NVDIMM Interface Table (ACPI 6.0)
+ * NFIT - NVDIMM Interface Table (ACPI 6.0+)
  *        Version 1
  *
  ******************************************************************************/
@@ -1187,6 +1244,7 @@ typedef struct acpi_nfit_memory_map
 #define ACPI_NFIT_MEM_NOT_ARMED         (1<<3)  /* 03: Memory Device is not armed */
 #define ACPI_NFIT_MEM_HEALTH_OBSERVED   (1<<4)  /* 04: Memory Device observed SMART/health events */
 #define ACPI_NFIT_MEM_HEALTH_ENABLED    (1<<5)  /* 05: SMART/health events enabled */
+#define ACPI_NFIT_MEM_MAP_FAILED        (1<<6)  /* 06: Mapping to SPA failed */
 
 
 /* 2: Interleave Structure */
@@ -1226,7 +1284,10 @@ typedef struct acpi_nfit_control_region
     UINT16                  SubsystemVendorId;
     UINT16                  SubsystemDeviceId;
     UINT16                  SubsystemRevisionId;
-    UINT8                   Reserved[6];        /* Reserved, must be zero */
+    UINT8                   ValidFields;
+    UINT8                   ManufacturingLocation;
+    UINT16                  ManufacturingDate;
+    UINT8                   Reserved[2];        /* Reserved, must be zero */
     UINT32                  SerialNumber;
     UINT16                  Code;
     UINT16                  Windows;
@@ -1242,7 +1303,11 @@ typedef struct acpi_nfit_control_region
 
 /* Flags */
 
-#define ACPI_NFIT_CONTROL_BUFFERED      (1)     /* Block Data Windows implementation is buffered */
+#define ACPI_NFIT_CONTROL_BUFFERED          (1)     /* Block Data Windows implementation is buffered */
+
+/* ValidFields bits */
+
+#define ACPI_NFIT_CONTROL_MFG_INFO_VALID    (1)     /* Manufacturing fields are valid */
 
 
 /* 5: NVDIMM Block Data Window Region Structure */

@@ -341,8 +341,8 @@ AcpiExDigitsNeeded (
  *
  * FUNCTION:    AcpiExEisaIdToString
  *
- * PARAMETERS:  CompressedId    - EISAID to be converted
- *              OutString       - Where to put the converted string (8 bytes)
+ * PARAMETERS:  OutString       - Where to put the converted string (8 bytes)
+ *              CompressedId    - EISAID to be converted
  *
  * RETURN:      None
  *
@@ -400,7 +400,7 @@ AcpiExEisaIdToString (
  *                                possible 64-bit integer.
  *              Value           - Value to be converted
  *
- * RETURN:      None, string
+ * RETURN:      Converted string in OutString
  *
  * DESCRIPTION: Convert a 64-bit integer to decimal string representation.
  *              Assumes string buffer is large enough to hold the string. The
@@ -437,9 +437,9 @@ AcpiExIntegerToString (
  * FUNCTION:    AcpiExPciClsToString
  *
  * PARAMETERS:  OutString       - Where to put the converted string (7 bytes)
- * PARAMETERS:  ClassCode       - PCI class code to be converted (3 bytes)
+ *              ClassCode       - PCI class code to be converted (3 bytes)
  *
- * RETURN:      None
+ * RETURN:      Converted string in OutString
  *
  * DESCRIPTION: Convert 3-bytes PCI class code to string representation.
  *              Return buffer must be large enough to hold the string. The
@@ -475,7 +475,7 @@ AcpiExPciClsToString (
  *
  * PARAMETERS:  SpaceId             - ID to be validated
  *
- * RETURN:      TRUE if valid/supported ID.
+ * RETURN:      TRUE if SpaceId is a valid/supported ID.
  *
  * DESCRIPTION: Validate an operation region SpaceID.
  *

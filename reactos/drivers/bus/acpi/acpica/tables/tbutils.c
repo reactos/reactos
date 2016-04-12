@@ -185,7 +185,7 @@ AcpiTbCopyDsdt (
         ACPI_PTR_TO_PHYSADDR (NewTable),
         ACPI_TABLE_ORIGIN_INTERNAL_VIRTUAL, NewTable);
 
-    ACPI_INFO ((AE_INFO,
+    ACPI_INFO ((
         "Forced DSDT copy: length 0x%05X copied locally, original unmapped",
         NewTable->Length));
 

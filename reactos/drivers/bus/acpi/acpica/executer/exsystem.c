@@ -94,7 +94,7 @@ AcpiExSystemWaitSemaphore (
 
         /* Reacquire the interpreter */
 
-       AcpiExEnterInterpreter ();
+        AcpiExEnterInterpreter ();
     }
 
     return_ACPI_STATUS (Status);

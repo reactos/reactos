@@ -642,7 +642,8 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_NOTIFY_SHUTDOWN_REQUEST    (UINT8) 0x0C
 #define ACPI_NOTIFY_AFFINITY_UPDATE     (UINT8) 0x0D
 
-#define ACPI_NOTIFY_MAX                 0x0D
+#define ACPI_GENERIC_NOTIFY_MAX         0x0D
+#define ACPI_SPECIFIC_NOTIFY_MAX        0x84
 
 /*
  * Types associated with ACPI names and objects. The first group of
@@ -1033,7 +1034,7 @@ typedef struct acpi_buffer
  */
 typedef struct acpi_predefined_names
 {
-    char                            *Name;
+    const char                      *Name;
     UINT8                           Type;
     char                            *Val;
 
@@ -1324,7 +1325,7 @@ typedef struct acpi_mem_space_context
  */
 typedef struct acpi_memory_list
 {
-    char                            *ListName;
+    const char                      *ListName;
     void                            *ListHead;
     UINT16                          ObjectSize;
     UINT16                          MaxDepth;

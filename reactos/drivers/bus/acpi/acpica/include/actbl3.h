@@ -205,7 +205,7 @@ typedef struct acpi_table_fpdt
 } ACPI_TABLE_FPDT;
 
 
-/* FPDT subtable header */
+/* FPDT subtable header (Performance Record Structure) */
 
 typedef struct acpi_fpdt_header
 {
@@ -230,6 +230,72 @@ enum AcpiFpdtType
 
 /* 0: Firmware Basic Boot Performance Record */
 
+typedef struct acpi_fpdt_boot_pointer
+{
+    ACPI_FPDT_HEADER        Header;
+    UINT8                   Reserved[4];
+    UINT64                  Address;
+
+} ACPI_FPDT_BOOT_POINTER;
+
+
+/* 1: S3 Performance Table Pointer Record */
+
+typedef struct acpi_fpdt_s3pt_pointer
+{
+    ACPI_FPDT_HEADER        Header;
+    UINT8                   Reserved[4];
+    UINT64                  Address;
+
+} ACPI_FPDT_S3PT_POINTER;
+
+
+/*
+ * S3PT - S3 Performance Table. This table is pointed to by the
+ * S3 Pointer Record above.
+ */
+typedef struct acpi_table_s3pt
+{
+    UINT8                   Signature[4]; /* "S3PT" */
+    UINT32                  Length;
+
+} ACPI_TABLE_S3PT;
+
+
+/*
+ * S3PT Subtables (Not part of the actual FPDT)
+ */
+
+/* Values for Type field in S3PT header */
+
+enum AcpiS3ptType
+{
+    ACPI_S3PT_TYPE_RESUME               = 0,
+    ACPI_S3PT_TYPE_SUSPEND              = 1,
+    ACPI_FPDT_BOOT_PERFORMANCE          = 2
+};
+
+typedef struct acpi_s3pt_resume
+{
+    ACPI_FPDT_HEADER        Header;
+    UINT32                  ResumeCount;
+    UINT64                  FullResume;
+    UINT64                  AverageResume;
+
+} ACPI_S3PT_RESUME;
+
+typedef struct acpi_s3pt_suspend
+{
+    ACPI_FPDT_HEADER        Header;
+    UINT64                  SuspendStart;
+    UINT64                  SuspendEnd;
+
+} ACPI_S3PT_SUSPEND;
+
+
+/*
+ * FPDT Boot Performance Record (Not part of the actual FPDT)
+ */
 typedef struct acpi_fpdt_boot
 {
     ACPI_FPDT_HEADER        Header;
@@ -241,66 +307,6 @@ typedef struct acpi_fpdt_boot
     UINT64                  ExitServicesExit;
 
 } ACPI_FPDT_BOOT;
-
-
-/* 1: S3 Performance Table Pointer Record */
-
-typedef struct acpi_fpdt_s3pt_ptr
-{
-    ACPI_FPDT_HEADER        Header;
-    UINT8                   Reserved[4];
-    UINT64                  Address;
-
-} ACPI_FPDT_S3PT_PTR;
-
-
-/*
- * S3PT - S3 Performance Table. This table is pointed to by the
- * FPDT S3 Pointer Record above.
- */
-typedef struct acpi_table_s3pt
-{
-    UINT8                   Signature[4]; /* "S3PT" */
-    UINT32                  Length;
-
-} ACPI_TABLE_S3PT;
-
-
-/*
- * S3PT Subtables
- */
-typedef struct acpi_s3pt_header
-{
-    UINT16                  Type;
-    UINT8                   Length;
-    UINT8                   Revision;
-
-} ACPI_S3PT_HEADER;
-
-/* Values for Type field above */
-
-enum AcpiS3ptType
-{
-    ACPI_S3PT_TYPE_RESUME               = 0,
-    ACPI_S3PT_TYPE_SUSPEND              = 1
-};
-
-typedef struct acpi_s3pt_resume
-{
-    ACPI_S3PT_HEADER        Header;
-    UINT32                  ResumeCount;
-    UINT64                  FullResume;
-    UINT64                  AverageResume;
-
-} ACPI_S3PT_RESUME;
-
-typedef struct acpi_s3pt_suspend
-{
-    ACPI_S3PT_HEADER        Header;
-    UINT64                  SuspendStart;
-    UINT64                  SuspendEnd;
-
-} ACPI_S3PT_SUSPEND;
 
 
 /*******************************************************************************

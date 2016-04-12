@@ -273,10 +273,6 @@ AcpiEvDetachRegion (
     BOOLEAN                 AcpiNsIsLocked);
 
 void
-AcpiEvAssociateRegMethod (
-    ACPI_OPERAND_OBJECT     *RegionObj);
-
-void
 AcpiEvExecuteRegMethods (
     ACPI_NAMESPACE_NODE     *Node,
     ACPI_ADR_SPACE_TYPE     SpaceId,

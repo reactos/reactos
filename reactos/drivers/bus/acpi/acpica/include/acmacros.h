@@ -264,6 +264,10 @@
 
 #define ACPI_IS_MISALIGNED(value)           (((ACPI_SIZE) value) & (sizeof(ACPI_SIZE)-1))
 
+/* Generic (power-of-two) rounding */
+
+#define ACPI_IS_POWER_OF_TWO(a)             (((a) & ((a) - 1)) == 0)
+
 /*
  * Bitmask creation
  * Bit positions start at zero.
