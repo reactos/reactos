@@ -13,6 +13,7 @@ list(APPEND SOURCE
     NtOpenProcessToken.c
     NtOpenThreadToken.c
     NtProtectVirtualMemory.c
+    NtQueryInformationProcess.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c
