@@ -70,6 +70,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
     PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
+    ULONG UserTime, KernelTime;
     PPROCESS_PRIORITY_CLASS PsPriorityClass = (PPROCESS_PRIORITY_CLASS)ProcessInformation;
     ULONG HandleCount;
     PPROCESS_SESSION_INFORMATION SessionInfo =
@@ -296,12 +297,10 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Copy time information from EPROCESS/KPROCESS */
-                /* FIXME: Call KeQueryRuntimeProcess */
+                KernelTime = KeQueryRuntimeProcess(&Process->Pcb, &UserTime);
                 ProcessTime->CreateTime = Process->CreateTime;
-                ProcessTime->UserTime.QuadPart = Process->Pcb.UserTime *
-                                                 KeMaximumIncrement;
-                ProcessTime->KernelTime.QuadPart = Process->Pcb.KernelTime *
-                                                   KeMaximumIncrement;
+                ProcessTime->UserTime.QuadPart = (LONGLONG)UserTime * KeMaximumIncrement;
+                ProcessTime->KernelTime.QuadPart = (LONGLONG)KernelTime * KeMaximumIncrement;
                 ProcessTime->ExitTime = Process->ExitTime;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

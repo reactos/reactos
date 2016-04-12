@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING in the top level directory
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for the NtQueryInformationProcess API
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
