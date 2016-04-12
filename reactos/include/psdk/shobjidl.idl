@@ -1998,6 +1998,145 @@ interface ITaskbarList : IUnknown
 }
 
 /*****************************************************************************
+ *    ITaskbarList2 interface
+ */
+[
+    object,
+    uuid(602D4995-B13A-429B-A66E-1935E44F4317),
+    pointer_default(unique)
+]
+interface ITaskbarList2 : ITaskbarList
+{
+    HRESULT MarkFullscreenWindow(
+        [in] HWND hwnd,
+        [in] BOOL fullscreen);
+}
+
+cpp_quote("#ifdef MIDL_PASS")
+typedef IUnknown* HIMAGELIST;
+cpp_quote("#endif")
+
+typedef [v1_enum] enum THUMBBUTTONFLAGS {
+    THBF_ENABLED         = 0x0000,
+    THBF_DISABLED        = 0x0001,
+    THBF_DISMISSONCLICK  = 0x0002,
+    THBF_NOBACKGROUND    = 0x0004,
+    THBF_HIDDEN          = 0x0008,
+    THBF_NONINTERACTIVE  = 0x0010
+} THUMBBUTTONFLAGS;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONFLAGS)")
+
+typedef [v1_enum] enum THUMBBUTTONMASK {
+    THB_BITMAP   = 0x0001,
+    THB_ICON     = 0x0002,
+    THB_TOOLTIP  = 0x0004,
+    THB_FLAGS    = 0x0008
+} THUMBBUTTONMASK;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONMASK)")
+
+cpp_quote("#include <pshpack8.h>")
+typedef struct THUMBBUTTON {
+    THUMBBUTTONMASK dwMask;
+    UINT iId;
+    UINT iBitmap;
+    HICON hIcon;
+    WCHAR szTip[260];
+    THUMBBUTTONFLAGS dwFlags;
+} THUMBBUTTON, *LPTHUMBBUTTON;
+cpp_quote("#include <poppack.h>")
+
+[
+    uuid(ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf),
+    object
+]
+interface ITaskbarList3 : ITaskbarList2
+{
+    typedef [v1_enum] enum TBPFLAG {
+        TBPF_NOPROGRESS     = 0x0000,
+        TBPF_INDETERMINATE  = 0x0001,
+        TBPF_NORMAL         = 0x0002,
+        TBPF_ERROR          = 0x0004,
+        TBPF_PAUSED         = 0x0008
+    } TBPFLAG;
+
+    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(TBPFLAG)")
+
+    HRESULT SetProgressValue(
+            [in] HWND hwnd,
+            [in] ULONGLONG ullCompleted,
+            [in] ULONGLONG ullTotal);
+
+    HRESULT SetProgressState(
+            [in] HWND hwnd,
+            [in] TBPFLAG tbpFlags);
+
+    HRESULT RegisterTab(
+            [in] HWND hwndTab,
+            [in] HWND hwndMDI);
+
+    HRESULT UnregisterTab([in] HWND hwndTab);
+
+    HRESULT SetTabOrder(
+            [in] HWND hwndTab,
+            [in] HWND hwndInsertBefore);
+
+    HRESULT SetTabActive(
+            [in] HWND hwndTab,
+            [in] HWND hwndMDI,
+            [in] DWORD dwReserved);
+
+    HRESULT ThumbBarAddButtons(
+            [in] HWND hwnd,
+            [in] UINT cButtons,
+            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
+
+    HRESULT ThumbBarUpdateButtons(
+            [in] HWND hwnd,
+            [in] UINT cButtons,
+            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
+
+    HRESULT ThumbBarSetImageList(
+            [in] HWND hwnd,
+            [in] HIMAGELIST himl);
+
+    HRESULT SetOverlayIcon(
+            [in] HWND hwnd,
+            [in] HICON hIcon,
+            [in, unique, string] LPCWSTR pszDescription);
+
+    HRESULT SetThumbnailTooltip(
+            [in] HWND hwnd,
+            [in, unique, string] LPCWSTR pszTip);
+
+    HRESULT SetThumbnailClip(
+            [in] HWND hwnd,
+            [in] RECT *prcClip);
+}
+
+[
+    uuid(c43dc798-95d1-4bea-9030-bb99e2983a1a),
+    object
+]
+interface ITaskbarList4 : ITaskbarList3
+{
+    typedef [v1_enum] enum STPFLAG {
+        STPF_NONE                       = 0x0000,
+        STPF_USEAPPTHUMBNAILALWAYS      = 0x0001,
+        STPF_USEAPPTHUMBNAILWHENACTIVE  = 0x0002,
+        STPF_USEAPPPEEKALWAYS           = 0x0004,
+        STPF_USEAPPPEEKWHENACTIVE       = 0x0008
+    } STPFLAG;
+
+    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(STPFLAG)")
+
+    HRESULT SetTabProperties(
+            [in] HWND hwndTab,
+            [in] STPFLAG stpFlags);
+}
+
+/*****************************************************************************
  * IDefaultExtractIconInit interface
  */
 
@@ -2283,25 +2422,6 @@ interface IMenuBand : IUnknown
 }
 
 /*****************************************************************************
- * IProfferService interface
- */
-[
-    uuid(cb728b20-f786-11ce-92ad-00aa00a74cd0),
-    object,
-    pointer_default(unique),
-    local
-]
-interface IProfferService : IUnknown
-{
-    HRESULT ProfferService(
-        [in] REFGUID service,
-        [in] IServiceProvider *pService,
-        [out] DWORD *pCookie);
-
-    HRESULT RevokeService([in] DWORD cookie);
-}
-
-/*****************************************************************************
  * IShellMenuCallback interface
  */
 cpp_quote("#include <pshpack8.h>")
@@ -2512,145 +2632,6 @@ interface ITrackShellMenu : IShellMenu
 
 cpp_quote("#endif /* _WIN32_IE_IE60 */")
 
-cpp_quote("#ifdef MIDL_PASS")
-typedef IUnknown* HIMAGELIST;
-cpp_quote("#endif")
-
-typedef [v1_enum] enum THUMBBUTTONFLAGS {
-    THBF_ENABLED         = 0x0000,
-    THBF_DISABLED        = 0x0001,
-    THBF_DISMISSONCLICK  = 0x0002,
-    THBF_NOBACKGROUND    = 0x0004,
-    THBF_HIDDEN          = 0x0008,
-    THBF_NONINTERACTIVE  = 0x0010
-} THUMBBUTTONFLAGS;
-
-cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONFLAGS)")
-
-typedef [v1_enum] enum THUMBBUTTONMASK {
-    THB_BITMAP   = 0x0001,
-    THB_ICON     = 0x0002,
-    THB_TOOLTIP  = 0x0004,
-    THB_FLAGS    = 0x0008
-} THUMBBUTTONMASK;
-
-cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONMASK)")
-
-cpp_quote("#include <pshpack8.h>")
-typedef struct THUMBBUTTON {
-    THUMBBUTTONMASK dwMask;
-    UINT iId;
-    UINT iBitmap;
-    HICON hIcon;
-    WCHAR szTip[260];
-    THUMBBUTTONFLAGS dwFlags;
-} THUMBBUTTON, *LPTHUMBBUTTON;
-cpp_quote("#include <poppack.h>")
-
-/*****************************************************************************
- *    ITaskbarList2 interface
- */
-[
-    object,
-    uuid(602D4995-B13A-429B-A66E-1935E44F4317),
-    pointer_default(unique)
-]
-interface ITaskbarList2 : ITaskbarList
-{
-    HRESULT MarkFullscreenWindow(
-        [in] HWND hwnd,
-        [in] BOOL fullscreen);
-}
-
-[
-    uuid(ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf),
-    object
-]
-interface ITaskbarList3 : ITaskbarList2
-{
-    typedef [v1_enum] enum TBPFLAG {
-        TBPF_NOPROGRESS     = 0x0000,
-        TBPF_INDETERMINATE  = 0x0001,
-        TBPF_NORMAL         = 0x0002,
-        TBPF_ERROR          = 0x0004,
-        TBPF_PAUSED         = 0x0008
-    } TBPFLAG;
-
-    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(TBPFLAG)")
-
-    HRESULT SetProgressValue(
-            [in] HWND hwnd,
-            [in] ULONGLONG ullCompleted,
-            [in] ULONGLONG ullTotal);
-
-    HRESULT SetProgressState(
-            [in] HWND hwnd,
-            [in] TBPFLAG tbpFlags);
-
-    HRESULT RegisterTab(
-            [in] HWND hwndTab,
-            [in] HWND hwndMDI);
-
-    HRESULT UnregisterTab([in] HWND hwndTab);
-
-    HRESULT SetTabOrder(
-            [in] HWND hwndTab,
-            [in] HWND hwndInsertBefore);
-
-    HRESULT SetTabActive(
-            [in] HWND hwndTab,
-            [in] HWND hwndMDI,
-            [in] DWORD dwReserved);
-
-    HRESULT ThumbBarAddButtons(
-            [in] HWND hwnd,
-            [in] UINT cButtons,
-            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
-
-    HRESULT ThumbBarUpdateButtons(
-            [in] HWND hwnd,
-            [in] UINT cButtons,
-            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
-
-    HRESULT ThumbBarSetImageList(
-            [in] HWND hwnd,
-            [in] HIMAGELIST himl);
-
-    HRESULT SetOverlayIcon(
-            [in] HWND hwnd,
-            [in] HICON hIcon,
-            [in, unique, string] LPCWSTR pszDescription);
-
-    HRESULT SetThumbnailTooltip(
-            [in] HWND hwnd,
-            [in, unique, string] LPCWSTR pszTip);
-
-    HRESULT SetThumbnailClip(
-            [in] HWND hwnd,
-            [in] RECT *prcClip);
-}
-
-[
-    uuid(c43dc798-95d1-4bea-9030-bb99e2983a1a),
-    object
-]
-interface ITaskbarList4 : ITaskbarList3
-{
-    typedef [v1_enum] enum STPFLAG {
-        STPF_NONE                       = 0x0000,
-        STPF_USEAPPTHUMBNAILALWAYS      = 0x0001,
-        STPF_USEAPPTHUMBNAILWHENACTIVE  = 0x0002,
-        STPF_USEAPPPEEKALWAYS           = 0x0004,
-        STPF_USEAPPPEEKWHENACTIVE       = 0x0008
-    } STPFLAG;
-
-    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(STPFLAG)")
-
-    HRESULT SetTabProperties(
-            [in] HWND hwndTab,
-            [in] STPFLAG stpFlags);
-}
-
 /*****************************************************************************
  *    IAutoCompleteDropDown interface
  */
@@ -2668,6 +2649,24 @@ cpp_quote("#define ACDD_VISIBLE   0x0001")
         [out, string] LPWSTR *ppwszString);
 
     HRESULT ResetEnumerator();
+}
+
+/*****************************************************************************
+ * IProfferService interface
+ */
+[
+    object,
+    uuid(cb728b20-f786-11ce-92ad-00aa00a74cd0),
+    pointer_default(unique)
+]
+interface IProfferService : IUnknown
+{
+    HRESULT ProfferService(
+        [in] REFGUID service,
+        [in] IServiceProvider *pService,
+        [out] DWORD *pCookie);
+
+    HRESULT RevokeService([in] DWORD cookie);
 }
 
 /*****************************************************************************
