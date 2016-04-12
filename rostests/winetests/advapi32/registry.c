@@ -2,7 +2,7 @@
  * Unit tests for registry functions
  *
  * Copyright (c) 2002 Alexandre Julliard
- * Copyright (c) 2010 André Hentschel
+ * Copyright (c) 2010 AndrÃ© Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1997,8 +1997,30 @@ static void test_reg_query_info(void)
        "classbuffer = \"%.*s\", expected %s\n",
        (int)sizeof(classbuffer), classbuffer, expectbuffer);
 
+    memset(classbuffer, 0x55, sizeof(classbuffer));
+    classlen = 0xdeadbeef;
+    ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == sizeof(subkey_class) - 1, "classlen = %u\n", classlen);
+    memset(expectbuffer, 0x55, sizeof(expectbuffer));
+    strcpy(expectbuffer, subkey_class);
+    ok(!memcmp(classbuffer, expectbuffer, sizeof(classbuffer)),
+       "classbuffer = \"%.*s\", expected %s\n",
+       (int)sizeof(classbuffer), classbuffer, expectbuffer);
+
     memset(classbufferW, 0x55, sizeof(classbufferW));
     classlen = sizeof(subkey_class);
+    ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == sizeof(subkey_class) - 1, "classlen = %u\n", classlen);
+    memset(expectbufferW, 0x55, sizeof(expectbufferW));
+    lstrcpyW(expectbufferW, subkey_classW);
+    ok(!memcmp(classbufferW, expectbufferW, sizeof(classbufferW)),
+       "classbufferW = %s, expected %s\n",
+       wine_dbgstr_wn(classbufferW, sizeof(classbufferW) / sizeof(WCHAR)), wine_dbgstr_w(expectbufferW));
+
+    memset(classbufferW, 0x55, sizeof(classbufferW));
+    classlen = 0xdeadbeef;
     ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
     ok(classlen == sizeof(subkey_class) - 1, "classlen = %u\n", classlen);

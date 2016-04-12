@@ -3645,7 +3645,7 @@ RegQueryInfoKeyA(HKEY hKey,
                                               FALSE);
         ErrorCode = RtlNtStatusToDosError(Status);
         cClass = AnsiString.Length;
-        lpClass[*lpcClass - 1] = 0;
+        lpClass[cClass] = ANSI_NULL;
     }
 
     if (lpcClass != NULL)
