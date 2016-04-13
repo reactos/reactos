@@ -26,8 +26,6 @@
 #include "apphelp.h"
 
 #include "wine/winternl.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
 
 /* from dpfilter.h */
 #define DPFLTR_APPCOMPAT_ID 123
@@ -82,6 +80,12 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     return TRUE;
 }
 
+BOOL WINAPI ApphelpCheckInstallShieldPackage(void* ptr, LPCWSTR path)
+{
+    SHIM_WARN("stub: ptr=%p path='%S'\r\n", ptr, path);
+    return TRUE;
+}
+
 
 /**
  * Outputs diagnostic info.
@@ -130,6 +134,11 @@ BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format
     va_start(ArgList, Format);
     StringCchVPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, Format, ArgList);
     va_end(ArgList);
+#if defined(APPCOMPAT_USE_DBGPRINTEX) && APPCOMPAT_USE_DBGPRINTEX
     return NT_SUCCESS(DbgPrintEx(DPFLTR_APPCOMPAT_ID, Level, "%s", Buffer));
+#else
+    OutputDebugStringA(Buffer);
+    return TRUE;
+#endif
 }
 
