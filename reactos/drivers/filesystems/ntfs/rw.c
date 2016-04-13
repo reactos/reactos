@@ -150,7 +150,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
             RealLength += DeviceExt->NtfsInfo.BytesPerSector;
 
 
-        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + (DeviceExt->NtfsInfo.BytesPerSector * 2), TAG_NTFS);
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength, TAG_NTFS);
         if (ReadBuffer == NULL)
         {
             DPRINT1("Not enough memory!\n");
