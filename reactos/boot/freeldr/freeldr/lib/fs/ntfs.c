@@ -302,8 +302,8 @@ static ULONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT Cont
 
     ReadLength = (ULONG)min(DataRunLength * Volume->ClusterSize - (Offset - CurrentOffset), Length);
     if (DataRunStartLCN == -1)
-    RtlZeroMemory(Buffer, ReadLength);
-    if (NtfsDiskRead(Volume, DataRunStartLCN * Volume->ClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
+        RtlZeroMemory(Buffer, ReadLength);
+    if (DataRunStartLCN == -1 || NtfsDiskRead(Volume, DataRunStartLCN * Volume->ClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
     {
         Length -= ReadLength;
         Buffer += ReadLength;
