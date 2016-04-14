@@ -243,13 +243,19 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
 
     ReadLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset), Length);
     if (DataRunStartLCN == -1)
+    {
         RtlZeroMemory(Buffer, ReadLength);
-    Status = NtfsReadDisk(Vcb->StorageDevice,
-                          DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset,
-                          ReadLength,
-                          Vcb->NtfsInfo.BytesPerSector,
-                          (PVOID)Buffer,
-                          FALSE);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = NtfsReadDisk(Vcb->StorageDevice,
+                              DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset,
+                              ReadLength,
+                              Vcb->NtfsInfo.BytesPerSector,
+                              (PVOID)Buffer,
+                              FALSE);
+    }
     if (NT_SUCCESS(Status))
     {
         Length -= ReadLength;
