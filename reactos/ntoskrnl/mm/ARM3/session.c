@@ -1053,6 +1053,7 @@ MmGetSessionById(
     while (ListEntry != &MiSessionWsList)
     {
         Session = CONTAINING_RECORD(ListEntry, MM_SESSION_SPACE, WsListEntry);
+        ListEntry = ListEntry->Flink;
 
         /* Check if this is the session we are looking for */
         if (Session->SessionId == SessionId)
