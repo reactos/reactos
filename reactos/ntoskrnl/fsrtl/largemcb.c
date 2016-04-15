@@ -184,7 +184,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     NeedleRun.StartingLbn.QuadPart = ~0ULL;
     Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
     if ((LowerRun = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &NeedleRun)) &&
-        (LowerRun->StartingLbn.QuadPart < Node.StartingLbn.QuadPart))
+        (LowerRun->StartingLbn.QuadPart + (LowerRun->RunEndVbn.QuadPart - LowerRun->RunStartVbn.QuadPart) == Node.StartingLbn.QuadPart))
     {
         ASSERT(LowerRun->RunEndVbn.QuadPart == Node.RunStartVbn.QuadPart);
         Node.RunStartVbn.QuadPart = LowerRun->RunStartVbn.QuadPart;
