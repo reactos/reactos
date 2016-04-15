@@ -460,6 +460,14 @@ NtUserCreateWindowStation(
         return 0;
     }
 
+    /* Initialize the window station */
+    RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
+
+    InitializeListHead(&WindowStationObject->DesktopListHead);
+    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
+    WindowStationObject->Name = WindowStationName;
+    WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
+
     Status = ObInsertObject((PVOID)WindowStationObject,
                             NULL,
                             dwDesiredAccess,
@@ -470,19 +478,9 @@ NtUserCreateWindowStation(
     if (!NT_SUCCESS(Status))
     {
         ERR("ObInsertObject failed for window station %wZ\n", &WindowStationName);
-        ExFreePoolWithTag(WindowStationName.Buffer, TAG_STRING);
         SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-        ObDereferenceObject(WindowStationObject);
         return 0;
     }
-
-    /* Initialize the window station */
-    RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
-
-    InitializeListHead(&WindowStationObject->DesktopListHead);
-    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
-    WindowStationObject->Name = WindowStationName;
-    WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
 
     if (InputWindowStation == NULL)
     {
