@@ -454,7 +454,7 @@ NtUserCreateWindowStation(
 
     if (!NT_SUCCESS(Status))
     {
-        ERR("ObCreateObject failed for window station %wZ\n", &WindowStationName);
+        ERR("ObCreateObject failed with %lx for window station %wZ\n", Status, &WindowStationName);
         ExFreePoolWithTag(WindowStationName.Buffer, TAG_STRING);
         SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
         return 0;
@@ -464,9 +464,16 @@ NtUserCreateWindowStation(
     RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
 
     InitializeListHead(&WindowStationObject->DesktopListHead);
-    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
     WindowStationObject->Name = WindowStationName;
     WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
+    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlCreateAtomTable failed with %lx for window station %wZ\n", Status, &WindowStationName);
+        ObDereferenceObject(WindowStationObject);
+        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+        return 0;
+    }
 
     Status = ObInsertObject((PVOID)WindowStationObject,
                             NULL,
@@ -477,7 +484,7 @@ NtUserCreateWindowStation(
 
     if (!NT_SUCCESS(Status))
     {
-        ERR("ObInsertObject failed for window station %wZ\n", &WindowStationName);
+        ERR("ObInsertObject failed with %lx for window station\n", Status);
         SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
         return 0;
     }
