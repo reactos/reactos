@@ -833,7 +833,7 @@ NTSTATUS
 NTAPI
 FsRtlRegisterUncProvider(
   _Out_ PHANDLE MupHandle,
-  _In_ PUNICODE_STRING RedirectorDeviceName,
+  _In_ PCUNICODE_STRING RedirectorDeviceName,
   _In_ BOOLEAN MailslotsSupported);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
