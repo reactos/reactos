@@ -94,15 +94,6 @@
 #define ExRaiseStatus RtlRaiseStatus
 
 //
-// NT_ASSERT Best Assert
-//
-#if defined(_MSC_VER)
-#undef ASSERT
-#define ASSERT NT_ASSERT
-#endif
-
-
-//
 // Switch for enabling global page support
 //
 

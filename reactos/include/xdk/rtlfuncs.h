@@ -3188,6 +3188,42 @@ RtlCheckBit(
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
+#if defined(_MSC_VER)
+# define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
+# define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
+#else
+# define __assert_annotationA(msg) \
+    DbgPrint("Assertion failed at %s(%d): %s\n", __FILE__, __LINE__, msg)
+# define __assert_annotationW(msg) \
+    DbgPrint("Assertion failed at %s(%d): %S\n", __FILE__, __LINE__, msg)
+#endif
+
+#ifdef _PREFAST_
+# define NT_ANALYSIS_ASSUME(_exp) _Analysis_assume_(_exp)
+#elif DBG
+# define NT_ANALYSIS_ASSUME(_exp) ((void)0)
+#else
+# define NT_ANALYSIS_ASSUME(_exp) __noop(_exp)
+#endif
+
+#define NT_ASSERT_ACTION(exp) \
+   (NT_ANALYSIS_ASSUME(exp), \
+   ((!(exp)) ? \
+      (__assert_annotationA(#exp), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+
+#define NT_ASSERTMSG_ACTION(msg, exp) \
+   (NT_ANALYSIS_ASSUME(exp), \
+   ((!(exp)) ? \
+      (__assert_annotationA(msg), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+
+#define NT_ASSERTMSGW_ACTION(msg, exp) \
+   (NT_ANALYSIS_ASSUME(exp), \
+   ((!(exp)) ? \
+      (__assert_annotationW(msg), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+
 #if DBG
 
 #define RTL_VERIFY(exp) \
@@ -3206,95 +3242,76 @@ RtlCheckBit(
   ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-/* The ASSERTs must be cast to void to avoid warnings about unused results.
- * We also cannot invoke the VERIFY versions because the indirection messes
- * with stringify. */
-#define ASSERT(exp) \
-  ((VOID)((!(exp)) ? \
-    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE))
+/* The ASSERTs must be cast to void to avoid warnings about unused results. */
+#define ASSERT                 (void)RTL_VERIFY
+#define ASSERTMSG              (void)RTL_VERIFYMSG
+#define RTL_SOFT_ASSERT        (void)RTL_SOFT_VERIFY
+#define RTL_SOFT_ASSERTMSG     (void)RTL_SOFT_VERIFYMSG
 
-#define ASSERTMSG(msg, exp) \
-  ((VOID)((!(exp)) ? \
-    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE))
+#define NT_VERIFY              NT_ASSERT_ACTION
+#define NT_VERIFYMSG           NT_ASSERTMSG_ACTION
+#define NT_VERIFYMSGW          NT_ASSERTMSGW_ACTION
 
-#define RTL_SOFT_ASSERT(exp) \
-  ((VOID)((!(exp)) ? \
-    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE))
+#define NT_ASSERT_ASSUME       (void)NT_ASSERT_ACTION
+#define NT_ASSERTMSG_ASSUME    (void)NT_ASSERTMSG_ACTION
+#define NT_ASSERTMSGW_ASSUME   (void)NT_ASSERTMSGW_ACTION
 
-#define RTL_SOFT_ASSERTMSG(msg, exp) \
-  ((VOID)((!(exp)) ? \
-    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE))
-
-#if defined(_MSC_VER)
-# define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
-# define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
-#else
-# define __assert_annotationA(msg) \
-    DbgPrint("Assertion failed at %s(%d): %s\n", __FILE__, __LINE__, msg)
-# define __assert_annotationW(msg) \
-    DbgPrint("Assertion failed at %s(%d): %S\n", __FILE__, __LINE__, msg)
-#endif
-
-#ifdef _PREFAST_
-#define __analysis_unreachable() __assume(0)
-#else
-#define __analysis_unreachable() ((void)0)
-#endif
-
-#define NT_VERIFY(exp) \
-   ((!(exp)) ? \
-      (__assert_annotationA(#exp), \
-       DbgRaiseAssertionFailure(), FALSE) : TRUE)
-
-#define NT_VERIFYMSG(msg, exp) \
-   ((!(exp)) ? \
-      (__assert_annotationA(msg), \
-      DbgRaiseAssertionFailure(), FALSE) : TRUE)
-
-#define NT_VERIFYMSGW(msg, exp) \
-    ((!(exp)) ? \
-        (__assert_annotationW(msg), \
-         DbgRaiseAssertionFailure(), FALSE) : TRUE)
-
-/* Can't reuse verify, see above */
-#define NT_ASSERT(exp) \
-   ((VOID)((!(exp)) ? \
-      (__assert_annotationA(#exp), \
-       DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
-
-#define NT_ASSERTMSG(msg, exp) \
-   ((VOID)((!(exp)) ? \
-      (__assert_annotationA(msg), \
-      DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
-
-#define NT_ASSERTMSGW(msg, exp) \
-    ((VOID)((!(exp)) ? \
-        (__assert_annotationW(msg), \
-         DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
+#define NT_ASSERT_NOASSUME     (void)NT_ASSERT_ACTION
+#define NT_ASSERTMSG_NOASSUME  (void)NT_ASSERTMSG_ACTION
+#define NT_ASSERTMSGW_NOASSUME (void)NT_ASSERTMSGW_ACTION
 
 #else /* !DBG */
 
-#define ASSERT(exp) ((VOID) 0)
-#define ASSERTMSG(msg, exp) ((VOID) 0)
+#define ASSERT(exp)                  ((void)0)
+#define ASSERTMSG(msg, exp)          ((void)0)
 
-#define RTL_SOFT_ASSERT(exp) ((VOID) 0)
-#define RTL_SOFT_ASSERTMSG(msg, exp) ((VOID) 0)
+#define RTL_SOFT_ASSERT(exp)         ((void)0)
+#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)0)
 
-#define RTL_VERIFY(exp) ((exp) ? TRUE : FALSE)
-#define RTL_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
+#define RTL_VERIFY(exp)              ((exp) ? TRUE : FALSE)
+#define RTL_VERIFYMSG(msg, exp)      ((exp) ? TRUE : FALSE)
 
-#define RTL_SOFT_VERIFY(exp) ((exp) ? TRUE : FALSE)
+#define RTL_SOFT_VERIFY(exp)         ((exp) ? TRUE : FALSE)
 #define RTL_SOFT_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
 
-#define NT_ASSERT(exp)          ((VOID)0)
-#define NT_ASSERTMSG(msg, exp)  ((VOID)0)
-#define NT_ASSERTMSGW(msg, exp) ((VOID)0)
+#define NT_VERIFY(exp)          (NT_ANALYSIS_ASSUME(exp), ((exp) ? TRUE : FALSE))
+#define NT_VERIFYMSG(msg, exp)  (NT_ANALYSIS_ASSUME(exp), ((exp) ? TRUE : FALSE))
+#define NT_VERIFYMSGW(msg, exp) (NT_ANALYSIS_ASSUME(exp), ((exp) ? TRUE : FALSE))
 
-#define NT_VERIFY(_exp)           ((_exp) ? TRUE : FALSE)
-#define NT_VERIFYMSG(_msg, _exp ) ((_exp) ? TRUE : FALSE)
-#define NT_VERIFYMSGW(_msg, _exp) ((_exp) ? TRUE : FALSE)
+#define NT_ASSERT_ASSUME(exp)          (NT_ANALYSIS_ASSUME(exp), (void)0)
+#define NT_ASSERTMSG_ASSUME(msg, exp)  (NT_ANALYSIS_ASSUME(exp), (void)0)
+#define NT_ASSERTMSGW_ASSUME(msg, exp) (NT_ANALYSIS_ASSUME(exp), (void)0)
+
+#define NT_ASSERT_NOASSUME(exp)          ((void)0)
+#define NT_ASSERTMSG_NOASSUME(msg, exp)  ((void)0)
+#define NT_ASSERTMSGW_NOASSUME(msg, exp) ((void)0)
 
 #endif /* DBG */
+
+#define NT_FRE_ASSERT     (void)NT_ASSERT_ACTION
+#define NT_FRE_ASSERTMSG  (void)NT_ASSERTMSG_ACTION
+#define NT_FRE_ASSERTMSGW (void)NT_ASSERTMSGW_ACTION
+
+#ifdef NT_ASSERT_ALWAYS_ASSUMES
+# define NT_ASSERT NT_ASSERT_ASSUME
+# define NT_ASSERTMSG NT_ASSERTMSG_ASSUME
+# define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME
+#else
+# define NT_ASSERT NT_ASSERT_NOASSUME
+# define NT_ASSERTMSG NT_ASSERTMSG_NOASSUME
+# define NT_ASSERTMSGW NT_ASSERTMSGW_NOASSUME
+#endif /* NT_ASSERT_ALWAYS_ASSUMES */
+
+#if defined(_MSC_VER) && (defined(__REACTOS__) || defined(ASSERT_ALWAYS_NT_ASSERT))
+#undef ASSERT
+#define ASSERT NT_ASSERT
+#undef ASSERTMSG
+#define ASSERTMSG NT_ASSERT
+#undef ASSERTMSGW
+#define ASSERTMSGW NT_ASSERTMSGW
+#undef RTL_VERIFY
+#define RTL_VERIFY NT_VERIFY
+#endif
 
 #define InitializeListHead32(ListHead) (\
     (ListHead)->Flink = (ListHead)->Blink = PtrToUlong((ListHead)))

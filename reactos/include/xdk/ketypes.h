@@ -159,33 +159,34 @@ $if(_WDMDDK_)
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
-#define ASSERT_APC(Object) NT_ASSERT((Object)->Type == ApcObject)
+#define ASSERT_APC(Object) \
+    NT_ASSERT((Object)->Type == ApcObject)
 
 #define ASSERT_DPC(Object) \
-    ASSERT(((Object)->Type == 0) || \
-           ((Object)->Type == DpcObject) || \
-           ((Object)->Type == ThreadedDpcObject))
+    NT_ASSERT(((Object)->Type == 0) || \
+              ((Object)->Type == DpcObject) || \
+              ((Object)->Type == ThreadedDpcObject))
 
-#define ASSERT_GATE(object) \
-    NT_ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
-              (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+#define ASSERT_GATE(Object) \
+    NT_ASSERT((((Object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+              (((Object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
 
 #define ASSERT_DEVICE_QUEUE(Object) \
     NT_ASSERT((Object)->Type == DeviceQueueObject)
 
-#define ASSERT_TIMER(E) \
-    NT_ASSERT(((E)->Header.Type == TimerNotificationObject) || \
-              ((E)->Header.Type == TimerSynchronizationObject))
+#define ASSERT_TIMER(Object) \
+    NT_ASSERT(((Object)->Header.Type == TimerNotificationObject) || \
+              ((Object)->Header.Type == TimerSynchronizationObject))
 
-#define ASSERT_MUTANT(E) \
-    NT_ASSERT((E)->Header.Type == MutantObject)
+#define ASSERT_MUTANT(Object) \
+    NT_ASSERT((Object)->Header.Type == MutantObject)
 
-#define ASSERT_SEMAPHORE(E) \
-    NT_ASSERT((E)->Header.Type == SemaphoreObject)
+#define ASSERT_SEMAPHORE(Object) \
+    NT_ASSERT((Object)->Header.Type == SemaphoreObject)
 
-#define ASSERT_EVENT(E) \
-    NT_ASSERT(((E)->Header.Type == NotificationEvent) || \
-              ((E)->Header.Type == SynchronizationEvent))
+#define ASSERT_EVENT(Object) \
+    NT_ASSERT(((Object)->Header.Type == NotificationEvent) || \
+              ((Object)->Header.Type == SynchronizationEvent))
 
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
