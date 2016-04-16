@@ -1791,12 +1791,14 @@ NtUserSwitchDesktop(HDESK hdesk)
 
    if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
    {
+      ObDereferenceObject(pdesk);
       ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
       RETURN(FALSE);
    }
 
    if(pdesk == gpdeskInputDesktop)
    {
+       ObDereferenceObject(pdesk);
        WARN("NtUserSwitchDesktop called for active desktop\n");
        RETURN(TRUE);
    }
