@@ -3,16 +3,19 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for desktop objects
  * PROGRAMMERS:     Giannis Adamopoulos
+ *                  Thomas Faber
  */
 
+#define WIN32_NO_STATUS
 #include <apitest.h>
 
 #include <stdio.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include "helper.h"
+#include <ndk/umtypes.h>
+#include <ndk/obfuncs.h>
 
-#define STATUS_DLL_INIT_FAILED                  (0xC0000142)
 #define DESKTOP_ALL_ACCESS 0x01ff
 
 struct test_info {
@@ -196,6 +199,148 @@ void Test_OpenInputDesktop()
 
 }
 
+static HWINSTA open_winsta(PCWSTR winstaName, DWORD *error)
+{
+    HWINSTA hwinsta;
+    SetLastError(0xfeedf00d);
+    hwinsta = OpenWindowStationW(winstaName, FALSE, WINSTA_ALL_ACCESS);
+    *error = GetLastError();
+    return hwinsta;
+}
+
+static HWINSTA create_winsta(PCWSTR winstaName, DWORD *error)
+{
+    HWINSTA hwinsta;
+    SetLastError(0xfeedf00d);
+    hwinsta = CreateWindowStationW(winstaName, 0, WINSTA_ALL_ACCESS, NULL);
+    *error = GetLastError();
+    return hwinsta;
+}
+
+static HDESK open_desk(PCWSTR deskName, DWORD *error)
+{
+    HDESK hdesk;
+    SetLastError(0xfeedf00d);
+    hdesk = OpenDesktopW(deskName, 0, FALSE, DESKTOP_ALL_ACCESS);
+    *error = GetLastError();
+    return hdesk;
+}
+
+static HDESK create_desk(PCWSTR deskName, DWORD *error)
+{
+    HDESK hdesk;
+    SetLastError(0xfeedf00d);
+    hdesk = CreateDesktopW(deskName, NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    *error = GetLastError();
+    return hdesk;
+}
+
+static void Test_References(void)
+{
+    PCWSTR winstaName = L"RefTestWinsta";
+    PCWSTR deskName = L"RefTestDesktop";
+    HWINSTA hwinsta;
+    HWINSTA hwinsta2;
+    HWINSTA hwinstaProcess;
+    DWORD error;
+    NTSTATUS status;
+    OBJECT_BASIC_INFORMATION objectInfo = { 0 };
+    HDESK hdesk;
+    BOOL ret;
+    ULONG baseRefs;
+
+#define check_ref(handle, hdlcnt, ptrcnt) \
+    status = NtQueryObject(handle, ObjectBasicInformation, &objectInfo, sizeof(objectInfo), NULL);  \
+    ok(status == STATUS_SUCCESS, "status = %lx\n", status);                                         \
+    ok(objectInfo.HandleCount == (hdlcnt), "HandleCount = %lx\n", objectInfo.HandleCount);          \
+    ok(objectInfo.PointerCount == (ptrcnt), "PointerCount = %lx\n", objectInfo.PointerCount);
+
+    /* Winsta shouldn't exist */
+    hwinsta = open_winsta(winstaName, &error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+
+    /* Create it -- we get 1/4 instead of 1/3 because Winstas are kept in a list */
+    hwinsta = create_winsta(winstaName, &error);
+    ok(hwinsta != NULL && error == NO_ERROR, "Got %p, %lu\n", hwinsta, error);
+    check_ref(hwinsta, 1, 4);
+    baseRefs = objectInfo.PointerCount;
+    ok(baseRefs == 4, "Window station initially has %lu references, expected 4\n", baseRefs);
+    check_ref(hwinsta, 1, baseRefs);
+
+    /* Open a second handle */
+    hwinsta2 = open_winsta(winstaName, &error);
+    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hwinsta, error);
+    check_ref(hwinsta, 2, baseRefs + 1);
+
+    /* Close second handle -- back to 1/4 */
+    ret = CloseHandle(hwinsta2);
+    ok(ret == TRUE, "ret = %d\n", ret);
+    check_ref(hwinsta, 1, baseRefs);
+
+    /* Same game but using CloseWindowStation */
+    hwinsta2 = open_winsta(winstaName, &error);
+    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hwinsta, error);
+    check_ref(hwinsta, 2, baseRefs + 1);
+    ret = CloseWindowStation(hwinsta2);
+    ok(ret == TRUE, "ret = %d\n", ret);
+    check_ref(hwinsta, 1, baseRefs);
+
+    /* Set it as the process Winsta */
+    hwinstaProcess = GetProcessWindowStation();
+    SetProcessWindowStation(hwinsta);
+    check_ref(hwinsta, 2, baseRefs + 2);
+
+    /* Create a desktop. It takes a reference */
+    hdesk = create_desk(deskName, &error);
+    ok(hdesk != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hdesk, error);
+    check_ref(hwinsta, 2, baseRefs + 3);
+
+    /* CloseHandle fails, must use CloseDesktop */
+    ret = CloseHandle(hdesk);
+    ok(ret == FALSE, "ret = %d\n", ret);
+    check_ref(hwinsta, 2, baseRefs + 3);
+    ret = CloseDesktop(hdesk);
+    ok(ret == TRUE, "ret = %d\n", ret);
+    check_ref(hwinsta, 2, baseRefs + 2); // 2/7 on Win7?
+
+    /* Desktop no longer exists */
+    hdesk = open_desk(deskName, &error);
+    ok(hdesk == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hdesk, error);
+    check_ref(hwinsta, 2, baseRefs + 2);
+
+    /* Restore the original process Winsta */
+    SetProcessWindowStation(hwinstaProcess);
+    check_ref(hwinsta, 1, baseRefs);
+
+    /* Close our last handle */
+    ret = CloseHandle(hwinsta);
+    ok(ret == TRUE, "ret = %d\n", ret);
+
+    /* Winsta no longer exists */
+    hwinsta = open_winsta(winstaName, &error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+
+    /* Create the Winsta again, and close it while there's still a desktop */
+    hwinsta = create_winsta(winstaName, &error);
+    ok(hwinsta != NULL && error == NO_ERROR, "Got %p, %lu\n", hwinsta, error);
+    check_ref(hwinsta, 1, baseRefs);
+    hwinstaProcess = GetProcessWindowStation();
+    SetProcessWindowStation(hwinsta);
+    check_ref(hwinsta, 2, baseRefs + 2);
+
+    hdesk = create_desk(deskName, &error);
+    ok(hdesk != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hdesk, error);
+    check_ref(hwinsta, 2, baseRefs + 3);
+
+    /* The reference from the desktop is still there, hence 1/5 */
+    SetProcessWindowStation(hwinstaProcess);
+    check_ref(hwinsta, 1, baseRefs + 1);
+    ret = CloseHandle(hwinsta);
+    ok(ret == TRUE, "ret = %d\n", ret);
+    hwinsta = open_winsta(winstaName, &error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+}
+
 START_TEST(desktop)
 {
     char **test_argv;
@@ -216,4 +361,5 @@ START_TEST(desktop)
 
     Test_InitialDesktop(test_argv[0]);
     Test_OpenInputDesktop();
+    Test_References();
 }
