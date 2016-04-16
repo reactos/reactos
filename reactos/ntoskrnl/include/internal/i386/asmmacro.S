@@ -264,6 +264,8 @@ ENDM
 #define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
 
 MACRO(KiTrapExitStub, Name, Flags)
+    LOCAL ret8_instruction
+    LOCAL not_nested_int
 
 PUBLIC @&Name&@4
 @&Name&@4:
@@ -357,6 +359,18 @@ PUBLIC @&Name&@4
 
         if (Flags AND KI_EXIT_RET8)
 
+            /* Check if we return from a nested interrupt, i.e. an interrupt
+               that occurred in the ret8 return path between restoring
+               EFLAGS and returning with the ret instruction. */
+            cmp dword ptr [esp], offset ret8_instruction
+            jne not_nested_int
+
+            /* This is a nested interrupt, so we have 2 IRET frames.
+               Skip the first, and go directly to the previous return address.
+               Do not pass Go. Do not collect $200 */
+            add esp, 12
+
+not_nested_int:
             /* We are at the IRET frame, so push EFLAGS first */
             push dword ptr [esp + 8]
 
@@ -387,6 +401,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_RET8)
 
         /* Return to kernel mode with a ret 8 */
+ret8_instruction:
         ret 8
 
     elseif (Flags AND KI_EXIT_RET)
