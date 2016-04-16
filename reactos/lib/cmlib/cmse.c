@@ -84,7 +84,7 @@ CmpFreeSecurityDescriptor(IN PHHIVE Hive,
     // a BSOD at the end...
     if (CellData->Security == HCELL_NIL)
     {
-        DPRINT1("Cell 0x%08x (data 0x%p) has no security block!\n", Cell, CellData);
+        DPRINT("Cell 0x%08x (data 0x%p) has no security block!\n", Cell, CellData);
         HvReleaseCell(Hive, Cell);
         return;
     }
