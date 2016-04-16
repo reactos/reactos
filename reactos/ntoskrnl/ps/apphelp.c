@@ -274,7 +274,7 @@ ApphelpCacheParse(
     }
 
     NumEntries = Header->NumEntries;
-    DPRINT1("SHIMS: ApphelpCacheParse walking %d entries\n", NumEntries);
+    DPRINT("SHIMS: ApphelpCacheParse walking %d entries\n", NumEntries);
     for (Cur = 0; Cur < NumEntries; ++Cur)
     {
         Persistent = (PSHIM_PERSISTENT_CACHE_ENTRY)(Data + SHIM_CACHE_HEADER_SIZE +
@@ -382,9 +382,9 @@ ApphelpCacheWrite(VOID)
         ++NumEntries;
         ListEntry = ListEntry->Flink;
     }
-    DPRINT1("SHIMS: ApphelpCacheWrite, %d Entries, total size: %d\n", NumEntries, Length);
+    DPRINT("SHIMS: ApphelpCacheWrite, %d Entries, total size: %d\n", NumEntries, Length);
     Length = ROUND_UP(Length, sizeof(ULONGLONG));
-    DPRINT1("SHIMS: ApphelpCacheWrite, Rounded to: %d\n", Length);
+    DPRINT("SHIMS: ApphelpCacheWrite, Rounded to: %d\n", Length);
 
     /* Now we allocate and prepare some helpers */
     Buffer = ApphelpAlloc(Length);
@@ -439,7 +439,7 @@ NTAPI
 INIT_FUNCTION
 ApphelpCacheInitialize(VOID)
 {
-    DPRINT1("SHIMS: ApphelpCacheInitialize\n");
+    DPRINT("SHIMS: ApphelpCacheInitialize\n");
     /* If we are booting in safemode we do not want to use the apphelp cache */
     if (InitSafeBootMode)
     {
@@ -457,7 +457,7 @@ ApphelpCacheInitialize(VOID)
         InitializeListHead(&ApphelpShimCacheAge);
         ApphelpCacheEnabled = ApphelpCacheRead();
     }
-    DPRINT1("SHIMS: ApphelpCacheInitialize: %d\n", ApphelpCacheEnabled);
+    DPRINT("SHIMS: ApphelpCacheInitialize: %d\n", ApphelpCacheEnabled);
     return STATUS_SUCCESS;
 }
 

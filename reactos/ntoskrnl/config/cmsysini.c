@@ -787,7 +787,7 @@ Cleanup:
     if (ProfileHandle) NtClose(ProfileHandle);
     if (ParentHandle) NtClose(ParentHandle);
 
-    DPRINT1("CmpCreateControlSet() done\n");
+    DPRINT("CmpCreateControlSet() done\n");
 
     /* Return success */
     return STATUS_SUCCESS;

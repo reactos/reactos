@@ -379,7 +379,7 @@ RegisterControlAtoms(VOID)
        if (IntRegisterClassAtom(&ClassName, &Atom))
        {
           gpsi->atomSysClass[i] = Atom;
-          ERR("Reg Control Atoms 0x%x\n",Atom);
+          TRACE("Reg Control Atom %ls: 0x%x\n", ControlsList[i], Atom);
        }
        i++;
     }
@@ -2299,15 +2299,17 @@ UserRegisterSystemClasses(VOID)
         wc.hIcon = NULL;
 
         //// System Cursors should be initilized!!!
-        if (DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL &&
-            SYSTEMCUR(ARROW) != NULL)
+        wc.hCursor = NULL;
+        if (DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL)
         {
-            wc.hCursor = UserHMGetHandle(SYSTEMCUR(ARROW));
-        }
-        else
-        {
-            ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
-            wc.hCursor = NULL;
+            if (SYSTEMCUR(ARROW) == NULL)
+            {
+                ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
+            }
+            else
+            {
+                wc.hCursor = UserHMGetHandle(SYSTEMCUR(ARROW));
+            }
         }
 
         hBrush = DefaultServerClasses[i].hBrush;
