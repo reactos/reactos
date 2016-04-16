@@ -1407,8 +1407,8 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
         }
         else if (xmlstr_cmp(&attr_name, languageW))
         {
-            DPRINT1("Unsupported yet language attribute (%.*S)\n",
-                    attr_value.len, attr_value.ptr);
+            DPRINT("Unsupported yet language attribute (%.*S)\n",
+                   attr_value.len, attr_value.ptr);
             if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
         }
         else
@@ -2435,6 +2435,12 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
                 }
             }
         }
+#ifdef __REACTOS__
+        else if (xml_elem_cmp(&elem, L"trustInfo", asmv1W))
+        {
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+#endif
         else
         {
             attr_nameU = xmlstr2unicode(&elem);
