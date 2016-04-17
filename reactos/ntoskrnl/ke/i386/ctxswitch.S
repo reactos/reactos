@@ -63,6 +63,10 @@ PUBLIC @KiSwitchThreads@8
 @KiSwitchThreads@8:
     /* Load the new kernel stack and switch OS to new thread */
     mov esp, edx
+#if DBG
+    /* Restore the frame pointer early to get sensible backtraces */
+    mov ebp, [esp+12]
+#endif
     call @KiSwapContextExit@8
 
     /* Now we're on the new thread. Return to the caller to restore registers */
