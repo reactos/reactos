@@ -191,6 +191,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         Node.StartingLbn.QuadPart = LowerRun->StartingLbn.QuadPart;
         Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
         RtlDeleteElementGenericTable(&Mcb->Mapping->Table, LowerRun);
+        --Mcb->PairCount;
         DPRINT("Intersecting lower run found (%I64d,%I64d) Lbn: %I64d\n", LowerRun->RunStartVbn.QuadPart, LowerRun->RunEndVbn.QuadPart, LowerRun->StartingLbn.QuadPart);
     }
 
@@ -205,12 +206,14 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         Node.RunEndVbn.QuadPart = HigherRun->RunEndVbn.QuadPart;
         Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
         RtlDeleteElementGenericTable(&Mcb->Mapping->Table, HigherRun);
+        --Mcb->PairCount;
         DPRINT("Intersecting higher run found (%I64d,%I64d) Lbn: %I64d\n", HigherRun->RunStartVbn.QuadPart, HigherRun->RunEndVbn.QuadPart, HigherRun->StartingLbn.QuadPart);
     }
     Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
 
     /* finally insert the resulting run */
     RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Node, sizeof(Node), &NewElement);
+    ++Mcb->PairCount
     ASSERT(NewElement);
 
     // NB: Two consecutive runs can only be merged, if actual LBNs also match!
@@ -847,12 +850,11 @@ FsRtlNumberOfRunsInBaseMcb(IN PBASE_MCB OpaqueMcb)
 {
     PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
     LONGLONG LbnAtVbn0 = -1;
-    ULONG Nodes = RtlNumberGenericTableElements(&Mcb->Mapping->Table);
     ULONG NumberOfRuns = 0;
 
     DPRINT("FsRtlNumberOfRunsInBaseMcb(%p)\n", OpaqueMcb);
 
-    if (Nodes == 0) goto quit;
+    if (Mcb->PairCount == 0) goto quit;
 
     FsRtlLookupBaseMcbEntry(OpaqueMcb,
         0,                           /* Vbn */
@@ -865,7 +867,7 @@ FsRtlNumberOfRunsInBaseMcb(IN PBASE_MCB OpaqueMcb)
 	/* Return the number of 'real' and 'hole' runs.
 	 * If we do not have sector 0 as 'real' emulate a 'hole' there.
 	 */
-    NumberOfRuns = Nodes * 2 - (LbnAtVbn0 != -1 ? 1 : 0);	/* include holes as runs */
+    NumberOfRuns = Mcb->PairCount * 2 - (LbnAtVbn0 != -1 ? 1 : 0);	/* include holes as runs */
 
 quit:
     DPRINT("FsRtlNumberOfRunsInBaseMcb(%p) = %d\n", OpaqueMcb, NumberOfRuns);
@@ -954,6 +956,7 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
             //ASSERT(NeedleRun.RunEndVbn.QuadPart <= HaystackRun->RunEndVbn.QuadPart);
             Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
             RtlDeleteElementGenericTable(&Mcb->Mapping->Table, HaystackRun);
+            --Mcb->PairCount;
             Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
         }
     }
@@ -1069,7 +1072,10 @@ FsRtlSplitBaseMcb(IN PBASE_MCB OpaqueMcb,
     }
 
     if (InsertLowerRun)
+    {
         ExistingRun = RtlInsertElementGenericTable(&Mcb->Mapping->Table, InsertLowerRun, sizeof(*InsertLowerRun), &NewElement);
+        ++Mcb->PairCount;
+    }
 
     ASSERT(ExistingRun == NULL);
 
