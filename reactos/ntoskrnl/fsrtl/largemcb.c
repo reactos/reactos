@@ -213,7 +213,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
 
     /* finally insert the resulting run */
     RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Node, sizeof(Node), &NewElement);
-    ++Mcb->PairCount
+    ++Mcb->PairCount;
     ASSERT(NewElement);
 
     // NB: Two consecutive runs can only be merged, if actual LBNs also match!
