@@ -17,7 +17,7 @@ The following build tools are shared with Wine.
 
 reactos/tools/unicode             # Synced to WineStaging-1.9.4
 reactos/tools/widl                # Synced to WineStaging-1.7.55
-reactos/tools/wpp                 # Synced to WineStaging-1.7.55
+reactos/tools/wpp                 # Synced to WineStaging-1.9.4
 
 The following libraries are shared with Wine.
 
@@ -224,7 +224,7 @@ reactos/dll/win32/xinput1_3           # Synced to WineStaging-1.9.4
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-1.9.4
 reactos/dll/win32/xmllite             # Synced to WineStaging-1.9.4
 
-reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.7.55
+reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.9.4
 
 ReactOS shares the following programs with Winehq.
 
@@ -332,15 +332,15 @@ schannel.c
 
 secur32 -
   reactos/dll/win32/secur32/sspi.c              # Partially synced to WineStaging-1.7.55 (secur32.c)
-  reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.7.55
-  reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.7.55
+  reactos/dll/win32/secur32/thunks.c            # Synced to WineStaging-1.9.4
+  reactos/dll/win32/secur32/wrapper.c           # Synced to WineStaging-1.9.4
 
 setupapi -
-  reactos/dll/win32/setupapi/query.c            # Partially synced to WineStaging-1.7.55
-  reactos/dll/win32/setupapi/setupcab.c         # Synced to WineStaging-1.7.55
+  reactos/dll/win32/setupapi/query.c            # Partially synced to WineStaging-1.9.4
+  reactos/dll/win32/setupapi/setupcab.c         # Synced to WineStaging-1.9.4
 
 win32k -
-  win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.7.55 (gdi32/painting.c)
+  win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.9.4 (gdi32/painting.c)
 
 ws2_32 -
-  reactos/dll/win32/ws2_32/misc/async.c         # Synced to WineStaging-1.7.55
+  reactos/dll/win32/ws2_32/wine/async.c         # Synced to WineStaging-1.9.4
