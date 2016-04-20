@@ -1,5 +1,5 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
     cred.c

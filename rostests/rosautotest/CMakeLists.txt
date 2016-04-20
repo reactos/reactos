@@ -22,7 +22,7 @@ list(APPEND SOURCE
     tools.cpp
     precomp.h)
 
-add_executable(rosautotest ${SOURCE} ${REACTOS_BINARY_DIR}/include/reactos/rosautotestmsg.rc)
+add_executable(rosautotest ${SOURCE} ${REACTOS_BINARY_DIR}/sdk/include/reactos/rosautotestmsg.rc)
 set_module_type(rosautotest win32cui UNICODE)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
 add_pch(rosautotest precomp.h SOURCE)
