@@ -2,7 +2,7 @@
 /* png.c - location for general purpose libpng functions
  *
  * Last changed in libpng 1.6.19 [November 12, 2015]
- * Copyright (c) 1998-2015 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002,2004,2006-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_19 Your_png_h_is_not_version_1_6_19;
+typedef png_libpng_version_1_6_21 Your_png_h_is_not_version_1_6_21;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -775,14 +775,15 @@ png_get_copyright(png_const_structrp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.19 - November 12, 2015" PNG_STRING_NEWLINE \
-      "Copyright (c) 1998-2015 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+      "libpng version 1.6.21 - January 15, 2016" PNG_STRING_NEWLINE \
+      "Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson" \
+      PNG_STRING_NEWLINE \
       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
       "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
       PNG_STRING_NEWLINE;
 #  else
-   return "libpng version 1.6.19 - November 12, 2015\
-      Copyright (c) 1998-2015 Glenn Randers-Pehrson\
+   return "libpng version 1.6.21 - January 15, 2016\
+      Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
 #  endif
@@ -2343,7 +2344,7 @@ png_compare_ICC_profile_with_sRGB(png_const_structrp png_ptr,
           * Fall through to "no match".
           */
          png_chunk_report(png_ptr,
-             "Not recognizing known sRGB profile that has been edited", 
+             "Not recognizing known sRGB profile that has been edited",
              PNG_CHUNK_WARNING);
          break;
 # endif

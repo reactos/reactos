@@ -1,8 +1,8 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.19 [November 12, 2015]
- * Copyright (c) 1998-2015 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.20 [December 3, 2014]
+ * Copyright (c) 1998-2002,2004,2006-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -377,10 +377,16 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 
       if (((png_ptr->options >> PNG_MAXIMUM_INFLATE_WINDOW) & 3) ==
           PNG_OPTION_ON)
+      {
          window_bits = 15;
+         png_ptr->zstream_start = 0; /* fixed window size */
+      }
 
       else
+      {
          window_bits = 0;
+         png_ptr->zstream_start = 1;
+      }
 # else
 #   define window_bits 0
 # endif
@@ -428,6 +434,31 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 # undef window_bits
 #endif
 }
+
+#if PNG_ZLIB_VERNUM >= 0x1240
+/* Handle the start of the inflate stream if we called inflateInit2(strm,0);
+ * in this case some zlib versions skip validation of the CINFO field and, in
+ * certain circumstances, libpng may end up displaying an invalid image, in
+ * contrast to implementations that call zlib in the normal way (e.g. libpng
+ * 1.5).
+ */
+int /* PRIVATE */
+png_zlib_inflate(png_structrp png_ptr, int flush)
+{
+   if (png_ptr->zstream_start && png_ptr->zstream.avail_in > 0)
+   {
+      if ((*png_ptr->zstream.next_in >> 4) > 7)
+      {
+         png_ptr->zstream.msg = "invalid window size (libpng)";
+         return Z_DATA_ERROR;
+      }
+
+      png_ptr->zstream_start = 0;
+   }
+
+   return inflate(&png_ptr->zstream, flush);
+}
+#endif /* Zlib >= 1.2.4 */
 
 #ifdef PNG_READ_COMPRESSED_TEXT_SUPPORTED
 /* png_inflate now returns zlib error codes including Z_OK and Z_STREAM_END to
@@ -522,7 +553,7 @@ png_inflate(png_structrp png_ptr, png_uint_32 owner, int finish,
           * the previous chunk of input data.  Tell zlib if we have reached the
           * end of the output buffer.
           */
-         ret = inflate(&png_ptr->zstream, avail_out > 0 ? Z_NO_FLUSH :
+         ret = PNG_INFLATE(png_ptr, avail_out > 0 ? Z_NO_FLUSH :
              (finish ? Z_FINISH : Z_SYNC_FLUSH));
       } while (ret == Z_OK);
 
@@ -771,7 +802,7 @@ png_inflate_read(png_structrp png_ptr, png_bytep read_buffer, uInt read_size,
           * the available output is produced; this allows reading of truncated
           * streams.
           */
-         ret = inflate(&png_ptr->zstream,
+         ret = PNG_INFLATE(png_ptr,
             *chunk_bytes > 0 ? Z_NO_FLUSH : (finish ? Z_FINISH : Z_SYNC_FLUSH));
       }
       while (ret == Z_OK && (*out_size > 0 || png_ptr->zstream.avail_out > 0));
@@ -1670,7 +1701,7 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    ++entry_start;
 
    /* A sample depth should follow the separator, and we should be on it  */
-   if (entry_start > buffer + length - 2)
+   if (length < 2U || entry_start > buffer + (length - 2U))
    {
       png_warning(png_ptr, "malformed sPLT chunk");
       return;
@@ -2174,7 +2205,7 @@ png_handle_pCAL(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    /* We need to have at least 12 bytes after the purpose string
     * in order to get the parameter information.
     */
-   if (endptr <= buf + 12)
+   if (endptr - buf <= 12)
    {
       png_chunk_benign_error(png_ptr, "invalid");
       return;
@@ -4039,7 +4070,7 @@ png_read_IDAT_data(png_structrp png_ptr, png_bytep output,
        *
        * TODO: deal more elegantly with truncated IDAT lists.
        */
-      ret = inflate(&png_ptr->zstream, Z_NO_FLUSH);
+      ret = PNG_INFLATE(png_ptr, Z_NO_FLUSH);
 
       /* Take the unconsumed output back. */
       if (output != NULL)

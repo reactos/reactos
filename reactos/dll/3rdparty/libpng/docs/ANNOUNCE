@@ -1,4 +1,4 @@
-Libpng 1.6.19 - November 12, 2015
+Libpng 1.6.21 - January 15, 2016
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -7,104 +7,49 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.6.19.tar.xz (LZMA-compressed, recommended)
-   libpng-1.6.19.tar.gz
+   libpng-1.6.21.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.21.tar.gz
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   lpng1619.7z  (LZMA-compressed, recommended)
-   lpng1619.zip
+   /scratch/glennrp/Libpng16/lpng1621.7z  (LZMA-compressed, recommended)
+   /scratch/glennrp/Libpng16/lpng1621.zip
 
 Other information:
 
-   libpng-1.6.19-README.txt
-   libpng-1.6.19-LICENSE.txt
-   libpng-1.6.19-*.asc (armored detached GPG signatures)
+   libpng-1.6.21-README.txt
+   libpng-1.6.21-LICENSE.txt
+   libpng-1.6.21-*.asc (armored detached GPG signatures)
 
-Changes since the last public release (1.6.18):
+Changes since the last public release (1.6.20):
 
-  Updated obsolete information about the simplified API macros in the
-    manual pages (Bug report by Arc Riley).
-  Avoid potentially dereferencing NULL info_ptr in png_info_init_3().
-  Rearranged png.h to put the major sections in the same order as
-    in libpng17.
-  Eliminated unused PNG_COST_SHIFT, PNG_WEIGHT_SHIFT, PNG_COST_FACTOR, and
-    PNG_WEIGHT_FACTOR macros.
-  Suppressed some warnings from the Borland C++ 5.5.1/5.82 compiler
-    (Bug report by Viktor Szakats).  Several warnings remain and are
-    unavoidable, where we test for overflow.
-  Fixed potential leak of png_pixels in contrib/pngminus/pnm2png.c
-  Fixed uninitialized variable in contrib/gregbook/rpng2-x.c
-  Moved config.h.in~ from the "libpng_autotools_files" list to the
-    "libpng_autotools_extra" list in autogen.sh because it was causing a
-    false positive for missing files (bug report by Robert C. Seacord).
-  Removed unreachable "break" statements in png.c, pngread.c, and pngrtran.c
-    to suppress clang warnings (Bug report by Viktor Szakats).
-  Fixed some bad links in the man page.
-  Changed "n bit" to "n-bit" in comments.
-  Added signed/unsigned 16-bit safety net. This removes the dubious
-    0x8000 flag definitions on 16-bit systems. They aren't supported
-    yet the defs *probably* work, however it seems much safer to do this
-    and be advised if anyone, contrary to advice, is building libpng 1.6
-    on a 16-bit system. It also adds back various switch default clauses
-    for GCC; GCC errors out if they are not present (with an appropriately
-    high level of warnings).
-  Safely convert num_bytes to a png_byte in png_set_sig_bytes() (Robert
-    Seacord).
-  Fixed the recently reported 1's complement security issue by replacing
-    the value that is illegal in the PNG spec, in both signed and unsigned
-    values, with 0. Illegal unsigned values (anything greater than or equal
-    to  0x80000000) can still pass through, but since these are not illegal
-    in ANSI-C (unlike 0x80000000 in the signed case) the checking that
-    occurs later can catch them (John Bowler).
-  Fixed png_save_int_32 when int is not 2's complement (John Bowler).
-  Updated libpng16 with all the recent test changes from libpng17,
-    including changes to pngvalid.c to ensure that the original,
-    distributed, version of contrib/visupng/cexcept.h can be used
-    (John Bowler).
-  pngvalid contains the correction to the use of SAVE/STORE_
-    UNKNOWN_CHUNKS; a bug revealed by changes in libpng 1.7. More
-    tests contain the --strict option to detect warnings and the
-    pngvalid-standard test has been corrected so that it does not
-    turn on progressive-read. There is a separate test which does
-    that. (John Bowler)
-  Also made some signed/unsigned fixes.
-  Make pngstest error limits version specific. Splitting the machine
-    generated error structs out to a file allows the values to be updated
-    without changing pngstest.c itself. Since libpng 1.6 and 1.7 have
-    slightly different error limits this simplifies maintenance. The
-    makepngs.sh script has also been updated to more accurately reflect
-    current problems in libpng 1.7 (John Bowler).
-  Incorporated new test PNG files into make check.  tests/pngstest-*
-    are changed so that the new test files are divided into 8 groups by
-    gamma and alpha channel.  These tests have considerably better code
-    and pixel-value coverage than contrib/pngsuite; however,coverage is
-    still incomplete (John Bowler).
-  Removed the '--strict' in 1.6 because of the double-gamma-correction
-    warning, updated pngstest-errors.h for the errors detected with the
-    new contrib/testspngs PNG test files (John Bowler).
-  Worked around rgb-to-gray issues in libpng 1.6.  The previous
-    attempts to ignore the errors in the code aren't quite enough to
-    deal with the 'channel selection' encoding added to libpng 1.7; abort.
-  Fixed 'pow' macros in pngvalid.c. It is legal for 'pow' to be a
-    macro, therefore the argument list cannot contain preprocessing
-    directives.  Make sure pow is a function where this happens. This is
-    a minimal safe fix, the issue only arises in non-performance-critical
-    code (bug report by Curtis Leach, fix by John Bowler).
-  Added sPLT support to pngtest.c
-  Prevent setting or writing over-length PLTE chunk (Cosmin Truta).
-  Silently truncate over-length PLTE chunk while reading.
-  Libpng incorrectly calculated the output rowbytes when the application
-    decreased either the number of channels or the bit depth (or both) in
-    a user transform.  This was safe; libpng overallocated buffer space
-   (potentially by quite a lot; up to 4 times the amount required) but,
-   from 1.5.4 on, resulted in a png_error (John Bowler).
-  Fixed some inconsequential cut-and-paste typos in png_set_cHRM_XYZ_fixed().
-  Clarified COPYRIGHT information to state explicitly that versions
-    are derived from previous versions.
-  Removed much of the long list of previous versions from png.h and
-    libpng.3.
+  Fixed syntax "$(command)" in tests/pngstest that some shells other than
+    bash could not parse (Bug report by Nelson Beebe). Use `command` instead.
+  Moved png_check_keyword() from pngwutil.c to pngset.c
+  Removed LE/BE dependencies in pngvalid, to 'fix' the current problem
+    in the BigEndian tests by not testing it, making the BE code the same 
+    as the LE version.
+  Fixes to pngvalid for various reduced build configurations (eliminate unused
+    statics) and a fix for the case in rgb_to_gray when the digitize option
+    reduces graylo to 0, producing a large error.
+  Widened the 'limit' check on the internally calculated error limits in
+    the 'DIGITIZE' case (the code used prior to 1.7 for rgb_to_gray error
+    checks) and changed the check to only operate in non-release builds
+   (base build type not RC or RELEASE.)
+  Fixed undefined behavior in pngvalid.c, undefined because
+    (png_byte) << shift is undefined if it changes the signed bit
+    (because png_byte is promoted to int). The libpng exported functions
+    png_get_uint_32 and png_get_uint_16 handle this. (Bug reported by
+    David Drysdale as a result of reports from UBSAN in clang 3.8).
+  This changes pngvalid to use BE random numbers; this used to produce
+    errors but these should not be fixed as a result of the previous changes.
+  In projects/vstudio, combined readme.txt and WARNING into README.txt
+  Relocated assert() in contrib/tools/pngfix.c, bug found by American
+    Fuzzy Lop, reported by Brian Carpenter.
+  Marked 'limit' UNUSED in transform_range_check().  This only affects
+    release builds.
+  Worked around a false-positive Coverity issue in pngvalid.c.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

@@ -5409,10 +5409,80 @@ Version 1.6.19rc03 [November 3, 2015]
 
 Version 1.6.19rc04 [November 5, 2015]
   Fixed new bug with CRC error after reading an over-length palette
-    (bug report by Cosmin Truta).
+    (bug report by Cosmin Truta) (CVE-2015-8126).
 
 Version 1.6.19 [November 12, 2015]
   Cleaned up coding style in png_handle_PLTE().
+
+Version 1.6.20beta01 [November 20, 2015]
+  Avoid potential pointer overflow/underflow in png_handle_sPLT() and
+    png_handle_pCAL() (Bug report by John Regehr).
+
+Version 1.6.20beta02 [November 23, 2015]
+  Fixed incorrect implementation of png_set_PLTE() that uses png_ptr
+    not info_ptr, that left png_set_PLTE() open to the CVE-2015-8126
+    vulnerability.  Fixes CVE-2015-8472.
+
+Version 1.6.20beta03 [November 24, 2015]
+  Backported tests from libpng-1.7.0beta69.
+
+Version 1.6.20rc01 [November 26, 2015]
+  Fixed an error in handling of bad zlib CMINFO field in pngfix, found by
+    American Fuzzy Lop, reported by Brian Carpenter.  inflate() doesn't
+    immediately fault a bad CMINFO field; instead a 'too far back' error
+    happens later (at least some times).  pngfix failed to limit CMINFO to
+    the allowed values but then assumed that window_bits was in range,
+    triggering an assert. The bug is mostly harmless; the PNG file cannot
+    be fixed.
+
+Version 1.6.20rc02 [November 29, 2015]
+  In libpng 1.6 zlib initialization was changed to use the window size
+    in the zlib stream, not a fixed value. This causes some invalid images,
+    where CINFO is too large, to display 'correctly' if the rest of the
+    data is valid.  This provides a workaround for zlib versions where the
+    error arises (ones that support the API change to use the window size
+    in the stream).
+
+Version 1.6.20 [December 3, 2015]
+  No changes.
+
+Version 1.6.21beta01 [December 11, 2015]
+  Fixed syntax "$(command)" in tests/pngstest that some shells other than
+    bash could not parse (Bug report by Nelson Beebe). Use `command` instead.
+
+Version 1.6.21beta02 [December 14, 2015]
+  Moved png_check_keyword() from pngwutil.c to pngset.c
+  Removed LE/BE dependencies in pngvalid, to 'fix' the current problem
+    in the BigEndian tests by not testing it, making the BE code the same 
+    as the LE version.
+  Fixes to pngvalid for various reduced build configurations (eliminate unused
+    statics) and a fix for the case in rgb_to_gray when the digitize option
+    reduces graylo to 0, producing a large error.
+
+Version 1.6.21beta03 [December 18, 2015]
+  Widened the 'limit' check on the internally calculated error limits in
+    the 'DIGITIZE' case (the code used prior to 1.7 for rgb_to_gray error
+    checks) and changed the check to only operate in non-release builds
+    (base build type not RC or RELEASE.)
+  Fixed undefined behavior in pngvalid.c, undefined because
+    (png_byte) << shift is undefined if it changes the signed bit
+    (because png_byte is promoted to int). The libpng exported functions
+    png_get_uint_32 and png_get_uint_16 handle this. (Bug reported by
+    David Drysdale as a result of reports from UBSAN in clang 3.8).
+  This changes pngvalid to use BE random numbers; this used to produce
+    errors but these should not be fixed as a result of the previous changes.
+
+Version 1.6.21rc01 [January 4, 2016]
+  In projects/vstudio, combined readme.txt and WARNING into README.txt
+
+Version 1.6.21rc02 [January 7, 2016]
+  Relocated assert() in contrib/tools/pngfix.c, bug found by American
+    Fuzzy Lop, reported by Brian Carpenter.
+  Marked 'limit' UNUSED in transform_range_check().  This only affects
+    release builds.
+
+Version 1.6.21 [January 15, 2016]
+  Worked around a false-positive Coverity issue in pngvalid.c.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

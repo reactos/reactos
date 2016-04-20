@@ -2,7 +2,7 @@
 /* pngerror.c - stub functions for i/o and memory allocation
  *
  * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002,2004,2006-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -768,7 +768,7 @@ png_longjmp,(png_const_structrp png_ptr, int val),PNG_NORETURN)
 
    /* If control reaches this point, png_longjmp() must not return. The only
     * choice is to terminate the whole process (or maybe the thread); to do
-    * this the ANSI-C abort() function is used unless a different method is 
+    * this the ANSI-C abort() function is used unless a different method is
     * implemented by overriding the default configuration setting for
     * PNG_ABORT().
     */

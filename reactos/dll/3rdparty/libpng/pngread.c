@@ -2,7 +2,7 @@
 /* pngread.c - read a PNG file
  *
  * Last changed in libpng 1.6.17 [March 26, 2015]
- * Copyright (c) 1998-2015 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002,2004,2006-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -2838,7 +2838,6 @@ png_image_read_colormap(png_voidp argument)
       default:
          png_error(png_ptr, "invalid PNG color type");
          /*NOT REACHED*/
-         break;
    }
 
    /* Now deal with the output processing */
