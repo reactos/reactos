@@ -19,8 +19,8 @@ add_definitions(
     -D_WINE)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/lib/recyclebin
-    ${REACTOS_SOURCE_DIR}/lib/atl
+    ${REACTOS_SOURCE_DIR}/sdk/lib/recyclebin
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR})
 
 list(APPEND SOURCE

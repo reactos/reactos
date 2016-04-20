@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos)
+include_directories(${REACTOS_BINARY_DIR}/sdk/include/reactos)
 add_library(netevent SHARED netevt.rc)
 set_module_type(netevent win32dll UNICODE ENTRYPOINT 0)
 add_dependencies(netevent neteventmsg)

@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
 spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(

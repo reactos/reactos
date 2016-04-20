@@ -6,8 +6,8 @@ add_definitions(
     -DPNG_BUILD_DLL)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
 list(APPEND SOURCE
     png.c

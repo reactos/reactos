@@ -7,8 +7,8 @@ add_definitions(
     -DUSE_WIN32_FILEIO)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
 list(APPEND SOURCE
     mkg3states.c

@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 spec2def(smdll.dll smdll.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

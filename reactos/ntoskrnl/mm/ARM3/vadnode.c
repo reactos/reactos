@@ -18,7 +18,7 @@
 
 /* Include Mm version of AVL support */
 #include "miavl.h"
-#include <lib/rtl/avlsupp.c>
+#include <sdk/lib/rtl/avlsupp.c>
 
 /* GLOBALS ********************************************************************/
 

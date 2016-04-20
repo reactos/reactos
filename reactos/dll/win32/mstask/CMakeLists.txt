@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 generate_idl_iids(mstask_local.idl)
 spec2def(mstask.dll mstask.spec)
 

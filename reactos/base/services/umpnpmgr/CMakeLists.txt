@@ -1,6 +1,6 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
-add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/pnp.idl)
 spec2def(umpnpmgr.dll umpnpmgr.spec ADD_IMPORTLIB)
 
 add_library(umpnpmgr SHARED

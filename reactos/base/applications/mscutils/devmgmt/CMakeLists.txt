@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/dll/devmgr)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/dll/devmgr)
 
 add_executable(devmgmt devmgmt.c devmgmt.rc)
 set_module_type(devmgmt win32gui UNICODE)

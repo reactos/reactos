@@ -4,7 +4,7 @@ spec2def(ws2_32_new.dll ws2_32.spec)
 
 include_directories(
     inc
-    ${REACTOS_SOURCE_DIR}/include/reactos/winsock)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/winsock)
 
 list(APPEND SOURCE
     src/addrconv.c

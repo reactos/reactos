@@ -9,7 +9,7 @@ if(NOT MSVC)
 endif()
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/lib/atl
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR})
 
 spec2def(ntobjshex.dll ntobjshex.spec)

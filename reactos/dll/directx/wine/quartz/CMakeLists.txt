@@ -8,7 +8,7 @@ add_definitions(
     -DWINE_REGISTER_DLL
     -DPROXY_DELEGATION)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(quartz.dll quartz.spec)
 add_rpcproxy_files(quartz_strmif.idl)
 

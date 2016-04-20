@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
 list(APPEND SOURCE
     crashdmp.c

@@ -1,6 +1,6 @@
 
-include_directories( ${REACTOS_SOURCE_DIR}/include/reactos/idl)
-add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/wlansvc.idl)
+include_directories( ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
+add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/wlansvc.idl)
 spec2def(wlanapi.dll wlanapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

@@ -3,7 +3,7 @@ add_definitions(
     -DANONYMOUSUNIONS
     -D_DEBUG_MEM)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
     alias.c

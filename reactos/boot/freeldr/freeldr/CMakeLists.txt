@@ -26,9 +26,9 @@ endif()
 
 include_directories(BEFORE include)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
-include_directories(${REACTOS_SOURCE_DIR}/lib/cmlib)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/elf)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/cmlib)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 

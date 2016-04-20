@@ -1,7 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/subsystems/win32/csrsrv/include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
 add_executable(csrss csrss.c csrss.rc)
 set_module_type(csrss nativecui)

@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
 spec2def(basesrv.dll basesrv.spec ADD_IMPORTLIB)
 

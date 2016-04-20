@@ -1,11 +1,11 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}
-    ${REACTOS_SOURCE_DIR}/lib/cmlib
+    ${REACTOS_SOURCE_DIR}/sdk/lib/cmlib
     include
     ${CMAKE_CURRENT_BINARY_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include/internal
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 add_definitions(
     -D__NTOSKRNL__

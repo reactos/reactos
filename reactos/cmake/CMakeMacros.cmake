@@ -70,8 +70,8 @@ macro(set_cpp)
     if(__cppopts_WITH_STL)
         set(CPP_USE_STL 1)
         if(MSVC)
-            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++)
-            include_directories(${REACTOS_SOURCE_DIR}/include/c++/stlport)
+            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++)
+            include_directories(${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
         else()
             replace_compile_flags("-nostdinc" " ")
         endif()
@@ -117,13 +117,13 @@ function(add_message_headers _type)
         get_filename_component(FILE ${_in_FILE} NAME_WE)
         macro_mc(${_flag} ${FILE})
         add_custom_command(
-            OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
+            OUTPUT ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h
             COMMAND ${COMMAND_MC} ${MC_FLAGS}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
         set_source_files_properties(
-            ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc
+            ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc
             PROPERTIES GENERATED TRUE)
-        add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc)
+        add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc)
     endforeach()
 endfunction()
 

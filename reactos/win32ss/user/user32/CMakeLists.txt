@@ -2,7 +2,7 @@
 spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 

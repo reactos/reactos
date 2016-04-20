@@ -7,7 +7,7 @@ add_definitions(
     -D_WINE
     -D_CRYPT32_)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

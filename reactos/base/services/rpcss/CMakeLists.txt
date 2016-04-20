@@ -1,7 +1,7 @@
 
 add_rpc_files(server
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine/epm.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine/irot.idl)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/epm.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/irot.idl)
     
 
 list(APPEND SOURCE
@@ -13,7 +13,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/epm_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/irot_s.c)
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
+include_directories(${REACTOS_BINARY_DIR}/sdk/include/reactos/wine)
 add_executable(rpcss ${SOURCE} rpcss.rc)
 target_link_libraries(rpcss ${PSEH_LIB} wine)
 set_module_type(rpcss win32cui UNICODE)

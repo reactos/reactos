@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/libsamplerate)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libsamplerate)
 
 list(APPEND SOURCE
     kmixer.c

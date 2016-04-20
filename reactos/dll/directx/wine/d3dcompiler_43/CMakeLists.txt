@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -DDIRECT3D_VERSION=0x0900)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

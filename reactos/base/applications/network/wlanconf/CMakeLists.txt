@@ -1,7 +1,7 @@
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers/ndisuio)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers/ndisuio)
 
 add_executable(wlanconf wlanconf.c wlanconf.rc)
 set_module_type(wlanconf win32cui UNICODE)

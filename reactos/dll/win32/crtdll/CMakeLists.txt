@@ -10,7 +10,7 @@ add_definitions(
     -D_NO_INLINING
     -D__MINGW_IMPORT="")
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
 
 list(APPEND SOURCE
     dllmain.c

@@ -1,15 +1,15 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 add_definitions(-D__WINESRC__)
 spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 add_rpc_files(client
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/atsvc.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/dssetup.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/srvsvc.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/wkssvc.idl)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/srvsvc.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/wkssvc.idl)
 
 list(APPEND SOURCE
     access.c

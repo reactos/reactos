@@ -2,8 +2,8 @@
 spec2def(ksecdd.sys ksecdd.spec)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers/ksecdd
-    ${REACTOS_SOURCE_DIR}/lib/cryptlib)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers/ksecdd
+    ${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
 
 list(APPEND SOURCE
     ksecdd.c

@@ -2,8 +2,8 @@
 add_definitions(-D_COMDDK_)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/lib/drivers/sound/mmixer
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sound/mmixer
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound)
 
 list(APPEND SOURCE
     control.c

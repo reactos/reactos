@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -DWIDL_C_INLINE_WRAPPERS)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(amstream.dll amstream.spec)
 
 list(APPEND SOURCE
