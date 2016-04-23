@@ -4,6 +4,7 @@
  * FILE:            lib/sdk/delayimp/delayimp.c
  * PURPOSE:         Library for delay importing from dlls
  * PROGRAMMERS:     Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Mark Jansen
  *
  */
 
@@ -12,17 +13,55 @@
 #include <winbase.h>
 #include <delayimp.h>
 
+/**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
+
+#if defined(__GNUC__)
+PfnDliHook __pfnDliNotifyHook2;
+PfnDliHook __pfnDliFailureHook2;
+#else
+/* The actual items we use */
+extern PfnDliHook __pfnDliNotifyHook2;
+extern PfnDliHook __pfnDliFailureHook2;
+
+/* The fallback symbols */
+extern PfnDliHook __pfnDliNotifyHook2Default = NULL;
+extern PfnDliHook __pfnDliFailureHook2Default = NULL;
+
+/* Tell the linker to use the fallback symbols */
+#pragma comment(linker, "/alternatename:___pfnDliNotifyHook2=___pfnDliNotifyHook2Default")
+#pragma comment(linker, "/alternatename:___pfnDliFailureHook2=___pfnDliFailureHook2Default")
+#endif
+
+
+/**** Helper functions to convert from RVA to address ****/
+
+FORCEINLINE
+unsigned
+IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
+{
+    return pData - pBase;
+}
+
+extern const IMAGE_DOS_HEADER __ImageBase;
+
+FORCEINLINE
+PVOID
+PFromRva(RVA rva)
+{
+    return (PVOID)(((ULONG_PTR)(rva)) + ((ULONG_PTR)&__ImageBase));
+}
+
+
 /**** load helper ****/
 
 FARPROC WINAPI
 __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
 {
-    DelayLoadInfo dli;
+    DelayLoadInfo dli = {0};
     int index;
     PImgThunkData pIAT;
     PImgThunkData pINT;
     HMODULE *phMod;
-    FARPROC pProc;
 
     pIAT = PFromRva(pidd->rvaIAT);
     pINT = PFromRva(pidd->rvaINT);
@@ -31,9 +70,9 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
 
     dli.cb = sizeof(dli);
     dli.pidd = pidd;
-    dli.ppfn = (FARPROC*)pIATEntry->u1.Function;
+    dli.ppfn = (FARPROC*)&pIAT[index].u1.Function;
     dli.szDll = PFromRva(pidd->rvaDLLName);
-    dli.dlp.fImportByName = !(pINT[index].u1.Ordinal & IMAGE_ORDINAL_FLAG);
+    dli.dlp.fImportByName = !IMAGE_SNAP_BY_ORDINAL(pINT[index].u1.Ordinal);
     if (dli.dlp.fImportByName)
     {
         /* u1.AdressOfData points to a IMAGE_IMPORT_BY_NAME struct */
@@ -42,61 +81,80 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
     }
     else
     {
-        dli.dlp.dwOrdinal = pINT[index].u1.Ordinal & ~IMAGE_ORDINAL_FLAG;
+        dli.dlp.dwOrdinal = IMAGE_ORDINAL(pINT[index].u1.Ordinal);
     }
-    dli.hmodCur = *phMod;
-    dli.pfnCur = (FARPROC)pIAT[index].u1.Function;
-    dli.dwLastError = GetLastError();
-    pProc = __pfnDliNotifyHook2(dliStartProcessing, &dli);
-    if (pProc)
+
+    if (__pfnDliNotifyHook2)
     {
-        pIAT[index].u1.Function = (DWORD_PTR)pProc;
-        return pProc;
+        dli.pfnCur = __pfnDliNotifyHook2(dliStartProcessing, &dli);
+        if (dli.pfnCur)
+        {
+            pIAT[index].u1.Function = (DWORD_PTR)dli.pfnCur;
+            if (__pfnDliNotifyHook2)
+                __pfnDliNotifyHook2(dliNoteEndProcessing, &dli);
+
+            return dli.pfnCur;
+        }
     }
+
+    dli.hmodCur = *phMod;
 
     if (dli.hmodCur == NULL)
     {
-        dli.hmodCur = LoadLibraryA(dli.szDll);
-        if (!dli.hmodCur)
+        if (__pfnDliNotifyHook2)
+            dli.hmodCur = (HMODULE)__pfnDliNotifyHook2(dliNotePreLoadLibrary, &dli);
+        if (dli.hmodCur == NULL)
         {
-            dli.dwLastError = GetLastError();
-            __pfnDliFailureHook2(dliFailLoadLib, &dli);
-//            if (ret)
-//            {
-//            }
-            // FIXME: raise exception;
-            return NULL;
+            dli.hmodCur = LoadLibraryA(dli.szDll);
+            if (dli.hmodCur == NULL)
+            {
+                dli.dwLastError = GetLastError();
+                if (__pfnDliFailureHook2)
+                    dli.hmodCur = (HMODULE)__pfnDliFailureHook2(dliFailLoadLib, &dli);
+
+                if (dli.hmodCur == NULL)
+                {
+                    ULONG_PTR args[] = { (ULONG_PTR)&dli };
+                    RaiseException(VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND), 0, 1, args);
+
+                    /* If we survive the exception, we are expected to use pfnCur directly.. */
+                    return dli.pfnCur;
+                }
+            }
         }
         *phMod = dli.hmodCur;
     }
 
-    /* dli.dlp.szProcName might also contain the ordinal */
-    pProc = GetProcAddress(dli.hmodCur, dli.dlp.szProcName);
-    if (!pProc)
+    dli.dwLastError = ERROR_SUCCESS;
+
+    if (__pfnDliNotifyHook2)
+        dli.pfnCur = (FARPROC)__pfnDliNotifyHook2(dliNotePreGetProcAddress, &dli);
+    if (dli.pfnCur == NULL)
     {
-        dli.dwLastError = GetLastError();
-        __pfnDliFailureHook2(dliFailGetProc, &dli);
-        // FIXME: handle return value & raise exception
-        return NULL;
+        /* dli.dlp.szProcName might also contain the ordinal */
+        dli.pfnCur = GetProcAddress(dli.hmodCur, dli.dlp.szProcName);
+        if (dli.pfnCur == NULL)
+        {
+            dli.dwLastError = GetLastError();
+            if (__pfnDliFailureHook2)
+               dli.pfnCur = __pfnDliFailureHook2(dliFailGetProc, &dli);
+
+            if (dli.pfnCur == NULL)
+            {
+                ULONG_PTR args[] = { (ULONG_PTR)&dli };
+                RaiseException(VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND), 0, 1, args);
+            }
+
+            //return NULL;
+        }
     }
-    pIAT[index].u1.Function = (DWORD_PTR)pProc;
 
-    return pProc;
+    pIAT[index].u1.Function = (DWORD_PTR)dli.pfnCur;
+    dli.dwLastError = ERROR_SUCCESS;
+
+    if (__pfnDliNotifyHook2)
+        __pfnDliNotifyHook2(dliNoteEndProcessing, &dli);
+
+    return dli.pfnCur;
 }
 
-/*** The default hooks ***/
-
-FARPROC WINAPI
-DefaultDliNotifyHook2(unsigned dliNotify, PDelayLoadInfo pdli)
-{
-    return NULL;
-}
-
-FARPROC WINAPI
-DefaultDliFailureHook2(unsigned dliNotify, PDelayLoadInfo pdli)
-{
-    return NULL;
-}
-
-PfnDliHook __pfnDliNotifyHook2 = DefaultDliNotifyHook2;
-PfnDliHook __pfnDliFailureHook2 = DefaultDliFailureHook2;

@@ -6,6 +6,17 @@
 #define __ImageBase _image_base__
 #endif
 
+#if defined(__cplusplus)
+#define ExternC extern "C"
+#else
+#define ExternC extern
+#endif
+
+#ifndef FACILITY_VISUALCPP
+#define FACILITY_VISUALCPP  ((LONG)0x6d)
+#endif
+#define VcppException(sev,err)  ((sev) | (FACILITY_VISUALCPP<<16) | err)
+
 #define DELAYLOAD_VERSION 0x200
 
 typedef DWORD RVA;
@@ -65,24 +76,8 @@ typedef struct DelayLoadInfo
 
 typedef FARPROC (WINAPI *PfnDliHook)(unsigned, PDelayLoadInfo);
 
-FORCEINLINE
-unsigned
-IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
-{
-    return pData - pBase;
-}
 
-extern const IMAGE_DOS_HEADER __ImageBase;
-
-FORCEINLINE
-PVOID
-PFromRva(RVA rva)
-{
-    return (PVOID)(((ULONG_PTR)(rva)) + ((ULONG_PTR)&__ImageBase));
-}
-
-
-extern PfnDliHook __pfnDliNotifyHook2;
-extern PfnDliHook __pfnDliFailureHook2;
+ExternC PfnDliHook __pfnDliNotifyHook2;
+ExternC PfnDliHook __pfnDliFailureHook2;
 
 #endif /* not _delayimp_h */
