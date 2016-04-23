@@ -3207,6 +3207,7 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         SHEnableMenuItem(theMenu, IDM_TOOLS_MAPNETWORKDRIVE, FALSE);
         SHEnableMenuItem(theMenu, IDM_TOOLS_DISCONNECTNETWORKDRIVE, FALSE);
         SHEnableMenuItem(theMenu, IDM_TOOLS_SYNCHRONIZE, FALSE);
+        FIXME("Folder options dialog is stubbed: CORE-11141\n");
         SHEnableMenuItem(theMenu, IDM_TOOLS_FOLDEROPTIONS, FALSE);  // Remove when CORE-11141 is fixed.
         menuIndex = 4;
     }
