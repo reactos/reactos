@@ -407,17 +407,17 @@ BEGIN
     GROUPBOX "タスク", -1, 7, 10, 249, 45
     ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", 14002, 40, 37, 120, 10
     GROUPBOX "フォルダの参照", -1, 7, 60, 249, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "同じウィンドウでフォルダを開く(&M)", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "フォルダごとに異なるウィンドウで開く(&W)", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "フォルダごとに異なるウィンドウで開く(&W)", 14005, 40, 82, 140, 10
     GROUPBOX "項目のクリック方法", -1, 7, 110, 249, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "シングルクリックで項目を開く(ポイントで選択) (&S)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ブラウザに合わせてアイコンタイトルに下線を引く(&B)", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ポイントしたときのみアイコンタイトルに下線を引く(&P)", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ダブルクリックで項目を開く(シングルクリックで選択)(&D)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ブラウザに合わせてアイコンタイトルに下線を引く(&B)", 14008, 50, 132, 170, 10
+    AUTORADIOBUTTON "ポイントしたときのみアイコンタイトルに下線を引く(&P)", 14009, 50, 144, 170, 10
+    AUTORADIOBUTTON "ダブルクリックで項目を開く(シングルクリックで選択)(&D)", 14010, 40, 156, 170, 10
     PUSHBUTTON "デフォルトに戻す(&R)", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

@@ -411,17 +411,17 @@ BEGIN
     GROUPBOX "Zadania", -1, 7, 10, 249, 45
     ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "Pokaż podstawowe zadania w &katalogach", 14001, 40, 25, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Użyj klasycznych katalogów &ReactOS", 14002, 40, 37, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Użyj klasycznych katalogów &ReactOS", 14002, 40, 37, 180, 10
     GROUPBOX "Przeglądaj katalogi", -1, 7, 60, 249, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", 14004, 40, 70, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", 14005, 40, 82, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", 14005, 40, 82, 180, 10
     GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", 14007, 40, 120, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", 14008, 50, 132, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 180, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", 14010, 40, 156, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", 14008, 50, 132, 180, 10
+    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 180, 10
+    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", 14010, 40, 156, 180, 10
     PUSHBUTTON "Przywróć &domyślne", 14011, 180, 180, 80, 14, WS_TABSTOP
 END
 

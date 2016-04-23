@@ -409,17 +409,17 @@ BEGIN
     GROUPBOX "Tareas", -1, 7, 10, 279, 45
     ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 160, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 160, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 160, 10
     GROUPBOX "Examinar carpetas ", -1, 7, 60, 279, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 75, 160, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Abrir cada carpeta en ventanas di&ferentes", 14005, 40, 87, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Abrir cada carpeta en ventanas di&ferentes", 14005, 40, 87, 140, 10
     GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 190, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 220, 10
+    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 190, 10
+    AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 190, 10
     PUSHBUTTON "&Restaurar valores predeterminados", 14011, 146, 180, 140, 14, WS_TABSTOP
 END
 
