@@ -83,7 +83,6 @@ static FOLDER_VIEW_ENTRY s_Options[] =
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
-static
 INT_PTR
 CALLBACK
 FolderOptionsGeneralDlg(
@@ -124,7 +123,6 @@ InitializeFolderOptionsListCtrl(HWND hwndDlg)
 
 }
 
-static
 INT_PTR
 CALLBACK
 FolderOptionsViewDlg(
@@ -384,7 +382,6 @@ FindSelectedItem(
     return NULL;
 }
 
-static
 INT_PTR
 CALLBACK
 FolderOptionsFileTypesDlg(

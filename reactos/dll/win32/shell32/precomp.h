@@ -55,6 +55,7 @@
 #include "CFolder.h"
 #include "CShell.h"
 #include "CDropTargetHelper.h"
+#include "CFolderOptions.h"
 #include "folders/CFSFolder.h"
 #include "folders/CDrivesFolder.h"
 #include "folders/CDesktopFolder.h"

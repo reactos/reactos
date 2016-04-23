@@ -42,6 +42,7 @@ list(APPEND SOURCE
     shell32.cpp
     CShellItem.cpp
     CShellLink.cpp
+    CFolderOptions.cpp
     folders/CDesktopFolder.cpp
     folders/CFSFolder.cpp
     folders/CDrivesFolder.cpp
