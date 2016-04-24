@@ -3,12 +3,12 @@
 #define STANDALONE
 #include <wine/test.h>
 
-extern void func_layerapi(void);
 extern void func_apphelp(void);
+extern void func_layerapi(void);
 
 const struct test winetest_testlist[] =
 {
-    { "layerapi", func_layerapi },
     { "apphelp", func_apphelp },
+    { "layerapi", func_layerapi },
     { 0, 0 }
 };
