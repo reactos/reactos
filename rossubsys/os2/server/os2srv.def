@@ -1,3 +1,0 @@
-LIBRARY os2srv.dll
-EXPORTS
-ServerDllInitialization@8
