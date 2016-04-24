@@ -214,6 +214,7 @@ if "%NEW_STYLE_BUILD%"=="0" (
 
 if EXIST CMakeCache.txt (
     del CMakeCache.txt /q
+    del host-tools\CMakeCache.txt /q
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (
