@@ -213,7 +213,7 @@ void SdbpFree(LPVOID mem
 LPCWSTR WINAPI SdbTagToString(TAG tag)
 {
     /* lookup tables for tags in range 0x1 -> 0xFF | TYPE */
-    static const WCHAR table[9][0x31][25] = {
+    static const WCHAR table[9][0x32][25] = {
     {   /* TAG_TYPE_NULL */
         {'I','N','C','L','U','D','E',0},
         {'G','E','N','E','R','A','L',0},
@@ -284,7 +284,8 @@ LPCWSTR WINAPI SdbTagToString(TAG tag)
         {'I','n','v','a','l','i','d','T','a','g',0},
         {'I','n','v','a','l','i','d','T','a','g',0},
         {'C','O','N','T','E','X','T','_','T','A','G','I','D',0},
-        {'E','X','E','_','W','R','A','P','P','E','R',0}
+        {'E','X','E','_','W','R','A','P','P','E','R',0},
+        {'U','R','L','_','I','D',0}
     },
     {   /* TAG_TYPE_QWORD */
         {'T','I','M','E',0},
@@ -341,7 +342,8 @@ LPCWSTR WINAPI SdbTagToString(TAG tag)
         {'L','A','Y','E','R','_','D','I','S','P','L','A','Y','N','A','M','E',0},
         {'C','O','M','P','I','L','E','R','_','V','E','R','S','I','O','N',0},
         {'A','C','T','I','O','N','_','T','Y','P','E',0},
-        {'E','X','P','O','R','T','_','N','A','M','E',0}
+        {'E','X','P','O','R','T','_','N','A','M','E',0},
+        {'U','R','L',0}
     },
     {   /* TAG_TYPE_LIST */
         {'D','A','T','A','B','A','S','E',0},
@@ -368,7 +370,14 @@ LPCWSTR WINAPI SdbTagToString(TAG tag)
         {'A','C','T','I','O','N',0},
         {'L','O','O','K','U','P',0},
         {'C','O','N','T','E','X','T',0},
-        {'C','O','N','T','E','X','T','_','R','E','F',0}
+        {'C','O','N','T','E','X','T','_','R','E','F',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'I','n','v','a','l','i','d','T','a','g',0},
+        {'S','P','C',0}
     },
     {   /* TAG_TYPE_STRING */
         {'I','n','v','a','l','i','d','T','a','g',0}
@@ -400,10 +409,10 @@ LPCWSTR WINAPI SdbTagToString(TAG tag)
         TAG_REINSTALL_UPGRADE & 0xFF,
         1,
         TAG_MATCH_MODE & 0xFF,
-        TAG_EXE_WRAPPER & 0xFF,
+        TAG_URL_ID & 0xFF,
         TAG_FLAG_INSTALL & 0xFF,
-        TAG_EXPORT_NAME & 0xFF,
-        TAG_CONTEXT_REF & 0xFF,
+        TAG_URL & 0xFF,
+        TAG_SPC & 0xFF,
         1,
         TAG_APP_ID & 0xFF
     };
