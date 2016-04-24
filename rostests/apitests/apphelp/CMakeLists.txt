@@ -3,6 +3,7 @@ add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     layerapi.c
+    apphelp.c
     testlist.c)
 
 add_executable(apphelp_apitest ${SOURCE})
