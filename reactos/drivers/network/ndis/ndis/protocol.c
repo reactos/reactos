@@ -321,7 +321,7 @@ ProRequest(
   PLOGICAL_ADAPTER Adapter;
   PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
 
-  NDIS_DbgPrint(MIN_TRACE, ("Called.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT(MacBindingHandle);
   AdapterBinding = GET_ADAPTER_BINDING(MacBindingHandle);
