@@ -21,8 +21,10 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-SetAccountDomain(LPCWSTR DomainName,
-                 PSID DomainSid)
+WINAPI
+SetAccountsDomainSid(
+    PSID DomainSid,
+    LPCWSTR DomainName)
 {
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     POLICY_ACCOUNT_DOMAIN_INFO Info;
@@ -35,7 +37,7 @@ SetAccountDomain(LPCWSTR DomainName,
 
     NTSTATUS Status;
 
-    DPRINT("SYSSETUP: SetAccountDomain\n");
+    DPRINT("SYSSETUP: SetAccountsDomainSid\n");
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);

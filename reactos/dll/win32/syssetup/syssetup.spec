@@ -38,7 +38,7 @@
 @ stub ReportError
 @ stub RunOEMExtraTasks
 @ stdcall ScsiClassInstaller(long ptr ptr)
-@ stub SetAccountDomainSid
+@ stdcall SetAccountsDomainSid(ptr wstr)
 @ stub SetupAddOrRemoveTestCertificate
 @ stdcall SetupChangeFontSize(ptr wstr)
 @ stdcall SetupChangeLocale(ptr long)

@@ -74,8 +74,7 @@ extern ADMIN_INFO AdminInfo;
 BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
 
 /* security.c */
-NTSTATUS SetAccountDomain(LPCWSTR DomainName,
-                          PSID DomainSid);
+
 VOID InstallSecurity(VOID);
 NTSTATUS
 SetAdministratorPassword(LPCWSTR Password);

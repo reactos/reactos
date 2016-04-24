@@ -587,8 +587,8 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     /* Try to also set DNS hostname */
     SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
-    /* Set the account domain name */
-    SetAccountDomain(ComputerName, NULL);
+    /* Set the accounts domain name */
+    SetAccountsDomainSid(NULL, ComputerName);
 
     return TRUE;
 }

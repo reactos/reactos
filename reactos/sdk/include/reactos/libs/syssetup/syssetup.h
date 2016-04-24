@@ -25,9 +25,16 @@
 
 /* System setup APIs */
 
-DWORD WINAPI
-InstallReactOS (HINSTANCE hInstance);
+DWORD
+WINAPI
+InstallReactOS(
+    HINSTANCE hInstance);
 
+NTSTATUS
+WINAPI
+SetAccountsDomainSid(
+    PSID DomainSid,
+    LPCWSTR DomainName);
 
 /* Log File APIs */
 
