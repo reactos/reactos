@@ -803,13 +803,13 @@ ClassDispatchPnp(
                 if(irpStack->MinorFunction == IRP_MN_CANCEL_STOP_DEVICE) {
                     status = devInfo->ClassStopDevice(DeviceObject,
                                                       irpStack->MinorFunction);
-                    ASSERTMSG("ClassDispatchPnp !! CANCEL_STOP_DEVICE should "
-                              L"never be failed\n", NT_SUCCESS(status));
+                    ASSERTMSGW(L"ClassDispatchPnp !! CANCEL_STOP_DEVICE should "
+                               L"never be failed\n", NT_SUCCESS(status));
                 } else {
                     status = devInfo->ClassRemoveDevice(DeviceObject,
                                                         irpStack->MinorFunction);
-                    ASSERTMSG("ClassDispatchPnp !! CANCEL_REMOVE_DEVICE should "
-                              L"never be failed\n", NT_SUCCESS(status));
+                    ASSERTMSGW(L"ClassDispatchPnp !! CANCEL_REMOVE_DEVICE should "
+                               L"never be failed\n", NT_SUCCESS(status));
                 }
 
                 Irp->IoStatus.Status = status;
@@ -876,8 +876,8 @@ ClassDispatchPnp(
 
                 status = devInfo->ClassStopDevice(DeviceObject, IRP_MN_STOP_DEVICE);
 
-                ASSERTMSG("ClassDispatchPnp !! STOP_DEVICE should "
-                          L"never be failed\n", NT_SUCCESS(status));
+                ASSERTMSGW(L"ClassDispatchPnp !! STOP_DEVICE should "
+                           L"never be failed\n", NT_SUCCESS(status));
 
                 if(isFdo) {
                     status = ClassForwardIrpSynchronous(commonExtension, Irp);
