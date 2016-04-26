@@ -406,8 +406,8 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
     ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10
+    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 20, 150, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 32, 150, 10
     GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
     ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
@@ -415,10 +415,10 @@ BEGIN
     GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
     ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
     AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10
-    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10
+    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", 14008, 50, 132, 200, 10
+    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", 14009, 50, 144, 200, 10
     AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10
-    PUSHBUTTON "&Wiederherstellen", 14011, 180, 180, 60, 14, WS_TABSTOP
+    PUSHBUTTON "&Wiederherstellen", 14011, 191, 175, 65, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -432,8 +432,8 @@ BEGIN
     PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 90, 14, WS_TABSTOP
     PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 160, 50, 90, 14, WS_TABSTOP
     LTEXT "Erweiterte Einstellungen:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "&Wiederherstellen", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 140
+    PUSHBUTTON "&Wiederherstellen", 14004, 191, 235, 65, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -442,16 +442,16 @@ CAPTION "Dateitypen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 80, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&Neu", 14001, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Löschen", 14002, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 130, 249, 70
-    LTEXT "Öffnen mit:", -1, 12, 140, 40, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    PUSHBUTTON "&Neu", 14001, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Löschen", 14002, 200, 140, 55, 14, WS_TABSTOP
+    GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 170, 249, 70
+    LTEXT "Öffnen mit:", -1, 12, 180, 40, 10
     //ICON
-    LTEXT "Name", 14005, 100, 140, 40, 10
-    PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", 14007, 12, 155, 160, 30
-    PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Name", 14005, 100, 180, 40, 10
+    PUSHBUTTON "Än&dern...", 14006, 200, 180, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 195, 160, 30
+    PUSHBUTTON "&Erweitert", 14008, 200, 215, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
