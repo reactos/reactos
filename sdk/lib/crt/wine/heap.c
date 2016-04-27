@@ -418,7 +418,15 @@ size_t CDECL _aligned_msize(void *p, MSVCRT_size_t alignment, MSVCRT_size_t offs
  */
 void* CDECL MSVCRT_calloc(MSVCRT_size_t count, MSVCRT_size_t size)
 {
-  return msvcrt_heap_alloc(HEAP_ZERO_MEMORY, count*size);
+  MSVCRT_size_t bytes = count*size;
+
+  if (size && bytes / size != count)
+  {
+    *MSVCRT__errno() = MSVCRT_ENOMEM;
+    return NULL;
+  }
+
+  return msvcrt_heap_alloc(HEAP_ZERO_MEMORY, bytes);
 }
 
 /*********************************************************************
