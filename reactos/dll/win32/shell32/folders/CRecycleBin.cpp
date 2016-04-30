@@ -63,6 +63,19 @@ static const columninfo RecycleBinColumns[] =
  * Recycle Bin folder
  */
 
+HRESULT CRecyclerExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED(hr))
+        return NULL;
+
+    /* FIXME: This is completely unimplemented */
+    initIcon->SetNormalIcon(swShell32Name, 0);
+
+    return initIcon->QueryInterface(riid, ppvOut);
+}
+
 class CRecycleBinEnum :
     public CEnumIDListBase
 {
@@ -571,7 +584,7 @@ HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY api
 HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT *prgfInOut, void **ppv)
 {
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p, %p %p)\n", this,
@@ -592,21 +605,9 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
         hr = QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
     }
-    else if(IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
+    else if((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        // FIXME: This is not correct, it does not show the right icons
-        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
-        pObj = IExtractIconA_Constructor(pidlItem);
-        SHFree(pidlItem);
-        hr = S_OK;
-    }
-    else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
-    {
-        // FIXME: This is not correct, it does not show the right icons
-        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
-        pObj = IExtractIconW_Constructor(pidlItem);
-        SHFree(pidlItem);
-        hr = S_OK;
+        hr = CRecyclerExtractIcon_CreateInstance(apidl[0], riid, &pObj);
     }
     else
         hr = E_NOINTERFACE;
@@ -686,8 +687,10 @@ HRESULT WINAPI CRecycleBin::EnumSearches(IEnumExtraSearch **ppEnum)
 HRESULT WINAPI CRecycleBin::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay)
 {
     TRACE("(%p, %x, %p, %p)\n", this, (unsigned int)dwReserved, pSort, pDisplay);
-    *pSort = 0;
-    *pDisplay = 0;
+    if (pSort)
+        *pSort = 0;
+    if (pDisplay)
+        *pDisplay = 0;
     return S_OK;
 }
 
