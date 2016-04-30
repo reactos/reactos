@@ -538,8 +538,6 @@ HRESULT WINAPI CNetFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *
 
 HRESULT WINAPI CNetFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-
     if (iColumn >= NETWORKPLACESSHELLVIEWCOLUMNS)
         return E_FAIL;
 
