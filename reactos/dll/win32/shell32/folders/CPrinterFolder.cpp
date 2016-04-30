@@ -577,8 +577,6 @@ HRESULT WINAPI CPrinterFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMN
 
 HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-
     TRACE("(%p)->(%p %i %p): stub\n", this, pidl, iColumn, psd);
 
     if (iColumn >= PrinterSHELLVIEWCOLUMNS)
