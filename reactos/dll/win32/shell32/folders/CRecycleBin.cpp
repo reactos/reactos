@@ -740,11 +740,7 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
     pDetails->fmt = RecycleBinColumns[iColumn].fmt;
     pDetails->cxChar = RecycleBinColumns[iColumn].cxChars;
     if (pidl == NULL)
-    {
-        pDetails->str.uType = STRRET_WSTR;
-        LoadStringW(shell32_hInstance, RecycleBinColumns[iColumn].column_name_id, buffer, MAX_PATH);
-        return SHStrDupW(buffer, &pDetails->str.pOleStr);
-    }
+        return SHSetStrRet(&pDetails->str, RecycleBinColumns[iColumn].column_name_id);
 
     if (iColumn == COLUMN_NAME)
         return GetDisplayNameOf(pidl, SHGDN_NORMAL, &pDetails->str);
@@ -780,15 +776,12 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
                 if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName) / sizeof(WCHAR)) - Length))
                     szTypeName[(sizeof(szTypeName)/sizeof(WCHAR))-1] = L'\0';
             }
-            pDetails->str.uType = STRRET_WSTR;
-            return SHStrDupW(szTypeName, &pDetails->str.pOleStr);
-            break;
+            return SHSetStrRet(&pDetails->str, szTypeName);
         default:
             return E_FAIL;
     }
 
-    pDetails->str.uType = STRRET_WSTR;
-    return SHStrDupW(buffer, &pDetails->str.pOleStr);
+    return SHSetStrRet(&pDetails->str, buffer);
 }
 
 HRESULT WINAPI CRecycleBin::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)

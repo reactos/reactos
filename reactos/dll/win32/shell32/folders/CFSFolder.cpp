@@ -813,10 +813,7 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
         /* the header titles */
         psd->fmt = GenericSFHeader[iColumn].fmt;
         psd->cxChar = GenericSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA(shell32_hInstance, GenericSFHeader[iColumn].colnameid,
-                    psd->str.cStr, MAX_PATH);
-        return S_OK;
+        return SHSetStrRet(&psd->str, GenericSFHeader[iColumn].colnameid);
     }
     else
     {

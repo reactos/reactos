@@ -32,7 +32,6 @@ class CDrivesFolder :
     private:
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;    /* absolute pidl */
-        LPWSTR sName;
     public:
         CDrivesFolder();
         ~CDrivesFolder();

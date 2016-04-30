@@ -164,7 +164,6 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 CDrivesFolder::CDrivesFolder()
 {
     pidlRoot = NULL;
-    sName = NULL;
 }
 
 CDrivesFolder::~CDrivesFolder()
@@ -175,26 +174,10 @@ CDrivesFolder::~CDrivesFolder()
 
 HRESULT WINAPI CDrivesFolder::FinalConstruct()
 {
-    DWORD dwSize;
-    WCHAR szName[MAX_PATH];
-    WCHAR wszMyCompKey[256];
-    INT i;
-
     pidlRoot = _ILCreateMyComputer();    /* my qualified pidl */
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    i = swprintf(wszMyCompKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\");
-    StringFromGUID2(CLSID_MyComputer, wszMyCompKey + i, sizeof(wszMyCompKey) / sizeof(wszMyCompKey[0]) - i);
-    dwSize = sizeof(szName);
-    if (RegGetValueW(HKEY_CURRENT_USER, wszMyCompKey,
-                     NULL, RRF_RT_REG_SZ, NULL, szName, &dwSize) == ERROR_SUCCESS)
-    {
-        sName = (LPWSTR)SHAlloc((wcslen(szName) + 1) * sizeof(WCHAR));
-        if (sName)
-            wcscpy(sName, szName);
-        TRACE("sName %s\n", debugstr_w(sName));
-    }
     return S_OK;
 }
 
@@ -696,10 +679,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     {
         psd->fmt = MyComputerSFHeader[iColumn].fmt;
         psd->cxChar = MyComputerSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA(shell32_hInstance, MyComputerSFHeader[iColumn].colnameid,
-                    psd->str.cStr, MAX_PATH);
-        return S_OK;
+        return SHSetStrRet(&psd->str, MyComputerSFHeader[iColumn].colnameid);
     }
     else if (_ILIsSpecialFolder(pidl))
     {

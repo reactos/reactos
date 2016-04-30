@@ -492,7 +492,6 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMI
  */
 HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    LPWSTR pszName;
     PIDLPrinterStruct * p;
 
     TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", this, pidl, dwFlags, strRet);
@@ -505,21 +504,7 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     }
 
     if (!pidl->mkid.cb)
-    {
-        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
-        if (!pszName)
-            return E_OUTOFMEMORY;
-
-        if (LoadStringW(shell32_hInstance, IDS_PRINTERS, pszName, MAX_PATH))
-        {
-            pszName[MAX_PATH-1] = L'\0';
-            strRet->uType = STRRET_WSTR;
-            strRet->pOleStr = pszName;
-            return S_OK;
-        }
-        CoTaskMemFree(pszName);
-        return E_FAIL;
-    }
+        return SHSetStrRet(strRet, IDS_PRINTERS);
 
     p = _ILGetPrinterStruct(pidl);
     if (!p)
@@ -527,14 +512,8 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         WARN("no printer struct\n");
         return E_INVALIDARG;
     }
-    strRet->pOleStr = (LPWSTR)SHAlloc(p->offsServer * sizeof(WCHAR));
-    if (!strRet->pOleStr)
-        return E_OUTOFMEMORY;
 
-    memcpy((LPVOID)strRet->pOleStr, (LPVOID)p->szName, p->offsServer * sizeof(WCHAR));
-    TRACE("ret %s\n", debugstr_w(strRet->pOleStr));
-
-    return S_OK;
+    return SHSetStrRet(strRet, p->szName);
 }
 
 /**************************************************************************
@@ -599,7 +578,6 @@ HRESULT WINAPI CPrinterFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMN
 HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
-    HRESULT hr = E_FAIL;
 
     TRACE("(%p)->(%p %i %p): stub\n", this, pidl, iColumn, psd);
 
@@ -609,19 +587,10 @@ HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, 
     psd->fmt = PrinterSFHeader[iColumn].fmt;
     psd->cxChar = PrinterSFHeader[iColumn].cxChar;
     if (pidl == NULL)
-    {
-        psd->str.uType = STRRET_WSTR;
-        if (LoadStringW(shell32_hInstance, PrinterSFHeader[iColumn].colnameid, buffer, MAX_PATH))
-            hr = SHStrDupW(buffer, &psd->str.pOleStr);
-
-        return hr;
-    }
+        return SHSetStrRet(&psd->str, PrinterSFHeader[iColumn].colnameid);
 
     if (iColumn == COLUMN_NAME)
-    {
-        psd->str.uType = STRRET_WSTR;
         return GetDisplayNameOf(pidl, SHGDN_NORMAL, &psd->str);
-    }
 
     psd->str.uType = STRRET_CSTR;
     psd->str.cStr[0] = '\0';

@@ -889,10 +889,7 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     {
         psd->fmt = DesktopSFHeader[iColumn].fmt;
         psd->cxChar = DesktopSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA (shell32_hInstance, DesktopSFHeader[iColumn].colnameid,
-                     psd->str.cStr, MAX_PATH);
-        return S_OK;
+        return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
     }
     else if (_ILIsSpecialFolder(pidl))
     {
