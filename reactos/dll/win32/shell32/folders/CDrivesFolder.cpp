@@ -206,7 +206,6 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 {
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
-    WCHAR szElement[MAX_PATH];
     LPITEMIDLIST pidlTemp = NULL;
 
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
@@ -219,17 +218,18 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 
     /* handle CLSID paths */
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
-    {
         return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-    }
-    /* do we have an absolute path name ? */
-    else if (PathGetDriveNumberW (lpszDisplayName) >= 0 &&
-             lpszDisplayName[2] == (WCHAR) '\\')
+
+    if (PathGetDriveNumberW(lpszDisplayName) < 0)
+        return E_INVALIDARG;
+
+    pidlTemp = _ILCreateDrive(lpszDisplayName);
+    if (!pidlTemp)
+        return E_OUTOFMEMORY;
+
+    if (lpszDisplayName[2] == L'\\')
     {
-        szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
-        /* make drive letter uppercase to enable PIDL comparison */
-        szElement[0] = toupper(szElement[0]);
-        pidlTemp = _ILCreateDrive (szElement);
+        szNext = &lpszDisplayName[3];
     }
 
     if (szNext && *szNext)
