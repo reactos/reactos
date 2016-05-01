@@ -359,13 +359,6 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     FileObject = Stack->FileObject;
 
-    if (RequestedDisposition == FILE_CREATE ||
-        RequestedDisposition == FILE_OVERWRITE_IF ||
-        RequestedDisposition == FILE_SUPERSEDE)
-    {
-        return STATUS_ACCESS_DENIED;
-    }
-
     if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {
         ULONGLONG MFTId;
