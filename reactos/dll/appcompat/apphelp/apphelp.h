@@ -32,6 +32,16 @@ typedef UINT64 QWORD;
 #define TAGREF_NULL (0)
 #define TAGREF_ROOT (0)
 
+typedef struct tagATTRINFO {
+  TAG   type;
+  DWORD flags;
+  union {
+    QWORD qwattr;
+    DWORD dwattr;
+    WCHAR *lpattr;
+  };
+} ATTRINFO, *PATTRINFO;
+
 typedef enum _SHIM_LOG_LEVEL {
     SHIM_ERR = 1,
     SHIM_WARN = 2,
@@ -72,12 +82,28 @@ void SdbpFree(LPVOID mem);
 
 #endif
 
+typedef struct tagMEMMAPPED {
+    HANDLE file;
+    HANDLE section;
+    PBYTE view;
+    SIZE_T size;
+    SIZE_T mapped_size;
+} MEMMAPPED, *PMEMMAPPED;
+
+BOOL WINAPI SdbpOpenMemMappedFile(LPCWSTR path, PMEMMAPPED mapping);
+void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping);
+DWORD SdbpStrlen(LPCWSTR string);
+PWSTR SdbpStrDup(LPCWSTR string);
+
 
 /* layer.c */
 BOOL WINAPI AllowPermLayer(PCWSTR path);
 BOOL WINAPI SdbGetPermLayerKeys(PCWSTR wszPath, PWSTR pwszLayers, PDWORD pdwBytes, DWORD dwFlags);
 BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
 
+
+#define ATTRIBUTE_AVAILABLE 0x1
+#define ATTRIBUTE_FAILED 0x2
 
 #define TAGID_NULL 0x0
 #define TAGID_ROOT 0x0

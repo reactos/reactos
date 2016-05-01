@@ -155,11 +155,6 @@ void SdbpHeapDeinit(void)
     HeapDestroy(g_Heap);
 }
 
-DWORD SdbpStrlen(PCWSTR string)
-{
-    return (lstrlenW(string) + 1) * sizeof(WCHAR);
-}
-
 static HANDLE SdbpHeap(void)
 {
     return g_Heap;
@@ -201,6 +196,94 @@ void SdbpFree(LPVOID mem
     SdbpRemoveAllocation(mem, line, file);
 #endif
     HeapFree(SdbpHeap(), 0, mem);
+}
+
+DWORD SdbpStrlen(PCWSTR string)
+{
+    return (lstrlenW(string) + 1) * sizeof(WCHAR);
+}
+
+PWSTR SdbpStrDup(LPCWSTR string)
+{
+    PWSTR ret = SdbpAlloc(SdbpStrlen(string));
+    lstrcpyW(ret, string);
+    return ret;
+}
+
+
+BOOL WINAPI SdbpOpenMemMappedFile(LPCWSTR path, PMEMMAPPED mapping)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_STANDARD_INFORMATION FileStandard;
+    UNICODE_STRING FileName;
+
+    RtlZeroMemory(mapping, sizeof(*mapping));
+
+    if(!RtlDosPathNameToNtPathName_U(path, &FileName, NULL, NULL))
+    {
+        RtlFreeUnicodeString(&FileName);
+        return FALSE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&mapping->file, GENERIC_READ | SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT);
+    RtlFreeUnicodeString(&FileName);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SHIM_ERR("Failed to open file %S: 0x%lx\n", path, Status);
+        return FALSE;
+    }
+
+    Status = NtCreateSection(&mapping->section, STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ, 0, 0, PAGE_READONLY, SEC_COMMIT, mapping->file);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Special case */
+        if (Status == STATUS_MAPPED_FILE_SIZE_ZERO)
+        {
+            NtClose(mapping->file);
+            mapping->file = mapping->section = NULL;
+            return TRUE;
+        }
+        SHIM_ERR("Failed to create mapping for file: 0x%lx\n", Status);
+        goto err_out;
+    }
+
+    Status = NtQueryInformationFile(mapping->file, &IoStatusBlock, &FileStandard, sizeof(FileStandard), FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        SHIM_ERR("Failed to read file info for file: 0x%lx\n", Status);
+        goto err_out;
+    }
+
+    mapping->mapped_size = mapping->size = FileStandard.EndOfFile.LowPart;
+    Status = NtMapViewOfSection(mapping->section, NtCurrentProcess(), (PVOID*)&mapping->view, 0, 0, 0, &mapping->mapped_size, ViewUnmap, 0, PAGE_READONLY);
+    if (!NT_SUCCESS(Status))
+    {
+        SHIM_ERR("Failed to map view of file: 0x%lx\n", Status);
+        goto err_out;
+    }
+
+    return TRUE;
+
+err_out:
+    if (!mapping->view)
+    {
+        if (mapping->section)
+            NtClose(mapping->section);
+        NtClose(mapping->file);
+    }
+    return FALSE;
+}
+
+void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping)
+{
+    NtUnmapViewOfSection(NtCurrentProcess(), mapping->view);
+    NtClose(mapping->section);
+    NtClose(mapping->file);
+    RtlZeroMemory(mapping, sizeof(*mapping));
 }
 
 /**
