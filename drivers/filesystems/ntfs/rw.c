@@ -22,6 +22,7 @@
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMERS:      Art Yerkes
  *                   Pierre Schweitzer (pierre@reactos.org)
+ *                   Trevor Thompson
  */
 
 /* INCLUDES *****************************************************************/
@@ -252,14 +253,403 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     return Status;
 }
 
+/**
+* @name NtfsWriteFile
+* @implemented
+*
+* Writes a file to the disk. It presently borrows a lot of code from NtfsReadFile() and
+* VFatWriteFileData(). It needs some more work before it will be complete; it won't handle 
+* page files, asnyc io, cached writes, etc.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param FileObject
+* Pointer to a FILE_OBJECT describing the target file
+*
+* @param Buffer
+* The data that's being written to the file
+*
+* @Param Length
+* The size of the data buffer being written, in bytes
+*
+* @param WriteOffset
+* Offset, in bytes, from the beginning of the file. Indicates where to start
+* writing data.
+*
+* @param IrpFlags
+* TODO: flags are presently ignored in code.
+*
+* @param LengthWritten
+* Pointer to a ULONG. This ULONG will be set to the number of bytes successfully written.
+*
+* @return
+* STATUS_SUCCESS if successful, STATUS_NOT_IMPLEMENTED if a required feature isn't implemented,
+* STATUS_INSUFFICIENT_RESOURCES if an allocation failed, STATUS_ACCESS_DENIED if the write itself fails,
+* STATUS_PARTIAL_COPY or STATUS_UNSUCCESSFUL if ReadFileRecord() fails, or
+* STATUS_OBJECT_NAME_NOT_FOUND if the file's data stream could not be found.
+*
+* @remarks Called by NtfsWrite(). It may perform a read-modify-write operation if the requested write is
+* not sector-aligned. LengthWritten only refers to how much of the requested data has been written;
+* extra data that needs to be written to make the write sector-aligned will not affect it.
+*
+*/
+NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
+                       PFILE_OBJECT FileObject,
+                       const PUCHAR Buffer,
+                       ULONG Length,
+                       ULONG WriteOffset,
+                       ULONG IrpFlags,
+                       PULONG LengthWritten)
+{
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    PNTFS_FCB Fcb;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG StreamSize;
 
+    DPRINT("NtfsWriteFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, WriteOffset, IrpFlags, LengthWritten);
+
+    *LengthWritten = 0;
+
+    ASSERT(DeviceExt);
+
+    if (Length == 0)
+    {
+        if (Buffer == NULL)
+            return STATUS_SUCCESS;
+        else
+            return STATUS_INVALID_PARAMETER;
+    }
+
+    // get the File control block
+    Fcb = (PNTFS_FCB)FileObject->FsContext;
+    ASSERT(Fcb);
+
+    DPRINT("Fcb->PathName: %wS\n", Fcb->PathName);
+    DPRINT("Fcb->ObjectName: %wS\n", Fcb->ObjectName);
+
+    // we don't yet handle compression
+    if (NtfsFCBIsCompressed(Fcb))
+    {
+        DPRINT("Compressed file!\n");
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // allocate non-paged memory for the FILE_RECORD_HEADER
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        DPRINT1("Not enough memory! Can't write %wS!\n", Fcb->PathName);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // read the FILE_RECORD_HEADER from the drive (or cache)
+    DPRINT("Reading file record...\n");
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        // We couldn't get the file's record. Free the memory and return the error
+        DPRINT1("Can't find record for %wS!\n", Fcb->ObjectName);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    DPRINT("Found record for %wS\n", Fcb->ObjectName);
+
+    // Find the attribute (in the NTFS sense of the word) with the data stream for our file
+    DPRINT("Finding Data Attribute...\n");
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext);
+
+    // Did we fail to find the attribute?
+    if (!NT_SUCCESS(Status))
+    {
+        NTSTATUS BrowseStatus;
+        FIND_ATTR_CONTXT Context;
+        PNTFS_ATTR_RECORD Attribute;
+
+        DPRINT1("No '%S' data stream associated with file!\n", Fcb->Stream);
+
+        // Couldn't find the requested data stream; print a list of streams available
+        BrowseStatus = FindFirstAttribute(&Context, DeviceExt, FileRecord, FALSE, &Attribute);
+        while (NT_SUCCESS(BrowseStatus))
+        {
+            if (Attribute->Type == AttributeData)
+            {
+                UNICODE_STRING Name;
+
+                Name.Length = Attribute->NameLength * sizeof(WCHAR);
+                Name.MaximumLength = Name.Length;
+                Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
+                DPRINT1("Data stream: '%wZ' available\n", &Name);
+            }
+
+            BrowseStatus = FindNextAttribute(&Context, &Attribute);
+        }
+        FindCloseAttribute(&Context);
+
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Get the size of the stream on disk
+    StreamSize = AttributeDataLength(&DataContext->Record);
+
+    DPRINT("WriteOffset: %lu\tStreamSize: %I64u\n", WriteOffset, StreamSize);
+
+    // Are we trying to write beyond the end of the stream?
+    if (WriteOffset + Length > StreamSize)
+    {
+        // TODO: allocate additional clusters as needed and expand stream
+        DPRINT1("WriteOffset: %lu\tLength: %lu\tStreamSize: %I64u\n", WriteOffset, Length, StreamSize);
+        DPRINT1("TODO: Stream embiggening (appending files) is not yet supported!\n");
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        *LengthWritten = 0;             // We didn't write anything
+        return STATUS_ACCESS_DENIED;    // temporarily; we don't change file sizes yet
+    }
+
+    DPRINT("Length: %lu\tWriteOffset: %lu\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);
+
+    // Write the data to the attribute
+    Status = WriteAttribute(DeviceExt, DataContext, WriteOffset, Buffer, Length, LengthWritten);
+
+    // Did the write fail?
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Write failure!\n");
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+        return Status;
+    }
+
+    // This should never happen:
+    if (*LengthWritten != Length)
+    {
+        DPRINT1("\a\tNTFS DRIVER ERROR: length written (%lu) differs from requested (%lu), but no error was indicated!\n",
+            *LengthWritten, Length);
+        Status = STATUS_UNEXPECTED_IO_ERROR;
+    }
+
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    return Status;
+}
+
+/**
+* @name NtfsWrite
+* @implemented
+*
+* Handles IRP_MJ_WRITE I/O Request Packets for NTFS. This code borrows a lot from
+* VfatWrite, and needs a lot of cleaning up. It also needs a lot more of the code
+* from VfatWrite integrated.
+*
+* @param IrpContext
+* Points to an NTFS_IRP_CONTEXT which describes the write
+*
+* @return
+* STATUS_SUCCESS if successful,
+* STATUS_INSUFFICIENT_RESOURCES if an allocation failed,
+* STATUS_INVALID_DEVICE_REQUEST if called on the main device object,
+* STATUS_NOT_IMPLEMENTED or STATUS_ACCESS_DENIED if a required feature isn't implemented.
+* STATUS_PARTIAL_COPY, STATUS_UNSUCCESSFUL, or STATUS_OBJECT_NAME_NOT_FOUND if NtfsWriteFile() fails.
+*
+* @remarks Called by NtfsDispatch() in response to an IRP_MJ_WRITE request. Page files are not implemented.
+* Support for large files (>4gb) is not implemented. Cached writes, file locks, transactions, etc - not implemented.
+*
+*/
 NTSTATUS
 NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
 {
-    DPRINT("NtfsWrite(IrpContext %p)\n",IrpContext);
+    PNTFS_FCB Fcb;
+    PERESOURCE Resource = NULL;
+    LARGE_INTEGER ByteOffset;
+    PUCHAR Buffer;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Length = 0;
+    ULONG ReturnedWriteLength = 0;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PDEVICE_EXTENSION DeviceExt = NULL;
+    PFILE_OBJECT FileObject = NULL;
+    PIRP Irp = NULL;
+    ULONG BytesPerSector;
 
-    IrpContext->Irp->IoStatus.Information = 0;
-    return STATUS_NOT_SUPPORTED;
+    DPRINT("NtfsWrite(IrpContext %p)\n", IrpContext);
+    ASSERT(IrpContext);
+
+    // This request is not allowed on the main device object
+    if (IrpContext->DeviceObject == NtfsGlobalData->DeviceObject)
+    {
+        DPRINT1("\t\t\t\tNtfsWrite is called with the main device object.\n");
+
+        Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    // get the I/O request packet
+    Irp = IrpContext->Irp;
+
+    // get the File control block
+    Fcb = (PNTFS_FCB)IrpContext->FileObject->FsContext;
+    ASSERT(Fcb);
+
+    DPRINT("About to write %wS\n", Fcb->ObjectName);
+    DPRINT("NTFS Version: %d.%d\n", Fcb->Vcb->NtfsInfo.MajorVersion, Fcb->Vcb->NtfsInfo.MinorVersion);
+
+    // setup some more locals
+    FileObject = IrpContext->FileObject;
+    DeviceObject = IrpContext->DeviceObject;
+    DeviceExt = DeviceObject->DeviceExtension;
+    BytesPerSector = DeviceExt->StorageDevice->SectorSize;
+    Length = IrpContext->Stack->Parameters.Write.Length;
+
+    // get the file offset we'll be writing to
+    ByteOffset = IrpContext->Stack->Parameters.Write.ByteOffset;
+    if (ByteOffset.u.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+        ByteOffset.u.HighPart == -1)
+    {
+        ByteOffset.QuadPart = Fcb->RFCB.FileSize.QuadPart;
+    }
+
+    DPRINT("ByteOffset: %I64u\tLength: %lu\tBytes per sector: %lu\n", ByteOffset.QuadPart,
+        Length, BytesPerSector);
+
+    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
+    {
+        // TODO: Support large files
+        DPRINT1("FIXME: Writing to large files is not yet supported at this time.\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    // Is this a non-cached write? A non-buffered write?
+    if (IrpContext->Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || (Fcb->Flags & FCB_IS_VOLUME) ||
+        IrpContext->FileObject->Flags & FILE_NO_INTERMEDIATE_BUFFERING)
+    {
+        // non-cached and non-buffered writes must be sector aligned
+        if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
+        {
+            DPRINT1("Non-cached writes and non-buffered writes must be sector aligned!\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    if (Length == 0)
+    {
+        DPRINT1("Null write!\n");
+
+        IrpContext->Irp->IoStatus.Information = 0;
+
+        // FIXME: Doesn't accurately detect when a user passes NULL to WriteFile() for the buffer
+        if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
+        {
+            // FIXME: Update last write time
+            return STATUS_SUCCESS;
+        }
+
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    // get the Resource
+    if (Fcb->Flags & FCB_IS_VOLUME)
+    {
+        Resource = &DeviceExt->DirResource;
+    }
+    else if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+    {
+        Resource = &Fcb->PagingIoResource;
+    }
+    else
+    {
+        Resource = &Fcb->MainResource;
+    }
+
+    // acquire exclusive access to the Resource
+    if (!ExAcquireResourceExclusiveLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return STATUS_CANT_WAIT;
+    }
+
+    /* From VfatWrite(). Todo: Handle file locks
+    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+    FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+    {
+    if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
+    {
+    Status = STATUS_FILE_LOCK_CONFLICT;
+    goto ByeBye;
+    }
+    }*/
+
+    // Is this an async request to a file?
+    if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT) && !(Fcb->Flags & FCB_IS_VOLUME))
+    {
+        DPRINT1("FIXME: Async writes not supported in NTFS!\n");
+
+        ExReleaseResourceLite(Resource);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // get the buffer of data the user is trying to write
+    Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
+    ASSERT(Buffer);
+
+    // lock the buffer
+    Status = NtfsLockUserBuffer(Irp, Length, IoReadAccess);
+
+    // were we unable to lock the buffer?
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to lock user buffer!\n");
+
+        ExReleaseResourceLite(Resource);
+        return Status;
+    }
+
+    DPRINT("Existing File Size(Fcb->RFCB.FileSize.QuadPart): %I64u\n", Fcb->RFCB.FileSize.QuadPart);
+    DPRINT("About to write the data. Length: %lu\n", Length);
+
+    // TODO: handle HighPart of ByteOffset (large files)
+
+    // write the file
+    Status = NtfsWriteFile(DeviceExt,
+                           FileObject,
+                           Buffer,
+                           Length,
+                           ByteOffset.LowPart,
+                           Irp->Flags,
+                           &ReturnedWriteLength);
+
+    IrpContext->Irp->IoStatus.Status = Status;
+
+    // was the write successful?
+    if (NT_SUCCESS(Status))
+    {
+        // TODO: Update timestamps
+
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            // advance the file pointer
+            FileObject->CurrentByteOffset.QuadPart = ByteOffset.QuadPart + ReturnedWriteLength;
+        }
+
+        IrpContext->PriorityBoost = IO_DISK_INCREMENT;
+    }
+    else
+    {
+        DPRINT1("Write not Succesful!\tReturned length: %lu\n", ReturnedWriteLength);
+    }
+
+    Irp->IoStatus.Information = ReturnedWriteLength;
+
+    // Note: We leave the user buffer that we locked alone, it's up to the I/O manager to unlock and free it
+
+    ExReleaseResourceLite(Resource);
+
+    return Status;
 }
 
 /* EOF */

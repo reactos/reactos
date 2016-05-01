@@ -359,13 +359,6 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     FileObject = Stack->FileObject;
 
-    if (RequestedDisposition == FILE_CREATE ||
-        RequestedDisposition == FILE_OVERWRITE_IF ||
-        RequestedDisposition == FILE_SUPERSEDE)
-    {
-        return STATUS_ACCESS_DENIED;
-    }
-
     if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {
         ULONGLONG MFTId;
@@ -483,26 +476,26 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return Status;
         }
 
-        /* HUGLY HACK: remain RO so far... */
+        /* HUGLY HACK: Can't overwrite or supersede a file yet... */
         if (RequestedDisposition == FILE_OVERWRITE ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            DPRINT1("Denying write request on NTFS volume\n");
+            DPRINT1("Cannot yet perform an overwrite or supersede request on NTFS volume\n");
             NtfsCloseFile(DeviceExt, FileObject);
             return STATUS_ACCESS_DENIED;
         }
     }
     else
     {
-        /* HUGLY HACK: remain RO so far... */
+        /* HUGLY HACK: Can't create new files yet... */
         if (RequestedDisposition == FILE_CREATE ||
             RequestedDisposition == FILE_OPEN_IF ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            DPRINT1("Denying write request on NTFS volume\n");
-            return STATUS_ACCESS_DENIED;
+            DPRINT1("Denying file creation request on NTFS volume\n");
+            return STATUS_CANNOT_MAKE;
         }
     }
 
