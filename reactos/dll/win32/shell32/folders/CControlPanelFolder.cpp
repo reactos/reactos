@@ -125,19 +125,12 @@ static PIDLCPanelStruct *_ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
-HRESULT CCPLExtractIcon_CreateInstance(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+HRESULT CCPLExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     PIDLCPanelStruct *pData = _ILGetCPanelPointer(pidl);
     if (!pData)
     {
-        LPITEMIDLIST pidlComplete = ILCombine(pidlRoot, pidl);
-        if (!pidlComplete)
-            return E_OUTOFMEMORY;
-
-        *ppvOut = IExtractIconW_Constructor(pidlComplete);
-
-        SHFree(pidlComplete);
-        return *ppvOut ? S_OK : E_FAIL;
+        return GenericExtractIcon_CreateInstance(psf, pidl, riid, ppvOut);
     }
 
     CComPtr<IDefaultExtractIconInit> initIcon;
@@ -508,7 +501,7 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         } else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1)) {
             hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
         } else if ((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1)) {
-            hr = CCPLExtractIcon_CreateInstance(pidlRoot, apidl[0], riid, &pObj);
+            hr = CCPLExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
 
         } else if ((IsEqualIID(riid, IID_IShellLinkW) || IsEqualIID(riid, IID_IShellLinkA))
                    && (cidl == 1)) {

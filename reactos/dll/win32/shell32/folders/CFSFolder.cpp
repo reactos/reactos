@@ -488,7 +488,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
                                         LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
@@ -515,19 +515,9 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
                 hr = IDataObject_Constructor (hwndOwner, pidlRoot, (LPCITEMIDLIST*)&pidlRoot, 1, (IDataObject **)&pObj);
             }
         }
-        else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
+        else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
         {
-            pidl = ILCombine (pidlRoot, apidl[0]);
-            pObj = IExtractIconA_Constructor (pidl);
-            SHFree (pidl);
-            hr = S_OK;
-        }
-        else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
-        {
-            pidl = ILCombine (pidlRoot, apidl[0]);
-            pObj = IExtractIconW_Constructor (pidl);
-            SHFree (pidl);
-            hr = S_OK;
+            hr = GenericExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
         }
         else if (IsEqualIID (riid, IID_IDropTarget))
         {
