@@ -358,12 +358,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
     {
         BOOL found = FALSE;
 
-        if (_ILIsCPanelStruct(pSimplePidl))
-        {
-            if (SUCCEEDED(CPanel_GetIconLocationW(pSimplePidl, wTemp, MAX_PATH, &icon_idx)))
-                found = TRUE;
-        }
-        else if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
+        if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
         {
             if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
                     && HCR_GetIconA(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
