@@ -24,6 +24,7 @@
  *                   Valentin Verkhovsky
  *                   Pierre Schweitzer (pierre@reactos.org)
  *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   Trevor Thompson
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,6 +32,7 @@
 #include "ntfs.h"
 
 #define NDEBUG
+#undef NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -333,6 +335,273 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     return AlreadyRead;
 }
 
+
+/**
+* @name WriteAttribute
+* @implemented
+*
+* Writes an NTFS attribute to the disk. It presently borrows a lot of code from ReadAttribute(),
+* and it still needs more documentation / cleaning up.
+*
+* @param Vcb
+* Volume Control Block indicating which volume to write the attribute to
+*
+* @param Context
+* Pointer to an NTFS_ATTR_CONTEXT that has information about the attribute
+*
+* @param Offset
+* Offset, in bytes, from the beginning of the attribute indicating where to start
+* writing data
+*
+* @param Buffer
+* The data that's being written to the device
+*
+* @param Length
+* How much data will be written, in bytes
+*
+* @param RealLengthWritten
+* Pointer to a ULONG which will receive how much data was written, in bytes
+*
+* @return
+* STATUS_SUCCESS if successful, an error code otherwise. STATUS_NOT_IMPLEMENTED if
+* writing to a sparse file.
+*
+* @remarks Note that in this context the word "attribute" isn't referring read-only, hidden,
+* etc. - the file's data is actually stored in an attribute in NTFS parlance.
+*
+*/
+
+NTSTATUS
+WriteAttribute(PDEVICE_EXTENSION Vcb,
+               PNTFS_ATTR_CONTEXT Context,
+               ULONGLONG Offset,
+               const PUCHAR Buffer,
+               ULONG Length,
+               PULONG RealLengthWritten)
+{
+    ULONGLONG LastLCN;
+    PUCHAR DataRun;
+    LONGLONG DataRunOffset;
+    ULONGLONG DataRunLength;
+    LONGLONG DataRunStartLCN;
+    ULONGLONG CurrentOffset;
+    ULONG WriteLength;
+    NTSTATUS Status;
+    PUCHAR SourceBuffer = Buffer;
+    LONGLONG StartingOffset;
+
+    DPRINT("WriteAttribute(%p, %p, %I64U, %p, %lu)\n", Vcb, Context, Offset, Buffer, Length);
+
+    // is this a resident attribute?
+    if (!Context->Record.IsNonResident)
+    {
+        DPRINT1("FIXME: Writing to resident NTFS records (small files) is not supported at this time.\n");
+        // (TODO: This should be really easy to implement)
+
+        /* LeftOver code from ReadAttribute(), may be helpful:
+        if (Offset > Context->Record.Resident.ValueLength)
+        return 0;
+        if (Offset + Length > Context->Record.Resident.ValueLength)
+        Length = (ULONG)(Context->Record.Resident.ValueLength - Offset);
+        RtlCopyMemory(Buffer, (PCHAR)&Context->Record + Context->Record.Resident.ValueOffset + Offset, Length);
+        return Length;*/
+
+        return STATUS_NOT_IMPLEMENTED;	// until we implement it
+    }
+
+    // This is a non-resident attribute.
+
+    // I. Find the corresponding start data run.	
+
+    *RealLengthWritten = 0;
+
+    // FIXME: Cache seems to be non-working. Disable it for now
+    //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
+    /*if (0)
+    {
+    DataRun = Context->CacheRun;
+    LastLCN = Context->CacheRunLastLCN;
+    DataRunStartLCN = Context->CacheRunStartLCN;
+    DataRunLength = Context->CacheRunLength;
+    CurrentOffset = Context->CacheRunCurrentOffset;
+    }
+    else*/
+    {
+        LastLCN = 0;
+        DataRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
+        CurrentOffset = 0;
+
+        while (1)
+        {
+            DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+            if (DataRunOffset != -1)
+            {
+                // Normal data run. 
+                // DPRINT1("Writing to normal data run, LastLCN %I64u DataRunOffset %I64d\n", LastLCN, DataRunOffset);
+                DataRunStartLCN = LastLCN + DataRunOffset;
+                LastLCN = DataRunStartLCN;
+            }
+            else
+            {
+                // Sparse data run. We can't support writing to sparse files yet 
+                // (it may require increasing the allocation size).
+                DataRunStartLCN = -1;
+                DPRINT1("FIXME: Writing to sparse files is not supported yet!\n");
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            // Have we reached the data run we're trying to write to?
+            if (Offset >= CurrentOffset &&
+                Offset < CurrentOffset + (DataRunLength * Vcb->NtfsInfo.BytesPerCluster))
+            {
+                break;
+            }
+
+            if (*DataRun == 0)
+            {
+                // We reached the last assigned cluster
+                // TODO: assign new clusters to the end of the file. 
+                // (Presently, this code will never be reached, the write should have already failed by now)
+                return STATUS_END_OF_FILE;
+            }
+
+            CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+        }
+    }
+
+    // II. Go through the run list and write the data
+
+    /* REVIEWME -- As adapted from NtfsReadAttribute():
+    We seem to be making a special case for the first applicable data run, but I'm not sure why.
+    Does it have something to do with (not) caching? Is this strategy equally applicable to writing? */
+
+    WriteLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset), Length);
+
+    StartingOffset = DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset;
+
+    // Write the data to the disk
+    Status = NtfsWriteDisk(Vcb->StorageDevice,
+                           StartingOffset,
+                           WriteLength,
+                           Vcb->NtfsInfo.BytesPerSector,
+                           (PVOID)SourceBuffer);
+
+    // Did the write fail?
+    if (!NT_SUCCESS(Status))
+    {
+        Context->CacheRun = DataRun;
+        Context->CacheRunOffset = Offset;
+        Context->CacheRunStartLCN = DataRunStartLCN;
+        Context->CacheRunLength = DataRunLength;
+        Context->CacheRunLastLCN = LastLCN;
+        Context->CacheRunCurrentOffset = CurrentOffset;
+
+        return Status;
+    }
+
+    Length -= WriteLength;
+    SourceBuffer += WriteLength;
+    *RealLengthWritten += WriteLength;
+
+    // Did we write to the end of the data run?
+    if (WriteLength == DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset))
+    {
+        // Advance to the next data run
+        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+
+        if (DataRunOffset != (ULONGLONG)-1)
+        {
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+            DataRunStartLCN = -1;
+
+        if (*DataRun == 0)
+        {
+            if (Length == 0)
+                return STATUS_SUCCESS;
+
+            // This code shouldn't execute, because we should have extended the allocation size
+            // or failed the request by now. It's just a sanity check.
+            DPRINT1("Encountered EOF before expected!\n");
+            return STATUS_END_OF_FILE;
+        }
+    }
+
+    // Do we have more data to write?
+    while (Length > 0)
+    {
+        // Make sure we don't write past the end of the current data run
+        WriteLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster, Length);
+        
+        // Are we dealing with a sparse data run?
+        if (DataRunStartLCN == -1)
+        {
+            DPRINT1("FIXME: Don't know how to write to sparse files yet! (DataRunStartLCN == -1)\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        else
+        {
+            // write the data to the disk
+            Status = NtfsWriteDisk(Vcb->StorageDevice,
+                                   DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster,
+                                   WriteLength,
+                                   Vcb->NtfsInfo.BytesPerSector,
+                                   (PVOID)SourceBuffer);
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+
+        Length -= WriteLength;
+        SourceBuffer += WriteLength;
+        RealLengthWritten += WriteLength;
+
+        // We finished this request, but there's still data in this data run. 
+        if (Length == 0 && WriteLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
+            break;
+
+        // Go to next run in the list.
+
+        if (*DataRun == 0)
+        {
+            // that was the last run
+            if (Length > 0)
+            {
+                // Failed sanity check.
+                DPRINT1("Encountered EOF before expected!\n");
+                return STATUS_END_OF_FILE;
+            }
+
+            break;
+        }
+
+        // Advance to the next data run
+        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+        if (DataRunOffset != -1)
+        {
+            // Normal data run.
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+        {
+            // Sparse data run. 
+            DataRunStartLCN = -1;
+        }
+    } // end while (Length > 0) [more data to write]
+
+    Context->CacheRun = DataRun;
+    Context->CacheRunOffset = Offset + *RealLengthWritten;
+    Context->CacheRunStartLCN = DataRunStartLCN;
+    Context->CacheRunLength = DataRunLength;
+    Context->CacheRunLastLCN = LastLCN;
+    Context->CacheRunCurrentOffset = CurrentOffset;
+
+    return Status;
+}
 
 NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,

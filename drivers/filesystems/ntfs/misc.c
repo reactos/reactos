@@ -130,4 +130,62 @@ NtfsGetUserBuffer(PIRP Irp,
     }
 }
 
+/**
+* @name NtfsLockUserBuffer
+* @implemented
+*
+* Ensures the IRP has an MDL Address.
+*
+* @param Irp
+* Irp with the UserBuffer that needs locking
+*
+* @param Length
+* Size of the Irp->UserBuffer, in bytes
+*
+* @param Operation
+* What kind of access does the driver need to the buffer. Set to
+* IoReadAccess, IoWriteAccess, or IoModifyAccess.
+*
+* @return
+* STATUS_SUCCESS in case of success, STATUS_INSUFFICIENT_RESOURCES 
+* or an exception code otherwise.
+*
+* @remarks Trevor Thompson shamelessly ripped this from 
+* VfatLockUserBuffer(). Only the name was changed.
+*
+*/
+NTSTATUS
+NtfsLockUserBuffer(IN PIRP Irp,
+                   IN ULONG Length,
+                   IN LOCK_OPERATION Operation)
+{
+    ASSERT(Irp);
+
+    if (Irp->MdlAddress)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    IoAllocateMdl(Irp->UserBuffer, Length, FALSE, FALSE, Irp);
+
+    if (!Irp->MdlAddress)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        IoFreeMdl(Irp->MdlAddress);
+        Irp->MdlAddress = NULL;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

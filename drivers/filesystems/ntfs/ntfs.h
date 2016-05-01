@@ -551,6 +551,13 @@ NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
              IN BOOLEAN Override);
 
 NTSTATUS
+NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
+              IN LONGLONG StartingOffset,
+              IN ULONG Length,
+              IN ULONG SectorSize,
+              IN PUCHAR Buffer);
+
+NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
                 IN ULONG DiskSector,
                 IN ULONG SectorCount,
@@ -741,6 +748,14 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
               PCHAR Buffer,
               ULONG Length);
 
+NTSTATUS
+WriteAttribute(PDEVICE_EXTENSION Vcb,
+               PNTFS_ATTR_CONTEXT Context,
+               ULONGLONG Offset,
+               const PUCHAR Buffer,
+               ULONG Length,
+               PULONG LengthWritten);
+
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
@@ -816,6 +831,21 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 PVOID
 NtfsGetUserBuffer(PIRP Irp,
                   BOOLEAN Paging);
+
+NTSTATUS
+NtfsLockUserBuffer(IN PIRP Irp,
+                   IN ULONG Length,
+                   IN LOCK_OPERATION Operation);
+
+#if 0
+BOOLEAN
+wstrcmpjoki(PWSTR s1, PWSTR s2);
+
+VOID
+CdfsSwapString(PWCHAR Out,
+	       PUCHAR In,
+	       ULONG Count);
+#endif
 
 VOID
 NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
