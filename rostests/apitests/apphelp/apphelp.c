@@ -32,6 +32,7 @@
 
 #include <winerror.h>
 #include <stdio.h>
+#include <initguid.h>
 
 #include "wine/test.h"
 
@@ -119,8 +120,20 @@ typedef struct tagATTRINFO {
 
 static HMODULE hdll;
 static LPCWSTR (WINAPI *pSdbTagToString)(TAG);
+static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
+static BOOL (WINAPI *pSdbIsNullGUID)(CONST GUID *);
+static BOOL (WINAPI *pSdbGetStandardDatabaseGUID)(DWORD, GUID*);
 static BOOL (WINAPI *pSdbGetFileAttributes)(LPCWSTR, PATTRINFO *, LPDWORD);
 static BOOL (WINAPI *pSdbFreeFileAttributes)(PATTRINFO);
+
+/* 'Known' database guids */
+DEFINE_GUID(GUID_DATABASE_MSI,0xd8ff6d16,0x6a3a,0x468a,0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea);
+DEFINE_GUID(GUID_DATABASE_SHIM,0x11111111,0x1111,0x1111,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11);
+DEFINE_GUID(GUID_DATABASE_DRIVERS,0xf9ab2228,0x3312,0x4a73,0xb6,0xf9,0x93,0x6d,0x70,0xe1,0x12,0xef);
+DEFINE_GUID(GUID_DATABASE_TEST,0x6E989AB7,0x864D,0x4575,0x87,0x34,0x90,0x36,0x4A,0xC6,0x4F,0xBD);
+
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+DEFINE_GUID(test_UserAssist, 0xdd313e04, 0xfeff, 0x11d1, 0x8e, 0xcd, 0x00, 0x00, 0xf8, 0x7a, 0x47, 0x0c);
 
 static void test_SdbTagToString(void)
 {
@@ -423,6 +436,32 @@ static void test_SdbTagToStringAllTags(void)
             test_tag(data[n].base, data[n].tags, data[n].upper_limit, data[n].line);
         }
     }
+}
+
+static void test_GuidFunctions(void)
+{
+    GUID guid;
+    ok(pSdbIsNullGUID(&GUID_NULL), "expected GUID_NULL to be recognized as NULL GUID\n");
+    ok(pSdbIsNullGUID(NULL), "expected NULL to be recognized as NULL GUID\n");
+    ok(pSdbIsNullGUID(&test_UserAssist) == 0, "expected a set GUID not to be recognized as NULL GUID\n");
+
+    memset(&guid, 0, sizeof(guid));
+    ok(pSdbGetStandardDatabaseGUID(0, &guid) == 0,"Expected SdbGetStandardDatabaseGUID to fail\n");
+    ok(IsEqualGUID(&GUID_NULL, &guid), "Expected guid not to be changed\n");
+
+    ok(pSdbGetStandardDatabaseGUID(0x80020000, NULL),"Expected SdbGetStandardDatabaseGUID to succeed\n");
+
+    memset(&guid, 0, sizeof(guid));
+    ok(pSdbGetStandardDatabaseGUID(0x80020000, &guid),"Expected SdbGetStandardDatabaseGUID to succeed\n");
+    ok(IsEqualGUID(&GUID_DATABASE_MSI, &guid), "Expected guid to equal GUID_DATABASE_MSI, was: %s\n", wine_dbgstr_guid(&guid));
+
+    memset(&guid, 0, sizeof(guid));
+    ok(pSdbGetStandardDatabaseGUID(0x80030000, &guid),"Expected SdbGetStandardDatabaseGUID to succeed\n");
+    ok(IsEqualGUID(&GUID_DATABASE_SHIM, &guid), "Expected guid to equal GUID_DATABASE_SHIM, was: %s\n", wine_dbgstr_guid(&guid));
+
+    memset(&guid, 0, sizeof(guid));
+    ok(pSdbGetStandardDatabaseGUID(0x80040000, &guid),"Expected SdbGetStandardDatabaseGUID to succeed\n");
+    ok(IsEqualGUID(&GUID_DATABASE_DRIVERS, &guid), "Expected guid to equal GUID_DATABASE_DRIVERS, was: %s\n", wine_dbgstr_guid(&guid));
 }
 
 static void expect_tag_skip_imp(PATTRINFO pattr, DWORD num)
@@ -820,9 +859,13 @@ START_TEST(apphelp)
     //SetEnvironmentVariable("DEBUGCHANNEL", "+apphelp");
     hdll = LoadLibraryA("apphelp.dll");
     pSdbTagToString = (void *) GetProcAddress(hdll, "SdbTagToString");
+    pSdbGUIDToString = (void *) GetProcAddress(hdll, "SdbGUIDToString");
+    pSdbIsNullGUID = (void *) GetProcAddress(hdll, "SdbIsNullGUID");
+    pSdbGetStandardDatabaseGUID = (void *) GetProcAddress(hdll, "SdbGetStandardDatabaseGUID");
     pSdbGetFileAttributes = (void *) GetProcAddress(hdll, "SdbGetFileAttributes");
     pSdbFreeFileAttributes = (void *) GetProcAddress(hdll, "SdbFreeFileAttributes");
 
+    test_GuidFunctions();
     test_ApplicationAttributes();
     test_SdbTagToString();
 #ifdef __REACTOS__

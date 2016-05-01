@@ -79,17 +79,17 @@
 @ stdcall SdbGetPermLayerKeys(wstr wstr ptr long)
 @ stub SdbGetShowDebugInfoOption
 @ stub SdbGetShowDebugInfoOptionValue
-@ stub SdbGetStandardDatabaseGUID
+@ stdcall SdbGetStandardDatabaseGUID(long ptr)
 @ stub SdbGetStringTagPtr
 @ stub SdbGetTagDataSize
 @ stub SdbGetTagFromTagID
 @ stub SdbGrabMatchingInfo
 @ stub SdbGrabMatchingInfoEx
-@ stub SdbGUIDFromString
-@ stub SdbGUIDToString
+@ stdcall SdbGUIDFromString(wstr ptr)
+@ stdcall SdbGUIDToString(ptr wstr long)
 @ stub SdbInitDatabase
 @ stub SdbInitDatabaseEx
-@ stub SdbIsNullGUID
+@ stdcall SdbIsNullGUID(ptr)
 @ stub SdbIsStandardDatabase
 @ stub SdbIsTagrefFromLocalDB
 @ stub SdbIsTagrefFromMainDB

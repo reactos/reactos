@@ -27,6 +27,10 @@
 #include "wine/unicode.h"
 
 
+static const GUID GUID_DATABASE_MSI = {0xd8ff6d16,0x6a3a,0x468a, {0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea}};
+static const GUID GUID_DATABASE_SHIM = {0x11111111,0x1111,0x1111, {0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11}};
+static const GUID GUID_DATABASE_DRIVERS = {0xf9ab2228,0x3312,0x4a73, {0xb6,0xf9,0x93,0x6d,0x70,0xe1,0x12,0xef}};
+
 static HANDLE SdbpHeap(void);
 
 #if SDBAPI_DEBUG_ALLOC
@@ -284,6 +288,88 @@ void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping)
     NtClose(mapping->section);
     NtClose(mapping->file);
     RtlZeroMemory(mapping, sizeof(*mapping));
+}
+
+/**
+ * Parses a string to retrieve a GUID.
+ *
+ * @param [in]  GuidString  The string to parse.
+ * @param [out] Guid        The resulting GUID.
+ *
+ * @return  TRUE if it succeeds, FALSE if it fails.
+ */
+BOOL WINAPI SdbGUIDFromString(PCWSTR GuidString, GUID *Guid)
+{
+    UNICODE_STRING GuidString_u;
+    RtlInitUnicodeString(&GuidString_u, GuidString);
+    return NT_SUCCESS(RtlGUIDFromString(&GuidString_u, Guid));
+}
+
+/**
+ * Converts a GUID to a string.
+ *
+ * @param [in]  Guid        The GUID to convert.
+ * @param [out] GuidString  The resulting string representation of Guid.
+ * @param [in]  Length      The length of GuidString.
+ *
+ * @return  TRUE if it succeeds, FALSE if it fails.
+ */
+BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length)
+{
+    UNICODE_STRING GuidString_u;
+    if(NT_SUCCESS(RtlStringFromGUID(Guid, &GuidString_u)))
+    {
+        HRESULT hr = StringCchCopyNW(GuidString, Length, GuidString_u.Buffer, GuidString_u.Length / 2);
+        RtlFreeUnicodeString(&GuidString_u);
+        return SUCCEEDED(hr);
+    }
+    return FALSE;
+}
+
+/**
+ * Checks if the specified GUID is a NULL GUID
+ *
+ * @param [in]  Guid    The GUID to check.
+ *
+ * @return  TRUE if it is a NULL GUID.
+ */
+BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid)
+{
+    static GUID NullGuid = { 0 };
+    return !Guid || IsEqualGUID(&NullGuid, Guid);
+}
+
+/**
+ * Get the GUID from one of the standard databases.
+ *
+ * @param [in]  Flags   The ID to retrieve the guid from. (See SDB_DATABASE_MAIN_[xxx])
+ * @param [out] Guid    The resulting GUID.
+ *
+ * @return  TRUE if a known database ID.
+ */
+BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
+{
+    const GUID* copy_from = NULL;
+    switch(Flags & HID_DATABASE_TYPE_MASK)
+    {
+    case SDB_DATABASE_MAIN_MSI:
+        copy_from = &GUID_DATABASE_MSI;
+        break;
+    case SDB_DATABASE_MAIN_SHIM:
+        copy_from = &GUID_DATABASE_SHIM;
+        break;
+    case SDB_DATABASE_MAIN_DRIVERS:
+        copy_from = &GUID_DATABASE_DRIVERS;
+        break;
+    default:
+        SHIM_ERR("Cannot obtain database guid for databases other than main\n");
+        return FALSE;
+    }
+    if(Guid)
+    {
+        memcpy(Guid, copy_from, sizeof(GUID));
+    }
+    return TRUE;
 }
 
 /**
