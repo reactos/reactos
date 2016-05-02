@@ -299,7 +299,7 @@ static INT EDIT_WordBreakProc(EDITSTATE *es, LPWSTR s, INT index, INT count, INT
     case WB_RIGHT:
         if (!count)
             break;
-        while (s[index] && index < count && !es->logAttr[index].fSoftBreak)
+        while (index < count && s[index] && !es->logAttr[index].fSoftBreak)
             index++;
         ret = index;
         break;
