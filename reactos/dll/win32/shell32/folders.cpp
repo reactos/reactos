@@ -370,21 +370,17 @@ HRESULT GenericExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
             else if (!lstrcmpiA(sTemp, "lnkfile"))
             {
                 /* extract icon from shell shortcut */
-                CComPtr<IShellFolder>        dsf;
                 CComPtr<IShellLinkW>        psl;
 
-                if (SUCCEEDED(SHGetDesktopFolder(&dsf)))
+                HRESULT hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
+
+                if (SUCCEEDED(hr))
                 {
-                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
+                    hr = psl->GetIconLocation(wTemp, MAX_PATH, &icon_idx);
 
-                    if (SUCCEEDED(hr))
-                    {
-                        hr = psl->GetIconLocation(wTemp, MAX_PATH, &icon_idx);
+                    if (SUCCEEDED(hr) && *sTemp)
+                        found = TRUE;
 
-                        if (SUCCEEDED(hr) && *sTemp)
-                            found = TRUE;
-
-                    }
                 }
             }
         }
