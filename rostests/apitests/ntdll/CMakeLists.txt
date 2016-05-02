@@ -18,6 +18,7 @@ list(APPEND SOURCE
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c
     NtSaveKey.c
+    NtSetValueKey.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlCopyMappedMemory.c
