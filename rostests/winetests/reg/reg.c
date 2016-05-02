@@ -450,10 +450,7 @@ START_TEST(reg)
         return;
     }
 
-    if (!winetest_interactive)
-        skip("ROSTESTS-200: Skipping test_add because of exceptions in Cm.\n");
-    else
-        test_add();
+    test_add();
     test_delete();
     test_query();
     test_v_flags();
