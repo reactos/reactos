@@ -2,6 +2,7 @@ PROJECT(SHELL)
 
 add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
+add_subdirectory(shellrecyclebin)
 
 set_cpp(WITH_RUNTIME)
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
@@ -19,7 +20,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/recyclebin
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR})
 

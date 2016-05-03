@@ -20,7 +20,6 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shobjidl.h>
-#include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
@@ -41,6 +40,7 @@
 
 #include <shellutils.h>
 
+#include "shellrecyclebin/recyclebin.h"
 #include "wine/pidl.h"
 #include "debughlp.h"
 #include "wine/shell32_main.h"

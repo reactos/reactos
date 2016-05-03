@@ -34,7 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
-#include <recyclebin.h>
+#include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
