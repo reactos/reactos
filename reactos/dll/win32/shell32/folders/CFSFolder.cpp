@@ -1585,7 +1585,7 @@ HRESULT WINAPI CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
 
     TRACE("CFSFolder::_GetDropTarget entered\n");
 
-    if (_ILGetGUIDPointer (pidl) || _ILIsFolder (pidl))
+    if (_ILIsFolder (pidl))
         return this->BindToObject(pidl, NULL, IID_IDropTarget, ppvOut);
 
     STRRET strFile;
