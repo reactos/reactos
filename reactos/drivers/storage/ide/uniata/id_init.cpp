@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2004-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2004-2016 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_init.cpp
@@ -38,12 +38,16 @@ Revision History:
         VIA, nVidia
     added support for non-standard layout of registers
     added SATA support
+    added AHCI support
+
+Licence:
+    GPLv2
 
 --*/
 
 #include "stdafx.h"
 
-static BUSMASTER_CONTROLLER_INFORMATION const AtiSouthAdapters[] = {
+static BUSMASTER_CONTROLLER_INFORMATION_BASE const AtiSouthAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 4385, 1002, 0x00, ATA_MODE_NOT_SPEC, "ATI South", 0 ),
     PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR, NULL      , BMLIST_TERMINATOR )
     };
@@ -165,7 +169,7 @@ UniataChipDetectChannels(
         case ATA_ATI_IXP700: {
             UCHAR satacfg = 0;
             PCI_SLOT_NUMBER slotData;
-            ULONG i, slotNumber;
+            ULONG j, slotNumber;
                  
             KdPrint2((PRINT_PREFIX "  IXP700\n"));
             /*
@@ -173,8 +177,8 @@ UniataChipDetectChannels(
              * emulated with two SATA ports and appears on this device.
              * This mode can only be detected via SMB controller.
              */
-            i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION*)&AtiSouthAdapters[0], -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, &slotData);
-            if(i != BMLIST_TERMINATOR) {
+            j = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION_BASE*)&AtiSouthAdapters[0], -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, &slotData);
+            if(j != BMLIST_TERMINATOR) {
                 slotNumber = slotData.u.AsULONG;
 
                 GetPciConfig1(0xad, satacfg);
@@ -340,7 +344,7 @@ UniataChipDetect(
     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
     ULONG RevID    =  deviceExtension->RevID;
     ULONG i, c;
-    BUSMASTER_CONTROLLER_INFORMATION* DevTypeInfo;
+    BUSMASTER_CONTROLLER_INFORMATION_BASE* DevTypeInfo;
     PHW_CHANNEL chan;
     ULONG ChipType;
     ULONG ChipFlags;
@@ -356,7 +360,7 @@ UniataChipDetect(
     KdPrint2((PRINT_PREFIX "UniataChipDetect:\n" ));
     KdPrint2((PRINT_PREFIX "HwFlags: %#x\n", deviceExtension->HwFlags));
 
-    i = Ata_is_dev_listed((PBUSMASTER_CONTROLLER_INFORMATION)&BusMasterAdapters[0], VendorID, 0xffff, 0, NUM_BUSMASTER_ADAPTERS);
+    i = Ata_is_dev_listed((PBUSMASTER_CONTROLLER_INFORMATION_BASE)&BusMasterAdapters[0], VendorID, 0xffff, 0, NUM_BUSMASTER_ADAPTERS);
 
     c = AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"ForceSimplex", 0);
     if(c) {
@@ -374,7 +378,7 @@ UniataChipDetect(
 
     KdPrint2((PRINT_PREFIX "i: %#x\n", i));
     if(i != BMLIST_TERMINATOR) {
-        DevTypeInfo = (PBUSMASTER_CONTROLLER_INFORMATION)&BusMasterAdapters[i];
+        DevTypeInfo = (PBUSMASTER_CONTROLLER_INFORMATION_BASE)&BusMasterAdapters[i];
     } else {
 unknown_dev:
         if(Ata_is_ahci_dev(pciData)) {
@@ -400,7 +404,7 @@ unknown_dev:
         return STATUS_SUCCESS;
     }
 
-    static BUSMASTER_CONTROLLER_INFORMATION const SiSAdapters[] = {
+    static BUSMASTER_CONTROLLER_INFORMATION_BASE const SiSAdapters[] = {
         PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_SA150, "SiS 1183 IDE" , SIS133NEW),
         PCI_DEV_HW_SPEC_BM( 1182, 1039, 0x00, ATA_SA150, "SiS 1182" , SISSATA   | UNIATA_SATA),
         PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS 183 RAID"  , SISSATA   | UNIATA_SATA),
@@ -441,7 +445,7 @@ unknown_dev:
         PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR       , NULL       , BMLIST_TERMINATOR )
         };
 
-    static BUSMASTER_CONTROLLER_INFORMATION const ViaAdapters[] = {
+    static BUSMASTER_CONTROLLER_INFORMATION_BASE const ViaAdapters[] = {
         PCI_DEV_HW_SPEC_BM( 0586, 1106, 0x41, ATA_UDMA2, "VIA 82C586B", VIA33  | 0x00   ),
         PCI_DEV_HW_SPEC_BM( 0586, 1106, 0x40, ATA_UDMA2, "VIA 82C586B", VIA33  | VIAPRQ ),
         PCI_DEV_HW_SPEC_BM( 0586, 1106, 0x02, ATA_UDMA2, "VIA 82C586B", VIA33  | 0x00   ),
@@ -463,14 +467,14 @@ unknown_dev:
         PCI_DEV_HW_SPEC_BM( 5372, 1106, 0x00, ATA_UDMA6, "VIA 8237"   , VIA133 | 0x00 ),
         PCI_DEV_HW_SPEC_BM( 7372, 1106, 0x00, ATA_UDMA6, "VIA 8237"   , VIA133 | 0x00 ),
         PCI_DEV_HW_SPEC_BM( 3349, 1106, 0x00, ATA_UDMA6, "VIA 8251"   , VIA133 | 0x00 ),
-        PCI_DEV_HW_SPEC_BM( 8324, 1106, 0x00, ATA_SA150, "VIA CX700"  , VIA133 | VIASATA),
-        PCI_DEV_HW_SPEC_BM( 8353, 1106, 0x00, ATA_SA150, "VIA VX800"  , VIA133 | VIASATA),
+        PCI_DEV_HW_SPEC_BM( 8324, 1106, 0x00, ATA_SA150, "VIA CX700"  , VIANEW | VIASATA),
+        PCI_DEV_HW_SPEC_BM( 8353, 1106, 0x00, ATA_SA150, "VIA VX800"  , VIANEW | VIASATA),
         PCI_DEV_HW_SPEC_BM( 8409, 1106, 0x00, ATA_UDMA6, "VIA VX855"  , VIA133 | 0x00 ),
-        PCI_DEV_HW_SPEC_BM( 8410, 1106, 0x00, ATA_SA300, "VIA VX900"  , VIA133 | VIASATA),
+        PCI_DEV_HW_SPEC_BM( 8410, 1106, 0x00, ATA_SA300, "VIA VX900"  , VIANEW | VIASATA),
         PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR       , NULL         , BMLIST_TERMINATOR )
         };
 
-    static BUSMASTER_CONTROLLER_INFORMATION const ViaSouthAdapters[] = {
+    static BUSMASTER_CONTROLLER_INFORMATION_BASE const ViaSouthAdapters[] = {
         PCI_DEV_HW_SPEC_BM( 3112, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8361", VIASOUTH ),
         PCI_DEV_HW_SPEC_BM( 0305, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8363", VIASOUTH ),
         PCI_DEV_HW_SPEC_BM( 0391, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8371", VIASOUTH ),
@@ -488,7 +492,7 @@ unknown_dev:
            Then perform bus scan to find SIS bridge and decide what to do with controller
          */
         KdPrint2((PRINT_PREFIX "ATA_SIS_ID\n"));
-        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION*)&SiSAdapters[0];
+        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION_BASE*)&SiSAdapters[0];
         i = AtapiFindListedDev(DevTypeInfo, -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, NULL);
         if(i != BMLIST_TERMINATOR) {
             deviceExtension->FullDevName = SiSAdapters[i].FullDevName;
@@ -509,7 +513,7 @@ unknown_dev:
         KdPrint2((PRINT_PREFIX "Via-old-style %x\n", deviceExtension->DevID));
         // Traditionally, chips have same DeviceId, we can distinguish between them
         // only by ISA Bridge DeviceId
-        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION*)&ViaSouthAdapters[0];
+        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION_BASE*)&ViaSouthAdapters[0];
         i = AtapiFindListedDev(DevTypeInfo, -1, HwDeviceExtension, SystemIoBusNumber,
                                PCISLOTNUM_NOT_SPECIFIED/*slotNumber*/, NULL);
 /*        if(i == BMLIST_TERMINATOR) {
@@ -519,7 +523,7 @@ unknown_dev:
             KdPrint2((PRINT_PREFIX "VIASOUTH\n"));
             deviceExtension->HwFlags |= VIASOUTH;
         }
-        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION*)&ViaAdapters[0];
+        DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION_BASE*)&ViaAdapters[0];
         i = AtapiFindListedDev(DevTypeInfo, -1, HwDeviceExtension, SystemIoBusNumber,
                                PCISLOTNUM_NOT_SPECIFIED/*slotNumber*/, NULL);
         if(i != BMLIST_TERMINATOR) {
@@ -960,7 +964,7 @@ for_ugly_chips:
             // Restore device ID
             ChangePciConfig1(0x57, (a | 0x80));
         } else {
-            static BUSMASTER_CONTROLLER_INFORMATION const SiSSouthAdapters[] = {
+            static BUSMASTER_CONTROLLER_INFORMATION_BASE const SiSSouthAdapters[] = {
                 PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x10, ATA_MODE_NOT_SPEC, "SiS 961", 0 ),
 //                PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x00, ATA_MODE_NOT_SPEC, "SiS 961", 0 ),
                 PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, ATA_MODE_NOT_SPEC, NULL     , -1 )
@@ -970,7 +974,7 @@ for_ugly_chips:
             ChangePciConfig1(0x4a, (a | 0x10));
             if(tmp32 == ATA_SIS5513 ||
                tmp32 == ATA_SIS5517) {
-                i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION*)&SiSSouthAdapters[0],
+                i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION_BASE*)&SiSSouthAdapters[0],
                      -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, NULL); 
                 if(i != BMLIST_TERMINATOR) {
                     deviceExtension->HwFlags = (deviceExtension->HwFlags & ~CHIPTYPE_MASK) | SIS133OLD;
@@ -1038,7 +1042,7 @@ for_ugly_chips:
         if(ChipFlags & UNIATA_SATA) {
 
             ULONG IoSize = 0;
-            ULONG BaseMemAddress = 0;
+            BaseMemAddress = 0;
 
             switch(DeviceID) {
             case 0x3149: // VIA 6420
@@ -1870,13 +1874,13 @@ AtapiChipInit(
     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
     ULONG RevID    =  deviceExtension->RevID;
 //    ULONG i;
-//    BUSMASTER_CONTROLLER_INFORMATION* DevTypeInfo;
+//    BUSMASTER_CONTROLLER_INFORMATION_BASE* DevTypeInfo;
     ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
     PHW_CHANNEL chan;
     UCHAR  tmp8;
     USHORT tmp16;
-    //ULONG  tmp32;
+    ULONG  tmp32;
     ULONG  c; // logical channel (for Compatible Mode controllers)
     BOOLEAN CheckCable = FALSE;
     BOOLEAN GlobalInit = FALSE;
@@ -2045,7 +2049,6 @@ AtapiChipInit(
     case ATA_INTEL_ID: {
         BOOLEAN IsPata;
         USHORT reg54;
-        UCHAR tmp8;
         if(ChipFlags & UNIATA_SATA) {
 
             KdPrint2((PRINT_PREFIX "Intel SATA\n"));
@@ -2195,13 +2198,29 @@ AtapiChipInit(
                 AtapiStallExecution(10);
                 KdPrint2((PRINT_PREFIX "BaseIoAddressSATA_0=%x\n", deviceExtension->BaseIoAddressSATA_0.Addr));
                 if(ChipFlags & NVQ) {
+                    KdPrint2((PRINT_PREFIX "Disable NCQ\n"));
+                    tmp32 = AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x0400);
+                    KdPrint2((PRINT_PREFIX "MODE=%#x\n", tmp32));
+                    if(tmp32 & ~0xfffffff9) {
+                        AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x0400, 
+                             tmp32 & 0xfffffff9);
+                    }
+                    ChipFlags &= ~NVQ;
+                    deviceExtension->HwFlags = ChipFlags;
+                }
+                if(ChipFlags & NVQ) {
+                    /* disable  ECO 398 */
+                    ChangePciConfig1(0x7f, (a & ~(1 << 7)));
+
+                    KdPrint2((PRINT_PREFIX "Enable NCQ\n"));
+                    /* enable NCQ support */
+                    AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x0400, 
+                         tmp32 | ~0x00000006);
+
                     /* clear interrupt status */
                     AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),offs, 0x00ff00ff);
                     /* enable device and PHY state change interrupts */
                     AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),offs+4, 0x000d000d);
-                    /* disable NCQ support */
-                    AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x0400, 
-                        AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x0400) & 0xfffffff9);
                 } else {
                     /* clear interrupt status */
                     AtapiWritePortEx1(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),offs, 0xff);
@@ -2465,7 +2484,6 @@ AtapiChipInit(
             // do nothing for SATA
         } else
         if(ChipType == SIS133NEW) {
-            USHORT tmp16;
             // check 80-pin cable
             if(c == CHAN_NOT_SPECIFIED) {
                 // do nothing
@@ -2755,6 +2773,7 @@ AtapiSetupLunPtrs(
     }
     chan->AltRegMap       = deviceExtension->AltRegMap;
     chan->NextDpcChan     = -1;
+    chan->last_devsel     = -1;
     for(i=0; i<deviceExtension->NumberLuns; i++) {
         chan->lun[i]->DeviceExtension = deviceExtension;
         chan->lun[i]->chan            = chan;
