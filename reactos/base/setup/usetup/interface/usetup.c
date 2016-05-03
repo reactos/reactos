@@ -629,6 +629,10 @@ UpdateKBLayout(VOID)
  *
  * Next pages: IntroPage, QuitPage
  *
+ * SIDEEFFECTS
+ *  Init SelectedLanguageId
+ *  Init LanguageId
+ *
  * RETURNS
  *   Number of the next page.
  */
@@ -772,6 +776,8 @@ LanguagePage(PINPUT_RECORD Ir)
  *  Init RequiredPartitionDiskSpace
  *  Init IsUnattendedSetup
  *  If unattended, init *List and sets the Codepage
+ *  If unattended, init SelectedLanguageId
+ *  If unattended, init LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -906,10 +912,10 @@ SetupStartPage(PINPUT_RECORD Ir)
 
         /* new part */
         wcscpy(SelectedLanguageId,LocaleID);
+        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
-
         while (ListEntry != NULL)
         {
             if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
