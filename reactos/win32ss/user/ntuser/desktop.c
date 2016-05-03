@@ -151,10 +151,12 @@ IntDesktopObjectDelete(
 
     TRACE("Deleting desktop object 0x%p\n", pdesk);
 
-    ASSERT(pdesk->pDeskInfo->spwnd->spwndChild == NULL);
-
-    if (pdesk->pDeskInfo->spwnd)
+    if (pdesk->pDeskInfo &&
+        pdesk->pDeskInfo->spwnd)
+    {
+        ASSERT(pdesk->pDeskInfo->spwnd->spwndChild == NULL);
         co_UserDestroyWindow(pdesk->pDeskInfo->spwnd);
+    }
 
     if (pdesk->spwndMessage)
         co_UserDestroyWindow(pdesk->spwndMessage);
