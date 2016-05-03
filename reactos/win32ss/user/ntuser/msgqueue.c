@@ -2288,8 +2288,12 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
            IntGetSysCursorInfo()->CurrentCursorObject = NULL;
        }
 
-       TRACE("DereferenceObject pCursor\n");
-       UserDereferenceObject(pCursor);
+       if (pCursor && UserObjectInDestroy(UserHMGetHandle(pCursor)))
+       {
+           TRACE("DereferenceObject pCursor\n");
+           UserDereferenceObject(pCursor);
+           pCursor = NULL;
+       }
    }
 
    if (gpqForeground == MessageQueue)
