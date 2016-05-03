@@ -18,7 +18,7 @@ list(APPEND SOURCE
     id_queue.cpp
     id_sata.cpp
     ros_glue/ros_glue.cpp
-    stdafx.cpp)
+    stdafx.h)
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
