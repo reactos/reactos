@@ -487,7 +487,6 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
                                         REFIID riid, UINT * prgfInOut,
                                         LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
     LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
@@ -532,9 +531,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         else if ((IsEqualIID(riid, IID_IShellLinkW) ||
             IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
         {
-            pidl = ILCombine (pidlRoot, apidl[0]);
-            hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-            SHFree (pidl);
+            hr = IShellLink_ConstructFromFile(this, apidl[0], riid, &pObj);
         }
         else
             hr = E_NOINTERFACE;
@@ -1426,7 +1423,7 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
                         hr = E_FAIL;
                         break;
                     }
-                    hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, ILCombine(pidl, apidl[i]), (LPVOID*)&ppf);
+                    hr = IShellLink_ConstructFromFile(this, apidl[i], IID_PPV_ARG(IPersistFile, &ppf));
                     if (FAILED(hr)) {
                         ERR("Error constructing link from file");
                         break;

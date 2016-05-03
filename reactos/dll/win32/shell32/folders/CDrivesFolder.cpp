@@ -435,7 +435,6 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
-    LPITEMIDLIST pidl;
     LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
@@ -465,13 +464,6 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
         IDropTarget * pDt = NULL;
         hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
-    }
-    else if ((IsEqualIID(riid, IID_IShellLinkW) ||
-              IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*) &pObj);
-        SHFree (pidl);
     }
     else
         hr = E_NOINTERFACE;

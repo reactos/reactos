@@ -472,7 +472,6 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
 HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
     LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
@@ -502,12 +501,6 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
             hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
         } else if ((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1)) {
             hr = CCPLExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
-
-        } else if ((IsEqualIID(riid, IID_IShellLinkW) || IsEqualIID(riid, IID_IShellLinkA))
-                   && (cidl == 1)) {
-            pidl = ILCombine(pidlRoot, apidl[0]);
-            hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-            SHFree(pidl);
         } else {
             hr = E_NOINTERFACE;
         }

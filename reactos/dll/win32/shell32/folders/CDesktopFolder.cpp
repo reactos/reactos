@@ -589,7 +589,6 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     UINT *prgfInOut,
     LPVOID *ppvOut)
 {
-    LPITEMIDLIST pidl;
     LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
@@ -624,9 +623,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     else if ((IsEqualIID(riid, IID_IShellLinkW) ||
               IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-        SHFree (pidl);
+        hr = IShellLink_ConstructFromFile(this, apidl[0], riid, &pObj);
     }
     else
         hr = E_NOINTERFACE;
@@ -682,7 +679,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         int cLen = 0;
 
         /* file system folder or file rooted at the desktop */
-        if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
                 (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
         {
             lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
@@ -697,7 +694,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         if (GetFileAttributes(pszPath) == INVALID_FILE_ATTRIBUTES)
         {
             /* file system folder or file rooted at the AllUsers desktop */
-            if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
+            if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
                     (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
             {
                 SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
