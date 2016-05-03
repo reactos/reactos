@@ -166,6 +166,9 @@ IntDesktopObjectDelete(
 
     /* Free the heap */
     IntFreeDesktopHeap(pdesk);
+
+    ObDereferenceObject(pdesk->rpwinstaParent);
+
     return STATUS_SUCCESS;
 }
 
@@ -1217,6 +1220,7 @@ UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_O
     RtlZeroMemory(pdesk, sizeof(DESKTOP));
 
     /* Link the desktop with the parent window station */
+    ObReferenceObject(pwinsta);
     pdesk->rpwinstaParent = pwinsta;
     InsertTailList(&pwinsta->DesktopListHead, &pdesk->ListEntry);
 
