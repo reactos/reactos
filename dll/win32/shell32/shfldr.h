@@ -104,4 +104,13 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
 
+#ifdef __cplusplus
+
+HRESULT inline SHSetStrRet(LPSTRRET pStrRet, DWORD resId)
+{
+    return SHSetStrRet(pStrRet, shell32_hInstance, resId);
+}
+
+#endif
+
 #endif /* _SHFLDR_H_ */

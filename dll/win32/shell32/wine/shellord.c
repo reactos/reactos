@@ -34,7 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
-#include <recyclebin.h>
+#include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -823,8 +823,13 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     ext = strrchr(doc_name, '.');
     if (!lstrcmpiA(ext, ".lnk"))
     {
+        WCHAR doc_nameW[MAX_PATH];
         IShellLinkA* ShellLink;
-        IShellLink_ConstructFromFile(NULL, &IID_IShellLinkA, (LPCITEMIDLIST)SHSimpleIDListFromPathA(doc_name), (LPVOID*)&ShellLink);
+        int nLength = MultiByteToWideChar(CP_ACP, 0, doc_name, -1, doc_nameW, MAX_PATH);
+        if (nLength == 0)
+            return;
+
+        IShellLink_ConstructFromPath(doc_nameW, &IID_IShellLinkA, (LPVOID*)&ShellLink);
         IShellLinkA_GetPath(ShellLink, doc_name, MAX_PATH, NULL, 0);
         IShellLinkA_Release(ShellLink);
     }

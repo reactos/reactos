@@ -621,7 +621,7 @@ int COMDLG32_SplitFileNames(LPWSTR lpstrEdit, UINT nStrLen, LPWSTR *lpstrFileLis
 	  if ( lpstrEdit[nStrCharCount]=='"' )
 	  {
 	    nStrCharCount++;
-	    while ((lpstrEdit[nStrCharCount]!='"') && (nStrCharCount <= nStrLen))
+	    while ((nStrCharCount <= nStrLen) && (lpstrEdit[nStrCharCount]!='"'))
 	    {
 	      (*lpstrFileList)[nFileIndex++] = lpstrEdit[nStrCharCount];
 	      nStrCharCount++;

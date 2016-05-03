@@ -399,7 +399,7 @@ HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPa
     if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING && 
         GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL)
     {
-        int bWantsForParsing;
+        int bWantsForParsing = FALSE;
 
         /*
             * We can only get a filesystem path from a shellfolder if the

@@ -692,7 +692,8 @@ static void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, B
             error_exit("'%s' is not ISO-9660, aborting...", filename);
         s++;
     }
-    if (strlen(s) > MAX_EXTENSION_LENGTH)
+    // Check for extension length
+    if (!joliet && strlen(s) > MAX_EXTENSION_LENGTH)
     {
         error_exit("'%s' has too long extension, aborting...", filename);
     }

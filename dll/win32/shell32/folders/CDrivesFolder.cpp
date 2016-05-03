@@ -164,7 +164,6 @@ BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
 CDrivesFolder::CDrivesFolder()
 {
     pidlRoot = NULL;
-    sName = NULL;
 }
 
 CDrivesFolder::~CDrivesFolder()
@@ -175,26 +174,10 @@ CDrivesFolder::~CDrivesFolder()
 
 HRESULT WINAPI CDrivesFolder::FinalConstruct()
 {
-    DWORD dwSize;
-    WCHAR szName[MAX_PATH];
-    WCHAR wszMyCompKey[256];
-    INT i;
-
     pidlRoot = _ILCreateMyComputer();    /* my qualified pidl */
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    i = swprintf(wszMyCompKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\");
-    StringFromGUID2(CLSID_MyComputer, wszMyCompKey + i, sizeof(wszMyCompKey) / sizeof(wszMyCompKey[0]) - i);
-    dwSize = sizeof(szName);
-    if (RegGetValueW(HKEY_CURRENT_USER, wszMyCompKey,
-                     NULL, RRF_RT_REG_SZ, NULL, szName, &dwSize) == ERROR_SUCCESS)
-    {
-        sName = (LPWSTR)SHAlloc((wcslen(szName) + 1) * sizeof(WCHAR));
-        if (sName)
-            wcscpy(sName, szName);
-        TRACE("sName %s\n", debugstr_w(sName));
-    }
     return S_OK;
 }
 
@@ -206,7 +189,6 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 {
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
-    WCHAR szElement[MAX_PATH];
     LPITEMIDLIST pidlTemp = NULL;
 
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
@@ -219,17 +201,18 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 
     /* handle CLSID paths */
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
-    {
         return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-    }
-    /* do we have an absolute path name ? */
-    else if (PathGetDriveNumberW (lpszDisplayName) >= 0 &&
-             lpszDisplayName[2] == (WCHAR) '\\')
+
+    if (PathGetDriveNumberW(lpszDisplayName) < 0)
+        return E_INVALIDARG;
+
+    pidlTemp = _ILCreateDrive(lpszDisplayName);
+    if (!pidlTemp)
+        return E_OUTOFMEMORY;
+
+    if (lpszDisplayName[2] == L'\\')
     {
-        szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
-        /* make drive letter uppercase to enable PIDL comparison */
-        szElement[0] = toupper(szElement[0]);
-        pidlTemp = _ILCreateDrive (szElement);
+        szNext = &lpszDisplayName[3];
     }
 
     if (szNext && *szNext)
@@ -452,8 +435,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
-    LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n", this,
@@ -473,32 +455,15 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
         hr = IDataObject_Constructor (hwndOwner,
                                       pidlRoot, apidl, cidl, (IDataObject **)&pObj);
     }
-    else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
+    else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconA_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconW_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
+        hr = GenericExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
         IDropTarget * pDt = NULL;
         hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
-    }
-    else if ((IsEqualIID(riid, IID_IShellLinkW) ||
-              IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*) &pObj);
-        SHFree (pidl);
     }
     else
         hr = E_NOINTERFACE;
@@ -696,10 +661,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     {
         psd->fmt = MyComputerSFHeader[iColumn].fmt;
         psd->cxChar = MyComputerSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA(shell32_hInstance, MyComputerSFHeader[iColumn].colnameid,
-                    psd->str.cStr, MAX_PATH);
-        return S_OK;
+        return SHSetStrRet(&psd->str, MyComputerSFHeader[iColumn].colnameid);
     }
     else if (_ILIsSpecialFolder(pidl))
     {

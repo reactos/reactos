@@ -48,7 +48,7 @@
 @ stub SdbFindNextTag
 @ stub SdbFindNextTagRef
 @ stub SdbFreeDatabaseInformation
-@ stub SdbFreeFileAttributes
+@ stdcall SdbFreeFileAttributes(ptr)
 @ stub SdbFreeFileInfo
 @ stub SdbFreeFlagInfo
 @ stub SdbGetAppCompatDataSize
@@ -61,7 +61,7 @@
 @ stub SdbGetDatabaseVersion
 @ stub SdbGetDllPath
 @ stub SdbGetEntryFlags
-@ stub SdbGetFileAttributes
+@ stdcall SdbGetFileAttributes(wstr ptr ptr)
 @ stub SdbGetFileImageType
 @ stub SdbGetFileImageTypeEx
 @ stub SdbGetFileInfo
@@ -79,17 +79,17 @@
 @ stdcall SdbGetPermLayerKeys(wstr wstr ptr long)
 @ stub SdbGetShowDebugInfoOption
 @ stub SdbGetShowDebugInfoOptionValue
-@ stub SdbGetStandardDatabaseGUID
+@ stdcall SdbGetStandardDatabaseGUID(long ptr)
 @ stub SdbGetStringTagPtr
 @ stub SdbGetTagDataSize
 @ stub SdbGetTagFromTagID
 @ stub SdbGrabMatchingInfo
 @ stub SdbGrabMatchingInfoEx
-@ stub SdbGUIDFromString
-@ stub SdbGUIDToString
+@ stdcall SdbGUIDFromString(wstr ptr)
+@ stdcall SdbGUIDToString(ptr wstr long)
 @ stub SdbInitDatabase
 @ stub SdbInitDatabaseEx
-@ stub SdbIsNullGUID
+@ stdcall SdbIsNullGUID(ptr)
 @ stub SdbIsStandardDatabase
 @ stub SdbIsTagrefFromLocalDB
 @ stub SdbIsTagrefFromMainDB
@@ -145,7 +145,7 @@
 @ stub SdbStringReplaceArray
 @ stub SdbTagIDToTagRef
 @ stub SdbTagRefToTagID
-@ stub SdbTagToString
+@ stdcall SdbTagToString(long)
 @ stub SdbUnregisterDatabase
 @ stub SdbWriteBinaryTag
 @ stub SdbWriteBinaryTagFromFile

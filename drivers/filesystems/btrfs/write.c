@@ -263,8 +263,6 @@ void add_to_space_list(chunk* c, UINT64 offset, UINT64 size, UINT8 type) {
         }
         
         if (s->offset >= offset && s->offset + s->size <= offset + size) { // delete entirely
-            RemoveEntryList(&s->list_entry);
-            
             if (s->offset + s->size == offset + size) {
                 insbef = s->list_entry.Flink;
                 RemoveEntryList(&s->list_entry);

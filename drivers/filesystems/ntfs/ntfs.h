@@ -837,16 +837,6 @@ NtfsLockUserBuffer(IN PIRP Irp,
                    IN ULONG Length,
                    IN LOCK_OPERATION Operation);
 
-#if 0
-BOOLEAN
-wstrcmpjoki(PWSTR s1, PWSTR s2);
-
-VOID
-CdfsSwapString(PWCHAR Out,
-	       PUCHAR In,
-	       ULONG Count);
-#endif
-
 VOID
 NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
                           PULONG FileAttributes);
