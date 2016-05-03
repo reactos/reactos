@@ -21,6 +21,7 @@ extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtSaveKey(void);
+extern void func_NtSetValueKey(void);
 extern void func_NtSystemInformation(void);
 extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
@@ -63,6 +64,7 @@ const struct test winetest_testlist[] =
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
     { "NtSaveKey",                      func_NtSaveKey},
+    { "NtSetValueKey",                  func_NtSetValueKey},
     { "NtSystemInformation",            func_NtSystemInformation },
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
     { "RtlBitmapApi",                   func_RtlBitmap },
