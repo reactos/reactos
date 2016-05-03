@@ -1129,7 +1129,7 @@ FindNextStreamW(IN HANDLE hFindStream,
     /* Select next stream if possible */
     if (FindStreamData->CurrentInfo->NextEntryOffset != 0)
     {
-        FindStreamData->CurrentInfo = (PFILE_STREAM_INFORMATION)((ULONG_PTR)FindStreamData->FileStreamInfo +
+        FindStreamData->CurrentInfo = (PFILE_STREAM_INFORMATION)((ULONG_PTR)FindStreamData->CurrentInfo +
                                                                  FindStreamData->CurrentInfo->NextEntryOffset);
 
         /* Return the information */
