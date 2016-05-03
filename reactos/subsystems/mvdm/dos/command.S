@@ -19,6 +19,8 @@
 
 // #define NDEBUG
 
+#define NDEBUG
+
 /* DEFINES ********************************************************************/
 
 #define MAX_PATH            260
