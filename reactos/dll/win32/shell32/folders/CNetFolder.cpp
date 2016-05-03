@@ -47,6 +47,18 @@ LPITEMIDLIST ILCreateFromNetworkPlaceW(LPCWSTR lpNetworkPlace)
 *   IShellFolder implementation
 */
 
+HRESULT CNetFolderExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED(hr))
+        return NULL;
+
+    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_NETWORK_FOLDER);
+
+    return initIcon->QueryInterface(riid, ppvOut);
+}
+
 class CNetFolderEnum :
     public CEnumIDListBase
 {
@@ -403,8 +415,7 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
 HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
         UINT * prgfInOut, LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n", this,
@@ -427,19 +438,9 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
         hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, &pDo);
         pObj = pDo;
     }
-    else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
+    else if ((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconA_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconW_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
+        hr = CNetFolderExtractIcon_CreateInstance(apidl[0], riid, &pObj);
     }
     else if (IsEqualIID(riid, IID_IDropTarget) && (cidl >= 1))
     {
