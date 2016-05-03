@@ -310,8 +310,6 @@ HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
     if (!_ILSimpleGetTextW(pidl, szFileName + cLen, MAX_PATH - cLen))
         return E_FAIL;
 
-    ERR("%S\n", szFileName);
-
     if (GetFileAttributes(szFileName) == INVALID_FILE_ATTRIBUTES)
         return m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
     else
@@ -445,8 +443,8 @@ HRESULT WINAPI CDesktopFolder::BindToObject(
     REFIID riid,
     LPVOID *ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n",
-           this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+    if (!pidl)
+        return E_INVALIDARG;
 
     if (_ILIsSpecialFolder(pidl))
         return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
