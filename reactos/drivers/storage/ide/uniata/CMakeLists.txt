@@ -8,6 +8,8 @@ include_directories(
 #add_definitions(-D_DEBUG)
 
 list(APPEND SOURCE
+    atacmd_map.cpp
+    bm_devs.cpp
     id_ata.cpp
     id_badblock.cpp
     id_dma.cpp
@@ -16,7 +18,7 @@ list(APPEND SOURCE
     id_queue.cpp
     id_sata.cpp
     ros_glue/ros_glue.cpp
-    stdafx.h)
+    stdafx.cpp)
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
