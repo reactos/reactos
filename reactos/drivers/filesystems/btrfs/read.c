@@ -331,7 +331,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
 
     if (tp.item->key.obj_id < searchkey.obj_id || tp.item->key.obj_type < searchkey.obj_type) {
         if (find_next_item(Vcb, &tp, &next_tp, FALSE)) {
-            free_traverse_ptr(&tp);
             tp = next_tp;
             
             TRACE("moving on to %llx,%x,%llx\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
@@ -339,7 +338,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
     }
     
     if (tp.item->key.obj_id != searchkey.obj_id || tp.item->key.obj_type != searchkey.obj_type) {
-        free_traverse_ptr(&tp);
         ERR("couldn't find EXTENT_DATA for inode %llx in subvol %llx\n", searchkey.obj_id, subvol->id);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
@@ -347,7 +345,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
     
     if (tp.item->key.offset > start) {
         ERR("first EXTENT_DATA was after offset\n");
-        free_traverse_ptr(&tp);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
@@ -375,14 +372,12 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
         
         if (tp.item->size < sizeof(EXTENT_DATA)) {
             ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA));
-            free_traverse_ptr(&tp);
             Status = STATUS_INTERNAL_ERROR;
             goto exit;
         }
         
         if ((ed->type == EXTENT_TYPE_REGULAR || ed->type == EXTENT_TYPE_PREALLOC) && tp.item->size < sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
             ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2));
-            free_traverse_ptr(&tp);
             Status = STATUS_INTERNAL_ERROR;
             goto exit;
         }
@@ -393,28 +388,24 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
         
         if (tp.item->key.offset + len < start) {
             ERR("Tried to read beyond end of file\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_END_OF_FILE;
             goto exit;
         }
         
         if (ed->compression != BTRFS_COMPRESSION_NONE) {
             FIXME("FIXME - compression not yet supported\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_NOT_IMPLEMENTED;
             goto exit;
         }
         
         if (ed->encryption != BTRFS_ENCRYPTION_NONE) {
             WARN("Encryption not supported\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_NOT_IMPLEMENTED;
             goto exit;
         }
         
         if (ed->encoding != BTRFS_ENCODING_NONE) {
             WARN("Other encodings not supported\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_NOT_IMPLEMENTED;
             goto exit;
         }
@@ -452,7 +443,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
                     
                     if (!buf) {
                         ERR("out of memory\n");
-                        free_traverse_ptr(&tp);
                         Status = STATUS_INSUFFICIENT_RESOURCES;
                         goto exit;
                     }
@@ -463,7 +453,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
                     if (!NT_SUCCESS(Status)) {
                         ERR("read_data returned %08x\n", Status);
                         ExFreePool(buf);
-                        free_traverse_ptr(&tp);
                         goto exit;
                     }
                     
@@ -495,7 +484,6 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
                 
             default:
                 WARN("Unsupported extent data type %u\n", ed->type);
-                free_traverse_ptr(&tp);
                 Status = STATUS_NOT_IMPLEMENTED;
                 goto exit;
         }
@@ -509,19 +497,15 @@ NTSTATUS STDCALL read_file(device_extension* Vcb, root* subvol, UINT64 inode, UI
                 next_tp.item->key.obj_type != TYPE_EXTENT_DATA ||
                 next_tp.item->key.offset != tp.item->key.offset + len
             ) {
-                free_traverse_ptr(&next_tp);
                 break;
             } else {
                 TRACE("found next key (%llx,%x,%llx)\n", next_tp.item->key.obj_id, next_tp.item->key.obj_type, next_tp.item->key.offset);
                 
-                free_traverse_ptr(&tp);
                 tp = next_tp;
             }
         } else
             break;
     } while (TRUE);
-    
-    free_traverse_ptr(&tp);
     
     Status = STATUS_SUCCESS;
     if (pbr)
@@ -547,52 +531,17 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     TRACE("read\n");
     
-    switch (IrpSp->MinorFunction) {
-        case IRP_MN_COMPLETE:
-            FIXME("unsupported - IRP_MN_COMPLETE\n");
-            break;
-
-        case IRP_MN_COMPLETE_MDL:
-            FIXME("unsupported - IRP_MN_COMPLETE_MDL\n");
-            break;
-
-        case IRP_MN_COMPLETE_MDL_DPC:
-            FIXME("unsupported - IRP_MN_COMPLETE_MDL_DPC\n");
-            break;
-
-        case IRP_MN_COMPRESSED:
-            FIXME("unsupported - IRP_MN_COMPRESSED\n");
-            break;
-
-        case IRP_MN_DPC:
-            FIXME("unsupported - IRP_MN_DPC\n");
-            break;
-
-        case IRP_MN_MDL:
-            FIXME("unsupported - IRP_MN_MDL\n");
-            break;
-
-        case IRP_MN_MDL_DPC:
-            FIXME("unsupported - IRP_MN_MDL_DPC\n");
-            break;
-
-        case IRP_MN_NORMAL:
-            TRACE("IRP_MN_NORMAL\n");
-            break;
+    Irp->IoStatus.Information = 0;
+    
+    if (IrpSp->MinorFunction & IRP_MN_COMPLETE) {
+        CcMdlReadComplete(IrpSp->FileObject, Irp->MdlAddress);
         
-        default:
-            WARN("unknown minor %u\n", IrpSp->MinorFunction);
-    }
-    
-    data = map_user_buffer(Irp);
-    
-    if (Irp->MdlAddress && !data) {
-        ERR("MmGetSystemAddressForMdlSafe returned NULL\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->MdlAddress = NULL;
+        Status = STATUS_SUCCESS;
+        bytes_read = 0;
+        
         goto exit;
     }
-    
-    Irp->IoStatus.Information = 0;
     
     start = IrpSp->Parameters.Read.ByteOffset.QuadPart;
     length = IrpSp->Parameters.Read.Length;
@@ -603,11 +552,14 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         goto exit;
     }
     
-    TRACE("file = %.*S (fcb = %p)\n", fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer, fcb);
+    TRACE("file = %S (fcb = %p)\n", file_desc(FileObject), fcb);
     TRACE("offset = %llx, length = %x\n", start, length);
     TRACE("paging_io = %s, no cache = %s\n", Irp->Flags & IRP_PAGING_IO ? "TRUE" : "FALSE", Irp->Flags & IRP_NOCACHE ? "TRUE" : "FALSE");
 
-    // FIXME - shouldn't be able to read from a directory
+    if (fcb->type == BTRFS_TYPE_DIRECTORY) {
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        goto exit;
+    }
     
     if (!(Irp->Flags & IRP_PAGING_IO) && !FsRtlCheckLockForReadAccess(&fcb->lock, Irp)) {
         WARN("tried to read locked region\n");
@@ -630,9 +582,19 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     TRACE("FileObject %p fcb %p FileSize = %llx st_size = %llx (%p)\n", FileObject, fcb, fcb->Header.FileSize.QuadPart, fcb->inode_item.st_size, &fcb->inode_item.st_size);
 //     int3;
     
-    if (length + start > fcb->Header.ValidDataLength.QuadPart) {
-        RtlZeroMemory(data + (fcb->Header.ValidDataLength.QuadPart - start), length - (fcb->Header.ValidDataLength.QuadPart - start));
-        length = fcb->Header.ValidDataLength.QuadPart - start;
+    if (Irp->Flags & IRP_NOCACHE || !(IrpSp->MinorFunction & IRP_MN_MDL)) {
+        data = map_user_buffer(Irp);
+        
+        if (Irp->MdlAddress && !data) {
+            ERR("MmGetSystemAddressForMdlSafe returned NULL\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto exit;
+        }
+        
+        if (length + start > fcb->Header.ValidDataLength.QuadPart) {
+            RtlZeroMemory(data + (fcb->Header.ValidDataLength.QuadPart - start), length - (fcb->Header.ValidDataLength.QuadPart - start));
+            length = fcb->Header.ValidDataLength.QuadPart - start;
+        }
     }
         
     if (!(Irp->Flags & IRP_NOCACHE)) {
@@ -640,7 +602,7 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         
         Status = STATUS_SUCCESS;
         
-//         try {
+        try {
             if (!FileObject->PrivateCacheMap) {
                 CC_FILE_SIZES ccfs;
                 
@@ -659,19 +621,23 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     //         wait = IoIsOperationSynchronous(Irp) ? TRUE : FALSE;
             wait = TRUE;
             
-            TRACE("CcCopyRead(%p, %llx, %x, %u, %p, %p)\n", FileObject, IrpSp->Parameters.Read.ByteOffset.QuadPart, length, wait, data, &Irp->IoStatus);
-            TRACE("sizes = %llx, %llx, %llx\n", fcb->Header.AllocationSize, fcb->Header.FileSize, fcb->Header.ValidDataLength);
-            if (!CcCopyRead(FileObject, &IrpSp->Parameters.Read.ByteOffset, length, wait, data, &Irp->IoStatus)) {
-                TRACE("CcCopyRead failed\n");
-                
-                IoMarkIrpPending(Irp);
-                Status = STATUS_PENDING;
-                goto exit;
+            if (IrpSp->MinorFunction & IRP_MN_MDL) {
+                CcMdlRead(FileObject,&IrpSp->Parameters.Read.ByteOffset, length, &Irp->MdlAddress, &Irp->IoStatus);
+            } else {
+                TRACE("CcCopyRead(%p, %llx, %x, %u, %p, %p)\n", FileObject, IrpSp->Parameters.Read.ByteOffset.QuadPart, length, wait, data, &Irp->IoStatus);
+                TRACE("sizes = %llx, %llx, %llx\n", fcb->Header.AllocationSize, fcb->Header.FileSize, fcb->Header.ValidDataLength);
+                if (!CcCopyRead(FileObject, &IrpSp->Parameters.Read.ByteOffset, length, wait, data, &Irp->IoStatus)) {
+                    TRACE("CcCopyRead failed\n");
+                    
+                    IoMarkIrpPending(Irp);
+                    Status = STATUS_PENDING;
+                    goto exit;
+                }
+                TRACE("CcCopyRead finished\n");
             }
-            TRACE("CcCopyRead finished\n");
-//         } except (EXCEPTION_EXECUTE_HANDLER) {
-//             Status = GetExceptionCode();
-//         }
+        } except (EXCEPTION_EXECUTE_HANDLER) {
+            Status = GetExceptionCode();
+        }
         
         if (NT_SUCCESS(Status)) {
             Status = Irp->IoStatus.Status;
@@ -710,6 +676,10 @@ exit:
     
     if (FileObject->Flags & FO_SYNCHRONOUS_IO && !(Irp->Flags & IRP_PAGING_IO))
         FileObject->CurrentByteOffset.QuadPart = start + (NT_SUCCESS(Status) ? bytes_read : 0);
+    
+    // fastfat doesn't do this, but the Wine ntdll file test seems to think we ought to
+    if (Irp->UserIosb)
+        *Irp->UserIosb = Irp->IoStatus;
     
     TRACE("Irp->IoStatus.Status = %08x\n", Irp->IoStatus.Status);
     TRACE("Irp->IoStatus.Information = %lu\n", Irp->IoStatus.Information);

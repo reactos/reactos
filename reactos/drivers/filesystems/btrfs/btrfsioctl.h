@@ -2,11 +2,19 @@
 #define BTRFSIOCTL_H_DEFINED
 
 #define FSCTL_BTRFS_GET_FILE_IDS CTL_CODE(FILE_DEVICE_UNKNOWN, 0x829, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+#define FSCTL_BTRFS_CREATE_SUBVOL CTL_CODE(FILE_DEVICE_UNKNOWN, 0x82a, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
+#define FSCTL_BTRFS_CREATE_SNAPSHOT CTL_CODE(FILE_DEVICE_UNKNOWN, 0x82b, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
 
 typedef struct {
     UINT64 subvol;
     UINT64 inode;
     BOOL top;
 } btrfs_get_file_ids;
+
+typedef struct {
+    HANDLE subvol;
+    UINT32 namelen;
+    WCHAR name[1];
+} btrfs_create_snapshot;
 
 #endif
