@@ -1351,6 +1351,53 @@ Test_NoLoadSection(BOOL Relocate)
     DeleteFileW(FileName);
 }
 
+static void
+Test_EmptyFile(VOID)
+{
+    NTSTATUS Status;
+    WCHAR TempPath[MAX_PATH];
+    WCHAR FileName[MAX_PATH];
+    HANDLE Handle;
+    HANDLE SectionHandle;
+    ULONG Length;
+
+    Length = GetTempPathW(MAX_PATH, TempPath);
+    ok(Length != 0, "GetTempPathW failed with %lu\n", GetLastError());
+    Length = GetTempFileNameW(TempPath, L"nta", 0, FileName);
+    ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
+    Handle = CreateFileW(FileName,
+                         FILE_ALL_ACCESS,
+                         0,
+                         NULL,
+                         CREATE_ALWAYS,
+                         0,
+                         NULL);
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Failed to create temp file %ls, error %lu\n", FileName, GetLastError());
+        return;
+    }
+    
+    Status = NtCreateSection(&SectionHandle,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
+                             0, 0, PAGE_READONLY, SEC_COMMIT, Handle);
+    ok_ntstatus(Status, STATUS_MAPPED_FILE_SIZE_ZERO);
+
+    if (NT_SUCCESS(Status))
+        NtClose(SectionHandle);
+
+    Status = NtCreateSection(&SectionHandle,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
+                             0, 0, PAGE_READONLY, SEC_IMAGE, Handle);
+    ok_ntstatus(Status, STATUS_INVALID_FILE_FOR_SECTION);
+
+    if (NT_SUCCESS(Status))
+        NtClose(SectionHandle);
+
+    CloseHandle(Handle);
+    DeleteFileW(FileName);
+}
+
 START_TEST(NtMapViewOfSection)
 {
     Test_PageFileSection();
@@ -1358,4 +1405,5 @@ START_TEST(NtMapViewOfSection)
     Test_BasedSection();
     Test_NoLoadSection(FALSE);
     Test_NoLoadSection(TRUE);
+    Test_EmptyFile();
 }
