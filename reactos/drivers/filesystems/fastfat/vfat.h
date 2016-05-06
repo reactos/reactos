@@ -488,6 +488,7 @@ typedef struct _VFAT_MOVE_CONTEXT
     ULONG FileSize;
     USHORT CreationDate;
     USHORT CreationTime;
+    BOOLEAN InPlace;
 } VFAT_MOVE_CONTEXT, *PVFAT_MOVE_CONTEXT;
 
 FORCEINLINE

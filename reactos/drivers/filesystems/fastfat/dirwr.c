@@ -345,6 +345,18 @@ FATAddEntry(
             {
                 break;
             }
+            else if (MoveContext)
+            {
+                ASSERT(*Fcb);
+                if (strncmp((char *)SearchContext.DirEntry.Fat.ShortName, (char *)(*Fcb)->entry.Fat.ShortName, 11) == 0)
+                {
+                    if (MoveContext->InPlace)
+                    {
+                        ASSERT(SearchContext.DirEntry.Fat.FileSize == MoveContext->FileSize);
+                        break;
+                    }
+                } 
+            }
         }
         if (i == 100) /* FIXME : what to do after this ? */
         {
@@ -947,6 +959,7 @@ VfatMoveEntry(
 
     OldParent = pFcb->parentFcb;
     CcPurgeCacheSection(&OldParent->SectionObjectPointers, NULL, 0, FALSE);
+    MoveContext.InPlace = (OldParent == ParentFcb);
 
     /* Add our new entry with our cluster */
     Status = VfatAddEntry(DeviceExt,
