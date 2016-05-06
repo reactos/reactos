@@ -9,7 +9,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documente și preferințe"
-    IDS_APPDATA "Date aplicații"
+    IDS_APPDATA "Date de aplicație"
     IDS_DESKTOP "Birou"
     IDS_FAVORITES "Favorite"
     IDS_STARTMENU "Meniul Pornire"
@@ -26,7 +26,7 @@ BEGIN
     IDS_PRINTHOOD "Imprimante"
     IDS_NETHOOD "Rețele"
     IDS_LOCALSETTINGS "Preferințe locale"
-    IDS_LOCALAPPDATA "Preferințe locale\\Date aplicații"
+    IDS_LOCALAPPDATA "Preferințe locale\\Date de aplicație"
     IDS_TEMP "Preferințe locale\\Temp"
     IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_HISTORY "Preferințe locale\\Istoric"

@@ -1,6 +1,6 @@
 /* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU
 BEGIN
@@ -733,9 +733,9 @@ BEGIN
     IDS_DESKTOPDIRECTORY "Birou"
     IDS_NETHOOD "Rețele"
     IDS_TEMPLATES "Șabloane"
-    IDS_APPDATA "Date aplicații"
+    IDS_APPDATA "Date de aplicație"
     IDS_PRINTHOOD "Imprimante"
-    IDS_LOCAL_APPDATA "Preferințe locale\\Date aplicații"
+    IDS_LOCAL_APPDATA "Preferințe locale\\Date de aplicație"
     IDS_INTERNET_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_COOKIES "Cookies"
     IDS_HISTORY "Preferințe locale\\Istoric"
@@ -747,7 +747,7 @@ BEGIN
     IDS_COMMON_MUSIC "Documentele mele\\Audio"
     IDS_COMMON_PICTURES "Documentele mele\\Imagini"
     IDS_COMMON_VIDEO "Documentele mele\\Video"
-    IDS_CDBURN_AREA "Preferințe locale\\Date aplicații\\Microsoft\\Inscripționare CD"
+    IDS_CDBURN_AREA "Preferințe locale\\Date de aplicație\\Microsoft\\Inscripționare CD"
     IDS_NETWORKPLACE "Locații în rețea"
 
     IDS_NEWFOLDER "Dosar nou"
@@ -823,7 +823,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "Fișier %s"
 
     IDS_BYTES_FORMAT "octeți"
     IDS_UNKNOWN_APP "Aplicație nespecificată"
