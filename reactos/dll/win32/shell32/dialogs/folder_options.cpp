@@ -37,6 +37,7 @@ typedef struct
     WCHAR FileExtension[30];
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
+    DWORD EditFlags;
 } FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 typedef struct
@@ -211,6 +212,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     HKEY hKey;
     LVITEMW lvItem;
     DWORD dwSize;
+    DWORD dwType;
 
     if (szName[0] != L'.')
     {
@@ -264,8 +266,23 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
         RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->FileDescription, &dwSize);
     }
 
+    /* Read the EditFlags value */
+    Entry->EditFlags = 0;
+    if (!RegQueryValueExW(hKey, L"EditFlags", NULL, &dwType, NULL, &dwSize))
+    {
+        if ((dwType == REG_DWORD || dwType == REG_BINARY) && dwSize == sizeof(DWORD))
+            RegQueryValueExW(hKey, L"EditFlags", NULL, NULL, (LPBYTE)&Entry->EditFlags, &dwSize);
+    }
+
     /* close key */
     RegCloseKey(hKey);
+
+    /* Do not add excluded entries */
+    if (Entry->EditFlags & 0x00000001) //FTA_Exclude
+    {
+        HeapFree(GetProcessHeap(), 0, Entry);
+        return;
+    }
 
     /* convert extension to upper case */
     wcscpy(Entry->FileExtension, szName);
@@ -303,11 +320,16 @@ CALLBACK
 ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     PFOLDER_FILE_TYPE_ENTRY Entry1, Entry2;
+    int x;
 
     Entry1 = (PFOLDER_FILE_TYPE_ENTRY)lParam1;
     Entry2 = (PFOLDER_FILE_TYPE_ENTRY)lParam2;
 
-    return wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
+    x = wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
+    if (x != 0)
+        return x;
+
+    return wcsicmp(Entry1->FileDescription, Entry2->FileDescription);
 }
 
 static
@@ -335,7 +357,7 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
     dwName = _countof(szName);
 
-    while(RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    while (RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
         InsertFileType(hDlgCtrl, szName, &iItem, szFile);
         dwName = _countof(szName);
@@ -388,8 +410,7 @@ FolderOptionsFileTypesDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LPNMLISTVIEW lppl;
     LVITEMW lvItem;
@@ -401,7 +422,11 @@ FolderOptionsFileTypesDlg(
     {
         case WM_INITDIALOG:
             InitializeFileTypesListCtrl(hwndDlg);
+
+            /* Disable the Delete button by default */
+            EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
             return TRUE;
+
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
@@ -415,8 +440,8 @@ FolderOptionsFileTypesDlg(
                     }
                     break;
             }
-
             break;
+
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
 
@@ -455,6 +480,12 @@ FolderOptionsFileTypesDlg(
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                     /* update dialog */
                     SetDlgItemTextW(hwndDlg, 14007, Buffer);
+
+                    /* Enable the Delete button */
+                    if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
+                        EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+                    else
+                        EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
                 }
             }
             break;

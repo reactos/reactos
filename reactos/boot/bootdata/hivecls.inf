@@ -58,6 +58,7 @@ HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 ; ReactOS Batch Files
 HKCR,".bat","",0x00000000,"batfile"
 HKCR,"batfile","",0x00000000,"ReactOS Batch File"
+HKCR,"batfile","EditFlags",0x00010001,0x00000010
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
@@ -66,6 +67,7 @@ HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; ReactOS Command Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
+HKCR,"cmdfile","EditFlags",0x00010001,0x00000010
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
@@ -74,6 +76,7 @@ HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
 HKCR,"comfile","",0x00000000,"DOS Application"
+HKCR,"comfile","EditFlags",0x00010001,0x00000010
 HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-203"
 HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
 HKCR,"comfile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -97,6 +100,7 @@ HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
 HKCR,"dllfile","",0x00000000,"Application Extension"
+HKCR,"dllfile","EditFlags",0x00010001,0x00000001
 HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-206"
 HKCR,"dllfile","NoOpen",0x00000000,""
 HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
@@ -110,6 +114,7 @@ HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154
 ; Applications
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile","",0x00000000,"Application"
+HKCR,"exefile","EditFlags",0x00010001,0x00000010
 HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-208"
 HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -261,6 +266,7 @@ HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,".lnk\shellnew","",0x00000000,""
 HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere %1"
 HKCR,"lnkfile","",0x00000000,"Shortcut"
+HKCR,"lnkfile","EditFlags",0x00010001,0x00000001
 HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-215"
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile","NeverShowExt",0x00000000,""
@@ -321,6 +327,7 @@ HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\
 ; Program Information File for NT VDM
 HKCR,".pif","",0x00000000,"piffile"
 HKCR,"piffile","",0x00000000,"NT VDM Program Information File"
+HKCR,"piffile","EditFlags",0x00010001,0x00000001
 HKCR,"piffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-216"
 HKCR,"piffile","IsShortcut",0x00000000,"yes"
 HKCR,"piffile","NeverShowExt",0x00000000,""
