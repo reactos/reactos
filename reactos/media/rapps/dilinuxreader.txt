@@ -1,27 +1,27 @@
 [Section]
 Name = DiskInternals Linux Reader
-Version = 2.3
+Version = 2.3.0.3
 License = Freeware
 Description = A easy way to bridge between Windows/ReactOS and Ext2/Ext3/Ext4, HFS and ReiserFS file systems.
-Size = 20.0 MiB
+Size = 20.4 MiB
 Category = 12
 URLSite = http://www.diskinternals.com/linux-reader/
 URLDownload = http://www.diskinternals.com/download/Linux_Reader.exe
-SHA1 = fe1d4dbb10e94a72442396c8a9b554eaee9b7cc7
+SHA1 = 8f93c2f09d83bc9e94d63a912cd7495791a596fb
 CDPath = none
 
 [Section.0407]
 Description = Eine einfache Möglichkeit zwischen Windows/ReactOS und Ext2/Ext3/Ext4, HFS und ReiserFS-Dateisystemen zu überbrücken.
-Size = 20,0 MiB
+Size = 20,4 MiB
 
 [Section.0418]
 License = Gratuită
 Description = Un mod facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.
-Size = 20,0 Mio
+Size = 20,4 Mio
 
 [Section.041f]
 Name = DiskInternals Linux Okuyucu
 License = Ücretsiz
 Description = Windows ya da ReactOS ile Ext2, Ext3, Ext4, HFS ve ReiserFS kütük dizgeleri arasında köprü kurmak için kolay bir yol.
-Size = 20,0 MiB
+Size = 20,4 MiB
 
