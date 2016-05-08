@@ -129,7 +129,7 @@ EtfspGetDirentNameLength (
     PUCHAR Pos;
 
     RealLength = Length = DirEntry->FileIdLen;
-    for (Pos = &DirEntry->FileIdLen + Length; Length; --Pos)
+    for (Pos = DirEntry->FileId + Length - 1; Length; --Pos)
     {
         --Length;
 
@@ -141,7 +141,7 @@ EtfspGetDirentNameLength (
     }
 
     Length = RealLength;
-    for (Pos = &DirEntry->FileIdLen + Length; Length; --Pos)
+    for (Pos = DirEntry->FileId + Length - 1; Length; --Pos)
     {
         --Length;
 
