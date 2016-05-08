@@ -1692,6 +1692,8 @@ KsCreateBusEnumObject(
         /* free device extension */
         FreeItem(BusDeviceExtension->ServicePath.Buffer);
         FreeItem(BusDeviceExtension);
+
+        return Status;
     }
 
     /* acquire device entry lock */
