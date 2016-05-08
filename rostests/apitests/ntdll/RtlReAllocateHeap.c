@@ -69,6 +69,10 @@ START_TEST(RtlReAllocateHeap)
     SIZE_T OldSize = 0;
     SIZE_T Size;
     BOOLEAN Continue = TRUE;
+    BOOLEAN Success;
+    PVOID UserValue;
+    ULONG UserFlags;
+    PVOID Buffer2;
 
     OldSize = 0x100;
     Buffer = RtlReAllocateHeap(RtlGetProcessHeap(),
@@ -99,5 +103,89 @@ START_TEST(RtlReAllocateHeap)
     {
         Continue = ReAllocBuffer(&Buffer, Size, &OldSize, "shrinking");
     }
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    /* Now make sure user flags/values get preserved */
+    OldSize = 0x100;
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                             HEAP_ZERO_MEMORY | HEAP_SETTABLE_USER_VALUE | HEAP_SETTABLE_USER_FLAG2,
+                             OldSize);
+    if (!Buffer)
+    {
+        skip("RtlAllocateHeap failed for size %lu\n", OldSize);
+        return;
+    }
+
+    UserValue = InvalidPointer;
+    UserFlags = 0x55555555;
+    Success = RtlGetUserInfoHeap(RtlGetProcessHeap(),
+                                 0,
+                                 Buffer,
+                                 &UserValue,
+                                 &UserFlags);
+    ok(Success == TRUE, "RtlGetUserInfoHeap returned %u\n", Success);
+    ok(UserValue == NULL, "UserValue = %p\n", UserValue);
+    ok(UserFlags == HEAP_SETTABLE_USER_FLAG2, "UserFlags = %lx\n", UserFlags);
+
+    Success = RtlSetUserFlagsHeap(RtlGetProcessHeap(),
+                                  0,
+                                  Buffer,
+                                  HEAP_SETTABLE_USER_FLAG1 | HEAP_SETTABLE_USER_FLAG2,
+                                  HEAP_SETTABLE_USER_FLAG3);
+    ok(Success == TRUE, "RtlSetUserFlagsHeap returned %u\n", Success);
+
+    Success = RtlSetUserValueHeap(RtlGetProcessHeap(),
+                                  0,
+                                  Buffer,
+                                  &UserValue);
+    ok(Success == TRUE, "RtlSetUserValueHeap returned %u\n", Success);
+
+    UserValue = InvalidPointer;
+    UserFlags = 0x55555555;
+    Success = RtlGetUserInfoHeap(RtlGetProcessHeap(),
+                                 0,
+                                 Buffer,
+                                 &UserValue,
+                                 &UserFlags);
+    ok(Success == TRUE, "RtlGetUserInfoHeap returned %u\n", Success);
+    ok(UserValue == &UserValue, "UserValue = %p, expected %p\n", UserValue, &UserValue);
+    ok(UserFlags == HEAP_SETTABLE_USER_FLAG3, "UserFlags = %lx\n", UserFlags);
+
+    /* shrink (preserves flags) */
+    Buffer2 = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_REALLOC_IN_PLACE_ONLY | HEAP_SETTABLE_USER_FLAG2,
+                                Buffer,
+                                OldSize / 2);
+    ok(Buffer2 == Buffer, "New Buffer is %p, expected %p\n", Buffer2, Buffer);
+    if (Buffer2) Buffer = Buffer2;
+    UserValue = InvalidPointer;
+    UserFlags = 0x55555555;
+    Success = RtlGetUserInfoHeap(RtlGetProcessHeap(),
+                                 0,
+                                 Buffer,
+                                 &UserValue,
+                                 &UserFlags);
+    ok(Success == TRUE, "RtlGetUserInfoHeap returned %u\n", Success);
+    ok(UserValue == &UserValue, "UserValue = %p, expected %p\n", UserValue, &UserValue);
+    ok(UserFlags == HEAP_SETTABLE_USER_FLAG3, "UserFlags = %lx\n", UserFlags);
+
+    /* grow (overwrites flags) */
+    Buffer2 = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_REALLOC_IN_PLACE_ONLY | HEAP_SETTABLE_USER_FLAG1,
+                                Buffer,
+                                OldSize / 4 * 3);
+    ok(Buffer2 == Buffer, "New Buffer is %p, expected %p\n", Buffer2, Buffer);
+    if (Buffer2) Buffer = Buffer2;
+    UserValue = InvalidPointer;
+    UserFlags = 0x55555555;
+    Success = RtlGetUserInfoHeap(RtlGetProcessHeap(),
+                                 0,
+                                 Buffer,
+                                 &UserValue,
+                                 &UserFlags);
+    ok(Success == TRUE, "RtlGetUserInfoHeap returned %u\n", Success);
+    ok(UserValue == &UserValue, "UserValue = %p, expected %p\n", UserValue, &UserValue);
+    ok(UserFlags == HEAP_SETTABLE_USER_FLAG1, "UserFlags = %lx\n", UserFlags);
+
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 }

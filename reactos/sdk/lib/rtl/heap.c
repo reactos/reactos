@@ -2359,7 +2359,7 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
     }
 
     /* Process extra stuff */
-    if (RememberFlags & HEAP_ENTRY_EXTRA_PRESENT)
+    if (EntryFlags & HEAP_ENTRY_EXTRA_PRESENT)
     {
         /* Calculate pointers */
         OldExtra = (PHEAP_ENTRY_EXTRA)(InUseEntry + InUseEntry->Size - 1);
