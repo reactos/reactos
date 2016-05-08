@@ -284,7 +284,9 @@ err_out:
 
 void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping)
 {
-    NtUnmapViewOfSection(NtCurrentProcess(), mapping->view);
+    /* Prevent a VAD warning */
+    if (mapping->view)
+        NtUnmapViewOfSection(NtCurrentProcess(), mapping->view);
     NtClose(mapping->section);
     NtClose(mapping->file);
     RtlZeroMemory(mapping, sizeof(*mapping));
