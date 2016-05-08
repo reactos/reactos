@@ -1398,6 +1398,101 @@ Test_EmptyFile(VOID)
     DeleteFileW(FileName);
 }
 
+// CORE-11206
+static void
+Test_Truncate(VOID)
+{
+    WCHAR TempPath[MAX_PATH];
+    WCHAR FileName[MAX_PATH];
+    NTSTATUS Status;
+    SIZE_T ViewSize = 0;
+    HANDLE Handle;
+    HANDLE SectionHandle;
+
+    ULONG Length;
+    BOOL Success;
+    DWORD Written, Error;
+    VOID* BaseAddress;
+
+    Length = GetTempPathW(MAX_PATH, TempPath);
+    ok(Length != 0, "GetTempPathW failed with %lu\n", GetLastError());
+    Length = GetTempFileNameW(TempPath, L"nta", 0, FileName);
+    ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
+    Handle = CreateFileW(FileName, FILE_ALL_ACCESS, 0, NULL, CREATE_ALWAYS, 0, NULL);
+
+    Success = WriteFile(Handle, "TESTDATA", 8, &Written, NULL);
+    ok(Success == TRUE, "WriteFile failed with %lu\n", GetLastError());
+    ok(Written == 8, "WriteFile wrote %lu bytes\n", Written);
+
+    Written = SetFilePointer(Handle, 6, NULL, FILE_BEGIN);
+    ok(Written == 6, "SetFilePointer returned %lu bytes\n", Written);
+    Success = SetEndOfFile(Handle);
+    ok(Success == TRUE, "SetEndOfFile failed with %lu\n", GetLastError());
+
+    Status = NtCreateSection(&SectionHandle,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
+                             0, 0, PAGE_READONLY, SEC_COMMIT, Handle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    BaseAddress = NULL;
+    ViewSize = 0;
+    Status = NtMapViewOfSection(SectionHandle, NtCurrentProcess(), &BaseAddress, 0,
+                                0, 0, &ViewSize, ViewShare, 0, PAGE_READONLY);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    if (BaseAddress)
+    {
+        // First we test data that was truncated even before the file mapping was opened
+        Length = strlen((char*)BaseAddress);
+        ok(Length == 6, "Old data was not properly erased! (Length=%lu)\n", Length);
+    }
+
+    // Now we truncate the file on disk some more
+    Written = SetFilePointer(Handle, 4, NULL, FILE_BEGIN);
+    ok(Written == 4, "SetFilePointer returned %lu bytes\n", Written);
+    Success = SetEndOfFile(Handle);
+    Error = GetLastError();
+    ok(Success == FALSE, "SetEndOfFile succeeded\n");
+    ok(Error == ERROR_USER_MAPPED_FILE, "SetEndOfFile did not set error to ERROR_USER_MAPPED_FILE (%lu)\n", Error);
+
+    if (BaseAddress)
+    {
+        Length = strlen((char*)BaseAddress);
+        ok(Length == 6, "Length should not have changed! (Length=%lu)\n", Length);
+    }
+
+    // Unmap and set the end shorter.
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Success = CloseHandle(SectionHandle);
+    ok(Success == TRUE, "CloseHandle failed with %lu\n", GetLastError());
+
+    Written = SetFilePointer(Handle, 4, NULL, FILE_BEGIN);
+    ok(Written == 4, "SetFilePointer returned %lu bytes\n", Written);
+    Success = SetEndOfFile(Handle);
+    ok(Success == TRUE, "SetEndOfFile failed with %lu\n", GetLastError());
+
+    Status = NtCreateSection(&SectionHandle,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
+                             0, 0, PAGE_READONLY, SEC_COMMIT, Handle);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    BaseAddress = NULL;
+    ViewSize = 0;
+    Status = NtMapViewOfSection(SectionHandle, NtCurrentProcess(), &BaseAddress, 0,
+                                0, 0, &ViewSize, ViewShare, 0, PAGE_READONLY);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    // CLEANUP
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Success = CloseHandle(SectionHandle);
+    ok(Success == TRUE, "CloseHandle failed with %lu\n", GetLastError());
+    Success = CloseHandle(Handle);
+    ok(Success == TRUE, "CloseHandle failed with %lu\n", GetLastError());
+
+    Success = DeleteFileW(FileName);
+    ok(Success == TRUE, "DeleteFileW failed with %lu\n", GetLastError());
+}
+
 START_TEST(NtMapViewOfSection)
 {
     Test_PageFileSection();
@@ -1406,4 +1501,5 @@ START_TEST(NtMapViewOfSection)
     Test_NoLoadSection(FALSE);
     Test_NoLoadSection(TRUE);
     Test_EmptyFile();
+    Test_Truncate();
 }
