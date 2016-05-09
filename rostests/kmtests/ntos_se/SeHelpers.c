@@ -49,6 +49,42 @@ RtlxAddAuditAccessAceEx(
     return Status;
 }
 
+NTSTATUS
+RtlxAddMandatoryLabelAceEx(
+    _Inout_ PACL Acl,
+    _In_ ULONG Revision,
+    _In_ ULONG Flags,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ PSID Sid)
+{
+    NTSTATUS Status;
+    USHORT AceSize;
+    PSYSTEM_MANDATORY_LABEL_ACE Ace;
+
+    AceSize = FIELD_OFFSET(SYSTEM_MANDATORY_LABEL_ACE, SidStart) + RtlLengthSid(Sid);
+    Ace = ExAllocatePoolWithTag(PagedPool, AceSize, 'cAmK');
+    if (!Ace)
+        return STATUS_INSUFFICIENT_RESOURCES;
+    Ace->Header.AceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE;
+    Ace->Header.AceFlags = Flags;
+    Ace->Header.AceSize = AceSize;
+    Ace->Mask = AccessMask;
+    Status = RtlCopySid(AceSize - FIELD_OFFSET(SYSTEM_MANDATORY_LABEL_ACE, SidStart),
+                        (PSID)&Ace->SidStart,
+                        Sid);
+    ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAddAce(Acl,
+                           Revision,
+                           MAXULONG,
+                           Ace,
+                           AceSize);
+    }
+    ExFreePoolWithTag(Ace, 'cAmK');
+    return Status;
+}
+
 VOID
 CheckSid__(
     _In_ PSID Sid,

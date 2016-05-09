@@ -33,6 +33,14 @@ RtlxAddAuditAccessAceEx(
     _In_ BOOLEAN Success,
     _In_ BOOLEAN Failure);
 
+NTSTATUS
+RtlxAddMandatoryLabelAceEx(
+    _Inout_ PACL Acl,
+    _In_ ULONG Revision,
+    _In_ ULONG Flags,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ PSID Sid);
+
 #define NO_SIZE ((ULONG)-1)
 
 #define CheckSid(Sid, SidSize, ExpectedSid) CheckSid_(Sid, SidSize, ExpectedSid, __FILE__, __LINE__)
