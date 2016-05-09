@@ -780,6 +780,81 @@ TestSeAssignSecurity(
         EndTestAssign()
     }
 
+    /* ACE type that Win2003 doesn't know about (> ACCESS_MAX_MS_ACE_TYPE) */
+    for (UsingDefault = 0; UsingDefault <= 3; UsingDefault++)
+    {
+        Status = RtlCreateAcl(Acl, AclSize, ACL_REVISION);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlxAddMandatoryLabelAceEx(Acl, ACL_REVISION, 0, SYSTEM_MANDATORY_LABEL_NO_WRITE_UP, SeExports->SeWorldSid);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlSetSaclSecurityDescriptor(&ParentDescriptor,
+                                              TRUE,
+                                              Acl,
+                                              BooleanFlagOn(UsingDefault, 1));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlSetSaclSecurityDescriptor(&ExplicitDescriptor,
+                                              TRUE,
+                                              Acl,
+                                              BooleanFlagOn(UsingDefault, 2));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+
+        TestAssignExpectDefault(&ParentDescriptor, NULL, FALSE)
+        TestAssignExpectDefault(&ParentDescriptor, NULL, TRUE)
+        StartTestAssign(NULL, &ExplicitDescriptor, FALSE, TRUE, TRUE)
+            ok_eq_uint(DaclDefaulted, FALSE);
+            CheckAcl(Dacl, 2, ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeLocalSystemSid,    STANDARD_RIGHTS_ALL | 0x800F,
+                              ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeAliasAdminsSid,    STANDARD_RIGHTS_READ | 0x0005);
+            ok_eq_uint(SaclDefaulted, FALSE);
+            CheckAcl(Sacl, 1, SYSTEM_MANDATORY_LABEL_ACE_TYPE, 0, SeExports->SeWorldSid, SYSTEM_MANDATORY_LABEL_NO_WRITE_UP);
+            ok_eq_uint(OwnerDefaulted, FALSE);
+            CheckSid(Owner, NO_SIZE, Token->UserAndGroups[Token->DefaultOwnerIndex].Sid);
+            ok_eq_uint(GroupDefaulted, FALSE);
+            CheckSid(Group, NO_SIZE, Token->PrimaryGroup);
+        EndTestAssign()
+    }
+
+    for (UsingDefault = 0; UsingDefault <= 3; UsingDefault++)
+    {
+        Status = RtlCreateAcl(Acl, AclSize, ACL_REVISION);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlxAddMandatoryLabelAceEx(Acl, ACL_REVISION, OBJECT_INHERIT_ACE, SYSTEM_MANDATORY_LABEL_NO_WRITE_UP, SeExports->SeCreatorOwnerSid);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlSetSaclSecurityDescriptor(&ParentDescriptor,
+                                              TRUE,
+                                              Acl,
+                                              BooleanFlagOn(UsingDefault, 1));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        Status = RtlSetSaclSecurityDescriptor(&ExplicitDescriptor,
+                                              TRUE,
+                                              Acl,
+                                              BooleanFlagOn(UsingDefault, 2));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+
+        StartTestAssign(&ParentDescriptor, NULL, FALSE, TRUE, TRUE)
+            ok_eq_uint(DaclDefaulted, FALSE);
+            CheckAcl(Dacl, 2, ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeLocalSystemSid,    STANDARD_RIGHTS_ALL | 0x800F,
+                              ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeAliasAdminsSid,    STANDARD_RIGHTS_READ | 0x0005);
+            ok_eq_uint(SaclDefaulted, FALSE);
+            CheckAcl(Sacl, 1, SYSTEM_MANDATORY_LABEL_ACE_TYPE, 0, Token->UserAndGroups[Token->DefaultOwnerIndex].Sid, SYSTEM_MANDATORY_LABEL_NO_WRITE_UP);
+            ok_eq_uint(OwnerDefaulted, FALSE);
+            CheckSid(Owner, NO_SIZE, Token->UserAndGroups[Token->DefaultOwnerIndex].Sid);
+            ok_eq_uint(GroupDefaulted, FALSE);
+            CheckSid(Group, NO_SIZE, Token->PrimaryGroup);
+        EndTestAssign()
+        StartTestAssign(NULL, &ExplicitDescriptor, FALSE, TRUE, TRUE)
+            ok_eq_uint(DaclDefaulted, FALSE);
+            CheckAcl(Dacl, 2, ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeLocalSystemSid,    STANDARD_RIGHTS_ALL | 0x800F,
+                              ACCESS_ALLOWED_ACE_TYPE, 0, SeExports->SeAliasAdminsSid,    STANDARD_RIGHTS_READ | 0x0005);
+            ok_eq_uint(SaclDefaulted, FALSE);
+            CheckAcl(Sacl, 1, SYSTEM_MANDATORY_LABEL_ACE_TYPE, OBJECT_INHERIT_ACE, SeExports->SeCreatorOwnerSid, SYSTEM_MANDATORY_LABEL_NO_WRITE_UP);
+            ok_eq_uint(OwnerDefaulted, FALSE);
+            CheckSid(Owner, NO_SIZE, Token->UserAndGroups[Token->DefaultOwnerIndex].Sid);
+            ok_eq_uint(GroupDefaulted, FALSE);
+            CheckSid(Group, NO_SIZE, Token->PrimaryGroup);
+        EndTestAssign()
+    }
+
+    /* TODO: Test object/compound ACEs */
     /* TODO: Test duplicate ACEs */
     /* TODO: Test INHERITED_ACE flag */
     /* TODO: Test invalid ACE flags */
