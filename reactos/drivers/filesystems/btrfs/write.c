@@ -3086,6 +3086,9 @@ static NTSTATUS STDCALL do_splits(device_extension* Vcb, LIST_ENTRY* rollback) {
                     if (t->parent) {
                         LIST_ENTRY* le2;
                         KEY firstitem = {0xcccccccccccccccc,0xcc,0xcccccccccccccccc};
+#ifdef __REACTOS__
+                        (void)firstitem;
+#endif
                         
                         done_deletions = TRUE;
             

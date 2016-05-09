@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU Lesser General Public Licence
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
+#ifndef __REACTOS__
 #include <sys/stat.h>
+#endif /* __REACTOS__ */
 #include "btrfs_drv.h"
 
 extern PDEVICE_OBJECT devobj;

@@ -602,7 +602,7 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         
         Status = STATUS_SUCCESS;
         
-        try {
+        _SEH2_TRY {
             if (!FileObject->PrivateCacheMap) {
                 CC_FILE_SIZES ccfs;
                 
@@ -635,9 +635,9 @@ NTSTATUS STDCALL drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                 }
                 TRACE("CcCopyRead finished\n");
             }
-        } except (EXCEPTION_EXECUTE_HANDLER) {
-            Status = GetExceptionCode();
-        }
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
         
         if (NT_SUCCESS(Status)) {
             Status = Irp->IoStatus.Status;

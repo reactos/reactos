@@ -25,12 +25,6 @@ list(APPEND SOURCE
 
 add_library(btrfs SHARED ${SOURCE} btrfs.rc)
 
-if(NOT MSVC)
-    replace_compile_flags("-Werror" " ")
-else()
-    replace_compile_flags("/we\"4189\"" " ")
-endif()
-
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)
 target_link_libraries(btrfs ntoskrnl_vista ${PSEH_LIB})

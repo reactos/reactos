@@ -2984,6 +2984,7 @@ end:
     return Status;
 }
 
+#ifndef __REACTOS__
 static NTSTATUS STDCALL fill_in_file_standard_link_information(FILE_STANDARD_LINK_INFORMATION* fsli, fcb* fcb, file_ref* fileref, LONG* length) {
     TRACE("FileStandardLinkInformation\n");
     
@@ -2998,6 +2999,7 @@ static NTSTATUS STDCALL fill_in_file_standard_link_information(FILE_STANDARD_LIN
     
     return STATUS_SUCCESS;
 }
+#endif /* __REACTOS__ */
 
 typedef struct {
     UNICODE_STRING name;
@@ -3280,6 +3282,7 @@ end:
     return Status;
 }
 
+#ifndef __REACTOS__
 static NTSTATUS STDCALL fill_in_hard_link_information(FILE_LINKS_INFORMATION* fli, fcb* fcb, LONG* length) {
     KEY searchkey;
     traverse_ptr tp, next_tp;
@@ -3465,6 +3468,7 @@ end:
     }
     return Status;
 }
+#endif /* __REACTOS__ */
 
 static NTSTATUS STDCALL query_info(device_extension* Vcb, PFILE_OBJECT FileObject, PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
