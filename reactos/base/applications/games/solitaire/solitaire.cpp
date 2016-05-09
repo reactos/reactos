@@ -150,7 +150,7 @@ void UpdateStatusBar(void)
     TCHAR szStatusText[128];
     TCHAR szTempText[64];
 
-    ZeroMemory(szStatusText, sizeof(szStatusText) / sizeof(TCHAR));
+    ZeroMemory(szStatusText, sizeof(szStatusText));
 
     if (GetScoreMode() != SCORE_NONE)
     {
