@@ -309,8 +309,8 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     lvItem.pszText = Entry->FileDescription;
     lvItem.iItem = *iItem;
     lvItem.iSubItem = 1;
+    ListView_SetItem(hDlgCtrl, &lvItem);
 
-    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&lvItem);
     (*iItem)++;
 }
 
@@ -333,7 +333,7 @@ ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 static
-BOOL
+PFOLDER_FILE_TYPE_ENTRY
 InitializeFileTypesListCtrl(HWND hwndDlg)
 {
     HWND hDlgCtrl;
@@ -353,7 +353,7 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
         /* default to english */
         wcscpy(szFile, L"%s File");
     }
-    szFile[(_countof(szFile))-1] = 0;
+    szFile[(_countof(szFile)) - 1] = 0;
 
     dwName = _countof(szName);
 
@@ -363,18 +363,25 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
         dwName = _countof(szName);
     }
 
+    /* Leave if the list is empty */
+    if (iItem == 0)
+        return NULL;
+
     /* sort list */
     ListView_SortItems(hDlgCtrl, ListViewCompareProc, NULL);
 
     /* select first item */
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_STATE;
-    lvItem.stateMask = (UINT) - 1;
+    lvItem.stateMask = (UINT)-1;
     lvItem.state = LVIS_FOCUSED | LVIS_SELECTED;
     lvItem.iItem = 0;
-    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&lvItem);
+    ListView_SetItem(hDlgCtrl, &lvItem);
 
-    return TRUE;
+    lvItem.mask = LVIF_PARAM;
+    ListView_GetItem(hDlgCtrl, &lvItem);
+
+    return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 }
 
 static
@@ -421,10 +428,12 @@ FolderOptionsFileTypesDlg(
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            InitializeFileTypesListCtrl(hwndDlg);
+            pItem = InitializeFileTypesListCtrl(hwndDlg);
 
-            /* Disable the Delete button by default */
-            EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+            /* Disable the Delete button if the listview is empty or
+               the selected item should not be deleted by the user */
+            if (pItem == NULL || (pItem->EditFlags & 0x00000010)) // FTA_NoRemove
+                EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
             return TRUE;
 
         case WM_COMMAND:
@@ -487,6 +496,11 @@ FolderOptionsFileTypesDlg(
                     else
                         EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
                 }
+            }
+            else if (lppl->hdr.code == PSN_SETACTIVE)
+            {
+                /* On page activation, set the focus to the listview */
+                SetFocus(GetDlgItem(hwndDlg, 14000));
             }
             break;
     }
