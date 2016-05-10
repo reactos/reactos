@@ -155,7 +155,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                                      IFInfo **infoSet,
                                      PDWORD numInterfaces ) {
     DWORD numEntities;
-    TDIEntityID *entIDSet = 0;
+    TDIEntityID *entIDSet = NULL;
     NTSTATUS status = tdiGetEntityIDSet( tcpFile, &entIDSet, &numEntities );
     IFInfo *infoSetInt = 0;
     int curInterf = 0, i;
@@ -187,7 +187,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     if( NT_SUCCESS(status) )
                         status = tdiGetIpAddrsForIpEntity
                             ( tcpFile, &ip_ent, &addrs, &numAddrs );
-                    for( j = 0; j < numAddrs && NT_SUCCESS(status); j++ ) {
+                    for( j = 0; NT_SUCCESS(status) && j < numAddrs; j++ ) {
                         TRACE("ADDR %d: index %d (target %d)\n", j, addrs[j].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
                         if( addrs[j].iae_index ==
                             infoSetInt[curInterf].if_info.ent.if_index ) {
@@ -198,6 +198,8 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                             break;
                         }
                     }
+                    if ( NT_SUCCESS(status) )
+                        tdiFreeThingSet(addrs);
                 }
             }
         }
@@ -213,6 +215,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
 
         return status;
     } else {
+        tdiFreeThingSet(entIDSet);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 }
