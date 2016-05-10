@@ -816,7 +816,7 @@ BEGIN
 
     IDS_FILE_DETAILS "拡張子 '%s' の詳細"
     IDS_FILE_DETAILSADV "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
-    IDS_FILE_TYPES "FileTypes"
+    IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions

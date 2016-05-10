@@ -178,7 +178,8 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
     if (!LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szName, sizeof(szName) / sizeof(WCHAR)))
     {
         /* default to english */
-        wcscpy(szName, L"FileTypes");
+        wcscpy(szName, L"File Types");
+        ERR("Failed to load localized string!\n");
     }
 
     col.iSubItem   = 1;
