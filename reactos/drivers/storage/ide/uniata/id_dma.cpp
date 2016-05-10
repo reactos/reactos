@@ -1538,7 +1538,7 @@ dma_cs55xx:
         if(deviceExtension->DevID == ATA_I82371FB) {
             KdPrint2((PRINT_PREFIX "  I82371FB\n"));
             USHORT reg4x;
-            USHORT control;
+            USHORT control=0;
             for(i=wdmamode; i>=0; i--) {
                 idx = 5+i;
                 if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
@@ -1559,9 +1559,9 @@ dma_cs55xx:
             }
             GetPciConfig2(0x40+Channel*2, reg4x);
             if(apiomode > ATA_PIO0) {
-                control = 0x03;	/* IORDY|TIME0 */
+                control |= 0x03;	/* IORDY|TIME0 */
             } else {
-                control = 0x02;	/* IORDY */
+                control |= 0x02;	/* IORDY */
             }
 	    // if (ata_pio_need_iordy(adev))
 		//control |= 2;	/* IE */
