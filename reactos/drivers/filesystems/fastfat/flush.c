@@ -115,7 +115,7 @@ VfatFlushVolume(
         if (Status == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = Irp->IoStatus.Status;
+            Status = IoStatusBlock.Status;
         }
 
         /* Ignore device not supporting flush operation */
