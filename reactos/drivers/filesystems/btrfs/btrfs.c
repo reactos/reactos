@@ -2374,6 +2374,13 @@ void STDCALL uninit(device_extension* Vcb, BOOL flush) {
 
         release_tree_lock(Vcb, TRUE);
     }
+    
+    // FIXME - stop async threads
+    
+    free_fcb(Vcb->volume_fcb);
+    free_fileref(Vcb->root_fileref);
+    
+    // FIXME - free any open fcbs?
 
     while (!IsListEmpty(&Vcb->roots)) {
         LIST_ENTRY* le = RemoveHeadList(&Vcb->roots);
@@ -2401,9 +2408,6 @@ void STDCALL uninit(device_extension* Vcb, BOOL flush) {
         ExFreePool(c->chunk_item);
         ExFreePool(c);
     }
-    
-    free_fcb(Vcb->volume_fcb);
-    free_fileref(Vcb->root_fileref);
     
     for (i = 0; i < Vcb->superblock.num_devices; i++) {
         while (!IsListEmpty(&Vcb->devices[i].disk_holes)) {
