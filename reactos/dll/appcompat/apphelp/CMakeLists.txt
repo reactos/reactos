@@ -16,7 +16,6 @@ add_library(apphelp SHARED
 
 set_module_type(apphelp win32dll)
 target_link_libraries(apphelp wine)
-# When binutils is fixed, we should move imagehlp to delay! CORE-6504
 add_delay_importlibs(apphelp version)
-add_importlibs(apphelp msvcrt imagehlp kernel32 ntdll)
+add_importlibs(apphelp msvcrt kernel32 ntdll)
 add_cd_file(TARGET apphelp DESTINATION reactos/system32 FOR all)

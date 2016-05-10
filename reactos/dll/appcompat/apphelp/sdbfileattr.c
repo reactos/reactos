@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "apphelp.h"
 #include "imagehlp.h"
 #include "winver.h"
+#include "rtlfuncs.h"
 
 #include "wine/unicode.h"
 
@@ -334,11 +336,11 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
         SdbpSetDWORDAttr(&attr_info[23], TAG_LINK_DATE, headers->FileHeader.TimeDateStamp);
         SdbpSetDWORDAttr(&attr_info[24], TAG_UPTO_LINK_DATE, headers->FileHeader.TimeDateStamp);
 
-        export_dir = (PIMAGE_EXPORT_DIRECTORY)ImageDirectoryEntryToData(mapped.view, FALSE, IMAGE_DIRECTORY_ENTRY_EXPORT, &export_dir_size);
+        export_dir = (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData(mapped.view, FALSE, IMAGE_DIRECTORY_ENTRY_EXPORT, &export_dir_size);
         if (export_dir && ((PBYTE)(export_dir+1) <= mapping_end))
         {
             PIMAGE_SECTION_HEADER section = NULL;
-            PBYTE export_name = ImageRvaToVa(headers, mapped.view, export_dir->Name, &section);
+            PBYTE export_name = RtlImageRvaToVa(headers, mapped.view, export_dir->Name, &section);
             if (export_name)
                 SdbpSetStringAttrFromAnsiString(&attr_info[25], TAG_EXPORT_NAME, export_name, strlen((char*)export_name));
             else
