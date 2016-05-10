@@ -44,8 +44,12 @@ PMMPTE MiSpecialPoolFirstPte;
 PMMPTE MiSpecialPoolLastPte;
 
 PFN_COUNT MmSpecialPagesInUse;
+PFN_COUNT MmSpecialPagesInUsePeak;
+PFN_COUNT MiSpecialPagesPagable;
+PFN_COUNT MiSpecialPagesPagablePeak;
 PFN_COUNT MiSpecialPagesNonPaged;
-PFN_NUMBER MiSpecialPagesNonPagedMaximum;
+PFN_COUNT MiSpecialPagesNonPagedPeak;
+PFN_COUNT MiSpecialPagesNonPagedMaximum;
 
 BOOLEAN MmSpecialPoolCatchOverruns = TRUE;
 
@@ -135,7 +139,9 @@ MiInitializeSpecialPool(VOID)
     /* Reserve those PTEs */
     do
     {
-        PointerPte = MiReserveAlignedSystemPtes(SpecialPoolPtes, 0, /*0x400000*/0); // FIXME:
+        PointerPte = MiReserveAlignedSystemPtes(SpecialPoolPtes,
+                                                SystemPteSpace,
+                                                /*0x400000*/0); // FIXME:
         if (PointerPte) break;
 
         /* Reserving didn't work, so try to reduce the requested size */
@@ -238,6 +244,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     LARGE_INTEGER TickCount;
     PVOID Entry;
     PPOOL_HEADER Header;
+    PFN_COUNT PagesInUse;
 
     DPRINT("MmAllocateSpecialPool(%x %x %x %x)\n", NumberOfBytes, Tag, PoolType, SpecialType);
 
@@ -262,8 +269,13 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     }
 
     /* TODO: Take into account various limitations */
-    /*if ((PoolType != NonPagedPool) &&
-        MiSpecialPagesNonPaged > MiSpecialPagesNonPagedMaximum)*/
+
+    /* Heed the maximum limit of nonpaged pages */
+    if ((PoolType == NonPagedPool) &&
+        (MiSpecialPagesNonPaged > MiSpecialPagesNonPagedMaximum))
+    {
+        return NULL;
+    }
 
     /* Lock PFN database */
     Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -311,6 +323,11 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     /* Release the PFN database lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
 
+    /* Increase page counter */
+    PagesInUse = InterlockedIncrementUL(&MmSpecialPagesInUse);
+    if (PagesInUse > MmSpecialPagesInUsePeak)
+        MmSpecialPagesInUsePeak = PagesInUse;
+
     /* Put some content into the page. Low value of tick count would do */
     Entry = MiPteToAddress(PointerPte);
     RtlFillMemory(Entry, PAGE_SIZE, TickCount.LowPart);
@@ -347,11 +364,21 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
 
         /* Also mark the next PTE as special-pool-paged */
         PointerPte[1].u.Soft.PageFileHigh |= SPECIAL_POOL_PAGED_PTE;
+
+        /* Increase pagable counter */
+        PagesInUse = InterlockedIncrementUL(&MiSpecialPagesPagable);
+        if (PagesInUse > MiSpecialPagesPagablePeak)
+            MiSpecialPagesPagablePeak = PagesInUse;
     }
     else
     {
         /* Mark the next PTE as special-pool-nonpaged */
         PointerPte[1].u.Soft.PageFileHigh |= SPECIAL_POOL_NONPAGED_PTE;
+
+        /* Increase nonpaged counter */
+        PagesInUse = InterlockedIncrementUL(&MiSpecialPagesNonPaged);
+        if (PagesInUse > MiSpecialPagesNonPagedPeak)
+            MiSpecialPagesNonPagedPeak = PagesInUse;
     }
 
     /* Finally save tag and put allocation time into the header's blocksize.
@@ -547,6 +574,9 @@ MmFreeSpecialPool(PVOID P)
         /* Non pagable. Get PFN element corresponding to the PTE */
         Pfn = MI_PFN_ELEMENT(PointerPte->u.Hard.PageFrameNumber);
 
+        /* Count the page as free */
+        InterlockedDecrementUL(&MiSpecialPagesNonPaged);
+
         /* Lock PFN database */
         Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
@@ -567,6 +597,9 @@ MmFreeSpecialPool(PVOID P)
         /* Pagable. Delete that virtual address */
         MiDeleteSystemPageableVm(PointerPte, 1, 0, NULL);
 
+        /* Count the page as free */
+        InterlockedDecrementUL(&MiSpecialPagesPagable);
+
         /* Lock PFN database */
         Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     }
@@ -586,6 +619,9 @@ MmFreeSpecialPool(PVOID P)
 
     /* Release the PFN database lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
+
+    /* Update page counter */
+    InterlockedDecrementUL(&MmSpecialPagesInUse);
 }
 
 VOID
