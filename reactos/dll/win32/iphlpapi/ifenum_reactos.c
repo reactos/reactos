@@ -183,21 +183,21 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     TDIEntityID ip_ent;
                     int j;
 
-		    status = getNthIpEntity( tcpFile, curInterf, &ip_ent );
-		    if( NT_SUCCESS(status) )
-			status = tdiGetIpAddrsForIpEntity
-			    ( tcpFile, &ip_ent, &addrs, &numAddrs );
-		    for( j = 0; j < numAddrs && NT_SUCCESS(status); j++ ) {
-			TRACE("ADDR %d: index %d (target %d)\n", j, addrs[j].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
-			if( addrs[j].iae_index ==
-			    infoSetInt[curInterf].if_info.ent.if_index ) {
-			    memcpy( &infoSetInt[curInterf].ip_addr,
-				    &addrs[j],
-				    sizeof( addrs[j] ) );
-			    curInterf++;
-			    break;
-			}
-		    }
+                    status = getNthIpEntity( tcpFile, curInterf, &ip_ent );
+                    if( NT_SUCCESS(status) )
+                        status = tdiGetIpAddrsForIpEntity
+                            ( tcpFile, &ip_ent, &addrs, &numAddrs );
+                    for( j = 0; j < numAddrs && NT_SUCCESS(status); j++ ) {
+                        TRACE("ADDR %d: index %d (target %d)\n", j, addrs[j].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
+                        if( addrs[j].iae_index ==
+                            infoSetInt[curInterf].if_info.ent.if_index ) {
+                            memcpy( &infoSetInt[curInterf].ip_addr,
+                                    &addrs[j],
+                                    sizeof( addrs[j] ) );
+                            curInterf++;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -243,7 +243,7 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
             (!onlyNonLoopback ||
-	     (onlyNonLoopback && !isLoopback( tcpFile, &entitySet[i] ))) )
+             (onlyNonLoopback && !isLoopback( tcpFile, &entitySet[i] ))) )
             numInterfaces++;
     }
 
@@ -406,9 +406,9 @@ InterfaceIndexTable *getInterfaceIndexTableInt( BOOL nonLoopbackOnly ) {
       status = getInterfaceInfoSet( tcpFile, &ifInfo, &numInterfaces );
 
       TRACE("InterfaceInfoSet: %08x, %04x:%08x\n",
-	     status,
-	     ifInfo->entity_id.tei_entity,
-	     ifInfo->entity_id.tei_instance);
+             status,
+             ifInfo->entity_id.tei_entity,
+             ifInfo->entity_id.tei_instance);
 
       if( NT_SUCCESS(status) ) {
           ret = (InterfaceIndexTable *)
@@ -418,13 +418,13 @@ InterfaceIndexTable *getInterfaceIndexTableInt( BOOL nonLoopbackOnly ) {
 
           if (ret) {
               ret->numAllocated = numInterfaces;
-	      TRACE("NumInterfaces = %d\n", numInterfaces);
+              TRACE("NumInterfaces = %d\n", numInterfaces);
 
               for( i = 0; i < numInterfaces; i++ ) {
-		  TRACE("Examining interface %d\n", i);
+                  TRACE("Examining interface %d\n", i);
                   if( !nonLoopbackOnly ||
                       !isLoopback( tcpFile, &ifInfo[i].entity_id ) ) {
-		      TRACE("Interface %d matches (%d)\n", i, curInterface);
+                      TRACE("Interface %d matches (%d)\n", i, curInterface);
                       ret->indexes[curInterface++] =
                           ifInfo[i].if_info.ent.if_index;
                   }
@@ -633,7 +633,7 @@ char *toIPAddressString(unsigned int addr, char string[16])
 
     if (string)
         strncpy(string, inet_ntoa(iAddr), 16);
-  
+
     return inet_ntoa(iAddr);
 }
 
