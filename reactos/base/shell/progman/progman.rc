@@ -31,74 +31,22 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "progman.exe"
 #include <reactos/version.rc>
 
-IDI_APPICON ICON "res/progman.ico"
+IDI_APPICON             ICON "res/progman.ico"
+IDI_GROUP_PERSONAL_ICON ICON "res/group_personal.ico"
+IDI_GROUP_COMMON_ICON   ICON "res/group_common.ico"
+IDI_ROSLOGO             ICON "res/roslogo.ico"
+IDI_GROUP_ICON          ICON "res/group.ico"
+IDI_TERMINAL            ICON "res/terminal.ico"
+
+#include <reactos/manifest_exe.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#if 0 // Work in progress! See "new_resources.rc"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-MAIN_MENU MENU
-{
- POPUP "&File" {
-   MENUITEM "&New...",              PM_NEW
-   MENUITEM "O&pen\tEnter",             PM_OPEN
-   MENUITEM "&Move...\tF7",             PM_MOVE,      GRAYED
-   MENUITEM "&Copy...\tF8",             PM_COPY,      GRAYED
-   MENUITEM "&Delete\tDel",             PM_DELETE
-   MENUITEM "&Properties\tAlt+Enter",   PM_ATTRIBUTES
-   MENUITEM SEPARATOR
-   MENUITEM "&Execute...",          PM_EXECUTE
-   MENUITEM SEPARATOR
-   MENUITEM "E&xit Windows",            PM_EXIT
- }
- POPUP "&Options" {
-   MENUITEM "&Arrange automatically",  PM_AUTO_ARRANGE
-   MENUITEM "&Minimize on run",    PM_MIN_ON_RUN
-   MENUITEM "&Save settings on exit", PM_SAVE_SETTINGS
- }
- POPUP "&Windows" {
-   MENUITEM "&Overlapped\tShift+F5",       PM_OVERLAP
-   MENUITEM "&Side by side\tShift+F4",  PM_SIDE_BY_SIDE
-   MENUITEM "&Arrange Icons",       PM_ARRANGE
- }
- 
-POPUP "&Help" {
-   MENUITEM "&Contents\tF1",            PM_CONTENTS
-   MENUITEM "&About Program Manager",   PM_ABOUT_WINE
- }
-}
-
-STRINGTABLE
-{
-IDS_PROGRAM_MANAGER,		"Program Manager"
-IDS_ERROR,			"ERROR"
-IDS_WARNING,			"WARNING"
-IDS_INFO,			"Information"
-IDS_DELETE,			"Delete"
-IDS_DELETE_GROUP_s,		"Delete group `%s'?"
-IDS_DELETE_PROGRAM_s,		"Delete program `%s'?"
-IDS_NOT_IMPLEMENTED,		"Not implemented"
-IDS_FILE_READ_ERROR_s,		"Error reading `%s'."
-IDS_FILE_WRITE_ERROR_s,		"Error writing `%s'."
-IDS_GRPFILE_READ_ERROR_s,	"\
-The group file `%s' cannot be opened.\n\
-Should it be tried further on?"
-IDS_OUT_OF_MEMORY,		"Out of memory."
-IDS_WINHELP_ERROR,		"Help not available."
-IDS_UNKNOWN_FEATURE_s,		"Unknown feature in %s"
-IDS_FILE_NOT_OVERWRITTEN_s,	"File `%s' exists. Not overwritten."
-IDS_SAVE_GROUP_AS_s,		"Save group as `%s to prevent overwriting original files."
-IDS_NO_HOT_KEY,			"#msgctxt#hotkey#None"
-IDS_ALL_FILES,			"All files (*.*)"
-IDS_PROGRAMS,			"Programs"
-IDS_LIBRARIES_DLL,		"Libraries (*.dll)"
-IDS_SYMBOL_FILES,		"Icon files"
-IDS_SYMBOLS_ICO,		"Icons (*.ico)"
-}
-
-IDA_ACCEL ACCELERATORS
-{
-VK_F1,     PM_CONTENTS, VIRTKEY
-VK_RETURN, PM_ATTRIBUTES, VIRTKEY, ALT
-}
 
 /* Dialog `New' */
 
@@ -118,7 +66,7 @@ PUSHBUTTON    "&Help",        PM_HELP,        105, 45,  60, 15, WS_TABSTOP
 
 /* Dialog `Move' */
 
-IDD_MOVE DIALOG 0, 0, 250, 65
+IDD_COPY_MOVE DIALOG 0, 0, 250, 65
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Move Program"
@@ -230,3 +178,7 @@ PUSHBUTTON    "Cancel",           IDCANCEL,  135, 25,  60, 15, WS_TABSTOP
 PUSHBUTTON    "&Browse...",          PM_BROWSE, 135, 45,  60, 15, WS_TABSTOP
 PUSHBUTTON    "&Help",             PM_HELP,   135, 65,  60, 15, WS_TABSTOP
 }
+
+#endif
+
+#include "new_resources.rc"

@@ -18,6 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/*
+ * PROJECT:         ReactOS Program Manager
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            base/shell/progman/group.c
+ * PURPOSE:         Program group files helper functions
+ * PROGRAMMERS:     Ulrich Schmid
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
+
 #include "progman.h"
 
 /***********************************************************************
@@ -25,23 +34,77 @@
  *           GROUP_GroupWndProc
  */
 
-static LRESULT CALLBACK GROUP_GroupWndProc(HWND hWnd, UINT msg,
-				   WPARAM wParam, LPARAM lParam)
+static
+LRESULT
+CALLBACK
+GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  switch (msg)
-    {
-    case WM_SYSCOMMAND:
-      if (wParam == SC_CLOSE) wParam = SC_MINIMIZE;
-      break;
+    PROGGROUP* group;
 
-    case WM_CHILDACTIVATE:
-    case WM_NCLBUTTONDOWN:
-      Globals.hActiveGroup = (HLOCAL)GetWindowLongPtrW(hWnd, 0);
-      EnableMenuItem(Globals.hFileMenu, PM_MOVE , MF_GRAYED);
-      EnableMenuItem(Globals.hFileMenu, PM_COPY , MF_GRAYED);
-      break;
+    group = (PROGGROUP*)GetWindowLongPtrW(hWnd, 0);
+
+    switch (uMsg)
+    {
+        case WM_NCCREATE:
+        {
+            LPCREATESTRUCTW pcs = (LPCREATESTRUCTW)lParam;
+            LPMDICREATESTRUCTW pMDIcs = (LPMDICREATESTRUCTW)pcs->lpCreateParams;
+            group = (PROGGROUP*)pMDIcs->lParam;
+            SetWindowLongPtrW(hWnd, 0, (LONG_PTR)group);
+
+            if (group->bIsCommonGroup)
+            {
+                DefMDIChildProcW(hWnd, WM_SETICON, ICON_BIG,
+                                 (LPARAM)CopyImage(Globals.hCommonGroupIcon,
+                                                   IMAGE_ICON,
+                                                   GetSystemMetrics(SM_CXICON),
+                                                   GetSystemMetrics(SM_CYICON),
+                                                   LR_COPYFROMRESOURCE));
+                DefMDIChildProcW(hWnd, WM_SETICON, ICON_SMALL,
+                                 (LPARAM)CopyImage(Globals.hCommonGroupIcon,
+                                                   IMAGE_ICON,
+                                                   GetSystemMetrics(SM_CXSMICON),
+                                                   GetSystemMetrics(SM_CYSMICON),
+                                                   LR_COPYFROMRESOURCE));
+            }
+            else
+            {
+                DefMDIChildProcW(hWnd, WM_SETICON, ICON_BIG,
+                                 (LPARAM)CopyImage(Globals.hPersonalGroupIcon,
+                                                   IMAGE_ICON,
+                                                   GetSystemMetrics(SM_CXICON),
+                                                   GetSystemMetrics(SM_CYICON),
+                                                   LR_COPYFROMRESOURCE));
+                DefMDIChildProcW(hWnd, WM_SETICON, ICON_SMALL,
+                                 (LPARAM)CopyImage(Globals.hPersonalGroupIcon,
+                                                   IMAGE_ICON,
+                                                   GetSystemMetrics(SM_CXSMICON),
+                                                   GetSystemMetrics(SM_CYSMICON),
+                                                   LR_COPYFROMRESOURCE));
+            }
+            break;
+        }
+
+        case WM_NCDESTROY:
+            SetWindowLongPtrW(hWnd, 0, 0);
+            break;
+
+        case WM_CLOSE:
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+            break;
+
+        case WM_SYSCOMMAND:
+            if (wParam == SC_CLOSE) wParam = SC_MINIMIZE;
+            break;
+
+        case WM_CHILDACTIVATE:
+        case WM_NCLBUTTONDOWN:
+            Globals.hActiveGroup = (PROGGROUP*)GetWindowLongPtrW(hWnd, 0);
+            Globals.hActiveGroup->hActiveProgram = NULL;
+            break;
     }
-  return DefMDIChildProcW(hWnd, msg, wParam, lParam);
+
+    return DefMDIChildProcW(hWnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************
@@ -49,22 +112,22 @@ static LRESULT CALLBACK GROUP_GroupWndProc(HWND hWnd, UINT msg,
  *           GROUP_RegisterGroupWinClass
  */
 
-ATOM GROUP_RegisterGroupWinClass(void)
+ATOM GROUP_RegisterGroupWinClass(VOID)
 {
-  WNDCLASSW class;
+    WNDCLASSW wndClass;
 
-  class.style         = CS_HREDRAW | CS_VREDRAW;
-  class.lpfnWndProc   = GROUP_GroupWndProc;
-  class.cbClsExtra    = 0;
-  class.cbWndExtra    = sizeof(LONG_PTR);
-  class.hInstance     = Globals.hInstance;
-  class.hIcon         = LoadIconW (0, (LPWSTR)IDI_WINLOGO);
-  class.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
-  class.hbrBackground = GetStockObject (WHITE_BRUSH);
-  class.lpszMenuName  = 0;
-  class.lpszClassName = STRING_GROUP_WIN_CLASS_NAME;
+    wndClass.style         = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
+    wndClass.lpfnWndProc   = GROUP_GroupWndProc;
+    wndClass.cbClsExtra    = 0;
+    wndClass.cbWndExtra    = sizeof(LONG_PTR);
+    wndClass.hInstance     = Globals.hInstance;
+    wndClass.hIcon         = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_GROUP_ICON));
+    wndClass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wndClass.lpszMenuName  = NULL;
+    wndClass.lpszClassName = STRING_GROUP_WIN_CLASS_NAME;
 
-  return RegisterClassW(&class);
+    return RegisterClassW(&wndClass);
 }
 
 /***********************************************************************
@@ -72,29 +135,41 @@ ATOM GROUP_RegisterGroupWinClass(void)
  *           GROUP_NewGroup
  */
 
-VOID GROUP_NewGroup(void)
+VOID GROUP_NewGroup(GROUPFORMAT format, BOOL bIsCommonGroup)
 {
-  CHAR szName[MAX_PATHNAME_LEN] = "";
-  CHAR szFile[MAX_PATHNAME_LEN] = "";
-  OFSTRUCT dummy;
+    HANDLE hFile;
+    WCHAR szGrpFile[MAX_PATHNAME_LEN] = L"";
+    WCHAR szTitle[MAX_PATHNAME_LEN]   = L"";
 
-  if (!DIALOG_GroupAttributes(szName, szFile, MAX_PATHNAME_LEN)) return;
+    // ZeroMemory(szTitle, sizeof(szTitle));
+    // ZeroMemory(szGrpFile, sizeof(szGrpFile));
 
-  if (OpenFile(szFile, &dummy, OF_EXIST) == HFILE_ERROR)
+    if (!DIALOG_GroupAttributes(format, szTitle, szGrpFile, MAX_PATHNAME_LEN))
+        return;
+
+    /*
+     * Just check whether the group file does exist. If it does, close the handle, because GRPFILE_ReadGroupFile will
+     * reopen the file for loading. If it doesn't exist, we create a new one.
+     */
+    hFile = CreateFileW(szGrpFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
-      /* File doesn't exist */
-      HLOCAL hGroup =
-	GROUP_AddGroup(szName, szFile, SW_SHOWNORMAL,
-		       DEF_GROUP_WIN_XPOS, DEF_GROUP_WIN_YPOS,
-		       DEF_GROUP_WIN_WIDTH, DEF_GROUP_WIN_HEIGHT, 0, 0,
-		       FALSE, FALSE, FALSE);
-      if (!hGroup) return;
-      GRPFILE_WriteGroupFile(hGroup);
+        /* File doesn't exist */
+        PROGGROUP* hGroup = GROUP_AddGroup(format, bIsCommonGroup, szTitle, szGrpFile,
+                                           DEF_GROUP_WIN_XPOS, DEF_GROUP_WIN_YPOS,
+                                           DEF_GROUP_WIN_XPOS + DEF_GROUP_WIN_WIDTH, DEF_GROUP_WIN_YPOS + DEF_GROUP_WIN_HEIGHT,
+                                           0, 0, SW_SHOWNORMAL, 0, 0, FALSE, FALSE);
+        if (hGroup)
+            GRPFILE_WriteGroupFile(hGroup);
     }
-  else /* File exist */
-    GRPFILE_ReadGroupFile(szFile);
+    else
+    {
+        /* File exist */
+        CloseHandle(hFile);
+        GRPFILE_ReadGroupFile(szGrpFile, bIsCommonGroup);
+    }
 
-  /* FIXME Update progman.ini */
+    /* FIXME Update progman.ini */
 }
 
 /***********************************************************************
@@ -102,121 +177,224 @@ VOID GROUP_NewGroup(void)
  *           GROUP_AddGroup
  */
 
-HLOCAL GROUP_AddGroup(LPCSTR lpszName, LPCSTR lpszGrpFile, INT nCmdShow,
-		      INT x, INT y, INT width, INT height,
-		      INT iconx, INT icony,
-		      BOOL bFileNameModified, BOOL bOverwriteFileOk,
-		      /* FIXME shouldn't be necessary */
-		      BOOL bSuppressShowWindow)
+PROGGROUP*
+GROUP_AddGroup(GROUPFORMAT format, BOOL bIsCommonGroup, LPCWSTR lpszName, LPCWSTR lpszGrpFile,
+               INT left, INT top, INT right, INT bottom, INT xMin, INT yMin, INT nCmdShow,
+               WORD cxIcon, WORD cyIcon, BOOL bOverwriteFileOk,
+               /* FIXME shouldn't be necessary */
+               BOOL bSuppressShowWindow)
 {
-  PROGGROUP *group, *prior;
-  MDICREATESTRUCTW cs;
-  INT    seqnum;
-  HLOCAL hPrior, *p;
-  HLOCAL hGroup   = LocalAlloc(LMEM_FIXED, sizeof(PROGGROUP));
-  HLOCAL hName    = LocalAlloc(LMEM_FIXED, 1 + strlen(lpszName));
-  HLOCAL hGrpFile = LocalAlloc(LMEM_FIXED, 1 + strlen(lpszGrpFile));
-  if (!hGroup || !hName || !hGrpFile)
+    PROGGROUP* hGroup;
+    PROGGROUP* hPrior;
+    PROGGROUP** p;
+    LPWSTR hName;
+    LPWSTR hGrpFile;
+    LPCWSTR GroupFileName;
+    INT skip;
+    INT width;
+    INT height;
+    INT seqnum;
+    MDICREATESTRUCTW mcs;
+    WINDOWPLACEMENT WndPl;
+
+    WndPl.length = sizeof(WndPl);
+
+    // FIXME: Use system default position in case we don't place the window at a given (x,y) coordinate.
+
+    if (bIsCommonGroup)
     {
-      MAIN_MessageBoxIDS(IDS_OUT_OF_MEMORY, IDS_ERROR, MB_OK);
-      if (hGroup)   LocalFree(hGroup);
-      if (hName)    LocalFree(hName);
-      if (hGrpFile) LocalFree(hGrpFile);
-      return(0);
-    }
-  memcpy(LocalLock(hName), lpszName, 1 + strlen(lpszName));
-  memcpy(LocalLock(hGrpFile), lpszGrpFile, 1 + strlen(lpszGrpFile));
-
-  Globals.hActiveGroup   = hGroup;
-
-  seqnum = 1;
-  hPrior = 0;
-  p = &Globals.hGroups;
-  while (*p)
-    {
-      hPrior = *p;
-      prior  = LocalLock(hPrior);
-      p      = &prior->hNext;
-      if (prior->seqnum >= seqnum)
-	seqnum = prior->seqnum + 1;
-    }
-  *p = hGroup;
-
-  group = LocalLock(hGroup);
-  group->hPrior    = hPrior;
-  group->hNext     = 0;
-  group->hName     = hName;
-  group->hGrpFile  = hGrpFile;
-  group->bFileNameModified = bFileNameModified;
-  group->bOverwriteFileOk  = bOverwriteFileOk;
-  group->seqnum    = seqnum;
-  group->nCmdShow  = nCmdShow;
-  group->x         = x;
-  group->y         = y;
-  group->width     = width;
-  group->height    = height;
-  group->iconx     = iconx;
-  group->icony     = icony;
-  group->hPrograms = 0;
-  group->hActiveProgram = 0;
-
-  cs.szClass = STRING_GROUP_WIN_CLASS_NAME;
-  cs.szTitle = NULL;
-  cs.hOwner  = 0;
-  cs.x       = x;
-  cs.y       = y;
-  cs.cx      = width;
-  cs.cy      = height;
-  cs.style   = 0;
-  cs.lParam  = 0;
-
-#ifdef __REACTOS__
-  group->hWnd = (HWND)SendMessageW(Globals.hMDIWnd, WM_MDICREATE, 0, (LPARAM)&cs);
+        if (swscanf(lpszGrpFile,
+                    L"%d %d %d %d %d %d %d %n",
+                    &WndPl.rcNormalPosition.left,
+                    &WndPl.rcNormalPosition.top,
+                    &WndPl.rcNormalPosition.right,
+                    &WndPl.rcNormalPosition.bottom,
+                    &WndPl.ptMinPosition,
+                    &WndPl.ptMinPosition.y,
+                    &WndPl.showCmd,
+                    &skip) == 7)
+        {
+            WndPl.flags = WPF_SETMINPOSITION;
+            width  = WndPl.rcNormalPosition.right  - WndPl.rcNormalPosition.left;
+            height = WndPl.rcNormalPosition.bottom - WndPl.rcNormalPosition.top;
+            GroupFileName = &lpszGrpFile[skip];
+        }
+        else
+        {
+#if 0 // FIXME!
+            WndPl.rcNormalPosition.top    = CW_USEDEFAULT;
+            WndPl.rcNormalPosition.left   = CW_USEDEFAULT;
+            WndPl.rcNormalPosition.right  = 0;
+            WndPl.rcNormalPosition.bottom = 0;
+            width  = CW_USEDEFAULT;
+            height = CW_USEDEFAULT;
+            WndPl.showCmd = SW_SHOWNORMAL;
+            GroupFileName = lpszGrpFile;
 #else
-  group->hWnd = (HWND)SendMessageA(Globals.hMDIWnd, WM_MDICREATE, 0, (LPARAM)&cs);
+        WndPl.flags = WPF_SETMINPOSITION;
+        WndPl.ptMinPosition.x = xMin;
+        WndPl.ptMinPosition.y = yMin;
+        WndPl.rcNormalPosition.left   = left;
+        WndPl.rcNormalPosition.top    = top;
+        WndPl.rcNormalPosition.right  = right;
+        WndPl.rcNormalPosition.bottom = bottom;
+        width  = right  - left;
+        height = bottom - top;
+        WndPl.showCmd = nCmdShow;
+        GroupFileName = lpszGrpFile;
 #endif
-  SetWindowTextA( group->hWnd, lpszName );
-  SetWindowLongPtrW(group->hWnd, 0, (LONG_PTR) hGroup);
+        }
+    }
+    else
+    {
+        WndPl.flags = WPF_SETMINPOSITION;
+        WndPl.ptMinPosition.x = xMin;
+        WndPl.ptMinPosition.y = yMin;
+        WndPl.rcNormalPosition.left   = left;
+        WndPl.rcNormalPosition.top    = top;
+        WndPl.rcNormalPosition.right  = right;
+        WndPl.rcNormalPosition.bottom = bottom;
+        width  = right  - left;
+        height = bottom - top;
+        WndPl.showCmd = nCmdShow;
+        GroupFileName = lpszGrpFile;
+    }
+
+    hGroup   = Alloc(HEAP_ZERO_MEMORY, sizeof(*hGroup));
+    hName    = Alloc(HEAP_ZERO_MEMORY, (wcslen(lpszName)      + 1) * sizeof(WCHAR));
+    hGrpFile = Alloc(HEAP_ZERO_MEMORY, (wcslen(GroupFileName) + 1) * sizeof(WCHAR));
+    if (!hGroup || !hName || !hGrpFile)
+    {
+        MAIN_MessageBoxIDS(IDS_OUT_OF_MEMORY, IDS_ERROR, MB_OK);
+        if (hGroup)   Free(hGroup);
+        if (hName)    Free(hName);
+        if (hGrpFile) Free(hGrpFile);
+        return NULL;
+    }
+    memcpy(hName   , lpszName     , (wcslen(lpszName)      + 1) * sizeof(WCHAR));
+    memcpy(hGrpFile, GroupFileName, (wcslen(GroupFileName) + 1) * sizeof(WCHAR));
+
+    Globals.hActiveGroup = hGroup;
+
+    seqnum = 1;
+    hPrior = NULL;
+    for (p = &Globals.hGroups; *p; p = &hPrior->hNext)
+    {
+        hPrior = *p;
+        if (hPrior->seqnum >= seqnum)
+            seqnum = hPrior->seqnum + 1;
+    }
+    *p = hGroup;
+
+    hGroup->hPrior           = hPrior;
+    hGroup->hNext            = NULL;
+    hGroup->format           = format;
+    hGroup->bIsCommonGroup   = bIsCommonGroup;
+    hGroup->hName            = hName;
+    hGroup->hGrpFile         = hGrpFile;
+    hGroup->bOverwriteFileOk = bOverwriteFileOk;
+    hGroup->seqnum           = seqnum;
+    hGroup->nCmdShow         = nCmdShow;
+#if 0
+    hGroup->x         = x;
+    hGroup->y         = y;
+    hGroup->width     = width;
+    hGroup->height    = height;
+#endif
+    hGroup->iconx            = cxIcon;
+    hGroup->icony            = cyIcon;
+    hGroup->hPrograms        = NULL;
+    hGroup->hActiveProgram   = NULL;
+    hGroup->TagsSize         = 0;
+    hGroup->Tags             = NULL;
+
+    mcs.szClass = STRING_GROUP_WIN_CLASS_NAME;
+    mcs.szTitle = lpszName;
+    mcs.hOwner  = NULL;
+    mcs.x       = WndPl.rcNormalPosition.left;
+    mcs.y       = WndPl.rcNormalPosition.top;
+    mcs.cx      = width;
+    mcs.cy      = height;
+    mcs.style   = 0;
+    mcs.lParam  = (LPARAM)hGroup;
+
+    hGroup->hWnd = (HWND)SendMessageW(Globals.hMDIWnd, WM_MDICREATE, 0, (LPARAM)&mcs);
+
+    SetWindowPlacement(hGroup->hWnd, &WndPl);
 
 #if 1
-  if (!bSuppressShowWindow) /* FIXME shouldn't be necessary */
+    if (!bSuppressShowWindow) /* FIXME shouldn't be necessary */
 #endif
-    {
-      ShowWindow (group->hWnd, nCmdShow);
-      UpdateWindow (group->hWnd);
-    }
+        UpdateWindow(hGroup->hWnd);
 
-  return(hGroup);
+    return hGroup;
 }
+
+
+
+
 
 /***********************************************************************
  *
  *           GROUP_ModifyGroup
  */
 
-VOID GROUP_ModifyGroup(HLOCAL hGroup)
+VOID GROUP_ModifyGroup(PROGGROUP* hGroup)
 {
-  PROGGROUP *group = LocalLock(hGroup);
-  CHAR szName[MAX_PATHNAME_LEN];
-  CHAR szFile[MAX_PATHNAME_LEN];
-  lstrcpynA(szName, LocalLock(group->hName), MAX_PATHNAME_LEN);
-  lstrcpynA(szFile, LocalLock(group->hGrpFile), MAX_PATHNAME_LEN);
+    WCHAR Dest[MAX_PATHNAME_LEN]; // szName
+    WCHAR szGrpFile[MAX_PATHNAME_LEN]; // szFile
 
-  if (!DIALOG_GroupAttributes(szName, szFile, MAX_PATHNAME_LEN)) return;
+    wcsncpy(Dest, hGroup->hName, ARRAYSIZE(Dest));
+    wcsncpy(szGrpFile, hGroup->hGrpFile, ARRAYSIZE(szGrpFile));
 
-  if (strcmp(szFile, LocalLock(group->hGrpFile)))
-    group->bOverwriteFileOk = FALSE;
+    if (!DIALOG_GroupAttributes(hGroup->format, Dest, szGrpFile, MAX_PATHNAME_LEN))
+        return;
 
-  MAIN_ReplaceString(&group->hName,    szName);
-  MAIN_ReplaceString(&group->hGrpFile, szFile);
+    if (wcscmp(szGrpFile, hGroup->hGrpFile))
+        hGroup->bOverwriteFileOk = FALSE;
 
-  GRPFILE_WriteGroupFile(hGroup);
+    MAIN_ReplaceString(&hGroup->hName, Dest);
+    MAIN_ReplaceString(&hGroup->hGrpFile, szGrpFile);
 
-  /* FIXME Delete old GrpFile if GrpFile changed */
+    GRPFILE_WriteGroupFile(hGroup);
 
-  /* FIXME Update progman.ini */
+    /* FIXME Delete old GrpFile if GrpFile changed */
 
-  SetWindowTextA(group->hWnd, szName);
+    /* FIXME Update progman.ini */
+
+    SetWindowTextW(hGroup->hWnd, Dest);
+}
+
+/***********************************************************************
+ *
+ *           GROUP_DeleteGroup
+ */
+
+VOID GROUP_DeleteGroup(PROGGROUP* hGroup)
+{
+    if (Globals.hActiveGroup == hGroup)
+        Globals.hActiveGroup = NULL;
+
+    if (hGroup->hPrior)
+        hGroup->hPrior->hNext = hGroup->hNext;
+    else
+        Globals.hGroups = hGroup->hNext;
+
+    if (hGroup->hNext)
+        hGroup->hNext->hPrior = hGroup->hPrior;
+
+    while (hGroup->hPrograms)
+        PROGRAM_DeleteProgram(hGroup->hPrograms, FALSE);
+
+    /* FIXME Update progman.ini */
+
+    SendMessageW(Globals.hMDIWnd, WM_MDIDESTROY, (WPARAM)hGroup->hWnd, 0);
+
+    if (hGroup->Tags)
+        Free(hGroup->Tags);
+    Free(hGroup->hName);
+    Free(hGroup->hGrpFile);
+    Free(hGroup);
 }
 
 /***********************************************************************
@@ -225,64 +403,10 @@ VOID GROUP_ModifyGroup(HLOCAL hGroup)
  */
 
 /* FIXME shouldn't be necessary */
-VOID GROUP_ShowGroupWindow(HLOCAL hGroup)
+VOID GROUP_ShowGroupWindow(PROGGROUP* hGroup)
 {
-  PROGGROUP *group = LocalLock(hGroup);
-  ShowWindow (group->hWnd, group->nCmdShow);
-  UpdateWindow (group->hWnd);
-}
-
-/***********************************************************************
- *
- *           GROUP_DeleteGroup
- */
-
-VOID GROUP_DeleteGroup(HLOCAL hGroup)
-{
-  PROGGROUP *group = LocalLock(hGroup);
-
-  Globals.hActiveGroup = 0;
-
-  if (group->hPrior)
-    ((PROGGROUP*)LocalLock(group->hPrior))->hNext = group->hNext;
-  else Globals.hGroups = group->hNext;
-
-  if (group->hNext)
-    ((PROGGROUP*)LocalLock(group->hNext))->hPrior = group->hPrior;
-
-  while (group->hPrograms)
-    PROGRAM_DeleteProgram(group->hPrograms, FALSE);
-
-  /* FIXME Update progman.ini */
-
-  SendMessageW(Globals.hMDIWnd, WM_MDIDESTROY, (WPARAM)group->hWnd, 0);
-
-  LocalFree(group->hName);
-  LocalFree(group->hGrpFile);
-  LocalFree(hGroup);
-}
-
-/***********************************************************************
- *
- *           GROUP_FirstGroup
- */
-
-HLOCAL GROUP_FirstGroup(void)
-{
-  return(Globals.hGroups);
-}
-
-/***********************************************************************
- *
- *           GROUP_NextGroup
- */
-
-HLOCAL GROUP_NextGroup(HLOCAL hGroup)
-{
-  PROGGROUP *group;
-  if (!hGroup) return(0);
-  group = LocalLock(hGroup);
-  return(group->hNext);
+    ShowWindow(hGroup->hWnd, hGroup->nCmdShow);
+    UpdateWindow(hGroup->hWnd);
 }
 
 /***********************************************************************
@@ -290,33 +414,7 @@ HLOCAL GROUP_NextGroup(HLOCAL hGroup)
  *           GROUP_ActiveGroup
  */
 
-HLOCAL GROUP_ActiveGroup(void)
+PROGGROUP* GROUP_ActiveGroup(VOID)
 {
-  return(Globals.hActiveGroup);
-}
-
-/***********************************************************************
- *
- *           GROUP_GroupWnd
- */
-
-HWND GROUP_GroupWnd(HLOCAL hGroup)
-{
-  PROGGROUP *group;
-  if (!hGroup) return(0);
-  group = LocalLock(hGroup);
-  return(group->hWnd);
-}
-
-/***********************************************************************
- *
- *           GROUP_GroupName
- */
-
-LPCSTR GROUP_GroupName(HLOCAL hGroup)
-{
-  PROGGROUP *group;
-  if (!hGroup) return(0);
-  group = LocalLock(hGroup);
-  return(LocalLock(group->hName));
+    return Globals.hActiveGroup;
 }

@@ -1,35 +1,12 @@
-/*
- * Program Manager
- *
- * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Sylvain Petreolle
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by new_resources.rc
+//
 
-/*
- * PROJECT:         ReactOS Program Manager
- * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            base/shell/progman/resource.h
- * PURPOSE:         ProgMan resource header
- * PROGRAMMERS:     Ulrich Schmid
- *                  Sylvain Petreolle
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- */
+#include <winuser.h>
 
-#pragma once
+#define IDHELP 9
+
 
 #ifndef IDC_STATIC
 #define IDC_STATIC  -1
@@ -147,3 +124,15 @@
 #define PM_SYMBOL           0x1a1 // FIXME: Rename: PM_RUN_MINIMIZED
 #define PM_NEW_VDM          0x1a2
 #define PM_BROWSE           0x1a3
+
+
+// Next default values for new objects
+// 
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        106
+#define _APS_NEXT_COMMAND_VALUE         40002
+#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_SYMED_VALUE           101
+#endif
+#endif
