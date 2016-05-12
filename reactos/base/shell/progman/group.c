@@ -31,6 +31,83 @@
 
 /***********************************************************************
  *
+ * UX Theming helpers, dropped from msconfig_new/comctl32ex/uxthemesupp.c
+ *
+ */
+
+static HMODULE hUxTheme = NULL;
+
+typedef HRESULT (WINAPI* ETDTProc)(HWND, DWORD);
+static ETDTProc fnEnableThemeDialogTexture = NULL;
+
+typedef HRESULT (WINAPI* SWTProc)(HWND, LPCWSTR, LPCWSTR);
+static SWTProc fnSetWindowTheme = NULL;
+
+
+static BOOL
+InitUxTheme(VOID)
+{
+    if (hUxTheme) return TRUE;
+
+    hUxTheme = LoadLibraryW(L"uxtheme.dll");
+    if (hUxTheme == NULL) return FALSE;
+
+    fnEnableThemeDialogTexture =
+        (ETDTProc)GetProcAddress(hUxTheme, "EnableThemeDialogTexture");
+    fnSetWindowTheme =
+        (SWTProc)GetProcAddress(hUxTheme, "SetWindowTheme");
+
+    return TRUE;
+}
+
+#if 0
+static VOID
+CleanupUxTheme(VOID)
+{
+    FreeLibrary(hUxTheme);
+    hUxTheme = NULL;
+}
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Taken from WinSpy++ 1.7
+// http://www.catch22.net/software/winspy
+// Copyright (c) 2002 by J Brown
+//
+
+HRESULT
+WINAPI
+EnableThemeDialogTexture(_In_ HWND  hwnd,
+                         _In_ DWORD dwFlags)
+{
+    if (!InitUxTheme())
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    if (!fnEnableThemeDialogTexture)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    return fnEnableThemeDialogTexture(hwnd, dwFlags);
+}
+
+HRESULT
+WINAPI
+SetWindowTheme(_In_ HWND    hwnd,
+               _In_ LPCWSTR pszSubAppName,
+               _In_ LPCWSTR pszSubIdList)
+{
+    if (!InitUxTheme())
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    if (!fnSetWindowTheme)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    return fnSetWindowTheme(hwnd, pszSubAppName, pszSubIdList);
+}
+
+
+/***********************************************************************
+ *
  *           GROUP_GroupWndProc
  */
 
@@ -40,6 +117,8 @@ CALLBACK
 GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PROGGROUP* group;
+    INT iItem;
+    LVITEMW lvItem;
 
     group = (PROGGROUP*)GetWindowLongPtrW(hWnd, 0);
 
@@ -89,6 +168,53 @@ GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetWindowLongPtrW(hWnd, 0, 0);
             break;
 
+        case WM_CREATE:
+        {
+            DWORD dwStyle;
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+            group->hListView = CreateWindowW(WC_LISTVIEW,
+                                             NULL,
+                                             WS_CHILD | WS_VISIBLE | WS_OVERLAPPED,
+                                             0, 0,
+                                             rect.right - rect.left,
+                                             rect.bottom - rect.top,
+                                             hWnd,
+                                             NULL,
+                                             Globals.hInstance,
+                                             NULL);
+            dwStyle = (GetWindowLongPtrW(group->hListView, GWL_STYLE) | LVS_SHOWSELALWAYS) & ~LVS_AUTOARRANGE;
+            SetWindowLongPtrW(group->hListView, GWL_STYLE, dwStyle);
+            dwStyle = SendMessageA(group->hListView, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0) | LVS_EX_BORDERSELECT;
+            SendMessageA(group->hListView, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_SNAPTOGRID, dwStyle);
+            InitUxTheme();
+            SetWindowTheme(group->hListView, L"Explorer", NULL);
+            group->hListLarge = ImageList_Create(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), ILC_COLOR24 | ILC_MASK, 1, 1);
+            SendMessageA(group->hListView, LVM_SETIMAGELIST, 0, (LPARAM)group->hListLarge);
+            SendMessageA(group->hListView, LVM_SETICONSPACING, 0, MAKELPARAM(80, 64));
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            SendMessageA(group->hListView, LVM_SETIMAGELIST, 0, 0);
+            ImageList_Destroy(group->hListLarge);
+            DestroyWindow(group->hListView);
+            break;
+        }
+
+        case WM_SIZE:
+        {
+            RECT rect;
+            rect.left = 0;
+            rect.top  = 0;
+            rect.right  = LOWORD(lParam);
+            rect.bottom = HIWORD(lParam);
+            AdjustWindowRectEx(&rect, GetWindowLongPtrW(group->hListView, GWL_STYLE), FALSE, GetWindowLongPtrW(group->hListView, GWL_EXSTYLE));
+            MoveWindow(group->hListView, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+            break;
+        }
+
         case WM_CLOSE:
             SendMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
             break;
@@ -101,6 +227,41 @@ GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_NCLBUTTONDOWN:
             Globals.hActiveGroup = (PROGGROUP*)GetWindowLongPtrW(hWnd, 0);
             Globals.hActiveGroup->hActiveProgram = NULL;
+            break;
+
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case NM_CLICK:
+                {
+                    iItem = ((LPNMITEMACTIVATE)lParam)->iItem;
+                    if (iItem == -1)
+                    {
+                        group->hActiveProgram = NULL;
+                        break;
+                    }
+
+                    lvItem.mask  = LVIF_PARAM;
+                    lvItem.iItem = iItem;
+                    SendMessageW(group->hListView, LVM_GETITEMW, 0, (LPARAM)&lvItem);
+                    group->hActiveProgram = (PROGRAM*)lvItem.lParam;
+                    break;
+                }
+
+                case NM_DBLCLK:
+                {
+                    iItem = ((LPNMITEMACTIVATE)lParam)->iItem;
+                    if (iItem == -1)
+                        break;
+
+                    lvItem.mask  = LVIF_PARAM;
+                    lvItem.iItem = iItem;
+                    SendMessageW(group->hListView, LVM_GETITEMW, 0, (LPARAM)&lvItem);
+                    /* ... or use group->hActiveProgram */
+                    PROGRAM_ExecuteProgram((PROGRAM*)lvItem.lParam);
+                    break;
+                }
+            }
             break;
     }
 
