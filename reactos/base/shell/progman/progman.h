@@ -147,11 +147,11 @@ typedef struct _GLOBALS
     HACCEL    hAccel;
     HWND      hMainWnd;
     HWND      hMDIWnd;
-    //HICON   hMainIcon;
-    HICON     hGroupIcon;
+    HICON     hDefaultIcon;
+    HICON     hMainIcon;
+    // HICON     hGroupIcon;
     HICON     hPersonalGroupIcon;
     HICON     hCommonGroupIcon;
-    HICON     hDefaultIcon;
     HMENU     hMainMenu;
     HMENU     hFileMenu;
     HMENU     hOptionMenu;

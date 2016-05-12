@@ -620,11 +620,10 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     MAIN_LoadSettings();
 
     /* Load the default icons */
+    Globals.hDefaultIcon       = LoadIconW(NULL, MAKEINTRESOURCEW(IDI_WINLOGO));
+    Globals.hMainIcon          = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_APPICON));
     Globals.hPersonalGroupIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_GROUP_PERSONAL_ICON));
     Globals.hCommonGroupIcon   = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_GROUP_COMMON_ICON));
-    Globals.hDefaultIcon       = LoadIconW(NULL, MAKEINTRESOURCEW(IDI_WINLOGO));
-
-    // Globals.hMainIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_APPICON));
 
     /* Initialize the common controls */
     icex.dwSize = sizeof(icex);
@@ -1036,7 +1035,7 @@ static VOID MAIN_MenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
             break;
 
         case PM_ABOUT:
-            ShellAboutW(hWnd, szTitle, NULL, NULL);
+            ShellAboutW(hWnd, szTitle, NULL, Globals.hMainIcon);
             break;
 
         default:
@@ -1060,7 +1059,7 @@ static ATOM MAIN_RegisterMainWinClass(VOID)
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = 0;
     wndClass.hInstance     = Globals.hInstance;
-    wndClass.hIcon         = LoadIconW(Globals.hInstance, MAKEINTRESOURCEW(IDI_APPICON));
+    wndClass.hIcon         = Globals.hMainIcon;
     wndClass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
     wndClass.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
     wndClass.lpszMenuName  = NULL;
