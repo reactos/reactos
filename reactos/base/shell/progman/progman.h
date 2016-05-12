@@ -32,8 +32,6 @@
 #ifndef PROGMAN_H
 #define PROGMAN_H
 
-#pragma once
-
 #include <stdio.h>
 #include <stdlib.h>
 
