@@ -2878,7 +2878,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #ifndef NDEBUG
     ULONG Line;
     ULONG i;
-    PLIST_ENTRY Entry;
+    PPARTITION_INFORMATION PartitionInfo;
 #endif
 
     DPRINT("FormatPartitionPage()\n");
@@ -2988,38 +2988,29 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
 #ifndef NDEBUG
             CONSOLE_PrintTextXY(6, 12,
-                                "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
-                                DiskEntry->DiskSize,
-                                DiskEntry->CylinderSize,
-                                DiskEntry->TrackSize);
+                                "Cylinders: %I64u  Tracks/Cyl: %lu  Sectors/Trk: %lu  Bytes/Sec: %lu  %c",
+                                DiskEntry->Cylinders,
+                                DiskEntry->TracksPerCylinder,
+                                DiskEntry->SectorsPerTrack,
+                                DiskEntry->BytesPerSector,
+                                DiskEntry->Dirty ? '*' : ' ');
 
             Line = 13;
-            DiskEntry = PartitionList->TempDisk;
-            Entry = DiskEntry->PartListHead.Flink;
 
-            while (Entry != &DiskEntry->PrimaryPartListHead)
+            for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
             {
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
 
-                if (PartEntry->IsPartitioned == TRUE)
-                {
-                    CONSOLE_PrintTextXY(6, Line,
-                                        "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
-                                        i,
-                                        PartEntry->PartitionNumber,
-                                        PartEntry->BootIndicator ? 'A' : '-',
-                                        PartEntry->StartSector.QuadPart,
-                                        PartEntry->SectorCount.QuadPart,
-                                        PartEntry->PartitionType,
-                                        PartEntry->Dirty ? '*' : ' ');
-                    Line++;
-                }
-
-                Entry = Entry->Flink;
+                CONSOLE_PrintTextXY(6, Line,
+                                    "%2u:  %2lu  %c  %12I64u  %12I64u  %02x",
+                                    i,
+                                    PartitionInfo->PartitionNumber,
+                                    PartitionInfo->BootIndicator ? 'A' : '-',
+                                    PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionType);
+                Line++;
             }
-
-            /* Restore the old entry */
-            PartEntry = PartitionList->TempPartition;
 #endif
 
             if (WritePartitionsToDisk(PartitionList) == FALSE)
