@@ -405,19 +405,19 @@ CAPTION "Geral"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Tarefas", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Exibir tarefas comuns em &pastas", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Usar pastas cláss&icas do ReactOS", 14002, 40, 37, 120, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Exibir tarefas comuns em &pastas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Usar pastas cláss&icas do ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Abrir novas pastas na mes&ma janela", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Abrir novas pastas em &janelas independentes", 14005, 40, 82, 140, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Abrir novas pastas na mes&ma janela", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Abrir novas pastas em &janelas independentes", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Clique único para abrir um item (apontar para &selecionar)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10
-    AUTORADIOBUTTON "Sublinhar títulos de ícones somente quando a&pontados", 14009, 50, 144, 170, 10
-    AUTORADIOBUTTON "Clique &duplo para abrir um item (clique único para selecionar)", 14010, 40, 156, 170, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "Clique único para abrir um item (apontar para &selecionar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Underline icon titles consistent with my &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
+    AUTORADIOBUTTON "Sublinhar títulos de ícones somente quando a&pontados", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "Clique &duplo para abrir um item (clique único para selecionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
     PUSHBUTTON "&Restaurar Padrões", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

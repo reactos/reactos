@@ -411,19 +411,19 @@ CAPTION "Obecné"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Úkoly", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Zobrazit běžné operace ve složkách", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Použít klas&ické složky ReactOS", 14002, 40, 37, 120, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "&Zobrazit běžné operace ve složkách", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Použít klas&ické složky ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "Procházení složek", -1, 7, 60, 249, 45, WS_TABSTOP | WS_GROUP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Otevírat každou složku ve stejné&m okně", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním okně", 14005, 40, 82, 140, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Otevírat každou složku ve stejné&m okně", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním okně", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "Klikání na položky", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Jedno kliknutí k &otevření položky (vybrat ukázáním)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeče", 14008, 50, 132, 170, 10
-    AUTORADIOBUTTON "Podtrhávat názvy ikon jen &při ukázání na ně", 14009, 50, 144, 170, 10
-    AUTORADIOBUTTON "&Dvojkliknutí k otevření položky (vybrat kliknutím)", 14010, 40, 156, 170, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "Jedno kliknutí k &otevření položky (vybrat ukázáním)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeče", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
+    AUTORADIOBUTTON "Podtrhávat názvy ikon jen &při ukázání na ně", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "&Dvojkliknutí k otevření položky (vybrat kliknutím)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
     PUSHBUTTON "O&bnovit výchozí", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

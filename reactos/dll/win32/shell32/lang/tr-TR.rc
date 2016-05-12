@@ -405,19 +405,19 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Görevler", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Kl&asörlerdeki ortak görevleri göster", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS k&lasik klasörlerini kullan", 14002, 40, 37, 120, 10 | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Kl&asörlerdeki ortak görevleri göster", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS k&lasik klasörlerini kullan", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10 | WS_GROUP
     GROUPBOX "Klasörlere Gözat", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "H&er bir klasörü aynı pencerede aç", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "&Her bir klasörü kendi penceresinde aç", 14005, 40, 82, 140, 10 | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "H&er bir klasörü aynı pencerede aç", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+    AUTORADIOBUTTON "&Her bir klasörü kendi penceresinde aç", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10 | WS_GROUP
     GROUPBOX "Öğeleri tıklatma seçenekleri", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Öğeyi açma&k için tek tıklat (seçmek için üzerine git)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Tarayıcımla tutarlı olan simge başlıklarının altını çiz", 14008, 50, 132, 170, 10
-    AUTORADIOBUTTON "Üzerine gittiğimde &simge başlıklarının altını çiz", 14009, 50, 144, 170, 10
-    AUTORADIOBUTTON "Öğe&yi açmak için çift tıklat (seçmek için tek tıklat)", 14010, 40, 156, 170, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "Öğeyi açma&k için tek tıklat (seçmek için üzerine git)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Tarayıcımla tutarlı olan simge başlıklarının altını çiz", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
+    AUTORADIOBUTTON "Üzerine gittiğimde &simge başlıklarının altını çiz", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "Öğe&yi açmak için çift tıklat (seçmek için tek tıklat)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
     PUSHBUTTON "&Varsayılanı Yükle", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
