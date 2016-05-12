@@ -514,9 +514,9 @@ EnumPickIconResourceProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LON
     WCHAR szName[100];
 
     if (IS_INTRESOURCE(lpszName))
-        wcscpy(szName, lpszName);
-    else
         swprintf(szName, L"%u", lpszName);
+    else
+        wcscpy(szName, lpszName);
 
     hIcon = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
     if (hIcon == NULL)
@@ -531,17 +531,17 @@ VOID
 DestroyIconList(HWND hDlgCtrl)
 {
     HICON hIcon;
-    INT index;
-    INT count;
+    UINT count;
 
     count = SendMessageA(hDlgCtrl, LB_GETCOUNT, 0, 0);
-    if (count == LB_ERR)
+    if (count == LB_ERR || count == 0)
         return;
 
-    for (index = 0; index < count; ++index)
+    while (count-- > 0)
     {
-        hIcon = (HICON)SendMessageA(hDlgCtrl, LB_GETITEMDATA, index, 0);
+        hIcon = (HICON)SendMessageA(hDlgCtrl, LB_GETITEMDATA, 0, 0);
         DestroyIcon(hIcon);
+        SendMessageA(hDlgCtrl, LB_DELETESTRING, 0, 0);
     }
 }
 
@@ -591,7 +591,7 @@ DIALOG_SYMBOL_DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (pIconContext->hLibrary)
             {
                 EnumResourceNamesW(pIconContext->hLibrary,
-                                   (LPCWSTR)RT_ICON, // RT_GROUP_ICON
+                                   (LPCWSTR)RT_GROUP_ICON,
                                    EnumPickIconResourceProc,
                                    (LONG_PTR)pIconContext->hDlgCtrl);
                 FreeLibrary(pIconContext->hLibrary);
@@ -640,7 +640,7 @@ DIALOG_SYMBOL_DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (pIconContext->hLibrary)
                     {
                         EnumResourceNamesW(pIconContext->hLibrary,
-                                           (LPCWSTR)RT_ICON, // RT_GROUP_ICON
+                                           (LPCWSTR)RT_GROUP_ICON,
                                            EnumPickIconResourceProc,
                                            (LONG_PTR)pIconContext->hDlgCtrl);
                         FreeLibrary(pIconContext->hLibrary);
