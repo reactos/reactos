@@ -1978,6 +1978,8 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2133,6 +2135,8 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2287,6 +2291,8 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2375,7 +2381,7 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    return SELECT_PARTITION_PAGE;
+    return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
 }
 
 
@@ -3250,8 +3256,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     ULONG Length;
 
     /* We do not need the filsystem list any more */
-    DestroyFileSystemList(FileSystemList);
-    FileSystemList = NULL;
+    if (FileSystemList != NULL)
+    {
+        DestroyFileSystemList(FileSystemList);
+        FileSystemList = NULL;
+    }
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
