@@ -119,6 +119,7 @@ GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     PROGGROUP* group;
     INT iItem;
     LVITEMW lvItem;
+    POINT pt;
 
     group = (PROGGROUP*)GetWindowLongPtrW(hWnd, 0);
 
@@ -260,6 +261,98 @@ GROUP_GroupWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     /* ... or use group->hActiveProgram */
                     PROGRAM_ExecuteProgram((PROGRAM*)lvItem.lParam);
                     break;
+                }
+
+                case LVN_BEGINDRAG:
+                {
+                    POINT ptMin;
+
+                    BOOL bFirst = TRUE;
+                    for (iItem = SendMessageA(group->hListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+                         iItem != -1;
+                         iItem = SendMessageA(group->hListView, LVM_GETNEXTITEM, iItem, LVNI_SELECTED))
+                    {
+                        if (bFirst)
+                        {
+                            group->hDragImageList = (HIMAGELIST)SendMessageA(group->hListView,
+                                                                             LVM_CREATEDRAGIMAGE,
+                                                                             iItem,
+                                                                             (LPARAM)&pt);
+                            ptMin  = pt;
+                            bFirst = FALSE;
+                        }
+                        else
+                        {
+                            HIMAGELIST hOneImageList, hTempImageList;
+
+                            hOneImageList = (HIMAGELIST)SendMessageA(group->hListView,
+                                                                     LVM_CREATEDRAGIMAGE,
+                                                                     iItem,
+                                                                     (LPARAM)&pt);
+                            hTempImageList = ImageList_Merge(group->hDragImageList,
+                                                             0,
+                                                             hOneImageList,
+                                                             0,
+                                                             pt.x - ptMin.x,
+                                                             pt.y - ptMin.y);
+                            ImageList_Destroy(group->hDragImageList);
+                            ImageList_Destroy(hOneImageList);
+                            group->hDragImageList = hTempImageList;
+                            ptMin.x = min(ptMin.x, pt.x);
+                            ptMin.y = min(ptMin.y, pt.y);
+                        }
+                    }
+                    // pt = ((LPNMLISTVIEW)lParam)->ptAction;
+                    pt.x = ((LPNMLISTVIEW)lParam)->ptAction.x;
+                    pt.y = ((LPNMLISTVIEW)lParam)->ptAction.y;
+                    group->ptStart = pt;
+                    pt.x -= ptMin.x;
+                    pt.y -= ptMin.y;
+                    ImageList_BeginDrag(group->hDragImageList, 0, pt.x, pt.y);
+                    MapWindowPoints(group->hListView, Globals.hMDIWnd, &pt, 1);
+                    ImageList_DragEnter(Globals.hMDIWnd, pt.x, pt.y);
+                    group->bDragging = TRUE;
+                    group->hOldCursor = GetCursor();
+                    SetCapture(group->hWnd);
+
+                    break;
+                }
+            }
+            break;
+
+        case WM_MOUSEMOVE:
+            if (group->bDragging)
+            {
+                pt.x = GET_X_LPARAM(lParam);
+                pt.y = GET_Y_LPARAM(lParam);
+                MapWindowPoints(group->hWnd, Globals.hMDIWnd, &pt, 1);
+                ImageList_DragMove(pt.x, pt.y);
+            }
+            break;
+
+        case WM_LBUTTONUP:
+            if (group->bDragging)
+            {
+                // LVHITTESTINFO lvhti;
+                POINT ptHit;
+
+                group->bDragging = FALSE;
+                ImageList_DragLeave(Globals.hMDIWnd);
+                ImageList_EndDrag();
+                ImageList_Destroy(group->hDragImageList);
+                ReleaseCapture();
+                SetCursor(group->hOldCursor);
+                ptHit.x = GET_X_LPARAM(lParam);
+                ptHit.y = GET_Y_LPARAM(lParam);
+                MapWindowPoints(group->hWnd, group->hListView, &ptHit, 1);
+                for (iItem = SendMessageA(group->hListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+                     iItem != -1;
+                     iItem = SendMessageA(group->hListView, LVM_GETNEXTITEM, iItem, LVNI_SELECTED))
+                {
+                    SendMessageA(group->hListView, LVM_GETITEMPOSITION, iItem, (LPARAM)&pt);
+                    pt.x += ptHit.x - group->ptStart.x;
+                    pt.y += ptHit.y - group->ptStart.y;
+                    SendMessageA(group->hListView, LVM_SETITEMPOSITION, iItem, MAKELPARAM(pt.x, pt.y));
                 }
             }
             break;

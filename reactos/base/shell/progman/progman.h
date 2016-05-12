@@ -47,6 +47,8 @@
 #include <commctrl.h>
 #include <richedit.h>
 
+#include <windowsx.h>
+
 #define MAX_STRING_LEN      255
 #define MAX_PATHNAME_LEN    1024
 #define MAX_LANGUAGE_NUMBER (PM_LAST_LANGUAGE - PM_FIRST_LANGUAGE)
