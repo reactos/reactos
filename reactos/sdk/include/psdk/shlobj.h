@@ -644,6 +644,30 @@ DECLARE_INTERFACE_(IObjMgr,IUnknown)
 #define IObjMgr_Remove(p,a) (p)->lpVtbl->Remove(p,a)
 #endif
 
+/* ICurrentWorkingDirectory interface */
+#define INTERFACE ICurrentWorkingDirectory
+DECLARE_INTERFACE_(ICurrentWorkingDirectory,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** ICurrentWorkingDirectory methods ***/
+    STDMETHOD(GetDirectory)(THIS_ _Out_writes_(cchSize) PWSTR pwzPath, DWORD cchSize);
+    STDMETHOD(SetDirectory)(THIS_ _In_ PCWSTR pwzPath) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define ICurrentWorkingDirectory_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define ICurrentWorkingDirectory_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define ICurrentWorkingDirectory_Release(p)             (p)->lpVtbl->Release(p)
+/*** ICurrentWorkingDirectory methods ***/
+#define ICurrentWorkingDirectory_GetDirectory(p,a,b)    (p)->lpVtbl->GetDirectory(p,a,b)
+#define ICurrentWorkingDirectory_SetDirectory(p,a)      (p)->lpVtbl->SetDirectory(p,a)
+#endif
+
 /* IACList interface */
 #define INTERFACE IACList
 DECLARE_INTERFACE_(IACList,IUnknown)
