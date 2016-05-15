@@ -191,7 +191,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
 
        /* Set appropriate status and complete */
        Irp->IoStatus.Status = STATUS_CANCELLED;
-       IofCompleteRequest(Irp, EVENT_INCREMENT);
+       IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 
        /* If that notification isn't referenced any longer, drop it */
        if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
@@ -384,7 +384,7 @@ ReleaseAndComplete:
 Completion:
     IoMarkIrpPending(Irp);
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, EVENT_INCREMENT);
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 }
 
 /*
@@ -794,7 +794,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
         {
             IoMarkIrpPending(NotifyIrp);
             NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
-            IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+            IoCompleteRequest(NotifyIrp, IO_DISK_INCREMENT);
             _SEH2_LEAVE;
         }
 
@@ -807,14 +807,14 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
             {
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_NOTIFY_CLEANUP;
-                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, IO_DISK_INCREMENT);
             }
             /* Or if it's about to be deleted, complete */
             else if (NotifyChange->Flags & DELETE_IN_PROCESS)
             {
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_DELETE_PENDING;
-                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, IO_DISK_INCREMENT);
             }
             /* Complete now if asked to (and not asked to notify later on) */
             if ((NotifyChange->Flags & NOTIFY_IMMEDIATELY) && !(NotifyChange->Flags & NOTIFY_LATER))
@@ -822,7 +822,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                 NotifyChange->Flags &= ~NOTIFY_IMMEDIATELY;
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
-                IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
+                IoCompleteRequest(NotifyIrp, IO_DISK_INCREMENT);
             }
             /* If no data yet, or asked to notify later on, handle */
             else if (NotifyChange->DataLength == 0 || (NotifyChange->Flags & NOTIFY_LATER))
