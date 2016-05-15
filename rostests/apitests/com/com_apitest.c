@@ -97,6 +97,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IContinue)                         },
     { ID_NAME(IID_ICopyHookA),                  TRUE },
     { ID_NAME(IID_ICopyHookW),                  TRUE },
+    { ID_NAME(IID_ICurrentWorkingDirectory),    TRUE },
     { ID_NAME(IID_ICustomizeInfoTip)                 },
     { ID_NAME(IID_IDVGetEnum),                  TRUE },
     { ID_NAME(IID_IDataObject)                       },
