@@ -209,6 +209,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
     if( find_lease( &dhcpl, dhcpm->xid, dhcpm->chaddr ) < 0 )
       {
 	fprintf( stdout, "No free leases! \n" );
+	free( name );
 	return -1;
       }
     dhcpm->op = BOOTREPLY;
@@ -281,6 +282,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
 	sprintf( name, "%u.%u.%u.%u", (dhcpm->ciaddr &0xFF), ((dhcpm->ciaddr>>8)&0xFF), ((dhcpm->ciaddr>>16)&0xFF), ((dhcpm->ciaddr>>24)&0xFF));
 	display_dhcp_packet( dhcpm, dhcpo );
 	write_packet( dhcpm, name );
+	free( name );
 	return -1;
       }
     dhcpm->siaddr = dhcpl.siaddr;
@@ -339,6 +341,7 @@ int process_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
   display_dhcp_packet( dhcpm, dhcpo );
   write_packet( dhcpm, name );
   fprintf( stdout, "process_dhcp_packet [end]!\n");
+  free( name );
   return 0;
 }
 

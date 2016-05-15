@@ -56,6 +56,7 @@ int display_dhcp_packet( DHCPMESSAGE *dhcpm, DHCPOPTIONS *dhcpo )
       break;
     }
   fprintf( stdout, "Message Type: %s \n", mtype );
+  free( mtype );
   return 0;
 }
 
