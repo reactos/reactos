@@ -473,10 +473,23 @@ UserpMessageBox(
         case OptionShutdownSystem:
             Type = MB_RETRYCANCEL; // FIXME???
             break;
+        case OptionOkNoWait:
+            /*
+             * This gives a balloon notification.
+             * See rostests/kmtests/ntos_ex/ExHardError.c
+             */
+            Type = MB_YESNO; // FIXME!
+            break;
+        case OptionCancelTryContinue:
+            Type = MB_CANCELTRYCONTINUE;
+            break;
 
         /* Anything else is invalid */
         default:
+        {
+            DPRINT1("Unknown ValidResponseOptions = %d\n", ValidResponseOptions);
             return ResponseNotHandled;
+        }
     }
 
     /* Set severity */

@@ -552,6 +552,8 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             case OptionYesNo:
             case OptionYesNoCancel:
             case OptionShutdownSystem:
+            case OptionOkNoWait:
+            case OptionCancelTryContinue:
                 break;
 
             /* Anything else is invalid */
