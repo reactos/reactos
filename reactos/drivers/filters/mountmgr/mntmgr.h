@@ -112,7 +112,7 @@ typedef struct _DEVICE_INFORMATION_ENTRY
 
 typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
 {
-    WORK_QUEUE_ITEM;                                              // 0x00
+    WORK_QUEUE_ITEM WorkItem;                                     // 0x00
     PDEVICE_EXTENSION DeviceExtension;                            // 0x10
     UNICODE_STRING SymbolicName;                                  // 0x14
 } ONLINE_NOTIFICATION_WORK_ITEM, *PONLINE_NOTIFICATION_WORK_ITEM; // 0x1C

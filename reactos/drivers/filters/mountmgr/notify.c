@@ -119,11 +119,11 @@ SendOnlineNotificationWorker(IN PVOID Parameter)
     {
         /* Queue a new one for execution */
         Head = RemoveHeadList(&(DeviceExtension->OnlineNotificationListHead));
-        NewWorkItem = CONTAINING_RECORD(Head, ONLINE_NOTIFICATION_WORK_ITEM, List);
+        NewWorkItem = CONTAINING_RECORD(Head, ONLINE_NOTIFICATION_WORK_ITEM, WorkItem.List);
         KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
-        NewWorkItem->List.Blink = NULL;
-        NewWorkItem->List.Flink = NULL;
-        ExQueueWorkItem((PWORK_QUEUE_ITEM)NewWorkItem, DelayedWorkQueue);
+        NewWorkItem->WorkItem.List.Blink = NULL;
+        NewWorkItem->WorkItem.List.Flink = NULL;
+        ExQueueWorkItem(&NewWorkItem->WorkItem, DelayedWorkQueue);
     }
     else
     {
@@ -155,10 +155,8 @@ PostOnlineNotification(IN PDEVICE_EXTENSION DeviceExtension,
         return;
     }
 
-    WorkItem->List.Flink = NULL;
+    ExInitializeWorkItem(&WorkItem->WorkItem, SendOnlineNotificationWorker, WorkItem);
     WorkItem->DeviceExtension = DeviceExtension;
-    WorkItem->WorkerRoutine = SendOnlineNotificationWorker;
-    WorkItem->Parameter = WorkItem;
     WorkItem->SymbolicName.Length = SymbolicName->Length;
     WorkItem->SymbolicName.MaximumLength = SymbolicName->Length + sizeof(WCHAR);
     WorkItem->SymbolicName.Buffer = AllocatePool(WorkItem->SymbolicName.MaximumLength);
@@ -179,12 +177,12 @@ PostOnlineNotification(IN PDEVICE_EXTENSION DeviceExtension,
     {
         /* Queue that one for execution */
         DeviceExtension->OnlineNotificationWorkerActive = 1;
-        ExQueueWorkItem((PWORK_QUEUE_ITEM)WorkItem, DelayedWorkQueue);
+        ExQueueWorkItem(&WorkItem->WorkItem, DelayedWorkQueue);
     }
     else
     {
         /* Otherwise, just put it in the queue list */
-        InsertTailList(&(DeviceExtension->OnlineNotificationListHead), &(WorkItem->List));
+        InsertTailList(&(DeviceExtension->OnlineNotificationListHead), &(WorkItem->WorkItem.List));
     }
 
     KeReleaseSpinLock(&(DeviceExtension->WorkerLock), OldIrql);
