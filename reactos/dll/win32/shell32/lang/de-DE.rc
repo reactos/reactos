@@ -413,7 +413,7 @@ BEGIN
     AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 150, 10
     GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
     AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
