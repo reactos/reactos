@@ -35,10 +35,7 @@ typedef struct _EXPLORER_INFO
     ULONG Padding[PADDING_SIZE];
 } EXPLORER_INFO, *PEXPLORER_INFO;
 
-UINT
-WINAPI
-SHExplorerParseCmdLine(
-_Out_ PEXPLORER_INFO Info);
+UINT (WINAPI *SHExplorerParseCmdLine)(_Out_ PEXPLORER_INFO Info);
 
 #define PIDL_IS_UNTOUCHED -1
 #define PIDL_IS_NULL -2
@@ -345,6 +342,14 @@ START_TEST(SHExplorerParseCmdLine)
     int i;
     UINT maxWrite = 0;
     FILE * ff;
+
+    HMODULE browseui = LoadLibraryA("browseui.dll");
+    SHExplorerParseCmdLine = (UINT (__stdcall *)(PEXPLORER_INFO))GetProcAddress(browseui, MAKEINTRESOURCEA(107));
+    if (!SHExplorerParseCmdLine)
+    {
+        skip("SHExplorerParseCmdLine not found, NT 6.0?\n");
+        return;
+    }
 
     CommandLine = GetCommandLineW();
     StringCbCopyW(OriginalCommandLine, sizeof(OriginalCommandLine), CommandLine);
