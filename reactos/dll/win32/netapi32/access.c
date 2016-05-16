@@ -262,6 +262,22 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
 }
 
 /************************************************************
+ *                NetGetAnyDCName  (NETAPI32.@)
+ *
+ *  Return the name of any domain controller (DC)
+ */
+NET_API_STATUS WINAPI
+NetGetAnyDCName(
+    _In_  LPCWSTR servername,
+    _In_  LPCWSTR domainname,
+    _Out_ LPBYTE *bufptr)
+{
+    FIXME("NetGetAnyDCName(%s, %s, %p) stub!\n", debugstr_w(servername),
+          debugstr_w(domainname), bufptr);
+    return ERROR_NO_LOGON_SERVERS;
+}
+
+/************************************************************
  *                NetEnumerateTrustedDomains  (NETAPI32.@)
  *
  * On success, *DomainNames is a multi-sz allocated using NetApiBufferAllocate
