@@ -1396,7 +1396,6 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
     PEXT2_MCB           Mcb = NULL;
 
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
-    BOOLEAN             MainResourceAcquired = FALSE;
 
     PVOID               OutputBuffer;
     ULONG               OutputBufferLength;
