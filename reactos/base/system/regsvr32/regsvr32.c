@@ -292,7 +292,7 @@ int WINAPI _tWinMain(
 
 	// Find all arguments starting with a slash (/)
 	for (i = 1; i < argc; i++) {
-		if (*argv[i] == _T('/')) {
+		if (*argv[i] == _T('/') || *argv[i] == '-') {
 			switch (argv[i][1]) {
 			case _T('u'):
 			case _T('U'):
