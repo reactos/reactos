@@ -653,7 +653,7 @@ DECLARE_INTERFACE_(ICurrentWorkingDirectory,IUnknown)
     STDMETHOD_(ULONG,AddRef) (THIS) PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     /*** ICurrentWorkingDirectory methods ***/
-    STDMETHOD(GetDirectory)(THIS_ _Out_writes_(cchSize) PWSTR pwzPath, DWORD cchSize);
+    STDMETHOD(GetDirectory)(THIS_ _Out_writes_(cchSize) PWSTR pwzPath, DWORD cchSize) PURE;
     STDMETHOD(SetDirectory)(THIS_ _In_ PCWSTR pwzPath) PURE;
 };
 #undef INTERFACE
