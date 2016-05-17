@@ -357,6 +357,7 @@ enum RDP_INPUT_DEVICE
 /* NT status codes for RDPDR */
 #define STATUS_SUCCESS			0x00000000
 #define STATUS_NOT_IMPLEMENTED          0x00000001
+#define STATUS_TIMEOUT                  0x00000102
 #define STATUS_PENDING                  0x00000103
 
 #define STATUS_NO_MORE_FILES            0x80000006
@@ -374,7 +375,6 @@ enum RDP_INPUT_DEVICE
 #define STATUS_DISK_FULL                0xc000007f
 #define STATUS_FILE_IS_A_DIRECTORY      0xc00000ba
 #define STATUS_NOT_SUPPORTED            0xc00000bb
-#define STATUS_TIMEOUT                  0xc0000102
 #define STATUS_NOTIFY_ENUM_DIR          0xc000010c
 #define STATUS_CANCELLED                0xc0000120
 
