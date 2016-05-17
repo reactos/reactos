@@ -122,28 +122,44 @@ CenterWindow(HWND hWnd)
 static HFONT
 CreateTitleFont(VOID)
 {
-    NONCLIENTMETRICSW ncm;
-    LOGFONTW LogFont;
+    LOGFONTW LogFont = {0};
     HDC hdc;
-    INT FontSize;
     HFONT hFont;
 
-    ncm.cbSize = sizeof(NONCLIENTMETRICSW);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
-
-    LogFont = ncm.lfMessageFont;
-    LogFont.lfWeight = FW_BOLD;
+    LogFont.lfWeight = FW_HEAVY;
     wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
     hdc = GetDC(NULL);
-    FontSize = 12;
-    LogFont.lfHeight = 0 - GetDeviceCaps(hdc, LOGPIXELSY) * FontSize / 72;
+    LogFont.lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+
     hFont = CreateFontIndirectW(&LogFont);
+
     ReleaseDC(NULL, hdc);
 
     return hFont;
 }
 
+
+static HFONT
+CreateBoldFont(VOID)
+{
+    LOGFONTW tmpFont = {0};
+    HFONT hBoldFont;
+    HDC hDc;
+
+    /* Grabs the Drawing Context */
+    hDc = GetDC(NULL);
+
+    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
+    tmpFont.lfWeight = FW_HEAVY;
+    wcscpy(tmpFont.lfFaceName, L"MS Shell Dlg");
+
+    hBoldFont = CreateFontIndirectW(&tmpFont);
+
+    ReleaseDC(NULL, hDc);
+
+    return hBoldFont;
+}
 
 static INT_PTR CALLBACK
 GplDlgProc(HWND hwndDlg,
@@ -1585,7 +1601,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_PROCESSPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
                     break;
@@ -2365,17 +2381,21 @@ ProcessUnattendSetup(
     }
 }
 
+typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
 
 VOID
 InstallWizard(VOID)
 {
     PROPSHEETHEADER psh;
-    HPROPSHEETPAGE ahpsp[8];
+    HPROPSHEETPAGE *phpage = NULL;
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
     HWND hWnd;
     MSG msg;
     PSETUPDATA pSetupData = NULL;
+    HMODULE hNetShell = NULL;
+    PFNREQUESTWIZARDPAGES pfn = NULL;
+    DWORD dwPageCount = 8, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2390,7 +2410,36 @@ InstallWizard(VOID)
                     L"Setup failed to allocate global data!",
                     L"ReactOS Setup",
                     MB_ICONERROR | MB_OK);
-        return;
+        goto done;
+    }
+
+    hNetShell = LoadLibraryW(L"netshell.dll");
+    if (hNetShell != NULL)
+    {
+        DPRINT("Netshell.dll loaded!\n");
+
+        pfn = (PFNREQUESTWIZARDPAGES)GetProcAddress(hNetShell,
+                                                    "NetSetupRequestWizardPages");
+        if (pfn != NULL)
+        {
+            pfn(&dwNetworkPageCount, NULL, NULL);
+            dwPageCount += dwNetworkPageCount;
+        }
+    }
+
+    DPRINT("PageCount: %lu\n", dwPageCount);
+
+    phpage = HeapAlloc(GetProcessHeap(),
+                       HEAP_ZERO_MEMORY,
+                       dwPageCount * sizeof(HPROPSHEETPAGE));
+    if (phpage == NULL)
+    {
+        LogItem(NULL, L"Page array allocation failed!");
+        MessageBoxW(NULL,
+                    L"Setup failed to allocate page array!",
+                    L"ReactOS Setup",
+                    MB_ICONERROR | MB_OK);
+        goto done;
     }
 
     pSetupData->hUnattendedInf = INVALID_HANDLE_VALUE;
@@ -2403,7 +2452,7 @@ InstallWizard(VOID)
     psp.lParam = (LPARAM)pSetupData;
     psp.pfnDlgProc = WelcomeDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_WELCOMEPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Acknowledgements page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -2411,7 +2460,7 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_ACKSUBTITLE);
     psp.pszTemplate = MAKEINTRESOURCE(IDD_ACKPAGE);
     psp.pfnDlgProc = AckPageDlgProc;
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -2419,7 +2468,7 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
     psp.pfnDlgProc = LocalePageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
 
     /* Create the Owner page */
@@ -2428,7 +2477,7 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_OWNERSUBTITLE);
     psp.pszTemplate = MAKEINTRESOURCE(IDD_OWNERPAGE);
     psp.pfnDlgProc = OwnerPageDlgProc;
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Computer page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -2436,7 +2485,7 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
     psp.pfnDlgProc = ComputerPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
 
     /* Create the DateTime page */
@@ -2445,8 +2494,17 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DATETIMESUBTITLE);
     psp.pfnDlgProc = DateTimePageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_DATETIMEPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
+
+    pSetupData->uFirstNetworkWizardPage = IDD_PROCESSPAGE;
+    pSetupData->uPostNetworkWizardPage = IDD_PROCESSPAGE;
+
+    if (pfn)
+    {
+        pfn(&dwNetworkPageCount, &phpage[nPages], pSetupData);
+        nPages += dwNetworkPageCount;
+    }
 
     /* Create the Process page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -2454,14 +2512,14 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
     psp.pfnDlgProc = ProcessPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -2470,12 +2528,13 @@ InstallWizard(VOID)
     psh.hwndParent = NULL;
     psh.nPages = nPages;
     psh.nStartPage = 0;
-    psh.phpage = ahpsp;
+    psh.phpage = phpage;
     psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
     psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
     /* Create title font */
     pSetupData->hTitleFont = CreateTitleFont();
+    pSetupData->hBoldFont = CreateBoldFont();
 
     /* Display the wizard */
     hWnd = (HWND)PropertySheet(&psh);
@@ -2493,8 +2552,19 @@ InstallWizard(VOID)
     if (pSetupData->hUnattendedInf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(pSetupData->hUnattendedInf);
 
-    DeleteObject(pSetupData->hTitleFont);
-    HeapFree(GetProcessHeap(), 0, pSetupData);
+done:
+    if (phpage != NULL)
+        HeapFree(GetProcessHeap(), 0, phpage);
+
+    if (hNetShell != NULL)
+        FreeLibrary(hNetShell);
+
+    if (pSetupData != NULL)
+    {
+        DeleteObject(pSetupData->hBoldFont);
+        DeleteObject(pSetupData->hTitleFont);
+        HeapFree(GetProcessHeap(), 0, pSetupData);
+    }
 
     LogItem(L"END_SECTION", L"InstallWizard");
 }

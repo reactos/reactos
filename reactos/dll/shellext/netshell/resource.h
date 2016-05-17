@@ -12,6 +12,9 @@
 #define IDI_NET_REC              107
 #define IDI_NET_TRANS            108
 #define IDI_NET_TRANSREC         109
+#define IDI_NET_SETUP            110
+
+#define IDC_STATIC -1
 
 /* dialogs */
 #define IDD_NETPROPERTIES         400
@@ -47,6 +50,23 @@
 #define IDC_DETAILS        1204
 
 #define IDC_CLOSE 1300
+
+/* Network setup wizard pages */
+#define IDD_NETWORKSETTINGSPAGE  3500
+#define IDC_NETWORK_TYPICAL      3501
+#define IDC_NETWORK_CUSTOM       3501
+
+#define IDD_NETWORKCOMPONENTPAGE 3600
+#define IDC_COMPONENT_LIST       3601
+#define IDC_NETWORK_DEVICE       3602
+#define IDC_NETWORK_INSTALL      3603
+#define IDC_NETWORK_UNINSTALL    3604
+#define IDC_NETWORK_PROPERTIES   3605
+
+#define IDD_NETWORKDOMAINPAGE    3700
+#define IDC_SELECT_WORKGROUP     3701
+#define IDC_SELECT_DOMAIN        3702
+#define IDC_DOMAIN_NAME          3703
 
 /* resource constants */
 
@@ -94,5 +114,14 @@
 #define IDS_WINS_SERVERS     10308
 #define IDS_PROPERTY         10309
 #define IDS_VALUE            10310
+
+#define IDS_NETWORKSETTINGSTITLE     13050
+#define IDS_NETWORKSETTINGSSUBTITLE  13051
+#define IDS_NETWORKCOMPONENTTITLE    13052
+#define IDS_NETWORKCOMPONENTSUBTITLE 13053
+#define IDS_NETWORKDOMAINTITLE       13054
+#define IDS_NETWORKDOMAINSUBTITLE    13055
+#define IDS_REACTOS_SETUP            13456
+#define IDS_WZD_DOMAIN_NAME          13457
 
 #define IDR_NETSHELL 20000
