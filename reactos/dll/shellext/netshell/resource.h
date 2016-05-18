@@ -54,7 +54,7 @@
 /* Network setup wizard pages */
 #define IDD_NETWORKSETTINGSPAGE  3500
 #define IDC_NETWORK_TYPICAL      3501
-#define IDC_NETWORK_CUSTOM       3501
+#define IDC_NETWORK_CUSTOM       3502
 
 #define IDD_NETWORKCOMPONENTPAGE 3600
 #define IDC_COMPONENT_LIST       3601
