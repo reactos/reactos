@@ -99,11 +99,6 @@ UpdateGeneralIcons(HWND hDlg)
 
     if (lpTaskIconName)
     {
-        if (hTaskIcon)
-        {
-            DeleteObject(hTaskIcon);
-        }
-
         hTaskIcon = (HICON)LoadImage(shell32_hInstance,
                                               lpTaskIconName,
                                               IMAGE_ICON,
@@ -132,11 +127,6 @@ UpdateGeneralIcons(HWND hDlg)
     
     if (lpFolderIconName)
     {
-        if (hFolderIcon)
-        {
-            DeleteObject(hFolderIcon);
-        }
-        
         hFolderIcon = (HICON)LoadImage(shell32_hInstance,
                                               lpFolderIconName,
                                               IMAGE_ICON,
@@ -165,11 +155,6 @@ UpdateGeneralIcons(HWND hDlg)
 
     if (lpClickIconName)
     {
-        if (hClickIcon)
-        {
-            DeleteObject(hClickIcon);
-        }
-        
         hClickIcon = (HICON)LoadImage(shell32_hInstance,
                                               lpClickIconName,
                                               IMAGE_ICON,
