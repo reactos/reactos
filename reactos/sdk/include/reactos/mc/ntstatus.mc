@@ -6,7 +6,7 @@ Error=0x3:STATUS_SEVERITY_ERROR
 )
 
 FacilityNames=(System=0x0
-Debuger=0x1:FACILITY_DEBUGGER
+Debugger=0x1:FACILITY_DEBUGGER
 RpcRuntime=0x2:FACILITY_RPC_RUNTIME
 RpcStubs=0x3:FACILITY_RPC_STUBS
 Io=0x4:FACILITY_IO_ERROR_CODE
@@ -305,7 +305,7 @@ An operation is blocked waiting for an oplock.
 
 MessageId=0x1
 Severity=Success
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_EXCEPTION_HANDLED
 Language=English
 Debugger handled exception
@@ -313,7 +313,7 @@ Debugger handled exception
 
 MessageId=0x2
 Severity=Success
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_CONTINUE
 Language=English
 Debugger continued
@@ -665,7 +665,7 @@ The Directory Service is shuting down.
 
 MessageId=0x1
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_REPLY_LATER
 Language=English
 Debugger will reply later.
@@ -673,7 +673,7 @@ Debugger will reply later.
 
 MessageId=0x2
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_UNABLE_TO_PROVIDE_HANDLE
 Language=English
 Debugger can not provide handle.
@@ -681,7 +681,7 @@ Debugger can not provide handle.
 
 MessageId=0x3
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_TERMINATE_THREAD
 Language=English
 Debugger terminated thread.
@@ -689,7 +689,7 @@ Debugger terminated thread.
 
 MessageId=0x4
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_TERMINATE_PROCESS
 Language=English
 Debugger terminated process.
@@ -697,7 +697,7 @@ Debugger terminated process.
 
 MessageId=0x5
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_CONTROL_C
 Language=English
 Debugger got control C.
@@ -705,7 +705,7 @@ Debugger got control C.
 
 MessageId=0x6
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_PRINTEXCEPTION_C
 Language=English
 Debugger printed exception on control C.
@@ -713,7 +713,7 @@ Debugger printed exception on control C.
 
 MessageId=0x7
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_RIPEXCEPTION
 Language=English
 Debugger received RIP exception.
@@ -721,7 +721,7 @@ Debugger received RIP exception.
 
 MessageId=0x8
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_CONTROL_BREAK
 Language=English
 Debugger received control break.
@@ -729,7 +729,7 @@ Debugger received control break.
 
 MessageId=0x9
 Severity=Informational
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_COMMAND_EXCEPTION
 Language=English
 Debugger command communication exception.
@@ -1010,7 +1010,7 @@ The device has indicated that it's door is open. Further operations require it c
 
 MessageId=0x1
 Severity=Warning
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_EXCEPTION_NOT_HANDLED
 Language=English
 Debugger did not handle the exception.
@@ -4621,7 +4621,7 @@ The protocol is not installed.
 
 MessageId=0x1
 Severity=Error
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_NO_STATE_CHANGE
 Language=English
 Debugger did not perform a state change.
@@ -4629,7 +4629,7 @@ Debugger did not perform a state change.
 
 MessageId=0x2
 Severity=Error
-Facility=Debuger
+Facility=Debugger
 SymbolicName=DBG_APP_NOT_IDLE
 Language=English
 Debugger has found the application is not idle.
