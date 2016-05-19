@@ -29,7 +29,7 @@ Bus_PlugInDevice (
     NTSTATUS            status;
     ULONG               index;
 	WCHAR               temp[256];
-    PLIST_ENTRY         entry; 
+    PLIST_ENTRY         entry;
 
     PAGED_CODE ();
 
@@ -110,13 +110,13 @@ Bus_PlugInDevice (
 		index += swprintf(&temp[index],
 							L"ACPI\\%hs",
 							Device->pnp.hardware_id);
-		index++;
+		temp[index++] = UNICODE_NULL;
 
 		index += swprintf(&temp[index],
 							L"*%hs",
 							Device->pnp.hardware_id);
-		index++;
-		temp[++index] = UNICODE_NULL;
+		temp[index++] = UNICODE_NULL;
+		temp[index++] = UNICODE_NULL;
 
 		pdoData->HardwareIDs = ExAllocatePoolWithTag(NonPagedPool, index*sizeof(WCHAR), 'DpcA');
 
