@@ -2,6 +2,19 @@
 
 #include <syssetup/syssetup.h>
 
+
+#define NETWORK_SETUP_MAGIC 0x50515253
+
+typedef struct _NETWORKSETUPDATA
+{
+    DWORD dwMagic;
+    BOOL bTypicalNetworkSetup;
+
+
+    PSETUPDATA pSetupData;
+} NETWORKSETUPDATA, *PNETWORKSETUPDATA;
+
+
 extern "C"
 {
 
@@ -24,33 +37,39 @@ NetworkSettingsPageDlgProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    PSETUPDATA SetupData;
+    PNETWORKSETUPDATA pNetworkSetupData;
+    PSETUPDATA pSetupData;
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    if ((pNetworkSetupData != NULL) &&
+        (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
+        pSetupData = pNetworkSetupData->pSetupData;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
-            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            pSetupData = pNetworkSetupData->pSetupData;
 
             /* Set the fonts of both the options to bold */
-            SetBoldText(hwndDlg, IDC_NETWORK_TYPICAL, SetupData);
-            SetBoldText(hwndDlg, IDC_NETWORK_CUSTOM, SetupData);
+            SetBoldText(hwndDlg, IDC_NETWORK_TYPICAL, pSetupData);
+            SetBoldText(hwndDlg, IDC_NETWORK_CUSTOM, pSetupData);
 
             /* Set the typical settings option as the default */
             SendDlgItemMessage(hwndDlg, IDC_NETWORK_TYPICAL, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 
-            if (SetupData->UnattendSetup)
+            if (pSetupData->UnattendSetup)
             {
                 //...
             }
             break;
 
         case WM_DESTROY:
+            /* ATTENTION: Free pNetworkSetupData only in one of the page functions!!! */
             //...
             break;
 
@@ -62,7 +81,7 @@ NetworkSettingsPageDlgProc(
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                    if (SetupData->UnattendSetup)
+                    if (pSetupData->UnattendSetup)
                     {
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKCOMPONENTPAGE);
                         return TRUE;
@@ -70,16 +89,19 @@ NetworkSettingsPageDlgProc(
                     break;
 
                 case PSN_WIZNEXT:
+                    pNetworkSetupData->bTypicalNetworkSetup = FALSE;
+
                     /* If the Typical Settings button is chosen, then skip to the Domain Page */
                     if (IsDlgButtonChecked(hwndDlg, IDC_NETWORK_TYPICAL) == BST_CHECKED)
                     {
+                        pNetworkSetupData->bTypicalNetworkSetup = TRUE;
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
                     }
                     break;
 
                 case PSN_WIZBACK:
-                    SetupData->UnattendSetup = FALSE;
+                    pSetupData->UnattendSetup = FALSE;
                     break;
             }
             break;
@@ -94,34 +116,40 @@ NetworkSettingsPageDlgProc(
 static
 INT_PTR
 CALLBACK
-NetworkPageDlgProc(
+NetworkComponentPageDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
     LPARAM lParam)
 {
-    PSETUPDATA SetupData;
+    PNETWORKSETUPDATA pNetworkSetupData;
+    PSETUPDATA pSetupData;
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    if ((pNetworkSetupData != NULL) &&
+        (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
+        pSetupData = pNetworkSetupData->pSetupData;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
-            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            pSetupData = pNetworkSetupData->pSetupData;
 
-            SetBoldText(hwndDlg, IDC_NETWORK_DEVICE, SetupData);
+            SetBoldText(hwndDlg, IDC_NETWORK_DEVICE, pSetupData);
 
-            if (SetupData->UnattendSetup)
+            if (pSetupData->UnattendSetup)
             {
                 //...
             }
             break;
 
         case WM_DESTROY:
+            /* ATTENTION: Free pNetworkSetupData only in one of the page functions!!! */
             //...
             break;
 
@@ -133,7 +161,7 @@ NetworkPageDlgProc(
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                    if (SetupData->UnattendSetup)
+                    if (pSetupData->UnattendSetup)
                     {
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
@@ -141,7 +169,7 @@ NetworkPageDlgProc(
                     break;
 
                 case PSN_WIZBACK:
-                    SetupData->UnattendSetup = FALSE;
+                    pSetupData->UnattendSetup = FALSE;
                     break;
             }
             break;
@@ -156,27 +184,32 @@ NetworkPageDlgProc(
 static
 INT_PTR
 CALLBACK
-DomainPageDlgProc(
+NetworkDomainPageDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
     LPARAM lParam)
 {
+    PNETWORKSETUPDATA pNetworkSetupData;
+    PSETUPDATA pSetupData;
     WCHAR DomainName[51];
     WCHAR Title[64];
     WCHAR ErrorName[256];
     LPNMHDR lpnm;
-    PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    if ((pNetworkSetupData != NULL) &&
+        (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
+        pSetupData = pNetworkSetupData->pSetupData;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
-            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            pSetupData = pNetworkSetupData->pSetupData;
 
             /* Set the workgroup option as the default */
             SendDlgItemMessage(hwndDlg, IDC_SELECT_WORKGROUP, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -189,7 +222,7 @@ DomainPageDlgProc(
             /* Set focus to owner name */
             SetFocus(GetDlgItem(hwndDlg, IDC_DOMAIN_NAME));
 
-            if (SetupData->UnattendSetup)
+            if (pSetupData->UnattendSetup)
             {
                 //...
             }
@@ -197,6 +230,15 @@ DomainPageDlgProc(
 
         case WM_DESTROY:
             //...
+            /* ATTENTION: Free pNetworkSetupData only in one of the page functions!!! */
+            if (pNetworkSetupData != NULL)
+            {
+                if ((!IsBadReadPtr(pNetworkSetupData, sizeof(NETWORKSETUPDATA))) &&
+                    (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
+                    HeapFree(GetProcessHeap(), 0, pNetworkSetupData);
+
+                SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)NULL);
+            }
             break;
 
         case WM_NOTIFY:
@@ -207,9 +249,9 @@ DomainPageDlgProc(
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                    if (SetupData->UnattendSetup)
+                    if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uPostNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, pSetupData->uPostNetworkWizardPage);
                         return TRUE;
                     }
                     break;
@@ -238,7 +280,14 @@ DomainPageDlgProc(
                     break;
 
                 case PSN_WIZBACK:
-                    SetupData->UnattendSetup = FALSE;
+                    pSetupData->UnattendSetup = FALSE;
+
+                    /* If the Typical setup chosen, then skip back to the Settings Page */
+                    if (pNetworkSetupData->bTypicalNetworkSetup == TRUE)
+                    {
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKSETTINGSPAGE);
+                        return TRUE;
+                    }
                     break;
             }
             break;
@@ -258,6 +307,7 @@ NetSetupRequestWizardPages(
     HPROPSHEETPAGE *pPages,
     PSETUPDATA pSetupData)
 {
+    PNETWORKSETUPDATA pNetworkSetupData;
     PROPSHEETPAGE psp = {0};
     DWORD dwPageCount = 3;
     INT nPage = 0;
@@ -276,10 +326,18 @@ NetSetupRequestWizardPages(
 
     pSetupData->uFirstNetworkWizardPage = IDD_NETWORKSETTINGSPAGE;
 
+    pNetworkSetupData = (PNETWORKSETUPDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETWORKSETUPDATA));
+    if (pNetworkSetupData == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    pNetworkSetupData->dwMagic = NETWORK_SETUP_MAGIC;
+    pNetworkSetupData->pSetupData = pSetupData;
+
+
     /* Create the Network Settings page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.hInstance = netshell_hInstance;
-    psp.lParam = (LPARAM)pSetupData;
+    psp.lParam = (LPARAM)pNetworkSetupData;
 
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_NETWORKSETTINGSTITLE);
@@ -292,7 +350,7 @@ NetSetupRequestWizardPages(
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_NETWORKCOMPONENTTITLE);
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_NETWORKCOMPONENTSUBTITLE);
-    psp.pfnDlgProc = NetworkPageDlgProc;
+    psp.pfnDlgProc = NetworkComponentPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NETWORKCOMPONENTPAGE);
     pPages[nPage++] = CreatePropertySheetPage(&psp);
 
@@ -300,7 +358,7 @@ NetSetupRequestWizardPages(
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_NETWORKDOMAINTITLE);
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_NETWORKDOMAINSUBTITLE);
-    psp.pfnDlgProc = DomainPageDlgProc;
+    psp.pfnDlgProc = NetworkDomainPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NETWORKDOMAINPAGE);
     pPages[nPage++] = CreatePropertySheetPage(&psp);
 
