@@ -244,6 +244,7 @@ void schan_imp_dispose_session(schan_imp_session session)
     mbedtls_ssl_free(&s->ssl);
     mbedtls_ctr_drbg_free(&s->ctr_drbg);
     mbedtls_entropy_free(&s->entropy);
+    mbedtls_ssl_config_free(&s->conf);
 
     /* safely overwrite the freed context with zeroes */
     HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, s);
