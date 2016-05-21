@@ -8047,10 +8047,10 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
 {
     ENCRYPTED_LM_OWF_PASSWORD StoredLmPassword;
     ENCRYPTED_NT_OWF_PASSWORD StoredNtPassword;
-    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
-    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
-    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
-    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    LM_OWF_PASSWORD OldLmPassword;
+    LM_OWF_PASSWORD NewLmPassword;
+    NT_OWF_PASSWORD OldNtPassword;
+    NT_OWF_PASSWORD NewNtPassword;
     BOOLEAN StoredLmPresent = FALSE;
     BOOLEAN StoredNtPresent = FALSE;
     BOOLEAN StoredLmEmpty = TRUE;
