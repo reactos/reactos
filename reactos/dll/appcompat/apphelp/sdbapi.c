@@ -313,23 +313,14 @@ BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
     return SdbpCheckTagType(tag, type);
 }
 
-/**
- * Opens specified shim database file.
- *
- * @param [in]  path    Path to the shim database.
- * @param [in]  type    Type of path. Either DOS_PATH or NT_PATH.
- *
- * @return  Success: Handle to the shim database, NULL otherwise.
- */
-PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
+PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
-    NTSTATUS Status;
-    IO_STATUS_BLOCK io;
-    OBJECT_ATTRIBUTES attr;
     UNICODE_STRING str;
+    OBJECT_ATTRIBUTES attr;
+    IO_STATUS_BLOCK io;
     PDB db;
+    NTSTATUS Status;
     BYTE header[12];
-    DWORD dwRead = 0;
 
     if (type == DOS_PATH)
     {
@@ -364,7 +355,14 @@ PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
 
     db->size = GetFileSize(db->file, NULL);
     db->data = SdbAlloc(db->size);
-    ReadFile(db->file, db->data, db->size, &dwRead, NULL);
+    Status = NtReadFile(db->file, NULL, NULL, NULL, &io, db->data, db->size, NULL, NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
+        return NULL;
+    }
 
     if (!SdbpReadData(db, &header, 0, 12))
     {
@@ -380,7 +378,31 @@ PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
         return NULL;
     }
 
-    if (*(DWORD*)&header[0] != (DWORD)2)
+    *major = *(DWORD*)&header[0];
+    *minor = *(DWORD*)&header[4];
+
+    return db;
+}
+
+
+/**
+ * Opens specified shim database file.
+ *
+ * @param [in]  path    Path to the shim database.
+ * @param [in]  type    Type of path. Either DOS_PATH or NT_PATH.
+ *
+ * @return  Success: Handle to the shim database, NULL otherwise.
+ */
+PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
+{
+    PDB db;
+    DWORD major, minor;
+
+    db = SdbpOpenDatabase(path, type, &major, &minor);
+    if (!db)
+        return NULL;
+
+    if (major != 2)
     {
         SdbCloseDatabase(db);
         SHIM_ERR("Invalid shim database version\n");
@@ -490,6 +512,26 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
     {
         memcpy(Guid, copy_from, sizeof(GUID));
     }
+    return TRUE;
+}
+
+/**
+ * Read the database version from the specified database.
+ *
+ * @param [in]  database    The database.
+ * @param [out] VersionHi   The first part of the version number.
+ * @param [out] VersionLo   The second part of the version number.
+ *
+ * @return  TRUE if it succeeds or fails, FALSE if ???
+ */
+BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD VersionLo)
+{
+    PDB db;
+
+    db = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
+    if (db)
+        SdbCloseDatabase(db);
+
     return TRUE;
 }
 

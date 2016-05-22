@@ -58,7 +58,7 @@
 @ stub SdbGetDatabaseInformation
 @ stub SdbGetDatabaseInformationByName
 @ stub SdbGetDatabaseMatch
-@ stub SdbGetDatabaseVersion
+@ stdcall SdbGetDatabaseVersion(wstr ptr ptr)
 @ stub SdbGetDllPath
 @ stub SdbGetEntryFlags
 @ stdcall SdbGetFileAttributes(wstr ptr ptr)
