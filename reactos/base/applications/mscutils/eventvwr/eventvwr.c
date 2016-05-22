@@ -83,8 +83,8 @@ OPENFILENAMEW sfn;
 LPWSTR lpSourceLogName = NULL;
 LPWSTR lpComputerName  = NULL;
 
-DWORD dwNumLogs = 0;
-LPWSTR* LogNames;
+DWORD dwNumLogs  = 0;
+LPWSTR* LogNames = NULL;
 
 /* Forward declarations of functions included in this code module: */
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -294,13 +294,13 @@ GetEventCategory(IN LPCWSTR KeyName,
         goto Quit;
 
     hLibrary = LoadLibraryExW(szMessageDLL, NULL,
-                              DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+                              LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
     if (hLibrary == NULL)
         goto Quit;
 
-    /* Retrieve the message string. */
+    /* Retrieve the message string without appending extra newlines */
     if (FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE |
-                       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_MAX_WIDTH_MASK,
                        hLibrary,
                        pevlr->EventCategory,
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
@@ -395,7 +395,7 @@ GetEventMessage(IN LPCWSTR KeyName,
     while ((szDll != NULL) && (!Success))
     {
         hLibrary = LoadLibraryExW(szDll, NULL,
-                                  DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
+                                  LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
         if (hLibrary == NULL)
         {
             /* The DLL could not be loaded try the next one (if any) */
@@ -403,9 +403,9 @@ GetEventMessage(IN LPCWSTR KeyName,
             continue;
         }
 
-        /* Retrieve the message string. */
+        /* Retrieve the message string without appending extra newlines */
         if (FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE |
-                           FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                           FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_MAX_WIDTH_MASK,
                            hLibrary,
                            pevlr->EventID,
                            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
@@ -894,7 +894,7 @@ MyRegisterClass(HINSTANCE hInstance)
 }
 
 
-VOID
+BOOL
 GetDisplayNameFile(IN LPCWSTR lpLogName,
                    OUT PWCHAR lpModuleName)
 {
@@ -908,7 +908,7 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
     {
-        return;
+        return FALSE;
     }
 
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
@@ -917,7 +917,7 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, KeyPath);
-        return;
+        return FALSE;
     }
 
     cbData = sizeof(szModuleName);
@@ -928,6 +928,8 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
 
     RegCloseKey(hKey);
     HeapFree(GetProcessHeap(), 0, KeyPath);
+
+    return TRUE;
 }
 
 
@@ -970,86 +972,114 @@ VOID
 BuildLogList(void)
 {
     HKEY hKey;
-    DWORD lpcName;
     DWORD dwIndex;
-    DWORD dwMessageID;
     DWORD dwMaxKeyLength;
+    LPWSTR LogName = NULL;
     WCHAR szModuleName[MAX_PATH];
+    DWORD lpcName;
+    DWORD dwMessageID;
     LPWSTR lpDisplayName;
     HMODULE hLibrary = NULL;
 
+    /* Open the EventLog key */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, EVENTLOG_BASE_KEY, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         return;
     }
 
+    /* Retrieve the number of event logs enumerated as registry keys */
     if (RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwNumLogs, &dwMaxKeyLength, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return;
     }
-
     if (!dwNumLogs)
     {
         RegCloseKey(hKey);
         return;
     }
 
-    LogNames = HeapAlloc(GetProcessHeap(), 0, (dwNumLogs + 1) * sizeof(LPWSTR));
+    /* Take the NULL terminator into account */
+    ++dwMaxKeyLength;
 
-    if (!LogNames)
+    /* Allocate the temporary buffer */
+    LogName = HeapAlloc(GetProcessHeap(), 0, dwMaxKeyLength * sizeof(WCHAR));
+    if (!LogName)
     {
         RegCloseKey(hKey);
         return;
     }
 
+    /* Allocate the list of event logs (add 1 to dwNumLogs in order to have one guard entry) */
+    LogNames = HeapAlloc(GetProcessHeap(), 0, (dwNumLogs + 1) * sizeof(LPWSTR));
+    if (!LogNames)
+    {
+        HeapFree(GetProcessHeap(), 0, LogName);
+        RegCloseKey(hKey);
+        return;
+    }
+
+    /* Enumerate and retrieve each event log name */
     for (dwIndex = 0; dwIndex < dwNumLogs; dwIndex++)
     {
-        LogNames[dwIndex] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ((dwMaxKeyLength + 1) * sizeof(WCHAR)));
-
-        if (LogNames[dwIndex] != NULL)
+        lpcName = dwMaxKeyLength;
+        if (RegEnumKeyExW(hKey, dwIndex, LogName, &lpcName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
         {
-            lpcName = dwMaxKeyLength + 1;
+            LogNames[dwIndex] = NULL;
+            continue;
+        }
 
-            if (RegEnumKeyExW(hKey, dwIndex, LogNames[dwIndex], &lpcName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        /* Take the NULL terminator into account */
+        ++lpcName;
+
+        /* Allocate the event log name string and copy it from the temporary buffer */
+        LogNames[dwIndex] = HeapAlloc(GetProcessHeap(), 0, lpcName * sizeof(WCHAR));
+        if (LogNames[dwIndex] == NULL)
+            continue;
+
+        StringCchCopyW(LogNames[dwIndex], lpcName, LogName);
+
+        /* Get the display name for the event log */
+        lpDisplayName = NULL;
+
+        ZeroMemory(szModuleName, sizeof(szModuleName));
+        if (GetDisplayNameFile(LogNames[dwIndex], szModuleName))
+        {
+            dwMessageID = GetDisplayNameID(LogNames[dwIndex]);
+
+            hLibrary = LoadLibraryExW(szModuleName, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+            if (hLibrary != NULL)
             {
-                lpDisplayName = NULL;
-
-                ZeroMemory(szModuleName, sizeof(szModuleName));
-                GetDisplayNameFile(LogNames[dwIndex], szModuleName);
-                dwMessageID = GetDisplayNameID(LogNames[dwIndex]);
-
-                hLibrary = LoadLibraryExW(szModuleName, NULL, DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
-                if (hLibrary != NULL)
-                {
-                    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE,
-                                   hLibrary,
-                                   dwMessageID,
-                                   0,
-                                   (LPWSTR)&lpDisplayName,
-                                   0,
-                                   NULL);
-                    FreeLibrary(hLibrary);
-                }
-
-                if (lpDisplayName)
-                {
-                    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
-                }
-                else
-                {
-                    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
-                }
-
-                /* Free the buffer allocated by FormatMessage */
-                if (lpDisplayName)
-                    LocalFree(lpDisplayName);
+                /* Retrieve the message string without appending extra newlines */
+                FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
+                               FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                               hLibrary,
+                               dwMessageID,
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                               (LPWSTR)&lpDisplayName,
+                               0,
+                               NULL);
+                FreeLibrary(hLibrary);
             }
         }
+
+        if (lpDisplayName)
+        {
+            InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
+        }
+        else
+        {
+            InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
+        }
+
+        /* Free the buffer allocated by FormatMessage */
+        if (lpDisplayName)
+            LocalFree(lpDisplayName);
     }
 
     InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
 
+    HeapFree(GetProcessHeap(), 0, LogName);
     RegCloseKey(hKey);
 
     return;
@@ -1079,7 +1109,7 @@ FreeLogList(void)
     DeleteMenu(hMainMenu, ID_FIRST_LOG + dwIndex + 1, MF_BYCOMMAND);
 
     HeapFree(GetProcessHeap(), 0, LogNames);
-
+    LogNames  = NULL;
     dwNumLogs = 0;
 
     return;
