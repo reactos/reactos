@@ -33,8 +33,16 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <commctrl.h>
+#include <richedit.h>
 #include <commdlg.h>
 #include <strsafe.h>
+
+/* Missing RichEdit flags in our richedit.h */
+#define AURL_ENABLEURL          1
+#define AURL_ENABLEEMAILADDR    2
+#define AURL_ENABLETELNO        4
+#define AURL_ENABLEEAURLS       8
+#define AURL_ENABLEDRIVELETTERS 16
 
 #include "resource.h"
 
@@ -96,6 +104,7 @@ wWinMain(HINSTANCE hInstance,
     MSG msg;
     HACCEL hAccelTable;
     INITCOMMONCONTROLSEX iccx;
+    HMODULE hRichEdit;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -119,6 +128,13 @@ wWinMain(HINSTANCE hInstance,
         return FALSE;
     }
 
+    /* Load the RichEdit DLL to add support for RichEdit controls */
+    hRichEdit = LoadLibraryW(L"riched20.dll");
+    if (!hRichEdit)
+    {
+        return FALSE;
+    }
+
     hAccelTable = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(IDA_EVENTVWR));
 
     /* Main message loop: */
@@ -130,6 +146,8 @@ wWinMain(HINSTANCE hInstance,
             DispatchMessageW(&msg);
         }
     }
+
+    FreeLibrary(hRichEdit);
 
     return (int)msg.wParam;
 }
@@ -1112,9 +1130,8 @@ InitInstance(HINSTANCE hInstance,
     // Create the ImageList
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                               GetSystemMetrics(SM_CYSMICON),
-                              ILC_COLOR32,
-                              1,
-                              1);
+                              ILC_COLOR32 | ILC_MASK, // ILC_COLOR24
+                              1, 1);
 
     // Add event type icons to ImageList
     ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_INFORMATIONICON)));
@@ -1580,7 +1597,7 @@ CreateMonospaceFont(VOID)
 
     tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
     tmpFont.lfWeight = FW_NORMAL;
-    wcscpy(tmpFont.lfFaceName, L"Courier");
+    wcscpy(tmpFont.lfFaceName, L"Courier New");
 
     hFont = CreateFontIndirectW(&tmpFont);
 
@@ -1662,13 +1679,32 @@ static
 VOID
 InitDetailsDlg(HWND hDlg, PDETAILDATA pData)
 {
+    DWORD dwMask;
+
     HANDLE nextIcon = LoadImageW(hInst, MAKEINTRESOURCEW(IDI_NEXT), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     HANDLE prevIcon = LoadImageW(hInst, MAKEINTRESOURCEW(IDI_PREV), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     HANDLE copyIcon = LoadImageW(hInst, MAKEINTRESOURCEW(IDI_COPY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 
-    SendMessageW(GetDlgItem(hDlg, IDC_NEXT), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)nextIcon);
-    SendMessageW(GetDlgItem(hDlg, IDC_PREVIOUS), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)prevIcon);
-    SendMessageW(GetDlgItem(hDlg, IDC_COPY), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)copyIcon);
+    SendDlgItemMessageW(hDlg, IDC_NEXT, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)nextIcon);
+    SendDlgItemMessageW(hDlg, IDC_PREVIOUS, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)prevIcon);
+    SendDlgItemMessageW(hDlg, IDC_COPY, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)copyIcon);
+
+    /* Set the default read-only RichEdit color */
+    SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_3DFACE));
+
+    /* Enable RichEdit coloured and underlined links */
+    dwMask = SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_GETEVENTMASK, 0, 0);
+    SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_SETEVENTMASK, 0, dwMask | ENM_LINK | ENM_MOUSEEVENTS);
+
+    /*
+     * Activate automatic URL recognition by the RichEdit control. For more information, see:
+     * https://blogs.msdn.microsoft.com/murrays/2009/08/31/automatic-richedit-hyperlinks/
+     * https://blogs.msdn.microsoft.com/murrays/2009/09/24/richedit-friendly-name-hyperlinks/
+     * https://msdn.microsoft.com/en-us/library/windows/desktop/bb787991(v=vs.85).aspx
+     */
+    SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_AUTOURLDETECT, AURL_ENABLEURL /* | AURL_ENABLEEAURLS */, 0);
+
+    /* Note that the RichEdit control never gets themed under WinXP+. One would have to write code to simulate Edit-control theming */
 
     SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
@@ -1767,6 +1803,15 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 default:
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case EN_LINK:
+                    // TODO: Act on the activated RichEdit link!
                     break;
             }
             break;
