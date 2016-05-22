@@ -22,11 +22,13 @@ list(APPEND SOURCE
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlCopyMappedMemory.c
+    RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
     RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
+    RtlFirstFreeAce.c
     RtlGenerate8dot3Name.c
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
