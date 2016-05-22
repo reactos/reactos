@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015 Mark Jansen
+ * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -202,6 +202,12 @@ void SdbpFree(LPVOID mem
     HeapFree(SdbpHeap(), 0, mem);
 }
 
+PDB WINAPI SdbpCreate(void)
+{
+    PDB db = (PDB)SdbAlloc(sizeof(DB));
+    /* SdbAlloc zeroes the memory. */
+    return db;
+}
 DWORD SdbpStrlen(PCWSTR string)
 {
     return (lstrlenW(string) + 1) * sizeof(WCHAR);
@@ -292,6 +298,119 @@ void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping)
     RtlZeroMemory(mapping, sizeof(*mapping));
 }
 
+BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
+{
+    if ((tag & TAG_TYPE_MASK) != type)
+        return FALSE;
+    return TRUE;
+}
+
+BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
+{
+    TAG tag = SdbGetTagFromTagID(db, tagid);
+    if (tag == TAG_NULL)
+        return FALSE;
+    return SdbpCheckTagType(tag, type);
+}
+
+/**
+ * Opens specified shim database file.
+ *
+ * @param [in]  path    Path to the shim database.
+ * @param [in]  type    Type of path. Either DOS_PATH or NT_PATH.
+ *
+ * @return  Success: Handle to the shim database, NULL otherwise.
+ */
+PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK io;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    PDB db;
+    BYTE header[12];
+    DWORD dwRead = 0;
+
+    if (type == DOS_PATH)
+    {
+        if (!RtlDosPathNameToNtPathName_U(path, &str, NULL, NULL))
+            return NULL;
+    }
+    else
+        RtlInitUnicodeString(&str, path);
+
+    db = SdbpCreate();
+    if (!db)
+    {
+        SHIM_ERR("Failed to allocate memory for shim database\n");
+        return NULL;
+    }
+
+    InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    Status = NtCreateFile(&db->file, FILE_GENERIC_READ | SYNCHRONIZE,
+                          &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
+                          FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+
+    if (type == DOS_PATH)
+        RtlFreeUnicodeString(&str);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
+        return NULL;
+    }
+
+    db->size = GetFileSize(db->file, NULL);
+    db->data = SdbAlloc(db->size);
+    ReadFile(db->file, db->data, db->size, &dwRead, NULL);
+
+    if (!SdbpReadData(db, &header, 0, 12))
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Failed to read shim database header\n");
+        return NULL;
+    }
+
+    if (memcmp(&header[8], "sdbf", 4) != 0)
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Shim database header is invalid\n");
+        return NULL;
+    }
+
+    if (*(DWORD*)&header[0] != (DWORD)2)
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Invalid shim database version\n");
+        return NULL;
+    }
+
+    db->stringtable = SdbFindFirstTag(db, TAGID_ROOT, TAG_STRINGTABLE);
+    if(!SdbGetDatabaseID(db, &db->database_id))
+    {
+        SHIM_INFO("Failed to get the database id\n");
+    }
+    return db;
+}
+
+/**
+ * Closes specified database and frees its memory.
+ *
+ * @param [in]  db  Handle to the shim database.
+ */
+void WINAPI SdbCloseDatabase(PDB db)
+{
+    if (!db)
+        return;
+
+    if (db->file)
+        NtClose(db->file);
+    SdbFree(db->data);
+    SdbFree(db);
+}
+
 /**
  * Parses a string to retrieve a GUID.
  *
@@ -380,6 +499,8 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
  * @param [in]  tag The tag which will be converted to a string.
  *
  * @return  Success: Pointer to the string matching specified tag, or L"InvalidTag" on failure.
+ *
+ * @todo: Convert this into a lookup table, this is wasting alot of space.
  */
 LPCWSTR WINAPI SdbTagToString(TAG tag)
 {

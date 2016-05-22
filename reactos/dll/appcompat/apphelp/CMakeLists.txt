@@ -5,6 +5,8 @@ list(APPEND SOURCE
     apphelp.c
     layer.c
     sdbapi.c
+    sdbread.c
+    sdbwrite.c
     sdbfileattr.c
     apphelp.spec
     apphelp.h

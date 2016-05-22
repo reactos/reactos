@@ -4,6 +4,7 @@ add_definitions(-D__ROS_LONG64__)
 list(APPEND SOURCE
     apphelp.c
     data.c
+    db.c
     layerapi.c
     testlist.c)
 
