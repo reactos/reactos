@@ -5923,13 +5923,13 @@ continue_read_drq:
                     // for that also.
                     if (srb->Cdb[0] == SCSIOP_READ_CAPACITY) {
 
-                        AtaReq->DataBuffer -= wordCount;
+                        AtaReq->DataBuffer -= AtaReq->WordsTransfered;
                         if (AtaReq->DataBuffer[0] == 0x00) {
                             *((ULONG *) &(AtaReq->DataBuffer[0])) = 0xFFFFFF7F;
                         }
 
                         *((ULONG *) &(AtaReq->DataBuffer[2])) = 0x00080000;
-                        AtaReq->DataBuffer += wordCount;
+                        AtaReq->DataBuffer += AtaReq->WordsTransfered;
                     }
 #ifndef UNIATA_INIT_CHANGERS
                     else
