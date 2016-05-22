@@ -26,7 +26,7 @@ IDI_ICON5 ICON "resources/5.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/"
+    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://www.ext2fsd.com/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/\nBtrfs - https://github.com/maharmstone/btrfs"
 END
 
 IDR_GPL RT_TEXT "COPYING"
