@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -36,6 +37,12 @@
 #include <strsafe.h>
 
 #include "resource.h"
+
+typedef struct _DETAILDATA
+{
+    BOOL bDisplayWords;
+    HFONT hMonospaceFont;
+} DETAILDATA, *PDETAILDATA;
 
 static const WCHAR szWindowClass[]      = L"EVENTVWR"; /* the main window class name */
 static const WCHAR EVENTLOG_BASE_KEY[]  = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
@@ -1367,7 +1374,6 @@ DisplayEvent(HWND hDlg)
     WCHAR szCategory[MAX_PATH];
     WCHAR szEventID[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
-    WCHAR szEventData[MAX_PATH];
     BOOL bEventData = FALSE;
     LVITEMW li;
     EVENTLOGRECORD* pevlr;
@@ -1411,27 +1417,176 @@ DisplayEvent(HWND hDlg)
     SetDlgItemTextW(hDlg, IDC_EVENTTYPESTATIC, szEventType);
 
     bEventData = (pevlr->DataLength > 0);
-    if (bEventData)
-    {
-        // This is the data section of the current event
-        MultiByteToWideChar(CP_ACP,
-                            0,
-                            (LPCSTR)((LPBYTE)pevlr + pevlr->DataOffset),
-                            pevlr->DataLength,
-                            szEventData,
-                            MAX_PATH);
-
-        SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, szEventData);
-    }
-    else
-    {
-        SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
-    }
     EnableWindow(GetDlgItem(hDlg, IDC_BYTESRADIO), bEventData);
     EnableWindow(GetDlgItem(hDlg, IDC_WORDRADIO), bEventData);
 
     GetEventMessage(lpSourceLogName, szSource, pevlr, szEventText);
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, szEventText);
+}
+
+UINT
+PrintByteDataLine(PWCHAR pBuffer, UINT uOffset, PBYTE pd, UINT uLength)
+{
+    PWCHAR p = pBuffer;
+    UINT n, i, r = 0;
+
+    if (uOffset != 0)
+    {
+        n = swprintf(p, L"\r\n");
+        p = p + n;
+        r += n;
+    }
+
+    n = swprintf(p, L"%04lx:", uOffset);
+    p = p + n;
+    r += n;
+
+    for (i = 0; i < uLength; i++)
+    {
+        n = swprintf(p, L" %02x", pd[i]);
+        p = p + n;
+        r += n;
+    }
+
+    for (i = 0; i < 9 - uLength; i++)
+    {
+        n = swprintf(p, L"   ");
+        p = p + n;
+        r += n;
+    }
+
+    for (i = 0; i < uLength; i++)
+    {
+        n = swprintf(p, L"%c", iswprint(pd[i]) ? pd[i] : L'.');
+        p = p + n;
+        r += n;
+    }
+
+    return r;
+}
+
+UINT
+PrintWordDataLine(PWCHAR pBuffer, UINT uOffset, PULONG pData, UINT uLength)
+{
+    PWCHAR p = pBuffer;
+    UINT n, i, r = 0;
+
+    if (uOffset != 0)
+    {
+        n = swprintf(p, L"\r\n");
+        p = p + n;
+        r += n;
+    }
+
+    n = swprintf(p, L"%04lx:", uOffset);
+    p = p + n;
+    r += n;
+
+    for (i = 0; i < uLength / sizeof(ULONG); i++)
+    {
+        n = swprintf(p, L" %08lx", pData[i]);
+        p = p + n;
+        r += n;
+    }
+
+    return r;
+}
+
+
+VOID
+DisplayEventData(HWND hDlg, BOOL bDisplayWords)
+{
+    LVITEMW li;
+    EVENTLOGRECORD* pevlr;
+    int iIndex;
+
+    LPBYTE pData;
+    UINT i, uOffset;
+    UINT uBufferSize, uLineLength;
+    PWCHAR pTextBuffer, pLine;
+
+    // Get index of selected item
+    iIndex = (int)SendMessageW(hwndListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED | LVNI_FOCUSED);
+    if (iIndex == -1)
+    {
+        MessageBoxW(NULL,
+                    L"No Items in ListView",
+                    L"Error",
+                    MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    li.mask = LVIF_PARAM;
+    li.iItem = iIndex;
+    li.iSubItem = 0;
+
+    (void)ListView_GetItem(hwndListView, &li);
+
+    pevlr = (EVENTLOGRECORD*)li.lParam;
+    if (pevlr->DataLength == 0)
+    {
+        SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
+        return;
+    }
+
+    if (bDisplayWords)
+        uBufferSize = ((pevlr->DataLength / 8) + 1) * 26 * sizeof(WCHAR);
+    else
+        uBufferSize = ((pevlr->DataLength / 8) + 1) * 43 * sizeof(WCHAR);
+
+    pTextBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, uBufferSize);
+    if (pTextBuffer)
+    {
+        pLine = pTextBuffer;
+        uOffset = 0;
+
+        for (i = 0; i < pevlr->DataLength / 8; i++)
+        {
+            pData = (LPBYTE)((LPBYTE)pevlr + pevlr->DataOffset + uOffset);
+
+            if (bDisplayWords)
+                uLineLength = PrintWordDataLine(pLine, uOffset, (PULONG)pData, 8);
+            else
+                uLineLength = PrintByteDataLine(pLine, uOffset, pData, 8);
+            pLine = pLine + uLineLength;
+
+            uOffset += 8;
+        }
+
+        if (pevlr->DataLength % 8 != 0)
+        {
+            pData = (LPBYTE)((LPBYTE)pevlr + pevlr->DataOffset + uOffset);
+
+            if (bDisplayWords)
+                PrintWordDataLine(pLine, uOffset, (PULONG)pData, pevlr->DataLength % 8);
+            else
+                PrintByteDataLine(pLine, uOffset, pData, pevlr->DataLength % 8);
+        }
+
+        SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, pTextBuffer);
+
+        HeapFree(GetProcessHeap(), 0, pTextBuffer);
+    }
+}
+
+HFONT
+CreateMonospaceFont(VOID)
+{
+    LOGFONTW tmpFont = {0};
+    HFONT hFont;
+    HDC hDc;
+
+    hDc = GetDC(NULL);
+
+    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
+    tmpFont.lfWeight = FW_NORMAL;
+    wcscpy(tmpFont.lfFaceName, L"Courier");
+
+    hFont = CreateFontIndirectW(&tmpFont);
+
+    ReleaseDC(NULL, hDc);
+
+    return hFont;
 }
 
 VOID
@@ -1505,7 +1660,7 @@ StatusMessageWindowProc(IN HWND hwndDlg,
 
 static
 VOID
-InitDetailsDlg(HWND hDlg)
+InitDetailsDlg(HWND hDlg, PDETAILDATA pData)
 {
     HANDLE nextIcon = LoadImageW(hInst, MAKEINTRESOURCEW(IDI_NEXT), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     HANDLE prevIcon = LoadImageW(hInst, MAKEINTRESOURCEW(IDI_PREV), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -1514,24 +1669,45 @@ InitDetailsDlg(HWND hDlg)
     SendMessageW(GetDlgItem(hDlg, IDC_NEXT), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)nextIcon);
     SendMessageW(GetDlgItem(hDlg, IDC_PREVIOUS), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)prevIcon);
     SendMessageW(GetDlgItem(hDlg, IDC_COPY), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)copyIcon);
+
+    SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
+    SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
 }
 
 // Message handler for event details box.
 INT_PTR CALLBACK
 EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    PDETAILDATA pData;
+
     UNREFERENCED_PARAMETER(lParam);
+
+    pData = (PDETAILDATA)GetWindowLongPtr(hDlg, DWLP_USER);
 
     switch (message)
     {
         case WM_INITDIALOG:
-        {
-            InitDetailsDlg(hDlg);
+            pData = (PDETAILDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DETAILDATA));
+            if (pData)
+            {
+                SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pData);
 
-            // Show event info on dialog box
-            DisplayEvent(hDlg);
+                pData->bDisplayWords = FALSE;
+                pData->hMonospaceFont = CreateMonospaceFont();
+
+                InitDetailsDlg(hDlg, pData);
+
+                // Show event info on dialog box
+                DisplayEvent(hDlg);
+                DisplayEventData(hDlg, pData->bDisplayWords);
+            }
             return (INT_PTR)TRUE;
-        }
+
+        case WM_DESTROY:
+            if (pData->hMonospaceFont)
+                DeleteObject(pData->hMonospaceFont);
+            HeapFree(GetProcessHeap(), 0, pData);
+            return (INT_PTR)TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -1542,33 +1718,45 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 case IDC_PREVIOUS:
-                {
                     SendMessageW(hwndListView, WM_KEYDOWN, VK_UP, 0);
 
                     // Show event info on dialog box
-                    DisplayEvent(hDlg);
+                    if (pData)
+                    {
+                        DisplayEvent(hDlg);
+                        DisplayEventData(hDlg, pData->bDisplayWords);
+                    }
                     return (INT_PTR)TRUE;
-                }
 
                 case IDC_NEXT:
-                {
                     SendMessageW(hwndListView, WM_KEYDOWN, VK_DOWN, 0);
 
                     // Show event info on dialog box
-                    DisplayEvent(hDlg);
+                    if (pData)
+                    {
+                        DisplayEvent(hDlg);
+                        DisplayEventData(hDlg, pData->bDisplayWords);
+                    }
                     return (INT_PTR)TRUE;
-                }
 
                 case IDC_COPY:
                     CopyEventEntry(hDlg);
                     return (INT_PTR)TRUE;
 
-                // UNIMPLEMENTED!
                 case IDC_BYTESRADIO:
+                    if (pData)
+                    {
+                        pData->bDisplayWords = FALSE;
+                        DisplayEventData(hDlg, pData->bDisplayWords);
+                    }
                     return (INT_PTR)TRUE;
 
-                // UNIMPLEMENTED!
                 case IDC_WORDRADIO:
+                    if (pData)
+                    {
+                        pData->bDisplayWords = TRUE;
+                        DisplayEventData(hDlg, pData->bDisplayWords);
+                    }
                     return (INT_PTR)TRUE;
 
                 case IDHELP:
