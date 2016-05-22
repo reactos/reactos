@@ -682,6 +682,7 @@ SECURITY_STATUS schan_imp_recv(schan_imp_session session, void *buffer,
     }
     else if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
     {
+        *length = 0;
         TRACE("MBEDTLS schan_imp_recv: ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY -> SEC_E_OK\n");
         return SEC_E_OK;
     }
