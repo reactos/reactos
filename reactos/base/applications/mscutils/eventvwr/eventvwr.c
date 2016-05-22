@@ -515,17 +515,26 @@ GetEventUserName(EVENTLOGRECORD *pelr,
 static DWORD WINAPI
 ShowStatusMessageThread(IN LPVOID lpParameter)
 {
-    HWND *phWnd = (HWND *)lpParameter;
+    HWND* phWnd = (HWND*)lpParameter;
     HWND hWnd;
     MSG Msg;
 
-    hWnd = CreateDialogParamW(hInst,
-                              MAKEINTRESOURCEW(IDD_PROGRESSBOX),
-                              GetDesktopWindow(),
-                              StatusMessageWindowProc,
-                              (LPARAM)NULL);
+    hWnd = CreateDialogW(hInst,
+                         MAKEINTRESOURCEW(IDD_PROGRESSBOX),
+                         GetDesktopWindow(), // hwndMainWindow,
+                         StatusMessageWindowProc);
     if (!hWnd)
         return 0;
+
+    /*
+     * FIXME: With this technique, there is one problem, namely that if
+     * for some reason, the call to CreateDialogW takes longer than the
+     * whole event-loading code to execute, then it may happen that the
+     * event-loading code tries to close this dialog *BEFORE* we had the
+     * time to return the window handle, hence the progress dialog would
+     * be created *AFTER* the event-loading code has finished its job and
+     * as a result, we would have a orphan window floating around.
+     */
 
     *phWnd = hWnd;
 
@@ -537,6 +546,8 @@ ShowStatusMessageThread(IN LPVOID lpParameter)
         TranslateMessage(&Msg);
         DispatchMessageW(&Msg);
     }
+
+    DestroyWindow(hWnd);
 
     return 0;
 }
@@ -598,12 +609,12 @@ QueryEventMessages(LPWSTR lpMachineName,
     if (dwTotalRecords > 0)
     {
         EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_ENABLED);
-        EnableMenuItem(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_ENABLED);
     }
     else
     {
         EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_GRAYED);
     }
 
     g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(*g_RecordPtrs));
@@ -759,7 +770,7 @@ QueryEventMessages(LPWSTR lpMachineName,
 
 
 VOID
-SaveProtocol(VOID)
+SaveEventLog(VOID)
 {
     HANDLE hEventLog;
     WCHAR szFileName[MAX_PATH];
@@ -1023,11 +1034,11 @@ BuildLogList(void)
 
                 if (lpDisplayName)
                 {
-                    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
+                    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
                 }
                 else
                 {
-                    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
+                    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
                 }
 
                 /* Free the buffer allocated by FormatMessage */
@@ -1037,7 +1048,7 @@ BuildLogList(void)
         }
     }
 
-    InsertMenuW(hMainMenu, IDM_SAVE_PROTOCOL, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
+    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
 
     RegCloseKey(hKey);
 
@@ -1293,8 +1304,8 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             switch (LOWORD(wParam))
             {
-                case IDM_SAVE_PROTOCOL:
-                    SaveProtocol();
+                case IDM_SAVE_EVENTLOG:
+                    SaveEventLog();
                     break;
 
                 case IDM_CLEAR_EVENTS:
@@ -1400,7 +1411,7 @@ DisplayEvent(HWND hDlg)
     iIndex = (int)SendMessageW(hwndListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED | LVNI_FOCUSED);
     if (iIndex == -1)
     {
-        MessageBoxW(NULL,
+        MessageBoxW(hDlg,
                     L"No Items in ListView",
                     L"Error",
                     MB_OK | MB_ICONINFORMATION);
@@ -1526,7 +1537,7 @@ DisplayEventData(HWND hDlg, BOOL bDisplayWords)
     iIndex = (int)SendMessageW(hwndListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED | LVNI_FOCUSED);
     if (iIndex == -1)
     {
-        MessageBoxW(NULL,
+        MessageBoxW(hDlg,
                     L"No Items in ListView",
                     L"Error",
                     MB_OK | MB_ICONINFORMATION);

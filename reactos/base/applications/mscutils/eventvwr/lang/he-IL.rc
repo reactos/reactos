@@ -6,7 +6,7 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "מציג האירועים (מקומי)"
     BEGIN
-        MENUITEM "Save &Protocol...", IDM_SAVE_PROTOCOL, GRAYED
+        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR

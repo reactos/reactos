@@ -4,15 +4,15 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDM_EVENTVWR MENU
 BEGIN
-    POPUP "Journa&l"
+    POPUP "&Journal"
     BEGIN
-        MENUITEM "Save &Protocol...", IDM_SAVE_PROTOCOL, GRAYED
+        MENUITEM "Enregistrer le fichier journal &sous...", IDM_SAVE_EVENTLOG, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Effacer tous &les événements", IDM_CLEAR_EVENTS, GRAYED
+        MENUITEM "&Effacer tous les événements", IDM_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Quitter", IDM_EXIT
     END
-    POPUP "Affichage"
+    POPUP "&Affichage"
     BEGIN
         MENUITEM "&Rafraîchir", IDM_REFRESH
     END
