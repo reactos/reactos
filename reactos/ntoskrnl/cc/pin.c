@@ -290,11 +290,7 @@ CcUnpinRepinnedBcb (
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+            ExAcquireResourceExclusiveLite(&iBcb->Vacb->Lock, TRUE);
             if (iBcb->Vacb->Dirty)
             {
                 IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
@@ -303,7 +299,7 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
+            ExReleaseResourceLite(&iBcb->Vacb->Lock);
         }
         else
         {

@@ -164,6 +164,8 @@ typedef struct _ROS_VACB
     PVOID BaseAddress;
     /* Memory area representing the region where the view's data is mapped. */
     struct _MEMORY_AREA* MemoryArea;
+    /* Lock */
+    ERESOURCE Lock;
     /* Are the contents of the view valid. */
     BOOLEAN Valid;
     /* Are the contents of the view newer than those on disk. */
@@ -179,8 +181,6 @@ typedef struct _ROS_VACB
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
     LARGE_INTEGER FileOffset;
-    /* Mutex */
-    KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
