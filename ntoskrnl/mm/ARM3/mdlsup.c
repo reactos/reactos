@@ -1326,16 +1326,56 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
-MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
+MmProbeAndLockProcessPages(IN OUT PMDL Mdl,
                            IN PEPROCESS Process,
                            IN KPROCESSOR_MODE AccessMode,
                            IN LOCK_OPERATION Operation)
 {
-    UNIMPLEMENTED;
+	PVOID Address;
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	BOOLEAN Attach;
+	KAPC_STATE ApcState;
+
+	DPRINT("Probing MDL: %p for process %p\n", Mdl, Process);
+	//
+	// Get address information, to see if we really need to attach
+	//
+	Address = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
+
+	Attach = ((Process != PsGetCurrentProcess()) && (Address <= (PVOID)MM_USER_PROBE_ADDRESS));
+	if (Attach)
+	{
+		KeStackAttachProcess(&Process->Pcb, &ApcState);
+	}
+
+	_SEH2_TRY
+	{
+		MmProbeAndLockPages(Mdl, AccessMode, Operation);
+	}
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        //
+        // Oops :(
+        //
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+	if (Attach)
+	{
+		KeUnstackDetachProcess(&ApcState);
+	}
+
+	if (!NT_SUCCESS(Status))
+	{
+	    /* If the operation failed while we were attached, forward it to the caller */
+	    ExRaiseStatus(Status);
+	}
 }
 
 
