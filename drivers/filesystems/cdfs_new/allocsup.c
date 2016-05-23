@@ -44,7 +44,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -149,7 +149,7 @@ Return Value:
     //  Use a try finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We use a loop to perform the lookup.  If we don't find the mapping in the
@@ -296,7 +296,7 @@ Return Value:
             FirstPass = FALSE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         if (CleanupParent) {
 
@@ -311,7 +311,7 @@ Return Value:
         }
 
         if (UnlockFcb) { CdUnlockFcb( IrpContext, Fcb ); }
-    }
+    } _SEH2_END
 
     return;
 }

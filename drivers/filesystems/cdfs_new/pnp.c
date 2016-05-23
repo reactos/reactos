@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -51,6 +51,7 @@ CdPnpCancelRemove (
     );
 
 NTSTATUS
+NTAPI
 CdPnpCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -774,6 +775,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI
 CdPnpCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -92,7 +92,7 @@ Return Value:
     Vcb = &CONTAINING_RECORD( IrpSp->DeviceObject,
                               VOLUME_DEVICE_OBJECT,
                               DeviceObject )->Vcb;
-    try {
+    _SEH2_TRY {
 
         //
         //  Send down the verify FSCTL.  Note that this is sent to the
@@ -206,7 +206,7 @@ Return Value:
             Status = CdFsdPostRequest( IrpContext, Irp );
         }
 
-    } except(CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+    } _SEH2_EXCEPT(CdExceptionFilter( IrpContext, _exception_info() )) {
 
         //
         //  We had some trouble trying to perform the verify or raised
@@ -214,8 +214,8 @@ Return Value:
         //  the error status that we get back from the execption code.
         //
 
-        Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-    }
+        Status = CdProcessException( IrpContext, Irp, _exception_code() );
+    } _SEH2_END
 
     return Status;
 }

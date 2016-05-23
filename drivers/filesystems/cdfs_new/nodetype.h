@@ -97,8 +97,6 @@ typedef CSHORT NODE_BYTE_SIZE;
 #define CDFS_BUG_CHECK_VOLINFO           (0x001b0000)
 #define CDFS_BUG_CHECK_WORKQUE           (0x001c0000)
 
-/* ReactOS Change: Need to add to reactos.mc */
-#define CDFS_FILE_SYSTEM                 ((ULONG)0x00000026L)
 #define CdBugCheck(A,B,C) { KeBugCheckEx(CDFS_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
 
 #endif // _NODETYPE_

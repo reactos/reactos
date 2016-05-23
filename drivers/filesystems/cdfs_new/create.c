@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -222,13 +222,15 @@ Return Value:
 
     PAGED_CODE();
 
+    DbgPrint("CdCommonCreate(%p)\n", IrpSp->FileObject);
+
     //
     //  If we were called with our file system device object instead of a
     //  volume device object, just complete this request with STATUS_SUCCESS.
     //
 
     if (IrpContext->Vcb == NULL) {
-
+        DbgPrint("IrpContext->Vcb == NULL\n");
         CdCompleteRequest( IrpContext, Irp, STATUS_SUCCESS );
         return STATUS_SUCCESS;
     }
@@ -315,7 +317,7 @@ Return Value:
     //  in the IrpContext will indicate whether we removed the
     //  backslash.
     //
-
+    DbgPrint("Avant CdNormalizeFileNames.\n");
     Status = CdNormalizeFileNames( IrpContext,
                                    Vcb,
                                    OpenByFileId,
@@ -357,7 +359,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify that the Vcb is not in an unusable condition.  This routine
@@ -490,6 +492,7 @@ Return Value:
 
         if (RemainingName.FileName.Length == 0) {
 
+            DbgPrint("RemainingName.FileName.Length == 0\n");
             //
             //  If this is a file so verify the user didn't want to open
             //  a directory.
@@ -499,7 +502,7 @@ Return Value:
 
                 if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TRAIL_BACKSLASH ) ||
                     FlagOn( IrpSp->Parameters.Create.Options, FILE_DIRECTORY_FILE )) {
-
+                    DbgPrint("STATUS_NOT_A_DIRECTORY.\n");
                     try_return( Status = STATUS_NOT_A_DIRECTORY );
                 }
 
@@ -574,7 +577,7 @@ Return Value:
         //
 
         if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT )) {
-
+            DbgPrint("IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT\n");
             CdRaiseStatus( IrpContext, STATUS_CANT_WAIT );
         }
 
@@ -584,6 +587,7 @@ Return Value:
 
         FinalName.VersionString.Length = 0;
 
+        DbgPrint("Avant la boucle.\n");
         while (TRUE) {
 
             ShortNameMatch = FALSE;
@@ -761,7 +765,7 @@ Return Value:
 
                     try_return( Status = STATUS_ACCESS_DENIED );
                 }
-
+                DbgPrint("CdOpenDirectoryFromPathEntry\n");
                 try_return( Status = CdOpenDirectoryFromPathEntry( IrpContext,
                                                                    IrpSp,
                                                                    Vcb,
@@ -792,6 +796,7 @@ Return Value:
             CdCleanupCompoundPathEntry( IrpContext, &CompoundPathEntry );
             CleanupCompoundPathEntry = FALSE;
         }
+        DbgPrint("Apres la boucle.\n");
 
         //
         //  We need to scan the current directory for a matching file name
@@ -890,6 +895,7 @@ Return Value:
         //  first and last dirents.
         //
 
+        DbgPrint("Avant CdOpenFileFromFileContext.\n");
         try_return( Status = CdOpenFileFromFileContext( IrpContext,
                                                         IrpSp,
                                                         Vcb,
@@ -901,7 +907,7 @@ Return Value:
                                                         RelatedCcb ));
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup the PathEntry if initialized.
@@ -926,7 +932,7 @@ Return Value:
         //  condition.
         //
 
-        if (AbnormalTermination()) {
+        if (_abnormal_termination()) {
 
 
             //
@@ -985,7 +991,7 @@ Return Value:
         //
 
         CdCompleteRequest( IrpContext, Irp, Status );
-    }
+    } _SEH2_END
 
     return Status;
 }
@@ -1508,11 +1514,13 @@ Return Value:
 
     RtlCopyMemory( &FileId, IrpSp->FileObject->FileName.Buffer, sizeof( FILE_ID ));
 
+    DbgPrint("CdOpenByFileId (%p)", IrpSp->FileObject);
+
     //
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Go ahead and figure out the TypeOfOpen and NodeType.  We can
@@ -1524,7 +1532,7 @@ Return Value:
             TypeOfOpen = UserDirectoryOpen;
             NodeTypeCode = CDFS_NTC_FCB_INDEX;
 
-            //
+            //CdQueryFidDirentOffset
             //  If the offset isn't zero then the file Id is bad.
             //
 
@@ -1546,7 +1554,7 @@ Return Value:
         //  request can't wait.
         //
 
-        CdLockVcb( IrpContext, Vcb );
+        CdLockVcb( CdQueryFidDirentOffsetIrpContext, Vcb );
         UnlockVcb = TRUE;
 
         NextFcb = CdLookupFcbTable( IrpContext, Vcb, FileId );
@@ -1723,7 +1731,7 @@ Return Value:
                 //
 
                 if (NextFcb->FileObject == NULL) {
-
+                    DbgPrint("NextFcb->FileObject == NULL\n");
                     CdCreateInternalStream( IrpContext, Vcb, NextFcb );
                 }
 
@@ -1905,7 +1913,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         if (UnlockVcb) {
 
@@ -1921,7 +1929,7 @@ Return Value:
 
             CdCleanupCompoundPathEntry( IrpContext, &CompoundPathEntry );
         }
-    }
+    } _SEH2_END
 
     return Status;
 }
@@ -1977,6 +1985,8 @@ Return Value:
     NTSTATUS Status = STATUS_ACCESS_DENIED;
 
     PAGED_CODE();
+
+    DbgPrint("CdOpenExistingFcb(%p)", IrpSp->FileObject);
 
     //
     //  Check that the desired access is legal.
@@ -2110,6 +2120,8 @@ Return Value:
 
     PAGED_CODE();
 
+    DbgPrint("CdOpenDirectoryFromPathEntry(%p)", IrpSp->FileObject);
+
     //
     //  Check for illegal access to this file.
     //
@@ -2126,7 +2138,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check the related Ccb to see if this was an OpenByFileId.
@@ -2281,7 +2293,7 @@ Return Value:
                                         IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2300,7 +2312,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END
 
     return Status;
 }
@@ -2384,6 +2396,8 @@ Return Value:
 
     PAGED_CODE();
 
+    DbgPrint("CdOpenFileFromFileContext(%p)\n", IrpSp);
+
     //
     //  Check for illegal access to this file.
     //
@@ -2399,7 +2413,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check if a version number was used to open this file.
@@ -2569,7 +2583,7 @@ Return Value:
                                     CcbFlags,
                                     IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2588,7 +2602,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END
 
     return Status;
 }
@@ -2652,6 +2666,8 @@ Return Value:
     PCCB Ccb;
 
     PAGED_CODE();
+
+    DbgPrint("CdCompleteFcbOpen(%p).\n", IrpSp->FileObject);
 
     //
     //  Expand maximum allowed to something sensible for share access checking

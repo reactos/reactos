@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -130,7 +130,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -177,14 +177,14 @@ Return Value:
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
         //
 
         CdReleaseVcb( IrpContext, Fcb->Vcb );
-    }
+    } _SEH2_END
 
     //
     //  Complete the request if we didn't raise.

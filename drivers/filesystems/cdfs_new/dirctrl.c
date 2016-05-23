@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -287,7 +287,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb is still good.
@@ -499,7 +499,7 @@ Return Value:
             //  such trickery.
             //
             
-            try {
+            _SEH2_TRY {
             
                 //
                 //  Zero and initialize the base part of the current entry.
@@ -715,7 +715,7 @@ Return Value:
                 LastEntry = NextEntry;
                 NextEntry = QuadAlign( Information );
             
-            } except (EXCEPTION_EXECUTE_HANDLER) {
+            } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
 
                   //
                   //  We had a problem filling in the user's buffer, so stop and
@@ -724,13 +724,13 @@ Return Value:
                   //
                   
                   Information = 0;
-                  try_leave( Status = GetExceptionCode());
-            }
+                  try_leave( Status = _exception_code());
+            } _SEH2_END
         }
         
         DoCcbUpdate = TRUE;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup our search context - *before* aquiring the FCB mutex exclusive,
@@ -769,7 +769,7 @@ Return Value:
         //
 
         CdReleaseFile( IrpContext, Fcb );
-    }
+    } _SEH2_END
 
     //
     //  Complete the request here.
@@ -837,7 +837,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -862,14 +862,14 @@ Return Value:
                                         NULL,
                                         NULL );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
         //
 
         CdReleaseVcb( IrpContext, IrpContext->Vcb );
-    }
+    } _SEH2_END
 
     //
     //  Cleanup the IrpContext.

@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -94,7 +94,7 @@ Return Value:
 
         while (TRUE) {
 
-            try {
+            _SEH2_TRY {
 
                 //
                 //  Reinitialize for the next try at completing this
@@ -184,10 +184,10 @@ Return Value:
                     CdCompleteRequest( IrpContext, Irp, Status );
                 }
 
-            } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+            } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _exception_info() )) {
 
-                Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-            }
+                Status = CdProcessException( IrpContext, Irp, _exception_code() );
+            } _SEH2_END
 
             //
             //  Break out of the loop if we didn't get CANT_WAIT.
