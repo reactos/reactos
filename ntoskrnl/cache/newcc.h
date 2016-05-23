@@ -6,12 +6,14 @@ typedef struct _NOCC_BCB
     PUBLIC_BCB Bcb;
 
     struct _NOCC_CACHE_MAP *Map;
-    PROS_SECTION_OBJECT SectionObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;
     BOOLEAN Dirty;
     PVOID OwnerPointer;
+
+    PMDL Mdl;
+    PVOID MdlAddress;
 
     /* Reference counts */
     ULONG RefCount;
@@ -36,6 +38,7 @@ typedef struct _NOCC_CACHE_MAP
     PVOID LogHandle;
     PFLUSH_TO_LSN FlushToLsn;
     ULONG ReadAheadGranularity;
+    PVOID SectionObject;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID

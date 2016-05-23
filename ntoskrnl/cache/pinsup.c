@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* The following is a test mode that only works with modified filesystems.
@@ -128,47 +128,12 @@ PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
 
-/*
-
-Allocate an almost ordinary section object for use by the cache system.
-The special internal SEC_CACHE flag is used to indicate that the section
-should not count when determining whether the file can be resized.
-
-*/
-
-NTSTATUS
-CcpAllocateSection(PFILE_OBJECT FileObject,
-                   ULONG Length,
-                   ULONG Protect,
-                   PROS_SECTION_OBJECT *Result)
-{
-    NTSTATUS Status;
-    LARGE_INTEGER MaxSize;
-
-    MaxSize.QuadPart = Length;
-
-    DPRINT("Making Section for File %x\n", FileObject);
-    DPRINT("File name %wZ\n", &FileObject->FileName);
-
-    Status = MmCreateSection((PVOID*)Result,
-                             STANDARD_RIGHTS_REQUIRED,
-                             NULL,
-                             &MaxSize,
-                             Protect,
-                             SEC_RESERVE | SEC_CACHE,
-                             NULL,
-                             FileObject);
-
-    return Status;
-}
-
 typedef struct _WORK_QUEUE_WITH_CONTEXT
 {
     WORK_QUEUE_ITEM WorkItem;
     PVOID ToUnmap;
     LARGE_INTEGER FileOffset;
     LARGE_INTEGER MapSize;
-    PROS_SECTION_OBJECT ToDeref;
     PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
     PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
     PVOID LazyContext;
@@ -188,8 +153,7 @@ CcpUnmapCache(PVOID Context)
 {
     PWORK_QUEUE_WITH_CONTEXT WorkItem = (PWORK_QUEUE_WITH_CONTEXT)Context;
     DPRINT("Unmapping (finally) %x\n", WorkItem->ToUnmap);
-    MmUnmapCacheViewInSystemSpace(WorkItem->ToUnmap);
-    ObDereferenceObject(WorkItem->ToDeref);
+    MmUnmapViewOfSection(PsInitialSystemProcess, WorkItem->ToUnmap);
     ExFreePool(WorkItem);
     DPRINT("Done\n");
 }
@@ -230,7 +194,7 @@ CcpDereferenceCache(ULONG Start,
     MappedSize = Bcb->Map->FileSizes.ValidDataLength;
 
     DPRINT("Dereference #%x (count %d)\n", Start, Bcb->RefCount);
-    ASSERT(Bcb->SectionObject);
+    ASSERT(Bcb->Map->SectionObject);
     ASSERT(Bcb->RefCount == 1);
 
     DPRINT("Firing work item for %x\n", Bcb->BaseAddress);
@@ -245,9 +209,7 @@ CcpDereferenceCache(ULONG Start,
 
     if (Immediate)
     {
-        PROS_SECTION_OBJECT ToDeref = Bcb->SectionObject;
         Bcb->Map = NULL;
-        Bcb->SectionObject = NULL;
         Bcb->BaseAddress = NULL;
         Bcb->FileOffset.QuadPart = 0;
         Bcb->Length = 0;
@@ -256,8 +218,7 @@ CcpDereferenceCache(ULONG Start,
         RemoveEntryList(&Bcb->ThisFileList);
 
         CcpUnlock();
-        MmUnmapCacheViewInSystemSpace(ToUnmap);
-        ObDereferenceObject(ToDeref);
+        MmUnmapViewOfSection(PsInitialSystemProcess, ToUnmap);
         CcpLock();
     }
     else
@@ -268,7 +229,6 @@ CcpDereferenceCache(ULONG Start,
         WorkItem->FileOffset = Bcb->FileOffset;
         WorkItem->Dirty = Bcb->Dirty;
         WorkItem->MapSize = MappedSize;
-        WorkItem->ToDeref = Bcb->SectionObject;
         WorkItem->AcquireForLazyWrite = Bcb->Map->Callbacks.AcquireForLazyWrite;
         WorkItem->ReleaseFromLazyWrite = Bcb->Map->Callbacks.ReleaseFromLazyWrite;
         WorkItem->LazyContext = Bcb->Map->LazyContext;
@@ -278,7 +238,6 @@ CcpDereferenceCache(ULONG Start,
                              WorkItem);
 
         Bcb->Map = NULL;
-        Bcb->SectionObject = NULL;
         Bcb->BaseAddress = NULL;
         Bcb->FileOffset.QuadPart = 0;
         Bcb->Length = 0;
@@ -308,7 +267,7 @@ on failure.
 /* Needs mutex */
 ULONG
 CcpAllocateCacheSections(PFILE_OBJECT FileObject,
-                         PROS_SECTION_OBJECT SectionObject)
+                         PVOID SectionObject)
 {
     ULONG i = INVALID_CACHE;
     PNOCC_CACHE_MAP Map;
@@ -369,7 +328,6 @@ CcpReferenceCache(ULONG Start)
 {
     PNOCC_BCB Bcb;
     Bcb = &CcCacheSections[Start];
-    ASSERT(Bcb->SectionObject);
     Bcb->RefCount++;
     RtlSetBit(CcCacheBitmap, Start);
 
@@ -405,7 +363,6 @@ CcpReferenceCacheExclusive(ULONG Start)
 
     CcpLock();
     ASSERT(Bcb->ExclusiveWaiter);
-    ASSERT(Bcb->SectionObject);
     Bcb->Exclusive = TRUE;
     Bcb->ExclusiveWaiter--;
     RtlSetBit(CcCacheBitmap, Start);
@@ -469,13 +426,12 @@ CcpMapData(IN PFILE_OBJECT FileObject,
            OUT PVOID *BcbResult,
            OUT PVOID *Buffer)
 {
-    BOOLEAN Success = FALSE, FaultIn = FALSE;
+    BOOLEAN Success = FALSE;
     /* Note: windows 2000 drivers treat this as a bool */
     //BOOLEAN Wait = (Flags & MAP_WAIT) || (Flags == TRUE);
     LARGE_INTEGER Target, EndInterval;
     ULONG BcbHead, SectionSize, ViewSize;
     PNOCC_BCB Bcb = NULL;
-    PROS_SECTION_OBJECT SectionObject = NULL;
     NTSTATUS Status;
     PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
     ViewSize = CACHE_STRIPE;
@@ -486,8 +442,9 @@ CcpMapData(IN PFILE_OBJECT FileObject,
         return FALSE;
     }
 
-    DPRINT("CcMapData(F->%x, %I64x:%d)\n",
+    DPRINT("CcMapData(F->%x, %S, %I64x:%d)\n",
            FileObject,
+           FileObject->FileName.Buffer,
            FileOffset->QuadPart,
            Length);
 
@@ -506,8 +463,6 @@ CcpMapData(IN PFILE_OBJECT FileObject,
     {
         Bcb = &CcCacheSections[BcbHead];
         Success = TRUE;
-        *BcbResult = Bcb;
-        *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
 
         DPRINT("Bcb #%x Buffer maps (%I64x) At %x Length %x (Getting %p:%x) %wZ\n",
                Bcb - CcCacheSections,
@@ -545,31 +500,10 @@ CcpMapData(IN PFILE_OBJECT FileObject,
 
     //ASSERT(SectionSize <= CACHE_STRIPE);
 
-    CcpUnlock();
-    /* CcpAllocateSection doesn't need the lock, so we'll give other action
-       a chance in here. */
-    Status = CcpAllocateSection(FileObject,
-                                SectionSize,
-#ifdef PIN_WRITE_ONLY
-                                PAGE_READONLY,
-#else
-                                PAGE_READWRITE,
-#endif
-                                &SectionObject);
-    CcpLock();
-
-    if (!NT_SUCCESS(Status))
-    {
-        *BcbResult = NULL;
-        *Buffer = NULL;
-        DPRINT1("End %08x\n", Status);
-        goto cleanup;
-    }
-
 retry:
     /* Returns a reference */
     DPRINT("Allocating cache sections: %wZ\n", &FileObject->FileName);
-    BcbHead = CcpAllocateCacheSections(FileObject, SectionObject);
+    BcbHead = CcpAllocateCacheSections(FileObject, Map->SectionObject);
     /* XXX todo: we should handle the immediate fail case here, but don't */
     if (BcbHead == INVALID_CACHE)
     {
@@ -603,24 +537,27 @@ retry:
     }
 
     DPRINT("Selected BCB #%x\n", BcbHead);
-    ViewSize = CACHE_STRIPE;
+    ViewSize = SectionSize;
 
     Bcb = &CcCacheSections[BcbHead];
-    /* MmMapCacheViewInSystemSpaceAtOffset is one of three methods of Mm
-       that are specific to NewCC.  In this case, it's implementation
-       exactly mirrors MmMapViewInSystemSpace, but allows an offset to
-       be specified. */
-    Status = MmMapCacheViewInSystemSpaceAtOffset(SectionObject->Segment,
-                                                 &Bcb->BaseAddress,
-                                                 &Target,
-                                                 &ViewSize);
+    Status = MmMapViewOfSection(Map->SectionObject,
+    							PsInitialSystemProcess,
+                                &Bcb->BaseAddress,
+                                0,
+                                ViewSize,
+                                &Target,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+
+    DPRINT("MmMapViewOfSection, Status 0x%08x.\n", Status);
 
     /* Summary: Failure.  Dereference our section and tell the user we failed */
     if (!NT_SUCCESS(Status))
     {
         *BcbResult = NULL;
         *Buffer = NULL;
-        ObDereferenceObject(SectionObject);
         RemoveEntryList(&Bcb->ThisFileList);
         RtlZeroMemory(Bcb, sizeof(*Bcb));
         RtlClearBit(CcCacheBitmap, BcbHead);
@@ -636,14 +573,9 @@ retry:
     Bcb->Length = MIN(Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart,
                       CACHE_STRIPE);
 
-    Bcb->SectionObject = SectionObject;
     Bcb->Map = Map;
     Bcb->FileOffset = Target;
     InsertTailList(&Map->AssociatedBcb, &Bcb->ThisFileList);
-
-    *BcbResult = &CcCacheSections[BcbHead];
-    *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
-    FaultIn = TRUE;
 
     DPRINT("Bcb #%x Buffer maps (%I64x) At %x Length %x (Getting %p:%lx) %wZ\n",
            Bcb - CcCacheSections,
@@ -659,32 +591,48 @@ retry:
            (Bcb->FileOffset.QuadPart & ~(CACHE_STRIPE - 1)));
 
 cleanup:
-    CcpUnlock();
     if (Success)
     {
-        if (FaultIn)
+        if (!Bcb->Mdl)
         {
-            /* Fault in the pages.  This forces reads to happen now. */
-            ULONG i;
-            PCHAR FaultIn = Bcb->BaseAddress;
+        	PMDL Mdl;
+			PVOID MdlAddress;
+            CcpUnlock();
 
-            DPRINT("Faulting in pages at this point: file %wZ %I64x:%x\n",
-                   &FileObject->FileName,
-                   Bcb->FileOffset.QuadPart,
-                   Bcb->Length);
+			DPRINT("Allocating MDL for Bcb #%x.\n", Bcb - CcCacheSections);
 
-            for (i = 0; i < Bcb->Length; i += PAGE_SIZE)
+            Mdl = IoAllocateMdl(Bcb->BaseAddress, Bcb->Length, FALSE, FALSE, NULL);
+            if (!Mdl)
+            	RtlRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+
+            MmProbeAndLockProcessPages(Mdl, PsInitialSystemProcess, KernelMode, IoModifyAccess);
+            MdlAddress = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+
+            CcpLock();
+            if (Bcb->Mdl)
             {
-                FaultIn[i] ^= 0;
+            	/* Someone beat us */
+            	MmUnlockPages(Mdl);
+            	IoFreeMdl(Mdl);
+            }
+            else
+            {
+            	Bcb->Mdl = Mdl;
+            	Bcb->MdlAddress = MdlAddress;
             }
         }
         ASSERT(Bcb >= CcCacheSections &&
                Bcb < (CcCacheSections + CACHE_NUM_SECTIONS));
+
+        *BcbResult = Bcb;
+        *Buffer = ((PCHAR)Bcb->MdlAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
     }
     else
     {
         ASSERT(FALSE);
     }
+
+    CcpUnlock();
 
     return Success;
 }
@@ -815,7 +763,7 @@ CcPinRead(IN PFILE_OBJECT FileObject,
     {
         CcpLock();
         RealBcb = *Bcb;
-        *Buffer = ((PCHAR)RealBcb->BaseAddress) + (int)(FileOffset->QuadPart - RealBcb->FileOffset.QuadPart);
+        *Buffer = ((PCHAR)RealBcb->MdlAddress) + (int)(FileOffset->QuadPart - RealBcb->FileOffset.QuadPart);
         CcpUnlock();
     }
 
@@ -933,6 +881,14 @@ CcpUnpinData(IN PNOCC_BCB RealBcb, BOOLEAN ReleaseBit)
         DPRINT("Clearing allocation bit #%x\n", RealBcb - CcCacheSections);
 
         RtlClearBit(CcCacheBitmap, RealBcb - CcCacheSections);
+
+        if(RealBcb->Mdl)
+        {
+			MmUnlockPages(RealBcb->Mdl);
+			IoFreeMdl(RealBcb->Mdl);
+			RealBcb->Mdl = NULL;
+			RealBcb->MdlAddress = NULL;
+        }
 
 #ifdef PIN_WRITE_ONLY
         PVOID BaseAddress = RealBcb->BaseAddress;

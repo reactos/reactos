@@ -64,6 +64,10 @@ CcpReadAhead(PVOID Context)
         PLIST_ENTRY ListEntry;
         volatile char *chptr;
         PNOCC_BCB Bcb;
+        KAPC_STATE ApcState;
+
+        KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+
         for (ListEntry = Map->AssociatedBcb.Flink;
              ListEntry != &Map->AssociatedBcb;
              ListEntry = ListEntry->Flink)
@@ -81,6 +85,8 @@ CcpReadAhead(PVOID Context)
                 *chptr ^= 0;
             }
         }
+
+        KeUnstackDetachProcess(&ApcState);
     }
     ObDereferenceObject(WorkItem->FileObject);
     ExFreePool(WorkItem);
@@ -306,13 +312,13 @@ CcShutdownSystem(VOID)
     for (i = 0; i < CACHE_NUM_SECTIONS; i++)
     {
         PNOCC_BCB Bcb = &CcCacheSections[i];
-        if (Bcb->SectionObject)
+        if (Bcb->Map->SectionObject)
         {
             DPRINT1("Evicting #%02x %08x%08x %wZ\n",
                     i,
                     Bcb->FileOffset.u.HighPart,
                     Bcb->FileOffset.u.LowPart,
-                    &MmGetFileObjectForSection((PROS_SECTION_OBJECT)Bcb->SectionObject)->FileName);
+                    &MmGetFileObjectForSection(Bcb->Map->SectionObject)->FileName);
 
             CcpFlushCache(Bcb->Map, NULL, 0, NULL, TRUE);
             Bcb->Dirty = FALSE;

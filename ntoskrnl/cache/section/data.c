@@ -77,7 +77,7 @@ entry.
 #include <ntoskrnl.h>
 #include "newmm.h"
 #include <cache/newcc.h>
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 #include <mm/ARM3/miarm.h>
 
@@ -157,7 +157,7 @@ _MiFlushMappedSection(PVOID BaseAddress,
     if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_CACHE || MemoryArea->DeleteInProgress)
     {
         MmUnlockAddressSpace(AddressSpace);
-        DPRINT("STATUS_NOT_MAPPED_DATA\n");
+        DPRINT1("STATUS_NOT_MAPPED_DATA\n");
         return STATUS_NOT_MAPPED_DATA;
     }
     BeginningAddress = PAGE_ROUND_DOWN(MA_GetStartingAddress(MemoryArea));

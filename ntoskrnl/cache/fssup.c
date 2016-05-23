@@ -218,6 +218,9 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
     /* We still don't have a shared cache map.  We need to create one. */
     if (!Map)
     {
+        NTSTATUS Status;
+        LARGE_INTEGER MaxSize = FileSizes->AllocationSize;
+
         DPRINT("Initializing file object for (%p) %wZ\n",
                FileObject,
                &FileObject->FileName);
@@ -237,6 +240,20 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
         InitializeListHead(&Map->PrivateCacheMaps);
         InsertTailList(&CcpAllSharedCacheMaps, &Map->Entry);
         DPRINT("New Map %p\n", Map);
+
+        Status = MmCreateSection(&Map->SectionObject,
+                         STANDARD_RIGHTS_REQUIRED | SECTION_EXTEND_SIZE,
+                         NULL,
+                         &MaxSize,
+                         PAGE_READWRITE,
+                         SEC_RESERVE, // Use ARM3 implementation
+                         NULL,
+                         FileObject);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(Map);
+            RtlRaiseStatus(Status);
+        }
     }
     /* We don't have a private cache map.  Link it with the shared cache map
        to serve as a held reference. When the list in the shared cache map
@@ -325,6 +342,7 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
                 CcpDereferenceCache(Bcb - CcCacheSections, TRUE);
             }
             RemoveEntryList(&PrivateCacheMap->Map->Entry);
+            ObDereferenceObject(PrivateCacheMap->Map->SectionObject);
             ExFreePool(PrivateCacheMap->Map);
             FileObject->SectionObjectPointer->SharedCacheMap = NULL;
             LastMap = TRUE;
@@ -354,18 +372,36 @@ NTAPI
 CcSetFileSizes(IN PFILE_OBJECT FileObject,
                IN PCC_FILE_SIZES FileSizes)
 {
-    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
-    PNOCC_BCB Bcb;
+    PNOCC_CACHE_MAP Map;
 
-    if (!Map) return;
+    CcpLock();
+
+    Map = FileObject->SectionObjectPointer->SharedCacheMap;
+
+    if (!Map)
+    {
+    	CcpUnlock();
+		return;
+    }
+
+    /* FS should have unmapped the whole thing. */
+    //ASSERT(IsListEmpty(&Map->AssociatedBcb));
+
+    if (Map->FileSizes.AllocationSize.QuadPart != FileSizes->AllocationSize.QuadPart)
+    {
+        LARGE_INTEGER SectionSize = FileSizes->AllocationSize;
+        NTSTATUS Status = MmExtendSection(Map->SectionObject, &SectionSize);
+
+        if (!NT_SUCCESS(Status))
+        {
+            CcpUnlock();
+            ExRaiseStatus(Status);
+        }
+    }
+
     Map->FileSizes = *FileSizes;
-    Bcb = Map->AssociatedBcb.Flink == &Map->AssociatedBcb ?
-        NULL : CONTAINING_RECORD(Map->AssociatedBcb.Flink, NOCC_BCB, ThisFileList);
-    if (!Bcb) return;
-    MmExtendCacheSection(Bcb->SectionObject, &FileSizes->FileSize, FALSE);
-    DPRINT("FileSizes->FileSize %x\n", FileSizes->FileSize.LowPart);
-    DPRINT("FileSizes->AllocationSize %x\n", FileSizes->AllocationSize.LowPart);
-    DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
+
+    CcpUnlock();
 }
 
 BOOLEAN
@@ -612,7 +648,7 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointer)
                                           NOCC_BCB,
                                           ThisFileList);
 
-        Result = MmGetFileObjectForSection((PROS_SECTION_OBJECT)Bcb->SectionObject);
+        Result = MmGetFileObjectForSection(Bcb->Map->SectionObject);
     }
     CcpUnlock();
     return Result;
@@ -624,7 +660,7 @@ CcGetFileObjectFromBcb(PVOID Bcb)
 {
     PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
     DPRINT("BCB #%x\n", RealBcb - CcCacheSections);
-    return MmGetFileObjectForSection((PROS_SECTION_OBJECT)RealBcb->SectionObject);
+    return MmGetFileObjectForSection(RealBcb->Map->SectionObject);
 }
 
 /* EOF */
