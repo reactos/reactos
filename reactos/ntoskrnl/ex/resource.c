@@ -141,7 +141,7 @@ ExpCheckForApcsDisabled(IN KIRQL Irql,
         !(Thread->CombinedApcDisable))
     {
         /* Bad! */
-        DPRINT1("EX: resource: APCs still enabled before resource %p acquire "
+        DPRINT1("EX: resource: APCs still enabled before resource %p acquire/release "
                 "!!!\n", Resource);
         DbgBreakPoint();
     }
