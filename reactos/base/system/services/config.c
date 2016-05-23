@@ -481,7 +481,7 @@ ScmSetServicePassword(
 
     Status = LsaStorePrivateData(PolicyHandle,
                                  &ServiceName,
-                                 &Password);
+                                 pszPassword ? &Password : NULL);
     if (!NT_SUCCESS(Status))
     {
         dwError = RtlNtStatusToDosError(Status);
