@@ -322,8 +322,8 @@
 322 stdcall IsWellKnownSid(ptr long)
 323 stdcall LockServiceDatabase(ptr)
 324 stdcall LogonUserA(str str str long long ptr)
-325 stub LogonUserExA
-326 stub LogonUserExW
+325 stdcall LogonUserExA(str str str long long ptr ptr ptr ptr ptr)
+326 stdcall LogonUserExW(wstr wstr wstr long long ptr ptr ptr ptr ptr)
 327 stdcall LogonUserW(wstr wstr wstr long long ptr)
 328 stdcall LookupAccountNameA(str str ptr ptr ptr ptr ptr)
 329 stdcall LookupAccountNameW(wstr wstr ptr ptr ptr ptr ptr)
