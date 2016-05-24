@@ -272,6 +272,7 @@ typedef struct
     PACQUIRE_FUNCTION AcquireResource;
     BOOLEAN Wait;
     BOOLEAN RetExpected;
+    PKSTART_ROUTINE StartRoutine;
 } THREAD_DATA, *PTHREAD_DATA;
 
 static
@@ -302,15 +303,27 @@ AcquireResourceThread(
 
 static
 VOID
-InitThreadData(
+InitThreadDataEx(
     PTHREAD_DATA ThreadData,
     PERESOURCE Res,
-    PACQUIRE_FUNCTION AcquireFunction)
+    PACQUIRE_FUNCTION AcquireFunction,
+    PKSTART_ROUTINE StartRoutine)
 {
     ThreadData->Res = Res;
     KeInitializeEvent(&ThreadData->InEvent, NotificationEvent, FALSE);
     KeInitializeEvent(&ThreadData->OutEvent, NotificationEvent, FALSE);
     ThreadData->AcquireResource = AcquireFunction;
+    ThreadData->StartRoutine = StartRoutine;
+}
+
+static
+VOID
+InitThreadData(
+    PTHREAD_DATA ThreadData,
+    PERESOURCE Res,
+    PACQUIRE_FUNCTION AcquireFunction)
+{
+    InitThreadDataEx(ThreadData, Res, AcquireFunction, AcquireResourceThread);
 }
 
 static
@@ -327,7 +340,7 @@ StartThread(
     ThreadData->Wait = Wait;
     ThreadData->RetExpected = RetExpected;
     InitializeObjectAttributes(&Attributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
-    Status = PsCreateSystemThread(&ThreadData->Handle, GENERIC_ALL, &Attributes, NULL, NULL, AcquireResourceThread, ThreadData);
+    Status = PsCreateSystemThread(&ThreadData->Handle, GENERIC_ALL, &Attributes, NULL, NULL, ThreadData->StartRoutine, ThreadData);
     ok_eq_hex(Status, STATUS_SUCCESS);
     Status = ObReferenceObjectByHandle(ThreadData->Handle, SYNCHRONIZE, *PsThreadType, KernelMode, (PVOID *)&ThreadData->Thread, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
@@ -455,6 +468,52 @@ TestResourceWithThreads(
     ok_eq_int(Res->ActiveCount, 0);
 }
 
+static
+VOID
+NTAPI
+TestOwnerRes(
+    PVOID Context)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PTHREAD_DATA ThreadData = Context;
+    BOOLEAN Ret;
+
+    KeEnterCriticalRegion();
+    Ret = ThreadData->AcquireResource(ThreadData->Res, ThreadData->Wait);
+    if (ThreadData->RetExpected)
+        ok_bool_true(Ret, "AcquireResource returned");
+    else
+        ok_bool_false(Ret, "AcquireResource returned");
+    KeLeaveCriticalRegion();
+
+    ExReleaseResourceForThreadLite(ThreadData->Res, (ULONG_PTR)ThreadData->Res | 3);
+
+    ok_bool_false(KeSetEvent(&ThreadData->OutEvent, 0, TRUE), "KeSetEvent returned");
+    Status = KeWaitForSingleObject(&ThreadData->InEvent, Executive, KernelMode, FALSE, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+}
+
+static
+VOID
+TestResourceWithOwner(
+    IN PERESOURCE Res)
+{
+    NTSTATUS Status;
+    THREAD_DATA ThreadDataOwner;
+
+    InitThreadDataEx(&ThreadDataOwner, Res, ExAcquireResourceExclusiveLite, TestOwnerRes);
+
+    KeEnterCriticalRegion();
+    ok_bool_true(ExAcquireResourceExclusiveLite(Res, FALSE), "ExAcquireResourceExclusiveLite returned");
+    ExSetResourceOwnerPointer(Res, (PVOID)((ULONG_PTR)Res | 3));
+    KeLeaveCriticalRegion();
+
+    Status = StartThread(&ThreadDataOwner, NULL, FALSE, FALSE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    FinishThread(&ThreadDataOwner);
+}
+
 START_TEST(ExResource)
 {
     NTSTATUS Status;
@@ -512,6 +571,9 @@ START_TEST(ExResource)
     Status = ExReinitializeResourceLite(&Res);
     ok_eq_hex(Status, STATUS_SUCCESS);
     CheckResourceFields((PERESOURCE_2K3)&Res, TRUE);
+    CheckResourceStatus(&Res, FALSE, 0LU, 0LU, 0LU);
+
+    TestResourceWithOwner(&Res);
     CheckResourceStatus(&Res, FALSE, 0LU, 0LU, 0LU);
 
     Status = ExDeleteResourceLite(&Res);
