@@ -791,7 +791,7 @@
 786 stdcall RtlNumberGenericTableElementsAvl(ptr)
 787 stdcall RtlNumberOfClearBits(ptr)
 788 stdcall RtlNumberOfSetBits(ptr)
-# stdcall RtlOemStringToUnicodeSize(ptr)
+789 stdcall RtlOemStringToUnicodeSize(ptr) RtlxOemStringToUnicodeSize
 790 stdcall RtlOemStringToUnicodeString(ptr ptr long)
 791 stdcall RtlOemToUnicodeN(ptr long ptr ptr long)
 792 stdcall RtlOpenCurrentUser(long ptr)
@@ -909,11 +909,11 @@
 903 stdcall RtlTryEnterCriticalSection(ptr)
 # stdcall RtlUnhandledExceptionFilter2
 905 stdcall RtlUnhandledExceptionFilter(ptr)
-# stdcall RtlUnicodeStringToAnsiSize(ptr)
+906 stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
 907 stdcall RtlUnicodeStringToAnsiString(ptr ptr long)
 908 stdcall RtlUnicodeStringToCountedOemString(ptr ptr long)
 909 stdcall RtlUnicodeStringToInteger(ptr long ptr)
-# stdcall RtlUnicodeStringToOemSize(ptr)
+910 stdcall RtlUnicodeStringToOemSize(ptr) RtlxUnicodeStringToOemSize
 911 stdcall RtlUnicodeStringToOemString(ptr ptr long)
 912 stdcall RtlUnicodeToCustomCPN(ptr ptr long ptr wstr long)
 913 stdcall RtlUnicodeToMultiByteN(ptr long ptr ptr long)
@@ -969,7 +969,7 @@
 961 stdcall RtlxAnsiStringToUnicodeSize(ptr)
 962 stdcall RtlxOemStringToUnicodeSize(ptr)
 963 stdcall RtlxUnicodeStringToAnsiSize(ptr)
-964 stdcall RtlxUnicodeStringToOemSize(ptr) ; RtlUnicodeStringToOemSize
+964 stdcall RtlxUnicodeStringToOemSize(ptr)
 965 stdcall -ret64 VerSetConditionMask(double long long)
 966 stdcall ZwAcceptConnectPort(ptr long ptr long long ptr) NtAcceptConnectPort
 967 stdcall ZwAccessCheck(ptr long long ptr ptr ptr ptr ptr) NtAccessCheck
