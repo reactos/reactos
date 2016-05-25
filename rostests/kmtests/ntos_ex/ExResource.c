@@ -505,6 +505,10 @@ TestResourceWithOwner(
 
     KeEnterCriticalRegion();
     ok_bool_true(ExAcquireResourceExclusiveLite(Res, FALSE), "ExAcquireResourceExclusiveLite returned");
+    ExSetResourceOwnerPointer(Res, (PVOID)(ULONG_PTR)3);
+    ExReleaseResourceForThreadLite(Res, 3);
+
+    ok_bool_true(ExAcquireResourceExclusiveLite(Res, FALSE), "ExAcquireResourceExclusiveLite returned");
     ExSetResourceOwnerPointer(Res, (PVOID)((ULONG_PTR)Res | 3));
     KeLeaveCriticalRegion();
 
