@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Jansen
+ * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,8 @@
 
 #include "wine/test.h"
 
+/* data.c */
+DWORD get_host_winver();
 
 #define GPLK_USER 1
 #define GPLK_MACHINE 2
@@ -45,10 +47,10 @@ static BOOL(WINAPI *pSdbGetPermLayerKeys)(PCWSTR wszPath, PWSTR pwszLayers, PDWO
 static BOOL(WINAPI *pSetPermLayerState)(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
 
 
-static DWORD g_Version;
-#define APPHELP_VISTA   0x0600
-#define APPHELP_WIN8    0x0602
-#define APPHELP_WIN10   0x1000
+static DWORD g_WinVersion;
+#define WINVER_VISTA   0x0600
+#define WINVER_WIN8    0x0602
+#define WINVER_WIN10   0x1000
 
 
 /* Helper function to disable Wow64 redirection on an os that reports it being enabled. */
@@ -137,7 +139,7 @@ void expect_Sdb_imp(PCSTR path, DWORD type, BOOL result, DWORD lenResult, PCSTR 
     else
         winetest_ok(dwBufSize == lenResult ||
             /* W2k3 is off by 2 when concatenating user / machine */
-            broken(g_Version < APPHELP_VISTA && type == (GPLK_MACHINE|GPLK_USER) && (lenResult + 2) == dwBufSize),
+            broken(g_WinVersion < WINVER_VISTA && type == (GPLK_MACHINE|GPLK_USER) && (lenResult + 2) == dwBufSize),
                 "Expected dwBufSize to be %u, was %u\n", lenResult, dwBufSize);
     if (result)
     {
@@ -173,7 +175,7 @@ static void test_AllowPermLayer(void)
     char drive_letter;
     UINT drivetype = 0;
     ok(pAllowPermLayer(NULL) == FALSE, "Expected AllowPermLayer to fail for NULL\n");
-    if (g_Version < APPHELP_WIN8)
+    if (g_WinVersion < WINVER_WIN8)
     {
         ok(wrapAllowPermLayer("-:"), "Expected AllowPermLayer to succeed\n");
         ok(wrapAllowPermLayer("@:"), "Expected AllowPermLayer to succeed\n");
@@ -371,7 +373,7 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
     ok(wrapSetPermLayerState(emptyString, "TEST", 0, bMachine, 0) == FALSE, "Expected SetPermLayerState to fail\n");
     expect_LayerValue(bMachine, NULL, NULL);
 
-    if (g_Version <= APPHELP_WIN8)
+    if (g_WinVersion <= WINVER_WIN8)
     {
         ok(wrapSetPermLayerState(emptyString, "TEST", 0, bMachine, 1) == FALSE, "Expected SetPermLayerState to fail\n");
         expect_LayerValue(bMachine, NULL, NULL);
@@ -399,13 +401,13 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
     expect_LayerValue(bMachine, file, "TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST1", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-        expect_LayerValue2(bMachine, file, "TEST TEST1", g_Version >= APPHELP_WIN8, "TEST1 TEST");
+        expect_LayerValue2(bMachine, file, "TEST TEST1", g_WinVersion >= WINVER_WIN8, "TEST1 TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST2", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "TEST TEST1 TEST2", g_Version >= APPHELP_WIN8, "TEST2 TEST1 TEST");
+    expect_LayerValue2(bMachine, file, "TEST TEST1 TEST2", g_WinVersion >= WINVER_WIN8, "TEST2 TEST1 TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST1", 0, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "TEST TEST2", g_Version >= APPHELP_WIN8, "TEST2 TEST");
+    expect_LayerValue2(bMachine, file, "TEST TEST2", g_WinVersion >= WINVER_WIN8, "TEST2 TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST", 0, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
     expect_LayerValue(bMachine, file, "TEST2");
@@ -415,7 +417,7 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
 
     /* Valid flags until win8: !# */
     /* Key is empty, now play around with the flags. */
-    for (dwFlag = ((g_Version >= APPHELP_WIN8) ? 6 : 2); dwFlag < 32; ++dwFlag)
+    for (dwFlag = ((g_WinVersion >= WINVER_WIN8) ? 6 : 2); dwFlag < 32; ++dwFlag)
     {
         ok(wrapSetPermLayerState(fileW, "TEST", (1<<dwFlag), bMachine, 1) == FALSE, "Expected SetPermLayerState to fail on 0x%x\n", (1<<dwFlag));
     }
@@ -426,23 +428,23 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
     expect_LayerValue(bMachine, file, "# TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST2", 2, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST TEST2", g_Version >= APPHELP_WIN8, "!# TEST2 TEST");
+    expect_LayerValue2(bMachine, file, "!# TEST TEST2", g_WinVersion >= WINVER_WIN8, "!# TEST2 TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST2 TEST", g_Version >= APPHELP_WIN8, "!# TEST TEST2");
+    expect_LayerValue2(bMachine, file, "!# TEST2 TEST", g_WinVersion >= WINVER_WIN8, "!# TEST TEST2");
 
     ok(wrapSetPermLayerState(fileW, "TEST3", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST2 TEST TEST3", g_Version >= APPHELP_WIN8, "!# TEST3 TEST TEST2");
+    expect_LayerValue2(bMachine, file, "!# TEST2 TEST TEST3", g_WinVersion >= WINVER_WIN8, "!# TEST3 TEST TEST2");
 
     /* Remove on a flag removes that flag from the start. */
     ok(wrapSetPermLayerState(fileW, "TEST2", 2, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "# TEST TEST3", g_Version >= APPHELP_WIN8, "# TEST3 TEST");
+    expect_LayerValue2(bMachine, file, "# TEST TEST3", g_WinVersion >= WINVER_WIN8, "# TEST3 TEST");
 
     ok(wrapSetPermLayerState(fileW, "", LAYER_APPLY_TO_SYSTEM_EXES, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "TEST TEST3", g_Version >= APPHELP_WIN8, "TEST3 TEST");
+    expect_LayerValue2(bMachine, file, "TEST TEST3", g_WinVersion >= WINVER_WIN8, "TEST3 TEST");
 
     ok(wrapSetPermLayerState(fileW, "", LAYER_APPLY_TO_SYSTEM_EXES | 2, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST TEST3", g_Version >= APPHELP_WIN8, "!# TEST3 TEST");
+    expect_LayerValue2(bMachine, file, "!# TEST TEST3", g_WinVersion >= WINVER_WIN8, "!# TEST3 TEST");
 
     ok(wrapSetPermLayerState(fileW, "TEST3", LAYER_APPLY_TO_SYSTEM_EXES, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
     expect_LayerValue(bMachine, file, "! TEST");
@@ -468,17 +470,17 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
     setLayerValue(bMachine, file, "!#!# TEST2 TEST2  !#  TEST    ");
 
     ok(wrapSetPermLayerState(fileW, "TEST1", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST2 TEST2 !# TEST TEST1", g_Version >= APPHELP_WIN8, "!# TEST1 TEST2 TEST2 !# TEST");
+    expect_LayerValue2(bMachine, file, "!# TEST2 TEST2 !# TEST TEST1", g_WinVersion >= WINVER_WIN8, "!# TEST1 TEST2 TEST2 !# TEST");
 
     /* Removing a duplicate entry will remove all instances of it */
     ok(wrapSetPermLayerState(fileW, "TEST2", 0, bMachine, 0) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# !# TEST TEST1", g_Version >= APPHELP_WIN8, "!# TEST1 !# TEST");
+    expect_LayerValue2(bMachine, file, "!# !# TEST TEST1", g_WinVersion >= WINVER_WIN8, "!# TEST1 !# TEST");
 
     /* Adding a flag cleans other flags (from the start) */
     ok(wrapSetPermLayerState(fileW, "", LAYER_APPLY_TO_SYSTEM_EXES, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# TEST TEST1", g_Version >= APPHELP_WIN8, "!# TEST1 !# TEST");
+    expect_LayerValue2(bMachine, file, "!# TEST TEST1", g_WinVersion >= WINVER_WIN8, "!# TEST1 !# TEST");
 
-    if(g_Version < APPHELP_WIN8)
+    if(g_WinVersion < WINVER_WIN8)
     {
         ok(wrapSetPermLayerState(fileW, "$%$%^^", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
         expect_LayerValue(bMachine, file, "!# TEST TEST1 $%$%^^");
@@ -491,12 +493,12 @@ static void test_SetPermLayerStateLevel(BOOL bMachine, const char* file)
     /* Tabs are treated as spaces */
     setLayerValue(bMachine, file, "!#!# TEST2 \t  TEST2 !#  \t TEST    ");
     ok(wrapSetPermLayerState(fileW, "TEST2", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# !# TEST TEST2", g_Version >= APPHELP_WIN8, "!# TEST2 !# TEST");
+    expect_LayerValue2(bMachine, file, "!# !# TEST TEST2", g_WinVersion >= WINVER_WIN8, "!# TEST2 !# TEST");
 
     /* Newlines are left as-is */
     setLayerValue(bMachine, file, "!#!# TEST2 \n  TEST2 !#  \r\n TEST    ");
     ok(wrapSetPermLayerState(fileW, "TEST2", 0, bMachine, 1) == TRUE, "Expected SetPermLayerState to succeed\n");
-    expect_LayerValue2(bMachine, file, "!# \n !# \r\n TEST TEST2", g_Version >= APPHELP_WIN8, "!# TEST2 \n !# \r\n TEST");
+    expect_LayerValue2(bMachine, file, "!# \n !# \r\n TEST TEST2", g_WinVersion >= WINVER_WIN8, "!# TEST2 \n !# \r\n TEST");
 
     /* Whitespace and duplicate flags are eaten from the start */
     setLayerValue(bMachine, file, "     !#!# TEST2 \t  TEST2 !#  \t TEST    ");
@@ -750,7 +752,7 @@ static void test_Sign_Media(void)
     if(ret)
     {
         ret = RedirectIat("apphelp.dll", "kernel32.dll", "GetDriveTypeW", (ULONG_PTR)mGetDriveTypeW, (ULONG_PTR*)&pGetDriveTypeW);
-        if (g_Version < APPHELP_WIN8)
+        if (g_WinVersion < WINVER_WIN8)
             ok(ret, "Expected redirect_iat to succeed\n");
         if(ret)
         {
@@ -875,20 +877,13 @@ static void test_Sign_Media(void)
 
 START_TEST(layerapi)
 {
-    RTL_OSVERSIONINFOEXW rtlinfo;
     /*SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");*/
     hdll = LoadLibraryA("apphelp.dll");
     pAllowPermLayer = (void *)GetProcAddress(hdll, "AllowPermLayer");
     pSdbSetPermLayerKeys = (void *)GetProcAddress(hdll, "SdbSetPermLayerKeys");
     pSdbGetPermLayerKeys = (void *)GetProcAddress(hdll, "SdbGetPermLayerKeys");
     pSetPermLayerState = (void *)GetProcAddress(hdll, "SetPermLayerState");
-    rtlinfo.dwOSVersionInfoSize = sizeof(rtlinfo);
-#ifdef __REACTOS__
-    RtlGetVersion((PRTL_OSVERSIONINFOW)&rtlinfo);
-#else
-    RtlGetVersion(&rtlinfo);
-#endif
-    g_Version = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
+    g_WinVersion = get_host_winver();
 
     if (!pAllowPermLayer)
     {

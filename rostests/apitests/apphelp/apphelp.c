@@ -40,21 +40,22 @@
 void test_create_exe_imp(const char* name, int skip_rsrc_exports);
 void test_create_file_imp(const char* name, const char* contents, size_t len);
 void test_create_ne_imp(const char* name, int skip_names);
+DWORD get_host_winver();
 
 #define test_create_exe     (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_exe_imp
 #define test_create_file    (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_file_imp
 #define test_create_ne      (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_ne_imp
 
 
-static DWORD g_Version;
+static DWORD g_WinVersion;
 
-#define VERSION_ANY     0
-#define VERSION_WINXP   0x0501
-#define VERSION_2003    0x0502
-#define VERSION_VISTA   0x0600
-#define VERSION_WIN7    0x0601
-#define VERSION_WIN8    0x0602
-#define VERSION_WIN10   0x1000
+#define WINVER_ANY     0
+#define WINVER_WINXP   0x0501
+#define WINVER_2003    0x0502
+#define WINVER_VISTA   0x0600
+#define WINVER_WIN7    0x0601
+#define WINVER_WIN8    0x0602
+#define WINVER_WIN10   0x1000
 
 
 typedef WORD TAG;
@@ -187,20 +188,20 @@ static struct
     const char* tags[7*8];
 } data[] = {
     {
-        TAG_TYPE_NULL, 0x1000, __LINE__, VERSION_ANY, VERSION_2003,
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_ANY, WINVER_2003,
         {
             "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", NULL
         }
     },
     {
-        TAG_TYPE_NULL, 0x1000, __LINE__, VERSION_VISTA, VERSION_VISTA,
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_VISTA, WINVER_VISTA,
         {
             "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", "MITIGATION_OS", "BLOCK_UPGRADE",
             "INCLUDEEXCLUDEDLL", NULL
         }
     },
     {
-        TAG_TYPE_NULL, 0x1000, __LINE__, VERSION_WIN7, VERSION_ANY,
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_WIN7, WINVER_ANY,
         {
             "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", "MITIGATION_OS", "BLOCK_UPGRADE",
             "INCLUDEEXCLUDEDLL", "RAC_EVENT_OFF", "TELEMETRY_OFF", "SHIM_ENGINE_OFF", "LAYER_PROPAGATION_OFF", "REINSTALL_UPGRADE", NULL
@@ -208,33 +209,33 @@ static struct
     },
 
     {
-        TAG_TYPE_BYTE, 0x1000, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_BYTE, 0x1000, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", NULL
         }
     },
 
     {
-        TAG_TYPE_WORD, 0x800, __LINE__, VERSION_ANY, VERSION_WIN7,
+        TAG_TYPE_WORD, 0x800, __LINE__, WINVER_ANY, WINVER_WIN7,
         {
             "InvalidTag", "MATCH_MODE", NULL
         }
     },
     {
-        TAG_TYPE_WORD, 0x800, __LINE__, VERSION_WIN8, VERSION_ANY,
+        TAG_TYPE_WORD, 0x800, __LINE__, WINVER_WIN8, WINVER_ANY,
         {
             "InvalidTag", "MATCH_MODE", "QUIRK_COMPONENT_CODE_ID", "QUIRK_CODE_ID", NULL
         }
     },
     {
-        TAG_TYPE_WORD | 0x800, 0x800, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_WORD | 0x800, 0x800, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", "TAG", "INDEX_TAG", "INDEX_KEY", NULL
         }
     },
 
     {
-        TAG_TYPE_DWORD, 0x800, __LINE__, VERSION_ANY, VERSION_WINXP,
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_ANY, WINVER_WINXP,
         {
             "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERFILEDATEHI",
             "VERFILEDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVERSION", "PREVOSMINORVERSION", "PREVOSPLATFORMID", "PREVOSBUILDNO",
@@ -244,7 +245,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_DWORD, 0x800, __LINE__, VERSION_2003, VERSION_2003,
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_2003, WINVER_2003,
         {
             "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERFILEDATEHI",
             "VERFILEDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVERSION", "PREVOSMINORVERSION", "PREVOSPLATFORMID", "PREVOSBUILDNO",
@@ -254,7 +255,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_DWORD, 0x800, __LINE__, VERSION_VISTA, VERSION_VISTA,
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_VISTA, WINVER_VISTA,
         {
             "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERDATEHI",
             "VERDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVER", "PREVOSMINORVER", "PREVOSPLATFORMID", "PREVOSBUILDNO",
@@ -265,7 +266,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_DWORD, 0x800, __LINE__, VERSION_WIN7, VERSION_ANY,
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
         {
             "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERDATEHI",
             "VERDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVER", "PREVOSMINORVER", "PREVOSPLATFORMID", "PREVOSBUILDNO",
@@ -277,21 +278,21 @@ static struct
         }
     },
     {
-        TAG_TYPE_DWORD | 0x800, 0x800, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_DWORD | 0x800, 0x800, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", "TAGID", NULL
         }
     },
 
     {
-        TAG_TYPE_QWORD, 0x1000, __LINE__, VERSION_ANY, VERSION_WINXP,
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_ANY, WINVER_WINXP,
         {
             "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
             "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", NULL
         }
     },
     {
-        TAG_TYPE_QWORD, 0x1000, __LINE__, VERSION_2003, VERSION_2003,
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_2003, WINVER_2003,
         {
             "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
             "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", "FLAG_MASK_FUSION", "FLAGS_PROCESSPARAM",
@@ -299,7 +300,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_QWORD, 0x1000, __LINE__, VERSION_VISTA, VERSION_ANY,
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_VISTA, WINVER_ANY,
         {
             "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
             "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", "FLAG_MASK_FUSION", "FLAG_PROCESSPARAM",
@@ -308,7 +309,7 @@ static struct
     },
 
     {
-        TAG_TYPE_STRINGREF, 0x1000, __LINE__, VERSION_ANY, VERSION_2003,
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_ANY, WINVER_2003,
         {
             "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
             "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
@@ -318,7 +319,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_STRINGREF, 0x1000, __LINE__, VERSION_VISTA, VERSION_VISTA,
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_VISTA, WINVER_VISTA,
         {
             "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
             "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
@@ -328,7 +329,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_STRINGREF, 0x1000, __LINE__, VERSION_WIN7, VERSION_ANY,
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_WIN7, WINVER_ANY,
         {
             "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
             "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
@@ -339,7 +340,7 @@ static struct
     },
 
     {
-        TAG_TYPE_LIST, 0x800, __LINE__, VERSION_ANY, VERSION_2003,
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_ANY, WINVER_2003,
         {
             "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
             "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
@@ -347,7 +348,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_LIST, 0x800, __LINE__, VERSION_VISTA, VERSION_VISTA,
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_VISTA, WINVER_VISTA,
         {
             "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
             "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
@@ -356,7 +357,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_LIST, 0x800, __LINE__, VERSION_WIN7, VERSION_ANY,
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
         {
             "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
             "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
@@ -366,26 +367,26 @@ static struct
         }
     },
     {
-        TAG_TYPE_LIST | 0x800, 0x800, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_LIST | 0x800, 0x800, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", "STRINGTABLE", "INDEXES", "INDEX", NULL
         }
     },
 
     {
-        TAG_TYPE_STRING, 0x800, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_STRING, 0x800, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", NULL
         }
     },
     {
-        TAG_TYPE_STRING | 0x800, 0x800, __LINE__, VERSION_ANY, VERSION_2003,
+        TAG_TYPE_STRING | 0x800, 0x800, __LINE__, WINVER_ANY, WINVER_2003,
         {
             "InvalidTag", "STRTAB_ITEM", NULL
         }
     },
     {
-        TAG_TYPE_STRING | 0x800, 0x800, __LINE__, VERSION_VISTA, VERSION_ANY,
+        TAG_TYPE_STRING | 0x800, 0x800, __LINE__, WINVER_VISTA, WINVER_ANY,
         {
             "InvalidTag", "STRINGTABLE_ITEM", NULL
         }
@@ -393,21 +394,21 @@ static struct
 
 
     {
-        TAG_TYPE_BINARY, 0x800, __LINE__, VERSION_ANY, VERSION_2003,
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_ANY, WINVER_2003,
         {
             "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID(GUID)", "DATA_BITS", "MSI_PACKAGE_ID(GUID)", "DATABASE_ID(GUID)",
             NULL
         }
     },
     {
-        TAG_TYPE_BINARY, 0x800, __LINE__, VERSION_VISTA, VERSION_VISTA,
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_VISTA, WINVER_VISTA,
         {
             "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID", "DATA_BITS", "MSI_PACKAGE_ID", "DATABASE_ID",
             NULL
         }
     },
     {
-        TAG_TYPE_BINARY, 0x800, __LINE__, VERSION_WIN7, VERSION_ANY,
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
         {
             "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID", "DATA_BITS", "MSI_PACKAGE_ID", "DATABASE_ID",
             "CONTEXT_PLATFORM_ID", "CONTEXT_BRANCH_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
@@ -415,7 +416,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_BINARY | 0x800, 0x800, __LINE__, VERSION_ANY, VERSION_ANY,
+        TAG_TYPE_BINARY | 0x800, 0x800, __LINE__, WINVER_ANY, WINVER_ANY,
         {
             "InvalidTag", "INDEX_BITS", NULL
         }
@@ -430,8 +431,8 @@ static void test_SdbTagToStringAllTags(void)
     int n;
     for (n = 0; data[n].base; ++n)
     {
-        if ((data[n].min_ver == VERSION_ANY || g_Version >= data[n].min_ver) &&
-            (data[n].max_ver == VERSION_ANY || g_Version <= data[n].max_ver))
+        if ((data[n].min_ver == WINVER_ANY || g_WinVersion >= data[n].min_ver) &&
+            (data[n].max_ver == WINVER_ANY || g_WinVersion <= data[n].max_ver))
         {
             test_tag(data[n].base, data[n].tags, data[n].upper_limit, data[n].line);
         }
@@ -846,15 +847,8 @@ static void test_ApplicationAttributes(void)
 
 START_TEST(apphelp)
 {
-    RTL_OSVERSIONINFOEXW rtlinfo;
-    rtlinfo.dwOSVersionInfoSize = sizeof(rtlinfo);
-#ifdef __REACTOS__
-    RtlGetVersion((PRTL_OSVERSIONINFOW)&rtlinfo);
-#else
-    RtlGetVersion(&rtlinfo);
-#endif
-    g_Version = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
-    trace("Detected version: 0x%x\n", g_Version);
+    g_WinVersion = get_host_winver();
+    trace("Detected version: 0x%x\n", g_WinVersion);
     //SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");
     //SetEnvironmentVariable("DEBUGCHANNEL", "+apphelp");
     hdll = LoadLibraryA("apphelp.dll");
@@ -869,10 +863,10 @@ START_TEST(apphelp)
     test_ApplicationAttributes();
     test_SdbTagToString();
 #ifdef __REACTOS__
-    if (g_Version < VERSION_WIN7)
+    if (g_WinVersion < WINVER_WIN7)
     {
-        g_Version = VERSION_WIN7;
-        trace("Using version 0x%x for SdbTagToString tests\n", g_Version);
+        g_WinVersion = WINVER_WIN7;
+        trace("Using version 0x%x for SdbTagToString tests\n", g_WinVersion);
     }
 #endif
     test_SdbTagToStringAllTags();

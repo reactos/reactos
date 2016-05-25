@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Jansen
+ * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -781,5 +781,21 @@ void test_create_db(const char* name)
         WriteFile(file, rawData, sizeof(rawData), &size, NULL);
         CloseHandle(file);
     }
+}
+
+static DWORD g_WinVersion;
+DWORD get_host_winver()
+{
+    if (!g_WinVersion)
+    {
+        RTL_OSVERSIONINFOEXW rtlinfo = {0};
+        void (__stdcall* pRtlGetVersion)(RTL_OSVERSIONINFOEXW*);
+        pRtlGetVersion = (void (__stdcall*)(RTL_OSVERSIONINFOEXW*))GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+        rtlinfo.dwOSVersionInfoSize = sizeof(rtlinfo);
+        pRtlGetVersion(&rtlinfo);
+        g_WinVersion = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
+    }
+    return g_WinVersion;
 }
 
