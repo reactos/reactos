@@ -978,8 +978,10 @@ BOOL
 WINAPI
 SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    static int once;
+    if (once++ == 0)
+         DPRINT1("SetThreadStackGuarantee(%p): stub\n", StackSizeInBytes);
+    return TRUE;
 }
 
 /*
