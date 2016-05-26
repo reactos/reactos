@@ -126,6 +126,10 @@ ScmReadDependencies(HKEY hServiceKey,
                     LPWSTR *lpDependencies,
                     DWORD *lpdwDependenciesLength);
 
+DWORD
+ScmSetServicePassword(
+    IN PCWSTR pszServiceName,
+    IN PCWSTR pszPassword);
 
 /* controlset.c */
 

@@ -405,19 +405,19 @@ CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 20, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 32, 150, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 150, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 150, 10
     GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 150, 10
     GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", 14008, 50, 132, 200, 10
-    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", 14009, 50, 144, 200, 10
-    AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
+    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     PUSHBUTTON "&Wiederherstellen", 14011, 191, 175, 65, 14, WS_TABSTOP
 END
 
@@ -442,7 +442,7 @@ CAPTION "Dateitypen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 80, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
     PUSHBUTTON "&Neu", 14001, 140, 140, 55, 14, WS_TABSTOP
     PUSHBUTTON "&Löschen", 14002, 200, 140, 55, 14, WS_TABSTOP
     GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 170, 249, 70

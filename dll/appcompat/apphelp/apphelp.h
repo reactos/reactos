@@ -32,6 +32,19 @@ typedef UINT64 QWORD;
 #define TAGREF_NULL (0)
 #define TAGREF_ROOT (0)
 
+typedef struct _DB {
+    HANDLE file;
+    DWORD size;
+    PBYTE data;
+    TAGID stringtable;
+    DWORD write_iter;
+    GUID database_id;
+} DB, *PDB;
+
+/* Flags for SdbInitDatabase */
+#define HID_DOS_PATHS 0x1
+#define HID_DATABASE_FULLPATH 0x2
+#define HID_NO_DATABASE 0x4
 #define HID_DATABASE_TYPE_MASK 0xF00F0000
 #define SDB_DATABASE_MAIN_MSI 0x80020000
 #define SDB_DATABASE_MAIN_SHIM 0x80030000
@@ -46,6 +59,11 @@ typedef struct tagATTRINFO {
     WCHAR *lpattr;
   };
 } ATTRINFO, *PATTRINFO;
+
+typedef enum _PATH_TYPE {
+    DOS_PATH,
+    NT_PATH
+} PATH_TYPE;
 
 typedef enum _SHIM_LOG_LEVEL {
     SHIM_ERR = 1,
@@ -99,6 +117,18 @@ BOOL WINAPI SdbpOpenMemMappedFile(LPCWSTR path, PMEMMAPPED mapping);
 void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping);
 DWORD SdbpStrlen(LPCWSTR string);
 PWSTR SdbpStrDup(LPCWSTR string);
+BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type);
+BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type);
+PDB WINAPI SdbpCreate(void);
+PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
+void WINAPI SdbCloseDatabase(PDB);
+BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
+
+/* sdbread.c */
+BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num);
+TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid);
+TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
+BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
 
 
 /* layer.c */

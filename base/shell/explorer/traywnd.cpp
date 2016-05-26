@@ -1052,7 +1052,7 @@ ChangePos:
                      rcTray.top,
                      rcTray.right - rcTray.left,
                      rcTray.bottom - rcTray.top,
-                     SWP_NOZORDER);
+                     SWP_NOZORDER | SWP_NOACTIVATE);
 
         ResizeWorkArea();
 
@@ -1146,7 +1146,7 @@ ChangePos:
             0,
             0,
             0,
-            SWP_NOMOVE | SWP_NOSIZE);
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
         /* Determine a minimum tray window rectangle. The "client" height is
            zero here since we cannot determine an optimal minimum width when
@@ -1456,7 +1456,7 @@ ChangePos:
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
         }
-        SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
 
         return TRUE;
     }
@@ -1825,7 +1825,7 @@ ChangePos:
             {
                 SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
             }
-            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
 
         }
 

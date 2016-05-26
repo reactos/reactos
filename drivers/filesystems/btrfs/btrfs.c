@@ -61,6 +61,8 @@ PDEVICE_OBJECT comdo = NULL;
 HANDLE log_handle = NULL;
 #endif
 
+int __security_cookie = __LINE__;
+
 static NTSTATUS STDCALL close_file(device_extension* Vcb, PFILE_OBJECT FileObject);
 
 typedef struct {
@@ -82,9 +84,9 @@ static NTSTATUS STDCALL dbg_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PV
 }
 
 #ifdef DEBUG_LONG_MESSAGES
-void STDCALL _debug_message(const char* func, UINT8 priority, const char* file, unsigned int line, char* s, ...) {
+void STDCALL _debug_message(const char* func, const char* file, unsigned int line, char* s, ...) {
 #else
-void STDCALL _debug_message(const char* func, UINT8 priority, char* s, ...) {
+void STDCALL _debug_message(const char* func, char* s, ...) {
 #endif
     LARGE_INTEGER offset;
     PIO_STACK_LOCATION IrpSp;
@@ -94,9 +96,6 @@ void STDCALL _debug_message(const char* func, UINT8 priority, char* s, ...) {
     char *buf2 = NULL, *buf;
     read_context* context = NULL;
     UINT32 length;
-    
-    if (log_started && priority > debug_log_level)
-        return;
     
     buf2 = ExAllocatePoolWithTag(NonPagedPool, 1024, ALLOC_TAG);
     
@@ -327,20 +326,16 @@ BOOL STDCALL get_last_inode(device_extension* Vcb, root* r) {
     }
     
     while (find_prev_item(Vcb, &tp, &prev_tp, FALSE)) {
-        free_traverse_ptr(&tp);
         tp = prev_tp;
         
         TRACE("moving on to %llx,%x,%llx\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
         
-        if (tp.item->key.obj_type == TYPE_INODE_ITEM) {
+        if (tp.item->key.obj_type == TYPE_INODE_ITEM || (tp.item->key.obj_type == TYPE_ROOT_ITEM && !(tp.item->key.obj_id & 0x8000000000000000))) {
             r->lastinode = tp.item->key.obj_id;
-            free_traverse_ptr(&tp);
             TRACE("last inode for tree %llx is %llx\n", r->id, r->lastinode);
             return TRUE;
         }
     }
-    
-    free_traverse_ptr(&tp);
     
     r->lastinode = SUBVOL_ROOT_INODE;
     
@@ -370,13 +365,11 @@ BOOL STDCALL get_xattr(device_extension* Vcb, root* subvol, UINT64 inode, char* 
     
     if (keycmp(&tp.item->key, &searchkey)) {
         TRACE("could not find item (%llx,%x,%llx)\n", searchkey.obj_id, searchkey.obj_type, searchkey.offset);
-        free_traverse_ptr(&tp);
         return FALSE;
     }
     
     if (tp.item->size < sizeof(DIR_ITEM)) {
         ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
-        free_traverse_ptr(&tp);
         return FALSE;
     }
     
@@ -386,7 +379,6 @@ BOOL STDCALL get_xattr(device_extension* Vcb, root* subvol, UINT64 inode, char* 
     while (TRUE) {
         if (size < sizeof(DIR_ITEM) || size < (sizeof(DIR_ITEM) - 1 + xa->m + xa->n)) {
             WARN("(%llx,%x,%llx) is truncated\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
-            free_traverse_ptr(&tp);
             return FALSE;
         }
         
@@ -399,7 +391,6 @@ BOOL STDCALL get_xattr(device_extension* Vcb, root* subvol, UINT64 inode, char* 
                 *data = ExAllocatePoolWithTag(PagedPool, xa->m, ALLOC_TAG);
                 if (!*data) {
                     ERR("out of memory\n");
-                    free_traverse_ptr(&tp);
                     return FALSE;
                 }
                 
@@ -407,7 +398,6 @@ BOOL STDCALL get_xattr(device_extension* Vcb, root* subvol, UINT64 inode, char* 
             } else
                 *data = NULL;
             
-            free_traverse_ptr(&tp);
             return TRUE;
         }
         
@@ -421,8 +411,6 @@ BOOL STDCALL get_xattr(device_extension* Vcb, root* subvol, UINT64 inode, char* 
     }
     
     TRACE("xattr %s not found in (%llx,%x,%llx)\n", name, searchkey.obj_id, searchkey.obj_type, searchkey.offset);
-    
-    free_traverse_ptr(&tp);
     
     return FALSE;
 }
@@ -447,6 +435,8 @@ NTSTATUS STDCALL set_xattr(device_extension* Vcb, root* subvol, UINT64 inode, ch
     }
     
     xasize = sizeof(DIR_ITEM) - 1 + (ULONG)strlen(name) + datalen;
+    
+    // FIXME - make sure xasize not too big
     
     if (!keycmp(&tp.item->key, &searchkey)) { // key exists
         UINT8* newdata;
@@ -474,7 +464,6 @@ NTSTATUS STDCALL set_xattr(device_extension* Vcb, root* subvol, UINT64 inode, ch
                     newdata = ExAllocatePoolWithTag(PagedPool, tp.item->size + xasize - oldxasize, ALLOC_TAG);
                     if (!newdata) {
                         ERR("out of memory\n");
-                        free_traverse_ptr(&tp);
                         return STATUS_INSUFFICIENT_RESOURCES;
                     }
                     
@@ -510,7 +499,6 @@ NTSTATUS STDCALL set_xattr(device_extension* Vcb, root* subvol, UINT64 inode, ch
                     newdata = ExAllocatePoolWithTag(PagedPool, tp.item->size + xasize, ALLOC_TAG);
                     if (!newdata) {
                         ERR("out of memory\n");
-                        free_traverse_ptr(&tp);
                         return STATUS_INSUFFICIENT_RESOURCES;
                     }
                     
@@ -543,7 +531,6 @@ NTSTATUS STDCALL set_xattr(device_extension* Vcb, root* subvol, UINT64 inode, ch
         xa = ExAllocatePoolWithTag(PagedPool, xasize, ALLOC_TAG);
         if (!xa) {
             ERR("out of memory\n");
-            free_traverse_ptr(&tp);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -559,8 +546,6 @@ NTSTATUS STDCALL set_xattr(device_extension* Vcb, root* subvol, UINT64 inode, ch
         
         insert_tree_item(Vcb, subvol, inode, TYPE_XATTR_ITEM, crc32, xa, xasize, NULL, rollback);
     }
-    
-    free_traverse_ptr(&tp);
     
     return STATUS_SUCCESS;
 }
@@ -589,7 +574,6 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
         if (tp.item->size < sizeof(DIR_ITEM)) {
             ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
             
-            free_traverse_ptr(&tp);
             return FALSE;
         } else {
             xa = (DIR_ITEM*)tp.item->data;
@@ -599,7 +583,6 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
                 
                 if (size < sizeof(DIR_ITEM) || size < sizeof(DIR_ITEM) - 1 + xa->m + xa->n) {
                     ERR("(%llx,%x,%llx) was truncated\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
-                    free_traverse_ptr(&tp);
                         
                     return FALSE;
                 }
@@ -616,7 +599,6 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
                     
                     if (newsize == 0) {
                         TRACE("xattr %s deleted\n", name);
-                        free_traverse_ptr(&tp);
                         
                         return TRUE;
                     }
@@ -625,7 +607,6 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
                     newdata = ExAllocatePoolWithTag(PagedPool, newsize, ALLOC_TAG);
                     if (!newdata) {
                         ERR("out of memory\n");
-                        free_traverse_ptr(&tp);
                         return FALSE;
                     }
 
@@ -641,14 +622,12 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
                     
                     insert_tree_item(Vcb, subvol, inode, TYPE_XATTR_ITEM, crc32, newdata, newsize, NULL, rollback);
                     
-                    free_traverse_ptr(&tp);
                         
                     return TRUE;
                 }
                 
                 if (xa->m + xa->n >= size) { // FIXME - test this works
                     WARN("xattr %s not found\n", name);
-                    free_traverse_ptr(&tp);
 
                     return FALSE;
                 } else {
@@ -659,7 +638,6 @@ BOOL STDCALL delete_xattr(device_extension* Vcb, root* subvol, UINT64 inode, cha
         }
     } else {
         WARN("xattr %s not found\n", name);
-        free_traverse_ptr(&tp);
         
         return FALSE;
     }
@@ -686,14 +664,12 @@ NTSTATUS add_dir_item(device_extension* Vcb, root* subvol, UINT64 inode, UINT32 
         
         if (tp.item->size + disize > maxlen) {
             WARN("DIR_ITEM was longer than maxlen (%u + %u > %u)\n", tp.item->size, disize, maxlen);
-            free_traverse_ptr(&tp);
             return STATUS_INTERNAL_ERROR;
         }
         
         di2 = ExAllocatePoolWithTag(PagedPool, tp.item->size + disize, ALLOC_TAG);
         if (!di2) {
             ERR("out of memory\n");
-            free_traverse_ptr(&tp);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -710,8 +686,6 @@ NTSTATUS add_dir_item(device_extension* Vcb, root* subvol, UINT64 inode, UINT32 
     } else {
         insert_tree_item(Vcb, subvol, inode, TYPE_DIR_ITEM, crc32, di, disize, NULL, rollback);
     }
-
-    free_traverse_ptr(&tp);
     
     return STATUS_SUCCESS;
 }
@@ -734,7 +708,6 @@ UINT64 find_next_dir_index(device_extension* Vcb, root* subvol, UINT64 inode) {
     
     if (!keycmp(&searchkey, &tp.item->key)) {
         if (!find_prev_item(Vcb, &tp, &prev_tp, FALSE)) {
-            free_traverse_ptr(&tp);
             tp = prev_tp;
             
             TRACE("moving back to %llx,%x,%llx\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
@@ -745,8 +718,6 @@ UINT64 find_next_dir_index(device_extension* Vcb, root* subvol, UINT64 inode) {
         dirpos = tp.item->key.offset + 1;
     } else
         dirpos = 2;
-    
-    free_traverse_ptr(&tp);
     
     return dirpos;
 }
@@ -794,6 +765,7 @@ exit:
 static NTSTATUS STDCALL drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     BOOL top_level;
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     FsRtlEnterFileSystem();
 
@@ -801,7 +773,18 @@ static NTSTATUS STDCALL drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     
 //     ERR("recursive = %s\n", Irp != IoGetTopLevelIrp() ? "TRUE" : "FALSE");
     
-    Status = write_file(DeviceObject, Irp);
+    _SEH2_TRY {
+        if (IrpSp->MinorFunction & IRP_MN_COMPLETE) {
+            CcMdlWriteComplete(IrpSp->FileObject, &IrpSp->Parameters.Write.ByteOffset, Irp->MdlAddress);
+            
+            Irp->MdlAddress = NULL;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+        } else {
+            Status = write_file(DeviceObject, Irp);
+        }
+    } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+        Status = _SEH2_GetExceptionCode();
+    } _SEH2_END;
     
     Irp->IoStatus.Status = Status;
 
@@ -1180,6 +1163,151 @@ static NTSTATUS STDCALL read_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, P
 //     }
 // }
 
+// static void test_dropping_tree(device_extension* Vcb) {
+//     LIST_ENTRY* le = Vcb->roots.Flink;
+//     
+//     while (le != &Vcb->roots) {
+//         root* r = CONTAINING_RECORD(le, root, list_entry);
+//         
+//         if (r->id == 0x101) {
+//             RemoveEntryList(&r->list_entry);
+//             InsertTailList(&Vcb->drop_roots, &r->list_entry);
+//             return;
+//         }
+//         
+//         le = le->Flink;
+//     }
+// }
+
+NTSTATUS create_root(device_extension* Vcb, UINT64 id, root** rootptr, BOOL no_tree, UINT64 offset, LIST_ENTRY* rollback) {
+    root* r;
+    tree* t;
+    ROOT_ITEM* ri;
+    traverse_ptr tp;
+    
+    r = ExAllocatePoolWithTag(PagedPool, sizeof(root), ALLOC_TAG);
+    if (!r) {
+        ERR("out of memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    r->nonpaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(root_nonpaged), ALLOC_TAG);
+    if (!r->nonpaged) {
+        ERR("out of memory\n");
+        ExFreePool(r);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    if (!no_tree) {
+        t = ExAllocatePoolWithTag(PagedPool, sizeof(tree), ALLOC_TAG);
+        if (!t) {
+            ERR("out of memory\n");
+            ExFreePool(r->nonpaged);
+            ExFreePool(r);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    
+    ri = ExAllocatePoolWithTag(PagedPool, sizeof(ROOT_ITEM), ALLOC_TAG);
+    if (!ri) {
+        ERR("out of memory\n");
+        
+        if (!no_tree)
+            ExFreePool(t);
+        
+        ExFreePool(r->nonpaged);
+        ExFreePool(r);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    r->id = id;
+    r->treeholder.address = 0;
+    r->treeholder.generation = Vcb->superblock.generation;
+    r->treeholder.tree = no_tree ? NULL : t;
+    r->lastinode = 0;
+    r->path.Buffer = NULL;
+    RtlZeroMemory(&r->root_item, sizeof(ROOT_ITEM));
+    r->root_item.num_references = 1;
+    InitializeListHead(&r->fcbs);
+    
+    RtlCopyMemory(ri, &r->root_item, sizeof(ROOT_ITEM));
+    
+    // We ask here for a traverse_ptr to the item we're inserting, so we can
+    // copy some of the tree's variables
+    
+    if (!insert_tree_item(Vcb, Vcb->root_root, id, TYPE_ROOT_ITEM, offset, ri, sizeof(ROOT_ITEM), &tp, rollback)) {
+        ERR("insert_tree_item failed\n");
+        ExFreePool(ri);
+        
+        if (!no_tree)
+            ExFreePool(t);
+        
+        ExFreePool(r->nonpaged);
+        ExFreePool(r);
+        return STATUS_INTERNAL_ERROR;
+    }
+        
+    ExInitializeResourceLite(&r->nonpaged->load_tree_lock);
+    
+    InsertTailList(&Vcb->roots, &r->list_entry);
+    
+    if (!no_tree) {
+        t->header.fs_uuid = tp.tree->header.fs_uuid;
+        t->header.address = 0;
+        t->header.flags = HEADER_FLAG_MIXED_BACKREF | 1; // 1 == "written"? Why does the Linux driver record this?
+        t->header.chunk_tree_uuid = tp.tree->header.chunk_tree_uuid;
+        t->header.generation = Vcb->superblock.generation;
+        t->header.tree_id = id;
+        t->header.num_items = 0;
+        t->header.level = 0;
+
+        t->has_address = FALSE;
+        t->size = 0;
+        t->Vcb = Vcb;
+        t->parent = NULL;
+        t->paritem = NULL;
+        t->root = r;
+        
+        InitializeListHead(&t->itemlist);
+    
+        t->new_address = 0;
+        t->has_new_address = FALSE;
+        t->flags = tp.tree->flags;
+        
+        InsertTailList(&Vcb->trees, &t->list_entry);
+        
+        t->write = TRUE;
+        Vcb->write_trees++;
+    }
+    
+    *rootptr = r;
+
+    return STATUS_SUCCESS;
+}
+
+// static void test_creating_root(device_extension* Vcb) {
+//     NTSTATUS Status;
+//     LIST_ENTRY rollback;
+//     UINT64 id;
+//     root* r;
+//     
+//     InitializeListHead(&rollback);
+//     
+//     if (Vcb->root_root->lastinode == 0)
+//         get_last_inode(Vcb, Vcb->root_root);
+//     
+//     id = Vcb->root_root->lastinode > 0x100 ? (Vcb->root_root->lastinode + 1) : 0x101;
+//     Status = create_root(Vcb, id, &r, &rollback);
+//     
+//     if (!NT_SUCCESS(Status)) {
+//         ERR("create_root returned %08x\n", Status);
+//         do_rollback(Vcb, &rollback);
+//     } else {
+//         Vcb->root_root->lastinode = id;
+//         clear_rollback(&rollback);
+//     }
+// }
+
 static NTSTATUS STDCALL set_label(device_extension* Vcb, FILE_FS_LABEL_INFORMATION* ffli) {
     ULONG utf8len;
     NTSTATUS Status;
@@ -1210,6 +1338,8 @@ static NTSTATUS STDCALL set_label(device_extension* Vcb, FILE_FS_LABEL_INFORMATI
     
 //     test_tree_deletion(Vcb); // TESTING
 //     test_tree_splitting(Vcb);
+//     test_dropping_tree(Vcb);
+//     test_creating_root(Vcb);
     
     Status = consider_write(Vcb);
     
@@ -1238,6 +1368,11 @@ static NTSTATUS STDCALL drv_set_volume_information(IN PDEVICE_OBJECT DeviceObjec
     
     if (Vcb->readonly) {
         Status = STATUS_MEDIA_WRITE_PROTECTED;
+        goto end;
+    }
+    
+    if (Vcb->removing) {
+        Status = STATUS_ACCESS_DENIED;
         goto end;
     }
     
@@ -1313,7 +1448,6 @@ NTSTATUS delete_dir_item(device_extension* Vcb, root* subvol, UINT64 parinode, U
                         
                         if (!newdi) {
                             ERR("out of memory\n");
-                            free_traverse_ptr(&tp);
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
                         
@@ -1342,8 +1476,6 @@ NTSTATUS delete_dir_item(device_extension* Vcb, root* subvol, UINT64 parinode, U
     } else {
         WARN("could not find DIR_ITEM for crc32 %08x\n", crc32);
     }
-    
-    free_traverse_ptr(&tp);
     
     return STATUS_SUCCESS;
 }
@@ -1397,7 +1529,6 @@ NTSTATUS delete_inode_ref(device_extension* Vcb, root* subvol, UINT64 inode, UIN
                         
                         if (!newir) {
                             ERR("out of memory\n");
-                            free_traverse_ptr(&tp);
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
                         
@@ -1436,8 +1567,6 @@ NTSTATUS delete_inode_ref(device_extension* Vcb, root* subvol, UINT64 inode, UIN
     } else {
         WARN("could not find INODE_REF entry for inode %llx in %llx\n", searchkey.obj_id, searchkey.offset);
     }
-    
-    free_traverse_ptr(&tp);
     
     if (changed)
         return STATUS_SUCCESS;
@@ -1488,7 +1617,6 @@ NTSTATUS delete_inode_ref(device_extension* Vcb, root* subvol, UINT64 inode, UIN
                         
                         if (!newier) {
                             ERR("out of memory\n");
-                            free_traverse_ptr(&tp);
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
                         
@@ -1524,12 +1652,224 @@ NTSTATUS delete_inode_ref(device_extension* Vcb, root* subvol, UINT64 inode, UIN
         WARN("couldn't find INODE_EXTREF entry either (offset = %08x)\n", (UINT32)searchkey.offset);
     }
     
-    free_traverse_ptr(&tp);
-    
     return changed ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
 }
 
-NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
+static NTSTATUS delete_subvol(file_ref* fileref, LIST_ENTRY* rollback) {
+    NTSTATUS Status;
+    UINT64 index;
+    KEY searchkey;
+    traverse_ptr tp;
+    UINT32 crc32;
+    ROOT_ITEM* ri;
+    BOOL no_ref = FALSE;
+    fcb* fcb = fileref->fcb;
+    
+    // delete ROOT_REF in root tree
+    
+    Status = delete_root_ref(fcb->Vcb, fcb->subvol->id, fileref->parent->fcb->subvol->id, fileref->parent->fcb->inode, &fileref->utf8, &index, rollback);
+    
+    // A bug in Linux means that if you create a snapshot of a subvol containing another subvol,
+    // the ROOT_REF and ROOT_BACKREF items won't be created, nor will num_references of ROOT_ITEM
+    // be increased. In this case, we just unlink the subvol from its parent, and don't worry
+    // about anything else.
+    
+    if (Status == STATUS_NOT_FOUND)
+        no_ref = TRUE;
+    else if (!NT_SUCCESS(Status)) {
+        ERR("delete_root_ref returned %08x\n", Status);
+        return Status;
+    }
+    
+    if (!no_ref) {
+        // delete ROOT_BACKREF in root tree
+        
+        Status = update_root_backref(fcb->Vcb, fcb->subvol->id, fileref->parent->fcb->subvol->id, rollback);
+        if (!NT_SUCCESS(Status)) {
+            ERR("update_root_backref returned %08x\n", Status);
+            return Status;
+        }
+    }
+    
+    // delete DIR_ITEM in parent
+    
+    crc32 = calc_crc32c(0xfffffffe, (UINT8*)fileref->utf8.Buffer, fileref->utf8.Length);
+    Status = delete_dir_item(fcb->Vcb, fileref->parent->fcb->subvol, fileref->parent->fcb->inode, crc32, &fileref->utf8, rollback);
+    if (!NT_SUCCESS(Status)) {
+        ERR("delete_dir_item returned %08x\n", Status);
+        return Status;
+    }
+    
+    // delete DIR_INDEX in parent
+    
+    if (!no_ref) {
+        searchkey.obj_id = fileref->parent->fcb->inode;
+        searchkey.obj_type = TYPE_DIR_INDEX;
+        searchkey.offset = index;
+        
+        Status = find_item(fcb->Vcb, fileref->parent->fcb->subvol, &tp, &searchkey, FALSE);
+        if (!NT_SUCCESS(Status)) {
+            ERR("find_item 1 returned %08x\n", Status);
+            return Status;
+        }
+    
+        if (!keycmp(&searchkey, &tp.item->key)) {
+            delete_tree_item(fcb->Vcb, &tp, rollback);
+            TRACE("deleting (%llx,%x,%llx)\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
+        }
+    } else {
+        BOOL b;
+        traverse_ptr next_tp;
+        
+        // If we have no ROOT_REF, we have to look through all the DIR_INDEX entries manually :-(
+        
+        searchkey.obj_id = fileref->parent->fcb->inode;
+        searchkey.obj_type = TYPE_DIR_INDEX;
+        searchkey.offset = 0;
+        
+        Status = find_item(fcb->Vcb, fileref->parent->fcb->subvol, &tp, &searchkey, FALSE);
+        if (!NT_SUCCESS(Status)) {
+            ERR("find_item 1 returned %08x\n", Status);
+            return Status;
+        }
+        
+        do {
+            if (tp.item->key.obj_type == TYPE_DIR_INDEX && tp.item->size >= sizeof(DIR_ITEM)) {
+                DIR_ITEM* di = (DIR_ITEM*)tp.item->data;
+                
+                if (di->key.obj_id == fcb->subvol->id && di->key.obj_type == TYPE_ROOT_ITEM && di->n == fileref->utf8.Length &&
+                    tp.item->size >= sizeof(DIR_ITEM) - 1 + di->m + di->n && RtlCompareMemory(fileref->utf8.Buffer, di->name, di->n) == di->n) {
+                    delete_tree_item(fcb->Vcb, &tp, rollback);
+                    break;
+                }
+            }
+        
+            b = find_next_item(fcb->Vcb, &tp, &next_tp, FALSE);
+            
+            if (b) {
+                tp = next_tp;
+                
+                if (tp.item->key.obj_id > searchkey.obj_id || (tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type > searchkey.obj_type))
+                    break;
+            }
+        } while (b);
+    }
+    
+    if (no_ref)
+        return STATUS_SUCCESS;
+    
+    if (fcb->subvol->root_item.num_references > 1) {
+        UINT64 offset;
+        
+        // change ROOT_ITEM num_references
+        
+        fcb->subvol->root_item.num_references--;
+        
+        searchkey.obj_id = fcb->subvol->id;
+        searchkey.obj_type = TYPE_ROOT_ITEM;
+        searchkey.offset = 0xffffffffffffffff;
+        
+        Status = find_item(fcb->Vcb, fcb->Vcb->root_root, &tp, &searchkey, FALSE);
+        if (!NT_SUCCESS(Status)) {
+            ERR("find_item 2 returned %08x\n", Status);
+            return Status;
+        }
+        
+        if (tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type == searchkey.obj_type) {
+            delete_tree_item(fcb->Vcb, &tp, rollback);
+            TRACE("deleting (%llx,%x,%llx)\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
+            offset = tp.item->key.offset;
+        } else {
+            ERR("could not find ROOT_ITEM for subvol %llx\n", fcb->subvol->id);
+            offset = 0;
+        }
+        
+        ri = ExAllocatePoolWithTag(PagedPool, sizeof(ROOT_ITEM), ALLOC_TAG);
+        if (!ri) {
+            ERR("out of memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        
+        RtlCopyMemory(ri, &fcb->subvol->root_item, sizeof(ROOT_ITEM));
+        
+        if (!insert_tree_item(fcb->Vcb, fcb->Vcb->root_root, fcb->subvol->id, TYPE_ROOT_ITEM, offset, ri, sizeof(ROOT_ITEM), NULL, rollback)) {
+            ERR("insert_tree_item failed\n");
+            return STATUS_INTERNAL_ERROR;
+        }
+    } else {
+        RemoveEntryList(&fcb->subvol->list_entry);
+        
+        InsertTailList(&fcb->Vcb->drop_roots, &fcb->subvol->list_entry);
+    }
+    
+    return STATUS_SUCCESS;
+}
+
+static WCHAR* file_desc_fcb(fcb* fcb) {
+    char s[60];
+    UNICODE_STRING us;
+    ANSI_STRING as;
+    
+    if (fcb->debug_desc)
+        return fcb->debug_desc;
+    
+    fcb->debug_desc = ExAllocatePoolWithTag(PagedPool, 60 * sizeof(WCHAR), ALLOC_TAG);
+    if (!fcb->debug_desc)
+        return L"(memory error)";
+    
+    // I know this is pretty hackish...
+    // GCC doesn't like %llx in sprintf, and MSVC won't let us use swprintf
+    // without the CRT, which breaks drivers.
+    
+    sprintf(s, "subvol %x, inode %x", (UINT32)fcb->subvol->id, (UINT32)fcb->inode);
+    
+    as.Buffer = s;
+    as.Length = as.MaximumLength = strlen(s);
+    
+    us.Buffer = fcb->debug_desc;
+    us.MaximumLength = 60 * sizeof(WCHAR);
+    us.Length = 0;
+    
+    RtlAnsiStringToUnicodeString(&us, &as, FALSE);
+    
+    us.Buffer[us.Length / sizeof(WCHAR)] = 0;
+    
+    return fcb->debug_desc;
+}
+
+WCHAR* file_desc_fileref(file_ref* fileref) {
+    if (fileref->debug_desc)
+        return fileref->debug_desc;
+    
+    fileref->debug_desc = ExAllocatePoolWithTag(PagedPool, fileref->full_filename.Length + sizeof(WCHAR), ALLOC_TAG);
+    if (!fileref->debug_desc)
+        return L"(memory error)";
+    
+    RtlCopyMemory(fileref->debug_desc, fileref->full_filename.Buffer, fileref->full_filename.Length);
+    fileref->debug_desc[fileref->full_filename.Length / sizeof(WCHAR)] = 0;
+    
+    return fileref->debug_desc;
+}
+
+WCHAR* file_desc(PFILE_OBJECT FileObject) {
+    fcb* fcb = FileObject->FsContext;
+    ccb* ccb = FileObject->FsContext2;
+    file_ref* fileref = ccb ? ccb->fileref : NULL;
+    
+    if (fileref)
+        return file_desc_fileref(fileref);
+    else
+        return file_desc_fcb(fcb);
+}
+
+void send_notification_fileref(file_ref* fileref, ULONG filter_match, ULONG action) {
+    fcb* fcb = fileref->fcb;
+    
+    FsRtlNotifyFullReportChange(fcb->Vcb->NotifySync, &fcb->Vcb->DirNotifyList, (PSTRING)&fileref->full_filename, fileref->name_offset * sizeof(WCHAR),
+                                NULL, NULL, filter_match, action, NULL);
+}
+
+NTSTATUS delete_fileref(file_ref* fileref, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     ULONG bytecount;
     NTSTATUS Status;
     char* utf8 = NULL;
@@ -1537,26 +1877,37 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     KEY searchkey;
     traverse_ptr tp, tp2;
     UINT64 parinode, index;
+    root* parsubvol;
     INODE_ITEM *ii, *dirii;
     LARGE_INTEGER time;
     BTRFS_TIME now;
     LIST_ENTRY changed_sector_list;
+    fcb* fcb = fileref->fcb;
 #ifdef _DEBUG
     LARGE_INTEGER freq, time1, time2;
 #endif
     
-    // FIXME - throw error if try to delete subvol root(?)
-    
-    // FIXME - delete all children if deleting directory
-    
-    if (fcb->deleted) {
+    if (fileref->deleted || fcb->deleted) {
         WARN("trying to delete already-deleted file\n");
         return STATUS_SUCCESS;
     }
     
-    if (!fcb->par) {
+    if (fileref == fcb->Vcb->root_fileref) {
         ERR("error - trying to delete root FCB\n");
         return STATUS_INTERNAL_ERROR;
+    }
+    
+    if (fcb->inode == SUBVOL_ROOT_INODE) {
+        Status = delete_subvol(fileref, rollback);
+        
+        if (!NT_SUCCESS(Status))
+            goto exit;
+        else {
+            parinode = fileref->parent->fcb->inode;
+            parsubvol = fileref->parent->fcb->subvol;
+            bytecount = fileref->utf8.Length;
+            goto success2;
+        }
     }
     
 #ifdef _DEBUG
@@ -1580,29 +1931,28 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         RtlCopyMemory(s, fcb->adsxattr.Buffer, fcb->adsxattr.Length);
         s[fcb->adsxattr.Length] = 0;
         
-        if (!delete_xattr(fcb->Vcb, fcb->par->subvol, fcb->par->inode, s, fcb->adshash, rollback)) {
+        if (!delete_xattr(fcb->Vcb, fileref->parent->fcb->subvol, fileref->parent->fcb->inode, s, fcb->adshash, rollback)) {
             ERR("failed to delete xattr %s\n", s);
         }
         
         ExFreePool(s);
         
-        fcb->par->inode_item.transid = fcb->Vcb->superblock.generation;
-        fcb->par->inode_item.sequence++;
-        fcb->par->inode_item.st_ctime = now;
+        fileref->parent->fcb->inode_item.transid = fcb->Vcb->superblock.generation;
+        fileref->parent->fcb->inode_item.sequence++;
+        fileref->parent->fcb->inode_item.st_ctime = now;
         
-        searchkey.obj_id = fcb->par->inode;
+        searchkey.obj_id = fileref->parent->fcb->inode;
         searchkey.obj_type = TYPE_INODE_ITEM;
         searchkey.offset = 0xffffffffffffffff;
         
-        Status = find_item(fcb->Vcb, fcb->par->subvol, &tp, &searchkey, FALSE);
+        Status = find_item(fcb->Vcb, fileref->parent->fcb->subvol, &tp, &searchkey, FALSE);
         if (!NT_SUCCESS(Status)) {
             ERR("error - find_item returned %08x\n", Status);
             goto exit;
         }
         
         if (tp.item->key.obj_id != searchkey.obj_id || tp.item->key.obj_type != searchkey.obj_type) {
-            ERR("error - could not find INODE_ITEM for inode %llx in subvol %llx\n", fcb->par->inode, fcb->par->subvol->id);
-            free_traverse_ptr(&tp);
+            ERR("error - could not find INODE_ITEM for inode %llx in subvol %llx\n", fileref->parent->fcb->inode, fileref->parent->fcb->subvol->id);
             Status = STATUS_INTERNAL_ERROR;
             goto exit;
         }
@@ -1610,25 +1960,22 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         ii = ExAllocatePoolWithTag(PagedPool, sizeof(INODE_ITEM), ALLOC_TAG);
         if (!ii) {
             ERR("out of memory\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto exit;
         }
         
-        RtlCopyMemory(ii, &fcb->par->inode_item, sizeof(INODE_ITEM));
+        RtlCopyMemory(ii, &fileref->parent->fcb->inode_item, sizeof(INODE_ITEM));
         delete_tree_item(fcb->Vcb, &tp, rollback);
         
-        insert_tree_item(fcb->Vcb, fcb->par->subvol, searchkey.obj_id, searchkey.obj_type, 0, ii, sizeof(INODE_ITEM), NULL, rollback);
+        insert_tree_item(fcb->Vcb, fileref->parent->fcb->subvol, searchkey.obj_id, searchkey.obj_type, 0, ii, sizeof(INODE_ITEM), NULL, rollback);
         
-        free_traverse_ptr(&tp);
-        
-        fcb->par->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
-        fcb->par->subvol->root_item.ctime = now;
+        fileref->parent->fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
+        fileref->parent->fcb->subvol->root_item.ctime = now;
         
         goto success;
     }
     
-    Status = RtlUnicodeToUTF8N(NULL, 0, &bytecount, fcb->filepart.Buffer, fcb->filepart.Length);
+    Status = RtlUnicodeToUTF8N(NULL, 0, &bytecount, fileref->filepart.Buffer, fileref->filepart.Length);
     if (!NT_SUCCESS(Status)) {
         ERR("RtlUnicodeToUTF8N failed with error %08x\n", Status);
         return Status;
@@ -1640,21 +1987,23 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    RtlUnicodeToUTF8N(utf8, bytecount, &bytecount, fcb->filepart.Buffer, fcb->filepart.Length);
+    RtlUnicodeToUTF8N(utf8, bytecount, &bytecount, fileref->filepart.Buffer, fileref->filepart.Length);
     utf8[bytecount] = 0;
     
     crc32 = calc_crc32c(0xfffffffe, (UINT8*)utf8, bytecount);
 
-    TRACE("deleting %.*S\n", fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+    TRACE("deleting %.*S\n", file_desc_fileref(fileref));
     
-    if (fcb->par->subvol == fcb->subvol)
-        parinode = fcb->par->inode;
+    if (fileref->parent->fcb->subvol == fcb->subvol)
+        parinode = fileref->parent->fcb->inode;
     else
         parinode = SUBVOL_ROOT_INODE;
     
+    parsubvol = fcb->subvol;
+    
     // delete DIR_ITEM (0x54)
     
-    Status = delete_dir_item(fcb->Vcb, fcb->subvol, parinode, crc32, &fcb->utf8, rollback);
+    Status = delete_dir_item(fcb->Vcb, fcb->subvol, parinode, crc32, &fileref->utf8, rollback);
     if (!NT_SUCCESS(Status)) {
         ERR("delete_dir_item returned %08x\n", Status);
         return Status;
@@ -1664,7 +2013,7 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     
     index = 0;
     
-    Status = delete_inode_ref(fcb->Vcb, fcb->subvol, fcb->inode, parinode, &fcb->utf8, &index, rollback);
+    Status = delete_inode_ref(fcb->Vcb, fcb->subvol, fcb->inode, parinode, &fileref->utf8, &index, rollback);
     
     // delete DIR_INDEX (0x60)
     
@@ -1675,7 +2024,6 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     Status = find_item(fcb->Vcb, fcb->subvol, &tp, &searchkey, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("error - find_item returned %08x\n", Status);
-        free_traverse_ptr(&tp);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
@@ -1694,23 +2042,19 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
     Status = find_item(fcb->Vcb, fcb->subvol, &tp2, &searchkey, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("error - find_item returned %08x\n", Status);
-        free_traverse_ptr(&tp);
         goto exit;
     }
     
-    free_traverse_ptr(&tp);
     tp = tp2;
     
     if (keycmp(&searchkey, &tp.item->key)) {
         ERR("error - INODE_ITEM not found\n");
-        free_traverse_ptr(&tp);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
     
     if (tp.item->size < sizeof(INODE_ITEM)) {
         ERR("(%llx,%x,%llx) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(INODE_ITEM));
-        free_traverse_ptr(&tp);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
@@ -1724,7 +2068,6 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         newii = ExAllocatePoolWithTag(PagedPool, sizeof(INODE_ITEM), ALLOC_TAG);
         if (!newii) {
             ERR("out of memory\n");
-            free_traverse_ptr(&tp);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto exit;
         }
@@ -1742,18 +2085,17 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         if (!insert_tree_item(fcb->Vcb, fcb->subvol, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, newii, sizeof(INODE_ITEM), NULL, rollback))
             ERR("error - failed to insert item\n");
         
-        free_traverse_ptr(&tp);
-        
         goto success2;
     }
     
     delete_tree_item(fcb->Vcb, &tp, rollback);
     TRACE("deleting (%llx,%x,%llx)\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
     
+    fcb->deleted = TRUE;
+    
     // delete XATTR_ITEM (0x18)
     
     while (find_next_item(fcb->Vcb, &tp, &tp2, FALSE)) {
-        free_traverse_ptr(&tp);
         tp = tp2;
         
         if (tp.item->key.obj_id == fcb->inode) {
@@ -1765,8 +2107,6 @@ NTSTATUS delete_fcb(fcb* fcb, PFILE_OBJECT FileObject, LIST_ENTRY* rollback) {
         } else
             break;
     }
-    
-    free_traverse_ptr(&tp);
     
     // excise extents
     
@@ -1790,49 +2130,45 @@ success2:
     searchkey.obj_type = TYPE_INODE_ITEM;
     searchkey.offset = 0;
     
-    Status = find_item(fcb->Vcb, fcb->subvol, &tp, &searchkey, FALSE);
+    Status = find_item(fcb->Vcb, parsubvol, &tp, &searchkey, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("error - find_tree returned %08x\n", Status);
         goto exit;
     }
     
     if (keycmp(&searchkey, &tp.item->key)) {
-        ERR("error - could not find INODE_ITEM for parent directory %llx in subvol %llx\n", parinode, fcb->subvol->id);
-        free_traverse_ptr(&tp);
+        ERR("error - could not find INODE_ITEM for parent directory %llx in subvol %llx\n", parinode, parsubvol->id);
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
     
-    TRACE("fcb->par->inode_item.st_size was %llx\n", fcb->par->inode_item.st_size);
-    fcb->par->inode_item.st_size -= bytecount * 2;
-    TRACE("fcb->par->inode_item.st_size now %llx\n", fcb->par->inode_item.st_size);
-    fcb->par->inode_item.transid = fcb->Vcb->superblock.generation;
-    fcb->par->inode_item.sequence++;
-    fcb->par->inode_item.st_ctime = now;
-    fcb->par->inode_item.st_mtime = now;
+    TRACE("fileref->parent->fcb->inode_item.st_size was %llx\n", fileref->parent->fcb->inode_item.st_size);
+    fileref->parent->fcb->inode_item.st_size -= bytecount * 2;
+    TRACE("fileref->parent->fcb->inode_item.st_size now %llx\n", fileref->parent->fcb->inode_item.st_size);
+    fileref->parent->fcb->inode_item.transid = fcb->Vcb->superblock.generation;
+    fileref->parent->fcb->inode_item.sequence++;
+    fileref->parent->fcb->inode_item.st_ctime = now;
+    fileref->parent->fcb->inode_item.st_mtime = now;
 
     dirii = ExAllocatePoolWithTag(PagedPool, sizeof(INODE_ITEM), ALLOC_TAG);
     if (!dirii) {
         ERR("out of memory\n");
-        free_traverse_ptr(&tp);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto exit;
     }
     
-    RtlCopyMemory(dirii, &fcb->par->inode_item, sizeof(INODE_ITEM));
+    RtlCopyMemory(dirii, &fileref->parent->fcb->inode_item, sizeof(INODE_ITEM));
     delete_tree_item(fcb->Vcb, &tp, rollback);
     
-    insert_tree_item(fcb->Vcb, fcb->subvol, searchkey.obj_id, searchkey.obj_type, searchkey.offset, dirii, sizeof(INODE_ITEM), NULL, rollback);
+    insert_tree_item(fcb->Vcb, parsubvol, searchkey.obj_id, searchkey.obj_type, searchkey.offset, dirii, sizeof(INODE_ITEM), NULL, rollback);
     
-    free_traverse_ptr(&tp);
-    
-    fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
-    fcb->subvol->root_item.ctime = now;
+    parsubvol->root_item.ctransid = fcb->Vcb->superblock.generation;
+    parsubvol->root_item.ctime = now;
     
 success:
     consider_write(fcb->Vcb);
     
-    fcb->deleted = TRUE;
+    fileref->deleted = TRUE;
     
     fcb->Header.AllocationSize.QuadPart = 0;
     fcb->Header.FileSize.QuadPart = 0;
@@ -1850,11 +2186,12 @@ success:
     
     // FIXME - set deleted flag of any open FCBs for ADS
     
-    TRACE("sending notification for deletion of %.*S\n", fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
-    
-    FsRtlNotifyFullReportChange(fcb->Vcb->NotifySync, &fcb->Vcb->DirNotifyList, (PSTRING)&fcb->full_filename, fcb->name_offset * sizeof(WCHAR), NULL, NULL,
-                                fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
-                                FILE_ACTION_REMOVED, NULL);
+    if (FileObject && FileObject->FsContext2) {
+        ccb* ccb = FileObject->FsContext2;
+        
+        if (ccb->fileref)
+            send_notification_fileref(ccb->fileref, fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME, FILE_ACTION_REMOVED);
+    }
     
 #ifdef _DEBUG
     time2 = KeQueryPerformanceCounter(NULL);
@@ -1872,16 +2209,16 @@ exit:
 }
 
 void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) {
-    ULONG rc;
-    
+    LONG rc;
+
     rc = InterlockedDecrement(&fcb->refcount);
     
 #ifdef DEBUG_FCB_REFCOUNTS
 //     WARN("fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
 #ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, 1, file, line, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+    _debug_message(func, file, line, "fcb %p: refcount now %i (subvol %llx, inode %llx)\n", fcb, rc, fcb->subvol ? fcb->subvol->id : 0, fcb->inode);
 #else
-    _debug_message(func, 1, "fcb %p: refcount now %i (%.*S)\n", fcb, rc, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+    _debug_message(func, "fcb %p: refcount now %i (subvol %llx, inode %llx)\n", fcb, rc, fcb->subvol ? fcb->subvol->id : 0, fcb->inode);
 #endif
 #endif
     
@@ -1889,30 +2226,13 @@ void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) 
         return;
     
     ExAcquireResourceExclusiveLite(&fcb->Vcb->fcb_lock, TRUE);
-
-    if (fcb->filepart.Buffer)
-        RtlFreeUnicodeString(&fcb->filepart);
    
     ExDeleteResourceLite(&fcb->nonpaged->resource);
     ExDeleteResourceLite(&fcb->nonpaged->paging_resource);
     ExFreePool(fcb->nonpaged);
     
-    if (fcb->par/* && fcb->par != fcb->par->Vcb->root_fcb*/) {
+    if (fcb->list_entry.Flink)
         RemoveEntryList(&fcb->list_entry);
-        _free_fcb(fcb->par, func, file, line);
-    }
-    
-    if (fcb->prev)
-        fcb->prev->next = fcb->next;
-    
-    if (fcb->next)
-        fcb->next->prev = fcb->prev;
-    
-    if (fcb->Vcb->fcbs == fcb)
-        fcb->Vcb->fcbs = fcb->next;
-    
-    if (fcb->full_filename.Buffer)
-        ExFreePool(fcb->full_filename.Buffer);
     
     if (fcb->sd)
         ExFreePool(fcb->sd);
@@ -1920,8 +2240,8 @@ void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) 
     if (fcb->adsxattr.Buffer)
         ExFreePool(fcb->adsxattr.Buffer);
     
-    if (fcb->utf8.Buffer)
-        ExFreePool(fcb->utf8.Buffer);
+    if (fcb->debug_desc)
+        ExFreePool(fcb->debug_desc);
     
     FsRtlUninitializeFileLock(&fcb->lock);
     
@@ -1930,16 +2250,69 @@ void _free_fcb(fcb* fcb, const char* func, const char* file, unsigned int line) 
     ExFreePool(fcb);
 #ifdef DEBUG_FCB_REFCOUNTS
 #ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, 1, file, line, "freeing fcb %p\n", fcb);
+    _debug_message(func, file, line, "freeing fcb %p\n", fcb);
 #else
-    _debug_message(func, 1, "freeing fcb %p\n", fcb);
+    _debug_message(func, "freeing fcb %p\n", fcb);
 #endif
 #endif
+}
+
+void _free_fileref(file_ref* fr, const char* func, const char* file, unsigned int line) {
+    LONG rc;
+
+    rc = InterlockedDecrement(&fr->refcount);
+    
+#ifdef DEBUG_FCB_REFCOUNTS
+#ifdef DEBUG_LONG_MESSAGES
+    _debug_message(func, file, line, "fileref %p: refcount now %i\n", fr, rc);
+#else
+    _debug_message(func, "fileref %p: refcount now %i\n", fr, rc);
+#endif
+#endif
+    
+#ifdef _DEBUG
+    if (rc < 0) {
+        ERR("fileref %p: refcount now %i\n", fr, rc);
+        int3;
+    }
+#endif
+    
+    if (rc > 0)
+        return;
+    
+    // FIXME - do we need a file_ref lock?
+    
+    // FIXME - do delete if needed
+    
+    if (fr->filepart.Buffer)
+        ExFreePool(fr->filepart.Buffer);
+    
+    if (fr->utf8.Buffer)
+        ExFreePool(fr->utf8.Buffer);
+    
+    if (fr->full_filename.Buffer)
+        ExFreePool(fr->full_filename.Buffer);
+    
+    if (fr->debug_desc)
+        ExFreePool(fr->debug_desc);
+    
+    // FIXME - throw error if children not empty
+    
+    free_fcb(fr->fcb);
+    
+    if (fr->list_entry.Flink)
+        RemoveEntryList(&fr->list_entry);
+    
+    if (fr->parent)
+        free_fileref((file_ref*)fr->parent);
+    
+    ExFreePool(fr);
 }
 
 static NTSTATUS STDCALL close_file(device_extension* Vcb, PFILE_OBJECT FileObject) {
     fcb* fcb;
     ccb* ccb;
+    file_ref* fileref = NULL;
     
     TRACE("FileObject = %p\n", FileObject);
     
@@ -1951,7 +2324,7 @@ static NTSTATUS STDCALL close_file(device_extension* Vcb, PFILE_OBJECT FileObjec
     
     ccb = FileObject->FsContext2;
     
-    TRACE("close called for %.*S (fcb == %p)\n", fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer, fcb);
+    TRACE("close called for %S (fcb == %p)\n", file_desc(FileObject), fcb);
     
     FsRtlNotifyCleanup(Vcb->NotifySync, &Vcb->DirNotifyList, ccb);
     
@@ -1961,43 +2334,61 @@ static NTSTATUS STDCALL close_file(device_extension* Vcb, PFILE_OBJECT FileObjec
         if (ccb->query_string.Buffer)
             RtlFreeUnicodeString(&ccb->query_string);
         
+        // FIXME - use refcounts for fileref
+        fileref = ccb->fileref;
+        
         ExFreePool(ccb);
     }
     
     CcUninitializeCacheMap(FileObject, NULL, NULL);
     
-    free_fcb(fcb);
+    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    
+    if (fileref)
+        free_fileref(fileref);
+    else
+        free_fcb(fcb);
+    
+    ExReleaseResourceLite(&Vcb->fcb_lock);
     
     return STATUS_SUCCESS;
 }
 
-static void STDCALL uninit(device_extension* Vcb) {
+void STDCALL uninit(device_extension* Vcb, BOOL flush) {
     chunk* c;
     space* s;
     UINT64 i;
     LIST_ENTRY rollback;
     
-    InitializeListHead(&rollback);
-    
-    acquire_tree_lock(Vcb, TRUE);
-
-    if (Vcb->write_trees > 0)
-        do_write(Vcb, &rollback);
-    
-    free_tree_cache(&Vcb->tree_cache);
-    
-    clear_rollback(&rollback);
-
-    release_tree_lock(Vcb, TRUE);
-
-    while (Vcb->roots) {
-        root* r = Vcb->roots->next;
-
-        ExDeleteResourceLite(&Vcb->roots->nonpaged->load_tree_lock);
-        ExFreePool(Vcb->roots->nonpaged);
-        ExFreePool(Vcb->roots);
+    if (flush) {
+        InitializeListHead(&rollback);
         
-        Vcb->roots = r;
+        acquire_tree_lock(Vcb, TRUE);
+
+        if (Vcb->write_trees > 0)
+            do_write(Vcb, &rollback);
+        
+        free_trees(Vcb);
+        
+        clear_rollback(&rollback);
+
+        release_tree_lock(Vcb, TRUE);
+    }
+    
+    // FIXME - stop async threads
+    
+    free_fcb(Vcb->volume_fcb);
+    free_fileref(Vcb->root_fileref);
+    
+    // FIXME - free any open fcbs?
+
+    while (!IsListEmpty(&Vcb->roots)) {
+        LIST_ENTRY* le = RemoveHeadList(&Vcb->roots);
+        root* r = CONTAINING_RECORD(le, root, list_entry);
+
+        ExDeleteResourceLite(&r->nonpaged->load_tree_lock);
+        ExFreePool(r->nonpaged);
+        ExFreePool(r);
     }
     
     while (!IsListEmpty(&Vcb->chunks)) {
@@ -2017,9 +2408,6 @@ static void STDCALL uninit(device_extension* Vcb) {
         ExFreePool(c->chunk_item);
         ExFreePool(c);
     }
-    
-    free_fcb(Vcb->volume_fcb);
-    free_fcb(Vcb->root_fcb);
     
     for (i = 0; i < Vcb->superblock.num_devices; i++) {
         while (!IsListEmpty(&Vcb->devices[i].disk_holes)) {
@@ -2058,13 +2446,17 @@ static NTSTATUS STDCALL drv_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         goto exit;
     }
     
-    if (FileObject) {
+    if (FileObject && FileObject->FsContext) {
         LONG oc;
+        ccb* ccb;
+        file_ref* fileref;
         
         fcb = FileObject->FsContext;
+        ccb = FileObject->FsContext2;
+        fileref = ccb ? ccb->fileref : NULL;
         
         TRACE("cleanup called for FileObject %p\n", FileObject);
-        TRACE("fcb %p (%.*S), refcount = %u, open_count = %u\n", fcb, fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer, fcb->refcount, fcb->open_count);
+        TRACE("fcb %p (%S), refcount = %u, open_count = %u\n", fcb, file_desc(FileObject), fcb->refcount, fcb->open_count);
         
         IoRemoveShareAccess(FileObject, &fcb->share_access);
         
@@ -2073,14 +2465,20 @@ static NTSTATUS STDCALL drv_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         ERR("fcb %p: open_count now %i\n", fcb, oc);
 #endif
         
+        if (ccb && ccb->options & FILE_DELETE_ON_CLOSE && fileref)
+            fileref->delete_on_close = TRUE;
+        
+        if (fileref && fileref->delete_on_close && fcb->type == BTRFS_TYPE_DIRECTORY && fcb->inode_item.st_size > 0)
+            fileref->delete_on_close = FALSE;
+        
         if (oc == 0) {
-            if (fcb->delete_on_close && fcb != fcb->Vcb->root_fcb && fcb != fcb->Vcb->volume_fcb) {
+            if (fileref && fileref->delete_on_close && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) {
                 LIST_ENTRY rollback;
                 InitializeListHead(&rollback);
                 
                 acquire_tree_lock(fcb->Vcb, TRUE);
                 
-                Status = delete_fcb(fcb, FileObject, &rollback);
+                Status = delete_fileref(fileref, FileObject, &rollback);
                 
                 if (NT_SUCCESS(Status)) {
                     LARGE_INTEGER newlength;
@@ -2144,6 +2542,8 @@ ULONG STDCALL get_file_attributes(device_extension* Vcb, INODE_ITEM* ii, root* r
     char* eaval;
     UINT16 ealen;
     
+    // ii can be NULL
+    
     if (!ignore_xa && get_xattr(Vcb, r, inode, EA_DOSATTRIB, EA_DOSATTRIB_HASH, (UINT8**)&eaval, &ealen)) {
         if (ealen > 2) {
             if (eaval[0] == '0' && eaval[1] == 'x') {
@@ -2164,6 +2564,11 @@ ULONG STDCALL get_file_attributes(device_extension* Vcb, INODE_ITEM* ii, root* r
                 TRACE("DOSATTRIB: %08x\n", dosnum);
 
                 ExFreePool(eaval);
+                
+                if (type == BTRFS_TYPE_DIRECTORY)
+                    dosnum |= FILE_ATTRIBUTE_DIRECTORY;
+                else if (type == BTRFS_TYPE_SYMLINK)
+                    dosnum |= FILE_ATTRIBUTE_REPARSE_POINT;
                 
                 return dosnum;
             }
@@ -2359,8 +2764,8 @@ static NTSTATUS STDCALL read_superblock(device_extension* Vcb, PDEVICE_OBJECT de
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL dev_ioctl(PDEVICE_OBJECT DeviceObject, ULONG ControlCode, PVOID InputBuffer,
-                    ULONG InputBufferSize, PVOID OutputBuffer, ULONG OutputBufferSize, BOOLEAN Override)
+NTSTATUS STDCALL dev_ioctl(PDEVICE_OBJECT DeviceObject, ULONG ControlCode, PVOID InputBuffer, ULONG InputBufferSize,
+                           PVOID OutputBuffer, ULONG OutputBufferSize, BOOLEAN Override, IO_STATUS_BLOCK* iosb)
 {
     PIRP Irp;
     KEVENT Event;
@@ -2393,6 +2798,9 @@ static NTSTATUS STDCALL dev_ioctl(PDEVICE_OBJECT DeviceObject, ULONG ControlCode
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
+    
+    if (iosb)
+        *iosb = IoStatus;
 
     return Status;
 }
@@ -2430,11 +2838,11 @@ static NTSTATUS STDCALL add_root(device_extension* Vcb, UINT64 id, UINT64 addr, 
     }
     
     r->id = id;
+    r->path.Buffer = NULL;
     r->treeholder.address = addr;
     r->treeholder.tree = NULL;
     init_tree_holder(&r->treeholder);
-    r->prev = NULL;
-    r->next = Vcb->roots;
+    InitializeListHead(&r->fcbs);
 
     r->nonpaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(root_nonpaged), ALLOC_TAG);
     if (!r->nonpaged) {
@@ -2453,10 +2861,7 @@ static NTSTATUS STDCALL add_root(device_extension* Vcb, UINT64 id, UINT64 addr, 
             RtlZeroMemory(((UINT8*)&r->root_item) + tp->item->size, sizeof(ROOT_ITEM) - tp->item->size);
     }
     
-    if (Vcb->roots)
-        Vcb->roots->prev = r;
-    
-    Vcb->roots = r;
+    InsertTailList(&Vcb->roots, &r->list_entry);
     
     switch (r->id) {
         case BTRFS_ROOT_ROOT:
@@ -2477,6 +2882,10 @@ static NTSTATUS STDCALL add_root(device_extension* Vcb, UINT64 id, UINT64 addr, 
             
         case BTRFS_ROOT_CHECKSUM:
             Vcb->checksum_root = r;
+            break;
+            
+        case BTRFS_ROOT_UUID:
+            Vcb->uuid_root = r;
             break;
     }
     
@@ -2520,13 +2929,9 @@ static NTSTATUS STDCALL look_for_roots(device_extension* Vcb) {
     
         b = find_next_item(Vcb, &tp, &next_tp, FALSE);
         
-        if (b) {
-            free_traverse_ptr(&tp);
+        if (b)
             tp = next_tp;
-        }
     } while (b);
-    
-    free_traverse_ptr(&tp);
     
     return STATUS_SUCCESS;
 }
@@ -2591,14 +2996,11 @@ static NTSTATUS find_disk_holes(device_extension* Vcb, device* dev) {
         b = find_next_item(Vcb, &tp, &next_tp, FALSE);
         
         if (b) {
-            free_traverse_ptr(&tp);
             tp = next_tp;
             if (tp.item->key.obj_id > searchkey.obj_id || tp.item->key.obj_type > searchkey.obj_type)
                 break;
         }
     } while (b);
-    
-    free_traverse_ptr(&tp);
     
     if (lastaddr < dev->devitem.num_bytes) {
         Status = add_disk_hole(&dev->disk_holes, lastaddr, dev->devitem.num_bytes - lastaddr);
@@ -2674,6 +3076,8 @@ static NTSTATUS STDCALL load_chunk_root(device_extension* Vcb) {
                 c->offset = tp.item->key.offset;
                 c->used = c->oldused = 0;
                 c->space_changed = FALSE;
+                c->cache_inode = 0;
+                c->cache_size = 0;
                 
                 c->chunk_item = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
                 
@@ -2709,317 +3113,18 @@ static NTSTATUS STDCALL load_chunk_root(device_extension* Vcb) {
     
         b = find_next_item(Vcb, &tp, &next_tp, FALSE);
         
-        if (b) {
-            free_traverse_ptr(&tp);
+        if (b)
             tp = next_tp;
-        }
     } while (b);
-    
-    free_traverse_ptr(&tp);
     
     Vcb->log_to_phys_loaded = TRUE;
     
     return STATUS_SUCCESS;
 }
 
-static BOOL load_stored_free_space_cache(device_extension* Vcb, chunk* c) {
-    KEY searchkey;
-    traverse_ptr tp, tp2;
-    FREE_SPACE_ITEM* fsi;
-    UINT64 inode, num_sectors, i, generation;
-    INODE_ITEM* ii;
-    UINT8* data;
-    NTSTATUS Status;
-    UINT32 *checksums, crc32;
-#ifdef _DEBUG
-    FREE_SPACE_ENTRY* fse;
-    UINT64 num_entries;
-#endif
-    
-    TRACE("(%p, %llx)\n", Vcb, c->offset);
-    
-    if (Vcb->superblock.generation != Vcb->superblock.cache_generation)
-        return FALSE;
-    
-    searchkey.obj_id = FREE_SPACE_CACHE_ID;
-    searchkey.obj_type = 0;
-    searchkey.offset = c->offset;
-    
-    Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, FALSE);
-    if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
-        return FALSE;
-    }
-    
-    if (keycmp(&tp.item->key, &searchkey)) {
-        WARN("(%llx,%x,%llx) not found\n", searchkey.obj_id, searchkey.obj_type, searchkey.offset);
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    if (tp.item->size < sizeof(FREE_SPACE_ITEM)) {
-        WARN("(%llx,%x,%llx) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(FREE_SPACE_ITEM));
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    fsi = (FREE_SPACE_ITEM*)tp.item->data;
-    
-    if (fsi->generation != Vcb->superblock.cache_generation) {
-        WARN("cache had generation %llx, expecting %llx\n", fsi->generation, Vcb->superblock.cache_generation);
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    if (fsi->key.obj_type != TYPE_INODE_ITEM) {
-        WARN("cache pointed to something other than an INODE_ITEM\n");
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    if (fsi->num_bitmaps > 0) {
-        WARN("cache had bitmaps, unsure of how to deal with these\n");
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    inode = fsi->key.obj_id;
-    
-    searchkey = fsi->key;
-#ifdef _DEBUG
-    num_entries = fsi->num_entries;
-#endif
-    
-    Status = find_item(Vcb, Vcb->root_root, &tp2, &searchkey, FALSE);
-    if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
-        free_traverse_ptr(&tp);
-        return FALSE;
-    }
-    
-    free_traverse_ptr(&tp);
-    
-    if (keycmp(&tp2.item->key, &searchkey)) {
-        WARN("(%llx,%x,%llx) not found\n", searchkey.obj_id, searchkey.obj_type, searchkey.offset);
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    if (tp2.item->size < sizeof(INODE_ITEM)) {
-        WARN("(%llx,%x,%llx) was %u bytes, expected %u\n", tp2.item->key.obj_id, tp2.item->key.obj_type, tp2.item->key.offset, tp2.item->size, sizeof(INODE_ITEM));
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    ii = (INODE_ITEM*)tp2.item->data;
-    
-    data = ExAllocatePoolWithTag(PagedPool, ii->st_size, ALLOC_TAG);
-    
-    if (!data) {
-        ERR("out of memory\n");
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    Status = read_file(Vcb, Vcb->root_root, inode, data, 0, ii->st_size, NULL);
-    if (!NT_SUCCESS(Status)) {
-        ERR("read_file returned %08x\n", Status);
-        ExFreePool(data);
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    num_sectors = ii->st_size / Vcb->superblock.sector_size;
-    
-    generation = *(data + (num_sectors * sizeof(UINT32)));
-    
-    if (generation != Vcb->superblock.cache_generation) {
-        ERR("generation was %llx, expected %llx\n", generation, Vcb->superblock.cache_generation);
-        ExFreePool(data);
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    checksums = ExAllocatePoolWithTag(PagedPool, sizeof(UINT32) * num_sectors, ALLOC_TAG); // FIXME - get rid of this
-    
-    if (!checksums) {
-        ERR("out of memory\n");
-        ExFreePool(data);
-        free_traverse_ptr(&tp2);
-        return FALSE;
-    }
-    
-    RtlCopyMemory(checksums, data, sizeof(UINT32) * num_sectors);
-    
-    for (i = 0; i < num_sectors; i++) {
-        if (i * Vcb->superblock.sector_size > sizeof(UINT32) * num_sectors)
-            crc32 = ~calc_crc32c(0xffffffff, &data[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
-        else if ((i + 1) * Vcb->superblock.sector_size < sizeof(UINT32) * num_sectors)
-            crc32 = 0; // FIXME - test this
-        else
-            crc32 = ~calc_crc32c(0xffffffff, &data[sizeof(UINT32) * num_sectors], ((i + 1) * Vcb->superblock.sector_size) - (sizeof(UINT32) * num_sectors));
-        
-        if (crc32 != checksums[i]) {
-            WARN("checksum %llu was %08x, expected %08x\n", i, crc32, checksums[i]);
-            ExFreePool(checksums);
-            ExFreePool(data);
-            free_traverse_ptr(&tp2);
-            return FALSE;
-        }
-    }
-    
-    ExFreePool(checksums);
-    
-#ifdef _DEBUG
-    fse = (FREE_SPACE_ENTRY*)&data[(sizeof(UINT32) * num_sectors) + sizeof(UINT64)];
-
-    for (i = 0; i < num_entries; i++) {
-        TRACE("(%llx,%llx,%x)\n", fse[i].offset, fse[i].size, fse[i].type);
-    }
-#endif
-    
-    FIXME("FIXME - read cache\n");
-    
-    ExFreePool(data);
-    free_traverse_ptr(&tp2);
-    
-    return FALSE;
-}
-
-static NTSTATUS load_free_space_cache(device_extension* Vcb, chunk* c) {
-    traverse_ptr tp, next_tp;
-    KEY searchkey;
-    UINT64 lastaddr;
-    BOOL b;
-    space *s, *s2;
-    LIST_ENTRY* le;
-    NTSTATUS Status;
-    
-    load_stored_free_space_cache(Vcb, c);
-    
-    TRACE("generating free space cache for chunk %llx\n", c->offset);
-    
-    searchkey.obj_id = c->offset;
-    searchkey.obj_type = TYPE_EXTENT_ITEM;
-    searchkey.offset = 0;
-    
-    Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, FALSE);
-    if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
-        return Status;
-    }
-    
-    lastaddr = c->offset;
-    
-    do {
-        if (tp.item->key.obj_id >= c->offset + c->chunk_item->size)
-            break;
-        
-        if (tp.item->key.obj_id >= c->offset && (tp.item->key.obj_type == TYPE_EXTENT_ITEM || tp.item->key.obj_type == TYPE_METADATA_ITEM)) {
-            if (tp.item->key.obj_id > lastaddr) {
-                s = ExAllocatePoolWithTag(PagedPool, sizeof(space), ALLOC_TAG);
-                
-                if (!s) {
-                    ERR("out of memory\n");
-                    return STATUS_INSUFFICIENT_RESOURCES;
-                }
-                
-                s->offset = lastaddr;
-                s->size = tp.item->key.obj_id - lastaddr;
-                s->type = SPACE_TYPE_FREE;
-                InsertTailList(&c->space, &s->list_entry);
-                
-                TRACE("(%llx,%llx)\n", s->offset, s->size);
-            }
-            
-            if (tp.item->key.obj_type == TYPE_METADATA_ITEM)
-                lastaddr = tp.item->key.obj_id + Vcb->superblock.node_size;
-            else
-                lastaddr = tp.item->key.obj_id + tp.item->key.offset;
-        }
-        
-        b = find_next_item(Vcb, &tp, &next_tp, FALSE);
-        if (b) {
-            free_traverse_ptr(&tp);
-            tp = next_tp;
-        }
-    } while (b);
-    
-    if (lastaddr < c->offset + c->chunk_item->size) {
-        s = ExAllocatePoolWithTag(PagedPool, sizeof(space), ALLOC_TAG);
-        
-        if (!s) {
-            ERR("out of memory\n");
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        
-        s->offset = lastaddr;
-        s->size = c->offset + c->chunk_item->size - lastaddr;
-        s->type = SPACE_TYPE_FREE;
-        InsertTailList(&c->space, &s->list_entry);
-        
-        TRACE("(%llx,%llx)\n", s->offset, s->size);
-    }
-    
-    free_traverse_ptr(&tp);
-    
-    // add allocated space
-    
-    lastaddr = c->offset;
-    
-    le = c->space.Flink;
-    while (le != &c->space) {
-        s = CONTAINING_RECORD(le, space, list_entry);
-        
-        if (s->offset > lastaddr) {
-            s2 = ExAllocatePoolWithTag(PagedPool, sizeof(space), ALLOC_TAG);
-            
-            if (!s2) {
-                ERR("out of memory\n");
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-            
-            s2->offset = lastaddr;
-            s2->size = s->offset - lastaddr;
-            s2->type = SPACE_TYPE_USED;
-            
-            InsertTailList(&s->list_entry, &s2->list_entry);
-        }
-        
-        lastaddr = s->offset + s->size;
-        
-        le = le->Flink;
-    }
-    
-    if (lastaddr < c->offset + c->chunk_item->size) {
-        s = ExAllocatePoolWithTag(PagedPool, sizeof(space), ALLOC_TAG);
-        
-        if (!s) {
-            ERR("out of memory\n");
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        
-        s->offset = lastaddr;
-        s->size = c->offset + c->chunk_item->size - lastaddr;
-        s->type = SPACE_TYPE_USED;
-        InsertTailList(&c->space, &s->list_entry);
-    }
-    
-    le = c->space.Flink;
-    while (le != &c->space) {
-        s = CONTAINING_RECORD(le, space, list_entry);
-        
-        TRACE("%llx,%llx,%u\n", s->offset, s->size, s->type);
-        
-        le = le->Flink;
-    }
-    
-    return STATUS_SUCCESS;
-}
-
 void protect_superblocks(device_extension* Vcb, chunk* c) {
     int i = 0, j;
-    UINT64 addr;
+    UINT64 off_start, off_end;
     
     // FIXME - this will need modifying for RAID
     
@@ -3029,23 +3134,14 @@ void protect_superblocks(device_extension* Vcb, chunk* c) {
         
         for (j = 0; j < ci->num_stripes; j++) {
             if (cis[j].offset + ci->size > superblock_addrs[i] && cis[j].offset <= superblock_addrs[i] + sizeof(superblock)) {
-                UINT32 size;
-                
                 TRACE("cut out superblock in chunk %llx\n", c->offset);
                 
-                addr = (superblock_addrs[i] - cis[j].offset) + c->offset;
-                TRACE("addr %llx\n", addr);
+                // The Linux driver protects the whole stripe in which the superblock lives
                 
-                // This prevents trees from spanning a stripe boundary, which btrfs check complains
-                // about. It also prevents the chunk tree being placed at 0x11000, which for some
-                // reason makes the FS unmountable on Linux (it tries to read 0x10000, i.e. the 
-                // superblock, instead).
-                if (ci->type & BLOCK_FLAG_SYSTEM || ci->type & BLOCK_FLAG_METADATA)
-                    size = max(sizeof(superblock), Vcb->superblock.node_size);
-                else
-                    size = sizeof(superblock);
+                off_start = ((superblock_addrs[i] - cis[j].offset) / c->chunk_item->stripe_length) * c->chunk_item->stripe_length;
+                off_end = sector_align(superblock_addrs[i] - cis[j].offset + sizeof(superblock), c->chunk_item->stripe_length);
                 
-                add_to_space_list(c, addr, size, SPACE_TYPE_USED);
+                add_to_space_list(c, c->offset + off_start, off_end - off_start, SPACE_TYPE_USED);
             }
         }
         
@@ -3091,7 +3187,6 @@ static NTSTATUS STDCALL find_chunk_usage(device_extension* Vcb) {
             }
         }
         
-        free_traverse_ptr(&tp);
 //         if (addr >= c->offset && (addr - c->offset) < c->chunk_item->size && c->chunk_item->num_stripes > 0) {
 //             cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];
 // 
@@ -3218,6 +3313,7 @@ static root* find_default_subvol(device_extension* Vcb) {
     UINT64 inode;
     UINT8 type;
     UNICODE_STRING filename;
+    LIST_ENTRY* le;
     
     static WCHAR fn[] = L"default";
     static UINT32 crc32 = 0x8dbfc2d2;
@@ -3232,11 +3328,51 @@ static root* find_default_subvol(device_extension* Vcb) {
             return subvol;
     }
     
-    subvol = Vcb->roots;
-    while (subvol && subvol->id != BTRFS_ROOT_FSTREE)
-        subvol = subvol->next;
+    le = Vcb->roots.Flink;
+    while (le != &Vcb->roots) {
+        root* r = CONTAINING_RECORD(le, root, list_entry);
+        
+        if (r->id == BTRFS_ROOT_FSTREE)
+            return r;
+        
+        le = le->Flink;
+    }
     
-    return subvol;
+    return NULL;
+}
+
+static BOOL is_device_removable(PDEVICE_OBJECT devobj) {
+    NTSTATUS Status;
+    STORAGE_HOTPLUG_INFO shi;
+    
+    Status = dev_ioctl(devobj, IOCTL_STORAGE_GET_HOTPLUG_INFO, NULL, 0, &shi, sizeof(STORAGE_HOTPLUG_INFO), TRUE, NULL);
+    
+    if (!NT_SUCCESS(Status)) {
+        ERR("dev_ioctl returned %08x\n", Status);
+        return FALSE;
+    }
+    
+    return shi.MediaRemovable != 0 ? TRUE : FALSE;
+}
+
+static ULONG get_device_change_count(PDEVICE_OBJECT devobj) {
+    NTSTATUS Status;
+    ULONG cc;
+    IO_STATUS_BLOCK iosb;
+    
+    Status = dev_ioctl(devobj, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, &cc, sizeof(ULONG), TRUE, &iosb);
+    
+    if (!NT_SUCCESS(Status)) {
+        ERR("dev_ioctl returned %08x\n", Status);
+        return 0;
+    }
+    
+    if (iosb.Information < sizeof(ULONG)) {
+        ERR("iosb.Information was too short\n");
+        return 0;
+    }
+    
+    return cc;
 }
 
 static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
@@ -3250,6 +3386,7 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     LIST_ENTRY* le;
     KEY searchkey;
     traverse_ptr tp;
+    fcb* root_fcb = NULL;
     
     TRACE("mount_vol called\n");
     
@@ -3269,9 +3406,10 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 //     }
 
     Status = dev_ioctl(DeviceToMount, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0,
-                       &piex, sizeof(piex), TRUE);
+                       &piex, sizeof(piex), TRUE, NULL);
     if (!NT_SUCCESS(Status)) {
         ERR("error reading partition information: %08x\n", Status);
+        Status = STATUS_UNRECOGNIZED_VOLUME;
         goto exit;
     }
 
@@ -3282,16 +3420,17 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                             0,
                             FALSE,
                             &NewDeviceObject);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) {
+        ERR("IoCreateDevice returned %08x\n", Status);
+        Status = STATUS_UNRECOGNIZED_VOLUME;
         goto exit;
+    }
     
 //     TRACE("DEV_ITEM = %x, superblock = %x\n", sizeof(DEV_ITEM), sizeof(superblock));
 
     NewDeviceObject->Flags |= DO_DIRECT_IO;
     Vcb = (PVOID)NewDeviceObject->DeviceExtension;
     RtlZeroMemory(Vcb, sizeof(device_extension));
-    
-    InitializeListHead(&Vcb->tree_cache);
     
     ExInitializeResourceLite(&Vcb->tree_lock);
     Vcb->tree_lock_counter = 0;
@@ -3392,6 +3531,8 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     Vcb->devices[0].devobj = DeviceToMount;
     RtlCopyMemory(&Vcb->devices[0].devitem, &Vcb->superblock.dev_item, sizeof(DEV_ITEM));
+    Vcb->devices[0].removable = is_device_removable(Vcb->devices[0].devobj);
+    Vcb->devices[0].change_count = Vcb->devices[0].removable ? get_device_change_count(Vcb->devices[0].devobj) : 0;
     
     if (Vcb->superblock.num_devices > 1)
         RtlZeroMemory(&Vcb->devices[1], sizeof(DEV_ITEM) * (Vcb->superblock.num_devices - 1));
@@ -3409,7 +3550,9 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
 //     Vcb->root_tree_phys_addr = logical_to_physical(Vcb, Vcb->superblock.root_tree_addr);
     
-    Vcb->roots = NULL;
+    InitializeListHead(&Vcb->roots);
+    InitializeListHead(&Vcb->drop_roots);
+    
     Vcb->log_to_phys_loaded = FALSE;
     
     Vcb->max_inline = Vcb->superblock.node_size / 2;
@@ -3463,6 +3606,16 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         ERR("find_chunk_usage returned %08x\n", Status);
         goto exit;
     }
+        
+    // We've already increased the generation by one
+    if (!Vcb->readonly && Vcb->superblock.generation - 1 != Vcb->superblock.cache_generation) {
+        WARN("generation was %llx, free-space cache generation was %llx; clearing cache...\n", Vcb->superblock.generation - 1, Vcb->superblock.cache_generation);
+        Status = clear_free_space_cache(Vcb);
+        if (!NT_SUCCESS(Status)) {
+            ERR("clear_free_space_cache returned %08x\n", Status);
+            goto exit;
+        }
+    }
     
     Vcb->volume_fcb = create_fcb();
     if (!Vcb->volume_fcb) {
@@ -3474,48 +3627,35 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     Vcb->volume_fcb->Vcb = Vcb;
     Vcb->volume_fcb->sd = NULL;
     
-    Vcb->root_fcb = create_fcb();
-    if (!Vcb->root_fcb) {
+    root_fcb = create_fcb();
+    if (!root_fcb) {
         ERR("out of memory\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto exit;
     }
     
-    Vcb->root_fcb->Vcb = Vcb;
-    Vcb->root_fcb->inode = SUBVOL_ROOT_INODE;
-    Vcb->root_fcb->type = BTRFS_TYPE_DIRECTORY;
-    
-    Vcb->root_fcb->full_filename.Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(WCHAR), ALLOC_TAG);
-    
-    if (!Vcb->root_fcb->full_filename.Buffer) {
-        ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto exit;
-    }
-    
-    Vcb->root_fcb->full_filename.Buffer[0] = '\\';
-    Vcb->root_fcb->full_filename.Length = Vcb->root_fcb->full_filename.MaximumLength = sizeof(WCHAR);
+    root_fcb->Vcb = Vcb;
+    root_fcb->inode = SUBVOL_ROOT_INODE;
+    root_fcb->type = BTRFS_TYPE_DIRECTORY;
     
 #ifdef DEBUG_FCB_REFCOUNTS
     WARN("volume FCB = %p\n", Vcb->volume_fcb);
-    WARN("root FCB = %p\n", Vcb->root_fcb);
+    WARN("root FCB = %p\n", root_fcb);
 #endif
     
-    Vcb->root_fcb->subvol = find_default_subvol(Vcb);
+    root_fcb->subvol = find_default_subvol(Vcb);
 
-    if (!Vcb->root_fcb->subvol) {
+    if (!root_fcb->subvol) {
         ERR("could not find top subvol\n");
         Status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
     
-    Vcb->fcbs = Vcb->root_fcb;
-    
-    searchkey.obj_id = Vcb->root_fcb->inode;
+    searchkey.obj_id = root_fcb->inode;
     searchkey.obj_type = TYPE_INODE_ITEM;
     searchkey.offset = 0xffffffffffffffff;
     
-    Status = find_item(Vcb, Vcb->root_fcb->subvol, &tp, &searchkey, FALSE);
+    Status = find_item(Vcb, root_fcb->subvol, &tp, &searchkey, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("error - find_item returned %08x\n", Status);
         goto exit;
@@ -3524,20 +3664,37 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     if (tp.item->key.obj_id != searchkey.obj_id || tp.item->key.obj_type != searchkey.obj_type) {
         ERR("couldn't find INODE_ITEM for root directory\n");
         Status = STATUS_INTERNAL_ERROR;
-        free_traverse_ptr(&tp);
         goto exit;
     }
     
     if (tp.item->size > 0)
-        RtlCopyMemory(&Vcb->root_fcb->inode_item, tp.item->data, min(sizeof(INODE_ITEM), tp.item->size));
+        RtlCopyMemory(&root_fcb->inode_item, tp.item->data, min(sizeof(INODE_ITEM), tp.item->size));
     
-    free_traverse_ptr(&tp);
+    fcb_get_sd(root_fcb, NULL);
     
-    fcb_get_sd(Vcb->root_fcb);
+    root_fcb->atts = get_file_attributes(Vcb, &root_fcb->inode_item, root_fcb->subvol, root_fcb->inode, root_fcb->type, FALSE, FALSE);
     
-    Vcb->root_fcb->atts = get_file_attributes(Vcb, &Vcb->root_fcb->inode_item, Vcb->root_fcb->subvol, Vcb->root_fcb->inode, Vcb->root_fcb->type,
-                                              FALSE, FALSE);
-      
+    Vcb->root_fileref = create_fileref();
+    if (!Vcb->root_fileref) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto exit;
+    }
+    
+    Vcb->root_fileref->fcb = root_fcb;
+    InsertTailList(&root_fcb->subvol->fcbs, &root_fcb->list_entry);
+    
+    Vcb->root_fileref->full_filename.Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(WCHAR), ALLOC_TAG);
+    
+    if (!Vcb->root_fileref->full_filename.Buffer) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto exit;
+    }
+    
+    Vcb->root_fileref->full_filename.Buffer[0] = '\\';
+    Vcb->root_fileref->full_filename.Length = Vcb->root_fileref->full_filename.MaximumLength = sizeof(WCHAR);
+
     for (i = 0; i < Vcb->superblock.num_devices; i++) {
         Status = find_disk_holes(Vcb, &Vcb->devices[i]);
         if (!NT_SUCCESS(Status)) {
@@ -3607,12 +3764,6 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 //     RtlCopyMemory(NewDeviceObject->Vpb->VolumeLabel,
 //                   Vcb->NtfsInfo.VolumeLabel,
 //                   Vcb->NtfsInfo.VolumeLabelLength);
-    
-    Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, NULL, NULL, NULL, flush_thread, Vcb);
-    if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
-        goto exit;
-    }
 
     NewDeviceObject->Vpb = Stack->Parameters.MountVolume.Vpb;
     Stack->Parameters.MountVolume.Vpb->DeviceObject = NewDeviceObject;
@@ -3622,6 +3773,12 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     NewDeviceObject->Vpb->VolumeLabel[0] = '?';
     NewDeviceObject->Vpb->VolumeLabel[1] = 0;
     NewDeviceObject->Vpb->ReferenceCount++; // FIXME - should we deref this at any point?
+    
+    Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, NULL, NULL, NULL, flush_thread, NewDeviceObject);
+    if (!NT_SUCCESS(Status)) {
+        ERR("PsCreateSystemThread returned %08x\n", Status);
+        goto exit;
+    }
     
     Status = STATUS_SUCCESS;
 
@@ -3648,8 +3805,10 @@ exit:
 
     if (!NT_SUCCESS(Status)) {
         if (Vcb) {
-            if (Vcb->root_fcb)
-                free_fcb(Vcb->root_fcb);
+            if (Vcb->root_fileref)
+                free_fileref(Vcb->root_fileref);
+            else if (root_fcb)
+                free_fcb(root_fcb);
 
             if (Vcb->volume_fcb)
                 free_fcb(Vcb->volume_fcb);
@@ -3707,10 +3866,8 @@ static NTSTATUS STDCALL drv_file_system_control(IN PDEVICE_OBJECT DeviceObject, 
             
         case IRP_MN_KERNEL_CALL:
             TRACE("IRP_MN_KERNEL_CALL\n");
-            break;
             
-        case IRP_MN_LOAD_FILE_SYSTEM:
-            TRACE("IRP_MN_LOAD_FILE_SYSTEM\n");
+            status = fsctl_request(DeviceObject, Irp, IrpSp->Parameters.FileSystemControl.FsControlCode, FALSE);
             break;
             
         case IRP_MN_USER_FS_REQUEST:
@@ -3720,13 +3877,11 @@ static NTSTATUS STDCALL drv_file_system_control(IN PDEVICE_OBJECT DeviceObject, 
             break;
             
         case IRP_MN_VERIFY_VOLUME:
-            TRACE("IRP_MN_VERIFY_VOLUME\n");
+            FIXME("STUB: IRP_MN_VERIFY_VOLUME\n");
             break;
            
         default:
-            WARN("unknown minor %u\n", IrpSp->MinorFunction);
             break;
-            
     }
 
     Irp->IoStatus.Status = status;
@@ -3754,6 +3909,8 @@ static NTSTATUS STDCALL drv_lock_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP
     TRACE("lock control\n");
     
     Status = FsRtlProcessFileLock(&fcb->lock, Irp, NULL);
+
+    fcb->Header.IsFastIoPossible = fast_io_possible(fcb);
     
     if (top_level) 
         IoSetTopLevelIrp(NULL);
@@ -3800,7 +3957,7 @@ static NTSTATUS STDCALL drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PI
         FIXME("FIXME - pass through\n");
         Status = STATUS_NOT_IMPLEMENTED;
     } else {
-        TRACE("filename = %.*S\n", fcb->full_filename.Length / sizeof(WCHAR), fcb->full_filename.Buffer);
+        TRACE("filename = %S\n", file_desc(FileObject));
         
         switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
             case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
@@ -3849,7 +4006,7 @@ static NTSTATUS STDCALL drv_shutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
         
         TRACE("shutting down Vcb %p\n", Vcb);
         
-        uninit(Vcb);
+        uninit(Vcb, TRUE);
     }
     
     Irp->IoStatus.Status = Status;
@@ -3865,65 +4022,25 @@ static NTSTATUS STDCALL drv_shutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
     return Status;
 }
 
-static NTSTATUS STDCALL drv_pnp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    device_extension* Vcb = DeviceObject->DeviceExtension;
-    NTSTATUS Status;
-    BOOL top_level;
-
-    FIXME("STUB: pnp\n");
+BOOL is_file_name_valid(PUNICODE_STRING us) {
+    ULONG i;
     
-    FsRtlEnterFileSystem();
-
-    top_level = is_top_level(Irp);
+    if (us->Length < sizeof(WCHAR))
+        return FALSE;
     
-    Status = STATUS_NOT_IMPLEMENTED;
+    if (us->Length > 255 * sizeof(WCHAR))
+        return FALSE;
     
-    switch (IrpSp->MinorFunction) {
-        case IRP_MN_CANCEL_REMOVE_DEVICE:
-            TRACE("    IRP_MN_CANCEL_REMOVE_DEVICE\n");
-            break;
-
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-            TRACE("    IRP_MN_QUERY_REMOVE_DEVICE\n");
-            break;
-
-        case IRP_MN_REMOVE_DEVICE:
-            TRACE("    IRP_MN_REMOVE_DEVICE\n");
-            break;
-
-        case IRP_MN_START_DEVICE:
-            TRACE("    IRP_MN_START_DEVICE\n");
-            break;
-
-        case IRP_MN_SURPRISE_REMOVAL:
-            TRACE("    IRP_MN_SURPRISE_REMOVAL\n");
-            break;
-            
-        case IRP_MN_QUERY_DEVICE_RELATIONS:
-            TRACE("    IRP_MN_QUERY_DEVICE_RELATIONS\n");
-            break;
-        
-        default:
-            WARN("Unrecognized minor function 0x%x\n", IrpSp->MinorFunction);
-            break;
+    for (i = 0; i < us->Length / sizeof(WCHAR); i++) {
+        if (us->Buffer[i] == '/' || us->Buffer[i] == '<' || us->Buffer[i] == '>' || us->Buffer[i] == ':' || us->Buffer[i] == '"' ||
+            us->Buffer[i] == '|' || us->Buffer[i] == '?' || us->Buffer[i] == '*' || (us->Buffer[i] >= 1 && us->Buffer[i] <= 31))
+            return FALSE;
     }
-
-//     Irp->IoStatus.Status = Status;
-//     Irp->IoStatus.Information = 0;
-
-    IoSkipCurrentIrpStackLocation(Irp);
     
-    Status = IoCallDriver(Vcb->devices[0].devobj, Irp);
-
-//     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (us->Buffer[0] == '.' && (us->Length == sizeof(WCHAR) || (us->Length == 2 * sizeof(WCHAR) && us->Buffer[1] == '.')))
+        return FALSE;
     
-    if (top_level) 
-        IoSetTopLevelIrp(NULL);
-    
-    FsRtlExitFileSystem();
-
-    return Status;
+    return TRUE;
 }
 
 #ifdef _DEBUG

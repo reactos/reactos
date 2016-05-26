@@ -6,7 +6,7 @@ Description = Additional Plugins for supporting more file types.
 Size = 15.6 MiB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = ftp://ftp.uibk.ac.at/pub/software/win32/irfanview_plugins_442_setup.exe
+URLDownload = http://www.tucows.com/download/windows/files/irfanview_plugins_442_setup.exe
 SHA1 = 0ba08abb613a36de9a9369b75a83fde6427734d5
 CDPath = none
 

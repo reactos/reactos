@@ -1,0 +1,299 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource_2.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Anglais (États-Unis) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource_2.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NEW DIALOGEX 0, 0, 240, 70
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Object"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,5,5,165,44
+    CONTROL         "Program &Group",PM_NEW_GROUP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,10,4,66,11
+    CONTROL         "&Personal",PM_PERSONAL_GROUP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,20,15,44,14
+    CONTROL         "&Common",PM_COMMON_GROUP,"Button",BS_AUTORADIOBUTTON,73,15,39,14
+    LTEXT           "&Format:",PM_FORMAT_TXT,20,33,35,11
+    COMBOBOX        PM_FORMAT,61,31,104,15,CBS_DROPDOWNLIST | WS_TABSTOP
+    CONTROL         "Program &Item",PM_NEW_PROGRAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,10,52,59,12
+    DEFPUSHBUTTON   "OK",IDOK,175,5,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,175,25,60,15
+    PUSHBUTTON      "&Help",IDHELP,175,49,60,15
+END
+
+IDD_COPY_MOVE DIALOGEX 0, 0, 250, 65
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Copy Program"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Copy program:",PM_COPY_MOVE_TXT,5,5,70,10
+    LTEXT           "P",PM_PROGRAM,80,5,100,10
+    LTEXT           "From group:",IDC_STATIC,5,18,70,10
+    LTEXT           "G",PM_FROM_GROUP,80,18,100,10
+    LTEXT           "&To group:",IDC_STATIC,5,32,70,10
+    COMBOBOX        PM_TO_GROUP,5,46,140,50,CBS_DROPDOWNLIST | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,185,5,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,185,25,60,15
+    PUSHBUTTON      "&Help",IDHELP,185,45,60,15
+END
+
+IDD_GROUP DIALOGEX 0, 0, 250, 65
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Program Group Attributes"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Description:",IDC_STATIC,5,16,50,11
+    EDITTEXT        PM_DESCRIPTION,60,14,120,15,ES_AUTOHSCROLL
+    LTEXT           "&Group file:",IDC_STATIC,5,38,50,11
+    EDITTEXT        PM_FILE,60,35,120,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,185,5,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,185,25,60,15
+    PUSHBUTTON      "&Help",IDHELP,185,45,60,15
+END
+
+IDD_PROGRAM DIALOGEX 0, 0, 270, 105
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Program Attributes"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Description:",IDC_STATIC,5,11,65,10
+    EDITTEXT        PM_DESCRIPTION,75,7,115,15,ES_AUTOHSCROLL
+    LTEXT           "&Command line:",IDC_STATIC,5,26,65,10
+    EDITTEXT        PM_COMMAND_LINE,75,23,115,15,ES_AUTOHSCROLL
+    LTEXT           "&Working directory:",IDC_STATIC,5,41,65,10
+    EDITTEXT        PM_DIRECTORY,75,39,115,15,ES_AUTOHSCROLL
+    LTEXT           "&Key combination:",IDC_STATIC,5,56,65,10
+    CONTROL         "",PM_HOT_KEY,"msctls_hotkey32",WS_BORDER | WS_TABSTOP,75,55,115,15
+    ICON            "",PM_ICON,24,72,20,20
+    CHECKBOX        "&Run minimized",PM_SYMBOL,75,74,115,10
+    CONTROL         "Run in separate &memory space",PM_NEW_VDM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,87,115,11
+    DEFPUSHBUTTON   "OK",IDOK,195,5,70,15
+    PUSHBUTTON      "Cancel",IDCANCEL,195,25,70,15
+    PUSHBUTTON      "&Browse...",PM_BROWSE,195,45,70,15
+    PUSHBUTTON      "Change &icon...",PM_OTHER_SYMBOL,195,65,70,15
+    PUSHBUTTON      "&Help",IDHELP,195,85,70,15
+END
+
+IDD_SYMBOL DIALOGEX 0, 0, 240, 85
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Icon"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Filename:",IDC_STATIC,5,11,50,10
+    EDITTEXT        PM_ICON_FILE,60,9,110,15,ES_AUTOHSCROLL
+    LTEXT           "Current &icon:",IDC_STATIC,5,32,50,10
+    DEFPUSHBUTTON   "OK",IDOK,175,5,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,175,25,60,15
+    PUSHBUTTON      "&Browse...",PM_BROWSE,175,45,60,15
+    PUSHBUTTON      "&Help",IDHELP,175,65,60,15
+    LISTBOX         PM_SYMBOL_LIST,5,45,165,35,LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+END
+
+IDD_EXECUTE DIALOGEX 0, 0, 200, 85
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute Program"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Command line:",IDC_STATIC,5,15,125,10
+    COMBOBOX        PM_COMMAND,5,26,125,15,CBS_DROPDOWN | CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CHECKBOX        "&Run minimized",PM_SYMBOL,5,46,115,10
+    CONTROL         "Run in separate &memory space",PM_NEW_VDM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,59,115,11
+    DEFPUSHBUTTON   "OK",IDOK,135,5,60,15
+    PUSHBUTTON      "Cancel",IDCANCEL,135,25,60,15
+    PUSHBUTTON      "&Browse...",PM_BROWSE,135,45,60,15
+    PUSHBUTTON      "&Help",IDHELP,135,65,60,15
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New...",                     PM_NEW
+        MENUITEM "O&pen\tEnter",                PM_OPEN
+        MENUITEM "&Move...\tF7",                PM_MOVE
+        MENUITEM "&Copy...\tF8",                PM_COPY
+        MENUITEM "&Delete\tDel",                PM_DELETE
+        MENUITEM "&Properties\tAlt+Enter",      PM_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "&Execute...",                 PM_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit Windows",               PM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Arrange automatically",      PM_AUTO_ARRANGE
+        MENUITEM "&Minimize on run",            PM_MIN_ON_RUN
+        MENUITEM "&Save settings on exit",      PM_SAVE_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "Save settings &now",          PM_SAVE_SETTINGS_NOW
+    END
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "&Overlapped\tShift+F5",       PM_OVERLAP
+        MENUITEM "&Side by side\tShift+F4",     PM_SIDE_BY_SIDE
+        MENUITEM "&Arrange Icons",              PM_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents\tF1",               PM_CONTENTS
+        MENUITEM "&About Program Manager",      PM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDA_ACCEL ACCELERATORS
+BEGIN
+    VK_RETURN,      PM_ATTRIBUTES,          VIRTKEY, ALT, NOINVERT
+    VK_F1,          PM_CONTENTS,            VIRTKEY, NOINVERT
+    VK_F4,          PM_SIDE_BY_SIDE,        VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          PM_OVERLAP,             VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          PM_MOVE,                VIRTKEY, NOINVERT
+    VK_F8,          PM_COPY,                VIRTKEY, NOINVERT
+    VK_DELETE,      PM_DELETE,              VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_NEW, DIALOG
+    BEGIN
+    END
+
+    IDD_COPY_MOVE, DIALOG
+    BEGIN
+    END
+
+    IDD_GROUP, DIALOG
+    BEGIN
+    END
+
+    IDD_PROGRAM, DIALOG
+    BEGIN
+    END
+
+    IDD_SYMBOL, DIALOG
+    BEGIN
+    END
+
+    IDD_EXECUTE, DIALOG
+    BEGIN
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAM_MANAGER     "Program Manager"
+    IDS_ERROR               "ERROR"
+    IDS_WARNING             "WARNING"
+    IDS_INFO                "Information"
+    IDS_DELETE              "Delete"
+    IDS_DELETE_GROUP_s      "Delete group `%s'?"
+    IDS_DELETE_PROGRAM_s    "Delete program `%s'?"
+    IDS_MOVE_PROGRAM_1      "Move Program"
+    IDS_MOVE_PROGRAM_2      "Move program:"
+    IDS_NOT_IMPLEMENTED     "Not implemented"
+    IDS_FILE_READ_ERROR_s   "Error reading `%s'."
+    IDS_FILE_WRITE_ERROR_s  "Error writing `%s'."
+    IDS_GRPFILE_READ_ERROR_s 
+                            "The group file `%s' cannot be opened.\nShould it be tried further on?"
+    IDS_OUT_OF_MEMORY       "Out of memory."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_WINHELP_ERROR       "Help not available."
+    IDS_UNKNOWN_FEATURE_s   "Unknown feature in %s"
+    IDS_FILE_NOT_OVERWRITTEN_s "File `%s' exists. Not overwritten."
+    IDS_SAVE_GROUP_AS_s     "Save group as `%s' to prevent overwriting original files."
+    IDS_ALL_FILES           "All files (*.*)"
+    IDS_PROGRAMS            "Programs (*.exe)"
+    IDS_LIBRARIES_DLL       "Libraries (*.dll)"
+    IDS_SYMBOL_FILES        "Icon files (*.ico;*.exe;*.dll)"
+    IDS_SYMBOLS_ICO         "Icons (*.ico)"
+END
+
+#endif    // Anglais (États-Unis) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

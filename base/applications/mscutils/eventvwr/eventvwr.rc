@@ -1,5 +1,6 @@
 #include <windef.h>
 #include <winuser.h>
+#include <richedit.h>
 
 #include "resource.h"
 

@@ -1,6 +1,4 @@
-#include "tnmsg.h"
-
-LANGUAGE 0, 0
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
@@ -96,9 +94,3 @@ BEGIN
     MSG_KEYBADMAP "Bad keymap number - try 'keys display'\n"
     MSG_KEYMAPSWITCHED "keymap switched.\n"
 END
-
-#if defined(__MINGW32__) || defined(__CYGWIN__)
-TelnetIcon ICON "telnet.ico"
-#else
-TelnetIcon ICON "../telnet.ico"
-#endif

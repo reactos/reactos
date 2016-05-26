@@ -917,6 +917,14 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             exit(1);
         }
     }
+    
+    /* Check if we have found any ScanCode in the file */
+
+    if (ScanCodeCount == -1)
+    {
+        printf("No ScanCode found!\n");
+        exit(1);
+    }
 
     /* Process the scan code table */
     Entry = &LayoutData->Entry[ScanCodeCount];

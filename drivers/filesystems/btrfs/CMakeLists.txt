@@ -8,10 +8,13 @@ list(APPEND SOURCE
     crc32c.c
     create.c
     dirctrl.c
+    extent-tree.c
     fastio.c
     fileinfo.c
     flushthread.c
+    free-space.c
     fsctl.c
+    pnp.c
     read.c
     reparse.c
     search.c
@@ -22,15 +25,9 @@ list(APPEND SOURCE
 
 add_library(btrfs SHARED ${SOURCE} btrfs.rc)
 
-if(NOT MSVC)
-    replace_compile_flags("-Werror" " ")
-else()
-    replace_compile_flags("/we\"4189\"" " ")
-endif()
-
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)
-target_link_libraries(btrfs ntoskrnl_vista)
+target_link_libraries(btrfs ntoskrnl_vista ${PSEH_LIB})
 add_importlibs(btrfs ntoskrnl hal)
 add_pch(btrfs btrfs_drv.h SOURCE)
 add_cd_file(TARGET btrfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

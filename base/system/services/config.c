@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
+#include <ntsecapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -441,6 +442,60 @@ ScmReadDependencies(HKEY hServiceKey,
         HeapFree(GetProcessHeap(), 0, lpServices);
 
     return ERROR_SUCCESS;
+}
+
+
+DWORD
+ScmSetServicePassword(
+    IN PCWSTR pszServiceName,
+    IN PCWSTR pszPassword)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    UNICODE_STRING ServiceName = {0, 0, NULL};
+    UNICODE_STRING Password;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    RtlZeroMemory(&ObjectAttributes, sizeof(OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_CREATE_SECRET,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    ServiceName.Length = (wcslen(pszServiceName) + 4) * sizeof(WCHAR);
+    ServiceName.MaximumLength = ServiceName.Length + sizeof(WCHAR);
+    ServiceName.Buffer = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   ServiceName.MaximumLength);
+    if (ServiceName.Buffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(ServiceName.Buffer, L"_SC_");
+    wcscat(ServiceName.Buffer, pszServiceName);
+
+    RtlInitUnicodeString(&Password, pszPassword);
+
+    Status = LsaStorePrivateData(PolicyHandle,
+                                 &ServiceName,
+                                 pszPassword ? &Password : NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+done:
+    if (ServiceName.Buffer != NULL)
+        HeapFree(GetProcessHeap(), 0, ServiceName.Buffer);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+
+    return dwError;
 }
 
 /* EOF */

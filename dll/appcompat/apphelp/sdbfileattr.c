@@ -18,15 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "apphelp.h"
 #include "imagehlp.h"
 #include "winver.h"
+#include "rtlfuncs.h"
 
 #include "wine/unicode.h"
 
 #define NUM_ATTRIBUTES  28
+enum APPHELP_MODULETYPE
+{
+    MODTYPE_UNKNOWN = 0,
+    MODTYPE_DOS = 1,
+    MODTYPE_NE = 2,
+    MODTYPE_PE = 3,
+};
+
 
 static void WINAPI SdbpSetDWORDAttr(PATTRINFO attr, TAG tag, DWORD value)
 {
@@ -176,25 +186,33 @@ static DWORD WINAPI SdbpCalculateFileChecksum(PMEMMAPPED mapping)
     return checks;
 }
 
-static DWORD WINAPI SdbpGetModuleType(PMEMMAPPED mapping)
+static DWORD WINAPI SdbpGetModuleType(PMEMMAPPED mapping, PIMAGE_NT_HEADERS* nt_headers)
 {
     PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)mapping->view;
     PIMAGE_OS2_HEADER os2;
 
+    *nt_headers = NULL;
+
     if (mapping->size < 2 || dos->e_magic != IMAGE_DOS_SIGNATURE)
-        return 0;
+        return MODTYPE_UNKNOWN;
 
     if (mapping->size < sizeof(IMAGE_DOS_HEADER) || mapping->size < (dos->e_lfanew+2))
-        return 1;
+        return MODTYPE_DOS;
 
     os2 = (PIMAGE_OS2_HEADER)((PBYTE)dos + dos->e_lfanew);
     if (os2->ne_magic == IMAGE_OS2_SIGNATURE || os2->ne_magic == IMAGE_OS2_SIGNATURE_LE)
-        return 2;
+    {
+        *nt_headers = (PIMAGE_NT_HEADERS)os2;
+        return MODTYPE_NE;
+    }
 
     if (mapping->size >= (dos->e_lfanew + 4) && ((PIMAGE_NT_HEADERS)os2)->Signature == IMAGE_NT_SIGNATURE)
-        return 3;
+    {
+        *nt_headers = (PIMAGE_NT_HEADERS)os2;
+        return MODTYPE_PE;
+    }
 
-    return 1;
+    return MODTYPE_DOS;
 }
 
 /**
@@ -246,8 +264,9 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
 
     PIMAGE_NT_HEADERS headers;
     MEMMAPPED mapped;
+    PBYTE mapping_end;
     PVOID file_info = 0;
-    DWORD headersum, checksum, module_type;
+    DWORD module_type;
     WCHAR translation[128] = {0};
     PATTRINFO attr_info;
 
@@ -261,6 +280,7 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
         SHIM_ERR("Error retrieving FILEINFO structure\n");
         return FALSE;
     }
+    mapping_end = mapped.view + mapped.size;
 
     attr_info = (PATTRINFO)SdbAlloc(NUM_ATTRIBUTES * sizeof(ATTRINFO));
 
@@ -269,15 +289,14 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
         SdbpSetDWORDAttr(&attr_info[1], TAG_CHECKSUM, SdbpCalculateFileChecksum(&mapped));
     else
         SdbpSetAttrFail(&attr_info[1]);
-    module_type = SdbpGetModuleType(&mapped);
+    module_type = SdbpGetModuleType(&mapped, &headers);
 
-    if (module_type)
+    if (module_type != MODTYPE_UNKNOWN)
         SdbpSetDWORDAttr(&attr_info[16], TAG_MODULE_TYPE, module_type);
     else
         SdbpSetAttrFail(&attr_info[16]); /* TAG_MODULE_TYPE */
 
-    headers = CheckSumMappedFile(mapped.view, mapped.size, &headersum, &checksum);
-    if (headers)
+    if (headers && module_type == MODTYPE_PE && ((PBYTE)(headers+1) <= mapping_end))
     {
         DWORD info_size;
         SIZE_T export_dir_size;
@@ -317,11 +336,11 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
         SdbpSetDWORDAttr(&attr_info[23], TAG_LINK_DATE, headers->FileHeader.TimeDateStamp);
         SdbpSetDWORDAttr(&attr_info[24], TAG_UPTO_LINK_DATE, headers->FileHeader.TimeDateStamp);
 
-        export_dir = (PIMAGE_EXPORT_DIRECTORY)ImageDirectoryEntryToData(mapped.view, FALSE, IMAGE_DIRECTORY_ENTRY_EXPORT, &export_dir_size);
-        if (export_dir)
+        export_dir = (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData(mapped.view, FALSE, IMAGE_DIRECTORY_ENTRY_EXPORT, &export_dir_size);
+        if (export_dir && ((PBYTE)(export_dir+1) <= mapping_end))
         {
             PIMAGE_SECTION_HEADER section = NULL;
-            PBYTE export_name = ImageRvaToVa(headers, mapped.view, export_dir->Name, &section);
+            PBYTE export_name = RtlImageRvaToVa(headers, mapped.view, export_dir->Name, &section);
             if (export_name)
                 SdbpSetStringAttrFromAnsiString(&attr_info[25], TAG_EXPORT_NAME, export_name, strlen((char*)export_name));
             else
@@ -345,18 +364,17 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
             if (n != 16 && n != 26)
                 SdbpSetAttrFail(&attr_info[n]);
         }
-        if (module_type == 2)
+        if (module_type == MODTYPE_NE)
         {
-            PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)mapped.view;
-            PBYTE end = mapped.view + mapped.size, ptr;
-            PIMAGE_OS2_HEADER os2 = (PIMAGE_OS2_HEADER)((PBYTE)dos + dos->e_lfanew);
-            if ((PBYTE)(os2 + 1) <= end)
+            PBYTE ptr;
+            PIMAGE_OS2_HEADER os2 = (PIMAGE_OS2_HEADER)headers;
+            if ((PBYTE)(os2 + 1) <= mapping_end)
             {
-                ptr = (PBYTE)dos + os2->ne_nrestab;
-                if (ptr <= end && (ptr + 1 + *ptr) <= end)
+                ptr = mapped.view + os2->ne_nrestab;
+                if (ptr <= mapping_end && (ptr + 1 + *ptr) <= mapping_end)
                     SdbpSetStringAttrFromPascalString(&attr_info[19], TAG_16BIT_DESCRIPTION, ptr);
                 ptr = (PBYTE)os2 + os2->ne_restab;
-                if (ptr <= end && (ptr + 1 + *ptr) <= end)
+                if (ptr <= mapping_end && (ptr + 1 + *ptr) <= mapping_end)
                     SdbpSetStringAttrFromPascalString(&attr_info[20], TAG_16BIT_MODULE_NAME, ptr);
             }
         }

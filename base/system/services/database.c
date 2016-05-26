@@ -566,8 +566,7 @@ done:;
 
     if (lpService != NULL)
     {
-        if (lpService->lpImage != NULL)
-            ScmDereferenceServiceImage(lpService->lpImage);
+        ASSERT(lpService->lpImage == NULL);
     }
 
     return dwError;
@@ -1085,6 +1084,7 @@ Done:
         dwControl == SERVICE_CONTROL_STOP)
     {
         ScmDereferenceServiceImage(Service->lpImage);
+        Service->lpImage = NULL;
     }
 
     LeaveCriticalSection(&ControlServiceCriticalSection);

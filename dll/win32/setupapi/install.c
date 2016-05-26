@@ -1748,10 +1748,8 @@ static VOID FixupServiceBinaryPath(
         /* Handle Win32-services differently */
         if (ServiceType & SERVICE_WIN32)
         {
-            Win32Length = (ServiceLength -
-                RosDirLength - 1 + 13) * sizeof(WCHAR);
-            /* -1 to not count the separator after C:\ReactOS
-               wcslen(L"%SystemRoot%\\") = 13*sizeof(wchar_t) */
+            Win32Length = (ServiceLength - RosDirLength) * sizeof(WCHAR)
+                        - sizeof(L'\\') + sizeof(L"%SystemRoot%\\");
             Buffer = MyMalloc(Win32Length);
 
             wcscpy(Buffer, L"%SystemRoot%\\");

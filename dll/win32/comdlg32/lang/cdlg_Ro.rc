@@ -140,7 +140,7 @@ STRINGTABLE
     IDS_SAVE_AS     "Păstrare în:"
     IDS_OPEN_FILE   "Deschidere fișier"
     IDS_SELECT_FOLDER "Selecează dosar"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_FONT_SIZE_INPUT "Dimensiunea fontului trebuie să fie un număr."
 }
 
 /*

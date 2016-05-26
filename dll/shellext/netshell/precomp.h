@@ -9,6 +9,8 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
+#include <wincon.h>
 #include <winreg.h>
 #include <winnls.h>
 #include <shlwapi.h>
@@ -19,6 +21,7 @@
 #include <devguid.h>
 #include <netcon.h>
 #include <shlguid_undoc.h>
+#include <prsht.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

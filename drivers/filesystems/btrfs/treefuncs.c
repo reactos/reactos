@@ -105,7 +105,7 @@ end:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-static NTSTATUS STDCALL read_tree(device_extension* Vcb, UINT64 addr, UINT8* buf) {
+NTSTATUS STDCALL read_tree(device_extension* Vcb, UINT64 addr, UINT8* buf) {
     CHUNK_ITEM* ci;
     CHUNK_ITEM_STRIPE* cis;
     read_tree_context* context;
@@ -277,6 +277,17 @@ static NTSTATUS STDCALL read_tree(device_extension* Vcb, UINT64 addr, UINT8* buf
     
     // FIXME - if checksum error, write good data over bad
     
+    // check if any of the devices return a "user-induced" error
+    
+    for (i = 0; i < ci->num_stripes; i++) {
+        if (context->stripes[i].status == ReadTreeStatus_Error && IoIsErrorUserInduced(context->stripes[i].iosb.Status)) {
+            IoSetHardErrorOrVerifyDevice(context->stripes[i].Irp, devices[i]->devobj);
+            
+            Status = context->stripes[i].iosb.Status;
+            goto exit;
+        }
+    }
+    
     // check if any of the stripes succeeded
     
     for (i = 0; i < ci->num_stripes; i++) {
@@ -385,7 +396,6 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
     RtlCopyMemory(&t->header, th, sizeof(tree_header));
 //     t->address = addr;
 //     t->level = th->level;
-    t->refcount = 1;
     t->has_address = TRUE;
     t->Vcb = Vcb;
     t->parent = NULL;
@@ -395,13 +405,7 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
     t->size = 0;
     t->new_address = 0;
     t->has_new_address = FALSE;
-#ifdef DEBUG_TREE_REFCOUNTS   
-#ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, file, line, "loaded tree %p (%llx)\n", t, addr);
-#else
-    _debug_message(func, "loaded tree %p (%llx)\n", t, addr);
-#endif
-#endif
+    t->write = FALSE;
     
     c = get_chunk_from_address(Vcb, addr);
     
@@ -494,85 +498,56 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
 }
 
 static tree* free_tree2(tree* t, const char* func, const char* file, unsigned int line) {
-    LONG rc;
     LIST_ENTRY* le;
     tree_data* td;
     tree* par;
-    
-#ifdef DEBUG_TREE_REFCOUNTS
-    TRACE("(%p)\n", t);
-#endif
+    root* r = t->root;
     
     par = t->parent;
     
 //     if (par) ExAcquireResourceExclusiveLite(&par->nonpaged->load_tree_lock, TRUE);
     
-    rc = InterlockedDecrement(&t->refcount);
+    if (r && r->treeholder.tree != t)
+        r = NULL;
     
-#ifdef DEBUG_TREE_REFCOUNTS
-#ifdef DEBUG_LONG_MESSAGES
-    _debug_message(func, file, line, "tree %p: refcount decreased to %i (free_tree2)\n", t, rc);
-#else
-    _debug_message(func, "tree %p: refcount decreased to %i (free_tree2)\n", t, rc);
-#endif
-#endif
-    
-    if (rc < 0) {
-        ERR("error - negative refcount (%i)\n", rc);
-        int3;
-    }
-    
-    if (rc == 0) {
-        root* r = t->root;
-        if (r && r->treeholder.tree != t)
-            r = NULL;
-        
 //         if (r) {
 //             FsRtlEnterFileSystem();
 //             ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
 //         }
+    
+    if (par) {
+        if (t->paritem)
+            t->paritem->treeholder.tree = NULL;
         
-        if (par) {
-            if (t->paritem)
-                t->paritem->treeholder.tree = NULL;
-            
 //             ExReleaseResourceLite(&par->nonpaged->load_tree_lock);
-        }
-        
-        if (t->parent)
-            t->parent = free_tree2(t->parent, func, file, line);
-        
-//         ExDeleteResourceLite(&t->nonpaged->load_tree_lock);
-        
-//         ExFreePool(t->nonpaged);
-        
-        while (!IsListEmpty(&t->itemlist)) {
-            le = RemoveHeadList(&t->itemlist);
-            td = CONTAINING_RECORD(le, tree_data, list_entry);
-            
-            if (t->header.level == 0 && td->data)
-                ExFreePool(td->data);
-             
-            ExFreePool(td);
-        }
-        
-        InterlockedDecrement(&t->Vcb->open_trees);
-        RemoveEntryList(&t->list_entry);
-        
-        if (r) {
-            r->treeholder.tree = NULL;
-//             ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
-//             FsRtlExitFileSystem();
-        }
-        
-        ExFreePool(t);
-
-        return NULL;
-    } else {
-//         if (par) ExReleaseResourceLite(&par->nonpaged->load_tree_lock);
     }
     
-    return t;
+//         ExDeleteResourceLite(&t->nonpaged->load_tree_lock);
+    
+//         ExFreePool(t->nonpaged);
+    
+    while (!IsListEmpty(&t->itemlist)) {
+        le = RemoveHeadList(&t->itemlist);
+        td = CONTAINING_RECORD(le, tree_data, list_entry);
+        
+        if (t->header.level == 0 && td->data)
+            ExFreePool(td->data);
+            
+        ExFreePool(td);
+    }
+    
+    InterlockedDecrement(&t->Vcb->open_trees);
+    RemoveEntryList(&t->list_entry);
+    
+    if (r) {
+        r->treeholder.tree = NULL;
+//             ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
+//             FsRtlExitFileSystem();
+    }
+    
+    ExFreePool(t);
+
+    return NULL;
 }
 
 NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, BOOL* loaded, const char* func, const char* file, unsigned int line) {
@@ -623,11 +598,8 @@ NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, 
         th->tree->paritem = td;
         
         ret = TRUE;
-    } else {
-        _increase_tree_rc(th->tree, func, file, line);
-        
+    } else
         ret = FALSE;
-    }
     
 //     KeReleaseSpinLock(&thnp->spin_lock, irql);
     
@@ -726,13 +698,11 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
             
             oldtp.tree = t;
             oldtp.item = td;
-            _increase_tree_rc(t, func, file, line);
             
             while (_find_prev_item(Vcb, &oldtp, tp, TRUE, func, file, line)) {
                 if (!tp->item->ignore)
                     return STATUS_SUCCESS;
                 
-                free_traverse_ptr(&oldtp);
                 oldtp = *tp;
             }
             
@@ -740,23 +710,18 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
             
             oldtp.tree = t;
             oldtp.item = td;
-            _increase_tree_rc(t, func, file, line);
             
             while (_find_next_item(Vcb, &oldtp, tp, TRUE, func, file, line)) {
                 if (!tp->item->ignore)
                     return STATUS_SUCCESS;
                 
-                free_traverse_ptr(&oldtp);
                 oldtp = *tp;
             }
             
             return STATUS_INTERNAL_ERROR;
         } else {
             tp->tree = t;
-            _increase_tree_rc(t, func, file, line);
             tp->item = td;
-            
-            add_to_tree_cache(Vcb, t, FALSE);
         }
         
         return STATUS_SUCCESS;
@@ -780,13 +745,7 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
             return Status;
         }
         
-        if (loaded)
-            _increase_tree_rc(t, func, file, line);
-        
         Status = find_item_in_tree(Vcb, td->treeholder.tree, tp, searchkey, ignore, func, file, line);
-        
-        td->treeholder.tree = _free_tree(td->treeholder.tree, func, file, line);
-        TRACE("tree now %p\n", td->treeholder.tree);
         
         return Status;
     }
@@ -799,18 +758,18 @@ NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, co
     
     TRACE("(%p, %p, %p, %p)\n", Vcb, r, tp, searchkey);
     
-    Status = _do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, func, file, line);
-    if (!NT_SUCCESS(Status)) {
-        ERR("do_load_tree returned %08x\n", Status);
-        return Status;
+    if (!r->treeholder.tree) {
+        Status = _do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, func, file, line);
+        if (!NT_SUCCESS(Status)) {
+            ERR("do_load_tree returned %08x\n", Status);
+            return Status;
+        }
     }
 
     Status = find_item_in_tree(Vcb, r->treeholder.tree, tp, searchkey, ignore, func, file, line);
     if (!NT_SUCCESS(Status)) {
         ERR("find_item_in_tree returned %08x\n", Status);
     }
-
-    _free_tree(r->treeholder.tree, func, file, line);
     
 // #ifdef DEBUG_PARANOID
 //     if (b && !ignore && tp->item->ignore) {
@@ -820,12 +779,6 @@ NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, co
 // #endif
     
     return Status;
-}
-
-void STDCALL _free_traverse_ptr(traverse_ptr* tp, const char* func, const char* file, unsigned int line) {
-    if (tp->tree) {
-        tp->tree = free_tree2(tp->tree, func, file, line);
-    }
 }
 
 BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* next_tp, BOOL ignore, const char* func, const char* file, unsigned int line) {
@@ -843,7 +796,6 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
     
     if (next) {
         next_tp->tree = tp->tree;
-        _increase_tree_rc(next_tp->tree, func, file, line);
         next_tp->item = next;
         
 #ifdef DEBUG_PARANOID
@@ -879,9 +831,6 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
         return FALSE;
     }
     
-    if (loaded)
-        _increase_tree_rc(t->parent, func, file, line);
-    
     t = td->treeholder.tree;
     
     while (t->header.level != 0) {
@@ -906,20 +855,15 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
         BOOL b;
         
         while ((b = _find_next_item(Vcb, next_tp, &ntp2, TRUE, func, file, line))) {
-            _free_traverse_ptr(next_tp, func, file, line);
             *next_tp = ntp2;
             
             if (!next_tp->item->ignore)
                 break;
         }
         
-        if (!b) {
-            _free_traverse_ptr(next_tp, func, file, line);
+        if (!b)
             return FALSE;
-        }
     }
-    
-    add_to_tree_cache(Vcb, t, FALSE);
     
 #ifdef DEBUG_PARANOID
     if (!ignore && next_tp->item->ignore) {
@@ -949,7 +893,6 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
     // FIXME - support ignore flag
     if (prev_item(tp->tree, tp->item)) {
         prev_tp->tree = tp->tree;
-        _increase_tree_rc(prev_tp->tree, func, file, line);
         prev_tp->item = prev_item(tp->tree, tp->item);
 
         return TRUE;
@@ -974,9 +917,6 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
         return FALSE;
     }
     
-    if (loaded)
-        _increase_tree_rc(t->parent, func, file, line);
-    
     t = td->treeholder.tree;
     
     while (t->header.level != 0) {
@@ -992,8 +932,6 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
         
         t = li->treeholder.tree;
     }
-    
-    add_to_tree_cache(Vcb, t, FALSE);
     
     prev_tp->tree = t;
     prev_tp->item = last_item(t);
@@ -1013,74 +951,54 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
 //     ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
 // }
 
-void STDCALL free_tree_cache(LIST_ENTRY* tc) {
+void free_trees_root(device_extension* Vcb, root* r) {
     LIST_ENTRY* le;
-    tree_cache* tc2;
-    root* r;
-
-    while (tc->Flink != tc) {
-        le = tc->Flink;
-        tc2 = CONTAINING_RECORD(le, tree_cache, list_entry);
-        r = tc2->tree->root;
+    UINT8 level;
+    
+    for (level = 0; level <= 255; level++) {
+        BOOL empty = TRUE;
         
-        ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
+        le = Vcb->trees.Flink;
         
-        while (le != tc) {
+        while (le != &Vcb->trees) {
             LIST_ENTRY* nextle = le->Flink;
-            tc2 = CONTAINING_RECORD(le, tree_cache, list_entry);
+            tree* t = CONTAINING_RECORD(le, tree, list_entry);
             
-            if (tc2->tree->root == r) {
-                tree* nt;
-                BOOL top = !tc2->tree->paritem;
+            if (t->root == r && t->header.level == level) {
+                BOOL top = !t->paritem;
                 
-                nt = free_tree2(tc2->tree, funcname, __FILE__, __LINE__);
-                if (top && !nt && r->treeholder.tree == tc2->tree)
+                empty = FALSE;
+                
+                free_tree2(t, funcname, __FILE__, __LINE__);
+                if (top && r->treeholder.tree == t)
                     r->treeholder.tree = NULL;
                 
-                RemoveEntryList(&tc2->list_entry);
-                ExFreePool(tc2);
+                if (IsListEmpty(&Vcb->trees))
+                    return;
             }
             
             le = nextle;
         }
         
-        ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
+        if (empty)
+            break;
     }
 }
 
-void STDCALL add_to_tree_cache(device_extension* Vcb, tree* t, BOOL write) {
-    LIST_ENTRY* le;
-    tree_cache* tc2;
-    
-    le = Vcb->tree_cache.Flink;
-    while (le != &Vcb->tree_cache) {
-        tc2 = CONTAINING_RECORD(le, tree_cache, list_entry);
-        
-        if (tc2->tree == t) {
-            if (write && !tc2->write) {
-                Vcb->write_trees++;
-                tc2->write = TRUE;
-            }
-            return;
-        }
-        
-        le = le->Flink;
-    }
-    
-    tc2 = ExAllocatePoolWithTag(PagedPool, sizeof(tree_cache), ALLOC_TAG);
-    if (!tc2) {
-        ERR("out of memory\n");
-        return;
-    }
-    
-    TRACE("adding %p to tree cache\n", t);
-    
-    tc2->tree = t;
-    tc2->write = write;
-    increase_tree_rc(t);
-    InsertTailList(&Vcb->tree_cache, &tc2->list_entry);
+void STDCALL free_trees(device_extension* Vcb) {
+    tree* t;
+    root* r;
 
-//     print_trees(tc);
+    while (!IsListEmpty(&Vcb->trees)) {
+        t = CONTAINING_RECORD(Vcb->trees.Flink, tree, list_entry);
+        r = t->root;
+        
+        ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
+        
+        free_trees_root(Vcb, r);
+        
+        ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
+    }
 }
 
 static void add_rollback(LIST_ENTRY* rollback, enum rollback_type type, void* ptr) {
@@ -1152,7 +1070,6 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
         
         if (cmp == 0 && !tp.item->ignore) { // FIXME - look for all items of the same key to make sure none are non-ignored
             ERR("error: key (%llx,%x,%llx) already present\n", obj_id, obj_type, offset);
-            free_traverse_ptr(&tp);
             goto end;
         }
     } else
@@ -1161,7 +1078,6 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
     td = ExAllocatePoolWithTag(PagedPool, sizeof(tree_data), ALLOC_TAG);
     if (!td) {
         ERR("out of memory\n");
-        free_traverse_ptr(&tp);
         goto end;
     }
     
@@ -1205,11 +1121,12 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
 //     ERR("tree %p, num_items now %x\n", tp.tree, tp.tree->header.num_items);
 //     ERR("size now %x\n", tp.tree->size);
     
-    add_to_tree_cache(Vcb, tp.tree, TRUE);
+    if (!tp.tree->write) {
+        tp.tree->write = TRUE;
+        Vcb->write_trees++;
+    }
     
-    if (!ptp)
-        free_traverse_ptr(&tp);
-    else
+    if (ptp)
         *ptp = tp;
     
     t = tp.tree;
@@ -1276,7 +1193,10 @@ void STDCALL delete_tree_item(device_extension* Vcb, traverse_ptr* tp, LIST_ENTR
 
     tp->item->ignore = TRUE;
     
-    add_to_tree_cache(Vcb, tp->tree, TRUE);
+    if (!tp->tree->write) {
+        tp->tree->write = TRUE;
+        Vcb->write_trees++;
+    }
     
     tp->tree->header.num_items--;
     

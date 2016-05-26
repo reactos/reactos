@@ -467,11 +467,11 @@ i8042KbdDeviceControl(
 		}
 	}
 
-	Irp->IoStatus.Status = Status;
-	if (Status == STATUS_PENDING)
-		IoMarkIrpPending(Irp);
-	else
+	if (Status != STATUS_PENDING)
+	{
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
 
 	return Status;
 }
@@ -738,9 +738,11 @@ cleanup:
 		}
 	}
 
-	Irp->IoStatus.Status = Status;
 	if (Status != STATUS_PENDING)
+	{
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
 	return Status;
 }
 

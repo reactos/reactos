@@ -132,7 +132,7 @@ RegInitCurrentControlSet(
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('LastKnownGood') failed (Error %u)\n", (int)Error);
         return Error;
     }
 

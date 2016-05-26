@@ -405,19 +405,19 @@ CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Attività", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", 14001, 40, 25, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", 14002, 40, 37, 200, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 200, 10
     GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", 14004, 40, 70, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", 14005, 40, 82, 200, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 200, 10
     GROUPBOX "Click sugli elementi come segue", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", 14008, 50, 132, 200, 10
-    AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", 14009, 50, 144, 200, 10
-    AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", 14010, 40, 156, 200, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
+    AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 200, 10
     PUSHBUTTON "&Ripristina le impostazioni predefinite", 14011, 120, 180, 120, 14, WS_TABSTOP
 END
 
@@ -442,7 +442,7 @@ CAPTION "Tipi dei File"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Tipi di file Registrati:", -1, 7, 10, 70, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Nuovo", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Cancella", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Dettagli per l'estensione '%s'", 14003, 7, 130, 249, 70

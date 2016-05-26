@@ -31,7 +31,7 @@ static void do_flush(device_extension* Vcb) {
     if (Vcb->write_trees > 0)
         do_write(Vcb, &rollback);
     
-    free_tree_cache(&Vcb->tree_cache);
+    free_trees(Vcb);
     
     clear_rollback(&rollback);
 
@@ -41,23 +41,31 @@ static void do_flush(device_extension* Vcb) {
 }
 
 void STDCALL flush_thread(void* context) {
-    device_extension* Vcb = context;
+    DEVICE_OBJECT* devobj = context;
+    device_extension* Vcb = devobj->DeviceExtension;
     LARGE_INTEGER due_time;
+    KTIMER flush_thread_timer;
     
-    KeInitializeTimer(&Vcb->flush_thread_timer);
+    ObReferenceObject(devobj);
+    
+    KeInitializeTimer(&flush_thread_timer);
     
     due_time.QuadPart = -INTERVAL * 10000;
     
-    KeSetTimer(&Vcb->flush_thread_timer, due_time, NULL);
+    KeSetTimer(&flush_thread_timer, due_time, NULL);
     
     while (TRUE) {
-        KeWaitForSingleObject(&Vcb->flush_thread_timer, Executive, KernelMode, FALSE, NULL);        
+        KeWaitForSingleObject(&flush_thread_timer, Executive, KernelMode, FALSE, NULL);
 
+        if (!(devobj->Vpb->Flags & VPB_MOUNTED))
+            break;
+            
         do_flush(Vcb);
         
-        KeSetTimer(&Vcb->flush_thread_timer, due_time, NULL);
+        KeSetTimer(&flush_thread_timer, due_time, NULL);
     }
     
-    KeCancelTimer(&Vcb->flush_thread_timer);
+    ObDereferenceObject(devobj);
+    KeCancelTimer(&flush_thread_timer);
     PsTerminateSystemThread(STATUS_SUCCESS);
 }

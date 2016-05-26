@@ -2554,7 +2554,7 @@ NetUserEnum(LPCWSTR servername,
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Count)
+    if (ApiStatus == NERR_Success && EnumContext != NULL && EnumContext->Index < EnumContext->Count)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)

@@ -1518,6 +1518,7 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
         ; /* no corresponding env. var, do nothing */
     }
 
+    hr = S_OK;
     if (CSIDL_Data[folder].szDefaultPath)
     {
         if (IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
@@ -1525,7 +1526,6 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
             if (LoadStringW(shell32_hInstance,
                 LOWORD(CSIDL_Data[folder].szDefaultPath), resourcePath, MAX_PATH))
             {
-                hr = S_OK;
                 PathAppendW(pszPath, resourcePath);
             }
             else
@@ -1537,7 +1537,6 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
         }
         else
         {
-            hr = S_OK;
             PathAppendW(pszPath, CSIDL_Data[folder].szDefaultPath);
         }
     }

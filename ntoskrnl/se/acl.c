@@ -462,10 +462,27 @@ SepPropagateAcl(
         AceDest = (PACCESS_ALLOWED_ACE)CurrentDest;
         AceSource = (PACCESS_ALLOWED_ACE)CurrentSource;
 
+        if (AceSource->Header.AceType > ACCESS_MAX_MS_V2_ACE_TYPE)
+        {
+            /* FIXME: handle object & compound ACEs */
+            AceSize = AceSource->Header.AceSize;
+
+            if (*AclLength >= Written + AceSize)
+            {
+                RtlCopyMemory(AceDest, AceSource, AceSize);
+            }
+            CurrentDest += AceSize;
+            CurrentSource += AceSize;
+            Written += AceSize;
+            AceCount++;
+            continue;
+        }
+
         /* These all have the same structure */
         ASSERT(AceSource->Header.AceType == ACCESS_ALLOWED_ACE_TYPE ||
-                  AceSource->Header.AceType == ACCESS_DENIED_ACE_TYPE ||
-                  AceSource->Header.AceType == SYSTEM_AUDIT_ACE_TYPE);
+               AceSource->Header.AceType == ACCESS_DENIED_ACE_TYPE ||
+               AceSource->Header.AceType == SYSTEM_AUDIT_ACE_TYPE ||
+               AceSource->Header.AceType == SYSTEM_ALARM_ACE_TYPE);
 
         ASSERT(AceSource->Header.AceSize % sizeof(ULONG) == 0);
         ASSERT(AceSource->Header.AceSize >= sizeof(*AceSource));

@@ -1163,7 +1163,7 @@ NetLocalGroupEnum(
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Phase != DonePhase)
+    if (ApiStatus == NERR_Success && EnumContext != NULL && EnumContext->Phase != DonePhase)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)

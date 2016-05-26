@@ -43,7 +43,7 @@
 /* Menu IDs */
 #define IDM_EVENTVWR       32771
 #define IDM_CLEAR_EVENTS   32772
-#define IDM_SAVE_PROTOCOL  32773
+#define IDM_SAVE_EVENTLOG  32773
 #define IDM_EXIT           32774
 #define IDM_REFRESH        32775
 #define IDM_OPTIONS        32776
@@ -76,7 +76,6 @@
 #define IDS_COLUMNEVENT     305
 #define IDS_COLUMNUSER      306
 #define IDS_COLUMNCOMPUTER  307
-#define IDS_COLUMNEVENTDATA 308
 
 #define IDS_COPY          400
 

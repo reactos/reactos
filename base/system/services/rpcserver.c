@@ -2022,7 +2022,27 @@ DWORD RChangeServiceConfigW(
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Decrypt and write password */
+        if (wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+        else
+        {
+            /* Delete the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            NULL);
+            if (dwError == ERROR_FILE_NOT_FOUND)
+                dwError = ERROR_SUCCESS;
+
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
     }
 
 done:
@@ -2323,6 +2343,7 @@ DWORD RCreateServiceW(
             goto done;
     }
 
+    /* Set the service tag */
     if (lpdwTagId != NULL)
     {
         dwError = RegSetValueExW(hServiceKey,
@@ -2345,9 +2366,10 @@ DWORD RCreateServiceW(
             goto done;
     }
 
-    /* Write service start name */
+    /* Start name and password are only used by Win32 services */
     if (dwServiceType & SERVICE_WIN32)
     {
+        /* Write service start name */
         lpObjectName = (lpServiceStartName != NULL) ? (LPWSTR)lpServiceStartName : L"LocalSystem";
         dwError = RegSetValueExW(hServiceKey,
                                  L"ObjectName",
@@ -2357,11 +2379,17 @@ DWORD RCreateServiceW(
                                  (DWORD)((wcslen(lpObjectName) + 1) * sizeof(WCHAR)));
         if (dwError != ERROR_SUCCESS)
             goto done;
-    }
 
-    if (lpPassword != NULL)
-    {
-        /* FIXME: Decrypt and write password */
+        if (lpPassword != NULL && wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
     }
 
     dwError = ScmCreateServiceHandle(lpService,
@@ -3452,11 +3480,34 @@ DWORD RChangeServiceConfigA(
                                        dwDependSize);
 
         HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Decrypt and write password */
+        if (wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+        else
+        {
+            /* Delete the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            NULL);
+            if (dwError == ERROR_FILE_NOT_FOUND)
+                dwError = ERROR_SUCCESS;
+
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
     }
 
 done:

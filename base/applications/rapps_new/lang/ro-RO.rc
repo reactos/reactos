@@ -207,6 +207,6 @@ BEGIN
     IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
     IDS_INTEG_CHECK_TITLE "Se verifică integritatea pachetului…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
+    IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
+    IDS_UNABLE_TO_WRITE "Nu se poate scrie pe disc. Una din cauze poate fi atingerea limitei de capacitate a discului."
 END

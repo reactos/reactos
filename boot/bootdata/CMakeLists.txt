@@ -18,7 +18,9 @@ add_registry_inf(
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/regtest.cmd DESTINATION reactos/bin FOR all)
 
 #autorun.inf
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/autorun.inf DESTINATION root NO_CAB NOT_IN_HYBRIDCD FOR all hybridcd)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/autorun-bootcd.inf DESTINATION root NO_CAB NOT_IN_HYBRIDCD NAME_ON_CD autorun.inf FOR bootcd)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/autorun-livecd.inf DESTINATION root NO_CAB NOT_IN_HYBRIDCD NAME_ON_CD autorun.inf FOR livecd)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/autorun-hybridcd.inf DESTINATION root NO_CAB NOT_IN_HYBRIDCD NAME_ON_CD autorun.inf FOR hybridcd)
 
 #icon.ico
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon.ico DESTINATION root NO_CAB NOT_IN_HYBRIDCD FOR all hybridcd)

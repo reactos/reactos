@@ -8047,10 +8047,10 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
 {
     ENCRYPTED_LM_OWF_PASSWORD StoredLmPassword;
     ENCRYPTED_NT_OWF_PASSWORD StoredNtPassword;
-    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
-    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
-    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
-    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    LM_OWF_PASSWORD OldLmPassword;
+    LM_OWF_PASSWORD NewLmPassword;
+    NT_OWF_PASSWORD OldNtPassword;
+    NT_OWF_PASSWORD NewNtPassword;
     BOOLEAN StoredLmPresent = FALSE;
     BOOLEAN StoredNtPresent = FALSE;
     BOOLEAN StoredLmEmpty = TRUE;
@@ -9212,6 +9212,7 @@ SamrUnicodeChangePasswordUser2(IN handle_t BindingHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 56 */
 NTSTATUS
 NTAPI
@@ -9219,8 +9220,59 @@ SamrGetDomainPasswordInformation(IN handle_t BindingHandle,
                                  IN PRPC_UNICODE_STRING Unused,
                                  OUT PUSER_DOMAIN_PASSWORD_INFORMATION PasswordInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SAMPR_HANDLE ServerHandle = NULL;
+    PSAM_DB_OBJECT DomainObject = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length;
+    NTSTATUS Status;
+
+    TRACE("(%p %p %p)\n", BindingHandle, Unused, PasswordInformation);
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampOpenDbObject((PSAM_DB_OBJECT)ServerHandle,
+                              L"Domains",
+                              L"Account",
+                              0,
+                              SamDbDomainObject,
+                              DOMAIN_READ_PASSWORD_PARAMETERS,
+                              &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampOpenDbObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    &FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    PasswordInformation->MinPasswordLength = FixedData.MinPasswordLength;
+    PasswordInformation->PasswordProperties = FixedData.PasswordProperties;
+
+done:
+    if (DomainObject != NULL)
+        SampCloseDbObject(DomainObject);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(ServerHandle);
+
+    return Status;
 }
 
 

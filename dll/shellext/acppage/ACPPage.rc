@@ -60,9 +60,11 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
+*/
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+/*
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
@@ -75,9 +77,11 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+*/
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
+/*
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif

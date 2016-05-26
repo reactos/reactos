@@ -23,6 +23,7 @@
 @ cdecl mbedtls_ssl_write(ptr ptr ptr)
 @ cdecl mbedtls_ssl_get_peer_cert(ptr)
 @ cdecl mbedtls_ssl_config_init(ptr)
+@ cdecl mbedtls_ssl_config_free(ptr)
 @ cdecl mbedtls_ssl_config_defaults(ptr long long long)
 @ cdecl mbedtls_ssl_conf_dbg(ptr ptr ptr)
 @ cdecl mbedtls_ssl_setup(ptr ptr)

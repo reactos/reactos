@@ -29,24 +29,24 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
 static
 LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 {
-   LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
-   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
+    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
 
-   if (RealFilter != NULL)
-   {
-      _SEH2_TRY
-      {
-         ExceptionDisposition = RealFilter(ExceptionInfo);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
-      }
-      _SEH2_END;
-   }
+    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+    if (RealFilter != NULL)
+    {
+        _SEH2_TRY
+        {
+            ExceptionDisposition = RealFilter(ExceptionInfo);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
+        }
+        _SEH2_END;
+    }
 
-   return ExceptionDisposition;
+    return ExceptionDisposition;
 }
 
 __declspec(noreturn)
@@ -978,8 +978,10 @@ BOOL
 WINAPI
 SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    static int once;
+    if (once++ == 0)
+         DPRINT1("SetThreadStackGuarantee(%p): stub\n", StackSizeInBytes);
+    return TRUE;
 }
 
 /*

@@ -1539,7 +1539,6 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  //ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
@@ -1552,14 +1551,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
       return FALSE;
   }
-#if 0
-  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
-  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
-  {
-     ERR("IntCallWindowsProcA() Exceeded Stack!\n");
-     return FALSE;
-  }
-#endif
+
   if (pWnd)
      Dialog = (pWnd->fnid == FNID_DIALOG);
   else

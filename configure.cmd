@@ -26,7 +26,7 @@ if /I "%1" == "arm_hosttools" (
     REM This launches %VSINSTALLDIR%VS\vcvarsall.bat
     call %2 x86
 
-    REM Configure host tools for x86
+    REM Configure host tools for x86.
     cmake -G %3 -DARCH:STRING=i386 %~dp0
     exit
 )

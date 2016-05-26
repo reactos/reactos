@@ -26,7 +26,7 @@
 25 stub NetSetupFinishInstall
 26 stub NetSetupInstallSoftware
 27 stub NetSetupPrepareSysPrep
-28 stub NetSetupRequestWizardPages
+28 stdcall NetSetupRequestWizardPages(ptr ptr ptr)
 29 stub NetSetupSetProgressCallback
 30 stub NormalizeExtendedStatus
 31 stub RaiseSupportDialog

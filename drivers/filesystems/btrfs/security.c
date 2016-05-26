@@ -281,7 +281,7 @@ static void uid_to_sid(UINT32 uid, PSID* sid) {
     *sid = sh;
 }
 
-static UINT32 sid_to_uid(PSID sid) {
+UINT32 sid_to_uid(PSID sid) {
     LIST_ENTRY* le;
     uid_map* um;
     sid_header* sh = sid;
@@ -646,7 +646,7 @@ static BOOL get_sd_from_xattr(fcb* fcb) {
     return TRUE;
 }
 
-void fcb_get_sd(fcb* fcb) {
+void fcb_get_sd(fcb* fcb, struct _fcb* parent) {
     NTSTATUS Status;
     SECURITY_DESCRIPTOR sd;
     ULONG buflen;
@@ -694,10 +694,10 @@ void fcb_get_sd(fcb* fcb) {
         }
 //     }
     
-    if (!fcb->par)
+    if (!parent)
         acl = load_default_acl();
     else
-        acl = inherit_acl(fcb->par->sd, fcb->type != BTRFS_TYPE_DIRECTORY);
+        acl = inherit_acl(parent->sd, fcb->type != BTRFS_TYPE_DIRECTORY);
     
     if (!acl) {
         ERR("out of memory\n");
@@ -758,9 +758,17 @@ end:
 static NTSTATUS STDCALL get_file_security(device_extension* Vcb, PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* relsd, ULONG* buflen, SECURITY_INFORMATION flags) {
     NTSTATUS Status;
     fcb* fcb = FileObject->FsContext;
+    ccb* ccb = FileObject->FsContext2;
+    file_ref* fileref = ccb ? ccb->fileref : NULL;
     
-    if (fcb->ads)
-        fcb = fcb->par;
+    if (fcb->ads) {
+        if (fileref && fileref->parent)
+            fcb = fileref->parent->fcb;
+        else {
+            ERR("could not get parent fcb for stream\n");
+            return STATUS_INTERNAL_ERROR;
+        }
+    }
     
 //     TRACE("buflen = %u, fcb->sdlen = %u\n", *buflen, fcb->sdlen);
 
@@ -846,6 +854,8 @@ NTSTATUS STDCALL drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* sd, SECURITY_INFORMATION flags) {
     NTSTATUS Status;
     fcb* fcb = FileObject->FsContext;
+    ccb* ccb = FileObject->FsContext2;
+    file_ref* fileref = ccb ? ccb->fileref : NULL;
     SECURITY_DESCRIPTOR* oldsd;
     INODE_ITEM* ii;
     KEY searchkey;
@@ -863,8 +873,14 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
     
     acquire_tree_lock(Vcb, TRUE);
     
-    if (fcb->ads)
-        fcb = fcb->par;
+    if (fcb->ads) {
+        if (fileref && fileref->parent)
+            fcb = fileref->parent->fcb;
+        else {
+            ERR("could not find parent fcb for stream\n");
+            return STATUS_INTERNAL_ERROR;
+        }
+    }
     
     if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY) {
         Status = STATUS_ACCESS_DENIED;
@@ -895,12 +911,10 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
     if (keycmp(&tp.item->key, &searchkey)) {
         ERR("error - could not find INODE_ITEM for inode %llx in subvol %llx\n", fcb->inode, fcb->subvol->id);
         Status = STATUS_INTERNAL_ERROR;
-        free_traverse_ptr(&tp);
         goto end;
     }
     
     delete_tree_item(Vcb, &tp, &rollback);
-    free_traverse_ptr(&tp);
     
     KeQuerySystemTime(&time);
     win_time_to_unix(time, &now);
@@ -1009,12 +1023,12 @@ NTSTATUS STDCALL drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     return Status;
 }
 
-NTSTATUS fcb_get_new_sd(fcb* fcb, ACCESS_STATE* as) {
+NTSTATUS fcb_get_new_sd(fcb* fcb, file_ref* fileref, ACCESS_STATE* as) {
     NTSTATUS Status;
     PSID owner;
     BOOLEAN defaulted;
     
-    Status = SeAssignSecurity(fcb->par ? fcb->par->sd : NULL, as->SecurityDescriptor, (void**)&fcb->sd, fcb->type == BTRFS_TYPE_DIRECTORY,
+    Status = SeAssignSecurity((fileref && fileref->parent) ? fileref->parent->fcb->sd : NULL, as->SecurityDescriptor, (void**)&fcb->sd, fcb->type == BTRFS_TYPE_DIRECTORY,
                               &as->SubjectSecurityContext, IoGetFileObjectGenericMapping(), PagedPool);
     
     if (!NT_SUCCESS(Status)) {

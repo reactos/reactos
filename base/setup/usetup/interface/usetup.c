@@ -629,6 +629,10 @@ UpdateKBLayout(VOID)
  *
  * Next pages: IntroPage, QuitPage
  *
+ * SIDEEFFECTS
+ *  Init SelectedLanguageId
+ *  Init LanguageId
+ *
  * RETURNS
  *   Number of the next page.
  */
@@ -772,6 +776,8 @@ LanguagePage(PINPUT_RECORD Ir)
  *  Init RequiredPartitionDiskSpace
  *  Init IsUnattendedSetup
  *  If unattended, init *List and sets the Codepage
+ *  If unattended, init SelectedLanguageId
+ *  If unattended, init LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -906,6 +912,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
         /* new part */
         wcscpy(SelectedLanguageId,LocaleID);
+        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
@@ -1971,6 +1978,8 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2126,6 +2135,8 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2280,6 +2291,8 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2368,7 +2381,7 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    return SELECT_PARTITION_PAGE;
+    return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
 }
 
 
@@ -2871,7 +2884,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #ifndef NDEBUG
     ULONG Line;
     ULONG i;
-    PLIST_ENTRY Entry;
+    PPARTITION_INFORMATION PartitionInfo;
 #endif
 
     DPRINT("FormatPartitionPage()\n");
@@ -2981,38 +2994,29 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
 #ifndef NDEBUG
             CONSOLE_PrintTextXY(6, 12,
-                                "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
-                                DiskEntry->DiskSize,
-                                DiskEntry->CylinderSize,
-                                DiskEntry->TrackSize);
+                                "Cylinders: %I64u  Tracks/Cyl: %lu  Sectors/Trk: %lu  Bytes/Sec: %lu  %c",
+                                DiskEntry->Cylinders,
+                                DiskEntry->TracksPerCylinder,
+                                DiskEntry->SectorsPerTrack,
+                                DiskEntry->BytesPerSector,
+                                DiskEntry->Dirty ? '*' : ' ');
 
             Line = 13;
-            DiskEntry = PartitionList->TempDisk;
-            Entry = DiskEntry->PartListHead.Flink;
 
-            while (Entry != &DiskEntry->PrimaryPartListHead)
+            for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
             {
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
 
-                if (PartEntry->IsPartitioned == TRUE)
-                {
-                    CONSOLE_PrintTextXY(6, Line,
-                                        "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
-                                        i,
-                                        PartEntry->PartitionNumber,
-                                        PartEntry->BootIndicator ? 'A' : '-',
-                                        PartEntry->StartSector.QuadPart,
-                                        PartEntry->SectorCount.QuadPart,
-                                        PartEntry->PartitionType,
-                                        PartEntry->Dirty ? '*' : ' ');
-                    Line++;
-                }
-
-                Entry = Entry->Flink;
+                CONSOLE_PrintTextXY(6, Line,
+                                    "%2u:  %2lu  %c  %12I64u  %12I64u  %02x",
+                                    i,
+                                    PartitionInfo->PartitionNumber,
+                                    PartitionInfo->BootIndicator ? 'A' : '-',
+                                    PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionType);
+                Line++;
             }
-
-            /* Restore the old entry */
-            PartEntry = PartitionList->TempPartition;
 #endif
 
             if (WritePartitionsToDisk(PartitionList) == FALSE)
@@ -3252,8 +3256,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     ULONG Length;
 
     /* We do not need the filsystem list any more */
-    DestroyFileSystemList(FileSystemList);
-    FileSystemList = NULL;
+    if (FileSystemList != NULL)
+    {
+        DestroyFileSystemList(FileSystemList);
+        FileSystemList = NULL;
+    }
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||

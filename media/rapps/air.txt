@@ -7,7 +7,7 @@ Size = 17.8 MiB
 Category = 14
 URLSite = https://get.adobe.com/air/
 URLDownload = http://airdownload.adobe.com/air/win/download/21.0/AdobeAIRInstaller.exe
-SHA1 = 8cb15281252227082cf07c320672aec671c0eaf3
+SHA1 = 27658c7839208dbb929f57a3bf416997b4e248be
 CDPath = none
 
 [Section.0407]

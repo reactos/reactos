@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2016 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     atapi.h
@@ -37,7 +37,10 @@ Revision History:
          Søren Schmidt, Copyright (c) 1998,1999,2000,2001
 
     Code was changed/updated by
-         Alter, Copyright (c) 2002-2004
+         Alter, Copyright (c) 2002-20016
+
+Licence:
+    GPLv2
 
 
 --*/
@@ -211,21 +214,21 @@ typedef union _IDE_REGISTERS_1 {
 #define IDX_IO1_o_DriveSelect       (FIELD_OFFSET(IDE_REGISTERS_1, o.DriveSelect )+IDX_IO1_o)
 #define IDX_IO1_o_Command           (FIELD_OFFSET(IDE_REGISTERS_1, o.Command     )+IDX_IO1_o)
 
-typedef struct _IDE_REGISTERS_2 {
+typedef union _IDE_REGISTERS_2 {
     UCHAR AltStatus;
-    UCHAR DriveAddress;
+    UCHAR Control;
 } IDE_REGISTERS_2, *PIDE_REGISTERS_2;
 
 #define IDX_IO2                     (IDX_IO1_o+IDX_IO1_o_SZ)
 #define IDX_IO2_SZ                  sizeof(IDE_REGISTERS_2)
 
 #define IDX_IO2_AltStatus           (FIELD_OFFSET(IDE_REGISTERS_2, AltStatus   )+IDX_IO2)
-#define IDX_IO2_DriveAddress        (FIELD_OFFSET(IDE_REGISTERS_2, DriveAddress)+IDX_IO2)
+//#define IDX_IO2_DriveAddress        (FIELD_OFFSET(IDE_REGISTERS_2, DriveAddress)+IDX_IO2)
 
 #define IDX_IO2_o                   (IDX_IO2+IDX_IO2_SZ)
 #define IDX_IO2_o_SZ                sizeof(IDE_REGISTERS_2)
 
-#define IDX_IO2_o_Control           (FIELD_OFFSET(IDE_REGISTERS_2, AltStatus   )+IDX_IO2_o)
+#define IDX_IO2_o_Control           (FIELD_OFFSET(IDE_REGISTERS_2, Control)+IDX_IO2_o)
 //
 // Device Extension Device Flags
 //
@@ -657,6 +660,7 @@ typedef struct _IDENTIFY_DATA {
     USHORT StandbyOverlap:1;
     USHORT SupportQTag:1;                                 /* supports queuing overlap */
     USHORT SupportIDma:1;                                 /* interleaved DMA supported */
+
 /*    USHORT Capabilities;                    // 62  49
 #define IDENTIFY_CAPABILITIES_SUPPORT_DMA   0x0100
 #define IDENTIFY_CAPABILITIES_SUPPORT_LBA   0x0200
@@ -708,7 +712,7 @@ typedef struct _IDENTIFY_DATA {
             USHORT UDMASupport : 7;        //     62  ATAPI
             USHORT MultiWordDMASupport : 3;
             USHORT DMASupport : 1;         
-            USHORT Reaseved62_11_14 : 4;         
+            USHORT Reserved62_11_14 : 4;         
             USHORT DMADirRequired : 1;         
         } AtapiDMA;
     };
@@ -867,10 +871,28 @@ typedef struct _IDENTIFY_DATA {
 
     ULONG  LargeSectorSize;                 //     117-118
     
-    USHORT Reserved119[8];                  //     119-126
+    struct {
+        USHORT Reserved;
+    } CommandFeatureSetSupport, CommandFeatureSetEnabled; // 119-120
+    USHORT Reserved121[4];                  //     121-124
+    USHORT AtapiByteCount0;                 //     125
+    USHORT Reserved126;                     //     126
     
     USHORT RemovableStatus;                 //     127
-    USHORT SecurityStatus;                  //     128
+    union {
+        USHORT SecurityStatus;                  //     128
+        struct {
+            USHORT Support:1;
+            USHORT Enabled:1;
+            USHORT Locked:1;
+            USHORT Frozen:1;
+            USHORT CountExpired:1;
+            USHORT EnhancedEraseSupport:1;
+            USHORT Reserved7_8:2;
+            USHORT MasterPasswdCap:1; // 0 - high, 1 - max
+            USHORT Reserved9_15:7;
+        } SecurityStatusOpt;
+    };
 
     USHORT Reserved129[31];                 //     129-159
     USHORT CfAdvPowerMode;                  //     160
@@ -1073,12 +1095,12 @@ NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
 #define WriteCommand(chan, _Command) \
     AtapiWritePort1(chan, IDX_IO1_o_Command, _Command);
 
-
+/*
 #define SelectDrive(chan, unit) { \
     if(chan && chan->lun[unit] && chan->lun[unit]->DeviceFlags & DFLAGS_ATAPI_CHANGER) KdPrint3(("  Select %d\n", unit)); \
     AtapiWritePort1(chan, IDX_IO1_o_DriveSelect, (unit) ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1); \
 }
-
+*/
 
 #define ReadBuffer(chan, Buffer, Count, timing) \
     AtapiReadBuffer2(chan, IDX_IO1_i_Data, \
@@ -1103,6 +1125,13 @@ NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
                               Buffer, \
                                  Count, \
                                  timing);
+
+UCHAR
+DDKFASTAPI
+SelectDrive(
+    IN struct _HW_CHANNEL*   chan,
+    IN ULONG                 DeviceNumber
+    );
 
 UCHAR
 DDKFASTAPI
@@ -1151,7 +1180,15 @@ DDKFASTAPI
 AtapiSoftReset(
     IN struct _HW_CHANNEL*   chan,/*
     PIDE_REGISTERS_1 BaseIoAddress*/
-    ULONG            DeviceNumber
+    IN ULONG            DeviceNumber
+    );
+
+VOID
+DDKFASTAPI
+AtapiHardReset(
+    IN struct _HW_CHANNEL*   chan,
+    IN BOOLEAN               DisableInterrupts,
+    IN ULONG                 Delay
     );
 
 
@@ -1266,7 +1303,7 @@ IdeMediaStatus(
     );
 
 ULONG NTAPI
-AtapiFindController(
+AtapiFindIsaController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
     IN PVOID BusInformation,
@@ -1539,6 +1576,8 @@ UniataAnybodyHome(
     IN ULONG   deviceNumber
     );
 
+#endif //USER_MODE
+
 #define ATA_AT_HOME_HDD        0x01
 #define ATA_AT_HOME_ATAPI      0x02
 #define ATA_AT_HOME_XXX        0x04
@@ -1552,9 +1591,6 @@ UniataAnybodyHome(
 #define ATA_CMD_FLAG_In        0x40
 #define ATA_CMD_FLAG_Out       0x80
 
-extern UCHAR AtaCommands48[256];
-extern UCHAR AtaCommandFlags[256];
-
 /*
  We need LBA48 when requested LBA or BlockCount are too large.
  But for LBA-based commands we have *special* limitation
@@ -1563,11 +1599,15 @@ extern UCHAR AtaCommandFlags[256];
     (  ((AtaCommandFlags[command] & ATA_CMD_FLAG_LBAIOsupp) && (supp48) && (((lba+count) >= ATA_MAX_IOLBA28) || (count > 256)) ) || \
        (lba > ATA_MAX_LBA28) || (count > 255) )
 
+#ifndef USER_MODE
+
 #define UniAtaClearAtaReq(AtaReq) \
 {  \
         RtlZeroMemory((PCHAR)(AtaReq), FIELD_OFFSET(ATA_REQ, ata)); \
 }
 
+extern UCHAR const AtaCommands48[256];
+extern UCHAR const AtaCommandFlags[256];
 
 //#define ATAPI_DEVICE(de, ldev)    (de->lun[ldev].DeviceFlags & DFLAGS_ATAPI_DEVICE)
 #define ATAPI_DEVICE(chan, dev)    ((chan->lun[dev]->DeviceFlags & DFLAGS_ATAPI_DEVICE) ? TRUE : FALSE)

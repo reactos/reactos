@@ -2569,6 +2569,36 @@ BOOL WINAPI LogonUserW(_In_ LPWSTR, _In_opt_ LPWSTR, _In_opt_ LPWSTR, _In_ DWORD
 _Success_(return != FALSE)
 BOOL
 WINAPI
+LogonUserExA(
+  _In_ LPSTR lpszUsername,
+  _In_opt_ LPSTR lpszDomain,
+  _In_opt_ LPSTR lpszPassword,
+  _In_ DWORD dwLogonType,
+  _In_ DWORD dwLogonProvider,
+  _Out_opt_ PHANDLE phToken,
+  _Out_opt_ PSID *ppLogonSid,
+  _Out_opt_ PVOID *ppProfileBuffer,
+  _Out_opt_ LPDWORD pdwProfileLength,
+  _Out_opt_ PQUOTA_LIMITS pQuotaLimits);
+
+_Success_(return != FALSE)
+BOOL
+WINAPI
+LogonUserExW(
+  _In_ LPWSTR lpszUsername,
+  _In_opt_ LPWSTR lpszDomain,
+  _In_opt_ LPWSTR lpszPassword,
+  _In_ DWORD dwLogonType,
+  _In_ DWORD dwLogonProvider,
+  _Out_opt_ PHANDLE phToken,
+  _Out_opt_ PSID *ppLogonSid,
+  _Out_opt_ PVOID *ppProfileBuffer,
+  _Out_opt_ LPDWORD pdwProfileLength,
+  _Out_opt_ PQUOTA_LIMITS pQuotaLimits);
+
+_Success_(return != FALSE)
+BOOL
+WINAPI
 LookupAccountNameA(
   _In_opt_ LPCSTR lpSystemName,
   _In_ LPCSTR lpAccountName,
@@ -3359,6 +3389,7 @@ typedef PCACTCTXW PCACTCTX;
 #define LoadLibrary LoadLibraryW
 #define LoadLibraryEx LoadLibraryExW
 #define LogonUser LogonUserW
+#define LogonUserEx LogonUserExW
 #define LookupAccountName LookupAccountNameW
 #define LookupAccountSid LookupAccountSidW
 #define LookupPrivilegeDisplayName LookupPrivilegeDisplayNameW
@@ -3567,6 +3598,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define LoadLibrary LoadLibraryA
 #define LoadLibraryEx LoadLibraryExA
 #define LogonUser LogonUserA
+#define LogonUserEx LogonUserExA
 #define LookupAccountName LookupAccountNameA
 #define LookupAccountSid LookupAccountSidA
 #define LookupPrivilegeDisplayName LookupPrivilegeDisplayNameA

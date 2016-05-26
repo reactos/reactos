@@ -405,19 +405,19 @@ CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Задачи", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Показване на общите задачи в папките", 14001, 20, 25, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Използване на обичайните папки на Windows", 14002, 20, 37, 210, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Показване на общите задачи в папките", IDC_FOLDER_OPTIONS_COMMONTASKS, 20, 25, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Използване на обичайните папки на Windows", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 20, 37, 210, 10
     GROUPBOX "Обзор на папките", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", 14004, 20, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", 14005, 20, 82, 210, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", IDC_FOLDER_OPTIONS_SAMEWINDOW, 20, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", IDC_FOLDER_OPTIONS_OWNWINDOW, 20, 82, 210, 10
     GROUPBOX "Цъкането действа така:", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", 14007, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", 14008, 30, 220, 170, 10
-    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", 14009, 30, 144, 220, 10
-    AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", 14010, 20, 156, 170, 10
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", IDC_FOLDER_OPTIONS_SINGLECLICK, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", IDC_FOLDER_OPTIONS_ULBROWSER, 30, 220, 170, 10
+    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", IDC_FOLDER_OPTIONS_ULPOINT, 30, 144, 220, 10
+    AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 20, 156, 170, 10
     PUSHBUTTON "От под&разбираните", 14011, 160, 180, 75, 14, WS_TABSTOP
 END
 
@@ -442,7 +442,7 @@ CAPTION "Видове файлове"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Вписани &видове файлове:", -1, 7, 10, 170, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Нов", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "Из&триване", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Подробности за разширение '%s'", 14003, 7, 130, 249, 70
@@ -816,7 +816,7 @@ BEGIN
 
     IDS_FILE_DETAILS "Подробности за разширение '%s"
     IDS_FILE_DETAILSADV "Файловете с разширение '%s' са от вида '%s'. За да промените настройките, за всички '%s' файлове, натиснете „Разширени”."
-    IDS_FILE_TYPES "FileTypes"
+    IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
