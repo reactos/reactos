@@ -900,7 +900,7 @@ NtGdiGetFontResourceInfoInternalW(
     SafeFileNames.MaximumLength = SafeFileNames.Length = (USHORT)cbStringSize - sizeof(WCHAR);
     SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  cbStringSize,
-                                                 'RTSU');
+                                                 TAG_USTR);
     if (!SafeFileNames.Buffer)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -926,7 +926,7 @@ NtGdiGetFontResourceInfoInternalW(
     {
         SetLastNtError(Status);
         /* Free the string buffer for the safe filename */
-        ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
+        ExFreePoolWithTag(SafeFileNames.Buffer, TAG_USTR);
         return FALSE;
     }
 
@@ -957,7 +957,7 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Free the string for the safe filenames */
-    ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
+    ExFreePoolWithTag(SafeFileNames.Buffer, TAG_USTR);
 
     return bRet;
 }
