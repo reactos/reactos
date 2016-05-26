@@ -149,6 +149,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PFILE_OBJECT FileObject;
     LARGE_INTEGER SectionSize;
     LARGE_INTEGER FileSize;
+    BOOLEAN PinAccess;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     KSPIN_LOCK CacheMapLock;
@@ -320,6 +321,7 @@ NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,
+    BOOLEAN PinAccess,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );

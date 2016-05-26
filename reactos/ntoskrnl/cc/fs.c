@@ -103,6 +103,7 @@ CcInitializeCacheMap (
     /* Call old ROS cache init function */
     Status = CcRosInitializeFileCache(FileObject,
                                       FileSizes,
+                                      PinAccess,
                                       CallBacks,
                                       LazyWriterContext);
     if (!NT_SUCCESS(Status))

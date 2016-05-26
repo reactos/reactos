@@ -133,8 +133,18 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
+
+    ASSERT(FileObject);
+    ASSERT(FileObject->SectionObjectPointer);
+    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
+    ASSERT(SharedCacheMap->PinAccess);
 
     /* no-op for current implementation. */
     return TRUE;
