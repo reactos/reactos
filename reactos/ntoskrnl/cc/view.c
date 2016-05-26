@@ -166,10 +166,12 @@ CcRosFlushDirtyPages (
     PROS_VACB current;
     BOOLEAN Locked;
     NTSTATUS Status;
+    LARGE_INTEGER ZeroTimeout;
 
     DPRINT("CcRosFlushDirtyPages(Target %lu)\n", Target);
 
     (*Count) = 0;
+    ZeroTimeout.QuadPart = 0;
 
     KeEnterCriticalRegion();
     KeAcquireGuardedMutex(&ViewLock);
@@ -197,8 +199,12 @@ CcRosFlushDirtyPages (
             continue;
         }
 
-        Locked = ExAcquireResourceExclusiveLite(&current->Lock, Wait);
-        if (!Locked)
+        Status = KeWaitForSingleObject(&current->Mutex,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       Wait ? NULL : &ZeroTimeout);
+        if (Status != STATUS_SUCCESS)
         {
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
                 current->SharedCacheMap->LazyWriteContext);
@@ -211,7 +217,7 @@ CcRosFlushDirtyPages (
         /* One reference is added above */
         if (current->ReferenceCount > 2)
         {
-            ExReleaseResourceLite(&current->Lock);
+            KeReleaseMutex(&current->Mutex, FALSE);
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
                 current->SharedCacheMap->LazyWriteContext);
             CcRosVacbDecRefCount(current);
@@ -222,7 +228,7 @@ CcRosFlushDirtyPages (
 
         Status = CcRosFlushVacb(current);
 
-        ExReleaseResourceLite(&current->Lock);
+        KeReleaseMutex(&current->Mutex, FALSE);
         current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
             current->SharedCacheMap->LazyWriteContext);
 
@@ -419,7 +425,10 @@ CcRosReleaseVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    ExReleaseResourceLite(&Vacb->Lock);
+    if (InterlockedCompareExchange(&Vacb->PinCount, 0, 0) == 0)
+    {
+        KeReleaseMutex(&Vacb->Mutex, FALSE);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -456,7 +465,14 @@ CcRosLookupVacb (
             CcRosVacbIncRefCount(current);
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
             KeReleaseGuardedMutex(&ViewLock);
-            ExAcquireResourceExclusiveLite(&current->Lock, TRUE);
+            if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
+            {
+                KeWaitForSingleObject(&current->Mutex,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+            }
             return current;
         }
         if (current->FileOffset.QuadPart > FileOffset)
@@ -511,7 +527,7 @@ CcRosMarkDirtyVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    ExReleaseResourceLite(&Vacb->Lock);
+    KeReleaseMutex(&Vacb->Mutex, FALSE);
 
     return STATUS_SUCCESS;
 }
@@ -564,7 +580,7 @@ CcRosUnmapVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    ExReleaseResourceLite(&Vacb->Lock);
+    KeReleaseMutex(&Vacb->Mutex, FALSE);
 
     return STATUS_SUCCESS;
 }
@@ -665,8 +681,13 @@ CcRosCreateVacb (
     current->DirtyVacbListEntry.Flink = NULL;
     current->DirtyVacbListEntry.Blink = NULL;
     current->ReferenceCount = 1;
-    ExInitializeResourceLite(&current->Lock);
-    ExAcquireResourceExclusiveLite(&current->Lock, TRUE);
+    current->PinCount = 0;
+    KeInitializeMutex(&current->Mutex, 0);
+    KeWaitForSingleObject(&current->Mutex,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
     KeAcquireGuardedMutex(&ViewLock);
 
     *Vacb = current;
@@ -698,11 +719,18 @@ CcRosCreateVacb (
                         current);
             }
 #endif
-            ExReleaseResourceLite(&(*Vacb)->Lock);
+            KeReleaseMutex(&(*Vacb)->Mutex, FALSE);
             KeReleaseGuardedMutex(&ViewLock);
             ExFreeToNPagedLookasideList(&VacbLookasideList, *Vacb);
             *Vacb = current;
-            ExAcquireResourceExclusiveLite(&current->Lock, TRUE);
+            if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
+            {
+                KeWaitForSingleObject(&current->Mutex,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+            }
             return STATUS_SUCCESS;
         }
         if (current->FileOffset.QuadPart < FileOffset)
@@ -868,7 +896,6 @@ CcRosInternalFreeVacb (
                      CcFreeCachePage,
                      NULL);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    ExDeleteResourceLite(&Vacb->Lock);
 
     ExFreeToNPagedLookasideList(&VacbLookasideList, Vacb);
     return STATUS_SUCCESS;
@@ -932,7 +959,11 @@ CcFlushCache (
                         IoStatus->Status = Status;
                     }
                 }
-                ExReleaseResourceLite(&current->Lock);
+
+                if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
+                {
+                    KeReleaseMutex(&current->Mutex, FALSE);
+                }
 
                 KeAcquireGuardedMutex(&ViewLock);
                 KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
