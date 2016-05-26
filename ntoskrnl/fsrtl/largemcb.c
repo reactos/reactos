@@ -42,11 +42,13 @@ typedef struct _BASE_MCB_INTERNAL {
     PLARGE_MCB_MAPPING Mapping;
 } BASE_MCB_INTERNAL, *PBASE_MCB_INTERNAL;
 
+/*
 static LARGE_MCB_MAPPING_ENTRY StaticRunBelow0 = {
-    {{-1}}, /* ignored */
+    {{-1}}, // ignored
     {{0}},
-    {{-1}}, /* ignored */
+    {{-1}}, // ignored
 };
+*/
 
 static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
@@ -321,107 +323,60 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 BOOLEAN
 NTAPI
 FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
-                         IN ULONG RunIndex,
-                         OUT PLONGLONG Vbn,
-                         OUT PLONGLONG Lbn,
-                         OUT PLONGLONG SectorCount)
+    IN ULONG RunIndex,
+    OUT PLONGLONG Vbn,
+    OUT PLONGLONG Lbn,
+    OUT PLONGLONG SectorCount)
 {
-    BOOLEAN Result = FALSE;
     PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
-    ULONG RunIndexRemaining;
-    PLARGE_MCB_MAPPING_ENTRY Run, RunFound = NULL, RunFoundLower = NULL, RunFoundHigher = NULL;
-    BOOLEAN First = TRUE;
+    PLARGE_MCB_MAPPING_ENTRY Run = NULL;
+    ULONG CurrentIndex = 0;
+    ULONGLONG LastVbn = 0;
+    ULONGLONG LastSectorCount = 0;
+    ULONG TableElementsConsumed = 0;
 
-    DPRINT("FsRtlGetNextBaseMcbEntry(%p, %d, %p, %p, %p)\n", OpaqueMcb, RunIndex, Vbn, Lbn, SectorCount);
-
-    RunIndexRemaining = RunIndex;
-
-    /* Traverse the tree */
+    // Traverse the tree 
     for (Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
-        Run;
+    Run;
         Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE))
     {
-        if (First)
+        TableElementsConsumed++; // we consume one element in the table everytime we call RtlEnumeratGenericTable
+
+        // is the current index a hole?
+        if (Run->RunStartVbn.QuadPart > (LastVbn + LastSectorCount))
         {
-            /* Take care when we must emulate missing 'hole' run at start of our run list. */
-            if (Run->RunStartVbn.QuadPart > 0)
+            // Is this the index we're looking for?
+            if (RunIndex == CurrentIndex)
             {
-                if (RunIndexRemaining == 0)
-                {
-                    RunFoundLower = &StaticRunBelow0;
-                    RunFoundHigher = Run;
+                *Vbn = LastVbn + LastSectorCount;
+                *Lbn = -1;
+                *SectorCount = Run->RunStartVbn.QuadPart - *Vbn;
 
-                    /* stop the traversal */
-                    break;
-                }
-                /* If someone wants RunIndex #1 we are already on it. */
-                RunIndexRemaining--;
+                return TRUE;
             }
-            First = FALSE;
+
+            CurrentIndex++;
         }
 
-        if (RunIndexRemaining > 0)
+        if (RunIndex == CurrentIndex)
         {
-            /* FIXME: performance: non-linear direct seek to the requested RunIndex */
-            RunIndexRemaining--;
-            if (RunIndexRemaining == 0)
-                RunFoundLower = Run;
-            else
-                RunIndexRemaining--;
+            *Vbn = Run->RunStartVbn.QuadPart;
+            *Lbn = Run->StartingLbn.QuadPart;
+            *SectorCount = Run->RunEndVbn.QuadPart - Run->RunStartVbn.QuadPart;
 
-            /* continue the traversal */
-            continue;
+            return TRUE;
         }
 
-        if (RunFoundLower)
-            RunFoundHigher = Run;
-        else
-            RunFound = Run;
-
-        /* stop the traversal */
-        break;
+        CurrentIndex++;
+        LastVbn = Run->RunStartVbn.QuadPart;
+        LastSectorCount = Run->RunEndVbn.QuadPart - Run->RunStartVbn.QuadPart;
     }
 
-    if (RunFound) DPRINT("RunFound(%lu %lu %lu)\n", RunFound->RunStartVbn.LowPart, RunFound->RunEndVbn.LowPart, RunFound->StartingLbn.LowPart);
-    if (RunFoundLower) DPRINT("RunFoundLower(%lu %lu %lu)\n", RunFoundLower->RunStartVbn.LowPart, RunFoundLower->RunEndVbn.LowPart, RunFoundLower->StartingLbn.LowPart);
-    if (RunFoundHigher) DPRINT("RunFoundHigher(%lu %lu %lu)\n", RunFoundHigher->RunStartVbn.LowPart, RunFoundHigher->RunEndVbn.LowPart, RunFoundHigher->StartingLbn.LowPart);
-
-    if (RunFound)
-    {
-        ASSERT(RunFoundLower == NULL);
-        ASSERT(RunFoundHigher == NULL);
-
-        if (Vbn)
-            *Vbn = RunFound->RunStartVbn.QuadPart;
-        if (Lbn)
-            *Lbn = RunFound->StartingLbn.QuadPart;
-        if (SectorCount)
-            *SectorCount = RunFound->RunEndVbn.QuadPart - RunFound->RunStartVbn.QuadPart;
-
-        Result = TRUE;
-        goto quit;
-    }
-
-    if (RunFoundLower && RunFoundHigher)
-    {
-        //ASSERT(RunFoundHigher != NULL);
-
-        if (Vbn)
-            *Vbn = RunFoundLower->RunEndVbn.QuadPart;
-        if (Lbn)
-            *Lbn = -1;
-        if (SectorCount)
-            *SectorCount = RunFoundHigher->RunStartVbn.QuadPart - RunFoundLower->RunEndVbn.QuadPart;
-
-        Result = TRUE;
-        goto quit;
-    }
-
-    ASSERT(RunFoundHigher == NULL);
-
-quit:
-    DPRINT("FsRtlGetNextBaseMcbEntry(%p, %d, %p, %p, %p) = %d (%I64d, %I64d, %I64d)\n", Mcb, RunIndex, Vbn, Lbn, SectorCount, Result, *Vbn, *Lbn, *SectorCount);
-    return Result;
+    // these values are meaningless when returning false (but setting them can be helpful for debugging purposes)
+    *Vbn = -7777;
+    *Lbn = -7777;
+    *SectorCount = -7777;
+    return FALSE;
 }
 
 /*
@@ -538,125 +493,53 @@ FsRtlInitializeLargeMcbs(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
-                        IN LONGLONG Vbn,
-                        OUT PLONGLONG Lbn OPTIONAL,
-                        OUT PLONGLONG SectorCountFromLbn OPTIONAL,
-                        OUT PLONGLONG StartingLbn OPTIONAL,
-                        OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
-                        OUT PULONG Index OPTIONAL)
+    IN LONGLONG Vbn,
+    OUT PLONGLONG Lbn OPTIONAL,
+    OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+    OUT PLONGLONG StartingLbn OPTIONAL,
+    OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+    OUT PULONG Index OPTIONAL)
 {
-    BOOLEAN Result = FALSE;
-    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
+    ULONG i;
+    LONGLONG LastVbn = 0, LastLbn = 0, Count = 0;   // the last values we've found during traversal
 
-    ULONG RunIndex = 0;
-    PLARGE_MCB_MAPPING_ENTRY Run, RunFound = NULL, RunFoundLower = NULL, RunFoundHigher = NULL;
-    BOOLEAN First = TRUE;
-
-    DPRINT("FsRtlLookupBaseMcbEntry(%p, %I64d, %p, %p, %p, %p, %p)\n", OpaqueMcb, Vbn, Lbn, SectorCountFromLbn, StartingLbn, SectorCountFromStartingLbn, Index);
-
-    /* Traverse the tree */
-    for (Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
-        Run;
-        Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE))
+    for (i = 0; FsRtlGetNextBaseMcbEntry(OpaqueMcb, i, &LastVbn, &LastLbn, &Count); i++)
     {
-        if (First)
+        // have we reached the target mapping?
+        if (Vbn < LastVbn + Count)
         {
-            /* Take care when we must emulate missing 'hole' run at start of our run list. */
-            if (Run->RunStartVbn.QuadPart > 0)
+            if (Lbn)
             {
-                RunIndex++;
-                RunFoundLower = &StaticRunBelow0;
+                if (LastLbn == -1)
+                    *Lbn = -1;
+                else
+                    *Lbn = LastLbn + (Vbn - LastVbn);
             }
-            First = FALSE;
-        }
 
-        if (Run->RunStartVbn.QuadPart <= Vbn && Vbn < Run->RunEndVbn.QuadPart)
-        {
-            RunFound = Run;
-            RunFoundLower = NULL;
-            /* stop the traversal; hit */
-            break;
-        }
+            if (SectorCountFromLbn)
+                *SectorCountFromLbn = LastVbn + Count - Vbn;
+            if (StartingLbn)
+                *StartingLbn = LastLbn;
+            if (SectorCountFromStartingLbn)
+                *SectorCountFromStartingLbn = LastVbn + Count - LastVbn;
+            if (Index)
+                *Index = i;
 
-        if (Run->RunEndVbn.QuadPart <= Vbn)
-        {
-            RunFoundLower = Run;
-            if (Run->StartingLbn.QuadPart > 0)
-            {
-              RunIndex += 2;
-            }
-            /* continue the traversal; not yet crossed by the run */
-            continue;
+            return TRUE;
         }
-
-        if (Vbn < Run->RunStartVbn.QuadPart)
-        {
-            RunFoundHigher = Run;
-            RunIndex++;
-            /* stop the traversal; the run skipped us */
-            break;
-        }
-
-        ASSERT(FALSE);
-        /* stop the traversal */
-        break;
     }
 
-    if (RunFound)
-    {
-        ASSERT(RunFoundLower == NULL);
-        ASSERT(RunFoundHigher == NULL);
+    if (Lbn)
+        *Lbn = -1;
+    if (StartingLbn)
+        *StartingLbn = -1;
 
-        if (Lbn)
-            *Lbn = RunFound->StartingLbn.QuadPart + (Vbn - RunFound->RunStartVbn.QuadPart);
-
-        if (SectorCountFromLbn)	/* FIXME: 'after' means including current 'Lbn' or without it? */
-            *SectorCountFromLbn = RunFound->RunEndVbn.QuadPart - Vbn;
-        if (StartingLbn)
-            *StartingLbn = RunFound->StartingLbn.QuadPart;
-        if (SectorCountFromStartingLbn)
-            *SectorCountFromStartingLbn = RunFound->RunEndVbn.QuadPart - RunFound->RunStartVbn.QuadPart;
-        if (Index)
-            *Index = RunIndex;
-
-        Result = TRUE;
-        goto quit;
-    }
-
-    if (RunFoundHigher)
-    {
-        /* search for hole */
-        ASSERT(RunFoundLower != NULL);
-
-        if (Lbn)
-            *Lbn = ~0ull;
-        if (SectorCountFromLbn)	/* FIXME: 'after' means including current 'Lbn' or without it? */
-            *SectorCountFromLbn = RunFoundHigher->RunStartVbn.QuadPart - Vbn;
-        if (StartingLbn)
-            *StartingLbn = ~0ull;
-        if (SectorCountFromStartingLbn)
-            *SectorCountFromStartingLbn = RunFoundHigher->RunStartVbn.QuadPart - RunFoundLower->RunEndVbn.QuadPart;
-        if (Index)
-            *Index = RunIndex - 2;
-
-        Result = TRUE;
-        goto quit;
-    }
-
-    /* We may have some 'RunFoundLower'. */
-
-quit:
-    DPRINT("FsRtlLookupBaseMcbEntry(%p, %I64d, %p, %p, %p, %p, %p) = %d (%I64d, %I64d, %I64d, %I64d, %d)\n",
-           OpaqueMcb, Vbn, Lbn, SectorCountFromLbn, StartingLbn, SectorCountFromStartingLbn, Index, Result,
-           (Lbn ? *Lbn : (ULONGLONG)-1), (SectorCountFromLbn ? *SectorCountFromLbn : (ULONGLONG)-1), (StartingLbn ? *StartingLbn : (ULONGLONG)-1),
-           (SectorCountFromStartingLbn ? *SectorCountFromStartingLbn : (ULONGLONG)-1), (Index ? *Index : (ULONG)-1));
-
-    return Result;
+    return FALSE;
 }
 
 /*
@@ -848,28 +731,18 @@ ULONG
 NTAPI
 FsRtlNumberOfRunsInBaseMcb(IN PBASE_MCB OpaqueMcb)
 {
-    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
-    LONGLONG LbnAtVbn0 = -1;
     ULONG NumberOfRuns = 0;
+    LONGLONG Vbn, Lbn, Count;
+    int i;
 
     DPRINT("FsRtlNumberOfRunsInBaseMcb(%p)\n", OpaqueMcb);
 
-    if (Mcb->PairCount == 0) goto quit;
+    // Count how many Mcb entries there are
+    for (i = 0; FsRtlGetNextBaseMcbEntry(OpaqueMcb, i, &Vbn, &Lbn, &Count); i++)
+    {
+        NumberOfRuns++;
+    }
 
-    FsRtlLookupBaseMcbEntry(OpaqueMcb,
-        0,                           /* Vbn */
-        &LbnAtVbn0,                  /* Lbn */
-        NULL, NULL, NULL, NULL);     /* 4 output arguments - not interested in them */
-
-
-    /* Return the count */
-    //return Mcb->PairCount;
-	/* Return the number of 'real' and 'hole' runs.
-	 * If we do not have sector 0 as 'real' emulate a 'hole' there.
-	 */
-    NumberOfRuns = Mcb->PairCount * 2 - (LbnAtVbn0 != -1 ? 1 : 0);	/* include holes as runs */
-
-quit:
     DPRINT("FsRtlNumberOfRunsInBaseMcb(%p) = %d\n", OpaqueMcb, NumberOfRuns);
     return NumberOfRuns;
 }
