@@ -20,7 +20,7 @@
 
 NTSTATUS
 NTAPI
-RtlpCreateUserStack(IN HANDLE hProcess,
+RtlpCreateUserStack(IN HANDLE ProcessHandle,
                     IN SIZE_T StackReserve OPTIONAL,
                     IN SIZE_T StackCommit OPTIONAL,
                     IN ULONG StackZeroBits OPTIONAL,
@@ -29,10 +29,10 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     NTSTATUS Status;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     PIMAGE_NT_HEADERS Headers;
-    ULONG_PTR Stack = 0;
-    BOOLEAN UseGuard = FALSE;
+    ULONG_PTR Stack;
+    BOOLEAN UseGuard;
     ULONG Dummy;
-    SIZE_T GuardPageSize;
+    SIZE_T MinimumStackCommit, GuardPageSize;
 
     /* Get some memory information */
     Status = ZwQuerySystemInformation(SystemBasicInformation,
@@ -42,26 +42,34 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Use the Image Settings if we are dealing with the current Process */
-    if (hProcess == NtCurrentProcess())
+    if (ProcessHandle == NtCurrentProcess())
     {
         /* Get the Image Headers */
         Headers = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
         if (!Headers) return STATUS_INVALID_IMAGE_FORMAT;
 
         /* If we didn't get the parameters, find them ourselves */
-        if (!StackReserve) StackReserve = Headers->OptionalHeader.
-                                          SizeOfStackReserve;
-        if (!StackCommit) StackCommit = Headers->OptionalHeader.
-                                        SizeOfStackCommit;
+        if (StackReserve == 0)
+            StackReserve = Headers->OptionalHeader.SizeOfStackReserve;
+        if (StackCommit == 0)
+            StackCommit = Headers->OptionalHeader.SizeOfStackCommit;
+
+        MinimumStackCommit = NtCurrentPeb()->MinimumStackCommit;
+        if ((MinimumStackCommit != 0) && (StackCommit < MinimumStackCommit))
+        {
+            StackCommit = MinimumStackCommit;
+        }
     }
     else
     {
         /* Use the System Settings if needed */
-        if (!StackReserve) StackReserve = SystemBasicInfo.AllocationGranularity;
-        if (!StackCommit) StackCommit = SystemBasicInfo.PageSize;
+        if (StackReserve == 0)
+            StackReserve = SystemBasicInfo.AllocationGranularity;
+        if (StackCommit == 0)
+            StackCommit = SystemBasicInfo.PageSize;
     }
 
-    /* Check if the commit is higher than the reserve*/
+    /* Check if the commit is higher than the reserve */
     if (StackCommit >= StackReserve)
     {
         /* Grow the reserve beyond the commit, up to 1MB alignment */
@@ -69,11 +77,12 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     }
 
     /* Align everything to Page Size */
-    StackReserve = ROUND_UP(StackReserve, SystemBasicInfo.AllocationGranularity);
     StackCommit = ROUND_UP(StackCommit, SystemBasicInfo.PageSize);
+    StackReserve = ROUND_UP(StackReserve, SystemBasicInfo.AllocationGranularity);
 
     /* Reserve memory for the stack */
-    Status = ZwAllocateVirtualMemory(hProcess,
+    Stack = 0;
+    Status = ZwAllocateVirtualMemory(ProcessHandle,
                                      (PVOID*)&Stack,
                                      StackZeroBits,
                                      &StackReserve,
@@ -82,41 +91,48 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now set up some basic Initial TEB Parameters */
-    InitialTeb->PreviousStackBase = NULL;
-    InitialTeb->PreviousStackLimit = NULL;
     InitialTeb->AllocatedStackBase = (PVOID)Stack;
     InitialTeb->StackBase = (PVOID)(Stack + StackReserve);
+    InitialTeb->PreviousStackBase = NULL;
+    InitialTeb->PreviousStackLimit = NULL;
 
-    /* Update the Stack Position */
+    /* Update the stack position */
     Stack += StackReserve - StackCommit;
 
-    /* Check if we will need a guard page */
-    if (StackReserve > StackCommit)
+    /* Check if we can add a guard page */
+    if (StackReserve >= StackCommit + SystemBasicInfo.PageSize)
     {
-        /* Remove a page to set as guard page */
         Stack -= SystemBasicInfo.PageSize;
         StackCommit += SystemBasicInfo.PageSize;
         UseGuard = TRUE;
     }
+    else
+    {
+        UseGuard = FALSE;
+    }
 
     /* Allocate memory for the stack */
-    Status = ZwAllocateVirtualMemory(hProcess,
+    Status = ZwAllocateVirtualMemory(ProcessHandle,
                                      (PVOID*)&Stack,
                                      0,
                                      &StackCommit,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        GuardPageSize = 0;
+        ZwFreeVirtualMemory(ProcessHandle, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
+        return Status;
+    }
 
     /* Now set the current Stack Limit */
     InitialTeb->StackLimit = (PVOID)Stack;
 
-    /* Create a guard page */
+    /* Create a guard page if needed */
     if (UseGuard)
     {
-        /* Attempt maximum space possible */
         GuardPageSize = SystemBasicInfo.PageSize;
-        Status = ZwProtectVirtualMemory(hProcess,
+        Status = ZwProtectVirtualMemory(ProcessHandle,
                                         (PVOID*)&Stack,
                                         &GuardPageSize,
                                         PAGE_GUARD | PAGE_READWRITE,
@@ -132,23 +148,21 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+VOID
 NTAPI
-RtlpFreeUserStack(IN HANDLE Process,
+RtlpFreeUserStack(IN HANDLE ProcessHandle,
                   IN PINITIAL_TEB InitialTeb)
 {
     SIZE_T Dummy = 0;
-    NTSTATUS Status;
 
     /* Free the Stack */
-    Status = ZwFreeVirtualMemory(Process,
-                                 &InitialTeb->AllocatedStackBase,
-                                 &Dummy,
-                                 MEM_RELEASE);
+    ZwFreeVirtualMemory(ProcessHandle,
+                        &InitialTeb->AllocatedStackBase,
+                        &Dummy,
+                        MEM_RELEASE);
 
     /* Clear the initial TEB */
-    RtlZeroMemory(InitialTeb, sizeof(INITIAL_TEB));
-    return Status;
+    RtlZeroMemory(InitialTeb, sizeof(*InitialTeb));
 }
 
 /* FUNCTIONS ***************************************************************/

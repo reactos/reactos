@@ -165,9 +165,10 @@ CreateRemoteThread(IN HANDLE hProcess,
 
     /* Create the Stack */
     Status = BaseCreateStack(hProcess,
-                             dwStackSize,
-                             dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
-                             dwStackSize : 0,
+                             (dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION) ?
+                                0 : dwStackSize,
+                             (dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION) ?
+                                dwStackSize : 0,
                              &InitialTeb);
     if (!NT_SUCCESS(Status))
     {
