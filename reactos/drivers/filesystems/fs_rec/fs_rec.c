@@ -176,6 +176,12 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
             Status = FsRecReiserfsFsControl(DeviceObject, Irp);
             break;
 
+        case FS_TYPE_FFS:
+
+            /* Send FFS command */
+            Status = FsRecFfsFsControl(DeviceObject, Irp);
+            break;
+
         default:
 
             /* Unrecognized FS */
@@ -411,6 +417,16 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Reiserfs",
                              L"\\FileSystem\\ReiserfsRecognizer",
                              FS_TYPE_REISERFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register FFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\ffs",
+                             L"\\FileSystem\\FfsRecognizer",
+                             FS_TYPE_FFS,
                              FILE_DEVICE_DISK_FILE_SYSTEM);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
