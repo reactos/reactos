@@ -279,6 +279,10 @@ LoadProvider(
     {
       RtlInitUnicodeString(&ProviderDll, L"ureiserfs.dll");
     }
+    else if (wcscmp(FileSystem, L"FFS") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"uffs.dll");
+    }
     else
     {
       return NULL;
