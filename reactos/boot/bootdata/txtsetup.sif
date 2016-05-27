@@ -69,6 +69,7 @@ ksecdd.sys=,,,,,,,,,,,,4
 mountmgr.sys=,,,,,,x,,,,,,4
 btrfs.sys=,,,,,,x,,,,,,4
 reiserfs.sys=,,,,,,x,,,,,,4
+ffs.sys=,,,,,,x,,,,,,4
 
 [SystemPartitionFiles]
 
