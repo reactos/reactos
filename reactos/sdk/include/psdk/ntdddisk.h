@@ -223,6 +223,9 @@ extern "C" {
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX               0x43
 #define PARTITION_LINUX                   0x83
+#define PARTITION_FREEBSD                 0xA5
+#define PARTITION_OPENBSD                 0xA6
+#define PARTITION_NETBSD                  0xA9
 #endif
 
 #define IsFTPartition( PartitionType ) \
@@ -248,8 +251,11 @@ extern "C" {
 	((PartitionType) == PARTITION_FAT32) || \
 	((PartitionType) == PARTITION_FAT32_XINT13) || \
 	((PartitionType) == PARTITION_XINT13) || \
-        ((PartitionType) == PARTITION_LINUX) || \
-        ((PartitionType) == PARTITION_OLD_LINUX))
+	((PartitionType) == PARTITION_LINUX) || \
+	((PartitionType) == PARTITION_OLD_LINUX) || \
+	((PartitionType) == PARTITION_FREEBSD) || \
+	((PartitionType) == PARTITION_OPENBSD) || \
+	((PartitionType) == PARTITION_NETBSD))
 #else
 #define IsRecognizedPartition(PartitionType) ( \
 	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
