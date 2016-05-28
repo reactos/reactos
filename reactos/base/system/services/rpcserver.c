@@ -1992,6 +1992,7 @@ DWORD RChangeServiceConfigW(
             goto done;
     }
 
+    /* Set the tag */
     if (lpdwTagId != NULL)
     {
         dwError = ScmAssignNewTag(lpService);

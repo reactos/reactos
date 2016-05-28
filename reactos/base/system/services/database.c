@@ -140,9 +140,9 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
         CurrentImage = CONTAINING_RECORD(ImageEntry,
                                          SERVICE_IMAGE,
                                          ImageListEntry);
-        if (_wcsicmp(CurrentImage->szImagePath, lpImagePath) == 0)
+        if (_wcsicmp(CurrentImage->pszImagePath, lpImagePath) == 0)
         {
-            DPRINT("Found image: '%S'\n", CurrentImage->szImagePath);
+            DPRINT("Found image: '%S'\n", CurrentImage->pszImagePath);
             return CurrentImage;
         }
 
@@ -156,18 +156,111 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 }
 
 
+static
+BOOL
+ScmIsSameServiceAccount(
+    IN PWSTR pszAccountName1,
+    IN PWSTR pszAccountName2)
+{
+    if ((pszAccountName1 == NULL && pszAccountName2 == NULL) ||
+        (pszAccountName1 == NULL && wcscmp(pszAccountName2, L"LocalSystem") == 0) ||
+        (pszAccountName2 == NULL && wcscmp(pszAccountName1, L"LocalSystem") == 0) ||
+        (wcscmp(pszAccountName1, pszAccountName2) == 0))
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+BOOL
+ScmIsLocalSystemAccount(
+    IN PWSTR pszAccountName)
+{
+    if (pszAccountName == NULL ||
+        wcscmp(pszAccountName, L"LocalSystem") == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+DWORD
+ScmLogonService(
+    IN PSERVICE pService,
+    IN PSERVICE_IMAGE pImage)
+{
+    PWSTR pUserName = NULL;
+    PWSTR pDomainName = NULL;
+    PWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("ScmLogonService()\n");
+
+    DPRINT("Service %S\n", pService->lpServiceName);
+
+    if (ScmIsLocalSystemAccount(pImage->pszAccountName))
+        return ERROR_SUCCESS;
+
+    ptr = wcschr(pImage->pszAccountName, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = 0;
+
+        pUserName = ptr + 1;
+        pDomainName = pImage->pszAccountName;
+    }
+    else
+    {
+        pUserName = pImage->pszAccountName;
+        pDomainName = NULL;
+    }
+
+    if (pDomainName == NULL || wcscmp(pDomainName, L".") == 0)
+    {
+        // pDomainName = computer name
+    }
+
+    DPRINT("Domain: %S  User: %S\n", pDomainName, pUserName);
+
+    /* FIXME */
+#if 0
+    if (!LogonUserW(pUserName,
+                    pDomainName,
+                    L"", // lpszPassword,
+                    LOGON32_LOGON_SERVICE,
+                    LOGON32_PROVIDER_DEFAULT,
+                    &pImage->hToken))
+    {
+        dwError = GetLastError();
+        DPRINT1("LogonUserW() failed (Error %lu)\n", dwError);
+    }
+#endif
+
+    if (ptr != NULL)
+        *ptr = L'\\';
+
+    return dwError;
+}
+
+
 static DWORD
 ScmCreateOrReferenceServiceImage(PSERVICE pService)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     UNICODE_STRING ImagePath;
+    UNICODE_STRING ObjectName;
     PSERVICE_IMAGE pServiceImage = NULL;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwRecordSize;
+    LPWSTR pString;
 
     DPRINT("ScmCreateOrReferenceServiceImage(%p)\n", pService);
 
     RtlInitUnicodeString(&ImagePath, NULL);
+    RtlInitUnicodeString(&ObjectName, NULL);
 
     /* Get service data */
     RtlZeroMemory(&QueryTable,
@@ -176,6 +269,9 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     QueryTable[0].Name = L"ImagePath";
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
     QueryTable[0].EntryContext = &ImagePath;
+    QueryTable[1].Name = L"ObjectName";
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[1].EntryContext = &ObjectName;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
                                     pService->lpServiceName,
@@ -189,14 +285,19 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     }
 
     DPRINT("ImagePath: '%wZ'\n", &ImagePath);
+    DPRINT("ObjectName: '%wZ'\n", &ObjectName);
 
     pServiceImage = ScmGetServiceImageByImagePath(ImagePath.Buffer);
     if (pServiceImage == NULL)
     {
+        dwRecordSize = sizeof(SERVICE_IMAGE) +
+                       ImagePath.Length + sizeof(WCHAR) +
+                       ((ObjectName.Length != 0) ? (ObjectName.Length + sizeof(WCHAR)) : 0);
+
         /* Create a new service image */
         pServiceImage = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  FIELD_OFFSET(SERVICE_IMAGE, szImagePath[ImagePath.Length / sizeof(WCHAR) + 1]));
+                                  dwRecordSize);
         if (pServiceImage == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -206,11 +307,30 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         pServiceImage->dwImageRunCount = 1;
         pServiceImage->hControlPipe = INVALID_HANDLE_VALUE;
 
+        pString = (PWSTR)((INT_PTR)pServiceImage + sizeof(SERVICE_IMAGE));
+
         /* Set the image path */
-        wcscpy(pServiceImage->szImagePath,
+        pServiceImage->pszImagePath = pString;
+        wcscpy(pServiceImage->pszImagePath,
                ImagePath.Buffer);
 
-        RtlFreeUnicodeString(&ImagePath);
+        /* Set the account name */
+        if (ObjectName.Length > 0)
+        {
+            pString = pString + wcslen(pString) + 1;
+
+            pServiceImage->pszAccountName = pString;
+            wcscpy(pServiceImage->pszAccountName,
+                   ObjectName.Buffer);
+        }
+
+        /* Service logon */
+        dwError = ScmLogonService(pService, pServiceImage);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("ScmLogonService() failed (Error %lu)\n", dwError);
+            goto done;
+        }
 
         /* Create the control pipe */
         dwError = ScmCreateNewControlPipe(pServiceImage);
@@ -229,16 +349,28 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     }
     else
     {
+//        if ((lpService->Status.dwServiceType & SERVICE_WIN32_SHARE_PROCESS) == 0)
+
+        /* Fail if services in an image use different accounts */
+        if (!ScmIsSameServiceAccount(pServiceImage->pszAccountName, ObjectName.Buffer))
+        {
+            dwError = ERROR_DIFFERENT_SERVICE_ACCOUNT;
+            goto done;
+        }
+
         /* Increment the run counter */
         pServiceImage->dwImageRunCount++;
     }
 
+    DPRINT("pServiceImage->pszImagePath: %S\n", pServiceImage->pszImagePath);
+    DPRINT("pServiceImage->pszAccountName: %S\n", pServiceImage->pszAccountName);
     DPRINT("pServiceImage->dwImageRunCount: %lu\n", pServiceImage->dwImageRunCount);
 
     /* Link the service image to the service */
     pService->lpImage = pServiceImage;
 
-done:;
+done:
+    RtlFreeUnicodeString(&ObjectName);
     RtlFreeUnicodeString(&ImagePath);
 
     DPRINT("ScmCreateOrReferenceServiceImage() done (Error: %lu)\n", dwError);
@@ -262,6 +394,10 @@ ScmDereferenceServiceImage(PSERVICE_IMAGE pServiceImage)
 
         /* Remove the service image from the list */
         RemoveEntryList(&pServiceImage->ImageListEntry);
+
+        /* Close the logon token */
+        if (pServiceImage->hToken != NULL)
+            CloseHandle(pServiceImage->hToken);
 
         /* Close the control pipe */
         if (pServiceImage->hControlPipe != INVALID_HANDLE_VALUE)
@@ -1566,16 +1702,17 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cb = sizeof(StartupInfo);
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
-    Result = CreateProcessW(NULL,
-                            Service->lpImage->szImagePath,
-                            NULL,
-                            NULL,
-                            FALSE,
-                            DETACHED_PROCESS | CREATE_SUSPENDED,
-                            NULL,
-                            NULL,
-                            &StartupInfo,
-                            &ProcessInformation);
+    Result = CreateProcessAsUserW(Service->lpImage->hToken,
+                                  NULL,
+                                  Service->lpImage->pszImagePath,
+                                  NULL,
+                                  NULL,
+                                  FALSE,
+                                  DETACHED_PROCESS | CREATE_SUSPENDED,
+                                  NULL,
+                                  NULL,
+                                  &StartupInfo,
+                                  &ProcessInformation);
     if (!Result)
     {
         dwError = GetLastError();

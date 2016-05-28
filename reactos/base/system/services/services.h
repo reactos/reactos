@@ -43,13 +43,14 @@ typedef struct _SERVICE_GROUP
 typedef struct _SERVICE_IMAGE
 {
     LIST_ENTRY ImageListEntry;
+    LPWSTR pszImagePath;
+    LPWSTR pszAccountName;
     DWORD dwImageRunCount;
 
     HANDLE hControlPipe;
     HANDLE hProcess;
     DWORD dwProcessId;
-
-    WCHAR szImagePath[1];
+    HANDLE hToken;
 } SERVICE_IMAGE, *PSERVICE_IMAGE;
 
 
