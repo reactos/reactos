@@ -7,6 +7,7 @@
 
 #include <kmt_test.h>
 
+KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FindFile;
 KMT_TESTFUNC Test_IoCreateFile;
@@ -27,6 +28,7 @@ KMT_TESTFUNC Test_TcpIpConnect;
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
 {
+    { "CcCopyRead",         Test_CcCopyRead },
     { "-Example",           Test_Example },
     { "FindFile",           Test_FindFile },
     { "IoCreateFile",       Test_IoCreateFile },
