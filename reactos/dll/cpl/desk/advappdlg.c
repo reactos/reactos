@@ -24,30 +24,32 @@ typedef struct
 
 /* This const assigns the color and metric numbers to the elements from the elements list */
 
-/* Size 1 (width)          Size 2 (height)     Color 1                  Color 2                         Font             Fontcolor */
+/*   Size 1 (width)          Size 2 (height)     Color 1                  Color 2                         Font             Fontcolor */
 const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
-{ {-1,                     -1,                 COLOR_DESKTOP,           -1,                             -1,              -1},                /* -Desktop */
-  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_INACTIVECAPTION,   COLOR_GRADIENTINACTIVECAPTION,  FONT_CAPTION,    -1},                /* inactive window caption */
-  {SIZE_BORDER_WIDTH,      -1,                 COLOR_INACTIVEBORDER,    -1,                             -1,              -1},                  /* inactive window border */
-  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_ACTIVECAPTION,     COLOR_GRADIENTACTIVECAPTION,    FONT_CAPTION,    COLOR_CAPTIONTEXT},    /* -active window caption */
-  {SIZE_BORDER_WIDTH,      -1,                 COLOR_ACTIVEBORDER,      -1,                             -1,              -1},                /* active window border */
-  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_MENU,              -1,                             FONT_MENU,       COLOR_MENUTEXT},    /* menu */
-  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_HIGHLIGHT,         -1,                             -1,              COLOR_HIGHLIGHTTEXT},/* marked element */
-  {-1,                     -1,                 COLOR_WINDOW,            -1 /*COLOR_WINDOWFRAME*/,       -1,              COLOR_WINDOWTEXT},    /* window */
-  {SIZE_SCROLL_WIDTH,      SIZE_SCROLL_HEIGHT, COLOR_SCROLLBAR,         -1,                             -1,              -1},                /* scroll bar */
-  {-1,                     -1,                 COLOR_3DFACE,            -1,                             -1,              COLOR_BTNTEXT},        /* 3d objects */
-  {SIZE_SM_CAPTION_HEIGHT, -1,                 -1,                      -1,                             FONT_SMCAPTION,  -1},                /* palette window caption */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* symbol caption FIXME: Access? */
-  {SIZE_CAPTION_HEIGHT,    -1,                 -1,                      -1,                             -1,              -1},                /* caption bar */
-  {-1,                     -1,                 -1,                      -1,                             -1,              COLOR_GRAYTEXT},    /* inactive menu item FIXME: Access? */
-  {-1,                     -1,                 -1,                      -1,                             FONT_MESSAGE,    COLOR_WINDOWTEXT},    /* dialog */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* scrollbar controls FIXME: Access? */
-  {-1,                     -1,                 COLOR_APPWORKSPACE,      -1,                             -1,              -1},                /* application background */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* small caption bar FIXME: Access? */
-  {SIZE_ICON_SPACE_X,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance horiz. */
-  {SIZE_ICON_SPACE_Y,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance vert. */
-  {-1,                     -1,                 COLOR_INFOBK,            -1,                             FONT_STATUS,     COLOR_INFOTEXT},    /* quickinfo */
-  {SIZE_ICON,              -1,                 -1,                      -1,                             FONT_ICON,       -1}};                /* symbol */
+{
+    {-1,                     -1,                 COLOR_DESKTOP,           -1,                             -1,              -1},                 /* Desktop */
+    {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_INACTIVECAPTION,   COLOR_GRADIENTINACTIVECAPTION,  FONT_CAPTION,    -1},                 /* inactive window caption */
+    {SIZE_BORDER_WIDTH,      -1,                 COLOR_INACTIVEBORDER,    -1,                             -1,              -1},                 /* inactive window border */
+    {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_ACTIVECAPTION,     COLOR_GRADIENTACTIVECAPTION,    FONT_CAPTION,    COLOR_CAPTIONTEXT},  /* active window caption */
+    {SIZE_BORDER_WIDTH,      -1,                 COLOR_ACTIVEBORDER,      -1,                             -1,              -1},                 /* active window border */
+    {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_MENU,              -1,                             FONT_MENU,       COLOR_MENUTEXT},     /* menu */
+    {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_HIGHLIGHT,         -1,                             -1,              COLOR_HIGHLIGHTTEXT},/* marked element */
+    {-1,                     -1,                 COLOR_WINDOW,            -1 /*COLOR_WINDOWFRAME*/,       -1,              COLOR_WINDOWTEXT},   /* window */
+    {SIZE_SCROLL_WIDTH,      SIZE_SCROLL_HEIGHT, COLOR_SCROLLBAR,         -1,                             -1,              -1},                 /* scroll bar */
+    {-1,                     -1,                 COLOR_3DFACE,            -1,                             -1,              COLOR_BTNTEXT},      /* 3d objects */
+    {SIZE_SM_CAPTION_HEIGHT, -1,                 -1,                      -1,                             FONT_SMCAPTION,  -1},                 /* palette window caption */
+    {-1,                     -1,                 -1,                      -1,                             -1,              -1},                 /* symbol caption -- FIXME: Access? */
+    {SIZE_CAPTION_HEIGHT,    -1,                 -1,                      -1,                             -1,              -1},                 /* caption bar */
+    {-1,                     -1,                 -1,                      -1,                             -1,              COLOR_GRAYTEXT},     /* inactive menu item -- FIXME: Access? */
+    {-1,                     -1,                 -1,                      -1,                             FONT_MESSAGE,    COLOR_WINDOWTEXT},   /* dialog */
+    {-1,                     -1,                 -1,                      -1,                             -1,              -1},                 /* scrollbar controls -- FIXME: Access? */
+    {-1,                     -1,                 COLOR_APPWORKSPACE,      -1,                             -1,              -1},                 /* application background */
+    {-1,                     -1,                 -1,                      -1,                             -1,              -1},                 /* small caption bar -- FIXME: Access? */
+    {SIZE_ICON_SPACE_X,      -1,                 -1,                      -1,                             -1,              -1},                 /* symbol distance horiz. */
+    {SIZE_ICON_SPACE_Y,      -1,                 -1,                      -1,                             -1,              -1},                 /* symbol distance vert. */
+    {-1,                     -1,                 COLOR_INFOBK,            -1,                             FONT_STATUS,     COLOR_INFOTEXT},     /* quickinfo */
+    {SIZE_ICON,              -1,                 -1,                      -1,                             FONT_ICON,       -1}                  /* symbol */
+};
 
 /******************************************************************************/
 
@@ -356,7 +358,6 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     g->SchemeAdv = g->Scheme;
 
     SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-
 
     /* Add the elements to the combo */
     for (iElement = 0; iElement < NUM_ELEMENTS; iElement++)

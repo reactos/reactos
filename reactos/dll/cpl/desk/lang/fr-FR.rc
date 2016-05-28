@@ -229,7 +229,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ELEMENT_1 "Bureau"
-    IDS_ELEMENT_2 "Titre de fenêtres actives"
+    IDS_ELEMENT_2 "Titre de fenêtres inactives"
     IDS_ELEMENT_3 "Bord de fenêtres inactives"
     IDS_ELEMENT_4 "Titre de fenêtres actives"
     IDS_ELEMENT_5 "Bord de fenêtres actives"
@@ -238,7 +238,7 @@ BEGIN
     IDS_ELEMENT_8 "Fenêtres"
     IDS_ELEMENT_9 "Barres de défilement"
     IDS_ELEMENT_10 "Objets 3D "
-    IDS_ELEMENT_11 "Palette title"
+    IDS_ELEMENT_11 "Titre de palette"
     IDS_ELEMENT_12 "Titre d'icône"
     IDS_ELEMENT_13 "Barre de titre"
     IDS_ELEMENT_14 "Éléments de menu désactivés"
