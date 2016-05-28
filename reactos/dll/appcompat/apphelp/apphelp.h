@@ -50,6 +50,11 @@ typedef struct _DB {
 #define SDB_DATABASE_MAIN_SHIM 0x80030000
 #define SDB_DATABASE_MAIN_DRIVERS 0x80040000
 
+typedef struct _SDB {
+    PDB db;
+    BOOL auto_loaded;
+} SDB, *HSDB;
+
 typedef struct tagATTRINFO {
   TAG   type;
   DWORD flags;
