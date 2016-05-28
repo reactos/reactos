@@ -37,7 +37,9 @@
 #include "wine/test.h"
 
 /* data.c */
-void test_create_db(const char* name);
+void test_create_db_imp(const char* name);
+
+#define test_create_db      (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_db_imp
 
 typedef WORD TAG;
 typedef DWORD TAGID;
@@ -164,6 +166,9 @@ static TAGID (WINAPI *pSdbGetFirstChild)(PDB, TAGID);
 static TAGID (WINAPI *pSdbGetNextChild)(PDB, TAGID, TAGID);
 static BOOL (WINAPI *pSdbGetDatabaseID)(PDB, GUID*);
 static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
+
+DEFINE_GUID(GUID_DATABASE_TEST,0xe39b0eb0,0x55db,0x450b,0x9b,0xd4,0xd2,0x0c,0x94,0x84,0x26,0x0f);
+
 
 static void Write(HANDLE file, LPCVOID buffer, DWORD size)
 {
@@ -387,13 +392,13 @@ static void check_db_properties(PDB pdb, TAGID root)
             {
                 char guid_str[50];
                 WideCharToMultiByte( CP_ACP, 0, guid_wstr, -1, guid_str, sizeof(guid_str), NULL, NULL );
-                ok_str(guid_str, "{6e989ab7-864d-4575-8734-90364ac64fbd}");
+                ok_str(guid_str, "{e39b0eb0-55db-450b-9bd4-d20c9484260f}");
             }
             ok(pSdbGetDatabaseID(pdb, &guid2),"expected SdbGetDatabaseID not to fail.\n");
             ok(IsEqualGUID(&guid, &guid2), "expected guids to be equal(%s:%s)\n", wine_dbgstr_guid(&guid), wine_dbgstr_guid(&guid2));
         }
     }
-    match_qw_attr(pdb, root, TAG_TIME, 0x1d0f3e6003f963e);
+    match_qw_attr(pdb, root, TAG_TIME, 0x1d1b91a02c0d63e);
     match_str_attr(pdb, root, TAG_COMPILER_VERSION, "2.1.0.3");
     match_str_attr(pdb, root, TAG_NAME, "apphelp_test1");
     match_dw_attr(pdb, root, TAG_OS_PLATFORM, 1);
@@ -420,8 +425,8 @@ static void check_db_layer(PDB pdb, TAGID layer)
         return;
 
     is_include = pSdbFindFirstTag(pdb, inexclude, TAG_INCLUDE);
-    ok(is_include != TAGID_NULL, "Expected a valid include ref, got NULL\n");
-    match_str_attr(pdb, inexclude, TAG_MODULE, "include.dll");
+    ok(is_include == TAGID_NULL, "Expected a NULL include ref, but got one anyway.\n");
+    match_str_attr(pdb, inexclude, TAG_MODULE, "exclude.dll");
 
     inexclude = pSdbFindNextTag(pdb, shimref, inexclude);
     ok(inexclude != TAGID_NULL, "Expected a valid in/exclude ref, got NULL\n");
@@ -429,8 +434,8 @@ static void check_db_layer(PDB pdb, TAGID layer)
         return;
 
     is_include = pSdbFindFirstTag(pdb, inexclude, TAG_INCLUDE);
-    ok(is_include == TAGID_NULL, "Expected a NULL include ref, but got one anyway.\n");
-    match_str_attr(pdb, inexclude, TAG_MODULE, "exclude.dll");
+    ok(is_include != TAGID_NULL, "Expected a valid include ref, got NULL\n");
+    match_str_attr(pdb, inexclude, TAG_MODULE, "include.dll");
 }
 
 static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num)
@@ -457,7 +462,7 @@ static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num
     }
     if(num == 1 || num == 3)
     {
-        match_dw_attr(pdb, matching_file, TAG_PE_CHECKSUM, 0x1848);
+        match_dw_attr(pdb, matching_file, TAG_PE_CHECKSUM, 0xbaad);
     }
     if(num != 0)
     {
@@ -467,17 +472,17 @@ static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num
     if(num == 3)
     {
         match_dw_attr(pdb, matching_file, TAG_SIZE, 0x800);
-        match_dw_attr(pdb, matching_file, TAG_CHECKSUM, 0x550826fe);
+        match_dw_attr(pdb, matching_file, TAG_CHECKSUM, 0x178bd629);
         match_str_attr(pdb, matching_file, TAG_FILE_DESCRIPTION, "FileDescription");
         match_dw_attr(pdb, matching_file, TAG_MODULE_TYPE, 3);
         match_dw_attr(pdb, matching_file, TAG_VERFILEOS, 4);
         match_dw_attr(pdb, matching_file, TAG_VERFILETYPE, 1);
-        match_dw_attr(pdb, matching_file, TAG_LINKER_VERSION, 0);
+        match_dw_attr(pdb, matching_file, TAG_LINKER_VERSION, 0x40002);
         match_str_attr(pdb, matching_file, TAG_ORIGINAL_FILENAME, "OriginalFilename");
         match_str_attr(pdb, matching_file, TAG_INTERNAL_NAME, "InternalName");
         match_str_attr(pdb, matching_file, TAG_LEGAL_COPYRIGHT, "LegalCopyright");
-        match_dw_attr(pdb, matching_file, TAG_LINK_DATE, 0);
-        match_dw_attr(pdb, matching_file, TAG_UPTO_LINK_DATE, 0);
+        match_dw_attr(pdb, matching_file, TAG_LINK_DATE, 0x12345);
+        match_dw_attr(pdb, matching_file, TAG_UPTO_LINK_DATE, 0x12345);
     }
     if(num > 3)
     {
@@ -515,9 +520,9 @@ Allow it!
 */
         match_dw_attr(pdb, apphelp, TAG_FLAGS, 1);
         match_dw_attr(pdb, apphelp, TAG_PROBLEMSEVERITY, 1);
-        match_dw_attr(pdb, apphelp, TAG_HTMLHELPID, 4);
-        match_dw_attr(pdb, apphelp, TAG_APP_NAME_RC_ID, 0x300078);
-        match_dw_attr(pdb, apphelp, TAG_VENDOR_NAME_RC_ID, 0x200022);
+        match_dw_attr(pdb, apphelp, TAG_HTMLHELPID, 1);
+        match_dw_attr(pdb, apphelp, TAG_APP_NAME_RC_ID, 0x6f0072);
+        match_dw_attr(pdb, apphelp, TAG_VENDOR_NAME_RC_ID, 0x720067);
         match_dw_attr(pdb, apphelp, TAG_SUMMARY_MSG_RC_ID, 0);
     }
     else
@@ -536,9 +541,9 @@ Not allowed!
 */
         match_dw_attr(pdb, apphelp, TAG_FLAGS, 1);
         match_dw_attr(pdb, apphelp, TAG_PROBLEMSEVERITY, 2);
-        match_dw_attr(pdb, apphelp, TAG_HTMLHELPID, 3);
-        match_dw_attr(pdb, apphelp, TAG_APP_NAME_RC_ID, 0x200065);
-        match_dw_attr(pdb, apphelp, TAG_VENDOR_NAME_RC_ID, 0);
+        match_dw_attr(pdb, apphelp, TAG_HTMLHELPID, 2);
+        match_dw_attr(pdb, apphelp, TAG_APP_NAME_RC_ID, 0x320020);
+        match_dw_attr(pdb, apphelp, TAG_VENDOR_NAME_RC_ID, 0x38002e);
         match_dw_attr(pdb, apphelp, TAG_SUMMARY_MSG_RC_ID, 0);
     }
     apphelp = pSdbFindNextTag(pdb, apphelp, apphelp);
@@ -575,7 +580,7 @@ static struct
         "test_allow.exe",
         "apphelp_name_allow",
         "apphelp_vendor_allow",
-        {0x1a263552,0xe904,0x41b2,{0x98,0x95,0x1a,0x40,0xd9,0x15,0x2b,0x58}},
+        {0x4e50c93f,0xb863,0x4dfa,{0xba,0xe2,0xd8,0x0e,0xf4,0xce,0x5c,0x89}},
         NULL,
         0,
         0x1c6,
@@ -585,7 +590,7 @@ static struct
         "test_disallow.exe",
         "apphelp_name_disallow",
         "apphelp_vendor_disallow",
-        {0xae94e02d,0x6300,0x4ee3,{0x92,0xc7,0x6f,0x51,0x09,0xd3,0xae,0xc0}},
+        {0x156720e1,0xef98,0x4d04,{0x96,0x5a,0xd8,0x5d,0xe0,0x5e,0x6d,0x9f}},
         NULL,
         0,
         0x256,
@@ -595,7 +600,7 @@ static struct
         "test_new.exe",
         "fixnew_name",
         "fixnew_vendor",
-        {0x5b6958c0,0x6084,0x4f7b,{0xb2,0x9e,0xd2,0xe2,0xa4,0x11,0x98,0x68}},
+        {0xce70ef69,0xa21d,0x408b,{0x84,0x5b,0xf9,0x9e,0xac,0x06,0x09,0xe7}},
         "test_checkfile.txt",
         1,
         0x2ec,
@@ -605,7 +610,7 @@ static struct
         "test_w2k3.exe",
         "fix_name",
         "fix_vendor",
-        {0x8a3e9b36,0xafd0,0x42d0,{0x83,0x8d,0xe3,0x1c,0x19,0xc4,0x15,0x46}},
+        {0xb4ead144,0xf640,0x4e4b,{0x94,0xc4,0x0c,0x7f,0xa8,0x66,0x23,0xb0}},
         NULL,
         0,
         0x37c,
@@ -664,16 +669,16 @@ static struct
     const char* apphelp_details;
 } test_layerdata[2] = {
     {
-        4,
-        "http://reactos.org/allow",
-        "apphelp_name_allow",
-        "Allow it!",
-    },
-    {
-        3,
+        2,
         "http://reactos.org/disallow",
         "apphelp_name_disallow",
         "Not allowed!",
+    },
+    {
+        1,
+        "http://reactos.org/allow",
+        "apphelp_name_allow",
+        "Allow it!",
     },
 };
 
