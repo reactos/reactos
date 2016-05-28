@@ -73,7 +73,7 @@ QueryTimezoneData(
     DWORD dwValueSize;
     LONG lError;
 
-    dwValueSize = 128 * sizeof(WCHAR);
+    dwValueSize = sizeof(Entry->Description);
     lError = RegQueryValueExW(hZoneKey,
                               L"Display",
                               NULL,
@@ -83,7 +83,7 @@ QueryTimezoneData(
     if (lError != ERROR_SUCCESS)
         return lError;
 
-    dwValueSize = 33 * sizeof(WCHAR);
+    dwValueSize = sizeof(Entry->StandardName);
     lError = RegQueryValueExW(hZoneKey,
                               L"Std",
                               NULL,
@@ -93,7 +93,7 @@ QueryTimezoneData(
     if (lError != ERROR_SUCCESS)
         return lError;
 
-    dwValueSize = 33 * sizeof(WCHAR);
+    dwValueSize = sizeof(Entry->DaylightName);
     lError = RegQueryValueExW(hZoneKey,
                               L"Dlt",
                               NULL,
@@ -103,7 +103,7 @@ QueryTimezoneData(
     if (lError != ERROR_SUCCESS)
         return lError;
 
-    dwValueSize = sizeof(TZ_INFO);
+    dwValueSize = sizeof(Entry->TimezoneInfo);
     lError = RegQueryValueExW(hZoneKey,
                               L"TZI",
                               NULL,
@@ -371,7 +371,7 @@ SetAutoDaylightInfo(HWND hwnd)
                        0,
                        REG_DWORD,
                        (LPBYTE)&dwValue,
-                       sizeof(DWORD));
+                       sizeof(dwValue));
     }
     else
     {
@@ -401,7 +401,7 @@ TimeZonePageProc(HWND hwndDlg,
             hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             if (hBitmap != NULL)
             {
-                GetObjectW(hBitmap, sizeof(BITMAP), &bitmap);
+                GetObjectW(hBitmap, sizeof(bitmap), &bitmap);
 
                 cxSource = bitmap.bmWidth;
                 cySource = bitmap.bmHeight;
