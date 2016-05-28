@@ -11,7 +11,7 @@
 /* GLOBALS ********************************************************************/
 
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
-ULONG RemotePacketId = INITIAL_PACKET_ID;
+ULONG RemotePacketId  = INITIAL_PACKET_ID;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -90,7 +90,7 @@ KdReceivePacket(
     ULONG Checksum;
 
     /* Special handling for breakin packet */
-    if(PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
+    if (PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
     {
         return KdpPollBreakIn();
     }
@@ -175,9 +175,9 @@ KdReceivePacket(
 
                 case PACKET_TYPE_KD_RESET:
                     KDDBGPRINT("KdReceivePacket - got PACKET_TYPE_KD_RESET\n");
-                    KdpSendControlPacket(PACKET_TYPE_KD_RESET, 0);
                     CurrentPacketId = INITIAL_PACKET_ID;
-                    RemotePacketId = INITIAL_PACKET_ID;
+                    RemotePacketId  = INITIAL_PACKET_ID;
+                    KdpSendControlPacket(PACKET_TYPE_KD_RESET, 0);
                     /* Fall through */
 
                 case PACKET_TYPE_KD_RESEND:
@@ -219,7 +219,7 @@ KdReceivePacket(
 
         /* Receive the message header data */
         KdStatus = KdpReceiveBuffer(MessageHeader->Buffer,
-                                   MessageHeader->Length);
+                                    MessageHeader->Length);
         if (KdStatus != KDP_PACKET_RECEIVED)
         {
             /* Didn't receive data. Packet needs to be resent. */
@@ -278,7 +278,7 @@ KdReceivePacket(
         if (Packet.Checksum != Checksum)
         {
             KDDBGPRINT("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
-                          Packet.Checksum, Checksum);
+                       Packet.Checksum, Checksum);
             KdpSendControlPacket(PACKET_TYPE_KD_RESEND, 0);
             continue;
         }
