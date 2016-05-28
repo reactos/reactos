@@ -582,20 +582,27 @@ void CDefView::UpdateListColors()
         DWORD cbDropShadow = sizeof(bDropShadow);
         WCHAR wszBuf[16] = L"";
 
+        /*
+         * The desktop ListView always take the default desktop colours, by
+         * remaining transparent and letting user32/win32k paint itself the
+         * desktop background color, if any.
+         */
+        m_ListView.SetBkColor(CLR_NONE);
+
         RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
                      L"ListviewShadow", RRF_RT_DWORD, NULL, &bDropShadow, &cbDropShadow);
         if (bDropShadow && SystemParametersInfoW(SPI_GETDESKWALLPAPER, _countof(wszBuf), wszBuf, 0) && wszBuf[0])
         {
+            /* Set the icon background transparent */
             m_ListView.SetTextBkColor(CLR_NONE);
-            m_ListView.SetBkColor(CLR_NONE);
             m_ListView.SetTextColor(RGB(255, 255, 255));
             m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
         else
         {
+            /* Set the icon background as the same colour as the desktop */
             COLORREF crDesktop = GetSysColor(COLOR_DESKTOP);
             m_ListView.SetTextBkColor(crDesktop);
-            m_ListView.SetBkColor(crDesktop);
             if (GetRValue(crDesktop) + GetGValue(crDesktop) + GetBValue(crDesktop) > 128 * 3)
                 m_ListView.SetTextColor(RGB(0, 0, 0));
             else
