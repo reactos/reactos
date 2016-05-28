@@ -40,7 +40,7 @@
 void test_create_exe_imp(const char* name, int skip_rsrc_exports);
 void test_create_file_imp(const char* name, const char* contents, size_t len);
 void test_create_ne_imp(const char* name, int skip_names);
-DWORD get_host_winver();
+DWORD get_host_winver(void);
 
 #define test_create_exe     (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_exe_imp
 #define test_create_file    (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_file_imp

@@ -32,7 +32,7 @@
 #include "wine/test.h"
 
 /* data.c */
-DWORD get_host_winver();
+DWORD get_host_winver(void);
 
 #define GPLK_USER 1
 #define GPLK_MACHINE 2

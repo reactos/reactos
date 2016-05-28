@@ -784,7 +784,7 @@ void test_create_db(const char* name)
 }
 
 static DWORD g_WinVersion;
-DWORD get_host_winver()
+DWORD get_host_winver(void)
 {
     if (!g_WinVersion)
     {
