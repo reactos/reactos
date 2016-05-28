@@ -27,9 +27,6 @@
 #include <stdio.h>
 #include "wine/test.h"
 
-/* data.c */
-DWORD get_host_winver(void);
-
 typedef struct tagHOOKAPI {
     PCSTR LibraryName;
     PCSTR FunctionName;
@@ -305,6 +302,16 @@ VersionLieInfo g_WinVistaSP2 = { 0x17720006, 6, 0, 6002, VER_PLATFORM_WIN32_NT, 
 
 VersionLieInfo g_Win7RTM = { 0x1db00106, 6, 1, 7600, VER_PLATFORM_WIN32_NT, 0, 0 };
 
+DWORD get_host_winver(void)
+{
+    RTL_OSVERSIONINFOEXW rtlinfo = {0};
+    void (__stdcall* pRtlGetVersion)(RTL_OSVERSIONINFOEXW*);
+    pRtlGetVersion = (void (__stdcall*)(RTL_OSVERSIONINFOEXW*))GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+    rtlinfo.dwOSVersionInfoSize = sizeof(rtlinfo);
+    pRtlGetVersion(&rtlinfo);
+    return (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
+}
 
 START_TEST(versionlie)
 {

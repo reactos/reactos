@@ -6,7 +6,6 @@ list(APPEND SOURCE
     data.c
     db.c
     layerapi.c
-    versionlie.c
     testlist.c)
 
 add_executable(apphelp_apitest ${SOURCE})

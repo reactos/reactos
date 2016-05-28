@@ -2,6 +2,7 @@ include_directories(include)
 
 add_subdirectory(advapi32)
 add_subdirectory(apphelp)
+add_subdirectory(appshim)
 add_subdirectory(atl)
 add_subdirectory(browseui)
 add_subdirectory(com)
