@@ -246,30 +246,40 @@ InitDesktopImpl(VOID)
     return STATUS_SUCCESS;
 }
 
-static int GetSystemVersionString(LPWSTR buffer)
+static INT GetSystemVersionString(PWSTR* buffer)
 {
-    int len;
-#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca).
-    RTL_OSVERSIONINFOEXW versionInfo;
+    static WCHAR wszVersion[256] = L"";
+    int len = 0;
 
-    versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+    if (!*wszVersion)
+    {
+#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca, r66750).
+        RTL_OSVERSIONINFOEXW versionInfo;
 
-    if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-        return 0;
+        versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
 
-    if (versionInfo.dwMajorVersion <= 4)
-        len = swprintf(buffer,
-                       L"ReactOS Version %lu.%lu %s Build %lu",
-                       versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
-    else
-        len = swprintf(buffer,
-                       L"ReactOS %s (Build %lu)",
-                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+        if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
+            return 0;
+
+        if (versionInfo.dwMajorVersion <= 4)
+            len = swprintf(wszVersion,
+                           L"ReactOS Version %lu.%lu %s Build %lu",
+                           versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+                           versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+        else
+            len = swprintf(wszVersion,
+                           L"ReactOS %s (Build %lu)",
+                           versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
 #else
-    len = swprintf(buffer, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+        len = swprintf(wszVersion, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
 #endif
+    }
+    else
+    {
+        len = wcslen(wszVersion);
+    }
 
+    *buffer = wszVersion;
     return len;
 }
 
@@ -1006,16 +1016,14 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 BOOL FASTCALL
 IntPaintDesktop(HDC hDC)
 {
+    static WCHAR s_wszSafeMode[] = L"Safe Mode"; // FIXME: Localize!
+
     RECTL Rect;
     HBRUSH DesktopBrush, PreviousBrush;
     HWND hWndDesktop;
     BOOL doPatBlt = TRUE;
     PWND WndDesktop;
-    static WCHAR s_wszSafeMode[] = L"Safe Mode";
-    int len;
-    COLORREF color_old;
-    UINT align_old;
-    int mode_old;
+    BOOLEAN InSafeMode;
 
     if (GdiGetClipBox(hDC, &Rect) == ERROR)
         return FALSE;
@@ -1026,7 +1034,10 @@ IntPaintDesktop(HDC hDC)
     if (!WndDesktop)
         return FALSE;
 
-    if (!UserGetSystemMetrics(SM_CLEANBOOT))
+    /* Retrieve the current SafeMode state */
+    InSafeMode = (UserGetSystemMetrics(SM_CLEANBOOT) != 0);
+
+    if (!InSafeMode)
     {
         DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
@@ -1149,60 +1160,75 @@ IntPaintDesktop(HDC hDC)
     /*
      * Display the system version on the desktop background
      */
-
-    if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
+    if (g_PaintDesktopVersion || InSafeMode)
     {
-        static WCHAR s_wszVersion[256] = {0};
-        RECTL rect;
+        PWSTR pwszVersion;
+        INT len;
+        NONCLIENTMETRICSW ncm;
+        HFONT hFont = NULL, hOldFont = NULL; // TODO: Cache it??
+        RECTL rect; // FIXME: Use 'Rect' instead of defining yet another var!
+        COLORREF color_old;
+        UINT align_old;
+        int mode_old;
 
-        if (*s_wszVersion)
+        if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
         {
-            len = wcslen(s_wszVersion);
-        }
-        else
-        {
-            len = GetSystemVersionString(s_wszVersion);
+            rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
+            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
         }
 
+        /* Set up the font (use default otherwise) */
+        ncm.cbSize = sizeof(ncm);
+        if (UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        {
+            hFont = GreCreateFontIndirectW(&ncm.lfCaptionFont);
+            if (hFont)
+                hOldFont = NtGdiSelectFont(hDC, hFont);
+        }
+
+        color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+        align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+        mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
+
+        /* Display the system version information */
+        // FIXME: We need different strings for Safe Mode and regular mode.
+        len = GetSystemVersionString(&pwszVersion); // , InSafeMode);
         if (len)
         {
-            if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+            if (!InSafeMode)
             {
-                rect.right = UserGetSystemMetrics(SM_CXSCREEN);
-                rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-            }
-
-            color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
-            align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-            mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
-
-            if (!UserGetSystemMetrics(SM_CLEANBOOT))
-            {
-                GreExtTextOutW(hDC, rect.right - 16, rect.bottom - 48, 0, NULL, s_wszVersion, len, NULL, 0);
+                GreExtTextOutW(hDC, rect.right - 16, rect.bottom - 48, 0, NULL, pwszVersion, len, NULL, 0);
             }
             else
             {
-                /* Safe Mode */
-
-                /* Version information text in top center */
+                /* Safe Mode: version information text in top center */
                 IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
-                GreExtTextOutW(hDC, (rect.right + rect.left)/2, rect.top + 3, 0, NULL, s_wszVersion, len, NULL, 0);
-
-                /* Safe Mode text in corners */
-                len = wcslen(s_wszSafeMode);
-                IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
-                GreExtTextOutW(hDC, rect.left, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
-                GreExtTextOutW(hDC, rect.right, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
-                GreExtTextOutW(hDC, rect.left, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
-                GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                GreExtTextOutW(hDC, (rect.right + rect.left)/2, rect.top + 3, 0, NULL, pwszVersion, len, NULL, 0);
             }
+        }
 
-            IntGdiSetBkMode(hDC, mode_old);
-            IntGdiSetTextAlign(hDC, align_old);
-            IntGdiSetTextColor(hDC, color_old);
+        if (InSafeMode)
+        {
+            /* Print Safe Mode text in corners */
+            len = wcslen(s_wszSafeMode);
+            IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
+            GreExtTextOutW(hDC, rect.left, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
+            GreExtTextOutW(hDC, rect.right, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
+            GreExtTextOutW(hDC, rect.left, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
+            GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+        }
+
+        IntGdiSetBkMode(hDC, mode_old);
+        IntGdiSetTextAlign(hDC, align_old);
+        IntGdiSetTextColor(hDC, color_old);
+
+        if (hFont)
+        {
+            NtGdiSelectFont(hDC, hOldFont);
+            GreDeleteObject(hFont);
         }
     }
 
