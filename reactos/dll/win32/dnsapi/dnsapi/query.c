@@ -283,7 +283,8 @@ DnsQuery_W(LPCWSTR Name,
         }
     }
 
-    LastRecord->pNext = 0;
+    if (LastRecord)
+        LastRecord->pNext = 0;
 
     /* The name */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
