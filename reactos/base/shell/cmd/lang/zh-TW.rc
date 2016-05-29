@@ -491,7 +491,7 @@ RESTORE       恢復視窗\n\
     STRING_REPLACE_ERROR6 "沒有檔案被發現 - %s\n"
     STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 幫助  "
-    STRING_REACTOS_VERSION "ReactOS 作業系統 [版本 %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS 作業系統 [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
