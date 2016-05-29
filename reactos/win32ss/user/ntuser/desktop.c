@@ -1067,7 +1067,7 @@ IntPaintDesktop(HDC hDC)
             }
 
             hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
-            if(hWallpaperDC != NULL)
+            if (hWallpaperDC != NULL)
             {
                 HBITMAP hOldBitmap;
 
@@ -1075,7 +1075,7 @@ IntPaintDesktop(HDC hDC)
                 if (x > 0 || y > 0)
                 {
                     /* FIXME: Clip out the bitmap
-                       can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                       can be replaced with "NtGdiPatBlt(hDC, x, y, gspv.cxWallpaper, gspv.cyWallpaper, PATCOPY | DSTINVERT);"
                        once we support DSTINVERT */
                     PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
                     NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
@@ -1165,19 +1165,19 @@ IntPaintDesktop(HDC hDC)
         PWSTR pwszVersion;
         INT len;
         NONCLIENTMETRICSW ncm;
-        HFONT hFont = NULL, hOldFont = NULL; // TODO: Cache it??
-        RECTL rect; // FIXME: Use 'Rect' instead of defining yet another var!
-        COLORREF color_old;
+        HFONT hFont = NULL, hOldFont = NULL;
+        COLORREF crText, color_old;
         UINT align_old;
         int mode_old;
+        PDC pdc;
 
-        if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+        if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
         {
-            rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
-            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+            Rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
+            Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
         }
 
-        /* Set up the font (use default otherwise) */
+        /* Set up the font (use default one otherwise) */
         ncm.cbSize = sizeof(ncm);
         if (UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
         {
@@ -1186,9 +1186,37 @@ IntPaintDesktop(HDC hDC)
                 hOldFont = NtGdiSelectFont(hDC, hFont);
         }
 
-        color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+        if (gspv.hbmWallpaper == NULL)
+        {
+            /* Retrieve the brush fill colour */
+            PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+            pdc = DC_LockDc(hDC);
+            if (pdc)
+            {
+                crText = pdc->eboFill.ulRGBColor;
+                DC_UnlockDc(pdc);
+            }
+            else
+            {
+                crText = RGB(0, 0, 0);
+            }
+            NtGdiSelectBrush(hDC, PreviousBrush);
+
+            /* Adjust text colour according to the brush */
+            if (GetRValue(crText) + GetGValue(crText) + GetBValue(crText) > 128 * 3)
+                crText = RGB(0, 0, 0);
+            else
+                crText = RGB(255, 255, 255);
+        }
+        else
+        {
+            /* Always use white when the text is displayed on top of a wallpaper */
+            crText = RGB(255, 255, 255);
+        }
+
+        color_old = IntGdiSetTextColor(hDC, crText);
         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-        mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
+        mode_old  = IntGdiSetBkMode(hDC, TRANSPARENT);
 
         /* Display the system version information */
         // FIXME: We need different strings for Safe Mode and regular mode.
@@ -1197,13 +1225,13 @@ IntPaintDesktop(HDC hDC)
         {
             if (!InSafeMode)
             {
-                GreExtTextOutW(hDC, rect.right - 16, rect.bottom - 48, 0, NULL, pwszVersion, len, NULL, 0);
+                GreExtTextOutW(hDC, Rect.right - 16, Rect.bottom - 48, 0, NULL, pwszVersion, len, NULL, 0);
             }
             else
             {
                 /* Safe Mode: version information text in top center */
                 IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
-                GreExtTextOutW(hDC, (rect.right + rect.left)/2, rect.top + 3, 0, NULL, pwszVersion, len, NULL, 0);
+                GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, pwszVersion, len, NULL, 0);
             }
         }
 
@@ -1212,13 +1240,13 @@ IntPaintDesktop(HDC hDC)
             /* Print Safe Mode text in corners */
             len = wcslen(s_wszSafeMode);
             IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
-            GreExtTextOutW(hDC, rect.left, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            GreExtTextOutW(hDC, Rect.left, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
             IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
-            GreExtTextOutW(hDC, rect.right, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            GreExtTextOutW(hDC, Rect.right, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
             IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
-            GreExtTextOutW(hDC, rect.left, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            GreExtTextOutW(hDC, Rect.left, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
             IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
-            GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            GreExtTextOutW(hDC, Rect.right, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
         }
 
         IntGdiSetBkMode(hDC, mode_old);
