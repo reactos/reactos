@@ -607,7 +607,7 @@ void CDefView::UpdateListColors()
                 m_ListView.SetTextColor(RGB(0, 0, 0));
             else
                 m_ListView.SetTextColor(RGB(255, 255, 255));
-            m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT);
+            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
     }
 }
