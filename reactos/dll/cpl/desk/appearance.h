@@ -22,7 +22,7 @@
 #define FONT_MESSAGE            4
 #define FONT_ICON               5
  
-#define NUM_ELEMENTS            22
+#define NUM_ELEMENTS            18
 #define NUM_FONTS               6
 #define NUM_SIZES               9
 #define NUM_COLORS              31
