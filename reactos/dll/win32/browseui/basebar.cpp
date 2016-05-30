@@ -30,11 +30,10 @@ provides resizing abilities.
 */
 /*
 TODO:
-  **Make base bar support resizing
+  **Make base bar support resizing -- almost done (need to support integral ?)
     Add context menu for base bar
     Fix base bar to correctly initialize fVertical field
-    Fix base bar to correctly reposition its base bar site when resized
-
+    Fix base bar to correctly reposition its base bar site when resized -- done ?
 */
 
 class CBaseBar :
@@ -51,7 +50,7 @@ class CBaseBar :
     public IPersistPropertyBag,
     public IObjectWithSite
 {
-public:
+private:
     CComPtr<IUnknown>                       fSite;
     CComPtr<IUnknown>                       fClient;
     HWND                                    fClientWindow;
@@ -255,6 +254,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID
 {
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
     {
+        // pass through to the explorer ?
     }
     else if (IsEqualIID(*pguidCmdGroup, IID_IDeskBarClient))
     {
@@ -264,6 +264,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID
                 // hide current band
                 break;
             case 2:
+                // switch bands
                 break;
             case 3:
                 break;
@@ -309,9 +310,10 @@ HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
 
-    if (punkClient == NULL)
-        fClient.Release();
-    else
+    /* Clean up old client */
+    fClient = NULL;
+
+    if (punkClient)
     {
         hResult = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &fClient));
         if (FAILED_UNEXPECTEDLY(hResult))
@@ -354,14 +356,18 @@ HRESULT STDMETHODCALLTYPE CBaseBar::OnPosRectChangeDB(LPRECT prc)
 HRESULT STDMETHODCALLTYPE CBaseBar::ShowDW(BOOL fShow)
 {
     fVisible = fShow ? true : false;
+    ShowWindow(fShow);
     ReserveBorderSpace();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::CloseDW(DWORD dwReserved)
 {
-    fVisible = false;
-    ReserveBorderSpace();
+    ShowDW(0);
+    // Detach from our client
+    SetClient(NULL);
+    // Destroy our site
+    SetSite(NULL);
     return S_OK;
 }
 
@@ -434,6 +440,31 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Save(IPropertyBag *pPropBag, BOOL fClearDirt
 
 LRESULT CBaseBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    DWORD                                   dwWidth;
+    DWORD                                   dwHeight;
+    CComPtr<IOleWindow>                     pClient;
+    HWND                                    clientHwnd;
+    HRESULT                                 hr;
+
+    if (fVisible)
+    {
+        dwWidth = LOWORD(lParam);
+        dwHeight = HIWORD(lParam);
+
+        // substract resizing grips to child's window size
+        if (fVertical)
+            dwWidth -= GetSystemMetrics(SM_CXFRAME);
+        else
+            dwHeight -= GetSystemMetrics(SM_CXFRAME);
+        hr = fClient->QueryInterface(IID_PPV_ARG(IOleWindow, &pClient));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return 0;
+        hr = pClient->GetWindow(&clientHwnd);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return 0;
+        ::SetWindowPos(clientHwnd, NULL, 0, (fVertical) ? 0 : GetSystemMetrics(SM_CXFRAME), dwWidth, dwHeight, NULL);
+        bHandled = TRUE;
+    }
     return 0;
 }
 
@@ -486,20 +517,21 @@ LRESULT CBaseBar::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 LRESULT CBaseBar::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     POINT                                   newLocation;
-    //int                                     delta;
+    int                                     delta;
 
     if (fTracking)
     {
         newLocation.x = (short)LOWORD(lParam);
         newLocation.y = (short)HIWORD(lParam);
-#if 0
         if (fVertical)
             delta = newLocation.x - fLastLocation.x;
         else
-            delta = newLocation.y - fLastLocation.y;
-
-#endif
+            delta = fLastLocation.y - newLocation.y;
+        if (fNeededSize + delta < 0)
+            return 0;
+        fNeededSize += delta;
         fLastLocation = newLocation;
+        ReserveBorderSpace();
     }
     return 0;
 }
