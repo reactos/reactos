@@ -345,6 +345,7 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
+    HRESULT OnSearch();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -1638,6 +1639,37 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
     SHEnableMenuItem(theMenu, IDM_VIEW_EXPLORERBAR, FALSE);
 }
 
+HRESULT CShellBrowser::OnSearch()
+{
+    CComPtr<IObjectWithSite>                objectWithSite;
+    CComPtr<IContextMenu>                   contextMenu;
+    CMINVOKECOMMANDINFO                     commandInfo;
+    const char                              *searchGUID = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}";
+    HRESULT                                 hResult;
+
+    // TODO: Query shell if this command is enabled first
+
+    memset(&commandInfo, 0, sizeof(commandInfo));
+    commandInfo.cbSize = sizeof(commandInfo);
+    commandInfo.hwnd = m_hWnd;
+    commandInfo.lpParameters = searchGUID;
+    commandInfo.nShow = SW_SHOWNORMAL;
+
+    hResult = CoCreateInstance(CLSID_ShellSearchExt, NULL, CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IContextMenu, &contextMenu));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return 0;
+    hResult = contextMenu->QueryInterface(IID_PPV_ARG(IObjectWithSite, &objectWithSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return 0;
+    hResult = objectWithSite->SetSite(dynamic_cast<IShellBrowser*>(this));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return 0;
+    hResult = contextMenu->InvokeCommand(&commandInfo);
+    hResult = objectWithSite->SetSite(NULL);
+    return hResult;
+}
+
 bool IUnknownIsEqual(IUnknown *int1, IUnknown *int2)
 {
     CComPtr<IUnknown>                       int1Retry;
@@ -1865,6 +1897,20 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
                 // Reset All Folders option in Folder Options
                 break;
         }
+    }
+    else if (IsEqualIID(*pguidCmdGroup, CLSID_CommonButtons))
+    {
+        // Windows seems to use this as proxy for toolbar buttons.
+        // We use it for search band for now to remove code duplication,
+        // let's see if it could be useful in the future.
+        switch (nCmdID)
+        {
+            case 0x123:
+                // Show search band from toolbar
+                OnSearch();
+                return S_OK;
+        }
+        return E_NOTIMPL;
     }
     else
     {
