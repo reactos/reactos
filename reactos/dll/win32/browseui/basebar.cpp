@@ -65,6 +65,8 @@ public:
 public:
     CBaseBar();
     ~CBaseBar();
+    HRESULT Initialize(BOOL);
+
 public:
     HRESULT ReserveBorderSpace();
 
@@ -170,6 +172,12 @@ CBaseBar::CBaseBar()
 
 CBaseBar::~CBaseBar()
 {
+}
+
+HRESULT CBaseBar::Initialize(BOOL vert)
+{
+    fVertical = (vert == TRUE);
+    return S_OK;
 }
 
 HRESULT CBaseBar::ReserveBorderSpace()
@@ -512,7 +520,7 @@ LRESULT CBaseBar::OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
-HRESULT CreateBaseBar(REFIID riid, void **ppv)
+HRESULT CreateBaseBar(REFIID riid, void **ppv, BOOL vertical)
 {
-    return ShellObjectCreator<CBaseBar>(riid, ppv);
+    return ShellObjectCreatorInit<CBaseBar, BOOL>(vertical, riid, ppv);
 }

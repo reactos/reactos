@@ -139,8 +139,8 @@ BOOL                                        createNewStuff = false;
 
 
 extern HRESULT CreateTravelLog(REFIID riid, void **ppv);
-extern HRESULT CreateBaseBar(REFIID riid, void **ppv);
-extern HRESULT CreateBaseBarSite(REFIID riid, void **ppv);
+extern HRESULT CreateBaseBar(REFIID riid, void **ppv, BOOL vertical);
+extern HRESULT CreateBaseBarSite(REFIID riid, void **ppv, BOOL vertical);
 
 // temporary
 extern HRESULT CreateInternetToolbar(REFIID riid, void **ppv);
@@ -1105,10 +1105,10 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
         cache = &fClientBars[BIHorizontalBaseBar].clientBar.p;
     if (*cache == NULL)
     {
-        hResult = CreateBaseBar(IID_PPV_ARG(IUnknown, &newBaseBar));
+        hResult = CreateBaseBar(IID_PPV_ARG(IUnknown, &newBaseBar), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = CreateBaseBarSite(IID_PPV_ARG(IUnknown, &newBaseBarSite));
+        hResult = CreateBaseBarSite(IID_PPV_ARG(IUnknown, &newBaseBarSite), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
 

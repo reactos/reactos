@@ -65,9 +65,11 @@ private:
 //    HWND                                    fRebarWindow;           // rebar for top of window
     CComPtr<IUnknown>                       fDeskBarSite;
     DWORD                                   fNextBandID;
+    BOOL                                    fVertical;
 public:
     CBaseBarSite();
     ~CBaseBarSite();
+    HRESULT Initialize(BOOL vert) { fVertical = vert; return S_OK; };
 private:
     HRESULT InsertBar(IUnknown *newBar);
 
@@ -147,7 +149,7 @@ BEGIN_COM_MAP(CBaseBarSite)
 END_COM_MAP()
 };
 
-CBaseBarSite::CBaseBarSite()
+CBaseBarSite::CBaseBarSite() : fVertical(TRUE)
 {
     fCurrentActiveBar = NULL;
     fNextBandID = 1;
@@ -475,7 +477,7 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return 0;
 }
 
-HRESULT CreateBaseBarSite(REFIID riid, void **ppv)
+HRESULT CreateBaseBarSite(REFIID riid, void **ppv, BOOL bVertical)
 {
-    return ShellObjectCreator<CBaseBarSite>(riid, ppv);
+    return ShellObjectCreatorInit<CBaseBarSite, BOOL>(bVertical, riid, ppv);
 }
