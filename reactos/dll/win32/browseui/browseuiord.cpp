@@ -139,7 +139,7 @@ extern "C" HRESULT WINAPI GetInfoTip(IUnknown *param8, long paramC, LPTSTR *para
 /*************************************************************************
  * SHEnumClassesOfCategories	[BROWSEUI.136]
  */
-extern "C" HRESULT WINAPI SHEnumClassesOfCategories(long param8, long paramC, long param10, long param14, long param18)
+extern "C" HRESULT WINAPI SHEnumClassesOfCategories(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired, IEnumGUID **out)
 {
     return E_NOTIMPL;
 }
