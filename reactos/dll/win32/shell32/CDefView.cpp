@@ -580,7 +580,6 @@ void CDefView::UpdateListColors()
         /* Check if drop shadows option is enabled */
         BOOL bDropShadow = FALSE;
         DWORD cbDropShadow = sizeof(bDropShadow);
-        WCHAR wszBuf[16] = L"";
 
         /*
          * The desktop ListView always take the default desktop colours, by
@@ -591,7 +590,7 @@ void CDefView::UpdateListColors()
 
         RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
                      L"ListviewShadow", RRF_RT_DWORD, NULL, &bDropShadow, &cbDropShadow);
-        if (bDropShadow && SystemParametersInfoW(SPI_GETDESKWALLPAPER, _countof(wszBuf), wszBuf, 0) && wszBuf[0])
+        if (bDropShadow)
         {
             /* Set the icon background transparent */
             m_ListView.SetTextBkColor(CLR_NONE);
