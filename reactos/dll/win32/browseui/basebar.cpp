@@ -241,8 +241,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CBaseBar::OnFocusChangeIS (IUnknown *punkObj, BOOL fSetFocus)
 {
-    // forward to owner
-    return E_NOTIMPL;
+    return IUnknown_OnFocusChangeIS(fSite, punkObj, fSetFocus);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
@@ -291,20 +290,17 @@ HRESULT STDMETHODCALLTYPE CBaseBar::QueryService(REFGUID guidService, REFIID rii
 
 HRESULT STDMETHODCALLTYPE CBaseBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    // forward to contained bar
-    return S_OK;
+    return IUnknown_UIActivateIO(fClient, fActivate, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::HasFocusIO()
 {
-    // forward to contained bar
-    return S_OK;
+    return IUnknown_HasFocusIO(fClient);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    // forward to contained bar
-    return S_FALSE;
+    return IUnknown_TranslateAcceleratorIO(fClient, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)

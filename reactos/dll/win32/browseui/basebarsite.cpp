@@ -248,17 +248,33 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    if (!fCurrentActiveBar)
+        return S_OK;
+
+    return IUnknown_UIActivateIO(fCurrentActiveBar->fTheBar, fActivate, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::HasFocusIO()
 {
-    return E_NOTIMPL;
+    if (!fCurrentActiveBar)
+        return S_FALSE;
+
+    return IUnknown_HasFocusIO(fCurrentActiveBar->fTheBar);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    if (!fCurrentActiveBar)
+    {
+        if (lpMsg)
+        {
+            TranslateMessage(lpMsg);
+            DispatchMessage(lpMsg);
+        }
+        return S_OK;
+    }
+
+    return IUnknown_TranslateAcceleratorIO(fCurrentActiveBar->fTheBar, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
@@ -314,7 +330,8 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::IsWindowOwner(HWND hWnd)
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::OnFocusChangeIS (IUnknown *punkObj, BOOL fSetFocus)
 {
-    return E_NOTIMPL;
+    // FIXME: should we directly pass-through, or advertise ourselves as focus owner ?
+    return IUnknown_OnFocusChangeIS(fDeskBarSite, punkObj, fSetFocus);
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
