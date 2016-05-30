@@ -128,6 +128,12 @@ private:
     // message handlers
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
+    // Helper functions
+    HRESULT FindBandByGUID(REFIID pGuid, DWORD *pdwBandID);
+    HRESULT ShowBand(DWORD dwBandID);
+    HRESULT GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo);
+    HRESULT GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo, DWORD fMask);
+
 BEGIN_MSG_MAP(CBaseBarSite)
     MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
 END_MSG_MAP()
@@ -165,12 +171,12 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     CComPtr<IObjectWithSite>                site;
     CComPtr<IOleWindow>                     oleWindow;
     CComPtr<IDeskBand>                      deskBand;
-    CComPtr<IDockingWindow>                 dockingWindow;
     CBarInfo                                *newInfo;
     REBARBANDINFOW                          bandInfo;
     DESKBANDINFO                            deskBandInfo;
     DWORD                                   thisBandID;
     HRESULT                                 hResult;
+    CLSID                                   tmp;
 
     hResult = newBar->QueryInterface(IID_PPV_ARG(IPersist, &persist));
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -184,12 +190,22 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     hResult = newBar->QueryInterface(IID_PPV_ARG(IDeskBand, &deskBand));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = newBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+
+    // Check if the GUID already exists
+    hResult = persist->GetClassID(&tmp);
+    if (!SUCCEEDED(hResult))
+    {
+        return E_INVALIDARG;
+    }
+    if (FindBandByGUID(tmp, &thisBandID) == S_OK)
+    {
+        return ShowBand(thisBandID);
+    }
+
     hResult = site->SetSite(static_cast<IOleWindow *>(this));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
     ATLTRY(newInfo = new CBarInfo);
     if (newInfo == NULL)
         return E_OUTOFMEMORY;
@@ -198,23 +214,26 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     thisBandID = fNextBandID++;
     newInfo->fTheBar = newBar;
     newInfo->fBandID = thisBandID;
-    hResult = persist->GetClassID(&newInfo->fBarClass);
+    newInfo->fBarClass = tmp;
 
     // get band info
-    deskBandInfo.dwMask = DBIM_MINSIZE | DBIM_ACTUAL | DBIM_TITLE;
+    deskBandInfo.dwMask = DBIM_MINSIZE | DBIM_ACTUAL | DBIM_TITLE | DBIM_BKCOLOR;
     deskBandInfo.wszTitle[0] = 0;
-    hResult = deskBand->GetBandInfo(0, 0, &deskBandInfo);
+    hResult = deskBand->GetBandInfo(0, (fVertical) ? DBIF_VIEWMODE_VERTICAL : DBIF_VIEWMODE_NORMAL, &deskBandInfo);
 
     // insert band
     memset(&bandInfo, 0, sizeof(bandInfo));
     bandInfo.cbSize = sizeof(bandInfo);
     bandInfo.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_TEXT |
         RBBIM_LPARAM | RBBIM_ID;
-    bandInfo.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
+    bandInfo.fStyle = RBBS_TOPALIGN | RBBS_VARIABLEHEIGHT | RBBS_NOGRIPPER;
     bandInfo.lpText = deskBandInfo.wszTitle;
     hResult = oleWindow->GetWindow(&bandInfo.hwndChild);
+    /* It seems Windows XP doesn't take account of band minsize */
+#if 0
     bandInfo.cxMinChild = 200; //deskBandInfo.ptMinSize.x;
     bandInfo.cyMinChild = 200; //deskBandInfo.ptMinSize.y;
+#endif
     bandInfo.cx = 0;
     bandInfo.wID = thisBandID;
     bandInfo.cyChild = -1; //deskBandInfo.ptActual.y;
@@ -223,15 +242,10 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     bandInfo.cxIdeal = 0; //deskBandInfo.ptActual.x;
     bandInfo.lParam = reinterpret_cast<LPARAM>(newInfo);
     SendMessage(RB_INSERTBANDW, -1, reinterpret_cast<LPARAM>(&bandInfo));
-
-    // this call is what makes the tree fill with contents
-    hResult = dockingWindow->ShowDW(TRUE);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    // for now
-    fCurrentActiveBar = newInfo;
-    return S_OK;
-}
+    hResult = ShowBand(newInfo->fBandID);
+    //fCurrentActiveBar = newInfo;
+    return hResult;
+ }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::GetWindow(HWND *lphwnd)
 {
@@ -299,7 +313,6 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     CComPtr<IDeskBar>                       deskBar;
     CComPtr<IWinEventHandler>               winEventHandler;
     NMHDR                                   *notifyHeader;
-    RECT                                    newBounds;
     HRESULT                                 hResult;
 
     hResult = S_OK;
@@ -308,9 +321,13 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
         notifyHeader = (NMHDR *)lParam;
         if (notifyHeader->hwndFrom == m_hWnd && notifyHeader->code == RBN_AUTOSIZE)
         {
+                    // For now, don't notify basebar we tried to resize ourselves, we don't
+                    // get correct values at the moment.
+#if 0
             hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
             GetClientRect(&newBounds);
             hResult = deskBar->OnPosRectChangeDB(&newBounds);
+#endif
         }
     }
     if (fCurrentActiveBar != NULL)
@@ -338,10 +355,23 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 {
     CComPtr<IOleWindow>                     oleWindow;
     HWND                                    ownerWindow;
-    HRESULT                                 hResult;
-
+    HRESULT                                 hResult;  
+    DWORD                                   dwBandID;
+    
     if (punkSite == NULL)
-        fDeskBarSite.Release();
+    {
+
+        TRACE("Destroying site \n");
+        /* Cleanup our bands */
+        while(SUCCEEDED(EnumBands(-1, &dwBandID)) && dwBandID)
+        {
+            hResult = EnumBands(0, &dwBandID);
+            if(FAILED_UNEXPECTEDLY(hResult))
+                continue;
+            RemoveBand(dwBandID);
+        }
+        fDeskBarSite = NULL;
+    }
     else
     {
         hResult = punkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
@@ -353,11 +383,20 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         hResult = oleWindow->GetWindow(&ownerWindow);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        m_hWnd = CreateWindow(REBARCLASSNAMEW, NULL, WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS |
-                    WS_CLIPCHILDREN |
-                    RBS_VARHEIGHT | RBS_REGISTERDROP | RBS_AUTOSIZE | RBS_VERTICALGRIPPER | RBS_DBLCLKTOGGLE |
-                    CCS_LEFT | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE, 0, 0, 0, 0, ownerWindow, NULL,
+
+        DWORD dwStyle =  WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER |
+             RBS_VARHEIGHT | RBS_REGISTERDROP | RBS_AUTOSIZE | RBS_VERTICALGRIPPER | RBS_DBLCLKTOGGLE |
+             CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE;
+        if (fVertical)
+            dwStyle |= CCS_VERT;
+
+        /* Create site window */
+        HWND tmp = CreateWindowW(REBARCLASSNAMEW, NULL, dwStyle, 0, 0, 0, 0, ownerWindow, NULL,
                     _AtlBaseModule.GetModuleInstance(), NULL);
+
+        /* Give window management to ATL */
+        SubclassWindow(tmp);
+
         SendMessage(RB_SETTEXTCOLOR, 0, CLR_DEFAULT);
         SendMessage(RB_SETBKCOLOR, 0, CLR_DEFAULT);
     }
@@ -392,6 +431,8 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::Exec(const GUID *pguidCmdGroup, DWORD nC
     {
         switch (nCmdID)
         {
+            case 0:
+                //update band info ?
             case 1:     // insert a new band
                 if (V_VT(pvaIn) != VT_UNKNOWN)
                     return E_INVALIDARG;
@@ -401,6 +442,33 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::Exec(const GUID *pguidCmdGroup, DWORD nC
     return E_FAIL;
 }
 
+HRESULT CBaseBarSite::GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo)
+{
+    if (!pBandInfo)
+        return E_INVALIDARG;
+    memset(pBandInfo, 0, sizeof(REBARBANDINFO));
+    pBandInfo->cbSize = sizeof(REBARBANDINFO);
+    pBandInfo->fMask = RBBIM_LPARAM | RBBIM_ID;
+
+    // Grab our bandinfo from rebar control
+    if (!SendMessage(RB_GETBANDINFO, uBand, reinterpret_cast<LPARAM>(pBandInfo)))
+        return E_INVALIDARG;
+    return S_OK;
+}
+
+HRESULT CBaseBarSite::GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo, DWORD fMask)
+{
+    if (!pBandInfo)
+        return E_INVALIDARG;
+    pBandInfo->cbSize = sizeof(REBARBANDINFO);
+    pBandInfo->fMask = fMask;
+
+    // Grab our bandinfo from rebar control
+    if (!SendMessage(RB_GETBANDINFO, uBand, reinterpret_cast<LPARAM>(pBandInfo)))
+        return E_INVALIDARG;
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CBaseBarSite::AddBand(IUnknown *punk)
 {
     return InsertBar(punk);
@@ -408,12 +476,19 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::AddBand(IUnknown *punk)
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
+    REBARBANDINFO bandInfo;
+
+    if (pdwBandID == NULL)
+        return E_INVALIDARG;
     if (uBand == 0xffffffff)
     {
         *pdwBandID = (DWORD)SendMessage(RB_GETBANDCOUNT, 0, 0);
         return S_OK;
     }
-    return E_NOTIMPL;
+    if (!SUCCEEDED(GetInternalBandInfo(uBand, &bandInfo)))
+        return E_INVALIDARG;
+    *pdwBandID = bandInfo.wID;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb,
@@ -429,14 +504,77 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetBandState(DWORD dwBandID, DWORD dwMas
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::RemoveBand(DWORD dwBandID)
 {
-    return E_NOTIMPL;
+    REBARBANDINFO                   bandInfo;
+    HRESULT                         hr;
+    CBarInfo                        *pInfo;
+    CComPtr<IObjectWithSite>        pSite;
+    CComPtr<IDeskBand>              pDockWnd;
+    DWORD                           index;
+
+    // Retrieve the right index of the coolbar knowing the id
+    index = SendMessage(RB_IDTOINDEX, dwBandID, 0);
+    if (index == 0xffffffff)
+       return E_INVALIDARG;
+
+    if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(index, &bandInfo)))
+        return E_INVALIDARG;
+
+    pInfo = reinterpret_cast<CBarInfo*>(bandInfo.lParam);
+    if (!pInfo)
+        return E_INVALIDARG;
+
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IDeskBand, &pDockWnd));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        return E_NOINTERFACE;
+    }
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pSite));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        return E_NOINTERFACE;
+    }
+    /* Windows sends a CloseDW before setting site to NULL */
+    pDockWnd->CloseDW(0);
+    pSite->SetSite(NULL);
+
+    // Delete the band from rebar
+    if (!SendMessage(RB_DELETEBAND, index, 0))
+    {
+        ERR("Can't delete the band\n");
+        return E_INVALIDARG;
+    }
+    if (pInfo == fCurrentActiveBar)
+    {
+        // FIXME: what to do when we are deleting active bar ? Let's assume we remove it for now
+        fCurrentActiveBar = NULL;
+    }
+    delete pInfo;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::GetBandObject(DWORD dwBandID, REFIID riid, void **ppv)
 {
+    REBARBANDINFO               bandInfo;
+    HRESULT                     hr;
+    CBarInfo                    *pInfo;
+    DWORD                       index;
+
     if (ppv == NULL)
         return E_POINTER;
-    return E_NOTIMPL;
+
+    // Retrieve the right index of the coolbar knowing the id
+    index = SendMessage(RB_IDTOINDEX, dwBandID, 0);
+    if (index == 0xffffffff)
+       return E_INVALIDARG;
+
+    if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(index, &bandInfo)))
+        return E_INVALIDARG;
+
+    pInfo = reinterpret_cast<CBarInfo*>(bandInfo.lParam);
+    hr = pInfo->fTheBar->QueryInterface(riid, ppv);
+    if (!SUCCEEDED(hr))
+        return E_NOINTERFACE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBarSite::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
@@ -491,7 +629,69 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     if (notifyHeader->hwndFrom == m_hWnd)
     {
     }
+    bHandled = FALSE; /* forward notification to parent */
     return 0;
+}
+
+HRESULT CBaseBarSite::FindBandByGUID(REFGUID pGuid, DWORD *pdwBandID)
+{
+    DWORD                       numBands;
+    DWORD                       i;
+    HRESULT                     hr;
+    REBARBANDINFO               bandInfo;
+    CBarInfo                    *realInfo;
+
+    hr = EnumBands(-1, &numBands);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_FAIL;
+
+    for(i = 0; i < numBands; i++)
+    {
+        if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(i, &bandInfo)))
+            return E_FAIL;
+        realInfo = (CBarInfo*)bandInfo.lParam;
+        if (IsEqualGUID(pGuid, realInfo->fBarClass))
+        {
+            *pdwBandID = realInfo->fBandID;
+            return S_OK;
+        }
+    }
+    return S_FALSE;
+}
+
+HRESULT CBaseBarSite::ShowBand(DWORD dwBandID)
+{
+    UINT                        index;
+    CComPtr<IDeskBand>          dockingWindow;
+    HRESULT                     hResult;
+    REBARBANDINFO               bandInfo;
+
+    // show our band
+    hResult = GetBandObject(dwBandID, IID_PPV_ARG(IDeskBand, &dockingWindow));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return E_FAIL;
+
+    hResult = dockingWindow->ShowDW(TRUE);
+
+    // Hide old band while adding new one
+    if (fCurrentActiveBar && fCurrentActiveBar->fBandID != dwBandID)
+    {
+        DWORD index;
+        index = SendMessage(RB_IDTOINDEX, fCurrentActiveBar->fBandID, 0);
+        if (index != 0xffffffff)
+            SendMessage(RB_SHOWBAND, index, 0);
+    }
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    // Display the current band
+    index = SendMessage(RB_IDTOINDEX, dwBandID, 0);
+    if (index != 0xffffffff)
+        SendMessage(RB_SHOWBAND, index, 1);
+    if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(index, &bandInfo)))
+        return E_FAIL;
+    fCurrentActiveBar = (CBarInfo*)bandInfo.lParam;
+    return S_OK;
 }
 
 HRESULT CreateBaseBarSite(REFIID riid, void **ppv, BOOL bVertical)
