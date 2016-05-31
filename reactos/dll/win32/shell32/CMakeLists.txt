@@ -65,7 +65,7 @@ list(APPEND SOURCE
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
     CNewMenu.cpp
-    CShell.cpp
+    CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp
     CFolderItemVerbs.cpp

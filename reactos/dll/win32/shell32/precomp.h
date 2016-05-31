@@ -53,7 +53,7 @@
 #include "CFolderItemVerbs.h"
 #include "CFolderItems.h"
 #include "CFolder.h"
-#include "CShell.h"
+#include "CShellDispatch.h"
 #include "CDropTargetHelper.h"
 #include "CFolderOptions.h"
 #include "folders/CFSFolder.h"
