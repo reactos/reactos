@@ -27,14 +27,13 @@ provides resizing abilities.
 
 /*
 TODO:
-****Fix so an already created bar will be detected and just shown instead of added again
-****When a new bar is added, initiate a resize
-  **Add owner draw for base bar
+****When a new bar is added, resize correctly the band inside instead of keeping current size.
+   *Translate close button label
+  **Add owner draw for base bar -- hackplemented atm
   **Make label text in base bar always draw in black
-  **Make base bar show close box
-  **Create close toolbar button
-  **Fix to delete all CBarInfo on deletion
-
+ ***Set rebar band style flags accordingly to what band object asked.
+ ***Set rebar style accordingly to direction
+****This class should also manage desktop bands ? (another kind of explorer bands)
 */
 
 class CBaseBarSite :
@@ -65,6 +64,8 @@ private:
 //    HWND                                    fRebarWindow;           // rebar for top of window
     CComPtr<IUnknown>                       fDeskBarSite;
     DWORD                                   fNextBandID;
+    HWND                                    toolbarWnd;
+    HIMAGELIST                              toolImageList;
     BOOL                                    fVertical;
 public:
     CBaseBarSite();
@@ -127,15 +128,20 @@ private:
 
     // message handlers
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCustomDraw(LPNMCUSTOMDRAW pnmcd);
 
     // Helper functions
+    HFONT GetTitleFont();
     HRESULT FindBandByGUID(REFIID pGuid, DWORD *pdwBandID);
     HRESULT ShowBand(DWORD dwBandID);
     HRESULT GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo);
     HRESULT GetInternalBandInfo(UINT uBand, REBARBANDINFO *pBandInfo, DWORD fMask);
 
+
 BEGIN_MSG_MAP(CBaseBarSite)
     MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+    MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CBaseBarSite)
@@ -163,6 +169,7 @@ CBaseBarSite::CBaseBarSite() : fVertical(TRUE)
 
 CBaseBarSite::~CBaseBarSite()
 {
+    TRACE("CBaseBarSite deleted\n");
 }
 
 HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
@@ -313,21 +320,31 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     CComPtr<IDeskBar>                       deskBar;
     CComPtr<IWinEventHandler>               winEventHandler;
     NMHDR                                   *notifyHeader;
+    // RECT                                    newBounds;
     HRESULT                                 hResult;
-
+    
     hResult = S_OK;
     if (uMsg == WM_NOTIFY)
     {
         notifyHeader = (NMHDR *)lParam;
-        if (notifyHeader->hwndFrom == m_hWnd && notifyHeader->code == RBN_AUTOSIZE)
+        if (notifyHeader->hwndFrom == m_hWnd)
         {
+            switch (notifyHeader->code)
+            {
+                case RBN_AUTOSIZE:
                     // For now, don't notify basebar we tried to resize ourselves, we don't
                     // get correct values at the moment.
 #if 0
-            hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
-            GetClientRect(&newBounds);
-            hResult = deskBar->OnPosRectChangeDB(&newBounds);
+                    hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
+                    GetClientRect(&newBounds);
+                    hResult = deskBar->OnPosRectChangeDB(&newBounds);
+                    
 #endif
+                    break;
+                case NM_CUSTOMDRAW:
+                    *theResult = OnCustomDraw((LPNMCUSTOMDRAW)lParam);
+                    return S_OK;
+            }
         }
     }
     if (fCurrentActiveBar != NULL)
@@ -374,6 +391,9 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
     }
     else
     {
+        TBBUTTON closeBtn;
+        HBITMAP hBmp;
+
         hResult = punkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
@@ -399,6 +419,37 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 
         SendMessage(RB_SETTEXTCOLOR, 0, CLR_DEFAULT);
         SendMessage(RB_SETBKCOLOR, 0, CLR_DEFAULT);
+
+        /* Create close toolbar and imagelist */
+        toolbarWnd = CreateWindowW(TOOLBARCLASSNAMEW, NULL,
+            WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+            TBSTYLE_FLAT | TBSTYLE_TRANSPARENT | TBSTYLE_TOOLTIPS | 
+            CCS_NOMOVEY | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER
+            , 0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
+
+        toolImageList = ImageList_Create(13, 11, ILC_COLOR24 | ILC_MASK, 3, 0);
+
+        hBmp = (HBITMAP)LoadImage(_AtlBaseModule.GetModuleInstance(),
+            MAKEINTRESOURCE(IDB_BANDBUTTONS), IMAGE_BITMAP, 0, 0,
+            LR_LOADTRANSPARENT);
+
+        ImageList_AddMasked(toolImageList, hBmp, RGB(192, 192, 192));
+        DeleteObject(hBmp);
+
+        SendMessage(toolbarWnd, TB_SETIMAGELIST, 0, (LPARAM)toolImageList);
+        
+        /* Add button to toolbar */
+        closeBtn.iBitmap = MAKELONG(1, 0);
+        closeBtn.idCommand = IDM_BASEBAR_CLOSE;
+        closeBtn.fsState = TBSTATE_ENABLED;
+        closeBtn.fsStyle = BTNS_BUTTON;
+        ZeroMemory(closeBtn.bReserved, sizeof(closeBtn.bReserved));
+        closeBtn.dwData = 0;
+        closeBtn.iString = (INT_PTR)L"Close";
+
+        SendMessage(toolbarWnd, TB_INSERTBUTTON, 0, (LPARAM)&closeBtn);
+        SendMessage(toolbarWnd, TB_SETMAXTEXTROWS, 0, 0);
+        //SendMessage(toolbarWnd, TB_AUTOSIZE, 0, 0);
     }
     return S_OK;
 }
@@ -437,6 +488,9 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::Exec(const GUID *pguidCmdGroup, DWORD nC
                 if (V_VT(pvaIn) != VT_UNKNOWN)
                     return E_INVALIDARG;
                 return InsertBar(V_UNKNOWN(pvaIn));
+            case 0x17:
+                // redim band
+                break;
         }
     }
     return E_FAIL;
@@ -631,6 +685,88 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     }
     bHandled = FALSE; /* forward notification to parent */
     return 0;
+}
+
+LRESULT CBaseBarSite::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HRESULT                             hResult;
+    CComPtr<IDockingWindow>             parentSite;
+
+    if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDM_BASEBAR_CLOSE)
+    {
+        hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDockingWindow, &parentSite));
+        if (!SUCCEEDED(hResult))
+        {
+            return E_FAIL;
+        }
+        parentSite->ShowDW(FALSE);
+        bHandled = TRUE;
+    }
+    return 0;
+}
+
+LRESULT CBaseBarSite::OnCustomDraw(LPNMCUSTOMDRAW pnmcd)
+{
+    switch (pnmcd->dwDrawStage)
+    {
+        case CDDS_PREPAINT:
+        case CDDS_PREERASE:
+            return CDRF_NOTIFYITEMDRAW;
+        case CDDS_ITEMPREPAINT:
+            if (fVertical)
+            {
+                REBARBANDINFO info;
+                WCHAR wszTitle[MAX_PATH];
+                DWORD index;
+                RECT rt;
+                HFONT newFont, oldFont;
+
+                index = SendMessage(RB_IDTOINDEX, fCurrentActiveBar->fBandID , 0);
+                ZeroMemory(&info, sizeof(info));
+                ZeroMemory(wszTitle, sizeof(wszTitle));
+                DrawEdge(pnmcd->hdc, &pnmcd->rc, EDGE_ETCHED, BF_BOTTOM);
+                // We also resize our close button
+                ::SetWindowPos(toolbarWnd, HWND_TOP, pnmcd->rc.right - 22, 0, 20, 18, SWP_SHOWWINDOW);
+                // Draw the text
+                info.cch = MAX_PATH;
+                info.lpText = wszTitle;
+                rt = pnmcd->rc;
+                rt.right -= 24;
+                rt.left += 2;
+                if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(index, &info, RBBIM_TEXT)))
+                    return CDRF_SKIPDEFAULT;
+                newFont = GetTitleFont();
+                if (newFont)
+                    oldFont = (HFONT)SelectObject(pnmcd->hdc, newFont);
+                DrawText(pnmcd->hdc, info.lpText, -1, &rt, DT_SINGLELINE | DT_LEFT);
+                SelectObject(pnmcd->hdc, oldFont);
+                DeleteObject(newFont);
+                return CDRF_SKIPDEFAULT;
+            }
+            else
+            {
+                DrawEdge(pnmcd->hdc, &pnmcd->rc, EDGE_ETCHED, BF_BOTTOM);
+                // We also resize our close button
+                ::SetWindowPos(toolbarWnd, HWND_TOP, 0, 2, 20, 18, SWP_SHOWWINDOW);
+            }
+            return CDRF_SKIPDEFAULT;
+        default:
+            break;
+    }
+    return CDRF_DODEFAULT;
+}
+
+HFONT CBaseBarSite::GetTitleFont()
+{
+    NONCLIENTMETRICS mt;
+    mt.cbSize = sizeof(mt);
+    if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(mt), &mt, 0))
+    {
+        ERR("Can't get system parameters !\n");
+        return NULL;
+    }
+    return CreateFontIndirect(&mt.lfMenuFont);
+
 }
 
 HRESULT CBaseBarSite::FindBandByGUID(REFGUID pGuid, DWORD *pdwBandID)

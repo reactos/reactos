@@ -104,3 +104,6 @@ IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
+
+/* Include band button bitmaps */
+IDB_BANDBUTTONS BITMAP "res/barbtn.bmp"
