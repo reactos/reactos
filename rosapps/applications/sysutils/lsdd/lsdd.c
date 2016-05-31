@@ -60,7 +60,7 @@ main (int argc, char * argv [] )
 	printf (
 		"ReactOS/Win32 %s - List DOS Devices Utility\n"
 		"Written by E.Aliberti (%s)\n\n",
-		KERNEL_RELEASE_STR,
+		KERNEL_VERSION_STR,
 		__DATE__
 		);
 

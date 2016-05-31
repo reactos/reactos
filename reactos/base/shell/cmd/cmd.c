@@ -1745,7 +1745,7 @@ Initialize()
         /* If neither /C or /K was given, display a simple version string */
         ConOutChar(_T('\n'));
         ConOutResPrintf(STRING_REACTOS_VERSION,
-                        _T(KERNEL_RELEASE_STR),
+                        _T(KERNEL_VERSION_STR),
                         _T(KERNEL_VERSION_BUILD_STR));
         ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
     }

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2002/10/29 04:45:54 rex Exp $
+/* $Id$
  *
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/misc/main.c 
@@ -49,7 +49,7 @@ int main (int argc, char * argv[])
 {
     INT c;
 
-    debug_print(L"POSIX+ Subsystem for ReactOS "KERNEL_RELEASE_STR);
+    debug_print(L"POSIX+ Subsystem for ReactOS "KERNEL_VERSION_STR);
 
     if (STATUS_SUCCESS == PsxServerInitialization(0,NULL))
     {
@@ -71,7 +71,7 @@ VOID NtProcessStartup (PPEB Peb)
 {
     UNICODE_STRING Banner;
 
-    RtlInitUnicodeString (& Banner, L"POSIX+ Subsystem for ReactOS "KERNEL_RELEASE_STR);
+    RtlInitUnicodeString (& Banner, L"POSIX+ Subsystem for ReactOS "KERNEL_VERSION_STR);
     NtDisplayString(& Banner);
 
     if (STATUS_SUCCESS == PsxServerInitialization(0,NULL))
