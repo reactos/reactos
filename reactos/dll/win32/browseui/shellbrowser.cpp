@@ -2884,7 +2884,17 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GoSearch()
 HRESULT STDMETHODCALLTYPE CShellBrowser::Navigate(BSTR URL, VARIANT *Flags,
     VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
-    return E_NOTIMPL;
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hResult;
+    CComPtr<IShellFolder> pDesktop;
+
+    hResult = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = pDesktop->ParseDisplayName(NULL, NULL, URL, NULL, &pidl, NULL);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    return BrowseObject(pidl, 1);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::Refresh()
@@ -3104,14 +3114,23 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::put_FullScreen(VARIANT_BOOL bFullScreen
 HRESULT STDMETHODCALLTYPE CShellBrowser::Navigate2(VARIANT *URL, VARIANT *Flags,
     VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
+    LPITEMIDLIST pidl = NULL;
+    HRESULT hResult;
     // called from drive combo box to navigate to a directory
-    if (V_VT(URL) != (VT_ARRAY | VT_UI1))
-        return E_INVALIDARG;
-    if (V_ARRAY(URL)->cDims != 1 || V_ARRAY(URL)->cbElements != 1)
-        return E_INVALIDARG;
+    // Also called by search band to display shell results folder view
 
-    LPITEMIDLIST pidl = static_cast<LPITEMIDLIST>(V_ARRAY(URL)->pvData);
-    HRESULT hResult = BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
+    if (V_VT(URL) == VT_BSTR)
+    {
+        return this->Navigate(V_BSTR(URL), Flags, TargetFrameName, PostData, Headers);
+    }
+    if (V_VT(URL) == (VT_ARRAY | VT_UI1))
+    {
+        if (V_ARRAY(URL)->cDims != 1 || V_ARRAY(URL)->cbElements != 1)
+            return E_INVALIDARG;
+
+        pidl = static_cast<LPITEMIDLIST>(V_ARRAY(URL)->pvData);
+    }
+    hResult = BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
