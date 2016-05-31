@@ -161,6 +161,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
         }
         if (ok1 && ok2)
         {
+            static const WCHAR szCSDFMT[] = {'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0};
             WCHAR szCSDVersion[128] = { 0 };
             winetest_ok(v1.dwOSVersionInfoSize == v2.dwOSVersionInfoSize, "Expected dwOSVersionInfoSize to be equal, was: %u, %u for %s\n", v1.dwOSVersionInfoSize, v2.dwOSVersionInfoSize, shim);
             winetest_ok(info->dwMajorVersion == v2.dwMajorVersion, "Expected dwMajorVersion to be equal, was: %u, %u for %s\n", info->dwMajorVersion, v2.dwMajorVersion, shim);
@@ -169,7 +170,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
             winetest_ok(info->dwPlatformId == v2.dwPlatformId, "Expected dwPlatformId to be equal, was: %u, %u for %s\n", info->dwPlatformId, v2.dwPlatformId, shim);
 
             if (info->wServicePackMajor)
-                swprintf(szCSDVersion, (const WCHAR[]){'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0}, info->wServicePackMajor);
+                swprintf(szCSDVersion, szCSDFMT, info->wServicePackMajor);
             winetest_ok(lstrcmpW(szCSDVersion, v2.szCSDVersion) == 0, "Expected szCSDVersion to be equal, was: %s, %s for %s\n", wine_dbgstr_w(szCSDVersion), wine_dbgstr_w(v2.szCSDVersion), shim);
 
             if (v1.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))

@@ -443,18 +443,19 @@ void WINAPI SdbCloseDatabase(PDB db)
 BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
 {
     static WCHAR* default_dir = NULL;
+    static CONST WCHAR szAppPatch[] = {'\\','A','p','p','P','a','t','c','h',0};
 
     if(!default_dir)
     {
         WCHAR* tmp = NULL;
-        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW((CONST WCHAR[]){'\\','A','p','p','P','a','t','c','h',0});
+        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW(szAppPatch);
         tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
         if(tmp)
         {
             UINT r = GetSystemWindowsDirectoryW(tmp, len+1);
             if (r && r < len)
             {
-                if (SUCCEEDED(StringCchCatW(tmp, len+1, (CONST WCHAR[]){'\\','A','p','p','P','a','t','c','h',0})))
+                if (SUCCEEDED(StringCchCatW(tmp, len+1, szAppPatch)))
                 {
                     if(InterlockedCompareExchangePointer((void**)&default_dir, tmp, NULL) == NULL)
                         tmp = NULL;

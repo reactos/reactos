@@ -47,12 +47,13 @@ BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason)
 {
     if (fdwReason == SHIM_REASON_ATTACH && VERSION_INFO.wServicePackMajor)
     {
+        static CONST WCHAR szServicePack[] = {'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0};
         HRESULT hr = StringCbPrintfA(VERSION_INFO.szCSDVersionA, sizeof(VERSION_INFO.szCSDVersionA),
             "Service Pack %u", VERSION_INFO.wServicePackMajor);
         if (FAILED(hr))
             return FALSE;
         StringCbPrintfW(VERSION_INFO.szCSDVersionW, sizeof(VERSION_INFO.szCSDVersionW),
-            (CONST WCHAR[]){'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0}, VERSION_INFO.wServicePackMajor);
+            szServicePack, VERSION_INFO.wServicePackMajor);
         if (FAILED(hr))
             return FALSE;
     }
@@ -71,3 +72,4 @@ BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason)
 #include <implement_shim.inl>
 
 #undef VERSION_INFO
+
